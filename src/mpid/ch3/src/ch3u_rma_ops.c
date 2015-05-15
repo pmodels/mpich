@@ -116,7 +116,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         }
     }
     else {
-        MPIDI_RMA_Op_t *new_ptr = NULL;
+        MPIDI_RMA_Op_t *op_ptr = NULL;
         MPIDI_CH3_Pkt_put_t *put_pkt = NULL;
         MPI_Aint origin_type_size;
         size_t immed_len, len;
@@ -124,7 +124,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         int is_origin_contig, is_target_contig;
 
         /* queue it up */
-        mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
+        mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &op_ptr);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
 
@@ -133,14 +133,14 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         /******************** Setting operation struct areas ***********************/
 
         /* FIXME: For contig and very short operations, use a streamlined op */
-        new_ptr->origin_addr = (void *) origin_addr;
-        new_ptr->origin_count = origin_count;
-        new_ptr->origin_datatype = origin_datatype;
-        new_ptr->target_rank = target_rank;
+        op_ptr->origin_addr = (void *) origin_addr;
+        op_ptr->origin_count = origin_count;
+        op_ptr->origin_datatype = origin_datatype;
+        op_ptr->target_rank = target_rank;
 
         /* Remember user request */
         if (ureq) {
-            new_ptr->ureq = ureq;
+            op_ptr->ureq = ureq;
         }
 
         /* if source or target datatypes are derived, increment their
@@ -148,12 +148,12 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
             MPID_Datatype_get_ptr(origin_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
-            new_ptr->is_dt = 1;
+            op_ptr->is_dt = 1;
         }
         if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             MPID_Datatype_get_ptr(target_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
-            new_ptr->is_dt = 1;
+            op_ptr->is_dt = 1;
         }
 
         MPID_Datatype_is_contig(origin_datatype, &is_origin_contig);
@@ -163,7 +163,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         MPIU_Assign_trunc(len, origin_count * origin_type_size, size_t);
 
         /* Judge if we can use IMMED data packet */
-        if (!new_ptr->is_dt && is_origin_contig && is_target_contig) {
+        if (!op_ptr->is_dt && is_origin_contig && is_target_contig) {
             MPIU_Assign_trunc(immed_len,
                               (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size,
                               size_t);
@@ -172,17 +172,17 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         }
 
         /* Judge if this operation is an piggyback candidate */
-        if (!new_ptr->is_dt) {
+        if (!op_ptr->is_dt) {
             /* FIXME: currently we only piggyback LOCK flag with op using predefined datatypes
              * for both origin and target data. We should extend this optimization to derived
              * datatypes as well. */
             if (len <= MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE)
-                new_ptr->piggyback_lock_candidate = 1;
+                op_ptr->piggyback_lock_candidate = 1;
         }
 
         /************** Setting packet struct areas in operation ****************/
 
-        put_pkt = &(new_ptr->pkt.put);
+        put_pkt = &(op_ptr->pkt.put);
 
         if (use_immed_pkt) {
             MPIDI_Pkt_init(put_pkt, MPIDI_CH3_PKT_PUT_IMMED);
@@ -208,7 +208,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
-        mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, new_ptr);
+        mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, op_ptr);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
 
@@ -313,7 +313,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         }
     }
     else {
-        MPIDI_RMA_Op_t *new_ptr = NULL;
+        MPIDI_RMA_Op_t *op_ptr = NULL;
         MPIDI_CH3_Pkt_get_t *get_pkt = NULL;
         MPI_Aint target_type_size;
         size_t immed_len, len;
@@ -321,7 +321,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         int is_origin_contig, is_target_contig;
 
         /* queue it up */
-        mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
+        mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &op_ptr);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
 
@@ -330,14 +330,14 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         /******************** Setting operation struct areas ***********************/
 
         /* FIXME: For contig and very short operations, use a streamlined op */
-        new_ptr->origin_addr = origin_addr;
-        new_ptr->origin_count = origin_count;
-        new_ptr->origin_datatype = origin_datatype;
-        new_ptr->target_rank = target_rank;
+        op_ptr->origin_addr = origin_addr;
+        op_ptr->origin_count = origin_count;
+        op_ptr->origin_datatype = origin_datatype;
+        op_ptr->target_rank = target_rank;
 
         /* Remember user request */
         if (ureq) {
-            new_ptr->ureq = ureq;
+            op_ptr->ureq = ureq;
         }
 
         /* if source or target datatypes are derived, increment their
@@ -345,12 +345,12 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
             MPID_Datatype_get_ptr(origin_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
-            new_ptr->is_dt = 1;
+            op_ptr->is_dt = 1;
         }
         if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             MPID_Datatype_get_ptr(target_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
-            new_ptr->is_dt = 1;
+            op_ptr->is_dt = 1;
         }
 
         MPID_Datatype_is_contig(origin_datatype, &is_origin_contig);
@@ -360,7 +360,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         MPIU_Assign_trunc(len, target_count * target_type_size, size_t);
 
         /* Judge if we can use IMMED data response packet */
-        if (!new_ptr->is_dt && is_origin_contig && is_target_contig) {
+        if (!op_ptr->is_dt && is_origin_contig && is_target_contig) {
             MPIU_Assign_trunc(immed_len,
                               (MPIDI_RMA_IMMED_BYTES / target_type_size) * target_type_size,
                               size_t);
@@ -369,16 +369,16 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         }
 
         /* Judge if this operation is an piggyback candidate. */
-        if (!new_ptr->is_dt) {
+        if (!op_ptr->is_dt) {
             /* FIXME: currently we only piggyback LOCK flag with op using predefined datatypes
              * for both origin and target data. We should extend this optimization to derived
              * datatypes as well. */
-            new_ptr->piggyback_lock_candidate = 1;
+            op_ptr->piggyback_lock_candidate = 1;
         }
 
         /************** Setting packet struct areas in operation ****************/
 
-        get_pkt = &(new_ptr->pkt.get);
+        get_pkt = &(op_ptr->pkt.get);
         MPIDI_Pkt_init(get_pkt, MPIDI_CH3_PKT_GET);
         get_pkt->addr = (char *) win_ptr->basic_info_table[target_rank].base_addr +
             win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
@@ -392,7 +392,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
-        mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, new_ptr);
+        mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, op_ptr);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
 
@@ -499,7 +499,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         }
     }
     else {
-        MPIDI_RMA_Op_t *new_ptr = NULL;
+        MPIDI_RMA_Op_t *op_ptr = NULL;
         MPIDI_CH3_Pkt_accum_t *accum_pkt = NULL;
         MPI_Aint origin_type_size;
         size_t immed_len, len;
@@ -511,7 +511,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         int i;
 
         /* queue it up */
-        mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
+        mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &op_ptr);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
 
@@ -519,25 +519,25 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
 
         /******************** Setting operation struct areas ***********************/
 
-        new_ptr->origin_addr = (void *) origin_addr;
-        new_ptr->origin_count = origin_count;
-        new_ptr->origin_datatype = origin_datatype;
-        new_ptr->target_rank = target_rank;
+        op_ptr->origin_addr = (void *) origin_addr;
+        op_ptr->origin_count = origin_count;
+        op_ptr->origin_datatype = origin_datatype;
+        op_ptr->target_rank = target_rank;
 
         /* Remember user request */
         if (ureq) {
-            new_ptr->ureq = ureq;
+            op_ptr->ureq = ureq;
         }
 
         /* if source or target datatypes are derived, increment their
          * reference counts */
         if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
             MPID_Datatype_get_ptr(origin_datatype, origin_dtp);
-            new_ptr->is_dt = 1;
+            op_ptr->is_dt = 1;
         }
         if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             MPID_Datatype_get_ptr(target_datatype, target_dtp);
-            new_ptr->is_dt = 1;
+            op_ptr->is_dt = 1;
         }
 
         MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
@@ -577,7 +577,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         MPID_Datatype_is_contig(target_datatype, &is_target_contig);
 
         /* Judge if we can use IMMED data packet */
-        if (!new_ptr->is_dt && is_origin_contig && is_target_contig) {
+        if (!op_ptr->is_dt && is_origin_contig && is_target_contig) {
             MPIU_Assign_trunc(immed_len,
                               (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size,
                               size_t);
@@ -586,17 +586,17 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         }
 
         /* Judge if this operation is an piggyback candidate. */
-        if (!new_ptr->is_dt) {
+        if (!op_ptr->is_dt) {
             /* FIXME: currently we only piggyback LOCK flag with op using predefined datatypes
              * for both origin and target data. We should extend this optimization to derived
              * datatypes as well. */
             if (len <= MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE)
-                new_ptr->piggyback_lock_candidate = 1;
+                op_ptr->piggyback_lock_candidate = 1;
         }
 
         /************** Setting packet struct areas in operation ****************/
 
-        accum_pkt = &(new_ptr->pkt.accum);
+        accum_pkt = &(op_ptr->pkt.accum);
 
         if (use_immed_pkt) {
             MPIDI_Pkt_init(accum_pkt, MPIDI_CH3_PKT_ACCUMULATE_IMMED);
@@ -623,7 +623,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
-        mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, new_ptr);
+        mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, op_ptr);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
 
@@ -733,10 +733,10 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
         }
     }
     else {
-        MPIDI_RMA_Op_t *new_ptr = NULL;
+        MPIDI_RMA_Op_t *op_ptr = NULL;
 
         /* Append the operation to the window's RMA ops queue */
-        mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
+        mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &op_ptr);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
 
@@ -754,25 +754,25 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 
             /******************** Setting operation struct areas ***********************/
 
-            new_ptr->origin_addr = result_addr;
-            new_ptr->origin_count = result_count;
-            new_ptr->origin_datatype = result_datatype;
-            new_ptr->target_rank = target_rank;
+            op_ptr->origin_addr = result_addr;
+            op_ptr->origin_count = result_count;
+            op_ptr->origin_datatype = result_datatype;
+            op_ptr->target_rank = target_rank;
 
             /* Remember user request */
             if (ureq) {
-                new_ptr->ureq = ureq;
+                op_ptr->ureq = ureq;
             }
 
             if (!MPIR_DATATYPE_IS_PREDEFINED(result_datatype)) {
                 MPID_Datatype_get_ptr(result_datatype, dtp);
                 MPID_Datatype_add_ref(dtp);
-                new_ptr->is_dt = 1;
+                op_ptr->is_dt = 1;
             }
             if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
                 MPID_Datatype_get_ptr(target_datatype, dtp);
                 MPID_Datatype_add_ref(dtp);
-                new_ptr->is_dt = 1;
+                op_ptr->is_dt = 1;
             }
 
             MPID_Datatype_get_size_macro(target_datatype, target_type_size);
@@ -782,7 +782,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             MPID_Datatype_is_contig(target_datatype, &is_target_contig);
 
             /* Judge if we can use IMMED data response packet */
-            if (!new_ptr->is_dt && is_result_contig && is_target_contig) {
+            if (!op_ptr->is_dt && is_result_contig && is_target_contig) {
                 MPIU_Assign_trunc(immed_len,
                                   (MPIDI_RMA_IMMED_BYTES / target_type_size) * target_type_size,
                                   size_t);
@@ -791,16 +791,16 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             }
 
             /* Judge if this operation is a piggyback candidate */
-            if (!new_ptr->is_dt) {
+            if (!op_ptr->is_dt) {
                 /* FIXME: currently we only piggyback LOCK flag with op using predefined datatypes
                  * for both origin and target data. We should extend this optimization to derived
                  * datatypes as well. */
-                new_ptr->piggyback_lock_candidate = 1;
+                op_ptr->piggyback_lock_candidate = 1;
             }
 
             /************** Setting packet struct areas in operation ****************/
 
-            get_pkt = &(new_ptr->pkt.get);
+            get_pkt = &(op_ptr->pkt.get);
             MPIDI_Pkt_init(get_pkt, MPIDI_CH3_PKT_GET);
             get_pkt->addr = (char *) win_ptr->basic_info_table[target_rank].base_addr +
                 win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
@@ -826,32 +826,32 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 
             /******************** Setting operation struct areas ***********************/
 
-            new_ptr->origin_addr = (void *) origin_addr;
-            new_ptr->origin_count = origin_count;
-            new_ptr->origin_datatype = origin_datatype;
-            new_ptr->result_addr = result_addr;
-            new_ptr->result_count = result_count;
-            new_ptr->result_datatype = result_datatype;
-            new_ptr->target_rank = target_rank;
+            op_ptr->origin_addr = (void *) origin_addr;
+            op_ptr->origin_count = origin_count;
+            op_ptr->origin_datatype = origin_datatype;
+            op_ptr->result_addr = result_addr;
+            op_ptr->result_count = result_count;
+            op_ptr->result_datatype = result_datatype;
+            op_ptr->target_rank = target_rank;
 
             /* Remember user request */
             if (ureq) {
-                new_ptr->ureq = ureq;
+                op_ptr->ureq = ureq;
             }
 
             /* if source or target datatypes are derived, increment their
              * reference counts */
             if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
                 MPID_Datatype_get_ptr(origin_datatype, origin_dtp);
-                new_ptr->is_dt = 1;
+                op_ptr->is_dt = 1;
             }
             if (!MPIR_DATATYPE_IS_PREDEFINED(result_datatype)) {
                 MPID_Datatype_get_ptr(result_datatype, target_dtp);
-                new_ptr->is_dt = 1;
+                op_ptr->is_dt = 1;
             }
             if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
                 MPID_Datatype_get_ptr(target_datatype, result_dtp);
-                new_ptr->is_dt = 1;
+                op_ptr->is_dt = 1;
             }
 
             MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
@@ -895,7 +895,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             MPID_Datatype_is_contig(result_datatype, &is_result_contig);
 
             /* Judge if we can use IMMED data packet */
-            if (!new_ptr->is_dt && is_origin_contig && is_target_contig && is_result_contig) {
+            if (!op_ptr->is_dt && is_origin_contig && is_target_contig && is_result_contig) {
                 MPIU_Assign_trunc(immed_len,
                                   (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size,
                                   size_t);
@@ -904,17 +904,17 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             }
 
             /* Judge if this operation is a piggyback candidate */
-            if (!new_ptr->is_dt) {
+            if (!op_ptr->is_dt) {
                 /* FIXME: currently we only piggyback LOCK flag with op using predefined datatypes
                  * for origin, target and result data. We should extend this optimization to derived
                  * datatypes as well. */
                 if (orig_len <= MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE)
-                    new_ptr->piggyback_lock_candidate = 1;
+                    op_ptr->piggyback_lock_candidate = 1;
             }
 
             /************** Setting packet struct areas in operation ****************/
 
-            get_accum_pkt = &(new_ptr->pkt.get_accum);
+            get_accum_pkt = &(op_ptr->pkt.get_accum);
 
             if (use_immed_pkt) {
                 MPIDI_Pkt_init(get_accum_pkt, MPIDI_CH3_PKT_GET_ACCUM_IMMED);
@@ -941,7 +941,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
-        mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, new_ptr);
+        mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, op_ptr);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
 
@@ -1149,13 +1149,13 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
             MPIU_ERR_POP(mpi_errno);
     }
     else {
-        MPIDI_RMA_Op_t *new_ptr = NULL;
+        MPIDI_RMA_Op_t *op_ptr = NULL;
         MPIDI_CH3_Pkt_cas_t *cas_pkt = NULL;
         MPI_Aint type_size;
         void *src = NULL, *dest = NULL;
 
         /* Append this operation to the RMA ops queue */
-        mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
+        mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &op_ptr);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
 
@@ -1163,19 +1163,19 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 
         /******************** Setting operation struct areas ***********************/
 
-        new_ptr->origin_addr = (void *) origin_addr;
-        new_ptr->origin_count = 1;
-        new_ptr->origin_datatype = datatype;
-        new_ptr->result_addr = result_addr;
-        new_ptr->result_datatype = datatype;
-        new_ptr->compare_addr = (void *) compare_addr;
-        new_ptr->compare_datatype = datatype;
-        new_ptr->target_rank = target_rank;
-        new_ptr->piggyback_lock_candidate = 1;  /* CAS is always able to piggyback LOCK */
+        op_ptr->origin_addr = (void *) origin_addr;
+        op_ptr->origin_count = 1;
+        op_ptr->origin_datatype = datatype;
+        op_ptr->result_addr = result_addr;
+        op_ptr->result_datatype = datatype;
+        op_ptr->compare_addr = (void *) compare_addr;
+        op_ptr->compare_datatype = datatype;
+        op_ptr->target_rank = target_rank;
+        op_ptr->piggyback_lock_candidate = 1;   /* CAS is always able to piggyback LOCK */
 
         /************** Setting packet struct areas in operation ****************/
 
-        cas_pkt = &(new_ptr->pkt.cas);
+        cas_pkt = &(op_ptr->pkt.cas);
         MPIDI_Pkt_init(cas_pkt, MPIDI_CH3_PKT_CAS_IMMED);
         cas_pkt->addr = (char *) win_ptr->basic_info_table[target_rank].base_addr +
             win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
@@ -1200,7 +1200,7 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
-        mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, new_ptr);
+        mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, op_ptr);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
 
@@ -1294,10 +1294,10 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             MPIU_ERR_POP(mpi_errno);
     }
     else {
-        MPIDI_RMA_Op_t *new_ptr = NULL;
+        MPIDI_RMA_Op_t *op_ptr = NULL;
 
         /* Append this operation to the RMA ops queue */
-        mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
+        mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &op_ptr);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
 
@@ -1313,11 +1313,11 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
             /******************** Setting operation struct areas ***********************/
 
-            new_ptr->origin_addr = result_addr;
-            new_ptr->origin_count = 1;
-            new_ptr->origin_datatype = datatype;
-            new_ptr->target_rank = target_rank;
-            new_ptr->piggyback_lock_candidate = 1;
+            op_ptr->origin_addr = result_addr;
+            op_ptr->origin_count = 1;
+            op_ptr->origin_datatype = datatype;
+            op_ptr->target_rank = target_rank;
+            op_ptr->piggyback_lock_candidate = 1;
 
             /************** Setting packet struct areas in operation ****************/
 
@@ -1335,7 +1335,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
                     use_immed_resp_pkt = TRUE;
             }
 
-            get_pkt = &(new_ptr->pkt.get);
+            get_pkt = &(op_ptr->pkt.get);
             MPIDI_Pkt_init(get_pkt, MPIDI_CH3_PKT_GET);
             get_pkt->addr = (char *) win_ptr->basic_info_table[target_rank].base_addr +
                 win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
@@ -1356,13 +1356,13 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
             /******************** Setting operation struct areas ***********************/
 
-            new_ptr->origin_addr = (void *) origin_addr;
-            new_ptr->origin_count = 1;
-            new_ptr->origin_datatype = datatype;
-            new_ptr->result_addr = result_addr;
-            new_ptr->result_datatype = datatype;
-            new_ptr->target_rank = target_rank;
-            new_ptr->piggyback_lock_candidate = 1;
+            op_ptr->origin_addr = (void *) origin_addr;
+            op_ptr->origin_count = 1;
+            op_ptr->origin_datatype = datatype;
+            op_ptr->result_addr = result_addr;
+            op_ptr->result_datatype = datatype;
+            op_ptr->target_rank = target_rank;
+            op_ptr->piggyback_lock_candidate = 1;
 
             /************** Setting packet struct areas in operation ****************/
 
@@ -1380,7 +1380,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
                 }
             }
 
-            fop_pkt = &(new_ptr->pkt.fop);
+            fop_pkt = &(op_ptr->pkt.fop);
 
             if (use_immed_pkt) {
                 MPIDI_Pkt_init(fop_pkt, MPIDI_CH3_PKT_FOP_IMMED);
@@ -1404,7 +1404,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
-        mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, new_ptr);
+        mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, op_ptr);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
 
