@@ -447,8 +447,8 @@ typedef struct MPIDI_Request {
     struct MPIDI_RMA_Lock_entry *lock_queue_entry;
     MPI_Request resp_request_handle; /* Handle for get_accumulate response */
 
-    MPI_Aint stream_offset; /* used when streaming ACC/GACC packets, specifying the start
-                               location of the current streaming unit. */
+    void *ext_hdr_ptr; /* pointer to extended packet header */
+    MPIDI_msg_sz_t ext_hdr_sz;
 
     MPIDI_REQUEST_SEQNUM
 

@@ -354,6 +354,8 @@ extern MPIDI_Process_t MPIDI_Process;
     (sreq_)->dev.iov_count	   = 0;                         \
     (sreq_)->dev.iov_offset	   = 0;                         \
     (sreq_)->dev.tmpbuf            = NULL;                      \
+    (sreq_)->dev.ext_hdr_ptr       = NULL;                      \
+    (sreq_)->dev.ext_hdr_sz        = 0;                         \
     MPIDI_Request_clear_dbg(sreq_);                             \
 }
 
@@ -388,6 +390,8 @@ extern MPIDI_Process_t MPIDI_Process;
     (rreq_)->dev.OnFinal	   = NULL;                      \
     (rreq_)->dev.drop_data = FALSE;                             \
     (rreq_)->dev.tmpbuf            = NULL;                      \
+    (rreq_)->dev.ext_hdr_ptr       = NULL;                      \
+    (rreq_)->dev.ext_hdr_sz        = 0;                         \
      MPIDI_CH3_REQUEST_INIT(rreq_);\
 }
 

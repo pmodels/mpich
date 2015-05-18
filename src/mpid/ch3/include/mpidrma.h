@@ -364,11 +364,13 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
         int complete = 0;
         MPIDI_msg_sz_t data_len;
         char *data_buf = NULL;
+        MPIDI_CH3_Pkt_flags_t flags;
 
         /* This is PUT, ACC, GACC, FOP */
 
         MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE((*pkt), target_dtp, mpi_errno);
         MPIDI_CH3_PKT_RMA_GET_TARGET_COUNT((*pkt), target_count, mpi_errno);
+        MPIDI_CH3_PKT_RMA_GET_FLAGS((*pkt), flags, mpi_errno);
 
         MPID_Datatype_get_extent_macro(target_dtp, type_extent);
         MPID_Datatype_get_size_macro(target_dtp, type_size);
@@ -378,15 +380,27 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
             buf_size = type_extent * target_count;
         }
         else {
-            MPI_Aint stream_offset, stream_elem_count;
-            MPI_Aint total_len, rest_len;
+            MPI_Aint stream_elem_count;
+            MPI_Aint total_len;
 
-            MPIDI_CH3_PKT_RMA_GET_STREAM_OFFSET((*pkt), stream_offset, mpi_errno);
             stream_elem_count = MPIDI_CH3U_SRBuf_size / type_extent;
             total_len = type_size * target_count;
-            rest_len = total_len - stream_offset;
-            recv_data_sz = MPIR_MIN(rest_len, type_size * stream_elem_count);
+            recv_data_sz = MPIR_MIN(total_len, type_size * stream_elem_count);
             buf_size = type_extent * (recv_data_sz / type_size);
+        }
+
+        if (flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
+            MPIU_Assert(pkt->type == MPIDI_CH3_PKT_ACCUMULATE ||
+                        pkt->type == MPIDI_CH3_PKT_GET_ACCUM);
+
+            if (pkt->type == MPIDI_CH3_PKT_ACCUMULATE) {
+                recv_data_sz += sizeof(MPIDI_CH3_Ext_pkt_accum_t);
+                buf_size += sizeof(MPIDI_CH3_Ext_pkt_accum_t);
+            }
+            else {
+                recv_data_sz += sizeof(MPIDI_CH3_Ext_pkt_get_accum_t);
+                buf_size += sizeof(MPIDI_CH3_Ext_pkt_get_accum_t);
+            }
         }
 
         if (new_ptr != NULL) {
@@ -404,10 +418,8 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
                 MPIDI_CH3_Pkt_t new_pkt;
                 MPIDI_CH3_Pkt_lock_t *lock_pkt = &new_pkt.lock;
                 MPI_Win target_win_handle;
-                MPIDI_CH3_Pkt_flags_t flags;
 
                 MPIDI_CH3_PKT_RMA_GET_TARGET_WIN_HANDLE((*pkt), target_win_handle, mpi_errno);
-                MPIDI_CH3_PKT_RMA_GET_FLAGS((*pkt), flags, mpi_errno);
 
                 if (pkt->type == MPIDI_CH3_PKT_PUT || pkt->type == MPIDI_CH3_PKT_ACCUMULATE) {
                     MPIDI_CH3_PKT_RMA_GET_SOURCE_WIN_HANDLE((*pkt), source_win_handle, mpi_errno);

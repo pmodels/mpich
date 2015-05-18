@@ -94,8 +94,9 @@ MPID_Request * MPID_Request_create(void)
         req->dev.OnFinal           = NULL;
         req->dev.user_buf          = NULL;
         req->dev.drop_data         = FALSE;
-        req->dev.stream_offset     = 0;
         req->dev.tmpbuf            = NULL;
+        req->dev.ext_hdr_ptr       = NULL;
+        req->dev.ext_hdr_sz        = 0;
 #ifdef MPIDI_CH3_REQUEST_INIT
 	MPIDI_CH3_REQUEST_INIT(req);
 #endif
@@ -169,6 +170,10 @@ void MPIDI_CH3_Request_destroy(MPID_Request * req)
 
     if (MPIDI_Request_get_srbuf_flag(req)) {
 	MPIDI_CH3U_SRBuf_free(req);
+    }
+
+    if (req->dev.ext_hdr_ptr != NULL) {
+        MPIU_Free(req->dev.ext_hdr_ptr);
     }
 
     MPIU_Handle_obj_free(&MPID_Request_mem, req);

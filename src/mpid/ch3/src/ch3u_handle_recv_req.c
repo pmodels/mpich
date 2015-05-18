@@ -139,6 +139,7 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq,
     MPIDI_CH3_Pkt_flags_t flags = rreq->dev.flags;
     MPI_Datatype basic_type;
     MPI_Aint predef_count, predef_dtp_size;
+    MPI_Aint stream_offset;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMRECVCOMPLETE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMRECVCOMPLETE);
@@ -176,12 +177,19 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq,
     predef_count = rreq->dev.recv_data_sz / predef_dtp_size;
     MPIU_Assert(predef_count > 0);
 
+    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
+        MPIU_Assert(rreq->dev.ext_hdr_ptr != NULL);
+        stream_offset = ((MPIDI_CH3_Ext_pkt_accum_t *) rreq->dev.ext_hdr_ptr)->stream_offset;
+    }
+    else
+        stream_offset = 0;
+
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
     /* accumulate data from tmp_buf into user_buf */
     mpi_errno = do_accumulate_op(rreq->dev.user_buf, predef_count, basic_type,
                                  rreq->dev.real_user_buf, rreq->dev.user_count, rreq->dev.datatype,
-                                 rreq->dev.stream_offset, rreq->dev.op);
+                                 stream_offset, rreq->dev.op);
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
     if (mpi_errno) {
@@ -233,6 +241,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     MPI_Datatype basic_type;
     MPI_Aint predef_count, predef_dtp_size;
     MPI_Aint dt_true_lb;
+    MPI_Aint stream_offset;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMRECVCOMPLETE);
 
@@ -262,6 +271,14 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
         (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
         get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
 
+    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
+        MPIU_Assert(rreq->dev.ext_hdr_ptr != NULL);
+        stream_offset = ((MPIDI_CH3_Ext_pkt_get_accum_t *) rreq->dev.ext_hdr_ptr)->stream_offset;
+    }
+    else {
+        stream_offset = 0;
+    }
+
     /* check if data is contiguous and get true lb */
     MPID_Datatype_is_contig(rreq->dev.datatype, &is_contig);
     MPID_Datatype_get_true_lb(rreq->dev.datatype, &dt_true_lb);
@@ -284,11 +301,11 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     if (is_contig) {
         MPIU_Memcpy(resp_req->dev.user_buf,
                     (void *) ((char *) rreq->dev.real_user_buf + dt_true_lb +
-                              rreq->dev.stream_offset), rreq->dev.recv_data_sz);
+                              stream_offset), rreq->dev.recv_data_sz);
     }
     else {
         MPID_Segment *seg = MPID_Segment_alloc();
-        MPI_Aint first = rreq->dev.stream_offset;
+        MPI_Aint first = stream_offset;
         MPI_Aint last = first + rreq->dev.recv_data_sz;
 
         if (seg == NULL) {
@@ -306,7 +323,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     /* accumulate data from tmp_buf into user_buf */
     mpi_errno = do_accumulate_op(rreq->dev.user_buf, predef_count, basic_type,
                                  rreq->dev.real_user_buf, rreq->dev.user_count, rreq->dev.datatype,
-                                 rreq->dev.stream_offset, rreq->dev.op);
+                                 stream_offset, rreq->dev.op);
 
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
@@ -542,18 +559,49 @@ int MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((u
     MPID_Datatype *new_dtp = NULL;
     MPI_Aint basic_type_extent, basic_type_size;
     MPI_Aint total_len, rest_len, stream_elem_count;
+    MPI_Aint stream_offset;
+    MPI_Aint type_size;
+    MPI_Datatype basic_dtp;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMDERIVEDDTRECVCOMPLETE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMDERIVEDDTRECVCOMPLETE);
 
-    /* create derived datatype */
-    create_derived_datatype(rreq, &new_dtp);
+    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
+        MPIU_Assert(rreq->dev.ext_hdr_ptr != NULL);
+        stream_offset = ((MPIDI_CH3_Ext_pkt_accum_t *) rreq->dev.ext_hdr_ptr)->stream_offset;
+    }
+    else
+        stream_offset = 0;
 
-    /* update new request to get the data */
-    MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_ACCUM_RECV);
+    if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_ACCUM_RECV_DERIVED_DT) {
+        /* create derived datatype */
+        create_derived_datatype(rreq, &new_dtp);
 
-    MPID_Datatype_get_size_macro(new_dtp->basic_type, basic_type_size);
-    MPID_Datatype_get_extent_macro(new_dtp->basic_type, basic_type_extent);
+        /* update new request to get the data */
+        MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_ACCUM_RECV);
+
+        MPIU_Assert(rreq->dev.datatype == MPI_DATATYPE_NULL);
+        rreq->dev.datatype = new_dtp->handle;
+        rreq->dev.datatype_ptr = new_dtp;
+        /* this will cause the datatype to be freed when the
+         * request is freed. free dtype_info here. */
+        MPIU_Free(rreq->dev.dtype_info);
+
+        type_size = new_dtp->size;
+
+        basic_dtp = new_dtp->basic_type;
+    }
+    else {
+        MPIU_Assert(MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_ACCUM_RECV);
+        MPIU_Assert(rreq->dev.datatype != MPI_DATATYPE_NULL);
+
+        MPID_Datatype_get_size_macro(rreq->dev.datatype, type_size);
+
+        basic_dtp = rreq->dev.datatype;
+    }
+
+    MPID_Datatype_get_size_macro(basic_dtp, basic_type_size);
+    MPID_Datatype_get_extent_macro(basic_dtp, basic_type_extent);
 
     MPIU_Assert(!MPIDI_Request_get_srbuf_flag(rreq));
     /* allocate a SRBuf for receiving stream unit */
@@ -570,17 +618,12 @@ int MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((u
     /* --END ERROR HANDLING-- */
 
     rreq->dev.user_buf = rreq->dev.tmpbuf;
-    rreq->dev.datatype = new_dtp->handle;
 
-    total_len = new_dtp->size * rreq->dev.user_count;
-    rest_len = total_len - rreq->dev.stream_offset;
+    total_len = type_size * rreq->dev.user_count;
+    rest_len = total_len - stream_offset;
     stream_elem_count = MPIDI_CH3U_SRBuf_size / basic_type_extent;
 
     rreq->dev.recv_data_sz = MPIR_MIN(rest_len, stream_elem_count * basic_type_size);
-    rreq->dev.datatype_ptr = new_dtp;
-    /* this will cause the datatype to be freed when the
-     * request is freed. free dtype_info here. */
-    MPIU_Free(rreq->dev.dtype_info);
 
     rreq->dev.segment_ptr = MPID_Segment_alloc();
     MPIU_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
@@ -588,7 +631,7 @@ int MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((u
 
     MPID_Segment_init(rreq->dev.user_buf,
                       (rreq->dev.recv_data_sz / basic_type_size),
-                      new_dtp->basic_type, rreq->dev.segment_ptr, 0);
+                      basic_dtp, rreq->dev.segment_ptr, 0);
     rreq->dev.segment_first = 0;
     rreq->dev.segment_size = rreq->dev.recv_data_sz;
 
@@ -617,18 +660,49 @@ int MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((
     MPID_Datatype *new_dtp = NULL;
     MPI_Aint basic_type_extent, basic_type_size;
     MPI_Aint total_len, rest_len, stream_elem_count;
+    MPI_Aint stream_offset;
+    MPI_Aint type_size;
+    MPI_Datatype basic_dtp;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMDERIVEDDTRECVCOMPLETE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMDERIVEDDTRECVCOMPLETE);
 
-    /* create derived datatype */
-    create_derived_datatype(rreq, &new_dtp);
+    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
+        MPIU_Assert(rreq->dev.ext_hdr_ptr != NULL);
+        stream_offset = ((MPIDI_CH3_Ext_pkt_get_accum_t *) rreq->dev.ext_hdr_ptr)->stream_offset;
+    }
+    else
+        stream_offset = 0;
 
-    /* update new request to get the data */
-    MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_GET_ACCUM_RECV);
+    if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_GET_ACCUM_RECV_DERIVED_DT) {
+        /* create derived datatype */
+        create_derived_datatype(rreq, &new_dtp);
 
-    MPID_Datatype_get_size_macro(new_dtp->basic_type, basic_type_size);
-    MPID_Datatype_get_extent_macro(new_dtp->basic_type, basic_type_extent);
+        /* update new request to get the data */
+        MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_GET_ACCUM_RECV);
+
+        MPIU_Assert(rreq->dev.datatype == MPI_DATATYPE_NULL);
+        rreq->dev.datatype = new_dtp->handle;
+        rreq->dev.datatype_ptr = new_dtp;
+        /* this will cause the datatype to be freed when the
+         * request is freed. free dtype_info here. */
+        MPIU_Free(rreq->dev.dtype_info);
+
+        type_size = new_dtp->size;
+
+        basic_dtp = new_dtp->basic_type;
+    }
+    else {
+        MPIU_Assert(MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_GET_ACCUM_RECV);
+        MPIU_Assert(rreq->dev.datatype != MPI_DATATYPE_NULL);
+
+        MPID_Datatype_get_size_macro(rreq->dev.datatype, type_size);
+
+        basic_dtp = rreq->dev.datatype;
+    }
+
+    MPID_Datatype_get_size_macro(basic_dtp, basic_type_size);
+    MPID_Datatype_get_extent_macro(basic_dtp, basic_type_extent);
 
     MPIU_Assert(!MPIDI_Request_get_srbuf_flag(rreq));
     /* allocate a SRBuf for receiving stream unit */
@@ -645,17 +719,12 @@ int MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((
     /* --END ERROR HANDLING-- */
 
     rreq->dev.user_buf = rreq->dev.tmpbuf;
-    rreq->dev.datatype = new_dtp->handle;
 
-    total_len = new_dtp->size * rreq->dev.user_count;
-    rest_len = total_len - rreq->dev.stream_offset;
+    total_len = type_size * rreq->dev.user_count;
+    rest_len = total_len - stream_offset;
     stream_elem_count = MPIDI_CH3U_SRBuf_size / basic_type_extent;
 
     rreq->dev.recv_data_sz = MPIR_MIN(rest_len, stream_elem_count * basic_type_size);
-    rreq->dev.datatype_ptr = new_dtp;
-    /* this will cause the datatype to be freed when the
-     * request is freed. free dtype_info here. */
-    MPIU_Free(rreq->dev.dtype_info);
 
     rreq->dev.segment_ptr = MPID_Segment_alloc();
     MPIU_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
@@ -663,7 +732,7 @@ int MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((
 
     MPID_Segment_init(rreq->dev.user_buf,
                       (rreq->dev.recv_data_sz / basic_type_size),
-                      new_dtp->basic_type, rreq->dev.segment_ptr, 0);
+                      basic_dtp, rreq->dev.segment_ptr, 0);
     rreq->dev.segment_first = 0;
     rreq->dev.segment_size = rreq->dev.recv_data_sz;
 
@@ -1122,19 +1191,20 @@ static inline int perform_acc_in_lock_queue(MPID_Win * win_ptr, MPIDI_RMA_Lock_e
     else {
         MPIU_Assert(acc_pkt->type == MPIDI_CH3_PKT_ACCUMULATE);
         MPI_Aint type_size, type_extent;
-        MPI_Aint total_len, rest_len, recv_count;
+        MPI_Aint total_len, recv_count;
 
         MPID_Datatype_get_size_macro(acc_pkt->datatype, type_size);
         MPID_Datatype_get_extent_macro(acc_pkt->datatype, type_extent);
 
         total_len = type_size * acc_pkt->count;
-        rest_len = total_len - acc_pkt->info.metadata.stream_offset;
-        recv_count = MPIR_MIN((rest_len / type_size), (MPIDI_CH3U_SRBuf_size / type_extent));
+        recv_count = MPIR_MIN((total_len / type_size), (MPIDI_CH3U_SRBuf_size / type_extent));
         MPIU_Assert(recv_count > 0);
 
+        /* Note: here stream_offset is 0 because when piggybacking LOCK, we must use
+         * the first stream unit. */
         mpi_errno = do_accumulate_op(lock_entry->data, recv_count, acc_pkt->datatype,
                                      acc_pkt->addr, acc_pkt->count, acc_pkt->datatype,
-                                     acc_pkt->info.metadata.stream_offset, acc_pkt->op);
+                                     0, acc_pkt->op);
     }
 
     if (win_ptr->shm_allocated == TRUE)
@@ -1169,7 +1239,7 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
     int is_contig;
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint type_extent;
-    MPI_Aint total_len, rest_len, recv_count;
+    MPI_Aint total_len, recv_count;
 
     /* Piggyback candidate should have basic datatype for target datatype. */
     MPIU_Assert(MPIR_DATATYPE_IS_PREDEFINED(get_accum_pkt->datatype));
@@ -1263,8 +1333,7 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
     MPID_Datatype_get_extent_macro(get_accum_pkt->datatype, type_extent);
 
     total_len = type_size * get_accum_pkt->count;
-    rest_len = total_len - get_accum_pkt->info.metadata.stream_offset;
-    recv_count = MPIR_MIN((rest_len / type_size), (MPIDI_CH3U_SRBuf_size / type_extent));
+    recv_count = MPIR_MIN((total_len / type_size), (MPIDI_CH3U_SRBuf_size / type_extent));
     MPIU_Assert(recv_count > 0);
 
     sreq->dev.user_buf = (void *) MPIU_Malloc(recv_count * type_size);
@@ -1278,14 +1347,15 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
 
     /* Copy data from target window to temporary buffer */
 
+    /* Note: here stream_offset is 0 because when piggybacking LOCK, we must use
+     * the first stream unit. */
+
     if (is_contig) {
-        MPIU_Memcpy(sreq->dev.user_buf,
-                    (void *) ((char *) get_accum_pkt->addr +
-                              get_accum_pkt->info.metadata.stream_offset), recv_count * type_size);
+        MPIU_Memcpy(sreq->dev.user_buf, get_accum_pkt->addr, recv_count * type_size);
     }
     else {
         MPID_Segment *seg = MPID_Segment_alloc();
-        MPI_Aint first = get_accum_pkt->info.metadata.stream_offset;
+        MPI_Aint first = 0;
         MPI_Aint last = first + type_size * recv_count;
 
         if (seg == NULL) {
@@ -1304,7 +1374,7 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
 
     mpi_errno = do_accumulate_op(lock_entry->data, recv_count, get_accum_pkt->datatype,
                                  get_accum_pkt->addr, get_accum_pkt->count, get_accum_pkt->datatype,
-                                 get_accum_pkt->info.metadata.stream_offset, get_accum_pkt->op);
+                                 0, get_accum_pkt->op);
 
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
@@ -1814,6 +1884,26 @@ int MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete(MPIDI_VC_t * vc,
         MPIDI_CH3_PKT_RMA_GET_TARGET_WIN_HANDLE(lock_queue_entry->pkt, target_win_handle,
                                                 mpi_errno);
         MPID_Win_get_ptr(target_win_handle, win_ptr);
+
+        if (flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM && (rreq->dev.lock_queue_entry)->data != NULL) {
+
+            MPIU_Assert(lock_queue_entry->pkt.type == MPIDI_CH3_PKT_ACCUMULATE ||
+                        lock_queue_entry->pkt.type == MPIDI_CH3_PKT_GET_ACCUM);
+
+            int ext_hdr_sz;
+
+            if (lock_queue_entry->pkt.type == MPIDI_CH3_PKT_ACCUMULATE)
+                ext_hdr_sz = sizeof(MPIDI_CH3_Ext_pkt_accum_t);
+            else
+                ext_hdr_sz = sizeof(MPIDI_CH3_Ext_pkt_get_accum_t);
+
+            /* here we drop the stream_offset received, because the stream unit that piggybacked with
+             * LOCK must be the first stream unit, with stream_offset equals to 0. */
+            rreq->dev.recv_data_sz -= ext_hdr_sz;
+            memmove((rreq->dev.lock_queue_entry)->data,
+                    (void *) ((char *) ((rreq->dev.lock_queue_entry)->data) + ext_hdr_sz),
+                    rreq->dev.recv_data_sz);
+        }
 
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED) {
             requested_lock = MPI_LOCK_SHARED;
