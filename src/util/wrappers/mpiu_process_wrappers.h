@@ -35,6 +35,9 @@
 #elif defined (USE_USLEEP_FOR_YIELD)
     #ifdef HAVE_UNISTD_H
         #include <unistd.h>
+        #if defined (NEEDS_USLEEP_DECL)
+        int usleep(useconds_t usec);
+        #endif
     #endif
     #define MPIU_PW_Sched_yield() usleep(0)
 #elif defined (USE_SLEEP_FOR_YIELD)
