@@ -389,6 +389,7 @@ int MPID_nem_ptl_pkt_cancel_send_resp_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *p
         for (i = 0; i < REQ_PTL(sreq)->num_gets; i++) {
             ret = PtlMEUnlink(REQ_PTL(sreq)->get_me_p[i]);
             MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeunlink", "**ptlmeunlink %s", MPID_nem_ptl_strerror(ret));
+            MPIDI_CH3U_Request_complete(sreq);
         }
         MPIU_DBG_MSG(CH3_OTHER,TYPICAL,"message cancelled");
     } else {

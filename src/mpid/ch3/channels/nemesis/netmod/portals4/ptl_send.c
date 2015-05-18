@@ -67,7 +67,7 @@ static int handler_send(const ptl_event_t *e)
     MPIDI_VC_t *vc = sreq->ch.vc;
     MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
 
-    int i, ret, incomplete;
+    int i, ret;
 
     MPIDI_STATE_DECL(MPID_STATE_HANDLER_SEND);
 
@@ -75,7 +75,7 @@ static int handler_send(const ptl_event_t *e)
 
     MPIU_Assert(e->type == PTL_EVENT_SEND || e->type == PTL_EVENT_GET);
 
-    /* if we are done, release all resources and complete the request */
+    /* if we are done, release all netmod resources */
     if (MPID_cc_get(sreq->cc) == 1) {
         if (REQ_PTL(sreq)->md != PTL_INVALID_HANDLE) {
             ret = PtlMDRelease(REQ_PTL(sreq)->md);
@@ -88,15 +88,8 @@ static int handler_send(const ptl_event_t *e)
 
         if (REQ_PTL(sreq)->get_me_p)
             MPIU_Free(REQ_PTL(sreq)->get_me_p);
-    
-        MPIDI_CH3U_Request_complete(sreq);
-        vc_ptl->num_queued_sends--;
-
-        if (vc->state == MPIDI_VC_STATE_CLOSED && vc_ptl->num_queued_sends == 0)
-            MPID_nem_ptl_vc_terminated(vc);
-    } else {
-        MPIDI_CH3U_Request_decrement_cc(sreq, &incomplete);
     }
+    MPIDI_CH3U_Request_complete(sreq);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_HANDLER_SEND);
@@ -135,7 +128,6 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     sreq->dev.match.parts.tag = tag;
     sreq->dev.match.parts.context_id = comm->context_id + context_offset;
     sreq->ch.vc = vc;
-    vc_ptl->num_queued_sends++;
 
     if (!vc_ptl->id_initialized) {
         mpi_errno = MPID_nem_ptl_init_id(vc);
