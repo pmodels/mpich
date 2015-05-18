@@ -220,7 +220,7 @@ int MPID_nem_ptl_pkt_cancel_send_resp_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *p
 typedef enum MPIDI_nem_ptl_pkt_type {
     MPIDI_NEM_PTL_PKT_CANCEL_SEND_REQ,
     MPIDI_NEM_PTL_PKT_CANCEL_SEND_RESP,
-    MPIDI_NEM_TCP_PKT_INVALID = -1 /* force signed, to avoid warnings */
+    MPIDI_NEM_PTL_PKT_INVALID = -1 /* force signed, to avoid warnings */
 } MPIDI_nem_ptl_pkt_type_t;
 
 typedef struct MPIDI_nem_ptl_pkt_cancel_send_req
