@@ -702,7 +702,7 @@ int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPID_Request *rreq, MPID_IOV s_
                             rreq->dev.match.parts.rank);
     MPIDI_CH3U_Request_increment_cc(rreq, &was_incomplete);
     MPIU_Assert(was_incomplete == 0);
-    MPIU_Object_add_ref(rreq);
+    MPIR_Request_add_ref(rreq);
 
     MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype, dt_contig, data_sz, dt_ptr,
                             dt_true_lb);
