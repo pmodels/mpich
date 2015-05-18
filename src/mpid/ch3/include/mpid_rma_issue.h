@@ -213,7 +213,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     if (target_dtp == NULL) {
         /* basic datatype on target */
         if (is_origin_contig) {
-            /* basic datatype on origin */
+            /* origin data is contiguous */
             int iovcnt = 2;
 
             iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *) rma_op->origin_addr + dt_true_lb);
@@ -236,7 +236,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
             }
         }
         else {
-            /* derived datatype on origin */
+            /* origin data is non-contiguous */
             req = MPID_Request_create();
             MPIU_ERR_CHKANDJUMP(req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
@@ -404,7 +404,7 @@ static int issue_from_origin_buffer_stream(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t *
     if (target_dtp == NULL) {
         /* basic datatype on target */
         if (is_origin_contig) {
-            /* basic datatype on origin */
+            /* origin data is contiguous */
             int iovcnt = 2;
 
             iov[1].MPID_IOV_BUF =
@@ -428,7 +428,7 @@ static int issue_from_origin_buffer_stream(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t *
             }
         }
         else {
-            /* derived datatype on origin */
+            /* origin data is non-contiguous */
             req = MPID_Request_create();
             MPIU_ERR_CHKANDJUMP(req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
