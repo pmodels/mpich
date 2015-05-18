@@ -232,6 +232,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     int is_contig;
     MPI_Datatype basic_type;
     MPI_Aint predef_count, predef_dtp_size;
+    MPI_Aint dt_true_lb;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMRECVCOMPLETE);
 
@@ -261,7 +262,9 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
         (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
         get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
 
+    /* check if data is contiguous and get true lb */
     MPID_Datatype_is_contig(rreq->dev.datatype, &is_contig);
+    MPID_Datatype_get_true_lb(rreq->dev.datatype, &dt_true_lb);
 
     resp_req = MPID_Request_create();
     MPIU_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
@@ -280,8 +283,8 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
 
     if (is_contig) {
         MPIU_Memcpy(resp_req->dev.user_buf,
-                    (void *) ((char *) rreq->dev.real_user_buf + rreq->dev.stream_offset),
-                    rreq->dev.recv_data_sz);
+                    (void *) ((char *) rreq->dev.real_user_buf + dt_true_lb +
+                              rreq->dev.stream_offset), rreq->dev.recv_data_sz);
     }
     else {
         MPID_Segment *seg = MPID_Segment_alloc();

@@ -565,6 +565,20 @@ do {									\
         }                                                                      \
     } while (0)
 
+/* helper macro: takes an MPI_Datatype handle value and returns true_lb in
+ * (*true_lb_) */
+#define MPID_Datatype_get_true_lb(dtype_, true_lb_)                            \
+    do {                                                                       \
+        if (HANDLE_GET_KIND(dtype_) == HANDLE_KIND_BUILTIN) {                  \
+            *(true_lb_) = 0;                                                   \
+        }                                                                      \
+        else {                                                                 \
+            MPID_Datatype *dtp_ = NULL;                                        \
+            MPID_Datatype_get_ptr((dtype_), dtp_);                             \
+            *(true_lb_) = dtp_->true_lb;                                       \
+        }                                                                      \
+    } while (0)
+
 /* Datatype functions */
 int MPID_Type_commit(MPI_Datatype *type);
 

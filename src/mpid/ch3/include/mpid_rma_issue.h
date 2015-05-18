@@ -176,6 +176,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     int *blocklens = NULL;
     MPI_Aint *displaces = NULL;
     MPI_Datatype *datatypes = NULL;
+    MPI_Aint dt_true_lb;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER);
 
@@ -201,7 +202,10 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     }
 
     MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
+
+    /* check if origin data is contiguous and get true lb */
     MPID_Datatype_is_contig(rma_op->origin_datatype, &is_origin_contig);
+    MPID_Datatype_get_true_lb(rma_op->origin_datatype, &dt_true_lb);
 
     iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) & (rma_op->pkt);
     iov[0].MPID_IOV_LEN = sizeof(rma_op->pkt);
@@ -212,7 +216,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
             /* basic datatype on origin */
             int iovcnt = 2;
 
-            iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *) rma_op->origin_addr);
+            iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *) rma_op->origin_addr + dt_true_lb);
             iov[1].MPID_IOV_LEN = rma_op->origin_count * origin_type_size;
 
             MPIU_THREAD_CS_ENTER(CH3COMM, vc);
@@ -363,6 +367,7 @@ static int issue_from_origin_buffer_stream(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t *
     int *blocklens = NULL;
     MPI_Aint *displaces = NULL;
     MPI_Datatype *datatypes = NULL;
+    MPI_Aint dt_true_lb;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER_STREAM);
 
@@ -389,7 +394,9 @@ static int issue_from_origin_buffer_stream(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t *
         MPID_Datatype_get_ptr(rma_op->origin_datatype, origin_dtp);
     }
 
+    /* check if origin data is contiguous and get true lb */
     MPID_Datatype_is_contig(rma_op->origin_datatype, &is_origin_contig);
+    MPID_Datatype_get_true_lb(rma_op->origin_datatype, &dt_true_lb);
 
     iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) & (rma_op->pkt);
     iov[0].MPID_IOV_LEN = sizeof(rma_op->pkt);
@@ -401,7 +408,7 @@ static int issue_from_origin_buffer_stream(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t *
             int iovcnt = 2;
 
             iov[1].MPID_IOV_BUF =
-                (MPID_IOV_BUF_CAST) ((char *) rma_op->origin_addr + stream_offset);
+                (MPID_IOV_BUF_CAST) ((char *) rma_op->origin_addr + dt_true_lb + stream_offset);
             iov[1].MPID_IOV_LEN = stream_size;
 
             MPIU_THREAD_CS_ENTER(CH3COMM, vc);
