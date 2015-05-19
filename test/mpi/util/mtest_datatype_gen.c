@@ -54,6 +54,8 @@ static int verbose = 0;         /* Message level (0 is none) */
  *      L count & S block length & L stride
  *      S count & L block length & L stride
  *      S count & L block length & S stride & S lower-bound
+ *      contiguous (stride = block length)
+ *      contiguous (stride = block length) & S lower-bound
  *
  *  How to add a new structure for each datatype:
  *    1. Add structure definition in function MTestDdtStructDefine.
@@ -97,7 +99,7 @@ static int datatype_index = 0;
 /* Routine and internal parameters to define the range of datatype tests */
 /* ------------------------------------------------------------------------ */
 
-#define MTEST_DDT_NUM_SUBTESTS 5        /* 5 kinds of derived datatype structure */
+#define MTEST_DDT_NUM_SUBTESTS 7        /* 7 kinds of derived datatype structure */
 static MTestDdtCreator mtestDdtCreators[MTEST_DDT_MAX];
 
 static int MTEST_BDT_START_IDX = -1;
@@ -293,6 +295,19 @@ static inline int MTestDdtStructDefine(int ddt_index, MPI_Aint tot_count, MPI_Ai
         _count = _short;
         _blen = _align_tot_count / _short;
         _stride = _blen * 2;
+        _lb = _short / 2;       /* make sure lb < blen */
+        break;
+    case 5:
+        /* Contig ddt (stride = block length) without lb */
+        _count = _align_tot_count / _short;
+        _blen = _short;
+        _stride = _blen;
+        break;
+    case 6:
+        /* Contig ddt (stride = block length) with lb */
+        _count = _short;
+        _blen = _align_tot_count / _short;
+        _stride = _blen;
         _lb = _short / 2;       /* make sure lb < blen */
         break;
     default:
