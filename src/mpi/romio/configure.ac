@@ -1155,6 +1155,17 @@ AS_IF([test "x$with_aiolite" == xyes],
      )
 # End of aio-related tests
 
+# Linux aio library seems to have problems when they are used in our NBC I/O
+# implementation. We let the code know when the host OS is Linux so that the
+# NBC I/O implementation uses blocking I/O operations.
+# See http://trac.mpich.org/projects/mpich/ticket/2201.
+
+# compute canonical system types
+AC_CANONICAL_HOST
+AS_CASE([$host_os],
+        [linux*], AC_DEFINE(ROMIO_RUN_ON_LINUX,1,[Define if run on Linux]))
+# End of OS check
+
 #
 # Check for statfs (many) and specifically f_fstypename field (BSD)
 #
