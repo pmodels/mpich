@@ -134,6 +134,7 @@ atomic_rmw_gacc 3
 @mpix@aint 2 strict=false
 acc-pairtype 2
 manyget 2 xfail=ticket2264
+derived-acc-flush_local 3 mpiversion=3.0
 
 ## This test is not strictly correct.  This was meant to test out the
 ## case when MPI_Test is not nonblocking.  However, we ended up
