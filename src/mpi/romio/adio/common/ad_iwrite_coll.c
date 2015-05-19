@@ -375,6 +375,28 @@ static void ADIOI_GEN_IwriteStridedColl_indio(ADIOI_NBC_Request *nbc_req,
         fd->fp_ind = vars->orig_fp;
         ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
 
+#if defined(ROMIO_RUN_ON_LINUX) && !defined(HAVE_AIO_LITE_H)
+        /* NOTE: This is currently a workaround to avoid weird errors, e.g.,
+         * stack fault, occurred on Linux. When the host OS is Linux and
+         * aio-lite is not used, a blocking ADIO function is used here.
+         * See https://trac.mpich.org/projects/mpich/ticket/2201. */
+        MPI_Status status;
+        if (vars->buftype_is_contig && filetype_is_contig) {
+            if (file_ptr_type == ADIO_EXPLICIT_OFFSET) {
+                off = fd->disp + (ADIO_Offset)(fd->etype_size) * offset;
+                ADIO_WriteContig(fd, buf, count, datatype,
+                                 ADIO_EXPLICIT_OFFSET,
+                                 off, &status, error_code);
+            }
+            else ADIO_WriteContig(fd, buf, count, datatype, ADIO_INDIVIDUAL,
+                                  0, &status, error_code);
+        }
+        else {
+            ADIO_WriteStrided(fd, buf, count, datatype, file_ptr_type,
+                              offset, &status, error_code);
+        }
+        ADIOI_GEN_IwriteStridedColl_fini(nbc_req, error_code);
+#else
         if (vars->buftype_is_contig && filetype_is_contig) {
             if (file_ptr_type == ADIO_EXPLICIT_OFFSET) {
                 off = fd->disp + (ADIO_Offset)(fd->etype_size) * offset;
@@ -391,6 +413,7 @@ static void ADIOI_GEN_IwriteStridedColl_indio(ADIOI_NBC_Request *nbc_req,
         }
 
         nbc_req->data.wr.state = ADIOI_IWC_STATE_GEN_IWRITESTRIDEDCOLL_INDIO;
+#endif
         return;
     }
 
@@ -893,12 +916,19 @@ static void ADIOI_Iexch_and_write_l1_body(ADIOI_NBC_Request *nbc_req,
 
     if (flag) {
         ADIOI_Assert(size == (int)size);
+#if defined(ROMIO_RUN_ON_LINUX) && !defined(HAVE_AIO_LITE_H)
+        MPI_Status status;
+        ADIO_WriteContig(fd, write_buf, (int)size, MPI_BYTE,
+                         ADIO_EXPLICIT_OFFSET, vars->off, &status,
+                         error_code);
+#else
         ADIO_IwriteContig(fd, write_buf, (int)size, MPI_BYTE,
                           ADIO_EXPLICIT_OFFSET, vars->off, &vars->req3,
                           error_code);
 
         nbc_req->data.wr.state = ADIOI_IWC_STATE_IEXCH_AND_WRITE_L1_BODY;
         return;
+#endif
     }
 
     ADIOI_Iexch_and_write_l1_end(nbc_req, error_code);

@@ -357,6 +357,27 @@ static void ADIOI_GEN_IreadStridedColl_indio(ADIOI_NBC_Request *nbc_req,
         fd->fp_ind = vars->orig_fp;
         ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
 
+#if defined(ROMIO_RUN_ON_LINUX) && !defined(HAVE_AIO_LITE_H)
+        /* NOTE: This is currently a workaround to avoid weird errors, e.g.,
+         * stack fault, occurred on Linux. When the host OS is Linux and
+         * aio-lite is not used, a blocking ADIO function is used here.
+         * See https://trac.mpich.org/projects/mpich/ticket/2201. */
+        MPI_Status status;
+        if (vars->buftype_is_contig && filetype_is_contig) {
+            if (file_ptr_type == ADIO_EXPLICIT_OFFSET) {
+                off = fd->disp + (fd->etype_size) * offset;
+                ADIO_ReadContig(fd, buf, count, datatype, ADIO_EXPLICIT_OFFSET,
+                                off, &status, error_code);
+            }
+            else ADIO_ReadContig(fd, buf, count, datatype, ADIO_INDIVIDUAL,
+                                 0, &status, error_code);
+        }
+        else {
+            ADIO_ReadStrided(fd, buf, count, datatype, file_ptr_type,
+                             offset, &status, error_code);
+        }
+        ADIOI_GEN_IreadStridedColl_fini(nbc_req, error_code);
+#else
         if (vars->buftype_is_contig && filetype_is_contig) {
             if (file_ptr_type == ADIO_EXPLICIT_OFFSET) {
                 off = fd->disp + (fd->etype_size) * offset;
@@ -372,6 +393,7 @@ static void ADIOI_GEN_IreadStridedColl_indio(ADIOI_NBC_Request *nbc_req,
         }
 
         nbc_req->data.rd.state = ADIOI_IRC_STATE_GEN_IREADSTRIDEDCOLL_INDIO;
+#endif
         return;
     }
 
@@ -834,12 +856,19 @@ static void ADIOI_Iread_and_exch_l1_begin(ADIOI_NBC_Request *nbc_req,
 
     if (flag) {
         ADIOI_Assert(size == (int)size);
+#if defined(ROMIO_RUN_ON_LINUX) && !defined(HAVE_AIO_LITE_H)
+        MPI_Status status;
+        ADIO_ReadContig(fd, read_buf+vars->for_curr_iter, (int)size,
+                        MPI_BYTE, ADIO_EXPLICIT_OFFSET, vars->off,
+                        &status, error_code);
+#else
         ADIO_IreadContig(fd, read_buf+vars->for_curr_iter, (int)size,
                          MPI_BYTE, ADIO_EXPLICIT_OFFSET, vars->off,
                          &vars->req2, error_code);
 
         nbc_req->data.rd.state = ADIOI_IRC_STATE_IREAD_AND_EXCH_L1_BEGIN;
         return;
+#endif
     }
 
     ADIOI_R_Iexchange_data(nbc_req, error_code);
