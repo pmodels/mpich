@@ -117,8 +117,6 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
     else {
         MPIDI_RMA_Op_t *op_ptr = NULL;
         MPIDI_CH3_Pkt_put_t *put_pkt = NULL;
-        MPI_Aint origin_type_size;
-        size_t len;
         int use_immed_pkt = FALSE;
         int is_origin_contig, is_target_contig;
 
@@ -154,13 +152,10 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         MPID_Datatype_is_contig(origin_datatype, &is_origin_contig);
         MPID_Datatype_is_contig(target_datatype, &is_target_contig);
 
-        MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
-        MPIU_Assign_trunc(len, origin_count * origin_type_size, size_t);
-
         /* Judge if we can use IMMED data packet */
         if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) &&
             MPIR_DATATYPE_IS_PREDEFINED(target_datatype) && is_origin_contig && is_target_contig) {
-            if (len <= MPIDI_RMA_IMMED_BYTES)
+            if (data_sz <= MPIDI_RMA_IMMED_BYTES)
                 use_immed_pkt = TRUE;
         }
 
@@ -170,7 +165,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
             /* FIXME: currently we only piggyback LOCK flag with op using predefined datatypes
              * for both origin and target data. We should extend this optimization to derived
              * datatypes as well. */
-            if (len <= MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE)
+            if (data_sz <= MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE)
                 op_ptr->piggyback_lock_candidate = 1;
         }
 
@@ -195,7 +190,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         put_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
         if (use_immed_pkt) {
             void *src = (void *) origin_addr, *dest = (void *) (put_pkt->info.data);
-            mpi_errno = immed_copy(src, dest, len);
+            mpi_errno = immed_copy(src, dest, data_sz);
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
         }
@@ -488,8 +483,6 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
     else {
         MPIDI_RMA_Op_t *op_ptr = NULL;
         MPIDI_CH3_Pkt_accum_t *accum_pkt = NULL;
-        MPI_Aint origin_type_size;
-        size_t len;
         int use_immed_pkt = FALSE;
         int is_origin_contig, is_target_contig;
         MPI_Aint stream_elem_count, stream_unit_count;
@@ -523,19 +516,16 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
             MPID_Datatype_get_ptr(target_datatype, target_dtp);
         }
 
-        MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
-        MPIU_Assign_trunc(len, origin_count * origin_type_size, size_t);
-
         /* Get size and count for predefined datatype elements */
         if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
-            predefined_dtp_size = origin_type_size;
+            MPID_Datatype_get_size_macro(origin_datatype, predefined_dtp_size);
             predefined_dtp_count = origin_count;
             MPID_Datatype_get_extent_macro(origin_datatype, predefined_dtp_extent);
         }
         else {
             MPIU_Assert(origin_dtp->basic_type != MPI_DATATYPE_NULL);
             MPID_Datatype_get_size_macro(origin_dtp->basic_type, predefined_dtp_size);
-            predefined_dtp_count = len / predefined_dtp_size;
+            predefined_dtp_count = data_sz / predefined_dtp_size;
             MPID_Datatype_get_extent_macro(origin_dtp->basic_type, predefined_dtp_extent);
         }
         MPIU_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 &&
@@ -562,7 +552,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         /* Judge if we can use IMMED data packet */
         if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) &&
             MPIR_DATATYPE_IS_PREDEFINED(target_datatype) && is_origin_contig && is_target_contig) {
-            if (len <= MPIDI_RMA_IMMED_BYTES)
+            if (data_sz <= MPIDI_RMA_IMMED_BYTES)
                 use_immed_pkt = TRUE;
         }
 
@@ -572,7 +562,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
             /* FIXME: currently we only piggyback LOCK flag with op using predefined datatypes
              * for both origin and target data. We should extend this optimization to derived
              * datatypes as well. */
-            if (len <= MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE)
+            if (data_sz <= MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE)
                 op_ptr->piggyback_lock_candidate = 1;
         }
 
@@ -598,7 +588,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         accum_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
         if (use_immed_pkt) {
             void *src = (void *) origin_addr, *dest = (void *) (accum_pkt->info.data);
-            mpi_errno = immed_copy(src, dest, len);
+            mpi_errno = immed_copy(src, dest, data_sz);
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
         }
@@ -728,8 +718,6 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
         if (op == MPI_NO_OP) {
             /* Convert GAcc to a Get */
             MPIDI_CH3_Pkt_get_t *get_pkt;
-            MPI_Aint target_type_size;
-            size_t len;
             int use_immed_resp_pkt = FALSE;
             int is_result_contig, is_target_contig;
 
@@ -752,9 +740,6 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                 MPID_Datatype_add_ref(dtp);
             }
 
-            MPID_Datatype_get_size_macro(target_datatype, target_type_size);
-            MPIU_Assign_trunc(len, target_count * target_type_size, size_t);
-
             MPID_Datatype_is_contig(result_datatype, &is_result_contig);
             MPID_Datatype_is_contig(target_datatype, &is_target_contig);
 
@@ -762,7 +747,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             if (MPIR_DATATYPE_IS_PREDEFINED(result_datatype) &&
                 MPIR_DATATYPE_IS_PREDEFINED(target_datatype) &&
                 is_result_contig && is_target_contig) {
-                if (len <= MPIDI_RMA_IMMED_BYTES)
+                if (data_sz <= MPIDI_RMA_IMMED_BYTES)
                     use_immed_resp_pkt = TRUE;
             }
 
