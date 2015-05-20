@@ -439,10 +439,15 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
     MPI_Aint total_len, rest_len;
     MPI_Aint origin_dtp_size;
     MPID_Datatype *origin_dtp_ptr = NULL;
+    int is_empty_origin = FALSE;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_GET_ACC_OP);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SHM_GET_ACC_OP);
+
+    /* Judge if origin buffer is empty */
+    if (op == MPI_NO_OP)
+        is_empty_origin = TRUE;
 
     if (win_ptr->shm_allocated == TRUE) {
         int local_target_rank = win_ptr->comm_ptr->intranode_table[target_rank];
@@ -464,17 +469,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
         MPIU_ERR_POP(mpi_errno);
     }
 
-    /* NO_OP: Don't perform the accumulate */
-    if (op == MPI_NO_OP) {
-        if (shm_locked) {
-            MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
-            shm_locked = 0;
-        }
-
-        goto fn_exit;
-    }
-
-    if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
+    if (is_empty_origin == TRUE || MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
 
         mpi_errno = do_accumulate_op((void*)origin_addr, origin_count, origin_datatype,
                                      (void*)((char *)base+disp_unit*target_disp), target_count, target_datatype,

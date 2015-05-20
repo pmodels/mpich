@@ -1356,10 +1356,8 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         }
 
         /* Apply the op */
-        if (fop_pkt->op != MPI_NO_OP) {
-            mpi_errno = do_accumulate_op(fop_pkt->info.data, 1, fop_pkt->datatype,
-                                         fop_pkt->addr, 1, fop_pkt->datatype, 0, fop_pkt->op);
-        }
+        mpi_errno = do_accumulate_op(fop_pkt->info.data, 1, fop_pkt->datatype,
+                                     fop_pkt->addr, 1, fop_pkt->datatype, 0, fop_pkt->op);
 
         if (win_ptr->shm_allocated == TRUE)
             MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);

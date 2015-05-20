@@ -808,14 +808,21 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_User_function *uop = NULL;
-    MPI_Aint source_dtp_size, source_dtp_extent;
+    MPI_Aint source_dtp_size = 0, source_dtp_extent = 0;
+    int is_empty_source = FALSE;
     MPIDI_STATE_DECL(MPID_STATE_DO_ACCUMULATE_OP);
 
     MPIDI_FUNC_ENTER(MPID_STATE_DO_ACCUMULATE_OP);
 
-    MPIU_Assert(MPIR_DATATYPE_IS_PREDEFINED(source_dtp));
-    MPID_Datatype_get_size_macro(source_dtp, source_dtp_size);
-    MPID_Datatype_get_extent_macro(source_dtp, source_dtp_extent);
+    /* first Judge if source buffer is empty */
+    if (acc_op == MPI_NO_OP)
+        is_empty_source = TRUE;
+
+    if (is_empty_source == FALSE) {
+        MPIU_Assert(MPIR_DATATYPE_IS_PREDEFINED(source_dtp));
+        MPID_Datatype_get_size_macro(source_dtp, source_dtp_size);
+        MPID_Datatype_get_extent_macro(source_dtp, source_dtp_extent);
+    }
 
     if (acc_op != MPI_REPLACE) {
         if (HANDLE_GET_KIND(acc_op) == HANDLE_KIND_BUILTIN) {
@@ -833,13 +840,19 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
     }
 
 
-    if (MPIR_DATATYPE_IS_PREDEFINED(target_dtp)) {
-        /* apply op if target dtp is predefined dtp */
+    if (is_empty_source == TRUE || MPIR_DATATYPE_IS_PREDEFINED(target_dtp)) {
+        /* directly apply op if target dtp is predefined dtp OR source buffer is empty */
+        MPI_Aint real_stream_offset;
+        void *curr_target_buf;
 
-        MPIU_Assert(source_dtp == target_dtp);
-
-        MPI_Aint real_stream_offset = (stream_offset / source_dtp_size) * source_dtp_extent;
-        void *curr_target_buf = (void *) ((char *) target_buf + real_stream_offset);
+        if (is_empty_source == FALSE) {
+            MPIU_Assert(source_dtp == target_dtp);
+            real_stream_offset = (stream_offset / source_dtp_size) * source_dtp_extent;
+            curr_target_buf = (void *) ((char *) target_buf + real_stream_offset);
+        }
+        else {
+            curr_target_buf = target_buf;
+        }
 
         if (acc_op == MPI_REPLACE) {
             mpi_errno = MPIR_Localcopy(source_buf, source_count, source_dtp,

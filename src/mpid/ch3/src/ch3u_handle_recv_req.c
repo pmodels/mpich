@@ -445,11 +445,8 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
     }
 
     /* Perform accumulate computation */
-    if (rreq->dev.op != MPI_NO_OP) {
-        mpi_errno = do_accumulate_op(rreq->dev.user_buf, 1, rreq->dev.datatype,
-                                     rreq->dev.real_user_buf, 1, rreq->dev.datatype, 0,
-                                     rreq->dev.op);
-    }
+    mpi_errno = do_accumulate_op(rreq->dev.user_buf, 1, rreq->dev.datatype,
+                                 rreq->dev.real_user_buf, 1, rreq->dev.datatype, 0, rreq->dev.op);
 
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
@@ -1514,15 +1511,13 @@ static inline int perform_fop_in_lock_queue(MPID_Win * win_ptr, MPIDI_RMA_Lock_e
     }
 
     /* Apply the op */
-    if (fop_pkt->op != MPI_NO_OP) {
-        if (fop_pkt->type == MPIDI_CH3_PKT_FOP_IMMED) {
-            mpi_errno = do_accumulate_op(fop_pkt->info.data, 1, fop_pkt->datatype,
-                                         fop_pkt->addr, 1, fop_pkt->datatype, 0, fop_pkt->op);
-        }
-        else {
-            mpi_errno = do_accumulate_op(lock_entry->data, 1, fop_pkt->datatype,
-                                         fop_pkt->addr, 1, fop_pkt->datatype, 0, fop_pkt->op);
-        }
+    if (fop_pkt->type == MPIDI_CH3_PKT_FOP_IMMED) {
+        mpi_errno = do_accumulate_op(fop_pkt->info.data, 1, fop_pkt->datatype,
+                                     fop_pkt->addr, 1, fop_pkt->datatype, 0, fop_pkt->op);
+    }
+    else {
+        mpi_errno = do_accumulate_op(lock_entry->data, 1, fop_pkt->datatype,
+                                     fop_pkt->addr, 1, fop_pkt->datatype, 0, fop_pkt->op);
     }
 
     if (win_ptr->shm_allocated == TRUE)
