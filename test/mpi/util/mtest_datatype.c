@@ -77,15 +77,17 @@ static inline void MTestTypeReset(MTestDatatype * mtype)
  */
 static void *MTestTypeContigInit(MTestDatatype * mtype)
 {
-    MPI_Aint size;
+    MPI_Aint extent = 0, lb = 0, size;
     int merr;
 
     if (mtype->count > 0) {
         unsigned char *p;
         MPI_Aint i, totsize;
-        merr = MPI_Type_extent(mtype->datatype, &size);
+        merr = MPI_Type_get_extent(mtype->datatype, &lb, &extent);
         if (merr)
             MTestPrintError(merr);
+
+        size = extent + lb;
         totsize = size * mtype->count;
         if (!mtype->buf) {
             mtype->buf = (void *) malloc(totsize);
@@ -117,13 +119,15 @@ static int MTestTypeContigCheckbuf(MTestDatatype * mtype)
     unsigned char *p;
     unsigned char expected;
     int err = 0, merr;
-    MPI_Aint i, totsize, size;
+    MPI_Aint i, totsize, size, extent = 0, lb = 0;
 
     p = (unsigned char *) mtype->buf;
     if (p) {
-        merr = MPI_Type_extent(mtype->datatype, &size);
+        merr = MPI_Type_get_extent(mtype->datatype, &lb, &extent);
         if (merr)
             MTestPrintError(merr);
+
+        size = lb + extent;
         totsize = size * mtype->count;
         for (i = 0; i < totsize; i++) {
             expected = (unsigned char) (0xff ^ (i & 0xff));
@@ -149,7 +153,7 @@ static int MTestTypeContigCheckbuf(MTestDatatype * mtype)
  */
 static void *MTestTypeVectorInit(MTestDatatype * mtype)
 {
-    MPI_Aint size, totsize, dt_offset, byte_offset;
+    MPI_Aint extent = 0, lb = 0, size, totsize, dt_offset, byte_offset;
     int merr;
 
     if (mtype->count > 0) {
@@ -157,9 +161,11 @@ static void *MTestTypeVectorInit(MTestDatatype * mtype)
         int j, k, nc;
         MPI_Aint i;
 
-        merr = MPI_Type_extent(mtype->datatype, &size);
+        merr = MPI_Type_get_extent(mtype->datatype, &lb, &extent);
         if (merr)
             MTestPrintError(merr);
+
+        size = extent + lb;
         totsize = mtype->count * size;
         if (!mtype->buf) {
             mtype->buf = (void *) malloc(totsize);
@@ -207,15 +213,16 @@ static int MTestTypeVectorCheckbuf(MTestDatatype * mtype)
     unsigned char *p;
     unsigned char expected;
     int i, err = 0, merr;
-    MPI_Aint size = 0, byte_offset, dt_offset;
+    MPI_Aint size = 0, byte_offset, dt_offset, extent, lb;
 
     p = (unsigned char *) mtype->buf;
     if (p) {
         int j, k, nc;
-        merr = MPI_Type_extent(mtype->datatype, &size);
+        merr = MPI_Type_get_extent(mtype->datatype, &lb, &extent);
         if (merr)
             MTestPrintError(merr);
 
+        size = extent + lb;
         nc = 0;
         dt_offset = 0;
         /* For each datatype */
@@ -253,7 +260,7 @@ static int MTestTypeVectorCheckbuf(MTestDatatype * mtype)
  */
 static void *MTestTypeIndexedInit(MTestDatatype * mtype)
 {
-    MPI_Aint size = 0, totsize, dt_offset, offset;
+    MPI_Aint extent = 0, lb = 0, size, totsize, dt_offset, offset;
     int merr;
 
     if (mtype->count > 0) {
@@ -262,9 +269,11 @@ static void *MTestTypeIndexedInit(MTestDatatype * mtype)
         MPI_Aint i;
 
         /* Allocate buffer */
-        merr = MPI_Type_extent(mtype->datatype, &size);
+        merr = MPI_Type_get_extent(mtype->datatype, &lb, &extent);
         if (merr)
             MTestPrintError(merr);
+
+        size = extent + lb;
         totsize = size * mtype->count;
 
         if (!mtype->buf) {
@@ -320,15 +329,16 @@ static int MTestTypeIndexedCheckbuf(MTestDatatype * mtype)
     unsigned char *p;
     unsigned char expected;
     int err = 0, merr;
-    MPI_Aint size = 0, offset, dt_offset;
+    MPI_Aint size = 0, offset, dt_offset, extent = 0, lb = 0;
 
     p = (unsigned char *) mtype->buf;
     if (p) {
         int i, j, k, b, nc;
-        merr = MPI_Type_extent(mtype->datatype, &size);
+        merr = MPI_Type_get_extent(mtype->datatype, &lb, &extent);
         if (merr)
             MTestPrintError(merr);
 
+        size = lb + extent;
         nc = 0;
         dt_offset = 0;
         /* For each datatype */
@@ -368,7 +378,7 @@ static int MTestTypeIndexedCheckbuf(MTestDatatype * mtype)
  */
 static void *MTestTypeIndexedBlockInit(MTestDatatype * mtype)
 {
-    MPI_Aint size = 0, totsize, offset, dt_offset;
+    MPI_Aint extent = 0, lb = 0, size, totsize, offset, dt_offset;
     int merr;
 
     if (mtype->count > 0) {
@@ -377,9 +387,10 @@ static void *MTestTypeIndexedBlockInit(MTestDatatype * mtype)
         MPI_Aint i;
 
         /* Allocate the send/recv buffer */
-        merr = MPI_Type_extent(mtype->datatype, &size);
+        merr = MPI_Type_get_extent(mtype->datatype, &lb, &extent);
         if (merr)
             MTestPrintError(merr);
+        size = extent + lb;
         totsize = size * mtype->count;
 
         if (!mtype->buf) {
@@ -431,15 +442,16 @@ static int MTestTypeIndexedBlockCheckbuf(MTestDatatype * mtype)
     unsigned char *p;
     unsigned char expected;
     int err = 0, merr;
-    MPI_Aint size = 0, offset, dt_offset;
+    MPI_Aint size = 0, offset, dt_offset, lb = 0, extent = 0;
 
     p = (unsigned char *) mtype->buf;
     if (p) {
         int i, j, k, nc;
-        merr = MPI_Type_extent(mtype->datatype, &size);
+        merr = MPI_Type_get_extent(mtype->datatype, &lb, &extent);
         if (merr)
             MTestPrintError(merr);
 
+        size = lb + extent;
         nc = 0;
         dt_offset = 0;
         /* For each datatype */
@@ -475,7 +487,7 @@ static int MTestTypeIndexedBlockCheckbuf(MTestDatatype * mtype)
  */
 static void *MTestTypeSubarrayInit(MTestDatatype * mtype)
 {
-    MPI_Aint size = 0, totsize, offset, dt_offset, byte_offset;
+    MPI_Aint extent = 0, lb = 0, size, totsize, offset, dt_offset, byte_offset;
     int merr;
 
     if (mtype->count > 0) {
@@ -484,9 +496,11 @@ static void *MTestTypeSubarrayInit(MTestDatatype * mtype)
         MPI_Aint i;
 
         /* Allocate the send/recv buffer */
-        merr = MPI_Type_extent(mtype->datatype, &size);
+        merr = MPI_Type_get_extent(mtype->datatype, &lb, &extent);
         if (merr)
             MTestPrintError(merr);
+
+        size = extent + lb;
         totsize = size * mtype->count;
 
         if (!mtype->buf) {
@@ -548,14 +562,16 @@ static int MTestTypeSubarrayCheckbuf(MTestDatatype * mtype)
     unsigned char *p;
     unsigned char expected;
     int err = 0, merr;
-    MPI_Aint size, offset, dt_offset, byte_offset;
+    MPI_Aint size, offset, dt_offset, byte_offset, lb = 0, extent = 0;
 
     p = (unsigned char *) mtype->buf;
     if (p) {
         int j, k, i, b, nc;
-        merr = MPI_Type_extent(mtype->datatype, &size);
+        merr = MPI_Type_get_extent(mtype->datatype, &lb, &extent);
         if (merr)
             MTestPrintError(merr);
+
+        size = lb + extent;
 
         int ncol, sub_ncol, sub_nrow, sub_col_start, sub_row_start;
         ncol = mtype->arr_sizes[1];
@@ -1239,15 +1255,17 @@ int MTestTypeDupCreate(MPI_Datatype oldtype, MTestDatatype * mtype)
  */
 void *MTestTypeInitRecv(MTestDatatype * mtype)
 {
-    MPI_Aint size;
+    MPI_Aint size, extent = 0, lb = 0;
     int merr;
 
     if (mtype->count > 0) {
         signed char *p;
         MPI_Aint i, totsize;
-        merr = MPI_Type_extent(mtype->datatype, &size);
+        merr = MPI_Type_get_extent(mtype->datatype, &lb, &extent);
         if (merr)
             MTestPrintError(merr);
+
+        size = extent + lb;
         totsize = size * mtype->count;
         if (!mtype->buf) {
             mtype->buf = (void *) malloc(totsize);
