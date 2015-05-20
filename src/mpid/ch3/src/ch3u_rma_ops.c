@@ -805,10 +805,10 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                 MPID_Datatype_get_ptr(origin_datatype, origin_dtp);
             }
             if (!MPIR_DATATYPE_IS_PREDEFINED(result_datatype)) {
-                MPID_Datatype_get_ptr(result_datatype, target_dtp);
+                MPID_Datatype_get_ptr(result_datatype, result_dtp);
             }
             if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
-                MPID_Datatype_get_ptr(target_datatype, result_dtp);
+                MPID_Datatype_get_ptr(target_datatype, target_dtp);
             }
 
             MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
