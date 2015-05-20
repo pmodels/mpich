@@ -4341,6 +4341,7 @@ int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count *size);
 /* random initializers */
 int MPIR_Group_init(void);
 int MPIR_Comm_init(MPID_Comm *);
+int MPIR_MPIOInit(int *error);
 
 
 /* Collective functions cannot be called from multiple threads. These
