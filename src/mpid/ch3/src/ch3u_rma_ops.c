@@ -247,7 +247,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
                    MPID_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_msg_sz_t data_sz;
+    MPIDI_msg_sz_t orig_data_sz, target_data_sz;
     int dt_contig ATTRIBUTE((unused)), rank;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPID_Datatype *dtp;
@@ -264,9 +264,10 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         goto fn_exit;
     }
 
-    MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, data_sz, dtp, dt_true_lb);
+    MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, orig_data_sz, dtp,
+                            dt_true_lb);
 
-    if (data_sz == 0) {
+    if (orig_data_sz == 0) {
         goto fn_exit;
     }
 
@@ -304,7 +305,6 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         MPIDI_RMA_Op_t *op_ptr = NULL;
         MPIDI_CH3_Pkt_get_t *get_pkt = NULL;
         MPI_Aint target_type_size;
-        size_t len;
         int use_immed_resp_pkt = FALSE;
         int is_origin_contig, is_target_contig;
 
@@ -341,12 +341,12 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         MPID_Datatype_is_contig(target_datatype, &is_target_contig);
 
         MPID_Datatype_get_size_macro(target_datatype, target_type_size);
-        MPIU_Assign_trunc(len, target_count * target_type_size, size_t);
+        MPIU_Assign_trunc(target_data_sz, target_count * target_type_size, MPIDI_msg_sz_t);
 
         /* Judge if we can use IMMED data response packet */
         if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) &&
             MPIR_DATATYPE_IS_PREDEFINED(target_datatype) && is_origin_contig && is_target_contig) {
-            if (len <= MPIDI_RMA_IMMED_BYTES)
+            if (target_data_sz <= MPIDI_RMA_IMMED_BYTES)
                 use_immed_resp_pkt = TRUE;
         }
 
@@ -647,7 +647,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                               MPID_Win * win_ptr, MPID_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_msg_sz_t data_sz;
+    MPIDI_msg_sz_t orig_data_sz, target_data_sz;
     int rank;
     int dt_contig ATTRIBUTE((unused));
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
@@ -665,9 +665,10 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
         goto fn_exit;
     }
 
-    MPIDI_Datatype_get_info(target_count, target_datatype, dt_contig, data_sz, dtp, dt_true_lb);
+    MPIDI_Datatype_get_info(target_count, target_datatype, dt_contig, target_data_sz, dtp,
+                            dt_true_lb);
 
-    if (data_sz == 0) {
+    if (target_data_sz == 0) {
         goto fn_exit;
     }
 
@@ -747,7 +748,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             if (MPIR_DATATYPE_IS_PREDEFINED(result_datatype) &&
                 MPIR_DATATYPE_IS_PREDEFINED(target_datatype) &&
                 is_result_contig && is_target_contig) {
-                if (data_sz <= MPIDI_RMA_IMMED_BYTES)
+                if (target_data_sz <= MPIDI_RMA_IMMED_BYTES)
                     use_immed_resp_pkt = TRUE;
             }
 
@@ -778,7 +779,6 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
         else {
             MPIDI_CH3_Pkt_get_accum_t *get_accum_pkt;
             MPI_Aint origin_type_size;
-            size_t orig_len;
             int use_immed_pkt = FALSE;
             int is_origin_contig, is_target_contig, is_result_contig;
             MPI_Aint stream_elem_count, stream_unit_count;
@@ -812,7 +812,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             }
 
             MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
-            MPIU_Assign_trunc(orig_len, origin_count * origin_type_size, size_t);
+            MPIU_Assign_trunc(orig_data_sz, origin_count * origin_type_size, MPIDI_msg_sz_t);
 
             /* Get size and count for predefined datatype elements */
             if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
@@ -823,7 +823,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             else {
                 MPIU_Assert(origin_dtp->basic_type != MPI_DATATYPE_NULL);
                 MPID_Datatype_get_size_macro(origin_dtp->basic_type, predefined_dtp_size);
-                predefined_dtp_count = orig_len / predefined_dtp_size;
+                predefined_dtp_count = orig_data_sz / predefined_dtp_size;
                 MPID_Datatype_get_extent_macro(origin_dtp->basic_type, predefined_dtp_extent);
             }
             MPIU_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 &&
@@ -856,7 +856,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                 MPIR_DATATYPE_IS_PREDEFINED(result_datatype) &&
                 MPIR_DATATYPE_IS_PREDEFINED(target_datatype) &&
                 is_origin_contig && is_target_contig && is_result_contig) {
-                if (orig_len <= MPIDI_RMA_IMMED_BYTES)
+                if (orig_data_sz <= MPIDI_RMA_IMMED_BYTES)
                     use_immed_pkt = TRUE;
             }
 
@@ -867,7 +867,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                 /* FIXME: currently we only piggyback LOCK flag with op using predefined datatypes
                  * for origin, target and result data. We should extend this optimization to derived
                  * datatypes as well. */
-                if (orig_len <= MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE)
+                if (orig_data_sz <= MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE)
                     op_ptr->piggyback_lock_candidate = 1;
             }
 
@@ -892,7 +892,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             get_accum_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
             if (use_immed_pkt) {
                 void *src = (void *) origin_addr, *dest = (void *) (get_accum_pkt->info.data);
-                mpi_errno = immed_copy(src, dest, orig_len);
+                mpi_errno = immed_copy(src, dest, orig_data_sz);
                 if (mpi_errno != MPI_SUCCESS)
                     MPIU_ERR_POP(mpi_errno);
             }
