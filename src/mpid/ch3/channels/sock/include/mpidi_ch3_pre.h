@@ -78,7 +78,7 @@ MPIDI_CH3I_Progress_state;
    and must be available to the routines in src/mpi */
 extern volatile unsigned int MPIDI_CH3I_progress_completion_count;
 
-extern int num_active_issued_win, num_passive_win;
+extern int MPIDI_CH3I_num_active_issued_win, MPIDI_CH3I_num_passive_win;
 
 /* MPICH_IS_THREADED isn't defined yet (handled by mpiimplthread.h) */
 #if (MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE)

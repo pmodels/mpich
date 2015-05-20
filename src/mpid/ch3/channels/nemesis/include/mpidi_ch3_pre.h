@@ -228,7 +228,7 @@ MPIDI_CH3I_Progress_state;
 #define MPIDI_CH3_PROGRESS_STATE_DECL MPIDI_CH3I_Progress_state ch;
 
 extern OPA_int_t MPIDI_CH3I_progress_completion_count;
-extern int num_active_issued_win, num_passive_win;
+extern int MPIDI_CH3I_num_active_issued_win, MPIDI_CH3I_num_passive_win;
 
 #define MPIDI_CH3I_INCR_PROGRESS_COMPLETION_COUNT do {                                  \
         OPA_write_barrier();                                                            \

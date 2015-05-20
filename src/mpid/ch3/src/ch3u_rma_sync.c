@@ -348,7 +348,7 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
 
             /* Set window access state properly. */
             win_ptr->states.access_state = MPIDI_RMA_FENCE_ISSUED;
-            num_active_issued_win++;
+            MPIDI_CH3I_num_active_issued_win++;
 
             goto finish_fence;
         }
@@ -671,7 +671,7 @@ int MPIDI_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
   finish_start:
     /* Set window access state properly. */
     win_ptr->states.access_state = MPIDI_RMA_PSCW_ISSUED;
-    num_active_issued_win++;
+    MPIDI_CH3I_num_active_issued_win++;
 
     /* BEGINNING synchronization: the following counter should be zero. */
     MPIU_Assert(win_ptr->accumulated_ops_cnt == 0);
@@ -981,7 +981,7 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win * win_ptr)
     if (win_ptr->lock_epoch_count == 0) {
         /* Set window access state properly. */
         win_ptr->states.access_state = MPIDI_RMA_PER_TARGET;
-        num_passive_win++;
+        MPIDI_CH3I_num_passive_win++;
     }
     win_ptr->lock_epoch_count++;
 
@@ -1118,8 +1118,8 @@ int MPIDI_Win_unlock(int dest, MPID_Win * win_ptr)
     if (win_ptr->lock_epoch_count == 0) {
         /* Set window access state properly. */
         win_ptr->states.access_state = MPIDI_RMA_NONE;
-        num_passive_win--;
-        MPIU_Assert(num_passive_win >= 0);
+        MPIDI_CH3I_num_passive_win--;
+        MPIU_Assert(MPIDI_CH3I_num_passive_win >= 0);
     }
 
     if (target != NULL) {
@@ -1406,7 +1406,7 @@ int MPIDI_Win_lock_all(int assert, MPID_Win * win_ptr)
         win_ptr->states.access_state = MPIDI_RMA_LOCK_ALL_GRANTED;
     else
         win_ptr->states.access_state = MPIDI_RMA_LOCK_ALL_CALLED;
-    num_passive_win++;
+    MPIDI_CH3I_num_passive_win++;
 
     win_ptr->lock_all_assert = assert;
 
@@ -1597,8 +1597,8 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
   finish_unlock_all:
     /* Set window access state properly. */
     win_ptr->states.access_state = MPIDI_RMA_NONE;
-    num_passive_win--;
-    MPIU_Assert(num_passive_win >= 0);
+    MPIDI_CH3I_num_passive_win--;
+    MPIU_Assert(MPIDI_CH3I_num_passive_win >= 0);
 
     /* reset lock_all assert on window. */
     win_ptr->lock_all_assert = 0;

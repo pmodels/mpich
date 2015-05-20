@@ -62,8 +62,8 @@ static inline int check_window_state(MPID_Win * win_ptr, int *made_progress)
             MPID_Request_release(fence_req_ptr);
             win_ptr->fence_sync_req = MPI_REQUEST_NULL;
 
-            num_active_issued_win--;
-            MPIU_Assert(num_active_issued_win >= 0);
+            MPIDI_CH3I_num_active_issued_win--;
+            MPIU_Assert(MPIDI_CH3I_num_active_issued_win >= 0);
 
             (*made_progress) = 1;
         }
@@ -75,8 +75,8 @@ static inline int check_window_state(MPID_Win * win_ptr, int *made_progress)
              * we do not create PSCW requests on window. */
             win_ptr->states.access_state = MPIDI_RMA_PSCW_GRANTED;
 
-            num_active_issued_win--;
-            MPIU_Assert(num_active_issued_win >= 0);
+            MPIDI_CH3I_num_active_issued_win--;
+            MPIU_Assert(MPIDI_CH3I_num_active_issued_win >= 0);
 
             (*made_progress) = 1;
         }
@@ -98,8 +98,8 @@ static inline int check_window_state(MPID_Win * win_ptr, int *made_progress)
             if (i == win_ptr->start_grp_size) {
                 win_ptr->states.access_state = MPIDI_RMA_PSCW_GRANTED;
 
-                num_active_issued_win--;
-                MPIU_Assert(num_active_issued_win >= 0);
+                MPIDI_CH3I_num_active_issued_win--;
+                MPIU_Assert(MPIDI_CH3I_num_active_issued_win >= 0);
 
                 (*made_progress) = 1;
 

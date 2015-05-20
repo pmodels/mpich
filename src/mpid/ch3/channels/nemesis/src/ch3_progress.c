@@ -46,7 +46,7 @@ extern MPID_Request ** const MPID_Recvq_unexpected_tail_ptr;
 #endif
 
 OPA_int_t MPIDI_CH3I_progress_completion_count = OPA_INT_T_INITIALIZER(0);
-int num_active_issued_win = 0, num_passive_win = 0;
+int MPIDI_CH3I_num_active_issued_win = 0, MPIDI_CH3I_num_passive_win = 0;
 
 /* NEMESIS MULTITHREADING: Extra Data Structures Added */
 #ifdef MPICH_IS_THREADED
@@ -478,7 +478,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 #endif /* HAVE_LIBHCOLL */
 
         /* make progress on RMA */
-        if (num_active_issued_win > 0 || num_passive_win > 0) {
+        if (MPIDI_CH3I_num_active_issued_win > 0 || MPIDI_CH3I_num_passive_win > 0) {
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_global(&made_progress);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
