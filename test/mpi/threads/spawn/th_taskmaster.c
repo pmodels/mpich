@@ -14,6 +14,9 @@
 
 int comm_world_rank;
 int comm_world_size;
+#ifdef USE_THREADS
+MPI_Comm th_comms[DEFAULT_TASK_WINDOW];
+#endif
 
 #define CHECK_SUCCESS(status) \
 { \
@@ -28,7 +31,7 @@ void process_spawn(MPI_Comm * comm, int thread_id)
 {
     CHECK_SUCCESS(MPI_Comm_spawn((char*)"./th_taskmaster", (char **)NULL,
 				 1, MPI_INFO_NULL, 0,
-				 MPI_COMM_WORLD, comm, NULL));
+                                 th_comms[thread_id], comm, NULL));
 }
 
 void process_disconnect(MPI_Comm * comm, int thread_id);
@@ -101,6 +104,10 @@ int main(int argc, char *argv[])
 #endif /* USE_THREADS */
 
 #ifdef USE_THREADS
+        /* We need different communicators per thread */
+        for (i = 0; i < DEFAULT_TASK_WINDOW; i++)
+            CHECK_SUCCESS(MPI_Comm_dup(MPI_COMM_WORLD, &th_comms[i]));
+
 	/* Create a thread for each task. Each thread will spawn a
 	 * child process to perform its task. */
 	for (i = 0; i < tasks;) {
@@ -110,6 +117,9 @@ int main(int argc, char *argv[])
         MTest_Join_threads();
 	    i += DEFAULT_TASK_WINDOW;
 	}
+
+        for (i = 0; i < DEFAULT_TASK_WINDOW; i++)
+            CHECK_SUCCESS(MPI_Comm_free(&th_comms[i]));
 #else
 	/* Directly spawn a child process to perform each task */
 	for (i = 0; i < tasks;) {
