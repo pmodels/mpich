@@ -250,6 +250,8 @@ int MPIR_Thread_CS_Finalize( void )
 /* There is a single, global lock, held for the duration of an MPI call */
     MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.global_mutex, &err);
     MPIU_Assert(err == 0);
+    MPID_Thread_mutex_destroy(&MPIR_ThreadInfo.handle_mutex, &err);
+    MPIU_Assert(err == 0);
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
     /* MPIU_THREAD_GRANULARITY_PER_OBJECT: There are multiple locks,
