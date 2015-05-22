@@ -13,7 +13,9 @@ EXTRA_DIST = testlist
 AM_DEFAULT_SOURCE_EXT = .f
 
 noinst_PROGRAMS = typenamef typesnamef typecntsf typesubf typem2f gaddressf \
-                  packef allctypesf hindex1f hindexed_blockf typename3f
+                  packef allctypesf hindex1f hindexed_blockf typename3f bottom
+
+bottom_SOURCES=bottomc.c bottomf.f
 
 ## typeaints.h will be distributed because it's listed in AC_CONFIG_FILES/AC_OUTPUT
 

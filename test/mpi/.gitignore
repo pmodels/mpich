@@ -5,6 +5,8 @@
 /f90/datatype/Makefile.am
 /f90/datatype/hindex1f90.f90
 /f90/datatype/hindexed_blockf90.f90
+/f90/datatype/bottomf90.f90
+/f90/datatype/bottomc.c
 /f90/ext/Makefile.am
 /f90/ext/stamp-Makefile.am
 /f90/io/Makefile.am
@@ -801,6 +803,7 @@
 /f77/datatype/typenamef
 /f77/datatype/typesnamef
 /f77/datatype/typesubf
+/f77/datatype/bottom
 /f77/ext/c2fmult
 /f77/ext/ctypesinf
 /f77/info/infotest2f
