@@ -273,13 +273,7 @@ PAC_PREFIX_ALL_FLAGS(USER)
 # so executables built within MPICH use them.  If inter-library
 # dependencies are not supported on the platform, these libraries are
 # added to the MPICH wrappers (mpicc and friends) as well.
-AC_SUBST(WRAPPER_CFLAGS)
-AC_SUBST(WRAPPER_CPPFLAGS)
-AC_SUBST(WRAPPER_CXXFLAGS)
-AC_SUBST(WRAPPER_FFLAGS)
-AC_SUBST(WRAPPER_FCFLAGS)
-AC_SUBST(WRAPPER_LDFLAGS)
-AC_SUBST(WRAPPER_LIBS)
+PAC_PREFIX_ALL_FLAGS(WRAPPER)
 
 # MPICH_MPIx_FLAGS are used by mpicc and friends.  They are like
 # WRAPPER flags, but these are provided by the user.
