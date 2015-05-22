@@ -22,6 +22,26 @@ extern MPIDI_RMA_Target_t *global_rma_target_pool, *global_rma_target_pool_tail,
 
 MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
 
+#define MPIDI_CH3I_RMA_ops_completion(win_, target_, local_completed_, remote_completed_) \
+    do {                                                                \
+        local_completed_ = 0;                                           \
+        remote_completed_ = 0;                                          \
+        if (win_->states.access_state != MPIDI_RMA_FENCE_ISSUED &&      \
+            win_->states.access_state != MPIDI_RMA_PSCW_ISSUED &&       \
+            win_->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&   \
+            target_->access_state != MPIDI_RMA_LOCK_CALLED &&           \
+            target_->access_state != MPIDI_RMA_LOCK_ISSUED &&           \
+            target_->pending_op_list_head == NULL &&                    \
+            target_->issued_read_op_list_head == NULL &&                \
+            target_->issued_write_op_list_head == NULL &&               \
+            target_->issued_dt_op_list_head == NULL) {                  \
+            local_completed_ = 1;                                       \
+            if (target_->sync.sync_flag == MPIDI_RMA_SYNC_NONE &&       \
+                target_->sync.outstanding_acks == 0)                    \
+                remote_completed_ = 1;                                  \
+        }                                                               \
+    } while (0)
+
 /* MPIDI_CH3I_Win_op_alloc(): get a new op element from op pool and
  * initialize it. If we cannot get one, return NULL. */
 #undef FUNCNAME
@@ -329,17 +349,13 @@ static inline int MPIDI_CH3I_Win_target_dequeue_and_free(MPID_Win * win_ptr, MPI
 #define FUNCNAME MPIDI_CH3I_RMA_Cleanup_ops_target
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
-                                                    int *local_completed, int *remote_completed)
+static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target)
 {
     MPIDI_RMA_Op_t *curr_op = NULL;
     MPIDI_RMA_Op_t **op_list_head = NULL, **op_list_tail = NULL;
     int read_flag = 0, write_flag = 0;
     int mpi_errno = MPI_SUCCESS;
     int i;
-
-    (*local_completed) = 0;
-    (*remote_completed) = 0;
 
     if (win_ptr->states.access_state == MPIDI_RMA_FENCE_ISSUED ||
         win_ptr->states.access_state == MPIDI_RMA_PSCW_ISSUED ||
@@ -356,7 +372,7 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
     if (target->pending_op_list_head == NULL &&
         target->issued_read_op_list_head == NULL && target->issued_write_op_list_head == NULL &&
         target->issued_dt_op_list_head == NULL)
-        goto cleanup_target;
+        goto fn_exit;
 
     /* go over issued_read_op_list, issued_write_op_list,
      * issued_dt_op_list, start from issued_read_op_list. */
@@ -433,21 +449,6 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
         curr_op = *op_list_head;
     }
 
-  cleanup_target:
-    if (target->pending_op_list_head == NULL &&
-        target->issued_read_op_list_head == NULL && target->issued_write_op_list_head == NULL &&
-        target->issued_dt_op_list_head == NULL) {
-
-        (*local_completed) = 1;
-
-        /* for the conditions that need to be satisfied before we free the
-         * target, see the MPIDI_RMA_Target definition in
-         * mpid_rma_types.h */
-        if (target->sync.sync_flag == MPIDI_RMA_SYNC_NONE && target->sync.outstanding_acks == 0) {
-            (*remote_completed) = 1;
-        }
-    }
-
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -473,9 +474,11 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_win(MPID_Win * win_ptr,
         for (target = win_ptr->slots[i].target_list_head; target;) {
             int local = 0, remote = 0;
 
-            mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_target(win_ptr, target, &local, &remote);
+            mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_target(win_ptr, target);
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
+
+            MPIDI_CH3I_RMA_ops_completion(win_ptr, target, local, remote);
 
             num_targets++;
             local_completed_targets += local;

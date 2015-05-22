@@ -628,7 +628,7 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_CH3I_RMA_Cleanup_ops_aggressive(MPID_Win * win_ptr)
 {
-    int i, local_completed = 0, remote_completed = 0;
+    int i, local_completed = 0, remote_completed ATTRIBUTE((unused)) = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_RMA_Target_t *curr_target = NULL;
     int made_progress = 0;
@@ -663,10 +663,12 @@ int MPIDI_CH3I_RMA_Cleanup_ops_aggressive(MPID_Win * win_ptr)
 
     /* Wait for local completion. */
     do {
-        mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_target(win_ptr, curr_target,
-                                                      &local_completed, &remote_completed);
+        mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_target(win_ptr, curr_target);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
+
+        MPIDI_CH3I_RMA_ops_completion(win_ptr, curr_target, local_completed, remote_completed);
+
         if (!local_completed) {
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
@@ -687,7 +689,7 @@ int MPIDI_CH3I_RMA_Cleanup_ops_aggressive(MPID_Win * win_ptr)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPID_Win * win_ptr, MPIDI_RMA_Target_t ** target)
 {
-    int i, local_completed = 0, remote_completed = 0;
+    int i, local_completed ATTRIBUTE((unused)) = 0, remote_completed = 0;
     int made_progress = 0;
     MPIDI_RMA_Target_t *curr_target = NULL;
     int mpi_errno = MPI_SUCCESS;
@@ -743,10 +745,12 @@ int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPID_Win * win_ptr, MPIDI_RMA_Targe
 
         /* Wait for remote completion. */
         do {
-            mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_target(win_ptr, curr_target,
-                                                          &local_completed, &remote_completed);
+            mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_target(win_ptr, curr_target);
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
+
+            MPIDI_CH3I_RMA_ops_completion(win_ptr, curr_target, local_completed, remote_completed);
+
             if (!remote_completed) {
                 mpi_errno = wait_progress_engine();
                 if (mpi_errno != MPI_SUCCESS)
