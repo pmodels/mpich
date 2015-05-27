@@ -1132,7 +1132,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win * win_ptr)
         }
 
         /* Cleanup the target. */
-        mpi_errno = MPIDI_CH3I_RMA_Cleanup_single_target(win_ptr, target);
+        mpi_errno = MPIDI_CH3I_Win_target_dequeue_and_free(win_ptr, target);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
     }

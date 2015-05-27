@@ -759,7 +759,7 @@ int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPID_Win * win_ptr, MPIDI_RMA_Targe
         } while (!remote_completed);
 
         /* Cleanup the target. */
-        mpi_errno = MPIDI_CH3I_RMA_Cleanup_single_target(win_ptr, curr_target);
+        mpi_errno = MPIDI_CH3I_Win_target_dequeue_and_free(win_ptr, curr_target);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
 

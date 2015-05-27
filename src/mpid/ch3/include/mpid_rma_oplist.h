@@ -501,27 +501,6 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_win(MPID_Win * win_ptr,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_RMA_Cleanup_single_target
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline int MPIDI_CH3I_RMA_Cleanup_single_target(MPID_Win * win_ptr,
-                                                       MPIDI_RMA_Target_t * target)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    /* dequeue the target and free it. */
-    mpi_errno = MPIDI_CH3I_Win_target_dequeue_and_free(win_ptr, target);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_RMA_Cleanup_targets_win
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
@@ -533,7 +512,7 @@ static inline int MPIDI_CH3I_RMA_Cleanup_targets_win(MPID_Win * win_ptr)
     for (i = 0; i < win_ptr->num_slots; i++) {
         for (target = win_ptr->slots[i].target_list_head; target;) {
             next_target = target->next;
-            mpi_errno = MPIDI_CH3I_RMA_Cleanup_single_target(win_ptr, target);
+            mpi_errno = MPIDI_CH3I_Win_target_dequeue_and_free(win_ptr, target);
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
             target = next_target;
