@@ -252,6 +252,10 @@ int MPIDI_CH3_PktHandler_CancelSendReq( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	{
 	    MPIU_Free(rreq->dev.tmpbuf);
 	}
+	if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_RNDV_MSG)
+	{
+	    MPID_Request_release(rreq);
+	}
 	MPID_Request_release(rreq);
 	ack = TRUE;
     }
