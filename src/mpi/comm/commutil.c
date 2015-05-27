@@ -1277,6 +1277,19 @@ fn_fail:
     return mpi_errno;
 }
 
+/* Try to find a valid context id.
+ *
+ * If the context id is found, then broadcast it; if not, then retry the
+ * nonblocking context id allocation algorithm again.
+ *
+ * Note the subtle difference on thread handling between the nonblocking
+ * algorithm (sched_cb_gcn_allocate_cid) and the blocking algorithm
+ * (MPIR_Get_contextid_sparse_group). In nonblocking algorithm, there is no
+ * need to yield to another thread because this thread will not block the
+ * progress. On the contrary, unnecessary yield will allow other threads to
+ * execute and insert wrong order of entries to the nonblocking schedule and
+ * cause errors.
+ */
 #undef FUNCNAME
 #define FUNCNAME sched_cb_gcn_allocate_cid
 #undef FCNAME
@@ -1287,7 +1300,6 @@ static int sched_cb_gcn_allocate_cid(MPID_Comm *comm, int tag, void *state)
     struct gcn_state *st = state;
     MPIR_Context_id_t newctxid;
 
-    MPIU_THREAD_CS_ENTER(CONTEXTID,);
     if (st->own_eager_mask) {
         newctxid = MPIR_Find_and_allocate_context_id(st->local_mask);
         if (st->ctx0)
@@ -1297,14 +1309,6 @@ static int sched_cb_gcn_allocate_cid(MPID_Comm *comm, int tag, void *state)
 
         st->own_eager_mask = 0;
         eager_in_use = 0;
-
-        if (newctxid <= 0) {
-            /* else we did not find a context id. Give up the mask in case
-             * there is another thread (with a lower input context id)
-             * waiting for it.  We need to ensure that any other threads
-             * have the opportunity to run, hence yielding */
-            MPIU_THREAD_CS_YIELD(CONTEXTID,);
-        }
     } else if (st->own_mask) {
         newctxid = MPIR_Find_and_allocate_context_id(st->local_mask);
 
@@ -1319,16 +1323,7 @@ static int sched_cb_gcn_allocate_cid(MPID_Comm *comm, int tag, void *state)
         if (newctxid > 0) {
             if (lowestContextId == st->comm_ptr->context_id)
                 lowestContextId = MPIR_MAXID;
-        } else {
-            /* else we did not find a context id. Give up the mask in case
-             * there is another thread (with a lower input context id)
-             * waiting for it.  We need to ensure that any other threads
-             * have the opportunity to run, hence yielding */
-            MPIU_THREAD_CS_YIELD(CONTEXTID,);
         }
-    } else {
-        /* As above, force this thread to yield */
-        MPIU_THREAD_CS_YIELD(CONTEXTID,);
     }
 
     if (*st->ctx0 == 0) {
@@ -1342,8 +1337,6 @@ static int sched_cb_gcn_allocate_cid(MPID_Comm *comm, int tag, void *state)
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPID_SCHED_BARRIER(st->s);
     }
-
-    MPIU_THREAD_CS_EXIT(CONTEXTID,);
 
     /* --BEGIN ERROR HANDLING-- */
     /* --END ERROR HANDLING-- */
@@ -1360,7 +1353,6 @@ static int sched_cb_gcn_copy_mask(MPID_Comm *comm, int tag, void *state)
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state *st = state;
 
-    MPIU_THREAD_CS_ENTER(CONTEXTID,);
     if (st->first_iter) {
         memset(st->local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
         st->own_eager_mask = 0;
@@ -1394,7 +1386,6 @@ static int sched_cb_gcn_copy_mask(MPID_Comm *comm, int tag, void *state)
             st->own_mask = 1;
         }
     }
-    MPIU_THREAD_CS_EXIT(CONTEXTID,);
 
     mpi_errno = st->comm_ptr->coll_fns->Iallreduce_sched(MPI_IN_PLACE, st->local_mask, MPIR_MAX_CONTEXT_MASK,
                                                MPI_UINT32_T, MPI_BAND, st->comm_ptr, st->s);
@@ -1457,7 +1448,6 @@ static int sched_get_cid_nonblock(MPID_Comm *comm_ptr, MPIR_Context_id_t *ctx0,
     struct gcn_state *st = NULL;
     MPIU_CHKPMEM_DECL(1);
 
-    MPIU_THREAD_CS_ENTER(CONTEXTID,);
     if (initialize_context_mask) {
         MPIR_Init_contextid();
     }
@@ -1483,7 +1473,6 @@ static int sched_get_cid_nonblock(MPID_Comm *comm_ptr, MPIR_Context_id_t *ctx0,
         MPIU_Assert( MPIR_CVAR_CTXID_EAGER_SIZE >= 0 && MPIR_CVAR_CTXID_EAGER_SIZE < MPIR_MAX_CONTEXT_MASK-1 );
         eager_nelem = MPIR_CVAR_CTXID_EAGER_SIZE;
     }
-    MPIU_THREAD_CS_EXIT(CONTEXTID,);
 
     mpi_errno = MPID_Sched_cb(&sched_cb_gcn_copy_mask, st, s);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
