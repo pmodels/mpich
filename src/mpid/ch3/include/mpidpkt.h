@@ -367,6 +367,29 @@ MPIDI_CH3_PKT_DEFS
         }                                                               \
     }
 
+#define MPIDI_CH3_PKT_RMA_GET_OP(pkt_, op_, err_)                       \
+    {                                                                   \
+        /* This macro returns op in RMA operation packets (ACC, GACC,   \
+           FOP) */                                                      \
+        err_ = MPI_SUCCESS;                                             \
+        switch((pkt_).type) {                                           \
+        case (MPIDI_CH3_PKT_ACCUMULATE):                                \
+        case (MPIDI_CH3_PKT_ACCUMULATE_IMMED):                          \
+            op_ = (pkt_).accum.op;                                      \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
+        case (MPIDI_CH3_PKT_GET_ACCUM_IMMED):                           \
+            op_ = (pkt_).get_accum.op;                                  \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_FOP):                                       \
+        case (MPIDI_CH3_PKT_FOP_IMMED):                                 \
+            op_ = (pkt_).fop.op;                                        \
+            break;                                                      \
+        default:                                                        \
+            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+        }                                                               \
+    }
+
 #define MPIDI_CH3_PKT_RMA_ERASE_FLAGS(pkt_, err_)                       \
     {                                                                   \
         /* This macro erases flags in RMA operation packets (PUT, GET,  \

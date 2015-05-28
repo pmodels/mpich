@@ -979,39 +979,53 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                 *buflen = sizeof(MPIDI_CH3_Pkt_t);
             }
             else {
+                int is_empty_origin = FALSE;
+
+                /* Judge if origin data is zero. */
+                if (get_accum_pkt->op == MPI_NO_OP)
+                    is_empty_origin = TRUE;
+
                 req->dev.OnFinal = MPIDI_CH3_ReqHandler_GaccumRecvComplete;
 
-                MPID_Datatype_get_extent_macro(get_accum_pkt->datatype, extent);
+                if (is_empty_origin == TRUE) {
+                    req->dev.recv_data_sz = 0;
 
-                MPIU_Assert(!MPIDI_Request_get_srbuf_flag(req));
-                /* allocate a SRBuf for receiving stream unit */
-                MPIDI_CH3U_SRBuf_alloc(req, MPIDI_CH3U_SRBuf_size);
-                /* --BEGIN ERROR HANDLING-- */
-                if (req->dev.tmpbuf_sz == 0) {
-                    MPIU_DBG_MSG(CH3_CHANNEL, TYPICAL, "SRBuf allocation failure");
-                    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-                                                     FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem",
-                                                     "**nomem %d", MPIDI_CH3U_SRBuf_size);
-                    req->status.MPI_ERROR = mpi_errno;
-                    goto fn_fail;
+                    *buflen = sizeof(MPIDI_CH3_Pkt_t);
+                    complete = 1;
                 }
-                /* --END ERROR HANDLING-- */
+                else {
+                    MPID_Datatype_get_extent_macro(get_accum_pkt->datatype, extent);
 
-                req->dev.user_buf = req->dev.tmpbuf;
+                    MPIU_Assert(!MPIDI_Request_get_srbuf_flag(req));
+                    /* allocate a SRBuf for receiving stream unit */
+                    MPIDI_CH3U_SRBuf_alloc(req, MPIDI_CH3U_SRBuf_size);
+                    /* --BEGIN ERROR HANDLING-- */
+                    if (req->dev.tmpbuf_sz == 0) {
+                        MPIU_DBG_MSG(CH3_CHANNEL, TYPICAL, "SRBuf allocation failure");
+                        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
+                                                         FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem",
+                                                         "**nomem %d", MPIDI_CH3U_SRBuf_size);
+                        req->status.MPI_ERROR = mpi_errno;
+                        goto fn_fail;
+                    }
+                    /* --END ERROR HANDLING-- */
 
-                MPID_Datatype_get_size_macro(get_accum_pkt->datatype, type_size);
-                total_len = type_size * get_accum_pkt->count;
-                stream_elem_count = MPIDI_CH3U_SRBuf_size / extent;
+                    req->dev.user_buf = req->dev.tmpbuf;
 
-                req->dev.recv_data_sz = MPIR_MIN(total_len, stream_elem_count * type_size);
-                MPIU_Assert(req->dev.recv_data_sz > 0);
+                    MPID_Datatype_get_size_macro(get_accum_pkt->datatype, type_size);
+                    total_len = type_size * get_accum_pkt->count;
+                    stream_elem_count = MPIDI_CH3U_SRBuf_size / extent;
 
-                mpi_errno = MPIDI_CH3U_Receive_data_found(req, data_buf, &data_len, &complete);
-                MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
-                                     "**ch3|postrecv %s", "MPIDI_CH3_PKT_ACCUMULATE");
+                    req->dev.recv_data_sz = MPIR_MIN(total_len, stream_elem_count * type_size);
+                    MPIU_Assert(req->dev.recv_data_sz > 0);
 
-                /* return the number of bytes processed in this function */
-                *buflen = data_len + sizeof(MPIDI_CH3_Pkt_t);
+                    mpi_errno = MPIDI_CH3U_Receive_data_found(req, data_buf, &data_len, &complete);
+                    MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
+                                         "**ch3|postrecv %s", "MPIDI_CH3_PKT_ACCUMULATE");
+
+                    /* return the number of bytes processed in this function */
+                    *buflen = data_len + sizeof(MPIDI_CH3_Pkt_t);
+                }
 
                 if (complete) {
                     mpi_errno = MPIDI_CH3_ReqHandler_GaccumRecvComplete(vc, req, &complete);
@@ -1404,6 +1418,11 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         MPIDI_msg_sz_t data_len;
         MPI_Aint extent;
         int complete = 0;
+        int is_empty_origin = FALSE;
+
+        /* Judge if origin data is zero. */
+        if (fop_pkt->op == MPI_NO_OP)
+            is_empty_origin = TRUE;
 
         req = MPID_Request_create();
         MPIU_Object_set_ref(req, 1);
@@ -1420,26 +1439,34 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         req->dev.datatype = fop_pkt->datatype;
         req->dev.user_count = 1;
 
-        /* get start location of data and length of data */
-        data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
-        data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
+        if (is_empty_origin == TRUE) {
+            req->dev.recv_data_sz = 0;
 
-        MPID_Datatype_get_extent_macro(fop_pkt->datatype, extent);
-
-        req->dev.user_buf = MPIU_Malloc(extent);
-        if (!req->dev.user_buf) {
-            MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %d", extent);
+            *buflen = sizeof(MPIDI_CH3_Pkt_t);
+            complete = 1;
         }
+        else {
+            /* get start location of data and length of data */
+            data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
+            data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
 
-        req->dev.recv_data_sz = type_size;
-        MPIU_Assert(req->dev.recv_data_sz > 0);
+            MPID_Datatype_get_extent_macro(fop_pkt->datatype, extent);
 
-        mpi_errno = MPIDI_CH3U_Receive_data_found(req, data_buf, &data_len, &complete);
-        MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
-                             "**ch3|postrecv %s", "MPIDI_CH3_PKT_ACCUMULATE");
+            req->dev.user_buf = MPIU_Malloc(extent);
+            if (!req->dev.user_buf) {
+                MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %d", extent);
+            }
 
-        /* return the number of bytes processed in this function */
-        *buflen = data_len + sizeof(MPIDI_CH3_Pkt_t);
+            req->dev.recv_data_sz = type_size;
+            MPIU_Assert(req->dev.recv_data_sz > 0);
+
+            mpi_errno = MPIDI_CH3U_Receive_data_found(req, data_buf, &data_len, &complete);
+            MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
+                                 "**ch3|postrecv %s", "MPIDI_CH3_PKT_ACCUMULATE");
+
+            /* return the number of bytes processed in this function */
+            *buflen = data_len + sizeof(MPIDI_CH3_Pkt_t);
+        }
 
         if (complete) {
             mpi_errno = MPIDI_CH3_ReqHandler_FOPRecvComplete(vc, req, &complete);

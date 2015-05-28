@@ -357,7 +357,7 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
         MPI_Aint type_size = 0;
         MPI_Aint type_extent;
         MPIDI_msg_sz_t recv_data_sz = 0;
-        MPIDI_msg_sz_t buf_size;
+        MPIDI_msg_sz_t buf_size = 0;
         MPID_Request *req = NULL;
         MPI_Datatype target_dtp;
         int target_count;
@@ -382,11 +382,15 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
         else {
             MPI_Aint stream_elem_count;
             MPI_Aint total_len;
+            MPI_Op op;
 
-            stream_elem_count = MPIDI_CH3U_SRBuf_size / type_extent;
-            total_len = type_size * target_count;
-            recv_data_sz = MPIR_MIN(total_len, type_size * stream_elem_count);
-            buf_size = type_extent * (recv_data_sz / type_size);
+            MPIDI_CH3_PKT_RMA_GET_OP((*pkt), op, mpi_errno);
+            if (op != MPI_NO_OP) {
+                stream_elem_count = MPIDI_CH3U_SRBuf_size / type_extent;
+                total_len = type_size * target_count;
+                recv_data_sz = MPIR_MIN(total_len, type_size * stream_elem_count);
+                buf_size = type_extent * (recv_data_sz / type_size);
+            }
         }
 
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
@@ -465,7 +469,7 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
 
             data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
             data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
-            MPIU_Assert(req->dev.recv_data_sz > 0);
+            MPIU_Assert(req->dev.recv_data_sz >= 0);
         }
         else {
             req->dev.user_buf = new_ptr->data;
@@ -478,7 +482,7 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
 
             data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
             data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
-            MPIU_Assert(req->dev.recv_data_sz > 0);
+            MPIU_Assert(req->dev.recv_data_sz >= 0);
         }
 
         mpi_errno = MPIDI_CH3U_Receive_data_found(req, data_buf, &data_len, &complete);

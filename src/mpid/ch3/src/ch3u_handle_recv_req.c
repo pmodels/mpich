@@ -242,10 +242,18 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     MPI_Aint predef_count, predef_dtp_size;
     MPI_Aint dt_true_lb;
     MPI_Aint stream_offset;
+    int is_empty_origin = FALSE;
+    MPI_Aint extent, type_size;
+    MPI_Aint stream_data_len, total_len;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMRECVCOMPLETE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMRECVCOMPLETE);
+
+    /* Judge if origin buffer is empty */
+    if (rreq->dev.op == MPI_NO_OP) {
+        is_empty_origin = TRUE;
+    }
 
     MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
@@ -256,8 +264,14 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     }
     MPIU_Assert(basic_type != MPI_DATATYPE_NULL);
 
+    /* Use target data to calculate current stream unit size */
+    MPID_Datatype_get_size_macro(rreq->dev.datatype, type_size);
+    total_len = type_size * rreq->dev.user_count;
+    MPID_Datatype_get_extent_macro(rreq->dev.datatype, extent);
+    stream_data_len = MPIR_MIN(total_len, (MPIDI_CH3U_SRBuf_size / extent) * type_size);
+
     MPID_Datatype_get_size_macro(basic_type, predef_dtp_size);
-    predef_count = rreq->dev.recv_data_sz / predef_dtp_size;
+    predef_count = stream_data_len / predef_dtp_size;
     MPIU_Assert(predef_count > 0);
 
     MPIDI_Pkt_init(get_accum_resp_pkt, MPIDI_CH3_PKT_GET_ACCUM_RESP);
@@ -288,7 +302,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     MPIU_Object_set_ref(resp_req, 1);
     MPIDI_Request_set_type(resp_req, MPIDI_REQUEST_TYPE_GET_ACCUM_RESP);
 
-    MPIU_CHKPMEM_MALLOC(resp_req->dev.user_buf, void *, rreq->dev.recv_data_sz,
+    MPIU_CHKPMEM_MALLOC(resp_req->dev.user_buf, void *, stream_data_len,
                         mpi_errno, "GACC resp. buffer");
 
     /* NOTE: 'copy data + ACC' needs to be atomic */
@@ -301,12 +315,12 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     if (is_contig) {
         MPIU_Memcpy(resp_req->dev.user_buf,
                     (void *) ((char *) rreq->dev.real_user_buf + dt_true_lb +
-                              stream_offset), rreq->dev.recv_data_sz);
+                              stream_offset), stream_data_len);
     }
     else {
         MPID_Segment *seg = MPID_Segment_alloc();
         MPI_Aint first = stream_offset;
-        MPI_Aint last = first + rreq->dev.recv_data_sz;
+        MPI_Aint last = first + stream_data_len;
 
         if (seg == NULL) {
             if (win_ptr->shm_allocated == TRUE)
@@ -343,7 +357,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
     iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
     iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *) resp_req->dev.user_buf);
-    iov[1].MPID_IOV_LEN = rreq->dev.recv_data_sz;
+    iov[1].MPID_IOV_LEN = stream_data_len;
     iovcnt = 2;
 
     MPIU_THREAD_CS_ENTER(CH3COMM, vc);
@@ -357,8 +371,12 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
 
     MPIU_Assert(MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_GET_ACCUM_RECV);
 
-    /* free the temporary buffer */
-    MPIDI_CH3U_SRBuf_free(rreq);
+    if (is_empty_origin == FALSE) {
+        /* free the temporary buffer.
+         * When origin data is zero, there
+         * is no temporary buffer allocated */
+        MPIDI_CH3U_SRBuf_free(rreq);
+    }
 
     /* mark data transfer as complete and decrement CC */
     MPIDI_CH3U_Request_complete(rreq);
@@ -391,10 +409,16 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_fop_resp_t *fop_resp_pkt = &upkt.fop_resp;
     int is_contig;
+    int is_empty_origin = FALSE;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_FOPRECVCOMPLETE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_FOPRECVCOMPLETE);
+
+    /* Judge if origin buffer is empty */
+    if (rreq->dev.op == MPI_NO_OP) {
+        is_empty_origin = TRUE;
+    }
 
     MPIU_Assert(MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_FOP_RECV);
 
@@ -478,8 +502,12 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
 
     MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
-    /* free the temporary buffer */
-    MPIU_Free((char *) rreq->dev.user_buf);
+    if (is_empty_origin == FALSE) {
+        /* free the temporary buffer.
+         * When origin data is zero, there
+         * is no temporary buffer allocated */
+        MPIU_Free((char *) rreq->dev.user_buf);
+    }
 
     /* mark data transfer as complete and decrement CC */
     MPIDI_CH3U_Request_complete(rreq);
@@ -650,7 +678,7 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
 #define FUNCNAME MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
+int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
                                                     MPID_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -660,9 +688,15 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((u
     MPI_Aint stream_offset;
     MPI_Aint type_size;
     MPI_Datatype basic_dtp;
+    int is_empty_origin = FALSE;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMMETADATARECVCOMPLETE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMMETADATARECVCOMPLETE);
+
+    /* Judge if origin buffer is empty */
+    if (rreq->dev.op == MPI_NO_OP) {
+        is_empty_origin = TRUE;
+    }
 
     if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
         MPIU_Assert(rreq->dev.ext_hdr_ptr != NULL);
@@ -698,49 +732,60 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((u
         basic_dtp = rreq->dev.datatype;
     }
 
-    MPID_Datatype_get_size_macro(basic_dtp, basic_type_size);
-    MPID_Datatype_get_extent_macro(basic_dtp, basic_type_extent);
+    if (is_empty_origin == TRUE) {
+        rreq->dev.recv_data_sz = 0;
 
-    MPIU_Assert(!MPIDI_Request_get_srbuf_flag(rreq));
-    /* allocate a SRBuf for receiving stream unit */
-    MPIDI_CH3U_SRBuf_alloc(rreq, MPIDI_CH3U_SRBuf_size);
-    /* --BEGIN ERROR HANDLING-- */
-    if (rreq->dev.tmpbuf_sz == 0) {
-        MPIU_DBG_MSG(CH3_CHANNEL, TYPICAL, "SRBuf allocation failure");
-        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-                                         FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem",
-                                         "**nomem %d", MPIDI_CH3U_SRBuf_size);
-        rreq->status.MPI_ERROR = mpi_errno;
-        goto fn_fail;
+        /* There is no origin data coming, directly call final req handler. */
+        mpi_errno = MPIDI_CH3_ReqHandler_GaccumRecvComplete(vc, rreq, complete);
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
     }
-    /* --END ERROR HANDLING-- */
+    else {
+        MPID_Datatype_get_size_macro(basic_dtp, basic_type_size);
+        MPID_Datatype_get_extent_macro(basic_dtp, basic_type_extent);
 
-    rreq->dev.user_buf = rreq->dev.tmpbuf;
+        MPIU_Assert(!MPIDI_Request_get_srbuf_flag(rreq));
+        /* allocate a SRBuf for receiving stream unit */
+        MPIDI_CH3U_SRBuf_alloc(rreq, MPIDI_CH3U_SRBuf_size);
+        /* --BEGIN ERROR HANDLING-- */
+        if (rreq->dev.tmpbuf_sz == 0) {
+            MPIU_DBG_MSG(CH3_CHANNEL, TYPICAL, "SRBuf allocation failure");
+            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
+                                             FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem",
+                                             "**nomem %d", MPIDI_CH3U_SRBuf_size);
+            rreq->status.MPI_ERROR = mpi_errno;
+            goto fn_fail;
+        }
+        /* --END ERROR HANDLING-- */
 
-    total_len = type_size * rreq->dev.user_count;
-    rest_len = total_len - stream_offset;
-    stream_elem_count = MPIDI_CH3U_SRBuf_size / basic_type_extent;
+        rreq->dev.user_buf = rreq->dev.tmpbuf;
 
-    rreq->dev.recv_data_sz = MPIR_MIN(rest_len, stream_elem_count * basic_type_size);
+        total_len = type_size * rreq->dev.user_count;
+        rest_len = total_len - stream_offset;
+        stream_elem_count = MPIDI_CH3U_SRBuf_size / basic_type_extent;
 
-    rreq->dev.segment_ptr = MPID_Segment_alloc();
-    MPIU_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
-                         "**nomem %s", "MPID_Segment_alloc");
+        rreq->dev.recv_data_sz = MPIR_MIN(rest_len, stream_elem_count * basic_type_size);
 
-    MPID_Segment_init(rreq->dev.user_buf,
-                      (rreq->dev.recv_data_sz / basic_type_size),
-                      basic_dtp, rreq->dev.segment_ptr, 0);
-    rreq->dev.segment_first = 0;
-    rreq->dev.segment_size = rreq->dev.recv_data_sz;
+        rreq->dev.segment_ptr = MPID_Segment_alloc();
+        MPIU_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
+                             "**nomem %s", "MPID_Segment_alloc");
 
-    mpi_errno = MPIDI_CH3U_Request_load_recv_iov(rreq);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|loadrecviov");
+        MPID_Segment_init(rreq->dev.user_buf,
+                          (rreq->dev.recv_data_sz / basic_type_size),
+                          basic_dtp, rreq->dev.segment_ptr, 0);
+        rreq->dev.segment_first = 0;
+        rreq->dev.segment_size = rreq->dev.recv_data_sz;
+
+        mpi_errno = MPIDI_CH3U_Request_load_recv_iov(rreq);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|loadrecviov");
+        }
+        if (!rreq->dev.OnDataAvail)
+            rreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumRecvComplete;
+
+        *complete = FALSE;
     }
-    if (!rreq->dev.OnDataAvail)
-        rreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumRecvComplete;
 
-    *complete = FALSE;
   fn_fail:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMMETADATARECVCOMPLETE);
     return mpi_errno;

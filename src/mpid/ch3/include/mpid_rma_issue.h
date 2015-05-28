@@ -182,10 +182,20 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     MPI_Datatype *datatypes = NULL;
     MPI_Aint dt_true_lb;
     MPIDI_CH3_Pkt_flags_t flags;
+    int is_empty_origin = FALSE;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER);
 
     MPIDI_FUNC_ENTER(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER);
+
+    /* Judge if origin buffer is empty (this can only happens for
+     * GACC and FOP when op is MPI_NO_OP). */
+    if ((rma_op->pkt).type == MPIDI_CH3_PKT_GET_ACCUM || (rma_op->pkt).type == MPIDI_CH3_PKT_FOP) {
+        MPI_Op op;
+        MPIDI_CH3_PKT_RMA_GET_OP(rma_op->pkt, op, mpi_errno);
+        if (op == MPI_NO_OP)
+            is_empty_origin = TRUE;
+    }
 
     /* Judge if target datatype is derived datatype. */
     MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE(rma_op->pkt, target_datatype, mpi_errno);
@@ -203,14 +213,21 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
         }
     }
 
-    /* Judge if origin datatype is derived datatype. */
-    if (!MPIR_DATATYPE_IS_PREDEFINED(rma_op->origin_datatype)) {
-        MPID_Datatype_get_ptr(rma_op->origin_datatype, origin_dtp);
-    }
+    if (is_empty_origin == FALSE) {
+        /* Judge if origin datatype is derived datatype. */
+        if (!MPIR_DATATYPE_IS_PREDEFINED(rma_op->origin_datatype)) {
+            MPID_Datatype_get_ptr(rma_op->origin_datatype, origin_dtp);
+        }
 
-    /* check if origin data is contiguous and get true lb */
-    MPID_Datatype_is_contig(rma_op->origin_datatype, &is_origin_contig);
-    MPID_Datatype_get_true_lb(rma_op->origin_datatype, &dt_true_lb);
+        /* check if origin data is contiguous and get true lb */
+        MPID_Datatype_is_contig(rma_op->origin_datatype, &is_origin_contig);
+        MPID_Datatype_get_true_lb(rma_op->origin_datatype, &dt_true_lb);
+    }
+    else {
+        /* origin buffer is empty, mark origin data as contig and true_lb as 0. */
+        is_origin_contig = 1;
+        dt_true_lb = 0;
+    }
 
     iov[iovcnt].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) & (rma_op->pkt);
     iov[iovcnt].MPID_IOV_LEN = sizeof(rma_op->pkt);
@@ -225,10 +242,12 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
          * (3) origin datatype is contiguous (do not need to pack the data and send);
          */
 
-        iov[iovcnt].MPID_IOV_BUF =
-            (MPID_IOV_BUF_CAST) ((char *) rma_op->origin_addr + dt_true_lb + stream_offset);
-        iov[iovcnt].MPID_IOV_LEN = stream_size;
-        iovcnt++;
+        if (is_empty_origin == FALSE) {
+            iov[iovcnt].MPID_IOV_BUF =
+                (MPID_IOV_BUF_CAST) ((char *) rma_op->origin_addr + dt_true_lb + stream_offset);
+            iov[iovcnt].MPID_IOV_LEN = stream_size;
+            iovcnt++;
+        }
 
         MPIU_THREAD_CS_ENTER(CH3COMM, vc);
         mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, iovcnt, &req);
@@ -294,10 +313,13 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
 
         if (is_origin_contig) {
             /* origin data is contiguous */
-            iov[iovcnt].MPID_IOV_BUF =
-                (MPID_IOV_BUF_CAST) ((char *) rma_op->origin_addr + dt_true_lb + stream_offset);
-            iov[iovcnt].MPID_IOV_LEN = stream_size;
-            iovcnt++;
+
+            if (is_empty_origin == FALSE) {
+                iov[iovcnt].MPID_IOV_BUF =
+                    (MPID_IOV_BUF_CAST) ((char *) rma_op->origin_addr + dt_true_lb + stream_offset);
+                iov[iovcnt].MPID_IOV_LEN = stream_size;
+                iovcnt++;
+            }
 
             MPIU_THREAD_CS_ENTER(CH3COMM, vc);
             mpi_errno = MPIDI_CH3_iSendv(vc, req, iov, iovcnt);
@@ -336,7 +358,24 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
 
         /* create a new datatype containing the dtype_info, dataloop, and origin data */
 
-        if (flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
+        if (is_empty_origin == TRUE) {
+            count = 2;
+            ints = (int *) MPIU_Malloc(sizeof(int) * (count + 1));
+            blocklens = &ints[1];
+            displaces = (MPI_Aint *) MPIU_Malloc(sizeof(MPI_Aint) * count);
+            datatypes = (MPI_Datatype *) MPIU_Malloc(sizeof(MPI_Datatype) * count);
+
+            ints[0] = count;
+
+            displaces[0] = MPIU_PtrToAint(&(rma_op->dtype_info));
+            blocklens[0] = sizeof(MPIDI_RMA_dtype_info);
+            datatypes[0] = MPI_BYTE;
+
+            displaces[1] = MPIU_PtrToAint(rma_op->dataloop);
+            MPIU_Assign_trunc(blocklens[1], target_dtp->dataloop_size, int);
+            datatypes[1] = MPI_BYTE;
+        }
+        else if (flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
             segp = MPID_Segment_alloc();
             MPIU_ERR_CHKANDJUMP1(segp == NULL, mpi_errno, MPI_ERR_OTHER,
                                  "**nomem", "**nomem %s", "MPID_Segment_alloc");
@@ -685,8 +724,8 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     MPI_Aint stream_elem_count, stream_unit_count;
     MPI_Aint predefined_dtp_size, predefined_dtp_count, predefined_dtp_extent;
     MPI_Aint total_len, rest_len;
-    MPI_Aint origin_dtp_size;
-    MPID_Datatype *origin_dtp_ptr = NULL;
+    MPI_Aint target_dtp_size;
+    MPID_Datatype *target_dtp_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_ISSUE_GET_ACC_OP);
 
@@ -746,22 +785,22 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         goto fn_exit;
     }
 
-    /* Get total length of origin data */
-    MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_dtp_size);
-    total_len = origin_dtp_size * rma_op->origin_count;
+    /* Get total length of target data */
+    MPID_Datatype_get_size_macro(get_accum_pkt->datatype, target_dtp_size);
+    total_len = target_dtp_size * get_accum_pkt->count;
 
     /* Get size and count for predefined datatype elements */
-    if (MPIR_DATATYPE_IS_PREDEFINED(rma_op->origin_datatype)) {
-        predefined_dtp_size = origin_dtp_size;
-        predefined_dtp_count = rma_op->origin_count;
-        MPID_Datatype_get_extent_macro(rma_op->origin_datatype, predefined_dtp_extent);
+    if (MPIR_DATATYPE_IS_PREDEFINED(get_accum_pkt->datatype)) {
+        predefined_dtp_size = target_dtp_size;
+        predefined_dtp_count = get_accum_pkt->count;
+        MPID_Datatype_get_extent_macro(get_accum_pkt->datatype, predefined_dtp_extent);
     }
     else {
-        MPID_Datatype_get_ptr(rma_op->origin_datatype, origin_dtp_ptr);
-        MPIU_Assert(origin_dtp_ptr != NULL && origin_dtp_ptr->basic_type != MPI_DATATYPE_NULL);
-        MPID_Datatype_get_size_macro(origin_dtp_ptr->basic_type, predefined_dtp_size);
+        MPID_Datatype_get_ptr(get_accum_pkt->datatype, target_dtp_ptr);
+        MPIU_Assert(target_dtp_ptr != NULL && target_dtp_ptr->basic_type != MPI_DATATYPE_NULL);
+        MPID_Datatype_get_size_macro(target_dtp_ptr->basic_type, predefined_dtp_size);
         predefined_dtp_count = total_len / predefined_dtp_size;
-        MPID_Datatype_get_extent_macro(origin_dtp_ptr->basic_type, predefined_dtp_extent);
+        MPID_Datatype_get_extent_macro(target_dtp_ptr->basic_type, predefined_dtp_extent);
     }
     MPIU_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 && predefined_dtp_extent > 0);
 
