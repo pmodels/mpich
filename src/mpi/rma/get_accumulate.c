@@ -137,6 +137,10 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
             if (mpi_errno) goto fn_fail;
 
             if (op != MPI_NO_OP) {
+                /* NOTE: when op is MPI_NO_OP, origin_addr is allowed to be NULL,
+                 * origin_datatype is allowed to be MPI_DATATYPE_NULL, and
+                 * origin_count is allowed to be 0. In such case, MPI_Get_accumulate
+                 * equals to an atomic GET. */
                 MPIR_ERRTEST_COUNT(origin_count, mpi_errno);
                 MPIR_ERRTEST_DATATYPE(origin_datatype, "origin_datatype", mpi_errno);
                 MPIR_ERRTEST_USERBUFFER(origin_addr, origin_count, origin_datatype, mpi_errno);
