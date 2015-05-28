@@ -824,19 +824,17 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
         MPID_Datatype_get_extent_macro(source_dtp, source_dtp_extent);
     }
 
-    if (acc_op != MPI_REPLACE) {
-        if (HANDLE_GET_KIND(acc_op) == HANDLE_KIND_BUILTIN) {
-            /* get the function by indexing into the op table */
-            uop = MPIR_OP_HDL_TO_FN(acc_op);
-        }
-        else {
-            /* --BEGIN ERROR HANDLING-- */
-            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                             FCNAME, __LINE__, MPI_ERR_OP,
-                                             "**opnotpredefined", "**opnotpredefined %d", acc_op);
-            return mpi_errno;
-            /* --END ERROR HANDLING-- */
-        }
+    if (HANDLE_GET_KIND(acc_op) == HANDLE_KIND_BUILTIN) {
+        /* get the function by indexing into the op table */
+        uop = MPIR_OP_HDL_TO_FN(acc_op);
+    }
+    else {
+        /* --BEGIN ERROR HANDLING-- */
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                         FCNAME, __LINE__, MPI_ERR_OP,
+                                         "**opnotpredefined", "**opnotpredefined %d", acc_op);
+        return mpi_errno;
+        /* --END ERROR HANDLING-- */
     }
 
 
@@ -854,15 +852,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
             curr_target_buf = target_buf;
         }
 
-        if (acc_op == MPI_REPLACE) {
-            mpi_errno = MPIR_Localcopy(source_buf, source_count, source_dtp,
-                                       curr_target_buf, source_count, source_dtp);
-            if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
-        }
-        else {
-            (*uop) (source_buf, curr_target_buf, &source_count, &source_dtp);
-        }
+        (*uop) (source_buf, curr_target_buf, &source_count, &source_dtp);
     }
     else {
         /* derived datatype */
@@ -929,18 +919,8 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
 
             MPIU_Assign_trunc(count, curr_len / type_size, int);
 
-            if (acc_op == MPI_REPLACE) {
-                mpi_errno = MPIR_Localcopy((char *) source_buf + type_extent * accumulated_count,
-                                           count, type,
-                                           (char *) target_buf + MPIU_PtrToAint(curr_loc),
-                                           count, type);
-                if (mpi_errno != MPI_SUCCESS)
-                    MPIU_ERR_POP(mpi_errno);
-            }
-            else {
-                (*uop) ((char *) source_buf + type_extent * accumulated_count,
-                        (char *) target_buf + MPIU_PtrToAint(curr_loc), &count, &type);
-            }
+            (*uop) ((char *) source_buf + type_extent * accumulated_count,
+                    (char *) target_buf + MPIU_PtrToAint(curr_loc), &count, &type);
 
             if (curr_len % type_size == 0) {
                 i++;
