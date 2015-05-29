@@ -84,7 +84,7 @@
                        0,                                               \
                        gl_data.mr,                                      \
                        VC_OFI(vc)->direct_addr,                         \
-                       MPID_MSG_CTS,                                    \
+                       match_bits | MPID_MSG_CTS,                       \
                        0, /* Exact tag match, no ignore bits */         \
                        &(REQ_OFI(cts_req)->ofi_context)),trecv);        \
         if (gl_data.api_set == API_SET_1){                              \
@@ -123,17 +123,17 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sre
     uint64_t tag = 0;
     BEGIN_FUNC(FCNAME);
     switch (wc->tag & MPID_PROTOCOL_MASK) {
-    case MPID_MSG_CTS:
+    case MPID_MSG_CTS | MPID_MSG_RTS:
         vc = REQ_OFI(sreq)->vc;
         FI_RC_RETRY(fi_tsend(gl_data.endpoint,
                        REQ_OFI(sreq)->pack_buffer,
                        REQ_OFI(sreq)->pack_buffer_size,
                        gl_data.mr,
                        VC_OFI(vc)->direct_addr,
-                       MPID_MSG_DATA, (void *) &(REQ_OFI(sreq)->ofi_context)), tsend);
+                       wc->tag | MPID_MSG_DATA, (void *) &(REQ_OFI(sreq)->ofi_context)), tsend);
         MPIDI_CH3U_Request_complete(sreq);
         break;
-    case MPID_MSG_DATA:
+    case MPID_MSG_CTS | MPID_MSG_RTS | MPID_MSG_DATA:
         if (REQ_OFI(sreq)->pack_buffer)
             MPIU_Free(REQ_OFI(sreq)->pack_buffer);
 

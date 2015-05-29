@@ -233,7 +233,7 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPID_R
                        REQ_OFI(new_rreq)->pack_buffer_size,
                        gl_data.mr,
                        VC_OFI(vc)->direct_addr,
-                       MPID_MSG_DATA, 0, &(REQ_OFI(new_rreq)->ofi_context)), trecv);
+                       wc->tag | MPID_MSG_CTS | MPID_MSG_DATA, 0, &(REQ_OFI(new_rreq)->ofi_context)), trecv);
 
     MPID_nem_ofi_create_req(&sreq, 1);
     sreq->dev.OnDataAvail = NULL;
@@ -245,7 +245,7 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPID_R
                      0,
                      gl_data.mr,
                      VC_OFI(vc)->direct_addr,
-                     MPID_MSG_CTS, &(REQ_OFI(sreq)->ofi_context)), tsend);
+                     wc->tag | MPID_MSG_CTS, &(REQ_OFI(sreq)->ofi_context)), tsend);
     MPIU_Assert(gl_data.persistent_req == rreq);
 
     rreq->dev.user_count = 0;
