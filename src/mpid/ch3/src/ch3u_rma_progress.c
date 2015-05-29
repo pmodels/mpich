@@ -32,25 +32,25 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-static inline int check_target_state(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
-                                     int *made_progress);
-static inline int check_window_state(MPID_Win * win_ptr, int *made_progress);
+static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
+                                                int *made_progress);
+static inline int check_and_switch_window_state(MPID_Win * win_ptr, int *made_progress);
 static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
                                    int *made_progress);
 static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress);
 
 /* check if we can switch window-wide state: FENCE_ISSUED, PSCW_ISSUED, LOCK_ALL_ISSUED */
 #undef FUNCNAME
-#define FUNCNAME check_window_state
+#define FUNCNAME check_and_switch_window_state
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline int check_window_state(MPID_Win * win_ptr, int *made_progress)
+static inline int check_and_switch_window_state(MPID_Win * win_ptr, int *made_progress)
 {
     MPID_Request *fence_req_ptr = NULL;
     int i, mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_CHECK_WINDOW_STATE);
+    MPIDI_STATE_DECL(MPID_STATE_CHECK_AND_SWITCH_WINDOW_STATE);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_CHECK_WINDOW_STATE);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_CHECK_AND_SWITCH_WINDOW_STATE);
 
     (*made_progress) = 0;
 
@@ -121,7 +121,7 @@ static inline int check_window_state(MPID_Win * win_ptr, int *made_progress)
     }   /* end of switch */
 
   fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_CHECK_WINDOW_STATE);
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_CHECK_AND_SWITCH_WINDOW_STATE);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -131,11 +131,11 @@ static inline int check_window_state(MPID_Win * win_ptr, int *made_progress)
 
 
 #undef FUNCNAME
-#define FUNCNAME check_target_state
+#define FUNCNAME check_and_switch_target_state
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline int check_target_state(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
-                                     int *made_progress)
+static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
+                                                int *made_progress)
 {
     int rank = win_ptr->comm_ptr->rank;
     int mpi_errno = MPI_SUCCESS;
@@ -492,7 +492,7 @@ static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress)
             int temp_progress = 0;
 
             /* check target state */
-            mpi_errno = check_target_state(win_ptr, target, &temp_progress);
+            mpi_errno = check_and_switch_target_state(win_ptr, target, &temp_progress);
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
             if (temp_progress)
@@ -788,7 +788,7 @@ int MPIDI_CH3I_RMA_Make_progress_target(MPID_Win * win_ptr, int target_rank, int
     (*made_progress) = 0;
 
     /* check window state */
-    mpi_errno = check_window_state(win_ptr, &temp_progress);
+    mpi_errno = check_and_switch_window_state(win_ptr, &temp_progress);
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
     if (temp_progress)
@@ -800,7 +800,7 @@ int MPIDI_CH3I_RMA_Make_progress_target(MPID_Win * win_ptr, int target_rank, int
         MPIU_ERR_POP(mpi_errno);
 
     /* check target state */
-    mpi_errno = check_target_state(win_ptr, target, &temp_progress);
+    mpi_errno = check_and_switch_target_state(win_ptr, target, &temp_progress);
     if (mpi_errno)
         MPIU_ERR_POP(mpi_errno);
     if (temp_progress)
@@ -832,7 +832,7 @@ int MPIDI_CH3I_RMA_Make_progress_win(MPID_Win * win_ptr, int *made_progress)
     (*made_progress) = 0;
 
     /* check window state */
-    mpi_errno = check_window_state(win_ptr, &temp_progress);
+    mpi_errno = check_and_switch_window_state(win_ptr, &temp_progress);
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
     if (temp_progress)
