@@ -100,8 +100,8 @@ static int test_indexed_with_zeros(char *filename, int testcase)
     if (err != MPI_SUCCESS) handle_error(err, "MPI_File_open");
     err = MPI_File_set_view(fh, 0, MPI_INT, filetype, "native", MPI_INFO_NULL);
     if (err != MPI_SUCCESS) handle_error(err, "MPI_File_set_view");
-    err = MPIX_File_iwrite_all(fh, buf, buflen, MPI_INT, &request);
-    if (err != MPI_SUCCESS) handle_error(err, "MPIX_File_iwrite_all");
+    err = MPI_File_iwrite_all(fh, buf, buflen, MPI_INT, &request);
+    if (err != MPI_SUCCESS) handle_error(err, "MPI_File_iwrite_all");
     err = MPI_Wait(&request, &status);
     if (err != MPI_SUCCESS) handle_error(err, "MPI_Wait");
     MPI_Type_free(&filetype);

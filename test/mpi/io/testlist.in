@@ -12,15 +12,15 @@ resized 1
 resized2 1 xfail=ticket2088
 bigtype 1
 hindexed_io 1
-@mpix@i_bigtype 1
-@mpix@i_hindexed_io 1
-@mpix@i_rdwrord 4
-@mpix@i_setviewcur 4
-@mpix@i_aggregation1 4
-@mpix@i_aggregation2 4
-@mpix@i_coll_test 4
-@mpix@i_darray_read 4
-@mpix@i_hindexed 4
-@mpix@i_noncontig_coll 2
-@mpix@i_noncontig_coll2 4
-@mpix@i_types_with_zeros 2
+i_bigtype 1 mpiversion=3.1
+i_hindexed_io 1 mpiversion=3.1
+i_rdwrord 4 mpiversion=3.1
+i_setviewcur 4 mpiversion=3.1
+i_aggregation1 4 mpiversion=3.1
+i_aggregation2 4 mpiversion=3.1
+i_coll_test 4 mpiversion=3.1
+i_darray_read 4 mpiversion=3.1
+i_hindexed 4 mpiversion=3.1
+i_noncontig_coll 2 mpiversion=3.1
+i_noncontig_coll2 4 mpiversion=3.1
+i_types_with_zeros 2 mpiversion=3.1

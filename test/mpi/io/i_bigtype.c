@@ -100,7 +100,7 @@ int main(int argc, char **argv)
     }
 
     /* write everything */
-    rc = MPIX_File_iwrite_at_all(fh, 0, buf_write, 1, mem_type, &request);
+    rc = MPI_File_iwrite_at_all(fh, 0, buf_write, 1, mem_type, &request);
     if (rc != MPI_SUCCESS) {
         printf("%d ERROR IWRITE AT ALL\n", rc);
         exit(1);
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
     }
 
     /* read everything */
-    rc = MPIX_File_iread_at_all(fh, 0, buf_read, 1, mem_type, &request);
+    rc = MPI_File_iread_at_all(fh, 0, buf_read, 1, mem_type, &request);
     if (rc != MPI_SUCCESS) {
         printf("%d ERROR IREAD AT ALL\n", rc);
         exit(1);

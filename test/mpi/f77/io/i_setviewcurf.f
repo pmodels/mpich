@@ -37,7 +37,7 @@ C    using a combination of collective and ordered writes
       endif
 
       buf(1) = size
-      call MPIX_File_iwrite_all( fh, buf, 1, MPI_INTEGER, request, ierr)
+      call MPI_File_iwrite_all( fh, buf, 1, MPI_INTEGER, request, ierr)
       if (ierr .ne. MPI_SUCCESS) then
          errs = errs + 1
          call MTestPrintErrorMsg( "iwrite_all", ierr )

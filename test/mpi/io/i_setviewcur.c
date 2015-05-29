@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(comm, &rank);
     buf = (int *) malloc(size * sizeof(int));
     buf[0] = size;
-    err = MPIX_File_iwrite_all(fh, buf, 1, MPI_INT, &request);
+    err = MPI_File_iwrite_all(fh, buf, 1, MPI_INT, &request);
     if (err) {
         errs++;
         MTestPrintErrorMsg("Iwrite_all", err);

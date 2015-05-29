@@ -174,7 +174,7 @@ int main(int argc, char **argv)
         offset = i * global_array_size;
         /* set the file view */
         MPI_File_set_view(fh, offset, MPI_BYTE, ftype, "native", MPI_INFO_NULL);
-        MPIX_File_iwrite_all(fh, buf, ftype_size, MPI_CHAR, &request[i]);
+        MPI_File_iwrite_all(fh, buf, ftype_size, MPI_CHAR, &request[i]);
     }
     MPI_Waitall(num_io, request, statuses);
     MPI_File_close(&fh);
