@@ -231,6 +231,7 @@
 /errors/f77/testlist
 /errors/group/rerr
 /errors/io/fileerrret
+/errors/io/file_errhdl
 /errors/pt2pt/proberank
 /errors/pt2pt/truncmsg2
 /errors/spawn/badport
