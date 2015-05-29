@@ -22,6 +22,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
 {
     int mpi_errno = MPI_SUCCESS;
     int again = 0;
+    int orig_segment_first = sreq->dev.segment_first;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SENDNONCONTIG);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SENDNONCONTIG);
@@ -58,7 +59,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
         /* we didn't finish sending everything */
         sreq->ch.noncontig = TRUE;
         sreq->ch.vc = vc;
-        if (sreq->dev.segment_first == 0) /* nothing was sent, save header */
+        if (sreq->dev.segment_first == orig_segment_first) /* nothing was sent, save header */
         {
             sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *)header;
             sreq->ch.header_sz    = hdr_sz;
