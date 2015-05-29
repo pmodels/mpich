@@ -131,7 +131,7 @@ at_complete 2
 atomic_rmw_fop 3
 atomic_rmw_cas 3
 atomic_rmw_gacc 3
-@mpix@aint 2 strict=false
+aint 2 mpiversion=3.1
 acc-pairtype 2
 manyget 2 xfail=ticket2264
 derived-acc-flush_local 3 mpiversion=3.0

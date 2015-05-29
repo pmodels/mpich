@@ -21,8 +21,8 @@
       integer :: win
       integer :: intsize
 
-      integer(kind=MPI_ADDRESS_KIND), external :: MPIX_Aint_add
-      integer(kind=MPI_ADDRESS_KIND), external :: MPIX_Aint_diff
+      integer(kind=MPI_ADDRESS_KIND), external :: MPI_Aint_add
+      integer(kind=MPI_ADDRESS_KIND), external :: MPI_Aint_diff
 
       errs = 0
       call mtest_init(ierr);
@@ -60,10 +60,10 @@
 ! Do MPI_Aint addressing arithmetic
       if (rank == 0) then
         disp = intsize*511
-        offset = MPIX_Aint_add(bases(1), disp)
+        offset = MPI_Aint_add(bases(1), disp)
       else if (rank == 1) then
         disp = intsize*512
-        offset = MPIX_Aint_diff(bases(0), disp)
+        offset = MPI_Aint_diff(bases(0), disp)
       endif
 
 ! Get value and verify it
