@@ -180,6 +180,13 @@ int MPID_nem_mxm_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     req_area->iov_buf[0].length = sizeof(MPIDI_CH3_Pkt_t);
 
     last = sreq->dev.segment_size;
+
+    /* NOTE: currently upper layer never pass packet with data that has
+     * either "last <= 0" or "last-sreq->dev.segment_first <=0" to this
+     * layer. In future, if upper layer passes such kind of packet, the
+     * judgement of the following IF branch needs to be modified. */
+    MPIU_Assert(last > 0 && last - sreq->dev.segment_first > 0);
+
     if (last > 0) {
         sreq->dev.tmpbuf = MPIU_Malloc((size_t) (sreq->dev.segment_size - sreq->dev.segment_first));
         MPIU_Assert(sreq->dev.tmpbuf);

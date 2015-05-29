@@ -10,9 +10,6 @@
 #include "mpl_utlist.h"
 #include "mpid_rma_types.h"
 
-/* define ACC stream size as the SRBuf size */
-#define MPIDI_CH3U_Acc_stream_size MPIDI_CH3U_SRBuf_size
-
 static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datatype source_dtp,
                                    void *target_buf, int target_count, MPI_Datatype target_dtp,
                                    MPI_Aint stream_offset, MPI_Op acc_op);

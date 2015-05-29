@@ -925,6 +925,11 @@ extern MPIDI_CH3U_SRBuf_element_t * MPIDI_CH3U_SRBuf_pool;
   END SEND/RECEIVE BUFFER SECTION
   -------------------------------*/
 
+/* define ACC stream size as the SRBuf size */
+#if !defined(MPIDI_CH3U_Acc_stream_size)
+#define MPIDI_CH3U_Acc_stream_size MPIDI_CH3U_SRBuf_size
+#endif
+
 /*----------------------------
   BEGIN DEBUGGING TOOL SECTION
   ----------------------------*/

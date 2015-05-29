@@ -10,9 +10,6 @@
 #include "mpl_utlist.h"
 #include "mpid_rma_types.h"
 
-/* define ACC stream size as the SRBuf size */
-#define MPIDI_CH3U_Acc_stream_size MPIDI_CH3U_SRBuf_size
-
 /* =========================================================== */
 /*                    auxiliary functions                      */
 /* =========================================================== */

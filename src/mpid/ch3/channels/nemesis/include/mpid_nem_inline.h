@@ -440,6 +440,16 @@ MPID_nem_mpich_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_f
     {
 	MPID_nem_fbox_mpich_t *pbox = vc_ch->fbox_out;
 
+        /* Add a compiler time check on streaming unit size and FASTBOX size */
+        MPIU_Static_assert((MPIDI_CH3U_Acc_stream_size > MPID_NEM_FBOX_DATALEN),
+                           "RMA ACC Streaming unit size <= FASTBOX size in Nemesis.");
+
+        /* NOTE: when FASTBOX is being used, streaming optimization is never triggered,
+         * because streaming unit size is larger than FASTBOX size. In such case,
+         * first offset (*segment_first) is zero, and last offset (segment_size)
+         * is the data size */
+        MPIU_Assert(*segment_first == 0);
+
         if (MPID_nem_fbox_is_full((MPID_nem_fbox_common_ptr_t)pbox))
             goto usequeue_l;
 
