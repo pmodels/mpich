@@ -12,4 +12,5 @@ int MPIR_Bsend_attach( void *, int );
 int MPIR_Bsend_detach( void *, int * );
 int MPIR_Bsend_isend(const void *, int, MPI_Datatype, int, int, MPID_Comm *,
                      MPIR_Bsend_kind_t, MPID_Request ** );
+int MPIR_Bsend_free_req_seg(MPID_Request * );
 

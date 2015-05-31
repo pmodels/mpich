@@ -81,6 +81,7 @@ static int MPIR_Bsend_check_active ( void );
 static MPIR_Bsend_data_t *MPIR_Bsend_find_buffer( int );
 static void MPIR_Bsend_take_buffer( MPIR_Bsend_data_t *, int );
 static int MPIR_Bsend_finalize( void * );
+static void MPIR_Bsend_free_segment( MPIR_Bsend_data_t * );
 
 /*
  * Attach a buffer.  This checks for the error conditions and then
@@ -310,6 +311,39 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
         MPIU_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_BUFFER, "**bufbsend", "**bufbsend %d %d", packsize, BsendBuffer.buffer_size);
     }
     
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+/*
+ * The following routine looks up the segment used by request req
+ * and frees it. The request is assumed to be completed. This routine
+ * is called by only MPIR_Ibsend_free.
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Bsend_free_seg
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIR_Bsend_free_req_seg( MPID_Request* req )
+{
+    int mpi_errno = MPI_ERR_INTERN;
+    MPIR_Bsend_data_t *active = BsendBuffer.active;
+
+    MPIU_DBG_MSG_P(BSEND,TYPICAL,"Checking active starting at %p", active);
+    while (active) {
+
+	if (active->request == req) {
+            MPIR_Bsend_free_segment( active );
+            mpi_errno = MPI_SUCCESS;
+        }
+
+	active = active->next;;
+
+	MPIU_DBG_MSG_P(BSEND,TYPICAL,"Next active is %p",active);
+    }
+
  fn_exit:
     return mpi_errno;
  fn_fail:

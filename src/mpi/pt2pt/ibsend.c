@@ -46,18 +46,8 @@ PMPI_LOCAL int MPIR_Ibsend_free( void *extra )
 {
     ibsend_req_info *ibsend_info = (ibsend_req_info *)extra;
 
-    /* Release the MPID_Request (there is still another ref pending
-     within the bsendutil functions) */
-    /* XXX DJG FIXME-MT should we be checking this? */
-    if (MPIU_Object_get_ref(ibsend_info->req) > 1) {
-        int inuse;
-	/* Note that this should mean that the request was 
-	   cancelled (that would have decremented the ref count)
-	 */
-        MPIR_Request_release_ref( ibsend_info->req, &inuse );
-    }
-
     MPIU_Free( ibsend_info );
+
     return MPI_SUCCESS;
 }
 #undef FUNCNAME
@@ -70,6 +60,7 @@ PMPI_LOCAL int MPIR_Ibsend_cancel( void *extra, int complete )
     ibsend_req_info *ibsend_info = (ibsend_req_info *)extra;
     MPI_Status status;
     MPID_Request *req = ibsend_info->req;
+    MPI_Request req_hdl = req->handle;
 
     /* FIXME: There should be no unreferenced args! */
     /* Note that this value should always be 1 because 
@@ -81,10 +72,16 @@ PMPI_LOCAL int MPIR_Ibsend_cancel( void *extra, int complete )
     /* Try to cancel the underlying request */
     mpi_errno = MPIR_Cancel_impl(req);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    mpi_errno = MPIR_Wait_impl( &req->handle, &status );
+    mpi_errno = MPIR_Wait_impl( &req_hdl, &status );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     MPIR_Test_cancelled_impl( &status, &ibsend_info->cancelled );
-    
+
+    /* If the cancelation is successful, free the memory in the
+       attached buffer used by the request */
+    if (ibsend_info->cancelled) {
+        mpi_errno = MPIR_Bsend_free_req_seg(ibsend_info->req);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
  fn_exit:
     return mpi_errno;
  fn_fail:
@@ -119,8 +116,6 @@ int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     /* The request is immediately complete because the MPIR_Bsend_isend has
        already moved the data out of the user's buffer */
-    MPIR_Request_add_ref( request_ptr );
-    /* Request count is now 2 (set to 1 in Grequest_start) */
     MPIR_Grequest_complete_impl(new_request_ptr);
     MPIU_OBJ_PUBLISH_HANDLE(*request, new_request_ptr->handle);
   
