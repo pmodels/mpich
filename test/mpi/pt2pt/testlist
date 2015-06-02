@@ -25,11 +25,11 @@ greq1 1
 probe-unexp 4
 probenull 1
 # For testing, scancel will run with 1 process as well
-scancel 2 xfail=ticket287
+scancel 2
 scancel2 2
-pscancel 2 xfail=ticket287
+pscancel 2
 rcancel 2
-cancelrecv 2 xfail=ticket2266
+cancelrecv 2
 cancelanysrc 2
 isendselfprobe 1
 inactivereq 1

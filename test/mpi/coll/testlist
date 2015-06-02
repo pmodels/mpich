@@ -18,7 +18,7 @@ red4 10
 alltoall1 8
 alltoallv 10
 alltoallv0 10
-alltoallw1 10 xfail=ticket2180
+alltoallw1 10
 alltoallw2 10
 alltoallw_zeros 1
 alltoallw_zeros 2
@@ -78,7 +78,7 @@ exscan 10
 exscan2 5
 gather 4
 gather2 4
-gather_big 8 xfail=ticket1767
+gather_big 8
 scattern 4
 scatter2 4
 scatter3 4

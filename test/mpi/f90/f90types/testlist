@@ -1,2 +1,2 @@
-createf90types 1 xfail=ticket2265
-createf90types 1 arg=10000 xfail=ticket2265
+createf90types 1
+createf90types 1 arg=10000

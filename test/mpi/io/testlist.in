@@ -8,8 +8,7 @@ async 4
 async_any 4
 userioerr 1
 resized 1
-# resize2 really is a goofy type, one we have never seen in real applications
-resized2 1 xfail=ticket2088
+resized2 1
 bigtype 1
 hindexed_io 1
 i_bigtype 1 mpiversion=3.1
