@@ -4433,6 +4433,29 @@ AC_SUBST([MPI_F77_CXX_FLOAT_COMPLEX])
 AC_SUBST([MPI_F77_CXX_DOUBLE_COMPLEX])
 AC_SUBST([MPI_F77_CXX_LONG_DOUBLE_COMPLEX])
 
+# ------------------------------------------------------------------------
+# Test if  type_tag_for_datatype is agnostic to modifiers such as const, volatile, and restrict
+# if not, the type tags are disabled to avoid compiler warings. A new type_tag for const etc. does
+# does not help, since only the latest type_tag definition is used. Type tags are defined in mpi.h,
+# therefore, they must be also be activated/deavtivated there
+PAC_PUSH_FLAG([CFLAGS])
+PAC_APPEND_FLAG([-Werror],[CFLAGS])
+AC_TRY_COMPILE([
+typedef int TEST_Datatype;
+#define TEST_INT ((TEST_Datatype)0x44)
+static const TEST_Datatype test_int  __attribute__((type_tag_for_datatype(TEST,int)))  = TEST_INT;
+void test(const void* buffer, TEST_Datatype datatype)__attribute__((pointer_with_type_tag(TEST,1,2)));],[
+const int buf[10];
+test(buf, TEST_INT);],ac_attr_support=yes, ac_attr_support=no)
+if test "$ac_attr_support" = yes
+then
+    DISABLE_TAG_SUPPORT="#undef NO_TAGS_WITH_MODIFIERS"
+else
+    DISABLE_TAG_SUPPORT="#define NO_TAGS_WITH_MODIFIERS 1"
+fi
+PAC_POP_FLAG([CFLAGS])
+AC_SUBST(DISABLE_TAG_SUPPORT)
+
 # ----------------------------------------------------------------------------
 # Check for the alignment rules moves with types int64_t etc.  These
 # are used in the datatype code to perform pack and unpack operations.  

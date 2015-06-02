@@ -14,10 +14,12 @@
 extern "C" {
 #endif
 
+@DISABLE_TAG_SUPPORT@
 #undef MPICH_DEFINE_ATTR_TYPE_TYPES
 #if defined(__has_attribute)
 #  if __has_attribute(pointer_with_type_tag) && \
       __has_attribute(type_tag_for_datatype) && \
+      !defined(NO_TAGS_WITH_MODIFIERS) &&\
       !defined(MPICH_NO_ATTR_TYPE_TAGS)
 #    define MPICH_DEFINE_ATTR_TYPE_TYPES 1
 #    define MPICH_ATTR_POINTER_WITH_TYPE_TAG(buffer_idx, type_idx)  __attribute__((pointer_with_type_tag(MPI,buffer_idx,type_idx)))
