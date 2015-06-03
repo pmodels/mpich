@@ -267,11 +267,11 @@ if [ -n "$profConf" ] ; then
 fi
 
 final_fflags="@MPICH_MPIF77_FFLAGS@ @WRAPPER_FFLAGS@"
-final_ldflags="@MPICH_MPIF77_LDFLAGS@"
+final_ldflags="@MPICH_MPIF77_LDFLAGS@ @WRAPPER_LDFLAGS@"
 final_libs="@MPICH_MPIF77_LIBS@"
 if test "@INTERLIB_DEPS@" = "no" -o "${interlib_deps}" = "no" ; then
-    final_ldflags="$ldflags @LDFLAGS@ @WRAPPER_LDFLAGS@"
-    final_libs="$libs @LIBS@ @WRAPPER_LIBS@"
+    final_ldflags="${final_ldflags} @LDFLAGS@"
+    final_libs="${final_libs} @LIBS@ @WRAPPER_LIBS@"
 fi
 
 # A temporary statement to invoke the compiler

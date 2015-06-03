@@ -325,11 +325,11 @@ elif [ -n "$FCMODINC" ] ; then
 fi
 
 final_fcflags="@MPICH_MPIFORT_FCFLAGS@ @WRAPPER_FCFLAGS@"
-final_ldflags="@MPICH_MPIFORT_LDFLAGS@"
+final_ldflags="@MPICH_MPIFORT_LDFLAGS@ @WRAPPER_LDFLAGS@"
 final_libs="@MPICH_MPIFORT_LIBS@"
 if test "@INTERLIB_DEPS@" = "no" -o "${interlib_deps}" = "no" ; then
-    final_ldflags="$ldflags @LDFLAGS@ @WRAPPER_LDFLAGS@"
-    final_libs="$libs @LIBS@ @WRAPPER_LIBS@"
+    final_ldflags="${final_ldflags} @LDFLAGS@"
+    final_libs="${final_libs} @LIBS@ @WRAPPER_LIBS@"
 fi
 
 # A temporary statement to invoke the compiler
