@@ -25,7 +25,9 @@ noinst_PROGRAMS = \
     resized       \
     resized2      \
     bigtype       \
-    hindexed_io
+    hindexed_io   \
+    simple_collective
+
 
 if BUILD_MPIX_TESTS
 noinst_PROGRAMS +=      \
