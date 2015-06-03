@@ -187,15 +187,21 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
     char *pack_buffer;
     uint64_t match_bits;
     MPID_Request *cts_req;
+    MPIDI_msg_sz_t buf_offset = 0;
 
     BEGIN_FUNC(FCNAME);
     MPIU_Assert(hdr_sz <= (MPIDI_msg_sz_t) sizeof(MPIDI_CH3_Pkt_t));
     MPID_nem_ofi_init_req(sreq);
-    pkt_len = sizeof(MPIDI_CH3_Pkt_t) + data_sz;
+    pkt_len = sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.ext_hdr_sz + data_sz;
     pack_buffer = MPIU_Malloc(pkt_len);
     MPIU_Assert(pack_buffer);
     MPIU_Memcpy(pack_buffer, hdr, hdr_sz);
-    MPIU_Memcpy(pack_buffer + sizeof(MPIDI_CH3_Pkt_t), data, data_sz);
+    buf_offset += sizeof(MPIDI_CH3_Pkt_t);
+    if (sreq->dev.ext_hdr_sz > 0) {
+        MPIU_Memcpy(pack_buffer + buf_offset, sreq->dev.ext_hdr_ptr, sreq->dev.ext_hdr_sz);
+        buf_offset += sreq->dev.ext_hdr_sz;
+    }
+    MPIU_Memcpy(pack_buffer + buf_offset, data, data_sz);
     START_COMM();
     END_FUNC_RC(FCNAME);
 }
@@ -211,6 +217,7 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc,
     uint64_t match_bits;
     MPID_Request *cts_req;
     MPIDI_msg_sz_t first, last;
+    MPIDI_msg_sz_t buf_offset = 0;
 
     BEGIN_FUNC(FCNAME);
     MPIU_Assert(hdr_sz <= (MPIDI_msg_sz_t) sizeof(MPIDI_CH3_Pkt_t));
@@ -218,11 +225,16 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc,
     first = sreq->dev.segment_first;
     last = sreq->dev.segment_size;
     data_sz = sreq->dev.segment_size - sreq->dev.segment_first;
-    pkt_len = sizeof(MPIDI_CH3_Pkt_t) + data_sz;
+    pkt_len = sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.ext_hdr_sz + data_sz;
     pack_buffer = MPIU_Malloc(pkt_len);
     MPIU_Assert(pack_buffer);
     MPIU_Memcpy(pack_buffer, hdr, hdr_sz);
-    MPID_Segment_pack(sreq->dev.segment_ptr, first, &last, pack_buffer + sizeof(MPIDI_CH3_Pkt_t));
+    buf_offset += sizeof(MPIDI_CH3_Pkt_t);
+    if (sreq->dev.ext_hdr_sz > 0) {
+        MPIU_Memcpy(pack_buffer + buf_offset, sreq->dev.ext_hdr_ptr, sreq->dev.ext_hdr_sz);
+        buf_offset += sreq->dev.ext_hdr_sz;
+    }
+    MPID_Segment_pack(sreq->dev.segment_ptr, first, &last, pack_buffer + buf_offset);
     START_COMM();
     MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);
     END_FUNC_RC(FCNAME);
