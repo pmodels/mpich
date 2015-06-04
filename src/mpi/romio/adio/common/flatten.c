@@ -693,6 +693,10 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
 		    flat->indices[j] = st_offset + adds[n];
 		    MPI_Type_size_x(types[n], &old_size);
 		    flat->blocklens[j] = blocklength * old_size;
+		    if (types[n] == MPI_LB)
+			flat->lb_idx = j;
+		    if (types[n] == MPI_UB)
+			flat->ub_idx = j;
 #ifdef FLATTEN_DEBUG
 		    DBG_FPRINTF(stderr,"ADIOI_Flatten:: simple adds[%#X] "MPI_AINT_FMT_HEX_SPEC", flat->indices[%#llX] %#llX, flat->blocklens[%#llX] %#llX\n",n,adds[n],j, flat->indices[j], j, flat->blocklens[j]);
 #endif
@@ -737,6 +741,7 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
 	 * flattening code, is correct and is used to indicate a lower bound
 	 * marker */
 	flat->blocklens[j] = 0;
+	flat->lb_idx = *curr_index;
 
         #ifdef FLATTEN_DEBUG 
         DBG_FPRINTF(stderr,"ADIOI_Flatten:: simple adds[%#X] "MPI_AINT_FMT_HEX_SPEC", flat->indices[%#llX] %#llX, flat->blocklens[%#llX] %#llX\n",0,adds[0],j, flat->indices[j], j, flat->blocklens[j]);
@@ -773,6 +778,7 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
 	/* again, zero-element ok: an upper-bound marker explicitly set by the
 	 * constructor of this resized type */
 	flat->blocklens[j] = 0;
+	flat->lb_idx = *curr_index;
 
         #ifdef FLATTEN_DEBUG 
         DBG_FPRINTF(stderr,"ADIOI_Flatten:: simple adds[%#X] "MPI_AINT_FMT_HEX_SPEC", flat->indices[%#llX] %#llX, flat->blocklens[%#llX] %#llX\n",1,adds[1],j, flat->indices[j], j, flat->blocklens[j]);

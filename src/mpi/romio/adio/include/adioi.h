@@ -114,6 +114,16 @@ typedef struct ADIOI_Fl_node {
     MPI_Count count;                   /* no. of contiguous blocks */
     ADIO_Offset *blocklens;      /* array of contiguous block lengths (bytes)*/
     ADIO_Offset *indices;        /* array of byte offsets of each block */
+    /* the type processing code in ROMIO loops through the flattened
+     * representation to tile file views.  so, we cannot simply indicate a
+     * lower bound and upper bound with entries here -- those are instead
+     * indicated by offset-length pairs with zero length.  In order to deal
+     * with repeatedly resetting the LB and UB though (as in resized of
+     * resized, or struct of resized, perhaps?), indicate where in the
+     * tuple-stream the lb and ub parts are kept
+     * (-1 indicates "not explicitly set") */
+    ADIO_Offset lb_idx;
+    ADIO_Offset ub_idx;
     struct ADIOI_Fl_node *next;  /* pointer to next node */
 } ADIOI_Flatlist_node;
 
