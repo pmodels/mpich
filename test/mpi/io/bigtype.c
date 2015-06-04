@@ -36,7 +36,15 @@ int main(int argc, char** argv)
     k = 0;
     /* create a large buffer 2*/
     buf_write = malloc (NUM_X*NUM_Y*sizeof(int));
+    if (buf_write == NULL) {
+        fprintf(stderr, "not enough memory\n");
+        exit(1);
+    }
     buf_read = malloc (NUM_X*NUM_Y*sizeof(int));
+    if (buf_read == NULL) {
+        fprintf(stderr, "not enough memory\n");
+        exit(1);
+    }
     memset(buf_read, 0, NUM_X*NUM_Y*sizeof(int));
 
     for (i=0; i<NUM_X ; i++) {
@@ -77,13 +85,13 @@ int main(int argc, char** argv)
 
     if(MPI_File_open (MPI_COMM_WORLD, "testfile", MPI_MODE_RDWR | MPI_MODE_CREATE,
                       MPI_INFO_NULL, &fh) != 0) {
-        printf("Can't open file: %s\n","testfile");
+        fprintf(stderr, "Can't open file: %s\n","testfile");
         exit(1);
     }
 
     if (MPI_SUCCESS != MPI_File_set_view(fh, 2144, MPI_BYTE,
                                          file_type, "native", MPI_INFO_NULL)) {
-        printf ("ERROR SET VIEW\n");
+        fprintf (stderr, "ERROR SET VIEW\n");
         exit(1);
     }
 
@@ -95,13 +103,13 @@ int main(int argc, char** argv)
                                  mem_type,
                                  MPI_STATUS_IGNORE);
     if (rc != MPI_SUCCESS){
-        printf ("%d ERROR WRITE AT ALL\n", rc);
+        fprintf (stderr, "%d ERROR WRITE AT ALL\n", rc);
         exit(1);
     }
 
     if (MPI_SUCCESS != MPI_File_set_view(fh, 2144, MPI_BYTE,
                                          file_type, "native", MPI_INFO_NULL)) {
-        printf ("ERROR SET VIEW\n");
+        fprintf (stderr, "ERROR SET VIEW\n");
         exit(1);
     }
 
@@ -113,7 +121,7 @@ int main(int argc, char** argv)
                                mem_type,
                                MPI_STATUS_IGNORE);
     if (rc != MPI_SUCCESS) {
-        printf ("%d ERROR READ AT ALL\n", rc);
+        fprintf (stderr, "%d ERROR READ AT ALL\n", rc);
         exit(1);
     }
 
