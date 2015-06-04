@@ -2,12 +2,10 @@
                                Changes in 3.2
 ===============================================================================
 
- # Added support for proposed MPI-3.1 features including nonblocking
-   collective I/O, address manipulation routines, thread-safety for
-   MPI initialization, pre-init functionality, and new MPI_T routines
-   to look up variables by name. Proposed MPI-3.1 features are
-   implemented as MPIX_ functions and the MPI version number is still
-   set to 3.0.
+ # Added support for MPI-3.1 features including nonblocking collective I/O,
+   address manipulation routines, thread-safety for MPI initialization,
+   pre-init functionality, and new MPI_T routines to look up variables
+   by name.
 
  # Fortran 2008 bindings are enabled by default and fully supported.
 
