@@ -119,6 +119,7 @@ const char * MPIDI_Conn_GetStateString(int state)
     case CONN_STATE_CONNECTED:       name = "CONN_STATE_CONNECTED"; break;
     case CONN_STATE_CLOSING:         name = "CONN_STATE_CLOSING"; break;
     case CONN_STATE_CLOSED:          name = "CONN_STATE_CLOSED"; break;
+    case CONN_STATE_DISCARD:         name = "CONN_STATE_DISCARD"; break;
     case CONN_STATE_FAILED:          name = "CONN_STATE_FAILE"; break;
     }
 

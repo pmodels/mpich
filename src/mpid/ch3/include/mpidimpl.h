@@ -92,6 +92,13 @@ typedef struct MPIDI_PG
        find a particular process group. */
     void * id;
 
+    /* Flag to mark a procress group which is finalizing. This means thay
+       the VCs for this process group are closing, (normally becuase
+       MPI_Finalize was called). This is required to avoid a reconnection
+       of the VCs when the PG is closed due to unused elements in the event
+       queue  */
+    int finalize;
+
     /* Replacement abstraction for connection information */
     /* Connection information needed to access processes in this process 
        group and to share the data with other processes.  The items are

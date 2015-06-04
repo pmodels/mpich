@@ -598,11 +598,13 @@ int MPIDI_CH3_Sockconn_handle_connect_event( MPIDI_CH3I_Connection_t *conn,
     }
     /* --END ERROR HANDLING-- */
 
-    if (conn->state == CONN_STATE_CONNECTING) {
+    if (conn->state == CONN_STATE_CONNECTING || conn->state == CONN_STATE_DISCARD) {
 	MPIDI_CH3I_Pkt_sc_open_req_t *openpkt = 
 	    (MPIDI_CH3I_Pkt_sc_open_req_t *)&conn->pkt.type;
-	MPIU_DBG_CONNSTATECHANGE(conn->vc,conn,CONN_STATE_OPEN_CSEND);
-	conn->state = CONN_STATE_OPEN_CSEND;
+        if(conn->state == CONN_STATE_CONNECTING){
+	    MPIU_DBG_CONNSTATECHANGE(conn->vc,conn,CONN_STATE_OPEN_CSEND);
+	    conn->state = CONN_STATE_OPEN_CSEND;
+        }
 	MPIDI_Pkt_init(openpkt, MPIDI_CH3I_PKT_SC_OPEN_REQ);
 	openpkt->pg_id_len = (int) strlen(MPIDI_Process.my_pg->id) + 1;
 	openpkt->pg_rank = MPIR_Process.comm_world->rank;
@@ -688,6 +690,16 @@ int MPIDI_CH3_Sockconn_handle_close_event( MPIDI_CH3I_Connection_t * conn )
                not be referenced anymore in any case. */
             conn->vc = NULL;
 	}
+        else if(conn->state == CONN_STATE_DISCARD) {
+        /* post close, so the socket is closed and memmory leaks are avoided */
+            MPIU_DBG_MSG(CH3_DISCONNECT,TYPICAL,"CLosing sock (Post_close)");
+            conn->state = CONN_STATE_CLOSING;
+            mpi_errno = MPIDU_Sock_post_close(conn->sock);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIU_ERR_POP(mpi_errno);
+	    }
+            goto fn_exit;
+        }
 	else {
 	    MPIU_Assert(conn->state == CONN_STATE_LISTENING);
 	    MPIDI_CH3I_listener_conn = NULL;
@@ -785,8 +797,9 @@ int MPIDI_CH3_Sockconn_handle_conn_event( MPIDI_CH3I_Connection_t * conn )
 	MPIDI_CH3I_Pkt_sc_open_resp_t *openpkt = 
 	    (MPIDI_CH3I_Pkt_sc_open_resp_t *)&conn->pkt.type;
 	/* FIXME: is this the correct assert? */
-	MPIU_Assert( conn->state == CONN_STATE_OPEN_CRECV );
-	if (openpkt->ack) {
+
+	if (openpkt->ack && conn->state != CONN_STATE_DISCARD) {
+	    MPIU_Assert( conn->state == CONN_STATE_OPEN_CRECV );
 	    MPIDI_CH3I_VC *vcch = &conn->vc->ch;
 	    MPIU_DBG_CONNSTATECHANGE(conn->vc,conn,CONN_STATE_CONNECTED);
 	    conn->state = CONN_STATE_CONNECTED;
@@ -812,6 +825,11 @@ int MPIDI_CH3_Sockconn_handle_conn_event( MPIDI_CH3I_Connection_t * conn )
 	       Why isn't it changed?  Is there an assert here, 
 	       such as conn->vc->conn != conn (there is another connection 
 	       chosen for the vc)? */
+            /*Answer to FIXME */
+            /* Neither freed nor updated. This connection is the looser of
+               a head-to-head connection. The VC is still in use, but by
+               another sochekt connection. The refcount is not incremented
+               By chaning the assosiated connection. */
 	    /* MPIU_Assert( conn->vc->ch.conn != conn ); */
 	    /* Set the candidate vc for this connection to NULL (we
 	       are discarding this connection because (I think) we
@@ -824,6 +842,11 @@ int MPIDI_CH3_Sockconn_handle_conn_event( MPIDI_CH3I_Connection_t * conn )
 	    conn->vc = NULL;
 	    conn->state = CONN_STATE_CLOSING;
 	    /* FIXME: What does post close do here? */
+            /* Answer to FIXME: */
+            /* Since the connection is discarded, the socket is
+               no longer needed and should be closed. This is initiated with the post
+               close command. This also caused that the socket is removed from the
+               socket set, so no more polling on this socket*/
 	    MPIU_DBG_MSG(CH3_DISCONNECT,TYPICAL,"CLosing sock (Post_close)");
 	    mpi_errno = MPIDU_Sock_post_close(conn->sock);
 	    if (mpi_errno != MPI_SUCCESS) {
@@ -881,6 +904,18 @@ int MPIDI_CH3_Sockconn_handle_connopen_event( MPIDI_CH3I_Connection_t * conn )
     MPIDI_PG_Get_vc_set_active(pg, pg_rank, &vc);
     MPIU_Assert(vc->pg_rank == pg_rank);
     
+    if(pg->finalize == 1) {
+        MPIDI_Pkt_init(openresp, MPIDI_CH3I_PKT_SC_OPEN_RESP);
+        openresp->ack = FALSE;
+        MPIU_DBG_CONNSTATECHANGE(conn->vc,conn,CONN_STATE_OPEN_LSEND);
+        conn->state = CONN_STATE_OPEN_LSEND;
+        mpi_errno = connection_post_send_pkt(conn);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_INTERN,
+			    "**ch3|sock|open_lrecv_data");
+        }
+        goto fn_exit;
+    }
     vcch = &vc->ch;
     if (vcch->conn == NULL) {
 	/* no head-to-head connects, accept the connection */
@@ -901,6 +936,11 @@ int MPIDI_CH3_Sockconn_handle_connopen_event( MPIDI_CH3I_Connection_t * conn )
 	    if (MPIR_Process.comm_world->rank < pg_rank) {
 		MPIU_DBG_MSG_FMT(CH3_CONNECT,TYPICAL,(MPIU_DBG_FDEST,
                 "vc=%p,conn=%p:Accept head-to-head connection (my process group), discarding vcch->conn=%p",vc,conn, vcch->conn));
+
+                /* mark old connection */
+                MPIDI_CH3I_Connection_t *old_conn = vcch->conn;
+                MPIU_DBG_CONNSTATECHANGE(old_conn,old_conn,CONN_STATE_DISCARD);
+                old_conn->state = CONN_STATE_DISCARD;
 
 		/* accept connection */
 		MPIU_DBG_VCCHSTATECHANGE(vc,VC_STATE_CONNECTING);
@@ -926,6 +966,10 @@ int MPIDI_CH3_Sockconn_handle_connopen_event( MPIDI_CH3I_Connection_t * conn )
 	    if (strcmp(MPIDI_Process.my_pg->id, pg->id) < 0) {
 		MPIU_DBG_MSG_FMT(CH3_CONNECT,TYPICAL,(MPIU_DBG_FDEST,
                 "vc=%p,conn=%p:Accept head-to-head connection (two process groups), discarding vcch->conn=%p",vc,conn, vcch->conn));
+                /* mark old connection */
+                MPIDI_CH3I_Connection_t *old_conn = vcch->conn;
+                MPIU_DBG_CONNSTATECHANGE(old_conn,old_conn,CONN_STATE_DISCARD);
+                old_conn->state = CONN_STATE_DISCARD;
 		/* accept connection */
 		MPIU_DBG_VCCHSTATECHANGE(vc,VC_STATE_CONNECTING);
 		vcch->state = MPIDI_CH3I_VC_STATE_CONNECTING;
@@ -973,11 +1017,13 @@ int MPIDI_CH3_Sockconn_handle_connwrite( MPIDI_CH3I_Connection_t * conn )
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_SOCKCONN_HANDLE_CONNWRITE);
 
-    if (conn->state == CONN_STATE_OPEN_CSEND) {
+    if (conn->state == CONN_STATE_OPEN_CSEND || conn->state == CONN_STATE_DISCARD) {
 	/* finished sending open request packet */
 	/* post receive for open response packet */
-	MPIU_DBG_CONNSTATECHANGE(conn->vc,conn,CONN_STATE_OPEN_CRECV);
-	conn->state = CONN_STATE_OPEN_CRECV;
+        if(conn->state == CONN_STATE_OPEN_CSEND){
+            MPIU_DBG_CONNSTATECHANGE(conn->vc,conn,CONN_STATE_OPEN_CRECV);
+            conn->state = CONN_STATE_OPEN_CRECV;
+        }
 	mpi_errno = connection_post_recv_pkt(conn);
 	if (mpi_errno != MPI_SUCCESS) {
 	    MPIU_ERR_POP(mpi_errno);

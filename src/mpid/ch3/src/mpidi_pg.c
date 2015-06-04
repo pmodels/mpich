@@ -200,6 +200,7 @@ int MPIDI_PG_Create(int vct_sz, void * pg_id, MPIDI_PG_t ** pg_ptr)
     MPIU_Object_set_ref(pg, 0);
     pg->size = vct_sz;
     pg->id   = pg_id;
+    pg->finalize = 0;
     /* Initialize the connection information to null.  Use
        the appropriate MPIDI_PG_InitConnXXX routine to set up these 
        fields */
@@ -1216,6 +1217,7 @@ int MPIDI_PG_Close_VCs( void )
 		     MPIDI_VC_GetStateString(vc->state)));
 	    }
 	}
+        pg->finalize = 1;
 	pg = pg->next;
     }
     /* Note that we do not free the process groups within this routine, even
