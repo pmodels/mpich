@@ -75,6 +75,13 @@ static inline int MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((u
   ret = fi_cancel((fid_t)gl_data.endpoint,              \
                   &(REQ_OFI(req)->ofi_context));        \
   if (ret == 0) {                                        \
+      while (!MPIR_STATUS_GET_CANCEL_BIT(req->status)) {		\
+	  if ((mpi_errno = MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL)) != \
+	      MPI_SUCCESS) {						\
+	      MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);	        \
+	      return mpi_errno;						\
+	  }								\
+      }									\
     MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);      \
   } else {                                              \
     MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);     \

@@ -106,6 +106,13 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
                         mpi_errno = MPI_ERR_OTHER;
                     }
                 }
+		else if (error.err == FI_ECANCELED) {
+			req = context_to_req(error.op_context);
+			MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
+		}
+		else {
+                        mpi_errno = MPI_ERR_OTHER;
+		}
             }
             else {
                 MPIU_ERR_CHKANDJUMP4(1, mpi_errno, MPI_ERR_OTHER, "**ofi_poll",
