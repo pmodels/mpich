@@ -495,6 +495,7 @@ install-html-local:
 	fi ; \
 	export dir ; \
 	if test ! -z $$dir && test -d $$dir && cd $$dir ; then \
+	 if [ ! -e ${DESTDIR}${htmldir} ] ; then $(MKDIR_P) ${DESTDIR}${htmldir} ; fi ; \
 	 for name in * ; do \
 	  if [ "$$name" = "*" ] ; then continue ; fi ; \
 	  if [ -f $$name ] ; then \
