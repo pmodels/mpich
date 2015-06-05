@@ -17,7 +17,7 @@
 
 /* This gives the maximum number of distinct types returned by any one of the
    MPI_Type_create_f90_xxx routines */
-#define MAX_F90_TYPES 16
+#define MAX_F90_TYPES 64
 typedef struct { int combiner; int r, p;
     MPI_Datatype d; } F90Predefined;
 static int nAlloc = 0;
@@ -57,7 +57,7 @@ int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner,
     }
 
     /* Create a new type and remember it */
-    if (nAlloc > MAX_F90_TYPES) {
+    if (nAlloc >= MAX_F90_TYPES) {
 	return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, 
 				     "MPIF_Create_unnamed_predefined", __LINE__,
 				     MPI_ERR_INTERN, "**f90typetoomany", 0 );
