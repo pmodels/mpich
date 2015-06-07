@@ -241,7 +241,7 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
     MPIU_Free((*win_ptr)->op_pool_start);
     MPIU_Free((*win_ptr)->target_pool_start);
     MPIU_Free((*win_ptr)->slots);
-    if (!(*win_ptr)->info_args.no_locks) {
+    if ((*win_ptr)->lock_entry_pool_start != NULL) {
         MPIU_Free((*win_ptr)->lock_entry_pool_start);
     }
     MPIU_Assert((*win_ptr)->current_lock_data_bytes == 0);
