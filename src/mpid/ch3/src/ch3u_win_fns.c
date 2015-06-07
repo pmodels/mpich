@@ -304,8 +304,8 @@ int MPIDI_Win_set_info(MPID_Win * win, MPID_Info * info)
         if (info_flag) {
             if (!strncmp(info_value, "true", strlen("true")))
                 win->info_args.no_locks = 1;
-            if (!strncmp(info_value, "false", strlen("true")))
-                win->info_args.no_locks = 1;
+            if (!strncmp(info_value, "false", strlen("false")))
+                win->info_args.no_locks = 0;
         }
     }
 
