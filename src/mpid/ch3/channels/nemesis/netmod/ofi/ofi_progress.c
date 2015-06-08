@@ -86,7 +86,7 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
         else if (ret < 0) {
             if (ret == -FI_EAVAIL) {
                 ret = fi_cq_readerr(gl_data.cq, (void *) &error, 0);
-                if (error.err == FI_EMSGSIZE) {
+                if (error.err == FI_ETRUNC) {
                     /* ----------------------------------------------------- */
                     /* This error message should only be delivered on send   */
                     /* events.  We want to ignore truncation errors          */
