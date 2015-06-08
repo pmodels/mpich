@@ -40,9 +40,9 @@ static void dequeue_req(const ptl_event_t *e)
         /* truncated data */
         MPIR_STATUS_SET_COUNT(rreq->status, r_len);
         MPIU_ERR_SET2(rreq->status.MPI_ERROR, MPI_ERR_TRUNCATE, "**truncate", "**truncate %d %d", s_len, r_len);
+    } else {
+        MPIR_STATUS_SET_COUNT(rreq->status, s_len);
     }
-    
-    MPIR_STATUS_SET_COUNT(rreq->status, s_len);
 }
 
 #undef FUNCNAME
