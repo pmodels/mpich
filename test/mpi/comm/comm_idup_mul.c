@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <mpi.h>
 
-#define NUM_ITER    2
+#define NUM_ITER    10
 
 int main(int argc, char **argv)
 {
