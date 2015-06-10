@@ -21,6 +21,9 @@
  # Completely revamped RMA infrastructure including several
    scalability improvements, performance improvements, and bug fixes.
 
+ # Added experimental support for Open Fabrics Interfaces (OFI) version 1.0.0.
+   https://github.com/ofiwg/libfabric (thanks to Intel for code contribution)
+
  # The Myrinet MX network module, which had a life cyle from 1.1 till
    3.1.2, has now been deprecated.
 
