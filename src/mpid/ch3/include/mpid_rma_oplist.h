@@ -554,11 +554,9 @@ static inline int MPIDI_CH3I_Win_get_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t ** e)
         if (new_ptr != NULL)
             break;
 
-        if (MPIDI_RMA_Pkt_orderings->flush_remote) {
-            mpi_errno = MPIDI_CH3I_RMA_Free_ops_before_completion(win_ptr);
-            if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
-        }
+        mpi_errno = MPIDI_CH3I_RMA_Free_ops_before_completion(win_ptr);
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
 
         MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_alloc);
         new_ptr = MPIDI_CH3I_Win_op_alloc(win_ptr);
