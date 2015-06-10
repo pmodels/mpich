@@ -135,6 +135,7 @@ aint 2 mpiversion=3.1
 acc-pairtype 2
 manyget 2
 derived-acc-flush_local 3 mpiversion=3.0
+large-acc-flush_local 3 mpiversion=3.0
 
 ## This test is not strictly correct.  This was meant to test out the
 ## case when MPI_Test is not nonblocking.  However, we ended up

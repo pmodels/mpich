@@ -146,7 +146,8 @@ noinst_PROGRAMS =          \
     atomic_rmw_gacc	   \
     acc-pairtype           \
     manyget                \
-    derived-acc-flush_local
+    derived-acc-flush_local\
+    large-acc-flush_local
 
 if BUILD_MPIX_TESTS
 noinst_PROGRAMS += aint
