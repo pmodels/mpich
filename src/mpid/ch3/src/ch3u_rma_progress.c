@@ -192,9 +192,6 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
                  * function will clean it up. */
                 target->access_state = MPIDI_RMA_LOCK_GRANTED;
 
-                target->sync.outstanding_acks--;
-                MPIU_Assert(target->sync.outstanding_acks >= 0);
-
                 /* We are done with ending synchronization, unset target's sync_flag. */
                 target->sync.sync_flag = MPIDI_RMA_SYNC_NONE;
 
@@ -214,22 +211,14 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
     case MPIDI_RMA_NONE:
         if (target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH) {
             if (target->pending_op_list_head == NULL) {
-                if (target->target_rank == rank) {
-                    target->sync.outstanding_acks--;
-                    MPIU_Assert(target->sync.outstanding_acks >= 0);
-                }
-                else {
+                if (target->target_rank != rank) {
                     if (target->put_acc_issued) {
+
+                        target->sync.outstanding_acks++;
+
                         mpi_errno = send_flush_msg(target->target_rank, win_ptr);
                         if (mpi_errno != MPI_SUCCESS)
                             MPIU_ERR_POP(mpi_errno);
-                    }
-                    else {
-                        /* We did not issue PUT/ACC since the last
-                         * synchronization call, therefore here we
-                         * don't need ACK back */
-                        target->sync.outstanding_acks--;
-                        MPIU_Assert(target->sync.outstanding_acks >= 0);
                     }
                 }
 
@@ -242,9 +231,6 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
         else if (target->sync.sync_flag == MPIDI_RMA_SYNC_UNLOCK) {
             if (target->pending_op_list_head == NULL) {
                 if (target->target_rank == rank) {
-                    target->sync.outstanding_acks--;
-                    MPIU_Assert(target->sync.outstanding_acks >= 0);
-
                     mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
                     if (mpi_errno != MPI_SUCCESS)
                         MPIU_ERR_POP(mpi_errno);
@@ -255,10 +241,11 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
                         /* We did not issue PUT/ACC since the last
                          * synchronization call, therefore here we
                          * don't need ACK back */
-                        target->sync.outstanding_acks--;
-                        MPIU_Assert(target->sync.outstanding_acks >= 0);
 
                         flag = MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_NO_ACK;
+                    }
+                    else {
+                        target->sync.outstanding_acks++;
                     }
                     mpi_errno = send_unlock_msg(target->target_rank, win_ptr, flag);
                     if (mpi_errno != MPI_SUCCESS)
@@ -354,6 +341,8 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
             /* piggyback on last OP. */
             if (target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH) {
                 flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH;
+                target->sync.outstanding_acks++;
+
                 if (target->win_complete_flag)
                     flags |= MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER;
             }
@@ -680,7 +669,6 @@ int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPID_Win * win_ptr, MPIDI_RMA_Targe
         curr_target = win_ptr->slots[i].target_list_head;
         if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
             curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
-            curr_target->sync.outstanding_acks++;
         }
 
         /* Issue out all operations. */
