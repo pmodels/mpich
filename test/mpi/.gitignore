@@ -953,6 +953,7 @@
 /pt2pt/rqstatus
 /pt2pt/scancel
 /pt2pt/scancel2
+/pt2pt/scancel_unmatch
 /pt2pt/sendall
 /pt2pt/sendflood
 /pt2pt/sendrecv1
