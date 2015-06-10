@@ -110,7 +110,12 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPID_IOV *iov, int n_i
 	    sreq->ch.vc = vc;
 	    MPIDI_CH3I_Sendq_enqueue(&MPIDI_CH3I_shm_sendq, sreq);
 	    MPIU_Assert (MPIDI_CH3I_shm_active_send == NULL);
-	    MPIDI_CH3I_shm_active_send = sreq;
+
+            if (remaining_iov != iov) {
+                /* headers are sent, mark current sreq as active_send req */
+                MPIDI_CH3I_shm_active_send = sreq;
+            }
+
             MPIU_DBG_MSG (CH3_CHANNEL, VERBOSE, "  enqueued");
 	}
 	else
