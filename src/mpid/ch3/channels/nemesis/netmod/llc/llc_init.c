@@ -36,6 +36,7 @@ MPID_nem_netmod_funcs_t MPIDI_nem_llc_funcs = {
     .vc_terminate = MPID_nem_llc_vc_terminate,
     .anysource_iprobe = MPID_nem_llc_anysource_iprobe,
     .anysource_improbe = MPID_nem_llc_anysource_improbe,
+    .get_ordering = MPID_nem_llc_get_ordering,
 };
 
 int MPID_nem_llc_my_llc_rank;
@@ -220,4 +221,14 @@ int MPID_nem_llc_anysource_improbe(int tag, MPID_Comm * comm, int context_offset
 {
     return MPID_nem_llc_improbe(NULL, MPI_ANY_SOURCE, tag, comm, context_offset, flag, message,
                                 status);
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_llc_get_ordering
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPID_nem_llc_get_ordering(int *ordering)
+{
+    (*ordering) = 1;
+    return MPI_SUCCESS;
 }

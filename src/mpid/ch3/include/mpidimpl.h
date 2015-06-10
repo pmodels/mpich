@@ -1149,12 +1149,26 @@ typedef struct {
 
 extern MPIDI_CH3U_Win_hooks_t MPIDI_CH3U_Win_hooks;
 
+typedef struct MPIDI_CH3U_Win_pkt_ordering {
+
+    /* Ordered AM flush.
+     * It means whether AM flush is guaranteed to be finished after all previous
+     * RMA operations. It initialized by Nemesis and used by CH3.
+     * Note that we use single global flag for all targets including both
+     * intra-node and inter-node processes.*/
+    int am_flush_ordered;
+} MPIDI_CH3U_Win_pkt_ordering_t;
+
+extern MPIDI_CH3U_Win_pkt_ordering_t MPIDI_CH3U_Win_pkt_orderings;
+
 /* CH3 and Channel window functions initializers */
 int MPIDI_Win_fns_init(MPIDI_CH3U_Win_fns_t *win_fns);
 int MPIDI_CH3_Win_fns_init(MPIDI_CH3U_Win_fns_t *win_fns);
 
 /* Channel window hooks initializer */
 int MPIDI_CH3_Win_hooks_init(MPIDI_CH3U_Win_hooks_t *win_hooks);
+
+int MPIDI_CH3_Win_pkt_orderings_init(MPIDI_CH3U_Win_pkt_ordering_t * win_pkt_orderings);
 
 /* Default window creation functions provided by CH3 */
 int MPIDI_CH3U_Win_create(void *, MPI_Aint, int, MPID_Info *, MPID_Comm *,

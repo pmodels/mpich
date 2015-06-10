@@ -298,14 +298,6 @@ typedef struct MPIDI_Win_basic_info {
     MPI_Win win_handle;
 } MPIDI_Win_basic_info_t;
 
-typedef struct MPIDI_RMA_Pkt_orderings {
-    int flush_remote; /* ordered FLUSH, for remote completion */
-    /* FIXME: in future we should also add local completin
-       ordering: WAW, WAR, RAW, RAR. */
-} MPIDI_RMA_Pkt_orderings_t;
-
-extern MPIDI_RMA_Pkt_orderings_t *MPIDI_RMA_Pkt_orderings;
-
 #define MPIDI_DEV_WIN_DECL                                               \
     volatile int at_completion_counter;  /* completion counter for operations \
                                  targeting this window */                \

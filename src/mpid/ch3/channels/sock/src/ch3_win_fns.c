@@ -43,3 +43,25 @@ int MPIDI_CH3_Win_hooks_init(MPIDI_CH3U_Win_hooks_t *win_hooks)
 
     return mpi_errno;
 }
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_Win_pkt_orderings_init
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3_Win_pkt_orderings_init(MPIDI_CH3U_Win_pkt_ordering_t * win_pkt_orderings)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int netmod_ordering = 0;
+
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_WIN_PKT_ORDERINGS_INIT);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3_WIN_PKT_ORDERINGS_INIT);
+
+    /* Guarantees ordered AM flush. */
+    win_pkt_orderings->am_flush_ordered = 1;
+
+  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_WIN_PKT_ORDERINGS_INIT);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}

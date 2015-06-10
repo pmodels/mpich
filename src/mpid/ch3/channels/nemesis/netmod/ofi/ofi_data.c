@@ -55,4 +55,5 @@ MPID_nem_netmod_funcs_t MPIDI_nem_ofi_funcs = {
     MPID_nem_ofi_vc_terminate,
     MPID_nem_ofi_anysource_iprobe,
     MPID_nem_ofi_anysource_improbe,
+    MPID_nem_ofi_get_ordering,
 };

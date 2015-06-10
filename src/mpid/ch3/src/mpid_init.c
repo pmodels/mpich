@@ -41,6 +41,7 @@ MPIDI_Process_t MPIDI_Process = { NULL };
 MPIDI_CH3U_SRBuf_element_t * MPIDI_CH3U_SRBuf_pool = NULL;
 MPIDI_CH3U_Win_fns_t MPIDI_CH3U_Win_fns = { NULL };
 MPIDI_CH3U_Win_hooks_t MPIDI_CH3U_Win_hooks = { NULL };
+MPIDI_CH3U_Win_pkt_ordering_t MPIDI_CH3U_Win_pkt_orderings = { 0 };
 
 
 #undef FUNCNAME
@@ -192,6 +193,9 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     /* setup receive queue statistics */
     mpi_errno = MPIDI_CH3U_Recvq_init();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* Ask channel to expose Window packet ordering. */
+    MPIDI_CH3_Win_pkt_orderings_init(&MPIDI_CH3U_Win_pkt_orderings);
 
     /*
      * Initialize the MPI_COMM_WORLD object

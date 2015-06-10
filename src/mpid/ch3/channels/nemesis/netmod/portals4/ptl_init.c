@@ -60,7 +60,8 @@ MPID_nem_netmod_funcs_t MPIDI_nem_portals4_funcs = {
     vc_destroy,
     vc_terminate,
     MPID_nem_ptl_anysource_iprobe,
-    MPID_nem_ptl_anysource_improbe
+    MPID_nem_ptl_anysource_improbe,
+    MPID_nem_ptl_get_ordering
 };
 
 static MPIDI_Comm_ops_t comm_ops = {
@@ -645,6 +646,16 @@ int MPID_nem_ptl_init_id(MPIDI_VC_t *vc)
     return mpi_errno;
  fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_ptl_get_ordering
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPID_nem_ptl_get_ordering(int *ordering)
+{
+    (*ordering) = 1;
+    return MPI_SUCCESS;
 }
 
 

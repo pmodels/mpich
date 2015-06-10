@@ -95,7 +95,6 @@ MPIDI_RMA_Op_t *global_rma_op_pool = NULL, *global_rma_op_pool_tail =
     NULL, *global_rma_op_pool_start = NULL;
 MPIDI_RMA_Target_t *global_rma_target_pool = NULL, *global_rma_target_pool_tail =
     NULL, *global_rma_target_pool_start = NULL;
-MPIDI_RMA_Pkt_orderings_t *MPIDI_RMA_Pkt_orderings = NULL;
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_RMA_init
@@ -128,12 +127,6 @@ int MPIDI_RMA_init(void)
                       &(global_rma_target_pool_start[i]));
     }
 
-    MPIU_CHKPMEM_MALLOC(MPIDI_RMA_Pkt_orderings, struct MPIDI_RMA_Pkt_orderings *,
-                        sizeof(struct MPIDI_RMA_Pkt_orderings), mpi_errno, "RMA packet orderings");
-    /* FIXME: here we should let channel to set ordering flags. For now we just set them
-     * in CH3 layer. */
-    MPIDI_RMA_Pkt_orderings->flush_remote = 1;
-
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RMA_INIT);
     return mpi_errno;
@@ -156,7 +149,6 @@ void MPIDI_RMA_finalize(void)
 
     MPIU_Free(global_rma_op_pool_start);
     MPIU_Free(global_rma_target_pool_start);
-    MPIU_Free(MPIDI_RMA_Pkt_orderings);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RMA_FINALIZE);
 }

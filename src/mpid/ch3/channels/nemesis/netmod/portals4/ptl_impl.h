@@ -203,6 +203,7 @@ int MPID_nem_ptl_anysource_improbe(int tag, MPID_Comm * comm, int context_offset
 void MPID_nem_ptl_anysource_posted(MPID_Request *rreq);
 int MPID_nem_ptl_anysource_matched(MPID_Request *rreq);
 int MPID_nem_ptl_init_id(MPIDI_VC_t *vc);
+int MPID_nem_ptl_get_ordering(int *ordering);
 
 int MPID_nem_ptl_lmt_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *rts_pkt, MPID_Request *req);
 int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPID_Request *rreq, MPID_IOV s_cookie);

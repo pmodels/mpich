@@ -104,7 +104,9 @@ MPID_nem_netmod_funcs_t MPIDI_nem_tcp_funcs = {
     MPID_nem_tcp_vc_init,
     MPID_nem_tcp_vc_destroy,
     MPID_nem_tcp_vc_terminate,
-    NULL /* anysource iprobe */
+    NULL, /* anysource iprobe */
+    NULL, /* anysource_improbe */
+    MPID_nem_tcp_get_ordering
 };
 
 /* in case there are no packet types defined (e.g., they're ifdef'ed out) make sure the array is not zero length */
@@ -726,3 +728,12 @@ int MPID_nem_tcp_vc_terminated(MPIDI_VC_t *vc)
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_tcp_get_ordering
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPID_nem_tcp_get_ordering(int *ordering)
+{
+    (*ordering) = 1;
+    return MPI_SUCCESS;
+}

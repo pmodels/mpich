@@ -81,6 +81,7 @@ int MPID_nem_llc_anysource_iprobe(int tag, MPID_Comm * comm, int context_offset,
                                   MPI_Status * status);
 int MPID_nem_llc_anysource_improbe(int tag, MPID_Comm * comm, int context_offset, int *flag,
                                    MPID_Request ** message, MPI_Status * status);
+int MPID_nem_llc_get_ordering(int *ordering);
 
 int MPID_nem_llc_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, MPIDI_msg_sz_t hdr_sz,
                              void *data, MPIDI_msg_sz_t data_sz);

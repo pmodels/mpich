@@ -26,6 +26,7 @@ int MPID_nem_mxm_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
 int MPID_nem_mxm_vc_init(MPIDI_VC_t * vc);
 int MPID_nem_mxm_vc_destroy(MPIDI_VC_t * vc);
 int MPID_nem_mxm_vc_terminate(MPIDI_VC_t * vc);
+int MPID_nem_mxm_get_ordering(int *ordering);
 
 /* alternate interface */
 int MPID_nem_mxm_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, MPIDI_msg_sz_t hdr_sz,

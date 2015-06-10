@@ -27,6 +27,7 @@ typedef int (* MPID_nem_net_module_anysource_improbe_t)(int tag, MPID_Comm *comm
                                                         MPID_Request **message, MPI_Status *status);
 
 typedef void (* MPID_nem_net_module_vc_dbg_print_sendq_t)(FILE *stream, MPIDI_VC_t *vc);
+typedef int (* MPID_nem_net_module_get_ordering_t)(int *ordering);
 
 typedef struct MPID_nem_netmod_funcs
 {
@@ -45,6 +46,7 @@ typedef struct MPID_nem_netmod_funcs
     MPID_nem_net_module_vc_terminate_t vc_terminate;
     MPID_nem_net_module_anysource_iprobe_t anysource_iprobe;
     MPID_nem_net_module_anysource_improbe_t anysource_improbe;
+    MPID_nem_net_module_get_ordering_t get_ordering;
 } MPID_nem_netmod_funcs_t;
 
 extern MPID_nem_net_module_vc_dbg_print_sendq_t  MPID_nem_net_module_vc_dbg_print_sendq;

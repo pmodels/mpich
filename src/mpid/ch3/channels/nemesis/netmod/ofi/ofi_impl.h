@@ -289,6 +289,7 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
 int MPID_nem_ofi_vc_destroy(MPIDI_VC_t * vc);
 int MPID_nem_ofi_cm_init(MPIDI_PG_t * pg_p, int pg_rank);
 int MPID_nem_ofi_cm_finalize();
+int MPID_nem_ofi_get_ordering(int *ordering);
 
 extern MPID_nem_ofi_global_t gl_data;
 extern MPIDI_Comm_ops_t _g_comm_ops;

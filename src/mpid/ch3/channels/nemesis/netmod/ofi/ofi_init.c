@@ -326,6 +326,14 @@ int MPID_nem_ofi_finalize(void)
     END_FUNC_RC(FCNAME);
 }
 
+#undef FCNAME
+#define FCNAME DECL_FUNC(MPID_nem_ofi_get_ordering)
+int MPID_nem_ofi_get_ordering(int *ordering)
+{
+    (*ordering) = 1;
+    return MPI_SUCCESS;
+}
+
 static inline int compile_time_checking()
 {
     OFI_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_vc_t) <= MPID_NEM_VC_NETMOD_AREA_LEN);

@@ -337,19 +337,31 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
             first_op = 0;
         }
 
+        /* piggyback FLUSH on every OP if ordered flush is not guaranteed. */
+        if (!MPIDI_CH3U_Win_pkt_orderings.am_flush_ordered)
+            flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH;
+
         if (curr_op->next == NULL) {
             /* piggyback on last OP. */
             if (target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH) {
                 flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH;
-                target->sync.outstanding_acks++;
-
                 if (target->win_complete_flag)
                     flags |= MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER;
             }
             else if (target->sync.sync_flag == MPIDI_RMA_SYNC_UNLOCK) {
                 flags |= MPIDI_CH3_PKT_FLAG_RMA_UNLOCK;
+
+                /* if piggyback UNLOCK then unset FLUSH (set for every
+                 * operation on out-of-order network). */
+                flags &= ~MPIDI_CH3_PKT_FLAG_RMA_FLUSH;
             }
         }
+
+        /* only increase ack counter when FLUSH or UNLOCK flag is set,
+         * but without LOCK piggyback. */
+        if (((flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH)
+             || (flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK)))
+            target->sync.outstanding_acks++;
 
         mpi_errno = issue_rma_op(curr_op, win_ptr, target, flags);
         if (mpi_errno != MPI_SUCCESS)
