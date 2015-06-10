@@ -17,6 +17,7 @@ bsendalign 2
 bsendpending 2
 isendself 1
 issendselfcancel 1
+isendirecv 10
 bsendfrag 2
 icsend 4
 rqstatus 2

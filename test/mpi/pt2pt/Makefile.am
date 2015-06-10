@@ -25,6 +25,7 @@ noinst_PROGRAMS =  \
     cancelanysrc   \
     isendself      \
     issendselfcancel \
+    isendirecv     \
     sendself       \
     eagerdt        \
     isendselfprobe \
