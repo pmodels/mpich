@@ -15,9 +15,6 @@
  # Added support for the Mellanox HCOLL interface for collectives.
    (thanks to Mellanox for the code contribution).
 
- # Added support for OFED IB on Xeon and Xeon Phi.  (thanks to RIKEN
-   and University of Tokyo for the contribution).
-
  # Significant stability improvements to the MPICH/portals4
    implementation.
 

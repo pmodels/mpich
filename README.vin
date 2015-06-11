@@ -502,45 +502,6 @@ to "error" instead of the default "warn" by using:
   MXM_LOG_LEVEL=error
   export MXM_LOG_LEVEL
 
-ib network module
-`````````````````
-The IB netmod provides support for InfiniBand on x86_64 platforms
-(including Xeon Phi). It can be built in the following
-configurations:
-
-1. InfiniBand Open Fabrics, x86_64 (host), Linux
-
-   For this mode, configure with the following option:
-
-       --with-device=ch3:nemesis:ib
-
-2. InfiniBand Open Fabrics, Xeon Phi, Intel MPSS Linux
-
-   For this mode, configure with the following options:
-
-       --with-device=ch3:nemesis:ib
-       --with-cross=<mpich-source>/src/mpid/ch3/channels/nemesis/netmod/ib/cross_values.txt
-       --host=x86_64-k1om-linux
-       --with-ib=/opt/intel/mic/ofed/card/usr
-       CC=icc CXX=icpc FC=ifort
-       CFLAGS=-mmic CXXFLAGS=-mmic FCFLAGS=-mmic LDFLAGS=-mmic
-
-3. InfiniBand Open Fabrics, Xeon Phi, McKernel (developed by
-   University of Tokyo)
-
-   For this mode, configure with the following options:
-
-       --with-device=ch3:nemesis:ib
-       --with-cross=<mpich-source>/src/mpid/ch3/channels/nemesis/netmod/ib/cross_values.txt
-       --host=x86_64-k1om-linux
-       --with-ib=<mckernel-source>/attached
-       --disable-shared
-       CC=icc CXX=icpc FC=ifort
-       CFLAGS=-mmic CXXFLAGS=-mmic FCFLAGS=-mmic LDFLAGS=-mmic
-
-    Note that shared builds are not supported for the third
-    configuration right now.
-
 
 portals4 network module
 ```````````````````````
