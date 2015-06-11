@@ -167,6 +167,15 @@ if (defined($ENV{'MPITEST_TIMELIMITARG'})) {
     $timelimitArg = $ENV{'MPITEST_TIMELIMITARG'};
 }
 
+# MPI version for testing
+if (defined($ENV{'MPITEST_MPIVERSION'})) {
+    $_ = $ENV{'MPITEST_MPIVERSION'};
+    if (/(\d+)\.(\d+)/) {
+        $MPIMajorVersion = $1;
+        $MPIMinorVersion = $2;
+    }
+}
+
 #---------------------------------------------------------------------------
 # Process arguments and override any defaults
 #---------------------------------------------------------------------------
@@ -176,6 +185,8 @@ foreach $_ (@ARGV) {
 	# we don't want to bother to try and find it.
 	$mpiexec = $1; 
     }
+    elsif (/--?mpiversion=(\d+)\.(\d+)/) { $MPIMajorVersion = $1;
+                                           $MPIMinorVersion = $2; }
     elsif (/--?np=(\d+)/)   { $np_default = $1; }
     elsif (/--?maxnp=(\d+)/) { $np_max = $1; }
     elsif (/--?ppn=(\d+)/)  { $ppnMax = $1; }
@@ -252,7 +263,7 @@ foreach $_ (@ARGV) {
 	print STDERR "runtests [-tests=testfile] [-np=nprocesses] \
         [-maxnp=max-nprocesses] [-srcdir=location-of-tests] \
         [-ppn=max-proc-per-node] [-ppnarg=string] \
-        [-timelimitarg=string] \
+        [-timelimitarg=string] [-mpiversion=major.minor] \
         [-xmlfile=filename ] [-tapfile=filename ] \
         [-junitfile=filename ] [-noxmlclose] \
         [-verbose] [-showprogress] [-debug] [-batch]\n";
