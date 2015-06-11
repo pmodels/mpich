@@ -773,7 +773,6 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
         MPIR_TAG_CLEAR_ERROR_BITS(match->parts.tag);
     }
 
- top_loop:
     prev_rreq = NULL;
 
     rreq = recvq_posted_head;
@@ -793,16 +792,23 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 	    }
         MPIR_T_PVAR_LEVEL_DEC(RECVQ, posted_recvq_length, 1);
 
-            /* give channel a chance to match the request, try again if so */
-	    channel_matched = MPIDI_POSTED_RECV_DEQUEUE_HOOK(rreq);
-            if (channel_matched)
-                goto top_loop;
-            
-	    found = TRUE;                
-	    goto lock_exit;
-	}
-	prev_rreq = rreq;
-	rreq = rreq->dev.next;
+            /* Give channel a chance to match the request */
+            channel_matched = MPIDI_POSTED_RECV_DEQUEUE_HOOK(rreq);
+            if (!channel_matched) {
+                /* If the channel did not match the request, the match here is
+                 * valid and we can stop searching for the request. */
+                found = TRUE;
+                goto lock_exit;
+            } else {
+                /* If the channel did match the request, then it's already
+                 * matched in the channel and the request here should be
+                 * discarded. Continue searching. */
+                rreq = rreq->dev.next;
+            }
+        } else {
+            prev_rreq = rreq;
+            rreq = rreq->dev.next;
+        }
     }
     MPIR_T_PVAR_TIMER_END(RECVQ, time_failed_matching_postedq);
 
