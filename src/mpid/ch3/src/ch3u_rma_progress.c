@@ -38,7 +38,6 @@ static inline int check_and_switch_window_state(MPID_Win * win_ptr, int *is_able
                                                 int *made_progress);
 static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
                                    int *made_progress);
-static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress);
 
 /* check if we can switch window-wide state: FENCE_ISSUED, PSCW_ISSUED, LOCK_ALL_ISSUED */
 #undef FUNCNAME
@@ -462,60 +461,6 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME issue_ops_win
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int start_slot, end_slot, i, idx;
-    int is_able_to_issue = 0;
-    MPIDI_RMA_Target_t *target = NULL;
-
-    (*made_progress) = 0;
-
-    /* check and try to switch window state */
-    mpi_errno = check_and_switch_window_state(win_ptr, &is_able_to_issue, made_progress);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
-    if (!is_able_to_issue)
-        goto fn_exit;
-
-    if (win_ptr->non_empty_slots == 0)
-        goto fn_exit;
-
-    /* FIXME: we should optimize the issuing pattern here. */
-
-    start_slot = win_ptr->comm_ptr->rank % win_ptr->num_slots;
-    end_slot = start_slot + win_ptr->num_slots;
-    for (i = start_slot; i < end_slot; i++) {
-        if (i < win_ptr->num_slots)
-            idx = i;
-        else
-            idx = i - win_ptr->num_slots;
-
-        target = win_ptr->slots[idx].target_list_head;
-        while (target != NULL) {
-            int temp_progress = 0;
-
-            /* issue operations to this target */
-            mpi_errno = issue_ops_target(win_ptr, target, &temp_progress);
-            if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
-            if (temp_progress)
-                (*made_progress) = 1;
-
-            target = target->next;
-        }
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_RMA_Free_ops_before_completion
@@ -823,17 +768,47 @@ int MPIDI_CH3I_RMA_Make_progress_target(MPID_Win * win_ptr, int target_rank, int
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_CH3I_RMA_Make_progress_win(MPID_Win * win_ptr, int *made_progress)
 {
-    int temp_progress = 0;
     int mpi_errno = MPI_SUCCESS;
+    int start_slot, end_slot, i, idx;
+    int is_able_to_issue = 0;
+    MPIDI_RMA_Target_t *target = NULL;
 
     (*made_progress) = 0;
 
-    /* issue operations on window */
-    mpi_errno = issue_ops_win(win_ptr, &temp_progress);
-    if (mpi_errno)
+    /* check and try to switch window state */
+    mpi_errno = check_and_switch_window_state(win_ptr, &is_able_to_issue, made_progress);
+    if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
-    if (temp_progress)
-        (*made_progress) = 1;
+    if (!is_able_to_issue)
+        goto fn_exit;
+
+    if (win_ptr->non_empty_slots == 0)
+        goto fn_exit;
+
+    /* FIXME: we should optimize the issuing pattern here. */
+
+    start_slot = win_ptr->comm_ptr->rank % win_ptr->num_slots;
+    end_slot = start_slot + win_ptr->num_slots;
+    for (i = start_slot; i < end_slot; i++) {
+        if (i < win_ptr->num_slots)
+            idx = i;
+        else
+            idx = i - win_ptr->num_slots;
+
+        target = win_ptr->slots[idx].target_list_head;
+        while (target != NULL) {
+            int temp_progress = 0;
+
+            /* issue operations to this target */
+            mpi_errno = issue_ops_target(win_ptr, target, &temp_progress);
+            if (mpi_errno != MPI_SUCCESS)
+                MPIU_ERR_POP(mpi_errno);
+            if (temp_progress)
+                (*made_progress) = 1;
+
+            target = target->next;
+        }
+    }
 
   fn_exit:
     return mpi_errno;
