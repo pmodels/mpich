@@ -14,8 +14,7 @@
 #define FUNCNAME MPID_nem_llc_finalize
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int
-MPID_nem_llc_finalize(void)
+int MPID_nem_llc_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int rc;
@@ -26,9 +25,9 @@ MPID_nem_llc_finalize(void)
     rc = LLC_finalize();
     MPIU_ERR_CHKANDJUMP(rc != 0, mpi_errno, MPI_ERR_OTHER, "**fail");
 
- fn_exit:
+  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_FINALIZE);
     return mpi_errno;
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }

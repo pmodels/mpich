@@ -21,7 +21,7 @@
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 /* returns zero in case request is canceled */
-int MPID_nem_llc_cancel_recv(struct MPIDI_VC *vc,  struct MPID_Request *req)
+int MPID_nem_llc_cancel_recv(struct MPIDI_VC *vc, struct MPID_Request *req)
 {
     int canceled;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_CANCEL_RECV);
@@ -29,11 +29,11 @@ int MPID_nem_llc_cancel_recv(struct MPIDI_VC *vc,  struct MPID_Request *req)
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_CANCEL_RECV);
 
     /* returns zero in case request is canceled */
-    canceled = LLC_req_approve_recv((LLC_cmd_t *)REQ_FIELD(req, cmds));
+    canceled = LLC_req_approve_recv((LLC_cmd_t *) REQ_FIELD(req, cmds));
 
- fn_exit:
+  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_CANCEL_RECV);
     return canceled;
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
