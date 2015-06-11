@@ -60,8 +60,11 @@ typedef struct MPIDI_RMA_Op {
     int result_count;
     MPI_Datatype result_datatype;
 
-    struct MPID_Request **reqs;
-    MPI_Aint reqs_size;
+    struct MPID_Request *single_req;    /* used for unstreamed RMA ops */
+    struct MPID_Request **multi_reqs;   /* used for streamed RMA ops */
+    MPI_Aint reqs_size;         /* when reqs_size == 0, neither single_req nor multi_reqs is used;
+                                 * when reqs_size == 1, single_req is used;
+                                 * when reqs_size > 1, multi_reqs is used. */
 
     MPIDI_RMA_dtype_info dtype_info;
     void *dataloop;

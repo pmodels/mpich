@@ -410,7 +410,7 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
         }
 
         if (curr_op->reqs_size == 0) {
-            MPIU_Assert(curr_op->reqs == NULL);
+            MPIU_Assert(curr_op->single_req == NULL && curr_op->multi_reqs == NULL);
             /* Sending is completed immediately. */
             MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_op_list_head),
                                          &(target->pending_op_list_tail), curr_op);
@@ -530,19 +530,26 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
     /* free all ops in the list since we do not need to maintain them anymore */
     while (1) {
         if (curr_op != NULL) {
-            if (curr_op->reqs_size > 0) {
-                MPIU_Assert(curr_op->reqs != NULL);
+            if (curr_op->reqs_size == 1) {
+                MPIU_Assert(curr_op->single_req != NULL);
+                MPID_Request_release(curr_op->single_req);
+                curr_op->single_req = NULL;
+                win_ptr->active_req_cnt--;
+                curr_op->reqs_size = 0;
+            }
+            else if (curr_op->reqs_size > 1) {
+                MPIU_Assert(curr_op->multi_reqs != NULL);
                 for (i = 0; i < curr_op->reqs_size; i++) {
-                    if (curr_op->reqs[i] != NULL) {
-                        MPID_Request_release(curr_op->reqs[i]);
-                        curr_op->reqs[i] = NULL;
+                    if (curr_op->multi_reqs[i] != NULL) {
+                        MPID_Request_release(curr_op->multi_reqs[i]);
+                        curr_op->multi_reqs[i] = NULL;
                         win_ptr->active_req_cnt--;
                     }
                 }
 
                 /* free req array in this op */
-                MPIU_Free(curr_op->reqs);
-                curr_op->reqs = NULL;
+                MPIU_Free(curr_op->multi_reqs);
+                curr_op->multi_reqs = NULL;
                 curr_op->reqs_size = 0;
             }
             MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, op_list_head, op_list_tail, curr_op);

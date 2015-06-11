@@ -67,7 +67,8 @@ static inline MPIDI_RMA_Op_t *MPIDI_CH3I_Win_op_alloc(MPID_Win * win_ptr)
     }
 
     e->dataloop = NULL;
-    e->reqs = NULL;
+    e->single_req = NULL;
+    e->multi_reqs = NULL;
     e->reqs_size = 0;
     e->ureq = NULL;
     e->piggyback_lock_candidate = 0;
@@ -383,27 +384,56 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
     curr_op = *op_list_head;
     while (1) {
         if (curr_op != NULL) {
-            for (i = 0; i < curr_op->reqs_size; i++) {
-                if (curr_op->reqs[i] == NULL)
-                    continue;
+            int completed = 0;
 
-                if (MPID_Request_is_complete(curr_op->reqs[i])) {
+            MPIU_Assert(curr_op->reqs_size > 0);
+            if (curr_op->reqs_size == 1) {
+                /* single_req is used */
+
+                if (MPID_Request_is_complete(curr_op->single_req)) {
                     /* If there's an error, return it */
-                    mpi_errno = curr_op->reqs[i]->status.MPI_ERROR;
+                    mpi_errno = curr_op->single_req->status.MPI_ERROR;
                     MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
 
                     /* No errors, free the request */
-                    MPID_Request_release(curr_op->reqs[i]);
+                    MPID_Request_release(curr_op->single_req);
 
-                    curr_op->reqs[i] = NULL;
+                    curr_op->single_req = NULL;
 
                     win_ptr->active_req_cnt--;
+
+                    completed = 1;
                 }
                 else
                     break;
             }
+            else {
+                /* multi_reqs is used */
+                for (i = 0; i < curr_op->reqs_size; i++) {
+                    if (curr_op->multi_reqs[i] == NULL)
+                        continue;
 
-            if (i == curr_op->reqs_size) {
+                    if (MPID_Request_is_complete(curr_op->multi_reqs[i])) {
+                        /* If there's an error, return it */
+                        mpi_errno = curr_op->multi_reqs[i]->status.MPI_ERROR;
+                        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
+
+                        /* No errors, free the request */
+                        MPID_Request_release(curr_op->multi_reqs[i]);
+
+                        curr_op->multi_reqs[i] = NULL;
+
+                        win_ptr->active_req_cnt--;
+                    }
+                    else
+                        break;
+                }
+
+                if (i == curr_op->reqs_size)
+                    completed = 1;
+            }
+
+            if (completed) {
                 /* Release user request */
                 if (curr_op->ureq) {
                     /* User request must be completed by progress engine */
@@ -413,9 +443,14 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
                     MPID_Request_release(curr_op->ureq);
                 }
 
-                /* free request array in op struct */
-                MPIU_Free(curr_op->reqs);
-                curr_op->reqs = NULL;
+                if (curr_op->reqs_size == 1) {
+                    curr_op->single_req = NULL;
+                }
+                else {
+                    /* free request array in op struct */
+                    MPIU_Free(curr_op->multi_reqs);
+                    curr_op->multi_reqs = NULL;
+                }
                 curr_op->reqs_size = 0;
 
                 /* dequeue the operation and free it */

@@ -639,7 +639,7 @@ static inline int adjust_op_piggybacked_with_lock(MPID_Win * win_ptr,
             }
 
             if (op->reqs_size == 0) {
-                MPIU_Assert(op->reqs == NULL);
+                MPIU_Assert(op->single_req == NULL && op->multi_reqs == NULL);
                 MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_op_list_head),
                                              &(target->pending_op_list_tail), op);
             }
@@ -683,18 +683,25 @@ static inline int adjust_op_piggybacked_with_lock(MPID_Win * win_ptr,
             /* We need to re-transmit this operation, so we destroy
              * the internal request and erase all flags in current
              * operation. */
-            if (op->reqs_size > 0) {
-                MPIU_Assert(op->reqs != NULL);
+            if (op->reqs_size == 1) {
+                MPIU_Assert(op->single_req != NULL);
+                MPIDI_CH3_Request_destroy(op->single_req);
+                op->single_req = NULL;
+                win_ptr->active_req_cnt--;
+                op->reqs_size = 0;
+            }
+            else if (op->reqs_size > 1) {
+                MPIU_Assert(op->multi_reqs != NULL);
                 for (i = 0; i < op->reqs_size; i++) {
-                    if (op->reqs[i] != NULL) {
-                        MPIDI_CH3_Request_destroy(op->reqs[i]);
-                        op->reqs[i] = NULL;
+                    if (op->multi_reqs[i] != NULL) {
+                        MPIDI_CH3_Request_destroy(op->multi_reqs[i]);
+                        op->multi_reqs[i] = NULL;
                         win_ptr->active_req_cnt--;
                     }
                 }
                 /* free req array in this op */
-                MPIU_Free(op->reqs);
-                op->reqs = NULL;
+                MPIU_Free(op->multi_reqs);
+                op->multi_reqs = NULL;
                 op->reqs_size = 0;
             }
             MPIDI_CH3_PKT_RMA_ERASE_FLAGS(op->pkt, mpi_errno);

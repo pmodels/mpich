@@ -505,7 +505,6 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     MPID_Comm *comm_ptr = win_ptr->comm_ptr;
     MPIDI_CH3_Pkt_put_t *put_pkt = &rma_op->pkt.put;
     MPID_Request *curr_req = NULL;
-    int i, curr_req_index = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_ISSUE_PUT_OP);
 
@@ -534,11 +533,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     if (curr_req != NULL) {
         rma_op->reqs_size = 1;
 
-        rma_op->reqs = (MPID_Request **) MPIU_Malloc(sizeof(MPID_Request *) * rma_op->reqs_size);
-        for (i = 0; i < rma_op->reqs_size; i++)
-            rma_op->reqs[i] = NULL;
-
-        rma_op->reqs[curr_req_index] = curr_req;
+        rma_op->single_req = curr_req;
         win_ptr->active_req_cnt++;
     }
 
@@ -547,10 +542,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
-    if (rma_op->reqs != NULL) {
-        MPIU_Free(rma_op->reqs);
-    }
-    rma_op->reqs = NULL;
+    rma_op->single_req = NULL;
     rma_op->reqs_size = 0;
     goto fn_exit;
     /* --END ERROR HANDLING-- */
@@ -593,16 +585,10 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
         if (curr_req != NULL) {
-            MPIU_Assert(rma_op->reqs_size == 0 && rma_op->reqs == NULL);
+            MPIU_Assert(rma_op->reqs_size == 0 && rma_op->single_req == NULL);
 
             rma_op->reqs_size = 1;
-
-            rma_op->reqs =
-                (MPID_Request **) MPIU_Malloc(sizeof(MPID_Request *) * rma_op->reqs_size);
-            for (i = 0; i < rma_op->reqs_size; i++)
-                rma_op->reqs[i] = NULL;
-
-            rma_op->reqs[0] = curr_req;
+            rma_op->single_req = curr_req;
             win_ptr->active_req_cnt++;
         }
         goto fn_exit;
@@ -669,16 +655,21 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 
         if (curr_req != NULL) {
             if (rma_op->reqs_size == 0) {
-                MPIU_Assert(rma_op->reqs == NULL);
+                MPIU_Assert(rma_op->single_req == NULL && rma_op->multi_reqs == NULL);
                 rma_op->reqs_size = stream_unit_count;
 
-                rma_op->reqs =
-                    (MPID_Request **) MPIU_Malloc(sizeof(MPID_Request *) * rma_op->reqs_size);
-                for (i = 0; i < rma_op->reqs_size; i++)
-                    rma_op->reqs[i] = NULL;
+                if (stream_unit_count > 1) {
+                    rma_op->multi_reqs =
+                        (MPID_Request **) MPIU_Malloc(sizeof(MPID_Request *) * rma_op->reqs_size);
+                    for (i = 0; i < rma_op->reqs_size; i++)
+                        rma_op->multi_reqs[i] = NULL;
+                }
             }
 
-            rma_op->reqs[j] = curr_req;
+            if (rma_op->reqs_size == 1)
+                rma_op->single_req = curr_req;
+            else
+                rma_op->multi_reqs[j] = curr_req;
             win_ptr->active_req_cnt++;
         }
 
@@ -700,10 +691,15 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_ACC_OP);
     return mpi_errno;
   fn_fail:
-    if (rma_op->reqs != NULL) {
-        MPIU_Free(rma_op->reqs);
+    if (rma_op->reqs_size == 1) {
+        rma_op->single_req = NULL;
     }
-    rma_op->reqs = NULL;
+    else if (rma_op->reqs_size > 1) {
+        if (rma_op->multi_reqs != NULL) {
+            MPIU_Free(rma_op->multi_reqs);
+            rma_op->multi_reqs = NULL;
+        }
+    }
     rma_op->reqs_size = 0;
     goto fn_exit;
 }
@@ -741,10 +737,6 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 
         rma_op->reqs_size = 1;
 
-        rma_op->reqs = (MPID_Request **) MPIU_Malloc(sizeof(MPID_Request *) * rma_op->reqs_size);
-        for (i = 0; i < rma_op->reqs_size; i++)
-            rma_op->reqs[i] = NULL;
-
         /* Create a request for the GACC response.  Store the response buf, count, and
          * datatype in it, and pass the request's handle in the GACC packet. When the
          * response comes from the target, it will contain the request handle. */
@@ -779,7 +771,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         /* For error checking */
         resp_req = NULL;
 
-        rma_op->reqs[0] = curr_req;
+        rma_op->single_req = curr_req;
         win_ptr->active_req_cnt++;
 
         goto fn_exit;
@@ -819,9 +811,12 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 
     rma_op->reqs_size = stream_unit_count;
 
-    rma_op->reqs = (MPID_Request **) MPIU_Malloc(sizeof(MPID_Request *) * rma_op->reqs_size);
-    for (i = 0; i < rma_op->reqs_size; i++)
-        rma_op->reqs[i] = NULL;
+    if (rma_op->reqs_size > 1) {
+        rma_op->multi_reqs =
+            (MPID_Request **) MPIU_Malloc(sizeof(MPID_Request *) * rma_op->reqs_size);
+        for (i = 0; i < rma_op->reqs_size; i++)
+            rma_op->multi_reqs[i] = NULL;
+    }
 
     MPIU_Assert(rma_op->issued_stream_count >= 0);
 
@@ -919,7 +914,11 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         /* For error checking */
         resp_req = NULL;
 
-        rma_op->reqs[j] = curr_req;
+        if (rma_op->reqs_size == 1)
+            rma_op->single_req = curr_req;
+        else
+            rma_op->multi_reqs[j] = curr_req;
+
         win_ptr->active_req_cnt++;
 
         rma_op->issued_stream_count++;
@@ -941,15 +940,19 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
-    for (i = 0; i < rma_op->reqs_size; i++) {
-        if (rma_op->reqs[i] != NULL) {
-            MPIDI_CH3_Request_destroy(rma_op->reqs[i]);
+    if (rma_op->reqs_size == 1) {
+        MPIDI_CH3_Request_destroy(rma_op->single_req);
+        rma_op->single_req = NULL;
+    }
+    else if (rma_op->reqs_size > 1) {
+        for (i = 0; i < rma_op->reqs_size; i++) {
+            if (rma_op->multi_reqs[i] != NULL) {
+                MPIDI_CH3_Request_destroy(rma_op->multi_reqs[i]);
+            }
         }
+        MPIU_Free(rma_op->multi_reqs);
+        rma_op->multi_reqs = NULL;
     }
-    if (rma_op->reqs != NULL) {
-        MPIU_Free(rma_op->reqs);
-    }
-    rma_op->reqs = NULL;
     rma_op->reqs_size = 0;
     goto fn_exit;
     /* --END ERROR HANDLING-- */
@@ -971,17 +974,12 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     MPI_Datatype target_datatype;
     MPID_Request *req = NULL;
     MPID_Request *curr_req = NULL;
-    int i, curr_req_index = 0;
     MPID_IOV iov[MPID_IOV_LIMIT];
     MPIDI_STATE_DECL(MPID_STATE_ISSUE_GET_OP);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_ISSUE_GET_OP);
 
     rma_op->reqs_size = 1;
-
-    rma_op->reqs = (MPID_Request **) MPIU_Malloc(sizeof(MPID_Request *) * rma_op->reqs_size);
-    for (i = 0; i < rma_op->reqs_size; i++)
-        rma_op->reqs[i] = NULL;
 
     /* create a request, store the origin buf, cnt, datatype in it,
      * and pass a handle to it in the get packet. When the get
@@ -1056,7 +1054,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         MPID_Request_release(req);
     }
 
-    rma_op->reqs[curr_req_index] = curr_req;
+    rma_op->single_req = curr_req;
     win_ptr->active_req_cnt++;
 
   fn_exit:
@@ -1064,15 +1062,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
-    for (i = 0; i < rma_op->reqs_size; i++) {
-        if (rma_op->reqs[i] != NULL) {
-            MPIDI_CH3_Request_destroy(rma_op->reqs[i]);
-        }
-    }
-    if (rma_op->reqs != NULL) {
-        MPIU_Free(rma_op->reqs);
-    }
-    rma_op->reqs = NULL;
+    rma_op->single_req = NULL;
     rma_op->reqs_size = 0;
     goto fn_exit;
     /* --END ERROR HANDLING-- */
@@ -1092,17 +1082,12 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     MPIDI_CH3_Pkt_cas_t *cas_pkt = &rma_op->pkt.cas;
     MPID_Request *rmw_req = NULL;
     MPID_Request *curr_req = NULL;
-    int i, curr_req_index = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_ISSUE_CAS_OP);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_ISSUE_CAS_OP);
 
     rma_op->reqs_size = 1;
-
-    rma_op->reqs = (MPID_Request **) MPIU_Malloc(sizeof(MPID_Request *) * rma_op->reqs_size);
-    for (i = 0; i < rma_op->reqs_size; i++)
-        rma_op->reqs[i] = NULL;
 
     /* Create a request for the RMW response.  Store the origin buf, count, and
      * datatype in it, and pass the request's handle RMW packet. When the
@@ -1133,7 +1118,7 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
         MPID_Request_release(rmw_req);
     }
 
-    rma_op->reqs[curr_req_index] = curr_req;
+    rma_op->single_req = curr_req;
     win_ptr->active_req_cnt++;
 
   fn_exit:
@@ -1141,15 +1126,7 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
-    for (i = 0; i < rma_op->reqs_size; i++) {
-        if (rma_op->reqs[i] != NULL) {
-            MPIDI_CH3_Request_destroy(rma_op->reqs[i]);
-        }
-    }
-    if (rma_op->reqs != NULL) {
-        MPIU_Free(rma_op->reqs);
-    }
-    rma_op->reqs = NULL;
+    rma_op->single_req = NULL;
     rma_op->reqs_size = 0;
     goto fn_exit;
     /* --END ERROR HANDLING-- */
@@ -1169,17 +1146,12 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     MPIDI_CH3_Pkt_fop_t *fop_pkt = &rma_op->pkt.fop;
     MPID_Request *resp_req = NULL;
     MPID_Request *curr_req = NULL;
-    int i, curr_req_index = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_ISSUE_FOP_OP);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_ISSUE_FOP_OP);
 
     rma_op->reqs_size = 1;
-
-    rma_op->reqs = (MPID_Request **) MPIU_Malloc(sizeof(MPID_Request *) * rma_op->reqs_size);
-    for (i = 0; i < rma_op->reqs_size; i++)
-        rma_op->reqs[i] = NULL;
 
     /* Create a request for the GACC response.  Store the response buf, count, and
      * datatype in it, and pass the request's handle in the GACC packet. When the
@@ -1243,7 +1215,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     /* For error checking */
     resp_req = NULL;
 
-    rma_op->reqs[curr_req_index] = curr_req;
+    rma_op->single_req = curr_req;
     win_ptr->active_req_cnt++;
 
   fn_exit:
@@ -1251,15 +1223,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
-    for (i = 0; i < rma_op->reqs_size; i++) {
-        if (rma_op->reqs[i] != NULL) {
-            MPIDI_CH3_Request_destroy(rma_op->reqs[i]);
-        }
-    }
-    if (rma_op->reqs != NULL) {
-        MPIU_Free(rma_op->reqs);
-    }
-    rma_op->reqs = NULL;
+    rma_op->single_req = NULL;
     rma_op->reqs_size = 0;
     goto fn_exit;
     /* --END ERROR HANDLING-- */
@@ -1335,7 +1299,7 @@ static inline int set_user_req_after_issuing_op(MPIDI_RMA_Op_t * op)
         goto fn_exit;
 
     if (op->reqs_size == 0) {
-        MPIU_Assert(op->reqs == NULL);
+        MPIU_Assert(op->single_req == NULL && op->multi_reqs == NULL);
         /* Sending is completed immediately, complete user request
          * and release ch3 ref. */
 
@@ -1343,17 +1307,24 @@ static inline int set_user_req_after_issuing_op(MPIDI_RMA_Op_t * op)
         MPIDI_CH3U_Request_complete(op->ureq);
     }
     else {
+        MPID_Request **req_ptr = NULL;
+
         /* Sending is not completed immediately. */
 
+        if (op->reqs_size == 1)
+            req_ptr = &(op->single_req);
+        else
+            req_ptr = op->multi_reqs;
+
         for (i = 0; i < op->reqs_size; i++) {
-            if (op->reqs[i] == NULL || MPID_Request_is_complete(op->reqs[i]))
+            if (req_ptr[i] == NULL || MPID_Request_is_complete(req_ptr[i]))
                 continue;
 
             /* Setup user request info in order to be completed following send request. */
             incomplete_req_cnt++;
             MPID_cc_set(&(op->ureq->cc), incomplete_req_cnt);   /* increment CC counter */
 
-            op->reqs[i]->dev.request_handle = op->ureq->handle;
+            req_ptr[i]->dev.request_handle = op->ureq->handle;
 
             /* Setup user request completion handler.
              *
@@ -1372,10 +1343,10 @@ static inline int set_user_req_after_issuing_op(MPIDI_RMA_Op_t * op)
              * last segment, so it is also correct for us.
              *
              * TODO: implement stack for overriding functions*/
-            if (op->reqs[i]->dev.OnDataAvail == NULL) {
-                op->reqs[i]->dev.OnDataAvail = MPIDI_CH3_ReqHandler_ReqOpsComplete;
+            if (req_ptr[i]->dev.OnDataAvail == NULL) {
+                req_ptr[i]->dev.OnDataAvail = MPIDI_CH3_ReqHandler_ReqOpsComplete;
             }
-            op->reqs[i]->dev.OnFinal = MPIDI_CH3_ReqHandler_ReqOpsComplete;
+            req_ptr[i]->dev.OnFinal = MPIDI_CH3_ReqHandler_ReqOpsComplete;
         }       /* end of for loop */
 
         if (incomplete_req_cnt) {
