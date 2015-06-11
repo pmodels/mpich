@@ -178,6 +178,8 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
         MPID_Request_release(req_ptr);
         (*win_ptr)->fence_sync_req = MPI_REQUEST_NULL;
         (*win_ptr)->states.access_state = MPIDI_RMA_NONE;
+        MPIDI_CH3I_num_active_issued_win--;
+        MPIU_Assert(MPIDI_CH3I_num_active_issued_win >= 0);
     }
 
     if ((*win_ptr)->states.access_state == MPIDI_RMA_FENCE_GRANTED)
