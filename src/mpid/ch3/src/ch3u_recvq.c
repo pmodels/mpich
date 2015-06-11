@@ -318,8 +318,14 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id,
     MPIR_TAG_CLEAR_ERROR_BITS(mask.parts.tag);
 
     /* Note that since this routine is used only in the case of send_cancel,
-       there can be only one match if at all. */
-    /* FIXME: Why doesn't this exit after it finds the first match? */
+     * there can be only one match, if at all. The reason the loop continues
+     * after finding a match is that send request handles are reused. In the
+     * case multiple requests with the same sender_req_id are present, only
+     * the last message is cancellable. This is because previous instances
+     * must have been tested or waited on the sender side, indicating completion
+     * and freeing the handle for reuse. Those completed operations cannot be
+     * cancelled.
+     */
     cur_rreq = recvq_unexpected_head;
     while (cur_rreq != NULL) {
         MPIR_T_PVAR_TIMER_START(RECVQ, time_matching_unexpectedq);
