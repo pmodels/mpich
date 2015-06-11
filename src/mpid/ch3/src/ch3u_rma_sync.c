@@ -354,18 +354,6 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
         }
     }
 
-    if (win_ptr->states.access_state == MPIDI_RMA_FENCE_ISSUED) {
-        while (win_ptr->states.access_state != MPIDI_RMA_FENCE_GRANTED) {
-            mpi_errno = wait_progress_engine();
-            if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
-
-            /* Mark that we triggered the progress engine
-             * in this function call. */
-            progress_engine_triggered = 1;
-        }
-    }
-
     /* Set sync_flag in target structs. */
     for (i = 0; i < win_ptr->num_slots; i++) {
         curr_target = win_ptr->slots[i].target_list_head;
