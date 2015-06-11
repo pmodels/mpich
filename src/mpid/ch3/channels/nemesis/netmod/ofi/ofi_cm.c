@@ -166,10 +166,10 @@ static inline int MPID_nem_ofi_handle_packet(cq_tagged_entry_t * wc ATTRIBUTE((u
 
     BEGIN_FUNC(FCNAME);
     if (MPID_cc_get(rreq->cc) == 1) {
-        vc = REQ_OFI(rreq)->vc;
-        MPIU_Assert(vc);
-        MPI_RC(MPID_nem_handle_pkt(vc, REQ_OFI(rreq)->pack_buffer, REQ_OFI(rreq)->pack_buffer_size))
-            MPIU_Free(REQ_OFI(rreq)->pack_buffer);
+      vc = REQ_OFI(rreq)->vc;
+      MPIU_Assert(vc);
+      MPI_RC(MPID_nem_handle_pkt(vc, REQ_OFI(rreq)->pack_buffer, REQ_OFI(rreq)->pack_buffer_size));
+      MPIU_Free(REQ_OFI(rreq)->pack_buffer);
     }
     MPIDI_CH3U_Request_complete(rreq);
     END_FUNC_RC(FCNAME);
@@ -215,10 +215,13 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPID_R
     MPIU_Assert(vc);
     VC_READY_CHECK(vc);
 
-    pkt_len = rreq->dev.user_count;
+    pkt_len = REQ_OFI(rreq)->msg_bytes;
     pack_buffer = (char *) MPIU_Malloc(pkt_len);
-    MPIU_ERR_CHKANDJUMP1(pack_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
-                         "**nomem", "**nomem %s", "Pack Buffer alloc");
+    /* If the pack buffer is NULL, let OFI handle the truncation
+     * in the progress loop
+     */
+    if(pack_buffer == NULL)
+      pkt_len = 0;
     c = 1;
     MPID_nem_ofi_create_req(&new_rreq, 1);
     MPID_cc_incr(new_rreq->cc_ptr, &c);
@@ -248,15 +251,17 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPID_R
                      wc->tag | MPID_MSG_CTS, &(REQ_OFI(sreq)->ofi_context)), tsend);
     MPIU_Assert(gl_data.persistent_req == rreq);
 
-    rreq->dev.user_count = 0;
     FI_RC_RETRY(fi_trecv(gl_data.endpoint,
-                   &rreq->dev.user_count,
-                   sizeof rreq->dev.user_count,
+                   &REQ_OFI(rreq)->msg_bytes,
+                   sizeof REQ_OFI(rreq)->msg_bytes,
                    gl_data.mr,
                    FI_ADDR_UNSPEC,
                    MPID_MSG_RTS,
                    GET_RCD_IGNORE_MASK(),
                    &(REQ_OFI(rreq)->ofi_context)), trecv);
+    /* Return a proper error to MPI to indicate out of memory condition */
+    MPIU_ERR_CHKANDJUMP1(pack_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
+                         "**nomem", "**nomem %s", "Pack Buffer alloc");
     END_FUNC_RC(FCNAME);
 }
 
@@ -319,8 +324,8 @@ int MPID_nem_ofi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
     REQ_OFI(persistent_req)->vc = NULL;
     REQ_OFI(persistent_req)->event_callback = MPID_nem_ofi_preposted_callback;
     FI_RC_RETRY(fi_trecv(gl_data.endpoint,
-                   &persistent_req->dev.user_count,
-                   sizeof persistent_req->dev.user_count,
+                   &REQ_OFI(persistent_req)->msg_bytes,
+                   sizeof REQ_OFI(persistent_req)->msg_bytes,
                    gl_data.mr,
                    FI_ADDR_UNSPEC,
                    MPID_MSG_RTS,

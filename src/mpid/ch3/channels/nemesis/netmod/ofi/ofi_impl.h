@@ -57,6 +57,7 @@ typedef struct {
     MPID_Request *persistent_req;       /* Unexpected request queue    */
     MPID_Request *conn_req;     /* Connection request          */
     MPIDI_Comm_ops_t comm_ops;
+    size_t iov_limit;           /* Max send iovec limit        */
     int rts_cts_in_flight;
     int api_set;
 } MPID_nem_ofi_global_t;
@@ -80,13 +81,17 @@ typedef struct {
 typedef struct {
     context_t ofi_context;      /* Context Object              */
     void *addr;                 /* OFI Address                 */
-    event_callback_fn event_callback;   /* Callback Event              */
-    char *pack_buffer;          /* MPI Pack Buffer             */
-    int pack_buffer_size;       /* Pack buffer size            */
+    event_callback_fn event_callback;   /* Callback Event      */
+    char  *pack_buffer;         /* MPI Pack Buffer             */
+    size_t pack_buffer_size;    /* Pack buffer size            */
+    size_t msg_bytes;           /* msg api bytes               */
+    int    iov_count;           /* Number of iovecs            */
+    void *real_hdr;             /* Extended header             */
     int match_state;            /* State of the match          */
     int req_started;            /* Request state               */
     MPIDI_VC_t *vc;             /* VC paired with this request */
     uint64_t tag;               /* 64 bit tag request          */
+    struct iovec iov[3];        /* scatter gather list         */
     MPID_Request *parent;       /* Parent request              */
 } MPID_nem_ofi_req_t;
 #define REQ_OFI(req) ((MPID_nem_ofi_req_t *)((req)->ch.netmod_area.padding))
