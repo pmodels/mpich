@@ -7,27 +7,27 @@
 
 
 #include "mpid_nem_impl.h"
-#include "tofu_impl.h"
+#include "llc_impl.h"
 
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_tofu_finalize
+#define FUNCNAME MPID_nem_llc_finalize
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_tofu_finalize(void)
+MPID_nem_llc_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int rc;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_FINALIZE);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_FINALIZE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_FINALIZE);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_FINALIZE);
 
     rc = LLC_finalize();
     MPIU_ERR_CHKANDJUMP(rc != 0, mpi_errno, MPI_ERR_OTHER, "**fail");
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_FINALIZE);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_FINALIZE);
     return mpi_errno;
  fn_fail:
     goto fn_exit;

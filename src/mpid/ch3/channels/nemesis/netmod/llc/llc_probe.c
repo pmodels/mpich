@@ -7,10 +7,10 @@
 
 
 #include "mpid_nem_impl.h"
-#include "tofu_impl.h"
+#include "llc_impl.h"
 
-//#define MPID_NEM_TOFU_DEBUG_PROBE
-#ifdef MPID_NEM_TOFU_DEBUG_PROBE
+//#define MPID_NEM_LLC_DEBUG_PROBE
+#ifdef MPID_NEM_LLC_DEBUG_PROBE
 #define dprintf printf
 #else
 #define dprintf(...)
@@ -18,31 +18,31 @@
 
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_tofu_probe
+#define FUNCNAME MPID_nem_llc_probe
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tofu_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, int context_offset,
+int MPID_nem_llc_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, int context_offset,
                         MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_PROBE);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_PROBE);
-    dprintf("tofu_probe,source=%d,tag=%d\n", source, tag);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_PROBE);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_PROBE);
+    dprintf("llc_probe,source=%d,tag=%d\n", source, tag);
 
     /* NOTE : This function is not used. Because 'vc->comm_ops->probe()' is not used */
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_PROBE);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_PROBE);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_tofu_iprobe
+#define FUNCNAME MPID_nem_llc_iprobe
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tofu_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, int context_offset,
+int MPID_nem_llc_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, int context_offset,
                          int *flag, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS, llc_errno;
@@ -51,9 +51,9 @@ int MPID_nem_tofu_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, i
     LLC_probe_t probe;
     LLC_match_mask_t mask;
 
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_IPROBE);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_IPROBE);
-    dprintf("tofu_iprobe,source=%d,tag=%d\n", source, tag);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_IPROBE);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_IPROBE);
+    dprintf("llc_iprobe,source=%d,tag=%d\n", source, tag);
 
     mask.rank = ~0;
     mask.tag = ~0;
@@ -98,17 +98,17 @@ int MPID_nem_tofu_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, i
     }
 
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_IPROBE);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_IPROBE);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_tofu_improbe
+#define FUNCNAME MPID_nem_llc_improbe
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tofu_improbe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, int context_offset,
+int MPID_nem_llc_improbe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, int context_offset,
                           int *flag, MPID_Request **message, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -118,9 +118,9 @@ int MPID_nem_tofu_improbe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm,
     LLC_match_mask_t mask;
     LLC_cmd_t *msg = NULL;
 
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_IMPROBE);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_IMPROBE);
-    dprintf("tofu_improbe,source=%d,tag=%d\n", source, tag);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_IMPROBE);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_IMPROBE);
+    dprintf("llc_improbe,source=%d,tag=%d\n", source, tag);
 
     mask.rank = ~0;
     mask.tag = ~0;
@@ -191,21 +191,21 @@ int MPID_nem_tofu_improbe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm,
         cmd[0].iov_remote[0].length = req->dev.recv_data_sz;
         cmd[0].niov_remote = 1;
     
-        ((struct llctofu_cmd_area *)cmd[0].usr_area)->cbarg = req;
+        ((struct llc_cmd_area *)cmd[0].usr_area)->cbarg = req;
         if (source == MPI_ANY_SOURCE) {
-            ((struct llctofu_cmd_area *)cmd[0].usr_area)->raddr = MPI_ANY_SOURCE;
+            ((struct llc_cmd_area *)cmd[0].usr_area)->raddr = MPI_ANY_SOURCE;
         } else {
-            ((struct llctofu_cmd_area *)cmd[0].usr_area)->raddr = VC_FIELD(vc, remote_endpoint_addr);
+            ((struct llc_cmd_area *)cmd[0].usr_area)->raddr = VC_FIELD(vc, remote_endpoint_addr);
         }
 
         LLC_recv_msg(cmd, msg);
 
         /* Wait until the reception of data is completed */
         do {
-            mpi_errno = MPID_nem_tofu_poll(0);
+            mpi_errno = MPID_nem_llc_poll(0);
         } while (!MPID_Request_is_complete(req));
 
-//        MPIDI_CH3U_Request_complete(req); // This operation is done in llctofu_poll.
+//        MPIDI_CH3U_Request_complete(req); // This operation is done in llc_poll.
 
         *message = req;
 
@@ -222,7 +222,7 @@ int MPID_nem_tofu_improbe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm,
     }
 
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_IMPROBE);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_IMPROBE);
     return mpi_errno;
 fn_fail:
     goto fn_exit;

@@ -13,5 +13,5 @@
 **PMI_KVS_Put:PMI_KVS_Put failed
 **PMS_KVS_Get:PMS_KVS_Get failed
 **fail:fail failed
-**llctofu_poll:llctofu_poll failed
+**llc_poll:llc_poll failed
 **outofmemory:outofmemory failed

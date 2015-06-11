@@ -4,16 +4,16 @@ dnl MPICH_SUBCFG_AFTER=src/mpid/ch3/channels/nemesis
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     AM_COND_IF([BUILD_CH3_NEMESIS],[
         for net in $nemesis_networks ; do
-            AS_CASE([$net],[tofu],[build_nemesis_netmod_tofu=yes])
+            AS_CASE([$net],[llc],[build_nemesis_netmod_llc=yes])
         done
     ])
-    AM_CONDITIONAL([BUILD_NEMESIS_NETMOD_TOFU],[test "X$build_nemesis_netmod_tofu" = "Xyes"])
+    AM_CONDITIONAL([BUILD_NEMESIS_NETMOD_LLC],[test "X$build_nemesis_netmod_llc" = "Xyes"])
 
 ])dnl
 
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
-AM_COND_IF([BUILD_NEMESIS_NETMOD_TOFU],[
-    AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:nemesis:tofu])
+AM_COND_IF([BUILD_NEMESIS_NETMOD_LLC],[
+    AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:nemesis:llc])
 
     PAC_SET_HEADER_LIB_PATH(libmemcached)
     PAC_SET_HEADER_LIB_PATH(ibverbs)
@@ -52,6 +52,6 @@ dnl   dlopen(NULL, RTLD_LAZY)
 dnl ],[ac_cv_func_dlopen=yes],[ac_cv_func_dlopen=no])
 
     AC_DEFINE([ENABLE_COMM_OVERRIDES], 1, [define to add per-vc function pointers to override send and recv functions])
-])dnl end AM_COND_IF(BUILD_NEMESIS_NETMOD_TOFU,...)
+])dnl end AM_COND_IF(BUILD_NEMESIS_NETMOD_LLC,...)
 ])dnl end _BODY
 [#] end of __file__

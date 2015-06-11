@@ -7,20 +7,20 @@
 
 
 #include "mpid_nem_impl.h"
-#include "tofu_impl.h"
+#include "llc_impl.h"
 
-//#define MPID_NEM_TOFU_DEBUG_SEND
-#ifdef MPID_NEM_TOFU_DEBUG_SEND
+//#define MPID_NEM_LLC_DEBUG_SEND
+#ifdef MPID_NEM_LLC_DEBUG_SEND
 #define dprintf printf
 #else
 #define dprintf(...)
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_tofu_isend
+#define FUNCNAME MPID_nem_llc_isend
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
                         int dest, int tag, MPID_Comm *comm, int context_offset,
                         struct MPID_Request **req_out)
 {
@@ -31,22 +31,22 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
     MPI_Aint dt_true_lb;
     int i;
 
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_ISEND);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_ISEND);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_ISEND);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_ISEND);
 
-    dprintf("tofu_isend,%d->%d,buf=%p,count=%d,datatype=%08x,dest=%d,tag=%08x,comm=%p,context_offset=%d\n",
+    dprintf("llc_isend,%d->%d,buf=%p,count=%d,datatype=%08x,dest=%d,tag=%08x,comm=%p,context_offset=%d\n",
             MPIDI_Process.my_pg_rank, vc->pg_rank, buf, count, datatype, dest, tag, comm, context_offset);
 
     int LLC_my_rank;
     LLC_comm_rank(LLC_COMM_MPICH, &LLC_my_rank);
-    dprintf("tofu_isend,LLC_my_rank=%d\n", LLC_my_rank);
+    dprintf("llc_isend,LLC_my_rank=%d\n", LLC_my_rank);
 
     struct MPID_Request * sreq = MPID_Request_create();
     MPIU_Assert(sreq != NULL);
     MPIU_Object_set_ref(sreq, 2);
     sreq->kind = MPID_REQUEST_SEND;
 
-    /* Used in tofullc_poll --> MPID_nem_tofu_send_handler */
+    /* Used in llc_poll --> MPID_nem_llc_send_handler */
     sreq->ch.vc = vc;
     sreq->dev.OnDataAvail = 0;
     /* Don't save iov_offset because it's not used. */
@@ -75,7 +75,7 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
     sreq->dev.match.parts.context_id = comm->context_id + context_offset;
 #endif	/* notdef_scan_hack */
 
-    dprintf("tofu_isend,remote_endpoint_addr=%ld\n", VC_FIELD(vc, remote_endpoint_addr));
+    dprintf("llc_isend,remote_endpoint_addr=%ld\n", VC_FIELD(vc, remote_endpoint_addr));
 
     REQ_FIELD(sreq, rma_buf) = NULL;
 
@@ -94,7 +94,7 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
     memset((uint8_t*)&cmd[0].tag + sizeof(int32_t) + sizeof(MPIR_Context_id_t),
            0, sizeof(LLC_tag_t) - sizeof(int32_t) - sizeof(MPIR_Context_id_t));
 
-    dprintf("tofu_isend,tag=");
+    dprintf("llc_isend,tag=");
     for(i = 0; i < sizeof(LLC_tag_t); i++) {
         dprintf("%02x", (int)*((uint8_t*)&cmd[0].tag + i));
     }
@@ -103,7 +103,7 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
     /* Prepare RDMA-write from buffer */
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr,
                             dt_true_lb);
-    dprintf("tofu_isend,dt_contig=%d,data_sz=%ld\n",
+    dprintf("llc_isend,dt_contig=%d,data_sz=%ld\n",
             dt_contig, data_sz);
 
 
@@ -146,39 +146,39 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
     cmd[0].iov_remote[0].length = data_sz;
     cmd[0].niov_remote = 1;
     
-    ((struct llctofu_cmd_area *)cmd[0].usr_area)->cbarg = sreq;
-    ((struct llctofu_cmd_area *)cmd[0].usr_area)->raddr = VC_FIELD(vc, remote_endpoint_addr);
+    ((struct llc_cmd_area *)cmd[0].usr_area)->cbarg = sreq;
+    ((struct llc_cmd_area *)cmd[0].usr_area)->raddr = VC_FIELD(vc, remote_endpoint_addr);
     
     llc_errno = LLC_post(cmd, 1);
     MPIU_ERR_CHKANDJUMP(llc_errno != LLC_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**LLC_post");
 
   fn_exit:
     *req_out = sreq;
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_ISEND);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_ISEND);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_tofu_iStartContigMsg
+#define FUNCNAME MPID_nem_llc_iStartContigMsg
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tofu_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz, MPID_Request **sreq_ptr)
+int MPID_nem_llc_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz, MPID_Request **sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *sreq = NULL;
-    MPID_nem_tofu_vc_area *vc_tofu = 0;
+    MPID_nem_llc_vc_area *vc_llc = 0;
     int need_to_queue = 0;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_ISTARTCONTIGMSG);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_ISTARTCONTIGMSG);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_ISTARTCONTIGMSG);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_ISTARTCONTIGMSG);
 
-    dprintf("tofu_iStartContigMsg,%d->%d,hdr=%p,hdr_sz=%ld,data=%p,data_sz=%ld\n",
+    dprintf("llc_iStartContigMsg,%d->%d,hdr=%p,hdr_sz=%ld,data=%p,data_sz=%ld\n",
             MPIDI_Process.my_pg_rank, vc->pg_rank, hdr, hdr_sz, data, data_sz);
 
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
-    MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "tofu_iStartContigMsg");
+    MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "llc_iStartContigMsg");
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)hdr);
     MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
 	"vc.pg_rank = %d", vc->pg_rank);
@@ -219,8 +219,8 @@ int MPID_nem_tofu_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_
 	    "IOV_LEN    = %d", (int)sreq->dev.iov[0].MPID_IOV_LEN);
     }
 
-    vc_tofu = VC_TOFU(vc);
-    if ( ! MPIDI_CH3I_Sendq_empty(vc_tofu->send_queue) ) {
+    vc_llc = VC_LLC(vc);
+    if ( ! MPIDI_CH3I_Sendq_empty(vc_llc->send_queue) ) {
 	need_to_queue = 1;
 	goto queue_it;
     }
@@ -228,17 +228,17 @@ int MPID_nem_tofu_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_
     {
 	int ret;
 
-	ret = llctofu_writev(vc_tofu->endpoint,
-		vc_tofu->remote_endpoint_addr,
+	ret = llc_writev(vc_llc->endpoint,
+		vc_llc->remote_endpoint_addr,
 		sreq->dev.iov, sreq->dev.iov_count,
-		sreq, &REQ_TOFU(sreq)->cmds);
+		sreq, &REQ_LLC(sreq)->cmds);
 	if (ret < 0) {
 	    mpi_errno = MPI_ERR_OTHER;
 	    MPIU_ERR_POP(mpi_errno);
 	}
 	MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
 	    "IOV_LEN    = %d", (int)sreq->dev.iov[0].MPID_IOV_LEN);
-	if ( ! MPIDI_nem_tofu_Rqst_iov_update(sreq, ret) ) {
+	if ( ! MPIDI_nem_llc_Rqst_iov_update(sreq, ret) ) {
 	    need_to_queue = 2; /* YYY */
 	}
 	MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
@@ -249,38 +249,38 @@ queue_it:
     MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
 	"need_to_que  %d", need_to_queue);
     if (need_to_queue > 0) {
-	MPIDI_CH3I_Sendq_enqueue(&vc_tofu->send_queue, sreq);
+	MPIDI_CH3I_Sendq_enqueue(&vc_llc->send_queue, sreq);
     }
 
  fn_exit:
     *sreq_ptr = sreq;
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_ISTARTCONTIGMSG);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_ISTARTCONTIGMSG);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_tofu_iSendContig
+#define FUNCNAME MPID_nem_llc_iSendContig
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tofu_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz)
+int MPID_nem_llc_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_nem_tofu_vc_area *vc_tofu = 0;
+    MPID_nem_llc_vc_area *vc_llc = 0;
     int need_to_queue = 0;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_ISENDCONTIGMSG);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_ISENDCONTIGMSG);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_ISENDCONTIGMSG);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_ISENDCONTIGMSG);
 
     if (sreq->kind == MPID_REQUEST_UNDEFINED) {
         sreq->kind = MPID_REQUEST_SEND;
     }
-    dprintf("tofu_iSendConitig,sreq=%p,hdr=%p,hdr_sz=%ld,data=%p,data_sz=%ld\n",
+    dprintf("llc_iSendConitig,sreq=%p,hdr=%p,hdr_sz=%ld,data=%p,data_sz=%ld\n",
             sreq, hdr, hdr_sz, data, data_sz);
 
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
-    MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "tofu_iSendContig");
+    MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "llc_iSendContig");
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)hdr);
     MPIU_DBG_PKT(vc, hdr, "isendcontig");
     {
@@ -312,8 +312,8 @@ int MPID_nem_tofu_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPI
 	    "IOV_LEN    = %d", (int)sreq->dev.iov[1].MPID_IOV_LEN);
     }
 
-    vc_tofu = VC_TOFU(vc);
-    if ( ! MPIDI_CH3I_Sendq_empty(vc_tofu->send_queue) ) {
+    vc_llc = VC_LLC(vc);
+    if ( ! MPIDI_CH3I_Sendq_empty(vc_llc->send_queue) ) {
 	need_to_queue = 1;
 	goto queue_it;
     }
@@ -321,17 +321,17 @@ int MPID_nem_tofu_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPI
     {
 	int ret;
 
-	ret = llctofu_writev(vc_tofu->endpoint,
-		vc_tofu->remote_endpoint_addr,
+	ret = llc_writev(vc_llc->endpoint,
+		vc_llc->remote_endpoint_addr,
 		sreq->dev.iov, sreq->dev.iov_count,
-		sreq, &REQ_TOFU(sreq)->cmds);
+		sreq, &REQ_LLC(sreq)->cmds);
 	if (ret < 0) {
 	    mpi_errno = MPI_ERR_OTHER;
 	    MPIU_ERR_POP(mpi_errno);
 	}
 	MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
 	    "WRITEV()   = %d", ret);
-	if ( ! MPIDI_nem_tofu_Rqst_iov_update(sreq, ret) ) {
+	if ( ! MPIDI_nem_llc_Rqst_iov_update(sreq, ret) ) {
 	    need_to_queue = 2; /* YYY */
 	}
     }
@@ -340,31 +340,31 @@ queue_it:
     MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
 	"need_to_que  %d", need_to_queue);
     if (need_to_queue > 0) {
-	MPIDI_CH3I_Sendq_enqueue(&vc_tofu->send_queue, sreq);
+	MPIDI_CH3I_Sendq_enqueue(&vc_llc->send_queue, sreq);
     }
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_ISENDCONTIGMSG);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_ISENDCONTIGMSG);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_tofu_SendNoncontig
+#define FUNCNAME MPID_nem_llc_SendNoncontig
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tofu_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz)
+int MPID_nem_llc_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_SENDNONCONTIG);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_SENDNONCONTIG);
-    MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "tofu_SendNoncontig");
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_SENDNONCONTIG);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_SENDNONCONTIG);
+    MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "llc_SendNoncontig");
 
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 
     MPIDI_msg_sz_t data_sz;
-    MPID_nem_tofu_vc_area *vc_tofu = 0;
+    MPID_nem_llc_vc_area *vc_llc = 0;
     int need_to_queue = 0;
 
     MPIU_Assert(sreq->dev.segment_first == 0);
@@ -389,8 +389,8 @@ int MPID_nem_tofu_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, M
     }
 
     sreq->ch.vc = vc;
-    vc_tofu = VC_TOFU(vc);
-    if ( ! MPIDI_CH3I_Sendq_empty(vc_tofu->send_queue) ) {
+    vc_llc = VC_LLC(vc);
+    if ( ! MPIDI_CH3I_Sendq_empty(vc_llc->send_queue) ) {
         need_to_queue = 1;
         goto queue_it;
     }
@@ -398,16 +398,16 @@ int MPID_nem_tofu_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, M
     {
         int ret;
 
-        ret = llctofu_writev(vc_tofu->endpoint,
-                             vc_tofu->remote_endpoint_addr,
+        ret = llc_writev(vc_llc->endpoint,
+                             vc_llc->remote_endpoint_addr,
                              sreq->dev.iov, sreq->dev.iov_count,
-                             sreq, &REQ_TOFU(sreq)->cmds);
+                             sreq, &REQ_LLC(sreq)->cmds);
         if (ret < 0) {
             mpi_errno = MPI_ERR_OTHER;
             MPIU_ERR_POP(mpi_errno);
         }
 
-        if ( ! MPIDI_nem_tofu_Rqst_iov_update(sreq, ret) ) {
+        if ( ! MPIDI_nem_llc_Rqst_iov_update(sreq, ret) ) {
             need_to_queue = 2; /* YYY */
         }
     }
@@ -415,36 +415,36 @@ int MPID_nem_tofu_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, M
  queue_it:
     MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "need_to_que %d", need_to_queue);
     if (need_to_queue > 0) {
-        MPIDI_CH3I_Sendq_enqueue(&vc_tofu->send_queue, sreq);
+        MPIDI_CH3I_Sendq_enqueue(&vc_llc->send_queue, sreq);
     }
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_SENDNONCONTIG);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_SENDNONCONTIG);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_tofu_send_queued
+#define FUNCNAME MPID_nem_llc_send_queued
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tofu_send_queued(MPIDI_VC_t * vc, rque_t *send_queue)
+int MPID_nem_llc_send_queued(MPIDI_VC_t * vc, rque_t *send_queue)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_nem_tofu_vc_area *vc_tofu;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_SEND_QUEUED);
+    MPID_nem_llc_vc_area *vc_llc;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_SEND_QUEUED);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_SEND_QUEUED);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_SEND_QUEUED);
 
     MPIU_Assert(vc != NULL);
-    vc_tofu = VC_TOFU(vc);
-    MPIU_Assert(vc_tofu != NULL);
+    vc_llc = VC_LLC(vc);
+    MPIU_Assert(vc_llc != NULL);
 
     while ( ! MPIDI_CH3I_Sendq_empty(*send_queue) ) {
 	ssize_t ret = 0;
 	MPID_Request *sreq;
-	void *endpt = vc_tofu->endpoint;
+	void *endpt = vc_llc->endpoint;
 	MPID_IOV *iovs;
 	int niov;
 
@@ -455,8 +455,8 @@ int MPID_nem_tofu_send_queued(MPIDI_VC_t * vc, rque_t *send_queue)
 	    iovs = &sreq->dev.iov[sreq->dev.iov_offset];
 	    niov = sreq->dev.iov_count;
 
-	    ret = llctofu_writev(endpt, vc_tofu->remote_endpoint_addr,
-		    iovs, niov, sreq, &REQ_TOFU(sreq)->cmds);
+	    ret = llc_writev(endpt, vc_llc->remote_endpoint_addr,
+		    iovs, niov, sreq, &REQ_LLC(sreq)->cmds);
 	    if (ret < 0) {
 		mpi_errno = MPI_ERR_OTHER;
 	    }
@@ -470,7 +470,7 @@ int MPID_nem_tofu_send_queued(MPIDI_VC_t * vc, rque_t *send_queue)
 	    MPIDI_CH3U_Request_complete(sreq);
 	    continue;
 	}
-	if ( ! MPIDI_nem_tofu_Rqst_iov_update(sreq, ret) ) {
+	if ( ! MPIDI_nem_llc_Rqst_iov_update(sreq, ret) ) {
 	    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "skip %p", sreq);
 	    break;
 	}
@@ -478,24 +478,24 @@ int MPID_nem_tofu_send_queued(MPIDI_VC_t * vc, rque_t *send_queue)
     }
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_SEND_QUEUED);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_SEND_QUEUED);
     return mpi_errno;
     //fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_nem_tofu_Rqst_iov_update
+#define FUNCNAME MPIDI_nem_llc_Rqst_iov_update
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_nem_tofu_Rqst_iov_update(MPID_Request *mreq, MPIDI_msg_sz_t consume)
+int MPIDI_nem_llc_Rqst_iov_update(MPID_Request *mreq, MPIDI_msg_sz_t consume)
 {
     int ret = TRUE;
     /* MPIDI_msg_sz_t oconsume = consume; */
     int iv, nv;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_NEM_TOFU_RQST_IOV_UPDATE);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_NEM_LLC_RQST_IOV_UPDATE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_NEM_TOFU_RQST_IOV_UPDATE);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_NEM_LLC_RQST_IOV_UPDATE);
 
     MPIU_Assert(consume >= 0);
 
@@ -535,11 +535,11 @@ int MPIDI_nem_tofu_Rqst_iov_update(MPID_Request *mreq, MPIDI_msg_sz_t consume)
     MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
 	"iov_update() = %d", ret);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_NEM_TOFU_RQST_IOV_UPDATE);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_NEM_LLC_RQST_IOV_UPDATE);
     return ret;
 }
 
-ssize_t llctofu_writev(void *endpt, uint64_t raddr,
+ssize_t llc_writev(void *endpt, uint64_t raddr,
     const struct iovec *iovs, int niov, void *cbarg, void **vpp_reqid)
 {
     ssize_t nw = 0;
@@ -550,7 +550,7 @@ ssize_t llctofu_writev(void *endpt, uint64_t raddr,
 
     dprintf("writev,raddr=%ld,niov=%d,sreq=%p", raddr, niov, cbarg);
 
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "llctofu_writev(%d)", (int)raddr);
+    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "llc_writev(%d)", (int)raddr);
     {
         uint8_t *buff = 0;
 #ifdef	notdef_hsiz_hack
@@ -570,14 +570,14 @@ ssize_t llctofu_writev(void *endpt, uint64_t raddr,
             }
 #ifdef	notdef_hsiz_hack
             if (bsiz > 0) {
-                buff = MPIU_Malloc(bsiz + sizeof(MPID_nem_tofu_netmod_hdr_t));
+                buff = MPIU_Malloc(bsiz + sizeof(MPID_nem_llc_netmod_hdr_t));
                 if (buff == 0) {
                     nw = -1; /* ENOMEM */
                     goto bad;
                 }
             }
 #else	/* notdef_hsiz_hack */
-            buff = MPIU_Malloc(bsiz + sizeof(MPID_nem_tofu_netmod_hdr_t));
+            buff = MPIU_Malloc(bsiz + sizeof(MPID_nem_llc_netmod_hdr_t));
             if (buff == 0) {
                 nw = -1; /* ENOMEM */
                 goto bad;
@@ -607,7 +607,7 @@ ssize_t llctofu_writev(void *endpt, uint64_t raddr,
         lcmd->niov_remote = 1;
         
         {
-            struct llctofu_cmd_area *usr = (void *)lcmd->usr_area;
+            struct llc_cmd_area *usr = (void *)lcmd->usr_area;
             usr->cbarg = cbarg;
             usr->raddr = lcmd->rank;
         }
@@ -619,16 +619,16 @@ ssize_t llctofu_writev(void *endpt, uint64_t raddr,
         char *bp;
 	size_t bz;
 
-	MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "llctofu_writev() : nv %d", nv);
+	MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "llc_writev() : nv %d", nv);
 	bp = (void *)lcmd->iov_local[0].addr;
 	bz = lcmd->iov_local[0].length;
 
     /* Prepare netmod header */
-    ((MPID_nem_tofu_netmod_hdr_t*)bp)->initiator_pg_rank = MPIDI_Process.my_pg_rank;
-    bp += sizeof(MPID_nem_tofu_netmod_hdr_t);
+    ((MPID_nem_llc_netmod_hdr_t*)bp)->initiator_pg_rank = MPIDI_Process.my_pg_rank;
+    bp += sizeof(MPID_nem_llc_netmod_hdr_t);
 #ifndef	notdef_hsiz_hack
-    lcmd->iov_local[0].length += sizeof (MPID_nem_tofu_netmod_hdr_t);
-    lcmd->iov_remote[0].length += sizeof (MPID_nem_tofu_netmod_hdr_t);
+    lcmd->iov_local[0].length += sizeof (MPID_nem_llc_netmod_hdr_t);
+    lcmd->iov_remote[0].length += sizeof (MPID_nem_llc_netmod_hdr_t);
 #endif	/* notdef_hsiz_hack */
 
     /* Pack iovs into buff */
@@ -647,7 +647,7 @@ ssize_t llctofu_writev(void *endpt, uint64_t raddr,
 	    }
 	    bp += len;
 	}
-	MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "llctofu_writev() : iv %d", iv);
+	MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "llc_writev() : iv %d", iv);
 	{
 	void *bb = (void *)lcmd->iov_local[0].addr;
 	MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
@@ -687,7 +687,7 @@ ssize_t llctofu_writev(void *endpt, uint64_t raddr,
     }
     
  bad:
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "llctofu_writev() : nw %d", (int)nw);
+    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "llc_writev() : nw %d", (int)nw);
     return nw;
 }
 
@@ -710,7 +710,7 @@ int convert_rank_llc2mpi(MPID_Comm *comm, int llc_rank, int *mpi_rank)
          *   - VC_FIELD(vc, remote_endpoint_addr) is 0.
          */
         if (vc->pg_rank == MPIDI_Process.my_pg_rank || vc_ch->is_local == 1) {
-            if (llc_rank == MPID_nem_tofu_my_llc_rank) {
+            if (llc_rank == MPID_nem_llc_my_llc_rank) {
                 *mpi_rank = rank;
                 found = 1;
                 break;
@@ -725,8 +725,8 @@ int convert_rank_llc2mpi(MPID_Comm *comm, int llc_rank, int *mpi_rank)
     return found;
 }
 
-int llctofu_poll(int in_blocking_poll,
-            llctofu_send_f sfnc, llctofu_recv_f rfnc)
+int llc_poll(int in_blocking_poll,
+            llc_send_f sfnc, llc_recv_f rfnc)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -749,18 +749,18 @@ int llctofu_poll(int in_blocking_poll,
         
         switch(events[0].type) {
         case LLC_EVENT_SEND_LEFT: {
-            dprintf("llctofu_poll,EVENT_SEND_LEFT\n");
+            dprintf("llc_poll,EVENT_SEND_LEFT\n");
             lcmd = (LLC_cmd_t *)events[0].side.initiator.req_id;
             MPIU_Assert(lcmd != 0);
             MPIU_Assert(lcmd->opcode == LLC_OPCODE_SEND || lcmd->opcode == LLC_OPCODE_SSEND);
             
             if(events[0].side.initiator.error_code != LLC_ERROR_SUCCESS) {
-                printf("llctofu_poll,error_code=%d\n", events[0].side.initiator.error_code);
-                MPID_nem_tofu_segv;
+                printf("llc_poll,error_code=%d\n", events[0].side.initiator.error_code);
+                MPID_nem_llc_segv;
             }
  
             /* Call send_handler. First arg is a pointer to MPID_Request */
-            (*sfnc)(((struct llctofu_cmd_area *)lcmd->usr_area)->cbarg, &reqid);
+            (*sfnc)(((struct llc_cmd_area *)lcmd->usr_area)->cbarg, &reqid);
             
             /* Don't free iov_local[0].addr */
 
@@ -769,20 +769,20 @@ int llctofu_poll(int in_blocking_poll,
             break; }
 
         case LLC_EVENT_UNSOLICITED_LEFT: {
-            dprintf("llctofu_poll,EVENT_UNSOLICITED_LEFT\n");
+            dprintf("llc_poll,EVENT_UNSOLICITED_LEFT\n");
             lcmd = (LLC_cmd_t *)events[0].side.initiator.req_id;
             MPIU_Assert(lcmd != 0);
             MPIU_Assert(lcmd->opcode == LLC_OPCODE_UNSOLICITED);
             
-            struct llctofu_cmd_area *usr;
+            struct llc_cmd_area *usr;
             usr = (void *)lcmd->usr_area;
             vp_sreq = usr->cbarg;
             
             UNSOLICITED_NUM_DEC(vp_sreq);
 
             if(events[0].side.initiator.error_code != LLC_ERROR_SUCCESS) {
-                printf("llctofu_poll,error_code=%d\n", events[0].side.initiator.error_code);
-                MPID_nem_tofu_segv;
+                printf("llc_poll,error_code=%d\n", events[0].side.initiator.error_code);
+                MPID_nem_llc_segv;
             }
             (*sfnc)(vp_sreq, &reqid);
             
@@ -811,36 +811,36 @@ int llctofu_poll(int in_blocking_poll,
                                "LLC_leng   = %d", (int)bsiz);
                 MPIU_DBG_PKT(vp_vc, buff, "poll");
             }
-            dprintf("tofu_poll,EVENT_UNSOLICITED_ARRIVED,%d<-%d\n",
+            dprintf("llc_poll,EVENT_UNSOLICITED_ARRIVED,%d<-%d\n",
                     MPIDI_Process.my_pg_rank,
-                    ((MPID_nem_tofu_netmod_hdr_t*)buff)->initiator_pg_rank
+                    ((MPID_nem_llc_netmod_hdr_t*)buff)->initiator_pg_rank
                     );
 #ifdef	notdef_hsiz_hack
             (*rfnc)(vp_vc,
-                    ((MPID_nem_tofu_netmod_hdr_t*)buff)->initiator_pg_rank,
-                    (uint8_t*)buff + sizeof(MPID_nem_tofu_netmod_hdr_t),
+                    ((MPID_nem_llc_netmod_hdr_t*)buff)->initiator_pg_rank,
+                    (uint8_t*)buff + sizeof(MPID_nem_llc_netmod_hdr_t),
                     bsiz);
 #else	/* notdef_hsiz_hack */
             (*rfnc)(vp_vc,
-                    ((MPID_nem_tofu_netmod_hdr_t*)buff)->initiator_pg_rank,
-                    (uint8_t*)buff + sizeof(MPID_nem_tofu_netmod_hdr_t),
-                    bsiz - sizeof(MPID_nem_tofu_netmod_hdr_t));
+                    ((MPID_nem_llc_netmod_hdr_t*)buff)->initiator_pg_rank,
+                    (uint8_t*)buff + sizeof(MPID_nem_llc_netmod_hdr_t),
+                    bsiz - sizeof(MPID_nem_llc_netmod_hdr_t));
 #endif	/* notdef_hsiz_hack */
             llc_errno = LLC_release_buffer(&events[0]);
             MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_release_buffer");
             
             break; }
         case LLC_EVENT_RECV_MATCHED: {
-            dprintf("llctofu_poll,EVENT_RECV_MATCHED\n");
+            dprintf("llc_poll,EVENT_RECV_MATCHED\n");
             lcmd = (LLC_cmd_t *)events[0].side.initiator.req_id;
-            MPID_Request *req =  ((struct llctofu_cmd_area*)lcmd->usr_area)->cbarg;
+            MPID_Request *req =  ((struct llc_cmd_area*)lcmd->usr_area)->cbarg;
 
             if (req->kind != MPID_REQUEST_MPROBE) {
                 /* Unpack non-contiguous dt */
                 int is_contig;
                 MPID_Datatype_is_contig(req->dev.datatype, &is_contig);
                 if (!is_contig) {
-                    dprintf("llctofu_poll,unpack noncontiguous data to user buffer\n");
+                    dprintf("llc_poll,unpack noncontiguous data to user buffer\n");
 
                     /* see MPIDI_CH3U_Request_unpack_uebuf (in /src/mpid/ch3/src/ch3u_request.c) */
                     /* or MPIDI_CH3U_Receive_data_found (in src/mpid/ch3/src/ch3u_handle_recv_pkt.c) */
@@ -865,10 +865,10 @@ int llctofu_poll(int in_blocking_poll,
                         MPIR_STATUS_SET_COUNT(req->status, last);
                         req->status.MPI_ERROR =
                             MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
-                                                 MPI_ERR_TYPE, "**llctofu_poll", 0);
+                                                 MPI_ERR_TYPE, "**llc_poll", 0);
                         /* --END ERROR HANDLING-- */
                     }
-                    dprintf("llctofu_poll,ref_count=%d,pack_buf=%p\n", req->ref_count,
+                    dprintf("llc_poll,ref_count=%d,pack_buf=%p\n", req->ref_count,
                             REQ_FIELD(req, pack_buf));
                     MPIU_Free(REQ_FIELD(req, pack_buf));
                 }
@@ -909,10 +909,10 @@ int llctofu_poll(int in_blocking_poll,
             lcmd = (LLC_cmd_t *)events[0].side.initiator.req_id;
             MPIU_Assert(lcmd != 0);
 
-            req =  ((struct llctofu_cmd_area*)lcmd->usr_area)->cbarg;
+            req =  ((struct llc_cmd_area*)lcmd->usr_area)->cbarg;
 
             if (lcmd->opcode == LLC_OPCODE_UNSOLICITED) {
-                struct llctofu_cmd_area *usr;
+                struct llc_cmd_area *usr;
                 usr = (void *)lcmd->usr_area;
                 vp_sreq = usr->cbarg;
 
@@ -941,8 +941,8 @@ int llctofu_poll(int in_blocking_poll,
                 MPIDI_CH3U_Request_complete(req);
 #endif
             } else {
-                printf("llctofu_poll,target dead, unknown opcode=%d\n", lcmd->opcode);
-                MPID_nem_tofu_segv;
+                printf("llc_poll,target dead, unknown opcode=%d\n", lcmd->opcode);
+                MPID_nem_llc_segv;
             }
 
             llc_errno = LLC_cmd_free(lcmd, 1);
@@ -950,8 +950,8 @@ int llctofu_poll(int in_blocking_poll,
 
             break; }
         default:
-            printf("llctofu_poll,unknown event type=%d\n", events[0].type);
-            MPID_nem_tofu_segv;
+            printf("llc_poll,unknown event type=%d\n", events[0].type);
+            MPID_nem_llc_segv;
         }
     }
     
@@ -962,10 +962,10 @@ int llctofu_poll(int in_blocking_poll,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_tofu_issend
+#define FUNCNAME MPID_nem_llc_issend
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_tofu_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+int MPID_nem_llc_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
                          int dest, int tag, MPID_Comm *comm, int context_offset,
                          struct MPID_Request **request)
 {
@@ -976,22 +976,22 @@ int MPID_nem_tofu_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Da
     MPI_Aint dt_true_lb;
     int i;
 
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_ISSEND);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_ISSEND);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_ISSEND);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_ISSEND);
 
-    dprintf("tofu_isend,%d->%d,buf=%p,count=%d,datatype=%08x,dest=%d,tag=%08x,comm=%p,context_offset=%d\n",
+    dprintf("llc_isend,%d->%d,buf=%p,count=%d,datatype=%08x,dest=%d,tag=%08x,comm=%p,context_offset=%d\n",
             MPIDI_Process.my_pg_rank, vc->pg_rank, buf, count, datatype, dest, tag, comm, context_offset);
 
     int LLC_my_rank;
     LLC_comm_rank(LLC_COMM_MPICH, &LLC_my_rank);
-    dprintf("tofu_isend,LLC_my_rank=%d\n", LLC_my_rank);
+    dprintf("llc_isend,LLC_my_rank=%d\n", LLC_my_rank);
 
     struct MPID_Request * sreq = MPID_Request_create();
     MPIU_Assert(sreq != NULL);
     MPIU_Object_set_ref(sreq, 2);
     sreq->kind = MPID_REQUEST_SEND;
 
-    /* Used in tofullc_poll --> MPID_nem_tofu_send_handler */
+    /* Used in llc_poll --> MPID_nem_llc_send_handler */
     sreq->ch.vc = vc;
     sreq->dev.OnDataAvail = 0;
     /* Don't save iov_offset because it's not used. */
@@ -1014,7 +1014,7 @@ int MPID_nem_tofu_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Da
     sreq->dev.match.parts.tag = tag;
     sreq->dev.match.parts.context_id = comm->context_id + context_offset;
 
-    dprintf("tofu_isend,remote_endpoint_addr=%ld\n", VC_FIELD(vc, remote_endpoint_addr));
+    dprintf("llc_isend,remote_endpoint_addr=%ld\n", VC_FIELD(vc, remote_endpoint_addr));
 
     LLC_cmd_t *cmd = LLC_cmd_alloc2(1, 1, 1);
     cmd[0].opcode = LLC_OPCODE_SSEND;
@@ -1031,7 +1031,7 @@ int MPID_nem_tofu_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Da
     memset((uint8_t*)&cmd[0].tag + sizeof(int32_t) + sizeof(MPIR_Context_id_t),
            0, sizeof(LLC_tag_t) - sizeof(int32_t) - sizeof(MPIR_Context_id_t));
 
-    dprintf("tofu_isend,tag=");
+    dprintf("llc_isend,tag=");
     for(i = 0; i < sizeof(LLC_tag_t); i++) {
         dprintf("%02x", (int)*((uint8_t*)&cmd[0].tag + i));
     }
@@ -1040,7 +1040,7 @@ int MPID_nem_tofu_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Da
     /* Prepare RDMA-write from buffer */
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr,
                             dt_true_lb);
-    dprintf("tofu_isend,dt_contig=%d,data_sz=%ld\n",
+    dprintf("llc_isend,dt_contig=%d,data_sz=%ld\n",
             dt_contig, data_sz);
 
 
@@ -1079,15 +1079,15 @@ int MPID_nem_tofu_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Da
     cmd[0].iov_remote[0].length = data_sz;
     cmd[0].niov_remote = 1;
 
-    ((struct llctofu_cmd_area *)cmd[0].usr_area)->cbarg = sreq;
-    ((struct llctofu_cmd_area *)cmd[0].usr_area)->raddr = VC_FIELD(vc, remote_endpoint_addr);
+    ((struct llc_cmd_area *)cmd[0].usr_area)->cbarg = sreq;
+    ((struct llc_cmd_area *)cmd[0].usr_area)->raddr = VC_FIELD(vc, remote_endpoint_addr);
 
     llc_errno = LLC_post(cmd, 1);
     MPIU_ERR_CHKANDJUMP(llc_errno != LLC_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**LLC_post");
 
   fn_exit:
     *request = sreq;
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_ISSEND);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_ISSEND);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
