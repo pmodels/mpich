@@ -375,6 +375,8 @@ int MPIDI_CH3I_Progress_init(void)
 int MPIDI_CH3I_Progress_finalize(void)
 {
     int mpi_errno;
+    MPIDI_CH3I_Connection_t *conn = NULL;
+
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
@@ -383,8 +385,16 @@ int MPIDI_CH3I_Progress_finalize(void)
     mpi_errno = MPIDU_CH3I_ShutdownListener();
     if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
     
-    /* FIXME: Cleanly shutdown other socks and free connection structures. 
-       (close protocol?) */
+
+    /* Close open connections */
+    MPIDU_Sock_close_open_sockets(MPIDI_CH3I_sock_set,(void**) &conn);
+    while (conn != NULL) {
+        conn->state = CONN_STATE_CLOSING;
+        mpi_errno = MPIDI_CH3_Sockconn_handle_close_event(conn);
+	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+        MPIDU_Sock_close_open_sockets(MPIDI_CH3I_sock_set,(void**) &conn);
+    }
+
 
 
     /*

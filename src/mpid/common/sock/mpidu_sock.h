@@ -229,6 +229,33 @@ int MPIDU_Sock_create_set(MPIDU_Sock_set_t * set);
 
 
 /*@
+MPIDU_Sock_close_open_sockets - close the first open sockets of a sock_element
+
+Input Parameter:
+. set - set to be considered
+
+Output Parameter:
+. user_ptr - pointer to the user pointer pointer of a socket.
+
+Return value: a MPI error code with a Sock extended error class
++ MPI_SUCCESS - sock set successfully destroyed
+. MPIDU_SOCK_ERR_INIT - Sock module not initialized
+. MPIDU_SOCK_ERR_BAD_SET - invalid sock set
+. MPIDU_SOCK_ERR_NOMEM - unable to allocate required memory
+- MPIDU_SOCK_ERR_FAIL - unable to destroy the sock set (<BRT> because it still contained active sock objects?)
+
+
+Notes:
+This function only closes the first open socket of a sock_set and returns the
+user pointer of the sock-info structure. To close all sockets, the function must
+be called repeatedly, untiluser_ptr == NULL. The reason for this is
+that the overlying protocoll may need the user_ptr for further cleanup.
+
+@*/
+int MPIDU_Sock_close_open_sockets(struct MPIDU_Sock_set * sock_set, void** user_ptr );
+
+
+/*@
 MPIDU_Sock_destroy_set - destroy an existing sock set, releasing an internal resource associated with that set
 
 Input Parameter:
