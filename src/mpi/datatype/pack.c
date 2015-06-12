@@ -31,7 +31,7 @@ int MPI_Pack(const void *inbuf, int incount, MPI_Datatype datatype, void *outbuf
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Pack_impl(const void *inbuf,
-                   int incount,
+                   MPI_Aint incount,
                    MPI_Datatype datatype,
                    void *outbuf,
                    MPI_Aint outsize,

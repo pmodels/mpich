@@ -80,7 +80,7 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPID_Request *sreq,
 /* MPIDI_CH3_EagerNoncontigSend - Eagerly send noncontiguous data */
 int MPIDI_CH3_EagerNoncontigSend( MPID_Request **sreq_p, 
 				  MPIDI_CH3_Pkt_type_t reqtype, 
-				  const void * buf, int count, 
+				  const void * buf, MPI_Aint count,
 				  MPI_Datatype datatype, MPIDI_msg_sz_t data_sz,
 				  int rank, 
 				  int tag, MPID_Comm * comm, 

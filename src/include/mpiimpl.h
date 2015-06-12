@@ -2850,7 +2850,7 @@ int MPID_Comm_revoke(MPID_Comm *comm, int is_remote);
   Communication
 
   @*/
-int MPID_Send( const void *buf, int count, MPI_Datatype datatype,
+int MPID_Send( const void *buf, MPI_Aint count, MPI_Datatype datatype,
 	       int dest, int tag, MPID_Comm *comm, int context_offset,
 	       MPID_Request **request );
 
@@ -2900,7 +2900,7 @@ int MPID_Rsend( const void *buf, int count, MPI_Datatype datatype,
   Communication
 
   @*/
-int MPID_Ssend( const void *buf, int count, MPI_Datatype datatype,
+int MPID_Ssend( const void *buf, MPI_Aint count, MPI_Datatype datatype,
 		int dest, int tag, MPID_Comm *comm, int context_offset,
 		MPID_Request **request );
 
@@ -2955,7 +2955,7 @@ int MPID_tBsend( const void *buf, int count, MPI_Datatype datatype,
   Communication
 
   @*/
-int MPID_Isend( const void *buf, int count, MPI_Datatype datatype,
+int MPID_Isend( const void *buf, MPI_Aint count, MPI_Datatype datatype,
 		int dest, int tag, MPID_Comm *comm, int context_offset,
 		MPID_Request **request );
 
@@ -3015,7 +3015,7 @@ int MPID_Issend( const void *buf, int count, MPI_Datatype datatype,
   Communication
 
   @*/
-int MPID_Recv( void *buf, int count, MPI_Datatype datatype,
+int MPID_Recv( void *buf, MPI_Aint count, MPI_Datatype datatype,
 	       int source, int tag, MPID_Comm *comm, int context_offset,
 	       MPI_Status *status, MPID_Request **request );
 
@@ -3035,7 +3035,7 @@ int MPID_Recv( void *buf, int count, MPI_Datatype datatype,
   Communication
 
   @*/
-int MPID_Irecv( void *buf, int count, MPI_Datatype datatype,
+int MPID_Irecv( void *buf, MPI_Aint count, MPI_Datatype datatype,
 		int source, int tag, MPID_Comm *comm, int context_offset,
 		MPID_Request **request );
 
@@ -3905,20 +3905,20 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
    other internal operations. They are wrappers around MPID send/recv
    functions. They do sends/receives by setting the context offset to
    MPID_CONTEXT_INTRA(INTER)_COLL. */
-int MPIR_Localcopy(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                   void *recvbuf, int recvcount, MPI_Datatype recvtype);
+int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                   void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype);
 int MPIC_Wait(MPID_Request * request_ptr, mpir_errflag_t *errflag);
 int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status);
 
 /* FT versions of te MPIC_ functions */
-int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                  MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
-int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
+int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int tag,
                  MPID_Comm *comm_ptr, MPI_Status *status, mpir_errflag_t *errflag);
-int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                   MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
-int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                     int dest, int sendtag, void *recvbuf, int recvcount,
+int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                     int dest, int sendtag, void *recvbuf, MPI_Aint recvcount,
                      MPI_Datatype recvtype, int source, int recvtag,
                      MPID_Comm *comm_ptr, MPI_Status *status, mpir_errflag_t *errflag);
 int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
@@ -4474,7 +4474,7 @@ int MPIR_Type_indexed_impl(int count, const int blocklens[], const int indices[]
 void MPIR_Type_free_impl(MPI_Datatype *datatype);
 int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype old_type, MPI_Datatype *newtype_p);
 int MPIR_Type_struct_impl(int count, const int blocklens[], const MPI_Aint indices[], const MPI_Datatype old_types[], MPI_Datatype *newtype);
-int MPIR_Pack_impl(const void *inbuf, int incount, MPI_Datatype datatype, void *outbuf, MPI_Aint outcount, MPI_Aint *position);
+int MPIR_Pack_impl(const void *inbuf, MPI_Aint incount, MPI_Datatype datatype, void *outbuf, MPI_Aint outcount, MPI_Aint *position);
 void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, MPI_Aint *size);
 int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint *position,
                      void *outbuf, int outcount, MPI_Datatype datatype);

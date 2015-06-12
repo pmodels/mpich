@@ -706,35 +706,35 @@ typedef struct MPIDI_Comm_ops
     /* Overriding calls in case of matching-capable interfaces */
     int (*recv_posted)(struct MPIDI_VC *vc, struct MPID_Request *req);
     
-    int (*send)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+    int (*send)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
 		int dest, int tag, MPID_Comm *comm, int context_offset,
 		struct MPID_Request **request);
-    int (*rsend)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
-		 int dest, int tag, MPID_Comm *comm, int context_offset,
+    int (*rsend)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
+		 int dest, int tag, MPID_Comm *comm, MPI_Aint context_offset,
 		 struct MPID_Request **request);
-    int (*ssend)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+    int (*ssend)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
 		 int dest, int tag, MPID_Comm *comm, int context_offset,
 		 struct MPID_Request **request );
-    int (*isend)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+    int (*isend)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
 		 int dest, int tag, MPID_Comm *comm, int context_offset,
 		 struct MPID_Request **request );
-    int (*irsend)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+    int (*irsend)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
 		  int dest, int tag, MPID_Comm *comm, int context_offset,
 		  struct MPID_Request **request );
-    int (*issend)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+    int (*issend)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
 		  int dest, int tag, MPID_Comm *comm, int context_offset,
 		  struct MPID_Request **request );
     
-    int (*send_init)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+    int (*send_init)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
 		     int dest, int tag, MPID_Comm *comm, int context_offset,
 		     struct MPID_Request **request );
     int (*bsend_init)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
 		      int dest, int tag, MPID_Comm *comm, int context_offset,
 		      struct MPID_Request **request);
-    int (*rsend_init)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+    int (*rsend_init)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
 		      int dest, int tag, MPID_Comm *comm, int context_offset,
 		      struct MPID_Request **request );
-    int (*ssend_init)(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+    int (*ssend_init)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
 		      int dest, int tag, MPID_Comm *comm, int context_offset,
 		      struct MPID_Request **request );
     int (*startall)(struct MPIDI_VC *vc, int count,  struct MPID_Request *requests[]);
@@ -803,7 +803,7 @@ typedef struct MPIDI_VC
 
     /* rendezvous function pointers.  Called to send a rendevous
        message or when one is matched */
-    int (* rndvSend_fn)( struct MPID_Request **sreq_p, const void * buf, int count, 
+    int (* rndvSend_fn)( struct MPID_Request **sreq_p, const void * buf, MPI_Aint count,
                          MPI_Datatype datatype, int dt_contig, MPIDI_msg_sz_t data_sz, 
                          MPI_Aint dt_true_lb, int rank, int tag,
                          struct MPID_Comm * comm, int context_offset );
@@ -1082,7 +1082,7 @@ const char * MPIDI_VC_GetStateString(int);
 
 
 /* Prototypes for internal device routines */
-int MPIDI_Isend_self(const void *, int, MPI_Datatype, int, int, MPID_Comm *, 
+int MPIDI_Isend_self(const void *, MPI_Aint, MPI_Datatype, int, int, MPID_Comm *,
 		     int, int, MPID_Request **);
 
 /*--------------------------
@@ -1578,7 +1578,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_matchonly(int source, int tag, int context_i
                                    int *foundp);
 MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag, 
                                           int context_id, MPID_Comm *comm, void *user_buf,
-                                           int user_count, MPI_Datatype datatype, int * foundp);
+                                           MPI_Aint user_count, MPI_Datatype datatype, int * foundp);
 int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq);
 MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match, 
 					   int * found);
@@ -1593,9 +1593,9 @@ int MPIDI_CH3U_Request_load_recv_iov(MPID_Request * const rreq);
 int MPIDI_CH3U_Request_unpack_uebuf(MPID_Request * rreq);
 int MPIDI_CH3U_Request_unpack_srbuf(MPID_Request * rreq);
 
-void MPIDI_CH3U_Buffer_copy(const void * const sbuf, int scount, 
+void MPIDI_CH3U_Buffer_copy(const void * const sbuf, MPI_Aint scount,
 			    MPI_Datatype sdt, int * smpi_errno,
-			    void * const rbuf, int rcount, MPI_Datatype rdt, 
+			    void * const rbuf, MPI_Aint rcount, MPI_Datatype rdt,
 			    MPIDI_msg_sz_t * rdata_sz, int * rmpi_errno);
 int MPIDI_CH3U_Post_data_receive(int found, MPID_Request ** rreqp);
 int MPIDI_CH3U_Post_data_receive_found(MPID_Request * rreqp);
@@ -1920,7 +1920,7 @@ int MPIDI_CH3_PktPrint_EagerSyncAck( FILE *fp, MPIDI_CH3_Pkt_t *pkt );
 
 /* Routines to create packets (used in implementing MPI communications */
 int MPIDI_CH3_EagerNoncontigSend( MPID_Request **, MPIDI_CH3_Pkt_type_t, 
-				  const void *, int, 
+				  const void *, MPI_Aint,
 				  MPI_Datatype, MPIDI_msg_sz_t, int, int, MPID_Comm *, 
 				  int );
 int MPIDI_CH3_EagerContigSend( MPID_Request **, MPIDI_CH3_Pkt_type_t, 
@@ -1948,7 +1948,7 @@ int MPIDI_CH3_SendNoncontig_iov( struct MPIDI_VC *vc, struct MPID_Request *sreq,
 /* Routines to ack packets, called in the receive routines when a 
    message is matched */
 int MPIDI_CH3_EagerSyncAck( MPIDI_VC_t *, MPID_Request * );
-int MPIDI_CH3_RecvFromSelf( MPID_Request *, void *, int, MPI_Datatype );
+int MPIDI_CH3_RecvFromSelf( MPID_Request *, void *, MPI_Aint, MPI_Datatype );
 int MPIDI_CH3_RecvRndv( MPIDI_VC_t *, MPID_Request * );
 
 /* Handler routines to continuing after an IOV is processed (assigned to the

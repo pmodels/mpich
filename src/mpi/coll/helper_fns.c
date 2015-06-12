@@ -47,8 +47,8 @@ int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status)
 #define FUNCNAME MPIR_Localcopy
 #undef FCNAME
 #define FCNAME "MPIR_Localcopy"
-int MPIR_Localcopy(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                   void *recvbuf, int recvcount, MPI_Datatype recvtype)
+int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                   void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype)
 {
     int mpi_errno = MPI_SUCCESS;
     int sendtype_iscontig, recvtype_iscontig;
@@ -268,7 +268,7 @@ int MPIC_Wait(MPID_Request * request_ptr, mpir_errflag_t *errflag)
 #define FUNCNAME MPIC_Send
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                  MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -326,7 +326,7 @@ int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 #define FUNCNAME MPIC_Recv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
+int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int tag,
                  MPID_Comm *comm_ptr, MPI_Status *status, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -384,7 +384,7 @@ int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 #define FUNCNAME MPIC_Ssend
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                   MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -442,8 +442,8 @@ int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 #define FUNCNAME MPIC_Sendrecv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                     int dest, int sendtag, void *recvbuf, int recvcount,
+int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
+                     int dest, int sendtag, void *recvbuf, MPI_Aint recvcount,
                      MPI_Datatype recvtype, int source, int recvtag,
                      MPID_Comm *comm_ptr, MPI_Status *status, mpir_errflag_t *errflag)
 {

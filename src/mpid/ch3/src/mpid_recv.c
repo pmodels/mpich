@@ -10,7 +10,7 @@
 #define FUNCNAME MPID_Recv
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_Recv(void * buf, int count, MPI_Datatype datatype, int rank, int tag, 
+int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
 	      MPID_Comm * comm, int context_offset,
 	      MPI_Status * status, MPID_Request ** request)
 {

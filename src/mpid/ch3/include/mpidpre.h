@@ -364,7 +364,7 @@ typedef struct MPIDI_Request {
     /* user_buf, user_count, and datatype needed to process 
        rendezvous messages. */
     void        *user_buf;
-    int          user_count;
+    MPI_Aint   user_count;
     MPI_Datatype datatype;
     int drop_data;
 

@@ -321,7 +321,9 @@ int PREPEND_PREFIX(Segment_blkidx_m2m)(DLOOP_Offset *blocks_p,
     struct PREPEND_PREFIX(m2m_params) *paramp = v_paramp;
 
     DLOOP_Handle_get_size_macro(el_type, el_size);
-    DBG_SEGMENT(printf( "blkidx m2m: elsize = %d, count = %d, blocklen = %d\n", (int)el_size, (int)count, (int)blocklen ));
+    DBG_SEGMENT( printf("blkidx m2m: elsize = %ld, count = %ld, blocklen = %ld,"
+			    " blocks_left = %ld\n",
+		    el_size, count, blocklen, blocks_left ));
 
     while (blocks_left) {
 	char *src, *dest;
@@ -335,11 +337,10 @@ int PREPEND_PREFIX(Segment_blkidx_m2m)(DLOOP_Offset *blocks_p,
 					 rel_off + offsetarray[curblock]);
 	cbufp = (char*) paramp->userbuf + rel_off + offsetarray[curblock];
 
-        /* Type-cast blocklen to a large type for comparison, but once
-         * we confirm that it is smaller than the blocks_left, we can
-         * safely type-cast blocks_left to a smaller type */
-	if ((DLOOP_Offset) blocklen > blocks_left)
-            blocklen = (DLOOP_Count) blocks_left;
+	/* there was some casting going on here at one time but now all types
+	 * are promoted ot big values */
+	if ( blocklen > blocks_left)
+            blocklen = blocks_left;
 
 	if (paramp->direction == DLOOP_M2M_TO_USERBUF) {
 	    src  = paramp->streambuf;

@@ -33,8 +33,8 @@ Used indirectly by mpid_irecv, mpid_recv (through MPIDI_CH3_RecvFromSelf) and
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 void MPIDI_CH3U_Buffer_copy(
-    const void * const sbuf, int scount, MPI_Datatype sdt, int * smpi_errno,
-    void * const rbuf, int rcount, MPI_Datatype rdt, MPIDI_msg_sz_t * rsz,
+    const void * const sbuf, MPI_Aint scount, MPI_Datatype sdt, int * smpi_errno,
+    void * const rbuf, MPI_Aint rcount, MPI_Datatype rdt, MPIDI_msg_sz_t * rsz,
     int * rmpi_errno)
 {
     int sdt_contig;
@@ -226,7 +226,7 @@ void MPIDI_CH3U_Buffer_copy(
  * This routine is called by mpid_recv and mpid_irecv when a request
  * matches a send-to-self message 
  */
-int MPIDI_CH3_RecvFromSelf( MPID_Request *rreq, void *buf, int count, 
+int MPIDI_CH3_RecvFromSelf( MPID_Request *rreq, void *buf, MPI_Aint count,
 			    MPI_Datatype datatype )
 {
     MPID_Request * const sreq = rreq->partner_request;
