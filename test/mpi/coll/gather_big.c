@@ -15,8 +15,8 @@
 #define COUNT 1048576*32
 #endif
 #if 1
-/* Following will fail always work for -n 8 unless gather path is 64 bit clean */
-#define COUNT 1048576*32+1
+/* Following will fail for -n 8 unless gather path is 64 bit clean */
+#define COUNT (1024*1024*128+1)
 #endif
 #define VERIFY_CONST 100000000L
 
@@ -25,8 +25,8 @@ main(int argc, char *argv[])
 {
     int rank, size;
     int i, j;
-    long *sendbuf;
-    long *recvbuf;
+    long *sendbuf=NULL;
+    long *recvbuf=NULL;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
