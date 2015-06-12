@@ -29,6 +29,19 @@ cvars:
          routines to wait until no. of active requests being
          reduced to this value.
 
+    - name        : MPIR_CVAR_CH3_RMA_POKE_PROGRESS_REQ_THRESHOLD
+      category    : CH3
+      type        : int
+      default     : 128
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Threshold at which the RMA implementation attempts to complete requests
+        while completing RMA operations and while using the lazy synchonization
+        approach.  Change this value if programs fail because they run out of
+        requests or other internal resources
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -459,6 +472,22 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
             else {
                 MPIDI_CH3I_RMA_Ops_append(&(target->issued_read_op_list_head),
                                           &(target->issued_read_op_list_tail), curr_op);
+            }
+
+
+            /* Poke the progress engine when next_op_to_issue is not the current OP, in
+             * order to make sure the issuing function is re-entrant safe. */
+            if (target->next_op_to_issue != curr_op &&
+                win_ptr->active_req_cnt > MPIR_CVAR_CH3_RMA_POKE_PROGRESS_REQ_THRESHOLD) {
+                int local_completed, remote_completed;
+                mpi_errno = poke_progress_engine();
+                if (mpi_errno != MPI_SUCCESS)
+                    MPIU_ERR_POP(mpi_errno);
+
+                mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_win(win_ptr, &local_completed,
+                                                           &remote_completed);
+                if (mpi_errno != MPI_SUCCESS)
+                    MPIU_ERR_POP(mpi_errno);
             }
         }
 
