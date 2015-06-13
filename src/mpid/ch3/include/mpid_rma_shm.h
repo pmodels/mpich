@@ -329,14 +329,15 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
         if (shm_op) {
             MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
         }
-        mpi_errno = do_accumulate_op((void*)origin_addr, origin_count, origin_datatype,
-                                     (void*)((char *)base+disp_unit*target_disp), target_count, target_datatype,
-                                     0, op);
+        mpi_errno = do_accumulate_op((void *) origin_addr, origin_count, origin_datatype,
+                                     (void *) ((char *) base + disp_unit * target_disp),
+                                     target_count, target_datatype, 0, op);
         if (shm_op) {
             MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
         }
 
-        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
 
         goto fn_exit;
     }
@@ -376,7 +377,8 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
         packed_buf = MPIU_Malloc(stream_size);
 
         seg = MPID_Segment_alloc();
-        MPIU_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment");
+        MPIU_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
+                             "MPID_Segment");
         MPID_Segment_init(origin_addr, origin_count, origin_datatype, seg, 0);
         MPID_Segment_pack(seg, first, &last, packed_buf);
         MPID_Segment_free(seg);
@@ -387,7 +389,8 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
             void *tmpbuf = MPIU_Malloc(stream_count * predefined_dtp_extent);
             mpi_errno = MPIR_Localcopy(tmpbuf, stream_count, basic_type,
                                        packed_buf, stream_size, MPI_BYTE);
-            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno != MPI_SUCCESS)
+                MPIU_ERR_POP(mpi_errno);
             MPIU_Free(packed_buf);
             packed_buf = tmpbuf;
         }
@@ -396,15 +399,16 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
             MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
         }
 
-        mpi_errno = do_accumulate_op((void*)packed_buf, stream_count, basic_type,
-                                     (void*)((char*)base+disp_unit*target_disp), target_count, target_datatype,
-                                     stream_offset, op);
+        mpi_errno = do_accumulate_op((void *) packed_buf, stream_count, basic_type,
+                                     (void *) ((char *) base + disp_unit * target_disp),
+                                     target_count, target_datatype, stream_offset, op);
 
         if (shm_op) {
             MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
         }
 
-        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
 
         MPIU_Free(packed_buf);
     }
@@ -471,14 +475,15 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
 
     if (is_empty_origin == TRUE || MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
 
-        mpi_errno = do_accumulate_op((void*)origin_addr, origin_count, origin_datatype,
-                                     (void*)((char *)base+disp_unit*target_disp), target_count, target_datatype,
-                                     0, op);
+        mpi_errno = do_accumulate_op((void *) origin_addr, origin_count, origin_datatype,
+                                     (void *) ((char *) base + disp_unit * target_disp),
+                                     target_count, target_datatype, 0, op);
         if (shm_locked) {
             MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
         }
 
-        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
 
         goto fn_exit;
     }
@@ -518,7 +523,8 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
         packed_buf = MPIU_Malloc(stream_size);
 
         seg = MPID_Segment_alloc();
-        MPIU_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment");
+        MPIU_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
+                             "MPID_Segment");
         MPID_Segment_init(origin_addr, origin_count, origin_datatype, seg, 0);
         MPID_Segment_pack(seg, first, &last, packed_buf);
         MPID_Segment_free(seg);
@@ -529,16 +535,18 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
             void *tmpbuf = MPIU_Malloc(stream_count * predefined_dtp_extent);
             mpi_errno = MPIR_Localcopy(tmpbuf, stream_count, basic_type,
                                        packed_buf, stream_size, MPI_BYTE);
-            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno != MPI_SUCCESS)
+                MPIU_ERR_POP(mpi_errno);
             MPIU_Free(packed_buf);
             packed_buf = tmpbuf;
         }
 
-        mpi_errno = do_accumulate_op((void*)packed_buf, stream_count, basic_type,
-                                     (void*)((char*)base+disp_unit*target_disp), target_count, target_datatype,
-                                     stream_offset, op);
+        mpi_errno = do_accumulate_op((void *) packed_buf, stream_count, basic_type,
+                                     (void *) ((char *) base + disp_unit * target_disp),
+                                     target_count, target_datatype, stream_offset, op);
 
-        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
 
         MPIU_Free(packed_buf);
     }
