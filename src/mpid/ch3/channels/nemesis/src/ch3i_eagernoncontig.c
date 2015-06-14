@@ -22,7 +22,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
 {
     int mpi_errno = MPI_SUCCESS;
     int again = 0;
-    int orig_segment_first = sreq->dev.segment_first;
+    MPIDI_msg_sz_t orig_segment_first = sreq->dev.segment_first;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SENDNONCONTIG);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SENDNONCONTIG);
