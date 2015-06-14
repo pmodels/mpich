@@ -264,13 +264,22 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     }
     MPIU_Assert(basic_type != MPI_DATATYPE_NULL);
 
+    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
+        MPIU_Assert(rreq->dev.ext_hdr_ptr != NULL);
+        stream_offset = ((MPIDI_CH3_Ext_pkt_get_accum_t *) rreq->dev.ext_hdr_ptr)->stream_offset;
+    }
+    else {
+        stream_offset = 0;
+    }
+
     /* Use target data to calculate current stream unit size */
     MPID_Datatype_get_size_macro(rreq->dev.datatype, type_size);
     total_len = type_size * rreq->dev.user_count;
-    MPID_Datatype_get_extent_macro(rreq->dev.datatype, extent);
-    stream_data_len = MPIR_MIN(total_len, (MPIDI_CH3U_SRBuf_size / extent) * type_size);
-
     MPID_Datatype_get_size_macro(basic_type, predef_dtp_size);
+    MPID_Datatype_get_extent_macro(basic_type, extent);
+    stream_data_len = MPIR_MIN(total_len - (stream_offset / extent) * predef_dtp_size,
+                               (MPIDI_CH3U_SRBuf_size / extent) * predef_dtp_size);
+
     predef_count = stream_data_len / predef_dtp_size;
     MPIU_Assert(predef_count > 0);
 
@@ -284,14 +293,6 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     if ((rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
         (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
         get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
-
-    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
-        MPIU_Assert(rreq->dev.ext_hdr_ptr != NULL);
-        stream_offset = ((MPIDI_CH3_Ext_pkt_get_accum_t *) rreq->dev.ext_hdr_ptr)->stream_offset;
-    }
-    else {
-        stream_offset = 0;
-    }
 
     /* check if data is contiguous and get true lb */
     MPID_Datatype_is_contig(rreq->dev.datatype, &is_contig);
