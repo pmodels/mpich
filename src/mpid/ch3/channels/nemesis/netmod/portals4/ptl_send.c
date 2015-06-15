@@ -48,7 +48,6 @@ static void big_meappend(void *buf, ptl_size_t left_to_send, MPIDI_VC_t *vc, ptl
         /* increment the cc for each get operation */
         MPIDI_CH3U_Request_increment_cc(sreq, &was_incomplete);
         MPIU_Assert(was_incomplete);
-        REQ_PTL(sreq)->num_gets++;
 
         /* account for what has been sent */
         me.start = (char *)me.start + me.length;
@@ -275,7 +274,6 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
                 /* increment the cc for the get operation */
                 MPIDI_CH3U_Request_increment_cc(sreq, &was_incomplete);
                 MPIU_Assert(was_incomplete);
-                REQ_PTL(sreq)->num_gets = 1;
 
                 /* Create MD for first chunk */
                 md.start = sreq->dev.iov;
