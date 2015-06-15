@@ -547,7 +547,8 @@ static int get_event_info(ptl_event_t * event, struct rptl **ret_rptl, struct rp
         op = (struct rptl_op *) event->user_ptr;
 
         rptl_info.origin_events_left++;
-        op->target->issued_data_ops--;
+        if (event->type != PTL_EVENT_SEND)
+            op->target->issued_data_ops--;
 
         /* see if there are any pending ops to be issued */
         ret = poke_progress();
