@@ -43,7 +43,6 @@ typedef int (* event_handler_fn)(const ptl_event_t *e);
 
 typedef struct {
     struct MPID_nem_ptl_pack_overflow overflow[MPID_NEM_PTL_NUM_CHUNK_BUFFERS];
-    int noncontig;
     int large;
     ptl_handle_md_t md;
     ptl_handle_me_t put_me;
@@ -68,7 +67,6 @@ static inline MPID_nem_ptl_req_area * REQ_PTL(MPID_Request *req) {
             REQ_PTL(req_)->overflow[i].len  = 0;                \
             REQ_PTL(req_)->chunk_buffer[i] = NULL;              \
         }                                                       \
-        REQ_PTL(req_)->noncontig     = FALSE;                   \
         REQ_PTL(req_)->large         = FALSE;                   \
         REQ_PTL(req_)->md            = PTL_INVALID_HANDLE;      \
         REQ_PTL(req_)->put_me        = PTL_INVALID_HANDLE;      \
