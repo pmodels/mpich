@@ -37,6 +37,7 @@ ptl_handle_eq_t MPIDI_nem_ptl_eq;
 ptl_handle_eq_t MPIDI_nem_ptl_get_eq;
 ptl_handle_eq_t MPIDI_nem_ptl_control_eq;
 ptl_handle_eq_t MPIDI_nem_ptl_origin_eq;
+ptl_handle_eq_t MPIDI_nem_ptl_rpt_eq;
 ptl_pt_index_t  MPIDI_nem_ptl_control_rpt_pt; /* portal for rportals control messages */
 ptl_pt_index_t  MPIDI_nem_ptl_get_rpt_pt; /* portal for rportals control messages */
 ptl_handle_md_t MPIDI_nem_ptl_global_md;
@@ -204,6 +205,9 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
     ret = PtlEQAlloc(MPIDI_nem_ptl_ni, EVENT_COUNT, &MPIDI_nem_ptl_control_eq);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqalloc", "**ptleqalloc %s", MPID_nem_ptl_strerror(ret));
 
+    ret = PtlEQAlloc(MPIDI_nem_ptl_ni, EVENT_COUNT, &MPIDI_nem_ptl_rpt_eq);
+    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqalloc", "**ptleqalloc %s", MPID_nem_ptl_strerror(ret));
+
     /* allocate a separate EQ for origin events. with this, we can implement rate-limit operations
        to prevent a locally triggered flow control even */
     ret = PtlEQAlloc(MPIDI_nem_ptl_ni, EVENT_COUNT, &MPIDI_nem_ptl_origin_eq);
@@ -225,17 +229,17 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptalloc", "**ptlptalloc %s", MPID_nem_ptl_strerror(ret));
 
     /* allocate portal for MPICH control messages */
-    ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_eq,
+    ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_rpt_eq,
                      PTL_PT_ANY, &MPIDI_nem_ptl_rpt_pt);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptalloc", "**ptlptalloc %s", MPID_nem_ptl_strerror(ret));
 
     /* allocate portal for MPICH control messages */
-    ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_get_eq,
+    ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_rpt_eq,
                      PTL_PT_ANY, &MPIDI_nem_ptl_get_rpt_pt);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptalloc", "**ptlptalloc %s", MPID_nem_ptl_strerror(ret));
 
     /* allocate portal for MPICH control messages */
-    ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_control_eq,
+    ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_rpt_eq,
                      PTL_PT_ANY, &MPIDI_nem_ptl_control_rpt_pt);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptalloc", "**ptlptalloc %s", MPID_nem_ptl_strerror(ret));
 
@@ -293,7 +297,7 @@ static int ptl_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
-    ptl_handle_eq_t eqs[4];
+    ptl_handle_eq_t eqs[5];
     MPIDI_STATE_DECL(MPID_STATE_PTL_FINALIZE);
     MPIDI_FUNC_ENTER(MPID_STATE_PTL_FINALIZE);
 
@@ -309,7 +313,8 @@ static int ptl_finalize(void)
     eqs[1] = MPIDI_nem_ptl_get_eq;
     eqs[2] = MPIDI_nem_ptl_control_eq;
     eqs[3] = MPIDI_nem_ptl_origin_eq;
-    ret = MPID_nem_ptl_rptl_drain_eq(4, eqs);
+    eqs[4] = MPIDI_nem_ptl_rpt_eq;
+    ret = MPID_nem_ptl_rptl_drain_eq(5, eqs);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptfree", "**ptlptfree %s", MPID_nem_ptl_strerror(ret));
 
     ret = MPID_nem_ptl_rptl_ptfini(MPIDI_nem_ptl_pt);

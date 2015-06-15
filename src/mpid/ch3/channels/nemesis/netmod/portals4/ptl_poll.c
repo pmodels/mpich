@@ -134,6 +134,10 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
     while (1) {
         int ctl_event = FALSE;
 
+        /* Check the rptls EQ first. It should never return an event. */
+        ret = MPID_nem_ptl_rptl_eqget(MPIDI_nem_ptl_rpt_eq, &event);
+        MPIU_Assert(ret == PTL_EQ_EMPTY);
+
         /* check EQs for events */
         ret = MPID_nem_ptl_rptl_eqget(MPIDI_nem_ptl_eq, &event);
         MPIU_ERR_CHKANDJUMP(ret == PTL_EQ_DROPPED, mpi_errno, MPI_ERR_OTHER, "**eqdropped");
