@@ -750,8 +750,8 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
 
         if (curr_target != NULL) {
             /* set sync_flag in sync struct */
-            if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
-                curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
+            if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH_LOCAL) {
+                curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH_LOCAL;
             }
             curr_target->win_complete_flag = 1;
         }
@@ -773,7 +773,7 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
         mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_win(win_ptr, &local_completed, &remote_completed);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
-        if (!remote_completed) {
+        if (!local_completed) {
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
@@ -782,7 +782,7 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
              * in this function call. */
             progress_engine_triggered = 1;
         }
-    } while (!remote_completed);
+    } while (!local_completed);
 
     /* Cleanup all targets on this window. */
     mpi_errno = MPIDI_CH3I_RMA_Cleanup_targets_win(win_ptr);

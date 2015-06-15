@@ -345,8 +345,6 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
             /* piggyback on last OP. */
             if (target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH) {
                 flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH;
-                if (target->win_complete_flag)
-                    flags |= MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER;
             }
             else if (target->sync.sync_flag == MPIDI_RMA_SYNC_UNLOCK) {
                 flags |= MPIDI_CH3_PKT_FLAG_RMA_UNLOCK;
@@ -355,6 +353,8 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
                  * operation on out-of-order network). */
                 flags &= ~MPIDI_CH3_PKT_FLAG_RMA_FLUSH;
             }
+            if (target->win_complete_flag)
+                flags |= MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER;
         }
 
         /* only increase ack counter when FLUSH or UNLOCK flag is set,
