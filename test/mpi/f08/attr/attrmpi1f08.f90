@@ -5,7 +5,8 @@
 !      See COPYRIGHT in top-level directory.
 !
       program main
-      use mpi
+      use mpi_f08
+      implicit none
       integer value, wsize, wrank, extra, mykey
       integer rvalue, svalue
       TYPE(MPI_Comm) ncomm
@@ -19,7 +20,7 @@
 !
 !     Simple attribute put and get
 !
-      call mpi_keyval_create( MPI_NULL_COPY_FN, MPI_NULL_DELETE_FN, &
+      call mpi_keyval_create( MPI_COMM_NULL_COPY_FN, MPI_COMM_NULL_DELETE_FN, &
       &     mykey, extra,ierr )
       call mpi_attr_get( MPI_COMM_WORLD, mykey, value, flag, ierr )
       if (flag) then
