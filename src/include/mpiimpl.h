@@ -4464,6 +4464,9 @@ int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
 int MPIR_Type_contiguous_impl(int count,
                               MPI_Datatype old_type,
                               MPI_Datatype *new_type_p);
+int MPIR_Type_contiguous_x_impl(MPI_Count count,
+                              MPI_Datatype old_type,
+                              MPI_Datatype *new_type_p);
 void MPIR_Type_get_extent_impl(MPI_Datatype datatype, MPI_Aint *lb, MPI_Aint *extent);
 void MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, MPI_Aint *true_lb, MPI_Aint *true_extent);
 void MPIR_Type_get_envelope_impl(MPI_Datatype datatype, int *num_integers, int *num_addresses,

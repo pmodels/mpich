@@ -329,10 +329,16 @@ int MPIR_Gather_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 		    blocks[0] = sendcount;
 		    struct_displs[0] = MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf;
 		    types[0] = sendtype;
-		    blocks[1] = curr_cnt - nbytes;
+		    /* check for overflow.  work around int limits if needed*/
+		    if (curr_cnt - nbytes != (int)(curr_cnt - nbytes)) {
+			    blocks[1] = 1;
+			    MPIR_Type_contiguous_x_impl(curr_cnt - nbytes,
+					    MPI_BYTE, &(types[1]));
+		    } else {
+			    MPIU_Assign_trunc(blocks[1],  curr_cnt - nbytes, int);
+			    types[1] = MPI_BYTE;
+		    }
 		    struct_displs[1] = MPI_VOID_PTR_CAST_TO_MPI_AINT tmp_buf;
-		    types[1] = MPI_BYTE;
-
 		    mpi_errno = MPIR_Type_create_struct_impl(2, blocks, struct_displs, types, &tmp_type);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                     
@@ -348,6 +354,8 @@ int MPIR_Gather_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
                     }
 		    MPIR_Type_free_impl(&tmp_type);
+		    if (types[1] != MPI_BYTE)
+			    MPIR_Type_free_impl(&types[1]);
 		}
 
                 break;
