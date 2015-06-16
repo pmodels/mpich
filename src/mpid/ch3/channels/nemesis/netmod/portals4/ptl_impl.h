@@ -64,7 +64,6 @@ static inline MPID_nem_ptl_req_area * REQ_PTL(MPID_Request *req) {
 #define MPID_nem_ptl_init_req(req_) do {                        \
         int i;                                                  \
         for (i = 0; i < MPID_NEM_PTL_NUM_CHUNK_BUFFERS; ++i) {  \
-            REQ_PTL(req_)->overflow[i].len  = 0;                \
             REQ_PTL(req_)->chunk_buffer[i] = NULL;              \
         }                                                       \
         REQ_PTL(req_)->large         = FALSE;                   \

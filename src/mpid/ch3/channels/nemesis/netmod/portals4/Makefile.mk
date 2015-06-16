@@ -9,7 +9,6 @@ if BUILD_NEMESIS_NETMOD_PORTALS4
 
 mpi_core_sources +=					\
     src/mpid/ch3/channels/nemesis/netmod/portals4/ptl_init.c		\
-    src/mpid/ch3/channels/nemesis/netmod/portals4/ptl_pack_byte.c	\
     src/mpid/ch3/channels/nemesis/netmod/portals4/ptl_poll.c		\
     src/mpid/ch3/channels/nemesis/netmod/portals4/ptl_probe.c		\
     src/mpid/ch3/channels/nemesis/netmod/portals4/ptl_recv.c		\
