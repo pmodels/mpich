@@ -223,6 +223,9 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
     MPL_LL_DELETE(MPIDI_RMA_Win_list, MPIDI_RMA_Win_list_tail, win_elem);
     MPIU_Free(win_elem);
 
+    if (MPIDI_RMA_Win_list == NULL)
+        MPID_Progress_deregister_hook(MPIDI_CH3I_RMA_Make_progress_global);
+
     comm_ptr = (*win_ptr)->comm_ptr;
     mpi_errno = MPIR_Comm_free_impl(comm_ptr);
     if (mpi_errno)

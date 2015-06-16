@@ -2059,4 +2059,11 @@ int MPIDI_CH3_ReqHandler_ReqOpsComplete(MPIDI_VC_t *, MPID_Request *,
             *(eager_threshold_p) = (vc)->eager_max_msg_sz;          \
     } while (0)
 
+
+int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*));
+int MPIDI_CH3I_Progress_deregister_hook(int (*progress_fn)(int*));
+
+#define MPID_Progress_register_hook(fn_) MPIDI_CH3I_Progress_register_hook(fn_)
+#define MPID_Progress_deregister_hook(fn_) MPIDI_CH3I_Progress_deregister_hook(fn_)
+
 #endif /* !defined(MPICH_MPIDIMPL_H_INCLUDED) */

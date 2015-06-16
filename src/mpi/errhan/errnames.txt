@@ -460,6 +460,7 @@ unexpected messages queued.
 **opnotpredefined:only predefined ops are valid
 
 **init:Initialization failed
+**progresshookstoomany: too many progress hooks are registered
 
 #
 # To be removed

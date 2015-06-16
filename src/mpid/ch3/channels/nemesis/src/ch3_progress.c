@@ -85,6 +85,10 @@ typedef struct qn_ent
 
 static qn_ent_t *qn_head = NULL;
 
+#define MAX_PROGRESS_HOOKS 16
+typedef int (*progress_func_ptr_t) (int* made_progress);
+static progress_func_ptr_t  progress_hooks[MAX_PROGRESS_HOOKS] = { NULL };
+
 #ifdef HAVE_SIGNAL
 static void sigusr1_handler(int sig)
 {
@@ -280,6 +284,69 @@ int MPIDI_CH3I_Shm_send_progress(void)
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Progress_register_hook
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*))
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_REGISTER_HOOK);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_REGISTER_HOOK);
+    MPIU_THREAD_CS_ENTER(MPIDCOMM,);
+
+    for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
+        if (progress_hooks[i] == NULL) {
+            progress_hooks[i] = progress_fn;
+            break;
+        }
+    }
+
+    if (i >= MAX_PROGRESS_HOOKS) {
+        return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+				     "MPIDI_CH3I_Progress_register_hook", __LINE__,
+				     MPI_ERR_INTERN, "**progresshookstoomany", 0 );
+    }
+
+  fn_exit:
+    MPIU_THREAD_CS_EXIT(MPIDCOMM,);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_REGISTER_HOOK);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Progress_deregister_hook
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3I_Progress_deregister_hook(int (*progress_fn)(int*))
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_DEREGISTER_HOOK);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_DEREGISTER_HOOK);
+    MPIU_THREAD_CS_ENTER(MPIDCOMM,);
+
+    for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
+        if (progress_hooks[i] == progress_fn) {
+            progress_hooks[i] = NULL;
+            break;
+        }
+    }
+
+  fn_exit:
+    MPIU_THREAD_CS_EXIT(MPIDCOMM,);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_DEREGISTER_HOOK);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
 
 /* NOTE: it appears that this function is sometimes (inadvertently?) recursive.
  * Some packet handlers, such as MPIDI_CH3_PktHandler_Close, call iStartMsg,
@@ -364,6 +431,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 	MPID_nem_cell_ptr_t  cell;
 	int                  in_fbox = 0;
 	MPIDI_VC_t          *vc;
+	int i;
 
         do /* receive progress */
         {
@@ -463,27 +531,13 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
 
-        /* make progress on NBC schedules */
-        mpi_errno = MPIDU_Sched_progress(&made_progress);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        if (made_progress) {
-            MPIDI_CH3_Progress_signal_completion();
-        }
-
-#if defined HAVE_LIBHCOLL
-        if (MPIR_CVAR_CH3_ENABLE_HCOLL) {
-            mpi_errno = hcoll_do_progress();
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        }
-#endif /* HAVE_LIBHCOLL */
-
-        /* make progress on RMA */
-        if (MPIDI_CH3I_num_active_issued_win > 0 || MPIDI_CH3I_num_passive_win > 0) {
-        mpi_errno = MPIDI_CH3I_RMA_Make_progress_global(&made_progress);
-        if (mpi_errno)
-            MPIU_ERR_POP(mpi_errno);
-        if (made_progress)
-            MPIDI_CH3_Progress_signal_completion();
+        for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
+            if (progress_hooks[i] != NULL) {
+                mpi_errno = progress_hooks[i](&made_progress);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (made_progress)
+                    MPIDI_CH3_Progress_signal_completion();
+            }
         }
 
         /* in the case of progress_wait, bail out if anything completed (CC-1) */

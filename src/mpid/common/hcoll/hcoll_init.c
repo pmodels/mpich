@@ -23,6 +23,7 @@ int hcoll_destroy(void *param ATTRIBUTE((unused)))
 {
     if (1 == hcoll_initialized) {
         hcoll_finalize();
+        MPID_Progress_deregister_hook(hcoll_do_progress);
     }
     hcoll_initialized = 0;
     return 0;
@@ -79,7 +80,11 @@ int hcoll_initialize(void)
     if (mpi_errno)
         MPIU_ERR_POP(mpi_errno);
 
-    hcoll_initialized = 1;
+    if (!hcoll_initialized) {
+        hcoll_initialized = 1;
+        mpi_errno = MPID_Progress_register_hook(hcoll_do_progress);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
     MPIR_Add_finalize(hcoll_destroy, 0, 0);
 
     mpi_errno =
@@ -213,11 +218,11 @@ int hcoll_comm_destroy(MPID_Comm * comm_ptr, void *param)
     goto fn_exit;
 }
 
-int hcoll_do_progress(void)
+int hcoll_do_progress(int *made_progress)
 {
-    if (1 == hcoll_initialized) {
-        hcoll_progress_fn();
-    }
+    if (made_progress)
+        *made_progress = 0;
+    hcoll_progress_fn();
 
     return MPI_SUCCESS;
 }

@@ -409,6 +409,10 @@ int MPID_Sched_start(MPID_Sched_t *sp, MPID_Comm *comm, int tag, MPID_Request **
 
     /* finally, enqueue in the list of all pending schedules so that the
      * progress engine can make progress on it */
+    if (all_schedules.head == NULL) {
+        mpi_errno = MPID_Progress_register_hook(MPIDU_Sched_progress);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
     MPL_DL_APPEND(all_schedules.head, s);
 
     MPIU_DBG_MSG_P(COMM, TYPICAL, "started schedule s=%p\n", s);
@@ -936,7 +940,13 @@ fn_fail:
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sched_progress(int *made_progress)
 {
-    return MPIDU_Sched_progress_state(&all_schedules, made_progress);
+    int mpi_errno;
+
+    mpi_errno = MPIDU_Sched_progress_state(&all_schedules, made_progress);
+    if (!mpi_errno && all_schedules.head == NULL)
+        MPIDI_CH3I_Progress_deregister_hook(MPIDU_Sched_progress);
+
+    return mpi_errno;
 }
 
 static const char *entry_to_str(enum MPIDU_Sched_entry_type type) ATTRIBUTE((unused,used));

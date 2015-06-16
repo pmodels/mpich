@@ -26,6 +26,6 @@ int hcoll_Iallgather_req(const void *sendbuf, int sendcount, MPI_Datatype sendty
                          MPID_Request ** request);
 int hcoll_Iallreduce_req(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                          MPI_Op op, MPID_Comm * comm_ptr, MPID_Request ** request);
-int hcoll_do_progress(void);
+int hcoll_do_progress(int *made_progress);
 
 #endif
