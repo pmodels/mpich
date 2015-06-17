@@ -23,28 +23,6 @@ static ptl_me_t get_me;
 static ptl_handle_me_t me_handles[NUM_RECV_BUFS];
 static ptl_handle_me_t get_me_handle;
 
-struct pending_gets_st {
-    void *ptr;
-    MPID_Request *req;
-    UT_hash_handle hh;
-};
-static struct pending_gets_st *pending_gets = NULL;
-
-
-#undef FUNCNAME
-#define FUNCNAME find_req
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-static inline MPID_Request * find_req(void *ptr)
-{
-    struct pending_gets_st *pending_get;
-    MPID_Request *req;
-    HASH_FIND_PTR(pending_gets, &ptr, pending_get);
-    req = pending_get->req;
-    HASH_DEL(pending_gets, pending_get);
-    MPIU_Free(pending_get);
-    return req;
-}
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ptl_nm_init
@@ -64,11 +42,11 @@ int MPID_nem_ptl_nm_init(void)
     overflow_me.ct_handle = PTL_CT_NONE;
     overflow_me.uid = PTL_UID_ANY;
     overflow_me.options = ( PTL_ME_OP_PUT | PTL_ME_MANAGE_LOCAL | PTL_ME_NO_TRUNCATE | PTL_ME_MAY_ALIGN |
-                   PTL_ME_IS_ACCESSIBLE | PTL_ME_EVENT_LINK_DISABLE );
+                            PTL_ME_IS_ACCESSIBLE | PTL_ME_EVENT_LINK_DISABLE );
     overflow_me.match_id.phys.pid = PTL_PID_ANY;
     overflow_me.match_id.phys.nid = PTL_NID_ANY;
-    overflow_me.match_bits = NPTL_MATCH(CTL_TAG, 0, MPI_ANY_SOURCE);
-    overflow_me.ignore_bits = NPTL_MATCH_IGNORE;
+    overflow_me.match_bits = NPTL_MATCH(MPI_ANY_TAG, CTL_TAG, MPI_ANY_SOURCE);
+    overflow_me.ignore_bits = NPTL_MATCH_IGNORE_ANY_TAG;
     overflow_me.min_free = PTL_MAX_EAGER;
 
     /* allocate all overflow space at once */
@@ -91,8 +69,8 @@ int MPID_nem_ptl_nm_init(void)
                        PTL_ME_EVENT_LINK_DISABLE | PTL_ME_EVENT_UNLINK_DISABLE );
     get_me.match_id.phys.pid = PTL_PID_ANY;
     get_me.match_id.phys.nid = PTL_NID_ANY;
-    get_me.match_bits = NPTL_MATCH(GET_TAG, 0, MPI_ANY_SOURCE);
-    get_me.ignore_bits = NPTL_MATCH_IGNORE;
+    get_me.match_bits = NPTL_MATCH(MPI_ANY_TAG, GET_TAG, MPI_ANY_SOURCE);
+    get_me.ignore_bits = NPTL_MATCH_IGNORE_ANY_TAG;
     get_me.min_free = 0;
     ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &get_me, PTL_PRIORITY_LIST, NULL,
                       &get_me_handle);
@@ -151,7 +129,7 @@ static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, MPIDI_msg_
     const size_t sent_sz = data_sz < (PAYLOAD_SIZE-sreq->dev.ext_hdr_sz) ? data_sz : (PAYLOAD_SIZE-sreq->dev.ext_hdr_sz-sizeof(ptl_size_t));
     const size_t remaining = data_sz - sent_sz;
     const size_t sendbuf_sz = SENDBUF_SIZE(sent_sz+sreq->dev.ext_hdr_sz+(remaining?sizeof(ptl_size_t):0));
-    ptl_match_bits_t match_bits = NPTL_MATCH(CTL_TAG, 0, MPIDI_Process.my_pg_rank);
+    ptl_match_bits_t match_bits = NPTL_MATCH(sreq->handle, CTL_TAG, MPIDI_Process.my_pg_rank);
     MPIDI_STATE_DECL(MPID_STATE_SEND_PKT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_SEND_PKT);
@@ -175,19 +153,11 @@ static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, MPIDI_msg_
         MPIU_Memcpy(sendbuf_ptr, data_p, sent_sz);
         sendbuf_ptr += sent_sz;
         if (remaining) {
-            char *tmp_ptr = (char *)data_p + sent_sz;
-            const char *endbuf = tmp_ptr + remaining;
             /* The address/offset for the remote side to do the get is last in the buffer */
             ptl_size_t *offset = (ptl_size_t *)sendbuf_ptr;
-            *offset = (ptl_size_t)tmp_ptr;
-            do {
-                struct pending_gets_st *pending_get = MPIU_Malloc(sizeof(struct pending_gets_st));
-                ++REQ_PTL(sreq)->num_gets;
-                pending_get->ptr = tmp_ptr;
-                pending_get->req = sreq;
-                HASH_ADD_PTR(pending_gets, ptr, pending_get);
-                tmp_ptr += MPIDI_nem_ptl_ni_limits.max_msg_size;
-            } while (tmp_ptr < endbuf);
+            *offset = (ptl_size_t)data_p + sent_sz;
+            REQ_PTL(sreq)->num_gets = remaining / MPIDI_nem_ptl_ni_limits.max_msg_size;
+            if (remaining % MPIDI_nem_ptl_ni_limits.max_msg_size) REQ_PTL(sreq)->num_gets++;
         }
     }
 
@@ -226,7 +196,7 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
     const size_t sent_sz = data_sz < (PAYLOAD_SIZE-sreq->dev.ext_hdr_sz) ? data_sz : (PAYLOAD_SIZE-sreq->dev.ext_hdr_sz-sizeof(ptl_size_t));
     const size_t remaining = data_sz - sent_sz;
     const size_t sendbuf_sz = SENDBUF_SIZE(sent_sz+sreq->dev.ext_hdr_sz+(remaining?sizeof(ptl_size_t):0));
-    ptl_match_bits_t match_bits = NPTL_MATCH(CTL_TAG, 0, MPIDI_Process.my_pg_rank);
+    ptl_match_bits_t match_bits = NPTL_MATCH(sreq->handle, CTL_TAG, MPIDI_Process.my_pg_rank);
     MPIDI_STATE_DECL(MPID_STATE_SEND_NONCONTIG_PKT);
     MPIDI_FUNC_ENTER(MPID_STATE_SEND_NONCONTIG_PKT);
 
@@ -252,25 +222,16 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
         sendbuf_ptr += sent_sz;
 
         if (remaining) {  /* Post MEs for the remote gets */
-            char *tmp_ptr, *endbuf;
             ptl_size_t *offset = (ptl_size_t *)sendbuf_ptr;
             TMPBUF(sreq) = MPIU_Malloc(remaining);
-            tmp_ptr = TMPBUF(sreq);
-            endbuf = (char *)TMPBUF(sreq) + remaining;
             *offset = (ptl_size_t)TMPBUF(sreq);
             first = last;
             last = sreq->dev.segment_size;
             MPID_Segment_pack(sreq->dev.segment_ptr, first, &last, TMPBUF(sreq));
             MPIU_Assert(last == sreq->dev.segment_size);
 
-            do {
-                struct pending_gets_st *pending_get = MPIU_Malloc(sizeof(struct pending_gets_st));
-                ++REQ_PTL(sreq)->num_gets;
-                pending_get->ptr = tmp_ptr;
-                pending_get->req = sreq;
-                HASH_ADD_PTR(pending_gets, ptr, pending_get);
-                tmp_ptr += MPIDI_nem_ptl_ni_limits.max_msg_size;
-            } while (tmp_ptr < endbuf);
+            REQ_PTL(sreq)->num_gets = remaining / MPIDI_nem_ptl_ni_limits.max_msg_size;
+            if (remaining % MPIDI_nem_ptl_ni_limits.max_msg_size) REQ_PTL(sreq)->num_gets++;
         }
     }
 
@@ -426,6 +387,7 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
             MPID_nem_ptl_vc_area * vc_ptl;
             ptl_size_t remaining = NPTL_HEADER_GET_LENGTH(e->hdr_data);
             ptl_me_t search_me;
+            MPI_Request sender_req_id = NPTL_MATCH_GET_TAG(e->match_bits);
 
             MPIDI_PG_Get_vc(MPIDI_Process.my_pg, NPTL_MATCH_GET_RANK(e->match_bits), &vc);
             vc_ptl = VC_PTL(vc);
@@ -458,13 +420,13 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
                 do {
                     MPIDI_CH3U_Request_increment_cc(req, &incomplete);  /* Will be decremented - and eventually freed in REPLY */
                     ret = MPID_nem_ptl_rptl_get(MPIDI_nem_ptl_global_md, (ptl_size_t)buf_ptr,
-                                                size, vc_ptl->id, vc_ptl->ptc, NPTL_MATCH(GET_TAG, 0, MPIDI_Process.my_pg_rank), target_offset, req);
+                                                size, vc_ptl->id, vc_ptl->ptc, NPTL_MATCH(sender_req_id, GET_TAG, MPIDI_Process.my_pg_rank), target_offset, req);
                     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s",
                                          MPID_nem_ptl_strerror(ret));
                     MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,
                                                             "PtlGet(size=%lu id=(%#x,%#x) pt=%#x tag=%d)", size,
                                                             vc_ptl->id.phys.nid,
-                                                            vc_ptl->id.phys.pid, vc_ptl->ptc, GET_TAG));
+                                                            vc_ptl->id.phys.pid, vc_ptl->ptc, sender_req_id));
                     buf_ptr += size;
                     remaining -= size;
                     target_offset += size;
@@ -485,8 +447,10 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
 
     case PTL_EVENT_GET:
         {
-            MPID_Request *const req = find_req(e->start);
+            MPI_Request handle = NPTL_MATCH_GET_TAG(e->match_bits);
+            MPID_Request *req = NULL;
 
+            MPID_Request_get_ptr(handle, req);
             if (--REQ_PTL(req)->num_gets == 0) {
                 MPIU_Free(TMPBUF(req));
                 if (REQ_PTL(req)->put_done)
