@@ -75,18 +75,6 @@ cvars:
         lock entries) that stores information about RMA lock requests that
         could not be satisfied immediatly.  Requires a positive value.
 
-    - name        : MPIR_CVAR_CH3_RMA_LOCK_ENTRY_GLOBAL_POOL_SIZE
-      category    : CH3
-      type        : int
-      default     : 16384
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Size of the Global RMA lock entries pool (in number of
-        lock entries) that stores information about RMA lock requests that
-        could not be satisfied immediatly.  Requires a positive value.
-
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
