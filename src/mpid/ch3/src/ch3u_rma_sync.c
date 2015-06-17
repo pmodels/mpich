@@ -230,6 +230,29 @@ cvars:
           is smaller than the value, FENCE will use a basic but fast
           algorithm which requires an O(P) data structure.
 
+    - name        : MPIR_CVAR_CH3_RMA_DELAY_ISSUING_FOR_PIGGYBACKING
+      category    : CH3
+      type        : int
+      default     : 0
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Specify if delay issuing of RMA operations for piggybacking
+        LOCK/UNLOCK/FLUSH is enabled. It can be either 0 or 1. When
+        it is set to 1, the issuing of LOCK message is delayed until
+        origin process see the first RMA operation and piggyback
+        LOCK with that operation, and the origin process always keeps
+        the current last operation until the ending synchronization
+        call in order to piggyback UNLOCK/FLUSH with that operation.
+        When it is set to 0, in WIN_LOCK/UNLOCK case, the LOCK message
+        is sent out as early as possible, in WIN_LOCK_ALL/UNLOCK_ALL
+        case, the origin process still tries to piggyback LOCK message
+        with the first operation; for UNLOCK/FLUSH message, the origin
+        process no longer keeps the current last operation but only
+        piggyback UNLOCK/FLUSH if there is an operation avaliable in
+        the ending synchronization call.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -432,18 +455,12 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
         for (i = 0; i < win_ptr->num_slots; i++) {
             curr_target = win_ptr->slots[i].target_list_head;
             while (curr_target != NULL) {
-                if (curr_target->pending_op_list_head != NULL) {
-                    if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH_LOCAL) {
-                        curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH_LOCAL;
-                    }
-                    /* flag is set in order to decrement complete counter on target */
-                    curr_target->win_complete_flag = 1;
+                if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH_LOCAL) {
+                    curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH_LOCAL;
                 }
-                else {
-                    mpi_errno = send_decr_at_cnt_msg(curr_target->target_rank, win_ptr);
-                    if (mpi_errno != MPI_SUCCESS)
-                        MPIU_ERR_POP(mpi_errno);
-                }
+                /* flag is set in order to decrement complete counter on target */
+                curr_target->win_complete_flag = 1;
+
                 curr_target = curr_target->next;
             }
         }
@@ -1046,13 +1063,22 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win * win_ptr)
 
     /* If Destination is myself or process on SHM, acquire the lock,
      * wait until lock is granted. */
-    if (!(assert & MPI_MODE_NOCHECK) && (dest == rank || shm_target)) {
-        mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, dest, &made_progress);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+    if (!(assert & MPI_MODE_NOCHECK)) {
+        if (dest == rank || shm_target) {
+            mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, dest, &made_progress);
+            if (mpi_errno != MPI_SUCCESS)
+                MPIU_ERR_POP(mpi_errno);
 
-        while (target->access_state != MPIDI_RMA_LOCK_GRANTED) {
-            mpi_errno = wait_progress_engine();
+            while (target->access_state != MPIDI_RMA_LOCK_GRANTED) {
+                mpi_errno = wait_progress_engine();
+                if (mpi_errno != MPI_SUCCESS)
+                    MPIU_ERR_POP(mpi_errno);
+            }
+        }
+        else if (!MPIR_CVAR_CH3_RMA_DELAY_ISSUING_FOR_PIGGYBACKING) {
+            /* if DELAY_ISSUING_FOR_PIGGYBACKING is turned off, send lock request now
+             * since we do not want to piggyback LOCK with future OP */
+            mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, dest, &made_progress);
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
         }

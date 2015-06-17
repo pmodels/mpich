@@ -201,6 +201,7 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
                 /* if we reach WIN_UNLOCK and there is still operation existing
                  * in pending list, this operation must be the only operation
                  * and it is prepared to piggyback LOCK and UNLOCK. */
+                MPIU_Assert(MPIR_CVAR_CH3_RMA_DELAY_ISSUING_FOR_PIGGYBACKING);
                 MPIU_Assert(target->pending_op_list_head->next == NULL);
                 MPIU_Assert(target->pending_op_list_head->piggyback_lock_candidate);
             }
@@ -209,6 +210,13 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
 
     case MPIDI_RMA_LOCK_GRANTED:
     case MPIDI_RMA_NONE:
+        if (target->win_complete_flag) {
+            if (target->pending_op_list_head == NULL) {
+                mpi_errno = send_decr_at_cnt_msg(target->target_rank, win_ptr);
+                if (mpi_errno != MPI_SUCCESS)
+                    MPIU_ERR_POP(mpi_errno);
+            }
+        }
         if (target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH) {
             if (target->pending_op_list_head == NULL) {
                 if (target->target_rank != rank) {
@@ -309,11 +317,12 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
             break;
         }
 
-        if (curr_op->next == NULL &&
+        if (MPIR_CVAR_CH3_RMA_DELAY_ISSUING_FOR_PIGGYBACKING && curr_op->next == NULL &&
             target->sync.sync_flag == MPIDI_RMA_SYNC_NONE && curr_op->ureq == NULL) {
-            /* Skip the last OP if sync_flag is NONE since we
+            /* If DELAY_ISSUING_FOR_PIGGYBACKING is turned on,
+             * skip the last OP if sync_flag is NONE since we
              * want to leave it to the ending synchronization
-             * so that we can piggyback LOCK / FLUSH.
+             * so that we can piggyback UNLOCK / FLUSH.
              * However, if it is a request-based RMA, do not
              * skip it (otherwise a wait call before unlock
              * will be blocked). */
