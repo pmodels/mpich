@@ -44,7 +44,7 @@
  */
 static inline int
 MPID_Irecv_inline(void          * buf,
-                  int             count,
+                  MPI_Aint        count,
                   MPI_Datatype    datatype,
                   int             rank,
                   int             tag,

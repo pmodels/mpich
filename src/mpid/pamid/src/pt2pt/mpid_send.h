@@ -43,7 +43,7 @@
  */
 static inline int
 MPID_Send_inline(const void    * buf,
-                 int             count,
+                 MPI_Aint        count,
                  MPI_Datatype    datatype,
                  int             rank,
                  int             tag,

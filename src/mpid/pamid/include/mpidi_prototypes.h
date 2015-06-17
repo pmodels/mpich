@@ -59,11 +59,11 @@ void           MPIDI_Recvq_insert_ool      (MPID_Request *q,MPID_Request *e);
 /** \} */
 
 void MPIDI_Buffer_copy(const void     * const sbuf,
-                       int                    scount,
+                       MPI_Aint               scount,
                        MPI_Datatype           sdt,
                        int            *       smpi_errno,
                        void           * const rbuf,
-                       int                    rcount,
+                       MPI_Aint               rcount,
                        MPI_Datatype           rdt,
                        MPIDI_msg_sz_t *       rsz,
                        int            *       rmpi_errno);
@@ -77,7 +77,7 @@ void MPIDI_RecvMsg_procnull(MPID_Comm     * comm,
                             unsigned        is_blocking,
                             MPI_Status    * status,
                             MPID_Request ** request);
-void MPIDI_RecvMsg_Unexp(MPID_Request * rreq, void * buf, int count, MPI_Datatype datatype);
+void MPIDI_RecvMsg_Unexp(MPID_Request * rreq, void * buf, MPI_Aint count, MPI_Datatype datatype);
 
 /**
  * \defgroup MPID_CALLBACKS MPID callbacks for communication

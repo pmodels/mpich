@@ -74,7 +74,7 @@ MPIDI_SendDoneCB_inline(pami_context_t   context,
  */
 static inline int
 MPIDI_Send(const void    * buf,
-           int             count,
+           MPI_Aint        count,
            MPI_Datatype    datatype,
            int             rank,
            int             tag,

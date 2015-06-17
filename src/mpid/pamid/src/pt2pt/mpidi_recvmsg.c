@@ -26,7 +26,7 @@
 void
 MPIDI_RecvMsg_Unexp(MPID_Request  * rreq,
                     void          * buf,
-                    int             count,
+                    MPI_Aint        count,
                     MPI_Datatype    datatype)
 {
   /* ------------------------------------------------------------ */

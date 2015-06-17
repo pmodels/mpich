@@ -46,8 +46,8 @@
  * \param[out] rmpi_errno Returns errors
  */
 void MPIDI_Buffer_copy(
-    const void * const sbuf, int scount, MPI_Datatype sdt,                       int * smpi_errno,
-          void * const rbuf, int rcount, MPI_Datatype rdt, MPIDI_msg_sz_t * rsz, int * rmpi_errno)
+    const void * const sbuf, MPI_Aint scount, MPI_Datatype sdt,                       int * smpi_errno,
+          void * const rbuf, MPI_Aint rcount, MPI_Datatype rdt, MPIDI_msg_sz_t * rsz, int * rmpi_errno)
 {
     int sdt_contig;
     int rdt_contig;

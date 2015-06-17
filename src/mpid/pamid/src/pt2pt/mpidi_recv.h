@@ -135,7 +135,7 @@ MPIDI_Alloc_lock_inline(void **buf,size_t size)
  */
 static inline int
 MPIDI_Recv(void          * buf,
-           int             count,
+           MPI_Aint        count,
            MPI_Datatype    datatype,
            int             rank,
            int             tag,

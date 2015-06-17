@@ -80,7 +80,7 @@ MPIDI_Context_local(MPID_Request * req)
  */
 static inline int
 MPID_Isend_inline(const void    * buf,
-                  int             count,
+                  MPI_Aint        count,
                   MPI_Datatype    datatype,
                   int             rank,
                   int             tag,

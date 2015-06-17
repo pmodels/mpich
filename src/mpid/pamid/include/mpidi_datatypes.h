@@ -278,7 +278,7 @@ struct MPIDI_Request
   MPIDI_MsgEnvelope     envelope;
 
   void                 *userbuf;      /**< User buffer                */
-  unsigned              userbufcount; /**< Userbuf data count         */
+  MPI_Aint              userbufcount; /**< Userbuf data count         */
   MPI_Datatype          datatype;     /**< Data type of message       */
   pami_task_t           peer_pami;    /**< The other guy's rank (in PAMI) */
   unsigned              peer_comm;    /**< The other guy's rank (in the orig communicator) */
