@@ -10,8 +10,8 @@
 #include "mpl_utlist.h"
 #include "mpid_rma_types.h"
 
-static inline int do_accumulate_op(void *source_buf, MPI_Aint source_count, MPI_Datatype source_dtp,
-                                   void *target_buf, MPI_Aint target_count, MPI_Datatype target_dtp,
+static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datatype source_dtp,
+                                   void *target_buf, int target_count, MPI_Datatype target_dtp,
                                    MPI_Aint stream_offset, MPI_Op acc_op);
 
 #define ASSIGN_COPY(src, dest, count, type)     \
@@ -399,7 +399,8 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
             MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
         }
 
-        mpi_errno = do_accumulate_op((void *) packed_buf, stream_count, basic_type,
+        MPIU_Assert(stream_count == (int) stream_count);
+        mpi_errno = do_accumulate_op((void *) packed_buf, (int) stream_count, basic_type,
                                      (void *) ((char *) base + disp_unit * target_disp),
                                      target_count, target_datatype, stream_offset, op);
 
@@ -541,7 +542,8 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
             packed_buf = tmpbuf;
         }
 
-        mpi_errno = do_accumulate_op((void *) packed_buf, stream_count, basic_type,
+        MPIU_Assert(stream_count == (int) stream_count);
+        mpi_errno = do_accumulate_op((void *) packed_buf, (int) stream_count, basic_type,
                                      (void *) ((char *) base + disp_unit * target_disp),
                                      target_count, target_datatype, stream_offset, op);
 

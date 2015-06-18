@@ -806,8 +806,8 @@ static inline int MPIDI_CH3I_RMA_Handle_flush_ack(MPID_Win * win_ptr, int target
 #define FUNCNAME do_accumulate_op
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline int do_accumulate_op(void *source_buf, MPI_Aint source_count, MPI_Datatype source_dtp,
-                                   void *target_buf, MPI_Aint target_count, MPI_Datatype target_dtp,
+static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datatype source_dtp,
+                                   void *target_buf, int target_count, MPI_Datatype target_dtp,
                                    MPI_Aint stream_offset, MPI_Op acc_op)
 {
     int mpi_errno = MPI_SUCCESS;

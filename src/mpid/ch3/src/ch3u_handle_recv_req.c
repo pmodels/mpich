@@ -187,7 +187,8 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq,
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
     /* accumulate data from tmp_buf into user_buf */
-    mpi_errno = do_accumulate_op(rreq->dev.user_buf, predef_count, basic_type,
+    MPIU_Assert(predef_count == (int) predef_count);
+    mpi_errno = do_accumulate_op(rreq->dev.user_buf, (int) predef_count, basic_type,
                                  rreq->dev.real_user_buf, rreq->dev.user_count, rreq->dev.datatype,
                                  stream_offset, rreq->dev.op);
     if (win_ptr->shm_allocated == TRUE)
@@ -336,7 +337,8 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     }
 
     /* accumulate data from tmp_buf into user_buf */
-    mpi_errno = do_accumulate_op(rreq->dev.user_buf, predef_count, basic_type,
+    MPIU_Assert(predef_count == (int) predef_count);
+    mpi_errno = do_accumulate_op(rreq->dev.user_buf, (int) predef_count, basic_type,
                                  rreq->dev.real_user_buf, rreq->dev.user_count, rreq->dev.datatype,
                                  stream_offset, rreq->dev.op);
 
@@ -1245,7 +1247,8 @@ static inline int perform_acc_in_lock_queue(MPID_Win * win_ptr, MPIDI_RMA_Lock_e
 
         /* Note: here stream_offset is 0 because when piggybacking LOCK, we must use
          * the first stream unit. */
-        mpi_errno = do_accumulate_op(lock_entry->data, recv_count, acc_pkt->datatype,
+        MPIU_Assert(recv_count = (int) recv_count);
+        mpi_errno = do_accumulate_op(lock_entry->data, (int) recv_count, acc_pkt->datatype,
                                      acc_pkt->addr, acc_pkt->count, acc_pkt->datatype,
                                      0, acc_pkt->op);
     }
@@ -1415,7 +1418,8 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
 
     /* Perform ACCUMULATE OP */
 
-    mpi_errno = do_accumulate_op(lock_entry->data, recv_count, get_accum_pkt->datatype,
+    MPIU_Assert(recv_count == (int) recv_count);
+    mpi_errno = do_accumulate_op(lock_entry->data, (int) recv_count, get_accum_pkt->datatype,
                                  get_accum_pkt->addr, get_accum_pkt->count, get_accum_pkt->datatype,
                                  0, get_accum_pkt->op);
 
