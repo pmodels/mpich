@@ -378,7 +378,8 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
         }
 
         if ((curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE ||
-             curr_op->pkt.type == MPIDI_CH3_PKT_GET_ACCUM) && curr_op->issued_stream_count > 0) {
+             curr_op->pkt.type == MPIDI_CH3_PKT_GET_ACCUM) &&
+            curr_op->issued_stream_count != ALL_STREAM_UNITS_ISSUED) {
             /* For ACC-like operations, if not all stream units
              * are issued out, we stick to the current operation,
              * otherwise we move on to the next operation. */
