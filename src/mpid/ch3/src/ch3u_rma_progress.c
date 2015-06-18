@@ -272,7 +272,7 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
         break;
     }   /* end of switch */
 
-    if (target->pending_op_list_head != NULL && target->access_state != MPIDI_RMA_LOCK_ISSUED) {
+    if (target->access_state != MPIDI_RMA_LOCK_ISSUED) {
         (*is_able_to_issue) = 1;
     }
 
@@ -304,7 +304,7 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
     if (!is_able_to_issue)
         goto fn_exit;
 
-    if (win_ptr->non_empty_slots == 0 || target == NULL)
+    if (win_ptr->non_empty_slots == 0 || target == NULL || target->pending_op_list_head == NULL)
         goto fn_exit;
 
     /* Issue out operations in the list. */
