@@ -63,8 +63,6 @@ static int handler_send(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *const sreq = e->user_ptr;
-    MPIDI_VC_t *vc = sreq->ch.vc;
-    MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
 
     int i, ret;
 
