@@ -184,4 +184,10 @@ MPIDI_Win_set_info(MPID_Win *win,
 
 MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp);
 MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2);
+
+int MPIDI_Progress_register_hook(int (*progress_fn)(int*));
+int MPIDI_Progress_deregister_hook(int (*progress_fn)(int*));
+
+#define MPID_Progress_register_hook(fn_) MPIDI_Progress_register_hook(fn_)
+#define MPID_Progress_deregister_hook(fn_) MPIDI_Progress_deregister_hook(fn_)
 #endif

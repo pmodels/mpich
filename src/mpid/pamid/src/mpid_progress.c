@@ -21,6 +21,73 @@
  */
 #include <mpidimpl.h>
 
+#define MAX_PROGRESS_HOOKS 16
+typedef int (*progress_func_ptr_t) (int* made_progress);
+static progress_func_ptr_t  progress_hooks[MAX_PROGRESS_HOOKS] = { NULL };
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Progress_register_hook
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_Progress_register_hook(int (*progress_fn)(int*))
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_PROGRESS_REGISTER_HOOK);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_PROGRESS_REGISTER_HOOK);
+    MPIU_THREAD_CS_ENTER(ASYNC,);
+
+    for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
+        if (progress_hooks[i] == NULL) {
+            progress_hooks[i] = progress_fn;
+            break;
+        }
+    }
+
+    if (i >= MAX_PROGRESS_HOOKS) {
+        return MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+            "MPIDI_Progress_register_hook", __LINE__,
+            MPI_ERR_INTERN, "**progresshookstoomany", 0 );
+    }
+
+  fn_exit:
+    MPIU_THREAD_CS_EXIT(ASYNC,);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_PROGRESS_REGISTER_HOOK);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Progress_deregister_hook
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3I_Progress_deregister_hook(int (*progress_fn)(int*))
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_PROGRESS_DEREGISTER_HOOK);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_PROGRESS_DEREGISTER_HOOK);
+    MPIU_THREAD_CS_ENTER(ASYNC,);
+
+    for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
+        if (progress_hooks[i] == progress_fn) {
+            progress_hooks[i] = NULL;
+            break;
+        }
+    }
+
+  fn_exit:
+    MPIU_THREAD_CS_EXIT(ASYNC,);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_PROGRESS_DEREGISTER_HOOK);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
 
 void
 MPIDI_Progress_init()
@@ -155,6 +222,7 @@ MPIDI_Progress_async_poll (pami_context_t context, void *cookie)
 {
   pami_result_t rc;
   int loop_count=100;
+  int i, made_progress;
 
   /* In the "global" mpich lock mode all application threads must acquire the
    * ALLFUNC global lock upon entry to the API. The async progress thread
@@ -164,6 +232,12 @@ MPIDI_Progress_async_poll (pami_context_t context, void *cookie)
    */
   if (MPIU_THREAD_CS_TRY(ALLFUNC,))           /* (0==try_acquire(0)) */
     {
+      for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
+        if (progress_hooks[i] != NULL) {
+          progress_hooks[i](&made_progress);
+        }
+      }
+
       /* There is a simplifying assertion when in the 'global' mpich lock mode
        * that only a single context is supported. See the discussion in
        * mpich/src/mpid/pamid/src/mpid_init.c for more information.
@@ -187,6 +261,13 @@ MPIDI_Progress_async_poll_perobj (pami_context_t context, void *cookie)
 {
   pami_result_t rc;
   int loop_count=100;
+  int i, made_progress;
+
+  for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
+    if (progress_hooks[i] != NULL) {
+      progress_hooks[i](&made_progress);
+    }
+  }
 
   /* In the "per object" mpich lock mode multiple application threads could be
    * active within the API interacting with contexts and multiple async progress
