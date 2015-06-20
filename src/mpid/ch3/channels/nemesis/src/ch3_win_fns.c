@@ -350,7 +350,7 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
                                       MPID_Comm * comm_ptr, MPID_Win ** win_ptr)
 {
     MPID_Comm *node_comm_ptr = NULL;
-    int node_rank, node_size;
+    int node_rank;
     int comm_rank, comm_size;
     MPI_Aint *tmp_buf = NULL;
     int i, k;
@@ -371,10 +371,9 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
 
     node_comm_ptr = (*win_ptr)->comm_ptr->node_comm;
     MPIU_Assert(node_comm_ptr != NULL);
-    node_size = node_comm_ptr->local_size;
     node_rank = node_comm_ptr->rank;
 
-    (*win_ptr)->info_shm_segment_len = node_size * sizeof(MPIDI_Win_basic_info_t);
+    (*win_ptr)->info_shm_segment_len = comm_size * sizeof(MPIDI_Win_basic_info_t);
 
     mpi_errno = MPIU_SHMW_Hnd_init(&(*win_ptr)->info_shm_segment_handle);
     if (mpi_errno != MPI_SUCCESS)
