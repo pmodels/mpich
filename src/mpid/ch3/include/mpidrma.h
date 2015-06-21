@@ -320,7 +320,7 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
                                       MPIDI_CH3_Pkt_t * pkt,
                                       MPIDI_msg_sz_t * buflen, MPID_Request ** reqp)
 {
-    MPIDI_RMA_Lock_entry_t *new_ptr = NULL;
+    MPIDI_RMA_Target_lock_entry_t *new_ptr = NULL;
     MPIDI_CH3_Pkt_flags_t flag;
     MPI_Win source_win_handle;
     MPI_Request request_handle;
@@ -329,9 +329,9 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
 
     (*reqp) = NULL;
 
-    new_ptr = MPIDI_CH3I_Win_lock_entry_alloc(win_ptr, pkt);
+    new_ptr = MPIDI_CH3I_Win_target_lock_entry_alloc(win_ptr, pkt);
     if (new_ptr != NULL) {
-        MPL_LL_APPEND(win_ptr->lock_queue, win_ptr->lock_queue_tail, new_ptr);
+        MPL_LL_APPEND(win_ptr->target_lock_queue_head, win_ptr->target_lock_queue_tail, new_ptr);
         new_ptr->vc = vc;
     }
     else {
@@ -408,13 +408,14 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
         }
 
         if (new_ptr != NULL) {
-            if (win_ptr->current_lock_data_bytes + buf_size < MPIR_CVAR_CH3_RMA_LOCK_DATA_BYTES) {
+            if (win_ptr->current_target_lock_data_bytes + buf_size <
+                MPIR_CVAR_CH3_RMA_TARGET_LOCK_DATA_BYTES) {
                 new_ptr->data = MPIU_Malloc(buf_size);
             }
 
             if (new_ptr->data == NULL) {
                 /* Note that there are two possible reasons to make new_ptr->data to be NULL:
-                 * (1) win_ptr->current_lock_data_bytes + buf_size >= MPIR_CVAR_CH3_RMA_LOCK_DATA_BYTES;
+                 * (1) win_ptr->current_target_lock_data_bytes + buf_size >= MPIR_CVAR_CH3_RMA_TARGET_LOCK_DATA_BYTES;
                  * (2) MPIU_Malloc(buf_size) failed.
                  * In such cases, we cannot allocate memory for lock data, so we give up
                  * buffering lock data, however, we still buffer lock request.
@@ -447,7 +448,7 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
                 data_discarded = 1;
             }
             else {
-                win_ptr->current_lock_data_bytes += buf_size;
+                win_ptr->current_target_lock_data_bytes += buf_size;
                 new_ptr->buf_size = buf_size;
             }
         }
@@ -465,7 +466,7 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
             req->dev.recv_data_sz = recv_data_sz;
             req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete;
             req->dev.OnFinal = MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete;
-            req->dev.lock_queue_entry = new_ptr;
+            req->dev.target_lock_queue_entry = new_ptr;
 
             data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
             data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
@@ -478,7 +479,7 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
             req->dev.recv_data_sz = recv_data_sz;
             req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete;
             req->dev.OnFinal = MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete;
-            req->dev.lock_queue_entry = new_ptr;
+            req->dev.target_lock_queue_entry = new_ptr;
 
             data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
             data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
@@ -746,7 +747,7 @@ static inline int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
         /* Queue the lock information. */
         MPIDI_CH3_Pkt_t pkt;
         MPIDI_CH3_Pkt_lock_t *lock_pkt = &pkt.lock;
-        MPIDI_RMA_Lock_entry_t *new_ptr = NULL;
+        MPIDI_RMA_Target_lock_entry_t *new_ptr = NULL;
         MPIDI_VC_t *my_vc;
 
         MPIDI_Pkt_init(lock_pkt, MPIDI_CH3_PKT_LOCK);
@@ -758,7 +759,7 @@ static inline int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
             lock_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE;
         }
 
-        new_ptr = MPIDI_CH3I_Win_lock_entry_alloc(win_ptr, &pkt);
+        new_ptr = MPIDI_CH3I_Win_target_lock_entry_alloc(win_ptr, &pkt);
         if (new_ptr == NULL) {
             mpi_errno = handle_lock_ack(win_ptr, win_ptr->comm_ptr->rank,
                                         MPIDI_CH3_PKT_FLAG_RMA_LOCK_DISCARDED);
@@ -766,7 +767,7 @@ static inline int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
                 MPIU_ERR_POP(mpi_errno);
             goto fn_exit;
         }
-        MPL_LL_APPEND(win_ptr->lock_queue, win_ptr->lock_queue_tail, new_ptr);
+        MPL_LL_APPEND(win_ptr->target_lock_queue_head, win_ptr->target_lock_queue_tail, new_ptr);
         MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &my_vc);
         new_ptr->vc = my_vc;
 

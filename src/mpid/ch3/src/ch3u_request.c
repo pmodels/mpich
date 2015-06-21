@@ -83,7 +83,7 @@ MPID_Request * MPID_Request_create(void)
 	   request for RMA operations */
 	req->dev.target_win_handle = MPI_WIN_NULL;
 	req->dev.source_win_handle = MPI_WIN_NULL;
-        req->dev.lock_queue_entry  = NULL;
+        req->dev.target_lock_queue_entry = NULL;
 	req->dev.dtype_info	   = NULL;
 	req->dev.dataloop	   = NULL;
 	req->dev.iov_offset        = 0;

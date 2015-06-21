@@ -16,8 +16,8 @@ int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPID_Win * win_ptr, MPIDI_RMA_Targe
 int MPIDI_CH3I_RMA_Make_progress_target(MPID_Win * win_ptr, int target_rank, int *made_progress);
 int MPIDI_CH3I_RMA_Make_progress_win(MPID_Win * win_ptr, int *made_progress);
 
-extern MPIDI_RMA_Op_t *global_rma_op_pool, *global_rma_op_pool_tail, *global_rma_op_pool_start;
-extern MPIDI_RMA_Target_t *global_rma_target_pool, *global_rma_target_pool_tail,
+extern MPIDI_RMA_Op_t *global_rma_op_pool_head, *global_rma_op_pool_tail, *global_rma_op_pool_start;
+extern MPIDI_RMA_Target_t *global_rma_target_pool_head, *global_rma_target_pool_tail,
     *global_rma_target_pool_start;
 
 MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
@@ -52,18 +52,18 @@ static inline MPIDI_RMA_Op_t *MPIDI_CH3I_Win_op_alloc(MPID_Win * win_ptr)
 {
     MPIDI_RMA_Op_t *e;
 
-    if (win_ptr->op_pool == NULL) {
+    if (win_ptr->op_pool_head == NULL) {
         /* local pool is empty, try to find something in the global pool */
-        if (global_rma_op_pool == NULL)
+        if (global_rma_op_pool_head == NULL)
             return NULL;
         else {
-            e = global_rma_op_pool;
-            MPL_LL_DELETE(global_rma_op_pool, global_rma_op_pool_tail, e);
+            e = global_rma_op_pool_head;
+            MPL_LL_DELETE(global_rma_op_pool_head, global_rma_op_pool_tail, e);
         }
     }
     else {
-        e = win_ptr->op_pool;
-        MPL_LL_DELETE(win_ptr->op_pool, win_ptr->op_pool_tail, e);
+        e = win_ptr->op_pool_head;
+        MPL_LL_DELETE(win_ptr->op_pool_head, win_ptr->op_pool_tail, e);
     }
 
     e->dataloop = NULL;
@@ -101,9 +101,9 @@ static inline int MPIDI_CH3I_Win_op_free(MPID_Win * win_ptr, MPIDI_RMA_Op_t * e)
     /* use PREPEND when return objects back to the pool
      * in order to improve cache performance */
     if (e->pool_type == MPIDI_RMA_POOL_WIN)
-        MPL_LL_PREPEND(win_ptr->op_pool, win_ptr->op_pool_tail, e);
+        MPL_LL_PREPEND(win_ptr->op_pool_head, win_ptr->op_pool_tail, e);
     else
-        MPL_LL_PREPEND(global_rma_op_pool, global_rma_op_pool_tail, e);
+        MPL_LL_PREPEND(global_rma_op_pool_head, global_rma_op_pool_tail, e);
 
     return mpi_errno;
 }
@@ -118,18 +118,18 @@ static inline MPIDI_RMA_Target_t *MPIDI_CH3I_Win_target_alloc(MPID_Win * win_ptr
 {
     MPIDI_RMA_Target_t *e;
 
-    if (win_ptr->target_pool == NULL) {
+    if (win_ptr->target_pool_head == NULL) {
         /* local pool is empty, try to find something in the global pool */
-        if (global_rma_target_pool == NULL)
+        if (global_rma_target_pool_head == NULL)
             return NULL;
         else {
-            e = global_rma_target_pool;
-            MPL_LL_DELETE(global_rma_target_pool, global_rma_target_pool_tail, e);
+            e = global_rma_target_pool_head;
+            MPL_LL_DELETE(global_rma_target_pool_head, global_rma_target_pool_tail, e);
         }
     }
     else {
-        e = win_ptr->target_pool;
-        MPL_LL_DELETE(win_ptr->target_pool, win_ptr->target_pool_tail, e);
+        e = win_ptr->target_pool_head;
+        MPL_LL_DELETE(win_ptr->target_pool_head, win_ptr->target_pool_tail, e);
     }
 
     e->issued_read_op_list_head = e->issued_read_op_list_tail = NULL;
@@ -173,9 +173,9 @@ static inline int MPIDI_CH3I_Win_target_free(MPID_Win * win_ptr, MPIDI_RMA_Targe
     /* use PREPEND when return objects back to the pool
      * in order to improve cache performance */
     if (e->pool_type == MPIDI_RMA_POOL_WIN)
-        MPL_LL_PREPEND(win_ptr->target_pool, win_ptr->target_pool_tail, e);
+        MPL_LL_PREPEND(win_ptr->target_pool_head, win_ptr->target_pool_tail, e);
     else
-        MPL_LL_PREPEND(global_rma_target_pool, global_rma_target_pool_tail, e);
+        MPL_LL_PREPEND(global_rma_target_pool_head, global_rma_target_pool_tail, e);
 
     return mpi_errno;
 }

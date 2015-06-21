@@ -63,7 +63,7 @@ cvars:
         targets) that stores information about RMA targets that
         could not be issued immediatly.  Requires a positive value.
 
-    - name        : MPIR_CVAR_CH3_RMA_LOCK_ENTRY_WIN_POOL_SIZE
+    - name        : MPIR_CVAR_CH3_RMA_TARGET_LOCK_ENTRY_WIN_POOL_SIZE
       category    : CH3
       type        : int
       default     : 256
@@ -79,9 +79,9 @@ cvars:
 */
 
 
-MPIDI_RMA_Op_t *global_rma_op_pool = NULL, *global_rma_op_pool_tail =
+MPIDI_RMA_Op_t *global_rma_op_pool_head = NULL, *global_rma_op_pool_tail =
     NULL, *global_rma_op_pool_start = NULL;
-MPIDI_RMA_Target_t *global_rma_target_pool = NULL, *global_rma_target_pool_tail =
+MPIDI_RMA_Target_t *global_rma_target_pool_head = NULL, *global_rma_target_pool_tail =
     NULL, *global_rma_target_pool_start = NULL;
 
 #undef FUNCNAME
@@ -103,7 +103,8 @@ int MPIDI_RMA_init(void)
                         mpi_errno, "RMA op pool");
     for (i = 0; i < MPIR_CVAR_CH3_RMA_OP_GLOBAL_POOL_SIZE; i++) {
         global_rma_op_pool_start[i].pool_type = MPIDI_RMA_POOL_GLOBAL;
-        MPL_LL_APPEND(global_rma_op_pool, global_rma_op_pool_tail, &(global_rma_op_pool_start[i]));
+        MPL_LL_APPEND(global_rma_op_pool_head, global_rma_op_pool_tail,
+                      &(global_rma_op_pool_start[i]));
     }
 
     MPIU_CHKPMEM_MALLOC(global_rma_target_pool_start, MPIDI_RMA_Target_t *,
@@ -111,7 +112,7 @@ int MPIDI_RMA_init(void)
                         mpi_errno, "RMA target pool");
     for (i = 0; i < MPIR_CVAR_CH3_RMA_TARGET_GLOBAL_POOL_SIZE; i++) {
         global_rma_target_pool_start[i].pool_type = MPIDI_RMA_POOL_GLOBAL;
-        MPL_LL_APPEND(global_rma_target_pool, global_rma_target_pool_tail,
+        MPL_LL_APPEND(global_rma_target_pool_head, global_rma_target_pool_tail,
                       &(global_rma_target_pool_start[i]));
     }
 
@@ -189,7 +190,8 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
      * entering Win_free. */
     while ((*win_ptr)->current_lock_type != MPID_LOCK_NONE ||
            (*win_ptr)->at_completion_counter != 0 ||
-           (*win_ptr)->lock_queue != NULL || (*win_ptr)->current_lock_data_bytes != 0) {
+           (*win_ptr)->target_lock_queue_head != NULL ||
+           (*win_ptr)->current_target_lock_data_bytes != 0) {
         mpi_errno = wait_progress_engine();
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
@@ -226,10 +228,10 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
     MPIU_Free((*win_ptr)->op_pool_start);
     MPIU_Free((*win_ptr)->target_pool_start);
     MPIU_Free((*win_ptr)->slots);
-    if ((*win_ptr)->lock_entry_pool_start != NULL) {
-        MPIU_Free((*win_ptr)->lock_entry_pool_start);
+    if ((*win_ptr)->target_lock_entry_pool_start != NULL) {
+        MPIU_Free((*win_ptr)->target_lock_entry_pool_start);
     }
-    MPIU_Assert((*win_ptr)->current_lock_data_bytes == 0);
+    MPIU_Assert((*win_ptr)->current_target_lock_data_bytes == 0);
 
     /* Free the attached buffer for windows created with MPI_Win_allocate() */
     if ((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE ||
