@@ -49,6 +49,7 @@ typedef struct {
     ptl_handle_me_t *get_me_p;
     int num_gets;
     int put_done;
+    void *recv_ptr;  /* used for reordering in ptl_nm */
     void *chunk_buffer[MPID_NEM_PTL_NUM_CHUNK_BUFFERS];
     MPIDI_msg_sz_t bytes_put;
     int found; /* used in probes with PtlMESearch() */
