@@ -395,7 +395,8 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
 
     if (MPIDI_RMA_Win_list == NULL) {
         mpi_errno = MPID_Progress_register_hook(MPIDI_CH3I_RMA_Make_progress_global);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIU_ERR_POP(mpi_errno);
     }
     MPL_LL_APPEND(MPIDI_RMA_Win_list, MPIDI_RMA_Win_list_tail, win_elem);
 
