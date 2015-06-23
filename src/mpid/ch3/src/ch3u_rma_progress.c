@@ -545,8 +545,7 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
                 curr_op->reqs = NULL;
                 curr_op->reqs_size = 0;
             }
-            MPL_LL_DELETE(*op_list_head, *op_list_tail, curr_op);
-            MPIDI_CH3I_Win_op_free(win_ptr, curr_op);
+            MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, op_list_head, op_list_tail, curr_op);
         }
         else {
             if (read_flag == 1) {
