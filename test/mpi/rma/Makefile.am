@@ -157,7 +157,8 @@ noinst_PROGRAMS =          \
     acc-pairtype           \
     manyget                \
     derived-acc-flush_local\
-    large-acc-flush_local
+    large-acc-flush_local  \
+    large-small-acc
 
 if BUILD_MPIX_TESTS
 noinst_PROGRAMS += aint
