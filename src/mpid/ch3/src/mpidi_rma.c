@@ -228,9 +228,8 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
     MPIU_Free((*win_ptr)->op_pool_start);
     MPIU_Free((*win_ptr)->target_pool_start);
     MPIU_Free((*win_ptr)->slots);
-    if ((*win_ptr)->target_lock_entry_pool_start != NULL) {
-        MPIU_Free((*win_ptr)->target_lock_entry_pool_start);
-    }
+    MPIU_Free((*win_ptr)->target_lock_entry_pool_start);
+
     MPIU_Assert((*win_ptr)->current_target_lock_data_bytes == 0);
 
     /* Free the attached buffer for windows created with MPI_Win_allocate() */
