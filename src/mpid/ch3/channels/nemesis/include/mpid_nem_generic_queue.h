@@ -113,8 +113,10 @@
 #define GENERIC_Q_SEARCH_REMOVE(qp, pred, epp, el_type, next_field) do {        \
     el_type *_e;                                                                \
     el_type *_prev;                                                             \
-    if (GENERIC_Q_EMPTY(*(qp)))                                                 \
+    if (GENERIC_Q_EMPTY(*(qp))) {                                               \
         *(epp) = NULL;                                                          \
+        break;                                                                  \
+    }                                                                           \
     _e = GENERIC_Q_HEAD(*(qp));                                                 \
     if (pred)                                                                   \
     {                                                                           \
