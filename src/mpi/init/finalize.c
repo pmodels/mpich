@@ -65,7 +65,7 @@ typedef struct Finalize_func_t {
 } Finalize_func_t;
 /* When full debugging is enabled, each MPI handle type has a finalize handler
    installed to detect unfreed handles.  */
-#define MAX_FINALIZE_FUNC 32
+#define MAX_FINALIZE_FUNC 64
 static Finalize_func_t fstack[MAX_FINALIZE_FUNC];
 static int fstack_sp = 0;
 static int fstack_max_priority = 0;
@@ -76,7 +76,8 @@ void MPIR_Add_finalize( int (*f)( void * ), void *extra_data, int priority )
     if (fstack_sp >= MAX_FINALIZE_FUNC) {
 	/* This is a little tricky.  We may want to check the state of
 	   MPIR_Process.mpich_state to decide how to signal the error */
-	(void)MPIU_Internal_error_printf( "overflow in finalize stack!\n" );
+	(void)MPIU_Internal_error_printf( "overflow in finalize stack! "
+		"Is MAX_FINALIZE_FUNC too small?\n" );
     if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_IN_INIT ||
         OPA_load_int(&MPIR_Process.mpich_state) == MPICH_POST_INIT)
     {
