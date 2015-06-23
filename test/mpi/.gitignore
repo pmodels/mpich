@@ -537,6 +537,15 @@
 /rma/putpscw1
 /rma/wintest
 /rma/manyget
+/rma/lock_dt
+/rma/lock_dt_flush
+/rma/lock_dt_flushlocal
+/rma/lockall_dt
+/rma/lockall_dt_flush
+/rma/lockall_dt_flushall
+/rma/lockall_dt_flushlocal
+/rma/lockall_dt_flushlocalall
+/rma/lock_contention_dt
 /spawn/namepub
 /spawn/disconnect3
 /spawn/spaiccreate

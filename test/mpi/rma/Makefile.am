@@ -25,6 +25,15 @@ noinst_PROGRAMS =          \
     lockcontention2        \
     lockcontention3        \
     lockopts               \
+    lock_dt                \
+    lock_dt_flush          \
+    lock_dt_flushlocal     \
+    lockall_dt             \
+    lockall_dt_flush       \
+    lockall_dt_flushall    \
+    lockall_dt_flushlocal  \
+    lockall_dt_flushlocalall\
+    lock_contention_dt     \
     contention_put         \
     contention_putget      \
     put_base               \
