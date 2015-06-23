@@ -551,7 +551,7 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
         else {
             if (read_flag == 1) {
                 op_list_head = &curr_target->issued_write_op_list_head;
-                op_list_head = &curr_target->issued_write_op_list_tail;
+                op_list_tail = &curr_target->issued_write_op_list_tail;
                 read_flag = 0;
             }
             else {
