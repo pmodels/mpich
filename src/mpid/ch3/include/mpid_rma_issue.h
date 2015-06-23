@@ -483,10 +483,10 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     MPIDI_FUNC_EXIT(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER);
     return mpi_errno;
   fn_fail:
-    if ((*req_ptr)) {
-        if ((*req_ptr)->dev.datatype_ptr)
-            MPID_Datatype_release((*req_ptr)->dev.datatype_ptr);
-        MPID_Request_release((*req_ptr));
+    if (req) {
+        if (req->dev.datatype_ptr)
+            MPID_Datatype_release(req->dev.datatype_ptr);
+        MPID_Request_release(req);
     }
     (*req_ptr) = NULL;
     goto fn_exit;
