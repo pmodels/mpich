@@ -1784,6 +1784,8 @@ int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
     /* wait for remote completion for those targets that disable flush_local,
      * and wait for local completion for other targets */
     do {
+        local_completed_cnt = 0;
+        remote_completed_cnt = 0;
         for (i = 0; i < win_ptr->num_slots; i++) {
             curr_target = win_ptr->slots[i].target_list_head;
             while (curr_target != NULL) {
