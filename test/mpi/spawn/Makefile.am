@@ -39,6 +39,7 @@ noinst_PROGRAMS =         \
     disconnect3           \
     pgroup_connect_test   \
     pgroup_intercomm_test \
-    concurrent_spawns
+    concurrent_spawns     \
+    spawn-rootargs
 
 join_LDADD = $(LDADD) @socklib@ @nslib@
