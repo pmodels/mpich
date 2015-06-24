@@ -1516,6 +1516,7 @@ AC_OUTPUT(maint/testmerge \
           attr/Makefile \
           util/Makefile \
           coll/Makefile \
+	  coll/testlist \
           comm/Makefile \
           datatype/Makefile \
           datatype/testlist \
