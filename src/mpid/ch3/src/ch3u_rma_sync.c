@@ -849,7 +849,7 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
         }
         else {
             /* FIXME: do we need to wait for remote completion? */
-            mpi_errno = send_decr_at_cnt_msg(dst, win_ptr);
+            mpi_errno = send_decr_at_cnt_msg(dst, win_ptr, MPIDI_CH3_PKT_FLAG_NONE);
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
         }

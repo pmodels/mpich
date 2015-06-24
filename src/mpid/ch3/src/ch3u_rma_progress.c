@@ -226,12 +226,23 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
     case MPIDI_RMA_NONE:
         if (target->win_complete_flag) {
             if (target->pending_op_list_head == NULL) {
-                mpi_errno = send_decr_at_cnt_msg(target->target_rank, win_ptr);
+                MPIDI_CH3_Pkt_flags_t flags = MPIDI_CH3_PKT_FLAG_NONE;
+                if (target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH && target->put_acc_issued) {
+                    flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH;
+                    target->sync.outstanding_acks++;
+                }
+
+                mpi_errno = send_decr_at_cnt_msg(target->target_rank, win_ptr, flags);
                 if (mpi_errno != MPI_SUCCESS)
                     MPIU_ERR_POP(mpi_errno);
+
+                /* We are done with ending synchronization, unset target's sync_flag. */
+                target->sync.sync_flag = MPIDI_RMA_SYNC_NONE;
+
+                (*made_progress) = 1;
             }
         }
-        if (target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH) {
+        else if (target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH) {
             if (target->pending_op_list_head == NULL) {
                 if (target->target_rank != rank) {
                     if (target->put_acc_issued) {

@@ -2033,6 +2033,13 @@ int MPIDI_CH3_PktHandler_DecrAtCnt(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
     *rreqp = NULL;
+
+    if (decr_at_cnt_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) {
+        mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr, decr_at_cnt_pkt->source_win_handle);
+        if (mpi_errno)
+            MPIU_ERR_POP(mpi_errno);
+    }
+
     MPIDI_CH3_Progress_signal_completion();
 
   fn_exit:

@@ -808,6 +808,8 @@ typedef struct MPIDI_CH3_Pkt_flush_ack {
 typedef struct MPIDI_CH3_Pkt_decr_at_counter {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Win target_win_handle;
+    MPI_Win source_win_handle;
+    MPIDI_CH3_Pkt_flags_t flags;
 } MPIDI_CH3_Pkt_decr_at_counter_t;
 
 typedef struct MPIDI_CH3_Pkt_close {

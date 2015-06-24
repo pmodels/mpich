@@ -239,7 +239,7 @@ static inline int MPIDI_CH3I_Send_flush_ack_pkt(MPIDI_VC_t * vc, MPID_Win * win_
 #define FUNCNAME send_decr_at_cnt_msg
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline int send_decr_at_cnt_msg(int dst, MPID_Win * win_ptr)
+static inline int send_decr_at_cnt_msg(int dst, MPID_Win * win_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_decr_at_counter_t *decr_at_cnt_pkt = &upkt.decr_at_cnt;
@@ -251,6 +251,8 @@ static inline int send_decr_at_cnt_msg(int dst, MPID_Win * win_ptr)
 
     MPIDI_Pkt_init(decr_at_cnt_pkt, MPIDI_CH3_PKT_DECR_AT_COUNTER);
     decr_at_cnt_pkt->target_win_handle = win_ptr->basic_info_table[dst].win_handle;
+    decr_at_cnt_pkt->source_win_handle = win_ptr->handle;
+    decr_at_cnt_pkt->flags = flags;
 
     MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr, dst, &vc);
 
