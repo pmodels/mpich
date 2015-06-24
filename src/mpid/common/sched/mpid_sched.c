@@ -944,7 +944,7 @@ int MPIDU_Sched_progress(int *made_progress)
 
     mpi_errno = MPIDU_Sched_progress_state(&all_schedules, made_progress);
     if (!mpi_errno && all_schedules.head == NULL)
-        MPIDI_CH3I_Progress_deregister_hook(MPIDU_Sched_progress);
+        MPID_Progress_deregister_hook(MPIDU_Sched_progress);
 
     return mpi_errno;
 }

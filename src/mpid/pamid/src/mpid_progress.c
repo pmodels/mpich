@@ -26,7 +26,7 @@ typedef int (*progress_func_ptr_t) (int* made_progress);
 static progress_func_ptr_t  progress_hooks[MAX_PROGRESS_HOOKS] = { NULL };
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_register_hook
+#define FUNCNAME MPIDI_Progress_register_hook
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Progress_register_hook(int (*progress_fn)(int*))
@@ -61,10 +61,10 @@ int MPIDI_Progress_register_hook(int (*progress_fn)(int*))
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Progress_deregister_hook
+#define FUNCNAME MPIDI_Progress_deregister_hook
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3I_Progress_deregister_hook(int (*progress_fn)(int*))
+int MPIDI_Progress_deregister_hook(int (*progress_fn)(int*))
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
