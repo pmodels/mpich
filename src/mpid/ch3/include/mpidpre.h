@@ -327,9 +327,6 @@ typedef struct MPIDI_Win_basic_info {
         enum MPIDI_RMA_states exposure_state;                            \
     } states;                                                            \
     int non_empty_slots;                                                 \
-    int accumulated_ops_cnt; /* keep track of number of accumulated posted RMA operations \
-                            in current epoch to control when to poke     \
-                            progress engine in RMA operation routines. */\
     int active_req_cnt; /* keep track of number of active requests in    \
                            current epoch, i.e., number of issued but     \
                            incomplete RMA operations. */                 \

@@ -142,7 +142,6 @@ static inline MPIDI_RMA_Target_t *MPIDI_CH3I_Win_target_alloc(MPID_Win * win_ptr
     e->access_state = MPIDI_RMA_NONE;
     e->lock_type = MPID_LOCK_NONE;
     e->lock_mode = 0;
-    e->accumulated_ops_cnt = 0;
     e->win_complete_flag = 0;
     e->put_acc_issued = 0;
 
@@ -301,10 +300,6 @@ static inline int MPIDI_CH3I_Win_enqueue_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t *
     MPL_LL_APPEND(target->pending_op_list_head, target->pending_op_list_tail, op);
     if (target->next_op_to_issue == NULL)
         target->next_op_to_issue = op;
-
-    /* Increment the counter for accumulated posted operations */
-    target->accumulated_ops_cnt++;
-    win_ptr->accumulated_ops_cnt++;
 
   fn_exit:
     return mpi_errno;

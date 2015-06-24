@@ -532,15 +532,6 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
     /* Make sure that all targets are freed. */
     MPIU_Assert(win_ptr->non_empty_slots == 0);
 
-    if (assert & MPI_MODE_NOPRECEDE) {
-        /* BEGINNING synchronization: the following counter should be zero. */
-        MPIU_Assert(win_ptr->accumulated_ops_cnt == 0);
-    }
-    else {
-        /* ENDING synchronization: correctly decrement the following counter. */
-        win_ptr->accumulated_ops_cnt = 0;
-    }
-
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
     /* Ensure ordering of load/store operations. */
@@ -764,9 +755,6 @@ int MPIDI_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
     win_ptr->states.access_state = MPIDI_RMA_PSCW_ISSUED;
     MPIDI_CH3I_num_active_issued_win++;
 
-    /* BEGINNING synchronization: the following counter should be zero. */
-    MPIU_Assert(win_ptr->accumulated_ops_cnt == 0);
-
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
     /* Ensure ordering of load/store operations. */
@@ -883,9 +871,6 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
 
     /* Make sure that all targets are freed. */
     MPIU_Assert(win_ptr->non_empty_slots == 0);
-
-    /* ENDING synchronization: correctly decrement the following counter. */
-    win_ptr->accumulated_ops_cnt = 0;
 
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
@@ -1074,11 +1059,6 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win * win_ptr)
     }
 
   finish_lock:
-    if (win_ptr->lock_epoch_count == 1) {
-        /* BEGINNING synchronization: the following counter should be zero. */
-        MPIU_Assert(win_ptr->accumulated_ops_cnt == 0);
-    }
-
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated == TRUE) {
         OPA_read_write_barrier();
@@ -1182,12 +1162,6 @@ int MPIDI_Win_unlock(int dest, MPID_Win * win_ptr)
     }
 
     if (target != NULL) {
-        /* ENDING synchronization: correctly decrement the following counter. */
-        win_ptr->accumulated_ops_cnt -= target->accumulated_ops_cnt;
-        if (win_ptr->lock_epoch_count == 0) {
-            MPIU_Assert(win_ptr->accumulated_ops_cnt == 0);
-        }
-
         /* Cleanup the target. */
         mpi_errno = MPIDI_CH3I_Win_target_dequeue_and_free(win_ptr, target);
         if (mpi_errno != MPI_SUCCESS)
@@ -1289,12 +1263,6 @@ int MPIDI_Win_flush(int dest, MPID_Win * win_ptr)
             MPIU_ERR_POP(mpi_errno);
     }
 
-    if (target != NULL) {
-        /* ENDING synchronization: correctly decrement the following counters. */
-        win_ptr->accumulated_ops_cnt -= target->accumulated_ops_cnt;
-        target->accumulated_ops_cnt = 0;
-    }
-
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FLUSH);
     return mpi_errno;
@@ -1388,10 +1356,6 @@ int MPIDI_Win_flush_local(int dest, MPID_Win * win_ptr)
     if (target != NULL) {
         /* reset upgrade_flush_local flag in target to 0 */
         target->sync.upgrade_flush_local = 0;
-
-        /* ENDING synchronization: correctly decrement the following counters. */
-        win_ptr->accumulated_ops_cnt -= target->accumulated_ops_cnt;
-        target->accumulated_ops_cnt = 0;
     }
 
   fn_exit:
@@ -1470,9 +1434,6 @@ int MPIDI_Win_lock_all(int assert, MPID_Win * win_ptr)
     }
 
   finish_lock_all:
-    /* BEGINNING synchronization: the following counter should be zero. */
-    MPIU_Assert(win_ptr->accumulated_ops_cnt == 0);
-
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
     /* Ensure ordering of load/store operations. */
@@ -1624,9 +1585,6 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
     /* Make sure that all targets are freed. */
     MPIU_Assert(win_ptr->non_empty_slots == 0);
 
-    /* ENDING synchronization: correctly decrement the following counter. */
-    win_ptr->accumulated_ops_cnt = 0;
-
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
   fn_exit:
@@ -1672,9 +1630,6 @@ int MPIDI_Win_flush_all(MPID_Win * win_ptr)
                 curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
             }
 
-            /* ENDING synchronization: correctly decrement the following counters. */
-            curr_target->accumulated_ops_cnt = 0;
-
             curr_target = curr_target->next;
         }
     }
@@ -1697,9 +1652,6 @@ int MPIDI_Win_flush_all(MPID_Win * win_ptr)
     } while (!remote_completed);
 
   finish_flush_all:
-    /* ENDING synchronization: correctly decrement the following counter. */
-    win_ptr->accumulated_ops_cnt = 0;
-
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
   fn_exit:
@@ -1755,9 +1707,6 @@ int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
                 }
                 enable_flush_local_cnt++;
             }
-
-            /* ENDING synchronization: correctly decrement the following counters. */
-            curr_target->accumulated_ops_cnt = 0;
 
             curr_target = curr_target->next;
         }
@@ -1815,9 +1764,6 @@ int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
             curr_target = curr_target->next;
         }
     }
-
-    /* ENDING synchronization: correctly decrement the following counter. */
-    win_ptr->accumulated_ops_cnt = 0;
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL_ALL);

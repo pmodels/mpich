@@ -12,23 +12,6 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_set);
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS
-      category    : CH3
-      type        : int
-      default     : 100
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-          Specify the threshold of number of posted operations
-          when starting poking progress in operation routines.
-          When the value is negative, runtime never pokes progress
-          engine in operation routines; when the value is zero,
-          runtime always pokes progress engine in operation
-          routines; when the value is larger than zero, runtime
-          starts to poke progress engine when number of posted
-          operations reaches that value.
-
     - name        : MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE
       category    : CH3
       type        : int
@@ -205,13 +188,6 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
 
-        if (MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS >= 0 &&
-            win_ptr->accumulated_ops_cnt >= MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS) {
-            mpi_errno = poke_progress_engine();
-            if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
-        }
-
         if (MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD >= 0 &&
             win_ptr->active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
             while (win_ptr->active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
@@ -382,13 +358,6 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
-
-        if (MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS >= 0 &&
-            win_ptr->accumulated_ops_cnt >= MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS) {
-            mpi_errno = poke_progress_engine();
-            if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
-        }
 
         if (MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD >= 0 &&
             win_ptr->active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
@@ -602,13 +571,6 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
-
-        if (MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS >= 0 &&
-            win_ptr->accumulated_ops_cnt >= MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS) {
-            mpi_errno = poke_progress_engine();
-            if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
-        }
 
         if (MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD >= 0 &&
             win_ptr->active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
@@ -864,13 +826,6 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
 
-        if (MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS >= 0 &&
-            win_ptr->accumulated_ops_cnt >= MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS) {
-            mpi_errno = poke_progress_engine();
-            if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
-        }
-
         if (MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD >= 0 &&
             win_ptr->active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
             while (win_ptr->active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
@@ -1123,13 +1078,6 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
 
-        if (MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS >= 0 &&
-            win_ptr->accumulated_ops_cnt >= MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS) {
-            mpi_errno = poke_progress_engine();
-            if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
-        }
-
         if (MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD >= 0 &&
             win_ptr->active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
             while (win_ptr->active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
@@ -1276,13 +1224,6 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
-
-        if (MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS >= 0 &&
-            win_ptr->accumulated_ops_cnt >= MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS) {
-            mpi_errno = poke_progress_engine();
-            if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
-        }
 
         if (MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD >= 0 &&
             win_ptr->active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
