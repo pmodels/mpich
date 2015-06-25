@@ -190,19 +190,21 @@ int MPIR_Ibarrier_impl(MPID_Comm *comm_ptr, MPI_Request *request)
         /* --END USEREXTENSION-- */
     }
 
-    mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    mpi_errno = MPID_Sched_create(&s);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (comm_ptr->local_size != 1) {
+        mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        mpi_errno = MPID_Sched_create(&s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    MPIU_Assert(comm_ptr->coll_fns->Ibarrier_sched != NULL);
-    mpi_errno = comm_ptr->coll_fns->Ibarrier_sched(comm_ptr, s);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIU_Assert(comm_ptr->coll_fns->Ibarrier_sched != NULL);
+        mpi_errno = comm_ptr->coll_fns->Ibarrier_sched(comm_ptr, s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, &reqp);
-    if (reqp)
-        *request = reqp->handle;
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, &reqp);
+        if (reqp)
+            *request = reqp->handle;
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
 
 fn_exit:
     return mpi_errno;

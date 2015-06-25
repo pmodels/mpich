@@ -537,9 +537,15 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
 
-            /* Set window access state properly. */
-            win_ptr->states.access_state = MPIDI_RMA_FENCE_ISSUED;
-            MPIDI_CH3I_num_active_issued_win++;
+            if (win_ptr->fence_sync_req == MPI_REQUEST_NULL) {
+                /* ibarrier completed immediately. */
+                win_ptr->states.access_state = MPIDI_RMA_FENCE_GRANTED;
+            }
+            else {
+                /* Set window access state properly. */
+                win_ptr->states.access_state = MPIDI_RMA_FENCE_ISSUED;
+                MPIDI_CH3I_num_active_issued_win++;
+            }
 
             goto finish_fence;
         }
@@ -644,8 +650,15 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
             mpi_errno = MPIR_Ibarrier_impl(win_ptr->comm_ptr, &(win_ptr->fence_sync_req));
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
-            MPIDI_CH3I_num_active_issued_win++;
-            win_ptr->states.access_state = MPIDI_RMA_FENCE_ISSUED;
+
+            if (win_ptr->fence_sync_req == MPI_REQUEST_NULL) {
+                /* ibarrier completed immediately. */
+                win_ptr->states.access_state = MPIDI_RMA_FENCE_GRANTED;
+            }
+            else {
+                MPIDI_CH3I_num_active_issued_win++;
+                win_ptr->states.access_state = MPIDI_RMA_FENCE_ISSUED;
+            }
 
             if (win_ptr->shm_allocated == TRUE) {
                 MPID_Comm *node_comm_ptr = win_ptr->comm_ptr->node_comm;
