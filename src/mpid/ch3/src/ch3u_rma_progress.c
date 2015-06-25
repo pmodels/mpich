@@ -51,6 +51,7 @@ static inline int check_and_switch_window_state(MPID_Win * win_ptr, int *is_able
                                                 int *made_progress);
 static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
                                    int *made_progress);
+static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress);
 
 /* check if we can switch window-wide state: FENCE_ISSUED, PSCW_ISSUED, LOCK_ALL_ISSUED */
 #undef FUNCNAME
@@ -305,17 +306,9 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
 {
     MPIDI_RMA_Op_t *curr_op = NULL;
     MPIDI_CH3_Pkt_flags_t flags;
-    int is_able_to_issue = 0;
     int first_op = 1, mpi_errno = MPI_SUCCESS;
 
     (*made_progress) = 0;
-
-    /* check and try to switch target state */
-    mpi_errno = check_and_switch_target_state(win_ptr, target, &is_able_to_issue, made_progress);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
-    if (!is_able_to_issue)
-        goto fn_exit;
 
     if (win_ptr->non_empty_slots == 0 || target == NULL || target->pending_op_list_head == NULL)
         goto fn_exit;
@@ -494,6 +487,61 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
         curr_op = target->next_op_to_issue;
 
     }   /* end of while loop */
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME issue_ops_win
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int start_slot, end_slot, i, idx;
+    int is_able_to_issue = 0;
+    int temp_progress = 0;
+    MPIDI_RMA_Target_t *target = NULL;
+
+    (*made_progress) = 0;
+
+    if (win_ptr->non_empty_slots == 0)
+        goto fn_exit;
+
+    /* FIXME: we should optimize the issuing pattern here. */
+
+    start_slot = win_ptr->comm_ptr->rank % win_ptr->num_slots;
+    end_slot = start_slot + win_ptr->num_slots;
+    for (i = start_slot; i < end_slot; i++) {
+        if (i < win_ptr->num_slots)
+            idx = i;
+        else
+            idx = i - win_ptr->num_slots;
+
+        for (target = win_ptr->slots[idx].target_list_head; target != NULL; target = target->next) {
+            /* check and try to switch target state */
+            mpi_errno = check_and_switch_target_state(win_ptr, target, &is_able_to_issue,
+                                                      &temp_progress);
+            if (mpi_errno != MPI_SUCCESS)
+                MPIU_ERR_POP(mpi_errno);
+            if (temp_progress)
+                (*made_progress) = 1;
+            if (!is_able_to_issue) {
+                continue;
+            }
+
+            /* issue operations to this target */
+            mpi_errno = issue_ops_target(win_ptr, target, &temp_progress);
+            if (mpi_errno != MPI_SUCCESS)
+                MPIU_ERR_POP(mpi_errno);
+            if (temp_progress)
+                (*made_progress) = 1;
+        }
+    }
 
   fn_exit:
     return mpi_errno;
@@ -779,19 +827,43 @@ int MPIDI_CH3I_RMA_Make_progress_target(MPID_Win * win_ptr, int target_rank, int
 
     (*made_progress) = 0;
 
+    /* NOTE: this function is called from either operation routines (MPI_PUT, MPI_GET...),
+     * or aggressive cleanup functions. It cannot be called from the progress engine.
+     * Here we poke the progress engine if window state is not satisfied (i.e. NBC is not
+     * finished). If it is allowed to be called from progress engine, when RMA progress
+     * is registered / executed before NBC progress, it will cause the progress engine
+     * to re-entrant RMA progress endlessly. */
+
     /* check window state */
     mpi_errno = check_and_switch_window_state(win_ptr, &is_able_to_issue, &temp_progress);
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
     if (temp_progress)
         (*made_progress) = 1;
-    if (!is_able_to_issue)
+    if (!is_able_to_issue) {
+        mpi_errno = poke_progress_engine();
+        if (mpi_errno)
+            MPIU_ERR_POP(mpi_errno);
         goto fn_exit;
+    }
 
     /* find target element */
     mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, target_rank, &target);
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
+
+    /* check and try to switch target state */
+    mpi_errno = check_and_switch_target_state(win_ptr, target, &is_able_to_issue, &temp_progress);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIU_ERR_POP(mpi_errno);
+    if (temp_progress)
+        (*made_progress) = 1;
+    if (!is_able_to_issue) {
+        mpi_errno = poke_progress_engine();
+        if (mpi_errno)
+            MPIU_ERR_POP(mpi_errno);
+        goto fn_exit;
+    }
 
     /* issue operations to this target */
     mpi_errno = issue_ops_target(win_ptr, target, &temp_progress);
@@ -814,46 +886,40 @@ int MPIDI_CH3I_RMA_Make_progress_target(MPID_Win * win_ptr, int target_rank, int
 int MPIDI_CH3I_RMA_Make_progress_win(MPID_Win * win_ptr, int *made_progress)
 {
     int mpi_errno = MPI_SUCCESS;
-    int start_slot, end_slot, i, idx;
     int is_able_to_issue = 0;
-    MPIDI_RMA_Target_t *target = NULL;
+    int temp_progress = 0;
 
     (*made_progress) = 0;
 
+    /* NOTE: this function is called from either synchronization routines
+     * (MPI_WIN_FENCE, MPI_WIN_LOCK...), or aggressive cleanup functions.
+     * It cannot be called from the progress engine.
+     * Here we poke the progress engine if window state is not satisfied (i.e. NBC is not
+     * finished). If it is allowed to be called from progress engine, when RMA progress
+     * is registered / executed before NBC progress, it will cause the progress engine
+     * to re-entrant RMA progress endlessly. */
+
     /* check and try to switch window state */
-    mpi_errno = check_and_switch_window_state(win_ptr, &is_able_to_issue, made_progress);
+    mpi_errno = check_and_switch_window_state(win_ptr, &is_able_to_issue, &temp_progress);
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
-    if (!is_able_to_issue)
+    if (temp_progress)
+        (*made_progress) = 1;
+    if (!is_able_to_issue) {
+        mpi_errno = poke_progress_engine();
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
         goto fn_exit;
+    }
 
     if (win_ptr->non_empty_slots == 0)
         goto fn_exit;
 
-    /* FIXME: we should optimize the issuing pattern here. */
-
-    start_slot = win_ptr->comm_ptr->rank % win_ptr->num_slots;
-    end_slot = start_slot + win_ptr->num_slots;
-    for (i = start_slot; i < end_slot; i++) {
-        if (i < win_ptr->num_slots)
-            idx = i;
-        else
-            idx = i - win_ptr->num_slots;
-
-        target = win_ptr->slots[idx].target_list_head;
-        while (target != NULL) {
-            int temp_progress = 0;
-
-            /* issue operations to this target */
-            mpi_errno = issue_ops_target(win_ptr, target, &temp_progress);
-            if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
-            if (temp_progress)
-                (*made_progress) = 1;
-
-            target = target->next;
-        }
-    }
+    mpi_errno = issue_ops_win(win_ptr, &temp_progress);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIU_ERR_POP(mpi_errno);
+    if (temp_progress)
+        (*made_progress) = 1;
 
   fn_exit:
     return mpi_errno;
@@ -878,13 +944,28 @@ int MPIDI_CH3I_RMA_Make_progress_global(int *made_progress)
 
     for (win_elem = MPIDI_RMA_Win_list; win_elem; win_elem = win_elem->next) {
         int temp_progress = 0;
+        int is_able_to_issue = 0;
 
         if (win_elem->win_ptr->states.access_state == MPIDI_RMA_NONE ||
             win_elem->win_ptr->states.access_state == MPIDI_RMA_FENCE_GRANTED ||
             win_elem->win_ptr->states.access_state == MPIDI_RMA_PSCW_GRANTED)
             continue;
 
-        mpi_errno = MPIDI_CH3I_RMA_Make_progress_win(win_elem->win_ptr, &temp_progress);
+        /* check and try to switch window state */
+        mpi_errno =
+            check_and_switch_window_state(win_elem->win_ptr, &is_able_to_issue, &temp_progress);
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
+        if (temp_progress)
+            (*made_progress) = 1;
+        if (!is_able_to_issue) {
+            continue;
+        }
+
+        if (win_elem->win_ptr->non_empty_slots == 0)
+            continue;
+
+        mpi_errno = issue_ops_win(win_elem->win_ptr, &temp_progress);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
         if (temp_progress)
