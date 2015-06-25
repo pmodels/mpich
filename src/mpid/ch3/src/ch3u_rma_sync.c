@@ -1289,6 +1289,11 @@ int MPIDI_Win_flush(int dest, MPID_Win * win_ptr)
             MPIU_ERR_POP(mpi_errno);
     }
 
+    if (target != NULL && target->sync.upgrade_flush_local) {
+        /* reset upgrade_flush_local flag in target to 0 */
+        target->sync.upgrade_flush_local = 0;
+    }
+
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FLUSH);
     return mpi_errno;
@@ -1679,6 +1684,15 @@ int MPIDI_Win_flush_all(MPID_Win * win_ptr)
 
   finish_flush_all:
     MPIU_Assert(win_ptr->active_req_cnt == 0);
+
+    /* reset upgrade_flush_local flag in target to 0 */
+    for (i = 0; i < win_ptr->num_slots; i++) {
+        curr_target = win_ptr->slots[i].target_list_head;
+        while (curr_target != NULL) {
+            curr_target->sync.upgrade_flush_local = 0;
+            curr_target = curr_target->next;
+        }
+    }
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPIDI_STATE_MPIDI_WIN_FLUSH_ALL);
