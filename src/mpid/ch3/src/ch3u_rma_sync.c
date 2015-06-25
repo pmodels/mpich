@@ -1800,6 +1800,8 @@ int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
         MPIU_ERR_POP(mpi_errno);
 
   finish_flush_local_all:
+    MPIU_Assert(win_ptr->active_req_cnt == 0);
+
     /* reset upgrade_flush_local flag in target to 0 */
     for (i = 0; i < win_ptr->num_slots; i++) {
         curr_target = win_ptr->slots[i].target_list_head;
