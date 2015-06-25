@@ -25,7 +25,7 @@
    https://github.com/ofiwg/libfabric (thanks to Intel for code contribution)
 
  # The Myrinet MX network module, which had a life cyle from 1.1 till
-   3.1.2, has now been deprecated.
+   3.1.2, has now been deleted.
 
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
 
