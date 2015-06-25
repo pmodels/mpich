@@ -424,8 +424,7 @@ typedef struct MPIDI_Request {
     MPI_Op op;
     /* For accumulate, since data is first read into a tmp_buf */
     void *real_user_buf;
-    /* For derived datatypes at target */
-    struct MPIDI_RMA_dtype_info *dtype_info;
+    /* For derived datatypes at target. */
     void *dataloop;
     /* req. handle needed to implement derived datatype gets.
      * It also used for remembering user request of request-based RMA operations. */
@@ -436,7 +435,9 @@ typedef struct MPIDI_Request {
     struct MPIDI_RMA_Target_lock_entry *target_lock_queue_entry;
     MPI_Request resp_request_handle; /* Handle for get_accumulate response */
 
-    void *ext_hdr_ptr; /* pointer to extended packet header */
+    void *ext_hdr_ptr; /* Pointer to extended packet header.
+                        * It is allocated in RMA issuing/pkt_handler functions,
+                        * and freed when release request. */
     MPIDI_msg_sz_t ext_hdr_sz;
 
     MPIDI_REQUEST_SEQNUM

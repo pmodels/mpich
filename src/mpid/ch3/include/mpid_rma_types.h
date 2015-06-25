@@ -23,23 +23,6 @@ enum MPIDI_RMA_Datatype {
  * a Request.
  */
 
-/* to send derived datatype across in RMA ops */
-typedef struct MPIDI_RMA_dtype_info {   /* for derived datatypes */
-    int is_contig;
-    MPI_Aint max_contig_blocks;
-    MPI_Aint size;
-    MPI_Aint extent;
-    MPI_Aint dataloop_size;     /* not needed because this info is sent in
-                                 * packet header. remove it after lock/unlock
-                                 * is implemented in the device */
-    void *dataloop;             /* pointer needed to update pointers
-                                 * within dataloop on remote side */
-    int dataloop_depth;
-    int basic_type;
-    MPI_Aint ub, lb, true_ub, true_lb;
-    int has_sticky_ub, has_sticky_lb;
-} MPIDI_RMA_dtype_info;
-
 typedef enum MPIDI_RMA_Pool_type {
     MPIDI_RMA_POOL_WIN = 6,
     MPIDI_RMA_POOL_GLOBAL = 7
@@ -65,9 +48,6 @@ typedef struct MPIDI_RMA_Op {
     MPI_Aint reqs_size;         /* when reqs_size == 0, neither single_req nor multi_reqs is used;
                                  * when reqs_size == 1, single_req is used;
                                  * when reqs_size > 1, multi_reqs is used. */
-
-    MPIDI_RMA_dtype_info dtype_info;
-    void *dataloop;
 
     int target_rank;
 

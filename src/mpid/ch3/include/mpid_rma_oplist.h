@@ -66,7 +66,6 @@ static inline MPIDI_RMA_Op_t *MPIDI_CH3I_Win_op_alloc(MPID_Win * win_ptr)
         MPL_LL_DELETE(win_ptr->op_pool_head, win_ptr->op_pool_tail, e);
     }
 
-    e->dataloop = NULL;
     e->single_req = NULL;
     e->multi_reqs = NULL;
     e->reqs_size = 0;
@@ -89,11 +88,6 @@ static inline MPIDI_RMA_Op_t *MPIDI_CH3I_Win_op_alloc(MPID_Win * win_ptr)
 static inline int MPIDI_CH3I_Win_op_free(MPID_Win * win_ptr, MPIDI_RMA_Op_t * e)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    /* Check if we allocated a dataloop for this op (see send/recv_rma_msg) */
-    if (e->dataloop != NULL) {
-        MPIU_Free(e->dataloop);
-    }
 
     /* We enqueue elements to the right pool, so when they get freed
      * at window free time, they won't conflict with the global pool

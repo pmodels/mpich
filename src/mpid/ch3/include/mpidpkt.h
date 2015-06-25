@@ -863,13 +863,60 @@ typedef union MPIDI_CH3_Pkt {
 #endif
 } MPIDI_CH3_Pkt_t;
 
-typedef struct MPIDI_CH3_Ext_pkt_accum {
-    MPI_Aint stream_offset;
-} MPIDI_CH3_Ext_pkt_accum_t;
+/* Extended header packet types */
 
-typedef struct MPIDI_CH3_Ext_pkt_get_accum {
+/* to send derived datatype across in RMA ops */
+typedef struct MPIDI_RMA_dtype_info {   /* for derived datatypes */
+    int is_contig;
+    MPI_Aint max_contig_blocks;
+    MPI_Aint size;
+    MPI_Aint extent;
+    MPI_Aint dataloop_size;     /* not needed because this info is sent in
+                                 * packet header. remove it after lock/unlock
+                                 * is implemented in the device */
+    void *dataloop;             /* pointer needed to update pointers
+                                 * within dataloop on remote side */
+    int dataloop_depth;
+    int basic_type;
+    MPI_Aint ub, lb, true_ub, true_lb;
+    int has_sticky_ub, has_sticky_lb;
+} MPIDI_RMA_dtype_info;
+
+typedef struct MPIDI_CH3_Ext_pkt_stream {
     MPI_Aint stream_offset;
-} MPIDI_CH3_Ext_pkt_get_accum_t;
+} MPIDI_CH3_Ext_pkt_stream_t;
+
+typedef struct MPIDI_CH3_Ext_pkt_derived {
+    MPIDI_RMA_dtype_info dtype_info;
+    /* Follow with variable-length dataloop.
+     * On origin we allocate a large buffer including
+     * this header and the dataloop; on target we use
+     * separate buffer to receive dataloop in order
+     * to avoid extra copy.*/
+} MPIDI_CH3_Ext_pkt_derived_t;
+
+typedef struct MPIDI_CH3_Ext_pkt_stream_derived {
+    MPI_Aint stream_offset;
+    MPIDI_RMA_dtype_info dtype_info;
+    /* follow with variable-length dataloop. */
+} MPIDI_CH3_Ext_pkt_stream_derived_t;
+
+/* Note that since ACC and GET_ACC contain the same extended attributes,
+ * we use generic routines for them in some places (see below).
+ * If we add OP-specific attribute in future, we should handle them separately.
+ *  1. origin issuing function
+ *  2. target packet handler
+ *  3. target data receive complete handler. */
+typedef MPIDI_CH3_Ext_pkt_stream_t MPIDI_CH3_Ext_pkt_accum_stream_t;
+typedef MPIDI_CH3_Ext_pkt_derived_t MPIDI_CH3_Ext_pkt_accum_derived_t;
+typedef MPIDI_CH3_Ext_pkt_stream_derived_t MPIDI_CH3_Ext_pkt_accum_stream_derived_t;
+
+typedef MPIDI_CH3_Ext_pkt_stream_t MPIDI_CH3_Ext_pkt_get_accum_stream_t;
+typedef MPIDI_CH3_Ext_pkt_derived_t MPIDI_CH3_Ext_pkt_get_accum_derived_t;
+typedef MPIDI_CH3_Ext_pkt_stream_derived_t MPIDI_CH3_Ext_pkt_get_accum_stream_derived_t;
+
+typedef MPIDI_CH3_Ext_pkt_derived_t MPIDI_CH3_Ext_pkt_put_derived_t;
+typedef MPIDI_CH3_Ext_pkt_derived_t MPIDI_CH3_Ext_pkt_get_derived_t;
 
 #if defined(MPID_USE_SEQUENCE_NUMBERS)
 typedef struct MPIDI_CH3_Pkt_send_container {

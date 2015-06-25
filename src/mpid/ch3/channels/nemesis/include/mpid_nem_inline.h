@@ -353,6 +353,9 @@ MPID_nem_mpich_sendv_header (MPID_IOV **iov, int *n_iov,
     buf_offset += sizeof(MPIDI_CH3_Pkt_t);
 
     if (ext_hdr_sz > 0) {
+        /* ensure extended header fits in this cell. */
+        MPIU_Assert(MPID_NEM_MPICH_DATA_LEN - buf_offset >= ext_hdr_sz);
+
         /* when extended packet header exists, copy it */
         MPIU_Memcpy((void *)((char *)(el->pkt.mpich.p.payload) + buf_offset), ext_hdr_ptr, ext_hdr_sz);
         buf_offset += ext_hdr_sz;
