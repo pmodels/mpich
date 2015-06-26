@@ -17,7 +17,7 @@ PROGRAM get_elem_u
 
   INTEGER, PARAMETER :: nb=2
   INTEGER :: blklen(nb)=(/1,1/)
-  INTEGER :: types(nb)=(/MPI_DOUBLE_PRECISION,MPI_CHAR/)
+  INTEGER :: types(nb)
   INTEGER(kind=MPI_ADDRESS_KIND) :: disp(nb)=(/0,8/)
 
   INTEGER, PARAMETER :: amax=200
@@ -27,6 +27,8 @@ PROGRAM get_elem_u
   errs = 0 
   CALL MPI_Init( ierr ) 
   COMM = MPI_COMM_WORLD 
+  types(1) = MPI_DOUBLE_PRECISION
+  types(2) = MPI_CHAR
   CALL MPI_Comm_rank(COMM,RANK,IERR) 
   CALL MPI_Comm_size(COMM,SIZE,IERR) 
   dest=size-1
