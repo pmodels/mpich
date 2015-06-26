@@ -1494,6 +1494,9 @@ int MPI_Type_size_x(MPI_Datatype datatype, MPI_Count *size);
 /* Noncollective communicator creation */
 int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm *newcomm);
 
+/* MPI_Aint addressing arithmetic */
+MPI_Aint MPI_Aint_add(MPI_Aint base, MPI_Aint disp);
+MPI_Aint MPI_Aint_diff(MPI_Aint addr1, MPI_Aint addr2);
 
 /* MPI_T interface */
 /* The MPI_T routines are available only in C bindings - tell tools that they
@@ -1548,9 +1551,6 @@ int MPIX_Comm_revoke(MPI_Comm comm);
 int MPIX_Comm_shrink(MPI_Comm comm, MPI_Comm *newcomm);
 int MPIX_Comm_agree(MPI_Comm comm, int *flag);
 
-/* MPI_Aint addressing arithmetic */
-MPI_Aint MPI_Aint_add(MPI_Aint base, MPI_Aint disp);
-MPI_Aint MPI_Aint_diff(MPI_Aint addr1, MPI_Aint addr2);
 
 /* End Prototypes */
 #endif /* MPICH_SUPPRESS_PROTOTYPES */
@@ -2140,6 +2140,9 @@ int PMPI_Type_get_extent_x(MPI_Datatype datatype, MPI_Count *lb, MPI_Count *exte
 int PMPI_Type_get_true_extent_x(MPI_Datatype datatype, MPI_Count *lb, MPI_Count *extent);
 int PMPI_Type_size_x(MPI_Datatype datatype, MPI_Count *size);
 
+/* MPI_Aint addressing arithmetic */
+MPI_Aint PMPI_Aint_add(MPI_Aint base, MPI_Aint disp);
+MPI_Aint PMPI_Aint_diff(MPI_Aint addr1, MPI_Aint addr2);
 
 /* MPI_T interface */
 /* The MPI_T routines are available only in C bindings - tell tools that they
@@ -2193,10 +2196,6 @@ int PMPIX_Comm_failure_get_acked(MPI_Comm comm, MPI_Group *failedgrp);
 int PMPIX_Comm_revoke(MPI_Comm comm);
 int PMPIX_Comm_shrink(MPI_Comm comm, MPI_Comm *newcomm);
 int PMPIX_Comm_agree(MPI_Comm comm, int *flag);
-
-/* MPI_Aint addressing arithmetic */
-MPI_Aint PMPI_Aint_add(MPI_Aint base, MPI_Aint disp);
-MPI_Aint PMPI_Aint_diff(MPI_Aint addr1, MPI_Aint addr2);
 
 #endif  /* MPI_BUILD_PROFILING */
 /* End of MPI bindings */
