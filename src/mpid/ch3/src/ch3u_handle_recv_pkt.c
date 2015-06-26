@@ -595,8 +595,8 @@ int MPIDI_CH3_PktHandler_Init( MPIDI_CH3_PktHandler_Fcn *pktArray[],
         MPIDI_CH3_PktHandler_Unlock;
     pktArray[MPIDI_CH3_PKT_FLUSH] =
         MPIDI_CH3_PktHandler_Flush;
-    pktArray[MPIDI_CH3_PKT_FLUSH_ACK] =
-	MPIDI_CH3_PktHandler_FlushAck;
+    pktArray[MPIDI_CH3_PKT_ACK] =
+	MPIDI_CH3_PktHandler_Ack;
     pktArray[MPIDI_CH3_PKT_DECR_AT_COUNTER] =
         MPIDI_CH3_PktHandler_DecrAtCnt;
     pktArray[MPIDI_CH3_PKT_CAS_IMMED] =

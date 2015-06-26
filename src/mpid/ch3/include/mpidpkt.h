@@ -97,7 +97,7 @@ typedef enum {
     MPIDI_CH3_PKT_LOCK_OP_ACK,
     MPIDI_CH3_PKT_UNLOCK,
     MPIDI_CH3_PKT_FLUSH,
-    MPIDI_CH3_PKT_FLUSH_ACK,
+    MPIDI_CH3_PKT_ACK,  /* ACK packet for FLUSH, UNLOCK, DECR_AT_COUNTER */
     MPIDI_CH3_PKT_DECR_AT_COUNTER,
     /* RMA Packets end here */
     MPIDI_CH3_PKT_FLOW_CNTL_UPDATE,     /* FIXME: Unused */
@@ -123,7 +123,7 @@ typedef enum {
     MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK = 16,
     MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER = 32,
     MPIDI_CH3_PKT_FLAG_RMA_NOCHECK = 64,
-    MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK = 128,
+    MPIDI_CH3_PKT_FLAG_RMA_ACK = 128,
     MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED = 256,
     MPIDI_CH3_PKT_FLAG_RMA_LOCK_QUEUED_DATA_QUEUED = 512,
     MPIDI_CH3_PKT_FLAG_RMA_LOCK_QUEUED_DATA_DISCARDED = 1024,
@@ -459,7 +459,7 @@ MPIDI_CH3_PKT_DEFS
            packets (PUT, GET, ACC, GACC, CAS, FOP), RMA operation       \
            response packets (GET_RESP, GACC_RESP, CAS_RESP, FOP_RESP),  \
            RMA control packets (LOCK, UNLOCK, FLUSH), and RMA control   \
-           response packets (LOCK_ACK, LOCK_OP_ACK, FLUSH_ACK). */      \
+           response packets (LOCK_ACK, LOCK_OP_ACK, ACK). */            \
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
@@ -485,8 +485,8 @@ MPIDI_CH3_PKT_DEFS
         case (MPIDI_CH3_PKT_LOCK_OP_ACK):                               \
             win_hdl_ = (pkt_).lock_op_ack.source_win_handle;            \
             break;                                                      \
-        case (MPIDI_CH3_PKT_FLUSH_ACK):                                 \
-            win_hdl_ = (pkt_).flush_ack.source_win_handle;              \
+        case (MPIDI_CH3_PKT_ACK):                                       \
+            win_hdl_ = (pkt_).ack.source_win_handle;                    \
             break;                                                      \
         default:                                                        \
             MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
@@ -798,12 +798,15 @@ typedef struct MPIDI_CH3_Pkt_lock_op_ack {
     int target_rank;
 } MPIDI_CH3_Pkt_lock_op_ack_t;
 
-typedef struct MPIDI_CH3_Pkt_flush_ack {
+/* This ACK packet is the acknowledgement
+ * for FLUSH, UNLOCK and DECR_AT_COUNTER
+ * packet */
+typedef struct MPIDI_CH3_Pkt_ack {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Win source_win_handle;
     int target_rank;
     MPIDI_CH3_Pkt_flags_t flags;
-} MPIDI_CH3_Pkt_flush_ack_t;
+} MPIDI_CH3_Pkt_ack_t;
 
 typedef struct MPIDI_CH3_Pkt_decr_at_counter {
     MPIDI_CH3_Pkt_type_t type;
@@ -846,7 +849,7 @@ typedef union MPIDI_CH3_Pkt {
     MPIDI_CH3_Pkt_lock_op_ack_t lock_op_ack;
     MPIDI_CH3_Pkt_unlock_t unlock;
     MPIDI_CH3_Pkt_flush_t flush;
-    MPIDI_CH3_Pkt_flush_ack_t flush_ack;
+    MPIDI_CH3_Pkt_ack_t ack;
     MPIDI_CH3_Pkt_decr_at_counter_t decr_at_cnt;
     MPIDI_CH3_Pkt_close_t close;
     MPIDI_CH3_Pkt_cas_t cas;

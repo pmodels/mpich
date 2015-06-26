@@ -138,8 +138,8 @@ void MPIDI_DBG_Print_packet(MPIDI_CH3_Pkt_t * pkt)
         case MPIDI_CH3_PKT_LOCK:
             MPIDI_CH3_PktPrint_Lock(stdout, pkt);
             break;
-        case MPIDI_CH3_PKT_FLUSH_ACK:
-            MPIDI_CH3_PktPrint_FlushAck(stdout, pkt);
+        case MPIDI_CH3_PKT_ACK:
+            MPIDI_CH3_PktPrint_Ack(stdout, pkt);
             break;
         case MPIDI_CH3_PKT_LOCK_ACK:
             MPIDI_CH3_PktPrint_LockAck(stdout, pkt);
@@ -310,10 +310,9 @@ const char *MPIDI_Pkt_GetDescString(MPIDI_CH3_Pkt_t * pkt)
     case MPIDI_CH3_PKT_LOCK:
         MPIU_Snprintf(pktmsg, sizeof(pktmsg), "LOCK - %d", pkt->lock.target_win_handle);
         break;
-    case MPIDI_CH3_PKT_FLUSH_ACK:
+    case MPIDI_CH3_PKT_ACK:
         /* There is no rma_done packet type */
-        MPIU_Snprintf(pktmsg, sizeof(pktmsg),
-                      "RMA_DONE - 0x%08X", pkt->flush_ack.source_win_handle);
+        MPIU_Snprintf(pktmsg, sizeof(pktmsg), "RMA_DONE - 0x%08X", pkt->ack.source_win_handle);
         break;
     case MPIDI_CH3_PKT_LOCK_ACK:
         MPIU_Snprintf(pktmsg, sizeof(pktmsg), "LOCK_ACK - 0x%08X", pkt->lock_ack.source_win_handle);

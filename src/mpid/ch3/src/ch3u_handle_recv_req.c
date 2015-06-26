@@ -293,7 +293,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
         get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
     if ((rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
         (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
-        get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
+        get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_ACK;
 
     /* check if data is contiguous and get true lb */
     MPID_Datatype_is_contig(rreq->dev.datatype, &is_contig);
@@ -481,7 +481,7 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
         fop_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
     if ((rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
         (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
-        fop_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
+        fop_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_ACK;
 
     iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) fop_resp_pkt;
     iov[0].MPID_IOV_LEN = sizeof(*fop_resp_pkt);
@@ -845,7 +845,7 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
         get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
     if ((rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
         (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
-        get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
+        get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_ACK;
 
     sreq->dev.segment_ptr = MPID_Segment_alloc();
     MPIU_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
@@ -1153,7 +1153,7 @@ static inline int perform_get_in_lock_queue(MPID_Win * win_ptr,
         get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
     if ((get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
         (get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
-        get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
+        get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_ACK;
     get_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
 
     /* length of target data */
@@ -1328,7 +1328,7 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
             get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
         if ((get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
             (get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
-            get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
+            get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_ACK;
         get_accum_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
 
 
@@ -1434,7 +1434,7 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
         get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
     if ((get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
         (get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
-        get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
+        get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_ACK;
     get_accum_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
 
     iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
@@ -1510,7 +1510,7 @@ static inline int perform_fop_in_lock_queue(MPID_Win * win_ptr,
         fop_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
     if ((fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
         (fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
-        fop_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
+        fop_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_ACK;
 
     if (fop_pkt->type == MPIDI_CH3_PKT_FOP) {
         resp_req = MPID_Request_create();
@@ -1665,7 +1665,7 @@ static inline int perform_cas_in_lock_queue(MPID_Win * win_ptr,
         cas_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
     if ((cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
         (cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
-        cas_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
+        cas_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_ACK;
 
     /* Copy old value into the response packet */
     MPID_Datatype_get_size_macro(cas_pkt->datatype, len);
