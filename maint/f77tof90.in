@@ -144,6 +144,10 @@ sub ConvertToF90 {
         if (/^CF90/) {
 	    s/^CF90/    /;
 	}
+    # Remove lines used only for F77, such as external MPI function declarations
+    if (/!\s*F77ONLY\s*$/i) {
+        $_ = "";
+    }
 	# Since we use interface statements for the error handlers,
 	# remove their external declaration
 	if (/^\s+external myerrhanfunc/) {

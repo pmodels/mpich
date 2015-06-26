@@ -21,8 +21,8 @@
       integer :: win
       integer :: intsize
 
-      integer(kind=MPI_ADDRESS_KIND), external :: MPI_Aint_add
-      integer(kind=MPI_ADDRESS_KIND), external :: MPI_Aint_diff
+      integer(kind=MPI_ADDRESS_KIND), external :: MPI_Aint_add !F77ONLY
+      integer(kind=MPI_ADDRESS_KIND), external :: MPI_Aint_diff !F77ONLY
 
       errs = 0
       call mtest_init(ierr);
