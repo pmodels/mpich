@@ -39,7 +39,7 @@ int MPIDI_Rput(const void *origin_addr, int origin_count,
     /* Create user request, initially cc=1, ref=1 */
     ureq = MPID_Request_create();
     MPIU_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
-    ureq->kind = MPID_REQUEST_SEND;
+    ureq->kind = MPID_WIN_REQUEST;
 
     /* Enqueue or perform the RMA operation */
     if (target_rank != MPI_PROC_NULL && data_sz != 0) {
@@ -101,7 +101,7 @@ int MPIDI_Rget(void *origin_addr, int origin_count,
     /* Create user request, initially cc=1, ref=1 */
     ureq = MPID_Request_create();
     MPIU_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
-    ureq->kind = MPID_REQUEST_SEND;
+    ureq->kind = MPID_WIN_REQUEST;
 
     /* Enqueue or perform the RMA operation */
     if (target_rank != MPI_PROC_NULL && data_sz != 0) {
@@ -161,7 +161,7 @@ int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
     /* Create user request, initially cc=1, ref=1 */
     ureq = MPID_Request_create();
     MPIU_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
-    ureq->kind = MPID_REQUEST_SEND;
+    ureq->kind = MPID_WIN_REQUEST;
 
     MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, data_sz, dtp, dt_true_lb);
 
@@ -224,7 +224,7 @@ int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
     /* Create user request, initially cc=1, ref=1 */
     ureq = MPID_Request_create();
     MPIU_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
-    ureq->kind = MPID_REQUEST_SEND;
+    ureq->kind = MPID_WIN_REQUEST;
 
     /* Note that GACC is only a no-op if no data goes in both directions */
     MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, data_sz, dtp, dt_true_lb);
