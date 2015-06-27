@@ -1180,7 +1180,7 @@ static inline void MPIDI_CH3_ExtPkt_Gaccum_get_stream(MPIDI_CH3_Pkt_flags_t flag
 {
     /* We do not check packet match here, because error must have already been
      * reported at header init time (on origin) and at packet receive time (on target).  */
-    return MPIDI_CH3_ExtPkt_Accum_get_stream(flags, is_derived_dt, ext_hdr_ptr, stream_offset);
+    MPIDI_CH3_ExtPkt_Accum_get_stream(flags, is_derived_dt, ext_hdr_ptr, stream_offset);
 }
 
 #endif /* MPID_RMA_H_INCLUDED */
