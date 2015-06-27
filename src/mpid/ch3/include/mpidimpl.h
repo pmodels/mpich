@@ -1934,7 +1934,7 @@ int MPIDI_CH3_EagerContigIsend( MPID_Request **, MPIDI_CH3_Pkt_type_t,
 				int, MPID_Comm *, int );
 
 
-int MPIDI_CH3_RndvSend( MPID_Request **, const void *, int, MPI_Datatype, 
+int MPIDI_CH3_RndvSend( MPID_Request **, const void *, MPI_Aint, MPI_Datatype,
 			int, MPIDI_msg_sz_t, MPI_Aint, int, int, MPID_Comm *, int );
 
 int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **, const void *, int, 

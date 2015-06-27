@@ -82,7 +82,7 @@ int MPID_nem_lmt_pkthandler_init(MPIDI_CH3_PktHandler_Fcn *pktArray[], int array
 #define FUNCNAME MPID_nem_lmt_RndvSend
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, int count,
+int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, MPI_Aint count,
                           MPI_Datatype datatype, int dt_contig ATTRIBUTE((unused)),
                           MPIDI_msg_sz_t data_sz, MPI_Aint dt_true_lb ATTRIBUTE((unused)),
                           int rank, int tag, MPID_Comm * comm, int context_offset)

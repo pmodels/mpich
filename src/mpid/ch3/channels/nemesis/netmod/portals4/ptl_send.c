@@ -100,7 +100,7 @@ static int handler_send(const ptl_event_t *e)
 #define FUNCNAME send_msg
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype, int dest,
+static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
                     int tag, MPID_Comm *comm, int context_offset, struct MPID_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -333,7 +333,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
 #define FUNCNAME MPID_nem_ptl_isend
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_ptl_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPID_nem_ptl_isend(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                        MPID_Comm *comm, int context_offset, struct MPID_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -352,7 +352,7 @@ int MPID_nem_ptl_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
 #define FUNCNAME MPID_nem_ptl_issend
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_ptl_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPID_nem_ptl_issend(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                         MPID_Comm *comm, int context_offset, struct MPID_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;

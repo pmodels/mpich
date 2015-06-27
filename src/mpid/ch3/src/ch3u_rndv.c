@@ -16,7 +16,7 @@
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 /* MPIDI_CH3_RndvSend - Send a request to perform a rendezvous send */
-int MPIDI_CH3_RndvSend( MPID_Request **sreq_p, const void * buf, int count, 
+int MPIDI_CH3_RndvSend( MPID_Request **sreq_p, const void * buf, MPI_Aint count,
 			MPI_Datatype datatype, int dt_contig, MPIDI_msg_sz_t data_sz, 
 			MPI_Aint dt_true_lb,
 			int rank, 
