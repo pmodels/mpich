@@ -35,6 +35,13 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPID_Request *sreq,
 
     iov_n = MPID_IOV_LIMIT - 1;
 
+    if (sreq->dev.ext_hdr_sz > 0) {
+        /* When extended packet header exists, here we leave one IOV slot
+         * before loading data to IOVs, so that there will be enough
+         * IOVs for hdr/ext_hdr/data. */
+        iov_n--;
+    }
+
     mpi_errno = MPIDI_CH3U_Request_load_send_iov(sreq, &iov[1], &iov_n);
     if (mpi_errno == MPI_SUCCESS)
     {
