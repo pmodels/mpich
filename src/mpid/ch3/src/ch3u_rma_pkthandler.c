@@ -1668,9 +1668,12 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         MPID_Datatype_get_extent_macro(basic_type, basic_type_extent);
         MPID_Datatype_get_size_macro(basic_type, basic_type_size);
 
-        /* get stream_offset from extended header */
-        MPIDI_CH3_ExtPkt_Gaccum_get_stream(req->dev.flags,
-                                           (!MPIR_DATATYPE_IS_PREDEFINED(req->dev.datatype)),
+        /* Note: here we get the stream_offset from the extended packet header
+         * in the response request, which is set in issue_get_acc_op() funcion.
+         * Note that this extended packet header only contains stream_offset and
+         * does not contain datatype info, so here we pass 0 to is_derived_dt
+         * flag. */
+        MPIDI_CH3_ExtPkt_Gaccum_get_stream(req->dev.flags, 0 /* is_derived_dt */ ,
                                            req->dev.ext_hdr_ptr, &contig_stream_offset);
 
         total_len = type_size * req->dev.user_count;

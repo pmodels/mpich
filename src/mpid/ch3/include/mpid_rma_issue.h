@@ -786,6 +786,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         resp_req->dev.datatype = rma_op->result_datatype;
         resp_req->dev.target_win_handle = MPI_WIN_NULL;
         resp_req->dev.source_win_handle = win_ptr->handle;
+        resp_req->dev.flags = flags;
 
         if (!MPIR_DATATYPE_IS_PREDEFINED(resp_req->dev.datatype)) {
             MPID_Datatype *result_dtp = NULL;
@@ -804,6 +805,13 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 
         /* Set extended packet header if needed. */
         init_get_accum_ext_pkt(flags, target_dtp_ptr, stream_offset, &ext_hdr_ptr, &ext_hdr_sz);
+
+        /* Note: here we need to allocate an extended packet header in response request,
+         * in order to store the stream_offset locally and use it in PktHandler_Get_AccumResp.
+         * This extended packet header only contains stream_offset and does not contain any
+         * other information. */
+        init_get_accum_ext_pkt(flags, NULL /* target_dtp_ptr */ , stream_offset,
+                               &(resp_req->dev.ext_hdr_ptr), &(resp_req->dev.ext_hdr_sz));
 
         mpi_errno = issue_from_origin_buffer(rma_op, vc, ext_hdr_ptr, ext_hdr_sz,
                                              stream_offset, stream_size, &curr_req);
