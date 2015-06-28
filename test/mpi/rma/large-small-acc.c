@@ -16,11 +16,12 @@
 #define LOOP 5
 #define DATA_COUNT 8192
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[])
+{
     int rank, nprocs;
     MPI_Win win;
     uint64_t buf[DATA_COUNT], orig_buf[DATA_COUNT];
-    uint64_t small_orig_buf_1 = 2, small_orig_buf_2[2] = {3, 3};
+    uint64_t small_orig_buf_1 = 2, small_orig_buf_2[2] = { 3, 3 };
     int i, j, error = 0;
 
     MPI_Init(&argc, &argv);
@@ -36,18 +37,21 @@ int main(int argc, char *argv[]){
             orig_buf[i] = 1;
         }
 
-        MPI_Win_create(buf, sizeof(uint64_t)*DATA_COUNT, sizeof(uint64_t),
+        MPI_Win_create(buf, sizeof(uint64_t) * DATA_COUNT, sizeof(uint64_t),
                        MPI_INFO_NULL, MPI_COMM_WORLD, &win);
 
         MPI_Win_fence(0, win);
 
         if (rank == 0) {
             /* ACC (atomic PUT) to win_buf[0...DATA_COUNT-1] */
-            MPI_Accumulate(orig_buf, DATA_COUNT, MPI_UINT64_T, 1, 0, DATA_COUNT, MPI_UINT64_T, MPI_REPLACE, win);
+            MPI_Accumulate(orig_buf, DATA_COUNT, MPI_UINT64_T, 1, 0, DATA_COUNT, MPI_UINT64_T,
+                           MPI_REPLACE, win);
             /* ACC (atomic PUT) to win_buf[0] */
-            MPI_Accumulate(&small_orig_buf_1, 1, MPI_UINT64_T, 1, 0, 1, MPI_UINT64_T, MPI_REPLACE, win);
+            MPI_Accumulate(&small_orig_buf_1, 1, MPI_UINT64_T, 1, 0, 1, MPI_UINT64_T, MPI_REPLACE,
+                           win);
             /* ACC (atomic PUT) to win_buf[1,2] */
-            MPI_Accumulate(&small_orig_buf_2, 2, MPI_UINT64_T, 1, 1, 2, MPI_UINT64_T, MPI_REPLACE, win);
+            MPI_Accumulate(&small_orig_buf_2, 2, MPI_UINT64_T, 1, 1, 2, MPI_UINT64_T, MPI_REPLACE,
+                           win);
         }
 
         MPI_Win_fence(0, win);
