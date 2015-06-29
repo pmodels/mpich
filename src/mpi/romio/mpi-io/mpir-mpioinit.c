@@ -19,8 +19,23 @@ extern int ADIO_Init_keyval;
 
 void MPIR_MPIOInit(int * error_code) {
 
+    int flag;
+    char myname[] = "MPIR_MPIOInit";
+
     /* first check if ADIO has been initialized. If not, initialize it */
     if (ADIO_Init_keyval == MPI_KEYVAL_INVALID) {
+        MPI_Initialized(&flag);
+
+	/* --BEGIN ERROR HANDLING-- */
+        if (!flag) {
+	    *error_code = MPIO_Err_create_code(MPI_SUCCESS, 
+		    MPIR_ERR_RECOVERABLE, myname, __LINE__, 
+		    MPI_ERR_OTHER, "**initialized", 0);
+	    *error_code = MPIO_Err_return_file(MPI_FILE_NULL, *error_code);
+	    return;
+	}
+	/* --END ERROR HANDLING-- */
+
         MPI_Keyval_create(MPI_NULL_COPY_FN, ADIOI_End_call, &ADIO_Init_keyval,
                           (void *) 0);  
 
