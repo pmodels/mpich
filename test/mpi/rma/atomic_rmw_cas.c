@@ -32,6 +32,7 @@ int main(int argc, char *argv[])
     int origin_shm, origin_am, dest;
     int *orig_buf = NULL, *result_buf = NULL, *compare_buf = NULL,
         *target_buf = NULL, *check_buf = NULL;
+    int target_value = 0;
     MPI_Win win;
     MPI_Status status;
 
@@ -93,8 +94,12 @@ int main(int argc, char *argv[])
             MPI_Gather(result_buf, 1, MPI_INT, check_buf, 1, MPI_INT, dest, MPI_COMM_WORLD);
         }
         else {
+            MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
+            target_value = target_buf[0];
+            MPI_Win_unlock(rank, win);
+
             MPI_Alloc_mem(sizeof(int) * 3, MPI_INFO_NULL, &check_buf);
-            MPI_Gather(target_buf, 1, MPI_INT, check_buf, 1, MPI_INT, dest, MPI_COMM_WORLD);
+            MPI_Gather(&target_value, 1, MPI_INT, check_buf, 1, MPI_INT, dest, MPI_COMM_WORLD);
 
             if (!(check_buf[dest] == 0 && check_buf[origin_shm] == 0 && check_buf[origin_am] == 1)
                 && !(check_buf[dest] == 1 && check_buf[origin_shm] == 0 &&

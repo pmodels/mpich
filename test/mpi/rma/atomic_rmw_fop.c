@@ -114,12 +114,14 @@ int main(int argc, char *argv[])
             }
         }
         else {
+            MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
             /* check results on P1 */
             if (target_buf[0] != AM_BUF_SIZE + SHM_BUF_SIZE) {
                 printf("LOOP=%d, rank=%d, FOP, target_buf[0] = %d, expected %d. \n",
                        k, rank, target_buf[0], AM_BUF_SIZE + SHM_BUF_SIZE);
                 errors++;
             }
+            MPI_Win_unlock(rank, win);
         }
     }
 

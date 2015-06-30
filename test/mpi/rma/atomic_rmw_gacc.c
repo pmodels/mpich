@@ -30,6 +30,7 @@
 int rank, size;
 int dest, origin_shm, origin_am;
 int *orig_buf = NULL, *result_buf = NULL, *target_buf = NULL, *check_buf = NULL;
+MPI_Win win;
 
 void checkResults(int loop_k, int *errors)
 {
@@ -63,6 +64,7 @@ void checkResults(int loop_k, int *errors)
         }
     }
     else {
+        MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
         /* check results on P1 */
         for (i = 0; i < OP_COUNT; i++) {
             if (target_buf[i] != AM_BUF_NUM + SHM_BUF_NUM) {
@@ -71,6 +73,7 @@ void checkResults(int loop_k, int *errors)
                 (*errors)++;
             }
         }
+        MPI_Win_unlock(rank, win);
     }
 }
 
@@ -79,7 +82,6 @@ int main(int argc, char *argv[])
     int i, j, k;
     int errors = 0, all_errors = 0;
     int my_buf_num;
-    MPI_Win win;
     MPI_Datatype origin_dtp, target_dtp;
 
     MPI_Init(&argc, &argv);
