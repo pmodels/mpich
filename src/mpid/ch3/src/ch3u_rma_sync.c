@@ -892,7 +892,6 @@ int MPIDI_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
         }
     }
 
-  finish_start:
     /* Set window access state properly. */
     win_ptr->states.access_state = MPIDI_RMA_PSCW_ISSUED;
     MPIDI_CH3I_num_active_issued_win++;
@@ -983,7 +982,6 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
 
-  finish_complete:
     /* Set window access state properly. */
     win_ptr->states.access_state = MPIDI_RMA_NONE;
 
@@ -1029,7 +1027,6 @@ int MPIDI_Win_wait(MPID_Win * win_ptr)
             MPIU_ERR_POP(mpi_errno);
     }
 
-  finish_wait:
     /* Set window exposure state properly. */
     win_ptr->states.exposure_state = MPIDI_RMA_NONE;
 
@@ -1570,7 +1567,6 @@ int MPIDI_Win_lock_all(int assert, MPID_Win * win_ptr)
         }
     }
 
-  finish_lock_all:
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
     /* Ensure ordering of load/store operations. */
@@ -1710,7 +1706,6 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
 
-  finish_unlock_all:
     /* Set window access state properly. */
     win_ptr->states.access_state = MPIDI_RMA_NONE;
     MPIDI_CH3I_num_passive_win--;
@@ -1762,7 +1757,6 @@ int MPIDI_Win_flush_all(MPID_Win * win_ptr)
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
 
-  finish_flush_all:
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
     /* reset upgrade_flush_local flag in target to 0 */
@@ -1812,7 +1806,6 @@ int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
 
-  finish_flush_local_all:
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
     /* reset upgrade_flush_local flag in target to 0 */
