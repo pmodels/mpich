@@ -127,6 +127,7 @@
 /comm/commname
 /comm/dupic
 /comm/ctxalloc
+/comm/comm_idup_iallreduce
 /cxx/testlist
 /cxx/topo/testlist
 /cxx/coll/uallreduce
