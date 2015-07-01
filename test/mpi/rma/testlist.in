@@ -147,6 +147,16 @@ manyget 2
 derived-acc-flush_local 3 mpiversion=3.0
 large-acc-flush_local 3 mpiversion=3.0
 large-small-acc 2
+win_shared_put_flush_load 3 mpiversion=3.0
+win_shared_acc_flush_load 3 mpiversion=3.0
+win_shared_gacc_flush_load 3 mpiversion=3.0
+win_shared_fop_flush_load 3 mpiversion=3.0
+win_shared_cas_flush_load 3 mpiversion=3.0
+put_flush_get 3 mpiversion=3.0
+acc_flush_get 3 mpiversion=3.0
+gacc_flush_get 3 mpiversion=3.0
+fop_flush_get 3 mpiversion=3.0
+cas_flush_get 3 mpiversion=3.0
 
 ## This test is not strictly correct.  This was meant to test out the
 ## case when MPI_Test is not nonblocking.  However, we ended up

@@ -158,7 +158,17 @@ noinst_PROGRAMS =          \
     manyget                \
     derived-acc-flush_local\
     large-acc-flush_local  \
-    large-small-acc
+    large-small-acc        \
+    put_flush_get  \
+    acc_flush_get  \
+    gacc_flush_get \
+    fop_flush_get  \
+    cas_flush_get  \
+    win_shared_put_flush_load  \
+    win_shared_acc_flush_load  \
+    win_shared_gacc_flush_load \
+    win_shared_fop_flush_load  \
+    win_shared_cas_flush_load
 
 if BUILD_MPIX_TESTS
 noinst_PROGRAMS += aint
@@ -242,3 +252,27 @@ linked_list_bench_lock_shr_nocheck_CPPFLAGS = -DUSE_MODE_NOCHECK $(AM_CPPFLAGS)
 win_shared_create_allocshm_SOURCES = win_shared_create.c
 win_shared_create_no_allocshm_SOURCES = win_shared_create.c
 win_shared_create_allocshm_CPPFLAGS = -DUSE_INFO_ALLOC_SHM $(AM_CPPFLAGS)
+
+put_flush_get_SOURCES        = wrma_flush_get.c
+acc_flush_get_SOURCES        = wrma_flush_get.c
+gacc_flush_get_SOURCES       = wrma_flush_get.c
+fop_flush_get_SOURCES        = wrma_flush_get.c
+cas_flush_get_SOURCES        = wrma_flush_get.c
+
+put_flush_get_CPPFLAGS  = -DTEST_PUT $(AM_CPPFLAGS)
+acc_flush_get_CPPFLAGS  = -DTEST_ACC $(AM_CPPFLAGS)
+gacc_flush_get_CPPFLAGS = -DTEST_GACC $(AM_CPPFLAGS)
+fop_flush_get_CPPFLAGS  = -DTEST_FOP $(AM_CPPFLAGS)
+cas_flush_get_CPPFLAGS  = -DTEST_CAS $(AM_CPPFLAGS)
+
+win_shared_put_flush_load_SOURCES        = win_shared_rma_flush_load.c
+win_shared_acc_flush_load_SOURCES        = win_shared_rma_flush_load.c
+win_shared_gacc_flush_load_SOURCES       = win_shared_rma_flush_load.c
+win_shared_fop_flush_load_SOURCES        = win_shared_rma_flush_load.c
+win_shared_cas_flush_load_SOURCES        = win_shared_rma_flush_load.c
+
+win_shared_put_flush_load_CPPFLAGS  = -DTEST_PUT $(AM_CPPFLAGS)
+win_shared_acc_flush_load_CPPFLAGS  = -DTEST_ACC $(AM_CPPFLAGS)
+win_shared_gacc_flush_load_CPPFLAGS = -DTEST_GACC $(AM_CPPFLAGS)
+win_shared_fop_flush_load_CPPFLAGS  = -DTEST_FOP $(AM_CPPFLAGS)
+win_shared_cas_flush_load_CPPFLAGS  = -DTEST_CAS $(AM_CPPFLAGS)
