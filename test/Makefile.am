@@ -7,7 +7,7 @@
 
 ## FIXME: commented out temporarily, really just want "mpi" to be dealt with at
 ## distclean time for now
-##SUBDIRS = mpi mpid util basic commands .
+##SUBDIRS = mpi util basic commands .
 SUBDIRS = mpi commands .
 
 # Test both the MPI routines and the MPICH command scripts
