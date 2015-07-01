@@ -23,7 +23,6 @@ noinst_HEADERS +=							\
     src/mpid/ch3/channels/nemesis/include/mpid_nem_generic_queue.h	\
     src/mpid/ch3/channels/nemesis/include/mpid_nem_impl.h		\
     src/mpid/ch3/channels/nemesis/include/mpid_nem_inline.h		\
-    src/mpid/ch3/channels/nemesis/include/mpid_nem_memdefs.h		\
     src/mpid/ch3/channels/nemesis/include/mpid_nem_nets.h		\
     src/mpid/ch3/channels/nemesis/include/mpid_nem_post.h		\
     src/mpid/ch3/channels/nemesis/include/mpid_nem_pre.h		\

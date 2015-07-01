@@ -9,7 +9,6 @@
 
 #include "mpid_nem_net_module_defs.h"
 #include "mpid_nem_defs.h"
-#include "mpid_nem_memdefs.h"
 
 #if defined(HAVE_PTHREAD_H)
 #include <pthread.h>
