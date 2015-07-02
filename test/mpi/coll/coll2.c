@@ -6,6 +6,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include "mpitest.h"
+#include "mpicolltest.h"
 
 #define MAX_PROCESSES 10
 
@@ -47,7 +48,7 @@ int main( int argc, char **argv )
       /* inefficient allgather */
       for (i=0; i<participants; i++) {
         void *sendbuf = (i == rank ? MPI_IN_PLACE : &table[begin_row][0]);
-	MPI_Gather(sendbuf,              send_count, MPI_INT,
+        MTest_Gather(sendbuf,              send_count, MPI_INT,
 		   &table[0][0],         recv_count, MPI_INT, i, 
 		   MPI_COMM_WORLD );
       }

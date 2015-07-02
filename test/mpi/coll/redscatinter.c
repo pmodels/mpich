@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+#include "mpicolltest.h"
 
 int main( int argc, char **argv )
 {
@@ -83,7 +84,7 @@ int main( int argc, char **argv )
 	    recvbuf[i] = (long long)(-i);
 	}
 	
-	MPI_Reduce_scatter( sendbuf, recvbuf, recvcounts, MPI_LONG_LONG, MPI_SUM,
+	MTest_Reduce_scatter( sendbuf, recvbuf, recvcounts, MPI_LONG_LONG, MPI_SUM,
 			    comm );
 
 	/* Check received data */

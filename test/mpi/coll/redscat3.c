@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+#include "mpicolltest.h"
 
 /* Limit the number of error reports */
 #define MAX_ERRORS 10
@@ -65,7 +66,7 @@ int main( int argc, char **argv )
 	recvbuf[i] = -1;
     }
 
-    MPI_Reduce_scatter( sendbuf, recvbuf, recvcounts, MPI_INT, MPI_SUM, comm );
+    MTest_Reduce_scatter( sendbuf, recvbuf, recvcounts, MPI_INT, MPI_SUM, comm );
 
     sumval = size * rank + ((size - 1) * size)/2;
     /* recvbuf should be size * (rank + i) */
@@ -81,7 +82,7 @@ int main( int argc, char **argv )
     }
 
 #if MTEST_HAVE_MIN_MPI_VERSION(2,2)
-    MPI_Reduce_scatter( MPI_IN_PLACE, sendbuf, recvcounts, MPI_INT, MPI_SUM, 
+    MTest_Reduce_scatter( MPI_IN_PLACE, sendbuf, recvcounts, MPI_INT, MPI_SUM,
 			comm );
 
     sumval = size * rank + ((size - 1) * size)/2;

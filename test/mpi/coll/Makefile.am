@@ -119,21 +119,15 @@ bcast_min_datatypes_SOURCES = bcast.c
 bcast_comm_world_CPPFLAGS = -DBCAST_COMM_WORLD_ONLY $(AM_CPPFLAGS)
 bcast_comm_world_SOURCES = bcast.c
 
-# Create tests of the nonblocking collectives by reusing the blocking tests,
-# using the MPI profiling interface to intercept the blocking call and
-# replace it with a MPI_Ixxx/MPI_Wait pair.
+# Generate tests of the nonblocking collectives by reusing the blocking tests.
 nballtoall1_SOURCES = alltoall1.c
-nballtoall1_LDADD   = $(LDADD) ../util/nbc_pmpi_adapter.$(OBJEXT)
+nballtoall1_CPPFLAGS  = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
 nbredscat_SOURCES   = redscat.c
-nbredscat_LDADD     = $(LDADD) ../util/nbc_pmpi_adapter.$(OBJEXT)
+nbredscat_CPPFLAGS     = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
 nbredscat3_SOURCES   = redscat3.c
-nbredscat3_LDADD     = $(LDADD) ../util/nbc_pmpi_adapter.$(OBJEXT)
+nbredscat3_CPPFLAGS     = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
 nbredscatinter_SOURCES   = redscatinter.c
-nbredscatinter_LDADD     = $(LDADD) ../util/nbc_pmpi_adapter.$(OBJEXT)
+nbredscatinter_CPPFLAGS     = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
 nbcoll2_SOURCES = coll2.c
-nbcoll2_LDADD   = $(LDADD) ../util/nbc_pmpi_adapter.$(OBJEXT)
+nbcoll2_CPPFLAGS   = -DUSE_MTEST_NBC $(AM_CPPFLAGS)
 
-# This is here instead of Makefile.mtest because it is only used in this 
-# set of tests
-$(top_builddir)/util/nbc_pmpi_adapter.$(OBJEXT): $(top_srcdir)/util/nbc_pmpi_adapter.c
-	(cd $(top_builddir)/util && $(MAKE) nbc_pmpi_adapter.$(OBJEXT))

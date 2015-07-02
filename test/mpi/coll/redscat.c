@@ -15,6 +15,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "mpicolltest.h"
 
 int main( int argc, char **argv )
 {
@@ -36,7 +37,7 @@ int main( int argc, char **argv )
     for (i=0; i<size; i++) 
 	recvcounts[i] = 1;
 
-    MPI_Reduce_scatter( sendbuf, &recvbuf, recvcounts, MPI_INT, MPI_SUM, comm );
+    MTest_Reduce_scatter( sendbuf, &recvbuf, recvcounts, MPI_INT, MPI_SUM, comm );
 
     sumval = size * rank + ((size - 1) * size)/2;
 /* recvbuf should be size * (rank + i) */

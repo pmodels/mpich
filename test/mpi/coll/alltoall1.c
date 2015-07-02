@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include "mpitest.h"
 #include <stdlib.h>
+#include "mpicolltest.h"
 
 /*
 static char MTEST_Descrip[] = "";
@@ -63,7 +64,7 @@ int main( int argc, char *argv[] )
 		}
 	    }
 
-	    MPI_Alltoall( sendbuf, sendcount, sendtype,
+	    MTest_Alltoall( sendbuf, sendcount, sendtype,
 			  recvbuf, recvcount, recvtype, comm );
 
 	    p = recvbuf;
