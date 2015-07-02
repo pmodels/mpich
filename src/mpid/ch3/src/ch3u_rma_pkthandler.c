@@ -949,6 +949,18 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             MPIU_ERR_POP(mpi_errno);
         }
 
+        /* perform accumulate operation. */
+        mpi_errno =
+            do_accumulate_op(get_accum_pkt->info.data, get_accum_pkt->count,
+                             get_accum_pkt->datatype, get_accum_pkt->addr, get_accum_pkt->count,
+                             get_accum_pkt->datatype, 0, get_accum_pkt->op);
+
+        if (win_ptr->shm_allocated == TRUE)
+            MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+
+        if (mpi_errno)
+            MPIU_ERR_POP(mpi_errno);
+
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
         iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
         iovcnt = 1;
@@ -963,18 +975,6 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
         }
         /* --END ERROR HANDLING-- */
-
-        /* perform accumulate operation. */
-        mpi_errno =
-            do_accumulate_op(get_accum_pkt->info.data, get_accum_pkt->count,
-                             get_accum_pkt->datatype, get_accum_pkt->addr, get_accum_pkt->count,
-                             get_accum_pkt->datatype, 0, get_accum_pkt->op);
-
-        if (win_ptr->shm_allocated == TRUE)
-            MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
-
-        if (mpi_errno)
-            MPIU_ERR_POP(mpi_errno);
     }
     else {
         int is_derived_dt = 0;
@@ -1206,13 +1206,6 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     MPIU_Memcpy((void *) &cas_resp_pkt->info.data, cas_pkt->addr, len);
 
-    /* Send the response packet */
-    MPIU_THREAD_CS_ENTER(CH3COMM, vc);
-    mpi_errno = MPIDI_CH3_iStartMsg(vc, cas_resp_pkt, sizeof(*cas_resp_pkt), &req);
-    MPIU_THREAD_CS_EXIT(CH3COMM, vc);
-
-    MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
-
     /* Compare and replace if equal */
     if (MPIR_Compare_equal(&cas_pkt->compare_data, cas_pkt->addr, cas_pkt->datatype)) {
         MPIU_Memcpy(cas_pkt->addr, &cas_pkt->origin_data, len);
@@ -1220,6 +1213,13 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+
+    /* Send the response packet */
+    MPIU_THREAD_CS_ENTER(CH3COMM, vc);
+    mpi_errno = MPIDI_CH3_iStartMsg(vc, cas_resp_pkt, sizeof(*cas_resp_pkt), &req);
+    MPIU_THREAD_CS_EXIT(CH3COMM, vc);
+
+    MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
     if (req != NULL) {
         if (!MPID_Request_is_complete(req)) {
@@ -1380,12 +1380,6 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             MPIU_ERR_POP(mpi_errno);
         }
 
-        /* send back the original data */
-        MPIU_THREAD_CS_ENTER(CH3COMM, vc);
-        mpi_errno = MPIDI_CH3_iStartMsg(vc, fop_resp_pkt, sizeof(*fop_resp_pkt), &resp_req);
-        MPIU_THREAD_CS_EXIT(CH3COMM, vc);
-        MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
-
         /* Apply the op */
         mpi_errno = do_accumulate_op(fop_pkt->info.data, 1, fop_pkt->datatype,
                                      fop_pkt->addr, 1, fop_pkt->datatype, 0, fop_pkt->op);
@@ -1395,6 +1389,12 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
+
+        /* send back the original data */
+        MPIU_THREAD_CS_ENTER(CH3COMM, vc);
+        mpi_errno = MPIDI_CH3_iStartMsg(vc, fop_resp_pkt, sizeof(*fop_resp_pkt), &resp_req);
+        MPIU_THREAD_CS_EXIT(CH3COMM, vc);
+        MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
         if (resp_req != NULL) {
             if (!MPID_Request_is_complete(resp_req)) {
