@@ -313,81 +313,29 @@ extern MPIDI_Process_t MPIDI_Process;
 */
 #define MPIDI_Request_create_sreq(sreq_, mpi_errno_, FAIL_)	\
 {								\
-    (sreq_) = MPIU_Handle_obj_alloc(&MPID_Request_mem);         \
-    if ((sreq_) == NULL)					\
-    {								\
-	MPIU_DBG_MSG(CH3_CHANNEL,TYPICAL,"unable to allocate a request");\
-	(mpi_errno_) = MPIR_ERR_MEMALLOCFAILED;			\
-	FAIL_;							\
-    }								\
-    MPIU_DBG_MSG_P(CH3_CHANNEL,VERBOSE,                         \
-	       "allocated request, handle=0x%08x", (sreq_)->handle);\
-    								\
+    (sreq_) = MPID_Request_create();                            \
     MPIU_Object_set_ref((sreq_), 2);				\
     (sreq_)->kind = MPID_REQUEST_SEND;				\
     (sreq_)->comm = comm;					\
-    (sreq_)->greq_fns = NULL;                                   \
-    MPID_cc_set(&(sreq_)->cc, 1);                               \
-    (sreq_)->cc_ptr		   = &(sreq_)->cc;              \
     (sreq_)->partner_request   = NULL;                          \
     MPIR_Comm_add_ref(comm);					\
-    (sreq_)->status.MPI_ERROR	   = MPI_SUCCESS;               \
-    MPIR_STATUS_SET_CANCEL_BIT((sreq_)->status, FALSE);	        \
-    (sreq_)->dev.state = 0;                                     \
-    (sreq_)->dev.cancel_pending = FALSE;                        \
     (sreq_)->dev.match.parts.rank = rank;			\
     (sreq_)->dev.match.parts.tag = tag;				\
     (sreq_)->dev.match.parts.context_id = comm->context_id + context_offset;	\
     (sreq_)->dev.user_buf = (void *) buf;			\
     (sreq_)->dev.user_count = count;				\
-    (sreq_)->dev.drop_data = FALSE;                             \
     (sreq_)->dev.datatype = datatype;				\
-    (sreq_)->dev.datatype_ptr	   = NULL;                      \
-    (sreq_)->dev.segment_ptr	   = NULL;                      \
-    (sreq_)->dev.OnDataAvail	   = NULL;                      \
-    (sreq_)->dev.OnFinal	   = NULL;                      \
     (sreq_)->dev.iov_count	   = 0;                         \
-    (sreq_)->dev.iov_offset	   = 0;                         \
-    (sreq_)->dev.tmpbuf            = NULL;                      \
-    (sreq_)->dev.ext_hdr_ptr       = NULL;                      \
-    (sreq_)->dev.ext_hdr_sz        = 0;                         \
     MPIDI_Request_clear_dbg(sreq_);                             \
 }
 
 /* This is the receive request version of MPIDI_Request_create_sreq */
 #define MPIDI_Request_create_rreq(rreq_, mpi_errno_, FAIL_)	\
 {								\
-    (rreq_) = MPIU_Handle_obj_alloc(&MPID_Request_mem);         \
-    if ((rreq_) == NULL)					\
-    {								\
-	MPIU_DBG_MSG(CH3_CHANNEL,TYPICAL,"unable to allocate a request");\
-	(mpi_errno_) = MPIR_ERR_MEMALLOCFAILED;			\
-	FAIL_;							\
-    }								\
-    MPIU_DBG_MSG_P(CH3_CHANNEL,VERBOSE,                         \
-	       "allocated request, handle=0x%08x", (rreq_)->handle);\
-    								\
+    (rreq_) = MPID_Request_create();                            \
     MPIU_Object_set_ref((rreq_), 2);				\
     (rreq_)->kind = MPID_REQUEST_RECV;				\
-    (rreq_)->comm = NULL;					\
-    (rreq_)->greq_fns = NULL;                                   \
-    MPID_cc_set(&(rreq_)->cc, 1);                               \
-    (rreq_)->cc_ptr		   = &(rreq_)->cc;              \
-    (rreq_)->status.MPI_ERROR	   = MPI_SUCCESS;               \
-    MPIR_STATUS_SET_CANCEL_BIT((rreq_)->status, FALSE);	        \
     (rreq_)->partner_request   = NULL;                          \
-    (rreq_)->dev.state = 0;                                     \
-    (rreq_)->dev.cancel_pending = FALSE;                        \
-    (rreq_)->dev.datatype_ptr = NULL;                           \
-    (rreq_)->dev.segment_ptr = NULL;                            \
-    (rreq_)->dev.iov_offset   = 0;                              \
-    (rreq_)->dev.OnDataAvail	   = NULL;                      \
-    (rreq_)->dev.OnFinal	   = NULL;                      \
-    (rreq_)->dev.drop_data = FALSE;                             \
-    (rreq_)->dev.tmpbuf            = NULL;                      \
-    (rreq_)->dev.ext_hdr_ptr       = NULL;                      \
-    (rreq_)->dev.ext_hdr_sz        = 0;                         \
-     MPIDI_CH3_REQUEST_INIT(rreq_);\
 }
 
 /* creates a new, trivially complete recv request that is suitable for

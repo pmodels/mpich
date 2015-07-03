@@ -76,25 +76,12 @@ static inline MPID_nem_ptl_req_area * REQ_PTL(MPID_Request *req) {
     } while (0)
 
 #define MPID_nem_ptl_request_create_sreq(sreq_, errno_, comm_) do {                                             \
-        (sreq_) = MPIU_Handle_obj_alloc(&MPID_Request_mem);                                                     \
-        MPIU_ERR_CHKANDJUMP1((sreq_) == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "request");    \
+        (sreq_) = MPID_Request_create();                                                                        \
         MPIU_Object_set_ref((sreq_), 2);                                                                        \
         (sreq_)->kind               = MPID_REQUEST_SEND;                                                        \
         MPIR_Comm_add_ref(comm_);                                                                               \
         (sreq_)->comm               = comm_;                                                                    \
-        (sreq_)->greq_fns           = NULL;                                                                     \
-        MPID_cc_set(&(sreq_)->cc, 1);                                                                           \
-        (sreq_)->cc_ptr             = &(sreq_)->cc;                                                             \
         (sreq_)->status.MPI_ERROR   = MPI_SUCCESS;                                                              \
-        MPIR_STATUS_SET_CANCEL_BIT((sreq_)->status, FALSE);                                                           \
-        (sreq_)->dev.cancel_pending = FALSE;                                                                    \
-        (sreq_)->dev.state          = 0;                                                                        \
-        (sreq_)->dev.datatype_ptr   = NULL;                                                                     \
-        (sreq_)->dev.segment_ptr    = NULL;                                                                     \
-        (sreq_)->dev.tmpbuf         = NULL;                                                                     \
-        (sreq_)->dev.ext_hdr_ptr    = NULL;                                                                     \
-        (sreq_)->dev.ext_hdr_sz     = 0;                                                                        \
-                                                                                                                \
         MPID_nem_ptl_init_req(sreq_);                                                                           \
     } while (0)
 
