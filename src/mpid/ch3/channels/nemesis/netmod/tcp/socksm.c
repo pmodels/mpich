@@ -1619,7 +1619,7 @@ static int MPID_nem_tcp_recv_handler(sockconn_t *const sc)
         if (!reqFn)
         {
             MPIU_Assert(MPIDI_Request_get_type(rreq) != MPIDI_REQUEST_TYPE_GET_RESP);
-            MPIDI_CH3U_Request_complete(rreq);
+            MPID_Request_complete(rreq);
             MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "...complete");
             sc_vc_ch->recv_active = NULL;
         }

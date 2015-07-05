@@ -504,7 +504,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
     while (last < data_sz);
 
     *done = TRUE;
-    MPIDI_CH3U_Request_complete(req);
+    MPID_Request_complete(req);
     MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "completed req local_req=%d", req->handle);
 
 
@@ -643,7 +643,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
     OPA_store_int(&copy_buf->owner_info.val.rank, NO_OWNER);
 
     *done = TRUE;
-    MPIDI_CH3U_Request_complete(req);
+    MPID_Request_complete(req);
 
  fn_exit:
     copy_buf->receiver_present.val = FALSE;
@@ -818,7 +818,7 @@ int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc)
         while (!MPID_nem_lmt_rtsq_empty(vc_ch->lmt_rts_queue)) {
             MPID_nem_lmt_rtsq_dequeue(&vc_ch->lmt_rts_queue, &req);
             req->status.MPI_ERROR = req_errno;
-            MPIDI_CH3U_Request_complete(req);
+            MPID_Request_complete(req);
         }
         MPIU_THREAD_CS_EXIT(LMT,);
     }
@@ -830,7 +830,7 @@ int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc)
     if (vc_ch->lmt_active_lmt) {
         MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Clearing active LMT");
         vc_ch->lmt_active_lmt->req->status.MPI_ERROR = req_errno;
-        MPIDI_CH3U_Request_complete(vc_ch->lmt_active_lmt->req);
+        MPID_Request_complete(vc_ch->lmt_active_lmt->req);
         MPIU_Free(vc_ch->lmt_active_lmt);
         vc_ch->lmt_active_lmt = NULL;
     }
@@ -842,7 +842,7 @@ int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc)
     while (!LMT_SHM_Q_EMPTY(vc_ch->lmt_queue)) {
         LMT_SHM_Q_DEQUEUE(&vc_ch->lmt_queue, &we);
         we->req->status.MPI_ERROR = req_errno;
-        MPIDI_CH3U_Request_complete(we->req);
+        MPID_Request_complete(we->req);
         MPIU_Free(we);
     }
 

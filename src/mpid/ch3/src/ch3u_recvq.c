@@ -636,7 +636,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
             if (vc->state == MPIDI_VC_STATE_MORIBUND) {
                 MPIU_ERR_SET1(mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                 rreq->status.MPI_ERROR = mpi_errno;
-                MPIDI_CH3U_Request_complete(rreq);
+                MPID_Request_complete(rreq);
                 goto lock_exit;
             }
         }
@@ -902,7 +902,7 @@ static inline void dequeue_and_set_error(MPID_Request **req,  MPID_Request *prev
 
     /* set error and complete */
     (*req)->status.MPI_ERROR = *error;
-    MPIDI_CH3U_Request_complete(*req);
+    MPID_Request_complete(*req);
     MPIU_DBG_MSG_FMT(CH3_OTHER, VERBOSE,
                      (MPIU_DBG_FDEST, "set error of req %p (%#08x) to %#x and completing.",
                       *req, (*req)->handle, *error));

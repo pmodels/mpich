@@ -258,7 +258,7 @@ int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 
 	if (rreq->dev.recv_data_sz == 0) {
             *buflen = sizeof(MPIDI_CH3_Pkt_t);
-	    MPIDI_CH3U_Request_complete(rreq);
+	    MPID_Request_complete(rreq);
 	    *rreqp = NULL;
 	}
 	else {
@@ -273,7 +273,7 @@ int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 
             if (complete) 
             {
-                MPIDI_CH3U_Request_complete(rreq);
+                MPID_Request_complete(rreq);
                 *rreqp = NULL;
             }
             else
@@ -301,7 +301,7 @@ int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     {
 	if (rreq->dev.recv_data_sz == 0) {
             *buflen = sizeof(MPIDI_CH3_Pkt_t);
-	    MPIDI_CH3U_Request_complete(rreq);
+	    MPID_Request_complete(rreq);
 	    *rreqp = NULL;
 	}
 	else {
@@ -316,7 +316,7 @@ int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 
             if (complete) 
             {
-                MPIDI_CH3U_Request_complete(rreq);
+                MPID_Request_complete(rreq);
                 *rreqp = NULL;
             }
             else
@@ -348,7 +348,7 @@ int MPIDI_CH3_PktHandler_EagerSyncAck( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
        transfer could still be in progress) */
 
     /* FIXME: This sometimes segfaults */
-    MPIDI_CH3U_Request_complete(sreq);  
+    MPID_Request_complete(sreq);
     
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
     *rreqp = NULL;

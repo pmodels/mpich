@@ -90,7 +90,7 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_callback)(cq_tagged_entry_t * wc, MPID_Request 
         /* request object                                       */
         /* ---------------------------------------------------- */
         MPIDI_CH3U_Recvq_DP(rreq);
-        MPIDI_CH3U_Request_complete(rreq);
+        MPID_Request_complete(rreq);
     }
     END_FUNC_RC(FCNAME);
 }

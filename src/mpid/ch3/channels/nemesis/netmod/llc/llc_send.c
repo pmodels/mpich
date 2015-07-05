@@ -451,7 +451,7 @@ int MPID_nem_llc_send_queued(MPIDI_VC_t * vc, rque_t * send_queue)
             sreq->status.MPI_ERROR = mpi_errno;
 
             MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "OnDataAvail = %p", sreq->dev.OnDataAvail);
-            MPIDI_CH3U_Request_complete(sreq);
+            MPID_Request_complete(sreq);
             continue;
         }
         if (!MPIDI_nem_llc_Rqst_iov_update(sreq, ret)) {
@@ -881,7 +881,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
                 }
 
                 /* Mark completion on rreq */
-                MPIDI_CH3U_Request_complete(req);
+                MPID_Request_complete(req);
 
                 llc_errno = LLC_cmd_free(lcmd, 1);
                 MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_cmd_free");
@@ -905,7 +905,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
                     req->status.MPI_ERROR = MPI_SUCCESS;
                     MPIU_ERR_SET(req->status.MPI_ERROR, MPIX_ERR_PROC_FAIL_STOP, "**comm_fail");
 
-                    MPIDI_CH3U_Request_complete(req);
+                    MPID_Request_complete(req);
 
                     if (lcmd->iov_local[0].addr != 0) {
                         MPIU_Free((void *) lcmd->iov_local[0].addr);
@@ -916,7 +916,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
                     req->status.MPI_ERROR = MPI_SUCCESS;
                     MPIU_ERR_SET(req->status.MPI_ERROR, MPIX_ERR_PROC_FAIL_STOP, "**comm_fail");
 
-                    MPIDI_CH3U_Request_complete(req);
+                    MPID_Request_complete(req);
                 }
                 else if (lcmd->opcode == LLC_OPCODE_RECV) {
                     /* Probably ch3 dequeued and completed this request. */
@@ -924,7 +924,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
                     MPIDI_CH3U_Recvq_DP(req);
                     req->status.MPI_ERROR = MPI_SUCCESS;
                     MPIU_ERR_SET(req->status.MPI_ERROR, MPIX_ERR_PROC_FAIL_STOP, "**comm_fail");
-                    MPIDI_CH3U_Request_complete(req);
+                    MPID_Request_complete(req);
 #endif
                 }
                 else {

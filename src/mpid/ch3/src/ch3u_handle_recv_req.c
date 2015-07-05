@@ -29,7 +29,7 @@ int MPIDI_CH3U_Handle_recv_req(MPIDI_VC_t * vc, MPID_Request * rreq, int *comple
     reqFn = rreq->dev.OnDataAvail;
     if (!reqFn) {
         MPIU_Assert(MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_RECV);
-        MPIDI_CH3U_Request_complete(rreq);
+        MPID_Request_complete(rreq);
         *complete = TRUE;
     }
     else {
@@ -64,7 +64,7 @@ int MPIDI_CH3_ReqHandler_RecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
                                       MPID_Request * rreq, int *complete)
 {
     /* mark data transfer as complete and decrement CC */
-    MPIDI_CH3U_Request_complete(rreq);
+    MPID_Request_complete(rreq);
     *complete = TRUE;
     return MPI_SUCCESS;
 }
@@ -104,7 +104,7 @@ int MPIDI_CH3_ReqHandler_PutRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
     MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
     /* mark data transfer as complete and decrement CC */
-    MPIDI_CH3U_Request_complete(rreq);
+    MPID_Request_complete(rreq);
 
     /* NOTE: finish_op_on_target() must be called after we complete this request,
      * because inside finish_op_on_target() we may call this request handler
@@ -200,7 +200,7 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq,
     MPIDI_CH3U_SRBuf_free(rreq);
 
     /* mark data transfer as complete and decrement CC */
-    MPIDI_CH3U_Request_complete(rreq);
+    MPID_Request_complete(rreq);
 
     /* NOTE: finish_op_on_target() must be called after we complete this request,
      * because inside finish_op_on_target() we may call this request handler
@@ -378,7 +378,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     }
 
     /* mark data transfer as complete and decrement CC */
-    MPIDI_CH3U_Request_complete(rreq);
+    MPID_Request_complete(rreq);
     *complete = TRUE;
   fn_exit:
     MPIU_CHKPMEM_COMMIT();
@@ -509,7 +509,7 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
     }
 
     /* mark data transfer as complete and decrement CC */
-    MPIDI_CH3U_Request_complete(rreq);
+    MPID_Request_complete(rreq);
     *complete = TRUE;
 
   fn_exit:
@@ -896,7 +896,7 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
 
     /* mark receive data transfer as complete and decrement CC in receive
      * request */
-    MPIDI_CH3U_Request_complete(rreq);
+    MPID_Request_complete(rreq);
     *complete = TRUE;
 
   fn_fail:
@@ -931,7 +931,7 @@ int MPIDI_CH3_ReqHandler_UnpackUEBufComplete(MPIDI_VC_t * vc ATTRIBUTE((unused))
     }
 
     /* mark data transfer as complete and decrement CC */
-    MPIDI_CH3U_Request_complete(rreq);
+    MPID_Request_complete(rreq);
     *complete = TRUE;
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_UNPACKUEBUFCOMPLETE);
@@ -965,7 +965,7 @@ int MPIDI_CH3_ReqHandler_UnpackSRBufComplete(MPIDI_VC_t * vc, MPID_Request * rre
     }
     else {
         /* mark data transfer as complete and decrement CC */
-        MPIDI_CH3U_Request_complete(rreq);
+        MPID_Request_complete(rreq);
         *complete = TRUE;
     }
 
@@ -2020,7 +2020,7 @@ int MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete(MPIDI_VC_t * vc,
 
     /* mark receive data transfer as complete and decrement CC in receive
      * request */
-    MPIDI_CH3U_Request_complete(rreq);
+    MPID_Request_complete(rreq);
     *complete = TRUE;
 
   fn_fail:

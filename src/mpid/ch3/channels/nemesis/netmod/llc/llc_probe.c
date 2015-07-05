@@ -213,7 +213,7 @@ int MPID_nem_llc_improbe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm,
             mpi_errno = MPID_nem_llc_poll(0);
         } while (!MPID_Request_is_complete(req));
 
-//        MPIDI_CH3U_Request_complete(req); // This operation is done in llc_poll.
+//        MPID_Request_complete(req); // This operation is done in llc_poll.
 
         *message = req;
 

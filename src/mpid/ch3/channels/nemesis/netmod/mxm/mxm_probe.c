@@ -155,7 +155,7 @@ int MPID_nem_mxm_improbe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm,
         err = mxm_message_recv(&mxm_req, mxm_msg);
         _mxm_req_wait(&mxm_req.base);
 
-        MPIDI_CH3U_Request_complete(req);
+        MPID_Request_complete(req);
 
         *message = req;
 

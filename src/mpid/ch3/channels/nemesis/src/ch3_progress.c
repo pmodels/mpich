@@ -252,7 +252,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
         MPIU_Assert(MPIDI_Request_get_type(sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
 #endif
 
-        MPIDI_CH3U_Request_complete(sreq);
+        MPID_Request_complete(sreq);
 
         /* MT - clear the current active send before dequeuing/destroying the current request */
         MPIDI_CH3I_shm_active_send = NULL;
@@ -825,7 +825,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
 #if !(defined(MPICH_IS_THREADED) && (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT))
                     MPIU_Assert(MPIDI_Request_get_type(rreq) != MPIDI_REQUEST_TYPE_GET_RESP);
 #endif
-                    MPIDI_CH3U_Request_complete(rreq);
+                    MPID_Request_complete(rreq);
                     complete = TRUE;
                 }
                 else
@@ -1095,7 +1095,7 @@ int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
             MPIU_ERR_SET1(req->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
             
             MPID_Request_release(req); /* ref count was incremented when added to queue */
-            MPIDI_CH3U_Request_complete(req);
+            MPID_Request_complete(req);
             req = next;
         } else {
             prev = req;

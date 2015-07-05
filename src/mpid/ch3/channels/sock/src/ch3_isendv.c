@@ -139,7 +139,7 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq,
 		    reqFn = sreq->dev.OnDataAvail;
 		    if (!reqFn) {
 			MPIU_Assert(MPIDI_Request_get_type(sreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
-			MPIDI_CH3U_Request_complete(sreq);
+			MPID_Request_complete(sreq);
 		    }
 		    else {
 			int complete;
@@ -187,7 +187,7 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq,
 			       MPI_ERR_INTERN, "**ch3|sock|writefailed", 
 			       "**ch3|sock|writefailed %d", rc );
 		 /* MT - CH3U_Request_complete performs write barrier */
-		MPIDI_CH3U_Request_complete(sreq);
+		MPID_Request_complete(sreq);
 		/* Return error to calling routine */
 		mpi_errno = sreq->status.MPI_ERROR;
 	    }
@@ -233,7 +233,7 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq,
 	/* TODO: Create an appropriate error message */
 	sreq->status.MPI_ERROR = MPI_ERR_INTERN;
 	/* MT - CH3U_Request_complete performs write barrier */
-	MPIDI_CH3U_Request_complete(sreq);
+	MPID_Request_complete(sreq);
     }
     /* --END ERROR HANDLING-- */
 

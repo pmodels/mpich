@@ -714,3 +714,14 @@ void MPID_Request_set_completed(MPID_Request *req)
     /* MT do not reorder! see note above*/
     MPIDI_CH3_Progress_signal_completion();
 }
+
+void MPID_Request_complete(MPID_Request *req)
+{
+    int incomplete;
+
+    MPIDI_CH3U_Request_decrement_cc(req, &incomplete);
+    if (!incomplete) {
+	MPID_Request_release(req);
+	MPIDI_CH3_Progress_signal_completion();
+    }
+}

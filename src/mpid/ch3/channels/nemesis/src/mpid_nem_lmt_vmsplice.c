@@ -75,7 +75,7 @@ static inline int check_req_complete(MPIDI_VC_t *vc, MPID_Request *req, int *com
     }
     else {
         *complete = 1;
-        MPIDI_CH3U_Request_complete(req);
+        MPID_Request_complete(req);
     }
 
 fn_fail:

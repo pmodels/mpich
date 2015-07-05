@@ -499,7 +499,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
      * all rreq field modifications must be complete at this point.  This macro
      * also kicks the progress engine, which was previously done here via
      * MPIDI_CH3_Progress_signal_completion(). */
-    MPIDI_CH3U_Request_complete(rreq);
+    MPID_Request_complete(rreq);
 
  fn_fail:
     /* MT note: it may be possible to narrow this CS after careful
@@ -643,7 +643,7 @@ int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     if (rreq->dev.recv_data_sz == 0) {
         /* return the number of bytes processed in this function */
         *buflen = sizeof(MPIDI_CH3_Pkt_t);
-	MPIDI_CH3U_Request_complete(rreq);
+	MPID_Request_complete(rreq);
 	*rreqp = NULL;
     }
     else {
@@ -666,7 +666,7 @@ int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 
         if (complete) 
         {
-            MPIDI_CH3U_Request_complete(rreq);
+            MPID_Request_complete(rreq);
             *rreqp = NULL;
         }
         else
@@ -728,7 +728,7 @@ int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	if (rreq->dev.recv_data_sz == 0) {
             /* return the number of bytes processed in this function */
             *buflen = sizeof(MPIDI_CH3_Pkt_t) + data_len;;
-	    MPIDI_CH3U_Request_complete(rreq);
+	    MPID_Request_complete(rreq);
 	    *rreqp = NULL;
 	}
 	else {
@@ -746,7 +746,7 @@ int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 
             if (complete) 
             {
-                MPIDI_CH3U_Request_complete(rreq);
+                MPID_Request_complete(rreq);
                 *rreqp = NULL;
             }
             else
@@ -788,7 +788,7 @@ int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	else
 	{
 	    /* mark data transfer as complete and decrement CC */
-	    MPIDI_CH3U_Request_complete(rreq);
+	    MPID_Request_complete(rreq);
 	    *rreqp = NULL;
 	}
         /* we didn't process anything but the header in this case */

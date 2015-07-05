@@ -1300,7 +1300,7 @@ int MPIDI_CH3_PktHandler_CASResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
     MPIU_Memcpy(req->dev.user_buf, (void *) &cas_resp_pkt->info.data, len);
 
-    MPIDI_CH3U_Request_complete(req);
+    MPID_Request_complete(req);
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
     *rreqp = NULL;
 
@@ -1573,7 +1573,7 @@ int MPIDI_CH3_PktHandler_FOPResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     }
 
     if (complete) {
-        MPIDI_CH3U_Request_complete(req);
+        MPID_Request_complete(req);
         *rreqp = NULL;
     }
 
@@ -1719,7 +1719,7 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             mpi_errno = reqFn(vc, req, &complete);
         }
         else {
-            MPIDI_CH3U_Request_complete(req);
+            MPID_Request_complete(req);
         }
         *rreqp = NULL;
     }
@@ -1867,7 +1867,7 @@ int MPIDI_CH3_PktHandler_GetResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
             mpi_errno = reqFn(vc, req, &complete);
         }
         else {
-            MPIDI_CH3U_Request_complete(req);
+            MPID_Request_complete(req);
         }
 
         *rreqp = NULL;

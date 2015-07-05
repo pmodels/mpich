@@ -300,7 +300,7 @@ int MPIDI_CH3_PktHandler_RndvSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     
     if (req->dev.recv_data_sz == 0) {
         *buflen = sizeof(MPIDI_CH3_Pkt_t);
-	MPIDI_CH3U_Request_complete(req);
+	MPID_Request_complete(req);
 	*rreqp = NULL;
     }
     else {
@@ -315,7 +315,7 @@ int MPIDI_CH3_PktHandler_RndvSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 
         if (complete) 
         {
-            MPIDI_CH3U_Request_complete(req);
+            MPID_Request_complete(req);
             *rreqp = NULL;
         }
         else

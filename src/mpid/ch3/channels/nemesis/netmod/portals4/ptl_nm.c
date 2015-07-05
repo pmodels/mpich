@@ -421,7 +421,7 @@ static inline void on_data_avail(MPID_Request * req)
 
     reqFn = req->dev.OnDataAvail;
     if (!reqFn) {
-        MPIDI_CH3U_Request_complete(req);
+        MPID_Request_complete(req);
         MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
     }
     else {

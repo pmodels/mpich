@@ -508,7 +508,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 		    reqFn = rreq->dev.OnDataAvail;
 		    if (!reqFn) {
 			MPIU_Assert(MPIDI_Request_get_type(rreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
-			MPIDI_CH3U_Request_complete(rreq);
+			MPID_Request_complete(rreq);
 			complete = TRUE;
 		    }
 		    else {
@@ -567,7 +567,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 		reqFn = sreq->dev.OnDataAvail;
 		if (!reqFn) {
 		    MPIU_Assert(MPIDI_Request_get_type(sreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
-		    MPIDI_CH3U_Request_complete(sreq);
+		    MPID_Request_complete(sreq);
 		    complete = TRUE;
 		}
 		else {
@@ -611,7 +611,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 			    reqFn = sreq->dev.OnDataAvail;
 			    if (!reqFn) {
 				MPIU_Assert(MPIDI_Request_get_type(sreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
-				MPIDI_CH3U_Request_complete(sreq);
+				MPID_Request_complete(sreq);
 				complete = TRUE;
 			    }
 			    else {
@@ -885,7 +885,7 @@ static int ReadMoreData( MPIDI_CH3I_Connection_t * conn, MPID_Request *rreq )
 	    reqFn = rreq->dev.OnDataAvail;
 	    if (!reqFn) {
 		MPIU_Assert(MPIDI_Request_get_type(rreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
-		MPIDI_CH3U_Request_complete(rreq);
+		MPID_Request_complete(rreq);
 		complete = TRUE;
 	    }
 	    else {

@@ -324,7 +324,7 @@ int MPIDI_CH3_PktHandler_CancelSendResp( MPIDI_VC_t *vc ATTRIBUTE((unused)),
 	MPIU_DBG_MSG(CH3_OTHER,TYPICAL,"unable to cancel message");
     }
     
-    MPIDI_CH3U_Request_complete(sreq);
+    MPID_Request_complete(sreq);
     
     *rreqp = NULL;
 

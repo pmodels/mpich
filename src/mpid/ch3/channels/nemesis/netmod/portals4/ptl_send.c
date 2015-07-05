@@ -86,7 +86,7 @@ static int handler_send(const ptl_event_t *e)
         if (REQ_PTL(sreq)->get_me_p)
             MPIU_Free(REQ_PTL(sreq)->get_me_p);
     }
-    MPIDI_CH3U_Request_complete(sreq);
+    MPID_Request_complete(sreq);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_HANDLER_SEND);

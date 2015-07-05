@@ -285,18 +285,6 @@ extern MPIDI_Process_t MPIDI_Process;
 #  error MPIU_HANDLE_ALLOCATION_METHOD not defined
 #endif
 
-#define MPIDI_CH3U_Request_complete(req_)			\
-{								\
-    int incomplete__;						\
-								\
-    MPIDI_CH3U_Request_decrement_cc((req_), &incomplete__);	\
-    if (!incomplete__)						\
-    {								\
-	MPID_Request_release(req_);				\
-	MPIDI_CH3_Progress_signal_completion();			\
-    }								\
-}
-
 
 /* If the channel doesn't initialize anything in the request, 
    provide a dummy */
