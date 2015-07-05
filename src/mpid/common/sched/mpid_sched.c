@@ -916,8 +916,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                     break;
             }
 
-            MPID_Request_set_completed(s->req);
-            MPID_Request_release(s->req);
+            MPID_Request_complete(s->req);
             s->req = NULL;
             MPIU_Free(s->entries);
             MPIU_Free(s);

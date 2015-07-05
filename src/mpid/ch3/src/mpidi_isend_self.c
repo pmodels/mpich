@@ -87,11 +87,8 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
 	MPIDI_CH3U_Buffer_copy(buf, count, datatype, &sreq->status.MPI_ERROR,
 			       rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype, &data_sz, &rreq->status.MPI_ERROR);
 	MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
-	MPID_Request_set_completed(rreq);
-	MPID_Request_release(rreq);
-	/* sreq has never been seen by the user or outside this thread, so it is safe to reset ref_count and cc */
-	MPIU_Object_set_ref(sreq, 1);
-        MPID_cc_set(&sreq->cc, 0);
+	MPID_Request_complete(rreq);
+	MPID_Request_complete(sreq);
     }
     else
     {

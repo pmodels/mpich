@@ -102,6 +102,11 @@ int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
     (*request_ptr)->greq_fns->grequest_extra_state = extra_state;
     (*request_ptr)->greq_fns->greq_lang            = MPID_LANG_C;
 
+    /* Add an additional reference to the greq.  One of them will be
+     * released when we complete the request, and the second one, when
+     * we test or wait on it. */
+    MPIR_Request_add_ref((*request_ptr));
+
     MPIU_CHKPMEM_COMMIT();
  fn_exit:
     return mpi_errno;

@@ -240,8 +240,7 @@ int MPIDI_CH3_RecvFromSelf( MPID_Request *rreq, void *buf, MPI_Aint count,
 			       buf, count, datatype, &data_sz, 
 			       &rreq->status.MPI_ERROR);
 	MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
-	MPID_Request_set_completed(sreq);
-	MPID_Request_release(sreq);
+	MPID_Request_complete(sreq);
     }
     else
     {
@@ -252,9 +251,7 @@ int MPIDI_CH3_RecvFromSelf( MPID_Request *rreq, void *buf, MPI_Aint count,
     
     /* no other thread can possibly be waiting on rreq, so it is safe to 
        reset ref_count and cc */
-    /* FIXME DJG really? shouldn't we at least decr+assert? */
-    MPID_cc_set(rreq->cc_ptr, 0);
-    MPIU_Object_set_ref(rreq, 1);
+    MPID_Request_complete(rreq);
 
     return MPI_SUCCESS;
 }

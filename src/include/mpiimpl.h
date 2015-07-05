@@ -3494,13 +3494,13 @@ int MPID_Progress_poke(void);
   This routine is intended for use by 'MPI_Grequest_start' only.  Note that 
   once a request is created with this routine, any progress engine must assume 
   that an outside function can complete a request with 
-  'MPID_Request_set_completed'.
+  'MPID_Request_complete'.
 
   The request object returned by this routine should be initialized such that
   ref_count is one and handle contains a valid handle referring to the object.
   @*/
 MPID_Request * MPID_Request_create(void);
-void MPID_Request_set_completed(MPID_Request *);
+
 /*@
   MPID_Request_release - Release a request 
 
@@ -3516,6 +3516,23 @@ void MPID_Request_set_completed(MPID_Request *);
   Request
 @*/
 void MPID_Request_release(MPID_Request *);
+
+/*@
+  MPID_Request_complete - Complete a request
+
+  Input Parameter:
+. request - request to complete
+
+  Notes:
+  This routine is called to decrement the completion count of a
+  request object.  If the completion count of the request object has
+  reached zero, the reference count for the object will be
+  decremented.
+
+  Module:
+  Request
+@*/
+void MPID_Request_complete(MPID_Request *);
 
 typedef struct MPID_Grequest_class {
      MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */

@@ -420,7 +420,7 @@ static void coll_handle_complete(void *handle)
     MPID_Request *req;
     if (NULL != handle) {
         req = (MPID_Request *) handle;
-        MPID_Request_set_completed(req);
+        MPID_Request_complete(req);
     }
 }
 

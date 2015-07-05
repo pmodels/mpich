@@ -1242,9 +1242,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
   This code is designed to support one particular model of thread-safety.
   It is common to many of the channels and was moved into this file because
   the MPIDI_CH3_Progress_signal_completion reference is used by the 
-  macro the implements MPID_Request_set_completed.  Note that there is 
-  a function version of MPID_Request_set_completed for use by greq_complete.c
-
+  function the implements MPID_Request_complete.
 @*/
 
 /*

@@ -37,7 +37,7 @@ void MPIR_Grequest_complete_impl(MPID_Request *request_ptr)
 {
     /* Set the request as completed.  This does not change the
        reference count on the generalized request */
-    MPID_Request_set_completed( request_ptr );
+    MPID_Request_complete( request_ptr );
 
     /* The request release comes with the wait/test, not this complete
        routine, so we don't call the MPID_Request_release routine */
