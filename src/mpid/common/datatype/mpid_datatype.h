@@ -58,10 +58,10 @@
  * structures.
  */
 #define MPID_Datatype_release(datatype_ptr) do {                            \
-    int inuse;								    \
+    int inuse_;								    \
 									    \
-    MPIU_Object_release_ref((datatype_ptr),&inuse);			    \
-    if (!inuse) {							    \
+    MPIU_Object_release_ref((datatype_ptr),&inuse_);			    \
+    if (!inuse_) {							    \
         int lmpi_errno = MPI_SUCCESS;					    \
 	if (MPIR_Process.attr_free && datatype_ptr->attributes) {	    \
 	    lmpi_errno = MPIR_Process.attr_free( datatype_ptr->handle,	    \
