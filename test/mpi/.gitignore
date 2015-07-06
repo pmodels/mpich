@@ -1078,6 +1078,7 @@
 /threads/comm/ctxdup
 /threads/comm/ctxidup
 /threads/comm/dup_leak_test
+/threads/comm/idup_nb
 /threads/init/initth
 /threads/pt2pt/threads
 /threads/spawn/multispawn
