@@ -331,18 +331,105 @@ int MTestGetIntracommGeneral( MPI_Comm *comm, int min_size, int allowSmaller )
 	    isBasic = 1;
 	    intraCommName = "MPI_COMM_SELF";
 	    break;
+    case 5:
+	{
+        /* Dup of the world using MPI_Intercomm_merge */
+        int rleader, isLeft;
+        MPI_Comm local_comm, inter_comm;
+        MPI_Comm_size(MPI_COMM_WORLD, &size);
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        if (size > 1) {
+            merr = MPI_Comm_split( MPI_COMM_WORLD, (rank < size/2), rank, &local_comm);
+            if (merr) MTestPrintError( merr );
+            if (rank == 0) { rleader = size/2; }
+            else if (rank == size/2) { rleader = 0; }
+            else { rleader = -1; }
+            isLeft = rank < size/2;
+            merr = MPI_Intercomm_create(local_comm, 0, MPI_COMM_WORLD, rleader, 99, &inter_comm);
+            if (merr) MTestPrintError(merr);
+            merr = MPI_Intercomm_merge(inter_comm, isLeft, comm);
+            if (merr) MTestPrintError(merr);
+            MPI_Comm_free(&inter_comm);
+            MPI_Comm_free(&local_comm);
+            intraCommName = "Dup of WORLD created by MPI_Intercomm_merge";
+        } else {
+            *comm = MPI_COMM_NULL;
+        }
+    }
+    break;
+    case 6:
+    {
+#if MTEST_HAVE_MIN_MPI_VERSION(3,0)
+        /* Even of the world using MPI_Comm_create_group */
+        int i;
+        MPI_Group world_group, even_group;
+        int *excl = NULL;
 
+        MPI_Comm_size(MPI_COMM_WORLD, &size);
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        if (allowSmaller && (size+1)/2 >= min_size) {
+            /* exclude the odd ranks */
+            excl = malloc((size/2) * sizeof(int));
+            for (i = 0; i < size / 2; i++) excl[i] = (2 * i) + 1;
+
+            MPI_Comm_group(MPI_COMM_WORLD, &world_group);
+            MPI_Group_excl(world_group, size / 2, excl, &even_group);
+            MPI_Group_free(&world_group);
+            free(excl);
+
+            if (rank % 2 == 0) {
+                /* Even processes create a comm. for themselves */
+                MPI_Comm_create_group(MPI_COMM_WORLD, even_group, 0, comm);
+                intraCommName = "Even of WORLD created by MPI_Comm_create_group";
+            } else {
+               *comm = MPI_COMM_NULL;
+            }
+
+            MPI_Group_free(&even_group);
+        } else {
+            *comm = MPI_COMM_NULL;
+        }
+#else
+        *comm = MPI_COMM_NULL;
+#endif
+    }
+    break;
+    case 7:
+    {
+        /* High half of the world using MPI_Comm_create */
+        int ranges[1][3];
+        MPI_Group world_group, high_group;
+        MPI_Comm_size(MPI_COMM_WORLD, &size);
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        ranges[0][0] = size/2;
+        ranges[0][1] = size-1;
+        ranges[0][2] = 1;
+
+        if (allowSmaller && (size+1)/2 >= min_size) {
+            MPI_Comm_group( MPI_COMM_WORLD, &world_group);
+            merr = MPI_Group_range_incl(world_group, 1, ranges, &high_group);
+            if (merr) MTestPrintError(merr);
+            merr = MPI_Comm_create(MPI_COMM_WORLD, high_group, comm);
+            if (merr) MTestPrintError(merr);
+            MPI_Group_free(&world_group);
+            MPI_Group_free(&high_group);
+            intraCommName = "High half of WORLD created by MPI_Comm_create";
+       } else {
+            *comm = MPI_COMM_NULL;
+       }
+    }
+    break;
 	    /* These next cases are communicators that include some
 	       but not all of the processes */
-	case 5:
-	case 6:
-	case 7:
 	case 8:
+	case 9:
+	case 10:
+	case 11:
 	{
 	    int newsize;
 	    merr = MPI_Comm_size( MPI_COMM_WORLD, &size );
 	    if (merr) MTestPrintError( merr );
-	    newsize = size - (intraCommIdx - 4);
+	    newsize = size - (intraCommIdx - 7);
 	    
 	    if (allowSmaller && newsize >= min_size) {
 		merr = MPI_Comm_rank( MPI_COMM_WORLD, &rank );
