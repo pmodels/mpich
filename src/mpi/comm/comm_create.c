@@ -125,8 +125,7 @@ int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
         {
             MPID_BEGIN_ERROR_CHECKS;
             {
-                int idx;
-                mpi_errno = MPIR_GroupCheckVCRSubset( group_ptr, vcr_size, vcr, &idx );
+                mpi_errno = MPIR_GroupCheckVCRSubset( group_ptr, vcr_size, vcr );
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             }
             MPID_END_ERROR_CHECKS;

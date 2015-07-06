@@ -1114,7 +1114,7 @@ extern MPID_Group * const MPID_Group_empty;
      do { MPIU_Object_release_ref( _group, _inuse ); } while (0)
 
 void MPIR_Group_setup_lpid_list( MPID_Group * );
-int MPIR_GroupCheckVCRSubset( MPID_Group *group_ptr, int vsize, MPID_VCR *vcr, int *idx );
+int MPIR_GroupCheckVCRSubset( MPID_Group *group_ptr, int vsize, MPID_VCR *vcr );
 
 /* ------------------------------------------------------------------------- */
 
