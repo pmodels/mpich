@@ -406,7 +406,7 @@ int MTestGetIntracommGeneral( MPI_Comm *comm, int min_size, int allowSmaller )
         ranges[0][2] = 1;
 
         if (allowSmaller && (size+1)/2 >= min_size) {
-            MPI_Comm_group( MPI_COMM_WORLD, &world_group);
+            MPI_Comm_group(MPI_COMM_WORLD, &world_group);
             merr = MPI_Group_range_incl(world_group, 1, ranges, &high_group);
             if (merr) MTestPrintError(merr);
             merr = MPI_Comm_create(MPI_COMM_WORLD, high_group, comm);
@@ -835,6 +835,117 @@ int MTestGetIntercomm( MPI_Comm *comm, int *isLeftGroup, int min_size )
 
     return interCommIdx;
 }
+
+int MTestTestIntercomm(MPI_Comm comm)
+{
+    int local_size, remote_size, rank, **bufs, *bufmem, rbuf[2], j;
+    int errs = 0, wrank, nsize;
+    char commname[MPI_MAX_OBJECT_NAME+1];
+    MPI_Request *reqs;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
+    MPI_Comm_size(comm, &local_size);
+    MPI_Comm_remote_size(comm, &remote_size);
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_get_name(comm, commname, &nsize);
+
+    MTestPrintfMsg(1, "Testing communication on intercomm '%s', remote_size=%d\n",
+                    commname, remote_size);
+
+    reqs = (MPI_Request *)malloc(remote_size * sizeof(MPI_Request));
+    if (!reqs) {
+        printf("[%d] Unable to allocated %d requests for testing intercomm %s\n",
+            wrank, remote_size, commname);
+        errs++;
+        return errs;
+    }
+    bufs = (int **) malloc(remote_size * sizeof(int *));
+    if (!bufs) {
+        printf("[%d] Unable to allocated %d int pointers for testing intercomm %s\n",
+            wrank, remote_size, commname);
+        errs++;
+        return errs;
+    }
+    bufmem = (int *) malloc(remote_size * 2 * sizeof(int));
+    if (!bufmem) {
+        printf("[%d] Unable to allocated %d int data for testing intercomm %s\n",
+            wrank, 2*remote_size, commname);
+        errs++;
+        return errs;
+    }
+
+    /* Each process sends a message containing its own rank and the
+       rank of the destination with a nonblocking send.  Because we're using
+       nonblocking sends, we need to use different buffers for each isend */
+    /* NOTE: the send buffer access restriction was relaxed in MPI-2.2, although
+       it doesn't really hurt to keep separate buffers for our purposes */
+    for (j=0; j<remote_size; j++) {
+        bufs[j]    = &bufmem[2*j];
+        bufs[j][0] = rank;
+        bufs[j][1] = j;
+        MPI_Isend(bufs[j], 2, MPI_INT, j, 0, comm, &reqs[j]);
+    }
+    MTestPrintfMsg(2, "isends posted, about to recv\n");
+
+    for (j=0; j<remote_size; j++) {
+        MPI_Recv(rbuf, 2, MPI_INT, j, 0, comm, MPI_STATUS_IGNORE);
+        if (rbuf[0] != j) {
+            printf("[%d] Expected rank %d but saw %d in %s\n",
+                wrank, j, rbuf[0], commname);
+            errs++;:
+        }
+        if (rbuf[1] != rank) {
+            printf( "[%d] Expected target rank %d but saw %d from %d in %s\n",
+                wrank, rank, rbuf[1], j, commname );
+            errs++;
+        }
+    }
+    if (errs) fflush(stdout);
+
+    MTestPrintfMsg(2, "my recvs completed, about to waitall\n");
+    MPI_Waitall(remote_size, reqs, MPI_STATUSES_IGNORE);
+
+    free(reqs);
+    free(bufs);
+    free(bufmem);
+
+    return errs;
+}
+
+int MTestTestIntracomm(MPI_Comm comm)
+{
+    int i, errs = 0;
+    int size;
+    int in[16], out[16], sol[16];
+
+    MPI_Comm_size(comm, &size);
+
+    /* Set input, output and sol-values */
+    for(i = 0; i<16; i++) {
+        in[i] = i;
+        out[i] = 0;
+        sol[i] = i*size;
+    }
+    MPI_Allreduce(in, out, 16, MPI_INT, MPI_SUM, comm);
+
+    /* Test results */
+    for(i = 0; i<16; i++) {
+       if(sol[i] != out[i]) errs++;
+    }
+
+    return errs;
+}
+
+int MTestTestComm(MPI_Comm comm)
+{
+    int is_inter;
+    MPI_Comm_test_inter(comm, &is_inter);
+    if (is_inter)
+        return MTestTestIntercomm(comm);
+    else
+        return MTestTestIntracomm(comm);
+}
+
 /* Return the name of an intercommunicator */
 const char *MTestGetIntercommName( void )
 {
