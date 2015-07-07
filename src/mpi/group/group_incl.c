@@ -49,7 +49,6 @@ int MPIR_Group_incl_impl(MPID_Group *group_ptr, int n, const int ranks[], MPID_G
     
     (*new_group_ptr)->rank = MPI_UNDEFINED;
     for (i = 0; i < n; i++) {
-        (*new_group_ptr)->lrank_to_lpid[i].lrank = i;
         (*new_group_ptr)->lrank_to_lpid[i].lpid = group_ptr->lrank_to_lpid[ranks[i]].lpid;
         if (ranks[i] == group_ptr->rank)
             (*new_group_ptr)->rank = i;

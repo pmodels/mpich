@@ -91,7 +91,6 @@ int MPIR_Group_range_excl_impl(MPID_Group *group_ptr, int n, int ranges[][3], MP
     k = 0;
     for (i = 0; i < size; i++) {
         if (!group_ptr->lrank_to_lpid[i].flag) {
-            (*new_group_ptr)->lrank_to_lpid[k].lrank = k;
             (*new_group_ptr)->lrank_to_lpid[k].lpid = group_ptr->lrank_to_lpid[i].lpid;
             if (group_ptr->rank == i) {
                 (*new_group_ptr)->rank = k;

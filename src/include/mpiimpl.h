@@ -1030,7 +1030,6 @@ typedef struct MPID_Attribute {
 /* This structure is used to implement the group operations such as 
    MPI_Group_translate_ranks */
 typedef struct MPID_Group_pmap_t {
-    int          lrank;     /* Local rank in group (between 0 and size-1) */
     int          lpid;      /* local process id, from VCONN */
     int          next_lpid; /* Index of next lpid (in lpid order) */
     int          flag;      /* marker, used to implement group operations */

@@ -82,7 +82,6 @@ int MPIR_Group_intersection_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2,
     for (i = 0; i < size1; i++) {
         if (group_ptr1->lrank_to_lpid[i].flag) {
             int lpid = group_ptr1->lrank_to_lpid[i].lpid;
-            (*new_group_ptr)->lrank_to_lpid[k].lrank = k;
             (*new_group_ptr)->lrank_to_lpid[k].lpid = lpid;
             if (i == group_ptr1->rank)
                 (*new_group_ptr)->rank = k;

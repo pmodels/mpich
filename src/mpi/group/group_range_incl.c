@@ -65,7 +65,6 @@ int MPIR_Group_range_incl_impl(MPID_Group *group_ptr, int n, int ranges[][3], MP
         first = ranges[i][0]; last = ranges[i][1]; stride = ranges[i][2];
         if (stride > 0) {
             for (j=first; j<=last; j += stride) {
-                (*new_group_ptr)->lrank_to_lpid[k].lrank = k;
                 (*new_group_ptr)->lrank_to_lpid[k].lpid = 
                     group_ptr->lrank_to_lpid[j].lpid;
                 if (j == group_ptr->rank) 
@@ -75,7 +74,6 @@ int MPIR_Group_range_incl_impl(MPID_Group *group_ptr, int n, int ranges[][3], MP
         }
         else {
             for (j=first; j>=last; j += stride) {
-                (*new_group_ptr)->lrank_to_lpid[k].lrank = k;
                 (*new_group_ptr)->lrank_to_lpid[k].lpid = 
                     group_ptr->lrank_to_lpid[j].lpid;
                 if (j == group_ptr->rank) 

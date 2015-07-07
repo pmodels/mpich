@@ -390,7 +390,6 @@ int MPIR_GroupCheckVCRSubset( MPID_Group *group_ptr, int vsize, MPID_VCR *vcr )
     /* Initialize the vmap */
     for (i=0; i<vsize; i++) {
 	MPID_VCR_Get_lpid( vcr[i], &vmap[i].lpid );
-	vmap[i].lrank     = i;
 	vmap[i].next_lpid = 0;
 	vmap[i].flag      = 0;
     }

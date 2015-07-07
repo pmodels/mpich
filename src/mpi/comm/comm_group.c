@@ -56,7 +56,6 @@ int MPIR_Comm_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr)
         (*group_ptr)->is_local_dense_monotonic = TRUE;
 	for (i=0; i<n; i++) {
 	    (void) MPID_VCR_Get_lpid( local_vcr[i], &lpid );
-	    (*group_ptr)->lrank_to_lpid[i].lrank = i;
 	    (*group_ptr)->lrank_to_lpid[i].lpid  = lpid;
             if (lpid > comm_world_size ||
                 (i > 0 && (*group_ptr)->lrank_to_lpid[i-1].lpid != (lpid-1)))

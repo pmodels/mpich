@@ -44,7 +44,6 @@ int MPIR_Comm_remote_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr)
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         for (i=0; i<n; i++) {
-            (*group_ptr)->lrank_to_lpid[i].lrank = i;
             (void) MPID_VCR_Get_lpid( comm_ptr->vcr[i], &lpid );
             (*group_ptr)->lrank_to_lpid[i].lpid  = lpid;
             /* TODO calculate is_local_dense_monotonic */

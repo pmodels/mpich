@@ -106,7 +106,6 @@ int MPIR_Group_union_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, MPID_G
     /* Add group1 */
     size1 = group_ptr1->size;
     for (i = 0; i < size1; i++) {
-        (*new_group_ptr)->lrank_to_lpid[i].lrank = i;
         (*new_group_ptr)->lrank_to_lpid[i].lpid  = 
             group_ptr1->lrank_to_lpid[i].lpid;
     }
@@ -123,7 +122,6 @@ int MPIR_Group_union_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, MPID_G
     k = size1;
     for (i = 0; i < size2; i++) {
         if (group_ptr2->lrank_to_lpid[i].flag) {
-            (*new_group_ptr)->lrank_to_lpid[k].lrank = k;
             (*new_group_ptr)->lrank_to_lpid[k].lpid = group_ptr2->lrank_to_lpid[i].lpid;
             if ((*new_group_ptr)->rank == MPI_UNDEFINED &&
                 group_ptr2->lrank_to_lpid[i].lpid == mylpid)

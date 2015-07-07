@@ -96,7 +96,7 @@ int MPIR_Group_translate_ranks_impl(MPID_Group *gp1, int n, const int ranks1[],
                         l2_pid = -1;
                 }
                 if (l1_pid == l2_pid)
-                    ranks2[i] = gp2->lrank_to_lpid[g2_idx].lrank;
+                    ranks2[i] = g2_idx;
             }
         }
     }

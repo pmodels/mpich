@@ -57,7 +57,6 @@ int MPIR_Group_excl_impl(MPID_Group *group_ptr, int n, const int ranks[], MPID_G
     newi = 0;
     for (i = 0; i < size; i++) {
         if (group_ptr->lrank_to_lpid[i].flag == 0) {
-            (*new_group_ptr)->lrank_to_lpid[newi].lrank = newi;
             (*new_group_ptr)->lrank_to_lpid[newi].lpid = group_ptr->lrank_to_lpid[i].lpid;
             if (group_ptr->rank == i)
                 (*new_group_ptr)->rank = newi;
