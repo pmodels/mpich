@@ -482,11 +482,6 @@ MPID_REQUEST_DECL
 #endif
 #endif
 
-
-/* Tell Intercomm create and friends that the GPID routines have been
-   implemented */
-#define HAVE_GPID_ROUTINES
-
 /* Tell initthread to prepare a private comm_world */
 #define MPID_NEEDS_ICOMM_WORLD
 
