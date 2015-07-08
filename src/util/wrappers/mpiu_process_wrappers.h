@@ -9,6 +9,16 @@
 #include "mpichconf.h"
 
 /* MPIU_PW_SCHED_YIELD() - Yield the processor to OS scheduler */
+/* On a typical Linux system (verified with kernels 3.2 and 3.5),
+ * usleep has a resolution of more than 1000 cycles. This makes
+ * it impractical if the desired sleeping period is shorter. On
+ * the other hand, sleep(0) returns immediately without going to
+ * the kernel. This means that there is no actual yielding, which
+ * is equivalent to doing nothing. Thus, usleep and sleep are not
+ * recommended as ways to yield the CPU, and sched_yield would be
+ * preferred if available.
+ * Note that nanosleep has the same shortcomings as usleep.*/
+
 #if defined(USE_SWITCHTOTHREAD_FOR_YIELD)
     #include <winsock2.h>
     #include <windows.h>
