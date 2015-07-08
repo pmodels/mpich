@@ -892,7 +892,7 @@ int MTestTestIntercomm(MPI_Comm comm)
         if (rbuf[0] != j) {
             printf("[%d] Expected rank %d but saw %d in %s\n",
                 wrank, j, rbuf[0], commname);
-            errs++;:
+            errs++;
         }
         if (rbuf[1] != rank) {
             printf( "[%d] Expected target rank %d but saw %d from %d in %s\n",
