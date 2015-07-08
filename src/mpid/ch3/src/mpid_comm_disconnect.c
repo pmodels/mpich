@@ -34,23 +34,6 @@ int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
         MPIU_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
     }
 
-    /* Before releasing the communicator, we need to ensure that all VCs are
-       in a stable state.  In particular, if a VC is still in the process of
-       connecting, complete the connection before tearing it down */
-    /* FIXME: How can we get to a state where we are still connecting a VC but
-       the MPIR_Comm_release will find that the ref count decrements to zero 
-       (it may be that some operation fails to increase/decrease the reference 
-       count.  A patch could be to increment the reference count while 
-       connecting, then decrement it.  But the increment in the reference 
-       count should come 
-       from the step that caused the connection steps to be initiated.  
-       Possibility: if the send queue is not empty, the ref count should
-       be higher.  */
-    /* FIXME: This doesn't work yet */
-    /*
-    mpi_errno = MPIDI_CH3U_Comm_FinishPending( comm_ptr );
-    */
-
     /* it's more than a comm_release, but ok for now */
     /* FIXME: Describe what more might be required */
     /* MPIU_PG_Printall( stdout ); */

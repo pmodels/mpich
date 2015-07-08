@@ -1122,10 +1122,6 @@ int MPIDI_CH3_Complete_Acceptq_dequeue(MPIDI_VC_t * vc);
   END MPI PORT SECTION 
   --------------------------*/
 
-/* part of mpid_vc.c, this routine completes any pending operations 
-   on a communicator */
-int MPIDI_CH3U_Comm_FinishPending( MPID_Comm * );
-
 #define MPIDI_MAX_KVS_VALUE_LEN    4096
 
 /* ------------------------------------------------------------------------- */
