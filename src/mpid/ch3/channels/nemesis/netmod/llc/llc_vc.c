@@ -131,9 +131,9 @@ static int llc_vc_init(MPIDI_VC_t * vc)
 
     {
         MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
-                       "MPID_NEM_VC_NETMOD_AREA_LEN = %d\n", MPID_NEM_VC_NETMOD_AREA_LEN);
+                       "MPIDI_NEM_VC_NETMOD_AREA_LEN = %d\n", MPIDI_NEM_VC_NETMOD_AREA_LEN);
         MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
-                       "MPID_NEM_REQ_NETMOD_AREA_LEN = %d", MPID_NEM_REQ_NETMOD_AREA_LEN);
+                       "MPIDI_NEM_REQ_NETMOD_AREA_LEN = %d", MPIDI_NEM_REQ_NETMOD_AREA_LEN);
         MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
                        "MPID_nem_llc_vc_area = %d\n", (int) sizeof(MPID_nem_llc_vc_area));
     }
