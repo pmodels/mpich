@@ -67,15 +67,15 @@ typedef unsigned long MPID_Seqnum_t;
 #include "mpichconf.h"
 
 #if CH3_RANK_BITS == 16
-typedef int16_t MPIR_Rank_t;
+typedef int16_t MPIDI_Rank_t;
 #elif CH3_RANK_BITS == 32
-typedef int32_t MPIR_Rank_t;
+typedef int32_t MPIDI_Rank_t;
 #endif /* CH3_RANK_BITS */
 
 /* Indicates that this device is topology aware and implements the
    MPID_Get_node_id function (and friends). */
 #define MPID_USE_NODE_IDS
-typedef MPIR_Rank_t MPID_Node_id_t;
+typedef MPIDI_Rank_t MPID_Node_id_t;
 
 
 /* provides "pre" typedefs and such for NBC scheduling mechanism */
@@ -105,7 +105,7 @@ typedef MPIR_Rank_t MPID_Node_id_t;
 */
 typedef struct MPIDI_Message_match_parts {
     int32_t tag;
-    MPIR_Rank_t rank;
+    MPIDI_Rank_t rank;
     MPIR_Context_id_t context_id;
 } MPIDI_Message_match_parts_t;
 typedef union {

@@ -27,7 +27,7 @@ static int split_type(MPID_Comm * comm_ptr, int stype, int key,
                       MPID_Info *info_ptr, MPID_Comm ** newcomm_ptr)
 {
     MPID_Node_id_t id;
-    MPIR_Rank_t nid;
+    MPIDI_Rank_t nid;
     int mpi_errno = MPI_SUCCESS;
 
     if (MPIDI_CH3I_Shm_supported()) {
