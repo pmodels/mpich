@@ -837,12 +837,6 @@ typedef enum MPIDI_VC_Event
 }
 MPIDI_VC_Event_t;
 
-#ifndef HAVE_MPIDI_VCRT
-#define HAVE_MPIDI_VCRT
-typedef struct MPIDI_VCRT * MPID_VCRT;
-typedef struct MPIDI_VC * MPID_VCR;
-#endif
-
 /* number of VCs that are in MORIBUND state */
 extern int MPIDI_Failed_vc_count;
 
