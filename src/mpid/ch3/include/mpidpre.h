@@ -489,7 +489,4 @@ MPID_REQUEST_DECL
    ADI */
 #define USE_MPID_RMA_TABLE
 
-int MPIDI_RMA_init(void);
-void MPIDI_RMA_finalize(void);
-
 #endif /* !defined(MPICH_MPIDPRE_H_INCLUDED) */

@@ -1128,6 +1128,9 @@ int MPIDI_CH3_Complete_Acceptq_dequeue(MPIDI_VC_t * vc);
 /* mpirma.h (in src/mpi/rma?) */
 /* ------------------------------------------------------------------------- */
 
+int MPIDI_RMA_init(void);
+void MPIDI_RMA_finalize(void);
+
 /* The Win_fns table contains pointers to the channel's implementation of the
  * RMA window creation routines.  The channel must provide the init function,
  * which can optionally override any defaults already set by CH3.
