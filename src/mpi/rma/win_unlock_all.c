@@ -100,7 +100,7 @@ int MPI_Win_unlock_all(MPI_Win win)
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPIU_RMA_CALL(win_ptr,Win_unlock_all(win_ptr));
+    mpi_errno = MPIR_RMA_CALL(win_ptr,Win_unlock_all(win_ptr));
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

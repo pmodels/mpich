@@ -97,7 +97,7 @@ int MPI_Win_sync(MPI_Win win)
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPIU_RMA_CALL(win_ptr,Win_sync(win_ptr));
+    mpi_errno = MPIR_RMA_CALL(win_ptr,Win_sync(win_ptr));
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

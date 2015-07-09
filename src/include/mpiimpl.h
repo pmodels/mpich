@@ -1601,11 +1601,11 @@ MPID_Progress_state;
 /* We need to export this header file (at least the struct) to the
    device, so that it can implement the init routine. */
 #ifdef USE_MPID_RMA_TABLE
-#define MPIU_RMA_CALL(winptr,funccall) (winptr)->RMAFns.funccall
+#define MPIR_RMA_CALL(winptr,funccall) (winptr)->RMAFns.funccall
 
 #else
 /* Just use the MPID_<fcn> version of the function */
-#define MPIU_RMA_CALL(winptr,funccall) MPID_##funccall
+#define MPIR_RMA_CALL(winptr,funccall) MPID_##funccall
 
 #endif /* USE_MPID_RMA_TABLE */
 

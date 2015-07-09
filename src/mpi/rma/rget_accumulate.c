@@ -186,7 +186,7 @@ int MPI_Rget_accumulate(const void *origin_addr, int origin_count,
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPIU_RMA_CALL(win_ptr,Rget_accumulate(origin_addr, origin_count, 
+    mpi_errno = MPIR_RMA_CALL(win_ptr,Rget_accumulate(origin_addr, origin_count,
                                          origin_datatype,
                                          result_addr, result_count,
                                          result_datatype,

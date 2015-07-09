@@ -154,7 +154,7 @@ int MPI_Rget(void *origin_addr, int origin_count, MPI_Datatype
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPIU_RMA_CALL(win_ptr,
+    mpi_errno = MPIR_RMA_CALL(win_ptr,
                               Rget(origin_addr, origin_count, origin_datatype,
                                   target_rank, target_disp, target_count,
                                   target_datatype, win_ptr, &request_ptr));

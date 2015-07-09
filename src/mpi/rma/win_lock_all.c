@@ -130,7 +130,7 @@ int MPI_Win_lock_all(int assert, MPI_Win win)
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPIU_RMA_CALL(win_ptr,
+    mpi_errno = MPIR_RMA_CALL(win_ptr,
                               Win_lock_all(assert, win_ptr));
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 

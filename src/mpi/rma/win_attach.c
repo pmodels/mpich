@@ -120,7 +120,7 @@ int MPI_Win_attach(MPI_Win win, void *base, MPI_Aint size)
    
     if (size == 0) goto fn_exit;
 
-    mpi_errno = MPIU_RMA_CALL(win_ptr,
+    mpi_errno = MPIR_RMA_CALL(win_ptr,
                               Win_attach(win_ptr, base, size));
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
