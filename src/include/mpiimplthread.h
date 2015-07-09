@@ -136,9 +136,6 @@ typedef struct MPID_Stateinfo_t {
     int count;
 } MPID_Stateinfo_t;
 #define MPICH_MAX_STATES 512
-/* Timer state routines (src/util/instrm/states.c) */
-void MPID_TimerStateBegin( int, MPID_Time_t * );
-void MPID_TimerStateEnd( int, MPID_Time_t * );
 
 /* arbitrary, just needed to avoid cleaning up heap allocated memory at thread
  * destruction time */

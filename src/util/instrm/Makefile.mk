@@ -6,6 +6,5 @@
 ##
 
 mpi_core_sources += \
-    src/util/instrm/states.c      \
     src/util/instrm/instr.c
 
