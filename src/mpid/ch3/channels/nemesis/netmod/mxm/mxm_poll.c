@@ -20,7 +20,7 @@ static int _mxm_process_rdtype(MPID_Request ** rreq_p, MPI_Datatype datatype,
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_poll
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_mxm_poll(int in_blocking_progress)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -67,7 +67,7 @@ static int _mxm_poll(void)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_get_adi_msg
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 void MPID_nem_mxm_get_adi_msg(mxm_conn_h conn, mxm_imm_t imm, void *data,
                               size_t length, size_t offset, int last)
 {
@@ -87,7 +87,7 @@ void MPID_nem_mxm_get_adi_msg(mxm_conn_h conn, mxm_imm_t imm, void *data,
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_anysource_posted
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 void MPID_nem_mxm_anysource_posted(MPID_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -109,7 +109,7 @@ void MPID_nem_mxm_anysource_posted(MPID_Request * req)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_anysource_matched
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_mxm_anysource_matched(MPID_Request * req)
 {
     mxm_error_t ret = MXM_OK;
@@ -147,7 +147,7 @@ int MPID_nem_mxm_anysource_matched(MPID_Request * req)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_recv
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;

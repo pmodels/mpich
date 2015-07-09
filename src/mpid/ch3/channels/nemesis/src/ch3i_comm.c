@@ -19,7 +19,7 @@ UT_array *coll_fns_array = NULL;
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_comm_create
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_comm_create(MPID_Comm *comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -85,7 +85,7 @@ int MPIDI_CH3I_comm_create(MPID_Comm *comm, void *param)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_comm_destroy
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_comm_destroy(MPID_Comm *comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -123,7 +123,7 @@ int MPIDI_CH3I_comm_destroy(MPID_Comm *comm, void *param)
 #undef FUNCNAME
 #define FUNCNAME alloc_barrier_vars
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int alloc_barrier_vars (MPID_Comm *comm, MPID_nem_barrier_vars_t **vars)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -160,7 +160,7 @@ static int alloc_barrier_vars (MPID_Comm *comm, MPID_nem_barrier_vars_t **vars)
 #undef FUNCNAME
 #define FUNCNAME barrier
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int barrier(MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -230,7 +230,7 @@ static int barrier(MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_barrier_vars_init
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -276,7 +276,7 @@ static int nem_coll_finalize(void *param ATTRIBUTE((unused)))
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_coll_init
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_coll_init(void)
 {
     int mpi_errno = MPI_SUCCESS;

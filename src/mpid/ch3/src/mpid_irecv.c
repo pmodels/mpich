@@ -9,7 +9,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Irecv
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
 	       MPID_Comm * comm, int context_offset,
                MPID_Request ** request)

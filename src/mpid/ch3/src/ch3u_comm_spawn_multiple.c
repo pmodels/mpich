@@ -33,7 +33,7 @@
 #undef FUNCNAME
 #define FUNCNAME mpi_to_pmi_keyvals
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int  mpi_to_pmi_keyvals( MPID_Info *info_ptr, PMI_keyval_t **kv_ptr, 
 				int *nkeys_ptr )
 {
@@ -101,7 +101,7 @@ static void free_pmi_keyvals(PMI_keyval_t **kv, int size, int *counts)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Comm_spawn_multiple
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_Comm_spawn_multiple(int count, char **commands,
                                   char ***argvs, const int *maxprocs,
                                   MPID_Info **info_ptrs, int root,
@@ -324,7 +324,7 @@ static char *parent_port_name = 0;    /* Name of parent port if this
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_GetParentPort
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3_GetParentPort(char ** parent_port)
 {
     int mpi_errno = MPI_SUCCESS;

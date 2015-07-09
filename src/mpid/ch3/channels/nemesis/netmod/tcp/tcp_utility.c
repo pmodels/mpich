@@ -14,7 +14,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_get_conninfo
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_get_conninfo (struct MPIDI_VC *vc, struct sockaddr_in *addr, char **pg_id, int *pg_rank)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -32,7 +32,7 @@ int MPID_nem_tcp_get_conninfo (struct MPIDI_VC *vc, struct sockaddr_in *addr, ch
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_get_vc_from_conninfo
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_get_vc_from_conninfo (char *pg_id, int pg_rank, struct MPIDI_VC **vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -61,7 +61,7 @@ int MPID_nem_tcp_get_vc_from_conninfo (char *pg_id, int pg_rank, struct MPIDI_VC
 #undef FUNCNAME
 #define FUNCNAME set_sockopts
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_set_sockopts (int fd)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -139,7 +139,7 @@ actually done now in this function.
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_check_sock_status
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 MPID_NEM_TCP_SOCK_STATUS_t 
 MPID_nem_tcp_check_sock_status(const struct pollfd *const plfd)
 {
@@ -174,7 +174,7 @@ MPID_nem_tcp_check_sock_status(const struct pollfd *const plfd)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_is_sock_connected
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_is_sock_connected(int fd)
 {
     int rc = FALSE;
@@ -205,7 +205,7 @@ int MPID_nem_tcp_is_sock_connected(int fd)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_dbg_print_all_sendq
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 void MPID_nem_tcp_vc_dbg_print_sendq(FILE *stream, MPIDI_VC_t *vc)
 {
     int i;

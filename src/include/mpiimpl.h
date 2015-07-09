@@ -139,13 +139,6 @@ int usleep(useconds_t usec);
 /* Include some basic (and easily shared) definitions */
 #include "mpibase.h"
 
-/* FIXME: The code base should not define two of these */
-/* This is used to quote a name in a definition (see FUNCNAME/FCNAME below) */
-#ifndef MPIDI_QUOTE
-#define MPIDI_QUOTE(A) MPIDI_QUOTE2(A)
-#define MPIDI_QUOTE2(A) #A
-#endif
-
 /* 
    Include the implementation definitions (e.g., error reporting, thread
    portability)

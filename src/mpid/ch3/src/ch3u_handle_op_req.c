@@ -13,7 +13,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_ReqHandler_ReqOpsComplete
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_ReqOpsComplete(MPIDI_VC_t * vc, MPID_Request * sreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;

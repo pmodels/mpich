@@ -19,7 +19,7 @@
 #undef FUNCNAME
 #define FUNCNAME immed_copy
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int immed_copy(void *src, void *dest, size_t len)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -62,7 +62,7 @@ static inline int immed_copy(void *src, void *dest, size_t len)
 #undef FUNCNAME
 #define FUNCNAME fill_in_derived_dtp_info
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline void fill_in_derived_dtp_info(MPIDI_RMA_dtype_info * dtype_info, void *dataloop,
                                             MPID_Datatype * dtp)
 {
@@ -98,7 +98,7 @@ static inline void fill_in_derived_dtp_info(MPIDI_RMA_dtype_info * dtype_info, v
 #undef FUNCNAME
 #define FUNCNAME init_accum_ext_pkt
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int init_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
                               MPID_Datatype * target_dtp, MPIDI_msg_sz_t stream_offset,
                               void **ext_hdr_ptr, MPI_Aint * ext_hdr_sz)
@@ -181,7 +181,7 @@ static int init_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
 #undef FUNCNAME
 #define FUNCNAME init_get_accum_ext_pkt
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int init_get_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
                                   MPID_Datatype * target_dtp, MPIDI_msg_sz_t stream_offset,
                                   void **ext_hdr_ptr, MPI_Aint * ext_hdr_sz)
@@ -214,7 +214,7 @@ static int init_get_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
 #undef FUNCNAME
 #define FUNCNAME issue_from_origin_buffer
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
                                     void *ext_hdr_ptr, MPI_Aint ext_hdr_sz,
                                     MPIDI_msg_sz_t stream_offset, MPIDI_msg_sz_t stream_size,
@@ -390,7 +390,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
 #undef FUNCNAME
 #define FUNCNAME issue_put_op
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
                         MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
@@ -473,7 +473,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 #undef FUNCNAME
 #define FUNCNAME issue_acc_op
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
                         MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
@@ -640,7 +640,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 #undef FUNCNAME
 #define FUNCNAME issue_get_acc_op
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
                             MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
@@ -894,7 +894,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 #undef FUNCNAME
 #define FUNCNAME issue_get_op
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
                         MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
@@ -1022,7 +1022,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 #undef FUNCNAME
 #define FUNCNAME issue_cas_op
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
                         MPID_Win * win_ptr, MPIDI_RMA_Target_t * target_ptr,
                         MPIDI_CH3_Pkt_flags_t flags)
@@ -1086,7 +1086,7 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
 #undef FUNCNAME
 #define FUNCNAME issue_fop_op
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
                         MPID_Win * win_ptr, MPIDI_RMA_Target_t * target_ptr,
                         MPIDI_CH3_Pkt_flags_t flags)
@@ -1186,7 +1186,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
 #undef FUNCNAME
 #define FUNCNAME issue_rma_op
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPID_Win * win_ptr,
                                MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
@@ -1237,7 +1237,7 @@ static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPID_Win * win_ptr,
 #undef FUNCNAME
 #define FUNCNAME set_user_req_after_issuing_op
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int set_user_req_after_issuing_op(MPIDI_RMA_Op_t * op)
 {
     int i, incomplete_req_cnt = 0;

@@ -30,7 +30,7 @@ int MPI_Errhandler_set(MPI_Comm comm, MPI_Errhandler errhandler) __attribute__((
 #undef FUNCNAME
 #define FUNCNAME MPI_Errhandler_set
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
   MPI_Errhandler_set - Sets the error handler for a communicator
 

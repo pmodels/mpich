@@ -129,7 +129,7 @@ int MPI_Info_set( MPI_Info info, const char *key, const char *value )
 #undef FUNCNAME
 #define FUNCNAME MPIR_Info_set_impl
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Info_set_impl(MPID_Info *info_ptr, const char *key, const char *value)
 {
     int mpi_errno = MPI_SUCCESS;

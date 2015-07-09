@@ -44,7 +44,7 @@ int MPID_nem_llc_my_llc_rank;
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_kvs_put_binary
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_llc_kvs_put_binary(int from, const char *postfix, const uint8_t * buf, int length)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -80,7 +80,7 @@ int MPID_nem_llc_kvs_put_binary(int from, const char *postfix, const uint8_t * b
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_kvs_get_binary
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_llc_kvs_get_binary(int from, const char *postfix, char *buf, int length)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -121,7 +121,7 @@ int MPID_nem_llc_kvs_get_binary(int from, const char *postfix, char *buf, int le
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_init
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_llc_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno, llc_errno;
@@ -164,7 +164,7 @@ int MPID_nem_llc_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_get_business_card
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_llc_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -182,7 +182,7 @@ int MPID_nem_llc_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_connect_to_root
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_llc_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -226,7 +226,7 @@ int MPID_nem_llc_anysource_improbe(int tag, MPID_Comm * comm, int context_offset
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_get_ordering
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_llc_get_ordering(int *ordering)
 {
     (*ordering) = 1;

@@ -599,7 +599,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIR_Grequest_waitall
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Grequest_waitall(int count, MPID_Request * const * request_ptrs)
 {
     void ** state_ptrs;

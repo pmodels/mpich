@@ -206,7 +206,7 @@ extern MPIDI_SHM_Wins_list_t shm_wins_list;
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_SHM_Wins_append
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_SHM_Wins_append(MPIDI_SHM_Wins_list_t * list, MPID_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -238,7 +238,7 @@ static inline int MPIDI_CH3I_SHM_Wins_append(MPIDI_SHM_Wins_list_t * list, MPID_
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_SHM_Wins_unlink
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline void MPIDI_CH3I_SHM_Wins_unlink(MPIDI_SHM_Wins_list_t * list, MPID_Win * shm_win)
 {
     MPIDI_SHM_Win_t *elem = NULL;

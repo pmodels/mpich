@@ -31,7 +31,7 @@ MPIU_Object_alloc_t MPID_Request_mem = {
 #undef FUNCNAME
 #define FUNCNAME MPID_Request_create
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 MPID_Request * MPID_Request_create(void)
 {
     MPID_Request * req;
@@ -117,7 +117,7 @@ MPID_Request * MPID_Request_create(void)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Request_destroy
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 void MPIDI_CH3_Request_destroy(MPID_Request * req)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQUEST_DESTROY);
@@ -200,7 +200,7 @@ void MPIDI_CH3_Request_destroy(MPID_Request * req)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Request_load_send_iov
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Request_load_send_iov(MPID_Request * const sreq, 
 				     MPID_IOV * const iov, int * const iov_n)
 {
@@ -312,7 +312,7 @@ int MPIDI_CH3U_Request_load_send_iov(MPID_Request * const sreq,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Request_load_recv_iov
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Request_load_recv_iov(MPID_Request * const rreq)
 {
     MPI_Aint last;
@@ -521,7 +521,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPID_Request * const rreq)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Request_unpack_srbuf
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Request_unpack_srbuf(MPID_Request * rreq)
 {
     MPI_Aint last;
@@ -598,7 +598,7 @@ int MPIDI_CH3U_Request_unpack_srbuf(MPID_Request * rreq)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Request_unpack_uebuf
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Request_unpack_uebuf(MPID_Request * rreq)
 {
     int dt_contig;

@@ -37,7 +37,7 @@ cvars:
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Put
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
                    origin_datatype, int target_rank, MPI_Aint target_disp,
                    int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
@@ -216,7 +216,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Get
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
                    origin_datatype, int target_rank, MPI_Aint target_disp,
                    int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
@@ -388,7 +388,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Accumulate
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
                           origin_datatype, int target_rank, MPI_Aint target_disp,
                           int target_count, MPI_Datatype target_datatype, MPI_Op op,
@@ -601,7 +601,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Get_accumulate
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                               MPI_Datatype origin_datatype, void *result_addr, int result_count,
                               MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
@@ -855,7 +855,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Put
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
               origin_datatype, int target_rank, MPI_Aint target_disp,
               int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr)
@@ -882,7 +882,7 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Get
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
               origin_datatype, int target_rank, MPI_Aint target_disp,
               int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr)
@@ -909,7 +909,7 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Accumulate
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
                      origin_datatype, int target_rank, MPI_Aint target_disp,
                      int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win * win_ptr)
@@ -936,7 +936,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Get_accumulate
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
                          MPI_Datatype origin_datatype, void *result_addr, int result_count,
                          MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
@@ -967,7 +967,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Compare_and_swap
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
                            void *result_addr, MPI_Datatype datatype, int target_rank,
                            MPI_Aint target_disp, MPID_Win * win_ptr)
@@ -1106,7 +1106,7 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Fetch_and_op
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
                        MPI_Datatype datatype, int target_rank,
                        MPI_Aint target_disp, MPI_Op op, MPID_Win * win_ptr)

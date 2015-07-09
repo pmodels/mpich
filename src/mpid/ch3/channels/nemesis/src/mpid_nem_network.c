@@ -36,7 +36,7 @@ MPID_nem_net_module_vc_dbg_print_sendq_t  MPID_nem_net_module_vc_dbg_print_sendq
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_choose_netmod
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_choose_netmod(void)
 {
     int mpi_errno = MPI_SUCCESS;

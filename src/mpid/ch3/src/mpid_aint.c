@@ -19,7 +19,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Aint_add
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp)
 {
     MPI_Aint result;
@@ -46,7 +46,7 @@ MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp)
 #undef FUNCNAME
 #define FUNCNAME MPID_Aint_diff
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
 {
     MPI_Aint result;

@@ -20,7 +20,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_probe
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_llc_probe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, int context_offset,
                        MPI_Status * status)
 {
@@ -41,7 +41,7 @@ int MPID_nem_llc_probe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, i
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_iprobe
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_llc_iprobe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, int context_offset,
                         int *flag, MPI_Status * status)
 {
@@ -111,7 +111,7 @@ int MPID_nem_llc_iprobe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_improbe
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_llc_improbe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, int context_offset,
                          int *flag, MPID_Request ** message, MPI_Status * status)
 {

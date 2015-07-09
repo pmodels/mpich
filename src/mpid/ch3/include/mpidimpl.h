@@ -1065,8 +1065,8 @@ extern char *MPIDI_DBG_parent_str;
 #endif
 
 /* This is used to quote a name in a definition (see FUNCNAME/FCNAME below) */
-#define MPIDI_QUOTE(A) MPIDI_QUOTE2(A)
-#define MPIDI_QUOTE2(A) #A
+#define MPIU_QUOTE(A) MPIU_QUOTE2(A)
+#define MPIU_QUOTE2(A) #A
 
 #ifdef MPICH_DBG_OUTPUT
     void MPIDI_DBG_Print_packet(MPIDI_CH3_Pkt_t *pkt);

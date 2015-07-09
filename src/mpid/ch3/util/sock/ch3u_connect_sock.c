@@ -93,7 +93,7 @@ extern MPIDU_Sock_set_t MPIDI_CH3I_sock_set;
 #undef FUNCNAME
 #define FUNCNAME MPIDU_CH3I_SetupListener
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_CH3I_SetupListener( MPIDU_Sock_set_t sock_set )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -127,7 +127,7 @@ int MPIDU_CH3I_SetupListener( MPIDU_Sock_set_t sock_set )
 #undef FUNCNAME
 #define FUNCNAME MPIDU_CH3I_ShutdownListener
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_CH3I_ShutdownListener( void )
 {
     int mpi_errno;
@@ -158,7 +158,7 @@ int MPIDU_CH3I_ShutdownListener( void )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Connection_alloc
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Connection_alloc(MPIDI_CH3I_Connection_t ** connp)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -204,7 +204,7 @@ int MPIDI_CH3I_Connection_alloc(MPIDI_CH3I_Connection_t ** connp)
 #undef FUNCNAME
 #define FUNCNAME  MPIDI_CH3I_Connect_to_root_sock
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Connect_to_root_sock(const char * port_name, 
 				    MPIDI_VC_t ** new_vc)
 {
@@ -331,7 +331,7 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_get_conninfo_from_bc
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_get_conninfo_from_bc( const char *bc, 
 				     char *host_description, int maxlen,
 				     int *port, MPIDU_Sock_ifaddr_t *ifaddr, 
@@ -427,7 +427,7 @@ int MPIDU_Sock_get_conninfo_from_bc( const char *bc,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Get_business_card_sock
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Get_business_card_sock(int myRank, 
 				      char **bc_val_p, int *val_max_sz_p)
 {
@@ -539,7 +539,7 @@ static void connection_destroy(MPIDI_CH3I_Connection_t * conn);
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Sockconn_handle_accept_event
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3_Sockconn_handle_accept_event( void )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -580,7 +580,7 @@ int MPIDI_CH3_Sockconn_handle_accept_event( void )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Sockconn_handle_connect_event
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3_Sockconn_handle_connect_event( MPIDI_CH3I_Connection_t *conn, 
 					     int event_error )
 {
@@ -646,7 +646,7 @@ int MPIDI_CH3_Sockconn_handle_connect_event( MPIDI_CH3I_Connection_t *conn,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Sockconn_handle_close_event
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3_Sockconn_handle_close_event( MPIDI_CH3I_Connection_t * conn )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -723,7 +723,7 @@ int MPIDI_CH3_Sockconn_handle_close_event( MPIDI_CH3I_Connection_t * conn )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Sockconn_handle_conn_event
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3_Sockconn_handle_conn_event( MPIDI_CH3I_Connection_t * conn )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -875,7 +875,7 @@ int MPIDI_CH3_Sockconn_handle_conn_event( MPIDI_CH3I_Connection_t * conn )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Sockconn_handle_connopen_event
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3_Sockconn_handle_connopen_event( MPIDI_CH3I_Connection_t * conn )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1009,7 +1009,7 @@ int MPIDI_CH3_Sockconn_handle_connopen_event( MPIDI_CH3I_Connection_t * conn )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Sockconn_handle_connwrite
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3_Sockconn_handle_connwrite( MPIDI_CH3I_Connection_t * conn )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1084,7 +1084,7 @@ int MPIDI_CH3_Sockconn_handle_connwrite( MPIDI_CH3I_Connection_t * conn )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_VC_post_sockconnect
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_VC_post_sockconnect(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1154,7 +1154,7 @@ int MPIDI_CH3I_VC_post_sockconnect(MPIDI_VC_t * vc)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Sock_connect
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Sock_connect( MPIDI_VC_t *vc, const char val[], int vallen )
 {
     char host_description[MAX_HOST_DESCRIPTION_LEN];
@@ -1261,7 +1261,7 @@ int MPIDI_CH3I_Sock_connect( MPIDI_VC_t *vc, const char val[], int vallen )
 #undef FUNCNAME
 #define FUNCNAME connection_post_recv_pkt
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1284,7 +1284,7 @@ static int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn)
 #undef FUNCNAME
 #define FUNCNAME connection_post_send_pkt
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int connection_post_send_pkt(MPIDI_CH3I_Connection_t * conn)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1307,7 +1307,7 @@ static int connection_post_send_pkt(MPIDI_CH3I_Connection_t * conn)
 #undef FUNCNAME
 #define FUNCNAME connection_post_send_pkt_and_pgid
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int connection_post_send_pkt_and_pgid(MPIDI_CH3I_Connection_t * conn)
 {
     int mpi_errno;
@@ -1336,7 +1336,7 @@ static int connection_post_send_pkt_and_pgid(MPIDI_CH3I_Connection_t * conn)
 #undef FUNCNAME
 #define FUNCNAME connection_post_sendq_req
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int connection_post_sendq_req(MPIDI_CH3I_Connection_t * conn)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1372,7 +1372,7 @@ static int connection_post_sendq_req(MPIDI_CH3I_Connection_t * conn)
 #undef FUNCNAME
 #define FUNCNAME connection_destroy
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static void connection_destroy(MPIDI_CH3I_Connection_t * conn)
 {
     MPIDI_STATE_DECL(MPID_STATE_CONNECTION_DESTROY);

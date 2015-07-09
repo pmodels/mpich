@@ -330,7 +330,7 @@ Input Parameters:
 #undef FUNCNAME
 #define FUNCNAME MPIU_Handle_obj_alloc
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 void *MPIU_Handle_obj_alloc(MPIU_Object_alloc_t *objmem)
 {
     void *ret;
@@ -343,7 +343,7 @@ void *MPIU_Handle_obj_alloc(MPIU_Object_alloc_t *objmem)
 #undef FUNCNAME
 #define FUNCNAME MPIU_Handle_obj_alloc_unsafe
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 void *MPIU_Handle_obj_alloc_unsafe(MPIU_Object_alloc_t *objmem)
 {
     MPIU_Handle_common *ptr;

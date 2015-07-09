@@ -7,8 +7,8 @@
 #include "mpiimpl.h"
 #include "mpidu_sock.h"
 
-#define MPIDI_QUOTE(A) MPIDI_QUOTE2(A)
-#define MPIDI_QUOTE2(A) #A
+#define MPIU_QUOTE(A) MPIU_QUOTE2(A)
+#define MPIU_QUOTE2(A) #A
 
 #define SOCKI_TCP_BUFFER_SIZE       32*1024
 #define SOCKI_DESCRIPTION_LENGTH    256
@@ -123,7 +123,7 @@ static char *get_error_string(int error_code)
 #undef FUNCNAME
 #define FUNCNAME easy_create
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int easy_create_ranged(SOCKET *sock, int port, unsigned long addr)
 {
     int mpi_errno=MPI_SUCCESS;
@@ -232,7 +232,7 @@ static int easy_create_ranged(SOCKET *sock, int port, unsigned long addr)
 #undef FUNCNAME
 #define FUNCNAME easy_create
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int easy_create(SOCKET *sock, int port, unsigned long addr)
 {
     int mpi_errno;
@@ -369,7 +369,7 @@ static inline void init_state_struct(sock_state_t *p)
 #undef FUNCNAME
 #define FUNCNAME post_next_accept
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int post_next_accept(sock_state_t * context)
 {
     int mpi_errno;
@@ -408,7 +408,7 @@ static inline int post_next_accept(sock_state_t * context)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_init
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_init()
 {
     int mpi_errno;
@@ -489,7 +489,7 @@ int MPIDU_Sock_init()
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_finalize
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_finalize()
 {
     int mpi_errno;
@@ -711,7 +711,7 @@ int MPIDU_Sock_hostname_to_host_description(char *hostname, char *host_descripti
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_get_host_description
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_get_host_description(int myRank, 
 				    char * host_description, int len)
 {
@@ -763,7 +763,7 @@ int MPIDU_Sock_get_host_description(int myRank,
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_create_set
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_create_set(MPIDU_Sock_set_t * set)
 {
     int mpi_errno;
@@ -793,7 +793,7 @@ int MPIDU_Sock_create_set(MPIDU_Sock_set_t * set)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_destroy_set
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_destroy_set(MPIDU_Sock_set_t set)
 {
     int mpi_errno;
@@ -826,7 +826,7 @@ int MPIDU_Sock_destroy_set(MPIDU_Sock_set_t set)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_native_to_sock
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_native_to_sock(MPIDU_Sock_set_t set, MPIDU_SOCK_NATIVE_FD fd, void *user_ptr, MPIDU_Sock_t *sock_ptr)
 {
     int mpi_errno;
@@ -884,7 +884,7 @@ int MPIDU_Sock_native_to_sock(MPIDU_Sock_set_t set, MPIDU_SOCK_NATIVE_FD fd, voi
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_listen
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_listen(MPIDU_Sock_set_t set, void * user_ptr, int * port, MPIDU_Sock_t * sock)
 {
     int mpi_errno;
@@ -965,7 +965,7 @@ int MPIDU_Sock_listen(MPIDU_Sock_set_t set, void * user_ptr, int * port, MPIDU_S
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_accept
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_accept(MPIDU_Sock_t listener_sock, MPIDU_Sock_set_t set, void * user_ptr, MPIDU_Sock_t * sock)
 {
     int mpi_errno;
@@ -1122,7 +1122,7 @@ static unsigned int GetMask(char *pszMask)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_post_connect
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_post_connect(MPIDU_Sock_set_t set, void * user_ptr, char * host_description, int port, MPIDU_Sock_t * sock)
 {
     int mpi_errno;
@@ -1331,7 +1331,7 @@ int MPIDU_Sock_post_connect(MPIDU_Sock_set_t set, void * user_ptr, char * host_d
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_set_user_ptr
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_set_user_ptr(MPIDU_Sock_t sock, void * user_ptr)
 {
     int mpi_errno;
@@ -1358,7 +1358,7 @@ int MPIDU_Sock_set_user_ptr(MPIDU_Sock_t sock, void * user_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_post_close
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_post_close(MPIDU_Sock_t sock)
 {
     int mpi_errno;
@@ -1524,7 +1524,7 @@ int MPIDU_Sock_post_close(MPIDU_Sock_t sock)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_post_read
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_post_read(MPIDU_Sock_t sock, void * buf, MPIU_Size_t minbr, MPIU_Size_t maxbr,
                          MPIDU_Sock_progress_update_func_t fn)
 {
@@ -1543,7 +1543,7 @@ int MPIDU_Sock_post_read(MPIDU_Sock_t sock, void * buf, MPIU_Size_t minbr, MPIU_
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_post_readv
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_post_readv(MPIDU_Sock_t sock, MPID_IOV * iov, int iov_n, MPIDU_Sock_progress_update_func_t fn)
 {
     int iter;
@@ -1650,7 +1650,7 @@ int MPIDU_Sock_post_readv(MPIDU_Sock_t sock, MPID_IOV * iov, int iov_n, MPIDU_So
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_post_write
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_post_write(MPIDU_Sock_t sock, void * buf, MPIU_Size_t min, MPIU_Size_t max, MPIDU_Sock_progress_update_func_t fn)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1668,7 +1668,7 @@ int MPIDU_Sock_post_write(MPIDU_Sock_t sock, void * buf, MPIU_Size_t min, MPIU_S
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_post_writev
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_post_writev(MPIDU_Sock_t sock, MPID_IOV * iov, int iov_n, MPIDU_Sock_progress_update_func_t fn)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1762,7 +1762,7 @@ int MPIDU_Sock_post_writev(MPIDU_Sock_t sock, MPID_IOV * iov, int iov_n, MPIDU_S
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_wait
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_wait(MPIDU_Sock_set_t set, int timeout, MPIDU_Sock_event_t * out)
 {
     /*double t1, t2;*/
@@ -2637,7 +2637,7 @@ int MPIDU_Sock_wait(MPIDU_Sock_set_t set, int timeout, MPIDU_Sock_event_t * out)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_wakeup
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_wakeup(MPIDU_Sock_set_t set)
 {
     /* post a completion event to wake up sock_wait */
@@ -2648,7 +2648,7 @@ int MPIDU_Sock_wakeup(MPIDU_Sock_set_t set)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_read
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_read(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len, MPIU_Size_t * num_read)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -2666,7 +2666,7 @@ int MPIDU_Sock_read(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len, MPIU_Size_t 
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_readv
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_readv(MPIDU_Sock_t sock, MPID_IOV * iov, int iov_n, MPIU_Size_t * num_read)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -2735,7 +2735,7 @@ int MPIDU_Sock_readv(MPIDU_Sock_t sock, MPID_IOV * iov, int iov_n, MPIU_Size_t *
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_write
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_write(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len, MPIU_Size_t * num_written)
 {
     int mpi_errno;
@@ -2753,7 +2753,7 @@ int MPIDU_Sock_write(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len, MPIU_Size_t
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_writev
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_writev(MPIDU_Sock_t sock, MPID_IOV * iov, int iov_n, MPIU_Size_t * num_written)
 {
     int mpi_errno;
@@ -2810,7 +2810,7 @@ int MPIDU_Sock_writev(MPIDU_Sock_t sock, MPID_IOV * iov, int iov_n, MPIU_Size_t 
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_get_sock_id
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_get_sock_id(MPIDU_Sock_t sock)
 {
     int ret_val;
@@ -2833,7 +2833,7 @@ int MPIDU_Sock_get_sock_id(MPIDU_Sock_t sock)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_get_sock_set_id
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_get_sock_set_id(MPIDU_Sock_set_t set)
 {
     int ret_val;
@@ -2848,7 +2848,7 @@ int MPIDU_Sock_get_sock_set_id(MPIDU_Sock_set_t set)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_get_error_class_string
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Sock_get_error_class_string(int error, char *error_string, int length)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPIDU_SOCK_GET_ERROR_CLASS_STRING);

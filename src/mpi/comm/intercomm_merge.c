@@ -34,7 +34,7 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm) __
 #undef FUNCNAME
 #define FUNCNAME create_and_map_vcrt
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int create_and_map_vcrt(MPID_Comm *comm_ptr, int local_high, MPID_Comm *new_intracomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;

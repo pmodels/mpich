@@ -53,7 +53,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIU_Find_local_and_external
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 
 #if defined(MPID_USE_NODE_IDS)
 int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_rank_p, int **local_ranks_p,
@@ -228,7 +228,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIU_Get_internode_rank
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIU_Get_internode_rank(MPID_Comm *comm_ptr, int r)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -249,7 +249,7 @@ int MPIU_Get_internode_rank(MPID_Comm *comm_ptr, int r)
 #undef FUNCNAME
 #define FUNCNAME MPIU_Get_intranode_rank
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIU_Get_intranode_rank(MPID_Comm *comm_ptr, int r)
 {
     int mpi_errno = MPI_SUCCESS;

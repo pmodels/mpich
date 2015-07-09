@@ -58,7 +58,7 @@ MPIDI_Compare_and_swap_using_pami_rmw(pami_context_t   context,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Compare_and_swap
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
                           void *result_addr, MPI_Datatype datatype, int target_rank,
                           MPI_Aint target_disp, MPID_Win *win)

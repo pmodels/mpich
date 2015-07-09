@@ -13,7 +13,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Cancel_send
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Cancel_send(MPID_Request * sreq)
 {
     MPIDI_VC_t * vc;

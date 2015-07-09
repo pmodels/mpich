@@ -14,7 +14,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_alloc_win
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_alloc_win (void **buf, int len, MPID_nem_mpich_win_t **win)
 {
@@ -46,7 +46,7 @@ MPID_nem_mpich_alloc_win (void **buf, int len, MPID_nem_mpich_win_t **win)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_free_win
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_free_win (MPID_nem_mpich_win_t *win)
 {
@@ -76,7 +76,7 @@ MPID_nem_mpich_free_win (MPID_nem_mpich_win_t *win)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_attach_win
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_attach_win (void **buf, MPID_nem_mpich_win_t *remote_win)
 {
@@ -108,7 +108,7 @@ MPID_nem_mpich_attach_win (void **buf, MPID_nem_mpich_win_t *remote_win)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_detach_win
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_detach_win (MPID_nem_mpich_win_t *remote_win)
 {
@@ -134,7 +134,7 @@ MPID_nem_mpich_detach_win (MPID_nem_mpich_win_t *remote_win)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_win_put
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_win_put (void *s_buf, void *d_buf, int len, MPID_nem_mpich_win_t *remote_win)
 {
@@ -161,7 +161,7 @@ MPID_nem_mpich_win_put (void *s_buf, void *d_buf, int len, MPID_nem_mpich_win_t 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_win_putv
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_win_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, MPID_nem_mpich_win_t *remote_win)
 {
@@ -231,7 +231,7 @@ MPID_nem_mpich_win_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_win_get
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_win_get (void *s_buf, void *d_buf, int len, MPID_nem_mpich_win_t *remote_win)
 {
@@ -258,7 +258,7 @@ MPID_nem_mpich_win_get (void *s_buf, void *d_buf, int len, MPID_nem_mpich_win_t 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_win_getv
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_win_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, MPID_nem_mpich_win_t *remote_win)
 {
@@ -334,7 +334,7 @@ MPID_nem_mpich_win_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_serialize_win
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_serialize_win (void *buf, int buf_len, MPID_nem_mpich_win_t *win, int *len)
 {
@@ -376,7 +376,7 @@ MPID_nem_mpich_serialize_win (void *buf, int buf_len, MPID_nem_mpich_win_t *win,
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_serialize_win
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_deserialize_win (void *buf, int buf_len, MPID_nem_mpich_win_t **win)
 {
@@ -424,7 +424,7 @@ MPID_nem_mpich_deserialize_win (void *buf, int buf_len, MPID_nem_mpich_win_t **w
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_register_memory
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_register_memory (void *buf, int len)
 {
@@ -445,7 +445,7 @@ MPID_nem_mpich_register_memory (void *buf, int len)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_deregister_memory
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_deregister_memory (void *buf, int len)
 {
@@ -466,7 +466,7 @@ MPID_nem_mpich_deregister_memory (void *buf, int len)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_put
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_put (void *s_buf, void *d_buf, int len, int proc, int *completion_ctr)
 {
@@ -504,7 +504,7 @@ MPID_nem_mpich_put (void *s_buf, void *d_buf, int len, int proc, int *completion
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_putv
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, int proc,
 		   int *completion_ctr)
@@ -581,7 +581,7 @@ MPID_nem_mpich_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, in
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_get
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_get (void *s_buf, void *d_buf, int len, int proc, int *completion_ctr)
 {
@@ -619,7 +619,7 @@ MPID_nem_mpich_get (void *s_buf, void *d_buf, int len, int proc, int *completion
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_getv
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, int proc,
 		   int *completion_ctr)

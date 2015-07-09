@@ -15,7 +15,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_finalize
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;

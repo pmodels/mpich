@@ -21,7 +21,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Comm_disconnect
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;

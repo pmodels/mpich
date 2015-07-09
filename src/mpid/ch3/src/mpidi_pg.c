@@ -33,7 +33,7 @@ static MPIDI_PG_t *pg_world = NULL;
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Init
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_PG_Init(int *argc_p, char ***argv_p, 
 		  MPIDI_PG_Compare_ids_fn_t compare_ids_fn, 
 		  MPIDI_PG_Destroy_fn_t destroy_fn)
@@ -73,7 +73,7 @@ int MPIDI_PG_Init(int *argc_p, char ***argv_p,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Finalize
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@ 
    MPIDI_PG_Finalize - Finalize the process groups, including freeing all
    process group structures
@@ -173,7 +173,7 @@ int MPIDI_PG_Finalize(void)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Create
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_PG_Create(int vct_sz, void * pg_id, MPIDI_PG_t ** pg_ptr)
 {
     MPIDI_PG_t * pg = NULL, *pgnext;
@@ -262,7 +262,7 @@ int MPIDI_PG_Create(int vct_sz, void * pg_id, MPIDI_PG_t ** pg_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Destroy
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
 {
     MPIDI_PG_t * pg_prev;
@@ -356,7 +356,7 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Find
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_PG_Find(void * id, MPIDI_PG_t ** pg_ptr)
 {
     MPIDI_PG_t * pg;
@@ -388,7 +388,7 @@ int MPIDI_PG_Find(void * id, MPIDI_PG_t ** pg_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Id_compare
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_PG_Id_compare(void * id1, void *id2)
 {
     return MPIDI_PG_Compare_ids_fn(id1, id2);
@@ -398,7 +398,7 @@ int MPIDI_PG_Id_compare(void * id1, void *id2)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Get_next
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_PG_Get_next(MPIDI_PG_iterator *iter, MPIDI_PG_t ** pg_ptr)
 {
     *pg_ptr = (*iter);
@@ -412,7 +412,7 @@ int MPIDI_PG_Get_next(MPIDI_PG_iterator *iter, MPIDI_PG_t ** pg_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Has_next
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_PG_Has_next(MPIDI_PG_iterator *iter)
 {
     return (*iter != NULL);
@@ -421,7 +421,7 @@ int MPIDI_PG_Has_next(MPIDI_PG_iterator *iter)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Get_iterator
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_PG_Get_iterator(MPIDI_PG_iterator *iter)
 {
     *iter = MPIDI_PG_list;
@@ -440,7 +440,7 @@ int MPIDI_PG_Get_iterator(MPIDI_PG_iterator *iter)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_To_string
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_PG_To_string(MPIDI_PG_t *pg_ptr, char **str_ptr, int *lenStr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -475,7 +475,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Create_from_string
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_PG_Create_from_string(const char * str, MPIDI_PG_t ** pg_pptr, 
 				int *flag)
 {
@@ -584,7 +584,7 @@ void MPIDI_PG_IdToNum( MPIDI_PG_t *pg, int *id )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_SetConnInfo
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_PG_SetConnInfo( int rank, const char *connString )
 {
 #ifdef USE_PMI2_API
@@ -674,7 +674,7 @@ int MPIDI_PG_SetConnInfo( int rank, const char *connString )
 #undef FUNCNAME
 #define FUNCNAME getConnInfoKVS
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int getConnInfoKVS( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
 {
 #ifdef USE_PMI2_API
@@ -823,7 +823,7 @@ static int connFreeKVS( MPIDI_PG_t *pg )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_InitConnKVS
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_PG_InitConnKVS( MPIDI_PG_t *pg )
 {
 #ifdef USE_PMI2_API
@@ -912,7 +912,7 @@ static int getConnInfo( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
 #undef FUNCNAME
 #define FUNCNAME connToString
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int connToString( char **buf_p, int *slen, MPIDI_PG_t *pg )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1089,7 +1089,7 @@ int MPIDI_PG_InitConnString( MPIDI_PG_t *pg )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_GetConnString
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_PG_GetConnString( MPIDI_PG_t *pg, int rank, char *val, int vallen )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1108,7 +1108,7 @@ int MPIDI_PG_GetConnString( MPIDI_PG_t *pg, int rank, char *val, int vallen )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Dup_vcr
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
   MPIDI_PG_Dup_vcr - Duplicate a virtual connection from a process group
 
@@ -1152,7 +1152,7 @@ int MPIDI_PG_Dup_vcr( MPIDI_PG_t *pg, int rank, MPIDI_VC_t **vc_p )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Close_VCs
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
   MPIDI_PG_Close_VCs - Close all virtual connections on all process groups.
   

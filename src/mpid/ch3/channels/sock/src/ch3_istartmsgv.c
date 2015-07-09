@@ -9,7 +9,7 @@
 #undef FUNCNAME
 #define FUNCNAME create_request
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static MPID_Request * create_request(MPID_IOV * iov, int iov_count, 
 				     int iov_offset, MPIU_Size_t nb)
 {
@@ -72,7 +72,7 @@ static MPID_Request * create_request(MPID_IOV * iov, int iov_count,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_iStartMsgv
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPID_IOV * iov, int n_iov, 
 			 MPID_Request ** sreq_ptr)
 {

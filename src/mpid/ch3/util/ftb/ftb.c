@@ -31,7 +31,7 @@ static FTB_event_info_t event_info[] = {
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Ftb_init
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_Ftb_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -75,7 +75,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Ftb_publish
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 void MPIDU_Ftb_publish(const char *event_name, const char *event_payload)
 {
     FTB_event_properties_t event_prop;
@@ -97,7 +97,7 @@ void MPIDU_Ftb_publish(const char *event_name, const char *event_payload)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Ftb_publish_vc
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 void MPIDU_Ftb_publish_vc(const char *event_name, struct MPIDI_VC *vc)
 {
     char payload[FTB_MAX_PAYLOAD_DATA] = "";
@@ -112,7 +112,7 @@ void MPIDU_Ftb_publish_vc(const char *event_name, struct MPIDI_VC *vc)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Ftb_publish_me
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 void MPIDU_Ftb_publish_me(const char *event_name)
 {
     char payload[FTB_MAX_PAYLOAD_DATA] = "";
@@ -129,7 +129,7 @@ void MPIDU_Ftb_publish_me(const char *event_name)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Ftb_finalize
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 void MPIDU_Ftb_finalize(void)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPIDU_FTB_FINALIZE);

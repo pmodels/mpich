@@ -69,7 +69,7 @@ static asym_check_region* asym_check_region_p = NULL;
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Seg_alloc
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Seg_alloc(size_t len, void **ptr_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -122,7 +122,7 @@ int MPIDI_CH3I_Seg_alloc(size_t len, void **ptr_p)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Seg_commit
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_rank)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -446,7 +446,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Seg_destroy
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Seg_destroy(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -477,7 +477,7 @@ int MPIDI_CH3I_Seg_destroy(void)
 #undef FUNCNAME
 #define FUNCNAME check_alloc
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int check_alloc(int num_local, int local_rank)
 {
     int mpi_errno = MPI_SUCCESS;

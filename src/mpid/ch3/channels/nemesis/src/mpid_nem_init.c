@@ -82,7 +82,7 @@ unsigned long long *MPID_nem_fbox_fall_back_to_queue_count = NULL;
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_init_stats
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPID_nem_init_stats(int n_local_ranks)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -114,7 +114,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_init
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 {
@@ -434,7 +434,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_vc_init
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_nem_vc_init (MPIDI_VC_t *vc)
 {
@@ -618,7 +618,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_vc_destroy
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_nem_vc_destroy(MPIDI_VC_t *vc)
 {
@@ -665,7 +665,7 @@ int MPID_nem_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 #undef FUNCNAME
 #define FUNCNAME get_local_procs
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int get_local_procs(MPIDI_PG_t *pg, int our_pg_rank, int *num_local_p,
                            int **local_procs_p, int *local_rank_p)
 {

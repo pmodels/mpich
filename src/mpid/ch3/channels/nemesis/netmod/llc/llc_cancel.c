@@ -19,7 +19,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_cancel_recv
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /* returns zero in case request is canceled */
 int MPID_nem_llc_cancel_recv(struct MPIDI_VC *vc, struct MPID_Request *req)
 {

@@ -32,7 +32,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Init_sock
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Init_sock(int has_parent, MPIDI_PG_t *pg_p, int pg_rank,
 			 char **bc_val_p, int *val_max_sz_p)
 {

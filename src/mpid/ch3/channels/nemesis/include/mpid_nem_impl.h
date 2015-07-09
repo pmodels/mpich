@@ -204,7 +204,7 @@ typedef union MPIDI_CH3_nem_pkt
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_send_COOKIE
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int MPID_nem_lmt_send_COOKIE(MPIDI_VC_t *vc, MPID_Request *req,
                                            void *cookie_buf, MPI_Aint cookie_len)
 {

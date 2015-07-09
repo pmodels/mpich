@@ -25,7 +25,7 @@ char *MPIDI_failed_procs_string = NULL;
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Handle_connection
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
   MPIDI_CH3U_Handle_connection - handle connection event
 
@@ -200,7 +200,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIDI_VC_SendClose
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
   MPIDI_CH3U_VC_SendClose - Initiate a close on a virtual connection
   
@@ -363,7 +363,7 @@ int MPIDI_CH3_PktPrint_Close( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_VC_WaitForClose
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
   MPIDI_CH3U_VC_WaitForClose - Wait for all virtual connections to close
   @*/

@@ -29,7 +29,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Abort
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Abort(MPID_Comm * comm, int mpi_errno, int exit_code, 
 	       const char *error_msg)
 {

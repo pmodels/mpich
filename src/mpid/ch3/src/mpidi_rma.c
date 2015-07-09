@@ -87,7 +87,7 @@ MPIDI_RMA_Target_t *global_rma_target_pool_head = NULL, *global_rma_target_pool_
 #undef FUNCNAME
 #define FUNCNAME MPIDI_RMA_init
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_RMA_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -129,7 +129,7 @@ int MPIDI_RMA_init(void)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_RMA_finalize
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 void MPIDI_RMA_finalize(void)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_RMA_FINALIZE);
@@ -146,7 +146,7 @@ void MPIDI_RMA_finalize(void)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Win_free
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_Win_free(MPID_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -257,7 +257,7 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Win_shared_query
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_Win_shared_query(MPID_Win * win_ptr, int target_rank, MPI_Aint * size,
                            int *disp_unit, void *baseptr)
 {
@@ -283,7 +283,7 @@ int MPIDI_Win_shared_query(MPID_Win * win_ptr, int target_rank, MPI_Aint * size,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Alloc_mem
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 void *MPIDI_Alloc_mem(size_t size, MPID_Info * info_ptr)
 {
     void *ap;
@@ -301,7 +301,7 @@ void *MPIDI_Alloc_mem(size_t size, MPID_Info * info_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Free_mem
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_Free_mem(void *ptr)
 {
     int mpi_errno = MPI_SUCCESS;

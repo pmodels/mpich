@@ -9,7 +9,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_sock_errno_to_mpi_errno
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_sock_errno_to_mpi_errno(char * fcname, int sock_errno)
 {
     int mpi_errno;

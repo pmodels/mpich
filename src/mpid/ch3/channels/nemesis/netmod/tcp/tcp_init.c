@@ -116,7 +116,7 @@ static MPIDI_CH3_PktHandler_Fcn *pkt_handlers[MPIDI_NEM_TCP_PKT_NUM_TYPES ? MPID
 #undef FUNCNAME
 #define FUNCNAME set_up_listener
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int set_up_listener(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -151,7 +151,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_init
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_init (MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -210,7 +210,7 @@ int MPID_nem_tcp_init (MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_
 #undef FUNCNAME
 #define FUNCNAME ckpt_restart
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int ckpt_restart(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -402,7 +402,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_get_business_card
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_get_business_card (int my_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -463,7 +463,7 @@ int MPID_nem_tcp_get_business_card (int my_rank, char **bc_val_p, int *val_max_s
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_connect_to_root
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -495,7 +495,7 @@ int MPID_nem_tcp_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_vc_init
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_vc_init (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -544,7 +544,7 @@ int MPID_nem_tcp_vc_init (MPIDI_VC_t *vc)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_vc_destroy
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_vc_destroy(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -563,7 +563,7 @@ int MPID_nem_tcp_vc_destroy(MPIDI_VC_t *vc)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_get_addr_port_from_bc
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr *addr, in_port_t *port)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -613,7 +613,7 @@ int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_bind
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_bind (int sockfd)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -704,7 +704,7 @@ int MPID_nem_tcp_vc_terminate(MPIDI_VC_t *vc)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_vc_terminated
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_vc_terminated(MPIDI_VC_t *vc)
 {
     /* This is called when the VC is to be terminated once all queued
@@ -731,7 +731,7 @@ int MPID_nem_tcp_vc_terminated(MPIDI_VC_t *vc)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_get_ordering
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_get_ordering(int *ordering)
 {
     (*ordering) = 1;

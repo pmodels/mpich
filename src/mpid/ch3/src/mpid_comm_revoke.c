@@ -18,7 +18,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Comm_revoke
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
 {
     MPIDI_VC_t *vc;

@@ -57,7 +57,7 @@ static int dbg_ifname = 0;
 #undef FUNCNAME
 #define FUNCNAME MPIDI_GetIPInterface
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 {
     int mpi_errno = MPI_SUCCESS;

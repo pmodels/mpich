@@ -13,7 +13,7 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_wincreate_allgather);
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Win_fns_init
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_Win_fns_init(MPIDI_CH3U_Win_fns_t * win_fns)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -36,7 +36,7 @@ int MPIDI_Win_fns_init(MPIDI_CH3U_Win_fns_t * win_fns)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Win_gather_info
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
                                MPID_Info * info, MPID_Comm * comm_ptr, MPID_Win ** win_ptr)
 {
@@ -103,7 +103,7 @@ int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Win_create
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info * info,
                           MPID_Comm * comm_ptr, MPID_Win ** win_ptr)
 {
@@ -138,7 +138,7 @@ int MPIDI_CH3U_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info * 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Win_create_dynamic
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Win_create_dynamic(MPID_Info * info, MPID_Comm * comm_ptr, MPID_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -163,7 +163,7 @@ int MPIDI_CH3U_Win_create_dynamic(MPID_Info * info, MPID_Comm * comm_ptr, MPID_W
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Win_attach
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_Win_attach(MPID_Win * win, void *base, MPI_Aint size)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -186,7 +186,7 @@ int MPIDI_Win_attach(MPID_Win * win, void *base, MPI_Aint size)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Win_detach
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_Win_detach(MPID_Win * win, const void *base)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -209,7 +209,7 @@ int MPIDI_Win_detach(MPID_Win * win, const void *base)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Win_allocate
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info * info,
                             MPID_Comm * comm_ptr, void *baseptr, MPID_Win ** win_ptr)
 {
@@ -243,7 +243,7 @@ int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info * info,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Win_allocate_no_shm
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPID_Info * info,
                                    MPID_Comm * comm_ptr, void *baseptr, MPID_Win ** win_ptr)
 {
@@ -285,7 +285,7 @@ int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPID_Info * inf
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Win_set_info
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_Win_set_info(MPID_Win * win, MPID_Info * info)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -364,7 +364,7 @@ int MPIDI_Win_set_info(MPID_Win * win, MPID_Info * info)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Win_get_info
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_Win_get_info(MPID_Win * win, MPID_Info ** info_used)
 {
     int mpi_errno = MPI_SUCCESS;

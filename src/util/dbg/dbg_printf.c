@@ -837,7 +837,7 @@ Environment variables\n\
 #undef FUNCNAME
 #define FUNCNAME MPIU_DBG_Open_temp_file
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -876,7 +876,7 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
 #undef FUNCNAME
 #define FUNCNAME MPIU_DBG_Open_temp_file
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -921,7 +921,7 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
 #undef FUNCNAME
 #define FUNCNAME MPIU_DBG_Open_temp_file
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
 {
     int mpi_errno = MPI_SUCCESS;

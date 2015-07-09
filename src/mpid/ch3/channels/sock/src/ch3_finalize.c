@@ -10,7 +10,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Finalize
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3_Finalize( void )
 {
     int mpi_errno = MPI_SUCCESS;

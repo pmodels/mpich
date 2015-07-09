@@ -107,7 +107,7 @@ MPIDI_VCRT_t;
 #undef FUNCNAME
 #define FUNCNAME MPID_VCRT_Create
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_VCRT_Create(int size, MPID_VCRT *vcrt_ptr)
 {
     MPIDI_VCRT_t * vcrt;
@@ -146,7 +146,7 @@ int MPID_VCRT_Create(int size, MPID_VCRT *vcrt_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPID_VCRT_Add_ref
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_VCRT_Add_ref(MPID_VCRT vcrt)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPID_VCRT_ADD_REF);
@@ -169,7 +169,7 @@ int MPID_VCRT_Add_ref(MPID_VCRT vcrt)
 #undef FUNCNAME
 #define FUNCNAME MPID_VCRT_Release
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect )
 {
     int in_use;
@@ -280,7 +280,7 @@ int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect )
 #undef FUNCNAME
 #define FUNCNAME MPID_VCRT_Get_ptr
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_VCRT_Get_ptr(MPID_VCRT vcrt, MPID_VCR **vc_pptr)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPID_VCRT_GET_PTR);
@@ -308,7 +308,7 @@ int MPID_VCRT_Get_ptr(MPID_VCRT vcrt, MPID_VCR **vc_pptr)
 #undef FUNCNAME
 #define FUNCNAME MPID_VCR_Dup
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_VCR_Dup(MPID_VCR orig_vcr, MPID_VCR * new_vcr)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPID_VCR_DUP);
@@ -340,7 +340,7 @@ int MPID_VCR_Dup(MPID_VCR orig_vcr, MPID_VCR * new_vcr)
 #undef FUNCNAME
 #define FUNCNAME MPID_VCR_Get_lpid
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPID_VCR_GET_LPID);
@@ -360,7 +360,7 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPID_GPID_GetAllInComm
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_GPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size, 
 			    int local_gpids[], int *singlePG )
 {
@@ -402,7 +402,7 @@ int MPID_GPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size,
 #undef FUNCNAME
 #define FUNCNAME MPID_GPID_Get
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_GPID_Get( MPID_Comm *comm_ptr, int rank, int gpid[] )
 {
     int      pgid;
@@ -427,7 +427,7 @@ int MPID_GPID_Get( MPID_Comm *comm_ptr, int rank, int gpid[] )
 #undef FUNCNAME
 #define FUNCNAME MPID_GPID_ToLpidArray
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_GPID_ToLpidArray( int size, int gpid[], int lpid[] )
 {
     int i, mpi_errno = MPI_SUCCESS;
@@ -494,7 +494,7 @@ int MPID_GPID_ToLpidArray( int size, int gpid[], int lpid[] )
 #undef FUNCNAME
 #define FUNCNAME MPID_VCR_CommFromLpids
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_VCR_CommFromLpids( MPID_Comm *newcomm_ptr, 
 			    int size, const int lpids[] )
 {
@@ -578,7 +578,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_PG_ForwardPGInfo
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr, 
 			   int nPGids, const int gpids[], 
 			   int root )
@@ -694,7 +694,7 @@ char MPIU_hostname[MAX_HOSTNAME_LEN] = "_UNKNOWN_"; /* '_' is an illegal char fo
 #undef FUNCNAME
 #define FUNCNAME MPID_Get_node_id
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Get_node_id(MPID_Comm *comm, int rank, MPID_Node_id_t *id_p)
 {
     *id_p = comm->vcr[rank]->node_id;
@@ -704,7 +704,7 @@ int MPID_Get_node_id(MPID_Comm *comm, int rank, MPID_Node_id_t *id_p)
 #undef FUNCNAME
 #define FUNCNAME MPID_Get_max_node_id
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /* Providing a comm argument permits optimization, but this function is always
    allowed to return the max for the universe. */
 int MPID_Get_max_node_id(MPID_Comm *comm, MPID_Node_id_t *max_id_p)
@@ -796,7 +796,7 @@ typedef struct map_block
 #undef FUNCNAME
 #define FUNCNAME parse_mapping
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int parse_mapping(char *map_str, mapping_type_t *type, map_block_t **map, int *nblocks)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -972,7 +972,7 @@ static int compare_ints(const void *orig_x, const void *orig_y)
 #undef FUNCNAME
 #define FUNCNAME populate_ids_from_mapping
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int populate_ids_from_mapping(char *mapping, int *num_nodes, MPIDI_PG_t *pg, int *did_map)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1097,7 +1097,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Populate_vc_node_ids
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
 {
     int mpi_errno = MPI_SUCCESS;

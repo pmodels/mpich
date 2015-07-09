@@ -31,7 +31,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Comm_spawn_multiple
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Comm_spawn_multiple(int count, char *array_of_commands[],
 			     char ** array_of_argv[], const int array_of_maxprocs[],
 			     MPID_Info * array_of_info_ptrs[], int root, 

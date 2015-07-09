@@ -90,7 +90,7 @@ static void MPIR_Bsend_free_segment( MPIR_Bsend_data_t * );
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bsend_attach
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Bsend_attach( void *buffer, int buffer_size )
 {
     MPIR_Bsend_data_t *p;
@@ -165,7 +165,7 @@ int MPIR_Bsend_attach( void *buffer, int buffer_size )
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bsend_detach
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Bsend_detach( void *bufferp, int *size )
 {
     if (BsendBuffer.pending) {
@@ -206,7 +206,7 @@ int MPIR_Bsend_detach( void *bufferp, int *size )
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bsend_isend
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
                      int dest, int tag, MPID_Comm *comm_ptr,
                      MPIR_Bsend_kind_t kind, MPID_Request **request )
@@ -325,7 +325,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bsend_free_seg
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Bsend_free_req_seg( MPID_Request* req )
 {
     int mpi_errno = MPI_ERR_INTERN;
@@ -363,7 +363,7 @@ int MPIR_Bsend_free_req_seg( MPID_Request* req )
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bsend_free_segment
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static void MPIR_Bsend_free_segment( MPIR_Bsend_data_t *p )
 {
     MPIR_Bsend_data_t *prev = p->prev, *avail = BsendBuffer.avail, *avail_prev;
@@ -457,7 +457,7 @@ static void MPIR_Bsend_free_segment( MPIR_Bsend_data_t *p )
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bsend_check_active
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPIR_Bsend_check_active( void )
 {
     int mpi_errno = MPI_SUCCESS;

@@ -20,7 +20,7 @@ char MPIDI_CH3_ABIVersion[] = "1.1";
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Init
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t * pg_p, int pg_rank )
 {
     int mpi_errno = MPI_SUCCESS;

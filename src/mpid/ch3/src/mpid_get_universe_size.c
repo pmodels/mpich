@@ -22,7 +22,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Get_universe_size
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Get_universe_size(int  * universe_size)
 {
     int mpi_errno = MPI_SUCCESS;

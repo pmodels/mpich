@@ -27,7 +27,7 @@ static int _mxm_process_sdtype(MPID_Request ** rreq_p, MPI_Datatype datatype,
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_iSendContig
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_mxm_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, MPIDI_msg_sz_t hdr_sz,
                              void *data, MPIDI_msg_sz_t data_sz)
 {
@@ -92,7 +92,7 @@ int MPID_nem_mxm_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, MP
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_iStartContigMsg
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_mxm_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data,
                                  MPIDI_msg_sz_t data_sz, MPID_Request ** sreq_ptr)
 {
@@ -157,7 +157,7 @@ int MPID_nem_mxm_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_SendNoncontig
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_mxm_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
                                MPIDI_msg_sz_t hdr_sz)
 {
@@ -235,7 +235,7 @@ int MPID_nem_mxm_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_send
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
                       int tag, MPID_Comm * comm, int context_offset, MPID_Request ** sreq_ptr)
 {
@@ -338,7 +338,7 @@ int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Data
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_ssend
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
                        int tag, MPID_Comm * comm, int context_offset, MPID_Request ** sreq_ptr)
 {
@@ -441,7 +441,7 @@ int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_isend
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_mxm_isend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
                        int tag, MPID_Comm * comm, int context_offset, MPID_Request ** sreq_ptr)
 {
@@ -544,7 +544,7 @@ int MPID_nem_mxm_isend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_issend
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_mxm_issend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
                         int rank, int tag, MPID_Comm * comm, int context_offset,
                         MPID_Request ** sreq_ptr)

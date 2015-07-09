@@ -15,7 +15,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Isend_self
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag, MPID_Comm * comm, int context_offset,
 		     int type, MPID_Request ** request)
 {

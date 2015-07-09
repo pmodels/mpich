@@ -152,7 +152,7 @@ static int ckpt_cb(void *arg)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_nem_ckpt_init
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_nem_ckpt_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -190,7 +190,7 @@ int MPIDI_nem_ckpt_init(void)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_nem_ckpt_finalize
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_nem_ckpt_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -214,7 +214,7 @@ int MPIDI_nem_ckpt_finalize(void)
 #undef FUNCNAME
 #define FUNCNAME reinit_pmi
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int reinit_pmi(void)
 {
     int ret;
@@ -272,7 +272,7 @@ static int reinit_pmi(void)
 #undef FUNCNAME
 #define FUNCNAME restore_env
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int restore_env(pid_t parent_pid, int rank)
 {
     FILE *f;
@@ -316,7 +316,7 @@ typedef struct sock_ident {
 #undef FUNCNAME
 #define FUNCNAME open_io_socket
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int open_io_socket(socktype_t socktype, int rank, int dupfd)
 {
     int fd;
@@ -379,7 +379,7 @@ fn_exit:
 #undef FUNCNAME
 #define FUNCNAME restore_stdinouterr
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int restore_stdinouterr(int rank)
 {
     int ret;
@@ -404,7 +404,7 @@ static int restore_stdinouterr(int rank)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_nem_ckpt_start
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_nem_ckpt_start(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -466,7 +466,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIDI_nem_ckpt_finish
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_nem_ckpt_finish(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -527,7 +527,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME pkt_ckpt_marker_handler
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int pkt_ckpt_marker_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t *buflen, MPID_Request **req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -570,7 +570,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ckpt_pkthandler_init
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_nem_ckpt_pkthandler_init(MPIDI_CH3_PktHandler_Fcn *pktArray[], int arraySize)
 {
     int mpi_errno = MPI_SUCCESS;

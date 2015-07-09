@@ -46,7 +46,7 @@ static inline void MPID_nem_mpich_send_seg (MPID_Segment *segment, MPIDI_msg_sz_
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_send_header
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
 {
@@ -170,7 +170,7 @@ MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_sendv
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_sendv (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
 {
@@ -272,7 +272,7 @@ MPID_nem_mpich_sendv (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_sendv_header
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_sendv_header (MPID_IOV **iov, int *n_iov,
                              void *ext_hdr_ptr, MPIDI_msg_sz_t ext_hdr_sz,
@@ -433,7 +433,7 @@ MPID_nem_mpich_sendv_header (MPID_IOV **iov, int *n_iov,
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_send_seg_header
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline void
 MPID_nem_mpich_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_size,
                                 void *header, MPIDI_msg_sz_t header_sz, void *ext_header, MPIDI_msg_sz_t ext_header_sz,
@@ -579,7 +579,7 @@ MPID_nem_mpich_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_f
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_send_seg
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline void
 MPID_nem_mpich_send_seg (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_size, MPIDI_VC_t *vc, int *again)
 {
@@ -666,7 +666,7 @@ MPID_nem_mpich_send_seg (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, M
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_dequeue_fastbox
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline void MPID_nem_mpich_dequeue_fastbox(int local_rank)
 {
     MPID_nem_fboxq_elem_t *el;
@@ -710,7 +710,7 @@ static inline void MPID_nem_mpich_dequeue_fastbox(int local_rank)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_dequeue_fastbox
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline void MPID_nem_mpich_enqueue_fastbox(int local_rank)
 {
     MPID_nem_fboxq_elem_t *el;
@@ -751,7 +751,7 @@ static inline void MPID_nem_mpich_enqueue_fastbox(int local_rank)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_recv_seqno_matches
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_recv_seqno_matches (MPID_nem_queue_ptr_t qhead)
 {
@@ -772,7 +772,7 @@ MPID_nem_recv_seqno_matches (MPID_nem_queue_ptr_t qhead)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_test_recv
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocking_progress)
 {
@@ -846,7 +846,7 @@ MPID_nem_mpich_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blockin
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_test_recv_wait
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int timeout)
 {
@@ -904,7 +904,7 @@ MPID_nem_mpich_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int time
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_blocking_recv
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int completions)
 {
@@ -989,7 +989,7 @@ MPID_nem_mpich_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int comple
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_release_cell
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_release_cell (MPID_nem_cell_ptr_t cell, MPIDI_VC_t *vc)
 {

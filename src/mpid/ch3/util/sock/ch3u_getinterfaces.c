@@ -62,7 +62,7 @@ static int MPIDI_CH3U_GetIPInterface( MPIDU_Sock_ifaddr_t *, int * );
 #undef FUNCNAME
 #define FUNCNAME MPIDU_CH3U_GetSockInterfaceAddr
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDU_CH3U_GetSockInterfaceAddr( int myRank, char *ifname, int maxIfname,
 				     MPIDU_Sock_ifaddr_t *ifaddr )
 {

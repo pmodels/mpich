@@ -9,7 +9,7 @@
 #undef FUNCNAME
 #define FUNCNAME update_request
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static void update_request(MPID_Request * sreq, void * hdr, 
 			   MPIDI_msg_sz_t hdr_sz, MPIU_Size_t nb)
 {
@@ -27,7 +27,7 @@ static void update_request(MPID_Request * sreq, void * hdr,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_iSend
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPID_Request * sreq, void * hdr, 
 		    MPIDI_msg_sz_t hdr_sz)
 {

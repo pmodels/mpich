@@ -18,7 +18,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Rsend
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Rsend(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPID_Comm * comm, int context_offset,
 	       MPID_Request ** request)
 {

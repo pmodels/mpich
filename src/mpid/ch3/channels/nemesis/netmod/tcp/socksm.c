@@ -149,7 +149,7 @@ static inline int is_same_connection(sockconn_t *sc1, sockconn_t *sc2)
 #undef FUNCNAME
 #define FUNCNAME alloc_sc_plfd_tbls
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int alloc_sc_plfd_tbls (void)
 {
     int i, mpi_errno = MPI_SUCCESS, idx = -1;
@@ -196,7 +196,7 @@ static int alloc_sc_plfd_tbls (void)
 #undef FUNCNAME
 #define FUNCNAME free_sc_plfd_tbls
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int free_sc_plfd_tbls (void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -216,7 +216,7 @@ static int free_sc_plfd_tbls (void)
 #undef FUNCNAME
 #define FUNCNAME expand_sc_plfd_tbls
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int expand_sc_plfd_tbls (void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -303,7 +303,7 @@ static int expand_sc_plfd_tbls (void)
 #undef FUNCNAME
 #define FUNCNAME find_free_entry
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int find_free_entry(int *idx)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -345,7 +345,7 @@ static int find_free_entry(int *idx)
 #undef FUNCNAME
 #define FUNCNAME found_better_sc
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int found_better_sc(sockconn_t *sc, sockconn_t **fnd_sc)
 {
     int i, found = FALSE;
@@ -429,7 +429,7 @@ fn_exit:
 #undef FUNCNAME
 #define FUNCNAME vc_is_in_shutdown
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int vc_is_in_shutdown(MPIDI_VC_t *vc)
 {
     int retval = FALSE;
@@ -452,7 +452,7 @@ static int vc_is_in_shutdown(MPIDI_VC_t *vc)
 #undef FUNCNAME
 #define FUNCNAME send_id_info
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int send_id_info(const sockconn_t *const sc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -513,7 +513,7 @@ static int send_id_info(const sockconn_t *const sc)
 #undef FUNCNAME
 #define FUNCNAME send_tmpvc_info
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int send_tmpvc_info(const sockconn_t *const sc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -562,7 +562,7 @@ static int send_tmpvc_info(const sockconn_t *const sc)
 #undef FUNCNAME
 #define FUNCNAME recv_id_or_tmpvc_info
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -697,7 +697,7 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
 #undef FUNCNAME
 #define FUNCNAME send_cmd_pkt
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int send_cmd_pkt(int fd, MPIDI_nem_tcp_socksm_pkt_type_t pkt_type)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -732,7 +732,7 @@ static int send_cmd_pkt(int fd, MPIDI_nem_tcp_socksm_pkt_type_t pkt_type)
 #undef FUNCNAME
 #define FUNCNAME recv_cmd_pkt
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int recv_cmd_pkt(int fd, MPIDI_nem_tcp_socksm_pkt_type_t *pkt_type)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -769,7 +769,7 @@ static int recv_cmd_pkt(int fd, MPIDI_nem_tcp_socksm_pkt_type_t *pkt_type)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_connect
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
 {
     MPID_nem_tcp_vc_area *const vc_tcp = VC_TCP(vc);
@@ -926,7 +926,7 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
 #undef FUNCNAME
 #define FUNCNAME cleanup_and_free_sc_plfd
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int cleanup_and_free_sc_plfd(sockconn_t *const sc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1019,7 +1019,7 @@ int close_cleanup_and_free_sc_plfd(sockconn_t *const sc)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_cleanup
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_cleanup (struct MPIDI_VC *const vc)
 {
     int mpi_errno = MPI_SUCCESS, i;
@@ -1104,7 +1104,7 @@ int MPID_nem_tcp_ckpt_cleanup(void)
 #undef FUNCNAME
 #define FUNCNAME state_tc_c_cnting_handler
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int state_tc_c_cnting_handler(struct pollfd *const plfd, sockconn_t *const sc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1142,7 +1142,7 @@ static int state_tc_c_cnting_handler(struct pollfd *const plfd, sockconn_t *cons
 #undef FUNCNAME
 #define FUNCNAME state_tc_c_cntd_handler
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int state_tc_c_cntd_handler(struct pollfd *const plfd, sockconn_t *const sc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1191,7 +1191,7 @@ static int state_tc_c_cntd_handler(struct pollfd *const plfd, sockconn_t *const 
 #undef FUNCNAME
 #define FUNCNAME state_c_ranksent_handler
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int state_c_ranksent_handler(struct pollfd *const plfd, sockconn_t *const sc)
 {
     MPIDI_VC_t *const sc_vc = sc->vc;
@@ -1247,7 +1247,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME state_c_tmpvcsent_handler
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int state_c_tmpvcsent_handler(struct pollfd *const plfd, sockconn_t *const sc)
 {
     MPIDI_VC_t *const sc_vc = sc->vc;
@@ -1298,7 +1298,7 @@ static int state_c_tmpvcsent_handler(struct pollfd *const plfd, sockconn_t *cons
 #undef FUNCNAME
 #define FUNCNAME state_l_cntd_handler
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int state_l_cntd_handler(struct pollfd *const plfd, sockconn_t *const sc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1357,7 +1357,7 @@ static int state_l_cntd_handler(struct pollfd *const plfd, sockconn_t *const sc)
 #undef FUNCNAME
 #define FUNCNAME do_i_win
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int do_i_win(sockconn_t *rmt_sc)
 {
     int win = FALSE;
@@ -1388,7 +1388,7 @@ static int do_i_win(sockconn_t *rmt_sc)
 #undef FUNCNAME
 #define FUNCNAME state_l_rankrcvd_handler
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int state_l_rankrcvd_handler(struct pollfd *const plfd, sockconn_t *const sc)
 {
     MPIDI_VC_t *const sc_vc = sc->vc;
@@ -1459,7 +1459,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME state_l_tmpvcrcvd_handler
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int state_l_tmpvcrcvd_handler(struct pollfd *const plfd, sockconn_t *const sc)
 {
     MPIDI_VC_t *const sc_vc = sc->vc;
@@ -1507,7 +1507,7 @@ fn_exit:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_recv_handler
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPID_nem_tcp_recv_handler(sockconn_t *const sc)
 {
     /* as a result of handling a message, the sc table might get
@@ -1662,7 +1662,7 @@ fn_noncomm_fail: /* NON-comm related failures jump here */
 #undef FUNCNAME
 #define FUNCNAME state_commrdy_handler
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int state_commrdy_handler(struct pollfd *const plfd, sockconn_t *const sc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1703,7 +1703,7 @@ static int state_commrdy_handler(struct pollfd *const plfd, sockconn_t *const sc
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_sm_init
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_sm_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1750,7 +1750,7 @@ int MPID_nem_tcp_sm_init(void)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_sm_finalize
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_sm_finalize(void)
 {
     freenode_t *node;
@@ -1778,7 +1778,7 @@ Evaluate the need for it by testing and then do it, if needed.
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_connpoll
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_connpoll(int in_blocking_poll)
 {
     int mpi_errno = MPI_SUCCESS, n, i;
@@ -1884,7 +1884,7 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
 #undef FUNCNAME
 #define FUNCNAME state_listening_handler
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_state_listening_handler(struct pollfd *const unused_1, sockconn_t *const unused_2)
         /*  listener fd poll struct and sockconn structure */
 {
@@ -1946,7 +1946,7 @@ int MPID_nem_tcp_state_listening_handler(struct pollfd *const unused_1, sockconn
 #undef FUNCNAME
 #define FUNCNAME error_closed
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int error_closed(struct MPIDI_VC *const vc, int req_errno)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1976,7 +1976,7 @@ static int error_closed(struct MPIDI_VC *const vc, int req_errno)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_cleanup_on_error
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tcp_cleanup_on_error(MPIDI_VC_t *const vc, int req_errno)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -12,7 +12,7 @@ int (*MPIDI_Anysource_iprobe_fn)(int tag, MPID_Comm * comm, int context_offset, 
 #undef FUNCNAME
 #define FUNCNAME MPID_Iprobe
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Iprobe(int source, int tag, MPID_Comm *comm, int context_offset, 
 		int *flag, MPI_Status *status)
 {

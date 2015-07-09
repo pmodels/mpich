@@ -94,7 +94,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_create
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info * info,
                     MPID_Comm * comm_ptr, MPID_Win ** win_ptr)
 {
@@ -129,7 +129,7 @@ int MPID_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info * info,
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_allocate
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info * info,
                       MPID_Comm * comm_ptr, void *baseptr, MPID_Win ** win_ptr)
 {
@@ -159,7 +159,7 @@ int MPID_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info * info,
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_create_dynamic
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Win_create_dynamic(MPID_Info * info, MPID_Comm * comm_ptr, MPID_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -192,7 +192,7 @@ int MPID_Win_create_dynamic(MPID_Info * info, MPID_Comm * comm_ptr, MPID_Win ** 
 #undef FUNCNAME
 #define FUNCNAME MPID_Alloc_mem
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 void *MPID_Alloc_mem(size_t size, MPID_Info * info_ptr)
 {
     void *ap = NULL;
@@ -210,7 +210,7 @@ void *MPID_Alloc_mem(size_t size, MPID_Info * info_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPID_Free_mem
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Free_mem(void *ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -232,7 +232,7 @@ int MPID_Free_mem(void *ptr)
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_allocate_shared
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info * info, MPID_Comm * comm_ptr,
                              void *base_ptr, MPID_Win ** win_ptr)
 {
@@ -419,7 +419,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_set_info
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Win_set_info(MPID_Win * win, MPID_Info * info)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -443,7 +443,7 @@ int MPID_Win_set_info(MPID_Win * win, MPID_Info * info)
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_get_info
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Win_get_info(MPID_Win * win, MPID_Info ** info_used)
 {
     int mpi_errno = MPI_SUCCESS;

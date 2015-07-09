@@ -88,7 +88,7 @@ static int MPID_Segment_vector_flatten(DLOOP_Offset *blocks_p,
 #undef FUNCNAME
 #define FUNCNAME MPID_Segment_pack_vector
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /* MPID_Segment_pack_vector
 *
 * Parameters:
@@ -141,7 +141,7 @@ return;
 #undef FUNCNAME
 #define FUNCNAME MPID_Segment_unpack_vector
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 void MPID_Segment_unpack_vector(struct DLOOP_Segment *segp,
 			    DLOOP_Offset first,
 			    DLOOP_Offset *lastp,
@@ -158,7 +158,7 @@ return;
 #undef FUNCNAME
 #define FUNCNAME MPID_Segment_flatten
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /* MPID_Segment_flatten
 *
 * offp    - pointer to array to fill in with offsets
@@ -214,7 +214,7 @@ return;
 #undef FUNCNAME
 #define FUNCNAME MPID_Segment_contig_pack_to_iov
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /* MPID_Segment_contig_pack_to_iov
 */
 static int MPID_Segment_contig_pack_to_iov(DLOOP_Offset *blocks_p,
@@ -277,7 +277,7 @@ static int MPID_Segment_contig_pack_to_iov(DLOOP_Offset *blocks_p,
 #undef FUNCNAME
 #define FUNCNAME MPID_Segment_vector_pack_to_iov
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /* MPID_Segment_vector_pack_to_iov
  *
  * Input Parameters:
@@ -399,7 +399,7 @@ static int MPID_Segment_vector_pack_to_iov(DLOOP_Offset *blocks_p,
 #undef FUNCNAME
 #define FUNCNAME MPID_Segment_contig_flatten
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /* MPID_Segment_contig_flatten
  */
 static int MPID_Segment_contig_flatten(DLOOP_Offset *blocks_p,
@@ -456,7 +456,7 @@ static int MPID_Segment_contig_flatten(DLOOP_Offset *blocks_p,
 #undef FUNCNAME
 #define FUNCNAME MPID_Segment_vector_flatten
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /* MPID_Segment_vector_flatten
  *
  * Notes:

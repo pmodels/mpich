@@ -14,7 +14,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_SendNoncontig
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /* MPIDI_CH3I_SendNoncontig - Sends a message by packing
    directly into cells.  The caller must initialize sreq->dev.segment
    as well as segment_first and segment_size. */

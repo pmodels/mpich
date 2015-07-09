@@ -57,7 +57,7 @@ static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress);
 #undef FUNCNAME
 #define FUNCNAME check_and_switch_window_state
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int check_and_switch_window_state(MPID_Win * win_ptr, int *is_able_to_issue,
                                                 int *made_progress)
 {
@@ -163,7 +163,7 @@ static inline int check_and_switch_window_state(MPID_Win * win_ptr, int *is_able
 #undef FUNCNAME
 #define FUNCNAME check_and_switch_target_state
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
                                                 int *is_able_to_issue, int *made_progress)
 {
@@ -311,7 +311,7 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
 #undef FUNCNAME
 #define FUNCNAME issue_ops_target
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
                                    int *made_progress)
 {
@@ -509,7 +509,7 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
 #undef FUNCNAME
 #define FUNCNAME issue_ops_win
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -564,7 +564,7 @@ static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_RMA_Free_ops_before_completion
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
 {
     MPIDI_RMA_Op_t *curr_op = NULL;
@@ -676,7 +676,7 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_RMA_Cleanup_ops_aggressive
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_RMA_Cleanup_ops_aggressive(MPID_Win * win_ptr)
 {
     int i, local_completed = 0, remote_completed ATTRIBUTE((unused)) = 0;
@@ -737,7 +737,7 @@ int MPIDI_CH3I_RMA_Cleanup_ops_aggressive(MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_RMA_Cleanup_target_aggressive
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPID_Win * win_ptr, MPIDI_RMA_Target_t ** target)
 {
     int i, local_completed ATTRIBUTE((unused)) = 0, remote_completed = 0;
@@ -828,7 +828,7 @@ int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPID_Win * win_ptr, MPIDI_RMA_Targe
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_RMA_Make_progress_target
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_RMA_Make_progress_target(MPID_Win * win_ptr, int target_rank, int *made_progress)
 {
     int temp_progress = 0;
@@ -893,7 +893,7 @@ int MPIDI_CH3I_RMA_Make_progress_target(MPID_Win * win_ptr, int target_rank, int
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_RMA_Make_progress_win
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_RMA_Make_progress_win(MPID_Win * win_ptr, int *made_progress)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -942,7 +942,7 @@ int MPIDI_CH3I_RMA_Make_progress_win(MPID_Win * win_ptr, int *made_progress)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_RMA_Make_progress_global
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_RMA_Make_progress_global(int *made_progress)
 {
     MPIDI_RMA_Win_list_t *win_elem = MPIDI_RMA_Win_list;

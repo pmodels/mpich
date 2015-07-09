@@ -388,7 +388,7 @@ double MPID_Wtick( void )
 #undef FUNCNAME
 #define FUNCNAME MPID_Wtick
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 double MPID_Wtick( void )
 {
     MPIU_THREADSAFE_INIT_DECL(initTick);

@@ -112,7 +112,7 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPID_Comm **comm_pptr,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Create_inter_root_communicator_connect
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPIDI_Create_inter_root_communicator_connect(const char *port_name, 
 							MPID_Comm **comm_pptr, 
 							MPIDI_VC_t **vc_pptr)
@@ -161,7 +161,7 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Create_inter_root_communicator_accept
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPIDI_Create_inter_root_communicator_accept(const char *port_name, 
 						MPID_Comm **comm_pptr, 
 						MPIDI_VC_t **vc_pptr)
@@ -233,7 +233,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME  MPIDI_CH3I_Initialize_tmp_comm
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Initialize_tmp_comm(MPID_Comm **comm_pptr, 
 					  MPIDI_VC_t *vc_ptr, int is_low_group, int context_id_offset)
 {
@@ -334,7 +334,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Comm_connect
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root, 
 		       MPID_Comm *comm_ptr, MPID_Comm **newcomm)
 {
@@ -578,7 +578,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
 #undef FUNCNAME
 #define FUNCNAME ExtractLocalPGInfo
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int ExtractLocalPGInfo( MPID_Comm *comm_p, 
 			       pg_translation local_translation[], 
 			       pg_node **pg_list_p,
@@ -685,7 +685,7 @@ static int ExtractLocalPGInfo( MPID_Comm *comm_p,
 #undef FUNCNAME
 #define FUNCNAME ReceivePGAndDistribute
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int ReceivePGAndDistribute( MPID_Comm *tmp_comm, MPID_Comm *comm_ptr, 
 				   int root, int *recvtag_p, 
 				   int n_remote_pgs, MPIDI_PG_t *remote_pg[] )
@@ -764,7 +764,7 @@ static int ReceivePGAndDistribute( MPID_Comm *tmp_comm, MPID_Comm *comm_ptr,
 #undef FUNCNAME
 #define FUNCNAME MPID_PG_BCast
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
 {
     int n_local_pgs=0, mpi_errno = MPI_SUCCESS;
@@ -868,7 +868,7 @@ int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
 #undef FUNCNAME
 #define FUNCNAME SendPGtoPeerAndFree
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int SendPGtoPeerAndFree( MPID_Comm *tmp_comm, int *sendtag_p, 
 				pg_node *pg_list )
 {
@@ -930,7 +930,7 @@ static int SendPGtoPeerAndFree( MPID_Comm *tmp_comm, int *sendtag_p,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Comm_accept
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root, 
 		      MPID_Comm *comm_ptr, MPID_Comm **newcomm)
 {
@@ -1147,7 +1147,7 @@ Input/Output Parameters:
 #undef FUNCNAME
 #define FUNCNAME SetupNewIntercomm
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int SetupNewIntercomm( MPID_Comm *comm_ptr, int remote_comm_size, 
 			      pg_translation remote_translation[],
 			      MPIDI_PG_t **remote_pg, 
@@ -1209,7 +1209,7 @@ static int SetupNewIntercomm( MPID_Comm *comm_ptr, int remote_comm_size,
 #undef FUNCNAME
 #define FUNCNAME FreeNewVC
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static int FreeNewVC( MPIDI_VC_t *new_vc )
 {
     MPID_Progress_state progress_state;
@@ -1271,7 +1271,7 @@ static int AcceptQueueSize    = 0;
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Acceptq_enqueue
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Acceptq_enqueue(MPIDI_VC_t * vc, int port_name_tag )
 {
     int mpi_errno=MPI_SUCCESS;
@@ -1315,7 +1315,7 @@ int MPIDI_CH3I_Acceptq_enqueue(MPIDI_VC_t * vc, int port_name_tag )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Acceptq_dequeue
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Acceptq_dequeue(MPIDI_VC_t ** vc, int port_name_tag)
 {
     int mpi_errno=MPI_SUCCESS;

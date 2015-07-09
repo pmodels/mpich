@@ -9,7 +9,7 @@
 #undef FUNCNAME
 #define FUNCNAME update_request
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 static void update_request(MPID_Request * sreq, MPID_IOV * iov, int iov_count,
 			   int iov_offset, MPIU_Size_t nb)
 {
@@ -39,7 +39,7 @@ static void update_request(MPID_Request * sreq, MPID_IOV * iov, int iov_count,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_iSendv
 #undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq, 
 		     MPID_IOV * iov, int n_iov)
 {
