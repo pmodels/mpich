@@ -182,8 +182,11 @@ MPIDI_CH3I_comm_t;
 
 #define MPID_DEV_COMM_DECL MPIDI_CH3I_comm_t dev;
 
+#ifndef HAVE_MPIDI_VCRT
+#define HAVE_MPIDI_VCRT
 typedef struct MPIDI_VCRT * MPID_VCRT;
 typedef struct MPIDI_VC * MPID_VCR;
+#endif
 
 #ifndef DEFINED_REQ
 #define DEFINED_REQ
