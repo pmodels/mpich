@@ -939,7 +939,11 @@ int MTestTestIntracomm(MPI_Comm comm)
 int MTestTestComm(MPI_Comm comm)
 {
     int is_inter;
+
+    if (comm == MPI_COMM_NULL) return 0;
+
     MPI_Comm_test_inter(comm, &is_inter);
+
     if (is_inter)
         return MTestTestIntercomm(comm);
     else
