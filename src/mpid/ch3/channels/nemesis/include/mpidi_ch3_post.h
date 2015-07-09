@@ -36,12 +36,6 @@ int  MPIDI_CH3I_Posted_recv_dequeued(MPID_Request *rreq);
 
 #include "mpid_nem_post.h"
 
-/* rendezvous hooks */
-int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, MPI_Aint count, MPI_Datatype datatype, int dt_contig,
-                          MPIDI_msg_sz_t data_sz, MPI_Aint dt_true_lb, int rank, int tag, MPID_Comm * comm, int context_offset);
-int MPID_nem_lmt_RndvRecv(struct MPIDI_VC *vc, MPID_Request *rreq);
-
-
 int MPIDI_CH3I_Register_anysource_notification(void (*enqueue_fn)(MPID_Request *rreq), int (*dequeue_fn)(MPID_Request *rreq));
 
 #endif /* !defined(MPICH_MPIDI_CH3_POST_H_INCLUDED) */

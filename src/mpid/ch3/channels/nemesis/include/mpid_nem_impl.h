@@ -32,6 +32,10 @@ int MPID_nem_choose_netmod(void);
 int MPIDI_CH3I_comm_create(MPID_Comm *comm, void *param);
 int MPIDI_CH3I_comm_destroy(MPID_Comm *comm, void *param);
 
+/* rendezvous hooks */
+int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, MPI_Aint count, MPI_Datatype datatype, int dt_contig,
+                          MPIDI_msg_sz_t data_sz, MPI_Aint dt_true_lb, int rank, int tag, MPID_Comm * comm, int context_offset);
+int MPID_nem_lmt_RndvRecv(struct MPIDI_VC *vc, MPID_Request *rreq);
 
 #define MPID_nem_mpich_release_fbox(cell)                                                                     \
     (OPA_store_release_int(&MPID_nem_mem_region.mailboxes.in[(cell)->pkt.mpich.source]->mpich.flag.value, 0), \
