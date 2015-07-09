@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+#include "mpicolltest.h"
 
 /*
 static char MTEST_Descrip[] = "Simple intercomm allgather test";
@@ -46,8 +47,8 @@ int main( int argc, char *argv[] )
 	    else {
 		for (i=0; i<count; i++)       sbuf[i] = -(i + rank*count);
 	    }
-	    err = MPI_Allgather( sbuf, count, datatype,
-				 rbuf, count, datatype, comm );
+	    err = MTest_Allgather(sbuf, count, datatype,
+				 rbuf, count, datatype, comm);
 	    if (err) {
 		errs++;
 		MTestPrintError( err );
@@ -70,8 +71,8 @@ int main( int argc, char *argv[] )
 	    /* Use Allgather in a unidirectional way */
 	    for (i=0; i<count*rsize; i++) rbuf[i] = -1;
 	    if (leftGroup) {
-		err = MPI_Allgather( sbuf, 0, datatype,
-				     rbuf, count, datatype, comm );
+		err = MTest_Allgather(sbuf, 0, datatype,
+				     rbuf, count, datatype, comm);
 		if (err) {
 		    errs++;
 		    MTestPrintError( err );
@@ -83,8 +84,8 @@ int main( int argc, char *argv[] )
 		}
 	    }
 	    else {
-		err = MPI_Allgather( sbuf, count, datatype,
-				     rbuf, 0, datatype, comm );
+		err = MTest_Allgather(sbuf, count, datatype,
+				     rbuf, 0, datatype, comm);
 		if (err) {
 		    errs++;
 		    MTestPrintError( err );

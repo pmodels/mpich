@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+#include "mpicolltest.h"
 
 /*
 static char MTEST_Descrip[] = "Simple intercomm broadcast test";
@@ -44,9 +45,9 @@ int main( int argc, char *argv[] )
 		else {
 		    for (i=0; i<count; i++) buf[i] = -1;
 		}
-		err = MPI_Bcast( buf, count, datatype, 
+		err = MTest_Bcast(buf, count, datatype,
 				 (rank == 0) ? MPI_ROOT : MPI_PROC_NULL,
-				 comm );
+				 comm);
 		if (err) {
 		    errs++;
 		    MTestPrintError( err );
@@ -64,7 +65,7 @@ int main( int argc, char *argv[] )
 	    else {
 		/* In the right group */
 		for (i=0; i<count; i++) buf[i] = -1;
-		err = MPI_Bcast( buf, count, datatype, 0, comm );
+		err = MTest_Bcast(buf, count, datatype, 0, comm);
 		if (err) {
 		    errs++;
 		    MTestPrintError( err );

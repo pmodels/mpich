@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+#include "mpicolltest.h"
 
 /*
 static char MTEST_Descrip[] = "Simple intercomm allgatherv test";
@@ -53,9 +54,9 @@ int main( int argc, char *argv[] )
 	    else {
 		for (i=0; i<count; i++)       sbuf[i] = -(i + rank*count);
 	    }
-	    err = MPI_Allgatherv( sbuf, count, datatype,
-				  rbuf, recvcounts, recvdispls, datatype, 
-				  comm );
+	    err = MTest_Allgatherv(sbuf, count, datatype,
+				  rbuf, recvcounts, recvdispls, datatype,
+				  comm);
 	    if (err) {
 		errs++;
 		MTestPrintError( err );
@@ -78,9 +79,9 @@ int main( int argc, char *argv[] )
 	    /* Use Allgather in a unidirectional way */
 	    for (i=0; i<count*rsize; i++) rbuf[i] = -1;
 	    if (leftGroup) {
-		err = MPI_Allgatherv( sbuf, 0, datatype,
-				      rbuf, recvcounts, recvdispls, datatype, 
-				      comm );
+		err = MTest_Allgatherv(sbuf, 0, datatype,
+				      rbuf, recvcounts, recvdispls, datatype,
+				      comm);
 		if (err) {
 		    errs++;
 		    MTestPrintError( err );
@@ -96,8 +97,8 @@ int main( int argc, char *argv[] )
                     recvcounts[i] = 0;
                     recvdispls[i] = 0;
                 }
-		err = MPI_Allgatherv( sbuf, count, datatype,
-				      rbuf, recvcounts, recvdispls, datatype, comm );
+		err = MTest_Allgatherv(sbuf, count, datatype,
+				      rbuf, recvcounts, recvdispls, datatype, comm);
 		if (err) {
 		    errs++;
 		    MTestPrintError( err );

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+#include "mpicolltest.h"
 
 /*
 static char MTEST_Descrip[] = "Simple intercomm scatterv test";
@@ -53,10 +54,10 @@ int main( int argc, char *argv[] )
 		else {
 		    for (i=0; i<count*rsize; i++) buf[i] = -1;
 		}
-		err = MPI_Scatterv( buf, sendcounts, senddispls, datatype, 
-				    NULL, 0, datatype,
-				    (rank == 0) ? MPI_ROOT : MPI_PROC_NULL,
-				    comm );
+		err = MTest_Scatterv(buf, sendcounts, senddispls, datatype,
+                                     NULL, 0, datatype,
+                                     (rank == 0) ? MPI_ROOT : MPI_PROC_NULL,
+                                     comm);
 		if (err) {
 		    errs++;
 		    MTestPrintError( err );
@@ -78,8 +79,8 @@ int main( int argc, char *argv[] )
 		buf = (int *)malloc( count * sizeof(int) );
 		/* In the right group */
 		for (i=0; i<count; i++) buf[i] = -1;
-		err = MPI_Scatterv( NULL, 0, 0, datatype, 
-				    buf, count, datatype, 0, comm );
+		err = MTest_Scatterv(NULL, 0, 0, datatype,
+                                     buf, count, datatype, 0, comm);
 		if (err) {
 		    errs++;
 		    MTestPrintError( err );

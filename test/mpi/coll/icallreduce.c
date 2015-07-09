@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+#include "mpicolltest.h"
 
 /*
 static char MTEST_Descrip[] = "Simple intercomm allreduce test";
@@ -45,8 +46,8 @@ int main( int argc, char *argv[] )
 		for (i=0; i<count; i++) sendbuf[i] = -i;
 	    }
 	    for (i=0; i<count; i++) recvbuf[i] = 0;
-	    err = MPI_Allreduce( sendbuf, recvbuf, count, datatype, 
-				 MPI_SUM, comm );
+	    err = MTest_Allreduce(sendbuf, recvbuf, count, datatype,
+				 MPI_SUM, comm);
 	    if (err) {
 		errs++;
 		MTestPrintError( err );

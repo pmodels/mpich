@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+#include "mpicolltest.h"
 
 /*
 static char MTEST_Descrip[] = "Simple intercomm barrier test";
@@ -36,7 +37,7 @@ int main( int argc, char *argv[] )
 	   change the error handler to errors return */
 	MPI_Comm_set_errhandler( comm, MPI_ERRORS_RETURN );
 	if (leftGroup) {
-	    err = MPI_Barrier( comm );
+	    err = MTest_Barrier(comm);
 	    if (err) {
 		errs++;
 		MTestPrintError( err );
@@ -44,7 +45,7 @@ int main( int argc, char *argv[] )
 	}
 	else {
 	    /* In the right group */
-	    err = MPI_Barrier( comm );
+	    err = MTest_Barrier(comm);
 	    if (err) {
 		errs++;
 		MTestPrintError( err );

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+#include "mpicolltest.h"
 
 /*
 static char MTEST_Descrip[] = "Simple intercomm gather test";
@@ -38,10 +39,10 @@ int main( int argc, char *argv[] )
 		buf = (int *)malloc( count * rsize * sizeof(int) );
 		for (i=0; i<count*rsize; i++) buf[i] = -1;
 
-		err = MPI_Gather( NULL, 0, datatype,
-				  buf, count, datatype, 
-				 (rank == 0) ? MPI_ROOT : MPI_PROC_NULL,
-				 comm );
+		err = MTest_Gather(NULL, 0, datatype,
+	                           buf, count, datatype,
+                                   (rank == 0) ? MPI_ROOT : MPI_PROC_NULL,
+                                   comm);
 		if (err) {
 		    errs++;
 		    MTestPrintError( err );
@@ -68,8 +69,8 @@ int main( int argc, char *argv[] )
 		/* In the right group */
 		buf = (int *)malloc( count * sizeof(int) );
 		for (i=0; i<count; i++) buf[i] = rank * count + i;
-		err = MPI_Gather( buf, count, datatype, 
-				  NULL, 0, datatype, 0, comm );
+		err = MTest_Gather(buf, count, datatype,
+                                   NULL, 0, datatype, 0, comm);
 		if (err) {
 		    errs++;
 		    MTestPrintError( err );

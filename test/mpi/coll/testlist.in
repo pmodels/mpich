@@ -152,3 +152,17 @@ nbredscat 4   mpiversion=3.0
 nbredscat 8   mpiversion=3.0
 nbredscat3 8  mpiversion=3.0
 nbredscatinter 8 mpiversion=3.0
+
+nbicbcast 8 mpiversion=3.0
+nbicallreduce 8 mpiversion=3.0
+nbicreduce 8 mpiversion=3.0
+nbicscatter 8 mpiversion=3.0
+nbicgather 8 mpiversion=3.0
+nbicallgather 8 mpiversion=3.0
+nbicbarrier 8  mpiversion=3.0
+nbicallgatherv 8 mpiversion=3.0
+nbicgatherv 8 mpiversion=3.0
+nbicscatterv 8 mpiversion=3.0
+nbicalltoall 8 mpiversion=3.0
+nbicalltoallv 8 mpiversion=3.0
+nbicalltoallw 8 mpiversion=3.0

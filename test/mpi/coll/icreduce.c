@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+#include "mpicolltest.h"
 
 /*
 static char MTEST_Descrip[] = "Simple intercomm reduce test";
@@ -44,9 +45,9 @@ int main( int argc, char *argv[] )
 		recvbuf[i] = -1;
 	    }
 	    if (leftGroup) {
-		err = MPI_Reduce( sendbuf, recvbuf, count, datatype, MPI_SUM,
-				 (rank == 0) ? MPI_ROOT : MPI_PROC_NULL,
-				 comm );
+		err = MTest_Reduce(sendbuf, recvbuf, count, datatype, MPI_SUM,
+                                   (rank == 0) ? MPI_ROOT : MPI_PROC_NULL,
+                                   comm);
 		if (err) {
 		    errs++;
 		    MTestPrintError( err );
@@ -71,8 +72,8 @@ int main( int argc, char *argv[] )
 	    else {
 		/* In the right group */
 		for (i=0; i<count; i++) sendbuf[i] = i;
-		err = MPI_Reduce( sendbuf, recvbuf, count, datatype, MPI_SUM, 
-				  0, comm );
+		err = MTest_Reduce(sendbuf, recvbuf, count, datatype, MPI_SUM,
+                                   0, comm);
 		if (err) {
 		    errs++;
 		    MTestPrintError( err );

@@ -7,6 +7,7 @@
 #include "mpitest.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include "mpicolltest.h"
 
 /*
   This program tests MPI_Alltoallw by having processor i send different
@@ -77,8 +78,8 @@ int main( int argc, char **argv )
 	rdispls[i]    = i * rank * sizeof(int);
 	recvtypes[i]  = MPI_INT;
       }
-      MPI_Alltoallw( sbuf, sendcounts, sdispls, sendtypes,
-		     rbuf, recvcounts, rdispls, recvtypes, comm );
+      MTest_Alltoallw(sbuf, sendcounts, sdispls, sendtypes,
+	              rbuf, recvcounts, rdispls, recvtypes, comm);
       
       /* Check rbuf */
       for (i=0; i<size; i++) {

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
+#include "mpicolltest.h"
 
 /*
 static char MTEST_Descrip[] = "Simple intercomm alltoall test";
@@ -40,8 +41,8 @@ int main( int argc, char *argv[] )
 			sendbuf[idx++] = i + rrank;
 		    }
 		}
-		err = MPI_Alltoall( sendbuf, count, datatype, 
-				    NULL, 0, datatype, comm );
+		err = MTest_Alltoall(sendbuf, count, datatype,
+				    NULL, 0, datatype, comm);
 		if (err) {
 		    errs++;
 		    MTestPrintError( err );
@@ -54,8 +55,8 @@ int main( int argc, char *argv[] )
 		MPI_Comm_size( comm, &size );
 
 		/* In the right group */
-		err = MPI_Alltoall( NULL, 0, datatype, 
-				    recvbuf, count, datatype, comm );
+		err = MTest_Alltoall(NULL, 0, datatype,
+				    recvbuf, count, datatype, comm);
 		if (err) {
 		    errs++;
 		    MTestPrintError( err );
