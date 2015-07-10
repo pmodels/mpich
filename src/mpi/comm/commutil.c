@@ -138,6 +138,10 @@ int MPIR_Comm_init(MPID_Comm *comm_p)
     /* Initialize the revoked flag as false */
     comm_p->revoked = 0;
 
+    comm_p->idup_count = 0;
+    comm_p->idup_curr_seqnum = 0;
+    comm_p->idup_next_seqnum = 0;
+
     /* Fields not set include context_id, remote and local size, and
        kind, since different communicator construction routines need
        different values */
@@ -1235,6 +1239,7 @@ struct gcn_state {
     int own_mask;
     int own_eager_mask;
     int first_iter;
+    int seqnum;
     MPID_Comm *comm_ptr;
     MPID_Comm *comm_ptr_inter;
     MPID_Sched_t s;
@@ -1333,6 +1338,10 @@ static int sched_cb_gcn_allocate_cid(MPID_Comm *comm, int tag, void *state)
         MPID_SCHED_BARRIER(st->s);
     } else {
         /* Successfully allocated a context id */
+
+        st->comm_ptr->idup_next_seqnum++;
+        st->comm_ptr->idup_count--;
+
         mpi_errno = MPID_Sched_cb(&sched_cb_gcn_bcast, st, st->s);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPID_SCHED_BARRIER(st->s);
@@ -1367,11 +1376,27 @@ static int sched_cb_gcn_copy_mask(MPID_Comm *comm, int tag, void *state)
             st->own_eager_mask = 1;
         }
         st->first_iter = 0;
+
+        /* idup_count > 1 means there are multiple communicators duplicating
+         * from the current communicator at the same time. And
+         * idup_curr_seqnum gives each duplication operation a priority */
+        st->comm_ptr->idup_count++;
+        st->seqnum = st->comm_ptr->idup_curr_seqnum++;
     } else {
         if (st->comm_ptr->context_id < lowestContextId) {
             lowestContextId = st->comm_ptr->context_id;
         }
-        if (mask_in_use || (st->comm_ptr->context_id != lowestContextId)) {
+
+        /* If one of the following conditions happens, set local_mask to zero
+         * so sched_cb_gcn_allocate_cid can not find a valid id and will retry:
+         * 1. mask is used by other threads;
+         * 2. the current MPI_COMM_IDUP operation does not has the lowestContextId;
+         * 3. for the case that multiple communicators duplicating from the
+         *    same communicator at the same time, the sequence number of the
+         *    current MPI_COMM_IDUP operation is not the smallest. */
+        if (mask_in_use || (st->comm_ptr->context_id != lowestContextId)
+                || (st->comm_ptr->idup_count > 1
+                    && st->seqnum != st->comm_ptr->idup_next_seqnum)) {
             memset(st->local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
             st->own_mask = 0;
         } else {
@@ -1385,6 +1410,7 @@ static int sched_cb_gcn_copy_mask(MPID_Comm *comm, int tag, void *state)
             mask_in_use = 1;
             st->own_mask = 1;
         }
+
     }
 
     mpi_errno = st->comm_ptr->coll_fns->Iallreduce_sched(MPI_IN_PLACE, st->local_mask, MPIR_MAX_CONTEXT_MASK,
