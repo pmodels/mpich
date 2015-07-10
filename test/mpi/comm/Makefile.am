@@ -37,6 +37,7 @@ noinst_PROGRAMS =     \
     comm_idup         \
     comm_idup_mul     \
     comm_idup_overlap \
+    comm_idup_isend   \
     comm_idup_nb      \
     comm_idup_iallreduce \
     comm_info
