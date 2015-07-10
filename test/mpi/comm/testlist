@@ -32,6 +32,7 @@ comm_idup_overlap 2 mpiversion=3.0
 comm_idup_iallreduce 6 mpiversion=3.0 xfail=ticket2269
 comm_idup_nb 6 mpiversion=3.0 xfail=ticket2283
 comm_idup_isend 6 mpiversion=3.0 xfail=ticket2269
+comm_idup_comm 6 mpiversion=3.0 xfail=ticket2269
 dup_with_info 2 mpiversion=3.0
 dup_with_info 4 mpiversion=3.0
 dup_with_info 9 mpiversion=3.0
