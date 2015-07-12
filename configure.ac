@@ -1487,10 +1487,14 @@ done
 IFS="$save_IFS"
 
 if test "$enable_append_g" = "yes" ; then
-    CFLAGS="$CFLAGS -g"
-    CXXFLAGS="$CXXFLAGS -g"
-    FFLAGS="$FFLAGS -g"
-    FCFLAGS="$FCFLAGS -g"
+    PAC_APPEND_FLAG([-g],[CFLAGS])
+    PAC_APPEND_FLAG([-g],[CXXFLAGS])
+    PAC_APPEND_FLAG([-g],[FFLAGS])
+    PAC_APPEND_FLAG([-g],[FCFLAGS])
+    PAC_APPEND_FLAG([-g],[WRAPPER_CFLAGS])
+    PAC_APPEND_FLAG([-g],[WRAPPER_CXXFLAGS])
+    PAC_APPEND_FLAG([-g],[WRAPPER_FFLAGS])
+    PAC_APPEND_FLAG([-g],[WRAPPER_FCFLAGS])
 fi
 if test -n "$perform_meminit" ; then
     AC_DEFINE(MPICH_DEBUG_MEMINIT,1,[Define to enable preinitialization of memory used by structures and unions])
