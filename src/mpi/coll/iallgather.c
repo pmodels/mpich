@@ -718,7 +718,7 @@ int MPI_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
 
             /* catch common aliasing cases */
-            if (recvbuf != MPI_IN_PLACE && sendtype == recvtype && sendcount == recvcount && sendcount != 0) {
+            if (comm_ptr->comm_kind == MPID_INTRACOMM && recvbuf != MPI_IN_PLACE && sendtype == recvtype && sendcount == recvcount && sendcount != 0) {
                 int recvtype_size;
                 MPID_Datatype_get_size_macro(recvtype, recvtype_size);
                 MPIR_ERRTEST_ALIAS_COLL(sendbuf, (char*)recvbuf + comm_ptr->rank*recvcount*recvtype_size, mpi_errno);
