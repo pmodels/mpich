@@ -11,7 +11,7 @@
 #include "mpitest.h"
 
 
-#define ITERS 3
+#define ITERS 5
 
 
 
@@ -102,9 +102,15 @@ int main(int argc, char **argv)
             MPI_Ibcast(&in[i], 1, MPI_INT, 0,test_comm, &sreq[i]);
             MPI_Comm_idup(test_comm, &new_comm[i], &sreq[i+ITERS]);
         }
-        sol = 815;
         MPI_Waitall(ITERS*2, sreq, MPI_STATUS_IGNORE);
+        sol = 815;
+        for(i = 0; i< ITERS; i++) {
+            if(in[i]!= sol) errs++;
+            errs += MTestTestComm(new_comm[i]);
+            MPI_Comm_free(&new_comm[i]);
+       }
 
+        MTestFreeComm(&test_comm);
 
     }
 /* Now the test for inter-communicators */
@@ -118,17 +124,16 @@ int main(int argc, char **argv)
        /* Ibarrier */
 
 
-      /* for(i = 0; i< ITERS; i++) {
+       for(i = 0; i< ITERS; i++) {
             MPI_Ibarrier(test_comm, &sreq[i]);
             MPI_Comm_idup(test_comm, &new_comm[i], &sreq[i+ITERS]);
         }
         MPI_Waitall(ITERS*2, sreq, MPI_STATUS_IGNORE);
        for(i = 0; i< ITERS; i++) {
-            if(in[i]!= sol) errs++;
             errs += MTestTestComm(new_comm[i]);
             MPI_Comm_free(&new_comm[i]);
        }
-*/
+
        /*Ibcast */
        int root;
        for(i = 0; i< ITERS; i++) {
@@ -172,6 +177,7 @@ int main(int argc, char **argv)
             MPI_Comm_free(&new_comm[i]);
        }
 
+        MTestFreeComm(&test_comm);
 
     }
    MTest_Finalize( errs );
