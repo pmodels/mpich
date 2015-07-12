@@ -688,7 +688,7 @@ int MTestGetIntercomm( MPI_Comm *comm, int *isLeftGroup, int min_size )
 
 		/* now split, some bugs only occur for splits of intercomms */
 		mcomm = *comm;
-		rank = MPI_Comm_rank(mcomm, &rank);
+		merr = MPI_Comm_rank(mcomm, &rank);
 		if (merr) MTestPrintError( merr );
 		/* this split is effectively a dup but tests the split code paths */
 		merr = MPI_Comm_split(mcomm, 0, rank, comm);
