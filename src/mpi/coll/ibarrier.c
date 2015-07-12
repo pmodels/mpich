@@ -115,11 +115,11 @@ int MPIR_Ibarrier_inter(MPID_Comm *comm_ptr, MPID_Sched_t s)
 
     /* do a barrier on the local intracommunicator */
     MPIU_Assert(comm_ptr->local_comm->coll_fns && comm_ptr->local_comm->coll_fns->Ibarrier_sched);
-    mpi_errno = comm_ptr->local_comm->coll_fns->Ibarrier_sched(comm_ptr->local_comm, s);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-    MPID_SCHED_BARRIER(s);
-
+    if(comm_ptr->local_size != 1) {
+        mpi_errno = comm_ptr->local_comm->coll_fns->Ibarrier_sched(comm_ptr->local_comm, s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPID_SCHED_BARRIER(s);
+    }
     /* rank 0 on each group does an intercommunicator broadcast to the
        remote group to indicate that all processes in the local group
        have reached the barrier. We do a 1-byte bcast because a 0-byte
@@ -190,7 +190,7 @@ int MPIR_Ibarrier_impl(MPID_Comm *comm_ptr, MPI_Request *request)
         /* --END USEREXTENSION-- */
     }
 
-    if (comm_ptr->local_size != 1) {
+    if (comm_ptr->local_size != 1 || comm_ptr->comm_kind == MPID_INTERCOMM) {
         mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         mpi_errno = MPID_Sched_create(&s);
