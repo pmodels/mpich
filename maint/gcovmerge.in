@@ -1,4 +1,4 @@
-#! @PERL@
+#! /usr/bin/env perl
 # -*- Mode: perl; -*-
 #
 # This script merges output from two files that should be applied to the

@@ -1,4 +1,4 @@
-#! @PERL@
+#! /usr/bin/env perl
 # -*- mode: perl; -*-
 #
 # Create an index of web pages for MPICH

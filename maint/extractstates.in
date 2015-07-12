@@ -1,4 +1,4 @@
-#! @PERL@ -w
+#! /usr/bin/env perl
 # -*- Mode: perl; -*-
 # This file contains the routines specific to extracting the states from 
 # the source files and writing them to the .states-cache files.  This
@@ -38,6 +38,8 @@
 # Defaults for this step.  These are globals variables that are used
 # by routines in the extractstrings script.
 # findStateDecl is the routine that is run to scan a file for information
+use warnings;
+
 $scanFile = "findStateDecl";
 $cachefile = '.state-cache';
 $pattern = '\.[chi](pp){0,1}$';

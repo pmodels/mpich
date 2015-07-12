@@ -1,4 +1,4 @@
-#! @PERL@ -w
+#! /usr/bin/env perl
 # -*- Mode: perl; -*-
 #
 # This script extracts information from files produced by gcov showing what
@@ -37,6 +37,8 @@
 # it is an executable statement, we can't just ignore breaks, and we can't
 # determine which type the break is without parsing the program :(.
 #
+use warnings;
+
 $includeFileInOutput = 0;
 $skipErrExits = 1;
 $outputUncovered = 1;

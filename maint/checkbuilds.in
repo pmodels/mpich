@@ -1,4 +1,4 @@
-#! @PERL@
+#! /usr/bin/env perl
 # -*- Mode: perl; -*-
 # @configure_input@
 #

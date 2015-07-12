@@ -1,4 +1,4 @@
-#! @PERL@ -w
+#! /usr/bin/env perl
 # -*- Mode: perl; -*-
 #
 # f77tof90 indir outdir [ Makefile-template [Make-Append] ]
@@ -10,6 +10,8 @@
 # We also allow the file name to be modified to help out Windows, since
 # programs in a project need to have distinct names
 #
+use warnings;
+
 $indir = $ARGV[0];
 $outdir = $ARGV[1];
 $makeTemplate = $ARGV[2];

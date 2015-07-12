@@ -1,4 +1,4 @@
-#! @PERL@
+#! /usr/bin/env perl
 use File::Find;
 
 %states = ();

@@ -1,4 +1,4 @@
-#! @PERL@ -w
+#! /usr/bin/env perl
 # -*- Mode: perl; -*-
 # 
 # This script is a replacement for several scripts that process source
@@ -59,6 +59,8 @@
 #   fileInCache{filename} = comparison info
 #   
 # -------------------------------------------------------------------------
+use warnings;
+
 $gDebug     = 0;
 # verbose of 1 gives the least amount of data, higher values give
 # increasing amount of detail. (0, of course, gives no detail)
