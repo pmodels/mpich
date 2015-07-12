@@ -873,13 +873,22 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     if (rma_op->reqs_size == 1) {
-        MPIDI_CH3_Request_destroy(rma_op->single_req);
+        /* error case: drop both our reference to the request and the
+         * progress engine's reference to it, since the progress
+         * engine didn't get a chance to see it yet. */
+        MPID_Request_release(rma_op->single_req);
+        MPID_Request_release(rma_op->single_req);
         rma_op->single_req = NULL;
     }
     else if (rma_op->reqs_size > 1) {
         for (i = 0; i < rma_op->reqs_size; i++) {
             if (rma_op->multi_reqs[i] != NULL) {
-                MPIDI_CH3_Request_destroy(rma_op->multi_reqs[i]);
+                /* error case: drop both our reference to the request
+                 * and the progress engine's reference to it, since
+                 * the progress engine didn't get a chance to see it
+                 * yet. */
+                MPID_Request_release(rma_op->multi_reqs[i]);
+                MPID_Request_release(rma_op->multi_reqs[i]);
             }
         }
         MPIU_Free(rma_op->multi_reqs);

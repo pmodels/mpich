@@ -110,76 +110,6 @@ MPID_Request * MPID_Request_create(void)
     return req;
 }
 
-/* FIXME: We need a lighter-weight version of this to avoid all of the
-   extra checks.  One posibility would be a single, no special case (no 
-   comm, datatype, or srbuf to check) and a more general (check everything)
-   version.  */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Request_destroy
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-void MPIDI_CH3_Request_destroy(MPID_Request * req)
-{
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQUEST_DESTROY);
-    
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQUEST_DESTROY);
-    MPIU_DBG_MSG_P(CH3_CHANNEL,VERBOSE,
-		   "freeing request, handle=0x%08x", req->handle);
-    
-#ifdef MPICH_DBG_OUTPUT
-    /*MPIU_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPID_REQUEST);*/
-    if (HANDLE_GET_MPI_KIND(req->handle) != MPID_REQUEST)
-    {
-	int mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, 
-                      FCNAME, __LINE__, MPI_ERR_OTHER, 
-                      "**invalid_handle", "**invalid_handle %d", req->handle);
-	MPID_Abort(MPIR_Process.comm_world, mpi_errno, -1, NULL);
-    }
-    /* XXX DJG FIXME should we be checking this? */
-    /*MPIU_Assert(req->ref_count == 0);*/
-    if (req->ref_count != 0)
-    {
-	int mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-                       FCNAME, __LINE__, MPI_ERR_OTHER, 
-              "**invalid_refcount", "**invalid_refcount %d", req->ref_count);
-	MPID_Abort(MPIR_Process.comm_world, mpi_errno, -1, NULL);
-    }
-#endif
-
-    /* FIXME: We need a better way to handle these so that we
-       do not always need to initialize these fields and check them
-       when we destroy a request */
-    /* FIXME: We need a way to call these routines ONLY when the 
-       related ref count has become zero. */
-    if (req->comm != NULL) {
-	MPIR_Comm_release(req->comm, 0);
-    }
-
-    if (req->greq_fns != NULL) {
-        MPIU_Free(req->greq_fns);
-    }
-
-    if (req->dev.datatype_ptr != NULL) {
-	MPID_Datatype_release(req->dev.datatype_ptr);
-    }
-
-    if (req->dev.segment_ptr != NULL) {
-	MPID_Segment_free(req->dev.segment_ptr);
-    }
-
-    if (MPIDI_Request_get_srbuf_flag(req)) {
-	MPIDI_CH3U_SRBuf_free(req);
-    }
-
-    if (req->dev.ext_hdr_ptr != NULL) {
-        MPIU_Free(req->dev.ext_hdr_ptr);
-    }
-
-    MPIU_Handle_obj_free(&MPID_Request_mem, req);
-    
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_REQUEST_DESTROY);
-}
-
 
 /* ------------------------------------------------------------------------- */
 /* Here are the routines to manipulate the iovs in the requests              */
@@ -684,5 +614,67 @@ void MPID_Request_complete(MPID_Request *req)
     if (!incomplete) {
 	MPID_Request_release(req);
 	MPIDI_CH3_Progress_signal_completion();
+    }
+}
+
+void MPID_Request_release(MPID_Request *req)
+{
+    int inuse;
+
+    MPIR_Request_release_ref(req, &inuse);
+    if (inuse == 0) {
+        MPIU_DBG_MSG_P(CH3_CHANNEL,VERBOSE,
+                       "freeing request, handle=0x%08x", req->handle);
+
+#ifdef MPICH_DBG_OUTPUT
+        /*MPIU_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPID_REQUEST);*/
+        if (HANDLE_GET_MPI_KIND(req->handle) != MPID_REQUEST)
+        {
+            int mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
+                                                 FCNAME, __LINE__, MPI_ERR_OTHER,
+                                                 "**invalid_handle", "**invalid_handle %d", req->handle);
+            MPID_Abort(MPIR_Process.comm_world, mpi_errno, -1, NULL);
+        }
+        /* XXX DJG FIXME should we be checking this? */
+        /*MPIU_Assert(req->ref_count == 0);*/
+        if (req->ref_count != 0)
+        {
+            int mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
+                                                 FCNAME, __LINE__, MPI_ERR_OTHER,
+                                                 "**invalid_refcount", "**invalid_refcount %d", req->ref_count);
+            MPID_Abort(MPIR_Process.comm_world, mpi_errno, -1, NULL);
+        }
+#endif
+
+        /* FIXME: We need a better way to handle these so that we do
+           not always need to initialize these fields and check them
+           when we destroy a request */
+        /* FIXME: We need a way to call these routines ONLY when the
+           related ref count has become zero. */
+        if (req->comm != NULL) {
+            MPIR_Comm_release(req->comm, 0);
+        }
+
+        if (req->greq_fns != NULL) {
+            MPIU_Free(req->greq_fns);
+        }
+
+        if (req->dev.datatype_ptr != NULL) {
+            MPID_Datatype_release(req->dev.datatype_ptr);
+        }
+
+        if (req->dev.segment_ptr != NULL) {
+            MPID_Segment_free(req->dev.segment_ptr);
+        }
+
+        if (MPIDI_Request_get_srbuf_flag(req)) {
+            MPIDI_CH3U_SRBuf_free(req);
+        }
+
+        if (req->dev.ext_hdr_ptr != NULL) {
+            MPIU_Free(req->dev.ext_hdr_ptr);
+        }
+
+        MPIU_Handle_obj_free(&MPID_Request_mem, req);
     }
 }

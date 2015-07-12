@@ -45,10 +45,12 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
     /* --BEGIN ERROR HANDLING-- */
     if (rreq == NULL)
     {
-        /* Set the refcount to 0 since the user will never have a chance to
-         * release their reference */
-        MPIU_Object_set_ref(sreq, 0);
-        MPIDI_CH3_Request_destroy(sreq);
+        /* We release the send request twice, once to release the
+         * progress engine reference and the second to release the
+         * user reference since the user will never have a chance to
+         * release their reference. */
+        MPID_Request_release(sreq);
+        MPID_Request_release(sreq);
 	sreq = NULL;
         MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**nomem", 
 		      "**nomemuereq %d", MPIDI_CH3U_Recvq_count_unexp());
@@ -60,8 +62,12 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
      * which this message is being sent has been revoked and we shouldn't
      * bother finishing this. */
     if (!found && MPID_cc_get(rreq->cc) == 0) {
-        MPIU_Object_set_ref(sreq, 0);
-        MPIDI_CH3_Request_destroy(sreq);
+        /* We release the send request twice, once to release the
+         * progress engine reference and the second to release the
+         * user reference since the user will never have a chance to
+         * release their reference. */
+        MPID_Request_release(sreq);
+        MPID_Request_release(sreq);
         sreq = NULL;
         goto fn_exit;
     }
@@ -124,8 +130,7 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
 	    MPIR_STATUS_SET_COUNT(rreq->status, 0);
 	    
 	    /* sreq has never been seen by the user or outside this thread, so it is safe to reset ref_count and cc */
-	    MPIU_Object_set_ref(sreq, 1);
-            MPID_cc_set(&sreq->cc, 0);
+            MPID_Request_complete(sreq);
 	    /* --END ERROR HANDLING-- */
 	}
 	    

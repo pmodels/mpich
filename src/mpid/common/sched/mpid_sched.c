@@ -424,12 +424,7 @@ fn_fail:
     if (*req)
         *req = NULL;
     if (r) {
-        /* overly complicated, but we can't just destroy the req directly
-         * because we aren't truly inside the device and don't have access to
-         * MPIDI_CH3_Request_destroy (we may not even be CH3) */
-        int inuse = TRUE;
-        MPIR_Request_release_ref(r, &inuse); /* the schedule's ref */
-        MPIU_Assert(inuse);
+        MPID_Request_release(r); /* the schedule's ref */
         MPID_Request_release(r); /* the user's ref */
     }
 

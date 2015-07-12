@@ -86,7 +86,7 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl)(struct MPIDI_VC *vc,
     ret = fi_trecvmsg(gl_data.endpoint,&msg,msgflags);
     if(ret == -ENOMSG) {
       if (rreq_ptr) {
-        MPIDI_CH3_Request_destroy(rreq);
+        MPID_Request_release(rreq);
         *rreq_ptr = NULL;
         *flag = 0;
       }

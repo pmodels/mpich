@@ -530,8 +530,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             MPIU_THREAD_CS_EXIT(CH3COMM, vc);
             /* --BEGIN ERROR HANDLING-- */
             if (mpi_errno != MPI_SUCCESS) {
-                MPIU_Object_set_ref(req, 0);
-                MPIDI_CH3_Request_destroy(req);
+                MPID_Request_release(req);
                 MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
             }
             /* --END ERROR HANDLING-- */
@@ -548,8 +547,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             MPIU_THREAD_CS_EXIT(CH3COMM, vc);
             /* --BEGIN ERROR HANDLING-- */
             if (mpi_errno != MPI_SUCCESS) {
-                MPIU_Object_set_ref(req, 0);
-                MPIDI_CH3_Request_destroy(req);
+                MPID_Request_release(req);
                 MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
             }
             /* --END ERROR HANDLING-- */
@@ -970,8 +968,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         MPIU_THREAD_CS_EXIT(CH3COMM, vc);
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_Object_set_ref(resp_req, 0);
-            MPIDI_CH3_Request_destroy(resp_req);
+            MPID_Request_release(resp_req);
             MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
         }
         /* --END ERROR HANDLING-- */

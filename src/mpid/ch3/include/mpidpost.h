@@ -17,20 +17,6 @@
  */
 
 /*@
-  MPIDI_CH3_Request_destroy - Release resources in use by an existing request 
-  object.
-
-  Input Parameters:
-. req - pointer to the request object
-
-  IMPLEMENTORS:
-  MPIDI_CH3_Request_destroy() must call MPIDI_CH3U_Request_destroy() before 
-  request object is freed.
-@*/
-void MPIDI_CH3_Request_destroy(MPID_Request * req);
-
-
-/*@
   MPIDI_CH3_Progress_start - Mark the beginning of a progress epoch.
 
   Input Parameters:
@@ -147,18 +133,6 @@ int MPIDI_CH3_Comm_connect(char * port_name, int root, MPID_Comm * comm_ptr,
 			   MPID_Comm ** newcomm);
 
 
-/*@
-  MPIDI_CH3U_Request_destroy - Free resources associated with the channel 
-  device (ch3) component of a request.
-
-  Input Parameters:
-. req - pointer to the request object
-
-  IMPLEMENTORS:
-  This routine must be called by MPIDI_CH3_Request_destroy().
-@*/
-void MPIDI_CH3U_Request_destroy(MPID_Request * req);
-
 /* Include definitions from the channel which require items defined by this 
    file (mpidimpl.h) or the file it includes
    (mpiimpl.h). */
@@ -187,21 +161,6 @@ void MPIDI_CH3U_Request_destroy(MPID_Request * req);
 /*
  * Device level request management macros
  */
-
-/* We only export release and set completed on requests, since 
- * other uses (such as incrementing the ref count) are done solely 
- * by the device */
-
-#define MPID_Request_release(req_)			\
-{							\
-    int inuse_;					        \
-							\
-    MPIR_Request_release_ref((req_), &inuse_);	        \
-    if (inuse_ == 0)					\
-    {							\
-	MPIDI_CH3_Request_destroy(req_);		\
-    }							\
-}
 
 
 /*

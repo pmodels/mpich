@@ -67,17 +67,16 @@ int MPID_Cancel_send(MPID_Request * sreq)
              "send-to-self cancellation successful, sreq=0x%08x, rreq=0x%08x",
 						sreq->handle, rreq->handle));
 
-            /* Pull the message out of the unexpected queue since it's being
-             * cancelled */
-            MPIU_Object_set_ref(rreq, 0);
-            MPIDI_CH3_Request_destroy(rreq);
+            /* Pull the message out of the unexpected queue since it's
+             * being cancelled.  The below request release drops one
+             * reference.  We explicitly drop a second reference,
+             * because the receive request will never be visible to
+             * the user. */
+            MPID_Request_release(rreq);
+            MPID_Request_release(rreq);
 
 	    MPIR_STATUS_SET_CANCEL_BIT(sreq->status, TRUE);
-	    /* no other thread should be waiting on sreq, so it is safe to 
-	       reset ref_count and cc */
-            MPID_cc_set(&sreq->cc, 0);
-            /* FIXME should be a decr and assert, not a set */
-	    MPIU_Object_set_ref(sreq, 1);
+            MPID_Request_complete(sreq);
 	}
 	else
 	{

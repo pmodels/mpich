@@ -690,7 +690,7 @@ static inline int adjust_op_piggybacked_with_lock(MPID_Win * win_ptr,
              * operation. */
             if (op->reqs_size == 1) {
                 MPIU_Assert(op->single_req != NULL);
-                MPIDI_CH3_Request_destroy(op->single_req);
+                MPID_Request_release(op->single_req);
                 op->single_req = NULL;
                 win_ptr->active_req_cnt--;
                 op->reqs_size = 0;
@@ -699,7 +699,7 @@ static inline int adjust_op_piggybacked_with_lock(MPID_Win * win_ptr,
                 MPIU_Assert(op->multi_reqs != NULL);
                 for (i = 0; i < op->reqs_size; i++) {
                     if (op->multi_reqs[i] != NULL) {
-                        MPIDI_CH3_Request_destroy(op->multi_reqs[i]);
+                        MPID_Request_release(op->multi_reqs[i]);
                         op->multi_reqs[i] = NULL;
                         win_ptr->active_req_cnt--;
                     }

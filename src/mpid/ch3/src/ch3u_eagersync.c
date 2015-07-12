@@ -81,8 +81,7 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
 	{
         /* Make sure to destroy the request before setting the pointer to
          * NULL, otherwise we lose the handle on the request */
-        MPIU_Object_set_ref(sreq, 0);
-        MPIDI_CH3_Request_destroy(sreq);
+            MPID_Request_release(sreq);
 	    *sreq_p = NULL;
             MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|eagermsg");
 	}

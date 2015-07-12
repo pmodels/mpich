@@ -156,8 +156,10 @@ typedef union MPIDI_CH3_nem_pkt
         if (mpi_errno != MPI_SUCCESS)                                                                   \
         {                                                                                               \
             if (NULL != _rts_req) {                                                                     \
-                MPIU_Object_set_ref(_rts_req, 0);                                                       \
-                MPIDI_CH3_Request_destroy(_rts_req);                                                    \
+                /* error case: drop both the ch3 and nemesis                                            \
+                 * references, so the request can be cleanly freed */                                   \
+                MPID_Request_release(_rts_req);                                                         \
+                MPID_Request_release(_rts_req);                                                         \
             }                                                                                           \
             MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**rtspkt");                                  \
         }                                                                                               \
@@ -167,8 +169,10 @@ typedef union MPIDI_CH3_nem_pkt
             if (_rts_req->status.MPI_ERROR != MPI_SUCCESS)                                              \
             {                                                                                           \
                 mpi_errno = _rts_req->status.MPI_ERROR;                                                 \
-                MPIU_Object_set_ref(_rts_req, 0);                                                       \
-                MPIDI_CH3_Request_destroy(_rts_req);                                                    \
+                /* error case: drop both the ch3 and nemesis                                            \
+                 * references, so the request can be cleanly freed */                                   \
+                MPID_Request_release(_rts_req);                                                         \
+                MPID_Request_release(_rts_req);                                                         \
                 MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**rtspkt");                              \
             }                                                                                           \
             MPID_Request_release(_rts_req);                                                             \
