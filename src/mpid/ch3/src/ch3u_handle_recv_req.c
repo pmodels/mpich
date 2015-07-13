@@ -1710,7 +1710,8 @@ static inline int perform_cas_in_lock_queue(MPID_Win * win_ptr,
 
     /* Send the response packet */
     MPIU_THREAD_CS_ENTER(CH3COMM, target_lock_entry->vc);
-    mpi_errno = MPIDI_CH3_iStartMsg(target_lock_entry->vc, cas_resp_pkt, sizeof(*cas_resp_pkt), &send_req);
+    mpi_errno =
+        MPIDI_CH3_iStartMsg(target_lock_entry->vc, cas_resp_pkt, sizeof(*cas_resp_pkt), &send_req);
     MPIU_THREAD_CS_EXIT(CH3COMM, target_lock_entry->vc);
 
     MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
