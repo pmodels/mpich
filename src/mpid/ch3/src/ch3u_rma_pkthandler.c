@@ -1715,16 +1715,7 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         }
     }
     if (complete) {
-        /* Request-based RMA defines final actions for completing user request. */
-        int (*reqFn) (MPIDI_VC_t *, MPID_Request *, int *);
-        reqFn = req->dev.OnFinal;
-
-        if (reqFn) {
-            mpi_errno = reqFn(vc, req, &complete);
-        }
-        else {
-            mpi_errno = MPID_Request_complete(req);
-        }
+        mpi_errno = MPID_Request_complete(req);
         if (mpi_errno != MPI_SUCCESS) {
             MPIU_ERR_POP(mpi_errno);
         }
@@ -1867,16 +1858,7 @@ int MPIDI_CH3_PktHandler_GetResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     }
 
     if (complete) {
-        /* Request-based RMA defines final actions for completing user request. */
-        int (*reqFn) (MPIDI_VC_t *, MPID_Request *, int *);
-        reqFn = req->dev.OnFinal;
-
-        if (reqFn) {
-            mpi_errno = reqFn(vc, req, &complete);
-        }
-        else {
-            mpi_errno = MPID_Request_complete(req);
-        }
+        mpi_errno = MPID_Request_complete(req);
         if (mpi_errno != MPI_SUCCESS) {
             MPIU_ERR_POP(mpi_errno);
         }

@@ -1852,8 +1852,7 @@ int MPIDI_CH3_ReqHandler_CASSendComplete( MPIDI_VC_t *, MPID_Request *,
 int MPIDI_CH3_ReqHandler_FOPSendComplete( MPIDI_VC_t *, MPID_Request *,
                                           int * );
 /* Request-based operation handler */
-int MPIDI_CH3_ReqHandler_ReqOpsComplete(MPIDI_VC_t *, MPID_Request *,
-                                        int *);
+int MPIDI_CH3_ReqHandler_ReqOpsComplete(MPID_Request *);
 
 /* Thread Support */
 #ifdef MPICH_IS_THREADED

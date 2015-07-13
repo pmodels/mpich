@@ -14,7 +14,7 @@
 #define FUNCNAME MPIDI_CH3_ReqHandler_ReqOpsComplete
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIDI_CH3_ReqHandler_ReqOpsComplete(MPIDI_VC_t * vc, MPID_Request * sreq, int *complete)
+int MPIDI_CH3_ReqHandler_ReqOpsComplete(MPID_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *ureq = NULL;
@@ -31,13 +31,6 @@ int MPIDI_CH3_ReqHandler_ReqOpsComplete(MPIDI_VC_t * vc, MPID_Request * sreq, in
     if (mpi_errno != MPI_SUCCESS) {
         MPIU_ERR_POP(mpi_errno);
     }
-
-    mpi_errno = MPID_Request_complete(sreq);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_POP(mpi_errno);
-    }
-
-    *complete = TRUE;
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_REQOPSCOMPLETE);

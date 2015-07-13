@@ -1296,20 +1296,8 @@ static inline int set_user_req_after_issuing_op(MPIDI_RMA_Op_t * op)
              * - progress engine: complete PUT/ACC req.
              * - GET/GET_ACC packet handler: complete GET/GET_ACC reqs.
              *
-             * We always set OnFinal which should be called when sending or
-             * receiving the last segment. However, short put/acc ops are
-             * issued in one packet and the lower layer only check OnDataAvail
-             * so we have to set OnDataAvail as well.
-             *
-             * Note that a noncontig send also uses OnDataAvail to loop all
-             * segments but it must be changed to OnFinal when sending the
-             * last segment, so it is also correct for us.
-             *
              * TODO: implement stack for overriding functions*/
-            if (req_ptr[i]->dev.OnDataAvail == NULL) {
-                req_ptr[i]->dev.OnDataAvail = MPIDI_CH3_ReqHandler_ReqOpsComplete;
-            }
-            req_ptr[i]->dev.OnFinal = MPIDI_CH3_ReqHandler_ReqOpsComplete;
+            req_ptr[i]->request_completed_cb = MPIDI_CH3_ReqHandler_ReqOpsComplete;
         }       /* end of for loop */
 
         if (incomplete_req_cnt) {
