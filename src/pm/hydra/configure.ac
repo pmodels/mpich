@@ -50,6 +50,9 @@ AC_SUBST(WRAPPER_LIBS)
 
 PAC_ARG_STRICT
 
+# Look for perl.  The absolute path of perl is required in hydra-doxygen.cfg.
+AC_PATH_PROG(PERL,perl)
+
 # In case the documentation targets are used, find doctext and attempt to find
 # the source for the doctext LaTex style files. Use "false" if doctext is not
 # found
