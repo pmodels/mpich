@@ -158,25 +158,19 @@ int MPID_Win_free(MPID_Win ** win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_FREE);
 
-    /* it is possible that there is a IBARRIER in MPI_WIN_FENCE with
-     * MODE_NOPRECEDE not being completed, we let the progress engine
-     * to delete its request when it is completed. */
-    if ((*win_ptr)->fence_sync_req != MPI_REQUEST_NULL) {
-        MPID_Request *req_ptr;
-        MPID_Request_get_ptr((*win_ptr)->fence_sync_req, req_ptr);
-        MPID_Request_release(req_ptr);
-        (*win_ptr)->fence_sync_req = MPI_REQUEST_NULL;
-        (*win_ptr)->states.access_state = MPIDI_RMA_NONE;
-        MPIDI_CH3I_num_active_issued_win--;
-        MPIU_Assert(MPIDI_CH3I_num_active_issued_win >= 0);
-    }
-
-    if ((*win_ptr)->states.access_state == MPIDI_RMA_FENCE_GRANTED)
-        (*win_ptr)->states.access_state = MPIDI_RMA_NONE;
-
-    MPIU_ERR_CHKANDJUMP((*win_ptr)->states.access_state != MPIDI_RMA_NONE ||
-                        (*win_ptr)->states.exposure_state != MPIDI_RMA_NONE,
+    MPIU_ERR_CHKANDJUMP(((*win_ptr)->states.access_state != MPIDI_RMA_NONE &&
+                         (*win_ptr)->states.access_state != MPIDI_RMA_FENCE_ISSUED &&
+                         (*win_ptr)->states.access_state != MPIDI_RMA_FENCE_GRANTED) ||
+                        ((*win_ptr)->states.exposure_state != MPIDI_RMA_NONE),
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
+    if ((*win_ptr)->fence_sync_req != MPI_REQUEST_NULL) {
+        /* If the ibarrier for previous FENCE is not completed,
+         * set the window state to FENCE_ISSUED here, so that
+         * wait_progress_engine() will enter RMA progress and
+         * try to swtich the window state when ibarrier is completed. */
+        (*win_ptr)->states.access_state = MPIDI_RMA_FENCE_ISSUED;
+    }
 
     /* 1. Here we must wait until all passive locks are released on this target,
      * because for some UNLOCK messages, we do not send ACK back to origin,
@@ -191,7 +185,9 @@ int MPID_Win_free(MPID_Win ** win_ptr)
     while ((*win_ptr)->current_lock_type != MPID_LOCK_NONE ||
            (*win_ptr)->at_completion_counter != 0 ||
            (*win_ptr)->target_lock_queue_head != NULL ||
-           (*win_ptr)->current_target_lock_data_bytes != 0) {
+           (*win_ptr)->current_target_lock_data_bytes != 0 ||
+           (*win_ptr)->fence_sync_req != MPI_REQUEST_NULL ||
+           (*win_ptr)->dangling_request_cnt != 0) {
         mpi_errno = wait_progress_engine();
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);

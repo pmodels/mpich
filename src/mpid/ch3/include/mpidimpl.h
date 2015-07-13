@@ -1854,6 +1854,9 @@ int MPIDI_CH3_ReqHandler_FOPSendComplete( MPIDI_VC_t *, MPID_Request *,
 /* Request-based operation handler */
 int MPIDI_CH3_ReqHandler_ReqOpsComplete(MPID_Request *);
 
+/* RMA Synchronization request handler */
+int MPIDI_CH3_Req_handler_rma_sync_complete(MPID_Request *);
+
 /* Thread Support */
 #ifdef MPICH_IS_THREADED
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL

@@ -300,6 +300,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
     (*win_ptr)->lock_epoch_count = 0;
     (*win_ptr)->outstanding_locks = 0;
     (*win_ptr)->current_target_lock_data_bytes = 0;
+    (*win_ptr)->dangling_request_cnt = 0;
 
     /* Initialize the info flags */
     (*win_ptr)->info_args.no_locks = 0;

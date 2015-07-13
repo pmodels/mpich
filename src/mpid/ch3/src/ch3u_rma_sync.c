@@ -515,6 +515,13 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
             if (win_ptr->fence_sync_req != MPI_REQUEST_NULL) {
                 MPID_Request *req_ptr;
                 MPID_Request_get_ptr(win_ptr->fence_sync_req, req_ptr);
+
+                if (!MPID_Request_is_complete(req_ptr)) {
+                    req_ptr->dev.source_win_handle = win_ptr->handle;
+                    req_ptr->request_completed_cb = MPIDI_CH3_Req_handler_rma_sync_complete;
+                    win_ptr->dangling_request_cnt++;
+                }
+
                 MPID_Request_release(req_ptr);
                 win_ptr->fence_sync_req = MPI_REQUEST_NULL;
                 win_ptr->states.access_state = MPIDI_RMA_NONE;
@@ -556,6 +563,13 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
         if (win_ptr->fence_sync_req != MPI_REQUEST_NULL) {
             MPID_Request *req_ptr;
             MPID_Request_get_ptr(win_ptr->fence_sync_req, req_ptr);
+
+            if (!MPID_Request_is_complete(req_ptr)) {
+                req_ptr->dev.source_win_handle = win_ptr->handle;
+                req_ptr->request_completed_cb = MPIDI_CH3_Req_handler_rma_sync_complete;
+                win_ptr->dangling_request_cnt++;
+            }
+
             MPID_Request_release(req_ptr);
             win_ptr->fence_sync_req = MPI_REQUEST_NULL;
             MPIDI_CH3I_num_active_issued_win--;
