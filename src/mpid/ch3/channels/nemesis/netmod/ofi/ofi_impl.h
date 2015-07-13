@@ -22,6 +22,33 @@
 #include <netdb.h>
 
 #include "ofi_tag_layout.h"
+
+/*
+ * Port name consists of tag and business card fields
+ * and has a limit in length up to 256 (MPI_MAX_PORT_NAME).
+ *
+ * Port name has the following format:
+ * <tag><business card>.
+ *
+ * <tag> has the following format:
+ * tag<delim>tag_value<separ>\0
+ * where "tag" is constant string (3 chars),
+ * <delim>  and <separ> are one-char delimeters (2 chars),
+ * tag_value is integer value (12 chars are enough for max value).
+ *
+ * <business card> has the following format:
+ * OFI<delim>address<separ>
+ * where "OFI" is constant string (3 chars),
+ * <delim>  and <separ> are one-char delimeters (2 chars).
+ * address is variable string.
+ *
+ * Address is provider specific and have encoded form
+ * (that increase the original address length in 2 times).
+ * Hence taking in account MPI_MAX_PORT_NAME
+ * the original address length has a limit on top (OFI_MAX_ADDR_LEN).
+ */
+#define OFI_MAX_ADDR_LEN (((MPI_MAX_PORT_NAME) - 23)/2)
+
 /* ************************************************************************** */
 /* Type Definitions                                                           */
 /* ************************************************************************** */
@@ -43,7 +70,7 @@ typedef int (*req_fn) (MPIDI_VC_t *, MPID_Request *, int *);
 /* Global Object for state tracking */
 /* ******************************** */
 typedef struct {
-    char bound_addr[128];       /* This ranks bound address    */
+    char bound_addr[OFI_MAX_ADDR_LEN];       /* This ranks bound address    */
     fi_addr_t any_addr;         /* Specifies any source        */
     size_t bound_addrlen;       /* length of the bound address */
     struct fid_fabric *fabric;  /* fabric object               */
