@@ -468,14 +468,17 @@ int MPID_nem_ofi_vc_init(MPIDI_VC_t * vc)
 int MPID_nem_ofi_vc_destroy(MPIDI_VC_t * vc)
 {
     BEGIN_FUNC(FCNAME);
-    if (vc && (VC_OFI(vc)->is_cmvc == 1) && (VC_OFI(vc)->ready == 1)) {
+    if (gl_data.cm_vcs && vc && (VC_OFI(vc)->is_cmvc == 1)) {
         if (vc->pg != NULL) {
             printf("ERROR: VC Destroy (%p) pg = %s\n", vc, (char *) vc->pg->id);
         }
         MPIDI_VC_t *prev = gl_data.cm_vcs;
         while (prev && prev != vc && VC_OFI(prev)->next != vc) {
-            prev = VC_OFI(vc)->next;
+            prev = VC_OFI(prev)->next;
         }
+
+        MPIU_Assert(prev != NULL);
+
         if (VC_OFI(prev)->next == vc) {
             VC_OFI(prev)->next = VC_OFI(vc)->next;
         }
