@@ -6,4 +6,4 @@ comm_create_group_threads 4
 comm_idup 4 mpiversion=3.0
 ctxidup 4 mpiversion=3.0
 idup_nb 4 mpiversion=3.0 xfail=ticket2283
-idup_comm_gen 4 mpiversion=3.0
+idup_comm_gen 4 mpiversion=3.0 xfail=ticket2286
