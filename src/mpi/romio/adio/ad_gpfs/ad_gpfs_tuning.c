@@ -37,11 +37,13 @@ long    bglocklessmpio_f_type;
 int     gpfsmpio_bg_nagg_pset;
 int     gpfsmpio_pthreadio;
 int     gpfsmpio_p2pcontig;
-int     gpfsmpio_aggmethod;
+int     gpfsmpio_write_aggmethod;
+int     gpfsmpio_read_aggmethod;
 int	gpfsmpio_balancecontig;
 int     gpfsmpio_devnullio;
 int     gpfsmpio_bridgeringagg;
 int     gpfsmpio_onesided_no_rmw;
+int     gpfsmpio_onesided_always_rmw;
 int     gpfsmpio_onesided_inform_rmw;
 
 double	gpfsmpio_prof_cw    [GPFSMPIO_CIO_LAST+1];
@@ -108,8 +110,10 @@ double	gpfsmpio_prof_cr    [GPFSMPIO_CIO_LAST+1];
  * 3.) There are no gaps between the offsets.
  * 4.) No single rank has a data size which spans multiple file domains.
  *
- * - GPFSMPIO_AGGMETHOD -  Replaces the two-phase collective IO aggregation with a one-
- *   sided algorithm, significantly reducing communication and memory overhead.  Fully
+ * - GPFSMPIO_WRITE_AGGMETHOD/GPFSMPIO_READ_AGGMETHOD -  Replaces the two-phase
+ *   collective IO aggregation
+ *   with a one-sided algorithm, significantly reducing communication and
+ *   memory overhead.  Fully
  *   supports all datasets and datatypes, the only caveat is that any holes in the data
  *   when writing to a pre-existing file are ignored -- there is no read-modify-write
  *   support to maintain the correctness of regions of pre-existing data so every byte
@@ -124,7 +128,7 @@ double	gpfsmpio_prof_cr    [GPFSMPIO_CIO_LAST+1];
  *         optimal performance for this is achieved when paired with PAMID_TYPED_ONESIDED=1.
  *   - Default is 0
  *
- * - GPFSMPIO_ONESIDED_NO_RMW - For one-sided aggregation (GPFSMPIO_AGGMETHOD = 1 or 2)
+ * - GPFSMPIO_ONESIDED_NO_RMW - For one-sided aggregation (GPFSMPIO_WRITE_AGGMETHOD = 1 or 2)
  *   disable the detection of holes in the data when writing to a pre-existing
  *   file requiring a read-modify-write, thereby avoiding the communication
  *   overhead for this detection.
@@ -200,9 +204,13 @@ void ad_gpfs_get_env_vars() {
     x = getenv( "GPFSMPIO_P2PCONTIG" );
     if (x) gpfsmpio_p2pcontig = atoi(x);
 
-    gpfsmpio_aggmethod = 0;
-    x = getenv( "GPFSMPIO_AGGMETHOD" );
-    if (x) gpfsmpio_aggmethod = atoi(x);
+    gpfsmpio_write_aggmethod = 0;
+    x = getenv( "GPFSMPIO_WRITE_AGGMETHOD" );
+    if (x) gpfsmpio_write_aggmethod = atoi(x);
+
+    gpfsmpio_read_aggmethod = 0;
+    x = getenv( "GPFSMPIO_READ_AGGMETHOD" );
+    if (x) gpfsmpio_read_aggmethod = atoi(x);
 
     gpfsmpio_balancecontig = 0;
     x = getenv( "GPFSMPIO_BALANCECONTIG" );
@@ -219,6 +227,12 @@ void ad_gpfs_get_env_vars() {
     gpfsmpio_onesided_no_rmw = 0;
     x = getenv( "GPFSMPIO_ONESIDED_NO_RMW" );
     if (x) gpfsmpio_onesided_no_rmw = atoi(x);
+
+    gpfsmpio_onesided_always_rmw = 0;
+    x = getenv( "GPFSMPIO_ONESIDED_ALWAYS_RMW" );
+    if (x) gpfsmpio_onesided_always_rmw = atoi(x);
+    if (gpfsmpio_onesided_always_rmw)
+      gpfsmpio_onesided_no_rmw = 1;
 
     gpfsmpio_onesided_inform_rmw = 0;
     x = getenv( "GPFSMPIO_ONESIDED_INFORM_RMW" );

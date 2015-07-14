@@ -66,11 +66,13 @@ extern int 	gpfsmpio_tuneblocking;
 extern long bglocklessmpio_f_type;
 extern int      gpfsmpio_pthreadio;
 extern int      gpfsmpio_p2pcontig;
-extern int      gpfsmpio_aggmethod;
+extern int      gpfsmpio_write_aggmethod;
+extern int      gpfsmpio_read_aggmethod;
 extern int  gpfsmpio_balancecontig;
 extern int      gpfsmpio_devnullio;
 extern int      gpfsmpio_bridgeringagg;
 extern int      gpfsmpio_onesided_no_rmw;
+extern int      gpfsmpio_onesided_always_rmw;
 extern int      gpfsmpio_onesided_inform_rmw;
 
 /* Default is, well, kind of complicated. Blue Gene /L and /P had "psets": one

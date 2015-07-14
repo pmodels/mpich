@@ -114,6 +114,7 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
     ADIO_Offset *offset_list = NULL, *st_offsets = NULL, *fd_start = NULL,
 	*fd_end = NULL, *end_offsets = NULL;
     ADIO_Offset *gpfs_offsets0 = NULL, *gpfs_offsets = NULL;
+    ADIO_Offset *count_sizes;
     int  ii;
     ADIO_Offset *len_list = NULL;
     int *buf_idx = NULL;
@@ -174,7 +175,36 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
 	st_offsets   = (ADIO_Offset *) ADIOI_Malloc(nprocs*sizeof(ADIO_Offset));
 	end_offsets  = (ADIO_Offset *) ADIOI_Malloc(nprocs*sizeof(ADIO_Offset));
 
+    ADIO_Offset my_count_size;
+    /* One-sided aggregation needs the amount of data per rank as well because the difference in
+     * starting and ending offsets for 1 byte is 0 the same as 0 bytes so it cannot be distiguished.
+     */
+    if ((gpfsmpio_read_aggmethod == 1) || (gpfsmpio_read_aggmethod == 2)) {
+        count_sizes = (ADIO_Offset *) ADIOI_Malloc(nprocs*sizeof(ADIO_Offset));
+        MPI_Count buftype_size;
+        MPI_Type_size_x(datatype, &buftype_size);
+        my_count_size = (ADIO_Offset) count  * (ADIO_Offset)buftype_size;
+    }
     if (gpfsmpio_tunegather) {
+      if ((gpfsmpio_read_aggmethod == 1) || (gpfsmpio_read_aggmethod == 2)) {
+        gpfs_offsets0 = (ADIO_Offset *) ADIOI_Malloc(3*nprocs*sizeof(ADIO_Offset));
+        gpfs_offsets  = (ADIO_Offset *) ADIOI_Malloc(3*nprocs*sizeof(ADIO_Offset));
+        for (ii=0; ii<nprocs; ii++)  {
+          gpfs_offsets0[ii*3]   = 0;
+          gpfs_offsets0[ii*3+1] = 0;
+          gpfs_offsets0[ii*3+2] = 0;
+        }
+        gpfs_offsets0[myrank*3]   = start_offset;
+        gpfs_offsets0[myrank*3+1] =   end_offset;
+        gpfs_offsets0[myrank*3+2] =   my_count_size;
+        MPI_Allreduce( gpfs_offsets0, gpfs_offsets, nprocs*3, ADIO_OFFSET, MPI_MAX, fd->comm );
+        for (ii=0; ii<nprocs; ii++)  {
+          st_offsets [ii] = gpfs_offsets[ii*3]  ;
+          end_offsets[ii] = gpfs_offsets[ii*3+1];
+          count_sizes[ii] = gpfs_offsets[ii*3+2];
+        }
+      }
+      else {
 	    gpfs_offsets0 = (ADIO_Offset *) ADIOI_Malloc(2*nprocs*sizeof(ADIO_Offset));
 	    gpfs_offsets  = (ADIO_Offset *) ADIOI_Malloc(2*nprocs*sizeof(ADIO_Offset));
 	    for (ii=0; ii<nprocs; ii++)  {
@@ -190,6 +220,7 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
 		st_offsets [ii] = gpfs_offsets[ii*2]  ;
 		end_offsets[ii] = gpfs_offsets[ii*2+1];
 	    }
+      }
 	    ADIOI_Free( gpfs_offsets0 );
 	    ADIOI_Free( gpfs_offsets  );
     } else {
@@ -197,6 +228,10 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
                       ADIO_OFFSET, fd->comm);
         MPI_Allgather(&end_offset, 1, ADIO_OFFSET, end_offsets, 1,
                       ADIO_OFFSET, fd->comm);
+        if ((gpfsmpio_read_aggmethod == 1) || (gpfsmpio_read_aggmethod == 2)) {
+	      MPI_Allgather(&count_sizes, 1, ADIO_OFFSET, count_sizes, 1,
+                        ADIO_OFFSET, fd->comm);
+        }
     }
 
     GPFSMPIO_T_CIO_SET_GET( r, 1, 1, GPFSMPIO_CIO_T_PATANA, GPFSMPIO_CIO_T_GATHER )
@@ -259,31 +294,67 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
      * needs to be mapped to an actual rank in the communicator later.
      *
      */
-    if (gpfsmpio_tuneblocking)
+    int currentNonZeroDataIndex = 0;
+    if ((gpfsmpio_read_aggmethod == 1) || (gpfsmpio_read_aggmethod == 2)) {
+      /* Take out the 0-data offsets by shifting the indexes with data to the
+       * front and keeping track of the non-zero data index for use as the
+       * length.  By doing this we will optimally use all available aggs
+       * and spread the actual data across them instead of having offsets
+       * with empty data potentially dilute the file domains and create
+       * problems for the one-sided aggregation.
+       */
+      for (i=0; i<nprocs; i++) {
+        if (count_sizes[i] > 0) {
+          st_offsets[currentNonZeroDataIndex] = st_offsets[i];
+          end_offsets[currentNonZeroDataIndex] = end_offsets[i];
+          currentNonZeroDataIndex++;
+        }
+      }
+    }
+    if (gpfsmpio_tuneblocking) {
+    if ((gpfsmpio_read_aggmethod == 1) || (gpfsmpio_read_aggmethod == 2)) {
+    ADIOI_GPFS_Calc_file_domains(fd, st_offsets, end_offsets, currentNonZeroDataIndex,
+			    nprocs_for_coll, &min_st_offset,
+			    &fd_start, &fd_end, &fd_size, fd->fs_ptr);
+    }
+    else {
     ADIOI_GPFS_Calc_file_domains(fd, st_offsets, end_offsets, nprocs,
 			    nprocs_for_coll, &min_st_offset,
 			    &fd_start, &fd_end, &fd_size, fd->fs_ptr);
-    else
+    }
+    }
+    else {
+    if ((gpfsmpio_read_aggmethod == 1) || (gpfsmpio_read_aggmethod == 2)) {
+    ADIOI_Calc_file_domains(st_offsets, end_offsets, currentNonZeroDataIndex,
+			    nprocs_for_coll, &min_st_offset,
+			    &fd_start, &fd_end,
+			    fd->hints->min_fdomain_size, &fd_size,
+			    fd->hints->striping_unit);
+	}
+    else {
     ADIOI_Calc_file_domains(st_offsets, end_offsets, nprocs,
 			    nprocs_for_coll, &min_st_offset,
 			    &fd_start, &fd_end,
 			    fd->hints->min_fdomain_size, &fd_size, 
 			    fd->hints->striping_unit);
+	}
+    }
 
     GPFSMPIO_T_CIO_SET_GET( r, 1, 1, GPFSMPIO_CIO_T_MYREQ, GPFSMPIO_CIO_T_FD_PART );
-    if ((gpfsmpio_aggmethod == 1) || (gpfsmpio_aggmethod == 2)) {
+    if ((gpfsmpio_read_aggmethod == 1) || (gpfsmpio_read_aggmethod == 2)) {
     /* If the user has specified to use a one-sided aggregation method then do that at
      * this point instead of the two-phase I/O.
      */
       ADIOI_OneSidedReadAggregation(fd, offset_list, len_list, contig_access_count, buf,
-		    datatype,error_code, st_offsets, end_offsets, fd_start, fd_end);
-      GPFSMPIO_T_CIO_REPORT( 1, fd, myrank, nprocs)
+		    datatype,error_code, st_offsets, end_offsets, currentNonZeroDataIndex, fd_start, fd_end);
+      GPFSMPIO_T_CIO_REPORT( 0, fd, myrank, nprocs)
       ADIOI_Free(offset_list);
       ADIOI_Free(len_list);
       ADIOI_Free(st_offsets);
       ADIOI_Free(end_offsets);
       ADIOI_Free(fd_start);
       ADIOI_Free(fd_end);
+      ADIOI_Free(count_sizes);
 	  goto fn_exit;
     }
     if (gpfsmpio_p2pcontig==1) {
