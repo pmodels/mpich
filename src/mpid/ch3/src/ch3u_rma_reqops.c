@@ -55,7 +55,10 @@ int MPID_Rput(const void *origin_addr, int origin_count,
         }
     }
     else {
-        MPID_Request_complete(ureq);
+        mpi_errno = MPID_Request_complete(ureq);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
+        }
     }
 
     *request = ureq;
@@ -115,7 +118,10 @@ int MPID_Rget(void *origin_addr, int origin_count,
         }
     }
     else {
-        MPID_Request_complete(ureq);
+        mpi_errno = MPID_Request_complete(ureq);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
+        }
     }
 
     *request = ureq;
@@ -175,7 +181,10 @@ int MPID_Raccumulate(const void *origin_addr, int origin_count,
         }
     }
     else {
-        MPID_Request_complete(ureq);
+        mpi_errno = MPID_Request_complete(ureq);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
+        }
     }
 
     *request = ureq;
@@ -239,7 +248,10 @@ int MPID_Rget_accumulate(const void *origin_addr, int origin_count,
         }
     }
     else {
-        MPID_Request_complete(ureq);
+        mpi_errno = MPID_Request_complete(ureq);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
+        }
     }
 
     *request = ureq;

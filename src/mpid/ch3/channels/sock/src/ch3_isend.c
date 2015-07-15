@@ -74,7 +74,10 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPID_Request * sreq, void * hdr,
 		    reqFn = sreq->dev.OnDataAvail;
 		    if (!reqFn) {
 			MPIU_Assert(MPIDI_Request_get_type(sreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
-			MPID_Request_complete(sreq);
+                        mpi_errno = MPID_Request_complete(sreq);
+                        if (mpi_errno != MPI_SUCCESS) {
+                            MPIU_ERR_POP(mpi_errno);
+                        }
 		    }
 		    else {
 			int complete;

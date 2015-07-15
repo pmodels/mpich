@@ -504,7 +504,10 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
     while (last < data_sz);
 
     *done = TRUE;
-    MPID_Request_complete(req);
+    mpi_errno = MPID_Request_complete(req);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIU_ERR_POP(mpi_errno);
+    }
     MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "completed req local_req=%d", req->handle);
 
 
@@ -512,6 +515,8 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
     copy_buf->sender_present.val = FALSE;
     MPIDI_FUNC_EXIT(MPID_STATE_LMT_SHM_SEND_PROGRESS);
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 /* Continued from note for lmt_shm_send_progress() above.  The
@@ -643,12 +648,17 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
     OPA_store_int(&copy_buf->owner_info.val.rank, NO_OWNER);
 
     *done = TRUE;
-    MPID_Request_complete(req);
+    mpi_errno = MPID_Request_complete(req);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIU_ERR_POP(mpi_errno);
+    }
 
  fn_exit:
     copy_buf->receiver_present.val = FALSE;
     MPIDI_FUNC_EXIT(MPID_STATE_LMT_SHM_RECV_PROGRESS);
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME

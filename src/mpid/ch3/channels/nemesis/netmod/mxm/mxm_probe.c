@@ -155,7 +155,10 @@ int MPID_nem_mxm_improbe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm,
         err = mxm_message_recv(&mxm_req, mxm_msg);
         _mxm_req_wait(&mxm_req.base);
 
-        MPID_Request_complete(req);
+        mpi_errno = MPID_Request_complete(req);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
+        }
 
         *message = req;
 

@@ -146,7 +146,8 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sre
           msg.data        = 0ULL;
           FI_RC_RETRY(fi_tsendmsg(gl_data.endpoint,&msg,0ULL),tsend);
         }
-        MPID_Request_complete(sreq);
+        MPI_RC(MPID_Request_complete(sreq));
+
         break;
     case MPID_MSG_CTS | MPID_MSG_RTS | MPID_MSG_DATA:
         if (REQ_OFI(sreq)->pack_buffer)
@@ -157,7 +158,7 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sre
 
         reqFn = sreq->dev.OnDataAvail;
         if (!reqFn) {
-            MPID_Request_complete(sreq);
+            MPI_RC(MPID_Request_complete(sreq));
         }
         else {
             vc = REQ_OFI(sreq)->vc;
@@ -166,7 +167,7 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sre
         gl_data.rts_cts_in_flight--;
         break;
     case MPID_MSG_RTS:
-        MPID_Request_complete(sreq);
+        MPI_RC(MPID_Request_complete(sreq));
         break;
     }
     END_FUNC_RC(FCNAME);
@@ -183,7 +184,8 @@ static int MPID_nem_ofi_cts_recv_callback(cq_tagged_entry_t * wc, MPID_Request *
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
     MPI_RC(MPID_nem_ofi_data_callback(wc, REQ_OFI(rreq)->parent));
-    MPID_Request_complete(rreq);
+    MPI_RC(MPID_Request_complete(rreq));
+
     END_FUNC_RC(FCNAME);
 }
 

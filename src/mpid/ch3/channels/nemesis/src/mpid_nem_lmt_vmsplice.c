@@ -75,7 +75,10 @@ static inline int check_req_complete(MPIDI_VC_t *vc, MPID_Request *req, int *com
     }
     else {
         *complete = 1;
-        MPID_Request_complete(req);
+        mpi_errno = MPID_Request_complete(req);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
+        }
     }
 
 fn_fail:

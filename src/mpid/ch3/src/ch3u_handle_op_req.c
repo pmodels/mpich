@@ -27,9 +27,16 @@ int MPIDI_CH3_ReqHandler_ReqOpsComplete(MPIDI_VC_t * vc, MPID_Request * sreq, in
 
     /* Complete user request and release ref of completion handler.
      * Note that ch3 ref is released by later clean_up call. */
-    MPID_Request_complete(ureq);
+    mpi_errno = MPID_Request_complete(ureq);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIU_ERR_POP(mpi_errno);
+    }
 
-    MPID_Request_complete(sreq);
+    mpi_errno = MPID_Request_complete(sreq);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIU_ERR_POP(mpi_errno);
+    }
+
     *complete = TRUE;
 
   fn_exit:

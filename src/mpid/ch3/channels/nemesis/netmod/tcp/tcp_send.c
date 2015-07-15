@@ -149,7 +149,10 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
             if (!reqFn)
             {
                 MPIU_Assert(MPIDI_Request_get_type(sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
-                MPID_Request_complete(sreq);
+                mpi_errno = MPID_Request_complete(sreq);
+                if (mpi_errno != MPI_SUCCESS) {
+                    MPIU_ERR_POP(mpi_errno);
+                }
                 MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
                 MPIDI_CH3I_Sendq_dequeue(send_queue, &sreq);
                 continue;
@@ -575,7 +578,10 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
                     if (!reqFn)
                     {
                         MPIU_Assert(MPIDI_Request_get_type(sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
-                        MPID_Request_complete(sreq);
+                        mpi_errno = MPID_Request_complete(sreq);
+                        if (mpi_errno != MPI_SUCCESS) {
+                            MPIU_ERR_POP(mpi_errno);
+                        }
                         MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
                         goto fn_exit;
                     }
@@ -799,7 +805,10 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
         reqFn = sreq->dev.OnDataAvail;
         if (!reqFn)
         {
-            MPID_Request_complete(sreq);
+            mpi_errno = MPID_Request_complete(sreq);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIU_ERR_POP(mpi_errno);
+            }
             MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
             goto fn_exit;
         }
@@ -870,7 +879,10 @@ int MPID_nem_tcp_error_out_send_queue(struct MPIDI_VC *const vc, int req_errno)
         MPIDI_CH3I_Sendq_dequeue(&vc_tcp->send_queue, &req);
         req->status.MPI_ERROR = req_errno;
 
-        MPID_Request_complete(req);
+        mpi_errno = MPID_Request_complete(req);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
+        }
     }
 
     /* paused send queue */
@@ -878,7 +890,10 @@ int MPID_nem_tcp_error_out_send_queue(struct MPIDI_VC *const vc, int req_errno)
         MPIDI_CH3I_Sendq_dequeue(&vc_tcp->paused_send_queue, &req);
         req->status.MPI_ERROR = req_errno;
 
-        MPID_Request_complete(req);
+        mpi_errno = MPID_Request_complete(req);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
+        }
     }
 
  fn_exit:

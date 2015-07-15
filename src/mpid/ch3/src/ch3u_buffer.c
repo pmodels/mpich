@@ -230,6 +230,7 @@ int MPIDI_CH3_RecvFromSelf( MPID_Request *rreq, void *buf, MPI_Aint count,
 			    MPI_Datatype datatype )
 {
     MPID_Request * const sreq = rreq->partner_request;
+    int mpi_errno = MPI_SUCCESS;
 
     if (sreq != NULL)
     {
@@ -240,7 +241,10 @@ int MPIDI_CH3_RecvFromSelf( MPID_Request *rreq, void *buf, MPI_Aint count,
 			       buf, count, datatype, &data_sz, 
 			       &rreq->status.MPI_ERROR);
 	MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
-	MPID_Request_complete(sreq);
+	mpi_errno = MPID_Request_complete(sreq);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
+        }
     }
     else
     {
@@ -251,7 +255,13 @@ int MPIDI_CH3_RecvFromSelf( MPID_Request *rreq, void *buf, MPI_Aint count,
     
     /* no other thread can possibly be waiting on rreq, so it is safe to 
        reset ref_count and cc */
-    MPID_Request_complete(rreq);
+    mpi_errno = MPID_Request_complete(rreq);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIU_ERR_POP(mpi_errno);
+    }
 
-    return MPI_SUCCESS;
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }

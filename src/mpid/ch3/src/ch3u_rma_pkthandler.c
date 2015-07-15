@@ -1297,7 +1297,11 @@ int MPIDI_CH3_PktHandler_CASResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
     MPIU_Memcpy(req->dev.user_buf, (void *) &cas_resp_pkt->info.data, len);
 
-    MPID_Request_complete(req);
+    mpi_errno = MPID_Request_complete(req);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIU_ERR_POP(mpi_errno);
+    }
+
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
     *rreqp = NULL;
 
@@ -1570,7 +1574,10 @@ int MPIDI_CH3_PktHandler_FOPResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     }
 
     if (complete) {
-        MPID_Request_complete(req);
+        mpi_errno = MPID_Request_complete(req);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
+        }
         *rreqp = NULL;
     }
 
@@ -1716,8 +1723,12 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             mpi_errno = reqFn(vc, req, &complete);
         }
         else {
-            MPID_Request_complete(req);
+            mpi_errno = MPID_Request_complete(req);
         }
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
+        }
+
         *rreqp = NULL;
     }
 
@@ -1864,7 +1875,10 @@ int MPIDI_CH3_PktHandler_GetResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
             mpi_errno = reqFn(vc, req, &complete);
         }
         else {
-            MPID_Request_complete(req);
+            mpi_errno = MPID_Request_complete(req);
+        }
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
         }
 
         *rreqp = NULL;

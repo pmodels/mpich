@@ -20,7 +20,7 @@ static int handle_probe(const ptl_event_t *e)
 
     if (e->ni_fail_type == PTL_NI_NO_MATCH) {
         REQ_PTL(req)->found = FALSE;
-        goto fn_exit;
+        goto finish_probe;
     }
 
     REQ_PTL(req)->found = TRUE;
@@ -28,8 +28,13 @@ static int handle_probe(const ptl_event_t *e)
     req->status.MPI_TAG = NPTL_MATCH_GET_TAG(e->match_bits);
     MPIR_STATUS_SET_COUNT(req->status, NPTL_HEADER_GET_LENGTH(e->hdr_data));
 
-  fn_exit:
-    MPID_Request_complete(req);
+ finish_probe:
+    mpi_errno = MPID_Request_complete(req);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIU_ERR_POP(mpi_errno);
+    }
+
+ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_HANDLE_PROBE);
     return mpi_errno;
  fn_fail:
@@ -47,7 +52,7 @@ static int handle_mprobe(const ptl_event_t *e)
 
     if (e->ni_fail_type == PTL_NI_NO_MATCH) {
         REQ_PTL(req)->found = FALSE;
-        goto fn_exit;
+        goto finish_mprobe;
     }
 
     REQ_PTL(req)->found = TRUE;
@@ -76,9 +81,14 @@ static int handle_mprobe(const ptl_event_t *e)
     REQ_PTL(req)->put_me = PTL_INVALID_HANDLE;
     req->dev.recv_pending_count = 1;
 
+  finish_mprobe:
+    mpi_errno = MPID_Request_complete(req);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIU_ERR_POP(mpi_errno);
+    }
+
   fn_exit:
     MPIU_CHKPMEM_COMMIT();
-    MPID_Request_complete(req);
     MPIDI_FUNC_EXIT(MPID_STATE_HANDLE_PROBE);
     return mpi_errno;
  fn_fail:
@@ -389,7 +399,10 @@ int MPID_nem_ptl_pkt_cancel_send_resp_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *p
         for (i = 0; i < REQ_PTL(sreq)->num_gets; i++) {
             ret = PtlMEUnlink(REQ_PTL(sreq)->get_me_p[i]);
             MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeunlink", "**ptlmeunlink %s", MPID_nem_ptl_strerror(ret));
-            MPID_Request_complete(sreq);
+            mpi_errno = MPID_Request_complete(sreq);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIU_ERR_POP(mpi_errno);
+            }
         }
         if (REQ_PTL(sreq)->get_me_p)
             MPIU_Free(REQ_PTL(sreq)->get_me_p);
@@ -400,7 +413,10 @@ int MPID_nem_ptl_pkt_cancel_send_resp_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *p
         MPIU_DBG_MSG(CH3_OTHER,TYPICAL,"unable to cancel message");
     }
 
-    MPID_Request_complete(sreq);
+    mpi_errno = MPID_Request_complete(sreq);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIU_ERR_POP(mpi_errno);
+    }
 
      *rreqp = NULL;
 

@@ -171,7 +171,7 @@ static inline int MPID_nem_ofi_handle_packet(cq_tagged_entry_t * wc ATTRIBUTE((u
       MPI_RC(MPID_nem_handle_pkt(vc, REQ_OFI(rreq)->pack_buffer, REQ_OFI(rreq)->pack_buffer_size));
       MPIU_Free(REQ_OFI(rreq)->pack_buffer);
     }
-    MPID_Request_complete(rreq);
+    MPI_RC(MPID_Request_complete(rreq));
     END_FUNC_RC(FCNAME);
 }
 
@@ -187,7 +187,7 @@ static inline int MPID_nem_ofi_cts_send_callback(cq_tagged_entry_t * wc, MPID_Re
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
     MPI_RC(MPID_nem_ofi_handle_packet(wc, REQ_OFI(sreq)->parent));
-    MPID_Request_complete(sreq);
+    MPI_RC(MPID_Request_complete(sreq));
     END_FUNC_RC(FCNAME);
 }
 
@@ -279,10 +279,10 @@ int MPID_nem_ofi_connect_to_root_callback(cq_tagged_entry_t * wc ATTRIBUTE((unus
 
     if (REQ_OFI(sreq)->pack_buffer)
         MPIU_Free(REQ_OFI(sreq)->pack_buffer);
-    MPID_Request_complete(sreq);
 
-    END_FUNC(FCNAME);
-    return mpi_errno;
+    MPI_RC(MPID_Request_complete(sreq));
+
+    END_FUNC_RC(FCNAME);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -375,18 +375,14 @@ int MPID_nem_ofi_cm_finalize()
                     &(REQ_OFI(gl_data.persistent_req)->ofi_context)), cancel);
     MPIR_STATUS_SET_CANCEL_BIT(gl_data.persistent_req->status, TRUE);
     MPIR_STATUS_SET_COUNT(gl_data.persistent_req->status, 0);
-    MPID_Request_complete(gl_data.persistent_req);
+    MPI_RC(MPID_Request_complete(gl_data.persistent_req));
 
     FI_RC(fi_cancel((fid_t) gl_data.endpoint, &(REQ_OFI(gl_data.conn_req)->ofi_context)), cancel);
     MPIU_Free(gl_data.conn_req->dev.user_buf);
     MPIR_STATUS_SET_CANCEL_BIT(gl_data.conn_req->status, TRUE);
     MPIR_STATUS_SET_COUNT(gl_data.conn_req->status, 0);
-    MPID_Request_complete(gl_data.conn_req);
-  fn_exit:
-    END_FUNC(FCNAME);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
+    MPI_RC(MPID_Request_complete(gl_data.conn_req));
+    END_FUNC_RC(FCNAME);
 }
 
 /* ------------------------------------------------------------------------ */

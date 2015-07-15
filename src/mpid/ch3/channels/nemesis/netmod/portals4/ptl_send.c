@@ -86,7 +86,10 @@ static int handler_send(const ptl_event_t *e)
         if (REQ_PTL(sreq)->get_me_p)
             MPIU_Free(REQ_PTL(sreq)->get_me_p);
     }
-    MPID_Request_complete(sreq);
+    mpi_errno = MPID_Request_complete(sreq);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIU_ERR_POP(mpi_errno);
+    }
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_HANDLER_SEND);

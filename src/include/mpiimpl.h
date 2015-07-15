@@ -3532,7 +3532,7 @@ void MPID_Request_release(MPID_Request *);
   Module:
   Request
 @*/
-void MPID_Request_complete(MPID_Request *);
+int MPID_Request_complete(MPID_Request *);
 
 typedef struct MPID_Grequest_class {
      MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */

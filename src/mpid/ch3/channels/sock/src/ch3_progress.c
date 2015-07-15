@@ -508,7 +508,10 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 		    reqFn = rreq->dev.OnDataAvail;
 		    if (!reqFn) {
 			MPIU_Assert(MPIDI_Request_get_type(rreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
-			MPID_Request_complete(rreq);
+                        mpi_errno = MPID_Request_complete(rreq);
+                        if (mpi_errno != MPI_SUCCESS) {
+                            MPIU_ERR_POP(mpi_errno);
+                        }
 			complete = TRUE;
 		    }
 		    else {
@@ -567,7 +570,11 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 		reqFn = sreq->dev.OnDataAvail;
 		if (!reqFn) {
 		    MPIU_Assert(MPIDI_Request_get_type(sreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
-		    MPID_Request_complete(sreq);
+                    mpi_errno = MPID_Request_complete(sreq);
+                    if (mpi_errno != MPI_SUCCESS) {
+                        MPIU_ERR_POP(mpi_errno);
+                    }
+
 		    complete = TRUE;
 		}
 		else {
@@ -611,7 +618,10 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 			    reqFn = sreq->dev.OnDataAvail;
 			    if (!reqFn) {
 				MPIU_Assert(MPIDI_Request_get_type(sreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
-				MPID_Request_complete(sreq);
+                                mpi_errno = MPID_Request_complete(sreq);
+                                if (mpi_errno != MPI_SUCCESS) {
+                                    MPIU_ERR_POP(mpi_errno);
+                                }
 				complete = TRUE;
 			    }
 			    else {
@@ -885,7 +895,10 @@ static int ReadMoreData( MPIDI_CH3I_Connection_t * conn, MPID_Request *rreq )
 	    reqFn = rreq->dev.OnDataAvail;
 	    if (!reqFn) {
 		MPIU_Assert(MPIDI_Request_get_type(rreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
-		MPID_Request_complete(rreq);
+                mpi_errno = MPID_Request_complete(rreq);
+                if (mpi_errno != MPI_SUCCESS) {
+                    MPIU_ERR_POP(mpi_errno);
+                }
 		complete = TRUE;
 	    }
 	    else {

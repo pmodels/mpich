@@ -300,7 +300,10 @@ int MPIDI_CH3_PktHandler_RndvSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     
     if (req->dev.recv_data_sz == 0) {
         *buflen = sizeof(MPIDI_CH3_Pkt_t);
-	MPID_Request_complete(req);
+        mpi_errno = MPID_Request_complete(req);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
+        }
 	*rreqp = NULL;
     }
     else {
@@ -315,7 +318,10 @@ int MPIDI_CH3_PktHandler_RndvSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 
         if (complete) 
         {
-            MPID_Request_complete(req);
+            mpi_errno = MPID_Request_complete(req);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIU_ERR_POP(mpi_errno);
+            }
             *rreqp = NULL;
         }
         else

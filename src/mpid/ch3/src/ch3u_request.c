@@ -606,15 +606,21 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPID_Request * rreq)
     return mpi_errno;
 }
 
-void MPID_Request_complete(MPID_Request *req)
+int MPID_Request_complete(MPID_Request *req)
 {
     int incomplete;
+    int mpi_errno = MPI_SUCCESS;
 
     MPIDI_CH3U_Request_decrement_cc(req, &incomplete);
     if (!incomplete) {
 	MPID_Request_release(req);
 	MPIDI_CH3_Progress_signal_completion();
     }
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 void MPID_Request_release(MPID_Request *req)

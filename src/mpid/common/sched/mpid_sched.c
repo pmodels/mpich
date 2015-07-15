@@ -911,7 +911,11 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                     break;
             }
 
-            MPID_Request_complete(s->req);
+            mpi_errno = MPID_Request_complete(s->req);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIU_ERR_POP(mpi_errno);
+            }
+
             s->req = NULL;
             MPIU_Free(s->entries);
             MPIU_Free(s);

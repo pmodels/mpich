@@ -1264,7 +1264,10 @@ static inline int set_user_req_after_issuing_op(MPIDI_RMA_Op_t * op)
          * and release ch3 ref. */
 
         /* Complete user request and release the ch3 ref */
-        MPID_Request_complete(op->ureq);
+        mpi_errno = MPID_Request_complete(op->ureq);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
+        }
     }
     else {
         MPID_Request **req_ptr = NULL;
@@ -1316,7 +1319,10 @@ static inline int set_user_req_after_issuing_op(MPIDI_RMA_Op_t * op)
         else {
             /* all requests are completed */
             /* Complete user request and release ch3 ref */
-            MPID_Request_complete(op->ureq);
+            mpi_errno = MPID_Request_complete(op->ureq);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIU_ERR_POP(mpi_errno);
+            }
             op->ureq = NULL;
         }
     }

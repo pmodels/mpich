@@ -409,11 +409,12 @@ int MPID_nem_ptl_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
 #define FUNCNAME on_data_avail
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static inline void on_data_avail(MPID_Request * req)
+static inline int on_data_avail(MPID_Request * req)
 {
     int (*reqFn) (MPIDI_VC_t *, MPID_Request *, int *);
     MPIDI_VC_t *vc = req->ch.vc;
     MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
+    int mpi_errno = MPI_SUCCESS;
 
     MPIDI_STATE_DECL(MPID_STATE_ON_DATA_AVAIL);
 
@@ -421,7 +422,11 @@ static inline void on_data_avail(MPID_Request * req)
 
     reqFn = req->dev.OnDataAvail;
     if (!reqFn) {
-        MPID_Request_complete(req);
+        mpi_errno = MPID_Request_complete(req);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
+        }
+
         MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
     }
     else {
@@ -435,7 +440,11 @@ static inline void on_data_avail(MPID_Request * req)
     if (vc->state == MPIDI_VC_STATE_CLOSED && vc_ptl->num_queued_sends == 0)
         MPID_nem_ptl_vc_terminated(vc);
 
+ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_ON_DATA_AVAIL);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -542,8 +551,12 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
             MPID_Request_get_ptr(handle, req);
             if (--REQ_PTL(req)->num_gets == 0) {
                 MPIU_Free(TMPBUF(req));
-                if (REQ_PTL(req)->put_done)
-                    on_data_avail(req);  /* Otherwise we'll do it on the SEND */
+                if (REQ_PTL(req)->put_done) {
+                    mpi_errno = on_data_avail(req);  /* Otherwise we'll do it on the SEND */
+                    if (mpi_errno != MPI_SUCCESS) {
+                        MPIU_ERR_POP(mpi_errno);
+                    }
+                }
             }
         }
         break;
@@ -554,8 +567,12 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
 
             MPIU_Free(SENDBUF(req));
             REQ_PTL(req)->put_done = 1;
-            if (REQ_PTL(req)->num_gets == 0)  /* Otherwise GET will do it */
-                on_data_avail(req);
+            if (REQ_PTL(req)->num_gets == 0) {  /* Otherwise GET will do it */
+                mpi_errno = on_data_avail(req);
+                if (mpi_errno != MPI_SUCCESS) {
+                    MPIU_ERR_POP(mpi_errno);
+                }
+            }
         }
         break;
 

@@ -70,7 +70,10 @@ static int handler_recv_complete(const ptl_event_t *e)
         if (REQ_PTL(rreq)->chunk_buffer[i])
             MPIU_Free(REQ_PTL(rreq)->chunk_buffer[i]);
     
-    MPID_Request_complete(rreq);
+    mpi_errno = MPID_Request_complete(rreq);
+    if (mpi_errno) {
+        MPIU_ERR_POP(mpi_errno);
+    }
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_HANDLER_RECV_COMPLETE);

@@ -134,7 +134,10 @@ static void MPID_nem_llc_send_handler(void *cba, uint64_t * p_reqid)
                 if (reqFn == 0) {
                     MPIU_Assert(reqtype != MPIDI_REQUEST_TYPE_GET_RESP);
 
-                    MPID_Request_complete(sreq);
+                    r_mpi_errno = MPID_Request_complete(sreq);
+                    if (r_mpi_errno != MPI_SUCCESS) {
+                        MPIU_ERR_POP(r_mpi_errno);
+                    }
                     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
                 }
                 else {

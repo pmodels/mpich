@@ -126,7 +126,10 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPID_IOV *iov, int n_i
             if (!reqFn)
             {
                 MPIU_Assert (MPIDI_Request_get_type (sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
-                MPID_Request_complete (sreq);
+                mpi_errno = MPID_Request_complete (sreq);
+                if (mpi_errno != MPI_SUCCESS) {
+                    MPIU_ERR_POP(mpi_errno);
+                }
                 MPIU_DBG_MSG (CH3_CHANNEL, VERBOSE, ".... complete");
             }
             else

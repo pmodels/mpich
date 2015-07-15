@@ -305,7 +305,10 @@ static inline int check_req_complete(MPIDI_VC_t *vc, MPID_Request *req, int *com
     }
     else {
         *complete = 1;
-        MPID_Request_complete(req);
+        mpi_errno = MPID_Request_complete(req);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
+        }
     }
 
 fn_fail:
@@ -478,7 +481,10 @@ int MPID_nem_lmt_dma_done_send(MPIDI_VC_t *vc, MPID_Request *sreq)
        reason. */
     reqFn = sreq->dev.OnDataAvail;
     if (!reqFn) {
-        MPID_Request_complete(sreq);
+        mpi_errno = MPID_Request_complete(sreq);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
+        }
         MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
         goto fn_exit;
     }
@@ -611,7 +617,10 @@ int MPID_nem_lmt_dma_progress(void)
                 cur->req->status.MPI_ERROR = MPI_SUCCESS;
                 MPIU_ERR_SET1(cur->req->status.MPI_ERROR, MPI_ERR_OTHER, "**recv_status", "**recv_status %d", *cur->status_p);
 
-                MPID_Request_complete(cur->req);
+                mpi_errno = MPID_Request_complete(cur->req);
+                if (mpi_errno != MPI_SUCCESS) {
+                    MPIU_ERR_POP(mpi_errno);
+                }
 
                 if (cur == outstanding_head) {
                     outstanding_head = cur->next;
