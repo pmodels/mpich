@@ -115,6 +115,11 @@ int MPIR_Comm_init(MPID_Comm *comm_p)
 
     MPIU_THREAD_MPI_OBJ_INIT(comm_p);
 
+    /* initialize local and remote sizes to -1 to allow other parts of
+     * the stack to detect errors more easily */
+    comm_p->local_size = -1;
+    comm_p->remote_size = -1;
+
     /* Clear many items (empty means to use the default; some of these
        may be overridden within the upper-level communicator initialization) */
     comm_p->errhandler   = NULL;
