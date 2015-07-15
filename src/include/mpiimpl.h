@@ -1509,6 +1509,11 @@ typedef struct MPID_Request {
     /* Errflag for NBC requests. Not used by other requests. */
     mpir_errflag_t errflag;
 
+    /* request_completed_cb: the callback function triggered when this request
+     * is completed, i.e. CC is set to 0. Inside request_completed_cb, progress
+     * engine should not be called. */
+    int (*request_completed_cb)(struct MPID_Request *);
+
     /* Other, device-specific information */
 #ifdef MPID_DEV_REQUEST_DECL
     MPID_DEV_REQUEST_DECL

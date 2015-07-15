@@ -74,6 +74,7 @@ MPID_Request * MPID_Request_create(void)
 	req->comm		   = NULL;
         req->greq_fns              = NULL;
         req->errflag               = MPIR_ERR_NONE;
+        req->request_completed_cb  = NULL;
 	req->dev.datatype_ptr	   = NULL;
 	req->dev.segment_ptr	   = NULL;
 	/* Masks and flags for channel device state in an MPID_Request */
@@ -613,6 +614,14 @@ int MPID_Request_complete(MPID_Request *req)
 
     MPIDI_CH3U_Request_decrement_cc(req, &incomplete);
     if (!incomplete) {
+        /* trigger request_completed callback function */
+        if (req->request_completed_cb != NULL) {
+            mpi_errno = req->request_completed_cb(req);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIU_ERR_POP(mpi_errno);
+            }
+        }
+
 	MPID_Request_release(req);
 	MPIDI_CH3_Progress_signal_completion();
     }
