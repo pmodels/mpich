@@ -646,7 +646,7 @@ typedef struct MPIDI_Comm_ops
 		int dest, int tag, MPID_Comm *comm, int context_offset,
 		struct MPID_Request **request);
     int (*rsend)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
-		 int dest, int tag, MPID_Comm *comm, MPI_Aint context_offset,
+		 int dest, int tag, MPID_Comm *comm, int context_offset,
 		 struct MPID_Request **request);
     int (*ssend)(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
 		 int dest, int tag, MPID_Comm *comm, int context_offset,
