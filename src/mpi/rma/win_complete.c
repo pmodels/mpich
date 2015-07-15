@@ -87,7 +87,7 @@ int MPI_Win_complete(MPI_Win win)
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPIR_RMA_CALL(win_ptr,Win_complete(win_ptr));
+    mpi_errno = MPID_Win_complete(win_ptr);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

@@ -138,11 +138,10 @@ int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    mpi_errno = MPIR_RMA_CALL(win_ptr,
-			      Get(origin_addr, origin_count, origin_datatype,
-				  target_rank, target_disp, target_count,
-				  target_datatype, win_ptr));
+
+    mpi_errno = MPID_Get(origin_addr, origin_count, origin_datatype,
+                         target_rank, target_disp, target_count,
+                         target_datatype, win_ptr);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

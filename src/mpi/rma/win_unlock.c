@@ -98,7 +98,7 @@ int MPI_Win_unlock(int rank, MPI_Win win)
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPIR_RMA_CALL(win_ptr,Win_unlock(rank, win_ptr));
+    mpi_errno = MPID_Win_unlock(rank, win_ptr);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

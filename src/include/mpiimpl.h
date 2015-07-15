@@ -1584,101 +1584,6 @@ MPID_Progress_state;
 /* end of mpirma.h (in src/mpi/rma?) */
 /* ------------------------------------------------------------------------- */
 
-/*
- * To provide more flexibility in the handling of RMA operations, we provide
- * these options:
- *
- *  Statically defined ADI routines
- *      MPID_Put etc, provided by the ADI
- *  Dynamically defined routines
- *      A function table is used, initialized during window creation
- *
- * Which of these is used is selected by the device.  If USE_MPID_RMA_TABLE is
- * defined, then the function table is used.  Otherwise, the calls turn into
- * MPID_<Rma operation>, e.g., MPID_Put or MPID_Win_create.
- */
-
-/* We need to export this header file (at least the struct) to the
-   device, so that it can implement the init routine. */
-#ifdef USE_MPID_RMA_TABLE
-#define MPIR_RMA_CALL(winptr,funccall) (winptr)->RMAFns.funccall
-
-#else
-/* Just use the MPID_<fcn> version of the function */
-#define MPIR_RMA_CALL(winptr,funccall) MPID_##funccall
-
-#endif /* USE_MPID_RMA_TABLE */
-
-/* Windows */
-#ifdef USE_MPID_RMA_TABLE
-struct MPID_Win;
-typedef struct MPID_RMA_Ops {
-    int (*Win_free)(struct MPID_Win **);
-
-    int (*Put) (const void *, int, MPI_Datatype, int, MPI_Aint, int,
-                MPI_Datatype, struct MPID_Win *);
-    int (*Get) (void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype,
-                struct MPID_Win *);
-    int (*Accumulate) (const void *, int, MPI_Datatype, int, MPI_Aint, int,
-                       MPI_Datatype, MPI_Op, struct MPID_Win *);
-
-    int (*Win_fence)(int, struct MPID_Win *);
-    int (*Win_post)(MPID_Group *, int, struct MPID_Win *);
-    int (*Win_start)(MPID_Group *, int, struct MPID_Win *);
-    int (*Win_complete)(struct MPID_Win *);
-    int (*Win_wait)(struct MPID_Win *);
-    int (*Win_test)(struct MPID_Win *, int *);
-
-    int (*Win_lock)(int, int, int, struct MPID_Win *);
-    int (*Win_unlock)(int, struct MPID_Win *);
-
-    /* MPI-3 Functions */
-    int (*Win_attach)(struct MPID_Win *, void *, MPI_Aint);
-    int (*Win_detach)(struct MPID_Win *, const void *);
-    int (*Win_shared_query)(struct MPID_Win *, int, MPI_Aint *, int *, void *);
-
-    int (*Win_set_info)(struct MPID_Win *, MPID_Info *);
-    int (*Win_get_info)(struct MPID_Win *, MPID_Info **);
-
-    int (*Win_lock_all)(int, struct MPID_Win *);
-    int (*Win_unlock_all)(struct MPID_Win *);
-
-    int (*Win_flush)(int, struct MPID_Win *);
-    int (*Win_flush_all)(struct MPID_Win *);
-    int (*Win_flush_local)(int, struct MPID_Win *);
-    int (*Win_flush_local_all)(struct MPID_Win *);
-    int (*Win_sync)(struct MPID_Win *);
-
-    int (*Get_accumulate)(const void *, int , MPI_Datatype, void *, int,
-                          MPI_Datatype, int, MPI_Aint, int, MPI_Datatype, MPI_Op,
-                          struct MPID_Win *);
-    int (*Fetch_and_op)(const void *, void *, MPI_Datatype, int, MPI_Aint, MPI_Op,
-                        struct MPID_Win *);
-    int (*Compare_and_swap)(const void *, const void *, void *, MPI_Datatype, int,
-                            MPI_Aint, struct MPID_Win *);
-
-    int (*Rput)(const void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype,
-                struct MPID_Win *, MPID_Request**);
-    int (*Rget)(void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype,
-                struct MPID_Win *, MPID_Request**);
-    int (*Raccumulate)(const void *, int, MPI_Datatype, int, MPI_Aint, int,
-                       MPI_Datatype, MPI_Op, struct MPID_Win *, MPID_Request**);
-    int (*Rget_accumulate)(const void *, int , MPI_Datatype, void *, int,
-                           MPI_Datatype, int, MPI_Aint, int, MPI_Datatype, MPI_Op,
-                           struct MPID_Win *, MPID_Request**);
-
-} MPID_RMAFns;
-#define MPID_RMAFNS_VERSION 2
-/* Note that the memory allocation/free routines do not take a window, 
-   so they must be initialized separately, and are a per-run, not per-window
-   object.  If the device can manage different kinds of memory allocations,
-   these routines must internally provide that flexibility. */
-/* 
-    void *(*Alloc_mem)(size_t, MPID_Info *);
-    int (*Free_mem)(void *);
-*/
-#endif
-
 /*S
   MPID_Win - Description of the Window Object data structure.
 
@@ -1731,10 +1636,6 @@ typedef struct MPID_Win {
     HANDLE passive_target_thread_id;
 #endif
 #endif
-    /* */
-#ifdef USE_MPID_RMA_TABLE
-    MPID_RMAFns RMAFns;
-#endif    
     /* These are COPIES of the values so that addresses to them
        can be returned as attributes.  They are initialized by the
        MPI_Win_get_attr function.

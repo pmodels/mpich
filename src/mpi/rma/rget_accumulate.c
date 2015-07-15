@@ -186,13 +186,13 @@ int MPI_Rget_accumulate(const void *origin_addr, int origin_count,
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPIR_RMA_CALL(win_ptr,Rget_accumulate(origin_addr, origin_count,
-                                         origin_datatype,
-                                         result_addr, result_count,
-                                         result_datatype,
-                                         target_rank, target_disp, target_count,
-                                         target_datatype, op, win_ptr,
-                                         &request_ptr));
+    mpi_errno = MPID_Rget_accumulate(origin_addr, origin_count,
+                                     origin_datatype,
+                                     result_addr, result_count,
+                                     result_datatype,
+                                     target_rank, target_disp, target_count,
+                                     target_datatype, op, win_ptr,
+                                     &request_ptr);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     *request = request_ptr->handle;

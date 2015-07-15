@@ -139,10 +139,9 @@ int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPIR_RMA_CALL(win_ptr,
-			      Put(origin_addr, origin_count, origin_datatype,
-				  target_rank, target_disp, target_count,
-				  target_datatype, win_ptr));
+    mpi_errno = MPID_Put(origin_addr, origin_count, origin_datatype,
+                         target_rank, target_disp, target_count,
+                         target_datatype, win_ptr);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

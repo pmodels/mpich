@@ -149,10 +149,10 @@ int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPIR_RMA_CALL(win_ptr,Fetch_and_op(origin_addr,
-                                         result_addr, datatype,
-                                         target_rank, target_disp,
-                                         op, win_ptr));
+    mpi_errno = MPID_Fetch_and_op(origin_addr,
+                                  result_addr, datatype,
+                                  target_rank, target_disp,
+                                  op, win_ptr);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

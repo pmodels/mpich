@@ -9,13 +9,13 @@
 #include "mpidrma.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Rput
+#define FUNCNAME MPID_Rput
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIDI_Rput(const void *origin_addr, int origin_count,
-               MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
-               int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
-               MPID_Request ** request)
+int MPID_Rput(const void *origin_addr, int origin_count,
+              MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+              int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
+              MPID_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig ATTRIBUTE((unused));
@@ -23,9 +23,9 @@ int MPIDI_Rput(const void *origin_addr, int origin_count,
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_msg_sz_t data_sz;
     MPID_Request *ureq;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_RPUT);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_RPUT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RPUT);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_RPUT);
 
     /* request-based RMA operations are only valid within a passive epoch */
     MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
@@ -63,7 +63,7 @@ int MPIDI_Rput(const void *origin_addr, int origin_count,
     *request = ureq;
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RPUT);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_RPUT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -71,13 +71,13 @@ int MPIDI_Rput(const void *origin_addr, int origin_count,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Rget
+#define FUNCNAME MPID_Rget
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIDI_Rget(void *origin_addr, int origin_count,
-               MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
-               int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
-               MPID_Request ** request)
+int MPID_Rget(void *origin_addr, int origin_count,
+              MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+              int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
+              MPID_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig ATTRIBUTE((unused));
@@ -85,9 +85,9 @@ int MPIDI_Rget(void *origin_addr, int origin_count,
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_msg_sz_t data_sz;
     MPID_Request *ureq;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_RGET);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_RGET);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RGET);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_RGET);
 
     /* request-based RMA operations are only valid within a passive epoch */
     MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
@@ -125,7 +125,7 @@ int MPIDI_Rget(void *origin_addr, int origin_count,
     *request = ureq;
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RGET);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_RGET);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -133,13 +133,13 @@ int MPIDI_Rget(void *origin_addr, int origin_count,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Raccumulate
+#define FUNCNAME MPID_Raccumulate
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
-                      MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
-                      int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win * win_ptr,
-                      MPID_Request ** request)
+int MPID_Raccumulate(const void *origin_addr, int origin_count,
+                     MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+                     int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win * win_ptr,
+                     MPID_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig ATTRIBUTE((unused));
@@ -147,9 +147,9 @@ int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_msg_sz_t data_sz;
     MPID_Request *ureq;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_RACCUMULATE);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_RACCUMULATE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RACCUMULATE);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_RACCUMULATE);
 
     /* request-based RMA operations are only valid within a passive epoch */
     MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
@@ -187,7 +187,7 @@ int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
     *request = ureq;
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RACCUMULATE);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_RACCUMULATE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -195,14 +195,14 @@ int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Rget_accumulate
+#define FUNCNAME MPID_Rget_accumulate
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
-                          MPI_Datatype origin_datatype, void *result_addr, int result_count,
-                          MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
-                          int target_count, MPI_Datatype target_datatype, MPI_Op op,
-                          MPID_Win * win_ptr, MPID_Request ** request)
+int MPID_Rget_accumulate(const void *origin_addr, int origin_count,
+                         MPI_Datatype origin_datatype, void *result_addr, int result_count,
+                         MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
+                         int target_count, MPI_Datatype target_datatype, MPI_Op op,
+                         MPID_Win * win_ptr, MPID_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig ATTRIBUTE((unused));
@@ -210,9 +210,9 @@ int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_msg_sz_t data_sz, trg_data_sz;
     MPID_Request *ureq;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_RGET_ACCUMULATE);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_RGET_ACCUMULATE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RGET_ACCUMULATE);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_RGET_ACCUMULATE);
 
     /* request-based RMA operations are only valid within a passive epoch */
     MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
@@ -253,7 +253,7 @@ int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
     *request = ureq;
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RGET_ACCUMULATE);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_RGET_ACCUMULATE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

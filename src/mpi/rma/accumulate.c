@@ -144,11 +144,11 @@ int MPI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    mpi_errno = MPIR_RMA_CALL(win_ptr,Accumulate(origin_addr, origin_count,
-					 origin_datatype,
-					 target_rank, target_disp, target_count,
-					 target_datatype, op, win_ptr));
+
+    mpi_errno = MPID_Accumulate(origin_addr, origin_count,
+                                origin_datatype,
+                                target_rank, target_disp, target_count,
+                                target_datatype, op, win_ptr);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

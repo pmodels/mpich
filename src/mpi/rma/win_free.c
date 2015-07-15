@@ -117,7 +117,7 @@ int MPI_Win_free(MPI_Win *win)
 	}
     }
     
-    mpi_errno = MPIR_RMA_CALL(win_ptr,Win_free(&win_ptr));
+    mpi_errno = MPID_Win_free(&win_ptr);
     if (mpi_errno) goto fn_fail;
     *win = MPI_WIN_NULL;
 

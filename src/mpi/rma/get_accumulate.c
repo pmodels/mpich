@@ -197,12 +197,12 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPIR_RMA_CALL(win_ptr,Get_accumulate(origin_addr, origin_count,
-                                         origin_datatype,
-                                         result_addr, result_count,
-                                         result_datatype,
-                                         target_rank, target_disp, target_count,
-                                         target_datatype, op, win_ptr));
+    mpi_errno = MPID_Get_accumulate(origin_addr, origin_count,
+                                    origin_datatype,
+                                    result_addr, result_count,
+                                    result_datatype,
+                                    target_rank, target_disp, target_count,
+                                    target_datatype, op, win_ptr);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

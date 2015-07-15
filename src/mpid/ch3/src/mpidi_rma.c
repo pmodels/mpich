@@ -144,19 +144,19 @@ void MPIDI_RMA_finalize(void)
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Win_free
+#define FUNCNAME MPID_Win_free
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIDI_Win_free(MPID_Win ** win_ptr)
+int MPID_Win_free(MPID_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int in_use;
     MPID_Comm *comm_ptr;
     mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPIDI_RMA_Win_list_t *win_elem;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FREE);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_WIN_FREE);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_FREE);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_FREE);
 
     /* it is possible that there is a IBARRIER in MPI_WIN_FENCE with
      * MODE_NOPRECEDE not being completed, we let the progress engine
@@ -246,71 +246,9 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
     MPIU_Handle_obj_free(&MPID_Win_mem, *win_ptr);
 
   fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FREE);
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPID_WIN_FREE);
     return mpi_errno;
 
   fn_fail:
     goto fn_exit;
-}
-
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Win_shared_query
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIDI_Win_shared_query(MPID_Win * win_ptr, int target_rank, MPI_Aint * size,
-                           int *disp_unit, void *baseptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_SHARED_QUERY);
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_SHARED_QUERY);
-
-    *(void **) baseptr = win_ptr->base;
-    *size = win_ptr->size;
-    *disp_unit = win_ptr->disp_unit;
-
-  fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_SHARED_QUERY);
-    return mpi_errno;
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
-}
-
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Alloc_mem
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-void *MPIDI_Alloc_mem(size_t size, MPID_Info * info_ptr)
-{
-    void *ap;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_ALLOC_MEM);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_ALLOC_MEM);
-
-    ap = MPIDI_CH3I_Alloc_mem(size, info_ptr);
-
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_ALLOC_MEM);
-    return ap;
-}
-
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Free_mem
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIDI_Free_mem(void *ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_FREE_MEM);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_FREE_MEM);
-
-    MPIDI_CH3I_Free_mem(ptr);
-
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_FREE_MEM);
-    return mpi_errno;
 }

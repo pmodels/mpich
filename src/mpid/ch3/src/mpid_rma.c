@@ -47,50 +47,6 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
                     MPID_Comm * comm_ptr, MPID_Win ** win_ptr);
 
 
-#define MPID_WIN_FTABLE_SET_DEFAULTS(win_ptr)                   \
-    do {                                                        \
-        /* Get ptr to RMAFns, which is embedded in MPID_Win */  \
-        MPID_RMAFns *ftable         = &(*(win_ptr))->RMAFns;    \
-        ftable->Win_free            = MPIDI_Win_free;           \
-        ftable->Win_attach          = MPIDI_Win_attach;         \
-        ftable->Win_detach          = MPIDI_Win_detach;         \
-        ftable->Win_shared_query    = MPIDI_Win_shared_query;   \
-                                                                \
-        ftable->Win_set_info        = MPIDI_Win_set_info;       \
-        ftable->Win_get_info        = MPIDI_Win_get_info;       \
-                                                                \
-        ftable->Put                 = MPIDI_Put;                \
-        ftable->Get                 = MPIDI_Get;                \
-        ftable->Accumulate          = MPIDI_Accumulate;         \
-        ftable->Get_accumulate      = MPIDI_Get_accumulate;     \
-        ftable->Fetch_and_op        = MPIDI_Fetch_and_op;       \
-        ftable->Compare_and_swap    = MPIDI_Compare_and_swap;   \
-                                                                \
-        ftable->Rput                = MPIDI_Rput;               \
-        ftable->Rget                = MPIDI_Rget;               \
-        ftable->Raccumulate         = MPIDI_Raccumulate;        \
-        ftable->Rget_accumulate     = MPIDI_Rget_accumulate;    \
-                                                                \
-        ftable->Win_fence           = MPIDI_Win_fence;          \
-        ftable->Win_post            = MPIDI_Win_post;           \
-        ftable->Win_start           = MPIDI_Win_start;          \
-        ftable->Win_complete        = MPIDI_Win_complete;       \
-        ftable->Win_wait            = MPIDI_Win_wait;           \
-        ftable->Win_test            = MPIDI_Win_test;           \
-                                                                \
-        ftable->Win_lock            = MPIDI_Win_lock;           \
-        ftable->Win_unlock          = MPIDI_Win_unlock;         \
-        ftable->Win_lock_all        = MPIDI_Win_lock_all;       \
-        ftable->Win_unlock_all      = MPIDI_Win_unlock_all;     \
-                                                                \
-        ftable->Win_flush           = MPIDI_Win_flush;          \
-        ftable->Win_flush_all       = MPIDI_Win_flush_all;      \
-        ftable->Win_flush_local     = MPIDI_Win_flush_local;    \
-        ftable->Win_flush_local_all = MPIDI_Win_flush_local_all;\
-        ftable->Win_sync            = MPIDI_Win_sync;           \
-    } while (0)
-
-
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_create
 #undef FCNAME
@@ -200,7 +156,7 @@ void *MPID_Alloc_mem(size_t size, MPID_Info * info_ptr)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_ALLOC_MEM);
 
-    ap = MPIDI_Alloc_mem(size, info_ptr);
+    ap = MPIDI_CH3I_Alloc_mem(size, info_ptr);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_ALLOC_MEM);
     return ap;
@@ -218,10 +174,7 @@ int MPID_Free_mem(void *ptr)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_FREE_MEM);
 
-    mpi_errno = MPIDI_Free_mem(ptr);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_POP(mpi_errno);
-    }
+    MPIDI_CH3I_Free_mem(ptr);
 
   fn_fail:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_FREE_MEM);
@@ -357,11 +310,8 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
     (*win_ptr)->info_args.alloc_shared_noncontig = 0;
     (*win_ptr)->info_args.alloc_shm = FALSE;
 
-    /* Set function pointers on window */
-    MPID_WIN_FTABLE_SET_DEFAULTS(win_ptr);
-
     /* Set info_args on window based on info provided by user */
-    mpi_errno = (*win_ptr)->RMAFns.Win_set_info((*win_ptr), info);
+    mpi_errno = MPID_Win_set_info((*win_ptr), info);
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
 
@@ -435,53 +385,5 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
     return mpi_errno;
   fn_fail:
     MPIU_CHKPMEM_REAP();
-    goto fn_exit;
-}
-
-
-#undef FUNCNAME
-#define FUNCNAME MPID_Win_set_info
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_Win_set_info(MPID_Win * win, MPID_Info * info)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_WIN_SET_INFO);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_WIN_SET_INFO);
-
-    mpi_errno = win->RMAFns.Win_set_info(win, info);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_POP(mpi_errno);
-    }
-
-  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_WIN_SET_INFO);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-
-#undef FUNCNAME
-#define FUNCNAME MPID_Win_get_info
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_Win_get_info(MPID_Win * win, MPID_Info ** info_used)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_WIN_GET_INFO);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_WIN_GET_INFO);
-
-    mpi_errno = win->RMAFns.Win_get_info(win, info_used);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_POP(mpi_errno);
-    }
-
-  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_WIN_GET_INFO);
-    return mpi_errno;
-  fn_fail:
     goto fn_exit;
 }

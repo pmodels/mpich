@@ -102,8 +102,7 @@ int MPI_Win_detach(MPI_Win win, const void *base)
 
     if (base == NULL) goto fn_exit;
     
-    mpi_errno = MPIR_RMA_CALL(win_ptr,
-                              Win_detach(win_ptr, base));
+    mpi_errno = MPID_Win_detach(win_ptr, base);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */
