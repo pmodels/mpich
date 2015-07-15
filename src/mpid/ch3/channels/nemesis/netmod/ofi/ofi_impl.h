@@ -201,7 +201,7 @@ fn_fail:                      \
                            #STR);                               \
     } while (0)
 
-#define MPI_RC(FUNC)                                        \
+#define MPIDI_CH3I_NM_OFI_RC(FUNC)                          \
   do                                                        \
     {                                                       \
       mpi_errno  = FUNC;                                    \
@@ -211,7 +211,7 @@ fn_fail:                      \
 #define VC_READY_CHECK(vc)                      \
 ({                                              \
   if (1 != VC_OFI(vc)->ready) {                 \
-    MPI_RC(MPID_nem_ofi_vc_connect(vc));        \
+    MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_vc_connect(vc));  \
   }                                             \
 })
 

@@ -214,7 +214,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* Get our business card            */
     /* -------------------------------- */
     my_bc = *bc_val_p;
-    MPI_RC(MPID_nem_ofi_get_business_card(pg_rank, bc_val_p, val_max_sz_p));
+    MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_get_business_card(pg_rank, bc_val_p, val_max_sz_p));
 
     /* -------------------------------- */
     /* Publish the business card        */
@@ -289,7 +289,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* required, like connection management and      */
     /* startcontig messages                          */
     /* --------------------------------------------- */
-    MPI_RC(MPID_nem_ofi_cm_init(pg_p, pg_rank));
+    MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_cm_init(pg_p, pg_rank));
   fn_exit:
     if (fi_addrs)
         MPIU_Free(fi_addrs);
@@ -316,7 +316,7 @@ int MPID_nem_ofi_finalize(void)
     /* Cancels any persistent/global requests and    */
     /* frees any resources from cm_init()            */
     /* --------------------------------------------- */
-    MPI_RC(MPID_nem_ofi_cm_finalize());
+    MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_cm_finalize());
 
     FI_RC(fi_close((fid_t) gl_data.endpoint), epclose);
     FI_RC(fi_close((fid_t) gl_data.av), avclose);

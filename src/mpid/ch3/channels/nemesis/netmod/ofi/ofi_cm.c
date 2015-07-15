@@ -124,7 +124,7 @@ static inline int MPID_nem_ofi_conn_req_callback(cq_tagged_entry_t * wc, MPID_Re
     MPIU_Assertp(vc);
 
     MPIDI_VC_Init(vc, NULL, 0);
-    MPI_RC(MPIDI_GetTagFromPort(bc, &vc->port_name_tag));
+    MPIDI_CH3I_NM_OFI_RC(MPIDI_GetTagFromPort(bc, &vc->port_name_tag));
     ret = MPIU_Str_get_binary_arg(bc, "OFI", addr, gl_data.bound_addrlen, &len);
     MPIU_ERR_CHKANDJUMP((ret != MPIU_STR_SUCCESS && ret != MPIU_STR_NOMEM) ||
                         (size_t) len != gl_data.bound_addrlen,
@@ -168,10 +168,10 @@ static inline int MPID_nem_ofi_handle_packet(cq_tagged_entry_t * wc ATTRIBUTE((u
     if (MPID_cc_get(rreq->cc) == 1) {
       vc = REQ_OFI(rreq)->vc;
       MPIU_Assert(vc);
-      MPI_RC(MPID_nem_handle_pkt(vc, REQ_OFI(rreq)->pack_buffer, REQ_OFI(rreq)->pack_buffer_size));
+      MPIDI_CH3I_NM_OFI_RC(MPID_nem_handle_pkt(vc, REQ_OFI(rreq)->pack_buffer, REQ_OFI(rreq)->pack_buffer_size));
       MPIU_Free(REQ_OFI(rreq)->pack_buffer);
     }
-    MPI_RC(MPID_Request_complete(rreq));
+    MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(rreq));
     END_FUNC_RC(FCNAME);
 }
 
@@ -186,8 +186,8 @@ static inline int MPID_nem_ofi_cts_send_callback(cq_tagged_entry_t * wc, MPID_Re
 {
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
-    MPI_RC(MPID_nem_ofi_handle_packet(wc, REQ_OFI(sreq)->parent));
-    MPI_RC(MPID_Request_complete(sreq));
+    MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_handle_packet(wc, REQ_OFI(sreq)->parent));
+    MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(sreq));
     END_FUNC_RC(FCNAME);
 }
 
@@ -280,7 +280,7 @@ int MPID_nem_ofi_connect_to_root_callback(cq_tagged_entry_t * wc ATTRIBUTE((unus
     if (REQ_OFI(sreq)->pack_buffer)
         MPIU_Free(REQ_OFI(sreq)->pack_buffer);
 
-    MPI_RC(MPID_Request_complete(sreq));
+    MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(sreq));
 
     END_FUNC_RC(FCNAME);
 }
@@ -303,12 +303,12 @@ int MPID_nem_ofi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
     /* Set up CH3 and netmod data structures */
     /* ------------------------------------- */
     if (gl_data.api_set == API_SET_1) {
-        MPI_RC(MPIDI_CH3I_Register_anysource_notification(MPID_nem_ofi_anysource_posted,
+        MPIDI_CH3I_NM_OFI_RC(MPIDI_CH3I_Register_anysource_notification(MPID_nem_ofi_anysource_posted,
                                                           MPID_nem_ofi_anysource_matched));
         MPIDI_Anysource_iprobe_fn = MPID_nem_ofi_anysource_iprobe;
         MPIDI_Anysource_improbe_fn = MPID_nem_ofi_anysource_improbe;
     } else {
-        MPI_RC(MPIDI_CH3I_Register_anysource_notification(MPID_nem_ofi_anysource_posted_2,
+        MPIDI_CH3I_NM_OFI_RC(MPIDI_CH3I_Register_anysource_notification(MPID_nem_ofi_anysource_posted_2,
                                                           MPID_nem_ofi_anysource_matched));
         MPIDI_Anysource_iprobe_fn = MPID_nem_ofi_anysource_iprobe_2;
         MPIDI_Anysource_improbe_fn = MPID_nem_ofi_anysource_improbe_2;
@@ -375,13 +375,13 @@ int MPID_nem_ofi_cm_finalize()
                     &(REQ_OFI(gl_data.persistent_req)->ofi_context)), cancel);
     MPIR_STATUS_SET_CANCEL_BIT(gl_data.persistent_req->status, TRUE);
     MPIR_STATUS_SET_COUNT(gl_data.persistent_req->status, 0);
-    MPI_RC(MPID_Request_complete(gl_data.persistent_req));
+    MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(gl_data.persistent_req));
 
     FI_RC(fi_cancel((fid_t) gl_data.endpoint, &(REQ_OFI(gl_data.conn_req)->ofi_context)), cancel);
     MPIU_Free(gl_data.conn_req->dev.user_buf);
     MPIR_STATUS_SET_CANCEL_BIT(gl_data.conn_req->status, TRUE);
     MPIR_STATUS_SET_COUNT(gl_data.conn_req->status, 0);
-    MPI_RC(MPID_Request_complete(gl_data.conn_req));
+    MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(gl_data.conn_req));
     END_FUNC_RC(FCNAME);
 }
 
@@ -408,7 +408,7 @@ int MPID_nem_ofi_vc_connect(MPIDI_VC_t * vc)
         goto fn_exit;
     }
 
-    MPI_RC(vc->pg->getConnInfo(vc->pg_rank, bc, OFI_KVSAPPSTRLEN, vc->pg));
+    MPIDI_CH3I_NM_OFI_RC(vc->pg->getConnInfo(vc->pg_rank, bc, OFI_KVSAPPSTRLEN, vc->pg));
     ret = MPIU_Str_get_binary_arg(bc, "OFI", addr, gl_data.bound_addrlen, &len);
     MPIU_ERR_CHKANDJUMP((ret != MPIU_STR_SUCCESS && ret != MPIU_STR_NOMEM) ||
                         (size_t) len != gl_data.bound_addrlen,
@@ -496,7 +496,7 @@ int MPID_nem_ofi_vc_terminate(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
-    MPI_RC(MPIDI_CH3U_Handle_connection(vc, MPIDI_VC_EVENT_TERMINATED));
+    MPIDI_CH3I_NM_OFI_RC(MPIDI_CH3U_Handle_connection(vc, MPIDI_VC_EVENT_TERMINATED));
     VC_OFI(vc)->ready = 0;
     END_FUNC_RC(FCNAME);
 }
@@ -537,7 +537,7 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
         mpi_errno = MPI_ERR_OTHER;
         goto fn_fail;
     }
-    MPI_RC(MPIDI_GetTagFromPort(business_card, &new_vc->port_name_tag));
+    MPIDI_CH3I_NM_OFI_RC(MPIDI_GetTagFromPort(business_card, &new_vc->port_name_tag));
     ret = MPIU_Str_get_binary_arg(business_card, "OFI", addr, gl_data.bound_addrlen, &len);
     MPIU_ERR_CHKANDJUMP((ret != MPIU_STR_SUCCESS && ret != MPIU_STR_NOMEM) ||
                         (size_t) len != gl_data.bound_addrlen,
@@ -547,7 +547,7 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     VC_OFI(new_vc)->ready = 1;
     str_errno = MPIU_Str_add_int_arg(&bc, &my_bc_len, "tag", new_vc->port_name_tag);
     MPIU_ERR_CHKANDJUMP(str_errno, mpi_errno, MPI_ERR_OTHER, "**argstr_port_name_tag");
-    MPI_RC(MPID_nem_ofi_get_business_card(MPIR_Process.comm_world->rank, &bc, &my_bc_len));
+    MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_get_business_card(MPIR_Process.comm_world->rank, &bc, &my_bc_len));
     my_bc_len = OFI_KVSAPPSTRLEN - my_bc_len;
 
     MPID_nem_ofi_create_req(&sreq, 1);

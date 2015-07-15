@@ -59,7 +59,7 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
             if (NULL != wc.op_context) {
                 req = context_to_req(wc.op_context);
                 if (REQ_OFI(req)->event_callback) {
-                    MPI_RC(REQ_OFI(req)->event_callback(&wc, req));
+                    MPIDI_CH3I_NM_OFI_RC(REQ_OFI(req)->event_callback(&wc, req));
                     continue;
                 }
                 reqFn = req->dev.OnDataAvail;
@@ -70,7 +70,7 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
                     vc = REQ_OFI(req)->vc;
 
                     complete = 0;
-                    MPI_RC(reqFn(vc, req, &complete));
+                    MPIDI_CH3I_NM_OFI_RC(reqFn(vc, req, &complete));
                     continue;
                 }
                 else {
