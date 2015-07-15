@@ -463,6 +463,13 @@ int MPIR_Comm_commit(MPID_Comm *comm)
     MPIU_Assert(comm->node_comm == NULL);
     MPIU_Assert(comm->node_roots_comm == NULL);
 
+    mpi_errno = set_collops(comm);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    /* Notify device of communicator creation */
+    mpi_errno = MPID_Dev_comm_create_hook(comm);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     if (comm->comm_kind == MPID_INTRACOMM) {
 
         mpi_errno = MPIU_Find_local_and_external(comm,
@@ -570,17 +577,6 @@ int MPIR_Comm_commit(MPID_Comm *comm)
     }
 
 fn_exit:
-    if (!mpi_errno) {
-        /* catch all of the early-bail, non-error cases */
-
-        mpi_errno = set_collops(comm);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-        /* Notify device of communicator creation */
-        mpi_errno = MPID_Dev_comm_create_hook(comm);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
-
     if (external_procs != NULL)
         MPIU_Free(external_procs);
     if (local_procs != NULL)
