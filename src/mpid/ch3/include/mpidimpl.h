@@ -1144,6 +1144,7 @@ typedef struct {
     int (*create_dynamic)(MPID_Info *, MPID_Comm *, MPID_Win **);
     int (*detect_shm)(MPID_Win **);
     int (*gather_info)(void *, MPI_Aint, int, MPID_Info *, MPID_Comm *, MPID_Win **);
+    int (*shared_query)(MPID_Win *, int, MPI_Aint *, int *, void *);
 } MPIDI_CH3U_Win_fns_t;
 
 extern MPIDI_CH3U_Win_fns_t MPIDI_CH3U_Win_fns;
@@ -1184,7 +1185,8 @@ int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info *info,
 int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPID_Info *info,
                                    MPID_Comm *comm_ptr, void *baseptr, MPID_Win **win_ptr);
 int MPIDI_CH3U_Win_create_dynamic(MPID_Info *info, MPID_Comm *comm, MPID_Win **win);
-
+int MPIDI_CH3U_Win_shared_query(MPID_Win * win_ptr, int target_rank, MPI_Aint * size,
+                                int *disp_unit, void *baseptr);
 
 /* MPI RMA Utility functions */
 

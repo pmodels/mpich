@@ -257,6 +257,29 @@ int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info * info, MPI
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPID_Win_shared_query
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPID_Win_shared_query(MPID_Win * win, int rank, MPI_Aint * size, int *disp_unit, void *baseptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDI_STATE_DECL(MPID_STATE_MPID_WIN_SHARED_QUERY);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_WIN_SHARED_QUERY);
+
+    mpi_errno = MPIDI_CH3U_Win_fns.shared_query(win, rank, size, disp_unit, baseptr);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIU_ERR_POP(mpi_errno);
+    }
+
+  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_WIN_SHARED_QUERY);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 
 #undef FUNCNAME
 #define FUNCNAME win_init

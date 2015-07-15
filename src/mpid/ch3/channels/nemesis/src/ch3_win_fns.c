@@ -44,6 +44,7 @@ int MPIDI_CH3_Win_fns_init(MPIDI_CH3U_Win_fns_t * win_fns)
         win_fns->allocate_shm = MPIDI_CH3I_Win_allocate_shm;
         win_fns->detect_shm = MPIDI_CH3I_Win_detect_shm;
         win_fns->gather_info = MPIDI_CH3I_Win_gather_info;
+        win_fns->shared_query = MPIDI_CH3_SHM_Win_shared_query;
     }
 
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3_WIN_FNS_INIT);
@@ -747,9 +748,6 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
     mpi_errno = MPIDI_CH3I_Win_gather_info((*base_pp), size, disp_unit, info, comm_ptr, win_ptr);
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
-
-    /* Provide operation overrides for this window flavor */
-    (*win_ptr)->RMAFns.Win_shared_query = MPIDI_CH3_SHM_Win_shared_query;
 
     /* Cache SHM windows */
     MPIDI_CH3I_SHM_Wins_append(&shm_wins_list, (*win_ptr));

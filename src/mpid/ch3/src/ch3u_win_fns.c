@@ -26,6 +26,7 @@ int MPIDI_Win_fns_init(MPIDI_CH3U_Win_fns_t * win_fns)
     win_fns->allocate_shared = MPIDI_CH3U_Win_allocate;
     win_fns->create_dynamic = MPIDI_CH3U_Win_create_dynamic;
     win_fns->gather_info = MPIDI_CH3U_Win_gather_info;
+    win_fns->shared_query = MPIDI_CH3U_Win_shared_query;
 
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FNS_INIT);
 

@@ -21,6 +21,14 @@ int MPIDI_CH3_SHM_Win_shared_query(MPID_Win * win_ptr, int target_rank, MPI_Aint
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3_WIN_SHARED_QUERY);
 
+    if (win_ptr->comm_ptr->node_comm == NULL) {
+        mpi_errno = MPIDI_CH3U_Win_shared_query(win_ptr, target_rank, size, disp_unit, baseptr);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
+        }
+        goto fn_exit;
+    }
+
     comm_size = win_ptr->comm_ptr->local_size;
 
     /* Scan the sizes to locate the first process that allocated a nonzero
