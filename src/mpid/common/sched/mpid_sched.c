@@ -852,7 +852,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                             e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
                         MPID_Request_release(e->u.send.sreq);
                         e->u.send.sreq = NULL;
-                        MPIR_Comm_release(e->u.send.comm, /*isDisconnect=*/FALSE);
+                        MPIR_Comm_release(e->u.send.comm);
                         dtype_release_if_not_builtin(e->u.send.datatype);
                     }
                     break;
@@ -867,7 +867,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                             e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
                         MPID_Request_release(e->u.recv.rreq);
                         e->u.recv.rreq = NULL;
-                        MPIR_Comm_release(e->u.recv.comm, /*isDisconnect=*/FALSE);
+                        MPIR_Comm_release(e->u.recv.comm);
                         dtype_release_if_not_builtin(e->u.recv.datatype);
                     }
                     break;

@@ -308,7 +308,7 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
 
                 MPIU_DBG_MSG_FMT(CH3_DISCONNECT, VERBOSE, (MPIU_DBG_FDEST, "about to free pg->vct=%p which contains vc=%p", pg->vct, &pg->vct[i]));
 
-                /* This used to be handled in MPID_VCRT_Release, but that was
+                /* This used to be handled in MPIDI_VCRT_Release, but that was
                    not the right place to do this.  The VC should only be freed
                    when the PG that it belongs to is freed, not just when the
                    VC's refcount drops to zero. [goodell@ 2008-06-13] */

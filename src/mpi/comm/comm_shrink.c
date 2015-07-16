@@ -76,7 +76,7 @@ int MPIR_Comm_shrink(MPID_Comm *comm_ptr, MPID_Comm **newcomm_ptr)
             errflag = MPIR_ERR_PROC_FAILED;
         } else if (mpi_errno) {
             errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-            MPIR_Comm_release(*newcomm_ptr, 0);
+            MPIR_Comm_release(*newcomm_ptr);
         }
 
         mpi_errno = MPIR_Allreduce_group(MPI_IN_PLACE, &errflag, 1, MPI_INT, MPI_MAX, comm_ptr,
@@ -86,7 +86,7 @@ int MPIR_Comm_shrink(MPID_Comm *comm_ptr, MPID_Comm **newcomm_ptr)
         if (errflag) {
             if (*newcomm_ptr != NULL && MPIU_Object_get_ref(*newcomm_ptr) > 0) {
                 MPIU_Object_set_ref(*newcomm_ptr, 1);
-                MPIR_Comm_release(*newcomm_ptr, 0);
+                MPIR_Comm_release(*newcomm_ptr);
             }
             if (MPIU_Object_get_ref(new_group_ptr) > 0) {
                 MPIU_Object_set_ref(new_group_ptr, 1);

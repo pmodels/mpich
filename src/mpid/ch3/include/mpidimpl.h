@@ -495,7 +495,7 @@ extern MPIDI_Process_t MPIDI_Process;
 /*------------------
   BEGIN COMM SECTION
   ------------------*/
-#define MPIDI_Comm_get_vc(comm_, rank_, vcp_) *(vcp_) = (comm_)->vcr[(rank_)]
+#define MPIDI_Comm_get_vc(comm_, rank_, vcp_) *(vcp_) = (comm_)->dev.vcrt->vcr_table[(rank_)]
 
 #ifdef USE_MPIDI_DBG_PRINT_VC
 void MPIDI_DBG_PrintVC(MPIDI_VC_t *vc);
@@ -508,7 +508,7 @@ void MPIDI_DBG_PrintVCState(MPIDI_VC_t *vc);
 #endif
 
 #define MPIDI_Comm_get_vc_set_active(comm_, rank_, vcp_) do {           \
-        *(vcp_) = (comm_)->vcr[(rank_)];                                \
+        *(vcp_) = (comm_)->dev.vcrt->vcr_table[(rank_)];                \
         if ((*(vcp_))->state == MPIDI_VC_STATE_INACTIVE)                \
         {                                                               \
             MPIDI_DBG_PrintVCState2(*(vcp_), MPIDI_VC_STATE_ACTIVE);     \
@@ -549,6 +549,11 @@ void MPIDI_DBG_PrintVCState(MPIDI_VC_t *vc);
    the MPICH routines and which are internal to the device implementation */
 typedef int (*MPIDI_PG_Compare_ids_fn_t)(void * id1, void * id2);
 typedef int (*MPIDI_PG_Destroy_fn_t)(MPIDI_PG_t * pg);
+
+int MPIDI_VCRT_Create(int size, struct MPIDI_VCRT **vcrt_ptr);
+int MPIDI_VCRT_Add_ref(struct MPIDI_VCRT *vcrt);
+int MPIDI_VCRT_Release(struct MPIDI_VCRT *vcrt, int isDisconnect);
+int MPIDI_VCR_Dup(MPIDI_VCR orig_vcr, MPIDI_VCR * new_vcr);
 
 int MPIDI_PG_Init( int *, char ***, 
 		   MPIDI_PG_Compare_ids_fn_t, MPIDI_PG_Destroy_fn_t);
@@ -773,11 +778,23 @@ typedef enum MPIDI_VC_Event
 }
 MPIDI_VC_Event_t;
 
-#ifndef HAVE_MPIDI_VCRT
-#define HAVE_MPIDI_VCRT
-typedef struct MPIDI_VCRT * MPID_VCRT;
-typedef struct MPIDI_VC * MPID_VCR;
-#endif
+/*S
+ * MPIDI_VCRT - virtual connection reference table
+ *
+ * handle - this element is not used, but exists so that we may use the
+ * MPIU_Object routines for reference counting
+ *
+ * ref_count - number of references to this table
+ *
+ * vcr_table - array of virtual connection references
+ S*/
+typedef struct MPIDI_VCRT
+{
+    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
+    int size;
+    MPIDI_VC_t * vcr_table[1];
+}
+MPIDI_VCRT_t;
 
 /* number of VCs that are in MORIBUND state */
 extern int MPIDI_Failed_vc_count;

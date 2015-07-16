@@ -32,7 +32,7 @@ int MPI_Comm_free(MPI_Comm *comm) __attribute__((weak,alias("PMPI_Comm_free")));
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Comm_free_impl(MPID_Comm * comm_ptr)
 {
-    return MPIR_Comm_release(comm_ptr, 0);
+    return MPIR_Comm_release(comm_ptr);
 }
 #endif
 

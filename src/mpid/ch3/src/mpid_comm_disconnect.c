@@ -37,7 +37,8 @@ int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
     /* it's more than a comm_release, but ok for now */
     /* FIXME: Describe what more might be required */
     /* MPIU_PG_Printall( stdout ); */
-    mpi_errno = MPIR_Comm_release(comm_ptr,1);
+    comm_ptr->dev.is_disconnected = 1;
+    mpi_errno = MPIR_Comm_release(comm_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     /* If any of the VCs were released by this Comm_release, wait
      for those close operations to complete */

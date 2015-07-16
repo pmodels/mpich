@@ -110,7 +110,7 @@ PMPI_LOCAL int MPID_LPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size,
     /* FIXME: Should be using the local_size argument */
     MPIU_Assert( comm_ptr->local_size == local_size );
     for (i=0; i<comm_ptr->local_size; i++) {
-	(void)MPID_VCR_Get_lpid( comm_ptr->vcr[i], &local_lpids[i] );
+	(void)MPID_Comm_get_lpid( comm_ptr, i, &local_lpids[i], MPIU_FALSE );
     }
     return 0;
 }
@@ -130,7 +130,6 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
     int comm_info[3];
     int is_low_group = 0;
     int cts_tag;
-    int i;
     mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPIU_CHKLMEM_DECL(4);
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_INTERCOMM_CREATE_IMPL);
@@ -333,16 +332,10 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
     (*new_intercomm_ptr)->local_comm     = 0;
     (*new_intercomm_ptr)->is_low_group   = is_low_group;
 
-    mpi_errno = MPID_VCR_CommFromLpids( *new_intercomm_ptr, remote_size, remote_lpids );
+    mpi_errno = MPID_Create_intercomm_from_lpids( *new_intercomm_ptr, remote_size, remote_lpids );
     if (mpi_errno) goto fn_fail;
 
-    /* Setup the communicator's vc table: local group.  This is
-     just a duplicate of the local_comm's group */
-    MPID_VCRT_Create( local_comm_ptr->local_size, &(*new_intercomm_ptr)->local_vcrt );
-    MPID_VCRT_Get_ptr( (*new_intercomm_ptr)->local_vcrt, &(*new_intercomm_ptr)->local_vcr );
-    for (i = 0; i < local_comm_ptr->local_size; i++) {
-        MPID_VCR_Dup( local_comm_ptr->vcr[i], &(*new_intercomm_ptr)->local_vcr[i] );
-    }
+    MPIR_Comm_map_dup(*new_intercomm_ptr, local_comm_ptr, MPIR_COMM_MAP_DIR_L2L);
 
     /* Inherit the error handler (if any) */
     MPIU_THREAD_CS_ENTER(MPI_OBJ, local_comm_ptr);

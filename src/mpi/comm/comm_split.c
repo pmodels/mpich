@@ -138,6 +138,7 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
     int in_newcomm; /* TRUE iff *newcomm should be populated */
     MPIR_Context_id_t   new_context_id, remote_context_id;
     mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Comm_map_t *mapper;
     MPIU_CHKLMEM_DECL(4);
 
     rank        = comm_ptr->rank;
@@ -314,17 +315,16 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
 	       corresponding process in the input communicator */
 	    MPIU_Sort_inttable( remotekeytable, new_remote_size );
 
-	    MPID_VCRT_Create( new_size, &(*newcomm_ptr)->local_vcrt );
-	    MPID_VCRT_Get_ptr( (*newcomm_ptr)->local_vcrt, 
-			       &(*newcomm_ptr)->local_vcr );
-	    for (i=0; i<new_size; i++) {
-		MPID_VCR_Dup( comm_ptr->local_vcr[keytable[i].color], 
-			      &(*newcomm_ptr)->local_vcr[i] );
-		if (keytable[i].color == comm_ptr->rank) {
+            MPIR_Comm_map_irregular(*newcomm_ptr, comm_ptr, NULL,
+                                    new_size, MPIR_COMM_MAP_DIR_L2L,
+                                    &mapper);
+
+            for (i = 0; i < new_size; i++) {
+                mapper->src_mapping[i] = keytable[i].color;
+		if (keytable[i].color == comm_ptr->rank)
 		    (*newcomm_ptr)->rank = i;
-		}
-	    }
-	    
+            }
+
 	    /* For the remote group, the situation is more complicated.
 	       We need to find the size of our "partner" group in the
 	       remote comm.  The easiest way (in terms of code) is for
@@ -340,12 +340,12 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
 	       is required to return MPI_COMM_NULL instead of an intercomm 
 	       with an empty remote group. */
 
-	    MPID_VCRT_Create( new_remote_size, &(*newcomm_ptr)->vcrt );
-	    MPID_VCRT_Get_ptr( (*newcomm_ptr)->vcrt, &(*newcomm_ptr)->vcr );
-	    for (i=0; i<new_remote_size; i++) {
-		MPID_VCR_Dup( comm_ptr->vcr[remotekeytable[i].color], 
-			      &(*newcomm_ptr)->vcr[i] );
-	    }
+            MPIR_Comm_map_irregular(*newcomm_ptr, comm_ptr, NULL,
+                                    new_remote_size,
+                                    MPIR_COMM_MAP_DIR_R2R, &mapper);
+
+            for (i = 0; i < new_remote_size; i++)
+                mapper->src_mapping[i] = remotekeytable[i].color;
 
 	    (*newcomm_ptr)->context_id     = remote_context_id;
 	    (*newcomm_ptr)->remote_size    = new_remote_size;
@@ -357,15 +357,16 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
 	    /* INTRA Communicator */
 	    (*newcomm_ptr)->context_id     = (*newcomm_ptr)->recvcontext_id;
 	    (*newcomm_ptr)->remote_size    = new_size;
-	    MPID_VCRT_Create( new_size, &(*newcomm_ptr)->vcrt );
-	    MPID_VCRT_Get_ptr( (*newcomm_ptr)->vcrt, &(*newcomm_ptr)->vcr );
-	    for (i=0; i<new_size; i++) {
-		MPID_VCR_Dup( comm_ptr->vcr[keytable[i].color], 
-			      &(*newcomm_ptr)->vcr[i] );
-		if (keytable[i].color == comm_ptr->rank) {
+
+            MPIR_Comm_map_irregular(*newcomm_ptr, comm_ptr, NULL,
+                                    new_size, MPIR_COMM_MAP_DIR_L2L,
+                                    &mapper);
+
+            for (i = 0; i < new_size; i++) {
+                mapper->src_mapping[i] = keytable[i].color;
+		if (keytable[i].color == comm_ptr->rank)
 		    (*newcomm_ptr)->rank = i;
-		}
-	    }
+            }
 	}
 
 	/* Inherit the error handler (if any) */
@@ -423,7 +424,6 @@ Algorithm:
      communicator with that many processes.  If this process has
      'MPI_UNDEFINED' as the color, create a process with a single member.
   3. Use key to order the ranks
-  4. Set the VCRs using the ordered key values
 .ve
  
 .N Errors

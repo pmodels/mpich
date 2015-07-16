@@ -1106,7 +1106,6 @@ extern MPID_Group * const MPID_Group_empty;
      do { MPIU_Object_release_ref( _group, _inuse ); } while (0)
 
 void MPIR_Group_setup_lpid_list( MPID_Group * );
-int MPIR_GroupCheckVCRSubset( MPID_Group *group_ptr, int vsize, MPID_VCR *vcr );
 
 /* ------------------------------------------------------------------------- */
 
@@ -1127,6 +1126,45 @@ typedef enum MPID_Comm_hierarchy_kind_t {
     MPID_HIERARCHY_SIZE             /* cardinality of this enum */
 } MPID_Comm_hierarchy_kind_t;
 /* Communicators */
+
+typedef enum {
+    MPIR_COMM_MAP_DUP,
+    MPIR_COMM_MAP_IRREGULAR
+} MPIR_Comm_map_type_t;
+
+/* direction of mapping: local to local, local to remote, remote to
+ * local, remote to remote */
+typedef enum {
+    MPIR_COMM_MAP_DIR_L2L,
+    MPIR_COMM_MAP_DIR_L2R,
+    MPIR_COMM_MAP_DIR_R2L,
+    MPIR_COMM_MAP_DIR_R2R
+} MPIR_Comm_map_dir_t;
+
+typedef struct MPIR_Comm_map {
+    MPIR_Comm_map_type_t type;
+
+    struct MPID_Comm *src_comm;
+
+    /* mapping direction for intercomms, which contain local and
+     * remote groups */
+    MPIR_Comm_map_dir_t dir;
+
+    /* only valid for irregular map type */
+    int src_mapping_size;
+    int *src_mapping;
+    int free_mapping;       /* we allocated the mapping */
+
+    struct MPIR_Comm_map *next;
+} MPIR_Comm_map_t;
+
+int MPIR_Comm_map_irregular(struct MPID_Comm *newcomm, struct MPID_Comm *src_comm,
+                            int *src_mapping, int src_mapping_size,
+                            MPIR_Comm_map_dir_t dir,
+                            MPIR_Comm_map_t **map);
+int MPIR_Comm_map_dup(struct MPID_Comm *newcomm, struct MPID_Comm *src_comm,
+                      MPIR_Comm_map_dir_t dir);
+int MPIR_Comm_map_free(struct MPID_Comm *comm);
 
 /*S
   MPID_Comm - Description of the Communicator data structure
@@ -1195,12 +1233,6 @@ typedef struct MPID_Comm {
     MPIR_Context_id_t recvcontext_id; /* Send context id.  See notes */
     int           remote_size;   /* Value of MPI_Comm_(remote)_size */
     int           rank;          /* Value of MPI_Comm_rank */
-    MPID_VCRT     vcrt;          /* virtual connecton reference table */
-    MPID_VCR *    vcr;           /* alias to the array of virtual connections
-				    in vcrt */
-    MPID_VCRT     local_vcrt;    /* local virtual connecton reference table */
-    MPID_VCR *    local_vcr;     /* alias to the array of local virtual
-				    connections in local vcrt */
     MPID_Attribute *attributes;  /* List of attributes */
     int           local_size;    /* Value of MPI_Comm_size for local group */
     MPID_Group   *local_group,   /* Groups in communicator. */
@@ -1258,6 +1290,12 @@ typedef struct MPID_Comm {
     hcoll_comm_priv_t hcoll_priv;
 #endif /* HAVE_LIBHCOLL */
 
+    /* the mapper is temporarily filled out in order to allow the
+     * device to setup its network addresses.  it will be freed after
+     * the device has initialized the comm. */
+    MPIR_Comm_map_t *mapper_head;
+    MPIR_Comm_map_t *mapper_tail;
+
   /* Other, device-specific information */
 #ifdef MPID_DEV_COMM_DECL
     MPID_DEV_COMM_DECL
@@ -1266,7 +1304,7 @@ typedef struct MPID_Comm {
 extern MPIU_Object_alloc_t MPID_Comm_mem;
 
 /* this function should not be called by normal code! */
-int MPIR_Comm_delete_internal(MPID_Comm * comm_ptr, int isDisconnect);
+int MPIR_Comm_delete_internal(MPID_Comm * comm_ptr);
 
 #define MPIR_Comm_add_ref(_comm) \
     do { MPIU_Object_add_ref((_comm)); } while (0)
@@ -1285,7 +1323,7 @@ int MPIR_Comm_delete_internal(MPID_Comm * comm_ptr, int isDisconnect);
 #define FUNCNAME MPIR_Comm_release
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static inline int MPIR_Comm_release(MPID_Comm * comm_ptr, int isDisconnect)
+static inline int MPIR_Comm_release(MPID_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int in_use;
@@ -1294,7 +1332,7 @@ static inline int MPIR_Comm_release(MPID_Comm * comm_ptr, int isDisconnect)
     if (unlikely(!in_use)) {
         /* the following routine should only be called by this function and its
          * "_always" variant. */
-        mpi_errno = MPIR_Comm_delete_internal(comm_ptr, isDisconnect);
+        mpi_errno = MPIR_Comm_delete_internal(comm_ptr);
         /* not ERR_POPing here to permit simpler inlining.  Our caller will
          * still report the error from the comm_delete level. */
     }
@@ -1307,7 +1345,7 @@ static inline int MPIR_Comm_release(MPID_Comm * comm_ptr, int isDisconnect)
 /* MPIR_Comm_release_always is the same as MPIR_Comm_release except it uses
    MPIR_Comm_release_ref_always instead.
 */
-int MPIR_Comm_release_always(MPID_Comm *comm_ptr, int isDisconnect);
+int MPIR_Comm_release_always(MPID_Comm *comm_ptr);
 
 /* applies the specified info chain to the specified communicator */
 int MPIR_Comm_apply_hints(MPID_Comm *comm_ptr, MPID_Info *info_ptr);
@@ -3692,45 +3730,9 @@ int MPID_Get_universe_size(int  * universe_size);
 #define MPIR_UNIVERSE_SIZE_NOT_SET -1
 #define MPIR_UNIVERSE_SIZE_NOT_AVAILABLE -2
 
-/*
- * FIXME: VCs should not be exposed to the top layer, which implies that these routines should not be exposed either.  Instead,
- * the creation, duplication and destruction of communicator objects should be communicated to the device, allowing the device to
- * manage the underlying connections in a way that is appropriate (and efficient).
- */
-
 /*@
-  MPID_VCRT_Create - Create a virtual connection reference table
-  @*/
-int MPID_VCRT_Create(int size, MPID_VCRT *vcrt_ptr);
-
-/*@
-  MPID_VCRT_Add_ref - Add a reference to a VCRT
-  @*/
-int MPID_VCRT_Add_ref(MPID_VCRT vcrt);
-
-/*@
-  MPID_VCRT_Release - Release a reference to a VCRT
-  
-  Notes:
-  The 'isDisconnect' argument allows this routine to handle the special
-  case of 'MPI_Comm_disconnect', which needs to take special action
-  if all references to a VC are removed.
-  @*/
-int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect);
-
-/*@
-  MPID_VCRT_Get_ptr - 
-  @*/
-int MPID_VCRT_Get_ptr(MPID_VCRT vcrt, MPID_VCR **vc_pptr);
-
-/*@
-  MPID_VCR_Dup - Create a duplicate reference to a virtual connection
-  @*/
-int MPID_VCR_Dup(MPID_VCR orig_vcr, MPID_VCR * new_vcr);
-
-/*@
-   MPID_VCR_Get_lpid - Get the local process id that corresponds to a 
-   virtual connection reference.
+   MPID_Comm_get_lpid - Get the local process id that corresponds to a
+   comm rank.
 
    Notes:
    The local process ids are described elsewhere.  Basically, they are
@@ -3738,7 +3740,7 @@ int MPID_VCR_Dup(MPID_VCR orig_vcr, MPID_VCR * new_vcr);
    to which it is connected.  These are local process ids because different
    processes may use different ids to identify the same target process
   @*/
-int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
+int MPID_Comm_get_lpid(MPID_Comm *comm_ptr, int idx, int * lpid_ptr, MPIU_BOOL is_remote);
 
 /* prototypes and declarations for the MPID_Sched interface for nonblocking
  * collectives */
@@ -4078,13 +4080,15 @@ int MPIR_Comm_create_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr, int tag
 /* comm_create helper functions, used by both comm_create and comm_create_group */
 int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
                                        MPID_Comm   *comm_ptr,
-                                       MPID_VCR   **mapping_vcr_out,
-                                       int        **mapping_out);
-int MPIR_Comm_create_create_and_map_vcrt(int n,
-                                         int *mapping,
-                                         MPID_VCR *mapping_vcr,
-                                         MPID_VCRT *out_vcrt,
-                                         MPID_VCR **out_vcr);
+                                       int        **mapping_out,
+                                       MPID_Comm **mapping_comm);
+
+int MPIR_Comm_create_map(int local_n,
+                         int remote_n,
+                         int *local_mapping,
+                         int *remote_mapping,
+                         MPID_Comm *mapping_comm,
+                         MPID_Comm *newcomm);
 
 /* implements the logic for MPI_Comm_create for intracommunicators only */
 int MPIR_Comm_create_intra(MPID_Comm *comm_ptr, MPID_Group *group_ptr,
@@ -4231,6 +4235,9 @@ int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
 int MPIR_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s);
 int MPIR_Ialltoallw_intra(const void *sendbuf, const int *sendcounts, const int *sdispls, const MPI_Datatype *sendtypes, void *recvbuf, const int *recvcounts, const int *rdispls, const MPI_Datatype *recvtypes, MPID_Comm *comm_ptr, MPID_Sched_t s);
 int MPIR_Ialltoallw_inter(const void *sendbuf, const int *sendcounts, const int *sdispls, const MPI_Datatype *sendtypes, void *recvbuf, const int *recvcounts, const int *rdispls, const MPI_Datatype *recvtypes, MPID_Comm *comm_ptr, MPID_Sched_t s);
+
+/* group functionality */
+int MPIR_Group_check_subset(MPID_Group * group_ptr, MPID_Comm * comm_ptr);
 
 /* begin impl functions for MPI_T (MPI_T_ right now) */
 int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPI_T_cvar_handle *handle, int *count);

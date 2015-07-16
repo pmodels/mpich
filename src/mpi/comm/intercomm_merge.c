@@ -27,52 +27,38 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm) __
 #undef MPI_Intercomm_merge
 #define MPI_Intercomm_merge PMPI_Intercomm_merge
 
-/* This function creates VCRT for new communicator
- * basing on VCRT of existing communicator.
+/* This function creates mapping for new communicator
+ * basing on network addresses of existing communicator.
  */
 
 #undef FUNCNAME
-#define FUNCNAME create_and_map_vcrt
+#define FUNCNAME create_and_map
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static int create_and_map_vcrt(MPID_Comm *comm_ptr, int local_high, MPID_Comm *new_intracomm_ptr)
+static int create_and_map(MPID_Comm *comm_ptr, int local_high, MPID_Comm *new_intracomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, j;
+    int i;
 
-    /* Now we know which group comes first.  Build the new vcr
-       from the existing vcrs */
-    mpi_errno = MPID_VCRT_Create( comm_ptr->local_size + comm_ptr->remote_size, &new_intracomm_ptr->vcrt );
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-    mpi_errno = MPID_VCRT_Get_ptr( new_intracomm_ptr->vcrt, &new_intracomm_ptr->vcr );
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
+    /* Now we know which group comes first.  Build the new mapping
+       from the existing comm */
     if (local_high) {
         /* remote group first */
-        j = 0;
-        for (i = 0; i < comm_ptr->remote_size; i++) {
-            mpi_errno = MPID_VCR_Dup( comm_ptr->vcr[i], &new_intracomm_ptr->vcr[j++] );
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        }
-        for (i = 0; i < comm_ptr->local_size; i++) {
-            if (i == comm_ptr->rank) new_intracomm_ptr->rank = j;
-            mpi_errno = MPID_VCR_Dup( comm_ptr->local_vcr[i], &new_intracomm_ptr->vcr[j++] );
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        }
+        MPIR_Comm_map_dup(new_intracomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR_R2L);
+
+        MPIR_Comm_map_dup(new_intracomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR_L2L);
+        for (i = 0; i < comm_ptr->local_size; i++)
+            if (i == comm_ptr->rank)
+                new_intracomm_ptr->rank = comm_ptr->remote_size + i;
     }
     else {
         /* local group first */
-        j = 0;
-        for (i = 0; i < comm_ptr->local_size; i++) {
-            if (i == comm_ptr->rank) new_intracomm_ptr->rank = j;
-            mpi_errno = MPID_VCR_Dup( comm_ptr->local_vcr[i], &new_intracomm_ptr->vcr[j++] );
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        }
-        for (i = 0; i < comm_ptr->remote_size; i++) {
-            mpi_errno = MPID_VCR_Dup( comm_ptr->vcr[i], &new_intracomm_ptr->vcr[j++] );
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        }
+        MPIR_Comm_map_dup(new_intracomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR_L2L);
+        for (i = 0; i < comm_ptr->local_size; i++)
+            if (i == comm_ptr->rank)
+                new_intracomm_ptr->rank = i;
+
+        MPIR_Comm_map_dup(new_intracomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR_R2L);
     }
 
 fn_fail:
@@ -169,9 +155,9 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
     (*new_intracomm_ptr)->rank           = -1;
     (*new_intracomm_ptr)->comm_kind      = MPID_INTRACOMM;
 
-    /* Now we know which group comes first.  Build the new vcr
-       from the existing vcrs */
-    mpi_errno = create_and_map_vcrt(comm_ptr, local_high, (*new_intracomm_ptr));
+    /* Now we know which group comes first.  Build the new mapping
+       from the existing comm */
+    mpi_errno = create_and_map(comm_ptr, local_high, (*new_intracomm_ptr));
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* We've setup a temporary context id, based on the context id
@@ -193,7 +179,7 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
     /* We release this communicator that was involved just to
      * get valid context id and create true one
      */
-    mpi_errno = MPIR_Comm_release( (*new_intracomm_ptr),0);
+    mpi_errno = MPIR_Comm_release(*new_intracomm_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Comm_create( new_intracomm_ptr );
@@ -205,7 +191,7 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
     (*new_intracomm_ptr)->context_id = new_context_id;
     (*new_intracomm_ptr)->recvcontext_id = new_context_id;
 
-    mpi_errno = create_and_map_vcrt(comm_ptr, local_high, (*new_intracomm_ptr));
+    mpi_errno = create_and_map(comm_ptr, local_high, (*new_intracomm_ptr));
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Comm_commit((*new_intracomm_ptr));

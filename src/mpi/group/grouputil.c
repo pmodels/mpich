@@ -369,27 +369,29 @@ int MPIR_Group_check_valid_ranges( MPID_Group *group_ptr,
 
     return mpi_errno;
 }
-/* Given a group and a VCR, check that the group is a subset of the processes
-   defined by the VCR.
 
-   We sort the lpids for the group and the vcr.  If the group has an
-   lpid that is not in the vcr, then report an error.
+/* Given a group and a comm, check that the group is a subset of the processes
+   defined by the comm.
+
+   We sort the lpids for the group and the comm.  If the group has an
+   lpid that is not in the comm, then report an error.
 */
-int MPIR_GroupCheckVCRSubset( MPID_Group *group_ptr, int vsize, MPID_VCR *vcr )
+int MPIR_Group_check_subset( MPID_Group *group_ptr, MPID_Comm *comm_ptr )
 {
     int mpi_errno = MPI_SUCCESS;
     int g1_idx, g2_idx, l1_pid, l2_pid, i;
     MPID_Group_pmap_t *vmap=0;
+    int vsize = comm_ptr->comm_kind == MPID_INTERCOMM ? comm_ptr->local_size :
+        comm_ptr->remote_size;
     MPIU_CHKLMEM_DECL(1);
 
     MPIU_Assert(group_ptr != NULL);
-    MPIU_Assert(vcr != NULL);
 
     MPIU_CHKLMEM_MALLOC(vmap,MPID_Group_pmap_t*,
 			vsize*sizeof(MPID_Group_pmap_t),mpi_errno, "" );
     /* Initialize the vmap */
     for (i=0; i<vsize; i++) {
-	MPID_VCR_Get_lpid( vcr[i], &vmap[i].lpid );
+	MPID_Comm_get_lpid(comm_ptr, i, &vmap[i].lpid, MPIU_FALSE);
 	vmap[i].next_lpid = 0;
 	vmap[i].flag      = 0;
     }

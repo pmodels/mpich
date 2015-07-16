@@ -288,7 +288,7 @@ static int get_ec_handles(int num_ec,
     comm = (MPID_Comm *) grp_h;
     for (i = 0; i < num_ec; i++) {
         ec_handles[i].rank = ec_indexes[i];
-        ec_handles[i].handle = (void *) (comm->vcr[ec_indexes[i]]);
+        ec_handles[i].handle = (void *) (comm->vcrt->vcr_table[ec_indexes[i]]);
     }
     return HCOLL_SUCCESS;
 }
@@ -302,7 +302,7 @@ static int get_my_ec(rte_grp_handle_t grp_h, rte_ec_handle_t * ec_handle)
     MPID_Comm *comm;
     comm = (MPID_Comm *) grp_h;
     int my_rank = MPIR_Comm_rank(comm);
-    ec_handle->handle = (void *) (comm->vcr[my_rank]);
+    ec_handle->handle = (void *) (comm->vcrt->vcr_table[my_rank]);
     ec_handle->rank = my_rank;
     return HCOLL_SUCCESS;
 }
@@ -430,5 +430,5 @@ static void coll_handle_complete(void *handle)
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static int world_rank(rte_grp_handle_t grp_h, rte_ec_handle_t ec)
 {
-    return ((MPID_VCR) ec.handle)->pg_rank;
+    return (MPIR_Process.comm_world->rank);
 }

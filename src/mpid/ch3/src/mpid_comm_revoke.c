@@ -75,7 +75,7 @@ int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
 
         /* Check to see if we are done revoking */
         if (comm_ptr->dev.waiting_for_revoke == 0) {
-            MPIR_Comm_release(comm_ptr, 0);
+            MPIR_Comm_release(comm_ptr);
         }
 
         /* Go clean up all of the existing operations involving this
@@ -94,7 +94,7 @@ int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
 
         /* Check to see if we are done revoking */
         if (comm_ptr->dev.waiting_for_revoke == 0) {
-            MPIR_Comm_release(comm_ptr, 0);
+            MPIR_Comm_release(comm_ptr);
         }
     }
 

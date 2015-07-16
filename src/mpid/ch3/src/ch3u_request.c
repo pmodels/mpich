@@ -667,7 +667,7 @@ void MPID_Request_release(MPID_Request *req)
         /* FIXME: We need a way to call these routines ONLY when the
            related ref count has become zero. */
         if (req->comm != NULL) {
-            MPIR_Comm_release(req->comm, 0);
+            MPIR_Comm_release(req->comm);
         }
 
         if (req->greq_fns != NULL) {

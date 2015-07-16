@@ -54,7 +54,7 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_callback)(cq_tagged_entry_t * wc, MPID_Request 
         /* ---------------------------------------------------- */
         vc = REQ_OFI(rreq)->vc;
         if (!vc) {      /* MPI_ANY_SOURCE -- Post message from status, complete the VC */
-            vc = rreq->comm->vcr[src];
+            vc = rreq->comm->dev.vcrt->vcr_table[src];
             MPIU_Assert(vc);
         }
 #if API_SET == API_SET_1

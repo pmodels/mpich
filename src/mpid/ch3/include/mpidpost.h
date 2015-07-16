@@ -177,7 +177,7 @@ int MPID_GPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size,
 			    int local_gpids[], int *singlePG );
 int MPID_GPID_Get( MPID_Comm *comm_ptr, int rank, int gpid[] );
 int MPID_GPID_ToLpidArray( int size, int gpid[], int lpid[] );
-int MPID_VCR_CommFromLpids( MPID_Comm *newcomm_ptr, 
+int MPID_Create_intercomm_from_lpids( MPID_Comm *newcomm_ptr,
 			    int size, const int lpids[] );
 int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr, 
 			   int nPGids, const int gpids[], 

@@ -52,7 +52,7 @@ int MPIR_Comm_create_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr, int tag
     /* Create a new communicator from the specified group members */
 
     if (group_ptr->rank != MPI_UNDEFINED) {
-        MPID_VCR *mapping_vcr = NULL;
+        MPID_Comm *mapping_comm = NULL;
 
         /* For this routine, creation of the id is collective over the input
            *group*, so processes not in the group do not participate. */
@@ -62,7 +62,7 @@ int MPIR_Comm_create_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr, int tag
         MPIU_Assert(new_context_id != 0);
 
         mpi_errno = MPIR_Comm_create_calculate_mapping(group_ptr, comm_ptr, 
-                                                       &mapping_vcr, &mapping);
+                                                       &mapping, &mapping_comm);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         /* Get the new communicator structure and context id */
@@ -86,11 +86,11 @@ int MPIR_Comm_create_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr, int tag
 
         /* Setup the communicator's vc table.  This is for the remote group,
            which is the same as the local group for intracommunicators */
-        mpi_errno = MPIR_Comm_create_create_and_map_vcrt(n,
-                                                         mapping,
-                                                         mapping_vcr,
-                                                         &((*newcomm_ptr)->vcrt),
-                                                         &((*newcomm_ptr)->vcr));
+        mpi_errno = MPIR_Comm_create_map(n, 0,
+                                         mapping,
+                                         NULL,
+                                         mapping_comm,
+                                         *newcomm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
@@ -110,7 +110,7 @@ fn_exit:
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */
     if (*newcomm_ptr != NULL) {
-        MPIR_Comm_release(*newcomm_ptr, 0/*isDisconnect*/);
+        MPIR_Comm_release(*newcomm_ptr);
         new_context_id = 0; /* MPIR_Comm_release frees the new ctx id */
     }
     if (new_context_id != 0)

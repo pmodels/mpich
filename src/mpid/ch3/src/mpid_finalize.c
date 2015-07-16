@@ -113,14 +113,14 @@ int MPID_Finalize(void)
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
 #ifdef MPID_NEEDS_ICOMM_WORLD
-    mpi_errno = MPIR_Comm_release_always(MPIR_Process.icomm_world, 0);
+    mpi_errno = MPIR_Comm_release_always(MPIR_Process.icomm_world);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 #endif
 
-    mpi_errno = MPIR_Comm_release_always(MPIR_Process.comm_self, 0);
+    mpi_errno = MPIR_Comm_release_always(MPIR_Process.comm_self);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIR_Comm_release_always(MPIR_Process.comm_world, 0);
+    mpi_errno = MPIR_Comm_release_always(MPIR_Process.comm_world);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* Tell the process group code that we're done with the process groups.

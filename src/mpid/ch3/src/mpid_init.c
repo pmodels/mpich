@@ -206,25 +206,18 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     comm->remote_size = pg_size;
     comm->local_size  = pg_size;
     
-    mpi_errno = MPID_VCRT_Create(comm->remote_size, &comm->vcrt);
+    mpi_errno = MPIDI_VCRT_Create(comm->remote_size, &comm->dev.vcrt);
     if (mpi_errno != MPI_SUCCESS)
     {
 	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**dev|vcrt_create", 
 			     "**dev|vcrt_create %s", "MPI_COMM_WORLD");
     }
-    
-    mpi_errno = MPID_VCRT_Get_ptr(comm->vcrt, &comm->vcr);
-    if (mpi_errno != MPI_SUCCESS)
-    {
-	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**dev|vcrt_get_ptr", 
-			     "dev|vcrt_get_ptr %s", "MPI_COMM_WORLD");
-    }
-    
+
     /* Initialize the connection table on COMM_WORLD from the process group's
        connection table */
     for (p = 0; p < pg_size; p++)
     {
-	MPID_VCR_Dup(&pg->vct[p], &comm->vcr[p]);
+	MPIDI_VCR_Dup(&pg->vct[p], &comm->dev.vcrt->vcr_table[p]);
     }
 
     mpi_errno = MPIR_Comm_commit(comm);
@@ -238,21 +231,14 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     comm->remote_size = 1;
     comm->local_size  = 1;
     
-    mpi_errno = MPID_VCRT_Create(comm->remote_size, &comm->vcrt);
+    mpi_errno = MPIDI_VCRT_Create(comm->remote_size, &comm->dev.vcrt);
     if (mpi_errno != MPI_SUCCESS)
     {
 	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**dev|vcrt_create", 
 			     "**dev|vcrt_create %s", "MPI_COMM_SELF");
     }
     
-    mpi_errno = MPID_VCRT_Get_ptr(comm->vcrt, &comm->vcr);
-    if (mpi_errno != MPI_SUCCESS)
-    {
-	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**dev|vcrt_get_ptr", 
-			     "dev|vcrt_get_ptr %s", "MPI_COMM_WORLD");
-    }
-    
-    MPID_VCR_Dup(&pg->vct[pg_rank], &comm->vcr[0]);
+    MPIDI_VCR_Dup(&pg->vct[pg_rank], &comm->dev.vcrt->vcr_table[0]);
 
     mpi_errno = MPIR_Comm_commit(comm);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -268,9 +254,8 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     comm->rank        = pg_rank;
     comm->remote_size = pg_size;
     comm->local_size  = pg_size;
-    MPID_VCRT_Add_ref( MPIR_Process.comm_world->vcrt );
-    comm->vcrt = MPIR_Process.comm_world->vcrt;
-    comm->vcr  = MPIR_Process.comm_world->vcr;
+    MPIDI_VCRT_Add_ref( MPIR_Process.comm_world->dev.vcrt );
+    comm->dev.vcrt = MPIR_Process.comm_world->dev.vcrt;
     
     mpi_errno = MPIR_Comm_commit(comm);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);

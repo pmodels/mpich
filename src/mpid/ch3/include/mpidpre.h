@@ -166,6 +166,11 @@ typedef union {
 #define MPID_Dev_comm_create_hook(comm_) MPIDI_CH3I_Comm_create_hook(comm_)
 #define MPID_Dev_comm_destroy_hook(comm_) MPIDI_CH3I_Comm_destroy_hook(comm_)
 
+#ifndef HAVE_MPIDI_VCRT
+#define HAVE_MPIDI_VCRT
+typedef struct MPIDI_VC * MPIDI_VCR;
+#endif
+
 typedef struct MPIDI_CH3I_comm
 {
     int eager_max_msg_sz;   /* comm-wide eager/rendezvous message threshold */
@@ -174,6 +179,14 @@ typedef struct MPIDI_CH3I_comm
     int waiting_for_revoke; /* The number of other processes from which we are
                              * waiting for a revoke message before we can release
                              * the context id */
+
+    int is_disconnected;    /* set to TRUE if this communicator was
+                             * disconnected as a part of
+                             * MPI_COMM_DISCONNECT; FALSE otherwise. */
+
+    struct MPIDI_VCRT *vcrt;          /* virtual connecton reference table */
+    struct MPIDI_VCRT *local_vcrt;    /* local virtual connecton reference table */
+
     struct MPID_Comm *next; /* next pointer for list of communicators */
     struct MPID_Comm *prev; /* prev pointer for list of communicators */
     MPIDI_CH3I_CH_comm_t ch;
@@ -181,12 +194,6 @@ typedef struct MPIDI_CH3I_comm
 MPIDI_CH3I_comm_t;
 
 #define MPID_DEV_COMM_DECL MPIDI_CH3I_comm_t dev;
-
-#ifndef HAVE_MPIDI_VCRT
-#define HAVE_MPIDI_VCRT
-typedef struct MPIDI_VCRT * MPID_VCRT;
-typedef struct MPIDI_VC * MPID_VCR;
-#endif
 
 #ifndef DEFINED_REQ
 #define DEFINED_REQ
