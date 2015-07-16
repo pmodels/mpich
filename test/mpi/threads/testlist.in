@@ -4,3 +4,4 @@ init
 mpi_t
 @spawndir@
 @rmadir@
+coll

@@ -1084,6 +1084,8 @@
 /threads/pt2pt/threads
 /threads/spawn/multispawn
 /threads/spawn/th_taskmaster
+/threads/coll/iallred
+/threads/coll/allred
 /topo/cartcreates
 /topo/cartzero
 /topo/dgraph_unwgt

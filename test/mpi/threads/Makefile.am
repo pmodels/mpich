@@ -9,5 +9,5 @@ include $(top_srcdir)/Makefile.mtest
 
 EXTRA_DIST = testlist.in
 
-SUBDIRS = util pt2pt comm init mpi_t $(spawndir) rma
-DIST_SUBDIRS = util pt2pt comm init mpi_t spawn rma
+SUBDIRS = util pt2pt comm init mpi_t $(spawndir) rma coll
+DIST_SUBDIRS = util pt2pt comm init mpi_t spawn rma coll

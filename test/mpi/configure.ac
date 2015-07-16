@@ -1624,6 +1624,7 @@ AC_OUTPUT(maint/testmerge \
           threads/mpi_t/Makefile \
           threads/spawn/Makefile \
           threads/rma/Makefile \
+          threads/coll/Makefile \
           errors/Makefile \
           errors/attr/Makefile \
           errors/basic/Makefile \

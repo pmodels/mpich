@@ -1,0 +1,2 @@
+allred 2 xfail=ticket2108
+iallred 2 xfail=ticket2108
