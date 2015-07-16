@@ -317,7 +317,7 @@ int MPIDU_Sock_wait(struct MPIDU_Sock_set * sock_set, int millisecond_timeout,
 	else if ((MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE) && pollinfo->type == MPIDU_SOCKI_TYPE_INTERRUPTER)
 		{
 		    char c[16];
-		    int nb;
+		    ssize_t nb;
 
 		    do
 		    {
@@ -570,7 +570,7 @@ static int MPIDU_Socki_handle_pollerr(struct pollfd * const pollfd, struct polli
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPIDU_Socki_handle_read(struct pollfd * const pollfd, struct pollinfo * const pollinfo)
 {
-    int nb;
+    ssize_t nb;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_READ);
     MPIDI_STATE_DECL(MPID_STATE_READV);
@@ -689,7 +689,7 @@ static int MPIDU_Socki_handle_read(struct pollfd * const pollfd, struct pollinfo
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPIDU_Socki_handle_write(struct pollfd * const pollfd, struct pollinfo * const pollinfo)
 {
-    int nb;
+    ssize_t nb;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_WRITE);
     MPIDI_STATE_DECL(MPID_STATE_WRITEV);
