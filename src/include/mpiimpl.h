@@ -143,16 +143,6 @@ int usleep(useconds_t usec);
 /* FIXME: ... to do ... */
 #include "mpitypedefs.h"
 
-/* This is the default implementation of MPIU_Memcpy.  We define this
-   before including mpidpre.h so that it can be used when a device or
-   channel can use it if it's overriding MPIU_Memcpy.  */
-MPIU_DBG_ATTRIBUTE_NOINLINE
-ATTRIBUTE((unused))
-static MPIU_DBG_INLINE_KEYWORD void MPIUI_Memcpy(void * dst, const void * src, size_t len)
-{
-    memcpy(dst, src, len);
-}
-
 /* Include definitions from the device which must exist before items in this
    file (mpiimpl.h) can be defined. mpidpre.h must be included before any
    files that allow the device to override or extend any terms; this includes
@@ -162,18 +152,16 @@ static MPIU_DBG_INLINE_KEYWORD void MPIUI_Memcpy(void * dst, const void * src, s
 /* ------------------------------------------------------------------------- */
 
 /* Overriding memcpy:
-   Devices and channels can override the default implementation of
-   MPIU_Memcpy by defining the MPIU_Memcpy macro.  The implementation
-   can call MPIUI_Memcpy for the default memcpy implementation.   
-   Note that MPIU_Memcpy and MPIUI_Memcpy return void rather than a
-   pointer to the destination buffer.  This is different from C89
-   memcpy.
+     This is a utility function for memory copy.  The device might use
+     this directly or override it with a different device-specific
+     mechanism to provide an MPID_Memcpy function.  However, we
+     currently do not provide such an ADI function.
 */
 #ifndef MPIU_Memcpy
 #define MPIU_Memcpy(dst, src, len)                \
     do {                                          \
         MPIU_MEM_CHECK_MEMCPY((dst),(src),(len)); \
-        MPIUI_Memcpy((dst), (src), (len));        \
+        memcpy((dst), (src), (len));              \
     } while (0)
 #endif
 

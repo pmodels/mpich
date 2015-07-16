@@ -180,8 +180,8 @@ static int alloc_sc_plfd_tbls (void)
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP (mpi_errno);
 
     MPIU_Assert(0 == idx); /* assumed in other parts of this file */
-    MPIUI_Memcpy (&g_sc_tbl[idx], &MPID_nem_tcp_g_lstn_sc, sizeof(MPID_nem_tcp_g_lstn_sc));
-    MPIUI_Memcpy (&MPID_nem_tcp_plfd_tbl[idx], &MPID_nem_tcp_g_lstn_plfd, sizeof(MPID_nem_tcp_g_lstn_plfd));
+    MPIU_Memcpy (&g_sc_tbl[idx], &MPID_nem_tcp_g_lstn_sc, sizeof(MPID_nem_tcp_g_lstn_sc));
+    MPIU_Memcpy (&MPID_nem_tcp_plfd_tbl[idx], &MPID_nem_tcp_g_lstn_plfd, sizeof(MPID_nem_tcp_g_lstn_plfd));
     MPIU_Assert(MPID_nem_tcp_plfd_tbl[idx].fd == g_sc_tbl[idx].fd);
     MPIU_Assert(MPID_nem_tcp_plfd_tbl[idx].events == POLLIN);
 
