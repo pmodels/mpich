@@ -114,10 +114,6 @@ int usleep(useconds_t usec);
 #define MAX_HOSTNAME_LEN MAXHOSTNAMELEN
 #endif
 
-/* Default PMI version to use */
-#define MPIU_DEFAULT_PMI_VERSION 1
-#define MPIU_DEFAULT_PMI_SUBVERSION 1
-
 /* This allows us to keep names local to a single file when we can use
    weak symbols */
 #ifdef  USE_WEAK_SYMBOLS

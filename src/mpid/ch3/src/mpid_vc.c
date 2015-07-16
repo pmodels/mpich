@@ -1077,7 +1077,8 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
     char *node_name_buf;
     int no_local = 0;
     int odd_even_cliques = 0;
-    int pmi_version = MPIU_DEFAULT_PMI_VERSION, pmi_subversion = MPIU_DEFAULT_PMI_SUBVERSION;
+    int pmi_version = MPIDI_CH3I_DEFAULT_PMI_VERSION;
+    int pmi_subversion = MPIDI_CH3I_DEFAULT_PMI_SUBVERSION;
     MPIU_CHKLMEM_DECL(4);
 
     /* See if the user wants to override our default values */
