@@ -140,12 +140,18 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     if (data_sz <= PTL_LARGE_THRESHOLD) {
         /* Small message.  Send all data eagerly */
         if (dt_contig) {
+            void *start = (char *)buf + dt_true_lb;
             MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Small contig message");
             REQ_PTL(sreq)->event_handler = handler_send;
             MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "&REQ_PTL(sreq)->event_handler = %p", &(REQ_PTL(sreq)->event_handler));
-            ret = MPID_nem_ptl_rptl_put(MPIDI_nem_ptl_global_md, (ptl_size_t)((char *)buf + dt_true_lb), data_sz, PTL_NO_ACK_REQ, vc_ptl->id, vc_ptl->pt,
-                         NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank), 0, sreq,
-                                        NPTL_HEADER(ssend_flag, data_sz));
+            if (start == NULL)
+                ret = MPID_nem_ptl_rptl_put(MPIDI_nem_ptl_global_md, (ptl_size_t)&dummy, data_sz, PTL_NO_ACK_REQ, vc_ptl->id, vc_ptl->pt,
+                                            NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank), 0, sreq,
+                                            NPTL_HEADER(ssend_flag, data_sz));
+            else
+                ret = MPID_nem_ptl_rptl_put(MPIDI_nem_ptl_global_md, (ptl_size_t)start, data_sz, PTL_NO_ACK_REQ, vc_ptl->id, vc_ptl->pt,
+                                            NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank), 0, sreq,
+                                            NPTL_HEADER(ssend_flag, data_sz));
             MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
             DBG_MSG_PUT("global", data_sz, vc->pg_rank, NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank), NPTL_HEADER(ssend_flag, data_sz));
             MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "id.nid = %#x", vc_ptl->id.phys.nid);

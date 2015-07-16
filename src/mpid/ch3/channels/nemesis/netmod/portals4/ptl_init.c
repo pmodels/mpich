@@ -43,6 +43,8 @@ ptl_pt_index_t  MPIDI_nem_ptl_get_rpt_pt; /* portal for rportals control message
 ptl_handle_md_t MPIDI_nem_ptl_global_md;
 ptl_ni_limits_t MPIDI_nem_ptl_ni_limits;
 
+char dummy;
+
 static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p);
 static int ptl_finalize(void);
 static int get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_p);

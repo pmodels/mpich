@@ -29,6 +29,9 @@ extern ptl_handle_eq_t MPIDI_nem_ptl_rpt_eq;
 extern ptl_handle_md_t MPIDI_nem_ptl_global_md;
 extern ptl_ni_limits_t MPIDI_nem_ptl_ni_limits;
 
+/* workaround for NULL operations */
+extern char dummy;
+
 #define MPID_NEM_PTL_MAX_OVERFLOW_DATA 32 /* that's way more than we need */
 typedef struct MPID_nem_ptl_pack_overflow
 {

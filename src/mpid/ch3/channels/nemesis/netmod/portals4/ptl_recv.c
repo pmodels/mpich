@@ -474,8 +474,12 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
     if (data_sz <= PTL_LARGE_THRESHOLD) {
         if (dt_contig) {
             /* small contig message */
+            void *start = (char *)rreq->dev.user_buf + dt_true_lb;
             MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Small contig message");
-            me.start = (char *)rreq->dev.user_buf + dt_true_lb;
+            if (start == NULL)
+                me.start = &dummy;
+            else
+                me.start = start;
             me.length = data_sz;
             REQ_PTL(rreq)->event_handler = handler_recv_dequeue_complete;
         } else {
