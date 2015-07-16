@@ -282,15 +282,12 @@ extern char *strdup( const char * );
 
 /* Memory allocation macros. See document. */
 
-/* You can redefine this to indicate whether memory allocation errors
-   are fatal.  Recoverable by default */
-#define MPIU_CHKMEM_ISFATAL MPIR_ERR_RECOVERABLE
-
-/* Standard macro for generating error codes.   */
+/* Standard macro for generating error codes.  We set the error to be
+ * recoverable by default, but this can be changed. */
 #ifdef HAVE_ERROR_CHECKING
 #define MPIU_CHKMEM_SETERR(rc_,nbytes_,name_) \
      rc_=MPIR_Err_create_code( MPI_SUCCESS, \
-          MPIU_CHKMEM_ISFATAL, FCNAME, __LINE__, \
+          MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
           MPI_ERR_OTHER, "**nomem2", "**nomem2 %d %s", nbytes_, name_ )
 #else
 #define MPIU_CHKMEM_SETERR(rc_,nbytes_,name_) rc_=MPI_ERR_OTHER
