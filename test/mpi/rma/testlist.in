@@ -62,7 +62,7 @@ baseattrwin 1
 fkeyvalwin 1
 selfrma 1
 mixedsync 4
-epochtest 4
+epochtest 4 timeLimit=300
 locknull 2
 rmanull 2
 rmazero 2
