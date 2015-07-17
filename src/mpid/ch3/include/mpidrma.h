@@ -333,7 +333,9 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
 
     new_ptr = MPIDI_CH3I_Win_target_lock_entry_alloc(win_ptr, pkt);
     if (new_ptr != NULL) {
-        MPL_LL_APPEND(win_ptr->target_lock_queue_head, win_ptr->target_lock_queue_tail, new_ptr);
+        MPIDI_RMA_Target_lock_entry_t **head_ptr =
+            (MPIDI_RMA_Target_lock_entry_t **) (&(win_ptr->target_lock_queue_head));
+        MPL_DL_APPEND((*head_ptr), new_ptr);
         new_ptr->vc = vc;
     }
     else {
@@ -645,15 +647,13 @@ static inline int adjust_op_piggybacked_with_lock(MPID_Win * win_ptr,
 
             if (op->reqs_size == 0) {
                 MPIU_Assert(op->single_req == NULL && op->multi_reqs == NULL);
-                MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_op_list_head),
-                                             &(target->pending_op_list_tail), op);
+                MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_op_list_head), op);
             }
             else {
                 MPI_Datatype target_datatype;
                 int is_derived = FALSE;
 
-                MPIDI_CH3I_RMA_Ops_unlink(&(target->pending_op_list_head),
-                                          &(target->pending_op_list_tail), op);
+                MPIDI_CH3I_RMA_Ops_unlink(&(target->pending_op_list_head), op);
 
                 MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE(op->pkt, target_datatype, mpi_errno);
 
@@ -667,19 +667,16 @@ static inline int adjust_op_piggybacked_with_lock(MPID_Win * win_ptr,
                 }
 
                 if (is_derived) {
-                    MPIDI_CH3I_RMA_Ops_append(&(target->issued_dt_op_list_head),
-                                              &(target->issued_dt_op_list_tail), op);
+                    MPIDI_CH3I_RMA_Ops_append(&(target->issued_dt_op_list_head), op);
                 }
                 else if (op->pkt.type == MPIDI_CH3_PKT_PUT ||
                          op->pkt.type == MPIDI_CH3_PKT_PUT_IMMED ||
                          op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE ||
                          op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {
-                    MPIDI_CH3I_RMA_Ops_append(&(target->issued_write_op_list_head),
-                                              &(target->issued_write_op_list_tail), op);
+                    MPIDI_CH3I_RMA_Ops_append(&(target->issued_write_op_list_head), op);
                 }
                 else {
-                    MPIDI_CH3I_RMA_Ops_append(&(target->issued_read_op_list_head),
-                                              &(target->issued_read_op_list_tail), op);
+                    MPIDI_CH3I_RMA_Ops_append(&(target->issued_read_op_list_head), op);
                 }
             }
         }
@@ -753,6 +750,8 @@ static inline int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
         MPIDI_CH3_Pkt_lock_t *lock_pkt = &pkt.lock;
         MPIDI_RMA_Target_lock_entry_t *new_ptr = NULL;
         MPIDI_VC_t *my_vc;
+        MPIDI_RMA_Target_lock_entry_t **head_ptr =
+            (MPIDI_RMA_Target_lock_entry_t **) (&(win_ptr->target_lock_queue_head));
 
         MPIDI_Pkt_init(lock_pkt, MPIDI_CH3_PKT_LOCK);
         lock_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
@@ -771,7 +770,7 @@ static inline int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
                 MPIU_ERR_POP(mpi_errno);
             goto fn_exit;
         }
-        MPL_LL_APPEND(win_ptr->target_lock_queue_head, win_ptr->target_lock_queue_tail, new_ptr);
+        MPL_DL_APPEND((*head_ptr), new_ptr);
         MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &my_vc);
         new_ptr->vc = my_vc;
 

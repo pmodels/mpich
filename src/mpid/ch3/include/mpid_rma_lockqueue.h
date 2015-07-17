@@ -28,8 +28,7 @@ static inline MPIDI_RMA_Target_lock_entry_t *MPIDI_CH3I_Win_target_lock_entry_al
 
     if (win_ptr->target_lock_entry_pool_head != NULL) {
         new_ptr = win_ptr->target_lock_entry_pool_head;
-        MPL_LL_DELETE(win_ptr->target_lock_entry_pool_head, win_ptr->target_lock_entry_pool_tail,
-                      new_ptr);
+        MPL_DL_DELETE(win_ptr->target_lock_entry_pool_head, new_ptr);
     }
 
     if (new_ptr != NULL) {
@@ -63,8 +62,7 @@ static inline int MPIDI_CH3I_Win_target_lock_entry_free(MPID_Win * win_ptr,
 
     /* use PREPEND when return objects back to the pool
      * in order to improve cache performance */
-    MPL_LL_PREPEND(win_ptr->target_lock_entry_pool_head, win_ptr->target_lock_entry_pool_tail,
-                   target_lock_entry);
+    MPL_DL_PREPEND(win_ptr->target_lock_entry_pool_head, target_lock_entry);
 
     return mpi_errno;
 }

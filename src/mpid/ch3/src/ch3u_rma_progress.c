@@ -439,8 +439,7 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
         if (curr_op->reqs_size == 0) {
             MPIU_Assert(curr_op->single_req == NULL && curr_op->multi_reqs == NULL);
             /* Sending is completed immediately. */
-            MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_op_list_head),
-                                         &(target->pending_op_list_tail), curr_op);
+            MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_op_list_head), curr_op);
         }
         else {
             MPI_Datatype target_datatype;
@@ -448,8 +447,7 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
 
             /* Sending is not completed immediately. */
 
-            MPIDI_CH3I_RMA_Ops_unlink(&(target->pending_op_list_head),
-                                      &(target->pending_op_list_tail), curr_op);
+            MPIDI_CH3I_RMA_Ops_unlink(&(target->pending_op_list_head), curr_op);
 
             MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE(curr_op->pkt, target_datatype, mpi_errno);
 
@@ -463,19 +461,16 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
             }
 
             if (is_derived) {
-                MPIDI_CH3I_RMA_Ops_append(&(target->issued_dt_op_list_head),
-                                          &(target->issued_dt_op_list_tail), curr_op);
+                MPIDI_CH3I_RMA_Ops_append(&(target->issued_dt_op_list_head), curr_op);
             }
             else if (curr_op->pkt.type == MPIDI_CH3_PKT_PUT ||
                      curr_op->pkt.type == MPIDI_CH3_PKT_PUT_IMMED ||
                      curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE ||
                      curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {
-                MPIDI_CH3I_RMA_Ops_append(&(target->issued_write_op_list_head),
-                                          &(target->issued_write_op_list_tail), curr_op);
+                MPIDI_CH3I_RMA_Ops_append(&(target->issued_write_op_list_head), curr_op);
             }
             else {
-                MPIDI_CH3I_RMA_Ops_append(&(target->issued_read_op_list_head),
-                                          &(target->issued_read_op_list_tail), curr_op);
+                MPIDI_CH3I_RMA_Ops_append(&(target->issued_read_op_list_head), curr_op);
             }
 
 
@@ -569,7 +564,7 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
 {
     MPIDI_RMA_Op_t *curr_op = NULL;
     MPIDI_RMA_Target_t *curr_target = NULL;
-    MPIDI_RMA_Op_t **op_list_head = NULL, **op_list_tail = NULL;
+    MPIDI_RMA_Op_t **op_list_head = NULL;
     int read_flag = 0;
     int i, made_progress = 0;
     int mpi_errno = MPI_SUCCESS;
@@ -620,7 +615,6 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
     curr_target->sync.upgrade_flush_local = 1;
 
     op_list_head = &curr_target->issued_read_op_list_head;
-    op_list_tail = &curr_target->issued_read_op_list_tail;
     read_flag = 1;
 
     curr_op = *op_list_head;
@@ -650,12 +644,11 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
                 curr_op->multi_reqs = NULL;
                 curr_op->reqs_size = 0;
             }
-            MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, op_list_head, op_list_tail, curr_op);
+            MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, op_list_head, curr_op);
         }
         else {
             if (read_flag == 1) {
                 op_list_head = &curr_target->issued_write_op_list_head;
-                op_list_tail = &curr_target->issued_write_op_list_tail;
                 read_flag = 0;
             }
             else {

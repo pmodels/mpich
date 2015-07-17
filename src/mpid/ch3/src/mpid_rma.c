@@ -41,7 +41,7 @@ cvars:
 
 MPIU_THREADSAFE_INIT_DECL(initRMAoptions);
 
-MPIDI_RMA_Win_list_t *MPIDI_RMA_Win_list = NULL, *MPIDI_RMA_Win_list_tail = NULL;
+MPIDI_RMA_Win_list_t *MPIDI_RMA_Win_list = NULL;
 
 static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, MPID_Info * info,
                     MPID_Comm * comm_ptr, MPID_Win ** win_ptr);
@@ -286,7 +286,6 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
     (*win_ptr)->current_lock_type = MPID_LOCK_NONE;
     (*win_ptr)->shared_lock_ref_cnt = 0;
     (*win_ptr)->target_lock_queue_head = NULL;
-    (*win_ptr)->target_lock_queue_tail = NULL;
     (*win_ptr)->shm_allocated = FALSE;
     (*win_ptr)->states.access_state = MPIDI_RMA_NONE;
     (*win_ptr)->states.exposure_state = MPIDI_RMA_NONE;
@@ -320,11 +319,9 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
                         sizeof(MPIDI_RMA_Op_t) * MPIR_CVAR_CH3_RMA_OP_WIN_POOL_SIZE, mpi_errno,
                         "RMA op pool");
     (*win_ptr)->op_pool_head = NULL;
-    (*win_ptr)->op_pool_tail = NULL;
     for (i = 0; i < MPIR_CVAR_CH3_RMA_OP_WIN_POOL_SIZE; i++) {
         (*win_ptr)->op_pool_start[i].pool_type = MPIDI_RMA_POOL_WIN;
-        MPL_LL_APPEND((*win_ptr)->op_pool_head, (*win_ptr)->op_pool_tail,
-                      &((*win_ptr)->op_pool_start[i]));
+        MPL_DL_APPEND((*win_ptr)->op_pool_head, &((*win_ptr)->op_pool_start[i]));
     }
 
     win_target_pool_size =
@@ -333,11 +330,9 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
                         sizeof(MPIDI_RMA_Target_t) * win_target_pool_size, mpi_errno,
                         "RMA target pool");
     (*win_ptr)->target_pool_head = NULL;
-    (*win_ptr)->target_pool_tail = NULL;
     for (i = 0; i < win_target_pool_size; i++) {
         (*win_ptr)->target_pool_start[i].pool_type = MPIDI_RMA_POOL_WIN;
-        MPL_LL_APPEND((*win_ptr)->target_pool_head, (*win_ptr)->target_pool_tail,
-                      &((*win_ptr)->target_pool_start[i]));
+        MPL_DL_APPEND((*win_ptr)->target_pool_head, &((*win_ptr)->target_pool_start[i]));
     }
 
     (*win_ptr)->num_slots = MPIR_MIN(MPIR_CVAR_CH3_RMA_SLOTS_SIZE, MPIR_Comm_size(win_comm_ptr));
@@ -345,7 +340,6 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
                         sizeof(MPIDI_RMA_Slot_t) * (*win_ptr)->num_slots, mpi_errno, "RMA slots");
     for (i = 0; i < (*win_ptr)->num_slots; i++) {
         (*win_ptr)->slots[i].target_list_head = NULL;
-        (*win_ptr)->slots[i].target_list_tail = NULL;
     }
 
     MPIU_CHKPMEM_MALLOC((*win_ptr)->target_lock_entry_pool_start,
@@ -354,10 +348,8 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
                         MPIR_CVAR_CH3_RMA_TARGET_LOCK_ENTRY_WIN_POOL_SIZE, mpi_errno,
                         "RMA lock entry pool");
     (*win_ptr)->target_lock_entry_pool_head = NULL;
-    (*win_ptr)->target_lock_entry_pool_tail = NULL;
     for (i = 0; i < MPIR_CVAR_CH3_RMA_TARGET_LOCK_ENTRY_WIN_POOL_SIZE; i++) {
-        MPL_LL_APPEND((*win_ptr)->target_lock_entry_pool_head,
-                      (*win_ptr)->target_lock_entry_pool_tail,
+        MPL_DL_APPEND((*win_ptr)->target_lock_entry_pool_head,
                       &((*win_ptr)->target_lock_entry_pool_start[i]));
     }
 
@@ -371,7 +363,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
     }
-    MPL_LL_APPEND(MPIDI_RMA_Win_list, MPIDI_RMA_Win_list_tail, win_elem);
+    MPL_DL_APPEND(MPIDI_RMA_Win_list, win_elem);
 
     if (MPIDI_CH3U_Win_hooks.win_init != NULL) {
         mpi_errno =

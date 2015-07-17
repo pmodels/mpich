@@ -31,6 +31,7 @@ typedef enum MPIDI_RMA_Pool_type {
 /* for keeping track of RMA ops, which will be executed at the next sync call */
 typedef struct MPIDI_RMA_Op {
     struct MPIDI_RMA_Op *next;  /* pointer to next element in list */
+    struct MPIDI_RMA_Op *prev;  /* pointer to prev element in list */
 
     void *origin_addr;
     int origin_count;
@@ -62,12 +63,13 @@ typedef struct MPIDI_RMA_Op {
 } MPIDI_RMA_Op_t;
 
 typedef struct MPIDI_RMA_Target {
-    struct MPIDI_RMA_Op *issued_read_op_list_head, *issued_read_op_list_tail;
-    struct MPIDI_RMA_Op *issued_write_op_list_head, *issued_write_op_list_tail;
-    struct MPIDI_RMA_Op *issued_dt_op_list_head, *issued_dt_op_list_tail;
-    struct MPIDI_RMA_Op *pending_op_list_head, *pending_op_list_tail;
+    struct MPIDI_RMA_Op *issued_read_op_list_head;
+    struct MPIDI_RMA_Op *issued_write_op_list_head;
+    struct MPIDI_RMA_Op *issued_dt_op_list_head;
+    struct MPIDI_RMA_Op *pending_op_list_head;
     struct MPIDI_RMA_Op *next_op_to_issue;
     struct MPIDI_RMA_Target *next;
+    struct MPIDI_RMA_Target *prev;
     int target_rank;
     enum MPIDI_RMA_states access_state;
     int lock_type;              /* NONE, SHARED, EXCLUSIVE */
@@ -99,18 +101,19 @@ typedef struct MPIDI_RMA_Target {
 
 typedef struct MPIDI_RMA_Slot {
     struct MPIDI_RMA_Target *target_list_head;
-    struct MPIDI_RMA_Target *target_list_tail;
 } MPIDI_RMA_Slot_t;
 
 typedef struct MPIDI_RMA_Win_list {
     MPID_Win *win_ptr;
     struct MPIDI_RMA_Win_list *next;
+    struct MPIDI_RMA_Win_list *prev;
 } MPIDI_RMA_Win_list_t;
 
-extern MPIDI_RMA_Win_list_t *MPIDI_RMA_Win_list, *MPIDI_RMA_Win_list_tail;
+extern MPIDI_RMA_Win_list_t *MPIDI_RMA_Win_list;
 
 typedef struct MPIDI_RMA_Target_lock_entry {
     struct MPIDI_RMA_Target_lock_entry *next;
+    struct MPIDI_RMA_Target_lock_entry *prev;
     MPIDI_CH3_Pkt_t pkt;        /* all information for this request packet */
     MPIDI_VC_t *vc;
     void *data;                 /* for queued PUTs / ACCs / GACCs, data is copied here */

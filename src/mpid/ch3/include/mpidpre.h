@@ -316,17 +316,13 @@ typedef struct MPIDI_Win_basic_info {
                               * (none, shared, exclusive) */             \
     volatile int shared_lock_ref_cnt;                                    \
     struct MPIDI_RMA_Target_lock_entry volatile *target_lock_queue_head;  /* list of unsatisfied locks */  \
-    struct MPIDI_RMA_Target_lock_entry volatile *target_lock_queue_tail; /* tail of unstaisfied locks. */ \
-                                                                         \
     struct MPIDI_Win_info_args info_args;                                \
     int shm_allocated; /* flag: TRUE iff this window has a shared memory \
                           region associated with it */                   \
     struct MPIDI_RMA_Op *op_pool_start; /* start pointer used for freeing */\
     struct MPIDI_RMA_Op *op_pool_head;  /* pool of operations */              \
-    struct MPIDI_RMA_Op *op_pool_tail; /* tail pointer to pool of operations. */ \
     struct MPIDI_RMA_Target *target_pool_start; /* start pointer used for freeing */\
     struct MPIDI_RMA_Target *target_pool_head; /* pool of targets */          \
-    struct MPIDI_RMA_Target *target_pool_tail; /* tail pointer to pool of targets */\
     struct MPIDI_RMA_Slot *slots;                                        \
     int num_slots;                                                       \
     struct {                                                             \
@@ -348,7 +344,6 @@ typedef struct MPIDI_Win_basic_info {
                             of number of locks not being granted yet. */ \
     struct MPIDI_RMA_Target_lock_entry *target_lock_entry_pool_start;   \
     struct MPIDI_RMA_Target_lock_entry *target_lock_entry_pool_head;    \
-    struct MPIDI_RMA_Target_lock_entry *target_lock_entry_pool_tail;    \
     int current_target_lock_data_bytes;                                 \
     int dangling_request_cnt; /* This counter tracks number of          \
                                  ibarrier requests (used in             \

@@ -79,10 +79,8 @@ cvars:
 */
 
 
-MPIDI_RMA_Op_t *global_rma_op_pool_head = NULL, *global_rma_op_pool_tail =
-    NULL, *global_rma_op_pool_start = NULL;
-MPIDI_RMA_Target_t *global_rma_target_pool_head = NULL, *global_rma_target_pool_tail =
-    NULL, *global_rma_target_pool_start = NULL;
+MPIDI_RMA_Op_t *global_rma_op_pool_head = NULL, *global_rma_op_pool_start = NULL;
+MPIDI_RMA_Target_t *global_rma_target_pool_head = NULL, *global_rma_target_pool_start = NULL;
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_RMA_init
@@ -103,8 +101,7 @@ int MPIDI_RMA_init(void)
                         mpi_errno, "RMA op pool");
     for (i = 0; i < MPIR_CVAR_CH3_RMA_OP_GLOBAL_POOL_SIZE; i++) {
         global_rma_op_pool_start[i].pool_type = MPIDI_RMA_POOL_GLOBAL;
-        MPL_LL_APPEND(global_rma_op_pool_head, global_rma_op_pool_tail,
-                      &(global_rma_op_pool_start[i]));
+        MPL_DL_APPEND(global_rma_op_pool_head, &(global_rma_op_pool_start[i]));
     }
 
     MPIU_CHKPMEM_MALLOC(global_rma_target_pool_start, MPIDI_RMA_Target_t *,
@@ -112,8 +109,7 @@ int MPIDI_RMA_init(void)
                         mpi_errno, "RMA target pool");
     for (i = 0; i < MPIR_CVAR_CH3_RMA_TARGET_GLOBAL_POOL_SIZE; i++) {
         global_rma_target_pool_start[i].pool_type = MPIDI_RMA_POOL_GLOBAL;
-        MPL_LL_APPEND(global_rma_target_pool_head, global_rma_target_pool_tail,
-                      &(global_rma_target_pool_start[i]));
+        MPL_DL_APPEND(global_rma_target_pool_head, &(global_rma_target_pool_start[i]));
     }
 
   fn_exit:
@@ -208,7 +204,7 @@ int MPID_Win_free(MPID_Win ** win_ptr)
     for (win_elem = MPIDI_RMA_Win_list; win_elem && win_elem->win_ptr != *win_ptr;
          win_elem = win_elem->next);
     MPIU_ERR_CHKANDJUMP(win_elem == NULL, mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
-    MPL_LL_DELETE(MPIDI_RMA_Win_list, MPIDI_RMA_Win_list_tail, win_elem);
+    MPL_DL_DELETE(MPIDI_RMA_Win_list, win_elem);
     MPIU_Free(win_elem);
 
     if (MPIDI_RMA_Win_list == NULL)
