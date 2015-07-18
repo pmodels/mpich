@@ -24,6 +24,8 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
 #define MPIDI_CH3I_RMA_Get_issued_list_ptr(target_, op_, list_ptr_, mpi_errno_) \
     do {                                                                \
         MPI_Datatype target_datatype_;                                  \
+        int is_read_;                                                   \
+        MPIDI_CH3I_RMA_PKT_IS_READ_OP((op_)->pkt, is_read_);            \
         MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE((op_)->pkt, target_datatype_, mpi_errno_); \
         if ((target_datatype_ != MPI_DATATYPE_NULL &&                   \
              !MPIR_DATATYPE_IS_PREDEFINED(target_datatype_)) ||         \
@@ -33,10 +35,7 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
              !MPIR_DATATYPE_IS_PREDEFINED((op_)->result_datatype))) {   \
             list_ptr_ = &((target_)->issued_dt_op_list_head);           \
         }                                                               \
-        else if ((op_)->pkt.type == MPIDI_CH3_PKT_PUT ||                \
-                 (op_)->pkt.type == MPIDI_CH3_PKT_PUT_IMMED ||          \
-                 (op_)->pkt.type == MPIDI_CH3_PKT_ACCUMULATE ||         \
-                 (op_)->pkt.type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {   \
+        else if (!is_read_) {                                           \
             list_ptr_ = &((target_)->issued_write_op_list_head);        \
         }                                                               \
         else {                                                          \
@@ -140,6 +139,14 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
             win_local_completed_ = 1;                                   \
                                                                         \
     } while (0)
+
+
+/* Given a rank, return slot index */
+#define MPIDI_CH3I_RMA_RANK_TO_SLOT(win_ptr_, rank_)                    \
+    (((win_ptr_)->num_slots < (win_ptr_)->comm_ptr->local_size) ?       \
+     &(win_ptr_)->slots[(rank_) % (win_ptr_)->num_slots] :              \
+     &(win_ptr_)->slots[(rank_)])
+
 
 /* MPIDI_CH3I_Win_op_alloc(): get a new op element from op pool and
  * initialize it. If we cannot get one, return NULL. */
@@ -292,11 +299,7 @@ static inline int MPIDI_CH3I_Win_create_target(MPID_Win * win_ptr, int target_ra
     MPIDI_RMA_Slot_t *slot = NULL;
     MPIDI_RMA_Target_t *t = NULL;
 
-    if (win_ptr->num_slots < win_ptr->comm_ptr->local_size)
-        slot = &(win_ptr->slots[target_rank % win_ptr->num_slots]);
-    else
-        slot = &(win_ptr->slots[target_rank]);
-
+    slot = MPIDI_CH3I_RMA_RANK_TO_SLOT(win_ptr, target_rank);
     t = MPIDI_CH3I_Win_target_alloc(win_ptr);
     if (t == NULL) {
         mpi_errno = MPIDI_CH3I_RMA_Cleanup_target_aggressive(win_ptr, &t);
@@ -335,10 +338,7 @@ static inline int MPIDI_CH3I_Win_find_target(MPID_Win * win_ptr, int target_rank
     MPIDI_RMA_Slot_t *slot = NULL;
     MPIDI_RMA_Target_t *t = NULL;
 
-    if (win_ptr->num_slots < win_ptr->comm_ptr->local_size)
-        slot = &(win_ptr->slots[target_rank % win_ptr->num_slots]);
-    else
-        slot = &(win_ptr->slots[target_rank]);
+    slot = MPIDI_CH3I_RMA_RANK_TO_SLOT(win_ptr, target_rank);
 
     t = slot->target_list_head;
     while (t != NULL) {
@@ -419,10 +419,7 @@ static inline int MPIDI_CH3I_Win_target_dequeue_and_free(MPID_Win * win_ptr, MPI
     int target_rank = e->target_rank;
     MPIDI_RMA_Slot_t *slot;
 
-    if (win_ptr->num_slots < win_ptr->comm_ptr->local_size)
-        slot = &(win_ptr->slots[target_rank % win_ptr->num_slots]);
-    else
-        slot = &(win_ptr->slots[target_rank]);
+    slot = MPIDI_CH3I_RMA_RANK_TO_SLOT(win_ptr, target_rank);
 
     MPL_DL_DELETE(slot->target_list_head, e);
 

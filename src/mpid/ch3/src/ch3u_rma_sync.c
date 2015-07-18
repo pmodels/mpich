@@ -903,7 +903,6 @@ int MPID_Win_complete(MPID_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, dst, rank = win_ptr->comm_ptr->rank;
-    MPID_Comm *win_comm_ptr = win_ptr->comm_ptr;
     MPIDI_RMA_Target_t *curr_target;
     MPIDI_STATE_DECL(MPID_STATE_MPID_WIN_COMPLETE);
 
@@ -935,13 +934,9 @@ int MPID_Win_complete(MPID_Win * win_ptr)
             continue;
         }
 
-        if (win_comm_ptr->local_size <= win_ptr->num_slots)
-            curr_target = win_ptr->slots[dst].target_list_head;
-        else {
-            curr_target = win_ptr->slots[dst % win_ptr->num_slots].target_list_head;
-            while (curr_target != NULL && curr_target->target_rank != dst)
-                curr_target = curr_target->next;
-        }
+        curr_target = MPIDI_CH3I_RMA_RANK_TO_SLOT(win_ptr, dst)->target_list_head;
+        while (curr_target != NULL && curr_target->target_rank != dst)
+            curr_target = curr_target->next;
 
         if (curr_target != NULL) {
             curr_target->win_complete_flag = 1;
@@ -1618,13 +1613,9 @@ int MPID_Win_unlock_all(MPID_Win * win_ptr)
     }
     else {
         for (i = 0; i < win_ptr->comm_ptr->local_size; i++) {
-            if (win_ptr->comm_ptr->local_size <= win_ptr->num_slots)
-                curr_target = win_ptr->slots[i].target_list_head;
-            else {
-                curr_target = win_ptr->slots[i % win_ptr->num_slots].target_list_head;
-                while (curr_target != NULL && curr_target->target_rank != i)
-                    curr_target = curr_target->next;
-            }
+            curr_target = MPIDI_CH3I_RMA_RANK_TO_SLOT(win_ptr, i)->target_list_head;
+            while (curr_target != NULL && curr_target->target_rank != i)
+                curr_target = curr_target->next;
 
             if (curr_target != NULL) {
                 if (curr_target->sync.sync_flag < sync_flag) {

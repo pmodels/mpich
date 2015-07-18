@@ -609,6 +609,41 @@ MPIDI_CH3_PKT_DEFS
         }                                                               \
     }
 
+
+/* This macro judges if the RMA operation is a read operation,
+ * which means, it will triffer the issuing of response data from
+ * the target to the origin */
+#define MPIDI_CH3I_RMA_PKT_IS_READ_OP(pkt_, is_read_op_)                \
+    do {                                                                \
+        if ((pkt_).type == MPIDI_CH3_PKT_GET_ACCUM_IMMED ||             \
+            (pkt_).type == MPIDI_CH3_PKT_GET_ACCUM ||                   \
+            (pkt_).type == MPIDI_CH3_PKT_FOP_IMMED ||                   \
+            (pkt_).type == MPIDI_CH3_PKT_FOP ||                         \
+            (pkt_).type == MPIDI_CH3_PKT_CAS_IMMED ||                   \
+            (pkt_).type == MPIDI_CH3_PKT_GET) {                         \
+            is_read_op_ = TRUE;                                         \
+        }                                                               \
+        else {                                                          \
+            is_read_op_ = FALSE;                                        \
+        }                                                               \
+    } while (0)
+
+
+/* This macro judges if the RMA operation is a immed operation */
+#define MPIDI_CH3I_RMA_PKT_IS_IMMED_OP(pkt_, is_immed_op_)              \
+    do {                                                                \
+        if ((pkt_).type == MPIDI_CH3_PKT_GET_ACCUM_IMMED ||             \
+            (pkt_).type == MPIDI_CH3_PKT_FOP_IMMED ||                   \
+            (pkt_).type == MPIDI_CH3_PKT_CAS_IMMED ||                   \
+            (pkt_).type == MPIDI_CH3_PKT_PUT_IMMED ||                   \
+            (pkt_).type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {            \
+            is_immed_op_ = TRUE;                                        \
+        }                                                               \
+        else {                                                          \
+            is_immed_op_ = FALSE;                                       \
+        }                                                               \
+    } while (0)
+
 typedef struct MPIDI_CH3_Pkt_put {
     MPIDI_CH3_Pkt_type_t type;
     MPIDI_CH3_Pkt_flags_t flags;

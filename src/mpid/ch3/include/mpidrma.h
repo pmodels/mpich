@@ -326,6 +326,7 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
     MPIDI_CH3_Pkt_flags_t flag;
     MPI_Win source_win_handle;
     MPI_Request request_handle;
+    int is_immed_op = FALSE;
     int lock_discarded = 0, data_discarded = 0;
     int mpi_errno = MPI_SUCCESS;
 
@@ -342,13 +343,8 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
         lock_discarded = 1;
     }
 
-    if (pkt->type == MPIDI_CH3_PKT_LOCK ||
-        pkt->type == MPIDI_CH3_PKT_PUT_IMMED ||
-        pkt->type == MPIDI_CH3_PKT_ACCUMULATE_IMMED ||
-        pkt->type == MPIDI_CH3_PKT_GET ||
-        pkt->type == MPIDI_CH3_PKT_GET_ACCUM_IMMED ||
-        pkt->type == MPIDI_CH3_PKT_FOP_IMMED || pkt->type == MPIDI_CH3_PKT_CAS_IMMED) {
-
+    MPIDI_CH3I_RMA_PKT_IS_IMMED_OP((*pkt), is_immed_op);
+    if (is_immed_op || pkt->type == MPIDI_CH3_PKT_LOCK || pkt->type == MPIDI_CH3_PKT_GET) {
         /* return bytes of data processed in this pkt handler */
         (*buflen) = sizeof(MPIDI_CH3_Pkt_t);
 
@@ -429,10 +425,12 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
                 MPIDI_CH3_Pkt_t new_pkt;
                 MPIDI_CH3_Pkt_lock_t *lock_pkt = &new_pkt.lock;
                 MPI_Win target_win_handle;
+                int is_read_op = FALSE;
 
+                MPIDI_CH3I_RMA_PKT_IS_READ_OP((*pkt), is_read_op);
                 MPIDI_CH3_PKT_RMA_GET_TARGET_WIN_HANDLE((*pkt), target_win_handle, mpi_errno);
 
-                if (pkt->type == MPIDI_CH3_PKT_PUT || pkt->type == MPIDI_CH3_PKT_ACCUMULATE) {
+                if (!is_read_op) {
                     MPIDI_CH3_PKT_RMA_GET_SOURCE_WIN_HANDLE((*pkt), source_win_handle, mpi_errno);
                     request_handle = MPI_REQUEST_NULL;
                 }
@@ -527,6 +525,8 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
             MPIU_ERR_POP(mpi_errno);
     }
     else {
+        int is_read_op = FALSE;
+
         if (lock_discarded)
             flag = MPIDI_CH3_PKT_FLAG_RMA_LOCK_DISCARDED;
         else if (data_discarded)
@@ -534,8 +534,8 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
         else
             flag = MPIDI_CH3_PKT_FLAG_RMA_LOCK_QUEUED_DATA_QUEUED;
 
-        if (pkt->type == MPIDI_CH3_PKT_PUT || pkt->type == MPIDI_CH3_PKT_PUT_IMMED ||
-            pkt->type == MPIDI_CH3_PKT_ACCUMULATE || pkt->type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {
+        MPIDI_CH3I_RMA_PKT_IS_READ_OP((*pkt), is_read_op);
+        if (!is_read_op) {
             MPIDI_CH3_PKT_RMA_GET_SOURCE_WIN_HANDLE((*pkt), source_win_handle, mpi_errno);
             request_handle = MPI_REQUEST_NULL;
         }
