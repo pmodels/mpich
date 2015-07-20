@@ -71,8 +71,8 @@
 
  * SMP-aware collectives do not perform as well, in select cases, as
    non-SMP-aware collectives, e.g. MPI_Reduce with message sizes
-   larger than 64KiB. These can be disabled by the configure option
-   "--disable-smpcoll".
+   larger than 64KiB. These can be disabled by setting the environment
+   variable MPIR_CVAR_ENABLE_SMP_COLLECTIVES to 0.
 
  * MPI_Irecv operations that are not explicitly completed before
    MPI_Finalize is called may fail to complete before MPI_Finalize
