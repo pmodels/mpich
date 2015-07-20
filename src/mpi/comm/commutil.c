@@ -1104,6 +1104,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
     int own_eager_mask = 0;
     mpir_errflag_t errflag = MPIR_ERR_NONE;
     int first_iter = 1;
+    int seqnum;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_CONTEXTID);
@@ -1149,6 +1150,9 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
         else if (first_iter) {
             memset(local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
             own_eager_mask = 0;
+            if(comm_ptr->idup_count)
+                 seqnum = comm_ptr->idup_curr_seqnum++;
+
 
             /* Attempt to reserve the eager mask segment */
             if (!eager_in_use && eager_nelem > 0) {
@@ -1170,7 +1174,8 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
                 lowestTag       = tag;
             }
 
-            if (mask_in_use || ! (comm_ptr->context_id == lowestContextId && tag == lowestTag)) {
+            if (mask_in_use || ! (comm_ptr->context_id == lowestContextId && tag == lowestTag) ||
+               (comm_ptr->idup_count && seqnum != comm_ptr->idup_next_seqnum))  {
                 memset(local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
                 own_mask = 0;
                 MPIU_DBG_MSG_D(COMM, VERBOSE, "In in-use, set lowestContextId to %d", lowestContextId);
@@ -1259,6 +1264,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
                     lowestTag       = -1;
                     /* Else leave it alone; there is another thread waiting */
                 }
+                comm_ptr->idup_curr_seqnum++;
             }
             else {
                 /* else we did not find a context id. Give up the mask in case
@@ -1490,11 +1496,6 @@ static int sched_cb_gcn_copy_mask(MPID_Comm *comm, int tag, void *state)
         }
         st->first_iter = 0;
 
-        /* idup_count > 1 means there are multiple communicators duplicating
-         * from the current communicator at the same time. And
-         * idup_curr_seqnum gives each duplication operation a priority */
-        st->comm_ptr->idup_count++;
-        st->seqnum = st->comm_ptr->idup_curr_seqnum++;
     } else {
         if (st->comm_ptr->context_id < lowestContextId) {
             lowestContextId = st->comm_ptr->context_id;
@@ -1606,6 +1607,12 @@ static int sched_get_cid_nonblock(MPID_Comm *comm_ptr, MPIR_Context_id_t *ctx0,
     *(st->ctx0) = 0;
     st->own_eager_mask = 0;
     st->first_iter = 1;
+    /* idup_count > 1 means there are multiple communicators duplicating
+     * from the current communicator at the same time. And
+     * idup_curr_seqnum gives each duplication operation a priority */
+     st->comm_ptr->idup_count++;
+     st->seqnum = st->comm_ptr->idup_curr_seqnum++;
+
     if (eager_nelem < 0) {
         /* Ensure that at least one word of deadlock-free context IDs is
            always set aside for the base protocol */
