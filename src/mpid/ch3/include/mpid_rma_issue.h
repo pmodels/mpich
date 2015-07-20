@@ -107,8 +107,8 @@ static int init_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
     void *dataloop_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
 
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_INIT_ACCUM_EXT_PKT);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_INIT_ACCUM_EXT_PKT);
+    MPIDI_STATE_DECL(MPID_STATE_INIT_ACCUM_EXT_PKT);
+    MPIDI_FUNC_ENTER(MPID_STATE_INIT_ACCUM_EXT_PKT);
 
     if ((flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) && target_dtp != NULL) {
         MPIDI_CH3_Ext_pkt_accum_stream_derived_t *_ext_hdr_ptr = NULL;
@@ -168,7 +168,7 @@ static int init_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
     (*ext_hdr_sz) = _total_sz;
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_INIT_ACCUM_EXT_PKT);
+    MPIDI_FUNC_EXIT(MPID_STATE_INIT_ACCUM_EXT_PKT);
     return mpi_errno;
   fn_fail:
     if ((*ext_hdr_ptr))
@@ -188,8 +188,8 @@ static int init_get_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_INIT_GET_ACCUM_EXT_PKT);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_INIT_GET_ACCUM_EXT_PKT);
+    MPIDI_STATE_DECL(MPID_STATE_INIT_GET_ACCUM_EXT_PKT);
+    MPIDI_FUNC_ENTER(MPID_STATE_INIT_GET_ACCUM_EXT_PKT);
 
     /* Check if get_accum still reuses accum' extended packet header. */
     MPIU_Assert(sizeof(MPIDI_CH3_Ext_pkt_accum_stream_derived_t) ==
@@ -201,7 +201,7 @@ static int init_get_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
 
     mpi_errno = init_accum_ext_pkt(flags, target_dtp, stream_offset, ext_hdr_ptr, ext_hdr_sz);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_INIT_GET_ACCUM_EXT_PKT);
+    MPIDI_FUNC_EXIT(MPID_STATE_INIT_GET_ACCUM_EXT_PKT);
     return mpi_errno;
 }
 
