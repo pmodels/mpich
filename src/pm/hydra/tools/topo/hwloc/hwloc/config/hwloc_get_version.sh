@@ -1,16 +1,17 @@
 #!/bin/sh
 #
-# Copyright (c) 2004-2006 The Trustees of Indiana University and Indiana
+# Copyright © 2004-2006 The Trustees of Indiana University and Indiana
 #                         University Research and Technology
 #                         Corporation.  All rights reserved.
-# Copyright (c) 2004-2005 The University of Tennessee and The University
+# Copyright © 2004-2005 The University of Tennessee and The University
 #                         of Tennessee Research Foundation.  All rights
 #                         reserved.
-# Copyright (c) 2004-2005 High Performance Computing Center Stuttgart,
+# Copyright © 2004-2005 High Performance Computing Center Stuttgart,
 #                         University of Stuttgart.  All rights reserved.
-# Copyright (c) 2004-2005 The Regents of the University of California.
+# Copyright © 2004-2005 The Regents of the University of California.
 #                         All rights reserved.
-# Copyright © 2008-2013 Cisco Systems, Inc.  All rights reserved.
+# Copyright © 2008-2014 Cisco Systems, Inc.  All rights reserved.
+# Copyright © 2014 Inria.  All rights reserved.
 # $COPYRIGHT$
 #
 # Additional copyrights may follow
@@ -34,6 +35,10 @@ else
 	s/^minor/HWLOC_MINOR_VERSION/
 	s/^release/HWLOC_RELEASE_VERSION/
 	s/^greek/HWLOC_GREEK_VERSION/
+	s/\\\${major}/\\\${HWLOC_MAJOR_VERSION}/
+	s/\\\${minor}/\\\${HWLOC_MINOR_VERSION}/
+	s/\\\${release}/\\\${HWLOC_RELEASE_VERSION}/
+	s/\\\${greek}/\\\${HWLOC_GREEK_VERSION}/
 	s/^date/HWLOC_RELEASE_DATE/
 	s/^snapshot_version/HWLOC_SNAPSHOT_VERSION/
 	s/^snapshot/HWLOC_SNAPSHOT/
@@ -43,13 +48,7 @@ else
 	p" < "$srcfile"`
 	eval "$ompi_vers"
 
-        # Only include the release version if it isn't 0
-        if test $HWLOC_RELEASE_VERSION -ne 0 ; then
-            HWLOC_VERSION="$HWLOC_MAJOR_VERSION.$HWLOC_MINOR_VERSION.$HWLOC_RELEASE_VERSION"
-        else
-            HWLOC_VERSION="$HWLOC_MAJOR_VERSION.$HWLOC_MINOR_VERSION"
-        fi
-        HWLOC_VERSION="${HWLOC_VERSION}${HWLOC_GREEK_VERSION}"
+        HWLOC_VERSION="$HWLOC_MAJOR_VERSION.$HWLOC_MINOR_VERSION.$HWLOC_RELEASE_VERSION${HWLOC_GREEK_VERSION}"
 
         # If HWLOC_SNAPSHOT=1, then use HWLOC_SNAPSHOT_VERSION
         if test "$HWLOC_SNAPSHOT" = "1"; then

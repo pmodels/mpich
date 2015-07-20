@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
  * Copyright © 2009-2014 Inria.  All rights reserved.
- * Copyright © 2009-2012 Université Bordeaux 1
+ * Copyright © 2009-2012 Université Bordeaux
  * Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -350,7 +350,7 @@ hwloc_get_next_obj_covering_cpuset_by_type(hwloc_topology_t topology, hwloc_cons
  * Be sure to see the figure in \ref termsanddefs that shows a
  * complete topology tree, including depths, child/sibling/cousin
  * relationships, and an example of an asymmetric topology where one
- * socket has fewer caches than its peers.
+ * package has fewer caches than its peers.
  */
 
 /** \brief Returns the ancestor object of \p obj at depth \p depth. */
@@ -538,16 +538,17 @@ hwloc_get_shared_cache_covering_obj (hwloc_topology_t topology __hwloc_attribute
  * Be sure to see the figure in \ref termsanddefs that shows a
  * complete topology tree, including depths, child/sibling/cousin
  * relationships, and an example of an asymmetric topology where one
- * socket has fewer caches than its peers.
+ * package has fewer caches than its peers.
  */
 
 /** \brief Returns the object of type ::HWLOC_OBJ_PU with \p os_index.
  *
- * \note The \p os_index field of object should most of the times only be
- * used for pretty-printing purpose. Type ::HWLOC_OBJ_PU is the only case
- * where \p os_index could actually be useful, when manually binding to
- * processors.
- * However, using CPU sets to hide this complexity should often be preferred.
+ * This function is useful for converting a CPU set into the PU
+ * objects it contains.
+ * When retrieving the current binding (e.g. with hwloc_get_cpubind()),
+ * one may iterate over the bits of the resulting CPU set with
+ * hwloc_bitmap_foreach_begin(), and find the corresponding PUs
+ * with this function.
  */
 static __hwloc_inline hwloc_obj_t
 hwloc_get_pu_obj_by_os_index(hwloc_topology_t topology, unsigned os_index) __hwloc_attribute_pure;
@@ -556,6 +557,27 @@ hwloc_get_pu_obj_by_os_index(hwloc_topology_t topology, unsigned os_index)
 {
   hwloc_obj_t obj = NULL;
   while ((obj = hwloc_get_next_obj_by_type(topology, HWLOC_OBJ_PU, obj)) != NULL)
+    if (obj->os_index == os_index)
+      return obj;
+  return NULL;
+}
+
+/** \brief Returns the object of type ::HWLOC_OBJ_NUMANODE with \p os_index.
+ *
+ * This function is useful for converting a nodeset into the NUMA node
+ * objects it contains.
+ * When retrieving the current binding (e.g. with hwloc_get_membind_nodeset()),
+ * one may iterate over the bits of the resulting nodeset with
+ * hwloc_bitmap_foreach_begin(), and find the corresponding NUMA nodes
+ * with this function.
+ */
+static __hwloc_inline hwloc_obj_t
+hwloc_get_numanode_obj_by_os_index(hwloc_topology_t topology, unsigned os_index) __hwloc_attribute_pure;
+static __hwloc_inline hwloc_obj_t
+hwloc_get_numanode_obj_by_os_index(hwloc_topology_t topology, unsigned os_index)
+{
+  hwloc_obj_t obj = NULL;
+  while ((obj = hwloc_get_next_obj_by_type(topology, HWLOC_OBJ_NUMANODE, obj)) != NULL)
     if (obj->os_index == os_index)
       return obj;
   return NULL;
@@ -582,8 +604,8 @@ HWLOC_DECLSPEC unsigned hwloc_get_closest_objs (hwloc_topology_t topology, hwloc
  * object of type \p type2 and logical index \p idx2.  Indexes are specified
  * within the parent, not withing the entire system.
  *
- * For instance, if type1 is SOCKET, idx1 is 2, type2 is CORE and idx2
- * is 3, return the fourth core object below the third socket.
+ * For instance, if type1 is PACKAGE, idx1 is 2, type2 is CORE and idx2
+ * is 3, return the fourth core object below the third package.
  *
  * \note This function requires these objects to have a CPU set.
  */
@@ -614,9 +636,9 @@ hwloc_get_obj_below_by_type (hwloc_topology_t topology,
  * object to find the index-th object of the given type.
  * Indexes are specified within the parent, not withing the entire system.
  *
- * For instance, if nr is 3, typev contains NODE, SOCKET and CORE,
+ * For instance, if nr is 3, typev contains NODE, PACKAGE and CORE,
  * and idxv contains 0, 1 and 2, return the third core object below
- * the second socket below the first NUMA node.
+ * the second package below the first NUMA node.
  *
  * \note This function requires all these objects and the root object
  * to have a CPU set.
@@ -685,6 +707,7 @@ hwloc_distrib(hwloc_topology_t topology,
 {
   unsigned i;
   unsigned tot_weight;
+  unsigned given, givenweight;
   hwloc_cpuset_t *cpusetp = set;
 
   if (flags & ~HWLOC_DISTRIB_FLAG_REVERSE) {
@@ -697,23 +720,41 @@ hwloc_distrib(hwloc_topology_t topology,
     if (roots[i]->cpuset)
       tot_weight += hwloc_bitmap_weight(roots[i]->cpuset);
 
-  for (i = 0; i < n_roots && tot_weight; i++) {
-    /* Give to roots[] a portion proportional to its weight */
+  for (i = 0, given = 0, givenweight = 0; i < n_roots; i++) {
+    unsigned chunk, weight;
     hwloc_obj_t root = roots[flags & HWLOC_DISTRIB_FLAG_REVERSE ? n_roots-1-i : i];
-    unsigned weight = root->cpuset ? hwloc_bitmap_weight(root->cpuset) : 0;
-    unsigned chunk = (n * weight + tot_weight-1) / tot_weight;
-    if (!root->arity || chunk == 1 || root->depth >= until) {
-      /* Got to the bottom, we can't split any more, put everything there.  */
-      unsigned j;
-      for (j=0; j<n; j++)
-	cpusetp[j] = hwloc_bitmap_dup(root->cpuset);
+    hwloc_cpuset_t cpuset = root->cpuset;
+    if (!cpuset)
+      continue;
+    weight = hwloc_bitmap_weight(cpuset);
+    if (!weight)
+      continue;
+    /* Give to root a chunk proportional to its weight.
+     * If previous chunks got rounded-up, we may get a bit less. */
+    chunk = (( (givenweight+weight) * n  + tot_weight-1) / tot_weight)
+          - ((  givenweight         * n  + tot_weight-1) / tot_weight);
+    if (!root->arity || chunk <= 1 || root->depth >= until) {
+      /* We can't split any more, put everything there.  */
+      if (chunk) {
+	/* Fill cpusets with ours */
+	unsigned j;
+	for (j=0; j < chunk; j++)
+	  cpusetp[j] = hwloc_bitmap_dup(cpuset);
+      } else {
+	/* We got no chunk, just merge our cpuset to a previous one
+	 * (the first chunk cannot be empty)
+	 * so that this root doesn't get ignored.
+	 */
+	assert(given);
+	hwloc_bitmap_or(cpusetp[-1], cpusetp[-1], cpuset);
+      }
     } else {
       /* Still more to distribute, recurse into children */
       hwloc_distrib(topology, root->children, root->arity, cpusetp, chunk, until, flags);
     }
     cpusetp += chunk;
-    tot_weight -= weight;
-    n -= chunk;
+    given += chunk;
+    givenweight += weight;
   }
 
   return 0;
@@ -733,7 +774,7 @@ hwloc_distrib(hwloc_topology_t topology,
  * returned.
  *
  * \note The returned cpuset is not newly allocated and should thus not be
- * changed or freed; hwloc_cpuset_dup must be used to obtain a local copy.
+ * changed or freed; hwloc_bitmap_dup() must be used to obtain a local copy.
  */
 static __hwloc_inline hwloc_const_cpuset_t
 hwloc_topology_get_complete_cpuset(hwloc_topology_t topology) __hwloc_attribute_pure;
@@ -751,7 +792,7 @@ hwloc_topology_get_complete_cpuset(hwloc_topology_t topology)
  * systems, NULL is returned.
  *
  * \note The returned cpuset is not newly allocated and should thus not be
- * changed or freed; hwloc_cpuset_dup must be used to obtain a local copy.
+ * changed or freed; hwloc_bitmap_dup() must be used to obtain a local copy.
  */
 static __hwloc_inline hwloc_const_cpuset_t
 hwloc_topology_get_topology_cpuset(hwloc_topology_t topology) __hwloc_attribute_pure;
@@ -768,7 +809,7 @@ hwloc_topology_get_topology_cpuset(hwloc_topology_t topology)
  * returned.
  *
  * \note The returned cpuset is not newly allocated and should thus not be
- * changed or freed; hwloc_cpuset_dup must be used to obtain a local copy.
+ * changed or freed; hwloc_bitmap_dup() must be used to obtain a local copy.
  */
 static __hwloc_inline hwloc_const_cpuset_t
 hwloc_topology_get_online_cpuset(hwloc_topology_t topology) __hwloc_attribute_pure;
@@ -785,7 +826,7 @@ hwloc_topology_get_online_cpuset(hwloc_topology_t topology)
  * returned.
  *
  * \note The returned cpuset is not newly allocated and should thus not be
- * changed or freed, hwloc_cpuset_dup must be used to obtain a local copy.
+ * changed or freed, hwloc_bitmap_dup() must be used to obtain a local copy.
  */
 static __hwloc_inline hwloc_const_cpuset_t
 hwloc_topology_get_allowed_cpuset(hwloc_topology_t topology) __hwloc_attribute_pure;
@@ -802,7 +843,7 @@ hwloc_topology_get_allowed_cpuset(hwloc_topology_t topology)
  * returned.
  *
  * \note The returned nodeset is not newly allocated and should thus not be
- * changed or freed; hwloc_nodeset_dup must be used to obtain a local copy.
+ * changed or freed; hwloc_bitmap_dup() must be used to obtain a local copy.
  */
 static __hwloc_inline hwloc_const_nodeset_t
 hwloc_topology_get_complete_nodeset(hwloc_topology_t topology) __hwloc_attribute_pure;
@@ -820,7 +861,7 @@ hwloc_topology_get_complete_nodeset(hwloc_topology_t topology)
  * systems, NULL is returned.
  *
  * \note The returned nodeset is not newly allocated and should thus not be
- * changed or freed; hwloc_nodeset_dup must be used to obtain a local copy.
+ * changed or freed; hwloc_bitmap_dup() must be used to obtain a local copy.
  */
 static __hwloc_inline hwloc_const_nodeset_t
 hwloc_topology_get_topology_nodeset(hwloc_topology_t topology) __hwloc_attribute_pure;
@@ -837,7 +878,7 @@ hwloc_topology_get_topology_nodeset(hwloc_topology_t topology)
  * returned.
  *
  * \note The returned nodeset is not newly allocated and should thus not be
- * changed or freed, hwloc_nodeset_dup must be used to obtain a local copy.
+ * changed or freed, hwloc_bitmap_dup() must be used to obtain a local copy.
  */
 static __hwloc_inline hwloc_const_nodeset_t
 hwloc_topology_get_allowed_nodeset(hwloc_topology_t topology) __hwloc_attribute_pure;
@@ -880,7 +921,7 @@ hwloc_topology_get_allowed_nodeset(hwloc_topology_t topology)
 static __hwloc_inline void
 hwloc_cpuset_to_nodeset(hwloc_topology_t topology, hwloc_const_cpuset_t _cpuset, hwloc_nodeset_t nodeset)
 {
-	int depth = hwloc_get_type_depth(topology, HWLOC_OBJ_NODE);
+	int depth = hwloc_get_type_depth(topology, HWLOC_OBJ_NUMANODE);
 	hwloc_obj_t obj;
 
 	if (depth == HWLOC_TYPE_DEPTH_UNKNOWN) {
@@ -908,7 +949,7 @@ hwloc_cpuset_to_nodeset(hwloc_topology_t topology, hwloc_const_cpuset_t _cpuset,
 static __hwloc_inline void
 hwloc_cpuset_to_nodeset_strict(struct hwloc_topology *topology, hwloc_const_cpuset_t _cpuset, hwloc_nodeset_t nodeset)
 {
-	int depth = hwloc_get_type_depth(topology, HWLOC_OBJ_NODE);
+	int depth = hwloc_get_type_depth(topology, HWLOC_OBJ_NUMANODE);
 	hwloc_obj_t obj;
 	if (depth == HWLOC_TYPE_DEPTH_UNKNOWN )
 		return;
@@ -929,7 +970,7 @@ hwloc_cpuset_to_nodeset_strict(struct hwloc_topology *topology, hwloc_const_cpus
 static __hwloc_inline void
 hwloc_cpuset_from_nodeset(hwloc_topology_t topology, hwloc_cpuset_t _cpuset, hwloc_const_nodeset_t nodeset)
 {
-	int depth = hwloc_get_type_depth(topology, HWLOC_OBJ_NODE);
+	int depth = hwloc_get_type_depth(topology, HWLOC_OBJ_NUMANODE);
 	hwloc_obj_t obj;
 
 	if (depth == HWLOC_TYPE_DEPTH_UNKNOWN ) {
@@ -960,7 +1001,7 @@ hwloc_cpuset_from_nodeset(hwloc_topology_t topology, hwloc_cpuset_t _cpuset, hwl
 static __hwloc_inline void
 hwloc_cpuset_from_nodeset_strict(struct hwloc_topology *topology, hwloc_cpuset_t _cpuset, hwloc_const_nodeset_t nodeset)
 {
-	int depth = hwloc_get_type_depth(topology, HWLOC_OBJ_NODE);
+	int depth = hwloc_get_type_depth(topology, HWLOC_OBJ_NUMANODE);
 	hwloc_obj_t obj;
 	if (depth == HWLOC_TYPE_DEPTH_UNKNOWN )
 		return;

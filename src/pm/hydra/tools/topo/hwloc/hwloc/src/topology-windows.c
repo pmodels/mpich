@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2012 Inria.  All rights reserved.
- * Copyright © 2009-2012 Université Bordeaux 1
+ * Copyright © 2009-2015 Inria.  All rights reserved.
+ * Copyright © 2009-2012 Université Bordeaux
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -533,11 +533,11 @@ hwloc_look_windows(struct hwloc_backend *backend)
 	id = -1;
 	switch (procInfo[i].Relationship) {
 	  case RelationNumaNode:
-	    type = HWLOC_OBJ_NODE;
+	    type = HWLOC_OBJ_NUMANODE;
 	    id = procInfo[i].NumaNode.NodeNumber;
 	    break;
 	  case RelationProcessorPackage:
-	    type = HWLOC_OBJ_SOCKET;
+	    type = HWLOC_OBJ_PACKAGE;
 	    break;
 	  case RelationCache:
 	    type = HWLOC_OBJ_CACHE;
@@ -559,7 +559,7 @@ hwloc_look_windows(struct hwloc_backend *backend)
 	hwloc_debug_2args_bitmap("%s#%u bitmap %s\n", hwloc_obj_type_string(type), id, obj->cpuset);
 
 	switch (type) {
-	  case HWLOC_OBJ_NODE:
+	  case HWLOC_OBJ_NUMANODE:
 	    {
 	      ULONGLONG avail;
 	      obj->nodeset = hwloc_bitmap_alloc();
@@ -644,13 +644,13 @@ hwloc_look_windows(struct hwloc_backend *backend)
 	id = -1;
 	switch (procInfo->Relationship) {
 	  case RelationNumaNode:
-	    type = HWLOC_OBJ_NODE;
+	    type = HWLOC_OBJ_NUMANODE;
             num = 1;
             GroupMask = &procInfo->NumaNode.GroupMask;
 	    id = procInfo->NumaNode.NodeNumber;
 	    break;
 	  case RelationProcessorPackage:
-	    type = HWLOC_OBJ_SOCKET;
+	    type = HWLOC_OBJ_PACKAGE;
             num = procInfo->Processor.GroupCount;
             GroupMask = procInfo->Processor.GroupMask;
 	    break;
@@ -695,7 +695,7 @@ hwloc_look_windows(struct hwloc_backend *backend)
 	hwloc_debug("%s#%u bitmap %s\n", hwloc_obj_type_string(type), id, obj->cpuset);
 
 	switch (type) {
-	  case HWLOC_OBJ_NODE:
+	  case HWLOC_OBJ_NUMANODE:
 	    {
 	      ULONGLONG avail;
 	      obj->nodeset = hwloc_bitmap_alloc();
@@ -715,7 +715,6 @@ hwloc_look_windows(struct hwloc_backend *backend)
 	    }
 	  case HWLOC_OBJ_CACHE:
 	    obj->attr->cache.size = procInfo->Cache.CacheSize;
-	    obj->attr->cache.associativity = procInfo->Cache.Associativity;
 	    obj->attr->cache.associativity = procInfo->Cache.Associativity == CACHE_FULLY_ASSOCIATIVE ? -1 : procInfo->Cache.Associativity ;
 	    obj->attr->cache.linesize = procInfo->Cache.LineSize;
 	    obj->attr->cache.depth = procInfo->Cache.Level;
@@ -806,6 +805,7 @@ static struct hwloc_disc_component hwloc_windows_disc_component = {
 
 const struct hwloc_component hwloc_windows_component = {
   HWLOC_COMPONENT_ABI,
+  NULL, NULL,
   HWLOC_COMPONENT_TYPE_DISC,
   0,
   &hwloc_windows_disc_component

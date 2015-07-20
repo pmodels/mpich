@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
  * Copyright © 2009-2010 inria.  All rights reserved.
- * Copyright © 2009-2010 Université Bordeaux 1
+ * Copyright © 2009-2010 Université Bordeaux
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -13,7 +13,7 @@
 #include <string.h>
 #include <assert.h>
 
-/* 
+/*
  * check hwloc_get_closest_objs()
  *
  * - get the last object of the last level

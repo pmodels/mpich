@@ -1,4 +1,4 @@
-Machine (P#0 total=129236992KB Backend=Linux)
+Machine (P#0 total=129236992KB PlatformName=pSeries PlatformModel="CHRP IBM,9125-F2A" Backend=Linux Architecture=ppc)
   NUMANode L#0 (P#0 local=31195136KB total=31195136KB)
     L3Cache L#0 (size=32768KB linesize=128)
       L2Cache L#0 (size=4096KB linesize=128 ways=8)
@@ -171,7 +171,7 @@ depth 0:	1 Machine (type #1)
      depth 5:	32 L1iCache (type #4)
       depth 6:	32 Core (type #5)
        depth 7:	32 PU (type #6)
-latency matrix between NUMANodes (depth 1) by logical indexes:
+relative latency matrix between NUMANodes (depth 1) by logical indexes:
   index     0     1     2     3
       0 1.000 2.000 2.000 2.000
       1 2.000 1.000 2.000 2.000

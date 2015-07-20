@@ -1,5 +1,5 @@
-# Copyright © 2009-2014 Inria.  All rights reserved.
-# Copyright © 2009-2011 Université Bordeaux 1
+# Copyright © 2009-2015 Inria.  All rights reserved.
+# Copyright © 2009-2011 Université Bordeaux
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 # See COPYING in top-level directory.
 
@@ -20,6 +20,7 @@ sysfs_outputs = \
 		256ppc-8n8s4t.output \
 		256ppc-8n8s4t-nocache.output \
 		256ppc-8n8s4t-nosys.output \
+		28em64t-2s2n7c-buggycoresiblings.output \
 		32amd64-4s2n4c-cgroup.output \
 		32amd64-4s2n4c-cgroup.xml.output \
 		32ppc-4n4c2c.output \
@@ -37,6 +38,7 @@ sysfs_outputs = \
 		16amd64-8n2c-cpusets.xml.output \
 		16amd64-8n2c-cpusets_noadmin.output \
 		16em64t-4s2ca2c-cpusetreorder.output \
+		16em64t-4s2ca2c-cpusetreorder-merge.output \
 		16em64t-4s2c2t.output \
 		16em64t-4s2c2t-offlines.output \
 		16em64t-4s2c2t-offlines.xml.output \
@@ -49,6 +51,7 @@ sysfs_outputs = \
 		24em64t-2n6c2t+2mic.olddriver.output \
 		32em64t-2n8c+1mic.output \
 		40intel64-2g2n4c+pci.output \
+		40intel64-4n10c+pci-conflicts.output \
 		48amd64-4d2n6c-sparse.output \
 		64amd64-4s2n4ca2co.output \
 		64fake-4n2s2ca2c2t.output \
@@ -77,6 +80,7 @@ sysfs_tarballs = \
 		256ppc-8n8s4t.tar.bz2 \
 		256ppc-8n8s4t-nocache.source \
 		256ppc-8n8s4t-nosys.source \
+		28em64t-2s2n7c-buggycoresiblings.tar.bz2 \
 		32amd64-4s2n4c-cgroup.tar.bz2 \
 		32amd64-4s2n4c-cgroup.xml.source \
 		32ppc-4n4c2c.tar.bz2 \
@@ -94,6 +98,7 @@ sysfs_tarballs = \
 		16amd64-8n2c-cpusets.xml.source \
 		16amd64-8n2c-cpusets_noadmin.source \
 		16em64t-4s2ca2c-cpusetreorder.tar.bz2 \
+		16em64t-4s2ca2c-cpusetreorder-merge.source \
 		16em64t-4s2c2t.tar.bz2 \
 		16em64t-4s2c2t-offlines.tar.bz2 \
 		16em64t-4s2c2t-offlines.xml.source \
@@ -106,6 +111,7 @@ sysfs_tarballs = \
 		24em64t-2n6c2t+2mic.olddriver.tar.bz2 \
 		32em64t-2n8c+1mic.tar.bz2 \
 		40intel64-2g2n4c+pci.tar.bz2 \
+		40intel64-4n10c+pci-conflicts.tar.bz2 \
 		48amd64-4d2n6c-sparse.tar.bz2 \
 		64amd64-4s2n4ca2co.tar.bz2 \
 		64fake-4n2s2ca2c2t.tar.bz2 \
@@ -133,6 +139,7 @@ sysfs_options = \
 		16amd64-4n4c-cgroup-distance-merge.options \
 		16amd64-8n2c-cpusets.xml.options \
 		16amd64-8n2c-cpusets_noadmin.options \
+		16em64t-4s2ca2c-cpusetreorder-merge.options \
 		16em64t-4s2c2t-offlines.xml.options \
 		16em64t-4s2c2t-offlines_noadmin.options \
 		16em64t-4s2c2t_ncaches.options \
@@ -147,9 +154,11 @@ sysfs_options = \
 # modifying the environment of lstopo
 sysfs_envs = \
 		2i386-2t-hugepagesizecount.xml.env \
+		16amd64-8n2c-cpusets.xml.env \
 		32amd64-4s2n4c-cgroup.env \
 		32amd64-4s2n4c-cgroup.xml.env \
 		40intel64-2g2n4c+pci.env \
+		40intel64-4n10c+pci-conflicts.env \
 		96em64t-4n4d3ca2co-forcecpuinfo.env
 
 if HWLOC_HAVE_OPENAT
@@ -162,11 +171,4 @@ EXTRA_DIST = $(sysfs_outputs) $(sysfs_tarballs) $(sysfs_excludes) $(sysfs_option
 
 LOG_COMPILER = $(builddir)/test-topology.sh
 
-
-bin_SCRIPTS = hwloc-gather-topology
-
-install-exec-hook:
-	$(SED) -e 's/HWLOC_top_builddir\/utils/bindir/' -e '/HWLOC_top_builddir/d' $(DESTDIR)$(bindir)/hwloc-gather-topology > $(DESTDIR)$(bindir)/hwloc-gather-topology.tmp && mv -f $(DESTDIR)$(bindir)/hwloc-gather-topology.tmp $(DESTDIR)$(bindir)/hwloc-gather-topology
-	chmod +x $(DESTDIR)$(bindir)/hwloc-gather-topology
-
-SUBDIRS = gather
+SUBDIRS = . gather

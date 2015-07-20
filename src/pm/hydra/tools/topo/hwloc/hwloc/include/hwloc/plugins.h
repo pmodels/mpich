@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Inria.  All rights reserved.
+ * Copyright © 2013-2015 Inria.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -216,6 +216,38 @@ struct hwloc_component {
   /** \brief Component ABI version, set to HWLOC_COMPONENT_ABI */
   unsigned abi;
 
+  /** \brief Process-wide component initialization callback.
+   *
+   * This optional callback is called when the component is registered
+   * to the hwloc core (after loading the plugin).
+   *
+   * When the component is built as a plugin, this callback
+   * should call hwloc_check_plugin_namespace()
+   * and return an negative error code on error.
+   *
+   * \p flags is always 0 for now.
+   *
+   * \return 0 on success, or a negative code on error.
+   *
+   * \note If the component uses ltdl for loading its own plugins,
+   * it should load/unload them only in init() and finalize(),
+   * to avoid race conditions with hwloc's use of ltdl.
+   */
+  int (*init)(unsigned long flags);
+
+  /** \brief Process-wide component termination callback.
+   *
+   * This optional callback is called after unregistering the component
+   * from the hwloc core (before unloading the plugin).
+   *
+   * \p flags is always 0 for now.
+   *
+   * \note If the component uses ltdl for loading its own plugins,
+   * it should load/unload them only in init() and finalize(),
+   * to avoid race conditions with hwloc's use of ltdl.
+   */
+  void (*finalize)(unsigned long flags);
+
   /** \brief Component type */
   hwloc_component_type_t type;
 
@@ -276,6 +308,10 @@ HWLOC_DECLSPEC struct hwloc_obj *hwloc__insert_object_by_cpuset(struct hwloc_top
  * The cpuset is completely ignored, so strange objects such as I/O devices should
  * preferably be inserted with this.
  *
+ * When used for "normal" children with cpusets (when importing from XML
+ * when duplicating a topology), the caller should make sure children are inserted
+ * in order.
+ *
  * The given object may have children.
  *
  * Remember to call topology_connect() afterwards to fix handy pointers.
@@ -312,12 +348,19 @@ HWLOC_DECLSPEC int hwloc_fill_object_sets(hwloc_obj_t obj);
  * This may fail (and abort the program) if libhwloc symbols are in a
  * private namespace.
  *
- * Plugins should call this function as an early sanity check to avoid
+ * \return 0 on success.
+ * \return -1 if the plugin cannot be successfully loaded. The caller
+ * plugin init() callback should return a negative error code as well.
+ *
+ * Plugins should call this function in their init() callback to avoid
  * later crashes if lazy symbol resolution is used by the upper layer that
  * loaded hwloc (e.g. OpenCL implementations using dlopen with RTLD_LAZY).
  *
  * \note The build system must define HWLOC_INSIDE_PLUGIN if and only if
  * building the caller as a plugin.
+ *
+ * \note This function should remain inline so plugins can call it even
+ * when they cannot find libhwloc symbols.
  */
 static __hwloc_inline int
 hwloc_plugin_check_namespace(const char *pluginname __hwloc_attribute_unused, const char *symbol __hwloc_attribute_unused)
@@ -335,7 +378,7 @@ hwloc_plugin_check_namespace(const char *pluginname __hwloc_attribute_unused, co
     static int verboseenv_checked = 0;
     static int verboseenv_value = 0;
     if (!verboseenv_checked) {
-      char *verboseenv = getenv("HWLOC_PLUGINS_VERBOSE");
+      const char *verboseenv = getenv("HWLOC_PLUGINS_VERBOSE");
       verboseenv_value = atoi(verboseenv);
       verboseenv_checked = 1;
     }

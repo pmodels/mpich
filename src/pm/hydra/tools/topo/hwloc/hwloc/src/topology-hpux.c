@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2012 Inria.  All rights reserved.
- * Copyright © 2009-2010, 2013 Université Bordeaux 1
+ * Copyright © 2009-2014 Inria.  All rights reserved.
+ * Copyright © 2009-2010, 2013 Université Bordeaux
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -43,9 +43,17 @@ hwloc_hpux_find_ldom(hwloc_topology_t topology, hwloc_const_bitmap_t hwloc_set)
     return -1;
 
   obj = hwloc_get_first_largest_obj_inside_cpuset(topology, hwloc_set);
-  if (!hwloc_bitmap_isequal(obj->cpuset, hwloc_set) || obj->type != HWLOC_OBJ_NODE) {
+  if (!hwloc_bitmap_isequal(obj->cpuset, hwloc_set))
     /* Does not correspond to exactly one node */
     return -1;
+  /* obj is the highest possibly matching object, but some (single) child (with same cpuset) could match too */
+  while (obj->type != HWLOC_OBJ_NUMANODE) {
+    /* try the first child, in case it has the same cpuset */
+    if (!obj->first_child
+	|| !obj->first_child->cpuset
+	|| !hwloc_bitmap_isequal(obj->cpuset, obj->first_child->cpuset))
+      return -1;
+    obj = obj->first_child;
   }
 
   return obj->os_index;
@@ -190,7 +198,7 @@ hwloc_look_hpux(struct hwloc_backend *backend)
       MPC_GETFIRSTLDOM_SYS : MPC_GETFIRSTLDOM, 0, 0);
     while (currentnode != -1 && i < nbnodes) {
       hwloc_debug("node %d is %d\n", i, currentnode);
-      nodes[i] = obj = hwloc_alloc_setup_object(HWLOC_OBJ_NODE, currentnode);
+      nodes[i] = obj = hwloc_alloc_setup_object(HWLOC_OBJ_NUMANODE, currentnode);
       obj->cpuset = hwloc_bitmap_alloc();
       obj->nodeset = hwloc_bitmap_alloc();
       hwloc_bitmap_set(obj->nodeset, currentnode);
@@ -296,6 +304,7 @@ static struct hwloc_disc_component hwloc_hpux_disc_component = {
 
 const struct hwloc_component hwloc_hpux_component = {
   HWLOC_COMPONENT_ABI,
+  NULL, NULL,
   HWLOC_COMPONENT_TYPE_DISC,
   0,
   &hwloc_hpux_disc_component

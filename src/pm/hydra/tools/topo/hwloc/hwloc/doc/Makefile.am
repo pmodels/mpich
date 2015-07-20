@@ -1,5 +1,5 @@
 # Copyright © 2009-2014 Inria.  All rights reserved.
-# Copyright © 2009-2013 Université Bordeaux 1
+# Copyright © 2009-2013 Université Bordeaux
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 # See COPYING in top-level directory.
 
@@ -253,11 +253,11 @@ man3_object_types_DATA = \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_GROUP.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_MACHINE.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_MISC.3 \
-        $(DOX_MAN_DIR)/man3/HWLOC_OBJ_NODE.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_OBJ_NUMANODE.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_OS_DEVICE.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_PU.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_PCI_DEVICE.3 \
-        $(DOX_MAN_DIR)/man3/HWLOC_OBJ_SOCKET.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_OBJ_PACKAGE.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_SYSTEM.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_TYPE_MAX.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_type_t.3 \
@@ -305,6 +305,7 @@ man3_creation_DATA = \
         $(DOX_MAN_DIR)/man3/hwloc_topology_init.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_load.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_destroy.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_topology_dup.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_check.3
 
 man3_configurationdir = $(man3dir)
@@ -334,7 +335,8 @@ man3_configuration_DATA = \
         $(DOX_MAN_DIR)/man3/hwloc_topology_cpubind_support.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_membind_support.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_support.3 \
-        $(DOX_MAN_DIR)/man3/hwloc_topology_get_support.3
+        $(DOX_MAN_DIR)/man3/hwloc_topology_set_userdata.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_topology_get_userdata.3
 
 man3_levelsdir = $(man3dir)
 man3_levels_DATA = \
@@ -431,8 +433,7 @@ man3_tinker_DATA = \
         $(DOX_MAN_DIR)/man3/HWLOC_RESTRICT_FLAG_ADAPT_IO.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_RESTRICT_FLAG_ADAPT_MISC.3 \
         $(DOX_MAN_DIR)/man3/hwloc_restrict_flags_e.3 \
-        $(DOX_MAN_DIR)/man3/hwloc_topology_restrict.3 \
-        $(DOX_MAN_DIR)/man3/hwloc_topology_dup.3
+        $(DOX_MAN_DIR)/man3/hwloc_topology_restrict.3
 
 man3_customdir = $(man3dir)
 man3_custom_DATA = \
@@ -450,6 +451,11 @@ man3_xmlexport_DATA = \
         $(DOX_MAN_DIR)/man3/hwloc_export_obj_userdata.3 \
         $(DOX_MAN_DIR)/man3/hwloc_export_obj_userdata_base64.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_set_userdata_import_callback.3
+
+man3_syntheticexportdir = $(man3dir)
+man3_syntheticexport_DATA = \
+        $(DOX_MAN_DIR)/man3/hwlocality_syntheticexport.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_topology_export_synthetic.3
 
 man3_bitmapdir = $(man3dir)
 man3_bitmap_DATA = \
@@ -714,6 +720,7 @@ $(man3_membinding_DATA): $(DOX_TAG)
 $(man3_tinker_DATA): $(DOX_TAG)
 $(man3_custom_DATA): $(DOX_TAG)
 $(man3_xmlexport_DATA): $(DOX_TAG)
+$(man3_syntheticexport_DATA): $(DOX_TAG)
 $(man3_bitmap_DATA): $(DOX_TAG)
 $(man3_helper_find_inside_DATA): $(DOX_TAG)
 $(man3_helper_find_covering_DATA): $(DOX_TAG)
@@ -746,30 +753,6 @@ $(DOX_A4PDF): $(DOX_TAG) $(DOX_LETTERPDF)
 endif HWLOC_BUILD_DOXYGEN
 
 
-
-#
-# Make sure that the documentation example works
-#
-
-TESTS = hwloc-hello
-if HWLOC_HAVE_CXX
-TESTS += hwloc-hello-cpp
-endif HWLOC_HAVE_CXX
-
-check_PROGRAMS = $(TESTS)
-
-hwloc-hello-cpp.cpp: $(srcdir)/hwloc-hello.c
-	cp -f $(srcdir)/hwloc-hello.c $@
-
-clean-local:
-	rm -f hwloc-hello-cpp.cpp
-
-hwloc_hello_LDADD = $(HWLOC_top_builddir)/src/libhwloc.la
-hwloc_hello_DEPENDENCIES = $(hwloc_hello_LDADD)
-
-hwloc_hello_cpp_SOURCES = hwloc-hello-cpp.cpp
-hwloc_hello_cpp_LDADD = $(HWLOC_top_builddir)/src/libhwloc.la
-hwloc_hello_cpp_DEPENDENCIES = $(hwloc_hello_LDADD)
 
 #
 # Only remove the actual generated documentation files for maintainers
@@ -812,3 +795,5 @@ readme: doc
 endif
 
 all-local: doc readme
+
+SUBDIRS = examples

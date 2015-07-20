@@ -1,5 +1,5 @@
-# Copyright © 2009-2013 Inria.  All rights reserved.
-# Copyright © 2009-2012 Université Bordeaux 1
+# Copyright © 2009-2015 Inria.  All rights reserved.
+# Copyright © 2009-2012 Université Bordeaux
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 # See COPYING in top-level directory.
 
@@ -7,7 +7,7 @@ AM_CFLAGS = $(HWLOC_CFLAGS)
 AM_CPPFLAGS = $(HWLOC_CPPFLAGS)
 AM_LDFLAGS = $(HWLOC_LDFLAGS)
 
-SUBDIRS = ports xml
+SUBDIRS = . ports xml
 DIST_SUBDIRS = ports xml linux rename
 
 if HWLOC_HAVE_LINUX
@@ -21,6 +21,7 @@ LOG_COMPILER = $(builddir)/wrapper.sh
 check_PROGRAMS = hwloc_list_components \
 	hwloc_bitmap \
 	hwloc_bitmap_string \
+	hwloc_bitmap_compare_inclusion \
 	hwloc_get_closest_objs \
 	hwloc_get_obj_covering_cpuset \
 	hwloc_get_cache_covering_cpuset \

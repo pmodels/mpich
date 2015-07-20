@@ -1,6 +1,6 @@
 Copyright © 2009 CNRS
-Copyright © 2009-2014 Inria.  All rights reserved.
-Copyright © 2009-2013 Université Bordeaux 1
+Copyright © 2009-2015 Inria.  All rights reserved.
+Copyright © 2009-2013 Université Bordeaux
 Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
 
 $COPYRIGHT$
@@ -15,6 +15,186 @@ This file contains the main features as well as overviews of specific
 bug fixes (and other actions) for each version of hwloc since version
 0.9 (as initially released as "libtopology", then re-branded to "hwloc"
 in v0.9.1).
+
+
+Version 1.11.0
+--------------
+* API
+  + Socket objects are renamed into Package to align with the terminology
+    used by processor vendors. The old HWLOC_OBJ_SOCKET type and "Socket"
+    name are still supported for backward compatibility.
+  + HWLOC_OBJ_NODE is replaced with HWLOC_OBJ_NUMANODE for clarification.
+    HWLOC_OBJ_NODE is still supported for backward compatibility.
+    "Node" and "NUMANode" strings are supported as in earlier releases.
+* Detection improvements
+  + Add support for Intel Knights Landing Xeon Phi.
+    Thanks to Grzegorz Andrejczuk and Lukasz Anaczkowski.
+  + Add Vendor, Model, Revision, SerialNumber, Type and LinuxDeviceID
+    info attributes to Block OS devices on Linux. Thanks to Vineet Pedaballe
+    for the help.
+    - Add --disable-libudev to avoid dependency on the libudev library.
+  + Add "MemoryDevice" Misc objects with information about DIMMs, on Linux
+    when privileged and when I/O is enabled.
+    Thanks to Vineet Pedaballe for the help.
+  + Add a PCISlot attribute to PCI devices on Linux when supported to
+    identify the physical PCI slot where the board is plugged.
+  + Add CPUStepping info attribute on x86 processors,
+    thanks to Thomas Röhl for the suggestion.
+  + Ignore the device-tree on non-Power architectures to avoid buggy
+    detection on ARM. Thanks to Orion Poplawski for reporting the issue.
+  + Work-around buggy Xeon E5v3 BIOS reporting invalid PCI-NUMA affinity
+    for the PCI links on the second processor.
+  + Add support for CUDA compute capability 5.x, thanks Benjamin Worpitz.
+  + Many fixes to the x86 backend
+    - Add L1i and fix L2/L3 type on old AMD processors without topoext support.
+    - Fix Intel CPU family and model numbers when basic family isn't 6 or 15.
+    - Fix package IDs on recent AMD processors.
+    - Fix misc issues due to incomplete APIC IDs on x2APIC processors.
+    - Avoid buggy discovery on old SGI Altix UVs with non-unique APIC IDs.
+  + Gather total machine memory on NetBSD.
+* Tools
+  + lstopo
+    - Collapse identical PCI devices unless --no-collapse is given.
+      This avoids gigantic outputs when a PCI device contains dozens of
+      identical virtual functions.
+    - The ASCII art output is now called "ascii", for instance in
+      "lstopo -.ascii".
+      The former "txt" extension is retained for backward compatibility.
+    - Automatically scales graphical box width to the inner text in Cairo,
+      ASCII and Windows outputs.
+    - Add --rect to lstopo to force rectangular layout even for NUMA nodes.
+    - Add --restrict-flags to configure the behavior of --restrict.
+    - Objects may have a "Type" info attribute to specify a better type name
+      and display it in lstopo.
+    - Really export all verbose information to the given output file.
+  + hwloc-annotate
+    - May now operate on all types of objects, including I/O.
+    - May now insert Misc objects in the topology.
+    - Do not drop instruction caches and I/O devices from the output anymore.
+  + Fix lstopo path in hwloc-gather-topology after install.
+* Misc
+  + Fix hwloc/cudart.h for machines with multiple PCI domains,
+    thanks to Imre Kerr for reporting the problem.
+  + Fix PCI Bridge-specific depth attribute.
+  + Fix hwloc_bitmap_intersect() for two infinite bitmaps.
+  + Fix some corner cases in the building of levels on large NUMA machines
+    with non-uniform NUMA groups and I/Os.
+  + Improve the performance of object insertion by cpuset for large
+    topologies.
+  + Prefix verbose XML import errors with the source name.
+  + Improve pkg-config checks and error messages.
+  + Fix excluding after a component with an argument in the HWLOC_COMPONENTS
+    environment variable.
+* Documentation
+  + Fix the recommended way in documentation and examples to allocate memory
+    on some node, it should use HWLOC_MEMBIND_BIND.
+    Thanks to Nicolas Bouzat for reporting the issue.
+  + Add a "Miscellaneous objects" section in the documentation.
+  + Add a FAQ entry "What happens to my topology if I disable symmetric
+    multithreading, hyper-threading, etc. ?" to the documentation.
+
+
+Version 1.10.1
+--------------
+* Actually remove disallowed NUMA nodes from nodesets when the whole-system
+  flag isn't enabled.
+* Fix the gathering of PCI domains. Thanks to James Custer for reporting
+  the issue and providing a patch.
+* Fix the merging of identical parent and child in presence of Misc objects.
+  Thanks to Dave Love for reporting the issue.
+* Fix some misordering of children when merging with ignore_keep_structure()
+  in partially allowed topologies.
+* Fix an overzealous assertion in the debug code when running on a single-PU
+  host with I/O. Thanks to Thomas Van Doren for reporting the issue.
+* Don't forget to setup NUMA node object nodesets in x86 backend (for BSDs)
+  and OSF/Tru64 backend.
+* Fix cpuid-x86 build error with gcc -O3 on x86-32. Thanks to Thomas Van Doren
+  for reporting the issue.
+* Fix support for future very large caches in the x86 backend.
+* Fix vendor/device names for SR-IOV PCI devices on Linux.
+* Fix an unlikely crash in case of buggy hierarchical distance matrix.
+* Fix PU os_index on some AIX releases. Thanks to Hendryk Bockelmann and
+  Erik Schnetter for helping debugging.
+* Fix hwloc_bitmap_isincluded() in case of infinite sets.
+* Change hwloc-ls.desktop into a lstopo.desktop and only install it if
+  lstopo is built with Cairo/X11 support. It cannot work with a non-graphical
+  lstopo or hwloc-ls.
+* Add support for the renaming of Socket into Package in future releases.
+* Add support for the replacement of HWLOC_OBJ_NODE with HWLOC_OBJ_NUMANODE
+  in future releases.
+* Clarify the documentation of distance matrices in hwloc.h and in the manpage
+  of the hwloc-distances. Thanks to Dave Love for the suggestion.
+* Improve some error messages by displaying more information about the
+  hwloc library in use.
+* Document how to deal with the ABI break when upgrading to the upcoming 2.0
+  See "How do I handle ABI breaks and API upgrades ?" in the FAQ.
+
+
+Version 1.10.0
+--------------
+* API
+  + Add hwloc_topology_export_synthetic() to export a topology to a
+    synthetic string without using lstopo. See the Synthetic topologies
+    section in the documentation.
+  + Add hwloc_topology_set/get_userdata() to let the application save
+    a private pointer in the topology whenever it needs a way to find
+    its own object corresponding to a topology.
+  + Add hwloc_get_numanode_obj_by_os_index() and document that this function
+    as well as hwloc_get_pu_obj_by_os_index() are good at converting
+    nodesets and cpusets into objects.
+  + hwloc_distrib() does not ignore any objects anymore when there are
+    too many of them. They get merged with others instead.
+    Thanks to Tim Creech for reporting the issue.
+* Tools
+  + hwloc-bind --get <command-line> now executes the command after displaying
+    the binding instead of ignoring the command entirely.
+    Thanks to John Donners for the suggestion.
+  + Clarify that memory sizes shown in lstopo are local by default
+    unless specified (total memory added in the root object).
+* Synthetic topologies
+  + Synthetic topology descriptions may now specify attributes such as
+    memory sizes and OS indexes. See the Synthetic topologies section
+    in the documentation.
+  + lstopo now exports in this fully-detailed format by default.
+    The new option --export-synthetic-flags may be used to revert
+    back the old format.
+* Documentation
+  + Add the doc/examples/ subdirectory with several real-life examples,
+    including the already existing hwloc-hello.C for basics.
+    Thanks to Rob Aulwes for the suggestion.
+  + Improve the documentation of CPU and memory binding in the API.
+  + Add a FAQ entry about operating system errors, especially on AMD
+    platforms with buggy cache information.
+  + Add a FAQ entry about loading many topologies in a single program.
+* Misc
+  + Work around buggy Linux kernels reporting 2 sockets instead
+    1 socket with 2 NUMA nodes for each Xeon E5 v3 (Haswell) processor.
+  + pciutils/libpci support is now removed since libpciaccess works
+    well and there's also a Linux-specific PCI backend. For the record,
+    pciutils was GPL and therefore disabled by default since v1.6.2.
+  + Add --disable-cpuid configure flag to work around buggy processor
+    simulators reporting invalid CPUID information.
+    Thanks for Andrew Friedley for reporting the issue.
+  + Fix a racy use of libltdl when manipulating multiple topologies in
+    different threads.
+    Thanks to Andra Hugo for reporting the issue and testing patches.
+  + Fix some build failures in private/misc.h.
+    Thanks to Pavan Balaji and Ralph Castain for the reports.
+  + Fix failures to detect X11/Xutil.h on some Solaris platforms.
+    Thanks to Siegmar Gross for reporting the failure.
+  + The plugin ABI has changed, this release will not load plugins
+    built against previous hwloc releases.
+
+
+Version 1.9.1
+-------------
+* Fix a crash when the PCI locality is invalid. Attach to the root object
+  instead. Thanks to Nicolas Denoyelle for reporting the issue.
+* Fix -f in lstopo manpage. Thanks to Jirka Hladky for reporting the issue.
+* Fix hwloc_obj_type_sscanf() and others when strncasecmp() is not properly
+  available. Thanks to Nick Papior Andersen for reporting the problem.
+* Mark Linux file descriptors as close-on-exec to avoid leaks on exec.
+* Fix some minor memory leaks.
 
 
 Version 1.9.0
@@ -365,7 +545,7 @@ Version 1.5.0
 -------------
 * Backends
   + Do not limit the number of processors to 1024 on Solaris anymore.
-  + Gather total machine memory on FreeBSD.
+  + Gather total machine memory on FreeBSD. Thanks to Cyril Roelandt.
   + XML topology files do not depend on the locale anymore. Float numbers
     such as NUMA distances or PCI link speeds now always use a dot as a
     decimal separator.

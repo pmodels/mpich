@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009      CNRS
- * Copyright © 2009-2014 Inria.  All rights reserved.
- * Copyright © 2009-2012 Université Bordeaux 1
+ * Copyright © 2009-2015 Inria.  All rights reserved.
+ * Copyright © 2009-2012 Université Bordeaux
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  *
  * See COPYING in top-level directory.
@@ -58,6 +58,7 @@ struct hwloc_topology {
   int is_thissystem;
   int is_loaded;
   hwloc_pid_t pid;                                      /* Process ID the topology is view from, 0 for self */
+  void *userdata;
 
   unsigned bridge_nbobjects;
   struct hwloc_obj **bridge_level;
@@ -135,6 +136,8 @@ extern int hwloc_get_sysctl(int name[], unsigned namelen, int *n);
 extern unsigned hwloc_fallback_nbprocessors(struct hwloc_topology *topology);
 extern void hwloc_connect_children(hwloc_obj_t obj);
 extern int hwloc_connect_levels(hwloc_topology_t topology);
+
+extern int hwloc__object_cpusets_compare_first(hwloc_obj_t obj1, hwloc_obj_t obj2);
 
 extern void hwloc_topology_setup_defaults(struct hwloc_topology *topology);
 extern void hwloc_topology_clear(struct hwloc_topology *topology);
@@ -299,10 +302,29 @@ extern int hwloc_namecoloncmp(const char *haystack, const char *needle, size_t n
 # define __hwloc_attribute_format(type, str, arg)
 #endif
 
+#define hwloc_memory_size_printf_value(_size, _verbose) \
+  ((_size) < (10ULL<<20) || _verbose ? (((_size)>>9)+1)>>1 : (_size) < (10ULL<<30) ? (((_size)>>19)+1)>>1 : (_size) < (10ULL<<40) ? (((_size)>>29)+1)>>1 : (((_size)>>39)+1)>>1)
+#define hwloc_memory_size_printf_unit(_size, _verbose) \
+  ((_size) < (10ULL<<20) || _verbose ? "KB" : (_size) < (10ULL<<30) ? "MB" : (_size) < (10ULL<<40) ? "GB" : "TB")
+
 /* On some systems, snprintf returns the size of written data, not the actually
  * required size.  hwloc_snprintf always report the actually required size. */
 extern int hwloc_snprintf(char *str, size_t size, const char *format, ...) __hwloc_attribute_format(printf, 3, 4);
 
 extern void hwloc_obj_add_info_nodup(hwloc_obj_t obj, const char *name, const char *value, int nodup);
 
+/* Return the name of the currently running program, if supported.
+ * If not NULL, must be freed by the caller.
+ */
+extern char * hwloc_progname(struct hwloc_topology *topology);
+
+#define HWLOC_BITMAP_EQUAL 0       /* Bitmaps are equal */
+#define HWLOC_BITMAP_INCLUDED 1    /* First bitmap included in second */
+#define HWLOC_BITMAP_CONTAINS 2    /* First bitmap contains second */
+#define HWLOC_BITMAP_INTERSECTS 3  /* Bitmaps intersect without any inclusion */
+#define HWLOC_BITMAP_DIFFERENT  4  /* Bitmaps do not intersect */
+
+/** \brief Compare bitmaps \p bitmap1 and \p bitmap2 from an inclusion point of view.
+ */
+HWLOC_DECLSPEC int hwloc_bitmap_compare_inclusion(hwloc_const_bitmap_t bitmap1, hwloc_const_bitmap_t bitmap2) __hwloc_attribute_pure;
 #endif /* HWLOC_PRIVATE_H */

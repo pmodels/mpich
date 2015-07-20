@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
  * Copyright © 2009-2014 Inria.  All rights reserved.
- * Copyright © 2009-2010 Université Bordeaux 1
+ * Copyright © 2009-2010 Université Bordeaux
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -19,6 +19,14 @@
 #include <stdio.h>
 #include <errno.h>
 #include <ctype.h>
+
+#ifdef HAVE_PROGRAM_INVOCATION_NAME
+#include <errno.h>
+extern char *program_invocation_name;
+#endif
+#ifdef HAVE___PROGNAME
+extern char *__progname;
+#endif
 
 int hwloc_snprintf(char *str, size_t size, const char *format, ...)
 {
@@ -114,4 +122,45 @@ void hwloc_add_uname_info(struct hwloc_topology *topology __hwloc_attribute_unus
   if (*utsname->machine)
     hwloc_obj_add_info(topology->levels[0][0], "Architecture", utsname->machine);
 #endif /* HAVE_UNAME */
+}
+
+char *
+hwloc_progname(struct hwloc_topology *topology __hwloc_attribute_unused)
+{
+#if HAVE_DECL_GETMODULEFILENAME
+  char name[256], *basename;
+  unsigned res = GetModuleFileName(NULL, name, sizeof(name));
+  if (res == sizeof(name) || !res)
+    return NULL;
+  basename = strrchr(name, '\\');
+  if (!basename)
+    basename = name;
+  else
+    basename++;
+  return strdup(basename);
+#else /* !HAVE_GETMODULEFILENAME */
+  const char *name, *basename;
+#if HAVE_DECL_GETPROGNAME
+  name = getprogname(); /* FreeBSD, NetBSD, some Solaris */
+#elif HAVE_DECL_GETEXECNAME
+  name = getexecname(); /* Solaris */
+#elif defined HAVE_PROGRAM_INVOCATION_NAME
+  name = program_invocation_name; /* Glibc. BGQ CNK. */
+  /* could use program_invocation_short_name directly, but we have the code to remove the path below anyway */
+#elif defined HAVE___PROGNAME
+  name = __progname; /* fallback for most unix, used for OpenBSD */
+#else
+  /* TODO: _NSGetExecutablePath(path, &size) on Darwin */
+  /* TODO: AIX, HPUX, OSF */
+  name = NULL;
+#endif
+  if (!name)
+    return NULL;
+  basename = strrchr(name, '/');
+  if (!basename)
+    basename = name;
+  else
+    basename++;
+  return strdup(basename);
+#endif /* !HAVE_GETMODULEFILENAME */
 }

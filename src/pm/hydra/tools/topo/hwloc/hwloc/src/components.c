@@ -1,5 +1,5 @@
 /*
- * Copyright © 2009-2014 Inria.  All rights reserved.
+ * Copyright © 2009-2015 Inria.  All rights reserved.
  * Copyright © 2012 Université Bordeau 1
  * See COPYING in top-level directory.
  */
@@ -26,6 +26,12 @@ static int hwloc_components_verbose = 0;
 static int hwloc_plugins_verbose = 0;
 #endif
 
+/* hwloc_components_mutex serializes:
+ * - loading/unloading plugins, and modifications of the hwloc_plugins list
+ * - calls to ltdl, including in hwloc_check_plugin_namespace()
+ * - registration of components with hwloc_disc_component_register()
+ *   and hwloc_xml_callbacks_register()
+ */
 #ifdef HWLOC_WIN_SYS
 /* Basic mutex on top of InterlockedCompareExchange() on windows,
  * Far from perfect, but easy to maintain, and way enough given that this code will never be needed for real. */
@@ -183,9 +189,9 @@ hwloc_plugins_exit(void)
 static int
 hwloc_plugins_init(void)
 {
-  char *verboseenv;
+  const char *verboseenv;
   char *path = HWLOC_PLUGINS_PATH;
-  char *env;
+  const char *env;
   int err;
 
   verboseenv = getenv("HWLOC_PLUGINS_VERBOSE");
@@ -297,13 +303,16 @@ hwloc_disc_component_register(struct hwloc_disc_component *component,
 
 #include <static-components.h>
 
+static void (**hwloc_component_finalize_cbs)(unsigned long);
+static unsigned hwloc_component_finalize_cb_count;
+
 void
 hwloc_components_init(struct hwloc_topology *topology __hwloc_attribute_unused)
 {
 #ifdef HWLOC_HAVE_PLUGINS
   struct hwloc__plugin_desc *desc;
 #endif
-  char *verboseenv;
+  const char *verboseenv;
   unsigned i;
 
   HWLOC_COMPONENTS_LOCK();
@@ -320,6 +329,23 @@ hwloc_components_init(struct hwloc_topology *topology __hwloc_attribute_unused)
   hwloc_plugins_init();
 #endif
 
+  hwloc_component_finalize_cbs = NULL;
+  hwloc_component_finalize_cb_count = 0;
+  /* count the max number of finalize callbacks */
+  for(i=0; NULL != hwloc_static_components[i]; i++)
+    hwloc_component_finalize_cb_count++;
+#ifdef HWLOC_HAVE_PLUGINS
+  for(desc = hwloc_plugins; NULL != desc; desc = desc->next)
+    hwloc_component_finalize_cb_count++;
+#endif
+  if (hwloc_component_finalize_cb_count) {
+    hwloc_component_finalize_cbs = calloc(hwloc_component_finalize_cb_count,
+					  sizeof(*hwloc_component_finalize_cbs));
+    assert(hwloc_component_finalize_cbs);
+    /* forget that max number and recompute the real one below */
+    hwloc_component_finalize_cb_count = 0;
+  }
+
   /* hwloc_static_components is created by configure in static-components.h */
   for(i=0; NULL != hwloc_static_components[i]; i++) {
     if (hwloc_static_components[i]->flags) {
@@ -327,6 +353,18 @@ hwloc_components_init(struct hwloc_topology *topology __hwloc_attribute_unused)
 	      hwloc_static_components[i]->flags);
       continue;
     }
+
+    /* initialize the component */
+    if (hwloc_static_components[i]->init && hwloc_static_components[i]->init(0) < 0) {
+      if (hwloc_components_verbose)
+	fprintf(stderr, "Ignoring static component, failed to initialize\n");
+      continue;
+    }
+    /* queue ->finalize() callback if any */
+    if (hwloc_static_components[i]->finalize)
+      hwloc_component_finalize_cbs[hwloc_component_finalize_cb_count++] = hwloc_static_components[i]->finalize;
+
+    /* register for real now */
     if (HWLOC_COMPONENT_TYPE_DISC == hwloc_static_components[i]->type)
       hwloc_disc_component_register(hwloc_static_components[i]->data, NULL);
     else if (HWLOC_COMPONENT_TYPE_XML == hwloc_static_components[i]->type)
@@ -343,6 +381,18 @@ hwloc_components_init(struct hwloc_topology *topology __hwloc_attribute_unused)
 	      desc->name, desc->component->flags);
       continue;
     }
+
+    /* initialize the component */
+    if (desc->component->init && desc->component->init(0) < 0) {
+      if (hwloc_components_verbose)
+	fprintf(stderr, "Ignoring plugin `%s', failed to initialize\n", desc->name);
+      continue;
+    }
+    /* queue ->finalize() callback if any */
+    if (desc->component->finalize)
+      hwloc_component_finalize_cbs[hwloc_component_finalize_cb_count++] = desc->component->finalize;
+
+    /* register for real now */
     if (HWLOC_COMPONENT_TYPE_DISC == desc->component->type)
       hwloc_disc_component_register(desc->component->data, desc->filename);
     else if (HWLOC_COMPONENT_TYPE_XML == desc->component->type)
@@ -445,9 +495,11 @@ hwloc_disc_components_enable_others(struct hwloc_topology *topology)
   struct hwloc_backend *backend;
   unsigned excludes = 0;
   int tryall = 1;
-  char *env;
+  const char *_env;
+  char *env; /* we'll to modify the env value, so duplicate it */
 
-  env = getenv("HWLOC_COMPONENTS");
+  _env = getenv("HWLOC_COMPONENTS");
+  env = _env ? strdup(_env) : NULL;
 
   /* compute current excludes */
   backend = topology->backends;
@@ -465,7 +517,7 @@ hwloc_disc_components_enable_others(struct hwloc_topology *topology)
       s = strcspn(curenv, HWLOC_COMPONENT_SEPS);
       if (s) {
 	char *arg;
-	char c;
+	char c, d;
 
 	/* replace libpci with pci for backward compatibility with v1.6 */
 	if (!strncmp(curenv, "libpci", s)) {
@@ -495,19 +547,21 @@ hwloc_disc_components_enable_others(struct hwloc_topology *topology)
 
 	arg = strchr(curenv, '=');
 	if (arg) {
+	  d = *arg;
 	  *arg = '\0';
-	  arg++;
 	}
 
 	comp = hwloc_disc_component_find(-1, curenv);
 	if (comp) {
-	  hwloc_disc_component_try_enable(topology, comp, arg, &excludes, 1 /* envvar forced */, 1 /* envvar forced need warnings */);
+	  hwloc_disc_component_try_enable(topology, comp, arg ? arg+1 : NULL, &excludes, 1 /* envvar forced */, 1 /* envvar forced need warnings */);
 	} else {
 	  fprintf(stderr, "Cannot find discovery component `%s'\n", curenv);
 	}
 
-	/* restore last char (the second loop below needs env to be unmodified) */
+	/* restore chars (the second loop below needs env to be unmodified) */
 	curenv[s] = c;
+	if (arg)
+	  *arg = d;
       }
 
 nextname:
@@ -559,17 +613,28 @@ nextcomp:
     }
     fprintf(stderr, "\n");
   }
+
+  if (env)
+    free(env);
 }
 
 void
 hwloc_components_destroy_all(struct hwloc_topology *topology __hwloc_attribute_unused)
 {
+  unsigned i;
+
   HWLOC_COMPONENTS_LOCK();
   assert(0 != hwloc_components_users);
   if (0 != --hwloc_components_users) {
     HWLOC_COMPONENTS_UNLOCK();
     return;
   }
+
+  for(i=0; i<hwloc_component_finalize_cb_count; i++)
+    hwloc_component_finalize_cbs[hwloc_component_finalize_cb_count-i-1](0);
+  free(hwloc_component_finalize_cbs);
+  hwloc_component_finalize_cbs = NULL;
+  hwloc_component_finalize_cb_count = 0;
 
   /* no need to unlink/free the list of components, they'll be unloaded below */
 
@@ -658,7 +723,7 @@ void
 hwloc_backends_is_thissystem(struct hwloc_topology *topology)
 {
   struct hwloc_backend *backend;
-  char *local_env;
+  const char *local_env;
 
   /* Apply is_thissystem topology flag before we enforce envvar backends.
    * If the application changed the backend with set_foo(),

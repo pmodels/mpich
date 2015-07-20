@@ -3,8 +3,8 @@
 
 #
 # Copyright © 2009 CNRS
-# Copyright © 2009-2013 Inria.  All rights reserved.
-# Copyright © 2009-2011 Université Bordeaux 1
+# Copyright © 2009-2015 Inria.  All rights reserved.
+# Copyright © 2009-2011 Université Bordeaux
 # Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
 # See COPYING in top-level directory.
 #
@@ -12,9 +12,10 @@
 # Check the conformance of `lstopo' for all the Linux sysfs
 # hierarchies available here.  Return true on success.
 
+HWLOC_VERSION="@HWLOC_VERSION@"
 HWLOC_top_srcdir="@HWLOC_top_srcdir@"
 HWLOC_top_builddir="@HWLOC_top_builddir@"
-lstopo="$HWLOC_top_builddir/utils/lstopo-no-graphics"
+lstopo="$HWLOC_top_builddir/utils/lstopo/lstopo-no-graphics"
 
 HWLOC_PLUGINS_PATH=${HWLOC_top_builddir}/src
 export HWLOC_PLUGINS_PATH
@@ -43,19 +44,26 @@ test_topology ()
 
     local output="`mktemp`"
 
-    export HWLOC_FSROOT="$dir"
     export HWLOC_DEBUG_CHECK=1
 
     opts="-v -"
     [ -r "$options" ] && opts=`cat $options`
 
-    if ! "$lstopo" $opts > "$output"
+    if ! "$lstopo" -i "$dir" --if fsroot $opts \
+	| sed	-e 's/ hwlocVersion='$HWLOC_VERSION'//' \
+		-e 's/ ProcessName=lstopo-no-graphics//' \
+		-e 's/ ProcessName=lt-lstopo-no-graphics//' \
+	| grep -v "<info name=\"hwlocVersion\" value=\"$HWLOC_VERSION\"\/>" \
+	| grep -v "<info name=\"ProcessName\" value=\"lstopo-no-graphics\"\/>" \
+	| grep -v "<info name=\"ProcessName\" value=\"lt-lstopo-no-graphics\"\/>" \
+	> "$output"
+	# filtered hwlocVersion since it often changes
     then
 	result=1
     else
 	if [ "$HWLOC_UPDATE_TEST_TOPOLOGY_OUTPUT" != 1 ]
 	then
-	    diff -uBb "$expected_output" "$output"
+	    diff @HWLOC_DIFF_U@ -b "$expected_output" "$output"
 	    result=$?
 	else
 	    if ! diff "$expected_output" "$output" >/dev/null

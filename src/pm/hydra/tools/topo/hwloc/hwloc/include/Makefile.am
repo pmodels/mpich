@@ -1,5 +1,5 @@
 # Copyright © 2009-2014 Inria.  All rights reserved.
-# Copyright © 2009-2010 Université Bordeaux 1
+# Copyright © 2009-2010 Université Bordeaux
 # Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
 # Copyright © 2011      Oracle and/or its affiliates.  All rights reserved.
 # See COPYING in top-level directory.
@@ -27,7 +27,7 @@ include_hwloc_HEADERS = \
         hwloc/rename.h \
         hwloc/deprecated.h
 include_hwloc_autogendir = $(includedir)/hwloc/autogen
-nodist_include_hwloc_autogen_HEADERS = hwloc/autogen/config.h 
+nodist_include_hwloc_autogen_HEADERS = hwloc/autogen/config.h
 
 noinst_HEADERS = \
         private/private.h \

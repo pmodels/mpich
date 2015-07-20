@@ -1,5 +1,5 @@
 /*
- * Copyright © 2009-2013 Inria.  All rights reserved.
+ * Copyright © 2009-2015 Inria.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -8,40 +8,43 @@
 #include <hwloc/plugins.h>
 #include <private/debug.h>
 
+#ifdef HWLOC_DEBUG
 static void
 hwloc_pci_traverse_print_cb(void * cbdata __hwloc_attribute_unused,
-			    struct hwloc_obj *pcidev, int depth __hwloc_attribute_unused)
+			    struct hwloc_obj *pcidev)
 {
   char busid[14];
+  hwloc_obj_t parent;
+
+  /* indent */
+  parent = pcidev->parent;
+  while (parent) {
+    hwloc_debug("%s", "  ");
+    parent = parent->parent;
+  }
+
   snprintf(busid, sizeof(busid), "%04x:%02x:%02x.%01x",
            pcidev->attr->pcidev.domain, pcidev->attr->pcidev.bus, pcidev->attr->pcidev.dev, pcidev->attr->pcidev.func);
 
   if (pcidev->type == HWLOC_OBJ_BRIDGE) {
     if (pcidev->attr->bridge.upstream_type == HWLOC_OBJ_BRIDGE_HOST)
-      hwloc_debug("%*s HostBridge", depth, "");
+      hwloc_debug("HostBridge");
     else
-      hwloc_debug("%*s %s Bridge [%04x:%04x]", depth, "", busid,
+      hwloc_debug("Bridge [%04x:%04x]", busid,
 		  pcidev->attr->pcidev.vendor_id, pcidev->attr->pcidev.device_id);
     hwloc_debug(" to %04x:[%02x:%02x]\n",
 		pcidev->attr->bridge.downstream.pci.domain, pcidev->attr->bridge.downstream.pci.secondary_bus, pcidev->attr->bridge.downstream.pci.subordinate_bus);
   } else
-    hwloc_debug("%*s %s Device [%04x:%04x (%04x:%04x) rev=%02x class=%04x]\n", depth, "", busid,
+    hwloc_debug("%s Device [%04x:%04x (%04x:%04x) rev=%02x class=%04x]\n", busid,
 		pcidev->attr->pcidev.vendor_id, pcidev->attr->pcidev.device_id,
 		pcidev->attr->pcidev.subvendor_id, pcidev->attr->pcidev.subdevice_id,
 		pcidev->attr->pcidev.revision, pcidev->attr->pcidev.class_id);
 }
-
-static void
-hwloc_pci_traverse_setbridgedepth_cb(void * cbdata __hwloc_attribute_unused,
-				     struct hwloc_obj *pcidev, int depth)
-{
-  if (pcidev->type == HWLOC_OBJ_BRIDGE)
-    pcidev->attr->bridge.depth = depth;
-}
+#endif /* HWLOC_DEBUG */
 
 static void
 hwloc_pci_traverse_lookuposdevices_cb(void * cbdata,
-				      struct hwloc_obj *pcidev, int depth __hwloc_attribute_unused)
+				      struct hwloc_obj *pcidev)
 {
   struct hwloc_backend *backend = cbdata;
 
@@ -53,23 +56,22 @@ hwloc_pci_traverse_lookuposdevices_cb(void * cbdata,
 
 static void
 hwloc_pci__traverse(void * cbdata, struct hwloc_obj *root,
-		    void (*cb)(void * cbdata, struct hwloc_obj *, int depth),
-		    int depth)
+		    void (*cb)(void * cbdata, struct hwloc_obj *))
 {
   struct hwloc_obj *child = root->first_child;
   while (child) {
-    cb(cbdata, child, depth);
+    cb(cbdata, child);
     if (child->type == HWLOC_OBJ_BRIDGE)
-      hwloc_pci__traverse(cbdata, child, cb, depth+1);
+      hwloc_pci__traverse(cbdata, child, cb);
     child = child->next_sibling;
   }
 }
 
 static void
 hwloc_pci_traverse(void * cbdata, struct hwloc_obj *root,
-		   void (*cb)(void * cbdata, struct hwloc_obj *, int depth))
+		   void (*cb)(void * cbdata, struct hwloc_obj *))
 {
-  hwloc_pci__traverse(cbdata, root, cb, 0);
+  hwloc_pci__traverse(cbdata, root, cb);
 }
 
 enum hwloc_pci_busid_comparison_e {
@@ -79,7 +81,7 @@ enum hwloc_pci_busid_comparison_e {
   HWLOC_PCI_BUSID_SUPERSET
 };
 
-static enum hwloc_pci_busid_comparison_e 
+static enum hwloc_pci_busid_comparison_e
 hwloc_pci_compare_busids(struct hwloc_obj *a, struct hwloc_obj *b)
 {
   if (a->type == HWLOC_OBJ_BRIDGE)
@@ -139,6 +141,8 @@ hwloc_pci_add_child_before(struct hwloc_obj *root, struct hwloc_obj *child, stru
   else
     root->first_child = new;
   new->next_sibling = child;
+
+  new->parent = root; /* so that hwloc_pci_traverse_print_cb() can indent by depth */
 }
 
 static void
@@ -212,20 +216,62 @@ hwloc_pci_add_object(struct hwloc_obj *root, struct hwloc_obj *new)
 }
 
 static struct hwloc_obj *
+hwloc_pci_fixup_hostbridge_parent(struct hwloc_topology *topology __hwloc_attribute_unused,
+				  struct hwloc_obj *hostbridge,
+				  struct hwloc_obj *parent)
+{
+  /* Xeon E5v3 in cluster-on-die mode only have PCI on the first NUMA node of each package.
+   * but many dual-processor host report the second PCI hierarchy on 2nd NUMA of first package.
+   */
+  if (parent->depth >= 2
+      && parent->type == HWLOC_OBJ_NUMANODE
+      && parent->sibling_rank == 1 && parent->parent->arity == 2
+      && parent->parent->type == HWLOC_OBJ_PACKAGE
+      && parent->parent->sibling_rank == 0 && parent->parent->parent->arity == 2) {
+    const char *cpumodel = hwloc_obj_get_info_by_name(parent->parent, "CPUModel");
+    if (cpumodel && strstr(cpumodel, "Xeon")) {
+      if (!hwloc_hide_errors()) {
+	fprintf(stderr, "****************************************************************************\n");
+	fprintf(stderr, "* hwloc %s has encountered an incorrect PCI locality information.\n", HWLOC_VERSION);
+	fprintf(stderr, "* PCI bus %04x:%02x is supposedly close to 2nd NUMA node of 1st package,\n",
+		hostbridge->first_child->attr->pcidev.domain, hostbridge->first_child->attr->pcidev.bus);
+	fprintf(stderr, "* however hwloc believes this is impossible on this architecture.\n");
+	fprintf(stderr, "* Therefore the PCI bus will be moved to 1st NUMA node of 2nd package.\n");
+	fprintf(stderr, "*\n");
+	fprintf(stderr, "* If you feel this fixup is wrong, disable it by setting in your environment\n");
+	fprintf(stderr, "* HWLOC_PCI_%04x_%02x_LOCALCPUS= (empty value), and report the problem\n",
+		hostbridge->first_child->attr->pcidev.domain, hostbridge->first_child->attr->pcidev.bus);
+	fprintf(stderr, "* to the hwloc's user mailing list together with the XML output of lstopo.\n");
+	fprintf(stderr, "*\n");
+	fprintf(stderr, "* You may silence this message by setting HWLOC_HIDE_ERRORS=1 in your environment.\n");
+	fprintf(stderr, "****************************************************************************\n");
+      }
+      return parent->parent->next_sibling->first_child;
+    }
+  }
+
+  return parent;
+}
+
+static struct hwloc_obj *
 hwloc_pci_find_hostbridge_parent(struct hwloc_topology *topology, struct hwloc_backend *backend,
 				 struct hwloc_obj *hostbridge)
 {
   hwloc_bitmap_t cpuset = hwloc_bitmap_alloc();
   struct hwloc_obj *parent;
-  char *env;
+  const char *env;
   int err;
 
   /* override the cpuset with the environment if given */
+  int forced = 0;
   char envname[256];
   snprintf(envname, sizeof(envname), "HWLOC_PCI_%04x_%02x_LOCALCPUS",
 	   hostbridge->first_child->attr->pcidev.domain, hostbridge->first_child->attr->pcidev.bus);
   env = getenv(envname);
-  if (env) {
+  if (env)
+    /* if env exists but is empty, don't let quirks change what the OS reports */
+    forced = 1;
+  if (env && *env) {
     /* force the hostbridge cpuset */
     hwloc_debug("Overriding localcpus using %s in the environment\n", envname);
     hwloc_bitmap_sscanf(cpuset, env);
@@ -258,16 +304,24 @@ hwloc_pci_find_hostbridge_parent(struct hwloc_topology *topology, struct hwloc_b
      */
     while (parent->parent && hwloc_bitmap_isequal(parent->cpuset, parent->parent->cpuset))
       parent = parent->parent;
+
+    if (!forced)
+      parent = hwloc_pci_fixup_hostbridge_parent(topology, hostbridge, parent);
+
   } else {
     /* the object we found is too large, insert an intermediate group */
     hwloc_obj_t group_obj = hwloc_alloc_setup_object(HWLOC_OBJ_GROUP, -1);
     if (group_obj) {
       group_obj->cpuset = hwloc_bitmap_dup(cpuset);
+      group_obj->complete_cpuset = hwloc_bitmap_dup(cpuset);
       group_obj->attr->group.depth = (unsigned) -1;
       parent = hwloc__insert_object_by_cpuset(topology, group_obj, hwloc_report_os_error);
       if (parent == group_obj)
 	/* if didn't get merged, setup its sets */
 	hwloc_fill_object_sets(group_obj);
+      if (!parent)
+	/* Failed to insert the parent, maybe a conflicting cpuset, attach to the root object instead */
+	parent = hwloc_get_root_obj(topology);
     }
   }
 
@@ -290,6 +344,7 @@ hwloc_insert_pci_device_list(struct hwloc_backend *backend,
     return 0;
 
   /* first, organise object as tree under a fake parent object */
+  fakeparent.parent = NULL;
   fakeparent.first_child = NULL;
   fakeparent.last_child = NULL;
   while (first_obj) {
@@ -298,11 +353,13 @@ hwloc_insert_pci_device_list(struct hwloc_backend *backend,
     hwloc_pci_add_object(&fakeparent, obj);
   }
 
+#ifdef HWLOC_DEBUG
   hwloc_debug("%s", "\nPCI hierarchy under fake parent:\n");
   hwloc_pci_traverse(NULL, &fakeparent, hwloc_pci_traverse_print_cb);
+  hwloc_debug("%s", "\n");
+#endif
 
-  /* walk the hierarchy, set bridge depth and lookup OS devices */
-  hwloc_pci_traverse(NULL, &fakeparent, hwloc_pci_traverse_setbridgedepth_cb);
+  /* walk the hierarchy, and lookup OS devices */
   hwloc_pci_traverse(backend, &fakeparent, hwloc_pci_traverse_lookuposdevices_cb);
 
   /*

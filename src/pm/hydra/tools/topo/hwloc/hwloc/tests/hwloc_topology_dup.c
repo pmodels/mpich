@@ -1,5 +1,5 @@
 /*
- * Copyright © 2011-2013 Inria.  All rights reserved.
+ * Copyright © 2011-2015 Inria.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -33,8 +33,8 @@ int main(void)
   hwloc_topology_init(&oldtopology);
   printf("building fake 'node:3 core:2 pu:4' topology\n");
   hwloc_topology_set_synthetic(oldtopology, "node:3 core:2 pu:4");
-  printf("adding node and core matrices");
-  hwloc_topology_set_distance_matrix(oldtopology, HWLOC_OBJ_NODE, 3, node_indexes, node_distances);
+  printf("adding node and core matrices\n");
+  hwloc_topology_set_distance_matrix(oldtopology, HWLOC_OBJ_NUMANODE, 3, node_indexes, node_distances);
   hwloc_topology_set_distance_matrix(oldtopology, HWLOC_OBJ_CORE, 6, core_indexes, core_distances);
   hwloc_topology_load(oldtopology);
 
@@ -50,7 +50,7 @@ int main(void)
   err = hwloc_topology_restrict(topology, cpuset, HWLOC_RESTRICT_FLAG_ADAPT_DISTANCES);
   assert(!err);
   printf("checking the result\n");
-  assert(hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_NODE) == 2);
+  assert(hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_NUMANODE) == 2);
 
   hwloc_topology_destroy(topology);
 

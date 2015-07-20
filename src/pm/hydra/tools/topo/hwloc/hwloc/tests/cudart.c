@@ -1,5 +1,5 @@
 /*
- * Copyright © 2010-2012 Inria.  All rights reserved.
+ * Copyright © 2010-2014 Inria.  All rights reserved.
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -54,7 +54,7 @@ int main(void)
     value = hwloc_obj_get_info_by_name(osdev, "CoProcType");
     err = strcmp(value, "CUDA");
     assert(!err);
-    
+
     value = hwloc_obj_get_info_by_name(osdev, "GPUModel");
     printf("found OSDev model %s\n", value);
 
@@ -66,7 +66,9 @@ int main(void)
       char *cpuset_string = NULL;
       hwloc_bitmap_asprintf(&cpuset_string, set);
       printf("got cpuset %s for device %d\n", cpuset_string, i);
-      assert(hwloc_bitmap_isequal(set, ancestor->cpuset));
+      if (hwloc_bitmap_isequal(hwloc_topology_get_complete_cpuset(topology), hwloc_topology_get_topology_cpuset(topology)))
+	/* only compare if the topology is complete, otherwise things can be significantly different */
+	assert(hwloc_bitmap_isequal(set, ancestor->cpuset));
       free(cpuset_string);
     }
     hwloc_bitmap_free(set);

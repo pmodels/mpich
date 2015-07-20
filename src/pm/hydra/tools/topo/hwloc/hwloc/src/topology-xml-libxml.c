@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
  * Copyright © 2009-2014 Inria.  All rights reserved.
- * Copyright © 2009-2011 Université Bordeaux 1
+ * Copyright © 2009-2011 Université Bordeaux
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -41,7 +41,7 @@ typedef struct hwloc__libxml_import_state_data_s {
   xmlNode *node; /* current libxml node, always valid */
   xmlNode *child; /* last processed child, or NULL if none yet */
   xmlAttr *attr; /* last processed attribute, or NULL if none yet */
-} * hwloc__libxml_import_state_data_t;
+} __hwloc_attribute_may_alias * hwloc__libxml_import_state_data_t;
 
 static int
 hwloc__libxml_import_next_attr(hwloc__xml_import_state_t state, char **namep, char **valuep)
@@ -86,12 +86,7 @@ hwloc__libxml_import_find_child(hwloc__xml_import_state_t state,
   hwloc__libxml_import_state_data_t lchildstate = (void*) childstate->data;
   xmlNode *child;
   childstate->parent = state;
-  childstate->next_attr = state->next_attr;
-  childstate->find_child = state->find_child;
-  childstate->close_tag = state->close_tag;
-  childstate->close_child = state->close_child;
-  childstate->get_content = state->get_content;
-  childstate->close_content = state->close_content;
+  childstate->global = state->global;
   if (!lstate->child)
     return 0;
   child = lstate->child->next;
@@ -182,12 +177,12 @@ hwloc_libxml_look_init(struct hwloc_xml_backend_data_s *bdata,
     goto failed;
   }
 
-  state->next_attr = hwloc__libxml_import_next_attr;
-  state->find_child = hwloc__libxml_import_find_child;
-  state->close_tag = hwloc__libxml_import_close_tag;
-  state->close_child = hwloc__libxml_import_close_child;
-  state->get_content = hwloc__libxml_import_get_content;
-  state->close_content = hwloc__libxml_import_close_content;
+  state->global->next_attr = hwloc__libxml_import_next_attr;
+  state->global->find_child = hwloc__libxml_import_find_child;
+  state->global->close_tag = hwloc__libxml_import_close_tag;
+  state->global->close_child = hwloc__libxml_import_close_child;
+  state->global->get_content = hwloc__libxml_import_get_content;
+  state->global->close_content = hwloc__libxml_import_close_content;
   state->parent = NULL;
   lstate->node = root_node;
   lstate->child = root_node->children;
@@ -199,22 +194,16 @@ hwloc_libxml_look_init(struct hwloc_xml_backend_data_s *bdata,
 }
 
 static int
-hwloc_libxml_import_diff(const char *xmlpath, const char *xmlbuffer, int xmlbuflen, hwloc_topology_diff_t *firstdiffp, char **refnamep)
+hwloc_libxml_import_diff(struct hwloc__xml_import_state_s *state, const char *xmlpath, const char *xmlbuffer, int xmlbuflen, hwloc_topology_diff_t *firstdiffp, char **refnamep)
 {
-  struct hwloc__xml_import_state_s state;
-  hwloc__libxml_import_state_data_t lstate = (void*) state.data;
+  hwloc__libxml_import_state_data_t lstate = (void*) state->data;
   char *refname = NULL;
   xmlDoc *doc = NULL;
   xmlNode* root_node;
   xmlDtd *dtd;
   int ret;
 
-  assert(sizeof(*lstate) <= sizeof(state.data));
-
-  if (hwloc_plugin_check_namespace("xml_libxml", "hwloc__xml_verbose") < 0) {
-    errno = ENOSYS;
-    return -1;
-  }
+  assert(sizeof(*lstate) <= sizeof(state->data));
 
   LIBXML_TEST_VERSION;
   hwloc_libxml2_disable_stderrwarnings();
@@ -252,20 +241,20 @@ hwloc_libxml_import_diff(const char *xmlpath, const char *xmlbuffer, int xmlbufl
     goto out_with_doc;
   }
 
-  state.next_attr = hwloc__libxml_import_next_attr;
-  state.find_child = hwloc__libxml_import_find_child;
-  state.close_tag = hwloc__libxml_import_close_tag;
-  state.close_child = hwloc__libxml_import_close_child;
-  state.get_content = hwloc__libxml_import_get_content;
-  state.close_content = hwloc__libxml_import_close_content;
-  state.parent = NULL;
+  state->global->next_attr = hwloc__libxml_import_next_attr;
+  state->global->find_child = hwloc__libxml_import_find_child;
+  state->global->close_tag = hwloc__libxml_import_close_tag;
+  state->global->close_child = hwloc__libxml_import_close_child;
+  state->global->get_content = hwloc__libxml_import_get_content;
+  state->global->close_content = hwloc__libxml_import_close_content;
+  state->parent = NULL;
   lstate->node = root_node;
   lstate->child = root_node->children;
   lstate->attr = NULL;
 
   while (1) {
     char *attrname, *attrvalue;
-    if (state.next_attr(&state, &attrname, &attrvalue) < 0)
+    if (state->global->next_attr(state, &attrname, &attrvalue) < 0)
       break;
     if (!strcmp(attrname, "refname")) {
       free(refname);
@@ -274,7 +263,7 @@ hwloc_libxml_import_diff(const char *xmlpath, const char *xmlbuffer, int xmlbufl
       goto out_with_doc;
   }
 
-  ret = hwloc__xml_import_diff(&state, firstdiffp);
+  ret = hwloc__xml_import_diff(state, firstdiffp);
   if (refnamep && !ret)
     *refnamep = refname;
   else
@@ -304,11 +293,6 @@ hwloc_libxml_backend_init(struct hwloc_xml_backend_data_s *bdata,
 			  const char *xmlpath, const char *xmlbuffer, int xmlbuflen)
 {
   xmlDoc *doc = NULL;
-
-  if (hwloc_plugin_check_namespace("xml_libxml", "hwloc__xml_verbose") < 0) {
-    errno = ENOSYS;
-    return -1;
-  }
 
   LIBXML_TEST_VERSION;
   hwloc_libxml2_disable_stderrwarnings();
@@ -340,7 +324,7 @@ hwloc_libxml_backend_init(struct hwloc_xml_backend_data_s *bdata,
 
 typedef struct hwloc__libxml_export_state_data_s {
   xmlNodePtr current_node; /* current node to output */
-} * hwloc__libxml_export_state_data_t;
+} __hwloc_attribute_may_alias * hwloc__libxml_export_state_data_t;
 
 static void
 hwloc__libxml_export_new_child(hwloc__xml_export_state_t parentstate,
@@ -418,11 +402,6 @@ hwloc_libxml_export_file(hwloc_topology_t topology, const char *filename)
   xmlDocPtr doc;
   int ret;
 
-  if (hwloc_plugin_check_namespace("xml_libxml", "hwloc__xml_verbose") < 0) {
-    errno = ENOSYS;
-    return -1;
-  }
-
   errno = 0; /* set to 0 so that we know if libxml2 changed it */
 
   doc = hwloc__libxml2_prepare_export(topology);
@@ -442,11 +421,6 @@ static int
 hwloc_libxml_export_buffer(hwloc_topology_t topology, char **xmlbuffer, int *buflen)
 {
   xmlDocPtr doc;
-
-  if (hwloc_plugin_check_namespace("xml_libxml", "hwloc__xml_verbose") < 0) {
-    errno = ENOSYS;
-    return -1;
-  }
 
   doc = hwloc__libxml2_prepare_export(topology);
   xmlDocDumpFormatMemoryEnc(doc, (xmlChar **)xmlbuffer, buflen, "UTF-8", 1);
@@ -495,11 +469,6 @@ hwloc_libxml_export_diff_file(hwloc_topology_diff_t diff, const char *refname, c
   xmlDocPtr doc;
   int ret;
 
-  if (hwloc_plugin_check_namespace("xml_libxml", "hwloc__xml_verbose") < 0) {
-    errno = ENOSYS;
-    return -1;
-  }
-
   errno = 0; /* set to 0 so that we know if libxml2 changed it */
 
   doc = hwloc__libxml2_prepare_export_diff(diff, refname);
@@ -519,11 +488,6 @@ static int
 hwloc_libxml_export_diff_buffer(hwloc_topology_diff_t diff, const char *refname, char **xmlbuffer, int *buflen)
 {
   xmlDocPtr doc;
-
-  if (hwloc_plugin_check_namespace("xml_libxml", "hwloc__xml_verbose") < 0) {
-    errno = ENOSYS;
-    return -1;
-  }
 
   doc = hwloc__libxml2_prepare_export_diff(diff, refname);
   xmlDocDumpFormatMemoryEnc(doc, (xmlChar **)xmlbuffer, buflen, "UTF-8", 1);
@@ -556,12 +520,23 @@ static struct hwloc_xml_component hwloc_libxml_xml_component = {
   &hwloc_xml_libxml_callbacks
 };
 
+static int
+hwloc_xml_libxml_component_init(unsigned long flags)
+{
+  if (flags)
+    return -1;
+  if (hwloc_plugin_check_namespace("xml_libxml", "hwloc__xml_verbose") < 0)
+    return -1;
+  return 0;
+}
+
 #ifdef HWLOC_INSIDE_PLUGIN
 HWLOC_DECLSPEC extern const struct hwloc_component hwloc_xml_libxml_component;
 #endif
 
 const struct hwloc_component hwloc_xml_libxml_component = {
   HWLOC_COMPONENT_ABI,
+  hwloc_xml_libxml_component_init, NULL,
   HWLOC_COMPONENT_TYPE_XML,
   0,
   &hwloc_libxml_xml_component
