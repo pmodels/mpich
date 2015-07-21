@@ -11,6 +11,13 @@
 
      https://trac.mpich.org/projects/mpich/ticket/2105
 
+### PGI compilers
+
+ * Compilation on 32-bit x86 platforms with the PGI compiler suite (as
+   of 13.9) will fail to build due to an error in the hwloc
+   implementation.  To workaround this issue, you can disable hwloc by
+   passing the configure option --without-hydra-topolib.
+
 ### PathScale compilers
  * Due to bugs in the PathScale compiler suite, some configurations of MPICH
    do not build correctly.
