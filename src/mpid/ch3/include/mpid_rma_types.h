@@ -109,7 +109,7 @@ typedef struct MPIDI_RMA_Win_list {
     struct MPIDI_RMA_Win_list *prev;
 } MPIDI_RMA_Win_list_t;
 
-extern MPIDI_RMA_Win_list_t *MPIDI_RMA_Win_list;
+extern MPIDI_RMA_Win_list_t *MPIDI_RMA_Win_list_head;
 
 typedef struct MPIDI_RMA_Target_lock_entry {
     struct MPIDI_RMA_Target_lock_entry *next;

@@ -201,13 +201,13 @@ int MPID_Win_free(MPID_Win ** win_ptr)
     }
 
     /* dequeue window from the global list */
-    for (win_elem = MPIDI_RMA_Win_list; win_elem && win_elem->win_ptr != *win_ptr;
+    for (win_elem = MPIDI_RMA_Win_list_head; win_elem && win_elem->win_ptr != *win_ptr;
          win_elem = win_elem->next);
     MPIU_ERR_CHKANDJUMP(win_elem == NULL, mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
-    MPL_DL_DELETE(MPIDI_RMA_Win_list, win_elem);
+    MPL_DL_DELETE(MPIDI_RMA_Win_list_head, win_elem);
     MPIU_Free(win_elem);
 
-    if (MPIDI_RMA_Win_list == NULL)
+    if (MPIDI_RMA_Win_list_head == NULL)
         MPID_Progress_deregister_hook(MPIDI_CH3I_RMA_Make_progress_global);
 
     comm_ptr = (*win_ptr)->comm_ptr;

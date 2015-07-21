@@ -938,7 +938,7 @@ int MPIDI_CH3I_RMA_Make_progress_win(MPID_Win * win_ptr, int *made_progress)
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_RMA_Make_progress_global(int *made_progress)
 {
-    MPIDI_RMA_Win_list_t *win_elem = MPIDI_RMA_Win_list;
+    MPIDI_RMA_Win_list_t *win_elem = MPIDI_RMA_Win_list_head;
     int mpi_errno = MPI_SUCCESS;
 
     (*made_progress) = 0;
@@ -946,7 +946,7 @@ int MPIDI_CH3I_RMA_Make_progress_global(int *made_progress)
     if (MPIDI_CH3I_num_active_issued_win == 0 && MPIDI_CH3I_num_passive_win == 0)
         goto fn_exit;
 
-    for (win_elem = MPIDI_RMA_Win_list; win_elem; win_elem = win_elem->next) {
+    for (win_elem = MPIDI_RMA_Win_list_head; win_elem; win_elem = win_elem->next) {
         int temp_progress = 0;
         int is_able_to_issue = 0;
 
