@@ -1612,7 +1612,7 @@ static int sched_get_cid_nonblock(MPID_Comm *comm_ptr, MPIR_Context_id_t *ctx0,
      * idup_curr_seqnum gives each duplication operation a priority */
      st->comm_ptr->idup_count++;
      st->seqnum = st->comm_ptr->idup_curr_seqnum++;
-
+     st->own_mask = 0;
     if (eager_nelem < 0) {
         /* Ensure that at least one word of deadlock-free context IDs is
            always set aside for the base protocol */
