@@ -938,7 +938,7 @@ int MPIDI_CH3I_RMA_Make_progress_win(MPID_Win * win_ptr, int *made_progress)
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3I_RMA_Make_progress_global(int *made_progress)
 {
-    MPIDI_RMA_Win_list_t *win_elem = MPIDI_RMA_Win_list_head;
+    MPIDI_RMA_Win_list_t *win_elem;
     int mpi_errno = MPI_SUCCESS;
 
     (*made_progress) = 0;
