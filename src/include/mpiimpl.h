@@ -1547,9 +1547,28 @@ typedef struct MPID_Request {
     /* Errflag for NBC requests. Not used by other requests. */
     mpir_errflag_t errflag;
 
-    /* request_completed_cb: the callback function triggered when this request
-     * is completed, i.e. CC is set to 0. Inside request_completed_cb, progress
-     * engine should not be called. */
+    /* Notes about request_completed_cb:
+     *
+     *   1. The callback function is triggered when this requests
+     *      completion count reaches 0.
+     *
+     *   2. The callback function should be nonblocking.
+     *
+     *   3. The callback function should not poke the progress engine,
+     *      or call any function that pokes the progress engine.
+     *
+     *   4. The callback function can complete other requests, thus
+     *      calling those requests' callback functions.  However, the
+     *      recursion depth of request completion function is limited.
+     *      If we ever need deeper recurisve calls, we need to change
+     *      to an iterative design instead of a recursive design for
+     *      request completion.
+     *
+     *   5. In multithreaded programs, since the callback function is
+     *      nonblocking and never calls the progress engine, it would
+     *      never yield the lock to other threads.  So the recursion
+     *      should be multithreading-safe.
+     */
     int (*request_completed_cb)(struct MPID_Request *);
 
     /* Other, device-specific information */
