@@ -23,9 +23,9 @@ done
 ##
 
 echo
-echo "Probability of Collision:"
+echo "Probability of collision on your next commit:"
 echo "Format:   [abbrev length]: probability of collision"
 for ((; x <= ${max_abbrev} ; x++)) ; do
-    percent=`echo "scale=8 ; 100 * ($total ^ 2) / (16 ^ $x)" | bc | awk '{ printf("%1.2f\n", $0); }'`
+    percent=`echo "scale=8 ; 100 * ($total) / (16 ^ $x)" | bc | awk '{ printf("%1.4f\n", $0); }'`
     echo "    [$x]: $percent %"
 done
