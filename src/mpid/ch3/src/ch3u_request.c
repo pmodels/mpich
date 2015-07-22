@@ -21,6 +21,9 @@
 #define MPID_REQUEST_PREALLOC 8
 #endif
 
+/* Max depth of recursive calls of MPID_Request_complete */
+#define REQUEST_CB_DEPTH 2
+
 MPID_Request MPID_Request_direct[MPID_REQUEST_PREALLOC] = {{0}};
 MPIU_Object_alloc_t MPID_Request_mem = {
     0, 0, 0, 0, MPID_REQUEST, sizeof(MPID_Request), MPID_Request_direct,
@@ -611,6 +614,10 @@ int MPID_Request_complete(MPID_Request *req)
 {
     int incomplete;
     int mpi_errno = MPI_SUCCESS;
+    static int called_cnt = 0;
+
+    MPIU_Assert(called_cnt <= REQUEST_CB_DEPTH);
+    called_cnt++;
 
     MPIDI_CH3U_Request_decrement_cc(req, &incomplete);
     if (!incomplete) {
@@ -627,6 +634,7 @@ int MPID_Request_complete(MPID_Request *req)
     }
 
  fn_exit:
+    called_cnt--;
     return mpi_errno;
  fn_fail:
     goto fn_exit;
