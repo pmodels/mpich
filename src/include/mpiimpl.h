@@ -4423,39 +4423,6 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
 int MPIR_Comm_set_attr_impl(MPID_Comm *comm_ptr, int comm_keyval, void *attribute_val, 
                             MPIR_AttrType attrType);
 
-
-/* The "fastpath" version of MPIR_Request_complete.  It only handles
- * MPID_REQUEST_SEND and MPID_REQUEST_RECV kinds, and it does not attempt to
- * deal with status structures under the assumption that bleeding fast code will
- * pass either MPI_STATUS_IGNORE or MPI_STATUSES_IGNORE as appropriate.  This
- * routine (or some a variation of it) is an unfortunately necessary stunt to
- * get high message rates on key benchmarks for high-end systems.
- */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Request_complete_fastpath
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-static inline int MPIR_Request_complete_fastpath(MPI_Request *request, MPID_Request *request_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIU_Assert(request_ptr->kind == MPID_REQUEST_SEND || request_ptr->kind == MPID_REQUEST_RECV);
-
-    if (request_ptr->kind == MPID_REQUEST_SEND) {
-        /* FIXME: are Ibsend requests added to the send queue? */
-        MPIR_SENDQ_FORGET(request_ptr);
-    }
-
-    /* the completion path for SEND and RECV is the same at this time, modulo
-     * the SENDQ hook above */
-    mpi_errno = request_ptr->status.MPI_ERROR;
-    MPID_Request_release(request_ptr);
-    *request = MPI_REQUEST_NULL;
-
-    /* avoid normal fn_exit/fn_fail jump pattern to reduce jumps and compiler confusion */
-    return mpi_errno;
-}
-
 /* Pull the error status out of the tag space and put it into an errflag. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_process_status
