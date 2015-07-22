@@ -7,7 +7,7 @@
 
 include $(top_srcdir)/threads/Makefile_threads.mtest
 
-EXTRA_DIST = testlist
+EXTRA_DIST = testlist.in
 
 noinst_PROGRAMS = ctxdup dup_leak_test comm_dup_deadlock comm_create_threads comm_create_group_threads comm_idup ctxidup idup_nb idup_comm_gen
 

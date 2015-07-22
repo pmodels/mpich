@@ -7,7 +7,7 @@
 
 include $(top_srcdir)/threads/Makefile_threads.mtest
 
-EXTRA_DIST = testlist
+EXTRA_DIST = testlist.in
 
 noinst_PROGRAMS = iallred allred
 

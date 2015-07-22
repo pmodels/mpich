@@ -174,6 +174,11 @@ AC_ARG_ENABLE(ft-tests,
 		[Include tests for fault tolerance (default)])],,
 	[enable_ft_tests=yes])
 
+AC_ARG_ENABLE(comm-overlap-tests,
+	[AC_HELP_STRING([--enable-comm-overlap-tests],
+		[Include tests for communicator overlap (default)])],,
+	[enable_comm_overlap_tests=yes])
+
 AC_ARG_ENABLE(checkfaults,
 	[AC_HELP_STRING([--enable-checkfaults],
 		[Add some tests for checking on handling of faults in user programs])],,
@@ -369,6 +374,15 @@ if test "$first_pm" = "hydra" -a  "$enable_strictmpi" = "no" -a "$enable_ft_test
     ftdir="ft"
 fi
 AC_SUBST(ftdir)
+
+# Setup "comm_overlap" variable based on whether comm_overlap tests
+# are enabled or not
+if test "${enable_comm_overlap_tests}" = "yes" ; then
+   comm_overlap=""
+else
+   comm_overlap="#"
+fi
+AC_SUBST(comm_overlap)
 
 # 
 # Only run the threads tests if multiple is specified
@@ -1620,11 +1634,13 @@ AC_OUTPUT(maint/testmerge \
           threads/pt2pt/Makefile \
           threads/util/Makefile \
           threads/comm/Makefile \
+          threads/comm/testlist \
           threads/init/Makefile \
           threads/mpi_t/Makefile \
           threads/spawn/Makefile \
           threads/rma/Makefile \
           threads/coll/Makefile \
+          threads/coll/testlist \
           errors/Makefile \
           errors/attr/Makefile \
           errors/basic/Makefile \

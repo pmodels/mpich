@@ -1,2 +1,0 @@
-allred 2 xfail=ticket2108
-iallred 2 mpiversion=3.0 xfail=ticket2108
