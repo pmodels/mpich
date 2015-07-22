@@ -164,4 +164,4 @@ cas_flush_get 3 mpiversion=3.0
 ## specified by the standard and might not be true.  Commenting this
 ## out till be find a better way to test the original problem with
 ## MPI_Test.
-# nb_test 2 mpiversion=3.0 xfail=ticket1910
+# nb_test 2 mpiversion=3.0
