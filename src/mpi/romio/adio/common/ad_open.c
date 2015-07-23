@@ -152,12 +152,6 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
 	if (*error_code != MPI_SUCCESS) 
 	    goto fn_exit;
     }
-    /* for debugging, it can be helpful to see the hints selected */
-    p = getenv("ROMIO_PRINT_HINTS");
-    if (rank == 0 && p != NULL ) {
-	ADIOI_Info_print_keyvals(fd->info);
-    }
-
     fd->is_open = 0;
     fd->my_cb_nodes_index = -2;
     fd->is_agg = is_aggregator(rank, fd);
@@ -172,6 +166,13 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     /* scalable open: one process opens and broadcasts results to everyone */
 
     ADIOI_OpenColl(fd, rank, access_mode, error_code);
+
+    /* for debugging, it can be helpful to see the hints selected. Some file
+     * systes set up the hints in the open call (e.g. lustre) */
+    p = getenv("ROMIO_PRINT_HINTS");
+    if (rank == 0 && p != NULL ) {
+	ADIOI_Info_print_keyvals(fd->info);
+    }
 
  fn_exit:
     MPI_Allreduce(error_code, &max_error_code, 1, MPI_INT, MPI_MAX, comm);
