@@ -125,6 +125,12 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     /* set the values for collective I/O and data sieving parameters */
     ADIOI_GEN_SetInfo(fd, users_info, error_code);
 
+    /* generic hints might step on striping_unit */
+    if (users_info != MPI_INFO_NULL) {
+	ADIOI_Info_check_and_install_int(fd, users_info, "striping_unit",
+		NULL, myname, error_code);
+    }
+
     if (ADIOI_Direct_read) fd->direct_read = 1;
     if (ADIOI_Direct_write) fd->direct_write = 1;
 
