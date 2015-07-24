@@ -622,7 +622,6 @@ static inline int adjust_op_piggybacked_with_lock(MPID_Win * win_ptr,
     MPIDI_RMA_Target_t *target = NULL;
     MPIDI_RMA_Op_t *op = NULL;
     MPIDI_CH3_Pkt_flags_t op_flags = MPIDI_CH3_PKT_FLAG_NONE;
-    int i;
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, target_rank, &target);
@@ -630,93 +629,81 @@ static inline int adjust_op_piggybacked_with_lock(MPID_Win * win_ptr,
         MPIU_ERR_POP(mpi_errno);
     MPIU_Assert(target != NULL);
 
-    op = target->pending_op_list_head;
-    if (op != NULL)
-        MPIDI_CH3_PKT_RMA_GET_FLAGS(op->pkt, op_flags, mpi_errno);
+    /* Here the next_op_to_issue pointer should still point to the OP piggybacked
+     * with LOCK */
+    op = target->next_op_to_issue;
+    MPIU_Assert(op != NULL);
 
-    if (op_flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
-        op_flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE) {
-        if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED ||
-            flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_QUEUED_DATA_QUEUED) {
+    MPIDI_CH3_PKT_RMA_GET_FLAGS(op->pkt, op_flags, mpi_errno);
+    MPIU_Assert(op_flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
+                op_flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE);
 
-            if (op->ureq != NULL) {
-                mpi_errno = set_user_req_after_issuing_op(op);
-                if (mpi_errno != MPI_SUCCESS)
-                    MPIU_ERR_POP(mpi_errno);
-            }
+    if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED ||
+        flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_QUEUED_DATA_QUEUED) {
 
-            if (op->reqs_size == 0) {
-                MPIU_Assert(op->single_req == NULL && op->multi_reqs == NULL);
-                MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_op_list_head), op);
-            }
-            else {
-                MPI_Datatype target_datatype;
-                int is_derived = FALSE;
+        if (op->reqs_size > 0) {
+            MPID_Request **req = NULL;
+            if (op->reqs_size == 1)
+                req = &(op->single_req);
+            else
+                req = &(op->multi_reqs[0]);
 
-                MPIDI_CH3I_RMA_Ops_unlink(&(target->pending_op_list_head), op);
+            MPIU_Assert((*req) != NULL);
+            MPID_Request_release((*req));
+            (*req) = NULL;
+        }
 
-                MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE(op->pkt, target_datatype, mpi_errno);
+        if ((op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE || op->pkt.type == MPIDI_CH3_PKT_GET_ACCUM)
+            && op->issued_stream_count != ALL_STREAM_UNITS_ISSUED) {
+            /* Now we successfully issue out the first stream unit,
+             * keep next_op_to_issue still stick to the current op
+             * since we need to issue the following stream units. */
+            goto fn_exit;
+        }
 
-                if ((target_datatype != MPI_DATATYPE_NULL &&
-                     !MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) ||
-                    (op->origin_datatype != MPI_DATATYPE_NULL &&
-                     !MPIR_DATATYPE_IS_PREDEFINED(op->origin_datatype)) ||
-                    (op->result_datatype != MPI_DATATYPE_NULL &&
-                     !MPIR_DATATYPE_IS_PREDEFINED(op->result_datatype))) {
-                    is_derived = TRUE;
-                }
+        /* We are done with the current operation, make next_op_to_issue points to the
+         * next operation. */
+        target->next_op_to_issue = op->next;
 
-                if (is_derived) {
-                    MPIDI_CH3I_RMA_Ops_append(&(target->issued_dt_op_list_head), op);
-                }
-                else if (op->pkt.type == MPIDI_CH3_PKT_PUT ||
-                         op->pkt.type == MPIDI_CH3_PKT_PUT_IMMED ||
-                         op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE ||
-                         op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {
-                    MPIDI_CH3I_RMA_Ops_append(&(target->issued_write_op_list_head), op);
-                }
-                else {
-                    MPIDI_CH3I_RMA_Ops_append(&(target->issued_read_op_list_head), op);
-                }
+        if (target->next_op_to_issue == NULL) {
+            if (op_flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH || op_flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
+                /* We are done with ending sync, unset target's sync_flag. */
+                target->sync.sync_flag = MPIDI_RMA_SYNC_NONE;
             }
         }
-        else if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_QUEUED_DATA_DISCARDED ||
-                 flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_DISCARDED) {
-            /* We need to re-transmit this operation, so we destroy
-             * the internal request and erase all flags in current
-             * operation. */
-            if (op->reqs_size == 1) {
-                MPIU_Assert(op->single_req != NULL);
-                MPID_Request_release(op->single_req);
-                op->single_req = NULL;
-                win_ptr->active_req_cnt--;
-                op->reqs_size = 0;
+
+        if (op->ureq != NULL) {
+            /* Complete user request and release the ch3 ref */
+            mpi_errno = MPID_Request_complete(op->ureq);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIU_ERR_POP(mpi_errno);
             }
-            else if (op->reqs_size > 1) {
-                MPIU_Assert(op->multi_reqs != NULL);
-                for (i = 0; i < op->reqs_size; i++) {
-                    if (op->multi_reqs[i] != NULL) {
-                        MPID_Request_release(op->multi_reqs[i]);
-                        op->multi_reqs[i] = NULL;
-                        win_ptr->active_req_cnt--;
-                    }
-                }
-                /* free req array in this op */
-                MPIU_Free(op->multi_reqs);
-                op->multi_reqs = NULL;
-                op->reqs_size = 0;
-            }
-            MPIDI_CH3_PKT_RMA_ERASE_FLAGS(op->pkt, mpi_errno);
-
-            target->next_op_to_issue = op;
-
-            op->issued_stream_count = 0;
-
-            if (op_flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH)
-                target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
-            else if (op_flags & MPIDI_RMA_SYNC_UNLOCK)
-                target->sync.sync_flag = MPIDI_RMA_SYNC_UNLOCK;
         }
+
+        MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_op_list_head), op);
+    }
+    else if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_QUEUED_DATA_DISCARDED ||
+             flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_DISCARDED) {
+        /* We need to re-transmit this operation, so we destroy
+         * the internal request and erase all flags in current
+         * operation. */
+        if (op->reqs_size == 1) {
+            MPIU_Assert(op->single_req != NULL);
+            MPID_Request_release(op->single_req);
+            op->single_req = NULL;
+            op->reqs_size = 0;
+        }
+        else if (op->reqs_size > 1) {
+            MPIU_Assert(op->multi_reqs != NULL && op->multi_reqs[0] != NULL);
+            MPID_Request_release(op->multi_reqs[0]);
+            /* free req array in this op */
+            MPIU_Free(op->multi_reqs);
+            op->multi_reqs = NULL;
+            op->reqs_size = 0;
+        }
+        MPIDI_CH3_PKT_RMA_ERASE_FLAGS(op->pkt, mpi_errno);
+
+        op->issued_stream_count = 0;
     }
 
   fn_exit:
