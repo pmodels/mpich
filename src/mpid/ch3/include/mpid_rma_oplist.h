@@ -310,7 +310,7 @@ static inline int MPIDI_CH3I_Win_create_target(MPID_Win * win_ptr, int target_ra
     t->target_rank = target_rank;
 
     if (slot->target_list_head == NULL)
-        win_ptr->non_empty_slots++;
+        win_ptr->num_active_slots++;
 
     /* Enqueue target into target list. */
     MPL_DL_APPEND(slot->target_list_head, t);
@@ -428,7 +428,7 @@ static inline int MPIDI_CH3I_Win_target_dequeue_and_free(MPID_Win * win_ptr, MPI
         MPIU_ERR_POP(mpi_errno);
 
     if (slot->target_list_head == NULL)
-        win_ptr->non_empty_slots--;
+        win_ptr->num_active_slots--;
 
   fn_exit:
     return mpi_errno;
@@ -455,7 +455,7 @@ static inline int MPIDI_CH3I_RMA_Cleanup_targets_win(MPID_Win * win_ptr)
         }
     }
 
-    MPIU_Assert(win_ptr->non_empty_slots == 0);
+    MPIU_Assert(win_ptr->num_active_slots == 0);
 
   fn_exit:
     return mpi_errno;

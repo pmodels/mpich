@@ -653,7 +653,7 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
 
   finish_fence:
     /* Make sure that all targets are freed. */
-    MPIU_Assert(win_ptr->non_empty_slots == 0);
+    MPIU_Assert(win_ptr->num_active_slots == 0);
 
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
@@ -967,7 +967,7 @@ int MPID_Win_complete(MPID_Win * win_ptr)
     MPIU_Assert(win_ptr->start_req == NULL);
 
     /* Make sure that all targets are freed. */
-    MPIU_Assert(win_ptr->non_empty_slots == 0);
+    MPIU_Assert(win_ptr->num_active_slots == 0);
 
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
@@ -1671,7 +1671,7 @@ int MPID_Win_unlock_all(MPID_Win * win_ptr)
     win_ptr->lock_all_assert = 0;
 
     /* Make sure that all targets are freed. */
-    MPIU_Assert(win_ptr->non_empty_slots == 0);
+    MPIU_Assert(win_ptr->num_active_slots == 0);
 
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 

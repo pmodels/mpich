@@ -329,7 +329,8 @@ typedef struct MPIDI_Win_basic_info {
         enum MPIDI_RMA_states access_state;                              \
         enum MPIDI_RMA_states exposure_state;                            \
     } states;                                                            \
-    int non_empty_slots;                                                 \
+    int num_active_slots; /* specify number of slots that have           \
+                             active targets */                           \
     int active_req_cnt; /* keep track of number of active requests in    \
                            current epoch, i.e., number of issued but     \
                            incomplete RMA operations. */                 \
