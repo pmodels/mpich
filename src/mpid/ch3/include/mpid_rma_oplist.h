@@ -50,23 +50,23 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
     do {                                                                \
         local_completed_ = 0;                                           \
         remote_completed_ = 0;                                          \
-        if (win_->states.access_state != MPIDI_RMA_FENCE_ISSUED &&      \
-            win_->states.access_state != MPIDI_RMA_PSCW_ISSUED &&       \
-            win_->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&   \
-            target_->access_state != MPIDI_RMA_LOCK_CALLED &&           \
-            target_->access_state != MPIDI_RMA_LOCK_ISSUED &&           \
-            target_->pending_op_list_head == NULL &&                    \
-            target_->issued_read_op_list_head == NULL &&                \
-            target_->issued_write_op_list_head == NULL &&               \
-            target_->issued_dt_op_list_head == NULL) {                  \
+        if ((win_)->states.access_state != MPIDI_RMA_FENCE_ISSUED &&    \
+            (win_)->states.access_state != MPIDI_RMA_PSCW_ISSUED &&     \
+            (win_)->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED && \
+            (target_)->access_state != MPIDI_RMA_LOCK_CALLED &&         \
+            (target_)->access_state != MPIDI_RMA_LOCK_ISSUED &&         \
+            (target_)->pending_op_list_head == NULL &&                  \
+            (target_)->issued_read_op_list_head == NULL &&              \
+            (target_)->issued_write_op_list_head == NULL &&             \
+            (target_)->issued_dt_op_list_head == NULL) {                \
             local_completed_ = 1;                                       \
-            if (target_->sync.sync_flag == MPIDI_RMA_SYNC_NONE &&       \
-                target_->sync.outstanding_acks == 0)                    \
+            if ((target_)->sync.sync_flag == MPIDI_RMA_SYNC_NONE &&     \
+                (target_)->sync.outstanding_acks == 0)                  \
                 remote_completed_ = 1;                                  \
         }                                                               \
                                                                         \
-        if ((target_->sync.upgrade_flush_local && !remote_completed_) || \
-            (!target_->sync.upgrade_flush_local && !local_completed_)) { \
+        if (((target_)->sync.upgrade_flush_local && !remote_completed_) || \
+            (!(target_)->sync.upgrade_flush_local && !local_completed_)) { \
             local_completed_ = 0;                                       \
         }                                                               \
         else {                                                          \
