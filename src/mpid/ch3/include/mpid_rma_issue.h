@@ -692,16 +692,9 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 
         if (curr_req != NULL) {
             MPID_Request_release(curr_req);
-            curr_req = resp_req;
-        }
-        else {
-            curr_req = resp_req;
         }
 
-        /* For error checking */
-        resp_req = NULL;
-
-        rma_op->single_req = curr_req;
+        rma_op->single_req = resp_req;
 
         goto fn_exit;
     }
@@ -814,39 +807,14 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
 
-        /* This operation can generate two requests; one for inbound and one for
-         * outbound data. */
         if (curr_req != NULL) {
-            /* If we have both inbound and outbound requests (i.e. GACC
-             * operation), we need to ensure that the source buffer is
-             * available and that the response data has been received before
-             * informing the origin that this operation is complete.  Because
-             * the update needs to be done atomically at the target, they will
-             * not send back data until it has been received.  Therefore,
-             * completion of the response request implies that the send request
-             * has completed.
-             *
-             * Therefore: refs on the response request are set to two: one is
-             * held by the progress engine and the other by the RMA op
-             * completion code.  Refs on the outbound request are set to one;
-             * it will be completed by the progress engine.
-             */
-
             MPID_Request_release(curr_req);
-            curr_req = resp_req;
         }
-        else {
-            curr_req = resp_req;
-        }
-
-        /* For error checking */
-        resp_req = NULL;
 
         if (rma_op->reqs_size == 1)
-            rma_op->single_req = curr_req;
+            rma_op->single_req = resp_req;
         else
-            rma_op->multi_reqs[j] = curr_req;
-
+            rma_op->multi_reqs[j] = resp_req;
 
         rma_op->issued_stream_count++;
 
@@ -1140,35 +1108,11 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
             MPIU_ERR_POP(mpi_errno);
     }
 
-    /* This operation can generate two requests; one for inbound and one for
-     * outbound data. */
     if (curr_req != NULL) {
-        /* If we have both inbound and outbound requests (i.e. GACC
-         * operation), we need to ensure that the source buffer is
-         * available and that the response data has been received before
-         * informing the origin that this operation is complete.  Because
-         * the update needs to be done atomically at the target, they will
-         * not send back data until it has been received.  Therefore,
-         * completion of the response request implies that the send request
-         * has completed.
-         *
-         * Therefore: refs on the response request are set to two: one is
-         * held by the progress engine and the other by the RMA op
-         * completion code.  Refs on the outbound request are set to one;
-         * it will be completed by the progress engine.
-         */
-
         MPID_Request_release(curr_req);
-        curr_req = resp_req;
-    }
-    else {
-        curr_req = resp_req;
     }
 
-    /* For error checking */
-    resp_req = NULL;
-
-    rma_op->single_req = curr_req;
+    rma_op->single_req = resp_req;
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_FOP_OP);
