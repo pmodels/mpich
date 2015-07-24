@@ -60,6 +60,8 @@ typedef struct MPIDI_RMA_Op {
                                  * when < 0, it means all stream units of this operation haven been issued. */
 
     MPID_Request *ureq;
+
+    int ref_cnt;
 } MPIDI_RMA_Op_t;
 
 typedef struct MPIDI_RMA_Target {

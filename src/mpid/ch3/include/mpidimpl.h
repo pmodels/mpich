@@ -1872,8 +1872,8 @@ int MPIDI_CH3_ReqHandler_CASSendComplete( MPIDI_VC_t *, MPID_Request *,
                                           int * );
 int MPIDI_CH3_ReqHandler_FOPSendComplete( MPIDI_VC_t *, MPID_Request *,
                                           int * );
-/* Request-based operation handler */
-int MPIDI_CH3_ReqHandler_ReqOpsComplete(MPID_Request *);
+/* RMA operation request handler */
+int MPIDI_CH3_Req_handler_rma_op_complete(MPID_Request *);
 
 /* RMA Synchronization request handler */
 int MPIDI_CH3_Req_handler_rma_sync_complete(MPID_Request *);

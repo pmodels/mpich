@@ -332,10 +332,8 @@ void MPIDI_CH3_RMA_Init_sync_pvars(void)
 static inline int flush_local_all(MPID_Win * win_ptr)
 {
     int i, made_progress = 0;
+    int local_completed = 0;
     MPIDI_RMA_Target_t *curr_target = NULL;
-    int local_completed = 0, remote_completed = 0;
-    int total_remote_complete_cnt = 0, total_local_complete_cnt = 0;
-    int curr_remote_complete_cnt = 0, curr_local_complete_cnt = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_FLUSH_LOCAL_ALL);
 
@@ -349,13 +347,11 @@ static inline int flush_local_all(MPID_Win * win_ptr)
                 if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
                     curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
                 }
-                total_remote_complete_cnt++;
             }
             else {
                 if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH_LOCAL) {
                     curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH_LOCAL;
                 }
-                total_local_complete_cnt++;
             }
 
             curr_target = curr_target->next;
@@ -370,39 +366,14 @@ static inline int flush_local_all(MPID_Win * win_ptr)
     /* wait for remote completion for those targets that disable flush_local,
      * and wait for local completion for other targets */
     do {
-        curr_local_complete_cnt = 0, curr_remote_complete_cnt = 0;
-        for (i = 0; i < win_ptr->num_slots; i++) {
-            curr_target = win_ptr->slots[i].target_list_head;
-            while (curr_target != NULL) {
-                mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_target(win_ptr, curr_target);
-                if (mpi_errno != MPI_SUCCESS)
-                    MPIU_ERR_POP(mpi_errno);
+        MPIDI_CH3I_RMA_ops_win_local_completion(win_ptr, local_completed);
 
-                MPIDI_CH3I_RMA_ops_completion(win_ptr, curr_target, local_completed,
-                                              remote_completed);
-
-                if (curr_target->sync.upgrade_flush_local) {
-                    if (remote_completed) {
-                        curr_remote_complete_cnt++;
-                    }
-                }
-                else {
-                    if (local_completed) {
-                        curr_local_complete_cnt++;
-                    }
-                }
-                curr_target = curr_target->next;
-            }
-        }
-
-        if (curr_remote_complete_cnt < total_remote_complete_cnt ||
-            curr_local_complete_cnt < total_local_complete_cnt) {
+        if (!local_completed) {
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
         }
-    } while (curr_remote_complete_cnt < total_remote_complete_cnt ||
-             curr_local_complete_cnt < total_local_complete_cnt);
+    } while (!local_completed);
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_FLUSH_LOCAL_ALL);
@@ -420,7 +391,7 @@ static inline int flush_local_all(MPID_Win * win_ptr)
 static inline int flush_all(MPID_Win * win_ptr)
 {
     int i, made_progress = 0;
-    int local_completed = 0, remote_completed = 0;
+    int remote_completed = 0;
     MPIDI_RMA_Target_t *curr_target = NULL;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_FLUSH_ALL);
@@ -446,9 +417,7 @@ static inline int flush_all(MPID_Win * win_ptr)
 
     /* Wait for remote completion. */
     do {
-        mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_win(win_ptr, &local_completed, &remote_completed);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+        MPIDI_CH3I_RMA_ops_win_remote_completion(win_ptr, remote_completed);
         if (!remote_completed) {
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
@@ -1267,10 +1236,6 @@ int MPID_Win_unlock(int dest, MPID_Win * win_ptr)
 
     /* Wait for remote completion. */
     do {
-        mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_target(win_ptr, target);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
-
         MPIDI_CH3I_RMA_ops_completion(win_ptr, target, local_completed, remote_completed);
 
         if (!remote_completed) {
@@ -1377,10 +1342,6 @@ int MPID_Win_flush(int dest, MPID_Win * win_ptr)
 
     /* Wait for remote completion. */
     do {
-        mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_target(win_ptr, target);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
-
         MPIDI_CH3I_RMA_ops_completion(win_ptr, target, local_completed, remote_completed);
 
         if (!remote_completed) {
@@ -1426,7 +1387,7 @@ int MPID_Win_flush(int dest, MPID_Win * win_ptr)
 int MPID_Win_flush_local(int dest, MPID_Win * win_ptr)
 {
     int made_progress = 0;
-    int local_completed = 0, remote_completed = 0;
+    int local_completed = 0, remote_completed ATTRIBUTE((unused)) = 0;
     int rank = win_ptr->comm_ptr->rank;
     MPIDI_RMA_Target_t *target = NULL;
     int mpi_errno = MPI_SUCCESS;
@@ -1483,20 +1444,14 @@ int MPID_Win_flush_local(int dest, MPID_Win * win_ptr)
 
     /* Wait for local completion. */
     do {
-        mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_target(win_ptr, target);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
-
         MPIDI_CH3I_RMA_ops_completion(win_ptr, target, local_completed, remote_completed);
 
-        if ((target->sync.upgrade_flush_local && !remote_completed) ||
-            (!target->sync.upgrade_flush_local && !local_completed)) {
+        if (!local_completed) {
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
         }
-    } while ((target->sync.upgrade_flush_local && !remote_completed) ||
-             (!target->sync.upgrade_flush_local && !local_completed));
+    } while (!local_completed);
 
   finish_flush_local:
     if (target != NULL) {
@@ -1603,7 +1558,7 @@ int MPID_Win_lock_all(int assert, MPID_Win * win_ptr)
 int MPID_Win_unlock_all(MPID_Win * win_ptr)
 {
     int i, made_progress = 0;
-    int local_completed = 0, remote_completed = 0;
+    int remote_completed = 0;
     int rank = win_ptr->comm_ptr->rank;
     MPIDI_RMA_Target_t *curr_target = NULL;
     enum MPIDI_RMA_sync_types sync_flag;
@@ -1703,9 +1658,7 @@ int MPID_Win_unlock_all(MPID_Win * win_ptr)
 
     /* Wait for remote completion. */
     do {
-        mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_win(win_ptr, &local_completed, &remote_completed);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+        MPIDI_CH3I_RMA_ops_win_remote_completion(win_ptr, remote_completed);
         if (!remote_completed) {
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)

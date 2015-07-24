@@ -451,6 +451,8 @@ typedef struct MPIDI_Request {
                         * and freed when release request. */
     MPIDI_msg_sz_t ext_hdr_sz;
 
+    struct MPIDI_RMA_Op *rma_op_ptr;
+
     MPIDI_REQUEST_SEQNUM
 
     /* Occasionally, when a message cannot be sent, we need to cache the

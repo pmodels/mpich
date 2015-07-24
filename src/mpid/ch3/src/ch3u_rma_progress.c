@@ -309,6 +309,84 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
 
 
 #undef FUNCNAME
+#define FUNCNAME check_and_set_req_completion
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static inline int check_and_set_req_completion(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
+                                               MPIDI_RMA_Op_t * rma_op, int *op_completed)
+{
+    int i, mpi_errno = MPI_SUCCESS;
+    MPID_Request **req = NULL;
+    MPIDI_STATE_DECL(MPID_STATE_CHECK_AND_SET_REQ_COMPLETION);
+
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_CHECK_AND_SET_REQ_COMPLETION);
+
+    (*op_completed) = FALSE;
+
+    if (rma_op->reqs_size > 0) {
+        for (i = 0; i < rma_op->reqs_size; i++) {
+            if (rma_op->reqs_size == 1)
+                req = &(rma_op->single_req);
+            else
+                req = &(rma_op->multi_reqs[i]);
+
+            if ((*req) == NULL)
+                continue;
+
+            if (MPID_Request_is_complete((*req))) {
+                MPID_Request_release((*req));
+                (*req) = NULL;
+            }
+            else {
+                MPID_Request_release((*req));
+                (*req)->request_completed_cb = MPIDI_CH3_Req_handler_rma_op_complete;
+                (*req)->dev.source_win_handle = win_ptr->handle;
+                (*req)->dev.rma_op_ptr = rma_op;
+
+                rma_op->ref_cnt++;
+
+                if (rma_op->ureq != NULL) {
+                    MPID_cc_set(&(rma_op->ureq->cc), rma_op->ref_cnt);
+                    (*req)->dev.request_handle = rma_op->ureq->handle;
+                }
+            }
+        }
+    }
+
+    if (rma_op->ref_cnt == 0) {
+        if (rma_op->ureq != NULL) {
+            mpi_errno = MPID_Request_complete(rma_op->ureq);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIU_ERR_POP(mpi_errno);
+            }
+        }
+        MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_op_list_head), rma_op);
+
+        (*op_completed) = TRUE;
+    }
+    else {
+        MPIDI_RMA_Op_t **list_ptr = NULL;
+
+        MPIDI_CH3I_RMA_Get_issued_list_ptr(target, rma_op, list_ptr, mpi_errno);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
+        }
+
+        MPIDI_CH3I_RMA_Ops_unlink(&(target->pending_op_list_head), rma_op);
+        MPIDI_CH3I_RMA_Ops_append(list_ptr, rma_op);
+
+        win_ptr->active_req_cnt += rma_op->ref_cnt;
+    }
+
+  fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_CHECK_AND_SET_REQ_COMPLETION);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
 #define FUNCNAME issue_ops_target
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
@@ -327,6 +405,7 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
     /* Issue out operations in the list. */
     curr_op = target->next_op_to_issue;
     while (curr_op != NULL) {
+        int op_completed = FALSE;
 
         if (target->access_state == MPIDI_RMA_LOCK_ISSUED) {
             /* It is possible that the previous OP+LOCK changes
@@ -403,24 +482,6 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
                                          * PUT/ACC operation. */
         }
 
-        if ((curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE ||
-             curr_op->pkt.type == MPIDI_CH3_PKT_GET_ACCUM) &&
-            curr_op->issued_stream_count != ALL_STREAM_UNITS_ISSUED) {
-            /* For ACC-like operations, if not all stream units
-             * are issued out, we stick to the current operation,
-             * otherwise we move on to the next operation. */
-            target->next_op_to_issue = curr_op;
-        }
-        else
-            target->next_op_to_issue = curr_op->next;
-
-        if (target->next_op_to_issue == NULL) {
-            if (flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH || flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
-                /* We are done with ending sync, unset target's sync_flag. */
-                target->sync.sync_flag = MPIDI_RMA_SYNC_NONE;
-            }
-        }
-
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
             flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE) {
             /* If this operation is piggybacked with LOCK,
@@ -430,61 +491,26 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
             break;
         }
 
-        if (curr_op->ureq != NULL) {
-            mpi_errno = set_user_req_after_issuing_op(curr_op);
-            if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
+        target->next_op_to_issue = curr_op->next;
+
+        if (target->next_op_to_issue == NULL) {
+            if (flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH || flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
+                /* We are done with ending sync, unset target's sync_flag. */
+                target->sync.sync_flag = MPIDI_RMA_SYNC_NONE;
+            }
         }
 
-        if (curr_op->reqs_size == 0) {
-            MPIU_Assert(curr_op->single_req == NULL && curr_op->multi_reqs == NULL);
-            /* Sending is completed immediately. */
-            MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_op_list_head), curr_op);
+        mpi_errno = check_and_set_req_completion(win_ptr, target, curr_op, &op_completed);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
         }
-        else {
-            MPI_Datatype target_datatype;
-            int is_derived = FALSE;
 
-            /* Sending is not completed immediately. */
-
-            MPIDI_CH3I_RMA_Ops_unlink(&(target->pending_op_list_head), curr_op);
-
-            MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE(curr_op->pkt, target_datatype, mpi_errno);
-
-            if ((target_datatype != MPI_DATATYPE_NULL &&
-                 !MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) ||
-                (curr_op->origin_datatype != MPI_DATATYPE_NULL &&
-                 !MPIR_DATATYPE_IS_PREDEFINED(curr_op->origin_datatype)) ||
-                (curr_op->result_datatype != MPI_DATATYPE_NULL &&
-                 !MPIR_DATATYPE_IS_PREDEFINED(curr_op->result_datatype))) {
-                is_derived = TRUE;
-            }
-
-            if (is_derived) {
-                MPIDI_CH3I_RMA_Ops_append(&(target->issued_dt_op_list_head), curr_op);
-            }
-            else if (curr_op->pkt.type == MPIDI_CH3_PKT_PUT ||
-                     curr_op->pkt.type == MPIDI_CH3_PKT_PUT_IMMED ||
-                     curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE ||
-                     curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {
-                MPIDI_CH3I_RMA_Ops_append(&(target->issued_write_op_list_head), curr_op);
-            }
-            else {
-                MPIDI_CH3I_RMA_Ops_append(&(target->issued_read_op_list_head), curr_op);
-            }
-
-
+        if (op_completed == FALSE) {
             /* Poke the progress engine when next_op_to_issue is not the current OP, in
              * order to make sure the issuing function is re-entrant safe. */
             if (target->next_op_to_issue != curr_op &&
                 win_ptr->active_req_cnt > MPIR_CVAR_CH3_RMA_POKE_PROGRESS_REQ_THRESHOLD) {
-                int local_completed, remote_completed;
                 mpi_errno = poke_progress_engine();
-                if (mpi_errno != MPI_SUCCESS)
-                    MPIU_ERR_POP(mpi_errno);
-
-                mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_win(win_ptr, &local_completed,
-                                                           &remote_completed);
                 if (mpi_errno != MPI_SUCCESS)
                     MPIU_ERR_POP(mpi_errno);
             }
@@ -622,27 +648,21 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
     /* free all ops in the list since we do not need to maintain them anymore */
     while (1) {
         if (curr_op != NULL) {
+            /* Here we mark the operation pointer in the request
+             * as NULL, so that when request is completed, it will
+             * not try to free this operation. */
             if (curr_op->reqs_size == 1) {
                 MPIU_Assert(curr_op->single_req != NULL);
-                MPID_Request_release(curr_op->single_req);
-                curr_op->single_req = NULL;
-                win_ptr->active_req_cnt--;
-                curr_op->reqs_size = 0;
+                curr_op->single_req->dev.rma_op_ptr = NULL;
             }
-            else if (curr_op->reqs_size > 1) {
+            else {
+                MPIU_Assert(curr_op->reqs_size > 1);
                 MPIU_Assert(curr_op->multi_reqs != NULL);
                 for (i = 0; i < curr_op->reqs_size; i++) {
                     if (curr_op->multi_reqs[i] != NULL) {
-                        MPID_Request_release(curr_op->multi_reqs[i]);
-                        curr_op->multi_reqs[i] = NULL;
-                        win_ptr->active_req_cnt--;
+                        curr_op->multi_reqs[i]->dev.rma_op_ptr = NULL;
                     }
                 }
-
-                /* free req array in this op */
-                MPIU_Free(curr_op->multi_reqs);
-                curr_op->multi_reqs = NULL;
-                curr_op->reqs_size = 0;
             }
             MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, op_list_head, curr_op);
         }
@@ -707,10 +727,6 @@ int MPIDI_CH3I_RMA_Cleanup_ops_aggressive(MPID_Win * win_ptr)
 
     /* Wait for local completion. */
     do {
-        mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_target(win_ptr, curr_target);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
-
         MPIDI_CH3I_RMA_ops_completion(win_ptr, curr_target, local_completed, remote_completed);
 
         if (!local_completed) {
@@ -788,10 +804,6 @@ int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPID_Win * win_ptr, MPIDI_RMA_Targe
 
         /* Wait for remote completion. */
         do {
-            mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_target(win_ptr, curr_target);
-            if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
-
             MPIDI_CH3I_RMA_ops_completion(win_ptr, curr_target, local_completed, remote_completed);
 
             if (!remote_completed) {

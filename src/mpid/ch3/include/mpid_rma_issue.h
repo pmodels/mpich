@@ -453,7 +453,6 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         rma_op->reqs_size = 1;
 
         rma_op->single_req = curr_req;
-        win_ptr->active_req_cnt++;
     }
 
   fn_exit:
@@ -512,7 +511,6 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 
             rma_op->reqs_size = 1;
             rma_op->single_req = curr_req;
-            win_ptr->active_req_cnt++;
         }
         goto fn_exit;
     }
@@ -601,7 +599,6 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
                 rma_op->single_req = curr_req;
             else
                 rma_op->multi_reqs[j] = curr_req;
-            win_ptr->active_req_cnt++;
         }
 
         rma_op->issued_stream_count++;
@@ -705,7 +702,6 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         resp_req = NULL;
 
         rma_op->single_req = curr_req;
-        win_ptr->active_req_cnt++;
 
         goto fn_exit;
     }
@@ -851,7 +847,6 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         else
             rma_op->multi_reqs[j] = curr_req;
 
-        win_ptr->active_req_cnt++;
 
         rma_op->issued_stream_count++;
 
@@ -1014,7 +1009,6 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     }
 
     rma_op->single_req = curr_req;
-    win_ptr->active_req_cnt++;
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_GET_OP);
@@ -1078,7 +1072,6 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     }
 
     rma_op->single_req = curr_req;
-    win_ptr->active_req_cnt++;
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_CAS_OP);
@@ -1176,7 +1169,6 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     resp_req = NULL;
 
     rma_op->single_req = curr_req;
-    win_ptr->active_req_cnt++;
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_FOP_OP);
@@ -1241,85 +1233,6 @@ static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPID_Win * win_ptr,
   fn_fail:
     goto fn_exit;
     /* --END ERROR HANDLING-- */
-}
-
-#undef FUNCNAME
-#define FUNCNAME set_user_req_after_issuing_op
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-static inline int set_user_req_after_issuing_op(MPIDI_RMA_Op_t * op)
-{
-    int i, incomplete_req_cnt = 0;
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_SET_USER_REQ_AFTER_ISSUING_OP);
-
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_SET_USER_REQ_AFTER_ISSUING_OP);
-
-    if (op->ureq == NULL)
-        goto fn_exit;
-
-    if (op->reqs_size == 0) {
-        MPIU_Assert(op->single_req == NULL && op->multi_reqs == NULL);
-        /* Sending is completed immediately, complete user request
-         * and release ch3 ref. */
-
-        /* Complete user request and release the ch3 ref */
-        mpi_errno = MPID_Request_complete(op->ureq);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
-        }
-    }
-    else {
-        MPID_Request **req_ptr = NULL;
-
-        /* Sending is not completed immediately. */
-
-        if (op->reqs_size == 1)
-            req_ptr = &(op->single_req);
-        else
-            req_ptr = op->multi_reqs;
-
-        for (i = 0; i < op->reqs_size; i++) {
-            if (req_ptr[i] == NULL || MPID_Request_is_complete(req_ptr[i]))
-                continue;
-
-            /* Setup user request info in order to be completed following send request. */
-            incomplete_req_cnt++;
-            MPID_cc_set(&(op->ureq->cc), incomplete_req_cnt);   /* increment CC counter */
-
-            req_ptr[i]->dev.request_handle = op->ureq->handle;
-
-            /* Setup user request completion handler.
-             *
-             * The handler is triggered when send request is completed at
-             * following places:
-             * - progress engine: complete PUT/ACC req.
-             * - GET/GET_ACC packet handler: complete GET/GET_ACC reqs.
-             *
-             * TODO: implement stack for overriding functions*/
-            req_ptr[i]->request_completed_cb = MPIDI_CH3_ReqHandler_ReqOpsComplete;
-        }       /* end of for loop */
-
-        if (incomplete_req_cnt) {
-            /* Increase ref for completion handler */
-            MPIU_Object_add_ref(op->ureq);
-        }
-        else {
-            /* all requests are completed */
-            /* Complete user request and release ch3 ref */
-            mpi_errno = MPID_Request_complete(op->ureq);
-            if (mpi_errno != MPI_SUCCESS) {
-                MPIU_ERR_POP(mpi_errno);
-            }
-            op->ureq = NULL;
-        }
-    }
-
-  fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_SET_USER_REQ_AFTER_ISSUING_OP);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #endif /* MPID_RMA_ISSUE_H_INCLUDED */

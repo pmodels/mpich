@@ -21,6 +21,31 @@ extern MPIDI_RMA_Target_t *global_rma_target_pool_head, *global_rma_target_pool_
 
 MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
 
+#define MPIDI_CH3I_RMA_Get_issued_list_ptr(target_, op_, list_ptr_, mpi_errno_) \
+    do {                                                                \
+        MPI_Datatype target_datatype_;                                  \
+        MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE((op_)->pkt, target_datatype_, mpi_errno_); \
+        if ((target_datatype_ != MPI_DATATYPE_NULL &&                   \
+             !MPIR_DATATYPE_IS_PREDEFINED(target_datatype_)) ||         \
+            ((op_)->origin_datatype != MPI_DATATYPE_NULL &&             \
+             !MPIR_DATATYPE_IS_PREDEFINED((op_)->origin_datatype)) ||   \
+            ((op_)->result_datatype != MPI_DATATYPE_NULL &&             \
+             !MPIR_DATATYPE_IS_PREDEFINED((op_)->result_datatype))) {   \
+            list_ptr_ = &((target_)->issued_dt_op_list_head);           \
+        }                                                               \
+        else if ((op_)->pkt.type == MPIDI_CH3_PKT_PUT ||                \
+                 (op_)->pkt.type == MPIDI_CH3_PKT_PUT_IMMED ||          \
+                 (op_)->pkt.type == MPIDI_CH3_PKT_ACCUMULATE ||         \
+                 (op_)->pkt.type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {   \
+            list_ptr_ = &((target_)->issued_write_op_list_head);        \
+        }                                                               \
+        else {                                                          \
+            list_ptr_ = &((target_)->issued_read_op_list_head);         \
+        }                                                               \
+    } while (0)
+
+/* This macro returns two flags: local_completed and remote_completed,
+ * to indicate if the completion is reached on this target. */
 #define MPIDI_CH3I_RMA_ops_completion(win_, target_, local_completed_, remote_completed_) \
     do {                                                                \
         local_completed_ = 0;                                           \
@@ -39,6 +64,81 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
                 target_->sync.outstanding_acks == 0)                    \
                 remote_completed_ = 1;                                  \
         }                                                               \
+                                                                        \
+        if ((target_->sync.upgrade_flush_local && !remote_completed_) || \
+            (!target_->sync.upgrade_flush_local && !local_completed_)) { \
+            local_completed_ = 0;                                       \
+        }                                                               \
+        else {                                                          \
+            local_completed_ = 1;                                       \
+        }                                                               \
+                                                                        \
+    } while (0)
+
+
+/* This macro returns a flag: win_remote_completed, to indicate if
+ * the remote completion is reached on the entire window. */
+#define MPIDI_CH3I_RMA_ops_win_remote_completion(win_ptr_, win_remote_completed_) \
+    do {                                                                \
+        MPIDI_RMA_Target_t *win_target_ = NULL;                         \
+        int i_, num_targets_ = 0;                                       \
+        int remote_completed_targets_ = 0;                              \
+                                                                        \
+        win_remote_completed_ = 0;                                      \
+                                                                        \
+        for (i_ = 0; i_ < (win_ptr_)->num_slots; i_++) {                \
+            for (win_target_ = (win_ptr_)->slots[i_].target_list_head; win_target_;) { \
+                int local_ ATTRIBUTE((unused)) = 0, remote_ = 0;        \
+                                                                        \
+                num_targets_++;                                         \
+                                                                        \
+                MPIDI_CH3I_RMA_ops_completion((win_ptr_), win_target_, local_, remote_); \
+                                                                        \
+                remote_completed_targets_ += remote_;                   \
+                                                                        \
+                win_target_ = win_target_->next;                        \
+            }                                                           \
+        }                                                               \
+                                                                        \
+        if (num_targets_ == remote_completed_targets_)                  \
+            win_remote_completed_ = 1;                                  \
+                                                                        \
+    } while (0)
+
+/* This macro returns a flag: win_local_completed, to indicate if
+ * the local completion is reached on the entire window. */
+#define MPIDI_CH3I_RMA_ops_win_local_completion(win_ptr_, win_local_completed_) \
+    do {                                                                \
+        MPIDI_RMA_Target_t *win_target_ = NULL;                         \
+        int i_, total_remote_cnt_ = 0, total_local_cnt_ = 0;            \
+        int remote_completed_targets_ = 0, local_completed_targets_ = 0; \
+                                                                        \
+        win_local_completed_ = 0;                                       \
+                                                                        \
+        for (i_ = 0; i_ < (win_ptr_)->num_slots; i_++) {                \
+            for (win_target_ = (win_ptr_)->slots[i_].target_list_head; win_target_;) { \
+                int local_ = 0, remote_ = 0;                            \
+                                                                        \
+                if (win_target_->sync.upgrade_flush_local)              \
+                    total_remote_cnt_++;                                \
+                else                                                    \
+                    total_local_cnt_++;                                 \
+                                                                        \
+                MPIDI_CH3I_RMA_ops_completion((win_ptr_), win_target_, local_, remote_); \
+                                                                        \
+                if (win_target_->sync.upgrade_flush_local)              \
+                    remote_completed_targets_ += remote_;               \
+                else                                                    \
+                    local_completed_targets_ += local_;                 \
+                                                                        \
+                win_target_ = win_target_->next;                        \
+            }                                                           \
+        }                                                               \
+                                                                        \
+        if (remote_completed_targets_ == total_remote_cnt_ &&           \
+            local_completed_targets_ == total_local_cnt_)               \
+            win_local_completed_ = 1;                                   \
+                                                                        \
     } while (0)
 
 /* MPIDI_CH3I_Win_op_alloc(): get a new op element from op pool and
@@ -75,6 +175,8 @@ static inline MPIDI_RMA_Op_t *MPIDI_CH3I_Win_op_alloc(MPID_Win * win_ptr)
     e->origin_datatype = MPI_DATATYPE_NULL;
     e->result_datatype = MPI_DATATYPE_NULL;
 
+    e->ref_cnt = 0;
+
     return e;
 }
 
@@ -87,6 +189,10 @@ static inline MPIDI_RMA_Op_t *MPIDI_CH3I_Win_op_alloc(MPID_Win * win_ptr)
 static inline int MPIDI_CH3I_Win_op_free(MPID_Win * win_ptr, MPIDI_RMA_Op_t * e)
 {
     int mpi_errno = MPI_SUCCESS;
+
+    if (e->multi_reqs != NULL) {
+        MPIU_Free(e->multi_reqs);
+    }
 
     /* We enqueue elements to the right pool, so when they get freed
      * at window free time, they won't conflict with the global pool
@@ -333,193 +439,6 @@ static inline int MPIDI_CH3I_Win_target_dequeue_and_free(MPID_Win * win_ptr, MPI
     goto fn_exit;
 }
 
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_RMA_Cleanup_ops_target
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target)
-{
-    MPIDI_RMA_Op_t *curr_op = NULL;
-    MPIDI_RMA_Op_t **op_list_head = NULL;
-    int read_flag = 0, write_flag = 0;
-    int mpi_errno = MPI_SUCCESS;
-    int i;
-
-    if (win_ptr->states.access_state == MPIDI_RMA_FENCE_ISSUED ||
-        win_ptr->states.access_state == MPIDI_RMA_PSCW_ISSUED ||
-        win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_ISSUED)
-        goto fn_exit;
-
-    if (target == NULL)
-        goto fn_exit;
-
-    if (target->access_state == MPIDI_RMA_LOCK_CALLED ||
-        target->access_state == MPIDI_RMA_LOCK_ISSUED)
-        goto fn_exit;
-
-    if (target->pending_op_list_head == NULL &&
-        target->issued_read_op_list_head == NULL && target->issued_write_op_list_head == NULL &&
-        target->issued_dt_op_list_head == NULL)
-        goto fn_exit;
-
-    /* go over issued_read_op_list, issued_write_op_list,
-     * issued_dt_op_list, start from issued_read_op_list. */
-    op_list_head = &(target->issued_read_op_list_head);
-    read_flag = 1;
-
-    curr_op = *op_list_head;
-    while (1) {
-        if (curr_op != NULL) {
-            int completed = 0;
-
-            MPIU_Assert(curr_op->reqs_size > 0);
-            if (curr_op->reqs_size == 1) {
-                /* single_req is used */
-
-                if (MPID_Request_is_complete(curr_op->single_req)) {
-                    /* If there's an error, return it */
-                    mpi_errno = curr_op->single_req->status.MPI_ERROR;
-                    MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
-
-                    /* No errors, free the request */
-                    MPID_Request_release(curr_op->single_req);
-
-                    curr_op->single_req = NULL;
-
-                    win_ptr->active_req_cnt--;
-
-                    completed = 1;
-                }
-                else
-                    break;
-            }
-            else {
-                /* multi_reqs is used */
-                for (i = 0; i < curr_op->reqs_size; i++) {
-                    if (curr_op->multi_reqs[i] == NULL)
-                        continue;
-
-                    if (MPID_Request_is_complete(curr_op->multi_reqs[i])) {
-                        /* If there's an error, return it */
-                        mpi_errno = curr_op->multi_reqs[i]->status.MPI_ERROR;
-                        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
-
-                        /* No errors, free the request */
-                        MPID_Request_release(curr_op->multi_reqs[i]);
-
-                        curr_op->multi_reqs[i] = NULL;
-
-                        win_ptr->active_req_cnt--;
-                    }
-                    else
-                        break;
-                }
-
-                if (i == curr_op->reqs_size)
-                    completed = 1;
-            }
-
-            if (completed) {
-                /* Release user request */
-                if (curr_op->ureq) {
-                    /* User request must be completed by progress engine */
-                    MPIU_Assert(MPID_Request_is_complete(curr_op->ureq));
-
-                    /* Release the ch3 ref */
-                    MPID_Request_release(curr_op->ureq);
-                }
-
-                if (curr_op->reqs_size == 1) {
-                    curr_op->single_req = NULL;
-                }
-                else {
-                    /* free request array in op struct */
-                    MPIU_Free(curr_op->multi_reqs);
-                    curr_op->multi_reqs = NULL;
-                }
-                curr_op->reqs_size = 0;
-
-                /* dequeue the operation and free it */
-                MPL_DL_DELETE(*op_list_head, curr_op);
-                MPIDI_CH3I_Win_op_free(win_ptr, curr_op);
-            }
-            else
-                break;
-        }
-        else {
-            /* current op ptr reaches NULL, move on to the next list */
-            if (read_flag == 1) {
-                read_flag = 0;
-                op_list_head = &(target->issued_write_op_list_head);
-                write_flag = 1;
-            }
-            else if (write_flag == 1) {
-                write_flag = 0;
-                op_list_head = &(target->issued_dt_op_list_head);
-            }
-            else {
-                /* we reach the tail of the last operation list (dt_op_list),
-                 * break out. */
-                break;
-            }
-        }
-
-        /* next op */
-        curr_op = *op_list_head;
-    }
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_RMA_Cleanup_ops_win
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-static inline int MPIDI_CH3I_RMA_Cleanup_ops_win(MPID_Win * win_ptr,
-                                                 int *local_completed, int *remote_completed)
-{
-    MPIDI_RMA_Target_t *target = NULL;
-    int num_targets = 0, local_completed_targets = 0, remote_completed_targets = 0;
-    int i, mpi_errno = MPI_SUCCESS;
-
-    (*local_completed) = 0;
-    (*remote_completed) = 0;
-
-    for (i = 0; i < win_ptr->num_slots; i++) {
-        for (target = win_ptr->slots[i].target_list_head; target;) {
-            int local = 0, remote = 0;
-
-            mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_target(win_ptr, target);
-            if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
-
-            MPIDI_CH3I_RMA_ops_completion(win_ptr, target, local, remote);
-
-            num_targets++;
-            local_completed_targets += local;
-            remote_completed_targets += remote;
-
-            target = target->next;
-        }
-    }
-
-    if (num_targets == local_completed_targets)
-        (*local_completed) = 1;
-    if (num_targets == remote_completed_targets)
-        (*remote_completed) = 1;
-
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_RMA_Cleanup_targets_win
 #undef FCNAME
@@ -554,7 +473,6 @@ static inline int MPIDI_CH3I_RMA_Cleanup_targets_win(MPID_Win * win_ptr)
 static inline int MPIDI_CH3I_Win_get_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t ** e)
 {
     MPIDI_RMA_Op_t *new_ptr = NULL;
-    int local_completed = 0, remote_completed = 0;
     int mpi_errno = MPI_SUCCESS;
 
     while (1) {
@@ -563,10 +481,6 @@ static inline int MPIDI_CH3I_Win_get_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t ** e)
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_alloc);
         if (new_ptr != NULL)
             break;
-
-        mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_win(win_ptr, &local_completed, &remote_completed);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
 
         MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_alloc);
         new_ptr = MPIDI_CH3I_Win_op_alloc(win_ptr);
