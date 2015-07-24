@@ -65,11 +65,11 @@ typedef struct _MTestDatatype {
 
 /* Setup the full version of datatype tests.
  * It generate tests for all basic datatypes and all derived datatypes except darray. */
-void MTestInitFullDatatypes();
+void MTestInitFullDatatypes(void);
 
 /* Setup the minimum version of datatype tests.
  * It generate tests for all basic datatypes, vector and indexed. */
-void MTestInitMinDatatypes();
+void MTestInitMinDatatypes(void);
 
 int MTestCheckRecv( MPI_Status *, MTestDatatype * );
 int MTestGetDatatypes( MTestDatatype *, MTestDatatype *, MPI_Aint );

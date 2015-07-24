@@ -15,7 +15,7 @@
 #define ITER 100
 
 int main(int argc, char **argv) {
-    int       i, j, rank, nproc;
+    int       i, rank, nproc;
     int       errors = 0, all_errors = 0;
     int      *val_ptr;
     MPI_Win   win;

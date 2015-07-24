@@ -79,7 +79,7 @@ void checkResults(int loop_k, int *errors)
 
 int main(int argc, char *argv[])
 {
-    int i, j, k;
+    int i, k;
     int errors = 0, all_errors = 0;
     int my_buf_num;
     MPI_Datatype origin_dtp, target_dtp;

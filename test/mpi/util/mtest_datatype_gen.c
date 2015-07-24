@@ -118,7 +118,7 @@ static int MTEST_RECV_DDT_RANGE = 0;
 enum {
     MTEST_DATATYPE_TEST_LEVEL_FULL,
     MTEST_DATATYPE_TEST_LEVEL_MIN,
-    MTEST_DATATYPE_TEST_LEVEL_BASIC,
+    MTEST_DATATYPE_TEST_LEVEL_BASIC
 };
 
 /* current datatype test level */
@@ -160,7 +160,7 @@ static void MTestResetDatatypeGen()
     MTEST_BDT_START_IDX = -1;
 }
 
-void MTestInitFullDatatypes()
+void MTestInitFullDatatypes(void)
 {
     /* Do not allow to change datatype test level during loop.
      * Otherwise indexes will be wrong.
@@ -176,7 +176,7 @@ void MTestInitFullDatatypes()
     }
 }
 
-void MTestInitMinDatatypes()
+void MTestInitMinDatatypes(void)
 {
     /* Do not allow to change datatype test level during loop.
      * Otherwise indexes will be wrong.
@@ -192,7 +192,7 @@ void MTestInitMinDatatypes()
     }
 }
 
-void MTestInitBasicDatatypes()
+void MTestInitBasicDatatypes(void)
 {
     /* Do not allow to change datatype test level during loop.
      * Otherwise indexes will be wrong.
@@ -393,7 +393,6 @@ static inline int MTestGetSendDerivedDatatypes(MTestDatatype * sendtype,
 {
     int merr = 0;
     int ddt_datatype_index, ddt_c_dt;
-    MPI_Count tsize = 1;
     MPI_Aint blen, stride, count, align_tot_count, lb;
     MPI_Datatype old_type = MPI_DOUBLE;
 
@@ -439,7 +438,6 @@ static inline int MTestGetRecvDerivedDatatypes(MTestDatatype * sendtype,
 {
     int merr = 0;
     int ddt_datatype_index, ddt_c_dt;
-    MPI_Count tsize;
     MPI_Aint blen, stride, count, align_tot_count, lb;
     MPI_Datatype old_type = MPI_DOUBLE;
 

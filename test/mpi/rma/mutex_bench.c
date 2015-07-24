@@ -21,7 +21,7 @@ double delay_ctr = 0.0;
 
 int main(int argc, char ** argv) {
   int rank, nproc, i;
-  double t_mpix_mtx, t_mcs_mtx;
+  double t_mcs_mtx;
   MPI_Comm mtx_comm;
   MCS_Mutex mcs_mtx;
 

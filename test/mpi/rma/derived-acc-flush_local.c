@@ -25,7 +25,7 @@
 int main(int argc, char *argv[])
 {
     int rank, nproc;
-    int i, j;
+    int i;
     MPI_Win win;
     int *tar_buf = NULL;
     int *orig_buf = NULL;

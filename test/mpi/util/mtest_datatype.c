@@ -45,28 +45,46 @@ static void *MTestTypeFree(MTestDatatype * mtype)
         free(mtype->index);
     if (mtype->old_datatypes)
         free(mtype->old_datatypes);
-    mtype->buf = 0;
-    mtype->displs = 0;
-    mtype->displ_in_bytes = 0;
-    mtype->index = 0;
-    mtype->old_datatypes = 0;
+    mtype->buf = NULL;
+    mtype->displs = NULL;
+    mtype->displ_in_bytes = NULL;
+    mtype->index = NULL;
+    mtype->old_datatypes = NULL;
 
     return 0;
 }
 
 static inline void MTestTypeReset(MTestDatatype * mtype)
 {
-    mtype->InitBuf = 0;
-    mtype->FreeBuf = 0;
-    mtype->CheckBuf = 0;
-    mtype->datatype = 0;
     mtype->isBasic = 0;
     mtype->printErrors = 0;
-    mtype->buf = 0;
-    mtype->index = 0;
-    mtype->displs = 0;
-    mtype->displ_in_bytes = 0;
-    mtype->old_datatypes = 0;
+    mtype->buf = NULL;
+
+    mtype->datatype = MPI_DATATYPE_NULL;
+    mtype->count = 0;
+    mtype->nblock = 0;
+    mtype->index = NULL;
+
+    mtype->stride = 0;
+    mtype->blksize = 0;
+    mtype->displ_in_bytes = NULL;
+
+    mtype->displs = NULL;
+    mtype->basesize = 0;
+
+    mtype->old_datatypes = NULL;
+
+    mtype->arr_sizes[0] = 0;
+    mtype->arr_sizes[1] = 0;
+    mtype->arr_subsizes[0] = 0;
+    mtype->arr_subsizes[1] = 0;
+    mtype->arr_starts[0] = 0;
+    mtype->arr_starts[1] = 0;
+    mtype->order = 0;
+
+    mtype->InitBuf = NULL;
+    mtype->FreeBuf = NULL;
+    mtype->CheckBuf = NULL;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -158,8 +176,8 @@ static void *MTestTypeVectorInit(MTestDatatype * mtype)
 
     if (mtype->count > 0) {
         unsigned char *p;
-        int j, k, nc;
-        MPI_Aint i;
+        MPI_Aint k, j;
+        int i, nc;
 
         merr = MPI_Type_get_extent(mtype->datatype, &lb, &extent);
         if (merr)
@@ -178,8 +196,8 @@ static void *MTestTypeVectorInit(MTestDatatype * mtype)
         }
 
         /* First, set to -1 */
-        for (i = 0; i < totsize; i++)
-            p[i] = 0xff;
+        for (k = 0; k < totsize; k++)
+            p[k] = 0xff;
 
         /* Now, set the actual elements to the successive values.
          * We require that the base type is a contiguous type */
@@ -217,7 +235,8 @@ static int MTestTypeVectorCheckbuf(MTestDatatype * mtype)
 
     p = (unsigned char *) mtype->buf;
     if (p) {
-        int j, k, nc;
+        MPI_Aint k, j;
+        int nc;
         merr = MPI_Type_get_extent(mtype->datatype, &lb, &extent);
         if (merr)
             MTestPrintError(merr);
@@ -265,8 +284,8 @@ static void *MTestTypeIndexedInit(MTestDatatype * mtype)
 
     if (mtype->count > 0) {
         unsigned char *p;
-        int j, k, b, nc;
-        MPI_Aint i;
+        MPI_Aint k, b;
+        int i, j, nc;
 
         /* Allocate buffer */
         merr = MPI_Type_get_extent(mtype->datatype, &lb, &extent);
@@ -287,8 +306,8 @@ static void *MTestTypeIndexedInit(MTestDatatype * mtype)
         }
 
         /* First, set to -1 */
-        for (i = 0; i < totsize; i++)
-            p[i] = 0xff;
+        for (k = 0; k < totsize; k++)
+            p[k] = 0xff;
 
         /* Now, set the actual elements to the successive values.
          * We require that the base type is a contiguous type */
@@ -333,7 +352,8 @@ static int MTestTypeIndexedCheckbuf(MTestDatatype * mtype)
 
     p = (unsigned char *) mtype->buf;
     if (p) {
-        int i, j, k, b, nc;
+        MPI_Aint k, b;
+        int i, j, nc;
         merr = MPI_Type_get_extent(mtype->datatype, &lb, &extent);
         if (merr)
             MTestPrintError(merr);
@@ -383,8 +403,8 @@ static void *MTestTypeIndexedBlockInit(MTestDatatype * mtype)
 
     if (mtype->count > 0) {
         unsigned char *p;
-        int k, j, nc;
-        MPI_Aint i;
+        MPI_Aint k, j;
+        int i, nc;
 
         /* Allocate the send/recv buffer */
         merr = MPI_Type_get_extent(mtype->datatype, &lb, &extent);
@@ -404,8 +424,8 @@ static void *MTestTypeIndexedBlockInit(MTestDatatype * mtype)
         }
 
         /* First, set to -1 */
-        for (i = 0; i < totsize; i++)
-            p[i] = 0xff;
+        for (k = 0; k < totsize; k++)
+            p[k] = 0xff;
 
         /* Now, set the actual elements to the successive values.
          * We require that the base type is a contiguous type */
@@ -446,7 +466,8 @@ static int MTestTypeIndexedBlockCheckbuf(MTestDatatype * mtype)
 
     p = (unsigned char *) mtype->buf;
     if (p) {
-        int i, j, k, nc;
+        MPI_Aint j, k;
+        int i, nc;
         merr = MPI_Type_get_extent(mtype->datatype, &lb, &extent);
         if (merr)
             MTestPrintError(merr);
@@ -492,8 +513,8 @@ static void *MTestTypeSubarrayInit(MTestDatatype * mtype)
 
     if (mtype->count > 0) {
         unsigned char *p;
-        int k, j, b, nc;
-        MPI_Aint i;
+        MPI_Aint k;
+        int j, b, i, nc;
 
         /* Allocate the send/recv buffer */
         merr = MPI_Type_get_extent(mtype->datatype, &lb, &extent);
@@ -514,8 +535,8 @@ static void *MTestTypeSubarrayInit(MTestDatatype * mtype)
         }
 
         /* First, set to -1 */
-        for (i = 0; i < totsize; i++)
-            p[i] = 0xff;
+        for (k = 0; k < totsize; k++)
+            p[k] = 0xff;
 
         /* Now, set the actual elements to the successive values.
          * We require that the base type is a contiguous type. */
@@ -566,7 +587,8 @@ static int MTestTypeSubarrayCheckbuf(MTestDatatype * mtype)
 
     p = (unsigned char *) mtype->buf;
     if (p) {
-        int j, k, i, b, nc;
+        MPI_Aint k;
+        int j, b, i, nc;
         merr = MPI_Type_get_extent(mtype->datatype, &lb, &extent);
         if (merr)
             MTestPrintError(merr);
@@ -613,7 +635,7 @@ static int MTestTypeSubarrayCheckbuf(MTestDatatype * mtype)
 }
 
 /* ------------------------------------------------------------------------ */
-/* Datatype creators                                                      */
+/* Datatype creators                                                        */
 /* ------------------------------------------------------------------------ */
 
 /*

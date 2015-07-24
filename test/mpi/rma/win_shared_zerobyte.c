@@ -15,7 +15,7 @@ const int verbose = 0;
 
 int main(int argc, char **argv)
 {
-    int i, j, rank, nproc;
+    int i, rank, nproc;
     int shm_rank, shm_nproc;
     MPI_Aint size;
     int errors = 0, all_errors = 0;

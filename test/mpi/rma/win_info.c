@@ -13,7 +13,7 @@
 #define VERBOSE 0
 
 int main(int argc, char **argv) {
-    int      i, j, rank, nproc;
+    int      rank, nproc;
     MPI_Info info_in, info_out;
     int      errors = 0, all_errors = 0;
     MPI_Win  win;

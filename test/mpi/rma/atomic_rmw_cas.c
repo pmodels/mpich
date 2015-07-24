@@ -27,14 +27,13 @@
 
 int main(int argc, char *argv[])
 {
-    int rank, size, i, j, k;
+    int rank, size, k;
     int errors = 0;
     int origin_shm, origin_am, dest;
     int *orig_buf = NULL, *result_buf = NULL, *compare_buf = NULL,
         *target_buf = NULL, *check_buf = NULL;
     int target_value = 0;
     MPI_Win win;
-    MPI_Status status;
 
     MPI_Init(&argc, &argv);
 

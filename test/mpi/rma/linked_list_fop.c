@@ -148,8 +148,6 @@ int main(int argc, char **argv) {
                 /* Tail pointer is stale, fetch the displacement.  May take multiple tries
                    if it is being updated. */
                 do {
-                    MPI_Aint junk = 0;
-
                     MPI_Win_lock(MPI_LOCK_SHARED, tail_ptr.rank, MPI_MODE_NOCHECK, llist_win);
 
                     MPI_Fetch_and_op(NULL, &next_tail_ptr.disp, MPI_AINT, tail_ptr.rank,

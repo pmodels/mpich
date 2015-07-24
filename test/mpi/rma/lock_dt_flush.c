@@ -16,6 +16,7 @@ static char MTEST_Descrip[] = "Test for streaming ACC-like operations with lock+
 int main(int argc, char *argv[])
 {
     int errs = 0;
+    int err = 0;
     int rank, size, source, dest;
     int minsize = 2, count;
     MPI_Comm comm;
@@ -77,7 +78,7 @@ int main(int argc, char *argv[])
 
                     MPI_Barrier(comm);
                     MPI_Win_lock(MPI_LOCK_SHARED, dest, 0, win);
-                    int err = MTestCheckRecv(0, &recvtype);
+                    err = MTestCheckRecv(0, &recvtype);
                     if (err)
                         errs++;
                     recvtype.InitBuf(&recvtype);

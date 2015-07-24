@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
     MPI_Win_create(my_base, new_win_size, win_unit, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
 
     if (verbose)
-        printf("%d --    new window my_base %p, size %ld\n", rank, my_base, new_win_size);
+        printf("%d --    new window my_base %p, size %d\n", rank, my_base, new_win_size);
 
     MPI_Barrier(MPI_COMM_WORLD);
 

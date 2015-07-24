@@ -50,7 +50,7 @@ int main( int argc, char *argv[] )
 {
     int errs = 0;
     int attrval;
-    int i, key[32], keyval, saveKeyval;
+    int i, key[32], keyval;
     MPI_Win win;
     MTest_Init( &argc, &argv );
 
@@ -58,7 +58,6 @@ int main( int argc, char *argv[] )
 	if (win == MPI_WIN_NULL) continue;
 
 	MPI_Win_create_keyval( copy_fn, delete_fn, &keyval, (void *)0 );
-	saveKeyval = keyval;   /* in case we need to free explicitly */
 	attrval = 1;
 	MPI_Win_set_attr( win, keyval, (void*)&attrval );
 	/* See MPI-1, 5.7.1.  Freeing the keyval does not remove it if it

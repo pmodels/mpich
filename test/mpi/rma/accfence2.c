@@ -20,11 +20,10 @@ static char MTEST_Descrip[] = "Test MPI_Accumulate with fence";
 int main( int argc, char *argv[] )
 {
     int errs = 0;
-    int rank, size, source, dest;
+    int rank, size, source;
     int minsize = 2, count, i; 
     MPI_Comm      comm;
     MPI_Win       win;
-    MPI_Datatype  datatype;
     int           *winbuf, *sbuf;
 
     MTest_Init( &argc, &argv );
@@ -39,10 +38,8 @@ int main( int argc, char *argv[] )
 	MPI_Comm_rank( comm, &rank );
 	MPI_Comm_size( comm, &size );
 	source = 0;
-	dest   = size - 1;
 	
 	for (count = 1; count < 65000; count = count * 2) {
-	    datatype = MPI_INT;
 	    /* We compare with an integer value that can be as large as
 	       size * (count * count + (1/2)*(size-1))
 	       For large machines (size large), this can exceed the 
