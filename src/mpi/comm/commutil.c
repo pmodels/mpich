@@ -1366,6 +1366,7 @@ struct gcn_state {
     MPID_Comm *comm_ptr;
     MPID_Comm *comm_ptr_inter;
     MPID_Sched_t s;
+    MPID_Comm *new_comm;
     MPID_Comm_kind_t gcn_cid_kind;
     uint32_t local_mask[MPIR_MAX_CONTEXT_MASK];
 };
@@ -1373,6 +1374,22 @@ struct gcn_state {
 static int sched_cb_gcn_copy_mask(MPID_Comm *comm, int tag, void *state);
 static int sched_cb_gcn_allocate_cid(MPID_Comm *comm, int tag, void *state);
 static int sched_cb_gcn_bcast(MPID_Comm *comm, int tag, void *state);
+#undef FUNCNAME
+#define FUNCNAME sched_cb_commit_comm
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static int sched_cb_commit_comm(MPID_Comm *comm, int tag, void *state)
+{
+    int mpi_errno = MPI_SUCCESS;
+    struct gcn_state *st = state;
+
+    mpi_errno = MPIR_Comm_commit(st->new_comm);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+fn_fail:
+    return mpi_errno;
+
+}
 
 #undef FUNCNAME
 #define FUNCNAME sched_cb_gcn_bcast
@@ -1398,6 +1415,8 @@ static int sched_cb_gcn_bcast(MPID_Comm *comm, int tag, void *state)
         MPID_SCHED_BARRIER(st->s);
     }
 
+    mpi_errno = MPID_Sched_cb(&sched_cb_commit_comm, st, st->s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     mpi_errno = MPID_Sched_cb(&MPIR_Sched_cb_free_buf, st, st->s);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -1585,7 +1604,7 @@ fn_fail:
 #define FUNCNAME sched_get_cid_nonblock
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static int sched_get_cid_nonblock(MPID_Comm *comm_ptr, MPIR_Context_id_t *ctx0,
+static int sched_get_cid_nonblock(MPID_Comm *comm_ptr, MPID_Comm *newcomm,  MPIR_Context_id_t *ctx0,
         MPIR_Context_id_t *ctx1, MPID_Sched_t s, MPID_Comm_kind_t gcn_cid_kind)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1611,6 +1630,7 @@ static int sched_get_cid_nonblock(MPID_Comm *comm_ptr, MPIR_Context_id_t *ctx0,
     *(st->ctx0) = 0;
     st->own_eager_mask = 0;
     st->first_iter = 1;
+    st->new_comm = newcomm;
     /* idup_count > 1 means there are multiple communicators duplicating
      * from the current communicator at the same time. And
      * idup_curr_seqnum gives each duplication operation a priority */
@@ -1659,7 +1679,7 @@ int MPIR_Get_contextid_nonblock(MPID_Comm *comm_ptr, MPID_Comm *newcommp, MPID_R
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* add some entries to it */
-    mpi_errno = sched_get_cid_nonblock(comm_ptr, &newcommp->context_id, &newcommp->recvcontext_id, s, MPID_INTRACOMM);
+    mpi_errno = sched_get_cid_nonblock(comm_ptr, newcommp,  &newcommp->context_id, &newcommp->recvcontext_id, s, MPID_INTRACOMM);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* finally, kick off the schedule and give the caller a request */
@@ -1703,7 +1723,7 @@ int MPIR_Get_intercomm_contextid_nonblock(MPID_Comm *comm_ptr, MPID_Comm *newcom
     /* add some entries to it */
 
     /* first get a context ID over the local comm */
-    mpi_errno = sched_get_cid_nonblock(comm_ptr, &newcommp->recvcontext_id, &newcommp->context_id, s, MPID_INTERCOMM);
+    mpi_errno = sched_get_cid_nonblock(comm_ptr, newcommp, &newcommp->recvcontext_id, &newcommp->context_id, s, MPID_INTERCOMM);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* finally, kick off the schedule and give the caller a request */
@@ -2076,9 +2096,6 @@ int MPIR_Comm_copy_data(MPID_Comm *comm_ptr, MPID_Comm **outcomm_ptr)
     MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
 
     /* FIXME do we want to copy coll_fns here? */
-
-    mpi_errno = MPIR_Comm_commit(newcomm_ptr);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* Start with no attributes on this communicator */
     newcomm_ptr->attributes = 0;
