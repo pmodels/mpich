@@ -41,7 +41,7 @@ cvars:
 
 MPIU_THREADSAFE_INIT_DECL(initRMAoptions);
 
-MPIDI_RMA_Win_list_t *MPIDI_RMA_Win_list_head = NULL;
+MPID_Win *MPIDI_RMA_Win_list_head = NULL;
 
 static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, MPID_Info * info,
                     MPID_Comm * comm_ptr, MPID_Win ** win_ptr);
@@ -245,7 +245,6 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
     int i;
     MPID_Comm *win_comm_ptr;
     int win_target_pool_size;
-    MPIDI_RMA_Win_list_t *win_elem;
     MPIU_CHKPMEM_DECL(5);
     MPIDI_STATE_DECL(MPID_STATE_WIN_INIT);
 
@@ -300,6 +299,8 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
     (*win_ptr)->outstanding_locks = 0;
     (*win_ptr)->current_target_lock_data_bytes = 0;
     (*win_ptr)->dangling_request_cnt = 0;
+    (*win_ptr)->next = NULL;
+    (*win_ptr)->prev = NULL;
 
     /* Initialize the info flags */
     (*win_ptr)->info_args.no_locks = 0;
@@ -353,17 +354,12 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
                       &((*win_ptr)->target_lock_entry_pool_start[i]));
     }
 
-    /* enqueue window into the global list */
-    MPIU_CHKPMEM_MALLOC(win_elem, MPIDI_RMA_Win_list_t *, sizeof(MPIDI_RMA_Win_list_t), mpi_errno,
-                        "Window list element");
-    win_elem->win_ptr = *win_ptr;
-
     if (MPIDI_RMA_Win_list_head == NULL) {
         mpi_errno = MPID_Progress_register_hook(MPIDI_CH3I_RMA_Make_progress_global);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
     }
-    MPL_DL_APPEND(MPIDI_RMA_Win_list_head, win_elem);
+    MPL_DL_APPEND(MPIDI_RMA_Win_list_head, (*win_ptr));
 
     if (MPIDI_CH3U_Win_hooks.win_init != NULL) {
         mpi_errno =

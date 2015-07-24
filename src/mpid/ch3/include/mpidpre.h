@@ -354,6 +354,8 @@ typedef struct MPIDI_Win_basic_info {
                                  their completion during RMA            \
                                  epoch, but we need to clean            \
                                  them up in Win_free. */                \
+    struct MPID_Win *prev;                                              \
+    struct MPID_Win *next;                                              \
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \

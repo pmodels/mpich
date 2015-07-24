@@ -149,7 +149,6 @@ int MPID_Win_free(MPID_Win ** win_ptr)
     int in_use;
     MPID_Comm *comm_ptr;
     mpir_errflag_t errflag = MPIR_ERR_NONE;
-    MPIDI_RMA_Win_list_t *win_elem;
     MPIDI_STATE_DECL(MPID_STATE_MPID_WIN_FREE);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_FREE);
@@ -201,11 +200,7 @@ int MPID_Win_free(MPID_Win ** win_ptr)
     }
 
     /* dequeue window from the global list */
-    for (win_elem = MPIDI_RMA_Win_list_head; win_elem && win_elem->win_ptr != *win_ptr;
-         win_elem = win_elem->next);
-    MPIU_ERR_CHKANDJUMP(win_elem == NULL, mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
-    MPL_DL_DELETE(MPIDI_RMA_Win_list_head, win_elem);
-    MPIU_Free(win_elem);
+    MPL_DL_DELETE(MPIDI_RMA_Win_list_head, (*win_ptr));
 
     if (MPIDI_RMA_Win_list_head == NULL)
         MPID_Progress_deregister_hook(MPIDI_CH3I_RMA_Make_progress_global);
