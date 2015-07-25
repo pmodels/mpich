@@ -154,7 +154,7 @@ print("\n");
 ## updated when you do that.
 check_autotools_version("autoconf", "2.69");
 check_autotools_version("automake", "1.15");
-check_autotools_version("libtool", "2.4.5");
+check_autotools_version("libtool", "2.4.6");
 print("\n");
 
 
