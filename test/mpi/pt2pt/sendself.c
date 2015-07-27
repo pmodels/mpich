@@ -34,8 +34,8 @@ int main( int argc, char *argv[] )
     MTEST_DATATYPE_FOR_EACH_COUNT(count) {
 	while (MTestGetDatatypes( &sendtype, &recvtype, count )) {
 	    
-	    sendtype.InitBuf( &sendtype );
-	    recvtype.InitBuf( &recvtype );
+	    sendtype.InitBuf( &sendtype, MTEST_DATA_SET1 );
+	    recvtype.InitBuf( &recvtype, MTEST_DATA_EMPTY );
 	    
 	    err = MPI_Irecv( recvtype.buf, recvtype.count, 
 			    recvtype.datatype, rank, 0, comm, &req );
@@ -55,7 +55,7 @@ int main( int argc, char *argv[] )
 		}
 	    }
 	    err = MPI_Wait( &req, MPI_STATUS_IGNORE );
-	    err = MTestCheckRecv( 0, &recvtype );
+	    err = MTestCheckRecv( 0, &recvtype, MTEST_DATA_SET1 );
 	    if (err) {
 		if (errs < 10) {
 		    printf( "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %d\n", 
@@ -63,7 +63,7 @@ int main( int argc, char *argv[] )
 			    MTestGetDatatypeName( &sendtype ),
 			    count );
 		    recvtype.printErrors = 1;
-		    (void)MTestCheckRecv( 0, &recvtype );
+		    (void)MTestCheckRecv( 0, &recvtype, MTEST_DATA_SET1 );
 		}
 		errs += err;
 	    }
@@ -86,7 +86,7 @@ int main( int argc, char *argv[] )
 		}
 	    }
 	    err = MPI_Wait( &req, MPI_STATUS_IGNORE );
-	    err = MTestCheckRecv( 0, &recvtype );
+	    err = MTestCheckRecv( 0, &recvtype, MTEST_DATA_SET1 );
 	    if (err) {
 		if (errs < 10) {
 		    printf( "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %d\n", 
@@ -94,7 +94,7 @@ int main( int argc, char *argv[] )
 			    MTestGetDatatypeName( &sendtype ),
 			    count );
 		    recvtype.printErrors = 1;
-		    (void)MTestCheckRecv( 0, &recvtype );
+		    (void)MTestCheckRecv( 0, &recvtype, MTEST_DATA_SET1 );
 		}
 		errs += err;
 	    }
@@ -117,7 +117,7 @@ int main( int argc, char *argv[] )
 		}
 	    }
 	    err = MPI_Wait( &req, MPI_STATUS_IGNORE );
-	    err = MTestCheckRecv( 0, &recvtype );
+	    err = MTestCheckRecv( 0, &recvtype, MTEST_DATA_SET1 );
 	    if (err) {
 		if (errs < 10) {
 		    printf( "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %d\n", 
@@ -125,7 +125,7 @@ int main( int argc, char *argv[] )
 			    MTestGetDatatypeName( &sendtype ),
 			    count );
 		    recvtype.printErrors = 1;
-		    (void)MTestCheckRecv( 0, &recvtype );
+		    (void)MTestCheckRecv( 0, &recvtype, MTEST_DATA_SET1 );
 		}
 		errs += err;
 	    }

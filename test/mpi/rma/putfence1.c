@@ -30,7 +30,7 @@ static inline int test(MPI_Comm comm, int rank, int source, int dest,
                     MTestGetDatatypeName( recvtype ) );
 
     /* Make sure that everyone has a recv buffer */
-    recvtype->InitBuf( recvtype );
+    recvtype->InitBuf( recvtype, MTEST_DATA_EMPTY );
     MPI_Type_extent( recvtype->datatype, &extent );
     MPI_Win_create( recvtype->buf, recvtype->count * extent,
                     extent, MPI_INFO_NULL, comm, &win );
@@ -40,7 +40,7 @@ static inline int test(MPI_Comm comm, int rank, int source, int dest,
            change the error handler to errors return */
         MPI_Win_set_errhandler( win, MPI_ERRORS_RETURN );
 
-        sendtype->InitBuf( sendtype );
+        sendtype->InitBuf( sendtype, MTEST_DATA_SET1 );
 
         err = MPI_Put( sendtype->buf, sendtype->count,
                        sendtype->datatype, dest, 0,
@@ -63,7 +63,7 @@ static inline int test(MPI_Comm comm, int rank, int source, int dest,
         MPI_Win_fence( 0, win );
         /* This should have the same effect, in terms of
            transfering data, as a send/recv pair */
-        err = MTestCheckRecv( 0, recvtype );
+        err = MTestCheckRecv( 0, recvtype, MTEST_DATA_SET1 );
         if (err) {
             if (errs < 10) {
                 printf( "Data in target buffer did not match for destination datatype %s (put with source datatype %s)\n",
@@ -71,7 +71,7 @@ static inline int test(MPI_Comm comm, int rank, int source, int dest,
                         MTestGetDatatypeName( sendtype ) );
                 /* Redo the test, with the errors printed */
                 recvtype->printErrors = 1;
-                (void)MTestCheckRecv( 0, recvtype );
+                (void)MTestCheckRecv( 0, recvtype, MTEST_DATA_SET1 );
             }
             errs += err;
         }

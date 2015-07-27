@@ -66,7 +66,7 @@ int main( int argc, char **argv )
 				MTestGetDatatypeName( &recvtype ) );
 
 		/* Make sure that everyone has a recv buffer */
-		recvtype.InitBuf( &recvtype );
+		recvtype.InitBuf( &recvtype, MTEST_DATA_EMPTY );
 
 		MPI_Type_extent( recvtype.datatype, &extent );
 		MPI_Win_create( recvtype.buf, recvtype.count * extent, 
@@ -82,7 +82,7 @@ int main( int argc, char **argv )
 		if (err) { if (errs++ < MAX_PERR) MTestPrintError(err); }
 		/* Source puts */
 		if (rank == source) {
-		    sendtype.InitBuf( &sendtype );
+		    sendtype.InitBuf( &sendtype, MTEST_DATA_SET1 );
 		    
 		    err = MPI_Put( sendtype.buf, sendtype.count, 
 				   sendtype.datatype, dest, 0, 
@@ -95,12 +95,12 @@ int main( int argc, char **argv )
 		if (err) { if (errs++ < MAX_PERR) MTestPrintError(err); }
 		/* dest checks data, then Dest puts */
 		if (rank == dest) {
-		    err = MTestCheckRecv( 0, &recvtype );
+		    err = MTestCheckRecv( 0, &recvtype, MTEST_DATA_SET1 );
 		    if (err) { if (errs++ < MAX_PERR) { 
 			    PrintRecvedError( "fence 2", &sendtype, &recvtype );
 			}
 		    }
-		    sendtype.InitBuf( &sendtype );
+		    sendtype.InitBuf( &sendtype, MTEST_DATA_SET1 );
 		    
 		    err = MPI_Put( sendtype.buf, sendtype.count, 
 				   sendtype.datatype, source, 0, 
@@ -113,12 +113,12 @@ int main( int argc, char **argv )
 		if (err) { if (errs++ < MAX_PERR) MTestPrintError(err); }
 		/* src checks data, then Src and dest puts*/
 		if (rank == source) {
-		    err = MTestCheckRecv( 0, &recvtype );
+		    err = MTestCheckRecv( 0, &recvtype, MTEST_DATA_SET1 );
 		    if (err) { if (errs++ < MAX_PERR) { 
 			    PrintRecvedError( "fence 3", &sendtype, &recvtype );
 			}
 		    }
-		    sendtype.InitBuf( &sendtype );
+		    sendtype.InitBuf( &sendtype, MTEST_DATA_SET1 );
 		    
 		    err = MPI_Put( sendtype.buf, sendtype.count, 
 				   sendtype.datatype, dest, 0, 
@@ -126,7 +126,7 @@ int main( int argc, char **argv )
 		    if (err) { if (errs++ < MAX_PERR) MTestPrintError(err); }
 		}
 		if (rank == dest) {
-		    sendtype.InitBuf( &sendtype );
+		    sendtype.InitBuf( &sendtype, MTEST_DATA_SET1 );
 		    
 		    err = MPI_Put( sendtype.buf, sendtype.count, 
 				   sendtype.datatype, source, 0, 
@@ -139,14 +139,14 @@ int main( int argc, char **argv )
 		if (err) { if (errs++ < MAX_PERR) MTestPrintError(err); }
 		/* src and dest checks data */
 		if (rank == source) {
-		    err = MTestCheckRecv( 0, &recvtype );
+		    err = MTestCheckRecv( 0, &recvtype, MTEST_DATA_SET1 );
 		    if (err) { if (errs++ < MAX_PERR) { 
 			    PrintRecvedError( "src fence4", &sendtype, &recvtype );
 			}
 		    }
 		}
 		if (rank == dest) {
-		    err = MTestCheckRecv( 0, &recvtype );
+		    err = MTestCheckRecv( 0, &recvtype, MTEST_DATA_SET1 );
 		    if (err) { if (errs++ < MAX_PERR) { 
 			    PrintRecvedError( "dest fence4", &sendtype, &recvtype );
 			}
@@ -186,6 +186,6 @@ int PrintRecvedError( const char *msg,
 	    MTestGetDatatypeName( sendtypePtr ) );
     /* Redo the test, with the errors printed */
     recvtypePtr->printErrors = 1;
-    (void)MTestCheckRecv( 0, recvtypePtr );
+    (void)MTestCheckRecv( 0, recvtypePtr, MTEST_DATA_SET1 );
     return 0;
 }

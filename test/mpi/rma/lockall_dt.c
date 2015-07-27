@@ -36,14 +36,14 @@ int main(int argc, char *argv[])
         MTEST_DATATYPE_FOR_EACH_COUNT(count) {
             while (MTestGetDatatypes(&sendtype, &recvtype, count)) {
                 recvtype.printErrors = 1;
-                recvtype.InitBuf(&recvtype);
+                recvtype.InitBuf(&recvtype, MTEST_DATA_EMPTY);
                 MPI_Type_get_extent(recvtype.datatype, &lb, &extent);
 
                 MPI_Win_create(recvtype.buf, lb + recvtype.count * extent,
                                (int) extent, MPI_INFO_NULL, comm, &win);
                 if (rank == source) {
                     int dest;
-                    sendtype.InitBuf(&sendtype);
+                    sendtype.InitBuf(&sendtype, MTEST_DATA_SET1);
 
                     MPI_Win_lock_all(0, win);
                     for (dest = 0; dest < size; dest++)
@@ -77,10 +77,10 @@ int main(int argc, char *argv[])
                     int err;
                     MPI_Barrier(comm);
                     MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
-                    err = MTestCheckRecv(0, &recvtype);
+                    err = MTestCheckRecv(0, &recvtype, MTEST_DATA_SET1);
                     if (err)
                         errs++;
-                    recvtype.InitBuf(&recvtype);
+                    recvtype.InitBuf(&recvtype, MTEST_DATA_EMPTY);
                     MPI_Win_unlock(rank, win);
 
                     /*signal the source that checking and reinitialization is done */
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 
                     MPI_Barrier(comm);
                     MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
-                    err = MTestCheckRecv(0, &recvtype);
+                    err = MTestCheckRecv(0, &recvtype, MTEST_DATA_SET1);
                     if (err)
                         errs++;
                     MPI_Win_unlock(rank, win);

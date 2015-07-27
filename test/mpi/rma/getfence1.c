@@ -30,8 +30,8 @@ static inline int test(MPI_Comm comm, int rank, int source, int dest,
                     sendtype->count, MTestGetDatatypeName( sendtype ), recvtype->count,
                     MTestGetDatatypeName( recvtype ) );
     /* Make sure that everyone has a recv buffer */
-    recvtype->InitBuf( recvtype );
-    sendtype->InitBuf( sendtype );
+    recvtype->InitBuf( recvtype, MTEST_DATA_EMPTY );
+    sendtype->InitBuf( sendtype, MTEST_DATA_SET1 );
     /* By default, print information about errors */
     recvtype->printErrors = 1;
     sendtype->printErrors = 1;
@@ -69,7 +69,7 @@ static inline int test(MPI_Comm comm, int rank, int source, int dest,
                 MTestPrintError( err );
             }
         }
-        err = MTestCheckRecv( 0, recvtype );
+        err = MTestCheckRecv( 0, recvtype, MTEST_DATA_SET1 );
         if (err) {
             errs += err;
         }
