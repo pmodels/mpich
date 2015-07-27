@@ -6005,6 +6005,12 @@ if test "X$enable_shared" = "Xyes" ; then
         # added in linking stage for both the shared library and the final
         # executable file.
 
+        # In Fortran programs, we implement global definitions such as MPI_BOTTOM
+        # as common symbols. We check the address of the user input and translate it
+        # to the C global definition if it is equal to the internal pre-stored address
+        # in the Fortran binding layer. Without -flat-namespace, we may get different
+        # addresses and thus treat the predefined constant as a normal buffer.
+
         # Although gfortran works fine by only adding -flat-namespace, and
         # ifort works by only adding -Wl,-commons,use_dylibs, we should add
         # both options here as a generic solution to make sure everything safe.
