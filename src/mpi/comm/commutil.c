@@ -1106,7 +1106,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
     int own_eager_mask = 0;
     mpir_errflag_t errflag = MPIR_ERR_NONE;
     int first_iter = 1;
-    int seqnum;
+    int seqnum = 0;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_CONTEXTID);
@@ -1332,6 +1332,8 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
 
         first_iter = 0;
     }
+    if (seqnum > 0)
+        comm_ptr->idup_next_seqnum++;
 
 
 fn_exit:
