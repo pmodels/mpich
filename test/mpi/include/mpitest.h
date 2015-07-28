@@ -27,6 +27,12 @@ int MTestReturnValue( int );
 void MTestSleep( int );
 void MTestGetDbgInfo(int *dbgflag, int *verbose);
 
+typedef enum _MTestDataset{
+    MTEST_DATA_EMPTY,
+    MTEST_DATA_SET1,
+    MTEST_DATA_SET2
+} MTestDataset;
+
 /*
  * This structure contains the information used to test datatypes
  * buf is set to null when an MTestDatatype is created; the
@@ -54,9 +60,9 @@ typedef struct _MTestDatatype {
     /* used in subarray */
     int arr_sizes[2], arr_subsizes[2], arr_starts[2], order;
 
-    void *(*InitBuf)( struct _MTestDatatype * );
+    void *(*InitBuf)( struct _MTestDatatype *, MTestDataset );
     void *(*FreeBuf)( struct _MTestDatatype * );
-    int   (*CheckBuf)( struct _MTestDatatype * );
+    int   (*CheckBuf)( struct _MTestDatatype *, MTestDataset );
     int   (*Dup)( struct _MTestDatatype, struct _MTestDatatype * );
 } MTestDatatype;
 
@@ -74,7 +80,7 @@ void MTestInitFullDatatypes(void);
  * It generate tests for all basic datatypes, vector and indexed. */
 void MTestInitMinDatatypes(void);
 
-int MTestCheckRecv( MPI_Status *, MTestDatatype * );
+int MTestCheckRecv( MPI_Status *, MTestDatatype *, MTestDataset );
 int MTestGetDatatypes( MTestDatatype *, MTestDatatype *, MPI_Aint );
 void MTestResetDatatypes( void );
 void MTestFreeDatatype( MTestDatatype * );
