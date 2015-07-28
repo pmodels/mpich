@@ -576,8 +576,8 @@ void MTestFreeDatatype(MTestDatatype * mtype)
     if (mtype->FreeBuf) {
         (mtype->FreeBuf) (mtype);
     }
-    /* Free the datatype itself if it was created */
-    if (!mtype->isBasic) {
+    /* Free the datatype itself if it was a created new datatype */
+    if (!mtype->isBasic && !mtype->isDuped) {
         merr = MPI_Type_free(&mtype->datatype);
         if (merr)
             MTestPrintError(merr);

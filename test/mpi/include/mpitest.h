@@ -40,6 +40,8 @@ typedef struct _MTestDatatype {
     void *buf;              /* buffer to use in communication */
     MPI_Aint  count;        /* count to use for this datatype */
     int  isBasic;           /* true if the type is predefined */
+    int  isDuped;           /* true if the type is duplicated from
+                             * an existing derived datatype */
     int  printErrors;       /* true if errors should be printed
 			       (used by the CheckBuf routines) */
     /* The following is optional data that is used by some of
@@ -55,6 +57,7 @@ typedef struct _MTestDatatype {
     void *(*InitBuf)( struct _MTestDatatype * );
     void *(*FreeBuf)( struct _MTestDatatype * );
     int   (*CheckBuf)( struct _MTestDatatype * );
+    int   (*Dup)( struct _MTestDatatype, struct _MTestDatatype * );
 } MTestDatatype;
 
 /* The max value of count must be very large to ensure that we
