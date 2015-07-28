@@ -80,6 +80,10 @@ void MTestInitFullDatatypes(void);
  * It generate tests for all basic datatypes, vector and indexed. */
 void MTestInitMinDatatypes(void);
 
+/* Setup the basic version of datatype tests.
+ * It generate tests for all basic datatypes. */
+void MTestInitBasicDatatypes(void);
+
 int MTestCheckRecv( MPI_Status *, MTestDatatype *, MTestDataset );
 int MTestGetDatatypes( MTestDatatype *, MTestDatatype *, MPI_Aint );
 void MTestResetDatatypes( void );
