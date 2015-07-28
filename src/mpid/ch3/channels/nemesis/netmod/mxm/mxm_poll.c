@@ -172,6 +172,7 @@ int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
         MPID_nem_mxm_vc_area *vc_area = NULL;
         MPID_nem_mxm_req_area *req_area = NULL;
 
+        mxm_mq_h *mq_h_v =  (mxm_mq_h*) rreq->comm->dev.ch.netmod_priv;
         rreq->dev.OnDataAvail = NULL;
         rreq->dev.tmpbuf = NULL;
         rreq->ch.vc = vc;
@@ -206,7 +207,7 @@ int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
 
         mpi_errno = _mxm_irecv((vc_area ? vc_area->mxm_ep : NULL), req_area,
                                tag,
-                               (rreq->comm ? (mxm_mq_h) rreq->comm->dev.ch.netmod_priv : mxm_obj->
+                               (rreq->comm ? mq_h_v[0] : mxm_obj->
                                 mxm_mq), _mxm_tag_mpi2mxm(tag, context_id));
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);

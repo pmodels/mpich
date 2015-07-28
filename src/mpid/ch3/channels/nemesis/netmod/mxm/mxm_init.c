@@ -628,36 +628,54 @@ static int _mxm_add_comm(MPID_Comm * comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
     mxm_error_t ret = MXM_OK;
-    mxm_mq_h mxm_mq;
+    mxm_mq_h *mq_h_v;
+    MPIU_CHKPMEM_DECL(1);
+
+    MPIU_CHKPMEM_MALLOC(mq_h_v, mxm_mq_h*, sizeof(mxm_mq_h)*2, mpi_errno, "mxm_mq_h_context_ptr" );
 
     _dbg_mxm_output(6, "Add COMM comm %p (rank %d type %d context %d | %d size %d | %d) \n",
                     comm, comm->rank, comm->comm_kind,
                     comm->context_id, comm->recvcontext_id,
                     comm->local_size, comm->remote_size);
 
-    ret = mxm_mq_create(_mxm_obj.mxm_context, comm->context_id, &mxm_mq);
+    ret = mxm_mq_create(_mxm_obj.mxm_context, comm->recvcontext_id, &mq_h_v[0]);
     MPIU_ERR_CHKANDJUMP1(ret != MXM_OK,
                          mpi_errno, MPI_ERR_OTHER,
                          "**mxm_mq_create", "**mxm_mq_create %s", mxm_error_string(ret));
 
-    comm->dev.ch.netmod_priv = (void *) mxm_mq;
+    if(comm->recvcontext_id != comm->context_id){
+        ret = mxm_mq_create(_mxm_obj.mxm_context, comm->context_id, &mq_h_v[1]);
+        MPIU_ERR_CHKANDJUMP1(ret != MXM_OK,
+                         mpi_errno, MPI_ERR_OTHER,
+                         "**mxm_mq_create", "**mxm_mq_create %s", mxm_error_string(ret));
+    }
+    else
+       memcpy(&mq_h_v[1], &mq_h_v[0], sizeof(mxm_mq_h));
+
+    comm->dev.ch.netmod_priv = (void *)mq_h_v;
 
   fn_exit:
+    MPIU_CHKPMEM_COMMIT();
     return mpi_errno;
   fn_fail:
+    MPIU_CHKPMEM_REAP();
     goto fn_exit;
 }
 
 static int _mxm_del_comm(MPID_Comm * comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
-    mxm_mq_h mxm_mq = (mxm_mq_h) comm->dev.ch.netmod_priv;
+    mxm_mq_h *mxm_mq = (mxm_mq_h*) comm->dev.ch.netmod_priv;
 
     _dbg_mxm_output(6, "Del COMM comm %p (rank %d type %d) \n",
                     comm, comm->rank, comm->comm_kind);
 
-    if (mxm_mq)
-        mxm_mq_destroy(mxm_mq);
+    if (mxm_mq[1] != mxm_mq[0])
+        mxm_mq_destroy(mxm_mq[1]);
+    if (mxm_mq[0])
+        mxm_mq_destroy(mxm_mq[0]);
+
+    MPIU_Free(mxm_mq);
 
     comm->dev.ch.netmod_priv = NULL;
 

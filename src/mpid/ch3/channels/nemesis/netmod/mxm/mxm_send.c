@@ -247,6 +247,7 @@ int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Data
     MPI_Aint dt_true_lb;
     MPID_nem_mxm_vc_area *vc_area = NULL;
     MPID_nem_mxm_req_area *req_area = NULL;
+    mxm_mq_h *mq_h_v =  (mxm_mq_h*) comm->dev.ch.netmod_priv;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MXM_SEND);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MXM_SEND);
@@ -316,7 +317,7 @@ int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Data
     vc_area->pending_sends += 1;
 
     mpi_errno = _mxm_isend(vc_area->mxm_ep, req_area, MXM_MPICH_ISEND,
-                           (mxm_mq_h) comm->dev.ch.netmod_priv, comm->rank, tag, _mxm_tag_mpi2mxm(tag,
+                           mq_h_v[1], comm->rank, tag, _mxm_tag_mpi2mxm(tag,
                                                                                               comm->context_id
                                                                                               +
                                                                                               context_offset),
@@ -350,6 +351,7 @@ int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
     MPI_Aint dt_true_lb;
     MPID_nem_mxm_vc_area *vc_area = NULL;
     MPID_nem_mxm_req_area *req_area = NULL;
+    mxm_mq_h *mq_h_v =  (mxm_mq_h*) comm->dev.ch.netmod_priv;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MXM_SSEND);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MXM_SSEND);
@@ -419,7 +421,7 @@ int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
     vc_area->pending_sends += 1;
 
     mpi_errno = _mxm_isend(vc_area->mxm_ep, req_area, MXM_MPICH_ISEND_SYNC,
-                           (mxm_mq_h) comm->dev.ch.netmod_priv, comm->rank, tag, _mxm_tag_mpi2mxm(tag,
+                           mq_h_v[1], comm->rank, tag, _mxm_tag_mpi2mxm(tag,
                                                                                               comm->context_id
                                                                                               +
                                                                                               context_offset),
@@ -453,6 +455,7 @@ int MPID_nem_mxm_isend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
     MPI_Aint dt_true_lb;
     MPID_nem_mxm_vc_area *vc_area = NULL;
     MPID_nem_mxm_req_area *req_area = NULL;
+    mxm_mq_h *mq_h_v =  (mxm_mq_h*) comm->dev.ch.netmod_priv;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MXM_ISEND);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MXM_ISEND);
@@ -522,7 +525,7 @@ int MPID_nem_mxm_isend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
     vc_area->pending_sends += 1;
 
     mpi_errno = _mxm_isend(vc_area->mxm_ep, req_area, MXM_MPICH_ISEND,
-                           (mxm_mq_h) comm->dev.ch.netmod_priv, comm->rank, tag, _mxm_tag_mpi2mxm(tag,
+                           mq_h_v[1], comm->rank, tag, _mxm_tag_mpi2mxm(tag,
                                                                                               comm->context_id
                                                                                               +
                                                                                               context_offset),
@@ -557,6 +560,7 @@ int MPID_nem_mxm_issend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Da
     MPI_Aint dt_true_lb;
     MPID_nem_mxm_vc_area *vc_area = NULL;
     MPID_nem_mxm_req_area *req_area = NULL;
+    mxm_mq_h *mq_h_v =  (mxm_mq_h*) comm->dev.ch.netmod_priv;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MXM_ISSEND);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MXM_ISSEND);
@@ -626,7 +630,7 @@ int MPID_nem_mxm_issend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Da
     vc_area->pending_sends += 1;
 
     mpi_errno = _mxm_isend(vc_area->mxm_ep, req_area, MXM_MPICH_ISEND_SYNC,
-                           (mxm_mq_h) comm->dev.ch.netmod_priv, comm->rank, tag, _mxm_tag_mpi2mxm(tag,
+                           mq_h_v[1], comm->rank, tag, _mxm_tag_mpi2mxm(tag,
                                                                                               comm->context_id
                                                                                               +
                                                                                               context_offset),
