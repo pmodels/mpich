@@ -199,9 +199,14 @@ int MPID_Win_free(MPID_Win ** win_ptr)
     }
 
     /* dequeue window from the global list */
-    MPL_DL_DELETE(MPIDI_RMA_Win_list_head, (*win_ptr));
+    if ((*win_ptr)->active == TRUE) {
+        MPL_DL_DELETE(MPIDI_RMA_Win_active_list_head, (*win_ptr));
+    }
+    else {
+        MPL_DL_DELETE(MPIDI_RMA_Win_inactive_list_head, (*win_ptr));
+    }
 
-    if (MPIDI_RMA_Win_list_head == NULL)
+    if (MPIDI_RMA_Win_active_list_head == NULL && MPIDI_RMA_Win_inactive_list_head == NULL)
         MPID_Progress_deregister_hook(MPIDI_CH3I_RMA_Make_progress_global);
 
     comm_ptr = (*win_ptr)->comm_ptr;

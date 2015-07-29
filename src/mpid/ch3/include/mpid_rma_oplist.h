@@ -148,6 +148,48 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
      &(win_ptr_)->slots[(rank_)])
 
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Win_set_active
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static inline int MPIDI_CH3I_Win_set_active(MPID_Win * win_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (win_ptr->active == FALSE) {
+        win_ptr->active = TRUE;
+        MPL_DL_DELETE(MPIDI_RMA_Win_inactive_list_head, win_ptr);
+        MPL_DL_APPEND(MPIDI_RMA_Win_active_list_head, win_ptr);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Win_set_inactive
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static inline int MPIDI_CH3I_Win_set_inactive(MPID_Win * win_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (win_ptr->active == TRUE) {
+        win_ptr->active = FALSE;
+        MPL_DL_DELETE(MPIDI_RMA_Win_active_list_head, win_ptr);
+        MPL_DL_APPEND(MPIDI_RMA_Win_inactive_list_head, win_ptr);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+
 /* MPIDI_CH3I_Win_op_alloc(): get a new op element from op pool and
  * initialize it. If we cannot get one, return NULL. */
 #undef FUNCNAME

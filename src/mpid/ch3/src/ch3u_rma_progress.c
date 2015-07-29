@@ -942,7 +942,7 @@ int MPIDI_CH3I_RMA_Make_progress_global(int *made_progress)
     if (MPIDI_CH3I_num_active_issued_win == 0 && MPIDI_CH3I_num_passive_win == 0)
         goto fn_exit;
 
-    for (win_ptr = MPIDI_RMA_Win_list_head; win_ptr; win_ptr = win_ptr->next) {
+    for (win_ptr = MPIDI_RMA_Win_active_list_head; win_ptr; win_ptr = win_ptr->next) {
         int temp_progress = 0;
         int is_able_to_issue = 0;
 

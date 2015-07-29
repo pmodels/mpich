@@ -41,7 +41,7 @@ cvars:
 
 MPIU_THREADSAFE_INIT_DECL(initRMAoptions);
 
-MPID_Win *MPIDI_RMA_Win_list_head = NULL;
+MPID_Win *MPIDI_RMA_Win_active_list_head = NULL, *MPIDI_RMA_Win_inactive_list_head = NULL;
 
 static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, MPID_Info * info,
                     MPID_Comm * comm_ptr, MPID_Win ** win_ptr);
@@ -299,6 +299,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
     (*win_ptr)->outstanding_locks = 0;
     (*win_ptr)->current_target_lock_data_bytes = 0;
     (*win_ptr)->sync_request_cnt = 0;
+    (*win_ptr)->active = FALSE;
     (*win_ptr)->next = NULL;
     (*win_ptr)->prev = NULL;
 
@@ -354,12 +355,12 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
                       &((*win_ptr)->target_lock_entry_pool_start[i]));
     }
 
-    if (MPIDI_RMA_Win_list_head == NULL) {
+    if (MPIDI_RMA_Win_inactive_list_head == NULL && MPIDI_RMA_Win_active_list_head == NULL) {
         mpi_errno = MPID_Progress_register_hook(MPIDI_CH3I_RMA_Make_progress_global);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
     }
-    MPL_DL_APPEND(MPIDI_RMA_Win_list_head, (*win_ptr));
+    MPL_DL_APPEND(MPIDI_RMA_Win_inactive_list_head, (*win_ptr));
 
     if (MPIDI_CH3U_Win_hooks.win_init != NULL) {
         mpi_errno =

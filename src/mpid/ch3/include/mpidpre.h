@@ -349,6 +349,7 @@ typedef struct MPIDI_Win_basic_info {
     int sync_request_cnt; /* This counter tracks number of              \
                              incomplete sync requests (used in          \
                              Win_fence and PSCW). */                    \
+    int active; /* specify if this window is active or not */           \
     struct MPID_Win *prev;                                              \
     struct MPID_Win *next;                                              \
 
