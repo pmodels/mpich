@@ -47,8 +47,7 @@ cvars:
 
 static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
                                                 int *is_able_to_issue, int *made_progress);
-static inline int check_and_switch_window_state(MPID_Win * win_ptr, int *is_able_to_issue,
-                                                int *made_progress);
+static inline int check_and_switch_window_state(MPID_Win * win_ptr, int *is_able_to_issue);
 static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
                                    int *made_progress);
 static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress);
@@ -58,15 +57,13 @@ static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress);
 #define FUNCNAME check_and_switch_window_state
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static inline int check_and_switch_window_state(MPID_Win * win_ptr, int *is_able_to_issue,
-                                                int *made_progress)
+static inline int check_and_switch_window_state(MPID_Win * win_ptr, int *is_able_to_issue)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_CHECK_AND_SWITCH_WINDOW_STATE);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_CHECK_AND_SWITCH_WINDOW_STATE);
 
-    (*made_progress) = 0;
     (*is_able_to_issue) = 0;
 
     switch (win_ptr->states.access_state) {
@@ -773,11 +770,9 @@ int MPIDI_CH3I_RMA_Make_progress_target(MPID_Win * win_ptr, int target_rank, int
      * to re-entrant RMA progress endlessly. */
 
     /* check window state */
-    mpi_errno = check_and_switch_window_state(win_ptr, &is_able_to_issue, &temp_progress);
+    mpi_errno = check_and_switch_window_state(win_ptr, &is_able_to_issue);
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
-    if (temp_progress)
-        (*made_progress) = 1;
     if (!is_able_to_issue) {
         mpi_errno = poke_progress_engine();
         if (mpi_errno)
@@ -838,11 +833,9 @@ int MPIDI_CH3I_RMA_Make_progress_win(MPID_Win * win_ptr, int *made_progress)
      * to re-entrant RMA progress endlessly. */
 
     /* check and try to switch window state */
-    mpi_errno = check_and_switch_window_state(win_ptr, &is_able_to_issue, &temp_progress);
+    mpi_errno = check_and_switch_window_state(win_ptr, &is_able_to_issue);
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
-    if (temp_progress)
-        (*made_progress) = 1;
     if (!is_able_to_issue) {
         mpi_errno = poke_progress_engine();
         if (mpi_errno != MPI_SUCCESS)
@@ -887,11 +880,9 @@ int MPIDI_CH3I_RMA_Make_progress_global(int *made_progress)
             continue;
 
         /* check and try to switch window state */
-        mpi_errno = check_and_switch_window_state(win_ptr, &is_able_to_issue, &temp_progress);
+        mpi_errno = check_and_switch_window_state(win_ptr, &is_able_to_issue);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
-        if (temp_progress)
-            (*made_progress) = 1;
         if (!is_able_to_issue) {
             continue;
         }
