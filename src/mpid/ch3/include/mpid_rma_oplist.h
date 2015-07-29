@@ -443,7 +443,9 @@ static inline int MPIDI_CH3I_Win_enqueue_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t *
         target->next_op_to_issue = op;
 
     if (win_ptr->states.access_state == MPIDI_RMA_FENCE_GRANTED ||
-        win_ptr->states.access_state == MPIDI_RMA_PSCW_GRANTED)
+        win_ptr->states.access_state == MPIDI_RMA_PSCW_GRANTED ||
+        win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_GRANTED ||
+        target->access_state == MPIDI_RMA_LOCK_GRANTED)
         MPIDI_CH3I_Win_set_active(win_ptr);
 
   fn_exit:

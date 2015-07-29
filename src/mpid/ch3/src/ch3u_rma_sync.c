@@ -1205,12 +1205,6 @@ int MPID_Win_lock(int lock_type, int dest, int assert, MPID_Win * win_ptr)
         /* Set window access state properly. */
         win_ptr->states.access_state = MPIDI_RMA_PER_TARGET;
         MPIDI_CH3I_num_passive_win++;
-
-        /* mark the window as active */
-        mpi_errno = MPIDI_CH3I_Win_set_active(win_ptr);
-        if (mpi_errno) {
-            MPIU_ERR_POP(mpi_errno);
-        }
     }
     win_ptr->lock_epoch_count++;
 
@@ -1358,12 +1352,6 @@ int MPID_Win_unlock(int dest, MPID_Win * win_ptr)
         win_ptr->states.access_state = MPIDI_RMA_NONE;
         MPIDI_CH3I_num_passive_win--;
         MPIU_Assert(MPIDI_CH3I_num_passive_win >= 0);
-
-        /* mark the window as inactive */
-        mpi_errno = MPIDI_CH3I_Win_set_inactive(win_ptr);
-        if (mpi_errno) {
-            MPIU_ERR_POP(mpi_errno);
-        }
     }
 
     if (target != NULL) {
@@ -1590,12 +1578,6 @@ int MPID_Win_lock_all(int assert, MPID_Win * win_ptr)
                         win_ptr->states.access_state != MPIDI_RMA_FENCE_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    /* mark the window as active */
-    mpi_errno = MPIDI_CH3I_Win_set_active(win_ptr);
-    if (mpi_errno) {
-        MPIU_ERR_POP(mpi_errno);
-    }
-
     /* Set window access state properly. */
     if (assert & MPI_MODE_NOCHECK)
         win_ptr->states.access_state = MPIDI_RMA_LOCK_ALL_GRANTED;
@@ -1781,12 +1763,6 @@ int MPID_Win_unlock_all(MPID_Win * win_ptr)
     win_ptr->lock_all_assert = 0;
 
     MPIU_Assert(win_ptr->active_req_cnt == 0);
-
-    /* mark the window as inactive */
-    mpi_errno = MPIDI_CH3I_Win_set_inactive(win_ptr);
-    if (mpi_errno) {
-        MPIU_ERR_POP(mpi_errno);
-    }
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPID_WIN_UNLOCK_ALL);

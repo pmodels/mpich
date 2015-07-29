@@ -381,11 +381,8 @@ static inline int check_and_set_req_completion(MPID_Win * win_ptr, MPIDI_RMA_Tar
     if (target->pending_op_list_head == NULL) {
         win_ptr->num_targets_with_pending_ops--;
         MPIU_Assert(win_ptr->num_targets_with_pending_ops >= 0);
-        if (win_ptr->states.access_state == MPIDI_RMA_PSCW_GRANTED ||
-            win_ptr->states.access_state == MPIDI_RMA_FENCE_GRANTED) {
-            if (win_ptr->num_targets_with_pending_ops == 0) {
-                MPIDI_CH3I_Win_set_inactive(win_ptr);
-            }
+        if (win_ptr->num_targets_with_pending_ops == 0) {
+            MPIDI_CH3I_Win_set_inactive(win_ptr);
         }
     }
 

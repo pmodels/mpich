@@ -589,6 +589,14 @@ static inline int handle_lock_ack(MPID_Win * win_ptr, int target_rank, MPIDI_CH3
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED) {
             win_ptr->outstanding_locks--;
             MPIU_Assert(win_ptr->outstanding_locks >= 0);
+            if (win_ptr->outstanding_locks == 0) {
+                if (win_ptr->num_targets_with_pending_ops) {
+                    mpi_errno = MPIDI_CH3I_Win_set_active(win_ptr);
+                    if (mpi_errno != MPI_SUCCESS) {
+                        MPIU_ERR_POP(mpi_errno);
+                    }
+                }
+            }
         }
         else if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_DISCARDED) {
             /* re-send lock request message. */
@@ -604,8 +612,11 @@ static inline int handle_lock_ack(MPID_Win * win_ptr, int target_rank, MPIDI_CH3
         MPIU_ERR_POP(mpi_errno);
     MPIU_Assert(t != NULL);
 
-    if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED)
+    if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED) {
         t->access_state = MPIDI_RMA_LOCK_GRANTED;
+        if (t->pending_op_list_head)
+            MPIDI_CH3I_Win_set_active(win_ptr);
+    }
 
     if (win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_GRANTED ||
         t->access_state == MPIDI_RMA_LOCK_GRANTED) {
@@ -697,11 +708,8 @@ static inline int handle_lock_ack_with_op(MPID_Win * win_ptr,
         if (target->pending_op_list_head == NULL) {
             win_ptr->num_targets_with_pending_ops--;
             MPIU_Assert(win_ptr->num_targets_with_pending_ops >= 0);
-            if (win_ptr->states.access_state == MPIDI_RMA_PSCW_GRANTED ||
-                win_ptr->states.access_state == MPIDI_RMA_FENCE_GRANTED) {
-                if (win_ptr->num_targets_with_pending_ops == 0) {
-                    MPIDI_CH3I_Win_set_inactive(win_ptr);
-                }
+            if (win_ptr->num_targets_with_pending_ops == 0) {
+                MPIDI_CH3I_Win_set_inactive(win_ptr);
             }
         }
     }
