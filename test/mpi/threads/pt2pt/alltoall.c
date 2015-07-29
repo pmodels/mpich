@@ -17,6 +17,8 @@
 #define DEBUG(_a)
 #endif
 
+#define NUM_ITER 10000
+
 const int REQ_TAG = 111;
 const int ANS_TAG = 222;
 
@@ -66,7 +68,7 @@ MTEST_THREAD_RETURN_TYPE listener(void *extra)
 int main(int argc, char *argv[])
 {
     int buf = 0;
-    long int i;
+    long int i, j;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
@@ -78,22 +80,23 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-#ifdef USE_BARRIER
-    MPI_Barrier(MPI_COMM_WORLD);
-#endif
+    for (i = 0; i < NUM_ITER; i++) {
+        /* create listener thread */
+        MTest_Start_thread(listener, NULL);
 
-    /* create listener thread */
-    MTest_Start_thread(listener, NULL);
+        /* no more requests to send
+         * inform other in the group that we have finished */
+        buf = -1;
+        for (j = 0; j < size; ++j) {
+            MPI_Send(&buf, 1, MPI_INT, j, REQ_TAG, MPI_COMM_WORLD);
+        }
 
-    /* no more requests to send
-     * inform other in the group that we have finished */
-    buf = -1;
-    for (i = 0; i < size; ++i) {
-        MPI_Send(&buf, 1, MPI_INT, i, REQ_TAG, MPI_COMM_WORLD);
+        /* and wait for others to do the same */
+        MTest_Join_threads();
+
+        /* barrier to avoid deadlock */
+        MPI_Barrier(MPI_COMM_WORLD);
     }
-
-    /* and wait for others to do the same */
-    MTest_Join_threads();
 
     MPI_Finalize();
 
