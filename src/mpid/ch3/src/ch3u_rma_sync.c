@@ -815,6 +815,39 @@ int MPID_Win_post(MPID_Group * post_grp_ptr, int assert, MPID_Win * win_ptr)
 }
 
 #undef FUNCNAME
+#define FUNCNAME start_req_complete
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static int start_req_complete(MPID_Request * req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Win *win_ptr = NULL;
+
+    MPIDI_STATE_DECL(MPID_STATE_START_REQ_COMPLETE);
+    MPIDI_FUNC_ENTER(MPID_STATE_START_REQ_COMPLETE);
+
+    MPID_Win_get_ptr(req->dev.source_win_handle, win_ptr);
+    MPIU_Assert(win_ptr != NULL);
+
+    win_ptr->sync_request_cnt--;
+    MPIU_Assert(win_ptr->sync_request_cnt >= 0);
+
+    if (win_ptr->sync_request_cnt == 0) {
+        win_ptr->states.access_state = MPIDI_RMA_PSCW_GRANTED;
+
+        if (win_ptr->num_targets_with_pending_ops)
+            MPIDI_CH3I_Win_set_active(win_ptr);
+    }
+
+  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_START_REQ_COMPLETE);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPID_Win_start
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
@@ -836,12 +869,6 @@ int MPID_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
                         win_ptr->states.access_state != MPIDI_RMA_FENCE_ISSUED &&
                         win_ptr->states.access_state != MPIDI_RMA_FENCE_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
-
-    /* mark the window as active */
-    mpi_errno = MPIDI_CH3I_Win_set_active(win_ptr);
-    if (mpi_errno) {
-        MPIU_ERR_POP(mpi_errno);
-    }
 
     win_ptr->start_grp_size = group_ptr->size;
 
@@ -896,7 +923,15 @@ int MPID_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
                     win_ptr->start_req[i] = MPI_REQUEST_NULL;
                 }
                 else {
-                    win_ptr->start_req[i] = req_ptr->handle;
+                    if (MPID_Request_is_complete(req_ptr)) {
+                        win_ptr->start_req[i] = MPI_REQUEST_NULL;
+                    }
+                    else {
+                        win_ptr->start_req[i] = req_ptr->handle;
+                        req_ptr->dev.source_win_handle = win_ptr->handle;
+                        req_ptr->request_completed_cb = start_req_complete;
+                        win_ptr->sync_request_cnt++;
+                    }
                 }
             }
             else {
@@ -925,6 +960,10 @@ int MPID_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
     /* Set window access state properly. */
     win_ptr->states.access_state = MPIDI_RMA_PSCW_ISSUED;
     MPIDI_CH3I_num_active_issued_win++;
+
+    if (win_ptr->sync_request_cnt == 0) {
+        win_ptr->states.access_state = MPIDI_RMA_PSCW_GRANTED;
+    }
 
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
@@ -1016,12 +1055,6 @@ int MPID_Win_complete(MPID_Win * win_ptr)
     MPIU_Assert(win_ptr->start_req == NULL);
 
     MPIU_Assert(win_ptr->active_req_cnt == 0);
-
-    /* mark the window as inactive */
-    mpi_errno = MPIDI_CH3I_Win_set_inactive(win_ptr);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_POP(mpi_errno);
-    }
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPID_WIN_COMPLETE);

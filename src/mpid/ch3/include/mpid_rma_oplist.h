@@ -442,6 +442,9 @@ static inline int MPIDI_CH3I_Win_enqueue_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t *
     if (target->next_op_to_issue == NULL)
         target->next_op_to_issue = op;
 
+    if (win_ptr->states.access_state == MPIDI_RMA_PSCW_GRANTED)
+        MPIDI_CH3I_Win_set_active(win_ptr);
+
   fn_exit:
     return mpi_errno;
   fn_fail:
