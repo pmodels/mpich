@@ -434,6 +434,35 @@ static inline int flush_all(MPID_Win * win_ptr)
     /* --END ERROR HANDLING-- */
 }
 
+
+#undef FUNCNAME
+#define FUNCNAME fence_barrier_complete
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static int fence_barrier_complete(MPID_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Win *win_ptr = NULL;
+
+    MPIDI_STATE_DECL(MPID_STATE_FENCE_BARRIER_COMPLETE);
+    MPIDI_FUNC_ENTER(MPID_STATE_FENCE_BARRIER_COMPLETE);
+
+    MPID_Win_get_ptr(sreq->dev.source_win_handle, win_ptr);
+    MPIU_Assert(win_ptr != NULL);
+
+    /* decrement pending incomplete ibarrier request counter */
+    win_ptr->dangling_request_cnt--;
+    MPIU_Assert(win_ptr->dangling_request_cnt >= 0);
+
+  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_FENCE_BARRIER_COMPLETE);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
 /********************************************************************************/
 /* Active Target synchronization (including WIN_FENCE, WIN_POST, WIN_START,     */
 /* WIN_COMPLETE, WIN_WAIT, WIN_TEST)                                            */
@@ -487,7 +516,7 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
 
                 if (!MPID_Request_is_complete(req_ptr)) {
                     req_ptr->dev.source_win_handle = win_ptr->handle;
-                    req_ptr->request_completed_cb = MPIDI_CH3_Req_handler_rma_sync_complete;
+                    req_ptr->request_completed_cb = fence_barrier_complete;
                     win_ptr->dangling_request_cnt++;
                 }
 
@@ -535,7 +564,7 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
 
             if (!MPID_Request_is_complete(req_ptr)) {
                 req_ptr->dev.source_win_handle = win_ptr->handle;
-                req_ptr->request_completed_cb = MPIDI_CH3_Req_handler_rma_sync_complete;
+                req_ptr->request_completed_cb = fence_barrier_complete;
                 win_ptr->dangling_request_cnt++;
             }
 

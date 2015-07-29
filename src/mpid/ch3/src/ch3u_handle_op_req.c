@@ -87,30 +87,3 @@ int MPIDI_CH3_Req_handler_rma_op_complete(MPID_Request * sreq)
   fn_fail:
     goto fn_exit;
 }
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Req_handler_rma_sync_complete
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_Req_handler_rma_sync_complete(MPID_Request * sreq)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr = NULL;
-
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQ_HANDLER_RMA_SYNC_COMPLETE);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQ_HANDLER_RMA_SYNC_COMPLETE);
-
-    MPID_Win_get_ptr(sreq->dev.source_win_handle, win_ptr);
-    MPIU_Assert(win_ptr != NULL);
-
-    /* decrement pending incomplete ibarrier request counter */
-    win_ptr->dangling_request_cnt--;
-    MPIU_Assert(win_ptr->dangling_request_cnt >= 0);
-
-  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_REQ_HANDLER_RMA_SYNC_COMPLETE);
-    return mpi_errno;
-
-  fn_fail:
-    goto fn_exit;
-}
