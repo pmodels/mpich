@@ -61,8 +61,7 @@ static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress);
 static inline int check_and_switch_window_state(MPID_Win * win_ptr, int *is_able_to_issue,
                                                 int *made_progress)
 {
-    MPID_Request *fence_req_ptr = NULL;
-    int i, mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_CHECK_AND_SWITCH_WINDOW_STATE);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_CHECK_AND_SWITCH_WINDOW_STATE);
@@ -71,73 +70,6 @@ static inline int check_and_switch_window_state(MPID_Win * win_ptr, int *is_able
     (*is_able_to_issue) = 0;
 
     switch (win_ptr->states.access_state) {
-    case MPIDI_RMA_FENCE_ISSUED:
-        MPID_Request_get_ptr(win_ptr->fence_sync_req, fence_req_ptr);
-        if (MPID_Request_is_complete(fence_req_ptr)) {
-            win_ptr->states.access_state = MPIDI_RMA_FENCE_GRANTED;
-            (*is_able_to_issue) = 1;
-
-            MPID_Request_release(fence_req_ptr);
-            win_ptr->fence_sync_req = MPI_REQUEST_NULL;
-
-            MPIDI_CH3I_num_active_issued_win--;
-            MPIU_Assert(MPIDI_CH3I_num_active_issued_win >= 0);
-
-            (*made_progress) = 1;
-        }
-        break;
-
-    case MPIDI_RMA_PSCW_ISSUED:
-        if (win_ptr->start_req == NULL) {
-            /* for MPI_MODE_NOCHECK and all targets on SHM,
-             * we do not create PSCW requests on window. */
-            win_ptr->states.access_state = MPIDI_RMA_PSCW_GRANTED;
-            (*is_able_to_issue) = 1;
-
-            MPIDI_CH3I_num_active_issued_win--;
-            MPIU_Assert(MPIDI_CH3I_num_active_issued_win >= 0);
-
-            (*made_progress) = 1;
-        }
-        else {
-            for (i = 0; i < win_ptr->start_grp_size; i++) {
-                MPID_Request *start_req_ptr = NULL;
-                if (win_ptr->start_req[i] == MPI_REQUEST_NULL)
-                    continue;
-                MPID_Request_get_ptr(win_ptr->start_req[i], start_req_ptr);
-                if (MPID_Request_is_complete(start_req_ptr)) {
-                    MPID_Request_release(start_req_ptr);
-                    win_ptr->start_req[i] = MPI_REQUEST_NULL;
-                }
-                else {
-                    break;
-                }
-            }
-
-            if (i == win_ptr->start_grp_size) {
-                win_ptr->states.access_state = MPIDI_RMA_PSCW_GRANTED;
-                (*is_able_to_issue) = 1;
-
-                MPIDI_CH3I_num_active_issued_win--;
-                MPIU_Assert(MPIDI_CH3I_num_active_issued_win >= 0);
-
-                (*made_progress) = 1;
-
-                MPIU_Free(win_ptr->start_req);
-                win_ptr->start_req = NULL;
-            }
-        }
-        break;
-
-    case MPIDI_RMA_LOCK_ALL_ISSUED:
-        if (win_ptr->outstanding_locks == 0) {
-            win_ptr->states.access_state = MPIDI_RMA_LOCK_ALL_GRANTED;
-            (*is_able_to_issue) = 1;
-
-            (*made_progress) = 1;
-        }
-        break;
-
     case MPIDI_RMA_PER_TARGET:
     case MPIDI_RMA_LOCK_ALL_CALLED:
     case MPIDI_RMA_FENCE_GRANTED:

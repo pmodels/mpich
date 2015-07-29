@@ -334,8 +334,6 @@ typedef struct MPIDI_Win_basic_info {
     int active_req_cnt; /* keep track of number of active requests in    \
                            current epoch, i.e., number of issued but     \
                            incomplete RMA operations. */                 \
-    MPI_Request fence_sync_req;                                          \
-    MPI_Request *start_req;                                              \
     int *start_ranks_in_win_grp;                                         \
     int start_grp_size;                                                  \
     int lock_all_assert;                                                 \

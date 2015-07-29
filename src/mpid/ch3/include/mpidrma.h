@@ -590,6 +590,8 @@ static inline int handle_lock_ack(MPID_Win * win_ptr, int target_rank, MPIDI_CH3
             win_ptr->outstanding_locks--;
             MPIU_Assert(win_ptr->outstanding_locks >= 0);
             if (win_ptr->outstanding_locks == 0) {
+                win_ptr->states.access_state = MPIDI_RMA_LOCK_ALL_GRANTED;
+
                 if (win_ptr->num_targets_with_pending_ops) {
                     mpi_errno = MPIDI_CH3I_Win_set_active(win_ptr);
                     if (mpi_errno != MPI_SUCCESS) {

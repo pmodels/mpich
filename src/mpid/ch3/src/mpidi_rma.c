@@ -159,14 +159,6 @@ int MPID_Win_free(MPID_Win ** win_ptr)
                         ((*win_ptr)->states.exposure_state != MPIDI_RMA_NONE),
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    if ((*win_ptr)->fence_sync_req != MPI_REQUEST_NULL) {
-        /* If the ibarrier for previous FENCE is not completed,
-         * set the window state to FENCE_ISSUED here, so that
-         * wait_progress_engine() will enter RMA progress and
-         * try to swtich the window state when ibarrier is completed. */
-        (*win_ptr)->states.access_state = MPIDI_RMA_FENCE_ISSUED;
-    }
-
     /* 1. Here we must wait until all passive locks are released on this target,
      * because for some UNLOCK messages, we do not send ACK back to origin,
      * we must wait until lock is released so that we can free window.
@@ -180,8 +172,7 @@ int MPID_Win_free(MPID_Win ** win_ptr)
     while ((*win_ptr)->current_lock_type != MPID_LOCK_NONE ||
            (*win_ptr)->at_completion_counter != 0 ||
            (*win_ptr)->target_lock_queue_head != NULL ||
-           (*win_ptr)->current_target_lock_data_bytes != 0 ||
-           (*win_ptr)->fence_sync_req != MPI_REQUEST_NULL || (*win_ptr)->sync_request_cnt != 0) {
+           (*win_ptr)->current_target_lock_data_bytes != 0 || (*win_ptr)->sync_request_cnt != 0) {
         mpi_errno = wait_progress_engine();
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);

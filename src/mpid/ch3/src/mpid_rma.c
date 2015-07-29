@@ -290,8 +290,6 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
     (*win_ptr)->states.exposure_state = MPIDI_RMA_NONE;
     (*win_ptr)->num_targets_with_pending_ops = 0;
     (*win_ptr)->active_req_cnt = 0;
-    (*win_ptr)->fence_sync_req = MPI_REQUEST_NULL;
-    (*win_ptr)->start_req = NULL;
     (*win_ptr)->start_ranks_in_win_grp = NULL;
     (*win_ptr)->start_grp_size = 0;
     (*win_ptr)->lock_all_assert = 0;
