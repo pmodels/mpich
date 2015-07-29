@@ -685,9 +685,6 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
     }
 
   finish_fence:
-    /* Make sure that all targets are freed. */
-    MPIU_Assert(win_ptr->num_active_slots == 0);
-
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
     /* Ensure ordering of load/store operations. */
@@ -802,7 +799,6 @@ int MPID_Win_post(MPID_Group * post_grp_ptr, int assert, MPID_Win * win_ptr)
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-
 
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_start
@@ -998,9 +994,6 @@ int MPID_Win_complete(MPID_Win * win_ptr)
     MPIU_Free(win_ptr->start_ranks_in_win_grp);
     win_ptr->start_ranks_in_win_grp = NULL;
     MPIU_Assert(win_ptr->start_req == NULL);
-
-    /* Make sure that all targets are freed. */
-    MPIU_Assert(win_ptr->num_active_slots == 0);
 
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
@@ -1702,9 +1695,6 @@ int MPID_Win_unlock_all(MPID_Win * win_ptr)
 
     /* reset lock_all assert on window. */
     win_ptr->lock_all_assert = 0;
-
-    /* Make sure that all targets are freed. */
-    MPIU_Assert(win_ptr->num_active_slots == 0);
 
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 

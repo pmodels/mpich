@@ -309,9 +309,6 @@ static inline int MPIDI_CH3I_Win_create_target(MPID_Win * win_ptr, int target_ra
 
     t->target_rank = target_rank;
 
-    if (slot->target_list_head == NULL)
-        win_ptr->num_active_slots++;
-
     /* Enqueue target into target list. */
     MPL_DL_APPEND(slot->target_list_head, t);
 
@@ -395,6 +392,9 @@ static inline int MPIDI_CH3I_Win_enqueue_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t *
         }
     }
 
+    if (target->pending_op_list_head == NULL)
+        win_ptr->num_targets_with_pending_ops++;
+
     /* Enqueue operation into pending list. */
     MPL_DL_APPEND(target->pending_op_list_head, op);
     if (target->next_op_to_issue == NULL)
@@ -427,9 +427,6 @@ static inline int MPIDI_CH3I_Win_target_dequeue_and_free(MPID_Win * win_ptr, MPI
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
 
-    if (slot->target_list_head == NULL)
-        win_ptr->num_active_slots--;
-
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -454,8 +451,6 @@ static inline int MPIDI_CH3I_RMA_Cleanup_targets_win(MPID_Win * win_ptr)
             target = next_target;
         }
     }
-
-    MPIU_Assert(win_ptr->num_active_slots == 0);
 
   fn_exit:
     return mpi_errno;

@@ -378,6 +378,11 @@ static inline int check_and_set_req_completion(MPID_Win * win_ptr, MPIDI_RMA_Tar
         win_ptr->active_req_cnt += rma_op->ref_cnt;
     }
 
+    if (target->pending_op_list_head == NULL) {
+        win_ptr->num_targets_with_pending_ops--;
+        MPIU_Assert(win_ptr->num_targets_with_pending_ops >= 0);
+    }
+
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_CHECK_AND_SET_REQ_COMPLETION);
     return mpi_errno;
@@ -399,7 +404,8 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
 
     (*made_progress) = 0;
 
-    if (win_ptr->num_active_slots == 0 || target == NULL || target->pending_op_list_head == NULL)
+    if (win_ptr->num_targets_with_pending_ops == 0 || target == NULL ||
+        target->pending_op_list_head == NULL)
         goto fn_exit;
 
     /* Issue out operations in the list. */
@@ -540,9 +546,6 @@ static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress)
 
     (*made_progress) = 0;
 
-    if (win_ptr->num_active_slots == 0)
-        goto fn_exit;
-
     /* FIXME: we should optimize the issuing pattern here. */
 
     start_slot = win_ptr->comm_ptr->rank % win_ptr->num_slots;
@@ -593,11 +596,6 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
     int read_flag = 0;
     int i, made_progress = 0;
     int mpi_errno = MPI_SUCCESS;
-
-    /* If we are in an free_ops_before_completion, the window must be holding
-     * up resources.  If it isn't, we are in the wrong window and
-     * incorrectly entered this function. */
-    MPIU_ERR_CHKANDJUMP(win_ptr->num_active_slots == 0, mpi_errno, MPI_ERR_OTHER, "**rmanoop");
 
     /* make nonblocking progress once */
     mpi_errno = MPIDI_CH3I_RMA_Make_progress_win(win_ptr, &made_progress);
@@ -696,11 +694,6 @@ int MPIDI_CH3I_RMA_Cleanup_ops_aggressive(MPID_Win * win_ptr)
     MPIDI_RMA_Target_t *curr_target = NULL;
     int made_progress = 0;
 
-    /* If we are in an aggressive cleanup, the window must be holding
-     * up resources.  If it isn't, we are in the wrong window and
-     * incorrectly entered this function. */
-    MPIU_ERR_CHKANDJUMP(win_ptr->num_active_slots == 0, mpi_errno, MPI_ERR_OTHER, "**rmanoop");
-
     /* find the first target that has something to issue */
     for (i = 0; i < win_ptr->num_slots; i++) {
         if (win_ptr->slots[i].target_list_head != NULL) {
@@ -754,11 +747,6 @@ int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPID_Win * win_ptr, MPIDI_RMA_Targe
     int mpi_errno = MPI_SUCCESS;
 
     (*target) = NULL;
-
-    /* If we are in an aggressive cleanup, the window must be holding
-     * up resources.  If it isn't, we are in the wrong window and
-     * incorrectly entered this function. */
-    MPIU_ERR_CHKANDJUMP(win_ptr->num_active_slots == 0, mpi_errno, MPI_ERR_OTHER, "**rmanotarget");
 
     if (win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_CALLED) {
         /* switch to window-wide protocol */
@@ -927,9 +915,6 @@ int MPIDI_CH3I_RMA_Make_progress_win(MPID_Win * win_ptr, int *made_progress)
         goto fn_exit;
     }
 
-    if (win_ptr->num_active_slots == 0)
-        goto fn_exit;
-
     mpi_errno = issue_ops_win(win_ptr, &temp_progress);
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
@@ -975,9 +960,6 @@ int MPIDI_CH3I_RMA_Make_progress_global(int *made_progress)
         if (!is_able_to_issue) {
             continue;
         }
-
-        if (win_ptr->num_active_slots == 0)
-            continue;
 
         mpi_errno = issue_ops_win(win_ptr, &temp_progress);
         if (mpi_errno != MPI_SUCCESS)
