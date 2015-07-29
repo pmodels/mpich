@@ -454,6 +454,19 @@ static int fence_barrier_complete(MPID_Request * sreq)
     win_ptr->sync_request_cnt--;
     MPIU_Assert(win_ptr->sync_request_cnt >= 0);
 
+    if (win_ptr->sync_request_cnt == 0) {
+        if (win_ptr->states.access_state == MPIDI_RMA_FENCE_ISSUED) {
+            win_ptr->states.access_state = MPIDI_RMA_FENCE_GRANTED;
+
+            if (win_ptr->num_targets_with_pending_ops) {
+                mpi_errno = MPIDI_CH3I_Win_set_active(win_ptr);
+                if (mpi_errno != MPI_SUCCESS) {
+                    MPIU_ERR_POP(mpi_errno);
+                }
+            }
+        }
+    }
+
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_FENCE_BARRIER_COMPLETE);
     return mpi_errno;
@@ -491,14 +504,6 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
                          win_ptr->states.access_state != MPIDI_RMA_FENCE_GRANTED) ||
                         win_ptr->states.exposure_state != MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
-
-    if (!(assert & MPI_MODE_NOSUCCEED)) {
-        /* mark the window as active */
-        mpi_errno = MPIDI_CH3I_Win_set_active(win_ptr);
-        if (mpi_errno) {
-            MPIU_ERR_POP(mpi_errno);
-        }
-    }
 
     /* Judge if we should switch to scalable FENCE algorithm */
     if (comm_size >= MPIR_CVAR_CH3_RMA_SCALABLE_FENCE_PROCESS_NUM) {
@@ -557,6 +562,10 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
                     req_ptr->dev.source_win_handle = win_ptr->handle;
                     req_ptr->request_completed_cb = fence_barrier_complete;
                     win_ptr->sync_request_cnt++;
+                }
+                else {
+                    /* ibarrier completed immediately. */
+                    win_ptr->states.access_state = MPIDI_RMA_FENCE_GRANTED;
                 }
             }
 
@@ -657,12 +666,6 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
 
         if (assert & MPI_MODE_NOSUCCEED) {
             win_ptr->states.access_state = MPIDI_RMA_NONE;
-
-            /* mark the window as inactive */
-            mpi_errno = MPIDI_CH3I_Win_set_inactive(win_ptr);
-            if (mpi_errno) {
-                MPIU_ERR_POP(mpi_errno);
-            }
         }
         else {
             /* Prepare for the next possible epoch */
@@ -685,6 +688,10 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
                     req_ptr->dev.source_win_handle = win_ptr->handle;
                     req_ptr->request_completed_cb = fence_barrier_complete;
                     win_ptr->sync_request_cnt++;
+                }
+                else {
+                    /* ibarrier completed immediately. */
+                    win_ptr->states.access_state = MPIDI_RMA_FENCE_GRANTED;
                 }
             }
 
