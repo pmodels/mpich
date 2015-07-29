@@ -181,8 +181,7 @@ int MPID_Win_free(MPID_Win ** win_ptr)
            (*win_ptr)->at_completion_counter != 0 ||
            (*win_ptr)->target_lock_queue_head != NULL ||
            (*win_ptr)->current_target_lock_data_bytes != 0 ||
-           (*win_ptr)->fence_sync_req != MPI_REQUEST_NULL ||
-           (*win_ptr)->dangling_request_cnt != 0) {
+           (*win_ptr)->fence_sync_req != MPI_REQUEST_NULL || (*win_ptr)->sync_request_cnt != 0) {
         mpi_errno = wait_progress_engine();
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);

@@ -346,15 +346,9 @@ typedef struct MPIDI_Win_basic_info {
     struct MPIDI_RMA_Target_lock_entry *target_lock_entry_pool_start;   \
     struct MPIDI_RMA_Target_lock_entry *target_lock_entry_pool_head;    \
     int current_target_lock_data_bytes;                                 \
-    int dangling_request_cnt; /* This counter tracks number of          \
-                                 ibarrier requests (used in             \
-                                 Win_fence) that are not                \
-                                 completed but are out-of-date          \
-                                 for the current RMA epoch.             \
-                                 we do not need to wait for             \
-                                 their completion during RMA            \
-                                 epoch, but we need to clean            \
-                                 them up in Win_free. */                \
+    int sync_request_cnt; /* This counter tracks number of              \
+                             incomplete sync requests (used in          \
+                             Win_fence and PSCW). */                    \
     struct MPID_Win *prev;                                              \
     struct MPID_Win *next;                                              \
 

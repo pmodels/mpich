@@ -451,8 +451,8 @@ static int fence_barrier_complete(MPID_Request * sreq)
     MPIU_Assert(win_ptr != NULL);
 
     /* decrement pending incomplete ibarrier request counter */
-    win_ptr->dangling_request_cnt--;
-    MPIU_Assert(win_ptr->dangling_request_cnt >= 0);
+    win_ptr->sync_request_cnt--;
+    MPIU_Assert(win_ptr->sync_request_cnt >= 0);
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_FENCE_BARRIER_COMPLETE);
@@ -517,7 +517,7 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
                 if (!MPID_Request_is_complete(req_ptr)) {
                     req_ptr->dev.source_win_handle = win_ptr->handle;
                     req_ptr->request_completed_cb = fence_barrier_complete;
-                    win_ptr->dangling_request_cnt++;
+                    win_ptr->sync_request_cnt++;
                 }
 
                 MPID_Request_release(req_ptr);
@@ -565,7 +565,7 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
             if (!MPID_Request_is_complete(req_ptr)) {
                 req_ptr->dev.source_win_handle = win_ptr->handle;
                 req_ptr->request_completed_cb = fence_barrier_complete;
-                win_ptr->dangling_request_cnt++;
+                win_ptr->sync_request_cnt++;
             }
 
             MPID_Request_release(req_ptr);
