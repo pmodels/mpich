@@ -255,7 +255,7 @@ static int MTestTypeVectorCheckbuf(MTestDatatype * mtype)
                     if (p[byte_offset + j] != expected) {
                         err++;
                         if (mtype->printErrors && err < 10) {
-                            printf("Data expected = %x but got p[%d,%d] = %x\n", expected, i, j,
+                            printf("Data expected = %x but got p[%d,%ld] = %x\n", expected, i, j,
                                    p[byte_offset + j]);
                             fflush(stdout);
                         }
@@ -486,7 +486,7 @@ static int MTestTypeIndexedBlockCheckbuf(MTestDatatype * mtype)
                     if (p[offset + j] != expected) {
                         err++;
                         if (mtype->printErrors && err < 10) {
-                            printf("Data expected = %x but got p[%d,%d] = %x\n",
+                            printf("Data expected = %x but got p[%d,%ld] = %x\n",
                                    expected, i, j, p[offset + j]);
                             fflush(stdout);
                         }
