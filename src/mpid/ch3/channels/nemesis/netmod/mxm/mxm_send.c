@@ -177,7 +177,7 @@ int MPID_nem_mxm_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     _dbg_mxm_output(5,
                     "SendNoncontig ========> Sending ADI msg (to=%d type=%d) for req %p (data_size %d, %d) \n",
                     vc->pg_rank, sreq->dev.pending_pkt.type, sreq, sizeof(MPIDI_CH3_Pkt_t),
-                    sreq->dev.segment_size-sreq->dev.segment_first);
+                    sreq->dev.segment_size - sreq->dev.segment_first);
 
     vc_area = VC_BASE(vc);
     req_area = REQ_BASE(sreq);
@@ -236,8 +236,9 @@ int MPID_nem_mxm_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
 #define FUNCNAME MPID_nem_mxm_send
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
-                      int tag, MPID_Comm * comm, int context_offset, MPID_Request ** sreq_ptr)
+int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                      int rank, int tag, MPID_Comm * comm, int context_offset,
+                      MPID_Request ** sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *sreq = NULL;
@@ -247,7 +248,7 @@ int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Data
     MPI_Aint dt_true_lb;
     MPID_nem_mxm_vc_area *vc_area = NULL;
     MPID_nem_mxm_req_area *req_area = NULL;
-    mxm_mq_h *mq_h_v =  (mxm_mq_h*) comm->dev.ch.netmod_priv;
+    mxm_mq_h *mq_h_v = (mxm_mq_h *) comm->dev.ch.netmod_priv;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MXM_SEND);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MXM_SEND);
@@ -318,10 +319,8 @@ int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Data
 
     mpi_errno = _mxm_isend(vc_area->mxm_ep, req_area, MXM_MPICH_ISEND,
                            mq_h_v[1], comm->rank, tag, _mxm_tag_mpi2mxm(tag,
-                                                                                              comm->context_id
-                                                                                              +
-                                                                                              context_offset),
-                           0);
+                                                                        comm->context_id
+                                                                        + context_offset), 0);
     if (mpi_errno)
         MPIU_ERR_POP(mpi_errno);
 
@@ -340,8 +339,9 @@ int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Data
 #define FUNCNAME MPID_nem_mxm_ssend
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
-                       int tag, MPID_Comm * comm, int context_offset, MPID_Request ** sreq_ptr)
+int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                       int rank, int tag, MPID_Comm * comm, int context_offset,
+                       MPID_Request ** sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *sreq = NULL;
@@ -351,7 +351,7 @@ int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
     MPI_Aint dt_true_lb;
     MPID_nem_mxm_vc_area *vc_area = NULL;
     MPID_nem_mxm_req_area *req_area = NULL;
-    mxm_mq_h *mq_h_v =  (mxm_mq_h*) comm->dev.ch.netmod_priv;
+    mxm_mq_h *mq_h_v = (mxm_mq_h *) comm->dev.ch.netmod_priv;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MXM_SSEND);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MXM_SSEND);
@@ -422,10 +422,8 @@ int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
 
     mpi_errno = _mxm_isend(vc_area->mxm_ep, req_area, MXM_MPICH_ISEND_SYNC,
                            mq_h_v[1], comm->rank, tag, _mxm_tag_mpi2mxm(tag,
-                                                                                              comm->context_id
-                                                                                              +
-                                                                                              context_offset),
-                           0);
+                                                                        comm->context_id
+                                                                        + context_offset), 0);
     if (mpi_errno)
         MPIU_ERR_POP(mpi_errno);
 
@@ -444,8 +442,9 @@ int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
 #define FUNCNAME MPID_nem_mxm_isend
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_mxm_isend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
-                       int tag, MPID_Comm * comm, int context_offset, MPID_Request ** sreq_ptr)
+int MPID_nem_mxm_isend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                       int rank, int tag, MPID_Comm * comm, int context_offset,
+                       MPID_Request ** sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *sreq = NULL;
@@ -455,7 +454,7 @@ int MPID_nem_mxm_isend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
     MPI_Aint dt_true_lb;
     MPID_nem_mxm_vc_area *vc_area = NULL;
     MPID_nem_mxm_req_area *req_area = NULL;
-    mxm_mq_h *mq_h_v =  (mxm_mq_h*) comm->dev.ch.netmod_priv;
+    mxm_mq_h *mq_h_v = (mxm_mq_h *) comm->dev.ch.netmod_priv;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MXM_ISEND);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MXM_ISEND);
@@ -526,10 +525,8 @@ int MPID_nem_mxm_isend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
 
     mpi_errno = _mxm_isend(vc_area->mxm_ep, req_area, MXM_MPICH_ISEND,
                            mq_h_v[1], comm->rank, tag, _mxm_tag_mpi2mxm(tag,
-                                                                                              comm->context_id
-                                                                                              +
-                                                                                              context_offset),
-                           0);
+                                                                        comm->context_id
+                                                                        + context_offset), 0);
     if (mpi_errno)
         MPIU_ERR_POP(mpi_errno);
 
@@ -560,7 +557,7 @@ int MPID_nem_mxm_issend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Da
     MPI_Aint dt_true_lb;
     MPID_nem_mxm_vc_area *vc_area = NULL;
     MPID_nem_mxm_req_area *req_area = NULL;
-    mxm_mq_h *mq_h_v =  (mxm_mq_h*) comm->dev.ch.netmod_priv;
+    mxm_mq_h *mq_h_v = (mxm_mq_h *) comm->dev.ch.netmod_priv;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MXM_ISSEND);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MXM_ISSEND);
@@ -591,7 +588,7 @@ int MPID_nem_mxm_issend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Da
     vc_area = VC_BASE(vc);
     req_area = REQ_BASE(sreq);
 
-    req_area-> ctx = sreq;
+    req_area->ctx = sreq;
     req_area->iov_buf = req_area->tmp_buf;
     req_area->iov_count = 0;
     req_area->iov_buf[0].ptr = NULL;
@@ -631,10 +628,8 @@ int MPID_nem_mxm_issend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Da
 
     mpi_errno = _mxm_isend(vc_area->mxm_ep, req_area, MXM_MPICH_ISEND_SYNC,
                            mq_h_v[1], comm->rank, tag, _mxm_tag_mpi2mxm(tag,
-                                                                                              comm->context_id
-                                                                                              +
-                                                                                              context_offset),
-                           0);
+                                                                        comm->context_id
+                                                                        + context_offset), 0);
     if (mpi_errno)
         MPIU_ERR_POP(mpi_errno);
 
@@ -659,8 +654,7 @@ int _mxm_handle_sreq(MPID_Request * req)
     req_area = REQ_BASE(req);
 
     _dbg_mxm_out_buf(req_area->iov_buf[0].ptr,
-                     (req_area->iov_buf[0].length >
-                      16 ? 16 : req_area->iov_buf[0].length));
+                     (req_area->iov_buf[0].length > 16 ? 16 : req_area->iov_buf[0].length));
 
     vc_area->pending_sends -= 1;
     if (req->dev.tmpbuf) {
@@ -820,8 +814,9 @@ static int _mxm_process_sdtype(MPID_Request ** sreq_p, MPI_Datatype datatype,
     MPIU_Assert(last == sreq->dev.segment_size);
 
 #if defined(MXM_DEBUG) && (MXM_DEBUG > 0)
-    _dbg_mxm_output(7, "Send Noncontiguous data vector %i entries (free slots : %i)\n", n_iov, MXM_REQ_DATA_MAX_IOV);
-    for(index = 0; index < n_iov; index++) {
+    _dbg_mxm_output(7, "Send Noncontiguous data vector %i entries (free slots : %i)\n", n_iov,
+                    MXM_REQ_DATA_MAX_IOV);
+    for (index = 0; index < n_iov; index++) {
         _dbg_mxm_output(7, "======= Recv iov[%i] = ptr : %p, len : %i \n",
                         index, iov[index].MPID_IOV_BUF, iov[index].MPID_IOV_LEN);
     }

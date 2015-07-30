@@ -59,7 +59,7 @@ int MPID_nem_mxm_cancel_recv(MPIDI_VC_t * vc, MPID_Request * req)
     if (likely(!_mxm_req_test(&req_area->mxm_req->item.base))) {
         ret = mxm_req_cancel_recv(&req_area->mxm_req->item.recv);
         if ((MXM_OK == ret) || (MXM_ERR_NO_PROGRESS == ret)) {
-            _mxm_req_wait(&req_area-> mxm_req->item.base);
+            _mxm_req_wait(&req_area->mxm_req->item.base);
         }
         else {
             mpi_errno = MPI_ERR_INTERN;

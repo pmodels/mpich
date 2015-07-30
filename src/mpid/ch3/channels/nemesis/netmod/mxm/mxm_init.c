@@ -83,7 +83,7 @@ static MPIDI_Comm_ops_t comm_ops = {
     MPID_nem_mxm_ssend, /* ssend */
     MPID_nem_mxm_isend, /* isend */
     MPID_nem_mxm_isend, /* irsend */
-    MPID_nem_mxm_issend,/* issend */
+    MPID_nem_mxm_issend,        /* issend */
 
     NULL,       /* send_init */
     NULL,       /* bsend_init */
@@ -423,8 +423,10 @@ static int _mxm_conf(void)
              "%ld.%ld", (cur_ver >> MXM_MAJOR_BIT) & 0xff, (cur_ver >> MXM_MINOR_BIT) & 0xff);
 #endif
 
-    _mxm_obj.conf.bulk_connect = cur_ver < MXM_VERSION(3, 2) ? 0 : MPIR_CVAR_NEMESIS_MXM_BULK_CONNECT;
-    _mxm_obj.conf.bulk_disconnect = cur_ver < MXM_VERSION(3, 2) ? 0 : MPIR_CVAR_NEMESIS_MXM_BULK_DISCONNECT;
+    _mxm_obj.conf.bulk_connect =
+        cur_ver < MXM_VERSION(3, 2) ? 0 : MPIR_CVAR_NEMESIS_MXM_BULK_CONNECT;
+    _mxm_obj.conf.bulk_disconnect =
+        cur_ver < MXM_VERSION(3, 2) ? 0 : MPIR_CVAR_NEMESIS_MXM_BULK_DISCONNECT;
 
     if (cur_ver < MXM_VERSION(3, 2) &&
         (_mxm_obj.conf.bulk_connect || _mxm_obj.conf.bulk_disconnect)) {
@@ -631,28 +633,28 @@ static int _mxm_add_comm(MPID_Comm * comm, void *param)
     mxm_mq_h *mq_h_v;
     MPIU_CHKPMEM_DECL(1);
 
-    MPIU_CHKPMEM_MALLOC(mq_h_v, mxm_mq_h*, sizeof(mxm_mq_h)*2, mpi_errno, "mxm_mq_h_context_ptr" );
+    MPIU_CHKPMEM_MALLOC(mq_h_v, mxm_mq_h *, sizeof(mxm_mq_h) * 2, mpi_errno,
+                        "mxm_mq_h_context_ptr");
 
     _dbg_mxm_output(6, "Add COMM comm %p (rank %d type %d context %d | %d size %d | %d) \n",
                     comm, comm->rank, comm->comm_kind,
-                    comm->context_id, comm->recvcontext_id,
-                    comm->local_size, comm->remote_size);
+                    comm->context_id, comm->recvcontext_id, comm->local_size, comm->remote_size);
 
     ret = mxm_mq_create(_mxm_obj.mxm_context, comm->recvcontext_id, &mq_h_v[0]);
     MPIU_ERR_CHKANDJUMP1(ret != MXM_OK,
                          mpi_errno, MPI_ERR_OTHER,
                          "**mxm_mq_create", "**mxm_mq_create %s", mxm_error_string(ret));
 
-    if(comm->recvcontext_id != comm->context_id){
+    if (comm->recvcontext_id != comm->context_id) {
         ret = mxm_mq_create(_mxm_obj.mxm_context, comm->context_id, &mq_h_v[1]);
         MPIU_ERR_CHKANDJUMP1(ret != MXM_OK,
-                         mpi_errno, MPI_ERR_OTHER,
-                         "**mxm_mq_create", "**mxm_mq_create %s", mxm_error_string(ret));
+                             mpi_errno, MPI_ERR_OTHER,
+                             "**mxm_mq_create", "**mxm_mq_create %s", mxm_error_string(ret));
     }
     else
-       memcpy(&mq_h_v[1], &mq_h_v[0], sizeof(mxm_mq_h));
+        memcpy(&mq_h_v[1], &mq_h_v[0], sizeof(mxm_mq_h));
 
-    comm->dev.ch.netmod_priv = (void *)mq_h_v;
+    comm->dev.ch.netmod_priv = (void *) mq_h_v;
 
   fn_exit:
     MPIU_CHKPMEM_COMMIT();
@@ -665,10 +667,9 @@ static int _mxm_add_comm(MPID_Comm * comm, void *param)
 static int _mxm_del_comm(MPID_Comm * comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
-    mxm_mq_h *mxm_mq = (mxm_mq_h*) comm->dev.ch.netmod_priv;
+    mxm_mq_h *mxm_mq = (mxm_mq_h *) comm->dev.ch.netmod_priv;
 
-    _dbg_mxm_output(6, "Del COMM comm %p (rank %d type %d) \n",
-                    comm, comm->rank, comm->comm_kind);
+    _dbg_mxm_output(6, "Del COMM comm %p (rank %d type %d) \n", comm, comm->rank, comm->comm_kind);
 
     if (mxm_mq[1] != mxm_mq[0])
         mxm_mq_destroy(mxm_mq[1]);

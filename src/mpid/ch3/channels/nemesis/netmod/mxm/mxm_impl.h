@@ -38,12 +38,15 @@ int MPID_nem_mxm_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *heade
 
 /* direct interface */
 int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq);
-int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
-                      int tag, MPID_Comm * comm, int context_offset, MPID_Request ** sreq_p);
-int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
-                       int tag, MPID_Comm * comm, int context_offset, MPID_Request ** sreq_p);
-int MPID_nem_mxm_isend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int rank,
-                       int tag, MPID_Comm * comm, int context_offset, MPID_Request ** sreq_p);
+int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                      int rank, int tag, MPID_Comm * comm, int context_offset,
+                      MPID_Request ** sreq_p);
+int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                       int rank, int tag, MPID_Comm * comm, int context_offset,
+                       MPID_Request ** sreq_p);
+int MPID_nem_mxm_isend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
+                       int rank, int tag, MPID_Comm * comm, int context_offset,
+                       MPID_Request ** sreq_p);
 int MPID_nem_mxm_issend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
                         int rank, int tag, MPID_Comm * comm, int context_offset,
                         MPID_Request ** sreq_p);

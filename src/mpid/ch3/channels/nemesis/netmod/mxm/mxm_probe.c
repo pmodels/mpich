@@ -19,7 +19,7 @@ int MPID_nem_mxm_probe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, i
     int mpi_errno = MPI_SUCCESS;
     mxm_error_t err;
     mxm_recv_req_t mxm_req;
-    mxm_mq_h *mq_h_v =  (mxm_mq_h*) comm->dev.ch.netmod_priv;
+    mxm_mq_h *mq_h_v = (mxm_mq_h *) comm->dev.ch.netmod_priv;
     MPID_nem_mxm_vc_area *vc_area = (vc ? VC_BASE(vc) : NULL);
 
     MPIDI_STATE_DECL(MPID_STATE_MXM_PROBE);
@@ -65,7 +65,7 @@ int MPID_nem_mxm_iprobe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, 
     int mpi_errno = MPI_SUCCESS;
     mxm_error_t err;
     mxm_recv_req_t mxm_req;
-    mxm_mq_h *mq_h_v =  (mxm_mq_h*) comm->dev.ch.netmod_priv;
+    mxm_mq_h *mq_h_v = (mxm_mq_h *) comm->dev.ch.netmod_priv;
     MPID_nem_mxm_vc_area *vc_area = (vc ? VC_BASE(vc) : NULL);
 
     MPIDI_STATE_DECL(MPID_STATE_MXM_IPROBE);
@@ -112,7 +112,7 @@ int MPID_nem_mxm_improbe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm,
     mxm_error_t err;
     mxm_recv_req_t mxm_req;
     mxm_message_h mxm_msg;
-    mxm_mq_h *mq_h_v =  (mxm_mq_h*) comm->dev.ch.netmod_priv;
+    mxm_mq_h *mq_h_v = (mxm_mq_h *) comm->dev.ch.netmod_priv;
     MPID_nem_mxm_vc_area *vc_area = (vc ? VC_BASE(vc) : NULL);
 
     MPIDI_STATE_DECL(MPID_STATE_MXM_IMPROBE);
@@ -166,15 +166,16 @@ int MPID_nem_mxm_improbe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm,
         *message = req;
 
         /* TODO: Should we change status
-                _mxm_to_mpi_status(mxm_req.base.error, status);
-        */
+         * _mxm_to_mpi_status(mxm_req.base.error, status);
+         */
         status->MPI_SOURCE = req->status.MPI_SOURCE;
         status->MPI_TAG = req->status.MPI_TAG;
         MPIR_STATUS_SET_COUNT(*status, req->dev.recv_data_sz);
 
         _dbg_mxm_output(8,
                         "imProbe ========> Found USER msg (context %d from %d tag %d size %d) \n",
-                        comm->context_id + context_offset, status->MPI_SOURCE, status->MPI_TAG, MPIR_STATUS_GET_COUNT(*status));
+                        comm->context_id + context_offset, status->MPI_SOURCE, status->MPI_TAG,
+                        MPIR_STATUS_GET_COUNT(*status));
     }
     else if (MXM_ERR_NO_MESSAGE == err) {
         *flag = 0;

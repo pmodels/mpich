@@ -172,7 +172,7 @@ int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
         MPID_nem_mxm_vc_area *vc_area = NULL;
         MPID_nem_mxm_req_area *req_area = NULL;
 
-        mxm_mq_h *mq_h_v =  (mxm_mq_h*) rreq->comm->dev.ch.netmod_priv;
+        mxm_mq_h *mq_h_v = (mxm_mq_h *) rreq->comm->dev.ch.netmod_priv;
         rreq->dev.OnDataAvail = NULL;
         rreq->dev.tmpbuf = NULL;
         rreq->ch.vc = vc;
@@ -207,8 +207,8 @@ int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
 
         mpi_errno = _mxm_irecv((vc_area ? vc_area->mxm_ep : NULL), req_area,
                                tag,
-                               (rreq->comm ? mq_h_v[0] : mxm_obj->
-                                mxm_mq), _mxm_tag_mpi2mxm(tag, context_id));
+                               (rreq->comm ? mq_h_v[0] : mxm_obj->mxm_mq), _mxm_tag_mpi2mxm(tag,
+                                                                                            context_id));
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
     }
@@ -240,7 +240,7 @@ static int _mxm_handle_rreq(MPID_Request * req)
     found = MPIDI_CH3U_Recvq_DP(req);
     MPIU_THREAD_CS_EXIT(MSGQUEUE, req);
     /* an MPI_ANY_SOURCE request may have been previously removed from the
-       CH3 queue by an FDP (find and dequeue posted) operation */
+     * CH3 queue by an FDP (find and dequeue posted) operation */
     if (req->dev.match.parts.rank != MPI_ANY_SOURCE) {
         MPIU_Assert(found);
     }
@@ -252,8 +252,7 @@ static int _mxm_handle_rreq(MPID_Request * req)
     req_area = REQ_BASE(req);
 
     _dbg_mxm_out_buf(req_area->iov_buf[0].ptr,
-                     (req_area->iov_buf[0].length >
-                      16 ? 16 : req_area->iov_buf[0].length));
+                     (req_area->iov_buf[0].length > 16 ? 16 : req_area->iov_buf[0].length));
 
     if (req->dev.recv_data_sz <= userbuf_sz) {
         data_sz = req->dev.recv_data_sz;
@@ -291,7 +290,7 @@ static int _mxm_handle_rreq(MPID_Request * req)
             tmp_buf = req->dev.tmpbuf;
         }
         else {
-            mxm_req_buffer_t * iov_buf;
+            mxm_req_buffer_t *iov_buf;
             MPID_IOV *iov;
             int n_iov = 0;
             int index;
@@ -308,7 +307,8 @@ static int _mxm_handle_rreq(MPID_Request * req)
                     iov[index].MPID_IOV_LEN = iov_buf[index].length;
                 }
 
-                MPID_Segment_unpack_vector(req->dev.segment_ptr, req->dev.segment_first, &last, iov, &n_iov);
+                MPID_Segment_unpack_vector(req->dev.segment_ptr, req->dev.segment_first, &last, iov,
+                                           &n_iov);
                 MPIU_Free(iov);
             }
             if (req_area->iov_count > MXM_MPICH_MAX_IOV) {
@@ -332,7 +332,8 @@ static int _mxm_handle_rreq(MPID_Request * req)
     MPIDI_CH3U_Handle_recv_req(req->ch.vc, req, &complete);
     MPIU_Assert(complete == TRUE);
 
-    if (tmp_buf) MPIU_Free(tmp_buf);
+    if (tmp_buf)
+        MPIU_Free(tmp_buf);
 
     return complete;
 }
@@ -463,8 +464,9 @@ static int _mxm_process_rdtype(MPID_Request ** rreq_p, MPI_Datatype datatype,
     MPIU_Assert(last == rreq->dev.segment_size);
 
 #if defined(MXM_DEBUG) && (MXM_DEBUG > 0)
-    _dbg_mxm_output(7, "Recv Noncontiguous data vector %i entries (free slots : %i)\n", n_iov, MXM_REQ_DATA_MAX_IOV);
-    for(index = 0; index < n_iov; index++) {
+    _dbg_mxm_output(7, "Recv Noncontiguous data vector %i entries (free slots : %i)\n", n_iov,
+                    MXM_REQ_DATA_MAX_IOV);
+    for (index = 0; index < n_iov; index++) {
         _dbg_mxm_output(7, "======= Recv iov[%i] = ptr : %p, len : %i \n",
                         index, iov[index].MPID_IOV_BUF, iov[index].MPID_IOV_LEN);
     }
