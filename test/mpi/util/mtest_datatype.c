@@ -37,19 +37,14 @@ static void *MTestTypeFree(MTestDatatype * mtype)
 {
     if (mtype->buf)
         free(mtype->buf);
-
-    /* Only free internal structures for created types. */
-    if (!mtype->isBasic && !mtype->isDuped) {
-        if (mtype->displs)
-            free(mtype->displs);
-        if (mtype->displ_in_bytes)
-            free(mtype->displ_in_bytes);
-        if (mtype->index)
-            free(mtype->index);
-        if (mtype->old_datatypes)
-            free(mtype->old_datatypes);
-    }
-
+    if (mtype->displs)
+        free(mtype->displs);
+    if (mtype->displ_in_bytes)
+        free(mtype->displ_in_bytes);
+    if (mtype->index)
+        free(mtype->index);
+    if (mtype->old_datatypes)
+        free(mtype->old_datatypes);
     mtype->buf = NULL;
     mtype->displs = NULL;
     mtype->displ_in_bytes = NULL;
@@ -62,7 +57,6 @@ static void *MTestTypeFree(MTestDatatype * mtype)
 static inline void MTestTypeReset(MTestDatatype * mtype)
 {
     mtype->isBasic = 0;
-    mtype->isDuped = 0;
     mtype->printErrors = 0;
     mtype->buf = NULL;
 
@@ -91,52 +85,6 @@ static inline void MTestTypeReset(MTestDatatype * mtype)
     mtype->InitBuf = NULL;
     mtype->FreeBuf = NULL;
     mtype->CheckBuf = NULL;
-    mtype->Dup = NULL;
-}
-
-/*
- * Duplicate a MTest datatype object.
- *
- * Note that we only set all the structure pointers to the existing objects,
- * only the buffer is allocated separately.
- * */
-static int MTestTypeDup(MTestDatatype old_mtype, MTestDatatype * new_mtype)
-{
-    int merr = 0;
-
-    MTestTypeReset(new_mtype);
-
-    new_mtype->isDuped = 1;
-
-    /* Copy all internal structures from old type. */
-    new_mtype->datatype = old_mtype.datatype;
-    new_mtype->count = old_mtype.count;
-    new_mtype->nblock = old_mtype.nblock;
-    new_mtype->index = old_mtype.index;
-
-    new_mtype->stride = old_mtype.stride;
-    new_mtype->blksize = old_mtype.blksize;
-    new_mtype->displ_in_bytes = old_mtype.displ_in_bytes;
-
-    new_mtype->displs = old_mtype.displs;
-    new_mtype->basesize = old_mtype.basesize;
-
-    new_mtype->old_datatypes = old_mtype.old_datatypes;
-
-    new_mtype->arr_sizes[0] = old_mtype.arr_sizes[0];
-    new_mtype->arr_sizes[1] = old_mtype.arr_sizes[1];
-    new_mtype->arr_subsizes[0] = old_mtype.arr_subsizes[0];
-    new_mtype->arr_subsizes[1] = old_mtype.arr_subsizes[1];
-    new_mtype->arr_starts[0] = old_mtype.arr_starts[0];
-    new_mtype->arr_starts[1] = old_mtype.arr_starts[1];
-    new_mtype->order = old_mtype.order;
-
-    new_mtype->InitBuf = old_mtype.InitBuf;
-    new_mtype->FreeBuf = old_mtype.FreeBuf;
-    new_mtype->CheckBuf = old_mtype.CheckBuf;
-    new_mtype->Dup = old_mtype.Dup;
-
-    return merr;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -732,7 +680,6 @@ static int MTestTypeContiguousCreate(int nblock, int blocklen, int stride, int l
     mtype->InitBuf = MTestTypeContigInit;
     mtype->FreeBuf = MTestTypeFree;
     mtype->CheckBuf = MTestTypeContigCheckbuf;
-    mtype->Dup = MTestTypeDup;
     return merr;
 }
 
@@ -782,7 +729,6 @@ static int MTestTypeVectorCreate(int nblock, int blocklen, int stride, int lb,
     mtype->InitBuf = MTestTypeVectorInit;
     mtype->FreeBuf = MTestTypeFree;
     mtype->CheckBuf = MTestTypeVectorCheckbuf;
-    mtype->Dup = MTestTypeDup;
     return merr;
 }
 
@@ -833,7 +779,6 @@ static int MTestTypeHvectorCreate(int nblock, int blocklen, int stride, int lb,
     mtype->InitBuf = MTestTypeVectorInit;
     mtype->FreeBuf = MTestTypeFree;
     mtype->CheckBuf = MTestTypeVectorCheckbuf;
-    mtype->Dup = MTestTypeDup;
 
     return merr;
 }
@@ -897,7 +842,6 @@ static int MTestTypeIndexedCreate(int nblock, int blocklen, int stride, int lb,
     mtype->InitBuf = MTestTypeIndexedInit;
     mtype->FreeBuf = MTestTypeFree;
     mtype->CheckBuf = MTestTypeIndexedCheckbuf;
-    mtype->Dup = MTestTypeDup;
 
     return merr;
 }
@@ -961,7 +905,6 @@ static inline int MTestTypeHindexedCreate(int nblock, int blocklen, int stride, 
     mtype->InitBuf = MTestTypeIndexedInit;
     mtype->FreeBuf = MTestTypeFree;
     mtype->CheckBuf = MTestTypeIndexedCheckbuf;
-    mtype->Dup = MTestTypeDup;
 
     return merr;
 }
@@ -1026,7 +969,6 @@ static int MTestTypeIndexedBlockCreate(int nblock, int blocklen, int stride, int
     mtype->InitBuf = MTestTypeIndexedBlockInit;
     mtype->FreeBuf = MTestTypeFree;
     mtype->CheckBuf = MTestTypeIndexedBlockCheckbuf;
-    mtype->Dup = MTestTypeDup;
 
     return merr;
 }
@@ -1089,7 +1031,6 @@ static int MTestTypeHindexedBlockCreate(int nblock, int blocklen, int stride, in
     mtype->InitBuf = MTestTypeIndexedBlockInit;
     mtype->FreeBuf = MTestTypeFree;
     mtype->CheckBuf = MTestTypeIndexedBlockCheckbuf;
-    mtype->Dup = MTestTypeDup;
 
     return merr;
 }
@@ -1156,7 +1097,6 @@ static int MTestTypeStructCreate(int nblock, int blocklen, int stride, int lb,
     mtype->InitBuf = MTestTypeIndexedInit;
     mtype->FreeBuf = MTestTypeFree;
     mtype->CheckBuf = MTestTypeIndexedCheckbuf;
-    mtype->Dup = MTestTypeDup;
 
     return merr;
 }
@@ -1213,7 +1153,6 @@ static int MTestTypeSubArrayOrderCCreate(int nblock, int blocklen, int stride, i
     mtype->InitBuf = MTestTypeSubarrayInit;
     mtype->FreeBuf = MTestTypeFree;
     mtype->CheckBuf = MTestTypeSubarrayCheckbuf;
-    mtype->Dup = MTestTypeDup;
 
     return merr;
 }
@@ -1278,7 +1217,6 @@ static int MTestTypeSubArrayOrderFortranCreate(int nblock, int blocklen, int str
     mtype->InitBuf = MTestTypeSubarrayInit;
     mtype->FreeBuf = MTestTypeFree;
     mtype->CheckBuf = MTestTypeSubarrayCheckbuf;
-    mtype->Dup = MTestTypeDup;
 
     return merr;
 }
@@ -1305,7 +1243,6 @@ int MTestTypeBasicCreate(MPI_Datatype oldtype, MTestDatatype * mtype)
     mtype->InitBuf = MTestTypeContigInit;
     mtype->FreeBuf = MTestTypeFree;
     mtype->CheckBuf = MTestTypeContigCheckbuf;
-    mtype->Dup = MTestTypeDup;
 
     return merr;
 }
@@ -1336,7 +1273,6 @@ int MTestTypeDupCreate(MPI_Datatype oldtype, MTestDatatype * mtype)
     mtype->InitBuf = MTestTypeContigInit;
     mtype->FreeBuf = MTestTypeFree;
     mtype->CheckBuf = MTestTypeContigCheckbuf;
-    mtype->Dup = MTestTypeDup;
 
     return merr;
 }
