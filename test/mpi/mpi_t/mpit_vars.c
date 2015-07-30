@@ -188,7 +188,8 @@ int PrintCategories(FILE * fp)
         MPI_T_category_get_info(i, name, &nameLen, desc, &descLen, &numCvars,
                                 &numPvars, &numSubcat);
         if (verbose) {
-            fprintf(fp, "Category %s has %d control variables, %d performance variables, %d subcategories\n",
+            fprintf(fp,
+                    "Category %s has %d control variables, %d performance variables, %d subcategories\n",
                     name, numCvars, numPvars, numSubcat);
             fprintf(fp, "\tDescription: %s\n", desc);
         }
@@ -294,9 +295,9 @@ char *mpit_validDtypeStr(MPI_Datatype datatype)
             strncpy(typename, "Invalid:", MPI_MAX_OBJECT_NAME);
             MPI_Type_get_name(datatype, typename + 8, &tlen);
             /* We must check location typename[8] to see if
-               MPI_Type_get_name returned a name (not all datatypes
-               have names).  If it did not, then we indicate that
-               with a different message */
+             * MPI_Type_get_name returned a name (not all datatypes
+             * have names).  If it did not, then we indicate that
+             * with a different message */
             if (typename[8])
                 p = typename;
             else

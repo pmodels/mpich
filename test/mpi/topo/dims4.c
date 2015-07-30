@@ -9,7 +9,7 @@
 int main(int argc, char **argv)
 {
     int nproc = (1000 * 1000 * 1000);
-    int ret[3] = {0, 0, 0};
+    int ret[3] = { 0, 0, 0 };
     int errs = 0, i, rank;
 
     MPI_Init(&argc, &argv);

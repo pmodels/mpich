@@ -10,21 +10,21 @@
 #include "mpitestconf.h"
 
 /*
- * Init and finalize test 
+ * Init and finalize test
  */
-void MTest_Init( int *, char *** );
-void MTest_Init_thread( int *, char ***, int, int * );
-void MTest_Finalize( int );
-void MTestPrintError( int );
-void MTestPrintErrorMsg( const char [], int );
-void MTestPrintfMsg( int, const char [], ... );
-void MTestError( const char [] );
-int MTestReturnValue( int );
+void MTest_Init(int *, char ***);
+void MTest_Init_thread(int *, char ***, int, int *);
+void MTest_Finalize(int);
+void MTestPrintError(int);
+void MTestPrintErrorMsg(const char[], int);
+void MTestPrintfMsg(int, const char[], ...);
+void MTestError(const char[]);
+int MTestReturnValue(int);
 
 /*
  * Utilities
  */
-void MTestSleep( int );
+void MTestSleep(int);
 void MTestGetDbgInfo(int *dbgflag, int *verbose);
 
 /*
@@ -32,19 +32,19 @@ void MTestGetDbgInfo(int *dbgflag, int *verbose);
  * buf is set to null when an MTestDatatype is created; the
  * InitBuf routine will allocate (if necessary) and initialize
  * the data.  InitBuf may be called multiple times (this is particularly
- * important for recv bufs), in which case the buffer will only 
+ * important for recv bufs), in which case the buffer will only
  * be allocated if it has not already been created.
  */
 typedef struct _MTestDatatype {
     MPI_Datatype datatype;
-    void *buf;              /* buffer to use in communication */
-    MPI_Aint  count;        /* count to use for this datatype */
-    int  isBasic;           /* true if the type is predefined */
-    int  printErrors;       /* true if errors should be printed
-			       (used by the CheckBuf routines) */
+    void *buf;                  /* buffer to use in communication */
+    MPI_Aint count;             /* count to use for this datatype */
+    int isBasic;                /* true if the type is predefined */
+    int printErrors;            /* true if errors should be printed
+                                 * (used by the CheckBuf routines) */
     /* The following is optional data that is used by some of
-       the derived datatypes */
-    int  nblock, *index;
+     * the derived datatypes */
+    int nblock, *index;
     /* stride, and blksize are in bytes */
     MPI_Aint stride, blksize, *displ_in_bytes;
     int *displs, basesize;
@@ -52,9 +52,9 @@ typedef struct _MTestDatatype {
     /* used in subarray */
     int arr_sizes[2], arr_subsizes[2], arr_starts[2], order;
 
-    void *(*InitBuf)( struct _MTestDatatype * );
-    void *(*FreeBuf)( struct _MTestDatatype * );
-    int   (*CheckBuf)( struct _MTestDatatype * );
+    void *(*InitBuf) (struct _MTestDatatype *);
+    void *(*FreeBuf) (struct _MTestDatatype *);
+    int (*CheckBuf) (struct _MTestDatatype *);
 } MTestDatatype;
 
 /* The max value of count must be very large to ensure that we
@@ -75,30 +75,30 @@ void MTestInitMinDatatypes(void);
  * It generate tests for all basic datatypes. */
 void MTestInitBasicDatatypes(void);
 
-int MTestCheckRecv( MPI_Status *, MTestDatatype * );
-int MTestGetDatatypes( MTestDatatype *, MTestDatatype *, MPI_Aint );
-void MTestResetDatatypes( void );
-void MTestFreeDatatype( MTestDatatype * );
-const char *MTestGetDatatypeName( MTestDatatype * );
-int MTestGetDatatypeIndex( void );
+int MTestCheckRecv(MPI_Status *, MTestDatatype *);
+int MTestGetDatatypes(MTestDatatype *, MTestDatatype *, MPI_Aint);
+void MTestResetDatatypes(void);
+void MTestFreeDatatype(MTestDatatype *);
+const char *MTestGetDatatypeName(MTestDatatype *);
+int MTestGetDatatypeIndex(void);
 
-int MTestGetIntracomm( MPI_Comm *, int );
-int MTestGetIntracommGeneral( MPI_Comm *, int, int );
-int MTestGetIntercomm( MPI_Comm *, int *, int );
-int MTestGetComm( MPI_Comm *, int );
+int MTestGetIntracomm(MPI_Comm *, int);
+int MTestGetIntracommGeneral(MPI_Comm *, int, int);
+int MTestGetIntercomm(MPI_Comm *, int *, int);
+int MTestGetComm(MPI_Comm *, int);
 int MTestTestIntercomm(MPI_Comm intercomm);
 int MTestTestIntracomm(MPI_Comm intracomm);
 int MTestTestComm(MPI_Comm comm);
-const char *MTestGetIntracommName( void );
-const char *MTestGetIntercommName( void );
-void MTestFreeComm( MPI_Comm * );
+const char *MTestGetIntracommName(void);
+const char *MTestGetIntercommName(void);
+void MTestFreeComm(MPI_Comm *);
 
-int MTestSpawnPossible( int * );
+int MTestSpawnPossible(int *);
 
 #ifdef HAVE_MPI_WIN_CREATE
-int MTestGetWin( MPI_Win *, int );
-const char *MTestGetWinName( void );
-void MTestFreeWin( MPI_Win * );
+int MTestGetWin(MPI_Win *, int);
+const char *MTestGetWinName(void);
+void MTestFreeWin(MPI_Win *);
 #endif
 
 /* These macros permit overrides via:

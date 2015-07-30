@@ -3,7 +3,7 @@
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#include "mpi.h" 
+#include "mpi.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "mpitest.h"
@@ -20,17 +20,17 @@
 
 #define SIZE 1048576
 
-int main(int argc, char *argv[]) 
-{ 
+int main(int argc, char *argv[])
+{
     int rank, destrank, nprocs, *A, *B, i;
     MPI_Comm CommDeuce;
     MPI_Group comm_group, group;
     MPI_Win win;
     int errs = 0;
 
-    MTest_Init(&argc,&argv); 
-    MPI_Comm_size(MPI_COMM_WORLD,&nprocs); 
-    MPI_Comm_rank(MPI_COMM_WORLD,&rank); 
+    MTest_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (nprocs < 2) {
         printf("Run this program with 2 or more processes\n");
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
                 MPI_Abort(MPI_COMM_WORLD, 1);
             }
 
-            for (i=0; i<SIZE; i++) {
+            for (i = 0; i < SIZE; i++) {
                 A[i] = i;
                 B[i] = SIZE + i;
             }
@@ -76,17 +76,18 @@ int main(int argc, char *argv[])
         }
         else {  /* rank=1 */
 #ifdef USE_WIN_ALLOCATE
-            MPI_Win_allocate(SIZE*sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &B, &win);
+            MPI_Win_allocate(SIZE * sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &B, &win);
 #else
             i = MPI_Alloc_mem(SIZE * sizeof(int), MPI_INFO_NULL, &B);
             if (i) {
                 printf("Can't allocate memory in test program\n");
                 MPI_Abort(MPI_COMM_WORLD, 1);
             }
-            MPI_Win_create(B, SIZE*sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &win);
+            MPI_Win_create(B, SIZE * sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &win);
 #endif
             MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
-            for (i=0; i<SIZE; i++) A[i] = B[i] = (-4)*i;
+            for (i = 0; i < SIZE; i++)
+                A[i] = B[i] = (-4) * i;
             MPI_Win_unlock(rank, win);
 
             destrank = 0;
@@ -95,13 +96,15 @@ int main(int argc, char *argv[])
             MPI_Recv(A, SIZE, MPI_INT, 0, 100, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             MPI_Win_wait(win);
 
-            for (i=0; i<SIZE; i++) {
+            for (i = 0; i < SIZE; i++) {
                 if (B[i] != i) {
-                    SQUELCH( printf("Rank 1: Put Error: B[i] is %d, should be %d\n", B[i], i); );
+                    SQUELCH(printf("Rank 1: Put Error: B[i] is %d, should be %d\n", B[i], i););
                     errs++;
                 }
                 if (A[i] != SIZE + i) {
-                    SQUELCH( printf("Rank 1: Send/Recv Error: A[i] is %d, should be %d\n", A[i], SIZE+i); );
+                    SQUELCH(printf
+                            ("Rank 1: Send/Recv Error: A[i] is %d, should be %d\n", A[i],
+                             SIZE + i););
                     errs++;
                 }
             }
@@ -118,6 +121,6 @@ int main(int argc, char *argv[])
     }
     MPI_Comm_free(&CommDeuce);
     MTest_Finalize(errs);
-    MPI_Finalize(); 
-    return 0; 
-} 
+    MPI_Finalize();
+    return 0;
+}

@@ -25,8 +25,8 @@
 #define MAX_BUF   (128 * 1024 * 1024)
 #define LOOPS 10
 
-char * sbuf, * rbuf;
-int * recvcounts, * displs;
+char *sbuf, *rbuf;
+int *recvcounts, *displs;
 int errs = 0;
 
 /* #define dprintf printf */
@@ -42,9 +42,9 @@ typedef enum {
 } test_t;
 
 void comm_tests(MPI_Comm comm);
-double run_test(long long msg_size, MPI_Comm comm, test_t test_type, double * max_time);
+double run_test(long long msg_size, MPI_Comm comm, test_t test_type, double *max_time);
 
-int main(int argc, char ** argv)
+int main(int argc, char **argv)
 {
     int comm_size, comm_rank;
     MPI_Comm comm;
@@ -65,10 +65,14 @@ int main(int argc, char ** argv)
     displs = (void *) malloc(comm_size * sizeof(int));
     if (!recvcounts || !displs || !sbuf || !rbuf) {
         fprintf(stderr, "Unable to allocate memory:\n");
-	if (!sbuf) fprintf(stderr,"\tsbuf of %d bytes\n", MAX_BUF );
-	if (!rbuf) fprintf(stderr,"\trbuf of %d bytes\n", MAX_BUF );
-	if (!recvcounts) fprintf(stderr,"\trecvcounts of %zd bytes\n", comm_size * sizeof(int) );
-	if (!displs) fprintf(stderr,"\tdispls of %zd bytes\n", comm_size * sizeof(int) );
+        if (!sbuf)
+            fprintf(stderr, "\tsbuf of %d bytes\n", MAX_BUF);
+        if (!rbuf)
+            fprintf(stderr, "\trbuf of %d bytes\n", MAX_BUF);
+        if (!recvcounts)
+            fprintf(stderr, "\trecvcounts of %zd bytes\n", comm_size * sizeof(int));
+        if (!displs)
+            fprintf(stderr, "\tdispls of %zd bytes\n", comm_size * sizeof(int));
         fflush(stderr);
         MPI_Abort(MPI_COMM_WORLD, -1);
     }
@@ -113,7 +117,7 @@ int main(int argc, char ** argv)
     free(recvcounts);
     free(displs);
 
-fn_exit:
+  fn_exit:
     MTest_Finalize(errs);
     MPI_Finalize();
 
@@ -173,8 +177,7 @@ void comm_tests(MPI_Comm comm)
     }
 }
 
-double run_test(long long msg_size, MPI_Comm comm, test_t test_type, 
-		double * max_time)
+double run_test(long long msg_size, MPI_Comm comm, test_t test_type, double *max_time)
 {
     int i, j;
     int comm_size, comm_rank;
@@ -197,36 +200,39 @@ double run_test(long long msg_size, MPI_Comm comm, test_t test_type,
             recvcounts[i] = (i < (comm_size / 2)) ? (2 * msg_size) : 0;
         else if (test_type == LINEAR_DECREASE) {
             tmp = 2 * msg_size * (comm_size - 1 - i) / (comm_size - 1);
-	    if (tmp != (int)tmp) {
-		fprintf( stderr, "Integer overflow in variable tmp\n" );
-		MPI_Abort( MPI_COMM_WORLD, 1 );
-	    }
+            if (tmp != (int) tmp) {
+                fprintf(stderr, "Integer overflow in variable tmp\n");
+                MPI_Abort(MPI_COMM_WORLD, 1);
+            }
             recvcounts[i] = (int) tmp;
 
             /* If the maximum message size is too large, don't run */
-            if (tmp > MAX_BUF) return 0;
+            if (tmp > MAX_BUF)
+                return 0;
         }
         else if (test_type == BELL_CURVE) {
             for (j = 0; j < i; j++) {
-                if (i - 1 + j >= comm_size) continue;
+                if (i - 1 + j >= comm_size)
+                    continue;
                 tmp = msg_size * comm_size / (log(comm_size) * i);
                 recvcounts[i - 1 + j] = (int) tmp;
                 displs[i - 1 + j] = 0;
 
                 /* If the maximum message size is too large, don't run */
-                if (tmp > MAX_BUF) return 0;
+                if (tmp > MAX_BUF)
+                    return 0;
             }
         }
 
         if (i < comm_size - 1)
-            displs[i+1] = displs[i] + recvcounts[i];
+            displs[i + 1] = displs[i] + recvcounts[i];
     }
 
     /* Test that:
-       1: sbuf is large enough
-       2: rbuf is large enough
-       3: There were no failures (e.g., tmp nowhere > rbuf size 
-    */
+     * 1: sbuf is large enough
+     * 2: rbuf is large enough
+     * 3: There were no failures (e.g., tmp nowhere > rbuf size
+     */
     MPI_Barrier(comm);
     start = MPI_Wtime();
     for (i = 0; i < LOOPS; i++) {

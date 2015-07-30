@@ -18,9 +18,9 @@ int main(int argc, char *argv[])
 {
     int myrank;
     MPI_Datatype subarray;
-    int array_size[] = {X, Y, Z};
-    int array_subsize[] = {X/2, Y/2, Z};
-    int array_start[] = {0, 0, 0};
+    int array_size[] = { X, Y, Z };
+    int array_subsize[] = { X / 2, Y / 2, Z };
+    int array_start[] = { 0, 0, 0 };
     int i, j, k;
     int errs = 0;
 
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
                              MPI_DOUBLE, &subarray);
     MPI_Type_commit(&subarray);
 
-    if(myrank == 0)
+    if (myrank == 0)
         MPI_Send(array, 1, subarray, 1, 0, MPI_COMM_WORLD);
     else {
         MPI_Recv(array, 1, subarray, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);

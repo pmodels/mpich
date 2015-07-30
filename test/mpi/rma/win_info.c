@@ -12,15 +12,16 @@
 
 #define VERBOSE 0
 
-int main(int argc, char **argv) {
-    int      rank, nproc;
+int main(int argc, char **argv)
+{
+    int rank, nproc;
     MPI_Info info_in, info_out;
-    int      errors = 0, all_errors = 0;
-    MPI_Win  win;
-    void    *base;
-    char     invalid_key[] = "invalid_test_key";
-    char     buf[MPI_MAX_INFO_VAL];
-    int      flag;
+    int errors = 0, all_errors = 0;
+    MPI_Win win;
+    void *base;
+    char invalid_key[] = "invalid_test_key";
+    char buf[MPI_MAX_INFO_VAL];
+    int flag;
 
     MPI_Init(&argc, &argv);
 
@@ -67,7 +68,8 @@ int main(int argc, char **argv) {
             printf("%d: no_locks = %s, expected false\n", rank, buf);
         errors++;
     }
-    if (flag && VERBOSE) printf("%d: no_locks = %s\n", rank, buf);
+    if (flag && VERBOSE)
+        printf("%d: no_locks = %s\n", rank, buf);
 
     MPI_Info_free(&info_in);
     MPI_Info_free(&info_out);
@@ -88,7 +90,8 @@ int main(int argc, char **argv) {
             printf("%d: no_locks = %s, expected true\n", rank, buf);
         errors++;
     }
-    if (flag && VERBOSE) printf("%d: no_locks = %s\n", rank, buf);
+    if (flag && VERBOSE)
+        printf("%d: no_locks = %s\n", rank, buf);
 
     MPI_Info_free(&info_in);
     MPI_Info_free(&info_out);
@@ -98,16 +101,20 @@ int main(int argc, char **argv) {
     MPI_Win_get_info(win, &info_out);
 
     MPI_Info_get(info_out, "accumulate_ordering", MPI_MAX_INFO_VAL, buf, &flag);
-    if (flag && VERBOSE) printf("%d: accumulate_ordering = %s\n", rank, buf);
+    if (flag && VERBOSE)
+        printf("%d: accumulate_ordering = %s\n", rank, buf);
 
     MPI_Info_get(info_out, "accumulate_ops", MPI_MAX_INFO_VAL, buf, &flag);
-    if (flag && VERBOSE) printf("%d: accumulate_ops = %s\n", rank, buf);
+    if (flag && VERBOSE)
+        printf("%d: accumulate_ops = %s\n", rank, buf);
 
     MPI_Info_get(info_out, "same_size", MPI_MAX_INFO_VAL, buf, &flag);
-    if (flag && VERBOSE) printf("%d: same_size = %s\n", rank, buf);
+    if (flag && VERBOSE)
+        printf("%d: same_size = %s\n", rank, buf);
 
     MPI_Info_get(info_out, "alloc_shm", MPI_MAX_INFO_VAL, buf, &flag);
-    if (flag && VERBOSE) printf("%d: alloc_shm = %s\n", rank, buf);
+    if (flag && VERBOSE)
+        printf("%d: alloc_shm = %s\n", rank, buf);
 
     MPI_Info_free(&info_out);
     MPI_Win_free(&win);

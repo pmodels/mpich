@@ -23,10 +23,11 @@
 
 static const int verbose = 0;
 
-int main(int argc, char **argv) {
-    int       rank, nproc, mpi_errno;
-    int       i, ncomm;
-    int       errors = 1;
+int main(int argc, char **argv)
+{
+    int rank, nproc, mpi_errno;
+    int i, ncomm;
+    int errors = 1;
     MPI_Comm *comm_hdls;
 
     MPI_Init(&argc, &argv);
@@ -44,8 +45,10 @@ int main(int argc, char **argv) {
 
         if (mpi_errno == MPI_SUCCESS) {
             ncomm++;
-        } else {
-            if (verbose) printf("%d: Error creating comm %d\n", rank, i);
+        }
+        else {
+            if (verbose)
+                printf("%d: Error creating comm %d\n", rank, i);
             errors = 0;
             break;
         }

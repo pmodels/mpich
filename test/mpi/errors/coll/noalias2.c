@@ -52,99 +52,98 @@ int main(int argc, char **argv)
 
     /* enough space for every process to contribute at least NUM_INTS ints to any
      * collective operation */
-    sbuf = malloc(NUM_INTS*size*sizeof(int));
+    sbuf = malloc(NUM_INTS * size * sizeof(int));
     my_assert(sbuf);
-    rbuf = malloc(NUM_INTS*size*sizeof(int));
+    rbuf = malloc(NUM_INTS * size * sizeof(int));
     my_assert(rbuf);
-    scounts = malloc(size*sizeof(int));
+    scounts = malloc(size * sizeof(int));
     my_assert(scounts);
-    rcounts = malloc(size*sizeof(int));
+    rcounts = malloc(size * sizeof(int));
     my_assert(rcounts);
-    sdispls = malloc(size*sizeof(int));
+    sdispls = malloc(size * sizeof(int));
     my_assert(sdispls);
-    rdispls = malloc(size*sizeof(int));
+    rdispls = malloc(size * sizeof(int));
     my_assert(rdispls);
-    types = malloc(size*sizeof(int));
+    types = malloc(size * sizeof(int));
     my_assert(types);
 
     for (i = 0; i < size; ++i) {
-        sbuf[2*i]   = i;
-        sbuf[2*i+1] = i;
-        rbuf[2*i]   = i;
-        rbuf[2*i+1] = i;
-        scounts[i]  = NUM_INTS;
-        rcounts[i]  = NUM_INTS;
-        sdispls[i]  = i * NUM_INTS;
-        rdispls[i]  = i * NUM_INTS;
-        types[i]    = MPI_INT;
+        sbuf[2 * i] = i;
+        sbuf[2 * i + 1] = i;
+        rbuf[2 * i] = i;
+        rbuf[2 * i + 1] = i;
+        scounts[i] = NUM_INTS;
+        rcounts[i] = NUM_INTS;
+        sdispls[i] = i * NUM_INTS;
+        rdispls[i] = i * NUM_INTS;
+        types[i] = MPI_INT;
     }
 
     if (rank == 0 && MPI_SUCCESS ==
-            MPI_Gather(sbuf, NUM_INTS, MPI_INT, sbuf, NUM_INTS, MPI_INT, 0, comm))
+        MPI_Gather(sbuf, NUM_INTS, MPI_INT, sbuf, NUM_INTS, MPI_INT, 0, comm))
         errs++;
 
     if (rank == 0 && MPI_SUCCESS ==
-            MPI_Gatherv(sbuf, NUM_INTS, MPI_INT, sbuf, rcounts, rdispls, MPI_INT, 0, comm))
+        MPI_Gatherv(sbuf, NUM_INTS, MPI_INT, sbuf, rcounts, rdispls, MPI_INT, 0, comm))
         errs++;
 
     if (rank == 0 && MPI_SUCCESS ==
-            MPI_Scatter(sbuf, NUM_INTS, MPI_INT, sbuf, NUM_INTS, MPI_INT, 0, comm))
+        MPI_Scatter(sbuf, NUM_INTS, MPI_INT, sbuf, NUM_INTS, MPI_INT, 0, comm))
         errs++;
 
     if (rank == 0 && MPI_SUCCESS ==
-            MPI_Scatterv(sbuf, scounts, sdispls, MPI_INT, sbuf, NUM_INTS, MPI_INT, 0, comm))
+        MPI_Scatterv(sbuf, scounts, sdispls, MPI_INT, sbuf, NUM_INTS, MPI_INT, 0, comm))
+        errs++;
+
+    if (MPI_SUCCESS == MPI_Allgather(&sbuf[rank], 1, MPI_INT, sbuf, 1, MPI_INT, comm))
         errs++;
 
     if (MPI_SUCCESS ==
-            MPI_Allgather(&sbuf[rank], 1, MPI_INT, sbuf, 1, MPI_INT, comm))
+        MPI_Allgatherv(&sbuf[rank * rcounts[rank]], rcounts[rank], MPI_INT, sbuf, rcounts, rdispls,
+                       MPI_INT, comm))
+        errs++;
+
+    if (MPI_SUCCESS == MPI_Alltoall(sbuf, NUM_INTS, MPI_INT, sbuf, NUM_INTS, MPI_INT, comm))
         errs++;
 
     if (MPI_SUCCESS ==
-            MPI_Allgatherv(&sbuf[rank * rcounts[rank]], rcounts[rank], MPI_INT, sbuf, rcounts, rdispls, MPI_INT, comm))
+        MPI_Alltoallv(sbuf, scounts, sdispls, MPI_INT, sbuf, scounts, sdispls, MPI_INT, comm))
         errs++;
 
     if (MPI_SUCCESS ==
-            MPI_Alltoall(sbuf, NUM_INTS, MPI_INT, sbuf, NUM_INTS, MPI_INT, comm))
+        MPI_Alltoallw(sbuf, scounts, sdispls, types, sbuf, scounts, sdispls, types, comm))
         errs++;
 
-    if (MPI_SUCCESS ==
-            MPI_Alltoallv(sbuf, scounts, sdispls, MPI_INT, sbuf, scounts, sdispls, MPI_INT, comm))
+    if (rank == 0 && MPI_SUCCESS == MPI_Reduce(sbuf, sbuf, NUM_INTS, MPI_INT, MPI_SUM, 0, comm))
         errs++;
 
-    if (MPI_SUCCESS ==
-            MPI_Alltoallw(sbuf, scounts, sdispls, types, sbuf, scounts, sdispls, types, comm))
+    if (MPI_SUCCESS == MPI_Allreduce(sbuf, sbuf, NUM_INTS, MPI_INT, MPI_SUM, comm))
         errs++;
 
-    if (rank == 0 && MPI_SUCCESS ==
-            MPI_Reduce(sbuf, sbuf, NUM_INTS, MPI_INT, MPI_SUM, 0, comm))
+    if (MPI_SUCCESS == MPI_Reduce_scatter(sbuf, sbuf, rcounts, MPI_INT, MPI_SUM, comm))
         errs++;
 
-    if (MPI_SUCCESS ==
-            MPI_Allreduce(sbuf, sbuf, NUM_INTS, MPI_INT, MPI_SUM, comm))
+    if (MPI_SUCCESS == MPI_Reduce_scatter_block(sbuf, sbuf, NUM_INTS, MPI_INT, MPI_SUM, comm))
         errs++;
 
-    if (MPI_SUCCESS ==
-            MPI_Reduce_scatter(sbuf, sbuf, rcounts, MPI_INT, MPI_SUM, comm))
+    if (MPI_SUCCESS == MPI_Scan(sbuf, sbuf, NUM_INTS, MPI_INT, MPI_SUM, comm))
         errs++;
 
-    if (MPI_SUCCESS ==
-            MPI_Reduce_scatter_block(sbuf, sbuf, NUM_INTS, MPI_INT, MPI_SUM, comm))
+    if (MPI_SUCCESS == MPI_Exscan(sbuf, sbuf, NUM_INTS, MPI_INT, MPI_SUM, comm))
         errs++;
 
-    if (MPI_SUCCESS ==
-            MPI_Scan(sbuf, sbuf, NUM_INTS, MPI_INT, MPI_SUM, comm))
-        errs++;
-
-    if (MPI_SUCCESS ==
-            MPI_Exscan(sbuf, sbuf, NUM_INTS, MPI_INT, MPI_SUM, comm))
-        errs++;
-
-    if (sbuf) free(sbuf);
-    if (rbuf) free(rbuf);
-    if (scounts) free(scounts);
-    if (rcounts) free(rcounts);
-    if (sdispls) free(sdispls);
-    if (rdispls) free(rdispls);
+    if (sbuf)
+        free(sbuf);
+    if (rbuf)
+        free(rbuf);
+    if (scounts)
+        free(scounts);
+    if (rcounts)
+        free(rcounts);
+    if (sdispls)
+        free(sdispls);
+    if (rdispls)
+        free(rdispls);
 
     if (rank == 0) {
         if (errs)
@@ -155,4 +154,3 @@ int main(int argc, char **argv)
     MPI_Finalize();
     return 0;
 }
-

@@ -14,34 +14,34 @@
 #include <string.h>
 #endif
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
     int errs = 0;
     MPI_Win win;
     int cnt, namelen;
     char name[MPI_MAX_OBJECT_NAME], nameout[MPI_MAX_OBJECT_NAME];
 
-    MTest_Init( &argc, &argv );
+    MTest_Init(&argc, &argv);
 
     cnt = 0;
-    while (MTestGetWin( &win, 1 )) {
-	if (win == MPI_WIN_NULL) continue;
-    
-	sprintf( name, "win-%d", cnt );
-	cnt++;
-	MPI_Win_set_name( win, name );
-	nameout[0] = 0;
-	MPI_Win_get_name( win, nameout, &namelen );
-	if (strcmp( name, nameout )) {
-	    errs++;
-	    printf( "Unexpected name, was %s but should be %s\n",
-		    nameout, name );
-	}
+    while (MTestGetWin(&win, 1)) {
+        if (win == MPI_WIN_NULL)
+            continue;
 
-	MTestFreeWin( &win );
+        sprintf(name, "win-%d", cnt);
+        cnt++;
+        MPI_Win_set_name(win, name);
+        nameout[0] = 0;
+        MPI_Win_get_name(win, nameout, &namelen);
+        if (strcmp(name, nameout)) {
+            errs++;
+            printf("Unexpected name, was %s but should be %s\n", nameout, name);
+        }
+
+        MTestFreeWin(&win);
     }
 
-    MTest_Finalize( errs );
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

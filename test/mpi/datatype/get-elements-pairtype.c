@@ -20,25 +20,25 @@ int main(int argc, char **argv)
 {
     int err, errs = 0;
 
-    MPI_Init(&argc, &argv); /* MPI-1.2 doesn't allow for MPI_Init(0,0) */
+    MPI_Init(&argc, &argv);     /* MPI-1.2 doesn't allow for MPI_Init(0,0) */
     parse_args(argc, argv);
 
     /* To improve reporting of problems about operations, we
-       change the error handler to errors return */
-    MPI_Comm_set_errhandler( MPI_COMM_WORLD, MPI_ERRORS_RETURN );
+     * change the error handler to errors return */
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     /* perform some tests */
     err = double_int_test();
-    if (err && verbose) fprintf(stderr, "%d errors in double_int test.\n",
-				err);
+    if (err && verbose)
+        fprintf(stderr, "%d errors in double_int test.\n", err);
     errs += err;
 
     /* print message and exit */
     if (errs) {
-	fprintf(stderr, "Found %d errors\n", errs);
+        fprintf(stderr, "Found %d errors\n", errs);
     }
     else {
-	printf(" No Errors\n");
+        printf(" No Errors\n");
     }
     MPI_Finalize();
     return 0;
@@ -52,8 +52,17 @@ int double_int_test(void)
 {
     int err, errs = 0, count;
 
-    struct { double a; int b; double c; } foo;
-    struct { double a; int b; double c; int d; } bar;
+    struct {
+        double a;
+        int b;
+        double c;
+    } foo;
+    struct {
+        double a;
+        int b;
+        double c;
+        int d;
+    } bar;
 
     int blks[3] = { 1, 1, 1 };
     MPI_Aint disps[3] = { 0, 0, 0 };
@@ -65,35 +74,33 @@ int double_int_test(void)
     /* fill in disps[1..2] with appropriate offset */
     disps[1] = (MPI_Aint) ((char *) &foo.b - (char *) &foo.a);
     disps[2] = (MPI_Aint) ((char *) &foo.c - (char *) &foo.a);
-   
+
     MPI_Type_create_struct(3, blks, disps, types, &stype);
     MPI_Type_commit(&stype);
 
     err = MPI_Sendrecv((const void *) &foo, 1, stype, 0, 0,
-		       (void *) &bar, 2, MPI_DOUBLE_INT, 0, 0,
-		       MPI_COMM_SELF, &recvstatus);
+                       (void *) &bar, 2, MPI_DOUBLE_INT, 0, 0, MPI_COMM_SELF, &recvstatus);
     if (err != MPI_SUCCESS) {
-	errs++;
-	if (verbose) fprintf(stderr, "MPI_Sendrecv returned error (%d)\n",
-			     err);
-	return errs;
+        errs++;
+        if (verbose)
+            fprintf(stderr, "MPI_Sendrecv returned error (%d)\n", err);
+        return errs;
     }
 
     err = MPI_Get_elements(&recvstatus, MPI_DOUBLE_INT, &count);
     if (err != MPI_SUCCESS) {
-	errs++;
-	if (verbose) fprintf(stderr, "MPI_Get_elements returned error (%d)\n",
-			     err);
+        errs++;
+        if (verbose)
+            fprintf(stderr, "MPI_Get_elements returned error (%d)\n", err);
     }
 
     if (count != 3) {
-	errs++;
-	if (verbose) fprintf(stderr,
-			     "MPI_Get_elements returned count of %d, should be 3\n",
-			     count);
+        errs++;
+        if (verbose)
+            fprintf(stderr, "MPI_Get_elements returned count of %d, should be 3\n", count);
     }
 
-    MPI_Type_free( &stype );
+    MPI_Type_free(&stype);
 
     return errs;
 }
@@ -101,6 +108,6 @@ int double_int_test(void)
 int parse_args(int argc, char **argv)
 {
     if (argc > 1 && strcmp(argv[1], "-v") == 0)
-	verbose = 1;
+        verbose = 1;
     return 0;
 }

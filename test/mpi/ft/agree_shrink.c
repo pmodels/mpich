@@ -27,7 +27,8 @@ int main(int argc, char **argv)
         MPI_Abort(dup, 1);
     }
 
-    if (2 == rank) exit(EXIT_FAILURE);
+    if (2 == rank)
+        exit(EXIT_FAILURE);
 
     if (MPI_SUCCESS == (rc = MPIX_Comm_agree(dup, &flag))) {
         MPI_Error_class(rc, &ec);

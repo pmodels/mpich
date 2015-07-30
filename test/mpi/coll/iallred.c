@@ -16,13 +16,13 @@ int main(int argc, char *argv[])
     int size, rank;
     int one = 1, two = 2, isum, sum;
 
-    MPI_Init(&argc,&argv);
+    MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     assert(size == 2);
-    MPI_Iallreduce(&one,&isum,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD,&request);
-    MPI_Allreduce(&two,&sum,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
-    MPI_Wait(&request,MPI_STATUS_IGNORE);
+    MPI_Iallreduce(&one, &isum, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &request);
+    MPI_Allreduce(&two, &sum, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Wait(&request, MPI_STATUS_IGNORE);
 
     assert(isum == 2);
     assert(sum == 4);
@@ -32,4 +32,3 @@ int main(int argc, char *argv[])
     MPI_Finalize();
     return 0;
 }
-

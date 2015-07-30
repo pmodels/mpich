@@ -56,26 +56,26 @@
 #endif
 
 /* Prototypes to keep compilers happy */
-int c2fwin_( int * );
-void f2cwin_( int * );
+int c2fwin_(int *);
+void f2cwin_(int *);
 
-int c2fwin_( int *win )
+int c2fwin_(int *win)
 {
-    MPI_Win cWin = MPI_Win_f2c( *win );
+    MPI_Win cWin = MPI_Win_f2c(*win);
     MPI_Group group, wgroup;
     int result;
 
-    MPI_Win_get_group( cWin, &group );
-    MPI_Comm_group( MPI_COMM_WORLD, &wgroup );
+    MPI_Win_get_group(cWin, &group);
+    MPI_Comm_group(MPI_COMM_WORLD, &wgroup);
 
-    MPI_Group_compare( group, wgroup, &result );
+    MPI_Group_compare(group, wgroup, &result);
     if (result != MPI_IDENT) {
-	fprintf( stderr, "Win: did not get expected group\n" );
-	return 1;
+        fprintf(stderr, "Win: did not get expected group\n");
+        return 1;
     }
 
-    MPI_Group_free( &group );
-    MPI_Group_free( &wgroup );
+    MPI_Group_free(&group);
+    MPI_Group_free(&wgroup);
 
     return 0;
 }
@@ -83,10 +83,9 @@ int c2fwin_( int *win )
 /*
  * The following routines provide handles to the calling Fortran program
  */
-void f2cwin_( int *win )
+void f2cwin_(int *win)
 {
     MPI_Win cWin;
-    MPI_Win_create( 0, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &cWin );
-    *win = MPI_Win_c2f( cWin );
+    MPI_Win_create(0, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &cWin);
+    *win = MPI_Win_c2f(cWin);
 }
-

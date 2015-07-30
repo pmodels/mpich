@@ -20,7 +20,7 @@
         err = (func);                       \
         if (err != MPI_SUCCESS)             \
             MPI_Abort(MPI_COMM_WORLD, err); \
-    } while(0)
+    } while (0)
 
 #define EAGER_SIZE 10
 #define RNDV_SIZE  100000
@@ -43,28 +43,29 @@ void reversed_tags_test()
         MPI_Send(send_buf, EAGER_SIZE, MPI_INT, 1, 0xB, MPI_COMM_WORLD);
         MPI_Send(send_buf, EAGER_SIZE, MPI_INT, 1, 0xC, MPI_COMM_WORLD);
         MPI_Send(send_buf, EAGER_SIZE, MPI_INT, 1, 0xD, MPI_COMM_WORLD);
-    } else if (rank == 1) {
+    }
+    else if (rank == 1) {
         int recv_buf[EAGER_SIZE];
         MPI_Status status;
 
         MPI_Recv(recv_buf, EAGER_SIZE, MPI_INT, 0, 0xD, MPI_COMM_WORLD, &status);
         TRY(MPI_T_pvar_read(session, uqsize_handle, &unexpected_recvq_buffer_size));
-        assert(unexpected_recvq_buffer_size == 3*EAGER_SIZE*sizeof(int));
+        assert(unexpected_recvq_buffer_size == 3 * EAGER_SIZE * sizeof(int));
 
         MPI_Recv(recv_buf, EAGER_SIZE, MPI_INT, 0, 0xC, MPI_COMM_WORLD, &status);
         TRY(MPI_T_pvar_read(session, uqsize_handle, &unexpected_recvq_buffer_size));
-        assert(unexpected_recvq_buffer_size == 2*EAGER_SIZE*sizeof(int));
+        assert(unexpected_recvq_buffer_size == 2 * EAGER_SIZE * sizeof(int));
 
         MPI_Recv(recv_buf, EAGER_SIZE, MPI_INT, 0, 0xB, MPI_COMM_WORLD, &status);
         TRY(MPI_T_pvar_read(session, uqsize_handle, &unexpected_recvq_buffer_size));
-        assert(unexpected_recvq_buffer_size == 1*EAGER_SIZE*sizeof(int));
+        assert(unexpected_recvq_buffer_size == 1 * EAGER_SIZE * sizeof(int));
 
         MPI_Recv(recv_buf, EAGER_SIZE, MPI_INT, 0, 0xA, MPI_COMM_WORLD, &status);
         TRY(MPI_T_pvar_read(session, uqsize_handle, &unexpected_recvq_buffer_size));
-        assert(unexpected_recvq_buffer_size == 0*EAGER_SIZE*sizeof(int));
+        assert(unexpected_recvq_buffer_size == 0 * EAGER_SIZE * sizeof(int));
     }
 
-    MPI_Barrier(MPI_COMM_WORLD);  /* make sure this test is over before going to the next one */
+    MPI_Barrier(MPI_COMM_WORLD);        /* make sure this test is over before going to the next one */
 }
 
 /* Rendezvous-based messages will never be unexpected (except for the initial RTS,
@@ -79,7 +80,8 @@ void rndv_test()
 
         MPI_Send(send_buf, RNDV_SIZE, MPI_INT, 1, 0, MPI_COMM_WORLD);
         MPI_Send(send_buf, RNDV_SIZE, MPI_INT, 1, 0, MPI_COMM_WORLD);
-    } else if (rank == 1) {
+    }
+    else if (rank == 1) {
         int recv_buf[RNDV_SIZE];
         MPI_Status status;
 
@@ -92,7 +94,7 @@ void rndv_test()
         assert(unexpected_recvq_buffer_size == 0);
     }
 
-    MPI_Barrier(MPI_COMM_WORLD);  /* make sure this test is over before going to the next one */
+    MPI_Barrier(MPI_COMM_WORLD);        /* make sure this test is over before going to the next one */
 }
 
 int main(int argc, char *argv[])

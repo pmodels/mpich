@@ -14,7 +14,8 @@
 
 MPI_Comm comm_all;
 
-void error_handler(MPI_Comm *communicator, int *error_code, ...) {
+void error_handler(MPI_Comm * communicator, int *error_code, ...)
+{
     MPI_Comm *new_comm = malloc(sizeof(MPI_Comm));
 
     MPIX_Comm_revoke(comm_all);
@@ -25,7 +26,8 @@ void error_handler(MPI_Comm *communicator, int *error_code, ...) {
     comm_all = *new_comm;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     int rank, size, i;
     int sum = 0, val = 1;
     int errs = 0;
@@ -50,7 +52,8 @@ int main(int argc, char *argv[]) {
         sum = 0;
         if (i == 5 && rank == 1) {
             exit(1);
-        } else if (i != 5) {
+        }
+        else if (i != 5) {
             MPI_Allreduce(&val, &sum, 1, MPI_INT, MPI_SUM, comm_all);
             if (sum != size && rank == 0) {
                 errs++;
@@ -61,7 +64,8 @@ int main(int argc, char *argv[]) {
 
     if (0 == rank && errs) {
         fprintf(stdout, " Found %d errors\n", errs);
-    } else if (0 == rank) {
+    }
+    else if (0 == rank) {
         fprintf(stdout, " No errors\n");
     }
 

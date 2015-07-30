@@ -11,14 +11,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     int my_rank, shared_rank;
     void *mybase = NULL;
     MPI_Win win;
     MPI_Info win_info;
     MPI_Comm shared_comm;
     int i;
-    int shm_win_size = 1024 * 1024 * 1024 * sizeof(char); /* 1GB */
+    int shm_win_size = 1024 * 1024 * 1024 * sizeof(char);       /* 1GB */
 
     MPI_Init(&argc, &argv);
 
@@ -27,13 +28,14 @@ int main(int argc, char **argv) {
     for (i = 0; i < 2; i++) {
         if (i == 0) {
             MPI_Info_create(&win_info);
-            MPI_Info_set(win_info, (char*)"alloc_shm", (char*)"true");
+            MPI_Info_set(win_info, (char *) "alloc_shm", (char *) "true");
         }
         else {
             win_info = MPI_INFO_NULL;
         }
 
-        MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, my_rank, MPI_INFO_NULL, &shared_comm);
+        MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, my_rank, MPI_INFO_NULL,
+                            &shared_comm);
 
         MPI_Comm_rank(shared_comm, &shared_rank);
 
@@ -55,7 +57,8 @@ int main(int argc, char **argv) {
         MPI_Win_free(&win);
 
         if (shared_rank % 2 == 0)
-            MPI_Win_allocate_shared(shm_win_size, sizeof(char), win_info, shared_comm, &mybase, &win);
+            MPI_Win_allocate_shared(shm_win_size, sizeof(char), win_info, shared_comm, &mybase,
+                                    &win);
         else
             MPI_Win_allocate_shared(0, sizeof(char), win_info, shared_comm, &mybase, &win);
 
@@ -65,15 +68,18 @@ int main(int argc, char **argv) {
         if (my_rank % 2 == 0)
             MPI_Win_allocate(shm_win_size, sizeof(char), win_info, MPI_COMM_WORLD, &mybase, &win);
         else
-            MPI_Win_allocate(shm_win_size/2, sizeof(char), win_info, MPI_COMM_WORLD, &mybase, &win);
+            MPI_Win_allocate(shm_win_size / 2, sizeof(char), win_info, MPI_COMM_WORLD, &mybase,
+                             &win);
 
         MPI_Win_free(&win);
 
         /* some processes allocate 1GB and some processes allocate smaller bytes */
         if (shared_rank % 2 == 0)
-            MPI_Win_allocate_shared(shm_win_size, sizeof(char), win_info, shared_comm, &mybase, &win);
+            MPI_Win_allocate_shared(shm_win_size, sizeof(char), win_info, shared_comm, &mybase,
+                                    &win);
         else
-            MPI_Win_allocate_shared(shm_win_size/2, sizeof(char), win_info, shared_comm, &mybase, &win);
+            MPI_Win_allocate_shared(shm_win_size / 2, sizeof(char), win_info, shared_comm, &mybase,
+                                    &win);
 
         MPI_Win_free(&win);
 

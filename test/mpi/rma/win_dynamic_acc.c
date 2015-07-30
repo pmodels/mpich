@@ -15,13 +15,14 @@
 
 const int verbose = 0;
 
-int main(int argc, char **argv) {
-    int       i, rank, nproc;
-    int       errors = 0, all_errors = 0;
-    int       val = 0, one = 1;
-    int       iter;
+int main(int argc, char **argv)
+{
+    int i, rank, nproc;
+    int errors = 0, all_errors = 0;
+    int val = 0, one = 1;
+    int iter;
     MPI_Aint *val_ptrs;
-    MPI_Win   dyn_win;
+    MPI_Win dyn_win;
 
     MPI_Init(&argc, &argv);
 
@@ -33,22 +34,22 @@ int main(int argc, char **argv) {
     val_ptrs = malloc(nproc * sizeof(MPI_Aint));
     MPI_Get_address(&val, &val_ptrs[rank]);
 
-    MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, val_ptrs, 1, MPI_AINT,
-                  MPI_COMM_WORLD);
+    MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, val_ptrs, 1, MPI_AINT, MPI_COMM_WORLD);
 
     MPI_Win_create_dynamic(MPI_INFO_NULL, MPI_COMM_WORLD, &dyn_win);
     MPI_Win_attach(dyn_win, &val, sizeof(int));
 
     for (i = 0; i < iter; i++) {
-            MPI_Win_fence(MPI_MODE_NOPRECEDE, dyn_win);
-            MPI_Accumulate(&one, 1, MPI_INT, i%nproc, val_ptrs[i%nproc], 1, MPI_INT, MPI_SUM, dyn_win);
-            MPI_Win_fence(MPI_MODE_NOSUCCEED, dyn_win);
+        MPI_Win_fence(MPI_MODE_NOPRECEDE, dyn_win);
+        MPI_Accumulate(&one, 1, MPI_INT, i % nproc, val_ptrs[i % nproc], 1, MPI_INT, MPI_SUM,
+                       dyn_win);
+        MPI_Win_fence(MPI_MODE_NOSUCCEED, dyn_win);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* Read and verify my data */
-    if ( val != iter ) {
+    if (val != iter) {
         errors++;
         printf("%d -- Got %d, expected %d\n", rank, val, iter);
     }

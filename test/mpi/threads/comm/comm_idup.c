@@ -20,10 +20,10 @@
         }               \
     } while (0)
 
-MPI_Comm               comms[NUM_THREADS];
+MPI_Comm comms[NUM_THREADS];
 MTEST_THREAD_LOCK_TYPE comm_lock;
-int                    rank, size;
-int                    verbose = 0;
+int rank, size;
+int verbose = 0;
 
 MTEST_THREAD_RETURN_TYPE test_comm_dup(void *arg)
 {
@@ -31,39 +31,44 @@ MTEST_THREAD_RETURN_TYPE test_comm_dup(void *arg)
     int i;
     MPI_Request req;
 
-    MPI_Comm_rank(comms[*(int*)arg], &rank);
+    MPI_Comm_rank(comms[*(int *) arg], &rank);
 
     for (i = 0; i < NUM_ITER; i++) {
-        MPI_Comm    comm, self_dup;
+        MPI_Comm comm, self_dup;
 
-        if (*(int*)arg == rank) {
+        if (*(int *) arg == rank) {
             MTestSleep(1);
         }
 
         MTest_thread_lock(&comm_lock);
-        if (verbose) printf("%d: Thread %d - COMM_IDUP %d start\n", rank, *(int*)arg, i);
+        if (verbose)
+            printf("%d: Thread %d - COMM_IDUP %d start\n", rank, *(int *) arg, i);
         MPI_Comm_idup(MPI_COMM_SELF, &self_dup, &req);
         MPI_Wait(&req, MPI_STATUS_IGNORE);
-        if (verbose) printf("\t%d: Thread %d - COMM_IDUP %d finish\n", rank, *(int*)arg, i);
+        if (verbose)
+            printf("\t%d: Thread %d - COMM_IDUP %d finish\n", rank, *(int *) arg, i);
         MTest_thread_unlock(&comm_lock);
         MPI_Comm_free(&self_dup);
 
-        if (verbose) printf("%d: Thread %d - comm_idup %d start\n", rank, *(int*)arg, i);
-        MPI_Comm_idup(comms[*(int*)arg], &comm, &req);
+        if (verbose)
+            printf("%d: Thread %d - comm_idup %d start\n", rank, *(int *) arg, i);
+        MPI_Comm_idup(comms[*(int *) arg], &comm, &req);
         MPI_Wait(&req, MPI_STATUS_IGNORE);
         MPI_Comm_free(&comm);
-        if (verbose) printf("\t%d: Thread %d - comm_idup %d finish\n", rank, *(int*)arg, i);
+        if (verbose)
+            printf("\t%d: Thread %d - comm_idup %d finish\n", rank, *(int *) arg, i);
     }
 
-    if (verbose) printf("%d: Thread %d - Done.\n", rank, *(int*)arg);
-    return (MTEST_THREAD_RETURN_TYPE)0;
+    if (verbose)
+        printf("%d: Thread %d - Done.\n", rank, *(int *) arg);
+    return (MTEST_THREAD_RETURN_TYPE) 0;
 }
 
 
 int main(int argc, char **argv)
 {
-    int         thread_args[NUM_THREADS];
-    int         i, provided;
+    int thread_args[NUM_THREADS];
+    int i, provided;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
@@ -80,7 +85,7 @@ int main(int argc, char **argv)
 
     for (i = 0; i < NUM_THREADS; i++) {
         thread_args[i] = i;
-        MTest_Start_thread( test_comm_dup, (void *)&thread_args[i] );
+        MTest_Start_thread(test_comm_dup, (void *) &thread_args[i]);
     }
 
     MTest_Join_threads();

@@ -24,7 +24,7 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     if (size < 2) {
-        fprintf( stderr, "Must run with at least 2 processes\n" );
+        fprintf(stderr, "Must run with at least 2 processes\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
@@ -40,7 +40,8 @@ int main(int argc, char **argv)
     MPI_Error_class(rc, &ec);
     if (ec != MPIX_ERR_REVOKED) {
         MPI_Error_string(ec, error, &size);
-        fprintf(stderr, "[%d] MPI_Barrier should have returned MPIX_ERR_REVOKED (%d), but it actually returned: %d\n%s\n",
+        fprintf(stderr,
+                "[%d] MPI_Barrier should have returned MPIX_ERR_REVOKED (%d), but it actually returned: %d\n%s\n",
                 rank, MPIX_ERR_REVOKED, ec, error);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }

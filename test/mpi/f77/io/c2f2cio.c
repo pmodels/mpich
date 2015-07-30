@@ -5,7 +5,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 /*
- * This file contains the C routines used in testing the c2f and f2c 
+ * This file contains the C routines used in testing the c2f and f2c
  * handle conversion functions for MPI_File
  * The tests follow this pattern:
  *
@@ -29,11 +29,11 @@
 #include "../../include/mpitestconf.h"
 #include <string.h>
 
-/* 
+/*
    Name mapping.  All routines are created with names that are lower case
    with a single trailing underscore.  This matches many compilers.
    We use #define to change the name for Fortran compilers that do
-   not use the lowercase/underscore pattern 
+   not use the lowercase/underscore pattern
 */
 
 #ifdef F77_NAME_UPPER
@@ -49,48 +49,48 @@
       defined(F77_NAME_MIXED_USCORE)
 /* Else leave name alone (routines have no underscore, so both
    of these map to a lowercase, single underscore) */
-#else 
+#else
 #error 'Unrecognized Fortran name mapping'
 #endif
 
 /* Prototypes to keep compilers happy */
-int c2ffile_( int * );
-void f2cfile_( int * );
+int c2ffile_(int *);
+void f2cfile_(int *);
 
-int c2ffile_ ( int *file )
+int c2ffile_(int *file)
 {
-    MPI_File cFile = MPI_File_f2c( *file );
+    MPI_File cFile = MPI_File_f2c(*file);
     MPI_Group group, wgroup;
     int result;
 
-    MPI_File_get_group( cFile, &group );
-    MPI_Comm_group( MPI_COMM_WORLD, &wgroup );
+    MPI_File_get_group(cFile, &group);
+    MPI_Comm_group(MPI_COMM_WORLD, &wgroup);
 
-    MPI_Group_compare( group, wgroup, &result );
+    MPI_Group_compare(group, wgroup, &result);
     if (result != MPI_IDENT) {
-	fprintf( stderr, "File: did not get expected group\n" );
-	return 1;
+        fprintf(stderr, "File: did not get expected group\n");
+        return 1;
     }
 
-    MPI_Group_free( &group );
-    MPI_Group_free( &wgroup );
+    MPI_Group_free(&group);
+    MPI_Group_free(&wgroup);
     return 0;
 }
 
-/* 
+/*
  * The following routines provide handles to the calling Fortran program
  */
-void f2cfile_( int *file )
+void f2cfile_(int *file)
 {
     MPI_File cFile;
     int rc;
-    rc = MPI_File_open( MPI_COMM_WORLD, (char*)"temp", 
-		   MPI_MODE_RDWR | MPI_MODE_DELETE_ON_CLOSE | MPI_MODE_CREATE, 
-		   MPI_INFO_NULL, &cFile );
+    rc = MPI_File_open(MPI_COMM_WORLD, (char *) "temp",
+                       MPI_MODE_RDWR | MPI_MODE_DELETE_ON_CLOSE | MPI_MODE_CREATE,
+                       MPI_INFO_NULL, &cFile);
     if (rc) {
-	*file = 0;
+        *file = 0;
     }
     else {
-	*file = MPI_File_c2f( cFile );
+        *file = MPI_File_c2f(cFile);
     }
 }

@@ -39,9 +39,9 @@ int main(int argc, char **argv)
     int num_pvars, num_cvars, num_cat;
 #define STR_SZ (50)
     int name_len;
-    char name[STR_SZ+1] = ""; /* +1 to check for overrun */
+    char name[STR_SZ + 1] = ""; /* +1 to check for overrun */
     int desc_len;
-    char desc[STR_SZ+1] = ""; /* +1 to check for overrun */
+    char desc[STR_SZ + 1] = ""; /* +1 to check for overrun */
     int verb;
     MPI_Datatype dtype;
     int count;
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     int provided;
 
     /* Init'ed to a garbage value, to trigger MPI_T bugs easily if there are. */
-    MPI_T_enum enumtype = (MPI_T_enum)0x31415926; 
+    MPI_T_enum enumtype = (MPI_T_enum) 0x31415926;
 
     MPI_Init(&argc, &argv);
     MPI_T_init_thread(MPI_THREAD_SINGLE, &provided);
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
         /* pass NULL string, non-zero lengths; should get full lengths */
         full_name_len = full_desc_len = 1;
         MPI_T_cvar_get_info(i, NULL, &full_name_len, &verb, &dtype,
-                             &enumtype, NULL, &full_desc_len, &bind, &scope);
+                            &enumtype, NULL, &full_desc_len, &bind, &scope);
         check(full_name_len >= 0);
         check(full_desc_len >= 0);
 
@@ -92,8 +92,8 @@ int main(int argc, char **argv)
             name[j] = j % CHAR_MAX;
             desc[j] = j % CHAR_MAX;
         }
-        MPI_T_cvar_get_info(i, name, /*name_len=*/NULL, &verb, &dtype,
-                            &enumtype, desc, /*desc_len=*/NULL, &bind, &scope);
+        MPI_T_cvar_get_info(i, name, /*name_len= */ NULL, &verb, &dtype,
+                            &enumtype, desc, /*desc_len= */ NULL, &bind, &scope);
         for (j = 0; j < STR_SZ; ++j) {
             check(name[j] == j % CHAR_MAX);
             check(desc[j] == j % CHAR_MAX);
@@ -129,32 +129,30 @@ int main(int argc, char **argv)
         /* pass non-NULL string, zero lengths; should get full lengths also */
         name_len = desc_len = 0;
         MPI_T_pvar_get_info(i, name, &name_len, &verb, &varclass, &dtype,
-                            &enumtype, desc, &desc_len, &bind, &readonly,
-                            &continuous, &atomic);
+                            &enumtype, desc, &desc_len, &bind, &readonly, &continuous, &atomic);
         check(full_name_len == name_len);
         check(full_desc_len == desc_len);
 
         /* regular call, no NULLs; should truncate (with termination) to STR_SZ
          * if necessary, otherwise returns strlen+1 in the corresponding "_len"
          * var */
-        name[STR_SZ] = (char)'Z';
-        desc[STR_SZ] = (char)'Z';
+        name[STR_SZ] = (char) 'Z';
+        desc[STR_SZ] = (char) 'Z';
         name_len = desc_len = STR_SZ;
         MPI_T_pvar_get_info(i, name, &name_len, &verb, &varclass, &dtype,
-                            &enumtype, desc, &desc_len, &bind, &readonly,
-                            &continuous, &atomic);
+                            &enumtype, desc, &desc_len, &bind, &readonly, &continuous, &atomic);
         check((strlen(name) + 1) == min(name_len, STR_SZ));
         check((strlen(desc) + 1) == min(desc_len, STR_SZ));
-        check(name[STR_SZ] == (char)'Z');
-        check(desc[STR_SZ] == (char)'Z');
+        check(name[STR_SZ] == (char) 'Z');
+        check(desc[STR_SZ] == (char) 'Z');
 
         /* pass NULL lengths, string buffers should be left alone */
         for (j = 0; j < STR_SZ; ++j) {
             name[j] = j % CHAR_MAX;
             desc[j] = j % CHAR_MAX;
         }
-        MPI_T_pvar_get_info(i, name, /*name_len=*/NULL, &verb, &varclass, &dtype,
-                            &enumtype, desc, /*desc_len=*/NULL, &bind, &readonly,
+        MPI_T_pvar_get_info(i, name, /*name_len= */ NULL, &verb, &varclass, &dtype,
+                            &enumtype, desc, /*desc_len= */ NULL, &bind, &readonly,
                             &continuous, &atomic);
         for (j = 0; j < STR_SZ; ++j) {
             check(name[j] == j % CHAR_MAX);
@@ -169,38 +167,38 @@ int main(int argc, char **argv)
         /* pass NULL string, non-zero lengths; should get full lengths */
         full_name_len = full_desc_len = 1;
         MPI_T_category_get_info(i, NULL, &full_name_len, NULL, &full_desc_len,
-                                &num_cvars, &num_pvars, /*num_categories=*/&j);
+                                &num_cvars, &num_pvars, /*num_categories= */ &j);
         check(full_name_len >= 0);
         check(full_desc_len >= 0);
 
         /* pass non-NULL string, zero lengths; should get full lengths also */
         name_len = desc_len = 0;
         MPI_T_category_get_info(i, name, &name_len, desc, &desc_len,
-                                &num_cvars, &num_pvars, /*num_categories=*/&j);
+                                &num_cvars, &num_pvars, /*num_categories= */ &j);
         check(full_name_len == name_len);
         check(full_desc_len == desc_len);
 
         /* regular call, no NULLs; should truncate (with termination) to STR_SZ
          * if necessary, otherwise returns strlen+1 in the corresponding "_len"
          * var */
-        name[STR_SZ] = (char)'Z';
-        desc[STR_SZ] = (char)'Z';
+        name[STR_SZ] = (char) 'Z';
+        desc[STR_SZ] = (char) 'Z';
         name_len = desc_len = STR_SZ;
         MPI_T_category_get_info(i, name, &name_len, desc, &desc_len,
-                                &num_cvars, &num_pvars, /*num_categories=*/&j);
+                                &num_cvars, &num_pvars, /*num_categories= */ &j);
         check((strlen(name) + 1) == min(name_len, STR_SZ));
         check((strlen(desc) + 1) == min(desc_len, STR_SZ));
-        check(name[STR_SZ] == (char)'Z');
-        check(desc[STR_SZ] == (char)'Z');
+        check(name[STR_SZ] == (char) 'Z');
+        check(desc[STR_SZ] == (char) 'Z');
 
         /* pass NULL lengths, string buffers should be left alone */
         for (j = 0; j < STR_SZ; ++j) {
             name[j] = j % CHAR_MAX;
             desc[j] = j % CHAR_MAX;
         }
-        MPI_T_category_get_info(i, name, /*name_len=*/NULL, desc,
-                                /*desc_len=*/NULL, &num_cvars, &num_pvars,
-                                /*num_categories=*/&j);
+        MPI_T_category_get_info(i, name, /*name_len= */ NULL, desc,
+                                /*desc_len= */ NULL, &num_cvars, &num_pvars,
+                                /*num_categories= */ &j);
         for (j = 0; j < STR_SZ; ++j) {
             check(name[j] == j % CHAR_MAX);
             check(desc[j] == j % CHAR_MAX);
@@ -229,4 +227,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-

@@ -18,7 +18,8 @@
 #define NUM_IDUPS   5
 
 MPI_Comm comms[NUM_THREADS];
-MPI_Comm errs[NUM_THREADS] = {0};
+MPI_Comm errs[NUM_THREADS] = { 0 };
+
 int verbose = 0;
 
 MTEST_THREAD_RETURN_TYPE test_idup(void *arg)
@@ -28,7 +29,7 @@ MTEST_THREAD_RETURN_TYPE test_idup(void *arg)
     int ranges[1][3];
     int rleader, isLeft;
     int *excl = NULL;
-    int tid = *(int*)arg;
+    int tid = *(int *) arg;
 
     MPI_Group ingroup, high_group, even_group;
     MPI_Comm local_comm, inter_comm;
@@ -55,13 +56,13 @@ MTEST_THREAD_RETURN_TYPE test_idup(void *arg)
     MTestFreeComm(&outcomm);
 
     /* Comm_split */
-    MPI_Comm_split(incomm, rank%2, size-rank, &outcomm);
+    MPI_Comm_split(incomm, rank % 2, size - rank, &outcomm);
     errs[tid] += MTestTestComm(outcomm);
     MTestFreeComm(&outcomm);
 
-     /* Comm_create, high half of incomm */
-    ranges[0][0] = size/2;
-    ranges[0][1] = size-1;
+    /* Comm_create, high half of incomm */
+    ranges[0][0] = size / 2;
+    ranges[0][1] = size - 1;
     ranges[0][2] = 1;
     MPI_Group_range_incl(ingroup, 1, ranges, &high_group);
     MPI_Comm_create(incomm, high_group, &outcomm);
@@ -71,16 +72,18 @@ MTEST_THREAD_RETURN_TYPE test_idup(void *arg)
 
     /* Comm_create_group, even ranks of incomm */
     /* exclude the odd ranks */
-    excl = malloc((size/2) * sizeof(int));
-    for (i = 0; i < size / 2; i++) excl[i] = (2 * i) + 1;
+    excl = malloc((size / 2) * sizeof(int));
+    for (i = 0; i < size / 2; i++)
+        excl[i] = (2 * i) + 1;
 
     MPI_Group_excl(ingroup, size / 2, excl, &even_group);
     free(excl);
 
     if (rank % 2 == 0) {
         MPI_Comm_create_group(incomm, even_group, 0, &outcomm);
-    } else {
-       outcomm = MPI_COMM_NULL;
+    }
+    else {
+        outcomm = MPI_COMM_NULL;
     }
     MPI_Group_free(&even_group);
 
@@ -88,12 +91,18 @@ MTEST_THREAD_RETURN_TYPE test_idup(void *arg)
     MTestFreeComm(&outcomm);
 
     /* Intercomm_create & Intercomm_merge */
-    MPI_Comm_split(incomm, (rank < size/2), rank, &local_comm);
+    MPI_Comm_split(incomm, (rank < size / 2), rank, &local_comm);
 
-    if (rank == 0) { rleader = size/2; }
-    else if (rank == size/2) { rleader = 0; }
-    else { rleader = -1; }
-    isLeft = rank < size/2;
+    if (rank == 0) {
+        rleader = size / 2;
+    }
+    else if (rank == size / 2) {
+        rleader = 0;
+    }
+    else {
+        rleader = -1;
+    }
+    isLeft = rank < size / 2;
 
     MPI_Intercomm_create(local_comm, 0, incomm, rleader, 99, &inter_comm);
     MPI_Intercomm_merge(inter_comm, isLeft, &outcomm);
@@ -143,7 +152,7 @@ int main(int argc, char **argv)
 
     for (i = 0; i < NUM_THREADS; i++) {
         thread_args[i] = i;
-        MTest_Start_thread(test_idup, (void *)&thread_args[i] );
+        MTest_Start_thread(test_idup, (void *) &thread_args[i]);
     }
 
     MTest_Join_threads();

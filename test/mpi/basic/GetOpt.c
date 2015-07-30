@@ -7,108 +7,95 @@
 #include "GetOpt.h"
 #include <stdio.h>
 
-bool GetOpt(int *argc, LPTSTR **argv, CLPTSTR flag)
+bool GetOpt(int *argc, LPTSTR ** argv, CLPTSTR flag)
 {
-  int i,j;
-  if (flag == NULL)
-    return false;
-  
-  for (i=0; i<*argc; i++)
-    {
-      if (_tcsicmp((*argv)[i], flag) == 0)
-	{
-	  for (j=i; j<*argc; j++)
-	    {
-	      (*argv)[j] = (*argv)[j+1];
-	    }
-	  *argc -= 1;
-	  return true;
-	}
+    int i, j;
+    if (flag == NULL)
+        return false;
+
+    for (i = 0; i < *argc; i++) {
+        if (_tcsicmp((*argv)[i], flag) == 0) {
+            for (j = i; j < *argc; j++) {
+                (*argv)[j] = (*argv)[j + 1];
+            }
+            *argc -= 1;
+            return true;
+        }
     }
-  return false;
+    return false;
 }
 
-bool GetOptInt(int *argc, LPTSTR **argv, CLPTSTR flag, int *n)
+bool GetOptInt(int *argc, LPTSTR ** argv, CLPTSTR flag, int *n)
 {
-  int i,j;
-  if (flag == NULL)
-    return false;
-  
-  for (i=0; i<*argc; i++)
-    {
-      if (_tcsicmp((*argv)[i], flag) == 0)
-	{
-	  if (i+1 == *argc)
-	    return false;
-	  *n = _ttoi((*argv)[i+1]);
-	  for (j=i; j<*argc-1; j++)
-	    {
-	      (*argv)[j] = (*argv)[j+2];
-	    }
-	  *argc -= 2;
-	  return true;
-	}
+    int i, j;
+    if (flag == NULL)
+        return false;
+
+    for (i = 0; i < *argc; i++) {
+        if (_tcsicmp((*argv)[i], flag) == 0) {
+            if (i + 1 == *argc)
+                return false;
+            *n = _ttoi((*argv)[i + 1]);
+            for (j = i; j < *argc - 1; j++) {
+                (*argv)[j] = (*argv)[j + 2];
+            }
+            *argc -= 2;
+            return true;
+        }
     }
-  return false;
+    return false;
 }
 
-bool GetOptLong(int *argc, LPTSTR **argv, CLPTSTR flag, long *n)
+bool GetOptLong(int *argc, LPTSTR ** argv, CLPTSTR flag, long *n)
 {
-  int i;
-  if (GetOptInt(argc, argv, flag, &i))
-    {
-      *n = (long)i;
-      return true;
+    int i;
+    if (GetOptInt(argc, argv, flag, &i)) {
+        *n = (long) i;
+        return true;
     }
-  return false;
+    return false;
 }
 
-bool GetOptDouble(int *argc, LPTSTR **argv, CLPTSTR flag, double *d)
+bool GetOptDouble(int *argc, LPTSTR ** argv, CLPTSTR flag, double *d)
 {
-  int i,j;
+    int i, j;
 
-  if (flag == NULL)
-    return false;
-  
-  for (i=0; i<*argc; i++)
-    {
-      if (_tcsicmp((*argv)[i], flag) == 0)
-	{
-	  if (i+1 == *argc)
-	    return false;
-	  *d = _tcstod((*argv)[i+1], NULL);
-	  for (j=i; j<*argc-1; j++)
-	    {
-	      (*argv)[j] = (*argv)[j+2];
-	    }
-	  *argc -= 2;
-	  return true;
-	}
+    if (flag == NULL)
+        return false;
+
+    for (i = 0; i < *argc; i++) {
+        if (_tcsicmp((*argv)[i], flag) == 0) {
+            if (i + 1 == *argc)
+                return false;
+            *d = _tcstod((*argv)[i + 1], NULL);
+            for (j = i; j < *argc - 1; j++) {
+                (*argv)[j] = (*argv)[j + 2];
+            }
+            *argc -= 2;
+            return true;
+        }
     }
-  return false;
+    return false;
 }
 
-bool GetOptString(int *argc, LPTSTR **argv, CLPTSTR flag, char *str)
+bool GetOptString(int *argc, LPTSTR ** argv, CLPTSTR flag, char *str)
 {
-  int i,j;
+    int i, j;
 
-  if (flag == NULL)
-    return false;
+    if (flag == NULL)
+        return false;
 
-  for (i=0; i<*argc; i++)
-    {
-      if (_tcsicmp((*argv)[i], flag) == 0)
-	{
-	  if (i+1 == *argc)
-	    return false;
-	  strcpy(str, (*argv)[i+1]);
-	  for (j=i; j<*argc-1; j++)
-	    {
-	      (*argv)[j] = (*argv)[j+2];
-	    }
-	  *argc -= 2;
-	  return true;
-	}
+    for (i = 0; i < *argc; i++) {
+        if (_tcsicmp((*argv)[i], flag) == 0) {
+            if (i + 1 == *argc)
+                return false;
+            strcpy(str, (*argv)[i + 1]);
+            for (j = i; j < *argc - 1; j++) {
+                (*argv)[j] = (*argv)[j + 2];
+            }
+            *argc -= 2;
+            return true;
+        }
     }
-  return false;
+    return false;
 }

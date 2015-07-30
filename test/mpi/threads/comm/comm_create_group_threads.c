@@ -20,20 +20,20 @@
         }               \
     } while (0)
 
-MPI_Comm               comms[NUM_THREADS];
+MPI_Comm comms[NUM_THREADS];
 MTEST_THREAD_LOCK_TYPE comm_lock;
-int                    rank, size;
-int                    verbose = 0;
+int rank, size;
+int verbose = 0;
 
 MTEST_THREAD_RETURN_TYPE test_comm_create_group(void *arg)
 {
     int i;
 
     for (i = 0; i < NUM_ITER; i++) {
-        MPI_Group   world_group;
-        MPI_Comm    comm, self_dup;
+        MPI_Group world_group;
+        MPI_Comm comm, self_dup;
 
-        MPI_Comm_group(comms[*(int*)arg], &world_group);
+        MPI_Comm_group(comms[*(int *) arg], &world_group);
 
         /* Every thread paticipates in a distinct MPI_Comm_create group,
          * distinguished by its thread-id (used as the tag).  Threads on even
@@ -41,11 +41,13 @@ MTEST_THREAD_RETURN_TYPE test_comm_create_group(void *arg)
          */
 
 #ifndef USE_STRICT_MPI
-        if (verbose) printf("%d: Thread %d - Comm_create_group %d start\n", rank, *(int*)arg, i);
-        MPI_Comm_create_group(comms[*(int*)arg], world_group, *(int*)arg /* tag */, &comm);
+        if (verbose)
+            printf("%d: Thread %d - Comm_create_group %d start\n", rank, *(int *) arg, i);
+        MPI_Comm_create_group(comms[*(int *) arg], world_group, *(int *) arg /* tag */ , &comm);
         MPI_Barrier(comm);
         MPI_Comm_free(&comm);
-        if (verbose) printf("%d: Thread %d - Comm_create_group %d finish\n", rank, *(int*)arg, i);
+        if (verbose)
+            printf("%d: Thread %d - Comm_create_group %d finish\n", rank, *(int *) arg, i);
 #endif /* USE_STRICT_MPI */
 
         MPI_Group_free(&world_group);
@@ -56,24 +58,27 @@ MTEST_THREAD_RETURN_TYPE test_comm_create_group(void *arg)
          * collective semantics.
          */
         MTest_thread_lock(&comm_lock);
-        if (verbose) printf("%d: Thread %d - Comm_dup %d start\n", rank, *(int*)arg, i);
+        if (verbose)
+            printf("%d: Thread %d - Comm_dup %d start\n", rank, *(int *) arg, i);
         MPI_Comm_dup(MPI_COMM_SELF, &self_dup);
-        if (verbose) printf("%d: Thread %d - Comm_dup %d finish\n", rank, *(int*)arg, i);
+        if (verbose)
+            printf("%d: Thread %d - Comm_dup %d finish\n", rank, *(int *) arg, i);
         MTest_thread_unlock(&comm_lock);
 
         MPI_Barrier(self_dup);
         MPI_Comm_free(&self_dup);
     }
 
-    if (verbose) printf("%d: Thread %d - Done.\n", rank, *(int*)arg);
+    if (verbose)
+        printf("%d: Thread %d - Done.\n", rank, *(int *) arg);
     return NULL;
 }
 
 
 int main(int argc, char **argv)
 {
-    int         thread_args[NUM_THREADS];
-    int         i, err, provided;
+    int thread_args[NUM_THREADS];
+    int i, err, provided;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
@@ -90,7 +95,7 @@ int main(int argc, char **argv)
 
     for (i = 0; i < NUM_THREADS; i++) {
         thread_args[i] = i;
-        MTest_Start_thread( test_comm_create_group, (void *)&thread_args[i] );
+        MTest_Start_thread(test_comm_create_group, (void *) &thread_args[i]);
     }
 
     MTest_Join_threads();

@@ -10,25 +10,25 @@
 #include "mpitest.h"
 
 /* calling lookup_name 15 times in a loop when the name has not been
-   been published used to cause MPICH to crash. Adding this as a 
+   been published used to cause MPICH to crash. Adding this as a
    regression test */
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
     int errs = 0, i;
     char port_name[MPI_MAX_PORT_NAME], serv_name[256];
 
-    MTest_Init( &argc, &argv );
+    MTest_Init(&argc, &argv);
 
-    strcpy( serv_name, "MyTest" );
+    strcpy(serv_name, "MyTest");
 
-    MPI_Comm_set_errhandler( MPI_COMM_WORLD, MPI_ERRORS_RETURN );
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
-    for (i=0; i<20; i++) 
-	MPI_Lookup_name(serv_name, MPI_INFO_NULL, port_name);
+    for (i = 0; i < 20; i++)
+        MPI_Lookup_name(serv_name, MPI_INFO_NULL, port_name);
 
-    MTest_Finalize( errs );
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
-  
+
 }

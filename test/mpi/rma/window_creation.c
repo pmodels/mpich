@@ -15,39 +15,47 @@
 
 static int verbose = 0;
 
-int main(int argc, char ** argv) {
-  int      rank, nproc, i;
-  void    *base_ptrs[NUM_WIN];
-  MPI_Win  windows[NUM_WIN];
+int main(int argc, char **argv)
+{
+    int rank, nproc, i;
+    void *base_ptrs[NUM_WIN];
+    MPI_Win windows[NUM_WIN];
 
-  MPI_Init(&argc, &argv);
+    MPI_Init(&argc, &argv);
 
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &nproc);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
-  if (rank == 0) if (verbose) printf("Starting MPI window creation test with %d processes\n", nproc);
+    if (rank == 0)
+        if (verbose)
+            printf("Starting MPI window creation test with %d processes\n", nproc);
 
-  /* Perform a pile of window creations */
-  for (i = 0; i < NUM_WIN; i++) {
-    if (rank == 0) if (verbose) printf(" + Creating window %d\n", i);
+    /* Perform a pile of window creations */
+    for (i = 0; i < NUM_WIN; i++) {
+        if (rank == 0)
+            if (verbose)
+                printf(" + Creating window %d\n", i);
 
-    MPI_Alloc_mem(DATA_SZ, MPI_INFO_NULL, &base_ptrs[i]);
-    MPI_Win_create(base_ptrs[i], DATA_SZ, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &windows[i]);
-  }
+        MPI_Alloc_mem(DATA_SZ, MPI_INFO_NULL, &base_ptrs[i]);
+        MPI_Win_create(base_ptrs[i], DATA_SZ, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &windows[i]);
+    }
 
-  MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
 
-  /* Free all the windows */
-  for (i = 0; i < NUM_WIN; i++) {
-    if (rank == 0) if (verbose) printf(" + Freeing window %d\n", i);
+    /* Free all the windows */
+    for (i = 0; i < NUM_WIN; i++) {
+        if (rank == 0)
+            if (verbose)
+                printf(" + Freeing window %d\n", i);
 
-    MPI_Win_free(&windows[i]);
-    MPI_Free_mem(base_ptrs[i]);
-  }
+        MPI_Win_free(&windows[i]);
+        MPI_Free_mem(base_ptrs[i]);
+    }
 
-  if (rank == 0) printf(" No Errors\n");
+    if (rank == 0)
+        printf(" No Errors\n");
 
-  MPI_Finalize();
+    MPI_Finalize();
 
-  return 0;
+    return 0;
 }

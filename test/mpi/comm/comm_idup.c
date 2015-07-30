@@ -75,7 +75,7 @@ int main(int argc, char **argv)
     buf[0] = rank;
     buf[1] = 0xfeedface;
     MPI_Allreduce(&buf[0], &buf[1], 1, MPI_INT, MPI_SUM, newcomm);
-    check(buf[1] == (size * (size-1) / 2));
+    check(buf[1] == (size * (size - 1) / 2));
 
     MPI_Comm_free(&newcomm);
 
@@ -118,7 +118,7 @@ int main(int argc, char **argv)
     buf[0] = lrank;
     buf[1] = 0xfeedface;
     MPI_Allreduce(&buf[0], &buf[1], 1, MPI_INT, MPI_SUM, newcomm);
-    check(buf[1] == (rsize * (rsize-1) / 2));
+    check(buf[1] == (rsize * (rsize - 1) / 2));
 
     /* free this down here, not before idup, otherwise it will undo our
      * stagger_comm work */
@@ -146,4 +146,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-

@@ -46,10 +46,7 @@ int main(int argc, char *argv[])
     recvcounts = malloc(size * sizeof(int));
     sdispls = malloc(size * sizeof(int));
     rdispls = malloc(size * sizeof(int));
-    if (!sendtypes  || !recvtypes ||
-        !sendcounts || !recvcounts ||
-        !sdispls    || !rdispls)
-    {
+    if (!sendtypes || !recvtypes || !sendcounts || !recvcounts || !sdispls || !rdispls) {
         printf("error, unable to allocate memory\n");
         goto fn_exit;
     }
@@ -69,26 +66,34 @@ int main(int argc, char *argv[])
 
 
     /* try zero-counts on both the send and recv side in case only one direction is broken for some reason */
-    MPI_Alltoallw(&sendbuf, sendcounts, sdispls, sendtypes, &recvbuf, recvcounts, rdispls, recvtypes, MPI_COMM_WORLD);
-    MPI_Alltoallw(&sendbuf, recvcounts, rdispls, recvtypes, &recvbuf, sendcounts, sdispls, sendtypes, MPI_COMM_WORLD);
+    MPI_Alltoallw(&sendbuf, sendcounts, sdispls, sendtypes, &recvbuf, recvcounts, rdispls,
+                  recvtypes, MPI_COMM_WORLD);
+    MPI_Alltoallw(&sendbuf, recvcounts, rdispls, recvtypes, &recvbuf, sendcounts, sdispls,
+                  sendtypes, MPI_COMM_WORLD);
 
 #if MTEST_HAVE_MIN_MPI_VERSION(2,2)
     /* pass MPI_IN_PLACE and different but compatible types rank is even/odd */
     if (rank % 2)
-        MPI_Alltoallw(MPI_IN_PLACE, NULL, NULL, NULL, &recvbuf, recvcounts, rdispls, recvtypes, MPI_COMM_WORLD);
+        MPI_Alltoallw(MPI_IN_PLACE, NULL, NULL, NULL, &recvbuf, recvcounts, rdispls, recvtypes,
+                      MPI_COMM_WORLD);
     else
-        MPI_Alltoallw(MPI_IN_PLACE, NULL, NULL, NULL, &recvbuf, sendcounts, sdispls, sendtypes, MPI_COMM_WORLD);
+        MPI_Alltoallw(MPI_IN_PLACE, NULL, NULL, NULL, &recvbuf, sendcounts, sdispls, sendtypes,
+                      MPI_COMM_WORLD);
 #endif
 
     /* now the same for Alltoallv instead of Alltoallw */
-    MPI_Alltoallv(&sendbuf, sendcounts, sdispls, sendtypes[0], &recvbuf, recvcounts, rdispls, recvtypes[0], MPI_COMM_WORLD);
-    MPI_Alltoallv(&sendbuf, recvcounts, rdispls, recvtypes[0], &recvbuf, sendcounts, sdispls, sendtypes[0], MPI_COMM_WORLD);
+    MPI_Alltoallv(&sendbuf, sendcounts, sdispls, sendtypes[0], &recvbuf, recvcounts, rdispls,
+                  recvtypes[0], MPI_COMM_WORLD);
+    MPI_Alltoallv(&sendbuf, recvcounts, rdispls, recvtypes[0], &recvbuf, sendcounts, sdispls,
+                  sendtypes[0], MPI_COMM_WORLD);
 
 #if MTEST_HAVE_MIN_MPI_VERSION(2,2)
     if (rank % 2)
-        MPI_Alltoallv(MPI_IN_PLACE, NULL, NULL, MPI_DATATYPE_NULL, &recvbuf, recvcounts, rdispls, recvtypes[0], MPI_COMM_WORLD);
+        MPI_Alltoallv(MPI_IN_PLACE, NULL, NULL, MPI_DATATYPE_NULL, &recvbuf, recvcounts, rdispls,
+                      recvtypes[0], MPI_COMM_WORLD);
     else
-        MPI_Alltoallv(MPI_IN_PLACE, NULL, NULL, MPI_DATATYPE_NULL, &recvbuf, sendcounts, sdispls, sendtypes[0], MPI_COMM_WORLD);
+        MPI_Alltoallv(MPI_IN_PLACE, NULL, NULL, MPI_DATATYPE_NULL, &recvbuf, sendcounts, sdispls,
+                      sendtypes[0], MPI_COMM_WORLD);
 #endif
 
     MPI_Type_free(&sendtype);
@@ -96,16 +101,21 @@ int main(int argc, char *argv[])
     if (rank == 0)
         printf(" No Errors\n");
 
-fn_exit:
-    if (rdispls)    free(rdispls);
-    if (sdispls)    free(sdispls);
-    if (recvcounts) free(recvcounts);
-    if (sendcounts) free(sendcounts);
-    if (recvtypes)  free(recvtypes);
-    if (sendtypes)  free(sendtypes);
+  fn_exit:
+    if (rdispls)
+        free(rdispls);
+    if (sdispls)
+        free(sdispls);
+    if (recvcounts)
+        free(recvcounts);
+    if (sendcounts)
+        free(sendcounts);
+    if (recvtypes)
+        free(recvtypes);
+    if (sendtypes)
+        free(sendtypes);
 
     MPI_Finalize();
 
     return 0;
 }
-

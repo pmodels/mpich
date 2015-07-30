@@ -23,8 +23,7 @@
 /* we are going to muck with this later to make it evenly divisible by however many compute nodes we have */
 #define STARTING_SIZE 5000
 
-int test_file(char *filename, int mynod, int nprocs, char *cb_hosts,
-              const char *msg, int verbose);
+int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char *msg, int verbose);
 
 #define ADIOI_Free free
 #define ADIOI_Malloc malloc
@@ -86,7 +85,7 @@ int cb_gather_name_array(MPI_Comm comm, ADIO_cb_name_array * arrayp)
     MPI_Get_processor_name(my_procname, &my_procname_len);
 
     /* allocate space for everything */
-    array = (ADIO_cb_name_array)malloc(sizeof(*array));
+    array = (ADIO_cb_name_array) malloc(sizeof(*array));
     if (array == NULL) {
         return -1;
     }
@@ -96,13 +95,13 @@ int cb_gather_name_array(MPI_Comm comm, ADIO_cb_name_array * arrayp)
         /* process 0 keeps the real list */
         array->namect = commsize;
 
-        array->names = (char **)ADIOI_Malloc(sizeof(char *) * commsize);
+        array->names = (char **) ADIOI_Malloc(sizeof(char *) * commsize);
         if (array->names == NULL) {
             return -1;
         }
         procname = array->names;        /* simpler to read */
 
-        procname_len = (int *)ADIOI_Malloc(commsize * sizeof(int));
+        procname_len = (int *) ADIOI_Malloc(commsize * sizeof(int));
         if (procname_len == NULL) {
             return -1;
         }
@@ -145,7 +144,7 @@ int cb_gather_name_array(MPI_Comm comm, ADIO_cb_name_array * arrayp)
         disp = malloc(commsize * sizeof(int));
         disp[0] = 0;
         for (i = 1; i < commsize; i++) {
-            disp[i] = (int)(procname[i] - procname[0]);
+            disp[i] = (int) (procname[i] - procname[0]);
         }
 
     }
@@ -274,7 +273,7 @@ int main(int argc, char **argv)
     }
     else {
         MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        filename = (char *)malloc(len + 1);
+        filename = (char *) malloc(len + 1);
         MPI_Bcast(filename, len + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
     }
 
@@ -304,8 +303,7 @@ int main(int argc, char **argv)
     }
 
     /* first, no hinting */
-    errs += test_file(filename, mynod, nprocs, NULL,
-                      "collective w/o hinting", verbose);
+    errs += test_file(filename, mynod, nprocs, NULL, "collective w/o hinting", verbose);
 
     /* hint, but no change in order */
     default_str(mynod, cb_config_len, array, cb_config_string);
@@ -330,10 +328,13 @@ int main(int argc, char **argv)
     MPI_Allreduce(&errs, &sum_errs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
     if (!mynod) {
-        if (sum_errs) fprintf(stderr, "Found %d error cases\n", sum_errs);
-        else printf(" No Errors\n");
+        if (sum_errs)
+            fprintf(stderr, "Found %d error cases\n", sum_errs);
+        else
+            printf(" No Errors\n");
     }
-    if (mynod) free(filename);
+    if (mynod)
+        free(filename);
     free(cb_config_string);
     MPI_Finalize();
     return 0;
@@ -341,8 +342,7 @@ int main(int argc, char **argv)
 
 #define SEEDER(x,y,z) ((x)*1000000 + (y) + (x)*(z))
 
-int test_file(char *filename, int mynod, int nprocs, char *cb_hosts,
-              const char *msg, int verbose)
+int test_file(char *filename, int mynod, int nprocs, char *cb_hosts, const char *msg, int verbose)
 {
     MPI_Datatype typevec, newtype, t[3];
     int *buf, i, b[3], errcode, errors = 0;
@@ -356,7 +356,7 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts,
     if (mynod == 0 && verbose)
         fprintf(stderr, "%s\n", msg);
 
-    buf = (int *)malloc(SIZE * sizeof(int));
+    buf = (int *) malloc(SIZE * sizeof(int));
     if (buf == NULL) {
         perror("test_file");
         MPI_Abort(MPI_COMM_WORLD, -1);
@@ -388,20 +388,20 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts,
     if (!mynod) {
         if (verbose)
             fprintf(stderr, "\ntesting noncontiguous in memory, noncontiguous "
-                            "in file using collective I/O\n");
+                    "in file using collective I/O\n");
         MPI_File_delete(filename, info);
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
-    errcode = MPI_File_open(MPI_COMM_WORLD, filename,
-                            MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh);
+    errcode = MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh);
     if (errcode != MPI_SUCCESS) {
         handle_error(errcode, "MPI_File_open");
     }
 
     MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
 
-    for (i = 0; i < SIZE; i++) buf[i] = SEEDER(mynod, i, SIZE);
+    for (i = 0; i < SIZE; i++)
+        buf[i] = SEEDER(mynod, i, SIZE);
     errcode = MPI_File_iwrite_all(fh, buf, 1, newtype, &request);
     if (errcode != MPI_SUCCESS) {
         handle_error(errcode, "nc mem - nc file: MPI_File_iwrite_all");
@@ -410,7 +410,8 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts,
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Wait(&request, &status);
 
-    for (i = 0; i < SIZE; i++) buf[i] = -1;
+    for (i = 0; i < SIZE; i++)
+        buf[i] = -1;
 
     errcode = MPI_File_iread_at_all(fh, 0, buf, 1, newtype, &request);
     if (errcode != MPI_SUCCESS) {
@@ -428,8 +429,7 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts,
     for (i = 0; i < mynod; i++) {
         if (buf[i] != -1) {
             if (verbose)
-                fprintf(stderr, "Process %d: buf is %d, should be -1\n",
-                        mynod, buf[i]);
+                fprintf(stderr, "Process %d: buf is %d, should be -1\n", mynod, buf[i]);
             errors++;
         }
     }
@@ -440,8 +440,7 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts,
     for (/* 'i' set in above loop */ ; i < SIZE; i++) {
         if (((i - mynod) % nprocs) && buf[i] != -1) {
             if (verbose)
-                fprintf(stderr, "Process %d: buf %d is %d, should be -1\n",
-                        mynod, i, buf[i]);
+                fprintf(stderr, "Process %d: buf %d is %d, should be -1\n", mynod, i, buf[i]);
             errors++;
         }
         if (!((i - mynod) % nprocs) && buf[i] != SEEDER(mynod, i, SIZE)) {
@@ -458,15 +457,15 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts,
     if (!mynod) {
         if (verbose)
             fprintf(stderr, "\ntesting noncontiguous in memory, contiguous in "
-                            "file using collective I/O\n");
+                    "file using collective I/O\n");
         MPI_File_delete(filename, info);
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR,
-                  info, &fh);
+    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh);
 
-    for (i = 0; i < SIZE; i++) buf[i] = SEEDER(mynod, i, SIZE);
+    for (i = 0; i < SIZE; i++)
+        buf[i] = SEEDER(mynod, i, SIZE);
     errcode = MPI_File_iwrite_at_all(fh, mynod * (SIZE / nprocs) * sizeof(int),
                                      buf, 1, newtype, &request);
     if (errcode != MPI_SUCCESS)
@@ -488,16 +487,14 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts,
     for (i = 0; i < mynod; i++) {
         if (buf[i] != -1) {
             if (verbose)
-                fprintf(stderr, "Process %d: buf is %d, should be -1\n",
-                        mynod, buf[i]);
+                fprintf(stderr, "Process %d: buf is %d, should be -1\n", mynod, buf[i]);
             errors++;
         }
     }
     for (/* i set in above loop */ ; i < SIZE; i++) {
         if (((i - mynod) % nprocs) && buf[i] != -1) {
             if (verbose)
-                fprintf(stderr, "Process %d: buf %d is %d, should be -1\n",
-                        mynod, i, buf[i]);
+                fprintf(stderr, "Process %d: buf %d is %d, should be -1\n", mynod, i, buf[i]);
             errors++;
         }
         if (!((i - mynod) % nprocs) && buf[i] != SEEDER(mynod, i, SIZE)) {
@@ -515,13 +512,12 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts,
     if (!mynod) {
         if (verbose)
             fprintf(stderr, "\ntesting contiguous in memory, noncontiguous in "
-                            "file using collective I/O\n");
+                    "file using collective I/O\n");
         MPI_File_delete(filename, info);
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR,
-                  info, &fh);
+    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh);
 
     MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
 
@@ -534,7 +530,8 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts,
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Wait(&request, &status);
 
-    for (i = 0; i < SIZE; i++) buf[i] = -1;
+    for (i = 0; i < SIZE; i++)
+        buf[i] = -1;
 
     errcode = MPI_File_iread_at_all(fh, 0, buf, SIZE, MPI_INT, &request);
     if (errcode != MPI_SUCCESS)
@@ -555,6 +552,7 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts,
 
     MPI_Type_free(&newtype);
     free(buf);
-    if (info != MPI_INFO_NULL) MPI_Info_free(&info);
+    if (info != MPI_INFO_NULL)
+        MPI_Info_free(&info);
     return errors;
 }

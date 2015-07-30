@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Test sent in by Avery Ching to report a bug in MPICH. 
+/* Test sent in by Avery Ching to report a bug in MPICH.
    Adding it as a regression test. */
 
 /*
@@ -30,10 +30,11 @@ static void print_char_buf(char *buf_name, char *buf, int buf_len)
 }
 */
 
-char correct_buf[] = {'a', '_', 'b', 'c', '_', '_', '_', '_', 'd', '_', 
-		      'e', 'f', 'g', '_', 'h', 'i', 'j', '_', 'k', 'l',
-		      '_', '_', '_', '_', 'm', '_', 'n', 'o', 'p', '_',
-		      'q', 'r'};
+char correct_buf[] = { 'a', '_', 'b', 'c', '_', '_', '_', '_', 'd', '_',
+    'e', 'f', 'g', '_', 'h', 'i', 'j', '_', 'k', 'l',
+    '_', '_', '_', '_', 'm', '_', 'n', 'o', 'p', '_',
+    'q', 'r'
+};
 
 #define COUNT 2
 
@@ -46,8 +47,8 @@ int main(int argc, char **argv)
     int mem_dtype_sz = -1;
     int mem_buf_sz = -1, unpack_buf_sz = -1, buf_pos = 0;
 
-    int blk_arr[COUNT] = {1, 2};
-    int dsp_arr[COUNT] = {0, 2};
+    int blk_arr[COUNT] = { 1, 2 };
+    int dsp_arr[COUNT] = { 0, 2 };
     int errs = 0;
 
     MTest_Init(&argc, &argv);
@@ -55,51 +56,45 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
 
     /* Creating the datatype to use for unpacking */
-    MPI_Type_indexed(COUNT, blk_arr, dsp_arr,
-                     MPI_CHAR, &tmp_dtype);
+    MPI_Type_indexed(COUNT, blk_arr, dsp_arr, MPI_CHAR, &tmp_dtype);
     MPI_Type_commit(&tmp_dtype);
-    MPI_Type_indexed(COUNT, blk_arr, dsp_arr,
-                     tmp_dtype, &mem_dtype);
-    MPI_Type_free( &tmp_dtype );
+    MPI_Type_indexed(COUNT, blk_arr, dsp_arr, tmp_dtype, &mem_dtype);
+    MPI_Type_free(&tmp_dtype);
     MPI_Type_commit(&mem_dtype);
 
     MPI_Type_size(mem_dtype, &mem_dtype_sz);
     MPI_Type_extent(mem_dtype, &mem_dtype_ext);
 
-    mem_buf_sz    = 2 * mem_dtype_ext;
+    mem_buf_sz = 2 * mem_dtype_ext;
     unpack_buf_sz = 2 * mem_dtype_sz;
 
-    if ((mem_buf = (char *) malloc(mem_buf_sz)) == NULL)
-    {
-	fprintf(stderr, "malloc mem_buf of size %d failed\n", mem_buf_sz);
-	return -1;
+    if ((mem_buf = (char *) malloc(mem_buf_sz)) == NULL) {
+        fprintf(stderr, "malloc mem_buf of size %d failed\n", mem_buf_sz);
+        return -1;
     }
     memset(mem_buf, '_', mem_buf_sz);
 
-    if ((unpack_buf = (char *) malloc(unpack_buf_sz)) == NULL)
-    {
-	fprintf(stderr, "malloc unpack_buf of size %d failed\n", 
-		unpack_buf_sz);
-	return -1;
+    if ((unpack_buf = (char *) malloc(unpack_buf_sz)) == NULL) {
+        fprintf(stderr, "malloc unpack_buf of size %d failed\n", unpack_buf_sz);
+        return -1;
     }
-    
+
     for (i = 0; i < unpack_buf_sz; i++)
-	unpack_buf[i] = 'a' + i;
-    
+        unpack_buf[i] = 'a' + i;
+
     /* print_char_buf("mem_buf before unpack", mem_buf, 2 * mem_dtype_ext); */
 
-    MPI_Unpack(unpack_buf, unpack_buf_sz, &buf_pos,
-	       mem_buf, 2, mem_dtype, MPI_COMM_SELF);
+    MPI_Unpack(unpack_buf, unpack_buf_sz, &buf_pos, mem_buf, 2, mem_dtype, MPI_COMM_SELF);
     /* Note: Unpack without a Pack is not technically correct, but should work
      * with MPICH. */
 
     /* print_char_buf("mem_buf after unpack", mem_buf, 2 * mem_dtype_ext);
-       print_char_buf("correct buffer should be", 
-                       correct_buf, 2 * mem_dtype_ext); */
+     * print_char_buf("correct buffer should be",
+     * correct_buf, 2 * mem_dtype_ext); */
 
     if (memcmp(mem_buf, correct_buf, 2 * mem_dtype_ext)) {
-	printf("Unpacked buffer does not match expected buffer\n");
-	errs++;
+        printf("Unpacked buffer does not match expected buffer\n");
+        errs++;
     }
 
     MPI_Type_free(&mem_dtype);

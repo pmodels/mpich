@@ -89,8 +89,7 @@ int main(int argc, char *argv[])
         }
         if (buf[0] != size) {
             errs++;
-            fprintf(stderr, "Unexpected value for the header = %d, should be %d\n",
-                    buf[0], size);
+            fprintf(stderr, "Unexpected value for the header = %d, should be %d\n", buf[0], size);
             fflush(stderr);
         }
     }

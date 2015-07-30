@@ -8,7 +8,8 @@
 #include <assert.h>
 #include "mpi.h"
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     int size, rank, msg, cancelled;
     MPI_Request request;
     MPI_Status status;
@@ -18,7 +19,7 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (size != 2) {
-        fprintf(stderr,"ERROR: must be run with 2 processes");
+        fprintf(stderr, "ERROR: must be run with 2 processes");
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
@@ -35,7 +36,8 @@ int main(int argc, char **argv) {
         MPI_Irecv(&msg, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &request);
         MPI_Wait(&request, &status);
         assert(msg == 42);
-    } else {
+    }
+    else {
         MPI_Barrier(MPI_COMM_WORLD);
         msg = 42;
         MPI_Send(&msg, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);

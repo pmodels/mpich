@@ -13,7 +13,7 @@
 #define MAX_STR_CVAR_LEN 512
 #define MAX_VAR_NAME_LEN 128
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     int i;
     int required, provided;
@@ -40,52 +40,63 @@ int main(int argc, char* argv[])
 
     for (i = 0; i < num_cvar; i++) {
         MPI_T_cvar_get_info(i, name, &namelen, &verbosity, &datatype, &enumtype,
-            NULL /* desc is intentionly ignored to test NULL input */, &desclen, &binding, &scope);
-        if (binding != MPI_T_BIND_NO_OBJECT) continue;
+                            NULL /* desc is intentionly ignored to test NULL input */ , &desclen,
+                            &binding, &scope);
+        if (binding != MPI_T_BIND_NO_OBJECT)
+            continue;
 
         MPI_T_cvar_handle_alloc(i, NULL, &chandle, &count);
         if (count == 1 || (datatype == MPI_CHAR && count < sizeof(cin))) {
             if (MPI_INT == datatype) {
                 iin = 123;
                 iout = 456;
-                MPI_T_cvar_read(chandle, &iold); /* Read the old value */
-                MPI_T_cvar_write(chandle, &iin); /* Write an arbitrary value */
-                MPI_T_cvar_read(chandle, &iout); /* Read the value again */
-                MPI_T_cvar_write(chandle, &iold); /* Restore the old value */
-                if (iin != iout) errs++;
-            } else if (MPI_UNSIGNED == datatype) {
+                MPI_T_cvar_read(chandle, &iold);        /* Read the old value */
+                MPI_T_cvar_write(chandle, &iin);        /* Write an arbitrary value */
+                MPI_T_cvar_read(chandle, &iout);        /* Read the value again */
+                MPI_T_cvar_write(chandle, &iold);       /* Restore the old value */
+                if (iin != iout)
+                    errs++;
+            }
+            else if (MPI_UNSIGNED == datatype) {
                 uin = 133;
                 uout = 986;
                 MPI_T_cvar_read(chandle, &uold);
                 MPI_T_cvar_write(chandle, &uin);
                 MPI_T_cvar_read(chandle, &uout);
                 MPI_T_cvar_write(chandle, &uold);
-                if (uin != uout) errs++;
-            } else if (MPI_UNSIGNED_LONG == datatype) {
+                if (uin != uout)
+                    errs++;
+            }
+            else if (MPI_UNSIGNED_LONG == datatype) {
                 ulin = 1830;
                 ulout = 2014;
                 MPI_T_cvar_read(chandle, &ulold);
                 MPI_T_cvar_write(chandle, &ulin);
                 MPI_T_cvar_read(chandle, &ulout);
                 MPI_T_cvar_write(chandle, &ulold);
-                if (ulin != ulout) errs++;
-            } else if (MPI_UNSIGNED_LONG_LONG == datatype) {
+                if (ulin != ulout)
+                    errs++;
+            }
+            else if (MPI_UNSIGNED_LONG_LONG == datatype) {
                 ullin = 11930;
                 ullout = 52014;
                 MPI_T_cvar_read(chandle, &ullold);
                 MPI_T_cvar_write(chandle, &ullin);
                 MPI_T_cvar_read(chandle, &ullout);
                 MPI_T_cvar_write(chandle, &ullold);
-                if (ullin != ullout) errs++;
-            } else if (MPI_CHAR == datatype) {
-                strcpy(cin,  "GARBAGE MPI_CHAR CVAR VALUE");
+                if (ullin != ullout)
+                    errs++;
+            }
+            else if (MPI_CHAR == datatype) {
+                strcpy(cin, "GARBAGE MPI_CHAR CVAR VALUE");
                 strcpy(cout, "TEMPORARY MPI_CHAR CVAR VALUE");
                 MPI_T_cvar_read(chandle, cold);
                 MPI_T_cvar_write(chandle, cin);
                 MPI_T_cvar_read(chandle, cout);
                 MPI_T_cvar_write(chandle, cold);
                 /* printf("%s = %s\n", name, cold); */
-                if (strcmp(cin, cout)) errs++;
+                if (strcmp(cin, cout))
+                    errs++;
             }
         }
 

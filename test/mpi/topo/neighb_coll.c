@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
      * neighborhood collective routines */
 
     /* (wrap)--> 0 <--> 1 <--> ... <--> p-1 <--(wrap) */
-    MPI_Cart_create(MPI_COMM_WORLD, 1, &wsize, periods, /*reorder=*/0, &cart);
+    MPI_Cart_create(MPI_COMM_WORLD, 1, &wsize, periods, /*reorder= */ 0, &cart);
 
     /* allgather */
     {
@@ -65,10 +65,10 @@ int main(int argc, char *argv[])
 
     /* allgatherv */
     {
-        int sendbuf[1]    = { wrank };
-        int recvbuf[2]    = { 0xdeadbeef, 0xdeadbeef };
+        int sendbuf[1] = { wrank };
+        int recvbuf[2] = { 0xdeadbeef, 0xdeadbeef };
         int recvcounts[2] = { 1, 1 };
-        int displs[2]     = { 1, 0};
+        int displs[2] = { 1, 0 };
 
         /* should see one send to each neighbor (rank-1 and rank+1) and one receive
          * each from same, but put them in opposite slots in the buffer */
@@ -87,8 +87,8 @@ int main(int argc, char *argv[])
 
     /* alltoall */
     {
-        int sendbuf[2]    = { -(wrank+1), wrank+1 };
-        int recvbuf[2]    = { 0xdeadbeef, 0xdeadbeef };
+        int sendbuf[2] = { -(wrank + 1), wrank + 1 };
+        int recvbuf[2] = { 0xdeadbeef, 0xdeadbeef };
 
         /* should see one send to each neighbor (rank-1 and rank+1) and one
          * receive each from same */
@@ -107,18 +107,17 @@ int main(int argc, char *argv[])
 
     /* alltoallv */
     {
-        int sendbuf[2]    = { -(wrank+1), wrank+1 };
-        int recvbuf[2]    = { 0xdeadbeef, 0xdeadbeef };
+        int sendbuf[2] = { -(wrank + 1), wrank + 1 };
+        int recvbuf[2] = { 0xdeadbeef, 0xdeadbeef };
         int sendcounts[2] = { 1, 1 };
         int recvcounts[2] = { 1, 1 };
-        int sdispls[2]    = { 0, 1 };
-        int rdispls[2]    = { 1, 0 };
+        int sdispls[2] = { 0, 1 };
+        int rdispls[2] = { 1, 0 };
 
         /* should see one send to each neighbor (rank-1 and rank+1) and one receive
          * each from same, but put them in opposite slots in the buffer */
         MPI_Neighbor_alltoallv(sendbuf, sendcounts, sdispls, MPI_INT,
-                                recvbuf, recvcounts, rdispls, MPI_INT,
-                                cart);
+                               recvbuf, recvcounts, rdispls, MPI_INT, cart);
 
         if (wrank == 0)
             check(recvbuf[1] == 0xdeadbeef);
@@ -133,20 +132,19 @@ int main(int argc, char *argv[])
 
     /* alltoallw */
     {
-        int sendbuf[2]            = { -(wrank+1), wrank+1 };
-        int recvbuf[2]            = { 0xdeadbeef, 0xdeadbeef };
-        int sendcounts[2]         = { 1, 1 };
-        int recvcounts[2]         = { 1, 1 };
-        MPI_Aint sdispls[2]       = { 0, sizeof(int) };
-        MPI_Aint rdispls[2]       = { sizeof(int), 0 };
+        int sendbuf[2] = { -(wrank + 1), wrank + 1 };
+        int recvbuf[2] = { 0xdeadbeef, 0xdeadbeef };
+        int sendcounts[2] = { 1, 1 };
+        int recvcounts[2] = { 1, 1 };
+        MPI_Aint sdispls[2] = { 0, sizeof(int) };
+        MPI_Aint rdispls[2] = { sizeof(int), 0 };
         MPI_Datatype sendtypes[2] = { MPI_INT, MPI_INT };
         MPI_Datatype recvtypes[2] = { MPI_INT, MPI_INT };
 
         /* should see one send to each neighbor (rank-1 and rank+1) and one receive
          * each from same, but put them in opposite slots in the buffer */
         MPI_Neighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes,
-                                recvbuf, recvcounts, rdispls, recvtypes,
-                                cart);
+                               recvbuf, recvcounts, rdispls, recvtypes, cart);
 
         if (wrank == 0)
             check(recvbuf[1] == 0xdeadbeef);
@@ -176,4 +174,3 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-

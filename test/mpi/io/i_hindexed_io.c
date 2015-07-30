@@ -53,8 +53,7 @@ int main(int argc, char **argv)
     for (i = 0; i < data_size / sizeof(int); i++)
         data[i] = i;
 
-    MPI_Type_create_hindexed_block(BLK_COUNT, data_size, disp, MPI_BYTE,
-                                   &file_type);
+    MPI_Type_create_hindexed_block(BLK_COUNT, data_size, disp, MPI_BYTE, &file_type);
     MPI_Type_commit(&file_type);
 
     MPI_Type_create_hvector(BLK_COUNT, data_size, 0, MPI_BYTE, &mem_type);
@@ -64,22 +63,20 @@ int main(int argc, char **argv)
         filename = argv[1];
 
     CHECK(MPI_File_open(MPI_COMM_WORLD, filename,
-                MPI_MODE_RDWR | MPI_MODE_CREATE | MPI_MODE_DELETE_ON_CLOSE,
-                MPI_INFO_NULL, &fh) != 0);
+                        MPI_MODE_RDWR | MPI_MODE_CREATE | MPI_MODE_DELETE_ON_CLOSE,
+                        MPI_INFO_NULL, &fh) != 0);
 
-    CHECK(MPI_File_set_view(fh, HEADER, MPI_BYTE, file_type, "native",
-                            MPI_INFO_NULL));
+    CHECK(MPI_File_set_view(fh, HEADER, MPI_BYTE, file_type, "native", MPI_INFO_NULL));
 
     /* write everything */
     CHECK(MPI_File_iwrite_at_all(fh, 0, data, 1, mem_type, &request));
     MPI_Wait(&request, &status);
 
     /* verify */
-    CHECK(MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native",
-          MPI_INFO_NULL));
+    CHECK(MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native", MPI_INFO_NULL));
     CHECK(MPI_File_iread_at_all(fh, 0,
-          verify, (HEADER + PAD + BLK_COUNT * DATA_SIZE) / sizeof(int),
-          MPI_INT, &request));
+                                verify, (HEADER + PAD + BLK_COUNT * DATA_SIZE) / sizeof(int),
+                                MPI_INT, &request));
     MPI_Wait(&request, &status);
 
     /* header and block padding should have no data */
@@ -92,12 +89,11 @@ int main(int argc, char **argv)
     /* blocks are replicated */
     for (j = 0; j < BLK_COUNT; j++) {
         for (k = 0; k < (DATA_SIZE / sizeof(int)); k++) {
-            if (verify[(HEADER+PAD)/sizeof(int) + k + j*(DATA_SIZE/sizeof(int))]
+            if (verify[(HEADER + PAD) / sizeof(int) + k + j * (DATA_SIZE / sizeof(int))]
                 != data[k]) {
                 nr_errors++;
                 fprintf(stderr, "expcted %d, read %d\n", data[k],
-                        verify[(HEADER+PAD)/sizeof(int) + k +
-                                j*(DATA_SIZE/sizeof(int))]);
+                        verify[(HEADER + PAD) / sizeof(int) + k + j * (DATA_SIZE / sizeof(int))]);
             }
             i++;
         }

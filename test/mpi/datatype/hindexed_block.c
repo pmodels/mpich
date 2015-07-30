@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     if (err && verbose)
         fprintf(stderr, "%d errors in hindexed_block vector test.\n", err);
     errs += err;
-#endif /*defined(TEST_HINDEXED_BLOCK)*/
+#endif /*defined(TEST_HINDEXED_BLOCK) */
 
     /* print message and exit */
     if (rank == 0) {
@@ -170,19 +170,19 @@ int hindexed_block_vector_test(void)
 #define NELT (18)
     int buf[NELT] = {
         -1, -1, -1,
-         1, -2,  2,
+        1, -2, 2,
         -3, -3, -3,
         -4, -4, -4,
-         3, -5,  4,
-         5, -6,  6
+        3, -5, 4,
+        5, -6, 6
     };
     int expected[NELT] = {
-         0,  0,  0,
-         1,  0,  2,
-         0,  0,  0,
-         0,  0,  0,
-         3,  0,  4,
-         5,  0,  6
+        0, 0, 0,
+        1, 0, 2,
+        0, 0, 0,
+        0, 0, 0,
+        3, 0, 4,
+        5, 0, 6
     };
     int err, errs = 0;
 
@@ -211,8 +211,7 @@ int hindexed_block_vector_test(void)
     err = MPI_Type_create_hindexed_block(count, 1, disp, vectype, &newtype);
     if (err != MPI_SUCCESS) {
         if (verbose) {
-            fprintf(stderr,
-                    "error creating hindexed_block type in hindexed_block_contig_test()\n");
+            fprintf(stderr, "error creating hindexed_block type in hindexed_block_contig_test()\n");
         }
         errs++;
     }
@@ -344,4 +343,4 @@ int parse_args(int argc, char **argv)
         verbose = 1;
     return 0;
 }
-#endif /*defined(TEST_HINDEXED_BLOCK)*/
+#endif /*defined(TEST_HINDEXED_BLOCK) */

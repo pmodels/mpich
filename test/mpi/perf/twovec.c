@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     MPI_Init(&argc, &argv);
 
     tmean = 0;
-    size  = 1;
+    size = 1;
     for (i = -SKIP; i < NUM_SIZES; i++) {
         nrows = ncols = size;
 
@@ -55,8 +55,8 @@ int main(int argc, char *argv[])
             t[i] = MPI_Wtime() - ttmp;
             if (t[i] < 100 * MPI_Wtick()) {
                 /* Time is too inaccurate to use.  Set to zero.
-                   Consider increasing the LOOPS value to make this
-                   time large enough */
+                 * Consider increasing the LOOPS value to make this
+                 * time large enough */
                 t[i] = 0;
             }
             tmean += t[i];
@@ -73,31 +73,32 @@ int main(int argc, char *argv[])
     tmean /= NUM_SIZES;
 
     /* Now, analyze the times to see that they do not grow too fast
-       as a function of size.  As that is a vague criteria, we do the
-       following as a simple test:
-          Compute the mean of the first half and the second half of the
-          data
-          Compare the two means
-          If the mean of the second half is more than FRACTION times the
-          mean of the first half, then the time may be growing too fast.
+     * as a function of size.  As that is a vague criteria, we do the
+     * following as a simple test:
+     * Compute the mean of the first half and the second half of the
+     * data
+     * Compare the two means
+     * If the mean of the second half is more than FRACTION times the
+     * mean of the first half, then the time may be growing too fast.
      */
     tMeanLower = tMeanHigher = 0;
-    for (i=0; i<NUM_SIZES/2; i++)
+    for (i = 0; i < NUM_SIZES / 2; i++)
         tMeanLower += t[i];
-    tMeanLower /= (NUM_SIZES/2);
-    for (i=NUM_SIZES/2; i<NUM_SIZES; i++)
+    tMeanLower /= (NUM_SIZES / 2);
+    for (i = NUM_SIZES / 2; i < NUM_SIZES; i++)
         tMeanHigher += t[i];
-    tMeanHigher /= (NUM_SIZES - NUM_SIZES/2);
+    tMeanHigher /= (NUM_SIZES - NUM_SIZES / 2);
     /* A large value (even 1 or greater) is a good choice for
-       FRACTION here - the goal is to detect significant growth in
-       execution time as the size increases, and there is no MPI
-       standard requirement here to meet.
-
-       If the times were too small, then the test also passes - the
-       goal is to find implementation problems that lead to excessive
-       time in these routines.
-    */
-    if (tMeanLower > 0 && tMeanHigher > (1 + FRACTION) * tMeanLower) errs++;
+     * FRACTION here - the goal is to detect significant growth in
+     * execution time as the size increases, and there is no MPI
+     * standard requirement here to meet.
+     *
+     * If the times were too small, then the test also passes - the
+     * goal is to find implementation problems that lead to excessive
+     * time in these routines.
+     */
+    if (tMeanLower > 0 && tMeanHigher > (1 + FRACTION) * tMeanLower)
+        errs++;
 
     if (errs) {
         fprintf(stderr, "too much difference in performance: ");

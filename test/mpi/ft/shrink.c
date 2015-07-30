@@ -28,7 +28,8 @@ int main(int argc, char **argv)
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    if (2 == rank) exit(EXIT_FAILURE);
+    if (2 == rank)
+        exit(EXIT_FAILURE);
 
     rc = MPIX_Comm_shrink(MPI_COMM_WORLD, &newcomm);
     if (rc) {
@@ -39,7 +40,7 @@ int main(int argc, char **argv)
     }
 
     MPI_Comm_size(newcomm, &newsize);
-    if (newsize != size-1)
+    if (newsize != size - 1)
         errs++;
 
     rc = MPI_Barrier(newcomm);
@@ -52,7 +53,8 @@ int main(int argc, char **argv)
 
     MPI_Comm_free(&newcomm);
 
-    if (0 == rank) fprintf(stdout, " No Errors\n");
+    if (0 == rank)
+        fprintf(stdout, " No Errors\n");
 
     MPI_Finalize();
 

@@ -40,9 +40,9 @@ int main(int argc, char **argv)
     int in, out, sol;
 
     MPI_Comm newcomm, newcomm_v[ITERS], dup_comm, split, ic, merge;
-    MPI_Request sreq[ITERS*2];
+    MPI_Request sreq[ITERS * 2];
 
-    MTest_Init( &argc, &argv );
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -59,19 +59,19 @@ int main(int argc, char **argv)
 
     MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
     /* Test results of overlapping allreduce */
-    if(sol != out)
+    if (sol != out)
         errs++;
     /*Test new communicator */
     errs += MTestTestComm(newcomm);
     MPI_Comm_free(&newcomm);
 
-    for(i = 0; i < ITERS; i++){
-       MPI_Comm_idup(MPI_COMM_WORLD, &newcomm_v[i], &sreq[i]);
-       MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[i+ITERS]);
+    for (i = 0; i < ITERS; i++) {
+        MPI_Comm_idup(MPI_COMM_WORLD, &newcomm_v[i], &sreq[i]);
+        MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[i + ITERS]);
     }
-    MPI_Waitall(ITERS*2,sreq, MPI_STATUS_IGNORE);
+    MPI_Waitall(ITERS * 2, sreq, MPI_STATUS_IGNORE);
 
-    for( i = 0; i<ITERS ; i++) {
+    for (i = 0; i < ITERS; i++) {
         errs += MTestTestComm(newcomm_v[i]);
         MPI_Comm_free(&newcomm_v[i]);
     }
@@ -80,63 +80,66 @@ int main(int argc, char **argv)
     MPI_Comm_dup(MPI_COMM_WORLD, &dup_comm);
 
 
-     if(rank == 0) {
-          MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
-          MPI_Comm_idup(dup_comm, &newcomm, &sreq[1]);
-          MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
+    if (rank == 0) {
+        MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
+        MPI_Comm_idup(dup_comm, &newcomm, &sreq[1]);
+        MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
     }
     else {
-          MPI_Comm_idup(dup_comm, &newcomm, &sreq[1]);
-          MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
-          MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
-   }
+        MPI_Comm_idup(dup_comm, &newcomm, &sreq[1]);
+        MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
+        MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
+    }
     /* Test Iallreduce */
 
-    if(sol != out) errs++;
+    if (sol != out)
+        errs++;
 
     /*Test new communicator */
     errs += MTestTestComm(newcomm);
 
-   MPI_Comm_free(&newcomm);
-   MPI_Comm_free(&dup_comm);
+    MPI_Comm_free(&newcomm);
+    MPI_Comm_free(&dup_comm);
 
 
-   MPI_Comm_split(MPI_COMM_WORLD, rank % 2, rank, &split);
-   MPI_Comm_rank(split, &lrank);
-   MPI_Comm_size(split, &lsize);
+    MPI_Comm_split(MPI_COMM_WORLD, rank % 2, rank, &split);
+    MPI_Comm_rank(split, &lrank);
+    MPI_Comm_size(split, &lsize);
 
-   sol = lsize;
-   if(lrank == 0) {
-          MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, split, &sreq[0]);
-          MPI_Comm_idup(MPI_COMM_WORLD, &newcomm, &sreq[1]);
-          MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
+    sol = lsize;
+    if (lrank == 0) {
+        MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, split, &sreq[0]);
+        MPI_Comm_idup(MPI_COMM_WORLD, &newcomm, &sreq[1]);
+        MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
     }
     else {
-          MPI_Comm_idup(MPI_COMM_WORLD, &newcomm, &sreq[1]);
-          MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, split, &sreq[0]);
-          MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
-   }
+        MPI_Comm_idup(MPI_COMM_WORLD, &newcomm, &sreq[1]);
+        MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, split, &sreq[0]);
+        MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
+    }
     /* Test Iallreduce */
-    if(sol != out) errs++;;
+    if (sol != out)
+        errs++;;
 
     /* Test new communicator */
     errs += MTestTestComm(newcomm);
     MPI_Comm_free(&newcomm);
     sol = size;
 
-   if(lrank == 0) {
-          MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
-          MPI_Comm_idup(split, &newcomm, &sreq[1]);
-          MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
+    if (lrank == 0) {
+        MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
+        MPI_Comm_idup(split, &newcomm, &sreq[1]);
+        MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
     }
     else {
-          MPI_Comm_idup(split, &newcomm, &sreq[1]);
-          MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
-          MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
+        MPI_Comm_idup(split, &newcomm, &sreq[1]);
+        MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
+        MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
     }
 
     /* Test Iallreduce */
-    if(sol != out) errs++;;
+    if (sol != out)
+        errs++;;
 
     /* Test new communicator */
     errs += MTestTestComm(newcomm);
@@ -152,69 +155,72 @@ int main(int argc, char **argv)
     MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
 
 
-    if(sol != out) errs++;;
+    if (sol != out)
+        errs++;;
     /* Test new inter communicator */
     errs += MTestTestComm(newcomm);
     MPI_Comm_free(&newcomm);
 
-     sol = lsize;
-    if(lrank == 0) {
-          MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, split, &sreq[0]);
-          MPI_Comm_idup(ic, &newcomm, &sreq[1]);
-          MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
+    sol = lsize;
+    if (lrank == 0) {
+        MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, split, &sreq[0]);
+        MPI_Comm_idup(ic, &newcomm, &sreq[1]);
+        MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
     }
     else {
-          MPI_Comm_idup(ic, &newcomm, &sreq[1]);
-          MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, split, &sreq[0]);
-          MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
-   }
-    /* Test Iallreduce resutls for split-communicator*/
-   if(sol != out) errs++;;
+        MPI_Comm_idup(ic, &newcomm, &sreq[1]);
+        MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, split, &sreq[0]);
+        MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
+    }
+    /* Test Iallreduce resutls for split-communicator */
+    if (sol != out)
+        errs++;;
     /* Test new inter-communicator */
 
-   errs += MTestTestComm(newcomm);
-   MPI_Comm_free(&newcomm);
+    errs += MTestTestComm(newcomm);
+    MPI_Comm_free(&newcomm);
 
 
-   MPI_Intercomm_merge( ic, rank%2, &merge );
-   MPI_Comm_size(merge, &isize);
+    MPI_Intercomm_merge(ic, rank % 2, &merge);
+    MPI_Comm_size(merge, &isize);
 
-   sol = size;
-   if(rank == 0) {
-          MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
-          MPI_Comm_idup(merge, &newcomm, &sreq[1]);
-          MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
+    sol = size;
+    if (rank == 0) {
+        MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
+        MPI_Comm_idup(merge, &newcomm, &sreq[1]);
+        MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
     }
     else {
-          MPI_Comm_idup(merge, &newcomm, &sreq[1]);
-          MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
-          MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
-   }
+        MPI_Comm_idup(merge, &newcomm, &sreq[1]);
+        MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
+        MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
+    }
 
 
-   if(sol != out) errs++;;
-   /* Test new communicator */
-   errs += MTestTestComm(newcomm);
-   MPI_Comm_free(&newcomm);
-   sol = isize;
+    if (sol != out)
+        errs++;;
+    /* Test new communicator */
+    errs += MTestTestComm(newcomm);
+    MPI_Comm_free(&newcomm);
+    sol = isize;
 
-  if(rank == 0) {
-          MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, merge, &sreq[0]);
-          MPI_Comm_idup(MPI_COMM_WORLD, &newcomm, &sreq[1]);
-          MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
+    if (rank == 0) {
+        MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, merge, &sreq[0]);
+        MPI_Comm_idup(MPI_COMM_WORLD, &newcomm, &sreq[1]);
+        MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
     }
     else {
-          MPI_Comm_idup(MPI_COMM_WORLD, &newcomm, &sreq[1]);
-          MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, merge, &sreq[0]);
-          MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
-   }
+        MPI_Comm_idup(MPI_COMM_WORLD, &newcomm, &sreq[1]);
+        MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, merge, &sreq[0]);
+        MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
+    }
 
-   MPI_Comm_free(&merge);
-   MPI_Comm_free(&newcomm);
-   MPI_Comm_free(&split);
-   MPI_Comm_free(&ic);
+    MPI_Comm_free(&merge);
+    MPI_Comm_free(&newcomm);
+    MPI_Comm_free(&split);
+    MPI_Comm_free(&ic);
 
-   MTest_Finalize(errs);
-   MPI_Finalize();
+    MTest_Finalize(errs);
+    MPI_Finalize();
 
 }

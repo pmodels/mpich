@@ -36,15 +36,15 @@ int main(int argc, char **argv)
      * (B) a type that has an odd number of ints in its "type contents" (1 in
      *     this case)
      * This triggers a specific bug in some versions of MPICH. */
-    blens[0]  = 1;
+    blens[0] = 1;
     displs[0] = offsetof(struct test_struct, a);
-    types[0]  = MPI_CHAR;
-    blens[1]  = 1;
+    types[0] = MPI_CHAR;
+    blens[1] = 1;
     displs[1] = offsetof(struct test_struct, b);
-    types[1]  = MPI_SHORT;
-    blens[2]  = 1;
+    types[1] = MPI_SHORT;
+    blens[2] = 1;
     displs[2] = offsetof(struct test_struct, c);
-    types[2]  = MPI_INT;
+    types[2] = MPI_INT;
     MPI_Type_create_struct(3, blens, displs, types, &struct_type);
     MPI_Type_contiguous(1, struct_type, &contig);
     MPI_Type_commit(&struct_type);
@@ -58,9 +58,7 @@ int main(int argc, char **argv)
     recvbuf.c = -1;
 
     /* send to ourself */
-    MPI_Sendrecv(&sendbuf, 1, contig, 0, 0,
-                 &recvbuf, 1, contig, 0, 0,
-                 MPI_COMM_SELF, &status);
+    MPI_Sendrecv(&sendbuf, 1, contig, 0, 0, &recvbuf, 1, contig, 0, 0, MPI_COMM_SELF, &status);
 
     /* sanity */
     assert(sendbuf.a == recvbuf.a);
@@ -86,4 +84,3 @@ int main(int argc, char **argv)
     MPI_Finalize();
     return 0;
 }
-

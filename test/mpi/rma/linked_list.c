@@ -7,7 +7,7 @@
 
 /*            MPI-3 distributed linked list construction example
  *            --------------------------------------------------
- * 
+ *
  * Construct a distributed shared linked list using proposed MPI-3 dynamic
  * windows.  Initially process 0 creates the head of the list, attaches it to
  * the window, and broadcasts the pointer to all processes.  All processes then
@@ -33,7 +33,7 @@
 
 /* Linked list pointer */
 typedef struct {
-    int      rank;
+    int rank;
     MPI_Aint disp;
 } llist_ptr_t;
 
@@ -44,28 +44,30 @@ typedef struct {
 } llist_elem_t;
 
 static const llist_ptr_t nil = { -1, (MPI_Aint) MPI_BOTTOM };
+
 static const int verbose = 0;
 
 /* List of locally allocated list elements. */
 static llist_elem_t **my_elems = NULL;
-static int my_elems_size  = 0;
+static int my_elems_size = 0;
 static int my_elems_count = 0;
 
 /* Allocate a new shared linked list element */
-MPI_Aint alloc_elem(int value, MPI_Win win) {
+MPI_Aint alloc_elem(int value, MPI_Win win)
+{
     MPI_Aint disp;
     llist_elem_t *elem_ptr;
 
     /* Allocate the new element and register it with the window */
     MPI_Alloc_mem(sizeof(llist_elem_t), MPI_INFO_NULL, &elem_ptr);
     elem_ptr->value = value;
-    elem_ptr->next  = nil;
+    elem_ptr->next = nil;
     MPI_Win_attach(win, elem_ptr, sizeof(llist_elem_t));
 
     /* Add the element to the list of local elements so we can free it later. */
     if (my_elems_size == my_elems_count) {
         my_elems_size += 100;
-        my_elems = realloc(my_elems, my_elems_size*sizeof(void*));
+        my_elems = realloc(my_elems, my_elems_size * sizeof(void *));
     }
     my_elems[my_elems_count] = elem_ptr;
     my_elems_count++;
@@ -74,10 +76,11 @@ MPI_Aint alloc_elem(int value, MPI_Win win) {
     return disp;
 }
 
-int main(int argc, char **argv) {
-    int           procid, nproc, i;
-    MPI_Win       llist_win;
-    llist_ptr_t   head_ptr, tail_ptr;
+int main(int argc, char **argv)
+{
+    int procid, nproc, i;
+    MPI_Win llist_win;
+    llist_ptr_t head_ptr, tail_ptr;
 
     MPI_Init(&argc, &argv);
 
@@ -105,15 +108,16 @@ int main(int argc, char **argv) {
         new_elem_ptr.disp = alloc_elem(procid, llist_win);
 
         /* Append the new node to the list.  This might take multiple attempts if
-           others have already appended and our tail pointer is stale. */
+         * others have already appended and our tail pointer is stale. */
         do {
             llist_ptr_t next_tail_ptr = nil;
 
             MPI_Win_lock(MPI_LOCK_EXCLUSIVE, tail_ptr.rank, 0, llist_win);
 
-            MPI_Compare_and_swap((void*) &new_elem_ptr.rank, (void*) &nil.rank,
-                                  (void*) &next_tail_ptr.rank, MPI_INT, tail_ptr.rank,
-                                  (MPI_Aint) &(((llist_elem_t*)tail_ptr.disp)->next.rank), llist_win);
+            MPI_Compare_and_swap((void *) &new_elem_ptr.rank, (void *) &nil.rank,
+                                 (void *) &next_tail_ptr.rank, MPI_INT, tail_ptr.rank,
+                                 (MPI_Aint) & (((llist_elem_t *) tail_ptr.disp)->next.rank),
+                                 llist_win);
 
             MPI_Win_unlock(tail_ptr.rank, llist_win);
             success = (next_tail_ptr.rank == nil.rank);
@@ -124,26 +128,28 @@ int main(int argc, char **argv) {
                 MPI_Win_lock(MPI_LOCK_EXCLUSIVE, tail_ptr.rank, 0, llist_win);
 
                 MPI_Put(&new_elem_ptr.disp, 1, MPI_AINT, tail_ptr.rank,
-                        (MPI_Aint) &(((llist_elem_t*)tail_ptr.disp)->next.disp), 1,
+                        (MPI_Aint) & (((llist_elem_t *) tail_ptr.disp)->next.disp), 1,
                         MPI_AINT, llist_win);
 
                 MPI_Win_unlock(tail_ptr.rank, llist_win);
                 tail_ptr = new_elem_ptr;
 
                 /* For implementations that use pt-to-pt messaging, force progress for other threads'
-                   RMA operations. */
+                 * RMA operations. */
                 for (i = 0; i < NPROBE; i++)
-                    MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, MPI_STATUS_IGNORE);
+                    MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag,
+                               MPI_STATUS_IGNORE);
 
-            } else {
+            }
+            else {
                 /* Tail pointer is stale, fetch the displacement.  May take multiple tries
-                   if it is being updated. */
+                 * if it is being updated. */
                 do {
                     MPI_Win_lock(MPI_LOCK_EXCLUSIVE, tail_ptr.rank, 0, llist_win);
 
-                    MPI_Get( &next_tail_ptr.disp, 1, MPI_AINT, tail_ptr.rank,
-                             (MPI_Aint) &(((llist_elem_t*)tail_ptr.disp)->next.disp),
-                             1, MPI_AINT, llist_win);
+                    MPI_Get(&next_tail_ptr.disp, 1, MPI_AINT, tail_ptr.rank,
+                            (MPI_Aint) & (((llist_elem_t *) tail_ptr.disp)->next.disp),
+                            1, MPI_AINT, llist_win);
 
                     MPI_Win_unlock(tail_ptr.rank, llist_win);
                 } while (next_tail_ptr.disp == nil.disp);
@@ -155,13 +161,13 @@ int main(int argc, char **argv) {
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* Traverse the list and verify that all processes inserted exactly the correct
-       number of elements. */
+     * number of elements. */
     if (procid == 0) {
-        int  have_root = 0;
-        int  errors    = 0;
+        int have_root = 0;
+        int errors = 0;
         int *counts, count = 0;
 
-        counts = (int*) malloc(sizeof(int) * nproc);
+        counts = (int *) malloc(sizeof(int) * nproc);
         assert(counts != NULL);
 
         for (i = 0; i < nproc; i++)
@@ -204,14 +210,15 @@ int main(int argc, char **argv) {
         }
 
         if (verbose)
-          printf("\n\n");
+            printf("\n\n");
 
         /* Verify the counts we collected */
         for (i = 0; i < nproc; i++) {
             int expected = NUM_ELEMS;
 
             if (counts[i] != expected) {
-                printf("Error: Rank %d inserted %d elements, expected %d\n", i, counts[i], expected);
+                printf("Error: Rank %d inserted %d elements, expected %d\n", i, counts[i],
+                       expected);
                 errors++;
             }
         }
@@ -223,8 +230,8 @@ int main(int argc, char **argv) {
     MPI_Win_free(&llist_win);
 
     /* Free all the elements in the list */
-    for ( ; my_elems_count > 0; my_elems_count--)
-        MPI_Free_mem(my_elems[my_elems_count-1]);
+    for (; my_elems_count > 0; my_elems_count--)
+        MPI_Free_mem(my_elems[my_elems_count - 1]);
 
     MPI_Finalize();
     return 0;

@@ -11,7 +11,8 @@
 #include <stdio.h>
 #include <mpi.h>
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     int errcode, errclass;
 
     MPI_Init(&argc, &argv);
@@ -21,8 +22,9 @@ int main(int argc, char **argv) {
 
     if (errclass != MPI_ERR_ARG) {
         printf("ERROR: Got 0x%x, expected 0x%x\n", errclass, MPI_ERR_ARG);
-    } else {
-        printf( " No Errors\n" );
+    }
+    else {
+        printf(" No Errors\n");
     }
 
     MPI_Finalize();

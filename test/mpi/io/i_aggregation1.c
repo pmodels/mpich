@@ -34,19 +34,18 @@ static void Usage(int line)
         fprintf(stderr,
                 "Usage (line %d): %s [-d] [-h] -f filename\n"
                 "\t-d for debugging\n"
-                "\t-h to turn on the hints to force collective aggregation\n",
-                line, prog);
+                "\t-h to turn on the hints to force collective aggregation\n", line, prog);
     }
     exit(0);
 }
 
-static void fatal_error(int mpi_ret, MPI_Status *mpi_stat, const char *msg)
+static void fatal_error(int mpi_ret, MPI_Status * mpi_stat, const char *msg)
 {
     fprintf(stderr, "Fatal error %s: %d\n", msg, mpi_ret);
     MPI_Abort(MPI_COMM_WORLD, -1);
 }
 
-static void print_hints(int rank, MPI_File *mfh)
+static void print_hints(int rank, MPI_File * mfh)
 {
     MPI_Info info;
     int nkeys;
@@ -73,18 +72,18 @@ static void print_hints(int rank, MPI_File *mfh)
 
 static void fill_buffer(char *buffer, int bufsize, int rank, MPI_Offset offset)
 {
-    memset((void *)buffer, 0, bufsize);
+    memset((void *) buffer, 0, bufsize);
     snprintf(buffer, bufsize, "Hello from %d at %lld\n", rank, offset);
 }
 
 static MPI_Offset get_offset(int rank, int num_objs, int obj_size, int which_obj)
 {
     MPI_Offset offset;
-    offset = (MPI_Offset)rank * num_objs * obj_size + which_obj * obj_size;
+    offset = (MPI_Offset) rank *num_objs * obj_size + which_obj * obj_size;
     return offset;
 }
 
-static void write_file(char *target, int rank, MPI_Info *info)
+static void write_file(char *target, int rank, MPI_Info * info)
 {
     MPI_File wfh;
     MPI_Request *request;
@@ -93,15 +92,15 @@ static void write_file(char *target, int rank, MPI_Info *info)
     int i;
     char **buffer;
 
-    request = (MPI_Request *)malloc(NUM_OBJS * sizeof(MPI_Request));
-    mpi_stat = (MPI_Status *)malloc(NUM_OBJS * sizeof(MPI_Status));
-    buffer = (char **)malloc(NUM_OBJS * sizeof(char *));
+    request = (MPI_Request *) malloc(NUM_OBJS * sizeof(MPI_Request));
+    mpi_stat = (MPI_Status *) malloc(NUM_OBJS * sizeof(MPI_Status));
+    buffer = (char **) malloc(NUM_OBJS * sizeof(char *));
 
-    if (debug) printf("%d writing file %s\n", rank, target);
+    if (debug)
+        printf("%d writing file %s\n", rank, target);
 
     if ((mpi_ret = MPI_File_open(MPI_COMM_WORLD, target,
-                                 MPI_MODE_WRONLY | MPI_MODE_CREATE,
-                                 *info, &wfh))
+                                 MPI_MODE_WRONLY | MPI_MODE_CREATE, *info, &wfh))
         != MPI_SUCCESS) {
         fatal_error(mpi_ret, NULL, "open for write");
     }
@@ -109,9 +108,10 @@ static void write_file(char *target, int rank, MPI_Info *info)
     /* nonblocking collective write */
     for (i = 0; i < NUM_OBJS; i++) {
         MPI_Offset offset = get_offset(rank, NUM_OBJS, OBJ_SIZE, i);
-        buffer[i] = (char *)malloc(OBJ_SIZE);
+        buffer[i] = (char *) malloc(OBJ_SIZE);
         fill_buffer(buffer[i], OBJ_SIZE, rank, offset);
-        if (debug) printf("%s", buffer[i]);
+        if (debug)
+            printf("%s", buffer[i]);
         if ((mpi_ret = MPI_File_iwrite_at_all(wfh, offset, buffer[i], OBJ_SIZE,
                                               MPI_CHAR, &request[i]))
             != MPI_SUCCESS) {
@@ -119,16 +119,19 @@ static void write_file(char *target, int rank, MPI_Info *info)
         }
     }
 
-    if (debug) print_hints(rank, &wfh);
+    if (debug)
+        print_hints(rank, &wfh);
 
     MPI_Waitall(NUM_OBJS, request, mpi_stat);
 
     if ((mpi_ret = MPI_File_close(&wfh)) != MPI_SUCCESS) {
         fatal_error(mpi_ret, NULL, "close for write");
     }
-    if (debug) printf("%d wrote file %s\n", rank, target);
+    if (debug)
+        printf("%d wrote file %s\n", rank, target);
 
-    for (i = 0; i < NUM_OBJS; i++) free(buffer[i]);
+    for (i = 0; i < NUM_OBJS; i++)
+        free(buffer[i]);
     free(buffer);
     free(mpi_stat);
     free(request);
@@ -145,7 +148,7 @@ static int reduce_corruptions(int corrupt_blocks)
     return sum;
 }
 
-static void read_file(char *target, int rank, MPI_Info *info, int *corrupt_blocks)
+static void read_file(char *target, int rank, MPI_Info * info, int *corrupt_blocks)
 {
     MPI_File rfh;
     MPI_Offset *offset;
@@ -156,13 +159,14 @@ static void read_file(char *target, int rank, MPI_Info *info, int *corrupt_block
     char **buffer;
     char **verify_buf = NULL;
 
-    offset = (MPI_Offset *)malloc(NUM_OBJS * sizeof(MPI_Offset));
-    request = (MPI_Request *)malloc(NUM_OBJS * sizeof(MPI_Request));
-    mpi_stat = (MPI_Status *)malloc(NUM_OBJS * sizeof(MPI_Status));
-    buffer = (char **)malloc(NUM_OBJS * sizeof(char *));
-    verify_buf = (char **)malloc(NUM_OBJS * sizeof(char *));
+    offset = (MPI_Offset *) malloc(NUM_OBJS * sizeof(MPI_Offset));
+    request = (MPI_Request *) malloc(NUM_OBJS * sizeof(MPI_Request));
+    mpi_stat = (MPI_Status *) malloc(NUM_OBJS * sizeof(MPI_Status));
+    buffer = (char **) malloc(NUM_OBJS * sizeof(char *));
+    verify_buf = (char **) malloc(NUM_OBJS * sizeof(char *));
 
-    if (debug) printf("%d reading file %s\n", rank, target);
+    if (debug)
+        printf("%d reading file %s\n", rank, target);
 
     if ((mpi_ret = MPI_File_open(MPI_COMM_WORLD, target, MPI_MODE_RDONLY,
                                  *info, &rfh)) != MPI_SUCCESS) {
@@ -172,10 +176,11 @@ static void read_file(char *target, int rank, MPI_Info *info, int *corrupt_block
     /* nonblocking collective read */
     for (i = 0; i < NUM_OBJS; i++) {
         offset[i] = get_offset(rank, NUM_OBJS, OBJ_SIZE, i);
-        buffer[i] = (char *)malloc(OBJ_SIZE);
-        verify_buf[i] = (char *)malloc(OBJ_SIZE);
+        buffer[i] = (char *) malloc(OBJ_SIZE);
+        verify_buf[i] = (char *) malloc(OBJ_SIZE);
         fill_buffer(verify_buf[i], OBJ_SIZE, rank, offset[i]);
-        if (debug) printf("Expecting %s", verify_buf[i]);
+        if (debug)
+            printf("Expecting %s", verify_buf[i]);
         if ((mpi_ret = MPI_File_iread_at_all(rfh, offset[i], buffer[i],
                                              OBJ_SIZE, MPI_CHAR, &request[i]))
             != MPI_SUCCESS) {
@@ -191,8 +196,7 @@ static void read_file(char *target, int rank, MPI_Info *info, int *corrupt_block
             (*corrupt_blocks)++;
             printf("Corruption at %lld\n", offset[i]);
             if (debug) {
-                printf("\tExpecting %s\n" "\tRecieved  %s\n",
-                       verify_buf[i], buffer[i]);
+                printf("\tExpecting %s\n" "\tRecieved  %s\n", verify_buf[i], buffer[i]);
             }
         }
     }
@@ -212,7 +216,7 @@ static void read_file(char *target, int rank, MPI_Info *info, int *corrupt_block
     free(offset);
 }
 
-static void set_hints(MPI_Info *info)
+static void set_hints(MPI_Info * info)
 {
     MPI_Info_set(*info, "romio_cb_write", "enable");
     MPI_Info_set(*info, "romio_no_indep_rw", "1");
@@ -254,7 +258,8 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if ((mpi_ret = MPI_Info_create(&info)) != MPI_SUCCESS) {
-        if (rank == 0) fatal_error(mpi_ret, NULL, "MPI_info_create.\n");
+        if (rank == 0)
+            fatal_error(mpi_ret, NULL, "MPI_info_create.\n");
     }
 
     prog = strdup(argv[0]);
@@ -278,7 +283,8 @@ int main(int argc, char *argv[])
         if (!target) {
             Usage(__LINE__);
         }
-    } else {
+    }
+    else {
         target = "testfile";
         set_hints(&info);
     }
@@ -292,8 +298,7 @@ int main(int argc, char *argv[])
             fprintf(stdout, " No Errors\n");
         }
         else {
-            fprintf(stdout, "%d/%d blocks corrupt\n", corrupt_blocks,
-                    nproc * NUM_OBJS);
+            fprintf(stdout, "%d/%d blocks corrupt\n", corrupt_blocks, nproc * NUM_OBJS);
         }
     }
     MPI_Info_free(&info);

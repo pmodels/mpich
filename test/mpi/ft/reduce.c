@@ -25,8 +25,8 @@ int main(int argc, char **argv)
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     if (size < 3) {
-        fprintf( stderr, "Must run with at least 3 processes\n" );
-        MPI_Abort( MPI_COMM_WORLD, 1 );
+        fprintf(stderr, "Must run with at least 3 processes\n");
+        MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
     if (rank == 1) {
@@ -41,14 +41,17 @@ int main(int argc, char **argv)
         if (errclass == MPIX_ERR_PROC_FAILED) {
             printf(" No Errors\n");
             fflush(stdout);
-        } else {
-            fprintf(stderr, "Wrong error code (%d) returned. Expected MPIX_ERR_PROC_FAILED\n", errclass);
+        }
+        else {
+            fprintf(stderr, "Wrong error code (%d) returned. Expected MPIX_ERR_PROC_FAILED\n",
+                    errclass);
         }
 #else
         if (err) {
             printf(" No Errors\n");
             fflush(stdout);
-        } else {
+        }
+        else {
             fprintf(stderr, "Program reported MPI_SUCCESS, but an error code was expected.\n");
         }
 #endif

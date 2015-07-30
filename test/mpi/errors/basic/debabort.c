@@ -6,17 +6,17 @@
 #include "mpi.h"
 #include <stdio.h>
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
-  int rank;
-  double v1[2], v2[2];
+    int rank;
+    double v1[2], v2[2];
 
-  MPI_Init( &argc, &argv );
+    MPI_Init(&argc, &argv);
 
-  MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  /* Clearly incorrect program */
-  MPI_Allreduce( v1, v2, rank ? 1 : 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
-  MPI_Finalize();
-  return 0;
+    /* Clearly incorrect program */
+    MPI_Allreduce(v1, v2, rank ? 1 : 2, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Finalize();
+    return 0;
 }

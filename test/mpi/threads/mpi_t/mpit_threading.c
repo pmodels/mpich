@@ -42,7 +42,7 @@ int PrintCategories(FILE * fp, int myThreadId);
 
 MTEST_THREAD_RETURN_TYPE RunTest(void *p)
 {
-    int myThreadId = (int)(long)p;
+    int myThreadId = (int) (long) p;
 
     PrintControlVars(stdout, myThreadId);
     if (DOPRINT)
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 
     /* Spawn threads */
     for (i = 0; i < NTHREADS; i++) {
-        MTest_Start_thread(RunTest, (void *)(long)i);
+        MTest_Start_thread(RunTest, (void *) (long) i);
     }
 
     MTest_Join_threads();
@@ -222,7 +222,8 @@ int PrintCategories(FILE * fp, int myThreadId)
         MPI_T_category_get_info(i, name, &nameLen, desc, &descLen, &numCvars,
                                 &numPvars, &numSubcat);
         if (DOPRINT)
-            fprintf(fp, "Category %s has %d control variables, %d performance variables, %d subcategories\n",
+            fprintf(fp,
+                    "Category %s has %d control variables, %d performance variables, %d subcategories\n",
                     name, numCvars, numPvars, numSubcat);
 
         if (numCvars > 0) {

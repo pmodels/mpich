@@ -18,11 +18,11 @@
 
 int main(int argc, char *argv[])
 {
-    int        err, errs = 0, len, i, errclass;
-    int        rank = -1, size = -1;
-    int       *buf;
-    int       *recvbuf;
-    char       msg[MPI_MAX_ERROR_STRING];
+    int err, errs = 0, len, i, errclass;
+    int rank = -1, size = -1;
+    int *buf;
+    int *recvbuf;
+    char msg[MPI_MAX_ERROR_STRING];
 
     MTest_Init(&argc, &argv);
     MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);

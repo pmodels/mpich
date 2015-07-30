@@ -26,10 +26,11 @@
 
 static const int verbose = 0;
 
-int main(int argc, char **argv) {
-    int       rank, nproc, mpi_errno;
-    int       i, ncomm, *ranks;
-    int       errors = 1;
+int main(int argc, char **argv)
+{
+    int rank, nproc, mpi_errno;
+    int i, ncomm, *ranks;
+    int errors = 1;
     MPI_Comm *comm_hdls;
     MPI_Group world_group;
 
@@ -41,11 +42,11 @@ int main(int argc, char **argv) {
 
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
     comm_hdls = malloc(sizeof(MPI_Comm) * MAX_NCOMM);
-    ranks     = malloc(sizeof(int) * nproc);
+    ranks = malloc(sizeof(int) * nproc);
 
     ncomm = 0;
     for (i = 0; i < MAX_NCOMM; i++) {
-        int       incl = i % nproc;
+        int incl = i % nproc;
         MPI_Group comm_group;
 
         /* Comms include ranks: 0; 1; 2; ...; 0; 1; ... */
@@ -55,10 +56,13 @@ int main(int argc, char **argv) {
         mpi_errno = MPI_Comm_create(MPI_COMM_WORLD, comm_group, &comm_hdls[i]);
 
         if (mpi_errno == MPI_SUCCESS) {
-            if (verbose) printf("%d: Created comm %d\n", rank, i);
+            if (verbose)
+                printf("%d: Created comm %d\n", rank, i);
             ncomm++;
-        } else {
-            if (verbose) printf("%d: Error creating comm %d\n", rank, i);
+        }
+        else {
+            if (verbose)
+                printf("%d: Error creating comm %d\n", rank, i);
             MPI_Group_free(&comm_group);
             errors = 0;
             break;

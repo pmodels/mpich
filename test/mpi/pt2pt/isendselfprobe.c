@@ -7,7 +7,7 @@
 #include "mpi.h"
 #include "mpitest.h"
 
-int main( int argc, char * argv[] )
+int main(int argc, char *argv[])
 {
     int rank;
     int sendMsg = 123;
@@ -18,30 +18,26 @@ int main( int argc, char * argv[] )
     MPI_Request request;
     int errs = 0;
 
-    MTest_Init( 0, 0 );
+    MTest_Init(0, 0);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if(rank == 0)
-    {
-	MPI_Isend( &sendMsg, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &request );
-	while(!flag)
-	{
-	    MPI_Iprobe( 0, 0, MPI_COMM_WORLD, &flag, &status );
-	}
-	MPI_Get_count( &status, MPI_INT, &count );
-	if(count != 1)
-	{
-	    errs++;
-	}
-	MPI_Recv( &recvMsg, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status );
-	if(recvMsg != 123)
-	{
-	    errs++;
-	}
-	MPI_Wait( &request, &status );
+    if (rank == 0) {
+        MPI_Isend(&sendMsg, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &request);
+        while (!flag) {
+            MPI_Iprobe(0, 0, MPI_COMM_WORLD, &flag, &status);
+        }
+        MPI_Get_count(&status, MPI_INT, &count);
+        if (count != 1) {
+            errs++;
+        }
+        MPI_Recv(&recvMsg, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+        if (recvMsg != 123) {
+            errs++;
+        }
+        MPI_Wait(&request, &status);
     }
-    MTest_Finalize( errs );
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
 }

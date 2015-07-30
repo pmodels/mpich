@@ -28,13 +28,13 @@ MTEST_THREAD_RETURN_TYPE do_thread(void *v);
 MTEST_THREAD_RETURN_TYPE do_thread(void *v)
 {
     int x;
-    MPI_Comm comm = *(MPI_Comm*)v;
+    MPI_Comm comm = *(MPI_Comm *) v;
     MPI_Comm newcomm;
     for (x = 0; x < NITER; ++x) {
         MPI_Comm_dup(comm, &newcomm);
         MPI_Comm_free(&newcomm);
     }
-    return (MTEST_THREAD_RETURN_TYPE)0;
+    return (MTEST_THREAD_RETURN_TYPE) 0;
 }
 
 int main(int argc, char **argv)
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     for (x = 0; x < NTHREADS; ++x) {
         MPI_Comm_dup(MPI_COMM_WORLD, &comms[x]);
         if (x != 0) {
-            err = MTest_Start_thread(do_thread, (void *)&comms[x]);
+            err = MTest_Start_thread(do_thread, (void *) &comms[x]);
             if (err) {
                 /* attempt to continue with fewer threads, we may be on a
                  * thread-constrained platform like BG/P in DUAL mode */
@@ -70,7 +70,7 @@ int main(int argc, char **argv)
         goto fn_fail;
     }
 
-    do_thread((void *)&comms[0]); /* we are thread 0 */
+    do_thread((void *) &comms[0]);      /* we are thread 0 */
 
     err = MTest_Join_threads();
     if (err) {
@@ -82,12 +82,11 @@ int main(int argc, char **argv)
         MPI_Comm_free(&comms[x]);
     }
 
-fn_exit:
+  fn_exit:
     MTest_Finalize(err);
     MPI_Finalize();
     return 0;
-fn_fail:
+  fn_fail:
     err = 1;
     goto fn_exit;
 }
-

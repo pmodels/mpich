@@ -3,7 +3,7 @@
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#include "mpi.h" 
+#include "mpi.h"
 #include "stdio.h"
 #include "mpitest.h"
 #include "squelch.h"
@@ -15,17 +15,17 @@
 #define SIZE1 100
 #define SIZE2 200
 
-int main(int argc, char *argv[]) 
-{ 
+int main(int argc, char *argv[])
+{
     int rank, destrank, nprocs, *A, *B, i;
     MPI_Comm CommDeuce;
     MPI_Group comm_group, group;
     MPI_Win win;
     int errs = 0;
 
-    MTest_Init(&argc,&argv); 
-    MPI_Comm_size(MPI_COMM_WORLD,&nprocs); 
-    MPI_Comm_rank(MPI_COMM_WORLD,&rank); 
+    MTest_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (nprocs < 2) {
         printf("Run this program with 2 or more processes\n");
@@ -34,8 +34,7 @@ int main(int argc, char *argv[])
 
     MPI_Comm_split(MPI_COMM_WORLD, (rank < 2), rank, &CommDeuce);
 
-    if (rank < 2)
-    {
+    if (rank < 2) {
 
         i = MPI_Alloc_mem(SIZE2 * sizeof(int), MPI_INFO_NULL, &A);
         if (i) {
@@ -52,7 +51,8 @@ int main(int argc, char *argv[])
                 MPI_Abort(MPI_COMM_WORLD, 1);
             }
 
-            for (i=0; i<SIZE2; i++) A[i] = B[i] = i;
+            for (i = 0; i < SIZE2; i++)
+                A[i] = B[i] = i;
 #ifdef USE_WIN_ALLOCATE
             char *base_ptr;
             MPI_Win_allocate(0, 1, MPI_INFO_NULL, CommDeuce, &base_ptr, &win);
@@ -62,16 +62,17 @@ int main(int argc, char *argv[])
             destrank = 1;
             MPI_Group_incl(comm_group, 1, &destrank, &group);
             MPI_Win_start(group, 0, win);
-            for (i=0; i<SIZE1; i++)
-                MPI_Put(A+i, 1, MPI_INT, 1, i, 1, MPI_INT, win);
-            for (i=0; i<SIZE1; i++)
-                MPI_Get(B+i, 1, MPI_INT, 1, SIZE1+i, 1, MPI_INT, win);
+            for (i = 0; i < SIZE1; i++)
+                MPI_Put(A + i, 1, MPI_INT, 1, i, 1, MPI_INT, win);
+            for (i = 0; i < SIZE1; i++)
+                MPI_Get(B + i, 1, MPI_INT, 1, SIZE1 + i, 1, MPI_INT, win);
 
             MPI_Win_complete(win);
 
-            for (i=0; i<SIZE1; i++)
-                if (B[i] != (-4)*(i+SIZE1)) {
-                    SQUELCH( printf("Get Error: B[i] is %d, should be %d\n", B[i], (-4)*(i+SIZE1)); );
+            for (i = 0; i < SIZE1; i++)
+                if (B[i] != (-4) * (i + SIZE1)) {
+                    SQUELCH(printf
+                            ("Get Error: B[i] is %d, should be %d\n", B[i], (-4) * (i + SIZE1)););
                     errs++;
                 }
 
@@ -79,17 +80,18 @@ int main(int argc, char *argv[])
         }
         else if (rank == 1) {
 #ifdef USE_WIN_ALLOCATE
-            MPI_Win_allocate(SIZE2*sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &B, &win);
+            MPI_Win_allocate(SIZE2 * sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &B, &win);
 #else
             i = MPI_Alloc_mem(SIZE2 * sizeof(int), MPI_INFO_NULL, &B);
             if (i) {
                 printf("Can't allocate memory in test program\n");
                 MPI_Abort(MPI_COMM_WORLD, 1);
             }
-            MPI_Win_create(B, SIZE2*sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &win);
+            MPI_Win_create(B, SIZE2 * sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &win);
 #endif
             MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
-            for (i=0; i<SIZE2; i++) B[i] = (-4)*i;
+            for (i = 0; i < SIZE2; i++)
+                B[i] = (-4) * i;
             MPI_Win_unlock(rank, win);
 
             destrank = 0;
@@ -97,9 +99,9 @@ int main(int argc, char *argv[])
             MPI_Win_post(group, 0, win);
             MPI_Win_wait(win);
 
-            for (i=0; i<SIZE1; i++) {
+            for (i = 0; i < SIZE1; i++) {
                 if (B[i] != i) {
-                    SQUELCH( printf("Put Error: B[i] is %d, should be %d\n", B[i], i); );
+                    SQUELCH(printf("Put Error: B[i] is %d, should be %d\n", B[i], i););
                     errs++;
                 }
             }
@@ -117,5 +119,5 @@ int main(int argc, char *argv[])
     MPI_Comm_free(&CommDeuce);
     MTest_Finalize(errs);
     MPI_Finalize();
-    return 0; 
-} 
+    return 0;
+}

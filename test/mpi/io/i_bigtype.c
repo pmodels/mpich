@@ -47,7 +47,7 @@ int main(int argc, char **argv)
     /* create a large buffer 2 */
     buf_write = malloc(NUM_X * NUM_Y * sizeof(int));
     buf_read = malloc(NUM_X * NUM_Y * sizeof(int));
-    if (buf_write == NULL || buf_read == NULL ) {
+    if (buf_write == NULL || buf_read == NULL) {
         fprintf(stderr, "Not enough memory\n");
         exit(1);
     }
@@ -96,8 +96,7 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    rc = MPI_File_set_view(fh, 2144, MPI_BYTE, file_type, "native",
-                           MPI_INFO_NULL);
+    rc = MPI_File_set_view(fh, 2144, MPI_BYTE, file_type, "native", MPI_INFO_NULL);
     if (rc != MPI_SUCCESS) {
         fprintf(stderr, "ERROR SET VIEW\n");
         exit(1);
@@ -111,8 +110,7 @@ int main(int argc, char **argv)
     }
     MPI_Wait(&request, &status);
 
-    rc = MPI_File_set_view(fh, 2144, MPI_BYTE, file_type, "native",
-                           MPI_INFO_NULL);
+    rc = MPI_File_set_view(fh, 2144, MPI_BYTE, file_type, "native", MPI_INFO_NULL);
     if (rc != MPI_SUCCESS) {
         fprintf(stderr, "ERROR SET VIEW\n");
         exit(1);

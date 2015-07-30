@@ -12,7 +12,8 @@
 #define WIN_SIZE (PUT_SIZE+GET_SIZE)
 #define LOOP 100
 
-int main (int argc, char **argv) {
+int main(int argc, char **argv)
+{
     MPI_Win win;
     int i, k, rank, nproc;
     int win_buf[WIN_SIZE], orig_get_buf[GET_SIZE], orig_put_buf[PUT_SIZE];
@@ -29,9 +30,12 @@ int main (int argc, char **argv) {
     MPI_Group_incl(comm_group, 1, &orig_rank, &orig_group);
     MPI_Group_incl(comm_group, 1, &dest_rank, &dest_group);
 
-    for (i = 0; i < PUT_SIZE; i++) orig_put_buf[i] = 1;
-    for (i = 0; i < GET_SIZE; i++) orig_get_buf[i] = 0;
-    for (i = 0; i < WIN_SIZE; i++) win_buf[i] = 1;
+    for (i = 0; i < PUT_SIZE; i++)
+        orig_put_buf[i] = 1;
+    for (i = 0; i < GET_SIZE; i++)
+        orig_get_buf[i] = 0;
+    for (i = 0; i < WIN_SIZE; i++)
+        win_buf[i] = 1;
 
     MPI_Win_create(win_buf, sizeof(int) * WIN_SIZE, sizeof(int), MPI_INFO_NULL,
                    MPI_COMM_WORLD, &win);
@@ -43,9 +47,9 @@ int main (int argc, char **argv) {
         if (rank == orig_rank) {
             MPI_Win_fence(MPI_MODE_NOPRECEDE, win);
             MPI_Get(orig_get_buf, GET_SIZE, MPI_INT,
-                    dest_rank, PUT_SIZE/*disp*/, GET_SIZE, MPI_INT, win);
+                    dest_rank, PUT_SIZE /*disp */ , GET_SIZE, MPI_INT, win);
             MPI_Put(orig_put_buf, PUT_SIZE, MPI_INT,
-                    dest_rank, 0/*disp*/, PUT_SIZE, MPI_INT, win);
+                    dest_rank, 0 /*disp */ , PUT_SIZE, MPI_INT, win);
             MPI_Win_fence(MPI_MODE_NOSUCCEED, win);
 
             /* check GET result values */
@@ -56,22 +60,26 @@ int main (int argc, char **argv) {
                     errors++;
                 }
             }
-        } else if (rank == dest_rank) {
+        }
+        else if (rank == dest_rank) {
             MPI_Win_fence(MPI_MODE_NOPRECEDE, win);
             MPI_Win_fence(MPI_MODE_NOSUCCEED, win);
 
             /* modify the last element in window */
             MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
-            win_buf[WIN_SIZE-1] = 2;
+            win_buf[WIN_SIZE - 1] = 2;
             MPI_Win_unlock(rank, win);
         }
 
         MPI_Barrier(MPI_COMM_WORLD);
         /* reset buffers */
-        for (i = 0; i < PUT_SIZE; i++) orig_put_buf[i] = 1;
-        for (i = 0; i < GET_SIZE; i++) orig_get_buf[i] = 0;
+        for (i = 0; i < PUT_SIZE; i++)
+            orig_put_buf[i] = 1;
+        for (i = 0; i < GET_SIZE; i++)
+            orig_get_buf[i] = 0;
         MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
-        for (i = 0; i < WIN_SIZE; i++) win_buf[i] = 1;
+        for (i = 0; i < WIN_SIZE; i++)
+            win_buf[i] = 1;
         MPI_Win_unlock(rank, win);
         MPI_Barrier(MPI_COMM_WORLD);
 
@@ -80,9 +88,9 @@ int main (int argc, char **argv) {
         if (rank == orig_rank) {
             MPI_Win_start(dest_group, 0, win);
             MPI_Get(orig_get_buf, GET_SIZE, MPI_INT,
-                    dest_rank, PUT_SIZE/*disp*/, GET_SIZE, MPI_INT, win);
+                    dest_rank, PUT_SIZE /*disp */ , GET_SIZE, MPI_INT, win);
             MPI_Put(orig_put_buf, PUT_SIZE, MPI_INT,
-                    dest_rank, 0/*disp*/, PUT_SIZE, MPI_INT, win);
+                    dest_rank, 0 /*disp */ , PUT_SIZE, MPI_INT, win);
             MPI_Win_complete(win);
 
             /* check GET result values */
@@ -100,16 +108,19 @@ int main (int argc, char **argv) {
 
             /* modify the last element in window */
             MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
-            win_buf[WIN_SIZE-1] = 2;
+            win_buf[WIN_SIZE - 1] = 2;
             MPI_Win_unlock(rank, win);
         }
 
         MPI_Barrier(MPI_COMM_WORLD);
         /* reset buffers */
-        for (i = 0; i < PUT_SIZE; i++) orig_put_buf[i] = 1;
-        for (i = 0; i < GET_SIZE; i++) orig_get_buf[i] = 0;
+        for (i = 0; i < PUT_SIZE; i++)
+            orig_put_buf[i] = 1;
+        for (i = 0; i < GET_SIZE; i++)
+            orig_get_buf[i] = 0;
         MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
-        for (i = 0; i < WIN_SIZE; i++) win_buf[i] = 1;
+        for (i = 0; i < WIN_SIZE; i++)
+            win_buf[i] = 1;
         MPI_Win_unlock(rank, win);
         MPI_Barrier(MPI_COMM_WORLD);
     }

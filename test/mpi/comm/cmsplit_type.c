@@ -14,7 +14,7 @@
 
 int main(int argc, char *argv[])
 {
-    int rank, size, verbose=0;
+    int rank, size, verbose = 0;
     int wrank;
     MPI_Comm comm;
 
@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     if (getenv("MPITEST_VERBOSE"))
         verbose = 1;
 
-    MPI_Comm_rank( MPI_COMM_WORLD, &wrank );
+    MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
 
     /* Check to see if MPI_COMM_TYPE_SHARED works correctly */
     MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm);
@@ -55,9 +55,9 @@ int main(int argc, char *argv[])
     }
 
     /* Use wrank because Comm_split_type may return more than one communicator
-       across the job, and if so, each will have a rank 0 entry.  Test 
-       output rules are for a single process to write the successful 
-       test (No Errors) output. */
+     * across the job, and if so, each will have a rank 0 entry.  Test
+     * output rules are for a single process to write the successful
+     * test (No Errors) output. */
     if (wrank == 0)
         printf(" No errors\n");
 

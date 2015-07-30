@@ -6,7 +6,7 @@
 
 /* One-Sided MPI 2-D Strided Accumulate Test
  *
- * Author: James Dinan <dinan@mcs.anl.gov> 
+ * Author: James Dinan <dinan@mcs.anl.gov>
  * Date  : December, 2010
  *
  * This code performs one-sided accumulate into a 2d patch of a shared array.
@@ -19,11 +19,12 @@
 #include "mpitest.h"
 #include "squelch.h"
 
-#define XDIM 1024 
+#define XDIM 1024
 #define YDIM 1024
 #define ITERATIONS 10
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     int i, j, rank, nranks, peer, bufsize, errors;
     double *buffer, *src_buf;
     MPI_Win buf_win;
@@ -37,41 +38,42 @@ int main(int argc, char **argv) {
     MPI_Alloc_mem(bufsize, MPI_INFO_NULL, &buffer);
     MPI_Alloc_mem(bufsize, MPI_INFO_NULL, &src_buf);
 
-    for (i = 0; i < XDIM*YDIM; i++) {
-        *(buffer  + i) = 1.0 + rank;
+    for (i = 0; i < XDIM * YDIM; i++) {
+        *(buffer + i) = 1.0 + rank;
         *(src_buf + i) = 1.0 + rank;
     }
 
     MPI_Win_create(buffer, bufsize, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &buf_win);
 
-    peer = (rank+1) % nranks;
+    peer = (rank + 1) % nranks;
 
     for (i = 0; i < ITERATIONS; i++) {
 
-      MPI_Win_lock(MPI_LOCK_EXCLUSIVE, peer, 0, buf_win);
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, peer, 0, buf_win);
 
-      for (j = 0; j < YDIM; j++) {
-        MPI_Accumulate(src_buf + j*XDIM, XDIM, MPI_DOUBLE, peer,
-                       j*XDIM*sizeof(double), XDIM, MPI_DOUBLE, MPI_SUM, buf_win);
-      }
+        for (j = 0; j < YDIM; j++) {
+            MPI_Accumulate(src_buf + j * XDIM, XDIM, MPI_DOUBLE, peer,
+                           j * XDIM * sizeof(double), XDIM, MPI_DOUBLE, MPI_SUM, buf_win);
+        }
 
-      MPI_Win_unlock(peer, buf_win);
+        MPI_Win_unlock(peer, buf_win);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
 
     MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, buf_win);
     for (i = errors = 0; i < XDIM; i++) {
-      for (j = 0; j < YDIM; j++) {
-        const double actual   = *(buffer + i + j*XDIM);
-        const double expected = (1.0 + rank) + (1.0 + ((rank+nranks-1)%nranks)) * (ITERATIONS);
-        if (fabs(actual - expected) > 1.0e-10) {
-          SQUELCH( printf("%d: Data validation failed at [%d, %d] expected=%f actual=%f\n",
-              rank, j, i, expected, actual); );
-          errors++;
-          fflush(stdout);
+        for (j = 0; j < YDIM; j++) {
+            const double actual = *(buffer + i + j * XDIM);
+            const double expected =
+                (1.0 + rank) + (1.0 + ((rank + nranks - 1) % nranks)) * (ITERATIONS);
+            if (fabs(actual - expected) > 1.0e-10) {
+                SQUELCH(printf("%d: Data validation failed at [%d, %d] expected=%f actual=%f\n",
+                               rank, j, i, expected, actual););
+                errors++;
+                fflush(stdout);
+            }
         }
-      }
     }
     MPI_Win_unlock(rank, buf_win);
 
@@ -79,7 +81,7 @@ int main(int argc, char **argv) {
     MPI_Free_mem(buffer);
     MPI_Free_mem(src_buf);
 
-    MTest_Finalize( errors );
+    MTest_Finalize(errors);
     MPI_Finalize();
-    return MTestReturnValue( errors );
+    return MTestReturnValue(errors);
 }

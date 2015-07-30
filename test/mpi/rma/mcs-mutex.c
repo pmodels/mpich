@@ -39,7 +39,7 @@ int MCS_Mutex_create(int tail_rank, MPI_Comm comm, MCS_Mutex * hdl_out)
     hdl->tail_rank = tail_rank;
 
 #ifdef USE_WIN_SHARED
-    MPI_Win_allocate_shared(2*sizeof(int), sizeof(int), MPI_INFO_NULL,
+    MPI_Win_allocate_shared(2 * sizeof(int), sizeof(int), MPI_INFO_NULL,
                             hdl->comm, &hdl->base, &hdl->window);
 #else
 #ifdef USE_WIN_ALLOC_SHM
@@ -49,7 +49,7 @@ int MCS_Mutex_create(int tail_rank, MPI_Comm comm, MCS_Mutex * hdl_out)
     MPI_Info_create(&hdl->win_info);
     MPI_Info_set(hdl->win_info, "alloc_shm", "false");
 #endif
-    MPI_Win_allocate(2*sizeof(int), sizeof(int), hdl->win_info, hdl->comm,
+    MPI_Win_allocate(2 * sizeof(int), sizeof(int), hdl->win_info, hdl->comm,
                      &hdl->base, &hdl->window);
 #endif
 
@@ -119,7 +119,8 @@ int MCS_Mutex_lock(MCS_Mutex hdl)
         /* Wait for notification */
         MPI_Status status;
 
-        MPI_Accumulate(&rank, 1, MPI_INT, prev, MCS_MTX_ELEM_DISP, 1, MPI_INT, MPI_REPLACE, hdl->window);
+        MPI_Accumulate(&rank, 1, MPI_INT, prev, MCS_MTX_ELEM_DISP, 1, MPI_INT, MPI_REPLACE,
+                       hdl->window);
         MPI_Win_flush(prev, hdl->window);
 
         debug_print("%2d: LOCK   - waiting for notification from %d\n", rank, prev);
@@ -181,11 +182,10 @@ int MCS_Mutex_unlock(MCS_Mutex hdl)
 
     /* Read my next pointer.  FOP is used since another process may write to
      * this location concurrent with this read. */
-    MPI_Fetch_and_op(NULL, &next, MPI_INT, rank, MCS_MTX_ELEM_DISP, MPI_NO_OP,
-                     hdl->window);
+    MPI_Fetch_and_op(NULL, &next, MPI_INT, rank, MCS_MTX_ELEM_DISP, MPI_NO_OP, hdl->window);
     MPI_Win_flush(rank, hdl->window);
 
-    if ( next == MPI_PROC_NULL) {
+    if (next == MPI_PROC_NULL) {
         int tail;
         int nil = MPI_PROC_NULL;
 
@@ -206,10 +206,10 @@ int MCS_Mutex_unlock(MCS_Mutex hdl)
                                  MPI_NO_OP, hdl->window);
 
                 MPI_Win_flush(rank, hdl->window);
-                if (next != MPI_PROC_NULL) break;
+                if (next != MPI_PROC_NULL)
+                    break;
 
-                MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag,
-                           MPI_STATUS_IGNORE);
+                MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, MPI_STATUS_IGNORE);
             }
         }
     }

@@ -25,9 +25,9 @@ int main(int argc, char *argv[])
     int errs = 0;
     int trank = 1;
 
-    MTest_Init(&argc,&argv);
-    MPI_Comm_size(MPI_COMM_WORLD,&nprocs);
-    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    MTest_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (nprocs < 3) {
         fprintf(stderr, "Run this program with 3 or more processes\n");
@@ -38,54 +38,54 @@ int main(int argc, char *argv[])
 
     if (rank < 3) {
         if (rank == 0) {
-            for (i=0; i<SIZE2; i++) {
+            for (i = 0; i < SIZE2; i++) {
                 A[i] = B[i] = i;
             }
         }
         else if (rank == 2) {
-            for (i=0; i<SIZE2; i++) {
+            for (i = 0; i < SIZE2; i++) {
                 A[i] = B[i] = -1;
             }
         }
         else if (rank == 1) {
-            for (i=0; i<SIZE2; i++) {
-                B[i] = (-4)*i;
+            for (i = 0; i < SIZE2; i++) {
+                B[i] = (-4) * i;
             }
         }
 
-        MPI_Win_create(B, SIZE2*sizeof(int), sizeof(int), MPI_INFO_NULL, CommThree, &win);
+        MPI_Win_create(B, SIZE2 * sizeof(int), sizeof(int), MPI_INFO_NULL, CommThree, &win);
 
         if (rank == 0) {
-            for (i=0; i<SIZE1; i++) {
+            for (i = 0; i < SIZE1; i++) {
                 MPI_Win_lock(MPI_LOCK_EXCLUSIVE, trank, 0, win);
-                MPI_Put(A+i, 1, MPI_INT, trank, i, 1, MPI_INT, win);
+                MPI_Put(A + i, 1, MPI_INT, trank, i, 1, MPI_INT, win);
                 /*  MPI_Put(A+i, 1, MPI_INT, trank, i, 1, MPI_INT, win);
-                    MPI_Put(A+i, 1, MPI_INT, trank, i, 1, MPI_INT, win); */
+                 * MPI_Put(A+i, 1, MPI_INT, trank, i, 1, MPI_INT, win); */
                 MPI_Win_unlock(trank, win);
             }
 
             MPI_Win_free(&win);
         }
         else if (rank == 2) {
-            for (i=0; i<SIZE1; i++) {
+            for (i = 0; i < SIZE1; i++) {
                 MPI_Win_lock(MPI_LOCK_EXCLUSIVE, trank, 0, win);
-                MPI_Get(A+i, 1, MPI_INT, trank, SIZE1+i, 1, MPI_INT, win);
+                MPI_Get(A + i, 1, MPI_INT, trank, SIZE1 + i, 1, MPI_INT, win);
                 MPI_Win_unlock(trank, win);
             }
 
             MPI_Win_free(&win);
 
-            for (i=0; i<SIZE1; i++)
-                if (A[i] != (-4)*(i+SIZE1)) {
-                    printf("Get Error: A[%d] is %d, should be %d\n", i, A[i], (-4)*(i+SIZE1));
+            for (i = 0; i < SIZE1; i++)
+                if (A[i] != (-4) * (i + SIZE1)) {
+                    printf("Get Error: A[%d] is %d, should be %d\n", i, A[i], (-4) * (i + SIZE1));
                     errs++;
                 }
         }
 
-        else if (rank == 1) { /*target*/
+        else if (rank == 1) {   /*target */
             MPI_Win_free(&win);
 
-            for (i=0; i<SIZE1; i++) {
+            for (i = 0; i < SIZE1; i++) {
                 if (B[i] != i) {
                     printf("Put Error: B[%d] is %d, should be %d\n", i, B[i], i);
                     errs++;

@@ -277,7 +277,7 @@ int main(int argc, char **argv)
         MPI_Imrecv(recvbuf, count, MPI_INT, &msg, &rreq);
         check(rreq != MPI_REQUEST_NULL);
         completed = 0;
-        MPI_Test(&rreq, &completed, &s2); /* single test should always succeed */
+        MPI_Test(&rreq, &completed, &s2);       /* single test should always succeed */
         check(completed);
         /* recvbuf should remain unmodified */
         check(recvbuf[0] == 0x01234567);
@@ -351,7 +351,7 @@ int main(int argc, char **argv)
         MPI_Imrecv(recvbuf, count, MPI_INT, &msg, &rreq);
         check(rreq != MPI_REQUEST_NULL);
         completed = 0;
-        MPI_Test(&rreq, &completed, &s2); /* single test should always succeed */
+        MPI_Test(&rreq, &completed, &s2);       /* single test should always succeed */
         check(completed);
         /* recvbuf should remain unmodified */
         check(recvbuf[0] == 0x01234567);
@@ -531,9 +531,9 @@ int main(int argc, char **argv)
         sendbuf[3] = 0xfeedface;
         sendbuf[4] = 0xdeadbeef;
         sendbuf[5] = 0xfeedface;
-        MPI_Isend(&sendbuf[0], 4, MPI_INT, 1, 6, MPI_COMM_WORLD,&lrequest[0]);
-        MPI_Isend(&sendbuf[4], 2, MPI_INT, 1, 6, MPI_COMM_WORLD,&lrequest[1]);
-        MPI_Waitall(2, &lrequest[0],MPI_STATUSES_IGNORE);
+        MPI_Isend(&sendbuf[0], 4, MPI_INT, 1, 6, MPI_COMM_WORLD, &lrequest[0]);
+        MPI_Isend(&sendbuf[4], 2, MPI_INT, 1, 6, MPI_COMM_WORLD, &lrequest[1]);
+        MPI_Waitall(2, &lrequest[0], MPI_STATUSES_IGNORE);
     }
     else {
         memset(&s1, 0xab, sizeof(MPI_Status));
@@ -561,10 +561,10 @@ int main(int argc, char **argv)
         check(recvbuf[0] == 0xdeadbeef);
         check(recvbuf[1] == 0xfeedface);
 
-        recvbuf[0]   = 0x01234567;
-        recvbuf[1]   = 0x89abcdef;
-        recvbuf[2]   = 0x01234567;
-        recvbuf[3]   = 0x89abcdef;
+        recvbuf[0] = 0x01234567;
+        recvbuf[1] = 0x89abcdef;
+        recvbuf[2] = 0x01234567;
+        recvbuf[3] = 0x89abcdef;
         s2.MPI_ERROR = MPI_ERR_TOPOLOGY;
 
         MPI_Mrecv(recvbuf, count, MPI_INT, &msg, &s2);
@@ -605,7 +605,7 @@ int main(int argc, char **argv)
 
 #endif /* TEST_MPROBE_ROUTINES */
 
-epilogue:
+  epilogue:
     MPI_Reduce((rank == 0 ? MPI_IN_PLACE : &errs), &errs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     if (rank == 0) {
         if (errs) {
@@ -620,4 +620,3 @@ epilogue:
 
     return 0;
 }
-

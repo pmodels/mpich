@@ -6,7 +6,7 @@
 
 /* One-Sided MPI 2-D Strided Get Test
  *
- * Author: James Dinan <dinan@mcs.anl.gov> 
+ * Author: James Dinan <dinan@mcs.anl.gov>
  * Date  : December, 2010
  *
  * This code performs N strided get operations from a 2d patch of a shared
@@ -27,7 +27,8 @@
 #define SUB_XDIM 8
 #define SUB_YDIM 256
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     int i, j, rank, nranks, peer, bufsize, errors;
     double *win_buf, *loc_buf;
     MPI_Win buf_win;
@@ -45,20 +46,20 @@ int main(int argc, char **argv) {
     MPI_Alloc_mem(bufsize, MPI_INFO_NULL, &win_buf);
     MPI_Alloc_mem(bufsize, MPI_INFO_NULL, &loc_buf);
 
-    for (i = 0; i < XDIM*YDIM; i++) {
-        *(win_buf + i) =  1.0 + rank;
+    for (i = 0; i < XDIM * YDIM; i++) {
+        *(win_buf + i) = 1.0 + rank;
         *(loc_buf + i) = -1.0;
     }
 
     MPI_Win_create(win_buf, bufsize, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &buf_win);
 
-    peer = (rank+1) % nranks;
+    peer = (rank + 1) % nranks;
 
     /* Build the datatype */
 
     for (i = 0; i < SUB_YDIM; i++) {
-      idx_rem[i] = i*XDIM;
-      blk_len[i] = SUB_XDIM;
+        idx_rem[i] = i * XDIM;
+        blk_len[i] = SUB_XDIM;
     }
 
     MPI_Type_indexed(SUB_YDIM, blk_len, idx_rem, MPI_DOUBLE, &loc_type);
@@ -87,47 +88,47 @@ int main(int argc, char **argv) {
 
     errors = 0;
     for (i = 0; i < SUB_XDIM; i++) {
-      for (j = 0; j < SUB_YDIM; j++) {
-        const double actual   = *(loc_buf + i + j*XDIM);
-        const double expected = (1.0 + peer);
-        if (fabs(actual - expected) > 1.0e-10) {
-          SQUELCH( printf("%d: Data validation failed at [%d, %d] expected=%f actual=%f\n",
-              rank, j, i, expected, actual); );
-          errors++;
-          fflush(stdout);
+        for (j = 0; j < SUB_YDIM; j++) {
+            const double actual = *(loc_buf + i + j * XDIM);
+            const double expected = (1.0 + peer);
+            if (fabs(actual - expected) > 1.0e-10) {
+                SQUELCH(printf("%d: Data validation failed at [%d, %d] expected=%f actual=%f\n",
+                               rank, j, i, expected, actual););
+                errors++;
+                fflush(stdout);
+            }
         }
-      }
     }
     for (i = SUB_XDIM; i < XDIM; i++) {
-      for (j = 0; j < SUB_YDIM; j++) {
-        const double actual   = *(loc_buf + i + j*XDIM);
-        const double expected = -1.0;
-        if (fabs(actual - expected) > 1.0e-10) {
-          SQUELCH( printf("%d: Data validation failed at [%d, %d] expected=%f actual=%f\n",
-              rank, j, i, expected, actual); );
-          errors++;
-          fflush(stdout);
+        for (j = 0; j < SUB_YDIM; j++) {
+            const double actual = *(loc_buf + i + j * XDIM);
+            const double expected = -1.0;
+            if (fabs(actual - expected) > 1.0e-10) {
+                SQUELCH(printf("%d: Data validation failed at [%d, %d] expected=%f actual=%f\n",
+                               rank, j, i, expected, actual););
+                errors++;
+                fflush(stdout);
+            }
         }
-      }
     }
     for (i = 0; i < XDIM; i++) {
-      for (j = SUB_YDIM; j < YDIM; j++) {
-        const double actual   = *(loc_buf + i + j*XDIM);
-        const double expected = -1.0;
-        if (fabs(actual - expected) > 1.0e-10) {
-          SQUELCH( printf("%d: Data validation failed at [%d, %d] expected=%f actual=%f\n",
-              rank, j, i, expected, actual); );
-          errors++;
-          fflush(stdout);
+        for (j = SUB_YDIM; j < YDIM; j++) {
+            const double actual = *(loc_buf + i + j * XDIM);
+            const double expected = -1.0;
+            if (fabs(actual - expected) > 1.0e-10) {
+                SQUELCH(printf("%d: Data validation failed at [%d, %d] expected=%f actual=%f\n",
+                               rank, j, i, expected, actual););
+                errors++;
+                fflush(stdout);
+            }
         }
-      }
     }
 
     MPI_Win_free(&buf_win);
     MPI_Free_mem(win_buf);
     MPI_Free_mem(loc_buf);
 
-    MTest_Finalize( errors );
+    MTest_Finalize(errors);
     MPI_Finalize();
-    return MTestReturnValue( errors );
+    return MTestReturnValue(errors);
 }

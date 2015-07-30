@@ -9,19 +9,19 @@
 
 int main(int argc, char *argv[])
 {
-	int i;
-	double dStart, dFinish, dDuration;
+    int i;
+    double dStart, dFinish, dDuration;
 
-	MPI_Init(&argc, &argv);
-	MPI_Comm_rank(MPI_COMM_WORLD, &i);
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &i);
 
-	dStart = MPI_Wtime();
+    dStart = MPI_Wtime();
     MTestSleep(1);
-	dFinish = MPI_Wtime();
-	dDuration = dFinish - dStart;
+    dFinish = MPI_Wtime();
+    dDuration = dFinish - dStart;
 
-	printf("start:%g\nfinish:%g\nduration:%g\n", dStart, dFinish, dDuration);
+    printf("start:%g\nfinish:%g\nduration:%g\n", dStart, dFinish, dDuration);
 
-	MPI_Finalize();
-	return 0;
+    MPI_Finalize();
+    return 0;
 }

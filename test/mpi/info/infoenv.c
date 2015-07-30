@@ -13,7 +13,8 @@ int main(int argc, char *argv[])
 {
     char value[MPI_MAX_INFO_VAL];
     char *keys[] = { "command", "argv", "maxprocs", "soft", "host", "arch", "wdir", "file",
-                     "thread_level", 0 };
+        "thread_level", 0
+    };
     int flag, i;
 
     MPI_Init(NULL, NULL);

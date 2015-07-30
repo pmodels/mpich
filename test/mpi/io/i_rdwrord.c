@@ -24,13 +24,12 @@ int main(int argc, char *argv[])
     MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
-    MPI_File_open(comm, (char *)"test.ord",
-                  MPI_MODE_RDWR | MPI_MODE_CREATE |
-                  MPI_MODE_DELETE_ON_CLOSE, MPI_INFO_NULL, &fh);
+    MPI_File_open(comm, (char *) "test.ord",
+                  MPI_MODE_RDWR | MPI_MODE_CREATE | MPI_MODE_DELETE_ON_CLOSE, MPI_INFO_NULL, &fh);
 
     MPI_Comm_size(comm, &size);
     MPI_Comm_rank(comm, &rank);
-    buf = (int *)malloc(size * sizeof(int));
+    buf = (int *) malloc(size * sizeof(int));
     buf[0] = rank;
     rc = MPI_File_write_ordered(fh, buf, 1, MPI_INT, &status);
     if (rc != MPI_SUCCESS) {
@@ -57,7 +56,8 @@ int main(int argc, char *argv[])
     }
 
     MPI_File_seek_shared(fh, 0, MPI_SEEK_SET);
-    for (i = 0; i < size; i++) buf[i] = -1;
+    for (i = 0; i < size; i++)
+        buf[i] = -1;
     MPI_File_read_ordered(fh, buf, 1, MPI_INT, &status);
     if (buf[0] != rank) {
         errs++;

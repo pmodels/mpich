@@ -23,88 +23,94 @@
 
 #include "connectstuff.h"
 
-static void printTimeStamp( void ) {
+static void printTimeStamp(void)
+{
     time_t t;
-    struct tm * ltime;
-    time( &t );
-    ltime = localtime( &t );
-    printf( "%04d-%02d-%02d %02d:%02d:%02d: ", 1900 + ltime->tm_year,
-            ltime->tm_mon, ltime->tm_mday, ltime->tm_hour, ltime->tm_min, ltime->tm_sec );
-    fflush( stdout );
+    struct tm *ltime;
+    time(&t);
+    ltime = localtime(&t);
+    printf("%04d-%02d-%02d %02d:%02d:%02d: ", 1900 + ltime->tm_year,
+           ltime->tm_mon, ltime->tm_mday, ltime->tm_hour, ltime->tm_min, ltime->tm_sec);
+    fflush(stdout);
 }
 
-void safeSleep( double seconds ) {
+void safeSleep(double seconds)
+{
     struct timespec sleepAmt = { 0, 0 };
     int ret = 0;
-    sleepAmt.tv_sec = floor( seconds );
-    sleepAmt.tv_nsec = 1e9 * ( seconds - floor( seconds ) );
-    ret = nanosleep( &sleepAmt, NULL );
-    if( ret == -1 ) {
-        printf( "Safesleep returned early. Sorry\n" );
+    sleepAmt.tv_sec = floor(seconds);
+    sleepAmt.tv_nsec = 1e9 * (seconds - floor(seconds));
+    ret = nanosleep(&sleepAmt, NULL);
+    if (ret == -1) {
+        printf("Safesleep returned early. Sorry\n");
     }
 }
 
-void printStackTrace() {
+void printStackTrace()
+{
     static char cmd[512];
-    int  ierr;
-    snprintf( cmd, 512, "/bin/sh -c \"/home/eellis/bin/pstack1 %d\"", getpid() );
-    ierr = system( cmd );
-    fflush( stdout );
+    int ierr;
+    snprintf(cmd, 512, "/bin/sh -c \"/home/eellis/bin/pstack1 %d\"", getpid());
+    ierr = system(cmd);
+    fflush(stdout);
 }
 
-void msg( const char * fmt, ... ) {
+void msg(const char *fmt, ...)
+{
     va_list ap;
-    va_start( ap, fmt );
+    va_start(ap, fmt);
     printTimeStamp();
-    vprintf( fmt, ap );
-    fflush( stdout );
-    va_end( ap );
+    vprintf(fmt, ap);
+    fflush(stdout);
+    va_end(ap);
 }
 
 /*
  * You should free the string once you've used it
  */
-char * getPortFromFile( const char * fmt, ... ) {
+char *getPortFromFile(const char *fmt, ...)
+{
     char fname[PATH_MAX];
     char dirname[PATH_MAX];
     char *retPort;
     char *cerr;
     va_list ap;
-    FILE * fp;
+    FILE *fp;
     int done = 0;
     int count = 0;              /* Just used for the NFS sync - not really a count */
-    
-    retPort = (char * ) calloc( MPI_MAX_PORT_NAME + 1, sizeof( char ) );
 
-    va_start( ap, fmt );
-    vsnprintf( fname, PATH_MAX, fmt, ap );
-    va_end( ap );
-    
-    srand( getpid() );
+    retPort = (char *) calloc(MPI_MAX_PORT_NAME + 1, sizeof(char));
 
-    while( !done ) {
+    va_start(ap, fmt);
+    vsnprintf(fname, PATH_MAX, fmt, ap);
+    va_end(ap);
+
+    srand(getpid());
+
+    while (!done) {
         count += rand();
-        fp = fopen( fname, "rt" );
-        if( fp != NULL ) {
-            cerr = fgets( retPort, MPI_MAX_PORT_NAME, fp );
-            fclose( fp );
+        fp = fopen(fname, "rt");
+        if (fp != NULL) {
+            cerr = fgets(retPort, MPI_MAX_PORT_NAME, fp);
+            fclose(fp);
             /* ignore bogus tag - assume that the real tag must be longer than 8
              * characters */
-            if( strlen( retPort ) >= 8 ) {
+            if (strlen(retPort) >= 8) {
                 done = 1;
-            } 
-        } 
-        if ( !done ) {
+            }
+        }
+        if (!done) {
             int retcode;
-            safeSleep( 0.1 );
+            safeSleep(0.1);
             /* force NFS to update by creating and then deleting a subdirectory. Ouch. */
-            snprintf( dirname, PATH_MAX, "%s___%d", fname, count );
-            retcode = mkdir( dirname, 0777 );
-            if( retcode != 0 ) {
-                perror( "Calling mkdir" );
-                _exit( 9 );
-            } else {
-                rmdir( dirname );
+            snprintf(dirname, PATH_MAX, "%s___%d", fname, count);
+            retcode = mkdir(dirname, 0777);
+            if (retcode != 0) {
+                perror("Calling mkdir");
+                _exit(9);
+            }
+            else {
+                rmdir(dirname);
             }
         }
     }
@@ -114,21 +120,22 @@ char * getPortFromFile( const char * fmt, ... ) {
 /*
  * Returns the filename written to. Free this once you're done.
  */
-char * writePortToFile( const char * port, const char * fmt, ... ) {
-    char * fname;
+char *writePortToFile(const char *port, const char *fmt, ...)
+{
+    char *fname;
     va_list ap;
-    FILE * fp;
+    FILE *fp;
 
-    fname = (char *) calloc( PATH_MAX, sizeof( char ) );
-    
-    va_start( ap, fmt );
-    vsnprintf( fname, PATH_MAX, fmt, ap );
-    va_end( ap );
-    
-    fp = fopen( fname, "wt" );
-    fprintf( fp, "%s\n", port );
-    fclose( fp );
-    
-    msg( "Wrote port <%s> to file <%s>\n", port, fname );
+    fname = (char *) calloc(PATH_MAX, sizeof(char));
+
+    va_start(ap, fmt);
+    vsnprintf(fname, PATH_MAX, fmt, ap);
+    va_end(ap);
+
+    fp = fopen(fname, "wt");
+    fprintf(fp, "%s\n", port);
+    fclose(fp);
+
+    msg("Wrote port <%s> to file <%s>\n", port, fname);
     return fname;
 }

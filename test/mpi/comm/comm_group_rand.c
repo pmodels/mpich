@@ -28,11 +28,11 @@ int main(int argc, char **argv)
     MPI_Comm_group(MPI_COMM_WORLD, &full_group);
 
     for (j = 0; j < LOOPS; j++) {
-        srand(j); /* Deterministic seed */
+        srand(j);       /* Deterministic seed */
 
         count = 0;
         for (i = 0; i < size; i++) {
-            if (rand() % 2) { /* randomly include a rank */
+            if (rand() % 2) {   /* randomly include a rank */
                 included[i] = 1;
                 ranks[count++] = i;
             }

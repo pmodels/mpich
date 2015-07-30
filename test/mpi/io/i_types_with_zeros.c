@@ -45,7 +45,8 @@ static int test_indexed_with_zeros(char *filename, int testcase)
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
     /* set up the number of integers to write in each iteration */
-    for (i = 0; i < MAXLEN; i++) nelms[i] = 0;
+    for (i = 0; i < MAXLEN; i++)
+        nelms[i] = 0;
     if (rank == 0)
         nelms[4] = nelms[5] = nelms[7] = 1;
     if (rank == 1)
@@ -56,13 +57,15 @@ static int test_indexed_with_zeros(char *filename, int testcase)
         for (i = 0; i < MAXLEN; i++)
             buf[i] = -999;
         err = MPI_File_open(MPI_COMM_SELF, filename,
-                            MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL,
-                            &fh);
-        if (err != MPI_SUCCESS) handle_error(err, "MPI_File_open");
+                            MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh);
+        if (err != MPI_SUCCESS)
+            handle_error(err, "MPI_File_open");
         err = MPI_File_write(fh, buf, MAXLEN, MPI_INT, &status);
-        if (err != MPI_SUCCESS) handle_error(err, "MPI_File_write");
+        if (err != MPI_SUCCESS)
+            handle_error(err, "MPI_File_write");
         err = MPI_File_close(&fh);
-        if (err != MPI_SUCCESS) handle_error(err, "MPI_File_close");
+        if (err != MPI_SUCCESS)
+            handle_error(err, "MPI_File_close");
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -77,46 +80,53 @@ static int test_indexed_with_zeros(char *filename, int testcase)
         num++;
     }
     switch (testcase) {
-        case INDEXED:
-            MPI_Type_indexed(num, blocklen, indices, MPI_INT, &filetype);
-            break;
-        case HINDEXED:
-            MPI_Type_hindexed(num, blocklen, addrs, MPI_INT, &filetype);
-            break;
-        case STRUCT:
-            MPI_Type_create_struct(num, blocklen, addrs, types, &filetype);
-            break;
-        default:
-            fprintf(stderr, "unknown testcase!\n");
-            return (-100);
+    case INDEXED:
+        MPI_Type_indexed(num, blocklen, indices, MPI_INT, &filetype);
+        break;
+    case HINDEXED:
+        MPI_Type_hindexed(num, blocklen, addrs, MPI_INT, &filetype);
+        break;
+    case STRUCT:
+        MPI_Type_create_struct(num, blocklen, addrs, types, &filetype);
+        break;
+    default:
+        fprintf(stderr, "unknown testcase!\n");
+        return (-100);
     }
 
     MPI_Type_commit(&filetype);
 
     /* initialize write buffer and write to file */
-    for (i = 0; i < MAXLEN; i++) buf[i] = 1;
-    err = MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_WRONLY,
-                        MPI_INFO_NULL, &fh);
-    if (err != MPI_SUCCESS) handle_error(err, "MPI_File_open");
+    for (i = 0; i < MAXLEN; i++)
+        buf[i] = 1;
+    err = MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_WRONLY, MPI_INFO_NULL, &fh);
+    if (err != MPI_SUCCESS)
+        handle_error(err, "MPI_File_open");
     err = MPI_File_set_view(fh, 0, MPI_INT, filetype, "native", MPI_INFO_NULL);
-    if (err != MPI_SUCCESS) handle_error(err, "MPI_File_set_view");
+    if (err != MPI_SUCCESS)
+        handle_error(err, "MPI_File_set_view");
     err = MPI_File_iwrite_all(fh, buf, buflen, MPI_INT, &request);
-    if (err != MPI_SUCCESS) handle_error(err, "MPI_File_iwrite_all");
+    if (err != MPI_SUCCESS)
+        handle_error(err, "MPI_File_iwrite_all");
     err = MPI_Wait(&request, &status);
-    if (err != MPI_SUCCESS) handle_error(err, "MPI_Wait");
+    if (err != MPI_SUCCESS)
+        handle_error(err, "MPI_Wait");
     MPI_Type_free(&filetype);
     err = MPI_File_close(&fh);
-    if (err != MPI_SUCCESS) handle_error(err, "MPI_File_close");
+    if (err != MPI_SUCCESS)
+        handle_error(err, "MPI_File_close");
 
     /* read back and check */
     if (rank == 0) {
-        err = MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_RDONLY,
-                            MPI_INFO_NULL, &fh);
-        if (err != MPI_SUCCESS) handle_error(err, "MPI_File_open");
+        err = MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
+        if (err != MPI_SUCCESS)
+            handle_error(err, "MPI_File_open");
         err = MPI_File_read(fh, buf, MAXLEN, MPI_INT, &status);
-        if (err != MPI_SUCCESS) handle_error(err, "MPI_File_read");
+        if (err != MPI_SUCCESS)
+            handle_error(err, "MPI_File_read");
         err = MPI_File_close(&fh);
-        if (err != MPI_SUCCESS) handle_error(err, "MPI_File_close");
+        if (err != MPI_SUCCESS)
+            handle_error(err, "MPI_File_close");
         for (i = 0; i < MAXLEN; i++) {
             if (buf[i] < 0) {
                 nr_errors++;
@@ -140,7 +150,8 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
     if (np != 2) {
-        if (rank == 0) fprintf(stderr, "Must run on 2 MPI processes\n");
+        if (rank == 0)
+            fprintf(stderr, "Must run on 2 MPI processes\n");
         MPI_Finalize();
         return 1;
     }
@@ -148,7 +159,8 @@ int main(int argc, char **argv)
     nr_errors += test_indexed_with_zeros(filename, HINDEXED);
     nr_errors += test_indexed_with_zeros(filename, STRUCT);
 
-    if (rank == 0 && nr_errors == 0) printf(" No Errors\n");
+    if (rank == 0 && nr_errors == 0)
+        printf(" No Errors\n");
 
     MPI_Finalize();
     return 0;

@@ -43,11 +43,11 @@ int main(int argc, char **argv)
     }
     else {
         MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        filename = (char *)malloc(len + 1);
+        filename = (char *) malloc(len + 1);
         MPI_Bcast(filename, len + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
     }
 
-    buf = (int *)malloc(SIZE * sizeof(int));
+    buf = (int *) malloc(SIZE * sizeof(int));
 
     MPI_Type_vector(SIZE / 2, 1, 2, MPI_INT, &typevec);
 
@@ -66,14 +66,13 @@ int main(int argc, char **argv)
     if (!mynod) {
 #if VERBOSE
         fprintf(stderr, "\ntesting noncontiguous in memory, noncontiguous in "
-                        "file using collective I/O\n");
+                "file using collective I/O\n");
 #endif
         MPI_File_delete(filename, MPI_INFO_NULL);
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR,
-                  MPI_INFO_NULL, &fh);
+    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
 
     MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL);
 
@@ -94,13 +93,11 @@ int main(int argc, char **argv)
         if (!mynod) {
             if ((i % 2) && (buf[i] != -1)) {
                 errs++;
-                fprintf(stderr, "Process %d: buf %d is %d, should be -1\n",
-                        mynod, i, buf[i]);
+                fprintf(stderr, "Process %d: buf %d is %d, should be -1\n", mynod, i, buf[i]);
             }
             if (!(i % 2) && (buf[i] != i)) {
                 errs++;
-                fprintf(stderr, "Process %d: buf %d is %d, should be %d\n",
-                        mynod, i, buf[i], i);
+                fprintf(stderr, "Process %d: buf %d is %d, should be %d\n", mynod, i, buf[i], i);
             }
         }
         else {
@@ -111,8 +108,7 @@ int main(int argc, char **argv)
             }
             if (!(i % 2) && (buf[i] != -1)) {
                 errs++;
-                fprintf(stderr, "Process %d: buf %d is %d, should be -1\n",
-                        mynod, i, buf[i]);
+                fprintf(stderr, "Process %d: buf %d is %d, should be -1\n", mynod, i, buf[i]);
             }
         }
     }
@@ -124,39 +120,36 @@ int main(int argc, char **argv)
     if (!mynod) {
 #if VERBOSE
         fprintf(stderr, "\ntesting noncontiguous in memory, contiguous in file "
-                        "using collective I/O\n");
+                "using collective I/O\n");
 #endif
         MPI_File_delete(filename, MPI_INFO_NULL);
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR,
-                  MPI_INFO_NULL, &fh);
+    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
 
-    for (i = 0; i < SIZE; i++) buf[i] = i + mynod * SIZE;
-    MPI_File_iwrite_at_all(fh, mynod * (SIZE / 2) * sizeof(int), buf, 1,
-                           newtype, &request);
+    for (i = 0; i < SIZE; i++)
+        buf[i] = i + mynod * SIZE;
+    MPI_File_iwrite_at_all(fh, mynod * (SIZE / 2) * sizeof(int), buf, 1, newtype, &request);
 
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Wait(&request, &status);
 
-    for (i = 0; i < SIZE; i++) buf[i] = -1;
+    for (i = 0; i < SIZE; i++)
+        buf[i] = -1;
 
-    MPI_File_iread_at_all(fh, mynod * (SIZE / 2) * sizeof(int), buf, 1,
-                           newtype, &request);
+    MPI_File_iread_at_all(fh, mynod * (SIZE / 2) * sizeof(int), buf, 1, newtype, &request);
     MPI_Wait(&request, &status);
 
     for (i = 0; i < SIZE; i++) {
         if (!mynod) {
             if ((i % 2) && (buf[i] != -1)) {
                 errs++;
-                fprintf(stderr, "Process %d: buf %d is %d, should be -1\n",
-                        mynod, i, buf[i]);
+                fprintf(stderr, "Process %d: buf %d is %d, should be -1\n", mynod, i, buf[i]);
             }
             if (!(i % 2) && (buf[i] != i)) {
                 errs++;
-                fprintf(stderr, "Process %d: buf %d is %d, should be %d\n",
-                        mynod, i, buf[i], i);
+                fprintf(stderr, "Process %d: buf %d is %d, should be %d\n", mynod, i, buf[i], i);
             }
         }
         else {
@@ -167,8 +160,7 @@ int main(int argc, char **argv)
             }
             if (!(i % 2) && (buf[i] != -1)) {
                 errs++;
-                fprintf(stderr, "Process %d: buf %d is %d, should be -1\n",
-                        mynod, i, buf[i]);
+                fprintf(stderr, "Process %d: buf %d is %d, should be -1\n", mynod, i, buf[i]);
             }
         }
     }
@@ -180,18 +172,18 @@ int main(int argc, char **argv)
     if (!mynod) {
 #if VERBOSE
         fprintf(stderr, "\ntesting contiguous in memory, noncontiguous in file "
-                        "using collective I/O\n");
+                "using collective I/O\n");
 #endif
         MPI_File_delete(filename, MPI_INFO_NULL);
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR,
-                  MPI_INFO_NULL, &fh);
+    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
 
     MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL);
 
-    for (i = 0; i < SIZE; i++) buf[i] = i + mynod * SIZE;
+    for (i = 0; i < SIZE; i++)
+        buf[i] = i + mynod * SIZE;
     MPI_File_iwrite_all(fh, buf, SIZE, MPI_INT, &request);
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -207,8 +199,7 @@ int main(int argc, char **argv)
         if (!mynod) {
             if (buf[i] != i) {
                 errs++;
-                fprintf(stderr, "Process %d: buf %d is %d, should be %d\n",
-                        mynod, i, buf[i], i);
+                fprintf(stderr, "Process %d: buf %d is %d, should be %d\n", mynod, i, buf[i], i);
             }
         }
         else {
@@ -234,7 +225,8 @@ int main(int argc, char **argv)
 
     MPI_Type_free(&newtype);
     free(buf);
-    if (mynod) free(filename);
+    if (mynod)
+        free(filename);
     MPI_Finalize();
     return 0;
 }

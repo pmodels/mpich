@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include "mpitest.h"
 
-#include <math.h> /* for fabs(3) */
+#include <math.h>       /* for fabs(3) */
 
 /* Measure and compare the relative performance of MPI_Group_translate_ranks
  * with small and large group2 sizes but a constant number of ranks.  This
@@ -22,56 +22,58 @@
 /* number of iterations used for timing */
 #define NUM_LOOPS (1000000)
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
     int errs = 0;
     int *ranks;
     int *ranksout;
     MPI_Group gworld, grev, gself;
-    MPI_Comm  comm;
-    MPI_Comm  commrev;
+    MPI_Comm comm;
+    MPI_Comm commrev;
     int rank, size, i;
     double start, end, time1, time2;
 
-    MTest_Init( &argc, &argv );
+    MTest_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
 
-    MPI_Comm_size( comm, &size );
-    MPI_Comm_rank( comm, &rank );
+    MPI_Comm_size(comm, &size);
+    MPI_Comm_rank(comm, &rank);
 
-    ranks    = malloc(size*sizeof(int));
-    ranksout = malloc(size*sizeof(int));
+    ranks = malloc(size * sizeof(int));
+    ranksout = malloc(size * sizeof(int));
     if (!ranks || !ranksout) {
         fprintf(stderr, "out of memory\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
     /* generate a comm with the rank order reversed */
-    MPI_Comm_split(comm, 0, (size-rank-1), &commrev);
+    MPI_Comm_split(comm, 0, (size - rank - 1), &commrev);
     MPI_Comm_group(commrev, &grev);
     MPI_Comm_group(MPI_COMM_SELF, &gself);
     MPI_Comm_group(comm, &gworld);
 
     /* sanity check correctness first */
-    for (i=0; i < size; i++) {
+    for (i = 0; i < size; i++) {
         ranks[i] = i;
         ranksout[i] = -1;
     }
     MPI_Group_translate_ranks(grev, size, ranks, gworld, ranksout);
-    for (i=0; i < size; i++) {
-        if (ranksout[i] != (size-i-1)) {
+    for (i = 0; i < size; i++) {
+        if (ranksout[i] != (size - i - 1)) {
             if (rank == 0)
-                printf("%d: (gworld) expected ranksout[%d]=%d, got %d\n", rank, i, (size-rank-1), ranksout[i]);
+                printf("%d: (gworld) expected ranksout[%d]=%d, got %d\n", rank, i,
+                       (size - rank - 1), ranksout[i]);
             ++errs;
         }
     }
     MPI_Group_translate_ranks(grev, size, ranks, gself, ranksout);
-    for (i=0; i < size; i++) {
-        int expected = (i == (size-rank-1) ? 0 : MPI_UNDEFINED);
+    for (i = 0; i < size; i++) {
+        int expected = (i == (size - rank - 1) ? 0 : MPI_UNDEFINED);
         if (ranksout[i] != expected) {
             if (rank == 0)
-                printf("%d: (gself) expected ranksout[%d]=%d, got %d\n", rank, i, expected, ranksout[i]);
+                printf("%d: (gself) expected ranksout[%d]=%d, got %d\n", rank, i, expected,
+                       ranksout[i]);
             ++errs;
         }
     }
@@ -88,10 +90,11 @@ int main( int argc, char *argv[] )
     if (rank != 0) {
         MTestSleep(10);
     }
-    else /* rank==0 */ {
-        MTestSleep(1); /* try to avoid timing while everyone else is making syscalls */
+    else {      /* rank==0 */
 
-        MPI_Group_translate_ranks(grev, size, ranks, gworld, ranksout); /*throwaway iter*/
+        MTestSleep(1);  /* try to avoid timing while everyone else is making syscalls */
+
+        MPI_Group_translate_ranks(grev, size, ranks, gworld, ranksout); /*throwaway iter */
         start = MPI_Wtime();
         for (i = 0; i < NUM_LOOPS; ++i) {
             MPI_Group_translate_ranks(grev, size, ranks, gworld, ranksout);
@@ -99,7 +102,7 @@ int main( int argc, char *argv[] )
         end = MPI_Wtime();
         time1 = end - start;
 
-        MPI_Group_translate_ranks(grev, size, ranks, gself, ranksout); /*throwaway iter*/
+        MPI_Group_translate_ranks(grev, size, ranks, gself, ranksout);  /*throwaway iter */
         start = MPI_Wtime();
         for (i = 0; i < NUM_LOOPS; ++i) {
             MPI_Group_translate_ranks(grev, size, ranks, gself, ranksout);
@@ -111,7 +114,7 @@ int main( int argc, char *argv[] )
         if (fabs(time1 - time2) > (2.00 * time2)) {
             printf("too much difference in MPI_Group_translate_ranks performance:\n");
             printf("time1=%f time2=%f\n", time1, time2);
-            printf("(fabs(time1-time2)/time2)=%f\n", (fabs(time1-time2)/time2));
+            printf("(fabs(time1-time2)/time2)=%f\n", (fabs(time1 - time2) / time2));
             if (time1 < time2) {
                 printf("also, (time1<time2) is surprising...\n");
             }

@@ -50,8 +50,7 @@ void *receiver(void *ptr)
 void *sender_bsend(void *ptr)
 {
     char buffer[MSGSIZE];
-    MPI_Bsend(buffer, MSGSIZE, MPI_CHAR, (rank + 1) % size, 0,
-              MPI_COMM_WORLD);
+    MPI_Bsend(buffer, MSGSIZE, MPI_CHAR, (rank + 1) % size, 0, MPI_COMM_WORLD);
 
     return NULL;
 }
@@ -60,8 +59,7 @@ void *sender_ibsend(void *ptr)
 {
     char buffer[MSGSIZE];
     MPI_Request req;
-    MPI_Ibsend(buffer, MSGSIZE, MPI_CHAR, (rank + 1) % size, 0,
-               MPI_COMM_WORLD, &req);
+    MPI_Ibsend(buffer, MSGSIZE, MPI_CHAR, (rank + 1) % size, 0, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
     return NULL;
@@ -71,8 +69,7 @@ void *sender_isend(void *ptr)
 {
     char buffer[MSGSIZE];
     MPI_Request req;
-    MPI_Isend(buffer, MSGSIZE, MPI_CHAR, (rank + 1) % size, 0,
-              MPI_COMM_WORLD, &req);
+    MPI_Isend(buffer, MSGSIZE, MPI_CHAR, (rank + 1) % size, 0, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
     return NULL;
@@ -81,8 +78,7 @@ void *sender_isend(void *ptr)
 void *sender_send(void *ptr)
 {
     char buffer[MSGSIZE];
-    MPI_Send(buffer, MSGSIZE, MPI_CHAR, (rank + 1) % size, 0,
-             MPI_COMM_WORLD);
+    MPI_Send(buffer, MSGSIZE, MPI_CHAR, (rank + 1) % size, 0, MPI_COMM_WORLD);
 
     return NULL;
 }
@@ -111,9 +107,9 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_dup(MPI_COMM_WORLD, &communicator);        /* We do not use this communicator in this program, but
-                                                           with this call, the problem appears more reliably.
-                                                           If the MPI_Comm_dup() call is commented out, it is still
-                                                           evident but does not appear that often (don't know why) */
+                                                         * with this call, the problem appears more reliably.
+                                                         * If the MPI_Comm_dup() call is commented out, it is still
+                                                         * evident but does not appear that often (don't know why) */
 
     /* Initialize and set thread detached attribute */
     pthread_attr_init(&attr);
@@ -153,7 +149,7 @@ int main(int argc, char *argv[])
 
     pthread_attr_destroy(&attr);
     if (!rank)
-        printf( " No Errors\n" );
+        printf(" No Errors\n");
 
     MPI_Comm_free(&communicator);
     MPI_Buffer_detach(&ptr_dt, &bs);

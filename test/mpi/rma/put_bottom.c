@@ -6,7 +6,7 @@
 
 /* One-Sided MPI 2-D Strided Put Test
  *
- * Author: James Dinan <dinan@mcs.anl.gov> 
+ * Author: James Dinan <dinan@mcs.anl.gov>
  * Date  : March, 2011
  *
  * This code performs N strided put operations into a 2d patch of a shared
@@ -30,7 +30,8 @@
 #define SUB_YDIM 1024
 #define ITERATIONS 10
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     int i, j, rank, nranks, peer, bufsize, errors;
     double *win_buf, *src_buf, *dst_buf;
     MPI_Win buf_win;
@@ -45,41 +46,42 @@ int main(int argc, char **argv) {
     MPI_Alloc_mem(bufsize, MPI_INFO_NULL, &src_buf);
     MPI_Alloc_mem(bufsize, MPI_INFO_NULL, &dst_buf);
 
-    for (i = 0; i < XDIM*YDIM; i++) {
-        *(win_buf  + i) = 1.0 + rank;
+    for (i = 0; i < XDIM * YDIM; i++) {
+        *(win_buf + i) = 1.0 + rank;
         *(src_buf + i) = 1.0 + rank;
     }
 
     MPI_Win_create(win_buf, bufsize, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &buf_win);
 
-    peer = (rank+1) % nranks;
+    peer = (rank + 1) % nranks;
 
     /* Perform ITERATIONS strided put operations */
 
     for (i = 0; i < ITERATIONS; i++) {
-      MPI_Aint idx_loc[SUB_YDIM];
-      int idx_rem[SUB_YDIM];
-      int blk_len[SUB_YDIM];
-      MPI_Datatype src_type, dst_type;
+        MPI_Aint idx_loc[SUB_YDIM];
+        int idx_rem[SUB_YDIM];
+        int blk_len[SUB_YDIM];
+        MPI_Datatype src_type, dst_type;
 
-      for (j = 0; j < SUB_YDIM; j++) {
-        MPI_Get_address(&src_buf[j*XDIM], &idx_loc[j]);
-        idx_rem[j] = j*XDIM*sizeof(double);
-        blk_len[j] = SUB_XDIM*sizeof(double);
-      }
+        for (j = 0; j < SUB_YDIM; j++) {
+            MPI_Get_address(&src_buf[j * XDIM], &idx_loc[j]);
+            idx_rem[j] = j * XDIM * sizeof(double);
+            blk_len[j] = SUB_XDIM * sizeof(double);
+        }
 
-      MPI_Type_create_hindexed(SUB_YDIM, blk_len, idx_loc, MPI_BYTE, &src_type);
-      MPI_Type_create_indexed_block(SUB_YDIM, SUB_XDIM*sizeof(double), idx_rem, MPI_BYTE, &dst_type);
+        MPI_Type_create_hindexed(SUB_YDIM, blk_len, idx_loc, MPI_BYTE, &src_type);
+        MPI_Type_create_indexed_block(SUB_YDIM, SUB_XDIM * sizeof(double), idx_rem, MPI_BYTE,
+                                      &dst_type);
 
-      MPI_Type_commit(&src_type);
-      MPI_Type_commit(&dst_type);
+        MPI_Type_commit(&src_type);
+        MPI_Type_commit(&dst_type);
 
-      MPI_Win_lock(MPI_LOCK_EXCLUSIVE, peer, 0, buf_win);
-      MPI_Put(MPI_BOTTOM, 1, src_type, peer, 0, 1, dst_type, buf_win);
-      MPI_Win_unlock(peer, buf_win);
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, peer, 0, buf_win);
+        MPI_Put(MPI_BOTTOM, 1, src_type, peer, 0, 1, dst_type, buf_win);
+        MPI_Win_unlock(peer, buf_win);
 
-      MPI_Type_free(&src_type);
-      MPI_Type_free(&dst_type);
+        MPI_Type_free(&src_type);
+        MPI_Type_free(&dst_type);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -89,40 +91,40 @@ int main(int argc, char **argv) {
     MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, buf_win);
     errors = 0;
     for (i = 0; i < SUB_XDIM; i++) {
-      for (j = 0; j < SUB_YDIM; j++) {
-        const double actual   = *(win_buf + i + j*XDIM);
-        const double expected = (1.0 + ((rank+nranks-1)%nranks));
-        if (actual - expected > 1e-10) {
-          SQUELCH( printf("%d: Data validation failed at [%d, %d] expected=%f actual=%f\n",
-              rank, j, i, expected, actual); );
-          errors++;
-          fflush(stdout);
+        for (j = 0; j < SUB_YDIM; j++) {
+            const double actual = *(win_buf + i + j * XDIM);
+            const double expected = (1.0 + ((rank + nranks - 1) % nranks));
+            if (actual - expected > 1e-10) {
+                SQUELCH(printf("%d: Data validation failed at [%d, %d] expected=%f actual=%f\n",
+                               rank, j, i, expected, actual););
+                errors++;
+                fflush(stdout);
+            }
         }
-      }
     }
     for (i = SUB_XDIM; i < XDIM; i++) {
-      for (j = 0; j < SUB_YDIM; j++) {
-        const double actual   = *(win_buf + i + j*XDIM);
-        const double expected = 1.0 + rank;
-        if (actual - expected > 1e-10) {
-          SQUELCH( printf("%d: Data validation failed at [%d, %d] expected=%f actual=%f\n",
-              rank, j, i, expected, actual); );
-          errors++;
-          fflush(stdout);
+        for (j = 0; j < SUB_YDIM; j++) {
+            const double actual = *(win_buf + i + j * XDIM);
+            const double expected = 1.0 + rank;
+            if (actual - expected > 1e-10) {
+                SQUELCH(printf("%d: Data validation failed at [%d, %d] expected=%f actual=%f\n",
+                               rank, j, i, expected, actual););
+                errors++;
+                fflush(stdout);
+            }
         }
-      }
     }
     for (i = 0; i < XDIM; i++) {
-      for (j = SUB_YDIM; j < YDIM; j++) {
-        const double actual   = *(win_buf + i + j*XDIM);
-        const double expected = 1.0 + rank;
-        if (actual - expected > 1e-10) {
-          SQUELCH( printf("%d: Data validation failed at [%d, %d] expected=%f actual=%f\n",
-              rank, j, i, expected, actual); );
-          errors++;
-          fflush(stdout);
+        for (j = SUB_YDIM; j < YDIM; j++) {
+            const double actual = *(win_buf + i + j * XDIM);
+            const double expected = 1.0 + rank;
+            if (actual - expected > 1e-10) {
+                SQUELCH(printf("%d: Data validation failed at [%d, %d] expected=%f actual=%f\n",
+                               rank, j, i, expected, actual););
+                errors++;
+                fflush(stdout);
+            }
         }
-      }
     }
     MPI_Win_unlock(rank, buf_win);
 
@@ -131,7 +133,7 @@ int main(int argc, char **argv) {
     MPI_Free_mem(src_buf);
     MPI_Free_mem(dst_buf);
 
-    MTest_Finalize( errors );
+    MTest_Finalize(errors);
     MPI_Finalize();
 
     return 0;

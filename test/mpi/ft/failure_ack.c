@@ -18,15 +18,15 @@ int main(int argc, char **argv)
     char buf[10] = " No errors";
     char error[MPI_MAX_ERROR_STRING];
     MPI_Group failed_grp, one_grp, world_grp;
-    int one[] = {1};
-    int world_ranks[] = {0,1,2};
+    int one[] = { 1 };
+    int world_ranks[] = { 0, 1, 2 };
     int failed_ranks[3];
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     if (size < 3) {
-        fprintf( stderr, "Must run with at least 3 processes\n" );
+        fprintf(stderr, "Must run with at least 3 processes\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
@@ -104,7 +104,8 @@ int main(int argc, char **argv)
         }
 
         fprintf(stdout, " No errors\n");
-    } else if (rank == 2) {
+    }
+    else if (rank == 2) {
         MPI_Ssend(buf, 10, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
 
         exit(EXIT_FAILURE);

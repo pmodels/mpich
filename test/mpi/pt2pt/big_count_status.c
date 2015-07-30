@@ -24,7 +24,7 @@ int test_count(MPI_Count count)
     MPI_Test_cancelled(&stat, &cancelled2);
     if (bcount != bcount2) {
         fprintf(stderr, "Count Error: expected %llx, got %llx\n",
-		(long long int)bcount, (long long int)bcount2);
+                (long long int) bcount, (long long int) bcount2);
         nerrs++;
     }
     if (cancelled != cancelled2) {

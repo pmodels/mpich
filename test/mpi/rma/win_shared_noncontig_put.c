@@ -15,14 +15,15 @@
 
 const int verbose = 0;
 
-int main(int argc, char **argv) {
-    int      i, j, rank, nproc;
-    int      shm_rank, shm_nproc;
+int main(int argc, char **argv)
+{
+    int i, j, rank, nproc;
+    int shm_rank, shm_nproc;
     MPI_Info alloc_shared_info;
-    int      errors = 0, all_errors = 0;
-    int      disp_unit;
-    int     *my_base, my_size;
-    MPI_Win  shm_win;
+    int errors = 0, all_errors = 0;
+    int disp_unit;
+    int *my_base, my_size;
+    MPI_Win shm_win;
     MPI_Comm shm_comm;
 
     MPI_Init(&argc, &argv);
@@ -39,26 +40,25 @@ int main(int argc, char **argv) {
     MPI_Comm_size(shm_comm, &shm_nproc);
 
     /* Allocate ELEM_PER_PROC integers on each even rank process */
-    my_size = (shm_rank % 2 == 0) ? sizeof(int)*ELEM_PER_PROC : 0;
-    MPI_Win_allocate_shared(my_size, sizeof(int), alloc_shared_info,
-                             shm_comm, &my_base, &shm_win);
+    my_size = (shm_rank % 2 == 0) ? sizeof(int) * ELEM_PER_PROC : 0;
+    MPI_Win_allocate_shared(my_size, sizeof(int), alloc_shared_info, shm_comm, &my_base, &shm_win);
 
     for (i = 0; i < ELEM_PER_PROC; i++) {
-            MPI_Win_fence(MPI_MODE_NOPRECEDE, shm_win);
-            if (shm_rank % 2 == 0) {
-                MPI_Put(&i, 1, MPI_INT, 
-                        (shm_rank + 2 > shm_nproc) ? 0 : (shm_rank+2) % shm_nproc,
-                        i, 1, MPI_INT, shm_win);
-            }
-            MPI_Win_fence(MPI_MODE_NOSUCCEED, shm_win);
+        MPI_Win_fence(MPI_MODE_NOPRECEDE, shm_win);
+        if (shm_rank % 2 == 0) {
+            MPI_Put(&i, 1, MPI_INT,
+                    (shm_rank + 2 > shm_nproc) ? 0 : (shm_rank + 2) % shm_nproc,
+                    i, 1, MPI_INT, shm_win);
+        }
+        MPI_Win_fence(MPI_MODE_NOSUCCEED, shm_win);
     }
 
     MPI_Barrier(shm_comm);
 
     /* Read and verify everyone's data */
     for (i = 0; i < shm_nproc; i++) {
-        int      *base;
-        MPI_Aint  size;
+        int *base;
+        MPI_Aint size;
 
         MPI_Win_shared_query(shm_win, i, &size, &disp_unit, &base);
 
@@ -66,13 +66,14 @@ int main(int argc, char **argv) {
             assert(size >= ELEM_PER_PROC * sizeof(int));
 
             for (j = 0; j < ELEM_PER_PROC; j++) {
-                if ( base[j] != j ) {
+                if (base[j] != j) {
                     errors++;
                     printf("%d -- Got %d at rank %d index %d, expected %d\n", shm_rank,
                            base[j], i, j, j);
                 }
             }
-        } else {
+        }
+        else {
             assert(size == 0);
             assert(base == NULL);
         }

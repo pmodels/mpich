@@ -57,7 +57,8 @@ int main(int argc, char **argv)
     assert(num != 0xdeadbeef);
     for (i = 0; i < num; ++i) {
         name_len = desc_len = STR_SZ;
-        MPI_T_cvar_get_info(i, name, &name_len, &verb, &dtype, &enumtype, desc, &desc_len, &bind, &scope);
+        MPI_T_cvar_get_info(i, name, &name_len, &verb, &dtype, &enumtype, desc, &desc_len, &bind,
+                            &scope);
         printf("index=%d\n", i);
         printf("--> name='%s' name_len=%d desc='%s' desc_len=%d\n", name, name_len, desc, desc_len);
         printf("--> verb=%d dtype=%#x bind=%d scope=%d\n", verb, dtype, bind, scope);
@@ -85,7 +86,7 @@ int main(int argc, char **argv)
             printf("--> doubled val=%f\n", val);
         }
         else if (dtype == MPI_CHAR) {
-            char *str = malloc(count+1);
+            char *str = malloc(count + 1);
             MPI_T_cvar_read(handle, str);
             printf("--> str='%s'\n", str);
             /* just write the string back unmodified for now */
@@ -107,13 +108,13 @@ int main(int argc, char **argv)
 }
 
 #else
-/* Simple null program to allow building this file with non-MPICH 
+/* Simple null program to allow building this file with non-MPICH
    implementations */
 int main(int argc, char **argv)
 {
-  MPI_Init( &argc, &argv );
-  printf( " No Errors\n" );
-  MPI_Finalize();
-  return 0;
+    MPI_Init(&argc, &argv);
+    printf(" No Errors\n");
+    MPI_Finalize();
+    return 0;
 }
 #endif

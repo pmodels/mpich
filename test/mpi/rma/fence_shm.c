@@ -78,8 +78,7 @@ int main(int argc, char *argv[])
 
             if (result_data != one) {
                 errors++;
-                printf("Expected: result_data = %d   Actual: result_data = %d\n",
-                       one, result_data);
+                printf("Expected: result_data = %d   Actual: result_data = %d\n", one, result_data);
             }
         }
 

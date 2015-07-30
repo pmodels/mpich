@@ -21,7 +21,7 @@ int main(int argc, char **argv)
 
     if (rank == 0) {
         printf(" No Errors\n");
-        fflush( stdout );
+        fflush(stdout);
     }
 
     MPI_Finalize();

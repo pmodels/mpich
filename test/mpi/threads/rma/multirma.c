@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
     MTest_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &pmode);
     if (pmode != MPI_THREAD_MULTIPLE) {
-	fprintf(stderr, "Thread Multiple not supported by the MPI implementation\n");
+        fprintf(stderr, "Thread Multiple not supported by the MPI implementation\n");
         MPI_Abort(MPI_COMM_WORLD, -1);
     }
 
@@ -49,7 +49,9 @@ int main(int argc, char *argv[])
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    errs += MPI_Win_allocate(COUNT * sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &win_buf, &win);
+    errs +=
+        MPI_Win_allocate(COUNT * sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &win_buf,
+                         &win);
     errs += MPI_Win_lock_all(0, win);
 
     for (i = 0; i < NUM_THREADS; i++)

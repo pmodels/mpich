@@ -20,13 +20,12 @@
 #endif
 #define VERIFY_CONST 100000000L
 
-int
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     int rank, size;
     int i, j;
-    long *sendbuf=NULL;
-    long *recvbuf=NULL;
+    long *sendbuf = NULL;
+    long *recvbuf = NULL;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -37,7 +36,7 @@ main(int argc, char *argv[])
         fprintf(stderr, "PE %d:ERROR: malloc of sendbuf failed\n", rank);
     }
     for (i = 0; i < COUNT; i++) {
-        sendbuf[i] = (long) i + (long) rank * VERIFY_CONST;
+        sendbuf[i] = (long) i + (long) rank *VERIFY_CONST;
     }
 
     if (rank == ROOT) {
@@ -50,8 +49,7 @@ main(int argc, char *argv[])
         }
     }
 
-    MPI_Gather(sendbuf, COUNT, MPI_LONG, recvbuf, COUNT, MPI_LONG,
-		    ROOT, MPI_COMM_WORLD);
+    MPI_Gather(sendbuf, COUNT, MPI_LONG, recvbuf, COUNT, MPI_LONG, ROOT, MPI_COMM_WORLD);
 
     int lerr = 0;
     if (rank == ROOT) {
@@ -65,14 +63,15 @@ main(int argc, char *argv[])
                     lerr++;
                     if (lerr > 10) {
                         j = COUNT;
-		    }
+                    }
                 }
             }
         }
-	MTest_Finalize(lerr);
-	free(recvbuf);
-    } else {
-	    MTest_Finalize(lerr);
+        MTest_Finalize(lerr);
+        free(recvbuf);
+    }
+    else {
+        MTest_Finalize(lerr);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -81,4 +80,3 @@ main(int argc, char *argv[])
     free(sendbuf);
     return 0;
 }
-

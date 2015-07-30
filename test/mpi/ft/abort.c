@@ -17,8 +17,7 @@ int main(int argc, char **argv)
     if (rank == 0)
         MPI_Abort(MPI_COMM_WORLD, 1);
 
-    while(1)
-        ;
+    while (1);
 
     MPI_Finalize();
     return 0;

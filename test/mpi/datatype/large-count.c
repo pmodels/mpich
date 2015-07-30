@@ -66,38 +66,38 @@ int main(int argc, char *argv[])
     MPI_Type_commit(&four_ints);
 
     /* a type with size>INT_MAX */
-    MPI_Type_vector(INT_MAX/2, 1, 3, four_ints, &imx4i);
+    MPI_Type_vector(INT_MAX / 2, 1, 3, four_ints, &imx4i);
     MPI_Type_commit(&imx4i);
     /* don't forget, ub for dtype w/ stride doesn't include any holes at the end
      * of the type, hence the more complicated calculation below */
-    imx4i_true_extent = 3LL*4LL*sizeof(int)*((INT_MAX/2)-1) + 4LL*sizeof(int);
+    imx4i_true_extent = 3LL * 4LL * sizeof(int) * ((INT_MAX / 2) - 1) + 4LL * sizeof(int);
 
     /* sanity check that the MPI_COUNT predefined named datatype exists */
     MPI_Send(&imx4i_true_extent, 1, MPI_COUNT, MPI_PROC_NULL, 0, MPI_COMM_SELF);
 
     /* the same oversized type but with goofy extents */
-    MPI_Type_create_resized(imx4i, /*lb=*/INT_MAX, /*extent=*/-1024, &imx4i_rsz);
+    MPI_Type_create_resized(imx4i, /*lb= */ INT_MAX, /*extent= */ -1024, &imx4i_rsz);
     MPI_Type_commit(&imx4i_rsz);
 
     /* MPI_Type_size */
     MPI_Type_size(imax_contig, &size);
     check(size == INT_MAX);
     MPI_Type_size(four_ints, &size);
-    check(size == 4*sizeof(int));
+    check(size == 4 * sizeof(int));
     MPI_Type_size(imx4i, &size);
-    check(size == MPI_UNDEFINED); /* should overflow an int */
+    check(size == MPI_UNDEFINED);       /* should overflow an int */
     MPI_Type_size(imx4i_rsz, &size);
-    check(size == MPI_UNDEFINED); /* should overflow an int */
+    check(size == MPI_UNDEFINED);       /* should overflow an int */
 
     /* MPI_Type_size_x */
     MPI_Type_size_x(imax_contig, &size_x);
     check(size_x == INT_MAX);
     MPI_Type_size_x(four_ints, &size_x);
-    check(size_x == 4*sizeof(int));
+    check(size_x == 4 * sizeof(int));
     MPI_Type_size_x(imx4i, &size_x);
-    check(size_x == 4LL*sizeof(int)*(INT_MAX/2)); /* should overflow an int */
+    check(size_x == 4LL * sizeof(int) * (INT_MAX / 2)); /* should overflow an int */
     MPI_Type_size_x(imx4i_rsz, &size_x);
-    check(size_x == 4LL*sizeof(int)*(INT_MAX/2)); /* should overflow an int */
+    check(size_x == 4LL * sizeof(int) * (INT_MAX / 2)); /* should overflow an int */
 
     /* MPI_Type_get_extent */
     MPI_Type_get_extent(imax_contig, &lb, &extent);
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     check(extent == INT_MAX);
     MPI_Type_get_extent(four_ints, &lb, &extent);
     check(lb == 0);
-    check(extent == 4*sizeof(int));
+    check(extent == 4 * sizeof(int));
     MPI_Type_get_extent(imx4i, &lb, &extent);
     check(lb == 0);
     if (sizeof(MPI_Aint) == sizeof(int))
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
     check(extent_x == INT_MAX);
     MPI_Type_get_extent_x(four_ints, &lb_x, &extent_x);
     check(lb_x == 0);
-    check(extent_x == 4*sizeof(int));
+    check(extent_x == 4 * sizeof(int));
     MPI_Type_get_extent_x(imx4i, &lb_x, &extent_x);
     check(lb_x == 0);
     check(extent_x == imx4i_true_extent);
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
     check(extent == INT_MAX);
     MPI_Type_get_true_extent(four_ints, &lb, &extent);
     check(lb == 0);
-    check(extent == 4*sizeof(int));
+    check(extent == 4 * sizeof(int));
     MPI_Type_get_true_extent(imx4i, &lb, &extent);
     check(lb == 0);
     if (sizeof(MPI_Aint) == sizeof(int))
@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
     check(extent_x == INT_MAX);
     MPI_Type_get_true_extent_x(four_ints, &lb_x, &extent_x);
     check(lb_x == 0);
-    check(extent_x == 4*sizeof(int));
+    check(extent_x == 4 * sizeof(int));
     MPI_Type_get_true_extent_x(imx4i, &lb_x, &extent_x);
     check(lb_x == 0);
     check(extent_x == imx4i_true_extent);
@@ -221,14 +221,18 @@ int main(int argc, char *argv[])
 
     check_set_elements(imax_contig, INT_MAX);
     check_set_elements(four_ints, 4);
-    check_set_elements(imx4i, 4LL*(INT_MAX/2));
-    check_set_elements(imx4i_rsz, 4LL*(INT_MAX/2));
+    check_set_elements(imx4i, 4LL * (INT_MAX / 2));
+    check_set_elements(imx4i_rsz, 4LL * (INT_MAX / 2));
 
-epilogue:
-    if (imax_contig != MPI_DATATYPE_NULL) MPI_Type_free(&imax_contig);
-    if (four_ints != MPI_DATATYPE_NULL) MPI_Type_free(&four_ints);
-    if (imx4i != MPI_DATATYPE_NULL) MPI_Type_free(&imx4i);
-    if (imx4i_rsz != MPI_DATATYPE_NULL) MPI_Type_free(&imx4i_rsz);
+  epilogue:
+    if (imax_contig != MPI_DATATYPE_NULL)
+        MPI_Type_free(&imax_contig);
+    if (four_ints != MPI_DATATYPE_NULL)
+        MPI_Type_free(&four_ints);
+    if (imx4i != MPI_DATATYPE_NULL)
+        MPI_Type_free(&imx4i);
+    if (imx4i_rsz != MPI_DATATYPE_NULL)
+        MPI_Type_free(&imx4i_rsz);
 
     MPI_Reduce((wrank == 0 ? MPI_IN_PLACE : &errs), &errs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     if (wrank == 0) {

@@ -20,7 +20,8 @@ typedef struct {
 
 static int errors = 0;
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     int me, nproc;
     twoint_t *data = NULL;
     twoint_t mine;
@@ -76,10 +77,10 @@ int main(int argc, char **argv) {
     MPI_Accumulate(&mine, 1, MPI_2INT, 0, 0, 1, MPI_2INT, MPI_MINLOC, win);
     MPI_Win_fence(0, win);
 
-    if (me == 0 && (data->loc != nproc-1 || data->val != 1)) {
+    if (me == 0 && (data->loc != nproc - 1 || data->val != 1)) {
         errors++;
         printf("Expected: { loc = %d, val = %d }  Actual: { loc = %d, val = %d }\n",
-               nproc-1, 1, data->loc, data->val);
+               nproc - 1, 1, data->loc, data->val);
     }
 
     /* All processes perform MAXLOC and MINLOC operations on a 2INT on rank 0.

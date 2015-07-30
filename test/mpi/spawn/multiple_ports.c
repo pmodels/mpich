@@ -21,7 +21,7 @@
  * the connection from process 1.
  */
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
     int num_errors = 0, total_num_errors = 0;
     int rank, size;
@@ -32,113 +32,103 @@ int main( int argc, char *argv[] )
     int verbose = 0;
     int data = 0;
 
-    if (getenv("MPITEST_VERBOSE"))
-    {
-	verbose = 1;
+    if (getenv("MPITEST_VERBOSE")) {
+        verbose = 1;
     }
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (size < 3)
-    {
-	printf("Three processes needed to run this test.\n");
-	MPI_Finalize();
-	return 0;
+    if (size < 3) {
+        printf("Three processes needed to run this test.\n");
+        MPI_Finalize();
+        return 0;
     }
 
-    if (rank == 0)
-    {
-	IF_VERBOSE(("0: opening ports.\n"));
-	MPI_Open_port(MPI_INFO_NULL, port1);
-	MPI_Open_port(MPI_INFO_NULL, port2);
+    if (rank == 0) {
+        IF_VERBOSE(("0: opening ports.\n"));
+        MPI_Open_port(MPI_INFO_NULL, port1);
+        MPI_Open_port(MPI_INFO_NULL, port2);
 
-	IF_VERBOSE(("0: opened port1: <%s>\n", port1));
-	IF_VERBOSE(("0: opened port2: <%s>\n", port2));
-	IF_VERBOSE(("0: sending ports.\n"));
-	MPI_Send(port1, MPI_MAX_PORT_NAME, MPI_CHAR, 1, 0, MPI_COMM_WORLD);
-	MPI_Send(port2, MPI_MAX_PORT_NAME, MPI_CHAR, 2, 0, MPI_COMM_WORLD);
+        IF_VERBOSE(("0: opened port1: <%s>\n", port1));
+        IF_VERBOSE(("0: opened port2: <%s>\n", port2));
+        IF_VERBOSE(("0: sending ports.\n"));
+        MPI_Send(port1, MPI_MAX_PORT_NAME, MPI_CHAR, 1, 0, MPI_COMM_WORLD);
+        MPI_Send(port2, MPI_MAX_PORT_NAME, MPI_CHAR, 2, 0, MPI_COMM_WORLD);
 
-	IF_VERBOSE(("0: accepting port2.\n"));
-	MPI_Comm_accept(port2, MPI_INFO_NULL, 0, MPI_COMM_SELF, &comm2);
-	IF_VERBOSE(("0: accepting port1.\n"));
-	MPI_Comm_accept(port1, MPI_INFO_NULL, 0, MPI_COMM_SELF, &comm1);
+        IF_VERBOSE(("0: accepting port2.\n"));
+        MPI_Comm_accept(port2, MPI_INFO_NULL, 0, MPI_COMM_SELF, &comm2);
+        IF_VERBOSE(("0: accepting port1.\n"));
+        MPI_Comm_accept(port1, MPI_INFO_NULL, 0, MPI_COMM_SELF, &comm1);
 
-	IF_VERBOSE(("0: closing ports.\n"));
-	MPI_Close_port(port1);
-	MPI_Close_port(port2);
+        IF_VERBOSE(("0: closing ports.\n"));
+        MPI_Close_port(port1);
+        MPI_Close_port(port2);
 
-	IF_VERBOSE(("0: sending 1 to process 1.\n"));
-	data = 1;
-	MPI_Send(&data, 1, MPI_INT, 0, 0, comm1);
+        IF_VERBOSE(("0: sending 1 to process 1.\n"));
+        data = 1;
+        MPI_Send(&data, 1, MPI_INT, 0, 0, comm1);
 
-	IF_VERBOSE(("0: sending 2 to process 2.\n"));
-	data = 2;
-	MPI_Send(&data, 1, MPI_INT, 0, 0, comm2);
+        IF_VERBOSE(("0: sending 2 to process 2.\n"));
+        data = 2;
+        MPI_Send(&data, 1, MPI_INT, 0, 0, comm2);
 
-	IF_VERBOSE(("0: disconnecting.\n"));
-	MPI_Comm_disconnect(&comm1);
-	MPI_Comm_disconnect(&comm2);
+        IF_VERBOSE(("0: disconnecting.\n"));
+        MPI_Comm_disconnect(&comm1);
+        MPI_Comm_disconnect(&comm2);
     }
-    else if (rank == 1)
-    {
-	IF_VERBOSE(("1: receiving port.\n"));
-	MPI_Recv(port1, MPI_MAX_PORT_NAME, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
+    else if (rank == 1) {
+        IF_VERBOSE(("1: receiving port.\n"));
+        MPI_Recv(port1, MPI_MAX_PORT_NAME, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
 
-	IF_VERBOSE(("1: received port1: <%s>\n", port1));
-	IF_VERBOSE(("1: connecting.\n"));
-	MPI_Comm_connect(port1, MPI_INFO_NULL, 0, MPI_COMM_SELF, &comm1);
+        IF_VERBOSE(("1: received port1: <%s>\n", port1));
+        IF_VERBOSE(("1: connecting.\n"));
+        MPI_Comm_connect(port1, MPI_INFO_NULL, 0, MPI_COMM_SELF, &comm1);
 
-	MPI_Recv(&data, 1, MPI_INT, 0, 0, comm1, &status);
-	if (data != 1)
-	{
-	    printf("Received %d from root when expecting 1\n", data);
-	    fflush(stdout);
-	    num_errors++;
-	}
+        MPI_Recv(&data, 1, MPI_INT, 0, 0, comm1, &status);
+        if (data != 1) {
+            printf("Received %d from root when expecting 1\n", data);
+            fflush(stdout);
+            num_errors++;
+        }
 
-	IF_VERBOSE(("1: disconnecting.\n"));
-	MPI_Comm_disconnect(&comm1);
+        IF_VERBOSE(("1: disconnecting.\n"));
+        MPI_Comm_disconnect(&comm1);
     }
-    else if (rank == 2)
-    {
-	IF_VERBOSE(("2: receiving port.\n"));
-	MPI_Recv(port2, MPI_MAX_PORT_NAME, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
+    else if (rank == 2) {
+        IF_VERBOSE(("2: receiving port.\n"));
+        MPI_Recv(port2, MPI_MAX_PORT_NAME, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status);
 
-	IF_VERBOSE(("2: received port2: <%s>\n", port2));
-	/* make sure process 1 has time to do the connect before this process 
-	   attempts to connect */
-	MTestSleep(3);
-	IF_VERBOSE(("2: connecting.\n"));
-	MPI_Comm_connect(port2, MPI_INFO_NULL, 0, MPI_COMM_SELF, &comm2);
+        IF_VERBOSE(("2: received port2: <%s>\n", port2));
+        /* make sure process 1 has time to do the connect before this process
+         * attempts to connect */
+        MTestSleep(3);
+        IF_VERBOSE(("2: connecting.\n"));
+        MPI_Comm_connect(port2, MPI_INFO_NULL, 0, MPI_COMM_SELF, &comm2);
 
-	MPI_Recv(&data, 1, MPI_INT, 0, 0, comm2, &status);
-	if (data != 2)
-	{
-	    printf("Received %d from root when expecting 2\n", data);
-	    fflush(stdout);
-	    num_errors++;
-	}
+        MPI_Recv(&data, 1, MPI_INT, 0, 0, comm2, &status);
+        if (data != 2) {
+            printf("Received %d from root when expecting 2\n", data);
+            fflush(stdout);
+            num_errors++;
+        }
 
-	IF_VERBOSE(("2: disconnecting.\n"));
-	MPI_Comm_disconnect(&comm2);
+        IF_VERBOSE(("2: disconnecting.\n"));
+        MPI_Comm_disconnect(&comm2);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
 
     MPI_Reduce(&num_errors, &total_num_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-    if (rank == 0)
-    {
-	if (total_num_errors)
-	{
-	    printf(" Found %d errors\n", total_num_errors);
-	}
-	else
-	{
-	    printf(" No Errors\n");
-	}
-	fflush(stdout);
+    if (rank == 0) {
+        if (total_num_errors) {
+            printf(" Found %d errors\n", total_num_errors);
+        }
+        else {
+            printf(" No Errors\n");
+        }
+        fflush(stdout);
     }
     MPI_Finalize();
     return total_num_errors;

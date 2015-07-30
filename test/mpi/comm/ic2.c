@@ -79,8 +79,7 @@ int main(int argc, char **argv)
         MPI_Comm_free(&ic);
 
 
-    MPI_Reduce((rank == 0 ? MPI_IN_PLACE : &errs), &errs,
-               1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce((rank == 0 ? MPI_IN_PLACE : &errs), &errs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     if (rank == 0) {
         if (errs) {
             printf("found %d errors\n", errs);
@@ -93,4 +92,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-

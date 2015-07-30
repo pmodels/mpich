@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     MPI_Comm idupcomms[NUM_IDUPS];
     MPI_Request reqs[NUM_IDUPS];
 
-    MTest_Init( &argc, &argv );
+    MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_group(MPI_COMM_WORLD, &world_group);
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-   /* Idup MPI_COMM_WORLD multiple times */
+    /* Idup MPI_COMM_WORLD multiple times */
     for (i = 0; i < NUM_IDUPS; i++) {
         MPI_Comm_idup(MPI_COMM_WORLD, &idupcomms[i], &reqs[i]);
     }
@@ -50,13 +50,13 @@ int main(int argc, char **argv)
     MTestFreeComm(&outcomm);
 
     /* Comm_split */
-    MPI_Comm_split(MPI_COMM_WORLD, rank%2, size-rank, &outcomm);
+    MPI_Comm_split(MPI_COMM_WORLD, rank % 2, size - rank, &outcomm);
     errs += MTestTestComm(outcomm);
     MTestFreeComm(&outcomm);
 
-     /* Comm_create, high half of MPI_COMM_WORLD */
-    ranges[0][0] = size/2;
-    ranges[0][1] = size-1;
+    /* Comm_create, high half of MPI_COMM_WORLD */
+    ranges[0][0] = size / 2;
+    ranges[0][1] = size - 1;
     ranges[0][2] = 1;
     MPI_Group_range_incl(world_group, 1, ranges, &high_group);
     MPI_Comm_create(MPI_COMM_WORLD, high_group, &outcomm);
@@ -66,16 +66,18 @@ int main(int argc, char **argv)
 
     /* Comm_create_group, even ranks of MPI_COMM_WORLD */
     /* exclude the odd ranks */
-    excl = malloc((size/2) * sizeof(int));
-    for (i = 0; i < size / 2; i++) excl[i] = (2 * i) + 1;
+    excl = malloc((size / 2) * sizeof(int));
+    for (i = 0; i < size / 2; i++)
+        excl[i] = (2 * i) + 1;
 
     MPI_Group_excl(world_group, size / 2, excl, &even_group);
     free(excl);
 
     if (rank % 2 == 0) {
         MPI_Comm_create_group(MPI_COMM_WORLD, even_group, 0, &outcomm);
-    } else {
-       outcomm = MPI_COMM_NULL;
+    }
+    else {
+        outcomm = MPI_COMM_NULL;
     }
     MPI_Group_free(&even_group);
 
@@ -83,12 +85,18 @@ int main(int argc, char **argv)
     MTestFreeComm(&outcomm);
 
     /* Intercomm_create & Intercomm_merge */
-    MPI_Comm_split(MPI_COMM_WORLD, (rank < size/2), rank, &local_comm);
+    MPI_Comm_split(MPI_COMM_WORLD, (rank < size / 2), rank, &local_comm);
 
-    if (rank == 0) { rleader = size/2; }
-    else if (rank == size/2) { rleader = 0; }
-    else { rleader = -1; }
-    isLeft = rank < size/2;
+    if (rank == 0) {
+        rleader = size / 2;
+    }
+    else if (rank == size / 2) {
+        rleader = 0;
+    }
+    else {
+        rleader = -1;
+    }
+    isLeft = rank < size / 2;
 
     MPI_Intercomm_create(local_comm, 0, MPI_COMM_WORLD, rleader, 99, &inter_comm);
     MPI_Intercomm_merge(inter_comm, isLeft, &outcomm);

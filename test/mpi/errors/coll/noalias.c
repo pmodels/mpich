@@ -8,19 +8,19 @@
 #include "mpi.h"
 #include "mpitest.h"
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
-    int        err, errs = 0, len, i;
-    int        rank = -1, size = -1;
-    int       *buf;
-    int       *recvbuf;
-    char       msg[MPI_MAX_ERROR_STRING];
+    int err, errs = 0, len, i;
+    int rank = -1, size = -1;
+    int *buf;
+    int *recvbuf;
+    char msg[MPI_MAX_ERROR_STRING];
 
-    MTest_Init( &argc, &argv );
-    MPI_Errhandler_set( MPI_COMM_WORLD, MPI_ERRORS_RETURN );
+    MTest_Init(&argc, &argv);
+    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
-    MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-    MPI_Comm_size( MPI_COMM_WORLD, &size );
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     buf = malloc(size * sizeof(int));
     recvbuf = malloc(size * sizeof(int));
@@ -29,16 +29,16 @@ int main( int argc, char *argv[] )
         recvbuf[i] = -1;
     }
 
-    err = MPI_Allreduce( buf, buf, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
+    err = MPI_Allreduce(buf, buf, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (!err) {
-	errs++;
-	if (rank == 0) 
-	    printf( "Did not detect aliased arguments in MPI_Allreduce\n" );
+        errs++;
+        if (rank == 0)
+            printf("Did not detect aliased arguments in MPI_Allreduce\n");
     }
     else {
-	/* Check that we can get a message for this error */
-	/* (This works if it does not SEGV or hang) */
-	MPI_Error_string( err, msg, &len );
+        /* Check that we can get a message for this error */
+        /* (This works if it does not SEGV or hang) */
+        MPI_Error_string(err, msg, &len);
     }
 
     /* This case is a bit stranger than the MPI_Allreduce case above, because
@@ -50,22 +50,22 @@ int main( int argc, char *argv[] )
      * do our best to carry on in this case by posting a second non-erroneous
      * MPI_Reduce on any process that got back an error from the intentionally
      * erroneous MPI_Reduce. */
-    err = MPI_Reduce( buf, ((rank == 0) ? buf : NULL), 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD );
+    err = MPI_Reduce(buf, ((rank == 0) ? buf : NULL), 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     if (rank == 0) {
         if (!err) {
             errs++;
             if (rank == 0)
-                printf( "Did not detect aliased arguments in MPI_Reduce\n" );
+                printf("Did not detect aliased arguments in MPI_Reduce\n");
         }
         else {
             /* Check that we can get a message for this error */
             /* (This works if it does not SEGV or hang) */
-            MPI_Error_string( err, msg, &len );
+            MPI_Error_string(err, msg, &len);
         }
     }
     if (err) {
         /* post a correct MPI_Reduce on any processes that got an error earlier */
-        err = MPI_Reduce( buf, recvbuf, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD );
+        err = MPI_Reduce(buf, recvbuf, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
         if (err) {
             errs++;
             printf("make-up reduce failed on rank %d\n", rank);
@@ -74,10 +74,13 @@ int main( int argc, char *argv[] )
 
     /* this case should _not_ trigger an error, thanks to Kenneth Inghram for
      * reporting this bug in MPICH */
-    err = MPI_Reduce( ((rank == 0) ? MPI_IN_PLACE : buf), buf, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD );
+    err =
+        MPI_Reduce(((rank == 0) ? MPI_IN_PLACE : buf), buf, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     if (err) {
         errs++;
-        printf("Incorrectly reported aliased arguments in MPI_Reduce with MPI_IN_PLACE on rank %d\n", rank);
+        printf
+            ("Incorrectly reported aliased arguments in MPI_Reduce with MPI_IN_PLACE on rank %d\n",
+             rank);
         MPI_Abort(MPI_COMM_WORLD, 1);
         printf("FAILED TO MPI_ABORT!!!\n");
     }
@@ -87,12 +90,12 @@ int main( int argc, char *argv[] )
     if (rank == 0) {
         if (!err) {
             errs++;
-            printf( "Did not detect aliased arguments in MPI_Gather\n" );
+            printf("Did not detect aliased arguments in MPI_Gather\n");
         }
         else {
             /* Check that we can get a message for this error */
             /* (This works if it does not SEGV or hang) */
-            MPI_Error_string( err, msg, &len );
+            MPI_Error_string(err, msg, &len);
         }
     }
     if (err) {
@@ -109,12 +112,12 @@ int main( int argc, char *argv[] )
     if (rank == 0) {
         if (!err) {
             errs++;
-            printf( "Did not detect aliased arguments in MPI_Scatter\n" );
+            printf("Did not detect aliased arguments in MPI_Scatter\n");
         }
         else {
             /* Check that we can get a message for this error */
             /* (This works if it does not SEGV or hang) */
-            MPI_Error_string( err, msg, &len );
+            MPI_Error_string(err, msg, &len);
         }
     }
     if (err) {
@@ -129,7 +132,7 @@ int main( int argc, char *argv[] )
     free(recvbuf);
     free(buf);
 
-    MTest_Finalize( errs );
-    MPI_Finalize( );
+    MTest_Finalize(errs);
+    MPI_Finalize();
     return 0;
 }

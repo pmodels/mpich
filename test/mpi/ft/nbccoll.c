@@ -36,8 +36,8 @@ int main(int argc, char **argv)
     MPI_Group_free(&small_grp);
 
     if (size < 4) {
-        fprintf( stderr, "Must run with at least 2 processes\n" );
-        MPI_Abort( MPI_COMM_WORLD, 1 );
+        fprintf(stderr, "Must run with at least 2 processes\n");
+        MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
     if (rank == excl) {

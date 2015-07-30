@@ -28,8 +28,8 @@
         }               \
     } while (0)
 
-MPI_Comm               comms[NUM_THREADS];
-int                    rank, size;
+MPI_Comm comms[NUM_THREADS];
+int rank, size;
 
 MTEST_THREAD_RETURN_TYPE test_iallred(void *arg)
 {
@@ -41,15 +41,15 @@ MTEST_THREAD_RETURN_TYPE test_iallred(void *arg)
         MTestSleep(1);
     MPI_Allreduce(MPI_IN_PLACE, buf, BUF_SIZE, MPI_INT, MPI_BAND, comms[tid]);
 
-    return (MTEST_THREAD_RETURN_TYPE)0;
+    return (MTEST_THREAD_RETURN_TYPE) 0;
 }
 
 
 int main(int argc, char **argv)
 {
-    int         thread_args[NUM_THREADS];
-    int         i, provided;
-    int         errs = 0;
+    int thread_args[NUM_THREADS];
+    int i, provided;
+    int errs = 0;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 
     for (i = 0; i < NUM_THREADS; i++) {
         thread_args[i] = i;
-        MTest_Start_thread( test_iallred, (void *)&thread_args[i] );
+        MTest_Start_thread(test_iallred, (void *) &thread_args[i]);
     }
 
     errs = MTest_Join_threads();

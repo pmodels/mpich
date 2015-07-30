@@ -40,12 +40,12 @@ int main(int argc, char **argv)
         fprintf(stderr, "unable to allocate send/recv buffers, aborting");
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
-    for (i=0; i<size; i++)
+    for (i = 0; i < size; i++)
         sendbuf[i] = rank + i;
 
     MPI_Reduce_scatter_block(sendbuf, recvbuf, 1, MPI_INT, MPI_SUM, comm);
 
-    sumval = size * rank + ((size - 1) * size)/2;
+    sumval = size * rank + ((size - 1) * size) / 2;
     if (recvbuf[0] != sumval) {
         err++;
         fprintf(stdout, "Did not get expected value for reduce scatter block\n");
@@ -55,12 +55,12 @@ int main(int argc, char **argv)
     free(sendbuf);
 
     /* let's try it again with MPI_IN_PLACE this time */
-    for (i=0; i<size; i++)
+    for (i = 0; i < size; i++)
         recvbuf[i] = rank + i;
 
     MPI_Reduce_scatter_block(MPI_IN_PLACE, recvbuf, 1, MPI_INT, MPI_SUM, comm);
 
-    sumval = size * rank + ((size - 1) * size)/2;
+    sumval = size * rank + ((size - 1) * size) / 2;
     if (recvbuf[0] != sumval) {
         err++;
         fprintf(stdout, "Did not get expected value for reduce scatter block\n");

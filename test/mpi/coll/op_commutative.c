@@ -29,11 +29,11 @@ static void noncomm_user_op(void *invec, void *inoutvec, int *len, MPI_Datatype 
 }
 */
 
-static void user_op(void *invec, void *inoutvec, int *len, MPI_Datatype *datatype)
+static void user_op(void *invec, void *inoutvec, int *len, MPI_Datatype * datatype)
 {
     int i;
-    int *invec_int = (int *)invec;
-    int *inoutvec_int = (int *)inoutvec;
+    int *invec_int = (int *) invec;
+    int *inoutvec_int = (int *) inoutvec;
 
     if (*datatype != MPI_INT) {
         ++errs;
@@ -47,7 +47,7 @@ static void user_op(void *invec, void *inoutvec, int *len, MPI_Datatype *datatyp
 }
 
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
     MPI_Op c_uop = MPI_OP_NULL;
     MPI_Op nc_uop = MPI_OP_NULL;
@@ -56,8 +56,8 @@ int main( int argc, char *argv[] )
     MTest_Init(&argc, &argv);
 
     /* make sure that user-define ops work too */
-    MPI_Op_create(&user_op, 1/*commute*/,  &c_uop);
-    MPI_Op_create(&user_op, 0/*!commute*/, &nc_uop);
+    MPI_Op_create(&user_op, 1 /*commute */ , &c_uop);
+    MPI_Op_create(&user_op, 0 /*!commute */ , &nc_uop);
 
 #if MTEST_HAVE_MIN_MPI_VERSION(2,2)
     /* this function was added in MPI-2.2 */
@@ -104,4 +104,3 @@ int main( int argc, char *argv[] )
     MPI_Finalize();
     return 0;
 }
-

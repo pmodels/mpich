@@ -57,7 +57,7 @@ int main(int argc, char **argv)
     }
     else {
         MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        filename = (char *)malloc(len + 1);
+        filename = (char *) malloc(len + 1);
         MPI_Bcast(filename, len + 1, MPI_CHAR, 0, MPI_COMM_WORLD);
     }
 
@@ -78,7 +78,8 @@ int main(int argc, char **argv)
     array_of_dargs[1] = MPI_DISTRIBUTE_DFLT_DARG;
     array_of_dargs[2] = MPI_DISTRIBUTE_DFLT_DARG;
 
-    for (i = 0; i < ndims; i++) array_of_psizes[i] = 0;
+    for (i = 0; i < ndims; i++)
+        array_of_psizes[i] = 0;
     MPI_Dims_create(nprocs, ndims, array_of_psizes);
 
     MPI_Type_create_darray(nprocs, mynod, ndims, array_of_gsizes,
@@ -90,8 +91,9 @@ int main(int argc, char **argv)
 
     MPI_Type_size_x(newtype, &bufcount);
     bufcount = bufcount / sizeof(int);
-    writebuf = (int *)malloc(bufcount * sizeof(int));
-    for (i = 0; i < bufcount; i++) writebuf[i] = 1;
+    writebuf = (int *) malloc(bufcount * sizeof(int));
+    for (i = 0; i < bufcount; i++)
+        writebuf[i] = 1;
 
     array_size = array_of_gsizes[0] * array_of_gsizes[1] * array_of_gsizes[2];
     tmpbuf = (int *) calloc(array_size, sizeof(int));
@@ -108,47 +110,50 @@ int main(int argc, char **argv)
     free(tmpbuf);
 
     if (j != bufcount) {
-        fprintf(stderr, "Error in initializing writebuf on process %d\n",
-                mynod);
+        fprintf(stderr, "Error in initializing writebuf on process %d\n", mynod);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
     /* end of initialization */
 
     /* write the array to the file */
-    errcode = MPI_File_open(MPI_COMM_WORLD, filename,
-                            MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh);
-    if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_open");
+    errcode = MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh);
+    if (errcode != MPI_SUCCESS)
+        handle_error(errcode, "MPI_File_open");
 
     errcode = MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
-    if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_set_view");
+    if (errcode != MPI_SUCCESS)
+        handle_error(errcode, "MPI_File_set_view");
 
     errcode = MPI_File_iwrite_all(fh, writebuf, bufcount, MPI_INT, &request);
-    if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_iwrite_all");
+    if (errcode != MPI_SUCCESS)
+        handle_error(errcode, "MPI_File_iwrite_all");
     MPI_Wait(&request, &status);
 
     errcode = MPI_File_close(&fh);
-    if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_close");
+    if (errcode != MPI_SUCCESS)
+        handle_error(errcode, "MPI_File_close");
 
     if (!mynod) {
         /* wkl suggests potential for false " No Errors" if both read
          * and write use the same file view */
         /* solution: rank 0 reads entire file and checks write values */
-        errcode = MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_RDONLY, info,
-                                &fh);
-        if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_open");
+        errcode = MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_RDONLY, info, &fh);
+        if (errcode != MPI_SUCCESS)
+            handle_error(errcode, "MPI_File_open");
 
-        readbuf = (int *)malloc(array_size * sizeof(int));
+        readbuf = (int *) malloc(array_size * sizeof(int));
         errcode = MPI_File_read(fh, readbuf, array_size, MPI_INT, &status);
-        if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_read");
+        if (errcode != MPI_SUCCESS)
+            handle_error(errcode, "MPI_File_read");
 
         errcode = MPI_File_close(&fh);
-        if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_close");
+        if (errcode != MPI_SUCCESS)
+            handle_error(errcode, "MPI_File_close");
 
         for (i = 0; i < array_size; i++)
             if (readbuf[i] != i) {
                 errs++;
-                fprintf(stderr, "Error: write integer %d but read %d\n",
-                        i, readbuf[i]);
+                fprintf(stderr, "Error: write integer %d but read %d\n", i, readbuf[i]);
                 break;
             }
         free(readbuf);
@@ -156,18 +161,21 @@ int main(int argc, char **argv)
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* now read it back */
-    readbuf = (int *)malloc(bufcount * sizeof(int));
-    errcode = MPI_File_open(MPI_COMM_WORLD, filename,
-                            MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh);
-    if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_open");
+    readbuf = (int *) malloc(bufcount * sizeof(int));
+    errcode = MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, info, &fh);
+    if (errcode != MPI_SUCCESS)
+        handle_error(errcode, "MPI_File_open");
 
     errcode = MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
-    if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_set_view");
+    if (errcode != MPI_SUCCESS)
+        handle_error(errcode, "MPI_File_set_view");
     errcode = MPI_File_iread_all(fh, readbuf, bufcount, MPI_INT, &request);
-    if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_iread_all");
+    if (errcode != MPI_SUCCESS)
+        handle_error(errcode, "MPI_File_iread_all");
     MPI_Wait(&request, &status);
     errcode = MPI_File_close(&fh);
-    if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_close");
+    if (errcode != MPI_SUCCESS)
+        handle_error(errcode, "MPI_File_close");
 
     /* check the data read */
     for (i = 0; i < bufcount; i++) {
@@ -191,7 +199,8 @@ int main(int argc, char **argv)
     MPI_Type_free(&newtype);
     free(readbuf);
     free(writebuf);
-    if (mynod) free(filename);
+    if (mynod)
+        free(filename);
 
     MPI_Finalize();
     return 0;

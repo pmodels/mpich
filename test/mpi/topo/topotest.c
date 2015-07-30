@@ -8,38 +8,38 @@
 #include <stdio.h>
 #include "mpitest.h"
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
     int errs = 0;
     int topo_type, size, dims[1], periods[1];
     MPI_Comm comm;
 
-    MTest_Init( &argc, &argv );
+    MTest_Init(&argc, &argv);
 
-    /* Check that topo test returns the correct type, including 
-       MPI_UNDEFINED */
+    /* Check that topo test returns the correct type, including
+     * MPI_UNDEFINED */
 
-    MPI_Topo_test( MPI_COMM_WORLD, &topo_type );
+    MPI_Topo_test(MPI_COMM_WORLD, &topo_type);
     if (topo_type != MPI_UNDEFINED) {
-	errs++;
-	printf( "Topo type of comm world is not UNDEFINED\n" );
+        errs++;
+        printf("Topo type of comm world is not UNDEFINED\n");
     }
 
-    MPI_Comm_size( MPI_COMM_WORLD, &size );
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
     dims[0] = size;
     periods[0] = 0;
-    MPI_Cart_create( MPI_COMM_WORLD, 1, dims, periods, 0, &comm );
-    MPI_Topo_test( comm, &topo_type );
+    MPI_Cart_create(MPI_COMM_WORLD, 1, dims, periods, 0, &comm);
+    MPI_Topo_test(comm, &topo_type);
     if (topo_type != MPI_CART) {
-	errs++;
-	printf( "Topo type of cart comm is not CART\n" );
+        errs++;
+        printf("Topo type of cart comm is not CART\n");
     }
 
-    MPI_Comm_free( &comm );
+    MPI_Comm_free(&comm);
     /* FIXME: still need graph example */
 
-    MTest_Finalize( errs );
+    MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
-  
+
 }

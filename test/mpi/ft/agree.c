@@ -24,32 +24,39 @@ int main(int argc, char **argv)
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    if (2 == rank) exit(EXIT_FAILURE);
+    if (2 == rank)
+        exit(EXIT_FAILURE);
 
-    if (0 == rank) flag = 0;
+    if (0 == rank)
+        flag = 0;
 
     rc = MPIX_Comm_agree(MPI_COMM_WORLD, &flag);
     MPI_Error_class(rc, &errclass);
     if (errclass != MPIX_ERR_PROC_FAILED) {
-        fprintf(stderr, "[%d] Expected MPIX_ERR_PROC_FAILED after agree. Received: %d\n", rank, errclass);
+        fprintf(stderr, "[%d] Expected MPIX_ERR_PROC_FAILED after agree. Received: %d\n", rank,
+                errclass);
         MPI_Abort(MPI_COMM_WORLD, 1);
         errs++;
-    } else if (0 != flag) {
+    }
+    else if (0 != flag) {
         fprintf(stderr, "[%d] Expected flag to be 0. Received: %d\n", rank, flag);
         errs++;
     }
 
     MPIX_Comm_failure_ack(MPI_COMM_WORLD);
 
-    if (0 == rank) flag = 0;
-    else flag = 1;
+    if (0 == rank)
+        flag = 0;
+    else
+        flag = 1;
     rc = MPIX_Comm_agree(MPI_COMM_WORLD, &flag);
     MPI_Error_class(rc, &errclass);
     if (MPI_SUCCESS != rc) {
         fprintf(stderr, "[%d] Expected MPI_SUCCESS after agree. Received: %d\n", rank, errclass);
         MPI_Abort(MPI_COMM_WORLD, 1);
         errs++;
-    } else if (0 != flag) {
+    }
+    else if (0 != flag) {
         fprintf(stderr, "[%d] Expected flag to be 0. Received: %d\n", rank, flag);
         MPI_Abort(MPI_COMM_WORLD, 1);
         errs++;

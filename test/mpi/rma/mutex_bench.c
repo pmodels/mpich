@@ -19,64 +19,64 @@
 const int verbose = 0;
 double delay_ctr = 0.0;
 
-int main(int argc, char ** argv) {
-  int rank, nproc, i;
-  double t_mcs_mtx;
-  MPI_Comm mtx_comm;
-  MCS_Mutex mcs_mtx;
+int main(int argc, char **argv)
+{
+    int rank, nproc, i;
+    double t_mcs_mtx;
+    MPI_Comm mtx_comm;
+    MCS_Mutex mcs_mtx;
 
-  MPI_Init(&argc, &argv);
+    MPI_Init(&argc, &argv);
 
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &nproc);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
 #ifdef USE_WIN_SHARED
-  MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, rank,
-                      MPI_INFO_NULL, &mtx_comm);
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, rank, MPI_INFO_NULL, &mtx_comm);
 #else
-  mtx_comm = MPI_COMM_WORLD;
+    mtx_comm = MPI_COMM_WORLD;
 #endif
 
-  MCS_Mutex_create(0, mtx_comm, &mcs_mtx);
+    MCS_Mutex_create(0, mtx_comm, &mcs_mtx);
 
-  MPI_Barrier(MPI_COMM_WORLD);
-  t_mcs_mtx = MPI_Wtime();
+    MPI_Barrier(MPI_COMM_WORLD);
+    t_mcs_mtx = MPI_Wtime();
 
-  for (i = 0; i < NUM_ITER; i++) {
-    /* Combining trylock and lock here is helpful for testing because it makes
-     * CAS and Fetch-and-op contend for the tail pointer. */
+    for (i = 0; i < NUM_ITER; i++) {
+        /* Combining trylock and lock here is helpful for testing because it makes
+         * CAS and Fetch-and-op contend for the tail pointer. */
 #ifdef USE_CONTIGUOUS_RANK
-    if (rank < nproc / 2) {
+        if (rank < nproc / 2) {
 #else
-    if (rank % 2) {
+        if (rank % 2) {
 #endif
-      int success = 0;
-      while (!success) {
-        MCS_Mutex_trylock(mcs_mtx, &success);
-      }
+            int success = 0;
+            while (!success) {
+                MCS_Mutex_trylock(mcs_mtx, &success);
+            }
+        }
+        else {
+            MCS_Mutex_lock(mcs_mtx);
+        }
+        MCS_Mutex_unlock(mcs_mtx);
     }
-    else {
-        MCS_Mutex_lock(mcs_mtx);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    t_mcs_mtx = MPI_Wtime() - t_mcs_mtx;
+
+    MCS_Mutex_free(&mcs_mtx);
+
+    if (rank == 0) {
+        if (verbose) {
+            printf("Nproc %d, MCS Mtx = %f us\n", nproc, t_mcs_mtx / NUM_ITER * 1.0e6);
+        }
     }
-    MCS_Mutex_unlock(mcs_mtx);
-  }
 
-  MPI_Barrier(MPI_COMM_WORLD);
-  t_mcs_mtx = MPI_Wtime() - t_mcs_mtx;
+    if (mtx_comm != MPI_COMM_WORLD)
+        MPI_Comm_free(&mtx_comm);
 
-  MCS_Mutex_free(&mcs_mtx);
+    MTest_Finalize(0);
+    MPI_Finalize();
 
-  if (rank == 0) {
-      if (verbose) {
-          printf("Nproc %d, MCS Mtx = %f us\n", nproc, t_mcs_mtx/NUM_ITER*1.0e6);
-      }
-  }
-
-  if (mtx_comm != MPI_COMM_WORLD)
-      MPI_Comm_free(&mtx_comm);
-
-  MTest_Finalize(0);
-  MPI_Finalize();
-
-  return 0;
+    return 0;
 }

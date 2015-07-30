@@ -12,31 +12,31 @@
 
 int verbose = 0;
 
-int main( int argc, char *argv[] )
+int main(int argc, char *argv[])
 {
-    int a, b, ierr, errs=0;
-    char      str[MPI_MAX_ERROR_STRING+1];
-    int       slen;
+    int a, b, ierr, errs = 0;
+    char str[MPI_MAX_ERROR_STRING + 1];
+    int slen;
 
-    MTest_Init( &argc, &argv );
-    
-    MPI_Errhandler_set( MPI_COMM_WORLD, MPI_ERRORS_RETURN );
-    
-    ierr = MPI_Reduce( &a, &b, 1, MPI_BYTE, MPI_MAX, 0, MPI_COMM_WORLD );
+    MTest_Init(&argc, &argv);
+
+    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+
+    ierr = MPI_Reduce(&a, &b, 1, MPI_BYTE, MPI_MAX, 0, MPI_COMM_WORLD);
     if (ierr == MPI_SUCCESS) {
-	errs ++;
-	printf( "Did not detect invalid type/op pair (byte,max) in Allreduce\n" );
+        errs++;
+        printf("Did not detect invalid type/op pair (byte,max) in Allreduce\n");
     }
     else {
-	if (verbose) {
-	    MPI_Error_string( ierr, str, &slen );
-	    printf( "Found expected error; message is: %s\n", str );
-	}
+        if (verbose) {
+            MPI_Error_string(ierr, str, &slen);
+            printf("Found expected error; message is: %s\n", str);
+        }
     }
 
-    MPI_Errhandler_set( MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL );
+    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
 
-    MTest_Finalize( errs );
-    MPI_Finalize( );
+    MTest_Finalize(errs);
+    MPI_Finalize();
     return 0;
 }

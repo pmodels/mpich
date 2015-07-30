@@ -82,8 +82,8 @@ int main(int argc, char **argv)
 
     num_io = 2;
 
-    request = (MPI_Request *)malloc(num_io * sizeof(MPI_Request));
-    statuses = (MPI_Status *)malloc(num_io * sizeof(MPI_Status));
+    request = (MPI_Request *) malloc(num_io * sizeof(MPI_Request));
+    statuses = (MPI_Status *) malloc(num_io * sizeof(MPI_Status));
 
     /*-----------------------------------------------------------------------*/
     /* process rank in each dimension */
@@ -103,16 +103,15 @@ int main(int argc, char **argv)
 
     /* define data type for file view */
     count = array_of_subsizes[0] * 2;   /* 2 is the no. blocks along X */
-    blocklengths = (int *)malloc(count * sizeof(int));
-    displacements = (MPI_Aint *)malloc(count * sizeof(MPI_Aint));
+    blocklengths = (int *) malloc(count * sizeof(int));
+    displacements = (MPI_Aint *) malloc(count * sizeof(MPI_Aint));
     for (i = 0; i < count; i++)
         blocklengths[i] = array_of_subsizes[1] / 2;
     for (i = 0; i < array_of_subsizes[0]; i++)
         for (j = 0; j < 2; j++)
             displacements[i * 2 + j] = offset + i * 2 * array_of_sizes[1]
-                                     + j * XLEN / 2;
-    MPI_Type_create_hindexed(count, blocklengths, displacements, MPI_CHAR,
-                             &ftype);
+                + j * XLEN / 2;
+    MPI_Type_create_hindexed(count, blocklengths, displacements, MPI_CHAR, &ftype);
     MPI_Type_commit(&ftype);
     MPI_Type_size_x(ftype, &ftype_size);
 
@@ -146,17 +145,16 @@ int main(int argc, char **argv)
 */
 
     /* initialize the write buffer */
-    buf = (char *)malloc(array_of_subsizes[0] * array_of_subsizes[1]);
+    buf = (char *) malloc(array_of_subsizes[0] * array_of_subsizes[1]);
     for (i = 0; i < array_of_subsizes[0] * array_of_subsizes[1]; i++)
         buf[i] = '0' + rank * 20 + i % 79;
 
     /* zero file contents --------------------------------------------------- */
     if (rank == 0) {
-        char *wr_buf = (char *)calloc(num_io * global_array_size, 1);
+        char *wr_buf = (char *) calloc(num_io * global_array_size, 1);
         MPI_File_open(MPI_COMM_SELF, filename,
                       MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fh);
-        MPI_File_write(fh, wr_buf, num_io * global_array_size, MPI_CHAR,
-                       &status);
+        MPI_File_write(fh, wr_buf, num_io * global_array_size, MPI_CHAR, &status);
         MPI_File_close(&fh);
         free(wr_buf);
     }
@@ -182,9 +180,8 @@ int main(int argc, char **argv)
     /* read and print file contents ----------------------------------------- */
     if (rank == 0) {
         char *ptr;
-        char *rd_buf = (char *)calloc(num_io * global_array_size, 1);
-        MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_RDONLY, MPI_INFO_NULL,
-                      &fh);
+        char *rd_buf = (char *) calloc(num_io * global_array_size, 1);
+        MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
         MPI_File_read(fh, rd_buf, num_io * global_array_size, MPI_CHAR, &status);
         MPI_File_close(&fh);
 

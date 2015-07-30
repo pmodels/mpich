@@ -8,7 +8,7 @@
 #ifndef WIN_SYNC_H_INCLUDED
 #define WIN_SYNC_H_INCLUDED
 
-#define CHECK_ERR( stmt )                                                               \
+#define CHECK_ERR(stmt)                                                               \
     do {                                                                                \
         int err_class, err, rank;                                                       \
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);                                           \
@@ -17,7 +17,7 @@
             printf("%d: Operation succeeded, when it should have failed\n", rank);      \
             errors++;                                                                   \
         } else {                                                                        \
-            MPI_Error_class( err, &err_class );                                         \
+            MPI_Error_class(err, &err_class);                                         \
             if (err_class != MPI_ERR_RMA_SYNC)  {                                       \
                 char str[MPI_MAX_ERROR_STRING];                                         \
                 int  len;                                                               \

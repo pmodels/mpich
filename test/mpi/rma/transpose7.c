@@ -3,7 +3,7 @@
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#include "mpi.h" 
+#include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
@@ -15,17 +15,17 @@
 #define NROWS 1000
 #define NCOLS 1000
 
-int main(int argc, char *argv[]) 
-{ 
+int main(int argc, char *argv[])
+{
     int rank, nprocs, **A, *A_data, i, j;
     MPI_Comm CommDeuce;
     MPI_Win win;
     MPI_Datatype column, xpose;
     int errs = 0;
 
-    MTest_Init(&argc,&argv); 
-    MPI_Comm_size(MPI_COMM_WORLD,&nprocs); 
-    MPI_Comm_rank(MPI_COMM_WORLD,&rank); 
+    MTest_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (nprocs < 2) {
         printf("Run this program with 2 or more processes\n");
@@ -34,19 +34,17 @@ int main(int argc, char *argv[])
 
     MPI_Comm_split(MPI_COMM_WORLD, (rank < 2), rank, &CommDeuce);
 
-    if (rank < 2)
-    {
+    if (rank < 2) {
         A_data = (int *) malloc(NROWS * NCOLS * sizeof(int));
         A = (int **) malloc(NROWS * sizeof(int *));
 
         A[0] = A_data;
-        for (i=1; i<NROWS; i++)
-            A[i] = A[i-1] + NCOLS;
+        for (i = 1; i < NROWS; i++)
+            A[i] = A[i - 1] + NCOLS;
 
-        if (rank == 0)
-        {
-            for (i=0; i<NROWS; i++)
-                for (j=0; j<NCOLS; j++)
+        if (rank == 0) {
+            for (i = 0; i < NROWS; i++)
+                for (j = 0; j < NCOLS; j++)
                     A[i][j] = -1;
 
             /* create datatype for one column */
@@ -59,40 +57,35 @@ int main(int argc, char *argv[])
 
             MPI_Win_fence(0, win);
 
-            MPI_Get(&A[0][0], NROWS*NCOLS, MPI_INT, 1, 0, 1, xpose, win);
+            MPI_Get(&A[0][0], NROWS * NCOLS, MPI_INT, 1, 0, 1, xpose, win);
 
             MPI_Type_free(&column);
             MPI_Type_free(&xpose);
 
             MPI_Win_fence(0, win);
 
-            for (j=0; j<NCOLS; j++)
-            {
-                for (i=0; i<NROWS; i++)
-                {
-                    if (A[j][i] != i*NCOLS + j)
-                    {
-                        if (errs < 50)
-                        {
+            for (j = 0; j < NCOLS; j++) {
+                for (i = 0; i < NROWS; i++) {
+                    if (A[j][i] != i * NCOLS + j) {
+                        if (errs < 50) {
                             printf("Error: A[%d][%d]=%d should be %d\n", j, i,
-                                   A[j][i], i*NCOLS + j);
+                                   A[j][i], i * NCOLS + j);
                         }
                         errs++;
                     }
                 }
             }
-            if (errs >= 50)
-            {
+            if (errs >= 50) {
                 printf("Total number of errors: %d\n", errs);
             }
         }
-        else
-        {
-            for (i=0; i<NROWS; i++)
-                for (j=0; j<NCOLS; j++)
-                    A[i][j] = i*NCOLS + j;
+        else {
+            for (i = 0; i < NROWS; i++)
+                for (j = 0; j < NCOLS; j++)
+                    A[i][j] = i * NCOLS + j;
 
-            MPI_Win_create(&A[0][0], NROWS*NCOLS*sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &win);
+            MPI_Win_create(&A[0][0], NROWS * NCOLS * sizeof(int), sizeof(int), MPI_INFO_NULL,
+                           CommDeuce, &win);
             MPI_Win_fence(0, win);
             MPI_Win_fence(0, win);
         }
@@ -100,6 +93,6 @@ int main(int argc, char *argv[])
     }
     MPI_Comm_free(&CommDeuce);
     MTest_Finalize(errs);
-    MPI_Finalize(); 
-    return 0; 
-} 
+    MPI_Finalize();
+    return 0;
+}

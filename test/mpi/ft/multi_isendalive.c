@@ -25,7 +25,7 @@ int main(int argc, char **argv)
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     if (size < 4) {
-        fprintf( stderr, "Must run with at least 4 processes\n" );
+        fprintf(stderr, "Must run with at least 4 processes\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     }
 
     if (rank == 0) {
-        err =  MPI_Issend("No Errors", 10, MPI_CHAR, 3, 0, MPI_COMM_WORLD, &request);
+        err = MPI_Issend("No Errors", 10, MPI_CHAR, 3, 0, MPI_COMM_WORLD, &request);
         err += MPI_Wait(&request, MPI_STATUS_IGNORE);
         if (err) {
             fprintf(stderr, "An error occurred during the send operation\n");
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     }
 
     if (rank == 3) {
-        err =  MPI_Irecv(buf, 10, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &request);
+        err = MPI_Irecv(buf, 10, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &request);
         err += MPI_Wait(&request, MPI_STATUS_IGNORE);
         if (err) {
             fprintf(stderr, "An error occurred during the recv operation\n");
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     }
 
     if (rank == 0) {
-        err =  MPI_Issend("No Errors", 10, MPI_CHAR, 2, 0, MPI_COMM_WORLD, &request);
+        err = MPI_Issend("No Errors", 10, MPI_CHAR, 2, 0, MPI_COMM_WORLD, &request);
         err += MPI_Wait(&request, MPI_STATUS_IGNORE);
         if (err) {
             fprintf(stderr, "An error occurred during the send operation\n");
@@ -62,11 +62,12 @@ int main(int argc, char **argv)
     }
 
     if (rank == 2) {
-        err =  MPI_Irecv(buf, 10, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &request);
+        err = MPI_Irecv(buf, 10, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &request);
         err += MPI_Wait(&request, MPI_STATUS_IGNORE);
         if (err) {
             fprintf(stderr, "An error occurred during the recv operation\n");
-        } else {
+        }
+        else {
             printf(" %s\n", buf);
             fflush(stdout);
         }

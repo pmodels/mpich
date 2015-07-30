@@ -12,8 +12,8 @@
 #include "mpitest.h"
 
 #define NUM_TIMES 500
-#define MAX_BUF_SIZE (400 * 1024 * 1024) /* 400 MB */
-#define PUT_SIZE (1024 * 1024) /* 1MB */
+#define MAX_BUF_SIZE (400 * 1024 * 1024)        /* 400 MB */
+#define PUT_SIZE (1024 * 1024)  /* 1MB */
 
 /*
 static char MTEST_Descrip[] = "ADLB mimic test";
@@ -61,36 +61,34 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &comm_rank);
 
     if (comm_size <= 2) {
-	fprintf( stderr, "This test requires at least 3 processes\n" );
-	MPI_Abort( MPI_COMM_WORLD, 1 );
+        fprintf(stderr, "This test requires at least 3 processes\n");
+        MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
     max_buf_size = comm_size * put_size;
     if (max_buf_size > MAX_BUF_SIZE) {
-	fprintf( stderr, "Too many processes in COMM_WORLD (max is %d)\n",
-		 MAX_BUF_SIZE / put_size );
-	MPI_Abort( MPI_COMM_WORLD, 1 );
+        fprintf(stderr, "Too many processes in COMM_WORLD (max is %d)\n", MAX_BUF_SIZE / put_size);
+        MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
     /* If alloc mem returns an error (because too much memory is requested */
-    MPI_Errhandler_set( MPI_COMM_WORLD, MPI_ERRORS_RETURN );
+    MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     rc = MPI_Alloc_mem(max_buf_size, MPI_INFO_NULL, (void *) &rma_win_addr);
     if (rc) {
-	MTestPrintErrorMsg( "Unable to MPI_Alloc_mem space (not an error)", rc );
-	MPI_Abort( MPI_COMM_WORLD, 0 );
+        MTestPrintErrorMsg("Unable to MPI_Alloc_mem space (not an error)", rc);
+        MPI_Abort(MPI_COMM_WORLD, 0);
     }
 
     memset(rma_win_addr, 0, max_buf_size);
-    MPI_Win_create((void *) rma_win_addr, max_buf_size, 1, MPI_INFO_NULL, 
-		   MPI_COMM_WORLD, &win);
+    MPI_Win_create((void *) rma_win_addr, max_buf_size, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
 
     /* Note that it is not necessary to use MPI_Alloc_mem for the memory that
-       is not part of the MPI_Win.  */
+     * is not part of the MPI_Win.  */
     rc = MPI_Alloc_mem(put_size, MPI_INFO_NULL, (void *) &local_buf);
     if (rc) {
-	MTestPrintErrorMsg( "Unable to MPI_Alloc_mem space (not an error)", rc );
-	MPI_Abort( MPI_COMM_WORLD, 0 );
+        MTestPrintErrorMsg("Unable to MPI_Alloc_mem space (not an error)", rc);
+        MPI_Abort(MPI_COMM_WORLD, 0);
     }
 
     for (i = 0; i < put_size; i++)
@@ -98,7 +96,7 @@ int main(int argc, char **argv)
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    if (comm_rank == 0) { /* target */
+    if (comm_rank == 0) {       /* target */
         for (i = 0; i < (NUM_TIMES * (comm_size - 2)); i++) {
             /* Wait for a message from the server to notify me that
              * someone put some data in my window */
@@ -108,9 +106,8 @@ int main(int argc, char **argv)
              * data in my local window. Check the last byte to make
              * sure we got it correctly. */
             MPI_Win_lock(MPI_LOCK_SHARED, 0, 0, win);
-            MPI_Get((void *) &check, 1, MPI_CHAR, 0, 
-		    ((by_rank + 1) * put_size) - 1, 1,
-                    MPI_CHAR, win);
+            MPI_Get((void *) &check, 1, MPI_CHAR, 0,
+                    ((by_rank + 1) * put_size) - 1, 1, MPI_CHAR, win);
             MPI_Win_unlock(0, win);
 
             /* If this is not the value I expect, count it as an error */
@@ -125,13 +122,12 @@ int main(int argc, char **argv)
         }
     }
 
-    else if (comm_rank == 1) { /* server */
+    else if (comm_rank == 1) {  /* server */
         for (i = 0; i < (NUM_TIMES * (comm_size - 2)); i++) {
             /* Wait for a message from any of the origin processes
              * informing me that it has put data to the target
              * process */
-            MPI_Recv(NULL, 0, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, 
-		     &status);
+            MPI_Recv(NULL, 0, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
             by_rank = status.MPI_SOURCE;
 
             /* Tell the target process that it should be seeing some
@@ -140,12 +136,12 @@ int main(int argc, char **argv)
         }
     }
 
-    else { /* origin */
+    else {      /* origin */
         for (i = 0; i < NUM_TIMES; i++) {
             /* Put some data in the target window */
             MPI_Win_lock(MPI_LOCK_SHARED, 0, 0, win);
-            MPI_Put(local_buf, put_size, MPI_CHAR, 0, comm_rank * put_size, 
-		    put_size, MPI_CHAR, win);
+            MPI_Put(local_buf, put_size, MPI_CHAR, 0, comm_rank * put_size,
+                    put_size, MPI_CHAR, win);
             MPI_Win_unlock(0, win);
 
             /* Tell the server that the put has completed */
