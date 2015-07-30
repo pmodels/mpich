@@ -41,7 +41,7 @@ int main( int argc, char *argv[] )
 	MTEST_DATATYPE_FOR_EACH_COUNT(count) {
 	    while (MTestGetDatatypes( &sendtype, &recvtype, count )) {
 		if (rank == source) {
-		    sendtype.InitBuf( &sendtype, MTEST_DATA_SET1 );
+		    sendtype.InitBuf( &sendtype );
 		    
 		    err = MPI_Send( sendtype.buf, sendtype.count, 
 				    sendtype.datatype, dest, 0, comm );
@@ -52,7 +52,7 @@ int main( int argc, char *argv[] )
 		    MTestFreeDatatype( &sendtype );
 		}
 		else if (rank == dest) {
-		    recvtype.InitBuf( &recvtype, MTEST_DATA_EMPTY );
+		    recvtype.InitBuf( &recvtype );
 		    err = MPI_Recv( recvtype.buf, recvtype.count, 
 				    recvtype.datatype, source, 0, comm, &status );
 		    if (err) {
@@ -62,7 +62,7 @@ int main( int argc, char *argv[] )
 				 MTestGetDatatypeName( &recvtype ) );
 			MTestPrintError( err );
 		    }
-		    err = MTestCheckRecv( &status, &recvtype, MTEST_DATA_SET1 );
+		    err = MTestCheckRecv( &status, &recvtype );
 		    if (err) {
 			errs += errs;
 		    }

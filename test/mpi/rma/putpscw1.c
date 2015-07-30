@@ -40,7 +40,7 @@ int main( int argc, char *argv[] )
 	MTEST_DATATYPE_FOR_EACH_COUNT(count) {
 	    while (MTestGetDatatypes( &sendtype, &recvtype, count )) {
 		/* Make sure that everyone has a recv buffer */
-		recvtype.InitBuf( &recvtype, MTEST_DATA_EMPTY );
+		recvtype.InitBuf( &recvtype );
 
 		MPI_Type_extent( recvtype.datatype, &extent );
 		MPI_Win_create( recvtype.buf, recvtype.count * extent, 
@@ -50,7 +50,7 @@ int main( int argc, char *argv[] )
 		    /* To improve reporting of problems about operations, we
 		       change the error handler to errors return */
 		    MPI_Win_set_errhandler( win, MPI_ERRORS_RETURN );
-		    sendtype.InitBuf( &sendtype, MTEST_DATA_SET1 );
+		    sendtype.InitBuf( &sendtype );
 		    
 		    /* Neighbor is dest only */
 		    MPI_Group_incl( wingroup, 1, &dest, &neighbors );
@@ -84,7 +84,7 @@ int main( int argc, char *argv[] )
 		    MPI_Win_wait( win );
 		    /* This should have the same effect, in terms of
 		       transfering data, as a send/recv pair */
-		    err = MTestCheckRecv( 0, &recvtype, MTEST_DATA_SET1 );
+		    err = MTestCheckRecv( 0, &recvtype );
 		    if (err) {
 			errs += errs;
 		    }

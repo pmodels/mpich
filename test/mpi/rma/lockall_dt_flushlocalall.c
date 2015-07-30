@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
         MTEST_DATATYPE_FOR_EACH_COUNT(count) {
             while (MTestGetDatatypes(&sendtype, &recvtype, count)) {
                 recvtype.printErrors = 1;
-                recvtype.InitBuf(&recvtype, MTEST_DATA_EMPTY);
+                recvtype.InitBuf(&recvtype);
                 MPI_Type_get_extent(recvtype.datatype, &lb, &extent);
 
                 MPI_Win_create(recvtype.buf, lb + recvtype.count * extent,
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
                     int dest;
                     MPI_Aint slb, sextent;
                     MPI_Type_get_extent(sendtype.datatype, &slb, &sextent);
-                    sendtype.InitBuf(&sendtype, MTEST_DATA_SET1);
+                    sendtype.InitBuf(&sendtype);
 
                     MPI_Win_lock_all(0, win);
                     for (dest = 0; dest < size; dest++)
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
                     MPI_Win_unlock_all(win);
                     MPI_Barrier(comm);
 
-                    sendtype.InitBuf(&sendtype, MTEST_DATA_SET1);
+                    sendtype.InitBuf(&sendtype);
                     char *resbuf = (char *) calloc(lb + extent * recvtype.count, sizeof(char));
 
                     /*wait for the destination to finish checking and reinitializing the buffer */
@@ -88,10 +88,10 @@ int main(int argc, char *argv[])
                     int err;
                     MPI_Barrier(comm);
                     MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
-                    err = MTestCheckRecv(0, &recvtype, MTEST_DATA_SET1);
+                    err = MTestCheckRecv(0, &recvtype);
                     if (err)
                         errs++;
-                    recvtype.InitBuf(&recvtype, MTEST_DATA_EMPTY);
+                    recvtype.InitBuf(&recvtype);
                     MPI_Win_unlock(rank, win);
 
                     /*signal the source that checking and reinitialization is done */
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
 
                     MPI_Barrier(comm);
                     MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
-                    err = MTestCheckRecv(0, &recvtype, MTEST_DATA_SET1);
+                    err = MTestCheckRecv(0, &recvtype);
                     if (err)
                         errs++;
                     MPI_Win_unlock(rank, win);

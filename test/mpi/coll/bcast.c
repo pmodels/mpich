@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
             while (MTestGetDatatypes(&sendtype, &recvtype, count)) {
                 for (root = 0; root < size; root++) {
                     if (rank == root) {
-                        sendtype.InitBuf(&sendtype, MTEST_DATA_SET1);
+                        sendtype.InitBuf(&sendtype);
                         err = MPI_Bcast(sendtype.buf, sendtype.count,
                                         sendtype.datatype, root, comm);
                         if (err) {
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
                         }
                     }
                     else {
-                        recvtype.InitBuf(&recvtype, MTEST_DATA_EMPTY);
+                        recvtype.InitBuf(&recvtype);
                         err = MPI_Bcast(recvtype.buf, recvtype.count,
                                         recvtype.datatype, root, comm);
                         if (err) {
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
                                     MTestGetIntracommName(), MTestGetDatatypeName(&recvtype));
                             MTestPrintError(err);
                         }
-                        err = MTestCheckRecv(0, &recvtype, MTEST_DATA_SET1);
+                        err = MTestCheckRecv(0, &recvtype);
                         if (err) {
                             errs += errs;
                         }

@@ -63,10 +63,10 @@ int main( int argc, char *argv[] )
 				count, MTestGetDatatypeName( &sendtype ), 
 				nbytes*count );
 		/* Make sure that everyone has a recv buffer */
-		recvtype.InitBuf( &recvtype, MTEST_DATA_EMPTY );
+		recvtype.InitBuf( &recvtype );
 
 		if (rank == source) {
-		    sendtype.InitBuf( &sendtype, MTEST_DATA_SET1 );
+		    sendtype.InitBuf( &sendtype );
 		    
 		    for (nmsg=1; nmsg<maxmsg; nmsg++) {
 			err = MPI_Send( sendtype.buf, sendtype.count, 
@@ -91,7 +91,7 @@ int main( int argc, char *argv[] )
 			    }
 			}
 
-			err = MTestCheckRecv( 0, &recvtype, MTEST_DATA_SET1 );
+			err = MTestCheckRecv( 0, &recvtype );
 			if (err) {
 			    if (errs < 10) {
 				printf( "Data in target buffer did not match for destination datatype %s and source datatype %s, count = %d, message iteration %d of %d\n", 
@@ -99,7 +99,7 @@ int main( int argc, char *argv[] )
 					MTestGetDatatypeName( &sendtype ),
 					count, nmsg, maxmsg );
 				recvtype.printErrors = 1;
-				(void)MTestCheckRecv( 0, &recvtype, MTEST_DATA_SET1 );
+				(void)MTestCheckRecv( 0, &recvtype );
 			    }
 			    errs += err;
 			}
