@@ -5,5 +5,5 @@ comm_create_threads 4
 comm_create_group_threads 4
 @comm_overlap@ comm_idup 4 mpiversion=3.0
 @comm_overlap@ ctxidup 4 mpiversion=3.0
-idup_nb 4 mpiversion=3.0 xfail=ticket2283
-idup_comm_gen 4 mpiversion=3.0 xfail=ticket2286
+idup_nb 4 mpiversion=3.0
+idup_comm_gen 4 mpiversion=3.0
