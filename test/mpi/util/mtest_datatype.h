@@ -54,6 +54,7 @@ typedef int (*MTestDdtCreator) (int, int, int, int, MPI_Datatype, const char *, 
 
 extern void MTestTypeCreatorInit(MTestDdtCreator * creators);
 extern void MTestTypeMinCreatorInit(MTestDdtCreator * creators);
+extern void *MTestTypeInitRecv(MTestDatatype * mtype);
 
 extern int MTestTypeBasicCreate(MPI_Datatype oldtype, MTestDatatype * mtype);
 extern int MTestTypeDupCreate(MPI_Datatype oldtype, MTestDatatype * mtype);

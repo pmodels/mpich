@@ -521,6 +521,11 @@ int MTestGetDatatypes(MTestDatatype * sendtype, MTestDatatype * recvtype, MPI_Ai
         datatype_index = -1;
     }
 
+    if (datatype_index > 0) {
+        /* general initialization for receive buffer. */
+        recvtype->InitBuf = MTestTypeInitRecv;
+    }
+
     datatype_index++;
 
     if (verbose >= 2 && datatype_index > 0) {
@@ -579,11 +584,9 @@ void MTestFreeDatatype(MTestDatatype * mtype)
     }
 }
 
-/* Check that a message was received correctly.
- * - status may be NULL or MPI_STATUS_IGNORE;
- * - specify dataset used to be compared;
- * - returns the number of errors detected. */
-int MTestCheckRecv(MPI_Status * status, MTestDatatype * recvtype, MTestDataset dataset)
+/* Check that a message was received correctly.  Returns the number of
+   errors detected.  Status may be NULL or MPI_STATUS_IGNORE */
+int MTestCheckRecv(MPI_Status * status, MTestDatatype * recvtype)
 {
     int count;
     int errs = 0, merr;
@@ -600,7 +603,7 @@ int MTestCheckRecv(MPI_Status * status, MTestDatatype * recvtype, MTestDataset d
     }
 
     /* Check received data */
-    if (!errs && recvtype->CheckBuf(recvtype, dataset)) {
+    if (!errs && recvtype->CheckBuf(recvtype)) {
         errs++;
     }
     return errs;
