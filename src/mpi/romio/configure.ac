@@ -792,7 +792,10 @@ if test -n "$file_system_panfs"; then
 	AC_DEFINE(ROMIO_PANFS,1,[Define for ROMIO with PANFS]),
 	AC_MSG_ERROR([PANFS support requested but cannot find pan_fs_client_cw_mode.h header file])
     )
+    AC_CHECK_TYPES([pan_fs_client_raidn_encoding_t], , ,
+		   [[#include <pan_fs_client_cw_mode.h>]])
 fi
+AM_CONDITIONAL([BUILD_PANFS_OPEN6], [test "X$ac_cv_type_pan_fs_client_raidn_encoding_t" = "Xyes"])
 
 if test -n "$file_system_ufs"; then
     AC_DEFINE(ROMIO_UFS,1,[Define for ROMIO with UFS])
