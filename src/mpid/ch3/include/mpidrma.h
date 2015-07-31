@@ -607,6 +607,18 @@ static inline int handle_lock_ack(MPID_Win * win_ptr, int target_rank, MPIDI_CH3
     if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED)
         t->access_state = MPIDI_RMA_LOCK_GRANTED;
 
+    if (win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_GRANTED ||
+        t->access_state == MPIDI_RMA_LOCK_GRANTED) {
+        if (t->pending_op_list_head == NULL) {
+            int made_progress ATTRIBUTE((unused)) = 0;
+            mpi_errno =
+                MPIDI_CH3I_RMA_Make_progress_target(win_ptr, t->target_rank, &made_progress);
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIU_ERR_POP(mpi_errno);
+            }
+        }
+    }
+
     if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_DISCARDED)
         t->access_state = MPIDI_RMA_LOCK_CALLED;
 
