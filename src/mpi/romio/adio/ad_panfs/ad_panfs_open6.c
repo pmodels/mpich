@@ -32,7 +32,9 @@ void ADIOI_PANFS_Open6(ADIO_File fd, int *error_code)
         unsigned long int layout_parity_stripe_width = 0;
         unsigned long int layout_parity_stripe_depth = 0;
         unsigned long int layout_total_num_comps = 0;
+        unsigned long int layout_max_faults = 2;
         pan_fs_client_layout_visit_t layout_visit_policy = PAN_FS_CLIENT_LAYOUT_VISIT__ROUND_ROBIN;
+        pan_fs_client_raidn_encoding_t layout_encoding = PAN_FS_CLIENT_LAYOUT_RAIDN_ENCODING_RS;
         int myrank;
 
         MPI_Comm_rank(fd->comm, &myrank);
@@ -61,33 +63,84 @@ void ADIOI_PANFS_Open6(ADIO_File fd, int *error_code)
         if (flag) {
             layout_parity_stripe_depth = strtoul(value, NULL, 10);
         }
+        ADIOI_Info_get(fd->info, "panfs_layout_max_faults", MPI_MAX_INFO_VAL, value, &flag);
+        if (flag) {
+            layout_max_faults = strtoul(value, NULL, 10);
+        }
         ADIOI_Info_get(fd->info, "panfs_layout_visit_policy", MPI_MAX_INFO_VAL, value, &flag);
         if (flag) {
             layout_visit_policy = strtoul(value, NULL, 10);
         }
+        ADIOI_Info_get(fd->info, "panfs_layout_encoding", MPI_MAX_INFO_VAL, value, &flag);
+        if (flag) {
+            layout_encoding = strtoul(value, NULL, 10);
+        }
         ADIOI_Free(value);
 
         amode = amode | O_CREAT;
-        /* Check for valid set of hints */
-        if ((layout_type < PAN_FS_CLIENT_LAYOUT_TYPE__DEFAULT) ||
-            (layout_type > PAN_FS_CLIENT_LAYOUT_TYPE__RAID10)) {
+        /* Check for valid set of hints
+         *
+         * Note that RAID0 has been dropped.  In the event PAN_FS_CLIENT_LAYOUT_TYPE__RAID0
+         * enumeraion no longer exists, the following check will still be correct.
+         *
+         * The enumerations looks as follows:
+         *
+         * enum pan_fs_client_layout_agg_type_e {
+         * PAN_FS_CLIENT_LAYOUT_TYPE__INVALID                 = 0,    - *INVALID
+         * PAN_FS_CLIENT_LAYOUT_TYPE__DEFAULT                 = 1,    - VALID
+         * PAN_FS_CLIENT_LAYOUT_TYPE__RAID0                   = 2,    - *INVALID
+         * PAN_FS_CLIENT_LAYOUT_TYPE__RAID1_5_PARITY_STRIPE   = 3,    - VALID
+         * PAN_FS_CLIENT_LAYOUT_TYPE__RAID10                  = 4,    - VALID
+         * PAN_FS_CLIENT_LAYOUT_TYPE__RAIDN_PARITY_STRIPE     = 5     - VALID
+         * };
+         */
+        if (((layout_type < PAN_FS_CLIENT_LAYOUT_TYPE__RAID1_5_PARITY_STRIPE) &&
+             (layout_type != PAN_FS_CLIENT_LAYOUT_TYPE__DEFAULT)) ||
+            (layout_type > PAN_FS_CLIENT_LAYOUT_TYPE__RAIDN_PARITY_STRIPE)) {
             FPRINTF(stderr, "%s: panfs_layout_type is not a valid value: %u.\n", myname,
                     layout_type);
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
-        if ((layout_type == PAN_FS_CLIENT_LAYOUT_TYPE__RAID0) &&
-            ((layout_stripe_unit == 0) || (layout_total_num_comps == 0))) {
-            if (layout_stripe_unit == 0) {
-                FPRINTF(stderr,
-                        "%s: MPI_Info does not contain the panfs_layout_stripe_unit hint which is necessary to specify a valid RAID0 layout to the PAN_FS_CLIENT_LAYOUT_CREATE_FILE ioctl.\n",
-                        myname);
+        if (layout_type == PAN_FS_CLIENT_LAYOUT_TYPE__RAIDN_PARITY_STRIPE) {
+            if ((layout_stripe_unit == 0) ||
+                (layout_parity_stripe_width == 0) ||
+                (layout_parity_stripe_depth == 0) || (layout_total_num_comps == 0)) {
+                if (layout_stripe_unit == 0) {
+                    FPRINTF(stderr,
+                            "%s: MPI_Info does not contain the panfs_layout_stripe_unit hint which is necessary to specify a valid RAIDN parity stripe layout to the PAN_FS_CLIENT_LAYOUT_CREATE_FILE ioctl.\n",
+                            myname);
+                }
+                if (layout_total_num_comps == 0) {
+                    FPRINTF(stderr,
+                            "%s: MPI_Info does not contain the panfs_layout_total_num_comps hint which is necessary to specify a valid RAIDN parity stripe layout to the PAN_FS_CLIENT_LAYOUT_CREATE_FILE ioctl.\n",
+                            myname);
+                }
+                if (layout_parity_stripe_width == 0) {
+                    FPRINTF(stderr,
+                            "%s: MPI_Info does not contain the panfs_layout_parity_stripe_width hint which is necessary to specify a valid RAIDN parity stripe layout to the PAN_FS_CLIENT_LAYOUT_CREATE_FILE ioctl.\n",
+                            myname);
+                }
+                if (layout_parity_stripe_depth == 0) {
+                    FPRINTF(stderr,
+                            "%s: MPI_Info does not contain the panfs_layout_parity_stripe_depth hint which is necessary to specify a valid RAIDN parity stripe layout to the PAN_FS_CLIENT_LAYOUT_CREATE_FILE ioctl.\n",
+                            myname);
+                }
+                MPI_Abort(MPI_COMM_WORLD, 1);
             }
-            if (layout_total_num_comps == 0) {
+            /* as of 6.0.x release, we only support max_faults == 2 */
+            if (layout_max_faults != 2) {
                 FPRINTF(stderr,
-                        "%s: MPI_Info does not contain the panfs_layout_total_num_comps hint which is necessary to specify a valid RAID0 layout to the PAN_FS_CLIENT_LAYOUT_CREATE_FILE ioctl.\n",
+                        "%s: panfs_layout_max_faults is not a valid value. Setting default of 2\n",
                         myname);
+                layout_max_faults = 2;
             }
-            MPI_Abort(MPI_COMM_WORLD, 1);
+            /* as of 6.0.x release, we only support RS enconding */
+            if (layout_encoding != PAN_FS_CLIENT_LAYOUT_RAIDN_ENCODING_RS) {
+                FPRINTF(stderr,
+                        "%s: panfs_layout_encoding is not a valid value: %u. Setting to default of %u\n",
+                        myname, layout_encoding, PAN_FS_CLIENT_LAYOUT_RAIDN_ENCODING_RS);
+                layout_encoding = PAN_FS_CLIENT_LAYOUT_RAIDN_ENCODING_RS;
+            }
         }
         if (layout_type == PAN_FS_CLIENT_LAYOUT_TYPE__RAID1_5_PARITY_STRIPE) {
             if ((layout_stripe_unit == 0) ||
@@ -149,9 +202,9 @@ void ADIOI_PANFS_Open6(ADIO_File fd, int *error_code)
          * already optimizes performance by only calling this function with
          * ADIO_CREATE on rank 0.  Therefore, we don't need to worry about
          * implementing that optimization here. */
-        if ((layout_type == PAN_FS_CLIENT_LAYOUT_TYPE__RAID0) ||
-            (layout_type == PAN_FS_CLIENT_LAYOUT_TYPE__RAID1_5_PARITY_STRIPE)
-            || (layout_type == PAN_FS_CLIENT_LAYOUT_TYPE__RAID10)) {
+        if ((layout_type == PAN_FS_CLIENT_LAYOUT_TYPE__RAID1_5_PARITY_STRIPE) ||
+            (layout_type == PAN_FS_CLIENT_LAYOUT_TYPE__RAID10) ||
+            (layout_type == PAN_FS_CLIENT_LAYOUT_TYPE__RAIDN_PARITY_STRIPE)) {
             pan_fs_client_layout_create_args_t file_create_args;
             int fd_dir;
             char *slash;
@@ -173,10 +226,13 @@ void ADIOI_PANFS_Open6(ADIO_File fd, int *error_code)
                 MPI_Abort(MPI_COMM_WORLD, 1);
             }
             else if (err == 0) {
+                /* ensure that we have the same semantics here and in the call to creat(). In the latter, we do not
+                 * use O_EXCL so a create on an existing file should not fail.
+                 */
                 FPRINTF(stderr,
-                        "%s: Cannot create PanFS file with ioctl when file already exists.\n",
+                        "%s: Cannot create PanFS file with ioctl when file already exists, using open() syscall.\n",
                         myname);
-                MPI_Abort(MPI_COMM_WORLD, 1);
+                goto use_open_syscall;
             }
             else {
                 /* (err == -1) && (errno == ENOENT) */
@@ -216,7 +272,20 @@ void ADIOI_PANFS_Open6(ADIO_File fd, int *error_code)
                                   strlen(fd->filename) + 1);
                     file_create_args.layout.agg_type = layout_type;
                     file_create_args.layout.layout_is_valid = 1;
-                    if (layout_type == PAN_FS_CLIENT_LAYOUT_TYPE__RAID1_5_PARITY_STRIPE) {
+                    if (layout_type == PAN_FS_CLIENT_LAYOUT_TYPE__RAIDN_PARITY_STRIPE) {
+                        file_create_args.layout.u.raidn_parity_stripe.total_num_comps =
+                            layout_total_num_comps;
+                        file_create_args.layout.u.raidn_parity_stripe.parity_stripe_width =
+                            layout_parity_stripe_width;
+                        file_create_args.layout.u.raidn_parity_stripe.parity_stripe_depth =
+                            layout_parity_stripe_depth;
+                        file_create_args.layout.u.raidn_parity_stripe.stripe_unit =
+                            layout_stripe_unit;
+                        file_create_args.layout.u.raidn_parity_stripe.max_faults =
+                            layout_max_faults;
+                        file_create_args.layout.u.raidn_parity_stripe.encoding = layout_encoding;
+                    }
+                    else if (layout_type == PAN_FS_CLIENT_LAYOUT_TYPE__RAID1_5_PARITY_STRIPE) {
                         file_create_args.layout.u.raid1_5_parity_stripe.total_num_comps =
                             layout_total_num_comps;
                         file_create_args.layout.u.raid1_5_parity_stripe.parity_stripe_width =
@@ -227,10 +296,6 @@ void ADIOI_PANFS_Open6(ADIO_File fd, int *error_code)
                             layout_stripe_unit;
                         file_create_args.layout.u.raid1_5_parity_stripe.layout_visit_policy =
                             layout_visit_policy;
-                    }
-                    else if (layout_type == PAN_FS_CLIENT_LAYOUT_TYPE__RAID0) {
-                        file_create_args.layout.u.raid0.total_num_comps = layout_total_num_comps;
-                        file_create_args.layout.u.raid0.stripe_unit = layout_stripe_unit;
                     }
                     else if (layout_type == PAN_FS_CLIENT_LAYOUT_TYPE__RAID10) {
                         file_create_args.layout.u.raid10.total_num_comps = layout_total_num_comps;
@@ -250,6 +315,7 @@ void ADIOI_PANFS_Open6(ADIO_File fd, int *error_code)
             }
         }
         else {
+          use_open_syscall:;
             int create_fd = open(fd->filename, amode, perm);
             if (create_fd != -1) {
                 close(create_fd);
@@ -299,13 +365,27 @@ void ADIOI_PANFS_Open6(ADIO_File fd, int *error_code)
             ADIOI_Info_set(fd->info, "panfs_layout_type", temp_buffer);
             if (file_query_args.layout.layout_is_valid == 1) {
                 switch (file_query_args.layout.agg_type) {
-                case PAN_FS_CLIENT_LAYOUT_TYPE__RAID0:
+                case PAN_FS_CLIENT_LAYOUT_TYPE__RAIDN_PARITY_STRIPE:
                     ADIOI_Snprintf(temp_buffer, TEMP_BUFFER_SIZE, "%u",
-                                   file_query_args.layout.u.raid0.stripe_unit);
+                                   file_query_args.layout.u.raidn_parity_stripe.stripe_unit);
                     ADIOI_Info_set(fd->info, "panfs_layout_stripe_unit", temp_buffer);
                     ADIOI_Snprintf(temp_buffer, TEMP_BUFFER_SIZE, "%u",
-                                   file_query_args.layout.u.raid0.total_num_comps);
+                                   file_query_args.layout.u.raidn_parity_stripe.
+                                   parity_stripe_width);
+                    ADIOI_Info_set(fd->info, "panfs_layout_parity_stripe_width", temp_buffer);
+                    ADIOI_Snprintf(temp_buffer, TEMP_BUFFER_SIZE, "%u",
+                                   file_query_args.layout.u.raidn_parity_stripe.
+                                   parity_stripe_depth);
+                    ADIOI_Info_set(fd->info, "panfs_layout_parity_stripe_depth", temp_buffer);
+                    ADIOI_Snprintf(temp_buffer, TEMP_BUFFER_SIZE, "%u",
+                                   file_query_args.layout.u.raidn_parity_stripe.total_num_comps);
                     ADIOI_Info_set(fd->info, "panfs_layout_total_num_comps", temp_buffer);
+                    ADIOI_Snprintf(temp_buffer, TEMP_BUFFER_SIZE, "%u",
+                                   file_query_args.layout.u.raidn_parity_stripe.max_faults);
+                    ADIOI_Info_set(fd->info, "panfs_layout_max_faults", temp_buffer);
+                    ADIOI_Snprintf(temp_buffer, TEMP_BUFFER_SIZE, "%u",
+                                   file_query_args.layout.u.raidn_parity_stripe.encoding);
+                    ADIOI_Info_set(fd->info, "panfs_layout_encoding", temp_buffer);
                     break;
                 case PAN_FS_CLIENT_LAYOUT_TYPE__RAID1_5_PARITY_STRIPE:
                     ADIOI_Snprintf(temp_buffer, TEMP_BUFFER_SIZE, "%u",
