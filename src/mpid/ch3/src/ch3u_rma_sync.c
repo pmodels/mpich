@@ -544,7 +544,6 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
 
                 /* Set window access state properly. */
                 win_ptr->states.access_state = MPIDI_RMA_FENCE_ISSUED;
-                MPIDI_CH3I_num_active_issued_win++;
 
                 MPID_Request_get_ptr(fence_sync_req, req_ptr);
                 if (!MPID_Request_is_complete(req_ptr)) {
@@ -661,7 +660,6 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
             else {
                 MPID_Request *req_ptr;
 
-                MPIDI_CH3I_num_active_issued_win++;
                 win_ptr->states.access_state = MPIDI_RMA_FENCE_ISSUED;
 
                 MPID_Request_get_ptr(fence_sync_req, req_ptr);
@@ -939,7 +937,6 @@ int MPID_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
 
     /* Set window access state properly. */
     win_ptr->states.access_state = MPIDI_RMA_PSCW_ISSUED;
-    MPIDI_CH3I_num_active_issued_win++;
 
     if (win_ptr->sync_request_cnt == 0) {
         win_ptr->states.access_state = MPIDI_RMA_PSCW_GRANTED;
@@ -1176,7 +1173,6 @@ int MPID_Win_lock(int lock_type, int dest, int assert, MPID_Win * win_ptr)
     if (win_ptr->lock_epoch_count == 0) {
         /* Set window access state properly. */
         win_ptr->states.access_state = MPIDI_RMA_PER_TARGET;
-        MPIDI_CH3I_num_passive_win++;
     }
     win_ptr->lock_epoch_count++;
 
@@ -1322,8 +1318,6 @@ int MPID_Win_unlock(int dest, MPID_Win * win_ptr)
     if (win_ptr->lock_epoch_count == 0) {
         /* Set window access state properly. */
         win_ptr->states.access_state = MPIDI_RMA_NONE;
-        MPIDI_CH3I_num_passive_win--;
-        MPIU_Assert(MPIDI_CH3I_num_passive_win >= 0);
     }
 
     if (target != NULL) {
@@ -1555,7 +1549,6 @@ int MPID_Win_lock_all(int assert, MPID_Win * win_ptr)
         win_ptr->states.access_state = MPIDI_RMA_LOCK_ALL_GRANTED;
     else
         win_ptr->states.access_state = MPIDI_RMA_LOCK_ALL_CALLED;
-    MPIDI_CH3I_num_passive_win++;
 
     win_ptr->lock_all_assert = assert;
 
@@ -1728,8 +1721,6 @@ int MPID_Win_unlock_all(MPID_Win * win_ptr)
 
     /* Set window access state properly. */
     win_ptr->states.access_state = MPIDI_RMA_NONE;
-    MPIDI_CH3I_num_passive_win--;
-    MPIU_Assert(MPIDI_CH3I_num_passive_win >= 0);
 
     /* reset lock_all assert on window. */
     win_ptr->lock_all_assert = 0;

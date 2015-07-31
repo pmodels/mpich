@@ -351,6 +351,8 @@ typedef struct MPIDI_Win_basic_info {
     struct MPID_Win *prev;                                              \
     struct MPID_Win *next;                                              \
 
+extern struct MPID_Win *MPIDI_RMA_Win_active_list_head, *MPIDI_RMA_Win_inactive_list_head;
+
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \
 MPIDI_DEV_WIN_DECL \

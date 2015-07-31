@@ -105,8 +105,6 @@ typedef struct MPIDI_RMA_Slot {
     struct MPIDI_RMA_Target *target_list_head;
 } MPIDI_RMA_Slot_t;
 
-extern MPID_Win *MPIDI_RMA_Win_active_list_head, *MPIDI_RMA_Win_inactive_list_head;
-
 typedef struct MPIDI_RMA_Target_lock_entry {
     struct MPIDI_RMA_Target_lock_entry *next;
     struct MPIDI_RMA_Target_lock_entry *prev;
