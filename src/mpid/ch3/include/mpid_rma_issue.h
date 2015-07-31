@@ -612,8 +612,10 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         }
     }   /* end of for loop */
 
-    /* Mark that all stream units have been issued */
-    rma_op->issued_stream_count = ALL_STREAM_UNITS_ISSUED;
+    if (rma_op->issued_stream_count == stream_unit_count) {
+        /* Mark that all stream units have been issued */
+        rma_op->issued_stream_count = ALL_STREAM_UNITS_ISSUED;
+    }
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_ACC_OP);
@@ -827,8 +829,10 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         }
     }   /* end of for loop */
 
-    /* Mark that all stream units have been issued */
-    rma_op->issued_stream_count = ALL_STREAM_UNITS_ISSUED;
+    if (rma_op->issued_stream_count == stream_unit_count) {
+        /* Mark that all stream units have been issued */
+        rma_op->issued_stream_count = ALL_STREAM_UNITS_ISSUED;
+    }
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_GET_ACC_OP);
