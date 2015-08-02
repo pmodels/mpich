@@ -616,8 +616,8 @@ static inline int handle_lock_ack(MPID_Win * win_ptr, int target_rank, MPIDI_CH3
     goto fn_exit;
 }
 
-static inline int adjust_op_piggybacked_with_lock(MPID_Win * win_ptr,
-                                                  int target_rank, MPIDI_CH3_Pkt_flags_t flags)
+static inline int handle_lock_ack_with_op(MPID_Win * win_ptr,
+                                          int target_rank, MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_RMA_Target_t *target = NULL;
     MPIDI_RMA_Op_t *op = NULL;
