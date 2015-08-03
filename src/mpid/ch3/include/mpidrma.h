@@ -663,8 +663,7 @@ static inline int handle_lock_ack_with_op(MPID_Win * win_ptr,
     MPIU_Assert(op_flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
                 op_flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE);
 
-    if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED ||
-        flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_QUEUED_DATA_QUEUED) {
+    if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED) {
 
         if (op->reqs_size > 0) {
             MPID_Request **req = NULL;
