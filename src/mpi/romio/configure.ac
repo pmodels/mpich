@@ -974,11 +974,13 @@ fi
 AS_IF([test -n "$file_system_gpfs"],
     [SYSDEP_INC=-I${prefix}/include], [SYSDEP_INC=])
 
-AC_CHECK_HEADERS([gpfs.h gpfs_fcntl.h])
-AS_IF([test "$ac_cv_header_gpfs_h" = "yes" -o "$ac_cv_header_gpfs_fcntl_h" = "yes"], [
-  AC_SEARCH_LIBS([gpfs_fcntl], [gpfs], [],
-    [AC_MSG_ERROR([Library containing gpfs_fcntl symbols not found])])
-])
+AS_IF([test -n "$file_system_gpfs"],
+	AC_CHECK_HEADERS([gpfs.h gpfs_fcntl.h])
+	AS_IF([test "$ac_cv_header_gpfs_h" = "yes" -o "$ac_cv_header_gpfs_fcntl_h" = "yes"], [
+	  AC_SEARCH_LIBS([gpfs_fcntl], [gpfs], [],
+	    [AC_MSG_ERROR([Library containing gpfs_fcntl symbols not found])])
+	])
+	)
 # Check for presence and characteristics of async. I/O calls if
 # not disabled.
 
