@@ -54,7 +54,8 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
             (win_)->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED && \
             (target_)->access_state != MPIDI_RMA_LOCK_CALLED &&         \
             (target_)->access_state != MPIDI_RMA_LOCK_ISSUED &&         \
-            (target_)->pending_op_list_head == NULL &&                  \
+            (target_)->pending_net_ops_list_head == NULL &&             \
+            (target_)->pending_user_ops_list_head == NULL &&            \
             (target_)->issued_read_op_list_head == NULL &&              \
             (target_)->issued_write_op_list_head == NULL &&             \
             (target_)->issued_dt_op_list_head == NULL) {                \
@@ -300,7 +301,8 @@ static inline MPIDI_RMA_Target_t *MPIDI_CH3I_Win_target_alloc(MPID_Win * win_ptr
     e->issued_read_op_list_head = NULL;
     e->issued_write_op_list_head = NULL;
     e->issued_dt_op_list_head = NULL;
-    e->pending_op_list_head = NULL;
+    e->pending_net_ops_list_head = NULL;
+    e->pending_user_ops_list_head = NULL;
     e->next_op_to_issue = NULL;
 
     e->target_rank = -1;
@@ -333,7 +335,8 @@ static inline int MPIDI_CH3I_Win_target_free(MPID_Win * win_ptr, MPIDI_RMA_Targe
     MPIU_Assert(e->issued_read_op_list_head == NULL);
     MPIU_Assert(e->issued_write_op_list_head == NULL);
     MPIU_Assert(e->issued_dt_op_list_head == NULL);
-    MPIU_Assert(e->pending_op_list_head == NULL);
+    MPIU_Assert(e->pending_net_ops_list_head == NULL);
+    MPIU_Assert(e->pending_user_ops_list_head == NULL);
 
     /* use PREPEND when return objects back to the pool
      * in order to improve cache performance */
@@ -451,18 +454,39 @@ static inline int MPIDI_CH3I_Win_enqueue_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t *
         }
     }
 
-    if (target->pending_op_list_head == NULL)
-        win_ptr->num_targets_with_pending_net_ops++;
+    /* Note that if it is a request-based RMA, do not put it in pending user list,
+     * otherwise a wait call before unlock will be blocked. */
+    if (MPIR_CVAR_CH3_RMA_DELAY_ISSUING_FOR_PIGGYBACKING && op->ureq == NULL) {
+        if (target->pending_user_ops_list_head != NULL) {
+            MPIDI_RMA_Op_t *user_op = target->pending_user_ops_list_head;
+            /* Move head element of user pending list to net pending list */
+            if (target->pending_net_ops_list_head == NULL)
+                win_ptr->num_targets_with_pending_net_ops++;
+            MPL_DL_DELETE(target->pending_user_ops_list_head, user_op);
+            MPL_DL_APPEND(target->pending_net_ops_list_head, user_op);
 
-    /* Enqueue operation into pending list. */
-    MPL_DL_APPEND(target->pending_op_list_head, op);
-    if (target->next_op_to_issue == NULL)
-        target->next_op_to_issue = op;
+            if (target->next_op_to_issue == NULL)
+                target->next_op_to_issue = user_op;
+        }
 
-    if (win_ptr->states.access_state == MPIDI_RMA_FENCE_GRANTED ||
-        win_ptr->states.access_state == MPIDI_RMA_PSCW_GRANTED ||
-        win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_GRANTED ||
-        target->access_state == MPIDI_RMA_LOCK_GRANTED)
+        /* Enqueue operation into user pending list. */
+        MPL_DL_APPEND(target->pending_user_ops_list_head, op);
+    }
+    else {
+        /* Enqueue operation into net pending list. */
+        if (target->pending_net_ops_list_head == NULL)
+            win_ptr->num_targets_with_pending_net_ops++;
+        MPL_DL_APPEND(target->pending_net_ops_list_head, op);
+
+        if (target->next_op_to_issue == NULL)
+            target->next_op_to_issue = op;
+    }
+
+    if (target->pending_net_ops_list_head != NULL &&
+        (win_ptr->states.access_state == MPIDI_RMA_FENCE_GRANTED ||
+         win_ptr->states.access_state == MPIDI_RMA_PSCW_GRANTED ||
+         win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_GRANTED ||
+         target->access_state == MPIDI_RMA_LOCK_GRANTED))
         MPIDI_CH3I_Win_set_active(win_ptr);
 
   fn_exit:

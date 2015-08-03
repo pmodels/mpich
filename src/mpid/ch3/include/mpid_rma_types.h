@@ -68,7 +68,8 @@ typedef struct MPIDI_RMA_Target {
     struct MPIDI_RMA_Op *issued_read_op_list_head;
     struct MPIDI_RMA_Op *issued_write_op_list_head;
     struct MPIDI_RMA_Op *issued_dt_op_list_head;
-    struct MPIDI_RMA_Op *pending_op_list_head;
+    struct MPIDI_RMA_Op *pending_net_ops_list_head;     /* pending operations that are waiting for network events */
+    struct MPIDI_RMA_Op *pending_user_ops_list_head;    /* pending operations that are waiting for user events */
     struct MPIDI_RMA_Op *next_op_to_issue;
     struct MPIDI_RMA_Target *next;
     struct MPIDI_RMA_Target *prev;

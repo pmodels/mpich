@@ -105,13 +105,34 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
     if (target == NULL)
         goto fn_exit;
 
+    /* When user event happens, move op in user pending list to network pending list */
+    if (target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH ||
+        target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH_LOCAL ||
+        target->sync.sync_flag == MPIDI_RMA_SYNC_UNLOCK || target->win_complete_flag) {
+
+        MPIDI_RMA_Op_t *user_op = target->pending_user_ops_list_head;
+
+        if (user_op != NULL) {
+            if (target->pending_net_ops_list_head == NULL)
+                win_ptr->num_targets_with_pending_net_ops++;
+
+            MPL_DL_DELETE(target->pending_user_ops_list_head, user_op);
+            MPL_DL_APPEND(target->pending_net_ops_list_head, user_op);
+
+            if (target->next_op_to_issue == NULL)
+                target->next_op_to_issue = user_op;
+        }
+    }
+
     switch (target->access_state) {
     case MPIDI_RMA_LOCK_CALLED:
         if (target->sync.sync_flag == MPIDI_RMA_SYNC_NONE ||
             target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH_LOCAL ||
             target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH) {
-            if (target->pending_op_list_head == NULL ||
-                !target->pending_op_list_head->piggyback_lock_candidate) {
+            if ((target->pending_net_ops_list_head == NULL ||
+                 !target->pending_net_ops_list_head->piggyback_lock_candidate) &&
+                (target->pending_user_ops_list_head == NULL ||
+                 !target->pending_user_ops_list_head->piggyback_lock_candidate)) {
                 /* issue lock request */
                 target->access_state = MPIDI_RMA_LOCK_ISSUED;
                 if (target->target_rank == rank) {
@@ -129,7 +150,7 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
             }
         }
         else if (target->sync.sync_flag == MPIDI_RMA_SYNC_UNLOCK) {
-            if (target->pending_op_list_head == NULL) {
+            if (target->pending_net_ops_list_head == NULL) {
                 /* No RMA operation has ever been posted to this target,
                  * finish issuing, no need to acquire the lock. Cleanup
                  * function will clean it up. */
@@ -145,8 +166,8 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
                  * in pending list, this operation must be the only operation
                  * and it is prepared to piggyback LOCK and UNLOCK. */
                 MPIU_Assert(MPIR_CVAR_CH3_RMA_DELAY_ISSUING_FOR_PIGGYBACKING);
-                MPIU_Assert(target->pending_op_list_head->next == NULL);
-                MPIU_Assert(target->pending_op_list_head->piggyback_lock_candidate);
+                MPIU_Assert(target->pending_net_ops_list_head->next == NULL);
+                MPIU_Assert(target->pending_net_ops_list_head->piggyback_lock_candidate);
             }
         }
         break;
@@ -154,7 +175,7 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
     case MPIDI_RMA_LOCK_GRANTED:
     case MPIDI_RMA_NONE:
         if (target->win_complete_flag) {
-            if (target->pending_op_list_head == NULL) {
+            if (target->pending_net_ops_list_head == NULL) {
                 MPIDI_CH3_Pkt_flags_t flags = MPIDI_CH3_PKT_FLAG_NONE;
                 if (target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH && target->put_acc_issued) {
                     flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH;
@@ -172,7 +193,7 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
             }
         }
         else if (target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH) {
-            if (target->pending_op_list_head == NULL) {
+            if (target->pending_net_ops_list_head == NULL) {
                 if (target->target_rank != rank) {
                     if (target->put_acc_issued) {
 
@@ -191,7 +212,7 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
             }
         }
         else if (target->sync.sync_flag == MPIDI_RMA_SYNC_UNLOCK) {
-            if (target->pending_op_list_head == NULL) {
+            if (target->pending_net_ops_list_head == NULL) {
                 if (target->target_rank == rank) {
                     mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
                     if (mpi_errno != MPI_SUCCESS)
@@ -289,7 +310,7 @@ static inline int check_and_set_req_completion(MPID_Win * win_ptr, MPIDI_RMA_Tar
                 MPIU_ERR_POP(mpi_errno);
             }
         }
-        MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_op_list_head), rma_op);
+        MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_net_ops_list_head), rma_op);
 
         (*op_completed) = TRUE;
     }
@@ -301,13 +322,13 @@ static inline int check_and_set_req_completion(MPID_Win * win_ptr, MPIDI_RMA_Tar
             MPIU_ERR_POP(mpi_errno);
         }
 
-        MPIDI_CH3I_RMA_Ops_unlink(&(target->pending_op_list_head), rma_op);
+        MPIDI_CH3I_RMA_Ops_unlink(&(target->pending_net_ops_list_head), rma_op);
         MPIDI_CH3I_RMA_Ops_append(list_ptr, rma_op);
 
         win_ptr->active_req_cnt += rma_op->ref_cnt;
     }
 
-    if (target->pending_op_list_head == NULL) {
+    if (target->pending_net_ops_list_head == NULL) {
         win_ptr->num_targets_with_pending_net_ops--;
         MPIU_Assert(win_ptr->num_targets_with_pending_net_ops >= 0);
         if (win_ptr->num_targets_with_pending_net_ops == 0) {
@@ -337,7 +358,7 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
     (*made_progress) = 0;
 
     if (win_ptr->num_targets_with_pending_net_ops == 0 || target == NULL ||
-        target->pending_op_list_head == NULL)
+        target->pending_net_ops_list_head == NULL)
         goto fn_exit;
 
     /* Issue out operations in the list. */
@@ -349,18 +370,6 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
         if (target->access_state == MPIDI_RMA_LOCK_ISSUED) {
             /* It is possible that the previous OP+LOCK changes
              * lock state to LOCK_ISSUED. */
-            break;
-        }
-
-        if (MPIR_CVAR_CH3_RMA_DELAY_ISSUING_FOR_PIGGYBACKING && curr_op->next == NULL &&
-            target->sync.sync_flag == MPIDI_RMA_SYNC_NONE && curr_op->ureq == NULL) {
-            /* If DELAY_ISSUING_FOR_PIGGYBACKING is turned on,
-             * skip the last OP if sync_flag is NONE since we
-             * want to leave it to the ending synchronization
-             * so that we can piggyback UNLOCK / FLUSH.
-             * However, if it is a request-based RMA, do not
-             * skip it (otherwise a wait call before unlock
-             * will be blocked). */
             break;
         }
 
@@ -630,7 +639,8 @@ int MPIDI_CH3I_RMA_Cleanup_ops_aggressive(MPID_Win * win_ptr)
     for (i = 0; i < win_ptr->num_slots; i++) {
         if (win_ptr->slots[i].target_list_head != NULL) {
             curr_target = win_ptr->slots[i].target_list_head;
-            while (curr_target != NULL && curr_target->pending_op_list_head == NULL)
+            while (curr_target != NULL && curr_target->pending_net_ops_list_head == NULL &&
+                   curr_target->pending_user_ops_list_head == NULL)
                 curr_target = curr_target->next;
             if (curr_target != NULL)
                 break;
