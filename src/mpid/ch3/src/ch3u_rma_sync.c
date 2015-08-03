@@ -458,7 +458,7 @@ static int fence_barrier_complete(MPID_Request * sreq)
         if (win_ptr->states.access_state == MPIDI_RMA_FENCE_ISSUED) {
             win_ptr->states.access_state = MPIDI_RMA_FENCE_GRANTED;
 
-            if (win_ptr->num_targets_with_pending_ops) {
+            if (win_ptr->num_targets_with_pending_net_ops) {
                 mpi_errno = MPIDI_CH3I_Win_set_active(win_ptr);
                 if (mpi_errno != MPI_SUCCESS) {
                     MPIU_ERR_POP(mpi_errno);
@@ -823,7 +823,7 @@ static int start_req_complete(MPID_Request * req)
     if (win_ptr->sync_request_cnt == 0) {
         win_ptr->states.access_state = MPIDI_RMA_PSCW_GRANTED;
 
-        if (win_ptr->num_targets_with_pending_ops)
+        if (win_ptr->num_targets_with_pending_net_ops)
             MPIDI_CH3I_Win_set_active(win_ptr);
     }
 

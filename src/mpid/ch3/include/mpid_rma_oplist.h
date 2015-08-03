@@ -452,7 +452,7 @@ static inline int MPIDI_CH3I_Win_enqueue_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t *
     }
 
     if (target->pending_op_list_head == NULL)
-        win_ptr->num_targets_with_pending_ops++;
+        win_ptr->num_targets_with_pending_net_ops++;
 
     /* Enqueue operation into pending list. */
     MPL_DL_APPEND(target->pending_op_list_head, op);

@@ -288,7 +288,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
     (*win_ptr)->shm_allocated = FALSE;
     (*win_ptr)->states.access_state = MPIDI_RMA_NONE;
     (*win_ptr)->states.exposure_state = MPIDI_RMA_NONE;
-    (*win_ptr)->num_targets_with_pending_ops = 0;
+    (*win_ptr)->num_targets_with_pending_net_ops = 0;
     (*win_ptr)->active_req_cnt = 0;
     (*win_ptr)->start_ranks_in_win_grp = NULL;
     (*win_ptr)->start_grp_size = 0;

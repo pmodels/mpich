@@ -592,7 +592,7 @@ static inline int handle_lock_ack(MPID_Win * win_ptr, int target_rank, MPIDI_CH3
             if (win_ptr->outstanding_locks == 0) {
                 win_ptr->states.access_state = MPIDI_RMA_LOCK_ALL_GRANTED;
 
-                if (win_ptr->num_targets_with_pending_ops) {
+                if (win_ptr->num_targets_with_pending_net_ops) {
                     mpi_errno = MPIDI_CH3I_Win_set_active(win_ptr);
                     if (mpi_errno != MPI_SUCCESS) {
                         MPIU_ERR_POP(mpi_errno);
@@ -707,9 +707,9 @@ static inline int handle_lock_ack_with_op(MPID_Win * win_ptr,
         MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_op_list_head), op);
 
         if (target->pending_op_list_head == NULL) {
-            win_ptr->num_targets_with_pending_ops--;
-            MPIU_Assert(win_ptr->num_targets_with_pending_ops >= 0);
-            if (win_ptr->num_targets_with_pending_ops == 0) {
+            win_ptr->num_targets_with_pending_net_ops--;
+            MPIU_Assert(win_ptr->num_targets_with_pending_net_ops >= 0);
+            if (win_ptr->num_targets_with_pending_net_ops == 0) {
                 MPIDI_CH3I_Win_set_inactive(win_ptr);
             }
         }

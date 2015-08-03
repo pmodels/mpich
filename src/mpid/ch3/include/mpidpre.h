@@ -329,8 +329,9 @@ typedef struct MPIDI_Win_basic_info {
         enum MPIDI_RMA_states access_state;                              \
         enum MPIDI_RMA_states exposure_state;                            \
     } states;                                                            \
-    int num_targets_with_pending_ops; /* keep track of number of targets \
-                                         tht has pending operations. */  \
+    int num_targets_with_pending_net_ops; /* keep track of number of     \
+                                             targets that has non-empty  \
+                                             net pending op list. */     \
     int active_req_cnt; /* keep track of number of active requests in    \
                            current epoch, i.e., number of issued but     \
                            incomplete RMA operations. */                 \
