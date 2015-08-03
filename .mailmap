@@ -4,5 +4,41 @@
 #
 # See "man git-shortlog" for formatting information on this file.
 
-# use "Dave Goodell" as Dave's canonical name (SVN history includes "David").
+Andrey Lobanov <andrey.lobanov@intel.com>
+
+Antonio J. Pena <apenya@mcs.anl.gov>
+
+Artem V. Yalozo <artem.v.yalozo@intel.com>
+
+Charles J Archer <charles.j.archer@intel.com> <archerc@us.ibm.com>
+
 Dave Goodell <goodell@mcs.anl.gov>
+
+Halim Amer <aamer@anl.gov> <halim.amer@gmail.com>
+
+James Dinan <james.dinan@intel.com> <dinan@mcs.anl.gov>
+
+Jeff Hammond <jeff.r.hammond@intel.com> <jeff.science@gmail.com>
+Jeff Hammond <jeff.r.hammond@intel.com> <jhammond@alcf.anl.gov>
+
+Junchao Zhang <jczhang@mcs.anl.gov> <jczhang@bblogin2.mcs.anl.gov>
+
+Keira Zhang <keirazhang@cn.ibm.com>
+
+Masamichi Takagi <masamichi.takagi@riken.jp> <masamichi.takagi@gmail.com>
+
+Norio Yamaguchi <norio.yamaguchi@riken.jp> <yamaguchi@kangaroo2.aics27.riken.jp>
+Norio Yamaguchi <norio.yamaguchi@riken.jp>
+
+Paul Coffman <pkcoff@alcf.anl.gov> <pkcoff@vestalac1.ftd.alcf.anl.gov>
+Paul Coffman <pkcoff@alcf.anl.gov> <pkcoff@us.ibm.com>
+
+Pavan Balaji <balaji@anl.gov> <balaji@mcs.anl.gov>
+Pavan Balaji <balaji@anl.gov> <balaji@bb95.mcs.anl.gov>
+
+Sameh Sharkawi <sssharka@us.ibm.com>
+
+Wesley Bland <wesley.bland@intel.com> <wbland@anl.gov>
+Wesley Bland <wesley.bland@intel.com> <wbland@mcs.anl.gov>
+
+William Gropp <wgropp@illinois.edu> <gropp@mcs.anl.gov>
