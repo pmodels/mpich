@@ -734,6 +734,7 @@ static inline int handle_lock_ack_with_op(MPID_Win * win_ptr,
     MPIDI_RMA_Target_t *target = NULL;
     MPIDI_RMA_Op_t *op = NULL;
     MPIDI_CH3_Pkt_flags_t op_flags = MPIDI_CH3_PKT_FLAG_NONE;
+    int op_completed ATTRIBUTE((unused)) = FALSE;
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, target_rank, &target);
@@ -751,18 +752,6 @@ static inline int handle_lock_ack_with_op(MPID_Win * win_ptr,
                 op_flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE);
 
     if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED) {
-
-        if (op->reqs_size > 0) {
-            MPID_Request **req = NULL;
-            if (op->reqs_size == 1)
-                req = &(op->single_req);
-            else
-                req = &(op->multi_reqs[0]);
-
-            MPIU_Assert((*req) != NULL);
-            MPID_Request_release((*req));
-            (*req) = NULL;
-        }
 
         if ((op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE || op->pkt.type == MPIDI_CH3_PKT_GET_ACCUM)
             && op->issued_stream_count != ALL_STREAM_UNITS_ISSUED) {
@@ -783,23 +772,7 @@ static inline int handle_lock_ack_with_op(MPID_Win * win_ptr,
             }
         }
 
-        if (op->ureq != NULL) {
-            /* Complete user request and release the ch3 ref */
-            mpi_errno = MPID_Request_complete(op->ureq);
-            if (mpi_errno != MPI_SUCCESS) {
-                MPIU_ERR_POP(mpi_errno);
-            }
-        }
-
-        MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_net_ops_list_head), op);
-
-        if (target->pending_net_ops_list_head == NULL) {
-            win_ptr->num_targets_with_pending_net_ops--;
-            MPIU_Assert(win_ptr->num_targets_with_pending_net_ops >= 0);
-            if (win_ptr->num_targets_with_pending_net_ops == 0) {
-                MPIDI_CH3I_Win_set_inactive(win_ptr);
-            }
-        }
+        check_and_set_req_completion(win_ptr, target, op, &op_completed);
     }
     else if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_QUEUED_DATA_DISCARDED ||
              flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_DISCARDED) {
