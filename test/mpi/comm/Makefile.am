@@ -41,4 +41,5 @@ noinst_PROGRAMS =     \
     comm_idup_nb      \
     comm_idup_iallreduce \
     comm_idup_comm    \
+    comm_idup_comm2   \
     comm_info
