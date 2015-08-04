@@ -705,8 +705,8 @@ static inline int check_and_set_req_completion(MPID_Win * win_ptr, MPIDI_RMA_Tar
             MPIU_ERR_POP(mpi_errno);
         }
 
-        MPIDI_CH3I_RMA_Ops_unlink(&(target->pending_net_ops_list_head), rma_op);
-        MPIDI_CH3I_RMA_Ops_append(list_ptr, rma_op);
+        MPL_DL_DELETE(target->pending_net_ops_list_head, rma_op);
+        MPL_DL_APPEND((*list_ptr), rma_op);
 
         win_ptr->active_req_cnt += rma_op->ref_cnt;
     }

@@ -593,36 +593,6 @@ static inline int MPIDI_CH3I_Win_get_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t ** e)
 }
 
 
-/* Append an element to the tail of the RMA ops list
- *
- * @param IN    list      Pointer to the RMA ops list
- * @param IN    elem      Pointer to the element to be appended
- */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_RMA_Ops_append
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-static inline void MPIDI_CH3I_RMA_Ops_append(MPIDI_RMA_Ops_list_t * list, MPIDI_RMA_Op_t * elem)
-{
-    MPL_DL_APPEND(*list, elem);
-}
-
-
-/* Unlink an element from the RMA ops list
- *
- * @param IN    list      Pointer to the RMA ops list
- * @param IN    elem      Pointer to the element to be unlinked
- */
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_RMA_Ops_unlink
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-static inline void MPIDI_CH3I_RMA_Ops_unlink(MPIDI_RMA_Ops_list_t * list, MPIDI_RMA_Op_t * elem)
-{
-    MPL_DL_DELETE(*list, elem);
-}
-
-
 /* Free an element in the RMA operations list.
  *
  * @param IN    list      Pointer to the RMA ops list
