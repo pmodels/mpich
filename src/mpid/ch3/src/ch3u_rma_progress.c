@@ -258,6 +258,8 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
 }
 
 
+/* Note: we should prevent this function to be re-entrant. It has the risk of
+ * causing too many re-entrance and using up function stack. */
 #undef FUNCNAME
 #define FUNCNAME issue_ops_target
 #undef FCNAME
@@ -268,12 +270,19 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
     MPIDI_RMA_Op_t *curr_op = NULL;
     MPIDI_CH3_Pkt_flags_t flags;
     int first_op = 1, mpi_errno = MPI_SUCCESS;
+    static int fn_reentrance_check = FALSE;
+
+    /* this function is not reentrant.  if it is invoked in a
+     * reentrant manner, simply exit without doing anything. */
+    if (fn_reentrance_check == TRUE)
+        goto fn_exit;
+    fn_reentrance_check = TRUE;
 
     (*made_progress) = 0;
 
     if (win_ptr->num_targets_with_pending_net_ops == 0 || target == NULL ||
         target->pending_net_ops_list_head == NULL)
-        goto fn_exit;
+        goto finish_issue;
 
     /* Issue out operations in the list. */
     curr_op = target->next_op_to_issue;
@@ -378,6 +387,9 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
         curr_op = target->next_op_to_issue;
 
     }   /* end of while loop */
+
+  finish_issue:
+    fn_reentrance_check = FALSE;
 
   fn_exit:
     return mpi_errno;
