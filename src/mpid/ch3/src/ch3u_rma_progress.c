@@ -797,9 +797,7 @@ int MPIDI_CH3I_RMA_Make_progress_global(int *made_progress)
         int temp_progress = 0;
         int is_able_to_issue = 0;
 
-        if (win_ptr->states.access_state == MPIDI_RMA_NONE ||
-            win_ptr->states.access_state == MPIDI_RMA_FENCE_GRANTED ||
-            win_ptr->states.access_state == MPIDI_RMA_PSCW_GRANTED)
+        if (win_ptr->states.access_state == MPIDI_RMA_NONE)
             continue;
 
         /* check and try to switch window state */
