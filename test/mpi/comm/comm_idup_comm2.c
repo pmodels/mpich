@@ -45,6 +45,7 @@ int main(int argc, char **argv)
 
     /* Overlap pending idups with various comm generation functions */
 
+#if 0
     /* Comm_dup */
     MPI_Comm_dup(dupcomm, &outcomm);
     errs += MTestTestComm(outcomm);
@@ -64,6 +65,7 @@ int main(int argc, char **argv)
     MPI_Group_free(&high_group);
     errs += MTestTestComm(outcomm);
     MTestFreeComm(&outcomm);
+#endif
 
     /* Comm_create_group, even ranks of dupcomm */
     /* exclude the odd ranks */
@@ -85,6 +87,7 @@ int main(int argc, char **argv)
     errs += MTestTestComm(outcomm);
     MTestFreeComm(&outcomm);
 
+#if 0
     /* Intercomm_create & Intercomm_merge */
     MPI_Comm_split(dupcomm, (rank < size / 2), rank, &local_comm);
 
@@ -108,6 +111,7 @@ int main(int argc, char **argv)
 
     errs += MTestTestComm(outcomm);
     MTestFreeComm(&outcomm);
+#endif
 
     MPI_Waitall(NUM_IDUPS, reqs, MPI_STATUSES_IGNORE);
     for (i = 0; i < NUM_IDUPS; i++) {
