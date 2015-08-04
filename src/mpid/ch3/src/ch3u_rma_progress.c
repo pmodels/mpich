@@ -368,8 +368,7 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
         if (op_completed == FALSE) {
             /* Poke the progress engine when next_op_to_issue is not the current OP, in
              * order to make sure the issuing function is re-entrant safe. */
-            if (target->next_op_to_issue != curr_op &&
-                win_ptr->active_req_cnt > MPIR_CVAR_CH3_RMA_POKE_PROGRESS_REQ_THRESHOLD) {
+            if (win_ptr->active_req_cnt > MPIR_CVAR_CH3_RMA_POKE_PROGRESS_REQ_THRESHOLD) {
                 mpi_errno = poke_progress_engine();
                 if (mpi_errno != MPI_SUCCESS)
                     MPIU_ERR_POP(mpi_errno);
