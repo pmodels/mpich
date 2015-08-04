@@ -671,7 +671,6 @@ static inline int check_and_set_req_completion(MPID_Win * win_ptr, MPIDI_RMA_Tar
             (*req) = NULL;
         }
         else {
-            MPID_Request_release((*req));
             (*req)->request_completed_cb = MPIDI_CH3_Req_handler_rma_op_complete;
             (*req)->dev.source_win_handle = win_ptr->handle;
             (*req)->dev.rma_op_ptr = rma_op;
@@ -682,6 +681,8 @@ static inline int check_and_set_req_completion(MPID_Win * win_ptr, MPIDI_RMA_Tar
                 MPID_cc_set(&(rma_op->ureq->cc), rma_op->ref_cnt);
                 (*req)->dev.request_handle = rma_op->ureq->handle;
             }
+
+            MPID_Request_release((*req));
         }
     }
 
