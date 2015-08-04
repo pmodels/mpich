@@ -657,32 +657,30 @@ static inline int check_and_set_req_completion(MPID_Win * win_ptr, MPIDI_RMA_Tar
 
     (*op_completed) = FALSE;
 
-    if (rma_op->reqs_size > 0) {
-        for (i = 0; i < rma_op->reqs_size; i++) {
-            if (rma_op->reqs_size == 1)
-                req = &(rma_op->single_req);
-            else
-                req = &(rma_op->multi_reqs[i]);
+    for (i = 0; i < rma_op->reqs_size; i++) {
+        if (rma_op->reqs_size == 1)
+            req = &(rma_op->single_req);
+        else
+            req = &(rma_op->multi_reqs[i]);
 
-            if ((*req) == NULL)
-                continue;
+        if ((*req) == NULL)
+            continue;
 
-            if (MPID_Request_is_complete((*req))) {
-                MPID_Request_release((*req));
-                (*req) = NULL;
-            }
-            else {
-                MPID_Request_release((*req));
-                (*req)->request_completed_cb = MPIDI_CH3_Req_handler_rma_op_complete;
-                (*req)->dev.source_win_handle = win_ptr->handle;
-                (*req)->dev.rma_op_ptr = rma_op;
+        if (MPID_Request_is_complete((*req))) {
+            MPID_Request_release((*req));
+            (*req) = NULL;
+        }
+        else {
+            MPID_Request_release((*req));
+            (*req)->request_completed_cb = MPIDI_CH3_Req_handler_rma_op_complete;
+            (*req)->dev.source_win_handle = win_ptr->handle;
+            (*req)->dev.rma_op_ptr = rma_op;
 
-                rma_op->ref_cnt++;
+            rma_op->ref_cnt++;
 
-                if (rma_op->ureq != NULL) {
-                    MPID_cc_set(&(rma_op->ureq->cc), rma_op->ref_cnt);
-                    (*req)->dev.request_handle = rma_op->ureq->handle;
-                }
+            if (rma_op->ureq != NULL) {
+                MPID_cc_set(&(rma_op->ureq->cc), rma_op->ref_cnt);
+                (*req)->dev.request_handle = rma_op->ureq->handle;
             }
         }
     }
