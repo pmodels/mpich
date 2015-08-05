@@ -22,7 +22,7 @@ int main(int argc, char **argv)
     int *excl;
     int ranges[1][3];
     int isLeft, rleader;
-    MPI_Group world_group, high_group, even_group;
+    MPI_Group dup_group, high_group, even_group;
     MPI_Comm local_comm, inter_comm, test_comm, outcomm, dupcomm;
     MPI_Comm idupcomms[NUM_IDUPS];
     MPI_Request reqs[NUM_IDUPS];
@@ -30,8 +30,8 @@ int main(int argc, char **argv)
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
-    MPI_Comm_group(MPI_COMM_WORLD, &world_group);
     MPI_Comm_dup(MPI_COMM_WORLD, &dupcomm);
+    MPI_Comm_group(dupcomm, &dup_group);
 
     if (size < 2) {
         printf("this test requires at least 2 processes\n");
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     ranges[0][0] = size / 2;
     ranges[0][1] = size - 1;
     ranges[0][2] = 1;
-    MPI_Group_range_incl(world_group, 1, ranges, &high_group);
+    MPI_Group_range_incl(dup_group, 1, ranges, &high_group);
     MPI_Comm_create(dupcomm, high_group, &outcomm);
     MPI_Group_free(&high_group);
     errs += MTestTestComm(outcomm);
@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     for (i = 0; i < size / 2; i++)
         excl[i] = (2 * i) + 1;
 
-    MPI_Group_excl(world_group, size / 2, excl, &even_group);
+    MPI_Group_excl(dup_group, size / 2, excl, &even_group);
     free(excl);
 
     if (rank % 2 == 0) {
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
         MPI_Comm_free(&idupcomms[i]);
     }
 
-    MPI_Group_free(&world_group);
+    MPI_Group_free(&dup_group);
     MPI_Comm_free(&dupcomm);
 
     MTest_Finalize(errs);
