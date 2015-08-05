@@ -1015,11 +1015,11 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
              * context ID space doesn't matter.  Set the mask to "all available". */
             memset(local_mask, 0xff, MPIR_MAX_CONTEXT_MASK * sizeof(int));
         }
+        else if (comm_ptr->idup_count && seqnum != comm_ptr->idup_next_seqnum) {
+            memset(local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
+        }
         else {
             MPIU_Memcpy(local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(int));
-        }
-        if (comm_ptr->idup_count && seqnum != comm_ptr->idup_next_seqnum) {
-            memset(local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
         }
 
         /* Note that this is the unthreaded version */
