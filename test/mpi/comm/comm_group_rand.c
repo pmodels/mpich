@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <mpi.h>
-/* USE_STRICT_MPI may be defined in mpitestconf.h */
 #include "mpitestconf.h"
 
 #define LOOPS 100
@@ -42,13 +41,11 @@ int main(int argc, char **argv)
 
         MPI_Group_incl(full_group, count, ranks, &sub_group);
 
-#if !defined(USE_STRICT_MPI) && defined(MPICH)
         if (included[rank]) {
             MPI_Comm_create_group(MPI_COMM_WORLD, sub_group, 0, &comm);
             MPI_Barrier(comm);
             MPI_Comm_free(&comm);
         }
-#endif /* USE_STRICT_MPI */
 
         MPI_Group_free(&sub_group);
     }

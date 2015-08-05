@@ -10,13 +10,6 @@
 #include "mpi.h"
 #include "mpitest.h"
 
-/* This is a temporary #ifdef to control whether we test this functionality.  A
- * configure-test or similar would be better.  Eventually the MPI-3 standard
- * will be released and this can be gated on a MPI_VERSION check */
-#if !defined(USE_STRICT_MPI) && defined(MPICH)
-#define TEST_IDUP 1
-#endif
-
 /* assert-like macro that bumps the err count and emits a message */
 #define check(x_)                                                                 \
     do {                                                                          \
@@ -47,7 +40,6 @@ int main(int argc, char **argv)
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-#ifdef TEST_IDUP
 
     /* test plan: make rank 0 wait in a blocking recv until all other processes
      * have posted their MPI_Comm_idup ops, then post last.  Should ensure that
@@ -130,7 +122,6 @@ int main(int argc, char **argv)
     MPI_Comm_free(&newcomm);
     MPI_Comm_free(&ic);
 
-#endif /* TEST_IDUP */
 
     MPI_Reduce((rank == 0 ? MPI_IN_PLACE : &errs), &errs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     if (rank == 0) {
