@@ -32,21 +32,11 @@ extern ptl_ni_limits_t MPIDI_nem_ptl_ni_limits;
 /* workaround for NULL operations */
 extern char dummy;
 
-#define MPID_NEM_PTL_MAX_OVERFLOW_DATA 32 /* that's way more than we need */
-typedef struct MPID_nem_ptl_pack_overflow
-{
-    MPI_Aint len;
-    MPI_Aint offset;
-    char buf[MPID_NEM_PTL_MAX_OVERFLOW_DATA];
-} MPID_nem_ptl_pack_overflow_t;
-
 typedef int (* event_handler_fn)(const ptl_event_t *e);
 
 #define MPID_NEM_PTL_NUM_CHUNK_BUFFERS 2
 
 typedef struct {
-    struct MPID_nem_ptl_pack_overflow overflow[MPID_NEM_PTL_NUM_CHUNK_BUFFERS];
-    int large;
     ptl_handle_md_t md;
     ptl_handle_me_t put_me;
     ptl_handle_me_t *get_me_p;
@@ -69,7 +59,6 @@ static inline MPID_nem_ptl_req_area * REQ_PTL(MPID_Request *req) {
         for (i = 0; i < MPID_NEM_PTL_NUM_CHUNK_BUFFERS; ++i) {  \
             REQ_PTL(req_)->chunk_buffer[i] = NULL;              \
         }                                                       \
-        REQ_PTL(req_)->large         = FALSE;                   \
         REQ_PTL(req_)->md            = PTL_INVALID_HANDLE;      \
         REQ_PTL(req_)->put_me        = PTL_INVALID_HANDLE;      \
         REQ_PTL(req_)->get_me_p      = NULL;                    \
@@ -163,10 +152,6 @@ int MPID_nem_ptl_poll(int is_blocking_poll);
 int MPID_nem_ptl_vc_terminated(MPIDI_VC_t *vc);
 int MPID_nem_ptl_get_id_from_bc(const char *business_card, ptl_process_t *id, ptl_pt_index_t *pt, ptl_pt_index_t *ptg,
                                 ptl_pt_index_t *ptc, ptl_pt_index_t *ptr, ptl_pt_index_t *ptrg, ptl_pt_index_t *ptrc);
-void MPI_nem_ptl_pack_byte(MPID_Segment *segment, MPI_Aint first, MPI_Aint last, void *buf,
-                           MPID_nem_ptl_pack_overflow_t *overflow);
-int MPID_nem_ptl_unpack_byte(MPID_Segment *segment, MPI_Aint first, MPI_Aint last, void *buf,
-                             MPID_nem_ptl_pack_overflow_t *overflow);
 
 /* comm override functions */
 int MPID_nem_ptl_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req);
