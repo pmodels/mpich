@@ -975,98 +975,6 @@ static volatile int mask_in_use     = 0;
 static volatile int lowestContextId = MPIR_MAXID;
 static volatile int lowestTag       = -1;
 
-#ifndef MPICH_IS_THREADED
-/* Unthreaded (only one MPI call active at any time) */
-
-#undef FUNCNAME
-#define FUNCNAME MPIR_Get_contextid_sparse
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id, int ignore_id)
-{
-    return MPIR_Get_contextid_sparse_group(comm_ptr, NULL /* group_ptr */, MPIR_Process.attrs.tag_ub /* tag */, context_id, ignore_id);
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIR_Get_contextid_sparse_group
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, int tag, MPIR_Context_id_t *context_id, int ignore_id)
-{
-    int mpi_errno = MPI_SUCCESS;
-    uint32_t     local_mask[MPIR_MAX_CONTEXT_MASK];
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
-    int seqnum = 0;
-    if (comm_ptr->idup_count)
-        seqnum = comm_ptr->idup_curr_seqnum++;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID);
-
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_CONTEXTID);
-
-    *context_id = 0;
-
-    while (*context_id == 0) {
-        if (initialize_context_mask) {
-            MPIR_Init_contextid();
-        }
-
-        if (ignore_id) {
-            /* We are not participating in the resulting communicator, so our
-             * context ID space doesn't matter.  Set the mask to "all available". */
-            memset(local_mask, 0xff, MPIR_MAX_CONTEXT_MASK * sizeof(int));
-        }
-        else if (comm_ptr->idup_count && seqnum != comm_ptr->idup_next_seqnum) {
-            memset(local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
-        }
-        else {
-            MPIU_Memcpy(local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(int));
-        }
-
-        /* Note that this is the unthreaded version */
-        /* Comm must be an intracommunicator */
-        if (group_ptr != NULL) {
-            int coll_tag = tag | MPIR_Process.tagged_coll_mask; /* Shift tag into the tagged coll space */
-            mpi_errno = MPIR_Allreduce_group(MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK,
-                                             MPI_INT, MPI_BAND, comm_ptr, group_ptr, coll_tag, &errflag);
-        } else {
-            mpi_errno = MPIR_Allreduce_impl(MPI_IN_PLACE, local_mask, MPIR_MAX_CONTEXT_MASK,
-                                            MPI_INT, MPI_BAND, comm_ptr, &errflag);
-        }
-
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-
-        if (ignore_id) {
-            *context_id = MPIR_Locate_context_bit(local_mask);
-            if (*context_id == 0) {
-                int nfree = -1;
-                int ntotal = -1;
-                MPIR_ContextMaskStats(&nfree, &ntotal);
-                MPIU_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
-                                     "**toomanycomm", "**toomanycomm %d %d %d",
-                                     nfree, ntotal, ignore_id);
-            }
-        }
-        else {
-            *context_id = MPIR_Find_and_allocate_context_id(local_mask);
-        }
-    }
-    if (seqnum > 0)
-        comm_ptr->idup_next_seqnum++;
-
-fn_exit:
-    if (ignore_id)
-        *context_id = MPIR_INVALID_CONTEXT_ID;
-    MPIU_DBG_MSG_S(COMM,VERBOSE,"Context mask = %s",MPIR_ContextMaskToStr());
-
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GET_CONTEXTID);
-    return mpi_errno;
-fn_fail:
-    goto fn_exit;
-}
-
-#else /* MPICH_IS_THREADED is set and true */
-
 #undef FUNCNAME
 #define FUNCNAME MPIR_Get_contextid_sparse
 #undef FCNAME
@@ -1353,8 +1261,6 @@ fn_fail:
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
-
-#endif
 
 struct gcn_state {
     MPIR_Context_id_t *ctx0;
