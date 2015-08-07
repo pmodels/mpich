@@ -280,16 +280,16 @@ static volatile int eager_in_use = 0;
  * single-threaded case, it is always 0. */
 static volatile int mask_in_use = 0;
 
-/* In multi-threaded case, lowestContextId is used to prioritize access when
- * multiple threads are contending for the mask, lowestTag is used to break
+/* In multi-threaded case, lowest_context_id is used to prioritize access when
+ * multiple threads are contending for the mask, lowest_tag is used to break
  * ties when MPI_Comm_create_group is invoked my multiple threads on the same
- * parent communicator.  In single-threaded case, lowestContextId is always
- * set to parent context id in sched_cb_gcn_copy_mask and lowestTag is not
+ * parent communicator.  In single-threaded case, lowest_context_id is always
+ * set to parent context id in sched_cb_gcn_copy_mask and lowest_tag is not
  * used.
  */
 #define MPIR_MAXID (1 << 30)
-static volatile int lowestContextId = MPIR_MAXID;
-static volatile int lowestTag = -1;
+static volatile int lowest_context_id = MPIR_MAXID;
+static volatile int lowest_tag = -1;
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Get_contextid_sparse
@@ -343,8 +343,8 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
 
     MPIU_DBG_MSG_FMT(COMM, VERBOSE, (MPIU_DBG_FDEST,
                                      "Entering; shared state is %d:%d:%d, my ctx id is %d, tag=%d",
-                                     mask_in_use, lowestContextId, lowestTag, comm_ptr->context_id,
-                                     tag));
+                                     mask_in_use, lowest_context_id, lowest_tag,
+                                     comm_ptr->context_id, tag));
 
     while (*context_id == 0) {
         /* We lock only around access to the mask (except in the global locking
@@ -368,7 +368,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
              * context ID space doesn't matter.  Set the mask to "all available". */
             memset(local_mask, 0xff, MPIR_MAX_CONTEXT_MASK * sizeof(int));
             own_mask = 0;
-            /* don't need to touch mask_in_use/lowestContextId b/c our thread
+            /* don't need to touch mask_in_use/lowest_context_id b/c our thread
              * doesn't ever need to "win" the mask */
         }
 
@@ -395,20 +395,20 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
         }
 
         else {
-            /* lowestTag breaks ties when contextIds are the same (happens only
+            /* lowest_tag breaks ties when context IDs are the same (happens only
              * in calls to MPI_Comm_create_group. */
-            if (comm_ptr->context_id < lowestContextId ||
-                (comm_ptr->context_id == lowestContextId && tag < lowestTag)) {
-                lowestContextId = comm_ptr->context_id;
-                lowestTag = tag;
+            if (comm_ptr->context_id < lowest_context_id ||
+                (comm_ptr->context_id == lowest_context_id && tag < lowest_tag)) {
+                lowest_context_id = comm_ptr->context_id;
+                lowest_tag = tag;
             }
 
-            if (mask_in_use || !(comm_ptr->context_id == lowestContextId && tag == lowestTag) ||
+            if (mask_in_use || !(comm_ptr->context_id == lowest_context_id && tag == lowest_tag) ||
                 (comm_ptr->idup_count && seqnum != comm_ptr->idup_next_seqnum)) {
                 memset(local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
                 own_mask = 0;
-                MPIU_DBG_MSG_D(COMM, VERBOSE, "In in-use, set lowestContextId to %d",
-                               lowestContextId);
+                MPIU_DBG_MSG_D(COMM, VERBOSE, "In in-use, set lowest_context_id to %d",
+                               lowest_context_id);
             }
             else {
                 int i;
@@ -492,9 +492,9 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
             if (*context_id > 0) {
                 /* If we were the lowest context id, reset the value to
                  * allow the other threads to compete for the mask */
-                if (lowestContextId == comm_ptr->context_id && lowestTag == tag) {
-                    lowestContextId = MPIR_MAXID;
-                    lowestTag = -1;
+                if (lowest_context_id == comm_ptr->context_id && lowest_tag == tag) {
+                    lowest_context_id = MPIR_MAXID;
+                    lowest_tag = -1;
                     /* Else leave it alone; there is another thread waiting */
                 }
                 comm_ptr->idup_curr_seqnum++;
@@ -527,9 +527,9 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
             if (own_mask) {
                 MPIU_THREAD_CS_ENTER(CONTEXTID,);
                 mask_in_use = 0;
-                if (lowestContextId == comm_ptr->context_id && lowestTag == tag) {
-                    lowestContextId = MPIR_MAXID;
-                    lowestTag = -1;
+                if (lowest_context_id == comm_ptr->context_id && lowest_tag == tag) {
+                    lowest_context_id = MPIR_MAXID;
+                    lowest_tag = -1;
                 }
                 MPIU_THREAD_CS_EXIT(CONTEXTID,);
             }
@@ -711,8 +711,8 @@ static int sched_cb_gcn_allocate_cid(MPID_Comm * comm, int tag, void *state)
         mask_in_use = 0;
 
         if (newctxid > 0) {
-            if (lowestContextId == st->comm_ptr->context_id)
-                lowestContextId = MPIR_MAXID;
+            if (lowest_context_id == st->comm_ptr->context_id)
+                lowest_context_id = MPIR_MAXID;
         }
     }
 
@@ -767,18 +767,18 @@ static int sched_cb_gcn_copy_mask(MPID_Comm * comm, int tag, void *state)
 
     }
     else {
-        if (st->comm_ptr->context_id < lowestContextId) {
-            lowestContextId = st->comm_ptr->context_id;
+        if (st->comm_ptr->context_id < lowest_context_id) {
+            lowest_context_id = st->comm_ptr->context_id;
         }
 
         /* If one of the following conditions happens, set local_mask to zero
          * so sched_cb_gcn_allocate_cid can not find a valid id and will retry:
          * 1. mask is used by other threads;
-         * 2. the current MPI_COMM_IDUP operation does not has the lowestContextId;
+         * 2. the current MPI_COMM_IDUP operation does not has the lowest_context_id;
          * 3. for the case that multiple communicators duplicating from the
          *    same communicator at the same time, the sequence number of the
          *    current MPI_COMM_IDUP operation is not the smallest. */
-        if (mask_in_use || (st->comm_ptr->context_id != lowestContextId)
+        if (mask_in_use || (st->comm_ptr->context_id != lowest_context_id)
             || (st->comm_ptr->idup_count > 1 && st->seqnum != st->comm_ptr->idup_next_seqnum)) {
             memset(st->local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
             st->own_mask = 0;
