@@ -1113,10 +1113,10 @@ int MPIR_Comm_apply_hints(MPID_Comm * comm_ptr, MPID_Info * info_ptr)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Comm_free_hint_handles
+#define FUNCNAME free_hint_handles
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static int MPIR_Comm_free_hint_handles(void *ignore)
+static int free_hint_handles(void *ignore)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIR_Comm_hint_fn_elt *curr_hint = NULL, *tmp = NULL;
@@ -1153,7 +1153,7 @@ int MPIR_Comm_register_hint(const char *hint_key, MPIR_Comm_hint_fn_t fn, void *
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_REGISTER_HINT);
 
     if (MPID_hint_fns == NULL) {
-        MPIR_Add_finalize(MPIR_Comm_free_hint_handles, NULL, MPIR_FINALIZE_CALLBACK_PRIO - 1);
+        MPIR_Add_finalize(free_hint_handles, NULL, MPIR_FINALIZE_CALLBACK_PRIO - 1);
     }
 
     hint_elt = MPIU_Malloc(sizeof(struct MPIR_Comm_hint_fn_elt));

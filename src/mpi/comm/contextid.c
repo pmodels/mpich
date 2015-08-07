@@ -45,7 +45,7 @@ static int initialize_context_mask = 1;
 /* utility function to pretty print a context ID for debugging purposes, see
  * mpiimpl.h for more info on the various fields */
 #ifdef USE_DBG_LOGGING
-static void MPIR_Comm_dump_context_id(MPIR_Context_id_t context_id, char *out_str, int len)
+static void dump_context_id(MPIR_Context_id_t context_id, char *out_str, int len)
 {
     int subcomm_type = MPID_CONTEXT_READ_FIELD(SUBCOMM, context_id);
     const char *subcomm_type_name = NULL;
@@ -90,8 +90,7 @@ static void MPIR_Comm_dump_context_id(MPIR_Context_id_t context_id, char *out_st
    (possibly "extern") copy of the prototype in their own code in order to call
    this routine.
  */
-char *MPIR_ContextMaskToStr(void);
-char *MPIR_ContextMaskToStr(void)
+static char *context_mask_to_str(void)
 {
     static char bufstr[MPIR_MAX_CONTEXT_MASK * 8 + 1];
     int i;
@@ -121,8 +120,7 @@ char *MPIR_ContextMaskToStr(void)
  *
  * The routine is non-static in order to permit "in the field debugging".  We
  * provide a prototype here to keep the compiler happy. */
-void MPIR_ContextMaskStats(int *free_ids, int *total_ids);
-void MPIR_ContextMaskStats(int *free_ids, int *total_ids)
+static void context_mask_stats(int *free_ids, int *total_ids)
 {
     if (free_ids) {
         int i, j;
@@ -144,7 +142,7 @@ void MPIR_ContextMaskStats(int *free_ids, int *total_ids)
 }
 
 #ifdef MPICH_DEBUG_HANDLEALLOC
-static int MPIU_CheckContextIDsOnFinalize(void *context_mask_ptr)
+static int check_context_ids_on_finalize(void *context_mask_ptr)
 {
     int i;
     uint32_t *mask = context_mask_ptr;
@@ -160,7 +158,7 @@ static int MPIU_CheckContextIDsOnFinalize(void *context_mask_ptr)
 }
 #endif
 
-static void MPIR_Init_contextid(void)
+static void context_id_init(void)
 {
     int i;
 
@@ -180,14 +178,13 @@ static void MPIR_Init_contextid(void)
 #ifdef MPICH_DEBUG_HANDLEALLOC
     /* check for context ID leaks in MPI_Finalize.  Use (_PRIO-1) to make sure
      * that we run after MPID_Finalize. */
-    MPIR_Add_finalize(MPIU_CheckContextIDsOnFinalize, context_mask,
-                      MPIR_FINALIZE_CALLBACK_PRIO - 1);
+    MPIR_Add_finalize(check_context_ids_on_finalize, context_mask, MPIR_FINALIZE_CALLBACK_PRIO - 1);
 #endif
 }
 
 /* Return the context id corresponding to the first set bit in the mask.
    Return 0 if no bit found.  This function does _not_ alter local_mask. */
-static int MPIR_Locate_context_bit(uint32_t local_mask[])
+static int locate_context_bit(uint32_t local_mask[])
 {
     int i, j, context_id = 0;
     for (i = 0; i < MPIR_MAX_CONTEXT_MASK; i++) {
@@ -235,7 +232,7 @@ static int MPIR_Locate_context_bit(uint32_t local_mask[])
 /* Allocates a context ID from the given mask by clearing the bit
  * corresponding to the the given id.  Returns 0 on failure, id on
  * success. */
-static int MPIR_Allocate_context_bit(uint32_t mask[], MPIR_Context_id_t id)
+static int allocate_context_bit(uint32_t mask[], MPIR_Context_id_t id)
 {
     int raw_prefix, idx, bitpos;
     raw_prefix = MPID_CONTEXT_READ_FIELD(PREFIX, id);
@@ -259,12 +256,12 @@ static int MPIR_Allocate_context_bit(uint32_t mask[], MPIR_Context_id_t id)
  * context_mask if allocation was successful.
  *
  * Returns 0 on failure.  Returns the allocated context ID on success. */
-static int MPIR_Find_and_allocate_context_id(uint32_t local_mask[])
+static int find_and_allocate_context_id(uint32_t local_mask[])
 {
     MPIR_Context_id_t context_id;
-    context_id = MPIR_Locate_context_bit(local_mask);
+    context_id = locate_context_bit(local_mask);
     if (context_id != 0) {
-        context_id = MPIR_Allocate_context_bit(context_mask, context_id);
+        context_id = allocate_context_bit(context_mask, context_id);
     }
     return context_id;
 }
@@ -287,7 +284,7 @@ int MPIR_Get_contextid(MPID_Comm * comm_ptr, MPIR_Context_id_t * context_id)
     if (*context_id == 0) {
         int nfree = -1;
         int ntotal = -1;
-        MPIR_ContextMaskStats(&nfree, &ntotal);
+        context_mask_stats(&nfree, &ntotal);
         MPIU_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
                              "**toomanycomm", "**toomanycomm %d %d %d",
                              nfree, ntotal, /*ignore_id= */ 0);
@@ -384,7 +381,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
         MPIU_THREAD_CS_ENTER(CONTEXTID,);
 
         if (initialize_context_mask) {
-            MPIR_Init_contextid();
+            context_id_init();
         }
 
         if (eager_nelem < 0) {
@@ -493,13 +490,13 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
         if (ignore_id) {
             /* we don't care what the value was, but make sure that everyone
              * who did care agreed on a value */
-            *context_id = MPIR_Locate_context_bit(local_mask);
+            *context_id = locate_context_bit(local_mask);
             /* used later in out-of-context ids check and outer while loop condition */
         }
         else if (own_eager_mask) {
             /* There is a chance that we've found a context id */
             /* Find_and_allocate_context_id updates the context_mask if it finds a match */
-            *context_id = MPIR_Find_and_allocate_context_id(local_mask);
+            *context_id = find_and_allocate_context_id(local_mask);
             MPIU_DBG_MSG_D(COMM, VERBOSE, "Context id is now %hd", *context_id);
 
             own_eager_mask = 0;
@@ -516,7 +513,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
         else if (own_mask) {
             /* There is a chance that we've found a context id */
             /* Find_and_allocate_context_id updates the context_mask if it finds a match */
-            *context_id = MPIR_Find_and_allocate_context_id(local_mask);
+            *context_id = find_and_allocate_context_id(local_mask);
             MPIU_DBG_MSG_D(COMM, VERBOSE, "Context id is now %hd", *context_id);
 
             mask_in_use = 0;
@@ -566,7 +563,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
                 MPIU_THREAD_CS_EXIT(CONTEXTID,);
             }
 
-            MPIR_ContextMaskStats(&nfree, &ntotal);
+            context_mask_stats(&nfree, &ntotal);
             if (ignore_id)
                 minfree = INT_MAX;
             else
@@ -604,7 +601,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
   fn_exit:
     if (ignore_id)
         *context_id = MPIR_INVALID_CONTEXT_ID;
-    MPIU_DBG_MSG_S(COMM, VERBOSE, "Context mask = %s", MPIR_ContextMaskToStr());
+    MPIU_DBG_MSG_S(COMM, VERBOSE, "Context mask = %s", context_mask_to_str());
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GET_CONTEXTID);
     return mpi_errno;
 
@@ -722,7 +719,7 @@ static int sched_cb_gcn_allocate_cid(MPID_Comm * comm, int tag, void *state)
     MPIR_Context_id_t newctxid;
 
     if (st->own_eager_mask) {
-        newctxid = MPIR_Find_and_allocate_context_id(st->local_mask);
+        newctxid = find_and_allocate_context_id(st->local_mask);
         if (st->ctx0)
             *st->ctx0 = newctxid;
         if (st->ctx1)
@@ -732,7 +729,7 @@ static int sched_cb_gcn_allocate_cid(MPID_Comm * comm, int tag, void *state)
         eager_in_use = 0;
     }
     else if (st->own_mask) {
-        newctxid = MPIR_Find_and_allocate_context_id(st->local_mask);
+        newctxid = find_and_allocate_context_id(st->local_mask);
 
         if (st->ctx0)
             *st->ctx0 = newctxid;
@@ -896,7 +893,7 @@ static int sched_get_cid_nonblock(MPID_Comm * comm_ptr, MPID_Comm * newcomm,
     MPIU_CHKPMEM_DECL(1);
 
     if (initialize_context_mask) {
-        MPIR_Init_contextid();
+        context_id_init();
     }
 
     MPIU_CHKPMEM_MALLOC(st, struct gcn_state *, sizeof(struct gcn_state), mpi_errno, "gcn_state");
@@ -1154,7 +1151,7 @@ void MPIR_Free_contextid(MPIR_Context_id_t context_id)
         if (MPID_CONTEXT_READ_FIELD(IS_LOCALCOMM, context_id)) {
 #ifdef USE_DBG_LOGGING
             char dump_str[1024];
-            MPIR_Comm_dump_context_id(context_id, dump_str, sizeof(dump_str));
+            dump_context_id(context_id, dump_str, sizeof(dump_str));
             MPIU_DBG_MSG_S(COMM, VERBOSE, "skipping localcomm id: %s", dump_str);
 #endif
             goto fn_exit;
@@ -1171,9 +1168,9 @@ void MPIR_Free_contextid(MPIR_Context_id_t context_id)
     if ((context_mask[idx] & (0x1 << bitpos)) != 0) {
 #ifdef USE_DBG_LOGGING
         char dump_str[1024];
-        MPIR_Comm_dump_context_id(context_id, dump_str, sizeof(dump_str));
+        dump_context_id(context_id, dump_str, sizeof(dump_str));
         MPIU_DBG_MSG_S(COMM, VERBOSE, "context dump: %s", dump_str);
-        MPIU_DBG_MSG_S(COMM, VERBOSE, "context mask = %s", MPIR_ContextMaskToStr());
+        MPIU_DBG_MSG_S(COMM, VERBOSE, "context mask = %s", context_mask_to_str());
 #endif
         MPID_Abort(0, MPI_ERR_INTERN, 1, "In MPIR_Free_contextid, the context id is not in use");
     }
