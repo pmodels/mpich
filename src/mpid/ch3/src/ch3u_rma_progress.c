@@ -288,7 +288,6 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
     curr_op = target->next_op_to_issue;
     while (curr_op != NULL) {
         int op_completed = FALSE;
-        int is_read_op = FALSE;
 
         if (target->access_state == MPIDI_RMA_LOCK_ISSUED) {
             /* It is possible that the previous OP+LOCK changes
@@ -345,8 +344,7 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
 
         (*made_progress) = 1;
 
-        MPIDI_CH3I_RMA_PKT_IS_READ_OP(curr_op->pkt, is_read_op);
-        if (!is_read_op) {
+        if (!MPIDI_CH3I_RMA_PKT_IS_READ_OP(curr_op->pkt)) {
             target->put_acc_issued = 1; /* set PUT_ACC_FLAG when sending
                                          * PUT/ACC operation. */
         }
