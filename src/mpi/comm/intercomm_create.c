@@ -231,10 +231,10 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
      */
     MPIU_DBG_MSG_FMT(COMM,VERBOSE, (MPIU_DBG_FDEST,"About to get contextid (local_size=%d) on rank %d",
                                     local_comm_ptr->local_size, local_comm_ptr->rank ));
-    /* In the multi-threaded case, MPIR_Get_contextid assumes that the
+    /* In the multi-threaded case, MPIR_Get_contextid_sparse assumes that the
        calling routine already holds the single criticial section */
     /* TODO: Make sure this is tag-safe */
-    mpi_errno = MPIR_Get_contextid( local_comm_ptr, &recvcontext_id );
+    mpi_errno = MPIR_Get_contextid_sparse( local_comm_ptr, &recvcontext_id, FALSE );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     MPIU_Assert(recvcontext_id != 0);
     MPIU_DBG_MSG_FMT(COMM,VERBOSE, (MPIU_DBG_FDEST,"Got contextid=%d", recvcontext_id));

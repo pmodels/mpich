@@ -246,7 +246,7 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
        be used by each (disjoint) collections of processes.  The
        processes whose color is MPI_UNDEFINED will not influence the
        resulting context id (by passing ignore_id==TRUE). */
-    /* In the multi-threaded case, MPIR_Get_contextid assumes that the
+    /* In the multi-threaded case, MPIR_Get_contextid_sparse assumes that the
        calling routine already holds the single criticial section */
     mpi_errno = MPIR_Get_contextid_sparse(local_comm_ptr, &new_context_id, !in_newcomm);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);

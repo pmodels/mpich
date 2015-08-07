@@ -208,7 +208,7 @@ int MPIR_Comm_create_intra(MPID_Comm *comm_ptr, MPID_Group *group_ptr,
     /* Creating the context id is collective over the *input* communicator,
        so it must be created before we decide if this process is a
        member of the group */
-    /* In the multi-threaded case, MPIR_Get_contextid assumes that the
+    /* In the multi-threaded case, MPIR_Get_contextid_sparse assumes that the
        calling routine already holds the single criticial section */
     mpi_errno = MPIR_Get_contextid_sparse( comm_ptr, &new_context_id,
                                            group_ptr->rank == MPI_UNDEFINED );
@@ -308,12 +308,12 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
        Creating the context id is collective over the *input* communicator,
        so it must be created before we decide if this process is a 
        member of the group */
-    /* In the multi-threaded case, MPIR_Get_contextid assumes that the
+    /* In the multi-threaded case, MPIR_Get_contextid_sparse assumes that the
        calling routine already holds the single criticial section */
     if (!comm_ptr->local_comm) {
         MPIR_Setup_intercomm_localcomm( comm_ptr );
     }
-    mpi_errno = MPIR_Get_contextid( comm_ptr->local_comm, &new_context_id );
+    mpi_errno = MPIR_Get_contextid_sparse( comm_ptr->local_comm, &new_context_id, FALSE );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     MPIU_Assert(new_context_id != 0);
     MPIU_Assert(new_context_id != comm_ptr->recvcontext_id);

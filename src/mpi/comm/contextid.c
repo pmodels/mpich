@@ -266,35 +266,6 @@ static int find_and_allocate_context_id(uint32_t local_mask[])
     return context_id;
 }
 
-/* Older, simpler interface.  Allocates a context ID collectively over the given
- * communicator. */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Get_contextid
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Get_contextid(MPID_Comm * comm_ptr, MPIR_Context_id_t * context_id)
-{
-    int mpi_errno = MPI_SUCCESS;
-    mpi_errno = MPIR_Get_contextid_sparse(comm_ptr, context_id, FALSE);
-    if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
-    MPIU_Assert(*context_id != MPIR_INVALID_CONTEXT_ID);
-
-    /* --BEGIN ERROR HANDLING-- */
-    if (*context_id == 0) {
-        int nfree = -1;
-        int ntotal = -1;
-        context_mask_stats(&nfree, &ntotal);
-        MPIU_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
-                             "**toomanycomm", "**toomanycomm %d %d %d",
-                             nfree, ntotal, /*ignore_id= */ 0);
-    }
-    /* --END ERROR HANDLING-- */
-  fn_fail:
-    return mpi_errno;
-}
-
-
 /* EAGER CONTEXT ID ALLOCATION: Attempt to allocate the context ID during the
  * initial synchronization step.  If eager protocol fails, threads fall back to
  * the base algorithm.
@@ -1080,7 +1051,7 @@ int MPIR_Get_intercomm_contextid(MPID_Comm * comm_ptr, MPIR_Context_id_t * conte
             MPIU_ERR_POP(mpi_errno);
     }
 
-    mpi_errno = MPIR_Get_contextid(comm_ptr->local_comm, &mycontext_id);
+    mpi_errno = MPIR_Get_contextid_sparse(comm_ptr->local_comm, &mycontext_id, FALSE);
     if (mpi_errno)
         MPIU_ERR_POP(mpi_errno);
     MPIU_Assert(mycontext_id != 0);

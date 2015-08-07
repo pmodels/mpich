@@ -169,10 +169,10 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* printf( "About to get context id \n" ); fflush( stdout ); */
-    /* In the multi-threaded case, MPIR_Get_contextid assumes that the
+    /* In the multi-threaded case, MPIR_Get_contextid_sparse assumes that the
        calling routine already holds the single criticial section */
     new_context_id = 0;
-    mpi_errno = MPIR_Get_contextid( (*new_intracomm_ptr), &new_context_id );
+    mpi_errno = MPIR_Get_contextid_sparse( (*new_intracomm_ptr), &new_context_id, FALSE );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     MPIU_Assert(new_context_id != 0);
 

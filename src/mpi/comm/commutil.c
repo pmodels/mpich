@@ -740,7 +740,7 @@ int MPIR_Comm_copy(MPID_Comm * comm_ptr, int size, MPID_Comm ** outcomm_ptr)
             MPIU_ERR_POP(mpi_errno);
     }
     else {
-        mpi_errno = MPIR_Get_contextid(comm_ptr, &new_context_id);
+        mpi_errno = MPIR_Get_contextid_sparse(comm_ptr, &new_context_id, FALSE);
         new_recvcontext_id = new_context_id;
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);

@@ -351,7 +351,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_COMM_CONNECT);
 
     /* Get the context ID here because we need to send it to the remote side */
-    mpi_errno = MPIR_Get_contextid( comm_ptr, &recvcontext_id );
+    mpi_errno = MPIR_Get_contextid_sparse( comm_ptr, &recvcontext_id, FALSE );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     rank = comm_ptr->rank;
@@ -951,7 +951,7 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
     if (mpi_errno != MPI_SUCCESS) {
 	MPIU_ERR_POP(mpi_errno);
     }
-    mpi_errno = MPIR_Get_contextid( comm_ptr, &(*newcomm)->recvcontext_id );
+    mpi_errno = MPIR_Get_contextid_sparse( comm_ptr, &(*newcomm)->recvcontext_id, FALSE );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     /* FIXME why is this commented out? */
     /*    (*newcomm)->context_id = (*newcomm)->recvcontext_id; */
