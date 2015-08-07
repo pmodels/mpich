@@ -32,7 +32,7 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm, int maxindegree, int sources[], int 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Dist_graph_neighbors_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Dist_graph_neighbors_impl(MPID_Comm *comm_ptr,
                                    int maxindegree, int sources[], int sourceweights[],
                                    int maxoutdegree, int destinations[], int destweights[])
@@ -41,7 +41,7 @@ int MPIR_Dist_graph_neighbors_impl(MPID_Comm *comm_ptr,
     MPIR_Topology *topo_ptr = NULL;
 
     topo_ptr = MPIR_Topology_get(comm_ptr);
-    MPIU_ERR_CHKANDJUMP(!topo_ptr || topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPI_ERR_TOPOLOGY, "**notdistgraphtopo");
+    MPIR_ERR_CHKANDJUMP(!topo_ptr || topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPI_ERR_TOPOLOGY, "**notdistgraphtopo");
 
     MPIU_Memcpy(sources, topo_ptr->topo.dist_graph.in, maxindegree*sizeof(int));
     MPIU_Memcpy(destinations, topo_ptr->topo.dist_graph.out, maxoutdegree*sizeof(int));
@@ -64,7 +64,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPI_Dist_graph_neighbors
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Dist_graph_neighbors - Provides adjacency information for a distributed graph topology.
 
@@ -97,7 +97,7 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     /* FIXME: Why does this routine need a CS */
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -121,12 +121,12 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
         {
             MPIR_Topology *topo_ptr = NULL;
             topo_ptr = MPIR_Topology_get(comm_ptr);
-            MPIU_ERR_CHKANDJUMP(!topo_ptr || topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPI_ERR_TOPOLOGY, "**notdistgraphtopo");
+            MPIR_ERR_CHKANDJUMP(!topo_ptr || topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPI_ERR_TOPOLOGY, "**notdistgraphtopo");
 
             MPIR_ERRTEST_ARGNEG(maxindegree, "maxindegree", mpi_errno);
             MPIR_ERRTEST_ARGNEG(maxoutdegree, "maxoutdegree", mpi_errno);
-            MPIU_ERR_CHKANDJUMP3((maxindegree < topo_ptr->topo.dist_graph.indegree), mpi_errno, MPI_ERR_ARG, "**argtoosmall", "**argtoosmall %s %d %d", "maxindegree", maxindegree, topo_ptr->topo.dist_graph.indegree);
-            MPIU_ERR_CHKANDJUMP3((maxoutdegree < topo_ptr->topo.dist_graph.outdegree), mpi_errno, MPI_ERR_ARG, "**argtoosmall", "**argtoosmall %s %d %d", "maxoutdegree", maxoutdegree, topo_ptr->topo.dist_graph.outdegree);
+            MPIR_ERR_CHKANDJUMP3((maxindegree < topo_ptr->topo.dist_graph.indegree), mpi_errno, MPI_ERR_ARG, "**argtoosmall", "**argtoosmall %s %d %d", "maxindegree", maxindegree, topo_ptr->topo.dist_graph.indegree);
+            MPIR_ERR_CHKANDJUMP3((maxoutdegree < topo_ptr->topo.dist_graph.outdegree), mpi_errno, MPI_ERR_ARG, "**argtoosmall", "**argtoosmall %s %d %d", "maxoutdegree", maxoutdegree, topo_ptr->topo.dist_graph.outdegree);
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -138,13 +138,13 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
     mpi_errno = MPIR_Dist_graph_neighbors_impl(comm_ptr,
                                                maxindegree, sources, sourceweights,
                                                maxoutdegree, destinations, destweights);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

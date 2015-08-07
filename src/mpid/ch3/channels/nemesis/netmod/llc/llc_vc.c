@@ -46,7 +46,7 @@ static MPIDI_Comm_ops_t comm_ops = {
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_vc_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_vc_init(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -56,7 +56,7 @@ int MPID_nem_llc_vc_init(MPIDI_VC_t * vc)
 
     mpi_errno = llc_vc_init(vc);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_VC_INIT);
@@ -68,7 +68,7 @@ int MPID_nem_llc_vc_init(MPIDI_VC_t * vc)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_vc_destroy
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_vc_destroy(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -98,7 +98,7 @@ int MPID_nem_llc_vc_destroy(MPIDI_VC_t * vc)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_vc_terminate
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_vc_terminate(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -122,7 +122,7 @@ int MPID_nem_llc_vc_terminate(MPIDI_VC_t * vc)
 #undef FUNCNAME
 #define FUNCNAME llc_vc_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int llc_vc_init(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -148,7 +148,7 @@ static int llc_vc_init(MPIDI_VC_t * vc)
             MPID_nem_llc_kvs_get_binary(vc->pg_rank,
                                         "llc_rank",
                                         (char *) &vc_llc->remote_endpoint_addr, sizeof(int));
-        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_kvs_get_binary");
+        MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_kvs_get_binary");
         dprintf("llc_vc_init,my_pg_rank=%d,pg_rank=%d,my_llc_rank=%d,llc_rank=%ld\n",
                 MPIDI_Process.my_pg_rank, vc->pg_rank, MPID_nem_llc_my_llc_rank,
                 vc_llc->remote_endpoint_addr);
@@ -187,7 +187,7 @@ static int llc_vc_init(MPIDI_VC_t * vc)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_vc_prnt
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPID_nem_llc_vc_prnt(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -195,7 +195,6 @@ static int MPID_nem_llc_vc_prnt(MPIDI_VC_t * vc)
     /* MPIU_OBJECT_HEADER; */
     /* src/include/mpihandlemem.h */
     /* int handle; */
-    /* MPIU_THREAD_OBJECT_HOOK */
     /* MPIU_Handle_ref_count ref_count; */
     /* MPIDI_VC_State_t state; */
     /* struct MPIDI_PG *pg; */

@@ -81,7 +81,7 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_PT2PT_FUNC_ENTER_BOTH(MPID_STATE_MPI_SENDRECV_REPLACE);
 
     /* Convert handles to MPI objects. */
@@ -220,7 +220,7 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
   fn_exit:
     MPIU_CHKLMEM_FREEALL();
     MPID_MPI_PT2PT_FUNC_EXIT_BOTH(MPID_STATE_MPI_SENDRECV_REPLACE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
     
   fn_fail:

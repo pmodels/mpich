@@ -52,7 +52,7 @@ int MPI_Info_delete( MPI_Info info, const char *key )
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_INFO_DELETE);
     
 
@@ -82,10 +82,10 @@ int MPI_Info_delete( MPI_Info info, const char *key )
             if (mpi_errno) goto fn_fail;
 	    
 	    /* Check key */
-	    MPIU_ERR_CHKANDJUMP((!key), mpi_errno, MPI_ERR_INFO_KEY, "**infokeynull");
+	    MPIR_ERR_CHKANDJUMP((!key), mpi_errno, MPI_ERR_INFO_KEY, "**infokeynull");
 	    keylen = (int)strlen(key);
-	    MPIU_ERR_CHKANDJUMP((keylen > MPI_MAX_INFO_KEY), mpi_errno, MPI_ERR_INFO_KEY, "**infokeylong");
-	    MPIU_ERR_CHKANDJUMP((keylen == 0), mpi_errno, MPI_ERR_INFO_KEY, "**infokeyempty");
+	    MPIR_ERR_CHKANDJUMP((keylen > MPI_MAX_INFO_KEY), mpi_errno, MPI_ERR_INFO_KEY, "**infokeylong");
+	    MPIR_ERR_CHKANDJUMP((keylen == 0), mpi_errno, MPI_ERR_INFO_KEY, "**infokeyempty");
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -109,13 +109,13 @@ int MPI_Info_delete( MPI_Info info, const char *key )
     }
 
     /* If curr_ptr is not defined, we never found the key */
-    MPIU_ERR_CHKANDJUMP1((!curr_ptr), mpi_errno, MPI_ERR_INFO_NOKEY, "**infonokey", "**infonokey %s", key);
+    MPIR_ERR_CHKANDJUMP1((!curr_ptr), mpi_errno, MPI_ERR_INFO_NOKEY, "**infonokey", "**infonokey %s", key);
     
     /* ... end of body of routine ... */
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_INFO_DELETE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
     
   fn_fail:

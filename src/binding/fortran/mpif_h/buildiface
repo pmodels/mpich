@@ -4283,17 +4283,14 @@ sub build_specials {
     &set_weak_decl( "MPI_Wtime", "void", "double" );
     &set_weak_decl( "PMPI_Wtime", "void", "double" );
     &print_header( "mpi_", "MPI_Wtime", "wtime", "" );
-    # mpichtimer.h is needed for the timer definitions
+    # mpiu_timer.h is needed for the timer definitions
     print $OUTFD "#include \"mpichconf.h\"\n";
-    print $OUTFD "#include \"mpichtimer.h\"\n";
+    print $OUTFD "#include \"mpiu_timer.h\"\n";
     &print_routine_type_decl( $OUTFD, $out_prefix, "wtime" );
     print $OUTFD "( void ) ";
     #&print_attr;
     print $OUTFD "{\n";
-    print $OUTFD "    double d; MPID_Time_t t;\n
-    MPID_Wtime( &t );
-    MPID_Wtime_todouble( &t, &d );
-    return d;\n";
+    print $OUTFD "return MPI_Wtime();\n";
     print $OUTFD "}\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
@@ -4315,16 +4312,14 @@ sub build_specials {
     &set_weak_decl( "MPI_Wtick", "void", "double" );
     &set_weak_decl( "PMPI_Wtick", "void", "double" );
     &print_header( "mpi_", "MPI_Wtick", "wtick", "" );
-    # mpichtimer.h is needed for the timer definitions
+    # mpiu_timer.h is needed for the timer definitions
     print $OUTFD "#include \"mpichconf.h\"\n";
-    print $OUTFD "#include \"mpichtimer.h\"\n";
+    print $OUTFD "#include \"mpiu_timer.h\"\n";
     &print_routine_type_decl( $OUTFD, $out_prefix, "wtick" );
     print $OUTFD "( void ) ";
     #&print_attr;
     print $OUTFD "{\n";
-    print $OUTFD "    double d; 
-    d = MPID_Wtick( );
-    return d;\n";
+    print $OUTFD "return MPI_Wtick();\n";
     print $OUTFD "}\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );

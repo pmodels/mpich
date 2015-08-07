@@ -28,7 +28,7 @@ int MPI_Test(MPI_Request *request, int *flag, MPI_Status *status) __attribute__(
 #undef FUNCNAME
 #define FUNCNAME MPIR_Test_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Test_impl(MPI_Request *request, int *flag, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -57,20 +57,20 @@ int MPIR_Test_impl(MPI_Request *request, int *flag, MPI_Status *status)
         request_ptr->greq_fns->poll_fn != NULL)
     {
         mpi_errno = (request_ptr->greq_fns->poll_fn)(request_ptr->greq_fns->grequest_extra_state, status);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     if (MPID_Request_is_complete(request_ptr)) {
 	mpi_errno = MPIR_Request_complete(request, request_ptr, status,
 					  &active_flag);
 	*flag = TRUE;
-	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	/* Fall through to the exit */
     } else if (unlikely(
                 MPIR_CVAR_ENABLE_FT &&
                 MPID_Request_is_anysource(request_ptr) &&
                 !MPID_Comm_AS_enabled(request_ptr->comm))) {
-        MPIU_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
+        MPIR_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
         if (status != MPI_STATUS_IGNORE) status->MPI_ERROR = mpi_errno;
         goto fn_fail;
     }
@@ -85,7 +85,7 @@ int MPIR_Test_impl(MPI_Request *request, int *flag, MPI_Status *status)
 #undef FUNCNAME
 #define FUNCNAME MPI_Test
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Test  - Tests for the completion of a request
 
@@ -117,7 +117,7 @@ int MPI_Test(MPI_Request *request, int *flag, MPI_Status *status)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_PT2PT_FUNC_ENTER(MPID_STATE_MPI_TEST);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -163,7 +163,7 @@ int MPI_Test(MPI_Request *request, int *flag, MPI_Status *status)
     
   fn_exit:
 	MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_TEST);
-	MPIU_THREAD_CS_EXIT(ALLFUNC,);
+	MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
 	return mpi_errno;
     
   fn_fail:

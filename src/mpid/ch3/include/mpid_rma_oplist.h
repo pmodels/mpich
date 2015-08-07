@@ -112,7 +112,7 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Win_set_active
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_set_active(MPID_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -139,7 +139,7 @@ static inline int MPIDI_CH3I_Win_set_active(MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Win_set_inactive
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_set_inactive(MPID_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -167,7 +167,7 @@ static inline int MPIDI_CH3I_Win_set_inactive(MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Win_op_alloc
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline MPIDI_RMA_Op_t *MPIDI_CH3I_Win_op_alloc(MPID_Win * win_ptr)
 {
     MPIDI_RMA_Op_t *e;
@@ -204,7 +204,7 @@ static inline MPIDI_RMA_Op_t *MPIDI_CH3I_Win_op_alloc(MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Win_op_free
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_op_free(MPID_Win * win_ptr, MPIDI_RMA_Op_t * e)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -231,7 +231,7 @@ static inline int MPIDI_CH3I_Win_op_free(MPID_Win * win_ptr, MPIDI_RMA_Op_t * e)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Win_target_alloc
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline MPIDI_RMA_Target_t *MPIDI_CH3I_Win_target_alloc(MPID_Win * win_ptr)
 {
     MPIDI_RMA_Target_t *e;
@@ -274,7 +274,7 @@ static inline MPIDI_RMA_Target_t *MPIDI_CH3I_Win_target_alloc(MPID_Win * win_ptr
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Win_target_free
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_target_free(MPID_Win * win_ptr, MPIDI_RMA_Target_t * e)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -300,7 +300,7 @@ static inline int MPIDI_CH3I_Win_target_free(MPID_Win * win_ptr, MPIDI_RMA_Targe
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Win_create_target
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_create_target(MPID_Win * win_ptr, int target_rank,
                                                MPIDI_RMA_Target_t ** e)
 {
@@ -313,7 +313,7 @@ static inline int MPIDI_CH3I_Win_create_target(MPID_Win * win_ptr, int target_ra
     if (t == NULL) {
         mpi_errno = MPIDI_CH3I_RMA_Cleanup_target_aggressive(win_ptr, &t);
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
     }
 
     t->target_rank = target_rank;
@@ -336,7 +336,7 @@ static inline int MPIDI_CH3I_Win_create_target(MPID_Win * win_ptr, int target_ra
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Win_find_target
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_find_target(MPID_Win * win_ptr, int target_rank,
                                              MPIDI_RMA_Target_t ** e)
 {
@@ -366,7 +366,7 @@ static inline int MPIDI_CH3I_Win_find_target(MPID_Win * win_ptr, int target_rank
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Win_enqueue_op
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_enqueue_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t * op)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -374,11 +374,11 @@ static inline int MPIDI_CH3I_Win_enqueue_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t *
 
     mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, op->target_rank, &target);
     if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     if (target == NULL) {
         mpi_errno = MPIDI_CH3I_Win_create_target(win_ptr, op->target_rank, &target);
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
 
         if (win_ptr->states.access_state == MPIDI_RMA_PER_TARGET ||
             win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_GRANTED) {
@@ -448,7 +448,7 @@ static inline int MPIDI_CH3I_Win_enqueue_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t *
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Win_target_dequeue_and_free
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_target_dequeue_and_free(MPID_Win * win_ptr, MPIDI_RMA_Target_t * e)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -461,7 +461,7 @@ static inline int MPIDI_CH3I_Win_target_dequeue_and_free(MPID_Win * win_ptr, MPI
 
     mpi_errno = MPIDI_CH3I_Win_target_free(win_ptr, e);
     if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -472,7 +472,7 @@ static inline int MPIDI_CH3I_Win_target_dequeue_and_free(MPID_Win * win_ptr, MPI
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_RMA_Cleanup_targets_win
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_RMA_Cleanup_targets_win(MPID_Win * win_ptr)
 {
     MPIDI_RMA_Target_t *target = NULL, *next_target = NULL;
@@ -483,7 +483,7 @@ static inline int MPIDI_CH3I_RMA_Cleanup_targets_win(MPID_Win * win_ptr)
             next_target = target->next;
             mpi_errno = MPIDI_CH3I_Win_target_dequeue_and_free(win_ptr, target);
             if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
             target = next_target;
         }
     }
@@ -497,7 +497,7 @@ static inline int MPIDI_CH3I_RMA_Cleanup_targets_win(MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Win_get_op
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_get_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t ** e)
 {
     MPIDI_RMA_Op_t *new_ptr = NULL;
@@ -512,7 +512,7 @@ static inline int MPIDI_CH3I_Win_get_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t ** e)
 
         mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_aggressive(win_ptr);
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
     }
 
     (*e) = new_ptr;
@@ -532,7 +532,7 @@ static inline int MPIDI_CH3I_Win_get_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t ** e)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_RMA_Ops_free_elem
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_CH3I_RMA_Ops_free_elem(MPID_Win * win_ptr, MPIDI_RMA_Ops_list_t * list,
                                                 MPIDI_RMA_Op_t * curr_ptr)
 {

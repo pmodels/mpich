@@ -30,7 +30,7 @@ int MPI_T_pvar_handle_free(MPI_T_pvar_session session, MPI_T_pvar_handle *handle
 #undef FUNCNAME
 #define FUNCNAME MPIR_T_pvar_handle_free_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_T_pvar_handle_free_impl(MPI_T_pvar_session session, MPI_T_pvar_handle *handle)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -73,7 +73,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPI_T_pvar_handle_free
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_pvar_handle_free - Free an existing handle for a performance variable
 
@@ -121,7 +121,7 @@ int MPI_T_pvar_handle_free(MPI_T_pvar_session session, MPI_T_pvar_handle *handle
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_T_pvar_handle_free_impl(session, handle);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 

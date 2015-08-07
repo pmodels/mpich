@@ -22,7 +22,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIR_LAND
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_LAND (
     void *invec,
     void *inoutvec,
@@ -86,7 +86,7 @@ void MPIR_LAND (
 #undef FUNCNAME
 #define FUNCNAME MPIR_LAND
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_LAND_check_dtype ( MPI_Datatype type )
 {
     switch (type) {

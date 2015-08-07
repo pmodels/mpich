@@ -31,7 +31,7 @@ int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message *message, MPI_Sta
 #undef FUNCNAME
 #define FUNCNAME MPI_Mprobe
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Mprobe - Blocking matched probe.
 
@@ -57,7 +57,7 @@ int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message *message, MPI_Sta
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_MPROBE);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_MPROBE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -93,7 +93,7 @@ int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message *message, MPI_Sta
 
     *message = MPI_MESSAGE_NULL;
     mpi_errno = MPID_Mprobe(source, tag, comm_ptr, MPID_CONTEXT_INTRA_PT2PT, &msgp, status);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     if (msgp == NULL) {
 	MPIU_Assert(source == MPI_PROC_NULL);
@@ -107,7 +107,7 @@ int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message *message, MPI_Sta
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_MPROBE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
 fn_fail:

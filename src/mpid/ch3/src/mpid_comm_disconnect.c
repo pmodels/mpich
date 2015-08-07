@@ -21,7 +21,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Comm_disconnect
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -31,7 +31,7 @@ int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
 
     /* Check to make sure the communicator hasn't already been revoked */
     if (comm_ptr->revoked) {
-        MPIU_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
+        MPIR_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
     }
 
     /* it's more than a comm_release, but ok for now */
@@ -39,11 +39,11 @@ int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
     /* MPIU_PG_Printall( stdout ); */
     comm_ptr->dev.is_disconnected = 1;
     mpi_errno = MPIR_Comm_release(comm_ptr);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     /* If any of the VCs were released by this Comm_release, wait
      for those close operations to complete */
     mpi_errno = MPIDI_CH3U_VC_WaitForClose();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     /* MPIU_PG_Printall( stdout ); */
 
 

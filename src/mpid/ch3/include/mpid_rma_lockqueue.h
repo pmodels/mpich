@@ -18,7 +18,7 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_winlock_getlocallock);
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Win_target_lock_entry_alloc
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline MPIDI_RMA_Target_lock_entry_t *MPIDI_CH3I_Win_target_lock_entry_alloc(MPID_Win *
                                                                                     win_ptr,
                                                                                     MPIDI_CH3_Pkt_t
@@ -48,7 +48,7 @@ static inline MPIDI_RMA_Target_lock_entry_t *MPIDI_CH3I_Win_target_lock_entry_al
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Win_target_lock_entry_free
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_target_lock_entry_free(MPID_Win * win_ptr,
                                                         MPIDI_RMA_Target_lock_entry_t *
                                                         target_lock_entry)

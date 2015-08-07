@@ -32,7 +32,7 @@ int MPI_Grequest_complete(MPI_Request request) __attribute__((weak,alias("PMPI_G
 #undef FUNCNAME
 #define FUNCNAME MPIR_Grequest_complete
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Grequest_complete_impl(MPID_Request *request_ptr)
 {
     /* Set the request as completed.  This does not change the
@@ -48,7 +48,7 @@ void MPIR_Grequest_complete_impl(MPID_Request *request_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPI_Grequest_complete
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Grequest_complete - Notify MPI that a user-defined request is complete
 
@@ -72,7 +72,7 @@ int MPI_Grequest_complete( MPI_Request request )
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GREQUEST_COMPLETE);
     
     /* Validate handle parameters needing to be converted */
@@ -115,7 +115,7 @@ int MPI_Grequest_complete( MPI_Request request )
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GREQUEST_COMPLETE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
     
     /* --BEGIN ERROR HANDLING-- */

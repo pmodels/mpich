@@ -30,7 +30,7 @@ int MPI_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosit
 #undef FUNCNAME
 #define FUNCNAME MPI_T_pvar_get_info
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_pvar_get_info - Get the inforamtion about a performance variable
 

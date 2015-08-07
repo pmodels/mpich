@@ -40,7 +40,7 @@ int MPI_File_set_info(MPI_File fh, MPI_Info info)
     static char myname[] = "MPI_FILE_SET_INFO";
     ADIO_File adio_fh;
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
 
     adio_fh = MPIO_File_resolve(fh);
 
@@ -58,7 +58,7 @@ fn_exit:
 	error_code = MPIO_Err_return_file(adio_fh, error_code);
     /* --END ERROR HANDLING-- */
 
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
 
     return error_code;
 fn_fail:

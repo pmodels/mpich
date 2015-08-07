@@ -513,11 +513,11 @@ AC_ARG_ENABLE(refcount,
 	AC_HELP_STRING([--enable-refcount=type],
 			[Choose the method for ensuring atomic updates
                          to the reference counts for MPI objects.
-                         Values may be lock, lock-free, none.  The
+                         Values may be lock-free or none.  The
                          default depends on the thread-cs choice; for
                          global it is none (because none is required),
-                         for per-object it is lock, and for lock-free
-                         it is lock-free]),,enable_refcount=default)
+                         for per-object and lock-free, lock-free]),,
+                         enable_refcount=default)
 
 AC_ARG_ENABLE(mutex-timing,
 	AC_HELP_STRING([--enable-mutex-timing], [calculate the time spent waiting on mutexes]),
@@ -1349,6 +1349,10 @@ fi
 export MPICH_THREAD_LEVEL
 AC_DEFINE_UNQUOTED(MPICH_THREAD_LEVEL,$MPICH_THREAD_LEVEL,[Level of thread support selected at compile time])
 
+if test "$MPICH_THREAD_LEVEL" = "MPI_THREAD_MULTIPLE" ; then
+   AC_DEFINE([MPICH_IS_THREADED],[1],[MPICH is configured to require thread safety])
+fi
+
 # If not in MPI_THREAD_SINGLE, we need -D_REENTRANT to get thread-safe "errno".
 # Most POSIX systems provide this by default when using -lpthread, but we only use it in MPI_THREAD_MULTIPLE.
 # Some systems (Solaris) still require an explicit define in any case.
@@ -1357,23 +1361,20 @@ if test "$MPICH_THREAD_LEVEL" != "MPI_THREAD_SINGLE"; then
 fi
 
 # Check for value thread_cs choice; set the refcount default if necessary
-thread_granularity=MPIU_THREAD_GRANULARITY_SINGLE
+thread_granularity=MPIR_THREAD_GRANULARITY_SINGLE
 thread_refcount=MPIU_REFCOUNT_NONE
 if test "$enable_threads" = "multiple" ; then
     case $enable_thread_cs in 
     global)
-    thread_granularity=MPIU_THREAD_GRANULARITY_GLOBAL
+    thread_granularity=MPIR_THREAD_GRANULARITY_GLOBAL
     if test "$enable_refcount" = "default" ; then enable_refcount=none ; fi
     ;;
-    brief-global|brief_global)
-    AC_MSG_ERROR([--enable-thread-cs=brief-global is no longer supported, please select a different granularity])
-    ;;
     per-object|per_object)
-    thread_granularity=MPIU_THREAD_GRANULARITY_PER_OBJECT
-    if test "$enable_refcount" = "default" ; then enable_refcount=lock ; fi
+    thread_granularity=MPIR_THREAD_GRANULARITY_PER_OBJECT
+    if test "$enable_refcount" = "default" ; then enable_refcount=lock-free ; fi
     ;;
     lock-free|lock_free|lockfree)
-    thread_granularity=MPIU_THREAD_GRANULARITY_LOCK_FREE
+    thread_granularity=MPIR_THREAD_GRANULARITY_LOCK_FREE
     if test "$enable_refcount" = "default" ; then enable_refcount=lock-free ; fi
     if test "$enable_predefined_refcount" = "default" ; then enable_predefined_refcount=no ; fi
     AC_MSG_ERROR([--enable-thread-cs=lock-free is not supported yet, please select a different granularity])
@@ -1384,9 +1385,6 @@ if test "$enable_threads" = "multiple" ; then
     esac
 
     case $enable_refcount in
-    lock)
-    thread_refcount=MPIU_REFCOUNT_LOCK
-    ;;
     lock-free|lock_free|lockfree)
     thread_refcount=MPIU_REFCOUNT_LOCKFREE
     ;;
@@ -1398,7 +1396,7 @@ if test "$enable_threads" = "multiple" ; then
     ;;
     esac
 fi
-AC_DEFINE_UNQUOTED([MPIU_THREAD_GRANULARITY],$thread_granularity,[Method used to implement atomic updates and access])
+AC_DEFINE_UNQUOTED([MPICH_THREAD_GRANULARITY],$thread_granularity,[Method used to implement atomic updates and access])
 
 if test "$enable_predefined_refcount" = "no" ; then
     AC_DEFINE([MPIU_THREAD_SUPPRESS_PREDEFINED_REFCOUNTS],[1],[define to disable reference counting predefined objects like MPI_COMM_WORLD])
@@ -1511,9 +1509,6 @@ if test -n "$perform_memtracing" ; then
     if test -n "$perform_memarena" ; then
         AC_DEFINE(MPICH_DEBUG_MEMARENA,1,[Define if each function exit should confirm memory arena correctness])
     fi
-fi
-if test -n "$perform_mutexnesting" ; then 
-    AC_DEFINE(MPICH_DEBUG_MUTEXNESTING,1,[Define to check nesting in mutexes])
 fi
 USE_DBG_LOGGING=0
 if test -n "$perform_dbglog" ; then
@@ -2355,6 +2350,18 @@ if test "X$modincdir" = "X" ; then
 fi
 export modincdir
 AC_SUBST(modincdir)
+
+AC_LANG_PUSH([C])
+AC_MSG_CHECKING([whether TRUE has been defined])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM(,[return TRUE;])],
+                  [has_true_upper_case=yes],
+	          [has_true_upper_case=no])
+AC_MSG_RESULT($has_true_upper_case)
+if test "$has_true_upper_case" = "no" ; then
+   AC_DEFINE(TRUE,1,[Define TRUE])
+   AC_DEFINE(FALSE,0,[Define FALSE])
+fi
+AC_LANG_POP([C])
 
 # ----------------------------------------------------------------------------
 # We previously allowed "default" as a valid value for $enable_cxx.  Now we
@@ -4699,7 +4706,7 @@ fi
 # Support for timers.  The following code processes the 
 #  --enable-timer-type=name argument and selects the timer based on 
 # both that field and what configure is able to determine is available.
-# The file src/include/mpichtimer.h is also created.
+# The file src/include/mpiu_timer.h is also created.
 # Note that at least the handling of the "device" option must come *after* 
 # the setup_device script is loaded so that the device can set the appropriate
 # fields.  For now, we've split this so that there is an update to the timer
@@ -4708,8 +4715,8 @@ fi
 # FIXME DJG setup_device has been eliminated in favor of subconfigure.m4 files
 # ----------------------------------------------------------------------------
 # Default type for timer stamp.
-MPID_TIMER_TYPE=long
-AC_SUBST(MPID_TIMER_TYPE)
+MPICH_TIMER_TYPE=long
+AC_SUBST(MPICH_TIMER_TYPE)
 
 # If the device specified a timer type, use that by default.  Else,
 # try to detect a type that works on this system.
@@ -4796,7 +4803,7 @@ fi
 case "$timer_type" in
 
     gethrtime)
-    MPID_TIMER_TYPE=hrtime_t
+    MPICH_TIMER_TYPE=hrtime_t
     AC_CHECK_FUNC(gethrtime,,[
          AC_MSG_ERROR([Requested timer gethrtime is not available])
 ])
@@ -4806,7 +4813,7 @@ case "$timer_type" in
     missing_function=no
     AC_SEARCH_LIBS([clock_gettime],[rt],,AC_MSG_ERROR([clock_gettime is not available]))
     AC_SEARCH_LIBS([clock_getres],[rt],,AC_MSG_ERROR([clock_getres is not available]))
-    MPID_TIMER_TYPE="struct timespec"
+    MPICH_TIMER_TYPE="struct timespec"
     # AIX does not always define struct timespec (!)
     # Make sure that we can use struct timespec
     AC_CACHE_CHECK([whether struct timespec is defined in time.h],
@@ -4862,7 +4869,7 @@ pac_cv_posix_clock_realtime=no)
     ;;
 
     gettimeofday)
-    MPID_TIMER_TYPE="struct timeval"
+    MPICH_TIMER_TYPE="struct timeval"
     # We may have already tested for gettimeofday.  If we got a "yes",
     # we're good to go
     if test "$ac_cv_func_gettimeofday" != "yes" ; then
@@ -4966,7 +4973,7 @@ dnl platform.
     if test "$cpu_gcc_x86_cycle" = "no" ; then
         AC_MSG_ERROR([Linux86 cycle counter is not available on this system and or with the $CC compiler])
     fi
-    MPID_TIMER_TYPE="long long"
+    MPICH_TIMER_TYPE="long long"
     ;;
 
     gcc_ia64_cycle)
@@ -4984,7 +4991,7 @@ pac_cv_ia64_cycle,[
     if test "$pac_cv_gcc_ia64_cycle" != "yes" ; then
         AC_MSG_ERROR([IPF cycle counter is not available on this system and or with the $CC compiler])
      fi
-     MPID_TIMER_TYPE="long"
+     MPICH_TIMER_TYPE="long"
      ;;
 
     linuxalpha_cycle)
@@ -4994,14 +5001,14 @@ pac_cv_ia64_cycle,[
     mach_absolute_time)
     AC_CHECK_FUNC(mach_absolute_time,,[AC_MSG_ERROR([mach_absolute_time is not available])])
     AC_CHECK_FUNC(mach_timebase_info,,[AC_MSG_ERROR([mach_timebase_info is not available])])
-    MPID_TIMER_TYPE="uint64_t"
+    MPICH_TIMER_TYPE="uint64_t"
     ;;
 
     device)
     # The device selected should export the datatype for the timer
     # in MPID_DEVICE_TIMER_TYPE if something other than long is needed
     if test -n "$MPID_DEVICE_TIMER_TYPE" ; then
-       MPID_TIMER_TYPE=$MPID_DEVICE_TIMER_TYPE
+       MPICH_TIMER_TYPE=$MPID_DEVICE_TIMER_TYPE
     fi
     ;;
 
@@ -5202,7 +5209,7 @@ if test "$timer_type" = "DEVICE" ; then
     # The device selected should export the datatype for the timer
     # in MPID_DEVICE_TIMER_TYPE if something other than long is needed
     if test -n "$MPID_DEVICE_TIMER_TYPE" ; then 
-       MPID_TIMER_TYPE=$MPID_DEVICE_TIMER_TYPE
+       MPICH_TIMER_TYPE=$MPID_DEVICE_TIMER_TYPE
     fi
 fi
 
@@ -6198,7 +6205,6 @@ AC_OUTPUT(Makefile \
           src/include/mpichinfo.h \
 	  mpich-doxygen \
           src/include/glue_romio.h \
-          src/include/mpichtimer.h \
           src/binding/cxx/mpicxx.h \
 	  src/binding/fortran/mpif_h/mpif.h \
 	  src/binding/fortran/mpif_h/setbotf.f \
@@ -6221,6 +6227,7 @@ AC_OUTPUT(Makefile \
 	  src/env/mpifort.bash \
           src/env/parkill \
 	  src/util/dbg/getfuncstack \
+	  src/util/timers/mpiu_timer.h \
           src/include/mpi.h \
           doc/design/Makefile \
           doc/installguide/Makefile \

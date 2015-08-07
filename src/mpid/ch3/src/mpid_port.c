@@ -40,7 +40,7 @@ static MPIDI_PortFns portFns = { 0, 0, 0, 0 };
 #undef FUNCNAME
 #define FUNCNAME MPID_Open_port
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Open_port(MPID_Info *info_ptr, char *port_name)
 {
     int mpi_errno=MPI_SUCCESS;
@@ -63,11 +63,11 @@ int MPID_Open_port(MPID_Info *info_ptr, char *port_name)
     if (portFns.OpenPort) {
 	mpi_errno = portFns.OpenPort( info_ptr, port_name );
 	if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_POP(mpi_errno);
+	    MPIR_ERR_POP(mpi_errno);
 	}
     }
     else {
-	MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**notimpl" );
+	MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**notimpl" );
     }
 
  fn_fail:
@@ -91,7 +91,7 @@ Input Parameters:
 #undef FUNCNAME
 #define FUNCNAME MPID_Close_port
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Close_port(const char *port_name)
 {
     int mpi_errno=MPI_SUCCESS;
@@ -112,11 +112,11 @@ int MPID_Close_port(const char *port_name)
     if (portFns.ClosePort) {
 	mpi_errno = portFns.ClosePort( port_name );
 	if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_POP(mpi_errno);
+	    MPIR_ERR_POP(mpi_errno);
 	}
     }
     else {
-	MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**notimpl" );
+	MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**notimpl" );
     }
 
  fn_fail:	
@@ -127,7 +127,7 @@ int MPID_Close_port(const char *port_name)
 #undef FUNCNAME
 #define FUNCNAME MPID_Comm_accept
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_accept(const char * port_name, MPID_Info * info, int root,
 		     MPID_Comm * comm, MPID_Comm ** newcomm_ptr)
 {
@@ -150,11 +150,11 @@ int MPID_Comm_accept(const char * port_name, MPID_Info * info, int root,
 	mpi_errno = portFns.CommAccept( port_name, info, root, comm, 
 					newcomm_ptr );
 	if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_POP(mpi_errno);
+	    MPIR_ERR_POP(mpi_errno);
 	}
     }
     else {
-	MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**notimpl" );
+	MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**notimpl" );
     }
 
  fn_fail:
@@ -165,7 +165,7 @@ int MPID_Comm_accept(const char * port_name, MPID_Info * info, int root,
 #undef FUNCNAME
 #define FUNCNAME MPID_Comm_connect
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_connect(const char * port_name, MPID_Info * info, int root, 
 		      MPID_Comm * comm, MPID_Comm ** newcomm_ptr)
 {
@@ -188,11 +188,11 @@ int MPID_Comm_connect(const char * port_name, MPID_Info * info, int root,
 	mpi_errno = portFns.CommConnect( port_name, info, root, comm, 
 					 newcomm_ptr );
 	if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_POP(mpi_errno);
+	    MPIR_ERR_POP(mpi_errno);
 	}
     }
     else {
-	MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**notimpl" );
+	MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**notimpl" );
     }
 
  fn_fail:
@@ -280,7 +280,7 @@ static void free_port_name_tag(int tag)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Open_port
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_Open_port(MPID_Info *info_ptr, char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -294,12 +294,12 @@ static int MPIDI_Open_port(MPID_Info *info_ptr, char *port_name)
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_OPEN_PORT);
 
     mpi_errno = get_port_name_tag(&port_name_tag);
-    MPIU_ERR_CHKANDJUMP(mpi_errno,mpi_errno,MPI_ERR_OTHER,"**argstr_port_name_tag");
+    MPIR_ERR_CHKANDJUMP(mpi_errno,mpi_errno,MPI_ERR_OTHER,"**argstr_port_name_tag");
 
     len = MPI_MAX_PORT_NAME;
     str_errno = MPIU_Str_add_int_arg(&port_name, &len,
                                      MPIDI_CH3I_PORT_NAME_TAG_KEY, port_name_tag);
-    MPIU_ERR_CHKANDJUMP(str_errno, mpi_errno, MPI_ERR_OTHER, "**argstr_port_name_tag");
+    MPIR_ERR_CHKANDJUMP(str_errno, mpi_errno, MPI_ERR_OTHER, "**argstr_port_name_tag");
 
     /* This works because Get_business_card uses the same MPIU_Str_xxx 
        functions as above to add the business card to the input string */
@@ -325,7 +325,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Close_port
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_Close_port(const char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -335,7 +335,7 @@ static int MPIDI_Close_port(const char *port_name)
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CLOSE_PORT);
 
     mpi_errno = MPIDI_GetTagFromPort(port_name, &port_name_tag);
-    MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,"**argstr_port_name_tag");
+    MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,"**argstr_port_name_tag");
 
     free_port_name_tag(port_name_tag);
 
@@ -357,7 +357,7 @@ int MPIDI_GetTagFromPort( const char *port_name, int *port_name_tag )
 
     str_errno = MPIU_Str_get_int_arg(port_name, MPIDI_CH3I_PORT_NAME_TAG_KEY,
                                      port_name_tag);
-    MPIU_ERR_CHKANDJUMP(str_errno, mpi_errno, MPI_ERR_OTHER, "**argstr_no_port_name_tag");
+    MPIR_ERR_CHKANDJUMP(str_errno, mpi_errno, MPI_ERR_OTHER, "**argstr_no_port_name_tag");
 
  fn_exit:
     return mpi_errno;

@@ -28,7 +28,7 @@ int MPI_T_category_get_index(const char *name, int *cat_index) __attribute__((we
 #undef FUNCNAME
 #define FUNCNAME MPI_T_category_get_index
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_category_get_index - Get the index of a category
 

@@ -9,7 +9,7 @@
 #undef FUNCNAME
 #define FUNCNAME handle_probe
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int handle_probe(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -31,7 +31,7 @@ static int handle_probe(const ptl_event_t *e)
  finish_probe:
     mpi_errno = MPID_Request_complete(req);
     if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     }
 
  fn_exit:
@@ -84,7 +84,7 @@ static int handle_mprobe(const ptl_event_t *e)
   finish_mprobe:
     mpi_errno = MPID_Request_complete(req);
     if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     }
 
   fn_exit:
@@ -100,7 +100,7 @@ static int handle_mprobe(const ptl_event_t *e)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ptl_probe
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_probe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, int context_offset, MPI_Status *status)
 {
     MPIU_Assertp(0 && "This function shouldn't be called.");
@@ -110,7 +110,7 @@ int MPID_nem_ptl_probe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, int
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ptl_iprobe
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, int context_offset, int *flag, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -128,7 +128,7 @@ int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, in
     
     /* create a request */
     req = MPID_Request_create();
-    MPIU_ERR_CHKANDJUMP1(!req, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Request_create");
+    MPIR_ERR_CHKANDJUMP1(!req, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Request_create");
     MPIU_Object_set_ref(req, 2); /* 1 ref for progress engine and 1 ref for us */
     REQ_PTL(req)->event_handler = handle_probe;
 
@@ -146,7 +146,7 @@ int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, in
     else {
         if (!vc_ptl->id_initialized) {
             mpi_errno = MPID_nem_ptl_init_id(vc);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
         me.match_id = vc_ptl->id;
     }
@@ -158,13 +158,13 @@ int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, in
 
     /* submit a search request */
     ret = PtlMESearch(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt, &me, PTL_SEARCH_ONLY, req);
-    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmesearch", "**ptlmesearch %s", MPID_nem_ptl_strerror(ret));
+    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmesearch", "**ptlmesearch %s", MPID_nem_ptl_strerror(ret));
     DBG_MSG_MESearch("REG", vc ? vc->pg_rank : MPI_ANY_SOURCE, me, req);
 
     /* wait for search request to complete */
     do {
         mpi_errno = MPID_nem_ptl_poll(FALSE);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     } while (!MPID_Request_is_complete(req));
 
     *flag = REQ_PTL(req)->found;
@@ -183,7 +183,7 @@ int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, in
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ptl_improbe
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_improbe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, int context_offset, int *flag,
                          MPID_Request **message, MPI_Status *status)
 {
@@ -204,7 +204,7 @@ int MPID_nem_ptl_improbe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, i
     /* create a request */
     req = MPID_Request_create();
     MPID_nem_ptl_init_req(req);
-    MPIU_ERR_CHKANDJUMP1(!req, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Request_create");
+    MPIR_ERR_CHKANDJUMP1(!req, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Request_create");
     MPIU_Object_set_ref(req, 2); /* 1 ref for progress engine and 1 ref for us */
     REQ_PTL(req)->event_handler = handle_mprobe;
     req->kind = MPID_REQUEST_MPROBE;
@@ -223,7 +223,7 @@ int MPID_nem_ptl_improbe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, i
     else {
         if (!vc_ptl->id_initialized) {
             mpi_errno = MPID_nem_ptl_init_id(vc);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
         me.match_id = vc_ptl->id;
     }
@@ -234,13 +234,13 @@ int MPID_nem_ptl_improbe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, i
         me.ignore_bits = NPTL_MATCH_IGNORE;
     /* submit a search request */
     ret = PtlMESearch(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt, &me, PTL_SEARCH_DELETE, req);
-    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmesearch", "**ptlmesearch %s", MPID_nem_ptl_strerror(ret));
+    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmesearch", "**ptlmesearch %s", MPID_nem_ptl_strerror(ret));
     DBG_MSG_MESearch("REG", vc ? vc->pg_rank : 0, me, req);
 
     /* wait for search request to complete */
     do {
         mpi_errno = MPID_nem_ptl_poll(FALSE);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     } while (!MPID_Request_is_complete(req));
 
     *flag = REQ_PTL(req)->found;
@@ -264,7 +264,7 @@ int MPID_nem_ptl_improbe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, i
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ptl_anysource_iprobe
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_anysource_iprobe(int tag, MPID_Comm * comm, int context_offset, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -284,7 +284,7 @@ int MPID_nem_ptl_anysource_iprobe(int tag, MPID_Comm * comm, int context_offset,
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ptl_anysource_improbe
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_anysource_improbe(int tag, MPID_Comm * comm, int context_offset, int *flag, MPID_Request **message,
                                    MPI_Status * status)
 {
@@ -305,7 +305,7 @@ int MPID_nem_ptl_anysource_improbe(int tag, MPID_Comm * comm, int context_offset
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ptl_pkt_cancel_send_req_handler
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_pkt_cancel_send_req_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
                                                     MPIDI_msg_sz_t *buflen, MPID_Request **rreqp)
 {
@@ -325,7 +325,7 @@ int MPID_nem_ptl_pkt_cancel_send_req_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pk
     /* create a request */
     search_req = MPID_Request_create();
     MPID_nem_ptl_init_req(search_req);
-    MPIU_ERR_CHKANDJUMP1(!search_req, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Request_create");
+    MPIR_ERR_CHKANDJUMP1(!search_req, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Request_create");
     MPIU_Object_set_ref(search_req, 2); /* 1 ref for progress engine and 1 ref for us */
     search_req->kind = MPID_REQUEST_MPROBE;
 
@@ -346,13 +346,13 @@ int MPID_nem_ptl_pkt_cancel_send_req_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pk
 
     /* submit a search request */
     ret = PtlMESearch(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt, &me, PTL_SEARCH_DELETE, search_req);
-    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmesearch", "**ptlmesearch %s", MPID_nem_ptl_strerror(ret));
+    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmesearch", "**ptlmesearch %s", MPID_nem_ptl_strerror(ret));
     DBG_MSG_MESearch("REG", vc ? vc->pg_rank : 0, me, search_req);
 
     /* wait for search request to complete */
     do {
         mpi_errno = MPID_nem_ptl_poll(FALSE);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     } while (!MPID_Request_is_complete(search_req));
 
     /* send response */
@@ -381,7 +381,7 @@ int MPID_nem_ptl_pkt_cancel_send_req_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pk
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ptl_pkt_cancel_send_resp_handler
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_pkt_cancel_send_resp_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
                                               MPIDI_msg_sz_t *buflen, MPID_Request **rreqp)
 {
@@ -398,10 +398,10 @@ int MPID_nem_ptl_pkt_cancel_send_resp_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *p
         /* remove/free any remaining get MEs and handles */
         for (i = 0; i < REQ_PTL(sreq)->num_gets; i++) {
             ret = PtlMEUnlink(REQ_PTL(sreq)->get_me_p[i]);
-            MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeunlink", "**ptlmeunlink %s", MPID_nem_ptl_strerror(ret));
+            MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeunlink", "**ptlmeunlink %s", MPID_nem_ptl_strerror(ret));
             mpi_errno = MPID_Request_complete(sreq);
             if (mpi_errno != MPI_SUCCESS) {
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
             }
         }
         if (REQ_PTL(sreq)->get_me_p)
@@ -415,7 +415,7 @@ int MPID_nem_ptl_pkt_cancel_send_resp_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *p
 
     mpi_errno = MPID_Request_complete(sreq);
     if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     }
 
      *rreqp = NULL;

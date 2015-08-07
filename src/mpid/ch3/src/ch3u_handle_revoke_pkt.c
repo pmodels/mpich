@@ -9,7 +9,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_PktHandler_Revoke
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_Revoke(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
                                 MPIDI_msg_sz_t *buflen, MPID_Request **rreqp)
 {
@@ -22,12 +22,12 @@ int MPIDI_CH3_PktHandler_Revoke(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     /* Search through all of the communicators to find the right context_id */
     MPIDI_CH3I_Comm_find(revoke_pkt->revoked_comm, &comm_ptr);
     if (comm_ptr == NULL)
-        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
                 "**ch3|postrecv %s", "MPIDI_CH3_PKT_REVOKE");
 
     mpi_errno = MPID_Comm_revoke(comm_ptr, 1);
     if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
                 "**ch3|postrecv %s", "MPIDI_CH3_PKT_REVOKE");
 
     /* There is no request associated with a revoke packet */

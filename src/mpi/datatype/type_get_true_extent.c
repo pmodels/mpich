@@ -28,7 +28,7 @@ int MPI_Type_get_true_extent(MPI_Datatype datatype, MPI_Aint *true_lb, MPI_Aint 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Type_get_true_extent_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, MPI_Aint *true_lb, MPI_Aint *true_extent)
 {
     MPI_Count true_lb_x, true_extent_x;
@@ -43,7 +43,7 @@ void MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, MPI_Aint *true_lb, MP
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_get_true_extent
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_get_true_extent - Get the true lower bound and extent for a
      datatype

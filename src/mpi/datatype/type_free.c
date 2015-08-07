@@ -28,7 +28,7 @@ int MPI_Type_free(MPI_Datatype *datatype) __attribute__((weak,alias("PMPI_Type_f
 #undef FUNCNAME
 #define FUNCNAME MPIR_Type_free_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Type_free_impl(MPI_Datatype *datatype)
 {
     MPID_Datatype *datatype_ptr = NULL;
@@ -43,7 +43,7 @@ void MPIR_Type_free_impl(MPI_Datatype *datatype)
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_free
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_free - Frees the datatype
 
@@ -77,7 +77,7 @@ int MPI_Type_free(MPI_Datatype *datatype)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_FREE);
     
     /* Validate parameters, especially handles needing to be converted */
@@ -146,7 +146,7 @@ int MPI_Type_free(MPI_Datatype *datatype)
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_FREE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

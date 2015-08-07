@@ -48,7 +48,6 @@ dist_noinst_DATA +=                        \
     maint/mpi1.lst                         \
     maint/setup.jpg                        \
     maint/structalign.c                    \
-    maint/template.c                       \
     maint/version.m4
 
 ### TODO FIXME what do we do about these?

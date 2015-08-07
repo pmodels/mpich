@@ -29,7 +29,7 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_split_type_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_impl(MPID_Comm * comm_ptr, int split_type, int key,
                               MPID_Info * info_ptr, MPID_Comm ** newcomm_ptr)
 {
@@ -51,7 +51,7 @@ int MPIR_Comm_split_type_impl(MPID_Comm * comm_ptr, int split_type, int key,
             MPID_Comm_fns->split_type(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
     }
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -64,7 +64,7 @@ int MPIR_Comm_split_type_impl(MPID_Comm * comm_ptr, int split_type, int key,
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_split_type
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Comm_split_type - Creates new communicators based on split types and keys
@@ -102,7 +102,7 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_SPLIT_TYPE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -140,7 +140,7 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
 
     mpi_errno = MPIR_Comm_split_type_impl(comm_ptr, split_type, key, info_ptr, &newcomm_ptr);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     if (newcomm_ptr)
         MPIU_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
     else
@@ -150,7 +150,7 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_SPLIT_TYPE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

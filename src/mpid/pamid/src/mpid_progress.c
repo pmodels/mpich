@@ -166,7 +166,7 @@ MPIDI_Progress_init()
   pamix_progress_function progress_fn = MPIDI_Progress_async_poll;
   uintptr_t i;
 
-#if (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT)
+#if (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT)
   /* In the "per object" mpich lock mode the only possible progress functions
    * are the "context lock" trigger progress function and the 'NULL' progress
    * function.
@@ -234,7 +234,7 @@ MPIDI_Progress_async_start(pami_context_t context, void *cookie)
    */
   MPIU_THREAD_CS_ENTER(ASYNC,);
 
-#if (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT)
+#if (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT)
   if (MPIDI_Process.async_progress.active == 0)
     {
       /* Asynchronous progress was completely disabled and now async progress
@@ -267,7 +267,7 @@ MPIDI_Progress_async_end  (pami_context_t context, void *cookie)
 
   MPIDI_Process.async_progress.active -= 1;
 
-#if (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT)
+#if (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT)
   if (MPIDI_Process.async_progress.active == 0)
     {
       /* Asynchronous progress is now completely disabled on all contexts. */

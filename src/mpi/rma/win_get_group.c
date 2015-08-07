@@ -66,7 +66,7 @@ int MPI_Win_get_group(MPI_Win win, MPI_Group *group)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_WIN_GET_GROUP);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -110,7 +110,7 @@ int MPI_Win_get_group(MPI_Win win, MPI_Group *group)
 
   fn_exit:
     MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_WIN_GET_GROUP);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

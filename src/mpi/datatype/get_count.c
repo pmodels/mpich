@@ -27,7 +27,7 @@ int MPI_Get_count(const MPI_Status *status, MPI_Datatype datatype, int *count) _
 #undef FUNCNAME
 #define FUNCNAME MPIR_Get_count_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Get_count_impl(const MPI_Status *status, MPI_Datatype datatype, int *count)
 {
     MPI_Count size;
@@ -66,7 +66,7 @@ void MPIR_Get_count_impl(const MPI_Status *status, MPI_Datatype datatype, int *c
 #undef FUNCNAME
 #define FUNCNAME MPI_Get_count
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Get_count - Gets the number of "top level" elements
 

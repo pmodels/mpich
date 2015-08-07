@@ -36,7 +36,7 @@ MPID_nem_net_module_vc_dbg_print_sendq_t  MPID_nem_net_module_vc_dbg_print_sendq
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_choose_netmod
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_choose_netmod(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -70,7 +70,7 @@ int MPID_nem_choose_netmod(void)
         }
     }
 
-    MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**invalid_netmod", "**invalid_netmod %s", MPIR_CVAR_NEMESIS_NETMOD);
+    MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**invalid_netmod", "**invalid_netmod %s", MPIR_CVAR_NEMESIS_NETMOD);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_CHOOSE_NETMOD);

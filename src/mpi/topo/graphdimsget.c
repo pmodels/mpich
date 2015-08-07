@@ -99,7 +99,7 @@ int MPI_Graphdims_get(MPI_Comm comm, int *nnodes, int *nedges)
     
     topo_ptr = MPIR_Topology_get( comm_ptr );
 
-    MPIU_ERR_CHKANDJUMP((!topo_ptr || topo_ptr->kind != MPI_GRAPH), mpi_errno, MPI_ERR_TOPOLOGY, "**notgraphtopo");
+    MPIR_ERR_CHKANDJUMP((!topo_ptr || topo_ptr->kind != MPI_GRAPH), mpi_errno, MPI_ERR_TOPOLOGY, "**notgraphtopo");
 
     /* Set nnodes */
     *nnodes = topo_ptr->topo.graph.nnodes;

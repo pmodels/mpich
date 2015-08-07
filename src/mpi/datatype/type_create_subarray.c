@@ -88,7 +88,7 @@ int MPI_Type_create_subarray(int ndims,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_CREATE_SUBARRAY);
 
 #   ifdef HAVE_ERROR_CHECKING
@@ -199,7 +199,7 @@ int MPI_Type_create_subarray(int ndims,
 					 0, /* stride in types */
 					 oldtype,
 					 &tmp1);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 	    size = ((MPI_Aint)(array_of_sizes[0])) * extent;
 	    for (i=2; i<ndims; i++) {
@@ -210,12 +210,12 @@ int MPI_Type_create_subarray(int ndims,
 					     1, /* stride in bytes */
 					     tmp1,
 					     &tmp2);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 		MPIR_Type_free_impl(&tmp1);
 		tmp1 = tmp2;
 	    }
 	}
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	
 	/* add displacement and UB */
 	
@@ -233,7 +233,7 @@ int MPI_Type_create_subarray(int ndims,
 	    mpi_errno = MPID_Type_contiguous(array_of_subsizes[0],
 					     oldtype,
 					     &tmp1);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 	}
 	else {
@@ -243,7 +243,7 @@ int MPI_Type_create_subarray(int ndims,
 					 0, /* stride in types */
 					 oldtype,
 					 &tmp1);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 	    size = (MPI_Aint)(array_of_sizes[ndims-1]) * extent;
 	    for (i=ndims-3; i>=0; i--) {
@@ -254,7 +254,7 @@ int MPI_Type_create_subarray(int ndims,
 					     1,    /* stride in bytes */
 					     tmp1, /* old type */
 					     &tmp2);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 		MPIR_Type_free_impl(&tmp1);
 		tmp1 = tmp2;
@@ -287,10 +287,10 @@ int MPI_Type_create_subarray(int ndims,
     mpi_errno = MPID_Type_blockindexed(1, 1, &disps[1],
                                        1, /* 1 means disp is in bytes */
                                        tmp1, &tmp2);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPID_Type_create_resized(tmp2, 0, disps[2], &new_handle);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     MPIR_Type_free_impl(&tmp1);
     MPIR_Type_free_impl(&tmp2);
@@ -324,7 +324,7 @@ int MPI_Type_create_subarray(int ndims,
 					   ints,
 					   NULL,
 					   &oldtype);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 
     MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
@@ -333,7 +333,7 @@ int MPI_Type_create_subarray(int ndims,
   fn_exit:
     MPIU_CHKLMEM_FREEALL();
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_CREATE_SUBARRAY);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

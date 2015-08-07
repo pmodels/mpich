@@ -65,7 +65,7 @@ int MPI_Type_create_resized(MPI_Datatype oldtype,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_CREATE_RESIZED);
 
     /* Get handles to MPI objects. */
@@ -115,7 +115,7 @@ int MPI_Type_create_resized(MPI_Datatype oldtype,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_CREATE_RESIZED);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

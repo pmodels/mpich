@@ -31,7 +31,7 @@ int MPIX_Comm_failure_get_acked( MPI_Comm comm, MPI_Group *failedgrp ) __attribu
 #undef FUNCNAME
 #define FUNCNAME MPIX_Comm_failure_get_acked
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPIX_Comm_failure_get_acked - Get the group of acknowledged failures.
@@ -62,7 +62,7 @@ int MPIX_Comm_failure_get_acked( MPI_Comm comm, MPI_Group *failedgrp )
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_COMM_FAILURE_GET_ACKED);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -102,7 +102,7 @@ int MPIX_Comm_failure_get_acked( MPI_Comm comm, MPI_Group *failedgrp )
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_COMM_FAILURE_GET_ACKED);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
 fn_fail:

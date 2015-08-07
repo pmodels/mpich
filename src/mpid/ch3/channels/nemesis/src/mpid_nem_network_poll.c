@@ -10,7 +10,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_network_poll
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_network_poll(int in_blocking_progress)
 {
     return MPID_nem_netmod_func->poll(in_blocking_progress);

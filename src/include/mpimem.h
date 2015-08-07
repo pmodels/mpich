@@ -88,11 +88,6 @@ char *MPIU_Strdup( const char * );
 #define MPIU_STR_FAIL      -1
 #define MPIU_STR_NOMEM      1
 
-/* FIXME: TRUE/FALSE definitions should either not be used or be
-   used consistently.  These also do not belong in the mpimem header file. */
-#define MPIU_TRUE  1
-#define MPIU_FALSE 0
-
 /* FIXME: Global types like this need to be discussed and agreed to */
 typedef int MPIU_BOOL;
 
@@ -420,7 +415,7 @@ if (pointer_) { \
     void *realloc_tmp_ = MPIU_Realloc((ptr_), (size_)); \
     if ((size_) && !realloc_tmp_) { \
         MPIU_Free(ptr_); \
-        MPIU_ERR_SETANDJUMP2(rc_,MPI_ERR_OTHER,"**nomem2","**nomem2 %d %s",(size_),MPIU_QUOTE(ptr_)); \
+        MPIR_ERR_SETANDJUMP2(rc_,MPI_ERR_OTHER,"**nomem2","**nomem2 %d %s",(size_),MPL_QUOTE(ptr_)); \
     } \
     (ptr_) = realloc_tmp_; \
 } while (0)
@@ -428,7 +423,7 @@ if (pointer_) { \
 #define MPIU_REALLOC_ORJUMP(ptr_,size_,rc_) do { \
     void *realloc_tmp_ = MPIU_Realloc((ptr_), (size_)); \
     if (size_) \
-        MPIU_ERR_CHKANDJUMP2(!realloc_tmp_,rc_,MPI_ERR_OTHER,"**nomem2","**nomem2 %d %s",(size_),MPIU_QUOTE(ptr_)); \
+        MPIR_ERR_CHKANDJUMP2(!realloc_tmp_,rc_,MPI_ERR_OTHER,"**nomem2","**nomem2 %d %s",(size_),MPL_QUOTE(ptr_)); \
     (ptr_) = realloc_tmp_; \
 } while (0)
 
@@ -454,13 +449,6 @@ void MPIU_Basename(char *path, char **basename);
     ( ((char *)(a_) >= (char *)(b_) && ((char *)(a_) < ((char *)(b_) + (b_len_)))) ||  \
       ((char *)(b_) >= (char *)(a_) && ((char *)(b_) < ((char *)(a_) + (a_len_)))) )
 #if (!defined(NDEBUG) && defined(HAVE_ERROR_CHECKING))
-
-#ifndef TRUE
-#define TRUE 1
-#endif
-#ifndef FALSE
-#define FALSE 0
-#endif
 
 /* May be used to perform sanity and range checking on memcpy and mempcy-like
    function calls.  This macro will bail out much like an MPIU_Assert if any of

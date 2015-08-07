@@ -236,7 +236,7 @@ static inline int shm_copy(const void *src, int scount, MPI_Datatype stype,
 
     mpi_errno = MPIR_Localcopy(src, scount, stype, dest, dcount, dtype);
     if (mpi_errno) {
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     }
 
   fn_exit:
@@ -250,7 +250,7 @@ static inline int shm_copy(const void *src, int scount, MPI_Datatype stype,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Shm_put_op
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Shm_put_op(const void *origin_addr, int origin_count, MPI_Datatype
                                         origin_datatype, int target_rank, MPI_Aint target_disp,
                                         int target_count, MPI_Datatype target_datatype,
@@ -277,7 +277,7 @@ static inline int MPIDI_CH3I_Shm_put_op(const void *origin_addr, int origin_coun
     mpi_errno = shm_copy(origin_addr, origin_count, origin_datatype,
                          (char *) base + disp_unit * target_disp, target_count, target_datatype);
     if (mpi_errno) {
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     }
 
   fn_exit:
@@ -293,7 +293,7 @@ static inline int MPIDI_CH3I_Shm_put_op(const void *origin_addr, int origin_coun
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Shm_acc_op
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_count, MPI_Datatype
                                         origin_datatype, int target_rank, MPI_Aint target_disp,
                                         int target_count, MPI_Datatype target_datatype, MPI_Op op,
@@ -337,7 +337,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
         }
 
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
 
         goto fn_exit;
     }
@@ -377,7 +377,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
         packed_buf = MPIU_Malloc(stream_size);
 
         seg = MPID_Segment_alloc();
-        MPIU_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
+        MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                              "MPID_Segment");
         MPID_Segment_init(origin_addr, origin_count, origin_datatype, seg, 0);
         MPID_Segment_pack(seg, first, &last, packed_buf);
@@ -390,7 +390,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
             mpi_errno = MPIR_Localcopy(tmpbuf, stream_count, basic_type,
                                        packed_buf, stream_size, MPI_BYTE);
             if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
             MPIU_Free(packed_buf);
             packed_buf = tmpbuf;
         }
@@ -409,7 +409,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
         }
 
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
 
         MPIU_Free(packed_buf);
     }
@@ -427,7 +427,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Shm_get_acc_op
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_count, MPI_Datatype
                                             origin_datatype, void *result_addr, int result_count,
                                             MPI_Datatype result_datatype, int target_rank, MPI_Aint
@@ -471,7 +471,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
     mpi_errno = shm_copy((char *) base + disp_unit * target_disp, target_count, target_datatype,
                          result_addr, result_count, result_datatype);
     if (mpi_errno) {
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     }
 
     if (is_empty_origin == TRUE || MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
@@ -484,7 +484,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
         }
 
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
 
         goto fn_exit;
     }
@@ -524,7 +524,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
         packed_buf = MPIU_Malloc(stream_size);
 
         seg = MPID_Segment_alloc();
-        MPIU_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
+        MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                              "MPID_Segment");
         MPID_Segment_init(origin_addr, origin_count, origin_datatype, seg, 0);
         MPID_Segment_pack(seg, first, &last, packed_buf);
@@ -537,7 +537,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
             mpi_errno = MPIR_Localcopy(tmpbuf, stream_count, basic_type,
                                        packed_buf, stream_size, MPI_BYTE);
             if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
             MPIU_Free(packed_buf);
             packed_buf = tmpbuf;
         }
@@ -548,7 +548,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
                                      target_count, target_datatype, stream_offset, op);
 
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
 
         MPIU_Free(packed_buf);
     }
@@ -574,7 +574,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Shm_get_op
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Shm_get_op(void *origin_addr, int origin_count,
                                         MPI_Datatype origin_datatype, int target_rank,
                                         MPI_Aint target_disp, int target_count,
@@ -601,7 +601,7 @@ static inline int MPIDI_CH3I_Shm_get_op(void *origin_addr, int origin_count,
     mpi_errno = shm_copy((char *) base + disp_unit * target_disp, target_count, target_datatype,
                          origin_addr, origin_count, origin_datatype);
     if (mpi_errno) {
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     }
 
   fn_exit:
@@ -617,7 +617,7 @@ static inline int MPIDI_CH3I_Shm_get_op(void *origin_addr, int origin_count,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Shm_cas_op
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Shm_cas_op(const void *origin_addr, const void *compare_addr,
                                         void *result_addr, MPI_Datatype datatype, int target_rank,
                                         MPI_Aint target_disp, MPID_Win * win_ptr)
@@ -675,7 +675,7 @@ static inline int MPIDI_CH3I_Shm_cas_op(const void *origin_addr, const void *com
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Shm_fop_op
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Shm_fop_op(const void *origin_addr, void *result_addr,
                                         MPI_Datatype datatype, int target_rank,
                                         MPI_Aint target_disp, MPI_Op op, MPID_Win * win_ptr)

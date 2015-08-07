@@ -17,7 +17,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_accept
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_accept(struct MPIDU_Sock * listener, 
 		      struct MPIDU_Sock_set * sock_set, void * user_ptr,
 		      struct MPIDU_Sock ** sockp)
@@ -162,7 +162,7 @@ int MPIDU_Sock_accept(struct MPIDU_Sock * listener,
        made at that time? */
 #if 1
     mpi_errno = MPIDU_Sock_SetSockBufferSize( fd, 1 );
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+    if (mpi_errno) { MPIR_ERR_POP(mpi_errno); }
 #else
     if (MPIDU_Socki_socket_bufsz > 0)
     {
@@ -257,7 +257,7 @@ int MPIDU_Sock_accept(struct MPIDU_Sock * listener,
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_read
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_read(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len, 
 		    MPIU_Size_t * num_read)
 {
@@ -376,7 +376,7 @@ int MPIDU_Sock_read(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len,
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_readv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_readv(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, 
 		     MPIU_Size_t * num_read)
 {
@@ -490,7 +490,7 @@ int MPIDU_Sock_readv(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n,
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_write
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_write(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len, 
 		     MPIU_Size_t * num_written)
 {
@@ -576,7 +576,7 @@ int MPIDU_Sock_write(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len,
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_writev
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_writev(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, MPIU_Size_t * num_written)
 {
     struct pollfd * pollfd;
@@ -661,7 +661,7 @@ int MPIDU_Sock_writev(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, MPIU_Size_t *
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_wakeup
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_wakeup(struct MPIDU_Sock_set * sock_set)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -678,7 +678,7 @@ int MPIDU_Sock_wakeup(struct MPIDU_Sock_set * sock_set)
        be implemented as an abstraction (e.g., wakeup_progress_threads?)
        rather than this specific code.  */
 #ifdef MPICH_IS_THREADED
-    MPIU_THREAD_CHECK_BEGIN
+    MPIU_THREAD_CHECK_BEGIN;
     {
 	struct pollinfo * pollinfo;
 	
@@ -687,7 +687,7 @@ int MPIDU_Sock_wakeup(struct MPIDU_Sock_set * sock_set)
 				  mpi_errno, mpi_errno, fn_exit);
 	MPIDU_Socki_wakeup(sock_set);
     }
-    MPIU_THREAD_CHECK_END
+    MPIU_THREAD_CHECK_END;
 #   endif
 
 #ifdef MPICH_IS_THREADED

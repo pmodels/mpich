@@ -22,7 +22,7 @@ do{									\
         }								\
         else                                                            \
         {                                                               \
-            *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;                \
+            *(int *)(err_ptr_) = MPIU_THREAD_SUCCESS;                \
         }                                                               \
     }                                                                   \
 }while(0)
@@ -35,7 +35,7 @@ do{								\
     {                                                           \
         if (result__)                                           \
         {                                                       \
-            *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;        \
+            *(int *)(err_ptr_) = MPIU_THREAD_SUCCESS;        \
         }                                                       \
         else                                                    \
         {							\
@@ -52,7 +52,7 @@ do{								\
     {                                                           \
         if (result__)                                           \
         {                                                       \
-            *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;        \
+            *(int *)(err_ptr_) = MPIU_THREAD_SUCCESS;        \
         }                                                       \
         else                                                    \
         {							\
@@ -72,7 +72,7 @@ do{								\
         }							\
         else                                                    \
         {                                                       \
-            *(int *)(err_ptr_) = MPIU_THREAD_ERR_SUCCESS;        \
+            *(int *)(err_ptr_) = MPIU_THREAD_SUCCESS;        \
         }                                                       \
     }                                                           \
 }while(0)

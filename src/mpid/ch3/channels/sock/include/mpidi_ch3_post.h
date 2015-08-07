@@ -23,10 +23,10 @@
  */
 #define MPIDI_CH3_Progress_start(progress_state_)			\
 {									\
-    MPIU_THREAD_CS_ENTER(MPIDCOMM,);\
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.global_mutex);\
     (progress_state_)->ch.completion_count = MPIDI_CH3I_progress_completion_count;\
 }
-#define MPIDI_CH3_Progress_end(progress_state_) MPIU_THREAD_CS_EXIT(MPIDCOMM,)
+#define MPIDI_CH3_Progress_end(progress_state_) MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.global_mutex)
 #define MPIDI_CH3_Progress_poke() (MPIDI_CH3_Progress_test())
 
 int MPIDI_CH3I_Progress(int blocking, MPID_Progress_state *state);

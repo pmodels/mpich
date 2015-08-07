@@ -23,7 +23,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_iStartMsg
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_Request **sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -33,7 +33,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ISTARTMSG);
 
-    MPIU_ERR_CHKANDJUMP1(vc->state == MPIDI_VC_STATE_MORIBUND, mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+    MPIR_ERR_CHKANDJUMP1(vc->state == MPIDI_VC_STATE_MORIBUND, mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
 
     if (vc->ch.iStartContigMsg)
     {
@@ -49,7 +49,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_
     hdr_sz = sizeof(MPIDI_CH3_Pkt_t);
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t*)hdr);
 
-    MPIU_THREAD_CS_ENTER(MPIDCOMM,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.global_mutex);
     in_cs = 1;
 
     if (MPIDI_CH3I_Sendq_empty(MPIDI_CH3I_shm_sendq))
@@ -58,7 +58,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_
         MPIU_Assert(hdr_sz <= INT_MAX);
 	MPIU_DBG_MSG_D (CH3_CHANNEL, VERBOSE, "iStartMsg %d", (int) hdr_sz);
 	mpi_errno = MPID_nem_mpich_send_header (hdr, (int)hdr_sz, vc, &again);
-        if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 	if (again)
 	{
 	    goto enqueue_it;
@@ -75,7 +75,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_
 
  fn_exit:
     if (in_cs) {
-        MPIU_THREAD_CS_EXIT(MPIDCOMM,);
+        MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.global_mutex);
     }
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_ISTARTMSG);
     return mpi_errno;
@@ -112,7 +112,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_
             /* FIXME we are sometimes called from within the progress engine, we
              * shouldn't be calling the progress engine again */
             mpi_errno = MPIDI_CH3I_Shm_send_progress();
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
     
 	*sreq_ptr = sreq;

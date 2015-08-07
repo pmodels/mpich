@@ -65,7 +65,7 @@ int MPI_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_PT2PT_FUNC_ENTER_FRONT(MPID_STATE_MPI_SSEND);
     
     /* Validate handle parameters needing to be converted */
@@ -130,7 +130,7 @@ int MPI_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
     /* If a request was returned, then we need to block until the request 
        is complete */
     mpi_errno = MPIR_Progress_wait_request(request_ptr);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = request_ptr->status.MPI_ERROR;
     MPID_Request_release(request_ptr);
@@ -141,7 +141,7 @@ int MPI_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
     
   fn_exit:
     MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_SSEND);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
     
   fn_fail:

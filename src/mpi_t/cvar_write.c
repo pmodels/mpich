@@ -29,7 +29,7 @@ int MPI_T_cvar_write(MPI_T_cvar_handle handle, const void *buf) __attribute__((w
 #undef FUNCNAME
 #define FUNCNAME MPIR_T_cvar_write_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_T_cvar_write_impl(MPI_T_cvar_handle handle, const void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -76,7 +76,7 @@ int MPIR_T_cvar_write_impl(MPI_T_cvar_handle handle, const void *buf)
         break;
     default:
          /* FIXME the error handling code may not have been setup yet */
-        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_INTERN, "**intern", "**intern %s", "unexpected parameter type");
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_INTERN, "**intern", "**intern %s", "unexpected parameter type");
         break;
     }
 
@@ -91,7 +91,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPI_T_cvar_write
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_cvar_write - Write a control variable
 
@@ -132,7 +132,7 @@ int MPI_T_cvar_write(MPI_T_cvar_handle handle, const void *buf)
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_T_cvar_write_impl(handle, buf);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 

@@ -53,7 +53,7 @@ static hook_elt *destroy_hooks_tail = NULL;
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Comm_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Comm_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -68,7 +68,7 @@ int MPIDI_CH3I_Comm_init(void)
 
     /* register hooks for keeping track of communicators */
     mpi_errno = MPIDI_CH3U_Comm_register_create_hook(comm_created, NULL);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 #if defined HAVE_LIBHCOLL
     if (MPIR_CVAR_CH3_ENABLE_HCOLL) {
@@ -81,7 +81,7 @@ int MPIDI_CH3I_Comm_init(void)
              * Test to make sure it's available before choosing to
              * enable or disable it. */
             r = MPL_putenv("HCOLL_ENABLE_MCAST_ALL=0");
-            MPIU_ERR_CHKANDJUMP(r, mpi_errno, MPI_ERR_OTHER, "**putenv");
+            MPIR_ERR_CHKANDJUMP(r, mpi_errno, MPI_ERR_OTHER, "**putenv");
         }
 
 #if defined MPID_CH3I_CH_HCOLL_BCOL
@@ -93,19 +93,19 @@ int MPIDI_CH3I_Comm_init(void)
             MPL_snprintf(envstr, size, "HCOLL_BCOL=%s", MPID_CH3I_CH_HCOLL_BCOL);
 
             r = MPL_putenv(envstr);
-            MPIU_ERR_CHKANDJUMP(r, mpi_errno, MPI_ERR_OTHER, "**putenv");
+            MPIR_ERR_CHKANDJUMP(r, mpi_errno, MPI_ERR_OTHER, "**putenv");
         }
 #endif
 
         mpi_errno = MPIDI_CH3U_Comm_register_create_hook(hcoll_comm_create, NULL);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         mpi_errno = MPIDI_CH3U_Comm_register_destroy_hook(hcoll_comm_destroy, NULL);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 #endif
 
     mpi_errno = MPIDI_CH3U_Comm_register_destroy_hook(comm_destroyed, NULL);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_COMM_INIT);
@@ -181,7 +181,7 @@ static inline int map_size(MPIR_Comm_map_t map)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Comm_create_hook
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Comm_create_hook(MPID_Comm *comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -302,7 +302,7 @@ int MPIDI_CH3I_Comm_create_hook(MPID_Comm *comm)
 
     MPL_LL_FOREACH(create_hooks_head, elt) {
         mpi_errno = elt->hook_fn(comm, elt->param);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);;
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);;
     }
 
  fn_exit:
@@ -315,7 +315,7 @@ int MPIDI_CH3I_Comm_create_hook(MPID_Comm *comm)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Comm_destroy_hook
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Comm_destroy_hook(MPID_Comm *comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -326,15 +326,15 @@ int MPIDI_CH3I_Comm_destroy_hook(MPID_Comm *comm)
 
     MPL_LL_FOREACH(destroy_hooks_head, elt) {
         mpi_errno = elt->hook_fn(comm, elt->param);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     mpi_errno = MPIDI_VCRT_Release(comm->dev.vcrt, comm->dev.is_disconnected);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     if (comm->comm_kind == MPID_INTERCOMM) {
         mpi_errno = MPIDI_VCRT_Release(comm->dev.local_vcrt, comm->dev.is_disconnected);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
  fn_exit:
@@ -348,7 +348,7 @@ int MPIDI_CH3I_Comm_destroy_hook(MPID_Comm *comm)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Comm_register_create_hook
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Comm_register_create_hook(int (*hook_fn)(struct MPID_Comm *, void *), void *param)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -377,7 +377,7 @@ int MPIDI_CH3U_Comm_register_create_hook(int (*hook_fn)(struct MPID_Comm *, void
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Comm_register_destroy_hook
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Comm_register_destroy_hook(int (*hook_fn)(struct MPID_Comm *, void *), void *param)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -405,7 +405,7 @@ int MPIDI_CH3U_Comm_register_destroy_hook(int (*hook_fn)(struct MPID_Comm *, voi
 #undef FUNCNAME
 #define FUNCNAME register_hook_finalize
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int register_hook_finalize(void *param)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -435,7 +435,7 @@ static int register_hook_finalize(void *param)
 #undef FUNCNAME
 #define FUNCNAME comm_created
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int comm_created(MPID_Comm *comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -463,7 +463,7 @@ int comm_created(MPID_Comm *comm, void *param)
 #undef FUNCNAME
 #define FUNCNAME comm_destroyed
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int comm_destroyed(MPID_Comm *comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -487,7 +487,7 @@ int comm_destroyed(MPID_Comm *comm, void *param)
 #undef FUNCNAME
 #define FUNCNAME nonempty_intersection
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int nonempty_intersection(MPID_Comm *comm, MPID_Group *group, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -532,7 +532,7 @@ static int nonempty_intersection(MPID_Comm *comm, MPID_Group *group, int *flag)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Comm_handle_failed_procs
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Comm_handle_failed_procs(MPID_Group *new_failed_procs)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -551,7 +551,7 @@ int MPIDI_CH3I_Comm_handle_failed_procs(MPID_Group *new_failed_procs)
             continue;
 
         mpi_errno = nonempty_intersection(comm, new_failed_procs, &flag);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         if (flag) {
             MPIU_DBG_MSG_FMT(CH3_OTHER, VERBOSE,

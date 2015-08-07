@@ -6,7 +6,7 @@
 #include "mpid_nem_impl.h"
 #include "mpid_nem_datatypes.h"
 
-MPIU_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
+MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #if defined(HAVE_VMSPLICE)
 
@@ -71,13 +71,13 @@ static inline int check_req_complete(MPIDI_VC_t *vc, MPID_Request *req, int *com
         req->dev.iov_offset = 0;
 
         mpi_errno = reqFn(vc, req, complete);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else {
         *complete = 1;
         mpi_errno = MPID_Request_complete(req);
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
     }
 
@@ -114,7 +114,7 @@ static int populate_iov_from_req(MPID_Request *req)
 
         /* XXX DJG FIXME where is this segment freed? */
         req->dev.segment_ptr = MPID_Segment_alloc();
-        MPIU_ERR_CHKANDJUMP1((req->dev.segment_ptr == NULL), mpi_errno,
+        MPIR_ERR_CHKANDJUMP1((req->dev.segment_ptr == NULL), mpi_errno,
                              MPI_ERR_OTHER, "**nomem",
                              "**nomem %s", "MPID_Segment_alloc");
         MPID_Segment_init(req->dev.user_buf, req->dev.user_count,
@@ -128,7 +128,7 @@ static int populate_iov_from_req(MPID_Request *req)
            larger than MPL_IOV_LIMIT. */
         mpi_errno = MPIDI_CH3U_Request_load_send_iov(req, &req->dev.iov[0],
                                                      &req->dev.iov_count);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
 fn_fail:
@@ -149,7 +149,7 @@ static int do_vmsplice(MPID_Request *sreq, int pipe_fd, MPL_IOV iov[],
 
     if (err < 0) {
         if (errno == EAGAIN) goto fn_exit;
-        MPIU_ERR_CHKANDJUMP2(errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**vmsplice",
+        MPIR_ERR_CHKANDJUMP2(errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**vmsplice",
                              "**vmsplice %d %s", errno, MPIU_Strerror(errno));
     }
 
@@ -157,11 +157,11 @@ static int do_vmsplice(MPID_Request *sreq, int pipe_fd, MPL_IOV iov[],
     if (*complete) {
         /* look for additional data to send and reload IOV if there is more */
         mpi_errno = check_req_complete(sreq->ch.vc, sreq, complete);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         if (*complete) {
             err = close(pipe_fd);
-            MPIU_ERR_CHKANDJUMP(err < 0, mpi_errno, MPI_ERR_OTHER, "**close");
+            MPIR_ERR_CHKANDJUMP(err < 0, mpi_errno, MPI_ERR_OTHER, "**close");
             MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
         }
     }
@@ -174,7 +174,7 @@ fn_exit:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_vmsplice_initiate_lmt
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_vmsplice_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPID_Request *sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -192,7 +192,7 @@ int MPID_nem_lmt_vmsplice_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPI
         MPIDI_CH3I_VC *vc_ch = &vc->ch;
 
         pipe_name = tempnam(NULL, "lmt_");
-        MPIU_ERR_CHKANDJUMP2(!pipe_name, mpi_errno, MPI_ERR_OTHER, "**tempnam",
+        MPIR_ERR_CHKANDJUMP2(!pipe_name, mpi_errno, MPI_ERR_OTHER, "**tempnam",
                              "**tempnam %d %s", errno, MPIU_Strerror(errno));
 
         vc_ch->lmt_copy_buf_handle = MPIU_Strdup(pipe_name);
@@ -201,7 +201,7 @@ int MPID_nem_lmt_vmsplice_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPI
         free(pipe_name);
 
         err = mkfifo(vc_ch->lmt_copy_buf_handle, 0660);
-        MPIU_ERR_CHKANDJUMP2(err < 0, mpi_errno, MPI_ERR_OTHER, "**mkfifo",
+        MPIR_ERR_CHKANDJUMP2(err < 0, mpi_errno, MPI_ERR_OTHER, "**mkfifo",
                              "**mkfifo %d %s", errno, MPIU_Strerror(errno));
     }
 
@@ -223,12 +223,12 @@ static int do_readv(MPID_Request *rreq, int pipe_fd, MPL_IOV iov[],
     ssize_t nread;
 
     nread = readv(pipe_fd, &rreq->dev.iov[rreq->dev.iov_offset], rreq->dev.iov_count);
-    MPIU_ERR_CHKANDJUMP2(nread < 0 && errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**read",
+    MPIR_ERR_CHKANDJUMP2(nread < 0 && errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**read",
                          "**readv %d %s", errno, MPIU_Strerror(errno));
 
     if (nread < 0) {
         if (errno == EAGAIN) goto fn_exit;
-        MPIU_ERR_CHKANDJUMP2(errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**vmsplice",
+        MPIR_ERR_CHKANDJUMP2(errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**vmsplice",
                              "**vmsplice %d %s", errno, MPIU_Strerror(errno));
     }
 
@@ -236,11 +236,11 @@ static int do_readv(MPID_Request *rreq, int pipe_fd, MPL_IOV iov[],
     if (*complete) {
         /* look for additional data to send and reload IOV if there is more */
         mpi_errno = check_req_complete(rreq->ch.vc, rreq, complete);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         if (*complete) {
             nread = close(pipe_fd);
-            MPIU_ERR_CHKANDJUMP(nread < 0, mpi_errno, MPI_ERR_OTHER, "**close");
+            MPIR_ERR_CHKANDJUMP(nread < 0, mpi_errno, MPI_ERR_OTHER, "**close");
             MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
         }
     }
@@ -254,7 +254,7 @@ fn_exit:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_vmsplice_start_recv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPL_IOV s_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -275,13 +275,13 @@ int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPL_IOV
     /* XXX DJG FIXME in a real version we would want to cache the fd on the vc
        so that we don't have two open's on the critical path every time. */
     pipe_fd = open(vc_ch->lmt_recv_copy_buf_handle, O_NONBLOCK|O_RDONLY);
-    MPIU_ERR_CHKANDJUMP1(pipe_fd < 0, mpi_errno, MPI_ERR_OTHER, "**open",
+    MPIR_ERR_CHKANDJUMP1(pipe_fd < 0, mpi_errno, MPI_ERR_OTHER, "**open",
                          "**open %s", MPIU_Strerror(errno));
 
     MPID_nem_lmt_send_CTS(vc, rreq, NULL, 0);
 
     mpi_errno = populate_iov_from_req(rreq);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = do_readv(rreq, pipe_fd, rreq->dev.iov, &rreq->dev.iov_offset,
                          &rreq->dev.iov_count, &complete);
@@ -325,17 +325,17 @@ int MPID_nem_lmt_vmsplice_progress(void)
                                      &cur->req->dev.iov_offset,
                                      &cur->req->dev.iov_count, &complete);
                 /* FIXME: set the error status of the req and complete it, rather than POP */
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 break;
             case MPIDI_REQUEST_TYPE_SEND:
                 mpi_errno = do_vmsplice(cur->req, cur->pipe_fd, cur->req->dev.iov,
                                         &cur->req->dev.iov_offset,
                                         &cur->req->dev.iov_count, &complete);
                 /* FIXME: set the error status of the req and complete it, rather than POP */
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 break;
             default:
-                MPIU_ERR_INTERNALANDJUMP(mpi_errno, "unexpected request type");
+                MPIR_ERR_INTERNALANDJUMP(mpi_errno, "unexpected request type");
                 break;
         }
 
@@ -376,7 +376,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_vmsplice_start_send
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_vmsplice_start_send(MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV r_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -393,18 +393,18 @@ int MPID_nem_lmt_vmsplice_start_send(MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV
        will error out with ENXIO.  This will be indicated by the receipt of a
        CTS message. */
     pipe_fd = open(vc_ch->lmt_copy_buf_handle, O_NONBLOCK|O_WRONLY);
-    MPIU_ERR_CHKANDJUMP1(pipe_fd < 0, mpi_errno, MPI_ERR_OTHER, "**open",
+    MPIR_ERR_CHKANDJUMP1(pipe_fd < 0, mpi_errno, MPI_ERR_OTHER, "**open",
                          "**open %s", MPIU_Strerror(errno));
 
     mpi_errno = populate_iov_from_req(sreq);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* send the first flight */
     sreq->ch.vc = vc; /* XXX DJG is this already assigned? */
     complete = 0;
     mpi_errno = do_vmsplice(sreq, pipe_fd, sreq->dev.iov,
                             &sreq->dev.iov_offset, &sreq->dev.iov_count, &complete);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     if (!complete) {
         /* push for later progress */
@@ -425,7 +425,7 @@ fn_exit:
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_MPID_nem_lmt_vmsplice_vc_terminated
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_MPID_nem_lmt_vmsplice_vc_terminated(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -454,7 +454,7 @@ int MPIDI_CH3_MPID_nem_lmt_vmsplice_vc_terminated(MPIDI_VC_t *vc)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_vmsplice_done_recv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_vmsplice_done_recv(MPIDI_VC_t *vc, MPID_Request *rreq)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_DONE_RECV);
@@ -470,7 +470,7 @@ int MPID_nem_lmt_vmsplice_done_recv(MPIDI_VC_t *vc, MPID_Request *rreq)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_vmsplice_done_send
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_vmsplice_done_send(MPIDI_VC_t *vc, MPID_Request *sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -488,7 +488,7 @@ int MPID_nem_lmt_vmsplice_done_send(MPIDI_VC_t *vc, MPID_Request *sreq)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_vmsplice_handle_cookie
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_vmsplice_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV cookie)
 {
     int mpi_errno = MPI_SUCCESS;

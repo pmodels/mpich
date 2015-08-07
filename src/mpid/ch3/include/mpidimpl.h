@@ -260,7 +260,7 @@ extern MPIDI_Process_t MPIDI_Process;
         if (!MPIU_THREADPRIV_FIELD(request_handles)) {                 \
             MPID_Request *prev, *cur;                                  \
             /* batch allocate a linked list of requests */             \
-            MPIU_THREAD_CS_ENTER(HANDLEALLOC,);                        \
+            MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.handle_mutex);                        \
             prev = MPIU_Handle_obj_alloc_unsafe(&MPID_Request_mem);    \
             prev->next = NULL;                                         \
             assert(prev);                                              \
@@ -270,7 +270,7 @@ extern MPIDI_Process_t MPIDI_Process;
                 cur->next = prev;                                      \
                 prev = cur;                                            \
             }                                                          \
-            MPIU_THREAD_CS_EXIT(HANDLEALLOC,);                         \
+            MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.handle_mutex);                         \
             MPIU_THREADPRIV_FIELD(request_handles) = cur;              \
             MPIU_THREADPRIV_FIELD(request_handle_count) += MPID_REQUEST_TLS_MAX;    \
         }                                                              \
@@ -1022,8 +1022,8 @@ extern char *MPIDI_DBG_parent_str;
 #endif
 
 /* This is used to quote a name in a definition (see FUNCNAME/FCNAME below) */
-#define MPIU_QUOTE(A) MPIU_QUOTE2(A)
-#define MPIU_QUOTE2(A) #A
+#define MPL_QUOTE(A) MPL_QUOTE2(A)
+#define MPL_QUOTE2(A) #A
 
 #ifdef MPICH_DBG_OUTPUT
     void MPIDI_DBG_Print_packet(MPIDI_CH3_Pkt_t *pkt);
@@ -1225,12 +1225,12 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 #ifndef MPIDI_CH3I_INCR_PROGRESS_COMPLETION_COUNT
 #define MPIDI_CH3I_INCR_PROGRESS_COMPLETION_COUNT                                \
     do {                                                                         \
-        MPIU_THREAD_CS_ENTER(COMPLETION,);                                       \
+        MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.completion_mutex);                                       \
         ++MPIDI_CH3I_progress_completion_count;                                  \
         MPIU_DBG_MSG_D(CH3_PROGRESS,VERBOSE,                                     \
                      "just incremented MPIDI_CH3I_progress_completion_count=%d", \
                      MPIDI_CH3I_progress_completion_count);                      \
-        MPIU_THREAD_CS_EXIT(COMPLETION,);                                        \
+        MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.completion_mutex);                                        \
     } while (0)
 #endif
 
@@ -1877,47 +1877,19 @@ int MPIDI_CH3_Req_handler_rma_op_complete(MPID_Request *);
 
 /* Thread Support */
 #ifdef MPICH_IS_THREADED
-#if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
+#if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
-#define MPIU_THREAD_CS_ENTER_CH3COMM(context_)
-#define MPIU_THREAD_CS_EXIT_CH3COMM(context_)
-
 #define MPIU_THREAD_CS_ENTER_LMT(_context)
 #define MPIU_THREAD_CS_EXIT_LMT(_context)
 
-#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
-
-#define MPIU_THREAD_CS_ENTER_POBJ_MUTEX(mutex_p_)                                                           \
-    do {                                                                                                    \
-        MPIU_DBG_MSG_P(THREAD,VERBOSE,"attempting to ENTER per-object CS, mutex=%s", MPIU_QUOTE(mutex_p_)); \
-        /* FIXME do we need nest checking here? the existing macros won't work unmodified...*/              \
-        MPID_Thread_mutex_lock(mutex_p_);                                                                   \
-    } while (0)
-#define MPIU_THREAD_CS_EXIT_POBJ_MUTEX(mutex_p_)                                                            \
-    do {                                                                                                    \
-        MPIU_DBG_MSG_P(THREAD,VERBOSE,"attempting to EXIT per-object CS, mutex=%s", MPIU_QUOTE(mutex_p_));  \
-        /* FIXME do we need nest checking here? the existing macros won't work unmodified...*/              \
-        MPID_Thread_mutex_unlock(mutex_p_);                                                                 \
-    } while (0)
-
-/* There is a per object lock */
-#define MPIU_THREAD_CS_ENTER_CH3COMM(context_)                      \
-    do {                                                            \
-        if (MPIU_ISTHREADED)                                        \
-            MPIU_THREAD_CS_ENTER_POBJ_MUTEX(&context_->pobj_mutex); \
-    } while (0)
-#define MPIU_THREAD_CS_EXIT_CH3COMM(context_)                       \
-    do {                                                            \
-        if (MPIU_ISTHREADED)                                        \
-            MPIU_THREAD_CS_EXIT_POBJ_MUTEX(&context_->pobj_mutex);  \
-    } while (0)
+#elif MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT
 
 /* MT FIXME making LMT into MPIDCOMM for now because of overwhelming deadlock
  * issues */
-#define MPIU_THREAD_CS_ENTER_LMT(context_) MPIU_THREAD_CS_ENTER_MPIDCOMM(context_)
-#define MPIU_THREAD_CS_EXIT_LMT(context_)  MPIU_THREAD_CS_EXIT_MPIDCOMM(context_)
+#define MPIU_THREAD_CS_ENTER_LMT(context_) MPID_THREAD_CS_ENTER_MPIDCOMM(context_)
+#define MPIU_THREAD_CS_EXIT_LMT(context_)  MPID_THREAD_CS_EXIT_MPIDCOMM(context_)
 
-#elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_SINGLE
+#elif MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_SINGLE
 /* No thread support, make all operations a no-op */
 /* FIXME incomplete? or already handled by the upper level? */
 /* FIXME does it make sense to have (MPICH_IS_THREADED && _GRANULARITY==_SINGLE) ? */

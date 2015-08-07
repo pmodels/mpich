@@ -29,7 +29,7 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval) __attribute__((weak,ali
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_delete_attr_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_delete_attr_impl(MPID_Comm *comm_ptr, MPID_Keyval *keyval_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -85,7 +85,7 @@ int MPIR_Comm_delete_attr_impl(MPID_Comm *comm_ptr, MPID_Keyval *keyval_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_delete_attr
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_delete_attr - Deletes an attribute value associated with a key on 
    a  communicator
@@ -114,7 +114,7 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_DELETE_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -159,7 +159,7 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_DELETE_ATTR);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

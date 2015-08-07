@@ -11,9 +11,9 @@
 #define MPITIMPL_H_INCLUDED
 
 #include "mpi.h"
+#include "mpiutil.h"
 #include "mpiu_utarray.h"
 #include "mpiu_uthash.h"
-#include "mpiimplthread.h" /* For MPICH_IS_THREADED */
 
 #ifdef HAVE_ERROR_CHECKING
 typedef enum {
@@ -1411,15 +1411,17 @@ extern MPIU_Thread_mutex_t mpi_t_mutex;
 
 #define MPIR_T_THREAD_CS_ENTER() \
     do { \
-        MPIR_T_THREAD_CHECK_BEGIN \
-        MPID_Thread_mutex_lock(&mpi_t_mutex); \
+        int err;                              \
+        MPIR_T_THREAD_CHECK_BEGIN             \
+            MPID_Thread_mutex_lock(&mpi_t_mutex,&err);  \
         MPIR_T_THREAD_CHECK_END \
     } while (0)
 
 #define MPIR_T_THREAD_CS_EXIT() \
     do { \
+        int err;                  \
         MPIR_T_THREAD_CHECK_BEGIN \
-        MPID_Thread_mutex_unlock(&mpi_t_mutex); \
+            MPID_Thread_mutex_unlock(&mpi_t_mutex,&err);  \
         MPIR_T_THREAD_CHECK_END \
     } while (0)
 #else /* !MPICH_IS_THREADED */

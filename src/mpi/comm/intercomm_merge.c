@@ -34,7 +34,7 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm) __
 #undef FUNCNAME
 #define FUNCNAME create_and_map
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int create_and_map(MPID_Comm *comm_ptr, int local_high, MPID_Comm *new_intracomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -68,7 +68,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIR_Intercomm_merge_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_intracomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -82,7 +82,7 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
     if (!comm_ptr->local_comm) {
         /* Manufacture the local communicator */
         mpi_errno = MPIR_Setup_intercomm_localcomm( comm_ptr );
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     /* Find the "high" value of the other group of processes.  This
@@ -95,7 +95,7 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
         mpi_errno = MPIC_Sendrecv( &local_high, 1, MPI_INT, 0, 0,
                                       &remote_high, 1, MPI_INT, 0, 0, comm_ptr,
                                       MPI_STATUS_IGNORE, &errflag );
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         
         /* If local_high and remote_high are the same, then order is arbitrary.
            we use the gpids of the rank 0 member of the local and remote
@@ -104,12 +104,12 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
             MPID_Gpid ingpid, outgpid;
             
             mpi_errno = MPID_GPID_Get( comm_ptr, 0, &ingpid );
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             
             mpi_errno = MPIC_Sendrecv( &ingpid, sizeof(MPID_Gpid), MPI_BYTE, 0, 1,
                                           &outgpid, sizeof(MPID_Gpid), MPI_BYTE, 0, 1, comm_ptr,
                                           MPI_STATUS_IGNORE, &errflag );
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
             /* Note that the gpids cannot be the same because we are
                starting from a valid intercomm */
@@ -133,11 +133,11 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
        of processes had the same value for high
     */
     mpi_errno = MPIR_Bcast_impl( &local_high, 1, MPI_INT, 0, comm_ptr->local_comm, &errflag );
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
     mpi_errno = MPIR_Comm_create( new_intracomm_ptr );
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
     new_size = comm_ptr->local_size + comm_ptr->remote_size;
 
@@ -158,7 +158,7 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
     /* Now we know which group comes first.  Build the new mapping
        from the existing comm */
     mpi_errno = create_and_map(comm_ptr, local_high, (*new_intracomm_ptr));
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* We've setup a temporary context id, based on the context id
        used by the intercomm.  This allows us to perform the allreduce
@@ -166,24 +166,24 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
        have a valid (almost - see comm_create_hook) communicator.
     */
     mpi_errno = MPIR_Comm_commit((*new_intracomm_ptr));
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* printf( "About to get context id \n" ); fflush( stdout ); */
     /* In the multi-threaded case, MPIR_Get_contextid_sparse assumes that the
        calling routine already holds the single criticial section */
     new_context_id = 0;
     mpi_errno = MPIR_Get_contextid_sparse( (*new_intracomm_ptr), &new_context_id, FALSE );
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     MPIU_Assert(new_context_id != 0);
 
     /* We release this communicator that was involved just to
      * get valid context id and create true one
      */
     mpi_errno = MPIR_Comm_release(*new_intracomm_ptr);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Comm_create( new_intracomm_ptr );
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     (*new_intracomm_ptr)->remote_size    = (*new_intracomm_ptr)->local_size   = new_size;
     (*new_intracomm_ptr)->rank           = -1;
@@ -192,10 +192,10 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
     (*new_intracomm_ptr)->recvcontext_id = new_context_id;
 
     mpi_errno = create_and_map(comm_ptr, local_high, (*new_intracomm_ptr));
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Comm_commit((*new_intracomm_ptr));
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_INTERCOMM_MERGE_IMPL);
@@ -210,7 +210,7 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
 #undef FUNCNAME
 #define FUNCNAME MPI_Intercomm_merge
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 MPI_Intercomm_merge - Creates an intracommuncator from an intercommunicator
@@ -260,7 +260,7 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);  
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);  
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_INTERCOMM_MERGE);
 
     MPIU_THREADPRIV_GET;
@@ -316,8 +316,8 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
 	    acthigh = high ? 1 : 0;   /* Clamp high into 1 or 0 */
 	    mpi_errno = MPIR_Allreduce_impl( MPI_IN_PLACE, &acthigh, 1, MPI_INT,
                                              MPI_SUM, comm_ptr->local_comm, &errflag );
-	    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-            MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+	    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	    /* acthigh must either == 0 or the size of the local comm */
 	    if (acthigh != 0 && acthigh != comm_ptr->local_size) {
 		mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
@@ -343,7 +343,7 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
     
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_INTERCOMM_MERGE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

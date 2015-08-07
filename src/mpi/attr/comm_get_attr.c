@@ -64,7 +64,7 @@ int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	       case.  Note that this code assumes sizeof(MPIU_Pint) is 
 	       a power of 2. */
 	    if ((MPIU_Pint)attribute_val & (sizeof(MPIU_Pint)-1)) {
-		MPIU_ERR_SETANDSTMT(mpi_errno,MPI_ERR_ARG,goto fn_fail,"**attrnotptr");
+		MPIR_ERR_SETANDSTMT(mpi_errno,MPI_ERR_ARG,goto fn_fail,"**attrnotptr");
 	    }
 #           endif
         }
@@ -300,9 +300,9 @@ int MPIR_CommGetAttr_fort(MPI_Comm comm, int comm_keyval, void *attribute_val,
 {
     int mpi_errno;
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     mpi_errno = MPIR_CommGetAttr(comm, comm_keyval, attribute_val, flag, outAttrType);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
 
     return mpi_errno;
 }
@@ -313,7 +313,7 @@ int MPIR_CommGetAttr_fort(MPI_Comm comm, int comm_keyval, void *attribute_val,
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_get_attr
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /* FIXME: Attributes must be visable from all languages */
 /*@
@@ -355,7 +355,7 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_GET_ATTR);
 
     /* Instead, ask for a desired type. */
@@ -366,7 +366,7 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_GET_ATTR);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

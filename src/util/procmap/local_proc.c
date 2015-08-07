@@ -53,7 +53,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIU_Find_local_and_external
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 
 #if defined(MPID_USE_NODE_IDS)
 int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_rank_p, int **local_ranks_p,
@@ -93,7 +93,7 @@ int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_
     MPIU_CHKPMEM_MALLOC (intranode_table, int *, sizeof(int) * comm->remote_size, mpi_errno, "intranode_table");
 
     mpi_errno = MPID_Get_max_node_id(comm, &max_node_id);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP (mpi_errno);
     MPIU_Assert(max_node_id >= 0);
     MPIU_CHKLMEM_MALLOC (nodes, int *, sizeof(int) * (max_node_id + 1), mpi_errno, "nodes");
 
@@ -107,7 +107,7 @@ int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_
     external_size = 0;
 
     mpi_errno = MPID_Get_node_id(comm, comm->rank, &my_node_id);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP (mpi_errno);
     MPIU_Assert(my_node_id >= 0);
     MPIU_Assert(my_node_id <= max_node_id);
 
@@ -118,11 +118,11 @@ int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_
     for (i = 0; i < comm->remote_size; ++i)
     {
         mpi_errno = MPID_Get_node_id(comm, i, &node_id);
-        if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
         /* The upper level can catch this non-fatal error and should be
            able to recover gracefully. */
-        MPIU_ERR_CHKANDJUMP(node_id < 0, mpi_errno, MPI_ERR_OTHER, "**dynamic_node_ids");
+        MPIR_ERR_CHKANDJUMP(node_id < 0, mpi_errno, MPI_ERR_OTHER, "**dynamic_node_ids");
 
         MPIU_Assert(node_id <= max_node_id);
 
@@ -180,12 +180,12 @@ int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_
     *local_size_p = local_size;
     *local_rank_p = local_rank;
     *local_ranks_p =  MPIU_Realloc (local_ranks, sizeof(int) * local_size);
-    MPIU_ERR_CHKANDJUMP (*local_ranks_p == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem2");
+    MPIR_ERR_CHKANDJUMP (*local_ranks_p == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem2");
 
     *external_size_p = external_size;
     *external_rank_p = external_rank;
     *external_ranks_p = MPIU_Realloc (external_ranks, sizeof(int) * external_size);
-    MPIU_ERR_CHKANDJUMP (*external_ranks_p == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem2");
+    MPIR_ERR_CHKANDJUMP (*external_ranks_p == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem2");
 
     /* no need to realloc */
     if (intranode_table_p)
@@ -212,7 +212,7 @@ int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_
     
     /* The upper level can catch this non-fatal error and should be
        able to recover gracefully. */
-    MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**notimpl");
+    MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**notimpl");
 fn_fail:
     return mpi_errno;
 }
@@ -228,7 +228,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIU_Get_internode_rank
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIU_Get_internode_rank(MPID_Comm *comm_ptr, int r)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -249,7 +249,7 @@ int MPIU_Get_internode_rank(MPID_Comm *comm_ptr, int r)
 #undef FUNCNAME
 #define FUNCNAME MPIU_Get_intranode_rank
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIU_Get_intranode_rank(MPID_Comm *comm_ptr, int r)
 {
     int mpi_errno = MPI_SUCCESS;

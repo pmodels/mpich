@@ -14,7 +14,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_SendNoncontig
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPIDI_CH3I_SendNoncontig - Sends a message by packing
    directly into cells.  The caller must initialize sreq->dev.segment
    as well as segment_first and segment_size. */
@@ -29,7 +29,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
 
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)header);
 
-    MPIU_THREAD_CS_ENTER(MPIDCOMM,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.global_mutex);
 
     if (!MPIDI_CH3I_Sendq_empty(MPIDI_CH3I_shm_sendq)) /* MT */
     {
@@ -45,7 +45,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
 
         MPIDI_CH3I_Sendq_enqueue(&MPIDI_CH3I_shm_sendq, sreq);
         mpi_errno = MPIDI_CH3I_Shm_send_progress();
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         goto fn_exit;
     }
 
@@ -81,7 +81,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
         MPIU_Assert(MPIDI_Request_get_type(sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
         mpi_errno = MPID_Request_complete(sreq);
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
         MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, ".... complete %d bytes", (int) (sreq->dev.segment_size));
     }
@@ -89,14 +89,14 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
     {
         int complete = 0;
         mpi_errno = sreq->dev.OnDataAvail(vc, sreq, &complete);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIU_Assert(complete); /* all data has been sent, we should always complete */
 
         MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, ".... complete %d bytes", (int) (sreq->dev.segment_size));
     }
 
  fn_exit:
-    MPIU_THREAD_CS_EXIT(MPIDCOMM,);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.global_mutex);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_SENDNONCONTIG);
     return mpi_errno;
  fn_fail:

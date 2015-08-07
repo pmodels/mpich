@@ -29,7 +29,7 @@ int MPI_Type_get_envelope(MPI_Datatype datatype, int *num_integers, int *num_add
 #undef FUNCNAME
 #define FUNCNAME MPIR_Type_get_envelope_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Type_get_envelope_impl(MPI_Datatype datatype,
                                  int *num_integers,
                                  int *num_addresses,
@@ -66,7 +66,7 @@ void MPIR_Type_get_envelope_impl(MPI_Datatype datatype,
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_get_envelope
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_get_envelope - get type envelope
 

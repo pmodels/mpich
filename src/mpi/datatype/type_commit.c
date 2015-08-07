@@ -28,7 +28,7 @@ int MPI_Type_commit(MPI_Datatype *datatype) __attribute__((weak,alias("PMPI_Type
 #undef FUNCNAME
 #define FUNCNAME MPIR_Type_commit_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_commit_impl(MPI_Datatype *datatype)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -43,7 +43,7 @@ int MPIR_Type_commit_impl(MPI_Datatype *datatype)
 	*datatype == MPI_LONG_DOUBLE_INT) goto fn_exit;
 
     mpi_errno = MPID_Type_commit(datatype);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
  fn_exit:
     return mpi_errno;
@@ -56,7 +56,7 @@ int MPIR_Type_commit_impl(MPI_Datatype *datatype)
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_commit
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_commit - Commits the datatype
 
@@ -78,7 +78,7 @@ int MPI_Type_commit(MPI_Datatype *datatype)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_COMMIT);
     
     /* Validate parameters, especially handles needing to be converted */
@@ -114,13 +114,13 @@ int MPI_Type_commit(MPI_Datatype *datatype)
     /* ... body of routine ... */
 
     mpi_errno = MPIR_Type_commit_impl(datatype);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
     /* ... end of body of routine ... */
     
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_COMMIT);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

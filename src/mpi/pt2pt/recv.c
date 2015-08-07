@@ -75,7 +75,7 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_PT2PT_FUNC_ENTER_BACK(MPID_STATE_MPI_RECV);
     
     /* Validate handle parameters needing to be converted */
@@ -170,7 +170,7 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
                 /* --BEGIN ERROR HANDLING-- */
                 MPID_Cancel_recv(request_ptr);
                 MPIR_STATUS_SET_CANCEL_BIT(request_ptr->status, FALSE);
-                MPIU_ERR_SET(request_ptr->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**proc_failed");
+                MPIR_ERR_SET(request_ptr->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**proc_failed");
                 mpi_errno = request_ptr->status.MPI_ERROR;
                 goto fn_fail;
                 /* --END ERROR HANDLING-- */
@@ -189,7 +189,7 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
     
   fn_exit:
     MPID_MPI_PT2PT_FUNC_EXIT_BACK(MPID_STATE_MPI_RECV);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

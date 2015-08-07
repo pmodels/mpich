@@ -28,7 +28,7 @@ int MPI_Pack_size(int incount, MPI_Datatype datatype, MPI_Comm comm, int *size) 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Pack_size_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, MPI_Aint *size)
 {
     MPI_Aint typesize;
@@ -42,7 +42,7 @@ void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, MPI_Aint *size)
 #undef FUNCNAME
 #define FUNCNAME MPI_Pack_size
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Pack_size - Returns the upper bound on the amount of space needed to
                     pack a message

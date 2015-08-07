@@ -22,7 +22,7 @@ static int nemesis_initialized = 0;
 #undef FUNCNAME
 #define FUNCNAME split_type
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int split_type(MPID_Comm * comm_ptr, int stype, int key,
                       MPID_Info *info_ptr, MPID_Comm ** newcomm_ptr)
 {
@@ -32,14 +32,14 @@ static int split_type(MPID_Comm * comm_ptr, int stype, int key,
 
     if (MPIDI_CH3I_Shm_supported()) {
         mpi_errno = MPID_Get_node_id(comm_ptr, comm_ptr->rank, &id);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else
         id = comm_ptr->rank;
 
     nid = (stype == MPI_COMM_TYPE_SHARED) ? id : MPI_UNDEFINED;
     mpi_errno = MPIR_Comm_split_impl(comm_ptr, nid, key, newcomm_ptr);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     return mpi_errno;
@@ -73,7 +73,7 @@ static MPID_CommOps comm_fns = {
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -86,7 +86,7 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
     MPID_Comm_fns = &comm_fns;
 
     mpi_errno = MPID_nem_init (pg_rank, pg_p, has_parent);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
     nemesis_initialized = 1;
 
@@ -97,12 +97,12 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
      * Initialize Progress Engine
      */
     mpi_errno = MPIDI_CH3I_Progress_init();
-    if (mpi_errno) MPIU_ERR_SETFATALANDJUMP (mpi_errno, MPI_ERR_OTHER, "**init_progress");
+    if (mpi_errno) MPIR_ERR_SETFATALANDJUMP (mpi_errno, MPI_ERR_OTHER, "**init_progress");
 
     for (i = 0; i < pg_p->size; i++)
     {
 	mpi_errno = MPIDI_CH3_VC_Init(&pg_p->vct[i]);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
  fn_exit:
@@ -129,7 +129,7 @@ int MPIDI_CH3_PortFnsInit( MPIDI_PortFns *portFns )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Get_business_card
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Get_business_card(int myRank, char *value, int length)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -138,7 +138,7 @@ int MPIDI_CH3_Get_business_card(int myRank, char *value, int length)
     MPIDI_FUNC_ENTER(MPIDI_STATE_MPIDI_CH3_GET_BUSINESS_CARD);
 
     mpi_errno = MPID_nem_get_business_card(myRank, value, length);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
     MPIDI_FUNC_EXIT(MPIDI_STATE_MPIDI_CH3_GET_BUSINESS_CARD);
@@ -151,7 +151,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_VC_Init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_VC_Init( MPIDI_VC_t *vc )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -186,7 +186,7 @@ int MPIDI_CH3_VC_Init( MPIDI_VC_t *vc )
     vc->ch.recv_active = NULL;
 
     mpi_errno = MPID_nem_vc_init (vc);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
  fn_exit:
  fn_fail:
@@ -197,7 +197,7 @@ int MPIDI_CH3_VC_Init( MPIDI_VC_t *vc )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_VC_Destroy
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_VC_Destroy(MPIDI_VC_t *vc )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -223,7 +223,7 @@ fn_exit:
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Connect_to_root
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Connect_to_root (const char *port_name, MPIDI_VC_t **new_vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -244,14 +244,14 @@ int MPIDI_CH3_Connect_to_root (const char *port_name, MPIDI_VC_t **new_vc)
     MPIDI_VC_Init (vc, NULL, 0);
 
     /* init channel portion of vc */
-    MPIU_ERR_CHKINTERNAL(!nemesis_initialized, mpi_errno, "Nemesis not initialized");
+    MPIR_ERR_CHKINTERNAL(!nemesis_initialized, mpi_errno, "Nemesis not initialized");
     vc->ch.recv_active = NULL;
     MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
 
     *new_vc = vc; /* we now have a valid, disconnected, temp VC */
 
     mpi_errno = MPID_nem_connect_to_root (port_name, vc);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
     MPIU_CHKPMEM_COMMIT();
  fn_exit:
@@ -315,7 +315,7 @@ static struct {initcomp_cb_t *top;} initcomp_cb_stack = {0};
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_register_initcomp_cb
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_register_initcomp_cb(int (* callback)(void))
 {
     int mpi_errno = MPI_SUCCESS;
@@ -341,7 +341,7 @@ int MPID_nem_register_initcomp_cb(int (* callback)(void))
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_InitCompleted
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_InitCompleted(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -354,7 +354,7 @@ int MPIDI_CH3_InitCompleted(void)
     while (ep)
     {
         mpi_errno = ep->callback();
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         ep_tmp = ep;
         ep = ep->next;
         MPIU_Free(ep_tmp);

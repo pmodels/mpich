@@ -24,7 +24,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIR_Fortran_array_of_string_f2c
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 extern int MPIR_Fortran_array_of_string_f2c(const char* strs_f, char*** strs_c, int str_len, int know_size, int size)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -53,7 +53,7 @@ extern int MPIR_Fortran_array_of_string_f2c(const char* strs_f, char*** strs_c, 
     /* Allocate memory for pointers to strings and the strings themself */
     buf = (char*) MPIU_Malloc(sizeof(char*) * num_strs + sizeof(char) * (num_chars + num_strs)); /* Add \0 for each string */
     if (buf == NULL) {
-        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     }
 
     *strs_c = (char**)buf;

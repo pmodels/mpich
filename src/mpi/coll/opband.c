@@ -19,7 +19,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIR_BAND
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_BAND (
     void *invec,
     void *inoutvec,
@@ -55,7 +55,7 @@ void MPIR_BAND (
 #undef FUNCNAME
 #define FUNCNAME MPIR_BAND_check_dtype
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_BAND_check_dtype ( MPI_Datatype type )
 {
     switch (type) {

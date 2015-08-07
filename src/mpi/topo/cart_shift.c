@@ -29,7 +29,7 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int disp, int *rank_source, int
 #undef FUNCNAME
 #define FUNCNAME MPIR_Cart_shift_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Cart_shift_impl(MPID_Comm *comm_ptr, int direction, int disp, int *rank_source, int *rank_dest)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -39,9 +39,9 @@ int MPIR_Cart_shift_impl(MPID_Comm *comm_ptr, int direction, int disp, int *rank
 
     cart_ptr = MPIR_Topology_get( comm_ptr );
 
-    MPIU_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART), mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
-    MPIU_ERR_CHKANDJUMP((cart_ptr->topo.cart.ndims == 0), mpi_errno, MPI_ERR_TOPOLOGY, "**dimszero");
-    MPIU_ERR_CHKANDJUMP2((direction >= cart_ptr->topo.cart.ndims), mpi_errno, MPI_ERR_ARG, "**dimsmany",
+    MPIR_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART), mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
+    MPIR_ERR_CHKANDJUMP((cart_ptr->topo.cart.ndims == 0), mpi_errno, MPI_ERR_TOPOLOGY, "**dimszero");
+    MPIR_ERR_CHKANDJUMP2((direction >= cart_ptr->topo.cart.ndims), mpi_errno, MPI_ERR_ARG, "**dimsmany",
                          "**dimsmany %d %d", cart_ptr->topo.cart.ndims, direction);
 
     /* Check for the case of a 0 displacement */
@@ -91,7 +91,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPI_Cart_shift
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Cart_shift - Returns the shifted source and destination ranks, given a 
                  shift direction and amount
@@ -167,7 +167,7 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int disp, int *rank_source,
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Cart_shift_impl(comm_ptr, direction, disp, rank_source, rank_dest);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 

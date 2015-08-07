@@ -9,7 +9,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Irecv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
 	       MPID_Comm * comm, int context_offset,
                MPID_Request ** request)
@@ -36,17 +36,17 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
             MPIR_AGREE_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_Process.tagged_coll_mask) &&
             MPIR_SHRINK_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_Process.tagged_coll_mask)) {
         MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"Comm has been revoked. Returning from MPID_IRECV.");
-        MPIU_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
+        MPIR_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
     }
 
-    MPIU_THREAD_CS_ENTER(MSGQUEUE,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.msgq_mutex);
     rreq = MPIDI_CH3U_Recvq_FDU_or_AEP(rank, tag, 
 				       comm->recvcontext_id + context_offset,
                                        comm, buf, count, datatype, &found);
     if (rreq == NULL)
     {
-	MPIU_THREAD_CS_EXIT(MSGQUEUE,);
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomemreq");
+	MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.msgq_mutex);
+	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomemreq");
     }
 
     if (found)
@@ -58,7 +58,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 
 	/* Release the message queue - we've removed this request from 
 	   the queue already */
-	MPIU_THREAD_CS_EXIT(MSGQUEUE,);
+	MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.msgq_mutex);
 
 	if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_EAGER_MSG)
 	{
@@ -73,7 +73,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 	    {
 		MPIDI_Comm_get_vc_set_active(comm, rreq->dev.match.parts.rank, &vc);
 		mpi_errno = MPIDI_CH3_EagerSyncAck( vc, rreq );
-		if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+		if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	    }
 
             /* the request was found in the unexpected queue, so it has a
@@ -117,7 +117,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 	    MPIDI_Comm_get_vc_set_active(comm, rreq->dev.match.parts.rank, &vc);
 	
 	    mpi_errno = vc->rndvRecv_fn( vc, rreq );
-	    if (mpi_errno) MPIU_ERR_POP( mpi_errno );
+	    if (mpi_errno) MPIR_ERR_POP( mpi_errno );
 	    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
 	    {
 		MPID_Datatype_get_ptr(datatype, rreq->dev.datatype_ptr);
@@ -127,7 +127,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 	else if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_SELF_MSG)
 	{
 	    mpi_errno = MPIDI_CH3_RecvFromSelf( rreq, buf, count, datatype );
-	    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	}
 	else
 	{
@@ -137,7 +137,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 #endif
             MPID_Request_release(rreq);
 	    rreq = NULL;
-	    MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_INTERN, "**ch3|badmsgtype",
+	    MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_INTERN, "**ch3|badmsgtype",
                                  "**ch3|badmsgtype %d", msg_type);
 	    /* --END ERROR HANDLING-- */
 	}
@@ -160,7 +160,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 	/* We must wait until here to exit the msgqueue critical section
 	   on this request (we needed to set the recv_pending_count
 	   and the datatype pointer) */
-	MPIU_THREAD_CS_EXIT(MSGQUEUE,rreq);
+        MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.msgq_mutex);
     }
 
   fn_exit:

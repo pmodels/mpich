@@ -57,7 +57,7 @@ int MPI_Add_error_code(int errorclass, int *errorcode)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_ADD_ERROR_CODE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -75,7 +75,7 @@ int MPI_Add_error_code(int errorclass, int *errorcode)
     /* ... body of routine ...  */
     
     new_code = MPIR_Err_add_code( errorclass );
-    MPIU_ERR_CHKANDJUMP(new_code<0,mpi_errno,MPI_ERR_OTHER,"**noerrcodes");
+    MPIR_ERR_CHKANDJUMP(new_code<0,mpi_errno,MPI_ERR_OTHER,"**noerrcodes");
 
     *errorcode = new_code;
     
@@ -83,7 +83,7 @@ int MPI_Add_error_code(int errorclass, int *errorcode)
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_ADD_ERROR_CODE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

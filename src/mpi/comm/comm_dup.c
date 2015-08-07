@@ -29,7 +29,7 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm *newcomm) __attribute__((weak,alias("PM
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_dup_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_dup_impl(MPID_Comm *comm_ptr, MPID_Comm **newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -45,7 +45,7 @@ int MPIR_Comm_dup_impl(MPID_Comm *comm_ptr, MPID_Comm **newcomm_ptr)
 	mpi_errno = MPIR_Process.attr_dup( comm_ptr->handle,
                                            comm_ptr->attributes,
                                            &new_attributes );
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     
@@ -54,7 +54,7 @@ int MPIR_Comm_dup_impl(MPID_Comm *comm_ptr, MPID_Comm **newcomm_ptr)
        rank of the process in the communicator.  For intercomms,
        this must be the local size */
     mpi_errno = MPIR_Comm_copy( comm_ptr, comm_ptr->local_size, newcomm_ptr );
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     (*newcomm_ptr)->attributes = new_attributes;
 
@@ -70,7 +70,7 @@ int MPIR_Comm_dup_impl(MPID_Comm *comm_ptr, MPID_Comm **newcomm_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_dup
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Comm_dup - Duplicates an existing communicator with all its cached
@@ -124,7 +124,7 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm *newcomm)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_DUP);
     
     /* Validate parameters, especially handles needing to be converted */
@@ -159,14 +159,14 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm *newcomm)
     /* ... body of routine ...  */
     
     mpi_errno = MPIR_Comm_dup_impl(comm_ptr, &newcomm_ptr);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     MPIU_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
     /* ... end of body of routine ... */
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_DUP);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
     
   fn_fail:

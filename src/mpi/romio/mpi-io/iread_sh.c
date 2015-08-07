@@ -55,7 +55,7 @@ int MPI_File_iread_shared(MPI_File fh, void *buf, int count,
     ADIO_Offset off, shared_fp;
     MPI_Offset nbytes=0;
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
 
     adio_fh = MPIO_File_resolve(fh);
 
@@ -134,7 +134,7 @@ int MPI_File_iread_shared(MPI_File fh, void *buf, int count,
     /* --END ERROR HANDLING-- */
 
 fn_exit:
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return error_code;
 }
 #endif

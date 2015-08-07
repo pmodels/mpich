@@ -74,7 +74,7 @@ typedef struct MPIR_longdoubleint_loctype {
 #undef FUNCNAME
 #define FUNCNAME MPIR_MINLOC
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_MINLOC( 
 	void *invec, 
 	void *inoutvec, 
@@ -113,7 +113,7 @@ void MPIR_MINLOC(
     default: {
 	MPIU_THREADPRIV_DECL;
 	MPIU_THREADPRIV_GET;
-        MPIU_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_MINLOC" );
+        MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_MINLOC" );
         MPIU_THREADPRIV_FIELD(op_errno) = mpi_errno;
         break;
     }
@@ -128,7 +128,7 @@ void MPIR_MINLOC(
 #undef FUNCNAME
 #define FUNCNAME MPIR_MINLOC_check_dtype
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_MINLOC_check_dtype( MPI_Datatype type )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -153,7 +153,7 @@ int MPIR_MINLOC_check_dtype( MPI_Datatype type )
 #endif
         break;
 
-    default: MPIU_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPI_MINLOC");
+    default: MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined", "**opundefined %s", "MPI_MINLOC");
     }
     
     return mpi_errno;

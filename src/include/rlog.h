@@ -17,12 +17,6 @@ extern "C" {
 #ifndef RLOG_BOOL
 #define RLOG_BOOL int
 #endif
-#ifndef RLOG_TRUE
-#define RLOG_TRUE 1
-#endif
-#ifndef RLOG_FALSE
-#define RLOG_FALSE 0
-#endif
 
 #define RLOG_BUFFSIZE           (8*1024*1024)
 #define RLOG_MAX_RECORD_SIZE     1024

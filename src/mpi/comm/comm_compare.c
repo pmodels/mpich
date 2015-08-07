@@ -77,7 +77,7 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_COMPARE);
 
 #   ifdef HAVE_ERROR_CHECKING
@@ -122,19 +122,19 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
 	MPID_Group *group_ptr1, *group_ptr2;
 
         mpi_errno = MPIR_Comm_group_impl(comm_ptr1, &group_ptr1);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         mpi_errno = MPIR_Comm_group_impl(comm_ptr2, &group_ptr2);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         mpi_errno = MPIR_Group_compare_impl(group_ptr1, group_ptr2, result);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	/* If the groups are the same but the contexts are different, then
 	   the communicators are congruent */
 	if (*result == MPI_IDENT)
 	    *result = MPI_CONGRUENT;
 	mpi_errno = MPIR_Group_free_impl(group_ptr1);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	mpi_errno = MPIR_Group_free_impl(group_ptr2);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else { 
 	/* INTER_COMM */
@@ -144,18 +144,18 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
 	
 	/* Get the groups and see what their relationship is */
 	mpi_errno = MPIR_Comm_group_impl(comm_ptr1, &group_ptr1);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	mpi_errno = MPIR_Comm_group_impl(comm_ptr2, &group_ptr2);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         mpi_errno = MPIR_Group_compare_impl(group_ptr1, group_ptr2, &lresult);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 	mpi_errno = MPIR_Comm_remote_group_impl(comm_ptr1, &rgroup_ptr1);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	mpi_errno = MPIR_Comm_remote_group_impl(comm_ptr2, &rgroup_ptr2);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         mpi_errno = MPIR_Group_compare_impl(rgroup_ptr1, rgroup_ptr2, &rresult);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 	/* Choose the result that is "least" strong. This works 
 	   due to the ordering of result types in mpi.h */
@@ -168,19 +168,19 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
 
 	/* Free the groups */
 	mpi_errno = MPIR_Group_free_impl(group_ptr1);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	mpi_errno = MPIR_Group_free_impl(group_ptr2);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	mpi_errno = MPIR_Group_free_impl(rgroup_ptr1);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	mpi_errno = MPIR_Group_free_impl(rgroup_ptr2);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     /* ... end of body of routine ... */
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_COMPARE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
     
     /* --BEGIN ERROR HANDLING-- */

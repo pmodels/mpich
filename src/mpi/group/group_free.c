@@ -28,7 +28,7 @@ int MPI_Group_free(MPI_Group *group) __attribute__((weak,alias("PMPI_Group_free"
 #undef FUNCNAME
 #define FUNCNAME MPIR_Group_free_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Group_free_impl(MPID_Group *group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -36,7 +36,7 @@ int MPIR_Group_free_impl(MPID_Group *group_ptr)
     /* Do not free MPI_GROUP_EMPTY */
     if (group_ptr->handle != MPI_GROUP_EMPTY) {
         mpi_errno = MPIR_Group_release(group_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
  fn_exit:
@@ -50,7 +50,7 @@ int MPIR_Group_free_impl(MPID_Group *group_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPI_Group_free
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Group_free - Frees a group
@@ -78,7 +78,7 @@ int MPI_Group_free(MPI_Group *group)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GROUP_FREE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -128,7 +128,7 @@ int MPI_Group_free(MPI_Group *group)
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GROUP_FREE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

@@ -51,7 +51,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Handle_ordered_recv_pkt
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Handle_ordered_recv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, 
 				       MPIDI_msg_sz_t *buflen, MPID_Request ** rreqp)
 {
@@ -101,7 +101,7 @@ int MPIDI_CH3U_Handle_ordered_recv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Receive_data_found
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t *buflen, int *complete)
 {
     int dt_contig;
@@ -174,7 +174,7 @@ int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t 
 	   the entire message */
         
 	rreq->dev.segment_ptr = MPID_Segment_alloc( );
-        MPIU_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
+        MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
 
  	MPID_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, 
 			  rreq->dev.datatype, rreq->dev.segment_ptr, 0);
@@ -197,7 +197,7 @@ int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t 
                 /* If the data can't be unpacked, the we have a
                    mismatch between the datatype and the amount of
                    data received.  Throw away received data. */
-                MPIU_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
+                MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
                 MPIR_STATUS_SET_COUNT(rreq->status, rreq->dev.segment_first);
                 *buflen = data_sz;
                 *complete = TRUE;
@@ -216,7 +216,7 @@ int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t 
 
             mpi_errno = MPIDI_CH3U_Request_load_recv_iov(rreq);
             if (mpi_errno != MPI_SUCCESS) {
-                MPIU_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_OTHER,
+                MPIR_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_OTHER,
                                          "**ch3|loadrecviov");
             }
             *buflen = 0;
@@ -234,7 +234,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Receive_data_unexpected
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Receive_data_unexpected(MPID_Request * rreq, char *buf, MPIDI_msg_sz_t *buflen, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -250,7 +250,7 @@ int MPIDI_CH3U_Receive_data_unexpected(MPID_Request * rreq, char *buf, MPIDI_msg
     
     rreq->dev.tmpbuf = MPIU_Malloc(rreq->dev.recv_data_sz);
     if (!rreq->dev.tmpbuf) {
-	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
+	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
 			     rreq->dev.recv_data_sz);
     }
     rreq->dev.tmpbuf_sz = rreq->dev.recv_data_sz;
@@ -292,7 +292,7 @@ int MPIDI_CH3U_Receive_data_unexpected(MPID_Request * rreq, char *buf, MPIDI_msg
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Post_data_receive_found
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Post_data_receive_found(MPID_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;	
@@ -347,14 +347,14 @@ int MPIDI_CH3U_Post_data_receive_found(MPID_Request * rreq)
 	   the entire message */
 	MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"IOV loaded for non-contiguous read");
 	rreq->dev.segment_ptr = MPID_Segment_alloc( );
-        MPIU_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
+        MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
 	MPID_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, 
 			  rreq->dev.datatype, rreq->dev.segment_ptr, 0);
 	rreq->dev.segment_first = 0;
 	rreq->dev.segment_size = data_sz;
 	mpi_errno = MPIDI_CH3U_Request_load_recv_iov(rreq);
 	if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_OTHER,
+	    MPIR_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_OTHER,
 				     "**ch3|loadrecviov");
 	}
     }
@@ -369,7 +369,7 @@ int MPIDI_CH3U_Post_data_receive_found(MPID_Request * rreq)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Post_data_receive_unexpected
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Post_data_receive_unexpected(MPID_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -385,7 +385,7 @@ int MPIDI_CH3U_Post_data_receive_unexpected(MPID_Request * rreq)
     
     rreq->dev.tmpbuf = MPIU_Malloc(rreq->dev.recv_data_sz);
     if (!rreq->dev.tmpbuf) {
-	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
+	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
 			     rreq->dev.recv_data_sz);
     }
     rreq->dev.tmpbuf_sz = rreq->dev.recv_data_sz;
@@ -412,7 +412,7 @@ int MPIDI_CH3U_Post_data_receive_unexpected(MPID_Request * rreq)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Try_acquire_win_lock
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Try_acquire_win_lock(MPID_Win *win_ptr, int requested_lock)
 {
     int existing_lock;
@@ -494,7 +494,7 @@ int MPIDI_CH3_PktHandler_FlowCntlUpdate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_PktHandler_EndCH3
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EndCH3( MPIDI_VC_t *vc ATTRIBUTE((unused)), 
 				 MPIDI_CH3_Pkt_t *pkt ATTRIBUTE((unused)),
 				 MPIDI_msg_sz_t *buflen ATTRIBUTE((unused)), 
@@ -522,7 +522,7 @@ int MPIDI_CH3_PktHandler_EndCH3( MPIDI_VC_t *vc ATTRIBUTE((unused)),
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_PktHandler_Init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_Init( MPIDI_CH3_PktHandler_Fcn *pktArray[], 
 			       int arraySize  )
 {
@@ -533,7 +533,7 @@ int MPIDI_CH3_PktHandler_Init( MPIDI_CH3_PktHandler_Fcn *pktArray[],
 
     /* Check that the array is large enough */
     if (arraySize < MPIDI_CH3_PKT_END_CH3) {
-	MPIU_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_INTERN,
+	MPIR_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_INTERN,
 				 "**ch3|pktarraytoosmall");
     }
     pktArray[MPIDI_CH3_PKT_EAGER_SEND] = 

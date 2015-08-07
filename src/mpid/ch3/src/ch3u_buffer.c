@@ -31,7 +31,7 @@ Used indirectly by mpid_irecv, mpid_recv (through MPIDI_CH3_RecvFromSelf) and
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Buffer_copy
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIDI_CH3U_Buffer_copy(
     const void * const sbuf, MPI_Aint scount, MPI_Datatype sdt, int * smpi_errno,
     void * const rbuf, MPI_Aint rcount, MPI_Datatype rdt, MPIDI_msg_sz_t * rsz,
@@ -243,7 +243,7 @@ int MPIDI_CH3_RecvFromSelf( MPID_Request *rreq, void *buf, MPI_Aint count,
 	MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
 	mpi_errno = MPID_Request_complete(sreq);
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
     }
     else
@@ -257,7 +257,7 @@ int MPIDI_CH3_RecvFromSelf( MPID_Request *rreq, void *buf, MPI_Aint count,
        reset ref_count and cc */
     mpi_errno = MPID_Request_complete(rreq);
     if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     }
 
  fn_exit:

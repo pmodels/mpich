@@ -28,7 +28,7 @@ int MPI_Info_get_nthkey(MPI_Info info, int n, char *key) __attribute__((weak,ali
 #undef FUNCNAME
 #define FUNCNAME MPIR_Info_get_nthkey_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Info_get_nthkey_impl(MPID_Info *info_ptr, int n, char *key)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -43,7 +43,7 @@ int MPIR_Info_get_nthkey_impl(MPID_Info *info_ptr, int n, char *key)
     }
 
     /* verify that n is valid */
-    MPIU_ERR_CHKANDJUMP2((!curr_ptr), mpi_errno, MPI_ERR_ARG, "**infonkey", "**infonkey %d %d", n, nkeys);
+    MPIR_ERR_CHKANDJUMP2((!curr_ptr), mpi_errno, MPI_ERR_ARG, "**infonkey", "**infonkey %d %d", n, nkeys);
 
     MPIU_Strncpy( key, curr_ptr->key, MPI_MAX_INFO_KEY+1 );
     /* Eventually, we could remember the location of this key in
@@ -79,7 +79,7 @@ Output Parameters:
 #undef FUNCNAME
 #define FUNCNAME MPI_Info_get_nthkey
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPI_Info_get_nthkey( MPI_Info info, int n, char *key )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -88,7 +88,7 @@ int MPI_Info_get_nthkey( MPI_Info info, int n, char *key )
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_INFO_GET_NTHKEY);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -114,7 +114,7 @@ int MPI_Info_get_nthkey( MPI_Info info, int n, char *key )
             MPID_Info_valid_ptr( info_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
 
-	    MPIU_ERR_CHKANDJUMP((!key), mpi_errno, MPI_ERR_INFO_KEY, "**infokeynull");
+	    MPIR_ERR_CHKANDJUMP((!key), mpi_errno, MPI_ERR_INFO_KEY, "**infokeynull");
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -127,7 +127,7 @@ int MPI_Info_get_nthkey( MPI_Info info, int n, char *key )
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_INFO_GET_NTHKEY);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
     
   fn_fail:

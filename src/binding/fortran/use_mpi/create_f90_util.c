@@ -36,7 +36,7 @@ static int MPIR_FreeF90Datatypes( void *d )
 #undef FUNCNAME
 #define FUNCNAME MPIR_Create_unnamed_predefined
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner, 
 				    int r, int p, 
 				    MPI_Datatype *new_ptr )
@@ -76,7 +76,7 @@ int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner,
 
     /* Create a contiguous type from one instance of the named type */
     mpi_errno = MPID_Type_contiguous( 1, old, &type->d );
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Initialize the contents data */
     {
@@ -102,7 +102,7 @@ int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner,
 	mpi_errno = MPID_Datatype_set_contents(new_dtp, combiner,
 					       nvals, 0, 0, vals,
 					       NULL, NULL );
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         /* FIXME should we be setting type->is_permanent=TRUE here too?  If so,
          * will the cleanup code handle it correctly and not freak out? */
@@ -123,7 +123,7 @@ int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner,
         /* the MPI Standard requires that these types are pre-committed
          * (MPI-2.2, sec 16.2.5, pg 492) */
         mpi_errno = MPID_Type_commit(&type->d);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     *new_ptr       = type->d;

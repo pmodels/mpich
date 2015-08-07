@@ -211,7 +211,7 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
     pkt_len = sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.ext_hdr_sz + data_sz;
     if (sreq->dev.ext_hdr_sz > 0 && gl_data.iov_limit > 2) {
       REQ_OFI(sreq)->real_hdr        = MPIU_Malloc(sizeof(MPIDI_CH3_Pkt_t)+sreq->dev.ext_hdr_sz);
-      MPIU_ERR_CHKANDJUMP1(REQ_OFI(sreq)->real_hdr == NULL, mpi_errno, MPI_ERR_OTHER,
+      MPIR_ERR_CHKANDJUMP1(REQ_OFI(sreq)->real_hdr == NULL, mpi_errno, MPI_ERR_OTHER,
                             "**nomem", "**nomem %s", "iSendContig extended header allocation");
       REQ_OFI(sreq)->iov[0].iov_base = REQ_OFI(sreq)->real_hdr;
       REQ_OFI(sreq)->iov[0].iov_len  = hdr_sz;
@@ -226,7 +226,7 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
       }
     else if(sreq->dev.ext_hdr_sz == 0 && gl_data.iov_limit > 1) {
         REQ_OFI(sreq)->real_hdr = MPIU_Malloc(sizeof(MPIDI_CH3_Pkt_t));
-        MPIU_ERR_CHKANDJUMP1(REQ_OFI(sreq)->real_hdr == NULL, mpi_errno, MPI_ERR_OTHER,
+        MPIR_ERR_CHKANDJUMP1(REQ_OFI(sreq)->real_hdr == NULL, mpi_errno, MPI_ERR_OTHER,
                              "**nomem", "**nomem %s", "iSendContig header allocation");
         MPIU_Memcpy(REQ_OFI(sreq)->real_hdr, hdr, hdr_sz);
         REQ_OFI(sreq)->iov[0].iov_base = REQ_OFI(sreq)->real_hdr;
@@ -237,7 +237,7 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
     }
     else {
       pack_buffer = MPIU_Malloc(pkt_len);
-      MPIU_ERR_CHKANDJUMP1(pack_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
+      MPIR_ERR_CHKANDJUMP1(pack_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
                            "**nomem", "**nomem %s", "iSendContig pack buffer allocation");
       MPIU_Memcpy(pack_buffer, hdr, hdr_sz);
       buf_offset += sizeof(MPIDI_CH3_Pkt_t);
@@ -273,7 +273,7 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc,
     data_sz = sreq->dev.segment_size - sreq->dev.segment_first;
     pkt_len = sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.ext_hdr_sz + data_sz;
     pack_buffer = MPIU_Malloc(pkt_len);
-    MPIU_ERR_CHKANDJUMP1(pack_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
+    MPIR_ERR_CHKANDJUMP1(pack_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
                          "**nomem", "**nomem %s", "SendNonContig pack buffer allocation");
     MPIU_Memcpy(pack_buffer, hdr, hdr_sz);
     buf_offset += sizeof(MPIDI_CH3_Pkt_t);
@@ -319,7 +319,7 @@ int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc,
     }
     else {
       pack_buffer = MPIU_Malloc(pkt_len);
-      MPIU_ERR_CHKANDJUMP1(pack_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
+      MPIR_ERR_CHKANDJUMP1(pack_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
                            "**nomem", "**nomem %s", "iStartContig pack buffer allocation");
       MPIU_Memcpy((void *) pack_buffer, hdr, hdr_sz);
       if (data_sz)

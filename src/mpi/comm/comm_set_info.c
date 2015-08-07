@@ -30,7 +30,7 @@ int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info) __attribute__((weak,alias("P
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_set_info_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_set_info_impl(MPID_Comm * comm_ptr, MPID_Info * info_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -58,7 +58,7 @@ int MPIR_Comm_set_info_impl(MPID_Comm * comm_ptr, MPID_Info * info_ptr)
         if (curr_info->key == NULL) continue;
 
         mpi_errno = MPIR_Info_set_impl(comm_ptr->info, curr_info->key, curr_info->value);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
   fn_exit:
@@ -73,7 +73,7 @@ int MPIR_Comm_set_info_impl(MPID_Comm * comm_ptr, MPID_Info * info_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_set_info
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_set_info - Set new values for the hints of the
    communicator associated with comm.  The call is collective on the
@@ -104,7 +104,7 @@ int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_SET_INFO);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -143,7 +143,7 @@ int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info)
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_SET_INFO);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

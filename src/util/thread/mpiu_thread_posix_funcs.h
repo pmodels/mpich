@@ -248,9 +248,8 @@ do {                                                                       \
 									\
     /* FIXME: convert error to an MPIU_THREAD_ERR value */		\
     *(int *)(err_ptr_) = err__;                                         \
-    if (err__) {                                                        \
-        MPIU_DBG_MSG_FMT(THREAD,TYPICAL,(MPIU_DBG_FDEST,"error in cond_wait on cond=%p mutex=%p err__=%d",(cond_ptr_),(mutex_ptr_), err__)) \
-            }                                                           \
+    MPIU_Assert_fmt_msg(err__ == 0,                   \
+                        ("cond_wait failed, err=%d (%s)",err__,strerror(err__))); \
     MPIU_DBG_MSG_FMT(THREAD,TYPICAL,(MPIU_DBG_FDEST,"Exit cond_wait on cond=%p mutex=%p",(cond_ptr_),(mutex_ptr_))) \
 } while (0)
 
@@ -263,6 +262,8 @@ do {                                                               \
 								\
     /* FIXME: convert error to an MPIU_THREAD_ERR value */	\
     *(int *)(err_ptr_) = err__;                                 \
+    MPIU_Assert_fmt_msg(err__ == 0,                     \
+                        ("cond_broadcast failed, err__=%d (%s)",err__,strerror(err__))); \
 } while (0)
 
 #define MPIU_Thread_cond_signal(cond_ptr_, err_ptr_)		\
@@ -274,6 +275,8 @@ do {                                                               \
 								\
     /* FIXME: convert error to an MPIU_THREAD_ERR value */	\
     *(int *)(err_ptr_) = err__;                                 \
+    MPIU_Assert_fmt_msg(err__ == 0,                                     \
+                        ("cond_signal failed, err__=%d (%s)",err__,strerror(err__))); \
 } while (0)
 
 
@@ -308,7 +311,9 @@ do {                                                               \
     err__ = pthread_setspecific(*(tls_ptr_), (value_));		\
 								\
     /* FIXME: convert error to an MPIU_THREAD_ERR value */	\
-    *(int *)(err_ptr_) = err__;                                 \
+    *(int *)(err_ptr_) = err__;                             \
+    MPIU_Assert_fmt_msg(err__ == 0,                     \
+                        ("tls_set failed, err__=%d (%s)",err__,strerror(err__))); \
 } while (0)
 
 #define MPIU_Thread_tls_get(tls_ptr_, value_ptr_, err_ptr_)	\

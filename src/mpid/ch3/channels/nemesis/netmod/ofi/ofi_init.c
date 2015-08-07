@@ -111,7 +111,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
                      hints,         /* In:  Hints to filter available providers  */
                      &prov_tagged), /* Out: List of providers that match hints   */
           getinfo);
-    MPIU_ERR_CHKANDJUMP4(prov_tagged == NULL, mpi_errno, MPI_ERR_OTHER,
+    MPIR_ERR_CHKANDJUMP4(prov_tagged == NULL, mpi_errno, MPI_ERR_OTHER,
                          "**ofi_getinfo", "**ofi_getinfo %s %d %s %s",
                          __SHORT_FILE__, __LINE__, FCNAME, "No tag matching provider found");
     /* ------------------------------------------------------------------------ */
@@ -252,7 +252,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
         ret = MPIU_Str_get_binary_arg(bc, "OFI",
                                       (char *) &addrs[i * gl_data.bound_addrlen],
                                       gl_data.bound_addrlen, &len);
-        MPIU_ERR_CHKANDJUMP((ret != MPIU_STR_SUCCESS && ret != MPIU_STR_NOMEM) ||
+        MPIR_ERR_CHKANDJUMP((ret != MPIU_STR_SUCCESS && ret != MPIU_STR_NOMEM) ||
                             (size_t) len != gl_data.bound_addrlen,
                             mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
     }
@@ -347,32 +347,32 @@ static inline int compile_time_checking()
 
     /* ------------------------------------------------------------------------ */
     /* Generate the MPICH catalog files                                         */
-    /* The high level mpich build scripts inspect MPIU_ERR_ macros to generate  */
+    /* The high level mpich build scripts inspect MPIR_ERR_ macros to generate  */
     /* the message catalog.  However, this netmod buries the messages under the */
     /* FI_RC macros, so the catalog doesn't get generated.  The build system    */
-    /* likely needs a MPIU_ERR_REGISTER macro                                   */
+    /* likely needs a MPIR_ERR_REGISTER macro                                   */
     /* ------------------------------------------------------------------------ */
 #if 0
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_avmap", "**ofi_avmap %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_tsend", "**ofi_tsend %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_trecv", "**ofi_trecv %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_getinfo", "**ofi_getinfo %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_openep", "**ofi_openep %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_openfabric", "**ofi_openfabric %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_opendomain", "**ofi_opendomain %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_opencq", "**ofi_opencq %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_avopen", "**ofi_avopen %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_bind", "**ofi_bind %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_ep_enable", "**ofi_ep_enable %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_getname", "**ofi_getname %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_avclose", "**ofi_avclose %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_epclose", "**ofi_epclose %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_cqclose", "**ofi_cqclose %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_fabricclose", "**ofi_fabricclose %s %d %s %s", a, b, a,a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_domainclose", "**ofi_domainclose %s %d %s %s", a, b, a,a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_peek", "**ofi_peek %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_poll", "**ofi_poll %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_cancel", "**ofi_cancel %s %d %s %s", a, b, a, a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_avmap", "**ofi_avmap %s %d %s %s", a, b, a, a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_tsend", "**ofi_tsend %s %d %s %s", a, b, a, a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_trecv", "**ofi_trecv %s %d %s %s", a, b, a, a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_getinfo", "**ofi_getinfo %s %d %s %s", a, b, a, a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_openep", "**ofi_openep %s %d %s %s", a, b, a, a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_openfabric", "**ofi_openfabric %s %d %s %s", a, b, a, a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_opendomain", "**ofi_opendomain %s %d %s %s", a, b, a, a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_opencq", "**ofi_opencq %s %d %s %s", a, b, a, a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_avopen", "**ofi_avopen %s %d %s %s", a, b, a, a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_bind", "**ofi_bind %s %d %s %s", a, b, a, a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_ep_enable", "**ofi_ep_enable %s %d %s %s", a, b, a, a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_getname", "**ofi_getname %s %d %s %s", a, b, a, a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_avclose", "**ofi_avclose %s %d %s %s", a, b, a, a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_epclose", "**ofi_epclose %s %d %s %s", a, b, a, a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_cqclose", "**ofi_cqclose %s %d %s %s", a, b, a, a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_fabricclose", "**ofi_fabricclose %s %d %s %s", a, b, a,a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_domainclose", "**ofi_domainclose %s %d %s %s", a, b, a,a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_peek", "**ofi_peek %s %d %s %s", a, b, a, a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_poll", "**ofi_poll %s %d %s %s", a, b, a, a);
+    MPIR_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_cancel", "**ofi_cancel %s %d %s %s", a, b, a, a);
 #endif
     return 0;
 }

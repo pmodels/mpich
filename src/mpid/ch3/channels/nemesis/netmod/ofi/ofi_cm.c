@@ -126,7 +126,7 @@ static inline int MPID_nem_ofi_conn_req_callback(cq_tagged_entry_t * wc, MPID_Re
     MPIDI_VC_Init(vc, NULL, 0);
     MPIDI_CH3I_NM_OFI_RC(MPIDI_GetTagFromPort(bc, &vc->port_name_tag));
     ret = MPIU_Str_get_binary_arg(bc, "OFI", addr, gl_data.bound_addrlen, &len);
-    MPIU_ERR_CHKANDJUMP((ret != MPIU_STR_SUCCESS && ret != MPIU_STR_NOMEM) ||
+    MPIR_ERR_CHKANDJUMP((ret != MPIU_STR_SUCCESS && ret != MPIU_STR_NOMEM) ||
                         (size_t) len != gl_data.bound_addrlen,
                         mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
 
@@ -260,7 +260,7 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPID_R
                    GET_RCD_IGNORE_MASK(),
                    &(REQ_OFI(rreq)->ofi_context)), trecv);
     /* Return a proper error to MPI to indicate out of memory condition */
-    MPIU_ERR_CHKANDJUMP1(pack_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
+    MPIR_ERR_CHKANDJUMP1(pack_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
                          "**nomem", "**nomem %s", "Pack Buffer alloc");
     END_FUNC_RC(FCNAME);
 }
@@ -410,7 +410,7 @@ int MPID_nem_ofi_vc_connect(MPIDI_VC_t * vc)
 
     MPIDI_CH3I_NM_OFI_RC(vc->pg->getConnInfo(vc->pg_rank, bc, OFI_KVSAPPSTRLEN, vc->pg));
     ret = MPIU_Str_get_binary_arg(bc, "OFI", addr, gl_data.bound_addrlen, &len);
-    MPIU_ERR_CHKANDJUMP((ret != MPIU_STR_SUCCESS && ret != MPIU_STR_NOMEM) ||
+    MPIR_ERR_CHKANDJUMP((ret != MPIU_STR_SUCCESS && ret != MPIU_STR_NOMEM) ||
                         (size_t) len != gl_data.bound_addrlen,
                         mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
     FI_RC(fi_av_insert(gl_data.av, addr, 1, &(VC_OFI(vc)->direct_addr), 0ULL, NULL), avmap);
@@ -539,14 +539,14 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     }
     MPIDI_CH3I_NM_OFI_RC(MPIDI_GetTagFromPort(business_card, &new_vc->port_name_tag));
     ret = MPIU_Str_get_binary_arg(business_card, "OFI", addr, gl_data.bound_addrlen, &len);
-    MPIU_ERR_CHKANDJUMP((ret != MPIU_STR_SUCCESS && ret != MPIU_STR_NOMEM) ||
+    MPIR_ERR_CHKANDJUMP((ret != MPIU_STR_SUCCESS && ret != MPIU_STR_NOMEM) ||
                         (size_t) len != gl_data.bound_addrlen,
                         mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
     FI_RC(fi_av_insert(gl_data.av, addr, 1, &(VC_OFI(new_vc)->direct_addr), 0ULL, NULL), avmap);
 
     VC_OFI(new_vc)->ready = 1;
     str_errno = MPIU_Str_add_int_arg(&bc, &my_bc_len, "tag", new_vc->port_name_tag);
-    MPIU_ERR_CHKANDJUMP(str_errno, mpi_errno, MPI_ERR_OTHER, "**argstr_port_name_tag");
+    MPIR_ERR_CHKANDJUMP(str_errno, mpi_errno, MPI_ERR_OTHER, "**argstr_port_name_tag");
     MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_get_business_card(MPIR_Process.comm_world->rank, &bc, &my_bc_len));
     my_bc_len = OFI_KVSAPPSTRLEN - my_bc_len;
 
@@ -601,8 +601,8 @@ int MPID_nem_ofi_get_business_card(int my_rank ATTRIBUTE((unused)),
                                         "OFI",
                                         (char *) &gl_data.bound_addr, gl_data.bound_addrlen);
     if (str_errno) {
-        MPIU_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
-        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
+        MPIR_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
     END_FUNC_RC(FCNAME);
 }

@@ -34,7 +34,7 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 #undef FUNCNAME
 #define FUNCNAME MPIR_Testall_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Testall_impl(int count, MPI_Request array_of_requests[], int *flag,
                       MPI_Status array_of_statuses[])
 {
@@ -111,7 +111,7 @@ int MPIR_Testall_impl(int count, MPI_Request array_of_requests[], int *flag,
                         !MPID_Comm_AS_enabled(request_ptrs[i]->comm)))
             {
                 mpi_errno = MPI_ERR_IN_STATUS;
-                MPIU_ERR_SET(rc, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
+                MPIR_ERR_SET(rc, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
                 status_ptr = (array_of_statuses != MPI_STATUSES_IGNORE) ? &array_of_statuses[i] : MPI_STATUS_IGNORE;
                 if (status_ptr != MPI_STATUS_IGNORE) status_ptr->MPI_ERROR = rc;
                 proc_failure = TRUE;
@@ -187,7 +187,7 @@ int MPIR_Testall_impl(int count, MPI_Request array_of_requests[], int *flag,
 #undef FUNCNAME
 #define FUNCNAME MPI_Testall
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Testall - Tests for the completion of all previously initiated
     requests
@@ -238,7 +238,7 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_PT2PT_FUNC_ENTER(MPID_STATE_MPI_TESTALL);
 
     /* Check the arguments */
@@ -273,7 +273,7 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
   fn_exit:
     
     MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_TESTALL);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

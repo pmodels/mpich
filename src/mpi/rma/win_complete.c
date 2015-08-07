@@ -54,7 +54,7 @@ int MPI_Win_complete(MPI_Win win)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_WIN_COMPLETE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -94,7 +94,7 @@ int MPI_Win_complete(MPI_Win win)
 
   fn_exit:
     MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_WIN_COMPLETE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

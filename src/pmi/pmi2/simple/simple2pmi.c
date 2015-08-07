@@ -1214,7 +1214,7 @@ fn_fail:
    We may want to share these routines with the PMI version 2 server */
 int PMIi_ReadCommand( int fd, PMI2_Command *cmd )
 {
-    int pmi2_errno = PMI2_SUCCESS;
+    int pmi2_errno = PMI2_SUCCESS,err;
     char cmd_len_str[PMII_COMMANDLEN_SIZE+1];
     int cmd_len, remaining_len, vallen = 0;
     char *c, *cmd_buf = NULL;
@@ -1234,18 +1234,18 @@ int PMIi_ReadCommand( int fd, PMI2_Command *cmd )
 #ifdef MPICH_IS_THREADED
     MPIU_THREAD_CHECK_BEGIN;
     {
-        MPID_Thread_mutex_lock(&mutex);
+        MPID_Thread_mutex_lock(&mutex, &err);
 
         while (blocked && !cmd->complete)
             MPID_Thread_cond_wait(&cond, &mutex);
 
         if (cmd->complete) {
-            MPID_Thread_mutex_unlock(&mutex);
+            MPID_Thread_mutex_unlock(&mutex, &err);
             goto fn_exit;
         }
 
         blocked = TRUE;
-        MPID_Thread_mutex_unlock(&mutex);
+        MPID_Thread_mutex_unlock(&mutex, &err);
     }
     MPIU_THREAD_CHECK_END;
 #endif
@@ -1366,10 +1366,10 @@ int PMIi_ReadCommand( int fd, PMI2_Command *cmd )
 #ifdef MPICH_IS_THREADED
     MPIU_THREAD_CHECK_BEGIN;
     {
-        MPID_Thread_mutex_lock(&mutex);
+        MPID_Thread_mutex_lock(&mutex, &err);
         blocked = FALSE;
-        MPID_Thread_cond_broadcast(&cond);
-        MPID_Thread_mutex_unlock(&mutex);
+        MPID_Thread_cond_broadcast(&cond,&err);
+        MPID_Thread_mutex_unlock(&mutex, &err);
     }
     MPIU_THREAD_CHECK_END;
 #endif
@@ -1418,7 +1418,7 @@ fn_fail:
 
 int PMIi_WriteSimpleCommand( int fd, PMI2_Command *resp, const char cmd[], PMI2_Keyvalpair *pairs[], int npairs)
 {
-    int pmi2_errno = PMI2_SUCCESS;
+    int pmi2_errno = PMI2_SUCCESS,err;
     char cmdbuf[PMII_MAX_COMMAND_LEN];
     char cmdlenbuf[PMII_COMMANDLEN_SIZE+1];
     char *c = cmdbuf;
@@ -1493,13 +1493,13 @@ int PMIi_WriteSimpleCommand( int fd, PMI2_Command *resp, const char cmd[], PMI2_
  #ifdef MPICH_IS_THREADED
     MPIU_THREAD_CHECK_BEGIN;
     {
-        MPID_Thread_mutex_lock(&mutex);
+        MPID_Thread_mutex_lock(&mutex, &err);
 
         while (blocked)
-            MPID_Thread_cond_wait(&cond, &mutex);
+            MPID_Thread_cond_wait(&cond, &mutex, &err);
 
         blocked = TRUE;
-        MPID_Thread_mutex_unlock(&mutex);
+        MPID_Thread_mutex_unlock(&mutex, &err);
     }
     MPIU_THREAD_CHECK_END;
 #endif
@@ -1520,10 +1520,10 @@ int PMIi_WriteSimpleCommand( int fd, PMI2_Command *resp, const char cmd[], PMI2_
 #ifdef MPICH_IS_THREADED
     MPIU_THREAD_CHECK_BEGIN;
     {
-        MPID_Thread_mutex_lock(&mutex);
+        MPID_Thread_mutex_lock(&mutex, &err);
         blocked = FALSE;
-        MPID_Thread_cond_broadcast(&cond);
-        MPID_Thread_mutex_unlock(&mutex);
+        MPID_Thread_cond_broadcast(&cond,&err);
+        MPID_Thread_mutex_unlock(&mutex, &err);
     }
     MPIU_THREAD_CHECK_END;
 #endif

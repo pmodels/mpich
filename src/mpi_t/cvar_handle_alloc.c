@@ -30,7 +30,7 @@ int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle 
 #undef FUNCNAME
 #define FUNCNAME MPIR_T_cvar_handle_alloc_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPI_T_cvar_handle *handle, int *count)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -78,7 +78,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPI_T_cvar_handle_alloc
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_cvar_handle_alloc - Allocate a handle for a control variable
 
@@ -126,7 +126,7 @@ int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle 
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_T_cvar_handle_alloc_impl(cvar_index, obj_handle, handle, count);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 

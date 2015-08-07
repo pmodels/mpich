@@ -252,18 +252,18 @@ static int ModifyArrows(FILE *f, int nNumArrows, int nMin, double *pOffsets, int
 	{
 	    arrow = pArray[i];
 
-	    bModified = RLOG_FALSE;
+	    bModified = FALSE;
 	    index = (arrow.leftright == RLOG_ARROW_RIGHT) ? arrow.src - nMin : arrow.dest - nMin;
 	    if (index >= 0 && index < n && pOffsets[index] != 0)
 	    {
 		arrow.start_time += pOffsets[index];
-		bModified = RLOG_TRUE;
+		bModified = TRUE;
 	    }
 	    index = (arrow.leftright == RLOG_ARROW_RIGHT) ? arrow.dest - nMin : arrow.src - nMin;
 	    if (index >= 0 && index < n && pOffsets[index] != 0)
 	    {
 		arrow.end_time += pOffsets[index];
-		bModified = RLOG_TRUE;
+		bModified = TRUE;
 	    }
 	    if (bModified)
 	    {
@@ -784,10 +784,10 @@ RLOG_BOOL FindMinGlobalEvent(RLOG_IOStruct *pInput, int *rank, int *level, int *
 {
     int i,j;
     double dmin = RLOG_MAX_DOUBLE;
-    RLOG_BOOL found = RLOG_FALSE;
+    RLOG_BOOL found = FALSE;
 
     if (pInput == NULL)
-	return RLOG_FALSE;
+	return FALSE;
 
     for (i=0; i<pInput->nNumRanks; i++)
     {
@@ -801,7 +801,7 @@ RLOG_BOOL FindMinGlobalEvent(RLOG_IOStruct *pInput, int *rank, int *level, int *
 		    *level = j;
 		    *index = pInput->ppCurGlobalEvent[i][j];
 		    dmin = pInput->gppCurEvent[i][j].start_time;
-		    found = RLOG_TRUE;
+		    found = TRUE;
 		}
 	    }
 	}
@@ -814,10 +814,10 @@ RLOG_BOOL FindMaxGlobalEvent(RLOG_IOStruct *pInput, int *rank, int *level, int *
 {
     int i,j;
     double dmax = RLOG_MIN_DOUBLE;
-    RLOG_BOOL found = RLOG_FALSE;
+    RLOG_BOOL found = FALSE;
 
     if (pInput == NULL)
-	return RLOG_FALSE;
+	return FALSE;
 
     for (i=0; i<pInput->nNumRanks; i++)
     {
@@ -831,7 +831,7 @@ RLOG_BOOL FindMaxGlobalEvent(RLOG_IOStruct *pInput, int *rank, int *level, int *
 		    *level = j;
 		    *index = pInput->ppCurGlobalEvent[i][j];
 		    dmax = pInput->gppPrevEvent[i][j].start_time;
-		    found = RLOG_TRUE;
+		    found = TRUE;
 		}
 	    }
 	}
@@ -844,7 +844,7 @@ int RLOG_ResetGlobalIter(RLOG_IOStruct *pInput)
 {
     int i,j, n;
     RLOG_EVENT min_event = {0};
-    RLOG_BOOL bMinSet = RLOG_FALSE;
+    RLOG_BOOL bMinSet = FALSE;
 
     if (pInput == NULL)
 	return -1;
@@ -870,7 +870,7 @@ int RLOG_ResetGlobalIter(RLOG_IOStruct *pInput)
 	    if (!bMinSet)
 	    {
 		min_event = pInput->gppCurEvent[pInput->header.nMinRank+i][0];
-		bMinSet = RLOG_TRUE;
+		bMinSet = TRUE;
 	    }
 	    /* save the rank with the earliest event */
 	    if (min_event.start_time > pInput->gppCurEvent[i][0].start_time)

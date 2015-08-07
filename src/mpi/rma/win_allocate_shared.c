@@ -31,7 +31,7 @@ int MPI_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Com
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_allocate_shared
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 MPI_Win_allocate_shared - Create an MPI Window object for one-sided
@@ -90,7 +90,7 @@ int MPI_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Com
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_WIN_ALLOCATE_SHARED);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -119,13 +119,13 @@ int MPI_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Com
 	    MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-            MPIU_ERR_CHKANDJUMP1(disp_unit <= 0, mpi_errno, MPI_ERR_ARG,
+            MPIR_ERR_CHKANDJUMP1(disp_unit <= 0, mpi_errno, MPI_ERR_ARG,
                                  "**arg", "**arg %s", "disp_unit must be positive");
 
-            MPIU_ERR_CHKANDJUMP1(size < 0, mpi_errno, MPI_ERR_SIZE,
+            MPIR_ERR_CHKANDJUMP1(size < 0, mpi_errno, MPI_ERR_SIZE,
                                  "**rmasize", "**rmasize %d", size);
 
-            MPIU_ERR_CHKANDJUMP1(size > 0 && baseptr == NULL, mpi_errno, MPI_ERR_ARG,
+            MPIR_ERR_CHKANDJUMP1(size > 0 && baseptr == NULL, mpi_errno, MPI_ERR_ARG,
                                  "**nullptr", "**nullptr %s",
                                  "NULL base pointer is invalid when size is nonzero");
 
@@ -151,7 +151,7 @@ int MPI_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Com
 
   fn_exit:
     MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_WIN_ALLOCATE_SHARED);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

@@ -11,7 +11,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Req_handler_rma_op_complete
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Req_handler_rma_op_complete(MPID_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -36,7 +36,7 @@ int MPIDI_CH3_Req_handler_rma_op_complete(MPID_Request * sreq)
         MPID_Request_get_ptr(sreq->dev.request_handle, ureq);
         mpi_errno = MPID_Request_complete(ureq);
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
     }
 

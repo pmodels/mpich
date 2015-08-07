@@ -31,7 +31,7 @@ int MPI_Type_size(MPI_Datatype datatype, int *size) __attribute__((weak,alias("P
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_size
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_size - Return the number of bytes occupied by entries
                     in the datatype
@@ -100,7 +100,7 @@ int MPI_Type_size(MPI_Datatype datatype, int *size)
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Type_size_x_impl(datatype, &size_x);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     MPIU_Assert(size_x >= 0);
     /* handle overflow: see MPI-3 p.104 */

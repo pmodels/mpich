@@ -33,7 +33,7 @@ int MPI_Ineighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype se
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ineighbor_allgatherv_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_allgatherv_default(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -54,23 +54,23 @@ int MPIR_Ineighbor_allgatherv_default(const void *sendbuf, int sendcount, MPI_Da
     }
 
     mpi_errno = MPIR_Topo_canon_nhb_count(comm_ptr, &indegree, &outdegree, &weighted);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     MPIU_CHKLMEM_MALLOC(srcs, int *, indegree*sizeof(int), mpi_errno, "srcs");
     MPIU_CHKLMEM_MALLOC(dsts, int *, outdegree*sizeof(int), mpi_errno, "dsts");
     mpi_errno = MPIR_Topo_canon_nhb(comm_ptr,
                                     indegree, srcs, MPI_UNWEIGHTED,
                                     outdegree, dsts, MPI_UNWEIGHTED);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     for (k = 0; k < outdegree; ++k) {
         mpi_errno = MPID_Sched_send(sendbuf, sendcount, sendtype, dsts[k], comm_ptr, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     for (l = 0; l < indegree; ++l) {
         char *rb = ((char *)recvbuf) + displs[l] * recvtype_extent;
         mpi_errno = MPID_Sched_recv(rb, recvcounts[l], recvtype, srcs[l], comm_ptr, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     MPID_SCHED_BARRIER(s);
@@ -85,7 +85,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ineighbor_allgatherv_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -96,20 +96,20 @@ int MPIR_Ineighbor_allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datat
     *request = MPI_REQUEST_NULL;
 
     mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPID_Sched_create(&s);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     MPIU_Assert(comm_ptr->coll_fns != NULL);
     MPIU_Assert(comm_ptr->coll_fns->Ineighbor_allgatherv != NULL);
     mpi_errno = comm_ptr->coll_fns->Ineighbor_allgatherv(sendbuf, sendcount, sendtype,
                                                          recvbuf, recvcounts, displs, recvtype,
                                                          comm_ptr, s);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, &reqp);
     if (reqp)
         *request = reqp->handle;
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;
@@ -122,7 +122,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPI_Ineighbor_allgatherv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Ineighbor_allgatherv - Nonblocking version of MPI_Neighbor_allgatherv.
 
@@ -151,7 +151,7 @@ int MPI_Ineighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype se
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INEIGHBOR_ALLGATHERV);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_INEIGHBOR_ALLGATHERV);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -208,13 +208,13 @@ int MPI_Ineighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype se
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Ineighbor_allgatherv_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm_ptr, request);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_INEIGHBOR_ALLGATHERV);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
 fn_fail:

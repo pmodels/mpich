@@ -33,9 +33,6 @@ int MPIR_Group_init(void)
     MPID_Group_builtin[0].idx_of_first_lpid = -1;
     MPID_Group_builtin[0].lrank_to_lpid = NULL;
 
-    /* the mutex is probably never used, but initializing it doesn't hurt */
-    MPIU_THREAD_MPI_OBJ_INIT(&MPID_Group_builtin[0]);
-
     /* TODO hook for device here? */
     return mpi_errno;
 }
@@ -285,7 +282,7 @@ int MPIR_Group_check_valid_ranges( MPID_Group *group_ptr,
     int i, j, size, first, last, stride, mpi_errno = MPI_SUCCESS;
 
     if (n < 0) {
-	MPIU_ERR_SETANDSTMT2(mpi_errno,MPI_ERR_ARG,;,
+	MPIR_ERR_SETANDSTMT2(mpi_errno,MPI_ERR_ARG,;,
                              "**argneg", "**argneg %s %d", "n", n );
 	return mpi_errno;
     }
@@ -391,7 +388,7 @@ int MPIR_Group_check_subset( MPID_Group *group_ptr, MPID_Comm *comm_ptr )
 			vsize*sizeof(MPID_Group_pmap_t),mpi_errno, "" );
     /* Initialize the vmap */
     for (i=0; i<vsize; i++) {
-	MPID_Comm_get_lpid(comm_ptr, i, &vmap[i].lpid, MPIU_FALSE);
+	MPID_Comm_get_lpid(comm_ptr, i, &vmap[i].lpid, FALSE);
 	vmap[i].next_lpid = 0;
 	vmap[i].flag      = 0;
     }
@@ -424,7 +421,7 @@ int MPIR_Group_check_subset( MPID_Group *group_ptr, MPID_Comm *comm_ptr )
     }
 
     if (g1_idx >= 0) {
-	MPIU_ERR_SET1(mpi_errno, MPI_ERR_GROUP,
+	MPIR_ERR_SET1(mpi_errno, MPI_ERR_GROUP,
 		      "**groupnotincomm", "**groupnotincomm %d", g1_idx );
     }
 

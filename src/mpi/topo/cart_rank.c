@@ -29,7 +29,7 @@ int MPI_Cart_rank(MPI_Comm comm, const int coords[], int *rank) __attribute__((w
 #undef FUNCNAME
 #define FUNCNAME MPIR_Cart_rank_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Cart_rank_impl(MPIR_Topology *cart_ptr, const int coords[], int *rank)
 {
     int i, ndims, coord, multiplier;
@@ -59,7 +59,7 @@ void MPIR_Cart_rank_impl(MPIR_Topology *cart_ptr, const int coords[], int *rank)
 #undef FUNCNAME
 #define FUNCNAME MPI_Cart_rank
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Cart_rank - Determines process rank in communicator given Cartesian
                 location
@@ -127,7 +127,7 @@ int MPI_Cart_rank(MPI_Comm comm, const int coords[], int *rank)
 #   endif /* HAVE_ERROR_CHECKING */
 
     cart_ptr = MPIR_Topology_get( comm_ptr );
-    MPIU_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART), mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
+    MPIR_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART), mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
 
     /* Validate coordinates */
 #   ifdef HAVE_ERROR_CHECKING
@@ -142,7 +142,7 @@ int MPI_Cart_rank(MPI_Comm comm, const int coords[], int *rank)
 	    for (i=0; i<ndims; i++) {
 		if (!cart_ptr->topo.cart.periodic[i]) {
 		    coord = coords[i];
-		    MPIU_ERR_CHKANDJUMP3(
+		    MPIR_ERR_CHKANDJUMP3(
 			(coord < 0 || coord >= cart_ptr->topo.cart.dims[i] ), mpi_errno, MPI_ERR_ARG, "**cartcoordinvalid",
 			"**cartcoordinvalid %d %d %d",i, coords[i], cart_ptr->topo.cart.dims[i]-1 );
 		}

@@ -29,7 +29,7 @@ int MPI_Cart_map(MPI_Comm comm, int ndims, const int dims[], const int periods[]
 #undef FUNCNAME
 #define FUNCNAME MPIR_Cart_map
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Cart_map( const MPID_Comm *comm_ptr, int ndims, const int dims[], 
 		   const int periodic[], int *newrank )
 {
@@ -48,7 +48,7 @@ int MPIR_Cart_map( const MPID_Comm *comm_ptr, int ndims, const int dims[],
     size = comm_ptr->remote_size;
     
     /* Test that the communicator is large enough */
-    MPIU_ERR_CHKANDJUMP2(size < nranks, mpi_errno, MPI_ERR_DIMS, "**topotoolarge",
+    MPIR_ERR_CHKANDJUMP2(size < nranks, mpi_errno, MPI_ERR_DIMS, "**topotoolarge",
                          "**topotoolarge %d %d", size, nranks);
 
     /* Am I in this range? */
@@ -69,7 +69,7 @@ int MPIR_Cart_map( const MPID_Comm *comm_ptr, int ndims, const int dims[],
 #undef FUNCNAME
 #define FUNCNAME MPIR_Cart_map_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Cart_map_impl(const MPID_Comm *comm_ptr, int ndims, const int dims[],
                        const int periods[], int *newrank)
 {
@@ -81,13 +81,13 @@ int MPIR_Cart_map_impl(const MPID_Comm *comm_ptr, int ndims, const int dims[],
 						 (const int*) dims,
 						 (const int*) periods,
 						 newrank );
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	/* --END USEREXTENSION-- */
     } else {
 	mpi_errno = MPIR_Cart_map( comm_ptr, ndims,
 				   (const int*) dims,
 				   (const int*) periods, newrank );
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
  fn_exit:
@@ -101,7 +101,7 @@ int MPIR_Cart_map_impl(const MPID_Comm *comm_ptr, int ndims, const int dims[],
 #undef FUNCNAME
 #define FUNCNAME MPI_Cart_map
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Cart_map - Maps process to Cartesian topology information 
 
@@ -180,7 +180,7 @@ int MPI_Cart_map(MPI_Comm comm, int ndims, const int dims[], const int periods[]
     mpi_errno = MPIR_Cart_map_impl( comm_ptr, ndims, 
                                     (const int*) dims,
                                     (const int*) periods, newrank );
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     /* ... end of body of routine ... */
 
   fn_exit:

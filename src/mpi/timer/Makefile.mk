@@ -7,7 +7,3 @@
 mpi_sources +=            \
     src/mpi/timer/wtime.c \
     src/mpi/timer/wtick.c
-
-mpi_core_sources += \
-    src/mpi/timer/mpidtime.c
-

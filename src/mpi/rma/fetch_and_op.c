@@ -88,7 +88,7 @@ int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_FETCH_AND_OP);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -127,7 +127,7 @@ int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
             if (!MPIR_DATATYPE_IS_PREDEFINED(datatype))
             {
-                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_TYPE, "**typenotpredefined");
+                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_TYPE, "**typenotpredefined");
             }
 
             if (win_ptr->create_flavor != MPI_WIN_FLAVOR_DYNAMIC)
@@ -140,7 +140,7 @@ int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
             if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN)
             {
-                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OP, "**opnotpredefined");
+                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OP, "**opnotpredefined");
             }
         }
         MPID_END_ERROR_CHECKS;
@@ -159,7 +159,7 @@ int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
   fn_exit:
     MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_FETCH_AND_OP);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

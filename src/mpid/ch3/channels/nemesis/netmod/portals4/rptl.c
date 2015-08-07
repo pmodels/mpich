@@ -70,7 +70,7 @@ struct rptl_info rptl_info;
 #undef FUNCNAME
 #define FUNCNAME find_target
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int find_target(ptl_process_t id, struct rptl_target **target)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -123,7 +123,7 @@ static int rptl_put(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size
 #undef FUNCNAME
 #define FUNCNAME poke_progress
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int poke_progress(void)
 {
     int ret = PTL_OK;
@@ -322,7 +322,7 @@ static int poke_progress(void)
 #undef FUNCNAME
 #define FUNCNAME rptl_put
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int rptl_put(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size_t length,
                     ptl_ack_req_t ack_req, ptl_process_t target_id, ptl_pt_index_t pt_index,
                     ptl_match_bits_t match_bits, ptl_size_t remote_offset, void *user_ptr,
@@ -383,7 +383,7 @@ static int rptl_put(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size
 #undef FUNCNAME
 #define FUNCNAME rptl_put
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_rptl_put(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size_t length,
                           ptl_ack_req_t ack_req, ptl_process_t target_id, ptl_pt_index_t pt_index,
                           ptl_match_bits_t match_bits, ptl_size_t remote_offset, void *user_ptr,
@@ -397,7 +397,7 @@ int MPID_nem_ptl_rptl_put(ptl_handle_md_t md_handle, ptl_size_t local_offset, pt
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ptl_rptl_get
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_rptl_get(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size_t length,
                           ptl_process_t target_id, ptl_pt_index_t pt_index,
                           ptl_match_bits_t match_bits, ptl_size_t remote_offset, void *user_ptr)
@@ -448,7 +448,7 @@ int MPID_nem_ptl_rptl_get(ptl_handle_md_t md_handle, ptl_size_t local_offset, pt
 #undef FUNCNAME
 #define FUNCNAME send_pause_messages
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int send_pause_messages(struct rptl *rptl)
 {
     int i, mpi_errno = MPI_SUCCESS;
@@ -495,7 +495,7 @@ static int send_pause_messages(struct rptl *rptl)
 #undef FUNCNAME
 #define FUNCNAME clear_nacks
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int clear_nacks(ptl_process_t target_id)
 {
     struct rptl_target *target;
@@ -532,7 +532,7 @@ static int clear_nacks(ptl_process_t target_id)
 #undef FUNCNAME
 #define FUNCNAME get_event_info
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int get_event_info(ptl_event_t * event, struct rptl **ret_rptl, struct rptl_op **ret_op)
 {
     struct rptl *rptl;
@@ -583,7 +583,7 @@ static int get_event_info(ptl_event_t * event, struct rptl **ret_rptl, struct rp
 #undef FUNCNAME
 #define FUNCNAME stash_event
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int stash_event(struct rptl_op *op, ptl_event_t event)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -636,7 +636,7 @@ static int pending_event_valid = 0;
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ptl_rptl_eqget
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
 {
     struct rptl_op *op = NULL;

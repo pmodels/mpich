@@ -29,7 +29,7 @@ int MPI_T_pvar_write(MPI_T_pvar_session session, MPI_T_pvar_handle handle, const
 #undef FUNCNAME
 #define FUNCNAME MPIR_T_pvar_write_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_T_pvar_write_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, const void *buf)
 {
     /* This function should never be called */
@@ -41,7 +41,7 @@ int MPIR_T_pvar_write_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle,
 #undef FUNCNAME
 #define FUNCNAME MPI_T_pvar_write
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_pvar_write - Write a performance variable
 

@@ -43,7 +43,7 @@ int MPI_File_get_group(MPI_File fh, MPI_Group *group)
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_GET_GROUP";
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
 
     adio_fh = MPIO_File_resolve(fh);
 
@@ -59,6 +59,6 @@ int MPI_File_get_group(MPI_File fh, MPI_Group *group)
     error_code = MPI_Comm_group(adio_fh->comm, group);
 
 fn_exit:
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return error_code;
 }

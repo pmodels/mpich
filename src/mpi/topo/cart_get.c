@@ -108,8 +108,8 @@ int MPI_Cart_get(MPI_Comm comm, int maxdims, int dims[], int periods[],
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIU_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART), mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
-	    MPIU_ERR_CHKANDJUMP2((cart_ptr->topo.cart.ndims > maxdims), mpi_errno, MPI_ERR_ARG, "**dimsmany",
+	    MPIR_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART), mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
+	    MPIR_ERR_CHKANDJUMP2((cart_ptr->topo.cart.ndims > maxdims), mpi_errno, MPI_ERR_ARG, "**dimsmany",
 			 "**dimsmany %d %d", cart_ptr->topo.cart.ndims, maxdims);
 
 	    if (cart_ptr->topo.cart.ndims) {

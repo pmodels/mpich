@@ -9,7 +9,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Cancel_recv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Cancel_recv(MPID_Request * rreq)
 {
     int netmod_cancelled = TRUE;
@@ -42,7 +42,7 @@ int MPID_Cancel_recv(MPID_Request * rreq)
         MPIR_STATUS_SET_COUNT(rreq->status, 0);
         mpi_errno = MPID_Request_complete(rreq);
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
     }
     else

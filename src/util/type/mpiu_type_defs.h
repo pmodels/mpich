@@ -42,14 +42,7 @@
 #ifndef BOOL
 #define BOOL int
 #endif
-#ifndef TRUE
-#define TRUE 1
 #endif
-#ifndef FALSE
-#define FALSE 0
-#endif
-#endif
-
 /* Use this macro for each parameter to a function that is not referenced in
    the body of the function */
 #ifdef HAVE_WINDOWS_H

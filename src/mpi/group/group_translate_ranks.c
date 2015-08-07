@@ -30,7 +30,7 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[], MPI_G
 #undef FUNCNAME
 #define FUNCNAME MPIR_Group_translate_ranks_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Group_translate_ranks_impl(MPID_Group *gp1, int n, const int ranks1[],
                                     MPID_Group *gp2, int ranks2[])
 {
@@ -112,7 +112,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPI_Group_translate_ranks
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
  MPI_Group_translate_ranks - Translates the ranks of processes in one group to 
                              those in another group
@@ -150,7 +150,7 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
     /* The routines that setup the group data structures must be executed
        within a mutex.  As most of the group routines are not performance
        critical, we simple run these routines within the SINGLE_CS */
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GROUP_TRANSLATE_RANKS);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -204,13 +204,13 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Group_translate_ranks_impl(group_ptr1, n, ranks1, group_ptr2, ranks2);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GROUP_TRANSLATE_RANKS);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

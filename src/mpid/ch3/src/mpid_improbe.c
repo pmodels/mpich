@@ -13,7 +13,7 @@ int (*MPIDI_Anysource_improbe_fn)(int tag, MPID_Comm * comm, int context_offset,
 #undef FUNCNAME
 #define FUNCNAME MPID_Improbe
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Improbe(int source, int tag, MPID_Comm *comm, int context_offset,
                  int *flag, MPID_Request **message, MPI_Status *status)
 {
@@ -32,7 +32,7 @@ int MPID_Improbe(int source, int tag, MPID_Comm *comm, int context_offset,
 
     /* Check to make sure the communicator hasn't already been revoked */
     if (comm->revoked) {
-        MPIU_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
+        MPIR_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
     }
 
 #ifdef ENABLE_COMM_OVERRIDES
@@ -42,25 +42,25 @@ int MPID_Improbe(int source, int tag, MPID_Comm *comm, int context_offset,
                If still not found, call progress, and check again. */
 
             /* check shm*/
-            MPIU_THREAD_CS_ENTER(MSGQUEUE,);
+            MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.msgq_mutex);
             *message = MPIDI_CH3U_Recvq_FDU_matchonly(source, tag, context_id, comm, flag);
-            MPIU_THREAD_CS_EXIT(MSGQUEUE,);
+            MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.msgq_mutex);
             if (!*flag) {
                 /* not found, check network */
                 mpi_errno = MPIDI_Anysource_improbe_fn(tag, comm, context_offset, flag, message, status);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 if (!*flag) {
                     /* still not found, make some progress*/
                     mpi_errno = MPIDI_CH3_Progress_poke();
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     /* check shm again */
-                    MPIU_THREAD_CS_ENTER(MSGQUEUE,);
+                    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.msgq_mutex);
                     *message = MPIDI_CH3U_Recvq_FDU_matchonly(source, tag, context_id, comm, flag);
-                    MPIU_THREAD_CS_EXIT(MSGQUEUE,);
+                    MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.msgq_mutex);
                     if (!*flag) {
                         /* check network again */
                         mpi_errno = MPIDI_Anysource_improbe_fn(tag, comm, context_offset, flag, message, status);
-                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     }
                 }
             }
@@ -72,7 +72,7 @@ int MPID_Improbe(int source, int tag, MPID_Comm *comm, int context_offset,
             MPIDI_Comm_get_vc_set_active(comm, source, &vc);
             if (vc->comm_ops && vc->comm_ops->improbe) {
                 mpi_errno = vc->comm_ops->improbe(vc, source, tag, comm, context_offset, flag, message, status);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 goto fn_exit;
             }
             /* fall-through to shm case */
@@ -80,9 +80,9 @@ int MPID_Improbe(int source, int tag, MPID_Comm *comm, int context_offset,
     }
 #endif
 
-    MPIU_THREAD_CS_ENTER(MSGQUEUE,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.msgq_mutex);
     *message = MPIDI_CH3U_Recvq_FDU_matchonly(source, tag, context_id, comm, flag);
-    MPIU_THREAD_CS_EXIT(MSGQUEUE,);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.msgq_mutex);
 
     if (!*flag) {
         /* Always try to advance progress before returning failure
@@ -92,10 +92,10 @@ int MPID_Improbe(int source, int tag, MPID_Comm *comm, int context_offset,
            a second test of the receive queue if we knew that nothing
            had changed */
         mpi_errno = MPID_Progress_poke();
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIU_THREAD_CS_ENTER(MSGQUEUE,);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.msgq_mutex);
         *message = MPIDI_CH3U_Recvq_FDU_matchonly(source, tag, context_id, comm, flag);
-        MPIU_THREAD_CS_EXIT(MSGQUEUE,);
+        MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.msgq_mutex);
     }
 
     if (*flag && *message) {

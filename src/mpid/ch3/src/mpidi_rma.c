@@ -85,7 +85,7 @@ MPIDI_RMA_Target_t *global_rma_target_pool_head = NULL, *global_rma_target_pool_
 #undef FUNCNAME
 #define FUNCNAME MPIDI_RMA_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_RMA_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -125,7 +125,7 @@ int MPIDI_RMA_init(void)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_RMA_finalize
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIDI_RMA_finalize(void)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_RMA_FINALIZE);
@@ -142,7 +142,7 @@ void MPIDI_RMA_finalize(void)
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_free
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_free(MPID_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -153,7 +153,7 @@ int MPID_Win_free(MPID_Win ** win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_FREE);
 
-    MPIU_ERR_CHKANDJUMP(((*win_ptr)->states.access_state != MPIDI_RMA_NONE &&
+    MPIR_ERR_CHKANDJUMP(((*win_ptr)->states.access_state != MPIDI_RMA_NONE &&
                          (*win_ptr)->states.access_state != MPIDI_RMA_FENCE_ISSUED &&
                          (*win_ptr)->states.access_state != MPIDI_RMA_FENCE_GRANTED) ||
                         ((*win_ptr)->states.exposure_state != MPIDI_RMA_NONE),
@@ -175,18 +175,18 @@ int MPID_Win_free(MPID_Win ** win_ptr)
            (*win_ptr)->current_target_lock_data_bytes != 0 || (*win_ptr)->sync_request_cnt != 0) {
         mpi_errno = wait_progress_engine();
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
     }
 
     mpi_errno = MPIR_Barrier_impl((*win_ptr)->comm_ptr, &errflag);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     /* Free window resources in lower layer. */
     if (MPIDI_CH3U_Win_hooks.win_free != NULL) {
         mpi_errno = MPIDI_CH3U_Win_hooks.win_free(win_ptr);
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
     }
 
     /* dequeue window from the global list */
@@ -197,14 +197,14 @@ int MPID_Win_free(MPID_Win ** win_ptr)
         /* this is the last window, de-register RMA progress hook */
         mpi_errno = MPID_Progress_deregister_hook(MPIDI_CH3I_RMA_Progress_hook_id);
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
     }
 
     comm_ptr = (*win_ptr)->comm_ptr;
     mpi_errno = MPIR_Comm_free_impl(comm_ptr);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     if ((*win_ptr)->basic_info_table != NULL)
         MPIU_Free((*win_ptr)->basic_info_table);

@@ -85,7 +85,7 @@ static MPID_Group *bitarray_to_group(MPID_Comm *comm_ptr, int *bitarray)
 #undef FUNCNAME
 #define FUNCNAME MPID_Comm_get_all_failed_procs
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_get_all_failed_procs(MPID_Comm *comm_ptr, MPID_Group **failed_group, int tag)
 {
     int mpi_errno = MPI_SUCCESS, ret_errno;
@@ -105,7 +105,7 @@ int MPID_Comm_get_all_failed_procs(MPID_Comm *comm_ptr, MPID_Group **failed_grou
     MPIDI_CH3U_Check_for_failed_procs();
 
     mpi_errno = MPIDI_CH3U_Get_failed_group(-2, &local_fail);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Generate a bitarray based on the list of failed procs */
     group_to_bitarray(local_fail, comm_ptr, &bitarray, &bitarray_size);

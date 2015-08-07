@@ -54,9 +54,6 @@
 #define MPI_THREAD_MULTIPLE 3
 #endif
 
-/* For thread support */
-#include "mpiimplthread.h"
-
 /* Error reporting routines */
 #include "mpierror.h"
 #include "mpierrs.h"
@@ -134,7 +131,5 @@
 #else
 #define MPIU_UNREFERENCED_ARG(a)
 #endif
-
-#include "mpiimplthreadpost.h"
 
 #endif

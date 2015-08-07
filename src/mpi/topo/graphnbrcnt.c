@@ -29,7 +29,7 @@ int MPI_Graph_neighbors_count(MPI_Comm comm, int rank, int *nneighbors) __attrib
 #undef FUNCNAME
 #define FUNCNAME MPIR_Graph_neighbors_count_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Graph_neighbors_count_impl(MPID_Comm *comm_ptr, int rank, int *nneighbors)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -37,8 +37,8 @@ int MPIR_Graph_neighbors_count_impl(MPID_Comm *comm_ptr, int rank, int *nneighbo
 
     graph_ptr = MPIR_Topology_get( comm_ptr );
 
-    MPIU_ERR_CHKANDJUMP((!graph_ptr || graph_ptr->kind != MPI_GRAPH), mpi_errno, MPI_ERR_TOPOLOGY, "**notgraphtopo");
-    MPIU_ERR_CHKANDJUMP2((rank < 0 || rank >= graph_ptr->topo.graph.nnodes), mpi_errno, MPI_ERR_RANK, "**rank",
+    MPIR_ERR_CHKANDJUMP((!graph_ptr || graph_ptr->kind != MPI_GRAPH), mpi_errno, MPI_ERR_TOPOLOGY, "**notgraphtopo");
+    MPIR_ERR_CHKANDJUMP2((rank < 0 || rank >= graph_ptr->topo.graph.nnodes), mpi_errno, MPI_ERR_RANK, "**rank",
                          "**rank %d %d", rank, graph_ptr->topo.graph.nnodes );
 
     if ( rank == 0 )
@@ -58,7 +58,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPI_Graph_neighbors_count
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 MPI_Graph_neighbors_count - Returns the number of neighbors of a node
@@ -124,7 +124,7 @@ int MPI_Graph_neighbors_count(MPI_Comm comm, int rank, int *nneighbors)
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Graph_neighbors_count_impl(comm_ptr, rank, nneighbors);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 

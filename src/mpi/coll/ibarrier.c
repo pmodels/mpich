@@ -52,7 +52,7 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request) __attribute__((weak,alias(
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ibarrier_intra
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibarrier_intra(MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -72,13 +72,13 @@ int MPIR_Ibarrier_intra(MPID_Comm *comm_ptr, MPID_Sched_t s)
         src = (rank - mask + size) % size;
 
         mpi_errno = MPID_Sched_send(NULL, 0, MPI_BYTE, dst, comm_ptr, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         mpi_errno = MPID_Sched_recv(NULL, 0, MPI_BYTE, src, comm_ptr, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         mpi_errno = MPID_Sched_barrier(s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         mask <<= 1;
     }
@@ -95,7 +95,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ibarrier_inter
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibarrier_inter(MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -110,14 +110,14 @@ int MPIR_Ibarrier_inter(MPID_Comm *comm_ptr, MPID_Sched_t s)
     /* Get the local intracommunicator */
     if (!comm_ptr->local_comm) {
         mpi_errno = MPIR_Setup_intercomm_localcomm(comm_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     /* do a barrier on the local intracommunicator */
     MPIU_Assert(comm_ptr->local_comm->coll_fns && comm_ptr->local_comm->coll_fns->Ibarrier_sched);
     if(comm_ptr->local_size != 1) {
         mpi_errno = comm_ptr->local_comm->coll_fns->Ibarrier_sched(comm_ptr->local_comm, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPID_SCHED_BARRIER(s);
     }
     /* rank 0 on each group does an intercommunicator broadcast to the
@@ -134,27 +134,27 @@ int MPIR_Ibarrier_inter(MPID_Comm *comm_ptr, MPID_Sched_t s)
     if (comm_ptr->is_low_group) {
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = comm_ptr->coll_fns->Ibcast_sched(buf, 1, MPI_BYTE, root, comm_ptr, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         MPID_SCHED_BARRIER(s);
 
         /* receive bcast from right */
         root = 0;
         mpi_errno = comm_ptr->coll_fns->Ibcast_sched(buf, 1, MPI_BYTE, root, comm_ptr, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else {
         /* receive bcast from left */
         root = 0;
         mpi_errno = comm_ptr->coll_fns->Ibcast_sched(buf, 1, MPI_BYTE, root, comm_ptr, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         MPID_SCHED_BARRIER(s);
 
         /* bcast to left */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = comm_ptr->coll_fns->Ibcast_sched(buf, 1, MPI_BYTE, root, comm_ptr, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     MPIR_SCHED_CHKPMEM_COMMIT(s);
@@ -168,7 +168,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ibarrier_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibarrier_impl(MPID_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -184,7 +184,7 @@ int MPIR_Ibarrier_impl(MPID_Comm *comm_ptr, MPI_Request *request)
         mpi_errno = comm_ptr->coll_fns->Ibarrier_req(comm_ptr, &reqp);
         if (reqp) {
             *request = reqp->handle;
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             goto fn_exit;
         }
         /* --END USEREXTENSION-- */
@@ -192,18 +192,18 @@ int MPIR_Ibarrier_impl(MPID_Comm *comm_ptr, MPI_Request *request)
 
     if (comm_ptr->local_size != 1 || comm_ptr->comm_kind == MPID_INTERCOMM) {
         mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         mpi_errno = MPID_Sched_create(&s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         MPIU_Assert(comm_ptr->coll_fns->Ibarrier_sched != NULL);
         mpi_errno = comm_ptr->coll_fns->Ibarrier_sched(comm_ptr, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, &reqp);
         if (reqp)
             *request = reqp->handle;
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
 fn_exit:
@@ -217,7 +217,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPI_Ibarrier
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Ibarrier - Notifies the process that it has reached the barrier and returns
                immediately
@@ -250,7 +250,7 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request)
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_IBARRIER);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IBARRIER);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -286,13 +286,13 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request)
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Ibarrier_impl(comm_ptr, request);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IBARRIER);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
 fn_fail:

@@ -49,7 +49,7 @@ MPIO_Request MPIO_Request_f2c(MPI_Fint request)
     return (MPIO_Request) request;
 #else
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     
     if (!request) {
 	return MPIO_REQUEST_NULL;
@@ -65,7 +65,7 @@ MPIO_Request MPIO_Request_f2c(MPI_Fint request)
     /* --END ERROR HANDLING-- */
 
 fn_exit:
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return ADIOI_Reqtable[request];
 #endif
 }

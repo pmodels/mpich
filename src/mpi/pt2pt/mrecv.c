@@ -32,7 +32,7 @@ int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message *message,
 #undef FUNCNAME
 #define FUNCNAME MPI_Mrecv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Mrecv - Blocking receive of message matched by MPI_Mprobe or MPI_Improbe.
 
@@ -59,7 +59,7 @@ int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message *message,
     MPID_Request *msgp = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_MRECV);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_MRECV);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -95,8 +95,8 @@ int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message *message,
             /* MPI_MESSAGE_NO_PROC should yield a "proc null" status */
             if (*message != MPI_MESSAGE_NO_PROC) {
                 MPID_Request_valid_ptr(msgp, mpi_errno);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-                MPIU_ERR_CHKANDJUMP((msgp->kind != MPID_REQUEST_MPROBE),
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHKANDJUMP((msgp->kind != MPID_REQUEST_MPROBE),
                                     mpi_errno, MPI_ERR_ARG, "**reqnotmsg");
             }
 
@@ -109,7 +109,7 @@ int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message *message,
     /* ... body of routine ...  */
 
     mpi_errno = MPID_Mrecv(buf, count, datatype, msgp, status);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     *message = MPI_MESSAGE_NULL;
 
@@ -117,7 +117,7 @@ int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message *message,
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_MRECV);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
 fn_fail:

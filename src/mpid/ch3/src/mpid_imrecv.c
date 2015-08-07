@@ -9,7 +9,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Imrecv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
                 MPID_Request *message, MPID_Request **rreqp)
 {
@@ -56,7 +56,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
         {
             MPIDI_Comm_get_vc_set_active(comm, rreq->dev.match.parts.rank, &vc);
             mpi_errno = MPIDI_CH3_EagerSyncAck(vc, rreq);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
 
         /* the request was found in the unexpected queue, so it has a
@@ -100,7 +100,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
         MPIDI_Comm_get_vc_set_active(comm, rreq->dev.match.parts.rank, &vc);
 
         mpi_errno = vc->rndvRecv_fn(vc, rreq);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
         {
             MPID_Datatype_get_ptr(datatype, rreq->dev.datatype_ptr);
@@ -110,7 +110,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
     else if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_SELF_MSG)
     {
         mpi_errno = MPIDI_CH3_RecvFromSelf(rreq, buf, count, datatype);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else
     {
@@ -120,7 +120,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
 #endif
         MPID_Request_release(rreq);
         rreq = NULL;
-        MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_INTERN, "**ch3|badmsgtype",
+        MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_INTERN, "**ch3|badmsgtype",
                              "**ch3|badmsgtype %d", msg_type);
         /* --END ERROR HANDLING-- */
     }

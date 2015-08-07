@@ -392,7 +392,7 @@ int MPI_Type_create_darray(int size,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_CREATE_DARRAY);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -418,7 +418,7 @@ int MPI_Type_create_darray(int size,
 	    /* Check parameters */
 	    MPIR_ERRTEST_ARGNONPOS(size, "size", mpi_errno, MPI_ERR_ARG);
             /* use MPI_ERR_RANK class for PE-MPI compatibility */
-            MPIU_ERR_CHKANDJUMP3((rank < 0 || rank >= size), mpi_errno, MPI_ERR_RANK,
+            MPIR_ERR_CHKANDJUMP3((rank < 0 || rank >= size), mpi_errno, MPI_ERR_RANK,
                                  "**argrange", "**argrange %s %d %d", "rank", rank, (size-1));
 	    MPIR_ERRTEST_ARGNONPOS(ndims, "ndims", mpi_errno, MPI_ERR_DIMS);
 
@@ -488,7 +488,7 @@ int MPI_Type_create_darray(int size,
                 tmp_size *= array_of_psizes[i];
 	    }
 
-            MPIU_ERR_CHKANDJUMP1((tmp_size != size), mpi_errno, MPI_ERR_ARG,
+            MPIR_ERR_CHKANDJUMP1((tmp_size != size), mpi_errno, MPI_ERR_ARG,
                                  "**arg", "**arg %s", "array_of_psizes");
 
 	    /* TODO: GET THIS CHECK IN ALSO */
@@ -745,7 +745,7 @@ int MPI_Type_create_darray(int size,
   fn_exit:
     MPIU_CHKLMEM_FREEALL();
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_CREATE_DARRAY);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

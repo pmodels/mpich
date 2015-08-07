@@ -59,7 +59,7 @@ int MPI_Win_free_keyval(int *win_keyval)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_WIN_FREE_KEYVAL);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -107,7 +107,7 @@ int MPI_Win_free_keyval(int *win_keyval)
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_WIN_FREE_KEYVAL);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

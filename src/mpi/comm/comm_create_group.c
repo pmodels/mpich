@@ -30,7 +30,7 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm *new
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_create_group
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /* comm create group impl; assumes that the standard error checking
  * has already taken place in the calling function */
 int MPIR_Comm_create_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr, int tag,
@@ -58,17 +58,17 @@ int MPIR_Comm_create_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr, int tag
            *group*, so processes not in the group do not participate. */
 
         mpi_errno = MPIR_Get_contextid_sparse_group( comm_ptr, group_ptr, tag, &new_context_id, 0 );
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIU_Assert(new_context_id != 0);
 
         mpi_errno = MPIR_Comm_create_calculate_mapping(group_ptr, comm_ptr, 
                                                        &mapping, &mapping_comm);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         /* Get the new communicator structure and context id */
 
         mpi_errno = MPIR_Comm_create( newcomm_ptr );
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         (*newcomm_ptr)->recvcontext_id = new_context_id;
         (*newcomm_ptr)->rank           = group_ptr->rank;
@@ -91,10 +91,10 @@ int MPIR_Comm_create_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr, int tag
                                          NULL,
                                          mapping_comm,
                                          *newcomm_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else {
         /* This process is not in the group */
@@ -125,7 +125,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_create_group
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Comm_create_group - Creates a new communicator
@@ -158,7 +158,7 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * ne
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_CREATE_GROUP);
 
     /* Validate parameters, and convert MPI object handles to object pointers */
@@ -206,7 +206,7 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * ne
 
     /* ... body of routine ...  */
     mpi_errno = MPIR_Comm_create_group(comm_ptr, group_ptr, tag, &newcomm_ptr);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     if (newcomm_ptr)
         MPIU_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
@@ -216,7 +216,7 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * ne
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_CREATE_GROUP);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

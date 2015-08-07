@@ -48,7 +48,7 @@ int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
 
     MPIU_UNREFERENCED_ARG(info);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
 
     MPIR_MPIOInit(&error_code);
     if (error_code != MPI_SUCCESS) goto fn_exit;
@@ -90,6 +90,6 @@ int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
 #endif /* MPI_hpux */
 
 fn_exit:
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return error_code;
 }

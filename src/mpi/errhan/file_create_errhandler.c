@@ -57,7 +57,7 @@ int MPI_File_create_errhandler(MPI_File_errhandler_function *file_errhandler_fn,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_FILE_CREATE_ERRHANDLER);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -75,7 +75,7 @@ int MPI_File_create_errhandler(MPI_File_errhandler_function *file_errhandler_fn,
     /* ... body of routine ...  */
     
     errhan_ptr = (MPID_Errhandler *)MPIU_Handle_obj_alloc( &MPID_Errhandler_mem );
-    MPIU_ERR_CHKANDJUMP(!errhan_ptr,mpi_errno,MPI_ERR_OTHER,"**nomem");
+    MPIR_ERR_CHKANDJUMP(!errhan_ptr,mpi_errno,MPI_ERR_OTHER,"**nomem");
     errhan_ptr->language = MPID_LANG_C;
     errhan_ptr->kind	 = MPID_FILE;
     MPIU_Object_set_ref(errhan_ptr,1);
@@ -86,7 +86,7 @@ int MPI_File_create_errhandler(MPI_File_errhandler_function *file_errhandler_fn,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_FILE_CREATE_ERRHANDLER);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

@@ -54,7 +54,7 @@ int MPI_File_write_shared(MPI_File fh, ROMIO_CONST void *buf, int count,
     void *e32buf = NULL;
     const void *xbuf = NULL;
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
 
     adio_fh = MPIO_File_resolve(fh);
 
@@ -144,6 +144,6 @@ int MPI_File_write_shared(MPI_File fh, ROMIO_CONST void *buf, int count,
 
 fn_exit:
     if (e32buf != NULL) ADIOI_Free(e32buf);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return error_code;
 }

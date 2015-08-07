@@ -28,7 +28,7 @@ int MPI_Type_get_extent(MPI_Datatype datatype, MPI_Aint *lb, MPI_Aint *extent) _
 #undef FUNCNAME
 #define FUNCNAME MPIR_Type_get_extent_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Type_get_extent_impl(MPI_Datatype datatype, MPI_Aint *lb, MPI_Aint *extent)
 {
     MPI_Count lb_x, extent_x;
@@ -43,7 +43,7 @@ void MPIR_Type_get_extent_impl(MPI_Datatype datatype, MPI_Aint *lb, MPI_Aint *ex
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_get_extent
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_get_extent - Get the lower bound and extent for a Datatype
 

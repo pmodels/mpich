@@ -52,7 +52,7 @@ int MPI_Free_mem(void *base)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_FREE_MEM);
 
     /* ... body of routine ...  */
@@ -66,7 +66,7 @@ int MPI_Free_mem(void *base)
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_FREE_MEM);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

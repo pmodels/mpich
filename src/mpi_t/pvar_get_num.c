@@ -28,7 +28,7 @@ int MPI_T_pvar_get_num(int *num_pvar) __attribute__((weak,alias("PMPI_T_pvar_get
 #undef FUNCNAME
 #define FUNCNAME MPI_T_pvar_get_num
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_pvar_get_num - Get the number of performance variables
 

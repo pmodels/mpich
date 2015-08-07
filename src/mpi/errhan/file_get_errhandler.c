@@ -64,7 +64,7 @@ int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler *errhandler)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_FILE_GET_ERRHANDLER);
 
 #ifdef MPI_MODE_RDONLY
@@ -107,7 +107,7 @@ int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler *errhandler)
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_FILE_GET_ERRHANDLER);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

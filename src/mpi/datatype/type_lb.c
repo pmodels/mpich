@@ -28,7 +28,7 @@ int MPI_Type_lb(MPI_Datatype datatype, MPI_Aint *displacement) __attribute__((we
 #undef FUNCNAME
 #define FUNCNAME MPIR_Type_lb_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Type_lb_impl(MPI_Datatype datatype, MPI_Aint *displacement)
 {
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {

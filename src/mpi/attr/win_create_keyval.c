@@ -81,7 +81,7 @@ int MPI_Win_create_keyval(MPI_Win_copy_attr_function *win_copy_attr_fn,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_WIN_CREATE_KEYVAL);
 
     /* Validate parameters and objects (post conversion) */
@@ -98,7 +98,7 @@ int MPI_Win_create_keyval(MPI_Win_copy_attr_function *win_copy_attr_fn,
     /* ... body of routine ...  */
     
     keyval_ptr = (MPID_Keyval *)MPIU_Handle_obj_alloc( &MPID_Keyval_mem );
-    MPIU_ERR_CHKANDJUMP1(!keyval_ptr,mpi_errno,MPI_ERR_OTHER,"**nomem",
+    MPIR_ERR_CHKANDJUMP1(!keyval_ptr,mpi_errno,MPI_ERR_OTHER,"**nomem",
 			 "**nomem %s", "MPID_Keyval" );
     /* Initialize the attribute dup function */
     if (!MPIR_Process.attr_dup) {
@@ -124,7 +124,7 @@ int MPI_Win_create_keyval(MPI_Win_copy_attr_function *win_copy_attr_fn,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_WIN_CREATE_KEYVAL);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

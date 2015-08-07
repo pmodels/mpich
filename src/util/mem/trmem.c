@@ -17,95 +17,95 @@ void MPIU_trinit(int rank)
 
 void MPIU_trdump(FILE *fp, int minid)
 {
-    MPIU_THREAD_CS_ENTER(MEMALLOC,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.memalloc_mutex);
     MPL_trdump(fp, minid);
-    MPIU_THREAD_CS_EXIT(MEMALLOC,);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.memalloc_mutex);
 }
 
 void *MPIU_trmalloc(size_t a, int lineno, const char fname[])
 {
     void *retval;
-    MPIU_THREAD_CS_ENTER(MEMALLOC,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.memalloc_mutex);
     retval = MPL_trmalloc(a, lineno, fname);
-    MPIU_THREAD_CS_EXIT(MEMALLOC,);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.memalloc_mutex);
     return retval;
 }
 
 void MPIU_trfree(void *a_ptr, int line, const char fname[])
 {
-    MPIU_THREAD_CS_ENTER(MEMALLOC,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.memalloc_mutex);
     MPL_trfree(a_ptr, line, fname);
-    MPIU_THREAD_CS_EXIT(MEMALLOC,);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.memalloc_mutex);
 }
 
 int MPIU_trvalid(const char str[])
 {
     int retval;
-    MPIU_THREAD_CS_ENTER(MEMALLOC,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.memalloc_mutex);
     retval = MPL_trvalid(str);
-    MPIU_THREAD_CS_EXIT(MEMALLOC,);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.memalloc_mutex);
     return retval;
 }
 
 void MPIU_trspace(size_t *space, size_t *fr)
 {
-    MPIU_THREAD_CS_ENTER(MEMALLOC,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.memalloc_mutex);
     MPL_trspace(space, fr);
-    MPIU_THREAD_CS_EXIT(MEMALLOC,);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.memalloc_mutex);
 }
 
 void MPIU_trid(int id)
 {
-    MPIU_THREAD_CS_ENTER(MEMALLOC,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.memalloc_mutex);
     MPL_trid(id);
-    MPIU_THREAD_CS_EXIT(MEMALLOC,);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.memalloc_mutex);
 }
 
 void MPIU_trlevel(int level)
 {
-    MPIU_THREAD_CS_ENTER(MEMALLOC,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.memalloc_mutex);
     MPL_trlevel(level);
-    MPIU_THREAD_CS_EXIT(MEMALLOC,);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.memalloc_mutex);
 }
 
 void MPIU_trDebugLevel(int level)
 {
-    MPIU_THREAD_CS_ENTER(MEMALLOC,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.memalloc_mutex);
     MPL_trDebugLevel(level);
-    MPIU_THREAD_CS_EXIT(MEMALLOC,);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.memalloc_mutex);
 }
 
 void *MPIU_trcalloc(size_t nelem, size_t elsize, int lineno, const char fname[])
 {
     void *retval;
-    MPIU_THREAD_CS_ENTER(MEMALLOC,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.memalloc_mutex);
     retval = MPL_trcalloc(nelem, elsize, lineno, fname);
-    MPIU_THREAD_CS_EXIT(MEMALLOC,);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.memalloc_mutex);
     return retval;
 }
 
 void *MPIU_trrealloc(void *p, size_t size, int lineno, const char fname[])
 {
     void *retval;
-    MPIU_THREAD_CS_ENTER(MEMALLOC,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.memalloc_mutex);
     retval = MPL_trrealloc(p, size, lineno, fname);
-    MPIU_THREAD_CS_EXIT(MEMALLOC,);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.memalloc_mutex);
     return retval;
 }
 
 void *MPIU_trstrdup(const char *str, int lineno, const char fname[])
 {
     void *retval;
-    MPIU_THREAD_CS_ENTER(MEMALLOC,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.memalloc_mutex);
     retval = MPL_trstrdup(str, lineno, fname);
-    MPIU_THREAD_CS_EXIT(MEMALLOC,);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.memalloc_mutex);
     return retval;
 }
 
 void MPIU_TrSetMaxMem(size_t size)
 {
-    MPIU_THREAD_CS_ENTER(MEMALLOC,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.memalloc_mutex);
     MPL_TrSetMaxMem(size);
-    MPIU_THREAD_CS_EXIT(MEMALLOC,);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.memalloc_mutex);
 }
 

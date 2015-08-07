@@ -84,7 +84,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPI_Group_compare
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Group_compare - Compares two groups
@@ -119,7 +119,7 @@ int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
     /* The routines that setup the group data structures must be executed
        within a mutex.  As most of the group routines are not performance
        critical, we simple run these routines within the SINGLE_CS */
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GROUP_COMPARE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -157,13 +157,13 @@ int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Group_compare_impl(group_ptr1, group_ptr2, result);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GROUP_COMPARE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

@@ -29,7 +29,7 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup
 #undef FUNCNAME
 #define FUNCNAME MPIR_Group_difference_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Group_difference_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, MPID_Group **new_group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -109,7 +109,7 @@ int MPIR_Group_difference_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, M
 #undef FUNCNAME
 #define FUNCNAME MPI_Group_difference
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 
@@ -146,7 +146,7 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GROUP_DIFFERENCE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -191,7 +191,7 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GROUP_DIFFERENCE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

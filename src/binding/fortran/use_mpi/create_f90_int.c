@@ -74,7 +74,7 @@ int MPI_Type_create_f90_integer( int range, MPI_Datatype *newtype )
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_CREATE_F90_INTEGER);
 
     /* ... body of routine ...  */
@@ -109,7 +109,7 @@ int MPI_Type_create_f90_integer( int range, MPI_Datatype *newtype )
     /* ... end of body of routine ... */
  fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_CREATE_F90_INTEGER);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
  fn_fail:
     /* --BEGIN ERROR HANDLING-- */

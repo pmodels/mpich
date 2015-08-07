@@ -59,7 +59,7 @@ int MPIOI_File_write_all_end(MPI_File fh,
 
     MPIU_UNREFERENCED_ARG(buf);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
 
     adio_fh = MPIO_File_resolve(fh);
 
@@ -88,7 +88,7 @@ int MPIOI_File_write_all_end(MPI_File fh,
     error_code = MPI_SUCCESS;
 
 fn_exit:
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
 
     return error_code;
 }

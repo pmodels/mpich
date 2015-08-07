@@ -44,7 +44,7 @@ Output Parameters:
 #undef FUNCNAME
 #define FUNCNAME MPI_Get_library_version
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPI_Get_library_version(char *version, int *resultlen)
 {
     int mpi_errno = MPI_SUCCESS;

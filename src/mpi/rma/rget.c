@@ -86,7 +86,7 @@ int MPI_Rget(void *origin_addr, int origin_count, MPI_Datatype
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_RGET);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -165,7 +165,7 @@ int MPI_Rget(void *origin_addr, int origin_count, MPI_Datatype
 
   fn_exit:
     MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_RGET);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

@@ -29,7 +29,7 @@ int MPI_Comm_rank(MPI_Comm comm, int *rank) __attribute__((weak,alias("PMPI_Comm
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_rank
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 
@@ -57,7 +57,7 @@ int MPI_Comm_rank( MPI_Comm comm, int *rank )
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_RANK);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -99,7 +99,7 @@ int MPI_Comm_rank( MPI_Comm comm, int *rank )
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_RANK);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

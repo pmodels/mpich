@@ -19,7 +19,7 @@
 #undef FUNCNAME
 #define FUNCNAME immed_copy
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int immed_copy(void *src, void *dest, size_t len)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -62,7 +62,7 @@ static inline int immed_copy(void *src, void *dest, size_t len)
 #undef FUNCNAME
 #define FUNCNAME fill_in_derived_dtp_info
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void fill_in_derived_dtp_info(MPIDI_RMA_dtype_info * dtype_info, void *dataloop,
                                             MPID_Datatype * dtp)
 {
@@ -98,7 +98,7 @@ static inline void fill_in_derived_dtp_info(MPIDI_RMA_dtype_info * dtype_info, v
 #undef FUNCNAME
 #define FUNCNAME init_accum_ext_pkt
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int init_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
                               MPID_Datatype * target_dtp, MPIDI_msg_sz_t stream_offset,
                               void **ext_hdr_ptr, MPI_Aint * ext_hdr_sz)
@@ -120,7 +120,7 @@ static int init_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
 
         _ext_hdr_ptr = (MPIDI_CH3_Ext_pkt_accum_stream_derived_t *) MPIU_Malloc(_total_sz);
         if (_ext_hdr_ptr == NULL) {
-            MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem",
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem",
                                  "**nomem %s", "MPIDI_CH3_Ext_pkt_accum_stream_derived_t");
         }
 
@@ -138,7 +138,7 @@ static int init_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
 
         _ext_hdr_ptr = (MPIDI_CH3_Ext_pkt_accum_stream_t *) MPIU_Malloc(_total_sz);
         if (_ext_hdr_ptr == NULL) {
-            MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem",
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem",
                                  "**nomem %s", "MPIDI_CH3_Ext_pkt_accum_stream_t");
         }
 
@@ -155,7 +155,7 @@ static int init_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
 
         _ext_hdr_ptr = (MPIDI_CH3_Ext_pkt_accum_derived_t *) MPIU_Malloc(_total_sz);
         if (_ext_hdr_ptr == NULL) {
-            MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem",
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem",
                                  "**nomem %s", "MPIDI_CH3_Ext_pkt_accum_derived_t");
         }
 
@@ -181,7 +181,7 @@ static int init_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
 #undef FUNCNAME
 #define FUNCNAME init_get_accum_ext_pkt
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int init_get_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
                                   MPID_Datatype * target_dtp, MPIDI_msg_sz_t stream_offset,
                                   void **ext_hdr_ptr, MPI_Aint * ext_hdr_sz)
@@ -214,7 +214,7 @@ static int init_get_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
 #undef FUNCNAME
 #define FUNCNAME issue_from_origin_buffer
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
                                     void *ext_hdr_ptr, MPI_Aint ext_hdr_sz,
                                     MPIDI_msg_sz_t stream_offset, MPIDI_msg_sz_t stream_size,
@@ -288,10 +288,10 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
             iovcnt++;
         }
 
-        MPIU_THREAD_CS_ENTER(CH3COMM, vc);
+        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, iovcnt, &req);
-        MPIU_THREAD_CS_EXIT(CH3COMM, vc);
-        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
+        MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
         if (origin_dtp != NULL) {
             if (req == NULL) {
@@ -312,7 +312,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
 
     /* create a new request */
     req = MPID_Request_create();
-    MPIU_ERR_CHKANDJUMP(req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+    MPIR_ERR_CHKANDJUMP(req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
     MPIU_Object_set_ref(req, 2);
     req->kind = MPID_REQUEST_SEND;
@@ -339,15 +339,15 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
             iovcnt++;
         }
 
-        MPIU_THREAD_CS_ENTER(CH3COMM, vc);
+        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = MPIDI_CH3_iSendv(vc, req, iov, iovcnt);
-        MPIU_THREAD_CS_EXIT(CH3COMM, vc);
-        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
+        MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
     else {
         /* origin data is non-contiguous */
         req->dev.segment_ptr = MPID_Segment_alloc();
-        MPIU_ERR_CHKANDJUMP1(req->dev.segment_ptr == NULL, mpi_errno,
+        MPIR_ERR_CHKANDJUMP1(req->dev.segment_ptr == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
 
         MPID_Segment_init(rma_op->origin_addr, rma_op->origin_count,
@@ -358,10 +358,10 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
         req->dev.OnFinal = 0;
         req->dev.OnDataAvail = 0;
 
-        MPIU_THREAD_CS_ENTER(CH3COMM, vc);
+        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = vc->sendNoncontig_fn(vc, req, iov[0].MPL_IOV_BUF, iov[0].MPL_IOV_LEN);
-        MPIU_THREAD_CS_EXIT(CH3COMM, vc);
-        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
+        MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
 
   fn_exit:
@@ -390,7 +390,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
 #undef FUNCNAME
 #define FUNCNAME issue_put_op
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
                         MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
@@ -413,10 +413,10 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 
     if (rma_op->pkt.type == MPIDI_CH3_PKT_PUT_IMMED) {
         /* All origin data is in packet header, issue the header. */
-        MPIU_THREAD_CS_ENTER(CH3COMM, vc);
+        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = MPIDI_CH3_iStartMsg(vc, put_pkt, sizeof(*put_pkt), &curr_req);
-        MPIU_THREAD_CS_EXIT(CH3COMM, vc);
-        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
+        MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
     else {
         MPI_Aint origin_type_size;
@@ -434,7 +434,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
             ext_hdr_sz = sizeof(MPIDI_CH3_Ext_pkt_put_derived_t) + target_dtp_ptr->dataloop_size;
             ext_hdr_ptr = MPIU_Malloc(ext_hdr_sz);
             if (!ext_hdr_ptr) {
-                MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem",
+                MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem",
                                      "**nomem %s", "MPIDI_CH3_Ext_pkt_put_derived_t");
             }
 
@@ -446,7 +446,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         mpi_errno = issue_from_origin_buffer(rma_op, vc, ext_hdr_ptr, ext_hdr_sz,
                                              0, rma_op->origin_count * origin_type_size, &curr_req);
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
     }
 
     if (curr_req != NULL) {
@@ -472,7 +472,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 #undef FUNCNAME
 #define FUNCNAME issue_acc_op
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
                         MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
@@ -501,10 +501,10 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         accum_pkt->flags |= flags;
 
         /* All origin data is in packet header, issue the header. */
-        MPIU_THREAD_CS_ENTER(CH3COMM, vc);
+        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = MPIDI_CH3_iStartMsg(vc, accum_pkt, sizeof(*accum_pkt), &curr_req);
-        MPIU_THREAD_CS_EXIT(CH3COMM, vc);
-        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
+        MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
         if (curr_req != NULL) {
             MPIU_Assert(rma_op->reqs_size == 0 && rma_op->single_req == NULL);
@@ -580,7 +580,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         mpi_errno = issue_from_origin_buffer(rma_op, vc, ext_hdr_ptr, ext_hdr_sz,
                                              stream_offset, stream_size, &curr_req);
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
 
         if (curr_req != NULL) {
             if (rma_op->reqs_size == 0) {
@@ -639,7 +639,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 #undef FUNCNAME
 #define FUNCNAME issue_get_acc_op
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
                             MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
@@ -673,7 +673,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
          * datatype in it, and pass the request's handle in the GACC packet. When the
          * response comes from the target, it will contain the request handle. */
         resp_req = MPID_Request_create();
-        MPIU_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+        MPIR_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
         MPIU_Object_set_ref(resp_req, 2);
 
@@ -687,10 +687,10 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         get_accum_pkt->request_handle = resp_req->handle;
 
         /* All origin data is in packet header, issue the header. */
-        MPIU_THREAD_CS_ENTER(CH3COMM, vc);
+        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = MPIDI_CH3_iStartMsg(vc, get_accum_pkt, sizeof(*get_accum_pkt), &curr_req);
-        MPIU_THREAD_CS_EXIT(CH3COMM, vc);
-        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
+        MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
         if (curr_req != NULL) {
             MPID_Request_release(curr_req);
@@ -768,7 +768,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
          * datatype in it, and pass the request's handle in the GACC packet. When the
          * response comes from the target, it will contain the request handle. */
         resp_req = MPID_Request_create();
-        MPIU_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+        MPIR_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
         MPIU_Object_set_ref(resp_req, 2);
 
@@ -807,7 +807,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         mpi_errno = issue_from_origin_buffer(rma_op, vc, ext_hdr_ptr, ext_hdr_sz,
                                              stream_offset, stream_size, &curr_req);
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
 
         if (curr_req != NULL) {
             MPID_Request_release(curr_req);
@@ -870,7 +870,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 #undef FUNCNAME
 #define FUNCNAME issue_get_op
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
                         MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
@@ -897,7 +897,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
      * handle. */
     curr_req = MPID_Request_create();
     if (curr_req == NULL) {
-        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     }
 
     MPIU_Object_set_ref(curr_req, 2);
@@ -924,9 +924,9 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE(rma_op->pkt, target_datatype, mpi_errno);
     if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
         /* basic datatype on target. simply send the get_pkt. */
-        MPIU_THREAD_CS_ENTER(CH3COMM, vc);
+        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = MPIDI_CH3_iStartMsg(vc, get_pkt, sizeof(*get_pkt), &req);
-        MPIU_THREAD_CS_EXIT(CH3COMM, vc);
+        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
     }
     else {
         /* derived datatype on target. */
@@ -939,7 +939,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         ext_hdr_sz = sizeof(MPIDI_CH3_Ext_pkt_get_derived_t) + dtp->dataloop_size;
         ext_hdr_ptr = MPIU_Malloc(ext_hdr_sz);
         if (!ext_hdr_ptr) {
-            MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem",
+            MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem",
                                  "**nomem %s", "MPIDI_CH3_Ext_pkt_get_derived_t");
         }
 
@@ -954,9 +954,9 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) ext_hdr_ptr;
         iov[1].MPL_IOV_LEN = ext_hdr_sz;
 
-        MPIU_THREAD_CS_ENTER(CH3COMM, vc);
+        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, 2, &req);
-        MPIU_THREAD_CS_EXIT(CH3COMM, vc);
+        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
 
         /* release the target datatype */
         MPID_Datatype_release(dtp);
@@ -972,7 +972,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     }
 
     if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
 
     /* release the request returned by iStartMsg or iStartMsgv */
@@ -997,7 +997,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 #undef FUNCNAME
 #define FUNCNAME issue_cas_op
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
                         MPID_Win * win_ptr, MPIDI_RMA_Target_t * target_ptr,
                         MPIDI_CH3_Pkt_flags_t flags)
@@ -1018,7 +1018,7 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
      * datatype in it, and pass the request's handle RMW packet. When the
      * response comes from the target, it will contain the request handle. */
     curr_req = MPID_Request_create();
-    MPIU_ERR_CHKANDJUMP(curr_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+    MPIR_ERR_CHKANDJUMP(curr_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
     /* Set refs on the request to 2: one for the response message, and one for
      * the partial completion handler */
@@ -1034,10 +1034,10 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     cas_pkt->flags |= flags;
 
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
-    MPIU_THREAD_CS_ENTER(CH3COMM, vc);
+    MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = MPIDI_CH3_iStartMsg(vc, cas_pkt, sizeof(*cas_pkt), &rmw_req);
-    MPIU_THREAD_CS_EXIT(CH3COMM, vc);
-    MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+    MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
+    MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
     if (rmw_req != NULL) {
         MPID_Request_release(rmw_req);
@@ -1060,7 +1060,7 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
 #undef FUNCNAME
 #define FUNCNAME issue_fop_op
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
                         MPID_Win * win_ptr, MPIDI_RMA_Target_t * target_ptr,
                         MPIDI_CH3_Pkt_flags_t flags)
@@ -1081,7 +1081,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
      * datatype in it, and pass the request's handle in the GACC packet. When the
      * response comes from the target, it will contain the request handle. */
     resp_req = MPID_Request_create();
-    MPIU_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+    MPIR_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
     MPIU_Object_set_ref(resp_req, 2);
 
@@ -1098,10 +1098,10 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
 
     if (rma_op->pkt.type == MPIDI_CH3_PKT_FOP_IMMED) {
         /* All origin data is in packet header, issue the header. */
-        MPIU_THREAD_CS_ENTER(CH3COMM, vc);
+        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
         mpi_errno = MPIDI_CH3_iStartMsg(vc, fop_pkt, sizeof(*fop_pkt), &curr_req);
-        MPIU_THREAD_CS_EXIT(CH3COMM, vc);
-        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
+        MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
     else {
         MPI_Aint origin_dtp_size;
@@ -1109,7 +1109,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
         mpi_errno = issue_from_origin_buffer(rma_op, vc, NULL, 0,       /*ext_hdr_ptr, ext_hdr_sz */
                                              0, 1 * origin_dtp_size, &curr_req);
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
     }
 
     if (curr_req != NULL) {
@@ -1135,7 +1135,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
 #undef FUNCNAME
 #define FUNCNAME issue_rma_op
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPID_Win * win_ptr,
                                MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
@@ -1168,11 +1168,11 @@ static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPID_Win * win_ptr,
         mpi_errno = issue_fop_op(op_ptr, win_ptr, target_ptr, flags);
         break;
     default:
-        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**winInvalidOp");
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**winInvalidOp");
     }
 
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_RMA_OP);

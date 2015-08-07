@@ -30,7 +30,7 @@ int MPI_Op_commutative(MPI_Op op, int *commute) __attribute__((weak,alias("PMPI_
 #undef FUNCNAME
 #define FUNCNAME MPI_Op_commutative
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Op_commute - Queries an MPI reduction operation for its commutativity.
 
@@ -60,7 +60,7 @@ int MPI_Op_commutative(MPI_Op op, int *commute)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_OP_COMMUTATIVE);
 
     MPID_Op_get_ptr( op, op_ptr );
@@ -70,7 +70,7 @@ int MPI_Op_commutative(MPI_Op op, int *commute)
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPID_Op_valid_ptr( op_ptr, mpi_errno );
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -92,7 +92,7 @@ int MPI_Op_commutative(MPI_Op op, int *commute)
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_OP_COMMUTATIVE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */

@@ -29,7 +29,7 @@ int MPI_Type_struct(int count, const int *array_of_blocklengths,
 #undef FUNCNAME
 #define FUNCNAME MPIR_Type_struct_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_struct_impl(int count, const int *array_of_blocklengths,
                           const MPI_Aint *array_of_displacements,
                           const MPI_Datatype *array_of_types, MPI_Datatype *newtype)
@@ -45,7 +45,7 @@ int MPIR_Type_struct_impl(int count, const int *array_of_blocklengths,
 				 array_of_displacements,
 				 array_of_types,
 				 &new_handle);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 
     MPIU_CHKLMEM_MALLOC(ints, int *, (count + 1) * sizeof(int), mpi_errno, "contents integer array");
@@ -65,7 +65,7 @@ int MPIR_Type_struct_impl(int count, const int *array_of_blocklengths,
                                            array_of_displacements,
                                            array_of_types);
     
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 
@@ -81,7 +81,7 @@ int MPIR_Type_struct_impl(int count, const int *array_of_blocklengths,
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_struct
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_struct - Creates a struct datatype
 
@@ -159,7 +159,7 @@ int MPI_Type_struct(int count,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_STRUCT);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -202,7 +202,7 @@ int MPI_Type_struct(int count,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_STRUCT);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

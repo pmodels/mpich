@@ -19,7 +19,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIR_Sched_cb_free_buf
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_is_rma_atomic(MPI_Datatype type)
 {
     switch (type) {
@@ -49,7 +49,7 @@ int MPIR_Type_is_rma_atomic(MPI_Datatype type)
 #undef FUNCNAME
 #define FUNCNAME MPIR_COMPARE_EQUAL
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Compare_equal(const void *a, const void *b, MPI_Datatype type)
 {
     switch (type) {

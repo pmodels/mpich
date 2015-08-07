@@ -26,16 +26,15 @@
 /* Define the four ways that we achieve proper thread-safe updates of
  * shared structures and services
  *
- * A configure choice will set MPIU_THREAD_GRANULARITY to one of these values */
+ * A configure choice will set MPICH_THREAD_GRANULARITY to one of these values */
 
 /* _INVALID exists to avoid accidental macro evaluations to 0 */
-#define MPIU_THREAD_GRANULARITY_INVALID 0
-#define MPIU_THREAD_GRANULARITY_GLOBAL 1
-#define MPIU_THREAD_GRANULARITY_BRIEF_GLOBAL 2
-#define MPIU_THREAD_GRANULARITY_PER_OBJECT 3
-#define MPIU_THREAD_GRANULARITY_LOCK_FREE 4
+#define MPIR_THREAD_GRANULARITY_INVALID 0
+#define MPIR_THREAD_GRANULARITY_GLOBAL 1
+#define MPIR_THREAD_GRANULARITY_PER_OBJECT 2
+#define MPIR_THREAD_GRANULARITY_LOCK_FREE 3
 /* _SINGLE is the "null" granularity, where all processes are single-threaded */
-#define MPIU_THREAD_GRANULARITY_SINGLE 5
+#define MPIR_THREAD_GRANULARITY_SINGLE 4
 
 /* controls the allocation mechanism for MPID_Request handles, which can greatly
  * affect concurrency on the critical path */
@@ -46,7 +45,6 @@
 #define MPIU_REFCOUNT_INVALID 0
 /* _NONE means no concurrency control, such as when using MPI_THREAD_SINGLE */
 #define MPIU_REFCOUNT_NONE 1
-#define MPIU_REFCOUNT_LOCK 2
-#define MPIU_REFCOUNT_LOCKFREE 3
+#define MPIU_REFCOUNT_LOCKFREE 2
 
 #endif /* MPICHCONFCONST_H_INCLUDED */

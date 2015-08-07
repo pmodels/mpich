@@ -14,8 +14,7 @@ nodist_include_HEADERS += src/include/mpi.h
 nodist_noinst_HEADERS +=     \
     src/include/glue_romio.h \
     src/include/mpichinfo.h \
-    src/include/mpichconf.h  \
-    src/include/mpichtimer.h
+    src/include/mpichconf.h
 
 ## listed here in BUILT_SOURCES to ensure that if glue_romio.h is out of date
 ## that it will be rebuilt before make recurses into src/mpi/romio and runs
@@ -39,8 +38,6 @@ noinst_HEADERS +=                   \
     src/include/mpifunc.h           \
     src/include/mpihandlemem.h      \
     src/include/mpiimpl.h           \
-    src/include/mpiimplthread.h     \
-    src/include/mpiimplthreadpost.h \
     src/include/mpimem.h            \
     src/include/mpir_nbc.h          \
     src/include/mpir_type_defs.h    \

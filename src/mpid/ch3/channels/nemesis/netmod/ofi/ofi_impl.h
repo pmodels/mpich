@@ -145,7 +145,7 @@ fn_fail:                      \
    ? strrchr(__FILE__,'/')+1                    \
    : __FILE__                                   \
 )
-#define DECL_FUNC(FUNCNAME)  MPIU_QUOTE(FUNCNAME)
+#define DECL_FUNC(FUNCNAME)  MPL_QUOTE(FUNCNAME)
 #define OFI_COMPILE_TIME_ASSERT(expr_)                                  \
   do { switch(0) { case 0: case (expr_): default: break; } } while (0)
 
@@ -153,7 +153,7 @@ fn_fail:                      \
   do                                                            \
     {                                                           \
       ssize_t _ret = FUNC;                                      \
-      MPIU_ERR_##CHKANDJUMP4(_ret<0,                            \
+      MPIR_ERR_##CHKANDJUMP4(_ret<0,                            \
                            mpi_errno,                           \
                            MPI_ERR_OTHER,                       \
                            "**ofi_"#STR,                        \
@@ -170,7 +170,7 @@ fn_fail:                      \
 		do {							\
 			_ret = FUNC;                                    \
 			if(likely(_ret==0)) break;			\
-			MPIU_ERR_##CHKANDJUMP4(_ret != -FI_EAGAIN,	\
+			MPIR_ERR_##CHKANDJUMP4(_ret != -FI_EAGAIN,	\
 					       mpi_errno,		\
 					       MPI_ERR_OTHER,		\
 					       "**ofi_"#STR,		\
@@ -181,7 +181,7 @@ fn_fail:                      \
 					       fi_strerror(-_ret));	\
 				mpi_errno = MPID_nem_ofi_poll(0);	\
 				if(mpi_errno != MPI_SUCCESS)		\
-					MPIU_ERR_POP(mpi_errno);	\
+					MPIR_ERR_POP(mpi_errno);	\
 		} while (_ret == -FI_EAGAIN);				\
 	} while (0)
 
@@ -190,7 +190,7 @@ fn_fail:                      \
   do                                                            \
     {                                                           \
       pmi_errno  = FUNC;                                        \
-      MPIU_ERR_##CHKANDJUMP4(pmi_errno!=PMI_SUCCESS,            \
+      MPIR_ERR_##CHKANDJUMP4(pmi_errno!=PMI_SUCCESS,            \
                            mpi_errno,                           \
                            MPI_ERR_OTHER,                       \
                            "**ofi_"#STR,                        \
@@ -205,7 +205,7 @@ fn_fail:                      \
   do                                                        \
     {                                                       \
       mpi_errno  = FUNC;                                    \
-      if (mpi_errno) MPIU_ERR_POP(mpi_errno);               \
+      if (mpi_errno) MPIR_ERR_POP(mpi_errno);               \
     } while (0);
 
 #define VC_READY_CHECK(vc)                      \

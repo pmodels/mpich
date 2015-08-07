@@ -68,7 +68,7 @@ int MPI_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
 #undef FUNCNAME
 #define FUNCNAME MPIR_Scan_generic
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIR_Scan_generic ( 
     const void *sendbuf,
     void *recvbuf,
@@ -136,7 +136,7 @@ static int MPIR_Scan_generic (
     if (sendbuf != MPI_IN_PLACE) {
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype,
                                    recvbuf, count, datatype);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     
     if (sendbuf != MPI_IN_PLACE)
@@ -145,7 +145,7 @@ static int MPIR_Scan_generic (
     else 
         mpi_errno = MPIR_Localcopy(recvbuf, count, datatype,
                                    partial_scan, count, datatype);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
     mask = 0x1;
     while (mask < comm_size) {
@@ -160,32 +160,32 @@ static int MPIR_Scan_generic (
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                MPIU_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
             
             if (rank > dst) {
 		mpi_errno = MPIR_Reduce_local_impl( 
 			   tmp_buf, partial_scan, count, datatype, op);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 		mpi_errno = MPIR_Reduce_local_impl( 
 			   tmp_buf, recvbuf, count, datatype, op);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             }
             else {
                 if (is_commutative) {
 		    mpi_errno = MPIR_Reduce_local_impl( 
 			       tmp_buf, partial_scan, count, datatype, op);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 		}
                 else {
 		    mpi_errno = MPIR_Reduce_local_impl( 
 			       partial_scan, tmp_buf, count, datatype, op);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 		    mpi_errno = MPIR_Localcopy(tmp_buf, count, datatype,
 					       partial_scan,
 					       count, datatype);
-		    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+		    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 }
             }
         }
@@ -194,7 +194,7 @@ static int MPIR_Scan_generic (
     
     if (MPIU_THREADPRIV_FIELD(op_errno)) {
 	mpi_errno = MPIU_THREADPRIV_FIELD(op_errno);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     
  fn_exit:
@@ -205,7 +205,7 @@ static int MPIR_Scan_generic (
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)
-        MPIU_ERR_SET(mpi_errno, *errflag, "**coll_fail");
+        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -220,7 +220,7 @@ static int MPIR_Scan_generic (
 #undef FUNCNAME
 #define FUNCNAME MPIR_Scan
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scan(
     const void *sendbuf,
     void *recvbuf,
@@ -284,15 +284,15 @@ int MPIR_Scan(
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-            MPIU_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
     }
     else if (sendbuf != MPI_IN_PLACE)
     {
         mpi_errno = MPIR_Localcopy(sendbuf, count, datatype,
                                    recvbuf, count, datatype);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     /* get result from local node's last processor which 
@@ -307,8 +307,8 @@ int MPIR_Scan(
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-            MPIU_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
     }
     else if (comm_ptr->node_roots_comm == NULL && 
@@ -320,8 +320,8 @@ int MPIR_Scan(
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-            MPIU_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
     }
     else if (comm_ptr->node_roots_comm != NULL)
@@ -340,8 +340,8 @@ int MPIR_Scan(
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-            MPIU_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
 
         if (MPIU_Get_internode_rank(comm_ptr, rank) != 
@@ -353,8 +353,8 @@ int MPIR_Scan(
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                MPIU_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
         }
         if (MPIU_Get_internode_rank(comm_ptr, rank) != 0)
@@ -366,8 +366,8 @@ int MPIR_Scan(
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                MPIU_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
         }
     }
@@ -383,8 +383,8 @@ int MPIR_Scan(
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-            MPIU_ERR_SET(mpi_errno, *errflag, "**fail");
-            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+            MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+            MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
     }
 
@@ -395,8 +395,8 @@ int MPIR_Scan(
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
-                MPIU_ERR_SET(mpi_errno, *errflag, "**fail");
-                MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+                MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
+                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
             }
         }
 
@@ -410,7 +410,7 @@ int MPIR_Scan(
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)
-        MPIU_ERR_SET(mpi_errno, *errflag, "**coll_fail");
+        MPIR_ERR_SET(mpi_errno, *errflag, "**coll_fail");
     return mpi_errno;
 
   fn_fail:
@@ -424,7 +424,7 @@ int MPIR_Scan(
 #undef FUNCNAME
 #define FUNCNAME MPIR_Scan_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                    MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
@@ -434,12 +434,12 @@ int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
 	/* --BEGIN USEREXTENSION-- */
 	mpi_errno = comm_ptr->coll_fns->Scan(sendbuf, recvbuf, count,
                                              datatype, op, comm_ptr, errflag);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	/* --END USEREXTENSION-- */
     } else {
         mpi_errno = MPIR_Scan(sendbuf, recvbuf, count, datatype,
                               op, comm_ptr, errflag);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
         
  fn_exit:
@@ -454,7 +454,7 @@ int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
 #undef FUNCNAME
 #define FUNCNAME MPI_Scan
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Scan - Computes the scan (partial reductions) of data on a collection of
@@ -494,7 +494,7 @@ int MPI_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_COLL_FUNC_ENTER(MPID_STATE_MPI_SCAN);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -566,7 +566,7 @@ int MPI_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
     
   fn_exit:
     MPID_MPI_COLL_FUNC_EXIT(MPID_STATE_MPI_SCAN);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

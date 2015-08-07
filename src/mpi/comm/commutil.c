@@ -74,8 +74,6 @@ int MPIR_Comm_init(MPID_Comm * comm_p)
 
     MPIU_Object_set_ref(comm_p, 1);
 
-    MPIU_THREAD_MPI_OBJ_INIT(comm_p);
-
     /* initialize local and remote sizes to -1 to allow other parts of
      * the stack to detect errors more easily */
     comm_p->local_size = -1;
@@ -136,13 +134,13 @@ int MPIR_Comm_create(MPID_Comm ** newcomm_ptr)
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_CREATE);
 
     newptr = (MPID_Comm *) MPIU_Handle_obj_alloc(&MPID_Comm_mem);
-    MPIU_ERR_CHKANDJUMP(!newptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP(!newptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     *newcomm_ptr = newptr;
 
     mpi_errno = MPIR_Comm_init(newptr);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     /* Insert this new communicator into the list of known communicators.
      * Make this conditional on debugger support to match the test in
@@ -171,12 +169,12 @@ int MPIR_Setup_intercomm_localcomm(MPID_Comm * intercomm_ptr)
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_SETUP_INTERCOMM_LOCALCOMM);
 
     localcomm_ptr = (MPID_Comm *) MPIU_Handle_obj_alloc(&MPID_Comm_mem);
-    MPIU_ERR_CHKANDJUMP(!localcomm_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP(!localcomm_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     /* get sensible default values for most fields (usually zeros) */
     mpi_errno = MPIR_Comm_init(localcomm_ptr);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     /* use the parent intercomm's recv ctx as the basis for our ctx */
     localcomm_ptr->recvcontext_id =
@@ -209,7 +207,7 @@ int MPIR_Setup_intercomm_localcomm(MPID_Comm * intercomm_ptr)
     /* sets up the SMP-aware sub-communicators and tables */
     mpi_errno = MPIR_Comm_commit(localcomm_ptr);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
   fn_fail:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_SETUP_INTERCOMM_LOCALCOMM);
@@ -228,7 +226,7 @@ static struct MPID_Collops *ic_default_collops = NULL;
 #undef FUNCNAME
 #define FUNCNAME cleanup_default_collops
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int cleanup_default_collops(void *unused)
 {
     int i;
@@ -251,7 +249,7 @@ static int cleanup_default_collops(void *unused)
 #undef FUNCNAME
 #define FUNCNAME init_default_collops
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int init_default_collops(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -378,7 +376,7 @@ static int init_default_collops(void)
 #undef FUNCNAME
 #define FUNCNAME set_collops
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int set_collops(MPID_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -390,7 +388,7 @@ static int set_collops(MPID_Comm * comm)
     if (unlikely(!initialized)) {
         mpi_errno = init_default_collops();
         if (mpi_errno)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
 
         initialized = TRUE;
     }
@@ -414,7 +412,7 @@ static int set_collops(MPID_Comm * comm)
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_map_irregular
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_map_irregular(MPID_Comm * newcomm, MPID_Comm * src_comm,
                             int *src_mapping, int src_mapping_size,
                             MPIR_Comm_map_dir_t dir, MPIR_Comm_map_t ** map)
@@ -462,7 +460,7 @@ int MPIR_Comm_map_irregular(MPID_Comm * newcomm, MPID_Comm * src_comm,
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_map_dup
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_map_dup(MPID_Comm * newcomm, MPID_Comm * src_comm, MPIR_Comm_map_dir_t dir)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -495,7 +493,7 @@ int MPIR_Comm_map_dup(MPID_Comm * newcomm, MPID_Comm * src_comm, MPIR_Comm_map_d
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_map_free
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_map_free(MPID_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -528,7 +526,7 @@ int MPIR_Comm_map_free(MPID_Comm * comm)
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_commit
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_commit(MPID_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -547,12 +545,12 @@ int MPIR_Comm_commit(MPID_Comm * comm)
 
     mpi_errno = set_collops(comm);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     /* Notify device of communicator creation */
     mpi_errno = MPID_Dev_comm_create_hook(comm);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     MPIR_Comm_map_free(comm);
 
@@ -565,7 +563,7 @@ int MPIR_Comm_commit(MPID_Comm * comm)
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno) {
             if (MPIR_Err_is_fatal(mpi_errno))
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
 
             /* Non-fatal errors simply mean that this communicator will not have
              * any node awareness.  Node-aware collectives are an optimization. */
@@ -597,7 +595,7 @@ int MPIR_Comm_commit(MPID_Comm * comm)
         if (num_local > 1) {
             mpi_errno = MPIR_Comm_create(&comm->node_comm);
             if (mpi_errno)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
 
             comm->node_comm->context_id = comm->context_id + MPID_CONTEXT_INTRANODE_OFFSET;
             comm->node_comm->recvcontext_id = comm->node_comm->context_id;
@@ -615,12 +613,12 @@ int MPIR_Comm_commit(MPID_Comm * comm)
 
             mpi_errno = set_collops(comm->node_comm);
             if (mpi_errno)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
 
             /* Notify device of communicator creation */
             mpi_errno = MPID_Dev_comm_create_hook(comm->node_comm);
             if (mpi_errno)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
             /* don't call MPIR_Comm_commit here */
 
             MPIR_Comm_map_free(comm->node_comm);
@@ -631,7 +629,7 @@ int MPIR_Comm_commit(MPID_Comm * comm)
         if (local_rank == 0) {
             mpi_errno = MPIR_Comm_create(&comm->node_roots_comm);
             if (mpi_errno)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
 
             comm->node_roots_comm->context_id = comm->context_id + MPID_CONTEXT_INTERNODE_OFFSET;
             comm->node_roots_comm->recvcontext_id = comm->node_roots_comm->context_id;
@@ -648,12 +646,12 @@ int MPIR_Comm_commit(MPID_Comm * comm)
 
             mpi_errno = set_collops(comm->node_roots_comm);
             if (mpi_errno)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
 
             /* Notify device of communicator creation */
             mpi_errno = MPID_Dev_comm_create_hook(comm->node_roots_comm);
             if (mpi_errno)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
             /* don't call MPIR_Comm_commit here */
 
             MPIR_Comm_map_free(comm->node_roots_comm);
@@ -737,13 +735,13 @@ int MPIR_Comm_copy(MPID_Comm * comm_ptr, int size, MPID_Comm ** outcomm_ptr)
     if (comm_ptr->comm_kind == MPID_INTERCOMM) {
         mpi_errno = MPIR_Get_intercomm_contextid(comm_ptr, &new_context_id, &new_recvcontext_id);
         if (mpi_errno)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
     }
     else {
         mpi_errno = MPIR_Get_contextid_sparse(comm_ptr, &new_context_id, FALSE);
         new_recvcontext_id = new_context_id;
         if (mpi_errno)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         MPIU_Assert(new_context_id != 0);
     }
 
@@ -813,18 +811,18 @@ int MPIR_Comm_copy(MPID_Comm * comm_ptr, int size, MPID_Comm ** outcomm_ptr)
     }
 
     /* Inherit the error handler (if any) */
-    MPIU_THREAD_CS_ENTER(MPI_OBJ, comm_ptr);
+    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->pobj_mutex);
     newcomm_ptr->errhandler = comm_ptr->errhandler;
     if (comm_ptr->errhandler) {
         MPIR_Errhandler_add_ref(comm_ptr->errhandler);
     }
-    MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
+    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->pobj_mutex);
 
     /* FIXME do we want to copy coll_fns here? */
 
     mpi_errno = MPIR_Comm_commit(newcomm_ptr);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     /* Start with no attributes on this communicator */
     newcomm_ptr->attributes = 0;
@@ -832,10 +830,10 @@ int MPIR_Comm_copy(MPID_Comm * comm_ptr, int size, MPID_Comm ** outcomm_ptr)
     /* Copy over the info hints from the original communicator. */
     mpi_errno = MPIR_Info_dup_impl(comm_ptr->info, &(newcomm_ptr->info));
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Comm_apply_hints(newcomm_ptr, newcomm_ptr->info);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     *outcomm_ptr = newcomm_ptr;
 
@@ -856,7 +854,7 @@ int MPIR_Comm_copy(MPID_Comm * comm_ptr, int size, MPID_Comm ** outcomm_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_copy_data
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_copy_data(MPID_Comm * comm_ptr, MPID_Comm ** outcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -894,12 +892,12 @@ int MPIR_Comm_copy_data(MPID_Comm * comm_ptr, MPID_Comm ** outcomm_ptr)
     newcomm_ptr->is_low_group = comm_ptr->is_low_group; /* only relevant for intercomms */
 
     /* Inherit the error handler (if any) */
-    MPIU_THREAD_CS_ENTER(MPI_OBJ, comm_ptr);
+    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->pobj_mutex);
     newcomm_ptr->errhandler = comm_ptr->errhandler;
     if (comm_ptr->errhandler) {
         MPIR_Errhandler_add_ref(comm_ptr->errhandler);
     }
-    MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
+    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->pobj_mutex);
 
     /* FIXME do we want to copy coll_fns here? */
 
@@ -924,7 +922,7 @@ int MPIR_Comm_copy_data(MPID_Comm * comm_ptr, MPID_Comm ** outcomm_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_delete_internal
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_delete_internal(MPID_Comm * comm_ptr)
 {
     int in_use;
@@ -962,7 +960,7 @@ int MPIR_Comm_delete_internal(MPID_Comm * comm_ptr)
          * destroyed */
         mpi_errno = MPID_Dev_comm_destroy_hook(comm_ptr);
         if (mpi_errno)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
 
         /* Free info hints */
         if (comm_ptr->info != NULL) {
@@ -1006,7 +1004,6 @@ int MPIR_Comm_delete_internal(MPID_Comm * comm_ptr)
         MPIR_Free_contextid(comm_ptr->recvcontext_id);
 
         /* We need to release the error handler */
-        /* no MPI_OBJ CS needed */
         if (comm_ptr->errhandler &&
             !(HANDLE_GET_KIND(comm_ptr->errhandler->handle) == HANDLE_KIND_BUILTIN)) {
             int errhInuse;
@@ -1047,7 +1044,7 @@ int MPIR_Comm_delete_internal(MPID_Comm * comm_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_release_always
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_release_always(MPID_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1062,7 +1059,7 @@ int MPIR_Comm_release_always(MPID_Comm * comm_ptr)
     if (!in_use) {
         mpi_errno = MPIR_Comm_delete_internal(comm_ptr);
         if (mpi_errno)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
     }
 
   fn_exit:
@@ -1077,7 +1074,7 @@ int MPIR_Comm_release_always(MPID_Comm * comm_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_apply_hints
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_apply_hints(MPID_Comm * comm_ptr, MPID_Info * info_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1101,7 +1098,7 @@ int MPIR_Comm_apply_hints(MPID_Comm * comm_ptr, MPID_Info * info_ptr)
         if (hint_fn) {
             mpi_errno = hint_fn->fn(comm_ptr, hint, hint_fn->state);
             if (mpi_errno)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
         }
     }
 
@@ -1115,7 +1112,7 @@ int MPIR_Comm_apply_hints(MPID_Comm * comm_ptr, MPID_Info * info_ptr)
 #undef FUNCNAME
 #define FUNCNAME free_hint_handles
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int free_hint_handles(void *ignore)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1143,7 +1140,7 @@ static int free_hint_handles(void *ignore)
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_register_hint
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_register_hint(const char *hint_key, MPIR_Comm_hint_fn_t fn, void *state)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -44,7 +44,7 @@ int MPID_nem_llc_my_llc_rank;
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_kvs_put_binary
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_kvs_put_binary(int from, const char *postfix, const uint8_t * buf, int length)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -57,7 +57,7 @@ int MPID_nem_llc_kvs_put_binary(int from, const char *postfix, const uint8_t * b
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_KVS_PUT_BINARY);
 
     mpi_errno = MPIDI_PG_GetConnKVSname(&kvs_name);
-    MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPIDI_PG_GetConnKVSname");
+    MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPIDI_PG_GetConnKVSname");
     dprintf("kvs_put_binary,kvs_name=%s\n", kvs_name);
 
     sprintf(key, "bc/%d/%s", from, postfix);
@@ -69,7 +69,7 @@ int MPID_nem_llc_kvs_put_binary(int from, const char *postfix, const uint8_t * b
     dprintf("kvs_put_binary,rank=%d,from=%d,PMI_KVS_Put(%s, %s, %s)\n",
             MPIDI_Process.my_pg_rank, from, kvs_name, key, val);
     pmi_errno = PMI_KVS_Put(kvs_name, key, val);
-    MPIU_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**PMI_KVS_Put");
+    MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**PMI_KVS_Put");
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_KVS_PUT_BINARY);
     return mpi_errno;
@@ -80,7 +80,7 @@ int MPID_nem_llc_kvs_put_binary(int from, const char *postfix, const uint8_t * b
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_kvs_get_binary
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_kvs_get_binary(int from, const char *postfix, char *buf, int length)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -94,13 +94,13 @@ int MPID_nem_llc_kvs_get_binary(int from, const char *postfix, char *buf, int le
 
     mpi_errno = MPIDI_PG_GetConnKVSname(&kvs_name);
     dprintf("kvs_get_binary,kvs_name=%s\n", kvs_name);
-    MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPIDI_PG_GetConnKVSname");
+    MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPIDI_PG_GetConnKVSname");
 
     sprintf(key, "bc/%d/%s", from, postfix);
     dprintf("kvs_put_binary,rank=%d,from=%d,PMI_KVS_Get(%s, %s, %s)\n",
             MPIDI_Process.my_pg_rank, from, kvs_name, key, val);
     pmi_errno = PMI_KVS_Get(kvs_name, key, val, 256);
-    MPIU_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**PMS_KVS_Get");
+    MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**PMS_KVS_Get");
 
     dprintf("rank=%d,obtained val=%s\n", MPIDI_Process.my_pg_rank, val);
     char *strp = val;
@@ -121,7 +121,7 @@ int MPID_nem_llc_kvs_get_binary(int from, const char *postfix, char *buf, int le
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno, llc_errno;
@@ -131,22 +131,22 @@ int MPID_nem_llc_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_INIT);
 
     llc_errno = LLC_init(TYPE_MPI);
-    MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_init");
+    MPIR_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_init");
 
     llc_errno = LLC_comm_rank(LLC_COMM_MPICH, &MPID_nem_llc_my_llc_rank);
-    MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_comm_rank");
+    MPIR_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_comm_rank");
 
     /* Announce my LLC rank */
     mpi_errno =
         MPID_nem_llc_kvs_put_binary(pg_rank, "llc_rank",
                                     (uint8_t *) & MPID_nem_llc_my_llc_rank, sizeof(int));
-    MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_kvs_put_binary");
+    MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_kvs_put_binary");
     dprintf("llc_init,my_pg_rank=%d,my_llc_rank=%d\n",
             MPIDI_Process.my_pg_rank, MPID_nem_llc_my_llc_rank);
 
     /* Wait until the key-value propagates among all ranks */
     pmi_errno = PMI_Barrier();
-    MPIU_ERR_CHKANDJUMP(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**PMI_Barrier");
+    MPIR_ERR_CHKANDJUMP(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**PMI_Barrier");
 
     mpi_errno =
         MPIDI_CH3I_Register_anysource_notification(MPID_nem_llc_anysource_posted,
@@ -164,7 +164,7 @@ int MPID_nem_llc_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_get_business_card
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -182,7 +182,7 @@ int MPID_nem_llc_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_connect_to_root
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -204,7 +204,7 @@ int MPID_nem_llc_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_anysource_iprobe
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_anysource_iprobe(int tag, MPID_Comm * comm, int context_offset, int *flag,
                                   MPI_Status * status)
 {
@@ -215,7 +215,7 @@ int MPID_nem_llc_anysource_iprobe(int tag, MPID_Comm * comm, int context_offset,
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_anysource_improbe
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_anysource_improbe(int tag, MPID_Comm * comm, int context_offset, int *flag,
                                    MPID_Request ** message, MPI_Status * status)
 {
@@ -226,7 +226,7 @@ int MPID_nem_llc_anysource_improbe(int tag, MPID_Comm * comm, int context_offset
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_llc_get_ordering
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_get_ordering(int *ordering)
 {
     (*ordering) = 1;

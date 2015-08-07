@@ -29,7 +29,7 @@ int MPI_Type_hvector(int count, int blocklength, MPI_Aint stride, MPI_Datatype o
 #undef FUNCNAME
 #define FUNCNAME MPIR_Type_hvector_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_hvector_impl(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype, MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -43,7 +43,7 @@ int MPIR_Type_hvector_impl(int count, int blocklength, MPI_Aint stride, MPI_Data
 				 1, /* stride in bytes */
 				 oldtype,
 				 &new_handle);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     ints[0] = count;
     ints[1] = blocklength;
@@ -56,7 +56,7 @@ int MPIR_Type_hvector_impl(int count, int blocklength, MPI_Aint stride, MPI_Data
 				           ints,
 				           &stride,
 				           &oldtype);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
     MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 
@@ -72,7 +72,7 @@ int MPIR_Type_hvector_impl(int count, int blocklength, MPI_Aint stride, MPI_Data
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_hvector
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_hvector - type_hvector
 
@@ -104,7 +104,7 @@ int MPI_Type_hvector(int count,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_HVECTOR);
 
 #   ifdef HAVE_ERROR_CHECKING
@@ -138,7 +138,7 @@ int MPI_Type_hvector(int count,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_HVECTOR);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

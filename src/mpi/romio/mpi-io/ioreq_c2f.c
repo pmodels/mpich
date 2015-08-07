@@ -49,14 +49,14 @@ MPI_Fint MPIO_Request_c2f(MPIO_Request request)
     int i;
     MPIU_THREADPRIV_DECL;
 
-    /* We can make this test outside of the ALLFUNC mutex because it does
+    /* We can make this test outside of the GLOBAL mutex because it does
        not access any shared data */
     if ((request <= (MPIO_Request) 0) || (request->cookie != ADIOI_REQ_COOKIE))
     {
 	    return (MPI_Fint) 0;
     }
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     if (!ADIOI_Reqtable) {
 	ADIOI_Reqtable_max = 1024;
 	ADIOI_Reqtable = (MPIO_Request *)
@@ -75,7 +75,7 @@ MPI_Fint MPIO_Request_c2f(MPIO_Request request)
     ADIOI_Reqtable_ptr++;
     ADIOI_Reqtable[ADIOI_Reqtable_ptr] = request;
 
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return (MPI_Fint) ADIOI_Reqtable_ptr;
 #endif
 }

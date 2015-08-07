@@ -29,7 +29,7 @@ int MPI_Type_get_true_extent_x(MPI_Datatype datatype, MPI_Count *lb, MPI_Count *
 #undef FUNCNAME
 #define FUNCNAME MPIR_Type_get_true_extent_x_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count *true_lb, MPI_Count *true_extent)
 {
     MPID_Datatype *datatype_ptr = NULL;
@@ -51,7 +51,7 @@ void MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count *true_lb,
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_get_true_extent_x
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Type_get_true_extent_x - XXX description here
 
@@ -73,7 +73,7 @@ int MPI_Type_get_true_extent_x(MPI_Datatype datatype, MPI_Count *true_lb, MPI_Co
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_GET_TRUE_EXTENT_X);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_GET_TRUE_EXTENT_X);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -118,7 +118,7 @@ int MPI_Type_get_true_extent_x(MPI_Datatype datatype, MPI_Count *true_lb, MPI_Co
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_GET_TRUE_EXTENT_X);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
 fn_fail:

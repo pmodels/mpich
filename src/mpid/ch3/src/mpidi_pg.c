@@ -33,7 +33,7 @@ static MPIDI_PG_t *pg_world = NULL;
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_PG_Init(int *argc_p, char ***argv_p, 
 		  MPIDI_PG_Compare_ids_fn_t compare_ids_fn, 
 		  MPIDI_PG_Destroy_fn_t destroy_fn)
@@ -73,7 +73,7 @@ int MPIDI_PG_Init(int *argc_p, char ***argv_p,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Finalize
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@ 
    MPIDI_PG_Finalize - Finalize the process groups, including freeing all
    process group structures
@@ -96,12 +96,12 @@ int MPIDI_PG_Finalize(void)
     if (pg_world->connData) {
 #ifdef USE_PMI2_API
         mpi_errno = PMI2_Finalize();
-        if (mpi_errno) MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**ch3|pmi_finalize");
+        if (mpi_errno) MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**ch3|pmi_finalize");
 #else
 	int rc;
 	rc = PMI_Finalize();
 	if (rc) {
-	    MPIU_ERR_SET1(mpi_errno,MPI_ERR_OTHER, 
+	    MPIR_ERR_SET1(mpi_errno,MPI_ERR_OTHER, 
 			  "**ch3|pmi_finalize", 
 			  "**ch3|pmi_finalize %d", rc);
 	}
@@ -173,7 +173,7 @@ int MPIDI_PG_Finalize(void)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Create
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_PG_Create(int vct_sz, void * pg_id, MPIDI_PG_t ** pg_ptr)
 {
     MPIDI_PG_t * pg = NULL, *pgnext;
@@ -262,7 +262,7 @@ int MPIDI_PG_Create(int vct_sz, void * pg_id, MPIDI_PG_t ** pg_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Destroy
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
 {
     MPIDI_PG_t * pg_prev;
@@ -319,7 +319,7 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
 		   and can thus free unused (or idle) VCs, it should be allowed
 		   to do so.  [wdg 2008-08-31] */
                 mpi_errno = MPIDI_CH3_VC_Destroy(&(pg->vct[i]));
-                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+                if (mpi_errno) { MPIR_ERR_POP(mpi_errno); }
             }
 
 	    MPIDI_PG_Destroy_fn(pg);
@@ -343,7 +343,7 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
     }
 
     /* PG not found if we got here */
-    MPIU_ERR_SET1(mpi_errno,MPI_ERR_OTHER,
+    MPIR_ERR_SET1(mpi_errno,MPI_ERR_OTHER,
 		  "**dev|pg_not_found", "**dev|pg_not_found %p", pg);
 
   fn_exit:
@@ -356,7 +356,7 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Find
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_PG_Find(void * id, MPIDI_PG_t ** pg_ptr)
 {
     MPIDI_PG_t * pg;
@@ -388,7 +388,7 @@ int MPIDI_PG_Find(void * id, MPIDI_PG_t ** pg_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Id_compare
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_PG_Id_compare(void * id1, void *id2)
 {
     return MPIDI_PG_Compare_ids_fn(id1, id2);
@@ -398,7 +398,7 @@ int MPIDI_PG_Id_compare(void * id1, void *id2)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Get_next
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_PG_Get_next(MPIDI_PG_iterator *iter, MPIDI_PG_t ** pg_ptr)
 {
     *pg_ptr = (*iter);
@@ -412,7 +412,7 @@ int MPIDI_PG_Get_next(MPIDI_PG_iterator *iter, MPIDI_PG_t ** pg_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Has_next
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_PG_Has_next(MPIDI_PG_iterator *iter)
 {
     return (*iter != NULL);
@@ -421,7 +421,7 @@ int MPIDI_PG_Has_next(MPIDI_PG_iterator *iter)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Get_iterator
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_PG_Get_iterator(MPIDI_PG_iterator *iter)
 {
     *iter = MPIDI_PG_list;
@@ -440,7 +440,7 @@ int MPIDI_PG_Get_iterator(MPIDI_PG_iterator *iter)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_To_string
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_PG_To_string(MPIDI_PG_t *pg_ptr, char **str_ptr, int *lenStr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -453,7 +453,7 @@ int MPIDI_PG_To_string(MPIDI_PG_t *pg_ptr, char **str_ptr, int *lenStr)
 	(*pg_ptr->connInfoToString)( str_ptr, lenStr, pg_ptr );
     }
     else {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_INTERN,"**noConnInfoToString");
+	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_INTERN,"**noConnInfoToString");
     }
 
     /*printf( "PgToString: Pg string is %s\n", *str_ptr ); fflush(stdout);*/
@@ -475,7 +475,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Create_from_string
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_PG_Create_from_string(const char * str, MPIDI_PG_t ** pg_pptr, 
 				int *flag)
 {
@@ -493,7 +493,7 @@ int MPIDI_PG_Create_from_string(const char * str, MPIDI_PG_t ** pg_pptr,
        it to the find routine */
     /* printf( "Looking for pg with id %s\n", str );fflush(stdout); */
     mpi_errno = MPIDI_PG_Find((void *)str, &existing_pg);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     if (existing_pg != NULL) {
 	/* return the existing PG */
@@ -511,7 +511,7 @@ int MPIDI_PG_Create_from_string(const char * str, MPIDI_PG_t ** pg_pptr,
 
     mpi_errno = MPIDI_PG_Create(vct_sz, (void *)str, pg_pptr);
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_POP(mpi_errno);
+	MPIR_ERR_POP(mpi_errno);
     }
     
     pg_ptr = *pg_pptr;
@@ -584,7 +584,7 @@ void MPIDI_PG_IdToNum( MPIDI_PG_t *pg, int *id )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_SetConnInfo
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_PG_SetConnInfo( int rank, const char *connString )
 {
 #ifdef USE_PMI2_API
@@ -596,13 +596,13 @@ int MPIDI_PG_SetConnInfo( int rank, const char *connString )
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_PG_SetConnInfo);
 
     len = MPL_snprintf(key, sizeof(key), "P%d-businesscard", rank);
-    MPIU_ERR_CHKANDJUMP1(len < 0 || len > sizeof(key), mpi_errno, MPI_ERR_OTHER, "**snprintf", "**snprintf %d", len);
+    MPIR_ERR_CHKANDJUMP1(len < 0 || len > sizeof(key), mpi_errno, MPI_ERR_OTHER, "**snprintf", "**snprintf %d", len);
 
     mpi_errno = PMI2_KVS_Put(key, connString);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = PMI2_KVS_Fence();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_PG_SetConnInfo);
@@ -622,23 +622,23 @@ int MPIDI_PG_SetConnInfo( int rank, const char *connString )
     
     len = MPL_snprintf(key, sizeof(key), "P%d-businesscard", rank);
     if (len < 0 || len > sizeof(key)) {
-	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**snprintf",
+	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**snprintf",
 			     "**snprintf %d", len);
     }
     pmi_errno = PMI_KVS_Put(pg_world->connData, key, connString );
     if (pmi_errno != PMI_SUCCESS) {
-	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_kvs_put",
+	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_kvs_put",
 			     "**pmi_kvs_put %d", pmi_errno);
     }
     pmi_errno = PMI_KVS_Commit(pg_world->connData);
     if (pmi_errno != PMI_SUCCESS) {
-	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_kvs_commit",
+	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_kvs_commit",
 			     "**pmi_kvs_commit %d", pmi_errno);
     }
     
     pmi_errno = PMI_Barrier();
     if (pmi_errno != PMI_SUCCESS) {
-	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_barrier",
+	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_barrier",
 			     "**pmi_barrier %d", pmi_errno);
     }
  fn_exit:
@@ -674,7 +674,7 @@ int MPIDI_PG_SetConnInfo( int rank, const char *connString )
 #undef FUNCNAME
 #define FUNCNAME getConnInfoKVS
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int getConnInfoKVS( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
 {
 #ifdef USE_PMI2_API
@@ -684,14 +684,14 @@ static int getConnInfoKVS( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
 
     rc = MPL_snprintf(key, MPIDI_MAX_KVS_KEY_LEN, "P%d-businesscard", rank );
     if (rc < 0 || rc > MPIDI_MAX_KVS_KEY_LEN) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
+	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
     }
 
     mpi_errno = PMI2_KVS_Get(pg->connData, PMI2_ID_NULL, key, buf, bufsize, &vallen);
     if (mpi_errno) {
 	MPIDI_PG_CheckForSingleton();
 	mpi_errno = PMI2_KVS_Get(pg->connData, PMI2_ID_NULL, key, buf, bufsize, &vallen);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
  fn_exit:
     return mpi_errno;
@@ -703,18 +703,18 @@ static int getConnInfoKVS( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
 
     rc = MPL_snprintf(key, MPIDI_MAX_KVS_KEY_LEN, "P%d-businesscard", rank );
     if (rc < 0 || rc > MPIDI_MAX_KVS_KEY_LEN) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
+	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
     }
 
-    MPIU_THREAD_CS_ENTER(PMI,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.pmi_mutex);
     pmi_errno = PMI_KVS_Get(pg->connData, key, buf, bufsize );
     if (pmi_errno) {
 	MPIDI_PG_CheckForSingleton();
 	pmi_errno = PMI_KVS_Get(pg->connData, key, buf, bufsize );
     }
-    MPIU_THREAD_CS_EXIT(PMI,);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.pmi_mutex);
     if (pmi_errno) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**pmi_kvs_get");
+	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**pmi_kvs_get");
     }
 
  fn_exit:
@@ -785,7 +785,7 @@ static int connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
             curSlen += (pg->size - i) * (vallen + 1 );
 	    nstring = MPIU_Realloc( string, curSlen );
 	    if (!nstring) {
-		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
+		MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
 	    }
 	    string = nstring;
 	}
@@ -823,7 +823,7 @@ static int connFreeKVS( MPIDI_PG_t *pg )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_InitConnKVS
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_PG_InitConnKVS( MPIDI_PG_t *pg )
 {
 #ifdef USE_PMI2_API
@@ -831,30 +831,30 @@ int MPIDI_PG_InitConnKVS( MPIDI_PG_t *pg )
     
     pg->connData = (char *)MPIU_Malloc(MAX_JOBID_LEN);
     if (pg->connData == NULL) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomem");
+	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomem");
     }
     
     mpi_errno = PMI2_Job_GetId(pg->connData, MAX_JOBID_LEN);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 #else
     int pmi_errno, kvs_name_sz;
     int mpi_errno = MPI_SUCCESS;
 
     pmi_errno = PMI_KVS_Get_name_length_max( &kvs_name_sz );
     if (pmi_errno != PMI_SUCCESS) {
-	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, 
+	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, 
 			     "**pmi_kvs_get_name_length_max", 
 			     "**pmi_kvs_get_name_length_max %d", pmi_errno);
     }
     
     pg->connData = (char *)MPIU_Malloc(kvs_name_sz + 1);
     if (pg->connData == NULL) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomem");
+	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomem");
     }
     
     pmi_errno = PMI_KVS_Get_my_name(pg->connData, kvs_name_sz);
     if (pmi_errno != PMI_SUCCESS) {
-	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, 
+	MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, 
 			     "**pmi_kvs_get_my_name", 
 			     "**pmi_kvs_get_my_name %d", pmi_errno);
     }
@@ -912,7 +912,7 @@ static int getConnInfo( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
 #undef FUNCNAME
 #define FUNCNAME connToString
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int connToString( char **buf_p, int *slen, MPIDI_PG_t *pg )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -960,7 +960,7 @@ static int connToString( char **buf_p, int *slen, MPIDI_PG_t *pg )
     if (len > connInfo->toStringLen) {
 	*buf_p = 0;
 	*slen  = 0;
-        MPIU_ERR_INTERNALANDJUMP(mpi_errno, "len > connInfo->toStringLen");
+        MPIR_ERR_INTERNALANDJUMP(mpi_errno, "len > connInfo->toStringLen");
     }
 
     *buf_p = str;
@@ -1089,7 +1089,7 @@ int MPIDI_PG_InitConnString( MPIDI_PG_t *pg )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_GetConnString
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_PG_GetConnString( MPIDI_PG_t *pg, int rank, char *val, int vallen )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1108,7 +1108,7 @@ int MPIDI_PG_GetConnString( MPIDI_PG_t *pg, int rank, char *val, int vallen )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Dup_vcr
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPIDI_PG_Dup_vcr - Duplicate a virtual connection from a process group
 
@@ -1152,7 +1152,7 @@ int MPIDI_PG_Dup_vcr( MPIDI_PG_t *pg, int rank, MPIDI_VC_t **vc_p )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_PG_Close_VCs
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPIDI_PG_Close_VCs - Close all virtual connections on all process groups.
   
@@ -1196,7 +1196,7 @@ int MPIDI_PG_Close_VCs( void )
 	    if (vc->state == MPIDI_VC_STATE_ACTIVE ||
 		vc->state == MPIDI_VC_STATE_REMOTE_CLOSE) {
 		mpi_errno = MPIDI_CH3U_VC_SendClose( vc, i );
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	    } else if (vc->state == MPIDI_VC_STATE_INACTIVE ||
                        vc->state == MPIDI_VC_STATE_MORIBUND) {
                 /* XXX DJG FIXME-MT should we be checking this? */

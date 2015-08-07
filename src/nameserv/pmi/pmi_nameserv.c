@@ -25,7 +25,7 @@ struct MPID_NS_Handle { int dummy; };    /* unused for now */
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Create
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
 {
     static struct MPID_NS_Handle nsHandleWithNoData;
@@ -39,7 +39,7 @@ int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Publish
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Publish( MPID_NS_Handle handle, const MPID_Info *info_ptr, 
                      const char service_name[], const char port[] )
 {
@@ -51,13 +51,13 @@ int MPID_NS_Publish( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 
 #ifdef USE_PMI2_API
     /* release the global CS for PMI calls */
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     rc = PMI2_Nameserv_publish(service_name, info_ptr, port);
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
 #else
     rc = PMI_Publish_name( service_name, port );
 #endif
-    MPIU_ERR_CHKANDJUMP1(rc, mpi_errno, MPI_ERR_NAME, "**namepubnotpub", "**namepubnotpub %s", service_name);
+    MPIR_ERR_CHKANDJUMP1(rc, mpi_errno, MPI_ERR_NAME, "**namepubnotpub", "**namepubnotpub %s", service_name);
 
 fn_fail:
     return mpi_errno;
@@ -66,7 +66,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Lookup
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Lookup( MPID_NS_Handle handle, const MPID_Info *info_ptr,
                     const char service_name[], char port[] )
 {
@@ -78,13 +78,13 @@ int MPID_NS_Lookup( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 
 #ifdef USE_PMI2_API
     /* release the global CS for PMI calls */
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     rc = PMI2_Nameserv_lookup(service_name, info_ptr, port, MPI_MAX_PORT_NAME);
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
 #else
     rc = PMI_Lookup_name( service_name, port );
 #endif
-    MPIU_ERR_CHKANDJUMP1(rc, mpi_errno, MPI_ERR_NAME, "**namepubnotfound", "**namepubnotfound %s", service_name);
+    MPIR_ERR_CHKANDJUMP1(rc, mpi_errno, MPI_ERR_NAME, "**namepubnotfound", "**namepubnotfound %s", service_name);
 
 fn_fail:
     return mpi_errno;
@@ -93,7 +93,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Unpublish
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_NS_Unpublish( MPID_NS_Handle handle, const MPID_Info *info_ptr, 
                        const char service_name[] )
 {
@@ -105,13 +105,13 @@ int MPID_NS_Unpublish( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 
 #ifdef USE_PMI2_API
     /* release the global CS for PMI calls */
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     rc = PMI2_Nameserv_unpublish(service_name, info_ptr);
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
 #else
     rc = PMI_Unpublish_name( service_name );
 #endif
-    MPIU_ERR_CHKANDJUMP1(rc, mpi_errno, MPI_ERR_SERVICE, "**namepubnotunpub", "**namepubnotunpub %s", service_name);
+    MPIR_ERR_CHKANDJUMP1(rc, mpi_errno, MPI_ERR_SERVICE, "**namepubnotunpub", "**namepubnotunpub %s", service_name);
 
 fn_fail:
     return mpi_errno;

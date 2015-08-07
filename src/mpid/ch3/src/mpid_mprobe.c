@@ -9,7 +9,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Mprobe
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Mprobe(int source, int tag, MPID_Comm *comm, int context_offset,
                 MPID_Request **message, MPI_Status *status)
 {
@@ -30,7 +30,7 @@ int MPID_Mprobe(int source, int tag, MPID_Comm *comm, int context_offset,
 
     /* Check to make sure the communicator hasn't already been revoked */
     if (comm->revoked) {
-        MPIU_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
+        MPIR_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
     }
 
 #ifdef ENABLE_COMM_OVERRIDES
@@ -40,20 +40,20 @@ int MPID_Mprobe(int source, int tag, MPID_Comm *comm, int context_offset,
                queue and improbing the netmod, then do a progress
                test to make some progress. */
             do {
-                MPIU_THREAD_CS_ENTER(MSGQUEUE,);
+                MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.msgq_mutex);
                 *message = MPIDI_CH3U_Recvq_FDU_matchonly(source, tag, context_id, comm,&found);
-                MPIU_THREAD_CS_EXIT(MSGQUEUE,);
+                MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.msgq_mutex);
                 if (found) goto fn_exit;
 
                 mpi_errno = MPIDI_Anysource_improbe_fn(tag, comm, context_offset, &found, message, status);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 if (found) goto fn_exit;
 
-                MPIU_THREAD_CS_YIELD(ALLFUNC,);
+                MPID_THREAD_CS_YIELD(GLOBAL, MPIR_ThreadInfo.global_mutex);
 
                 /* FIXME could this be replaced with a progress_wait? */
                 mpi_errno = MPIDI_CH3_Progress_test();
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             } while (1);
         }
         else {
@@ -66,14 +66,14 @@ int MPID_Mprobe(int source, int tag, MPID_Comm *comm, int context_offset,
                 do {
                     mpi_errno = vc->comm_ops->improbe(vc, source, tag, comm, context_offset, &found,
                                                       message, status);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     if (found) goto fn_exit;
 
-                    MPIU_THREAD_CS_YIELD(ALLFUNC,);
+                    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_ThreadInfo.global_mutex);
 
                     /* FIXME could this be replaced with a progress_wait? */
                     mpi_errno = MPIDI_CH3_Progress_test();
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 } while (1);
             }
             /* fall-through to shm case */
@@ -93,9 +93,9 @@ int MPID_Mprobe(int source, int tag, MPID_Comm *comm, int context_offset,
     MPIDI_CH3_Progress_start(&progress_state);
     do
     {
-        MPIU_THREAD_CS_ENTER(MSGQUEUE,);
+        MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.msgq_mutex);
         *message = MPIDI_CH3U_Recvq_FDU_matchonly(source, tag, context_id, comm, &found);
-        MPIU_THREAD_CS_EXIT(MSGQUEUE,);
+        MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.msgq_mutex);
         if (found)
             break;
 
@@ -103,7 +103,7 @@ int MPID_Mprobe(int source, int tag, MPID_Comm *comm, int context_offset,
     }
     while(mpi_errno == MPI_SUCCESS);
     MPIDI_CH3_Progress_end(&progress_state);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     if (*message) {
         (*message)->kind = MPID_REQUEST_MPROBE;

@@ -73,7 +73,7 @@ PMPI_LOCAL int MPIR_Grequest_free_classes_on_finalize(void *extra_data ATTRIBUTE
 #undef FUNCNAME
 #define FUNCNAME MPIR_Grequest_start
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
                              MPI_Grequest_free_function *free_fn,
                              MPI_Grequest_cancel_function *cancel_fn,
@@ -85,7 +85,7 @@ int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
     /* MT FIXME this routine is not thread-safe in the non-global case */
     
     *request_ptr = MPID_Request_create();
-    MPIU_ERR_CHKANDJUMP1(request_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "generalized request");
+    MPIR_ERR_CHKANDJUMP1(request_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "generalized request");
     
     (*request_ptr)->kind                 = MPID_UREQUEST;
     MPIU_Object_set_ref( *request_ptr, 1 );
@@ -126,7 +126,7 @@ extern MPID_Grequest_class *MPIR_Grequest_class_list;
 #undef FUNCNAME
 #define FUNCNAME MPI_Grequest_start
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Grequest_start - Create and return a user-defined request
 
@@ -184,7 +184,7 @@ int MPI_Grequest_start( MPI_Grequest_query_function *query_fn,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GREQUEST_START);
 
     /* Validate parameters if error checking is enabled */
@@ -209,7 +209,7 @@ int MPI_Grequest_start( MPI_Grequest_query_function *query_fn,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GREQUEST_START);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
     
   fn_fail:
@@ -255,7 +255,7 @@ int MPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn,
 #undef FUNCNAME
 #define FUNCNAME MPIX_Grequest_class_create
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /* extensions for Generalized Request redesign paper */
 int MPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn,
 		               MPI_Grequest_free_function *free_fn,
@@ -424,7 +424,7 @@ int MPIX_Grequest_start( MPI_Grequest_query_function *query_fn,
 #undef FUNCNAME
 #define FUNCNAME MPIX_Grequest_start_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIX_Grequest_start_impl( MPI_Grequest_query_function *query_fn,
                               MPI_Grequest_free_function *free_fn,
                               MPI_Grequest_cancel_function *cancel_fn,

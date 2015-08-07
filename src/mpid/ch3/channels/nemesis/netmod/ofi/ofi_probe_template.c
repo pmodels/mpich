@@ -93,7 +93,7 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl)(struct MPIDI_VC *vc,
       MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);
       goto fn_exit;
     }
-    MPIU_ERR_CHKANDJUMP4((ret < 0), mpi_errno, MPI_ERR_OTHER,
+    MPIR_ERR_CHKANDJUMP4((ret < 0), mpi_errno, MPI_ERR_OTHER,
                          "**ofi_peek", "**ofi_peek %s %d %s %s",
                          __SHORT_FILE__, __LINE__, FCNAME, fi_strerror(-ret));
 

@@ -14,7 +14,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_alloc_win
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_alloc_win (void **buf, int len, MPID_nem_mpich_win_t **win)
 {
@@ -27,7 +27,7 @@ MPID_nem_mpich_alloc_win (void **buf, int len, MPID_nem_mpich_win_t **win)
     MPIU_CHKPMEM_MALLOC (*win, MPID_nem_mpich_win_t *, sizeof (MPID_nem_mpich_win_t), mpi_errno, "rma win object");
 
     mpi_errno = MPID_nem_allocate_shared_memory ((char **)buf, len, &(*win)->handle);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
     (*win)->proc = MPID_nem_mem_region.rank;
     (*win)->home_address = *buf;
@@ -46,7 +46,7 @@ MPID_nem_mpich_alloc_win (void **buf, int len, MPID_nem_mpich_win_t **win)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_free_win
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_free_win (MPID_nem_mpich_win_t *win)
 {
@@ -58,10 +58,10 @@ MPID_nem_mpich_free_win (MPID_nem_mpich_win_t *win)
     MPIU_Assert (win->proc == MPID_nem_mem_region.rank);
 
     mpi_errno = MPID_nem_remove_shared_memory (win->handle);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
     mpi_errno = MPID_nem_detach_shared_memory (win->home_address, win->len);
-    if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
     MPIU_Free (win->handle);
     MPIU_Free (win);
@@ -76,7 +76,7 @@ MPID_nem_mpich_free_win (MPID_nem_mpich_win_t *win)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_attach_win
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_attach_win (void **buf, MPID_nem_mpich_win_t *remote_win)
 {
@@ -93,7 +93,7 @@ MPID_nem_mpich_attach_win (void **buf, MPID_nem_mpich_win_t *remote_win)
     else
     {
         mpi_errno = MPID_nem_attach_shared_memory ((char **)buf, remote_win->len, remote_win->handle);
-        if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP (mpi_errno);
     }
 
     remote_win->local_address = *buf;
@@ -108,7 +108,7 @@ MPID_nem_mpich_attach_win (void **buf, MPID_nem_mpich_win_t *remote_win)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_detach_win
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_detach_win (MPID_nem_mpich_win_t *remote_win)
 {
@@ -121,7 +121,7 @@ MPID_nem_mpich_detach_win (MPID_nem_mpich_win_t *remote_win)
     {
         /* we didn't actually attach if the "remote window" is local */
         mpi_errno = MPID_nem_detach_shared_memory (remote_win->local_address, remote_win->len);
-        if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP (mpi_errno);
     }
 
  fn_exit:
@@ -134,7 +134,7 @@ MPID_nem_mpich_detach_win (MPID_nem_mpich_win_t *remote_win)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_win_put
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_win_put (void *s_buf, void *d_buf, int len, MPID_nem_mpich_win_t *remote_win)
 {
@@ -147,7 +147,7 @@ MPID_nem_mpich_win_put (void *s_buf, void *d_buf, int len, MPID_nem_mpich_win_t 
     _d_buf += (char *)remote_win->local_address - (char *)remote_win->home_address;
 
     if (_d_buf < (char *)remote_win->local_address || _d_buf + len > (char *)remote_win->local_address + remote_win->len)
-        MPIU_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**winput_oob");
+        MPIR_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**winput_oob");
 
     MPIU_Memcpy (_d_buf, s_buf, len);
 
@@ -161,7 +161,7 @@ MPID_nem_mpich_win_put (void *s_buf, void *d_buf, int len, MPID_nem_mpich_win_t 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_win_putv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_win_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, MPID_nem_mpich_win_t *remote_win)
 {
@@ -176,7 +176,7 @@ MPID_nem_mpich_win_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov
 
     if ((char *)(*d_iov)->iov_base + diff < (char *)remote_win->local_address ||
 	(char *)(*d_iov)->iov_base + diff + (*d_iov)->iov_len > (char *)remote_win->local_address + remote_win->len)
-        MPIU_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**winput_oob");
+        MPIR_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**winput_oob");
 
     while (*s_niov && *d_niov)
     {
@@ -192,7 +192,7 @@ MPID_nem_mpich_win_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov
 	    --(*d_niov);
 	    if ((char *)(*d_iov)->iov_base + diff < (char *)remote_win->local_address ||
 		(char *)(*d_iov)->iov_base + diff + (*d_iov)->iov_len > (char *)remote_win->local_address + remote_win->len)
-                MPIU_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**winput_oob");
+                MPIR_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**winput_oob");
 	}
 	else if ((*s_iov)->iov_len > (*d_iov)->iov_len)
 	{
@@ -217,7 +217,7 @@ MPID_nem_mpich_win_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov
 	    --(*d_niov);
 	    if ((char *)(*d_iov)->iov_base + diff < (char *)remote_win->local_address ||
 		(char *)(*d_iov)->iov_base + diff + (*d_iov)->iov_len > (char *)remote_win->local_address + remote_win->len)
-                MPIU_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**winput_oob");
+                MPIR_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**winput_oob");
 	}
     }
 
@@ -231,7 +231,7 @@ MPID_nem_mpich_win_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_win_get
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_win_get (void *s_buf, void *d_buf, int len, MPID_nem_mpich_win_t *remote_win)
 {
@@ -244,7 +244,7 @@ MPID_nem_mpich_win_get (void *s_buf, void *d_buf, int len, MPID_nem_mpich_win_t 
     _s_buf += (char *)remote_win->local_address - (char *)remote_win->home_address;
 
     if (_s_buf < (char *)remote_win->local_address || _s_buf + len > (char *)remote_win->local_address + remote_win->len)
-        MPIU_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**winget_oob");
+        MPIR_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**winget_oob");
 
     MPIU_Memcpy (d_buf, _s_buf, len);
 
@@ -258,7 +258,7 @@ MPID_nem_mpich_win_get (void *s_buf, void *d_buf, int len, MPID_nem_mpich_win_t 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_win_getv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_win_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, MPID_nem_mpich_win_t *remote_win)
 {
@@ -273,7 +273,7 @@ MPID_nem_mpich_win_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov
 
     if ((char *)(*s_iov)->iov_base + diff < (char *)remote_win->local_address ||
 	(char *)(*s_iov)->iov_base + diff + (*s_iov)->iov_len > (char *)remote_win->local_address + remote_win->len)
-        MPIU_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**winget_oob");
+        MPIR_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**winget_oob");
 
     while (*s_niov && *d_niov)
     {
@@ -289,7 +289,7 @@ MPID_nem_mpich_win_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov
 	    --(*s_niov);
 	    if ((char *)(*s_iov)->iov_base + diff < (char *)remote_win->local_address ||
 		(char *)(*s_iov)->iov_base + diff + (*s_iov)->iov_len > (char *)remote_win->local_address + remote_win->len)
-	        MPIU_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**winget_oob");
+	        MPIR_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**winget_oob");
 	}
 	else if ((*d_iov)->iov_len > (*s_iov)->iov_len)
 	{
@@ -314,7 +314,7 @@ MPID_nem_mpich_win_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov
 	    --(*s_niov);
 	    if ((char *)(*s_iov)->iov_base + diff < (char *)remote_win->local_address ||
 		(char *)(*s_iov)->iov_base + diff + (*s_iov)->iov_len > (char *)remote_win->local_address + remote_win->len)
-                MPIU_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**winget_oob");
+                MPIR_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**winget_oob");
 	}
     }
 
@@ -334,7 +334,7 @@ MPID_nem_mpich_win_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_serialize_win
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_serialize_win (void *buf, int buf_len, MPID_nem_mpich_win_t *win, int *len)
 {
@@ -349,20 +349,20 @@ MPID_nem_mpich_serialize_win (void *buf, int buf_len, MPID_nem_mpich_win_t *win,
 
     handle_len = strlen (win->handle);
     str_errno = MPIU_Str_add_int_arg (&b, &bl, WIN_HANLEN_KEY, handle_len);
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
     str_errno = MPIU_Str_add_string_arg(&b, &bl, WIN_HANDLE_KEY, win->handle);
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
     str_errno = MPIU_Str_add_int_arg (&b, &bl, WIN_PROC_KEY, win->proc);
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
     str_errno = MPIU_Str_add_binary_arg (&b, &bl, WIN_HOME_ADDR_KEY, win->home_address, sizeof (win->home_address));
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
     str_errno = MPIU_Str_add_int_arg (&b, &bl, WIN_LEN_KEY, win->len);
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
 
     *len = buf_len - bl;
 
@@ -376,7 +376,7 @@ MPID_nem_mpich_serialize_win (void *buf, int buf_len, MPID_nem_mpich_win_t *win,
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_serialize_win
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_deserialize_win (void *buf, int buf_len, MPID_nem_mpich_win_t **win)
 {
@@ -393,22 +393,22 @@ MPID_nem_mpich_deserialize_win (void *buf, int buf_len, MPID_nem_mpich_win_t **w
     MPIU_CHKPMEM_MALLOC (*win, MPID_nem_mpich_win_t *, sizeof (MPID_nem_mpich_win_t), mpi_errno, "win object");
 
     str_errno = MPIU_Str_get_int_arg (b, WIN_HANLEN_KEY, &handle_len);
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**windeserialize");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**windeserialize");
     MPIU_CHKPMEM_MALLOC ((*win)->handle, char *, handle_len, mpi_errno, "window handle");
 
     str_errno = MPIU_Str_get_string_arg(b, WIN_HANDLE_KEY, (*win)->handle, handle_len);
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**windeserialize");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**windeserialize");
     str_errno = MPIU_Str_get_int_arg (b, WIN_PROC_KEY, &(*win)->proc);
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**windeserialize");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**windeserialize");
     str_errno = MPIU_Str_get_binary_arg (b, WIN_HOME_ADDR_KEY, (char *)&(*win)->home_address, sizeof ((*win)->home_address), &ol);
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL || ol != sizeof ((*win)->home_address), mpi_errno, MPI_ERR_OTHER, "**windeserialize");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL || ol != sizeof ((*win)->home_address), mpi_errno, MPI_ERR_OTHER, "**windeserialize");
     str_errno = MPIU_Str_get_int_arg (b, WIN_LEN_KEY, &(*win)->len);
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**windeserialize");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**windeserialize");
 
     (*win)->local_address = 0;
 
@@ -424,7 +424,7 @@ MPID_nem_mpich_deserialize_win (void *buf, int buf_len, MPID_nem_mpich_win_t **w
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_register_memory
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_register_memory (void *buf, int len)
 {
@@ -445,7 +445,7 @@ MPID_nem_mpich_register_memory (void *buf, int len)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_deregister_memory
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_deregister_memory (void *buf, int len)
 {
@@ -466,7 +466,7 @@ MPID_nem_mpich_deregister_memory (void *buf, int len)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_put
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_put (void *s_buf, void *d_buf, int len, int proc, int *completion_ctr)
 {
@@ -477,7 +477,7 @@ MPID_nem_mpich_put (void *s_buf, void *d_buf, int len, int proc, int *completion
 
     if (MPID_NEM_IS_LOCAL (proc))
     {
-        MPIU_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**notimpl");
+        MPIR_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**notimpl");
     }
     else
     {
@@ -489,7 +489,7 @@ MPID_nem_mpich_put (void *s_buf, void *d_buf, int len, int proc, int *completion
 	    return MPID_nem_gm_module_put (d_buf, s_buf, len, proc, completion_ctr);
 	    break;
 	default:
-            MPIU_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**notimpl");
+            MPIR_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**notimpl");
 	    break;
 	}
       */
@@ -504,7 +504,7 @@ MPID_nem_mpich_put (void *s_buf, void *d_buf, int len, int proc, int *completion
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_putv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, int proc,
 		   int *completion_ctr)
@@ -517,7 +517,7 @@ MPID_nem_mpich_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, in
 
     if (MPID_NEM_IS_LOCAL (proc))
     {
-        MPIU_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**notimpl");
+        MPIR_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**notimpl");
     }
     else
     {
@@ -566,7 +566,7 @@ MPID_nem_mpich_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, in
 	    }
 	    break;
 	default:
-	    MPIU_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**notimpl");
+	    MPIR_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**notimpl");
 	    break;
 	}
       */
@@ -581,7 +581,7 @@ MPID_nem_mpich_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, in
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_get
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_get (void *s_buf, void *d_buf, int len, int proc, int *completion_ctr)
 {
@@ -592,7 +592,7 @@ MPID_nem_mpich_get (void *s_buf, void *d_buf, int len, int proc, int *completion
 
     if (MPID_NEM_IS_LOCAL (proc))
     {
-        MPIU_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**notimpl");
+        MPIR_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**notimpl");
     }
     else
     {
@@ -604,7 +604,7 @@ MPID_nem_mpich_get (void *s_buf, void *d_buf, int len, int proc, int *completion
 	    return MPID_nem_gm_module_get (d_buf, s_buf, len, proc, completion_ctr);
 	    break;
 	default:
-	    MPIU_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**notimpl");
+	    MPIR_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**notimpl");
 	    break;
 	}
       */
@@ -619,7 +619,7 @@ MPID_nem_mpich_get (void *s_buf, void *d_buf, int len, int proc, int *completion
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_getv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, int proc,
 		   int *completion_ctr)
@@ -632,7 +632,7 @@ MPID_nem_mpich_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, in
 
     if (MPID_NEM_IS_LOCAL (proc))
     {
-        MPIU_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**notimpl");
+        MPIR_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**notimpl");
     }
     else
     {
@@ -681,7 +681,7 @@ MPID_nem_mpich_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, in
 	    }
 	    break;
 	default:
-	    MPIU_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**notimpl");
+	    MPIR_ERR_SETANDJUMP (mpi_errno, MPI_ERR_OTHER, "**notimpl");
 	    break;
 	}
       */

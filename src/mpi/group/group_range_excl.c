@@ -28,7 +28,7 @@ int MPI_Group_range_excl(MPI_Group group, int n, int ranges[][3], MPI_Group *new
 #undef FUNCNAME
 #define FUNCNAME MPIR_Group_range_excl_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Group_range_excl_impl(MPID_Group *group_ptr, int n, int ranges[][3], MPID_Group **new_group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -114,7 +114,7 @@ int MPIR_Group_range_excl_impl(MPID_Group *group_ptr, int n, int ranges[][3], MP
 #undef FUNCNAME
 #define FUNCNAME MPI_Group_range_excl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /*@
 
@@ -159,7 +159,7 @@ int MPI_Group_range_excl(MPI_Group group, int n, int ranges[][3],
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GROUP_RANGE_EXCL);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -208,7 +208,7 @@ int MPI_Group_range_excl(MPI_Group group, int n, int ranges[][3],
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GROUP_RANGE_EXCL);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

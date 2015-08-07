@@ -38,33 +38,33 @@ RLOG_BOOL PackQuadChar(char *str, int *length, char *base, int *pos, const int m
     /* Am I supposed to include the terminating NULL character? */
     /* This function does not. */
     if (*pos + (int)strlen(str) > max)
-	return RLOG_FALSE;
+	return FALSE;
     *length = strlen(str);
     memcpy(&base[*pos], str, *length);
     *pos += *length;
-    return RLOG_TRUE;
+    return TRUE;
 }
 
 RLOG_BOOL PackQuadInt(int n1, int n2, int *length, int *base, int *pos, const int max)
 {
     if (*pos + 2 > max)
-	return RLOG_FALSE;
+	return FALSE;
     *length = 2;
     base[*pos] = n1;
     base[*pos+1] = n2;
     *pos += 2;
-    return RLOG_TRUE;
+    return TRUE;
 }
 
 RLOG_BOOL PackQuadDouble(double d1, double d2, int *length, double *base, int *pos, const int max)
 {
     if (*pos + 2 > max)
-	return RLOG_FALSE;
+	return FALSE;
     *length = 2;
     base[*pos] = d1;
     base[*pos+1] = d2;
     *pos += 2;
-    return RLOG_TRUE;
+    return TRUE;
 }
 
 TRACE_EXPORT int TRACE_Open( const char filespec[], TRACE_file *fp )
@@ -277,7 +277,7 @@ TRACE_EXPORT int TRACE_Peek_next_primitive( const TRACE_file fp,
 {
     int i, j, rank = -1, level = -1;
     double dmin;
-    RLOG_BOOL done = RLOG_FALSE;
+    RLOG_BOOL done = FALSE;
 
     *n_tcoords = 2;
     *n_ycoords = 2;
@@ -292,7 +292,7 @@ TRACE_EXPORT int TRACE_Peek_next_primitive( const TRACE_file fp,
 		level = i;
 		rank  = j;
 		dmin = fp->ppEvent[j][i].end_time;
-		done = RLOG_TRUE;
+		done = TRUE;
 	    }
 	}
     }
@@ -345,7 +345,7 @@ TRACE_EXPORT int TRACE_Get_next_primitive( const TRACE_file fp,
 {
     int i, j, rank = 1, level = -1;
     double dmin;
-    RLOG_BOOL done = RLOG_FALSE;
+    RLOG_BOOL done = FALSE;
 
     *n_bytes = 0;
 

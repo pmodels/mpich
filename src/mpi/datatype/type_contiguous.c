@@ -28,7 +28,7 @@ int MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype *newtype) 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Type_contiguous_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_contiguous_impl(int count,
                               MPI_Datatype oldtype,
                               MPI_Datatype *newtype)
@@ -66,7 +66,7 @@ int MPIR_Type_contiguous_impl(int count,
 #undef FUNCNAME
 #define FUNCNAME MPIR_Type_contiguous_x_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_contiguous_x_impl(MPI_Count count,
                               MPI_Datatype oldtype,
 			      MPI_Datatype *newtype)
@@ -116,7 +116,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_contiguous
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_contiguous - Creates a contiguous datatype
 
@@ -146,7 +146,7 @@ int MPI_Type_contiguous(int count,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_CONTIGUOUS);
 
 #   ifdef HAVE_ERROR_CHECKING
@@ -171,13 +171,13 @@ int MPI_Type_contiguous(int count,
     /* ... body of routine ... */
 
     mpi_errno = MPIR_Type_contiguous_impl(count, oldtype, newtype);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
     
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_CONTIGUOUS);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

@@ -24,7 +24,7 @@ int MPIDI_CH3U_Handle_unordered_recv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Handle_unordered_recv_pkt
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Handle_unordered_recv_pkt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t * pkt,
 					 MPID_Request ** rreqp)
 {

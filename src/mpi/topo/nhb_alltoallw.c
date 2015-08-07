@@ -31,7 +31,7 @@ int MPI_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MP
 #undef FUNCNAME
 #define FUNCNAME MPIR_Neighbor_alltoallw_default
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Neighbor_alltoallw_default(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPID_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -39,9 +39,9 @@ int MPIR_Neighbor_alltoallw_default(const void *sendbuf, const int sendcounts[],
 
     /* just call the nonblocking version and wait on it */
     mpi_errno = MPIR_Ineighbor_alltoallw_impl(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, &req);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Wait_impl(&req, MPI_STATUS_IGNORE);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;
@@ -52,7 +52,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIR_Neighbor_alltoallw_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Neighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPID_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -62,7 +62,7 @@ int MPIR_Neighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[], co
     mpi_errno = comm_ptr->coll_fns->Neighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes,
                                                        recvbuf, recvcounts, rdispls, recvtypes,
                                                        comm_ptr);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;
@@ -75,7 +75,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPI_Neighbor_alltoallw
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Neighbor_alltoallw - Like MPI_Neighbor_alltoallv but it allows one to send
 and receive with different types to and from each neighbor.
@@ -105,7 +105,7 @@ int MPI_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MP
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_NEIGHBOR_ALLTOALLW);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_NEIGHBOR_ALLTOALLW);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -141,13 +141,13 @@ int MPI_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MP
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Neighbor_alltoallw_impl(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_NEIGHBOR_ALLTOALLW);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
 fn_fail:

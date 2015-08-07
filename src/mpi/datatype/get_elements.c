@@ -32,7 +32,7 @@ int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *count
 #undef FUNCNAME
 #define FUNCNAME MPI_Get_elements
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Get_elements - Returns the number of basic elements
                       in a datatype
@@ -105,7 +105,7 @@ int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *count
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Get_elements_x_impl(status, datatype, &count_x);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* clip the value if it cannot be correctly returned to the user */
     *count = (count_x > INT_MAX) ? MPI_UNDEFINED : (int)count_x;

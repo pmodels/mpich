@@ -10,7 +10,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_init(void)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPIDU_SOCK_INIT);
@@ -27,7 +27,7 @@ int MPIDU_Sock_init(void)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_finalize
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;

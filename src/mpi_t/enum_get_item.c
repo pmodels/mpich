@@ -28,7 +28,7 @@ int MPI_T_enum_get_item(MPI_T_enum enumtype, int indx, int *value, char *name, i
 #undef FUNCNAME
 #define FUNCNAME MPI_T_enum_get_item
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_enum_get_item - Get the information about an item in an enumeration
 

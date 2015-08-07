@@ -23,7 +23,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-MPIU_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
+MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #ifdef ENABLE_CHECKPOINTING
 
@@ -152,7 +152,7 @@ static int ckpt_cb(void *arg)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_nem_ckpt_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_nem_ckpt_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -167,18 +167,18 @@ int MPIDI_nem_ckpt_init(void)
         goto fn_exit;
     
     client_id = cr_init();
-    MPIU_ERR_CHKANDJUMP(client_id < 0 && errno == ENOSYS, mpi_errno, MPI_ERR_OTHER, "**blcr_mod");
+    MPIR_ERR_CHKANDJUMP(client_id < 0 && errno == ENOSYS, mpi_errno, MPI_ERR_OTHER, "**blcr_mod");
 
     cb_id = cr_register_callback(ckpt_cb, NULL, CR_THREAD_CONTEXT);
-    MPIU_ERR_CHKANDJUMP1(cb_id == -1, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", MPIU_Strerror(errno));
+    MPIR_ERR_CHKANDJUMP1(cb_id == -1, mpi_errno, MPI_ERR_OTHER, "**intern", "**intern %s", MPIU_Strerror(errno));
     
     checkpointing = FALSE;
     current_wave = 0;
 
     ret = sem_init(&ckpt_sem, 0, 0);
-    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_init", "**sem_init %s", MPIU_Strerror(errno));
+    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_init", "**sem_init %s", MPIU_Strerror(errno));
     ret = sem_init(&cont_sem, 0, 0);
-    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_init", "**sem_init %s", MPIU_Strerror(errno));
+    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_init", "**sem_init %s", MPIU_Strerror(errno));
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_NEM_CKPT_INIT);
@@ -190,7 +190,7 @@ int MPIDI_nem_ckpt_init(void)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_nem_ckpt_finalize
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_nem_ckpt_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -200,9 +200,9 @@ int MPIDI_nem_ckpt_finalize(void)
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_NEM_CKPT_FINALIZE);
 
     ret = sem_destroy(&ckpt_sem);
-    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_destroy", "**sem_destroy %s", MPIU_Strerror(errno));
+    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_destroy", "**sem_destroy %s", MPIU_Strerror(errno));
     ret = sem_destroy(&cont_sem);
-    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_destroy", "**sem_destroy %s", MPIU_Strerror(errno));
+    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_destroy", "**sem_destroy %s", MPIU_Strerror(errno));
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_NEM_CKPT_FINALIZE);
@@ -214,7 +214,7 @@ int MPIDI_nem_ckpt_finalize(void)
 #undef FUNCNAME
 #define FUNCNAME reinit_pmi
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int reinit_pmi(void)
 {
     int ret;
@@ -272,7 +272,7 @@ static int reinit_pmi(void)
 #undef FUNCNAME
 #define FUNCNAME restore_env
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int restore_env(pid_t parent_pid, int rank)
 {
     FILE *f;
@@ -316,7 +316,7 @@ typedef struct sock_ident {
 #undef FUNCNAME
 #define FUNCNAME open_io_socket
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int open_io_socket(socktype_t socktype, int rank, int dupfd)
 {
     int fd;
@@ -379,7 +379,7 @@ fn_exit:
 #undef FUNCNAME
 #define FUNCNAME restore_stdinouterr
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int restore_stdinouterr(int rank)
 {
     int ret;
@@ -404,7 +404,7 @@ static int restore_stdinouterr(int rank)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_nem_ckpt_start
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_nem_ckpt_start(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -441,16 +441,16 @@ int MPIDI_nem_ckpt_start(void)
         ckpt_pkt->wave = current_wave;
         
         mpi_errno = MPIDI_CH3_iStartMsg(vc, ckpt_pkt, sizeof(ckpt_pkt), &req);
-        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ckptpkt");
+        MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ckptpkt");
         if (req != NULL)
         {
-            MPIU_ERR_CHKANDJUMP(req->status.MPI_ERROR, mpi_errno, MPI_ERR_OTHER, "**ckptpkt");
+            MPIR_ERR_CHKANDJUMP(req->status.MPI_ERROR, mpi_errno, MPI_ERR_OTHER, "**ckptpkt");
             MPID_Request_release(req);
         }
 
         if (!vc_ch->is_local) {
             mpi_errno = vc_ch->ckpt_pause_send_vc(vc);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
     }
     
@@ -466,7 +466,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIDI_nem_ckpt_finish
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_nem_ckpt_finish(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -481,20 +481,20 @@ int MPIDI_nem_ckpt_finish(void)
        channels, just make sure no one is sending or receiving during
        the checkpoint */
     mpi_errno = MPID_nem_barrier();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     do {
         ret = sem_post(&ckpt_sem);
     } while (ret == -1 && errno == EINTR);
-    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_post", "**sem_post %s", MPIU_Strerror(errno));
+    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_post", "**sem_post %s", MPIU_Strerror(errno));
 
     do {
         ret = sem_wait(&cont_sem);
     } while (ret == -1 && errno == EINTR);
-    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_wait", "**sem_wait %s", MPIU_Strerror(errno));
+    MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_wait", "**sem_wait %s", MPIU_Strerror(errno));
 
     mpi_errno = MPID_nem_barrier();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     if (ckpt_result == CKPT_CONTINUE) {
         for (i = 0; i < MPIDI_Process.my_pg->size; ++i) {
@@ -508,7 +508,7 @@ int MPIDI_nem_ckpt_finish(void)
             vc_ch = &vc->ch;
             if (!vc_ch->is_local) {
                 mpi_errno = vc_ch->ckpt_continue_vc(vc);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             }
         }
     }
@@ -527,7 +527,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME pkt_ckpt_marker_handler
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int pkt_ckpt_marker_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t *buflen, MPID_Request **req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -538,7 +538,7 @@ static int pkt_ckpt_marker_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_m
 
     if (!checkpointing) {
         mpi_errno = MPIDI_nem_ckpt_start();
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     MPIU_Assert(current_wave == ckpt_pkt->wave);
@@ -570,7 +570,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ckpt_pkthandler_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_nem_ckpt_pkthandler_init(MPIDI_CH3_PktHandler_Fcn *pktArray[], int arraySize)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -580,7 +580,7 @@ int MPIDI_nem_ckpt_pkthandler_init(MPIDI_CH3_PktHandler_Fcn *pktArray[], int arr
 
     /* Check that the array is large enough */
     if (arraySize <= MPIDI_CH3_PKT_END_ALL) {
-	MPIU_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_INTERN, "**ch3|pktarraytoosmall");
+	MPIR_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_INTERN, "**ch3|pktarraytoosmall");
     }
 
     pktArray[MPIDI_NEM_PKT_CKPT_MARKER] = pkt_ckpt_marker_handler;

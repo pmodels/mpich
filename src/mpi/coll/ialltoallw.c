@@ -54,7 +54,7 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ialltoallw_intra
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallw_intra(const void *sendbuf, const int sendcounts[], const int sdispls[],
                           const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                           const int rdispls[], const MPI_Datatype recvtypes[],
@@ -114,15 +114,15 @@ int MPIR_Ialltoallw_intra(const void *sendbuf, const int sendcounts[], const int
 
                     mpi_errno = MPID_Sched_send(((char *)recvbuf + rdispls[dst]),
                                                 recvcounts[dst], recvtypes[dst], dst, comm_ptr, s);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     mpi_errno = MPID_Sched_recv(adj_tmp_buf, recvcounts[dst], recvtypes[dst], dst, comm_ptr, s);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     MPID_SCHED_BARRIER(s);
 
                     mpi_errno = MPID_Sched_copy(adj_tmp_buf, recvcounts[dst], recvtypes[dst],
                                                 ((char *)recvbuf + rdispls[dst]),
                                                 recvcounts[dst], recvtypes[dst], s);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     MPID_SCHED_BARRIER(s);
                 }
             }
@@ -145,7 +145,7 @@ int MPIR_Ialltoallw_intra(const void *sendbuf, const int sendcounts[], const int
                         mpi_errno = MPID_Sched_recv((char *)recvbuf+rdispls[dst],
                                                     recvcounts[dst], recvtypes[dst],
                                                     dst, comm_ptr, s);
-                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     }
                 }
             }
@@ -158,7 +158,7 @@ int MPIR_Ialltoallw_intra(const void *sendbuf, const int sendcounts[], const int
                         mpi_errno = MPID_Sched_send((char *)sendbuf+sdispls[dst],
                                                     sendcounts[dst], sendtypes[dst],
                                                     dst, comm_ptr, s);
-                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     }
                 }
             }
@@ -179,7 +179,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ialltoallw_inter
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallw_inter(const void *sendbuf, const int sendcounts[], const int sdispls[],
                           const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                           const int rdispls[], const MPI_Datatype recvtypes[],
@@ -233,10 +233,10 @@ int MPIR_Ialltoallw_inter(const void *sendbuf, const int sendcounts[], const int
         }
 
         mpi_errno = MPID_Sched_send(sendaddr, sendcount, sendtype, dst, comm_ptr, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         /* sendrecv, no barrier here */
         mpi_errno = MPID_Sched_recv(recvaddr, recvcount, recvtype, src, comm_ptr, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPID_SCHED_BARRIER(s);
     }
 
@@ -249,7 +249,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ialltoallw_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int sdispls[],
                          const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                          const int rdispls[], const MPI_Datatype recvtypes[], MPID_Comm *comm_ptr,
@@ -268,26 +268,26 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int 
         mpi_errno = comm_ptr->coll_fns->Ialltoallw_req(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, &reqp);
         if (reqp) {
             *request = reqp->handle;
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             goto fn_exit;
         }
         /* --END USEREXTENSION-- */
     }
 
     mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPID_Sched_create(&s);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     MPIU_Assert(comm_ptr->coll_fns != NULL);
     MPIU_Assert(comm_ptr->coll_fns->Ialltoallw_sched != NULL);
     mpi_errno = comm_ptr->coll_fns->Ialltoallw_sched(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, s);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, &reqp);
     if (reqp)
         *request = reqp->handle;
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;
@@ -300,7 +300,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPI_Ialltoallw
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Ialltoallw - Nonblocking generalized all-to-all communication allowing
    different datatypes, counts, and displacements for each partner
@@ -334,7 +334,7 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_IALLTOALLW);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IALLTOALLW);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -375,7 +375,7 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
             MPIR_ERRTEST_ARGNULL(rdispls,"rdispls", mpi_errno);
             MPIR_ERRTEST_ARGNULL(recvtypes,"recvtypes", mpi_errno);
             if (comm_ptr->comm_kind == MPID_INTERCOMM && sendbuf == MPI_IN_PLACE) {
-                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sendbuf_inplace");
+                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sendbuf_inplace");
             }
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, etc) */
@@ -387,13 +387,13 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Ialltoallw_impl(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, request);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IALLTOALLW);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
 fn_fail:

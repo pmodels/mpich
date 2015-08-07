@@ -8,7 +8,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_create_set
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_create_set(struct MPIDU_Sock_set ** sock_setp)
 {
     struct MPIDU_Sock_set * sock_set = NULL;
@@ -55,7 +55,7 @@ int MPIDU_Sock_create_set(struct MPIDU_Sock_set ** sock_setp)
 #   endif
 
 #   ifdef MPICH_IS_THREADED
-    MPIU_THREAD_CHECK_BEGIN
+    MPIU_THREAD_CHECK_BEGIN;
     {
 	struct MPIDU_Sock * sock = NULL;
 	struct pollfd * pollfd;
@@ -134,7 +134,7 @@ int MPIDU_Sock_create_set(struct MPIDU_Sock_set ** sock_setp)
 
 	MPIDU_SOCKI_POLLFD_OP_SET(pollfd, pollinfo, POLLIN);
     }
-    MPIU_THREAD_CHECK_END
+    MPIU_THREAD_CHECK_END;
 #   endif
 
     *sock_setp = sock_set;
@@ -148,7 +148,7 @@ int MPIDU_Sock_create_set(struct MPIDU_Sock_set ** sock_setp)
     if (sock_set != NULL)
     {
 #       ifdef MPICH_IS_THREADED
-	MPIU_THREAD_CHECK_BEGIN
+	MPIU_THREAD_CHECK_BEGIN;
 	{
 	    if (sock_set->intr_fds[0] != -1)
 	    {
@@ -160,7 +160,7 @@ int MPIDU_Sock_create_set(struct MPIDU_Sock_set ** sock_setp)
 		close(sock_set->intr_fds[1]);
 	    }
 	}
-	MPIU_THREAD_CHECK_END
+	MPIU_THREAD_CHECK_END;
 #	endif
 	
 	MPIU_Free(sock_set);
@@ -173,7 +173,7 @@ int MPIDU_Sock_create_set(struct MPIDU_Sock_set ** sock_setp)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_close_open_sockets
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_close_open_sockets(struct MPIDU_Sock_set * sock_set, void** user_ptr ){
 
     int i;
@@ -206,7 +206,7 @@ int MPIDU_Sock_close_open_sockets(struct MPIDU_Sock_set * sock_set, void** user_
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_destroy_set
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_destroy_set(struct MPIDU_Sock_set * sock_set)
 {
     int elem;
@@ -231,7 +231,7 @@ int MPIDU_Sock_destroy_set(struct MPIDU_Sock_set * sock_set)
      * Close pipe for interrupting a blocking poll()
      */
 #   ifdef MPICH_IS_THREADED
-    MPIU_THREAD_CHECK_BEGIN
+    MPIU_THREAD_CHECK_BEGIN;
     {
 	close(sock_set->intr_fds[1]);
 	close(sock_set->intr_fds[0]);
@@ -244,7 +244,7 @@ int MPIDU_Sock_destroy_set(struct MPIDU_Sock_set * sock_set)
 	sock_set->intr_fds[1] = -1;
 	sock_set->intr_sock = NULL;
     }
-    MPIU_THREAD_CHECK_END
+    MPIU_THREAD_CHECK_END;
 #   endif
 
     /*

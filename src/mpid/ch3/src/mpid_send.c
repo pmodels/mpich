@@ -14,7 +14,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Send
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
 	      int tag, MPID_Comm * comm, int context_offset,
 	      MPID_Request ** request)
@@ -42,7 +42,7 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
     if (comm->revoked &&
             MPIR_AGREE_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_Process.tagged_coll_mask) &&
             MPIR_SHRINK_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_Process.tagged_coll_mask)) {
-        MPIU_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
+        MPIR_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
     }
 
     if (rank == comm->rank && comm->comm_kind != MPID_INTERCOMM)
@@ -57,12 +57,12 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
 #       ifndef MPICH_IS_THREADED
 	{
 	    if (sreq != NULL && MPID_cc_get(sreq->cc) != 0) {
-		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,
+		MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,
 				    "**dev|selfsenddeadlock");
 	    }
 	}
 #	endif
-	if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+	if (mpi_errno != MPI_SUCCESS) { MPIR_ERR_POP(mpi_errno); }
 	goto fn_exit;
     }
 
@@ -72,7 +72,7 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
     }
 
     MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
-    MPIU_ERR_CHKANDJUMP1(vc->state == MPIDI_VC_STATE_MORIBUND, mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", rank);
+    MPIR_ERR_CHKANDJUMP1(vc->state == MPIDI_VC_STATE_MORIBUND, mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", rank);
 
 #ifdef ENABLE_COMM_OVERRIDES
     if (vc->comm_ops && vc->comm_ops->send)
@@ -102,13 +102,13 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
 	MPIDI_VC_FAI_send_seqnum(vc, seqnum);
 	MPIDI_Pkt_set_seqnum(eager_pkt, seqnum);
 	
-	MPIU_THREAD_CS_ENTER(CH3COMM,vc);
+	MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
 	mpi_errno = MPIDI_CH3_iStartMsg(vc, eager_pkt, sizeof(*eager_pkt), &sreq);
-	MPIU_THREAD_CS_EXIT(CH3COMM,vc);
+	MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
 	/* --BEGIN ERROR HANDLING-- */
 	if (mpi_errno != MPI_SUCCESS)
 	{
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|eagermsg");
+	    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|eagermsg");
 	}
 	/* --END ERROR HANDLING-- */
 	if (sreq != NULL)

@@ -96,7 +96,7 @@ int MPI_Cartdim_get(MPI_Comm comm, int *ndims)
     
     cart_ptr = MPIR_Topology_get( comm_ptr );
 
-    MPIU_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART), mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
+    MPIR_ERR_CHKANDJUMP((!cart_ptr || cart_ptr->kind != MPI_CART), mpi_errno, MPI_ERR_TOPOLOGY, "**notcarttopo");
 
     *ndims = cart_ptr->topo.cart.ndims;
     

@@ -10,7 +10,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Handle_send_req
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Handle_send_req(MPIDI_VC_t * vc, MPID_Request * sreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -31,7 +31,7 @@ int MPIDI_CH3U_Handle_send_req(MPIDI_VC_t * vc, MPID_Request * sreq, int *comple
         mpi_errno = reqFn(vc, sreq, complete);
     }
     if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     }
 
   fn_exit:
@@ -83,7 +83,7 @@ int MPIDI_CH3_ReqHandler_GetSendComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     /* mark data transfer as complete and decrement CC */
     mpi_errno = MPID_Request_complete(sreq);
     if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     }
 
     /* NOTE: finish_op_on_target() must be called after we complete this request,
@@ -93,7 +93,7 @@ int MPIDI_CH3_ReqHandler_GetSendComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */ ,
                                     flags, MPI_WIN_NULL);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     *complete = TRUE;
 
@@ -106,7 +106,7 @@ int MPIDI_CH3_ReqHandler_GetSendComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_ReqHandler_GaccumSendComplete
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -149,7 +149,7 @@ int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq
 
     mpi_errno = MPID_Request_complete(rreq);
     if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     }
 
     /* NOTE: finish_op_on_target() must be called after we complete this request,
@@ -159,7 +159,7 @@ int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */ ,
                                     flags, MPI_WIN_NULL);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     *complete = TRUE;
 
@@ -175,7 +175,7 @@ int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_ReqHandler_CASSendComplete
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -218,7 +218,7 @@ int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
 
     mpi_errno = MPID_Request_complete(rreq);
     if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     }
 
     /* NOTE: finish_op_on_target() must be called after we complete this request,
@@ -228,7 +228,7 @@ int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
     mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */ ,
                                     flags, MPI_WIN_NULL);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     *complete = TRUE;
 
@@ -243,7 +243,7 @@ int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_ReqHandler_FOPSendComplete
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_FOPSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -286,7 +286,7 @@ int MPIDI_CH3_ReqHandler_FOPSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
 
     mpi_errno = MPID_Request_complete(rreq);
     if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     }
 
     /* NOTE: finish_op_on_target() must be called after we complete this request,
@@ -296,7 +296,7 @@ int MPIDI_CH3_ReqHandler_FOPSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
     mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */ ,
                                     flags, MPI_WIN_NULL);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     *complete = TRUE;
 
@@ -320,7 +320,7 @@ int MPIDI_CH3_ReqHandler_SendReloadIOV(MPIDI_VC_t * vc ATTRIBUTE((unused)), MPID
     sreq->dev.iov_count = MPL_IOV_LIMIT;
     mpi_errno = MPIDI_CH3U_Request_load_send_iov(sreq, sreq->dev.iov, &sreq->dev.iov_count);
     if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_SETFATALANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|loadsendiov");
+        MPIR_ERR_SETFATALANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|loadsendiov");
     }
 
     *complete = FALSE;

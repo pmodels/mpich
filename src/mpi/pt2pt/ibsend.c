@@ -53,7 +53,7 @@ PMPI_LOCAL int MPIR_Ibsend_free( void *extra )
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ibsend_cancel
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 PMPI_LOCAL int MPIR_Ibsend_cancel( void *extra, int complete )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -71,16 +71,16 @@ PMPI_LOCAL int MPIR_Ibsend_cancel( void *extra, int complete )
 
     /* Try to cancel the underlying request */
     mpi_errno = MPIR_Cancel_impl(req);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Wait_impl( &req_hdl, &status );
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     MPIR_Test_cancelled_impl( &status, &ibsend_info->cancelled );
 
     /* If the cancelation is successful, free the memory in the
        attached buffer used by the request */
     if (ibsend_info->cancelled) {
         mpi_errno = MPIR_Bsend_free_req_seg(ibsend_info->req);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
  fn_exit:
     return mpi_errno;
@@ -91,7 +91,7 @@ PMPI_LOCAL int MPIR_Ibsend_cancel( void *extra, int complete )
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ibsend_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
                      MPID_Comm *comm_ptr, MPI_Request *request)
 {
@@ -113,7 +113,7 @@ int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest
     ibinfo->cancelled = 0;
     mpi_errno = MPIR_Grequest_start_impl( MPIR_Ibsend_query, MPIR_Ibsend_free,
                                           MPIR_Ibsend_cancel, ibinfo, &new_request_ptr );
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     /* The request is immediately complete because the MPIR_Bsend_isend has
        already moved the data out of the user's buffer */
     MPIR_Grequest_complete_impl(new_request_ptr);
@@ -131,7 +131,7 @@ int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest
 #undef FUNCNAME
 #define FUNCNAME MPI_Ibsend
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Ibsend - Starts a nonblocking buffered send
 
@@ -169,7 +169,7 @@ int MPI_Ibsend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_PT2PT_FUNC_ENTER_FRONT(MPID_STATE_MPI_IBSEND);
 
     /* Validate handle parameters needing to be converted */
@@ -232,7 +232,7 @@ int MPI_Ibsend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 
   fn_exit:
     MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_IBSEND);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
     
   fn_fail:

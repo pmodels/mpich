@@ -84,7 +84,7 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_PT2PT_FUNC_ENTER(MPID_STATE_MPI_TESTSOME);
 
     /* Check the arguments */
@@ -203,7 +203,7 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
                         !MPID_Comm_AS_enabled(request_ptrs[i]->comm)))
             {
                 mpi_errno = MPI_ERR_IN_STATUS;
-                MPIU_ERR_SET(rc, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
+                MPIR_ERR_SET(rc, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
                 status_ptr = (array_of_statuses != MPI_STATUSES_IGNORE) ? &array_of_statuses[i] : MPI_STATUS_IGNORE;
                 if (status_ptr != MPI_STATUS_IGNORE) status_ptr->MPI_ERROR = rc;
             }
@@ -244,7 +244,7 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
     }
 
     MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_TESTSOME);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

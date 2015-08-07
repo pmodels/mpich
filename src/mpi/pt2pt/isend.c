@@ -31,7 +31,7 @@ int MPI_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 #undef FUNCNAME
 #define FUNCNAME MPI_Isend
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Isend - Begins a nonblocking send
 
@@ -68,7 +68,7 @@ int MPI_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_PT2PT_FUNC_ENTER_FRONT(MPID_STATE_MPI_ISEND);
 
     /* Validate handle parameters needing to be converted */
@@ -138,7 +138,7 @@ int MPI_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
     
   fn_exit:
     MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_ISEND);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
     
   fn_fail:

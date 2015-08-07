@@ -40,7 +40,7 @@ int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_create_keyval_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
                                  MPI_Comm_delete_attr_function *comm_delete_attr_fn,
                                  int *comm_keyval, void *extra_state)
@@ -49,7 +49,7 @@ int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
     MPID_Keyval *keyval_ptr;
         
     keyval_ptr = (MPID_Keyval *)MPIU_Handle_obj_alloc( &MPID_Keyval_mem );
-    MPIU_ERR_CHKANDJUMP(!keyval_ptr, mpi_errno, MPI_ERR_OTHER,"**nomem");
+    MPIR_ERR_CHKANDJUMP(!keyval_ptr, mpi_errno, MPI_ERR_OTHER,"**nomem");
 
     /* Initialize the attribute dup function */
     if (!MPIR_Process.attr_dup) {
@@ -84,7 +84,7 @@ int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_create_keyval
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_create_keyval - Create a new attribute key 
 
@@ -130,7 +130,7 @@ int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_CREATE_KEYVAL);
 
     /* Validate parameters and objects (post conversion) */
@@ -153,7 +153,7 @@ int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_CREATE_KEYVAL);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

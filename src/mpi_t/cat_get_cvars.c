@@ -29,7 +29,7 @@ int MPI_T_category_get_cvars(int cat_index, int len, int indices[]) __attribute_
 #undef FUNCNAME
 #define FUNCNAME MPIR_T_category_get_cvars_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_T_category_get_cvars_impl(int cat_index, int len, int indices[])
 {
     int mpi_errno = MPI_SUCCESS;
@@ -55,7 +55,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPI_T_category_get_cvars
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_category_get_cvars - Get control variables in a category
 
@@ -100,7 +100,7 @@ int MPI_T_category_get_cvars(int cat_index, int len, int indices[])
     if (len == 0) goto fn_exit;
 
     mpi_errno = MPIR_T_category_get_cvars_impl(cat_index, len, indices);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 

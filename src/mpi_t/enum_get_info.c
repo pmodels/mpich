@@ -28,7 +28,7 @@ int MPI_T_enum_get_info(MPI_T_enum enumtype, int *num, char *name, int *name_len
 #undef FUNCNAME
 #define FUNCNAME MPI_T_enum_get_info
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_enum_get_info - Get the information about an enumeration
 

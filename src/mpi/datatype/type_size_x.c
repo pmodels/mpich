@@ -29,7 +29,7 @@ int MPI_Type_size_x(MPI_Datatype datatype, MPI_Count *size) __attribute__((weak,
 #undef FUNCNAME
 #define FUNCNAME MPIR_Type_size_x_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count *size)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -47,7 +47,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_size_x
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Type_size_x - Return the number of bytes occupied by entries
                   in the datatype
@@ -69,7 +69,7 @@ int MPI_Type_size_x(MPI_Datatype datatype, MPI_Count *size)
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_SIZE_X);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_SIZE_X);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -109,13 +109,13 @@ int MPI_Type_size_x(MPI_Datatype datatype, MPI_Count *size)
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Type_size_x_impl(datatype, size);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_SIZE_X);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
 fn_fail:

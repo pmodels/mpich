@@ -11,7 +11,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Rput
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Rput(const void *origin_addr, int origin_count,
               MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
               int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
@@ -28,7 +28,7 @@ int MPID_Rput(const void *origin_addr, int origin_count,
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_RPUT);
 
     /* request-based RMA operations are only valid within a passive epoch */
-    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
+    MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
@@ -38,7 +38,7 @@ int MPID_Rput(const void *origin_addr, int origin_count,
 
     /* Create user request, initially cc=1, ref=1 */
     ureq = MPID_Request_create();
-    MPIU_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+    MPIR_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     ureq->kind = MPID_WIN_REQUEST;
 
     /* This request is referenced by user and ch3 by default. */
@@ -51,13 +51,13 @@ int MPID_Rput(const void *origin_addr, int origin_count,
                                    target_disp, target_count, target_datatype, win_ptr, ureq);
 
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
     }
     else {
         mpi_errno = MPID_Request_complete(ureq);
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
     }
 
@@ -74,7 +74,7 @@ int MPID_Rput(const void *origin_addr, int origin_count,
 #undef FUNCNAME
 #define FUNCNAME MPID_Rget
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Rget(void *origin_addr, int origin_count,
               MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
               int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
@@ -91,7 +91,7 @@ int MPID_Rget(void *origin_addr, int origin_count,
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_RGET);
 
     /* request-based RMA operations are only valid within a passive epoch */
-    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
+    MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
@@ -101,7 +101,7 @@ int MPID_Rget(void *origin_addr, int origin_count,
 
     /* Create user request, initially cc=1, ref=1 */
     ureq = MPID_Request_create();
-    MPIU_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+    MPIR_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     ureq->kind = MPID_WIN_REQUEST;
 
     /* This request is referenced by user and ch3 by default. */
@@ -114,13 +114,13 @@ int MPID_Rget(void *origin_addr, int origin_count,
                                    target_disp, target_count, target_datatype, win_ptr, ureq);
 
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
     }
     else {
         mpi_errno = MPID_Request_complete(ureq);
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
     }
 
@@ -137,7 +137,7 @@ int MPID_Rget(void *origin_addr, int origin_count,
 #undef FUNCNAME
 #define FUNCNAME MPID_Raccumulate
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Raccumulate(const void *origin_addr, int origin_count,
                      MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
                      int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win * win_ptr,
@@ -154,7 +154,7 @@ int MPID_Raccumulate(const void *origin_addr, int origin_count,
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_RACCUMULATE);
 
     /* request-based RMA operations are only valid within a passive epoch */
-    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
+    MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
@@ -162,7 +162,7 @@ int MPID_Raccumulate(const void *origin_addr, int origin_count,
 
     /* Create user request, initially cc=1, ref=1 */
     ureq = MPID_Request_create();
-    MPIU_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+    MPIR_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     ureq->kind = MPID_WIN_REQUEST;
 
     /* This request is referenced by user and ch3 by default. */
@@ -177,13 +177,13 @@ int MPID_Raccumulate(const void *origin_addr, int origin_count,
                                           target_disp, target_count,
                                           target_datatype, op, win_ptr, ureq);
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
     }
     else {
         mpi_errno = MPID_Request_complete(ureq);
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
     }
 
@@ -200,7 +200,7 @@ int MPID_Raccumulate(const void *origin_addr, int origin_count,
 #undef FUNCNAME
 #define FUNCNAME MPID_Rget_accumulate
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Rget_accumulate(const void *origin_addr, int origin_count,
                          MPI_Datatype origin_datatype, void *result_addr, int result_count,
                          MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
@@ -218,7 +218,7 @@ int MPID_Rget_accumulate(const void *origin_addr, int origin_count,
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_RGET_ACCUMULATE);
 
     /* request-based RMA operations are only valid within a passive epoch */
-    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
+    MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
@@ -226,7 +226,7 @@ int MPID_Rget_accumulate(const void *origin_addr, int origin_count,
 
     /* Create user request, initially cc=1, ref=1 */
     ureq = MPID_Request_create();
-    MPIU_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+    MPIR_ERR_CHKANDJUMP(ureq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     ureq->kind = MPID_WIN_REQUEST;
 
     /* This request is referenced by user and ch3 by default. */
@@ -244,13 +244,13 @@ int MPID_Rget_accumulate(const void *origin_addr, int origin_count,
                                               target_rank, target_disp,
                                               target_count, target_datatype, op, win_ptr, ureq);
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
     }
     else {
         mpi_errno = MPID_Request_complete(ureq);
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
     }
 

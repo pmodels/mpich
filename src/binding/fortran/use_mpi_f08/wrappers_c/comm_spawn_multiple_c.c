@@ -4,7 +4,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_spawn_multiple_c
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_spawn_multiple_c(int count, char* array_of_commands_f,
              char* array_of_argv_f, const int* array_of_maxprocs,
              const MPI_Info* array_of_info, int root, MPI_Comm comm,
@@ -49,12 +49,12 @@ int MPIR_Comm_spawn_multiple_c(int count, char* array_of_commands_f,
         array_of_argv_c = MPI_ARGVS_NULL;
     } else {
         array_of_argv_c = (char***) MPIU_Malloc(sizeof(char**)*count);
-        if (!array_of_argv_c) MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
+        if (!array_of_argv_c) MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         /* Allocate a temp buf to put args of a command */
         len = 256; /* length of buf. Initialized with an arbitrary value */
         buf = (char*)MPIU_Malloc(sizeof(char)*len);
-        if (!buf) MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
+        if (!buf) MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         for (i = 0; i < count; i++) {
             /* Extract args of command i, and put them in buf */
@@ -67,7 +67,7 @@ int MPIR_Comm_spawn_multiple_c(int count, char* array_of_commands_f,
                     newbuf = (char*)MPIU_Realloc(buf, len);
                     if (!newbuf) {
                         MPIU_Free(buf);
-                        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
+                        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
                     }
                     buf = newbuf;
                 }

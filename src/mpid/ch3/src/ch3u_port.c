@@ -112,7 +112,7 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPID_Comm **comm_pptr,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Create_inter_root_communicator_connect
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_Create_inter_root_communicator_connect(const char *port_name, 
 							MPID_Comm **comm_pptr, 
 							MPIDI_VC_t **vc_pptr)
@@ -131,18 +131,18 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
 
     mpi_errno = MPIDI_CH3_Connect_to_root(port_name, &connect_vc);
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_POP(mpi_errno);
+	MPIR_ERR_POP(mpi_errno);
     }
 
     /* extract the tag from the port_name */
     mpi_errno = MPIDI_GetTagFromPort( port_name, &port_name_tag);
     if (mpi_errno != MPIU_STR_SUCCESS) {
-	MPIU_ERR_POP(mpi_errno);
+	MPIR_ERR_POP(mpi_errno);
     }
 
     mpi_errno = MPIDI_CH3I_Initialize_tmp_comm(&tmp_comm, connect_vc, 1, port_name_tag);
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_POP(mpi_errno);
+	MPIR_ERR_POP(mpi_errno);
     }
 
     *comm_pptr = tmp_comm;
@@ -161,7 +161,7 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Create_inter_root_communicator_accept
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_Create_inter_root_communicator_accept(const char *port_name, 
 						MPID_Comm **comm_pptr, 
 						MPIDI_VC_t **vc_pptr)
@@ -178,7 +178,7 @@ static int MPIDI_Create_inter_root_communicator_accept(const char *port_name,
     /* extract the tag from the port_name */
     mpi_errno = MPIDI_GetTagFromPort( port_name, &port_name_tag);
     if (mpi_errno != MPIU_STR_SUCCESS) {
-	MPIU_ERR_POP(mpi_errno);
+	MPIR_ERR_POP(mpi_errno);
     }
 
     /* FIXME: Describe the algorithm used here, and what routine 
@@ -202,7 +202,7 @@ static int MPIDI_Create_inter_root_communicator_accept(const char *port_name,
 	if (mpi_errno)
 	{
 	    MPID_Progress_end(&progress_state);
-	    MPIU_ERR_POP(mpi_errno);
+	    MPIR_ERR_POP(mpi_errno);
 	}
 	/* --END ERROR HANDLING-- */
     }
@@ -210,7 +210,7 @@ static int MPIDI_Create_inter_root_communicator_accept(const char *port_name,
 
     mpi_errno = MPIDI_CH3I_Initialize_tmp_comm(&tmp_comm, new_vc, 0, port_name_tag);
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_POP(mpi_errno);
+	MPIR_ERR_POP(mpi_errno);
     }
 
     *comm_pptr = tmp_comm;
@@ -233,7 +233,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME  MPIDI_CH3I_Initialize_tmp_comm
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Initialize_tmp_comm(MPID_Comm **comm_pptr, 
 					  MPIDI_VC_t *vc_ptr, int is_low_group, int context_id_offset)
 {
@@ -248,7 +248,7 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPID_Comm **comm_pptr,
     /* WDG-old code allocated a context id that was then discarded */
     mpi_errno = MPIR_Comm_create(&tmp_comm);
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_POP(mpi_errno);
+	MPIR_ERR_POP(mpi_errno);
     }
     /* fill in all the fields of tmp_comm. */
 
@@ -292,7 +292,7 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPID_Comm **comm_pptr,
     /* Set up VC reference table */
     mpi_errno = MPIDI_VCRT_Create(tmp_comm->remote_size, &tmp_comm->dev.vcrt);
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**init_vcrt");
+	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**init_vcrt");
     }
 
     /* FIXME: Why do we do a dup here? */
@@ -302,7 +302,7 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPID_Comm **comm_pptr,
        MPI_Comm_commit, we still need to call the creation hook
        because the destruction hook will be called in comm_release */
     mpi_errno = MPID_Dev_comm_create_hook(tmp_comm);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
     *comm_pptr = tmp_comm;
 
@@ -329,7 +329,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Comm_connect
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root, 
 		       MPID_Comm *comm_ptr, MPID_Comm **newcomm)
 {
@@ -352,7 +352,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
 
     /* Get the context ID here because we need to send it to the remote side */
     mpi_errno = MPIR_Get_contextid_sparse( comm_ptr, &recvcontext_id, FALSE );
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     rank = comm_ptr->rank;
     local_comm_size = comm_ptr->local_size;
@@ -364,7 +364,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
 	mpi_errno = MPIDI_Create_inter_root_communicator_connect(
 	    port_name, &tmp_comm, &new_vc);
 	if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_POP_LABEL(mpi_errno, no_port);
+	    MPIR_ERR_POP_LABEL(mpi_errno, no_port);
 	}
 
 	/* Make an array to translate local ranks to process group index 
@@ -379,7 +379,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
 	   group id, size and all its KVS values */
 	mpi_errno = ExtractLocalPGInfo( comm_ptr, local_translation, 
 					&pg_list, &n_local_pgs );
-        MPIU_ERR_CHKINTERNAL(mpi_errno, mpi_errno, "Can't extract local PG info.");
+        MPIR_ERR_CHKINTERNAL(mpi_errno, mpi_errno, "Can't extract local PG info.");
 
 	/* Send the remote root: n_local_pgs, local_comm_size,
            Recv from the remote root: n_remote_pgs, remote_comm_size,
@@ -399,18 +399,18 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
         if (mpi_errno != MPI_SUCCESS) {
             /* this is a no_port error because we may fail to connect
                on the send if the port name is invalid */
-	    MPIU_ERR_POP_LABEL(mpi_errno, no_port);
+	    MPIR_ERR_POP_LABEL(mpi_errno, no_port);
 	}
     }
 
     /* broadcast the received info to local processes */
     MPIU_DBG_MSG(CH3_CONNECT,VERBOSE,"broadcasting the received 3 ints");
     mpi_errno = MPIR_Bcast_intra(recv_ints, 3, MPI_INT, root, comm_ptr, &errflag);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
     /* check if root was unable to connect to the port */
-    MPIU_ERR_CHKANDJUMP1(recv_ints[0] == -1, mpi_errno, MPI_ERR_PORT, "**portexist", "**portexist %s", port_name);
+    MPIR_ERR_CHKANDJUMP1(recv_ints[0] == -1, mpi_errno, MPI_ERR_PORT, "**portexist", "**portexist %s", port_name);
     
     n_remote_pgs     = recv_ints[0];
     remote_comm_size = recv_ints[1];
@@ -441,7 +441,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
 				  MPI_INT, 0, recvtag++, tmp_comm,
 				  MPI_STATUS_IGNORE, &errflag);
 	if (mpi_errno) {
-	    MPIU_ERR_POP(mpi_errno);
+	    MPIR_ERR_POP(mpi_errno);
 	}
 
 #ifdef MPICH_DBG_OUTPUT
@@ -463,8 +463,8 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     MPIU_DBG_MSG(CH3_CONNECT,VERBOSE,"Broadcasting remote translation");
     mpi_errno = MPIR_Bcast_intra(remote_translation, remote_comm_size * 2, MPI_INT,
                                  root, comm_ptr, &errflag);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
 #ifdef MPICH_DBG_OUTPUT
     MPIU_DBG_PRINTF(("[%d]connect:Received remote_translation after broadcast:\n", rank));
@@ -476,7 +476,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
 #endif
 
     mpi_errno = MPIR_Comm_create(newcomm);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     (*newcomm)->context_id     = context_id;
     (*newcomm)->recvcontext_id = recvcontext_id;
@@ -485,7 +485,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     mpi_errno = SetupNewIntercomm( comm_ptr, remote_comm_size, 
 				   remote_translation, remote_pg, *newcomm );
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_POP(mpi_errno);
+	MPIR_ERR_POP(mpi_errno);
     }
 
     /* synchronize with remote root */
@@ -497,7 +497,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
                                      0, recvtag++, tmp_comm,
                                      MPI_STATUS_IGNORE, &errflag);
         if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_POP(mpi_errno);
+	    MPIR_ERR_POP(mpi_errno);
         }
 
         /* All communication with remote root done. Release the communicator. */
@@ -507,7 +507,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     /*printf("connect:barrier\n");fflush(stdout);*/
     mpi_errno = MPIR_Barrier_intra(comm_ptr, &errflag);
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_POP(mpi_errno);
+	MPIR_ERR_POP(mpi_errno);
     }
 
     /* Free new_vc. It was explicitly allocated in MPIDI_CH3_Connect_to_root.*/
@@ -525,13 +525,13 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
         int mpi_errno2 = MPI_SUCCESS;
         if (new_vc) {
 	    mpi_errno2 = MPIDI_CH3_VC_Destroy(new_vc);
-            if (mpi_errno2) MPIU_ERR_SET(mpi_errno2, MPI_ERR_OTHER, "**fail");
+            if (mpi_errno2) MPIR_ERR_SET(mpi_errno2, MPI_ERR_OTHER, "**fail");
         }
 
         if (recvcontext_id != MPIU_INVALID_CONTEXT_ID)
             MPIR_Free_contextid(recvcontext_id);
         
-        if (mpi_errno2) MPIU_ERR_ADD(mpi_errno, mpi_errno2);
+        if (mpi_errno2) MPIR_ERR_ADD(mpi_errno, mpi_errno2);
 
         goto fn_exit;
     }
@@ -544,15 +544,15 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
         recv_ints[0] = -1;
         recv_ints[1] = -1;
         recv_ints[2] = -1;
-        MPIU_ERR_SET1(mpi_errno, MPI_ERR_PORT, "**portexist", "**portexist %s", port_name);
+        MPIR_ERR_SET1(mpi_errno, MPI_ERR_PORT, "**portexist", "**portexist %s", port_name);
 
         /* notify other processes to return an error */
         MPIU_DBG_MSG(CH3_CONNECT,VERBOSE,"broadcasting 3 ints: error case");
         mpi_errno2 = MPIR_Bcast_intra(recv_ints, 3, MPI_INT, root, comm_ptr, &errflag);
-        if (mpi_errno2) MPIU_ERR_ADD(mpi_errno, mpi_errno2);
+        if (mpi_errno2) MPIR_ERR_ADD(mpi_errno, mpi_errno2);
         if (errflag) {
-            MPIU_ERR_SET(mpi_errno2, MPI_ERR_OTHER, "**coll_fail");
-            MPIU_ERR_ADD(mpi_errno, mpi_errno2);
+            MPIR_ERR_SET(mpi_errno2, MPI_ERR_OTHER, "**coll_fail");
+            MPIR_ERR_ADD(mpi_errno, mpi_errno2);
         }
         goto fn_fail;
     }
@@ -573,7 +573,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
 #undef FUNCNAME
 #define FUNCNAME ExtractLocalPGInfo
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int ExtractLocalPGInfo( MPID_Comm *comm_p, 
 			       pg_translation local_translation[], 
 			       pg_node **pg_list_p,
@@ -609,7 +609,7 @@ static int ExtractLocalPGInfo( MPID_Comm *comm_p,
     mpi_errno = MPIDI_PG_To_string(comm_p->dev.vcrt->vcr_table[0]->pg, &pg_list->str,
 				   &pg_list->lenStr );
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_POP(mpi_errno);
+	MPIR_ERR_POP(mpi_errno);
     }
     MPIU_DBG_STMT(CH3_CONNECT,VERBOSE,MPIDI_PrintConnStr(__FILE__,__LINE__,"PG as string is", pg_list->str ));
     local_translation[0].pg_index = 0;
@@ -636,7 +636,7 @@ static int ExtractLocalPGInfo( MPID_Comm *comm_p,
 	       advance how many nodes we may allocate */
 	    pg_iter = (pg_node*)MPIU_Malloc(sizeof(pg_node));
 	    if (!pg_iter) {
-		MPIU_ERR_POP(mpi_errno);
+		MPIR_ERR_POP(mpi_errno);
 	    }
 	    pg_iter->pg_id = MPIU_Strdup(comm_p->dev.vcrt->vcr_table[i]->pg->id);
 	    pg_iter->index = cur_index++;
@@ -644,7 +644,7 @@ static int ExtractLocalPGInfo( MPID_Comm *comm_p,
 	    mpi_errno = MPIDI_PG_To_string(comm_p->dev.vcrt->vcr_table[i]->pg, &pg_iter->str,
 					   &pg_iter->lenStr );
 	    if (mpi_errno != MPI_SUCCESS) {
-		MPIU_ERR_POP(mpi_errno);
+		MPIR_ERR_POP(mpi_errno);
 	    }
 	    local_translation[i].pg_index = pg_iter->index;
 	    local_translation[i].pg_rank = comm_p->dev.vcrt->vcr_table[i]->pg_rank;
@@ -680,7 +680,7 @@ static int ExtractLocalPGInfo( MPID_Comm *comm_p,
 #undef FUNCNAME
 #define FUNCNAME ReceivePGAndDistribute
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int ReceivePGAndDistribute( MPID_Comm *tmp_comm, MPID_Comm *comm_ptr, 
 				   int root, int *recvtag_p, 
 				   int n_remote_pgs, MPIDI_PG_t *remote_pg[] )
@@ -703,44 +703,44 @@ static int ReceivePGAndDistribute( MPID_Comm *tmp_comm, MPID_Comm *comm_ptr,
 				  tmp_comm, MPI_STATUS_IGNORE, &errflag);
 	    *recvtag_p = recvtag;
 	    if (mpi_errno != MPI_SUCCESS) {
-		MPIU_ERR_POP(mpi_errno);
+		MPIR_ERR_POP(mpi_errno);
 	    }
 	    pg_str = (char*)MPIU_Malloc(j);
 	    if (pg_str == NULL) {
-		MPIU_ERR_POP(mpi_errno);
+		MPIR_ERR_POP(mpi_errno);
 	    }
 	    mpi_errno = MPIC_Recv(pg_str, j, MPI_CHAR, 0, recvtag++,
 				  tmp_comm, MPI_STATUS_IGNORE, &errflag);
 	    *recvtag_p = recvtag;
 	    if (mpi_errno != MPI_SUCCESS) {
-		MPIU_ERR_POP(mpi_errno);
+		MPIR_ERR_POP(mpi_errno);
 	    }
 	}
 
 	/* Broadcast the size and data to the local communicator */
 	/*printf("accept:broadcasting 1 int\n");fflush(stdout);*/
 	mpi_errno = MPIR_Bcast_intra(&j, 1, MPI_INT, root, comm_ptr, &errflag);
-	if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+	if (mpi_errno != MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
 	if (rank != root) {
 	    /* The root has already allocated this string */
 	    pg_str = (char*)MPIU_Malloc(j);
 	    if (pg_str == NULL) {
-		MPIU_ERR_POP(mpi_errno);
+		MPIR_ERR_POP(mpi_errno);
 	    }
 	}
 	/*printf("accept:broadcasting string of length %d\n", j);fflush(stdout);*/
 	mpi_errno = MPIR_Bcast_intra(pg_str, j, MPI_CHAR, root, comm_ptr, &errflag);
-	if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+	if (mpi_errno != MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	/* Then reconstruct the received process group.  This step
 	   also initializes the created process group */
 
 	MPIU_DBG_STMT(CH3_CONNECT,VERBOSE,MPIDI_PrintConnStr(__FILE__,__LINE__,"Creating pg from string", pg_str ));
 	mpi_errno = MPIDI_PG_Create_from_string(pg_str, &remote_pg[i], &flag);
 	if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_POP(mpi_errno);
+	    MPIR_ERR_POP(mpi_errno);
 	}
 	
 	MPIU_Free(pg_str);
@@ -759,7 +759,7 @@ static int ReceivePGAndDistribute( MPID_Comm *tmp_comm, MPID_Comm *comm_ptr,
 #undef FUNCNAME
 #define FUNCNAME MPID_PG_BCast
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
 {
     int n_local_pgs=0, mpi_errno = MPI_SUCCESS;
@@ -784,8 +784,8 @@ int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
 
     /* Now, broadcast the number of local pgs */
     mpi_errno = MPIR_Bcast_impl( &n_local_pgs, 1, MPI_INT, root, comm_p, &errflag);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
     pg_list = pg_head;
     for (i=0; i<n_local_pgs; i++) {
@@ -805,8 +805,8 @@ int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
 	    pg_list = pg_list->next;
 	}
 	mpi_errno = MPIR_Bcast_impl( &len, 1, MPI_INT, root, comm_p, &errflag);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	if (rank != root) {
 	    pg_str = (char *)MPIU_Malloc(len);
             if (!pg_str) {
@@ -818,9 +818,9 @@ int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
         if (mpi_errno) {
             if (rank != root)
                 MPIU_Free( pg_str );
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
-        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+        MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
 	if (rank != root) {
 	    /* flag is true if the pg was created, false if it
@@ -863,7 +863,7 @@ int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
 #undef FUNCNAME
 #define FUNCNAME SendPGtoPeerAndFree
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int SendPGtoPeerAndFree( MPID_Comm *tmp_comm, int *sendtag_p, 
 				pg_node *pg_list )
 {
@@ -882,7 +882,7 @@ static int SendPGtoPeerAndFree( MPID_Comm *tmp_comm, int *sendtag_p,
 	mpi_errno = MPIC_Send(&i, 1, MPI_INT, 0, sendtag++, tmp_comm, &errflag);
 	*sendtag_p = sendtag;
 	if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_POP(mpi_errno);
+	    MPIR_ERR_POP(mpi_errno);
 	}
 	
 	/* printf("connect:sending string length %d\n", i);fflush(stdout); */
@@ -890,7 +890,7 @@ static int SendPGtoPeerAndFree( MPID_Comm *tmp_comm, int *sendtag_p,
 			      tmp_comm, &errflag);
 	*sendtag_p = sendtag;
 	if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_POP(mpi_errno);
+	    MPIR_ERR_POP(mpi_errno);
 	}
 	
 	pg_list = pg_list->next;
@@ -925,7 +925,7 @@ static int SendPGtoPeerAndFree( MPID_Comm *tmp_comm, int *sendtag_p,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Comm_accept
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root, 
 		      MPID_Comm *comm_ptr, MPID_Comm **newcomm)
 {
@@ -949,10 +949,10 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
        context id to the other side. */
     mpi_errno = MPIR_Comm_create(newcomm);
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_POP(mpi_errno);
+	MPIR_ERR_POP(mpi_errno);
     }
     mpi_errno = MPIR_Get_contextid_sparse( comm_ptr, &(*newcomm)->recvcontext_id, FALSE );
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     /* FIXME why is this commented out? */
     /*    (*newcomm)->context_id = (*newcomm)->recvcontext_id; */
     
@@ -966,7 +966,7 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
 	mpi_errno = MPIDI_Create_inter_root_communicator_accept(port_name, 
 						&tmp_comm, &new_vc);
 	if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_POP(mpi_errno);
+	    MPIR_ERR_POP(mpi_errno);
 	}
 
 	/* Make an array to translate local ranks to process group index and 
@@ -995,15 +995,15 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
                                      0, recvtag++, tmp_comm,
                                      MPI_STATUS_IGNORE, &errflag);
         if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_POP(mpi_errno);
+	    MPIR_ERR_POP(mpi_errno);
 	}
     }
 
     /* broadcast the received info to local processes */
     /*printf("accept:broadcasting 2 ints - %d and %d\n", recv_ints[0], recv_ints[1]);fflush(stdout);*/
     mpi_errno = MPIR_Bcast_intra(recv_ints, 3, MPI_INT, root, comm_ptr, &errflag);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
 
     n_remote_pgs     = recv_ints[0];
@@ -1047,15 +1047,15 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
     {
 	mpi_errno = ReceivePGAndDistribute( tmp_comm, comm_ptr, root, &recvtag,
 					    n_remote_pgs, remote_pg );
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     /* Broadcast out the remote rank translation array */
     MPIU_DBG_MSG(CH3_CONNECT,VERBOSE,"Broadcast remote_translation");
     mpi_errno = MPIR_Bcast_intra(remote_translation, remote_comm_size * 2, MPI_INT, 
                                  root, comm_ptr, &errflag);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 #ifdef MPICH_DBG_OUTPUT
     MPIU_DBG_PRINTF(("[%d]accept:Received remote_translation after broadcast:\n", rank));
     for (i=0; i<remote_comm_size; i++)
@@ -1074,7 +1074,7 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
     mpi_errno = SetupNewIntercomm( comm_ptr, remote_comm_size, 
 				   remote_translation, remote_pg, intercomm );
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_POP(mpi_errno);
+	MPIR_ERR_POP(mpi_errno);
     }
 
     /* synchronize with remote root */
@@ -1086,7 +1086,7 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
                                      0, recvtag++, tmp_comm,
                                      MPI_STATUS_IGNORE, &errflag);
         if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_POP(mpi_errno);
+	    MPIR_ERR_POP(mpi_errno);
         }
 
         /* All communication with remote root done. Release the communicator. */
@@ -1096,7 +1096,7 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
     MPIU_DBG_MSG(CH3_CONNECT,VERBOSE,"Barrier");
     mpi_errno = MPIR_Barrier_intra(comm_ptr, &errflag);
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_POP(mpi_errno);
+	MPIR_ERR_POP(mpi_errno);
     }
 
     /* Free new_vc once the connection is completed. It was explicitly 
@@ -1142,7 +1142,7 @@ Input/Output Parameters:
 #undef FUNCNAME
 #define FUNCNAME SetupNewIntercomm
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int SetupNewIntercomm( MPID_Comm *comm_ptr, int remote_comm_size, 
 			      pg_translation remote_translation[],
 			      MPIDI_PG_t **remote_pg, 
@@ -1171,7 +1171,7 @@ static int SetupNewIntercomm( MPID_Comm *comm_ptr, int remote_comm_size,
     /* Set up VC reference table */
     mpi_errno = MPIDI_VCRT_Create(intercomm->remote_size, &intercomm->dev.vcrt);
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**init_vcrt");
+	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**init_vcrt");
     }
     for (i=0; i < intercomm->remote_size; i++) {
 	MPIDI_PG_Dup_vcr(remote_pg[remote_translation[i].pg_index], 
@@ -1179,12 +1179,12 @@ static int SetupNewIntercomm( MPID_Comm *comm_ptr, int remote_comm_size,
     }
 
     mpi_errno = MPIR_Comm_commit(intercomm);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
     MPIU_DBG_MSG(CH3_CONNECT,VERBOSE,"Barrier");
     mpi_errno = MPIR_Barrier_intra(comm_ptr, &errflag);
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_POP(mpi_errno);
+	MPIR_ERR_POP(mpi_errno);
     }
 
  fn_exit:
@@ -1199,7 +1199,7 @@ static int SetupNewIntercomm( MPID_Comm *comm_ptr, int remote_comm_size,
 #undef FUNCNAME
 #define FUNCNAME FreeNewVC
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int FreeNewVC( MPIDI_VC_t *new_vc )
 {
     MPID_Progress_state progress_state;
@@ -1215,7 +1215,7 @@ static int FreeNewVC( MPIDI_VC_t *new_vc )
 	    if (mpi_errno != MPI_SUCCESS)
                 {
                     MPID_Progress_end(&progress_state);
-		    MPIU_ERR_POP(mpi_errno);
+		    MPIR_ERR_POP(mpi_errno);
                 }
 	    /* --END ERROR HANDLING-- */
 	}
@@ -1261,7 +1261,7 @@ static int AcceptQueueSize    = 0;
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Acceptq_enqueue
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Acceptq_enqueue(MPIDI_VC_t * vc, int port_name_tag )
 {
     int mpi_errno=MPI_SUCCESS;
@@ -1305,7 +1305,7 @@ int MPIDI_CH3I_Acceptq_enqueue(MPIDI_VC_t * vc, int port_name_tag )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Acceptq_dequeue
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Acceptq_dequeue(MPIDI_VC_t ** vc, int port_name_tag)
 {
     int mpi_errno=MPI_SUCCESS;

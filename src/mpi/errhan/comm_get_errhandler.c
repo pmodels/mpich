@@ -30,14 +30,14 @@ int MPI_Comm_get_errhandler(MPI_Comm comm, MPI_Errhandler *errhandler) __attribu
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_get_errhandler_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Comm_get_errhandler_impl(MPID_Comm *comm_ptr, MPID_Errhandler **errhandler_ptr)
 {
-    MPIU_THREAD_CS_ENTER(MPI_OBJ, comm_ptr);
+    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->pobj_mutex);
     *errhandler_ptr = comm_ptr->errhandler;
     if (comm_ptr->errhandler)
 	MPIR_Errhandler_add_ref(comm_ptr->errhandler);
-    MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
+    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->pobj_mutex);
 
     return;
 }
@@ -47,7 +47,7 @@ void MPIR_Comm_get_errhandler_impl(MPID_Comm *comm_ptr, MPID_Errhandler **errhan
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_get_errhandler
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_get_errhandler - Get the error handler attached to a communicator
 
@@ -74,7 +74,7 @@ int MPI_Comm_get_errhandler(MPI_Comm comm, MPI_Errhandler *errhandler)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_GET_ERRHANDLER);
     
     /* Validate parameters, especially handles needing to be converted */
@@ -119,7 +119,7 @@ int MPI_Comm_get_errhandler(MPI_Comm comm, MPI_Errhandler *errhandler)
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_GET_ERRHANDLER);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

@@ -11,7 +11,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Win_shared_query
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_SHM_Win_shared_query(MPID_Win * win_ptr, int target_rank, MPI_Aint * size,
                                    int *disp_unit, void *baseptr)
 {
@@ -24,7 +24,7 @@ int MPIDI_CH3_SHM_Win_shared_query(MPID_Win * win_ptr, int target_rank, MPI_Aint
     if (win_ptr->comm_ptr->node_comm == NULL) {
         mpi_errno = MPIDI_CH3U_Win_shared_query(win_ptr, target_rank, size, disp_unit, baseptr);
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
         goto fn_exit;
     }
@@ -74,7 +74,7 @@ int MPIDI_CH3_SHM_Win_shared_query(MPID_Win * win_ptr, int target_rank, MPI_Aint
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_SHM_Win_free
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_SHM_Win_free(MPID_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -101,7 +101,7 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win ** win_ptr)
                                      (char **) &(*win_ptr)->shm_base_addr,
                                      (*win_ptr)->shm_segment_len);
             if (mpi_errno)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
 
             MPIU_SHMW_Hnd_finalize(&(*win_ptr)->shm_segment_handle);
         }
@@ -131,7 +131,7 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win ** win_ptr)
             MPIU_SHMW_Seg_detach((*win_ptr)->shm_mutex_segment_handle,
                                  (char **) &(*win_ptr)->shm_mutex, sizeof(MPIDI_CH3I_SHM_MUTEX));
         if (mpi_errno)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
 
         MPIU_SHMW_Hnd_finalize(&(*win_ptr)->shm_mutex_segment_handle);
     }
@@ -142,7 +142,7 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win ** win_ptr)
                                          (char **) &(*win_ptr)->info_shm_base_addr,
                                          (*win_ptr)->info_shm_segment_len);
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
 
         MPIU_SHMW_Hnd_finalize(&(*win_ptr)->info_shm_segment_handle);
 

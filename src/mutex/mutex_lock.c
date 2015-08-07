@@ -35,7 +35,7 @@ int MPIX_Mutex_lock(MPIX_Mutex hdl, int mutex, int proc) __attribute__((weak,ali
 #undef FUNCNAME
 #define FUNCNAME MPIX_Mutex_lock
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /** Lock a mutex.
   *

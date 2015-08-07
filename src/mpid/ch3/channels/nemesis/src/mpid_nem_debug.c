@@ -11,7 +11,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_dbg_dump_cell
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPID_nem_dbg_dump_cell (volatile struct MPID_nem_cell *cell)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_DBG_DUMP_CELL);
@@ -56,7 +56,7 @@ void MPID_nem_dbg_print_vc_sendq(FILE *stream, MPIDI_VC_t *vc);
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_dbg_print_all_sendq
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPID_nem_dbg_print_vc_sendq(FILE *stream, MPIDI_VC_t *vc)
 {
     MPID_Request * sreq;
@@ -104,7 +104,7 @@ void MPID_nem_dbg_print_all_sendq(FILE *stream);
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_dbg_print_all_sendq
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPID_nem_dbg_print_all_sendq(FILE *stream)
 {
     int i;

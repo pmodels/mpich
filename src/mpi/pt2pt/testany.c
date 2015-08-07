@@ -80,7 +80,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_PT2PT_FUNC_ENTER(MPID_STATE_MPI_TESTANY);
 
     /* Check the arguments */
@@ -199,7 +199,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
      * pending failure. */
     if (unlikely(last_disabled_anysource != -1))
     {
-        MPIU_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
+        MPIR_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
         if (status != MPI_STATUS_IGNORE) status->MPI_ERROR = mpi_errno;
         *flag = TRUE;
         goto fn_fail;
@@ -221,7 +221,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     }
 
     MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_TESTANY);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

@@ -10,7 +10,7 @@
 #undef FUNCNAME
 #define FUNCNAME rptli_op_alloc
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int rptli_op_alloc(struct rptl_op **op, struct rptl_target *target)
 {
     int ret = PTL_OK;
@@ -52,7 +52,7 @@ int rptli_op_alloc(struct rptl_op **op, struct rptl_target *target)
 #undef FUNCNAME
 #define FUNCNAME rptli_op_free
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void rptli_op_free(struct rptl_op *op)
 {
     MPIDI_STATE_DECL(MPID_STATE_RPTLI_OP_FREE);

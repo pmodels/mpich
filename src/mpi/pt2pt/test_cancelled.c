@@ -30,7 +30,7 @@ int MPI_Test_cancelled(const MPI_Status *status, int *flag) __attribute__((weak,
 #undef FUNCNAME
 #define FUNCNAME MPI_Test_cancelled
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
   MPI_Test_cancelled - Tests to see if a request was cancelled
 

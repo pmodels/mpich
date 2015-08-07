@@ -33,7 +33,7 @@ int MPI_Ineighbor_alltoallw(const void *sendbuf, const int sendcounts[],
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ineighbor_alltoallw_default
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_alltoallw_default(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -43,13 +43,13 @@ int MPIR_Ineighbor_alltoallw_default(const void *sendbuf, const int sendcounts[]
     MPIU_CHKLMEM_DECL(2);
 
     mpi_errno = MPIR_Topo_canon_nhb_count(comm_ptr, &indegree, &outdegree, &weighted);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     MPIU_CHKLMEM_MALLOC(srcs, int *, indegree*sizeof(int), mpi_errno, "srcs");
     MPIU_CHKLMEM_MALLOC(dsts, int *, outdegree*sizeof(int), mpi_errno, "dsts");
     mpi_errno = MPIR_Topo_canon_nhb(comm_ptr,
                                     indegree, srcs, MPI_UNWEIGHTED,
                                     outdegree, dsts, MPI_UNWEIGHTED);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     for (k = 0; k < outdegree; ++k) {
         char *sb;
@@ -57,7 +57,7 @@ int MPIR_Ineighbor_alltoallw_default(const void *sendbuf, const int sendcounts[]
 
         sb = ((char *)sendbuf) + sdispls[k];
         mpi_errno = MPID_Sched_send(sb, sendcounts[k], sendtypes[k], dsts[k], comm_ptr, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     for (l = 0; l < indegree; ++l) {
@@ -66,7 +66,7 @@ int MPIR_Ineighbor_alltoallw_default(const void *sendbuf, const int sendcounts[]
 
         rb = ((char *)recvbuf) + rdispls[l];
         mpi_errno = MPID_Sched_recv(rb, recvcounts[l], recvtypes[l], srcs[l], comm_ptr, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     MPID_SCHED_BARRIER(s);
@@ -81,7 +81,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ineighbor_alltoallw_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Ineighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPID_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -92,20 +92,20 @@ int MPIR_Ineighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[], c
     *request = MPI_REQUEST_NULL;
 
     mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPID_Sched_create(&s);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     MPIU_Assert(comm_ptr->coll_fns != NULL);
     MPIU_Assert(comm_ptr->coll_fns->Ineighbor_alltoallw != NULL);
     mpi_errno = comm_ptr->coll_fns->Ineighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes,
                                                         recvbuf, recvcounts, rdispls, recvtypes,
                                                         comm_ptr, s);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, &reqp);
     if (reqp)
         *request = reqp->handle;
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;
@@ -118,7 +118,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPI_Ineighbor_alltoallw
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Ineighbor_alltoallw - Nonblocking version of MPI_Neighbor_alltoallw.
 
@@ -148,7 +148,7 @@ int MPI_Ineighbor_alltoallw(const void *sendbuf, const int sendcounts[], const M
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INEIGHBOR_ALLTOALLW);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_INEIGHBOR_ALLTOALLW);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -185,13 +185,13 @@ int MPI_Ineighbor_alltoallw(const void *sendbuf, const int sendcounts[], const M
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Ineighbor_alltoallw_impl(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, request);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_INEIGHBOR_ALLTOALLW);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
 fn_fail:

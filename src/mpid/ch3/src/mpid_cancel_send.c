@@ -13,7 +13,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Cancel_send
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Cancel_send(MPID_Request * sreq)
 {
     MPIDI_VC_t * vc;
@@ -56,9 +56,9 @@ int MPID_Cancel_send(MPID_Request * sreq)
 	MPIU_DBG_MSG(CH3_OTHER,VERBOSE,
 		     "attempting to cancel message sent to self");
 	
-	MPIU_THREAD_CS_ENTER(MSGQUEUE,);
+	MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.msgq_mutex);
 	rreq = MPIDI_CH3U_Recvq_FDU(sreq->handle, &sreq->dev.match);
-	MPIU_THREAD_CS_EXIT(MSGQUEUE,);
+	MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.msgq_mutex);
 	if (rreq)
 	{
 	    MPIU_Assert(rreq->partner_request == sreq);
@@ -78,7 +78,7 @@ int MPID_Cancel_send(MPID_Request * sreq)
 	    MPIR_STATUS_SET_CANCEL_BIT(sreq->status, TRUE);
             mpi_errno = MPID_Request_complete(sreq);
             if (mpi_errno != MPI_SUCCESS) {
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
             }
 	}
 	else
@@ -196,11 +196,11 @@ int MPID_Cancel_send(MPID_Request * sreq)
 	csr_pkt->match.parts.context_id = sreq->dev.match.parts.context_id;
 	csr_pkt->sender_req_id = sreq->handle;
 	
-	MPIU_THREAD_CS_ENTER(CH3COMM,vc);
+	MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
 	mpi_errno = MPIDI_CH3_iStartMsg(vc, csr_pkt, sizeof(*csr_pkt), &csr_sreq);
-	MPIU_THREAD_CS_EXIT(CH3COMM,vc);
+	MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
 	if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|cancelreq");
+	    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|cancelreq");
 	}
 	if (csr_sreq != NULL)
 	{
@@ -271,11 +271,11 @@ int MPIDI_CH3_PktHandler_CancelSendReq( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     resp_pkt->sender_req_id = req_pkt->sender_req_id;
     resp_pkt->ack = ack;
     /* FIXME: This is called within the packet handler */
-    /* MPIU_THREAD_CS_ENTER(CH3COMM,vc); */
+    /* MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex); */
     mpi_errno = MPIDI_CH3_iStartMsg(vc, resp_pkt, sizeof(*resp_pkt), &resp_sreq);
-    /* MPIU_THREAD_CS_EXIT(CH3COMM,vc); */
+    /* MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex); */
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,
+	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,
 			    "**ch3|cancelresp");
     }
     if (resp_sreq != NULL)
@@ -329,7 +329,7 @@ int MPIDI_CH3_PktHandler_CancelSendResp( MPIDI_VC_t *vc ATTRIBUTE((unused)),
     
     mpi_errno = MPID_Request_complete(sreq);
     if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     }
 
     *rreqp = NULL;

@@ -34,7 +34,7 @@ int MPIR_Open_port_impl(MPID_Info *info_ptr, char *port_name)
 #undef FUNCNAME
 #define FUNCNAME MPI_Open_port
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Open_port - Establish an address that can be used to establish 
    connections between groups of MPI processes
@@ -73,7 +73,7 @@ int MPI_Open_port(MPI_Info info, char *port_name)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_OPEN_PORT);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -112,7 +112,7 @@ int MPI_Open_port(MPI_Info info, char *port_name)
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_OPEN_PORT);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

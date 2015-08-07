@@ -62,7 +62,7 @@ int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
     
     /* The thread lock prevents a valid attr delete on the same window
        but in a different thread from causing problems */
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_WIN_DELETE_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -144,7 +144,7 @@ int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_WIN_DELETE_ATTR);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

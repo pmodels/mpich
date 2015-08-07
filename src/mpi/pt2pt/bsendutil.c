@@ -90,7 +90,7 @@ static void MPIR_Bsend_free_segment( MPIR_Bsend_data_t * );
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bsend_attach
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Bsend_attach( void *buffer, int buffer_size )
 {
     MPIR_Bsend_data_t *p;
@@ -165,7 +165,7 @@ int MPIR_Bsend_attach( void *buffer, int buffer_size )
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bsend_detach
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Bsend_detach( void *bufferp, int *size )
 {
     if (BsendBuffer.pending) {
@@ -206,7 +206,7 @@ int MPIR_Bsend_detach( void *bufferp, int *size )
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bsend_isend
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
                      int dest, int tag, MPID_Comm *comm_ptr,
                      MPIR_Bsend_kind_t kind, MPID_Request **request )
@@ -229,7 +229,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
     /* We check the active buffer first.  This helps avoid storage 
        fragmentation */
     mpi_errno = MPIR_Bsend_check_active();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     if (dtype != MPI_PACKED)
         MPIR_Pack_size_impl( count, dtype, &packsize );
@@ -261,7 +261,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
             if (dtype != MPI_PACKED)
             {
                 mpi_errno = MPIR_Pack_impl( buf, count, dtype, p->msg.msgbuf, packsize, &p->msg.count);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             }
             else
             {
@@ -273,7 +273,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
 	    mpi_errno = MPID_Isend(msg->msgbuf, msg->count, MPI_PACKED, 
 				   dest, tag, comm_ptr,
 				   MPID_CONTEXT_INTRA_PT2PT, &p->request );
-            MPIU_ERR_CHKINTERNAL(mpi_errno, mpi_errno, "Bsend internal error: isend returned err");
+            MPIR_ERR_CHKINTERNAL(mpi_errno, mpi_errno, "Bsend internal error: isend returned err");
             /* If the error is "request not available", we should 
                put this on the pending list.  This will depend on
                how we signal failure to send. */
@@ -308,7 +308,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
 	   packsize could not be found */
 	MPIU_DBG_MSG(BSEND,TYPICAL,"Could not find space; dumping arena" );
 	MPIU_DBG_STMT(BSEND,TYPICAL,MPIR_Bsend_dump());
-        MPIU_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_BUFFER, "**bufbsend", "**bufbsend %d %d", packsize, BsendBuffer.buffer_size);
+        MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_BUFFER, "**bufbsend", "**bufbsend %d %d", packsize, BsendBuffer.buffer_size);
     }
     
  fn_exit:
@@ -325,7 +325,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bsend_free_seg
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Bsend_free_req_seg( MPID_Request* req )
 {
     int mpi_errno = MPI_ERR_INTERN;
@@ -363,7 +363,7 @@ int MPIR_Bsend_free_req_seg( MPID_Request* req )
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bsend_free_segment
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static void MPIR_Bsend_free_segment( MPIR_Bsend_data_t *p )
 {
     MPIR_Bsend_data_t *prev = p->prev, *avail = BsendBuffer.avail, *avail_prev;
@@ -457,7 +457,7 @@ static void MPIR_Bsend_free_segment( MPIR_Bsend_data_t *p )
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bsend_check_active
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIR_Bsend_check_active( void )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -481,7 +481,7 @@ static int MPIR_Bsend_check_active( void )
             /* XXX DJG FIXME-MT should we be checking this? */
 	    if (MPIU_Object_get_ref(active->request) == 1) {
 		mpi_errno = MPIR_Test_impl(&r, &flag, MPI_STATUS_IGNORE );
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	    } else {
 		/* We need to invoke the progress engine in case we 
 		 need to advance other, incomplete communication.  */
@@ -489,11 +489,11 @@ static int MPIR_Bsend_check_active( void )
 		MPID_Progress_start(&progress_state);
 		mpi_errno = MPID_Progress_test( );
 		MPID_Progress_end(&progress_state);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	    }
 	} else {
 	    mpi_errno = MPIR_Test_impl( &r, &flag, MPI_STATUS_IGNORE );
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	}
 	if (flag) {
 	    /* We're done.  Remove this segment */

@@ -59,7 +59,7 @@ int MPI_Win_get_errhandler(MPI_Win win, MPI_Errhandler *errhandler)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_WIN_GET_ERRHANDLER);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -93,7 +93,7 @@ int MPI_Win_get_errhandler(MPI_Win win, MPI_Errhandler *errhandler)
 
     /* ... body of routine ...  */
 
-    MPIU_THREAD_CS_ENTER(MPI_OBJ, win_ptr);
+    MPID_THREAD_CS_ENTER(POBJ, win_ptr->pobj_mutex);
 
     if (win_ptr->errhandler) {
 	*errhandler = win_ptr->errhandler->handle;
@@ -104,7 +104,7 @@ int MPI_Win_get_errhandler(MPI_Win win, MPI_Errhandler *errhandler)
 	*errhandler = MPI_ERRORS_ARE_FATAL;
     }
 
-    MPIU_THREAD_CS_EXIT(MPI_OBJ, win_ptr);
+    MPID_THREAD_CS_EXIT(POBJ, win_ptr->pobj_mutex);
 
     /* ... end of body of routine ... */
 
@@ -112,7 +112,7 @@ int MPI_Win_get_errhandler(MPI_Win win, MPI_Errhandler *errhandler)
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_WIN_GET_ERRHANDLER);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

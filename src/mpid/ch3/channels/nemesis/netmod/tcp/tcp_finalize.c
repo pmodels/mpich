@@ -9,7 +9,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_finalize
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -19,14 +19,14 @@ int MPID_nem_tcp_finalize(void)
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_FINALIZE);
 
     mpi_errno = MPID_nem_tcp_send_finalize();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPID_nem_tcp_sm_finalize();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
      
     if (MPID_nem_tcp_g_lstn_sc.fd)
     {
         CHECK_EINTR (ret, close(MPID_nem_tcp_g_lstn_sc.fd));
-        MPIU_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**closesocket", "**closesocket %s %d", errno, MPIU_Strerror (errno));
+        MPIR_ERR_CHKANDJUMP2 (ret == -1, mpi_errno, MPI_ERR_OTHER, "**closesocket", "**closesocket %s %d", errno, MPIU_Strerror (errno));
     }
         
  fn_exit:

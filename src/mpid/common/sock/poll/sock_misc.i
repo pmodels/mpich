@@ -13,7 +13,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_get_host_description
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_get_host_description(int myRank, 
 				    char * host_description, int len)
 {
@@ -95,7 +95,7 @@ int MPIDU_Sock_get_host_description(int myRank,
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_native_to_sock
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_native_to_sock(struct MPIDU_Sock_set * sock_set, MPIDU_SOCK_NATIVE_FD fd, void *user_ptr,
 			      struct MPIDU_Sock ** sockp)
 {
@@ -176,7 +176,7 @@ int MPIDU_Sock_native_to_sock(struct MPIDU_Sock_set * sock_set, MPIDU_SOCK_NATIV
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_set_user_ptr
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_set_user_ptr(struct MPIDU_Sock * sock, void * user_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -210,7 +210,7 @@ int MPIDU_Sock_set_user_ptr(struct MPIDU_Sock * sock, void * user_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_get_sock_id
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_get_sock_id(struct MPIDU_Sock * sock)
 {
     int id;
@@ -241,7 +241,7 @@ int MPIDU_Sock_get_sock_id(struct MPIDU_Sock * sock)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_get_sock_set_id
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_get_sock_set_id(struct MPIDU_Sock_set * sock_set)
 {
     int id;
@@ -274,7 +274,7 @@ int MPIDU_Sock_get_sock_set_id(struct MPIDU_Sock_set * sock_set)
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_get_error_class_string
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /* --BEGIN ERROR HANDLING-- */
 int MPIDU_Sock_get_error_class_string(int error, char *error_string, size_t length)
 {

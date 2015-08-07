@@ -288,13 +288,13 @@ L:  while (<FD>) {
 	}
 
 	# If requested, skip obvious error checking lines
-	# The errflag set should really be an MPIU_ERR macro; the
+	# The errflag set should really be an MPIR_ERR macro; the
 	# test is designed to accept only lines that set that flag
 	# and nothing else.
 	if ($skipErrExits && 
 	    (/FUNC_EXIT.*STATE/ || /MPIR_Err_return_/ || 
-	     /MPIU_ERR_SET/ || /MPIU_ERR_POP/ || /goto\s+fn_fail/ ||
-	     /MPIU_ERR_ADD/ || /\*errflag\s*=\s*[^;]*;\s*$/ || 
+	     /MPIR_ERR_SET/ || /MPIR_ERR_POP/ || /goto\s+fn_fail/ ||
+	     /MPIR_ERR_ADD/ || /\*errflag\s*=\s*[^;]*;\s*$/ || 
 	     /fn_fail:/ || /MPIR_Err_create_code/)) {
 	    next;
 	}
@@ -408,8 +408,8 @@ L2: while (<FD>) {
 	# The format of the line also changed
 	if ($skipErrExits && 
 	    (/FUNC_EXIT.*STATE/ || /MPIR_Err_return_/ || 
-	     /MPIU_ERR_SET/ || /MPIU_ERR_POP/ || /goto\s+fn_fail/ ||
-	     /MPIU_ERR_ADD/ || /\*errflag\s*=\s*[^;]*;\s*$/ || 
+	     /MPIR_ERR_SET/ || /MPIR_ERR_POP/ || /goto\s+fn_fail/ ||
+	     /MPIR_ERR_ADD/ || /\*errflag\s*=\s*[^;]*;\s*$/ || 
             /fn_fail:/ || /MPIR_Err_create_code/)) {
 	    # If requested, skip obvious error checking lines
 	    $newstate = "skip";

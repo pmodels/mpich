@@ -31,7 +31,7 @@ int MPI_Neighbor_allgather(const void *sendbuf, int sendcount, MPI_Datatype send
 #undef FUNCNAME
 #define FUNCNAME MPIR_Neighbor_allgather_default
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Neighbor_allgather_default(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPID_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -39,9 +39,9 @@ int MPIR_Neighbor_allgather_default(const void *sendbuf, int sendcount, MPI_Data
 
     /* just call the nonblocking version and wait on it */
     mpi_errno = MPIR_Ineighbor_allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr, &req);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Wait_impl(&req, MPI_STATUS_IGNORE);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;
@@ -52,7 +52,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIR_Neighbor_allgather_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Neighbor_allgather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPID_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -62,7 +62,7 @@ int MPIR_Neighbor_allgather_impl(const void *sendbuf, int sendcount, MPI_Datatyp
     mpi_errno = comm_ptr->coll_fns->Neighbor_allgather(sendbuf, sendcount, sendtype,
                                                        recvbuf, recvcount, recvtype,
                                                        comm_ptr);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;
@@ -75,7 +75,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPI_Neighbor_allgather
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Neighbor_allgather - In this function, each process i gathers data items
 from each process j if an edge (j,i) exists in the topology graph, and each
@@ -106,7 +106,7 @@ int MPI_Neighbor_allgather(const void *sendbuf, int sendcount, MPI_Datatype send
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_NEIGHBOR_ALLGATHER);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_NEIGHBOR_ALLGATHER);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -157,13 +157,13 @@ int MPI_Neighbor_allgather(const void *sendbuf, int sendcount, MPI_Datatype send
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Neighbor_allgather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm_ptr);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_NEIGHBOR_ALLGATHER);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
 fn_fail:

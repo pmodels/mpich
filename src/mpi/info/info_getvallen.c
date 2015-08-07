@@ -28,7 +28,7 @@ int MPI_Info_get_valuelen(MPI_Info info, const char *key, int *valuelen, int *fl
 #undef FUNCNAME
 #define FUNCNAME MPIR_Info_get_valuelen_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Info_get_valuelen_impl(MPID_Info *info_ptr, const char *key, int *valuelen, int *flag)
 {
     MPID_Info *curr_ptr;
@@ -74,7 +74,7 @@ Output Parameters:
 #undef FUNCNAME
 #define FUNCNAME MPIRInfo_get_valuelen
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPI_Info_get_valuelen( MPI_Info info, const char *key, int *valuelen, int *flag )
 {
     MPID_Info *info_ptr=0;
@@ -83,7 +83,7 @@ int MPI_Info_get_valuelen( MPI_Info info, const char *key, int *valuelen, int *f
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_INFO_GET_VALUELEN);
     
     /* Validate parameters, especially handles needing to be converted */
@@ -112,12 +112,12 @@ int MPI_Info_get_valuelen( MPI_Info info, const char *key, int *valuelen, int *f
             if (mpi_errno) goto fn_fail;
 	    
 	    /* Check key */
-	    MPIU_ERR_CHKANDJUMP((!key), mpi_errno, MPI_ERR_INFO_KEY, 
+	    MPIR_ERR_CHKANDJUMP((!key), mpi_errno, MPI_ERR_INFO_KEY, 
 				"**infokeynull");
 	    keylen = (int)strlen(key);
-	    MPIU_ERR_CHKANDJUMP((keylen > MPI_MAX_INFO_KEY), mpi_errno, 
+	    MPIR_ERR_CHKANDJUMP((keylen > MPI_MAX_INFO_KEY), mpi_errno, 
 				MPI_ERR_INFO_KEY, "**infokeylong");
-	    MPIU_ERR_CHKANDJUMP((keylen == 0), mpi_errno, MPI_ERR_INFO_KEY, 
+	    MPIR_ERR_CHKANDJUMP((keylen == 0), mpi_errno, MPI_ERR_INFO_KEY, 
 				"**infokeyempty");
 
 	    MPIR_ERRTEST_ARGNULL(valuelen, "valuelen", mpi_errno);
@@ -136,7 +136,7 @@ int MPI_Info_get_valuelen( MPI_Info info, const char *key, int *valuelen, int *f
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_INFO_GET_VALUELEN);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
     
     /* --BEGIN ERROR HANDLING-- */

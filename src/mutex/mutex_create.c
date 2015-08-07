@@ -36,7 +36,7 @@ int MPIX_Mutex_create(int my_count, MPI_Comm comm, MPIX_Mutex * hdl_out) __attri
 #undef FUNCNAME
 #define FUNCNAME MPIX_Mutex_create
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 
 /** Create a group of MPI mutexes.  Collective on the given communicator.
   *

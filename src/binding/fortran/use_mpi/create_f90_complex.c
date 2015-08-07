@@ -80,7 +80,7 @@ int MPI_Type_create_f90_complex( int precision, int range, MPI_Datatype *newtype
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_CREATE_F90_COMPLEX);
 
     /* ... body of routine ...  */
@@ -95,7 +95,7 @@ int MPI_Type_create_f90_complex( int precision, int range, MPI_Datatype *newtype
 					    f90_real_model[i].digits, 
 					    f90_real_model[i].exponent, 
 					    &f90_real_model[i].dtype );
-	    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+	    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	}
     }
 
@@ -120,13 +120,13 @@ int MPI_Type_create_f90_complex( int precision, int range, MPI_Datatype *newtype
 	mpi_errno = MPIR_Create_unnamed_predefined( basetype, 
 		    MPI_COMBINER_F90_COMPLEX, range, precision, newtype );
 	}
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	
     /* ... end of body of routine ... */
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_CREATE_F90_COMPLEX);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */

@@ -256,9 +256,9 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
     MPIU_DBG_MSG_FMT(ERRHAND, TERSE, (MPIU_DBG_FDEST, "MPIR_Err_return_comm(comm_ptr=%p, fcname=%s, errcode=%d)", comm_ptr, fcname, errcode));
 
     if (comm_ptr) {
-        MPIU_THREAD_CS_ENTER(MPI_OBJ, comm_ptr);
+        MPID_THREAD_CS_ENTER(POBJ, comm_ptr->pobj_mutex);
         errhandler = comm_ptr->errhandler;
-        MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
+        MPID_THREAD_CS_EXIT(POBJ, comm_ptr->pobj_mutex);
     }
 
     if (errhandler == NULL) {
@@ -284,12 +284,12 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
     /* comm_ptr may have changed to comm_world.  Keep this locked as long as we
      * are using the errhandler to prevent it from disappearing out from under
      * us. */
-    MPIU_THREAD_CS_ENTER(MPI_OBJ, comm_ptr);
+    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->pobj_mutex);
     errhandler = comm_ptr->errhandler;
 
     /* --BEGIN ERROR HANDLING-- */
     if (errhandler == NULL || errhandler->handle == MPI_ERRORS_ARE_FATAL) {
-        MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
+        MPID_THREAD_CS_EXIT(POBJ, comm_ptr->pobj_mutex);
 	/* Calls MPID_Abort */
 	MPIR_Handle_fatal_error( comm_ptr, fcname, errcode );
         /* never get here */
@@ -338,7 +338,7 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
 
     }
 
-    MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
+    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->pobj_mutex);
     return errcode;
 }
 
@@ -816,34 +816,42 @@ static volatile unsigned int max_error_ring_loc = 0;
    since in the "global" thread level, an extra thread mutex is not required. */
 #if defined(MPID_REQUIRES_THREAD_SAFETY)
 /* if the device requires internal MPICH routines to be thread safe, the
-   MPIU_THREAD_CHECK macros are not appropriate */
+   MPID_THREAD_CHECK macros are not appropriate */
 static MPID_Thread_mutex_t error_ring_mutex;
 #define error_ring_mutex_create(_mpi_errno_p_)			\
     MPID_Thread_mutex_create(&error_ring_mutex, _mpi_errno_p_)
 #define error_ring_mutex_destroy(_mpi_errno_p)				\
     MPID_Thread_mutex_destroy(&error_ring_mutex, _mpi_errno_p_)
-#define error_ring_mutex_lock()			\
-    MPID_Thread_mutex_lock(&error_ring_mutex)
-#define error_ring_mutex_unlock()		\
-    MPID_Thread_mutex_unlock(&error_ring_mutex)
+#define error_ring_mutex_lock()                                 \
+    do {                                                        \
+        int err;                                                \
+        MPID_Thread_mutex_lock(&error_ring_mutex, &err);        \
+    } while (0)
+#define error_ring_mutex_unlock()                               \
+    do {                                                        \
+        int err;                                                \
+        MPID_Thread_mutex_unlock(&error_ring_mutex, &err);      \
+    } while (0)
 #elif defined(MPICH_IS_THREADED)
 static MPID_Thread_mutex_t error_ring_mutex;
 #define error_ring_mutex_create(_mpi_errno_p) MPID_Thread_mutex_create(&error_ring_mutex,_mpi_errno_p)
 #define error_ring_mutex_destroy(_mpi_errno_p) MPID_Thread_mutex_destroy(&error_ring_mutex,_mpi_errno_p)
 #define error_ring_mutex_lock()                          \
     do {                                                 \
+        int err;                                         \
         if (did_err_init) {                              \
-            MPIU_THREAD_CHECK_BEGIN                      \
-            MPID_Thread_mutex_lock(&error_ring_mutex);   \
-            MPIU_THREAD_CHECK_END                        \
+            MPID_THREAD_CHECK_BEGIN                      \
+            MPID_Thread_mutex_lock(&error_ring_mutex,&err); \
+            MPID_THREAD_CHECK_END                        \
         }                                                \
     } while (0)
 #define error_ring_mutex_unlock()                        \
     do {                                                 \
+        int err;                                         \
         if (did_err_init) {                              \
-            MPIU_THREAD_CHECK_BEGIN                      \
-            MPID_Thread_mutex_unlock(&error_ring_mutex); \
-            MPIU_THREAD_CHECK_END                        \
+            MPID_THREAD_CHECK_BEGIN                      \
+            MPID_Thread_mutex_unlock(&error_ring_mutex,&err); \
+            MPID_THREAD_CHECK_END                        \
         }                                                \
     } while (0)
 #else

@@ -31,7 +31,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Comm_spawn_multiple
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_spawn_multiple(int count, char *array_of_commands[],
 			     char ** array_of_argv[], const int array_of_maxprocs[],
 			     MPID_Info * array_of_info_ptrs[], int root, 
@@ -45,7 +45,7 @@ int MPID_Comm_spawn_multiple(int count, char *array_of_commands[],
 
     /* Check to make sure the communicator hasn't already been revoked */
     if (comm_ptr->revoked) {
-        MPIU_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
+        MPIR_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
     }
 
     /* We allow an empty implementation of this function to 
@@ -58,7 +58,7 @@ int MPID_Comm_spawn_multiple(int count, char *array_of_commands[],
 					  root, comm_ptr, intercomm, 
 					  array_of_errcodes);
 #   else
-    MPIU_ERR_SET1(mpi_errno,MPI_ERR_OTHER, "**notimpl",
+    MPIR_ERR_SET1(mpi_errno,MPI_ERR_OTHER, "**notimpl",
 		  "**notimpl %s", FCNAME);
 #   endif
     

@@ -33,6 +33,56 @@ static inline void MPID_nem_mpich_send_seg_header (MPID_Segment *segment, MPIDI_
 static inline void MPID_nem_mpich_send_seg (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_size,
                                                     MPIDI_VC_t *vc, int *again);
 
+
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_POLLS_BEFORE_YIELD
+      category    : NEMESIS
+      type        : int
+      default     : 1000
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        When MPICH is in a busy waiting loop, it will periodically
+        call a function to yield the processor.  This cvar sets
+        the number of loops before the yield function is called.  A
+        value of 0 disables yielding.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
+/* -------------------------------------------------------------------------- */
+
+/*
+ * MPIU_Busy_wait()
+ *
+ * Call this in every busy wait loop to periodically yield the processor.  The
+ * MPIR_CVAR_POLLS_BEFORE_YIELD parameter can be used to adjust the number of
+ * times MPIU_Busy_wait is called before the yield function is called.
+ */
+#ifdef USE_NOTHING_FOR_YIELD
+/* optimize if we're not yielding the processor */
+#define MPIU_Busy_wait() do {} while (0)
+#else
+/* MT: Updating the static int poll_count variable isn't thread safe and will
+   need to be changed for fine-grained multithreading.  A possible alternative
+   is to make it a global thread-local variable. */
+#define MPIU_Busy_wait() do {                                   \
+        if (MPIR_CVAR_POLLS_BEFORE_YIELD) {                    \
+            static int poll_count_ = 0;                         \
+            if (poll_count_ >= MPIR_CVAR_POLLS_BEFORE_YIELD) { \
+                poll_count_ = 0;                                \
+                MPIU_PW_Sched_yield();                          \
+            } else {                                            \
+                ++poll_count_;                                  \
+            }                                                   \
+        }                                                       \
+    } while (0)
+#endif
+
 /* evaluates to TRUE if it is safe to block on recv operations in the progress
  * loop, FALSE otherwise */
 #define MPID_nem_safe_to_block_recv()           \
@@ -45,7 +95,7 @@ static inline void MPID_nem_mpich_send_seg (MPID_Segment *segment, MPIDI_msg_sz_
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_send_header
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
 {
@@ -169,7 +219,7 @@ MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_sendv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_sendv (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
 {
@@ -271,7 +321,7 @@ MPID_nem_mpich_sendv (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_sendv_header
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov,
                              void *ext_hdr_ptr, MPIDI_msg_sz_t ext_hdr_sz,
@@ -432,7 +482,7 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov,
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_send_seg_header
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void
 MPID_nem_mpich_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_size,
                                 void *header, MPIDI_msg_sz_t header_sz, void *ext_header, MPIDI_msg_sz_t ext_header_sz,
@@ -578,7 +628,7 @@ MPID_nem_mpich_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_f
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_send_seg
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void
 MPID_nem_mpich_send_seg (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_size, MPIDI_VC_t *vc, int *again)
 {
@@ -665,7 +715,7 @@ MPID_nem_mpich_send_seg (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, M
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_dequeue_fastbox
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPID_nem_mpich_dequeue_fastbox(int local_rank)
 {
     MPID_nem_fboxq_elem_t *el;
@@ -709,7 +759,7 @@ static inline void MPID_nem_mpich_dequeue_fastbox(int local_rank)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_dequeue_fastbox
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPID_nem_mpich_enqueue_fastbox(int local_rank)
 {
     MPID_nem_fboxq_elem_t *el;
@@ -750,7 +800,7 @@ static inline void MPID_nem_mpich_enqueue_fastbox(int local_rank)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_recv_seqno_matches
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_recv_seqno_matches (MPID_nem_queue_ptr_t qhead)
 {
@@ -771,7 +821,7 @@ MPID_nem_recv_seqno_matches (MPID_nem_queue_ptr_t qhead)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_test_recv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocking_progress)
 {
@@ -786,7 +836,7 @@ MPID_nem_mpich_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blockin
     if (MPID_nem_num_netmods)
     {
 	mpi_errno = MPID_nem_network_poll(in_blocking_progress);
-        if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP (mpi_errno);
     }
 
     if (MPID_nem_queue_empty (MPID_nem_mem_region.my_recvQ) || !MPID_nem_recv_seqno_matches (MPID_nem_mem_region.my_recvQ))
@@ -845,7 +895,7 @@ MPID_nem_mpich_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blockin
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_test_recv_wait
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int timeout)
 {
@@ -858,7 +908,7 @@ MPID_nem_mpich_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int time
     if (MPID_nem_num_netmods)
     {
 	mpi_errno = MPID_nem_network_poll(TRUE /* blocking */);
-        if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP (mpi_errno);
     }
 
     while ((--timeout > 0) && (MPID_nem_queue_empty (MPID_nem_mem_region.my_recvQ) || !MPID_nem_recv_seqno_matches (MPID_nem_mem_region.my_recvQ)))
@@ -903,7 +953,7 @@ MPID_nem_mpich_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int time
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_blocking_recv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int completions)
 {
@@ -922,7 +972,7 @@ MPID_nem_mpich_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int comple
     if (MPID_nem_num_netmods)
     {
 	mpi_errno = MPID_nem_network_poll(TRUE /* blocking */);
-        if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP (mpi_errno);
     }
 
     while (MPID_nem_queue_empty (MPID_nem_mem_region.my_recvQ) || !MPID_nem_recv_seqno_matches (MPID_nem_mem_region.my_recvQ))
@@ -937,7 +987,7 @@ MPID_nem_mpich_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int comple
 	if (MPID_nem_num_netmods)
 	{            
 	    mpi_errno = MPID_nem_network_poll(TRUE /* blocking */);
-            if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
             if (!MPID_nem_safe_to_block_recv())
             {
@@ -988,7 +1038,7 @@ MPID_nem_mpich_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int comple
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_release_cell
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_release_cell (MPID_nem_cell_ptr_t cell, MPIDI_VC_t *vc)
 {

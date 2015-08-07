@@ -9,7 +9,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Comm_failure_ack
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_failure_ack(MPID_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -41,7 +41,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_Comm_failure_get_acked
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_failure_get_acked(MPID_Comm *comm_ptr, MPID_Group **group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -76,7 +76,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_Comm_AS_enabled
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_AS_enabled(MPID_Comm *comm_ptr) {
     return comm_ptr->dev.anysource_enabled;
 }
@@ -85,7 +85,7 @@ int MPID_Comm_AS_enabled(MPID_Comm *comm_ptr) {
 #undef FUNCNAME
 #define FUNCNAME MPID_Request_is_anysource
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Request_is_anysource(MPID_Request *request_ptr) {
     int ret = 0;
 

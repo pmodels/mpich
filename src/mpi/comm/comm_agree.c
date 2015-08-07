@@ -30,7 +30,7 @@ int MPIX_Comm_agree(MPI_Comm comm, int *flag) __attribute__((weak,alias("PMPIX_C
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_agree
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_agree(MPID_Comm *comm_ptr, int *flag)
 {
     int mpi_errno = MPI_SUCCESS, mpi_errno_tmp = MPI_SUCCESS;
@@ -46,18 +46,18 @@ int MPIR_Comm_agree(MPID_Comm *comm_ptr, int *flag)
 
     /* Get the locally known (not acknowledged) group of failed procs */
     mpi_errno = MPID_Comm_failure_get_acked(comm_ptr, &failed_grp);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* First decide on the group of failed procs. */
     mpi_errno = MPID_Comm_get_all_failed_procs(comm_ptr, &global_failed, MPIR_AGREE_TAG);
     if (mpi_errno) errflag = MPIR_ERR_PROC_FAILED;
 
     mpi_errno = MPIR_Group_compare_impl(failed_grp, global_failed, &result);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Create a subgroup without the failed procs */
     mpi_errno = MPIR_Group_difference_impl(comm_grp, global_failed, &new_group_ptr);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* If that group isn't the same as what we think is failed locally, then
      * mark it as such. */
@@ -95,8 +95,8 @@ int MPIR_Comm_agree(MPID_Comm *comm_ptr, int *flag)
     *flag = values[1];
 
     if (!success) {
-        MPIU_ERR_SET(mpi_errno_tmp, MPIX_ERR_PROC_FAILED, "**mpix_comm_agree");
-        MPIU_ERR_ADD(mpi_errno, mpi_errno_tmp);
+        MPIR_ERR_SET(mpi_errno_tmp, MPIX_ERR_PROC_FAILED, "**mpix_comm_agree");
+        MPIR_ERR_ADD(mpi_errno, mpi_errno_tmp);
     }
 
   fn_exit:
@@ -109,7 +109,7 @@ int MPIR_Comm_agree(MPID_Comm *comm_ptr, int *flag)
 #undef FUNCNAME
 #define FUNCNAME MPIX_Comm_agree
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPIX_Comm_agree - Performs agreement operation on comm
 
@@ -136,7 +136,7 @@ int MPIX_Comm_agree(MPI_Comm comm, int *flag)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_COMM_AGREE);
 
     /* Validate parameters, and convert MPI object handles to object pointers */
@@ -166,13 +166,13 @@ int MPIX_Comm_agree(MPI_Comm comm, int *flag)
 
     /* ... body of routine ... */
     mpi_errno = MPIR_Comm_agree(comm_ptr, flag);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_COMM_AGREE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

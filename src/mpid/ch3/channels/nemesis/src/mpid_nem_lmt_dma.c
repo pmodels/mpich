@@ -24,7 +24,7 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-MPIU_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
+MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #if defined(HAVE_KNEM_IO_H)
 
@@ -77,7 +77,7 @@ static void free_status_index(int index)
 #undef FUNCNAME
 #define FUNCNAME open_knem_dev
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int open_knem_dev(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -86,19 +86,19 @@ static int open_knem_dev(void)
     struct knem_cmd_info info;
 
     knem_fd = open(KNEM_DEVICE_FILENAME, O_RDWR);
-    MPIU_ERR_CHKANDJUMP2(knem_fd < 0, mpi_errno, MPI_ERR_OTHER, "**shm_open",
+    MPIR_ERR_CHKANDJUMP2(knem_fd < 0, mpi_errno, MPI_ERR_OTHER, "**shm_open",
                          "**shm_open %s %d", KNEM_DEVICE_FILENAME, errno);
     err = ioctl(knem_fd, KNEM_CMD_GET_INFO, &info);
-    MPIU_ERR_CHKANDJUMP2(err < 0, mpi_errno, MPI_ERR_OTHER, "**ioctl",
+    MPIR_ERR_CHKANDJUMP2(err < 0, mpi_errno, MPI_ERR_OTHER, "**ioctl",
                          "**ioctl %d %s", errno, MPIU_Strerror(errno));
-    MPIU_ERR_CHKANDJUMP2(info.abi != KNEM_ABI_VERSION, mpi_errno, MPI_ERR_OTHER,
+    MPIR_ERR_CHKANDJUMP2(info.abi != KNEM_ABI_VERSION, mpi_errno, MPI_ERR_OTHER,
                          "**abi_version_mismatch", "**abi_version_mismatch %D %D",
                          (unsigned long)KNEM_ABI_VERSION, (unsigned long)info.abi);
 
     knem_has_dma = (info.features & KNEM_FEATURE_DMA);
 
     knem_status = mmap(NULL, KNEM_STATUS_NR, PROT_READ|PROT_WRITE, MAP_SHARED, knem_fd, KNEM_STATUS_ARRAY_FILE_OFFSET);
-    MPIU_ERR_CHKANDJUMP1(knem_status == MAP_FAILED, mpi_errno, MPI_ERR_OTHER, "**mmap",
+    MPIR_ERR_CHKANDJUMP1(knem_status == MAP_FAILED, mpi_errno, MPI_ERR_OTHER, "**mmap",
                          "**mmap %d", errno);
     for (i = 0; i < KNEM_STATUS_NR; ++i) {
         index_stack[i] = i;
@@ -112,7 +112,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME do_dma_send
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int do_dma_send(MPIDI_VC_t *vc,  MPID_Request *sreq, int send_iov_n,
                        MPL_IOV send_iov[], knem_cookie_t *s_cookiep)
 {
@@ -146,7 +146,7 @@ static int do_dma_send(MPIDI_VC_t *vc,  MPID_Request *sreq, int send_iov_n,
     cr.protection = PROT_READ;
     err = ioctl(knem_fd, KNEM_CMD_CREATE_REGION, &cr);
 #endif
-    MPIU_ERR_CHKANDJUMP2(err < 0, mpi_errno, MPI_ERR_OTHER, "**ioctl",
+    MPIR_ERR_CHKANDJUMP2(err < 0, mpi_errno, MPI_ERR_OTHER, "**ioctl",
                          "**ioctl %d %s", errno, MPIU_Strerror(errno));
 #if KNEM_ABI_VERSION < MPICH_NEW_KNEM_ABI_VERSION
     *s_cookiep = sendcmd.send_cookie;
@@ -163,7 +163,7 @@ fn_exit:
 #undef FUNCNAME
 #define FUNCNAME do_dma_recv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int do_dma_recv(int iov_n, MPL_IOV iov[], knem_cookie_t s_cookie, int nodma, volatile knem_status_t **status_p_p, knem_status_t *current_status_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -202,7 +202,7 @@ static int do_dma_recv(int iov_n, MPL_IOV iov[], knem_cookie_t s_cookie, int nod
     icopy.flags = nodma ? 0 : KNEM_FLAG_DMA | KNEM_FLAG_ASYNCDMACOMPLETE;
     err = ioctl(knem_fd, KNEM_CMD_INLINE_COPY, &icopy);
 #endif
-    MPIU_ERR_CHKANDJUMP2(err < 0, mpi_errno, MPI_ERR_OTHER, "**ioctl",
+    MPIR_ERR_CHKANDJUMP2(err < 0, mpi_errno, MPI_ERR_OTHER, "**ioctl",
                          "**ioctl %d %s", errno, MPIU_Strerror(errno));
 
 #if KNEM_ABI_VERSION < MPICH_NEW_KNEM_ABI_VERSION
@@ -227,7 +227,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME send_sreq_data
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int send_sreq_data(MPIDI_VC_t *vc, MPID_Request *sreq, knem_cookie_t *s_cookiep)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -239,7 +239,7 @@ static int send_sreq_data(MPIDI_VC_t *vc, MPID_Request *sreq, knem_cookie_t *s_c
     /* MT: this code assumes only one thread can be at this point at a time */
     if (knem_fd < 0) {
         mpi_errno = open_knem_dev();
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     /* find out contig/noncontig, size, and lb for the datatype */
@@ -262,7 +262,7 @@ static int send_sreq_data(MPIDI_VC_t *vc, MPID_Request *sreq, knem_cookie_t *s_c
                many-part message that we couldn't fit in one single flight of
                iovs. */
             sreq->dev.segment_ptr = MPID_Segment_alloc();
-            MPIU_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno,
+            MPIR_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno,
                                  MPI_ERR_OTHER, "**nomem",
                                  "**nomem %s", "MPID_Segment_alloc");
             MPID_Segment_init(sreq->dev.user_buf, sreq->dev.user_count,
@@ -276,12 +276,12 @@ static int send_sreq_data(MPIDI_VC_t *vc, MPID_Request *sreq, knem_cookie_t *s_c
                larger than MPL_IOV_LIMIT. */
             mpi_errno = MPIDI_CH3U_Request_load_send_iov(sreq, &sreq->dev.iov[0],
                                                          &sreq->dev.iov_count);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
     }
 
     mpi_errno = do_dma_send(vc, sreq, sreq->dev.iov_count, sreq->dev.iov, s_cookiep);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
     return mpi_errno;
@@ -292,7 +292,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME check_req_complete
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int check_req_complete(MPIDI_VC_t *vc, MPID_Request *req, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -301,13 +301,13 @@ static inline int check_req_complete(MPIDI_VC_t *vc, MPID_Request *req, int *com
     if (reqFn) {
         *complete = 0;
         mpi_errno = reqFn(vc, req, complete);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else {
         *complete = 1;
         mpi_errno = MPID_Request_complete(req);
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
     }
 
@@ -319,7 +319,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_dma_initiate_lmt
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_dma_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPID_Request *sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -332,7 +332,7 @@ int MPID_nem_lmt_dma_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPID_Req
     MPIU_CHKPMEM_MALLOC(sreq->ch.s_cookie, knem_cookie_t *, sizeof(knem_cookie_t), mpi_errno, "s_cookie");
 
     mpi_errno = send_sreq_data(vc, sreq, sreq->ch.s_cookie);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     MPID_nem_lmt_send_RTS(vc, rts_pkt, sreq->ch.s_cookie, sizeof(knem_cookie_t));
 
 fn_exit:
@@ -350,7 +350,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_dma_start_recv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPL_IOV s_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -369,7 +369,7 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPL_IOV s_co
     /* MT: this code assumes only one thread can be at this point at a time */
     if (knem_fd < 0) {
         mpi_errno = open_knem_dev();
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     /* find out contig/noncontig, size, and lb for the datatype */
@@ -391,7 +391,7 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPL_IOV s_co
                iovs. */
             MPIU_Assert(rreq->dev.segment_ptr == NULL);
             rreq->dev.segment_ptr = MPID_Segment_alloc();
-            MPIU_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno,
+            MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno,
                                  MPI_ERR_OTHER, "**nomem",
                                  "**nomem %s", "MPID_Segment_alloc");
             MPID_Segment_init(rreq->dev.user_buf, rreq->dev.user_count,
@@ -401,7 +401,7 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPL_IOV s_co
 
             /* see load_send_iov FIXME above */
             mpi_errno = MPIDI_CH3U_Request_load_recv_iov(rreq);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
     }
 
@@ -410,7 +410,7 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPL_IOV s_co
     mpi_errno = do_dma_recv(rreq->dev.iov_count, rreq->dev.iov,
                             *((knem_cookie_t *)s_cookie.MPL_IOV_BUF), nodma,
                             &status, &current_status);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* TODO refactor this block and MPID_nem_lmt_dma_progress (and anywhere
      * else) to share a common function.  This advancement/completion code is
@@ -419,11 +419,11 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPL_IOV s_co
         /* complete the request if all data has been sent, remove it from the list */
         int complete = 0;
 
-        MPIU_ERR_CHKANDJUMP1(current_status == KNEM_STATUS_FAILED, mpi_errno, MPI_ERR_OTHER,
+        MPIR_ERR_CHKANDJUMP1(current_status == KNEM_STATUS_FAILED, mpi_errno, MPI_ERR_OTHER,
                              "**recv_status", "**recv_status %d", current_status);
 
         mpi_errno = check_req_complete(vc, rreq, &complete);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         free_status_index(status - knem_status);
 
@@ -461,7 +461,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_dma_done_send
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_dma_done_send(MPIDI_VC_t *vc, MPID_Request *sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -483,7 +483,7 @@ int MPID_nem_lmt_dma_done_send(MPIDI_VC_t *vc, MPID_Request *sreq)
     if (!reqFn) {
         mpi_errno = MPID_Request_complete(sreq);
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
         MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
         goto fn_exit;
@@ -491,7 +491,7 @@ int MPID_nem_lmt_dma_done_send(MPIDI_VC_t *vc, MPID_Request *sreq)
 
     complete = 0;
     mpi_errno = reqFn(vc, sreq, &complete);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         
     if (complete) {
         /* request was completed by the OnDataAvail fn */
@@ -514,7 +514,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_dma_handle_cookie
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_dma_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV cookie)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -531,21 +531,21 @@ int MPID_nem_lmt_dma_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV co
 
         /* This function will invoke the OnDataAvail function to load more data. */
         mpi_errno = check_req_complete(vc, req, &complete);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         /* If we were complete we should have received a DONE message instead
            of a COOKIE message. */
         MPIU_Assert(!complete);
 
         mpi_errno = do_dma_send(vc, req, req->dev.iov_count, &req->dev.iov[0], &s_cookie);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPID_nem_lmt_send_COOKIE(vc, req, &s_cookie, sizeof(knem_cookie_t));
     }
     else {
         /* req is a receive request and we need to continue receiving using the
            lid provided in the cookie iov. */
         mpi_errno = MPID_nem_lmt_dma_start_recv(vc, req, cookie);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
 fn_fail:
@@ -556,7 +556,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_dma_progress
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_dma_progress(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -577,7 +577,7 @@ int MPID_nem_lmt_dma_progress(void)
                     /* complete the request if all data has been sent, remove it from the list */
                     int complete = 0;
                     mpi_errno = check_req_complete(cur->vc, cur->req, &complete);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
                     free_status_index(cur->status_p - knem_status);
 
@@ -615,11 +615,11 @@ int MPID_nem_lmt_dma_progress(void)
             case KNEM_STATUS_FAILED:
                 /* set the error status for the request, complete it then dequeue the entry */
                 cur->req->status.MPI_ERROR = MPI_SUCCESS;
-                MPIU_ERR_SET1(cur->req->status.MPI_ERROR, MPI_ERR_OTHER, "**recv_status", "**recv_status %d", *cur->status_p);
+                MPIR_ERR_SET1(cur->req->status.MPI_ERROR, MPI_ERR_OTHER, "**recv_status", "**recv_status %d", *cur->status_p);
 
                 mpi_errno = MPID_Request_complete(cur->req);
                 if (mpi_errno != MPI_SUCCESS) {
-                    MPIU_ERR_POP(mpi_errno);
+                    MPIR_ERR_POP(mpi_errno);
                 }
 
                 if (cur == outstanding_head) {
@@ -643,7 +643,7 @@ int MPID_nem_lmt_dma_progress(void)
                 /* nothing to do here */
                 break;
             default:
-                MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**invalid_knem_status",
+                MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**invalid_knem_status",
                                      "**invalid_knem_status %d", *cur->status_p);
                 break;
         }
@@ -662,7 +662,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_dma_vc_terminated
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_dma_vc_terminated(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -688,7 +688,7 @@ int MPID_nem_lmt_dma_vc_terminated(MPIDI_VC_t *vc)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_dma_start_send
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_dma_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV r_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -704,7 +704,7 @@ int MPID_nem_lmt_dma_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV r_coo
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_dma_done_recv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_dma_done_recv(MPIDI_VC_t *vc, MPID_Request *rreq)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_DONE_RECV);

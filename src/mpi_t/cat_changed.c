@@ -28,7 +28,7 @@ int MPI_T_category_changed(int *stamp) __attribute__((weak,alias("PMPI_T_categor
 #undef FUNCNAME
 #define FUNCNAME MPI_T_category_changed
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_category_changed - Get the timestamp indicating the last change to the categories
 

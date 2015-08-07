@@ -44,7 +44,7 @@ int MPI_File_get_errhandler(MPI_File mpi_fh, MPI_Errhandler *errhandler)
     static char myname[] = "MPI_FILE_GET_ERRHANDLER";
     MPIU_THREADPRIV_DECL;
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
 
     if (mpi_fh == MPI_FILE_NULL) {
 	*errhandler = ADIOI_DFLT_ERR_HANDLER;
@@ -66,6 +66,6 @@ int MPI_File_get_errhandler(MPI_File mpi_fh, MPI_Errhandler *errhandler)
     }
 
 fn_exit:
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return MPI_SUCCESS;
 }

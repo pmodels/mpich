@@ -322,7 +322,7 @@ Input Parameters:
   MPI_Requests) and should not call any other routines in the common
   case.
 
-  Threading: The 'MPIU_THREAD_CS_ENTER/EXIT(HANDLEALLOC,)' enables both 
+  Threading: The 'MPID_THREAD_CS_ENTER/EXIT(POBJ, MPIR_ThreadInfo.handle_mutex)' enables both 
   finer-grain
   locking with a single global mutex and with a mutex specific for handles.
 
@@ -330,20 +330,20 @@ Input Parameters:
 #undef FUNCNAME
 #define FUNCNAME MPIU_Handle_obj_alloc
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void *MPIU_Handle_obj_alloc(MPIU_Object_alloc_t *objmem)
 {
     void *ret;
-    MPIU_THREAD_CS_ENTER(HANDLEALLOC,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.handle_mutex);
     ret = MPIU_Handle_obj_alloc_unsafe(objmem);
-    MPIU_THREAD_CS_EXIT(HANDLEALLOC,);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.handle_mutex);
     return ret;
 }
 
 #undef FUNCNAME
 #define FUNCNAME MPIU_Handle_obj_alloc_unsafe
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void *MPIU_Handle_obj_alloc_unsafe(MPIU_Object_alloc_t *objmem)
 {
     MPIU_Handle_common *ptr;
@@ -436,9 +436,6 @@ void *MPIU_Handle_obj_alloc_unsafe(MPIU_Object_alloc_t *objmem)
          * annotations instead. */
         MPL_VG_ANNOTATE_NEW_MEMORY(ptr, objmem->size);
 
-        /* must come after NEW_MEMORY annotation above to avoid problems */
-        MPIU_THREAD_MPI_OBJ_INIT(ptr);
-
         MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,
                                          "Allocating object ptr %p (handle val 0x%08x)",
                                          ptr, ptr->handle));
@@ -462,7 +459,7 @@ void MPIU_Handle_obj_free( MPIU_Object_alloc_t *objmem, void *object )
 {
     MPIU_Handle_common *obj = (MPIU_Handle_common *)object;
 
-    MPIU_THREAD_CS_ENTER(HANDLEALLOC,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.handle_mutex);
 
     MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,
                                      "Freeing object ptr %p (0x%08x kind=%s) refcount=%d",
@@ -470,8 +467,6 @@ void MPIU_Handle_obj_free( MPIU_Object_alloc_t *objmem, void *object )
                                      (obj)->handle,
                                      MPIU_Handle_get_kind_str(HANDLE_GET_MPI_KIND((obj)->handle)),
                                      MPIU_Object_get_ref(obj)));
-
-    MPIU_THREAD_MPI_OBJ_FINALIZE(obj);
 
 #ifdef USE_MEMORY_TRACING
     {
@@ -507,7 +502,7 @@ void MPIU_Handle_obj_free( MPIU_Object_alloc_t *objmem, void *object )
 
     obj->next	        = objmem->avail;
     objmem->avail	= obj;
-    MPIU_THREAD_CS_EXIT(HANDLEALLOC,);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.handle_mutex);
 }
 
 /* 

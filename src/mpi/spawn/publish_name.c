@@ -62,7 +62,7 @@ int MPI_Publish_name(const char *service_name, MPI_Info info, const char *port_n
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_PUBLISH_NAME);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -114,7 +114,7 @@ int MPI_Publish_name(const char *service_name, MPI_Info info, const char *port_n
 #   else
     {
 	/* No name publishing service available */
-	MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nonamepub");
+	MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nonamepub");
     }
 #   endif
 
@@ -122,7 +122,7 @@ int MPI_Publish_name(const char *service_name, MPI_Info info, const char *port_n
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_PUBLISH_NAME);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
     
   fn_fail:

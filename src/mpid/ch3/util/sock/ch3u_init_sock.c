@@ -32,7 +32,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Init_sock
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Init_sock(int has_parent, MPIDI_PG_t *pg_p, int pg_rank,
 			 char **bc_val_p, int *val_max_sz_p)
 {
@@ -72,7 +72,7 @@ int MPIDI_CH3U_Init_sock(int has_parent, MPIDI_PG_t *pg_p, int pg_rank,
     mpi_errno = MPIDI_CH3U_Get_business_card_sock(pg_rank, 
 						  bc_val_p, val_max_sz_p);
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**init_buscard");
+	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**init_buscard");
     }
 
  fn_exit:

@@ -52,7 +52,7 @@ int MPI_Info_create( MPI_Info *info )
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_INFO_CREATE);
 
     /* Validate parameters and objects (post conversion) */
@@ -69,7 +69,7 @@ int MPI_Info_create( MPI_Info *info )
     /* ... body of routine ...  */
 
     mpi_errno = MPIU_Info_alloc(&info_ptr);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     *info	     = info_ptr->handle;
     /* (info_ptr)->cookie = MPIR_INFO_COOKIE; */
@@ -80,7 +80,7 @@ int MPI_Info_create( MPI_Info *info )
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_INFO_CREATE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
     
   fn_fail:

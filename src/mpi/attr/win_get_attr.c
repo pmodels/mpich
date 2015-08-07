@@ -28,7 +28,7 @@ int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, int *flag
 #undef FUNCNAME
 #define FUNCNAME MPIR_WinGetAttr
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val, 
 		     int *flag, MPIR_AttrType outAttrType )
 {
@@ -38,7 +38,7 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_WIN_GET_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -55,7 +55,7 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 	       case.  Note that this code assumes sizeof(MPIU_Pint) is
 	       a power of 2. */
 	    if ((MPIU_Pint)attribute_val & (sizeof(MPIU_Pint)-1)) {
-		MPIU_ERR_SETANDSTMT(mpi_errno,MPI_ERR_ARG,goto fn_fail,"**attrnotptr");
+		MPIR_ERR_SETANDSTMT(mpi_errno,MPI_ERR_ARG,goto fn_fail,"**attrnotptr");
 	    }
 #           endif
         }
@@ -198,7 +198,7 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_WIN_GET_ATTR);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
@@ -221,7 +221,7 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 #undef FUNCNAME
 #define FUNCNAME MPI_Win_get_attr
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Win_get_attr - Get attribute cached on an MPI window object
 

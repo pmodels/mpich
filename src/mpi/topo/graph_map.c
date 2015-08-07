@@ -45,7 +45,7 @@ int MPIR_Graph_map( const MPID_Comm *comm_ptr, int nnodes,
 #undef FUNCNAME
 #define FUNCNAME MPIR_Graph_map_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Graph_map_impl(const MPID_Comm *comm_ptr, int nnodes,
                         const int indx[], const int edges[], int *newrank)
 {
@@ -57,13 +57,13 @@ int MPIR_Graph_map_impl(const MPID_Comm *comm_ptr, int nnodes,
 						  (const int*) indx,
 						  (const int*) edges,
 						  newrank );
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	/* --END USEREXTENSION-- */
     } else {
 	mpi_errno = MPIR_Graph_map( comm_ptr, nnodes,
 				   (const int*) indx,
 				   (const int*) edges, newrank );
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
         
  fn_exit:
@@ -77,7 +77,7 @@ int MPIR_Graph_map_impl(const MPID_Comm *comm_ptr, int nnodes,
 #undef FUNCNAME
 #define FUNCNAME MPI_Graph_map
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Graph_map - Maps process to graph topology information
 
@@ -146,11 +146,11 @@ int MPI_Graph_map(MPI_Comm comm, int nnodes, const int indx[], const int edges[]
 
     /* ... body of routine ...  */
     
-    MPIU_ERR_CHKANDJUMP(comm_ptr->local_size < nnodes,mpi_errno,MPI_ERR_ARG, "**graphnnodes");
+    MPIR_ERR_CHKANDJUMP(comm_ptr->local_size < nnodes,mpi_errno,MPI_ERR_ARG, "**graphnnodes");
 
     mpi_errno = MPIR_Graph_map_impl(comm_ptr, nnodes, (const int*) indx,
                                     (const int*) edges, newrank);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 

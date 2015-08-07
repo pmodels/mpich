@@ -41,7 +41,7 @@ int MPI_File_set_atomicity(MPI_File fh, int flag)
     ADIO_Fcntl_t *fcntl_struct;
     ADIO_File adio_fh;
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
 
     adio_fh = MPIO_File_resolve(fh);
 
@@ -86,6 +86,6 @@ int MPI_File_set_atomicity(MPI_File fh, int flag)
     ADIOI_Free(fcntl_struct);
 
 fn_exit:
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return error_code;
 }

@@ -30,7 +30,7 @@ int MPI_T_pvar_reset(MPI_T_pvar_session session, MPI_T_pvar_handle handle) __att
 #undef FUNCNAME
 #define FUNCNAME MPIR_T_pvar_reset_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_T_pvar_reset_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -78,7 +78,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPI_T_pvar_reset
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_pvar_reset - Reset a performance variable
 

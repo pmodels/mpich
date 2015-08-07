@@ -29,7 +29,7 @@ int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group *group) __attribute__((weak,a
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_remote_group_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_remote_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -41,10 +41,10 @@ int MPIR_Comm_remote_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr)
     if (!comm_ptr->remote_group) {
         n = comm_ptr->remote_size;
         mpi_errno = MPIR_Group_create( n, group_ptr );
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         for (i=0; i<n; i++) {
-            (void) MPID_Comm_get_lpid( comm_ptr, i, &lpid, MPIU_TRUE );
+            (void) MPID_Comm_get_lpid( comm_ptr, i, &lpid, TRUE );
             (*group_ptr)->lrank_to_lpid[i].lpid  = lpid;
             /* TODO calculate is_local_dense_monotonic */
         }
@@ -71,7 +71,7 @@ int MPIR_Comm_remote_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_remote_group
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Comm_remote_group - Accesses the remote group associated with 
@@ -105,7 +105,7 @@ int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group *group)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_REMOTE_GROUP);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -144,7 +144,7 @@ int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group *group)
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_Comm_remote_group_impl(comm_ptr, &group_ptr);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     *group = group_ptr->handle;
     
@@ -152,7 +152,7 @@ int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group *group)
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_REMOTE_GROUP);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

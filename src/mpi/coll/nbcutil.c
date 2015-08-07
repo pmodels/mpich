@@ -9,7 +9,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIR_Sched_cb_free_buf
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Sched_cb_free_buf(MPID_Comm *comm, int tag, void *state)
 {
     MPIU_Free(state);

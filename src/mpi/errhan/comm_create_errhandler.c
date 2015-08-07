@@ -29,7 +29,7 @@ int MPI_Comm_create_errhandler(MPI_Comm_errhandler_function *comm_errhandler_fn,
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_create_errhandler_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function *comm_errhandler_fn,
                                      MPI_Errhandler *errhandler)
 {
@@ -37,7 +37,7 @@ int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function *comm_errhandl
     MPID_Errhandler *errhan_ptr;
         
     errhan_ptr = (MPID_Errhandler *)MPIU_Handle_obj_alloc( &MPID_Errhandler_mem );
-    MPIU_ERR_CHKANDJUMP(!errhan_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP(!errhan_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     errhan_ptr->language = MPID_LANG_C;
     errhan_ptr->kind	 = MPID_COMM;
@@ -57,7 +57,7 @@ int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function *comm_errhandl
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_create_errhandler
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_create_errhandler - Create a communicator error handler
 
@@ -89,7 +89,7 @@ int MPI_Comm_create_errhandler(MPI_Comm_errhandler_function *comm_errhandler_fn,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_CREATE_ERRHANDLER);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -113,7 +113,7 @@ int MPI_Comm_create_errhandler(MPI_Comm_errhandler_function *comm_errhandler_fn,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_CREATE_ERRHANDLER);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

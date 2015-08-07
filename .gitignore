@@ -473,7 +473,6 @@ Makefile.am-stamp
 # /src/include/
 /src/include/mpi.h
 /src/include/mpif.h
-/src/include/mpichtimer.h
 #/src/include/mpe_thread.h
 /src/include/mpimod.pcl
 /src/include/mpid_datatype.h
@@ -530,9 +529,6 @@ Makefile.am-stamp
 
 # /src/mpi/spawn/
 
-# /src/mpi/timer/
-/src/mpi/timer/mpichtimer.h
-
 # /src/mpid/ch3/channels/nemesis/nemesis/src/
 /src/mpid/ch3/channels/nemesis/src/mpid_nem_net_array.c
 
@@ -577,6 +573,9 @@ Makefile.am-stamp
 /src/util/logging/rlog/pprintirlog
 /src/util/logging/rlog/irlog2rlog
 /src/util/logging/rlog/trace_impl.h
+
+# /src/util/timers
+/src/util/timers/mpiu_timer.h
 
 # /test/
 /test/runtests

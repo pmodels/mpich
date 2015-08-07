@@ -22,7 +22,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Get_universe_size
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Get_universe_size(int  * universe_size)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -32,13 +32,13 @@ int MPID_Get_universe_size(int  * universe_size)
     char *endptr;
     
     mpi_errno = PMI2_Info_GetJobAttr("universeSize", val, sizeof(val), &found);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     if (!found)
 	*universe_size = MPIR_UNIVERSE_SIZE_NOT_AVAILABLE;
     else {
         *universe_size = strtol(val, &endptr, 0);
-        MPIU_ERR_CHKINTERNAL(endptr - val != strlen(val), mpi_errno, "can't parse universe size");
+        MPIR_ERR_CHKINTERNAL(endptr - val != strlen(val), mpi_errno, "can't parse universe size");
     }
 
 #else
@@ -46,7 +46,7 @@ int MPID_Get_universe_size(int  * universe_size)
 
     pmi_errno = PMI_Get_universe_size(universe_size);
     if (pmi_errno != PMI_SUCCESS) {
-	MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, 
+	MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, 
 			     "**pmi_get_universe_size",
 			     "**pmi_get_universe_size %d", pmi_errno);
     }

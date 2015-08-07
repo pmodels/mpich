@@ -531,7 +531,7 @@ MPIU_BOOL MPIU_Str_hide_string_arg(char *str, const char *flag)
     /* line up with the first token */
     str = (char*)first_token(str);
     if (str == NULL)
-	return MPIU_TRUE;
+	return TRUE;
 
     do
     {
@@ -542,9 +542,9 @@ MPIU_BOOL MPIU_Str_hide_string_arg(char *str, const char *flag)
 	    {
 		str = (char*)next_token(str);
 		if (str == NULL)
-		    return MPIU_TRUE;
+		    return TRUE;
 		token_hide(str);
-		return MPIU_TRUE;
+		return TRUE;
 	    }
 	}
 	else
@@ -552,7 +552,7 @@ MPIU_BOOL MPIU_Str_hide_string_arg(char *str, const char *flag)
 	    str = (char*)next_token(str);
 	}
     } while (str);
-    return MPIU_FALSE;
+    return FALSE;
 }
 
 /*@ MPIU_Str_get_int_arg - Extract an option from a string

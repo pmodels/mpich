@@ -64,7 +64,7 @@ int MPI_Op_free(MPI_Op *op)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_OP_FREE);
     
     MPID_Op_get_ptr( *op, op_ptr );
@@ -100,7 +100,7 @@ int MPI_Op_free(MPI_Op *op)
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_OP_FREE);
-        MPIU_THREAD_CS_EXIT(ALLFUNC,);
+        MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
 	return mpi_errno;
 	
     /* --BEGIN ERROR HANDLING-- */

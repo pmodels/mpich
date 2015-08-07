@@ -28,7 +28,7 @@ int MPI_T_category_get_num(int *num_cat) __attribute__((weak,alias("PMPI_T_categ
 #undef FUNCNAME
 #define FUNCNAME MPI_T_category_get_num
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_category_get_num - Get the number of categories
 

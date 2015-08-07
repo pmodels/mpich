@@ -77,12 +77,12 @@ int MPID_Sched_copy(const void *inbuf,  int incount,  MPI_Datatype intype,
 int MPID_Sched_barrier(MPID_Sched_t s);
 
 /* A convenience macro for the extremely common case that "mpi_errno" is the
- * variable used for tracking error state and MPIU_ERR_POP is needed.  This
+ * variable used for tracking error state and MPIR_ERR_POP is needed.  This
  * declutters the NBC code substantially. */
 #define MPID_SCHED_BARRIER(sched_)              \
     do {                                        \
         mpi_errno = MPID_Sched_barrier(sched_); \
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno); \
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno); \
     } while (0)
 
 /* Defers evaluating (*count) until the entry actually begins to execute.  This
@@ -151,7 +151,7 @@ int MPIR_Sched_cb_free_buf(MPID_Comm *comm, int tag, void *state);
             mpi_errno = MPID_Sched_cb(&MPIR_Sched_cb_free_buf,                                 \
                                       (mpir_sched_chkpmem_stk_[--mpir_sched_chkpmem_stk_sp_]), \
                                       (sched_));                                               \
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);                                            \
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);                                            \
         }                                                                                      \
     } while (0)
 

@@ -31,7 +31,7 @@ int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm *newcomm) __at
 #undef FUNCNAME
 #define FUNCNAME MPI_Cart_sub
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 
 MPI_Cart_sub - Partitions a communicator into subgroups which 
@@ -68,7 +68,7 @@ int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm *newcomm)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_CART_SUB);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -104,8 +104,8 @@ int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm *newcomm)
     /* Check that the communicator already has a Cartesian topology */
     topo_ptr = MPIR_Topology_get( comm_ptr );
 
-    MPIU_ERR_CHKANDJUMP(!topo_ptr,mpi_errno,MPI_ERR_TOPOLOGY,"**notopology");
-    MPIU_ERR_CHKANDJUMP(topo_ptr->kind != MPI_CART,mpi_errno,MPI_ERR_TOPOLOGY,
+    MPIR_ERR_CHKANDJUMP(!topo_ptr,mpi_errno,MPI_ERR_TOPOLOGY,"**notopology");
+    MPIR_ERR_CHKANDJUMP(topo_ptr->kind != MPI_CART,mpi_errno,MPI_ERR_TOPOLOGY,
 			"**notcarttopo");
 
     ndims = topo_ptr->topo.cart.ndims;
@@ -123,7 +123,7 @@ int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm *newcomm)
         /* ndims=0, or all entries in remain_dims are false.
            MPI 2.1 says return a 0D Cartesian topology. */
 	mpi_errno = MPIR_Cart_create_impl(comm_ptr, 0, NULL, NULL, 0, newcomm);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     } else {
 	/* Determine the number of remaining dimensions */
 	ndims_in_subcomm = 0;
@@ -150,7 +150,7 @@ int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm *newcomm)
 	    }
 	}
 	mpi_errno = MPIR_Comm_split_impl( comm_ptr, color, key, &newcomm_ptr );
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         *newcomm = newcomm_ptr->handle;
 	
@@ -199,7 +199,7 @@ int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm *newcomm)
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_CART_SUB);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

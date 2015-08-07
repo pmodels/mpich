@@ -26,7 +26,7 @@ unsigned short *MPID_nem_recv_seqno = 0;
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int
 MPID_nem_mpich_init(void)
 {
@@ -78,7 +78,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_send_iov
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_send_iov(MPIDI_VC_t *vc, MPID_Request **sreq_ptr, MPL_IOV *iov, int n_iov)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -132,7 +132,7 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPID_Request **sreq_ptr, MPL_IOV *iov, int
     }
 
     mpi_errno = vc->ch.iSendContig(vc, sreq, iov[0].MPL_IOV_BUF, iov[0].MPL_IOV_LEN, sreq->dev.tmpbuf, data_sz);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     *sreq_ptr = sreq;
 

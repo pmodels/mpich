@@ -142,7 +142,7 @@ static MPI_Datatype mpi_pairtypes[] = {
 #undef FUNCNAME
 #define FUNCNAME MPIR_Datatype_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Datatype_init(void)
 {
     int i;
@@ -176,7 +176,7 @@ int MPIR_Datatype_init(void)
         MPIU_Assert((void *) ptr == (void *) (MPID_Datatype_direct + HANDLE_INDEX(mpi_pairtypes[i])));
 
         mpi_errno = MPID_Type_create_pairtype(mpi_pairtypes[i], (MPID_Datatype *) ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     MPIR_Add_finalize(MPIR_Datatype_finalize, 0,
@@ -189,7 +189,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIR_Datatype_finalize
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIR_Datatype_finalize(void *dummy ATTRIBUTE((unused)) )
 {
     int i;
@@ -212,7 +212,7 @@ static int MPIR_Datatype_finalize(void *dummy ATTRIBUTE((unused)) )
 #undef FUNCNAME
 #define FUNCNAME MPIR_Datatype_builtin_fillin
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Datatype_builtin_fillin(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -265,8 +265,6 @@ int MPIR_Datatype_builtin_fillin(void)
 	    dptr->ub	   = dptr->size;
 	    dptr->true_ub	   = dptr->size;
 	    dptr->contents     = NULL; /* should never get referenced? */
-
-            MPIU_THREAD_MPI_OBJ_INIT(dptr);
 	}
 	/* --BEGIN ERROR HANDLING-- */
  	if (d != -1 && i < sizeof(mpi_dtypes)/sizeof(*mpi_dtypes) && mpi_dtypes[i] != -1) { 

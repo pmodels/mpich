@@ -19,7 +19,7 @@ UT_array *coll_fns_array = NULL;
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_comm_create
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_comm_create(MPID_Comm *comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -76,7 +76,7 @@ int MPIDI_CH3I_comm_create(MPID_Comm *comm, void *param)
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_COMM_CREATE);
     return mpi_errno;
  fn_oom: /* out-of-memory handler for utarray operations */
-    MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "utarray");
+    MPIR_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "utarray");
  fn_fail:
     MPIU_CHKPMEM_REAP();
     goto fn_exit;
@@ -85,7 +85,7 @@ int MPIDI_CH3I_comm_create(MPID_Comm *comm, void *param)
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_comm_destroy
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_comm_destroy(MPID_Comm *comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -123,7 +123,7 @@ int MPIDI_CH3I_comm_destroy(MPID_Comm *comm, void *param)
 #undef FUNCNAME
 #define FUNCNAME alloc_barrier_vars
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int alloc_barrier_vars (MPID_Comm *comm, MPID_nem_barrier_vars_t **vars)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -160,7 +160,7 @@ static int alloc_barrier_vars (MPID_Comm *comm, MPID_nem_barrier_vars_t **vars)
 #undef FUNCNAME
 #define FUNCNAME barrier
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int barrier(MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -180,7 +180,7 @@ static int barrier(MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 
     if (comm_ptr->dev.ch.barrier_vars == NULL) {
         mpi_errno = alloc_barrier_vars (comm_ptr, &comm_ptr->dev.ch.barrier_vars);
-        if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
         if (comm_ptr->dev.ch.barrier_vars == NULL) {
             /* no barrier_vars left -- revert to default barrier. */
@@ -192,10 +192,10 @@ static int barrier(MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
             */
             if (comm_ptr->coll_fns->prev_coll_fns->Barrier != NULL) {
                 mpi_errno = comm_ptr->coll_fns->prev_coll_fns->Barrier(comm_ptr, errflag);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             } else {
                 mpi_errno = MPIR_Barrier_intra(comm_ptr, errflag);
-                if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP (mpi_errno);
             }
             goto fn_exit;
         }
@@ -230,7 +230,7 @@ static int barrier(MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_barrier_vars_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -255,7 +255,7 @@ int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region)
 #undef FUNCNAME
 #define FUNCNAME nem_coll_finalize
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int nem_coll_finalize(void *param ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
@@ -276,7 +276,7 @@ static int nem_coll_finalize(void *param ATTRIBUTE((unused)))
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_coll_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_coll_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -291,7 +291,7 @@ int MPID_nem_coll_init(void)
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_COLL_INIT);
     return mpi_errno;
  fn_oom: /* out-of-memory handler for utarray operations */
-    MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "utarray");
+    MPIR_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "utarray");
  fn_fail:
     goto fn_exit;
 }

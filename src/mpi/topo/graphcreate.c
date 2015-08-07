@@ -41,7 +41,7 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, const int indx[], const int 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Graph_create
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Graph_create( MPID_Comm *comm_ptr, int nnodes, 
 		       const int indx[], const int edges[], int reorder, 
 		       MPI_Comm *comm_graph)
@@ -62,19 +62,19 @@ int MPIR_Graph_create( MPID_Comm *comm_ptr, int nnodes,
 	/* Allow the cart map routine to remap the assignment of ranks to 
 	   processes */
 	mpi_errno = MPIR_Graph_map_impl(comm_ptr, nnodes, indx, edges, &nrank);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	/* Create the new communicator with split, since we need to reorder
 	   the ranks (including the related internals, such as the connection
 	   tables */
         mpi_errno = MPIR_Comm_split_impl( comm_ptr,
                                           nrank == MPI_UNDEFINED ? MPI_UNDEFINED : 1,
                                           nrank, &newcomm_ptr );
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     } else {
 	/* Just use the first nnodes processes in the communicator */
 	mpi_errno = MPIR_Comm_copy( (MPID_Comm *)comm_ptr, nnodes, 
 				    &newcomm_ptr );
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
 
@@ -135,7 +135,7 @@ int MPIR_Graph_create( MPID_Comm *comm_ptr, int nnodes,
 #undef FUNCNAME
 #define FUNCNAME MPI_Graph_create
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Graph_create - Makes a new communicator to which topology information
                  has been attached
@@ -177,7 +177,7 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, const int indx[],
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GRAPH_CREATE);
     
     /* Validate parameters, especially handles needing to be converted */
@@ -310,7 +310,7 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, const int indx[],
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GRAPH_CREATE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

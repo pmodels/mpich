@@ -151,7 +151,7 @@ int MPI_Finalize( void )
 
     /* Note: Only one thread may ever call MPI_Finalize (MPI_Finalize may
        be called at most once in any program) */
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FINALIZE_FUNC_ENTER(MPID_STATE_MPI_FINALIZE);
     
     /* ... body of routine ... */
@@ -178,13 +178,13 @@ int MPI_Finalize( void )
     if (MPIR_Process.attr_free && MPIR_Process.comm_self->attributes) {
         mpi_errno = MPIR_Process.attr_free( MPI_COMM_SELF,
 					    &MPIR_Process.comm_self->attributes);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	MPIR_Process.comm_self->attributes = 0;
     }
     if (MPIR_Process.attr_free && MPIR_Process.comm_world->attributes) {
         mpi_errno = MPIR_Process.attr_free( MPI_COMM_WORLD, 
                                             &MPIR_Process.comm_world->attributes);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	MPIR_Process.comm_world->attributes = 0;
     }
 
@@ -193,7 +193,6 @@ int MPI_Finalize( void )
      * At this point, we will release any user-defined error handlers on 
      * comm self and comm world
      */
-    /* no MPI_OBJ CS needed here */
     if (MPIR_Process.comm_world->errhandler && 
 	! (HANDLE_GET_KIND(MPIR_Process.comm_world->errhandler->handle) == 
 	   HANDLE_KIND_BUILTIN) ) {
@@ -237,7 +236,7 @@ int MPI_Finalize( void )
 
     mpi_errno = MPID_Finalize();
     if (mpi_errno) {
-	MPIU_ERR_POP(mpi_errno);
+	MPIR_ERR_POP(mpi_errno);
     }
 
     /* Call the low-priority (post Finalize) callbacks */
@@ -258,10 +257,12 @@ int MPI_Finalize( void )
     /* If memory debugging is enabled, check the memory here, after all
        finalize callbacks */
 
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     OPA_store_int(&MPIR_Process.mpich_state, MPICH_POST_FINALIZED);
 
-    MPIU_THREAD_CS_FINALIZE;
+#if defined(MPICH_IS_THREADED)
+    MPIR_Thread_CS_Finalize();
+#endif
 
     /* We place the memory tracing at the very end because any of the other
        steps may have allocated memory that they still need to release*/
@@ -318,7 +319,7 @@ int MPI_Finalize( void )
 #   endif
     mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
     if (OPA_load_int(&MPIR_Process.mpich_state) < MPICH_POST_FINALIZED) {
-        MPIU_THREAD_CS_EXIT(ALLFUNC,);
+        MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     }
     goto fn_exit;
     /* --END ERROR HANDLING-- */

@@ -12,7 +12,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_cancel_send
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_mxm_cancel_send(MPIDI_VC_t * vc, MPID_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -47,7 +47,7 @@ int MPID_nem_mxm_cancel_send(MPIDI_VC_t * vc, MPID_Request * req)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_cancel_recv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_mxm_cancel_recv(MPIDI_VC_t * vc, MPID_Request * req)
 {
     int mpi_errno ATTRIBUTE((unused)) = MPI_SUCCESS;

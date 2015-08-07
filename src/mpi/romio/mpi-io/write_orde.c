@@ -45,7 +45,7 @@ int MPI_File_write_ordered_end(MPI_File fh, ROMIO_CONST void *buf, MPI_Status *s
 
     MPIU_UNREFERENCED_ARG(buf);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
 
     adio_fh = MPIO_File_resolve(fh);
 
@@ -70,6 +70,6 @@ int MPI_File_write_ordered_end(MPI_File fh, ROMIO_CONST void *buf, MPI_Status *s
 
 
 fn_exit:
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return MPI_SUCCESS;
 }

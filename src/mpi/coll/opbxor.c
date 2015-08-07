@@ -19,7 +19,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIR_BXOR
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_BXOR (
     void *invec,
     void *inoutvec,
@@ -55,7 +55,7 @@ void MPIR_BXOR (
 #undef FUNCNAME
 #define FUNCNAME MPIR_BXOR
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_BXOR_check_dtype ( MPI_Datatype type )
 {
     switch (type) {

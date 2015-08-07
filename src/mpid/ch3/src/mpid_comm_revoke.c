@@ -18,7 +18,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Comm_revoke
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
 {
     MPIDI_VC_t *vc;
@@ -62,9 +62,9 @@ int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
             iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) revoke_pkt;
             iov[0].MPL_IOV_LEN = sizeof(*revoke_pkt);
 
-            MPIU_THREAD_CS_ENTER(CH3COMM, vc);
+            MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
             mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, 1, &request);
-            MPIU_THREAD_CS_EXIT(CH3COMM, vc);
+            MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
             if (mpi_errno) comm_ptr->dev.waiting_for_revoke--;
             if (NULL != request)
                 /* We don't need to keep a reference to this request. The
@@ -84,9 +84,9 @@ int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
          * aren't any unexpected messages hanging around. */
 
         /* Clean up the receive and unexpected queues */
-        MPIU_THREAD_CS_ENTER(MSGQUEUE,);
+        MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.msgq_mutex);
         MPIDI_CH3U_Clean_recvq(comm_ptr);
-        MPIU_THREAD_CS_EXIT(MSGQUEUE,);
+        MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.msgq_mutex);
     } else if (is_remote)  { /* If this is local, we've already revoked and don't need to do it again. */
         /* Decrement the revoke counter */
         comm_ptr->dev.waiting_for_revoke--;

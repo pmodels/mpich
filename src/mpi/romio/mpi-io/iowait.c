@@ -56,7 +56,7 @@ int MPIO_Wait(MPIO_Request *request, MPI_Status *status)
     }
 #endif /* MPI_hpux */
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
 
     if (*request == MPIO_REQUEST_NULL) {
 	    error_code = MPI_SUCCESS;
@@ -90,7 +90,7 @@ int MPIO_Wait(MPIO_Request *request, MPI_Status *status)
 #endif /* MPI_hpux */
 
 fn_exit:
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return error_code;
 }
 #endif

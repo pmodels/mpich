@@ -28,7 +28,7 @@ int MPI_T_cvar_get_num(int *num_cvar) __attribute__((weak,alias("PMPI_T_cvar_get
 #undef FUNCNAME
 #define FUNCNAME MPI_T_cvar_get_num
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_cvar_get_num - Get the number of control variables
 

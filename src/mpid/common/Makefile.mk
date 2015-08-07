@@ -11,3 +11,4 @@ include $(top_srcdir)/src/mpid/common/sched/Makefile.mk
 include $(top_srcdir)/src/mpid/common/sock/Makefile.mk
 include $(top_srcdir)/src/mpid/common/thread/Makefile.mk
 include $(top_srcdir)/src/mpid/common/hcoll/Makefile.mk
+include $(top_srcdir)/src/mpid/common/timers/Makefile.mk

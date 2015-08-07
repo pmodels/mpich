@@ -29,7 +29,7 @@ int MPI_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val) __att
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_set_attr_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_set_attr_impl(MPID_Comm *comm_ptr, int comm_keyval, void *attribute_val, 
                             MPIR_AttrType attrType)
 {
@@ -37,7 +37,7 @@ int MPIR_Comm_set_attr_impl(MPID_Comm *comm_ptr, int comm_keyval, void *attribut
     MPID_Keyval *keyval_ptr = NULL;
     MPID_Attribute *p;
 
-    MPIU_ERR_CHKANDJUMP(comm_keyval == MPI_KEYVAL_INVALID, mpi_errno, MPI_ERR_KEYVAL, "**keyvalinvalid");
+    MPIR_ERR_CHKANDJUMP(comm_keyval == MPI_KEYVAL_INVALID, mpi_errno, MPI_ERR_KEYVAL, "**keyvalinvalid");
 
     /* CHANGE FOR MPI 2.2:  Look for attribute.  They are ordered by when they
        were added, with the most recent first. This uses 
@@ -75,7 +75,7 @@ int MPIR_Comm_set_attr_impl(MPID_Comm *comm_ptr, int comm_keyval, void *attribut
     /* CHANGE FOR MPI 2.2: If not found, add at the beginning */
     if (!p) {
 	MPID_Attribute *new_p = MPID_Attr_alloc();
-	MPIU_ERR_CHKANDJUMP(!new_p,mpi_errno,MPI_ERR_OTHER,"**nomem");
+	MPIR_ERR_CHKANDJUMP(!new_p,mpi_errno,MPI_ERR_OTHER,"**nomem");
 	/* Did not find in list.  Add at end */
 	new_p->keyval	     = keyval_ptr;
 	new_p->attrType      = attrType;
@@ -105,7 +105,7 @@ int MPIR_Comm_set_attr_impl(MPID_Comm *comm_ptr, int comm_keyval, void *attribut
 #undef FUNCNAME
 #define FUNCNAME MPIR_CommSetAttr
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val, 
 		      MPIR_AttrType attrType )
 {
@@ -115,7 +115,7 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_SET_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -161,7 +161,7 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_SET_ATTR);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:
@@ -182,7 +182,7 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_set_attr
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_set_attr - Stores attribute value associated with a key
 
@@ -222,7 +222,7 @@ int MPI_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val)
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SET_ATTR);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_SET_ATTR);
 
      /* Validate parameters, especially handles needing to be converted */
@@ -267,7 +267,7 @@ int MPI_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val)
 
  fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_SET_ATTR);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

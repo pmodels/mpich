@@ -29,7 +29,7 @@ int MPI_T_category_get_info(int cat_index, char *name, int *name_len, char *desc
 #undef FUNCNAME
 #define FUNCNAME MPI_T_category_get_info
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_category_get_info - Get the information about a category
 

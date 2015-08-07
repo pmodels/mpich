@@ -39,7 +39,7 @@ static struct {MPID_nem_tcp_send_q_element_t *top;} free_buffers = {0};
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_send_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_send_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -66,7 +66,7 @@ int MPID_nem_tcp_send_init(void)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_send_queued
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send_queue)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -96,10 +96,10 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
         if (offset == 0) {
             int req_errno = MPI_SUCCESS;
 
-            MPIU_ERR_SET(req_errno, MPI_ERR_OTHER, "**sock_closed");
-            MPIU_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+            MPIR_ERR_SET(req_errno, MPI_ERR_OTHER, "**sock_closed");
+            MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
             mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             goto fn_exit; /* this vc is closed now, just bail out */
         }
         if (offset == -1)
@@ -111,10 +111,10 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
                 break;
             } else {
                 int req_errno = MPI_SUCCESS;
-                MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror(errno));
-                MPIU_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                MPIR_ERR_SET1(req_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror(errno));
+                MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                 mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 goto fn_exit; /* this vc is closed now, just bail out */
             }
         }
@@ -151,7 +151,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
                 MPIU_Assert(MPIDI_Request_get_type(sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
                 mpi_errno = MPID_Request_complete(sreq);
                 if (mpi_errno != MPI_SUCCESS) {
-                    MPIU_ERR_POP(mpi_errno);
+                    MPIR_ERR_POP(mpi_errno);
                 }
                 MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
                 MPIDI_CH3I_Sendq_dequeue(send_queue, &sreq);
@@ -160,7 +160,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
 
             complete = 0;
             mpi_errno = reqFn(vc, sreq, &complete);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             
             if (complete)
             {
@@ -185,7 +185,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_send_finalize
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_send_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -204,7 +204,7 @@ int MPID_nem_tcp_send_finalize(void)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_conn_est
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_conn_est (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -219,7 +219,7 @@ int MPID_nem_tcp_conn_est (MPIDI_VC_t *vc)
     {
         SET_PLFD(vc_tcp);
         mpi_errno = MPID_nem_tcp_send_queued(vc, &vc_tcp->send_queue);
-        if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP (mpi_errno);
     }
 
  fn_fail:
@@ -230,7 +230,7 @@ int MPID_nem_tcp_conn_est (MPIDI_VC_t *vc)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_iStartContigMsg
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz,
                                  MPID_Request **sreq_ptr)
 {
@@ -264,10 +264,10 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
                 if (offset == 0) {
                     int req_errno = MPI_SUCCESS;
 
-                    MPIU_ERR_SET(req_errno, MPI_ERR_OTHER, "**sock_closed");
-                    MPIU_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                    MPIR_ERR_SET(req_errno, MPI_ERR_OTHER, "**sock_closed");
+                    MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                     mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     goto fn_fail;
                 }
                 if (offset == -1)
@@ -276,10 +276,10 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
                         offset = 0;
                     else {
                         int req_errno = MPI_SUCCESS;
-                        MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror(errno));
-                        MPIU_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                        MPIR_ERR_SET1(req_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror(errno));
+                        MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                         mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
-                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                         goto fn_fail;
                     }
                 }
@@ -298,7 +298,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
             /* state may be DISCONNECTED or ERROR.  Calling tcp_connect in an ERROR state will return an
                appropriate error code. */
             mpi_errno = MPID_nem_tcp_connect(vc);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
     }
 
@@ -350,7 +350,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
                 /* there are other sends in the queue before this one: try to send from the queue */
                 MPIDI_CH3I_Sendq_enqueue(&vc_tcp->send_queue, sreq);
                 mpi_errno = MPID_nem_tcp_send_queued(vc, &vc_tcp->send_queue);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             }
         } else {
             MPIDI_CH3I_Sendq_enqueue(&vc_tcp->send_queue, sreq);
@@ -370,7 +370,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_iStartContigMsg_paused
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz,
                                         MPID_Request **sreq_ptr)
 {
@@ -403,10 +403,10 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_
             if (offset == 0) {
                 int req_errno = MPI_SUCCESS;
 
-                MPIU_ERR_SET(req_errno, MPI_ERR_OTHER, "**sock_closed");
-                MPIU_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                MPIR_ERR_SET(req_errno, MPI_ERR_OTHER, "**sock_closed");
+                MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                 mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 goto fn_fail;
             }
             if (offset == -1)
@@ -415,11 +415,11 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_
                     offset = 0;
                 else {
                     int req_errno = MPI_SUCCESS;
-                    MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror(errno));
-                    MPIU_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                    MPIR_ERR_SET1(req_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror(errno));
+                    MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
 
                     mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     goto fn_fail;
                 }
             }
@@ -438,7 +438,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_
         /* state may be DISCONNECTED or ERROR.  Calling tcp_connect in an ERROR state will return an
            appropriate error code. */
         mpi_errno = MPID_nem_tcp_connect(vc);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     /* create and enqueue request */
@@ -486,7 +486,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_
             /* there are other sends in the queue before this one: try to send from the queue */
             MPIDI_CH3I_Sendq_enqueue(&vc_tcp->send_queue, sreq);
             mpi_errno = MPID_nem_tcp_send_queued(vc, &vc_tcp->send_queue);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
     } else {
         MPIDI_CH3I_Sendq_enqueue(&vc_tcp->send_queue, sreq);
@@ -504,7 +504,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_iSendContig
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz,
                              void *data, MPIDI_msg_sz_t data_sz)
 {
@@ -548,10 +548,10 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
                 if (offset == 0) {
                     int req_errno = MPI_SUCCESS;
 
-                    MPIU_ERR_SET(req_errno, MPI_ERR_OTHER, "**sock_closed");
-                    MPIU_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                    MPIR_ERR_SET(req_errno, MPI_ERR_OTHER, "**sock_closed");
+                    MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                     mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     goto fn_fail;
                 }
                 if (offset == -1)
@@ -560,10 +560,10 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
                         offset = 0;
                     else {
                         int req_errno = MPI_SUCCESS;
-                        MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror(errno));
-                        MPIU_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                        MPIR_ERR_SET1(req_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror(errno));
+                        MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                         mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
-                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                         goto fn_fail;
                     }
                 }
@@ -580,7 +580,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
                         MPIU_Assert(MPIDI_Request_get_type(sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
                         mpi_errno = MPID_Request_complete(sreq);
                         if (mpi_errno != MPI_SUCCESS) {
-                            MPIU_ERR_POP(mpi_errno);
+                            MPIR_ERR_POP(mpi_errno);
                         }
                         MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
                         goto fn_exit;
@@ -590,7 +590,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
                         int complete = 0;
                         
                         mpi_errno = reqFn(vc, sreq, &complete);
-                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                         
                         if (complete)
                         {
@@ -609,7 +609,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
             /* state may be DISCONNECTED or ERROR.  Calling tcp_connect in an ERROR state will return an
                appropriate error code. */
             mpi_errno = MPID_nem_tcp_connect(vc);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
     }
 
@@ -676,7 +676,7 @@ enqueue_request:
                 /* there are other sends in the queue before this one: try to send from the queue */
                 MPIDI_CH3I_Sendq_enqueue(&vc_tcp->send_queue, sreq);
                 mpi_errno = MPID_nem_tcp_send_queued(vc, &vc_tcp->send_queue);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             }
         } else {
             MPIDI_CH3I_Sendq_enqueue(&vc_tcp->send_queue, sreq);
@@ -694,7 +694,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_SendNoncontig
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header, MPIDI_msg_sz_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -726,7 +726,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
     iov_offset = iov_n;
 
     mpi_errno = MPIDI_CH3U_Request_load_send_iov(sreq, &iov[iov_offset], &iov_n);
-    MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|loadsendiov");
+    MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|loadsendiov");
 
     iov_n += iov_offset;
     offset = 0;
@@ -740,10 +740,10 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
                 if (offset == 0) {
                     int req_errno = MPI_SUCCESS;
 
-                    MPIU_ERR_SET(req_errno, MPI_ERR_OTHER, "**sock_closed");
-                    MPIU_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                    MPIR_ERR_SET(req_errno, MPI_ERR_OTHER, "**sock_closed");
+                    MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                     mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     goto fn_fail;
                 }
                 if (offset == -1)
@@ -752,10 +752,10 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
                         offset = 0;
                     else {
                         int req_errno = MPI_SUCCESS;
-                        MPIU_ERR_SET1(req_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror(errno));
-                        MPIU_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+                        MPIR_ERR_SET1(req_errno, MPI_ERR_OTHER, "**writev", "**writev %s", MPIU_Strerror(errno));
+                        MPIR_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
                         mpi_errno = MPID_nem_tcp_cleanup_on_error(vc, req_errno);
-                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                         goto fn_fail;
                     }
                 }
@@ -768,7 +768,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
             /* state may be DISCONNECTED or ERROR.  Calling tcp_connect in an ERROR state will return an
                appropriate error code. */
             mpi_errno = MPID_nem_tcp_connect(vc);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
     }
     
@@ -807,7 +807,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
         {
             mpi_errno = MPID_Request_complete(sreq);
             if (mpi_errno != MPI_SUCCESS) {
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
             }
             MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
             goto fn_exit;
@@ -815,7 +815,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
 
         complete = 0;
         mpi_errno = reqFn(vc, sreq, &complete);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             
         if (complete)
         {
@@ -843,7 +843,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
                 /* there are other sends in the queue before this one: try to send from the queue */
                 MPIDI_CH3I_Sendq_enqueue(&vc_tcp->send_queue, sreq);
                 mpi_errno = MPID_nem_tcp_send_queued(vc, &vc_tcp->send_queue);
-                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             }
         } else {
             MPIDI_CH3I_Sendq_enqueue(&vc_tcp->send_queue, sreq);
@@ -861,7 +861,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tcp_error_out_send_queue
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_error_out_send_queue(struct MPIDI_VC *const vc, int req_errno)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -881,7 +881,7 @@ int MPID_nem_tcp_error_out_send_queue(struct MPIDI_VC *const vc, int req_errno)
 
         mpi_errno = MPID_Request_complete(req);
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
     }
 
@@ -892,7 +892,7 @@ int MPID_nem_tcp_error_out_send_queue(struct MPIDI_VC *const vc, int req_errno)
 
         mpi_errno = MPID_Request_complete(req);
         if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         }
     }
 

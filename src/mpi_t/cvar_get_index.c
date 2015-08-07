@@ -28,7 +28,7 @@ int MPI_T_cvar_get_index(const char *name, int *cvar_index) __attribute__((weak,
 #undef FUNCNAME
 #define FUNCNAME MPI_T_cvar_get_index
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_cvar_get_index - Get the index of a control variable
 

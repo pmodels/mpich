@@ -30,7 +30,7 @@ int MPI_Type_create_struct(int count, const int array_of_blocklengths[],
 #undef FUNCNAME
 #define FUNCNAME MPIR_Type_create_struct_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Type_create_struct_impl(int count,
                                  const int array_of_blocklengths[],
                                  const MPI_Aint array_of_displacements[],
@@ -49,7 +49,7 @@ int MPIR_Type_create_struct_impl(int count,
 				 array_of_types,
 				 &new_handle);
 
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 
     MPIU_CHKLMEM_MALLOC_ORJUMP(ints, int *, (count + 1) * sizeof(int), mpi_errno, "content description");
@@ -67,7 +67,7 @@ int MPIR_Type_create_struct_impl(int count,
 				           ints,
 				           array_of_displacements,
 				           array_of_types);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
         
@@ -83,7 +83,7 @@ int MPIR_Type_create_struct_impl(int count,
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_create_struct
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Type_create_struct - Create an MPI datatype from a general set of
    datatypes, displacements, and block sizes
@@ -119,7 +119,7 @@ int MPI_Type_create_struct(int count,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_CREATE_STRUCT);
 
 #   ifdef HAVE_ERROR_CHECKING
@@ -162,7 +162,7 @@ int MPI_Type_create_struct(int count,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_CREATE_STRUCT);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

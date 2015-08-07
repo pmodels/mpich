@@ -26,7 +26,7 @@ MPIU_Object_alloc_t MPID_Info_mem = { 0, 0, 0, 0, MPID_INFO,
 #undef FUNCNAME
 #define FUNCNAME MPIU_Info_free
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIU_Info_free( MPID_Info *info_ptr )
 {
     MPID_Info *curr_ptr, *last_ptr;
@@ -53,12 +53,12 @@ void MPIU_Info_free( MPID_Info *info_ptr )
 #undef FUNCNAME
 #define FUNCNAME MPIU_Info_alloc
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIU_Info_alloc(MPID_Info **info_p_p)
 {
     int mpi_errno = MPI_SUCCESS;
     *info_p_p = (MPID_Info *)MPIU_Handle_obj_alloc(&MPID_Info_mem);
-    MPIU_ERR_CHKANDJUMP1(!*info_p_p, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPI_Info");
+    MPIR_ERR_CHKANDJUMP1(!*info_p_p, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPI_Info");
 
     MPIU_Object_set_ref(*info_p_p, 0);
     (*info_p_p)->next  = NULL;

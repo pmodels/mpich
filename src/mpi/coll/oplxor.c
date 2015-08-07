@@ -22,7 +22,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIR_LXOR
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_LXOR (
     void *invec,
     void *inoutvec,
@@ -86,7 +86,7 @@ void MPIR_LXOR (
 #undef FUNCNAME
 #define FUNCNAME MPIR_LXOR
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_LXOR_check_dtype ( MPI_Datatype type )
 {
     switch (type) {

@@ -17,7 +17,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIR_PROD
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_PROD (
     void *invec,
     void *inoutvec,
@@ -90,7 +90,7 @@ void MPIR_PROD (
 #undef FUNCNAME
 #define FUNCNAME MPIR_PROD_check_dtype
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_PROD_check_dtype( MPI_Datatype type )
 {
     switch (type) {

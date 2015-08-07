@@ -21,7 +21,7 @@ static inline void setupProcessorName( void );
 #undef FUNCNAME
 #define FUNCNAME MPID_Get_processor_name
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Get_processor_name(char * name, int namelen, int * resultlen)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -30,7 +30,7 @@ int MPID_Get_processor_name(char * name, int namelen, int * resultlen)
 	setupProcessorName( );
 	setProcessorName = 1;
     }
-    MPIU_ERR_CHKANDJUMP(processorNameLen <= 0, mpi_errno, MPI_ERR_OTHER, "**procnamefailed");
+    MPIR_ERR_CHKANDJUMP(processorNameLen <= 0, mpi_errno, MPI_ERR_OTHER, "**procnamefailed");
 
     /* MPIU_Strncpy only copies until (and including) the null,
        unlike strncpy, it does not blank pad.  This is a good thing

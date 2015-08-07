@@ -268,7 +268,7 @@ static inline int MPIU_SHMW_Hnd_deserialize_by_ref(MPIU_SHMW_Hnd_t hnd, char **s
 #undef FUNCNAME
 #define FUNCNAME MPIU_SHMW_Hnd_serialize
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Hnd_serialize(char *str, 
     MPIU_SHMW_Hnd_t hnd, int str_len)
 {
@@ -280,7 +280,7 @@ static inline int MPIU_SHMW_Hnd_serialize(char *str,
     MPIU_Assert(str_len >= MPIU_SHMW_GHND_SZ);
 
     rc = MPIU_SHMW_Ghnd_get_by_val(hnd, str, str_len);
-    MPIU_ERR_CHKANDJUMP(rc != 0, mpi_errno, MPI_ERR_OTHER, "**shmw_gethnd");
+    MPIR_ERR_CHKANDJUMP(rc != 0, mpi_errno, MPI_ERR_OTHER, "**shmw_gethnd");
 
 fn_exit:
     return mpi_errno;
@@ -299,7 +299,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIU_SHMW_Hnd_deserialize
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Hnd_deserialize(
     MPIU_SHMW_Hnd_t hnd, const char *str_hnd, size_t str_hnd_len)
 {
@@ -307,21 +307,21 @@ static inline int MPIU_SHMW_Hnd_deserialize(
     int rc = -1;
 
     MPIU_Assert(MPIU_SHMW_Hnd_is_init(hnd));
-    MPIU_ERR_CHKINTERNAL(!str_hnd, mpi_errno, "ser hnd is null");
-    MPIU_ERR_CHKANDJUMP(str_hnd_len>=MPIU_SHMW_GHND_SZ,
+    MPIR_ERR_CHKINTERNAL(!str_hnd, mpi_errno, "ser hnd is null");
+    MPIR_ERR_CHKANDJUMP(str_hnd_len>=MPIU_SHMW_GHND_SZ,
         mpi_errno, MPI_ERR_OTHER, "**shmw_deserbufbig");
 
     MPIU_SHMW_Hnd_reset_val(hnd);
 
     rc = MPIU_SHMW_Ghnd_alloc(hnd);
-    MPIU_ERR_CHKANDJUMP1((rc != 0), mpi_errno, MPI_ERR_OTHER,
+    MPIR_ERR_CHKANDJUMP1((rc != 0), mpi_errno, MPI_ERR_OTHER,
         "**nomem", "**nomem %s", "shared mem global handle");
 
     rc = MPIU_SHMW_Ghnd_set_by_val(hnd, "%s", str_hnd);
     MPIU_Assert(rc == 0);
 
     mpi_errno = MPIU_SHMW_Seg_open(hnd, 0);
-    if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    if(mpi_errno != MPI_SUCCESS) { MPIR_ERR_POP(mpi_errno); }
     
 fn_exit:
     return mpi_errno;
@@ -342,7 +342,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIU_SHMW_Hnd_get_serialized_by_ref
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Hnd_get_serialized_by_ref(
     MPIU_SHMW_Hnd_t hnd, char **str_ptr)
 {
@@ -369,7 +369,7 @@ static inline int MPIU_SHMW_Hnd_get_serialized_by_ref(
 #undef FUNCNAME
 #define FUNCNAME MPIU_SHMW_Hnd_deserialize_by_ref
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Hnd_deserialize_by_ref(
     MPIU_SHMW_Hnd_t hnd, char **ser_hnd_ptr)
 {
@@ -378,13 +378,13 @@ static inline int MPIU_SHMW_Hnd_deserialize_by_ref(
     MPIU_Assert(MPIU_SHMW_Hnd_is_init(hnd));
     MPIU_Assert(ser_hnd_ptr);
 
-    MPIU_ERR_CHKINTERNAL(!(*ser_hnd_ptr), mpi_errno, "ser hnd is null");
+    MPIR_ERR_CHKINTERNAL(!(*ser_hnd_ptr), mpi_errno, "ser hnd is null");
 
     MPIU_SHMW_Hnd_reset_val(hnd);
     MPIU_SHMW_Ghnd_set_by_ref(hnd, *ser_hnd_ptr);
 
     mpi_errno = MPIU_SHMW_Seg_open(hnd, 0);
-    if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    if(mpi_errno != MPI_SUCCESS) { MPIR_ERR_POP(mpi_errno); }
 
 fn_exit:
     return mpi_errno;
@@ -399,7 +399,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIU_SHMW_Hnd_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Hnd_init(
                     MPIU_SHMW_Hnd_t *hnd_ptr)
 {
@@ -409,7 +409,7 @@ static inline int MPIU_SHMW_Hnd_init(
     MPIU_Assert(hnd_ptr);
 
     rc = MPIU_SHMW_Hnd_alloc(hnd_ptr);
-    MPIU_ERR_CHKANDJUMP1((rc != 0), mpi_errno, MPI_ERR_OTHER,
+    MPIR_ERR_CHKANDJUMP1((rc != 0), mpi_errno, MPI_ERR_OTHER,
         "**nomem", "**nomem %s", "shared mem handle");
 
     MPIU_SHMW_Hnd_reset_val(*hnd_ptr);
@@ -427,7 +427,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIU_SHMW_Hnd_finalize
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Hnd_finalize(
                     MPIU_SHMW_Hnd_t *hnd_ptr)
 {
@@ -455,7 +455,7 @@ static inline int MPIU_SHMW_Hnd_finalize(
 #undef FUNCNAME
 #define FUNCNAME MPIU_SHMW_Seg_create_attach_templ
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_create_attach_templ(
     MPIU_SHMW_Hnd_t hnd, MPIU_Size_t seg_sz, char **shm_addr_ptr,
     int offset, int flag)
@@ -467,7 +467,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
     if(flag & MPIU_SHMW_FLAG_SHM_CREATE){
         lhnd = shmget(IPC_PRIVATE, seg_sz, IPC_CREAT | S_IRWXU);
         /* Return error if SHM seg already exists or create fails */
-        MPIU_ERR_CHKANDJUMP2((lhnd == -1) ||
+        MPIR_ERR_CHKANDJUMP2((lhnd == -1) ||
             (MPIU_OSW_Get_errno() == MPIU_SHMW_SEG_ALREADY_EXISTS),
             mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem",
             "**alloc_shar_mem %s %s", "shmget",
@@ -476,7 +476,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
         MPIU_SHMW_Lhnd_set(hnd, lhnd);
 
         rc = MPIU_SHMW_Ghnd_alloc(hnd);
-        MPIU_ERR_CHKANDJUMP1((rc != 0), mpi_errno, MPI_ERR_OTHER,
+        MPIR_ERR_CHKANDJUMP1((rc != 0), mpi_errno, MPI_ERR_OTHER,
             "**nomem", "**nomem %s", "shared mem global handle");
 
         rc = MPIU_SHMW_Ghnd_set_by_val(hnd, "%d", lhnd);
@@ -488,7 +488,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
 
         if(!MPIU_SHMW_Lhnd_is_valid(hnd)){
             lhnd = atoi(MPIU_SHMW_Ghnd_get_by_ref(hnd));
-            MPIU_ERR_CHKANDJUMP((lhnd == -1), mpi_errno,
+            MPIR_ERR_CHKANDJUMP((lhnd == -1), mpi_errno,
                 MPI_ERR_OTHER, "**shmw_badhnd");
 
             MPIU_SHMW_Lhnd_set(hnd, lhnd);
@@ -501,7 +501,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
 
         *shm_addr_ptr = shmat(MPIU_SHMW_Lhnd_get(hnd), NULL, 0x0);
 
-        MPIU_ERR_CHKANDJUMP2((*shm_addr_ptr == (void*)(-1)), mpi_errno, MPI_ERR_OTHER,
+        MPIR_ERR_CHKANDJUMP2((*shm_addr_ptr == (void*)(-1)), mpi_errno, MPI_ERR_OTHER,
             "**attach_shar_mem", "**attach_shar_mem %s %s",
             "shmat", MPIU_OSW_Strerror(MPIU_OSW_Get_errno()));
     }
@@ -520,20 +520,20 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIU_SHMW_Seg_detach
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_detach(
     MPIU_SHMW_Hnd_t hnd, char **shm_addr_ptr, MPIU_Size_t seg_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     int rc = -1;
 
-    MPIU_ERR_CHKANDJUMP(!MPIU_SHMW_Hnd_is_valid(hnd),
+    MPIR_ERR_CHKANDJUMP(!MPIU_SHMW_Hnd_is_valid(hnd),
         mpi_errno, MPI_ERR_OTHER, "**shmw_badhnd");
     MPIU_Assert(shm_addr_ptr);
-    MPIU_ERR_CHKINTERNAL(!(*shm_addr_ptr), mpi_errno, "shm address is null");
+    MPIR_ERR_CHKINTERNAL(!(*shm_addr_ptr), mpi_errno, "shm address is null");
 
     rc = shmdt(*shm_addr_ptr);
-    MPIU_ERR_CHKANDJUMP2((rc != 0), mpi_errno, MPI_ERR_OTHER,
+    MPIR_ERR_CHKANDJUMP2((rc != 0), mpi_errno, MPI_ERR_OTHER,
         "**detach_shar_mem","**detach_shar_mem %s %s",
         "shmdt", MPIU_OSW_Strerror(MPIU_OSW_Get_errno()));
     *shm_addr_ptr = NULL;
@@ -551,18 +551,18 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIU_SHMW_Seg_remove
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int  MPIU_SHMW_Seg_remove(MPIU_SHMW_Hnd_t hnd)
 {
     int mpi_errno = MPI_SUCCESS;
     struct shmid_ds ds;
     int rc = -1;
 
-    MPIU_ERR_CHKANDJUMP(!MPIU_SHMW_Hnd_is_valid(hnd),
+    MPIR_ERR_CHKANDJUMP(!MPIU_SHMW_Hnd_is_valid(hnd),
         mpi_errno, MPI_ERR_OTHER, "**shmw_badhnd");
 
     rc = shmctl(MPIU_SHMW_Lhnd_get(hnd), IPC_RMID, &ds);
-    MPIU_ERR_CHKANDJUMP2((rc != 0), mpi_errno, MPI_ERR_OTHER,
+    MPIR_ERR_CHKANDJUMP2((rc != 0), mpi_errno, MPI_ERR_OTHER,
         "**remove_shar_mem", "**remove_shar_mem %s %s","shmctl",
         MPIU_OSW_Strerror(MPIU_OSW_Get_errno()));
 
@@ -586,7 +586,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIU_SHMW_Seg_create_attach_templ
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_create_attach_templ(
     MPIU_SHMW_Hnd_t hnd, MPIU_Size_t seg_sz, char **shm_addr_ptr,
     int offset, int flag)
@@ -605,22 +605,22 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
             chosen_fname = tmp_fname;
             lhnd = mkstemp(chosen_fname);
         }
-        MPIU_ERR_CHKANDJUMP1((lhnd == -1), mpi_errno, 
+        MPIR_ERR_CHKANDJUMP1((lhnd == -1), mpi_errno, 
             MPI_ERR_OTHER,"**mkstemp","**mkstemp %s",
             MPIU_OSW_Strerror(MPIU_OSW_Get_errno()));
 
         MPIU_SHMW_Lhnd_set(hnd, lhnd);
         rc = (MPIU_SHMW_Lhnd_t)lseek(lhnd, seg_sz - 1, SEEK_SET);
-        MPIU_ERR_CHKANDJUMP1((rc == -1), mpi_errno,
+        MPIR_ERR_CHKANDJUMP1((rc == -1), mpi_errno,
             MPI_ERR_OTHER, "**lseek", "**lseek %s",
             MPIU_OSW_Strerror(MPIU_OSW_Get_errno()));
 
         MPIU_OSW_RETRYON_INTR((rc == -1), (rc = (int)write(lhnd, "", 1)));
-        MPIU_ERR_CHKANDJUMP((rc == -1), mpi_errno, MPI_ERR_OTHER,
+        MPIR_ERR_CHKANDJUMP((rc == -1), mpi_errno, MPI_ERR_OTHER,
             "**write");
 
         rc = MPIU_SHMW_Ghnd_alloc(hnd);
-        MPIU_ERR_CHKANDJUMP1((rc != 0),mpi_errno, MPI_ERR_OTHER,
+        MPIR_ERR_CHKANDJUMP1((rc != 0),mpi_errno, MPI_ERR_OTHER,
             "**nomem", "**nomem %s", "shared memory global handle");
 
         rc = MPIU_SHMW_Ghnd_set_by_val(hnd, "%s", chosen_fname);
@@ -632,7 +632,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
 
         if(!MPIU_SHMW_Lhnd_is_valid(hnd)){
             lhnd = open(MPIU_SHMW_Ghnd_get_by_ref(hnd), O_RDWR);
-            MPIU_ERR_CHKANDJUMP1((lhnd == -1), mpi_errno,
+            MPIR_ERR_CHKANDJUMP1((lhnd == -1), mpi_errno,
                 MPI_ERR_OTHER, "**open", "**open %s",
                 MPIU_OSW_Strerror(MPIU_OSW_Get_errno()));
 
@@ -647,7 +647,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
 
         buf_ptr = mmap(NULL, seg_sz, PROT_READ | PROT_WRITE,
                         MAP_SHARED, MPIU_SHMW_Lhnd_get(hnd), 0);
-        MPIU_ERR_CHKANDJUMP2((buf_ptr == MAP_FAILED),
+        MPIR_ERR_CHKANDJUMP2((buf_ptr == MAP_FAILED),
             mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem",
             "**alloc_shar_mem %s %s", "mmap",
             MPIU_OSW_Strerror(MPIU_OSW_Get_errno()));
@@ -670,7 +670,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIU_SHMW_Seg_detach
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_detach(
     MPIU_SHMW_Hnd_t hnd, char **shm_addr_ptr, MPIU_Size_t seg_sz)
 {
@@ -678,10 +678,10 @@ static inline int MPIU_SHMW_Seg_detach(
     int rc = -1;
 
     MPIU_Assert(shm_addr_ptr);
-    MPIU_ERR_CHKINTERNAL(!(*shm_addr_ptr), mpi_errno, "shm address is null");
+    MPIR_ERR_CHKINTERNAL(!(*shm_addr_ptr), mpi_errno, "shm address is null");
 
     rc = munmap(*shm_addr_ptr, seg_sz);
-    MPIU_ERR_CHKANDJUMP2((rc != 0), mpi_errno, MPI_ERR_OTHER,
+    MPIR_ERR_CHKANDJUMP2((rc != 0), mpi_errno, MPI_ERR_OTHER,
         "**detach_shar_mem", "**detach_shar_mem %s %s","munmap", 
         MPIU_OSW_Strerror(MPIU_OSW_Get_errno()));
     *shm_addr_ptr = NULL;
@@ -698,11 +698,11 @@ static inline int  MPIU_SHMW_Seg_remove(MPIU_SHMW_Hnd_t hnd)
     int mpi_errno = MPI_SUCCESS;
     int rc = -1;
 
-    MPIU_ERR_CHKANDJUMP(!MPIU_SHMW_Ghnd_is_valid(hnd),
+    MPIR_ERR_CHKANDJUMP(!MPIU_SHMW_Ghnd_is_valid(hnd),
         mpi_errno, MPI_ERR_OTHER, "**shmw_badhnd");
 
     rc = unlink(MPIU_SHMW_Ghnd_get_by_ref(hnd));
-    MPIU_ERR_CHKANDJUMP2((rc != 0), mpi_errno, MPI_ERR_OTHER,
+    MPIR_ERR_CHKANDJUMP2((rc != 0), mpi_errno, MPI_ERR_OTHER,
         "**remove_shar_mem", "**remove_shar_mem %s %s","unlink", 
         MPIU_OSW_Strerror(MPIU_OSW_Get_errno()));
 
@@ -720,7 +720,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIU_SHMW_Seg_create_attach_templ
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_create_attach_templ(
     MPIU_SHMW_Hnd_t hnd, MPIU_Size_t seg_sz, char **shm_addr_ptr,
     int offset, int flag)
@@ -735,7 +735,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
         MPIU_Assert(flag & MPIU_SHMW_FLAG_SHM_CREATE);
 
         rc = MPIU_SHMW_Ghnd_set_uniq(hnd);
-        MPIU_ERR_CHKANDJUMP((rc == 0), mpi_errno, MPI_ERR_OTHER,
+        MPIR_ERR_CHKANDJUMP((rc == 0), mpi_errno, MPI_ERR_OTHER,
             "**shmw_sethnd");
     }
 
@@ -744,7 +744,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
                 PAGE_READWRITE, seg_sz_large.HighPart, seg_sz_large.LowPart,
                 MPIU_SHMW_Ghnd_get_by_ref(hnd));
         /* Return error if SHM seg already exists or create fails */
-        MPIU_ERR_CHKANDJUMP2((lhnd == INVALID_HANDLE_VALUE) ||
+        MPIR_ERR_CHKANDJUMP2((lhnd == INVALID_HANDLE_VALUE) ||
             (MPIU_OSW_Get_errno() == MPIU_SHMW_SEG_ALREADY_EXISTS),
             mpi_errno, MPI_ERR_OTHER, "**alloc_shar_mem",
             "**alloc_shar_mem %s %s", "CreateFileMapping",
@@ -759,7 +759,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
             /* Strangely OpenFileMapping() returns NULL on error! */
             lhnd = OpenFileMapping(FILE_MAP_WRITE, FALSE, 
                     MPIU_SHMW_Ghnd_get_by_ref(hnd));
-            MPIU_ERR_CHKANDJUMP2((lhnd == NULL), mpi_errno,
+            MPIR_ERR_CHKANDJUMP2((lhnd == NULL), mpi_errno,
                 MPI_ERR_OTHER, "**alloc_shar_mem", 
                 "**alloc_shar_mem %s %s", "OpenFileMapping",
                 MPIU_OSW_Strerror(MPIU_OSW_Get_errno()));
@@ -773,7 +773,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
 
         *shm_addr_ptr = (char *)MapViewOfFile(MPIU_SHMW_Lhnd_get(hnd),
                             FILE_MAP_WRITE, 0, offset, 0);
-        MPIU_ERR_CHKANDJUMP2(!(*shm_addr_ptr), mpi_errno, MPI_ERR_OTHER,
+        MPIR_ERR_CHKANDJUMP2(!(*shm_addr_ptr), mpi_errno, MPI_ERR_OTHER,
             "**attach_shar_mem", "**attach_shar_mem %s %s",
             "MapViewOfFile", MPIU_OSW_Strerror(MPIU_OSW_Get_errno()));
     }
@@ -788,7 +788,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIU_SHMW_Seg_detach
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_detach(
     MPIU_SHMW_Hnd_t hnd, char **shm_addr_ptr, MPIU_Size_t seg_sz)
 {
@@ -796,13 +796,13 @@ static inline int MPIU_SHMW_Seg_detach(
     int rc = -1;
 
     MPIU_UNREFERENCED_ARG(seg_sz);
-    MPIU_ERR_CHKANDJUMP(!MPIU_SHMW_Hnd_is_valid(hnd),
+    MPIR_ERR_CHKANDJUMP(!MPIU_SHMW_Hnd_is_valid(hnd),
         mpi_errno, MPI_ERR_OTHER, "**shmw_badhnd");
     MPIU_Assert(shm_addr_ptr);
-    MPIU_ERR_CHKINTERNAL(!(*shm_addr_ptr), mpi_errno, "shm address is null");
+    MPIR_ERR_CHKINTERNAL(!(*shm_addr_ptr), mpi_errno, "shm address is null");
 
     rc = UnmapViewOfFile(*shm_addr_ptr);
-    MPIU_ERR_CHKANDJUMP2((rc == 0), mpi_errno, MPI_ERR_OTHER,
+    MPIR_ERR_CHKANDJUMP2((rc == 0), mpi_errno, MPI_ERR_OTHER,
         "**detach_shar_mem", "**detach_shar_mem %s %s","UnmapViewOfFile", 
         MPIU_OSW_Strerror(MPIU_OSW_Get_errno()));
     *shm_addr_ptr = NULL;
@@ -825,7 +825,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIU_SHMW_Seg_create
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_create(
     MPIU_SHMW_Hnd_t hnd, MPIU_Size_t seg_sz)
 {
@@ -836,7 +836,7 @@ static inline int MPIU_SHMW_Seg_create(
 
     mpi_errno = MPIU_SHMW_Seg_create_attach_templ(hnd,
                     seg_sz, NULL, 0, MPIU_SHMW_FLAG_SHM_CREATE);
-    if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    if(mpi_errno != MPI_SUCCESS) { MPIR_ERR_POP(mpi_errno); }
 
 fn_exit:
     return mpi_errno;
@@ -852,7 +852,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIU_SHMW_Seg_open
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_open(
     MPIU_SHMW_Hnd_t hnd, MPIU_Size_t seg_sz)
 {
@@ -862,7 +862,7 @@ static inline int MPIU_SHMW_Seg_open(
 
     mpi_errno = MPIU_SHMW_Seg_create_attach_templ(hnd, seg_sz,
             NULL, 0, MPIU_SHMW_FLAG_CLR);
-    if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    if(mpi_errno != MPI_SUCCESS) { MPIR_ERR_POP(mpi_errno); }
 
 fn_exit:
     return mpi_errno;
@@ -880,7 +880,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIU_SHMW_Seg_create_and_attach
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_create_and_attach(
     MPIU_SHMW_Hnd_t hnd, MPIU_Size_t seg_sz, char **shm_addr_ptr, 
     int offset)
@@ -894,7 +894,7 @@ static inline int MPIU_SHMW_Seg_create_and_attach(
     mpi_errno = MPIU_SHMW_Seg_create_attach_templ(hnd, seg_sz,
                     shm_addr_ptr, offset, MPIU_SHMW_FLAG_SHM_CREATE |
                     MPIU_SHMW_FLAG_SHM_ATTACH);
-    if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    if(mpi_errno != MPI_SUCCESS) { MPIR_ERR_POP(mpi_errno); }
 
 fn_exit:
     return mpi_errno;
@@ -912,7 +912,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIU_SHMW_Seg_attach
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_attach(
     MPIU_SHMW_Hnd_t hnd, MPIU_Size_t seg_sz, char **shm_addr_ptr,
     int offset)
@@ -924,7 +924,7 @@ static inline int MPIU_SHMW_Seg_attach(
 
     mpi_errno = MPIU_SHMW_Seg_create_attach_templ(hnd, seg_sz,
                 shm_addr_ptr, offset, MPIU_SHMW_FLAG_SHM_ATTACH);
-    if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    if(mpi_errno != MPI_SUCCESS) { MPIR_ERR_POP(mpi_errno); }
 
 fn_exit:
     return mpi_errno;

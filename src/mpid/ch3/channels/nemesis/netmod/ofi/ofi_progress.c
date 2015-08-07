@@ -115,7 +115,7 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
 		}
             }
             else {
-                MPIU_ERR_CHKANDJUMP4(1, mpi_errno, MPI_ERR_OTHER, "**ofi_poll",
+                MPIR_ERR_CHKANDJUMP4(1, mpi_errno, MPI_ERR_OTHER, "**ofi_poll",
                                      "**ofi_poll %s %d %s %s", __SHORT_FILE__,
                                      __LINE__, FCNAME, fi_strerror(-ret));
             }

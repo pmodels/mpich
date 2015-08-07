@@ -328,7 +328,7 @@ void MPIDI_CH3_RMA_Init_sync_pvars(void)
 #undef FUNCNAME
 #define FUNCNAME flush_local_all
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int flush_local_all(MPID_Win * win_ptr)
 {
     int i, made_progress = 0;
@@ -354,7 +354,7 @@ static inline int flush_local_all(MPID_Win * win_ptr)
     /* issue out all operations. */
     mpi_errno = MPIDI_CH3I_RMA_Make_progress_win(win_ptr, &made_progress);
     if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     /* wait for remote completion for those targets that disable flush_local,
      * and wait for local completion for other targets */
@@ -364,7 +364,7 @@ static inline int flush_local_all(MPID_Win * win_ptr)
         if (!local_completed) {
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
         }
     } while (!local_completed);
 
@@ -380,7 +380,7 @@ static inline int flush_local_all(MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME flush_all
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int flush_all(MPID_Win * win_ptr)
 {
     int i, made_progress = 0;
@@ -406,7 +406,7 @@ static inline int flush_all(MPID_Win * win_ptr)
     /* Issue out all operations. */
     mpi_errno = MPIDI_CH3I_RMA_Make_progress_win(win_ptr, &made_progress);
     if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     /* Wait for remote completion. */
     do {
@@ -414,7 +414,7 @@ static inline int flush_all(MPID_Win * win_ptr)
         if (!remote_completed) {
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
         }
     } while (!remote_completed);
 
@@ -431,7 +431,7 @@ static inline int flush_all(MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME fence_barrier_complete
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int fence_barrier_complete(MPID_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -454,7 +454,7 @@ static int fence_barrier_complete(MPID_Request * sreq)
             if (win_ptr->num_targets_with_pending_net_ops) {
                 mpi_errno = MPIDI_CH3I_Win_set_active(win_ptr);
                 if (mpi_errno != MPI_SUCCESS) {
-                    MPIU_ERR_POP(mpi_errno);
+                    MPIR_ERR_POP(mpi_errno);
                 }
             }
         }
@@ -477,7 +477,7 @@ static int fence_barrier_complete(MPID_Request * sreq)
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_fence
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_fence(int assert, MPID_Win * win_ptr)
 {
     int i;
@@ -492,7 +492,7 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_FENCE);
 
-    MPIU_ERR_CHKANDJUMP((win_ptr->states.access_state != MPIDI_RMA_NONE &&
+    MPIR_ERR_CHKANDJUMP((win_ptr->states.access_state != MPIDI_RMA_NONE &&
                          win_ptr->states.access_state != MPIDI_RMA_FENCE_ISSUED &&
                          win_ptr->states.access_state != MPIDI_RMA_FENCE_GRANTED) ||
                         win_ptr->states.exposure_state != MPIDI_RMA_NONE,
@@ -520,13 +520,13 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
 
                 mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
                 if (mpi_errno != MPI_SUCCESS)
-                    MPIU_ERR_POP(mpi_errno);
-                MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
             }
 
             mpi_errno = MPIR_Ibarrier_impl(win_ptr->comm_ptr, &fence_sync_req);
             if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
 
             if (fence_sync_req == MPI_REQUEST_NULL) {
                 /* ibarrier completed immediately. */
@@ -576,9 +576,9 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
         mpi_errno = MPIR_Reduce_scatter_block_impl(MPI_IN_PLACE, rma_target_marks, 1,
                                                    MPI_INT, MPI_SUM, win_ptr->comm_ptr, &errflag);
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
 
-        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+        MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
         win_ptr->at_completion_counter -= comm_size;
         win_ptr->at_completion_counter += rma_target_marks[0];
@@ -600,24 +600,24 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
 
         mpi_errno = flush_local_all(win_ptr);
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
     }
     else {
         mpi_errno = flush_all(win_ptr);
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
     }
 
     /* Cleanup all targets on window. */
     mpi_errno = MPIDI_CH3I_RMA_Cleanup_targets_win(win_ptr);
     if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     if (scalable_fence_enabled) {
         mpi_errno = MPIR_Barrier_impl(win_ptr->comm_ptr, &errflag);
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
-        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
         /* Set window access state properly. */
         if (assert & MPI_MODE_NOSUCCEED) {
@@ -632,7 +632,7 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
         while (win_ptr->at_completion_counter) {
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
         }
 
         if (assert & MPI_MODE_NOSUCCEED) {
@@ -644,7 +644,7 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
             /* Prepare for the next possible epoch */
             mpi_errno = MPIR_Ibarrier_impl(win_ptr->comm_ptr, &fence_sync_req);
             if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
 
             if (fence_sync_req == MPI_REQUEST_NULL) {
                 /* ibarrier completed immediately. */
@@ -673,8 +673,8 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
                 MPID_Comm *node_comm_ptr = win_ptr->comm_ptr->node_comm;
                 mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
                 if (mpi_errno != MPI_SUCCESS)
-                    MPIU_ERR_POP(mpi_errno);
-                MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+                    MPIR_ERR_POP(mpi_errno);
+                MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
             }
         }
     }
@@ -699,7 +699,7 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_post
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_post(MPID_Group * post_grp_ptr, int assert, MPID_Win * win_ptr)
 {
     int *post_ranks_in_win_grp;
@@ -713,7 +713,7 @@ int MPID_Win_post(MPID_Group * post_grp_ptr, int assert, MPID_Win * win_ptr)
      * with an exposure epoch of FENCE (which is not allowed), since FENCE may be
      * ended up with not unsetting the window state. We can only detect if this
      * exposure epoch is overlapped with another exposure epoch of PSCW. */
-    MPIU_ERR_CHKANDJUMP(win_ptr->states.exposure_state != MPIDI_RMA_NONE,
+    MPIR_ERR_CHKANDJUMP(win_ptr->states.exposure_state != MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     /* Ensure ordering of load/store operations. */
@@ -743,7 +743,7 @@ int MPID_Win_post(MPID_Group * post_grp_ptr, int assert, MPID_Win * win_ptr)
                             post_grp_size * sizeof(int), mpi_errno, "post_ranks_in_win_grp");
         mpi_errno = fill_ranks_in_win_grp(win_ptr, post_grp_ptr, post_ranks_in_win_grp);
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
 
         MPIU_CHKLMEM_MALLOC(req, MPI_Request *, post_grp_size * sizeof(MPI_Request),
                             mpi_errno, "req");
@@ -759,7 +759,7 @@ int MPID_Win_post(MPID_Group * post_grp_ptr, int assert, MPID_Win * win_ptr)
                 mpi_errno = MPID_Isend(&i, 0, MPI_INT, dst, SYNC_POST_TAG, win_comm_ptr,
                                        MPID_CONTEXT_INTRA_PT2PT, &req_ptr);
                 if (mpi_errno != MPI_SUCCESS)
-                    MPIU_ERR_POP(mpi_errno);
+                    MPIR_ERR_POP(mpi_errno);
                 req[i] = req_ptr->handle;
             }
             else {
@@ -769,14 +769,14 @@ int MPID_Win_post(MPID_Group * post_grp_ptr, int assert, MPID_Win * win_ptr)
 
         mpi_errno = MPIR_Waitall_impl(post_grp_size, req, status);
         if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
 
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno == MPI_ERR_IN_STATUS) {
             for (i = 0; i < post_grp_size; i++) {
                 if (status[i].MPI_ERROR != MPI_SUCCESS) {
                     mpi_errno = status[i].MPI_ERROR;
-                    MPIU_ERR_POP(mpi_errno);
+                    MPIR_ERR_POP(mpi_errno);
                 }
             }
         }
@@ -796,7 +796,7 @@ int MPID_Win_post(MPID_Group * post_grp_ptr, int assert, MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME start_req_complete
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int start_req_complete(MPID_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -829,7 +829,7 @@ static int start_req_complete(MPID_Request * req)
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_start
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -844,7 +844,7 @@ int MPID_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
      * ended up with not unsetting the window state. We can only detect if this
      * access epoch is overlapped with another access epoch of PSCW or Passive
      * Target. */
-    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_NONE &&
+    MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_NONE &&
                         win_ptr->states.access_state != MPIDI_RMA_FENCE_ISSUED &&
                         win_ptr->states.access_state != MPIDI_RMA_FENCE_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
@@ -857,7 +857,7 @@ int MPID_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
 
     mpi_errno = fill_ranks_in_win_grp(win_ptr, group_ptr, win_ptr->start_ranks_in_win_grp);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     if ((assert & MPI_MODE_NOCHECK) == 0) {
         int i, intra_cnt;
@@ -891,7 +891,7 @@ int MPID_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
                 mpi_errno = MPID_Irecv(NULL, 0, MPI_INT, src, SYNC_POST_TAG,
                                        comm_ptr, MPID_CONTEXT_INTRA_PT2PT, &req_ptr);
                 if (mpi_errno != MPI_SUCCESS)
-                    MPIU_ERR_POP(mpi_errno);
+                    MPIR_ERR_POP(mpi_errno);
 
                 if (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) {
                     intra_start_req[intra_cnt++] = req_ptr->handle;
@@ -912,13 +912,13 @@ int MPID_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
         if (intra_cnt) {
             mpi_errno = MPIR_Waitall_impl(intra_cnt, intra_start_req, intra_start_status);
             if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
             /* --BEGIN ERROR HANDLING-- */
             if (mpi_errno == MPI_ERR_IN_STATUS) {
                 for (i = 0; i < intra_cnt; i++) {
                     if (intra_start_status[i].MPI_ERROR != MPI_SUCCESS) {
                         mpi_errno = intra_start_status[i].MPI_ERROR;
-                        MPIU_ERR_POP(mpi_errno);
+                        MPIR_ERR_POP(mpi_errno);
                     }
                 }
             }
@@ -952,7 +952,7 @@ int MPID_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_complete
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_complete(MPID_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -963,7 +963,7 @@ int MPID_Win_complete(MPID_Win * win_ptr)
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_COMPLETE);
 
     /* Access epochs on the same window must be disjoint. */
-    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PSCW_ISSUED &&
+    MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PSCW_ISSUED &&
                         win_ptr->states.access_state != MPIDI_RMA_PSCW_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
@@ -976,7 +976,7 @@ int MPID_Win_complete(MPID_Win * win_ptr)
         while (win_ptr->states.access_state != MPIDI_RMA_PSCW_GRANTED) {
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
         }
     }
 
@@ -999,18 +999,18 @@ int MPID_Win_complete(MPID_Win * win_ptr)
             /* FIXME: do we need to wait for remote completion? */
             mpi_errno = send_decr_at_cnt_msg(dst, win_ptr, MPIDI_CH3_PKT_FLAG_NONE);
             if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
         }
     }
 
     mpi_errno = flush_local_all(win_ptr);
     if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     /* Cleanup all targets on this window. */
     mpi_errno = MPIDI_CH3I_RMA_Cleanup_targets_win(win_ptr);
     if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     /* Set window access state properly. */
     win_ptr->states.access_state = MPIDI_RMA_NONE;
@@ -1033,7 +1033,7 @@ int MPID_Win_complete(MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_wait
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_wait(MPID_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1041,14 +1041,14 @@ int MPID_Win_wait(MPID_Win * win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_WAIT);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->states.exposure_state != MPIDI_RMA_PSCW_EXPO,
+    MPIR_ERR_CHKANDJUMP(win_ptr->states.exposure_state != MPIDI_RMA_PSCW_EXPO,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     /* wait for all operations from other processes to finish */
     while (win_ptr->at_completion_counter) {
         mpi_errno = wait_progress_engine();
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
     }
 
     /* Set window exposure state properly. */
@@ -1072,7 +1072,7 @@ int MPID_Win_wait(MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_test
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_test(MPID_Win * win_ptr, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1080,12 +1080,12 @@ int MPID_Win_test(MPID_Win * win_ptr, int *flag)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_TEST);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->states.exposure_state != MPIDI_RMA_PSCW_EXPO,
+    MPIR_ERR_CHKANDJUMP(win_ptr->states.exposure_state != MPIDI_RMA_PSCW_EXPO,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     mpi_errno = MPID_Progress_test();
     if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     }
 
     *flag = (win_ptr->at_completion_counter) ? 0 : 1;
@@ -1118,7 +1118,7 @@ int MPID_Win_test(MPID_Win * win_ptr, int *flag)
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_lock
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_lock(int lock_type, int dest, int assert, MPID_Win * win_ptr)
 {
     int made_progress = 0;
@@ -1137,13 +1137,13 @@ int MPID_Win_lock(int lock_type, int dest, int assert, MPID_Win * win_ptr)
      * access epoch is overlapped with another access epoch of PSCW or Passive
      * Target. */
     if (win_ptr->lock_epoch_count == 0) {
-        MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_NONE &&
+        MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_NONE &&
                             win_ptr->states.access_state != MPIDI_RMA_FENCE_ISSUED &&
                             win_ptr->states.access_state != MPIDI_RMA_FENCE_GRANTED,
                             mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
     }
     else {
-        MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET,
+        MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET,
                             mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
     }
 
@@ -1151,8 +1151,8 @@ int MPID_Win_lock(int lock_type, int dest, int assert, MPID_Win * win_ptr)
         /* check if we lock the same target window more than once. */
         mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, dest, &target);
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
-        MPIU_ERR_CHKANDJUMP(target != NULL, mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+            MPIR_ERR_POP(mpi_errno);
+        MPIR_ERR_CHKANDJUMP(target != NULL, mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
     }
 
     /* Error handling is finished. */
@@ -1176,7 +1176,7 @@ int MPID_Win_lock(int lock_type, int dest, int assert, MPID_Win * win_ptr)
     /* Create a new target. */
     mpi_errno = MPIDI_CH3I_Win_create_target(win_ptr, dest, &target);
     if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     /* Store lock_state (CALLED/ISSUED/GRANTED), lock_type (SHARED/EXCLUSIVE),
      * lock_mode (MODE_NOCHECK). */
@@ -1193,12 +1193,12 @@ int MPID_Win_lock(int lock_type, int dest, int assert, MPID_Win * win_ptr)
         if (dest == rank || shm_target) {
             mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, dest, &made_progress);
             if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
 
             while (target->access_state != MPIDI_RMA_LOCK_GRANTED) {
                 mpi_errno = wait_progress_engine();
                 if (mpi_errno != MPI_SUCCESS)
-                    MPIU_ERR_POP(mpi_errno);
+                    MPIR_ERR_POP(mpi_errno);
             }
         }
         else if (!MPIR_CVAR_CH3_RMA_DELAY_ISSUING_FOR_PIGGYBACKING) {
@@ -1206,7 +1206,7 @@ int MPID_Win_lock(int lock_type, int dest, int assert, MPID_Win * win_ptr)
              * since we do not want to piggyback LOCK with future OP */
             mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, dest, &made_progress);
             if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
         }
     }
 
@@ -1228,7 +1228,7 @@ int MPID_Win_lock(int lock_type, int dest, int assert, MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_unlock
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_unlock(int dest, MPID_Win * win_ptr)
 {
     int made_progress = 0;
@@ -1240,7 +1240,7 @@ int MPID_Win_unlock(int dest, MPID_Win * win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_UNLOCK);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET,
+    MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     /* Ensure ordering of load/store operations. */
@@ -1254,11 +1254,11 @@ int MPID_Win_unlock(int dest, MPID_Win * win_ptr)
     /* Find or recreate target. */
     mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, dest, &target);
     if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     if (target == NULL) {
         mpi_errno = MPIDI_CH3I_Win_create_target(win_ptr, dest, &target);
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
         target->access_state = MPIDI_RMA_LOCK_GRANTED;
     }
 
@@ -1274,7 +1274,7 @@ int MPID_Win_unlock(int dest, MPID_Win * win_ptr)
     /* Issue out all operations. */
     mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, dest, &made_progress);
     if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     /* Wait for remote completion. */
     do {
@@ -1283,7 +1283,7 @@ int MPID_Win_unlock(int dest, MPID_Win * win_ptr)
         if (!remote_completed) {
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
         }
     } while (!remote_completed);
 
@@ -1298,7 +1298,7 @@ int MPID_Win_unlock(int dest, MPID_Win * win_ptr)
          * the progress engine once to avoid such issue.  */
         mpi_errno = poke_progress_engine();
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
     }
 
     win_ptr->lock_epoch_count--;
@@ -1311,7 +1311,7 @@ int MPID_Win_unlock(int dest, MPID_Win * win_ptr)
         /* Cleanup the target. */
         mpi_errno = MPIDI_CH3I_Win_target_dequeue_and_free(win_ptr, target);
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
     }
 
   fn_exit:
@@ -1327,7 +1327,7 @@ int MPID_Win_unlock(int dest, MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_flush
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_flush(int dest, MPID_Win * win_ptr)
 {
     int made_progress = 0;
@@ -1339,7 +1339,7 @@ int MPID_Win_flush(int dest, MPID_Win * win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_FLUSH);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
+    MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
@@ -1355,7 +1355,7 @@ int MPID_Win_flush(int dest, MPID_Win * win_ptr)
 
     mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, dest, &target);
     if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     if (target == NULL)
         goto finish_flush;
 
@@ -1378,7 +1378,7 @@ int MPID_Win_flush(int dest, MPID_Win * win_ptr)
     /* Issue out all operations. */
     mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, dest, &made_progress);
     if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     /* Wait for remote completion. */
     do {
@@ -1387,7 +1387,7 @@ int MPID_Win_flush(int dest, MPID_Win * win_ptr)
         if (!remote_completed) {
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
         }
     } while (!remote_completed);
 
@@ -1402,7 +1402,7 @@ int MPID_Win_flush(int dest, MPID_Win * win_ptr)
          * the progress engine once to avoid such issue.  */
         mpi_errno = poke_progress_engine();
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
     }
 
   fn_exit:
@@ -1418,7 +1418,7 @@ int MPID_Win_flush(int dest, MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_flush_local
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_flush_local(int dest, MPID_Win * win_ptr)
 {
     int made_progress = 0;
@@ -1430,7 +1430,7 @@ int MPID_Win_flush_local(int dest, MPID_Win * win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_FLUSH_LOCAL);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
+    MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
@@ -1446,7 +1446,7 @@ int MPID_Win_flush_local(int dest, MPID_Win * win_ptr)
 
     mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, dest, &target);
     if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
     if (target == NULL)
         goto fn_exit;
 
@@ -1468,7 +1468,7 @@ int MPID_Win_flush_local(int dest, MPID_Win * win_ptr)
     /* Issue out all operations. */
     mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, dest, &made_progress);
     if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     /* Wait for local completion. */
     do {
@@ -1477,7 +1477,7 @@ int MPID_Win_flush_local(int dest, MPID_Win * win_ptr)
         if (!local_completed) {
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
         }
     } while (!local_completed);
 
@@ -1494,7 +1494,7 @@ int MPID_Win_flush_local(int dest, MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_lock_all
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_lock_all(int assert, MPID_Win * win_ptr)
 {
     int i, rank = win_ptr->comm_ptr->rank;
@@ -1508,7 +1508,7 @@ int MPID_Win_lock_all(int assert, MPID_Win * win_ptr)
      * ended up with not unsetting the window state. We can only detect if this
      * access epoch is overlapped with another access epoch of PSCW or Passive
      * Target. */
-    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_NONE &&
+    MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_NONE &&
                         win_ptr->states.access_state != MPIDI_RMA_FENCE_ISSUED &&
                         win_ptr->states.access_state != MPIDI_RMA_FENCE_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
@@ -1529,7 +1529,7 @@ int MPID_Win_lock_all(int assert, MPID_Win * win_ptr)
         win_ptr->outstanding_locks++;
         mpi_errno = acquire_local_lock(win_ptr, MPI_LOCK_SHARED);
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
 
         if (win_ptr->shm_allocated == TRUE) {
             MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
@@ -1542,7 +1542,7 @@ int MPID_Win_lock_all(int assert, MPID_Win * win_ptr)
                     win_ptr->outstanding_locks++;
                     mpi_errno = send_lock_msg(i, MPI_LOCK_SHARED, win_ptr);
                     if (mpi_errno != MPI_SUCCESS)
-                        MPIU_ERR_POP(mpi_errno);
+                        MPIR_ERR_POP(mpi_errno);
                 }
             }
         }
@@ -1551,7 +1551,7 @@ int MPID_Win_lock_all(int assert, MPID_Win * win_ptr)
         while (win_ptr->outstanding_locks > 0) {
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
         }
     }
 
@@ -1573,7 +1573,7 @@ int MPID_Win_lock_all(int assert, MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_unlock_all
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_unlock_all(MPID_Win * win_ptr)
 {
     int i, made_progress = 0;
@@ -1586,7 +1586,7 @@ int MPID_Win_unlock_all(MPID_Win * win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_UNLOCK_ALL);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
+    MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
@@ -1600,7 +1600,7 @@ int MPID_Win_unlock_all(MPID_Win * win_ptr)
     if (!(win_ptr->lock_all_assert & MPI_MODE_NOCHECK)) {
         mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
         if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
+            MPIR_ERR_POP(mpi_errno);
 
         if (win_ptr->shm_allocated == TRUE) {
             MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
@@ -1612,7 +1612,7 @@ int MPID_Win_unlock_all(MPID_Win * win_ptr)
                 if (orig_vc->node_id == target_vc->node_id) {
                     mpi_errno = send_unlock_msg(i, win_ptr, MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_NO_ACK);
                     if (mpi_errno != MPI_SUCCESS)
-                        MPIU_ERR_POP(mpi_errno);
+                        MPIR_ERR_POP(mpi_errno);
                 }
             }
         }
@@ -1661,7 +1661,7 @@ int MPID_Win_unlock_all(MPID_Win * win_ptr)
 
                 mpi_errno = send_unlock_msg(i, win_ptr, MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_NO_ACK);
                 if (mpi_errno != MPI_SUCCESS)
-                    MPIU_ERR_POP(mpi_errno);
+                    MPIR_ERR_POP(mpi_errno);
             }
         }
     }
@@ -1669,7 +1669,7 @@ int MPID_Win_unlock_all(MPID_Win * win_ptr)
     /* Issue out all operations. */
     mpi_errno = MPIDI_CH3I_RMA_Make_progress_win(win_ptr, &made_progress);
     if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     /* Wait for remote completion. */
     do {
@@ -1677,14 +1677,14 @@ int MPID_Win_unlock_all(MPID_Win * win_ptr)
         if (!remote_completed) {
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
+                MPIR_ERR_POP(mpi_errno);
         }
     } while (!remote_completed);
 
     /* Cleanup all targets on this window. */
     mpi_errno = MPIDI_CH3I_RMA_Cleanup_targets_win(win_ptr);
     if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     /* Set window access state properly. */
     win_ptr->states.access_state = MPIDI_RMA_NONE;
@@ -1705,7 +1705,7 @@ int MPID_Win_unlock_all(MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_flush_all
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_flush_all(MPID_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1713,7 +1713,7 @@ int MPID_Win_flush_all(MPID_Win * win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPIDI_STATE_MPID_WIN_FLUSH_ALL);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
+    MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
@@ -1726,7 +1726,7 @@ int MPID_Win_flush_all(MPID_Win * win_ptr)
 
     mpi_errno = flush_all(win_ptr);
     if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPIDI_STATE_MPID_WIN_FLUSH_ALL);
@@ -1741,7 +1741,7 @@ int MPID_Win_flush_all(MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_flush_local_all
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_flush_local_all(MPID_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1749,7 +1749,7 @@ int MPID_Win_flush_local_all(MPID_Win * win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_FLUSH_LOCAL_ALL);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
+    MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
@@ -1762,7 +1762,7 @@ int MPID_Win_flush_local_all(MPID_Win * win_ptr)
 
     mpi_errno = flush_local_all(win_ptr);
     if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPID_WIN_FLUSH_LOCAL_ALL);
@@ -1777,7 +1777,7 @@ int MPID_Win_flush_local_all(MPID_Win * win_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPID_Win_sync
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Win_sync(MPID_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1785,7 +1785,7 @@ int MPID_Win_sync(MPID_Win * win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_SYNC);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
+    MPIR_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,

@@ -161,7 +161,7 @@ typedef union MPIDI_CH3_nem_pkt
                 MPID_Request_release(_rts_req);                                                         \
                 MPID_Request_release(_rts_req);                                                         \
             }                                                                                           \
-            MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**rtspkt");                                  \
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**rtspkt");                                  \
         }                                                                                               \
         /* --END ERROR HANDLING-- */                                                                    \
         if (_rts_req != NULL)                                                                           \
@@ -173,7 +173,7 @@ typedef union MPIDI_CH3_nem_pkt
                  * references, so the request can be cleanly freed */                                   \
                 MPID_Request_release(_rts_req);                                                         \
                 MPID_Request_release(_rts_req);                                                         \
-                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**rtspkt");                              \
+                MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**rtspkt");                              \
             }                                                                                           \
             MPID_Request_release(_rts_req);                                                             \
         }                                                                                               \
@@ -197,10 +197,10 @@ typedef union MPIDI_CH3_nem_pkt
         _iov[1].MPL_IOV_LEN = (r_cookie_len);                                                          \
                                                                                                         \
         mpi_errno = MPIDI_CH3_iStartMsgv((vc), _iov, (r_cookie_len) ? 2 : 1, &_cts_req);                \
-        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ctspkt");                           \
+        MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ctspkt");                           \
         if (_cts_req != NULL)                                                                           \
         {                                                                                               \
-            MPIU_ERR_CHKANDJUMP(_cts_req->status.MPI_ERROR, mpi_errno, MPI_ERR_OTHER, "**ctspkt");      \
+            MPIR_ERR_CHKANDJUMP(_cts_req->status.MPI_ERROR, mpi_errno, MPI_ERR_OTHER, "**ctspkt");      \
             MPID_Request_release(_cts_req);                                                             \
         }                                                                                               \
     } while (0)
@@ -208,7 +208,7 @@ typedef union MPIDI_CH3_nem_pkt
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_send_COOKIE
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPID_nem_lmt_send_COOKIE(MPIDI_VC_t *vc, MPID_Request *req,
                                            void *cookie_buf, MPI_Aint cookie_len)
 {
@@ -238,7 +238,7 @@ static inline int MPID_nem_lmt_send_COOKIE(MPIDI_VC_t *vc, MPID_Request *req,
             cookie_pkt->receiver_req_id = (req)->ch.lmt_req_id;
             break;
         default:
-            MPIU_ERR_INTERNALANDJUMP(mpi_errno, "unexpected request type");
+            MPIR_ERR_INTERNALANDJUMP(mpi_errno, "unexpected request type");
             break;
     }
 
@@ -248,10 +248,10 @@ static inline int MPID_nem_lmt_send_COOKIE(MPIDI_VC_t *vc, MPID_Request *req,
     iov[1].MPL_IOV_LEN = cookie_len;
 
     mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, (cookie_len ? 2 : 1), &cookie_req);
-    MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**cookiepkt");
+    MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**cookiepkt");
     if (cookie_req != NULL)
     {
-        MPIU_ERR_CHKANDJUMP(cookie_req->status.MPI_ERROR, mpi_errno, MPI_ERR_OTHER, "**cookiepkt");
+        MPIR_ERR_CHKANDJUMP(cookie_req->status.MPI_ERROR, mpi_errno, MPI_ERR_OTHER, "**cookiepkt");
         MPID_Request_release(cookie_req);
     }
 
@@ -268,10 +268,10 @@ fn_fail:
         _done_pkt->req_id = (rreq)->ch.lmt_req_id;                                                              \
                                                                                                                 \
         mpi_errno = MPIDI_CH3_iStartMsg((vc), _done_pkt, sizeof(*_done_pkt), &_done_req);                       \
-        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**donepkt");                                  \
+        MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**donepkt");                                  \
         if (_done_req != NULL)                                                                                  \
         {                                                                                                       \
-            MPIU_ERR_CHKANDJUMP(_done_req->status.MPI_ERROR, mpi_errno, MPI_ERR_OTHER, "**donepkt");            \
+            MPIR_ERR_CHKANDJUMP(_done_req->status.MPI_ERROR, mpi_errno, MPI_ERR_OTHER, "**donepkt");            \
             MPID_Request_release(_done_req);                                                                    \
         }                                                                                                       \
     } while (0)   

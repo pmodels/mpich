@@ -29,7 +29,7 @@ int MPI_Unpack(const void *inbuf, int insize, int *position, void *outbuf, int o
 #undef FUNCNAME
 #define FUNCNAME MPIR_Unpack_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint *position,
                      void *outbuf, int outcount, MPI_Datatype datatype)
 {
@@ -65,7 +65,7 @@ int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint *position,
 
     /* non-contig case */
     segp = MPID_Segment_alloc();
-    MPIU_ERR_CHKANDJUMP1(segp == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
+    MPIR_ERR_CHKANDJUMP1(segp == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
     mpi_errno = MPID_Segment_init(outbuf, outcount, datatype, segp, 0);
     MPIU_Assert(mpi_errno == MPI_SUCCESS);
 
@@ -104,7 +104,7 @@ int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint *position,
 #undef FUNCNAME
 #define FUNCNAME MPI_Unpack
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Unpack - Unpack a buffer according to a datatype into contiguous memory
 

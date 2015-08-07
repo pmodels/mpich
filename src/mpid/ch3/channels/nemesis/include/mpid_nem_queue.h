@@ -36,7 +36,7 @@ int MPID_nem_network_poll(int in_blocking_progress);
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_cell_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPID_nem_cell_init(MPID_nem_cell_ptr_t cell)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_CELL_INIT);
@@ -54,7 +54,7 @@ static inline void MPID_nem_cell_init(MPID_nem_cell_ptr_t cell)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_queue_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPID_nem_queue_init(MPID_nem_queue_ptr_t qhead)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_QUEUE_INIT);
@@ -242,7 +242,7 @@ MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_queue_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPID_nem_queue_init(MPID_nem_queue_ptr_t qhead)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_QUEUE_INIT);

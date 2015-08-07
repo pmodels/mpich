@@ -57,7 +57,7 @@ static int dbg_ifname = 0;
 #undef FUNCNAME
 #define FUNCNAME MPIDI_GetIPInterface
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -78,7 +78,7 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 
     fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd < 0) {
-	MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sock_create");
+	MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sock_create");
     }
 
     /* Use MSB localhost if necessary */
@@ -104,7 +104,7 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 
 	buf_ptr = (char *) MPIU_Malloc(buf_len);
 	if (buf_ptr == NULL) {
-	    MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %d", buf_len);
+	    MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %d", buf_len);
 	}
 	
 	ifconf.ifc_buf = buf_ptr;
@@ -113,7 +113,7 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 	rc = ioctl(fd, SIOCGIFCONF, &ifconf);
 	if (rc < 0) {
 	    if (errno != EINVAL || buf_len_prev != 0) {
-		MPIU_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**ioctl", "**ioctl %d %s", errno, MPIU_Strerror(errno));
+		MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**ioctl", "**ioctl %d %s", errno, MPIU_Strerror(errno));
 	    }
 	}
         else {
@@ -243,7 +243,7 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Get_IP_for_iface
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_Get_IP_for_iface(const char *ifname, MPIDU_Sock_ifaddr_t *ifaddr, int *found)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -254,11 +254,11 @@ int MPIDI_Get_IP_for_iface(const char *ifname, MPIDU_Sock_ifaddr_t *ifaddr, int 
         *found = FALSE;
 
     fd = socket(AF_INET, SOCK_DGRAM, 0);
-    MPIU_ERR_CHKANDJUMP2(fd < 0, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", MPIU_Strerror(errno), errno);
+    MPIR_ERR_CHKANDJUMP2(fd < 0, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", MPIU_Strerror(errno), errno);
     ifr.ifr_addr.sa_family = AF_INET; /* just IPv4 for now */
     MPIU_Strncpy(ifr.ifr_name, ifname, IFNAMSIZ-1);
     ret = ioctl(fd, SIOCGIFADDR, &ifr);
-    MPIU_ERR_CHKANDJUMP2(ret < 0, mpi_errno, MPI_ERR_OTHER, "**ioctl", "**ioctl %d %s", errno, MPIU_Strerror(errno));
+    MPIR_ERR_CHKANDJUMP2(ret < 0, mpi_errno, MPI_ERR_OTHER, "**ioctl", "**ioctl %d %s", errno, MPIU_Strerror(errno));
 
     *found = TRUE;
     MPIU_Memcpy(ifaddr->ifaddr, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr, 4);
@@ -269,7 +269,7 @@ fn_exit:
     if (fd != -1) {
         ret = close(fd);
         if (ret < 0) {
-            MPIU_ERR_SET2(mpi_errno, MPI_ERR_OTHER, "**sock_close", "**sock_close %s %d", MPIU_Strerror(errno), errno);
+            MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER, "**sock_close", "**sock_close %s %d", MPIU_Strerror(errno), errno);
         }
     }
     return mpi_errno;
@@ -282,7 +282,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Get_IP_for_iface
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_Get_IP_for_iface(const char *ifname, MPIDU_Sock_ifaddr_t *ifaddr, int *found)
 {
     if (found != NULL)

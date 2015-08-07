@@ -10,7 +10,7 @@
 #undef FUNCNAME 
 #define FUNCNAME MPIDU_Sock_post_connect_ifaddr
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /* 
  This routine connects to a particular address (in byte form; for ipv4, 
  the address is four bytes, typically the value of h_addr_list[0] in 
@@ -58,20 +58,20 @@ int MPIDU_Sock_post_connect_ifaddr( struct MPIDU_Sock_set * sock_set,
 	   clue for system error messages (e.g., %dSE; in the recommended
 	   revision for error reporting (that is, value (errno) is an int, 
 	   but should be interpreted as an System Error string) */
-	MPIU_ERR_SETANDJUMP2(mpi_errno,MPIDU_SOCK_ERR_FAIL,
+	MPIR_ERR_SETANDJUMP2(mpi_errno,MPIDU_SOCK_ERR_FAIL,
 			     "**sock|poll|socket", 
 		    "**sock|poll|socket %d %s", errno, MPIU_Strerror(errno));
     }
 
     flags = fcntl(fd, F_GETFL, 0);
     if (flags == -1) {
-	MPIU_ERR_SETANDJUMP2(mpi_errno,MPIDU_SOCK_ERR_FAIL,
+	MPIR_ERR_SETANDJUMP2(mpi_errno,MPIDU_SOCK_ERR_FAIL,
 			     "**sock|poll|nonblock", 
                     "**sock|poll|nonblock %d %s", errno, MPIU_Strerror(errno));
     }
     rc = fcntl(fd, F_SETFL, flags | O_NONBLOCK);
     if (rc == -1) {
-	MPIU_ERR_SETANDJUMP2( mpi_errno, MPIDU_SOCK_ERR_FAIL,
+	MPIR_ERR_SETANDJUMP2( mpi_errno, MPIDU_SOCK_ERR_FAIL,
 			      "**sock|poll|nonblock", 
 			      "**sock|poll|nonblock %d %s",
 			      errno, MPIU_Strerror(errno));
@@ -80,7 +80,7 @@ int MPIDU_Sock_post_connect_ifaddr( struct MPIDU_Sock_set * sock_set,
     nodelay = 1;
     rc = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &nodelay, sizeof(nodelay));
     if (rc != 0) {
-	MPIU_ERR_SETANDJUMP2(mpi_errno,MPIDU_SOCK_ERR_FAIL,
+	MPIR_ERR_SETANDJUMP2(mpi_errno,MPIDU_SOCK_ERR_FAIL,
 			     "**sock|poll|nodelay", 
 			     "**sock|poll|nodelay %d %s", 
 			     errno, MPIU_Strerror(errno));
@@ -97,7 +97,7 @@ int MPIDU_Sock_post_connect_ifaddr( struct MPIDU_Sock_set * sock_set,
      */
     mpi_errno = MPIDU_Socki_sock_alloc(sock_set, &sock);
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPIDU_SOCK_ERR_NOMEM,
+	MPIR_ERR_SETANDJUMP(mpi_errno,MPIDU_SOCK_ERR_NOMEM,
 			    "**sock|sockalloc");
     }
 
@@ -120,7 +120,7 @@ int MPIDU_Sock_post_connect_ifaddr( struct MPIDU_Sock_set * sock_set,
      * Set and verify the socket buffer size
      */
     mpi_errno = MPIDU_Sock_SetSockBufferSize( fd, 1 );
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+    if (mpi_errno) { MPIR_ERR_POP(mpi_errno); }
     
     /*
      * Attempt to establish the connection
@@ -203,7 +203,7 @@ int MPIDU_Sock_post_connect_ifaddr( struct MPIDU_Sock_set * sock_set,
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_post_connect
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_post_connect(struct MPIDU_Sock_set * sock_set, void * user_ptr, 
 			    char * host_description, int port,
 			    struct MPIDU_Sock ** sockp)
@@ -246,7 +246,7 @@ int MPIDU_Sock_post_connect(struct MPIDU_Sock_set * sock_set, void * user_ptr,
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_listen
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 #ifndef USHRT_MAX
 #define USHRT_MAX 65535   /* 2^16-1 */
 #endif
@@ -333,7 +333,7 @@ int MPIDU_Sock_listen(struct MPIDU_Sock_set * sock_set, void * user_ptr,
 	int portnum;
 	/* see if we actually want to find values within a range */
 
-        MPIU_ERR_CHKANDJUMP(MPIR_CVAR_CH3_PORT_RANGE.low < 0 || MPIR_CVAR_CH3_PORT_RANGE.low > MPIR_CVAR_CH3_PORT_RANGE.high, mpi_errno, MPI_ERR_OTHER, "**badportrange");
+        MPIR_ERR_CHKANDJUMP(MPIR_CVAR_CH3_PORT_RANGE.low < 0 || MPIR_CVAR_CH3_PORT_RANGE.low > MPIR_CVAR_CH3_PORT_RANGE.high, mpi_errno, MPI_ERR_OTHER, "**badportrange");
 
         /* default MPICH_PORT_RANGE is {0,0} so bind will use any available port */
         for (portnum = MPIR_CVAR_CH3_PORT_RANGE.low; portnum <= MPIR_CVAR_CH3_PORT_RANGE.high; ++portnum) {
@@ -373,7 +373,7 @@ int MPIDU_Sock_listen(struct MPIDU_Sock_set * sock_set, void * user_ptr,
      * Set and verify the socket buffer size
      */
     mpi_errno = MPIDU_Sock_SetSockBufferSize( fd, 1 );
-    if (mpi_errno) { MPIU_ERR_POP( mpi_errno ); }
+    if (mpi_errno) { MPIR_ERR_POP( mpi_errno ); }
     
     /*
      * Start listening for incoming connections...
@@ -452,7 +452,7 @@ int MPIDU_Sock_listen(struct MPIDU_Sock_set * sock_set, void * user_ptr,
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_post_read
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_post_read(struct MPIDU_Sock * sock, void * buf, MPIU_Size_t minlen, MPIU_Size_t maxlen,
 			 MPIDU_Sock_progress_update_func_t fn)
 {
@@ -502,7 +502,7 @@ int MPIDU_Sock_post_read(struct MPIDU_Sock * sock, void * buf, MPIU_Size_t minle
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_post_readv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_post_readv(struct MPIDU_Sock * sock, MPL_IOV * iov, int iov_n, MPIDU_Sock_progress_update_func_t fn)
 {
     struct pollfd * pollfd;
@@ -551,7 +551,7 @@ int MPIDU_Sock_post_readv(struct MPIDU_Sock * sock, MPL_IOV * iov, int iov_n, MP
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_post_write
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_post_write(struct MPIDU_Sock * sock, void * buf, MPIU_Size_t minlen, MPIU_Size_t maxlen,
 			  MPIDU_Sock_progress_update_func_t fn)
 {
@@ -601,7 +601,7 @@ int MPIDU_Sock_post_write(struct MPIDU_Sock * sock, void * buf, MPIU_Size_t minl
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_post_writev
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_post_writev(struct MPIDU_Sock * sock, MPL_IOV * iov, int iov_n, MPIDU_Sock_progress_update_func_t fn)
 {
     struct pollfd * pollfd;
@@ -650,7 +650,7 @@ int MPIDU_Sock_post_writev(struct MPIDU_Sock * sock, MPL_IOV * iov, int iov_n, M
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_post_close
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_post_close(struct MPIDU_Sock * sock)
 {
     struct pollfd * pollfd;

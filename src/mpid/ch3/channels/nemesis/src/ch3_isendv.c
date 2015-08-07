@@ -16,7 +16,7 @@ extern void *MPIDI_CH3_packet_buffer;
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_iSendv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV *iov, int n_iov)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -30,8 +30,8 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV *iov, int n_io
 
     if (vc->state == MPIDI_VC_STATE_MORIBUND) {
         sreq->status.MPI_ERROR = MPI_SUCCESS;
-        MPIU_ERR_SET1(sreq->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
-        MPIU_ERR_SET1(mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+        MPIR_ERR_SET1(sreq->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+        MPIR_ERR_SET1(mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
         MPID_Request_complete(sreq);
         goto fn_fail;
     }
@@ -63,7 +63,7 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV *iov, int n_io
     iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)iov[0].MPL_IOV_BUF);
 
-    MPIU_THREAD_CS_ENTER(MPIDCOMM,);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.global_mutex);
     in_cs = TRUE;
 
     if (MPIDI_CH3I_Sendq_empty(MPIDI_CH3I_shm_sendq))
@@ -75,11 +75,11 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV *iov, int n_io
 	mpi_errno = MPID_nem_mpich_sendv_header (&remaining_iov, &remaining_n_iov,
 	                                         sreq->dev.ext_hdr_ptr, sreq->dev.ext_hdr_sz,
 	                                         vc, &again);
-        if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 	while (!again && remaining_n_iov > 0)
 	{
 	    mpi_errno = MPID_nem_mpich_sendv (&remaining_iov, &remaining_n_iov, vc, &again);
-            if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+            if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 	}
 
 	if (again)
@@ -128,7 +128,7 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV *iov, int n_io
                 MPIU_Assert (MPIDI_Request_get_type (sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
                 mpi_errno = MPID_Request_complete (sreq);
                 if (mpi_errno != MPI_SUCCESS) {
-                    MPIU_ERR_POP(mpi_errno);
+                    MPIR_ERR_POP(mpi_errno);
                 }
                 MPIU_DBG_MSG (CH3_CHANNEL, VERBOSE, ".... complete");
             }
@@ -137,7 +137,7 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV *iov, int n_io
                 int complete = 0;
 
                 mpi_errno = reqFn (vc, sreq, &complete);
-                if (mpi_errno) MPIU_ERR_POP (mpi_errno);
+                if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
                 if (!complete)
                 {
@@ -180,12 +180,12 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV *iov, int n_io
            check to see if we can send any now */
         MPIDI_CH3I_Sendq_enqueue(&MPIDI_CH3I_shm_sendq, sreq);
         mpi_errno = MPIDI_CH3I_Shm_send_progress();
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
  fn_exit:
     if (in_cs) {
-        MPIU_THREAD_CS_EXIT(MPIDCOMM,);
+        MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.global_mutex);
     }
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_ISENDV);

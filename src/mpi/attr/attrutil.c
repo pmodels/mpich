@@ -63,7 +63,7 @@ void MPID_Attr_free(MPID_Attribute *attr_ptr)
 #undef FUNCNAME
 #define FUNCNAME MPIR_Call_attr_delete
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*
   This function deletes a single attribute.
   It is called by both the function to delete a list and attribute set/put 
@@ -133,7 +133,7 @@ int MPIR_Call_attr_delete( int handle, MPID_Attribute *attr_p )
 #undef FUNCNAME
 #define FUNCNAME MPIR_Call_attr_copy
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Call_attr_copy( int handle, MPID_Attribute *attr_p, void** value_copy, int* flag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -173,7 +173,7 @@ fn_fail:
 #undef FUNCNAME
 #define FUNCNAME MPIR_Attr_dup_list
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /* Routine to duplicate an attribute list */
 int MPIR_Attr_dup_list( int handle, MPID_Attribute *old_attrs, 
 			MPID_Attribute **new_attr )
@@ -239,7 +239,7 @@ int MPIR_Attr_dup_list( int handle, MPID_Attribute *old_attrs,
 #undef FUNCNAME
 #define FUNCNAME MPIR_Attr_delete_list
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /* Routine to delete an attribute list */
 int MPIR_Attr_delete_list( int handle, MPID_Attribute **attr )
 {
@@ -256,7 +256,7 @@ int MPIR_Attr_delete_list( int handle, MPID_Attribute **attr )
 	/* Check the sentinals first */
 	/* --BEGIN ERROR HANDLING-- */
 	if (p->pre_sentinal != 0 || p->post_sentinal != 0) {
-	    MPIU_ERR_SET(mpi_errno,MPI_ERR_OTHER,"**attrsentinal");
+	    MPIR_ERR_SET(mpi_errno,MPI_ERR_OTHER,"**attrsentinal");
 	    /* We could keep trying to free the attributes, but for now
 	       we'll just bag it */
 	    return mpi_errno;
@@ -325,11 +325,11 @@ MPIR_Attr_copy_c_proxy(
     }
 
     /* user functions might call other MPI functions, so we need to
-     * release the lock here. This is safe to do as ALLFUNC is not at
+     * release the lock here. This is safe to do as GLOBAL is not at
      * all recursive in our implementation. */
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     ret = user_function(handle, keyval, extra_state, attrib_val, attrib_copy, flag);
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
 
     return ret;
 }
@@ -355,11 +355,11 @@ MPIR_Attr_delete_c_proxy(
         attrib_val = attrib;
 
     /* user functions might call other MPI functions, so we need to
-     * release the lock here. This is safe to do as ALLFUNC is not at
+     * release the lock here. This is safe to do as GLOBAL is not at
      * all recursive in our implementation. */
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     ret = user_function(handle, keyval, attrib_val, extra_state);
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
 
     return ret;
 }

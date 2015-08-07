@@ -29,7 +29,7 @@ int MPI_Comm_free_keyval(int *comm_keyval) __attribute__((weak,alias("PMPI_Comm_
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_free_keyval_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Comm_free_keyval_impl(int keyval)
 {
     int in_use;
@@ -52,7 +52,7 @@ void MPIR_Comm_free_keyval_impl(int keyval)
 #undef FUNCNAME
 #define FUNCNAME MPI_Comm_free_keyval
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
    MPI_Comm_free_keyval - Frees an attribute key for communicators
 
@@ -78,7 +78,7 @@ int MPI_Comm_free_keyval(int *comm_keyval)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_FREE_KEYVAL);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -122,7 +122,7 @@ int MPI_Comm_free_keyval(int *comm_keyval)
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_FREE_KEYVAL);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

@@ -228,7 +228,7 @@ MPIDI_CH3_PKT_DEFS
             datatype_ = (pkt_).fop.datatype;                            \
             break;                                                      \
         default:                                                        \
-            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+            MPIR_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
         }                                                               \
     }
 
@@ -259,7 +259,7 @@ MPIDI_CH3_PKT_DEFS
             count_ = 1;                                                 \
             break;                                                      \
         default:                                                        \
-            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+            MPIR_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
         }                                                               \
     }
 
@@ -300,7 +300,7 @@ MPIDI_CH3_PKT_DEFS
             immed_data_ = &((pkt_).cas_resp.info.data);                 \
             break;                                                      \
         default:                                                        \
-            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+            MPIR_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
         }                                                               \
     }
 
@@ -363,7 +363,7 @@ MPIDI_CH3_PKT_DEFS
             flags_ = (pkt_).lock_op_ack.flags;                          \
             break;                                                      \
         default:                                                        \
-            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+            MPIR_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
         }                                                               \
     }
 
@@ -386,7 +386,7 @@ MPIDI_CH3_PKT_DEFS
             op_ = (pkt_).fop.op;                                        \
             break;                                                      \
         default:                                                        \
-            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+            MPIR_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
         }                                                               \
     }
 
@@ -449,7 +449,7 @@ MPIDI_CH3_PKT_DEFS
             (pkt_).lock_op_ack.flags = MPIDI_CH3_PKT_FLAG_NONE;         \
             break;                                                      \
         default:                                                        \
-            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+            MPIR_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
         }                                                               \
     }
 
@@ -489,7 +489,7 @@ MPIDI_CH3_PKT_DEFS
             win_hdl_ = (pkt_).ack.source_win_handle;                    \
             break;                                                      \
         default:                                                        \
-            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+            MPIR_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
         }                                                               \
     }
 
@@ -535,7 +535,7 @@ MPIDI_CH3_PKT_DEFS
             win_hdl_ = (pkt_).decr_at_cnt.target_win_handle;            \
             break;                                                      \
         default:                                                        \
-            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+            MPIR_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
         }                                                               \
     }
 
@@ -558,7 +558,7 @@ MPIDI_CH3_PKT_DEFS
             (pkt_).get_accum.info.dataloop_size = (dataloop_size_);     \
             break;                                                      \
         default:                                                        \
-            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+            MPIR_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
         }                                                               \
     }
 
@@ -605,7 +605,7 @@ MPIDI_CH3_PKT_DEFS
             request_hdl_ = (pkt_).lock_op_ack.request_handle;           \
             break;                                                      \
         default:                                                        \
-            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+            MPIR_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
         }                                                               \
     }
 

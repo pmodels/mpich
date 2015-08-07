@@ -30,7 +30,7 @@ int MPI_Type_extent(MPI_Datatype datatype, MPI_Aint *extent) __attribute__((weak
 #undef FUNCNAME
 #define FUNCNAME MPI_Type_extent
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
     MPI_Type_extent - Returns the extent of a datatype
 

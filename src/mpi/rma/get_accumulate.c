@@ -108,7 +108,7 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_GET_ACCUMULATE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -209,7 +209,7 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
 
   fn_exit:
     MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_GET_ACCUMULATE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
   fn_fail:

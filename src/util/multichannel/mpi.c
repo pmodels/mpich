@@ -20,7 +20,7 @@
 #include <winsock2.h>
 #include <windows.h>
 #include "mpichconf.h"
-#include "mpichtimer.h"
+#include "mpiu_timer.h"
 #include "mpimem.h"
 #include <stdio.h>
 #include <stdarg.h>

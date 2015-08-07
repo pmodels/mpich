@@ -95,14 +95,14 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr);
 #define MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr)                                              \
     do {                                                                                \
         int pt_err = pthread_mutex_lock((win_ptr)->shm_mutex);                          \
-        MPIU_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_lock",        \
+        MPIR_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_lock",        \
                              "**pthread_lock %s", strerror(pt_err));                    \
     } while (0)
 
 #define MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr)                                            \
     do {                                                                                \
         int pt_err = pthread_mutex_unlock((win_ptr)->shm_mutex);                        \
-        MPIU_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_unlock",      \
+        MPIR_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_unlock",      \
                              "**pthread_unlock %s", strerror(pt_err));                  \
     } while (0)
 
@@ -112,23 +112,23 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr);
         pthread_mutexattr_t attr;                                                       \
                                                                                         \
         pt_err = pthread_mutexattr_init(&attr);                                         \
-        MPIU_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",       \
+        MPIR_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",       \
                              "**pthread_mutex %s", strerror(pt_err));                   \
         pt_err = pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);           \
-        MPIU_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",       \
+        MPIR_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",       \
                              "**pthread_mutex %s", strerror(pt_err));                   \
         pt_err = pthread_mutex_init((win_ptr)->shm_mutex, &attr);                       \
-        MPIU_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",       \
+        MPIR_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",       \
                              "**pthread_mutex %s", strerror(pt_err));                   \
         pt_err = pthread_mutexattr_destroy(&attr);                                      \
-        MPIU_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",       \
+        MPIR_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",       \
                              "**pthread_mutex %s", strerror(pt_err));                   \
     } while (0);
 
 #define MPIDI_CH3I_SHM_MUTEX_DESTROY(win_ptr)                                           \
     do {                                                                                \
         int pt_err = pthread_mutex_destroy((win_ptr)->shm_mutex);                       \
-        MPIU_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",       \
+        MPIR_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",       \
                              "**pthread_mutex %s", strerror(pt_err));                   \
     } while (0);
 #else
@@ -152,7 +152,7 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr);
             MPIU_Strncpy(error_msg, str, MPIU_STRERROR_BUF_SIZE);                       \
             LocalFree(str);                                                             \
             strtok(error_msg, "\r\n");                                                  \
-            MPIU_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**windows_mutex",   \
+            MPIR_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**windows_mutex",   \
                                  "**windows_mutex %s", error_msg);                      \
         }                                                                               \
     } while (0);
@@ -208,7 +208,7 @@ extern MPIDI_SHM_Wins_list_t shm_wins_list;
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_SHM_Wins_append
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_SHM_Wins_append(MPIDI_SHM_Wins_list_t * list, MPID_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -240,7 +240,7 @@ static inline int MPIDI_CH3I_SHM_Wins_append(MPIDI_SHM_Wins_list_t * list, MPID_
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_SHM_Wins_unlink
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_CH3I_SHM_Wins_unlink(MPIDI_SHM_Wins_list_t * list, MPID_Win * shm_win)
 {
     MPIDI_SHM_Win_t *elem = NULL;

@@ -35,7 +35,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old, int indegree, const int so
 #undef FUNCNAME
 #define FUNCNAME MPI_Dist_graph_create_adjacent
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_Dist_graph_create_adjacent - returns a handle to a new communicator to
 which the distributed graph topology information is attached.
@@ -84,7 +84,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_DIST_GRAPH_CREATE_ADJACENT);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -121,7 +121,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
             if (indegree > 0) {
                 MPIR_ERRTEST_ARGNULL(sources, "sources", mpi_errno);
                 if (sourceweights == MPI_UNWEIGHTED && destweights != MPI_UNWEIGHTED) {
-                    MPIU_ERR_SET(mpi_errno, MPI_ERR_TOPOLOGY, "**unweightedboth");
+                    MPIR_ERR_SET(mpi_errno, MPI_ERR_TOPOLOGY, "**unweightedboth");
                     goto fn_fail;
                 }
                 /* TODO check ranges for array elements too (**argarrayneg / **rankarray)*/
@@ -129,7 +129,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
             if (outdegree > 0) {
                 MPIR_ERRTEST_ARGNULL(destinations, "destinations", mpi_errno);
                 if (destweights == MPI_UNWEIGHTED && sourceweights != MPI_UNWEIGHTED) {
-                    MPIU_ERR_SET(mpi_errno, MPI_ERR_TOPOLOGY, "**unweightedboth");
+                    MPIR_ERR_SET(mpi_errno, MPI_ERR_TOPOLOGY, "**unweightedboth");
                     goto fn_fail;
                 }
             }
@@ -148,7 +148,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
     /* following the spirit of the old topo interface, attributes do not
      * propagate to the new communicator (see MPI-2.1 pp. 243 line 11) */
     mpi_errno = MPIR_Comm_copy(comm_ptr, comm_ptr->local_size, &comm_dist_graph_ptr);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Create the topology structure */
     MPIU_CHKPMEM_MALLOC(topo_ptr, MPIR_Topology *, sizeof(MPIR_Topology), mpi_errno, "topo_ptr");
@@ -175,14 +175,14 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
     }
 
     mpi_errno = MPIR_Topology_put(comm_dist_graph_ptr, topo_ptr);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     MPIU_OBJ_PUBLISH_HANDLE(*comm_dist_graph, comm_dist_graph_ptr->handle);
     MPIU_CHKPMEM_COMMIT();
     /* ... end of body of routine ... */
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_DIST_GRAPH_CREATE_ADJACENT);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

@@ -51,7 +51,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPID_Startall
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Startall(int count, MPID_Request * requests[])
 {
     int i;
@@ -161,7 +161,7 @@ int MPID_Startall(int count, MPID_Request * requests[])
 #undef FUNCNAME
 #define FUNCNAME MPID_Send_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Send_init(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPID_Comm * comm, int context_offset,
 		   MPID_Request ** request)
 {
@@ -191,7 +191,7 @@ int MPID_Send_init(const void * buf, int count, MPI_Datatype datatype, int rank,
 #undef FUNCNAME
 #define FUNCNAME MPID_Ssend_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Ssend_init(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPID_Comm * comm, int context_offset,
 		    MPID_Request ** request)
 {
@@ -221,7 +221,7 @@ int MPID_Ssend_init(const void * buf, int count, MPI_Datatype datatype, int rank
 #undef FUNCNAME
 #define FUNCNAME MPID_Rsend_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Rsend_init(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPID_Comm * comm, int context_offset,
 		    MPID_Request ** request)
 {
@@ -251,7 +251,7 @@ int MPID_Rsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
 #undef FUNCNAME
 #define FUNCNAME MPID_Bsend_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Bsend_init(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPID_Comm * comm, int context_offset,
 		    MPID_Request ** request)
 {
@@ -289,7 +289,7 @@ int MPID_Bsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
 #undef FUNCNAME
 #define FUNCNAME MPID_Recv_init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPID_Comm * comm, int context_offset,
 		   MPID_Request ** request)
 {

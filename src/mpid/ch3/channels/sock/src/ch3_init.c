@@ -20,7 +20,7 @@ char MPIDI_CH3_ABIVersion[] = "1.1";
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Init
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t * pg_p, int pg_rank )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -32,11 +32,11 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t * pg_p, int pg_rank )
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_CH3_INIT);
 
     mpi_errno = MPIDI_CH3I_Progress_init();
-    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno != MPI_SUCCESS) MPIR_ERR_POP(mpi_errno);
 
     /* Initialize the business card */
     mpi_errno = MPIDI_CH3I_BCInit( &bc_val, &val_max_remaining );
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     publish_bc_orig = bc_val;
 
     /* initialize aspects specific to sockets  */
@@ -51,7 +51,7 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t * pg_p, int pg_rank )
      (note that publish_bc_orig is the head of bc_val ) */
     MPIDI_CH3I_BCFree( publish_bc_orig );
 
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_CH3_INIT);

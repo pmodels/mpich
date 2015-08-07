@@ -28,7 +28,7 @@ int MPI_T_cvar_handle_free(MPI_T_cvar_handle *handle) __attribute__((weak,alias(
 #undef FUNCNAME
 #define FUNCNAME MPI_T_cvar_handle_free
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
 MPI_T_cvar_handle_free - Free an existing handle for a control variable
 

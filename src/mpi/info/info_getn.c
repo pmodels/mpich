@@ -28,7 +28,7 @@ int MPI_Info_get_nkeys(MPI_Info info, int *nkeys) __attribute__((weak,alias("PMP
 #undef FUNCNAME
 #define FUNCNAME MPIR_Info_get_nkeys_impl
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Info_get_nkeys_impl(MPID_Info *info_ptr, int *nkeys)
 {
     int n;
@@ -68,7 +68,7 @@ Output Parameters:
 #undef FUNCNAME
 #define FUNCNAME MPI_Info_get_nkeys
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPI_Info_get_nkeys( MPI_Info info, int *nkeys )
 {
     MPID_Info *info_ptr=0;
@@ -77,7 +77,7 @@ int MPI_Info_get_nkeys( MPI_Info info, int *nkeys )
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_INFO_GET_NKEYS);
     
     /* Validate parameters, especially handles needing to be converted */
@@ -119,7 +119,7 @@ int MPI_Info_get_nkeys( MPI_Info info, int *nkeys )
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_INFO_GET_NKEYS);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
     return mpi_errno;
     
     /* --BEGIN ERROR HANDLING-- */

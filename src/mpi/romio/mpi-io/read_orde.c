@@ -45,7 +45,7 @@ int MPI_File_read_ordered_end(MPI_File fh, void *buf, MPI_Status *status)
 
     MPIU_UNREFERENCED_ARG(buf);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
 
     adio_fh = MPIO_File_resolve(fh);
 
@@ -69,7 +69,7 @@ int MPI_File_read_ordered_end(MPI_File fh, void *buf, MPI_Status *status)
     adio_fh->split_coll_count = 0;
 
 fn_exit:
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
 
     return error_code;
 }

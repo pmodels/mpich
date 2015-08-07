@@ -26,6 +26,11 @@ typedef MPIU_Pint MPIDI_msg_sz_t;
 /* FIXME: Include here? */
 #include "opa_primitives.h"
 
+/* We simply use the fallback thread functionality and do not define
+ * our own */
+#include "mpid_thread_fallback.h"
+#include "mpid_timers_fallback.h"
+
 union MPIDI_CH3_Pkt;
 struct MPIDI_VC;
 struct MPID_Request;

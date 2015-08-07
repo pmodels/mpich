@@ -136,8 +136,6 @@ int usleep(useconds_t usec);
     } while (0)
 #endif
 
-#include "mpiimplthread.h"
-
 /* ------------------------------------------------------------------------- */
 /* mpidebug.h */
 /* ------------------------------------------------------------------------- */
@@ -450,10 +448,10 @@ int MPIU_Handle_free( void *((*)[]), int );
 #define MPID_Comm_valid_ptr(ptr,err,ignore_rev) {     \
      MPID_Valid_ptr_class(Comm,ptr,MPI_ERR_COMM,err); \
      if ((ptr) && MPIU_Object_get_ref(ptr) <= 0) {    \
-         MPIU_ERR_SET(err,MPI_ERR_COMM,"**comm");     \
+         MPIR_ERR_SET(err,MPI_ERR_COMM,"**comm");     \
          ptr = 0;                                     \
      } else if ((ptr) && (ptr)->revoked && !(ignore_rev)) {        \
-         MPIU_ERR_SET(err,MPIX_ERR_REVOKED,"**comm"); \
+         MPIR_ERR_SET(err,MPIX_ERR_REVOKED,"**comm"); \
      }                                                \
 }
 #define MPID_Group_valid_ptr(ptr,err) MPID_Valid_ptr_class(Group,ptr,MPI_ERR_GROUP,err)
@@ -1284,7 +1282,7 @@ int MPIR_Comm_delete_internal(MPID_Comm * comm_ptr);
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_release
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIR_Comm_release(MPID_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1462,7 +1460,6 @@ struct MPID_Grequest_fns {
                                                        the generalize req */
 };
 
-/* see mpiimplthread.h for the def of MPID_cc_t and related functions/macros */
 #define MPID_Request_is_complete(req_) (MPID_cc_is_complete((req_)->cc_ptr))
 
 /*S
@@ -3719,8 +3716,6 @@ int MPID_Comm_get_lpid(MPID_Comm *comm_ptr, int idx, int * lpid_ptr, MPIU_BOOL i
  * collectives */
 #include "mpir_nbc.h"
 
-#include "mpiimplthreadpost.h"
-
 /* Include definitions from the device which require items defined by this 
    file (mpiimpl.h). */
 #include "mpidpost.h"
@@ -4397,7 +4392,7 @@ int MPIR_Comm_set_attr_impl(MPID_Comm *comm_ptr, int comm_keyval, void *attribut
 #undef FUNCNAME
 #define FUNCNAME MPIR_process_status
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIR_Process_status(MPI_Status *status, MPIR_Errflag_t *errflag)
 {
     if (MPI_PROC_NULL != status->MPI_SOURCE &&

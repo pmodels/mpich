@@ -27,7 +27,7 @@ static int _mxm_process_sdtype(MPID_Request ** rreq_p, MPI_Datatype datatype,
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_iSendContig
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_mxm_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, MPIDI_msg_sz_t hdr_sz,
                              void *data, MPIDI_msg_sz_t data_sz)
 {
@@ -79,7 +79,7 @@ int MPID_nem_mxm_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, MP
     mpi_errno = _mxm_isend(vc_area->mxm_ep, req_area, MXM_MPICH_ISEND_AM,
                            mxm_obj->mxm_mq, mxm_obj->mxm_rank, MXM_MPICH_HID_ADI_MSG, 0, 0);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MXM_ISENDCONTIGMSG);
@@ -92,7 +92,7 @@ int MPID_nem_mxm_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, MP
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_iStartContigMsg
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_mxm_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data,
                                  MPIDI_msg_sz_t data_sz, MPID_Request ** sreq_ptr)
 {
@@ -143,7 +143,7 @@ int MPID_nem_mxm_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_
     mpi_errno = _mxm_isend(vc_area->mxm_ep, req_area, MXM_MPICH_ISEND_AM,
                            mxm_obj->mxm_mq, mxm_obj->mxm_rank, MXM_MPICH_HID_ADI_MSG, 0, 0);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     *sreq_ptr = sreq;
@@ -157,7 +157,7 @@ int MPID_nem_mxm_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_SendNoncontig
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_mxm_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
                                MPIDI_msg_sz_t hdr_sz)
 {
@@ -222,7 +222,7 @@ int MPID_nem_mxm_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     mpi_errno = _mxm_isend(vc_area->mxm_ep, req_area, MXM_MPICH_ISEND_AM,
                            mxm_obj->mxm_mq, mxm_obj->mxm_rank, MXM_MPICH_HID_ADI_MSG, 0, 0);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MXM_SENDNONCONTIGMSG);
@@ -235,7 +235,7 @@ int MPID_nem_mxm_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_send
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
                       int rank, int tag, MPID_Comm * comm, int context_offset,
                       MPID_Request ** sreq_ptr)
@@ -296,7 +296,7 @@ int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Data
             MPI_Aint packsize = 0;
 
             sreq->dev.segment_ptr = MPID_Segment_alloc();
-            MPIU_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER,
+            MPIR_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER,
                                  "**nomem", "**nomem %s", "MPID_Segment_alloc");
             MPIR_Pack_size_impl(count, datatype, &packsize);
 
@@ -322,7 +322,7 @@ int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Data
                                                                         comm->context_id
                                                                         + context_offset), 0);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     _dbg_mxm_out_req(sreq);
 
@@ -338,7 +338,7 @@ int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Data
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_ssend
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
                        int rank, int tag, MPID_Comm * comm, int context_offset,
                        MPID_Request ** sreq_ptr)
@@ -399,7 +399,7 @@ int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
             MPI_Aint packsize = 0;
 
             sreq->dev.segment_ptr = MPID_Segment_alloc();
-            MPIU_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER,
+            MPIR_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER,
                                  "**nomem", "**nomem %s", "MPID_Segment_alloc");
             MPIR_Pack_size_impl(count, datatype, &packsize);
 
@@ -425,7 +425,7 @@ int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
                                                                         comm->context_id
                                                                         + context_offset), 0);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     _dbg_mxm_out_req(sreq);
 
@@ -441,7 +441,7 @@ int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_isend
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_mxm_isend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
                        int rank, int tag, MPID_Comm * comm, int context_offset,
                        MPID_Request ** sreq_ptr)
@@ -502,7 +502,7 @@ int MPID_nem_mxm_isend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
             MPI_Aint packsize = 0;
 
             sreq->dev.segment_ptr = MPID_Segment_alloc();
-            MPIU_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER,
+            MPIR_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER,
                                  "**nomem", "**nomem %s", "MPID_Segment_alloc");
             MPIR_Pack_size_impl(count, datatype, &packsize);
 
@@ -528,7 +528,7 @@ int MPID_nem_mxm_isend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
                                                                         comm->context_id
                                                                         + context_offset), 0);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     _dbg_mxm_out_req(sreq);
 
@@ -544,7 +544,7 @@ int MPID_nem_mxm_isend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mxm_issend
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_mxm_issend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Datatype datatype,
                         int rank, int tag, MPID_Comm * comm, int context_offset,
                         MPID_Request ** sreq_ptr)
@@ -606,7 +606,7 @@ int MPID_nem_mxm_issend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Da
 
             sreq->ch.noncontig = TRUE;
             sreq->dev.segment_ptr = MPID_Segment_alloc();
-            MPIU_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER,
+            MPIR_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER,
                                  "**nomem", "**nomem %s", "MPID_Segment_alloc");
             MPIR_Pack_size_impl(count, datatype, &packsize);
 
@@ -631,7 +631,7 @@ int MPID_nem_mxm_issend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Da
                                                                         comm->context_id
                                                                         + context_offset), 0);
     if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+        MPIR_ERR_POP(mpi_errno);
 
     _dbg_mxm_out_req(sreq);
 
@@ -795,7 +795,7 @@ static int _mxm_process_sdtype(MPID_Request ** sreq_p, MPI_Datatype datatype,
     int size_to_copy = 0;
 
     sreq->dev.segment_ptr = MPID_Segment_alloc();
-    MPIU_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
+    MPIR_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
                          "**nomem %s", "MPID_Segment_alloc");
 
     MPID_Segment_init(buf, count, datatype, sreq->dev.segment_ptr, 0);

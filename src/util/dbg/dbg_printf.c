@@ -386,33 +386,36 @@ static void dbg_init_tls(void)
 static FILE *get_fp(void)
 {
 #ifdef MPICH_IS_THREADED
+    int err;
     /* if we're not initialized, use the static fp, since there should
      * only be one thread in here until then */
-    if (mpiu_dbg_initialized == MPIU_DBG_INITIALIZED && MPIU_ISTHREADED) {
+    MPIU_THREAD_CHECK_BEGIN;
+    if (mpiu_dbg_initialized == MPIU_DBG_INITIALIZED) {
         FILE *fp;
-        MPID_Thread_tls_get(&dbg_tls_key, (void **) &fp);
+        MPID_Thread_tls_get(&dbg_tls_key, (void **) &fp, &err);
         return fp;
     }
-    else
-        return static_dbg_fp;
-#else
-    return static_dbg_fp;
+    MPIU_THREAD_CHECK_END;
 #endif
+
+    return static_dbg_fp;
 }
 
 static void set_fp(FILE *fp)
 {
 #ifdef MPICH_IS_THREADED
+    int err;
     /* if we're not initialized, use the static fp, since there should
      * only be one thread in here until then */
-    if (mpiu_dbg_initialized == MPIU_DBG_INITIALIZED && MPIU_ISTHREADED) {
-        MPID_Thread_tls_set(&dbg_tls_key, (void *)fp);
+    MPIU_THREAD_CHECK_BEGIN;
+    if (mpiu_dbg_initialized == MPIU_DBG_INITIALIZED) {
+        MPID_Thread_tls_set(&dbg_tls_key, (void *)fp, &err);
+        return;
     }
-    else
-        static_dbg_fp = fp;
-#else
-    static_dbg_fp = fp;
+    MPIU_THREAD_CHECK_END;
 #endif
+
+    static_dbg_fp = fp;
 }
 
 
@@ -837,7 +840,7 @@ Environment variables\n\
 #undef FUNCNAME
 #define FUNCNAME MPIU_DBG_Open_temp_file
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -876,7 +879,7 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
 #undef FUNCNAME
 #define FUNCNAME MPIU_DBG_Open_temp_file
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -921,7 +924,7 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
 #undef FUNCNAME
 #define FUNCNAME MPIU_DBG_Open_temp_file
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
 {
     int mpi_errno = MPI_SUCCESS;

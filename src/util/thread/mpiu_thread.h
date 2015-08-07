@@ -7,15 +7,16 @@
 #if !defined(MPIU_THREAD_H_INCLUDED)
 #define MPIU_THREAD_H_INCLUDED
 
-#include "mpichconf.h" /* defines MPIU_THREAD_PACKAGE_NAME */
+#include "mpi.h"
+#include "mpichconf.h"  /* defines MPIU_THREAD_PACKAGE_NAME */
+#include "mpichconfconst.h"
 #include "mpidbg.h"
-
-#if !defined(TRUE)
-#define TRUE 1
-#endif
-#if !defined(FALSE)
-#define FALSE 0
-#endif
+#include "mpiassert.h"
+/* Time stamps */
+/* Get the timer definitions.  The source file for this include is
+   src/util/timers/mpiu_timer.h.in */
+#include "mpiu_strerror.h"
+#include "mpiu_timer.h"
 
 /* _INVALID exists to avoid accidental macro evaluations to 0 */
 #define MPIU_THREAD_PACKAGE_INVALID 0
@@ -39,7 +40,6 @@ typedef int MPIU_Thread_tls_t;
 #  error "thread package not defined or unknown"
 #endif
 
-
 /*
  * threading function prototypes
  *
@@ -47,238 +47,40 @@ typedef int MPIU_Thread_tls_t;
  * rather than actual or even inline functions.
  */
 
-typedef void (* MPIU_Thread_func_t)(void * data);
+typedef void (*MPIU_Thread_func_t) (void *data);
 
-/*@
-  MPIU_Thread_create - create a new thread
-
-  Input Parameters:
-+ func - function to run in new thread
-- data - data to be passed to thread function
-
-  Output Parameters:
-+ id - identifier for the new thread
-- err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
-
-  Notes:
-  The thread is created in a detach state, meaning that is may not be waited upon.  If another thread needs to wait for this
-  thread to complete, the threads must provide their own synchronization mechanism.
-@*/
-void MPIU_Thread_create(MPIU_Thread_func_t func, void * data, MPIU_Thread_id_t * id, int * err);
-
-/*@
-  MPIU_Thread_exit - exit from the current thread
-@*/
+void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * id, int *err);
 void MPIU_Thread_exit(void);
-
-/*@
-  MPIU_Thread_self - get the identifier of the current thread
-
-  Output Parameter:
-. id - identifier of current thread
-@*/
 void MPIU_Thread_self(MPIU_Thread_id_t * id);
-
-/*@
-  MPIU_Thread_same - compare two threads identifiers to see if refer to the same thread
-
-  Input Parameters:
-+ id1 - first identifier
-- id2 - second identifier
-  
-  Output Parameter:
-. same - TRUE if the two threads identifiers refer to the same thread; FALSE otherwise
-@*/
-void MPIU_Thread_same(MPIU_Thread_id_t * id1, MPIU_Thread_id_t * id2, int * same);
-
-/*@
-  MPIU_Thread_yield - voluntarily relinquish the CPU, giving other threads an opportunity to run
-@*/
+void MPIU_Thread_same(MPIU_Thread_id_t * id1, MPIU_Thread_id_t * id2, int *same);
 void MPIU_Thread_yield(void);
 
+void MPIU_Thread_mutex_create(MPIU_Thread_mutex_t * mutex, int *err);
+void MPIU_Thread_mutex_destroy(MPIU_Thread_mutex_t * mutex, int *err);
+void MPIU_Thread_mutex_lock(MPIU_Thread_mutex_t * mutex, int *err);
+void MPIU_Thread_mutex_unlock(MPIU_Thread_mutex_t * mutex, int *err);
+void MPIU_Thread_mutex_trylock(MPIU_Thread_mutex_t * mutex, int *flag, int *err);
 
-/*
- *    Mutexes
- */
-
-/*@
-  MPIU_Thread_mutex_create - create a new mutex
-  
-  Output Parameters:
-+ mutex - mutex
-- err - error code (non-zero indicates an error has occurred)
-@*/
-void MPIU_Thread_mutex_create(MPIU_Thread_mutex_t * mutex, int * err);
-
-/*@
-  MPIU_Thread_mutex_destroy - destroy an existing mutex
-  
-  Input Parameter:
-. mutex - mutex
-
-  Output Parameter:
-. err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
-@*/
-void MPIU_Thread_mutex_destroy(MPIU_Thread_mutex_t * mutex, int * err);
-
-/*@
-  MPIU_Thread_lock - acquire a mutex
-  
-  Input Parameter:
-. mutex - mutex
-
-  Output Parameter:
-. err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
-@*/
-void MPIU_Thread_mutex_lock(MPIU_Thread_mutex_t * mutex, int * err);
-
-/*@
-  MPIU_Thread_unlock - release a mutex
-  
-  Input Parameter:
-. mutex - mutex
-
-  Output Parameter:
-. err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
-@*/
-void MPIU_Thread_mutex_unlock(MPIU_Thread_mutex_t * mutex, int * err);
-
-/*@
-  MPIU_Thread_mutex_trylock - try to acquire a mutex, but return even if unsuccessful
-  
-  Input Parameter:
-. mutex - mutex
-
-  Output Parameters:
-+ flag - flag
-- err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
-@*/
-void MPIU_Thread_mutex_trylock(MPIU_Thread_mutex_t * mutex, int * flag, int * err);
-
-
-/*
- * Condition Variables
- */
-
-/*@
-  MPIU_Thread_cond_create - create a new condition variable
-  
-  Output Parameters:
-+ cond - condition variable
-- err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
-@*/
-void MPIU_Thread_cond_create(MPIU_Thread_cond_t * cond, int * err);
-
-/*@
-  MPIU_Thread_cond_destroy - destroy an existinga condition variable
-  
-  Input Parameter:
-. cond - condition variable
-
-  Output Parameter:
-. err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
-@*/
-void MPIU_Thread_cond_destroy(MPIU_Thread_cond_t * cond, int * err);
-
-/*@
-  MPIU_Thread_cond_wait - wait (block) on a condition variable
-  
-  Input Parameters:
-+ cond - condition variable
-- mutex - mutex
-
-  Output Parameter:
-. err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
-
-  Notes:
-  This function may return even though another thread has not requested that a thread be released.  Therefore, the calling
-  program must wrap the function in a while loop that verifies program state has changed in a way that warrants letting the
-  thread proceed.
-@*/
-void MPIU_Thread_cond_wait(MPIU_Thread_cond_t * cond, MPIU_Thread_mutex_t * mutex, int * err);
-
-/*@
-  MPIU_Thread_cond_broadcast - release all threads currently waiting on a condition variable
-  
-  Input Parameter:
-. cond - condition variable
-
-  Output Parameter:
-. err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
-@*/
-void MPIU_Thread_cond_broadcast(MPIU_Thread_cond_t * cond, int * err);
-
-/*@
-  MPIU_Thread_cond_signal - release one thread currently waitng on a condition variable
-  
-  Input Parameter:
-. cond - condition variable
-
-  Output Parameter:
-. err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
-@*/
-void MPIU_Thread_cond_signal(MPIU_Thread_cond_t * cond, int * err);
+void MPIU_Thread_cond_create(MPIU_Thread_cond_t * cond, int *err);
+void MPIU_Thread_cond_destroy(MPIU_Thread_cond_t * cond, int *err);
+void MPIU_Thread_cond_wait(MPIU_Thread_cond_t * cond, MPIU_Thread_mutex_t * mutex, int *err);
+void MPIU_Thread_cond_broadcast(MPIU_Thread_cond_t * cond, int *err);
+void MPIU_Thread_cond_signal(MPIU_Thread_cond_t * cond, int *err);
 
 
 /*
  * Thread Local Storage
  */
-typedef void (*MPIU_Thread_tls_exit_func_t)(void * value);
+typedef void (*MPIU_Thread_tls_exit_func_t) (void *value);
 
-
-/*@
-  MPIU_Thread_tls_create - create a thread local storage space
-
-  Input Parameter:
-. exit_func - function to be called when the thread exists; may be NULL is a callback is not desired
-  
-  Output Parameters:
-+ tls - new thread local storage space
-- err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
-@*/
-void MPIU_Thread_tls_create(MPIU_Thread_tls_exit_func_t exit_func, MPIU_Thread_tls_t * tls, int * err);
-
-/*@
-  MPIU_Thread_tls_destroy - destroy a thread local storage space
-  
-  Input Parameter:
-. tls - thread local storage space to be destroyed
-
-  Output Parameter:
-. err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
-  
-  Notes:
-  The destroy function associated with the thread local storage will not called after the space has been destroyed.
-@*/
-void MPIU_Thread_tls_destroy(MPIU_Thread_tls_t * tls, int * err);
-
-/*@
-  MPIU_Thread_tls_set - associate a value with the current thread in the thread local storage space
-  
-  Input Parameters:
-+ tls - thread local storage space
-- value - value to associate with current thread
-
-  Output Parameter:
-. err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
-@*/
-void MPIU_Thread_tls_set(MPIU_Thread_tls_t * tls, void * value, int * err);
-
-/*@
-  MPIU_Thread_tls_get - obtain the value associated with the current thread from the thread local storage space
-  
-  Input Parameter:
-. tls - thread local storage space
-
-  Output Parameters:
-+ value - value associated with current thread
-- err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
-@*/
-void MPIU_Thread_tls_get(MPIU_Thread_tls_t * tls, void ** value, int * err);
+void MPIU_Thread_tls_create(MPIU_Thread_tls_exit_func_t exit_func, MPIU_Thread_tls_t * tls,
+                            int *err);
+void MPIU_Thread_tls_destroy(MPIU_Thread_tls_t * tls, int *err);
+void MPIU_Thread_tls_set(MPIU_Thread_tls_t * tls, void *value, int *err);
+void MPIU_Thread_tls_get(MPIU_Thread_tls_t * tls, void **value, int *err);
 
 /* Error values */
-#define MPIU_THREAD_SUCCESS MPIU_THREAD_ERR_SUCCESS
-#define MPIU_THREAD_ERR_SUCCESS 0
+#define MPIU_THREAD_SUCCESS 0
 /* FIXME: Define other error codes.  For now, any non-zero value is an error. */
 
 /* Implementation specific function definitions (usually in the form of macros) */
@@ -292,6 +94,93 @@ void MPIU_Thread_tls_get(MPIU_Thread_tls_t * tls, void ** value, int * err);
 /* do nothing */
 #else
 #  error "thread package not defined or unknown"
+#endif
+
+
+#if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_INVALID
+#  error Invalid thread granularity option specified (possibly none)
+#elif MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_LOCK_FREE
+#  error MPIR_THREAD_GRANULARITY_LOCK_FREE not implemented yet
+#endif
+
+
+/* I don't have a better place for this at the moment, so it lives here for now. */
+enum MPIU_Thread_cs_name {
+    MPIU_THREAD_CS_NAME_GLOBAL = 0,
+    MPIU_THREAD_CS_NAME_POBJ,
+    MPIU_THREAD_CS_NUM_NAMES
+};
+
+typedef struct MPICH_ThreadInfo_t {
+    int thread_provided;        /* Provided level of thread support */
+    /* This is a special case for is_thread_main, which must be
+     * implemented even if MPICH itself is single threaded.  */
+#if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
+#  if !defined(MPIU_TLS_SPECIFIER)
+    MPIU_Thread_tls_t thread_storage;   /* Id for perthread data */
+#  endif                        /* !TLS */
+    MPIU_Thread_id_t master_thread;     /* Thread that started MPI */
+#endif
+
+#if defined MPICH_IS_THREADED
+    int isThreaded;             /* Set to true if user requested
+                                 * THREAD_MULTIPLE */
+#endif                          /* MPICH_IS_THREADED */
+
+    /* Define the mutex values used for each kind of implementation */
+#if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL || \
+    MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT
+    MPIU_Thread_mutex_t global_mutex;
+    /* We need the handle mutex to avoid problems with lock nesting */
+    MPIU_Thread_mutex_t handle_mutex;
+#endif
+
+#if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT
+    MPIU_Thread_mutex_t msgq_mutex;
+    MPIU_Thread_mutex_t completion_mutex;
+    MPIU_Thread_mutex_t ctx_mutex;
+    MPIU_Thread_mutex_t pmi_mutex;
+#endif
+
+#if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
+    MPIU_Thread_mutex_t memalloc_mutex; /* for MPIU_{Malloc,Free,Calloc} */
+    MPIU_Thread_id_t cs_holder[MPIU_THREAD_CS_NUM_NAMES];
+#endif
+} MPICH_ThreadInfo_t;
+extern MPICH_ThreadInfo_t MPIR_ThreadInfo;
+
+/* ------------------------------------------------------------------------- */
+/* thread-local storage macros */
+/* moved here from mpiimpl.h because they logically belong here */
+
+/* arbitrary, just needed to avoid cleaning up heap allocated memory at thread
+ * destruction time */
+#define MPIU_STRERROR_BUF_SIZE (1024)
+
+/* FIXME should really be MPIU_NEST_NUM_MUTEXES, but it's defined later */
+#define MPICH_MAX_LOCKS (6)
+
+/* This structure contains all thread-local variables and will be zeroed at
+ * allocation time.
+ *
+ * Note that any pointers to dynamically allocated memory stored in this
+ * structure must be externally cleaned up.
+ * */
+typedef struct MPICH_PerThread_t {
+    int op_errno;               /* For errors in predefined MPI_Ops */
+
+    /* error string storage for MPIU_Strerror */
+    char strerrbuf[MPIU_STRERROR_BUF_SIZE];
+
+#if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
+    int lock_depth[MPICH_MAX_LOCKS];
+#endif
+} MPICH_PerThread_t;
+
+#if defined (MPICH_IS_THREADED)
+#include "mpiu_thread_multiple.h"
+#else
+#include "mpiu_thread_single.h"
 #endif
 
 #endif /* !defined(MPIU_THREAD_H_INCLUDED) */

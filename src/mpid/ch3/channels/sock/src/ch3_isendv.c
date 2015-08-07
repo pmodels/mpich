@@ -9,7 +9,7 @@
 #undef FUNCNAME
 #define FUNCNAME update_request
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 static void update_request(MPID_Request * sreq, MPL_IOV * iov, int iov_count,
 			   int iov_offset, MPIU_Size_t nb)
 {
@@ -39,7 +39,7 @@ static void update_request(MPID_Request * sreq, MPL_IOV * iov, int iov_count,
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_iSendv
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq, 
 		     MPL_IOV * iov, int n_iov)
 {
@@ -141,13 +141,13 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq,
 			MPIU_Assert(MPIDI_Request_get_type(sreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
                         mpi_errno = MPID_Request_complete(sreq);
                         if (mpi_errno != MPI_SUCCESS) {
-                            MPIU_ERR_POP(mpi_errno);
+                            MPIR_ERR_POP(mpi_errno);
                         }
 		    }
 		    else {
 			int complete;
 			mpi_errno = reqFn( vc, sreq, &complete );
-			if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+			if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 			if (!complete) {
 			    MPIDI_CH3I_SendQ_enqueue_head(vcch, sreq);
 			    MPIU_DBG_MSG_FMT(CH3_CHANNEL,VERBOSE,
@@ -218,7 +218,7 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq,
 	MPIDI_CH3I_SendQ_enqueue(vcch, sreq);
 	mpi_errno = MPIDI_CH3I_VC_post_connect(vc);
 	if (mpi_errno) {
-	    MPIU_ERR_POP(mpi_errno);
+	    MPIR_ERR_POP(mpi_errno);
 	}
     }
     else if (vcch->state != MPIDI_CH3I_VC_STATE_FAILED)
