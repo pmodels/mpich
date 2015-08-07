@@ -36,6 +36,7 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
             (target_)->num_pkts_wait_for_local_completion == 0) {       \
             local_completed_ = 1;                                       \
             if ((target_)->sync.sync_flag == MPIDI_RMA_SYNC_NONE &&     \
+                (target_)->num_ops_flush_not_issued == 0 &&             \
                 (target_)->sync.outstanding_acks == 0)                  \
                 remote_completed_ = 1;                                  \
         }                                                               \
@@ -265,12 +266,12 @@ static inline MPIDI_RMA_Target_t *MPIDI_CH3I_Win_target_alloc(MPID_Win * win_ptr
     e->lock_type = MPID_LOCK_NONE;
     e->lock_mode = 0;
     e->win_complete_flag = 0;
-    e->put_acc_issued = 0;
 
     e->sync.sync_flag = MPIDI_RMA_SYNC_NONE;
     e->sync.outstanding_acks = 0;
 
     e->num_pkts_wait_for_local_completion = 0;
+    e->num_ops_flush_not_issued = 0;
 
     return e;
 }

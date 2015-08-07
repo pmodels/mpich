@@ -177,9 +177,11 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
         if (target->win_complete_flag) {
             if (target->pending_net_ops_list_head == NULL) {
                 MPIDI_CH3_Pkt_flags_t flags = MPIDI_CH3_PKT_FLAG_NONE;
-                if (target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH && target->put_acc_issued) {
+                if (target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH &&
+                    target->num_ops_flush_not_issued > 0) {
                     flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH;
                     target->sync.outstanding_acks++;
+                    target->num_ops_flush_not_issued = 0;
                 }
 
                 mpi_errno = send_decr_at_cnt_msg(target->target_rank, win_ptr, flags);
@@ -195,9 +197,10 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
         else if (target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH) {
             if (target->pending_net_ops_list_head == NULL) {
                 if (target->target_rank != rank) {
-                    if (target->put_acc_issued) {
+                    if (target->num_ops_flush_not_issued > 0) {
 
                         target->sync.outstanding_acks++;
+                        target->num_ops_flush_not_issued = 0;
 
                         mpi_errno = send_flush_msg(target->target_rank, win_ptr);
                         if (mpi_errno != MPI_SUCCESS)
@@ -220,15 +223,12 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
                 }
                 else {
                     MPIDI_CH3_Pkt_flags_t flag = MPIDI_CH3_PKT_FLAG_NONE;
-                    if (!target->put_acc_issued) {
-                        /* We did not issue PUT/ACC since the last
-                         * synchronization call, therefore here we
-                         * don't need ACK back */
-
+                    if (target->num_ops_flush_not_issued == 0) {
                         flag = MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_NO_ACK;
                     }
                     else {
                         target->sync.outstanding_acks++;
+                        target->num_ops_flush_not_issued = 0;
                     }
                     mpi_errno = send_unlock_msg(target->target_rank, win_ptr, flag);
                     if (mpi_errno != MPI_SUCCESS)
@@ -295,6 +295,8 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
             break;
         }
 
+        target->num_ops_flush_not_issued++;
+
         flags = MPIDI_CH3_PKT_FLAG_NONE;
 
         if (first_op) {
@@ -312,9 +314,14 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
             first_op = 0;
         }
 
-        /* piggyback FLUSH on every OP if ordered flush is not guaranteed. */
-        if (!MPIDI_CH3U_Win_pkt_orderings.am_flush_ordered)
+        /* piggyback FLUSH on current OP if one of the following
+         * conditions meet:
+         * (1) ordered flush is not guaranteed;
+         * (2) operation is a READ op (GET, GACC, FOP, CAS) */
+        if ((!MPIDI_CH3U_Win_pkt_orderings.am_flush_ordered) ||
+            MPIDI_CH3I_RMA_PKT_IS_READ_OP(curr_op->pkt)) {
             flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH;
+        }
 
         if (curr_op->next == NULL) {
             /* piggyback on last OP. */
@@ -335,19 +342,16 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
         /* only increase ack counter when FLUSH or UNLOCK flag is set,
          * but without LOCK piggyback. */
         if (((flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH)
-             || (flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK)))
+             || (flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))) {
             target->sync.outstanding_acks++;
+            target->num_ops_flush_not_issued = 0;
+        }
 
         mpi_errno = issue_rma_op(curr_op, win_ptr, target, flags);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
 
         (*made_progress) = 1;
-
-        if (!MPIDI_CH3I_RMA_PKT_IS_READ_OP(curr_op->pkt)) {
-            target->put_acc_issued = 1; /* set PUT_ACC_FLAG when sending
-                                         * PUT/ACC operation. */
-        }
 
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
             flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE) {
@@ -361,7 +365,10 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
         target->next_op_to_issue = curr_op->next;
 
         if (target->next_op_to_issue == NULL) {
-            if (flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH || flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
+            if (((target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH) &&
+                 (flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH)) ||
+                ((target->sync.sync_flag == MPIDI_RMA_SYNC_UNLOCK) &&
+                 (flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))) {
                 /* We are done with ending sync, unset target's sync_flag. */
                 target->sync.sync_flag = MPIDI_RMA_SYNC_NONE;
             }

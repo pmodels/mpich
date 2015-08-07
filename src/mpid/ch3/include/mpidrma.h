@@ -751,7 +751,10 @@ static inline int handle_lock_ack_with_op(MPID_Win * win_ptr,
         target->next_op_to_issue = op->next;
 
         if (target->next_op_to_issue == NULL) {
-            if (op_flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH || op_flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
+            if (((target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH) &&
+                 (op_flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH)) ||
+                ((target->sync.sync_flag == MPIDI_RMA_SYNC_UNLOCK) &&
+                 (op_flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))) {
                 /* We are done with ending sync, unset target's sync_flag. */
                 target->sync.sync_flag = MPIDI_RMA_SYNC_NONE;
             }
@@ -867,8 +870,6 @@ static inline int MPIDI_CH3I_RMA_Handle_ack(MPID_Win * win_ptr, int target_rank)
 
     t->sync.outstanding_acks--;
     MPIU_Assert(t->sync.outstanding_acks >= 0);
-
-    t->put_acc_issued = 0;      /* reset PUT_ACC_FLAG after FLUSH is completed */
 
   fn_exit:
     return mpi_errno;
