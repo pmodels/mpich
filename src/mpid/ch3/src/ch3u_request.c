@@ -100,7 +100,7 @@ MPID_Request * MPID_Request_create(void)
         req->dev.tmpbuf            = NULL;
         req->dev.ext_hdr_ptr       = NULL;
         req->dev.ext_hdr_sz        = 0;
-        req->dev.rma_op_ptr        = NULL;
+        req->dev.rma_target_ptr    = NULL;
         req->dev.request_handle    = MPI_REQUEST_NULL;
 #ifdef MPIDI_CH3_REQUEST_INIT
 	MPIDI_CH3_REQUEST_INIT(req);

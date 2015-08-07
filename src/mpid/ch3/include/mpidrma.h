@@ -644,6 +644,7 @@ static inline int check_and_set_req_completion(MPID_Win * win_ptr, MPIDI_RMA_Tar
                                                MPIDI_RMA_Op_t * rma_op, int *op_completed)
 {
     int i, mpi_errno = MPI_SUCCESS;
+    int incomplete_req_cnt = 0;
     MPID_Request **req = NULL;
     MPIDI_STATE_DECL(MPID_STATE_CHECK_AND_SET_REQ_COMPLETION);
 
@@ -667,12 +668,12 @@ static inline int check_and_set_req_completion(MPID_Win * win_ptr, MPIDI_RMA_Tar
         else {
             (*req)->request_completed_cb = MPIDI_CH3_Req_handler_rma_op_complete;
             (*req)->dev.source_win_handle = win_ptr->handle;
-            (*req)->dev.rma_op_ptr = rma_op;
+            (*req)->dev.rma_target_ptr = target;
 
-            rma_op->ref_cnt++;
+            incomplete_req_cnt++;
 
             if (rma_op->ureq != NULL) {
-                MPID_cc_set(&(rma_op->ureq->cc), rma_op->ref_cnt);
+                MPID_cc_set(&(rma_op->ureq->cc), incomplete_req_cnt);
                 (*req)->dev.request_handle = rma_op->ureq->handle;
             }
 
@@ -680,30 +681,21 @@ static inline int check_and_set_req_completion(MPID_Win * win_ptr, MPIDI_RMA_Tar
         }
     }
 
-    if (rma_op->ref_cnt == 0) {
+    if (incomplete_req_cnt == 0) {
         if (rma_op->ureq != NULL) {
             mpi_errno = MPID_Request_complete(rma_op->ureq);
             if (mpi_errno != MPI_SUCCESS) {
                 MPIU_ERR_POP(mpi_errno);
             }
         }
-        MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_net_ops_list_head), rma_op);
-
         (*op_completed) = TRUE;
     }
     else {
-        MPIDI_RMA_Op_t **list_ptr = NULL;
-
-        MPIDI_CH3I_RMA_Get_issued_list_ptr(target, rma_op, list_ptr, mpi_errno);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
-        }
-
-        MPL_DL_DELETE(target->pending_net_ops_list_head, rma_op);
-        MPL_DL_APPEND((*list_ptr), rma_op);
-
-        win_ptr->active_req_cnt += rma_op->ref_cnt;
+        win_ptr->active_req_cnt += incomplete_req_cnt;
+        target->num_pkts_wait_for_local_completion += incomplete_req_cnt;
     }
+
+    MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_net_ops_list_head), rma_op);
 
     if (target->pending_net_ops_list_head == NULL) {
         win_ptr->num_targets_with_pending_net_ops--;
