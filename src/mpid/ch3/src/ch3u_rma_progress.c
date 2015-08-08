@@ -47,46 +47,18 @@ cvars:
 
 static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
                                                 int *is_able_to_issue, int *made_progress);
-static inline int check_and_switch_window_state(MPID_Win * win_ptr, int *is_able_to_issue);
 static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
                                    int *made_progress);
 static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress);
 
-/* check if we can switch window-wide state: FENCE_ISSUED, PSCW_ISSUED, LOCK_ALL_ISSUED */
-#undef FUNCNAME
-#define FUNCNAME check_and_switch_window_state
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-static inline int check_and_switch_window_state(MPID_Win * win_ptr, int *is_able_to_issue)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_CHECK_AND_SWITCH_WINDOW_STATE);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_CHECK_AND_SWITCH_WINDOW_STATE);
-
-    (*is_able_to_issue) = 0;
-
-    switch (win_ptr->states.access_state) {
-    case MPIDI_RMA_PER_TARGET:
-    case MPIDI_RMA_LOCK_ALL_CALLED:
-    case MPIDI_RMA_FENCE_GRANTED:
-    case MPIDI_RMA_PSCW_GRANTED:
-    case MPIDI_RMA_LOCK_ALL_GRANTED:
-        (*is_able_to_issue) = 1;
-        break;
-
-    default:
-        break;
-    }   /* end of switch */
-
-  fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_CHECK_AND_SWITCH_WINDOW_STATE);
-    return mpi_errno;
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
-}
+/* This macro checks if window state is ready for issuing RMA operations. */
+#define WIN_READY(win_)                                                 \
+    ((win_)->states.access_state == MPIDI_RMA_PER_TARGET ||             \
+     (win_)->states.access_state == MPIDI_RMA_LOCK_ALL_CALLED ||        \
+     (win_)->states.access_state == MPIDI_RMA_FENCE_GRANTED ||          \
+     (win_)->states.access_state == MPIDI_RMA_PSCW_GRANTED ||           \
+     (win_)->states.access_state == MPIDI_RMA_LOCK_ALL_GRANTED)
 
 
 #undef FUNCNAME
@@ -608,11 +580,8 @@ int MPIDI_CH3I_RMA_Make_progress_target(MPID_Win * win_ptr, int target_rank, int
      * is registered / executed before NBC progress, it will cause the progress engine
      * to re-entrant RMA progress endlessly. */
 
-    /* check window state */
-    mpi_errno = check_and_switch_window_state(win_ptr, &is_able_to_issue);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
-    if (!is_able_to_issue) {
+    /* check window state, if it is not ready, poke the progress engine */
+    if (!WIN_READY(win_ptr)) {
         mpi_errno = poke_progress_engine();
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
@@ -658,7 +627,6 @@ int MPIDI_CH3I_RMA_Make_progress_target(MPID_Win * win_ptr, int target_rank, int
 int MPIDI_CH3I_RMA_Make_progress_win(MPID_Win * win_ptr, int *made_progress)
 {
     int mpi_errno = MPI_SUCCESS;
-    int is_able_to_issue = 0;
     int temp_progress = 0;
 
     (*made_progress) = 0;
@@ -671,11 +639,8 @@ int MPIDI_CH3I_RMA_Make_progress_win(MPID_Win * win_ptr, int *made_progress)
      * is registered / executed before NBC progress, it will cause the progress engine
      * to re-entrant RMA progress endlessly. */
 
-    /* check and try to switch window state */
-    mpi_errno = check_and_switch_window_state(win_ptr, &is_able_to_issue);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
-    if (!is_able_to_issue) {
+    /* check and try to switch window state, if it is not ready, poke the progress engine */
+    if (!WIN_READY(win_ptr)) {
         mpi_errno = poke_progress_engine();
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
@@ -711,18 +676,13 @@ int MPIDI_CH3I_RMA_Make_progress_global(int *made_progress)
 
     for (win_ptr = MPIDI_RMA_Win_active_list_head; win_ptr; win_ptr = win_ptr->next) {
         int temp_progress = 0;
-        int is_able_to_issue = 0;
 
         if (win_ptr->states.access_state == MPIDI_RMA_NONE)
             continue;
 
         /* check and try to switch window state */
-        mpi_errno = check_and_switch_window_state(win_ptr, &is_able_to_issue);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
-        if (!is_able_to_issue) {
+        if (!WIN_READY(win_ptr))
             continue;
-        }
 
         mpi_errno = issue_ops_win(win_ptr, &temp_progress);
         if (mpi_errno != MPI_SUCCESS)
