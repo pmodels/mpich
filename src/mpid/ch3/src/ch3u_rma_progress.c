@@ -14,7 +14,7 @@ cvars:
     - name        : MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD
       category    : CH3
       type        : int
-      default     : 2097152
+      default     : 65536
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
