@@ -43,6 +43,11 @@ MPIU_THREADSAFE_INIT_DECL(initRMAoptions);
 
 MPID_Win *MPIDI_RMA_Win_active_list_head = NULL, *MPIDI_RMA_Win_inactive_list_head = NULL;
 
+/* This variable keeps track of number of active RMA requests, i.e., total number of issued
+ * but incomplete RMA operations. We use this variable to control the resources used up by
+ * internal requests in RMA infrastructure. */
+int MPIDI_CH3I_RMA_Active_req_cnt = 0;
+
 static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, MPID_Info * info,
                     MPID_Comm * comm_ptr, MPID_Win ** win_ptr);
 
@@ -289,7 +294,6 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
     (*win_ptr)->states.access_state = MPIDI_RMA_NONE;
     (*win_ptr)->states.exposure_state = MPIDI_RMA_NONE;
     (*win_ptr)->num_targets_with_pending_net_ops = 0;
-    (*win_ptr)->active_req_cnt = 0;
     (*win_ptr)->start_ranks_in_win_grp = NULL;
     (*win_ptr)->start_grp_size = 0;
     (*win_ptr)->lock_all_assert = 0;

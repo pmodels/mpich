@@ -680,8 +680,6 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
     }
 
   finish_fence:
-    MPIU_Assert(win_ptr->active_req_cnt == 0);
-
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated == TRUE) {
         OPA_read_write_barrier();
@@ -935,8 +933,6 @@ int MPID_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
         win_ptr->states.access_state = MPIDI_RMA_PSCW_GRANTED;
     }
 
-    MPIU_Assert(win_ptr->active_req_cnt == 0);
-
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated == TRUE) {
         OPA_read_write_barrier();
@@ -1022,8 +1018,6 @@ int MPID_Win_complete(MPID_Win * win_ptr)
     /* free start group stored in window */
     MPIU_Free(win_ptr->start_ranks_in_win_grp);
     win_ptr->start_ranks_in_win_grp = NULL;
-
-    MPIU_Assert(win_ptr->active_req_cnt == 0);
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPID_WIN_COMPLETE);
@@ -1561,8 +1555,6 @@ int MPID_Win_lock_all(int assert, MPID_Win * win_ptr)
         }
     }
 
-    MPIU_Assert(win_ptr->active_req_cnt == 0);
-
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated == TRUE) {
         OPA_read_write_barrier();
@@ -1700,8 +1692,6 @@ int MPID_Win_unlock_all(MPID_Win * win_ptr)
     /* reset lock_all assert on window. */
     win_ptr->lock_all_assert = 0;
 
-    MPIU_Assert(win_ptr->active_req_cnt == 0);
-
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPID_WIN_UNLOCK_ALL);
     return mpi_errno;
@@ -1738,8 +1728,6 @@ int MPID_Win_flush_all(MPID_Win * win_ptr)
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
 
-    MPIU_Assert(win_ptr->active_req_cnt == 0);
-
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPIDI_STATE_MPID_WIN_FLUSH_ALL);
     return mpi_errno;
@@ -1775,8 +1763,6 @@ int MPID_Win_flush_local_all(MPID_Win * win_ptr)
     mpi_errno = flush_local_all(win_ptr);
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
-
-    MPIU_Assert(win_ptr->active_req_cnt == 0);
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPID_WIN_FLUSH_LOCAL_ALL);

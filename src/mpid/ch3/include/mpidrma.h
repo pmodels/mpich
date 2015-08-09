@@ -691,7 +691,7 @@ static inline int check_and_set_req_completion(MPID_Win * win_ptr, MPIDI_RMA_Tar
         (*op_completed) = TRUE;
     }
     else {
-        win_ptr->active_req_cnt += incomplete_req_cnt;
+        MPIDI_CH3I_RMA_Active_req_cnt += incomplete_req_cnt;
         target->num_pkts_wait_for_local_completion += incomplete_req_cnt;
     }
 

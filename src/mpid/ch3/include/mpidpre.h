@@ -332,9 +332,6 @@ typedef struct MPIDI_Win_basic_info {
     int num_targets_with_pending_net_ops; /* keep track of number of     \
                                              targets that has non-empty  \
                                              net pending op list. */     \
-    int active_req_cnt; /* keep track of number of active requests in    \
-                           current epoch, i.e., number of issued but     \
-                           incomplete RMA operations. */                 \
     int *start_ranks_in_win_grp;                                         \
     int start_grp_size;                                                  \
     int lock_all_assert;                                                 \
@@ -353,6 +350,8 @@ typedef struct MPIDI_Win_basic_info {
     struct MPID_Win *next;                                              \
 
 extern struct MPID_Win *MPIDI_RMA_Win_active_list_head, *MPIDI_RMA_Win_inactive_list_head;
+
+extern int MPIDI_CH3I_RMA_Active_req_cnt;
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \
