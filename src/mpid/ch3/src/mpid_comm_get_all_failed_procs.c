@@ -89,7 +89,7 @@ static MPID_Group *bitarray_to_group(MPID_Comm *comm_ptr, int *bitarray)
 int MPID_Comm_get_all_failed_procs(MPID_Comm *comm_ptr, MPID_Group **failed_group, int tag)
 {
     int mpi_errno = MPI_SUCCESS, ret_errno;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int i, j, bitarray_size;
     int *bitarray, *remote_bitarray;
     MPID_Group *local_fail;

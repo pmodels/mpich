@@ -500,7 +500,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                     req_len = others_req[i].lens[j];
 		    if (req_off < iter_st_off + max_size) {
 			recv_count[i]++;
-                        ADIOI_Assert((((ADIO_Offset)(MPIR_Upint)write_buf)+req_off-off) == (ADIO_Offset)(MPIR_Upint)(write_buf+req_off-off));
+                        ADIOI_Assert((((ADIO_Offset)(MPIU_Upint)write_buf)+req_off-off) == (ADIO_Offset)(MPIU_Upint)(write_buf+req_off-off));
 			MPI_Address(write_buf + req_off - off,
 				    &(others_req[i].mem_ptrs[j]));
                         recv_size[i] += req_len;
@@ -862,7 +862,7 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
 { \
     while (size) { \
         size_in_buf = ADIOI_MIN(size, flat_buf_sz); \
-        ADIOI_Assert((((ADIO_Offset)(MPIR_Upint)buf) + user_buf_idx) == (ADIO_Offset)(MPIR_Upint)((MPIR_Upint)buf + user_buf_idx)); \
+        ADIOI_Assert((((ADIO_Offset)(MPIU_Upint)buf) + user_buf_idx) == (ADIO_Offset)(MPIU_Upint)((MPIU_Upint)buf + user_buf_idx)); \
         ADIOI_Assert(size_in_buf == (size_t)size_in_buf);               \
         memcpy(&(send_buf[p][send_buf_idx[p]]), \
                ((char *) buf) + user_buf_idx, size_in_buf); \

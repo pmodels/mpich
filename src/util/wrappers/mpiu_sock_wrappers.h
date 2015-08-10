@@ -16,9 +16,9 @@
 /* FIXME: Add more comments */
 /* FIXME: Ensure this header is only loaded when needed */
 
+#include "mpl.h"
 #include "mpichconf.h"
 #include "mpi.h"
-#include "mpiiov.h"
 #include "mpierror.h"
 #include "mpierrs.h"
 #include "mpimem.h"
@@ -346,7 +346,7 @@ fn_fail:
 #   undef FCNAME
 #   define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Readv(MPIU_SOCKW_Sockfd_t sock,
-    MPID_IOV *iov, int iov_cnt, int *nb_rd_ptr)
+    MPL_IOV *iov, int iov_cnt, int *nb_rd_ptr)
 {
     DWORD flags = 0;
     int err;
@@ -376,7 +376,7 @@ fn_fail:
 #   undef FCNAME
 #   define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Readv_ex(MPIU_SOCKW_Sockfd_t sock,
-    MPID_IOV *iov, int iov_cnt, int *nb_rd_ptr, MPIU_EXOVERLAPPED *ov)
+    MPL_IOV *iov, int iov_cnt, int *nb_rd_ptr, MPIU_EXOVERLAPPED *ov)
 {
     DWORD flags = 0;
     int err;
@@ -451,7 +451,7 @@ fn_fail:
 #   undef FCNAME
 #   define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int MPIU_SOCKW_Writev_ex(MPIU_SOCKW_Sockfd_t sock,
-    MPID_IOV *iov, int iov_cnt, int *nb_wr_ptr, MPIU_EXOVERLAPPED *ov)
+    MPL_IOV *iov, int iov_cnt, int *nb_wr_ptr, MPIU_EXOVERLAPPED *ov)
 {
     int err;
     int mpi_errno = MPI_SUCCESS;

@@ -503,7 +503,7 @@ int MPIDU_Sock_post_read(struct MPIDU_Sock * sock, void * buf, MPIU_Size_t minle
 #define FUNCNAME MPIDU_Sock_post_readv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIDU_Sock_post_readv(struct MPIDU_Sock * sock, MPID_IOV * iov, int iov_n, MPIDU_Sock_progress_update_func_t fn)
+int MPIDU_Sock_post_readv(struct MPIDU_Sock * sock, MPL_IOV * iov, int iov_n, MPIDU_Sock_progress_update_func_t fn)
 {
     struct pollfd * pollfd;
     struct pollinfo * pollinfo;
@@ -523,7 +523,7 @@ int MPIDU_Sock_post_readv(struct MPIDU_Sock * sock, MPID_IOV * iov, int iov_n, M
     MPIDU_SOCKI_VERIFY_NO_POSTED_READ(pollfd, pollinfo, mpi_errno, fn_exit);
 
     /* --BEGIN ERROR HANDLING-- */
-    if (iov_n < 1 || iov_n > MPID_IOV_LIMIT)
+    if (iov_n < 1 || iov_n > MPL_IOV_LIMIT)
     {
 	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDU_SOCK_ERR_BAD_LEN,
 					 "**sock|badiovn", "**sock|badiovn %d %d %d",
@@ -602,7 +602,7 @@ int MPIDU_Sock_post_write(struct MPIDU_Sock * sock, void * buf, MPIU_Size_t minl
 #define FUNCNAME MPIDU_Sock_post_writev
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIDU_Sock_post_writev(struct MPIDU_Sock * sock, MPID_IOV * iov, int iov_n, MPIDU_Sock_progress_update_func_t fn)
+int MPIDU_Sock_post_writev(struct MPIDU_Sock * sock, MPL_IOV * iov, int iov_n, MPIDU_Sock_progress_update_func_t fn)
 {
     struct pollfd * pollfd;
     struct pollinfo * pollinfo;
@@ -622,7 +622,7 @@ int MPIDU_Sock_post_writev(struct MPIDU_Sock * sock, MPID_IOV * iov, int iov_n, 
     MPIDU_SOCKI_VERIFY_NO_POSTED_WRITE(pollfd, pollinfo, mpi_errno, fn_exit);
 
     /* --BEGIN ERROR HANDLING-- */
-    if (iov_n < 1 || iov_n > MPID_IOV_LIMIT)
+    if (iov_n < 1 || iov_n > MPL_IOV_LIMIT)
     {
 	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDU_SOCK_ERR_BAD_LEN,
 					 "**sock|badiovn", "**sock|badiovn %d %d %d",

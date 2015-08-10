@@ -63,7 +63,7 @@ int MPI_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispls
 int MPIR_Alltoallv_intra(const void *sendbuf, const int *sendcounts, const int *sdispls,
                          MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
                          const int *rdispls, MPI_Datatype recvtype, MPID_Comm *comm_ptr,
-                         mpir_errflag_t *errflag)
+                         MPIR_Errflag_t *errflag)
 {
     int        comm_size, i, j;
     MPI_Aint   send_extent, recv_extent;
@@ -152,7 +152,7 @@ int MPIR_Alltoallv_intra(const void *sendbuf, const int *sendcounts, const int *
                 if (recvcounts[dst]) {
                     MPID_Datatype_get_size_macro(recvtype, type_size);
                     if (type_size) {
-                        MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+                        MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
                                                          rdispls[dst]*recv_extent);
                         mpi_errno = MPIC_Irecv((char *)recvbuf+rdispls[dst]*recv_extent,
                                                   recvcounts[dst], recvtype, dst,
@@ -174,7 +174,7 @@ int MPIR_Alltoallv_intra(const void *sendbuf, const int *sendcounts, const int *
                 if (sendcounts[dst]) {
                     MPID_Datatype_get_size_macro(sendtype, type_size);
                     if (type_size) {
-                        MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
+                        MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
                                                          sdispls[dst]*send_extent);
                         mpi_errno = MPIC_Isend((char *)sendbuf+sdispls[dst]*send_extent,
                                                   sendcounts[dst], sendtype, dst,
@@ -238,7 +238,7 @@ fn_fail:
 int MPIR_Alltoallv_inter(const void *sendbuf, const int *sendcounts, const int *sdispls,
                          MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
                          const int *rdispls, MPI_Datatype recvtype, MPID_Comm *comm_ptr,
-                         mpir_errflag_t *errflag)
+                         MPIR_Errflag_t *errflag)
 {
 /* Intercommunicator alltoallv. We use a pairwise exchange algorithm
    similar to the one used in intracommunicator alltoallv. Since the
@@ -282,7 +282,7 @@ int MPIR_Alltoallv_inter(const void *sendbuf, const int *sendcounts, const int *
             recvcount = 0;
         }
         else {
-            MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+            MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
 					     rdispls[src]*recv_extent);
             recvaddr = (char *)recvbuf + rdispls[src]*recv_extent;
             recvcount = recvcounts[src];
@@ -293,7 +293,7 @@ int MPIR_Alltoallv_inter(const void *sendbuf, const int *sendcounts, const int *
             sendcount = 0;
         }
         else {
-            MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
+            MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
 					     sdispls[dst]*send_extent);
             sendaddr = (char *)sendbuf + sdispls[dst]*send_extent;
             sendcount = sendcounts[dst];
@@ -330,7 +330,7 @@ int MPIR_Alltoallv_inter(const void *sendbuf, const int *sendcounts, const int *
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispls,
                    MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *rdispls,
-                   MPI_Datatype recvtype, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+                   MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -361,7 +361,7 @@ int MPIR_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispl
 int MPIR_Alltoallv_impl(const void *sendbuf, const int *sendcounts, const int *sdispls,
                         MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
                         const int *rdispls, MPI_Datatype recvtype,
-                        MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+                        MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -436,7 +436,7 @@ int MPI_Alltoallv(const void *sendbuf, const int *sendcounts,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ALLTOALLV);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

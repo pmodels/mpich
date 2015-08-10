@@ -290,7 +290,7 @@ int MPIR_Ireduce_scatter_block_pairwise(const void *sendbuf, void *recvbuf, int 
     }
     /* total_count*extent eventually gets malloced. it isn't added to
      * a user-passed in buffer */
-    MPID_Ensure_Aint_fits_in_pointer(total_count * MPIR_MAX(true_extent, extent));
+    MPIU_Ensure_Aint_fits_in_pointer(total_count * MPIR_MAX(true_extent, extent));
 
     if (sendbuf != MPI_IN_PLACE) {
         /* copy local data into recvbuf */
@@ -430,7 +430,7 @@ int MPIR_Ireduce_scatter_block_rec_dbl(const void *sendbuf, void *recvbuf, int r
 
     /* total_count*extent eventually gets malloced. it isn't added to
      * a user-passed in buffer */
-    MPID_Ensure_Aint_fits_in_pointer(total_count * MPIR_MAX(true_extent, extent));
+    MPIU_Ensure_Aint_fits_in_pointer(total_count * MPIR_MAX(true_extent, extent));
 
 
     /* need to allocate temporary buffer to receive incoming data*/

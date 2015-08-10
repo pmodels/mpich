@@ -300,11 +300,11 @@ int MPID_nem_llc_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
         *(int32_t *) ((uint8_t *) & cmd[0].tag) = req->dev.match.parts.tag;
     }
 
-    *(MPIR_Context_id_t *) ((uint8_t *) & cmd[0].tag + sizeof(int32_t)) =
+    *(MPIU_Context_id_t *) ((uint8_t *) & cmd[0].tag + sizeof(int32_t)) =
         req->dev.match.parts.context_id;
-    MPIU_Assert(sizeof(LLC_tag_t) >= sizeof(int32_t) + sizeof(MPIR_Context_id_t));
-    memset((uint8_t *) & cmd[0].tag + sizeof(int32_t) + sizeof(MPIR_Context_id_t),
-           0, sizeof(LLC_tag_t) - sizeof(int32_t) - sizeof(MPIR_Context_id_t));
+    MPIU_Assert(sizeof(LLC_tag_t) >= sizeof(int32_t) + sizeof(MPIU_Context_id_t));
+    memset((uint8_t *) & cmd[0].tag + sizeof(int32_t) + sizeof(MPIU_Context_id_t),
+           0, sizeof(LLC_tag_t) - sizeof(int32_t) - sizeof(MPIU_Context_id_t));
 
 
     dprintf("llc_recv_posted,tag=");

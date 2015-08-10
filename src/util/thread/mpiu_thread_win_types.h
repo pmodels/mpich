@@ -11,6 +11,8 @@
  * include hierarchy -- to prevent type redefinition 
  * errors...
  */
+#ifndef MPIU_THREAD_WIN_TYPES_H_INCLUDED
+#define MPIU_THREAD_WIN_TYPES_H_INCLUDED
 
 #define WIN32_LEAN_AND_MEAN
 
@@ -31,3 +33,5 @@ typedef struct MPIU_Thread_cond_t
     MPIU_Thread_mutex_t fifo_mutex;
     MPIU_Thread_cond_fifo_t *fifo_head, *fifo_tail;
 } MPIU_Thread_cond_t;
+
+#endif /* MPIU_THREAD_WIN_TYPES_H_INCLUDED */

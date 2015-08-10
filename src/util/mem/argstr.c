@@ -50,7 +50,7 @@ static int encode_buffer(char *dest, int dest_length, const char *src,
     }
     while (src_length && dest_length)
     {
-	num_used = MPIU_Snprintf(dest, dest_length, "%02X", 
+	num_used = MPL_snprintf(dest, dest_length, "%02X", 
 				 (unsigned char)*src);
 	if (num_used < 0)
 	{
@@ -691,12 +691,12 @@ int MPIU_Str_add_string(char **str_ptr, int *maxlen_ptr, const char *val)
     {
 	if (*val == '\0')
 	{
-	    num_chars = MPIU_Snprintf(str, maxlen, 
+	    num_chars = MPL_snprintf(str, maxlen, 
 		      MPIU_STR_QUOTE_STR MPIU_STR_QUOTE_STR/*"\"\""*/);
 	}
 	else
 	{
-	    num_chars = MPIU_Snprintf(str, maxlen, "%s%c", val, 
+	    num_chars = MPL_snprintf(str, maxlen, "%s%c", val, 
 				      MPIU_STR_SEPAR_CHAR);
 	}
 	if (num_chars == maxlen)
@@ -822,7 +822,7 @@ int MPIU_Str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
     }
     else
     {
-	num_chars = MPIU_Snprintf(*str_ptr, *maxlen_ptr, "%s", flag);
+	num_chars = MPL_snprintf(*str_ptr, *maxlen_ptr, "%s", flag);
     }
     *maxlen_ptr = *maxlen_ptr - num_chars;
     if (*maxlen_ptr < 1)
@@ -851,12 +851,12 @@ int MPIU_Str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
     {
 	if (*val == '\0')
 	{
-	    num_chars = MPIU_Snprintf(*str_ptr, *maxlen_ptr, 
+	    num_chars = MPL_snprintf(*str_ptr, *maxlen_ptr, 
 			      MPIU_STR_QUOTE_STR MPIU_STR_QUOTE_STR/*"\"\""*/);
 	}
 	else
 	{
-	    num_chars = MPIU_Snprintf(*str_ptr, *maxlen_ptr, "%s", val);
+	    num_chars = MPL_snprintf(*str_ptr, *maxlen_ptr, "%s", val);
 	}
     }
     *str_ptr = *str_ptr + num_chars;
@@ -908,7 +908,7 @@ int MPIU_Str_add_int_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
 			 int val)
 {
     char val_str[12];
-    MPIU_Snprintf(val_str, 12, "%d", val);
+    MPL_snprintf(val_str, 12, "%d", val);
     return MPIU_Str_add_string_arg(str_ptr, maxlen_ptr, flag, val_str);
 }
 
@@ -959,7 +959,7 @@ int MPIU_Str_add_binary_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
     }
     else
     {
-	num_chars = MPIU_Snprintf(*str_ptr, *maxlen_ptr, "%s", flag);
+	num_chars = MPL_snprintf(*str_ptr, *maxlen_ptr, "%s", flag);
     }
     *maxlen_ptr = *maxlen_ptr - num_chars;
     if (*maxlen_ptr < 1)

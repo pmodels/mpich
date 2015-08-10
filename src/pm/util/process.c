@@ -152,7 +152,7 @@ int MPIE_ForkProcesses( ProcessWorld *pWorld, char *envp[],
 		}
 		rc = MPIE_ExecProgram( &pState[i], envp );
 		if (rc) {
-		    MPIU_Internal_error_printf( "mpiexec fork failed\n" );
+		    MPL_internal_error_printf( "mpiexec fork failed\n" );
 		    /* FIXME: kill children */
 		    exit(1);
 		}
@@ -170,7 +170,7 @@ int MPIE_ForkProcesses( ProcessWorld *pWorld, char *envp[],
 		    rc = (*postamble)( preambleData, postambleData, 
 				       &pState[i] );
 		    if (rc) {
-			MPIU_Internal_error_printf( 
+			MPL_internal_error_printf( 
 				      "mpiexec postamble failed\n" );
 			/* FIXME: kill children */
 			exit(1);
@@ -263,27 +263,27 @@ int MPIE_ExecProgram( ProcessState *pState, char *envp[] )
     /* build environment for client. */
     j = MPIE_EnvSetup( pState, envp, client_env, MAX_CLIENT_ENV-7 );
     if (j < 0) {
-	MPIU_Error_printf( "Failure setting up environment\n" );
+	MPL_error_printf( "Failure setting up environment\n" );
     }
     nj = j;  /* nj is the first entry of client_env that will be set by
 		this routine */
     DBG_PRINTF( ( "Setup env (j=%d)\n", j ) );
 
     if (j == MAX_CLIENT_ENV-7) {
-	MPIU_Error_printf( "Environment is too large (max is %d)\n",
+	MPL_error_printf( "Environment is too large (max is %d)\n",
 			   MAX_CLIENT_ENV-7);
 	exit(-1);
     }
 
     DBG_PRINTF( ( "Creating pmi env\n" ) );
     if (pState->initWithEnv) {
-	MPIU_Snprintf( env_pmi_rank, MAXNAMELEN, "PMI_RANK=%d", 
+	MPL_snprintf( env_pmi_rank, MAXNAMELEN, "PMI_RANK=%d", 
 		       pState->wRank );
 	client_env[j++] = env_pmi_rank;
-	MPIU_Snprintf( env_pmi_size, MAXNAMELEN, "PMI_SIZE=%d", 
+	MPL_snprintf( env_pmi_size, MAXNAMELEN, "PMI_SIZE=%d", 
 		       app->pWorld->nProcess );
 	client_env[j++] = env_pmi_size;
-	MPIU_Snprintf( env_pmi_debug, MAXNAMELEN, "PMI_DEBUG=%d", MPIE_Debug );
+	MPL_snprintf( env_pmi_debug, MAXNAMELEN, "PMI_DEBUG=%d", MPIE_Debug );
 	client_env[j++] = env_pmi_debug; 
     }
     else {
@@ -291,21 +291,21 @@ int MPIE_ExecProgram( ProcessState *pState, char *envp[] )
 	   This id is saved in the pState so that we can match it 
 	   when it comes back to us (it is the same as the rank 
 	   in the simple case) */
-	MPIU_Snprintf( env_pmi_id, sizeof(env_pmi_id), "PMI_ID=%d",
+	MPL_snprintf( env_pmi_id, sizeof(env_pmi_id), "PMI_ID=%d",
 		       pState->id );
 	client_env[j++] = env_pmi_id;
     }
 
-    MPIU_Snprintf( env_appnum, MAXNAMELEN, "MPI_APPNUM=%d", app->myAppNum );
+    MPL_snprintf( env_appnum, MAXNAMELEN, "MPI_APPNUM=%d", app->myAppNum );
     client_env[j++] = env_appnum;
-    MPIU_Snprintf( env_universesize, MAXNAMELEN, "MPI_UNIVERSE_SIZE=%d", 
+    MPL_snprintf( env_universesize, MAXNAMELEN, "MPI_UNIVERSE_SIZE=%d", 
 		   pUniv.size );
     client_env[j++] = env_universesize;
     client_env[j]   = 0;
 
     for ( j = nj; client_env[j]; j++ )
 	if (putenv( client_env[j] )) {
-	    MPIU_Internal_sys_error_printf( "mpiexec", errno, 
+	    MPL_internal_sys_error_printf( "mpiexec", errno, 
 			     "Could not set environment %s", client_env[j] );
 	    exit( 1 );
 	}
@@ -316,11 +316,11 @@ int MPIE_ExecProgram( ProcessState *pState, char *envp[] )
     if (app->wdir) {
 	rc = chdir( app->wdir );
 	if (rc < 0) {
-	    MPIU_Error_printf( "Unable to set working directory to %s\n",
+	    MPL_error_printf( "Unable to set working directory to %s\n",
 			       app->wdir);
 	    rc = chdir( getenv( "HOME" ) );
 	    if (rc < 0) {
-		MPIU_Error_printf( "Unable to set working directory to %s\n",
+		MPL_error_printf( "Unable to set working directory to %s\n",
 				   getenv( "HOME" ) );
 		exit( 1 );
 	    }
@@ -329,7 +329,7 @@ int MPIE_ExecProgram( ProcessState *pState, char *envp[] )
 
     DBG_PRINTF( ( "Setup command-line args\n" ) );
     if ((app->nArgs + 2) > MAX_CLIENT_ARG) { /* +1 for exename, +1 for null */
-        MPIU_Error_printf("Too many command-line arguments: requested=%d maximum=%d\n",
+        MPL_error_printf("Too many command-line arguments: requested=%d maximum=%d\n",
                           app->nArgs, MAX_CLIENT_ARG - 2);
         exit(1);
     }
@@ -344,7 +344,7 @@ int MPIE_ExecProgram( ProcessState *pState, char *envp[] )
     /* pathname argument should be used here */
     if (app->path) {
 	/* Set up the search path */
-	MPIU_Snprintf( pathstring, sizeof(pathstring)-1, "PATH=%s", 
+	MPL_snprintf( pathstring, sizeof(pathstring)-1, "PATH=%s", 
 		       app->path );
 	/* Some systems require that the path include the path to
 	   certain files or libraries, for example cygwin1.dll for
@@ -359,7 +359,7 @@ int MPIE_ExecProgram( ProcessState *pState, char *envp[] )
     rc = execvp( app->exename, client_arg );
 
     if ( rc < 0 ) {
-	MPIU_Internal_sys_error_printf( "mpiexec", errno, 
+	MPL_internal_sys_error_printf( "mpiexec", errno, 
 					"mpiexec could not exec %s\n", 
 					app->exename );
 	exit( 1 );
@@ -869,17 +869,17 @@ void MPIE_PrintFailureReasons( FILE *fp )
 		if (sig && (exitReason != EXIT_KILLED || 
 			    (sig != SIGKILL && sig != SIGINT))) {
 #ifdef HAVE_STRSIGNAL
-		    MPIU_Error_printf( 
+		    MPL_error_printf( 
 			      "[%d]%d:Return code = %d, signaled with %s\n", 
 			      worldnum, wrank, rc, strsignal(sig) );
 #else
-		    MPIU_Error_printf( 
+		    MPL_error_printf( 
 			      "[%d]%d:Return code = %d, signaled with %d\n", 
 			      worldnum, wrank, rc, sig );
 #endif
 		}
 		else if (MPIE_Debug || rc) {
-		    MPIU_Error_printf( "[%d]%d:Return code = %d\n", 
+		    MPL_error_printf( "[%d]%d:Return code = %d\n", 
 				       worldnum, wrank, rc );
 		}
 	    }

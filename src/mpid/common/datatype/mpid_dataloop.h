@@ -23,9 +23,9 @@
 #define DLOOP_Handle     MPI_Datatype
 #define DLOOP_Type       MPI_Datatype
 #define DLOOP_Buffer     void *
-#define DLOOP_VECTOR     MPID_IOV
-#define DLOOP_VECTOR_LEN MPID_IOV_LEN
-#define DLOOP_VECTOR_BUF MPID_IOV_BUF
+#define DLOOP_VECTOR     MPL_IOV
+#define DLOOP_VECTOR_LEN MPL_IOV_LEN
+#define DLOOP_VECTOR_BUF MPL_IOV_BUF
 #define DLOOP_Size       MPI_Aint
 
 /* The following accessor functions must also be defined:
@@ -74,7 +74,7 @@
     ((HANDLE_GET_KIND(handle_) == HANDLE_KIND_BUILTIN) ? 0 : 1)
 
 #define DLOOP_Ensure_Offset_fits_in_pointer(value_) \
-    MPID_Ensure_Aint_fits_in_pointer(value_)
+    MPIU_Ensure_Aint_fits_in_pointer(value_)
 
 /* allocate and free functions must also be defined. */
 #define DLOOP_Malloc MPIU_Malloc

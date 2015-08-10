@@ -25,7 +25,7 @@ int MPIDI_CH3I_Seg_destroy(void);
 int MPID_nem_check_alloc(int);
 int MPID_nem_mpich_init(void);
 int MPID_nem_coll_init (void);
-int MPID_nem_send_iov(MPIDI_VC_t *vc, MPID_Request **sreq_ptr, MPID_IOV *iov, int n_iov);
+int MPID_nem_send_iov(MPIDI_VC_t *vc, MPID_Request **sreq_ptr, MPL_IOV *iov, int n_iov);
 int MPID_nem_lmt_pkthandler_init(MPIDI_CH3_PktHandler_Fcn *pktArray[], int arraySize);
 int MPID_nem_register_initcomp_cb(int (* callback)(void));
 int MPID_nem_choose_netmod(void);
@@ -138,15 +138,15 @@ typedef union MPIDI_CH3_nem_pkt
 
 #define MPID_nem_lmt_send_RTS(vc, rts_pkt, s_cookie_buf, s_cookie_len) do {                             \
         MPID_Request *_rts_req;                                                                         \
-        MPID_IOV _iov[2];                                                                               \
+        MPL_IOV _iov[2];                                                                               \
                                                                                                         \
         MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"sending rndv RTS packet");                                      \
         (rts_pkt)->cookie_len = (s_cookie_len);                                                         \
                                                                                                         \
-        _iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)(rts_pkt);                                            \
-        _iov[0].MPID_IOV_LEN = sizeof(*(rts_pkt));                                                      \
-        _iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)(s_cookie_buf);                                       \
-        _iov[1].MPID_IOV_LEN = (s_cookie_len);                                                          \
+        _iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)(rts_pkt);                                            \
+        _iov[0].MPL_IOV_LEN = sizeof(*(rts_pkt));                                                      \
+        _iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)(s_cookie_buf);                                       \
+        _iov[1].MPL_IOV_LEN = (s_cookie_len);                                                          \
                                                                                                         \
         MPIU_DBG_MSGPKT((vc), (rts_pkt)->match.parts.tag, (rts_pkt)->match.parts.context_id, (rts_pkt)->match.parts.rank, \
                         (rts_pkt)->data_sz, "Rndv");                                                    \
@@ -182,7 +182,7 @@ typedef union MPIDI_CH3_nem_pkt
 #define MPID_nem_lmt_send_CTS(vc, rreq, r_cookie_buf, r_cookie_len) do {                                \
         MPID_PKT_DECL_CAST(_upkt, MPID_nem_pkt_lmt_cts_t, _cts_pkt);                                    \
         MPID_Request *_cts_req;                                                                         \
-        MPID_IOV _iov[2];                                                                               \
+        MPL_IOV _iov[2];                                                                               \
                                                                                                         \
         MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"sending rndv CTS packet");                                      \
         MPIDI_Pkt_init(_cts_pkt, MPIDI_NEM_PKT_LMT_CTS);                                                \
@@ -191,10 +191,10 @@ typedef union MPIDI_CH3_nem_pkt
         _cts_pkt->cookie_len = (r_cookie_len);                                                          \
         _cts_pkt->data_sz = (rreq)->ch.lmt_data_sz;                                                     \
                                                                                                         \
-        _iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)_cts_pkt;                                             \
-        _iov[0].MPID_IOV_LEN = sizeof(*_cts_pkt);                                                       \
-        _iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)(r_cookie_buf);                                       \
-        _iov[1].MPID_IOV_LEN = (r_cookie_len);                                                          \
+        _iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)_cts_pkt;                                             \
+        _iov[0].MPL_IOV_LEN = sizeof(*_cts_pkt);                                                       \
+        _iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)(r_cookie_buf);                                       \
+        _iov[1].MPL_IOV_LEN = (r_cookie_len);                                                          \
                                                                                                         \
         mpi_errno = MPIDI_CH3_iStartMsgv((vc), _iov, (r_cookie_len) ? 2 : 1, &_cts_req);                \
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ctspkt");                           \
@@ -215,7 +215,7 @@ static inline int MPID_nem_lmt_send_COOKIE(MPIDI_VC_t *vc, MPID_Request *req,
     int mpi_errno = MPI_SUCCESS;
     MPID_PKT_DECL_CAST(_upkt, MPID_nem_pkt_lmt_cookie_t, cookie_pkt);
     MPID_Request *cookie_req;
-    MPID_IOV iov[2];
+    MPL_IOV iov[2];
 
     MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"sending rndv COOKIE packet");
     MPIDI_Pkt_init(cookie_pkt, MPIDI_NEM_PKT_LMT_COOKIE);
@@ -242,10 +242,10 @@ static inline int MPID_nem_lmt_send_COOKIE(MPIDI_VC_t *vc, MPID_Request *req,
             break;
     }
 
-    iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) cookie_pkt;
-    iov[0].MPID_IOV_LEN = sizeof(*cookie_pkt);
-    iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) cookie_buf;
-    iov[1].MPID_IOV_LEN = cookie_len;
+    iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) cookie_pkt;
+    iov[0].MPL_IOV_LEN = sizeof(*cookie_pkt);
+    iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) cookie_buf;
+    iov[1].MPL_IOV_LEN = cookie_len;
 
     mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, (cookie_len ? 2 : 1), &cookie_req);
     MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**cookiepkt");

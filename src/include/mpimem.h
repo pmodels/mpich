@@ -24,9 +24,6 @@ extern "C" {
 #include "mpichconf.h"
 #include "mpl.h"
 
-/* ensure that we weren't included out of order */
-#include "mpibase.h"
-
 /* Define attribute as empty if it has no definition */
 #ifndef ATTRIBUTE
 #define ATTRIBUTE(a)
@@ -443,8 +440,6 @@ if (pointer_) { \
 /* FIXME: Provide a fallback function ? */
 #   error "No function defined for case-insensitive strncmp"
 #endif
-
-#define MPIU_Snprintf MPL_snprintf
 
 /* MPIU_Basename(path, basename)
    This function finds the basename in a path (ala "man 1 basename").

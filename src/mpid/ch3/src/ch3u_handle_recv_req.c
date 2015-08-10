@@ -258,7 +258,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_get_accum_resp_t *get_accum_resp_pkt = &upkt.get_accum_resp;
     MPID_Request *resp_req;
-    MPID_IOV iov[MPID_IOV_LIMIT];
+    MPL_IOV iov[MPL_IOV_LIMIT];
     int iovcnt;
     int is_contig;
     MPI_Datatype basic_type;
@@ -376,10 +376,10 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
      * operation are completed when counter reaches zero. */
     win_ptr->at_completion_counter++;
 
-    iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
-    iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
-    iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *) resp_req->dev.user_buf);
-    iov[1].MPID_IOV_LEN = stream_data_len;
+    iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) get_accum_resp_pkt;
+    iov[0].MPL_IOV_LEN = sizeof(*get_accum_resp_pkt);
+    iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) ((char *) resp_req->dev.user_buf);
+    iov[1].MPL_IOV_LEN = stream_data_len;
     iovcnt = 2;
 
     MPIU_THREAD_CS_ENTER(CH3COMM, vc);
@@ -430,7 +430,7 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
     MPID_Win *win_ptr = NULL;
     MPI_Aint type_size;
     MPID_Request *resp_req = NULL;
-    MPID_IOV iov[MPID_IOV_LIMIT];
+    MPL_IOV iov[MPL_IOV_LIMIT];
     int iovcnt;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_fop_resp_t *fop_resp_pkt = &upkt.fop_resp;
@@ -516,10 +516,10 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
         (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
         fop_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_ACK;
 
-    iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) fop_resp_pkt;
-    iov[0].MPID_IOV_LEN = sizeof(*fop_resp_pkt);
-    iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *) resp_req->dev.user_buf);
-    iov[1].MPID_IOV_LEN = type_size;
+    iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) fop_resp_pkt;
+    iov[0].MPL_IOV_LEN = sizeof(*fop_resp_pkt);
+    iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) ((char *) resp_req->dev.user_buf);
+    iov[1].MPL_IOV_LEN = type_size;
     iovcnt = 2;
 
     MPIU_THREAD_CS_ENTER(CH3COMM, vc);
@@ -1188,7 +1188,7 @@ static inline int perform_get_in_lock_queue(MPID_Win * win_ptr,
     MPI_Aint type_size;
     size_t len;
     int iovcnt;
-    MPID_IOV iov[MPID_IOV_LIMIT];
+    MPL_IOV iov[MPL_IOV_LIMIT];
     int is_contig;
     int mpi_errno = MPI_SUCCESS;
 
@@ -1245,8 +1245,8 @@ static inline int perform_get_in_lock_queue(MPID_Win * win_ptr,
             MPIU_ERR_POP(mpi_errno);
 
         /* All origin data is in packet header, issue the header. */
-        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_resp_pkt;
-        iov[0].MPID_IOV_LEN = sizeof(*get_resp_pkt);
+        iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) get_resp_pkt;
+        iov[0].MPL_IOV_LEN = sizeof(*get_resp_pkt);
         iovcnt = 1;
 
         mpi_errno = MPIDI_CH3_iSendv(target_lock_entry->vc, sreq, iov, iovcnt);
@@ -1256,10 +1256,10 @@ static inline int perform_get_in_lock_queue(MPID_Win * win_ptr,
         }
     }
     else if (is_contig) {
-        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_resp_pkt;
-        iov[0].MPID_IOV_LEN = sizeof(*get_resp_pkt);
-        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) (get_pkt->addr);
-        iov[1].MPID_IOV_LEN = get_pkt->count * type_size;
+        iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) get_resp_pkt;
+        iov[0].MPL_IOV_LEN = sizeof(*get_resp_pkt);
+        iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) (get_pkt->addr);
+        iov[1].MPL_IOV_LEN = get_pkt->count * type_size;
         iovcnt = 2;
 
         mpi_errno = MPIDI_CH3_iSendv(target_lock_entry->vc, sreq, iov, iovcnt);
@@ -1269,8 +1269,8 @@ static inline int perform_get_in_lock_queue(MPID_Win * win_ptr,
         }
     }
     else {
-        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_resp_pkt;
-        iov[0].MPID_IOV_LEN = sizeof(*get_resp_pkt);
+        iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) get_resp_pkt;
+        iov[0].MPL_IOV_LEN = sizeof(*get_resp_pkt);
 
         sreq->dev.segment_ptr = MPID_Segment_alloc();
         MPIU_ERR_CHKANDJUMP1(sreq->dev.segment_ptr == NULL, mpi_errno,
@@ -1282,8 +1282,8 @@ static inline int perform_get_in_lock_queue(MPID_Win * win_ptr,
         sreq->dev.segment_size = get_pkt->count * type_size;
 
         mpi_errno = target_lock_entry->vc->sendNoncontig_fn(target_lock_entry->vc, sreq,
-                                                            iov[0].MPID_IOV_BUF,
-                                                            iov[0].MPID_IOV_LEN);
+                                                            iov[0].MPL_IOV_BUF,
+                                                            iov[0].MPL_IOV_LEN);
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
 
@@ -1363,7 +1363,7 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
     MPI_Aint type_size;
     size_t len;
     int iovcnt;
-    MPID_IOV iov[MPID_IOV_LIMIT];
+    MPL_IOV iov[MPL_IOV_LIMIT];
     int is_contig;
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint type_extent;
@@ -1443,8 +1443,8 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
         win_ptr->at_completion_counter++;
 
         /* All origin data is in packet header, issue the header. */
-        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
-        iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
+        iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) get_accum_resp_pkt;
+        iov[0].MPL_IOV_LEN = sizeof(*get_accum_resp_pkt);
         iovcnt = 1;
 
         mpi_errno = MPIDI_CH3_iSendv(target_lock_entry->vc, sreq, iov, iovcnt);
@@ -1526,10 +1526,10 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
         get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_ACK;
     get_accum_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
 
-    iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
-    iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
-    iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *) sreq->dev.user_buf);
-    iov[1].MPID_IOV_LEN = recv_count * type_size;
+    iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) get_accum_resp_pkt;
+    iov[0].MPL_IOV_LEN = sizeof(*get_accum_resp_pkt);
+    iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) ((char *) sreq->dev.user_buf);
+    iov[1].MPL_IOV_LEN = recv_count * type_size;
     iovcnt = 2;
 
     mpi_errno = MPIDI_CH3_iSendv(target_lock_entry->vc, sreq, iov, iovcnt);
@@ -1553,7 +1553,7 @@ static inline int perform_fop_in_lock_queue(MPID_Win * win_ptr,
     MPIDI_CH3_Pkt_fop_t *fop_pkt = &((target_lock_entry->pkt).fop);
     MPID_Request *resp_req = NULL;
     MPI_Aint type_size;
-    MPID_IOV iov[MPID_IOV_LIMIT];
+    MPL_IOV iov[MPL_IOV_LIMIT];
     int iovcnt;
     int is_contig;
     int mpi_errno = MPI_SUCCESS;
@@ -1689,10 +1689,10 @@ static inline int perform_fop_in_lock_queue(MPID_Win * win_ptr,
         }
     }
     else {
-        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) fop_resp_pkt;
-        iov[0].MPID_IOV_LEN = sizeof(*fop_resp_pkt);
-        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *) resp_req->dev.user_buf);
-        iov[1].MPID_IOV_LEN = type_size;
+        iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) fop_resp_pkt;
+        iov[0].MPL_IOV_LEN = sizeof(*fop_resp_pkt);
+        iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) ((char *) resp_req->dev.user_buf);
+        iov[1].MPL_IOV_LEN = type_size;
         iovcnt = 2;
 
         mpi_errno = MPIDI_CH3_iSendv(target_lock_entry->vc, resp_req, iov, iovcnt);

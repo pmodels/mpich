@@ -299,7 +299,7 @@ static inline int _mxm_eager_threshold(void)
 /*
  * Tag management section
  */
-static inline mxm_tag_t _mxm_tag_mpi2mxm(int mpi_tag, MPIR_Context_id_t context_id)
+static inline mxm_tag_t _mxm_tag_mpi2mxm(int mpi_tag, MPIU_Context_id_t context_id)
 {
     mxm_tag_t mxm_tag;
 
@@ -374,19 +374,19 @@ static inline void _dbg_mxm_hexdump(void *ptr, int buflen)
     len = 80 * (buflen / 16 + 1);
     str = (char *) MPIU_Malloc(len);
     for (i = 0; i < buflen; i += 16) {
-        cur_len += MPIU_Snprintf(str + cur_len, len - cur_len, "%06x: ", i);
+        cur_len += MPL_snprintf(str + cur_len, len - cur_len, "%06x: ", i);
         for (j = 0; j < 16; j++)
             if (i + j < buflen)
-                cur_len += MPIU_Snprintf(str + cur_len, len - cur_len, "%02x ", buf[i + j]);
+                cur_len += MPL_snprintf(str + cur_len, len - cur_len, "%02x ", buf[i + j]);
             else
-                cur_len += MPIU_Snprintf(str + cur_len, len - cur_len, "   ");
-        cur_len += MPIU_Snprintf(str + cur_len, len - cur_len, " ");
+                cur_len += MPL_snprintf(str + cur_len, len - cur_len, "   ");
+        cur_len += MPL_snprintf(str + cur_len, len - cur_len, " ");
         for (j = 0; j < 16; j++)
             if (i + j < buflen)
                 cur_len +=
-                    MPIU_Snprintf(str + cur_len, len - cur_len, "%c",
+                    MPL_snprintf(str + cur_len, len - cur_len, "%c",
                                   isprint(buf[i + j]) ? buf[i + j] : '.');
-        cur_len += MPIU_Snprintf(str + cur_len, len - cur_len, "\n");
+        cur_len += MPL_snprintf(str + cur_len, len - cur_len, "\n");
     }
     _dbg_mxm_out(8, NULL, 1, NULL, NULL, -1, "%s", str);
     MPIU_Free(str);
@@ -398,7 +398,7 @@ static inline char *_tag_val_to_str(int tag, char *out, int max)
         MPIU_Strncpy(out, "MPI_ANY_TAG", max);
     }
     else {
-        MPIU_Snprintf(out, max, "%d", tag);
+        MPL_snprintf(out, max, "%d", tag);
     }
     return out;
 }
@@ -409,7 +409,7 @@ static inline char *_rank_val_to_str(int rank, char *out, int max)
         MPIU_Strncpy(out, "MPI_ANY_SOURCE", max);
     }
     else {
-        MPIU_Snprintf(out, max, "%d", rank);
+        MPL_snprintf(out, max, "%d", rank);
     }
     return out;
 }

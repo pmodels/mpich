@@ -85,7 +85,7 @@ int MPIR_Pack_impl(const void *inbuf,
     last  = SEGMENT_IGNORE_LAST;
 
     /* Ensure that pointer increment fits in a pointer */
-    MPID_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT outbuf) +
+    MPIU_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT outbuf) +
 				     (MPI_Aint) *position);
 
     MPID_Segment_pack(segp,
@@ -94,7 +94,7 @@ int MPIR_Pack_impl(const void *inbuf,
 		      (void *) ((char *) outbuf + *position));
 
     /* Ensure that calculation fits into an int datatype. */
-    MPID_Ensure_Aint_fits_in_int((MPI_Aint)*position + last);
+    MPIU_Ensure_Aint_fits_in_int((MPI_Aint)*position + last);
 
     *position = (int)((MPI_Aint)*position + last);
 

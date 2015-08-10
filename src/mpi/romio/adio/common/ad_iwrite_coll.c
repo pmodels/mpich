@@ -824,7 +824,7 @@ static void ADIOI_Iexch_and_write_l1_begin(ADIOI_NBC_Request *nbc_req,
                 }
                 if (req_off < off + size) {
                     count[i]++;
-                    ADIOI_Assert((((ADIO_Offset)(MPIR_Upint)write_buf)+req_off-off) == (ADIO_Offset)(MPIR_Upint)(write_buf+req_off-off));
+                    ADIOI_Assert((((ADIO_Offset)(MPIU_Upint)write_buf)+req_off-off) == (ADIO_Offset)(MPIU_Upint)(write_buf+req_off-off));
                     MPI_Address(write_buf + req_off - off,
                                 &(others_req[i].mem_ptrs[j]));
                     ADIOI_Assert((off + size - req_off) == (int)(off + size - req_off));

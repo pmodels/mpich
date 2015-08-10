@@ -35,7 +35,7 @@ typedef HANDLE MPIDU_Sock_set_t;
 typedef struct sock_state_t * MPIDU_Sock_t;
 typedef DWORD MPIDU_Sock_size_t;
 
-#include "mpiiov.h"
+#include "mpl.h"
 #include "mpi.h"
 
 #endif

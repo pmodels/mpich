@@ -324,7 +324,7 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
     /* noncontig recv buffer */
     
     last = rreq->dev.segment_size;
-    rreq->dev.iov_count = MPID_IOV_LIMIT;
+    rreq->dev.iov_count = MPL_IOV_LIMIT;
     MPID_Segment_pack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov, &rreq->dev.iov_count);
 
     if (last == rreq->dev.segment_size && rreq->dev.segment_size <= MPIDI_nem_ptl_ni_limits.max_msg_size + PTL_LARGE_THRESHOLD) {
@@ -492,7 +492,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
             rreq->dev.segment_size = data_sz;
 
             last = rreq->dev.segment_size;
-            rreq->dev.iov_count = MPID_IOV_LIMIT;
+            rreq->dev.iov_count = MPL_IOV_LIMIT;
             MPID_Segment_pack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov, &rreq->dev.iov_count);
 
             if (last == rreq->dev.segment_size) {
@@ -530,7 +530,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
             rreq->dev.segment_size = data_sz;
 
             last = PTL_LARGE_THRESHOLD;
-            rreq->dev.iov_count = MPID_IOV_LIMIT;
+            rreq->dev.iov_count = MPL_IOV_LIMIT;
             MPID_Segment_pack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov, &rreq->dev.iov_count);
 
             if (last == PTL_LARGE_THRESHOLD) {
@@ -681,7 +681,7 @@ int MPID_nem_ptl_cancel_recv(MPIDI_VC_t *vc,  MPID_Request *rreq)
 #define FUNCNAME MPID_nem_ptl_lmt_start_recv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPID_Request *rreq, MPID_IOV s_cookie)
+int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPID_Request *rreq, MPL_IOV s_cookie)
 {
     /* This function should only be called as a result of an Mrecv because of the CH3 protocol for
        Rendezvous Mrecvs. The regular CH3 protocol is not optimal for portals, since we don't need
@@ -737,7 +737,7 @@ int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPID_Request *rreq, MPID_IOV s_
         MPIU_Assert(last == PTL_LARGE_THRESHOLD);
         rreq->dev.segment_first = PTL_LARGE_THRESHOLD;
         last = rreq->dev.segment_size;
-        rreq->dev.iov_count = MPID_IOV_LIMIT;
+        rreq->dev.iov_count = MPL_IOV_LIMIT;
         MPID_Segment_pack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.iov,
                                  &rreq->dev.iov_count);
         if (last == rreq->dev.segment_size && last <= MPIDI_nem_ptl_ni_limits.max_msg_size + PTL_LARGE_THRESHOLD) {
@@ -768,7 +768,7 @@ int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPID_Request *rreq, MPID_IOV s_
         }
     }
     MPIU_Free(rreq->dev.tmpbuf);
-    rreq->ch.lmt_tmp_cookie.MPID_IOV_LEN = 0;  /* Required for do_cts in mpid_nem_lmt.c */
+    rreq->ch.lmt_tmp_cookie.MPL_IOV_LEN = 0;  /* Required for do_cts in mpid_nem_lmt.c */
 
  fn_exit:
     MPIU_CHKPMEM_COMMIT();

@@ -119,9 +119,9 @@ typedef struct MPIDI_CH3I_VC
 
     /* LMT function pointers */
     int (* lmt_initiate_lmt)(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts_pkt, struct MPID_Request *req);
-    int (* lmt_start_recv)(struct MPIDI_VC *vc, struct MPID_Request *req, MPID_IOV s_cookie);
-    int (* lmt_start_send)(struct MPIDI_VC *vc, struct MPID_Request *sreq, MPID_IOV r_cookie);
-    int (* lmt_handle_cookie)(struct MPIDI_VC *vc, struct MPID_Request *req, MPID_IOV cookie);
+    int (* lmt_start_recv)(struct MPIDI_VC *vc, struct MPID_Request *req, MPL_IOV s_cookie);
+    int (* lmt_start_send)(struct MPIDI_VC *vc, struct MPID_Request *sreq, MPL_IOV r_cookie);
+    int (* lmt_handle_cookie)(struct MPIDI_VC *vc, struct MPID_Request *req, MPL_IOV cookie);
     int (* lmt_done_send)(struct MPIDI_VC *vc, struct MPID_Request *req);
     int (* lmt_done_recv)(struct MPIDI_VC *vc, struct MPID_Request *req);
     int (* lmt_vc_terminated)(struct MPIDI_VC *vc);
@@ -169,7 +169,7 @@ struct MPIDI_CH3I_Request
     MPI_Request          lmt_req_id;     /* request id of remote side */
     struct MPID_Request *lmt_req;        /* pointer to original send/recv request */
     MPIDI_msg_sz_t       lmt_data_sz;    /* data size to be transferred, after checking for truncation */
-    MPID_IOV             lmt_tmp_cookie; /* temporary storage for received cookie */
+    MPL_IOV             lmt_tmp_cookie; /* temporary storage for received cookie */
     void                *s_cookie;       /* temporary storage for the cookie data in case the packet can't be sent immediately */
 
     union
@@ -198,8 +198,8 @@ struct MPIDI_CH3I_Request
         MPIDI_DBG_PRINTF((55, FCNAME, "  cc = %d\n", (req)->cc));			\
         for (i = 0; i < (req)->iov_count; ++i)                                          \
             MPIDI_DBG_PRINTF((55, FCNAME, "  dev.iov[%d] = (%p, %d)\n", i,		\
-                              (req)->dev.iov[i+(req)->dev.iov_offset].MPID_IOV_BUF,     \
-                              (req)->dev.iov[i+(req)->dev.iov_offset].MPID_IOV_LEN));  \
+                              (req)->dev.iov[i+(req)->dev.iov_offset].MPL_IOV_BUF,     \
+                              (req)->dev.iov[i+(req)->dev.iov_offset].MPL_IOV_LEN));  \
     MPIDI_DBG_PRINTF((55, FCNAME, "  dev.iov_count = %d\n",                             \
                       (req)->dev.iov_count));                                           \
     MPIDI_DBG_PRINTF((55, FCNAME, "  dev.state = 0x%x\n", (req)->dev.state));           \

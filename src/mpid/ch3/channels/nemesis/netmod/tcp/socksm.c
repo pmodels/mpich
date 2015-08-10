@@ -480,9 +480,9 @@ static int send_id_info(const sockconn_t *const sc)
     hdr.datalen = sizeof(MPIDI_nem_tcp_idinfo_t) + pg_id_len;    
     id_info.pg_rank = MPIDI_Process.my_pg_rank;
 
-    iov[0].iov_base = (MPID_IOV_BUF_CAST)&hdr;
+    iov[0].iov_base = (MPL_IOV_BUF_CAST)&hdr;
     iov[0].iov_len = sizeof(hdr);
-    iov[1].iov_base = (MPID_IOV_BUF_CAST)&id_info;
+    iov[1].iov_base = (MPL_IOV_BUF_CAST)&id_info;
     iov[1].iov_len = sizeof(id_info);
     buf_size = sizeof(hdr) + sizeof(id_info);
 
@@ -537,9 +537,9 @@ static int send_tmpvc_info(const sockconn_t *const sc)
     hdr.datalen = sizeof(MPIDI_nem_tcp_portinfo_t);
     port_info.port_name_tag = sc->vc->port_name_tag;
 
-    iov[0].iov_base = (MPID_IOV_BUF_CAST)&hdr;
+    iov[0].iov_base = (MPL_IOV_BUF_CAST)&hdr;
     iov[0].iov_len = sizeof(hdr);
-    iov[1].iov_base = (MPID_IOV_BUF_CAST)&port_info;
+    iov[1].iov_base = (MPL_IOV_BUF_CAST)&port_info;
     iov[1].iov_len = sizeof(port_info);
     buf_size = sizeof(hdr) + sizeof(port_info);
     
@@ -1575,11 +1575,11 @@ static int MPID_nem_tcp_recv_handler(sockconn_t *const sc)
         /* there is a pending receive, receive it directly into the user buffer */
         MPIDI_CH3I_VC *const sc_vc_ch = &sc_vc->ch;
         MPID_Request *const rreq = sc_vc_ch->recv_active;
-        MPID_IOV *iov = &rreq->dev.iov[rreq->dev.iov_offset];
+        MPL_IOV *iov = &rreq->dev.iov[rreq->dev.iov_offset];
         int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
 
         MPIU_Assert(rreq->dev.iov_count > 0);
-        MPIU_Assert(rreq->dev.iov_count + rreq->dev.iov_offset <= MPID_IOV_LIMIT);
+        MPIU_Assert(rreq->dev.iov_count + rreq->dev.iov_offset <= MPL_IOV_LIMIT);
 
         bytes_recvd = MPL_large_readv(sc_fd, iov, rreq->dev.iov_count);
         if (bytes_recvd <= 0)
@@ -1599,18 +1599,18 @@ static int MPID_nem_tcp_recv_handler(sockconn_t *const sc)
         /* update the iov */
         for (iov = &rreq->dev.iov[rreq->dev.iov_offset]; iov < &rreq->dev.iov[rreq->dev.iov_offset + rreq->dev.iov_count]; ++iov)
         {
-            if (bytes_recvd < iov->MPID_IOV_LEN)
+            if (bytes_recvd < iov->MPL_IOV_LEN)
             {
-                iov->MPID_IOV_BUF = (char *)iov->MPID_IOV_BUF + bytes_recvd;
-                iov->MPID_IOV_LEN -= bytes_recvd;
+                iov->MPL_IOV_BUF = (char *)iov->MPL_IOV_BUF + bytes_recvd;
+                iov->MPL_IOV_LEN -= bytes_recvd;
                 rreq->dev.iov_count = (int)(&rreq->dev.iov[rreq->dev.iov_offset + rreq->dev.iov_count] - iov);
                 rreq->dev.iov_offset = iov - rreq->dev.iov;
                 MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "bytes_recvd = %ld", (long int)bytes_recvd);
-                MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "iov len = %ld", (long int)iov->MPID_IOV_LEN);
+                MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "iov len = %ld", (long int)iov->MPL_IOV_LEN);
                 MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "iov_offset = %lld", (long long)rreq->dev.iov_offset);
                 goto fn_exit;
             }
-            bytes_recvd -= iov->MPID_IOV_LEN;
+            bytes_recvd -= iov->MPL_IOV_LEN;
         }
         
         /* the whole iov has been received */

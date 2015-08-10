@@ -248,7 +248,7 @@ static int MPID_Segment_contig_pack_to_iov(DLOOP_Offset *blocks_p,
 	    paramp->u.pack_vector.vectorp[last_idx].DLOOP_VECTOR_LEN;
     }
 
-    MPID_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (bufp)) + rel_off);
+    MPIU_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (bufp)) + rel_off);
     if ((last_idx == paramp->u.pack_vector.length-1) &&
 	(last_end != ((char *) bufp + rel_off)))
     {
@@ -348,7 +348,7 @@ static int MPID_Segment_vector_pack_to_iov(DLOOP_Offset *blocks_p,
 		paramp->u.pack_vector.vectorp[last_idx].DLOOP_VECTOR_LEN;
 	}
 
-	MPID_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (bufp)) + rel_off);
+	MPIU_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT (bufp)) + rel_off);
 	if ((last_idx == paramp->u.pack_vector.length-1) &&
 	    (last_end != ((char *) bufp + rel_off)))
 	{

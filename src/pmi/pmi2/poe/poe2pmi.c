@@ -324,7 +324,7 @@ int _mpi_world_exiting_handler(int world_id)
 
   MPIU_THREAD_CS_EXIT(ALLFUNC,);
   if(comm->rank == 0) {
-    MPIU_Snprintf(world_id_str, sizeof(world_id_str), "%d", world_id);
+    MPL_snprintf(world_id_str, sizeof(world_id_str), "%d", world_id);
     PMI2_Abort(0, world_id_str);
     if((reduce_state != world_size)) {
       TRACE_ERR("root is exiting with error\n");
@@ -389,7 +389,7 @@ int _mpi_reduce_for_dyntask(int *sendbuf, int *recvbuf)
   int         numchildren, parent=0, i, result=0,tag, remaining_child_count;
   MPID_Comm   *comm_ptr;
   int         mpi_errno;
-  mpir_errflag_t errflag = MPIR_ERR_NONE;
+  MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
   int TASKS= world_size;
   children = MPIU_Malloc(TASKS*sizeof(int));

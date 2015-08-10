@@ -151,14 +151,14 @@ int MPIDI_PG_Finalize(void)
 
    if(MPIR_Process.comm_world->rank == 0) {
 
-     MPIU_Snprintf(key, PMI2_MAX_KEYLEN-1, "%s", "ROOTWIDARRAY");
-     MPIU_Snprintf(value, PMI2_MAX_VALLEN-1, "%s", root_wid_barray);
+     MPL_snprintf(key, PMI2_MAX_KEYLEN-1, "%s", "ROOTWIDARRAY");
+     MPL_snprintf(value, PMI2_MAX_VALLEN-1, "%s", root_wid_barray);
      TRACE_ERR("root_wid_barray=%s\n", value);
      mpi_errno = PMI2_KVS_Put(key, value);
      TRACE_ERR("PMI2_KVS_Put returned with mpi_errno=%d\n", mpi_errno);
 
-     MPIU_Snprintf(key, PMI2_MAX_KEYLEN-1, "%s", "WIDBITARRAYSZ");
-     MPIU_Snprintf(value, PMI2_MAX_VALLEN-1, "%x", wid_bit_array_size);
+     MPL_snprintf(key, PMI2_MAX_KEYLEN-1, "%s", "WIDBITARRAYSZ");
+     MPL_snprintf(value, PMI2_MAX_VALLEN-1, "%x", wid_bit_array_size);
      key[strlen(key)+1]='\0';
      value[strlen(value)+1]='\0';
      mpi_errno = PMI2_KVS_Put(key, value);
@@ -557,7 +557,7 @@ static int MPIDI_getConnInfoKVS( int rank, char *buf, int bufsize, MPIDI_PG_t *p
     int  mpi_errno = MPI_SUCCESS, rc;
     int vallen;
 
-    rc = MPIU_Snprintf(key, MPIDI_MAX_KVS_KEY_LEN, "P%d-businesscard", rank );
+    rc = MPL_snprintf(key, MPIDI_MAX_KVS_KEY_LEN, "P%d-businesscard", rank );
 
     mpi_errno = PMI2_KVS_Get(pg->connData, PMI2_ID_NULL, key, buf, bufsize, &vallen);
     if (mpi_errno) {
@@ -571,7 +571,7 @@ static int MPIDI_getConnInfoKVS( int rank, char *buf, int bufsize, MPIDI_PG_t *p
     char key[MPIDI_MAX_KVS_KEY_LEN];
     int  mpi_errno = MPI_SUCCESS, rc, pmi_errno;
 
-    rc = MPIU_Snprintf(key, MPIDI_MAX_KVS_KEY_LEN, "P%d-businesscard", rank );
+    rc = MPL_snprintf(key, MPIDI_MAX_KVS_KEY_LEN, "P%d-businesscard", rank );
     if (rc < 0 || rc > MPIDI_MAX_KVS_KEY_LEN) {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
     }
@@ -617,13 +617,13 @@ int MPIDI_connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
     string[len++] = 0;
 
     /* Add the size of the pg */
-    MPIU_Snprintf( &string[len], curSlen - len, "%d", pg->size );
+    MPL_snprintf( &string[len], curSlen - len, "%d", pg->size );
     while (string[len]) len++;
     string[len++] = 0;
 
     /* add the taskids of the pg */
     for(i = 0; i < pg->size; i++) {
-      MPIU_Snprintf(buf, MPIDI_MAX_KVS_VALUE_LEN, "%d:", pg->vct[i].taskid);
+      MPL_snprintf(buf, MPIDI_MAX_KVS_VALUE_LEN, "%d:", pg->vct[i].taskid);
       vallen = strlen(buf);
       if (len+vallen+1 >= curSlen) {
         char *nstring = 0;
@@ -633,7 +633,7 @@ int MPIDI_connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
         string = nstring;
       }
       /* Append to string */
-      nChars = MPIU_Snprintf(&string[len], curSlen - len, "%d:", pg->vct[i].taskid);
+      nChars = MPL_snprintf(&string[len], curSlen - len, "%d:", pg->vct[i].taskid);
       len+=nChars;
     }
 
@@ -641,7 +641,7 @@ int MPIDI_connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
     for (i=0; i<pg->size; i++) {
 	rc = getConnInfoKVS( i, buf, MPIDI_MAX_KVS_VALUE_LEN, pg );
 	if (rc) {
-	    MPIU_Internal_error_printf(
+	    MPL_internal_error_printf(
 		    "Panic: getConnInfoKVS failed for %s (rc=%d)\n",
 		    (char *)pg->id, rc );
 	}
@@ -828,7 +828,7 @@ static int MPIDI_connToString( char **buf_p, int *slen, MPIDI_PG_t *pg )
     while (*pg_id) str[len++] = *pg_id++;
     str[len++] = 0;
 
-    MPIU_Snprintf( &str[len], 20, "%d", pg->size);
+    MPL_snprintf( &str[len], 20, "%d", pg->size);
     /* Skip over the length */
     while (str[len++]);
 
@@ -1011,7 +1011,7 @@ int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr,
     int i, allfound = 1, pgid, pgidWorld;
     MPIDI_PG_t *pg = 0;
     MPIDI_PG_iterator iter;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
     if(mpidi_dynamic_tasking) {
     /* Get the pgid for CommWorld (always attached to the first process

@@ -482,7 +482,7 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
 {
     int i;
     MPIDI_RMA_Target_t *curr_target = NULL;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int comm_size = win_ptr->comm_ptr->local_size;
     int scalable_fence_enabled = 0;
     int *rma_target_marks = NULL;

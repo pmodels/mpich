@@ -105,18 +105,16 @@ extern char *strdup( const char * );
 #endif /* HAVE_STRDUP */
 /* Provide a fallback snprintf for systems that do not have one */
 #ifdef HAVE_SNPRINTF
-#define MPIU_Snprintf snprintf
+#define MPL_snprintf snprintf
 /* Sometimes systems don't provide prototypes for snprintf */
 #ifdef NEEDS_SNPRINTF_DECL
 extern int snprintf( char *, size_t, const char *, ... ) ATTRIBUTE((format(printf,3,4)));
 #endif
 #else
-int MPIU_Snprintf( char *str, size_t size, const char *format, ... ) 
+int MPL_snprintf( char *str, size_t size, const char *format, ... ) 
      ATTRIBUTE((format(printf,3,4)));
 #endif /* HAVE_SNPRINTF */
 
-
-/* mpibase includes definitions of the MPIU_xxx_printf routines */
-#include "mpibase.h"
+#include "mpl.h"
 
 #endif

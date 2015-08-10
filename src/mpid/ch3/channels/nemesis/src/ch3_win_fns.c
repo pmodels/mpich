@@ -156,7 +156,7 @@ static int MPIDI_CH3I_SHM_Wins_match(MPID_Win ** win_ptr, MPID_Win ** matched_wi
     MPID_Comm *node_comm_ptr = NULL, *shm_node_comm_ptr = NULL;
     int *node_ranks = NULL, *node_ranks_in_shm_node = NULL;
     MPID_Group *node_group_ptr = NULL, *shm_node_group_ptr = NULL;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPI_Aint *base_shm_offs;
 
     MPIDI_SHM_Win_t *elem = shm_wins_list;
@@ -355,7 +355,7 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
     int comm_rank, comm_size;
     MPI_Aint *tmp_buf = NULL;
     int i, k;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKLMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_WIN_GATHER_INFO);
@@ -498,7 +498,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
     int i, node_size, node_rank;
     MPID_Comm *node_comm_ptr;
     MPI_Aint *node_sizes;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int noncontig = FALSE;
     MPIU_CHKPMEM_DECL(1);
     MPIU_CHKLMEM_DECL(1);

@@ -34,7 +34,7 @@
 #include "labelout.h"
 
 #ifdef HAVE_SNPRINTF
-#define MPIU_Snprintf snprintf
+#define MPL_snprintf snprintf
 #ifdef NEEDS_SNPRINTF_DECL
 /* style: allow:sprintf:1 sig:0 */
 int snprintf(char *, size_t, const char *, ...);
@@ -196,9 +196,9 @@ static int IOLabelSetLabelText( const char pattern[], char label[],
     char        worldnumAsChar[12];
 
     /* Convert the rank in world to characters */
-    MPIU_Snprintf( rankAsChar, sizeof(rankAsChar), "%d", rank );
+    MPL_snprintf( rankAsChar, sizeof(rankAsChar), "%d", rank );
     /* Convert the world number to characters */
-    MPIU_Snprintf( worldnumAsChar, sizeof(worldnumAsChar), "%d", worldnum );
+    MPL_snprintf( worldnumAsChar, sizeof(worldnumAsChar), "%d", worldnum );
 
     pout[0] = 0;
     /* Copy the pattern looking for format commands */
@@ -291,7 +291,7 @@ int IOLabelCheckEnv( void )
 	    useLabels = 1;
 	}
 	else {
-	    MPIU_Error_printf( "Pattern for stdout label specified by MPIEXEC_PREFIX_STROUT is too long" );
+	    MPL_error_printf( "Pattern for stdout label specified by MPIEXEC_PREFIX_STROUT is too long" );
 	}
     }
     envval = getenv( "MPIEXEC_PREFIX_STDERR" );
@@ -301,7 +301,7 @@ int IOLabelCheckEnv( void )
 	    useLabels = 1;
 	}
 	else {
-	    MPIU_Error_printf( "Pattern for stderr label specified by MPIEXEC_PREFIX_STRERR is too long" );
+	    MPL_error_printf( "Pattern for stderr label specified by MPIEXEC_PREFIX_STRERR is too long" );
 	}
     }
 

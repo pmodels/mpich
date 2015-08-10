@@ -171,7 +171,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
         sreq->dev.segment_size = data_sz;
 
         last = sreq->dev.segment_size;
-        sreq->dev.iov_count = MPID_IOV_LIMIT;
+        sreq->dev.iov_count = MPL_IOV_LIMIT;
         MPID_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, sreq->dev.iov, &sreq->dev.iov_count);
 
         if (last == sreq->dev.segment_size) {
@@ -236,7 +236,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     sreq->dev.segment_size = data_sz;
 
     last = PTL_LARGE_THRESHOLD;
-    sreq->dev.iov_count = MPID_IOV_LIMIT;
+    sreq->dev.iov_count = MPL_IOV_LIMIT;
     MPID_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, sreq->dev.iov, &sreq->dev.iov_count);
 
     initial_iov_count = sreq->dev.iov_count;
@@ -245,9 +245,9 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     if (last == PTL_LARGE_THRESHOLD) {
         /* first chunk of message fits into IOV */
         MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "    first chunk fits in IOV");
-        if (initial_iov_count < MPID_IOV_LIMIT) {
+        if (initial_iov_count < MPL_IOV_LIMIT) {
             /* There may be space for the rest of the message in this IOV */
-            sreq->dev.iov_count = MPID_IOV_LIMIT - sreq->dev.iov_count;
+            sreq->dev.iov_count = MPL_IOV_LIMIT - sreq->dev.iov_count;
             last = sreq->dev.segment_size;
                     
             MPID_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, &last,

@@ -197,7 +197,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
         MPIU_CHKPMEM_MALLOC (addr, char *, segment_len + MPID_NEM_CACHE_LINE_LEN, mpi_errno, "segment");
 
         memory->base_addr = addr;
-        current_addr = (char *)(((MPIR_Upint)addr + (MPIR_Upint)MPID_NEM_CACHE_LINE_LEN-1) & (~((MPIR_Upint)MPID_NEM_CACHE_LINE_LEN-1)));
+        current_addr = (char *)(((MPIU_Upint)addr + (MPIU_Upint)MPID_NEM_CACHE_LINE_LEN-1) & (~((MPIU_Upint)MPID_NEM_CACHE_LINE_LEN-1)));
         memory->symmetrical = 0;
 
         /* must come before barrier_init since we use OPA in that function */
@@ -293,7 +293,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
         MPIU_CHKPMEM_MALLOC (addr, char *, segment_len + MPID_NEM_CACHE_LINE_LEN, mpi_errno, "segment");
 
         memory->base_addr = addr;
-        current_addr = (char *)(((MPIR_Upint)addr + (MPIR_Upint)MPID_NEM_CACHE_LINE_LEN-1) & (~((MPIR_Upint)MPID_NEM_CACHE_LINE_LEN-1)));
+        current_addr = (char *)(((MPIU_Upint)addr + (MPIU_Upint)MPID_NEM_CACHE_LINE_LEN-1) & (~((MPIU_Upint)MPID_NEM_CACHE_LINE_LEN-1)));
         memory->symmetrical = 0 ;
 
         /* we still need to call barrier */
@@ -328,7 +328,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
 
             /* post name of shared file */
             MPIU_Assert (MPID_nem_mem_region.local_procs[0] == MPID_nem_mem_region.rank);
-            MPIU_Snprintf (key, key_max_sz, "sharedFilename[%i]", MPID_nem_mem_region.rank);
+            MPL_snprintf (key, key_max_sz, "sharedFilename[%i]", MPID_nem_mem_region.rank);
 
             mpi_errno = MPIU_SHMW_Hnd_get_serialized_by_ref(memory->hnd, &serialized_hnd);
             if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP (mpi_errno);
@@ -358,7 +358,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
             MPIU_ERR_CHKANDJUMP1 (pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", "**pmi_barrier %d", pmi_errno);
 
             /* get name of shared file */
-            MPIU_Snprintf (key, key_max_sz, "sharedFilename[%i]", MPID_nem_mem_region.local_procs[0]);
+            MPL_snprintf (key, key_max_sz, "sharedFilename[%i]", MPID_nem_mem_region.local_procs[0]);
             pmi_errno = PMI_KVS_Get (kvs_name, key, val, val_max_sz);
             MPIU_ERR_CHKANDJUMP1 (pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);
 

@@ -789,7 +789,7 @@ static int _mxm_process_sdtype(MPID_Request ** sreq_p, MPI_Datatype datatype,
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *sreq = *sreq_p;
     MPIDI_msg_sz_t last;
-    MPID_IOV *iov;
+    MPL_IOV *iov;
     int n_iov = 0;
     int index;
     int size_to_copy = 0;
@@ -818,7 +818,7 @@ static int _mxm_process_sdtype(MPID_Request ** sreq_p, MPI_Datatype datatype,
                     MXM_REQ_DATA_MAX_IOV);
     for (index = 0; index < n_iov; index++) {
         _dbg_mxm_output(7, "======= Recv iov[%i] = ptr : %p, len : %i \n",
-                        index, iov[index].MPID_IOV_BUF, iov[index].MPID_IOV_LEN);
+                        index, iov[index].MPL_IOV_BUF, iov[index].MPL_IOV_LEN);
     }
 #endif
 
@@ -829,11 +829,11 @@ static int _mxm_process_sdtype(MPID_Request ** sreq_p, MPI_Datatype datatype,
 
     for (index = 0; index < n_iov; index++) {
         if (index < (MXM_REQ_DATA_MAX_IOV - 1)) {
-            (*iov_buf)[index].ptr = iov[index].MPID_IOV_BUF;
-            (*iov_buf)[index].length = iov[index].MPID_IOV_LEN;
+            (*iov_buf)[index].ptr = iov[index].MPL_IOV_BUF;
+            (*iov_buf)[index].length = iov[index].MPL_IOV_LEN;
         }
         else {
-            size_to_copy += iov[index].MPID_IOV_LEN;
+            size_to_copy += iov[index].MPL_IOV_LEN;
         }
     }
 
@@ -848,9 +848,9 @@ static int _mxm_process_sdtype(MPID_Request ** sreq_p, MPI_Datatype datatype,
         sreq->dev.tmpbuf_sz = size_to_copy;
         MPIU_Assert(sreq->dev.tmpbuf);
         for (index = (MXM_REQ_DATA_MAX_IOV - 1); index < n_iov; index++) {
-            MPIU_Memcpy((char *) (sreq->dev.tmpbuf) + offset, iov[index].MPID_IOV_BUF,
-                        iov[index].MPID_IOV_LEN);
-            offset += iov[index].MPID_IOV_LEN;
+            MPIU_Memcpy((char *) (sreq->dev.tmpbuf) + offset, iov[index].MPL_IOV_BUF,
+                        iov[index].MPL_IOV_LEN);
+            offset += iov[index].MPL_IOV_LEN;
         }
         (*iov_buf)[MXM_REQ_DATA_MAX_IOV - 1].ptr = sreq->dev.tmpbuf;
         (*iov_buf)[MXM_REQ_DATA_MAX_IOV - 1].length = size_to_copy;

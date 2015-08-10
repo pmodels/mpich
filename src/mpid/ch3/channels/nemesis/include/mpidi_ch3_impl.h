@@ -60,25 +60,25 @@ int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc);
 int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, MPIDI_msg_sz_t hdr_sz );
 
 int MPID_nem_lmt_shm_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *rts_pkt, MPID_Request *req);
-int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV s_cookie);
-int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV r_cookie);
-int MPID_nem_lmt_shm_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV cookie);
+int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV s_cookie);
+int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV r_cookie);
+int MPID_nem_lmt_shm_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV cookie);
 int MPID_nem_lmt_shm_done_send(MPIDI_VC_t *vc, MPID_Request *req);
 int MPID_nem_lmt_shm_done_recv(MPIDI_VC_t *vc, MPID_Request *req);
 int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc);
 
 int MPID_nem_lmt_dma_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *rts_pkt, MPID_Request *req);
-int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV s_cookie);
-int MPID_nem_lmt_dma_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV r_cookie);
-int MPID_nem_lmt_dma_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV cookie);
+int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV s_cookie);
+int MPID_nem_lmt_dma_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV r_cookie);
+int MPID_nem_lmt_dma_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV cookie);
 int MPID_nem_lmt_dma_done_send(MPIDI_VC_t *vc, MPID_Request *req);
 int MPID_nem_lmt_dma_done_recv(MPIDI_VC_t *vc, MPID_Request *req);
 int MPID_nem_lmt_dma_vc_terminated(MPIDI_VC_t *vc);
 
 int MPID_nem_lmt_vmsplice_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *rts_pkt, MPID_Request *req);
-int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV s_cookie);
-int MPID_nem_lmt_vmsplice_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV r_cookie);
-int MPID_nem_lmt_vmsplice_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV cookie);
+int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV s_cookie);
+int MPID_nem_lmt_vmsplice_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV r_cookie);
+int MPID_nem_lmt_vmsplice_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV cookie);
 int MPID_nem_lmt_vmsplice_done_send(MPIDI_VC_t *vc, MPID_Request *req);
 int MPID_nem_lmt_vmsplice_done_recv(MPIDI_VC_t *vc, MPID_Request *req);
 int MPID_nem_lmt_vmsplice_vc_terminated(MPIDI_VC_t *vc);

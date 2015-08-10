@@ -6,6 +6,11 @@
 #if !defined(MPIUTIL_H_INCLUDED)
 #define MPIUTIL_H_INCLUDED
 
+#include "mpiu_strerror.h"
+#include "mpiu_thread.h"
+#include "mpiu_type_defs.h"
+#include "mpidbg.h"
+
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
@@ -46,12 +51,6 @@ cvars:
 #endif
 
 /* -------------------------------------------------------------------------- */
-
-/*
- * MPIU_Sterror()
- *
- * Thread safe implementation of strerror(), whenever possible. */
-const char *MPIU_Strerror(int errnum);
 
 /*
  * MPIU_Busy_wait()
@@ -136,7 +135,7 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
  *    a backtrace, if valgrind client requests are available and the process is
  *    running under valgrind.  It will also evaluate and print the supplied
  *    message.
- * 2) It will emit an "Assertion failed..." message via MPIU_Internal_error_printf.
+ * 2) It will emit an "Assertion failed..." message via MPL_internal_error_printf.
  *    The supplied error message will also be evaluated and printed.
  * 3) It will similarly emit the assertion failure and caller supplied messages
  *    to the debug log, if enabled, via MPIU_DBG_MSG_FMT.
@@ -250,7 +249,7 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
  *
  * \param[in]  aint  Variable of type MPI_Aint
  */
-#define MPID_Ensure_Aint_fits_in_int(aint) \
+#define MPIU_Ensure_Aint_fits_in_int(aint) \
   MPIU_Assert((aint) == (MPI_Aint)(int)(aint));
 
 /*
@@ -260,7 +259,7 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
  *
  * \param[in]  aint  Variable of type MPI_Aint
  */
-#define MPID_Ensure_Aint_fits_in_uint(aint) \
+#define MPIU_Ensure_Aint_fits_in_uint(aint) \
   MPIU_Assert((aint) == (MPI_Aint)(unsigned int)(aint));
 
 /*
@@ -269,8 +268,8 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
  *
  * \param[in]  aint  Variable of type MPI_Aint
  */
-#define MPID_Ensure_Aint_fits_in_pointer(aint) \
-  MPIU_Assert((aint) == (MPI_Aint)(MPIR_Upint) MPI_AINT_CAST_TO_VOID_PTR(aint));
+#define MPIU_Ensure_Aint_fits_in_pointer(aint) \
+  MPIU_Assert((aint) == (MPI_Aint)(MPIU_Upint) MPI_AINT_CAST_TO_VOID_PTR(aint));
 
 /* -------------------------------------------------------------------------- */
 /* static assertions

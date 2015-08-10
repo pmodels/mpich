@@ -239,17 +239,17 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     
     if (dt_contig) 
     {
-	MPID_IOV iov[MPID_IOV_LIMIT];
+	MPL_IOV iov[MPL_IOV_LIMIT];
 
 	MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
 		    "sending contiguous rndv data, data_sz=" MPIDI_MSG_SZ_FMT, 
 					    data_sz));
 	
-	iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)rs_pkt;
-	iov[0].MPID_IOV_LEN = sizeof(*rs_pkt);
+	iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)rs_pkt;
+	iov[0].MPL_IOV_LEN = sizeof(*rs_pkt);
 	
-	iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)((char *)sreq->dev.user_buf + dt_true_lb);
-	iov[1].MPID_IOV_LEN = data_sz;
+	iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)((char *)sreq->dev.user_buf + dt_true_lb);
+	iov[1].MPL_IOV_LEN = data_sz;
 
         MPIU_THREAD_CS_ENTER(CH3COMM,vc);
 	mpi_errno = MPIDI_CH3_iSendv(vc, sreq, iov, 2);

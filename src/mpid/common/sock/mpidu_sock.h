@@ -21,9 +21,8 @@ CPLUSPLUS_BEGIN
 
 /* Load just the utility definitions that we need */
 #include "mpichconf.h"
-#include "mpibase.h"
+#include "mpl.h"
 #include "mpiutil.h"
-#include "mpitypedefs.h"
 #include "mpich_cvars.h"
 /* implementation specific header file */    
 #include "mpidu_socki.h"
@@ -630,7 +629,7 @@ MPIDU_Sock_post_readv - request that a vector of data be read from a sock
 Input Parameters:
 + sock - sock object from which the data is to read
 . iov - I/O vector describing buffers into which the data is placed
-. iov_n - number of elements in I/O vector (must be less than MPID_IOV_LIMIT)
+. iov_n - number of elements in I/O vector (must be less than MPL_IOV_LIMIT)
 + upate_fn - application progress update function (may be NULL)
 
 Return value: a MPI error code with a Sock extended error class
@@ -679,7 +678,7 @@ that one thread is not attempting to post a new operation while another thread i
 Module:
 Utility-Sock
 @*/
-int MPIDU_Sock_post_readv(MPIDU_Sock_t sock, MPID_IOV * iov, int iov_n, MPIDU_Sock_progress_update_func_t fn);
+int MPIDU_Sock_post_readv(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, MPIDU_Sock_progress_update_func_t fn);
 
 
 /*@
@@ -749,7 +748,7 @@ MPIDU_Sock_post_writev - request that a vector of data be written to a sock
 Input Parameters:
 + sock - sock object which the data is to be written
 . iov - I/O vector describing buffers of data to be written
-. iov_n - number of elements in I/O vector (must be less than MPID_IOV_LIMIT)
+. iov_n - number of elements in I/O vector (must be less than MPL_IOV_LIMIT)
 + upate_fn - application progress update function (may be NULL)
 
 Return value: a MPI error code with a Sock extended error class
@@ -798,7 +797,7 @@ that one thread is not attempting to post a new operation while another thread i
 Module:
 Utility-Sock
 @*/
-int MPIDU_Sock_post_writev(MPIDU_Sock_t sock, MPID_IOV * iov, int iov_n, MPIDU_Sock_progress_update_func_t fn);
+int MPIDU_Sock_post_writev(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, MPIDU_Sock_progress_update_func_t fn);
 
 
 /*@
@@ -917,7 +916,7 @@ MPIDU_Sock_readv - perform an immediate vector read
 Input Parameters:
 + sock - sock object from which data is to be read
 . iov - I/O vector describing buffers into which the data is placed
-- iov_n - number of elements in I/O vector (must be less than MPID_IOV_LIMIT)
+- iov_n - number of elements in I/O vector (must be less than MPL_IOV_LIMIT)
 
 Output Parameter:
 . num_read - number of bytes actually read
@@ -927,7 +926,7 @@ Return value: a MPI error code with a Sock extended error class
 . MPIDU_SOCK_ERR_INIT - Sock module not initialized
 . MPIDU_SOCK_ERR_BAD_SOCK - invalid sock object
 . MPIDU_SOCK_ERR_BAD_BUF - using the buffer described by iov and iov_n resulted in a memory fault
-. MPIDU_SOCK_ERR_BAD_LEN - iov_n parameter must be greater than zero and not greater than MPID_IOV_LIMIT
+. MPIDU_SOCK_ERR_BAD_LEN - iov_n parameter must be greater than zero and not greater than MPL_IOV_LIMIT
 . MPIDU_SOCK_ERR_SOCK_CLOSED - the sock object was closed locally
 . MPIDU_SOCK_ERR_CONN_CLOSED - the connection was closed by the peer
 . MPIDU_SOCK_ERR_CONN_FAILED - the connection failed
@@ -958,7 +957,7 @@ not attempting to perform an immediate read while another thread is attempting t
 Module:
 Utility-Sock
 @*/
-int MPIDU_Sock_readv(MPIDU_Sock_t sock, MPID_IOV * iov, int iov_n, MPIU_Size_t * num_read);
+int MPIDU_Sock_readv(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, MPIU_Size_t * num_read);
 
 
 /*@
@@ -1016,7 +1015,7 @@ MPIDU_Sock_writev - perform an immediate vector write
 Input Parameters:
 + sock - sock object to which data is to be written
 . iov - I/O vector describing buffers of data to be written
-- iov_n - number of elements in I/O vector (must be less than MPID_IOV_LIMIT)
+- iov_n - number of elements in I/O vector (must be less than MPL_IOV_LIMIT)
 
 Output Parameter:
 . num_written - actual number of bytes written
@@ -1026,7 +1025,7 @@ Return value: a MPI error code with a Sock extended error class
 . MPIDU_SOCK_ERR_INIT - Sock module not initialized
 . MPIDU_SOCK_ERR_BAD_SOCK - invalid sock object
 . MPIDU_SOCK_ERR_BAD_BUF - using the buffer described by iov and iov_n resulted in a memory fault
-. MPIDU_SOCK_ERR_BAD_LEN - iov_n parameter must be greater than zero and not greater than MPID_IOV_LIMIT
+. MPIDU_SOCK_ERR_BAD_LEN - iov_n parameter must be greater than zero and not greater than MPL_IOV_LIMIT
 . MPIDU_SOCK_ERR_SOCK_CLOSED - the sock object was closed locally
 . MPIDU_SOCK_ERR_CONN_CLOSED - the connection was closed by the peer
 . MPIDU_SOCK_ERR_CONN_FAILED - the connection failed
@@ -1056,7 +1055,7 @@ not attempting to perform an immediate write while another thread is attempting 
 Module:
 Utility-Sock
 @*/
-int MPIDU_Sock_writev(MPIDU_Sock_t sock, MPID_IOV * iov, int iov_n, MPIU_Size_t * num_written);
+int MPIDU_Sock_writev(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, MPIU_Size_t * num_written);
 
 
 /*@

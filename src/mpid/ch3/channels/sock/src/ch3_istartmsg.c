@@ -27,9 +27,9 @@ static MPID_Request * create_request(void * hdr, MPIDI_msg_sz_t hdr_sz,
     sreq->kind = MPID_REQUEST_SEND;
     MPIU_Assert(hdr_sz == sizeof(MPIDI_CH3_Pkt_t));
     sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;
-    sreq->dev.iov[0].MPID_IOV_BUF = 
-	(MPID_IOV_BUF_CAST)((char *) &sreq->dev.pending_pkt + nb);
-    sreq->dev.iov[0].MPID_IOV_LEN = hdr_sz - nb;
+    sreq->dev.iov[0].MPL_IOV_BUF = 
+	(MPL_IOV_BUF_CAST)((char *) &sreq->dev.pending_pkt + nb);
+    sreq->dev.iov[0].MPL_IOV_LEN = hdr_sz - nb;
     sreq->dev.iov_count = 1;
     sreq->dev.OnDataAvail = 0;
     
@@ -108,8 +108,8 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, MPIDI_msg_sz_t hdr_sz,
 		    MPIU_DBG_MSG_FMT(CH3_CHANNEL,VERBOSE,
      (MPIU_DBG_FDEST,"posting write, vc=0x%p, sreq=0x%08x", vc, sreq->handle));
 		    vcch->conn->send_active = sreq;
-		    mpi_errno = MPIDU_Sock_post_write(vcch->conn->sock, sreq->dev.iov[0].MPID_IOV_BUF,
-						      sreq->dev.iov[0].MPID_IOV_LEN, sreq->dev.iov[0].MPID_IOV_LEN, NULL);
+		    mpi_errno = MPIDU_Sock_post_write(vcch->conn->sock, sreq->dev.iov[0].MPL_IOV_BUF,
+						      sreq->dev.iov[0].MPL_IOV_LEN, sreq->dev.iov[0].MPL_IOV_LEN, NULL);
 		    /* --BEGIN ERROR HANDLING-- */
 		    if (mpi_errno != MPI_SUCCESS)
 		    {

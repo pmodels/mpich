@@ -32,9 +32,9 @@
 
 #include "mpid_sched.h"
 
-/* We need to match the size of MPIR_Pint to the relevant Format control
+/* We need to match the size of MPIU_Pint to the relevant Format control
  */
-#define MPIDI_MSG_SZ_FMT MPIR_PINT_FMT_DEC_SPEC
+#define MPIDI_MSG_SZ_FMT MPIU_PINT_FMT_DEC_SPEC
 
 #if !defined(MPIDI_IOV_DENSITY_MIN)
 #   define MPIDI_IOV_DENSITY_MIN (16 * 1024)
@@ -1016,7 +1016,7 @@ extern char *MPIDI_DBG_parent_str;
     }
 #   define MPIDI_err_printf(func, fmt, ...)				\
     {									\
-        MPIU_Error_printf("[%d] ERROR - %s(): " fmt "\n", MPIR_Process.comm_world->rank, func, __VA_ARGS__);    \
+        MPL_error_printf("[%d] ERROR - %s(): " fmt "\n", MPIR_Process.comm_world->rank, func, __VA_ARGS__);    \
         fflush(stdout);							\
     }
 #endif
@@ -1363,7 +1363,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * pkt, MPIDI_msg_sz_t pkt_sz,
   If the send completes immediately, the channel implementation should return 
   NULL.
 @*/
-int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPID_IOV * iov, int iov_n, 
+int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int iov_n, 
 			 MPID_Request **sreq_ptr);
 
 
@@ -1427,7 +1427,7 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPID_Request * sreq, void * pkt,
   If the send completes immediately, the channel implementation still must 
   call the OnDataAvail routine in the request, if any.
 @*/
-int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq, MPID_IOV * iov, 
+int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq, MPL_IOV * iov, 
 		     int iov_n);
 
 /*@
@@ -1467,7 +1467,7 @@ int MPIDI_CH3U_Clean_recvq(MPID_Comm *comm_ptr);
 
 
 int MPIDI_CH3U_Request_load_send_iov(MPID_Request * const sreq, 
-				     MPID_IOV * const iov, int * const iov_n);
+				     MPL_IOV * const iov, int * const iov_n);
 int MPIDI_CH3U_Request_load_recv_iov(MPID_Request * const rreq);
 int MPIDI_CH3U_Request_unpack_uebuf(MPID_Request * rreq);
 int MPIDI_CH3U_Request_unpack_srbuf(MPID_Request * rreq);
@@ -1486,7 +1486,7 @@ int MPIDI_CH3U_Receive_data_unexpected(MPID_Request * rreq, char *buf, MPIDI_msg
 int MPIDI_CH3I_Comm_init(void);
 
 int MPIDI_CH3I_Comm_handle_failed_procs(MPID_Group *new_failed_procs);
-void MPIDI_CH3I_Comm_find(MPIR_Context_id_t context_id, MPID_Comm **comm);
+void MPIDI_CH3I_Comm_find(MPIU_Context_id_t context_id, MPID_Comm **comm);
 
 /* The functions below allow channels to register functions to be
    called immediately after a communicator has been created, and

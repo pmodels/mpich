@@ -1,0 +1,90 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *  (C) 2001 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+/* common header includes */
+#include <stdlib.h>
+#include "mpichconf.h"  /* defines MPIU_THREAD_PACKAGE_NAME */
+#include "mpl.h"
+#include "mpiutil.h"    /* for HAS_NO_SYMBOLS_WARNING */
+#include "mpiu_thread.h"
+
+MPIU_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
+
+/* This file currently implements these as a preprocessor if/elif/else sequence.
+ * This has the upside of not doing #includes for .c files or (poorly
+ * named) .i files.  It has the downside of making this file large-ish
+ * and a little harder to read in some cases.  If this becomes
+ * unmanagable at some point these should be separated back out into
+ * header files and included as needed. [goodell@ 2009-06-24] */
+
+/* Implementation specific function definitions (usually in the form of macros) */
+
+#if defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_SOLARIS)
+/* begin solaris impl */
+
+/*
+ * struct MPEI_Thread_info
+ *
+ * Structure used to pass the user function and data to the intermediate function, MPEI_Thread_start.  See comment in
+ * MPEI_Thread_start() header for more information.
+ */
+struct MPEI_Thread_info {
+    MPIU_Thread_func_t func;
+    void *data;
+};
+
+
+void *MPEI_Thread_start(void *arg);
+
+
+/*
+ * MPIU_Thread_create()
+ */
+void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * idp, int *errp)
+{
+    struct MPEI_Thread_info *thread_info;
+    int err = MPIU_THREAD_SUCCESS;
+
+    /* FIXME: faster allocation, or avoid it all together? */
+    thread_info = (struct MPEI_Thread_info *) MPIU_Malloc(sizeof(struct MPEI_Thread_info));
+    if (thread_info != NULL) {
+        thread_info->func = func;
+        thread_info->data = data;
+
+        err = thr_create(NULL, 0, MPEI_Thread_start, thread_info, THR_DETACHED, idp);
+        /* FIXME: convert error to an MPIU_THREAD_ERR value */
+    }
+    else {
+        err = 1000000000;
+    }
+
+    if (errp != NULL) {
+        *errp = err;
+    }
+}
+
+
+/*
+ * MPEI_Thread_start()
+ *
+ * Start functions in Solaris threads are expected to return a void pointer.  Since our start functions do not return a value we
+ * must use an intermediate function to perform call to the user's start function and then return a value of NULL.
+ */
+void *MPEI_Thread_start(void *arg)
+{
+    struct MPEI_Thread_info *thread_info = (struct MPEI_Thread_info *) arg;
+    MPIU_Thread_func_t func = thread_info->func;
+    void *data = thread_info->data;
+
+    MPIU_Free(arg);
+
+    func(data);
+
+    return NULL;
+}
+
+/* end solaris impl */
+#endif

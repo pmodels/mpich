@@ -56,9 +56,9 @@ int MPIR_TypeGetAttr( MPI_Datatype datatype, int type_keyval, void *attribute_va
             /* A common user error is to pass the address of a 4-byte
 	       int when the address of a pointer (or an address-sized int)
 	       should have been used.  We can test for this specific
-	       case.  Note that this code assumes sizeof(MPIR_Pint) is 
+	       case.  Note that this code assumes sizeof(MPIU_Pint) is 
 	       a power of 2. */
-	    if ((MPIR_Pint)attribute_val & (sizeof(MPIR_Pint)-1)) {
+	    if ((MPIU_Pint)attribute_val & (sizeof(MPIU_Pint)-1)) {
 		MPIU_ERR_SETANDSTMT(mpi_errno,MPI_ERR_ARG,goto fn_fail,"**attrnotptr");
 	    }
 #           endif
@@ -113,11 +113,11 @@ int MPIR_TypeGetAttr( MPI_Datatype datatype, int type_keyval, void *attribute_va
 		    *(void**)attribute_val = &(p->value);
 		}
 		else {
-		    *(void**)attribute_val = (void *)(MPIR_Pint)(p->value);
+		    *(void**)attribute_val = (void *)(MPIU_Pint)(p->value);
 		}
 	    }
 	    else
-		*(void**)attribute_val = (void *)(MPIR_Pint)(p->value);
+		*(void**)attribute_val = (void *)(MPIU_Pint)(p->value);
 	    
 	    break;
 	}

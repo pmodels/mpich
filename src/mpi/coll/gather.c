@@ -87,7 +87,7 @@ int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Gather_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                       int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr,
-                      mpir_errflag_t *errflag)
+                      MPIR_Errflag_t *errflag)
 {
     int        comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
@@ -135,7 +135,7 @@ int MPIR_Gather_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     if (rank == root) 
     {
         MPID_Datatype_get_extent_macro(recvtype, extent);
-        MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf+
+        MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf+
 					 (extent*recvcount*comm_size));
     }
 
@@ -503,7 +503,7 @@ int MPIR_Gather_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Gather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                       int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr,
-                      mpir_errflag_t *errflag)
+                      MPIR_Errflag_t *errflag)
 {
 /*  Intercommunicator gather.
     For short messages, remote group does a local intracommunicator
@@ -577,7 +577,7 @@ int MPIR_Gather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                 MPIR_Type_get_true_extent_impl(sendtype, &true_lb, &true_extent);
                 MPID_Datatype_get_extent_macro(sendtype, extent);
  
-		MPID_Ensure_Aint_fits_in_pointer(sendcount*local_size*
+		MPIU_Ensure_Aint_fits_in_pointer(sendcount*local_size*
 						 (MPIR_MAX(extent, true_extent)));
                 MPIU_CHKLMEM_MALLOC(tmp_buf, void *, sendcount*local_size*(MPIR_MAX(extent,true_extent)), mpi_errno, "tmp_buf");
                 /* adjust for potential negative lower bound in datatype */
@@ -623,7 +623,7 @@ int MPIR_Gather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         if (root == MPI_ROOT)
 	{
             MPID_Datatype_get_extent_macro(recvtype, extent);
-            MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+            MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
 					     (recvcount*remote_size*extent));
 
             for (i=0; i<remote_size; i++)
@@ -674,7 +674,7 @@ int MPIR_Gather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                 void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+                int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -708,7 +708,7 @@ int MPIR_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Gather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                      void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                     int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+                     int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -774,7 +774,7 @@ int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GATHER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

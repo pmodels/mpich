@@ -119,7 +119,7 @@ int PMIServGetPort( int *fdout, char *portString, int portLen )
 	    while (*p && isdigit(*p)) high_port = 10 * high_port + (*p++ - '0');
 	}
 	if (*p) {
-	    MPIU_Error_printf( "Invalid character %c in MPIEXEC_PORTRANGE\n", 
+	    MPL_error_printf( "Invalid character %c in MPIEXEC_PORTRANGE\n", 
 			       *p );
 	    return -1;
 	}
@@ -139,7 +139,7 @@ int PMIServGetPort( int *fdout, char *portString, int portLen )
     
 	if (setsockopt( fd, IPPROTO_TCP, TCP_NODELAY, 
 		    (char *)&optval, sizeof(optval) )) {
-	    MPIU_Internal_sys_error_printf( "setsockopt", errno, 0 );
+	    MPL_internal_sys_error_printf( "setsockopt", errno, 0 );
 	}
 	
 	if (bind( fd, (struct sockaddr *)&sa, sizeof(sa) ) < 0) {
@@ -181,7 +181,7 @@ int PMIServGetPort( int *fdout, char *portString, int portLen )
 	char hostname[MAX_HOST_NAME+1];
 	hostname[0] = 0;
 	MPIE_GetMyHostName( hostname, sizeof(hostname) );
-	MPIU_Snprintf( portString, portLen, "%s:%d", hostname, portnum );
+	MPL_snprintf( portString, portLen, "%s:%d", hostname, portnum );
     }
     
     return 0;
@@ -271,7 +271,7 @@ int PMIServAcceptFromPort( int fd, int rdwr, void *data )
 	}
 	if (!pState) {
 	    /* We have a problem */
-	    MPIU_Error_printf( "Unable to find process with PMI_ID = %d in the universe", id );
+	    MPL_error_printf( "Unable to find process with PMI_ID = %d in the universe", id );
 	    return -1;
 	}
 
@@ -320,7 +320,7 @@ int PMIServSetupPort( ProcessUniverse *mypUniv, char *portString, int portLen )
     if (rc) return rc;
     rc = MPIE_IORegister( listenfd, IO_READ, PMIServAcceptFromPort, mypUniv );
     if (mypUniv->OnNone) {
-	MPIU_Internal_error_printf( "pUniv.OnNone already set; cannot set to PMIServEndPort\n" );
+	MPL_internal_error_printf( "pUniv.OnNone already set; cannot set to PMIServEndPort\n" );
 	return -1;
     }
     else {

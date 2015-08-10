@@ -733,7 +733,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 		    }
 		    if (req_off < off + size) {
 			count[i]++;
-      ADIOI_Assert((((ADIO_Offset)(MPIR_Upint)write_buf)+req_off-off) == (ADIO_Offset)(MPIR_Upint)(write_buf+req_off-off));
+      ADIOI_Assert((((ADIO_Offset)(MPIU_Upint)write_buf)+req_off-off) == (ADIO_Offset)(MPIU_Upint)(write_buf+req_off-off));
 			MPI_Address(write_buf+req_off-off, 
                                &(others_req[i].mem_ptrs[j]));
       ADIOI_Assert((off + size - req_off) == (int)(off + size - req_off));
@@ -1179,7 +1179,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, const void *buf, char *write_buf
 { \
     while (size) { \
         size_in_buf = ADIOI_MIN(size, flat_buf_sz); \
-  ADIOI_Assert((((ADIO_Offset)(MPIR_Upint)buf) + user_buf_idx) == (ADIO_Offset)(MPIR_Upint)((MPIR_Upint)buf + user_buf_idx)); \
+  ADIOI_Assert((((ADIO_Offset)(MPIU_Upint)buf) + user_buf_idx) == (ADIO_Offset)(MPIU_Upint)((MPIU_Upint)buf + user_buf_idx)); \
   ADIOI_Assert(size_in_buf == (size_t)size_in_buf); \
         memcpy(&(send_buf[p][send_buf_idx[p]]), \
                ((char *) buf) + user_buf_idx, size_in_buf); \

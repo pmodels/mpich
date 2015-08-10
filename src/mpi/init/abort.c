@@ -129,11 +129,11 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
     MPIR_Comm_get_name_impl(comm_ptr, comm_name, &len);
     if (len == 0)
     {
-	MPIU_Snprintf(comm_name, MPI_MAX_OBJECT_NAME, "comm=0x%X", comm);
+	MPL_snprintf(comm_name, MPI_MAX_OBJECT_NAME, "comm=0x%X", comm);
     }
     if (!MPIR_CVAR_SUPPRESS_ABORT_MESSAGE)
         /* FIXME: This is not internationalized */
-        MPIU_Snprintf(abort_str, 100, "application called MPI_Abort(%s, %d) - process %d", comm_name, errorcode, comm_ptr->rank);
+        MPL_snprintf(abort_str, 100, "application called MPI_Abort(%s, %d) - process %d", comm_name, errorcode, comm_ptr->rank);
     mpi_errno = MPID_Abort( comm_ptr, mpi_errno, errorcode, abort_str );
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;

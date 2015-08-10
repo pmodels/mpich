@@ -159,7 +159,7 @@ MPID_getSharedSegment_mmap(MPID_Win * win)
 {
   int rank, rc, fd;
   int mpi_errno = MPI_SUCCESS;
-  mpir_errflag_t errflag = MPIR_ERR_NONE;
+  MPIR_Errflag_t errflag = MPIR_ERR_NONE;
   int first = 0;
 
   snprintf (win->mpid.shm->shm_key, 63, "/mpich.comm-%d.win_shared", win->comm_ptr->context_id);
@@ -205,7 +205,7 @@ int
 MPID_getSharedSegment_sysv(MPID_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     uint32_t shm_key;
     int rank;
     char *cp;
@@ -308,7 +308,7 @@ MPID_getSharedSegment(MPI_Aint     size,
 {
     int mpi_errno = MPI_SUCCESS;
     int i, comm_size, rank;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPI_Aint pageSize,pageSize2, len,new_size;
     MPID_Win  *win;
     int    padSize;
@@ -484,7 +484,7 @@ MPID_Win_allocate_shared(MPI_Aint     size,
                          MPID_Win  ** win_ptr)
 {
   int mpi_errno  = MPI_SUCCESS;
-  mpir_errflag_t errflag = MPIR_ERR_NONE;
+  MPIR_Errflag_t errflag = MPIR_ERR_NONE;
   int onNode     = 0;
   MPID_Win    *win = NULL;
   int rank, prev_size;

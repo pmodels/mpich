@@ -62,5 +62,7 @@
 #include "mpltrmem.h"
 #include "mplenv.h"
 #include "mplsock.h"
+#include "mplmsg.h"
+#include "mpliov.h"
 
 #endif /* MPL_H_INCLUDED */

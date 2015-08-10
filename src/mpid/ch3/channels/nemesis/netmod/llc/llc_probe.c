@@ -66,10 +66,10 @@ int MPID_nem_llc_iprobe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, 
         *(int32_t *) ((uint8_t *) & _tag) = tag;
     }
 
-    *(MPIR_Context_id_t *) ((uint8_t *) & _tag + sizeof(int32_t)) =
+    *(MPIU_Context_id_t *) ((uint8_t *) & _tag + sizeof(int32_t)) =
         comm->recvcontext_id + context_offset;
-    memset((uint8_t *) & _tag + sizeof(int32_t) + sizeof(MPIR_Context_id_t),
-           0, sizeof(LLC_tag_t) - sizeof(int32_t) - sizeof(MPIR_Context_id_t));
+    memset((uint8_t *) & _tag + sizeof(int32_t) + sizeof(MPIU_Context_id_t),
+           0, sizeof(LLC_tag_t) - sizeof(int32_t) - sizeof(MPIU_Context_id_t));
 
     if (source == MPI_ANY_SOURCE) {
         rank = LLC_ANY_SOURCE;
@@ -137,10 +137,10 @@ int MPID_nem_llc_improbe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm,
         *(int32_t *) ((uint8_t *) & _tag) = tag;
     }
 
-    *(MPIR_Context_id_t *) ((uint8_t *) & _tag + sizeof(int32_t)) =
+    *(MPIU_Context_id_t *) ((uint8_t *) & _tag + sizeof(int32_t)) =
         comm->recvcontext_id + context_offset;
-    memset((uint8_t *) & _tag + sizeof(int32_t) + sizeof(MPIR_Context_id_t),
-           0, sizeof(LLC_tag_t) - sizeof(int32_t) - sizeof(MPIR_Context_id_t));
+    memset((uint8_t *) & _tag + sizeof(int32_t) + sizeof(MPIU_Context_id_t),
+           0, sizeof(LLC_tag_t) - sizeof(int32_t) - sizeof(MPIU_Context_id_t));
 
     if (source == MPI_ANY_SOURCE) {
         rank = LLC_ANY_SOURCE;

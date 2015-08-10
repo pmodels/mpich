@@ -180,7 +180,7 @@ int MPIDU_Sock_accept(struct MPIDU_Sock * listener,
 	    if (bufsz < MPIDU_Socki_socket_bufsz * 0.9 || 
 		bufsz < MPIDU_Socki_socket_bufsz * 1.0)
 	    {
-		MPIU_Msg_printf("WARNING: send socket buffer size differs from requested size (requested=%d, actual=%d)\n",
+		MPL_msg_printf("WARNING: send socket buffer size differs from requested size (requested=%d, actual=%d)\n",
 				MPIDU_Socki_socket_bufsz, bufsz);
 	    }
 	}
@@ -200,7 +200,7 @@ int MPIDU_Sock_accept(struct MPIDU_Sock * listener,
 	    if (bufsz < MPIDU_Socki_socket_bufsz * 0.9 || 
 		bufsz < MPIDU_Socki_socket_bufsz * 1.0)
 	    {
-		MPIU_Msg_printf("WARNING: receive socket buffer size differs from requested size (requested=%d, actual=%d)\n",
+		MPL_msg_printf("WARNING: receive socket buffer size differs from requested size (requested=%d, actual=%d)\n",
 				MPIDU_Socki_socket_bufsz, bufsz);
 	    }
 	}
@@ -377,7 +377,7 @@ int MPIDU_Sock_read(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len,
 #define FUNCNAME MPIDU_Sock_readv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIDU_Sock_readv(MPIDU_Sock_t sock, MPID_IOV * iov, int iov_n, 
+int MPIDU_Sock_readv(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, 
 		     MPIU_Size_t * num_read)
 {
     struct pollfd * pollfd;
@@ -577,7 +577,7 @@ int MPIDU_Sock_write(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len,
 #define FUNCNAME MPIDU_Sock_writev
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIDU_Sock_writev(MPIDU_Sock_t sock, MPID_IOV * iov, int iov_n, MPIU_Size_t * num_written)
+int MPIDU_Sock_writev(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, MPIU_Size_t * num_written)
 {
     struct pollfd * pollfd;
     struct pollinfo * pollinfo;

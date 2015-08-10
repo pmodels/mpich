@@ -143,7 +143,7 @@ void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, const void *buf, int count,
 				    flat_buf->blocklens[i]);
 #endif
         ADIOI_Assert(flat_buf->blocklens[i] == (unsigned)flat_buf->blocklens[i]);
-        ADIOI_Assert((((ADIO_Offset)(MPIR_Upint)buf) + (ADIO_Offset)j*(ADIO_Offset)buftype_extent + flat_buf->indices[i]) == (ADIO_Offset)((MPIR_Upint)buf + (ADIO_Offset)j*(ADIO_Offset)buftype_extent + flat_buf->indices[i]));
+        ADIOI_Assert((((ADIO_Offset)(MPIU_Upint)buf) + (ADIO_Offset)j*(ADIO_Offset)buftype_extent + flat_buf->indices[i]) == (ADIO_Offset)((MPIU_Upint)buf + (ADIO_Offset)j*(ADIO_Offset)buftype_extent + flat_buf->indices[i]));
 #ifdef ADIOI_MPE_LOGGING
 		    MPE_Log_event( ADIOI_MPE_write_a, 0, NULL );
 #endif

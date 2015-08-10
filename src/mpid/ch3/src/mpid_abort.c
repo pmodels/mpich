@@ -15,7 +15,7 @@
 /* FIXME: We should move this into a header file so that we don't
    need the ifdef.  Also, don't use exit (add to coding check) since
    not safe in windows.  To avoid confusion, define a RobustExit? or
-   MPIU_Exit? */
+   MPL_exit? */
 #ifdef HAVE_WINDOWS_H
 /* exit can hang if libc fflushes output while in/out/err buffers are locked
    (this must be a bug in exit?).  ExitProcess does not hang (what does this
@@ -67,12 +67,12 @@ int MPID_Abort(MPID_Comm * comm, int mpi_errno, int exit_code,
 	{
 	    MPIR_Err_get_string(mpi_errno, msg, MPI_MAX_ERROR_STRING, NULL);
 	    /* FIXME: Not internationalized */
-	    MPIU_Snprintf(error_str, sizeof(error_str), "internal ABORT - process %d: %s", rank, msg);
+	    MPL_snprintf(error_str, sizeof(error_str), "internal ABORT - process %d: %s", rank, msg);
 	}
 	else
 	{
 	    /* FIXME: Not internationalized */
-	    MPIU_Snprintf(error_str, sizeof(error_str), "internal ABORT - process %d", rank);
+	    MPL_snprintf(error_str, sizeof(error_str), "internal ABORT - process %d", rank);
 	}
     }
     
@@ -90,7 +90,7 @@ int MPID_Abort(MPID_Comm * comm, int mpi_errno, int exit_code,
      * where the stdout/stderr pipes from MPICH to the PM are
      * broken), but not all PMs might display respect the message
      * (this problem was noticed with SLURM). */
-    MPIU_Error_printf("%s\n", error_msg);
+    MPL_error_printf("%s\n", error_msg);
     fflush(stderr);
 
     /* FIXME: What is the scope for PMI_Abort?  Shouldn't it be one or more
@@ -107,7 +107,7 @@ int MPID_Abort(MPID_Comm * comm, int mpi_errno, int exit_code,
     /* pmi_abort should not return but if it does, exit here.  If it does,
        add the function exit code before calling the final exit.  */
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_ABORT);
-    MPIU_Exit(exit_code);
+    MPL_exit(exit_code);
 
     return MPI_ERR_INTERN;
 }

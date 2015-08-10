@@ -133,7 +133,7 @@ int main( int argc, char *argv[], char *envp[] )
     /* If there were any soft arguments, we need to handle them now */
     rc = MPIE_InitWorldWithSoft( &pUniv.worlds[0], pUniv.size );
     if (!rc) {
-	MPIU_Error_printf( "Unable to process soft arguments\n" );
+	MPL_error_printf( "Unable to process soft arguments\n" );
 	exit(1);
     }
 
@@ -163,10 +163,10 @@ int main( int argc, char *argv[], char *envp[] )
     if (getenv("MPIEXEC_USE_PORT")) {
 	s.pmiinfo.portName = (char *)MPIU_Malloc( 1024 );
 	if (!s.pmiinfo.portName) {
-	    MPIU_Error_printf( "Failed to allocate storage for portName" );
+	    MPL_error_printf( "Failed to allocate storage for portName" );
 	}
 	if (PMIServSetupPort( &pUniv, s.pmiinfo.portName, 1024 )) {
-	    MPIU_Error_printf( "Failed to setup a host:port\n" );
+	    MPL_error_printf( "Failed to setup a host:port\n" );
 	}
 	else {
 	    usePort = 1;
@@ -203,7 +203,7 @@ int main( int argc, char *argv[], char *envp[] )
 				    pUniv.singletonPort );
 	if (newfd < 0) {
 	    /* Unable to connect */
-	    MPIU_Error_printf( "Unable to connect to singleton process" );
+	    MPL_error_printf( "Unable to connect to singleton process" );
 	    exit(1);
 	}
 	pState = pUniv.worlds[0].apps->pState;
@@ -236,11 +236,11 @@ int main( int argc, char *argv[], char *envp[] )
 	/* Exited due to timeout.  Generate an error message and
 	   terminate the children */
 	if (pUniv.timeout > 60) {
-	    MPIU_Error_printf( "Timeout of %d minutes expired; job aborted\n",
+	    MPL_error_printf( "Timeout of %d minutes expired; job aborted\n",
 			       pUniv.timeout / 60 );
 	}
 	else {
-	    MPIU_Error_printf( "Timeout of %d seconds expired; job aborted\n",
+	    MPL_error_printf( "Timeout of %d seconds expired; job aborted\n",
 			       pUniv.timeout );
 	}
 	erc = 1;
@@ -275,12 +275,12 @@ int main( int argc, char *argv[], char *envp[] )
 void mpiexec_usage( const char *msg )
 {
     if (msg) {
-	MPIU_Error_printf( "%s", msg );
+	MPL_error_printf( "%s", msg );
 	if (msg[strlen(msg)-1] != '\n') {
-	    MPIU_Error_printf( "\n" );
+	    MPL_error_printf( "\n" );
 	}
     }
-    MPIU_Usage_printf( "Usage: mpiexec %s\n", MPIE_ArgDescription() );
+    MPL_usage_printf( "Usage: mpiexec %s\n", MPIE_ArgDescription() );
     exit( -1 );
 }
 
@@ -309,14 +309,14 @@ int mypreamble( void *data, ProcessState *pState )
 	/* Create the string of ranks.  These are ranks in comm_world */
 	ranks[0] = 0;
 	for (i=0; i<size; i++) {
-	    MPIU_Snprintf( digits, sizeof(digits), "%d,", i );
+	    MPL_snprintf( digits, sizeof(digits), "%d,", i );
 	    MPIU_Strnapp( ranks, digits, sizeof(ranks) );
 	}
 	/* Remove the trailing comma */
 	if (size > 0) 
 	    ranks[strlen(ranks)-1] = 0;
 	/* Add this to the predefined keys */
-	MPIU_Snprintf( key, sizeof(key), "pmiPrivateLocalRanks_%d", 
+	MPL_snprintf( key, sizeof(key), "pmiPrivateLocalRanks_%d", 
 		       pState->wRank );
 	/* printf( "%s = %s\n", key, ranks ); */
 	

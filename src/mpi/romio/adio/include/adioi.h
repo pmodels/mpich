@@ -1014,11 +1014,11 @@ int  ADIOI_MPE_iwrite_b;
    (no loss of (meaningful) high order bytes in 8 byte MPI_Aint 
       to (possible) 4 byte ptr cast)                              */
 /* Should work even on 64bit or old 32bit configs                 */
-  /* Use MPID_Ensure_Aint_fits_in_pointer from mpiutil.h and 
+  /* Use MPIU_Ensure_Aint_fits_in_pointer from mpiutil.h and 
          MPI_AINT_CAST_TO_VOID_PTR from configure (mpi.h) */
   #include "glue_romio.h"
 
-  #define ADIOI_AINT_CAST_TO_VOID_PTR (void*)(MPIR_Pint)
+  #define ADIOI_AINT_CAST_TO_VOID_PTR (void*)(MPIU_Pint)
   /* The next two casts are only used when you don't want sign extension
      when casting a (possible 4 byte) aint to a (8 byte) long long or offset */
   #define ADIOI_AINT_CAST_TO_LONG_LONG (long long)
@@ -1033,7 +1033,7 @@ int  ADIOI_MPE_iwrite_b;
   #define ADIOI_AINT_CAST_TO_OFFSET ADIOI_AINT_CAST_TO_LONG_LONG
   #define ADIOI_ENSURE_AINT_FITS_IN_PTR(aint_value) 
   #define ADIOI_Assert assert
-  #define MPIR_Upint unsigned long
+  #define MPIU_Upint unsigned long
   #define MPIU_THREADPRIV_DECL
 #endif
 

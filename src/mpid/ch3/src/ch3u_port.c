@@ -264,8 +264,8 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPID_Comm **comm_pptr,
 
     /* sanity: the INVALID context ID value could potentially conflict with the
      * dynamic proccess space */
-    MPIU_Assert(tmp_comm->context_id     != MPIR_INVALID_CONTEXT_ID);
-    MPIU_Assert(tmp_comm->recvcontext_id != MPIR_INVALID_CONTEXT_ID);
+    MPIU_Assert(tmp_comm->context_id     != MPIU_INVALID_CONTEXT_ID);
+    MPIU_Assert(tmp_comm->recvcontext_id != MPIU_INVALID_CONTEXT_ID);
 
     /* FIXME - we probably need a unique context_id. */
     tmp_comm->remote_size = 1;
@@ -343,8 +343,8 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     pg_translation *local_translation = NULL, *remote_translation = NULL;
     pg_node *pg_list = NULL;
     MPIDI_PG_t **remote_pg = NULL;
-    MPIR_Context_id_t recvcontext_id = MPIR_INVALID_CONTEXT_ID;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIU_Context_id_t recvcontext_id = MPIU_INVALID_CONTEXT_ID;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIU_CHKLMEM_DECL(3);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_COMM_CONNECT);
 
@@ -528,7 +528,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
             if (mpi_errno2) MPIU_ERR_SET(mpi_errno2, MPI_ERR_OTHER, "**fail");
         }
 
-        if (recvcontext_id != MPIR_INVALID_CONTEXT_ID)
+        if (recvcontext_id != MPIU_INVALID_CONTEXT_ID)
             MPIR_Free_contextid(recvcontext_id);
         
         if (mpi_errno2) MPIU_ERR_ADD(mpi_errno, mpi_errno2);
@@ -690,7 +690,7 @@ static int ReceivePGAndDistribute( MPID_Comm *tmp_comm, MPID_Comm *comm_ptr,
     int  rank = comm_ptr->rank;
     int  mpi_errno = 0;
     int  recvtag = *recvtag_p;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIDI_STATE_DECL(MPID_STATE_RECEIVEPGANDDISTRIBUTE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_RECEIVEPGANDDISTRIBUTE);
@@ -766,7 +766,7 @@ int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
     pg_translation *local_translation = 0;
     pg_node *pg_list, *pg_next, *pg_head = 0;
     int rank, i, peer_comm_size;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIU_CHKLMEM_DECL(1);
 
     peer_comm_size = comm_p->local_size;
@@ -870,7 +870,7 @@ static int SendPGtoPeerAndFree( MPID_Comm *tmp_comm, int *sendtag_p,
     int mpi_errno = 0;
     int sendtag = *sendtag_p, i;
     pg_node *pg_iter;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIDI_STATE_DECL(MPID_STATE_SENDPGTOPEERANDFREE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_SENDPGTOPEERANDFREE);
@@ -939,7 +939,7 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
     pg_translation *local_translation = NULL, *remote_translation = NULL;
     pg_node *pg_list = NULL;
     MPIDI_PG_t **remote_pg = NULL;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIU_CHKLMEM_DECL(3);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_COMM_ACCEPT);
 
@@ -1149,7 +1149,7 @@ static int SetupNewIntercomm( MPID_Comm *comm_ptr, int remote_comm_size,
 			      MPID_Comm *intercomm )
 {
     int mpi_errno = MPI_SUCCESS, i;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     /* FIXME: How much of this could/should be common with the
        upper level (src/mpi/comm/ *.c) code? For best robustness, 
        this should use the same routine (not copy/paste code) as

@@ -4,6 +4,8 @@
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
+#ifndef MPIU_THREAD_SOLARIS_FUNCS_H_INCLUDED
+#define MPIU_THREAD_SOLARIS_FUNCS_H_INCLUDED
 
 /*
  * Threads
@@ -224,3 +226,5 @@ do {                                                                       \
 	/* FIXME: convert error to a MPIU_THREAD_ERR value */		\
     }									\
 } while (0)
+
+#endif /* MPIU_THREAD_SOLARIS_FUNCS_H_INCLUDED */

@@ -317,7 +317,7 @@ int MPIDI_CH3_ReqHandler_SendReloadIOV(MPIDI_VC_t * vc ATTRIBUTE((unused)), MPID
     /* setting the iov_offset to 0 here is critical, since it is intentionally
      * not set in the _load_send_iov function */
     sreq->dev.iov_offset = 0;
-    sreq->dev.iov_count = MPID_IOV_LIMIT;
+    sreq->dev.iov_count = MPL_IOV_LIMIT;
     mpi_errno = MPIDI_CH3U_Request_load_send_iov(sreq, sreq->dev.iov, &sreq->dev.iov_count);
     if (mpi_errno != MPI_SUCCESS) {
         MPIU_ERR_SETFATALANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|loadsendiov");

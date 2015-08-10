@@ -108,7 +108,7 @@ int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, MPI_Aint coun
     MPIU_DBG_MSG_D(CH3_OTHER,VERBOSE,
 		   "sending lmt RTS, data_sz=" MPIDI_MSG_SZ_FMT, data_sz);
     sreq->partner_request = NULL;
-    sreq->ch.lmt_tmp_cookie.MPID_IOV_LEN = 0;
+    sreq->ch.lmt_tmp_cookie.MPL_IOV_LEN = 0;
 	
     MPIDI_Pkt_init(rts_pkt, MPIDI_NEM_PKT_LMT_RTS);
     rts_pkt->match.parts.rank	      = comm->rank;
@@ -224,8 +224,8 @@ static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
     {
         /* set for the cookie to be received into the tmp_cookie in the request */
         MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"haven't received entire cookie");
-        MPIU_CHKPMEM_MALLOC(rreq->ch.lmt_tmp_cookie.MPID_IOV_BUF, char *, rts_pkt->cookie_len, mpi_errno, "tmp cookie buf");
-        rreq->ch.lmt_tmp_cookie.MPID_IOV_LEN = rts_pkt->cookie_len;
+        MPIU_CHKPMEM_MALLOC(rreq->ch.lmt_tmp_cookie.MPL_IOV_BUF, char *, rts_pkt->cookie_len, mpi_errno, "tmp cookie buf");
+        rreq->ch.lmt_tmp_cookie.MPL_IOV_LEN = rts_pkt->cookie_len;
 
         rreq->dev.iov[0] = rreq->ch.lmt_tmp_cookie;
         rreq->dev.iov_count = 1;
@@ -251,7 +251,7 @@ static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
         if (rts_pkt->cookie_len == 0)
         {
             /* there's no cookie to receive */
-            rreq->ch.lmt_tmp_cookie.MPID_IOV_LEN = 0;
+            rreq->ch.lmt_tmp_cookie.MPL_IOV_LEN = 0;
             rreq->dev.iov_count = 0;
             *buflen = sizeof(MPIDI_CH3_Pkt_t);
             *rreqp = NULL;
@@ -260,10 +260,10 @@ static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
         {
             /* receive cookie into tmp_cookie in the request */
             MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"received entire cookie");
-            MPIU_CHKPMEM_MALLOC(rreq->ch.lmt_tmp_cookie.MPID_IOV_BUF, char *, rts_pkt->cookie_len, mpi_errno, "tmp cookie buf");
-            rreq->ch.lmt_tmp_cookie.MPID_IOV_LEN = rts_pkt->cookie_len;
+            MPIU_CHKPMEM_MALLOC(rreq->ch.lmt_tmp_cookie.MPL_IOV_BUF, char *, rts_pkt->cookie_len, mpi_errno, "tmp cookie buf");
+            rreq->ch.lmt_tmp_cookie.MPL_IOV_LEN = rts_pkt->cookie_len;
         
-            MPIU_Memcpy(rreq->ch.lmt_tmp_cookie.MPID_IOV_BUF, data_buf, rts_pkt->cookie_len);
+            MPIU_Memcpy(rreq->ch.lmt_tmp_cookie.MPL_IOV_BUF, data_buf, rts_pkt->cookie_len);
             *buflen = sizeof(MPIDI_CH3_Pkt_t) + rts_pkt->cookie_len;
             *rreqp = NULL;
         }
@@ -346,13 +346,13 @@ static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
         if (data_len >= cts_pkt->cookie_len)
         {
             /* if whole cookie has been received, start the send */
-            sreq->ch.lmt_tmp_cookie.MPID_IOV_BUF = data_buf;
-            sreq->ch.lmt_tmp_cookie.MPID_IOV_LEN = cts_pkt->cookie_len;
+            sreq->ch.lmt_tmp_cookie.MPL_IOV_BUF = data_buf;
+            sreq->ch.lmt_tmp_cookie.MPL_IOV_LEN = cts_pkt->cookie_len;
             MPIU_THREAD_CS_ENTER(LMT,);
             mpi_errno = vc->ch.lmt_start_send(vc, sreq, sreq->ch.lmt_tmp_cookie);
             MPIU_THREAD_CS_EXIT(LMT,);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
-            sreq->ch.lmt_tmp_cookie.MPID_IOV_LEN = 0;
+            sreq->ch.lmt_tmp_cookie.MPL_IOV_LEN = 0;
             *buflen = sizeof(MPIDI_CH3_Pkt_t) + cts_pkt->cookie_len;
             *rreqp = NULL;
         }
@@ -361,8 +361,8 @@ static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
             /* create a recv req and set up to receive the cookie into the sreq's tmp_cookie */
             MPID_Request *rreq;
 
-            MPIU_CHKPMEM_MALLOC(sreq->ch.lmt_tmp_cookie.MPID_IOV_BUF, char *, cts_pkt->cookie_len, mpi_errno, "tmp cookie buf");
-            sreq->ch.lmt_tmp_cookie.MPID_IOV_LEN = cts_pkt->cookie_len;
+            MPIU_CHKPMEM_MALLOC(sreq->ch.lmt_tmp_cookie.MPL_IOV_BUF, char *, cts_pkt->cookie_len, mpi_errno, "tmp cookie buf");
+            sreq->ch.lmt_tmp_cookie.MPL_IOV_LEN = cts_pkt->cookie_len;
 
             MPIDI_Request_create_rreq(rreq, mpi_errno, goto fn_fail);
             /* FIXME:  where does this request get freed? */
@@ -377,7 +377,7 @@ static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
     }
     else
     {
-        MPID_IOV cookie = {0,0};
+        MPL_IOV cookie = {0,0};
         MPIU_THREAD_CS_ENTER(LMT,);
         mpi_errno = vc->ch.lmt_start_send(vc, sreq, cookie);
         MPIU_THREAD_CS_EXIT(LMT,);
@@ -476,10 +476,10 @@ static int pkt_COOKIE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz
         if (data_len >= cookie_pkt->cookie_len)
         {
             /* call handle cookie with cookie data in receive buffer */
-            MPID_IOV cookie;
+            MPL_IOV cookie;
 
-            cookie.MPID_IOV_BUF = data_buf;
-            cookie.MPID_IOV_LEN = cookie_pkt->cookie_len;
+            cookie.MPL_IOV_BUF = data_buf;
+            cookie.MPL_IOV_LEN = cookie_pkt->cookie_len;
             MPIU_THREAD_CS_ENTER(LMT,);
             mpi_errno = vc->ch.lmt_handle_cookie(vc, req, cookie);
             MPIU_THREAD_CS_EXIT(LMT,);
@@ -494,9 +494,9 @@ static int pkt_COOKIE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz
             MPID_Request *rreq;
 
             MPIDI_Request_create_rreq(rreq, mpi_errno, goto fn_fail);
-            MPIU_CHKPMEM_MALLOC(rreq->ch.lmt_tmp_cookie.MPID_IOV_BUF, char *, cookie_pkt->cookie_len, mpi_errno, "tmp cookie buf");
+            MPIU_CHKPMEM_MALLOC(rreq->ch.lmt_tmp_cookie.MPL_IOV_BUF, char *, cookie_pkt->cookie_len, mpi_errno, "tmp cookie buf");
             /* FIXME:  where does this request get freed? */
-            rreq->ch.lmt_tmp_cookie.MPID_IOV_LEN = cookie_pkt->cookie_len;
+            rreq->ch.lmt_tmp_cookie.MPL_IOV_LEN = cookie_pkt->cookie_len;
 
             rreq->dev.iov[0] = rreq->ch.lmt_tmp_cookie;
             rreq->dev.iov_count = 1;
@@ -508,7 +508,7 @@ static int pkt_COOKIE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz
     }
     else
     {
-        MPID_IOV cookie = {0,0};
+        MPL_IOV cookie = {0,0};
 
         MPIU_THREAD_CS_ENTER(LMT,);
         mpi_errno = vc->ch.lmt_handle_cookie(vc, req, cookie);
@@ -539,7 +539,7 @@ static int do_cts(MPIDI_VC_t *vc, MPID_Request *rreq, int *complete)
     int dt_contig ATTRIBUTE((unused));
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPID_Datatype * dt_ptr;
-    MPID_IOV s_cookie;
+    MPL_IOV s_cookie;
     MPIDI_STATE_DECL(MPID_STATE_DO_CTS);
 
     MPIDI_FUNC_ENTER(MPID_STATE_DO_CTS);
@@ -562,10 +562,10 @@ static int do_cts(MPIDI_VC_t *vc, MPID_Request *rreq, int *complete)
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* free cookie buffer allocated in RTS handler */
-    if (rreq->ch.lmt_tmp_cookie.MPID_IOV_LEN)
+    if (rreq->ch.lmt_tmp_cookie.MPL_IOV_LEN)
     {
-        MPIU_Free(rreq->ch.lmt_tmp_cookie.MPID_IOV_BUF);
-        rreq->ch.lmt_tmp_cookie.MPID_IOV_LEN = 0;
+        MPIU_Free(rreq->ch.lmt_tmp_cookie.MPL_IOV_BUF);
+        rreq->ch.lmt_tmp_cookie.MPL_IOV_LEN = 0;
     }
 
     *complete = TRUE;
@@ -584,7 +584,7 @@ static int do_cts(MPIDI_VC_t *vc, MPID_Request *rreq, int *complete)
 static int do_send(MPIDI_VC_t *vc, MPID_Request *rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_IOV r_cookie;
+    MPL_IOV r_cookie;
     MPID_Request * const sreq = rreq->ch.lmt_req;
     MPIDI_STATE_DECL(MPID_STATE_DO_SEND);
 
@@ -598,8 +598,8 @@ static int do_send(MPIDI_VC_t *vc, MPID_Request *rreq, int *complete)
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* free cookie buffer allocated in CTS handler */
-    MPIU_Free(sreq->ch.lmt_tmp_cookie.MPID_IOV_BUF);
-    sreq->ch.lmt_tmp_cookie.MPID_IOV_LEN = 0;
+    MPIU_Free(sreq->ch.lmt_tmp_cookie.MPL_IOV_BUF);
+    sreq->ch.lmt_tmp_cookie.MPL_IOV_LEN = 0;
 
     *complete = TRUE;
 
@@ -617,7 +617,7 @@ static int do_send(MPIDI_VC_t *vc, MPID_Request *rreq, int *complete)
 static int do_cookie(MPIDI_VC_t *vc, MPID_Request *rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_IOV cookie;
+    MPL_IOV cookie;
     MPID_Request *req = rreq->ch.lmt_req;
     MPIDI_STATE_DECL(MPID_STATE_DO_COOKIE);
 
@@ -631,8 +631,8 @@ static int do_cookie(MPIDI_VC_t *vc, MPID_Request *rreq, int *complete)
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
     /* free cookie buffer allocated in COOKIE handler */
-    MPIU_Free(req->ch.lmt_tmp_cookie.MPID_IOV_BUF);
-    req->ch.lmt_tmp_cookie.MPID_IOV_LEN = 0;
+    MPIU_Free(req->ch.lmt_tmp_cookie.MPL_IOV_BUF);
+    req->ch.lmt_tmp_cookie.MPL_IOV_LEN = 0;
 
     *complete = TRUE;
 

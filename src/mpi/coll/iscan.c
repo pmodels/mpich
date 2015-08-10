@@ -95,7 +95,7 @@ int MPIR_Iscan_rec_dbl(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
 
     /* This eventually gets malloc()ed as a temp buffer, not added to
      * any user buffers */
-    MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+    MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
 
     /* adjust for potential negative lower bound in datatype */
     partial_scan = (void *)((char*)partial_scan - true_lb);
@@ -208,7 +208,7 @@ int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPID_Datatype_get_extent_macro(datatype, extent);
 
-    MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+    MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
 
     MPIR_SCHED_CHKPMEM_MALLOC(tempbuf, void *, count*(MPIR_MAX(extent, true_extent)),
                         mpi_errno, "temporary buffer");

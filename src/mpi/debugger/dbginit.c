@@ -458,7 +458,7 @@ void MPIR_CommL_remember( MPID_Comm *comm_ptr )
 		   "Remember list structure address is %p",&MPIR_All_communicators);
     MPIU_THREAD_CS_ENTER(HANDLE,comm_ptr);
     if (comm_ptr == MPIR_All_communicators.head) {
-	MPIU_Internal_error_printf( "Internal error: communicator is already on free list\n" );
+	MPL_internal_error_printf( "Internal error: communicator is already on free list\n" );
 	return;
     }
     comm_ptr->comm_next = MPIR_All_communicators.head;
@@ -486,7 +486,7 @@ void MPIR_CommL_forget( MPID_Comm *comm_ptr )
 	    break;
 	}
 	if (p == p->comm_next) {
-	    MPIU_Internal_error_printf( "Mangled pointers to communicators - next is itself for %p\n", p );
+	    MPL_internal_error_printf( "Mangled pointers to communicators - next is itself for %p\n", p );
 	    break;
 	}
 	prev = p;

@@ -329,7 +329,7 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
 	   environment to each process.  There's no way to do this with
            the param interface, so we need to use getenv() here. */
 	char namebuf[1024];
-	MPIU_Snprintf( namebuf, sizeof(namebuf), 
+	MPL_snprintf( namebuf, sizeof(namebuf), 
 		       "MPICH_INTERFACE_HOSTNAME_R%d", myRank );
 	ifname_string = getenv( namebuf );
 
@@ -440,7 +440,7 @@ int MPID_nem_tcp_get_business_card (int my_rank, char **bc_val_p, int *val_max_s
     {
         unsigned char *p;
         p = (unsigned char *)(ifaddr.ifaddr);
-        MPIU_Snprintf( ifname, sizeof(ifname), "%u.%u.%u.%u", p[0], p[1], p[2], p[3] );
+        MPL_snprintf( ifname, sizeof(ifname), "%u.%u.%u.%u", p[0], p[1], p[2], p[3] );
         MPIU_DBG_MSG_S(CH3_CONNECT,VERBOSE,"ifname = %s",ifname );
         str_errno = MPIU_Str_add_string_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_IFNAME_KEY, ifname);
         if (str_errno) {

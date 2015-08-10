@@ -191,7 +191,7 @@ int MPIR_Comm_create_intra(MPID_Comm *comm_ptr, MPID_Group *group_ptr,
                            MPID_Comm **newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Context_id_t new_context_id = 0;
+    MPIU_Context_id_t new_context_id = 0;
     int *mapping = NULL;
     int n;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_INTRA);
@@ -287,13 +287,13 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
                                       MPID_Comm **newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Context_id_t new_context_id;
+    MPIU_Context_id_t new_context_id;
     int *mapping = NULL;
     int *remote_mapping = NULL;
     MPID_Comm *mapping_comm = NULL;
     int remote_size = -1;
     int rinfo[2];
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIU_CHKLMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_INTER);
 

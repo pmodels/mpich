@@ -14,7 +14,7 @@ int MPIDI_Sock_update_sock_set( struct MPIDU_Sock_set *, int );
 static int MPIDU_Socki_os_to_mpi_errno(struct pollinfo * pollinfo, 
 		     int os_errno, const char * fcname, int line, int * conn_failed);
 
-static int MPIDU_Socki_adjust_iov(ssize_t nb, MPID_IOV * const iov, 
+static int MPIDU_Socki_adjust_iov(ssize_t nb, MPL_IOV * const iov, 
 				  const int count, int * const offsetp);
 
 static int MPIDU_Socki_sock_alloc(struct MPIDU_Sock_set * sock_set, 
@@ -524,7 +524,7 @@ static int MPIDU_Socki_os_to_mpi_errno(struct pollinfo * pollinfo, int os_errno,
  * values.  If the iovec has been consumed, return
  * true; otherwise return false.
  *
- * The input is an iov (MPID_IOV is just an iov) and the offset into which 
+ * The input is an iov (MPL_IOV is just an iov) and the offset into which 
  * to start (start with entry iov[*offsetp]) and remove nb bytes from the iov.
  * The use of the offsetp term allows use to remove values from the iov without
  * making a copy to shift down elements when only part of the iov is
@@ -534,21 +534,21 @@ static int MPIDU_Socki_os_to_mpi_errno(struct pollinfo * pollinfo, int os_errno,
 #define FUNCNAME MPIDU_Socki_adjust_iov
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static int MPIDU_Socki_adjust_iov(ssize_t nb, MPID_IOV * const iov, const int count, int * const offsetp)
+static int MPIDU_Socki_adjust_iov(ssize_t nb, MPL_IOV * const iov, const int count, int * const offsetp)
 {
     int offset = *offsetp;
     
     while (offset < count)
     {
-	if (iov[offset].MPID_IOV_LEN <= nb)
+	if (iov[offset].MPL_IOV_LEN <= nb)
 	{
-	    nb -= iov[offset].MPID_IOV_LEN;
+	    nb -= iov[offset].MPL_IOV_LEN;
 	    offset++;
 	}
 	else
 	{
-	    iov[offset].MPID_IOV_BUF = (char *) iov[offset].MPID_IOV_BUF + nb;
-	    iov[offset].MPID_IOV_LEN -= nb;
+	    iov[offset].MPL_IOV_BUF = (char *) iov[offset].MPL_IOV_BUF + nb;
+	    iov[offset].MPL_IOV_LEN -= nb;
 	    *offsetp = offset;
 	    return FALSE;
 	}
@@ -1020,7 +1020,7 @@ int MPIDU_Sock_SetSockBufferSize( int fd, int firm )
 	    /* --BEGIN ERROR HANDLING-- */
 	    if (rc == 0) {
 		if (bufsz < sockBufSize * 0.9) {
-		MPIU_Msg_printf("WARNING: send socket buffer size differs from requested size (requested=%d, actual=%d)\n",
+		MPL_msg_printf("WARNING: send socket buffer size differs from requested size (requested=%d, actual=%d)\n",
 				sockBufSize, bufsz);
 		}
 	    }
@@ -1031,7 +1031,7 @@ int MPIDU_Sock_SetSockBufferSize( int fd, int firm )
 	    /* --BEGIN ERROR HANDLING-- */
 	    if (rc == 0) {
 		if (bufsz < sockBufSize * 0.9) {
-		    MPIU_Msg_printf("WARNING: receive socket buffer size differs from requested size (requested=%d, actual=%d)\n",
+		    MPL_msg_printf("WARNING: receive socket buffer size differs from requested size (requested=%d, actual=%d)\n",
 				    sockBufSize, bufsz);
 		}
 	    }

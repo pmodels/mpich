@@ -158,14 +158,14 @@ static inline int MPIU_SHMW_Ghnd_set_uniq(MPIU_SHMW_Hnd_t hnd)
 
 /* Returns -1 on error, 0 on success */
 #define MPIU_SHMW_Ghnd_get_by_val(hnd, str, strlen)  (              \
-    (MPIU_Snprintf(str, strlen, "%s",                               \
+    (MPL_snprintf(str, strlen, "%s",                               \
         MPIU_SHMW_Ghnd_get_by_ref(hnd))) ? 0 : -1                   \
 )
 #define MPIU_SHMW_Ghnd_set_by_ref(hnd, val) ((hnd)->ghnd = val)
 /* Returns -1 on error, 0 on success */
 /* FIXME: What if val is a non-null terminated string ? */
 #define MPIU_SHMW_Ghnd_set_by_val(hnd, fmt, val) (                  \
-    (MPIU_Snprintf(MPIU_SHMW_Ghnd_get_by_ref(hnd),                  \
+    (MPL_snprintf(MPIU_SHMW_Ghnd_get_by_ref(hnd),                  \
         MPIU_SHMW_GHND_SZ, fmt, val)) ? 0 : -1                      \
 )
 

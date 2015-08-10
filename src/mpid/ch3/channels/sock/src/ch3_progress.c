@@ -43,7 +43,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event);
 static inline int connection_pop_sendq_req(MPIDI_CH3I_Connection_t * conn);
 static inline int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn);
 
-static int adjust_iov(MPID_IOV ** iovp, int * countp, MPIU_Size_t nb);
+static int adjust_iov(MPL_IOV ** iovp, int * countp, MPIU_Size_t nb);
 
 #define MAX_PROGRESS_HOOKS 16
 typedef int (*progress_func_ptr_t) (int* made_progress);
@@ -620,7 +620,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 		{
 		    for(;;)
 		    {
-			MPID_IOV * iovp;
+			MPL_IOV * iovp;
 			MPIU_Size_t nb;
 				
 			iovp = sreq->dev.iov;
@@ -860,24 +860,24 @@ static inline int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn)
 #define FUNCNAME adjust_iov
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static int adjust_iov(MPID_IOV ** iovp, int * countp, MPIU_Size_t nb)
+static int adjust_iov(MPL_IOV ** iovp, int * countp, MPIU_Size_t nb)
 {
-    MPID_IOV * const iov = *iovp;
+    MPL_IOV * const iov = *iovp;
     const int count = *countp;
     int offset = 0;
     
     while (offset < count)
     {
-	if (iov[offset].MPID_IOV_LEN <= nb)
+	if (iov[offset].MPL_IOV_LEN <= nb)
 	{
-	    nb -= iov[offset].MPID_IOV_LEN;
+	    nb -= iov[offset].MPL_IOV_LEN;
 	    offset++;
 	}
 	else
 	{
-	    iov[offset].MPID_IOV_BUF = 
-		(MPID_IOV_BUF_CAST)((char *) iov[offset].MPID_IOV_BUF + nb);
-	    iov[offset].MPID_IOV_LEN -= nb;
+	    iov[offset].MPL_IOV_BUF = 
+		(MPL_IOV_BUF_CAST)((char *) iov[offset].MPL_IOV_BUF + nb);
+	    iov[offset].MPL_IOV_LEN -= nb;
 	    break;
 	}
     }
@@ -895,7 +895,7 @@ static int ReadMoreData( MPIDI_CH3I_Connection_t * conn, MPID_Request *rreq )
     int mpi_errno = MPI_SUCCESS;
     
     while (1) {
-	MPID_IOV * iovp;
+	MPL_IOV * iovp;
 	MPIU_Size_t nb;
 	
 	iovp = rreq->dev.iov;

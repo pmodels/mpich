@@ -13,7 +13,7 @@
  * (formerly lived in mpe_types.i)
  */
 
-#include "mpiu_thread.h"
+#include "mpiutil.h"
 
 typedef MPIU_Thread_mutex_t MPID_Thread_mutex_t;
 typedef MPIU_Thread_cond_t  MPID_Thread_cond_t;
@@ -42,21 +42,28 @@ typedef void (* MPID_Thread_func_t)(void * data);
   The thread is created in a detach state, meaning that is may not be waited upon.  If another thread needs to wait for this
   thread to complete, the threads must provide their own synchronization mechanism.
 @*/
-void MPID_Thread_create(MPID_Thread_func_t func, void * data, MPID_Thread_id_t * id, int * err);
+static inline void MPID_Thread_create(MPID_Thread_func_t func, void * data, MPID_Thread_id_t * id, int * err)
+{
+    MPIU_Thread_create(func,data,id,err);
+}
 
 /*@
   MPID_Thread_exit - exit from the current thread
 @*/
-void MPID_Thread_exit(void);
-
+static inline void MPID_Thread_exit(void)
+{
+    MPIU_Thread_exit();
+}
 /*@
   MPID_Thread_self - get the identifier of the current thread
 
   Output Parameter:
 . id - identifier of current thread
 @*/
-void MPID_Thread_self(MPID_Thread_id_t * id);
-
+static inline void MPID_Thread_self(MPID_Thread_id_t * id)
+{
+    MPIU_Thread_self(id);
+}
 /*@
   MPID_Thread_same - compare two threads identifiers to see if refer to the same thread
 
@@ -67,13 +74,17 @@ void MPID_Thread_self(MPID_Thread_id_t * id);
   Output Parameter:
 . same - TRUE if the two threads identifiers refer to the same thread; FALSE otherwise
 @*/
-void MPID_Thread_same(MPID_Thread_id_t * id1, MPID_Thread_id_t * id2, int * same);
-
+static inline void MPID_Thread_same(MPID_Thread_id_t * id1, MPID_Thread_id_t * id2, int * same)
+{
+    MPIU_Thread_same(id1,id2,same);
+}
 /*@
   MPID_Thread_yield - voluntarily relinquish the CPU, giving other threads an opportunity to run
 @*/
-void MPID_Thread_yield(void);
-
+static inline void MPID_Thread_yield(MPID_Thread_mutex_t *t)
+{
+    MPIU_Thread_yield(t);
+}
 
 /*
  *    Mutexes
@@ -86,8 +97,10 @@ void MPID_Thread_yield(void);
 + mutex - mutex
 - err - error code (non-zero indicates an error has occurred)
 @*/
-void MPID_Thread_mutex_create(MPID_Thread_mutex_t * mutex, int * err);
-
+static inline void MPID_Thread_mutex_create(MPID_Thread_mutex_t * mutex, int * err)
+{
+    MPIU_Thread_mutex_create(mutex,err);
+}
 /*@
   MPID_Thread_mutex_destroy - destroy an existing mutex
   
@@ -97,24 +110,36 @@ void MPID_Thread_mutex_create(MPID_Thread_mutex_t * mutex, int * err);
   Output Parameter:
 . err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
 @*/
-void MPID_Thread_mutex_destroy(MPID_Thread_mutex_t * mutex, int * err);
-
+static inline void MPID_Thread_mutex_destroy(MPID_Thread_mutex_t * mutex, int * err)
+{
+    MPIU_Thread_mutex_destroy(mutex,err);
+}
 /*@
   MPID_Thread_lock - acquire a mutex
   
   Input Parameter:
 . mutex - mutex
 @*/
-void MPID_Thread_mutex_lock(MPID_Thread_mutex_t * mutex);
-
+static inline void MPID_Thread_mutex_lock(MPID_Thread_mutex_t * mutex)
+{
+    int err;
+    MPIU_Thread_mutex_lock(mutex,&err);
+    MPIU_Assert_fmt_msg(err == MPIU_THREAD_SUCCESS,
+                        ("mutex_lock failed, err=%d (%s)",err,MPIU_Strerror(err)));
+}
 /*@
   MPID_Thread_unlock - release a mutex
   
   Input Parameter:
 . mutex - mutex
 @*/
-void MPID_Thread_mutex_unlock(MPID_Thread_mutex_t * mutex);
-
+static inline void MPID_Thread_mutex_unlock(MPID_Thread_mutex_t * mutex)
+{
+    int err;
+    MPIU_Thread_mutex_unlock(mutex,&err);
+    MPIU_Assert_fmt_msg(err == MPIU_THREAD_SUCCESS,
+                        ("mutex_unlock failed, err=%d (%s)",err,MPIU_Strerror(err)));
+}
 /*@
   MPID_Thread_mutex_trylock - try to acquire a mutex, but return even if unsuccessful
   
@@ -124,8 +149,13 @@ void MPID_Thread_mutex_unlock(MPID_Thread_mutex_t * mutex);
   Output Parameter:
 . flag - flag
 @*/
-void MPID_Thread_mutex_trylock(MPID_Thread_mutex_t * mutex, int * flag);
-
+static inline void MPID_Thread_mutex_trylock(MPID_Thread_mutex_t * mutex, int * flag)
+{
+    int err;
+    MPIU_Thread_mutex_trylock(mutex,flag,&err);
+    MPIU_Assert_fmt_msg(err == MPIU_THREAD_SUCCESS,
+                        ("mutex_trylock failed, err=%d (%s)",err,MPIU_Strerror(err)));
+}
 
 /*
  * Condition Variables
@@ -138,8 +168,10 @@ void MPID_Thread_mutex_trylock(MPID_Thread_mutex_t * mutex, int * flag);
 + cond - condition variable
 - err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
 @*/
-void MPID_Thread_cond_create(MPID_Thread_cond_t * cond, int * err);
-
+static inline void MPID_Thread_cond_create(MPID_Thread_cond_t * cond, int * err)
+{
+    MPIU_Thread_cond_create(cond,err);
+}
 /*@
   MPID_Thread_cond_destroy - destroy an existinga condition variable
   
@@ -150,8 +182,10 @@ void MPID_Thread_cond_create(MPID_Thread_cond_t * cond, int * err);
 . err - location to store the error code; pointer may be NULL; error is zero 
         for success, non-zero if a failure occurred
 @*/
-void MPID_Thread_cond_destroy(MPID_Thread_cond_t * cond, int * err);
-
+static inline void MPID_Thread_cond_destroy(MPID_Thread_cond_t * cond, int * err)
+{
+    MPIU_Thread_cond_destroy(cond,err);
+}
 /*@
   MPID_Thread_cond_wait - wait (block) on a condition variable
   
@@ -166,31 +200,44 @@ void MPID_Thread_cond_destroy(MPID_Thread_cond_t * cond, int * err);
   has changed in a way that warrants letting the
   thread proceed.
 @*/
-void MPID_Thread_cond_wait(MPID_Thread_cond_t * cond, MPID_Thread_mutex_t * mutex);
-
+static inline void MPID_Thread_cond_wait(MPID_Thread_cond_t * cond, MPID_Thread_mutex_t * mutex)
+{
+    int err;
+    MPIU_Thread_cond_wait(cond,mutex,&err);
+    MPIU_Assert_fmt_msg(err == MPIU_THREAD_SUCCESS,
+                        ("cond_wait failed, err=%d (%s)",err,MPIU_Strerror(err)));
+}
 /*@
   MPID_Thread_cond_broadcast - release all threads currently waiting on a condition variable
   
   Input Parameter:
 . cond - condition variable
 @*/
-void MPID_Thread_cond_broadcast(MPID_Thread_cond_t * cond);
-
+static inline void MPID_Thread_cond_broadcast(MPID_Thread_cond_t * cond)
+{
+    int err;
+    MPIU_Thread_cond_broadcast(cond,&err);
+    MPIU_Assert_fmt_msg(err == MPIU_THREAD_SUCCESS,
+                        ("cond_broadcast failed, err=%d (%s)",err,MPIU_Strerror(err)));
+}
 /*@
   MPID_Thread_cond_signal - release one thread currently waitng on a condition variable
   
   Input Parameter:
 . cond - condition variable
 @*/
-void MPID_Thread_cond_signal(MPID_Thread_cond_t * cond);
-
+static inline void MPID_Thread_cond_signal(MPID_Thread_cond_t * cond)
+{
+    int err;
+    MPIU_Thread_cond_signal(cond,&err);
+    MPIU_Assert_fmt_msg(err == MPIU_THREAD_SUCCESS,
+                        ("cond_signal failed, err=%d (%s)",err,MPIU_Strerror(err)));
+}
 
 /*
  * Thread Local Storage
  */
 typedef void (*MPID_Thread_tls_exit_func_t)(void * value);
-
-
 /*@
   MPID_Thread_tls_create - create a thread local storage space
 
@@ -203,8 +250,10 @@ typedef void (*MPID_Thread_tls_exit_func_t)(void * value);
 - err - location to store the error code; pointer may be NULL; error is zero 
         for success, non-zero if a failure occurred
 @*/
-void MPID_Thread_tls_create(MPID_Thread_tls_exit_func_t exit_func, MPID_Thread_tls_t * tls, int * err);
-
+static inline void MPID_Thread_tls_create(MPID_Thread_tls_exit_func_t exit_func, MPID_Thread_tls_t * tls, int * err)
+{
+    MPIU_Thread_tls_create(exit_func,tls,err);
+}
 /*@
   MPID_Thread_tls_destroy - destroy a thread local storage space
   
@@ -219,8 +268,10 @@ void MPID_Thread_tls_create(MPID_Thread_tls_exit_func_t exit_func, MPID_Thread_t
   The destroy function associated with the thread local storage will not 
   called after the space has been destroyed.
 @*/
-void MPID_Thread_tls_destroy(MPID_Thread_tls_t * tls, int * err);
-
+static inline void MPID_Thread_tls_destroy(MPID_Thread_tls_t * tls, int * err)
+{
+    MPIU_Thread_tls_destroy(tls,err);
+}
 /*@
   MPID_Thread_tls_set - associate a value with the current thread in the 
   thread local storage space
@@ -229,8 +280,13 @@ void MPID_Thread_tls_destroy(MPID_Thread_tls_t * tls, int * err);
 + tls - thread local storage space
 - value - value to associate with current thread
 @*/
-void MPID_Thread_tls_set(MPID_Thread_tls_t * tls, void * value);
-
+static inline void MPID_Thread_tls_set(MPID_Thread_tls_t * tls, void * value)
+{
+    int err;
+    MPIU_Thread_tls_set(tls,value,&err);
+    MPIU_Assert_fmt_msg(err == MPIU_THREAD_SUCCESS,
+                        ("tls_set failed, err=%d (%s)",err,MPIU_Strerror(err)));
+}
 /*@
   MPID_Thread_tls_get - obtain the value associated with the current thread 
   from the thread local storage space
@@ -241,156 +297,11 @@ void MPID_Thread_tls_set(MPID_Thread_tls_t * tls, void * value);
   Output Parameter:
 . value - value associated with current thread
 @*/
-void MPID_Thread_tls_get(MPID_Thread_tls_t * tls, void ** value);
-
-
-/*
- * Error values
- */
-#define MPID_THREAD_SUCCESS MPID_THREAD_ERR_SUCCESS
-#define MPID_THREAD_ERR_SUCCESS 0
-/* FIXME: Define other error codes.  For now, any non-zero value is an error. */
-
-
-/*
- * Implementation specific function definitions (usually in the form of macros)
- *
- * (formerly lived in mpe_funcs.i)
- */
-
-#define MPID_Thread_create(func_, data_, id_, err_)	\
-do {                                                       \
-    MPIU_Thread_create((func_), (data_), (id_), (err_));	\
-} while (0)
-
-#define MPID_Thread_exit()			\
-do {                                               \
-    MPIU_Thread_exit();				\
-} while (0)
-
-#define MPID_Thread_self(id_)			\
-do {                                               \
-    MPIU_Thread_self(id_);			\
-} while (0)
-
-#define MPID_Thread_same(id1_, id2_, same_)	\
-do {                                               \
-    MPIU_Thread_same((id1_), (id2_), (same_));	\
-} while (0)
-
-#define MPID_Thread_yield(mutex_ptr)               \
-do {                                               \
-    MPIU_Thread_yield(mutex_ptr);                  \
-} while (0)
-
-
-/*
- *    Mutexes
- */
-
-#define MPID_Thread_mutex_create(mutex_, err_)	\
-do {                                               \
-    MPIU_Thread_mutex_create((mutex_), (err_));	\
-} while (0)
-
-#define MPID_Thread_mutex_destroy(mutex_, err_)	\
-do {                                               \
-    MPIU_Thread_mutex_destroy((mutex_), (err_));	\
-} while (0)
-
-#define MPID_Thread_mutex_lock(mutex_)		\
-do {                                               \
-    int err_;					\
-    MPIU_Thread_mutex_lock((mutex_), &err_);	\
-    MPIU_Assert_fmt_msg(err_ == MPIU_THREAD_SUCCESS,                                   \
-                        ("mutex_lock failed, err_=%d (%s)",err_,MPIU_Strerror(err_))); \
-} while (0)
-
-#define MPID_Thread_mutex_unlock(mutex_)	\
-do {                                               \
-    int err_;					\
-    MPIU_Thread_mutex_unlock((mutex_), &err_);	\
-    MPIU_Assert_fmt_msg(err_ == MPIU_THREAD_SUCCESS,                                     \
-                        ("mutex_unlock failed, err_=%d (%s)",err_,MPIU_Strerror(err_))); \
-} while (0)
-
-#define MPID_Thread_mutex_trylock(mutex_, flag_)		\
-do {                                                               \
-    int err_;							\
-    MPIU_Thread_mutex_trylock((mutex_), (flag_), &err_);	\
-    MPIU_Assert_fmt_msg(err_ == MPIU_THREAD_SUCCESS,                                      \
-                        ("mutex_trylock failed, err_=%d (%s)",err_,MPIU_Strerror(err_))); \
-} while (0)
-
-
-/*
- * Condition Variables
- */
-
-#define MPID_Thread_cond_create(cond_, err_)	\
-do {                                               \
-    MPIU_Thread_cond_create((cond_), (err_));	\
-} while (0)
-
-#define MPID_Thread_cond_destroy(cond_, err_)	\
-do {                                               \
-    MPIU_Thread_cond_destroy((cond_), (err_));	\
-} while (0)
-
-#define MPID_Thread_cond_wait(cond_, mutex_)		\
-do {                                                       \
-    int err_;						\
-    MPIU_Thread_cond_wait((cond_), (mutex_), &err_);	\
-    MPIU_Assert_fmt_msg(err_ == MPIU_THREAD_SUCCESS,                                  \
-                        ("cond_wait failed, err_=%d (%s)",err_,MPIU_Strerror(err_))); \
-} while (0)
-
-#define MPID_Thread_cond_broadcast(cond_)	\
-do {                                               \
-    int err_;					\
-    MPIU_Thread_cond_broadcast((cond_), &err_);	\
-    MPIU_Assert_fmt_msg(err_ == MPIU_THREAD_SUCCESS,                                       \
-                        ("cond_broadcast failed, err_=%d (%s)",err_,MPIU_Strerror(err_))); \
-} while (0)
-
-#define MPID_Thread_cond_signal(cond_)		\
-do {                                               \
-    int err_;					\
-    MPIU_Thread_cond_signal((cond_), &err_);	\
-    MPIU_Assert_fmt_msg(err_ == MPIU_THREAD_SUCCESS,                                    \
-                        ("cond_signal failed, err_=%d (%s)",err_,MPIU_Strerror(err_))); \
-} while (0)
-
-
-/*
- * Thread Local Storage
- */
-
-#define MPID_Thread_tls_create(exit_func_, tls_, err_)		\
-do {                                                               \
-    MPIU_Thread_tls_create((exit_func_), (tls_), (err_));	\
-} while (0)
-
-#define MPID_Thread_tls_destroy(tls_, err_)	\
-do {                                               \
-    MPIU_Thread_tls_destroy((tls_), (err_));	\
-} while (0)
-
-#define MPID_Thread_tls_set(tls_, value_)		\
-do {                                                       \
-    int err_;						\
-    MPIU_Thread_tls_set((tls_), (value_), &err_);	\
-    MPIU_Assert_fmt_msg(err_ == MPIU_THREAD_SUCCESS,                                \
-                        ("tls_set failed, err_=%d (%s)",err_,MPIU_Strerror(err_))); \
-} while (0)
-
-#define MPID_Thread_tls_get(tls_, value_)		\
-do {                                                       \
-    int err_;						\
-							\
-    MPIU_Thread_tls_get((tls_), (value_), &err_);	\
-    /* can't strerror here, possible endless recursion in strerror */ \
-    MPIU_Assert_fmt_msg(err_ == MPIU_THREAD_SUCCESS,("tls_get failed, err_=%d",err_)); \
-} while (0)
-
+static inline void MPID_Thread_tls_get(MPID_Thread_tls_t * tls, void ** value)
+{
+    int err;
+    MPIU_Thread_tls_get(tls,value,&err);
+    /* can't strerror here, possible endless recursion in strerror */
+    MPIU_Assert_fmt_msg(err == MPIU_THREAD_SUCCESS,("tls_get failed, err=%d",err));
+}
 #endif /* !defined(MPID_THREAD_H_INCLUDED) */

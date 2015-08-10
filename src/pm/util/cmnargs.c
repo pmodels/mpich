@@ -246,7 +246,7 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *mypUniv,
 	else if (strncmp( argv[i], "-channel=", 9 ) == 0) {
 	    const char *channame = argv[i] + 9;
 	    char envstring[256];
-	    MPIU_Snprintf( envstring, sizeof(envstring), "MPICH_CH3CHANNEL=%s",
+	    MPL_snprintf( envstring, sizeof(envstring), "MPICH_CH3CHANNEL=%s",
 			   channame );
 	    MPIE_Putenv( mypUniv->worlds, envstring );
 	}
@@ -346,7 +346,7 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *mypUniv,
 		i += (incr-1);
 	    }
 	    else {
-		MPIU_Error_printf( "invalid mpiexec argument %s\n", argv[i] );
+		MPL_error_printf( "invalid mpiexec argument %s\n", argv[i] );
 		mpiexec_usage( NULL );
 		return -1;
 	    }
@@ -360,7 +360,7 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *mypUniv,
     }
 
     if (optionArgs && optionCmdline) {
-	MPIU_Error_printf( "-configfile may not be used with other options\n" );
+	MPL_error_printf( "-configfile may not be used with other options\n" );
 	return -1;
     }
     return curplist;
@@ -522,7 +522,7 @@ static int getInt( int argnum, int argc, char *argv[] )
 	p = argv[argnum];
 	i = strtol( argv[argnum], &p, 0 );
 	if (p == argv[argnum]) {
-	    MPIU_Error_printf( "Invalid parameter value %s to argument %s\n",
+	    MPL_error_printf( "Invalid parameter value %s to argument %s\n",
 		     argv[argnum], argv[argnum-1] );
 	    mpiexec_usage( NULL );
 	    /* Does not return */
@@ -530,7 +530,7 @@ static int getInt( int argnum, int argc, char *argv[] )
 	return (int)i;
     }
     else {
-	MPIU_Error_printf( "Missing argument to %s\n", argv[argnum-1] );
+	MPL_error_printf( "Missing argument to %s\n", argv[argnum-1] );
 	mpiexec_usage( NULL );
 	/* Does not return */
     }
@@ -657,7 +657,7 @@ static int ReadConfigFile( const char *filename, ProcessUniverse *mypUniv)
 
     fp = fopen( filename, "r" );
     if (!fp) {
-	MPIU_Error_printf( "Unable to open configfile %s\n", filename );
+	MPL_error_printf( "Unable to open configfile %s\n", filename );
 	return -1;
     }
 
@@ -696,7 +696,7 @@ static int LineToArgv( char *linebuf, char *(argv[]), int maxargv )
     while (*p) {
 	while (isspace(*p)) p++;
 	if (argc >= maxargv) {
-	    MPIU_Error_printf( "Too many arguments in configfile line\n" );
+	    MPL_error_printf( "Too many arguments in configfile line\n" );
 	    return -1;
 	}
 	argv[argc] = p;

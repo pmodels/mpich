@@ -106,7 +106,7 @@ struct pollinfo
     {
 	struct
 	{
-	    MPID_IOV * ptr;
+	    MPL_IOV * ptr;
 	    int count;
 	    int offset;
 	} iov;
@@ -124,7 +124,7 @@ struct pollinfo
     {
 	struct
 	{
-	    MPID_IOV * ptr;
+	    MPL_IOV * ptr;
 	    int count;
 	    int offset;
 	} iov;

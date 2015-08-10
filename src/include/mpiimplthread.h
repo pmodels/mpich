@@ -944,7 +944,7 @@ static inline void MPID_cc_set(MPID_cc_t *cc_ptr, int val)
 }
 
 ATTRIBUTE((unused))
-static MPIU_DBG_INLINE_KEYWORD int MPID_cc_is_complete(MPID_cc_t *cc_ptr)
+static MPL_DBG_INLINE_KEYWORD int MPID_cc_is_complete(MPID_cc_t *cc_ptr)
 {
     int complete;
     complete = (0 == OPA_load_int(cc_ptr));

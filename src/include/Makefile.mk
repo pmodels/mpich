@@ -5,8 +5,6 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-include $(top_srcdir)/src/include/thread/Makefile.mk
-
 # nodist_ b/c these are created by config.status and should not be distributed
 nodist_include_HEADERS += src/include/mpi.h
 
@@ -32,11 +30,9 @@ noinst_HEADERS +=                   \
     src/include/mpi_fortlogical.h   \
     src/include/mpi_lang.h          \
     src/include/mpiallstates.h      \
-    src/include/mpibase.h           \
     src/include/mpibsend.h          \
     src/include/mpich_cvars.h  \
     src/include/mpichconfconst.h    \
-    src/include/mpidbg.h            \
     src/include/mpierror.h          \
     src/include/mpierrs.h           \
     src/include/mpiext.h            \
@@ -45,15 +41,12 @@ noinst_HEADERS +=                   \
     src/include/mpiimpl.h           \
     src/include/mpiimplthread.h     \
     src/include/mpiimplthreadpost.h \
-    src/include/mpiiov.h            \
     src/include/mpimem.h            \
     src/include/mpir_nbc.h          \
+    src/include/mpir_type_defs.h    \
     src/include/mpishared.h         \
     src/include/mpistates.h         \
     src/include/mpitimerimpl.h      \
-    src/include/mpitypedefs.h       \
-    src/include/mpiu_ex.h           \
-    src/include/mpiu_thread.h       \
     src/include/mpiu_utarray.h      \
     src/include/mpiu_uthash.h       \
     src/include/mpiutil.h           \

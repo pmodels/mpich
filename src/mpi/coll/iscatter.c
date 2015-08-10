@@ -131,14 +131,14 @@ int MPIR_Iscatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
                in the event of recvbuf=MPI_IN_PLACE on the root,
                recvcount and recvtype are not valid */
             MPID_Datatype_get_size_macro(sendtype, sendtype_size);
-            MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
+            MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
                                              extent*sendcount*comm_size);
 
             ss->nbytes = sendtype_size * sendcount;
         }
         else {
             MPID_Datatype_get_size_macro(recvtype, recvtype_size);
-            MPID_Ensure_Aint_fits_in_pointer(extent*recvcount*comm_size);
+            MPIU_Ensure_Aint_fits_in_pointer(extent*recvcount*comm_size);
             ss->nbytes = recvtype_size * recvcount;
         }
 
@@ -485,8 +485,8 @@ int MPIR_Iscatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
                 MPIR_Type_get_true_extent_impl(recvtype, &true_lb, &true_extent);
 
                 MPID_Datatype_get_extent_macro(recvtype, extent);
-                MPID_Ensure_Aint_fits_in_pointer(extent*recvcount*local_size);
-                MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
+                MPIU_Ensure_Aint_fits_in_pointer(extent*recvcount*local_size);
+                MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
                                                  sendcount*remote_size*extent);
 
                 MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, recvcount*local_size*(MPIR_MAX(extent,true_extent)),

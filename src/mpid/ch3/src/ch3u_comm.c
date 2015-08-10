@@ -572,7 +572,7 @@ int MPIDI_CH3I_Comm_handle_failed_procs(MPID_Group *new_failed_procs)
     goto fn_exit;
 }
 
-void MPIDI_CH3I_Comm_find(MPIR_Context_id_t context_id, MPID_Comm **comm)
+void MPIDI_CH3I_Comm_find(MPIU_Context_id_t context_id, MPID_Comm **comm)
 {
     MPIDI_STATE_DECL(MPIDI_STATE_MPIDI_CH3I_COMM_FIND);
     MPIDI_FUNC_ENTER(MPIDI_STATE_MPIDI_CH3I_COMM_FIND);

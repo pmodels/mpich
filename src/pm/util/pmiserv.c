@@ -38,7 +38,7 @@
 #include "simple_pmiutil.h"
 
 #ifdef HAVE_SNPRINTF
-#define MPIU_Snprintf snprintf
+#define MPL_snprintf snprintf
 #ifdef NEEDS_SNPRINTF_DECL
 int snprintf(char *, size_t, const char *, ...);
 #endif
@@ -169,26 +169,26 @@ int PMISetupInClient( int usePort, PMISetup *pmiinfo )
 
     if (usePort == 0) {
 	close( pmiinfo->fdpair[0] );
-	MPIU_Snprintf( env_pmi_fd, sizeof(env_pmi_fd), "PMI_FD=%d" , 
+	MPL_snprintf( env_pmi_fd, sizeof(env_pmi_fd), "PMI_FD=%d" , 
 		       pmiinfo->fdpair[1] );
 	if (MPIE_Putenv( pmiinfo->pWorld, env_pmi_fd )) {
-	    MPIU_Internal_error_printf( "Could not set environment PMI_FD" );
+	    MPL_internal_error_printf( "Could not set environment PMI_FD" );
 	    return 1;
 	}
     }
     else {
 	/* We must communicate the port name to the process */
 	if (pmiinfo->portName) {
-	    MPIU_Snprintf( env_pmi_port, sizeof(env_pmi_port), "PMI_PORT=%s",
+	    MPL_snprintf( env_pmi_port, sizeof(env_pmi_port), "PMI_PORT=%s",
 			   pmiinfo->portName );
 	    if (MPIE_Putenv( pmiinfo->pWorld, env_pmi_port )) {
-		MPIU_Internal_error_printf( "Could not set environment PMI_PORT" );
+		MPL_internal_error_printf( "Could not set environment PMI_PORT" );
 		perror( "Reason: " );
 		return 1;
 	    }
 	}
 	else {
-	    MPIU_Internal_error_printf( "Required portname was not defined\n" );
+	    MPL_internal_error_printf( "Required portname was not defined\n" );
 	    return 1;
 	}
 	
@@ -405,7 +405,7 @@ static int fPMI_Handle_finalize( PMIProcess *pentry )
     pentry->pState->status = PROCESS_FINALIZED;
 
     /* send back an acknowledgement to release the process */
-    MPIU_Snprintf(outbuf, PMIU_MAXLINE, "cmd=finalize_ack\n");
+    MPL_snprintf(outbuf, PMIU_MAXLINE, "cmd=finalize_ack\n");
     PMIWriteLine(pentry->fd, outbuf);
 
     return 0;
@@ -458,7 +458,7 @@ static PMIKVSpace *fPMIKVSAllocate( void )
     /* Create the space */
     kvs = (PMIKVSpace *)MPIU_Malloc( sizeof(PMIKVSpace) );
     if (!kvs) {
-	MPIU_Internal_error_printf( "too many kvs's\n" );
+	MPL_internal_error_printf( "too many kvs's\n" );
 	return 0;
     }
     /* We include the pid of the PMI server as a way to allow multiple
@@ -468,7 +468,7 @@ static PMIKVSpace *fPMIKVSAllocate( void )
        hostname as well, just to avoid getting the same pid on two
        different hosts, but this is probably good enough for most
        uses) */
-    MPIU_Snprintf( (char *)(kvs->kvsname), MAXNAMELEN, "kvs_%d_%d", 
+    MPL_snprintf( (char *)(kvs->kvsname), MAXNAMELEN, "kvs_%d_%d", 
 		   (int)getpid(), kvsnum++ );
     kvs->pairs     = 0;
     kvs->lastByIdx = 0;
@@ -615,7 +615,7 @@ static int PMIKVSFree( PMIKVSpace *kvs )
     /* Note that if we did not find the kvs, we have an internal 
        error, since all kv spaces are maintained within the pmimaster list */
     if (rc != 0) {
-	MPIU_Internal_error_printf( "Could not find KV Space %s\n", 
+	MPL_internal_error_printf( "Could not find KV Space %s\n", 
 				    kvs->kvsname );
 	return 1;
     }
@@ -634,7 +634,7 @@ static int fPMI_Handle_create_kvs( PMIProcess *pentry )
 	/* PANIC - allocation failed */
 	return 1;
     }
-    MPIU_Snprintf( outbuf, PMIU_MAXLINE, "cmd=newkvs kvsname=%s\n", kvsname );
+    MPL_snprintf( outbuf, PMIU_MAXLINE, "cmd=newkvs kvsname=%s\n", kvsname );
     PMIWriteLine( pentry->fd, outbuf );
     DBG_PRINTFCOND(pmidebug, ("Handle_create_kvs new name %s\n", kvsname ) );
     return 0;
@@ -654,14 +654,14 @@ static int fPMI_Handle_destroy_kvs( PMIProcess *pentry )
     kvs = fPMIKVSFindSpace( kvsname );
     if (kvs) {
 	PMIKVSFree( kvs );
-	MPIU_Snprintf( message, PMIU_MAXLINE,
+	MPL_snprintf( message, PMIU_MAXLINE,
 		       "KVS_%s_successfully_destroyed", kvsname );
     }
     else {
-	MPIU_Snprintf( message, PMIU_MAXLINE, "KVS %s not found", kvsname );
+	MPL_snprintf( message, PMIU_MAXLINE, "KVS %s not found", kvsname );
 	rc = -1;
     }
-    MPIU_Snprintf( outbuf, PMIU_MAXLINE, "cmd=kvs_destroyed rc=%d msg=%s\n",
+    MPL_snprintf( outbuf, PMIU_MAXLINE, "cmd=kvs_destroyed rc=%d msg=%s\n",
 	      rc, message );
     PMIWriteLine( pentry->fd, outbuf );
     return 0;
@@ -689,11 +689,11 @@ static int fPMI_Handle_put( PMIProcess *pentry )
 	rc = fPMIKVSAddPair( kvs, key, val );
 	if (rc == 1) {
 	    rc = -1;          /* no duplicate keys allowed */
-	    MPIU_Snprintf( message, PMIU_MAXLINE, "duplicate_key %s", key );
+	    MPL_snprintf( message, PMIU_MAXLINE, "duplicate_key %s", key );
 	}
 	else if (rc == -1) {
 	    rc = -1;
-	    MPIU_Snprintf( message, PMIU_MAXLINE, "no_room_in_kvs_%s",
+	    MPL_snprintf( message, PMIU_MAXLINE, "no_room_in_kvs_%s",
 			   kvsname );
 	}
 	else {
@@ -703,9 +703,9 @@ static int fPMI_Handle_put( PMIProcess *pentry )
     }
     else {
 	rc = -1;
-	MPIU_Snprintf( message, PMIU_MAXLINE, "kvs_%s_not_found", kvsname );
+	MPL_snprintf( message, PMIU_MAXLINE, "kvs_%s_not_found", kvsname );
     }
-    MPIU_Snprintf( outbuf, PMIU_MAXLINE, "cmd=put_result rc=%d msg=%s\n",
+    MPL_snprintf( outbuf, PMIU_MAXLINE, "cmd=put_result rc=%d msg=%s\n",
 	      rc, message );
     PMIWriteLine( pentry->fd, outbuf );
     return 0;
@@ -738,16 +738,16 @@ static int fPMI_Handle_get( PMIProcess *pentry )
 	else if (rc) {
 	    rc = -1;
 	    MPIU_Strncpy( value, "unknown", PMIU_MAXLINE );
-	    MPIU_Snprintf( message, PMIU_MAXLINE, "key_%s_not_found", 
+	    MPL_snprintf( message, PMIU_MAXLINE, "key_%s_not_found", 
 			   kvsname );
 	}
     }
     else { 
 	rc = -1;
 	MPIU_Strncpy( value, "unknown", PMIU_MAXLINE );
-	MPIU_Snprintf( message, PMIU_MAXLINE, "kvs_%s_not_found", kvsname );
+	MPL_snprintf( message, PMIU_MAXLINE, "kvs_%s_not_found", kvsname );
     }
-    MPIU_Snprintf( outbuf, PMIU_MAXLINE, 
+    MPL_snprintf( outbuf, PMIU_MAXLINE, 
 		   "cmd=get_result rc=%d msg=%s value=%s\n",
 		   rc, message, value );
     PMIWriteLine( pentry->fd, outbuf );
@@ -763,11 +763,11 @@ static int fPMI_Handle_get_my_kvsname( PMIProcess *pentry )
 
     kvs = pentry->group->kvs;
     if (kvs && kvs->kvsname) {
-	MPIU_Snprintf( outbuf, PMIU_MAXLINE, "cmd=my_kvsname kvsname=%s\n",
+	MPL_snprintf( outbuf, PMIU_MAXLINE, "cmd=my_kvsname kvsname=%s\n",
 		       kvs->kvsname );
     }
     else {
-	MPIU_Internal_error_printf( "Group has no associated KVS" );
+	MPL_internal_error_printf( "Group has no associated KVS" );
 	return -1;
     }
     PMIWriteLine( pentry->fd, outbuf );
@@ -780,7 +780,7 @@ static int fPMI_Handle_get_universe_size( PMIProcess *pentry )
 {
     char outbuf[PMIU_MAXLINE];
     /* Import the universe size from the process structures */
-    MPIU_Snprintf( outbuf, PMIU_MAXLINE, "cmd=universe_size size=%d\n",
+    MPL_snprintf( outbuf, PMIU_MAXLINE, "cmd=universe_size size=%d\n",
 		   pUniv.size );
     PMIWriteLine( pentry->fd, outbuf );
     DBG_PRINTFCOND(pmidebug,( "%s", outbuf ));
@@ -792,7 +792,7 @@ static int fPMI_Handle_get_appnum( PMIProcess *pentry )
 {
     ProcessApp *app = pentry->pState->app;
     char outbuf[PMIU_MAXLINE];
-    MPIU_Snprintf( outbuf, PMIU_MAXLINE, "cmd=appnum appnum=%d\n",
+    MPL_snprintf( outbuf, PMIU_MAXLINE, "cmd=appnum appnum=%d\n",
 		   app->myAppNum );		
     PMIWriteLine( pentry->fd, outbuf );
     DBG_PRINTFCOND(pmidebug,( "%s", outbuf ));
@@ -817,7 +817,7 @@ static int fPMI_Handle_init( PMIProcess *pentry )
 
     pentry->pState->status = PROCESS_COMMUNICATING;
 
-    MPIU_Snprintf( outbuf, PMIU_MAXLINE,
+    MPL_snprintf( outbuf, PMIU_MAXLINE,
 	   "cmd=response_to_init pmi_version=%d pmi_subversion=%d rc=%d\n",
 		   PMI_VERSION, PMI_SUBVERSION, rc);
     PMIWriteLine( pentry->fd, outbuf );
@@ -829,7 +829,7 @@ static int fPMI_Handle_init( PMIProcess *pentry )
 static int fPMI_Handle_get_maxes( PMIProcess *pentry )
 {
     char outbuf[PMIU_MAXLINE];
-    MPIU_Snprintf( outbuf, PMIU_MAXLINE,
+    MPL_snprintf( outbuf, PMIU_MAXLINE,
 	      "cmd=maxes kvsname_max=%d keylen_max=%d vallen_max=%d\n",
 	      MAXKVSNAME, MAXKEYLEN, MAXVALLEN );
     PMIWriteLine( pentry->fd, outbuf );
@@ -861,14 +861,14 @@ static int fPMI_Handle_getbyidx( PMIProcess *pentry )
 	    for (p = kvs->pairs; j-- > 0 && p; p = p->nextPair) ;
 	}
 	if (p) {
-	    MPIU_Snprintf( outbuf, PMIU_MAXLINE, "cmd=getbyidx_results "
+	    MPL_snprintf( outbuf, PMIU_MAXLINE, "cmd=getbyidx_results "
 			   "rc=0 nextidx=%d key=%s val=%s\n",
 			   jNext, p->key, p->val );
 	    kvs->lastIdx   = jNext-1;
 	    kvs->lastByIdx = p;
 	}
 	else {
-	    MPIU_Snprintf( outbuf, PMIU_MAXLINE, "cmd=getbyidx_results rc=-1 "
+	    MPL_snprintf( outbuf, PMIU_MAXLINE, "cmd=getbyidx_results rc=-1 "
 			   "reason=no_more_keyvals\n" );
 	    kvs->lastIdx   = -1;
 	    kvs->lastByIdx = 0;
@@ -876,7 +876,7 @@ static int fPMI_Handle_getbyidx( PMIProcess *pentry )
     }
     else {
 	rc = -1;
-	MPIU_Snprintf( outbuf, PMIU_MAXLINE, "cmd=getbyidx_results rc=-1 "
+	MPL_snprintf( outbuf, PMIU_MAXLINE, "cmd=getbyidx_results rc=-1 "
 		  "reason=kvs_%s_not_found\n", kvsname );
     }
 
@@ -947,13 +947,13 @@ static int fPMI_Handle_init_port( PMIProcess *pentry )
     /* simple_pmi wants to see cmd=initack after the initack request before
        the other data */
     PMIWriteLine( pentry->fd, "cmd=initack\n" );
-    MPIU_Snprintf( outbuf, PMIU_MAXLINE, "cmd=set size=%d\n", 
+    MPL_snprintf( outbuf, PMIU_MAXLINE, "cmd=set size=%d\n", 
 		   pentry->group->nProcess );
     PMIWriteLine( pentry->fd, outbuf );
-    MPIU_Snprintf( outbuf, PMIU_MAXLINE, "cmd=set rank=%d\n", 
+    MPL_snprintf( outbuf, PMIU_MAXLINE, "cmd=set rank=%d\n", 
 		   pentry->pState->wRank );
     PMIWriteLine( pentry->fd, outbuf );
-    MPIU_Snprintf( outbuf, PMIU_MAXLINE, "cmd=set debug=%d\n", pmidebug );
+    MPL_snprintf( outbuf, PMIU_MAXLINE, "cmd=set debug=%d\n", pmidebug );
     PMIWriteLine( pentry->fd, outbuf );
     return 0;
 }
@@ -1090,7 +1090,7 @@ static int fPMI_Handle_spawn( PMIProcess *pentry )
 	    *++p = 0;
 	    if (strcmp( "endcmd", cmdPtr ) == 0) { break; }
 	    /* FIXME: Otherwise, we have a problem */
-	    MPIU_Error_printf( "Malformed PMI command (no endcmd seen\n" );
+	    MPL_error_printf( "Malformed PMI command (no endcmd seen\n" );
 	    return 1;
 	}
 	else {
@@ -1131,7 +1131,7 @@ static int fPMI_Handle_spawn( PMIProcess *pentry )
 	    /* Handle arg%d.  Values are 1 - origin */
 	    argnum = atoi( cmdPtr + 3 ) - 1;
 	    if (argnum < 0 || argnum >= PMI_MAX_ARGS) {
-		MPIU_Error_printf( "Malformed PMI Spawn command; the index of an argument in the command is %d but must be between 0 and %d\n",
+		MPL_error_printf( "Malformed PMI Spawn command; the index of an argument in the command is %d but must be between 0 and %d\n",
 				   argnum, PMI_MAX_ARGS-1 );
 		return 1;
 	    }
@@ -1173,7 +1173,7 @@ static int fPMI_Handle_spawn( PMIProcess *pentry )
 	       value this is */
 	    int idx = atoi( cmdPtr + 9 );
 	    if (idx != curInfoIdx) {
-		MPIU_Error_printf( "Malformed PMI command: info keys and values not ordered as expected (expected value %d but got %d)\n", curInfoIdx, idx );
+		MPL_error_printf( "Malformed PMI command: info keys and values not ordered as expected (expected value %d but got %d)\n", curInfoIdx, idx );
 		return 1;
 	    }
 	    else {
@@ -1184,7 +1184,7 @@ static int fPMI_Handle_spawn( PMIProcess *pentry )
 	    }
 	}
 	else {
-	    MPIU_Error_printf( "Unrecognized PMI subcommand on spawnmult: %s\n",
+	    MPL_error_printf( "Unrecognized PMI subcommand on spawnmult: %s\n",
 			       cmdPtr );
 	    return 1;
 	}
@@ -1208,12 +1208,12 @@ static int fPMI_Handle_spawn( PMIProcess *pentry )
 	    rc = (*userSpawner)( pWorld, userSpawnerData );
 	}
 	else {
-	    MPIU_Error_printf( "Unable to spawn %s\n", app->exename );
+	    MPL_error_printf( "Unable to spawn %s\n", app->exename );
 	    rc = 1;
 	    MPIE_PrintProcessWorld( stdout, pWorld );
 	}
 	
-	MPIU_Snprintf( outbuf, PMIU_MAXLINE, "cmd=spawn_result rc=%d\n", rc );
+	MPL_snprintf( outbuf, PMIU_MAXLINE, "cmd=spawn_result rc=%d\n", rc );
 	PMIWriteLine( pentry->fd, outbuf );
 	DBG_PRINTFCOND(pmidebug,( "%s", outbuf ));
 
@@ -1287,7 +1287,7 @@ int PMI_InitSingletonConnection( int fd, PMIProcess *pmiprocess )
     
     /* We start with the singinit command, wait for the singinit from
        the client, and then send the singinit_info */
-    MPIU_Snprintf( buf, PMIU_MAXLINE, 
+    MPL_snprintf( buf, PMIU_MAXLINE, 
    "cmd=singinit pmi_version=%d pmi_subversion=%d stdio=no authtype=none\n",
 	   PMI_VERSION, PMI_SUBVERSION );
     PMIWriteLine( fd, buf );
@@ -1307,7 +1307,7 @@ int PMI_InitSingletonConnection( int fd, PMIProcess *pmiprocess )
     else
 	rc = -1;
     
-    MPIU_Snprintf( buf, PMIU_MAXLINE,
+    MPL_snprintf( buf, PMIU_MAXLINE,
 		   "cmd=singinit_info versionok=%s stdio=no kvsname=%s\n",
 		   (rc == 0) ? "yes" : "no",  
 		   (char *)(pmiprocess->group->kvs->kvsname) );

@@ -5,8 +5,10 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
+AM_CPPFLAGS += -I$(top_srcdir)/src/util/dbg
+
+noinst_HEADERS += src/util/dbg/mpidbg.h
+
 mpi_core_sources += \
     src/util/dbg/dbg_printf.c     \
-    src/util/dbg/timelimit.c      \
-    src/util/dbg/exit.c
-
+    src/util/dbg/timelimit.c

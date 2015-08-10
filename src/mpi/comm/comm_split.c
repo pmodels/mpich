@@ -136,8 +136,8 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
     int rank, size, remote_size, i, new_size, new_remote_size,
 	first_entry = 0, first_remote_entry = 0, *last_ptr;
     int in_newcomm; /* TRUE iff *newcomm should be populated */
-    MPIR_Context_id_t   new_context_id, remote_context_id;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIU_Context_id_t   new_context_id, remote_context_id;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Comm_map_t *mapper;
     MPIU_CHKLMEM_DECL(4);
 
@@ -255,17 +255,17 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
     /* In the intercomm case, we need to exchange the context ids */
     if (comm_ptr->comm_kind == MPID_INTERCOMM) {
 	if (comm_ptr->rank == 0) {
-	    mpi_errno = MPIC_Sendrecv( &new_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, 0,
-				       &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 
+	    mpi_errno = MPIC_Sendrecv( &new_context_id, 1, MPIU_CONTEXT_ID_T_DATATYPE, 0, 0,
+				       &remote_context_id, 1, MPIU_CONTEXT_ID_T_DATATYPE, 
 				       0, 0, comm_ptr, MPI_STATUS_IGNORE, &errflag );
 	    if (mpi_errno) { MPIU_ERR_POP( mpi_errno ); }
-	    mpi_errno = MPIR_Bcast_impl( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr, &errflag );
+	    mpi_errno = MPIR_Bcast_impl( &remote_context_id, 1, MPIU_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr, &errflag );
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	}
 	else {
 	    /* Broadcast to the other members of the local group */
-	    mpi_errno = MPIR_Bcast_impl( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr, &errflag );
+	    mpi_errno = MPIR_Bcast_impl( &remote_context_id, 1, MPIU_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr, &errflag );
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	}

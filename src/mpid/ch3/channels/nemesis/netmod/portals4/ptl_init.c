@@ -160,10 +160,10 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
     MPIU_Assert(sizeof(MPID_nem_ptl_req_area) <= MPIDI_NEM_REQ_NETMOD_AREA_LEN);
 
     /* Make sure our IOV is the same as portals4's IOV */
-    MPIU_Assert(sizeof(ptl_iovec_t) == sizeof(MPID_IOV));
-    MPIU_Assert(((void*)&(((ptl_iovec_t*)0)->iov_base)) == ((void*)&(((MPID_IOV*)0)->MPID_IOV_BUF)));
-    MPIU_Assert(((void*)&(((ptl_iovec_t*)0)->iov_len))  == ((void*)&(((MPID_IOV*)0)->MPID_IOV_LEN)));
-    MPIU_Assert(sizeof(((ptl_iovec_t*)0)->iov_len) == sizeof(((MPID_IOV*)0)->MPID_IOV_LEN));
+    MPIU_Assert(sizeof(ptl_iovec_t) == sizeof(MPL_IOV));
+    MPIU_Assert(((void*)&(((ptl_iovec_t*)0)->iov_base)) == ((void*)&(((MPL_IOV*)0)->MPL_IOV_BUF)));
+    MPIU_Assert(((void*)&(((ptl_iovec_t*)0)->iov_len))  == ((void*)&(((MPL_IOV*)0)->MPL_IOV_LEN)));
+    MPIU_Assert(sizeof(((ptl_iovec_t*)0)->iov_len) == sizeof(((MPL_IOV*)0)->MPL_IOV_LEN));
             
 
     mpi_errno = MPIDI_CH3I_Register_anysource_notification(MPID_nem_ptl_anysource_posted, MPID_nem_ptl_anysource_matched);

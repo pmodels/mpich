@@ -34,7 +34,7 @@ static struct lmt_vmsplice_node *outstanding_head = NULL;
   
    iov_count and iov_offset are pointers so that this function can manipulate
    them */
-static int adjust_partially_xferred_iov(MPID_IOV iov[], int *iov_offset,
+static int adjust_partially_xferred_iov(MPL_IOV iov[], int *iov_offset,
                                         int *iov_count, int bytes_xferred)
 {
     int i;
@@ -42,17 +42,17 @@ static int adjust_partially_xferred_iov(MPID_IOV iov[], int *iov_offset,
 
     for (i = *iov_offset; i < (*iov_offset + *iov_count); ++i)
     {
-        if (bytes_xferred < iov[i].MPID_IOV_LEN)
+        if (bytes_xferred < iov[i].MPL_IOV_LEN)
         {
-            iov[i].MPID_IOV_BUF = (char *)iov[i].MPID_IOV_BUF + bytes_xferred;
-            iov[i].MPID_IOV_LEN -= bytes_xferred;
+            iov[i].MPL_IOV_BUF = (char *)iov[i].MPL_IOV_BUF + bytes_xferred;
+            iov[i].MPL_IOV_LEN -= bytes_xferred;
             /* iov_count should be equal to the number of iov's remaining */
             *iov_count -= (i - *iov_offset);
             *iov_offset = i;
             complete = 0;
             break;
         }
-        bytes_xferred -= iov[i].MPID_IOV_LEN;
+        bytes_xferred -= iov[i].MPL_IOV_LEN;
     }
 
     return complete;
@@ -67,7 +67,7 @@ static inline int check_req_complete(MPIDI_VC_t *vc, MPID_Request *req, int *com
         *complete = 0;
 
         /* XXX DJG FIXME this feels like a hack */
-        req->dev.iov_count = MPID_IOV_LIMIT;
+        req->dev.iov_count = MPL_IOV_LIMIT;
         req->dev.iov_offset = 0;
 
         mpi_errno = reqFn(vc, req, complete);
@@ -101,15 +101,15 @@ static int populate_iov_from_req(MPID_Request *req)
 
     if (dt_contig) {
         /* handle the iov creation ourselves */
-        req->dev.iov[0].MPID_IOV_BUF = (char *)req->dev.user_buf + dt_true_lb;
-        req->dev.iov[0].MPID_IOV_LEN = data_sz;
+        req->dev.iov[0].MPL_IOV_BUF = (char *)req->dev.user_buf + dt_true_lb;
+        req->dev.iov[0].MPL_IOV_LEN = data_sz;
         req->dev.iov_count = 1;
     }
     else {
         /* use the segment routines to handle the iovec creation */
         MPIU_Assert(req->dev.segment_ptr == NULL);
 
-        req->dev.iov_count = MPID_IOV_LIMIT;
+        req->dev.iov_count = MPL_IOV_LIMIT;
         req->dev.iov_offset = 0;
 
         /* XXX DJG FIXME where is this segment freed? */
@@ -125,7 +125,7 @@ static int populate_iov_from_req(MPID_Request *req)
 
         /* FIXME we should write our own function that isn't dependent on
            the in-request iov array.  This will let us use IOVs that are
-           larger than MPID_IOV_LIMIT. */
+           larger than MPL_IOV_LIMIT. */
         mpi_errno = MPIDI_CH3U_Request_load_send_iov(req, &req->dev.iov[0],
                                                      &req->dev.iov_count);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -135,7 +135,7 @@ fn_fail:
     return mpi_errno;
 }
 
-static int do_vmsplice(MPID_Request *sreq, int pipe_fd, MPID_IOV iov[],
+static int do_vmsplice(MPID_Request *sreq, int pipe_fd, MPL_IOV iov[],
                        int *iov_offset, int *iov_count, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -216,7 +216,7 @@ fn_exit:
     return mpi_errno;
 }
 
-static int do_readv(MPID_Request *rreq, int pipe_fd, MPID_IOV iov[],
+static int do_readv(MPID_Request *rreq, int pipe_fd, MPL_IOV iov[],
                     int *iov_offset, int *iov_count, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -255,7 +255,7 @@ fn_exit:
 #define FUNCNAME MPID_nem_lmt_vmsplice_start_recv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPID_IOV s_cookie)
+int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPL_IOV s_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -268,8 +268,8 @@ int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPID_IO
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_RECV);
 
     if (vc_ch->lmt_recv_copy_buf_handle == NULL) {
-        MPIU_Assert(s_cookie.MPID_IOV_BUF != NULL);
-        vc_ch->lmt_recv_copy_buf_handle = MPIU_Strdup(s_cookie.MPID_IOV_BUF);
+        MPIU_Assert(s_cookie.MPL_IOV_BUF != NULL);
+        vc_ch->lmt_recv_copy_buf_handle = MPIU_Strdup(s_cookie.MPL_IOV_BUF);
     }
 
     /* XXX DJG FIXME in a real version we would want to cache the fd on the vc
@@ -377,7 +377,7 @@ fn_fail:
 #define FUNCNAME MPID_nem_lmt_vmsplice_start_send
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_lmt_vmsplice_start_send(MPIDI_VC_t *vc, MPID_Request *sreq, MPID_IOV r_cookie)
+int MPID_nem_lmt_vmsplice_start_send(MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV r_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_SEND);
@@ -489,7 +489,7 @@ int MPID_nem_lmt_vmsplice_done_send(MPIDI_VC_t *vc, MPID_Request *sreq)
 #define FUNCNAME MPID_nem_lmt_vmsplice_handle_cookie
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_lmt_vmsplice_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV cookie)
+int MPID_nem_lmt_vmsplice_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV cookie)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_HANDLE_COOKIE);

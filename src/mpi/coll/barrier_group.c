@@ -13,7 +13,7 @@
    This is an intracommunicator barrier only!
 */
 
-int MPIR_Barrier_group( MPID_Comm *comm_ptr, MPID_Group *group_ptr, int tag, mpir_errflag_t *errflag )
+int MPIR_Barrier_group( MPID_Comm *comm_ptr, MPID_Group *group_ptr, int tag, MPIR_Errflag_t *errflag )
 {
     int src = 0;
     int dst, mpi_errno = MPI_SUCCESS;

@@ -298,7 +298,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
     }
 
     if (errcodes != MPI_ERRCODES_IGNORE) {
-        mpir_errflag_t errflag = MPIR_ERR_NONE;
+        MPIR_Errflag_t errflag = MPIR_ERR_NONE;
         mpi_errno = MPIR_Bcast_impl(&should_accept, 1, MPI_INT, root, comm_ptr, &errflag);
         if (mpi_errno) TRACE_ERR("MPIR_Bcast_impl returned with mpi_errno=%d\n", mpi_errno);
 

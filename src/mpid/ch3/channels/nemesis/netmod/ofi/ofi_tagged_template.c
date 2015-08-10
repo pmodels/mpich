@@ -276,7 +276,7 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_posted)(struct MPIDI_VC *vc, struct MPID_Reques
     MPIDI_msg_sz_t data_sz;
     MPI_Aint dt_true_lb;
     MPID_Datatype *dt_ptr;
-    MPIR_Context_id_t context_id;
+    MPIU_Context_id_t context_id;
     char *recv_buffer;
     BEGIN_FUNC(FCNAME);
 

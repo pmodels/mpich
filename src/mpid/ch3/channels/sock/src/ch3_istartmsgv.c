@@ -10,7 +10,7 @@
 #define FUNCNAME create_request
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static MPID_Request * create_request(MPID_IOV * iov, int iov_count, 
+static MPID_Request * create_request(MPL_IOV * iov, int iov_count, 
 				     int iov_offset, MPIU_Size_t nb)
 {
     MPID_Request * sreq;
@@ -33,12 +33,12 @@ static MPID_Request * create_request(MPID_IOV * iov, int iov_count,
     }
     if (iov_offset == 0)
     {
-	MPIU_Assert(iov[0].MPID_IOV_LEN == sizeof(MPIDI_CH3_Pkt_t));
-	sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) iov[0].MPID_IOV_BUF;
-	sreq->dev.iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) &sreq->dev.pending_pkt;
+	MPIU_Assert(iov[0].MPL_IOV_LEN == sizeof(MPIDI_CH3_Pkt_t));
+	sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) iov[0].MPL_IOV_BUF;
+	sreq->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) &sreq->dev.pending_pkt;
     }
-    sreq->dev.iov[iov_offset].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)((char *) sreq->dev.iov[iov_offset].MPID_IOV_BUF + nb);
-    sreq->dev.iov[iov_offset].MPID_IOV_LEN -= nb;
+    sreq->dev.iov[iov_offset].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)((char *) sreq->dev.iov[iov_offset].MPL_IOV_BUF + nb);
+    sreq->dev.iov[iov_offset].MPL_IOV_LEN -= nb;
     sreq->dev.iov_count = iov_count;
     sreq->dev.OnDataAvail = 0;
 
@@ -67,13 +67,13 @@ static MPID_Request * create_request(MPID_IOV * iov, int iov_count,
    CH3_iStartMsgv() is alway MPIDI_CH3_CA_COMPLETE.  This
    implies that CH3_iStartMsgv() can only be used when the entire message can 
    be described by a single iovec of size
-   MPID_IOV_LIMIT. */
+   MPL_IOV_LIMIT. */
     
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_iStartMsgv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPID_IOV * iov, int n_iov, 
+int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov, 
 			 MPID_Request ** sreq_ptr)
 {
     MPID_Request * sreq = NULL;
@@ -83,13 +83,13 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPID_IOV * iov, int n_iov,
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
 
-    MPIU_Assert( n_iov <= MPID_IOV_LIMIT);
+    MPIU_Assert( n_iov <= MPL_IOV_LIMIT);
 
     /* The SOCK channel uses a fixed length header, the size of which is the 
        maximum of all possible packet headers */
-    iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
+    iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
     MPIU_DBG_STMT(CH3_CHANNEL,VERBOSE,
-	   MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t*)iov[0].MPID_IOV_BUF));
+	   MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t*)iov[0].MPL_IOV_BUF));
     
     if (vcch->state == MPIDI_CH3I_VC_STATE_CONNECTED) /* MT */
     {
@@ -102,7 +102,7 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPID_IOV * iov, int n_iov,
 
 	    MPIU_DBG_MSG(CH3_CHANNEL,VERBOSE,
 			 "send queue empty, attempting to write");
-	    MPIU_DBG_PKT(vcch->conn,(MPIDI_CH3_Pkt_t*)iov[0].MPID_IOV_BUF,"isend");
+	    MPIU_DBG_PKT(vcch->conn,(MPIDI_CH3_Pkt_t*)iov[0].MPL_IOV_BUF,"isend");
 	    
 	    /* MT - need some signalling to lock down our right to use the 
 	       channel, thus insuring that the progress engine does
@@ -117,9 +117,9 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPID_IOV * iov, int n_iov,
 		
 		while (offset < n_iov)
 		{
-		    if (nb >= (int)iov[offset].MPID_IOV_LEN)
+		    if (nb >= (int)iov[offset].MPL_IOV_LEN)
 		    {
-			nb -= iov[offset].MPID_IOV_LEN;
+			nb -= iov[offset].MPL_IOV_LEN;
 			offset++;
 		    }
 		    else

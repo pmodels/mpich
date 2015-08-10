@@ -64,7 +64,7 @@ int MPIR_Ireduce_binomial(const void *sendbuf, void *recvbuf, int count, MPI_Dat
     /* I think this is the worse case, so we can avoid an assert()
      * inside the for loop */
     /* should be buf+{this}? */
-    MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+    MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
 
     MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)),
                         mpi_errno, "temporary buffer");
@@ -253,7 +253,7 @@ int MPIR_Ireduce_redscat_gather(const void *sendbuf, void *recvbuf, int count, M
     /* I think this is the worse case, so we can avoid an assert()
      * inside the for loop */
     /* should be buf+{this}? */
-    MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+    MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
 
     MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)),
                               mpi_errno, "temporary buffer");
@@ -605,7 +605,7 @@ int MPIR_Ireduce_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
         MPID_Datatype_get_extent_macro(datatype, extent);
 
-        MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+        MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
 
         MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)),
                                   mpi_errno, "temporary buffer");
@@ -725,7 +725,7 @@ int MPIR_Ireduce_inter(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
             /* I think this is the worse case, so we can avoid an assert()
              * inside the for loop */
             /* Should MPIR_SCHED_CHKPMEM_MALLOC do this? */
-            MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+            MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
             MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
             /* adjust for potential negative lower bound in datatype */
             tmp_buf = (void *)((char*)tmp_buf - true_lb);

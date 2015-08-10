@@ -15,34 +15,11 @@
 #ifndef MPIIMPL_H_INCLUDED
 #define MPIIMPL_H_INCLUDED
 
-/*
- * This file is the temporary home of most of the definitions used to 
- * implement MPICH.  We will eventually divide this file into logical
- * pieces once we are certain of the relationships between the components.
- */
-
 /* style: define:vsnprintf:1 sig:0 */
 /* style: allow:printf:3 sig:0 */
 
-/* Include the mpi definitions */
-#include "mpi.h"
-
-/* There are a few definitions that must be made *before* the mpichconf.h
-   file is included.  These include the definitions of the error levels and some
-   thread granularity constants */
 #include "mpichconfconst.h"
-
-/* Data computed by configure.  This is included *after* mpi.h because we
-   do not want mpi.h to depend on any other files or configure flags */
 #include "mpichconf.h"
-
-#include "opa_primitives.h"
-
-/* if we are defining this, we must define it before including mpl.h */
-#if defined(MPICH_DEBUG_MEMINIT)
-#define MPL_VG_ENABLED 1
-#endif
-#include "mpl.h"
 
 #include <stdio.h>
 #ifdef STDC_HEADERS
@@ -64,6 +41,33 @@
 #ifdef HAVE_LIMITS_H
 #include <limits.h>
 #endif
+
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+
+/* for MAXHOSTNAMELEN under Linux and OSX */
+#ifdef HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
+
+#if defined (HAVE_USLEEP)
+#include <unistd.h>
+#if defined (NEEDS_USLEEP_DECL)
+int usleep(useconds_t usec);
+#endif
+#endif
+
+/* if we are defining this, we must define it before including mpl.h */
+#if defined(MPICH_DEBUG_MEMINIT)
+#define MPL_VG_ENABLED 1
+#endif
+
+#include "mpl.h"
+#include "opa_primitives.h"
+#include "mpi.h"
+#include "mpiutil.h"
+#include "mpidpre.h"
 
 #if defined(HAVE_LONG_LONG_INT)
 /* tt#1776: some platforms have "long long" but not a LLONG_MAX/ULLONG_MAX,
@@ -92,22 +96,6 @@
 #endif
 #endif /* defined(HAVE_LONG_LONG_INT) */
 
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-
-/* for MAXHOSTNAMELEN under Linux and OSX */
-#ifdef HAVE_SYS_PARAM_H
-#include <sys/param.h>
-#endif
-
-#if defined (HAVE_USLEEP)
-#include <unistd.h>
-#if defined (NEEDS_USLEEP_DECL)
-int usleep(useconds_t usec);
-#endif
-#endif
-
 #if (!defined MAXHOSTNAMELEN) && (!defined MAX_HOSTNAME_LEN)
 #define MAX_HOSTNAME_LEN 256
 #elif !defined MAX_HOSTNAME_LEN
@@ -132,24 +120,7 @@ int usleep(useconds_t usec);
 #endif
 #endif
 
-/* Include some basic (and easily shared) definitions */
-#include "mpibase.h"
-
-/* 
-   Include the implementation definitions (e.g., error reporting, thread
-   portability)
-   More detailed documentation is contained in the MPICH and ADI3 manuals.
- */
-/* FIXME: ... to do ... */
-#include "mpitypedefs.h"
-
-/* Include definitions from the device which must exist before items in this
-   file (mpiimpl.h) can be defined. mpidpre.h must be included before any
-   files that allow the device to override or extend any terms; this includes
-   mpiimplthread.h and mpiutil.h */
-/* ------------------------------------------------------------------------- */
-#include "mpidpre.h"
-/* ------------------------------------------------------------------------- */
+#include "mpir_type_defs.h"
 
 /* Overriding memcpy:
      This is a utility function for memory copy.  The device might use
@@ -166,7 +137,6 @@ int usleep(useconds_t usec);
 #endif
 
 #include "mpiimplthread.h"
-#include "mpiutil.h"
 
 /* ------------------------------------------------------------------------- */
 /* mpidebug.h */
@@ -1213,8 +1183,8 @@ int MPIR_Comm_map_free(struct MPID_Comm *comm);
   S*/
 typedef struct MPID_Comm {
     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
-    MPIR_Context_id_t context_id; /* Send context id.  See notes */
-    MPIR_Context_id_t recvcontext_id; /* Send context id.  See notes */
+    MPIU_Context_id_t context_id; /* Send context id.  See notes */
+    MPIU_Context_id_t recvcontext_id; /* Send context id.  See notes */
     int           remote_size;   /* Value of MPI_Comm_(remote)_size */
     int           rank;          /* Value of MPI_Comm_rank */
     MPID_Attribute *attributes;  /* List of attributes */
@@ -1419,7 +1389,7 @@ extern MPID_Comm MPID_Comm_direct[];
 
 /* should probably be (sizeof(int)*CHAR_BITS) once we make the code CHAR_BITS-clean */
 #define MPIR_CONTEXT_INT_BITS (32)
-#define MPIR_CONTEXT_ID_BITS (sizeof(MPIR_Context_id_t)*8) /* 8 --> CHAR_BITS eventually */
+#define MPIR_CONTEXT_ID_BITS (sizeof(MPIU_Context_id_t)*8) /* 8 --> CHAR_BITS eventually */
 #define MPIR_MAX_CONTEXT_MASK \
     ((1 << (MPIR_CONTEXT_ID_BITS - (MPID_CONTEXT_PREFIX_SHIFT + MPID_CONTEXT_DYNAMIC_PROC_WIDTH))) / MPIR_CONTEXT_INT_BITS)
 
@@ -1427,9 +1397,9 @@ extern MPID_Comm MPID_Comm_direct[];
    with the other comm routines (src/mpi/comm, in mpicomm.h).  However,
    to create a new communicator after a spawn or connect-accept operation, 
    the device may need to create a new contextid */
-int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIR_Context_id_t *context_id, int ignore_id);
-int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, int tag, MPIR_Context_id_t *context_id, int ignore_id);
-void MPIR_Free_contextid( MPIR_Context_id_t );
+int MPIR_Get_contextid_sparse(MPID_Comm *comm_ptr, MPIU_Context_id_t *context_id, int ignore_id);
+int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, int tag, MPIU_Context_id_t *context_id, int ignore_id);
+void MPIR_Free_contextid( MPIU_Context_id_t );
 
 /* ------------------------------------------------------------------------- */
 
@@ -1528,7 +1498,7 @@ typedef struct MPID_Request {
     struct MPIR_Sendq *dbg_next;
 
     /* Errflag for NBC requests. Not used by other requests. */
-    mpir_errflag_t errflag;
+    MPIR_Errflag_t errflag;
 
     /* Notes about request_completed_cb:
      *
@@ -1913,37 +1883,37 @@ extern MPIU_Object_alloc_t MPID_Op_mem;
 typedef struct MPID_Collops {
     int ref_count;   /* Supports lazy copies */
     /* Contains pointers to the functions for the MPI collectives */
-    int (*Barrier) (MPID_Comm *, mpir_errflag_t *);
-    int (*Bcast) (void*, int, MPI_Datatype, int, MPID_Comm *, mpir_errflag_t *);
+    int (*Barrier) (MPID_Comm *, MPIR_Errflag_t *);
+    int (*Bcast) (void*, int, MPI_Datatype, int, MPID_Comm *, MPIR_Errflag_t *);
     int (*Gather) (const void*, int, MPI_Datatype, void*, int, MPI_Datatype,
-                   int, MPID_Comm *, mpir_errflag_t *);
+                   int, MPID_Comm *, MPIR_Errflag_t *);
     int (*Gatherv) (const void*, int, MPI_Datatype, void*, const int *, const int *,
-                    MPI_Datatype, int, MPID_Comm *, mpir_errflag_t *);
+                    MPI_Datatype, int, MPID_Comm *, MPIR_Errflag_t *);
     int (*Scatter) (const void*, int, MPI_Datatype, void*, int, MPI_Datatype,
-                    int, MPID_Comm *, mpir_errflag_t *);
+                    int, MPID_Comm *, MPIR_Errflag_t *);
     int (*Scatterv) (const void*, const int *, const int *, MPI_Datatype,
-                     void*, int, MPI_Datatype, int, MPID_Comm *, mpir_errflag_t *);
+                     void*, int, MPI_Datatype, int, MPID_Comm *, MPIR_Errflag_t *);
     int (*Allgather) (const void*, int, MPI_Datatype, void*, int,
-                      MPI_Datatype, MPID_Comm *, mpir_errflag_t *);
+                      MPI_Datatype, MPID_Comm *, MPIR_Errflag_t *);
     int (*Allgatherv) (const void*, int, MPI_Datatype, void*, const int *,
-                       const int *, MPI_Datatype, MPID_Comm *, mpir_errflag_t *);
+                       const int *, MPI_Datatype, MPID_Comm *, MPIR_Errflag_t *);
     int (*Alltoall) (const void*, int, MPI_Datatype, void*, int, MPI_Datatype,
-                               MPID_Comm *, mpir_errflag_t *);
+                               MPID_Comm *, MPIR_Errflag_t *);
     int (*Alltoallv) (const void*, const int *, const int *, MPI_Datatype,
                       void*, const int *, const int *, MPI_Datatype, MPID_Comm *,
-                      mpir_errflag_t *);
+                      MPIR_Errflag_t *);
     int (*Alltoallw) (const void*, const int *, const int *, const MPI_Datatype *, void*,
-                      const int *, const int *, const MPI_Datatype *, MPID_Comm *, mpir_errflag_t *);
+                      const int *, const int *, const MPI_Datatype *, MPID_Comm *, MPIR_Errflag_t *);
     int (*Reduce) (const void*, void*, int, MPI_Datatype, MPI_Op, int,
-                   MPID_Comm *, mpir_errflag_t *);
+                   MPID_Comm *, MPIR_Errflag_t *);
     int (*Allreduce) (const void*, void*, int, MPI_Datatype, MPI_Op,
-                      MPID_Comm *, mpir_errflag_t *);
+                      MPID_Comm *, MPIR_Errflag_t *);
     int (*Reduce_scatter) (const void*, void*, const int *, MPI_Datatype, MPI_Op,
-                           MPID_Comm *, mpir_errflag_t *);
-    int (*Scan) (const void*, void*, int, MPI_Datatype, MPI_Op, MPID_Comm *, mpir_errflag_t * );
-    int (*Exscan) (const void*, void*, int, MPI_Datatype, MPI_Op, MPID_Comm *, mpir_errflag_t * );
+                           MPID_Comm *, MPIR_Errflag_t *);
+    int (*Scan) (const void*, void*, int, MPI_Datatype, MPI_Op, MPID_Comm *, MPIR_Errflag_t * );
+    int (*Exscan) (const void*, void*, int, MPI_Datatype, MPI_Op, MPID_Comm *, MPIR_Errflag_t * );
     int (*Reduce_scatter_block) (const void*, void*, int, MPI_Datatype, MPI_Op,
-                           MPID_Comm *, mpir_errflag_t *);
+                           MPID_Comm *, MPIR_Errflag_t *);
 
     /* MPI-3 nonblocking collectives */
     int (*Ibarrier_sched)(MPID_Comm *comm_ptr, MPID_Sched_t s);
@@ -3824,31 +3794,31 @@ int MPID_Comm_get_lpid(MPID_Comm *comm_ptr, int idx, int * lpid_ptr, MPIU_BOOL i
    MPID_CONTEXT_INTRA(INTER)_COLL. */
 int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype);
-int MPIC_Wait(MPID_Request * request_ptr, mpir_errflag_t *errflag);
+int MPIC_Wait(MPID_Request * request_ptr, MPIR_Errflag_t *errflag);
 int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status);
 
 /* FT versions of te MPIC_ functions */
 int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-                 MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                 MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int tag,
-                 MPID_Comm *comm_ptr, MPI_Status *status, mpir_errflag_t *errflag);
+                 MPID_Comm *comm_ptr, MPI_Status *status, MPIR_Errflag_t *errflag);
 int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-                  MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                  MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                      int dest, int sendtag, void *recvbuf, MPI_Aint recvcount,
                      MPI_Datatype recvtype, int source, int recvtag,
-                     MPID_Comm *comm_ptr, MPI_Status *status, mpir_errflag_t *errflag);
+                     MPID_Comm *comm_ptr, MPI_Status *status, MPIR_Errflag_t *errflag);
 int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
                              int dest, int sendtag,
                              int source, int recvtag,
-                             MPID_Comm *comm_ptr, MPI_Status *status, mpir_errflag_t *errflag);
+                             MPID_Comm *comm_ptr, MPI_Status *status, MPIR_Errflag_t *errflag);
 int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-                  MPID_Comm *comm_ptr, MPID_Request **request, mpir_errflag_t *errflag);
+                  MPID_Comm *comm_ptr, MPID_Request **request, MPIR_Errflag_t *errflag);
 int MPIC_Issend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-                  MPID_Comm *comm_ptr, MPID_Request **request, mpir_errflag_t *errflag);
+                  MPID_Comm *comm_ptr, MPID_Request **request, MPIR_Errflag_t *errflag);
 int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
                   int tag, MPID_Comm *comm_ptr, MPID_Request **request);
-int MPIC_Waitall(int numreq, MPID_Request *requests[], MPI_Status statuses[], mpir_errflag_t *errflag);
+int MPIC_Waitall(int numreq, MPID_Request *requests[], MPI_Status statuses[], MPIR_Errflag_t *errflag);
 
 
 void MPIR_MAXF  ( void *, void *, int *, MPI_Datatype * ) ;
@@ -3903,166 +3873,166 @@ int MPIR_Compare_equal(const void *a, const void *b, MPI_Datatype type);
 
 int MPIR_Allgather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                        MPID_Comm *comm_ptr, mpir_errflag_t *errflag );
+                        MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                   MPID_Comm *comm_ptr, mpir_errflag_t *errflag );
+                   MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Allgather_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                          void *recvbuf, int recvcount, MPI_Datatype recvtype, 
-                         MPID_Comm *comm_ptr, mpir_errflag_t *errflag );
+                         MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Allgather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                          void *recvbuf, int recvcount, MPI_Datatype recvtype, 
-                         MPID_Comm *comm_ptr, mpir_errflag_t *errflag );
+                         MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                          void *recvbuf, const int *recvcounts, const int *displs,
-                         MPI_Datatype recvtype, MPID_Comm *comm_ptr, mpir_errflag_t *errflag );
+                         MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                     void *recvbuf, const int *recvcounts, const int *displs,
-                    MPI_Datatype recvtype, MPID_Comm *comm_ptr, mpir_errflag_t *errflag );
+                    MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Allgatherv_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                           void *recvbuf, const int *recvcounts, const int *displs,
-                          MPI_Datatype recvtype, MPID_Comm *comm_pt, mpir_errflag_t *errflag );
+                          MPI_Datatype recvtype, MPID_Comm *comm_pt, MPIR_Errflag_t *errflag );
 int MPIR_Allgatherv_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                           void *recvbuf, const int *recvcounts, const int *displs,
-                          MPI_Datatype recvtype, MPID_Comm *comm_ptr, mpir_errflag_t *errflag );
+                          MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Allreduce_impl(const void *sendbuf, void *recvbuf, int count,
-                        MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                        MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Allreduce(const void *sendbuf, void *recvbuf, int count,
-                   MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                   MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Allreduce_intra(const void *sendbuf, void *recvbuf, int count,
-                         MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                         MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Allreduce_inter(const void *sendbuf, void *recvbuf, int count,
-                        MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                        MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Alltoall_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                       MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                       MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                  MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                  MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Alltoall_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                        MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                        MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Alltoall_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                        MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                        MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Alltoallv_impl(const void *sendbuf, const int *sendcnts, const int *sdispls,
                         MPI_Datatype sendtype, void *recvbuf, const int *recvcnts,
                         const int *rdispls, MPI_Datatype recvtype, MPID_Comm *comm_ptr,
-                        mpir_errflag_t *errflag);
+                        MPIR_Errflag_t *errflag);
 int MPIR_Alltoallv(const void *sendbuf, const int *sendcnts, const int *sdispls,
                    MPI_Datatype sendtype, void *recvbuf, const int *recvcnts,
-                   const int *rdispls, MPI_Datatype recvtype, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                   const int *rdispls, MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Alltoallv_intra(const void *sendbuf, const int *sendcnts, const int *sdispls,
                          MPI_Datatype sendtype, void *recvbuf, const int *recvcnts,
                          const int *rdispls, MPI_Datatype recvtype, MPID_Comm *comm_ptr,
-                         mpir_errflag_t *errflag);
+                         MPIR_Errflag_t *errflag);
 int MPIR_Alltoallv_inter(const void *sendbuf, const int *sendcnts, const int *sdispls,
                          MPI_Datatype sendtype, void *recvbuf, const int *recvcnts,
                          const int *rdispls, MPI_Datatype recvtype,
-                         MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                         MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Alltoallw_impl(const void *sendbuf, const int *sendcnts, const int *sdispls,
                         const MPI_Datatype *sendtypes, void *recvbuf, const int *recvcnts,
                         const int *rdispls, const MPI_Datatype *recvtypes, MPID_Comm *comm_ptr,
-                        mpir_errflag_t *errflag);
+                        MPIR_Errflag_t *errflag);
 int MPIR_Alltoallw(const void *sendbuf, const int *sendcnts, const int *sdispls,
                    const MPI_Datatype *sendtypes, void *recvbuf, const int *recvcnts,
                    const int *rdispls, const MPI_Datatype *recvtypes, MPID_Comm *comm_ptr,
-                   mpir_errflag_t *errflag);
+                   MPIR_Errflag_t *errflag);
 int MPIR_Alltoallw_intra(const void *sendbuf, const int *sendcnts, const int *sdispls,
                          const MPI_Datatype *sendtypes, void *recvbuf, const int *recvcnts,
                          const int *rdispls, const MPI_Datatype *recvtypes, MPID_Comm *comm_ptr,
-                         mpir_errflag_t *errflag);
+                         MPIR_Errflag_t *errflag);
 int MPIR_Alltoallw_inter(const void *sendbuf, const int *sendcnts, const int *sdispls,
                          const MPI_Datatype *sendtypes, void *recvbuf,
                          const int *recvcnts, const int *rdispls, const MPI_Datatype *recvtypes,
-                         MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                         MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Bcast_inter(void *buffer, int count, MPI_Datatype datatype,
-		     int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+		     int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Bcast_intra (void *buffer, int count, MPI_Datatype datatype, int
-                      root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                      root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Bcast (void *buffer, int count, MPI_Datatype datatype, int
-                root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Bcast_impl (void *buffer, int count, MPI_Datatype datatype, int
-                root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                MPI_Op op, MPID_Comm *comm_ptr, mpir_errflag_t *errflag );
+                MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Exscan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                     MPI_Op op, MPID_Comm *comm_ptr, mpir_errflag_t *errflag );
+                     MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Gather_impl (const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                       void *recvbuf, int recvcnt, MPI_Datatype recvtype,
-                      int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                      int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Gather (const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                  void *recvbuf, int recvcnt, MPI_Datatype recvtype,
-                 int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                 int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Gather_intra (const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                        void *recvbuf, int recvcnt, MPI_Datatype recvtype,
-                       int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                       int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Gather_inter (const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                        void *recvbuf, int recvcnt, MPI_Datatype recvtype,
-                       int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag );
+                       int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Gatherv (const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                   void *recvbuf, const int *recvcnts, const int *displs,
-                  MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                  MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Gatherv_impl (const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                        void *recvbuf, const int *recvcnts, const int *displs,
-                       MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                       MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf, const int *recvcnts,
-                             MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                             MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcnts,
-                        MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                        MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int *recvcnts,
-                              MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                              MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Reduce_scatter_inter(const void *sendbuf, void *recvbuf, const int *recvcnts,
                               MPI_Datatype datatype, MPI_Op op,
-                              MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                              MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf, int recvcount,
                                    MPI_Datatype datatype, MPI_Op op, MPID_Comm
-                                   *comm_ptr, mpir_errflag_t *errflag );
+                                   *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
                               MPI_Datatype datatype, MPI_Op op, MPID_Comm
-                              *comm_ptr, mpir_errflag_t *errflag );
+                              *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Reduce_scatter_block_intra(const void *sendbuf, void *recvbuf, int recvcount,
                                     MPI_Datatype datatype, MPI_Op op, MPID_Comm
-                                    *comm_ptr, mpir_errflag_t *errflag );
+                                    *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Reduce_scatter_block_inter(const void *sendbuf, void *recvbuf, int recvcount,
                                     MPI_Datatype datatype, MPI_Op op, MPID_Comm
-                                    *comm_ptr, mpir_errflag_t *errflag);
+                                    *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Reduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                     MPI_Op op, int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag );
+                     MPI_Op op, int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                MPI_Op op, int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag );
+                MPI_Op op, int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Reduce_intra(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                      MPI_Op op, int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag );
+                      MPI_Op op, int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Reduce_inter (const void *sendbuf, void *recvbuf, int count, MPI_Datatype
-                       datatype, MPI_Op op, int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                       datatype, MPI_Op op, int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                   MPI_Op op, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                   MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-              MPI_Op op, MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+              MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Scatter_impl(const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                       void *recvbuf, int recvcnt, MPI_Datatype recvtype,
-                      int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag );
+                      int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Scatter(const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                  void *recvbuf, int recvcnt, MPI_Datatype recvtype,
-                 int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag );
+                 int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Scatter_intra(const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                        void *recvbuf, int recvcnt, MPI_Datatype recvtype,
-                       int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag );
+                       int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Scatter_inter(const void *sendbuf, int sendcnt, MPI_Datatype sendtype,
                        void *recvbuf, int recvcnt, MPI_Datatype recvtype,
-                       int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag );
+                       int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag );
 int MPIR_Scatterv_impl (const void *sendbuf, const int *sendcnts, const int *displs,
                         MPI_Datatype sendtype, void *recvbuf, int recvcnt,
                         MPI_Datatype recvtype, int root, MPID_Comm
-                        *comm_ptr, mpir_errflag_t *errflag);
+                        *comm_ptr, MPIR_Errflag_t *errflag);
 int MPIR_Scatterv (const void *sendbuf, const int *sendcnts, const int *displs,
                    MPI_Datatype sendtype, void *recvbuf, int recvcnt,
                    MPI_Datatype recvtype, int root, MPID_Comm
-                   *comm_ptr, mpir_errflag_t *errflag);
-int MPIR_Barrier_impl( MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
-int MPIR_Barrier( MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
-int MPIR_Barrier_intra( MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
-int MPIR_Barrier_inter( MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+                   *comm_ptr, MPIR_Errflag_t *errflag);
+int MPIR_Barrier_impl( MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
+int MPIR_Barrier( MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
+int MPIR_Barrier_intra( MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
+int MPIR_Barrier_inter( MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 
 int MPIR_Reduce_local_impl(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op);
 
@@ -4105,13 +4075,13 @@ int MPIR_Comm_agree(MPID_Comm *comm_ptr, int *flag);
 
 int MPIR_Allreduce_group(void *sendbuf, void *recvbuf, int count,
                          MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
-                         MPID_Group *group_ptr, int tag, mpir_errflag_t *errflag);
+                         MPID_Group *group_ptr, int tag, MPIR_Errflag_t *errflag);
 int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
                                MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
-                               MPID_Group *group_ptr, int tag, mpir_errflag_t *errflag);
+                               MPID_Group *group_ptr, int tag, MPIR_Errflag_t *errflag);
 
 
-int MPIR_Barrier_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, int tag, mpir_errflag_t *errflag);
+int MPIR_Barrier_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, int tag, MPIR_Errflag_t *errflag);
 
 
 /* topology impl functions */
@@ -4420,7 +4390,7 @@ int MPIR_Comm_set_attr_impl(MPID_Comm *comm_ptr, int comm_keyval, void *attribut
 #define FUNCNAME MPIR_process_status
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static inline void MPIR_Process_status(MPI_Status *status, mpir_errflag_t *errflag)
+static inline void MPIR_Process_status(MPI_Status *status, MPIR_Errflag_t *errflag)
 {
     if (MPI_PROC_NULL != status->MPI_SOURCE &&
         (MPIX_ERR_REVOKED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||

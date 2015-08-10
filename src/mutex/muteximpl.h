@@ -8,8 +8,7 @@
 #define MUTEXIMPL_H_INCLUDED
 
 #include <mpi.h>
-#include <mpitypedefs.h>
-
+#include <stdint.h>
 #define MPIX_MUTEX_TAG 100
 
 #ifdef ENABLE_DEBUG

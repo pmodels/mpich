@@ -12,7 +12,6 @@ if THREAD_SERIALIZED_OR_MULTIPLE
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/common/thread
 
 noinst_HEADERS += src/mpid/common/thread/mpid_thread.h
-mpi_core_sources += src/mpid/common/thread/mpid_thread.c
 
 endif THREAD_SERIALIZED_OR_MULTIPLE
 endif BUILD_MPID_COMMON_THREAD

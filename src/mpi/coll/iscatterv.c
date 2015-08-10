@@ -77,7 +77,7 @@ int MPIR_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs
          * a minimal sanity check. Maybe add a global var since we do
          * loop over sendcount[] in MPI_Scatterv before calling
          * this? */
-        MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf + extent);
+        MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf + extent);
 
         for (i = 0; i < comm_size; i++) {
             if (sendcounts[i]) {

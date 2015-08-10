@@ -397,10 +397,10 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                 }
             }
             else {
-                req->dev.iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *) req->dev.ext_hdr_ptr);
-                req->dev.iov[0].MPID_IOV_LEN = req->dev.ext_hdr_sz;
-                req->dev.iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) req->dev.dataloop;
-                req->dev.iov[1].MPID_IOV_LEN = put_pkt->info.dataloop_size;
+                req->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) ((char *) req->dev.ext_hdr_ptr);
+                req->dev.iov[0].MPL_IOV_LEN = req->dev.ext_hdr_sz;
+                req->dev.iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) req->dev.dataloop;
+                req->dev.iov[1].MPL_IOV_LEN = put_pkt->info.dataloop_size;
                 req->dev.iov_count = 2;
 
                 *buflen = sizeof(MPIDI_CH3_Pkt_t);
@@ -436,7 +436,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 {
     MPIDI_CH3_Pkt_get_t *get_pkt = &pkt->get;
     MPID_Request *req = NULL;
-    MPID_IOV iov[MPID_IOV_LIMIT];
+    MPL_IOV iov[MPL_IOV_LIMIT];
     int complete = 0;
     char *data_buf = NULL;
     MPIDI_msg_sz_t data_len;
@@ -521,8 +521,8 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
 
-            iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_resp_pkt;
-            iov[0].MPID_IOV_LEN = sizeof(*get_resp_pkt);
+            iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) get_resp_pkt;
+            iov[0].MPL_IOV_LEN = sizeof(*get_resp_pkt);
             iovcnt = 1;
 
             MPIU_THREAD_CS_ENTER(CH3COMM, vc);
@@ -536,10 +536,10 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             /* --END ERROR HANDLING-- */
         }
         else if (is_contig) {
-            iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_resp_pkt;
-            iov[0].MPID_IOV_LEN = sizeof(*get_resp_pkt);
-            iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *) get_pkt->addr);
-            iov[1].MPID_IOV_LEN = get_pkt->count * type_size;
+            iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) get_resp_pkt;
+            iov[0].MPL_IOV_LEN = sizeof(*get_resp_pkt);
+            iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) ((char *) get_pkt->addr);
+            iov[1].MPL_IOV_LEN = get_pkt->count * type_size;
             iovcnt = 2;
 
             MPIU_THREAD_CS_ENTER(CH3COMM, vc);
@@ -553,8 +553,8 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             /* --END ERROR HANDLING-- */
         }
         else {
-            iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_resp_pkt;
-            iov[0].MPID_IOV_LEN = sizeof(*get_resp_pkt);
+            iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) get_resp_pkt;
+            iov[0].MPL_IOV_LEN = sizeof(*get_resp_pkt);
 
             req->dev.segment_ptr = MPID_Segment_alloc();
             MPIU_ERR_CHKANDJUMP1(req->dev.segment_ptr == NULL, mpi_errno,
@@ -566,7 +566,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             req->dev.segment_size = get_pkt->count * type_size;
 
             MPIU_THREAD_CS_ENTER(CH3COMM, vc);
-            mpi_errno = vc->sendNoncontig_fn(vc, req, iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN);
+            mpi_errno = vc->sendNoncontig_fn(vc, req, iov[0].MPL_IOV_BUF, iov[0].MPL_IOV_LEN);
             MPIU_THREAD_CS_EXIT(CH3COMM, vc);
             MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
         }
@@ -621,10 +621,10 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                 *rreqp = NULL;
         }
         else {
-            req->dev.iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *) req->dev.ext_hdr_ptr);
-            req->dev.iov[0].MPID_IOV_LEN = req->dev.ext_hdr_sz;
-            req->dev.iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) req->dev.dataloop;
-            req->dev.iov[1].MPID_IOV_LEN = get_pkt->info.dataloop_size;
+            req->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) ((char *) req->dev.ext_hdr_ptr);
+            req->dev.iov[0].MPL_IOV_LEN = req->dev.ext_hdr_sz;
+            req->dev.iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) req->dev.dataloop;
+            req->dev.iov[1].MPL_IOV_LEN = get_pkt->info.dataloop_size;
             req->dev.iov_count = 2;
 
             *buflen = sizeof(MPIDI_CH3_Pkt_t);
@@ -739,8 +739,8 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                 req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete;
 
                 /* if this is a streamed op pkt, set iov to receive extended pkt header. */
-                req->dev.iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) req->dev.ext_hdr_ptr;
-                req->dev.iov[0].MPID_IOV_LEN = req->dev.ext_hdr_sz;
+                req->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) req->dev.ext_hdr_ptr;
+                req->dev.iov[0].MPL_IOV_LEN = req->dev.ext_hdr_sz;
                 req->dev.iov_count = 1;
 
                 *buflen = sizeof(MPIDI_CH3_Pkt_t);
@@ -826,10 +826,10 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             else {
                 /* Prepare to receive extended header.
                  * All variable-length data can be received in separate iovs. */
-                req->dev.iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) req->dev.ext_hdr_ptr;
-                req->dev.iov[0].MPID_IOV_LEN = req->dev.ext_hdr_sz;
-                req->dev.iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) req->dev.dataloop;
-                req->dev.iov[1].MPID_IOV_LEN = accum_pkt->info.dataloop_size;
+                req->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) req->dev.ext_hdr_ptr;
+                req->dev.iov[0].MPL_IOV_LEN = req->dev.ext_hdr_sz;
+                req->dev.iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) req->dev.dataloop;
+                req->dev.iov[1].MPL_IOV_LEN = accum_pkt->info.dataloop_size;
                 req->dev.iov_count = 2;
 
                 *buflen = sizeof(MPIDI_CH3_Pkt_t);
@@ -895,7 +895,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         MPID_Request *resp_req = NULL;
         MPIDI_CH3_Pkt_t upkt;
         MPIDI_CH3_Pkt_get_accum_resp_t *get_accum_resp_pkt = &upkt.get_accum_resp;
-        MPID_IOV iov[MPID_IOV_LIMIT];
+        MPL_IOV iov[MPL_IOV_LIMIT];
         int iovcnt;
         MPI_Aint type_size;
 
@@ -959,8 +959,8 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
 
-        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
-        iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
+        iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) get_accum_resp_pkt;
+        iov[0].MPL_IOV_LEN = sizeof(*get_accum_resp_pkt);
         iovcnt = 1;
 
         MPIU_THREAD_CS_ENTER(CH3COMM, vc);
@@ -1013,8 +1013,8 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                 req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete;
 
                 /* if this is a streamed op pkt, set iov to receive extended pkt header. */
-                req->dev.iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) req->dev.ext_hdr_ptr;
-                req->dev.iov[0].MPID_IOV_LEN = req->dev.ext_hdr_sz;
+                req->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) req->dev.ext_hdr_ptr;
+                req->dev.iov[0].MPL_IOV_LEN = req->dev.ext_hdr_sz;
                 req->dev.iov_count = 1;
 
                 *buflen = sizeof(MPIDI_CH3_Pkt_t);
@@ -1113,10 +1113,10 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             else {
                 /* Prepare to receive extended header.
                  * All variable-length data can be received in separate iovs. */
-                req->dev.iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) req->dev.ext_hdr_ptr;
-                req->dev.iov[0].MPID_IOV_LEN = req->dev.ext_hdr_sz;
-                req->dev.iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) req->dev.dataloop;
-                req->dev.iov[1].MPID_IOV_LEN = get_accum_pkt->info.dataloop_size;
+                req->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) req->dev.ext_hdr_ptr;
+                req->dev.iov[0].MPL_IOV_LEN = req->dev.ext_hdr_sz;
+                req->dev.iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) req->dev.dataloop;
+                req->dev.iov[1].MPL_IOV_LEN = get_accum_pkt->info.dataloop_size;
                 req->dev.iov_count = 2;
 
                 *buflen = sizeof(MPIDI_CH3_Pkt_t);

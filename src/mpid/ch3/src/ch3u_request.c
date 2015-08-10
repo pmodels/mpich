@@ -138,7 +138,7 @@ MPID_Request * MPID_Request_create(void)
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Request_load_send_iov(MPID_Request * const sreq, 
-				     MPID_IOV * const iov, int * const iov_n)
+				     MPL_IOV * const iov, int * const iov_n)
 {
     MPI_Aint last;
     int mpi_errno = MPI_SUCCESS;
@@ -152,13 +152,13 @@ int MPIDI_CH3U_Request_load_send_iov(MPID_Request * const sreq,
 		      sreq->dev.segment_first, last, *iov_n));
     MPIU_Assert(sreq->dev.segment_first < last);
     MPIU_Assert(last > 0);
-    MPIU_Assert(*iov_n > 0 && *iov_n <= MPID_IOV_LIMIT);
+    MPIU_Assert(*iov_n > 0 && *iov_n <= MPL_IOV_LIMIT);
     MPID_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, 
 			     &last, iov, iov_n);
     MPIU_DBG_MSG_FMT(CH3_CHANNEL,VERBOSE,(MPIU_DBG_FDEST,
     "post-pv: first=" MPIDI_MSG_SZ_FMT ", last=" MPIDI_MSG_SZ_FMT ", iov_n=%d",
 		      sreq->dev.segment_first, last, *iov_n));
-    MPIU_Assert(*iov_n > 0 && *iov_n <= MPID_IOV_LIMIT);
+    MPIU_Assert(*iov_n > 0 && *iov_n <= MPL_IOV_LIMIT);
     
     if (last == sreq->dev.segment_size)
     {
@@ -198,8 +198,8 @@ int MPIDI_CH3U_Request_load_send_iov(MPID_Request * const sreq,
 	iov_data_copied = 0;
 	for (i = 0; i < *iov_n; i++) {
 	    MPIU_Memcpy((char*) sreq->dev.tmpbuf + iov_data_copied, 
-		   iov[i].MPID_IOV_BUF, iov[i].MPID_IOV_LEN);
-	    iov_data_copied += iov[i].MPID_IOV_LEN;
+		   iov[i].MPL_IOV_BUF, iov[i].MPL_IOV_LEN);
+	    iov_data_copied += iov[i].MPL_IOV_LEN;
 	}
 	sreq->dev.segment_first = last;
 
@@ -214,8 +214,8 @@ int MPIDI_CH3U_Request_load_send_iov(MPID_Request * const sreq,
 	MPIU_DBG_MSG_FMT(CH3_CHANNEL,VERBOSE,(MPIU_DBG_FDEST,
               "post-pack: first=" MPIDI_MSG_SZ_FMT ", last=" MPIDI_MSG_SZ_FMT,
 			   sreq->dev.segment_first, last));
-	iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)sreq->dev.tmpbuf;
-	iov[0].MPID_IOV_LEN = last - sreq->dev.segment_first + iov_data_copied;
+	iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)sreq->dev.tmpbuf;
+	iov[0].MPL_IOV_LEN = last - sreq->dev.segment_first + iov_data_copied;
 	*iov_n = 1;
 	if (last == sreq->dev.segment_size)
 	{
@@ -288,10 +288,10 @@ int MPIDI_CH3U_Request_load_recv_iov(MPID_Request * const rreq)
 	    {
 		data_sz = tmpbuf_sz;
 	    }
-	    rreq->dev.iov[0].MPID_IOV_BUF = 
-		(MPID_IOV_BUF_CAST)((char *) rreq->dev.tmpbuf + 
+	    rreq->dev.iov[0].MPL_IOV_BUF = 
+		(MPL_IOV_BUF_CAST)((char *) rreq->dev.tmpbuf + 
 				    rreq->dev.tmpbuf_off);
-	    rreq->dev.iov[0].MPID_IOV_LEN = data_sz;
+	    rreq->dev.iov[0].MPL_IOV_LEN = data_sz;
             rreq->dev.iov_offset = 0;
 	    rreq->dev.iov_count = 1;
 	    MPIU_Assert(rreq->dev.segment_first - orig_segment_first + data_sz +
@@ -314,7 +314,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPID_Request * const rreq)
 	}
 	
 	last = rreq->dev.segment_size;
-	rreq->dev.iov_count = MPID_IOV_LIMIT;
+	rreq->dev.iov_count = MPL_IOV_LIMIT;
 	rreq->dev.iov_offset = 0;
 	MPIU_DBG_MSG_FMT(CH3_CHANNEL,VERBOSE,(MPIU_DBG_FDEST,
    "pre-upv: first=" MPIDI_MSG_SZ_FMT ", last=" MPIDI_MSG_SZ_FMT ", iov_n=%d",
@@ -328,7 +328,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPID_Request * const rreq)
    "post-upv: first=" MPIDI_MSG_SZ_FMT ", last=" MPIDI_MSG_SZ_FMT ", iov_n=%d, iov_offset=%lld",
 			  rreq->dev.segment_first, last, rreq->dev.iov_count, (long long)rreq->dev.iov_offset));
 	MPIU_Assert(rreq->dev.iov_count >= 0 && rreq->dev.iov_count <= 
-		    MPID_IOV_LIMIT);
+		    MPL_IOV_LIMIT);
 
 	/* --BEGIN ERROR HANDLING-- */
 	if (rreq->dev.iov_count == 0)
@@ -425,7 +425,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPID_Request * const rreq)
 	{
 	    MPIU_DBG_MSG(CH3_CHANNEL,VERBOSE,
 	    "updating rreq to read overflow data into the SRBuf and complete");
-	    rreq->dev.iov[0].MPID_IOV_LEN = data_sz;
+	    rreq->dev.iov[0].MPL_IOV_LEN = data_sz;
 	    MPIU_Assert(MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_RECV);
 	    /* Eventually, use OnFinal for this instead */
 	    rreq->dev.OnDataAvail = rreq->dev.OnFinal;
@@ -435,12 +435,12 @@ int MPIDI_CH3U_Request_load_recv_iov(MPID_Request * const rreq)
 	{
 	    MPIU_DBG_MSG(CH3_CHANNEL,VERBOSE,
 	  "updating rreq to read overflow data into the SRBuf and reload IOV");
-	    rreq->dev.iov[0].MPID_IOV_LEN = rreq->dev.tmpbuf_sz;
+	    rreq->dev.iov[0].MPL_IOV_LEN = rreq->dev.tmpbuf_sz;
 	    rreq->dev.segment_first += rreq->dev.tmpbuf_sz;
 	    rreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_ReloadIOV;
 	}
 	
-	rreq->dev.iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)rreq->dev.tmpbuf;
+	rreq->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)rreq->dev.tmpbuf;
 	rreq->dev.iov_count = 1;
     }
     

@@ -122,7 +122,7 @@ int MPIE_ChooseHosts( ProcessWorld *pWorld,
 		curMtArch = app->arch;
 		curHost   = 0;
 		if (!mt) {
-		    MPIU_Error_printf( "Could not find machines for %s\n",
+		    MPL_error_printf( "Could not find machines for %s\n",
 		       app->arch ? app->arch : "default architecture" );
 		    return nNeeded;
 		}
@@ -235,7 +235,7 @@ MachineTable *MPIE_ReadMachines( const char *arch, int nNeeded,
 
 	/* Construct the final path name */
 	if (arch) {
-	    MPIU_Snprintf( machinesfile, PATH_MAX, 
+	    MPL_snprintf( machinesfile, PATH_MAX, 
 			   "%s/machines.%s", dirname, arch );
 	}
 	else {
@@ -253,12 +253,12 @@ MachineTable *MPIE_ReadMachines( const char *arch, int nNeeded,
     }
 	
     if (!fp) {
-	MPIU_Error_printf( "Could not open machines file %s\n", machinesfile );
+	MPL_error_printf( "Could not open machines file %s\n", machinesfile );
 	return 0;
     }
     mt = (MachineTable *)MPIU_Malloc( sizeof(MachineTable) );
     if (!mt) {
-	MPIU_Internal_error_printf( "Could not allocate machine table\n" );
+	MPL_internal_error_printf( "Could not allocate machine table\n" );
 	return 0;
     }
     

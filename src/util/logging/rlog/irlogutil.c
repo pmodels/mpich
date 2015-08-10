@@ -19,7 +19,7 @@ static int ReadFileData(char *pBuffer, int length, FILE *fin)
 	num_read = (int)fread(pBuffer, 1, length, fin);
 	if (num_read == -1)
 	{
-	    MPIU_Error_printf("Error: fread failed - %s\n", strerror(errno));
+	    MPL_error_printf("Error: fread failed - %s\n", strerror(errno));
 	    return errno;
 	}
 
@@ -40,7 +40,7 @@ static int WriteFileData(const char *pBuffer, int length, FILE *fout)
 	num_written = (int)fwrite(pBuffer, 1, length, fout);
 	if (num_written == -1)
 	{
-	    MPIU_Error_printf("Error: fwrite failed - %s\n", strerror(errno));
+	    MPL_error_printf("Error: fwrite failed - %s\n", strerror(errno));
 	    return errno;
 	}
 
@@ -61,14 +61,14 @@ IRLOG_IOStruct *IRLOG_CreateInputStruct(const char *filename)
     pInput = (IRLOG_IOStruct*)MPIU_Malloc(sizeof(IRLOG_IOStruct));
     if (pInput == NULL)
     {
-	MPIU_Error_printf("malloc failed - %s\n", strerror(errno));
+	MPL_error_printf("malloc failed - %s\n", strerror(errno));
 	return NULL;
     }
     /* open the input clog file */
     pInput->f = fopen(filename, "rb");
     if (pInput->f == NULL)
     {
-	MPIU_Error_printf("fopen(%s) failed, error: %s\n", filename, strerror(errno));
+	MPL_error_printf("fopen(%s) failed, error: %s\n", filename, strerror(errno));
 	MPIU_Free(pInput);
 	return NULL;
     }
@@ -76,7 +76,7 @@ IRLOG_IOStruct *IRLOG_CreateInputStruct(const char *filename)
     num_read = (int)fread(pInput->buffer, 1, RLOG_BUFFSIZE, pInput->f);
     if (num_read == 0)
     {
-	MPIU_Error_printf("Unable to read data from the input file.\n");
+	MPL_error_printf("Unable to read data from the input file.\n");
 	fclose(pInput->f);
 	MPIU_Free(pInput);
 	return NULL;
@@ -87,7 +87,7 @@ IRLOG_IOStruct *IRLOG_CreateInputStruct(const char *filename)
     pInput->pEnd = pInput->buffer + num_read;
     if (IRLOG_GetNextRecord(pInput))
     {
-	MPIU_Error_printf("Unable to get the first record from the file.\n");
+	MPL_error_printf("Unable to get the first record from the file.\n");
 	fclose(pInput->f);
 	MPIU_Free(pInput);
 	return NULL;
@@ -103,7 +103,7 @@ IRLOG_IOStruct *IRLOG_CreateOutputStruct(const char *filename)
     pOutput = (IRLOG_IOStruct*)MPIU_Malloc(sizeof(IRLOG_IOStruct));
     if (pOutput == NULL)
     {
-	MPIU_Error_printf("malloc failed - %s\n", strerror(errno));
+	MPL_error_printf("malloc failed - %s\n", strerror(errno));
 	return NULL;
     }
 
@@ -111,7 +111,7 @@ IRLOG_IOStruct *IRLOG_CreateOutputStruct(const char *filename)
     pOutput->f = fopen(filename, "wb");
     if (pOutput->f == NULL)
     {
-	MPIU_Error_printf("Unable to open output file '%s' - %s\n", filename, strerror(errno));
+	MPL_error_printf("Unable to open output file '%s' - %s\n", filename, strerror(errno));
 	MPIU_Free(pOutput);
 	return NULL;
     }
@@ -158,7 +158,7 @@ int IRLOG_GetNextRecord(IRLOG_IOStruct *pInput)
 	num_read = (int)fread(pInput->buffer + num_valid, 1, RLOG_BUFFSIZE - num_valid, pInput->f);
 	if (num_read == 0)
 	{
-	    MPIU_Error_printf("RLOG Error: unable to get the next record.\n");
+	    MPL_error_printf("RLOG Error: unable to get the next record.\n");
 	    return 1;
 	}
 	pInput->pEnd = pInput->buffer + num_valid + num_read;
@@ -170,7 +170,7 @@ int IRLOG_GetNextRecord(IRLOG_IOStruct *pInput)
     switch (pInput->header.type)
     {
     case RLOG_INVALID_TYPE:
-	MPIU_Error_printf("RLOG Error: invalid record type.\n");
+	MPL_error_printf("RLOG Error: invalid record type.\n");
 	return 1;
 	break;
     case RLOG_ENDLOG_TYPE:
@@ -189,7 +189,7 @@ int IRLOG_GetNextRecord(IRLOG_IOStruct *pInput)
 	memcpy(&pInput->record.comm, pInput->pCurHeader + sizeof(RLOG_HEADER), sizeof(RLOG_COMM));
 	break;
     default:
-	MPIU_Error_printf("RLOG Error: unknown record type %d.\n", pInput->header.type);
+	MPL_error_printf("RLOG Error: unknown record type %d.\n", pInput->header.type);
 	return 1;
 	break;
     }

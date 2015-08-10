@@ -7,7 +7,8 @@
 #define MPIDBG_H_INCLUDED
 #include <stdio.h>
 #include <stdarg.h>
-#include "mpibase.h"
+#include "mpl.h"
+
 /*
  * Multilevel debugging and tracing macros.
  * The design is discussed at
@@ -56,7 +57,7 @@
    {if ( (MPIU_DBG_##_class & MPIU_DBG_ActiveClasses) && \
           MPIU_DBG_##_level <= MPIU_DBG_MaxLevel ) {\
           char _s[MPIU_DBG_MAXLINE]; \
-          MPIU_Snprintf _fmatargs ; \
+          MPL_snprintf _fmatargs ; \
      MPIU_DBG_Outevent( __FILE__, __LINE__, MPIU_DBG_##_class, 0, "%s", _s ); }}
 #define MPIU_DBG_STMT(_class,_level,_stmt) \
    {if ( (MPIU_DBG_##_class & MPIU_DBG_ActiveClasses) && \
@@ -66,7 +67,7 @@
     MPIU_DBG_Outevent( __FILE__, __LINE__, MPIU_DBG_##_class, 0, "%s", _msg )
 #define MPIU_DBG_OUT_FMT(_class,_fmatargs) \
     {     char _s[MPIU_DBG_MAXLINE]; \
-          MPIU_Snprintf _fmatargs ; \
+          MPL_snprintf _fmatargs ; \
     MPIU_DBG_Outevent( __FILE__, __LINE__, MPIU_DBG_##_class, 0, "%s", _s );}
 
 #else

@@ -43,7 +43,7 @@ int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
 {
     int mpi_errno = MPI_SUCCESS, i, k, comm_size, rank;
     MPI_Aint *tmp_buf;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIU_CHKPMEM_DECL(1);
     MPIU_CHKLMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_WIN_GATHER_INFO);

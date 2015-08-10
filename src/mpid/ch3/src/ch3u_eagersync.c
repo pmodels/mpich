@@ -63,15 +63,15 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
 
     if (dt_contig)
     {
-        MPID_IOV iov[2];
+        MPL_IOV iov[2];
 	MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
                                             "sending contiguous sync eager message, data_sz=" MPIDI_MSG_SZ_FMT, 
 					    data_sz));
 	
-        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)es_pkt;
-        iov[0].MPID_IOV_LEN = sizeof(*es_pkt);
-	iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *)buf + dt_true_lb);
-	iov[1].MPID_IOV_LEN = data_sz;	
+        iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)es_pkt;
+        iov[0].MPL_IOV_LEN = sizeof(*es_pkt);
+	iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) ((char *)buf + dt_true_lb);
+	iov[1].MPL_IOV_LEN = data_sz;	
 	
 	MPIU_THREAD_CS_ENTER(CH3COMM,vc);
 	mpi_errno = MPIDI_CH3_iSendv(vc, sreq, iov, 2);

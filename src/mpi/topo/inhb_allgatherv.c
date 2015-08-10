@@ -49,7 +49,7 @@ int MPIR_Ineighbor_allgatherv_default(const void *sendbuf, int sendcount, MPI_Da
     MPID_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
     for (i = 0; i < comm_size; ++i) {
-        MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+        MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
                                          (displs[i] * recvtype_extent));
     }
 

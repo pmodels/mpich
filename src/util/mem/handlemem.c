@@ -159,7 +159,7 @@ static int MPIU_Handle_free( void *((*indirect)[]), int indirect_size )
     do {                                                                                         \
         if (MPL_VG_RUNNING_ON_VALGRIND()) {                                                     \
             char desc_str[256];                                                                  \
-            MPIU_Snprintf(desc_str, sizeof(desc_str)-1,                                          \
+            MPL_snprintf(desc_str, sizeof(desc_str)-1,                                          \
                           "[MPICH handle: objptr=%p handle=0x%x %s/%s]",                        \
                           (objptr_), (objptr_)->handle,                                          \
                           ((is_direct_) ? "DIRECT" : "INDIRECT"),                                \

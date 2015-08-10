@@ -160,7 +160,7 @@ int MPID_nem_lmt_shm_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPID_Req
 #define FUNCNAME MPID_nem_lmt_shm_start_recv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV s_cookie)
+int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV s_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
     int done = FALSE;
@@ -240,7 +240,7 @@ int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV s_co
 #define FUNCNAME MPID_nem_lmt_shm_start_send
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV r_cookie)
+int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV r_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
     int done = FALSE;
@@ -253,7 +253,7 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV r_co
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_SHM_START_SEND);
 
     if (vc_ch->lmt_copy_buf == NULL){
-        mpi_errno = MPIU_SHMW_Hnd_deserialize(vc_ch->lmt_copy_buf_handle, r_cookie.MPID_IOV_BUF, strlen(r_cookie.MPID_IOV_BUF));
+        mpi_errno = MPIU_SHMW_Hnd_deserialize(vc_ch->lmt_copy_buf_handle, r_cookie.MPL_IOV_BUF, strlen(r_cookie.MPL_IOV_BUF));
         if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
         mpi_errno = MPID_nem_attach_shm_region(&vc_ch->lmt_copy_buf, vc_ch->lmt_copy_buf_handle);
@@ -264,7 +264,7 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV r_co
         char *ser_lmt_copy_buf_handle=NULL;
         mpi_errno = MPIU_SHMW_Hnd_get_serialized_by_ref(vc_ch->lmt_copy_buf_handle, &ser_lmt_copy_buf_handle);
         if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
-        if (strncmp(ser_lmt_copy_buf_handle, r_cookie.MPID_IOV_BUF, r_cookie.MPID_IOV_LEN) < 0){
+        if (strncmp(ser_lmt_copy_buf_handle, r_cookie.MPL_IOV_BUF, r_cookie.MPL_IOV_LEN) < 0){
             /* Each side allocated its own buffer, lexicographically lower valued buffer handle is deleted */
             mpi_errno = MPID_nem_delete_shm_region(&(vc_ch->lmt_copy_buf), &(vc_ch->lmt_copy_buf_handle));
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -275,7 +275,7 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV r_co
             mpi_errno = MPIU_SHMW_Hnd_init(&vc_ch->lmt_copy_buf_handle);
             if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
-            mpi_errno = MPIU_SHMW_Hnd_deserialize(vc_ch->lmt_copy_buf_handle, r_cookie.MPID_IOV_BUF, strlen(r_cookie.MPID_IOV_BUF));
+            mpi_errno = MPIU_SHMW_Hnd_deserialize(vc_ch->lmt_copy_buf_handle, r_cookie.MPL_IOV_BUF, strlen(r_cookie.MPL_IOV_BUF));
             if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
             mpi_errno = MPID_nem_attach_shm_region(&vc_ch->lmt_copy_buf, vc_ch->lmt_copy_buf_handle);
@@ -665,7 +665,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
 #define FUNCNAME MPID_nem_lmt_shm_handle_cookie
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_lmt_shm_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV cookie)
+int MPID_nem_lmt_shm_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV cookie)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_SHM_HANDLE_COOKIE);
 

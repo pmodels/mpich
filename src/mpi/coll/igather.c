@@ -91,7 +91,7 @@ int MPIR_Igather_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendt
     if (rank == root)
     {
         MPID_Datatype_get_extent_macro(recvtype, extent);
-        MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf+
+        MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf+
                                          (extent*recvcount*comm_size));
     }
 
@@ -453,7 +453,7 @@ int MPIR_Igather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype
                 MPIR_Type_get_true_extent_impl(sendtype, &true_lb, &true_extent);
                 MPID_Datatype_get_extent_macro(sendtype, extent);
 
-                MPID_Ensure_Aint_fits_in_pointer(sendcount*local_size*(MPIR_MAX(extent, true_extent)));
+                MPIU_Ensure_Aint_fits_in_pointer(sendcount*local_size*(MPIR_MAX(extent, true_extent)));
                 MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, sendcount*local_size*(MPIR_MAX(extent,true_extent)),
                                           mpi_errno, "tmp_buf");
                 /* adjust for potential negative lower bound in datatype */
@@ -485,7 +485,7 @@ int MPIR_Igather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype
         /* long message. use linear algorithm. */
         if (root == MPI_ROOT) {
             MPID_Datatype_get_extent_macro(recvtype, extent);
-            MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+            MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
                                              (recvcount*remote_size*extent));
 
             for (i=0; i<remote_size; i++) {

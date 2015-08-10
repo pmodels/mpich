@@ -25,15 +25,15 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPID_Request *sreq,
 {
     int mpi_errno = MPI_SUCCESS;
     int iov_n;
-    MPID_IOV iov[MPID_IOV_LIMIT];
+    MPL_IOV iov[MPL_IOV_LIMIT];
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_SENDNONCONTIG_IOV);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_SENDNONCONTIG_IOV);
 
-    iov[0].MPID_IOV_BUF = header;
-    iov[0].MPID_IOV_LEN = hdr_sz;
+    iov[0].MPL_IOV_BUF = header;
+    iov[0].MPL_IOV_LEN = hdr_sz;
 
-    iov_n = MPID_IOV_LIMIT - 1;
+    iov_n = MPL_IOV_LIMIT - 1;
 
     if (sreq->dev.ext_hdr_sz > 0) {
         /* When extended packet header exists, here we leave one IOV slot
@@ -161,7 +161,7 @@ int MPIDI_CH3_EagerContigSend( MPID_Request **sreq_p,
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_eager_send_t * const eager_pkt = &upkt.eager_send;
     MPID_Request *sreq = *sreq_p;
-    MPID_IOV iov[2];
+    MPL_IOV iov[2];
     
     MPIDI_Pkt_init(eager_pkt, reqtype);
     eager_pkt->match.parts.rank	= comm->rank;
@@ -170,15 +170,15 @@ int MPIDI_CH3_EagerContigSend( MPID_Request **sreq_p,
     eager_pkt->sender_req_id	= MPI_REQUEST_NULL;
     eager_pkt->data_sz		= data_sz;
     
-    iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)eager_pkt;
-    iov[0].MPID_IOV_LEN = sizeof(*eager_pkt);
+    iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)eager_pkt;
+    iov[0].MPL_IOV_LEN = sizeof(*eager_pkt);
     
     MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
 	       "sending contiguous eager message, data_sz=" MPIDI_MSG_SZ_FMT,
 					data_sz));
 	    
-    iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) buf;
-    iov[1].MPID_IOV_LEN = data_sz;
+    iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) buf;
+    iov[1].MPL_IOV_LEN = data_sz;
     
     MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
     MPIDI_VC_FAI_send_seqnum(vc, seqnum);
@@ -535,7 +535,7 @@ int MPIDI_CH3_EagerContigIsend( MPID_Request **sreq_p,
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_eager_send_t * const eager_pkt = &upkt.eager_send;
     MPID_Request *sreq = *sreq_p;
-    MPID_IOV iov[MPID_IOV_LIMIT];
+    MPL_IOV iov[MPL_IOV_LIMIT];
 
     MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
 	       "sending contiguous eager message, data_sz=" MPIDI_MSG_SZ_FMT,
@@ -550,11 +550,11 @@ int MPIDI_CH3_EagerContigIsend( MPID_Request **sreq_p,
     eager_pkt->sender_req_id	= sreq->handle;
     eager_pkt->data_sz		= data_sz;
     
-    iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)eager_pkt;
-    iov[0].MPID_IOV_LEN = sizeof(*eager_pkt);
+    iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)eager_pkt;
+    iov[0].MPL_IOV_LEN = sizeof(*eager_pkt);
     
-    iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) buf;
-    iov[1].MPID_IOV_LEN = data_sz;
+    iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) buf;
+    iov[1].MPL_IOV_LEN = data_sz;
     
     MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
     MPIDI_VC_FAI_send_seqnum(vc, seqnum);
@@ -854,7 +854,7 @@ int MPIDI_CH3_PktPrint_EagerShortSend( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 	int i;
 	if (datalen > 32) datalen = 32;
 	for (i=0; i<datalen; i++) {
-	    MPIU_Snprintf( &databytes[2*i], 64 - 2*i, "%2x", p[i] );
+	    MPL_snprintf( &databytes[2*i], 64 - 2*i, "%2x", p[i] );
 	}
 	MPIU_DBG_PRINTF((" data ......... %s\n", databytes));
     }

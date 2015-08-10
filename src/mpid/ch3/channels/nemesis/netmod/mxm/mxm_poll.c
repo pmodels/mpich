@@ -167,7 +167,7 @@ int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
                             dt_ptr, dt_true_lb);
 
     {
-        MPIR_Context_id_t context_id = rreq->dev.match.parts.context_id;
+        MPIU_Context_id_t context_id = rreq->dev.match.parts.context_id;
         int tag = rreq->dev.match.parts.tag;
         MPID_nem_mxm_vc_area *vc_area = NULL;
         MPID_nem_mxm_req_area *req_area = NULL;
@@ -291,7 +291,7 @@ static int _mxm_handle_rreq(MPID_Request * req)
         }
         else {
             mxm_req_buffer_t *iov_buf;
-            MPID_IOV *iov;
+            MPL_IOV *iov;
             int n_iov = 0;
             int index;
 
@@ -303,8 +303,8 @@ static int _mxm_handle_rreq(MPID_Request * req)
                 MPIU_Assert(iov);
 
                 for (index = 0; index < n_iov; index++) {
-                    iov[index].MPID_IOV_BUF = iov_buf[index].ptr;
-                    iov[index].MPID_IOV_LEN = iov_buf[index].length;
+                    iov[index].MPL_IOV_BUF = iov_buf[index].ptr;
+                    iov[index].MPL_IOV_LEN = iov_buf[index].length;
                 }
 
                 MPID_Segment_unpack_vector(req->dev.segment_ptr, req->dev.segment_first, &last, iov,
@@ -439,7 +439,7 @@ static int _mxm_process_rdtype(MPID_Request ** rreq_p, MPI_Datatype datatype,
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *rreq = *rreq_p;
     MPIDI_msg_sz_t last;
-    MPID_IOV *iov;
+    MPL_IOV *iov;
     int n_iov = 0;
     int index;
 
@@ -468,7 +468,7 @@ static int _mxm_process_rdtype(MPID_Request ** rreq_p, MPI_Datatype datatype,
                     MXM_REQ_DATA_MAX_IOV);
     for (index = 0; index < n_iov; index++) {
         _dbg_mxm_output(7, "======= Recv iov[%i] = ptr : %p, len : %i \n",
-                        index, iov[index].MPID_IOV_BUF, iov[index].MPID_IOV_LEN);
+                        index, iov[index].MPL_IOV_BUF, iov[index].MPL_IOV_LEN);
     }
 #endif
 
@@ -479,8 +479,8 @@ static int _mxm_process_rdtype(MPID_Request ** rreq_p, MPI_Datatype datatype,
         }
 
         for (index = 0; index < n_iov; index++) {
-            (*iov_buf)[index].ptr = iov[index].MPID_IOV_BUF;
-            (*iov_buf)[index].length = iov[index].MPID_IOV_LEN;
+            (*iov_buf)[index].ptr = iov[index].MPL_IOV_BUF;
+            (*iov_buf)[index].length = iov[index].MPL_IOV_LEN;
         }
         rreq->dev.tmpbuf = NULL;
         rreq->dev.tmpbuf_sz = 0;

@@ -65,7 +65,7 @@ void MPIDI_Abort_core(MPID_Comm * comm, int mpi_errno, int exit_code, const char
     }
 
   snprintf(error_str, sizeof(error_str), "Abort(%d)%s%s: %s%s\n", exit_code, world_str, comm_str, user_str, sys_str);
-  MPIU_Error_printf("%s", error_str);
+  MPL_error_printf("%s", error_str);
 
   fflush(stderr);  fflush(stdout);
 }

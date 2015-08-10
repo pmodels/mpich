@@ -19,7 +19,7 @@ struct MPID_Request;
 
 /* The maximum message size is the size of a pointer; this allows MPI_Aint 
    to be larger than a pointer */
-typedef MPIR_Pint MPIDI_msg_sz_t;
+typedef MPIU_Pint MPIDI_msg_sz_t;
 
 #include "mpid_dataloop.h"
 
@@ -87,7 +87,7 @@ typedef MPIDI_Rank_t MPID_Node_id_t;
    information, which is beneficial for slower communication
    links. Further, this allows the total structure size to be 64 bits
    and the search operations can be optimized on 64-bit platforms. We
-   use a union of the actual required structure with a MPIR_Upint, so
+   use a union of the actual required structure with a MPIU_Upint, so
    in this optimized case, the "whole" field can be used for
    comparisons.
 
@@ -106,11 +106,11 @@ typedef MPIDI_Rank_t MPID_Node_id_t;
 typedef struct MPIDI_Message_match_parts {
     int32_t tag;
     MPIDI_Rank_t rank;
-    MPIR_Context_id_t context_id;
+    MPIU_Context_id_t context_id;
 } MPIDI_Message_match_parts_t;
 typedef union {
     MPIDI_Message_match_parts_t parts;
-    MPIR_Upint whole;
+    MPIU_Upint whole;
 } MPIDI_Message_match;
 
 /* Provides MPIDI_CH3_Pkt_t.  Must come after MPIDI_Message_match definition. */
@@ -387,7 +387,7 @@ typedef struct MPIDI_Request {
 
     /* iov and iov_count define the data to be transferred/received.  
        iov_offset points to the current head element in the IOV */
-    MPID_IOV iov[MPID_IOV_LIMIT];
+    MPL_IOV iov[MPL_IOV_LIMIT];
     int iov_count;
     size_t iov_offset;
 

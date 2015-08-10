@@ -10,13 +10,13 @@ extern int world_comm_destroying;
 int hcoll_comm_create(MPID_Comm * comm, void *param);
 int hcoll_comm_destroy(MPID_Comm * comm, void *param);
 
-int hcoll_Barrier(MPID_Comm * comm_ptr, mpir_errflag_t *err);
+int hcoll_Barrier(MPID_Comm * comm_ptr, MPIR_Errflag_t *err);
 int hcoll_Bcast(void *buffer, int count, MPI_Datatype datatype, int root,
-                MPID_Comm * comm_ptr, mpir_errflag_t *err);
+                MPID_Comm * comm_ptr, MPIR_Errflag_t *err);
 int hcoll_Allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
-                    void *rbuf, int rcount, MPI_Datatype rdtype, MPID_Comm * comm_ptr, mpir_errflag_t *err);
+                    void *rbuf, int rcount, MPI_Datatype rdtype, MPID_Comm * comm_ptr, MPIR_Errflag_t *err);
 int hcoll_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                    MPI_Op op, MPID_Comm * comm_ptr, mpir_errflag_t *err);
+                    MPI_Op op, MPID_Comm * comm_ptr, MPIR_Errflag_t *err);
 
 int hcoll_Ibarrier_req(MPID_Comm * comm_ptr, MPID_Request ** request);
 int hcoll_Ibcast_req(void *buffer, int count, MPI_Datatype datatype, int root,

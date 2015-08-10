@@ -8,6 +8,8 @@
 /*
  * Threads
  */
+#ifndef MPIU_THREAD_POSIX_FUNCS_H_INCLUDED
+#define MPIU_THREAD_POSIX_FUNCS_H_INCLUDED
 
 #include "mpiu_process_wrappers.h" /* for MPIU_PW_Sched_yield */
 
@@ -96,7 +98,7 @@ do {                                                                       \
     pthread_mutexattr_settype(&attr__, PTHREAD_MUTEX_ERRORCHECK_VALUE); \
     err__ = pthread_mutex_init(&(mutex_ptr_)->mutex, &attr__);          \
     if (err__)                                                          \
-        MPIU_Internal_sys_error_printf("pthread_mutex_init", err__,     \
+        MPL_internal_sys_error_printf("pthread_mutex_init", err__,     \
                                        "    %s:%d\n", __FILE__, __LINE__);\
     /* FIXME: convert error to an MPIU_THREAD_ERR value */                  \
     *(int *)(err_ptr_) = err__;                                             \
@@ -137,7 +139,7 @@ do {                                                               \
     if (err__)                                                  \
     {                                                           \
         MPIU_DBG_MSG_S(THREAD,TERSE,"  mutex lock error: %s", MPIU_Strerror(err__));       \
-        MPIU_Internal_sys_error_printf("pthread_mutex_lock", err__,\
+        MPL_internal_sys_error_printf("pthread_mutex_lock", err__,\
                                        "    %s:%d\n", __FILE__, __LINE__);\
     }                                                          \
     /* FIXME: convert error to an MPIU_THREAD_ERR value */     \
@@ -166,7 +168,7 @@ do {                                                               \
     if (err__)                                                  \
     {                                                           \
         MPIU_DBG_MSG_S(THREAD,TERSE,"  mutex unlock error: %s", MPIU_Strerror(err__));     \
-        MPIU_Internal_sys_error_printf("pthread_mutex_unlock", err__,         \
+        MPL_internal_sys_error_printf("pthread_mutex_unlock", err__,         \
                                        "    %s:%d\n", __FILE__, __LINE__);    \
     }                                                           \
     /* FIXME: convert error to an MPIU_THREAD_ERR value */      \
@@ -194,7 +196,7 @@ do {                                                                    \
     if (err__ && err__ != EBUSY)                                     \
     {                                                                \
         MPIU_DBG_MSG_S(THREAD,TERSE,"  mutex trylock error: %s", MPIU_Strerror(err__));    \
-        MPIU_Internal_sys_error_printf("pthread_mutex_trylock", err__,\
+        MPL_internal_sys_error_printf("pthread_mutex_trylock", err__,\
                                        "    %s:%d\n", __FILE__, __LINE__);\
     }                                                                \
     *(flag_ptr_) = (err__ == 0) ? TRUE : FALSE;                      \
@@ -316,3 +318,5 @@ do {                                                               \
     /* FIXME: convert error to an MPIU_THREAD_ERR value */	\
     *(int *)(err_ptr_) = MPIU_THREAD_SUCCESS;                   \
 } while (0)
+
+#endif /* MPIU_THREAD_POSIX_FUNCS_H_INCLUDED */

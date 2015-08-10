@@ -84,7 +84,7 @@ static int MPIR_Reduce_binomial (
     MPI_Op op,
     int root,
     MPID_Comm *comm_ptr,
-    mpir_errflag_t *errflag )
+    MPIR_Errflag_t *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -110,7 +110,7 @@ static int MPIR_Reduce_binomial (
     /* I think this is the worse case, so we can avoid an assert() 
      * inside the for loop */
     /* should be buf+{this}? */
-    MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+    MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
 
     MPIU_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)),
                         mpi_errno, "temporary buffer");
@@ -290,7 +290,7 @@ static int MPIR_Reduce_redscat_gather (
     MPI_Op op,
     int root,
     MPID_Comm *comm_ptr,
-    mpir_errflag_t *errflag )
+    MPIR_Errflag_t *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -319,7 +319,7 @@ static int MPIR_Reduce_redscat_gather (
     /* I think this is the worse case, so we can avoid an assert() 
      * inside the for loop */
     /* should be buf+{this}? */
-    MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+    MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
 
     MPIU_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)),
                         mpi_errno, "temporary buffer");
@@ -720,7 +720,7 @@ int MPIR_Reduce_intra (
     MPI_Op op,
     int root,
     MPID_Comm *comm_ptr,
-    mpir_errflag_t *errflag )
+    MPIR_Errflag_t *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -756,7 +756,7 @@ int MPIR_Reduce_intra (
             MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
             MPID_Datatype_get_extent_macro(datatype, extent);
 
-            MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+            MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
 
             MPIU_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)),
                                 mpi_errno, "temporary buffer");
@@ -911,7 +911,7 @@ int MPIR_Reduce_inter (
     MPI_Op op,
     int root,
     MPID_Comm *comm_ptr,
-    mpir_errflag_t *errflag )
+    MPIR_Errflag_t *errflag )
 {
 /*  Intercommunicator reduce.
     Remote group does a local intracommunicator
@@ -961,7 +961,7 @@ int MPIR_Reduce_inter (
 	    /* I think this is the worse case, so we can avoid an assert() 
 	     * inside the for loop */
 	    /* Should MPIU_CHKLMEM_MALLOC do this? */
-	    MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+	    MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
 	    MPIU_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
             /* adjust for potential negative lower bound in datatype */
             tmp_buf = (void *)((char*)tmp_buf - true_lb);
@@ -1021,7 +1021,7 @@ int MPIR_Reduce_inter (
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                MPI_Op op, int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+                MPI_Op op, int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -1052,7 +1052,7 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Reduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                     MPI_Op op, int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+                     MPI_Op op, int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -1127,7 +1127,7 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_REDUCE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

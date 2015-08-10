@@ -55,7 +55,7 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
                   MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                  int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+                  int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int rank, comm_size, mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -85,7 +85,7 @@ int MPIR_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
          * a minimal sanity check. Maybe add a global var since we do
          * loop over sendcount[] in MPI_Scatterv before calling
          * this? */
-        MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf + extent);
+        MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf + extent);
 
         MPIU_CHKLMEM_MALLOC(reqarray, MPID_Request **, comm_size * sizeof(MPID_Request *), mpi_errno, "reqarray");
         MPIU_CHKLMEM_MALLOC(starray, MPI_Status *, comm_size * sizeof(MPI_Status), mpi_errno, "starray");
@@ -166,7 +166,7 @@ fn_fail:
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts, const int *displs,
                        MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                       int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+                       int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -234,7 +234,7 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_SCATTERV);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

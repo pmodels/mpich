@@ -57,7 +57,7 @@ int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static int MPIR_Reduce_scatter_noncomm(const void *sendbuf, void *recvbuf, const int recvcounts[],
                                        MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
-                                       mpir_errflag_t *errflag)
+                                       MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -240,7 +240,7 @@ fn_fail:
 
 /* not declared static because a machine-specific function may call this one in some cases */
 int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recvcounts[],
-                              MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+                              MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int   rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb; 
@@ -300,7 +300,7 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
 
     /* total_count*extent eventually gets malloced. it isn't added to
      * a user-passed in buffer */
-    MPID_Ensure_Aint_fits_in_pointer(total_count * MPIR_MAX(true_extent, extent));
+    MPIU_Ensure_Aint_fits_in_pointer(total_count * MPIR_MAX(true_extent, extent));
 
     if ((is_commutative) && (nbytes < MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
         /* commutative and short. use recursive halving algorithm */
@@ -894,7 +894,7 @@ fn_fail:
 /* not declared static because a machine-specific function may call this one in some cases */
 int MPIR_Reduce_scatter_inter(const void *sendbuf, void *recvbuf, const int recvcounts[],
                               MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
-                              mpir_errflag_t *errflag)
+                              MPIR_Errflag_t *errflag)
 {
 /* Intercommunicator Reduce_scatter.
    We first do an intercommunicator reduce to rank 0 on left group,
@@ -1024,7 +1024,7 @@ int MPIR_Reduce_scatter_inter(const void *sendbuf, void *recvbuf, const int recv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[],
-                        MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+                        MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -1055,7 +1055,7 @@ int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recvcounts[],
-                             MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+                             MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -1120,7 +1120,7 @@ int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_REDUCE_SCATTER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

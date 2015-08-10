@@ -26,12 +26,13 @@
 #include <unistd.h>
 #endif
 #include <errno.h>
+
+#include "mpl.h"
+
 #include "simple_pmiutil.h"
 
 /* Use the memory definitions from mpich/src/include */
 #include "mpimem.h"
-/* Use the MPI error message routines from mpich/src/include */
-#include "mpibase.h"
 
 #define MAXVALLEN 1024
 #define MAXKEYLEN   32
@@ -53,7 +54,7 @@ static char PMIU_print_id[PMIU_IDSIZE] = "unset";
 
 void PMIU_Set_rank( int PMI_rank )
 {
-    MPIU_Snprintf( PMIU_print_id, PMIU_IDSIZE, "cli_%d", PMI_rank );
+    MPL_snprintf( PMIU_print_id, PMIU_IDSIZE, "cli_%d", PMI_rank );
 }
 void PMIU_SetServer( void )
 {
@@ -80,7 +81,7 @@ void PMIU_printf( int print_flag, const char *fmt, ... )
 	    char filename[1024];
 	    p = getenv("PMI_ID");
 	    if (p) {
-		MPIU_Snprintf( filename, sizeof(filename), 
+		MPL_snprintf( filename, sizeof(filename), 
 			       "testclient-%s.out", p );
 		logfile = fopen( filename, "w" );
 	    }
@@ -93,7 +94,7 @@ void PMIU_printf( int print_flag, const char *fmt, ... )
     }
 
     if ( print_flag ) {
-	/* MPIU_Error_printf( "[%s]: ", PMIU_print_id ); */
+	/* MPL_error_printf( "[%s]: ", PMIU_print_id ); */
 	/* FIXME: Decide what role PMIU_printf should have (if any) and
 	   select the appropriate MPIU routine */
 	fprintf( logfile, "[%s]: ", PMIU_print_id );
@@ -124,7 +125,7 @@ int PMIU_readline( int fd, char *buf, int maxlen )
        Server side code should not use this routine (see the 
        replacement version in src/pm/util/pmiserv.c) */
     if (nextChar != lastChar && fd != lastfd) {
-	MPIU_Internal_error_printf( "Panic - buffer inconsistent\n" );
+	MPL_internal_error_printf( "Panic - buffer inconsistent\n" );
 	return -1;
     }
 

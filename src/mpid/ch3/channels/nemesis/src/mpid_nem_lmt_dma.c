@@ -114,7 +114,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static int do_dma_send(MPIDI_VC_t *vc,  MPID_Request *sreq, int send_iov_n,
-                       MPID_IOV send_iov[], knem_cookie_t *s_cookiep)
+                       MPL_IOV send_iov[], knem_cookie_t *s_cookiep)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, err;
@@ -123,15 +123,15 @@ static int do_dma_send(MPIDI_VC_t *vc,  MPID_Request *sreq, int send_iov_n,
 #else
     struct knem_cmd_create_region cr;
 #endif
-    struct knem_cmd_param_iovec knem_iov[MPID_IOV_LIMIT];
+    struct knem_cmd_param_iovec knem_iov[MPL_IOV_LIMIT];
 
     /* FIXME The knem module iovec is potentially different from the system
        iovec.  This causes all sorts of fun if you don't realize it and use the
        system iovec directly instead.  Eventually we need to either unify them
        or avoid this extra copy. */
     for (i = 0; i < send_iov_n; ++i) {
-        knem_iov[i].base = (uintptr_t)send_iov[i] .MPID_IOV_BUF;
-        knem_iov[i].len  = send_iov[i] .MPID_IOV_LEN;
+        knem_iov[i].base = (uintptr_t)send_iov[i] .MPL_IOV_BUF;
+        knem_iov[i].len  = send_iov[i] .MPL_IOV_LEN;
     }
 
 #if KNEM_ABI_VERSION < MPICH_NEW_KNEM_ABI_VERSION
@@ -164,7 +164,7 @@ fn_exit:
 #define FUNCNAME do_dma_recv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static int do_dma_recv(int iov_n, MPID_IOV iov[], knem_cookie_t s_cookie, int nodma, volatile knem_status_t **status_p_p, knem_status_t *current_status_p)
+static int do_dma_recv(int iov_n, MPL_IOV iov[], knem_cookie_t s_cookie, int nodma, volatile knem_status_t **status_p_p, knem_status_t *current_status_p)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, err;
@@ -174,15 +174,15 @@ static int do_dma_recv(int iov_n, MPID_IOV iov[], knem_cookie_t s_cookie, int no
 #else
     struct knem_cmd_inline_copy icopy;
 #endif
-    struct knem_cmd_param_iovec knem_iov[MPID_IOV_LIMIT];
+    struct knem_cmd_param_iovec knem_iov[MPL_IOV_LIMIT];
 
     /* FIXME The knem module iovec is potentially different from the system
        iovec.  This causes all sorts of fun if you don't realize it and use the
        system iovec directly instead.  Eventually we need to either unify them
        or avoid this extra copy. */
     for (i = 0; i < iov_n; ++i) {
-        knem_iov[i].base = (uintptr_t)iov[i] .MPID_IOV_BUF;
-        knem_iov[i].len  = iov[i] .MPID_IOV_LEN;
+        knem_iov[i].base = (uintptr_t)iov[i] .MPL_IOV_BUF;
+        knem_iov[i].len  = iov[i] .MPL_IOV_LEN;
     }
 
 #if KNEM_ABI_VERSION < MPICH_NEW_KNEM_ABI_VERSION
@@ -248,14 +248,14 @@ static int send_sreq_data(MPIDI_VC_t *vc, MPID_Request *sreq, knem_cookie_t *s_c
 
     if (dt_contig) {
         /* handle the iov creation ourselves */
-        sreq->dev.iov[0].MPID_IOV_BUF = (char *)sreq->dev.user_buf + dt_true_lb;
-        sreq->dev.iov[0].MPID_IOV_LEN = data_sz;
+        sreq->dev.iov[0].MPL_IOV_BUF = (char *)sreq->dev.user_buf + dt_true_lb;
+        sreq->dev.iov[0].MPL_IOV_LEN = data_sz;
         sreq->dev.iov_count = 1;
     }
     else {
         /* use the segment routines to handle the iovec creation */
         if (sreq->dev.segment_ptr == NULL) {
-            sreq->dev.iov_count = MPID_IOV_LIMIT;
+            sreq->dev.iov_count = MPL_IOV_LIMIT;
             sreq->dev.iov_offset = 0;
 
             /* segment_ptr may be non-null when this is a continuation of a
@@ -273,7 +273,7 @@ static int send_sreq_data(MPIDI_VC_t *vc, MPID_Request *sreq, knem_cookie_t *s_c
 
             /* FIXME we should write our own function that isn't dependent on
                the in-request iov array.  This will let us use IOVs that are
-               larger than MPID_IOV_LIMIT. */
+               larger than MPL_IOV_LIMIT. */
             mpi_errno = MPIDI_CH3U_Request_load_send_iov(sreq, &sreq->dev.iov[0],
                                                          &sreq->dev.iov_count);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -351,7 +351,7 @@ fn_fail:
 #define FUNCNAME MPID_nem_lmt_dma_start_recv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPID_IOV s_cookie)
+int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPL_IOV s_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
     int nodma;
@@ -380,8 +380,8 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPID_IOV s_c
 
     if (dt_contig) {
         /* handle the iov creation ourselves */
-        rreq->dev.iov[0].MPID_IOV_BUF = (char *)rreq->dev.user_buf + dt_true_lb;
-        rreq->dev.iov[0].MPID_IOV_LEN = data_sz;
+        rreq->dev.iov[0].MPL_IOV_BUF = (char *)rreq->dev.user_buf + dt_true_lb;
+        rreq->dev.iov[0].MPL_IOV_LEN = data_sz;
         rreq->dev.iov_count = 1;
     }
     else {
@@ -405,10 +405,10 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPID_IOV s_c
         }
     }
 
-    MPIU_Assert(s_cookie.MPID_IOV_LEN == sizeof(knem_cookie_t));
-    MPIU_Assert(s_cookie.MPID_IOV_BUF != NULL);
+    MPIU_Assert(s_cookie.MPL_IOV_LEN == sizeof(knem_cookie_t));
+    MPIU_Assert(s_cookie.MPL_IOV_BUF != NULL);
     mpi_errno = do_dma_recv(rreq->dev.iov_count, rreq->dev.iov,
-                            *((knem_cookie_t *)s_cookie.MPID_IOV_BUF), nodma,
+                            *((knem_cookie_t *)s_cookie.MPL_IOV_BUF), nodma,
                             &status, &current_status);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -515,14 +515,14 @@ fn_fail:
 #define FUNCNAME MPID_nem_lmt_dma_handle_cookie
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_lmt_dma_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV cookie)
+int MPID_nem_lmt_dma_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV cookie)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_HANDLE_COOKIE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_HANDLE_COOKIE);
 
-    if (cookie.MPID_IOV_LEN == 0 && cookie.MPID_IOV_BUF == NULL) {
+    if (cookie.MPL_IOV_LEN == 0 && cookie.MPL_IOV_BUF == NULL) {
         /* req is a send request, we need to initiate another knem request and
            send a COOKIE message back to the receiver indicating the lid
            returned from the ioctl. */
@@ -689,7 +689,7 @@ int MPID_nem_lmt_dma_vc_terminated(MPIDI_VC_t *vc)
 #define FUNCNAME MPID_nem_lmt_dma_start_send
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_lmt_dma_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV r_cookie)
+int MPID_nem_lmt_dma_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV r_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_START_SEND);

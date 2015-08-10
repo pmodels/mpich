@@ -12,9 +12,9 @@
  * defined in process.h)
  */
 #include "mpichconf.h"
+#include "mpl.h"
 #include "pmutil.h"
 #include <stdio.h>
-#include "mpibase.h"
 #include "process.h"
 #include "pmiserv.h" /* for MPIE_GetMyHostName */
 

@@ -281,7 +281,7 @@ static int restore_env(pid_t parent_pid, int rank)
     int ret;
     
 
-    MPIU_Snprintf(env_filename, MAX_STR_LEN, "/tmp/hydra-env-file-%d:%d", parent_pid, rank); 
+    MPL_snprintf(env_filename, MAX_STR_LEN, "/tmp/hydra-env-file-%d:%d", parent_pid, rank); 
 
     f = fopen(env_filename, "r");
     CHECK_ERR(!f, MPIU_Strerror (errno));

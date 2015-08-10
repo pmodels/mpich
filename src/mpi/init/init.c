@@ -163,7 +163,7 @@ int MPI_Init( int *argc, char ***argv )
     else if (!strcmp(MPIR_CVAR_DEFAULT_THREAD_LEVEL, "MPI_THREAD_SINGLE"))
         threadLevel = MPI_THREAD_SINGLE;
     else {
-        MPIU_Error_printf("Unrecognized thread level %s\n", MPIR_CVAR_DEFAULT_THREAD_LEVEL);
+        MPL_error_printf("Unrecognized thread level %s\n", MPIR_CVAR_DEFAULT_THREAD_LEVEL);
         exit(1);
     }
 

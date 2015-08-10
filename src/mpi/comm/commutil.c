@@ -722,7 +722,7 @@ int MPIR_Comm_is_node_consecutive(MPID_Comm * comm)
 int MPIR_Comm_copy(MPID_Comm * comm_ptr, int size, MPID_Comm ** outcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Context_id_t new_context_id, new_recvcontext_id;
+    MPIU_Context_id_t new_context_id, new_recvcontext_id;
     MPID_Comm *newcomm_ptr = NULL;
     MPIR_Comm_map_t *map;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_COPY);

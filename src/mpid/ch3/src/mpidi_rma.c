@@ -148,7 +148,7 @@ int MPID_Win_free(MPID_Win ** win_ptr)
     int mpi_errno = MPI_SUCCESS;
     int in_use;
     MPID_Comm *comm_ptr;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIDI_STATE_DECL(MPID_STATE_MPID_WIN_FREE);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_FREE);

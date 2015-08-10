@@ -37,7 +37,7 @@ int MPIR_Comm_create_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr, int tag
                            MPID_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Context_id_t new_context_id = 0;
+    MPIU_Context_id_t new_context_id = 0;
     int *mapping = NULL;
     int n;
 

@@ -122,7 +122,7 @@
 
 /* mpi.h includes the definitions of MPI_Fint */
 #include "mpi.h"
-#include "mpitypedefs.h"
+#include "mpiutil.h"
 
 /* Include prototypes of helper functions.
    These include MPIR_Keyval_set_fortran, fortran90, and 

@@ -51,9 +51,9 @@ int MPIR_Ineighbor_alltoallv_default(const void *sendbuf, const int sendcounts[]
     MPID_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
     for (i = 0; i < comm_size; ++i) {
-        MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
+        MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
                                          (sdispls[i] * sendtype_extent));
-        MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+        MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
                                          (rdispls[i] * recvtype_extent));
     }
 

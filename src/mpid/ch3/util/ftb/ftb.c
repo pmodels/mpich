@@ -103,7 +103,7 @@ void MPIDU_Ftb_publish_vc(const char *event_name, struct MPIDI_VC *vc)
     char payload[FTB_MAX_PAYLOAD_DATA] = "";
 
     if (vc && vc->pg)  /* pg can be null for temp VCs (dynamic processes) */
-        MPIU_Snprintf(payload, sizeof(payload), "[id: {%s:{%d}}]", (char*)vc->pg->id, vc->pg_rank);
+        MPL_snprintf(payload, sizeof(payload), "[id: {%s:{%d}}]", (char*)vc->pg->id, vc->pg_rank);
     MPIDU_Ftb_publish(event_name, payload);
     return;
 }
@@ -117,7 +117,7 @@ void MPIDU_Ftb_publish_me(const char *event_name)
 {
     char payload[FTB_MAX_PAYLOAD_DATA] = "";
 
-    MPIU_Snprintf(payload, sizeof(payload), "[id: {%s:{%d}}]", (char *)MPIDI_Process.my_pg->id, MPIDI_Process.my_pg_rank);
+    MPL_snprintf(payload, sizeof(payload), "[id: {%s:{%d}}]", (char *)MPIDI_Process.my_pg->id, MPIDI_Process.my_pg_rank);
     MPIDU_Ftb_publish(event_name, payload);
     return;
 }

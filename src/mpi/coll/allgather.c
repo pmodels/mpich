@@ -117,7 +117,7 @@ int MPIR_Allgather_intra (
     int recvcount,
     MPI_Datatype recvtype,
     MPID_Comm *comm_ptr,
-    mpir_errflag_t *errflag )
+    MPIR_Errflag_t *errflag )
 {
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
@@ -147,7 +147,7 @@ int MPIR_Allgather_intra (
     MPID_Datatype_get_size_macro( recvtype, type_size );
 
     /* This is the largest offset we add to recvbuf */
-    MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+    MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
 				     (comm_size * recvcount * recvtype_extent));
 
     /* check if multiple threads are calling this collective function */
@@ -655,7 +655,7 @@ int MPIR_Allgather_inter (
     int recvcount,
     MPI_Datatype recvtype,
     MPID_Comm *comm_ptr,
-    mpir_errflag_t *errflag)
+    MPIR_Errflag_t *errflag)
 {
     /* Intercommunicator Allgather.
        Each group does a gather to local root with the local
@@ -682,7 +682,7 @@ int MPIR_Allgather_inter (
         MPID_Datatype_get_extent_macro( sendtype, send_extent );
         extent = MPIR_MAX(send_extent, true_extent);
 
-	MPID_Ensure_Aint_fits_in_pointer(extent * sendcount * local_size);
+	MPIU_Ensure_Aint_fits_in_pointer(extent * sendcount * local_size);
         MPIU_CHKLMEM_MALLOC(tmp_buf, void*, extent*sendcount*local_size, mpi_errno, "tmp_buf");
 
         /* adjust for potential negative lower bound in datatype */
@@ -787,7 +787,7 @@ int MPIR_Allgather_inter (
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                   MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+                   MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -821,7 +821,7 @@ fn_fail:
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Allgather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                        MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+                        MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -902,7 +902,7 @@ int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ALLGATHER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

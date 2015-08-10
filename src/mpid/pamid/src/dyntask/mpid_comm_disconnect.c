@@ -201,7 +201,7 @@ int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
     int rc, i,j, k, ref_count,mpi_errno=0, probe_flag=0;
     pami_task_t *local_list;
     MPI_Status status;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIDI_PG_t *pg;
     int total_leaders=0, gsize;
     pami_task_t *leader_tids;
@@ -320,8 +320,8 @@ int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
 
 	  /* sanity: the INVALID context ID value could potentially conflict with the
 	   * dynamic proccess space */
-	  MPIU_Assert(lcomm->context_id     != MPIR_INVALID_CONTEXT_ID);
-	  MPIU_Assert(lcomm->recvcontext_id != MPIR_INVALID_CONTEXT_ID);
+	  MPIU_Assert(lcomm->context_id     != MPIU_INVALID_CONTEXT_ID);
+	  MPIU_Assert(lcomm->recvcontext_id != MPIU_INVALID_CONTEXT_ID);
 
 	  /* FIXME - we probably need a unique context_id. */
 

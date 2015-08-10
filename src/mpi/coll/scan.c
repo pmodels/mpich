@@ -76,7 +76,7 @@ static int MPIR_Scan_generic (
     MPI_Datatype datatype,
     MPI_Op op,
     MPID_Comm *comm_ptr,
-    mpir_errflag_t *errflag )
+    MPIR_Errflag_t *errflag )
 {
     MPI_Status status;
     int        rank, comm_size;
@@ -120,7 +120,7 @@ static int MPIR_Scan_generic (
 
     /* This eventually gets malloc()ed as a temp buffer, not added to
      * any user buffers */
-    MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+    MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
 
     /* adjust for potential negative lower bound in datatype */
     partial_scan = (void *)((char*)partial_scan - true_lb);
@@ -228,7 +228,7 @@ int MPIR_Scan(
     MPI_Datatype datatype,
     MPI_Op op,
     MPID_Comm *comm_ptr,
-    mpir_errflag_t *errflag )
+    MPIR_Errflag_t *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -256,7 +256,7 @@ int MPIR_Scan(
 
     MPID_Datatype_get_extent_macro(datatype, extent);
 
-    MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+    MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
 
     MPIU_CHKLMEM_MALLOC(tempbuf, void *, count*(MPIR_MAX(extent, true_extent)),
                         mpi_errno, "temporary buffer");
@@ -426,7 +426,7 @@ int MPIR_Scan(
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Scan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                   MPI_Op op, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+                   MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -489,7 +489,7 @@ int MPI_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_SCAN);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

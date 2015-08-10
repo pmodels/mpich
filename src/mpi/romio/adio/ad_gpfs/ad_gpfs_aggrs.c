@@ -719,9 +719,9 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 	    others_req[i].lens =
 		ADIOI_Malloc(count_others_req_per_proc[i]*sizeof(ADIO_Offset));
 
-	    if ( (MPIR_Upint)others_req[i].offsets < (MPIR_Upint)recvBufForOffsets )
+	    if ( (MPIU_Upint)others_req[i].offsets < (MPIU_Upint)recvBufForOffsets )
 		recvBufForOffsets = others_req[i].offsets;
-	    if ( (MPIR_Upint)others_req[i].lens < (MPIR_Upint)recvBufForLens )
+	    if ( (MPIU_Upint)others_req[i].lens < (MPIU_Upint)recvBufForLens )
 		recvBufForLens = others_req[i].lens;
 
 	    others_req[i].mem_ptrs = (MPI_Aint *)
@@ -750,13 +750,13 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
     for (i=0; i<nprocs; i++)
     {
 	if ( (my_req[i].count) &&
-	     ((MPIR_Upint)my_req[i].offsets <= (MPIR_Upint)sendBufForOffsets) )
+	     ((MPIU_Upint)my_req[i].offsets <= (MPIU_Upint)sendBufForOffsets) )
        {
 	  sendBufForOffsets = my_req[i].offsets;
     }
 
 	if ( (my_req[i].count) &&
-	     ((MPIR_Upint)my_req[i].lens <= (MPIR_Upint)sendBufForLens) )
+	     ((MPIU_Upint)my_req[i].lens <= (MPIU_Upint)sendBufForLens) )
        {
 	    sendBufForLens = my_req[i].lens;
       }
@@ -775,9 +775,9 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 	    sdispls[i] = 0;
 	else
 	    sdispls[i] =  (int)
-	                ( ( (MPIR_Upint)my_req[i].offsets -
-			   (MPIR_Upint)sendBufForOffsets ) /
-			  (MPIR_Upint)sizeof(ADIO_Offset) );
+	                ( ( (MPIU_Upint)my_req[i].offsets -
+			   (MPIU_Upint)sendBufForOffsets ) /
+			  (MPIU_Upint)sizeof(ADIO_Offset) );
 
 	/* Receive these offsets from process i.*/
 	rcounts[i] = count_others_req_per_proc[i];
@@ -785,9 +785,9 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 	    rdispls[i] = 0;
 	else
 	    rdispls[i] = (int)
-	                 ( ( (MPIR_Upint)others_req[i].offsets -
-			     (MPIR_Upint)recvBufForOffsets ) /
-			   (MPIR_Upint)sizeof(ADIO_Offset) );
+	                 ( ( (MPIU_Upint)others_req[i].offsets -
+			     (MPIU_Upint)recvBufForOffsets ) /
+			   (MPIU_Upint)sizeof(ADIO_Offset) );
     }
 
     /* Exchange the offsets */
@@ -809,9 +809,9 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 	    sdispls[i] = 0;
 	else
 	  sdispls[i] = (int)
-	               ( ( (MPIR_Upint)my_req[i].lens -
-			   (MPIR_Upint)sendBufForLens ) /
-			 (MPIR_Upint) sizeof(ADIO_Offset) );
+	               ( ( (MPIU_Upint)my_req[i].lens -
+			   (MPIU_Upint)sendBufForLens ) /
+			 (MPIU_Upint) sizeof(ADIO_Offset) );
 
 	/* Receive these offsets from process i. */
 	rcounts[i] = count_others_req_per_proc[i];
@@ -819,9 +819,9 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 	    rdispls[i] = 0;
 	else
 	    rdispls[i] = (int)
-	                 ( ( (MPIR_Upint)others_req[i].lens -
-			     (MPIR_Upint)recvBufForLens ) /
-			   (MPIR_Upint) sizeof(ADIO_Offset) );
+	                 ( ( (MPIU_Upint)others_req[i].lens -
+			     (MPIU_Upint)recvBufForLens ) /
+			   (MPIU_Upint) sizeof(ADIO_Offset) );
     }
 
     /* Exchange the lengths */

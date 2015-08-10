@@ -595,7 +595,7 @@ int MPIDI_PG_SetConnInfo( int rank, const char *connString )
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_PG_SetConnInfo);
 
-    len = MPIU_Snprintf(key, sizeof(key), "P%d-businesscard", rank);
+    len = MPL_snprintf(key, sizeof(key), "P%d-businesscard", rank);
     MPIU_ERR_CHKANDJUMP1(len < 0 || len > sizeof(key), mpi_errno, MPI_ERR_OTHER, "**snprintf", "**snprintf %d", len);
 
     mpi_errno = PMI2_KVS_Put(key, connString);
@@ -620,7 +620,7 @@ int MPIDI_PG_SetConnInfo( int rank, const char *connString )
 
     MPIU_Assert(pg_world->connData);
     
-    len = MPIU_Snprintf(key, sizeof(key), "P%d-businesscard", rank);
+    len = MPL_snprintf(key, sizeof(key), "P%d-businesscard", rank);
     if (len < 0 || len > sizeof(key)) {
 	MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**snprintf",
 			     "**snprintf %d", len);
@@ -682,7 +682,7 @@ static int getConnInfoKVS( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
     int  mpi_errno = MPI_SUCCESS, rc;
     int vallen;
 
-    rc = MPIU_Snprintf(key, MPIDI_MAX_KVS_KEY_LEN, "P%d-businesscard", rank );
+    rc = MPL_snprintf(key, MPIDI_MAX_KVS_KEY_LEN, "P%d-businesscard", rank );
     if (rc < 0 || rc > MPIDI_MAX_KVS_KEY_LEN) {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
     }
@@ -701,7 +701,7 @@ static int getConnInfoKVS( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
     char key[MPIDI_MAX_KVS_KEY_LEN];
     int  mpi_errno = MPI_SUCCESS, rc, pmi_errno;
 
-    rc = MPIU_Snprintf(key, MPIDI_MAX_KVS_KEY_LEN, "P%d-businesscard", rank );
+    rc = MPL_snprintf(key, MPIDI_MAX_KVS_KEY_LEN, "P%d-businesscard", rank );
     if (rc < 0 || rc > MPIDI_MAX_KVS_KEY_LEN) {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
     }
@@ -747,14 +747,14 @@ static int connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
     string[len++] = 0;
     
     /* Add the size of the pg */
-    MPIU_Snprintf( &string[len], curSlen - len, "%d", pg->size );
+    MPL_snprintf( &string[len], curSlen - len, "%d", pg->size );
     while (string[len]) len++;
     len++;
 
     for (i=0; i<pg->size; i++) {
 	rc = getConnInfoKVS( i, buf, MPIDI_MAX_KVS_VALUE_LEN, pg );
 	if (rc) {
-	    MPIU_Internal_error_printf( 
+	    MPL_internal_error_printf( 
 		    "Panic: getConnInfoKVS failed for %s (rc=%d)\n", 
 		    (char *)pg->id, rc );
 	}
@@ -946,7 +946,7 @@ static int connToString( char **buf_p, int *slen, MPIDI_PG_t *pg )
     while (*pg_id) str[len++] = *pg_id++;
     str[len++] = 0;
     
-    MPIU_Snprintf( &str[len], 20, "%d", pg->size);
+    MPL_snprintf( &str[len], 20, "%d", pg->size);
     /* Skip over the length */
     while (str[len++]);
 
@@ -1098,7 +1098,7 @@ int MPIDI_PG_GetConnString( MPIDI_PG_t *pg, int rank, char *val, int vallen )
 	mpi_errno = (*pg->getConnInfo)( rank, val, vallen, pg );
     }
     else {
-	MPIU_Internal_error_printf( "Panic: no getConnInfo defined!\n" );
+	MPL_internal_error_printf( "Panic: no getConnInfo defined!\n" );
     }
 
     return mpi_errno;

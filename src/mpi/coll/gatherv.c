@@ -83,7 +83,7 @@ int MPIR_Gatherv (
 	MPI_Datatype recvtype,
 	int root,
 	MPID_Comm *comm_ptr,
-        mpir_errflag_t *errflag )
+        MPIR_Errflag_t *errflag )
 {
     int        comm_size, rank;
     int        mpi_errno = MPI_SUCCESS;
@@ -110,7 +110,7 @@ int MPIR_Gatherv (
 
         MPID_Datatype_get_extent_macro(recvtype, extent);
 	/* each node can make sure it is not going to overflow aint */
-        MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+        MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
 					 displs[rank] * extent);
 
         MPIU_CHKLMEM_MALLOC(reqarray, MPID_Request **, comm_size * sizeof(MPID_Request *), mpi_errno, "reqarray");
@@ -217,7 +217,7 @@ fn_fail:
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Gatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                       void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype,
-                      int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+                      int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -287,7 +287,7 @@ int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GATHERV);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

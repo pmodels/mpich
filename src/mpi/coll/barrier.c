@@ -67,7 +67,7 @@ int MPI_Barrier(MPI_Comm comm) __attribute__((weak,alias("PMPI_Barrier")));
 #define FUNCNAME barrier_smp_intra
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static int barrier_smp_intra(MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+static int barrier_smp_intra(MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno=MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -128,7 +128,7 @@ static int barrier_smp_intra(MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 #define FUNCNAME MPIR_Barrier_intra
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Barrier_intra( MPID_Comm *comm_ptr, mpir_errflag_t *errflag )
+int MPIR_Barrier_intra( MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
     int size, rank, src, dst, mask, mpi_errno=MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -189,7 +189,7 @@ int MPIR_Barrier_intra( MPID_Comm *comm_ptr, mpir_errflag_t *errflag )
 #define FUNCNAME MPIR_Barrier_inter
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Barrier_inter( MPID_Comm *comm_ptr, mpir_errflag_t *errflag )
+int MPIR_Barrier_inter( MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
     int rank, mpi_errno = MPI_SUCCESS, root;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -282,7 +282,7 @@ t-to-point messages.
 #define FUNCNAME MPIR_Barrier
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Barrier(MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+int MPIR_Barrier(MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -311,7 +311,7 @@ int MPIR_Barrier(MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 #define FUNCNAME MPIR_Barrier_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Barrier_impl(MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+int MPIR_Barrier_impl(MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Barrier != NULL)
@@ -370,7 +370,7 @@ int MPI_Barrier( MPI_Comm comm )
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_BARRIER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

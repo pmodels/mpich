@@ -55,7 +55,7 @@ MPID_Win_allocate(MPI_Aint     size,
 {
   int mpi_errno  = MPI_SUCCESS;
   int rc = MPI_SUCCESS;
-  mpir_errflag_t errflag = MPIR_ERR_NONE;
+  MPIR_Errflag_t errflag = MPIR_ERR_NONE;
   void *baseP; 
   static char FCNAME[] = "MPID_Win_allocate";
   MPIDI_Win_info  *winfo;

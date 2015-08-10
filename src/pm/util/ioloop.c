@@ -188,7 +188,7 @@ int MPIE_IOLoop( int timeoutSeconds )
 	}
 	if (nfds < 0) {
 	    /* Serious error */
-	    MPIU_Internal_sys_error_printf( "select", errno, 0 );
+	    MPL_internal_sys_error_printf( "select", errno, 0 );
 	    break;
 	}
 	if (nfds == 0) { 

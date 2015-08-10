@@ -11,7 +11,7 @@
 
 #define NULL_CONTEXT_ID -1
 
-static int barrier (MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
+static int barrier (MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag);
 static int alloc_barrier_vars (MPID_Comm *comm, MPID_nem_barrier_vars_t **vars);
 
 UT_array *coll_fns_array = NULL;
@@ -161,7 +161,7 @@ static int alloc_barrier_vars (MPID_Comm *comm, MPID_nem_barrier_vars_t **vars)
 #define FUNCNAME barrier
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static int barrier(MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+static int barrier(MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_barrier_vars_t *barrier_vars;

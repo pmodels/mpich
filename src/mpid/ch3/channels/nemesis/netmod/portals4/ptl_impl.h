@@ -177,9 +177,9 @@ int MPID_nem_ptl_init_id(MPIDI_VC_t *vc);
 int MPID_nem_ptl_get_ordering(int *ordering);
 
 int MPID_nem_ptl_lmt_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *rts_pkt, MPID_Request *req);
-int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPID_Request *rreq, MPID_IOV s_cookie);
-int MPID_nem_ptl_lmt_start_send(MPIDI_VC_t *vc, MPID_Request *sreq, MPID_IOV r_cookie);
-int MPID_nem_ptl_lmt_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV s_cookie);
+int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPID_Request *rreq, MPL_IOV s_cookie);
+int MPID_nem_ptl_lmt_start_send(MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV r_cookie);
+int MPID_nem_ptl_lmt_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV s_cookie);
 int MPID_nem_ptl_lmt_done_send(MPIDI_VC_t *vc, MPID_Request *req);
 int MPID_nem_ptl_lmt_done_recv(MPIDI_VC_t *vc, MPID_Request *req);
 

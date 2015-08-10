@@ -124,7 +124,7 @@ int MPID_Type_indexed(int count,
 	MPID_Datatype_get_ptr(oldtype, old_dtp);
 
 	/* Ensure that "builtin_element_size" fits into an int datatype. */
-	MPID_Ensure_Aint_fits_in_int(old_dtp->builtin_element_size);
+	MPIU_Ensure_Aint_fits_in_int(old_dtp->builtin_element_size);
 
 	el_sz   = old_dtp->builtin_element_size;
 	old_sz  = old_dtp->size;

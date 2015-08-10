@@ -85,7 +85,7 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, int count,
 		req_len = flat_buf->blocklens[b_index];
 
     ADIOI_Assert(req_len == (int) req_len);
-    ADIOI_Assert((((ADIO_Offset)(MPIR_Upint)buf) + userbuf_off) == (ADIO_Offset)(MPIR_Upint)((MPIR_Upint)buf + userbuf_off));
+    ADIOI_Assert((((ADIO_Offset)(MPIU_Upint)buf) + userbuf_off) == (ADIO_Offset)(MPIU_Upint)((MPIU_Upint)buf + userbuf_off));
 		ADIO_WriteContig(fd, 
 				(char *) buf + userbuf_off,
 				(int)req_len, 
@@ -246,7 +246,7 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, int count,
 		    req_len = fwr_size;
 
         ADIOI_Assert(req_len == (int) req_len);
-        ADIOI_Assert((((ADIO_Offset)(MPIR_Upint)buf) + userbuf_off) == (ADIO_Offset)(MPIR_Upint)((MPIR_Upint)buf + userbuf_off));
+        ADIOI_Assert((((ADIO_Offset)(MPIU_Upint)buf) + userbuf_off) == (ADIO_Offset)(MPIU_Upint)((MPIU_Upint)buf + userbuf_off));
 		    ADIO_WriteContig(fd, 
 				    (char *) buf + userbuf_off,
 				    (int)req_len, 
@@ -312,7 +312,7 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, int count,
 		    userbuf_off = i_offset;
 
         ADIOI_Assert(req_len == (int) req_len);
-        ADIOI_Assert((((ADIO_Offset)(MPIR_Upint)buf) + userbuf_off) == (ADIO_Offset)(MPIR_Upint)((MPIR_Upint)buf + userbuf_off));
+        ADIOI_Assert((((ADIO_Offset)(MPIU_Upint)buf) + userbuf_off) == (ADIO_Offset)(MPIU_Upint)((MPIU_Upint)buf + userbuf_off));
 		    ADIO_WriteContig(fd, 
 				    (char *) buf + userbuf_off,
 				    (int)req_len, 

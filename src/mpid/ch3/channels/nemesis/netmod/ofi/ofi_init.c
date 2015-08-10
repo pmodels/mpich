@@ -305,7 +305,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
 int MPID_nem_ofi_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    mpir_errflag_t ret = MPIR_ERR_NONE;
+    MPIR_Errflag_t ret = MPIR_ERR_NONE;
     BEGIN_FUNC(FCNAME);
 
     while(gl_data.rts_cts_in_flight) {
@@ -338,12 +338,12 @@ static inline int compile_time_checking()
 {
     OFI_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_vc_t) <= MPIDI_NEM_VC_NETMOD_AREA_LEN);
     OFI_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_req_t) <= MPIDI_NEM_REQ_NETMOD_AREA_LEN);
-    OFI_COMPILE_TIME_ASSERT(sizeof(iovec_t) == sizeof(MPID_IOV));
+    OFI_COMPILE_TIME_ASSERT(sizeof(iovec_t) == sizeof(MPL_IOV));
     MPIU_Assert(((void *) &(((iovec_t *) 0)->iov_base)) ==
-                ((void *) &(((MPID_IOV *) 0)->MPID_IOV_BUF)));
+                ((void *) &(((MPL_IOV *) 0)->MPL_IOV_BUF)));
     MPIU_Assert(((void *) &(((iovec_t *) 0)->iov_len)) ==
-                ((void *) &(((MPID_IOV *) 0)->MPID_IOV_LEN)));
-    MPIU_Assert(sizeof(((iovec_t *) 0)->iov_len) == sizeof(((MPID_IOV *) 0)->MPID_IOV_LEN));
+                ((void *) &(((MPL_IOV *) 0)->MPL_IOV_LEN)));
+    MPIU_Assert(sizeof(((iovec_t *) 0)->iov_len) == sizeof(((MPL_IOV *) 0)->MPL_IOV_LEN));
 
     /* ------------------------------------------------------------------------ */
     /* Generate the MPICH catalog files                                         */

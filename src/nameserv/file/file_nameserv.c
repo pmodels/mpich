@@ -175,7 +175,7 @@ int MPID_NS_Publish( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 	case ENOMEM:
 	    reason "Insufficient kernel memory available";
 	default:
-	    MPIU_Snprintf( rstr, sizeof(rstr), "errno = %d", errno );
+	    MPL_snprintf( rstr, sizeof(rstr), "errno = %d", errno );
 	}
 #endif
 	err = MPIR_Err_create_code( 

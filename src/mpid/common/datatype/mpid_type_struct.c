@@ -249,7 +249,7 @@ int MPID_Type_struct(int count,
 	    MPID_Datatype_get_ptr(oldtype_array[i], old_dtp);
 
 	    /* Ensure that "builtin_element_size" fits into an int datatype. */
-	    MPID_Ensure_Aint_fits_in_int(old_dtp->builtin_element_size);
+	    MPIU_Ensure_Aint_fits_in_int(old_dtp->builtin_element_size);
 
 	    tmp_el_sz   = old_dtp->builtin_element_size;
 	    tmp_el_type = old_dtp->basic_type;

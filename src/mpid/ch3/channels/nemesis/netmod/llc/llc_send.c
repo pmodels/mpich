@@ -90,11 +90,11 @@ int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
     /* Prepare bit-vector to perform tag-match. We use the same bit-vector as in CH3 layer. */
     /* See src/mpid/ch3/src/mpid_isend.c */
     *(int32_t *) ((uint8_t *) & cmd[0].tag) = tag;
-    *(MPIR_Context_id_t *) ((uint8_t *) & cmd[0].tag + sizeof(int32_t)) =
+    *(MPIU_Context_id_t *) ((uint8_t *) & cmd[0].tag + sizeof(int32_t)) =
         comm->context_id + context_offset;
-    MPIU_Assert(sizeof(LLC_tag_t) >= sizeof(int32_t) + sizeof(MPIR_Context_id_t));
-    memset((uint8_t *) & cmd[0].tag + sizeof(int32_t) + sizeof(MPIR_Context_id_t),
-           0, sizeof(LLC_tag_t) - sizeof(int32_t) - sizeof(MPIR_Context_id_t));
+    MPIU_Assert(sizeof(LLC_tag_t) >= sizeof(int32_t) + sizeof(MPIU_Context_id_t));
+    memset((uint8_t *) & cmd[0].tag + sizeof(int32_t) + sizeof(MPIU_Context_id_t),
+           0, sizeof(LLC_tag_t) - sizeof(int32_t) - sizeof(MPIU_Context_id_t));
 
     dprintf("llc_isend,tag=");
     for (i = 0; i < sizeof(LLC_tag_t); i++) {
@@ -199,16 +199,16 @@ int MPID_nem_llc_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_
 
     /* sreq: src/mpid/ch3/include/mpidpre.h */
     sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;
-    sreq->dev.iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) & sreq->dev.pending_pkt;
-    sreq->dev.iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
+    sreq->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) & sreq->dev.pending_pkt;
+    sreq->dev.iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
     sreq->dev.iov_count = 1;
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "IOV_LEN    = %d", (int) sreq->dev.iov[0].MPID_IOV_LEN);
+    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "IOV_LEN    = %d", (int) sreq->dev.iov[0].MPL_IOV_LEN);
     if (data_sz > 0) {
-        sreq->dev.iov[1].MPID_IOV_BUF = data;
-        sreq->dev.iov[1].MPID_IOV_LEN = data_sz;
+        sreq->dev.iov[1].MPL_IOV_BUF = data;
+        sreq->dev.iov[1].MPL_IOV_LEN = data_sz;
         sreq->dev.iov_count = 2;
         MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
-                       "IOV_LEN    = %d", (int) sreq->dev.iov[0].MPID_IOV_LEN);
+                       "IOV_LEN    = %d", (int) sreq->dev.iov[0].MPL_IOV_LEN);
     }
 
     vc_llc = VC_LLC(vc);
@@ -228,12 +228,12 @@ int MPID_nem_llc_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_
             MPIU_ERR_POP(mpi_errno);
         }
         MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
-                       "IOV_LEN    = %d", (int) sreq->dev.iov[0].MPID_IOV_LEN);
+                       "IOV_LEN    = %d", (int) sreq->dev.iov[0].MPL_IOV_LEN);
         if (!MPIDI_nem_llc_Rqst_iov_update(sreq, ret)) {
             need_to_queue = 2;  /* YYY */
         }
         MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
-                       "IOV_LEN    = %d", (int) sreq->dev.iov[0].MPID_IOV_LEN);
+                       "IOV_LEN    = %d", (int) sreq->dev.iov[0].MPL_IOV_LEN);
     }
 
   queue_it:
@@ -287,16 +287,16 @@ int MPID_nem_llc_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, MP
 
     /* sreq: src/mpid/ch3/include/mpidpre.h */
     sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;
-    sreq->dev.iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) & sreq->dev.pending_pkt;
-    sreq->dev.iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
+    sreq->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) & sreq->dev.pending_pkt;
+    sreq->dev.iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
     sreq->dev.iov_count = 1;
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "IOV_LEN    = %d", (int) sreq->dev.iov[0].MPID_IOV_LEN);
+    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "IOV_LEN    = %d", (int) sreq->dev.iov[0].MPL_IOV_LEN);
     if (data_sz > 0) {
-        sreq->dev.iov[1].MPID_IOV_BUF = data;
-        sreq->dev.iov[1].MPID_IOV_LEN = data_sz;
+        sreq->dev.iov[1].MPL_IOV_BUF = data;
+        sreq->dev.iov[1].MPL_IOV_LEN = data_sz;
         sreq->dev.iov_count = 2;
         MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
-                       "IOV_LEN    = %d", (int) sreq->dev.iov[1].MPID_IOV_LEN);
+                       "IOV_LEN    = %d", (int) sreq->dev.iov[1].MPL_IOV_LEN);
     }
 
     vc_llc = VC_LLC(vc);
@@ -356,10 +356,10 @@ int MPID_nem_llc_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     REQ_FIELD(sreq, rma_buf) = NULL;
 
     sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;
-    sreq->dev.iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) & sreq->dev.pending_pkt;
-    sreq->dev.iov[0].MPID_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
+    sreq->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) & sreq->dev.pending_pkt;
+    sreq->dev.iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
     sreq->dev.iov_count = 1;
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "IOV_LEN = %d", (int) sreq->dev.iov[0].MPID_IOV_LEN);
+    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "IOV_LEN = %d", (int) sreq->dev.iov[0].MPL_IOV_LEN);
 
     data_sz = sreq->dev.segment_size;
     if (data_sz > 0) {
@@ -368,10 +368,10 @@ int MPID_nem_llc_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
         MPID_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &data_sz,
                           (char *) REQ_FIELD(sreq, rma_buf));
 
-        sreq->dev.iov[1].MPID_IOV_BUF = REQ_FIELD(sreq, rma_buf);
-        sreq->dev.iov[1].MPID_IOV_LEN = data_sz;
+        sreq->dev.iov[1].MPL_IOV_BUF = REQ_FIELD(sreq, rma_buf);
+        sreq->dev.iov[1].MPL_IOV_LEN = data_sz;
         sreq->dev.iov_count = 2;
-        MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "IOV_LEN = %d", (int) sreq->dev.iov[1].MPID_IOV_LEN);
+        MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "IOV_LEN = %d", (int) sreq->dev.iov[1].MPL_IOV_LEN);
     }
 
     sreq->ch.vc = vc;
@@ -430,7 +430,7 @@ int MPID_nem_llc_send_queued(MPIDI_VC_t * vc, rque_t * send_queue)
         ssize_t ret = 0;
         MPID_Request *sreq;
         void *endpt = vc_llc->endpoint;
-        MPID_IOV *iovs;
+        MPL_IOV *iovs;
         int niov;
 
         sreq = MPIDI_CH3I_Sendq_head(*send_queue);
@@ -488,21 +488,21 @@ int MPIDI_nem_llc_Rqst_iov_update(MPID_Request * mreq, MPIDI_msg_sz_t consume)
 
     nv = mreq->dev.iov_count;
     for (iv = mreq->dev.iov_offset; iv < nv; iv++) {
-        MPID_IOV *iov = &mreq->dev.iov[iv];
+        MPL_IOV *iov = &mreq->dev.iov[iv];
 
         MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "iov_update() : iov[iv]    %d", iv);
         MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "iov_update() : consume b  %d", (int) consume);
         MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
-                       "iov_update() : iov_len b  %d", (int) iov->MPID_IOV_LEN);
-        if (iov->MPID_IOV_LEN > consume) {
-            iov->MPID_IOV_BUF = ((char *) iov->MPID_IOV_BUF) + consume;
-            iov->MPID_IOV_LEN -= consume;
+                       "iov_update() : iov_len b  %d", (int) iov->MPL_IOV_LEN);
+        if (iov->MPL_IOV_LEN > consume) {
+            iov->MPL_IOV_BUF = ((char *) iov->MPL_IOV_BUF) + consume;
+            iov->MPL_IOV_LEN -= consume;
             consume = 0;
             ret = FALSE;
             break;
         }
-        consume -= iov->MPID_IOV_LEN;
-        iov->MPID_IOV_LEN = 0;
+        consume -= iov->MPL_IOV_LEN;
+        iov->MPL_IOV_LEN = 0;
     }
     MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "iov_update() : consume %d", (int) consume);
 
@@ -1015,11 +1015,11 @@ int MPID_nem_llc_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
     /* Prepare bit-vector to perform tag-match. We use the same bit-vector as in CH3 layer. */
     /* See src/mpid/ch3/src/mpid_isend.c */
     *(int32_t *) ((uint8_t *) & cmd[0].tag) = tag;
-    *(MPIR_Context_id_t *) ((uint8_t *) & cmd[0].tag + sizeof(int32_t)) =
+    *(MPIU_Context_id_t *) ((uint8_t *) & cmd[0].tag + sizeof(int32_t)) =
         comm->context_id + context_offset;
-    MPIU_Assert(sizeof(LLC_tag_t) >= sizeof(int32_t) + sizeof(MPIR_Context_id_t));
-    memset((uint8_t *) & cmd[0].tag + sizeof(int32_t) + sizeof(MPIR_Context_id_t),
-           0, sizeof(LLC_tag_t) - sizeof(int32_t) - sizeof(MPIR_Context_id_t));
+    MPIU_Assert(sizeof(LLC_tag_t) >= sizeof(int32_t) + sizeof(MPIU_Context_id_t));
+    memset((uint8_t *) & cmd[0].tag + sizeof(int32_t) + sizeof(MPIU_Context_id_t),
+           0, sizeof(LLC_tag_t) - sizeof(int32_t) - sizeof(MPIU_Context_id_t));
 
     dprintf("llc_isend,tag=");
     for (i = 0; i < sizeof(LLC_tag_t); i++) {

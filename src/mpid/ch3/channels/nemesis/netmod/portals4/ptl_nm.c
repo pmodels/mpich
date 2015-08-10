@@ -615,7 +615,7 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
         break;
 
     default:
-        MPIU_Error_printf("Received unexpected event type: %d %s\n", e->type, MPID_nem_ptl_strevent(e));
+        MPL_error_printf("Received unexpected event type: %d %s\n", e->type, MPID_nem_ptl_strevent(e));
         MPIU_ERR_INTERNALANDJUMP(mpi_errno, "Unexpected event type");
         break;
     }

@@ -410,7 +410,7 @@ int MPID_GPID_ToLpidArray( int size, int gpid[], int lpid[] )
 		/* Internal error.  This gpid is unknown on this process */
 		/* A printf is NEVER valid in code that might be executed
 		   by the user, even in an error case (use 
-		   MPIU_Internal_error_printf if you need to print
+		   MPL_internal_error_printf if you need to print
 		   an error message and its not appropriate to use the
 		   regular error code system */
 		/* printf("No matching pg foung for id = %d\n", pgid ); */
@@ -552,7 +552,7 @@ int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr,
     int i, allfound = 1, pgid, pgidWorld;
     MPIDI_PG_t *pg = 0;
     MPIDI_PG_iterator iter;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     
     /* Get the pgid for CommWorld (always attached to the first process 
        group) */
@@ -710,7 +710,7 @@ static int publish_node_id(MPIDI_PG_t *pg, int our_pg_rank)
     if (pg->size > 1)
     {
         memset(key, 0, key_max_sz);
-        MPIU_Snprintf(key, key_max_sz, "hostname[%d]", our_pg_rank);
+        MPL_snprintf(key, key_max_sz, "hostname[%d]", our_pg_rank);
 
         pmi_errno = PMI_KVS_Put(kvs_name, key, MPIU_hostname);
         MPIU_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_put", "**pmi_kvs_put %d", pmi_errno);
@@ -1202,12 +1202,12 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
         if (i == our_pg_rank)
         {
             /* This is us, no need to perform a get */
-            MPIU_Snprintf(node_names[g_num_nodes], key_max_sz, "%s", MPIU_hostname);
+            MPL_snprintf(node_names[g_num_nodes], key_max_sz, "%s", MPIU_hostname);
         }
         else
         {
             memset(key, 0, key_max_sz);
-            MPIU_Snprintf(key, key_max_sz, "hostname[%d]", i);
+            MPL_snprintf(key, key_max_sz, "hostname[%d]", i);
 
             pmi_errno = PMI_KVS_Get(kvs_name, key, node_names[g_num_nodes], key_max_sz);
             MPIU_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);

@@ -46,7 +46,7 @@ int MPIDU_Sock_get_host_description(int myRank,
 	   the process manager only delievers the same values for the 
 	   environment to each process */
 	char namebuf[1024];
-	MPIU_Snprintf( namebuf, sizeof(namebuf), 
+	MPL_snprintf( namebuf, sizeof(namebuf), 
 		       "MPICH_INTERFACE_HOSTNAME_R_%d", myRank );
 	env_hostname = getenv( namebuf );
     }
@@ -335,7 +335,7 @@ int MPIDU_Sock_get_error_class_string(int error, char *error_string, size_t leng
 	MPIU_Strncpy(error_string, "no new connection available", length);
 	break;
     default:
-	MPIU_Snprintf(error_string, length, "unknown socket error %d", error);
+	MPL_snprintf(error_string, length, "unknown socket error %d", error);
 	break;
     }
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_SOCK_GET_ERROR_CLASS_STRING);

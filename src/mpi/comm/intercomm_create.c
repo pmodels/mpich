@@ -124,13 +124,13 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
                                MPID_Comm **new_intercomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Context_id_t final_context_id, recvcontext_id;
+    MPIU_Context_id_t final_context_id, recvcontext_id;
     int remote_size, *remote_lpids=0, *remote_gpids=0, singlePG;
     int local_size, *local_gpids=0, *local_lpids=0;
     int comm_info[3];
     int is_low_group = 0;
     int cts_tag;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIU_CHKLMEM_DECL(4);
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_INTERCOMM_CREATE_IMPL);
 
@@ -242,10 +242,10 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
     /* Leaders can now swap context ids and then broadcast the value
        to the local group of processes */
     if (local_comm_ptr->rank == local_leader) {
-        MPIR_Context_id_t remote_context_id;
+        MPIU_Context_id_t remote_context_id;
 
-        mpi_errno = MPIC_Sendrecv( &recvcontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, cts_tag,
-                                      &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, cts_tag,
+        mpi_errno = MPIC_Sendrecv( &recvcontext_id, 1, MPIU_CONTEXT_ID_T_DATATYPE, remote_leader, cts_tag,
+                                      &remote_context_id, 1, MPIU_CONTEXT_ID_T_DATATYPE, remote_leader, cts_tag,
                                       peer_comm_ptr, MPI_STATUS_IGNORE, &errflag );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 

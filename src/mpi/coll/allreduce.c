@@ -149,7 +149,7 @@ MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[] = {
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int allreduce_intra_or_coll_fn(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
-                                             MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+                                             MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -183,7 +183,7 @@ int MPIR_Allreduce_intra (
     MPI_Datatype datatype, 
     MPI_Op op, 
     MPID_Comm *comm_ptr,
-    mpir_errflag_t *errflag )
+    MPIR_Errflag_t *errflag )
 {
 #ifdef MPID_HAS_HETERO
     int is_homogeneous;
@@ -315,7 +315,7 @@ int MPIR_Allreduce_intra (
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
         MPID_Datatype_get_extent_macro(datatype, extent);
 
-        MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+        MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
         MPIU_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
 	
         /* adjust for potential negative lower bound in datatype */
@@ -624,7 +624,7 @@ int MPIR_Allreduce_inter (
     MPI_Datatype datatype, 
     MPI_Op op, 
     MPID_Comm *comm_ptr,
-    mpir_errflag_t *errflag )
+    MPIR_Errflag_t *errflag )
 {
 /* Intercommunicator Allreduce.
    We first do intracommunicator reduces to rank 0 on left and right
@@ -646,7 +646,7 @@ int MPIR_Allreduce_inter (
         /* I think this is the worse case, so we can avoid an assert()
          * inside the for loop */
         /* Should MPIU_CHKLMEM_MALLOC do this? */
-        MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+        MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
         MPIU_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - true_lb);
@@ -714,7 +714,7 @@ int MPIR_Allreduce_inter (
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                   MPI_Op op, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+                   MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -745,7 +745,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Allreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
-                        mpir_errflag_t *errflag)
+                        MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -816,7 +816,7 @@ int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
     static const char FCNAME[] = "MPI_Allreduce";
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ALLREDUCE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

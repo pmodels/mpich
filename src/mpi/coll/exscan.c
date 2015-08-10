@@ -91,7 +91,7 @@ int MPIR_Exscan (
     MPI_Datatype datatype,
     MPI_Op op,
     MPID_Comm *comm_ptr,
-    mpir_errflag_t *errflag )
+    MPIR_Errflag_t *errflag )
 {
     MPI_Status status;
     int        rank, comm_size;
@@ -238,7 +238,7 @@ fn_fail:
 #define FUNCNAME MPIR_Exscan_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Exscan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
+int MPIR_Exscan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -305,7 +305,7 @@ int MPI_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_EXSCAN);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

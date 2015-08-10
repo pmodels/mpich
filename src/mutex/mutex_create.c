@@ -11,7 +11,6 @@
 #include <strings.h>
 
 #include <mpi.h>
-#include <mpitypedefs.h>
 #include "muteximpl.h"
 
 

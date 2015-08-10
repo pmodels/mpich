@@ -1769,13 +1769,13 @@ BOOL LoadMPILibrary()
 	    /* ignore the sock channel since it is the default and is not named mpichsock.dll */
 	    if (strncmp(channel, "sock", 5))
 	    {
-		MPIU_Snprintf(name, MAX_DLL_NAME, DLL_FORMAT_STRING, channel);
+		MPL_snprintf(name, MAX_DLL_NAME, DLL_FORMAT_STRING, channel);
 		dll_name = name;
 	    }
         else
         {
             /* FIXME: Get rid of dlls without a channel substring in the name */
-    		MPIU_Snprintf(name, MAX_DLL_NAME, "%s", MPI_SOCK_CHANNEL_DLL_NAME);
+    		MPL_snprintf(name, MAX_DLL_NAME, "%s", MPI_SOCK_CHANNEL_DLL_NAME);
 	    	dll_name = name;
         }
 	}

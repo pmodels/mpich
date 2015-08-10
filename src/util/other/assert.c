@@ -21,7 +21,7 @@ int MPIR_Assert_fail(const char *cond, const char *file_name, int line_num)
 {
     MPL_VG_PRINTF_BACKTRACE("Assertion failed in file %s at line %d: %s\n",
                             file_name, line_num, cond);
-    MPIU_Internal_error_printf("Assertion failed in file %s at line %d: %s\n",
+    MPL_internal_error_printf("Assertion failed in file %s at line %d: %s\n",
                                file_name, line_num, cond);
     MPIU_DBG_MSG_FMT(ALL, TERSE,
                      (MPIU_DBG_FDEST,
@@ -43,9 +43,9 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
                             file_name, line_num, cond);
     MPL_VG_PRINTF_BACKTRACE("%s\n", msg);
 
-    MPIU_Internal_error_printf("Assertion failed in file %s at line %d: %s\n",
+    MPL_internal_error_printf("Assertion failed in file %s at line %d: %s\n",
                                file_name, line_num, cond);
-    MPIU_Internal_error_printf("%s\n", msg);
+    MPL_internal_error_printf("%s\n", msg);
 
     MPIU_DBG_MSG_FMT(ALL, TERSE,
                      (MPIU_DBG_FDEST,

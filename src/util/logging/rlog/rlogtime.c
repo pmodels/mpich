@@ -13,7 +13,7 @@
 #include "mpi.h"
 
 #include "mpichconf.h"
-#include "mpimem.h" /* for MPIU_Snprintf */
+#include "mpimem.h" /* for MPL_snprintf */
 #include "rlog.h"
 #include <math.h>
 #include <stdlib.h>
@@ -130,7 +130,7 @@ static char *get_random_color_str(void)
 {
     unsigned char r,g,b;
     random_color(&r, &g, &b);
-    MPIU_Snprintf(random_color_str, sizeof(random_color_str),
+    MPL_snprintf(random_color_str, sizeof(random_color_str),
 		  "%3d %3d %3d", (int)r, (int)g, (int)b);
     return random_color_str;
 }
@@ -184,9 +184,9 @@ int MPIU_Timer_finalize()
        there be a strong desire to provide this output, it should be
        made optional, turned on (off by default) with a runtime parameter.
      */
-    /* MPIU_Msg_printf( "Writing logfile.\n");fflush(stdout); */
+    /* MPL_msg_printf( "Writing logfile.\n");fflush(stdout); */
     RLOG_FinishLog(g_pRLOG);
-    /* MPIU_Msg_printf("finished.\n");fflush(stdout); */
+    /* MPL_msg_printf("finished.\n");fflush(stdout); */
     s_RLOG_Initialized = 0;
 
     return MPI_SUCCESS;

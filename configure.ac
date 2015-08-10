@@ -4635,19 +4635,6 @@ fi
 
 PAC_C_MACRO_VA_ARGS
 
-dnl
-dnl If internationalization selected, try to find the needed functions
-dnl if test "$enable_internat" = "yes" ; then
-dnl     AC_CHECK_HEADERS(libintl.h)
-dnl     AC_CHECK_FUNCS(gettext dgettext)
-dnl     if test "$ac_cv_header_libintl" = "yes" -a \
-dnl 	    "$ac_cv_func_gettext" = "yes" -a \
-dnl 	    "$ac_cv_func_dgettext" = "yes" ; then
-dnl 	AC_DEFINE(USE_GETTEXT,1,[Define if messages should use gettext])
-dnl     else
-dnl         AC_MSG_WARN([Cannot use internationalization because necessary headers and functions are not available])
-dnl     fi
-dnl fi
 # Check for alloca function.  May set HAVE_ALLOCA_H and HAVE_ALLOCA
 AC_FUNC_ALLOCA
 # We don't use alloca unless USE_ALLOCA is also set.
@@ -5106,41 +5093,41 @@ for type in int long long_long short ; do
     if test "$len" = "$ac_cv_sizeof_void_p" ; then
         case $type in
             int)
-                MPIR_PINT_FMT_DEC_SPEC="\"%d\""
-                MPIR_UPINT_FMT_DEC_SPEC="\"%u\""
+                MPIU_PINT_FMT_DEC_SPEC="\"%d\""
+                MPIU_UPINT_FMT_DEC_SPEC="\"%u\""
                 ;;
             long)
-                MPIR_PINT_FMT_DEC_SPEC="\"%ld\""
-                MPIR_UPINT_FMT_DEC_SPEC="\"%lu\""
+                MPIU_PINT_FMT_DEC_SPEC="\"%ld\""
+                MPIU_UPINT_FMT_DEC_SPEC="\"%lu\""
                 ;;
             long_long)
-                MPIR_PINT_FMT_DEC_SPEC="\"%lld\""
-                MPIR_UPINT_FMT_DEC_SPEC="\"%llu\""
+                MPIU_PINT_FMT_DEC_SPEC="\"%lld\""
+                MPIU_UPINT_FMT_DEC_SPEC="\"%llu\""
                 ;;
             short)
-                MPIR_PINT_FMT_DEC_SPEC="\"%hd\""
-                MPIR_UPINT_FMT_DEC_SPEC="\"%hu\""
+                MPIU_PINT_FMT_DEC_SPEC="\"%hd\""
+                MPIU_UPINT_FMT_DEC_SPEC="\"%hu\""
                 ;;
             *)
-                AC_MSG_WARN([unable to determine format specifiers for MPIR_Pint, defaulting to int])
-                MPIR_PINT_FMT_DEC_SPEC="\"%d\""
-                MPIR_UPINT_FMT_DEC_SPEC="\"%u\""
+                AC_MSG_WARN([unable to determine format specifiers for MPIU_Pint, defaulting to int])
+                MPIU_PINT_FMT_DEC_SPEC="\"%d\""
+                MPIU_UPINT_FMT_DEC_SPEC="\"%u\""
             ;;
         esac
-        MPIR_PINT=`echo $type | sed -e 's/_/ /'`
+        MPIU_PINT=`echo $type | sed -e 's/_/ /'`
         break
     fi
 done
-AC_DEFINE_UNQUOTED(MPIR_Pint,$MPIR_PINT,[MPIR_Pint is a pointer-sized integer])
-# allow @MPIR_PINT@ substitution in glue_romio.h
-AC_SUBST([MPIR_PINT])
+AC_DEFINE_UNQUOTED(MPIU_Pint,$MPIU_PINT,[MPIU_Pint is a pointer-sized integer])
+# allow @MPIU_PINT@ substitution in glue_romio.h
+AC_SUBST([MPIU_PINT])
 
-AC_DEFINE_UNQUOTED(MPIR_PINT_FMT_DEC_SPEC,
-    $MPIR_PINT_FMT_DEC_SPEC,[MPIR_PINT_FMT_DEC_SPEC is the format
+AC_DEFINE_UNQUOTED(MPIU_PINT_FMT_DEC_SPEC,
+    $MPIU_PINT_FMT_DEC_SPEC,[MPIU_PINT_FMT_DEC_SPEC is the format
     specifier for printing Pint as a decimal])
-AC_DEFINE_UNQUOTED(MPIR_Upint,unsigned $MPIR_PINT,[MPIR_Upint is an unsigned pointer-sized integer])
-AC_DEFINE_UNQUOTED(MPIR_UPINT_FMT_DEC_SPEC,
-    $MPIR_UPINT_FMT_DEC_SPEC,[MPIR_UPINT_FMT_DEC_SPEC is the format
+AC_DEFINE_UNQUOTED(MPIU_Upint,unsigned $MPIU_PINT,[MPIU_Upint is an unsigned pointer-sized integer])
+AC_DEFINE_UNQUOTED(MPIU_UPINT_FMT_DEC_SPEC,
+    $MPIU_UPINT_FMT_DEC_SPEC,[MPIU_UPINT_FMT_DEC_SPEC is the format
     specifier for printing Upint as a decimal])
 
 # ----------------------------------------------------------------------------
@@ -5168,7 +5155,7 @@ export MPI_F77_AINT
 # ----------------------------------------------------------------------------
 
 # define MPIU_Size_t - used to express the size of objects
-# This is used in src/include/mpitypedefs.h to define MPIU_SIZE_T, 
+# This is used in mpiu_type_defs.h to define MPIU_SIZE_T, 
 # and is used in various parts of ch3 and mpid/common/sock.  
 # This is used to handle the potential problem that a message is 
 # too long to fit with an int.  However, we may still need to make

@@ -223,7 +223,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     MPI_Datatype target_datatype;
     MPID_Datatype *target_dtp = NULL, *origin_dtp = NULL;
     int is_origin_contig;
-    MPID_IOV iov[MPID_IOV_LIMIT];
+    MPL_IOV iov[MPL_IOV_LIMIT];
     int iovcnt = 0;
     MPID_Request *req = NULL;
     MPI_Aint dt_true_lb;
@@ -268,8 +268,8 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
         dt_true_lb = 0;
     }
 
-    iov[iovcnt].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) & (rma_op->pkt);
-    iov[iovcnt].MPID_IOV_LEN = sizeof(rma_op->pkt);
+    iov[iovcnt].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) & (rma_op->pkt);
+    iov[iovcnt].MPL_IOV_LEN = sizeof(rma_op->pkt);
     iovcnt++;
 
     MPIDI_CH3_PKT_RMA_GET_FLAGS(rma_op->pkt, flags, mpi_errno);
@@ -282,9 +282,9 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
          */
 
         if (is_empty_origin == FALSE) {
-            iov[iovcnt].MPID_IOV_BUF =
-                (MPID_IOV_BUF_CAST) ((char *) rma_op->origin_addr + dt_true_lb + stream_offset);
-            iov[iovcnt].MPID_IOV_LEN = stream_size;
+            iov[iovcnt].MPL_IOV_BUF =
+                (MPL_IOV_BUF_CAST) ((char *) rma_op->origin_addr + dt_true_lb + stream_offset);
+            iov[iovcnt].MPL_IOV_LEN = stream_size;
             iovcnt++;
         }
 
@@ -333,9 +333,9 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
         /* origin data is contiguous */
 
         if (is_empty_origin == FALSE) {
-            iov[iovcnt].MPID_IOV_BUF =
-                (MPID_IOV_BUF_CAST) ((char *) rma_op->origin_addr + dt_true_lb + stream_offset);
-            iov[iovcnt].MPID_IOV_LEN = stream_size;
+            iov[iovcnt].MPL_IOV_BUF =
+                (MPL_IOV_BUF_CAST) ((char *) rma_op->origin_addr + dt_true_lb + stream_offset);
+            iov[iovcnt].MPL_IOV_LEN = stream_size;
             iovcnt++;
         }
 
@@ -359,7 +359,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
         req->dev.OnDataAvail = 0;
 
         MPIU_THREAD_CS_ENTER(CH3COMM, vc);
-        mpi_errno = vc->sendNoncontig_fn(vc, req, iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN);
+        mpi_errno = vc->sendNoncontig_fn(vc, req, iov[0].MPL_IOV_BUF, iov[0].MPL_IOV_LEN);
         MPIU_THREAD_CS_EXIT(CH3COMM, vc);
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
@@ -884,7 +884,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     MPID_Request *curr_req = NULL;
     MPIDI_CH3_Ext_pkt_get_derived_t *ext_hdr_ptr = NULL;
     MPI_Aint ext_hdr_sz = 0;
-    MPID_IOV iov[MPID_IOV_LIMIT];
+    MPL_IOV iov[MPL_IOV_LIMIT];
     MPIDI_STATE_DECL(MPID_STATE_ISSUE_GET_OP);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_ISSUE_GET_OP);
@@ -949,10 +949,10 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         /* Set dataloop size in pkt header */
         MPIDI_CH3_PKT_RMA_SET_DATALOOP_SIZE(rma_op->pkt, dtp->dataloop_size, mpi_errno);
 
-        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_pkt;
-        iov[0].MPID_IOV_LEN = sizeof(*get_pkt);
-        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ext_hdr_ptr;
-        iov[1].MPID_IOV_LEN = ext_hdr_sz;
+        iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) get_pkt;
+        iov[0].MPL_IOV_LEN = sizeof(*get_pkt);
+        iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) ext_hdr_ptr;
+        iov[1].MPL_IOV_LEN = ext_hdr_sz;
 
         MPIU_THREAD_CS_ENTER(CH3COMM, vc);
         mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, 2, &req);
