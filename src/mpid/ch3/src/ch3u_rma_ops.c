@@ -194,7 +194,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         if (MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD >= 0 &&
             MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
             while (MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
-                mpi_errno = poke_progress_engine();
+                mpi_errno = wait_progress_engine();
                 if (mpi_errno != MPI_SUCCESS)
                     MPIU_ERR_POP(mpi_errno);
             }
@@ -363,7 +363,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         if (MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD >= 0 &&
             MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
             while (MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
-                mpi_errno = poke_progress_engine();
+                mpi_errno = wait_progress_engine();
                 if (mpi_errno != MPI_SUCCESS)
                     MPIU_ERR_POP(mpi_errno);
             }
@@ -574,7 +574,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         if (MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD >= 0 &&
             MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
             while (MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
-                mpi_errno = poke_progress_engine();
+                mpi_errno = wait_progress_engine();
                 if (mpi_errno != MPI_SUCCESS)
                     MPIU_ERR_POP(mpi_errno);
             }
@@ -826,7 +826,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
         if (MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD >= 0 &&
             MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
             while (MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
-                mpi_errno = poke_progress_engine();
+                mpi_errno = wait_progress_engine();
                 if (mpi_errno != MPI_SUCCESS)
                     MPIU_ERR_POP(mpi_errno);
             }
@@ -1073,7 +1073,7 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         if (MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD >= 0 &&
             MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
             while (MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
-                mpi_errno = poke_progress_engine();
+                mpi_errno = wait_progress_engine();
                 if (mpi_errno != MPI_SUCCESS)
                     MPIU_ERR_POP(mpi_errno);
             }
@@ -1215,7 +1215,7 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
         if (MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD >= 0 &&
             MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
             while (MPIDI_CH3I_RMA_Active_req_cnt >= MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD) {
-                mpi_errno = poke_progress_engine();
+                mpi_errno = wait_progress_engine();
                 if (mpi_errno != MPI_SUCCESS)
                     MPIU_ERR_POP(mpi_errno);
             }
