@@ -29,6 +29,7 @@ int MPIDI_CH3_Req_handler_rma_op_complete(MPID_Request * sreq)
     MPID_Win_get_ptr(sreq->dev.source_win_handle, win_ptr);
     MPIU_Assert(win_ptr != NULL);
     MPIDI_CH3I_RMA_Active_req_cnt--;
+    MPIU_Assert(MPIDI_CH3I_RMA_Active_req_cnt >= 0);
 
     if (sreq->dev.request_handle != MPI_REQUEST_NULL) {
         /* get user request */
