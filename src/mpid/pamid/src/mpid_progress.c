@@ -23,8 +23,14 @@
 
 #define MAX_PROGRESS_HOOKS 16
 typedef int (*progress_func_ptr_t) (int* made_progress);
-static progress_func_ptr_t  progress_hooks[MAX_PROGRESS_HOOKS] = { NULL };
-static int total_progress_hook_cnt = 0; /* Keep track of how many progress hooks are currently registered */
+
+typedef struct progress_hook_slot {
+    progress_func_ptr_t func_ptr;
+    int active;
+} progress_hook_slot_t;
+
+static progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
+static int total_progress_hook_cnt = 0; /* Keep track of how many progress hooks are currently activated */
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Progress_register_hook
@@ -40,12 +46,9 @@ int MPIDI_Progress_register_hook(int (*progress_fn)(int*), int *id)
     MPIU_THREAD_CS_ENTER(ASYNC,);
 
     for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
-        if (progress_hooks[i] == NULL) {
-            progress_hooks[i] = progress_fn;
-
-            total_progress_hook_cnt++;
-            MPIU_Assert(total_progress_hook_cnt <= MAX_PROGRESS_HOOKS);
-
+        if (progress_hooks[i].func_ptr == NULL) {
+            progress_hooks[i].func_ptr = progress_fn;
+            progress_hooks[i].active = FALSE;
             break;
         }
     }
@@ -79,16 +82,71 @@ int MPIDI_Progress_deregister_hook(int id)
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_PROGRESS_DEREGISTER_HOOK);
     MPIU_THREAD_CS_ENTER(ASYNC,);
 
-    MPIU_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS && progress_hooks[id] != NULL);
+    MPIU_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS && progress_hooks[id].func_ptr != NULL);
 
-    progress_hooks[id] = NULL;
+    progress_hooks[id].func_ptr = NULL;
+    progress_hooks[id].active = FALSE;
+
+  fn_exit:
+    MPIU_THREAD_CS_EXIT(ASYNC,);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_PROGRESS_DEREGISTER_HOOK);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Progress_activate_hook
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIDI_CH3I_Progress_activate_hook(int id)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_ACTIVATE_HOOK);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_ACTIVATE_HOOK);
+    MPIU_THREAD_CS_ENTER(MPIDCOMM,);
+
+    MPIU_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS &&
+                progress_hooks[id].active == FALSE && progress_hooks[id].func_ptr != NULL);
+    progress_hooks[id].active = TRUE;
+
+    total_progress_hook_cnt++;
+    MPIU_Assert(total_progress_hook_cnt <= MAX_PROGRESS_HOOKS);
+
+  fn_exit:
+    MPIU_THREAD_CS_EXIT(MPIDCOMM,);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_ACTIVATE_HOOK);
+    return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Progress_deactivate_hook
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIDI_CH3I_Progress_deactivate_hook(int id)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_DEACTIVATE_HOOK);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_DEACTIVATE_HOOK);
+    MPIU_THREAD_CS_ENTER(MPIDCOMM,);
+
+    MPIU_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS &&
+                progress_hooks[id].active == TRUE && progress_hooks[id].func_ptr != NULL);
+    progress_hooks[id].active = FALSE;
 
     total_progress_hook_cnt--;
     MPIU_Assert(total_progress_hook_cnt >= 0);
 
   fn_exit:
-    MPIU_THREAD_CS_EXIT(ASYNC,);
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_PROGRESS_DEREGISTER_HOOK);
+    MPIU_THREAD_CS_EXIT(MPIDCOMM,);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_DEACTIVATE_HOOK);
     return mpi_errno;
 
   fn_fail:
@@ -106,6 +164,7 @@ MPIDI_Progress_init()
    * function is ignored if async progress is disabled.
    */
   pamix_progress_function progress_fn = MPIDI_Progress_async_poll;
+  uintptr_t i;
 
 #if (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT)
   /* In the "per object" mpich lock mode the only possible progress functions
@@ -145,7 +204,6 @@ MPIDI_Progress_init()
       TRACE_ERR("Async advance beginning...\n");
 
       /* Enable async progress on all contexts.*/
-      uintptr_t i;
       for (i=0; i<MPIDI_Process.avail_contexts; ++i)
         {
           PAMIX_Progress_register(MPIDI_Context[i],
@@ -156,6 +214,13 @@ MPIDI_Progress_init()
           PAMIX_Progress_enable(MPIDI_Context[i], async_progress_type);
         }
       TRACE_ERR("Async advance enabled\n");
+    }
+
+  /* Initialize progress hook slots */
+  for (i = 0; i < MAX_PROGRESS_HOOKS; i++)
+    {
+      progress_hooks[i].func_ptr = NULL;
+      progress_hooks[i].active = FALSE;
     }
 }
 
@@ -241,8 +306,9 @@ MPIDI_Progress_async_poll (pami_context_t context, void *cookie)
     {
       called_progress_hook_cnt = 0;
       for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
-        if (progress_hooks[i] != NULL) {
-          progress_hooks[i](&made_progress);
+        if (progress_hooks[i].active == TRUE) {
+          MPIU_Assert(progress_hooks[i].func_ptr != NULL);
+          progress_hooks[i].func_ptr(&made_progress);
 
           called_progress_hook_cnt++;
           if (called_progress_hook_cnt == total_progress_hook_cnt)
@@ -277,8 +343,9 @@ MPIDI_Progress_async_poll_perobj (pami_context_t context, void *cookie)
   int called_progress_hook_cnt = 0;
 
   for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
-    if (progress_hooks[i] != NULL) {
-      progress_hooks[i](&made_progress);
+    if (progress_hooks[i].active == TRUE) {
+      MPIU_Assert(progress_hooks[i].func_ptr != NULL);
+      progress_hooks[i].func_ptr(&made_progress);
 
       called_progress_hook_cnt++;
       if (called_progress_hook_cnt == total_progress_hook_cnt)

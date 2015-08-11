@@ -187,7 +187,11 @@ MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2);
 
 int MPIDI_Progress_register_hook(int (*progress_fn)(int*), int *id);
 int MPIDI_Progress_deregister_hook(int id);
+int MPIDI_Progress_activate_hook(int id);
+int MPIDI_Progress_deactivate_hook(int id);
 
 #define MPID_Progress_register_hook(fn_, id_) MPIDI_Progress_register_hook(fn_, id_)
 #define MPID_Progress_deregister_hook(id_) MPIDI_Progress_deregister_hook(id_)
+#define MPID_Progress_activate_hook(id_) MPIDI_Progress_activate_hook(id_)
+#define MPID_Progress_deactivate_hook(id_) MPIDI_Progress_deactivate_hook(id_)
 #endif

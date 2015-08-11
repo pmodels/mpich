@@ -415,6 +415,8 @@ int MPID_Sched_start(MPID_Sched_t *sp, MPID_Comm *comm, int tag, MPID_Request **
         mpi_errno = MPID_Progress_register_hook(MPIDU_Sched_progress,
                                                 &nbc_progress_hook_id);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        MPID_Progress_activate_hook(nbc_progress_hook_id);
     }
     MPL_DL_APPEND(all_schedules.head, s);
 
@@ -944,8 +946,10 @@ int MPIDU_Sched_progress(int *made_progress)
     int mpi_errno;
 
     mpi_errno = MPIDU_Sched_progress_state(&all_schedules, made_progress);
-    if (!mpi_errno && all_schedules.head == NULL)
+    if (!mpi_errno && all_schedules.head == NULL) {
+        MPID_Progress_deactivate_hook(nbc_progress_hook_id);
         MPID_Progress_deregister_hook(nbc_progress_hook_id);
+    }
 
     return mpi_errno;
 }

@@ -120,6 +120,11 @@ static inline int MPIDI_CH3I_Win_set_active(MPID_Win * win_ptr)
     if (win_ptr->active == FALSE) {
         win_ptr->active = TRUE;
 
+        if (MPIDI_RMA_Win_active_list_head == NULL) {
+            /* This is the first active window, activate RMA progress */
+            MPID_Progress_activate_hook(MPIDI_CH3I_RMA_Progress_hook_id);
+        }
+
         MPL_DL_DELETE(MPIDI_RMA_Win_inactive_list_head, win_ptr);
         MPL_DL_APPEND(MPIDI_RMA_Win_active_list_head, win_ptr);
     }
@@ -143,6 +148,11 @@ static inline int MPIDI_CH3I_Win_set_inactive(MPID_Win * win_ptr)
         win_ptr->active = FALSE;
         MPL_DL_DELETE(MPIDI_RMA_Win_active_list_head, win_ptr);
         MPL_DL_APPEND(MPIDI_RMA_Win_inactive_list_head, win_ptr);
+
+        if (MPIDI_RMA_Win_active_list_head == NULL) {
+            /* This is the last active window, de-activate RMA progress */
+            MPID_Progress_deactivate_hook(MPIDI_CH3I_RMA_Progress_hook_id);
+        }
     }
 
   fn_exit:
