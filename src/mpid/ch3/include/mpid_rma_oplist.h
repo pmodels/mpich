@@ -109,8 +109,6 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
      &(win_ptr_)->slots[(rank_) % (win_ptr_)->num_slots] :              \
      &(win_ptr_)->slots[(rank_)])
 
-static int rma_progress_hook_id = 0;
-
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Win_set_active
 #undef FCNAME
@@ -121,15 +119,6 @@ static inline int MPIDI_CH3I_Win_set_active(MPID_Win * win_ptr)
 
     if (win_ptr->active == FALSE) {
         win_ptr->active = TRUE;
-
-        /* If this is the first active window, register RMA progress */
-        if (MPIDI_RMA_Win_active_list_head == NULL) {
-            mpi_errno = MPID_Progress_register_hook(MPIDI_CH3I_RMA_Make_progress_global,
-                                                    &rma_progress_hook_id);
-            if (mpi_errno) {
-                MPIU_ERR_POP(mpi_errno);
-            }
-        }
 
         MPL_DL_DELETE(MPIDI_RMA_Win_inactive_list_head, win_ptr);
         MPL_DL_APPEND(MPIDI_RMA_Win_active_list_head, win_ptr);
@@ -154,14 +143,6 @@ static inline int MPIDI_CH3I_Win_set_inactive(MPID_Win * win_ptr)
         win_ptr->active = FALSE;
         MPL_DL_DELETE(MPIDI_RMA_Win_active_list_head, win_ptr);
         MPL_DL_APPEND(MPIDI_RMA_Win_inactive_list_head, win_ptr);
-
-        /* This is the last active window, de-register RMA progress */
-        if (MPIDI_RMA_Win_active_list_head == NULL) {
-            mpi_errno = MPID_Progress_deregister_hook(rma_progress_hook_id);
-            if (mpi_errno != MPI_SUCCESS) {
-                MPIU_ERR_POP(mpi_errno);
-            }
-        }
     }
 
   fn_exit:

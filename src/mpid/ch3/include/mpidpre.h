@@ -352,6 +352,7 @@ typedef struct MPIDI_Win_basic_info {
 extern struct MPID_Win *MPIDI_RMA_Win_active_list_head, *MPIDI_RMA_Win_inactive_list_head;
 
 extern int MPIDI_CH3I_RMA_Active_req_cnt;
+extern int MPIDI_CH3I_RMA_Progress_hook_id;
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \

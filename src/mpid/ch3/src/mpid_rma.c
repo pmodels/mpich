@@ -48,6 +48,9 @@ MPID_Win *MPIDI_RMA_Win_active_list_head = NULL, *MPIDI_RMA_Win_inactive_list_he
  * internal requests in RMA infrastructure. */
 int MPIDI_CH3I_RMA_Active_req_cnt = 0;
 
+/* This variable stores the index of RMA progress hook in progress hook array */
+int MPIDI_CH3I_RMA_Progress_hook_id = 0;
+
 static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, MPID_Info * info,
                     MPID_Comm * comm_ptr, MPID_Win ** win_ptr);
 
@@ -355,6 +358,15 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
     for (i = 0; i < MPIR_CVAR_CH3_RMA_TARGET_LOCK_ENTRY_WIN_POOL_SIZE; i++) {
         MPL_DL_APPEND((*win_ptr)->target_lock_entry_pool_head,
                       &((*win_ptr)->target_lock_entry_pool_start[i]));
+    }
+
+    if (MPIDI_RMA_Win_inactive_list_head == NULL && MPIDI_RMA_Win_active_list_head == NULL) {
+        /* this is the first window, register RMA progress hook */
+        mpi_errno = MPID_Progress_register_hook(MPIDI_CH3I_RMA_Make_progress_global,
+                                                &MPIDI_CH3I_RMA_Progress_hook_id);
+        if (mpi_errno) {
+            MPIU_ERR_POP(mpi_errno);
+        }
     }
 
     MPL_DL_APPEND(MPIDI_RMA_Win_inactive_list_head, (*win_ptr));

@@ -193,6 +193,14 @@ int MPID_Win_free(MPID_Win ** win_ptr)
     MPIU_Assert((*win_ptr)->active == FALSE);
     MPL_DL_DELETE(MPIDI_RMA_Win_inactive_list_head, (*win_ptr));
 
+    if (MPIDI_RMA_Win_inactive_list_head == NULL && MPIDI_RMA_Win_inactive_list_head == NULL) {
+        /* this is the last window, de-register RMA progress hook */
+        mpi_errno = MPID_Progress_deregister_hook(MPIDI_CH3I_RMA_Progress_hook_id);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIU_ERR_POP(mpi_errno);
+        }
+    }
+
     comm_ptr = (*win_ptr)->comm_ptr;
     mpi_errno = MPIR_Comm_free_impl(comm_ptr);
     if (mpi_errno)
