@@ -48,6 +48,7 @@ static int adjust_iov(MPID_IOV ** iovp, int * countp, MPIU_Size_t nb);
 #define MAX_PROGRESS_HOOKS 16
 typedef int (*progress_func_ptr_t) (int* made_progress);
 static progress_func_ptr_t progress_hooks[MAX_PROGRESS_HOOKS] = { NULL };
+static int total_progress_hook_cnt = 0; /* Keep track of how many progress hooks are currently registered */
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3i_Progress_test
@@ -59,6 +60,7 @@ static int MPIDI_CH3i_Progress_test(void)
     int mpi_errno = MPI_SUCCESS;
     int made_progress;
     int i;
+    int called_progress_hook_cnt;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
@@ -90,10 +92,15 @@ static int MPIDI_CH3i_Progress_test(void)
     }
 #   endif
     
+    called_progress_hook_cnt = 0;
     for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
         if (progress_hooks[i] != NULL) {
             mpi_errno = progress_hooks[i](&made_progress);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+            called_progress_hook_cnt++;
+            if (called_progress_hook_cnt == total_progress_hook_cnt)
+                break;
         }
     }
 
@@ -185,7 +192,9 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
     {
         int made_progress = FALSE;
         int i;
+        int called_progress_hook_cnt;
 
+        called_progress_hook_cnt = 0;
         for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
             if (progress_hooks[i] != NULL) {
                 mpi_errno = progress_hooks[i](&made_progress);
@@ -194,6 +203,10 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
                     MPIDI_CH3_Progress_signal_completion();
                     break; /* break the for loop */
                 }
+
+                called_progress_hook_cnt++;
+                if (called_progress_hook_cnt == total_progress_hook_cnt)
+                    break;
             }
         }
         if (made_progress) break; /* break the do loop */
@@ -966,6 +979,10 @@ int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*))
     for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
         if (progress_hooks[i] == NULL) {
             progress_hooks[i] = progress_fn;
+
+            total_progress_hook_cnt++;
+            MPIU_Assert(total_progress_hook_cnt <= MAX_PROGRESS_HOOKS);
+
             break;
         }
     }
@@ -1001,6 +1018,10 @@ int MPIDI_CH3I_Progress_deregister_hook(int (*progress_fn)(int*))
     for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
         if (progress_hooks[i] == progress_fn) {
             progress_hooks[i] = NULL;
+
+            total_progress_hook_cnt--;
+            MPIU_Assert(total_progress_hook_cnt >= 0);
+
             break;
         }
     }

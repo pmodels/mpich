@@ -24,6 +24,7 @@
 #define MAX_PROGRESS_HOOKS 16
 typedef int (*progress_func_ptr_t) (int* made_progress);
 static progress_func_ptr_t  progress_hooks[MAX_PROGRESS_HOOKS] = { NULL };
+static int total_progress_hook_cnt = 0; /* Keep track of how many progress hooks are currently registered */
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Progress_register_hook
@@ -41,6 +42,10 @@ int MPIDI_Progress_register_hook(int (*progress_fn)(int*))
     for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
         if (progress_hooks[i] == NULL) {
             progress_hooks[i] = progress_fn;
+
+            total_progress_hook_cnt++;
+            MPIU_Assert(total_progress_hook_cnt <= MAX_PROGRESS_HOOKS);
+
             break;
         }
     }
@@ -76,6 +81,10 @@ int MPIDI_Progress_deregister_hook(int (*progress_fn)(int*))
     for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
         if (progress_hooks[i] == progress_fn) {
             progress_hooks[i] = NULL;
+
+            total_progress_hook_cnt--;
+            MPIU_Assert(total_progress_hook_cnt >= 0);
+
             break;
         }
     }
@@ -223,6 +232,7 @@ MPIDI_Progress_async_poll (pami_context_t context, void *cookie)
   pami_result_t rc;
   int loop_count=100;
   int i, made_progress;
+  int called_progress_hook_cnt;
 
   /* In the "global" mpich lock mode all application threads must acquire the
    * ALLFUNC global lock upon entry to the API. The async progress thread
@@ -232,9 +242,14 @@ MPIDI_Progress_async_poll (pami_context_t context, void *cookie)
    */
   if (MPIU_THREAD_CS_TRY(ALLFUNC,))           /* (0==try_acquire(0)) */
     {
+      called_progress_hook_cnt = 0;
       for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
         if (progress_hooks[i] != NULL) {
           progress_hooks[i](&made_progress);
+
+          called_progress_hook_cnt++;
+          if (called_progress_hook_cnt == total_progress_hook_cnt)
+            break;
         }
       }
 
@@ -262,10 +277,15 @@ MPIDI_Progress_async_poll_perobj (pami_context_t context, void *cookie)
   pami_result_t rc;
   int loop_count=100;
   int i, made_progress;
+  int called_progress_hook_cnt = 0;
 
   for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
     if (progress_hooks[i] != NULL) {
       progress_hooks[i](&made_progress);
+
+      called_progress_hook_cnt++;
+      if (called_progress_hook_cnt == total_progress_hook_cnt)
+        break;
     }
   }
 
