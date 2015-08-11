@@ -30,7 +30,7 @@ static int total_progress_hook_cnt = 0; /* Keep track of how many progress hooks
 #define FUNCNAME MPIDI_Progress_register_hook
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIDI_Progress_register_hook(int (*progress_fn)(int*))
+int MPIDI_Progress_register_hook(int (*progress_fn)(int*), int *id)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -56,6 +56,8 @@ int MPIDI_Progress_register_hook(int (*progress_fn)(int*))
             MPI_ERR_INTERN, "**progresshookstoomany", 0 );
     }
 
+    (*id) = i;
+
   fn_exit:
     MPIU_THREAD_CS_EXIT(ASYNC,);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_PROGRESS_REGISTER_HOOK);
@@ -69,25 +71,20 @@ int MPIDI_Progress_register_hook(int (*progress_fn)(int*))
 #define FUNCNAME MPIDI_Progress_deregister_hook
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIDI_Progress_deregister_hook(int (*progress_fn)(int*))
+int MPIDI_Progress_deregister_hook(int id)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_PROGRESS_DEREGISTER_HOOK);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_PROGRESS_DEREGISTER_HOOK);
     MPIU_THREAD_CS_ENTER(ASYNC,);
 
-    for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
-        if (progress_hooks[i] == progress_fn) {
-            progress_hooks[i] = NULL;
+    MPIU_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS && progress_hooks[id] != NULL);
 
-            total_progress_hook_cnt--;
-            MPIU_Assert(total_progress_hook_cnt >= 0);
+    progress_hooks[id] = NULL;
 
-            break;
-        }
-    }
+    total_progress_hook_cnt--;
+    MPIU_Assert(total_progress_hook_cnt >= 0);
 
   fn_exit:
     MPIU_THREAD_CS_EXIT(ASYNC,);

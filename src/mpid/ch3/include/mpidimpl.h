@@ -1938,10 +1938,10 @@ int MPIDI_CH3_Req_handler_rma_op_complete(MPID_Request *);
     } while (0)
 
 
-int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*));
-int MPIDI_CH3I_Progress_deregister_hook(int (*progress_fn)(int*));
+int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*), int *id);
+int MPIDI_CH3I_Progress_deregister_hook(int id);
 
-#define MPID_Progress_register_hook(fn_) MPIDI_CH3I_Progress_register_hook(fn_)
-#define MPID_Progress_deregister_hook(fn_) MPIDI_CH3I_Progress_deregister_hook(fn_)
+#define MPID_Progress_register_hook(fn_, id_) MPIDI_CH3I_Progress_register_hook(fn_, id_)
+#define MPID_Progress_deregister_hook(id_) MPIDI_CH3I_Progress_deregister_hook(id_)
 
 #endif /* !defined(MPICH_MPIDIMPL_H_INCLUDED) */
