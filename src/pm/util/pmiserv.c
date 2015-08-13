@@ -172,7 +172,7 @@ int PMISetupInClient( int usePort, PMISetup *pmiinfo )
 	MPL_snprintf( env_pmi_fd, sizeof(env_pmi_fd), "PMI_FD=%d" , 
 		       pmiinfo->fdpair[1] );
 	if (MPIE_Putenv( pmiinfo->pWorld, env_pmi_fd )) {
-	    MPL_internal_error_printf( "Could not set environment PMI_FD" );
+	    MPL_error_printf( "Could not set environment PMI_FD" );
 	    return 1;
 	}
     }
@@ -182,13 +182,13 @@ int PMISetupInClient( int usePort, PMISetup *pmiinfo )
 	    MPL_snprintf( env_pmi_port, sizeof(env_pmi_port), "PMI_PORT=%s",
 			   pmiinfo->portName );
 	    if (MPIE_Putenv( pmiinfo->pWorld, env_pmi_port )) {
-		MPL_internal_error_printf( "Could not set environment PMI_PORT" );
+		MPL_error_printf( "Could not set environment PMI_PORT" );
 		perror( "Reason: " );
 		return 1;
 	    }
 	}
 	else {
-	    MPL_internal_error_printf( "Required portname was not defined\n" );
+	    MPL_error_printf( "Required portname was not defined\n" );
 	    return 1;
 	}
 	
@@ -458,7 +458,7 @@ static PMIKVSpace *fPMIKVSAllocate( void )
     /* Create the space */
     kvs = (PMIKVSpace *)MPIU_Malloc( sizeof(PMIKVSpace) );
     if (!kvs) {
-	MPL_internal_error_printf( "too many kvs's\n" );
+	MPL_error_printf( "too many kvs's\n" );
 	return 0;
     }
     /* We include the pid of the PMI server as a way to allow multiple
@@ -615,7 +615,7 @@ static int PMIKVSFree( PMIKVSpace *kvs )
     /* Note that if we did not find the kvs, we have an internal 
        error, since all kv spaces are maintained within the pmimaster list */
     if (rc != 0) {
-	MPL_internal_error_printf( "Could not find KV Space %s\n", 
+	MPL_error_printf( "Could not find KV Space %s\n",
 				    kvs->kvsname );
 	return 1;
     }
@@ -767,7 +767,7 @@ static int fPMI_Handle_get_my_kvsname( PMIProcess *pentry )
 		       kvs->kvsname );
     }
     else {
-	MPL_internal_error_printf( "Group has no associated KVS" );
+	MPL_error_printf( "Group has no associated KVS" );
 	return -1;
     }
     PMIWriteLine( pentry->fd, outbuf );
