@@ -47,8 +47,7 @@ src_pm_util_libmpiexec_a_SOURCES = \
     src/pm/util/pmiport.c          \
     src/pm/util/dbgiface.c         \
     src/pm/util/safestr2.c         \
-    src/pm/util/simple_pmiutil2.c  \
-    src/mpl/src/mplmsg.c
+    src/pm/util/simple_pmiutil2.c
 
 endif BUILD_PM_UTIL
 

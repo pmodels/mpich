@@ -16,7 +16,7 @@ if BUILD_PM_GFORKER
 if PRIMARY_PM_GFORKER
 bin_PROGRAMS += src/pm/gforker/mpiexec
 src_pm_gforker_mpiexec_SOURCES = src/pm/gforker/mpiexec.c 
-src_pm_gforker_mpiexec_LDADD = src/pm/util/libmpiexec.a
+src_pm_gforker_mpiexec_LDADD = src/pm/util/libmpiexec.a $(mpllib)
 # we may not want to add AM_CPPFLAGS for this program
 src_pm_gforker_mpiexec_CPPFLAGS = $(common_pm_includes) $(AM_CPPFLAGS)
 else !PRIMARY_PM_GFORKER
