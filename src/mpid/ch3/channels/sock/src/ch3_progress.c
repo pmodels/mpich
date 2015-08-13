@@ -45,7 +45,7 @@ static inline int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn);
 
 static int adjust_iov(MPL_IOV ** iovp, int * countp, MPIU_Size_t nb);
 
-#define MAX_PROGRESS_HOOKS 16
+#define MAX_PROGRESS_HOOKS 4
 typedef int (*progress_func_ptr_t) (int* made_progress);
 
 typedef struct progress_hook_slot {

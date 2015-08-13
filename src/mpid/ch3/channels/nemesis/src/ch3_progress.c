@@ -84,7 +84,7 @@ typedef struct qn_ent
 
 static qn_ent_t *qn_head = NULL;
 
-#define MAX_PROGRESS_HOOKS 16
+#define MAX_PROGRESS_HOOKS 4
 typedef int (*progress_func_ptr_t) (int* made_progress);
 
 typedef struct progress_hook_slot {

@@ -21,7 +21,7 @@
  */
 #include <mpidimpl.h>
 
-#define MAX_PROGRESS_HOOKS 16
+#define MAX_PROGRESS_HOOKS 4
 typedef int (*progress_func_ptr_t) (int* made_progress);
 
 typedef struct progress_hook_slot {
