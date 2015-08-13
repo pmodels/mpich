@@ -93,7 +93,6 @@ typedef struct progress_hook_slot {
 } progress_hook_slot_t;
 
 static progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
-static int total_progress_hook_cnt = 0; /* Keep track of how many progress hooks are currently activated */
 
 #ifdef HAVE_SIGNAL
 static void sigusr1_handler(int sig)
@@ -374,9 +373,6 @@ int MPIDI_CH3I_Progress_activate_hook(int id)
                 progress_hooks[id].active == FALSE && progress_hooks[id].func_ptr != NULL);
     progress_hooks[id].active = TRUE;
 
-    total_progress_hook_cnt++;
-    MPIU_Assert(total_progress_hook_cnt <= MAX_PROGRESS_HOOKS);
-
   fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_MUTEX);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_ACTIVATE_HOOK);
@@ -402,9 +398,6 @@ int MPIDI_CH3I_Progress_deactivate_hook(int id)
     MPIU_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS &&
                 progress_hooks[id].active == TRUE && progress_hooks[id].func_ptr != NULL);
     progress_hooks[id].active = FALSE;
-
-    total_progress_hook_cnt--;
-    MPIU_Assert(total_progress_hook_cnt >= 0);
 
   fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_MUTEX);
@@ -499,7 +492,6 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 	int                  in_fbox = 0;
 	MPIDI_VC_t          *vc;
 	int i;
-	int called_progress_hook_cnt = 0;
 
         do /* receive progress */
         {
@@ -599,7 +591,6 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
 
-        called_progress_hook_cnt = 0;
         for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
             if (progress_hooks[i].active == TRUE) {
                 MPIU_Assert(progress_hooks[i].func_ptr != NULL);
@@ -607,10 +598,6 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 if (made_progress)
                     MPIDI_CH3_Progress_signal_completion();
-
-                called_progress_hook_cnt++;
-                if (called_progress_hook_cnt == total_progress_hook_cnt)
-                    break;
             }
         }
 
