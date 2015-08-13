@@ -30,7 +30,6 @@ typedef struct progress_hook_slot {
 } progress_hook_slot_t;
 
 static progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
-static int total_progress_hook_cnt = 0; /* Keep track of how many progress hooks are currently activated */
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Progress_register_hook
@@ -112,9 +111,6 @@ int MPIDI_CH3I_Progress_activate_hook(int id)
                 progress_hooks[id].active == FALSE && progress_hooks[id].func_ptr != NULL);
     progress_hooks[id].active = TRUE;
 
-    total_progress_hook_cnt++;
-    MPIU_Assert(total_progress_hook_cnt <= MAX_PROGRESS_HOOKS);
-
   fn_exit:
     MPIU_THREAD_CS_EXIT(MPIDCOMM,);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_ACTIVATE_HOOK);
@@ -140,9 +136,6 @@ int MPIDI_CH3I_Progress_deactivate_hook(int id)
     MPIU_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS &&
                 progress_hooks[id].active == TRUE && progress_hooks[id].func_ptr != NULL);
     progress_hooks[id].active = FALSE;
-
-    total_progress_hook_cnt--;
-    MPIU_Assert(total_progress_hook_cnt >= 0);
 
   fn_exit:
     MPIU_THREAD_CS_EXIT(MPIDCOMM,);
@@ -294,7 +287,6 @@ MPIDI_Progress_async_poll (pami_context_t context, void *cookie)
   pami_result_t rc;
   int loop_count=100;
   int i, made_progress;
-  int called_progress_hook_cnt;
 
   /* In the "global" mpich lock mode all application threads must acquire the
    * ALLFUNC global lock upon entry to the API. The async progress thread
@@ -304,15 +296,10 @@ MPIDI_Progress_async_poll (pami_context_t context, void *cookie)
    */
   if (MPIU_THREAD_CS_TRY(ALLFUNC,))           /* (0==try_acquire(0)) */
     {
-      called_progress_hook_cnt = 0;
       for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
         if (progress_hooks[i].active == TRUE) {
           MPIU_Assert(progress_hooks[i].func_ptr != NULL);
           progress_hooks[i].func_ptr(&made_progress);
-
-          called_progress_hook_cnt++;
-          if (called_progress_hook_cnt == total_progress_hook_cnt)
-            break;
         }
       }
 
@@ -340,16 +327,11 @@ MPIDI_Progress_async_poll_perobj (pami_context_t context, void *cookie)
   pami_result_t rc;
   int loop_count=100;
   int i, made_progress;
-  int called_progress_hook_cnt = 0;
 
   for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
     if (progress_hooks[i].active == TRUE) {
       MPIU_Assert(progress_hooks[i].func_ptr != NULL);
       progress_hooks[i].func_ptr(&made_progress);
-
-      called_progress_hook_cnt++;
-      if (called_progress_hook_cnt == total_progress_hook_cnt)
-        break;
     }
   }
 

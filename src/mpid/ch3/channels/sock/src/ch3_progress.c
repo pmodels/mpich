@@ -54,7 +54,6 @@ typedef struct progress_hook_slot {
 } progress_hook_slot_t;
 
 static progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
-static int total_progress_hook_cnt = 0; /* Keep track of how many progress hooks are currently activated */
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3i_Progress_test
@@ -66,7 +65,6 @@ static int MPIDI_CH3i_Progress_test(void)
     int mpi_errno = MPI_SUCCESS;
     int made_progress;
     int i;
-    int called_progress_hook_cnt;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
@@ -98,16 +96,11 @@ static int MPIDI_CH3i_Progress_test(void)
     }
 #   endif
     
-    called_progress_hook_cnt = 0;
     for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
         if (progress_hooks[i].active == TRUE) {
             MPIU_Assert(progress_hooks[i].func_ptr != NULL);
             mpi_errno = progress_hooks[i].func_ptr(&made_progress);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-            called_progress_hook_cnt++;
-            if (called_progress_hook_cnt == total_progress_hook_cnt)
-                break;
         }
     }
 
@@ -199,9 +192,7 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
     {
         int made_progress = FALSE;
         int i;
-        int called_progress_hook_cnt;
 
-        called_progress_hook_cnt = 0;
         for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
             if (progress_hooks[i].active == TRUE) {
                 MPIU_Assert(progress_hooks[i].func_ptr != NULL);
@@ -211,10 +202,6 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
                     MPIDI_CH3_Progress_signal_completion();
                     break; /* break the for loop */
                 }
-
-                called_progress_hook_cnt++;
-                if (called_progress_hook_cnt == total_progress_hook_cnt)
-                    break;
             }
         }
         if (made_progress) break; /* break the do loop */
@@ -1058,9 +1045,6 @@ int MPIDI_CH3I_Progress_activate_hook(int id)
                 progress_hooks[id].active == FALSE && progress_hooks[id].func_ptr != NULL);
     progress_hooks[id].active = TRUE;
 
-    total_progress_hook_cnt++;
-    MPIU_Assert(total_progress_hook_cnt <= MAX_PROGRESS_HOOKS);
-
   fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_MUTEX);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_ACTIVATE_HOOK);
@@ -1086,9 +1070,6 @@ int MPIDI_CH3I_Progress_deactivate_hook(int id)
     MPIU_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS &&
                 progress_hooks[id].active == TRUE && progress_hooks[id].func_ptr != NULL);
     progress_hooks[id].active = FALSE;
-
-    total_progress_hook_cnt--;
-    MPIU_Assert(total_progress_hook_cnt >= 0);
 
   fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_MUTEX);
