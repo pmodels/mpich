@@ -30,11 +30,11 @@ MTEST_THREAD_RETURN_TYPE test_comm_dup(void *arg)
     int rank;
     int i;
     MPI_Request req;
+    MPI_Comm comm, self_dup;
 
     MPI_Comm_rank(comms[*(int *) arg], &rank);
 
     for (i = 0; i < NUM_ITER; i++) {
-        MPI_Comm comm, self_dup;
 
         if (*(int *) arg == rank) {
             MTestSleep(1);

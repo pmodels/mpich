@@ -23,6 +23,7 @@ int main(int argc, char **argv)
     int in[ITERS], out[ITERS], sol;
     int rank, size, rsize, rrank;
     MPI_Request sreq[ITERS * 2];
+    int root;
 
     MTest_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -141,7 +142,6 @@ int main(int argc, char **argv)
         }
 
         /*Ibcast */
-        int root;
         for (i = 0; i < ITERS; i++) {
             if (isleft) {
                 if (rank == 0) {
