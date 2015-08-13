@@ -40,7 +40,6 @@ int main(int argc, char **argv)
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-
     /* test plan: make rank 0 wait in a blocking recv until all other processes
      * have posted their MPI_Comm_idup ops, then post last.  Should ensure that
      * idup doesn't block on the non-zero ranks, otherwise we'll get a deadlock.
@@ -121,7 +120,6 @@ int main(int argc, char **argv)
     }
     MPI_Comm_free(&newcomm);
     MPI_Comm_free(&ic);
-
 
     MPI_Reduce((rank == 0 ? MPI_IN_PLACE : &errs), &errs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     if (rank == 0) {

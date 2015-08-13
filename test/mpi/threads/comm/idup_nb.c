@@ -73,7 +73,6 @@ MTEST_THREAD_RETURN_TYPE test_intracomm(void *arg)
         MPI_Comm_rank(parentcomm, &rank);
         MPI_Iscan(&rank, &ans[0], 1, MPI_INT, MPI_SUM, parentcomm, &reqs[cnt++]);
         expected[0] = rank * (rank + 1) / 2;
-
         /* Wait for the first child comm to be ready */
         MPI_Wait(&reqs[0], MPI_STATUS_IGNORE);
 
@@ -101,7 +100,6 @@ MTEST_THREAD_RETURN_TYPE test_intracomm(void *arg)
 
         /* Pending operations include idup/iscan/ibcast on parentcomm
          * idup/Iallreduce/Ibarrier on comms[0], and Iscan on nbrcomm */
-
         /* Waitall even if the first request is completed */
         MPI_Waitall(cnt, reqs, MPI_STATUSES_IGNORE);
 
@@ -110,16 +108,13 @@ MTEST_THREAD_RETURN_TYPE test_intracomm(void *arg)
             if (ans[j] != expected[j])
                 errs[tid]++;
         }
-
         for (j = 0; j < NUM_IDUPS1 + NUM_IDUPS2; j++) {
             errs[tid] += MTestTestComm(comms[j]);
             MPI_Comm_free(&comms[j]);
         }
-
         if (verbose)
             printf("\t%d: Thread %d - comm_idup %d finish\n", rank, tid, i);
     }
-
     if (verbose)
         printf("%d: Thread %d - Done.\n", rank, tid);
     return (MTEST_THREAD_RETURN_TYPE) 0;
@@ -159,7 +154,6 @@ MTEST_THREAD_RETURN_TYPE test_intercomm(void *arg)
         MPI_Comm_remote_size(parentcomm, &rsize);
         MPI_Iallreduce(&rank, &ans[0], 1, MPI_INT, MPI_SUM, parentcomm, &reqs[cnt++]);
         expected[0] = (rsize - 1) * rsize / 2;
-
         /* Wait for the first child comm to be ready */
         MPI_Wait(&reqs[0], MPI_STATUS_IGNORE);
 
@@ -190,7 +184,6 @@ MTEST_THREAD_RETURN_TYPE test_intercomm(void *arg)
         }
         MPI_Ibcast(&ans[2], 1, MPI_INT, root, parentcomm, &reqs[cnt++]);
         expected[2] = 199;
-
         MPI_Ibarrier(comms[0], &reqs[cnt++]);
 
         /* Do an Iscan on a neighbor comm */
@@ -201,7 +194,6 @@ MTEST_THREAD_RETURN_TYPE test_intercomm(void *arg)
 
         /* Pending operations include idup/iallreduce/ibcast on parentcomm
          * Iallreduce/Ibarrier on comms[0], and Iallreduce on nbrcomm */
-
         /* Waitall even if the first request is completed */
         MPI_Waitall(cnt, reqs, MPI_STATUSES_IGNORE);
 
@@ -210,16 +202,13 @@ MTEST_THREAD_RETURN_TYPE test_intercomm(void *arg)
             if (ans[j] != expected[j])
                 errs[tid]++;
         }
-
         for (j = 0; j < NUM_IDUPS1 + NUM_IDUPS2; j++) {
             errs[tid] += MTestTestComm(comms[j]);
             MPI_Comm_free(&comms[j]);
         }
-
         if (verbose)
             printf("\t%d: Thread %d - comm_idup %d finish\n", rank, tid, i);
     }
-
     if (verbose)
         printf("%d: Thread %d - Done.\n", rank, tid);
     return (MTEST_THREAD_RETURN_TYPE) 0;
@@ -250,14 +239,12 @@ int main(int argc, char **argv)
             MPI_Comm_idup(newcomm, &parentcomms[i], &requests[2 * i]);
             MPI_Comm_idup(newcomm, &nbrcomms[i], &requests[2 * i + 1]);
         }
-
         MPI_Waitall(NUM_THREADS * 2, requests, MPI_STATUSES_IGNORE);
 
         for (i = 0; i < NUM_THREADS; i++) {
             thread_args[i] = i;
             MTest_Start_thread(test_intracomm, (void *) &thread_args[i]);
         }
-
         MTest_Join_threads();
 
         for (i = 0; i < NUM_THREADS; i++) {
@@ -265,7 +252,6 @@ int main(int argc, char **argv)
             MPI_Comm_free(&parentcomms[i]);
             MPI_Comm_free(&nbrcomms[i]);
         }
-
         MTestFreeComm(&newcomm);
     }
 
@@ -280,14 +266,12 @@ int main(int argc, char **argv)
             MPI_Comm_idup(newcomm, &parentcomms[i], &requests[2 * i]);
             MPI_Comm_idup(newcomm, &nbrcomms[i], &requests[2 * i + 1]);
         }
-
         MPI_Waitall(NUM_THREADS * 2, requests, MPI_STATUSES_IGNORE);
 
         for (i = 0; i < NUM_THREADS; i++) {
             thread_args[i] = i;
             MTest_Start_thread(test_intercomm, (void *) &thread_args[i]);
         }
-
         MTest_Join_threads();
 
         for (i = 0; i < NUM_THREADS; i++) {
@@ -295,10 +279,8 @@ int main(int argc, char **argv)
             MPI_Comm_free(&parentcomms[i]);
             MPI_Comm_free(&nbrcomms[i]);
         }
-
         MTestFreeComm(&newcomm);
     }
-
     MTest_Finalize(toterrs);
     MPI_Finalize();
     return 0;

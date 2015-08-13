@@ -58,12 +58,10 @@ MTEST_THREAD_RETURN_TYPE test_comm_dup(void *arg)
         if (verbose)
             printf("\t%d: Thread %d - comm_idup %d finish\n", rank, *(int *) arg, i);
     }
-
     if (verbose)
         printf("%d: Thread %d - Done.\n", rank, *(int *) arg);
     return (MTEST_THREAD_RETURN_TYPE) 0;
 }
-
 
 int main(int argc, char **argv)
 {
@@ -87,7 +85,6 @@ int main(int argc, char **argv)
         thread_args[i] = i;
         MTest_Start_thread(test_comm_dup, (void *) &thread_args[i]);
     }
-
     MTest_Join_threads();
 
     for (i = 0; i < NUM_THREADS; i++) {
@@ -98,6 +95,5 @@ int main(int argc, char **argv)
         printf(" No Errors\n");
 
     MPI_Finalize();
-
     return 0;
 }

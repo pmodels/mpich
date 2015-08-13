@@ -49,7 +49,6 @@ MTEST_THREAD_RETURN_TYPE test_idup(void *arg)
     }
 
     /* Overlap pending idups with various comm generation functions */
-
     /* Comm_dup */
     MPI_Comm_dup(incomm, &outcomm);
     errs[tid] += MTestTestComm(outcomm);
@@ -86,13 +85,11 @@ MTEST_THREAD_RETURN_TYPE test_idup(void *arg)
         outcomm = MPI_COMM_NULL;
     }
     MPI_Group_free(&even_group);
-
     errs[tid] += MTestTestComm(outcomm);
     MTestFreeComm(&outcomm);
 
     /* Intercomm_create & Intercomm_merge */
     MPI_Comm_split(incomm, (rank < size / 2), rank, &local_comm);
-
     if (rank == 0) {
         rleader = size / 2;
     }
@@ -110,7 +107,6 @@ MTEST_THREAD_RETURN_TYPE test_idup(void *arg)
 
     errs[tid] += MTestTestComm(inter_comm);
     MTestFreeComm(&inter_comm);
-
     errs[tid] += MTestTestComm(outcomm);
     MTestFreeComm(&outcomm);
 
@@ -119,12 +115,9 @@ MTEST_THREAD_RETURN_TYPE test_idup(void *arg)
         errs[tid] += MTestTestComm(idupcomms[i]);
         MPI_Comm_free(&idupcomms[i]);
     }
-
     MPI_Group_free(&ingroup);
-
     return NULL;
 }
-
 
 int main(int argc, char **argv)
 {
@@ -140,7 +133,6 @@ int main(int argc, char **argv)
         printf("MPI_THREAD_MULTIPLE for the test\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
-
     if (size < 2) {
         printf("This test requires at least two processes\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
@@ -149,19 +141,16 @@ int main(int argc, char **argv)
     for (i = 0; i < NUM_THREADS; i++) {
         MPI_Comm_dup(MPI_COMM_WORLD, &comms[i]);
     }
-
     for (i = 0; i < NUM_THREADS; i++) {
         thread_args[i] = i;
         MTest_Start_thread(test_idup, (void *) &thread_args[i]);
     }
-
     MTest_Join_threads();
 
     for (i = 0; i < NUM_THREADS; i++) {
         MPI_Comm_free(&comms[i]);
         toterrs += errs[i];
     }
-
     MTest_Finalize(toterrs);
     MPI_Finalize();
     return 0;

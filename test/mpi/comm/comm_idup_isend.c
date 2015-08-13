@@ -4,7 +4,6 @@
 #include "mpi.h"
 #include "mpitest.h"
 
-
 #define ITERS 4
 
 int main(int argc, char **argv)
@@ -24,7 +23,6 @@ int main(int argc, char **argv)
         printf("this test requires at least 2 processes\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
-
 
     sreq = (MPI_Request *) malloc(sizeof(MPI_Request) * (size + 1) * ITERS);
 
@@ -51,7 +49,6 @@ int main(int argc, char **argv)
                 MPI_Comm_idup(testcomm, &newcomm[j], &sreq[cnt++]);
                 MPI_Irecv(&in[j], 1, MPI_INT, 0, 0, testcomm, &sreq[cnt++]);
             }
-
         }
         MPI_Waitall(cnt, sreq, MPI_STATUS_IGNORE);
 
@@ -87,7 +84,6 @@ int main(int argc, char **argv)
                 MPI_Comm_idup(testcomm, &newcomm[j], &sreq[cnt++]);
                 MPI_Irecv(&in[j], 1, MPI_INT, 0, 0, testcomm, &sreq[cnt++]);
             }
-
         }
         MPI_Waitall(cnt, sreq, MPI_STATUS_IGNORE);
 

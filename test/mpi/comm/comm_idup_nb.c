@@ -10,10 +10,7 @@
 #include "mpi.h"
 #include "mpitest.h"
 
-
 #define ITERS 5
-
-
 
 int main(int argc, char **argv)
 {
@@ -115,9 +112,7 @@ int main(int argc, char **argv)
             errs += MTestTestComm(new_comm[i]);
             MPI_Comm_free(&new_comm[i]);
         }
-
         MTestFreeComm(&test_comm);
-
     }
 /* Now the test for inter-communicators */
     while (MTestGetIntercomm(&test_comm, &isleft, 1)) {
@@ -129,8 +124,6 @@ int main(int argc, char **argv)
 
         MPI_Comm_remote_size(test_comm, &rsize);
         /* Ibarrier */
-
-
         for (i = 0; i < ITERS; i++) {
             MPI_Ibarrier(test_comm, &sreq[i]);
             MPI_Comm_idup(test_comm, &new_comm[i], &sreq[i + ITERS]);
@@ -140,7 +133,6 @@ int main(int argc, char **argv)
             errs += MTestTestComm(new_comm[i]);
             MPI_Comm_free(&new_comm[i]);
         }
-
         /*Ibcast */
         for (i = 0; i < ITERS; i++) {
             if (isleft) {
@@ -184,13 +176,9 @@ int main(int argc, char **argv)
             errs += MTestTestComm(new_comm[i]);
             MPI_Comm_free(&new_comm[i]);
         }
-
         MTestFreeComm(&test_comm);
-
     }
     MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
-
-
 }

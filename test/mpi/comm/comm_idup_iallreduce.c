@@ -10,8 +10,8 @@
 #include "mpi.h"
 #include "mpitest.h"
 
-
 #define ITERS 10
+
 /* This test uses several scenarios to overlap iallreduce and comm_idup
  * 1.)  Use comm_idup  dublicate the COMM_WORLD and do iallreduce
  *      on the COMM_WORLD
@@ -29,8 +29,6 @@
  *      overlapping with communication on MPI_COMM_WORLD
  *  9.) Communicate on the merge communicator, while duplicating COMM_WORLD
 */
-
-
 
 int main(int argc, char **argv)
 {
@@ -76,9 +74,7 @@ int main(int argc, char **argv)
         MPI_Comm_free(&newcomm_v[i]);
     }
 
-
     MPI_Comm_dup(MPI_COMM_WORLD, &dup_comm);
-
 
     if (rank == 0) {
         MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
@@ -91,7 +87,6 @@ int main(int argc, char **argv)
         MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
     }
     /* Test Iallreduce */
-
     if (sol != out)
         errs++;
 
@@ -100,7 +95,6 @@ int main(int argc, char **argv)
 
     MPI_Comm_free(&newcomm);
     MPI_Comm_free(&dup_comm);
-
 
     MPI_Comm_split(MPI_COMM_WORLD, rank % 2, rank, &split);
     MPI_Comm_rank(split, &lrank);
@@ -136,7 +130,6 @@ int main(int argc, char **argv)
         MPI_Iallreduce(&in, &out, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &sreq[0]);
         MPI_Waitall(2, sreq, MPI_STATUS_IGNORE);
     }
-
     /* Test Iallreduce */
     if (sol != out)
         errs++;;
@@ -179,7 +172,6 @@ int main(int argc, char **argv)
 
     errs += MTestTestComm(newcomm);
     MPI_Comm_free(&newcomm);
-
 
     MPI_Intercomm_merge(ic, rank % 2, &merge);
     MPI_Comm_size(merge, &isize);
