@@ -127,7 +127,7 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 	case MPIR_ATTR_C_TO_FORTRAN(MPI_WIN_BASE):
 	    /* The Fortran routine that matches this routine should
 	       provide an address-sized integer, not an MPI_Fint */
-	    *attr_int = MPI_VOID_PTR_CAST_TO_MPI_AINT(win_ptr->base);
+	    *attr_int = MPIU_VOID_PTR_CAST_TO_MPI_AINT(win_ptr->base);
 	    break;
         case MPIR_ATTR_C_TO_FORTRAN(MPI_WIN_SIZE):
 	    /* We do not need to copy because we return the value,

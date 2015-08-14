@@ -174,7 +174,7 @@ int MPIDO_Allgather_bcast(const void *sendbuf,
   np = comm_ptr ->local_size;
   MPID_Datatype_get_extent_macro(recvtype, extent);
 
-  MPIU_Ensure_Aint_fits_in_pointer ((MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+  MPIU_Ensure_Aint_fits_in_pointer ((MPIU_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
 				     np * recvcount * extent));
   if (sendbuf != MPI_IN_PLACE)
   {

@@ -86,9 +86,9 @@ typedef MPIU_SIZE_T MPIU_Size_t;
 
 /* Adding the 32-bit compute/64-bit I/O related type-casts in here as
  * they are not a part of the MPI standard yet. */
-#define MPI_AINT_CAST_TO_VOID_PTR (void *)(MPIU_Pint)
-#define MPI_VOID_PTR_CAST_TO_MPI_AINT (MPI_Aint)(MPIU_Upint)
-#define MPI_PTR_DISP_CAST_TO_MPI_AINT (MPI_Aint)(MPIU_Pint)
+#define MPIU_AINT_CAST_TO_VOID_PTR (void *)(MPIU_Pint)
+#define MPIU_VOID_PTR_CAST_TO_MPI_AINT (MPI_Aint)(MPIU_Upint)
+#define MPIU_PTR_DISP_CAST_TO_MPI_AINT (MPI_Aint)(MPIU_Pint)
 
 #define MPIU_CONTEXT_ID_T_DATATYPE MPI_UINT16_T
 typedef uint16_t MPIU_Context_id_t;

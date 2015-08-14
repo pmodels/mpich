@@ -91,7 +91,7 @@ int MPIR_Igather_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendt
     if (rank == root)
     {
         MPID_Datatype_get_extent_macro(recvtype, extent);
-        MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf+
+        MPIU_Ensure_Aint_fits_in_pointer(MPIU_VOID_PTR_CAST_TO_MPI_AINT recvbuf+
                                          (extent*recvcount*comm_size));
     }
 
@@ -241,10 +241,10 @@ int MPIR_Igather_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendt
                 }
                 else {
                     blocks[0] = sendcount;
-                    struct_displs[0] = MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf;
+                    struct_displs[0] = MPIU_VOID_PTR_CAST_TO_MPI_AINT sendbuf;
                     types[0] = sendtype;
                     blocks[1] = curr_cnt - nbytes;
-                    struct_displs[1] = MPI_VOID_PTR_CAST_TO_MPI_AINT tmp_buf;
+                    struct_displs[1] = MPIU_VOID_PTR_CAST_TO_MPI_AINT tmp_buf;
                     types[1] = MPI_BYTE;
 
                     mpi_errno = MPIR_Type_create_struct_impl(2, blocks, struct_displs, types, &tmp_type);
@@ -485,7 +485,7 @@ int MPIR_Igather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype
         /* long message. use linear algorithm. */
         if (root == MPI_ROOT) {
             MPID_Datatype_get_extent_macro(recvtype, extent);
-            MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+            MPIU_Ensure_Aint_fits_in_pointer(MPIU_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
                                              (recvcount*remote_size*extent));
 
             for (i=0; i<remote_size; i++) {

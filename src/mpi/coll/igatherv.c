@@ -56,7 +56,7 @@ int MPIR_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, voi
 
         MPID_Datatype_get_extent_macro(recvtype, extent);
         /* each node can make sure it is not going to overflow aint */
-        MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf + displs[rank] * extent);
+        MPIU_Ensure_Aint_fits_in_pointer(MPIU_VOID_PTR_CAST_TO_MPI_AINT recvbuf + displs[rank] * extent);
 
         for (i = 0; i < comm_size; i++) {
             if (recvcounts[i]) {

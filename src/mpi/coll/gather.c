@@ -135,7 +135,7 @@ int MPIR_Gather_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     if (rank == root) 
     {
         MPID_Datatype_get_extent_macro(recvtype, extent);
-        MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf+
+        MPIU_Ensure_Aint_fits_in_pointer(MPIU_VOID_PTR_CAST_TO_MPI_AINT recvbuf+
 					 (extent*recvcount*comm_size));
     }
 
@@ -327,7 +327,7 @@ int MPIR_Gather_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 		}
 		else {
 		    blocks[0] = sendcount;
-		    struct_displs[0] = MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf;
+		    struct_displs[0] = MPIU_VOID_PTR_CAST_TO_MPI_AINT sendbuf;
 		    types[0] = sendtype;
 		    /* check for overflow.  work around int limits if needed*/
 		    if (curr_cnt - nbytes != (int)(curr_cnt - nbytes)) {
@@ -338,7 +338,7 @@ int MPIR_Gather_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 			    MPIU_Assign_trunc(blocks[1],  curr_cnt - nbytes, int);
 			    types[1] = MPI_BYTE;
 		    }
-		    struct_displs[1] = MPI_VOID_PTR_CAST_TO_MPI_AINT tmp_buf;
+		    struct_displs[1] = MPIU_VOID_PTR_CAST_TO_MPI_AINT tmp_buf;
 		    mpi_errno = MPIR_Type_create_struct_impl(2, blocks, struct_displs, types, &tmp_type);
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     
@@ -623,7 +623,7 @@ int MPIR_Gather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         if (root == MPI_ROOT)
 	{
             MPID_Datatype_get_extent_macro(recvtype, extent);
-            MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+            MPIU_Ensure_Aint_fits_in_pointer(MPIU_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
 					     (recvcount*remote_size*extent));
 
             for (i=0; i<remote_size; i++)

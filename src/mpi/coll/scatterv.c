@@ -85,7 +85,7 @@ int MPIR_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
          * a minimal sanity check. Maybe add a global var since we do
          * loop over sendcount[] in MPI_Scatterv before calling
          * this? */
-        MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf + extent);
+        MPIU_Ensure_Aint_fits_in_pointer(MPIU_VOID_PTR_CAST_TO_MPI_AINT sendbuf + extent);
 
         MPIU_CHKLMEM_MALLOC(reqarray, MPID_Request **, comm_size * sizeof(MPID_Request *), mpi_errno, "reqarray");
         MPIU_CHKLMEM_MALLOC(starray, MPI_Status *, comm_size * sizeof(MPI_Status), mpi_errno, "starray");

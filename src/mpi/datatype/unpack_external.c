@@ -122,7 +122,7 @@ int MPI_Unpack_external(const char datarep[],
     last  = SEGMENT_IGNORE_LAST;
 
     /* Ensure that pointer increment fits in a pointer */
-    MPIU_Ensure_Aint_fits_in_pointer((MPI_VOID_PTR_CAST_TO_MPI_AINT inbuf) + *position);
+    MPIU_Ensure_Aint_fits_in_pointer((MPIU_VOID_PTR_CAST_TO_MPI_AINT inbuf) + *position);
 
     MPID_Segment_unpack_external32(segp,
 				   first,

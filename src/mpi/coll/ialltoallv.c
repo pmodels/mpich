@@ -126,7 +126,7 @@ int MPIR_Ialltoallv_intra(const void *sendbuf, const int sendcounts[], const int
             for (i=0; i < ss; i++) {
                 dst = (rank+i+ii) % comm_size;
                 if (recvcounts[dst] && recvtype_size) {
-                    MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+                    MPIU_Ensure_Aint_fits_in_pointer(MPIU_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
                                                      rdispls[dst]*recv_extent);
                     mpi_errno = MPID_Sched_recv((char *)recvbuf+rdispls[dst]*recv_extent,
                                                 recvcounts[dst], recvtype, dst, comm_ptr, s);
@@ -137,7 +137,7 @@ int MPIR_Ialltoallv_intra(const void *sendbuf, const int sendcounts[], const int
             for (i=0; i < ss; i++) {
                 dst = (rank-i-ii+comm_size) % comm_size;
                 if (sendcounts[dst] && sendtype_size) {
-                    MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
+                    MPIU_Ensure_Aint_fits_in_pointer(MPIU_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
                                                      sdispls[dst]*send_extent);
                     mpi_errno = MPID_Sched_send((char *)sendbuf+sdispls[dst]*send_extent,
                                                 sendcounts[dst], sendtype, dst, comm_ptr, s);
@@ -205,7 +205,7 @@ int MPIR_Ialltoallv_inter(const void *sendbuf, const int sendcounts[], const int
             recvcount = 0;
         }
         else {
-            MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+            MPIU_Ensure_Aint_fits_in_pointer(MPIU_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
                                              rdispls[src]*recv_extent);
             recvaddr = (char *)recvbuf + rdispls[src]*recv_extent;
             recvcount = recvcounts[src];
@@ -216,7 +216,7 @@ int MPIR_Ialltoallv_inter(const void *sendbuf, const int sendcounts[], const int
             sendcount = 0;
         }
         else {
-            MPIU_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
+            MPIU_Ensure_Aint_fits_in_pointer(MPIU_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
                                              sdispls[dst]*send_extent);
             sendaddr = (char *)sendbuf + sdispls[dst]*send_extent;
             sendcount = sendcounts[dst];

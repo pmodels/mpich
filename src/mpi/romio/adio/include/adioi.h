@@ -1015,7 +1015,7 @@ int  ADIOI_MPE_iwrite_b;
       to (possible) 4 byte ptr cast)                              */
 /* Should work even on 64bit or old 32bit configs                 */
   /* Use MPIU_Ensure_Aint_fits_in_pointer from mpiutil.h and 
-         MPI_AINT_CAST_TO_VOID_PTR from configure (mpi.h) */
+         MPIU_AINT_CAST_TO_VOID_PTR from configure (mpi.h) */
   #include "glue_romio.h"
 
   #define ADIOI_AINT_CAST_TO_VOID_PTR (void*)(MPIU_Pint)

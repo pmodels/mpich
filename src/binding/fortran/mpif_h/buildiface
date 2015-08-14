@@ -4416,7 +4416,7 @@ MPIR_Comm_copy_attr_f77_proxy(
     MPI_Fint ierr = 0;
     MPI_Fint fhandle = (MPI_Fint)comm;
     MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Fint fvalue = (MPI_Fint) MPI_VOID_PTR_CAST_TO_MPI_AINT (value);
+    MPI_Fint fvalue = (MPI_Fint) MPIU_VOID_PTR_CAST_TO_MPI_AINT (value);
     MPI_Fint* fextra  = (MPI_Fint*)extra_state;
     MPI_Fint fnew = 0;
     MPI_Fint fflag = 0;
@@ -4424,7 +4424,7 @@ MPIR_Comm_copy_attr_f77_proxy(
     ((F77_CopyFunction*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
 
     *flag = MPIR_FROM_FLOG(fflag);
-    *new_value = MPI_AINT_CAST_TO_VOID_PTR ((MPI_Aint) fnew);
+    *new_value = MPIU_AINT_CAST_TO_VOID_PTR ((MPI_Aint) fnew);
     return (int)ierr;
 }
 
@@ -4447,7 +4447,7 @@ MPIR_Comm_delete_attr_f77_proxy(
     MPI_Fint ierr = 0;
     MPI_Fint fhandle = (MPI_Fint)comm;
     MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Fint fvalue = (MPI_Fint) MPI_VOID_PTR_CAST_TO_MPI_AINT (value);
+    MPI_Fint fvalue = (MPI_Fint) MPIU_VOID_PTR_CAST_TO_MPI_AINT (value);
     MPI_Fint* fextra  = (MPI_Fint*)extra_state;
 
     ((F77_DeleteFunction*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
@@ -5429,7 +5429,7 @@ MPIR_Type_copy_attr_f90_proxy(
     MPI_Fint ierr = 0;
     MPI_Fint fhandle = (MPI_Fint)datatype;
     MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = MPI_VOID_PTR_CAST_TO_MPI_AINT (value);
+    MPI_Aint fvalue = MPIU_VOID_PTR_CAST_TO_MPI_AINT (value);
     MPI_Aint* fextra  = (MPI_Aint*)extra_state;
     MPI_Aint fnew = 0;
     MPI_Fint fflag = 0;
@@ -5437,7 +5437,7 @@ MPIR_Type_copy_attr_f90_proxy(
     ((F90_CopyFunction*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
 
     *flag = MPIR_FROM_FLOG(fflag);
-    *new_value = MPI_AINT_CAST_TO_VOID_PTR (fnew);
+    *new_value = MPIU_AINT_CAST_TO_VOID_PTR (fnew);
     return (int)ierr;
 }
 
@@ -5460,7 +5460,7 @@ MPIR_Type_delete_attr_f90_proxy(
     MPI_Fint ierr = 0;
     MPI_Fint fhandle = (MPI_Fint)datatype;
     MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = MPI_VOID_PTR_CAST_TO_MPI_AINT (value);
+    MPI_Aint fvalue = MPIU_VOID_PTR_CAST_TO_MPI_AINT (value);
     MPI_Aint* fextra  = (MPI_Aint*)extra_state;
 
     ((F90_DeleteFunction*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
@@ -5493,7 +5493,7 @@ MPIR_Comm_copy_attr_f90_proxy(
     MPI_Fint ierr = 0;
     MPI_Fint fhandle = (MPI_Fint)comm;
     MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = MPI_VOID_PTR_CAST_TO_MPI_AINT (value);
+    MPI_Aint fvalue = MPIU_VOID_PTR_CAST_TO_MPI_AINT (value);
     MPI_Aint* fextra  = (MPI_Aint*)extra_state;
     MPI_Aint fnew = 0;
     MPI_Fint fflag = 0;
@@ -5501,7 +5501,7 @@ MPIR_Comm_copy_attr_f90_proxy(
     ((F90_CopyFunction*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
 
     *flag = MPIR_FROM_FLOG(fflag);
-    *new_value = MPI_AINT_CAST_TO_VOID_PTR (fnew);
+    *new_value = MPIU_AINT_CAST_TO_VOID_PTR (fnew);
     return (int)ierr;
 }
 
@@ -5524,7 +5524,7 @@ MPIR_Comm_delete_attr_f90_proxy(
     MPI_Fint ierr = 0;
     MPI_Fint fhandle = (MPI_Fint)comm;
     MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = MPI_VOID_PTR_CAST_TO_MPI_AINT (value);
+    MPI_Aint fvalue = MPIU_VOID_PTR_CAST_TO_MPI_AINT (value);
     MPI_Aint* fextra  = (MPI_Aint*)extra_state;
 
     ((F90_DeleteFunction*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
@@ -5557,7 +5557,7 @@ MPIR_Win_copy_attr_f90_proxy(
     MPI_Fint ierr = 0;
     MPI_Fint fhandle = (MPI_Fint)win;
     MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = MPI_VOID_PTR_CAST_TO_MPI_AINT (value);
+    MPI_Aint fvalue = MPIU_VOID_PTR_CAST_TO_MPI_AINT (value);
     MPI_Aint* fextra  = (MPI_Aint*)extra_state;
     MPI_Aint fnew = 0;
     MPI_Fint fflag = 0;
@@ -5565,7 +5565,7 @@ MPIR_Win_copy_attr_f90_proxy(
     ((F90_CopyFunction*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
 
     *flag = MPIR_FROM_FLOG(fflag);
-    *new_value = MPI_AINT_CAST_TO_VOID_PTR (fnew);
+    *new_value = MPIU_AINT_CAST_TO_VOID_PTR (fnew);
     return (int)ierr;
 }
 
@@ -5588,7 +5588,7 @@ MPIR_Win_delete_attr_f90_proxy(
     MPI_Fint ierr = 0;
     MPI_Fint fhandle = (MPI_Fint)win;
     MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = MPI_VOID_PTR_CAST_TO_MPI_AINT (value);
+    MPI_Aint fvalue = MPIU_VOID_PTR_CAST_TO_MPI_AINT (value);
     MPI_Aint* fextra  = (MPI_Aint*)extra_state;
 
     ((F90_DeleteFunction*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
