@@ -228,7 +228,6 @@ int MPIU_Wtime_init(void);
 #define MPICH_TIMER_KIND @MPICH_TIMER_KIND@
 
 #if MPICH_TIMER_KIND == USE_GETHRTIME
-#define MPIU_Wtime_init() 0
 #define MPIUM_Wtime_todouble MPIU_Wtime_todouble
 
 #elif MPICH_TIMER_KIND == USE_CLOCK_GETTIME
@@ -282,7 +281,6 @@ extern double MPIU_Seconds_per_tick;
 #define MPIUM_Wtime_todouble(t, d) *d = (double)*t * MPIU_Seconds_per_tick
 
 #elif MPICH_TIMER_KIND == USE_LINUXALPHA_CYCLE
-#define MPIU_Wtime_init() 0
 #define MPIUM_Wtime_todouble MPIU_Wtime_todouble
 
 #elif MPICH_TIMER_KIND == USE_QUERYPERFORMANCECOUNTER
