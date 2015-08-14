@@ -39,25 +39,25 @@
 #define MPIU_THREAD_CS_ENTER_LOCKNAME(name_,mutex_)                     \
     do {                                                                \
         MPIU_DBG_MSG_S(THREAD,VERBOSE,"attempting to ENTER lockname=%s", #name_); \
-        MPIU_Thread_CS_enter_lockname_impl_(#name_, &mutex_); \
+        MPIU_Thread_CS_enter_lockname_impl_(#name_, &mutex_);           \
     } while (0)
 
 #define MPIU_THREAD_CS_EXIT_LOCKNAME(name_,mutex_)                      \
     do {                                                                \
         MPIU_DBG_MSG_S(THREAD,VERBOSE,"attempting to EXIT lockname=%s", #name_); \
-        MPIU_Thread_CS_exit_lockname_impl_(#name_, &mutex_); \
+        MPIU_Thread_CS_exit_lockname_impl_(#name_, &mutex_);            \
     } while (0)
 
 #define MPIU_THREAD_CS_YIELD_LOCKNAME(name_,mutex_)                     \
     do {                                                                \
         MPIU_DBG_MSG_S(THREAD,VERBOSE,"attempting to YIELD lockname=%s", #name_); \
-        MPIU_Thread_CS_yield_lockname_impl_(#name_, &mutex_); \
+        MPIU_Thread_CS_yield_lockname_impl_(#name_, &mutex_);           \
     } while (0)
 
 
 enum MPIU_Nest_mutexes {
     MPIU_NEST_GLOBAL = 0,
-    MPIU_NEST_POBJ,   /* Nesting does not really make sense for POBJ */
+    MPIU_NEST_POBJ,     /* Nesting does not really make sense for POBJ */
     MPIU_NEST_NUM_MUTEXES
 };
 

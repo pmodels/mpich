@@ -149,23 +149,23 @@ static MPL_DBG_INLINE_KEYWORD int MPIU_cc_is_complete(MPIU_cc_t * cc_ptr)
 }
 
 /* incomplete_==TRUE iff the cc > 0 after the decr */
-#define MPIU_cc_decr(cc_ptr_, incomplete_)                                  \
-    do {                                                                    \
-        OPA_write_barrier();                                                \
-        MPL_VG_ANNOTATE_HAPPENS_BEFORE(cc_ptr_);                            \
-        *(incomplete_) = !OPA_decr_and_test_int(cc_ptr_);                   \
-        /* TODO check if this HA is actually necessary */                   \
-        if (!*(incomplete_)) {                                              \
-            MPL_VG_ANNOTATE_HAPPENS_AFTER(cc_ptr_);                         \
-        }                                                                   \
+#define MPIU_cc_decr(cc_ptr_, incomplete_)                      \
+    do {                                                        \
+        OPA_write_barrier();                                    \
+        MPL_VG_ANNOTATE_HAPPENS_BEFORE(cc_ptr_);                \
+        *(incomplete_) = !OPA_decr_and_test_int(cc_ptr_);       \
+        /* TODO check if this HA is actually necessary */       \
+        if (!*(incomplete_)) {                                  \
+            MPL_VG_ANNOTATE_HAPPENS_AFTER(cc_ptr_);             \
+        }                                                       \
     } while (0)
 
 /* MT FIXME does this need a HB/HA annotation?  This macro is only used for
  * cancel_send right now. */
 /* was_incomplete_==TRUE iff the cc==0 before the decr */
-#define MPIU_cc_incr(cc_ptr_, was_incomplete_)                              \
-    do {                                                                    \
-        *(was_incomplete_) = OPA_fetch_and_incr_int(cc_ptr_);               \
+#define MPIU_cc_incr(cc_ptr_, was_incomplete_)                  \
+    do {                                                        \
+        *(was_incomplete_) = OPA_fetch_and_incr_int(cc_ptr_);   \
     } while (0)
 
 #define MPIU_cc_get(cc_) OPA_load_int(&(cc_))
@@ -184,18 +184,18 @@ static MPL_DBG_INLINE_KEYWORD int MPIU_cc_is_complete(MPIU_cc_t * cc_ptr)
 /* Ideally _GLOBAL would use this too, but we don't want to count on OPA
  * availability in _GLOBAL mode.  Instead the GLOBAL critical section should be
  * used. */
-#define MPIU_OBJ_PUBLISH_HANDLE(hnd_lval_, handle_)                                 \
-    do {                                                                            \
+#define MPIU_OBJ_PUBLISH_HANDLE(hnd_lval_, handle_)                     \
+    do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
             /* wmb ensures all read-only object field values are seen before the */ \
-            /* handle value is seen at the application level */                     \
-            OPA_write_barrier();                                                    \
-            /* volatile ensures lval is not speculatively read or written */        \
-            *(volatile int *)&(hnd_lval_) = (handle_);                              \
-        }                                                                           \
-        else {                                                                      \
-            (hnd_lval_) = (handle_);                                                \
-        }                                                                           \
+            /* handle value is seen at the application level */         \
+            OPA_write_barrier();                                        \
+            /* volatile ensures lval is not speculatively read or written */ \
+            *(volatile int *)&(hnd_lval_) = (handle_);                  \
+        }                                                               \
+        else {                                                          \
+            (hnd_lval_) = (handle_);                                    \
+        }                                                               \
     } while (0)
 
 #endif /* !defined(MPIU_THREAD_POBJ_H_INCLUDED) */

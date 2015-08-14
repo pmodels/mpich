@@ -105,7 +105,7 @@ extern MPIU_TLS_SPECIFIER MPICH_PerThread_t MPIU_Thread;
 #define MPIU_THREADPRIV_DECL
 #define MPIU_THREADPRIV_GET
 #define MPIU_THREADPRIV_FIELD(a_) (MPIU_Thread.a_)
-#define MPIU_THREADPRIV_FINALIZE do{}while(0)
+#define MPIU_THREADPRIV_FINALIZE do {} while (0)
 
 #endif /* defined(MPIU_TLS_SPECIFIER) */
 

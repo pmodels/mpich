@@ -5,10 +5,10 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-/* For "historical" reasons windows.h includes winsock.h 
+/* For "historical" reasons windows.h includes winsock.h
  * internally and WIN32_MEAN_AND_LEAN is to be defined
- * if we plan to include winsock2.h later on -- in the 
- * include hierarchy -- to prevent type redefinition 
+ * if we plan to include winsock2.h later on -- in the
+ * include hierarchy -- to prevent type redefinition
  * errors...
  */
 #ifndef MPIU_THREAD_WIN_TYPES_H_INCLUDED
@@ -22,13 +22,11 @@ typedef HANDLE MPIU_Thread_mutex_t;
 typedef HANDLE MPIU_Thread_id_t;
 typedef DWORD MPIU_Thread_tls_t;
 
-typedef struct MPIU_Thread_cond_fifo_t
-{
+typedef struct MPIU_Thread_cond_fifo_t {
     HANDLE event;
     struct MPIU_Thread_cond_fifo_t *next;
 } MPIU_Thread_cond_fifo_t;
-typedef struct MPIU_Thread_cond_t
-{
+typedef struct MPIU_Thread_cond_t {
     MPIU_Thread_tls_t tls;
     MPIU_Thread_mutex_t fifo_mutex;
     MPIU_Thread_cond_fifo_t *fifo_head, *fifo_tail;
