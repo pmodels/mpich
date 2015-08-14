@@ -51,7 +51,6 @@ int MPIDI_CH3_Win_hooks_init(MPIDI_CH3U_Win_hooks_t *win_hooks)
 int MPIDI_CH3_Win_pkt_orderings_init(MPIDI_CH3U_Win_pkt_ordering_t * win_pkt_orderings)
 {
     int mpi_errno = MPI_SUCCESS;
-    int netmod_ordering = 0;
 
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_WIN_PKT_ORDERINGS_INIT);
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3_WIN_PKT_ORDERINGS_INIT);
