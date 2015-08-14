@@ -8,6 +8,8 @@
 
 #include "mpichconf.h"
 #include <stdlib.h>
+#include "mpl.h"
+
 /*
  * This include file provide the definitions that are necessary to use the
  * timer calls, including the definition of the time stamp type and

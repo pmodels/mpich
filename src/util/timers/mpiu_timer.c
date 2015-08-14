@@ -6,6 +6,38 @@
 
 #include "mpiu_timer.h"
 
+/*
+ * For timers that do not have defined resolutions, compute the resolution
+ * by sampling the clock itself.
+ *
+ */
+static double tickval = -1.0;
+
+static void init_wtick(void) ATTRIBUTE((unused));
+static void init_wtick(void)
+{
+    double timediff;
+    MPIU_Time_t t1, t2;
+    int cnt;
+    int icnt;
+
+    tickval = 1.0e6;
+    for (icnt = 0; icnt < 10; icnt++) {
+        cnt = 1000;
+        MPIU_Wtime(&t1);
+        do {
+            MPIU_Wtime(&t2);
+            MPIU_Wtime_diff(&t1, &t2, &timediff);
+            if (timediff > 0)
+                break;
+        }
+        while (cnt--);
+        if (cnt && timediff > 0.0 && timediff < tickval) {
+            MPIU_Wtime_diff(&t1, &t2, &tickval);
+        }
+    }
+}
+
 #if MPICH_TIMER_KIND == USE_GETHRTIME
 /*
  * MPIU_Time_t is hrtime_t, which under Solaris is defined as a 64bit
@@ -47,10 +79,10 @@ double MPIU_Wtick(void)
      * is untested */
     return 1.0e-9;
 }
-void MPIU_Init_wtick();
+
 int MPIU_Wtime_init(void)
 {
-    MPIU_Init_wtick();
+    init_wtick();
     return 0;
 }
 
@@ -86,9 +118,6 @@ void MPIU_Wtime_acc(MPIU_Time_t * t1, MPIU_Time_t * t2, MPIU_Time_t * t3)
     }
 }
 
-/* FIXME: We need to cleanup the use of the MPIU_Generic_wtick prototype */
-double MPIU_Generic_wtick(void);
-
 double MPIU_Wtick(void)
 {
     struct timespec res;
@@ -100,19 +129,16 @@ double MPIU_Wtick(void)
         return res.tv_sec + 1.0e-9 * res.tv_nsec;
 
     /* Sigh.  If not implemented (POSIX allows that),
-     * then we need to use the generic tick routine */
-    return MPIU_Generic_wtick();
+     * then we need to return the generic tick value */
+    return tickval;
 }
-void MPIU_Init_wtick();
+
 int MPIU_Wtime_init(void)
 {
-    MPIU_Init_wtick();
+    init_wtick();
     return 0;
 }
 
-#define MPICH_NEEDS_GENERIC_WTICK
-/* Rename the function so that we can access it */
-#define MPIU_Wtick MPIU_Generic_wtick
 
 #elif MPICH_TIMER_KIND == USE_GETTIMEOFDAY
 #ifdef HAVE_SYS_TIME_H
@@ -151,7 +177,15 @@ void MPIU_Wtime_acc(MPIU_Time_t * t1, MPIU_Time_t * t2, MPIU_Time_t * t3)
     }
 }
 
-#define MPICH_NEEDS_GENERIC_WTICK
+double MPIU_Wtick(void)
+{
+    return tickval;
+}
+
+int MPIU_Wtime_init(void)
+{
+    return 0;
+}
 
 
 #elif MPICH_TIMER_KIND == USE_LINUX86_CYCLE
@@ -200,6 +234,10 @@ void MPIU_Wtime_acc(MPIU_Time_t * t1, MPIU_Time_t * t2, MPIU_Time_t * t3)
     *t3 += (*t2 - *t1);
 }
 
+double MPIU_Wtick(void)
+{
+    return tickval;
+}
 
 
 #elif MPICH_TIMER_KIND == USE_GCC_IA64_CYCLE
@@ -334,13 +372,13 @@ void MPIU_Wtime_acc(MPIU_Time_t * t1, MPIU_Time_t * t2, MPIU_Time_t * t3)
 
 #elif MPICH_TIMER_KIND == USE_MACH_ABSOLUTE_TIME
 static double MPIR_Wtime_mult;
-void MPIU_Init_wtick();
+
 int MPIU_Wtime_init(void)
 {
     mach_timebase_info_data_t info;
     mach_timebase_info(&info);
     MPIR_Wtime_mult = 1.0e-9 * ((double) info.numer / (double) info.denom);
-    MPIU_Init_wtick();
+    init_wtick();
     return 0;
 }
 
@@ -364,59 +402,9 @@ void MPIU_Wtime_acc(MPIU_Time_t * t1, MPIU_Time_t * t2, MPIU_Time_t * t3)
     *t3 += *t2 - *t1;
 }
 
-/* FIXME: We need to cleanup the use of the MPIU_Generic_wtick prototype */
-double MPIU_Generic_wtick(void);
-
-double MPIU_Wtick(void)
-{
-    return MPIU_Generic_wtick();
-}
-
-#define MPICH_NEEDS_GENERIC_WTICK
-/* Rename the function so that we can access it */
-#define MPIU_Wtick MPIU_Generic_wtick
-
-
-#endif
-
-#ifdef MPICH_NEEDS_GENERIC_WTICK
-/*
- * For timers that do not have defined resolutions, compute the resolution
- * by sampling the clock itself.
- *
- */
-static double tickval = -1.0;
-
-void MPIU_Init_wtick(void)
-{
-    double timediff;
-    MPIU_Time_t t1, t2;
-    int cnt;
-    int icnt;
-
-    tickval = 1.0e6;
-    for (icnt = 0; icnt < 10; icnt++) {
-        cnt = 1000;
-        MPIU_Wtime(&t1);
-        do {
-            MPIU_Wtime(&t2);
-            MPIU_Wtime_diff(&t1, &t2, &timediff);
-            if (timediff > 0)
-                break;
-        }
-        while (cnt--);
-        if (cnt && timediff > 0.0 && timediff < tickval) {
-            MPIU_Wtime_diff(&t1, &t2, &tickval);
-        }
-    }
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIU_Wtick
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
 double MPIU_Wtick(void)
 {
     return tickval;
 }
+
 #endif
