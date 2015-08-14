@@ -1875,32 +1875,6 @@ int MPIDI_CH3_ReqHandler_FOPSendComplete( MPIDI_VC_t *, MPID_Request *,
 /* RMA operation request handler */
 int MPIDI_CH3_Req_handler_rma_op_complete(MPID_Request *);
 
-/* Thread Support */
-#ifdef MPICH_IS_THREADED
-#if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL
-/* There is a single, global lock, held for the duration of an MPI call */
-#define MPIU_THREAD_CS_ENTER_LMT(_context)
-#define MPIU_THREAD_CS_EXIT_LMT(_context)
-
-#elif MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT
-
-/* MT FIXME making LMT into MPIDCOMM for now because of overwhelming deadlock
- * issues */
-#define MPIU_THREAD_CS_ENTER_LMT(context_) MPID_THREAD_CS_ENTER_MPIDCOMM(context_)
-#define MPIU_THREAD_CS_EXIT_LMT(context_)  MPID_THREAD_CS_EXIT_MPIDCOMM(context_)
-
-#elif MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_SINGLE
-/* No thread support, make all operations a no-op */
-/* FIXME incomplete? or already handled by the upper level? */
-/* FIXME does it make sense to have (MPICH_IS_THREADED && _GRANULARITY==_SINGLE) ? */
-
-#else
-#error Unrecognized thread granularity
-#endif
-#else
-
-#endif /* MPICH_IS_THREADED */
-
 #define MPIDI_CH3_GET_EAGER_THRESHOLD(eager_threshold_p, comm, vc)  \
     do {                                                            \
         if ((comm)->dev.eager_max_msg_sz != -1)                     \
