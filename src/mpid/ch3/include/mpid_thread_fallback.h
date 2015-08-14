@@ -4,9 +4,10 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPID_THREAD_H_INCLUDED)
-#define MPID_THREAD_H_INCLUDED
+#if !defined(MPID_THREAD_FALLBACK_H_INCLUDED)
+#define MPID_THREAD_FALLBACK_H_INCLUDED
 
+#include "mpidu_thread_fallback.h"
 #include "mpiutil.h"
 
 /* some important critical section names:
@@ -58,31 +59,32 @@ g * MPI_FINALIZED, MPI_GET_COUNT, MPI_GET_ELEMENTS, MPI_GRAPH_GET,
  * state.  Such situations should be avoided where possible.
  */
 
-typedef MPIU_Thread_mutex_t MPID_Thread_mutex_t;
-typedef MPIU_Thread_cond_t  MPID_Thread_cond_t;
-typedef MPIU_Thread_id_t    MPID_Thread_id_t;
-typedef MPIU_Thread_tls_t   MPID_Thread_tls_t;
-typedef MPIU_Thread_func_t  MPID_Thread_func_t;
+typedef MPIDU_Thread_mutex_t MPID_Thread_mutex_t;
+typedef MPIDU_Thread_cond_t  MPID_Thread_cond_t;
+typedef MPIDU_Thread_id_t    MPID_Thread_id_t;
+typedef MPIDU_Thread_tls_t   MPID_Thread_tls_t;
+typedef MPIDU_Thread_func_t  MPID_Thread_func_t;
+typedef MPIDU_Thread_tls_exit_func_t MPID_Thread_tls_exit_func_t;
 
-/*M MPIU_THREAD_CS_ENTER - Enter a named critical section
+/*M MPIDU_THREAD_CS_ENTER - Enter a named critical section
 
   Input Parameters:
 + _name - name of the critical section
 - _context - A context (typically an object) of the critical section
 
 M*/
-#define MPID_THREAD_CS_ENTER       MPIU_THREAD_CS_ENTER
+#define MPID_THREAD_CS_ENTER       MPIDU_THREAD_CS_ENTER
 
-/*M MPIU_THREAD_CS_EXIT - Exit a named critical section
+/*M MPIDU_THREAD_CS_EXIT - Exit a named critical section
 
   Input Parameters:
 + _name - cname of the critical section
 - _context - A context (typically an object) of the critical section
 
 M*/
-#define MPID_THREAD_CS_EXIT        MPIU_THREAD_CS_EXIT
+#define MPID_THREAD_CS_EXIT        MPIDU_THREAD_CS_EXIT
 
-/*M MPIU_THREAD_CS_YIELD - Temporarily release a critical section and yield
+/*M MPIDU_THREAD_CS_YIELD - Temporarily release a critical section and yield
     to other threads
 
   Input Parameters:
@@ -90,10 +92,10 @@ M*/
 - _context - A context (typically an object) of the critical section
 
   M*/
-#define MPID_THREAD_CS_YIELD       MPIU_THREAD_CS_YIELD
+#define MPID_THREAD_CS_YIELD       MPIDU_THREAD_CS_YIELD
 
-#define MPID_THREAD_CHECK_BEGIN    MPIU_THREAD_CHECK_BEGIN
-#define MPID_THREAD_CHECK_END      MPIU_THREAD_CHECK_END
+#define MPID_THREAD_CHECK_BEGIN    MPIDU_THREAD_CHECK_BEGIN
+#define MPID_THREAD_CHECK_END      MPIDU_THREAD_CHECK_END
 
 /*@
   MPID_Thread_create - create a new thread
@@ -110,12 +112,12 @@ M*/
   The thread is created in a detach state, meaning that is may not be waited upon.  If another thread needs to wait for this
   thread to complete, the threads must provide their own synchronization mechanism.
 @*/
-#define MPID_Thread_create       MPIU_Thread_create
+#define MPID_Thread_create       MPIDU_Thread_create
 
 /*@
   MPID_Thread_exit - exit from the current thread
 @*/
-#define MPID_Thread_exit         MPIU_Thread_exit
+#define MPID_Thread_exit         MPIDU_Thread_exit
 
 /*@
   MPID_Thread_self - get the identifier of the current thread
@@ -123,7 +125,7 @@ M*/
   Output Parameter:
 . id - identifier of current thread
 @*/
-#define MPID_Thread_self         MPIU_Thread_self
+#define MPID_Thread_self         MPIDU_Thread_self
 
 /*@
   MPID_Thread_same - compare two threads identifiers to see if refer to the same thread
@@ -135,12 +137,12 @@ M*/
   Output Parameter:
 . same - TRUE if the two threads identifiers refer to the same thread; FALSE otherwise
 @*/
-#define MPID_Thread_same       MPIU_Thread_same
+#define MPID_Thread_same       MPIDU_Thread_same
 
 /*@
   MPID_Thread_yield - voluntarily relinquish the CPU, giving other threads an opportunity to run
 @*/
-#define MPID_Thread_same       MPIU_Thread_same
+#define MPID_Thread_same       MPIDU_Thread_same
 
 /*
  *    Mutexes
@@ -153,7 +155,7 @@ M*/
 + mutex - mutex
 - err - error code (non-zero indicates an error has occurred)
 @*/
-#define MPID_Thread_mutex_create  MPIU_Thread_mutex_create
+#define MPID_Thread_mutex_create  MPIDU_Thread_mutex_create
 
 /*@
   MPID_Thread_mutex_destroy - destroy an existing mutex
@@ -164,7 +166,7 @@ M*/
   Output Parameter:
 . err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
 @*/
-#define MPID_Thread_mutex_destroy  MPIU_Thread_mutex_destroy
+#define MPID_Thread_mutex_destroy  MPIDU_Thread_mutex_destroy
 
 /*@
   MPID_Thread_lock - acquire a mutex
@@ -172,7 +174,7 @@ M*/
   Input Parameter:
 . mutex - mutex
 @*/
-#define MPID_Thread_mutex_lock MPIU_Thread_mutex_lock
+#define MPID_Thread_mutex_lock MPIDU_Thread_mutex_lock
 
 /*@
   MPID_Thread_unlock - release a mutex
@@ -180,7 +182,7 @@ M*/
   Input Parameter:
 . mutex - mutex
 @*/
-#define MPID_Thread_mutex_unlock MPIU_Thread_mutex_unlock
+#define MPID_Thread_mutex_unlock MPIDU_Thread_mutex_unlock
 
 /*@
   MPID_Thread_mutex_trylock - try to acquire a mutex, but return even if unsuccessful
@@ -191,7 +193,7 @@ M*/
   Output Parameter:
 . flag - flag
 @*/
-#define MPID_Thread_mutex_trylock MPIU_Thread_mutex_trylock
+#define MPID_Thread_mutex_trylock MPIDU_Thread_mutex_trylock
 
 /*
  * Condition Variables
@@ -204,7 +206,7 @@ M*/
 + cond - condition variable
 - err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
 @*/
-#define MPID_Thread_cond_create MPIU_Thread_cond_create
+#define MPID_Thread_cond_create MPIDU_Thread_cond_create
 
 /*@
   MPID_Thread_cond_destroy - destroy an existinga condition variable
@@ -216,7 +218,7 @@ M*/
 . err - location to store the error code; pointer may be NULL; error is zero
         for success, non-zero if a failure occurred
 @*/
-#define MPID_Thread_cond_destroy MPIU_Thread_cond_destroy
+#define MPID_Thread_cond_destroy MPIDU_Thread_cond_destroy
 
 /*@
   MPID_Thread_cond_wait - wait (block) on a condition variable
@@ -232,7 +234,7 @@ M*/
   has changed in a way that warrants letting the
   thread proceed.
 @*/
-#define MPID_Thread_cond_wait MPIU_Thread_cond_wait
+#define MPID_Thread_cond_wait MPIDU_Thread_cond_wait
 
 /*@
   MPID_Thread_cond_broadcast - release all threads currently waiting on a condition variable
@@ -240,7 +242,7 @@ M*/
   Input Parameter:
 . cond - condition variable
 @*/
-#define MPID_Thread_cond_broadcast MPIU_Thread_cond_broadcast
+#define MPID_Thread_cond_broadcast MPIDU_Thread_cond_broadcast
 
 /*@
   MPID_Thread_cond_signal - release one thread currently waitng on a condition variable
@@ -248,7 +250,7 @@ M*/
   Input Parameter:
 . cond - condition variable
 @*/
-#define MPID_Thread_cond_signal MPIU_Thread_cond_signal
+#define MPID_Thread_cond_signal MPIDU_Thread_cond_signal
 
 /*
  * Thread Local Storage
@@ -265,7 +267,7 @@ M*/
 - err - location to store the error code; pointer may be NULL; error is zero
         for success, non-zero if a failure occurred
 @*/
-#define MPID_Thread_tls_create MPIU_Thread_tls_create
+#define MPID_Thread_tls_create MPIDU_Thread_tls_create
 
 /*@
   MPID_Thread_tls_destroy - destroy a thread local storage space
@@ -281,7 +283,7 @@ M*/
   The destroy function associated with the thread local storage will not
   called after the space has been destroyed.
 @*/
-#define MPID_Thread_tls_destroy MPIU_Thread_tls_destroy
+#define MPID_Thread_tls_destroy MPIDU_Thread_tls_destroy
 
 /*@
   MPID_Thread_tls_set - associate a value with the current thread in the
@@ -291,7 +293,7 @@ M*/
 + tls - thread local storage space
 - value - value to associate with current thread
 @*/
-#define MPID_Thread_tls_set MPIU_Thread_tls_set
+#define MPID_Thread_tls_set MPIDU_Thread_tls_set
 
 /*@
   MPID_Thread_tls_get - obtain the value associated with the current thread
@@ -303,15 +305,15 @@ M*/
   Output Parameter:
 . value - value associated with current thread
 @*/
-#define MPID_Thread_tls_get MPIU_Thread_tls_get
+#define MPID_Thread_tls_get MPIDU_Thread_tls_get
 
 
-#define MPID_cc_t            MPIU_cc_t
-#define MPID_cc_get          MPIU_cc_get
-#define MPID_cc_set          MPIU_cc_set
-#define MPID_cc_is_complete  MPIU_cc_is_complete
-#define MPID_cc_incr         MPIU_cc_incr
-#define MPID_cc_decr         MPIU_cc_decr
+#define MPID_cc_t            MPIDU_cc_t
+#define MPID_cc_get          MPIDU_cc_get
+#define MPID_cc_set          MPIDU_cc_set
+#define MPID_cc_is_complete  MPIDU_cc_is_complete
+#define MPID_cc_incr         MPIDU_cc_incr
+#define MPID_cc_decr         MPIDU_cc_decr
 
 
-#endif /* !defined(MPID_THREAD_H_INCLUDED) */
+#endif /* !defined(MPID_THREAD_FALLBACK_H_INCLUDED) */
