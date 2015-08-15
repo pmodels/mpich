@@ -89,7 +89,7 @@ int MPIOI_File_iread_all(MPI_File fh,
     ADIO_File adio_fh;
     void *xbuf=NULL, *e32_buf=NULL;
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
 
     adio_fh = MPIO_File_resolve(fh);
 
@@ -142,7 +142,7 @@ int MPIOI_File_iread_all(MPI_File fh,
     }
 
 fn_exit:
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
 
     return error_code;
 }

@@ -50,7 +50,7 @@ int MPI_File_read_ordered_begin(MPI_File fh, void *buf, int count,
     static char myname[] = "MPI_FILE_READ_ORDERED_BEGIN";
     void *xbuf=NULL, *e32_buf=NULL;
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
 
     adio_fh = MPIO_File_resolve(fh);
 
@@ -131,7 +131,7 @@ int MPI_File_read_ordered_begin(MPI_File fh, void *buf, int count,
     }
 
 fn_exit:
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
 
     return error_code;
 }

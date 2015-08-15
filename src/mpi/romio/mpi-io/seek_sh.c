@@ -41,7 +41,7 @@ int MPI_File_seek_shared(MPI_File fh, MPI_Offset offset, int whence)
     MPI_Offset curr_offset, eof_offset, tmp_offset;
     ADIO_File adio_fh;
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
 
     adio_fh = MPIO_File_resolve(fh);
 
@@ -178,7 +178,7 @@ int MPI_File_seek_shared(MPI_File fh, MPI_Offset offset, int whence)
     error_code = MPI_SUCCESS;
 
 fn_exit:
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
 
     return error_code;
 }

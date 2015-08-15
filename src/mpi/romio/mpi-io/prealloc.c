@@ -48,7 +48,7 @@ int MPI_File_preallocate(MPI_File fh, MPI_Offset size)
 		  adio_fh, MPI_DATATYPE_NULL, -1);
 #endif /* MPI_hpux */
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_ThreadInfo.global_mutex);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
 
     adio_fh = MPIO_File_resolve(fh);
 
@@ -99,7 +99,7 @@ int MPI_File_preallocate(MPI_File fh, MPI_Offset size)
 
 
 fn_exit:
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_ThreadInfo.global_mutex);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
 
     /* TODO: bcast result? */
     if (!mynod) return error_code;

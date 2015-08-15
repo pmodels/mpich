@@ -42,16 +42,16 @@ int MPID_Probe(int source, int tag, MPID_Comm * comm, int context_offset,
             do {
                 int found;
                 
-                MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.msgq_mutex);
+                MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_MSGQ_MUTEX);
                 found = MPIDI_CH3U_Recvq_FU(source, tag, context, status);
-                MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.msgq_mutex);
+                MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_MSGQ_MUTEX);
                 if (found) goto fn_exit;
 
                 mpi_errno = MPIDI_Anysource_iprobe_fn(tag, comm, context_offset, &found, status);
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 if (found) goto fn_exit;
 
-                MPID_THREAD_CS_YIELD(GLOBAL, MPIR_ThreadInfo.global_mutex);
+                MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
                 
                 mpi_errno = MPIDI_CH3_Progress_test();
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -71,7 +71,7 @@ int MPID_Probe(int source, int tag, MPID_Comm * comm, int context_offset,
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     if (found) goto fn_exit;
                     
-                    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_ThreadInfo.global_mutex);
+                    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
                     
                     mpi_errno = MPIDI_CH3_Progress_test();
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -86,9 +86,9 @@ int MPID_Probe(int source, int tag, MPID_Comm * comm, int context_offset,
     {
         int found;
 
-        MPID_THREAD_CS_ENTER(POBJ, MPIR_ThreadInfo.msgq_mutex);
+        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_MSGQ_MUTEX);
         found = MPIDI_CH3U_Recvq_FU(source, tag, context, status);
-        MPID_THREAD_CS_EXIT(POBJ, MPIR_ThreadInfo.msgq_mutex);
+        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_MSGQ_MUTEX);
         if (found) break;
 
 	mpi_errno = MPIDI_CH3_Progress_wait(&progress_state);
