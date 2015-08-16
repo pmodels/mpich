@@ -8,6 +8,14 @@
 
 #include "mpichconf.h"
 #include <stdlib.h>
+
+#if defined (HAVE_UNISTD_H)
+#include <unistd.h>
+#if defined (NEEDS_USLEEP_DECL)
+int usleep(useconds_t usec);
+#endif
+#endif
+
 #include "mpl.h"
 
 /*
