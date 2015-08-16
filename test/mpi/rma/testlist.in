@@ -31,12 +31,12 @@ lockopts 2
 lock_dt 2
 lock_dt_flush 2
 lock_dt_flushlocal 2
-lockall_dt 4
+lockall_dt 4 timeLimit=240
 lockall_dt_flush 4 timeLimit=240
 lockall_dt_flushall 4 timeLimit=240
 lockall_dt_flushlocal 4 timeLimit=240
 lockall_dt_flushlocalall 4 timeLimit=240
-lock_contention_dt 4
+lock_contention_dt 4 timeLimit=240
 transpose4 2
 fetchandadd 7
 fetchandadd_tree 7
