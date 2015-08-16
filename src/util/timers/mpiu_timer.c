@@ -234,11 +234,6 @@ void MPIU_Wtime_acc(MPIU_Time_t * t1, MPIU_Time_t * t2, MPIU_Time_t * t3)
     *t3 += (*t2 - *t1);
 }
 
-double MPIU_Wtick(void)
-{
-    return tickval;
-}
-
 
 #elif MPICH_TIMER_KIND == MPIU_GCC_IA64_CYCLE
 #include <sys/time.h>
