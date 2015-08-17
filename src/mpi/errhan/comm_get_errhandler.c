@@ -33,11 +33,11 @@ int MPI_Comm_get_errhandler(MPI_Comm comm, MPI_Errhandler *errhandler) __attribu
 #define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Comm_get_errhandler_impl(MPID_Comm *comm_ptr, MPID_Errhandler **errhandler_ptr)
 {
-    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->pobj_mutex);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
     *errhandler_ptr = comm_ptr->errhandler;
     if (comm_ptr->errhandler)
 	MPIR_Errhandler_add_ref(comm_ptr->errhandler);
-    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->pobj_mutex);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
 
     return;
 }

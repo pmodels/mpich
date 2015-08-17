@@ -1181,6 +1181,7 @@ int MPIR_Comm_map_free(struct MPID_Comm *comm);
   S*/
 typedef struct MPID_Comm {
     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
+    MPID_Thread_mutex_t mutex;
     MPIU_Context_id_t context_id; /* Send context id.  See notes */
     MPIU_Context_id_t recvcontext_id; /* Send context id.  See notes */
     int           remote_size;   /* Value of MPI_Comm_(remote)_size */
@@ -1638,6 +1639,7 @@ MPID_Progress_state;
   S*/
 typedef struct MPID_Win {
     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
+    MPID_Thread_mutex_t mutex;
     MPID_Errhandler *errhandler;  /* Pointer to the error handler structure */
     void *base;
     MPI_Aint    size;        

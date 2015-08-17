@@ -256,9 +256,9 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
     MPIU_DBG_MSG_FMT(ERRHAND, TERSE, (MPIU_DBG_FDEST, "MPIR_Err_return_comm(comm_ptr=%p, fcname=%s, errcode=%d)", comm_ptr, fcname, errcode));
 
     if (comm_ptr) {
-        MPID_THREAD_CS_ENTER(POBJ, comm_ptr->pobj_mutex);
+        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
         errhandler = comm_ptr->errhandler;
-        MPID_THREAD_CS_EXIT(POBJ, comm_ptr->pobj_mutex);
+        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
     }
 
     if (errhandler == NULL) {
@@ -284,12 +284,12 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
     /* comm_ptr may have changed to comm_world.  Keep this locked as long as we
      * are using the errhandler to prevent it from disappearing out from under
      * us. */
-    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->pobj_mutex);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
     errhandler = comm_ptr->errhandler;
 
     /* --BEGIN ERROR HANDLING-- */
     if (errhandler == NULL || errhandler->handle == MPI_ERRORS_ARE_FATAL) {
-        MPID_THREAD_CS_EXIT(POBJ, comm_ptr->pobj_mutex);
+        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
 	/* Calls MPID_Abort */
 	MPIR_Handle_fatal_error( comm_ptr, fcname, errcode );
         /* never get here */
@@ -338,7 +338,7 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
 
     }
 
-    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->pobj_mutex);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
     return errcode;
 }
 

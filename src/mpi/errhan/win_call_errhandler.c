@@ -96,7 +96,7 @@ int MPI_Win_call_errhandler(MPI_Win win, int errorcode)
 
     /* ... body of routine ...  */
 
-    MPID_THREAD_CS_ENTER(POBJ, win_ptr->pobj_mutex);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
     in_cs = TRUE;
 
     if (!win_ptr->errhandler || 
@@ -151,7 +151,7 @@ int MPI_Win_call_errhandler(MPI_Win win, int errorcode)
 
   fn_exit:
     if (in_cs)
-        MPID_THREAD_CS_EXIT(POBJ, win_ptr->pobj_mutex);
+        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
 
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_WIN_CALL_ERRHANDLER);
     return mpi_errno;

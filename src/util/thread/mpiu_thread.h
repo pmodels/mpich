@@ -151,6 +151,8 @@ extern MPICH_ThreadInfo_t MPIR_ThreadInfo;
 #define MPIR_THREAD_CTX_MUTEX         MPIR_ThreadInfo.ctx_mutex
 #define MPIR_THREAD_PMI_MUTEX         MPIR_ThreadInfo.pmi_mutex
 #define MPIR_THREAD_MEMALLOC_MUTEX    MPIR_ThreadInfo.memalloc_mutex
+#define MPIR_THREAD_POBJ_COMM_MUTEX(_comm_ptr) _comm_ptr->mutex
+#define MPIR_THREAD_POBJ_WIN_MUTEX(_win_ptr)   _win_ptr->mutex
 
 /* ------------------------------------------------------------------------- */
 /* thread-local storage macros */

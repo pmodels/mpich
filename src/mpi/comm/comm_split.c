@@ -370,12 +370,12 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
 	}
 
 	/* Inherit the error handler (if any) */
-        MPID_THREAD_CS_ENTER(POBJ, comm_ptr->pobj_mutex);
+        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
 	(*newcomm_ptr)->errhandler = comm_ptr->errhandler;
 	if (comm_ptr->errhandler) {
 	    MPIR_Errhandler_add_ref( comm_ptr->errhandler );
 	}
-        MPID_THREAD_CS_EXIT(POBJ, comm_ptr->pobj_mutex);
+        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
 
         mpi_errno = MPIR_Comm_commit(*newcomm_ptr);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);

@@ -811,12 +811,12 @@ int MPIR_Comm_copy(MPID_Comm * comm_ptr, int size, MPID_Comm ** outcomm_ptr)
     }
 
     /* Inherit the error handler (if any) */
-    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->pobj_mutex);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
     newcomm_ptr->errhandler = comm_ptr->errhandler;
     if (comm_ptr->errhandler) {
         MPIR_Errhandler_add_ref(comm_ptr->errhandler);
     }
-    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->pobj_mutex);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
 
     /* FIXME do we want to copy coll_fns here? */
 
@@ -892,12 +892,12 @@ int MPIR_Comm_copy_data(MPID_Comm * comm_ptr, MPID_Comm ** outcomm_ptr)
     newcomm_ptr->is_low_group = comm_ptr->is_low_group; /* only relevant for intercomms */
 
     /* Inherit the error handler (if any) */
-    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->pobj_mutex);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
     newcomm_ptr->errhandler = comm_ptr->errhandler;
     if (comm_ptr->errhandler) {
         MPIR_Errhandler_add_ref(comm_ptr->errhandler);
     }
-    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->pobj_mutex);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
 
     /* FIXME do we want to copy coll_fns here? */
 

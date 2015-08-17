@@ -456,7 +456,7 @@ void MPIR_CommL_remember( MPID_Comm *comm_ptr )
 		   "Adding communicator %p to remember list",comm_ptr);
     MPIU_DBG_MSG_P(COMM,VERBOSE,
 		   "Remember list structure address is %p",&MPIR_All_communicators);
-    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->pobj_mutex);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
     if (comm_ptr == MPIR_All_communicators.head) {
 	MPL_internal_error_printf( "Internal error: communicator is already on free list\n" );
 	return;
@@ -467,7 +467,7 @@ void MPIR_CommL_remember( MPID_Comm *comm_ptr )
     MPIU_DBG_MSG_P(COMM,VERBOSE,
 		   "master head is %p", MPIR_All_communicators.head );
 
-    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->pobj_mutex);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
 }
 
 void MPIR_CommL_forget( MPID_Comm *comm_ptr )
@@ -476,7 +476,7 @@ void MPIR_CommL_forget( MPID_Comm *comm_ptr )
 
     MPIU_DBG_MSG_P(COMM,VERBOSE,
 		   "Forgetting communicator %p from remember list",comm_ptr);
-    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->pobj_mutex);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
     p = MPIR_All_communicators.head;
     prev = 0;
     while (p) {
@@ -494,7 +494,7 @@ void MPIR_CommL_forget( MPID_Comm *comm_ptr )
     }
     /* Record a change to the list */
     MPIR_All_communicators.sequence_number++;
-    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->pobj_mutex);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
 }
 
 #ifdef MPIU_PROCTABLE_NEEDED

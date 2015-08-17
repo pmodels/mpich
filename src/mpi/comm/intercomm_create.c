@@ -340,12 +340,12 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
     MPIR_Comm_map_dup(*new_intercomm_ptr, local_comm_ptr, MPIR_COMM_MAP_DIR_L2L);
 
     /* Inherit the error handler (if any) */
-    MPID_THREAD_CS_ENTER(POBJ, local_comm_ptr->pobj_mutex);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(local_comm_ptr));
     (*new_intercomm_ptr)->errhandler = local_comm_ptr->errhandler;
     if (local_comm_ptr->errhandler) {
         MPIR_Errhandler_add_ref( local_comm_ptr->errhandler );
     }
-    MPID_THREAD_CS_EXIT(POBJ, local_comm_ptr->pobj_mutex);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(local_comm_ptr));
 
     mpi_errno = MPIR_Comm_commit(*new_intercomm_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);

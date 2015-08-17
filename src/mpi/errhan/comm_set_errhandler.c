@@ -33,7 +33,7 @@ void MPIR_Comm_set_errhandler_impl(MPID_Comm *comm_ptr, MPID_Errhandler *errhand
 {
     int in_use;
 
-    MPID_THREAD_CS_ENTER(POBJ, comm_ptr->pobj_mutex);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
 
     /* We don't bother with the case where the errhandler is NULL;
        in this case, the error handler was the original, MPI_ERRORS_ARE_FATAL,
@@ -48,7 +48,7 @@ void MPIR_Comm_set_errhandler_impl(MPID_Comm *comm_ptr, MPID_Errhandler *errhand
     MPIR_Errhandler_add_ref(errhandler_ptr);
     comm_ptr->errhandler = errhandler_ptr;
 
-    MPID_THREAD_CS_EXIT(POBJ, comm_ptr->pobj_mutex);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
     return;
 }
 

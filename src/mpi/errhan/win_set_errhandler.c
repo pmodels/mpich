@@ -104,7 +104,7 @@ int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler)
 
     /* ... body of routine ...  */
 
-    MPID_THREAD_CS_ENTER(POBJ, win_ptr->pobj_mutex);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
 
     if (win_ptr->errhandler != NULL) {
         MPIR_Errhandler_release_ref(win_ptr->errhandler,&in_use);
@@ -116,7 +116,7 @@ int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler)
     MPIR_Errhandler_add_ref(errhan_ptr);
     win_ptr->errhandler = errhan_ptr;
 
-    MPID_THREAD_CS_EXIT(POBJ, win_ptr->pobj_mutex);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_WIN_MUTEX(win_ptr));
 
     /* ... end of body of routine ... */
 
