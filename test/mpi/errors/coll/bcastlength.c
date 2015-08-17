@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "mpi.h"
 #include "mpitest.h"
+#include "mpicolltest.h"
 
 /* Very simple test that Bcast handled mismatched lengths (while not a
    common user error, we've seen it several times, so good handling of
@@ -27,10 +28,10 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (rank == 0) {
-        ierr = MPI_Bcast(buf, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        ierr = MTest_Bcast(buf, 1, MPI_INT, 0, MPI_COMM_WORLD);
     }
     else {
-        ierr = MPI_Bcast(buf, 10, MPI_INT, 0, MPI_COMM_WORLD);
+        ierr = MTest_Bcast(buf, 10, MPI_INT, 0, MPI_COMM_WORLD);
     }
     if (ierr == MPI_SUCCESS) {
         if (rank != 0) {
@@ -49,10 +50,10 @@ int main(int argc, char *argv[])
     }
 
     if (rank == 0) {
-        ierr = MPI_Bcast(buf, 10, MPI_INT, 0, MPI_COMM_WORLD);
+        ierr = MTest_Bcast(buf, 10, MPI_INT, 0, MPI_COMM_WORLD);
     }
     else {
-        ierr = MPI_Bcast(buf, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        ierr = MTest_Bcast(buf, 1, MPI_INT, 0, MPI_COMM_WORLD);
     }
     if (ierr == MPI_SUCCESS) {
         if (rank != 0) {

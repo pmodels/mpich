@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include "mpi.h"
 #include "mpitest.h"
-
+#include "mpicolltest.h"
 /* Very simple test that Allreduce detects invalid (datatype,operation)
    pair */
 
@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 
     MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
-    ierr = MPI_Reduce(&a, &b, 1, MPI_BYTE, MPI_MAX, 0, MPI_COMM_WORLD);
+    ierr = MTest_Reduce(&a, &b, 1, MPI_BYTE, MPI_MAX, 0, MPI_COMM_WORLD);
     if (ierr == MPI_SUCCESS) {
         errs++;
         printf("Did not detect invalid type/op pair (byte,max) in Allreduce\n");

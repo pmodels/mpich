@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include "mpi.h"
 #include "mpitest.h"
+#include "mpicolltest.h"
 
 int main(int argc, char *argv[])
 {
@@ -29,7 +30,7 @@ int main(int argc, char *argv[])
         recvbuf[i] = -1;
     }
 
-    err = MPI_Allreduce(buf, buf, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+    err = MTest_Allreduce(buf, buf, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     if (!err) {
         errs++;
         if (rank == 0)
@@ -50,7 +51,7 @@ int main(int argc, char *argv[])
      * do our best to carry on in this case by posting a second non-erroneous
      * MPI_Reduce on any process that got back an error from the intentionally
      * erroneous MPI_Reduce. */
-    err = MPI_Reduce(buf, ((rank == 0) ? buf : NULL), 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+    err = MTest_Reduce(buf, ((rank == 0) ? buf : NULL), 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     if (rank == 0) {
         if (!err) {
             errs++;
@@ -65,7 +66,7 @@ int main(int argc, char *argv[])
     }
     if (err) {
         /* post a correct MPI_Reduce on any processes that got an error earlier */
-        err = MPI_Reduce(buf, recvbuf, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+        err = MTest_Reduce(buf, recvbuf, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
         if (err) {
             errs++;
             printf("make-up reduce failed on rank %d\n", rank);
@@ -75,7 +76,7 @@ int main(int argc, char *argv[])
     /* this case should _not_ trigger an error, thanks to Kenneth Inghram for
      * reporting this bug in MPICH */
     err =
-        MPI_Reduce(((rank == 0) ? MPI_IN_PLACE : buf), buf, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+        MTest_Reduce(((rank == 0) ? MPI_IN_PLACE : buf), buf, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     if (err) {
         errs++;
         printf
@@ -86,7 +87,7 @@ int main(int argc, char *argv[])
     }
 
     /* check for aliasing detection in MPI_Gather (tt#1006) */
-    err = MPI_Gather(buf, 1, MPI_INT, buf, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    err = MTest_Gather(buf, 1, MPI_INT, buf, 1, MPI_INT, 0, MPI_COMM_WORLD);
     if (rank == 0) {
         if (!err) {
             errs++;
@@ -100,7 +101,7 @@ int main(int argc, char *argv[])
     }
     if (err) {
         /* post a correct MPI_Gather on any processes that got an error earlier */
-        err = MPI_Gather(buf, 1, MPI_INT, recvbuf, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        err = MTest_Gather(buf, 1, MPI_INT, recvbuf, 1, MPI_INT, 0, MPI_COMM_WORLD);
         if (err) {
             errs++;
             printf("make-up gather failed on rank %d\n", rank);
