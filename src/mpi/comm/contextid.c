@@ -331,7 +331,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
     int own_eager_mask = 0;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int first_iter = 1;
-    int seqnum = 0;
+
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_CONTEXTID);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_CONTEXTID);
@@ -379,10 +379,6 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
         else if (first_iter) {
             memset(local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
             own_eager_mask = 0;
-            if (comm_ptr->idup_count)
-                seqnum = comm_ptr->idup_curr_seqnum++;
-
-
             /* Attempt to reserve the eager mask segment */
             if (!eager_in_use && eager_nelem > 0) {
                 int i;
@@ -403,8 +399,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
                 lowest_tag = tag;
             }
 
-            if (mask_in_use || !(comm_ptr->context_id == lowest_context_id && tag == lowest_tag) ||
-                (comm_ptr->idup_count && seqnum != comm_ptr->idup_next_seqnum)) {
+            if (mask_in_use || !(comm_ptr->context_id == lowest_context_id && tag == lowest_tag)){
                 memset(local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
                 own_mask = 0;
                 MPIU_DBG_MSG_D(COMM, VERBOSE, "In in-use, set lowest_context_id to %d",
@@ -412,7 +407,6 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
             }
             else {
                 int i;
-
                 /* Copy safe mask segment to local_mask */
                 for (i = 0; i < eager_nelem; i++)
                     local_mask[i] = 0;
@@ -501,7 +495,6 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
                     lowest_tag = -1;
                     /* Else leave it alone; there is another thread waiting */
                 }
-                comm_ptr->idup_curr_seqnum++;
             }
             else {
                 /* else we did not find a context id. Give up the mask in case
@@ -577,9 +570,6 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
 
         first_iter = 0;
     }
-    if (seqnum > 0)
-        comm_ptr->idup_next_seqnum++;
-
 
   fn_exit:
     if (ignore_id)
@@ -606,6 +596,7 @@ struct gcn_state {
     int own_eager_mask;
     int first_iter;
     int seqnum;
+    int tag;
     MPID_Comm *comm_ptr;
     MPID_Comm *comm_ptr_inter;
     MPID_Sched_t s;
@@ -779,8 +770,9 @@ static int sched_cb_gcn_copy_mask(MPID_Comm * comm, int tag, void *state)
 
     }
     else {
-        if (st->comm_ptr->context_id < lowest_context_id) {
+        if (st->comm_ptr->context_id < lowest_context_id ) {
             lowest_context_id = st->comm_ptr->context_id;
+            lowest_tag = st->tag;
         }
 
         /* If one of the following conditions happens, set local_mask to zero
@@ -790,7 +782,7 @@ static int sched_cb_gcn_copy_mask(MPID_Comm * comm, int tag, void *state)
          * 3. for the case that multiple communicators duplicating from the
          *    same communicator at the same time, the sequence number of the
          *    current MPI_COMM_IDUP operation is not the smallest. */
-        if (mask_in_use || (st->comm_ptr->context_id != lowest_context_id)
+        if (mask_in_use || (st->comm_ptr->context_id != lowest_context_id) || ( st->comm_ptr->context_id == lowest_context_id && lowest_tag < st->tag)
             || (st->comm_ptr->idup_count > 1 && st->seqnum != st->comm_ptr->idup_next_seqnum)) {
             memset(st->local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
             st->own_mask = 0;
@@ -882,6 +874,8 @@ static int sched_get_cid_nonblock(MPID_Comm * comm_ptr, MPID_Comm * newcomm,
     MPIU_CHKPMEM_MALLOC(st, struct gcn_state *, sizeof(struct gcn_state), mpi_errno, "gcn_state");
     st->ctx0 = ctx0;
     st->ctx1 = ctx1;
+    /* since the tag is only used for odering, it can be higher than tag_ub*/
+    st->tag =  MPIR_Process.attrs.tag_ub+1;
     if (gcn_cid_kind == MPID_INTRACOMM) {
         st->comm_ptr = comm_ptr;
         st->comm_ptr_inter = NULL;
