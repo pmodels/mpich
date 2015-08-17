@@ -6,3 +6,4 @@ too_many_comms 4 strict=FALSE
 too_many_icomms 4 strict=FALSE
 too_many_comms2 4 strict=FALSE
 too_many_comms3 4 strict=FALSE
+too_many_icomms2 4 strict=FALSE
