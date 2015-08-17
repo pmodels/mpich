@@ -544,10 +544,10 @@ int MPID_nem_ptl_get_id_from_bc(const char *business_card, ptl_process_t *id, pt
     ret = MPIU_Str_get_binary_arg(business_card, PTIR_KEY, (char *)ptr, sizeof(ptr), &len);
     MPIR_ERR_CHKANDJUMP(ret != MPIU_STR_SUCCESS || len != sizeof(*ptr), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
 
-    ret = MPIU_Str_get_binary_arg(business_card, PTIRG_KEY, (char *)ptrg, sizeof(ptr), &len);
-    MPIR_ERR_CHKANDJUMP(ret != MPIU_STR_SUCCESS || len != sizeof(*ptrc), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+    ret = MPIU_Str_get_binary_arg(business_card, PTIRG_KEY, (char *)ptrg, sizeof(ptrg), &len);
+    MPIR_ERR_CHKANDJUMP(ret != MPIU_STR_SUCCESS || len != sizeof(*ptrg), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
 
-    ret = MPIU_Str_get_binary_arg(business_card, PTIRC_KEY, (char *)ptrc, sizeof(ptr), &len);
+    ret = MPIU_Str_get_binary_arg(business_card, PTIRC_KEY, (char *)ptrc, sizeof(ptrc), &len);
     MPIR_ERR_CHKANDJUMP(ret != MPIU_STR_SUCCESS || len != sizeof(*ptrc), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
 
  fn_exit:
