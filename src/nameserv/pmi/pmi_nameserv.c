@@ -51,9 +51,9 @@ int MPID_NS_Publish( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 
 #ifdef USE_PMI2_API
     /* release the global CS for PMI calls */
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     rc = PMI2_Nameserv_publish(service_name, info_ptr, port);
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 #else
     rc = PMI_Publish_name( service_name, port );
 #endif
@@ -78,9 +78,9 @@ int MPID_NS_Lookup( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 
 #ifdef USE_PMI2_API
     /* release the global CS for PMI calls */
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     rc = PMI2_Nameserv_lookup(service_name, info_ptr, port, MPI_MAX_PORT_NAME);
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 #else
     rc = PMI_Lookup_name( service_name, port );
 #endif
@@ -105,9 +105,9 @@ int MPID_NS_Unpublish( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 
 #ifdef USE_PMI2_API
     /* release the global CS for PMI calls */
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     rc = PMI2_Nameserv_unpublish(service_name, info_ptr);
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 #else
     rc = PMI_Unpublish_name( service_name );
 #endif

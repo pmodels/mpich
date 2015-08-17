@@ -80,7 +80,7 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_WIN_ALLOCATE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -153,7 +153,7 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
 
   fn_exit:
     MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_WIN_ALLOCATE);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

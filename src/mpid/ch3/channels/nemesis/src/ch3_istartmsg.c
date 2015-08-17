@@ -49,7 +49,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_
     hdr_sz = sizeof(MPIDI_CH3_Pkt_t);
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t*)hdr);
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     in_cs = 1;
 
     if (MPIDI_CH3I_Sendq_empty(MPIDI_CH3I_shm_sendq))
@@ -75,7 +75,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_
 
  fn_exit:
     if (in_cs) {
-        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_MUTEX);
+        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_ISTARTMSG);
     return mpi_errno;

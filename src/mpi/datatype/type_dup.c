@@ -58,7 +58,7 @@ int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype *newtype)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_DUP);
     
     /* Validate parameters, especially handles needing to be converted */
@@ -134,7 +134,7 @@ int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype *newtype)
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_DUP);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

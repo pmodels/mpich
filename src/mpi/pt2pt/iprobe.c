@@ -64,7 +64,7 @@ int MPI_Iprobe(int source, int tag, MPI_Comm comm, int *flag,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_PT2PT_FUNC_ENTER(MPID_STATE_MPI_IPROBE);
     
     /* Validate handle parameters needing to be converted */
@@ -111,7 +111,7 @@ int MPI_Iprobe(int source, int tag, MPI_Comm comm, int *flag,
     
   fn_exit:
     MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_IPROBE);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

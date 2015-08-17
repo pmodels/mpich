@@ -144,7 +144,7 @@ typedef struct MPICH_ThreadInfo_t {
 } MPICH_ThreadInfo_t;
 extern MPICH_ThreadInfo_t MPIR_ThreadInfo;
 
-#define MPIR_THREAD_GLOBAL_MUTEX      MPIR_ThreadInfo.global_mutex
+#define MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX      MPIR_ThreadInfo.global_mutex
 #define MPIR_THREAD_HANDLE_MUTEX      MPIR_ThreadInfo.handle_mutex
 #define MPIR_THREAD_MSGQ_MUTEX        MPIR_ThreadInfo.msgq_mutex
 #define MPIR_THREAD_COMPLETION_MUTEX  MPIR_ThreadInfo.completion_mutex

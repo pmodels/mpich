@@ -44,7 +44,7 @@ int MPI_File_close(MPI_File *fh)
     HPMP_IO_WSTART(fl_xmpi, BLKMPIFILECLOSE, TRDTBLOCK, *adio_fh);
 #endif /* MPI_hpux */
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     adio_fh = MPIO_File_resolve(*fh);
 
@@ -90,7 +90,7 @@ int MPI_File_close(MPI_File *fh)
 #endif /* MPI_hpux */
 
 fn_exit:
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return error_code;
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */

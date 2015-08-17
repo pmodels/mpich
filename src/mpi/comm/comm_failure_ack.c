@@ -58,7 +58,7 @@ int MPIX_Comm_failure_ack( MPI_Comm comm )
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_COMM_FAILURE_ACK);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -98,7 +98,7 @@ int MPIX_Comm_failure_ack( MPI_Comm comm )
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_COMM_FAILURE_ACK);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
 fn_fail:

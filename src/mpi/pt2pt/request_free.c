@@ -72,7 +72,7 @@ int MPI_Request_free(MPI_Request *request)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_REQUEST_FREE);
     
     /* Validate handle parameters needing to be converted */
@@ -174,7 +174,7 @@ int MPI_Request_free(MPI_Request *request)
     
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_REQUEST_FREE);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

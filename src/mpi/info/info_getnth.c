@@ -88,7 +88,7 @@ int MPI_Info_get_nthkey( MPI_Info info, int n, char *key )
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_INFO_GET_NTHKEY);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -127,7 +127,7 @@ int MPI_Info_get_nthkey( MPI_Info info, int n, char *key )
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_INFO_GET_NTHKEY);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
     
   fn_fail:

@@ -180,14 +180,14 @@ static int thread_cs_init( void )
 
 #if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
-    MPID_Thread_mutex_create(&MPIR_THREAD_GLOBAL_MUTEX, &err);
+    MPID_Thread_mutex_create(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIU_Assert(err == 0);
     MPID_Thread_mutex_create(&MPIR_THREAD_HANDLE_MUTEX, &err);
     MPIU_Assert(err == 0);
 
 #elif MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT
     /* MPIR_THREAD_GRANULARITY_PER_OBJECT: Multiple locks */
-    MPID_Thread_mutex_create(&MPIR_THREAD_GLOBAL_MUTEX, &err);
+    MPID_Thread_mutex_create(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIU_Assert(err == 0);
     MPID_Thread_mutex_create(&MPIR_THREAD_HANDLE_MUTEX, &err);
     MPIU_Assert(err == 0);
@@ -226,7 +226,7 @@ int MPIR_Thread_CS_Finalize( void )
     MPIU_DBG_MSG(THREAD,TYPICAL,"Freeing global mutex and private storage");
 #if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
-    MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_MUTEX, &err);
+    MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIU_Assert(err == 0);
     MPID_Thread_mutex_destroy(&MPIR_THREAD_HANDLE_MUTEX, &err);
     MPIU_Assert(err == 0);
@@ -234,7 +234,7 @@ int MPIR_Thread_CS_Finalize( void )
 #elif MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT
     /* MPIR_THREAD_GRANULARITY_PER_OBJECT: There are multiple locks,
      * one for each logical class (e.g., each type of object) */
-    MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_MUTEX, &err);
+    MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIU_Assert(err == 0);
     MPID_Thread_mutex_destroy(&MPIR_THREAD_HANDLE_MUTEX, &err);
     MPIU_Assert(err == 0);
@@ -462,7 +462,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 
     /* We can't acquire any critical sections until this point.  Any
      * earlier the basic data structures haven't been initialized */
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     exit_init_cs_on_failure = 1;
 
     /* create MPI_INFO_NULL object */
@@ -541,7 +541,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 	mpi_errno = MPID_InitCompleted();
 
 fn_exit:
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     /* Make fields of MPIR_Process global visible and set mpich_state
        atomically so that MPI_Initialized() etc. are thread safe */
     OPA_write_barrier();
@@ -554,7 +554,7 @@ fn_fail:
     OPA_store_int(&MPIR_Process.mpich_state, MPICH_PRE_INIT);
 
     if (exit_init_cs_on_failure) {
-        MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+        MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
 #if defined(MPICH_IS_THREADED)
     MPIR_Thread_CS_Finalize();
@@ -683,7 +683,7 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
     mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
     MPID_MPI_INIT_FUNC_EXIT(MPID_STATE_MPI_INIT_THREAD);
 
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     return mpi_errno;
     /* --END ERROR HANDLING-- */

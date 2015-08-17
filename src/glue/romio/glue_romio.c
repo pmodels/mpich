@@ -41,12 +41,12 @@ int MPIR_Ext_assert_fail(const char *cond, const char *file_name, int line_num)
  * threading strategies. */
 void MPIR_Ext_cs_enter_global(void)
 {
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 
 void MPIR_Ext_cs_exit_global(void)
 {
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 
 /* This routine is for a thread to yield control when the thread is waiting for
@@ -55,7 +55,7 @@ void MPIR_Ext_cs_exit_global(void)
 void MPIR_Ext_cs_yield_global_if_progress_blocked(void)
 {
     /* TODO: check whether the progress engine is blocked */
-    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 
 /* will consider MPI_DATATYPE_NULL to be an error */

@@ -71,7 +71,7 @@ int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int ta
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_PT2PT_FUNC_ENTER_FRONT(MPID_STATE_MPI_SEND);
     
     /* Validate handle parameters needing to be converted */
@@ -163,7 +163,7 @@ int MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int ta
     
   fn_exit:
     MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_SEND);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

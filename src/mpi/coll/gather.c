@@ -779,7 +779,7 @@ int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_COLL_FUNC_ENTER(MPID_STATE_MPI_GATHER);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -893,7 +893,7 @@ int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     
   fn_exit:
     MPID_MPI_COLL_FUNC_EXIT(MPID_STATE_MPI_GATHER);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

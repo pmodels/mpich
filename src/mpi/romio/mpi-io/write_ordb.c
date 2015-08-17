@@ -52,7 +52,7 @@ int MPI_File_write_ordered_begin(MPI_File fh, ROMIO_CONST void *buf, int count,
     void *e32buf = NULL;
     const void *xbuf=NULL;
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     adio_fh = MPIO_File_resolve(fh);
 
@@ -125,7 +125,7 @@ int MPI_File_write_ordered_begin(MPI_File fh, ROMIO_CONST void *buf, int count,
     /* --END ERROR HANDLING-- */
 
 fn_exit:
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     /* FIXME: Check for error code from WriteStridedColl? */
     return error_code;

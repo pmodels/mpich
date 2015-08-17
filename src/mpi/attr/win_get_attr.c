@@ -38,7 +38,7 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_WIN_GET_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -198,7 +198,7 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_WIN_GET_ATTR);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

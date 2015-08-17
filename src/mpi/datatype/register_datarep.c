@@ -60,7 +60,7 @@ int MPI_Register_datarep(char *datarep,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_REGISTER_DATAREP);
     
     /* Validate parameters and objects (post conversion) */
@@ -85,7 +85,7 @@ int MPI_Register_datarep(char *datarep,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_REGISTER_DATAREP);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

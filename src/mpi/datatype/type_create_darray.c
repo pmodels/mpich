@@ -392,7 +392,7 @@ int MPI_Type_create_darray(int size,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_CREATE_DARRAY);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -745,7 +745,7 @@ int MPI_Type_create_darray(int size,
   fn_exit:
     MPIU_CHKLMEM_FREEALL();
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_CREATE_DARRAY);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

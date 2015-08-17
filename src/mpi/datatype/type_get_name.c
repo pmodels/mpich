@@ -146,7 +146,7 @@ int MPIR_Datatype_init_names(void)
     MPID_Datatype *datatype_ptr = NULL;
     static volatile int needsInit = 1;
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     if (needsInit) {
 	/* Make sure that the basics have datatype structures allocated
 	 * and filled in for them.  They are just integers prior to this
@@ -204,7 +204,7 @@ int MPIR_Datatype_init_names(void)
 
 fn_fail:
     /* empty statement */ ;
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 }
 #endif

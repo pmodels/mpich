@@ -97,7 +97,7 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     /* FIXME: Why does this routine need a CS */
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -144,7 +144,7 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

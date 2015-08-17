@@ -300,9 +300,9 @@ int MPIR_CommGetAttr_fort(MPI_Comm comm, int comm_keyval, void *attribute_val,
 {
     int mpi_errno;
     
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     mpi_errno = MPIR_CommGetAttr(comm, comm_keyval, attribute_val, flag, outAttrType);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     return mpi_errno;
 }
@@ -355,7 +355,7 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_GET_ATTR);
 
     /* Instead, ask for a desired type. */
@@ -366,7 +366,7 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_GET_ATTR);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

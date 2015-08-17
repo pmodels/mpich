@@ -76,7 +76,7 @@ int MPI_Keyval_create(MPI_Copy_function *copy_fn,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_KEYVAL_CREATE);
 
     /* Validate parameters and objects (post conversion) */
@@ -99,7 +99,7 @@ int MPI_Keyval_create(MPI_Copy_function *copy_fn,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_KEYVAL_CREATE);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

@@ -62,7 +62,7 @@ int MPIX_Comm_failure_get_acked( MPI_Comm comm, MPI_Group *failedgrp )
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_COMM_FAILURE_GET_ACKED);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -102,7 +102,7 @@ int MPIX_Comm_failure_get_acked( MPI_Comm comm, MPI_Group *failedgrp )
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_COMM_FAILURE_GET_ACKED);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
 fn_fail:

@@ -42,7 +42,7 @@ int MPI_File_get_info(MPI_File fh, MPI_Info *info_used)
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_GET_INFO";
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     adio_fh = MPIO_File_resolve(fh);
 
@@ -57,6 +57,6 @@ int MPI_File_get_info(MPI_File fh, MPI_Info *info_used)
     /* --END ERROR HANDLING-- */
 
 fn_exit:
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return  error_code;
 }

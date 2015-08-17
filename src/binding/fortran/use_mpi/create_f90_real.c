@@ -79,7 +79,7 @@ int MPI_Type_create_f90_real( int precision, int range, MPI_Datatype *newtype )
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_CREATE_F90_REAL);
 
     /* ... body of routine ...  */
@@ -123,7 +123,7 @@ int MPI_Type_create_f90_real( int precision, int range, MPI_Datatype *newtype )
     /* ... end of body of routine ... */
 
  fn_exit:
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_CREATE_F90_REAL);
     return mpi_errno;
  fn_fail:

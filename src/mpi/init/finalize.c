@@ -151,7 +151,7 @@ int MPI_Finalize( void )
 
     /* Note: Only one thread may ever call MPI_Finalize (MPI_Finalize may
        be called at most once in any program) */
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FINALIZE_FUNC_ENTER(MPID_STATE_MPI_FINALIZE);
     
     /* ... body of routine ... */
@@ -257,7 +257,7 @@ int MPI_Finalize( void )
     /* If memory debugging is enabled, check the memory here, after all
        finalize callbacks */
 
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     OPA_store_int(&MPIR_Process.mpich_state, MPICH_POST_FINALIZED);
 
 #if defined(MPICH_IS_THREADED)
@@ -319,7 +319,7 @@ int MPI_Finalize( void )
 #   endif
     mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
     if (OPA_load_int(&MPIR_Process.mpich_state) < MPICH_POST_FINALIZED) {
-        MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+        MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
     goto fn_exit;
     /* --END ERROR HANDLING-- */

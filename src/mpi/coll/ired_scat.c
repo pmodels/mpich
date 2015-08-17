@@ -1089,7 +1089,7 @@ int MPI_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_IREDUCE_SCATTER);
     i = 0;
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IREDUCE_SCATTER);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -1159,7 +1159,7 @@ int MPI_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IREDUCE_SCATTER);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
 fn_fail:

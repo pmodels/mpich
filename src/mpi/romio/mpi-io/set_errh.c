@@ -42,7 +42,7 @@ int MPI_File_set_errhandler(MPI_File mpi_fh, MPI_Errhandler errhandler)
     ADIO_File fh;
     MPIU_THREADPRIV_DECL;
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     if (mpi_fh == MPI_FILE_NULL) {
 	ADIOI_DFLT_ERR_HANDLER = errhandler;
@@ -71,6 +71,6 @@ int MPI_File_set_errhandler(MPI_File mpi_fh, MPI_Errhandler errhandler)
     }
 
 fn_exit:
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return error_code;
 }

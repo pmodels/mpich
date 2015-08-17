@@ -175,7 +175,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
             /* XXX DJG don't need this, PMI API is thread-safe? */
             /*MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_PMI_MUTEX);*/
             /* release the global CS for spawn PMI calls */
-            MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+            MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
             pmi_errno = PMI2_Job_Spawn(count, (const char **)commands,
                                        argcs, (const char ***)argvs,
                                        maxprocs,
@@ -184,7 +184,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
                                        NULL, 0,
                                        /*jobId, jobIdSize,*/ /* XXX DJG job stuff? */
                                        pmi_errcodes);
-            MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+            MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
             /*MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_PMI_MUTEX);*/
             MPIU_Free(argcs);
             if (pmi_errno != PMI2_SUCCESS) {

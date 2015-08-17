@@ -49,7 +49,7 @@ int MPID_Mprobe(int source, int tag, MPID_Comm *comm, int context_offset,
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 if (found) goto fn_exit;
 
-                MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+                MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
                 /* FIXME could this be replaced with a progress_wait? */
                 mpi_errno = MPIDI_CH3_Progress_test();
@@ -69,7 +69,7 @@ int MPID_Mprobe(int source, int tag, MPID_Comm *comm, int context_offset,
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     if (found) goto fn_exit;
 
-                    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+                    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
                     /* FIXME could this be replaced with a progress_wait? */
                     mpi_errno = MPIDI_CH3_Progress_test();

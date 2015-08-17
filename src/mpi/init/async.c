@@ -35,7 +35,7 @@ static void progress_fn(void * data)
     /* Explicitly add CS_ENTER/EXIT since this thread is created from
      * within an internal function and will call NMPI functions
      * directly. */
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     /* FIXME: We assume that waiting on some request forces progress
      * on all requests. With fine-grained threads, will this still
@@ -65,7 +65,7 @@ static void progress_fn(void * data)
     MPIU_Thread_cond_signal(&progress_cond, &mpi_errno);
     MPIU_Assert(!mpi_errno);
 
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     return;
 }
@@ -135,7 +135,7 @@ int MPIR_Finalize_async_thread(void)
     MPIU_Assert(!mpi_errno);
 
     /* XXX DJG why is this unlock/lock necessary?  Should we just YIELD here or later?  */
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     MPIU_Thread_mutex_lock(&progress_mutex, &mpi_errno);
     MPIU_Assert(!mpi_errno);
@@ -151,7 +151,7 @@ int MPIR_Finalize_async_thread(void)
     mpi_errno = MPIR_Comm_free_impl(progress_comm_ptr);
     MPIU_Assert(!mpi_errno);
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     MPIU_Thread_cond_destroy(&progress_cond, &mpi_errno);
     MPIU_Assert(!mpi_errno);

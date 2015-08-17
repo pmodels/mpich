@@ -60,7 +60,7 @@ int MPIOI_File_read_all_end(MPI_File fh,
 
     MPIU_UNREFERENCED_ARG(buf);
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     adio_fh = MPIO_File_resolve(fh);
 
@@ -83,7 +83,7 @@ int MPIOI_File_read_all_end(MPI_File fh,
     adio_fh->split_coll_count = 0;
 
 fn_exit:
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     return error_code;
 }

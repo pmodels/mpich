@@ -83,7 +83,7 @@ int MPI_Info_get_valuelen( MPI_Info info, const char *key, int *valuelen, int *f
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_INFO_GET_VALUELEN);
     
     /* Validate parameters, especially handles needing to be converted */
@@ -136,7 +136,7 @@ int MPI_Info_get_valuelen( MPI_Info info, const char *key, int *valuelen, int *f
   fn_exit:
 #endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_INFO_GET_VALUELEN);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
     
     /* --BEGIN ERROR HANDLING-- */

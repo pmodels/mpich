@@ -156,9 +156,9 @@ int MPIDU_Sock_wait(struct MPIDU_Sock_set * sock_set, int millisecond_timeout,
 		       progress while this thread waits for something to 
 		       do */
 		    MPIU_DBG_MSG(THREAD,TYPICAL,"Exit global critical section (sock_wait)");
-		    /* 		    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_MUTEX);
-				    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX); */
-		    MPID_Thread_mutex_unlock(&MPIR_THREAD_GLOBAL_MUTEX, &err);
+		    /* 		    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+				    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); */
+		    MPID_Thread_mutex_unlock(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
 			    
 		    MPIDI_FUNC_ENTER(MPID_STATE_POLL);
 		    n_fds = poll(sock_set->pollfds_active, 
@@ -168,9 +168,9 @@ int MPIDU_Sock_wait(struct MPIDU_Sock_set * sock_set, int millisecond_timeout,
 		    /* Reaquire the lock before processing any of the 
 		       information returned from poll */
 		    MPIU_DBG_MSG(THREAD,TYPICAL,"Enter global critical section (sock_wait)");
-		    /* 		    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
-				    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_MUTEX); */
-		    MPID_Thread_mutex_lock(&MPIR_THREAD_GLOBAL_MUTEX, &err);
+		    /* 		    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+				    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); */
+		    MPID_Thread_mutex_lock(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
 
 		    /*
 		     * Update pollfds array if changes were posted while we 

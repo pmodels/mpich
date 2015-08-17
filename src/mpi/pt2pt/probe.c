@@ -60,7 +60,7 @@ int MPI_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_PT2PT_FUNC_ENTER(MPID_STATE_MPI_PROBE);
     
     /* Validate handle parameters needing to be converted */
@@ -104,7 +104,7 @@ int MPI_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status)
 
   fn_exit:
     MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_PROBE);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

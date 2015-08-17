@@ -298,7 +298,7 @@ int _mpi_world_exiting_handler(int world_id)
 /*  struct worldExitReq *req = (struct worldExitReq *)cookie; */
   MPID_Comm *comm = MPIR_Process.comm_world;
 
-  MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+  MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
   ref_count = MPIDI_get_refcnt_of_world(world_id);
   TRACE_ERR("_mpi_world_exiting_handler: invoked for world %d exiting ref_count=%d my comm_word_size=%d\n", world_id, ref_count, world_size);
   if(ref_count == 0) {
@@ -322,7 +322,7 @@ int _mpi_world_exiting_handler(int world_id)
 
   TRACE_ERR("_mpi_world_exiting_handler: Out of _mpi_reduce_for_dyntask for exiting world %d reduce_state=%d\n",world_id, reduce_state);
 
-  MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+  MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
   if(comm->rank == 0) {
     MPL_snprintf(world_id_str, sizeof(world_id_str), "%d", world_id);
     PMI2_Abort(0, world_id_str);

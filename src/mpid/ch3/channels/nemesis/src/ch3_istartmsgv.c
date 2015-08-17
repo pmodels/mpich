@@ -71,7 +71,7 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPL_IOV *iov, int n_iov, MPID_Request 
     iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t*)iov[0].MPL_IOV_BUF);
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     in_cs = TRUE;
 
     if (MPIDI_CH3I_Sendq_empty(MPIDI_CH3I_shm_sendq))
@@ -184,7 +184,7 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPL_IOV *iov, int n_iov, MPID_Request 
 
  fn_exit:
     if (in_cs) {
-        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_MUTEX);
+        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
     return mpi_errno;

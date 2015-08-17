@@ -103,7 +103,7 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_PT2PT_FUNC_ENTER(MPID_STATE_MPI_WAITSOME);
 
     /* Check the arguments */
@@ -297,7 +297,7 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
     }
 
     MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_WAITSOME);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

@@ -73,7 +73,7 @@ int MPI_Open_port(MPI_Info info, char *port_name)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_OPEN_PORT);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -112,7 +112,7 @@ int MPI_Open_port(MPI_Info info, char *port_name)
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_OPEN_PORT);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

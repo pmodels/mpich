@@ -61,7 +61,7 @@ int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
     
     /* The thread lock prevents a valid attr delete on the same datatype
        but in a different thread from causing problems */
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_DELETE_ATTR);
     
     /* Validate parameters, especially handles needing to be converted */
@@ -145,7 +145,7 @@ int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_DELETE_ATTR);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

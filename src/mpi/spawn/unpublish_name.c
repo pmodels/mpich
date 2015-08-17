@@ -59,7 +59,7 @@ int MPI_Unpublish_name(const char *service_name, MPI_Info info, const char *port
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);  
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);  
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_UNPUBLISH_NAME);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -122,7 +122,7 @@ int MPI_Unpublish_name(const char *service_name, MPI_Info info, const char *port
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_UNPUBLISH_NAME);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

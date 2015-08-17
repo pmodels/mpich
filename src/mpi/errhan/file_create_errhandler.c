@@ -57,7 +57,7 @@ int MPI_File_create_errhandler(MPI_File_errhandler_function *file_errhandler_fn,
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_FILE_CREATE_ERRHANDLER);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -86,7 +86,7 @@ int MPI_File_create_errhandler(MPI_File_errhandler_function *file_errhandler_fn,
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_FILE_CREATE_ERRHANDLER);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
   fn_fail:

@@ -334,7 +334,7 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_IALLTOALLW);
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IALLTOALLW);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -393,7 +393,7 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IALLTOALLW);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
 fn_fail:

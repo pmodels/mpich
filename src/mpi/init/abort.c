@@ -86,7 +86,7 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
        since that could result in the Abort hanging if another routine is
        hung holding the critical section.  Also note the "not thread-safe"
        comment in the description of MPI_Abort above. */
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_ABORT);
     
     /* Validate parameters, especially handles needing to be converted */
@@ -144,7 +144,7 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
     
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_ABORT);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
     
   fn_fail:

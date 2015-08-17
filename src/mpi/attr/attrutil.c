@@ -327,9 +327,9 @@ MPIR_Attr_copy_c_proxy(
     /* user functions might call other MPI functions, so we need to
      * release the lock here. This is safe to do as GLOBAL is not at
      * all recursive in our implementation. */
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     ret = user_function(handle, keyval, extra_state, attrib_val, attrib_copy, flag);
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     return ret;
 }
@@ -357,9 +357,9 @@ MPIR_Attr_delete_c_proxy(
     /* user functions might call other MPI functions, so we need to
      * release the lock here. This is safe to do as GLOBAL is not at
      * all recursive in our implementation. */
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     ret = user_function(handle, keyval, attrib_val, extra_state);
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     return ret;
 }

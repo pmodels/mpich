@@ -475,7 +475,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
                 /* FIXME: Do we need to do an GLOBAL yield here?
                  * When we do a collective operation, we anyway yield
                  * for other others */
-                MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+                MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
                 MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_CTX_MUTEX);
             }
         }
@@ -504,7 +504,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
                 /* FIXME: Do we need to do an GLOBAL yield here?
                  * When we do a collective operation, we anyway yield
                  * for other others */
-                MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+                MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
                 MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_CTX_MUTEX);
             }
         }
@@ -513,7 +513,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
             /* FIXME: Do we need to do an GLOBAL yield here?  When we
              * do a collective operation, we anyway yield for other
              * others */
-            MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+            MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
             MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_CTX_MUTEX);
         }
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_CTX_MUTEX);

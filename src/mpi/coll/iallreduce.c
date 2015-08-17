@@ -723,7 +723,7 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_IALLREDUCE);
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IALLREDUCE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -796,7 +796,7 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IALLREDUCE);
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
 fn_fail:

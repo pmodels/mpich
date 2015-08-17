@@ -257,7 +257,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
 
     MPIDI_FUNC_ENTER(MPID_STATE_WIN_INIT);
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     if (initRMAoptions) {
 
         MPIDI_CH3_RMA_Init_sync_pvars();
@@ -265,7 +265,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
 
         initRMAoptions = 0;
     }
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_MUTEX);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     *win_ptr = (MPID_Win *) MPIU_Handle_obj_alloc(&MPID_Win_mem);
     MPIR_ERR_CHKANDJUMP1(!(*win_ptr), mpi_errno, MPI_ERR_OTHER, "**nomem",
