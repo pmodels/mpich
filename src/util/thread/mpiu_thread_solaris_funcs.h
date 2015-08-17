@@ -155,9 +155,6 @@
 /*
  * Thread Local Storage
  */
-typedef void (*MPIU_Thread_tls_exit_func_t) (void *value);
-
-
 #define MPIU_Thread_tls_create(exit_func_ptr_, tls_ptr_, err_ptr_)	\
     do {                                                                \
         if ((err_ptr_) == NULL) {                                       \

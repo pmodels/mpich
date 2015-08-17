@@ -68,17 +68,6 @@ void MPIU_Thread_cond_broadcast(MPIU_Thread_cond_t * cond, int *err);
 void MPIU_Thread_cond_signal(MPIU_Thread_cond_t * cond, int *err);
 
 
-/*
- * Thread Local Storage
- */
-typedef void (*MPIU_Thread_tls_exit_func_t) (void *value);
-
-void MPIU_Thread_tls_create(MPIU_Thread_tls_exit_func_t exit_func, MPIU_Thread_tls_t * tls,
-                            int *err);
-void MPIU_Thread_tls_destroy(MPIU_Thread_tls_t * tls, int *err);
-void MPIU_Thread_tls_set(MPIU_Thread_tls_t * tls, void *value, int *err);
-void MPIU_Thread_tls_get(MPIU_Thread_tls_t * tls, void **value, int *err);
-
 /* Error values */
 #define MPIU_THREAD_SUCCESS 0
 /* FIXME: Define other error codes.  For now, any non-zero value is an error. */

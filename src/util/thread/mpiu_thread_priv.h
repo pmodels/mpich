@@ -26,7 +26,7 @@
 #if !defined(MPIU_TLS_SPECIFIER)
 /* We need to provide a function that will cleanup the storage attached
  * to the key.  */
-static void MPIUI_Cleanup_tls(void *a);
+void MPIUI_Cleanup_tls(void *a);
 
 /* In the case where the thread level is set in MPI_Init_thread, we
    need a blended version of the non-threaded and the thread-multiple
@@ -47,18 +47,20 @@ extern MPICH_PerThread_t MPIU_ThreadSingle;
 #define MPIU_THREADPRIV_INITKEY                                         \
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
-            int err_;                                                   \
-            MPIU_Thread_tls_create(MPIUI_Cleanup_tls,&MPIR_ThreadInfo.thread_storage,&err_); \
-            MPIU_Assert(err_ == 0);                                     \
+            int initkey_err_;                                           \
+            MPIU_Thread_tls_create(MPIUI_Cleanup_tls,&MPIR_ThreadInfo.thread_storage,&initkey_err_); \
+            MPIU_Assert(initkey_err_ == 0);                             \
         }                                                               \
     } while (0)
 
 #define MPIU_THREADPRIV_INIT                                            \
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
+            int init_err_;                                              \
             MPIU_Thread = (MPICH_PerThread_t *) MPIU_Calloc(1, sizeof(MPICH_PerThread_t)); \
             MPIU_Assert(MPIU_Thread);                                   \
-            MPIU_Thread_tls_set(&MPIR_ThreadInfo.thread_storage, (void *)MPIU_Thread); \
+            MPIU_Thread_tls_set(&MPIR_ThreadInfo.thread_storage, (void *)MPIU_Thread, &init_err_); \
+            MPIU_Assert(init_err_ == 0);                                \
         }                                                               \
     } while (0)
 
@@ -66,7 +68,9 @@ extern MPICH_PerThread_t MPIU_ThreadSingle;
     do {                                                                \
         if (!MPIU_Thread) {                                             \
             if (MPIR_ThreadInfo.isThreaded) {                           \
-                MPIU_Thread_tls_get(&MPIR_ThreadInfo.thread_storage, &MPIU_Thread); \
+                int get_err_;                                           \
+                MPIU_Thread_tls_get(&MPIR_ThreadInfo.thread_storage, (void **) &MPIU_Thread, &get_err_); \
+                MPIU_Assert(get_err_ == 0);                             \
                 if (!MPIU_Thread) {                                     \
                     MPIU_THREADPRIV_INIT; /* subtle, sets MPIU_Thread */ \
                 }                                                       \
@@ -88,7 +92,8 @@ extern MPICH_PerThread_t MPIU_ThreadSingle;
             int tpf_err_; /* unique name to not conflict with vars in called macros */ \
             MPIU_THREADPRIV_GET;                                        \
             MPIU_Free(MPIU_Thread);                                     \
-            MPIU_Thread_tls_set(&MPIR_ThreadInfo.thread_storage,NULL);  \
+            MPIU_Thread_tls_set(&MPIR_ThreadInfo.thread_storage,NULL, &tpf_err_); \
+            MPIU_Assert(tpf_err_ == 0);                                 \
             MPIU_Thread_tls_destroy(&MPIR_ThreadInfo.thread_storage,&tpf_err_); \
             MPIU_Assert(tpf_err_ == 0);                                 \
         }                                                               \
