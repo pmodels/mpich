@@ -64,7 +64,6 @@ typedef MPIDU_Thread_cond_t  MPID_Thread_cond_t;
 typedef MPIDU_Thread_id_t    MPID_Thread_id_t;
 typedef MPIDU_Thread_tls_t   MPID_Thread_tls_t;
 typedef MPIDU_Thread_func_t  MPID_Thread_func_t;
-typedef MPIDU_Thread_tls_exit_func_t MPID_Thread_tls_exit_func_t;
 
 /*M MPIDU_THREAD_CS_ENTER - Enter a named critical section
 
