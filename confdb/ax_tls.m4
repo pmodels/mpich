@@ -58,8 +58,24 @@ AC_DEFUN([AX_TLS], [
              # link line.
              AC_LINK_IFELSE(
                  [AC_LANG_PROGRAM([$ax_tls_keyword int bar = 5;],[++bar;])],
-                 [ac_cv_tls=$ax_tls_keyword ; break],
+                 [ac_cv_tls=$ax_tls_keyword],
                  [ac_cv_tls=none])
+
+	     # MPICH modification: Also test with the extern keyword.
+	     # The intel compiler on Darwin (at least as of 15.0.1)
+	     # seems to break with the above error when the extern
+	     # keyword is specified in shared library builds.
+	     PAC_PUSH_FLAG([LIBS])
+	     PAC_APPEND_FLAG([-shared],[LIBS])
+	     if test "$ac_cv_tls" != "none" ; then
+                AC_LINK_IFELSE(
+			[AC_LANG_PROGRAM([extern $ax_tls_keyword int bar;],[++bar;])],
+                        [ac_cv_tls=$ax_tls_keyword],
+                        [ac_cv_tls=none])
+	     fi
+	     PAC_POP_FLAG([LIBS])
+
+	     if test "$ac_cv_tls" != "none" ; then break ; fi
           esac
     done
 ])
