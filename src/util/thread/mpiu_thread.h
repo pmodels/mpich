@@ -18,6 +18,12 @@
 #include "mpiu_strerror.h"
 #include "mpiu_timer.h"
 
+/* FIXME: we should not be including an MPIR-level header here.  But
+ * the code is currently a rat-hole where the MPIU and MPIR functions
+ * are all mixed up.  Till that's resolved, adding mpimem.h here as a
+ * workaround for using MPIU_Calloc functionality. */
+#include "mpimem.h"
+
 /* _INVALID exists to avoid accidental macro evaluations to 0 */
 #define MPIU_THREAD_PACKAGE_INVALID 0
 #define MPIU_THREAD_PACKAGE_NONE    1
