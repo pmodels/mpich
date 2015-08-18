@@ -20,6 +20,7 @@ noinst_HEADERS +=                      \
     src/mpid/ch3/include/mpidpkt.h     \
     src/mpid/ch3/include/mpidpost.h    \
     src/mpid/ch3/include/mpidpre.h     \
+    src/mpid/ch3/include/mpid_thread.h \
     src/mpid/ch3/include/mpidrma.h
 
 include $(top_srcdir)/src/mpid/ch3/src/Makefile.mk
