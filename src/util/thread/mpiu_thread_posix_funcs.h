@@ -102,6 +102,9 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
                                                                         \
         MPIU_DBG_MSG_P(THREAD,TYPICAL,"About to destroy MPIU_Thread_mutex %p", (mutex_ptr_)); \
         err__ = pthread_mutex_destroy(&(mutex_ptr_)->mutex);            \
+        if (unlikely(err__))                                            \
+            MPL_internal_sys_error_printf("pthread_mutex_destroy", err__, \
+                                          "    %s:%d\n", __FILE__, __LINE__); \
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
 
@@ -147,6 +150,9 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
         int err__;							\
                                                                         \
         err__ = pthread_cond_init((cond_ptr_), NULL);                   \
+        if (unlikely(err__))                                            \
+            MPL_internal_sys_error_printf("pthread_cond_init", err__,   \
+                                          "    %s:%d\n", __FILE__, __LINE__); \
         MPIU_DBG_MSG_P(THREAD,TYPICAL,"Created MPIU_Thread_cond %p", (cond_ptr_)); \
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
@@ -157,6 +163,9 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
                                                                         \
         MPIU_DBG_MSG_P(THREAD,TYPICAL,"About to destroy MPIU_Thread_cond %p", (cond_ptr_)); \
         err__ = pthread_cond_destroy(cond_ptr_);                        \
+        if (unlikely(err__))                                            \
+            MPL_internal_sys_error_printf("pthread_cond_destroy", err__, \
+                                          "    %s:%d\n", __FILE__, __LINE__); \
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
 
@@ -173,6 +182,9 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
                 err__ = pthread_cond_wait((cond_ptr_), &(mutex_ptr_)->mutex); \
                 OPA_decr_int(&(mutex_ptr_)->num_queued_threads);        \
             } while (err__ == EINTR);                                   \
+        if (unlikely(err__))                                            \
+            MPL_internal_sys_error_printf("pthread_cond_wait", err__,   \
+                                          "    %s:%d\n", __FILE__, __LINE__); \
 									\
         *(int *)(err_ptr_) = err__;                                     \
         MPIU_Assert_fmt_msg(err__ == 0,                                 \
@@ -186,6 +198,9 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
                                                                         \
         MPIU_DBG_MSG_P(THREAD,TYPICAL,"About to cond_broadcast on MPIU_Thread_cond %p", (cond_ptr_)); \
         err__ = pthread_cond_broadcast(cond_ptr_);			\
+        if (unlikely(err__))                                            \
+            MPL_internal_sys_error_printf("pthread_cond_broadcast", err__, \
+                                          "    %s:%d\n", __FILE__, __LINE__); \
                                                                         \
         *(int *)(err_ptr_) = err__;                                     \
         MPIU_Assert_fmt_msg(err__ == 0,                                 \
@@ -198,6 +213,9 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
                                                                         \
         MPIU_DBG_MSG_P(THREAD,TYPICAL,"About to cond_signal on MPIU_Thread_cond %p", (cond_ptr_)); \
         err__ = pthread_cond_signal(cond_ptr_);                         \
+        if (unlikely(err__))                                            \
+            MPL_internal_sys_error_printf("pthread_cond_signal", err__, \
+                                          "    %s:%d\n", __FILE__, __LINE__); \
                                                                         \
         *(int *)(err_ptr_) = err__;                                     \
         MPIU_Assert_fmt_msg(err__ == 0,                                 \
@@ -214,6 +232,9 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
         int err__;                                                      \
     									\
         err__ = pthread_key_create((tls_ptr_), (exit_func_ptr_));       \
+        if (unlikely(err__))                                            \
+            MPL_internal_sys_error_printf("pthread_key_create", err__,  \
+                                          "    %s:%d\n", __FILE__, __LINE__); \
 									\
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
@@ -223,6 +244,9 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
         int err__;                                      \
                                                         \
         err__ = pthread_key_delete(*(tls_ptr_));        \
+        if (unlikely(err__))                                            \
+            MPL_internal_sys_error_printf("pthread_key_delete", err__,  \
+                                          "    %s:%d\n", __FILE__, __LINE__); \
                                                         \
         *(int *)(err_ptr_) = err__;                     \
     } while (0)
@@ -232,6 +256,9 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
         int err__;							\
                                                                         \
         err__ = pthread_setspecific(*(tls_ptr_), (value_));		\
+        if (unlikely(err__))                                            \
+            MPL_internal_sys_error_printf("pthread_setspecific", err__, \
+                                          "    %s:%d\n", __FILE__, __LINE__); \
                                                                         \
         *(int *)(err_ptr_) = err__;                                     \
         MPIU_Assert_fmt_msg(err__ == 0,                                 \
