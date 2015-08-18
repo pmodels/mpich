@@ -69,7 +69,7 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
                                                                         \
         OPA_store_int(&(mutex_ptr_)->num_queued_threads, 0);            \
         err__ = pthread_mutex_init(&(mutex_ptr_)->mutex, NULL);         \
-        if (err__)                                                      \
+        if (unlikely(err__))                                            \
             MPL_internal_sys_error_printf("pthread_mutex_init", err__,  \
                                           "    %s:%d\n", __FILE__, __LINE__); \
         *(int *)(err_ptr_) = err__;                                     \
@@ -87,7 +87,7 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
         pthread_mutexattr_init(&attr__);                                \
         pthread_mutexattr_settype(&attr__, MPICH_PTHREAD_MUTEX_ERRORCHECK_VALUE); \
         err__ = pthread_mutex_init(&(mutex_ptr_)->mutex, &attr__);      \
-        if (err__)                                                      \
+        if (unlikely(err__))                                            \
             MPL_internal_sys_error_printf("pthread_mutex_init", err__,  \
                                           "    %s:%d\n", __FILE__, __LINE__); \
         *(int *)(err_ptr_) = err__;                                     \
@@ -113,7 +113,7 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
         OPA_incr_int(&(mutex_ptr_)->num_queued_threads);                \
         err__ = pthread_mutex_lock(&(mutex_ptr_)->mutex);               \
         OPA_decr_int(&(mutex_ptr_)->num_queued_threads);                \
-        if (err__) {                                                    \
+        if (unlikely(err__)) {                                          \
             MPIU_DBG_MSG_S(THREAD,TERSE,"  mutex lock error: %s", MPIU_Strerror(err__)); \
             MPL_internal_sys_error_printf("pthread_mutex_lock", err__,  \
                                           "    %s:%d\n", __FILE__, __LINE__); \
@@ -129,7 +129,7 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
                                                                         \
         MPIU_DBG_MSG_P(THREAD,VERBOSE,"MPIU_Thread_mutex_unlock %p", (mutex_ptr_)); \
         err__ = pthread_mutex_unlock(&(mutex_ptr_)->mutex);             \
-        if (err__) {                                                    \
+        if (unlikely(err__)) {                                          \
             MPIU_DBG_MSG_S(THREAD,TERSE,"  mutex unlock error: %s", MPIU_Strerror(err__)); \
             MPL_internal_sys_error_printf("pthread_mutex_unlock", err__, \
                                           "    %s:%d\n", __FILE__, __LINE__); \
