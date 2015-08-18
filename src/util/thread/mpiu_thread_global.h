@@ -8,28 +8,24 @@
 #define MPIU_THREAD_GLOBAL_H_INCLUDED
 
 /* There is a single, global lock, held for the duration of an MPI call */
-/* FIXME this shouldn't need to be recursive, but using a recursive mutex here
- * greatly simplifies thread safety in ROMIO right now.  In the long term we
- * should make ROMIO internally thread safe and then this can go back to being a
- * non-recursive mutex. [goodell@ 2010-10-15] */
 #define MPIU_THREAD_CS_ENTER_GLOBAL(_context)                           \
     do {                                                                \
         MPIU_THREAD_CHECK_BEGIN;                                        \
-        MPIU_THREAD_CS_ENTER_LOCKNAME_RECURSIVE(GLOBAL,_context);       \
+        MPIU_THREAD_CS_ENTER_LOCKNAME(GLOBAL,_context);                 \
         MPIU_THREAD_CHECK_END;                                          \
     } while (0)
 
 #define MPIU_THREAD_CS_EXIT_GLOBAL(_context)                            \
     do {                                                                \
         MPIU_THREAD_CHECK_BEGIN;                                        \
-        MPIU_THREAD_CS_EXIT_LOCKNAME_RECURSIVE(GLOBAL,_context);        \
+        MPIU_THREAD_CS_EXIT_LOCKNAME(GLOBAL,_context);                  \
         MPIU_THREAD_CHECK_END;                                          \
     } while (0)
 
 #define MPIU_THREAD_CS_YIELD_GLOBAL(_context)                           \
     do {                                                                \
         MPIU_THREAD_CHECK_BEGIN;                                        \
-        MPIU_THREAD_CS_YIELD_LOCKNAME_RECURSIVE(GLOBAL,_context);       \
+        MPIU_THREAD_CS_YIELD_LOCKNAME(GLOBAL,_context);                 \
         MPIU_THREAD_CHECK_END;                                          \
     } while (0)
 

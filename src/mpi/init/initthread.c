@@ -168,8 +168,6 @@ static int thread_cs_init( void )
     int err;
     MPIU_THREADPRIV_DECL;
 
-    MPIU_Assert(MPICH_MAX_LOCKS >= MPIU_NEST_NUM_MUTEXES);
-
     /* we create this at all granularities right now */
     MPID_Thread_mutex_create(&MPIR_THREAD_MEMALLOC_MUTEX, &err);
     MPIU_Assert(err == 0);

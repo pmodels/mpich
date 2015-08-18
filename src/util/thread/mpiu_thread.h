@@ -125,7 +125,6 @@ typedef struct MPICH_ThreadInfo_t {
 #if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL || \
     MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT
     MPIU_Thread_mutex_t global_mutex;
-    /* We need the handle mutex to avoid problems with lock nesting */
     MPIU_Thread_mutex_t handle_mutex;
 #endif
 
@@ -161,9 +160,6 @@ extern MPICH_ThreadInfo_t MPIR_ThreadInfo;
  * destruction time */
 #define MPIU_STRERROR_BUF_SIZE (1024)
 
-/* FIXME should really be MPIU_NEST_NUM_MUTEXES, but it's defined later */
-#define MPICH_MAX_LOCKS (6)
-
 /* This structure contains all thread-local variables and will be zeroed at
  * allocation time.
  *
@@ -175,10 +171,6 @@ typedef struct MPICH_PerThread_t {
 
     /* error string storage for MPIU_Strerror */
     char strerrbuf[MPIU_STRERROR_BUF_SIZE];
-
-#if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
-    int lock_depth[MPICH_MAX_LOCKS];
-#endif
 } MPICH_PerThread_t;
 
 #if defined (MPICH_IS_THREADED)
