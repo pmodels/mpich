@@ -48,8 +48,6 @@ int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
 
     MPIU_UNREFERENCED_ARG(info);
 
-    ROMIO_THREAD_CS_ENTER();
-
     MPIR_MPIOInit(&error_code);
     if (error_code != MPI_SUCCESS) goto fn_exit;
 
@@ -90,6 +88,5 @@ int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
 #endif /* MPI_hpux */
 
 fn_exit:
-    ROMIO_THREAD_CS_EXIT();
     return error_code;
 }

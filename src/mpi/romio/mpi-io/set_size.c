@@ -48,8 +48,6 @@ int MPI_File_set_size(MPI_File fh, MPI_Offset size)
 		  MPI_DATATYPE_NULL, -1);
 #endif /* MPI_hpux */
 
-    ROMIO_THREAD_CS_ENTER();
-
     adio_fh = MPIO_File_resolve(fh);
 
     /* --BEGIN ERROR HANDLING-- */
@@ -99,7 +97,5 @@ int MPI_File_set_size(MPI_File fh, MPI_Offset size)
 #endif /* MPI_hpux */
 
 fn_exit:
-    ROMIO_THREAD_CS_EXIT();
-
     return error_code;
 }

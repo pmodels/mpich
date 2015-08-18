@@ -60,8 +60,6 @@ int MPIOI_File_read_all_end(MPI_File fh,
 
     MPIU_UNREFERENCED_ARG(buf);
 
-    ROMIO_THREAD_CS_ENTER();
-
     adio_fh = MPIO_File_resolve(fh);
 
     /* --BEGIN ERROR HANDLING-- */
@@ -83,8 +81,6 @@ int MPIOI_File_read_all_end(MPI_File fh,
     adio_fh->split_coll_count = 0;
 
 fn_exit:
-    ROMIO_THREAD_CS_EXIT();
-
     return error_code;
 }
 #endif

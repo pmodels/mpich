@@ -41,8 +41,6 @@ int MPI_File_set_atomicity(MPI_File fh, int flag)
     ADIO_Fcntl_t *fcntl_struct;
     ADIO_File adio_fh;
 
-    ROMIO_THREAD_CS_ENTER();
-
     adio_fh = MPIO_File_resolve(fh);
 
     /* --BEGIN ERROR HANDLING-- */
@@ -86,6 +84,5 @@ int MPI_File_set_atomicity(MPI_File fh, int flag)
     ADIOI_Free(fcntl_struct);
 
 fn_exit:
-    ROMIO_THREAD_CS_EXIT();
     return error_code;
 }

@@ -50,8 +50,6 @@ int MPI_File_read_ordered_begin(MPI_File fh, void *buf, int count,
     static char myname[] = "MPI_FILE_READ_ORDERED_BEGIN";
     void *xbuf=NULL, *e32_buf=NULL;
 
-    ROMIO_THREAD_CS_ENTER();
-
     adio_fh = MPIO_File_resolve(fh);
 
     /* --BEGIN ERROR HANDLING-- */
@@ -131,7 +129,5 @@ int MPI_File_read_ordered_begin(MPI_File fh, void *buf, int count,
     }
 
 fn_exit:
-    ROMIO_THREAD_CS_EXIT();
-
     return error_code;
 }

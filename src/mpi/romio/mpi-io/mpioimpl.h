@@ -18,9 +18,9 @@
 #ifdef ROMIO_INSIDE_MPICH
 #include "glue_romio.h"
 
-#define ROMIO_THREAD_CS_ENTER() MPIR_Ext_cs_enter()
-#define ROMIO_THREAD_CS_EXIT() MPIR_Ext_cs_exit()
-#define ROMIO_THREAD_CS_YIELD() MPIR_Ext_cs_yield()
+#define ROMIO_THREAD_CS_ENTER(mutex) MPIR_Ext_cs_enter(mutex)
+#define ROMIO_THREAD_CS_EXIT(mutex) MPIR_Ext_cs_exit(mutex)
+#define ROMIO_THREAD_CS_YIELD(mutex) MPIR_Ext_cs_yield(mutex)
 
 /* committed datatype checking support in ROMIO */
 #define MPIO_DATATYPE_ISCOMMITTED(dtype_, err_)        \
@@ -33,9 +33,9 @@
    error reporting features provided by MPICH must implement these 
    four functions.  Defining these as empty should not change the behavior 
    of correct programs */
-#define ROMIO_THREAD_CS_ENTER()
-#define ROMIO_THREAD_CS_EXIT()
-#define ROMIO_THREAD_CS_YIELD()
+#define ROMIO_THREAD_CS_ENTER(mutex)
+#define ROMIO_THREAD_CS_EXIT(mutex)
+#define ROMIO_THREAD_CS_YIELD(mutex)
 #define MPIO_DATATYPE_ISCOMMITTED(dtype_, err_) do {} while (0)
 #ifdef HAVE_WINDOWS_H
 #define MPIU_UNREFERENCED_ARG(a) a

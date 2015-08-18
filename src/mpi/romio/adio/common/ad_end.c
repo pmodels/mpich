@@ -76,5 +76,8 @@ int ADIOI_End_call(MPI_Comm comm, int keyval, void *attribute_val, void
         MPI_Keyval_free(&ADIOI_cb_config_list_keyval);
 
     ADIO_End(&error_code);
+
+    MPIR_Ext_thread_mutex_destroy((void *) ADIO_THREAD_MUTEX);
+
     return error_code;
 }

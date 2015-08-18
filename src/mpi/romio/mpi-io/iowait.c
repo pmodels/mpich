@@ -56,8 +56,6 @@ int MPIO_Wait(MPIO_Request *request, MPI_Status *status)
     }
 #endif /* MPI_hpux */
 
-    ROMIO_THREAD_CS_ENTER();
-
     if (*request == MPIO_REQUEST_NULL) {
 	    error_code = MPI_SUCCESS;
 	    goto fn_exit;
@@ -90,7 +88,6 @@ int MPIO_Wait(MPIO_Request *request, MPI_Status *status)
 #endif /* MPI_hpux */
 
 fn_exit:
-    ROMIO_THREAD_CS_EXIT();
     return error_code;
 }
 #endif
