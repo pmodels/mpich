@@ -17,7 +17,7 @@
 int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
 #endif /* NEEDS_PTHREAD_MUTEXATTR_SETTYPE_DECL */
 
-/* MPIU_Thread_create() defined in mpiu_thread.c */
+/* MPIU_Thread_create() defined in mpiu_thread_posix.c */
 
 #define MPIU_Thread_exit()			\
     do {                                        \
