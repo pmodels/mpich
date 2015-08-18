@@ -82,10 +82,7 @@ int ADIOI_PVFS2_StridedListIO(ADIO_File fd, void *buf, int count,
     ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
     if (buftype_is_contig == 0)
     {
-	ADIOI_Flatten_datatype(datatype);
-	flat_buf_p = ADIOI_Flatlist;
-	while (flat_buf_p->type != datatype) 
-	    flat_buf_p = flat_buf_p->next;
+	flat_buf_p = ADIOI_Flatten_and_find(datatype);
     }
     else 
     {
@@ -108,10 +105,7 @@ int ADIOI_PVFS2_StridedListIO(ADIO_File fd, void *buf, int count,
 	    /* TODO: why does avery say this should already have been
 	     * flattened in Open, but also says contig types don't get
 	     * flattened */
-	ADIOI_Flatten_datatype(fd->filetype);
-	flat_file_p = ADIOI_Flatlist;
-	while (flat_file_p->type != fd->filetype) 
-	    flat_file_p = flat_file_p->next;
+	flat_file_p = ADIOI_Flatten_and_find(fd->filetype);
     }
     else
     {

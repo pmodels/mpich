@@ -1195,3 +1195,12 @@ void ADIOI_Delete_flattened(MPI_Datatype datatype)
 	ADIOI_Free(flat);
     }
 }
+
+ADIOI_Flatlist_node * ADIOI_Flatten_and_find(MPI_Datatype datatype)
+{
+    ADIOI_Flatlist_node *node;
+    ADIOI_Flatten_datatype(datatype);
+    node = ADIOI_Flatlist;
+    while (node->type != datatype) node = node->next;
+    return node;
+}

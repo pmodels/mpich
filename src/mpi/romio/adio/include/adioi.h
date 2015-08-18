@@ -351,6 +351,7 @@ void ADIOI_Flatten_datatype(MPI_Datatype type);
 void ADIOI_Flatten(MPI_Datatype type, ADIOI_Flatlist_node *flat,
 		  ADIO_Offset st_offset, MPI_Count *curr_index);
 void ADIOI_Delete_flattened(MPI_Datatype datatype);
+ADIOI_Flatlist_node * ADIOI_Flatten_and_find(MPI_Datatype);
 MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype type, MPI_Count *curr_index);
 void ADIOI_Complete_async(int *error_code);
 void *ADIOI_Malloc_fn(size_t size, int lineno, const char *fname);

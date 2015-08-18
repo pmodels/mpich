@@ -150,10 +150,7 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
 	flat_mem_p->blocklens[0] = memtype_sz*count;
     }
     else {
-	ADIOI_Flatten_datatype(datatype);
-        flat_mem_p = ADIOI_Flatlist;
-        while (flat_mem_p->type != datatype)
-            flat_mem_p = flat_mem_p->next;
+	flat_mem_p = ADIOI_Flatten_and_find(datatype);
     }
 
     MPI_Type_extent(fd->filetype, &filetype_extent);

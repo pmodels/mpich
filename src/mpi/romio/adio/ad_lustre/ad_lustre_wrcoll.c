@@ -415,10 +415,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
 
     ADIOI_Datatype_iscontig(datatype, &buftype_is_contig);
     if (!buftype_is_contig) {
-	ADIOI_Flatten_datatype(datatype);
-	flat_buf = ADIOI_Flatlist;
-	while (flat_buf->type != datatype)
-	    flat_buf = flat_buf->next;
+	flat_buf = ADIOI_Flatten_and_find(datatype);
     }
     MPI_Type_extent(datatype, &buftype_extent);
     /* I need to check if there are any outstanding nonblocking writes to

@@ -115,9 +115,7 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
 
 /* noncontiguous in memory, contiguous in file. */
 
-	ADIOI_Flatten_datatype(datatype);
-	flat_buf = ADIOI_Flatlist;
-	while (flat_buf->type != datatype) flat_buf = flat_buf->next;
+	flat_buf = ADIOI_Flatten_and_find(datatype);
 
         off = (file_ptr_type == ADIO_INDIVIDUAL) ? fd->fp_ind : 
                  fd->disp + (ADIO_Offset)etype_size * offset;
@@ -321,9 +319,7 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
 	else {
 /* noncontiguous in memory as well as in file */
 
-	    ADIOI_Flatten_datatype(datatype);
-	    flat_buf = ADIOI_Flatlist;
-	    while (flat_buf->type != datatype) flat_buf = flat_buf->next;
+	    flat_buf = ADIOI_Flatten_and_find(datatype);
 
 	    k = num = buf_count = 0;
 	    i_offset = flat_buf->indices[0];

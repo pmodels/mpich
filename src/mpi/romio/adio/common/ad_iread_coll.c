@@ -589,7 +589,6 @@ static void ADIOI_Iread_and_exch(ADIOI_NBC_Request *nbc_req, int *error_code)
 
     int i, j;
     ADIO_Offset st_loc = -1, end_loc = -1;
-    ADIOI_Flatlist_node *flat_buf = NULL;
     int coll_bufsize;
 
     *error_code = MPI_SUCCESS;  /* changed below if error */
@@ -671,10 +670,7 @@ static void ADIOI_Iread_and_exch(ADIOI_NBC_Request *nbc_req, int *error_code)
 
     ADIOI_Datatype_iscontig(datatype, &vars->buftype_is_contig);
     if (!vars->buftype_is_contig) {
-        ADIOI_Flatten_datatype(datatype);
-        flat_buf = ADIOI_Flatlist;
-        while (flat_buf->type != datatype) flat_buf = flat_buf->next;
-        vars->flat_buf = flat_buf;
+	vars->flat_buf = ADIOI_Flatten_and_find(datatype);
     }
     MPI_Type_extent(datatype, &vars->buftype_extent);
 

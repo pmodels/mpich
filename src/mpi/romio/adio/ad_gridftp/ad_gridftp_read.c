@@ -241,10 +241,7 @@ void ADIOI_GRIDFTP_ReadDiscontig(ADIO_File fd, void *buf, int count,
     /* from here we can assume btype_extent==btype_size */
 
     /* Flatten out fd->filetype so we know which blocks to skip */
-    ADIOI_Flatten_datatype(fd->filetype);
-    flat_file = ADIOI_Flatlist;
-    while (flat_file->type != fd->filetype && flat_file->next!=NULL)
-	flat_file = flat_file->next;
+    flat_file = ADIOI_Flatten_and_find(fd->filetype);
 
     /* Figure out how big the area to read is */
     start=(globus_off_t)(offset*etype_size);

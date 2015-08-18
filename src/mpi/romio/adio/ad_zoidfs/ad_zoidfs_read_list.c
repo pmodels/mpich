@@ -95,9 +95,7 @@ void ADIOI_ZOIDFS_ReadStrided(ADIO_File fd, void *buf, int count,
         uint64_t file_offsets;
 	uint64_t file_lengths;
 
-	ADIOI_Flatten_datatype(datatype);
-	flat_buf = ADIOI_Flatlist;
-	while (flat_buf->type != datatype) flat_buf = flat_buf->next;
+	flat_buf = ADIOI_Flatten_and_find(datatype);
 
 	off = (file_ptr_type == ADIO_INDIVIDUAL) ? fd->fp_ind : 
 	    fd->disp + etype_size * offset;
@@ -410,9 +408,7 @@ void ADIOI_ZOIDFS_ReadStrided(ADIO_File fd, void *buf, int count,
     else {
 /* noncontiguous in memory as well as in file */
       
-        ADIOI_Flatten_datatype(datatype);
-	flat_buf = ADIOI_Flatlist;
-	while (flat_buf->type != datatype) flat_buf = flat_buf->next;
+	flat_buf = ADIOI_Flatten_and_find(datatype);
 
 	size_read = 0;
 	n_filetypes = st_n_filetypes;

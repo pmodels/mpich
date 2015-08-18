@@ -109,9 +109,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     if (!bufTypeIsContig) {
     /* Flatten the non-contiguous source datatype.
      */
-      ADIOI_Flatten_datatype(datatype);
-      flatBuf = ADIOI_Flatlist;
-      while (flatBuf->type != datatype) flatBuf = flatBuf->next;
+      flatBuf = ADIOI_Flatten_and_find(datatype);
       MPI_Type_extent(datatype, &bufTypeExtent);
 #ifdef onesidedtrace
       printf("flatBuf->count is %d bufTypeExtent is %d\n", flatBuf->count,bufTypeExtent);
@@ -1126,9 +1124,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     if (!bufTypeIsContig) {
     /* Flatten the non-contiguous source datatype.
      */
-      ADIOI_Flatten_datatype(datatype);
-      flatBuf = ADIOI_Flatlist;
-      while (flatBuf->type != datatype) flatBuf = flatBuf->next;
+      flatBuf = ADIOI_Flatten_and_find(datatype);
       MPI_Type_extent(datatype, &bufTypeExtent);
     }
 #ifdef onesidedtrace

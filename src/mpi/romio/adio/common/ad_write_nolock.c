@@ -84,9 +84,7 @@ void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, const void *buf, int count,
 	ADIO_Offset combine_buf_remain;
 /* noncontiguous in memory, contiguous in file. use writev */
 
-	ADIOI_Flatten_datatype(datatype);
-	flat_buf = ADIOI_Flatlist;
-	while (flat_buf->type != datatype) flat_buf = flat_buf->next;
+	flat_buf = ADIOI_Flatten_and_find(datatype);
 
 	/* allocate our "combine buffer" to pack data into before writing */
 	combine_buf = (char *) ADIOI_Malloc(fd->hints->ind_wr_buffer_size);
@@ -311,9 +309,7 @@ void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, const void *buf, int count,
 	else {
 /* noncontiguous in memory as well as in file */
 
-	    ADIOI_Flatten_datatype(datatype);
-	    flat_buf = ADIOI_Flatlist;
-	    while (flat_buf->type != datatype) flat_buf = flat_buf->next;
+	    flat_buf = ADIOI_Flatten_and_find(datatype);
 
 	    k = num = buf_count = 0;
 	    indx = flat_buf->indices[0];
