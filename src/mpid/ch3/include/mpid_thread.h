@@ -36,7 +36,6 @@ typedef MPIDU_Thread_func_t  MPID_Thread_func_t;
 #define MPID_Thread_mutex_destroy  MPIDU_Thread_mutex_destroy
 #define MPID_Thread_mutex_lock MPIDU_Thread_mutex_lock
 #define MPID_Thread_mutex_unlock MPIDU_Thread_mutex_unlock
-#define MPID_Thread_mutex_trylock MPIDU_Thread_mutex_trylock
 
 #define MPID_Thread_cond_create MPIDU_Thread_cond_create
 #define MPID_Thread_cond_destroy MPIDU_Thread_cond_destroy

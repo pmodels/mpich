@@ -178,34 +178,6 @@ void MPIU_Thread_mutex_unlock(MPIU_Thread_mutex_t * mutex, int *err)
     }
 }
 
-void MPIU_Thread_mutex_trylock(MPIU_Thread_mutex_t * mutex, int *flag, int *err)
-{
-    DWORD result;
-
-    result = WaitForSingleObject(*mutex, 0);
-    if (result == WAIT_OBJECT_0) {
-        *flag = TRUE;
-        if (err != NULL) {
-            *err = MPIU_THREAD_SUCCESS;
-        }
-    }
-    else {
-        *flag = FALSE;
-        if (err != NULL) {
-            if (result == WAIT_TIMEOUT) {
-                *err = MPIU_THREAD_SUCCESS;
-            }
-            else {
-                if (result == WAIT_FAILED) {
-                    *err = GetLastError();
-                }
-                else {
-                    *err = result;
-                }
-            }
-        }
-    }
-}
 
 /*
  * Condition Variables

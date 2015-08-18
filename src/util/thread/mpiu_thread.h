@@ -65,7 +65,6 @@ void MPIU_Thread_mutex_create(MPIU_Thread_mutex_t * mutex, int *err);
 void MPIU_Thread_mutex_destroy(MPIU_Thread_mutex_t * mutex, int *err);
 void MPIU_Thread_mutex_lock(MPIU_Thread_mutex_t * mutex, int *err);
 void MPIU_Thread_mutex_unlock(MPIU_Thread_mutex_t * mutex, int *err);
-void MPIU_Thread_mutex_trylock(MPIU_Thread_mutex_t * mutex, int *flag, int *err);
 
 void MPIU_Thread_cond_create(MPIU_Thread_cond_t * cond, int *err);
 void MPIU_Thread_cond_destroy(MPIU_Thread_cond_t * cond, int *err);

@@ -182,17 +182,6 @@ M*/
 @*/
 #define MPIDU_Thread_mutex_unlock MPIU_Thread_mutex_unlock
 
-/*@
-  MPIDU_Thread_mutex_trylock - try to acquire a mutex, but return even if unsuccessful
-
-  Input Parameter:
-. mutex - mutex
-
-  Output Parameter:
-. flag - flag
-@*/
-#define MPIDU_Thread_mutex_trylock MPIU_Thread_mutex_trylock
-
 /*
  * Condition Variables
  */

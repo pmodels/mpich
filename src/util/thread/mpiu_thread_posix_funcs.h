@@ -138,24 +138,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
     } while (0)
 
 
-#define MPIU_Thread_mutex_trylock(mutex_ptr_, flag_ptr_, err_ptr_)      \
-    do {                                                                \
-        int err__;                                                      \
-                                                                        \
-        err__ = pthread_mutex_trylock(&(mutex_ptr_)->mutex);            \
-        if (err__ && err__ != EBUSY)                                    \
-        {                                                               \
-            MPIU_DBG_MSG_S(THREAD,TERSE,"  mutex trylock error: %s", MPIU_Strerror(err__)); \
-            MPL_internal_sys_error_printf("pthread_mutex_trylock", err__, \
-                                          "    %s:%d\n", __FILE__, __LINE__); \
-        }                                                               \
-        *(flag_ptr_) = (err__ == 0) ? TRUE : FALSE;                     \
-        MPIU_DBG_MSG_FMT(THREAD,VERBOSE,(MPIU_DBG_FDEST, "MPIU_Thread_mutex_trylock mutex=%p result=%s", (mutex_ptr_), (*(flag_ptr_) ? "success" : "failure"))); \
-        *(int *)(err_ptr_) = (err__ == EBUSY) ? MPIU_THREAD_SUCCESS : err__; \
-    } while (0)
-
-
-
 /*
  * Condition Variables
  */
