@@ -13,20 +13,6 @@
 
 #include "mpiu_process_wrappers.h"      /* for MPIU_PW_Sched_yield */
 
-/*
-   One of PTHREAD_MUTEX_RECURSIVE_NP and PTHREAD_MUTEX_RECURSIVE seem to be
-   present in different versions.  For example, Mac OS X 10.4 had
-   PTHREAD_MUTEX_RECURSIVE_NP but Mac OS X 10.5 does not; instead it has
-   PTHREAD_MUTEX_RECURSIVE
-*/
-#if defined(HAVE_PTHREAD_MUTEX_RECURSIVE_NP)
-#define PTHREAD_MUTEX_RECURSIVE_VALUE PTHREAD_MUTEX_RECURSIVE_NP
-#elif defined(HAVE_PTHREAD_MUTEX_RECURSIVE)
-#define PTHREAD_MUTEX_RECURSIVE_VALUE PTHREAD_MUTEX_RECURSIVE
-#else
-#error 'Unable to determine pthrad mutex recursive value'
-#endif /* pthread mutex recursive value */
-
 #if defined(NEEDS_PTHREAD_MUTEXATTR_SETTYPE_DECL)
 int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
 #endif /* NEEDS_PTHREAD_MUTEXATTR_SETTYPE_DECL */
