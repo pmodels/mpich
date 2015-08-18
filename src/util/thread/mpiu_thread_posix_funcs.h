@@ -58,6 +58,9 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
  */
 
 /* FIXME: using constant initializer if available */
+
+/* FIXME: convert errors to an MPIU_THREAD_ERR value */
+
 #if !defined(MPICH_PTHREAD_MUTEX_ERRORCHECK_VALUE)
 
 #define MPIU_Thread_mutex_create(mutex_ptr_, err_ptr_)                  \
@@ -69,7 +72,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
         if (err__)                                                      \
             MPL_internal_sys_error_printf("pthread_mutex_init", err__,  \
                                           "    %s:%d\n", __FILE__, __LINE__); \
-        /* FIXME: convert error to an MPIU_THREAD_ERR value */          \
         *(int *)(err_ptr_) = err__;                                     \
         MPIU_DBG_MSG_P(THREAD,TYPICAL,"Created MPIU_Thread_mutex %p", (mutex_ptr_)); \
     } while (0)
@@ -88,7 +90,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
         if (err__)                                                      \
             MPL_internal_sys_error_printf("pthread_mutex_init", err__,  \
                                           "    %s:%d\n", __FILE__, __LINE__); \
-        /* FIXME: convert error to an MPIU_THREAD_ERR value */          \
         *(int *)(err_ptr_) = err__;                                     \
         MPIU_DBG_MSG_P(THREAD,TYPICAL,"Created MPIU_Thread_mutex %p", (mutex_ptr_)); \
     } while (0)
@@ -101,7 +102,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
                                                                         \
         MPIU_DBG_MSG_P(THREAD,TYPICAL,"About to destroy MPIU_Thread_mutex %p", (mutex_ptr_)); \
         err__ = pthread_mutex_destroy(&(mutex_ptr_)->mutex);            \
-        /* FIXME: convert error to an MPIU_THREAD_ERR value */          \
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
 
@@ -118,7 +118,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
             MPL_internal_sys_error_printf("pthread_mutex_lock", err__,  \
                                           "    %s:%d\n", __FILE__, __LINE__); \
         }                                                               \
-        /* FIXME: convert error to an MPIU_THREAD_ERR value */          \
         *(int *)(err_ptr_) = err__;                                     \
         MPIU_DBG_MSG_P(THREAD,VERBOSE,"exit MPIU_Thread_mutex_lock %p", (mutex_ptr_)); \
     } while (0)
@@ -135,7 +134,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
             MPL_internal_sys_error_printf("pthread_mutex_unlock", err__, \
                                           "    %s:%d\n", __FILE__, __LINE__); \
         }                                                               \
-        /* FIXME: convert error to an MPIU_THREAD_ERR value */          \
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
 
@@ -154,7 +152,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
         *(flag_ptr_) = (err__ == 0) ? TRUE : FALSE;                     \
         MPIU_DBG_MSG_FMT(THREAD,VERBOSE,(MPIU_DBG_FDEST, "MPIU_Thread_mutex_trylock mutex=%p result=%s", (mutex_ptr_), (*(flag_ptr_) ? "success" : "failure"))); \
         *(int *)(err_ptr_) = (err__ == EBUSY) ? MPIU_THREAD_SUCCESS : err__; \
-        /* FIXME: convert error to an MPIU_THREAD_ERR value */          \
     } while (0)
 
 
@@ -169,7 +166,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
                                                                         \
         err__ = pthread_cond_init((cond_ptr_), NULL);                   \
         MPIU_DBG_MSG_P(THREAD,TYPICAL,"Created MPIU_Thread_cond %p", (cond_ptr_)); \
-        /* FIXME: convert error to an MPIU_THREAD_ERR value */          \
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
 
@@ -179,7 +175,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
                                                                         \
         MPIU_DBG_MSG_P(THREAD,TYPICAL,"About to destroy MPIU_Thread_cond %p", (cond_ptr_)); \
         err__ = pthread_cond_destroy(cond_ptr_);                        \
-        /* FIXME: convert error to an MPIU_THREAD_ERR value */          \
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
 
@@ -198,7 +193,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
             }                                                           \
             while (err__ == EINTR);                                     \
 									\
-        /* FIXME: convert error to an MPIU_THREAD_ERR value */		\
         *(int *)(err_ptr_) = err__;                                     \
         MPIU_Assert_fmt_msg(err__ == 0,                                 \
                             ("cond_wait failed, err=%d (%s)",err__,strerror(err__))); \
@@ -212,7 +206,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
         MPIU_DBG_MSG_P(THREAD,TYPICAL,"About to cond_broadcast on MPIU_Thread_cond %p", (cond_ptr_)); \
         err__ = pthread_cond_broadcast(cond_ptr_);			\
                                                                         \
-        /* FIXME: convert error to an MPIU_THREAD_ERR value */          \
         *(int *)(err_ptr_) = err__;                                     \
         MPIU_Assert_fmt_msg(err__ == 0,                                 \
                             ("cond_broadcast failed, err__=%d (%s)",err__,strerror(err__))); \
@@ -225,7 +218,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
         MPIU_DBG_MSG_P(THREAD,TYPICAL,"About to cond_signal on MPIU_Thread_cond %p", (cond_ptr_)); \
         err__ = pthread_cond_signal(cond_ptr_);                         \
                                                                         \
-        /* FIXME: convert error to an MPIU_THREAD_ERR value */          \
         *(int *)(err_ptr_) = err__;                                     \
         MPIU_Assert_fmt_msg(err__ == 0,                                 \
                             ("cond_signal failed, err__=%d (%s)",err__,strerror(err__))); \
@@ -242,7 +234,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
     									\
         err__ = pthread_key_create((tls_ptr_), (exit_func_ptr_));       \
 									\
-        /* FIXME: convert error to an MPIU_THREAD_ERR value */		\
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
 
@@ -252,7 +243,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
     								\
         err__ = pthread_key_delete(*(tls_ptr_));                \
 								\
-        /* FIXME: convert error to an MPIU_THREAD_ERR value */	\
         *(int *)(err_ptr_) = err__;                             \
     } while (0)
 
@@ -262,7 +252,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
                                                                         \
         err__ = pthread_setspecific(*(tls_ptr_), (value_));		\
                                                                         \
-        /* FIXME: convert error to an MPIU_THREAD_ERR value */          \
         *(int *)(err_ptr_) = err__;                                     \
         MPIU_Assert_fmt_msg(err__ == 0,                                 \
                             ("tls_set failed, err__=%d (%s)",err__,strerror(err__))); \
@@ -272,7 +261,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
     do {                                                        \
         *(value_ptr_) = pthread_getspecific(*(tls_ptr_));       \
 								\
-        /* FIXME: convert error to an MPIU_THREAD_ERR value */	\
         *(int *)(err_ptr_) = MPIU_THREAD_SUCCESS;               \
     } while (0)
 
