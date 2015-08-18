@@ -25,6 +25,8 @@ void ADIOI_Flatten_datatype(MPI_Datatype datatype)
     int is_contig;
     ADIOI_Flatlist_node *flat, *prev=0;
 
+    MPIR_Ext_cs_enter(ADIO_THREAD_MUTEX);
+
     /* check if necessary to flatten. */
  
     /* is it entirely contiguous? */
@@ -98,6 +100,7 @@ void ADIOI_Flatten_datatype(MPI_Datatype datatype)
              );
   }
 #endif
+    MPIR_Ext_cs_exit(ADIO_THREAD_MUTEX);
 
 }
 
@@ -1182,6 +1185,7 @@ void ADIOI_Optimize_flattened(ADIOI_Flatlist_node *flat_type)
 void ADIOI_Delete_flattened(MPI_Datatype datatype)
 {
     ADIOI_Flatlist_node *flat, *prev;
+    MPIR_Ext_cs_enter(ADIO_THREAD_MUTEX);
 
     prev = flat = ADIOI_Flatlist;
     while (flat && (flat->type != datatype)) {
@@ -1194,13 +1198,16 @@ void ADIOI_Delete_flattened(MPI_Datatype datatype)
 	if (flat->indices) ADIOI_Free(flat->indices);
 	ADIOI_Free(flat);
     }
+    MPIR_Ext_cs_exit(ADIO_THREAD_MUTEX);
 }
 
 ADIOI_Flatlist_node * ADIOI_Flatten_and_find(MPI_Datatype datatype)
 {
     ADIOI_Flatlist_node *node;
+    MPIR_Ext_cs_enter(ADIO_THREAD_MUTEX);
     ADIOI_Flatten_datatype(datatype);
     node = ADIOI_Flatlist;
     while (node->type != datatype) node = node->next;
+    MPIR_Ext_cs_exit(ADIO_THREAD_MUTEX);
     return node;
 }
