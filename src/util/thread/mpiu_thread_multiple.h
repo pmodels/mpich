@@ -12,28 +12,35 @@
 #define MPIU_THREAD_CHECK_BEGIN if (MPIR_ThreadInfo.isThreaded) {
 #define MPIU_THREAD_CHECK_END   }
 
-#define MPIU_THREAD_CS_ENTER(_name,_context) MPIU_THREAD_CS_ENTER_##_name(_context)
-#define MPIU_THREAD_CS_EXIT(_name,_context) MPIU_THREAD_CS_EXIT_##_name(_context)
-#define MPIU_THREAD_CS_YIELD(_name,_context) MPIU_THREAD_CS_YIELD_##_name(_context)
-
-#define MPIU_THREAD_CS_ENTER_LOCKNAME(name_,mutex_)                     \
+#define MPIU_THREAD_CS_ENTER_REAL(lockname, mutex)                      \
     do {                                                                \
-        MPIU_DBG_MSG_S(THREAD,VERBOSE,"attempting to ENTER lockname=%s", #name_); \
-        MPIU_Thread_CS_enter_lockname_impl_(#name_, &mutex_);           \
+        int err_;                                                       \
+        MPIU_THREAD_CHECK_BEGIN;                                        \
+        MPIU_DBG_MSG_S(THREAD, TYPICAL, "locking %s", lockname);        \
+        MPIU_Thread_mutex_lock(&mutex, &err_);                          \
+        MPIU_THREAD_CHECK_END;                                          \
     } while (0)
 
-#define MPIU_THREAD_CS_EXIT_LOCKNAME(name_,mutex_)                      \
+#define MPIU_THREAD_CS_EXIT_REAL(lockname, mutex)                       \
     do {                                                                \
-        MPIU_DBG_MSG_S(THREAD,VERBOSE,"attempting to EXIT lockname=%s", #name_); \
-        MPIU_Thread_CS_exit_lockname_impl_(#name_, &mutex_);            \
+        int err_;                                                       \
+        MPIU_THREAD_CHECK_BEGIN;                                        \
+        MPIU_DBG_MSG_S(THREAD, TYPICAL, "unlocking %s", lockname);      \
+        MPIU_Thread_mutex_unlock(&mutex, &err_);                        \
+        MPIU_THREAD_CHECK_END;                                          \
     } while (0)
 
-#define MPIU_THREAD_CS_YIELD_LOCKNAME(name_,mutex_)                     \
+#define MPIU_THREAD_CS_YIELD_REAL(lockname, mutex)                      \
     do {                                                                \
-        MPIU_DBG_MSG_S(THREAD,VERBOSE,"attempting to YIELD lockname=%s", #name_); \
-        MPIU_Thread_CS_yield_lockname_impl_(#name_, &mutex_);           \
+        MPIU_THREAD_CHECK_BEGIN;                                        \
+        MPIU_DBG_MSG_S(THREAD, TYPICAL, "yielding %s", lockname);       \
+        MPIU_Thread_yield(&mutex);                                      \
+        MPIU_THREAD_CHECK_END;                                          \
     } while (0)
 
+#define MPIU_THREAD_CS_ENTER(name, mutex) MPIU_THREAD_CS_ENTER_##name(mutex)
+#define MPIU_THREAD_CS_EXIT(name, mutex) MPIU_THREAD_CS_EXIT_##name(mutex)
+#define MPIU_THREAD_CS_YIELD(name, mutex) MPIU_THREAD_CS_YIELD_##name(mutex)
 
 /* Definitions of the thread support for various levels of thread granularity */
 #if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL
@@ -45,50 +52,5 @@
 #else
 #error Unrecognized thread granularity
 #endif
-
-
-#undef FUNCNAME
-#define FUNCNAME MPIU_Thread_CS_enter_lockname_impl_
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-/* these are inline functions instead of macros to avoid some of the
- * MPIU_THREADPRIV_DECL scoping issues */
-MPL_DBG_ATTRIBUTE_NOINLINE ATTRIBUTE((unused))
-static MPL_DBG_INLINE_KEYWORD void
-MPIU_Thread_CS_enter_lockname_impl_(const char *lockname, MPIU_Thread_mutex_t * mutex)
-{
-    int err;
-    MPIU_DBG_MSG_S(THREAD, TYPICAL, "locking %s", lockname);
-    MPIU_Thread_mutex_lock(mutex, &err);
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIU_Thread_CS_exit_lockname_impl_
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_DBG_ATTRIBUTE_NOINLINE ATTRIBUTE((unused))
-static MPL_DBG_INLINE_KEYWORD void
-MPIU_Thread_CS_exit_lockname_impl_(const char *lockname, MPIU_Thread_mutex_t * mutex)
-{
-    int err;
-    MPIU_DBG_MSG_S(THREAD, TYPICAL, "unlocking %s", lockname);
-    MPIU_Thread_mutex_unlock(mutex, &err);
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIU_Thread_CS_yield_lockname_impl_
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_DBG_ATTRIBUTE_NOINLINE ATTRIBUTE((unused))
-static MPL_DBG_INLINE_KEYWORD void
-MPIU_Thread_CS_yield_lockname_impl_(const char *lockname, MPIU_Thread_mutex_t * mutex)
-{
-    MPIU_DBG_MSG_S(THREAD, TYPICAL, "yielding %s", lockname);
-    MPIU_Thread_yield(mutex);
-}
-
-/* undef for safety, this is a commonly-included header */
-#undef FUNCNAME
-#undef FCNAME
 
 #endif /* !defined(MPIU_THREAD_MULTIPLE_H_INCLUDED) */

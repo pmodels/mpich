@@ -7,33 +7,15 @@
 #if !defined(MPIU_THREAD_GLOBAL_H_INCLUDED)
 #define MPIU_THREAD_GLOBAL_H_INCLUDED
 
-/* There is a single, global lock, held for the duration of an MPI call */
-#define MPIU_THREAD_CS_ENTER_GLOBAL(_context)                           \
-    do {                                                                \
-        MPIU_THREAD_CHECK_BEGIN;                                        \
-        MPIU_THREAD_CS_ENTER_LOCKNAME(GLOBAL,_context);                 \
-        MPIU_THREAD_CHECK_END;                                          \
-    } while (0)
-
-#define MPIU_THREAD_CS_EXIT_GLOBAL(_context)                            \
-    do {                                                                \
-        MPIU_THREAD_CHECK_BEGIN;                                        \
-        MPIU_THREAD_CS_EXIT_LOCKNAME(GLOBAL,_context);                  \
-        MPIU_THREAD_CHECK_END;                                          \
-    } while (0)
-
-#define MPIU_THREAD_CS_YIELD_GLOBAL(_context)                           \
-    do {                                                                \
-        MPIU_THREAD_CHECK_BEGIN;                                        \
-        MPIU_THREAD_CS_YIELD_LOCKNAME(GLOBAL,_context);                 \
-        MPIU_THREAD_CHECK_END;                                          \
-    } while (0)
-
+/* GLOBAL locks are all real ops */
+#define MPIU_THREAD_CS_ENTER_GLOBAL(mutex) MPIU_THREAD_CS_ENTER_REAL("GLOBAL", mutex)
+#define MPIU_THREAD_CS_EXIT_GLOBAL(mutex) MPIU_THREAD_CS_EXIT_REAL("GLOBAL", mutex)
+#define MPIU_THREAD_CS_YIELD_GLOBAL(mutex) MPIU_THREAD_CS_YIELD_REAL("GLOBAL", mutex)
 
 /* POBJ locks are all NO-OPs */
-#define MPIU_THREAD_CS_ENTER_POBJ(_context)
-#define MPIU_THREAD_CS_EXIT_POBJ(_context)
-#define MPIU_THREAD_CS_YIELD_POBJ(_context)
+#define MPIU_THREAD_CS_ENTER_POBJ(mutex)
+#define MPIU_THREAD_CS_EXIT_POBJ(mutex)
+#define MPIU_THREAD_CS_YIELD_POBJ(mutex)
 
 
 /* define a type for the completion counter */

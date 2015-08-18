@@ -74,31 +74,15 @@
  * the order should be to acquire MPIDCOMM first, then MSGQUEUE.  Release in
  * reverse order. */
 
-#define MPIU_THREAD_CS_ENTER_GLOBAL(_context)
-#define MPIU_THREAD_CS_EXIT_GLOBAL(_context)
-#define MPIU_THREAD_CS_YIELD_GLOBAL(_context)
+/* POBJ locks are all real ops */
+#define MPIU_THREAD_CS_ENTER_POBJ(mutex) MPIU_THREAD_CS_ENTER_REAL("POBJ", mutex)
+#define MPIU_THREAD_CS_EXIT_POBJ(mutex) MPIU_THREAD_CS_EXIT_REAL("POBJ", mutex)
+#define MPIU_THREAD_CS_YIELD_POBJ(mutex) MPIU_THREAD_CS_YIELD_REAL("POBJ", mutex)
 
-#define MPIU_THREAD_CS_ENTER_POBJ(_context)             \
-    do {                                                \
-        MPIU_THREAD_CHECK_BEGIN;                        \
-        MPIU_THREAD_CS_ENTER_LOCKNAME(POBJ,_context);   \
-        MPIU_THREAD_CHECK_END;                          \
-    } while (0)
-
-#define MPIU_THREAD_CS_EXIT_POBJ(_context)              \
-    do {                                                \
-        MPIU_THREAD_CHECK_BEGIN;                        \
-        MPIU_THREAD_CS_EXIT_LOCKNAME(POBJ,_context);    \
-        MPIU_THREAD_CHECK_END;                          \
-    } while (0)
-
-#define MPIU_THREAD_CS_YIELD_POBJ(_context)             \
-    do {                                                \
-        MPIU_THREAD_CHECK_BEGIN;                        \
-        MPIU_THREAD_CS_YIELD_LOCKNAME(POBJ,_context);   \
-        MPIU_THREAD_CHECK_END;                          \
-    } while (0)
-
+/* GLOBAL locks are all NO-OPs */
+#define MPIU_THREAD_CS_ENTER_GLOBAL(mutex)
+#define MPIU_THREAD_CS_EXIT_GLOBAL(mutex)
+#define MPIU_THREAD_CS_YIELD_GLOBAL(mutex)
 
 /* define a type for the completion counter */
 #include "opa_primitives.h"
