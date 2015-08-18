@@ -180,8 +180,6 @@ static int thread_cs_init( void )
 /* There is a single, global lock, held for the duration of an MPI call */
     MPID_Thread_mutex_create(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIU_Assert(err == 0);
-    MPID_Thread_mutex_create(&MPIR_THREAD_HANDLE_MUTEX, &err);
-    MPIU_Assert(err == 0);
 
 #elif MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT
     /* MPIR_THREAD_GRANULARITY_PER_OBJECT: Multiple locks */
@@ -225,8 +223,6 @@ int MPIR_Thread_CS_Finalize( void )
 #if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
     MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
-    MPIU_Assert(err == 0);
-    MPID_Thread_mutex_destroy(&MPIR_THREAD_HANDLE_MUTEX, &err);
     MPIU_Assert(err == 0);
 
 #elif MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT

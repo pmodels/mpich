@@ -121,10 +121,10 @@ typedef struct MPICH_ThreadInfo_t {
 #if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL || \
     MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT
     MPIU_Thread_mutex_t global_mutex;
-    MPIU_Thread_mutex_t handle_mutex;
 #endif
 
 #if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT
+    MPIU_Thread_mutex_t handle_mutex;
     MPIU_Thread_mutex_t msgq_mutex;
     MPIU_Thread_mutex_t completion_mutex;
     MPIU_Thread_mutex_t ctx_mutex;
