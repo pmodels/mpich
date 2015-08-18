@@ -79,11 +79,6 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
         OPA_store_int(&(mutex_ptr_)->num_queued_threads,0);             \
         pthread_mutexattr_t attr__;                                     \
                                                                         \
-        /* FIXME this used to be PTHREAD_MUTEX_ERRORCHECK_NP, but we    \
-         * had to change it for the thread granularity work when we     \
-         * needed recursive mutexes.  We should go through this code    \
-         * and see if there's any good way to implement error checked   \
-         * versions with the recursive mutexes. */                      \
         pthread_mutexattr_init(&attr__);                                \
         pthread_mutexattr_settype(&attr__, PTHREAD_MUTEX_ERRORCHECK_VALUE); \
         err__ = pthread_mutex_init(&(mutex_ptr_)->mutex, &attr__);      \
