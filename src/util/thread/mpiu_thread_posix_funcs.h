@@ -58,7 +58,7 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
  */
 
 /* FIXME: using constant initializer if available */
-#if !defined(MPICH_DEBUG_MUTEX) || !defined(PTHREAD_MUTEX_ERRORCHECK_VALUE)
+#if !defined(MPICH_DEBUG_MUTEX) || !defined(MPICH_PTHREAD_MUTEX_ERRORCHECK_VALUE)
 
 #define MPIU_Thread_mutex_create(mutex_ptr_, err_ptr_)                  \
     do {                                                                \
@@ -71,7 +71,7 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
         MPIU_DBG_MSG_P(THREAD,TYPICAL,"Created MPIU_Thread_mutex %p", (mutex_ptr_)); \
     } while (0)
 
-#else /* defined(MPICH_DEBUG_MUTEX) && defined(PTHREAD_MUTEX_ERRORCHECK_VALUE) */
+#else /* defined(MPICH_DEBUG_MUTEX) && defined(MPICH_PTHREAD_MUTEX_ERRORCHECK_VALUE) */
 
 #define MPIU_Thread_mutex_create(mutex_ptr_, err_ptr_)                  \
     do {                                                                \
@@ -80,7 +80,7 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
         pthread_mutexattr_t attr__;                                     \
                                                                         \
         pthread_mutexattr_init(&attr__);                                \
-        pthread_mutexattr_settype(&attr__, PTHREAD_MUTEX_ERRORCHECK_VALUE); \
+        pthread_mutexattr_settype(&attr__, MPICH_PTHREAD_MUTEX_ERRORCHECK_VALUE); \
         err__ = pthread_mutex_init(&(mutex_ptr_)->mutex, &attr__);      \
         if (err__)                                                      \
             MPL_internal_sys_error_printf("pthread_mutex_init", err__,  \
@@ -90,7 +90,7 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
         MPIU_DBG_MSG_P(THREAD,TYPICAL,"Created MPIU_Thread_mutex %p", (mutex_ptr_)); \
     } while (0)
 
-#endif /* defined(MPICH_DEBUG_MUTEX) && defined(PTHREAD_MUTEX_ERRORCHECK_VALUE) */
+#endif /* defined(MPICH_DEBUG_MUTEX) && defined(MPICH_PTHREAD_MUTEX_ERRORCHECK_VALUE) */
 
 #define MPIU_Thread_mutex_destroy(mutex_ptr_, err_ptr_)                 \
     do {                                                                \

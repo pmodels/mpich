@@ -5315,10 +5315,10 @@ void f1(void *a) { return; }],
                        pac_cv_has_pthread_mutex_errorcheck=no)])
 
         if test "$pac_cv_has_pthread_mutex_errorcheck" = yes ; then
-            AC_DEFINE(PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK,
+            AC_DEFINE(MPICH_PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK,
                       [Define to an expression that will result in an error checking mutex type.])
         elif test "$pac_cv_has_pthread_mutex_errorcheck_np" = yes ; then
-            AC_DEFINE(PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK_NP,
+            AC_DEFINE(MPICH_PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK_NP,
                       [Define to an expression that will result in an error checking mutex type.])
         fi
 
