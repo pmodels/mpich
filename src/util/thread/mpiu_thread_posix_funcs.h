@@ -76,9 +76,9 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
 #define MPIU_Thread_mutex_create(mutex_ptr_, err_ptr_)                  \
     do {                                                                \
         int err__;                                                      \
-        OPA_store_int(&(mutex_ptr_)->num_queued_threads,0);             \
         pthread_mutexattr_t attr__;                                     \
                                                                         \
+        OPA_store_int(&(mutex_ptr_)->num_queued_threads,0);             \
         pthread_mutexattr_init(&attr__);                                \
         pthread_mutexattr_settype(&attr__, MPICH_PTHREAD_MUTEX_ERRORCHECK_VALUE); \
         err__ = pthread_mutex_init(&(mutex_ptr_)->mutex, &attr__);      \
