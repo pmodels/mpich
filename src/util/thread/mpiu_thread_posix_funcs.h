@@ -67,7 +67,7 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
     do {                                                                \
         int err__;                                                      \
                                                                         \
-        OPA_store_int(&(mutex_ptr_)->num_queued_threads,0);             \
+        OPA_store_int(&(mutex_ptr_)->num_queued_threads, 0);            \
         err__ = pthread_mutex_init(&(mutex_ptr_)->mutex, NULL);         \
         if (err__)                                                      \
             MPL_internal_sys_error_printf("pthread_mutex_init", err__,  \
@@ -83,7 +83,7 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
         int err__;                                                      \
         pthread_mutexattr_t attr__;                                     \
                                                                         \
-        OPA_store_int(&(mutex_ptr_)->num_queued_threads,0);             \
+        OPA_store_int(&(mutex_ptr_)->num_queued_threads, 0);            \
         pthread_mutexattr_init(&attr__);                                \
         pthread_mutexattr_settype(&attr__, MPICH_PTHREAD_MUTEX_ERRORCHECK_VALUE); \
         err__ = pthread_mutex_init(&(mutex_ptr_)->mutex, &attr__);      \
@@ -190,8 +190,7 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
                 OPA_incr_int(&(mutex_ptr_)->num_queued_threads);        \
                 err__ = pthread_cond_wait((cond_ptr_), &(mutex_ptr_)->mutex); \
                 OPA_decr_int(&(mutex_ptr_)->num_queued_threads);        \
-            }                                                           \
-            while (err__ == EINTR);                                     \
+            } while (err__ == EINTR);                                   \
 									\
         *(int *)(err_ptr_) = err__;                                     \
         MPIU_Assert_fmt_msg(err__ == 0,                                 \
@@ -237,13 +236,13 @@ int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
 
-#define MPIU_Thread_tls_destroy(tls_ptr_, err_ptr_)		\
-    do {                                                        \
-        int err__;                                              \
-    								\
-        err__ = pthread_key_delete(*(tls_ptr_));                \
-								\
-        *(int *)(err_ptr_) = err__;                             \
+#define MPIU_Thread_tls_destroy(tls_ptr_, err_ptr_)     \
+    do {                                                \
+        int err__;                                      \
+                                                        \
+        err__ = pthread_key_delete(*(tls_ptr_));        \
+                                                        \
+        *(int *)(err_ptr_) = err__;                     \
     } while (0)
 
 #define MPIU_Thread_tls_set(tls_ptr_, value_, err_ptr_)                 \
