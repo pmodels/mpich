@@ -1,6 +1,0 @@
-INCLUDES = -I../../include -I${master_top_srcdir}/src/include
-lib${MPILIBNAME}_a_SOURCES = ex.c
-ex.o: ex.c
-
-# FIXME: the following file should be included
-# src/include/mpiu_ex.h
