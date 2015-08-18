@@ -133,7 +133,6 @@ typedef struct MPICH_ThreadInfo_t {
 
 #if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
     MPIU_Thread_mutex_t memalloc_mutex; /* for MPIU_{Malloc,Free,Calloc} */
-    MPIU_Thread_id_t cs_holder[MPIU_THREAD_CS_NUM_NAMES];
 #endif
 } MPICH_ThreadInfo_t;
 extern MPICH_ThreadInfo_t MPIR_ThreadInfo;
