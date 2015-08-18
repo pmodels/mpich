@@ -12,11 +12,7 @@
 #include "mpichconfconst.h"
 #include "mpidbg.h"
 #include "mpiassert.h"
-/* Time stamps */
-/* Get the timer definitions.  The source file for this include is
-   src/util/timers/mpiu_timer.h.in */
 #include "mpiu_strerror.h"
-#include "mpiu_timer.h"
 
 /* FIXME: we should not be including an MPIR-level header here.  But
  * the code is currently a rat-hole where the MPIU and MPIR functions
