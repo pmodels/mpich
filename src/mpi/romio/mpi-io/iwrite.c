@@ -90,7 +90,7 @@ int MPIOI_File_iwrite(MPI_File fh,
     ADIO_File adio_fh;
     MPI_Offset nbytes=0;
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    ROMIO_THREAD_CS_ENTER();
     adio_fh = MPIO_File_resolve(fh);
 
     /* --BEGIN ERROR HANDLING-- */
@@ -162,7 +162,7 @@ int MPIOI_File_iwrite(MPI_File fh,
 			   offset, request, &error_code);
     }
 fn_exit:
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    ROMIO_THREAD_CS_EXIT();
     return error_code;
 }
 #endif

@@ -52,7 +52,7 @@ int MPI_File_read_shared(MPI_File fh, void *buf, int count,
     ADIO_File adio_fh;
     void *xbuf=NULL, *e32_buf=NULL;
 
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    ROMIO_THREAD_CS_ENTER();
 
     adio_fh = MPIO_File_resolve(fh);
 
@@ -149,7 +149,7 @@ int MPI_File_read_shared(MPI_File fh, void *buf, int count,
 	ADIOI_Free(e32_buf);
     }
 fn_exit:
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
+    ROMIO_THREAD_CS_EXIT();
 
     return error_code;
 }
