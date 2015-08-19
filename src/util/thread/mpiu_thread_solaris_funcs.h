@@ -7,11 +7,12 @@
 #ifndef MPIU_THREAD_SOLARIS_FUNCS_H_INCLUDED
 #define MPIU_THREAD_SOLARIS_FUNCS_H_INCLUDED
 
+typedef void (*MPIU_Thread_func_t) (void *data);
+void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * id, int *err);
+
 /*
  * Threads
  */
-
-/* MPIU_Thread_create() defined in mpiu_thread.c */
 
 #define MPIU_Thread_exit()			\
     do {                                        \

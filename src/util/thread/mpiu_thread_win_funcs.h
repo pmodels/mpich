@@ -8,6 +8,25 @@
 #ifndef MPIU_THREAD_WIN_FUNCS_H_INCLUDED
 #define MPIU_THREAD_WIN_FUNCS_H_INCLUDED
 
+typedef void (*MPIU_Thread_func_t) (void *data);
+
+void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * id, int *err);
+void MPIU_Thread_exit(void);
+void MPIU_Thread_self(MPIU_Thread_id_t * id);
+void MPIU_Thread_same(MPIU_Thread_id_t * id1, MPIU_Thread_id_t * id2, int *same);
+void MPIU_Thread_yield(void);
+
+void MPIU_Thread_mutex_create(MPIU_Thread_mutex_t * mutex, int *err);
+void MPIU_Thread_mutex_destroy(MPIU_Thread_mutex_t * mutex, int *err);
+void MPIU_Thread_mutex_lock(MPIU_Thread_mutex_t * mutex, int *err);
+void MPIU_Thread_mutex_unlock(MPIU_Thread_mutex_t * mutex, int *err);
+
+void MPIU_Thread_cond_create(MPIU_Thread_cond_t * cond, int *err);
+void MPIU_Thread_cond_destroy(MPIU_Thread_cond_t * cond, int *err);
+void MPIU_Thread_cond_wait(MPIU_Thread_cond_t * cond, MPIU_Thread_mutex_t * mutex, int *err);
+void MPIU_Thread_cond_broadcast(MPIU_Thread_cond_t * cond, int *err);
+void MPIU_Thread_cond_signal(MPIU_Thread_cond_t * cond, int *err);
+
 /*
  * Thread Local Storage
  */
