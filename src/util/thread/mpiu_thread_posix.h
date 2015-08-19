@@ -8,8 +8,8 @@
 /*
  * Threads
  */
-#ifndef MPIU_THREAD_POSIX_FUNCS_H_INCLUDED
-#define MPIU_THREAD_POSIX_FUNCS_H_INCLUDED
+#ifndef MPIU_THREAD_POSIX_H_INCLUDED
+#define MPIU_THREAD_POSIX_H_INCLUDED
 
 #include "mpiu_process_wrappers.h"      /* for MPIU_PW_Sched_yield */
 
@@ -285,4 +285,4 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
         *(int *)(err_ptr_) = MPIU_THREAD_SUCCESS;               \
     } while (0)
 
-#endif /* MPIU_THREAD_POSIX_FUNCS_H_INCLUDED */
+#endif /* MPIU_THREAD_POSIX_H_INCLUDED */

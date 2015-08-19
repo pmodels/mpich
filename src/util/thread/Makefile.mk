@@ -14,9 +14,9 @@ noinst_HEADERS +=                               \
     src/util/thread/mpiu_thread_global.h        \
     src/util/thread/mpiu_thread_pobj.h  	\
     src/util/thread/mpiu_thread_priv.h	      	\
-    src/util/thread/mpiu_thread_posix_funcs.h   \
-    src/util/thread/mpiu_thread_solaris_funcs.h \
-    src/util/thread/mpiu_thread_win_funcs.h
+    src/util/thread/mpiu_thread_posix.h   	\
+    src/util/thread/mpiu_thread_solaris.h 	\
+    src/util/thread/mpiu_thread_win.h
 
 mpi_core_sources += \
     src/util/thread/mpiu_thread.c \

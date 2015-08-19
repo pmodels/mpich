@@ -5,8 +5,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPIU_THREAD_WIN_FUNCS_H_INCLUDED
-#define MPIU_THREAD_WIN_FUNCS_H_INCLUDED
+#ifndef MPIU_THREAD_WIN_H_INCLUDED
+#define MPIU_THREAD_WIN_H_INCLUDED
 
 #define WIN32_LEAN_AND_MEAN
 
@@ -103,4 +103,4 @@ void MPIU_Thread_cond_signal(MPIU_Thread_cond_t * cond, int *err);
         }                                                               \
     } while (0)
 
-#endif /* MPIU_THREAD_WIN_FUNCS_H_INCLUDED */
+#endif /* MPIU_THREAD_WIN_H_INCLUDED */

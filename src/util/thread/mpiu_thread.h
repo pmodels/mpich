@@ -28,11 +28,11 @@
 #define MPIU_THREAD_PACKAGE_WIN     4
 
 #if defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_POSIX)
-#  include "mpiu_thread_posix_funcs.h"
+#  include "mpiu_thread_posix.h"
 #elif defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_SOLARIS)
-#  include "mpiu_thread_solaris_funcs.h"
+#  include "mpiu_thread_solaris.h"
 #elif defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_WIN)
-#  include "mpiu_thread_win_funcs.h"
+#  include "mpiu_thread_win.h"
 #elif defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_NONE)
 typedef int MPIU_Thread_mutex_t;
 typedef int MPIU_Thread_cond_t;
