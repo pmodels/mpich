@@ -22,9 +22,9 @@ const char *MPIU_Strerror(int errnum)
 {
 #if defined(HAVE_STRERROR_R)
     char *buf;
-    MPIU_THREADPRIV_DECL;
-    MPIU_THREADPRIV_GET;
-    buf = MPIU_THREADPRIV_FIELD(strerrbuf);
+    MPID_THREADPRIV_DECL;
+    MPID_THREADPRIV_GET;
+    buf = MPID_THREADPRIV_FIELD(strerrbuf);
 #  if defined(STRERROR_R_CHAR_P)
     /* strerror_r returns char ptr (old GNU-flavor).  Static strings for known
      * errnums are in returned buf, unknown errnums put a message in buf and

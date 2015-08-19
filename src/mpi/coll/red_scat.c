@@ -256,15 +256,15 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
     MPI_Datatype sendtype, recvtype;
     int nprocs_completed, tmp_mask, tree_root, is_commutative;
     MPID_Op *op_ptr;
-    MPIU_THREADPRIV_DECL;
+    MPID_THREADPRIV_DECL;
     MPIU_CHKLMEM_DECL(5);
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
     /* set op_errno to 0. stored in perthread structure */
-    MPIU_THREADPRIV_GET;
-    MPIU_THREADPRIV_FIELD(op_errno) = 0;
+    MPID_THREADPRIV_GET;
+    MPID_THREADPRIV_FIELD(op_errno) = 0;
 
     MPID_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
@@ -873,8 +873,8 @@ fn_exit:
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
 
-    if (MPIU_THREADPRIV_FIELD(op_errno)) 
-	mpi_errno = MPIU_THREADPRIV_FIELD(op_errno);
+    if (MPID_THREADPRIV_FIELD(op_errno)) 
+	mpi_errno = MPID_THREADPRIV_FIELD(op_errno);
 
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;

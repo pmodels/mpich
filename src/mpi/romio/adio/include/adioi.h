@@ -1035,7 +1035,7 @@ int  ADIOI_MPE_iwrite_b;
   #define ADIOI_ENSURE_AINT_FITS_IN_PTR(aint_value) 
   #define ADIOI_Assert assert
   #define MPIU_Upint unsigned long
-  #define MPIU_THREADPRIV_DECL
+  #define MPID_THREADPRIV_DECL
 #endif
 
 #ifdef USE_DBG_LOGGING    /*todo fix dependency on mpich?*/

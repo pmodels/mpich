@@ -255,7 +255,7 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_Comm *new_intracomm_ptr;
-    MPIU_THREADPRIV_DECL;
+    MPID_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INTERCOMM_MERGE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -263,7 +263,7 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);  
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_INTERCOMM_MERGE);
 
-    MPIU_THREADPRIV_GET;
+    MPID_THREADPRIV_GET;
     
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING

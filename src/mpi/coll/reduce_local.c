@@ -44,12 +44,12 @@ int MPIR_Reduce_local_impl(const void *inbuf, void *inoutbuf, int count, MPI_Dat
 #if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
     int is_f77_uop = 0;
 #endif
-    MPIU_THREADPRIV_DECL;
+    MPID_THREADPRIV_DECL;
 
     if (count == 0) goto fn_exit;
 
-    MPIU_THREADPRIV_GET;
-    MPIU_THREADPRIV_FIELD(op_errno) = MPI_SUCCESS;
+    MPID_THREADPRIV_GET;
+    MPID_THREADPRIV_FIELD(op_errno) = MPI_SUCCESS;
 
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
         /* get the function by indexing into the op table */
@@ -103,8 +103,8 @@ int MPIR_Reduce_local_impl(const void *inbuf, void *inoutbuf, int count, MPI_Dat
     }
 
     /* --BEGIN ERROR HANDLING-- */
-    if (MPIU_THREADPRIV_FIELD(op_errno))
-        mpi_errno = MPIU_THREADPRIV_FIELD(op_errno);
+    if (MPID_THREADPRIV_FIELD(op_errno))
+        mpi_errno = MPID_THREADPRIV_FIELD(op_errno);
     /* --END ERROR HANDLING-- */
 
 fn_exit:

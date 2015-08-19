@@ -166,7 +166,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 static int thread_cs_init( void )
 {
     int err;
-    MPIU_THREADPRIV_DECL;
+    MPID_THREADPRIV_DECL;
 
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
@@ -202,8 +202,8 @@ static int thread_cs_init( void )
 #error Unrecognized thread granularity
 #endif
 
-    MPIU_THREADPRIV_INITKEY;
-    MPIU_THREADPRIV_INIT;
+    MPID_THREADPRIV_INITKEY;
+    MPID_THREADPRIV_INIT;
 
     MPIU_DBG_MSG(THREAD,TYPICAL,"Created global mutex and private storage");
     return MPI_SUCCESS;
@@ -252,7 +252,7 @@ int MPIR_Thread_CS_Finalize( void )
 #error Unrecognized thread granularity
 #endif
 
-    MPIU_THREADPRIV_FINALIZE;
+    MPID_THREADPRIV_FINALIZE;
 
     return MPI_SUCCESS;
 }

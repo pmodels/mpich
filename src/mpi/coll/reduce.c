@@ -302,14 +302,14 @@ static int MPIR_Reduce_redscat_gather (
     void *tmp_buf;
 
     MPIU_CHKLMEM_DECL(4);
-    MPIU_THREADPRIV_DECL;
+    MPID_THREADPRIV_DECL;
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
     /* set op_errno to 0. stored in perthread structure */
-    MPIU_THREADPRIV_GET;
-    MPIU_THREADPRIV_FIELD(op_errno) = 0;
+    MPID_THREADPRIV_GET;
+    MPID_THREADPRIV_FIELD(op_errno) = 0;
 
     /* Create a temporary buffer */
 
@@ -634,8 +634,8 @@ static int MPIR_Reduce_redscat_gather (
     /* FIXME does this need to be checked after each uop invocation for
        predefined operators? */
     /* --BEGIN ERROR HANDLING-- */
-    if (MPIU_THREADPRIV_FIELD(op_errno)) {
-        mpi_errno = MPIU_THREADPRIV_FIELD(op_errno);
+    if (MPID_THREADPRIV_FIELD(op_errno)) {
+        mpi_errno = MPID_THREADPRIV_FIELD(op_errno);
         goto fn_fail;
     }
     /* --END ERROR HANDLING-- */

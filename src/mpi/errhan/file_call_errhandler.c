@@ -57,14 +57,14 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
     MPID_Errhandler *e;
     MPI_Errhandler eh;
 #endif
-    MPIU_THREADPRIV_DECL;
+    MPID_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_FILE_CALL_ERRHANDLER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_FILE_CALL_ERRHANDLER);
 
-    MPIU_THREADPRIV_GET;
+    MPID_THREADPRIV_GET;
 
 #ifdef MPI_MODE_RDONLY
     /* Validate parameters, especially handles needing to be converted */

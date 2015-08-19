@@ -255,9 +255,9 @@ extern MPIDI_Process_t MPIDI_Process;
 #  define MPIDI_Request_tls_alloc(req) \
     do { \
         int i;                                                         \
-        MPIU_THREADPRIV_DECL;                                          \
-        MPIU_THREADPRIV_GET;                                           \
-        if (!MPIU_THREADPRIV_FIELD(request_handles)) {                 \
+        MPID_THREADPRIV_DECL;                                          \
+        MPID_THREADPRIV_GET;                                           \
+        if (!MPID_THREADPRIV_FIELD(request_handles)) {                 \
             MPID_Request *prev, *cur;                                  \
             /* batch allocate a linked list of requests */             \
             MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_HANDLE_MUTEX);                        \
@@ -271,12 +271,12 @@ extern MPIDI_Process_t MPIDI_Process;
                 prev = cur;                                            \
             }                                                          \
             MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_HANDLE_MUTEX);                         \
-            MPIU_THREADPRIV_FIELD(request_handles) = cur;              \
-            MPIU_THREADPRIV_FIELD(request_handle_count) += MPID_REQUEST_TLS_MAX;    \
+            MPID_THREADPRIV_FIELD(request_handles) = cur;              \
+            MPID_THREADPRIV_FIELD(request_handle_count) += MPID_REQUEST_TLS_MAX;    \
         }                                                              \
-        (req) = MPIU_THREADPRIV_FIELD(request_handles);                \
-        MPIU_THREADPRIV_FIELD(request_handles) = req->next;            \
-        MPIU_THREADPRIV_FIELD(request_handle_count) -= 1;              \
+        (req) = MPID_THREADPRIV_FIELD(request_handles);                \
+        MPID_THREADPRIV_FIELD(request_handles) = req->next;            \
+        MPID_THREADPRIV_FIELD(request_handle_count) -= 1;              \
     } while (0)
 #elif MPIU_HANDLE_ALLOCATION_METHOD == MPIU_HANDLE_ALLOCATION_MUTEX
 #  define MPIDI_Request_tls_alloc(req_) \

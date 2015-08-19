@@ -32,7 +32,7 @@ int MPIO_Testall(int count, MPIO_Request requests[], int *flag,
 		 MPI_Status statuses[])
 {
     int done, i, err; 
-    MPIU_THREADPRIV_DECL;
+    MPID_THREADPRIV_DECL;
 
     if (count == 1)  {
 	    err = MPIO_Test( requests, flag, statuses );

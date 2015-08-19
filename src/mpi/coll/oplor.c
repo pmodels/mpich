@@ -73,9 +73,9 @@ void MPIR_LOR (
 #undef MPIR_OP_TYPE_MACRO
 	/* --BEGIN ERROR HANDLING-- */
         default: {
-            MPIU_THREADPRIV_DECL;
-            MPIU_THREADPRIV_GET;
-            MPIU_THREADPRIV_FIELD(op_errno) = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_LOR" );
+            MPID_THREADPRIV_DECL;
+            MPID_THREADPRIV_GET;
+            MPID_THREADPRIV_FIELD(op_errno) = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_LOR" );
             break;
         }
 	/* --END ERROR HANDLING-- */

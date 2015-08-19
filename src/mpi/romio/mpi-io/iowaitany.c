@@ -32,7 +32,7 @@ int MPIO_Waitany(int count, MPIO_Request requests[], int *index,
 		 MPI_Status *status)
 {
     int i, flag, err; 
-    MPIU_THREADPRIV_DECL;
+    MPID_THREADPRIV_DECL;
 
     if (count == 1) {
 	err = MPIO_Wait( requests, status );

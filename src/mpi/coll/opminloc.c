@@ -111,10 +111,10 @@ void MPIR_MINLOC(
 #endif
 	/* --BEGIN ERROR HANDLING-- */
     default: {
-	MPIU_THREADPRIV_DECL;
-	MPIU_THREADPRIV_GET;
+	MPID_THREADPRIV_DECL;
+	MPID_THREADPRIV_GET;
         MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_MINLOC" );
-        MPIU_THREADPRIV_FIELD(op_errno) = mpi_errno;
+        MPID_THREADPRIV_FIELD(op_errno) = mpi_errno;
         break;
     }
 	/* --END ERROR HANDLING-- */

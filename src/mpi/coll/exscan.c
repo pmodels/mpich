@@ -102,17 +102,17 @@ int MPIR_Exscan (
     void *partial_scan, *tmp_buf;
     MPID_Op *op_ptr;
     MPIU_CHKLMEM_DECL(2);
-    MPIU_THREADPRIV_DECL;
+    MPID_THREADPRIV_DECL;
     
     if (count == 0) return MPI_SUCCESS;
 
-    MPIU_THREADPRIV_GET;
+    MPID_THREADPRIV_GET;
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
     
     /* set op_errno to 0. stored in perthread structure */
-    MPIU_THREADPRIV_FIELD(op_errno) = 0;
+    MPID_THREADPRIV_FIELD(op_errno) = 0;
 
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
         is_commutative = 1;
@@ -215,8 +215,8 @@ int MPIR_Exscan (
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
 
-    if (MPIU_THREADPRIV_FIELD(op_errno)) 
-	mpi_errno = MPIU_THREADPRIV_FIELD(op_errno);
+    if (MPID_THREADPRIV_FIELD(op_errno)) 
+	mpi_errno = MPID_THREADPRIV_FIELD(op_errno);
 
 fn_exit:
     MPIU_CHKLMEM_FREEALL();
