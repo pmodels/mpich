@@ -60,7 +60,7 @@ enum MPIU_Thread_cs_name {
     MPIU_THREAD_CS_NUM_NAMES
 };
 
-typedef struct MPICH_ThreadInfo_t {
+typedef struct MPIR_Thread_info_t {
     int thread_provided;        /* Provided level of thread support */
 
 #if defined(MPICH_IS_THREADED) && !defined(MPIU_TLS_SPECIFIER)
@@ -92,8 +92,8 @@ typedef struct MPICH_ThreadInfo_t {
     MPIU_Thread_mutex_t pmi_mutex;
     MPIU_Thread_mutex_t memalloc_mutex; /* for MPIU_{Malloc,Free,Calloc} */
 #endif
-} MPICH_ThreadInfo_t;
-extern MPICH_ThreadInfo_t MPIR_ThreadInfo;
+} MPIR_Thread_info_t;
+extern MPIR_Thread_info_t MPIR_ThreadInfo;
 
 #define MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX      MPIR_ThreadInfo.global_mutex
 #define MPIR_THREAD_HANDLE_MUTEX      MPIR_ThreadInfo.handle_mutex

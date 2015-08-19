@@ -84,7 +84,7 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided) __attr
 /* Global variables can be initialized here */
 MPICH_PerProcess_t MPIR_Process = { OPA_INT_T_INITIALIZER(MPICH_PRE_INIT) };
      /* all other fields in MPIR_Process are irrelevant */
-MPICH_ThreadInfo_t MPIR_ThreadInfo = { 0 };
+MPIR_Thread_info_t MPIR_ThreadInfo = { 0 };
 
 /* These are initialized as null (avoids making these into common symbols).
    If the Fortran binding is supported, these can be initialized to 
