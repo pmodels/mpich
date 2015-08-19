@@ -3325,7 +3325,7 @@ sub chararray_ftoc {
     }
     print $OUTFD "\
       p$count = (char **)$malloc( asize$count * sizeof(char *) );
-      ptmp    = (char *)$malloc( asize$count * (d$count + 1) );
+      if (asize$count-1 > 0) ptmp = (char *)$malloc( asize$count * (d$count + 1) );
       for (i=0; i<asize$count-1; i++) {
           char *p = v$count + i * d$count, *pin, *pdest;
           int j;
@@ -3342,7 +3342,7 @@ sub chararray_ftoc {
     /* Null terminate the array */
     p$count\[asize$count-1\] = 0;
     }\n";
-    $clean_up .= "    $free( p$count\[0\] );\n    $free( p$count );\n";
+    $clean_up .= "    if (asize$count-1 > 0) $free( p$count\[0\] );\n    $free( p$count );\n";
 }
 
 # Add null to 2-dimensional arrays of input strings.  Used only 
