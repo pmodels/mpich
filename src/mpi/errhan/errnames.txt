@@ -434,12 +434,12 @@ unexpected messages queued.
 #**argnull %s:Invalid null parameter %s
 **commstack:Internal overflow in stack used for MPI_Comm_split
 
-**cond_create:MPIU_Thread_cond_create failed
-**cond_create %s:MPIU_Thread_cond_create failed: %s
-**mutex_create:MPIU_Thread_mutex_create failed
-**mutex_create %s:MPIU_Thread_mutex_create failed: %s
-**thread_create:MPIU_Thread_create failed
-**thread_create %s:MPIU_Thread_create failed: %s
+**cond_create:MPID_Thread_cond_create failed
+**cond_create %s:MPID_Thread_cond_create failed: %s
+**mutex_create:MPID_Thread_mutex_create failed
+**mutex_create %s:MPID_Thread_mutex_create failed: %s
+**thread_create:MPID_Thread_create failed
+**thread_create %s:MPID_Thread_create failed: %s
 
 #
 # Errors common to several devices
