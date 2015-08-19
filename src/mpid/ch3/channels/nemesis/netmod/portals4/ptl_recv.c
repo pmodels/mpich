@@ -15,7 +15,7 @@ static void dequeue_req(const ptl_event_t *e)
 {
     int found;
     MPID_Request *const rreq = e->user_ptr;
-    int s_len, r_len;
+    MPI_Aint s_len, r_len;
 
     /* At this point we know the ME is unlinked. Invalidate the handle to
        prevent further accesses, e.g. an attempted cancel. */
