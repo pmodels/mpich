@@ -52,14 +52,6 @@ typedef int MPIU_Thread_tls_t;
 #  error MPIR_THREAD_GRANULARITY_LOCK_FREE not implemented yet
 #endif
 
-
-/* I don't have a better place for this at the moment, so it lives here for now. */
-enum MPIU_Thread_cs_name {
-    MPIU_THREAD_CS_NAME_GLOBAL = 0,
-    MPIU_THREAD_CS_NAME_POBJ,
-    MPIU_THREAD_CS_NUM_NAMES
-};
-
 typedef struct {
     int thread_provided;        /* Provided level of thread support */
 
