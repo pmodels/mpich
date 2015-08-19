@@ -129,9 +129,6 @@ typedef struct MPICH_ThreadInfo_t {
     MPIU_Thread_mutex_t completion_mutex;
     MPIU_Thread_mutex_t ctx_mutex;
     MPIU_Thread_mutex_t pmi_mutex;
-#endif
-
-#if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
     MPIU_Thread_mutex_t memalloc_mutex; /* for MPIU_{Malloc,Free,Calloc} */
 #endif
 } MPICH_ThreadInfo_t;

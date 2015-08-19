@@ -168,14 +168,6 @@ static int thread_cs_init( void )
     int err;
     MPIU_THREADPRIV_DECL;
 
-    /* we create this at all granularities right now */
-    MPID_Thread_mutex_create(&MPIR_THREAD_MEMALLOC_MUTEX, &err);
-    MPIU_Assert(err == 0);
-
-    /* must come after memalloc_mutex creation */
-    MPIU_THREADPRIV_INITKEY;
-    MPIU_THREADPRIV_INIT;
-
 #if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
     MPID_Thread_mutex_create(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
@@ -195,6 +187,8 @@ static int thread_cs_init( void )
     MPIU_Assert(err == 0);
     MPID_Thread_mutex_create(&MPIR_THREAD_PMI_MUTEX, &err);
     MPIU_Assert(err == 0);
+    MPID_Thread_mutex_create(&MPIR_THREAD_MEMALLOC_MUTEX, &err);
+    MPIU_Assert(err == 0);
 
 #elif MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_LOCK_FREE
 /* Updates to shared data and access to shared services is handled without 
@@ -207,6 +201,10 @@ static int thread_cs_init( void )
 #else
 #error Unrecognized thread granularity
 #endif
+
+    MPIU_THREADPRIV_INITKEY;
+    MPIU_THREADPRIV_INIT;
+
     MPIU_DBG_MSG(THREAD,TYPICAL,"Created global mutex and private storage");
     return MPI_SUCCESS;
 }
