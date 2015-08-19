@@ -520,7 +520,7 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
                                            remote_leader, tag, &new_intercomm_ptr);
     if (mpi_errno) goto fn_fail;
     
-    MPIU_OBJ_PUBLISH_HANDLE(*newintercomm, new_intercomm_ptr->handle);
+    MPID_OBJ_PUBLISH_HANDLE(*newintercomm, new_intercomm_ptr->handle);
     /* ... end of body of routine ... */
     
   fn_exit:

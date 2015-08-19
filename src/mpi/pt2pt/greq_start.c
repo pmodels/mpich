@@ -203,7 +203,7 @@ int MPI_Grequest_start( MPI_Grequest_query_function *query_fn,
     mpi_errno = MPIR_Grequest_start_impl(query_fn, free_fn, cancel_fn, extra_state, &request_ptr);
     if (mpi_errno) goto fn_fail;
     
-    MPIU_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
+    MPID_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
 
     /* ... end of body of routine ... */
 
@@ -304,7 +304,7 @@ int MPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn,
             MPIR_Grequest_registered_finalizer = 1;
         }
 
-        MPIU_OBJ_PUBLISH_HANDLE(*greq_class, class_ptr->handle);
+        MPID_OBJ_PUBLISH_HANDLE(*greq_class, class_ptr->handle);
 
 	/* ... end of body of routine ... */
 fn_exit:

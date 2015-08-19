@@ -327,7 +327,7 @@ int MPI_Type_create_subarray(int ndims,
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 
-    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+    MPID_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */
 
   fn_exit:

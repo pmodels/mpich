@@ -55,7 +55,7 @@ int MPIR_Type_contiguous_impl(int count,
 
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+    MPID_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 
  fn_exit:
     return mpi_errno;

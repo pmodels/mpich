@@ -106,7 +106,7 @@ int MPIR_Graph_create( MPID_Comm *comm_ptr, int nnodes,
     mpi_errno = MPIR_Topology_put( newcomm_ptr, graph_ptr );
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    MPIU_OBJ_PUBLISH_HANDLE(*comm_graph, newcomm_ptr->handle);
+    MPID_OBJ_PUBLISH_HANDLE(*comm_graph, newcomm_ptr->handle);
 
     /* ... end of body of routine ... */
 

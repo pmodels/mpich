@@ -122,7 +122,7 @@ int MPI_Type_create_keyval(MPI_Type_copy_attr_function *type_copy_attr_fn,
     /* Tell finalize to check for attributes on permenant types */
     MPIR_DatatypeAttrFinalize();
     
-    MPIU_OBJ_PUBLISH_HANDLE(*type_keyval, keyval_ptr->handle);
+    MPID_OBJ_PUBLISH_HANDLE(*type_keyval, keyval_ptr->handle);
 
     /* ... end of body of routine ... */
 

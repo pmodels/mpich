@@ -112,7 +112,7 @@ int MPI_Comm_connect(const char *port_name, MPI_Info info, int root, MPI_Comm co
     mpi_errno = MPIR_Comm_connect_impl(port_name, info_ptr, root, comm_ptr, &newcomm_ptr);
     if (mpi_errno) goto fn_fail;
 
-    MPIU_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
+    MPID_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
 
     /* ... end of body of routine ... */
 

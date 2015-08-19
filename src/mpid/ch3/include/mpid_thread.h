@@ -55,5 +55,6 @@ typedef MPIDU_Thread_func_t  MPID_Thread_func_t;
 #define MPID_cc_incr         MPIDU_cc_incr
 #define MPID_cc_decr         MPIDU_cc_decr
 
+#define MPID_OBJ_PUBLISH_HANDLE  MPIDU_OBJ_PUBLISH_HANDLE
 
 #endif /* !defined(MPID_THREAD_H_INCLUDED) */

@@ -127,7 +127,7 @@ int MPI_Comm_spawn(const char *command, char *argv[], int maxprocs, MPI_Info inf
                                          array_of_errcodes); 
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    MPIU_OBJ_PUBLISH_HANDLE(*intercomm, intercomm_ptr->handle);
+    MPID_OBJ_PUBLISH_HANDLE(*intercomm, intercomm_ptr->handle);
 
     /* ... end of body of routine ... */
 

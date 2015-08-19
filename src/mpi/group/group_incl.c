@@ -155,7 +155,7 @@ int MPI_Group_incl(MPI_Group group, int n, const int ranks[], MPI_Group *newgrou
     mpi_errno = MPIR_Group_incl_impl(group_ptr, n, ranks, &new_group_ptr);
     if (mpi_errno) goto fn_fail;
     
-    MPIU_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
+    MPID_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
 
     /* ... end of body of routine ... */
 

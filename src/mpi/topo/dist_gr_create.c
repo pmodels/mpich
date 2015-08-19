@@ -393,7 +393,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
 
     MPIU_CHKPMEM_COMMIT();
 
-    MPIU_OBJ_PUBLISH_HANDLE(*comm_dist_graph, comm_dist_graph_ptr->handle);
+    MPID_OBJ_PUBLISH_HANDLE(*comm_dist_graph, comm_dist_graph_ptr->handle);
 
     /* ... end of body of routine ... */
 

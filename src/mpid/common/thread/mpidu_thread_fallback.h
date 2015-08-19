@@ -302,5 +302,7 @@ M*/
 #define MPIDU_cc_incr         MPIU_cc_incr
 #define MPIDU_cc_decr         MPIU_cc_decr
 
+#define MPIDU_OBJ_PUBLISH_HANDLE  MPIU_OBJ_PUBLISH_HANDLE
+
 
 #endif /* !defined(MPIDU_THREAD_H_INCLUDED) */

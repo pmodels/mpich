@@ -156,7 +156,7 @@ int MPIR_Cart_create( MPID_Comm *comm_ptr, int ndims, const int dims[],
     mpi_errno = MPIR_Topology_put( newcomm_ptr, cart_ptr );
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPIU_OBJ_PUBLISH_HANDLE(*comm_cart, newcomm_ptr->handle);
+    MPID_OBJ_PUBLISH_HANDLE(*comm_cart, newcomm_ptr->handle);
 
  fn_exit:
     return mpi_errno;

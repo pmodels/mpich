@@ -59,7 +59,7 @@ int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
                                            &oldtype);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+    MPID_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 
   fn_exit:
     return mpi_errno;

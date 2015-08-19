@@ -209,7 +209,7 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * ne
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     if (newcomm_ptr)
-        MPIU_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
+        MPID_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
     else
         *newcomm = MPI_COMM_NULL;
     /* ... end of body of routine ... */

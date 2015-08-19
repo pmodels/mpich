@@ -132,7 +132,7 @@ int MPI_Comm_dup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    MPIU_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
+    MPID_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
     /* ... end of body of routine ... */
 
   fn_exit:

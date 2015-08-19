@@ -117,7 +117,7 @@ int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest
     /* The request is immediately complete because the MPIR_Bsend_isend has
        already moved the data out of the user's buffer */
     MPIR_Grequest_complete_impl(new_request_ptr);
-    MPIU_OBJ_PUBLISH_HANDLE(*request, new_request_ptr->handle);
+    MPID_OBJ_PUBLISH_HANDLE(*request, new_request_ptr->handle);
   
  fn_exit:
     return mpi_errno;

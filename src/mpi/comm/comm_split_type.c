@@ -142,7 +142,7 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     if (newcomm_ptr)
-        MPIU_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
+        MPID_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
     else
         *newcomm = MPI_COMM_NULL;
 

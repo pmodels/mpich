@@ -129,7 +129,7 @@ int MPI_Op_create(MPI_User_function *user_fn, int commute, MPI_Op *op)
 				   const int *, const MPI_Datatype *))user_fn;
     MPIU_Object_set_ref(op_ptr,1);
 
-    MPIU_OBJ_PUBLISH_HANDLE(*op, op_ptr->handle);
+    MPID_OBJ_PUBLISH_HANDLE(*op, op_ptr->handle);
     /* ... end of body of routine ... */
 
   fn_exit:

@@ -478,7 +478,7 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
     mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, &newcomm_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     if (newcomm_ptr)
-        MPIU_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
+        MPID_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
     else
         *newcomm = MPI_COMM_NULL;
 

@@ -179,7 +179,7 @@ int MPI_Comm_join(int fd, MPI_Comm *intercomm)
     mpi_errno = MPIR_Close_port_impl(local_port);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPIU_OBJ_PUBLISH_HANDLE(*intercomm, intercomm_ptr->handle);
+    MPID_OBJ_PUBLISH_HANDLE(*intercomm, intercomm_ptr->handle);
 
     /* ... end of body of routine ... */
 

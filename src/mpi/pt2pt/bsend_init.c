@@ -125,7 +125,7 @@ int MPI_Bsend_init(const void *buf, int count, MPI_Datatype datatype,
     MPIR_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
 
     /* return the handle of the request to the user */
-    MPIU_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
+    MPID_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
 
     /* ... end of body of routine ... */
     
