@@ -60,7 +60,7 @@ enum MPIU_Thread_cs_name {
     MPIU_THREAD_CS_NUM_NAMES
 };
 
-typedef struct MPIR_Thread_info_t {
+typedef struct {
     int thread_provided;        /* Provided level of thread support */
 
 #if defined(MPICH_IS_THREADED) && !defined(MPIU_TLS_SPECIFIER)
@@ -119,7 +119,7 @@ extern MPIR_Thread_info_t MPIR_ThreadInfo;
  * Note that any pointers to dynamically allocated memory stored in this
  * structure must be externally cleaned up.
  * */
-typedef struct MPICH_PerThread_t {
+typedef struct {
     int op_errno;               /* For errors in predefined MPI_Ops */
 
     /* error string storage for MPIU_Strerror */
