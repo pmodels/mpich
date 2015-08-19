@@ -75,7 +75,6 @@ int MPI_Type_create_f90_complex( int precision, int range, MPI_Datatype *newtype
     static realModel f90_real_model[2] = { 
 	{ MPIR_F90_REAL_MODEL, MPI_COMPLEX},
 	{ MPIR_F90_DOUBLE_MODEL, MPI_DOUBLE_COMPLEX } };
-    MPID_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_F90_COMPLEX);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

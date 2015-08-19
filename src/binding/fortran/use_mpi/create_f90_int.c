@@ -69,7 +69,6 @@ int MPI_Type_create_f90_integer( int range, MPI_Datatype *newtype )
     MPI_Datatype basetype = MPI_DATATYPE_NULL;
     static intModel f90_integer_map[] = { MPIR_F90_INTEGER_MODEL_MAP
 					  {0, 0, 0 } };
-    MPID_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_F90_INTEGER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
