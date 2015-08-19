@@ -28,32 +28,32 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #include "mpimem.h"
 
 /*
- * struct MPEI_Thread_info
+ * struct MPIUI_Thread_info
  *
- * Structure used to pass the user function and data to the intermediate function, MPEI_Thread_start.  See comment in
- * MPEI_Thread_start() header for more information.
+ * Structure used to pass the user function and data to the intermediate function, MPIUI_Thread_start.  See comment in
+ * MPIUI_Thread_start() header for more information.
  */
-struct MPEI_Thread_info {
+struct MPIUI_Thread_info {
     MPIU_Thread_func_t func;
     void *data;
 };
 
 
-DWORD WINAPI MPEI_Thread_start(LPVOID arg);
+DWORD WINAPI MPIUI_Thread_start(LPVOID arg);
 
 /*
  * MPIU_Thread_create()
  */
 void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * idp, int *errp)
 {
-    struct MPEI_Thread_info *thread_info;
+    struct MPIUI_Thread_info *thread_info;
     int err = MPIU_THREAD_SUCCESS;
 
-    thread_info = (struct MPEI_Thread_info *) MPIU_Malloc(sizeof(struct MPEI_Thread_info));
+    thread_info = (struct MPIUI_Thread_info *) MPIU_Malloc(sizeof(struct MPIUI_Thread_info));
     if (thread_info != NULL) {
         thread_info->func = func;
         thread_info->data = data;
-        *idp = CreateThread(NULL, 0, MPEI_Thread_start, thread_info, 0, NULL);
+        *idp = CreateThread(NULL, 0, MPIUI_Thread_start, thread_info, 0, NULL);
         if (*idp == NULL) {
             err = GetLastError();
         }
@@ -69,14 +69,14 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
 
 
 /*
- * MPEI_Thread_start()
+ * MPIUI_Thread_start()
  *
  * Start functions in Windows are expected to return a DWORD.  Since our start functions do not return a value we must
  * use an intermediate function to perform the call to the user's start function and then return a value of 0.
  */
-DWORD WINAPI MPEI_Thread_start(LPVOID arg)
+DWORD WINAPI MPIUI_Thread_start(LPVOID arg)
 {
-    struct MPEI_Thread_info *thread_info = (struct MPEI_Thread_info *) arg;
+    struct MPIUI_Thread_info *thread_info = (struct MPIUI_Thread_info *) arg;
     MPIU_Thread_func_t func = thread_info->func;
     void *data = thread_info->data;
 
