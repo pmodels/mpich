@@ -12,7 +12,7 @@
 
 /* If single threaded, make this point at a pre-allocated segment.
    This structure is allocated in src/mpi/init/initthread.c */
-extern MPICH_PerThread_t MPIU_Thread;
+extern MPIU_Per_thread_t MPIU_Thread;
 
 #define MPIU_THREADPRIV_INITKEY
 #define MPIU_THREADPRIV_INIT

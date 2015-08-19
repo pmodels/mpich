@@ -124,7 +124,7 @@ typedef struct {
 
     /* error string storage for MPIU_Strerror */
     char strerrbuf[MPIU_STRERROR_BUF_SIZE];
-} MPICH_PerThread_t;
+} MPIU_Per_thread_t;
 
 #if defined (MPICH_IS_THREADED)
 #include "mpiu_thread_multiple.h"
