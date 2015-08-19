@@ -168,13 +168,13 @@ static int thread_cs_init( void )
     int err;
     MPIU_THREADPRIV_DECL;
 
-#if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
     MPID_Thread_mutex_create(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIU_Assert(err == 0);
 
-#elif MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT
-    /* MPIR_THREAD_GRANULARITY_PER_OBJECT: Multiple locks */
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
+    /* MPICH_THREAD_GRANULARITY_PER_OBJECT: Multiple locks */
     MPID_Thread_mutex_create(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIU_Assert(err == 0);
     MPID_Thread_mutex_create(&MPIR_THREAD_HANDLE_MUTEX, &err);
@@ -190,12 +190,12 @@ static int thread_cs_init( void )
     MPID_Thread_mutex_create(&MPIR_THREAD_MEMALLOC_MUTEX, &err);
     MPIU_Assert(err == 0);
 
-#elif MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_LOCK_FREE
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_LOCK_FREE
 /* Updates to shared data and access to shared services is handled without 
    locks where ever possible. */
 #error lock-free not yet implemented
 
-#elif MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_SINGLE
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_SINGLE
 /* No thread support, make all operations a no-op */
 
 #else
@@ -218,13 +218,13 @@ int MPIR_Thread_CS_Finalize( void )
     int err;
 
     MPIU_DBG_MSG(THREAD,TYPICAL,"Freeing global mutex and private storage");
-#if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
     MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIU_Assert(err == 0);
 
-#elif MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT
-    /* MPIR_THREAD_GRANULARITY_PER_OBJECT: There are multiple locks,
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
+    /* MPICH_THREAD_GRANULARITY_PER_OBJECT: There are multiple locks,
      * one for each logical class (e.g., each type of object) */
     MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIU_Assert(err == 0);
@@ -240,12 +240,12 @@ int MPIR_Thread_CS_Finalize( void )
     MPIU_Assert(err == 0);
 
 
-#elif MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_LOCK_FREE
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_LOCK_FREE
 /* Updates to shared data and access to shared services is handled without 
    locks where ever possible. */
 #error lock-free not yet implemented
 
-#elif MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_SINGLE
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_SINGLE
 /* No thread support, make all operations a no-op */
 
 #else

@@ -29,12 +29,12 @@
  * A configure choice will set MPICH_THREAD_GRANULARITY to one of these values */
 
 /* _INVALID exists to avoid accidental macro evaluations to 0 */
-#define MPIR_THREAD_GRANULARITY_INVALID 0
-#define MPIR_THREAD_GRANULARITY_GLOBAL 1
-#define MPIR_THREAD_GRANULARITY_PER_OBJECT 2
-#define MPIR_THREAD_GRANULARITY_LOCK_FREE 3
+#define MPICH_THREAD_GRANULARITY_INVALID 0
+#define MPICH_THREAD_GRANULARITY_GLOBAL 1
+#define MPICH_THREAD_GRANULARITY_PER_OBJECT 2
+#define MPICH_THREAD_GRANULARITY_LOCK_FREE 3
 /* _SINGLE is the "null" granularity, where all processes are single-threaded */
-#define MPIR_THREAD_GRANULARITY_SINGLE 4
+#define MPICH_THREAD_GRANULARITY_SINGLE 4
 
 /* controls the allocation mechanism for MPID_Request handles, which can greatly
  * affect concurrency on the critical path */

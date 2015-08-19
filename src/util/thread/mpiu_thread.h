@@ -46,10 +46,10 @@ typedef int MPIU_Thread_tls_t;
 #define MPIU_THREAD_SUCCESS 0
 /* FIXME: Define other error codes.  For now, any non-zero value is an error. */
 
-#if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_INVALID
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_INVALID
 #  error Invalid thread granularity option specified (possibly none)
-#elif MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_LOCK_FREE
-#  error MPIR_THREAD_GRANULARITY_LOCK_FREE not implemented yet
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_LOCK_FREE
+#  error MPICH_THREAD_GRANULARITY_LOCK_FREE not implemented yet
 #endif
 
 typedef struct {
@@ -71,12 +71,12 @@ typedef struct {
 #endif                          /* MPICH_IS_THREADED */
 
     /* Define the mutex values used for each kind of implementation */
-#if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL || \
-    MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL || \
+    MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
     MPIU_Thread_mutex_t global_mutex;
 #endif
 
-#if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
     MPIU_Thread_mutex_t handle_mutex;
     MPIU_Thread_mutex_t msgq_mutex;
     MPIU_Thread_mutex_t completion_mutex;

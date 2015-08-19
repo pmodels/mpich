@@ -1780,7 +1780,7 @@ int MPIDU_Sock_wait(MPIDU_Sock_set_t set, int timeout, MPIDU_Sock_event_t * out)
     for (;;) 
     {
 #if defined(MPICH_IS_THREADED)
-#       if (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL)
+#       if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
 	{
             int err;
 	    /* Release the lock so that other threads may make progress while this thread waits for something to do */
@@ -1805,7 +1805,7 @@ int MPIDU_Sock_wait(MPIDU_Sock_set_t set, int timeout, MPIDU_Sock_event_t * out)
 	    /*printf("[%d] GetQueuedCompletionStatus took %.3f seconds for sock: %d\n", getpid(), t2-t1, sock->sock);*/
 	    MPIDI_FUNC_EXIT(MPID_STATE_GETQUEUEDCOMPLETIONSTATUS);
 #if defined(MPICH_IS_THREADED)
-#           if (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL)
+#           if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
 	    {
                 int err;
 		/* Reaquire the lock before processing any of the information returned from GetQueuedCompletionStatus */
@@ -2398,7 +2398,7 @@ int MPIDU_Sock_wait(MPIDU_Sock_set_t set, int timeout, MPIDU_Sock_event_t * out)
 	else
 	{
 #if defined(MPICH_IS_THREADED)
-#           if (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL)
+#           if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
 	    {
                 int err;
 		/* Reaquire the lock before processing any of the information returned from GetQueuedCompletionStatus */

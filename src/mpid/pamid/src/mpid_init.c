@@ -56,7 +56,7 @@ MPIDI_Process_t  MPIDI_Process = {
   .verbose               = 0,
   .statistics            = 0,
 
-#if (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT)
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT)
   .avail_contexts        = MPIDI_MAX_CONTEXTS,
   .async_progress = {
     .active              = 0,
@@ -675,7 +675,7 @@ MPIDI_PAMI_context_init(int* threading, int *size)
 #endif
   int  numTasks;
 
-#if (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT)
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT)
   /*
    * ASYNC_PROGRESS_MODE_LOCKED requires context post because the async thread
    * will hold the context lock indefinitely; the only option for an application
@@ -694,7 +694,7 @@ MPIDI_PAMI_context_init(int* threading, int *size)
       MPIDI_Process.perobj.context_post.requested == 0)
     MPID_Abort (NULL, 0, 1, "'locking' async progress requires context post");
 
-#else /* MPICH_THREAD_GRANULARITY != MPIR_THREAD_GRANULARITY_PER_OBJECT */
+#else /* MPICH_THREAD_GRANULARITY != MPICH_THREAD_GRANULARITY_PER_OBJECT */
   /*
    * ASYNC_PROGRESS_MODE_LOCKED is not applicable in the "global lock" thread
    * mode. See discussion in src/mpid/pamid/src/mpid_progress.h for more
@@ -709,7 +709,7 @@ MPIDI_PAMI_context_init(int* threading, int *size)
   /* ----------------------------------
    *  Figure out the context situation
    * ---------------------------------- */
-#if (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT)
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT)
 
   /* Limit the number of requested contexts by the maximum number of contexts
    * allowed.  The default number of requested contexts depends on the mpich
@@ -744,7 +744,7 @@ MPIDI_PAMI_context_init(int* threading, int *size)
     --MPIDI_Process.avail_contexts;
   MPID_assert_always(MPIDI_Process.avail_contexts);
 
-#else /* (MPICH_THREAD_GRANULARITY != MPIR_THREAD_GRANULARITY_PER_OBJECT) */
+#else /* (MPICH_THREAD_GRANULARITY != MPICH_THREAD_GRANULARITY_PER_OBJECT) */
 
   /* Only a single context is supported in the 'global' mpich lock mode.
    *
@@ -1072,7 +1072,7 @@ MPIDI_PAMI_init(int* rank, int* size, int* threading)
             break;
         }
       printf("MPICH_THREAD_GRANULARITY : '%s'\n",
-             (MPICH_THREAD_GRANULARITY==MPIR_THREAD_GRANULARITY_PER_OBJECT)?"per object":"global");
+             (MPICH_THREAD_GRANULARITY==MPICH_THREAD_GRANULARITY_PER_OBJECT)?"per object":"global");
 #ifdef ASSERT_LEVEL
       printf("ASSERT_LEVEL            : %d\n", ASSERT_LEVEL);
 #else

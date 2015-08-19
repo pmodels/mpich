@@ -7,7 +7,7 @@
 
 /* Make sure that we can properly ensure atomic access to the poll routine */
 #ifdef MPICH_IS_THREADED
-#if !(MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL)
+#if !(MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
 #error selected multi-threaded implementation is not supported
 #endif
 #endif

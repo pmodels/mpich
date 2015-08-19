@@ -43,11 +43,11 @@
 #define MPIU_THREAD_CS_YIELD(name, mutex) MPIUI_THREAD_CS_YIELD_##name(mutex)
 
 /* Definitions of the thread support for various levels of thread granularity */
-#if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL
 #include "mpiu_thread_global.h"
-#elif MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
 #include "mpiu_thread_pobj.h"
-#elif MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_LOCK_FREE
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_LOCK_FREE
 #error lock-free not yet implemented
 #else
 #error Unrecognized thread granularity

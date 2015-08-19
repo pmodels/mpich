@@ -102,7 +102,7 @@ MPID_Cancel_send(MPID_Request * sreq)
 
   pami_context_t context = MPIDI_Context_local(sreq);
 
-#if (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT)
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT)
   if (likely(MPIDI_Process.perobj.context_post.active > 0))
     {
       /* This leaks intentionally.  At this time, the amount of work
@@ -123,7 +123,7 @@ MPID_Cancel_send(MPID_Request * sreq)
        MPIDI_CancelReq_post(context, sreq);
        PAMI_Context_unlock(context);
     }
-#else /* (MPICH_THREAD_GRANULARITY != MPIR_THREAD_GRANULARITY_PER_OBJECT) */
+#else /* (MPICH_THREAD_GRANULARITY != MPICH_THREAD_GRANULARITY_PER_OBJECT) */
   /*
    * It is not necessary to lock the context before access in the "global" mpich
    * lock mode because all application threads must first acquire the global

@@ -315,7 +315,7 @@ int MPIDI_CH3I_Progress_init(void)
 
     MPID_THREAD_CHECK_BEGIN
     /* FIXME should be appropriately abstracted somehow */
-#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL)
+#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
     {
         int err;
 	MPID_Thread_cond_create(&MPIDI_CH3I_progress_completion_cond, &err);
@@ -399,7 +399,7 @@ int MPIDI_CH3I_Progress_finalize(void)
 
     MPID_THREAD_CHECK_BEGIN
     /* FIXME should be appropriately abstracted somehow */
-#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL)
+#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
     {
         int err;
 	MPID_Thread_cond_destroy(&MPIDI_CH3I_progress_completion_cond, &err);
@@ -737,7 +737,7 @@ static int MPIDI_CH3I_Progress_delay(unsigned int completion_count)
     int mpi_errno = MPI_SUCCESS, err;
     
     /* FIXME should be appropriately abstracted somehow */
-#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL)
+#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
     {
 	while (completion_count == MPIDI_CH3I_progress_completion_count)
 	{
@@ -762,7 +762,7 @@ static int MPIDI_CH3I_Progress_continue(unsigned int completion_count)
 
     MPID_THREAD_CHECK_BEGIN
     /* FIXME should be appropriately abstracted somehow */
-#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL)
+#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
     {
         MPID_Thread_cond_broadcast(&MPIDI_CH3I_progress_completion_cond,&err);
     }

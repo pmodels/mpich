@@ -639,7 +639,7 @@ int MPIDI_VC_Init( MPIDI_VC_t *vc, MPIDI_PG_t *pg, int rank )
 #endif
     /* FIXME: We need a better abstraction for initializing the thread state 
        for an object */
-#if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
     {
         int err;
         MPID_Thread_mutex_create(&vc->pobj_mutex,&err);

@@ -253,7 +253,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
     {
         /* MT FIXME-N1 race under per-object, harmless to disable here but
          * its a symptom of a bigger problem... */
-#if !(defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT))
+#if !(defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT))
         MPIU_Assert(MPIDI_Request_get_type(sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
 #endif
 
@@ -676,7 +676,7 @@ static int MPIDI_CH3I_Progress_delay(unsigned int completion_count)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_DELAY);
     /* FIXME should be appropriately abstracted somehow */
-#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL)
+#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
     {
         MPID_Thread_cond_wait(&MPIDI_CH3I_progress_completion_cond, &MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX/*MPIDCOMM*/, &err);
     }
@@ -699,7 +699,7 @@ static int MPIDI_CH3I_Progress_continue(unsigned int completion_count/*unused*/)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_CONTINUE);
     /* FIXME should be appropriately abstracted somehow */
-#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL)
+#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
     {
         /* we currently hold the MPIDCOMM CS */
         MPID_Thread_cond_broadcast(&MPIDI_CH3I_progress_completion_cond, &err);
@@ -883,7 +883,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
                 if (!reqFn)
                 {
                     /* MT FIXME-N1 */
-#if !(defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT))
+#if !(defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT))
                     MPIU_Assert(MPIDI_Request_get_type(rreq) != MPIDI_REQUEST_TYPE_GET_RESP);
 #endif
                     mpi_errno = MPID_Request_complete(rreq);
@@ -949,7 +949,7 @@ int MPIDI_CH3I_Progress_init(void)
 
     MPID_THREAD_CHECK_BEGIN
     /* FIXME should be appropriately abstracted somehow */
-#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL)
+#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
     {
         int err;
 	MPID_Thread_cond_create(&MPIDI_CH3I_progress_completion_cond, &err);
@@ -1324,7 +1324,7 @@ void MPIDI_CH3I_Posted_recv_enqueued(MPID_Request *rreq)
          * ways to do this that don't require a hook on every request post, but
          * instead do some sort of caching or something analogous to branch
          * prediction. */
-#if !(defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT))
+#if !(defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT))
         /* enqueue fastbox */
 
         /* don't enqueue a fastbox for yourself */
@@ -1370,7 +1370,7 @@ int MPIDI_CH3I_Posted_recv_dequeued(MPID_Request *rreq)
     /* MT FIXME we unfortunately must disable this optimization for now in
      * per_object mode. There are possibly other ways to synchronize the
      * fboxes that won't cause lock-ordering deadlocks */
-#if !(defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_PER_OBJECT))
+#if !(defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT))
     else
     {
         if (rreq->dev.match.parts.rank == rreq->comm->rank)
