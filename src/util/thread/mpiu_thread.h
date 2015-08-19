@@ -28,11 +28,11 @@
 #define MPIU_THREAD_PACKAGE_WIN     4
 
 #if defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_POSIX)
-#  include "mpiu_thread_posix_types.h"
+#  include "mpiu_thread_posix_funcs.h"
 #elif defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_SOLARIS)
-#  include "mpiu_thread_solaris_types.h"
+#  include "mpiu_thread_solaris_funcs.h"
 #elif defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_WIN)
-#  include "mpiu_thread_win_types.h"
+#  include "mpiu_thread_win_funcs.h"
 #elif defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_NONE)
 typedef int MPIU_Thread_mutex_t;
 typedef int MPIU_Thread_cond_t;
@@ -45,20 +45,6 @@ typedef int MPIU_Thread_tls_t;
 /* Error values */
 #define MPIU_THREAD_SUCCESS 0
 /* FIXME: Define other error codes.  For now, any non-zero value is an error. */
-
-/* Implementation specific function definitions (usually in the form of macros) */
-#if defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_POSIX)
-#  include "mpiu_thread_posix_funcs.h"
-#elif defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_SOLARIS)
-#  include "mpiu_thread_solaris_funcs.h"
-#elif defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_WIN)
-#  include "mpiu_thread_win_funcs.h"
-#elif defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_NONE)
-/* do nothing */
-#else
-#  error "thread package not defined or unknown"
-#endif
-
 
 #if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_INVALID
 #  error Invalid thread granularity option specified (possibly none)

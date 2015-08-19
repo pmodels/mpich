@@ -7,6 +7,14 @@
 #ifndef MPIU_THREAD_SOLARIS_FUNCS_H_INCLUDED
 #define MPIU_THREAD_SOLARIS_FUNCS_H_INCLUDED
 
+#include <thread.h>
+#include <synch.h>
+
+typedef mutex_t MPIU_Thread_mutex_t;
+typedef cond_t MPIU_Thread_cond_t;
+typedef thread_t MPIU_Thread_id_t;
+typedef thread_key_t MPIU_Thread_key_t;
+
 typedef void (*MPIU_Thread_func_t) (void *data);
 void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * id, int *err);
 
