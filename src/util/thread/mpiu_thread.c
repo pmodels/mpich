@@ -11,11 +11,11 @@
 /* If single threaded, we preallocate this.  Otherwise, we create it */
 MPIU_Per_thread_t MPIU_Thread = { 0 };
 
-#elif defined(MPIU_TLS_SPECIFIER)
+#elif defined(MPICH_TLS_SPECIFIER)
 
-MPIU_TLS_SPECIFIER MPIU_Per_thread_t MPIU_Thread = { 0 };
+MPICH_TLS_SPECIFIER MPIU_Per_thread_t MPIU_Thread = { 0 };
 
-#else /* defined(MPICH_IS_THREADED) && !defined(MPIU_TLS_SPECIFIER) */
+#else /* defined(MPICH_IS_THREADED) && !defined(MPICH_TLS_SPECIFIER) */
 
 /* If we may be single threaded, we need a preallocated version to use
  * if we are single threaded case */

@@ -5253,7 +5253,7 @@ if test "${thread_pkg_required}" = "yes" -a "${with_thread_package}" = "none" ; 
    AC_ERROR([if no thread package is available, use --enable-threads=single or funneled])
 fi
 
-MPIU_THREAD_PACKAGE_NAME=MPIU_THREAD_PACKAGE_INVALID
+MPICH_THREAD_PACKAGE_NAME=MPICH_THREAD_PACKAGE_INVALID
 case $with_thread_package in 
     posix|pthreads)
 	with_thread_package=posix
@@ -5324,7 +5324,7 @@ void f1(void *a) { return; }],
 
 	PAC_FUNC_NEEDS_DECL([#include <pthread.h>],pthread_mutexattr_settype)
 
-        MPIU_THREAD_PACKAGE_NAME=MPIU_THREAD_PACKAGE_POSIX
+        MPICH_THREAD_PACKAGE_NAME=MPICH_THREAD_PACKAGE_POSIX
 	;;
     solaris)
 	AC_CHECK_HEADERS(thread.h)
@@ -5334,16 +5334,16 @@ void f1(void *a) { return; }],
 	   AC_MSG_ERROR([unable to find Solaris threads library])
 	fi
 	# FIXME: need to add -mt if using solaris compilers
-        MPIU_THREAD_PACKAGE_NAME=MPIU_THREAD_PACKAGE_SOLARIS
+        MPICH_THREAD_PACKAGE_NAME=MPICH_THREAD_PACKAGE_SOLARIS
 	;;
     win|windows)
         with_thread_package=win
-        MPIU_THREAD_PACKAGE_NAME=MPIU_THREAD_PACKAGE_WIN
+        MPICH_THREAD_PACKAGE_NAME=MPICH_THREAD_PACKAGE_WIN
         AC_MSG_ERROR([The 'win' thread package is not supported via autoconf builds at this time.])
         ;;
     no|none)
 	with_thread_package=none
-        MPIU_THREAD_PACKAGE_NAME=MPIU_THREAD_PACKAGE_NONE
+        MPICH_THREAD_PACKAGE_NAME=MPICH_THREAD_PACKAGE_NONE
 	;;
     *)
 	AC_MSG_ERROR([The specified thread package, $with_thread_package, is not supported.]) 
@@ -5352,9 +5352,9 @@ esac
 
 # Define and export the selected thread library so that other packages
 # know what's used in MPICH
-AC_DEFINE_UNQUOTED([MPIU_THREAD_PACKAGE_NAME],[$MPIU_THREAD_PACKAGE_NAME],[set to the name of the thread package])
+AC_DEFINE_UNQUOTED([MPICH_THREAD_PACKAGE_NAME],[$MPICH_THREAD_PACKAGE_NAME],[set to the name of the thread package])
 
-# check for compiler-support for thread-local storage (MPIU_TLS_SPECIFIER)
+# check for compiler-support for thread-local storage (MPICH_TLS_SPECIFIER)
 AX_TLS
 
 AC_CHECK_FUNCS(getpid)

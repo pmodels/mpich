@@ -8,7 +8,7 @@
 #define MPIU_THREAD_H_INCLUDED
 
 #include "mpi.h"
-#include "mpichconf.h"  /* defines MPIU_THREAD_PACKAGE_NAME */
+#include "mpichconf.h"  /* defines MPICH_THREAD_PACKAGE_NAME */
 #include "mpichconfconst.h"
 #include "mpidbg.h"
 #include "mpiassert.h"
@@ -21,19 +21,19 @@
 #include "mpimem.h"
 
 /* _INVALID exists to avoid accidental macro evaluations to 0 */
-#define MPIU_THREAD_PACKAGE_INVALID 0
-#define MPIU_THREAD_PACKAGE_NONE    1
-#define MPIU_THREAD_PACKAGE_POSIX   2
-#define MPIU_THREAD_PACKAGE_SOLARIS 3
-#define MPIU_THREAD_PACKAGE_WIN     4
+#define MPICH_THREAD_PACKAGE_INVALID 0
+#define MPICH_THREAD_PACKAGE_NONE    1
+#define MPICH_THREAD_PACKAGE_POSIX   2
+#define MPICH_THREAD_PACKAGE_SOLARIS 3
+#define MPICH_THREAD_PACKAGE_WIN     4
 
-#if defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_POSIX)
+#if defined(MPICH_THREAD_PACKAGE_NAME) && (MPICH_THREAD_PACKAGE_NAME == MPICH_THREAD_PACKAGE_POSIX)
 #  include "mpiu_thread_posix.h"
-#elif defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_SOLARIS)
+#elif defined(MPICH_THREAD_PACKAGE_NAME) && (MPICH_THREAD_PACKAGE_NAME == MPICH_THREAD_PACKAGE_SOLARIS)
 #  include "mpiu_thread_solaris.h"
-#elif defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_WIN)
+#elif defined(MPICH_THREAD_PACKAGE_NAME) && (MPICH_THREAD_PACKAGE_NAME == MPICH_THREAD_PACKAGE_WIN)
 #  include "mpiu_thread_win.h"
-#elif defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_NONE)
+#elif defined(MPICH_THREAD_PACKAGE_NAME) && (MPICH_THREAD_PACKAGE_NAME == MPICH_THREAD_PACKAGE_NONE)
 typedef int MPIU_Thread_mutex_t;
 typedef int MPIU_Thread_cond_t;
 typedef int MPIU_Thread_id_t;
@@ -55,7 +55,7 @@ typedef int MPIU_Thread_tls_t;
 typedef struct {
     int thread_provided;        /* Provided level of thread support */
 
-#if defined(MPICH_IS_THREADED) && !defined(MPIU_TLS_SPECIFIER)
+#if defined(MPICH_IS_THREADED) && !defined(MPICH_TLS_SPECIFIER)
     MPIU_Thread_tls_t thread_storage;   /* Id for perthread data */
 #endif
 

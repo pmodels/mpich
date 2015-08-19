@@ -6,7 +6,7 @@
 
 /* common header includes */
 #include <stdlib.h>
-#include "mpichconf.h"  /* defines MPIU_THREAD_PACKAGE_NAME */
+#include "mpichconf.h"  /* defines MPICH_THREAD_PACKAGE_NAME */
 #include "mpl.h"
 #include "mpiutil.h"    /* for HAS_NO_SYMBOLS_WARNING */
 #include "mpiu_thread.h"
@@ -22,7 +22,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 /* Implementation specific function definitions (usually in the form of macros) */
 
-#if defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_SOLARIS)
+#if defined(MPICH_THREAD_PACKAGE_NAME) && (MPICH_THREAD_PACKAGE_NAME == MPICH_THREAD_PACKAGE_SOLARIS)
 /* begin solaris impl */
 
 /*

@@ -82,9 +82,9 @@ AC_DEFUN([AX_TLS], [
 
   if test "$ac_cv_tls" != "none"; then
     # MPICH modification: this was "TLS" before instead of
-    # "MPIU_TLS_SPECIFIER", but TLS had a reasonably high chance of conflicting
+    # "MPICH_TLS_SPECIFIER", but TLS had a reasonably high chance of conflicting
     # with a system library.
-    AC_DEFINE_UNQUOTED([MPIU_TLS_SPECIFIER], $ac_cv_tls, [If the compiler supports a TLS storage class define it to that here])
+    AC_DEFINE_UNQUOTED([MPICH_TLS_SPECIFIER], $ac_cv_tls, [If the compiler supports a TLS storage class define it to that here])
   fi
   AC_MSG_RESULT($ac_cv_tls)
 ])

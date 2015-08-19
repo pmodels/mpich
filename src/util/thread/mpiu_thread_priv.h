@@ -23,7 +23,7 @@
    the declaration.
 */
 
-#if !defined(MPIU_TLS_SPECIFIER)
+#if !defined(MPICH_TLS_SPECIFIER)
 /* We need to provide a function that will cleanup the storage attached
  * to the key.  */
 void MPIUI_Cleanup_tls(void *a);
@@ -99,11 +99,11 @@ extern MPIU_Per_thread_t MPIU_ThreadSingle;
         }                                                               \
         } while (0)
 
-#else /* defined(MPIU_TLS_SPECIFIER) */
+#else /* defined(MPICH_TLS_SPECIFIER) */
 
 /* We have proper thread-local storage (TLS) support from the compiler, which
  * should yield the best performance and simplest code, so we'll use that. */
-extern MPIU_TLS_SPECIFIER MPIU_Per_thread_t MPIU_Thread;
+extern MPICH_TLS_SPECIFIER MPIU_Per_thread_t MPIU_Thread;
 
 #define MPIU_THREADPRIV_INITKEY
 #define MPIU_THREADPRIV_INIT
@@ -112,6 +112,6 @@ extern MPIU_TLS_SPECIFIER MPIU_Per_thread_t MPIU_Thread;
 #define MPIU_THREADPRIV_FIELD(a_) (MPIU_Thread.a_)
 #define MPIU_THREADPRIV_FINALIZE do {} while (0)
 
-#endif /* defined(MPIU_TLS_SPECIFIER) */
+#endif /* defined(MPICH_TLS_SPECIFIER) */
 
 #endif /* !defined(MPIU_THREAD_PRIV_H_INCLUDED) */

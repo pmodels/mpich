@@ -6,7 +6,7 @@
 
 /* common header includes */
 #include <stdlib.h>
-#include "mpichconf.h"  /* defines MPIU_THREAD_PACKAGE_NAME */
+#include "mpichconf.h"  /* defines MPICH_THREAD_PACKAGE_NAME */
 #include "mpl.h"
 #include "mpiutil.h"    /* for HAS_NO_SYMBOLS_WARNING */
 #include "mpiu_thread.h"
@@ -21,7 +21,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
  * header files and included as needed. [goodell@ 2009-06-24] */
 
 /* Implementation specific function definitions (usually in the form of macros) */
-#if defined(MPIU_THREAD_PACKAGE_NAME) && (MPIU_THREAD_PACKAGE_NAME == MPIU_THREAD_PACKAGE_POSIX)
+#if defined(MPICH_THREAD_PACKAGE_NAME) && (MPICH_THREAD_PACKAGE_NAME == MPICH_THREAD_PACKAGE_POSIX)
 /* begin posix impl */
 
 /* stdio.h is needed for mpimem, which prototypes a few routines that
