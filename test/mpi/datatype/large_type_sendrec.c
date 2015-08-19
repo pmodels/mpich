@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 
     MPI_Request requests[2];
     MPI_Status statuses[2];
-    MPI_Count ocount[2];
+    MPI_Count ocount;
 
     char *rbuf = NULL;
     char *sbuf = NULL;
@@ -144,12 +144,12 @@ int main(int argc, char *argv[])
 
     if (size == 1) {
         MPI_ASSERT(MPI_Waitall(2, requests, statuses));
-        MPI_ASSERT(MPI_Get_elements_x(&(statuses[1]), MPI_CHAR, &(ocount[1])));
+        MPI_ASSERT(MPI_Get_elements_x(&(statuses[1]), MPI_CHAR, &ocount));
     }
     else {
         if (rank == (size - 1)) {
             MPI_ASSERT(MPI_Wait(&(requests[1]), &(statuses[1])));
-            MPI_ASSERT(MPI_Get_elements_x(&(statuses[1]), MPI_CHAR, &(ocount[1])));
+            MPI_ASSERT(MPI_Get_elements_x(&(statuses[1]), MPI_CHAR, &ocount));
         }
         else if (rank == 0) {
             MPI_ASSERT(MPI_Wait(&(requests[0]), &(statuses[0])));
@@ -163,6 +163,7 @@ int main(int argc, char *argv[])
         MPI_Count j, errors = 0;
         for (j = 0; j < count; j++)
             errors += (rbuf[j] != 'z');
+        if (count != ocount) ++errors;
         if (errors == 0) {
             printf(" No Errors\n");
         }
