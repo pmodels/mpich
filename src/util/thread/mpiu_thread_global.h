@@ -8,14 +8,14 @@
 #define MPIU_THREAD_GLOBAL_H_INCLUDED
 
 /* GLOBAL locks are all real ops */
-#define MPIU_THREAD_CS_ENTER_GLOBAL(mutex) MPIU_THREAD_CS_ENTER_REAL("GLOBAL", mutex)
-#define MPIU_THREAD_CS_EXIT_GLOBAL(mutex) MPIU_THREAD_CS_EXIT_REAL("GLOBAL", mutex)
-#define MPIU_THREAD_CS_YIELD_GLOBAL(mutex) MPIU_THREAD_CS_YIELD_REAL("GLOBAL", mutex)
+#define MPIUI_THREAD_CS_ENTER_GLOBAL(mutex) MPIUI_THREAD_CS_ENTER_REAL("GLOBAL", mutex)
+#define MPIUI_THREAD_CS_EXIT_GLOBAL(mutex) MPIUI_THREAD_CS_EXIT_REAL("GLOBAL", mutex)
+#define MPIUI_THREAD_CS_YIELD_GLOBAL(mutex) MPIUI_THREAD_CS_YIELD_REAL("GLOBAL", mutex)
 
 /* POBJ locks are all NO-OPs */
-#define MPIU_THREAD_CS_ENTER_POBJ(mutex)
-#define MPIU_THREAD_CS_EXIT_POBJ(mutex)
-#define MPIU_THREAD_CS_YIELD_POBJ(mutex)
+#define MPIUI_THREAD_CS_ENTER_POBJ(mutex)
+#define MPIUI_THREAD_CS_EXIT_POBJ(mutex)
+#define MPIUI_THREAD_CS_YIELD_POBJ(mutex)
 
 
 /* define a type for the completion counter */

@@ -16,14 +16,14 @@ typedef HANDLE MPIU_Thread_mutex_t;
 typedef HANDLE MPIU_Thread_id_t;
 typedef DWORD MPIU_Thread_tls_t;
 
-typedef struct MPIU_Thread_cond_fifo_t {
+typedef struct MPIUI_Win_thread_cond_fifo_t {
     HANDLE event;
-    struct MPIU_Thread_cond_fifo_t *next;
-} MPIU_Thread_cond_fifo_t;
+    struct MPIUI_Win_thread_cond_fifo_t *next;
+} MPIUI_Win_thread_cond_fifo_t;
 typedef struct MPIU_Thread_cond_t {
     MPIU_Thread_tls_t tls;
     MPIU_Thread_mutex_t fifo_mutex;
-    MPIU_Thread_cond_fifo_t *fifo_head, *fifo_tail;
+    MPIUI_Win_thread_cond_fifo_t *fifo_head, *fifo_tail;
 } MPIU_Thread_cond_t;
 
 typedef void (*MPIU_Thread_func_t) (void *data);

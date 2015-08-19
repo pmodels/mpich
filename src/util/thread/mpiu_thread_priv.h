@@ -32,17 +32,17 @@ void MPIUI_Cleanup_tls(void *a);
    need a blended version of the non-threaded and the thread-multiple
    definitions.
 
-   The approach is to have TWO MPIU_Per_thread_t pointers.  One is local
+   The approach is to have TWO MPIUI_Per_thread_t pointers.  One is local
    (The MPIU_THREADPRIV_DECL is used in the routines local definitions),
    as in the threaded version of these macros.  This is set by using a routine
    to get thread-private storage.  The second is a preallocated, extern
-   MPIU_Per_thread_t struct, as in the single threaded case.  Based on
+   MPIUI_Per_thread_t struct, as in the single threaded case.  Based on
    MPIR_Process.isThreaded, one or the other is used.
 
  */
 /* For the single threaded case, we use a preallocated structure
    This structure is allocated in src/mpi/init/initthread.c */
-extern MPIU_Per_thread_t MPIU_ThreadSingle;
+extern MPIUI_Per_thread_t MPIUI_ThreadSingle;
 
 #define MPIU_THREADPRIV_INITKEY                                         \
     do {                                                                \
@@ -57,41 +57,41 @@ extern MPIU_Per_thread_t MPIU_ThreadSingle;
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int init_err_;                                              \
-            MPIU_Thread_ptr = (MPIU_Per_thread_t *) MPIU_Calloc(1, sizeof(MPIU_Per_thread_t)); \
-            MPIU_Assert(MPIU_Thread_ptr);                               \
-            MPIU_Thread_tls_set(&MPIR_ThreadInfo.thread_storage, (void *)MPIU_Thread_ptr, &init_err_); \
+            MPIUI_Thread_ptr = (MPIUI_Per_thread_t *) MPIU_Calloc(1, sizeof(MPIUI_Per_thread_t)); \
+            MPIU_Assert(MPIUI_Thread_ptr);                               \
+            MPIU_Thread_tls_set(&MPIR_ThreadInfo.thread_storage, (void *)MPIUI_Thread_ptr, &init_err_); \
             MPIU_Assert(init_err_ == 0);                                \
         }                                                               \
     } while (0)
 
 #define MPIU_THREADPRIV_GET                                             \
     do {                                                                \
-        if (!MPIU_Thread_ptr) {                                         \
+        if (!MPIUI_Thread_ptr) {                                         \
             if (MPIR_ThreadInfo.isThreaded) {                           \
                 int get_err_;                                           \
-                MPIU_Thread_tls_get(&MPIR_ThreadInfo.thread_storage, (void **) &MPIU_Thread_ptr, &get_err_); \
+                MPIU_Thread_tls_get(&MPIR_ThreadInfo.thread_storage, (void **) &MPIUI_Thread_ptr, &get_err_); \
                 MPIU_Assert(get_err_ == 0);                             \
-                if (!MPIU_Thread_ptr) {                                 \
-                    MPIU_THREADPRIV_INIT; /* subtle, sets MPIU_Thread_ptr */ \
+                if (!MPIUI_Thread_ptr) {                                 \
+                    MPIU_THREADPRIV_INIT; /* subtle, sets MPIUI_Thread_ptr */ \
                 }                                                       \
             }                                                           \
             else {                                                      \
-                MPIU_Thread_ptr = &MPIU_ThreadSingle;                   \
+                MPIUI_Thread_ptr = &MPIUI_ThreadSingle;                   \
             }                                                           \
-            MPIU_Assert(MPIU_Thread_ptr);                               \
+            MPIU_Assert(MPIUI_Thread_ptr);                               \
         }                                                               \
     } while (0)
 
 /* common definitions when using MPIU_Thread-based TLS */
-#define MPIU_THREADPRIV_DECL MPIU_Per_thread_t *MPIU_Thread_ptr = NULL
-#define MPIU_THREADPRIV_FIELD(a_) (MPIU_Thread_ptr->a_)
+#define MPIU_THREADPRIV_DECL MPIUI_Per_thread_t *MPIUI_Thread_ptr = NULL
+#define MPIU_THREADPRIV_FIELD(a_) (MPIUI_Thread_ptr->a_)
 #define MPIU_THREADPRIV_FINALIZE                                        \
     do {                                                                \
         MPIU_THREADPRIV_DECL;                                           \
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int tpf_err_; /* unique name to not conflict with vars in called macros */ \
             MPIU_THREADPRIV_GET;                                        \
-            MPIU_Free(MPIU_Thread_ptr);                                 \
+            MPIU_Free(MPIUI_Thread_ptr);                                 \
             MPIU_Thread_tls_set(&MPIR_ThreadInfo.thread_storage,NULL, &tpf_err_); \
             MPIU_Assert(tpf_err_ == 0);                                 \
             MPIU_Thread_tls_destroy(&MPIR_ThreadInfo.thread_storage,&tpf_err_); \
@@ -103,13 +103,13 @@ extern MPIU_Per_thread_t MPIU_ThreadSingle;
 
 /* We have proper thread-local storage (TLS) support from the compiler, which
  * should yield the best performance and simplest code, so we'll use that. */
-extern MPICH_TLS_SPECIFIER MPIU_Per_thread_t MPIU_Thread;
+extern MPICH_TLS_SPECIFIER MPIUI_Per_thread_t MPIUI_Thread;
 
 #define MPIU_THREADPRIV_INITKEY
 #define MPIU_THREADPRIV_INIT
 #define MPIU_THREADPRIV_DECL
 #define MPIU_THREADPRIV_GET
-#define MPIU_THREADPRIV_FIELD(a_) (MPIU_Thread.a_)
+#define MPIU_THREADPRIV_FIELD(a_) (MPIUI_Thread.a_)
 #define MPIU_THREADPRIV_FINALIZE do {} while (0)
 
 #endif /* defined(MPICH_TLS_SPECIFIER) */

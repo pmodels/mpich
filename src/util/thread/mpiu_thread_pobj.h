@@ -75,14 +75,14 @@
  * reverse order. */
 
 /* POBJ locks are all real ops */
-#define MPIU_THREAD_CS_ENTER_POBJ(mutex) MPIU_THREAD_CS_ENTER_REAL("POBJ", mutex)
-#define MPIU_THREAD_CS_EXIT_POBJ(mutex) MPIU_THREAD_CS_EXIT_REAL("POBJ", mutex)
-#define MPIU_THREAD_CS_YIELD_POBJ(mutex) MPIU_THREAD_CS_YIELD_REAL("POBJ", mutex)
+#define MPIUI_THREAD_CS_ENTER_POBJ(mutex) MPIUI_THREAD_CS_ENTER_REAL("POBJ", mutex)
+#define MPIUI_THREAD_CS_EXIT_POBJ(mutex) MPIUI_THREAD_CS_EXIT_REAL("POBJ", mutex)
+#define MPIUI_THREAD_CS_YIELD_POBJ(mutex) MPIUI_THREAD_CS_YIELD_REAL("POBJ", mutex)
 
 /* GLOBAL locks are all NO-OPs */
-#define MPIU_THREAD_CS_ENTER_GLOBAL(mutex)
-#define MPIU_THREAD_CS_EXIT_GLOBAL(mutex)
-#define MPIU_THREAD_CS_YIELD_GLOBAL(mutex)
+#define MPIUI_THREAD_CS_ENTER_GLOBAL(mutex)
+#define MPIUI_THREAD_CS_EXIT_GLOBAL(mutex)
+#define MPIUI_THREAD_CS_YIELD_GLOBAL(mutex)
 
 /* define a type for the completion counter */
 #include "opa_primitives.h"

@@ -9,17 +9,17 @@
 #if !defined(MPICH_IS_THREADED)
 
 /* If single threaded, we preallocate this.  Otherwise, we create it */
-MPIU_Per_thread_t MPIU_Thread = { 0 };
+MPIUI_Per_thread_t MPIUI_Thread = { 0 };
 
 #elif defined(MPICH_TLS_SPECIFIER)
 
-MPICH_TLS_SPECIFIER MPIU_Per_thread_t MPIU_Thread = { 0 };
+MPICH_TLS_SPECIFIER MPIUI_Per_thread_t MPIUI_Thread = { 0 };
 
 #else /* defined(MPICH_IS_THREADED) && !defined(MPICH_TLS_SPECIFIER) */
 
 /* If we may be single threaded, we need a preallocated version to use
  * if we are single threaded case */
-MPIU_Per_thread_t MPIU_ThreadSingle = { 0 };
+MPIUI_Per_thread_t MPIUI_ThreadSingle = { 0 };
 
 /* This routine is called when a thread exits; it is passed the value
  * associated with the key.  In our case, this is simply storage

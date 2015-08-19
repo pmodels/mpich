@@ -205,7 +205,7 @@ void MPIU_Thread_cond_create(MPIU_Thread_cond_t * cond, int *err)
 
 void MPIU_Thread_cond_destroy(MPIU_Thread_cond_t * cond, int *err)
 {
-    MPIU_Thread_cond_fifo_t *iter;
+    MPIUI_Win_thread_cond_fifo_t *iter;
 
     while (cond->fifo_head) {
         iter = cond->fifo_head;
@@ -251,12 +251,12 @@ void MPIU_Thread_cond_wait(MPIU_Thread_cond_t * cond, MPIU_Thread_mutex_t * mute
         return;
     }
     if (cond->fifo_tail == NULL) {
-        cond->fifo_tail = (MPIU_Thread_cond_fifo_t *) MPIU_Malloc(sizeof(MPIU_Thread_cond_fifo_t));
+        cond->fifo_tail = (MPIUI_Win_thread_cond_fifo_t *) MPIU_Malloc(sizeof(MPIUI_Win_thread_cond_fifo_t));
         cond->fifo_head = cond->fifo_tail;
     }
     else {
         cond->fifo_tail->next =
-            (MPIU_Thread_cond_fifo_t *) MPIU_Malloc(sizeof(MPIU_Thread_cond_fifo_t));
+            (MPIUI_Win_thread_cond_fifo_t *) MPIU_Malloc(sizeof(MPIUI_Win_thread_cond_fifo_t));
         cond->fifo_tail = cond->fifo_tail->next;
     }
     if (cond->fifo_tail == NULL) {
@@ -303,7 +303,7 @@ void MPIU_Thread_cond_wait(MPIU_Thread_cond_t * cond, MPIU_Thread_mutex_t * mute
 
 void MPIU_Thread_cond_broadcast(MPIU_Thread_cond_t * cond, int *err)
 {
-    MPIU_Thread_cond_fifo_t *fifo, *temp;
+    MPIUI_Win_thread_cond_fifo_t *fifo, *temp;
     MPIU_Thread_mutex_lock(&cond->fifo_mutex, err);
     if (err != NULL && *err != MPIU_THREAD_SUCCESS) {
         return;
@@ -333,7 +333,7 @@ void MPIU_Thread_cond_broadcast(MPIU_Thread_cond_t * cond, int *err)
 
 void MPIU_Thread_cond_signal(MPIU_Thread_cond_t * cond, int *err)
 {
-    MPIU_Thread_cond_fifo_t *fifo;
+    MPIUI_Win_thread_cond_fifo_t *fifo;
     MPIU_Thread_mutex_lock(&cond->fifo_mutex, err);
     if (err != NULL && *err != MPIU_THREAD_SUCCESS) {
         return;

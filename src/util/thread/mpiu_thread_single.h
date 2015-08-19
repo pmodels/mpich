@@ -12,13 +12,13 @@
 
 /* If single threaded, make this point at a pre-allocated segment.
    This structure is allocated in src/mpi/init/initthread.c */
-extern MPIU_Per_thread_t MPIU_Thread;
+extern MPIUI_Per_thread_t MPIUI_Thread;
 
 #define MPIU_THREADPRIV_INITKEY
 #define MPIU_THREADPRIV_INIT
 #define MPIU_THREADPRIV_DECL
 #define MPIU_THREADPRIV_GET
-#define MPIU_THREADPRIV_FIELD(a_) (MPIU_Thread.a_)
+#define MPIU_THREADPRIV_FIELD(a_) (MPIUI_Thread.a_)
 
 /* Helper definitions for the default macro definitions */
 #define MPIU_THREAD_CS_ENTER(_name,_context)

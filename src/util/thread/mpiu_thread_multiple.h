@@ -12,7 +12,7 @@
 #define MPIU_THREAD_CHECK_BEGIN if (MPIR_ThreadInfo.isThreaded) {
 #define MPIU_THREAD_CHECK_END   }
 
-#define MPIU_THREAD_CS_ENTER_REAL(lockname, mutex)                      \
+#define MPIUI_THREAD_CS_ENTER_REAL(lockname, mutex)                      \
     do {                                                                \
         int err_;                                                       \
         MPIU_THREAD_CHECK_BEGIN;                                        \
@@ -21,7 +21,7 @@
         MPIU_THREAD_CHECK_END;                                          \
     } while (0)
 
-#define MPIU_THREAD_CS_EXIT_REAL(lockname, mutex)                       \
+#define MPIUI_THREAD_CS_EXIT_REAL(lockname, mutex)                       \
     do {                                                                \
         int err_;                                                       \
         MPIU_THREAD_CHECK_BEGIN;                                        \
@@ -30,7 +30,7 @@
         MPIU_THREAD_CHECK_END;                                          \
     } while (0)
 
-#define MPIU_THREAD_CS_YIELD_REAL(lockname, mutex)                      \
+#define MPIUI_THREAD_CS_YIELD_REAL(lockname, mutex)                      \
     do {                                                                \
         MPIU_THREAD_CHECK_BEGIN;                                        \
         MPIU_DBG_MSG_S(THREAD, TYPICAL, "yielding %s", lockname);       \
@@ -38,9 +38,9 @@
         MPIU_THREAD_CHECK_END;                                          \
     } while (0)
 
-#define MPIU_THREAD_CS_ENTER(name, mutex) MPIU_THREAD_CS_ENTER_##name(mutex)
-#define MPIU_THREAD_CS_EXIT(name, mutex) MPIU_THREAD_CS_EXIT_##name(mutex)
-#define MPIU_THREAD_CS_YIELD(name, mutex) MPIU_THREAD_CS_YIELD_##name(mutex)
+#define MPIU_THREAD_CS_ENTER(name, mutex) MPIUI_THREAD_CS_ENTER_##name(mutex)
+#define MPIU_THREAD_CS_EXIT(name, mutex) MPIUI_THREAD_CS_EXIT_##name(mutex)
+#define MPIU_THREAD_CS_YIELD(name, mutex) MPIUI_THREAD_CS_YIELD_##name(mutex)
 
 /* Definitions of the thread support for various levels of thread granularity */
 #if MPICH_THREAD_GRANULARITY == MPIR_THREAD_GRANULARITY_GLOBAL
