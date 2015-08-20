@@ -38,6 +38,9 @@ typedef int MPIU_Thread_mutex_t;
 typedef int MPIU_Thread_cond_t;
 typedef int MPIU_Thread_id_t;
 typedef int MPIU_Thread_tls_t;
+typedef void (*MPIU_Thread_func_t) (void *data);
+#define MPIU_Thread_mutex_create(mutex_ptr_, err_ptr_)
+#define MPIU_Thread_mutex_destroy(mutex_ptr_, err_ptr_)
 #else
 #  error "thread package not defined or unknown"
 #endif
