@@ -18,3 +18,6 @@ fkeyval 1
 fkeyvalcomm 1
 fkeyvaltype 1
 keyval_double_free 1
+keyval_double_free_comm 1
+keyval_double_free_type 1
+keyval_double_free_win 1
