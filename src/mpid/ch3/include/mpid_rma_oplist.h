@@ -350,6 +350,7 @@ static inline int MPIDI_CH3I_Win_find_target(MPID_Win * win_ptr, int target_rank
     while (t != NULL) {
         if (t->target_rank == target_rank)
             break;
+        t = t->next;
     }
 
     (*e) = t;
