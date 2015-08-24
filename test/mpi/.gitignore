@@ -121,6 +121,7 @@
 /coll/icscatterv
 /coll/allgatherv2
 /coll/alltoallv0
+/coll/testlist
 /comm/dup
 /comm/ic1
 /comm/cfree
@@ -1080,12 +1081,14 @@
 /threads/comm/ctxidup
 /threads/comm/dup_leak_test
 /threads/comm/idup_nb
+/threads/comm/testlist
 /threads/init/initth
 /threads/pt2pt/threads
 /threads/spawn/multispawn
 /threads/spawn/th_taskmaster
 /threads/coll/iallred
 /threads/coll/allred
+/threads/coll/testlist
 /topo/cartcreates
 /topo/cartzero
 /topo/dgraph_unwgt
