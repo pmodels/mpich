@@ -791,6 +791,14 @@ static int sched_cb_gcn_allocate_cid(MPID_Comm * comm, int tag, void *state)
   fn_exit:
     return mpi_errno;
   fn_fail:
+    /* make sure that the pending comm_idups are still scheduled */
+     if(last_idup == st){
+        last_idup = st->next;
+     }
+     else {
+        for (tmp = last_idup; tmp->next != st; tmp = tmp->next);
+        tmp->next = st->next;
+     }
     /* In the case of failure, the new communicator was half created.
      * So we need to clean the memory allocated for it. */
     MPIR_Comm_map_free(st->new_comm);
