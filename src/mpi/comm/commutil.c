@@ -101,11 +101,6 @@ int MPIR_Comm_init(MPID_Comm * comm_p)
 
     /* Initialize the revoked flag as false */
     comm_p->revoked = 0;
-
-    comm_p->idup_count = 0;
-    comm_p->idup_curr_seqnum = 0;
-    comm_p->idup_next_seqnum = 0;
-
     comm_p->mapper_head = NULL;
     comm_p->mapper_tail = NULL;
 

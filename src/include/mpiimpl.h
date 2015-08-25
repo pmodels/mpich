@@ -1227,12 +1227,6 @@ typedef struct MPID_Comm {
 
     int revoked;                    /* Flag to track whether the communicator
                                      * has been revoked */
-
-    int idup_count;              /* how many MPI_COMM_IDUPs duplicating from
-                                    the current communicator at the same time */
-    int idup_curr_seqnum;        /* give each child communicator a sequence number */
-    int idup_next_seqnum;        /* the smallest sequence number wins  */
-
     MPID_Info *info;                /* Hints to the communicator */
 
 #ifdef MPID_HAS_HETERO

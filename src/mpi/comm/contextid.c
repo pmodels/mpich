@@ -603,7 +603,35 @@ struct gcn_state {
     MPID_Comm *new_comm;
     MPID_Comm_kind_t gcn_cid_kind;
     uint32_t local_mask[MPIR_MAX_CONTEXT_MASK+1];
+    struct gcn_state* next;
 };
+struct gcn_state *last_idup = NULL;
+
+/* All pending idups are added to the list of "last_idup" in the increasing
+ * order of its parent communicator context id. */
+#undef FUNCNAME
+#define FUNCNAME add_gcn_to_list
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static int add_gcn_to_list (struct gcn_state *new_state)
+{
+    int mpi_errno = 0;
+    struct gcn_state *tmp;
+    if(last_idup == NULL) {
+        last_idup = new_state;
+        new_state->next = NULL;
+    } else if (last_idup->comm_ptr->context_id > new_state->comm_ptr->context_id) {
+        new_state->next = last_idup;
+        last_idup = new_state;
+    } else {
+        for(tmp = last_idup;
+            tmp->next!= NULL && new_state->comm_ptr->context_id >= tmp->next->comm_ptr->context_id;
+            tmp = tmp->next);
+        new_state->next = tmp->next;
+        tmp->next = new_state;
+    }
+    return mpi_errno;
+}
 
 static int sched_cb_gcn_copy_mask(MPID_Comm * comm, int tag, void *state);
 static int sched_cb_gcn_allocate_cid(MPID_Comm * comm, int tag, void *state);
@@ -689,10 +717,9 @@ static int sched_cb_gcn_bcast(MPID_Comm * comm, int tag, void *state)
 static int sched_cb_gcn_allocate_cid(MPID_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct gcn_state *st = state;
+    struct gcn_state *st = state, *tmp;
     MPIU_Context_id_t newctxid;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-
     if (st->own_eager_mask) {
         newctxid = find_and_allocate_context_id(st->local_mask);
         if (st->ctx0)
@@ -747,13 +774,14 @@ static int sched_cb_gcn_allocate_cid(MPID_Comm * comm, int tag, void *state)
                 MPIR_ERR_POP(mpi_errno);
             MPID_SCHED_BARRIER(st->s);
         }
-    }
-    else {
+    } else {
         /* Successfully allocated a context id */
-
-        st->comm_ptr->idup_next_seqnum++;
-        st->comm_ptr->idup_count--;
-
+        if(last_idup == st){
+            last_idup = st->next;
+        } else {
+            for (tmp = last_idup; tmp->next != st; tmp = tmp->next);
+            tmp->next = st->next;
+        }
         mpi_errno = MPID_Sched_cb(&sched_cb_gcn_bcast, st, st->s);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -809,8 +837,7 @@ static int sched_cb_gcn_copy_mask(MPID_Comm * comm, int tag, void *state)
          * 3. for the case that multiple communicators duplicating from the
          *    same communicator at the same time, the sequence number of the
          *    current MPI_COMM_IDUP operation is not the smallest. */
-        if (mask_in_use || (st->comm_ptr->context_id != lowest_context_id) || ( st->comm_ptr->context_id == lowest_context_id && lowest_tag < st->tag)
-            || (st->comm_ptr->idup_count > 1 && st->seqnum != st->comm_ptr->idup_next_seqnum)) {
+        if (mask_in_use || lowest_tag < st->tag || st != last_idup) {
             memset(st->local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
             st->own_mask = 0;
             st->local_mask[ALL_OWN_MASK_FLAG] = 0;
@@ -918,11 +945,6 @@ static int sched_get_cid_nonblock(MPID_Comm * comm_ptr, MPID_Comm * newcomm,
     st->own_eager_mask = 0;
     st->first_iter = 1;
     st->new_comm = newcomm;
-    /* idup_count > 1 means there are multiple communicators duplicating
-     * from the current communicator at the same time. And
-     * idup_curr_seqnum gives each duplication operation a priority */
-    st->comm_ptr->idup_count++;
-    st->seqnum = st->comm_ptr->idup_curr_seqnum++;
     st->own_mask = 0;
     if (eager_nelem < 0) {
         /* Ensure that at least one word of deadlock-free context IDs is
@@ -931,7 +953,7 @@ static int sched_get_cid_nonblock(MPID_Comm * comm_ptr, MPID_Comm * newcomm,
                     MPIR_CVAR_CTXID_EAGER_SIZE < MPIR_MAX_CONTEXT_MASK - 1);
         eager_nelem = MPIR_CVAR_CTXID_EAGER_SIZE;
     }
-
+    add_gcn_to_list(st);
     mpi_errno = MPID_Sched_cb(&sched_cb_gcn_copy_mask, st, s);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
