@@ -6,5 +6,5 @@ comm_create_group_threads 4 mpiversion=3.0
 comm_create_group_threads2 4 mpiversion=3.0
 @comm_overlap@ comm_idup 4 mpiversion=3.0
 @comm_overlap@ ctxidup 4 mpiversion=3.0
-idup_nb 4 mpiversion=3.0
-idup_comm_gen 4 mpiversion=3.0
+@comm_overlap@ idup_nb 4 mpiversion=3.0
+@comm_overlap@ idup_comm_gen 4 mpiversion=3.0
