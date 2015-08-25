@@ -26,7 +26,7 @@ static const int verbose = 0;
 int main(int argc, char **argv)
 {
     int rank, nproc, mpi_errno;
-    int i, ncomm, block;
+    int i, j, ncomm, block;
     int errors = 1;
     MPI_Comm *comm_hdls;
     MPI_Request req[WAIT_COMM];
@@ -37,6 +37,7 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Status error_status[WAIT_COMM];
     comm_hdls = malloc(sizeof(MPI_Comm) * MAX_NCOMM);
 
 
@@ -46,16 +47,31 @@ int main(int argc, char **argv)
         /* Note: the comms we create are all dups of MPI_COMM_WORLD */
         MPI_Comm_idup(MPI_COMM_WORLD, &comm_hdls[i], &req[block++]);
         if(block == WAIT_COMM ){
-            mpi_errno = MPI_Waitall(block, req, MPI_STATUSES_IGNORE);
+            mpi_errno = MPI_Waitall(block, req, error_status);
             if (mpi_errno == MPI_SUCCESS) {
                 ncomm+=block;
             }
             else {
                 if (verbose)
                     printf("%d: Error creating comm %d\n", rank, i);
-                 errors = 0;
-                 block = 0;
-                 break;
+                for(j = 0; j <  block; j++) {
+                    if(error_status[j].MPI_ERROR == MPI_SUCCESS){
+                        ncomm+=1;
+                    }
+                    else if(error_status[j].MPI_ERROR == MPI_ERR_PENDING) {
+                        mpi_errno = MPI_Wait(&req[j], MPI_STATUSES_IGNORE);
+                        if(mpi_errno == MPI_SUCCESS) {
+                            ncomm+=1;
+                        }
+                        else {
+                            if (verbose)
+                                printf("%d: Error creating comm %d\n", rank, i);
+                        }
+                    }
+                }
+                errors = 0;
+                block = 0;
+                break;
             }
             block = 0;
         }
