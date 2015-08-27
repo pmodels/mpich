@@ -184,6 +184,7 @@ double MPIU_Wtick(void)
 
 int MPIU_Wtime_init(void)
 {
+    init_wtick();
     return 0;
 }
 
