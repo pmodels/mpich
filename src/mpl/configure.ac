@@ -52,9 +52,11 @@ AC_C_INLINE
 
 PAC_C_MACRO_VA_ARGS
 
-# TODO: could add a --enable-embedded or similar to also control this
-AC_ARG_VAR([FROM_MPICH],[set to "yes" if building MPL inside of MPICH])
-AM_CONDITIONAL([MPL_EMBEDDED_MODE],[test "x${FROM_MPICH}" = "xyes"])
+AC_ARG_ENABLE(embedded,
+    AC_HELP_STRING([--enable-embedded], [Build MPL in embedded mode (default is no)]),
+    [embedded=yes],
+    [embedded=no])
+AM_CONDITIONAL([MPL_EMBEDDED_MODE],[test "x${embedded}" = "xyes"])
 
 # support gcov test coverage information
 PAC_ENABLE_COVERAGE
