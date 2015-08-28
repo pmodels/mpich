@@ -7,7 +7,6 @@
 ACLOCAL_AMFLAGS = -I confdb
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
 
-noinst_LTLIBRARIES = lib@MPLLIBNAME@.la
 lib@MPLLIBNAME@_la_SOURCES = \
 	src/mplstr.c \
 	src/mpltrmem.c \
@@ -38,8 +37,10 @@ mpl_headers =              \
 
 if MPL_EMBEDDED_MODE
 noinst_HEADERS = $(mpl_headers)
+noinst_LTLIBRARIES = lib@MPLLIBNAME@.la
 else !MPL_EMBEDDED_MODE
 include_HEADERS = $(mpl_headers)
+lib_LTLIBRARIES = lib@MPLLIBNAME@.la
 endif !MPL_EMBEDDED_MODE
 
 # --------------------------------------------------------------------------

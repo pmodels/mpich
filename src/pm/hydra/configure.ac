@@ -160,7 +160,7 @@ if test "$with_mpl_prefix" = "embedded" ; then
     mpl_srcdir="mpl"
     mpl_dist_srcdir="mpl"
     mpl_lib="mpl/lib${MPLLIBNAME}.la"
-    mpl_subdir_args="--disable-versioning"
+    mpl_subdir_args="--disable-versioning --enable-embedded"
     PAC_CONFIG_SUBDIR_ARGS([mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
     mpl_includedir='-I$(top_builddir)/mpl/include -I$(top_srcdir)/mpl/include'
 else
