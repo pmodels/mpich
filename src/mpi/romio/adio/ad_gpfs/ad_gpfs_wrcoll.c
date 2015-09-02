@@ -750,7 +750,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 
     ADIOI_Datatype_iscontig(datatype, &buftype_is_contig);
     if (!buftype_is_contig) {
-	flat_buf = ADIOI_Flatten_and_find(dataype);
+	flat_buf = ADIOI_Flatten_and_find(datatype);
     }
     MPI_Type_extent(datatype, &buftype_extent);
 
