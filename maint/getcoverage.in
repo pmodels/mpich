@@ -784,7 +784,7 @@ sub ExpandDir {
 	    next;
 	}
 	elsif (-d "$dir/$filename") {
-	    # Skip pmpi directories used for mergeing gcov output
+	    # Skip pmpi directories used for merging gcov output
 	    if ($filename =~ /\-pmpi$/) { next; }
 	    # Skip mpi directories used for handling name-mangled files
 	    if ($filename =~ /\-mpi$/) { next; }
