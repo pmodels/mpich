@@ -855,11 +855,11 @@ printf("gpfsmpio_onesided_always_rmw - first buffer pre-read for file offsets %l
       /* These data structures are used for the derived datatype mpi_put
        * in the gpfsmpio_write_aggmethod of 2 case.
        */
-      int *targetAggBlockLengths;
-      MPI_Aint *targetAggDisplacements, *sourceBufferDisplacements;
-      MPI_Datatype *targetAggDataTypes;
+      int *targetAggBlockLengths=NULL;
+      MPI_Aint *targetAggDisplacements=NULL, *sourceBufferDisplacements=NULL;
+      MPI_Datatype *targetAggDataTypes=NULL;
 
-      char *derivedTypePackedSourceBuffer;
+      char *derivedTypePackedSourceBuffer=NULL;
       int derivedTypePackedSourceBufferOffset = 0;
       int allocatedDerivedTypeArrays = 0;
       ADIO_Offset amountOfDataWrittenThisRoundAgg = 0;
@@ -1957,9 +1957,9 @@ printf("iAmUsedAgg - currentRoundFDStart initialized "
       /* These data structures are used for the derived datatype mpi_get
        * in the gpfsmpio_read_aggmethod of 2 case.
        */
-      int *sourceAggBlockLengths;
-      MPI_Aint *sourceAggDisplacements, *recvBufferDisplacements;
-      MPI_Datatype *sourceAggDataTypes;
+      int *sourceAggBlockLengths=NULL;
+      MPI_Aint *sourceAggDisplacements=NULL, *recvBufferDisplacements=NULL;
+      MPI_Datatype *sourceAggDataTypes=NULL;
       char *derivedTypePackedSourceBuffer;
       int derivedTypePackedSourceBufferOffset = 0;
       int allocatedDerivedTypeArrays = 0;

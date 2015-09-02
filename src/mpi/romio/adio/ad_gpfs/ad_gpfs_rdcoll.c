@@ -175,7 +175,7 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
 	st_offsets   = (ADIO_Offset *) ADIOI_Malloc(nprocs*sizeof(ADIO_Offset));
 	end_offsets  = (ADIO_Offset *) ADIOI_Malloc(nprocs*sizeof(ADIO_Offset));
 
-    ADIO_Offset my_count_size;
+    ADIO_Offset my_count_size=0;
     /* One-sided aggregation needs the amount of data per rank as well because the difference in
      * starting and ending offsets for 1 byte is 0 the same as 0 bytes so it cannot be distiguished.
      */
