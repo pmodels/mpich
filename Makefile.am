@@ -300,11 +300,11 @@ gcov_sources = $(lib_lib@MPILIBNAME@_la_SOURCES)
 #   bcast.c --> {bcast.o,lib_libpmpi_la-bcast.o}
 # It still generates a bcast.c.gcov output for each object file.  Long file
 # names and preserved paths do not help with this problem.
-# What we can do in this case is to move the second files to a separate 
-# directory, rename name, and run the GCOV on the new files.
+# What we can do in this case is to move the second files to a separate
+# directory, rename name, and run gcov on the new files.
 # For the web-based coverage reports, the gcov output for the two files
-# needs to be merged; see maint/gcovmerge .  
-# To make it easier to re-run the coverage generation, we copy, rather than 
+# needs to be merged; see maint/gcovmerge .
+# To make it easier to re-run the coverage generation, we copy, rather than
 # move, when there are two object files for each source file.
 # A change to the build procedure broke this target.  This is a partial though
 # nearly complete fix to the broken build process.  The generated coverage
