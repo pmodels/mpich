@@ -17,15 +17,20 @@ if BUILD_PM_UTIL
 ## FIXME do we need this still?
 ##OTHER_DIRS = test
 
-noinst_LIBRARIES += src/pm/util/libmpiexec.a
+noinst_LTLIBRARIES += src/pm/util/libmpiexec.la
 
 # Ensure that dgbiface is compiled with the -g option, as the symbols must
 # be present for the debugger to see them
-src_pm_util_libmpiexec_a_CFLAGS = -g $(AM_CFLAGS)
+src_pm_util_libmpiexec_la_CFLAGS = -g $(AM_CFLAGS)
 
 # we may want to omit the regular AM_CPPFLAGS when building objects in this
 # utility library
-src_pm_util_libmpiexec_a_CPPFLAGS = $(common_pm_includes) $(AM_CPPFLAGS)
+src_pm_util_libmpiexec_la_CPPFLAGS = $(common_pm_includes) $(AM_CPPFLAGS)
+
+# MPL
+src_pm_util_libmpiexec_la_LIBADD = -l$(MPLLIBNAME)
+src_pm_util_libmpiexec_la_LDFLAGS = $(mpllibdir)
+EXTRA_src_pm_util_libmpiexec_la_DEPENDENCIES = $(mpllib)
 
 # We use the msg print routines (for now) - include these in the mpiexec
 # library so that we don't need to copy the source files
@@ -35,7 +40,7 @@ src_pm_util_libmpiexec_a_CPPFLAGS = $(common_pm_includes) $(AM_CPPFLAGS)
 # be used by other applications).
 #
 # [goodell] FIXME the above comment is basically unintelligible...
-src_pm_util_libmpiexec_a_SOURCES = \
+src_pm_util_libmpiexec_la_SOURCES = \
     src/pm/util/cmnargs.c          \
     src/pm/util/process.c          \
     src/pm/util/ioloop.c           \
