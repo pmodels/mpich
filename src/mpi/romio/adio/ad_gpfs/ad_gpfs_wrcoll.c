@@ -388,7 +388,7 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 	 *
 	 * First verify that the filetype is contig and the offsets are
 	 * increasing in rank order*/
-	int i, inOrderAndNoGaps = 1;
+	int inOrderAndNoGaps = 1;
 	for (i=0;i<(nprocs-1);i++) {
 	    if (end_offsets[i] != (st_offsets[i+1]-1))
 		inOrderAndNoGaps = 0;

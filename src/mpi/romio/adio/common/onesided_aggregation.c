@@ -2010,7 +2010,7 @@ printf("iAmUsedAgg - currentRoundFDStart initialized "
               sourceAggDataTypes = (MPI_Datatype *)ADIOI_Malloc(maxNumContigOperations * sizeof(MPI_Datatype));
               if (!bufTypeIsContig) {
                 int k;
-                for (i=sourceAggsForMyDataFirstOffLenIndex[roundIter][aggIter];i<=sourceAggsForMyDataLastOffLenIndex[roundIter][aggIter];k++)
+                for (k=sourceAggsForMyDataFirstOffLenIndex[roundIter][aggIter];k<=sourceAggsForMyDataLastOffLenIndex[roundIter][aggIter];k++)
                   amountOfDataReadThisRoundAgg += len_list[k];
 
 #ifdef onesidedtrace
