@@ -81,6 +81,8 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     hints->mode             = FI_CONTEXT;
     hints->ep_attr->type    = FI_EP_RDM;      /* Reliable datagram         */
     hints->caps             = FI_TAGGED;      /* Tag matching interface    */
+    hints->tx_attr->msg_order = FI_ORDER_SAS;
+    hints->rx_attr->msg_order = FI_ORDER_SAS;
 
     hints->ep_attr->mem_tag_format = MEM_TAG_FORMAT;
     MPIU_Assert(pg_p->size < ((1 << MPID_RANK_BITS) - 1));
