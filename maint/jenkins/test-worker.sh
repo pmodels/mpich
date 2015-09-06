@@ -79,6 +79,7 @@ CollectResults() {
     # TODO: copy saved test binaries (for failed cases)
     find . \
         \( -name "filtered-make.txt" -o \
+        -name "apply-xfail.sh" -o \
         -name "autogen.log" -o \
         -name "config.log" -o \
         -name "c.txt" -o \
@@ -416,6 +417,10 @@ pushd "$TMP_SRC"
 
 if test "$BUILD_MODE" = "per-commit" ; then
     ./autogen.sh 2>&1 | tee autogen.log
+fi
+
+if [[ -x maint/jenkins/set-xfail.sh ]]; then
+    ./maint/jenkins/set-xfail.sh -j $JOB_NAME -c $compiler -o $jenkins_configure -q $queue -m $_netmod
 fi
 
 ./configure --prefix="$TMP_SRC/_inst" $(SetNetmod $netmod) $(SetConfigOpt $jenkins_configure) \
