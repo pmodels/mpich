@@ -105,6 +105,7 @@ summary.xml
 summary.junit.xml
 summary.tap
 tags
+apply-xfail.sh
 
 # the hooks dir shouldn't be accidentally committed
 /maint/hooks
