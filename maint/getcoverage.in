@@ -170,6 +170,10 @@ for my $filename (@TopFilenames) {
 	# Check for a "pmpi" directory - one that was used to merge 
 	# PMPI and MPI outputs.  If found, we skip to the next directory
 	if ($filename =~ /\-pmpi$/) { next; }
+	# Added to handle a change in the naming convention for object files
+	# in MPICH, which now needs a -mpi directory as well as the -pmpi
+	# directory needed to handle the pmpi object files.
+	if ($filename =~ /\-mpi$/) { next; }
 	# Expand the directory into a list of files.  If there are 
 	# subdirectories, expand them too (e.g., get a list of 
 	# *every* file within the directory tree. 
@@ -782,6 +786,8 @@ sub ExpandDir {
 	elsif (-d "$dir/$filename") {
 	    # Skip pmpi directories used for mergeing gcov output
 	    if ($filename =~ /\-pmpi$/) { next; }
+	    # Skip mpi directories used for handling name-mangled files
+	    if ($filename =~ /\-mpi$/) { next; }
 	    $otherdirs[$#otherdirs+1] = "$dir/$filename";
 	}
 	elsif ($filename =~ /(.*\.gcov)$/) {
