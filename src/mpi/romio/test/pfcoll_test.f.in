@@ -173,5 +173,4 @@
 
       call PMPI_FINALIZE(ierr)
 
-      stop
       end

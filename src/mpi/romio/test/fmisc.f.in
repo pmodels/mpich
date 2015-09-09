@@ -201,5 +201,4 @@
       call MPI_GROUP_FREE(group, ierr)
       call MPI_FINALIZE(ierr)
 
-      stop
       end
