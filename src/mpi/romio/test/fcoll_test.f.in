@@ -172,5 +172,4 @@
 
       call MPI_FINALIZE(ierr)
 
-      stop
       end
