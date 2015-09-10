@@ -174,7 +174,7 @@ foreach my $x (keys %f08_mods) {
     print $makefile_fh <<EOT;
 \t\@rm -f src/binding/fortran/use_mpi_f08/$x.tmp
 \t\@touch src/binding/fortran/use_mpi_f08/$x.tmp
-\t\$(mod_verbose)\$(F08_COMPILE_MODS) -c src/binding/fortran/use_mpi_f08/$x.f90 -o src/binding/fortran/use_mpi_f08/$x.lo
+\t\$(mod_verbose)\$(F08_COMPILE_MODS) -c `test -f 'src/binding/fortran/use_mpi_f08/$x.f90' || echo '\$(srcdir)/'`src/binding/fortran/use_mpi_f08/$x.f90 -o src/binding/fortran/use_mpi_f08/$x.lo
 \t\@mv src/binding/fortran/use_mpi_f08/$x.tmp src/binding/fortran/use_mpi_f08/$x.stamp
 
 src/binding/fortran/use_mpi_f08/$DOLLARX.\$(MOD) src/binding/fortran/use_mpi_f08/$x.lo : src/binding/fortran/use_mpi_f08/$x.stamp
