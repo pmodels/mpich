@@ -489,7 +489,7 @@ int MPIR_Allgather_intra (
         MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &recvtype_true_extent);
             
         recvbuf_extent = recvcount * comm_size *
-            (MPIR_MAX(recvtype_true_extent, recvtype_extent));
+            (MPL_MAX(recvtype_true_extent, recvtype_extent));
 
         MPIU_CHKLMEM_MALLOC(tmp_buf, void*, recvbuf_extent, mpi_errno, "tmp_buf");
             
@@ -680,7 +680,7 @@ int MPIR_Allgather_inter (
         MPIR_Type_get_true_extent_impl(sendtype, &true_lb, &true_extent);
 
         MPID_Datatype_get_extent_macro( sendtype, send_extent );
-        extent = MPIR_MAX(send_extent, true_extent);
+        extent = MPL_MAX(send_extent, true_extent);
 
 	MPIU_Ensure_Aint_fits_in_pointer(extent * sendcount * local_size);
         MPIU_CHKLMEM_MALLOC(tmp_buf, void*, extent*sendcount*local_size, mpi_errno, "tmp_buf");

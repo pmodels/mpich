@@ -457,7 +457,7 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather(void *buffer, int count, MPI_Datatype 
 
     /* curr_size is the amount of data that this process now has stored in
      * buffer at byte offset (relative_rank*scatter_size) */
-    curr_size = MPIU_MIN(scatter_size, (nbytes - (relative_rank * scatter_size)));
+    curr_size = MPL_MIN(scatter_size, (nbytes - (relative_rank * scatter_size)));
     if (curr_size < 0)
         curr_size = 0;
 
@@ -490,7 +490,7 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather(void *buffer, int count, MPI_Datatype 
             /* calculate the exact amount of data to be received */
             /* alternative */
             if ((nbytes - recv_offset) > 0)
-                incoming_count = MPIU_MIN((nbytes-recv_offset), (mask * scatter_size));
+                incoming_count = MPL_MIN((nbytes-recv_offset), (mask * scatter_size));
             else
                 incoming_count = 0;
 
@@ -574,7 +574,7 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather(void *buffer, int count, MPI_Datatype 
                     /* recalculate incoming_count, since not all processes will have
                      * this value */
                     if ((nbytes - offset) > 0)
-                        incoming_count = MPIU_MIN((nbytes-offset), (mask * scatter_size));
+                        incoming_count = MPL_MIN((nbytes-offset), (mask * scatter_size));
                     else
                         incoming_count = 0;
 
@@ -715,11 +715,11 @@ int MPIR_Ibcast_scatter_ring_allgather(void *buffer, int count, MPI_Datatype dat
 
         rel_j     = (j     - root + comm_size) % comm_size;
         rel_jnext = (jnext - root + comm_size) % comm_size;
-        left_count = MPIR_MIN(scatter_size, (nbytes - rel_jnext * scatter_size));
+        left_count = MPL_MIN(scatter_size, (nbytes - rel_jnext * scatter_size));
         if (left_count < 0)
             left_count = 0;
         left_disp = rel_jnext * scatter_size;
-        right_count = MPIR_MIN(scatter_size, (nbytes - rel_j * scatter_size));
+        right_count = MPL_MIN(scatter_size, (nbytes - rel_j * scatter_size));
         if (right_count < 0)
             right_count = 0;
         right_disp = rel_j * scatter_size;

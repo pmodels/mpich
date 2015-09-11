@@ -435,7 +435,7 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
     /* Since ADIOI_Malloc may do other things we add the +1 
      * to avoid a 0-size malloc */    
     statuses = (MPI_Status *) 
-	ADIOI_Malloc(1 + 2 * ADIOI_MAX(send_req_arr_sz,recv_req_arr_sz)
+	ADIOI_Malloc(1 + 2 * MPL_MAX(send_req_arr_sz,recv_req_arr_sz)
 		     * sizeof(MPI_Status));
 
     if (send_req_arr_sz > 0) {

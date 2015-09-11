@@ -116,17 +116,17 @@ static int MPIR_Scan_generic (
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
     MPID_Datatype_get_extent_macro(datatype, extent);
-    MPIU_CHKLMEM_MALLOC(partial_scan, void *, count*(MPIR_MAX(extent,true_extent)), mpi_errno, "partial_scan");
+    MPIU_CHKLMEM_MALLOC(partial_scan, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "partial_scan");
 
     /* This eventually gets malloc()ed as a temp buffer, not added to
      * any user buffers */
-    MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+    MPIU_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
     /* adjust for potential negative lower bound in datatype */
     partial_scan = (void *)((char*)partial_scan - true_lb);
     
     /* need to allocate temporary buffer to store incoming data*/
-    MPIU_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)), mpi_errno, "tmp_buf");
+    MPIU_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "tmp_buf");
     
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
@@ -256,20 +256,20 @@ int MPIR_Scan(
 
     MPID_Datatype_get_extent_macro(datatype, extent);
 
-    MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+    MPIU_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
-    MPIU_CHKLMEM_MALLOC(tempbuf, void *, count*(MPIR_MAX(extent, true_extent)),
+    MPIU_CHKLMEM_MALLOC(tempbuf, void *, count*(MPL_MAX(extent, true_extent)),
                         mpi_errno, "temporary buffer");
     tempbuf = (void *)((char*)tempbuf - true_lb);
 
     /* Create prefulldata and localfulldata on local roots of all nodes */
     if (comm_ptr->node_roots_comm != NULL) {
-        MPIU_CHKLMEM_MALLOC(prefulldata, void *, count*(MPIR_MAX(extent, true_extent)),
+        MPIU_CHKLMEM_MALLOC(prefulldata, void *, count*(MPL_MAX(extent, true_extent)),
                             mpi_errno, "prefulldata for scan");
         prefulldata = (void *)((char*)prefulldata - true_lb);
 
         if (comm_ptr->node_comm != NULL) {
-            MPIU_CHKLMEM_MALLOC(localfulldata, void *, count*(MPIR_MAX(extent, true_extent)),
+            MPIU_CHKLMEM_MALLOC(localfulldata, void *, count*(MPL_MAX(extent, true_extent)),
                                 mpi_errno, "localfulldata for scan");
             localfulldata = (void *)((char*)localfulldata - true_lb);
         }

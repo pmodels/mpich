@@ -350,8 +350,8 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
 
     for (i=0; i < nprocs; i++)
 	for (j=0; j < others_req[i].count; j++) {
-	    st_loc = ADIOI_MIN(st_loc, others_req[i].offsets[j]);
-	    end_loc = ADIOI_MAX(end_loc, (others_req[i].offsets[j]
+	    st_loc = MPL_MIN(st_loc, others_req[i].offsets[j]);
+	    end_loc = MPL_MAX(end_loc, (others_req[i].offsets[j]
 				       + others_req[i].lens[j] - 1));
 	}
 
@@ -441,7 +441,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
 
 	for (i=0; i < nprocs; i++) count[i] = recv_size[i] = 0;
 
-	size = ADIOI_MIN((unsigned)coll_bufsize, end_loc-st_loc+1-done); 
+	size = MPL_MIN((unsigned)coll_bufsize, end_loc-st_loc+1-done); 
 
 	for (i=0; i < nprocs; i++) {
 	    if (others_req[i].count) {
@@ -469,7 +469,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
 			MPI_Address(write_buf+req_off-off, 
                                &(others_req[i].mem_ptrs[j]));
       ADIOI_Assert((off + size - req_off) == (int)(off + size - req_off));
-			recv_size[i] += (int)(ADIOI_MIN(off + size - req_off, 
+			recv_size[i] += (int)(MPL_MIN(off + size - req_off, 
                                       (unsigned)req_len));
 
 			if (off+size-req_off < (unsigned)req_len)
@@ -809,7 +809,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
 #define ADIOI_BUF_INCR \
 { \
     while (buf_incr) { \
-        size_in_buf = ADIOI_MIN(buf_incr, flat_buf_sz); \
+        size_in_buf = MPL_MIN(buf_incr, flat_buf_sz); \
         user_buf_idx += size_in_buf; \
         flat_buf_sz -= size_in_buf; \
         if (!flat_buf_sz) { \
@@ -830,7 +830,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
 #define ADIOI_BUF_COPY \
 { \
     while (size) { \
-        size_in_buf = ADIOI_MIN(size, flat_buf_sz); \
+        size_in_buf = MPL_MIN(size, flat_buf_sz); \
   ADIOI_Assert((((ADIO_Offset)(MPIU_Upint)buf) + user_buf_idx) == (ADIO_Offset)(MPIU_Upint)((MPIU_Upint)buf + user_buf_idx)); \
   ADIOI_Assert(size_in_buf == (size_t)size_in_buf); \
         memcpy(&(send_buf[p][send_buf_idx[p]]), \
@@ -921,7 +921,7 @@ void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 	    if (send_buf_idx[p] < send_size[p]) {
 		if (curr_to_proc[p]+len > done_to_proc[p]) {
 		    if (done_to_proc[p] > curr_to_proc[p]) {
-			size = ADIOI_MIN(curr_to_proc[p] + len - 
+			size = MPL_MIN(curr_to_proc[p] + len - 
                                 done_to_proc[p], send_size[p]-send_buf_idx[p]);
 			buf_incr = done_to_proc[p] - curr_to_proc[p];
 			ADIOI_BUF_INCR
@@ -933,7 +933,7 @@ void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 		        ADIOI_BUF_COPY
 		    }
 		    else {
-			size = ADIOI_MIN(len,send_size[p]-send_buf_idx[p]);
+			size = MPL_MIN(len,send_size[p]-send_buf_idx[p]);
 			buf_incr = len;
       ADIOI_Assert((curr_to_proc[p] + size) == (unsigned)((ADIO_Offset)curr_to_proc[p] + size));
 			curr_to_proc[p] += size;

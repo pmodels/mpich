@@ -614,8 +614,8 @@ static void ADIOI_Iread_and_exch(ADIOI_NBC_Request *nbc_req, int *error_code)
     /* now find the real values */
     for (i = 0; i < nprocs; i++)
         for (j = 0; j < others_req[i].count; j++) {
-            st_loc = ADIOI_MIN(st_loc, others_req[i].offsets[j]);
-            end_loc = ADIOI_MAX(end_loc, (others_req[i].offsets[j]
+            st_loc = MPL_MIN(st_loc, others_req[i].offsets[j]);
+            end_loc = MPL_MAX(end_loc, (others_req[i].offsets[j]
                           + others_req[i].lens[j] - 1));
         }
 
@@ -754,7 +754,7 @@ static void ADIOI_Iread_and_exch_l1_begin(ADIOI_NBC_Request *nbc_req,
                  minus what was satisfied in previous iteration
        req_size = size corresponding to req_off */
 
-    size = ADIOI_MIN((unsigned)vars->coll_bufsize,
+    size = MPL_MIN((unsigned)vars->coll_bufsize,
                      vars->end_loc - vars->st_loc + 1 - vars->done);
     real_off = vars->off - vars->for_curr_iter;
     real_size = size + vars->for_curr_iter;
@@ -793,7 +793,7 @@ static void ADIOI_Iread_and_exch_l1_begin(ADIOI_NBC_Request *nbc_req,
                     MPI_Address(read_buf + req_off - real_off,
                                 &(others_req[i].mem_ptrs[j]));
                     ADIOI_Assert((real_off + real_size - req_off) == (int)(real_off + real_size - req_off));
-                    send_size[i] += (int)(ADIOI_MIN(real_off + real_size - req_off,
+                    send_size[i] += (int)(MPL_MIN(real_off + real_size - req_off,
                                                     (ADIO_Offset)(unsigned)req_len));
 
                     if (real_off + real_size - req_off < (ADIO_Offset)(unsigned)req_len) {
@@ -802,7 +802,7 @@ static void ADIOI_Iread_and_exch_l1_begin(ADIOI_NBC_Request *nbc_req,
                             (others_req[i].offsets[j+1] < real_off + real_size)) {
                             /* this is the case illustrated in the
                                figure above. */
-                            for_next_iter = ADIOI_MAX(for_next_iter,
+                            for_next_iter = MPL_MAX(for_next_iter,
                                     real_off + real_size - others_req[i].offsets[j+1]);
                             /* max because it must cover requests
                                from different processes */

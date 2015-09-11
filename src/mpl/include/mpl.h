@@ -85,6 +85,9 @@
 #define MPL_QUOTE(A) MPL_QUOTE2(A)
 #define MPL_QUOTE2(A) #A
 
+#define MPL_MAX(a,b)    (((a) > (b)) ? (a) : (b))
+#define MPL_MIN(a,b)    (((a) < (b)) ? (a) : (b))
+
 /* This macro is used to silence warnings from the Mac OS X linker when
  * an object file "has no symbols".  The unused attribute prevents a
  * warning about the unused dummy variable while the used attribute

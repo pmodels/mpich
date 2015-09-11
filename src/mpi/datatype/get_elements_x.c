@@ -76,7 +76,7 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_basic_type_elements(MPI_Count *bytes_p,
         usable_bytes = *bytes_p;
     }
     else {
-        usable_bytes = MPIR_MIN(*bytes_p,
+        usable_bytes = MPL_MIN(*bytes_p,
                            count * MPID_Datatype_get_basic_size(datatype));
     }
 

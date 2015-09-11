@@ -92,7 +92,7 @@ void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, int count,
 { \
     if (req_off >= readbuf_off + readbuf_len) { \
 	readbuf_off = req_off; \
-	readbuf_len = (int) (ADIOI_MIN(max_bufsize, end_offset-readbuf_off+1));\
+	readbuf_len = (int) (MPL_MIN(max_bufsize, end_offset-readbuf_off+1));\
         MPE_Log_event( ADIOI_MPE_lseek_a, 0, NULL ); \
 	lseek(fd->fd_sys, readbuf_off, SEEK_SET);\
         MPE_Log_event( ADIOI_MPE_lseek_b, 0, NULL ); \
@@ -112,7 +112,7 @@ void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, int count,
 	memcpy(readbuf, tmp_buf, partial_read); \
 	ADIOI_Free(tmp_buf); \
 	readbuf_off += readbuf_len-partial_read; \
-	readbuf_len = (int) (partial_read + ADIOI_MIN(max_bufsize, \
+	readbuf_len = (int) (partial_read + MPL_MIN(max_bufsize, \
 				       end_offset-readbuf_off+1)); \
         MPE_Log_event( ADIOI_MPE_lseek_a, 0, NULL ); \
 	lseek(fd->fd_sys, readbuf_off+partial_read, SEEK_SET);\
@@ -131,7 +131,7 @@ void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, int count,
 { \
     if (req_off >= readbuf_off + readbuf_len) { \
 	readbuf_off = req_off; \
-	readbuf_len = (int) (ADIOI_MIN(max_bufsize, end_offset-readbuf_off+1));\
+	readbuf_len = (int) (MPL_MIN(max_bufsize, end_offset-readbuf_off+1));\
 	lseek(fd->fd_sys, readbuf_off, SEEK_SET);\
         if (!(fd->atomicity)) ADIOI_READ_LOCK(fd, readbuf_off, SEEK_SET, readbuf_len);\
         err = read(fd->fd_sys, readbuf, readbuf_len);\
@@ -147,7 +147,7 @@ void ADIOI_NFS_ReadContig(ADIO_File fd, void *buf, int count,
 	memcpy(readbuf, tmp_buf, partial_read); \
 	ADIOI_Free(tmp_buf); \
 	readbuf_off += readbuf_len-partial_read; \
-	readbuf_len = (int) (partial_read + ADIOI_MIN(max_bufsize, \
+	readbuf_len = (int) (partial_read + MPL_MIN(max_bufsize, \
 				       end_offset-readbuf_off+1)); \
 	lseek(fd->fd_sys, readbuf_off+partial_read, SEEK_SET);\
         if (!(fd->atomicity)) ADIOI_READ_LOCK(fd, readbuf_off+partial_read, SEEK_SET, readbuf_len-partial_read);\
@@ -224,7 +224,7 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, int count,
 	end_offset = off + bufsize - 1;
         readbuf_off = off;
         readbuf = (char *) ADIOI_Malloc(max_bufsize);
-        readbuf_len = (int) (ADIOI_MIN(max_bufsize, end_offset-readbuf_off+1));
+        readbuf_len = (int) (MPL_MIN(max_bufsize, end_offset-readbuf_off+1));
 
 /* if atomicity is true, lock (exclusive) the region to be accessed */
         if (fd->atomicity)
@@ -370,7 +370,7 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, int count,
 	i = 0;
 	j = st_index;
 	off = offset;
-	frd_size = ADIOI_MIN(st_frd_size, bufsize);
+	frd_size = MPL_MIN(st_frd_size, bufsize);
 	while (i < bufsize) {
 	    i += frd_size;
 	    end_offset = off + frd_size - 1;
@@ -382,7 +382,7 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, int count,
 	    }
 
 	    off = disp + flat_file->indices[j] + (ADIO_Offset) n_filetypes*filetype_extent;
-	    frd_size = ADIOI_MIN(flat_file->blocklens[j], bufsize-i);
+	    frd_size = MPL_MIN(flat_file->blocklens[j], bufsize-i);
 	}
 
 /* if atomicity is true, lock (exclusive) the region to be accessed */
@@ -392,7 +392,7 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, int count,
         /* initial read into readbuf */
 	readbuf_off = offset;
 	readbuf = (char *) ADIOI_Malloc(max_bufsize);
-	readbuf_len = (int) (ADIOI_MIN(max_bufsize, end_offset-readbuf_off+1));
+	readbuf_len = (int) (MPL_MIN(max_bufsize, end_offset-readbuf_off+1));
 
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event( ADIOI_MPE_lseek_a, 0, NULL );
@@ -422,7 +422,7 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, int count,
 	    j = st_index;
 	    off = offset;
 	    n_filetypes = st_n_filetypes;
-	    frd_size = ADIOI_MIN(st_frd_size, bufsize);
+	    frd_size = MPL_MIN(st_frd_size, bufsize);
 	    while (i < bufsize) {
                 if (frd_size) { 
                     /* TYPE_UB and TYPE_LB can result in 
@@ -451,7 +451,7 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, int count,
                     }
 		    off = disp + flat_file->indices[j] + 
                                         (ADIO_Offset) n_filetypes*filetype_extent;
-		    frd_size = ADIOI_MIN(flat_file->blocklens[j], bufsize-i);
+		    frd_size = MPL_MIN(flat_file->blocklens[j], bufsize-i);
 		}
 	    }
 	}
@@ -469,7 +469,7 @@ void ADIOI_NFS_ReadStrided(ADIO_File fd, void *buf, int count,
 	    brd_size = flat_buf->blocklens[0];
 
 	    while (num < bufsize) {
-		size = ADIOI_MIN(frd_size, brd_size);
+		size = MPL_MIN(frd_size, brd_size);
 		if (size) {
 		    /* lseek(fd->fd_sys, off, SEEK_SET);
 		    err = read(fd->fd_sys, ((char *) buf) + i, size); */

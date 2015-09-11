@@ -344,8 +344,8 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
     }
     for (i = 0; i < nprocs; i++) {
 	for (j = 0; j < others_req[i].count; j++) {
-	    st_loc = ADIOI_MIN(st_loc, others_req[i].offsets[j]);
-	    end_loc = ADIOI_MAX(end_loc, (others_req[i].offsets[j] +
+	    st_loc = MPL_MIN(st_loc, others_req[i].offsets[j]);
+	    end_loc = MPL_MAX(end_loc, (others_req[i].offsets[j] +
                                           others_req[i].lens[j] - 1));
 	}
     }
@@ -379,7 +379,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
         for (j = 0; j < others_req[i].count; j ++) {
             req_off = others_req[i].offsets[j];
             m = (int)((req_off - min_st_loc) / step_size);
-            off_list[m] = ADIOI_MIN(off_list[m], req_off);
+            off_list[m] = MPL_MIN(off_list[m], req_off);
         }
     }
 
@@ -471,8 +471,8 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
 	    recv_count[i] = recv_size[i] = send_size[i] = 0;
 
         off = off_list[m];
-        max_size = ADIOI_MIN(step_size, max_end_loc - iter_st_off + 1);
-        real_size = (int) ADIOI_MIN((off / stripe_size + 1) * stripe_size -
+        max_size = MPL_MIN(step_size, max_end_loc - iter_st_off + 1);
+        real_size = (int) MPL_MIN((off / stripe_size + 1) * stripe_size -
                                     off,
                                     end_loc - off + 1);
 
@@ -837,7 +837,7 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
 #define ADIOI_BUF_INCR \
 { \
     while (buf_incr) { \
-        size_in_buf = ADIOI_MIN(buf_incr, flat_buf_sz); \
+        size_in_buf = MPL_MIN(buf_incr, flat_buf_sz); \
         user_buf_idx += size_in_buf; \
         flat_buf_sz -= size_in_buf; \
         if (!flat_buf_sz) { \
@@ -858,7 +858,7 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
 #define ADIOI_BUF_COPY \
 { \
     while (size) { \
-        size_in_buf = ADIOI_MIN(size, flat_buf_sz); \
+        size_in_buf = MPL_MIN(size, flat_buf_sz); \
         ADIOI_Assert((((ADIO_Offset)(MPIU_Upint)buf) + user_buf_idx) == (ADIO_Offset)(MPIU_Upint)((MPIU_Upint)buf + user_buf_idx)); \
         ADIOI_Assert(size_in_buf == (size_t)size_in_buf);               \
         memcpy(&(send_buf[p][send_buf_idx[p]]), \
@@ -940,7 +940,7 @@ static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
 	    if (send_buf_idx[p] < send_size[p]) {
 		if (curr_to_proc[p] + len > done_to_proc[p]) {
 		    if (done_to_proc[p] > curr_to_proc[p]) {
-			size = (int) ADIOI_MIN(curr_to_proc[p] + len -
+			size = (int) MPL_MIN(curr_to_proc[p] + len -
 					       done_to_proc[p],
 					       send_size[p] -
 					       send_buf_idx[p]);
@@ -953,7 +953,7 @@ static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
 			curr_to_proc[p] = done_to_proc[p] + size;
 		        ADIOI_BUF_COPY
                     } else {
-			size = (int) ADIOI_MIN(len, send_size[p] -
+			size = (int) MPL_MIN(len, send_size[p] -
 					       send_buf_idx[p]);
 			buf_incr = (int) len;
                         ADIOI_Assert((curr_to_proc[p] + size) == (unsigned)((ADIO_Offset)curr_to_proc[p] + size));

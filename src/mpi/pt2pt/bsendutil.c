@@ -134,7 +134,7 @@ int MPIR_Bsend_attach( void *buffer, int buffer_size )
        code assumes pointer-alignment, and some code assumes double alignment.
        Further, GCC 4.5.1 generates bad code on 32-bit platforms when this is
        only 4-byte aligned (see #1149). */
-    align_sz = MPIR_MAX(sizeof(void *), sizeof(double));
+    align_sz = MPL_MAX(sizeof(void *), sizeof(double));
     offset = ((size_t)buffer) % align_sz;
     if (offset) {
         offset = align_sz - offset;

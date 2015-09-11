@@ -367,7 +367,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
         MPI_Aint stream_offset, stream_size, stream_count;
 
         stream_offset = i * stream_elem_count * predefined_dtp_size;
-        stream_size = MPIR_MIN(stream_elem_count * predefined_dtp_size, rest_len);
+        stream_size = MPL_MIN(stream_elem_count * predefined_dtp_size, rest_len);
         stream_count = stream_size / predefined_dtp_size;
         rest_len -= stream_size;
 
@@ -514,7 +514,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
         MPI_Aint stream_offset, stream_size, stream_count;
 
         stream_offset = i * stream_elem_count * predefined_dtp_size;
-        stream_size = MPIR_MIN(stream_elem_count * predefined_dtp_size, rest_len);
+        stream_size = MPL_MIN(stream_elem_count * predefined_dtp_size, rest_len);
         stream_count = stream_size / predefined_dtp_size;
         rest_len -= stream_size;
 

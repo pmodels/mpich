@@ -219,8 +219,6 @@ struct ADIOI_Fns_struct {
 #define ADIOI_READ                26
 #define ADIOI_WRITE               27
 
-#define ADIOI_MIN(a, b) ((a) < (b) ? (a) : (b))
-#define ADIOI_MAX(a, b) ((a) > (b) ? (a) : (b))
 /* thanks stackoverflow:
  * http://stackoverflow.com/questions/3982348/implement-generic-swap-macro-in-c */
 #define ADIOI_SWAP(x, y, T) do { T temp##x##y = x; x = y; y = temp##x##y; } while (0);

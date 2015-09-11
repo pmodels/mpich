@@ -261,7 +261,7 @@ void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, const void *buf, int count,
 	    i_offset = 0;
 	    j = st_index;
 	    off = offset;
-	    fwr_size = ADIOI_MIN(fwr_size, bufsize);
+	    fwr_size = MPL_MIN(fwr_size, bufsize);
 	    while (i_offset < bufsize) {
                 if (fwr_size) { 
                     /* TYPE_UB and TYPE_LB can result in 
@@ -302,7 +302,7 @@ void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, const void *buf, int count,
 		    }
 		    off = disp + flat_file->indices[j] + 
                                         n_filetypes*(ADIO_Offset)filetype_extent;
-		    fwr_size = ADIOI_MIN(flat_file->blocklens[j], bufsize-i_offset);
+		    fwr_size = MPL_MIN(flat_file->blocklens[j], bufsize-i_offset);
 		}
 	    }
 	}
@@ -318,7 +318,7 @@ void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, const void *buf, int count,
 	    bwr_size = flat_buf->blocklens[0];
 
 	    while (num < bufsize) {
-		size = ADIOI_MIN(fwr_size, bwr_size);
+		size = MPL_MIN(fwr_size, bwr_size);
 		if (size) {
 #ifdef IO_DEBUG
 		    printf("[%d/%d] nc mem nc file writing loc = %Ld sz = %d\n", 

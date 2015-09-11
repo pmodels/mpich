@@ -142,9 +142,9 @@ void ADIOI_IOStridedColl (ADIO_File fd, void *buf, int count, int rdwr,
 	    /* This is a rudimentary check for interleaving, but should
 	     * suffice for the moment. */
 	    
-	    min_st_offset = ADIOI_MIN(all_st_end_offsets[i*2],
+	    min_st_offset = MPL_MIN(all_st_end_offsets[i*2],
 				      min_st_offset);
-	    max_end_offset = ADIOI_MAX(all_st_end_offsets[i*2+1],
+	    max_end_offset = MPL_MAX(all_st_end_offsets[i*2+1],
 				       max_end_offset);
 	}
     }

@@ -297,7 +297,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     total_len = type_size * rreq->dev.user_count;
     MPID_Datatype_get_size_macro(basic_type, predef_dtp_size);
     MPID_Datatype_get_extent_macro(basic_type, extent);
-    stream_data_len = MPIR_MIN(total_len - (stream_offset / extent) * predef_dtp_size,
+    stream_data_len = MPL_MIN(total_len - (stream_offset / extent) * predef_dtp_size,
                                (MPIDI_CH3U_SRBuf_size / extent) * predef_dtp_size);
 
     predef_count = stream_data_len / predef_dtp_size;
@@ -692,7 +692,7 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
     rest_len = total_len - stream_offset;
     stream_elem_count = MPIDI_CH3U_SRBuf_size / basic_type_extent;
 
-    rreq->dev.recv_data_sz = MPIR_MIN(rest_len, stream_elem_count * basic_type_size);
+    rreq->dev.recv_data_sz = MPL_MIN(rest_len, stream_elem_count * basic_type_size);
 
     rreq->dev.segment_ptr = MPID_Segment_alloc();
     MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
@@ -822,7 +822,7 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
         rest_len = total_len - stream_offset;
         stream_elem_count = MPIDI_CH3U_SRBuf_size / basic_type_extent;
 
-        rreq->dev.recv_data_sz = MPIR_MIN(rest_len, stream_elem_count * basic_type_size);
+        rreq->dev.recv_data_sz = MPL_MIN(rest_len, stream_elem_count * basic_type_size);
 
         rreq->dev.segment_ptr = MPID_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem",
@@ -1322,7 +1322,7 @@ static inline int perform_acc_in_lock_queue(MPID_Win * win_ptr,
         MPID_Datatype_get_extent_macro(acc_pkt->datatype, type_extent);
 
         total_len = type_size * acc_pkt->count;
-        recv_count = MPIR_MIN((total_len / type_size), (MPIDI_CH3U_SRBuf_size / type_extent));
+        recv_count = MPL_MIN((total_len / type_size), (MPIDI_CH3U_SRBuf_size / type_extent));
         MPIU_Assert(recv_count > 0);
 
         /* Note: here stream_offset is 0 because when piggybacking LOCK, we must use
@@ -1460,7 +1460,7 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
     MPID_Datatype_get_extent_macro(get_accum_pkt->datatype, type_extent);
 
     total_len = type_size * get_accum_pkt->count;
-    recv_count = MPIR_MIN((total_len / type_size), (MPIDI_CH3U_SRBuf_size / type_extent));
+    recv_count = MPL_MIN((total_len / type_size), (MPIDI_CH3U_SRBuf_size / type_extent));
     MPIU_Assert(recv_count > 0);
 
     sreq->dev.user_buf = (void *) MPIU_Malloc(recv_count * type_size);

@@ -262,7 +262,7 @@ void ADIOI_GRIDFTP_WriteDiscontig(ADIO_File fd, void *buf, int count,
 		    else
 			blklen=(count*btype_size)-boff;
 		    boff+=blklen;
-		    extent=MAX(extent,nblks*ftype_extent+flat_file->indices[i]+blklen);
+		    extent=MPL_MAX(extent,nblks*ftype_extent+flat_file->indices[i]+blklen);
 		    if ( boff>=(count*btype_size) )
 			break;
 		}

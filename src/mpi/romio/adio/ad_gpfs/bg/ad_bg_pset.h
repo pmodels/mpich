@@ -55,9 +55,6 @@ typedef struct {
 } ADIOI_BG_ConfInfo_t __attribute__((aligned(16)));
 
 
-#undef MIN
-#define MIN(a,b) (((a)<(b) ? (a) : (b)))
-
 
 
 

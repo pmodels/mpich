@@ -265,7 +265,7 @@ void ADIOI_GRIDFTP_ReadDiscontig(ADIO_File fd, void *buf, int count,
 		    /* compute extent -- the nblks*ftype_extent bit is
 		       there so we remember how many ftypes we've already
 		       been through */
-		    extent=MAX(extent,nblks*ftype_extent+flat_file->indices[i]+blklen);
+		    extent=MPL_MAX(extent,nblks*ftype_extent+flat_file->indices[i]+blklen);
 		    if ( boff>=(count*btype_size) )
 			break;
 		}

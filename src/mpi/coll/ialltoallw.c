@@ -93,7 +93,7 @@ int MPIR_Ialltoallw_intra(const void *sendbuf, const int sendcounts[], const int
              * ignored when sendbuf==MPI_IN_PLACE */
             MPIR_Type_get_true_extent_impl(recvtypes[i], &true_lb, &true_extent);
             MPID_Datatype_get_extent_macro(recvtypes[i], recv_extent);
-            max_size = MPIU_MAX(max_size, recvcounts[i] * MPIU_MAX(recv_extent, true_extent));
+            max_size = MPL_MAX(max_size, recvcounts[i] * MPL_MAX(recv_extent, true_extent));
         }
         MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, max_size, mpi_errno, "Ialltoallw tmp_buf");
 
@@ -205,7 +205,7 @@ int MPIR_Ialltoallw_inter(const void *sendbuf, const int sendcounts[], const int
     rank = comm_ptr->rank;
 
     /* Use pairwise exchange algorithm. */
-    max_size = MPIR_MAX(local_size, remote_size);
+    max_size = MPL_MAX(local_size, remote_size);
     for (i=0; i<max_size; i++) {
         src = (rank - i + max_size) % max_size;
         dst = (rank + i) % max_size;

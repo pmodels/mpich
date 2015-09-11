@@ -270,7 +270,7 @@ void ADIOI_PVFS2_OldReadStrided(ADIO_File fd, void *buf, int count,
 	mem_list_count = 1;
 	
 	/* determine how many blocks in file to read */
-	f_data_read = ADIOI_MIN(st_frd_size, bufsize);
+	f_data_read = MPL_MIN(st_frd_size, bufsize);
 	total_blks_to_read = 1;
 	if (j < (flat_file->count-1)) j++;
 	else {
@@ -394,7 +394,7 @@ void ADIOI_PVFS2_OldReadStrided(ADIO_File fd, void *buf, int count,
 	    file_list_count = extra_blks;
 	    if(!i) {
 	        file_offsets[0] = offset;
-		file_lengths[0] = ADIOI_MIN(st_frd_size, bufsize);
+		file_lengths[0] = MPL_MIN(st_frd_size, bufsize);
 	    }
 	    for (k=0; k<extra_blks; k++) {
 	        if(i || k) {

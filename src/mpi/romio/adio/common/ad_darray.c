@@ -175,7 +175,7 @@ static int MPIOI_Type_block(int *array_of_gsizes, int dim, int ndims, int nprocs
     }
 
     j = global_size - blksize*rank;
-    mysize = ADIOI_MIN(blksize, j);
+    mysize = MPL_MIN(blksize, j);
     if (mysize < 0) mysize = 0;
 
     stride = orig_extent;
@@ -235,7 +235,7 @@ static int MPIOI_Type_cyclic(int *array_of_gsizes, int dim, int ndims, int nproc
     else {
 	local_size = ((end_index - st_index + 1)/(nprocs*blksize))*blksize;
 	rem = (end_index - st_index + 1) % (nprocs*blksize);
-	local_size += ADIOI_MIN(rem, blksize);
+	local_size += MPL_MIN(rem, blksize);
     }
 
     count = local_size/blksize;

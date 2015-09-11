@@ -312,7 +312,7 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
 	mem_list_count = 1;
         
 	/* determine how many blocks in file to write */
-	f_data_wrote = ADIOI_MIN(st_fwr_size, bufsize);
+	f_data_wrote = MPL_MIN(st_fwr_size, bufsize);
 	total_blks_to_write = 1;
 	if (j < (flat_file->count -1)) j++;
 	else {
@@ -437,7 +437,7 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
             file_list_count = extra_blks;
             if(!i) {
                 file_offsets[0] = offset;
-                file_lengths[0] = ADIOI_MIN(st_fwr_size, bufsize);
+                file_lengths[0] = MPL_MIN(st_fwr_size, bufsize);
             }
             for (k=0; k<extra_blks; k++) {
                 if(i || k) {

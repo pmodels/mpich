@@ -33,10 +33,6 @@
 #define PAMIX_assert(x)        assert(x)
 #endif
 
-#ifndef MIN
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#endif
-
 #ifdef __BGQ__
 #define __BG__
 #include <spi/include/kernel/location.h>
@@ -218,9 +214,9 @@ PAMIX_Dispatch_set(pami_context_t                  context[],
 
     size_t size;
     size = PAMIX_Dispatch_query(context[i], dispatch, PAMI_DISPATCH_SEND_IMMEDIATE_MAX).value.intval;
-    last_immediate_max = MIN(size, last_immediate_max);
+    last_immediate_max = MPL_MIN(size, last_immediate_max);
     size = PAMIX_Dispatch_query(context[i], dispatch, PAMI_DISPATCH_RECV_IMMEDIATE_MAX).value.intval;
-    last_immediate_max = MIN(size, last_immediate_max);
+    last_immediate_max = MPL_MIN(size, last_immediate_max);
   }
 
   if (immediate_max != NULL)

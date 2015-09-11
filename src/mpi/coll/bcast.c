@@ -570,7 +570,7 @@ static int MPIR_Bcast_scatter_doubling_allgather(
 
     /* curr_size is the amount of data that this process now has stored in
      * buffer at byte offset (relative_rank*scatter_size) */
-    curr_size = MPIU_MIN(scatter_size, (nbytes - (relative_rank * scatter_size)));
+    curr_size = MPL_MIN(scatter_size, (nbytes - (relative_rank * scatter_size)));
     if (curr_size < 0)
         curr_size = 0;
 
@@ -876,7 +876,7 @@ static int MPIR_Bcast_scatter_ring_allgather(
     /* long-message allgather or medium-size but non-power-of-two. use ring algorithm. */ 
 
     /* Calculate how much data we already have */
-    curr_size = MPIR_MIN(scatter_size,
+    curr_size = MPL_MIN(scatter_size,
                          nbytes - ((rank - root + comm_size) % comm_size) * scatter_size);
     if (curr_size < 0)
         curr_size = 0;
@@ -891,11 +891,11 @@ static int MPIR_Bcast_scatter_ring_allgather(
 
         rel_j     = (j     - root + comm_size) % comm_size;
         rel_jnext = (jnext - root + comm_size) % comm_size;
-        left_count = MPIR_MIN(scatter_size, (nbytes - rel_jnext * scatter_size));
+        left_count = MPL_MIN(scatter_size, (nbytes - rel_jnext * scatter_size));
         if (left_count < 0)
             left_count = 0;
         left_disp = rel_jnext * scatter_size;
-        right_count = MPIR_MIN(scatter_size, (nbytes - rel_j * scatter_size));
+        right_count = MPL_MIN(scatter_size, (nbytes - rel_j * scatter_size));
         if (right_count < 0)
             right_count = 0;
         right_disp = rel_j * scatter_size;

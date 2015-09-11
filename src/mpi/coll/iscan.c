@@ -91,17 +91,17 @@ int MPIR_Iscan_rec_dbl(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
     MPID_Datatype_get_extent_macro(datatype, extent);
-    MPIR_SCHED_CHKPMEM_MALLOC(partial_scan, void *, count*(MPIR_MAX(extent,true_extent)), mpi_errno, "partial_scan");
+    MPIR_SCHED_CHKPMEM_MALLOC(partial_scan, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "partial_scan");
 
     /* This eventually gets malloc()ed as a temp buffer, not added to
      * any user buffers */
-    MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+    MPIU_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
     /* adjust for potential negative lower bound in datatype */
     partial_scan = (void *)((char*)partial_scan - true_lb);
 
     /* need to allocate temporary buffer to store incoming data*/
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)), mpi_errno, "tmp_buf");
+    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "tmp_buf");
 
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
@@ -208,20 +208,20 @@ int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPID_Datatype_get_extent_macro(datatype, extent);
 
-    MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+    MPIU_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
-    MPIR_SCHED_CHKPMEM_MALLOC(tempbuf, void *, count*(MPIR_MAX(extent, true_extent)),
+    MPIR_SCHED_CHKPMEM_MALLOC(tempbuf, void *, count*(MPL_MAX(extent, true_extent)),
                         mpi_errno, "temporary buffer");
     tempbuf = (void *)((char*)tempbuf - true_lb);
 
     /* Create prefulldata and localfulldata on local roots of all nodes */
     if (comm_ptr->node_roots_comm != NULL) {
-        MPIR_SCHED_CHKPMEM_MALLOC(prefulldata, void *, count*(MPIR_MAX(extent, true_extent)),
+        MPIR_SCHED_CHKPMEM_MALLOC(prefulldata, void *, count*(MPL_MAX(extent, true_extent)),
                             mpi_errno, "prefulldata for scan");
         prefulldata = (void *)((char*)prefulldata - true_lb);
 
         if (node_comm != NULL) {
-            MPIR_SCHED_CHKPMEM_MALLOC(localfulldata, void *, count*(MPIR_MAX(extent, true_extent)),
+            MPIR_SCHED_CHKPMEM_MALLOC(localfulldata, void *, count*(MPL_MAX(extent, true_extent)),
                                 mpi_errno, "localfulldata for scan");
             localfulldata = (void *)((char*)localfulldata - true_lb);
         }

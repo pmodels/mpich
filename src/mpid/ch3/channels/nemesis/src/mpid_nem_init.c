@@ -66,14 +66,6 @@ char MPID_nem_hostname[MAX_HOSTNAME_LEN] = "UNKNOWN";
 static int get_local_procs(MPIDI_PG_t *pg, int our_pg_rank, int *num_local_p,
                            int **local_procs_p, int *local_rank_p);
 
-#ifndef MIN
-#define MIN( a , b ) ((a) >  (b)) ? (b) : (a)
-#endif /* MIN */
-
-#ifndef MAX
-#define MAX( a , b ) ((a) >= (b)) ? (a) : (b)
-#endif /* MAX */
-
 char *MPID_nem_asymm_base_addr = 0;
 
 /* used by mpid_nem_inline.h and mpid_nem_finalize.c */
@@ -246,7 +238,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 #endif  /*FORCE_ASYM */
 
     /* Request fastboxes region */
-    mpi_errno = MPIDI_CH3I_Seg_alloc(MAX((num_local*((num_local-1)*sizeof(MPID_nem_fastbox_t))), MPID_NEM_ASYMM_NULL_VAL),
+    mpi_errno = MPIDI_CH3I_Seg_alloc(MPL_MAX((num_local*((num_local-1)*sizeof(MPID_nem_fastbox_t))), MPID_NEM_ASYMM_NULL_VAL),
                                      (void **)&fastboxes_p);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     

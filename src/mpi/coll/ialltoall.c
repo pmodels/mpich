@@ -209,7 +209,7 @@ int MPIR_Ialltoall_bruck(const void *sendbuf, int sendcount, MPI_Datatype sendty
     /* get true extent of recvtype */
     MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &recvtype_true_extent);
 
-    recvbuf_extent = recvcount * comm_size * (MPIR_MAX(recvtype_true_extent, recvtype_extent));
+    recvbuf_extent = recvcount * comm_size * (MPL_MAX(recvtype_true_extent, recvtype_extent));
     /* not a leak, old tmp_buf value is still tracked by CHKPMEM macros */
     MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, recvbuf_extent, mpi_errno, "tmp_buf");
     /* adjust for potential negative lower bound in datatype */
@@ -479,7 +479,7 @@ int MPIR_Ialltoall_inter(const void *sendbuf, int sendcount, MPI_Datatype sendty
     MPID_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
     /* Do the pairwise exchanges */
-    max_size = MPIR_MAX(local_size, remote_size);
+    max_size = MPL_MAX(local_size, remote_size);
     MPIU_Ensure_Aint_fits_in_pointer(MPIU_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
                                      max_size*recvcount*recvtype_extent);
     MPIU_Ensure_Aint_fits_in_pointer(MPIU_VOID_PTR_CAST_TO_MPI_AINT sendbuf +

@@ -24,7 +24,7 @@
            } \
         } \
 	writebuf_off = req_off; \
-        writebuf_len = (unsigned) (ADIOI_MIN(max_bufsize,end_offset-writebuf_off+1));\
+        writebuf_len = (unsigned) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1));\
 	if (!(fd->atomicity)) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
 	ADIO_ReadContig(fd, writebuf, writebuf_len, MPI_BYTE, \
                  ADIO_EXPLICIT_OFFSET, writebuf_off, &status1, error_code); \
@@ -36,8 +36,8 @@
 	    goto fn_exit; \
 	} \
     } \
-    write_sz = (unsigned) (ADIOI_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
-    ADIOI_Assert((ADIO_Offset)write_sz == ADIOI_MIN(req_len, writebuf_off + writebuf_len - req_off));\
+    write_sz = (unsigned) (MPL_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
+    ADIOI_Assert((ADIO_Offset)write_sz == MPL_MIN(req_len, writebuf_off + writebuf_len - req_off));\
     memcpy(writebuf+req_off-writebuf_off, (char *)buf +userbuf_off, write_sz);\
     while (write_sz != req_len) { \
         ADIO_WriteContig(fd, writebuf, writebuf_len, MPI_BYTE, \
@@ -53,7 +53,7 @@
         req_len -= write_sz; \
         userbuf_off += write_sz; \
         writebuf_off += writebuf_len; \
-        writebuf_len = (unsigned) (ADIOI_MIN(max_bufsize,end_offset-writebuf_off+1));\
+        writebuf_len = (unsigned) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1));\
 	if (!(fd->atomicity)) ADIOI_WRITE_LOCK(fd, writebuf_off, SEEK_SET, writebuf_len); \
         ADIO_ReadContig(fd, writebuf, writebuf_len, MPI_BYTE, \
                   ADIO_EXPLICIT_OFFSET, writebuf_off, &status1, error_code); \
@@ -64,7 +64,7 @@
 					       "**iowsrc", 0); \
 	    goto fn_exit; \
 	} \
-        write_sz = ADIOI_MIN(req_len, writebuf_len); \
+        write_sz = MPL_MIN(req_len, writebuf_len); \
         memcpy(writebuf, (char *)buf + userbuf_off, write_sz);\
     } \
 }
@@ -85,10 +85,10 @@
             goto fn_exit; \
         } \
 	writebuf_off = req_off; \
-        writebuf_len = (unsigned) (ADIOI_MIN(max_bufsize,end_offset-writebuf_off+1));\
+        writebuf_len = (unsigned) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1));\
     } \
-    write_sz = (unsigned) (ADIOI_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
-    ADIOI_Assert((ADIO_Offset)write_sz == ADIOI_MIN(req_len, writebuf_off + writebuf_len - req_off));\
+    write_sz = (unsigned) (MPL_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
+    ADIOI_Assert((ADIO_Offset)write_sz == MPL_MIN(req_len, writebuf_off + writebuf_len - req_off));\
     memcpy(writebuf+req_off-writebuf_off, (char *)buf +userbuf_off, write_sz);\
     while (write_sz != req_len) { \
         ADIO_WriteContig(fd, writebuf, writebuf_len, MPI_BYTE, \
@@ -103,8 +103,8 @@
         req_len -= write_sz; \
         userbuf_off += write_sz; \
         writebuf_off += writebuf_len; \
-        writebuf_len = (unsigned) (ADIOI_MIN(max_bufsize,end_offset-writebuf_off+1));\
-        write_sz = ADIOI_MIN(req_len, writebuf_len); \
+        writebuf_len = (unsigned) (MPL_MIN(max_bufsize,end_offset-writebuf_off+1));\
+        write_sz = MPL_MIN(req_len, writebuf_len); \
         memcpy(writebuf, (char *)buf + userbuf_off, write_sz);\
     } \
 }
@@ -189,7 +189,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
 	end_offset = off + bufsize - 1;
         writebuf_off = off;
         writebuf = (char *) ADIOI_Malloc(max_bufsize);
-        writebuf_len = (unsigned) (ADIOI_MIN(max_bufsize, end_offset-writebuf_off+1));
+        writebuf_len = (unsigned) (MPL_MIN(max_bufsize, end_offset-writebuf_off+1));
 
 /* if atomicity is true, lock the region to be accessed */
 	if (fd->atomicity) 
@@ -321,7 +321,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
 	i_offset = 0;
 	j = st_index;
 	off = offset;
-	fwr_size = ADIOI_MIN(st_fwr_size, bufsize);
+	fwr_size = MPL_MIN(st_fwr_size, bufsize);
 	while (i_offset < bufsize) {
 	    i_offset += fwr_size;
 	    end_offset = off + fwr_size - 1;
@@ -335,7 +335,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
 
 	    off = disp + flat_file->indices[j] + 
 		    n_filetypes*(ADIO_Offset)filetype_extent;
-	    fwr_size = ADIOI_MIN(flat_file->blocklens[j], bufsize-i_offset);
+	    fwr_size = MPL_MIN(flat_file->blocklens[j], bufsize-i_offset);
 	}
 
 /* if atomicity is true, lock the region to be accessed */
@@ -356,7 +356,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
 	    j = st_index;
 	    off = offset;
 	    n_filetypes = st_n_filetypes;
-	    fwr_size = ADIOI_MIN(st_fwr_size, bufsize);
+	    fwr_size = MPL_MIN(st_fwr_size, bufsize);
 	    while (i_offset < bufsize) {
                 if (fwr_size) { 
                     /* TYPE_UB and TYPE_LB can result in 
@@ -385,7 +385,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
                     }
 		    off = disp + flat_file->indices[j] + 
                                     n_filetypes*(ADIO_Offset)filetype_extent;
-		    fwr_size = ADIOI_MIN(flat_file->blocklens[j], 
+		    fwr_size = MPL_MIN(flat_file->blocklens[j], 
 				    bufsize-i_offset);
 		}
 	    }
@@ -404,7 +404,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
 	    bwr_size = flat_buf->blocklens[0];
 
 	    while (num < bufsize) {
-		size = ADIOI_MIN(fwr_size, bwr_size);
+		size = MPL_MIN(fwr_size, bwr_size);
 		if (size) {
 		    /* lseek(fd->fd_sys, off, SEEK_SET);
 		    err = write(fd->fd_sys, ((char *) buf) + i_offset, size); */

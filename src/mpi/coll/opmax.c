@@ -27,7 +27,7 @@ void MPIR_MAXF(
 
     switch (*type) {
 #undef MPIR_OP_TYPE_MACRO
-#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_, c_type_, MPIR_MAX)
+#define MPIR_OP_TYPE_MACRO(mpi_type_, c_type_, type_name_) MPIR_OP_TYPE_REDUCE_CASE(mpi_type_, c_type_, MPL_MAX)
         /* no semicolons by necessity */
         MPIR_OP_TYPE_GROUP(C_INTEGER)
         MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)

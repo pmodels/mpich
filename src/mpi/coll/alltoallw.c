@@ -267,7 +267,7 @@ int MPIR_Alltoallw_inter(const void *sendbuf, const int sendcounts[], const int 
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
 
     /* Use pairwise exchange algorithm. */
-    max_size = MPIR_MAX(local_size, remote_size);
+    max_size = MPL_MAX(local_size, remote_size);
     for (i=0; i<max_size; i++) {
         src = (rank - i + max_size) % max_size;
         dst = (rank + i) % max_size;

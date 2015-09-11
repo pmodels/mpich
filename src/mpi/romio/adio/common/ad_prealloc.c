@@ -39,14 +39,14 @@ void ADIOI_GEN_Prealloc(ADIO_File fd, ADIO_Offset diskspace, int *error_code)
 					    working on a pre-existing file */
 	alloc_size = diskspace;
 
-	size = ADIOI_MIN(curr_fsize, alloc_size);
+	size = MPL_MIN(curr_fsize, alloc_size);
 	
 	ntimes = (size + ADIOI_PREALLOC_BUFSZ - 1)/ADIOI_PREALLOC_BUFSZ;
 	buf = (char *) ADIOI_Malloc(ADIOI_PREALLOC_BUFSZ);
 	done = 0;
 
 	for (i=0; i<ntimes; i++) {
-	    len = ADIOI_MIN(size-done, ADIOI_PREALLOC_BUFSZ);
+	    len = MPL_MIN(size-done, ADIOI_PREALLOC_BUFSZ);
 	    ADIO_ReadContig(fd, buf, 
                       (int)len, /* len is ADIO_Offset but is <= ADIOI_PREALLOC_BUFSZ (16M),
                               so it fits in an int parameter */
@@ -75,7 +75,7 @@ void ADIOI_GEN_Prealloc(ADIO_File fd, ADIO_Offset diskspace, int *error_code)
 	    size = alloc_size - curr_fsize;
 	    ntimes = (size + ADIOI_PREALLOC_BUFSZ - 1)/ADIOI_PREALLOC_BUFSZ;
 	    for (i=0; i<ntimes; i++) {
-		len = ADIOI_MIN(alloc_size-done, ADIOI_PREALLOC_BUFSZ);
+		len = MPL_MIN(alloc_size-done, ADIOI_PREALLOC_BUFSZ);
 		ADIO_WriteContig(fd, buf, 
                      (int)len, /* len is ADIO_Offset but is <= ADIOI_PREALLOC_BUFSZ (16M),
                              so it fits in an int parameter */

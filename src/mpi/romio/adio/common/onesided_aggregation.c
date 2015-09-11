@@ -303,11 +303,11 @@ printf("ADIOI_OneSidedWriteAggregation started on rank %d\n",myrank);
 #ifdef onesidedtrace
 printf("end_offsets[%d] is %ld st_offsets[%d] is %ld\n",j,end_offsets[j],j,st_offsets[j]);
 #endif
-        lastFileOffset = ADIOI_MAX(lastFileOffset,end_offsets[j]);
+        lastFileOffset = MPL_MAX(lastFileOffset,end_offsets[j]);
         if (firstFileOffset == -1)
           firstFileOffset = st_offsets[j];
         else
-          firstFileOffset = ADIOI_MIN(firstFileOffset,st_offsets[j]);
+          firstFileOffset = MPL_MIN(firstFileOffset,st_offsets[j]);
     }
 
     int myAggRank = -1; /* if I am an aggregor this is my index into fd->hints->ranklist */
@@ -1341,11 +1341,11 @@ printf("ADIOI_OneSidedReadAggregation started on rank %d\n",myrank);
 #ifdef onesidedtrace
 printf("end_offsets[%d] is %ld st_offsets[%d] is %ld\n",j,end_offsets[j],j,st_offsets[j]);
 #endif
-        lastFileOffset = ADIOI_MAX(lastFileOffset,end_offsets[j]);
+        lastFileOffset = MPL_MAX(lastFileOffset,end_offsets[j]);
         if (firstFileOffset == -1)
           firstFileOffset = st_offsets[j];
         else
-          firstFileOffset = ADIOI_MIN(firstFileOffset,st_offsets[j]);
+          firstFileOffset = MPL_MIN(firstFileOffset,st_offsets[j]);
     }
 
     int myAggRank = -1; /* if I am an aggregor this is my index into fd->hints->ranklist */

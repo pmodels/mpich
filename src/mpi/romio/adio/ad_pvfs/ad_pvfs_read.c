@@ -317,7 +317,7 @@ void ADIOI_PVFS_ReadStridedListIO(ADIO_File fd, void *buf, int count,
 	mem_list_count = 1;
 	
 	/* determine how many blocks in file to read */
-	f_data_read = ADIOI_MIN(st_frd_size, bufsize);
+	f_data_read = MPL_MIN(st_frd_size, bufsize);
 	total_blks_to_read = 1;
 	j++;
 	while (f_data_read < bufsize) {

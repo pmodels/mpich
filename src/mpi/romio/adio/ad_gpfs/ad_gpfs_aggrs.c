@@ -223,8 +223,8 @@ void ADIOI_GPFS_Calc_file_domains(ADIO_File fd,
     min_st_offset  = st_offsets [0];
     max_end_offset = end_offsets[0];
     for (i=1; i<nprocs; i++) {
-        min_st_offset = ADIOI_MIN(min_st_offset, st_offsets[i]);
-        max_end_offset = ADIOI_MAX(max_end_offset, end_offsets[i]);
+        min_st_offset = MPL_MIN(min_st_offset, st_offsets[i]);
+        max_end_offset = MPL_MAX(max_end_offset, end_offsets[i]);
     }
 
     /* DBG_FPRINTF(stderr, "_calc_file_domains, min_st_offset, max_

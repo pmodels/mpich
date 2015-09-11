@@ -74,7 +74,7 @@ int MPIR_Ialltoallv_intra(const void *sendbuf, const int sendcounts[], const int
          * algorithm. */
         max_count = 0;
         for (i = 0; i < comm_size; ++i) {
-            max_count = MPIU_MAX(max_count, recvcounts[i]);
+            max_count = MPL_MAX(max_count, recvcounts[i]);
         }
 
         MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, max_count*recv_extent, mpi_errno, "Ialltoallv tmp_buf");
@@ -195,7 +195,7 @@ int MPIR_Ialltoallv_inter(const void *sendbuf, const int sendcounts[], const int
     MPID_Datatype_get_size_macro(recvtype, recvtype_size);
 
     /* Use pairwise exchange algorithm. */
-    max_size = MPIR_MAX(local_size, remote_size);
+    max_size = MPL_MAX(local_size, remote_size);
     for (i=0; i<max_size; i++) {
         src = (rank - i + max_size) % max_size;
         dst = (rank + i) % max_size;

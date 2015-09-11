@@ -258,7 +258,7 @@ int MPIR_Iallgather_bruck(const void *sendbuf, int sendcount, MPI_Datatype sendt
     /* allocate a temporary buffer of the same size as recvbuf. */
     /* get true extent of recvtype */
 
-    recvbuf_extent = recvcount * comm_size * (MPIR_MAX(recvtype_true_extent, recvtype_extent));
+    recvbuf_extent = recvcount * comm_size * (MPL_MAX(recvtype_true_extent, recvtype_extent));
 
     MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void*, recvbuf_extent, mpi_errno, "tmp_buf");
 
@@ -511,7 +511,7 @@ int MPIR_Iallgather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendt
         MPIR_Type_get_true_extent_impl(sendtype, &true_lb, &true_extent);
 
         MPID_Datatype_get_extent_macro( sendtype, send_extent );
-        extent = MPIR_MAX(send_extent, true_extent);
+        extent = MPL_MAX(send_extent, true_extent);
 
         MPIU_Ensure_Aint_fits_in_pointer(extent * sendcount * local_size);
         MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void*, extent*sendcount*local_size, mpi_errno, "tmp_buf");

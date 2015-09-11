@@ -48,7 +48,7 @@ void ADIOI_XFS_ReadContig(ADIO_File fd, void *buf, int count,
    		        else copy into aligned buf and then use (1) */
 	else if (offset % fd->d_miniosz) {
 	    diff = fd->d_miniosz - (offset % fd->d_miniosz);
-	    diff = ADIOI_MIN(diff, len);
+	    diff = MPL_MIN(diff, len);
 	    nbytes = pread(fd->fd_sys, buf, diff, offset);
 
 	    buf = ((char *) buf) + diff;

@@ -23,7 +23,7 @@
 	true_ub_ = (MPIU_VOID_PTR_CAST_TO_MPI_AINT ((char *) &foo.b -     \
                                                   (char *) &foo.a)) +   \
                   (MPI_Aint) sizeof(foo.b);                             \
-	alignsize_ = MPIR_MAX(MPID_Datatype_get_basic_size(mt1_),	\
+	alignsize_ = MPL_MAX(MPID_Datatype_get_basic_size(mt1_),	\
                              MPID_Datatype_get_basic_size(mt2_));	\
     }
 
@@ -142,31 +142,31 @@ int MPID_Type_create_pairtype(MPI_Datatype type,
 	case MPI_SHORT_INT:
 	case MPI_LONG_INT:
 #ifdef HAVE_MAX_INTEGER_ALIGNMENT
-	    new_dtp->alignsize       = MPIR_MIN(new_dtp->alignsize,
+	    new_dtp->alignsize       = MPL_MIN(new_dtp->alignsize,
 						HAVE_MAX_INTEGER_ALIGNMENT);
 #endif
 	    break;
 	case MPI_FLOAT_INT:
 #ifdef HAVE_MAX_FP_ALIGNMENT
-	    new_dtp->alignsize       = MPIR_MIN(new_dtp->alignsize,
+	    new_dtp->alignsize       = MPL_MIN(new_dtp->alignsize,
 						HAVE_MAX_FP_ALIGNMENT);
 #endif
 	    break;
 	case MPI_DOUBLE_INT:
 #ifdef HAVE_MAX_DOUBLE_FP_ALIGNMENT
-	    new_dtp->alignsize       = MPIR_MIN(new_dtp->alignsize,
+	    new_dtp->alignsize       = MPL_MIN(new_dtp->alignsize,
 						HAVE_MAX_DOUBLE_FP_ALIGNMENT);
 #elif defined(HAVE_MAX_FP_ALIGNMENT)
-	    new_dtp->alignsize       = MPIR_MIN(new_dtp->alignsize,
+	    new_dtp->alignsize       = MPL_MIN(new_dtp->alignsize,
 						HAVE_MAX_FP_ALIGNMENT);
 #endif
 	    break;
 	case MPI_LONG_DOUBLE_INT:
 #ifdef HAVE_MAX_LONG_DOUBLE_FP_ALIGNMENT
-	    new_dtp->alignsize       = MPIR_MIN(new_dtp->alignsize,
+	    new_dtp->alignsize       = MPL_MIN(new_dtp->alignsize,
 					HAVE_MAX_LONG_DOUBLE_FP_ALIGNMENT);
 #elif defined(HAVE_MAX_FP_ALIGNMENT)
-	    new_dtp->alignsize       = MPIR_MIN(new_dtp->alignsize,
+	    new_dtp->alignsize       = MPL_MIN(new_dtp->alignsize,
 						HAVE_MAX_FP_ALIGNMENT);
 #endif
 	    break;
