@@ -512,10 +512,10 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
                 REQ_PTL(req)->recv_ptr = e->start;
                 req->ch.vc = vc;
 
-                size = remaining < MPIDI_nem_ptl_ni_limits.max_msg_size ? remaining : MPIDI_nem_ptl_ni_limits.max_msg_size;
                 buf_ptr = (char *)TMPBUF(req) + packet_sz - sizeof(ptl_size_t);
                 target_offset = *((ptl_size_t *)buf_ptr);
                 do {
+                    size = MPL_MIN(remaining, MPIDI_nem_ptl_ni_limits.max_msg_size);
                     MPIDI_CH3U_Request_increment_cc(req, &incomplete);  /* Will be decremented - and eventually freed in REPLY */
                     ret = MPID_nem_ptl_rptl_get(MPIDI_nem_ptl_global_md, (ptl_size_t)buf_ptr,
                                                 size, vc_ptl->id, vc_ptl->ptc, NPTL_MATCH(sender_req_id, GET_TAG, MPIDI_Process.my_pg_rank), target_offset, req);
@@ -528,8 +528,6 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
                     buf_ptr += size;
                     remaining -= size;
                     target_offset += size;
-                    if (remaining < MPIDI_nem_ptl_ni_limits.max_msg_size)
-                        size = remaining;
                 } while (remaining);
             }
 
