@@ -193,10 +193,7 @@ static void big_get(void *buf, ptl_size_t left_to_get, MPIDI_VC_t *vc, ptl_match
 
     while (left_to_get > 0) {
         /* get up to the maximum allowed by the portals interface */
-        if (left_to_get > MPIDI_nem_ptl_ni_limits.max_msg_size)
-            get_sz = MPIDI_nem_ptl_ni_limits.max_msg_size;
-        else
-            get_sz = left_to_get;
+        get_sz = MPL_MIN(MPIDI_nem_ptl_ni_limits.max_msg_size, left_to_get);
 
         ret = MPID_nem_ptl_rptl_get(MPIDI_nem_ptl_global_md, start, get_sz, vc_ptl->id, vc_ptl->ptg, match_bits, 0, rreq);
         DBG_MSG_GET("global", get_sz, vc->pg_rank, match_bits);

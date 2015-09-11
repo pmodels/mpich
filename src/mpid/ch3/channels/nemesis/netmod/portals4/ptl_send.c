@@ -36,10 +36,7 @@ static void big_meappend(void *buf, ptl_size_t left_to_send, MPIDI_VC_t *vc, ptl
     /* queue up as many entries as necessary to describe the entire message */
     for (i = 0; left_to_send > 0; i++) {
         /* send up to the maximum allowed by the portals interface */
-        if (left_to_send > MPIDI_nem_ptl_ni_limits.max_msg_size)
-            me.length = MPIDI_nem_ptl_ni_limits.max_msg_size;
-        else
-            me.length = left_to_send;
+        me.length = MPL_MIN(MPIDI_nem_ptl_ni_limits.max_msg_size, left_to_send);
 
         ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_get_pt, &me, PTL_PRIORITY_LIST, sreq,
                           &REQ_PTL(sreq)->get_me_p[i]);
