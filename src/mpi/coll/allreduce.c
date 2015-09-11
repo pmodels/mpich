@@ -315,8 +315,8 @@ int MPIR_Allreduce_intra (
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
         MPID_Datatype_get_extent_macro(datatype, extent);
 
-        MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
-        MPIU_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
+        MPIU_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
+        MPIU_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
 	
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - true_lb);
@@ -646,8 +646,8 @@ int MPIR_Allreduce_inter (
         /* I think this is the worse case, so we can avoid an assert()
          * inside the for loop */
         /* Should MPIU_CHKLMEM_MALLOC do this? */
-        MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
-        MPIU_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
+        MPIU_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
+        MPIU_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - true_lb);
     }

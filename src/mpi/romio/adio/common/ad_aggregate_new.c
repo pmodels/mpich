@@ -220,7 +220,7 @@ void ADIOI_Calc_file_realms_fsize (ADIO_File fd, int nprocs_for_coll,
     ADIO_Fcntl (fd, ADIO_FCNTL_GET_FSIZE, &fcntl_struct, &error_code);
     
     /* use impending file size since a write call may lengthen the file */
-    fsize = ADIOI_MAX (fcntl_struct.fsize, max_end_offset+1);
+    fsize = MPL_MAX (fcntl_struct.fsize, max_end_offset+1);
     fr_size = (fsize + nprocs_for_coll - 1) / nprocs_for_coll;
     align_fr(fr_size, 0, fd->hints->cb_fr_alignment,
 	     &aligned_fr_size, &aligned_fr_off);

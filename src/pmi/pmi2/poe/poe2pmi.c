@@ -357,7 +357,7 @@ int getchildren(int iam, double alpha,int gsize, int *children,
 
    while( p > 1 ) {
 
-     pbig = MAX(1,MIN((int) (alpha*(double)p), p-1));
+     pbig = MPL_MAX(1,MPL_MIN((int) (alpha*(double)p), p-1));
 
      if ( fakeme == 0 ) {
 

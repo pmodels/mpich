@@ -53,7 +53,7 @@ typedef struct MPIR_longdoubleint_loctype {
                 a[i].value = b[i].value;                \
                 a[i].loc   = b[i].loc;                  \
             } else if (a[i].value <= b[i].value)        \
-                a[i].loc = MPIR_MIN(a[i].loc,b[i].loc); \
+                a[i].loc = MPL_MIN(a[i].loc,b[i].loc); \
         }                                               \
     }                                                   \
     break
@@ -66,7 +66,7 @@ typedef struct MPIR_longdoubleint_loctype {
                 a[i]   = b[i];                          \
                 a[i+1] = b[i+1];                        \
             } else if (a[i] <= b[i])                    \
-                a[i+1] = MPIR_MIN(a[i+1],b[i+1]);       \
+                a[i+1] = MPL_MIN(a[i+1],b[i+1]);       \
         }                                               \
     }                                                   \
     break

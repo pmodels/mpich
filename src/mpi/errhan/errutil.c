@@ -1138,7 +1138,7 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen )
 	    
 	    if (ErrorRing[ring_idx].id == ring_id) {
 		len = (int)strlen(ErrorRing[ring_idx].location);
-		max_location_len = MPIR_MAX(max_location_len, len);
+		max_location_len = MPL_MAX(max_location_len, len);
 		tmp_errcode = ErrorRing[ring_idx].prev_error;
 	    }
 	    else

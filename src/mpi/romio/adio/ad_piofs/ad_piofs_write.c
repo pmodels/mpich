@@ -225,7 +225,7 @@ void ADIOI_PIOFS_WriteStrided(ADIO_File fd, void *buf, int count,
 	    i = 0;
 	    j = st_index;
 	    off = offset;
-	    fwr_size = ADIOI_MIN(fwr_size, bufsize);
+	    fwr_size = MPL_MIN(fwr_size, bufsize);
 	    while (i < bufsize) {
                 if (fwr_size) { 
                     /* TYPE_UB and TYPE_LB can result in 
@@ -249,7 +249,7 @@ void ADIOI_PIOFS_WriteStrided(ADIO_File fd, void *buf, int count,
 		    }
 		    off = disp + flat_file->indices[j] + 
                                         (ADIO_Offset) n_filetypes*filetype_extent;
-		    fwr_size = ADIOI_MIN(flat_file->blocklens[j], bufsize-i);
+		    fwr_size = MPL_MIN(flat_file->blocklens[j], bufsize-i);
 		}
 	    }
 	}
@@ -265,7 +265,7 @@ void ADIOI_PIOFS_WriteStrided(ADIO_File fd, void *buf, int count,
 	    bwr_size = flat_buf->blocklens[0];
 
 	    while (num < bufsize) {
-		size = ADIOI_MIN(fwr_size, bwr_size);
+		size = MPL_MIN(fwr_size, bwr_size);
 		if (size) {
 		    llseek(fd->fd_sys, off, SEEK_SET);
 		    err = write(fd->fd_sys, ((char *) buf) + indx, size);

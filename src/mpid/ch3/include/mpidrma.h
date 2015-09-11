@@ -387,7 +387,7 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
             if (op != MPI_NO_OP) {
                 stream_elem_count = MPIDI_CH3U_SRBuf_size / type_extent;
                 total_len = type_size * target_count;
-                recv_data_sz = MPIR_MIN(total_len, type_size * stream_elem_count);
+                recv_data_sz = MPL_MIN(total_len, type_size * stream_elem_count);
                 buf_size = type_extent * (recv_data_sz / type_size);
             }
         }

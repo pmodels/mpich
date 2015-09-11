@@ -51,9 +51,6 @@
 #define MPIU_UNREFERENCED_ARG(a)
 #endif
 
-#define MPIU_MAX(a,b)    (((a) > (b)) ? (a) : (b))
-#define MPIU_MIN(a,b)    (((a) < (b)) ? (a) : (b))
-
 #include "mpl.h"
 
 typedef MPIU_SIZE_T MPIU_Size_t;

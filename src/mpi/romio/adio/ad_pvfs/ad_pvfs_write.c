@@ -321,7 +321,7 @@ void ADIOI_PVFS_WriteStrided(ADIO_File fd, void *buf, int count,
 	    i = 0;
 	    j = st_index;
 	    off = offset;
-	    fwr_size = ADIOI_MIN(fwr_size, bufsize);
+	    fwr_size = MPL_MIN(fwr_size, bufsize);
 	    while (i < bufsize) {
                 if (fwr_size) { 
                     /* TYPE_UB and TYPE_LB can result in 
@@ -357,7 +357,7 @@ void ADIOI_PVFS_WriteStrided(ADIO_File fd, void *buf, int count,
 		    }
 		    off = disp + flat_file->indices[j] + 
                                         (ADIO_Offset) n_filetypes*filetype_extent;
-		    fwr_size = ADIOI_MIN(flat_file->blocklens[j], bufsize-i);
+		    fwr_size = MPL_MIN(flat_file->blocklens[j], bufsize-i);
 		}
 	    }
 	}
@@ -373,7 +373,7 @@ void ADIOI_PVFS_WriteStrided(ADIO_File fd, void *buf, int count,
 	    bwr_size = flat_buf->blocklens[0];
 
 	    while (num < bufsize) {
-		size = ADIOI_MIN(fwr_size, bwr_size);
+		size = MPL_MIN(fwr_size, bwr_size);
 		if (size) {
 #ifdef ADIOI_MPE_LOGGING
                     MPE_Log_event( ADIOI_MPE_lseek_a, 0, NULL );
@@ -706,7 +706,7 @@ void ADIOI_PVFS_WriteStridedListIO(ADIO_File fd, void *buf, int count,
 	mem_list_count = 1;
         
 	/* determine how many blocks in file to read */
-	f_data_wrote = ADIOI_MIN(st_fwr_size, bufsize);
+	f_data_wrote = MPL_MIN(st_fwr_size, bufsize);
 	total_blks_to_write = 1;
 	j++;
 	while (f_data_wrote < bufsize) {

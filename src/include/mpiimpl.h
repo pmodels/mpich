@@ -3859,14 +3859,6 @@ extern MPIR_Op_check_dtype_fn *MPIR_Op_check_dtype_table[];
 #define MPIR_OP_HDL_TO_FN(op) MPIR_Op_table[((op)&0xf) - 1]
 #define MPIR_OP_HDL_TO_DTYPE_FN(op) MPIR_Op_check_dtype_table[((op)&0xf) - 1]
 
-#if !defined MPIR_MIN
-#define MPIR_MIN(a,b) (((a)>(b))?(b):(a))
-#endif /* MPIR_MIN */
-
-#if !defined MPIR_MAX
-#define MPIR_MAX(a,b) (((b)>(a))?(b):(a))
-#endif /* MPIR_MAX */
-
 int MPIR_Type_is_rma_atomic(MPI_Datatype type);
 int MPIR_Compare_equal(const void *a, const void *b, MPI_Datatype type);
 

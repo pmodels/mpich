@@ -771,7 +771,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                 total_len = type_size * accum_pkt->count;
                 stream_elem_count = MPIDI_CH3U_SRBuf_size / extent;
 
-                req->dev.recv_data_sz = MPIR_MIN(total_len, stream_elem_count * type_size);
+                req->dev.recv_data_sz = MPL_MIN(total_len, stream_elem_count * type_size);
                 MPIU_Assert(req->dev.recv_data_sz > 0);
 
                 mpi_errno = MPIDI_CH3U_Receive_data_found(req, data_buf, &data_len, &complete);
@@ -1057,7 +1057,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                     total_len = type_size * get_accum_pkt->count;
                     stream_elem_count = MPIDI_CH3U_SRBuf_size / extent;
 
-                    req->dev.recv_data_sz = MPIR_MIN(total_len, stream_elem_count * type_size);
+                    req->dev.recv_data_sz = MPL_MIN(total_len, stream_elem_count * type_size);
                     MPIU_Assert(req->dev.recv_data_sz > 0);
 
                     mpi_errno = MPIDI_CH3U_Receive_data_found(req, data_buf, &data_len, &complete);
@@ -1682,7 +1682,7 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         rest_len = total_len - contig_stream_offset;
         stream_elem_count = MPIDI_CH3U_SRBuf_size / basic_type_extent;
 
-        req->dev.recv_data_sz = MPIR_MIN(rest_len, stream_elem_count * basic_type_size);
+        req->dev.recv_data_sz = MPL_MIN(rest_len, stream_elem_count * basic_type_size);
         real_stream_offset = (contig_stream_offset / basic_type_size) * basic_type_extent;
 
         if (MPIR_DATATYPE_IS_PREDEFINED(req->dev.datatype)) {

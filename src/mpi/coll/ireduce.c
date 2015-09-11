@@ -64,9 +64,9 @@ int MPIR_Ireduce_binomial(const void *sendbuf, void *recvbuf, int count, MPI_Dat
     /* I think this is the worse case, so we can avoid an assert()
      * inside the for loop */
     /* should be buf+{this}? */
-    MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+    MPIU_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)),
+    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
                         mpi_errno, "temporary buffer");
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
@@ -75,7 +75,7 @@ int MPIR_Ireduce_binomial(const void *sendbuf, void *recvbuf, int count, MPI_Dat
        I have to allocate a temporary one */
     if (rank != root) {
         MPIR_SCHED_CHKPMEM_MALLOC(recvbuf, void *,
-                            count*(MPIR_MAX(extent,true_extent)),
+                            count*(MPL_MAX(extent,true_extent)),
                             mpi_errno, "receive buffer");
         recvbuf = (void *)((char*)recvbuf - true_lb);
     }
@@ -253,9 +253,9 @@ int MPIR_Ireduce_redscat_gather(const void *sendbuf, void *recvbuf, int count, M
     /* I think this is the worse case, so we can avoid an assert()
      * inside the for loop */
     /* should be buf+{this}? */
-    MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+    MPIU_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
-    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)),
+    MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
                               mpi_errno, "temporary buffer");
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
@@ -270,7 +270,7 @@ int MPIR_Ireduce_redscat_gather(const void *sendbuf, void *recvbuf, int count, M
     /* If I'm not the root, then my recvbuf may not be valid, therefore
        I have to allocate a temporary one */
     if (rank != root) {
-        MPIR_SCHED_CHKPMEM_MALLOC(recvbuf, void *, count*(MPIR_MAX(extent,true_extent)),
+        MPIR_SCHED_CHKPMEM_MALLOC(recvbuf, void *, count*(MPL_MAX(extent,true_extent)),
                                   mpi_errno, "receive buffer");
         recvbuf = (void *)((char*)recvbuf - true_lb);
     }
@@ -605,9 +605,9 @@ int MPIR_Ireduce_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
         MPID_Datatype_get_extent_macro(datatype, extent);
 
-        MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+        MPIU_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
-        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)),
+        MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
                                   mpi_errno, "temporary buffer");
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - true_lb);
@@ -725,8 +725,8 @@ int MPIR_Ireduce_inter(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
             /* I think this is the worse case, so we can avoid an assert()
              * inside the for loop */
             /* Should MPIR_SCHED_CHKPMEM_MALLOC do this? */
-            MPIU_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
-            MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
+            MPIU_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
+            MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
             /* adjust for potential negative lower bound in datatype */
             tmp_buf = (void *)((char*)tmp_buf - true_lb);
         }

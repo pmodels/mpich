@@ -150,8 +150,8 @@ int MPIR_Allgatherv_intra (
             MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &recvtype_true_extent);
 
             MPIU_Ensure_Aint_fits_in_pointer(total_count *
-                           (MPIR_MAX(recvtype_true_extent, recvtype_extent)));
-            MPIU_CHKLMEM_MALLOC(tmp_buf, void *, total_count*(MPIR_MAX(recvtype_true_extent,recvtype_extent)), mpi_errno, "tmp_buf");
+                           (MPL_MAX(recvtype_true_extent, recvtype_extent)));
+            MPIU_CHKLMEM_MALLOC(tmp_buf, void *, total_count*(MPL_MAX(recvtype_true_extent,recvtype_extent)), mpi_errno, "tmp_buf");
 
             /* adjust for potential negative lower bound in datatype */
             tmp_buf = (void *)((char*)tmp_buf - recvtype_true_lb);
@@ -540,9 +540,9 @@ int MPIR_Allgatherv_intra (
         MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &recvtype_true_extent);
             
         MPIU_Ensure_Aint_fits_in_pointer(total_count *
-                        MPIR_MAX(recvtype_true_extent, recvtype_extent));
+                        MPL_MAX(recvtype_true_extent, recvtype_extent));
         recvbuf_extent = total_count *
-            (MPIR_MAX(recvtype_true_extent, recvtype_extent));
+            (MPL_MAX(recvtype_true_extent, recvtype_extent));
 
         MPIU_CHKLMEM_MALLOC(tmp_buf, void *, recvbuf_extent, mpi_errno, "tmp_buf");
             

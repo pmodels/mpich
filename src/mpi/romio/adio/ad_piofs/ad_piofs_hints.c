@@ -93,7 +93,7 @@ void ADIOI_PIOFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 
 		    ADIOI_Free(path);
 
-		    str_factor = ADIOI_MIN(nioservers, str_factor);
+		    str_factor = MPL_MIN(nioservers, str_factor);
 		    if (start_iodev >= nioservers) start_iodev = -1;
 
 		    ADIOI_Strncpy(piofs_create.name, fd->filename, len);

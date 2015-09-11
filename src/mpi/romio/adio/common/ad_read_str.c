@@ -12,7 +12,7 @@
 { \
     if (req_off >= readbuf_off + readbuf_len) { \
 	readbuf_off = req_off; \
-	readbuf_len = (unsigned) (ADIOI_MIN(max_bufsize, end_offset-readbuf_off+1));\
+	readbuf_len = (unsigned) (MPL_MIN(max_bufsize, end_offset-readbuf_off+1));\
 	ADIO_ReadContig(fd, readbuf, readbuf_len, MPI_BYTE, \
               ADIO_EXPLICIT_OFFSET, readbuf_off, &status1, error_code); \
         if (*error_code != MPI_SUCCESS) return; \
@@ -27,7 +27,7 @@
 	memcpy(readbuf, tmp_buf, partial_read); \
 	ADIOI_Free(tmp_buf); \
 	readbuf_off += readbuf_len-partial_read; \
-	readbuf_len = (unsigned) (partial_read + ADIOI_MIN(max_bufsize, \
+	readbuf_len = (unsigned) (partial_read + MPL_MIN(max_bufsize, \
 				       end_offset-readbuf_off+1)); \
 	ADIO_ReadContig(fd, readbuf+partial_read, readbuf_len-partial_read, \
              MPI_BYTE, ADIO_EXPLICIT_OFFSET, readbuf_off+partial_read, \
@@ -124,7 +124,7 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
 	end_offset = off + bufsize - 1;
         readbuf_off = off;
         readbuf = (char *) ADIOI_Malloc(max_bufsize);
-        readbuf_len = (unsigned) (ADIOI_MIN(max_bufsize, end_offset-readbuf_off+1));
+        readbuf_len = (unsigned) (MPL_MIN(max_bufsize, end_offset-readbuf_off+1));
 
 /* if atomicity is true, lock (exclusive) the region to be accessed */
         if ((fd->atomicity) && ADIO_Feature(fd, ADIO_LOCKS))
@@ -251,7 +251,7 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
 	i_offset = 0;
 	j = st_index;
 	off = offset;
-	frd_size = ADIOI_MIN(st_frd_size, bufsize);
+	frd_size = MPL_MIN(st_frd_size, bufsize);
 	while (i_offset < bufsize) {
 	    i_offset += frd_size;
 	    end_offset = off + frd_size - 1;
@@ -263,7 +263,7 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
 		n_filetypes += (j == 0) ? 1 : 0;
 	    }
 	    off = disp + flat_file->indices[j] + n_filetypes*(ADIO_Offset)filetype_extent;
-	    frd_size = ADIOI_MIN(flat_file->blocklens[j], bufsize-i_offset);
+	    frd_size = MPL_MIN(flat_file->blocklens[j], bufsize-i_offset);
 	}
 
 /* if atomicity is true, lock (exclusive) the region to be accessed */
@@ -283,7 +283,7 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
 	    j = st_index;
 	    off = offset;
 	    n_filetypes = st_n_filetypes;
-	    frd_size = ADIOI_MIN(st_frd_size, bufsize);
+	    frd_size = MPL_MIN(st_frd_size, bufsize);
 	    while (i_offset < bufsize) {
                 if (frd_size) { 
                     /* TYPE_UB and TYPE_LB can result in 
@@ -312,7 +312,7 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
                     }
 		    off = disp + flat_file->indices[j] + 
                                         n_filetypes*(ADIO_Offset)filetype_extent;
-		    frd_size = ADIOI_MIN(flat_file->blocklens[j], bufsize-i_offset);
+		    frd_size = MPL_MIN(flat_file->blocklens[j], bufsize-i_offset);
 		}
 	    }
 	}
@@ -330,7 +330,7 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
 	    brd_size = flat_buf->blocklens[0];
 
 	    while (num < bufsize) {
-		size = ADIOI_MIN(frd_size, brd_size);
+		size = MPL_MIN(frd_size, brd_size);
 		if (size) {
 		    /* lseek(fd->fd_sys, off, SEEK_SET);
 		    err = read(fd->fd_sys, ((char *) buf) + i, size); */

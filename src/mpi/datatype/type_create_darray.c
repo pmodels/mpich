@@ -106,7 +106,7 @@ PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
     }
 
     j = global_size - blksize*rank;
-    mysize = MPIR_MIN(blksize, j);
+    mysize = MPL_MIN(blksize, j);
     if (mysize < 0) mysize = 0;
 
     stride = orig_extent;
@@ -223,7 +223,7 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
     else {
 	local_size = ((end_index - st_index + 1)/(nprocs*blksize))*blksize;
 	rem = (end_index - st_index + 1) % (nprocs*blksize);
-	local_size += MPIR_MIN(rem, blksize);
+	local_size += MPL_MIN(rem, blksize);
     }
 
     count = local_size/blksize;

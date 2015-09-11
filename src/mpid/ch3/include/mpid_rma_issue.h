@@ -571,7 +571,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         }
 
         stream_offset = j * stream_elem_count * predefined_dtp_size;
-        stream_size = MPIR_MIN(stream_elem_count * predefined_dtp_size, rest_len);
+        stream_size = MPL_MIN(stream_elem_count * predefined_dtp_size, rest_len);
         rest_len -= stream_size;
 
         /* Set extended packet header if needed. */
@@ -791,7 +791,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         get_accum_pkt->request_handle = resp_req->handle;
 
         stream_offset = j * stream_elem_count * predefined_dtp_size;
-        stream_size = MPIR_MIN(stream_elem_count * predefined_dtp_size, rest_len);
+        stream_size = MPL_MIN(stream_elem_count * predefined_dtp_size, rest_len);
         rest_len -= stream_size;
 
         /* Set extended packet header if needed. */

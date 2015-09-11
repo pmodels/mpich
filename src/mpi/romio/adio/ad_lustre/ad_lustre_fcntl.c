@@ -45,14 +45,14 @@ void ADIOI_LUSTRE_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct, int 
 	curr_fsize = lseek(fd->fd_sys, 0, SEEK_END);
 	alloc_size = fcntl_struct->diskspace;
 
-	size = ADIOI_MIN(curr_fsize, alloc_size);
+	size = MPL_MIN(curr_fsize, alloc_size);
 	
 	ntimes = (size + ADIOI_PREALLOC_BUFSZ - 1)/ADIOI_PREALLOC_BUFSZ;
 	buf = (char *) ADIOI_Malloc(ADIOI_PREALLOC_BUFSZ);
 	done = 0;
 
 	for (i=0; i<ntimes; i++) {
-	    len = ADIOI_MIN(size-done, ADIOI_PREALLOC_BUFSZ);
+	    len = MPL_MIN(size-done, ADIOI_PREALLOC_BUFSZ);
 	    ADIO_ReadContig(fd, buf, len, MPI_BYTE, ADIO_EXPLICIT_OFFSET, done,
 			    &status, error_code);
 	    if (*error_code != MPI_SUCCESS) {
@@ -72,7 +72,7 @@ void ADIOI_LUSTRE_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct, int 
 	    size = alloc_size - curr_fsize;
 	    ntimes = (size + ADIOI_PREALLOC_BUFSZ - 1)/ADIOI_PREALLOC_BUFSZ;
 	    for (i=0; i<ntimes; i++) {
-		len = ADIOI_MIN(alloc_size-done, ADIOI_PREALLOC_BUFSZ);
+		len = MPL_MIN(alloc_size-done, ADIOI_PREALLOC_BUFSZ);
 		ADIO_WriteContig(fd, buf, len, MPI_BYTE, ADIO_EXPLICIT_OFFSET, 
 				 done, &status, error_code);
 		if (*error_code != MPI_SUCCESS) return;

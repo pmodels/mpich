@@ -578,8 +578,8 @@ int MPIR_Gather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                 MPID_Datatype_get_extent_macro(sendtype, extent);
  
 		MPIU_Ensure_Aint_fits_in_pointer(sendcount*local_size*
-						 (MPIR_MAX(extent, true_extent)));
-                MPIU_CHKLMEM_MALLOC(tmp_buf, void *, sendcount*local_size*(MPIR_MAX(extent,true_extent)), mpi_errno, "tmp_buf");
+						 (MPL_MAX(extent, true_extent)));
+                MPIU_CHKLMEM_MALLOC(tmp_buf, void *, sendcount*local_size*(MPL_MAX(extent,true_extent)), mpi_errno, "tmp_buf");
                 /* adjust for potential negative lower bound in datatype */
                 tmp_buf = (void *)((char*)tmp_buf - true_lb);
             }

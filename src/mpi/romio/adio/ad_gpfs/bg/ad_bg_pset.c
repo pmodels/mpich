@@ -350,7 +350,7 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
       if(conf->nAggrs <=0)
          conf->nAggrs = gpfsmpio_bg_nagg_pset;
       if(conf->ioMinSize <= conf->nAggrs)
-        conf->nAggrs = ADIOI_MAX(1,conf->ioMinSize-1); /* not including bridge itself */
+        conf->nAggrs = MPL_MAX(1,conf->ioMinSize-1); /* not including bridge itself */
 /*      if(conf->nAggrs > conf->numBridgeRanks) 
          conf->nAggrs = conf->numBridgeRanks; 
 */

@@ -65,7 +65,7 @@ static int ADIOI_LUSTRE_Directio(ADIO_File fd, const void *buf, int len,
 
     if (offset % fd->d_miniosz) {
 	diff = fd->d_miniosz - (offset % fd->d_miniosz);
-	diff = ADIOI_MIN(diff, len);
+	diff = MPL_MIN(diff, len);
 	if (rw)
 	    nbytes = pwrite(fd->fd_sys, (void *)buf, diff, offset);
 	else

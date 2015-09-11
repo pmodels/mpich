@@ -61,7 +61,7 @@ void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int **striping_info_ptr,
 	 * e.g. if stripe_count=20, nprocs_for_coll=42 and CO=3 then 
 	 * avail_cb_nodes should be equal to 40 */
         avail_cb_nodes = 
-		stripe_count * ADIOI_MIN(nprocs_for_coll/stripe_count, CO);
+		stripe_count * MPL_MIN(nprocs_for_coll/stripe_count, CO);
     else {
         /* nprocs_for_coll is less than stripe_count */
         /* avail_cb_nodes should divide stripe_count */

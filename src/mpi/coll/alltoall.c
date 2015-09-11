@@ -293,7 +293,7 @@ int MPIR_Alltoall_intra(
         MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &recvtype_true_extent);
 
         recvbuf_extent = recvcount * comm_size *
-            (MPIR_MAX(recvtype_true_extent, recvtype_extent));
+            (MPL_MAX(recvtype_true_extent, recvtype_extent));
         MPIU_CHKLMEM_MALLOC(tmp_buf, void *, recvbuf_extent, mpi_errno, "tmp_buf");
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - recvtype_true_lb);
@@ -500,7 +500,7 @@ int MPIR_Alltoall_inter(
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
 
     /* Do the pairwise exchanges */
-    max_size = MPIR_MAX(local_size, remote_size);
+    max_size = MPL_MAX(local_size, remote_size);
     MPIU_Ensure_Aint_fits_in_pointer(MPIU_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
 				     max_size*recvcount*recvtype_extent);
     MPIU_Ensure_Aint_fits_in_pointer(MPIU_VOID_PTR_CAST_TO_MPI_AINT sendbuf +

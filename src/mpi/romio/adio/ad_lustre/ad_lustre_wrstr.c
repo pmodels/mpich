@@ -32,7 +32,7 @@
         } \
 	writebuf_off = req_off; \
         /* stripe_size alignment */ \
-        writebuf_len = (unsigned) ADIOI_MIN(end_offset - writebuf_off + 1, \
+        writebuf_len = (unsigned) MPL_MIN(end_offset - writebuf_off + 1, \
                                        (writebuf_off / stripe_size + 1) * \
                                             stripe_size - writebuf_off); \
 	if (!(fd->atomicity)) \
@@ -50,10 +50,10 @@
 	    return; \
 	} \
     } \
-    write_sz = (unsigned) (ADIOI_MIN(req_len,                           \
+    write_sz = (unsigned) (MPL_MIN(req_len,                           \
                                      writebuf_off + writebuf_len - req_off)); \
     ADIOI_Assert((ADIO_Offset)write_sz ==                               \
-                 ADIOI_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
+                 MPL_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
     memcpy(writebuf + req_off - writebuf_off, (char *)buf +userbuf_off, write_sz); \
     while (write_sz != req_len) {                                       \
         ADIO_WriteContig(fd, writebuf, writebuf_len, MPI_BYTE, \
@@ -72,7 +72,7 @@
         userbuf_off += write_sz; \
         writebuf_off += writebuf_len; \
         /* stripe_size alignment */ \
-        writebuf_len = (unsigned) ADIOI_MIN(end_offset - writebuf_off + 1, \
+        writebuf_len = (unsigned) MPL_MIN(end_offset - writebuf_off + 1, \
                                        (writebuf_off / stripe_size + 1) * \
                                             stripe_size - writebuf_off); \
 	if (!(fd->atomicity)) \
@@ -88,7 +88,7 @@
             ADIOI_Free(writebuf); \
 	    return; \
 	} \
-        write_sz = ADIOI_MIN(req_len, writebuf_len); \
+        write_sz = MPL_MIN(req_len, writebuf_len); \
         memcpy(writebuf, (char *)buf + userbuf_off, write_sz);          \
     } \
 }
@@ -113,12 +113,12 @@
         }                                                               \
 	writebuf_off = req_off; \
         /* stripe_size alignment */ \
-        writebuf_len = (unsigned) ADIOI_MIN(end_offset - writebuf_off + 1, \
+        writebuf_len = (unsigned) MPL_MIN(end_offset - writebuf_off + 1, \
                                        (writebuf_off / stripe_size + 1) * \
                                             stripe_size - writebuf_off); \
     } \
-    write_sz = (unsigned) ADIOI_MIN(req_len, writebuf_off + writebuf_len - req_off); \
-    ADIOI_Assert((ADIO_Offset)write_sz == ADIOI_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
+    write_sz = (unsigned) MPL_MIN(req_len, writebuf_off + writebuf_len - req_off); \
+    ADIOI_Assert((ADIO_Offset)write_sz == MPL_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
     memcpy(writebuf + req_off - writebuf_off,                           \
            (char *)buf + userbuf_off, write_sz);                        \
     while (write_sz != req_len) {                                       \
@@ -136,10 +136,10 @@
         userbuf_off += write_sz; \
         writebuf_off += writebuf_len; \
         /* stripe_size alignment */ \
-        writebuf_len = (unsigned) ADIOI_MIN(end_offset - writebuf_off + 1, \
+        writebuf_len = (unsigned) MPL_MIN(end_offset - writebuf_off + 1, \
                                        (writebuf_off / stripe_size + 1) * \
                                             stripe_size - writebuf_off); \
-        write_sz = ADIOI_MIN(req_len, writebuf_len); \
+        write_sz = MPL_MIN(req_len, writebuf_len); \
         memcpy(writebuf, (char *)buf + userbuf_off, write_sz);          \
     } \
 }
@@ -217,7 +217,7 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
 	start_off = off;
 	end_offset = start_off + bufsize - 1;
         /* write stripe size buffer each time */
-	writebuf = (char *) ADIOI_Malloc(ADIOI_MIN(bufsize, stripe_size));
+	writebuf = (char *) ADIOI_Malloc(MPL_MIN(bufsize, stripe_size));
         writebuf_off = 0;
         writebuf_len = 0;
 
@@ -318,8 +318,8 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
             req_off = start_off;
             req_len = bufsize;
             end_offset = start_off + bufsize - 1;
-	    writebuf = (char *) ADIOI_Malloc(ADIOI_MIN(bufsize, stripe_size));
-	    memset(writebuf, -1, ADIOI_MIN(bufsize, stripe_size));
+	    writebuf = (char *) ADIOI_Malloc(MPL_MIN(bufsize, stripe_size));
+	    memset(writebuf, -1, MPL_MIN(bufsize, stripe_size));
             writebuf_off = 0;
             writebuf_len = 0;
             userbuf_off = 0;
@@ -361,7 +361,7 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
         i_offset = 0;
 	    j = st_index;
 	    off = offset;
-	    fwr_size = ADIOI_MIN(st_fwr_size, bufsize);
+	    fwr_size = MPL_MIN(st_fwr_size, bufsize);
         while (i_offset < bufsize) {
             i_offset += fwr_size;
 		end_offset = off + fwr_size - 1;
@@ -375,7 +375,7 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
 
 		off = disp + flat_file->indices[j] +
                 n_filetypes*(ADIO_Offset)filetype_extent;
-            fwr_size = ADIOI_MIN(flat_file->blocklens[j], bufsize-i_offset);
+            fwr_size = MPL_MIN(flat_file->blocklens[j], bufsize-i_offset);
 	    }
 
 /* if atomicity is true, lock the region to be accessed */
@@ -396,7 +396,7 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
 		j = st_index;
 		off = offset;
 		n_filetypes = st_n_filetypes;
-		fwr_size = ADIOI_MIN(st_fwr_size, bufsize);
+		fwr_size = MPL_MIN(st_fwr_size, bufsize);
             while (i_offset < bufsize) {
 		    if (fwr_size) {
 			/* TYPE_UB and TYPE_LB can result in
@@ -426,7 +426,7 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
 			}
 			off = disp + flat_file->indices[j] +
                         n_filetypes*(ADIO_Offset)filetype_extent;
-			fwr_size = ADIOI_MIN(flat_file->blocklens[j],
+			fwr_size = MPL_MIN(flat_file->blocklens[j],
                                          bufsize-i_offset);
 		    }
 		}
@@ -444,7 +444,7 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
 		bwr_size = flat_buf->blocklens[0];
 
 		while (num < bufsize) {
-		    size = ADIOI_MIN(fwr_size, bwr_size);
+		    size = MPL_MIN(fwr_size, bwr_size);
 		    if (size) {
                     /* lseek(fd->fd_sys, off, SEEK_SET);
                        err = write(fd->fd_sys, ((char *) buf) + i_offset, size); */
