@@ -95,7 +95,7 @@ while read -r line; do
     fi
 done < "$XFAIL_CONF"
 
-if [[ -f $XFAIL_CONF ]]; then
+if [[ -f $SCRIPT ]]; then
     source $SCRIPT
 fi
 
