@@ -139,7 +139,18 @@ mpi_fc_sources += \\
 	src/binding/fortran/use_mpi_f08/mpi_c_interface_nobuf.f90 \\
 	src/binding/fortran/use_mpi_f08/mpi_c_interface_types.f90
 
-mpi_fc_modules += src/binding/fortran/use_mpi_f08/\$(MPI_F08_NAME).\$(MOD)
+mpi_fc_modules += \\
+  src/binding/fortran/use_mpi_f08/\$(PMPI_F08_NAME).\$(MOD) \\
+  src/binding/fortran/use_mpi_f08/\$(MPI_F08_NAME).\$(MOD) \\
+  src/binding/fortran/use_mpi_f08/\$(MPI_F08_CALLBACKS_NAME).\$(MOD) \\
+  src/binding/fortran/use_mpi_f08/\$(MPI_F08_COMPILE_CONSTANTS_NAME).\$(MOD) \\
+  src/binding/fortran/use_mpi_f08/\$(MPI_F08_LINK_CONSTANTS_NAME).\$(MOD) \\
+  src/binding/fortran/use_mpi_f08/\$(MPI_F08_TYPES_NAME).\$(MOD) \\
+  src/binding/fortran/use_mpi_f08/\$(MPI_C_INTERFACE_NAME).\$(MOD) \\
+  src/binding/fortran/use_mpi_f08/\$(MPI_C_INTERFACE_CDESC_NAME).\$(MOD) \\
+  src/binding/fortran/use_mpi_f08/\$(MPI_C_INTERFACE_GLUE_NAME).\$(MOD) \\
+  src/binding/fortran/use_mpi_f08/\$(MPI_C_INTERFACE_NOBUF_NAME).\$(MOD) \\
+  src/binding/fortran/use_mpi_f08/\$(MPI_C_INTERFACE_TYPES_NAME).\$(MOD)
 
 EOT
 
