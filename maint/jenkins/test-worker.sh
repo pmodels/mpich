@@ -45,13 +45,35 @@ done
 
 cd $WORKSPACE
 
-TMP_WORKSPACE=$(mktemp -d /sandbox/jenkins.tmp.XXXXXXXX)
-SRC=$WORKSPACE
-TMP_SRC=$TMP_WORKSPACE
-
 if test "$GIT_BRANCH" = "" ; then
     BUILD_MODE="nightly"
 fi
+
+case "$BUILD_MODE" in
+    "nightly")
+        if [[ -x mpich-master/maint/jenkins/skip_test.sh ]]; then
+            ./mpich-master/maint/jenkins/skip_test.sh -j $JOB_NAME -c $compiler -o $jenkins_configure -q $queue -m $_netmod \
+                -s mpich-master/test/mpi/summary.junit.xml
+            if [[ -f mpich-master/test/mpi/summary.junit.xml ]]; then
+                exit 0
+            fi
+        fi
+        ;;
+    "per-commit")
+        if [[ -x maint/jenkins/skip_test.sh ]]; then
+            ./maint/jenkins/skip_test.sh -j $JOB_NAME -c $compiler -o $jenkins_configure -q $queue -m $_netmod \
+                -s test/mpi/summary.junit.xml
+            if [[ -f test/mpi/summary.junit.xml ]]; then
+                exit 0
+            fi
+        fi
+        ;;
+esac
+
+
+TMP_WORKSPACE=$(mktemp -d /sandbox/jenkins.tmp.XXXXXXXX)
+SRC=$WORKSPACE
+TMP_SRC=$TMP_WORKSPACE
 
 # Preparing the source
 case "$BUILD_MODE" in
