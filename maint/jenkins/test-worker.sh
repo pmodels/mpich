@@ -78,10 +78,12 @@ TMP_SRC=$TMP_WORKSPACE
 # Preparing the source
 case "$BUILD_MODE" in
     "nightly")
-        tar zxvf mpich-master.tar.gz
         SRC=$WORKSPACE/mpich-master
         TMP_SRC=$TMP_WORKSPACE/mpich-master
-        cp -a $WORKSPACE/mpich-master $TMP_WORKSPACE/
+        cp $WORKSPACE/mpich-master.tar.gz $TMP_WORKSPACE/
+        pushd "$TMP_WORKSPACE"
+        tar zxvf mpich-master.tar.gz
+        popd
         ;;
     "per-commit")
         git clean -x -d -f
@@ -99,6 +101,19 @@ esac
 
 CollectResults() {
     # TODO: copy saved test binaries (for failed cases)
+    if [[ "$BUILD_MODE" != "per-commit" ]]; then
+        find . \
+            \( -name "filtered-make.txt" \
+            -o -name "apply-xfail.sh" \
+            -o -name "autogen.log" \
+            -o -name "config.log" \
+            -o -name "c.txt" \
+            -o -name "m.txt" \
+            -o -name "mi.txt" \
+            -o -name "summary.junit.xml" \) \
+            -exec sh -c "mkdir -p $SRC/$(dirname {})" \;
+    fi
+
     find . \
         \( -name "filtered-make.txt" -o \
         -name "apply-xfail.sh" -o \
