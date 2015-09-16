@@ -51,17 +51,10 @@ int MPL_internal_sys_error_printf(const char *name, int errnum, const char *str,
     const char *format_str = 0;
 
     /* Prepend information on the system error */
-#ifdef HAVE_STRERROR
     if (!format_str)
         format_str = "Error in system call %s: %s\n";
 
-    fprintf(stderr, format_str, name, strerror(errnum));
-#else
-    if (!format_str)
-        format_str = "Error in system call %s errno = %d\n";
-
-    fprintf(stderr, "Error in %s: errno = %d\n", name, errnum);
-#endif
+    fprintf(stderr, format_str, name, MPL_strerror(errnum));
 
     /* Now add the message that is specific to this use, if any */
     if (str) {
