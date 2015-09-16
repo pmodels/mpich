@@ -471,9 +471,12 @@ case "$netmod" in
         ;;
 esac
 
-# run only the minimum level of datatype tests
-MPITEST_DATATYPE_TEST_LEVEL=min
-export MPITEST_DATATYPE_TEST_LEVEL
+# run only the minimum level of datatype tests when it is per-commit job
+if [[ "$BUILD_MODE" = "per-commit" ]]; then
+    MPITEST_DATATYPE_TEST_LEVEL=min
+    export MPITEST_DATATYPE_TEST_LEVEL
+fi
+
 make testing
 
 # Cleanup
