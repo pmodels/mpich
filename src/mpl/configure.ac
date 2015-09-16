@@ -194,6 +194,12 @@ if test "$ac_cv_func_putenv" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],putenv)
 fi
 
+# Check for strerror
+AC_CHECK_FUNCS(strerror)
+if test "$ac_cv_func_strerror" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <string.h>],strerror)
+fi
+
 dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE
 

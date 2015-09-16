@@ -48,6 +48,15 @@ extern int strncmp(const char *s1, const char *s2, size_t n);
 #error "strncmp is required"
 #endif /* MPL_HAVE_STRNCMP */
 
+#if defined MPL_NEEDS_STRERROR_DECL
+extern char *strerror(int errnum);
+#endif
+#if defined MPL_HAVE_STRERROR
+#define MPL_strerror strerror
+#else
+char *MPL_strerror(int errnum);
+#endif /* MPL_HAVE_STRERROR */
+
 /* *INDENT-ON* */
 #if defined(__cplusplus)
 }
