@@ -356,8 +356,7 @@ static inline int flush_local_all(MPID_Win * win_ptr)
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
 
-    /* wait for remote completion for those targets that disable flush_local,
-     * and wait for local completion for other targets */
+    /* Wait for local completion */
     do {
         MPIDI_CH3I_RMA_ops_win_local_completion(win_ptr, local_completed);
 
