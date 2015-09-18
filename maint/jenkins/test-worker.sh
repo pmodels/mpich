@@ -111,7 +111,9 @@ CollectResults() {
             -o -name "m.txt" \
             -o -name "mi.txt" \
             -o -name "summary.junit.xml" \) \
-            -exec sh -c "mkdir -p $SRC/$(dirname {})" \;
+            | while read -r line; do
+                mkdir -p "$SRC/$(dirname $line)"
+            done
     fi
 
     find . \
