@@ -145,6 +145,7 @@ int ADIOI_cb_gather_name_array(MPI_Comm comm,
         if (found) {
             ADIOI_Assert(array != NULL);
 	    *arrayp = array;
+	    MPIR_Ext_cs_exit(ADIO_THREAD_MUTEX);
 	    return 0;
 	}
     }

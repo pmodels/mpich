@@ -34,7 +34,7 @@ void ADIOI_Flatten_datatype(MPI_Datatype datatype)
   #ifdef FLATTEN_DEBUG 
   DBG_FPRINTF(stderr,"ADIOI_Flatten_datatype:: is_contig %#X\n",is_contig);
   #endif
-    if (is_contig) return;
+    if (is_contig) goto fn_exit;
 
     /* has it already been flattened? */
     flat = ADIOI_Flatlist;
@@ -43,7 +43,7 @@ void ADIOI_Flatten_datatype(MPI_Datatype datatype)
       #ifdef FLATTEN_DEBUG 
       DBG_FPRINTF(stderr,"ADIOI_Flatten_datatype:: found datatype %#X\n", datatype);
       #endif
-		return;
+		goto fn_exit;
 	}
 	else {
 	    prev = flat;
@@ -100,6 +100,8 @@ void ADIOI_Flatten_datatype(MPI_Datatype datatype)
              );
   }
 #endif
+
+  fn_exit:
     MPIR_Ext_cs_exit(ADIO_THREAD_MUTEX);
 
 }
