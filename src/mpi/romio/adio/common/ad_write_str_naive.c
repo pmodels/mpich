@@ -375,5 +375,4 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, int count,
      */
 #endif
 
-    if (!buftype_is_contig) ADIOI_Delete_flattened(buftype);
 }

@@ -242,7 +242,6 @@ void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
 			len_list, contig_access_count, min_st_offset,
 			fd_size, fd_start, fd_end, buf_idx, error_code);
 
-    if (!buftype_is_contig) ADIOI_Delete_flattened(datatype);
 
     /* free all memory allocated for collective I/O */
     for (i=0; i<nprocs; i++) {

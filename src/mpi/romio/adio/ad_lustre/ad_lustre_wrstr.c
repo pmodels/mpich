@@ -522,6 +522,4 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
     keep track of how much data was actually written by ADIOI_BUFFERED_WRITE. */
 #endif
 
-    if (!buftype_is_contig)
-        ADIOI_Delete_flattened(datatype);
 }

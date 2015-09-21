@@ -13,14 +13,21 @@
 
 void ADIOI_Optimize_flattened(ADIOI_Flatlist_node *flat_type);
 /* flatten datatype and add it to Flatlist */
-void ADIOI_Flatten_datatype(MPI_Datatype datatype)
+ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
 {
 #ifdef HAVE_MPIR_TYPE_FLATTEN
     MPI_Aint flatten_idx;
 #endif
     MPI_Count curr_index=0;
-    int is_contig;
-    ADIOI_Flatlist_node *flat, *prev=0;
+    int is_contig, flag;
+    ADIOI_Flatlist_node *flat;
+
+    if (ADIOI_Flattened_type_keyval == MPI_KEYVAL_INVALID) {
+	/* ADIOI_End_call will take care of cleanup */
+	MPI_Type_create_keyval(ADIOI_Flattened_type_copy,
+		ADIOI_Flattened_type_delete,
+		&ADIOI_Flattened_type_keyval, NULL);
+    }
 
     /* check if necessary to flatten. */
  
@@ -29,33 +36,25 @@ void ADIOI_Flatten_datatype(MPI_Datatype datatype)
   #ifdef FLATTEN_DEBUG 
   DBG_FPRINTF(stderr,"ADIOI_Flatten_datatype:: is_contig %#X\n",is_contig);
   #endif
-    if (is_contig) return;
+    if (is_contig) return NULL;
 
     /* has it already been flattened? */
-    flat = ADIOI_Flatlist;
-    while (flat) {
-	if (flat->type == datatype) {
+    MPI_Type_get_attr(datatype, ADIOI_Flattened_type_keyval, &flat, &flag);
+    if (flag) {
       #ifdef FLATTEN_DEBUG 
       DBG_FPRINTF(stderr,"ADIOI_Flatten_datatype:: found datatype %#X\n", datatype);
       #endif
-		return;
-	}
-	else {
-	    prev = flat;
-	    flat = flat->next;
-	}
+      return flat;
     }
 
     /* flatten and add to the list */
-    flat = prev;
-    flat->next = (ADIOI_Flatlist_node *)ADIOI_Malloc(sizeof(ADIOI_Flatlist_node));
-    flat = flat->next;
+    flat = ADIOI_Malloc(sizeof(ADIOI_Flatlist_node));
 
     flat->type = datatype;
-    flat->next = NULL;
     flat->blocklens = NULL;
     flat->indices = NULL;
     flat->lb_idx = flat->ub_idx = -1;
+    flat->refct = 1;
 
     flat->count = ADIOI_Count_contiguous_blocks(datatype, &curr_index);
 #ifdef FLATTEN_DEBUG 
@@ -95,6 +94,9 @@ void ADIOI_Flatten_datatype(MPI_Datatype datatype)
              );
   }
 #endif
+    MPI_Type_set_attr(datatype, ADIOI_Flattened_type_keyval, flat);
+    return flat;
+
 }
 
 /* ADIOI_Flatten()
@@ -1167,28 +1169,49 @@ void ADIOI_Optimize_flattened(ADIOI_Flatlist_node *flat_type)
     return;
 }
 
-void ADIOI_Delete_flattened(MPI_Datatype datatype)
+int ADIOI_Flattened_type_keyval=MPI_KEYVAL_INVALID;
+
+int ADIOI_Flattened_type_copy(MPI_Datatype oldtype,
+	int type_keyval, void *extra_state, void *attribute_val_in,
+	void *attribute_val_out, int *flag)
 {
-    ADIOI_Flatlist_node *flat, *prev;
-
-    prev = flat = ADIOI_Flatlist;
-    while (flat && (flat->type != datatype)) {
-	prev = flat;
-	flat = flat->next;
-    }
-    if (flat) {
-	prev->next = flat->next;
-	if (flat->blocklens) ADIOI_Free(flat->blocklens);
-	if (flat->indices) ADIOI_Free(flat->indices);
-	ADIOI_Free(flat);
-    }
+    ADIOI_Flatlist_node *node = (ADIOI_Flatlist_node *)attribute_val_in;
+    if (node != NULL) node->refct++;
+    *(ADIOI_Flatlist_node **)attribute_val_out= node;
+    *flag = 1;  /* attribute copied to new communicator */
+    return MPI_SUCCESS;
 }
+int ADIOI_Flattened_type_delete(MPI_Datatype datatype,
+	int type_keyval, void *attribute_val, void *extra_state)
+{
+    ADIOI_Flatlist_node *node = (ADIOI_Flatlist_node *)attribute_val;
+    ADIOI_Assert(node != NULL);
+    node->refct--;
 
+    if (node->refct <= 0) {
+	ADIOI_Free(node->blocklens);
+	ADIOI_Free(node->indices);
+	ADIOI_Free(node);
+    }
+
+    return MPI_SUCCESS;
+}
 ADIOI_Flatlist_node * ADIOI_Flatten_and_find(MPI_Datatype datatype)
 {
     ADIOI_Flatlist_node *node;
-    ADIOI_Flatten_datatype(datatype);
-    node = ADIOI_Flatlist;
-    while (node->type != datatype) node = node->next;
+    int flag=0;
+
+    if (ADIOI_Flattened_type_keyval == MPI_KEYVAL_INVALID) {
+	/* ADIOI_End_call will take care of cleanup */
+	MPI_Type_create_keyval(ADIOI_Flattened_type_copy,
+		ADIOI_Flattened_type_delete,
+		&ADIOI_Flattened_type_keyval, NULL);
+    }
+
+    MPI_Type_get_attr(datatype, ADIOI_Flattened_type_keyval, &node, &flag);
+    if (flag == 0) {
+	node = ADIOI_Flatten_datatype(datatype);
+    }
+
     return node;
 }

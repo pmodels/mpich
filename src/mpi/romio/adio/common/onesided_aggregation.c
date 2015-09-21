@@ -1212,8 +1212,6 @@ printf("freeing datastructures\n");
 
     ADIOI_Free(currentFDSourceBufferState);
 
-    if (!bufTypeIsContig)
-      ADIOI_Delete_flattened(datatype);
     return;
 }
 
@@ -2168,7 +2166,5 @@ printf("iAmUsedAgg - currentRoundFDStart initialized "
 
     ADIOI_Free(currentFDSourceBufferState);
 
-    if (!bufTypeIsContig)
-      ADIOI_Delete_flattened(datatype);
     return;
 }

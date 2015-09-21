@@ -549,7 +549,6 @@ static void ADIOI_GEN_IwriteStridedColl_free(ADIOI_NBC_Request *nbc_req,
 {
     ADIOI_GEN_IwriteStridedColl_vars *vars = nbc_req->data.wr.wsc_vars;
     ADIO_File fd = vars->fd;
-    MPI_Datatype datatype = vars->datatype;
     ADIOI_Access *others_req = vars->others_req;
     int nprocs = vars->nprocs;
     int old_error = vars->old_error;
@@ -565,8 +564,6 @@ static void ADIOI_GEN_IwriteStridedColl_free(ADIOI_NBC_Request *nbc_req,
     if ( (old_error != MPI_SUCCESS) && (old_error != MPI_ERR_IO) )
         *error_code = old_error;
 
-
-    if (!vars->buftype_is_contig) ADIOI_Delete_flattened(datatype);
 
     /* free all memory allocated for collective I/O */
     for (i = 0; i < nprocs; i++) {

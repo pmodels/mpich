@@ -13,7 +13,7 @@
 
 void ADIO_Close(ADIO_File fd, int *error_code)
 {
-    int i, j, k, combiner, myrank, err, is_contig;
+    int i, j, k, combiner, myrank, err;
     static char myname[] = "ADIO_CLOSE";
 
     if (fd->async_count) {
@@ -81,14 +81,10 @@ void ADIO_Close(ADIO_File fd, int *error_code)
     if (fd->hints->cb_pfr == ADIOI_HINT_ENABLE) {
 	/* AAR, FSIZE, and User provided uniform File realms */
 	if (1) {
-	    ADIOI_Delete_flattened (fd->file_realm_types[0]);
 	    MPI_Type_free (&fd->file_realm_types[0]);
 	}
 	else {
 	    for (i=0; i<fd->hints->cb_nodes; i++) {
-		ADIOI_Datatype_iscontig(fd->file_realm_types[i], &is_contig);
-		if (!is_contig)
-		    ADIOI_Delete_flattened(fd->file_realm_types[i]);
 		MPI_Type_free (&fd->file_realm_types[i]);
 	    }
 	}
@@ -104,9 +100,6 @@ void ADIO_Close(ADIO_File fd, int *error_code)
 
     MPI_Type_get_envelope(fd->etype, &i, &j, &k, &combiner);
     if (combiner != MPI_COMBINER_NAMED) MPI_Type_free(&(fd->etype));
-
-    ADIOI_Datatype_iscontig(fd->filetype, &is_contig);
-    if (!is_contig) ADIOI_Delete_flattened(fd->filetype);
 
     MPI_Type_get_envelope(fd->filetype, &i, &j, &k, &combiner);
     if (combiner != MPI_COMBINER_NAMED) MPI_Type_free(&(fd->filetype));

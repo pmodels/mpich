@@ -325,18 +325,14 @@ error_state:
 /* This is a temporary way of filling in status. The right way is to
    keep track of how much data was actually written by ADIOI_BUFFERED_WRITE. */
 #endif
-    if (buftype_is_contig == 0)
-	ADIOI_Delete_flattened(datatype);
-    else
+    if (buftype_is_contig != 0)
     {
 	ADIOI_Free(flat_buf_p->blocklens);
 	ADIOI_Free(flat_buf_p->indices);
 	ADIOI_Free(flat_buf_p);
     }
 
-    if (filetype_is_contig == 0)
-	ADIOI_Delete_flattened(fd->filetype);
-    else
+    if (filetype_is_contig != 0)
     {
 	ADIOI_Free(flat_file_p->blocklens);
 	ADIOI_Free(flat_file_p->indices);

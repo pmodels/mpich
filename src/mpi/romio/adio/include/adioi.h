@@ -124,7 +124,9 @@ typedef struct ADIOI_Fl_node {
      * (-1 indicates "not explicitly set") */
     ADIO_Offset lb_idx;
     ADIO_Offset ub_idx;
-    struct ADIOI_Fl_node *next;  /* pointer to next node */
+    int refct;                   /* when storing flattened representation on a
+				    type, attribute copy and delete routines
+				    will manage refct */
 } ADIOI_Flatlist_node;
 
 #ifdef ROMIO_PVFS2
@@ -345,10 +347,15 @@ typedef struct {
 /* prototypes for ADIO internal functions */
 
 void ADIOI_SetFunctions(ADIO_File fd);
-void ADIOI_Flatten_datatype(MPI_Datatype type);
+ADIOI_Flatlist_node * ADIOI_Flatten_datatype(MPI_Datatype type);
 void ADIOI_Flatten(MPI_Datatype type, ADIOI_Flatlist_node *flat,
 		  ADIO_Offset st_offset, MPI_Count *curr_index);
-void ADIOI_Delete_flattened(MPI_Datatype datatype);
+/* callbakcs for attribute-style flattened tracking */
+int ADIOI_Flattened_type_copy(MPI_Datatype oldtype,
+	int type_keyval, void *extra_state, void *attribute_val_in,
+	void *attribute_val_out, int *flag);
+int ADIOI_Flattened_type_delete(MPI_Datatype datatype,
+	int type_keyval, void *attribute_val, void *extra_state);
 ADIOI_Flatlist_node * ADIOI_Flatten_and_find(MPI_Datatype);
 MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype type, MPI_Count *curr_index);
 void ADIOI_Complete_async(int *error_code);
