@@ -336,5 +336,4 @@ void ADIOI_PIOFS_WriteStrided(ADIO_File fd, void *buf, int count,
    keep track of how much data was actually written by ADIOI_BUFFERED_WRITE. */
 #endif
 
-    if (!buftype_is_contig) ADIOI_Delete_flattened(datatype);
 }

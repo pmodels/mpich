@@ -450,7 +450,6 @@ void ADIOI_PVFS_WriteStrided(ADIO_File fd, void *buf, int count,
    keep track of how much data was actually written by ADIOI_BUFFERED_WRITE. */
 #endif
 
-    if (!buftype_is_contig) ADIOI_Delete_flattened(datatype);
 }
 
 #ifdef HAVE_PVFS_LISTIO
@@ -625,7 +624,6 @@ void ADIOI_PVFS_WriteStridedListIO(ADIO_File fd, void *buf, int count,
    keep track of how much data was actually written by ADIOI_BUFFERED_WRITE. */
 #endif
 
-	ADIOI_Delete_flattened(datatype);
 	return;
     } /* if (!buftype_is_contig && filetype_is_contig) */
 
@@ -1162,6 +1160,5 @@ void ADIOI_PVFS_WriteStridedListIO(ADIO_File fd, void *buf, int count,
    keep track of how much data was actually written by ADIOI_BUFFERED_WRITE. */
 #endif
 
-    if (!buftype_is_contig) ADIOI_Delete_flattened(datatype);
 }
 #endif /* HAVE_PVFS_LISTIO */

@@ -25,7 +25,6 @@ void ADIO_Set_view(ADIO_File fd, ADIO_Offset disp, MPI_Datatype etype,
 	if (combiner != MPI_COMBINER_NAMED) MPI_Type_free(&(fd->etype));
 
 	ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
-	if (!filetype_is_contig) ADIOI_Delete_flattened(fd->filetype);
 
 	MPI_Type_get_envelope(fd->filetype, &i, &j, &k, &combiner);
 	if (combiner != MPI_COMBINER_NAMED) MPI_Type_free(&(fd->filetype));

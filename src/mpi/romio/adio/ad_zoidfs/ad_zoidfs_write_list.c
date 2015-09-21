@@ -210,7 +210,6 @@ void ADIOI_ZOIDFS_WriteStrided(ADIO_File fd, void *buf, int count,
    keep track of how much data was actually written by ADIOI_BUFFERED_WRITE. */
 #endif
 
-	ADIOI_Delete_flattened(datatype);
 	return;
     } /* if (!buftype_is_contig && filetype_is_contig) */
 
@@ -618,7 +617,6 @@ void ADIOI_ZOIDFS_WriteStrided(ADIO_File fd, void *buf, int count,
 		( (mem_list_count == MAX_ARRAY_SIZE) &&
 		    (new_buffer_write < flat_file->blocklens[0])) )
 	{
-	    ADIOI_Delete_flattened(datatype);
 	    ADIOI_GEN_WriteStrided_naive(fd, buf, count, datatype,
 		    file_ptr_type, initial_off, status, error_code);
 	    return;
@@ -853,5 +851,4 @@ error_state:
    keep track of how much data was actually written by ADIOI_BUFFERED_WRITE. */
 #endif
 
-    if (!buftype_is_contig) ADIOI_Delete_flattened(datatype);
 }

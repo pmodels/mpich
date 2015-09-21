@@ -182,7 +182,6 @@ void ADIOI_ZOIDFS_ReadStrided(ADIO_File fd, void *buf, int count,
 	   keep tracke of how much data was actually read adn placed in buf
 	   by ADIOI_BUFFERED_READ. */
 #endif
-	ADIOI_Delete_flattened(datatype);
 
 	return;
     } /* if (!buftype_is_contig && filetype_is_contig) */
@@ -587,7 +586,6 @@ void ADIOI_ZOIDFS_ReadStrided(ADIO_File fd, void *buf, int count,
 		    (new_buffer_read < flat_file->blocklens[0])) )
 	{
 
-	    ADIOI_Delete_flattened(datatype);
 	    ADIOI_GEN_ReadStrided_naive(fd, buf, count, datatype,
 		    file_ptr_type, initial_off, status, error_code);
 	    return;
@@ -821,6 +819,5 @@ error_state:
        by ADIOI_BUFFERED_READ. */
 #endif
     
-    if (!buftype_is_contig) ADIOI_Delete_flattened(datatype);
 }
 

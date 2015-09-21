@@ -399,5 +399,4 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
    by ADIOI_BUFFERED_READ. */
 #endif
 
-    if (!buftype_is_contig) ADIOI_Delete_flattened(datatype);
 }

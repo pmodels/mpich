@@ -233,9 +233,6 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 	*error_code = old_error;
 
 
-    if (!buftype_is_contig)
-	ADIOI_Delete_flattened(datatype);
-
     /* free all memory allocated for collective I/O */
     /* free others_req */
     for (i = 0; i < nprocs; i++) {

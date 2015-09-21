@@ -631,14 +631,11 @@ void ADIOI_IOStridedColl (ADIO_File fd, void *buf, int count, int rdwr,
     if (fd->hints->cb_pfr != ADIOI_HINT_ENABLE) {
 	/* AAR, FSIZE, and User provided uniform File realms */
 	if (1) {
-	    ADIOI_Delete_flattened (fd->file_realm_types[0]);
 	    MPI_Type_free (&fd->file_realm_types[0]);
 	}
 	else {
 	    for (i=0; i<fd->hints->cb_nodes; i++) {
 		ADIOI_Datatype_iscontig(fd->file_realm_types[i], &is_contig);
-		if (!is_contig)
-		    ADIOI_Delete_flattened(fd->file_realm_types[i]);
 		MPI_Type_free (&fd->file_realm_types[i]);
 	    }
 	}
@@ -646,11 +643,6 @@ void ADIOI_IOStridedColl (ADIO_File fd, void *buf, int count, int rdwr,
 	ADIOI_Free (fd->file_realm_st_offs);
     }
 
-    /* This memtype must be deleted from the ADIOI_Flatlist or else it
-     * will match incorrectly with other datatypes which use this
-     * pointer. */
-    ADIOI_Delete_flattened(datatype);
-    ADIOI_Delete_flattened(fd->filetype);
 
     if (fd->is_agg) {
 	if (buffered_io_size > 0)
@@ -959,9 +951,6 @@ void ADIOI_IOFiletype(ADIO_File fd, void *buf, int count,
 			      status, error_code);
     }
 
-    /* Delete flattened temporary filetype */
-    if (!f_is_contig)
-	ADIOI_Delete_flattened (custom_ftype);
 
     /* restore the user specified file view to cover our tracks */
     fd->filetype                  = user_filetype;

@@ -58,10 +58,13 @@ void ADIOI_Print_flatlist_node(ADIOI_Flatlist_node *flatlist_node_p)
     fprintf(stderr, "\n");
 }
 
+/* delete this function when the flatten code adds a flatteed representation to
+ * built-in datatypes */
 /* Since ADIOI_Flatten_datatype won't add a contig datatype to the
  * ADIOI_Flatlist, we can force it to do so with this function. */
 ADIOI_Flatlist_node * ADIOI_Add_contig_flattened(MPI_Datatype contig_type)
 {
+#if 0
     MPI_Count contig_type_sz = -1;
     ADIOI_Flatlist_node *flat_node_p = ADIOI_Flatlist;
     
@@ -97,7 +100,8 @@ ADIOI_Flatlist_node * ADIOI_Add_contig_flattened(MPI_Datatype contig_type)
     flat_node_p->indices[0] = 0;
     flat_node_p->count = 1;
     flat_node_p->next = NULL;
-    return flat_node_p;
+#endif
+    return NULL;
 }
 
 /* ADIOI_Exchange_file_views - Sends all the aggregators the file

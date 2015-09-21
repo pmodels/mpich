@@ -464,7 +464,6 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
 
     GPFSMPIO_T_CIO_REPORT( 0, fd, myrank, nprocs)
 
-    if (!buftype_is_contig) ADIOI_Delete_flattened(datatype);
 
     /* free all memory allocated for collective I/O */
     for (i=0; i<nprocs; i++) {
