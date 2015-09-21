@@ -21,6 +21,7 @@
 #define ROMIO_THREAD_CS_ENTER(mutex) MPIR_Ext_cs_enter(mutex)
 #define ROMIO_THREAD_CS_EXIT(mutex) MPIR_Ext_cs_exit(mutex)
 #define ROMIO_THREAD_CS_YIELD(mutex) MPIR_Ext_cs_yield(mutex)
+#define MPIR_EXT_CS_YIELD_GLOBAL() MPIR_Ext_cs_yield_global()
 
 /* committed datatype checking support in ROMIO */
 #define MPIO_DATATYPE_ISCOMMITTED(dtype_, err_)        \
@@ -36,6 +37,7 @@
 #define ROMIO_THREAD_CS_ENTER(mutex)
 #define ROMIO_THREAD_CS_EXIT(mutex)
 #define ROMIO_THREAD_CS_YIELD(mutex)
+#define MPIR_EXT_CS_YIELD_GLOBAL()
 #define MPIO_DATATYPE_ISCOMMITTED(dtype_, err_) do {} while (0)
 #ifdef HAVE_WINDOWS_H
 #define MPIU_UNREFERENCED_ARG(a) a

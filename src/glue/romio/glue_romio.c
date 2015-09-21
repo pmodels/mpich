@@ -72,13 +72,18 @@ void MPIR_Ext_cs_exit(void *mutex_p)
     MPID_THREAD_CS_EXIT(GLOBAL, *((MPID_Thread_mutex_t *) mutex_p));
 }
 
+void MPIR_Ext_cs_yield(void *mutex_p)
+{
+    MPID_THREAD_CS_YIELD(GLOBAL, *((MPID_Thread_mutex_t *) mutex_p));
+}
+
 /* This routine is for a thread to yield control when the thread is waiting for
  * the completion of communication inside a ROMIO routine but the progress
  * engine is blocked by another thread. */
-void MPIR_Ext_cs_yield(void *mutex_p)
+void MPIR_Ext_cs_yield_global(void)
 {
     /* TODO: check whether the progress engine is blocked */
-    MPID_THREAD_CS_YIELD(GLOBAL, *((MPID_Thread_mutex_t *) mutex_p));
+    MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 
 /* will consider MPI_DATATYPE_NULL to be an error */

@@ -56,6 +56,7 @@ void MPIR_Ext_thread_mutex_destroy(void *mutex_p);
 void MPIR_Ext_cs_enter(void *mutex_p);
 void MPIR_Ext_cs_exit(void *mutex_p);
 void MPIR_Ext_cs_yield(void *mutex_p);
+void MPIR_Ext_cs_yield_global(void);
 
 /* to facilitate error checking */
 int MPIR_Ext_datatype_iscommitted(MPI_Datatype datatype);
