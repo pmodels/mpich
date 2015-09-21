@@ -65,8 +65,7 @@ void ADIOI_ZOIDFS_ReadStrided(ADIO_File fd, void *buf, int count,
      * lines down below).  We added a workaround, but common HDF5 file types
      * are actually contiguous and do not need the expensive workarond */
     if (!filetype_is_contig) {
-	flat_file = ADIOI_Flatlist;
-	while (flat_file->type != fd->filetype) flat_file = flat_file->next;
+	flat_file = ADIOI_Flatten_and_find(fd->filetype);
 	if (flat_file->count == 1 && !buftype_is_contig)
 	    filetype_is_contig = 1;
     }
@@ -190,8 +189,7 @@ void ADIOI_ZOIDFS_ReadStrided(ADIO_File fd, void *buf, int count,
     /* noncontiguous in file */
 
     /* filetype already flattened in ADIO_Open */
-    flat_file = ADIOI_Flatlist;
-    while (flat_file->type != fd->filetype) flat_file = flat_file->next;
+    flat_file = ADIOI_Flatten_and_find(fd->filetype);
 
     disp = fd->disp;
     initial_off = offset;

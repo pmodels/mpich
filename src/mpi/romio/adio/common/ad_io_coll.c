@@ -733,8 +733,7 @@ void ADIOI_Calc_bounds (ADIO_File fd, int count, MPI_Datatype buftype,
 	end_byte_off = st_byte_off + total_io - 1;
     }
     else {
-	flat_file = ADIOI_Flatlist;
-	while (flat_file->type != fd->filetype) flat_file = flat_file->next;
+	flat_file = ADIOI_Flatten_and_find(fd->filetype);
 
 	/* we need to take care of some weirdness since fd->fp_ind
 	   points at an accessible byte in file.  the first accessible

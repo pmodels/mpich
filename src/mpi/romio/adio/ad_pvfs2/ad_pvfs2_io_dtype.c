@@ -28,7 +28,7 @@ int ADIOI_PVFS2_StridedDtypeIO(ADIO_File fd, void *buf, int count,
     int i = -1;
     MPI_Count etype_size;
     PVFS_size pvfs_disp = -1;
-    ADIOI_Flatlist_node *flat_file_p = ADIOI_Flatlist;
+    ADIOI_Flatlist_node *flat_file_p;
 
     /* Use for offseting the PVFS2 filetype */
     int pvfs_blk = 1;
@@ -79,11 +79,7 @@ int ADIOI_PVFS2_StridedDtypeIO(ADIO_File fd, void *buf, int count,
 	else 
 	{
 	    int flag = 0;
-	    /* Should have already been flattened in ADIO_Open*/
-	    while (flat_file_p->type != fd->filetype) 
-	    {
-		flat_file_p = flat_file_p->next;
-	    }
+	    flat_file_p = ADIOI_Flatten_and_find(fd->filetype);
 	    num_filetypes = -1;
 	    while (!flag) 
 	    {

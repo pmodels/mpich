@@ -350,9 +350,7 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 
        /* First calculate what size of offset_list and len_list to allocate */
    
-       /* filetype already flattened in ADIO_Open or ADIO_Fcntl */
-	flat_file = ADIOI_Flatlist;
-	while (flat_file->type != fd->filetype) flat_file = flat_file->next;
+	flat_file = ADIOI_Flatten_and_find(fd->filetype);
 	disp = fd->disp;
 
 #ifdef RDCOLL_DEBUG 

@@ -159,16 +159,11 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
 
     MPI_Type_extent(fd->filetype, &filetype_extent);
     MPI_Type_size_x(fd->filetype, &filetype_sz);
+    flat_file_p = ADIOI_Flatten_and_find(fd->filetype);
     if (filetype_extent == filetype_sz) {
-	flat_file_p = ADIOI_Add_contig_flattened(fd->filetype);
 	flat_file_p->blocklens[0] = memtype_sz*count;
 	filetype_extent = memtype_sz*count;
 	filetype_sz = filetype_extent;
-    }
-    else {
-        flat_file_p = ADIOI_Flatlist;
-        while (flat_file_p->type != fd->filetype)
-            flat_file_p = flat_file_p->next; 
     }
 
     disp_off_sz_ext_typesz[0] = fd->fp_ind;
@@ -469,7 +464,7 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
 #ifdef DEBUG
     if (fd->is_agg == 1)
     {
-	ADIOI_Flatlist_node *fr_node_p = ADIOI_Flatlist;
+	ADIOI_Flatlist_node *fr_node_p;
 	for (i = 0; i < nprocs; i++)
 	{
 	    fprintf(stderr, "client_file_view_state_arr[%d]=(fp_ind=%Ld,"
@@ -481,9 +476,8 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
 		    client_file_view_state_arr[i].ext);
 	}
 	
-	while (fr_node_p->type != 
-	       fd->file_realm_types[fd->my_cb_nodes_index])
-	    fr_node_p = fr_node_p->next;
+	fr_node_p =
+	    ADIOI_Flatten_and_find(fd->file_realm_types[fd->my-cb_nodes_index]);
 	assert(fr_node_p != NULL);
 	
 	fprintf(stderr, "my file realm (idx=%d,st_off=%Ld) ", 

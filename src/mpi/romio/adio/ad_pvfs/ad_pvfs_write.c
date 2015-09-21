@@ -267,8 +267,7 @@ void ADIOI_PVFS_WriteStrided(ADIO_File fd, void *buf, int count,
 /* find starting location in the file */
 
 /* filetype already flattened in ADIO_Open */
-	flat_file = ADIOI_Flatlist;
-	while (flat_file->type != fd->filetype) flat_file = flat_file->next;
+	flat_file = ADIOI_Flatten_and_find(fd->filetype);
         disp = fd->disp;
 
 	if (file_ptr_type == ADIO_INDIVIDUAL) {
@@ -631,8 +630,7 @@ void ADIOI_PVFS_WriteStridedListIO(ADIO_File fd, void *buf, int count,
     /* noncontiguous in file */
 
 /* filetype already flattened in ADIO_Open */
-    flat_file = ADIOI_Flatlist;
-    while (flat_file->type != fd->filetype) flat_file = flat_file->next;
+    flat_file = ADIOI_Flatten_and_find(fd->filetype);
 
     disp = fd->disp;
 
