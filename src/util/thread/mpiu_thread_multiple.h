@@ -12,7 +12,7 @@
 #define MPIU_THREAD_CHECK_BEGIN if (MPIR_ThreadInfo.isThreaded) {
 #define MPIU_THREAD_CHECK_END   }
 
-#define MPIUI_THREAD_CS_ENTER_REAL(lockname, mutex)                      \
+#define MPIUI_THREAD_CS_ENTER_NONRECURSIVE(lockname, mutex)             \
     do {                                                                \
         int err_;                                                       \
         MPIU_THREAD_CHECK_BEGIN;                                        \
@@ -21,7 +21,7 @@
         MPIU_THREAD_CHECK_END;                                          \
     } while (0)
 
-#define MPIUI_THREAD_CS_EXIT_REAL(lockname, mutex)                       \
+#define MPIUI_THREAD_CS_EXIT_NONRECURSIVE(lockname, mutex)              \
     do {                                                                \
         int err_;                                                       \
         MPIU_THREAD_CHECK_BEGIN;                                        \
@@ -30,7 +30,7 @@
         MPIU_THREAD_CHECK_END;                                          \
     } while (0)
 
-#define MPIUI_THREAD_CS_YIELD_REAL(lockname, mutex)                      \
+#define MPIUI_THREAD_CS_YIELD_NONRECURSIVE(lockname, mutex)             \
     do {                                                                \
         MPIU_THREAD_CHECK_BEGIN;                                        \
         MPIU_DBG_MSG_S(THREAD, TYPICAL, "yielding %s", lockname);       \
