@@ -244,8 +244,7 @@ void ADIOI_PVFS_ReadStridedListIO(ADIO_File fd, void *buf, int count,
     /* noncontiguous in file */
 
     /* filetype already flattened in ADIO_Open */
-    flat_file = ADIOI_Flatlist;
-    while (flat_file->type != fd->filetype) flat_file = flat_file->next;
+    flat_file = ADIOI_Flatten_and_find(fd->filetype);
 
     disp = fd->disp;
 

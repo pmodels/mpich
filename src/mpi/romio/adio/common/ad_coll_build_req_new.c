@@ -281,12 +281,11 @@ static inline int get_next_fr_off(ADIO_File fd,
 {
     MPI_Aint fr_extent = -1;
     ADIO_Offset tmp_off, off_rem;
-    ADIOI_Flatlist_node *fr_node_p = ADIOI_Flatlist;
+    ADIOI_Flatlist_node *fr_node_p;
     int i = -1, fr_dtype_ct = 0;
 
     /* Should have already been flattened in calc_file_realms() */
-    while (fr_node_p->type != (*fr_type_p))
-	fr_node_p = fr_node_p->next;
+    fr_node_p = ADIOI_Flatten_and_find(*fr_type_p);
     assert(fr_node_p != NULL);
 
     /* Did we get to the first region of the file realm? */

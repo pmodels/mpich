@@ -39,10 +39,7 @@ void ADIOI_Get_eof_offset(ADIO_File fd, ADIO_Offset *eof_offset)
 	*eof_offset = (fsize - fd->disp + etype_size - 1)/etype_size;
     /* ceiling division in case fsize is not a multiple of etype_size;*/
     else {
-	/* filetype already flattened in ADIO_Open */
-	flat_file = ADIOI_Flatlist;
-	while (flat_file->type != fd->filetype) 
-	    flat_file = flat_file->next;
+	flat_file = ADIOI_Flatten_and_find(fd->filetype);
 	
 	MPI_Type_size_x(fd->filetype, &filetype_size);
 	MPI_Type_extent(fd->filetype, &filetype_extent);

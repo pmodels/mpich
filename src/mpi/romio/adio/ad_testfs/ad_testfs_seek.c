@@ -44,8 +44,7 @@ ADIO_Offset ADIOI_TESTFS_SeekIndividual(ADIO_File fd, ADIO_Offset offset,
 
     if (filetype_is_contig) off = fd->disp + etype_size * offset;
     else {
-        flat_file = ADIOI_Flatlist;
-        while (flat_file->type != fd->filetype) flat_file = flat_file->next;
+	flat_file = ADIOI_Flatten_and_find(fd->filetype);
 
 	MPI_Type_extent(fd->filetype, &filetype_extent);
 	MPI_Type_size_x(fd->filetype, &filetype_size);
