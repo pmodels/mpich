@@ -119,6 +119,10 @@ typedef struct {
 
     /* error string storage for MPIU_Strerror */
     char strerrbuf[MPIU_STRERROR_BUF_SIZE];
+
+#if (MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE)
+    int lock_depth;
+#endif
 } MPIUI_Per_thread_t;
 
 #if defined (MPICH_IS_THREADED)
