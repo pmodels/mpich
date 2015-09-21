@@ -83,7 +83,6 @@ int MPI_Type_match_size(int typeclass, int size, MPI_Datatype *datatype)
     MPI_Datatype matched_datatype = MPI_DATATYPE_NULL;
     int i;
     MPI_Aint tsize;
-    MPID_THREADPRIV_DECL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_MATCH_SIZE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -92,8 +91,6 @@ int MPI_Type_match_size(int typeclass, int size, MPI_Datatype *datatype)
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_MATCH_SIZE);
 
-    MPID_THREADPRIV_GET;
-    
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
     {
