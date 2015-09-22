@@ -655,7 +655,7 @@ int MPIDI_VC_Init( MPIDI_VC_t *vc, MPIDI_PG_t *pg, int rank )
 /* ----------------------------------------------------------------------- */
 /* Routines to vend topology information. */
 
-static MPID_Node_id_t g_num_nodes = 0;
+static MPID_Node_id_t g_max_node_id = -1;
 char MPIU_hostname[MAX_HOSTNAME_LEN] = "_UNKNOWN_"; /* '_' is an illegal char for a hostname so */
                                                     /* this will never match */
 
@@ -678,7 +678,7 @@ int MPID_Get_node_id(MPID_Comm *comm, int rank, MPID_Node_id_t *id_p)
 int MPID_Get_max_node_id(MPID_Comm *comm, MPID_Node_id_t *max_id_p)
 {
     /* easiest way to implement this is to track it at PG create/destroy time */
-    *max_id_p = g_num_nodes - 1;
+    *max_id_p = g_max_node_id;
     MPIU_Assert(*max_id_p >= 0);
     return MPI_SUCCESS;
 }
@@ -922,26 +922,11 @@ done:
 
 #endif
 
-#if defined HAVE_QSORT
-static int compare_ints(const void *orig_x, const void *orig_y)
-{
-    int x = *((int *) orig_x);
-    int y = *((int *) orig_y);
-
-    if (x == y)
-        return 0;
-    else if (x < y)
-        return -1;
-    else
-        return 1;
-}
-#endif
-
 #undef FUNCNAME
 #define FUNCNAME populate_ids_from_mapping
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int populate_ids_from_mapping(char *mapping, MPID_Node_id_t *num_nodes, MPIDI_PG_t *pg, int *did_map)
+static int populate_ids_from_mapping(char *mapping, MPID_Node_id_t *max_node_id, MPIDI_PG_t *pg, int *did_map)
 {
     int mpi_errno = MPI_SUCCESS;
     /* PMI_process_mapping is available */
@@ -952,7 +937,6 @@ static int populate_ids_from_mapping(char *mapping, MPID_Node_id_t *num_nodes, M
     int block, block_node, node_proc;
     int *tmp_rank_list, i;
     int found_wrap;
-    MPIU_CHKLMEM_DECL(1);
 
     *did_map = 1; /* reset upon failure */
 
@@ -992,50 +976,14 @@ static int populate_ids_from_mapping(char *mapping, MPID_Node_id_t *num_nodes, M
         }
     }
 
-break_out:
-    /* Find the number of unique node ids.  This is the classic
-     * element distinctness problem, for which the lower bound time
-     * complexity is O(N log N).  Here we use a simple algorithm to
-     * sort the array and find the number of changes in the array
-     * through a linear search.  There are certainly better algorithms
-     * available, which can be employed. */
-    MPIU_CHKLMEM_MALLOC(tmp_rank_list, int *, pg->size * sizeof(int), mpi_errno, "tmp_rank_list");
+ break_out:
+    /* identify maximum node id */
+    *max_node_id = -1;
     for (i = 0; i < pg->size; i++)
-        tmp_rank_list[i] = pg->vct[i].node_id;
-
-#if defined HAVE_QSORT
-    qsort(tmp_rank_list, pg->size, sizeof(int), compare_ints);
-#else
-    /* fall through to insertion sort if qsort is unavailable/disabled */
-    {
-        int j, tmp;
-
-        for (i = 1; i < pg->size; ++i) {
-            tmp = tmp_rank_list[i];
-            j = i - 1;
-            while (1) {
-                if (tmp_rank_list[j] > tmp) {
-                    tmp_rank_list[j+1] = tmp_rank_list[j];
-                    j = j - 1;
-                    if (j < 0)
-                        break;
-                }
-                else {
-                    break;
-                }
-            }
-            tmp_rank_list[j+1] = tmp;
-        }
-    }
-#endif
-
-    *num_nodes = 1;
-    for (i = 1; i < pg->size; i++)
-        if (tmp_rank_list[i] != tmp_rank_list[i-1])
-            (*num_nodes)++;
+        if (pg->vct[i].node_id + 1 > *max_node_id)
+            *max_node_id = pg->vct[i].node_id;
 
 fn_exit:
-    MPIU_CHKLMEM_FREEALL();
     MPIU_Free(mb);
     return mpi_errno;
 fn_fail:
@@ -1054,8 +1002,8 @@ fn_fail:
    Fallback Algorithm:
 
    Each process kvs_puts its hostname and stores the total number of
-   processes (g_num_global).  Each process determines the number of nodes
-   (g_num_nodes) and assigns a node id to each process (g_node_ids[]):
+   processes (g_num_global).  Each process determines maximum node id
+   (g_max_node_id) and assigns a node id to each process (g_node_ids[]):
 
      For each hostname the process seaches the list of unique nodes
      names (node_names[]) for a match.  If a match is found, the node id
@@ -1089,7 +1037,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
     MPL_env2int("PMI_SUBVERSION", &pmi_subversion);
 
     if (pg->size == 1) {
-        pg->vct[0].node_id = g_num_nodes++;
+        pg->vct[0].node_id = ++g_max_node_id;
         goto fn_exit;
     }
 
@@ -1112,7 +1060,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
     if (no_local) {
         /* just assign 0 to n-1 as node ids and bail */
         for (i = 0; i < pg->size; ++i) {
-            pg->vct[i].node_id = g_num_nodes++;
+            pg->vct[i].node_id = ++g_max_node_id;
         }
         goto fn_exit;
     }
@@ -1133,7 +1081,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKINTERNAL(!found, mpi_errno, "PMI_process_mapping attribute not found");
         /* this code currently assumes pg is comm_world */
-        mpi_errno = populate_ids_from_mapping(process_mapping, &g_num_nodes, pg, &did_map);
+        mpi_errno = populate_ids_from_mapping(process_mapping, &g_max_node_id, pg, &did_map);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKINTERNAL(!did_map, mpi_errno, "unable to populate node ids from PMI_process_mapping");
     }
@@ -1163,7 +1111,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
         if (pmi_errno == 0) {
             int did_map = 0;
             /* this code currently assumes pg is comm_world */
-            mpi_errno = populate_ids_from_mapping(value, &g_num_nodes, pg, &did_map);
+            mpi_errno = populate_ids_from_mapping(value, &g_max_node_id, pg, &did_map);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             if (did_map) {
                 goto odd_even_cliques;
@@ -1193,22 +1141,22 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
         node_names[i][0] = '\0';
     }
 
-    g_num_nodes = 0; /* defensive */
+    g_max_node_id = 0; /* defensive */
 
     for (i = 0; i < pg->size; ++i)
     {
-        MPIU_Assert(g_num_nodes < pg->size);
+        MPIU_Assert(g_max_node_id < pg->size);
         if (i == our_pg_rank)
         {
             /* This is us, no need to perform a get */
-            MPL_snprintf(node_names[g_num_nodes], key_max_sz, "%s", MPIU_hostname);
+            MPL_snprintf(node_names[g_max_node_id], key_max_sz, "%s", MPIU_hostname);
         }
         else
         {
             memset(key, 0, key_max_sz);
             MPL_snprintf(key, key_max_sz, "hostname[%d]", i);
 
-            pmi_errno = PMI_KVS_Get(kvs_name, key, node_names[g_num_nodes], key_max_sz);
+            pmi_errno = PMI_KVS_Get(kvs_name, key, node_names[g_max_node_id], key_max_sz);
             MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);
         }
 
@@ -1216,13 +1164,13 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
         /* FIXME:need a better algorithm -- this one does O(N^2) strncmp()s! */
         /* The right fix is to get all this information from the process
            manager, rather than bother with this hostname hack at all. */
-        for (j = 0; j < g_num_nodes; ++j)
-            if (!strncmp(node_names[j], node_names[g_num_nodes], key_max_sz))
+        for (j = 0; j < g_max_node_id + 1; ++j)
+            if (!strncmp(node_names[j], node_names[g_max_node_id], key_max_sz))
                 break;
-        if (j == g_num_nodes)
-            ++g_num_nodes;
+        if (j == g_max_node_id + 1)
+            ++g_max_node_id;
         else
-            node_names[g_num_nodes][0] = '\0';
+            node_names[g_max_node_id][0] = '\0';
         pg->vct[i].node_id = j;
     }
 
@@ -1234,8 +1182,8 @@ odd_even_cliques:
            I think this is OK */
         for (i = 0; i < pg->size; ++i)
             if (i & 0x1)
-                pg->vct[i].node_id += g_num_nodes;
-        g_num_nodes *= 2;
+                pg->vct[i].node_id += g_max_node_id + 1;
+        g_max_node_id = (g_max_node_id + 1) * 2;
     }
 #endif
 
