@@ -37,6 +37,12 @@ void *ADIOI_Calloc_fn(size_t nelem, size_t elsize, int lineno, const char *fname
 void *ADIOI_Realloc_fn(void *ptr, size_t size, int lineno, const char *fname);
 void ADIOI_Free_fn(void *ptr, int lineno, const char *fname);
 
+/* we used to call MPIU_Malloc, MPIU_Calloc, etc.  these macros either call
+ * malloc/calloc directly or they add instrumentation/tracing.  When we re-did
+ * the build system in 2011 we hacked ROMIO to call MPIU_trmalloc directly --
+ * once again ROMIO's sort-of standalone status bites us.  We dont' test for
+ * MPIU_FUNCS: these are set in configure with an AC_DEFINE when we figure out
+ * we are built as part of MPICH */
 void *ADIOI_Malloc_fn(size_t size, int lineno, const char *fname)
 {
     void *new;
