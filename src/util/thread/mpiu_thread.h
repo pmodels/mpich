@@ -77,6 +77,7 @@ typedef struct {
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL || \
     MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
     MPIU_Thread_mutex_t global_mutex;
+    MPIU_Thread_mutex_t memalloc_mutex; /* for MPIU_{Malloc,Free,Calloc} */
 #endif
 
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
@@ -85,7 +86,6 @@ typedef struct {
     MPIU_Thread_mutex_t completion_mutex;
     MPIU_Thread_mutex_t ctx_mutex;
     MPIU_Thread_mutex_t pmi_mutex;
-    MPIU_Thread_mutex_t memalloc_mutex; /* for MPIU_{Malloc,Free,Calloc} */
 #endif
 } MPIR_Thread_info_t;
 extern MPIR_Thread_info_t MPIR_ThreadInfo;
@@ -96,7 +96,7 @@ extern MPIR_Thread_info_t MPIR_ThreadInfo;
 #define MPIR_THREAD_POBJ_COMPLETION_MUTEX     MPIR_ThreadInfo.completion_mutex
 #define MPIR_THREAD_POBJ_CTX_MUTEX            MPIR_ThreadInfo.ctx_mutex
 #define MPIR_THREAD_POBJ_PMI_MUTEX            MPIR_ThreadInfo.pmi_mutex
-#define MPIR_THREAD_POBJ_MEMALLOC_MUTEX       MPIR_ThreadInfo.memalloc_mutex
+#define MPIR_THREAD_ALLGRAN_MEMALLOC_MUTEX    MPIR_ThreadInfo.memalloc_mutex
 #define MPIR_THREAD_POBJ_COMM_MUTEX(_comm_ptr) _comm_ptr->mutex
 #define MPIR_THREAD_POBJ_WIN_MUTEX(_win_ptr)   _win_ptr->mutex
 
