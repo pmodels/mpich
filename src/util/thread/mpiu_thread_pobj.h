@@ -74,10 +74,15 @@
  * the order should be to acquire MPIDCOMM first, then MSGQUEUE.  Release in
  * reverse order. */
 
-/* POBJ locks are all real ops */
+/* POBJ locks are all real recursive ops */
 #define MPIUI_THREAD_CS_ENTER_POBJ(mutex) MPIUI_THREAD_CS_ENTER_NONRECURSIVE("POBJ", mutex)
 #define MPIUI_THREAD_CS_EXIT_POBJ(mutex) MPIUI_THREAD_CS_EXIT_NONRECURSIVE("POBJ", mutex)
 #define MPIUI_THREAD_CS_YIELD_POBJ(mutex) MPIUI_THREAD_CS_YIELD_NONRECURSIVE("POBJ", mutex)
+
+/* ALLGRAN locks are all real nonrecursive ops */
+#define MPIUI_THREAD_CS_ENTER_ALLGRAN(mutex) MPIUI_THREAD_CS_ENTER_NONRECURSIVE("ALLGRAN", mutex)
+#define MPIUI_THREAD_CS_EXIT_ALLGRAN(mutex) MPIUI_THREAD_CS_EXIT_NONRECURSIVE("ALLGRAN", mutex)
+#define MPIUI_THREAD_CS_YIELD_ALLGRAN(mutex) MPIUI_THREAD_CS_YIELD_NONRECURSIVE("ALLGRAN", mutex)
 
 /* GLOBAL locks are all NO-OPs */
 #define MPIUI_THREAD_CS_ENTER_GLOBAL(mutex)
