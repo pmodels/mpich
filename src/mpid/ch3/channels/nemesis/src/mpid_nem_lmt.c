@@ -193,7 +193,7 @@ static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
 
     MPIDI_FUNC_ENTER(MPID_STATE_PKT_RTS_HANDLER);
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_MSGQ_MUTEX);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
 
     MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST, "received LMT RTS pkt, sreq=0x%08x, rank=%d, tag=%d, context=%d, data_sz=" MPIDI_MSG_SZ_FMT,
                                         rts_pkt->sender_req_id, rts_pkt->match.parts.rank, rts_pkt->match.parts.tag, rts_pkt->match.parts.context_id,
@@ -289,7 +289,7 @@ static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
     
     MPIU_CHKPMEM_COMMIT();
  fn_exit:
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_MSGQ_MUTEX);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
     MPIDI_FUNC_EXIT(MPID_STATE_PKT_RTS_HANDLER);
     return mpi_errno;
  fn_fail:

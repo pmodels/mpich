@@ -84,9 +84,9 @@ int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
          * aren't any unexpected messages hanging around. */
 
         /* Clean up the receive and unexpected queues */
-        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_MSGQ_MUTEX);
+        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
         MPIDI_CH3U_Clean_recvq(comm_ptr);
-        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_MSGQ_MUTEX);
+        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
     } else if (is_remote)  { /* If this is local, we've already revoked and don't need to do it again. */
         /* Decrement the revoke counter */
         comm_ptr->dev.waiting_for_revoke--;

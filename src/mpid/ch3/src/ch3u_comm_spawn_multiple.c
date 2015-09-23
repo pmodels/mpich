@@ -173,7 +173,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
                 */
             }
             /* XXX DJG don't need this, PMI API is thread-safe? */
-            /*MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_PMI_MUTEX);*/
+            /*MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);*/
             /* release the global CS for spawn PMI calls */
             MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
             pmi_errno = PMI2_Job_Spawn(count, (const char **)commands,
@@ -185,7 +185,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
                                        /*jobId, jobIdSize,*/ /* XXX DJG job stuff? */
                                        pmi_errcodes);
             MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-            /*MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_PMI_MUTEX);*/
+            /*MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);*/
             MPIU_Free(argcs);
             if (pmi_errno != PMI2_SUCCESS) {
                 MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
@@ -225,7 +225,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
         preput_keyval_vector.val = port_name;
 
 
-        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_PMI_MUTEX);
+        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);
         pmi_errno = PMI_Spawn_multiple(count, (const char **)
                                        commands, 
                                        (const char ***) argvs,
@@ -234,7 +234,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
                                        info_keyval_vectors, 1, 
                                        &preput_keyval_vector,
                                        pmi_errcodes);
-	MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_PMI_MUTEX);
+	MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);
         if (pmi_errno != PMI_SUCCESS) {
 	    MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
 		 "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
@@ -339,16 +339,16 @@ int MPIDI_CH3_GetParentPort(char ** parent_port)
 #ifdef USE_PMI2_API
         {
             int vallen = 0;
-            MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_PMI_MUTEX);
+            MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);
             pmi_errno = PMI2_KVS_Get(kvsname, PMI2_ID_NULL, PARENT_PORT_KVSKEY, val, sizeof(val), &vallen);
-            MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_PMI_MUTEX);
+            MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);
             if (pmi_errno)
                 MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_kvsget", "**pmi_kvsget %s", PARENT_PORT_KVSKEY);
         }
 #else
-	MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_PMI_MUTEX);
+	MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);
 	pmi_errno = PMI_KVS_Get( kvsname, PARENT_PORT_KVSKEY, val, sizeof(val));
-	MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_PMI_MUTEX);
+	MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);
 	if (pmi_errno) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**pmi_kvsget", "**pmi_kvsget %d", pmi_errno);
             goto fn_exit;

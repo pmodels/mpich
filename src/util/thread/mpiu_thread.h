@@ -91,12 +91,12 @@ typedef struct {
 extern MPIR_Thread_info_t MPIR_ThreadInfo;
 
 #define MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX      MPIR_ThreadInfo.global_mutex
-#define MPIR_THREAD_HANDLE_MUTEX      MPIR_ThreadInfo.handle_mutex
-#define MPIR_THREAD_MSGQ_MUTEX        MPIR_ThreadInfo.msgq_mutex
-#define MPIR_THREAD_COMPLETION_MUTEX  MPIR_ThreadInfo.completion_mutex
-#define MPIR_THREAD_CTX_MUTEX         MPIR_ThreadInfo.ctx_mutex
-#define MPIR_THREAD_PMI_MUTEX         MPIR_ThreadInfo.pmi_mutex
-#define MPIR_THREAD_MEMALLOC_MUTEX    MPIR_ThreadInfo.memalloc_mutex
+#define MPIR_THREAD_POBJ_HANDLE_MUTEX         MPIR_ThreadInfo.handle_mutex
+#define MPIR_THREAD_POBJ_MSGQ_MUTEX           MPIR_ThreadInfo.msgq_mutex
+#define MPIR_THREAD_POBJ_COMPLETION_MUTEX     MPIR_ThreadInfo.completion_mutex
+#define MPIR_THREAD_POBJ_CTX_MUTEX            MPIR_ThreadInfo.ctx_mutex
+#define MPIR_THREAD_POBJ_PMI_MUTEX            MPIR_ThreadInfo.pmi_mutex
+#define MPIR_THREAD_POBJ_MEMALLOC_MUTEX       MPIR_ThreadInfo.memalloc_mutex
 #define MPIR_THREAD_POBJ_COMM_MUTEX(_comm_ptr) _comm_ptr->mutex
 #define MPIR_THREAD_POBJ_WIN_MUTEX(_win_ptr)   _win_ptr->mutex
 

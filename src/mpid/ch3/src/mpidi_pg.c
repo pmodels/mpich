@@ -706,13 +706,13 @@ static int getConnInfoKVS( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
     }
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_PMI_MUTEX);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);
     pmi_errno = PMI_KVS_Get(pg->connData, key, buf, bufsize );
     if (pmi_errno) {
 	MPIDI_PG_CheckForSingleton();
 	pmi_errno = PMI_KVS_Get(pg->connData, key, buf, bufsize );
     }
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_PMI_MUTEX);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);
     if (pmi_errno) {
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**pmi_kvs_get");
     }

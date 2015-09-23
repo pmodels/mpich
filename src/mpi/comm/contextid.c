@@ -349,7 +349,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
     while (*context_id == 0) {
         /* We lock only around access to the mask (except in the global locking
          * case).  If another thread is using the mask, we take a mask of zero. */
-        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_CTX_MUTEX);
+        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
 
         if (initialize_context_mask) {
             context_id_init();
@@ -418,7 +418,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
                 MPIU_DBG_MSG(COMM, VERBOSE, "Copied local_mask");
             }
         }
-        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_CTX_MUTEX);
+        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
 
         /* Note: MPIR_MAX_CONTEXT_MASK elements of local_mask are used by the
          * context ID allocation algorithm.  The additional element is ignored
@@ -451,7 +451,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
 
         /* MT FIXME 2/3 cases don't seem to need the CONTEXTID CS, check and
          * narrow this region */
-        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_CTX_MUTEX);
+        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
         if (ignore_id) {
             /* we don't care what the value was, but make sure that everyone
              * who did care agreed on a value */
@@ -476,7 +476,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
                  * When we do a collective operation, we anyway yield
                  * for other others */
                 MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-                MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_CTX_MUTEX);
+                MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
             }
         }
         else if (own_mask) {
@@ -505,7 +505,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
                  * When we do a collective operation, we anyway yield
                  * for other others */
                 MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-                MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_CTX_MUTEX);
+                MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
             }
         }
         else {
@@ -514,9 +514,9 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
              * do a collective operation, we anyway yield for other
              * others */
             MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-            MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_CTX_MUTEX);
+            MPID_THREAD_CS_YIELD(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
         }
-        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_CTX_MUTEX);
+        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
 
         /* Test for context ID exhaustion: All threads that will participate in
          * the new communicator owned the mask and could not allocate a context
@@ -530,13 +530,13 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
             int minfree;
 
             if (own_mask) {
-                MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_CTX_MUTEX);
+                MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
                 mask_in_use = 0;
                 if (lowest_context_id == comm_ptr->context_id && lowest_tag == tag) {
                     lowest_context_id = MPIR_MAXID;
                     lowest_tag = -1;
                 }
-                MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_CTX_MUTEX);
+                MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
             }
 
             context_mask_stats(&nfree, &ntotal);
@@ -1211,12 +1211,12 @@ void MPIR_Free_contextid(MPIU_Context_id_t context_id)
     }
     /* --END ERROR HANDLING-- */
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_CTX_MUTEX);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
     /* MT: Note that this update must be done atomically in the multithreaedd
      * case.  In the "one, single lock" implementation, that lock is indeed
      * held when this operation is called. */
     context_mask[idx] |= (0x1 << bitpos);
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_CTX_MUTEX);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
 
     MPIU_DBG_MSG_FMT(COMM, VERBOSE,
                      (MPIU_DBG_FDEST,

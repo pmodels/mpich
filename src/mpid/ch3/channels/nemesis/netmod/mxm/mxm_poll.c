@@ -236,9 +236,9 @@ static int _mxm_handle_rreq(MPID_Request * req)
     MPID_nem_mxm_req_area *req_area = NULL;
     void *tmp_buf = NULL;
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_MSGQ_MUTEX);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
     found = MPIDI_CH3U_Recvq_DP(req);
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_MSGQ_MUTEX);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
     /* an MPI_ANY_SOURCE request may have been previously removed from the
      * CH3 queue by an FDP (find and dequeue posted) operation */
     if (req->dev.match.parts.rank != MPI_ANY_SOURCE) {

@@ -260,7 +260,7 @@ extern MPIDI_Process_t MPIDI_Process;
         if (!MPID_THREADPRIV_FIELD(request_handles)) {                 \
             MPID_Request *prev, *cur;                                  \
             /* batch allocate a linked list of requests */             \
-            MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_HANDLE_MUTEX);                        \
+            MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);                        \
             prev = MPIU_Handle_obj_alloc_unsafe(&MPID_Request_mem);    \
             prev->next = NULL;                                         \
             assert(prev);                                              \
@@ -270,7 +270,7 @@ extern MPIDI_Process_t MPIDI_Process;
                 cur->next = prev;                                      \
                 prev = cur;                                            \
             }                                                          \
-            MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_HANDLE_MUTEX);                         \
+            MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);                         \
             MPID_THREADPRIV_FIELD(request_handles) = cur;              \
             MPID_THREADPRIV_FIELD(request_handle_count) += MPID_REQUEST_TLS_MAX;    \
         }                                                              \
@@ -1225,12 +1225,12 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 #ifndef MPIDI_CH3I_INCR_PROGRESS_COMPLETION_COUNT
 #define MPIDI_CH3I_INCR_PROGRESS_COMPLETION_COUNT                                \
     do {                                                                         \
-        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_COMPLETION_MUTEX);                                       \
+        MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMPLETION_MUTEX);                                       \
         ++MPIDI_CH3I_progress_completion_count;                                  \
         MPIU_DBG_MSG_D(CH3_PROGRESS,VERBOSE,                                     \
                      "just incremented MPIDI_CH3I_progress_completion_count=%d", \
                      MPIDI_CH3I_progress_completion_count);                      \
-        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_COMPLETION_MUTEX);                                        \
+        MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMPLETION_MUTEX);                                        \
     } while (0)
 #endif
 

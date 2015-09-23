@@ -177,17 +177,17 @@ static int thread_cs_init( void )
     /* MPICH_THREAD_GRANULARITY_PER_OBJECT: Multiple locks */
     MPID_Thread_mutex_create(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIU_Assert(err == 0);
-    MPID_Thread_mutex_create(&MPIR_THREAD_HANDLE_MUTEX, &err);
+    MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_HANDLE_MUTEX, &err);
     MPIU_Assert(err == 0);
-    MPID_Thread_mutex_create(&MPIR_THREAD_MSGQ_MUTEX, &err);
+    MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_MSGQ_MUTEX, &err);
     MPIU_Assert(err == 0);
-    MPID_Thread_mutex_create(&MPIR_THREAD_COMPLETION_MUTEX, &err);
+    MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_COMPLETION_MUTEX, &err);
     MPIU_Assert(err == 0);
-    MPID_Thread_mutex_create(&MPIR_THREAD_CTX_MUTEX, &err);
+    MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_CTX_MUTEX, &err);
     MPIU_Assert(err == 0);
-    MPID_Thread_mutex_create(&MPIR_THREAD_PMI_MUTEX, &err);
+    MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_PMI_MUTEX, &err);
     MPIU_Assert(err == 0);
-    MPID_Thread_mutex_create(&MPIR_THREAD_MEMALLOC_MUTEX, &err);
+    MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_MEMALLOC_MUTEX, &err);
     MPIU_Assert(err == 0);
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_LOCK_FREE
@@ -228,15 +228,15 @@ int MPIR_Thread_CS_Finalize( void )
      * one for each logical class (e.g., each type of object) */
     MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIU_Assert(err == 0);
-    MPID_Thread_mutex_destroy(&MPIR_THREAD_HANDLE_MUTEX, &err);
+    MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_HANDLE_MUTEX, &err);
     MPIU_Assert(err == 0);
-    MPID_Thread_mutex_destroy(&MPIR_THREAD_MSGQ_MUTEX, &err);
+    MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_MSGQ_MUTEX, &err);
     MPIU_Assert(err == 0);
-    MPID_Thread_mutex_destroy(&MPIR_THREAD_COMPLETION_MUTEX, &err);
+    MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_COMPLETION_MUTEX, &err);
     MPIU_Assert(err == 0);
-    MPID_Thread_mutex_destroy(&MPIR_THREAD_CTX_MUTEX, &err);
+    MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_CTX_MUTEX, &err);
     MPIU_Assert(err == 0);
-    MPID_Thread_mutex_destroy(&MPIR_THREAD_PMI_MUTEX, &err);
+    MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_PMI_MUTEX, &err);
     MPIU_Assert(err == 0);
 
 
