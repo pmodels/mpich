@@ -56,9 +56,9 @@ int MPID_Cancel_send(MPID_Request * sreq)
 	MPIU_DBG_MSG(CH3_OTHER,VERBOSE,
 		     "attempting to cancel message sent to self");
 	
-	MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_MSGQ_MUTEX);
+	MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
 	rreq = MPIDI_CH3U_Recvq_FDU(sreq->handle, &sreq->dev.match);
-	MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_MSGQ_MUTEX);
+	MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
 	if (rreq)
 	{
 	    MPIU_Assert(rreq->partner_request == sreq);

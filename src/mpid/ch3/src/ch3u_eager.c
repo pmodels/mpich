@@ -296,7 +296,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     int found;
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_MSGQ_MUTEX);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
 
     /* printf( "Receiving short eager!\n" ); fflush(stdout); */
     MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
@@ -508,7 +508,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     /* MT note: it may be possible to narrow this CS after careful
      * consideration.  Note though that the (!found) case must be wholly
      * protected by this CS. */
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_MSGQ_MUTEX);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
     return mpi_errno;
 }
 
@@ -615,7 +615,7 @@ int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     MPIDI_msg_sz_t data_len;
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_MSGQ_MUTEX);
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
 
     MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
 	"received eager send pkt, sreq=0x%08x, rank=%d, tag=%d, context=%d",
@@ -685,7 +685,7 @@ int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     }
 
  fn_fail:
-    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_MSGQ_MUTEX);
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
     return mpi_errno;
 }
 
