@@ -53,6 +53,8 @@ int MPI_File_read_ordered(MPI_File fh, void *buf, int count,
     ADIO_Offset shared_fp=0;
     ADIO_File adio_fh;
 
+    ROMIO_THREAD_CS_ENTER();
+
     adio_fh = MPIO_File_resolve(fh);
 
     /* --BEGIN ERROR HANDLING-- */
@@ -102,6 +104,8 @@ int MPI_File_read_ordered(MPI_File fh, void *buf, int count,
     /* --END ERROR HANDLING-- */
 
 fn_exit:
+    ROMIO_THREAD_CS_EXIT();
+
     /* FIXME: Check for error code from ReadStridedColl? */
     return error_code;
 }

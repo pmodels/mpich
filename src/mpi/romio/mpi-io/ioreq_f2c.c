@@ -49,6 +49,8 @@ MPIO_Request MPIO_Request_f2c(MPI_Fint request)
     return (MPIO_Request) request;
 #else
 
+    ROMIO_THREAD_CS_ENTER();
+    
     if (!request) {
 	return MPIO_REQUEST_NULL;
     }
@@ -63,6 +65,7 @@ MPIO_Request MPIO_Request_f2c(MPI_Fint request)
     /* --END ERROR HANDLING-- */
 
 fn_exit:
+    ROMIO_THREAD_CS_EXIT();
     return ADIOI_Reqtable[request];
 #endif
 }

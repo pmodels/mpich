@@ -55,6 +55,8 @@ int MPI_File_iread_shared(MPI_File fh, void *buf, int count,
     ADIO_Offset off, shared_fp;
     MPI_Offset nbytes=0;
 
+    ROMIO_THREAD_CS_ENTER();
+
     adio_fh = MPIO_File_resolve(fh);
 
     /* --BEGIN ERROR HANDLING-- */
@@ -132,6 +134,7 @@ int MPI_File_iread_shared(MPI_File fh, void *buf, int count,
     /* --END ERROR HANDLING-- */
 
 fn_exit:
+    ROMIO_THREAD_CS_EXIT();
     return error_code;
 }
 #endif

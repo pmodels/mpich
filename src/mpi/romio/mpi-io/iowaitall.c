@@ -33,6 +33,8 @@ int MPIO_Waitall( int count, MPIO_Request requests[], MPI_Status statuses[] )
     int notdone, i, flag, err; 
     MPID_THREADPRIV_DECL;
 
+    ROMIO_THREAD_CS_ENTER();
+
     if (count == 1)  {
 	    err = MPIO_Wait(requests, statuses);
 	    goto fn_exit;
@@ -65,6 +67,8 @@ int MPIO_Waitall( int count, MPIO_Request requests[], MPI_Status statuses[] )
 
     err = MPI_SUCCESS;
 fn_exit:
+
+    ROMIO_THREAD_CS_EXIT();
     return err;
 }
 

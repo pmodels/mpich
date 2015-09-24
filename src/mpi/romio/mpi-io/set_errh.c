@@ -42,6 +42,8 @@ int MPI_File_set_errhandler(MPI_File mpi_fh, MPI_Errhandler errhandler)
     ADIO_File fh;
     MPID_THREADPRIV_DECL;
 
+    ROMIO_THREAD_CS_ENTER();
+
     if (mpi_fh == MPI_FILE_NULL) {
 	ADIOI_DFLT_ERR_HANDLER = errhandler;
     }
@@ -69,5 +71,6 @@ int MPI_File_set_errhandler(MPI_File mpi_fh, MPI_Errhandler errhandler)
     }
 
 fn_exit:
+    ROMIO_THREAD_CS_EXIT();
     return error_code;
 }
