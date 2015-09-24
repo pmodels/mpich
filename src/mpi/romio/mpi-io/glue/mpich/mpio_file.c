@@ -69,7 +69,6 @@ MPI_Fint MPIO_File_c2f(MPI_File fh)
     if (fh->fortran_handle != -1)
 	return fh->fortran_handle;
 
-    MPIR_Ext_cs_enter(ADIO_THREAD_MUTEX);
     if (!ADIOI_Ftable) {
 	ADIOI_Ftable_max = 1024;
 	ADIOI_Ftable = (MPI_File *)
@@ -88,7 +87,6 @@ MPI_Fint MPIO_File_c2f(MPI_File fh)
     ADIOI_Ftable_ptr++;
     ADIOI_Ftable[ADIOI_Ftable_ptr] = fh;
     fh->fortran_handle = ADIOI_Ftable_ptr;
-    MPIR_Ext_cs_exit(ADIO_THREAD_MUTEX);
     return (MPI_Fint) ADIOI_Ftable_ptr;
 #endif
 }
