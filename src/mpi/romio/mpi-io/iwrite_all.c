@@ -84,6 +84,8 @@ int MPIOI_File_iwrite_all(MPI_File fh,
     void *e32buf=NULL;
     const void *xbuf=NULL;
 
+    ROMIO_THREAD_CS_ENTER();
+
     adio_fh = MPIO_File_resolve(fh);
 
     /* --BEGIN ERROR HANDLING-- */
@@ -129,6 +131,8 @@ int MPIOI_File_iwrite_all(MPI_File fh,
 
 fn_exit:
     if (e32buf != NULL) ADIOI_Free(e32buf);
+    ROMIO_THREAD_CS_EXIT();
+
     return error_code;
 }
 #endif

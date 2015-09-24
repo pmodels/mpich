@@ -56,6 +56,7 @@ MPI_Fint MPIO_Request_c2f(MPIO_Request request)
 	    return (MPI_Fint) 0;
     }
 
+    ROMIO_THREAD_CS_ENTER();
     if (!ADIOI_Reqtable) {
 	ADIOI_Reqtable_max = 1024;
 	ADIOI_Reqtable = (MPIO_Request *)
@@ -74,6 +75,7 @@ MPI_Fint MPIO_Request_c2f(MPIO_Request request)
     ADIOI_Reqtable_ptr++;
     ADIOI_Reqtable[ADIOI_Reqtable_ptr] = request;
 
+    ROMIO_THREAD_CS_EXIT();
     return (MPI_Fint) ADIOI_Reqtable_ptr;
 #endif
 }

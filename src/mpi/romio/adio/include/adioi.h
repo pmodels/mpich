@@ -1087,6 +1087,4 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
 
 #endif
 
-extern void *ADIO_THREAD_MUTEX;
-
 #endif  /* ADIOI_INCLUDE */

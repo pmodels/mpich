@@ -35,52 +35,24 @@ int MPIR_Ext_assert_fail(const char *cond, const char *file_name, int line_num)
     return MPIR_Assert_fail(cond, file_name, line_num);
 }
 
-void MPIR_Ext_thread_mutex_create(void **mutex_p_p)
-{
-    int err;
-    MPID_Thread_mutex_t *m;
-
-    m = (MPID_Thread_mutex_t *) MPIU_Malloc(sizeof(MPID_Thread_mutex_t));
-    MPID_Thread_mutex_create(m, &err);
-    MPIU_Assert(err == 0);
-
-    *mutex_p_p = (void *) m;
-}
-
-void MPIR_Ext_thread_mutex_destroy(void *mutex_p)
-{
-    int err;
-    MPID_Thread_mutex_t *m = (MPID_Thread_mutex_t *) mutex_p;
-
-    MPID_Thread_mutex_destroy(m, &err);
-    MPIU_Assert(err == 0);
-
-    MPIU_Free(mutex_p);
-}
-
 /* These two routines export the GLOBAL CS_ENTER/EXIT macros as functions so
  * that ROMIO can use them.  These routines only support the GLOBAL granularity
  * of MPICH threading; other accommodations must be made for finer-grained
  * threading strategies. */
-void MPIR_Ext_cs_enter(void *mutex_p)
+void MPIR_Ext_cs_enter(void)
 {
-    MPID_THREAD_CS_ENTER(GLOBAL, *((MPID_Thread_mutex_t *) mutex_p));
+    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 
-void MPIR_Ext_cs_exit(void *mutex_p)
+void MPIR_Ext_cs_exit(void)
 {
-    MPID_THREAD_CS_EXIT(GLOBAL, *((MPID_Thread_mutex_t *) mutex_p));
-}
-
-void MPIR_Ext_cs_yield(void *mutex_p)
-{
-    MPID_THREAD_CS_YIELD(GLOBAL, *((MPID_Thread_mutex_t *) mutex_p));
+    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 }
 
 /* This routine is for a thread to yield control when the thread is waiting for
  * the completion of communication inside a ROMIO routine but the progress
  * engine is blocked by another thread. */
-void MPIR_Ext_cs_yield_global(void)
+void MPIR_Ext_cs_yield(void)
 {
     /* TODO: check whether the progress engine is blocked */
     MPID_THREAD_CS_YIELD(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);

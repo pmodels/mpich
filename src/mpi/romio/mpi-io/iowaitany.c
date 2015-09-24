@@ -34,6 +34,8 @@ int MPIO_Waitany(int count, MPIO_Request requests[], int *index,
     int i, flag, err; 
     MPID_THREADPRIV_DECL;
 
+    ROMIO_THREAD_CS_ENTER();
+
     if (count == 1) {
 	err = MPIO_Wait( requests, status );
 	if (!err) *index = 0;
@@ -76,5 +78,7 @@ int MPIO_Waitany(int count, MPIO_Request requests[], int *index,
     } while (flag == 0);
 
 fn_exit:
+    ROMIO_THREAD_CS_EXIT();
+
     return err;
 }

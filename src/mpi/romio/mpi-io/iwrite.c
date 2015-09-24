@@ -90,6 +90,7 @@ int MPIOI_File_iwrite(MPI_File fh,
     ADIO_File adio_fh;
     MPI_Offset nbytes=0;
 
+    ROMIO_THREAD_CS_ENTER();
     adio_fh = MPIO_File_resolve(fh);
 
     /* --BEGIN ERROR HANDLING-- */
@@ -161,6 +162,7 @@ int MPIOI_File_iwrite(MPI_File fh,
 			   offset, request, &error_code);
     }
 fn_exit:
+    ROMIO_THREAD_CS_EXIT();
     return error_code;
 }
 #endif

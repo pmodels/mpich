@@ -34,6 +34,8 @@ int MPIO_Testany(int count, MPIO_Request requests[], int *index,
     int i, err; 
     MPID_THREADPRIV_DECL;
 
+    ROMIO_THREAD_CS_ENTER();
+
     if (count == 1) {
 	err = MPIO_Test( requests, flag, status );
 	if (!err) *index = 0;
@@ -74,5 +76,6 @@ int MPIO_Testany(int count, MPIO_Request requests[], int *index,
 
 
 fn_exit:
+    ROMIO_THREAD_CS_EXIT();
     return err;
 }

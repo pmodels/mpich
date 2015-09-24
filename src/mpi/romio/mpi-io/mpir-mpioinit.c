@@ -13,7 +13,6 @@
 #endif
 
 extern int ADIO_Init_keyval;
-void *ADIO_THREAD_MUTEX = NULL;
 
 /* common code to stuff an attribute on a communicator for the purpose of
  * cleaning up in MPI_Finalize() */
@@ -49,9 +48,6 @@ void MPIR_MPIOInit(int * error_code) {
 
 	/* initialize ADIO */
         ADIO_Init( (int *)0, (char ***)0, error_code);
-
-        /* create mutexes */
-        MPIR_Ext_thread_mutex_create((void **) &ADIO_THREAD_MUTEX);
     }
     *error_code = MPI_SUCCESS;
 }

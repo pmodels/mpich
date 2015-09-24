@@ -83,6 +83,8 @@ int MPIOI_File_iread(MPI_File fh, MPI_Offset offset, int file_ptr_type, void *bu
     ADIO_Offset off, bufsize;
     MPI_Offset nbytes=0;
 
+    ROMIO_THREAD_CS_ENTER();
+
     adio_fh = MPIO_File_resolve(fh);
 
     /* --BEGIN ERROR HANDLING-- */
@@ -152,6 +154,8 @@ int MPIOI_File_iread(MPI_File fh, MPI_Offset offset, int file_ptr_type, void *bu
 			   offset, request, &error_code); 
 
 fn_exit:
+    ROMIO_THREAD_CS_EXIT();
+
     return error_code;
 }
 #endif

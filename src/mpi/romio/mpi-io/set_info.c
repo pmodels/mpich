@@ -40,6 +40,8 @@ int MPI_File_set_info(MPI_File fh, MPI_Info info)
     static char myname[] = "MPI_FILE_SET_INFO";
     ADIO_File adio_fh;
 
+    ROMIO_THREAD_CS_ENTER();
+
     adio_fh = MPIO_File_resolve(fh);
 
     /* --BEGIN ERROR HANDLING-- */
@@ -55,6 +57,8 @@ fn_exit:
     if (error_code != MPI_SUCCESS)
 	error_code = MPIO_Err_return_file(adio_fh, error_code);
     /* --END ERROR HANDLING-- */
+
+    ROMIO_THREAD_CS_EXIT();
 
     return error_code;
 fn_fail:

@@ -43,6 +43,8 @@ int MPI_File_get_group(MPI_File fh, MPI_Group *group)
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_GET_GROUP";
 
+    ROMIO_THREAD_CS_ENTER();
+
     adio_fh = MPIO_File_resolve(fh);
 
     /* --BEGIN ERROR HANDLING-- */
@@ -57,5 +59,6 @@ int MPI_File_get_group(MPI_File fh, MPI_Group *group)
     error_code = MPI_Comm_group(adio_fh->comm, group);
 
 fn_exit:
+    ROMIO_THREAD_CS_EXIT();
     return error_code;
 }
