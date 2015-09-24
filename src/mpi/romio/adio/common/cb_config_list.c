@@ -133,7 +133,6 @@ int ADIOI_cb_gather_name_array(MPI_Comm comm,
     ADIO_cb_name_array array = NULL;
     int alloc_size;
 
-    MPIR_Ext_cs_enter(ADIO_THREAD_MUTEX);
     if (ADIOI_cb_config_list_keyval == MPI_KEYVAL_INVALID) {
         /* cleaned up by ADIOI_End_call */
 	MPI_Keyval_create((MPI_Copy_function *) ADIOI_cb_copy_name_array, 
@@ -145,11 +144,9 @@ int ADIOI_cb_gather_name_array(MPI_Comm comm,
         if (found) {
             ADIOI_Assert(array != NULL);
 	    *arrayp = array;
-	    MPIR_Ext_cs_exit(ADIO_THREAD_MUTEX);
 	    return 0;
 	}
     }
-    MPIR_Ext_cs_exit(ADIO_THREAD_MUTEX);
 
     MPI_Comm_size(dupcomm, &commsize);
     MPI_Comm_rank(dupcomm, &commrank);

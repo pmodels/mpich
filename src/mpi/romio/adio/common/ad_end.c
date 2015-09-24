@@ -61,8 +61,6 @@ void ADIO_End(int *error_code)
 int ADIOI_End_call(MPI_Comm comm, int keyval, void *attribute_val, void
 		  *extra_state)
 {
-    /* though we are touching global variables here, only one thread can call
-     * MPI_Finalize so we can be less carefuil w. r. t. critical sections */
     int error_code;
 
     ADIOI_UNREFERENCED_ARG(comm);
