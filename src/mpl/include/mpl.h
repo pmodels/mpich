@@ -114,5 +114,6 @@
 #include "mplsock.h"
 #include "mplmsg.h"
 #include "mpliov.h"
+#include "mplutil.h"
 
 #endif /* MPL_H_INCLUDED */

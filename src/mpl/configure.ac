@@ -71,7 +71,7 @@ if test "$pac_cv_have___typeof" = "yes" ; then
 fi
 
 dnl Check if the necessary headers are available
-AC_CHECK_HEADERS(stdio.h stdlib.h string.h stdarg.h ctype.h search.h sys/types.h sys/uio.h)
+AC_CHECK_HEADERS(stdio.h stdlib.h string.h stdarg.h ctype.h search.h sys/types.h sys/uio.h execinfo.h backtrace.h libunwind.h)
 
 # A C99 compliant compiler should have inttypes.h for fixed-size int types
 AC_CHECK_HEADERS(inttypes.h stdint.h)
@@ -199,6 +199,10 @@ AC_CHECK_FUNCS(strerror)
 if test "$ac_cv_func_strerror" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <string.h>],strerror)
 fi
+
+AC_CHECK_FUNCS(backtrace_symbols)
+AC_CHECK_LIB(backtrace, backtrace_create_state)
+AC_CHECK_LIB(unwind, unw_backtrace)
 
 dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE
