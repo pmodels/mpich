@@ -13,7 +13,8 @@ lib@MPLLIBNAME@_la_SOURCES = \
 	src/mpltrmem.c \
 	src/mplenv.c \
 	src/mplmsg.c \
-	src/mplsock.c
+	src/mplsock.c \
+	src/mplutil.c
 lib@MPLLIBNAME@_la_LDFLAGS = ${lib@MPLLIBNAME@_so_versionflags}
 
 MPL_TESTS = strsep
@@ -32,7 +33,8 @@ mpl_headers =              \
     include/mpltrmem.h     \
     include/mplmsg.h       \
     include/mpliov.h       \
-    include/mplsock.h
+    include/mplsock.h      \
+    include/mplutil.h
 
 if MPL_EMBEDDED_MODE
 noinst_HEADERS = $(mpl_headers)
