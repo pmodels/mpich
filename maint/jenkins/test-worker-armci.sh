@@ -1,5 +1,7 @@
 #!/bin/zsh -xe
 
+hostname
+
 WORKSPACE=""
 GIT_BRANCH=""
 BUILD_MODE="per-commit"

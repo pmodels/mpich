@@ -1,5 +1,7 @@
 #!/bin/zsh -x
 
+hostname
+
 WORKSPACE=""
 build_mpi="mpich-master"
 compiler="gnu"

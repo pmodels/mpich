@@ -1,5 +1,7 @@
 #!/bin/zsh -xe
 
+hostname
+
 WORKSPACE=""
 compiler="gnu"
 jenkins_configure="default"

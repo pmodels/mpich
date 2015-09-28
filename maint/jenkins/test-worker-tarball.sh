@@ -1,5 +1,7 @@
 #!/bin/zsh -xe
 
+hostname
+
 export PATH=$HOME/software/autotools/bin:$HOME/software/sowing/bin:$PATH
 export DOCTEXT_PATH=$HOME/software/sowing/share/doctext
 export CC=gcc
