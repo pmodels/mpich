@@ -580,6 +580,8 @@ sub ReadErrnamesFile {
 	    else
 	    {
 		print STDERR "Warning: attempt to redefine $name.  Duplicate ignored.\n";
+		print STDERR "Previously defined at $longnamesDefined{$name} with value \"$longnames{$name}\"\n";
+		print STDERR "Redefined at $sourcefile:$linecount with value \"$repl\"\n";
 	    }
 	}
     }
