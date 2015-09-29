@@ -17,6 +17,7 @@ noinst_PROGRAMS =                       \
             comm_create_group_threads   \
             comm_create_group_threads2  \
             comm_idup                   \
+            idup_deadlock               \
             ctxidup                     \
             idup_nb                     \
             idup_comm_gen
