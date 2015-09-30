@@ -20,7 +20,7 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     char *value;
     int flag;
     ADIO_Offset stripe_val[3], str_factor = -1, str_unit=0, start_iodev=-1;
-    int err, myrank;
+    int myrank;
     static char myname[] = "ADIOI_LUSTRE_SETINFO";
 
     value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL+1)*sizeof(char));
