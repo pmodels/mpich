@@ -784,6 +784,7 @@
 /f77/attr/baseattrf
 /f77/attr/commattr2f
 /f77/attr/commattr3f
+/f77/attr/commattr4f
 /f77/attr/commattrf
 /f77/attr/typeattr2f
 /f77/attr/typeattr3f
@@ -859,6 +860,7 @@
 /f90/attr/baseattrf90
 /f90/attr/commattr2f90
 /f90/attr/commattr3f90
+/f90/attr/commattr4f90
 /f90/attr/commattrf90
 /f90/attr/fandcattrf90
 /f90/attr/typeattr2f90
