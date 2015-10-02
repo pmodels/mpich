@@ -238,74 +238,74 @@ const char *MPIDI_Pkt_GetDescString(MPIDI_CH3_Pkt_t * pkt)
     switch (pkt->type) {
     case MPIDI_CH3_PKT_EAGER_SEND:
         MPL_snprintf(pktmsg, sizeof(pktmsg),
-                      "EAGER_SEND - (%d,%d,%d,)" MPIDI_MSG_SZ_FMT,
-                      pkt->eager_send.match.parts.context_id,
-                      (int) pkt->eager_send.match.parts.tag,
-                      pkt->eager_send.match.parts.rank, pkt->eager_send.data_sz);
+                     "EAGER_SEND - (%d,%d,%d,)" MPIDI_MSG_SZ_FMT,
+                     pkt->eager_send.match.parts.context_id,
+                     (int) pkt->eager_send.match.parts.tag,
+                     pkt->eager_send.match.parts.rank, pkt->eager_send.data_sz);
         break;
     case MPIDI_CH3_PKT_EAGER_SYNC_SEND:
         MPL_snprintf(pktmsg, sizeof(pktmsg),
-                      "EAGER_SYNC_SEND - (%d,%d,%d,)" MPIDI_MSG_SZ_FMT " req=%d",
-                      pkt->eager_sync_send.match.parts.context_id,
-                      (int) pkt->eager_sync_send.match.parts.tag,
-                      pkt->eager_sync_send.match.parts.rank,
-                      pkt->eager_sync_send.data_sz, pkt->eager_sync_send.sender_req_id);
+                     "EAGER_SYNC_SEND - (%d,%d,%d,)" MPIDI_MSG_SZ_FMT " req=%d",
+                     pkt->eager_sync_send.match.parts.context_id,
+                     (int) pkt->eager_sync_send.match.parts.tag,
+                     pkt->eager_sync_send.match.parts.rank,
+                     pkt->eager_sync_send.data_sz, pkt->eager_sync_send.sender_req_id);
         break;
     case MPIDI_CH3_PKT_EAGER_SYNC_ACK:
         MPL_snprintf(pktmsg, sizeof(pktmsg),
-                      "EAGER_SYNC_ACK - req=%d", pkt->eager_sync_ack.sender_req_id);
+                     "EAGER_SYNC_ACK - req=%d", pkt->eager_sync_ack.sender_req_id);
         break;
     case MPIDI_CH3_PKT_READY_SEND:
         MPL_snprintf(pktmsg, sizeof(pktmsg),
-                      "READY_SEND - (%d,%d,%d,)" MPIDI_MSG_SZ_FMT,
-                      pkt->ready_send.match.parts.context_id,
-                      (int) pkt->ready_send.match.parts.tag,
-                      pkt->ready_send.match.parts.rank, pkt->ready_send.data_sz);
+                     "READY_SEND - (%d,%d,%d,)" MPIDI_MSG_SZ_FMT,
+                     pkt->ready_send.match.parts.context_id,
+                     (int) pkt->ready_send.match.parts.tag,
+                     pkt->ready_send.match.parts.rank, pkt->ready_send.data_sz);
         break;
     case MPIDI_CH3_PKT_RNDV_REQ_TO_SEND:
         MPL_snprintf(pktmsg, sizeof(pktmsg),
-                      "RNDV_REQ_TO_SEND - (%d,%d,%d,)" MPIDI_MSG_SZ_FMT " req=%d",
-                      pkt->rndv_req_to_send.match.parts.context_id,
-                      (int) pkt->rndv_req_to_send.match.parts.tag,
-                      pkt->rndv_req_to_send.match.parts.rank,
-                      pkt->rndv_req_to_send.data_sz, pkt->rndv_req_to_send.sender_req_id);
+                     "RNDV_REQ_TO_SEND - (%d,%d,%d,)" MPIDI_MSG_SZ_FMT " req=%d",
+                     pkt->rndv_req_to_send.match.parts.context_id,
+                     (int) pkt->rndv_req_to_send.match.parts.tag,
+                     pkt->rndv_req_to_send.match.parts.rank,
+                     pkt->rndv_req_to_send.data_sz, pkt->rndv_req_to_send.sender_req_id);
         break;
     case MPIDI_CH3_PKT_RNDV_CLR_TO_SEND:
         MPL_snprintf(pktmsg, sizeof(pktmsg),
-                      "RNDV_CLRTO_SEND - req=%d, recv req=%d",
-                      pkt->rndv_clr_to_send.sender_req_id, pkt->rndv_clr_to_send.receiver_req_id);
+                     "RNDV_CLRTO_SEND - req=%d, recv req=%d",
+                     pkt->rndv_clr_to_send.sender_req_id, pkt->rndv_clr_to_send.receiver_req_id);
         break;
     case MPIDI_CH3_PKT_RNDV_SEND:
         MPL_snprintf(pktmsg, sizeof(pktmsg),
-                      "RNDV_SEND - recv req=%d", pkt->rndv_send.receiver_req_id);
+                     "RNDV_SEND - recv req=%d", pkt->rndv_send.receiver_req_id);
         break;
     case MPIDI_CH3_PKT_CANCEL_SEND_REQ:
         MPL_snprintf(pktmsg, sizeof(pktmsg),
-                      "CANCEL_SEND_REQ - req=%d", pkt->cancel_send_req.sender_req_id);
+                     "CANCEL_SEND_REQ - req=%d", pkt->cancel_send_req.sender_req_id);
         break;
     case MPIDI_CH3_PKT_CANCEL_SEND_RESP:
         MPL_snprintf(pktmsg, sizeof(pktmsg),
-                      "CANCEL_SEND_RESP - req=%d ack=%d",
-                      pkt->cancel_send_resp.sender_req_id, pkt->cancel_send_resp.ack);
+                     "CANCEL_SEND_RESP - req=%d ack=%d",
+                     pkt->cancel_send_resp.sender_req_id, pkt->cancel_send_resp.ack);
         break;
     case MPIDI_CH3_PKT_PUT:
         MPL_snprintf(pktmsg, sizeof(pktmsg),
-                      "PUT - (%p,%d,0x%08X)",
-                      pkt->put.addr, pkt->put.count, pkt->put.target_win_handle);
+                     "PUT - (%p,%d,0x%08X)",
+                     pkt->put.addr, pkt->put.count, pkt->put.target_win_handle);
         break;
     case MPIDI_CH3_PKT_GET:
         MPL_snprintf(pktmsg, sizeof(pktmsg),
-                      "GET - (%p,%d,0x%08X) req=%d",
-                      pkt->get.addr,
-                      pkt->get.count, pkt->get.target_win_handle, pkt->get.request_handle);
+                     "GET - (%p,%d,0x%08X) req=%d",
+                     pkt->get.addr,
+                     pkt->get.count, pkt->get.target_win_handle, pkt->get.request_handle);
         break;
     case MPIDI_CH3_PKT_GET_RESP:
         MPL_snprintf(pktmsg, sizeof(pktmsg), "GET_RESP - req=%d", pkt->get_resp.request_handle);
         break;
     case MPIDI_CH3_PKT_ACCUMULATE:
         MPL_snprintf(pktmsg, sizeof(pktmsg),
-                      "ACCUMULATE - (%p,%d,0x%08X)",
-                      pkt->accum.addr, pkt->accum.count, pkt->accum.target_win_handle);
+                     "ACCUMULATE - (%p,%d,0x%08X)",
+                     pkt->accum.addr, pkt->accum.count, pkt->accum.target_win_handle);
         break;
     case MPIDI_CH3_PKT_LOCK:
         MPL_snprintf(pktmsg, sizeof(pktmsg), "LOCK - %d", pkt->lock.target_win_handle);
