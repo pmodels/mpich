@@ -1282,8 +1282,7 @@ static inline int perform_get_in_lock_queue(MPID_Win * win_ptr,
         sreq->dev.segment_size = get_pkt->count * type_size;
 
         mpi_errno = target_lock_entry->vc->sendNoncontig_fn(target_lock_entry->vc, sreq,
-                                                            iov[0].MPL_IOV_BUF,
-                                                            iov[0].MPL_IOV_LEN);
+                                                            iov[0].MPL_IOV_BUF, iov[0].MPL_IOV_LEN);
         MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
 
