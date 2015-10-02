@@ -608,6 +608,13 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
             MPIR_ERR_POP(mpi_errno);
     }
 
+    /* waiting for all outstanding ACKs */
+    while (win_ptr->outstanding_acks > 0) {
+        mpi_errno = wait_progress_engine();
+        if (mpi_errno != MPI_SUCCESS)
+            MPIR_ERR_POP(mpi_errno);
+    }
+
     /* Cleanup all targets on window. */
     mpi_errno = MPIDI_CH3I_RMA_Cleanup_targets_win(win_ptr);
     if (mpi_errno != MPI_SUCCESS)
@@ -1006,6 +1013,13 @@ int MPID_Win_complete(MPID_Win * win_ptr)
     mpi_errno = flush_local_all(win_ptr);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
+
+    /* waiting for all outstanding ACKs */
+    while (win_ptr->outstanding_acks > 0) {
+        mpi_errno = wait_progress_engine();
+        if (mpi_errno != MPI_SUCCESS)
+            MPIR_ERR_POP(mpi_errno);
+    }
 
     /* Cleanup all targets on this window. */
     mpi_errno = MPIDI_CH3I_RMA_Cleanup_targets_win(win_ptr);

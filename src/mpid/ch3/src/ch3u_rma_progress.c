@@ -152,6 +152,7 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
                 if (target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH &&
                     target->num_ops_flush_not_issued > 0) {
                     flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH;
+                    win_ptr->outstanding_acks++;
                     target->sync.outstanding_acks++;
                     target->num_ops_flush_not_issued = 0;
                 }
@@ -171,6 +172,7 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
                 if (target->target_rank != rank) {
                     if (target->num_ops_flush_not_issued > 0) {
 
+                        win_ptr->outstanding_acks++;
                         target->sync.outstanding_acks++;
                         target->num_ops_flush_not_issued = 0;
 
@@ -199,6 +201,7 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
                         flag = MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_NO_ACK;
                     }
                     else {
+                        win_ptr->outstanding_acks++;
                         target->sync.outstanding_acks++;
                         target->num_ops_flush_not_issued = 0;
                     }
@@ -315,6 +318,7 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
          * but without LOCK piggyback. */
         if (((flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH)
              || (flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))) {
+            win_ptr->outstanding_acks++;
             target->sync.outstanding_acks++;
             target->num_ops_flush_not_issued = 0;
         }
