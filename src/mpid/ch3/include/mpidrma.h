@@ -871,6 +871,9 @@ static inline int MPIDI_CH3I_RMA_Handle_ack(MPID_Win * win_ptr, int target_rank)
     t->sync.outstanding_acks--;
     MPIU_Assert(t->sync.outstanding_acks >= 0);
 
+    win_ptr->outstanding_acks--;
+    MPIU_Assert(win_ptr->outstanding_acks >= 0);
+
   fn_exit:
     return mpi_errno;
   fn_fail:

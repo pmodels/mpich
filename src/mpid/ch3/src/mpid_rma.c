@@ -306,6 +306,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
     (*win_ptr)->active = FALSE;
     (*win_ptr)->next = NULL;
     (*win_ptr)->prev = NULL;
+    (*win_ptr)->outstanding_acks = 0;
 
     /* Initialize the info flags */
     (*win_ptr)->info_args.no_locks = 0;

@@ -354,6 +354,8 @@ typedef struct MPIDI_Win_basic_info {
     int active; /* specify if this window is active or not */           \
     struct MPID_Win *prev;                                              \
     struct MPID_Win *next;                                              \
+    int outstanding_acks; /* keep track of # of outstanding ACKs window \
+                             wide. */                                   \
 
 extern struct MPID_Win *MPIDI_RMA_Win_active_list_head, *MPIDI_RMA_Win_inactive_list_head;
 
