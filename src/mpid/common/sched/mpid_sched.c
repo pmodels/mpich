@@ -476,7 +476,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* do these ops need an entry handle returned? */
-int MPID_Sched_send(const void *buf, int count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s)
+int MPID_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -514,7 +514,7 @@ fn_fail:
 #define FUNCNAME MPID_Sched_ssend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Sched_ssend(const void *buf, int count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s)
+int MPID_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -552,7 +552,7 @@ fn_fail:
 #define FUNCNAME MPID_Sched_send_defer
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Sched_send_defer(const void *buf, const int *count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s)
+int MPID_Sched_send_defer(const void *buf, const MPI_Aint *count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -589,7 +589,7 @@ fn_fail:
 #define FUNCNAME MPID_Sched_recv_status
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Sched_recv_status(void *buf, int count, MPI_Datatype datatype, int src, MPID_Comm *comm, MPI_Status *status, MPID_Sched_t s)
+int MPID_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, MPID_Comm *comm, MPI_Status *status, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -622,7 +622,7 @@ fn_fail:
 #define FUNCNAME MPID_Sched_recv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Sched_recv(void *buf, int count, MPI_Datatype datatype, int src, MPID_Comm *comm, MPID_Sched_t s)
+int MPID_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, MPID_Comm *comm, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -655,7 +655,7 @@ fn_fail:
 #define FUNCNAME MPID_Sched_reduce
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Sched_reduce(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Sched_t s)
+int MPID_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype, MPI_Op op, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -699,8 +699,8 @@ fn_fail:
  *
  * Packing/unpacking can be accomplished by passing MPI_PACKED as either intype
  * or outtype. */
-int MPID_Sched_copy(const void *inbuf,  int incount,  MPI_Datatype intype,
-                    void *outbuf, int outcount, MPI_Datatype outtype, MPID_Sched_t s)
+int MPID_Sched_copy(const void *inbuf,  MPI_Aint incount,  MPI_Datatype intype,
+                    void *outbuf, MPI_Aint outcount, MPI_Datatype outtype, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
