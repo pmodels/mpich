@@ -58,8 +58,9 @@ int MPIR_Igather_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendt
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank;
-    int curr_cnt=0, relative_rank, nbytes, is_homogeneous;
-    int mask, sendtype_size, recvtype_size, src, dst, relative_src;
+    int relative_rank, is_homogeneous;
+    int mask, src, dst, relative_src;
+    MPI_Aint recvtype_size, sendtype_size, curr_cnt=0, nbytes;
     int recvblks;
     int tmp_buf_size, missing;
     void *tmp_buf = NULL;
@@ -201,7 +202,7 @@ int MPIR_Igather_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendt
                         }
                     }
                     else { /* Intermediate nodes store in temporary buffer */
-                        int offset;
+                        MPI_Aint offset;
 
                         /* Estimate the amount of data that is going to come in */
                         recvblks = mask;
@@ -243,9 +244,16 @@ int MPIR_Igather_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendt
                     blocks[0] = sendcount;
                     struct_displs[0] = MPIU_VOID_PTR_CAST_TO_MPI_AINT sendbuf;
                     types[0] = sendtype;
-                    blocks[1] = curr_cnt - nbytes;
+		    /* check for overflow.  work around int limits if needed*/
+		    if (curr_cnt - nbytes != (int)(curr_cnt-nbytes)) {
+			blocks[1] = 1;
+			MPIR_Type_contiguous_x_impl(curr_cnt - nbytes,
+				MPI_BYTE, &(types[1]));
+		    } else {
+			MPIU_Assign_trunc(blocks[1], curr_cnt - nbytes, int);
+			types[1] = MPI_BYTE;
+		    }
                     struct_displs[1] = MPIU_VOID_PTR_CAST_TO_MPI_AINT tmp_buf;
-                    types[1] = MPI_BYTE;
 
                     mpi_errno = MPIR_Type_create_struct_impl(2, blocks, struct_displs, types, &tmp_type);
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -400,8 +408,10 @@ fn_fail:
 int MPIR_Igather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int rank, local_size, remote_size;
-    int i, nbytes, sendtype_size, recvtype_size;
+    int rank;
+    MPI_Aint local_size, remote_size;
+    int i;
+    MPI_Aint recvtype_size, sendtype_size, nbytes;
     MPI_Aint extent, true_extent, true_lb = 0;
     void *tmp_buf = NULL;
     MPID_Comm *newcomm_ptr = NULL;
@@ -661,7 +671,7 @@ int MPI_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
                     /* catch common aliasing cases */
                     if (recvbuf != MPI_IN_PLACE && sendtype == recvtype && sendcount == recvcount && sendcount != 0) {
-                        int recvtype_size;
+                        MPI_Aint recvtype_size;
                         MPID_Datatype_get_size_macro(recvtype, recvtype_size);
                         MPIR_ERRTEST_ALIAS_COLL(sendbuf, (char*)recvbuf + comm_ptr->rank*recvcount*recvtype_size, mpi_errno);
                     }
