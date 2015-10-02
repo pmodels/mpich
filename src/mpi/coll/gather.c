@@ -220,8 +220,8 @@ int MPIR_Gather_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 			     * should cover the case where the root is
 			     * rank 0. */
 			    mpi_errno = MPIC_Recv(((char *)recvbuf +
-                                                      (((rank + mask) % comm_size)*recvcount*extent)),
-                                                     recvblks * recvcount, recvtype, src,
+                                                      (((rank + mask) % comm_size)*(MPI_Aint)recvcount*extent)),
+                                                     (MPI_Aint)recvblks * recvcount, recvtype, src,
                                                      MPIR_GATHER_TAG, comm_ptr,
                                                      &status, errflag);
                             if (mpi_errno) {
