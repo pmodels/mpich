@@ -618,7 +618,7 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
 #define FUNCNAME MPIC_Isend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                   MPID_Comm *comm_ptr, MPID_Request **request_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -659,7 +659,7 @@ int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 #define FUNCNAME MPIC_Issend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIC_Issend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                   MPID_Comm *comm_ptr, MPID_Request **request_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -700,7 +700,7 @@ int MPIC_Issend(const void *buf, int count, MPI_Datatype datatype, int dest, int
 #define FUNCNAME MPIC_Irecv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
+int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
                   int tag, MPID_Comm *comm_ptr, MPID_Request **request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;

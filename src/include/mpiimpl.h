@@ -3811,11 +3811,11 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
                              int dest, int sendtag,
                              int source, int recvtag,
                              MPID_Comm *comm_ptr, MPI_Status *status, MPIR_Errflag_t *errflag);
-int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                   MPID_Comm *comm_ptr, MPID_Request **request, MPIR_Errflag_t *errflag);
-int MPIC_Issend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
                   MPID_Comm *comm_ptr, MPID_Request **request, MPIR_Errflag_t *errflag);
-int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
+int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
                   int tag, MPID_Comm *comm_ptr, MPID_Request **request);
 int MPIC_Waitall(int numreq, MPID_Request *requests[], MPI_Status statuses[], MPIR_Errflag_t *errflag);
 
