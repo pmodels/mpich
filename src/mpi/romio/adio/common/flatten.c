@@ -107,14 +107,14 @@ void ADIOI_Flatten_datatype(MPI_Datatype datatype)
 void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat, 
 		  ADIO_Offset st_offset, MPI_Count *curr_index)
 {
-    int i, k, m, n, basic_num, nonzeroth, is_hindexed_block=0;
+    int k, m, n, is_hindexed_block=0;
     int lb_updated=0;
     int combiner, old_combiner, old_is_contig;
     int nints, nadds, ntypes, old_nints, old_nadds, old_ntypes;
     /* By using ADIO_Offset we preserve +/- sign and 
          avoid >2G integer arithmetic problems */
     ADIO_Offset top_count;
-    MPI_Count j, old_size, prev_index, num;
+    MPI_Count i, j, old_size, prev_index, basic_num, num, nonzeroth;
     MPI_Aint old_extent;/* Assume extents are non-negative */
     int *ints;
     MPI_Aint *adds; /* Make no assumptions about +/- sign on these */
@@ -130,15 +130,15 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
   DBG_FPRINTF(stderr,"ADIOI_Flatten:: nints %#X, nadds %#X, ntypes %#X\n",nints, nadds, ntypes);
   for(i=0; i< nints; ++i)
   {
-    DBG_FPRINTF(stderr,"ADIOI_Flatten:: ints[%d]=%#X\n",i,ints[i]);
+    DBG_FPRINTF(stderr,"ADIOI_Flatten:: ints[%lld]=%#X\n",i,ints[i]);
   }
   for(i=0; i< nadds; ++i)
   {
-    DBG_FPRINTF(stderr,"ADIOI_Flatten:: adds[%d]="MPI_AINT_FMT_HEX_SPEC"\n",i,adds[i]);
+    DBG_FPRINTF(stderr,"ADIOI_Flatten:: adds[%lld]="MPI_AINT_FMT_HEX_SPEC"\n",i,adds[i]);
   }
   for(i=0; i< ntypes; ++i)
   {
-    DBG_FPRINTF(stderr,"ADIOI_Flatten:: types[%d]=%#llX\n",i,(unsigned long long)(unsigned long)types[i]);
+    DBG_FPRINTF(stderr,"ADIOI_Flatten:: types[%lld]=%#llX\n",i,(unsigned long long)(unsigned long)types[i]);
   }
   #endif
   /* Chapter 4, page 83: when processing datatypes, note this item from the
