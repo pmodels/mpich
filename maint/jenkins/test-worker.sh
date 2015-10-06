@@ -503,8 +503,6 @@ case "$netmod" in
     "mxm")
         MXM_LOG_LEVEL=error
         export MXM_LOG_LEVEL
-        MXM_SHM_KCOPY_MODE=off
-        export MXM_SHM_KCOPY_MODE
         ;;
     "ofi" | "portals4")
         MXM_LOG_LEVEL=error
