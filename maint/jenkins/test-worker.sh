@@ -530,10 +530,6 @@ case "$jenkins_configure" in
         ;;
 esac
 
-if killall -9 hydra_pmi_proxy; then
-  echo "leftover hydra_pmi_proxy processes killed"
-fi
-
 #####################################################################
 ## Copy Test results and Cleanup
 #####################################################################
