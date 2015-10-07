@@ -5473,7 +5473,7 @@ AC_ARG_ENABLE(checkpointing,
         PAC_SET_HEADER_LIB_PATH(blcr)
 	PAC_PUSH_FLAG([LIBS])
 	PAC_CHECK_HEADER_LIB_FATAL(blcr, libcr.h, cr, cr_init)
-	PAC_APPEND_FLAG([-lblcr],[WRAPPER_LIBS])
+	PAC_APPEND_FLAG([-lcr],[WRAPPER_LIBS])
 	PAC_POP_FLAG([LIBS])
         AC_DEFINE(ENABLE_CHECKPOINTING,1,[Application checkpointing enabled])
       fi ],
