@@ -258,22 +258,22 @@ char *HYDU_getcwd(void)
 HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **node_list)
 {
     int num_procs;
-    char *hostname, *procs, *binding, *tmp, *user;
+    char *hostname, *procs, *binding, *tmp, *user, *saveptr;
     struct HYD_node *node;
     HYD_status status = HYD_SUCCESS;
 
     if (newline) {      /* The first entry gives the hostname and processes */
-        hostname = strtok(token, ":");
-        procs = strtok(NULL, ":");
+        hostname = strtok_r(token, ":", &saveptr);
+        procs = strtok_r(NULL, ":", &saveptr);
         num_procs = procs ? atoi(procs) : 1;
 
         status = HYDU_add_to_node_list(hostname, num_procs, node_list);
         HYDU_ERR_POP(status, "unable to add to node list\n");
     }
     else {      /* Not a new line */
-        tmp = strtok(token, "=");
+        tmp = strtok_r(token, "=", &saveptr);
         if (!strcmp(tmp, "binding")) {
-            binding = strtok(NULL, "=");
+            binding = strtok_r(NULL, "=", &saveptr);
 
             for (node = *node_list; node->next; node = node->next);
             if (node->local_binding)
@@ -283,7 +283,7 @@ HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **
             node->local_binding = HYDU_strdup(binding);
         }
         else if (!strcmp(tmp, "user")) {
-            user = strtok(NULL, "=");
+            user = strtok_r(NULL, "=", &saveptr);
 
             for (node = *node_list; node->next; node = node->next);
             if (node->user)
