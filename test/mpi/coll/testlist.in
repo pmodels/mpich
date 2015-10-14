@@ -29,6 +29,7 @@ allgather3 10
 allgatherv2 10
 allgatherv3 10
 allgatherv4 4 timeLimit=600
+allgather_struct 10
 bcasttest 4
 bcasttest 8
 bcasttest 10
