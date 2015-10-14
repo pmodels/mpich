@@ -15,7 +15,11 @@ cmfree 4
 cmsplit 4
 cmsplit2 12
 probe-intercomm 2
-cmsplit_type 4 mpiversion=3.0
+# one way to split a communicator, if implementation supports it, is by access
+# to a common file system. argument is a directory whose presence or
+# non-presence will determine the communicator split.   the other split_type
+# cases will ignore the argument
+cmsplit_type 4 mpiversion=3.0 arg="."
 comm_create_group 4 mpiversion=3.0
 comm_create_group 8 mpiversion=3.0
 comm_group_half 2 mpiversion=3.0
