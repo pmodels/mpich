@@ -18,6 +18,7 @@ noinst_PROGRAMS =      \
     allgatherv2        \
     allgatherv3        \
     allgatherv4        \
+    allgather_struct   \
     allred             \
     allred2            \
     allred3            \
