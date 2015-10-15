@@ -42,7 +42,7 @@ program main
     endif
 
 ! Exchange bases
-    call MPI_Type_size(MPI_INT, intsize, ierr);
+    call MPI_Type_size(MPI_INTEGER, intsize, ierr);
     call MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, bases, 1, MPI_AINT, MPI_COMM_WORLD, ierr)
     call MPI_Win_create_dynamic(MPI_INFO_NULL, MPI_COMM_WORLD, win, ierr)
 
@@ -60,7 +60,7 @@ program main
 
 ! Get value and verify it
     call MPI_Win_fence(MPI_MODE_NOPRECEDE, win, ierr)
-    call MPI_Get(val, 1, MPI_INT, target_rank, offset, 1, MPI_INT, win, ierr)
+    call MPI_Get(val, 1, MPI_INTEGER, target_rank, offset, 1, MPI_INTEGER, win, ierr)
     call MPI_Win_fence(MPI_MODE_NOSUCCEED, win, ierr)
 
     if (val /= 1234) then
