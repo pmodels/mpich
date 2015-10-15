@@ -77,7 +77,8 @@ romio_other_sources +=       \
     mpi-io/mpich_fileutil.c \
     mpi-io/mpir-mpioinit.c   \
     mpi-io/mpiu_greq.c \
-    mpi-io/mpiu_external32.c
+    mpi-io/mpiu_external32.c \
+    mpi-io/mpir_cst_filesys.c
 
 # helper variables for conditionally compiled sources
 mpio_request_sources=   \
