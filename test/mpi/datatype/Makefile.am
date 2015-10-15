@@ -51,6 +51,7 @@ noinst_PROGRAMS =           \
     simple-commit           \
     simple-pack             \
     simple-pack-external    \
+    simple-pack-external2   \
     simple-resized          \
     simple-size-extent      \
     sizedtypes              \
