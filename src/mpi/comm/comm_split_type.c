@@ -35,8 +35,43 @@ int MPIR_Comm_split_type_impl(MPID_Comm * comm_ptr, int split_type, int key,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* Only MPI_COMM_TYPE_SHARED and MPI_UNDEFINED are supported */
-    MPIU_Assert(split_type == MPI_COMM_TYPE_SHARED || split_type == MPI_UNDEFINED);
+    /* Only MPI_COMM_TYPE_SHARED, MPI_UNDEFINED, and
+     * NEIGHBORHOOD are supported */
+    MPIU_Assert(split_type == MPI_COMM_TYPE_SHARED ||
+                split_type == MPI_UNDEFINED ||
+                split_type == MPIX_COMM_TYPE_NEIGHBORHOOD);
+
+    if (split_type == MPIX_COMM_TYPE_NEIGHBORHOOD) {
+	int flag;
+	char hintval[MPI_MAX_INFO_VAL+1];
+
+	/* We plan on dispatching different NEIGHBORHOOD support to
+	 * different parts of MPICH, based on the key provided in the
+	 * info object.  Right now, the one NEIGHBORHOOD we support is
+	 * "nbhd_common_dirname", implementation of which lives in ROMIO */
+
+	MPIR_Info_get_impl(info_ptr, "nbhd_common_dirname", MPI_MAX_INFO_VAL, hintval,
+                           &flag);
+	if (flag) {
+	    MPI_Comm dummycomm;
+	    MPID_Comm * dummycomm_ptr;
+
+	    mpi_errno = MPIR_Comm_split_filesystem(comm_ptr->handle, key,
+                                                   hintval, &dummycomm);
+	    MPID_Comm_get_ptr(dummycomm, dummycomm_ptr);
+	    *newcomm_ptr = dummycomm_ptr;
+
+	    goto fn_exit;
+	}
+	/* we don't work with other hints yet, but if we did (e.g.
+	 * nbhd_network, nbhd_partition), we'd do so here */
+
+	/* In the mean time, the user passed in COMM_TYPE_NEIGHBORHOOD
+	 * but did not give us an info we know how to work with.
+	 * Throw up our hands and treat it like UNDEFINED.  This will
+	 * result in MPI_COMM_NULL being returned to the user. */
+	split_type = MPI_UNDEFINED;
+    }
 
     if (MPID_Comm_fns == NULL || MPID_Comm_fns->split_type == NULL) {
         int color = (split_type == MPI_COMM_TYPE_SHARED) ? comm_ptr->rank : MPI_UNDEFINED;

@@ -545,6 +545,9 @@ typedef int MPI_Info;
 /* predefined types for MPI_Comm_split_type */
 #define MPI_COMM_TYPE_SHARED    1
 
+/* MPICH-specific types */
+#define MPIX_COMM_TYPE_NEIGHBORHOOD 2
+
 /* Definitions that are determined by configure. */
 typedef @MPI_AINT@ MPI_Aint;
 typedef @MPI_FINT@ MPI_Fint;

@@ -70,6 +70,10 @@ int usleep(useconds_t usec);
 #include "mpidpre.h"
 #include "mpir_refcount.h"
 
+#if defined(HAVE_ROMIO)
+int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm *newcomm);
+#endif
+
 #if defined(HAVE_LONG_LONG_INT)
 /* tt#1776: some platforms have "long long" but not a LLONG_MAX/ULLONG_MAX,
  * usually because some feature test macro has turned them off in glibc's
