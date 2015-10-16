@@ -316,7 +316,7 @@ static inline int _mxm_tag_mxm2mpi(mxm_tag_t mxm_tag)
 
 static inline mxm_tag_t _mxm_tag_mask(int mpi_tag)
 {
-    return (mpi_tag == MPI_ANY_TAG ? 0x80000000U : 0xffffffffU);
+    return (mpi_tag == MPI_ANY_TAG ? 0x80000000U : ~(MPIR_TAG_PROC_FAILURE_BIT | MPIR_TAG_ERROR_BIT));
 }
 
 /*
