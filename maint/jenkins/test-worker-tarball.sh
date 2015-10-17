@@ -9,6 +9,9 @@ export CXX=g++
 export FC=gfortran
 
 cd $WORKSPACE
+
+git clean -x -d -f
+
 TMP_WORKSPACE=$(mktemp -d /sandbox/jenkins.tmp.XXXXXXXX)
 
 if test ! -d $WORKSPACE/build ; then
@@ -17,9 +20,6 @@ fi
 
 cp -a $WORKSPACE/* $TMP_WORKSPACE/
 pushd $TMP_WORKSPACE
-
-git clean -x -d -f
-
 pushd build
 
 ../maint/release.pl --branch=master --version=master --git-repo=git://git.mpich.org/mpich.git
