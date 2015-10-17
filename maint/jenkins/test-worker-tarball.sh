@@ -11,7 +11,9 @@ export FC=gfortran
 cd $WORKSPACE
 TMP_WORKSPACE=$(mktemp -d /sandbox/jenkins.tmp.XXXXXXXX)
 
-mkdir build
+if test ! -d $WORKSPACE/build ; then
+    mkdir -p $WORKSPACE/build
+fi
 
 cp -a $WORKSPACE/* $TMP_WORKSPACE/
 pushd $TMP_WORKSPACE
