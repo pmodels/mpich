@@ -1,4 +1,8 @@
 #!/bin/zsh -xe
+#
+# (C) 2015 by Argonne National Laboratory.
+#     See COPYRIGHT in top-level directory.
+#
 
 # This script only run on the first node. The mpiexec will automatically spawned
 if test ! $SLURM_NODEID -eq 0; then
