@@ -131,7 +131,7 @@ HYD_status HYD_pmci_launch_procs(void)
         control_fd[i] = HYD_FD_UNSET;
 
     status = HYDT_bsci_launch_procs(proxy_stash.strlist, HYD_server_info.pg_list.proxy_list,
-                                    control_fd);
+                                    HYD_TRUE, control_fd);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
     for (i = 0, proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next, i++)

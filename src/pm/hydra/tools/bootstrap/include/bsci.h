@@ -51,7 +51,8 @@ struct HYDT_bsci_fns {
 
     /* Launcher functions */
     /** \brief Launch processes */
-    HYD_status(*launch_procs) (char **args, struct HYD_proxy * proxy_list, int *control_fd);
+    HYD_status(*launch_procs) (char **args, struct HYD_proxy * proxy_list, int use_rmk,
+                               int *control_fd);
 
     /** \brief Finalize the bootstrap control device */
     HYD_status(*launcher_finalize) (void);
@@ -94,6 +95,7 @@ HYD_status HYDT_bsci_init(const char *rmk, const char *launcher,
  *
  * \param[in]   args            Arguments to be used for the launched processes
  * \param[in]   proxy_list      List of proxies to launch
+ * \param[in]   use_rmk         Force not to use RMK if HYD_FALSE
  * \param[out]  control_fd      Control socket to communicate with the launched process
  *
  * This function appends a proxy ID to the end of the args list and
@@ -106,8 +108,28 @@ HYD_status HYDT_bsci_init(const char *rmk, const char *launcher,
  * perform parallel launches should set the proxy ID string to "-1",
  * but allow proxies to query their ID information on each node using
  * the HYDT_bsci_query_proxy_id function.
+ *
+ * Background of use_rmk: RMK is used to allocate nodes on a system
+ * before launching a job.  If it is not specified in the user
+ * arguments for the UI process (e.g., mpiexec), it is set to the same
+ * as a job launcher (e.g., SLURM or PBS).  This works fine for
+ * launching processes on nodes for the first time, but it has
+ * a problem when a process dynamically creates other processes at run
+ * time, e.g., by calling MPI_Comm_spawn(), because the job launcher
+ * does not know which node(s) will be used for new processes and it
+ * just allocates nodes based on its allocation policy.  This may
+ * conflict with the process management policy of the Hydra framework,
+ * since the Hydra independently decides target nodes to create a
+ * proxy process and to spawn new processes.  When the conflict
+ * happens the spawned processes cannot communicate correctly.
+ * To resolve this problem, a parameter 'use_rmk' is added to this
+ * launch function.  If it is HYD_TRUE, RMK is used to allocate nodes.
+ * HYD_TRUE is passed when this function is called from the UI
+ * process.  On the other hand, if it is HYD_FALSE, we force not to
+ * use RMK.  HYD_FALSE is passed in PMI spawn functions.
  */
-HYD_status HYDT_bsci_launch_procs(char **args, struct HYD_proxy *proxy_list, int *control_fd);
+HYD_status HYDT_bsci_launch_procs(char **args, struct HYD_proxy *proxy_list, int use_rmk,
+                                  int *control_fd);
 
 
 /**

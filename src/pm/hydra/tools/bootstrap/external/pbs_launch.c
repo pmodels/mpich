@@ -35,7 +35,8 @@ static HYD_status find_pbs_node_id(const char *hostname, int *node_id)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list, int *control_fd)
+HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list, int use_rmk,
+                                      int *control_fd)
 {
     int proxy_count, i, args_count, err, hostid;
     struct HYD_proxy *proxy;
@@ -46,7 +47,7 @@ HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
 
     /* If the RMK is not PBS, query for the PBS node list, and convert
      * the user-specified node IDs to PBS node IDs */
-    if (strcmp(HYDT_bsci_info.rmk, "pbs")) {
+    if (use_rmk == HYD_FALSE || strcmp(HYDT_bsci_info.rmk, "pbs")) {
         status = HYDT_bscd_pbs_query_node_list(&pbs_node_list);
         HYDU_ERR_POP(status, "error querying PBS node list\n");
     }
