@@ -97,7 +97,8 @@ static HYD_status sge_get_path(char **path)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_list, int *control_fd)
+HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_list, int use_rmk,
+                                         int *control_fd)
 {
     int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh, len, rc, autofork;
     int *pid, *fd_list, *dummy;

@@ -12,7 +12,7 @@
 #include "persist.h"
 
 HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_proxy *proxy_list,
-                                          int *control_fd);
+                                          int use_rmk, int *control_fd);
 HYD_status HYDT_bscd_persist_wait_for_completion(int timeout);
 
 extern int *HYDT_bscd_persist_control_fd;
