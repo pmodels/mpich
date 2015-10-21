@@ -233,20 +233,44 @@ install-exec-hook:
 		fi ; \
 	done ; \
 	if test -e ${DESTDIR}${bindir}/@MPICXX_NAME@ ; then \
-		cd ${DESTDIR}${bindir} && ln -f -s @MPICXX_NAME@ @MPICPP_NAME@ ; fi ; \
+		if test "@MPICXX_NAME@" != "@MPICPP_NAME@" ; then \
+			cd ${DESTDIR}${bindir} && ln -f -s @MPICXX_NAME@ @MPICPP_NAME@ ; \
+		fi ; \
+	fi ; \
 	if test -e ${DESTDIR}${bindir}/@MPIFORT_NAME@ ; then \
-		cd ${DESTDIR}${bindir} && ln -f -s @MPIFORT_NAME@ @MPIF90_NAME@ ; fi ; \
+		if test "@MPIFORT_NAME@" != "@MPIF90_NAME@" ; then \
+			cd ${DESTDIR}${bindir} && ln -f -s @MPIFORT_NAME@ @MPIF90_NAME@ ; \
+		fi ; \
+	fi ; \
 	if test -e ${DESTDIR}${bindir}/@MPIFORT_NAME@ -a ! -e ${DESTDIR}${bindir}/@MPIF77_NAME@ ; then \
-		cd ${DESTDIR}${bindir} && ln -f -s @MPIFORT_NAME@ @MPIF77_NAME@ ; fi ; \
+		if test "@MPIFORT_NAME@" != "@MPIF77_NAME@" ; then \
+			cd ${DESTDIR}${bindir} && ln -f -s @MPIFORT_NAME@ @MPIF77_NAME@ ; \
+		fi ; \
+	fi ; \
 	if test -e ${DESTDIR}${libdir}/lib@MPILIBNAME@@SHLIB_EXT@ ; then \
-		cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libmpl@SHLIB_EXT@ ; \
-		cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libopa@SHLIB_EXT@ ; \
-		cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libmpich@SHLIB_EXT@ ; fi ; \
+		if test "@MPILIBNAME@" != "mpl" ; then \
+			cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libmpl@SHLIB_EXT@ ; \
+		fi ; \
+		if test "@MPILIBNAME@" != "opa" ; then \
+			cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libopa@SHLIB_EXT@ ; \
+		fi ; \
+		if test "@MPILIBNAME@" != "mpich" ; then \
+			cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libmpich@SHLIB_EXT@ ; \
+		fi ; \
+	fi ; \
 	if test -e ${DESTDIR}${libdir}/lib@MPIFCLIBNAME@@SHLIB_EXT@ ; then \
-		cd ${DESTDIR}${libdir} && ln -f -s lib@MPIFCLIBNAME@@SHLIB_EXT@ libfmpich@SHLIB_EXT@ ; \
-		cd ${DESTDIR}${libdir} && ln -f -s lib@MPIFCLIBNAME@@SHLIB_EXT@ libmpichf90@SHLIB_EXT@ ; fi ; \
+		if test "@MPIFCLIBNAME@" != "fmpich" ; then \
+			cd ${DESTDIR}${libdir} && ln -f -s lib@MPIFCLIBNAME@@SHLIB_EXT@ libfmpich@SHLIB_EXT@ ; \
+		fi ; \
+		if test "@MPIFCLIBNAME@" != "mpichf90" ; then \
+			cd ${DESTDIR}${libdir} && ln -f -s lib@MPIFCLIBNAME@@SHLIB_EXT@ libmpichf90@SHLIB_EXT@ ; \
+		fi ; \
+	fi ; \
 	if test -e ${DESTDIR}${libdir}/lib@MPICXXLIBNAME@@SHLIB_EXT@ ; then \
-		cd ${DESTDIR}${libdir} && ln -f -s lib@MPICXXLIBNAME@@SHLIB_EXT@ libmpichcxx@SHLIB_EXT@ ; fi
+		if test "@MPICXXLIBNAME@" != "mpichcxx" ; then \
+			cd ${DESTDIR}${libdir} && ln -f -s lib@MPICXXLIBNAME@@SHLIB_EXT@ libmpichcxx@SHLIB_EXT@ ; \
+		fi ; \
+	fi
 
 # the configure step checks for the 'lib' dir to decide whether a source
 # directory has been previously used for an in-path build before allowing a
