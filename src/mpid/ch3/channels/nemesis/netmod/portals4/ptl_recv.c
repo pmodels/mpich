@@ -119,7 +119,13 @@ static int handler_recv_dequeue_complete(const ptl_event_t *e)
                 MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
         }
     } else {
-        if (!is_contig && data_sz != e->mlength)
+        /* Data was placed directly into the user buffer, so datatype mismatch
+           is harder to detect. We use a simple check ensuring the received bytes
+           are a multiple of a single basic element. Currently, we do not detect
+           mismatches with datatypes constructed of more than one basic type */
+        MPI_Datatype dt_basic_type;
+        MPID_Datatype_get_basic_type(rreq->dev.datatype, dt_basic_type);
+        if (dt_basic_type != MPI_DATATYPE_NULL && (e->mlength % MPID_Datatype_get_basic_size(dt_basic_type)) != 0)
             MPIR_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
     }
     
