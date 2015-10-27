@@ -13,6 +13,9 @@
 #define ITER 10000
 #define BUF_CNT 1
 int local_buf[BUF_CNT], result_addr[BUF_CNT], check_addr[BUF_CNT];
+#ifdef TEST_CAS
+int compare_buf[BUF_CNT];
+#endif
 
 const int verbose = 0;
 
@@ -70,8 +73,8 @@ static inline void issue_rma_op(int i)
 #elif defined(TEST_CAS)
 static inline void issue_rma_op(int i)
 {
-    int compare_val = i;        /* always equal to window value, thus swap happens */
-    MPI_Compare_and_swap(&local_buf[i], &compare_val, &result_addr[i], MPI_INT, target, i, win);
+    compare_buf[i] = i;        /* always equal to window value, thus swap happens */
+    MPI_Compare_and_swap(&local_buf[i], &compare_buf[i], &result_addr[i], MPI_INT, target, i, win);
 }
 #endif
 
