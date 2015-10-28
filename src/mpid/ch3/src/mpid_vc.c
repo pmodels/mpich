@@ -941,7 +941,7 @@ static int compare_ints(const void *orig_x, const void *orig_y)
 #define FUNCNAME populate_ids_from_mapping
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int populate_ids_from_mapping(char *mapping, int *num_nodes, MPIDI_PG_t *pg, int *did_map)
+static int populate_ids_from_mapping(char *mapping, MPID_Node_id_t *num_nodes, MPIDI_PG_t *pg, int *did_map)
 {
     int mpi_errno = MPI_SUCCESS;
     /* PMI_process_mapping is available */
@@ -1128,16 +1128,14 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
         int rank;
         int block, block_node, node_proc;
         int did_map = 0;
-        int num_nodes = 0;
 
         mpi_errno = PMI2_Info_GetJobAttr("PMI_process_mapping", process_mapping, sizeof(process_mapping), &found);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKINTERNAL(!found, mpi_errno, "PMI_process_mapping attribute not found");
         /* this code currently assumes pg is comm_world */
-        mpi_errno = populate_ids_from_mapping(process_mapping, &num_nodes, pg, &did_map);
+        mpi_errno = populate_ids_from_mapping(process_mapping, &g_num_nodes, pg, &did_map);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKINTERNAL(!did_map, mpi_errno, "unable to populate node ids from PMI_process_mapping");
-        g_num_nodes = num_nodes;
     }
 #else /* USE_PMI2_API */
     if (our_pg_rank == -1) {
@@ -1164,11 +1162,9 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
         pmi_errno = PMI_KVS_Get(kvs_name, "PMI_process_mapping", value, val_max_sz);
         if (pmi_errno == 0) {
             int did_map = 0;
-            int num_nodes = 0;
             /* this code currently assumes pg is comm_world */
-            mpi_errno = populate_ids_from_mapping(value, &num_nodes, pg, &did_map);
+            mpi_errno = populate_ids_from_mapping(value, &g_num_nodes, pg, &did_map);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            g_num_nodes = num_nodes;
             if (did_map) {
                 goto odd_even_cliques;
             }
