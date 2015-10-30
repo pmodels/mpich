@@ -15,6 +15,7 @@ int main(int argc, char *argv[])
 {
     int ierr, i, size, rank;
     int cnt = 270000000;
+    int stat_cnt = 0;
     MPI_Status status;
     long long *cols;
     int errs = 0;
@@ -57,8 +58,11 @@ int main(int argc, char *argv[])
         for (i = 0; i < cnt; i++)
             cols[i] = -1;
         ierr = MPI_Recv(cols, cnt, MPI_LONG_LONG_INT, 0, 0, MPI_COMM_WORLD, &status);
-        /* ierr = MPI_Get_count(&status,MPI_LONG_LONG_INT,&cnt);
-         * Get_count still fails because count is not 64 bit */
+        ierr = MPI_Get_count(&status,MPI_LONG_LONG_INT,&stat_cnt);
+        if (cnt != stat_cnt) {
+            fprintf(stderr, "Output of MPI_Get_count (%d) does not match expected count (%d).\n", stat_cnt, cnt);
+            errs++;
+        }
         for (i = 0; i < cnt; i++) {
             if (cols[i] != i) {
                 /*printf("Rank %d, cols[i]=%lld, should be %d\n", rank, cols[i], i); */
