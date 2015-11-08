@@ -53,5 +53,6 @@ noinst_PROGRAMS =  \
     sendall        \
     large_message  \
     mprobe         \
-    big_count_status
+    big_count_status	\
+    many_isend
 
