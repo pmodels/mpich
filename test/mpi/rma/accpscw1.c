@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     int minsize = 2, count;
     MPI_Comm comm;
     MPI_Win win;
-    MPI_Aint extent;
+    MPI_Aint extent, lb;
     MPI_Group wingroup, neighbors;
     MTestDatatype sendtype, recvtype;
 
@@ -44,7 +44,8 @@ int main(int argc, char *argv[])
                 recvtype.InitBuf(&recvtype);
 
                 MPI_Type_extent(recvtype.datatype, &extent);
-                MPI_Win_create(recvtype.buf, recvtype.count * extent,
+                MPI_Type_lb(recvtype.datatype, &lb);
+                MPI_Win_create(recvtype.buf, recvtype.count * extent + lb,
                                (int) extent, MPI_INFO_NULL, comm, &win);
                 MPI_Win_get_group(win, &wingroup);
                 if (rank == source) {
