@@ -544,7 +544,7 @@ fi
 
 echo_n "Checking for libtool version... "
 recreate_tmp
-ver=2.4.3
+ver=2.4.4
 cat <<EOF >.tmp/configure.ac
 AC_INIT(testver,1.0)
 AC_CONFIG_AUX_DIR([m4])
