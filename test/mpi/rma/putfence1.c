@@ -21,7 +21,7 @@ static inline int test(MPI_Comm comm, int rank, int source, int dest,
                        MTestDatatype * sendtype, MTestDatatype * recvtype)
 {
     int errs = 0, err;
-    MPI_Aint extent;
+    MPI_Aint extent, lb;
     MPI_Win win;
 
     MTestPrintfMsg(1,
@@ -32,7 +32,8 @@ static inline int test(MPI_Comm comm, int rank, int source, int dest,
     /* Make sure that everyone has a recv buffer */
     recvtype->InitBuf(recvtype);
     MPI_Type_extent(recvtype->datatype, &extent);
-    MPI_Win_create(recvtype->buf, recvtype->count * extent, extent, MPI_INFO_NULL, comm, &win);
+    MPI_Type_lb(recvtype->datatype, &lb);
+    MPI_Win_create(recvtype->buf, recvtype->count * extent + lb, extent, MPI_INFO_NULL, comm, &win);
     MPI_Win_fence(0, win);
     if (rank == source) {
         /* To improve reporting of problems about operations, we

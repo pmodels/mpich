@@ -22,7 +22,7 @@ static inline int test(MPI_Comm comm, int rank, int source, int dest,
 {
     int errs = 0, err;
     int disp_unit;
-    MPI_Aint extent;
+    MPI_Aint extent, lb;
     MPI_Win win;
 
     MTestPrintfMsg(1,
@@ -37,8 +37,9 @@ static inline int test(MPI_Comm comm, int rank, int source, int dest,
     sendtype->printErrors = 1;
 
     MPI_Type_extent(sendtype->datatype, &extent);
+    MPI_Type_lb(sendtype->datatype, &lb);
     disp_unit = extent < INT_MAX ? extent : 1;
-    MPI_Win_create(sendtype->buf, sendtype->count * extent, disp_unit, MPI_INFO_NULL, comm, &win);
+    MPI_Win_create(sendtype->buf, sendtype->count * extent + lb, disp_unit, MPI_INFO_NULL, comm, &win);
     MPI_Win_fence(0, win);
     if (rank == source) {
         /* The source does not need to do anything besides the
