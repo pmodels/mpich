@@ -310,8 +310,13 @@ int ADIOI_LUSTRE_Docollect(ADIO_File fd, int contig_access_count,
                fd->comm);
     MPI_Allreduce(&contig_access_count, &total_access_count, 1, MPI_INT, MPI_SUM,
                fd->comm);
-    /* estimate average req_size */
-    avg_req_size = (int)(total_req_size / total_access_count);
+    /* avoid possible divide-by-zero) */
+    if (total_access_count != 0) {
+	/* estimate average req_size */
+	avg_req_size = (int)(total_req_size / total_access_count);
+    } else {
+	avg_req_size = 0;
+    }
     /* get hint of big_req_size */
     big_req_size = fd->hints->fs_hints.lustre.coll_threshold;
     /* Don't perform collective I/O if there are big requests */
