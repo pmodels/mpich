@@ -1,9 +1,9 @@
 noalias 2
-nb_noalias 2 mpiversion=3.0  xfail=ticket2301
+nb_noalias 2 mpiversion=3.0
 noalias2 4 mpiversion=2.2
 noalias3 4 mpiversion=3.0
 rerr 2
 nb_rerr 2  mpiversion=3.0
 reduce_local 1
 bcastlength 4
-ibcastlength 4 mpiversion=3.0 xfail=ticket2300
+ibcastlength 4 mpiversion=3.0
