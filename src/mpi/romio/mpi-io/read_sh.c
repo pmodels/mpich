@@ -144,7 +144,7 @@ int MPI_File_read_shared(MPI_File fh, void *buf, int count,
     /* --END ERROR HANDLING-- */
 
     if (e32_buf != NULL) {
-        error_code = MPIU_read_external32_conversion_fn(xbuf, datatype,
+        error_code = MPIU_read_external32_conversion_fn(buf, datatype,
                 count, e32_buf);
 	ADIOI_Free(e32_buf);
     }
