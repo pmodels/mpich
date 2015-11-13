@@ -101,7 +101,7 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_callback)(cq_tagged_entry_t * wc, MPID_Request 
 static inline int
 ADD_SUFFIX(do_isend)(struct MPIDI_VC *vc,
          const void *buf,
-         int count,
+         MPI_Aint count,
          MPI_Datatype datatype,
          int dest,
          int tag,
@@ -199,7 +199,7 @@ ADD_SUFFIX(do_isend)(struct MPIDI_VC *vc,
 #define FCNAME DECL_FUNC(MPID_nem_ofi_send)
 int ADD_SUFFIX(MPID_nem_ofi_send)(struct MPIDI_VC *vc,
                       const void *buf,
-                      int count,
+                      MPI_Aint count,
                       MPI_Datatype datatype,
                       int dest,
                       int tag, MPID_Comm * comm, int context_offset, struct MPID_Request **request)
@@ -217,7 +217,7 @@ int ADD_SUFFIX(MPID_nem_ofi_send)(struct MPIDI_VC *vc,
 #define FCNAME DECL_FUNC(MPID_nem_ofi_isend)
 int ADD_SUFFIX(MPID_nem_ofi_isend)(struct MPIDI_VC *vc,
                        const void *buf,
-                       int count,
+                       MPI_Aint count,
                        MPI_Datatype datatype,
                        int dest,
                        int tag, MPID_Comm * comm, int context_offset, struct MPID_Request **request)
@@ -234,7 +234,7 @@ int ADD_SUFFIX(MPID_nem_ofi_isend)(struct MPIDI_VC *vc,
 #define FCNAME DECL_FUNC(MPID_nem_ofi_ssend)
 int ADD_SUFFIX(MPID_nem_ofi_ssend)(struct MPIDI_VC *vc,
                        const void *buf,
-                       int count,
+                       MPI_Aint count,
                        MPI_Datatype datatype,
                        int dest,
                        int tag, MPID_Comm * comm, int context_offset, struct MPID_Request **request)
@@ -251,7 +251,7 @@ int ADD_SUFFIX(MPID_nem_ofi_ssend)(struct MPIDI_VC *vc,
 #define FCNAME DECL_FUNC(MPID_nem_ofi_issend)
 int ADD_SUFFIX(MPID_nem_ofi_issend)(struct MPIDI_VC *vc,
                         const void *buf,
-                        int count,
+                        MPI_Aint count,
                         MPI_Datatype datatype,
                         int dest,
                         int tag,
