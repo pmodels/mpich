@@ -10,7 +10,6 @@
 #include "topo_hwloc.h"
 
 #define MAP_LENGTH      (5)
-#define DBG_STR_LENGTH  (128)
 
 struct HYDT_topo_hwloc_info HYDT_topo_hwloc_info = { 0 };
 
@@ -457,17 +456,21 @@ HYD_status HYDT_topo_hwloc_bind(int idx)
 
         /* For debugging, print the binding bitmaps but don't actually bind. */
         if (HYDT_topo_info.debug) {
-            int i, cur;
-            char binding[DBG_STR_LENGTH];
+            int i;
+            char *binding;
 
-            cur = HYDU_snprintf(binding, DBG_STR_LENGTH, "process %d binding: ", idx);
+            HYDU_MALLOC(binding, char *, HYDT_topo_hwloc_info.total_num_pus + 1, status);
+            memset(binding, '\0', HYDT_topo_hwloc_info.total_num_pus + 1);
 
-            for (i = 0; i < HYDT_topo_hwloc_info.total_num_pus; i++)
-                cur += HYDU_snprintf(&binding[cur], DBG_STR_LENGTH - cur + 1, "%d ",
-                                     hwloc_bitmap_isset(HYDT_topo_hwloc_info.bitmap[id], i));
+            for (i = 0; i < HYDT_topo_hwloc_info.total_num_pus; i++) {
+                if (hwloc_bitmap_isset(HYDT_topo_hwloc_info.bitmap[id], i))
+                    *(binding + i) = '1';
+                else
+                    *(binding + i) = '0';
+            }
 
-            HYDU_snprintf(&binding[cur], DBG_STR_LENGTH - cur + 1, "\n");
-            HYDU_dump_noprefix(stdout, "%s", binding);
+            HYDU_dump_noprefix(stdout, "process %d binding: %s\n", idx, binding);
+            HYDU_FREE(binding);
         }
         else {
             hwloc_set_cpubind(topology, HYDT_topo_hwloc_info.bitmap[id], 0);
@@ -476,8 +479,12 @@ HYD_status HYDT_topo_hwloc_bind(int idx)
         }
     }
 
+ fn_exit:
     HYDU_FUNC_EXIT();
     return status;
+
+ fn_fail:
+    goto fn_exit;
 }
 
 HYD_status HYDT_topo_hwloc_finalize(void)
