@@ -398,9 +398,7 @@ relevant Makefiles.
 
 The communication mechanisms in MPICH are called "devices". MPICH
 supports ch3 (default), as well as many third-party devices that are
-released and maintained by other institutes such as osu_ch3 (from Ohio
-State University for InfiniBand and iWARP), ch_mx (from Myricom for
-Myrinet MX), etc.
+released and maintained by other institutes.
 
                    *************************************
 
