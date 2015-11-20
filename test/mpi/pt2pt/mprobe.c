@@ -10,13 +10,6 @@
 #include "mpi.h"
 #include "mpitest.h"
 
-/* This is a temporary #ifdef to control whether we test this functionality.  A
- * configure-test or similar would be better.  Eventually the MPI-3 standard
- * will be released and this can be gated on a MPI_VERSION check */
-#if !defined(USE_STRICT_MPI) && defined(MPICH)
-#define TEST_MPROBE_ROUTINES 1
-#endif
-
 /* assert-like macro that bumps the err count and emits a message */
 #define check(x_)                                                                 \
     do {                                                                          \
@@ -38,9 +31,7 @@ int main(int argc, char **argv)
     int rank, size;
     int *sendbuf = NULL, *recvbuf = NULL;
     int count, i;
-#ifdef TEST_MPROBE_ROUTINES
     MPI_Message msg;
-#endif
     MPI_Request rreq;
     MPI_Status s1, s2;
     MPI_Datatype vectype;
@@ -60,7 +51,6 @@ int main(int argc, char **argv)
         goto epilogue;
     }
 
-#ifdef TEST_MPROBE_ROUTINES
     sendbuf = (int *) malloc(LARGE_SZ * sizeof(int));
     recvbuf = (int *) malloc(LARGE_SZ * sizeof(int));
     if (sendbuf == NULL || recvbuf == NULL) {
@@ -602,8 +592,6 @@ int main(int argc, char **argv)
         check(f_handle != 0xdeadbeef);
         check(msg == MPI_MESSAGE_NULL);
     }
-
-#endif /* TEST_MPROBE_ROUTINES */
 
   epilogue:
     MPI_Reduce((rank == 0 ? MPI_IN_PLACE : &errs), &errs, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
