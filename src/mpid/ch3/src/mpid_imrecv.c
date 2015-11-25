@@ -43,6 +43,16 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
     rreq->dev.user_count = count;
     rreq->dev.datatype = datatype;
 
+#ifdef ENABLE_COMM_OVERRIDES
+    MPIDI_Comm_get_vc(comm, rreq->status.MPI_SOURCE, &vc);
+    if (vc->comm_ops && vc->comm_ops->imrecv) {
+        MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
+        vc->comm_ops->imrecv(vc, rreq);
+        MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
+        goto fn_exit;
+    }
+#endif
+
     if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_EAGER_MSG)
     {
         int recv_pending;
