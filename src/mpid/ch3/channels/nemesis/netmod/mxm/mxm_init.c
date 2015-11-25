@@ -100,7 +100,8 @@ static MPIDI_Comm_ops_t comm_ops = {
 
     MPID_nem_mxm_probe, /* probe */
     MPID_nem_mxm_iprobe,        /* iprobe */
-    MPID_nem_mxm_improbe        /* improbe */
+    MPID_nem_mxm_improbe,       /* improbe */
+    NULL                        /* imrecv */
 };
 
 
