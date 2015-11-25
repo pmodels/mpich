@@ -36,7 +36,8 @@ MPIDI_Comm_ops_t _g_comm_ops = {
 
     NULL,       /* probe */
     MPID_nem_ofi_iprobe,        /* iprobe */
-    MPID_nem_ofi_improbe        /* improbe */
+    MPID_nem_ofi_improbe,       /* improbe */
+    MPID_nem_ofi_recv_posted    /* imrecv */
 };
 
 MPID_nem_netmod_funcs_t MPIDI_nem_ofi_funcs = {

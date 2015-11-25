@@ -88,7 +88,8 @@ static MPIDI_Comm_ops_t comm_ops = {
 
     MPID_nem_ptl_probe,         /* probe */
     MPID_nem_ptl_iprobe,        /* iprobe */
-    MPID_nem_ptl_improbe        /* improbe */
+    MPID_nem_ptl_improbe,       /* improbe */
+    NULL                        /* imrecv */
 };
 
 static MPIDI_CH3_PktHandler_Fcn *MPID_nem_ptl_pkt_handlers[2]; /* for CANCEL_SEND_REQ and CANCEL_SEND_RESP */

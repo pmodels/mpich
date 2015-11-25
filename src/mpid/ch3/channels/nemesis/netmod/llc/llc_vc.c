@@ -40,7 +40,8 @@ static MPIDI_Comm_ops_t comm_ops = {
 
     .probe = MPID_nem_llc_probe,
     .iprobe = MPID_nem_llc_iprobe,
-    .improbe = MPID_nem_llc_improbe
+    .improbe = MPID_nem_llc_improbe,
+    .imrecv = NULL
 };
 
 #undef FUNCNAME
