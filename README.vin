@@ -535,6 +535,37 @@ in the binary. If you're using gcc, you can do this by adding
 Currently, use of MPI_ANY_SOURCE and MPI dynamic processes are unsupported
 with the portals4 netmod.
 
+ofi network module
+```````````````````
+The ofi netmod provides support for the OFI network programming interface.
+To enable, configure with the following option:
+
+  --with-device=ch3:nemesis:ofi
+
+If the OFI include files and libraries are not in the normal search paths,
+you can specify them with the following options:
+
+  --with-ofi-include= and --with-ofi-lib=
+
+... or the if lib/ and include/ are in the same directory, you can use
+the following option:
+
+  --with-ofi=
+
+If the OFI libraries are shared libraries, they need to be in the
+shared library search path. This can be done by adding the path to
+/etc/ld.so.conf, or by setting the LD_LIBRARY_PATH variable in your
+environment. It's also possible to set the shared library search path
+in the binary. If you're using gcc, you can do this by adding
+
+  LD_LIBRARY_PATH=/path/to/lib
+
+  (and)
+
+  LDFLAGS="-Wl,-rpath -Wl,/path/to/lib"
+
+... as arguments to configure.
+
 
 sock channel
 ------------
