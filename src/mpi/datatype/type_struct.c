@@ -15,9 +15,9 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Type_struct as PMPI_Type_struct
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Type_struct(int count, const int *array_of_blocklengths,
-                    const MPI_Aint *array_of_displacements,
-                    const MPI_Datatype *array_of_types, MPI_Datatype *newtype) __attribute__((weak,alias("PMPI_Type_struct")));
+int MPI_Type_struct(int count, int *array_of_blocklengths,
+                    MPI_Aint *array_of_displacements,
+                    MPI_Datatype *array_of_types, MPI_Datatype *newtype) __attribute__((weak,alias("PMPI_Type_struct")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -149,9 +149,9 @@ for the structure foo
 .N MPI_ERR_EXHAUSTED
 @*/
 int MPI_Type_struct(int count,
-		    const int *array_of_blocklengths,
-		    const MPI_Aint *array_of_displacements,
-		    const MPI_Datatype *array_of_types,
+		    int *array_of_blocklengths,
+		    MPI_Aint *array_of_displacements,
+		    MPI_Datatype *array_of_types,
 		    MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;
