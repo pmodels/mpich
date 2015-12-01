@@ -15,7 +15,7 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Address as PMPI_Address
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_Address(const void *location, MPI_Aint *address) __attribute__((weak,alias("PMPI_Address")));
+int MPI_Address(void *location, MPI_Aint *address) __attribute__((weak,alias("PMPI_Address")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -59,7 +59,7 @@ The replacement for this routine is 'MPI_Get_address'.
 .N MPI_SUCCESS
 .N MPI_ERR_OTHER
 @*/
-int MPI_Address(const void *location, MPI_Aint *address)
+int MPI_Address(void *location, MPI_Aint *address)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ADDRESS);
