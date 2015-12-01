@@ -980,13 +980,13 @@ int MPI_Type_hvector(int count, int blocklength, MPI_Aint stride, MPI_Datatype o
 int MPI_Type_indexed(int count, const int *array_of_blocklengths,
                      const int *array_of_displacements, MPI_Datatype oldtype,
                      MPI_Datatype *newtype);
-int MPI_Type_hindexed(int count, const int *array_of_blocklengths,
-                      const MPI_Aint *array_of_displacements, MPI_Datatype oldtype,
+int MPI_Type_hindexed(int count, int *array_of_blocklengths,
+                      MPI_Aint *array_of_displacements, MPI_Datatype oldtype,
                       MPI_Datatype *newtype);
-int MPI_Type_struct(int count, const int *array_of_blocklengths,
-                    const MPI_Aint *array_of_displacements,
-                    const MPI_Datatype *array_of_types, MPI_Datatype *newtype);
-int MPI_Address(const void *location, MPI_Aint *address);
+int MPI_Type_struct(int count, int *array_of_blocklengths,
+                    MPI_Aint *array_of_displacements,
+                    MPI_Datatype *array_of_types, MPI_Datatype *newtype);
+int MPI_Address(void *location, MPI_Aint *address);
 int MPI_Type_extent(MPI_Datatype datatype, MPI_Aint *extent);
 int MPI_Type_size(MPI_Datatype datatype, int *size);
 int MPI_Type_lb(MPI_Datatype datatype, MPI_Aint *displacement);
@@ -1626,13 +1626,13 @@ int PMPI_Type_hvector(int count, int blocklength, MPI_Aint stride, MPI_Datatype 
 int PMPI_Type_indexed(int count, const int *array_of_blocklengths,
                       const int *array_of_displacements, MPI_Datatype oldtype,
                       MPI_Datatype *newtype);
-int PMPI_Type_hindexed(int count, const int *array_of_blocklengths,
-                       const MPI_Aint *array_of_displacements, MPI_Datatype oldtype,
+int PMPI_Type_hindexed(int count, int *array_of_blocklengths,
+                       MPI_Aint *array_of_displacements, MPI_Datatype oldtype,
                        MPI_Datatype *newtype);
-int PMPI_Type_struct(int count, const int *array_of_blocklengths,
-                     const MPI_Aint *array_of_displacements,
-                     const MPI_Datatype *array_of_types, MPI_Datatype *newtype);
-int PMPI_Address(const void *location, MPI_Aint *address);
+int PMPI_Type_struct(int count, int *array_of_blocklengths,
+                     MPI_Aint *array_of_displacements,
+                     MPI_Datatype *array_of_types, MPI_Datatype *newtype);
+int PMPI_Address(void *location, MPI_Aint *address);
 int PMPI_Type_extent(MPI_Datatype datatype, MPI_Aint *extent);
 int PMPI_Type_size(MPI_Datatype datatype, int *size);
 int PMPI_Type_lb(MPI_Datatype datatype, MPI_Aint *displacement);
