@@ -490,6 +490,7 @@
 /io/setinfo
 /io/setviewcur
 /io/userioerr
+/io/external32-derived-dtype
 /maint/testmerge
 /maint/conftimestamp
 /maint/f77tof90
