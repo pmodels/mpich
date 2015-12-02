@@ -112,6 +112,8 @@
 /* General handler for RTS-CTS-Data protocol.  Waits for the cc counter     */
 /* to hit two (send RTS and receive CTS decrementers) before kicking off the*/
 /* bulk data transfer.  On data send completion, the request can be freed   */
+/* Handles SEND-side events only.  We cannot rely on wc->tag field being    */
+/* set for these events, so we must use the TAG stored in the sreq.         */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPID_nem_ofi_data_callback)
@@ -122,49 +124,32 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sre
     req_fn reqFn;
     uint64_t tag = 0;
     BEGIN_FUNC(FCNAME);
-    switch (wc->tag & MPID_PROTOCOL_MASK) {
-    case MPID_MSG_CTS | MPID_MSG_RTS:
-        vc = REQ_OFI(sreq)->vc;
-        if(REQ_OFI(sreq)->pack_buffer) {
-          FI_RC_RETRY(fi_tsend(gl_data.endpoint,
-                               REQ_OFI(sreq)->pack_buffer,
-                               REQ_OFI(sreq)->pack_buffer_size,
-                               gl_data.mr,
-                               VC_OFI(vc)->direct_addr,
-                               wc->tag | MPID_MSG_DATA,
-                               (void *) &(REQ_OFI(sreq)->ofi_context)), tsend);
-        } else {
-          struct  fi_msg_tagged msg;
-          void   *desc    = NULL;
-          msg.msg_iov     = REQ_OFI(sreq)->iov;
-          msg.desc        = &desc;
-          msg.iov_count   = REQ_OFI(sreq)->iov_count;
-          msg.addr        = VC_OFI(vc)->direct_addr;
-          msg.tag         = wc->tag | MPID_MSG_DATA,
-          msg.ignore      = 0ULL;
-          msg.context     = &(REQ_OFI(sreq)->ofi_context);
-          msg.data        = 0ULL;
-          FI_RC_RETRY(fi_tsendmsg(gl_data.endpoint,&msg,0ULL),tsend);
-        }
-        MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(sreq));
-
-        break;
+    switch (REQ_OFI(sreq)->tag & MPID_PROTOCOL_MASK) {
     case MPID_MSG_CTS | MPID_MSG_RTS | MPID_MSG_DATA:
-        if (REQ_OFI(sreq)->pack_buffer)
-            MPIU_Free(REQ_OFI(sreq)->pack_buffer);
+        /* Verify request is complete prior to freeing buffers.
+         * Multiple DATA events may arrive because we need
+         * to store updated TAG values in the sreq.
+         */
+        if (MPID_cc_get(sreq->cc) == 1) {
+            if (REQ_OFI(sreq)->pack_buffer)
+                MPIU_Free(REQ_OFI(sreq)->pack_buffer);
 
-        if (REQ_OFI(sreq)->real_hdr)
-            MPIU_Free(REQ_OFI(sreq)->real_hdr);
+            if (REQ_OFI(sreq)->real_hdr)
+                MPIU_Free(REQ_OFI(sreq)->real_hdr);
 
-        reqFn = sreq->dev.OnDataAvail;
-        if (!reqFn) {
+            reqFn = sreq->dev.OnDataAvail;
+            if (!reqFn) {
+                MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(sreq));
+            }
+            else {
+                vc = REQ_OFI(sreq)->vc;
+                MPIDI_CH3I_NM_OFI_RC(reqFn(vc, sreq, &complete));
+            }
+            gl_data.rts_cts_in_flight--;
+
+        } else {
             MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(sreq));
         }
-        else {
-            vc = REQ_OFI(sreq)->vc;
-            MPIDI_CH3I_NM_OFI_RC(reqFn(vc, sreq, &complete));
-        }
-        gl_data.rts_cts_in_flight--;
         break;
     case MPID_MSG_RTS:
         MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(sreq));
@@ -176,14 +161,47 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sre
 /* ------------------------------------------------------------------------ */
 /* Signals the CTS has been received.  Call MPID_nem_ofi_data_callback on   */
 /* the parent send request to kick off the bulk data transfer               */
+/* Handles RECV-side events only.  We rely on wc->tag field being set for   */
+/* these events.                                                            */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPID_nem_ofi_cts_recv_callback)
 static int MPID_nem_ofi_cts_recv_callback(cq_tagged_entry_t * wc, MPID_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPID_Request *preq;
+    MPIDI_VC_t *vc;
     BEGIN_FUNC(FCNAME);
-    MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_data_callback(wc, REQ_OFI(rreq)->parent));
+    preq = REQ_OFI(rreq)->parent;
+    switch (wc->tag & MPID_PROTOCOL_MASK) {
+    case MPID_MSG_CTS | MPID_MSG_RTS:
+        vc = REQ_OFI(preq)->vc;
+        /* store tag in the request for SEND-side event processing */
+        REQ_OFI(preq)->tag = wc->tag | MPID_MSG_DATA;
+        if(REQ_OFI(preq)->pack_buffer) {
+          FI_RC_RETRY(fi_tsend(gl_data.endpoint,
+                               REQ_OFI(preq)->pack_buffer,
+                               REQ_OFI(preq)->pack_buffer_size,
+                               gl_data.mr,
+                               VC_OFI(vc)->direct_addr,
+                               REQ_OFI(preq)->tag,
+                               (void *) &(REQ_OFI(preq)->ofi_context)), tsend);
+        } else {
+          struct  fi_msg_tagged msg;
+          void   *desc    = NULL;
+          msg.msg_iov     = REQ_OFI(preq)->iov;
+          msg.desc        = &desc;
+          msg.iov_count   = REQ_OFI(preq)->iov_count;
+          msg.addr        = VC_OFI(vc)->direct_addr;
+          msg.tag         = REQ_OFI(preq)->tag,
+          msg.ignore      = 0ULL;
+          msg.context     = &(REQ_OFI(preq)->ofi_context);
+          msg.data        = 0ULL;
+          FI_RC_RETRY(fi_tsendmsg(gl_data.endpoint,&msg,0ULL),tsend);
+        }
+        MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(preq));
+        break;
+    }
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(rreq));
 
     END_FUNC_RC(FCNAME);
