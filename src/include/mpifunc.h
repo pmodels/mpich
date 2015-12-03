@@ -32,7 +32,7 @@
 #if defined(USE_DBG_LOGGING)
 #define MPIR_FUNC_EXIT(a) MPIU_DBG_MSG(ROUTINE_EXIT,TYPICAL,"Leaving "#a)
 #elif defined(MPICH_DEBUG_MEMARENA)
-#define MPIR_FUNC_EXIT(a) MPIU_DBG_MSG(ROUTINE_EXIT,TYPICAL,"Leaving "#a)
+#define MPIR_FUNC_EXIT(a) MPIU_trvalid("Leaving " #a)
 #endif
 
 #endif /* MPIFUNC_H_INCLUDED */
