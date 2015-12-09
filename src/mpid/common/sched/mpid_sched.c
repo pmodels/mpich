@@ -734,8 +734,10 @@ int MPID_Sched_copy(const void *inbuf,  MPI_Aint incount,  MPI_Datatype intype,
         MPID_Datatype_get_size_macro(intype, intype_size);
         MPID_Datatype_get_size_macro(outtype, outtype_size);
         if (incount * intype_size > outcount * outtype_size) {
-            MPL_error_printf("truncation: intype=%#x, intype_size=%lld, incount=%d, outtype=%#x, outtype_size=%lld outcount=%d\n",
-                              intype, (long long)intype_size, incount, outtype, (long long)outtype_size, outcount);
+            MPL_error_printf("truncation: intype=%#x, intype_size=%lld, incount=%lld, outtype=%#x, outtype_size=%lld outcount=%d\n",
+                              intype, (long long)intype_size,
+			      (long long)incount, outtype,
+			      (long long)outtype_size, outcount);
         }
     }
 #endif
