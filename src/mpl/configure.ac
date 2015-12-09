@@ -206,6 +206,8 @@ AC_CHECK_FUNCS(backtrace_symbols)
 AC_CHECK_LIB(backtrace, backtrace_create_state)
 AC_CHECK_LIB(unwind, unw_backtrace)
 
+AC_CHECK_DECLS([backtrace_create_state, backtrace_print])
+
 dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE
 
