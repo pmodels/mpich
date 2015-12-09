@@ -36,48 +36,15 @@
  *
  */
 
-#ifdef MPL_HAVE_BACKTRACE_SYMBOLS
-static inline void backtrace_libc(FILE *output)
-{
-#ifndef MPL_MAX_TRACE_DEPTH
-#define MPL_MAX_TRACE_DEPTH 32
-#endif
-    void *trace[MPL_MAX_TRACE_DEPTH];
-    char **stack_strs;
-    char backtrace_buffer[MPL_BACKTRACE_BUFFER_LEN];
-    int frames, i, ret, chars = 0;
-
-    frames = backtrace(trace, MPL_MAX_TRACE_DEPTH);
-    stack_strs = backtrace_symbols(trace, frames);
-
-    for (i = 0; i < frames; i++) {
-        ret = MPL_snprintf(backtrace_buffer + chars,
-                       MPL_BACKTRACE_BUFFER_LEN - chars,
-                       "%s\n", stack_strs[i]);
-        if (ret + chars >= MPL_BACKTRACE_BUFFER_LEN) {
-            /* the extra new line will be more readable than a merely
-             * truncated string */
-            backtrace_buffer[MPL_BACKTRACE_BUFFER_LEN - 2] = '\n';
-            backtrace_buffer[MPL_BACKTRACE_BUFFER_LEN - 1] = '\0';
-            break;
-        }
-        chars += ret;
-    }
-    fprintf(output, "%s", backtrace_buffer);
-    free(stack_strs);
-}
-#endif
-
 #ifdef MPL_HAVE_LIBBACKTRACE
+
 static inline void backtrace_libback(FILE *output)
 {
     struct backtrace_state *btstate;
     btstate = backtrace_create_state(NULL, 1, NULL, NULL);
     backtrace_print(btstate, 0, output);
 }
-#endif
-
-#ifdef MPL_HAVE_LIBUNWIND
+#elif defined MPL_HAVE_LIBUNWIND
 static inline void backtrace_libunwind(FILE *output)
 {
     unw_cursor_t cursor;
@@ -108,12 +75,43 @@ static inline void backtrace_libunwind(FILE *output)
     }
     fprintf(output, "%s", backtrace_buffer);
 }
-#endif
 
+#elif defined MPL_HAVE_BACKTRACE_SYMBOLS
+static inline void backtrace_libc(FILE *output)
+{
+#ifndef MPL_MAX_TRACE_DEPTH
+#define MPL_MAX_TRACE_DEPTH 32
+#endif
+    void *trace[MPL_MAX_TRACE_DEPTH];
+    char **stack_strs;
+    char backtrace_buffer[MPL_BACKTRACE_BUFFER_LEN];
+    int frames, i, ret, chars = 0;
+
+    frames = backtrace(trace, MPL_MAX_TRACE_DEPTH);
+    stack_strs = backtrace_symbols(trace, frames);
+
+    for (i = 0; i < frames; i++) {
+        ret = MPL_snprintf(backtrace_buffer + chars,
+                       MPL_BACKTRACE_BUFFER_LEN - chars,
+                       "%s\n", stack_strs[i]);
+        if (ret + chars >= MPL_BACKTRACE_BUFFER_LEN) {
+            /* the extra new line will be more readable than a merely
+             * truncated string */
+            backtrace_buffer[MPL_BACKTRACE_BUFFER_LEN - 2] = '\n';
+            backtrace_buffer[MPL_BACKTRACE_BUFFER_LEN - 1] = '\0';
+            break;
+        }
+        chars += ret;
+    }
+    fprintf(output, "%s", backtrace_buffer);
+    free(stack_strs);
+}
+#else
 static inline void backtrace_unsupported(FILE *output)
 {
     fprintf(output, "No backtrace info available\n");
 }
+#endif
 
 /* Pick one of the many ways one could dump out a call stack*/
 void MPL_backtrace_show(FILE *output)
