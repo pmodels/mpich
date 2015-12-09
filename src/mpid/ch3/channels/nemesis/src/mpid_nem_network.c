@@ -22,7 +22,7 @@ cvars:
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If non-empty, this cvar specifies which network module
-        should be used for communication.
+        should be used for communication. This variable is case-insensitive.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
