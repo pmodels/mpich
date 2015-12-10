@@ -132,22 +132,46 @@ PAC_POP_ALL_FLAGS
 
 AC_DEFINE_UNQUOTED(HYDRA_CONFIGURE_ARGS_CLEAN,"`echo $ac_configure_args`",[Configure arguments])
 
-# Dirty hack -- If we are compiling within MPICH, use the MPL in the
-# src/mpl directory. If not, use the one we checked out separately for
-# Hydra.
-if test "$FROM_MPICH" = "yes" ; then
-   mpl_srcdir="../../mpl"
-   mpl_dist_srcdir=
-else
-   mpl_srcdir="mpl"
-   mpl_dist_srcdir="mpl"
-   PAC_CONFIG_SUBDIR(mpl,,AC_ERROR(MPL configure failed))
-fi
-AC_SUBST(mpl_srcdir)
+# MPL
+AC_ARG_VAR([MPLLIBNAME],[can be used to override the name of the MPL library (default: "mpl")])
+MPLLIBNAME=${MPLLIBNAME:-"mpl"}
+export MPLLIBNAME
+AC_SUBST(MPLLIBNAME)
+AC_ARG_WITH([mpl-prefix],
+            [AS_HELP_STRING([[--with-mpl-prefix[=DIR]]],
+                            [use the MPL library installed in DIR. Pass
+                             "embedded" to force usage of the MPL source
+                             distributed with Hydra.])],
+            [],dnl action-if-given
+            [with_mpl_prefix=embedded]) dnl action-if-not-given
+mpl_srcdir=""
+AC_SUBST([mpl_srcdir])
 # Controls whether we recurse into the MPL dir when running "dist" rules like
 # "make distclean".  Technically we are cheating whenever DIST_SUBDIRS is not a
 # superset of SUBDIRS, but we don't want to double-distclean and similar.
 AC_SUBST(mpl_dist_srcdir)
+mpl_includedir=""
+AC_SUBST([mpl_includedir])
+mpl_libdir=""
+AC_SUBST([mpl_libdir])
+mpl_lib=""
+AC_SUBST([mpl_lib])
+if test "$with_mpl_prefix" = "embedded" ; then
+    mpl_srcdir="mpl"
+    mpl_dist_srcdir="mpl"
+    mpl_lib="mpl/lib${MPLLIBNAME}.la"
+    mpl_subdir_args="--disable-versioning"
+    PAC_CONFIG_SUBDIR_ARGS([mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
+    mpl_includedir='-I$(top_builddir)/mpl/include -I$(top_srcdir)/mpl/include'
+else
+    # The user specified an already-installed MPL; just sanity check, don't
+    # subconfigure it
+    AS_IF([test -s "${with_mpl_prefix}/include/mplconfig.h"],
+          [:],[AC_MSG_ERROR([the MPL installation in "${with_mpl_prefix}" appears broken])])
+    mpl_includedir="-I${with_mpl_prefix}/include"
+    mpl_libdir="-L${with_mpl_prefix}/lib"
+    mpl_lib="-l${MPLLIBNAME}"
+fi
 
 # Documentation
 AC_PATH_PROG([DOXYGEN],[doxygen],,$PATH)
