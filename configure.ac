@@ -1159,7 +1159,7 @@ AC_ARG_WITH([mpl-prefix],
                             [use the MPL library installed in DIR,
                              rather than the one included in src/mpl.  Pass
                              "embedded" to force usage of the MPL source
-                             distributed with MPICH2.])],
+                             distributed with MPICH.])],
             [],dnl action-if-given
             [with_mpl_prefix=embedded]) dnl action-if-not-given
 mplsrcdir=""
