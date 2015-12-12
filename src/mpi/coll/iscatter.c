@@ -31,7 +31,7 @@ int MPI_Iscatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void
 struct shared_state {
     int sendcount;
     int curr_count;
-    int send_subtree_count;
+    MPI_Aint send_subtree_count;
     int nbytes;
     MPI_Status status;
 };
