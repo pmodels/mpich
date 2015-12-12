@@ -31,14 +31,16 @@ int MPI_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, vo
 /* helper callbacks and associated state structures */
 struct shared_state {
     int recvtype;
-    int curr_count;
-    int last_recv_count;
+    MPI_Aint curr_count;
+    MPI_Aint last_recv_count;
     MPI_Status status;
 };
 static int get_count(MPID_Comm *comm, int tag, void *state)
 {
     struct shared_state *ss = state;
-    MPIR_Get_count_impl(&ss->status, ss->recvtype, &ss->last_recv_count);
+    int recv_count;
+    MPIR_Get_count_impl(&ss->status, ss->recvtype, &recv_count);
+    ss->last_recv_count = recv_count;
     ss->curr_count += ss->last_recv_count;
     return MPI_SUCCESS;
 }
