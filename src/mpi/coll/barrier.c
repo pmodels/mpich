@@ -274,8 +274,7 @@ int MPIR_Barrier_inter( MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag )
     goto fn_exit;
 }
 
-/* MPIR_Barrier performs an barrier using poin        MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-t-to-point messages.
+/* MPIR_Barrier performs an barrier using point-to-point messages.
    This is intended to be used by device-specific implementations of
    barrier.  In all other cases MPIR_Barrier_impl should be used. */
 #undef FUNCNAME
