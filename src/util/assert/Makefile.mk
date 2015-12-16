@@ -8,5 +8,5 @@
 AM_CPPFLAGS += -I$(top_srcdir)/src/util/assert
 
 noinst_HEADERS += src/util/assert/mpiassert.h
-mpi_core_sources +=
+mpi_core_sources += src/util/assert/assert.c
 
