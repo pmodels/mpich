@@ -42,8 +42,8 @@ void MPIDI_CH3U_Buffer_copy(
     MPI_Aint sdt_true_lb, rdt_true_lb;
     intptr_t sdata_sz;
     intptr_t rdata_sz;
-    MPID_Datatype * sdt_ptr;
-    MPID_Datatype * rdt_ptr;
+    MPIDU_Datatype* sdt_ptr;
+    MPIDU_Datatype* rdt_ptr;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_BUFFER_COPY);
     MPIDI_STATE_DECL(MPID_STATE_MEMCPY);
 
@@ -80,14 +80,14 @@ void MPIDI_CH3U_Buffer_copy(
     }
     else if (sdt_contig)
     {
-	MPID_Segment seg;
+	MPIDU_Segment seg;
 	MPI_Aint last;
 
-	MPID_Segment_init(rbuf, rcount, rdt, &seg, 0);
+	MPIDU_Segment_init(rbuf, rcount, rdt, &seg, 0);
 	last = sdata_sz;
 	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                           "pre-unpack last=%" PRIdPTR, last ));
-	MPID_Segment_unpack(&seg, 0, &last, (char*)sbuf + sdt_true_lb);
+	MPIDU_Segment_unpack(&seg, 0, &last, (char*)sbuf + sdt_true_lb);
 	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
 			 "pre-unpack last=%" PRIdPTR, last ));
 	/* --BEGIN ERROR HANDLING-- */
@@ -101,14 +101,14 @@ void MPIDI_CH3U_Buffer_copy(
     }
     else if (rdt_contig)
     {
-	MPID_Segment seg;
+	MPIDU_Segment seg;
 	MPI_Aint last;
 
-	MPID_Segment_init(sbuf, scount, sdt, &seg, 0);
+	MPIDU_Segment_init(sbuf, scount, sdt, &seg, 0);
 	last = sdata_sz;
 	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
 			       "pre-pack last=%" PRIdPTR, last ));
-	MPID_Segment_pack(&seg, 0, &last, (char*)rbuf + rdt_true_lb);
+	MPIDU_Segment_pack(&seg, 0, &last, (char*)rbuf + rdt_true_lb);
 	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
 			    "post-pack last=%" PRIdPTR, last ));
 	/* --BEGIN ERROR HANDLING-- */
@@ -124,9 +124,9 @@ void MPIDI_CH3U_Buffer_copy(
     {
 	char * buf;
 	intptr_t buf_off;
-	MPID_Segment sseg;
+	MPIDU_Segment sseg;
 	intptr_t sfirst;
-	MPID_Segment rseg;
+	MPIDU_Segment rseg;
 	intptr_t rfirst;
 
 	buf = MPL_malloc(MPIDI_COPY_BUFFER_SZ);
@@ -141,8 +141,8 @@ void MPIDI_CH3U_Buffer_copy(
 	}
 	/* --END ERROR HANDLING-- */
 
-	MPID_Segment_init(sbuf, scount, sdt, &sseg, 0);
-	MPID_Segment_init(rbuf, rcount, rdt, &rseg, 0);
+	MPIDU_Segment_init(sbuf, scount, sdt, &sseg, 0);
+	MPIDU_Segment_init(rbuf, rcount, rdt, &rseg, 0);
 
 	sfirst = 0;
 	rfirst = 0;
@@ -165,7 +165,7 @@ void MPIDI_CH3U_Buffer_copy(
 	    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                "pre-pack first=%" PRIdPTR ", last=%" PRIdPTR,
 						sfirst, last ));
-	    MPID_Segment_pack(&sseg, sfirst, &last, buf + buf_off);
+	    MPIDU_Segment_pack(&sseg, sfirst, &last, buf + buf_off);
 	    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                "post-pack first=%" PRIdPTR ", last=%" PRIdPTR,
                sfirst, last ));
@@ -179,7 +179,7 @@ void MPIDI_CH3U_Buffer_copy(
 	    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
              "pre-unpack first=%" PRIdPTR ", last=%" PRIdPTR,
 						rfirst, last ));
-	    MPID_Segment_unpack(&rseg, rfirst, &last, buf);
+	    MPIDU_Segment_unpack(&rseg, rfirst, &last, buf);
 	    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
              "post-unpack first=%" PRIdPTR ", last=%" PRIdPTR,
 						rfirst, last ));

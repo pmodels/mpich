@@ -129,7 +129,7 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
     win->mpid.sync.total += 1; 
 
     MPI_Datatype basic_type = MPI_DATATYPE_NULL;
-    MPID_Datatype_get_basic_type(datatype, basic_type);
+    MPIDU_Datatype_get_basic_type(datatype, basic_type);
     MPID_assert(basic_type != MPI_DATATYPE_NULL);
     req->origin.datatype=basic_type;
 

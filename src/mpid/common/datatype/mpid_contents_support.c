@@ -8,20 +8,20 @@
 #include <mpi.h>
 #include <mpid_datatype.h>
 
-void MPID_Type_access_contents(MPI_Datatype type,
+void MPIDU_Type_access_contents(MPI_Datatype type,
 			       int **ints_p,
 			       MPI_Aint **aints_p,
 			       MPI_Datatype **types_p)
 {
     int nr_ints, nr_aints, nr_types, combiner;
     int types_sz, struct_sz, ints_sz, epsilon, align_sz = 8;
-    MPID_Datatype *dtp;
-    MPID_Datatype_contents *cp;
+    MPIDU_Datatype *dtp;
+    MPIDU_Datatype_contents *cp;
 
     MPIR_Type_get_envelope_impl(type, &nr_ints, &nr_aints, &nr_types, &combiner);
 
     /* hardcoded handling of MPICH contents format... */
-    MPID_Datatype_get_ptr(type, dtp);
+    MPIDU_Datatype_get_ptr(type, dtp);
     DLOOP_Assert(dtp != NULL);
 
     cp = dtp->contents;
@@ -33,7 +33,7 @@ void MPID_Type_access_contents(MPI_Datatype type,
     }
 #endif
 
-    struct_sz = sizeof(MPID_Datatype_contents);
+    struct_sz = sizeof(MPIDU_Datatype_contents);
     types_sz  = nr_types * sizeof(MPI_Datatype);
     ints_sz   = nr_ints * sizeof(int);
 
@@ -57,7 +57,7 @@ void MPID_Type_access_contents(MPI_Datatype type,
 /* FIXME: Is this routine complete?  Why is it needed? If it is needed, it 
    must have a comment that describes why it is needed and the arguments 
    must have ATTRIBUTE((unused)) */
-void MPID_Type_release_contents(MPI_Datatype type,
+void MPIDU_Type_release_contents(MPI_Datatype type,
 				int **ints_p,
 				MPI_Aint **aints_p,
 				MPI_Datatype **types_p)

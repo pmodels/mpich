@@ -51,7 +51,7 @@ int MPIDO_Alltoall(const void *sendbuf,
 #endif
    TRACE_ERR("Entering MPIDO_Alltoall\n");
    volatile unsigned active = 1;
-   MPID_Datatype *sdt, *rdt;
+   MPIDU_Datatype*sdt, *rdt;
    pami_type_t stype, rtype;
    MPI_Aint sdt_true_lb=0, rdt_true_lb;
    MPIDI_Post_coll_t alltoall_post;
@@ -95,8 +95,8 @@ int MPIDO_Alltoall(const void *sendbuf,
     if(MPIDI_Process.cuda_aware_support_on)
     {
        MPI_Aint sdt_extent,rdt_extent;
-       MPID_Datatype_get_extent_macro(sendtype, sdt_extent);
-       MPID_Datatype_get_extent_macro(recvtype, rdt_extent);
+       MPIDU_Datatype_get_extent_macro(sendtype, sdt_extent);
+       MPIDU_Datatype_get_extent_macro(recvtype, rdt_extent);
        char *scbuf = NULL;
        char *rcbuf = NULL;
        int is_send_dev_buf = MPIDI_cuda_is_device_buf(sendbuf);
@@ -200,7 +200,7 @@ int MPIDO_Alltoall(const void *sendbuf,
          if(my_md->check_correct.values.rangeminmax)
          {
             MPI_Aint data_true_lb ATTRIBUTE((unused));
-            MPID_Datatype *data_ptr;
+            MPIDU_Datatype*data_ptr;
             int data_size, data_contig ATTRIBUTE((unused));
             MPIDI_Datatype_get_info(sendcount, sendtype, data_contig, data_size, data_ptr, data_true_lb); 
             if((my_md->range_lo <= data_size) &&
@@ -288,8 +288,8 @@ int MPIDO_Alltoall_simple(const void *sendbuf,
    void *sbuf = NULL, *rbuf = NULL;
    size_t send_size = 0;
    size_t recv_size = 0;
-   MPID_Segment segment;
-   MPID_Datatype *sdt, *rdt;
+   MPIDU_Segment segment;
+   MPIDU_Datatype*sdt, *rdt;
    MPI_Aint sdt_true_lb=0, rdt_true_lb;
    MPIDI_Post_coll_t alltoall_post;
    int sndlen, rcvlen, snd_contig = 1, rcv_contig = 1;
@@ -346,8 +346,8 @@ int MPIDO_Alltoall_simple(const void *sendbuf,
                    "Fatal:  Cannot allocate pack buffer");
       }
       DLOOP_Offset last = send_size*size;
-      MPID_Segment_init(sendbuf, sendcount*size, sendtype, &segment, 0);
-      MPID_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
+      MPIDU_Segment_init(sendbuf, sendcount*size, sendtype, &segment, 0);
+      MPIDU_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
 
     }
   }
@@ -364,7 +364,7 @@ int MPIDO_Alltoall_simple(const void *sendbuf,
     if(sendbuf == MPI_IN_PLACE)
     {
       size_t extent;
-      MPID_Datatype_get_extent_macro(recvtype,extent);
+      MPIDU_Datatype_get_extent_macro(recvtype,extent);
       MPIR_Localcopy(recvbuf + (rank*recvcount*extent), recvcount, recvtype,
                      rcv_noncontig_buff + (rank*recv_size), recv_size,MPI_CHAR);
     }

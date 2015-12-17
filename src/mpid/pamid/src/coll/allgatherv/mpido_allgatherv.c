@@ -178,7 +178,7 @@ int MPIDO_Allgatherv_bcast(const void *sendbuf,
    TRACE_ERR("Entering MPIDO_Allgatherv_bcast\n");
   int i, rc=MPI_ERR_INTERN;
   MPI_Aint extent;
-  MPID_Datatype_get_extent_macro(recvtype, extent);
+  MPIDU_Datatype_get_extent_macro(recvtype, extent);
 
   if (sendbuf != MPI_IN_PLACE)
   {
@@ -307,7 +307,7 @@ MPIDO_Allgatherv(const void *sendbuf,
   /* function pointer to be used to point to approperiate algorithm */
 
   /* Check the nature of the buffers */
-  MPID_Datatype *dt_null = NULL;
+  MPIDU_Datatype*dt_null = NULL;
   MPI_Aint send_true_lb  = 0;
   MPI_Aint recv_true_lb  = 0;
   size_t   send_size     = 0;
@@ -374,8 +374,8 @@ MPIDO_Allgatherv(const void *sendbuf,
     if(MPIDI_Process.cuda_aware_support_on)
     {
        MPI_Aint sdt_extent,rdt_extent;
-       MPID_Datatype_get_extent_macro(sendtype, sdt_extent);
-       MPID_Datatype_get_extent_macro(recvtype, rdt_extent);
+       MPIDU_Datatype_get_extent_macro(sendtype, sdt_extent);
+       MPIDU_Datatype_get_extent_macro(recvtype, rdt_extent);
        char *scbuf = NULL;
        char *rcbuf = NULL;
        int is_send_dev_buf = MPIDI_cuda_is_device_buf(sendbuf);
@@ -552,7 +552,7 @@ MPIDO_Allgatherv(const void *sendbuf,
           if(my_md->check_correct.values.rangeminmax)
            {
              MPI_Aint data_true_lb;
-             MPID_Datatype *data_ptr;
+             MPIDU_Datatype*data_ptr;
              int data_size, data_contig;
              MPIDI_Datatype_get_info(sendcount, sendtype, data_contig, data_size, data_ptr, data_true_lb); 
              if((my_md->range_lo <= data_size) &&
@@ -690,7 +690,7 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
    TRACE_ERR("Entering MPIDO_Allgatherv_optimized\n");
   /* function pointer to be used to point to approperiate algorithm */
   /* Check the nature of the buffers */
-  MPID_Datatype *dt_null = NULL;
+  MPIDU_Datatype*dt_null = NULL;
   MPI_Aint send_true_lb  = 0;
   MPI_Aint recv_true_lb  = 0;
   size_t   send_size     = 0;
@@ -818,7 +818,7 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
     if(inplace)
     {
       size_t extent;
-      MPID_Datatype_get_extent_macro(recvtype,extent);
+      MPIDU_Datatype_get_extent_macro(recvtype,extent);
       MPIR_Localcopy(recvbuf + displs[rank]*extent, recvcounts[rank], recvtype,
                      rcv_noncontig_buff + precvdispls[rank], precvcounts[rank],MPI_CHAR);
       scount = precvcounts[rank];
@@ -862,7 +862,7 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
     {
       size_t extent;
       int i;
-      MPID_Datatype_get_extent_macro(recvtype,extent);
+      MPIDU_Datatype_get_extent_macro(recvtype,extent);
       for(i=0; i<size; ++i)
       {
         char* scbuf = (char*)rcv_noncontig_buff+ precvdispls[i];

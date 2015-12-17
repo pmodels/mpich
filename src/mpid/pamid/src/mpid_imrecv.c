@@ -47,7 +47,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
 #ifdef MPIDI_TRACE
 {
   size_t ll;
-  ll = count * MPID_Datatype_get_basic_size(datatype);
+  ll = count * MPIDU_Datatype_get_basic_size(datatype);
   /*MPIDI_SET_PR_REC(rreq,buf,count,ll,datatype,pami_source,rank,tag,comm,is_blocking); */
 }
 #endif

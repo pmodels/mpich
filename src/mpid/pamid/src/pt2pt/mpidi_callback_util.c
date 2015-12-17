@@ -144,7 +144,7 @@ MPIDI_Callback_process_userdefined_dt(pami_context_t      context,
                                       MPID_Request      * rreq)
 {
   unsigned dt_contig, dt_size;
-  MPID_Datatype *dt_ptr;
+  MPIDU_Datatype*dt_ptr;
   MPI_Aint dt_true_lb;
   MPIDI_Datatype_get_info(rreq->mpid.userbufcount,
                           rreq->mpid.datatype,

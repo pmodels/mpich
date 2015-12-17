@@ -27,7 +27,7 @@ int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
     int mpi_errno = MPI_SUCCESS, llc_errno;
     int dt_contig;
     intptr_t data_sz;
-    MPID_Datatype *dt_ptr;
+    MPIDU_Datatype*dt_ptr;
     MPI_Aint dt_true_lb;
     int i;
 
@@ -116,7 +116,7 @@ int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
     }
     else {
         /* See MPIDI_CH3_EagerNoncontigSend (in ch3u_eager.c) */
-        struct MPID_Segment *segment_ptr = MPID_Segment_alloc();
+        struct MPIDU_Segment *segment_ptr = MPIDU_Segment_alloc();
         MPIR_ERR_CHKANDJUMP(!segment_ptr, mpi_errno, MPI_ERR_OTHER, "**outofmemory");
 #ifndef	notdef_leak_0001_hack
         /* See also MPIDI_CH3_Request_create and _destory() */
@@ -124,14 +124,14 @@ int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
         sreq->dev.segment_ptr = segment_ptr;
 #endif /* notdef_leak_0001_hack */
 
-        MPID_Segment_init(buf, count, datatype, segment_ptr, 0);
+        MPIDU_Segment_init(buf, count, datatype, segment_ptr, 0);
         intptr_t segment_first = 0;
         intptr_t segment_size = data_sz;
         intptr_t last = segment_size;
         MPIU_Assert(last > 0);
         REQ_FIELD(sreq, pack_buf) = MPL_malloc((size_t) data_sz);
         MPIR_ERR_CHKANDJUMP(!REQ_FIELD(sreq, pack_buf), mpi_errno, MPI_ERR_OTHER, "**outofmemory");
-        MPID_Segment_pack(segment_ptr, segment_first, &last, (char *) (REQ_FIELD(sreq, pack_buf)));
+        MPIDU_Segment_pack(segment_ptr, segment_first, &last, (char *) (REQ_FIELD(sreq, pack_buf)));
         MPIU_Assert(last == data_sz);
         write_from_buf = REQ_FIELD(sreq, pack_buf);
     }
@@ -365,7 +365,7 @@ int MPID_nem_llc_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     if (data_sz > 0) {
         REQ_FIELD(sreq, rma_buf) = MPL_malloc((size_t) sreq->dev.segment_size);
         MPIR_ERR_CHKANDJUMP(!REQ_FIELD(sreq, rma_buf), mpi_errno, MPI_ERR_OTHER, "**outofmemory");
-        MPID_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &data_sz,
+        MPIDU_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &data_sz,
                           (char *) REQ_FIELD(sreq, rma_buf));
 
         sreq->dev.iov[1].MPL_IOV_BUF = REQ_FIELD(sreq, rma_buf);
@@ -817,7 +817,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
                 if (req->kind != MPID_REQUEST_MPROBE) {
                     /* Unpack non-contiguous dt */
                     int is_contig;
-                    MPID_Datatype_is_contig(req->dev.datatype, &is_contig);
+                    MPIDU_Datatype_is_contig(req->dev.datatype, &is_contig);
                     if (!is_contig) {
                         dprintf("llc_poll,unpack noncontiguous data to user buffer\n");
 
@@ -828,14 +828,14 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
                          * pkt->data_sz is sender's request size.
                          */
                         intptr_t unpack_sz = events[0].side.initiator.length;
-                        MPID_Segment seg;
+                        MPIDU_Segment seg;
                         MPI_Aint last;
 
                         /* user_buf etc. are set in MPID_irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
-                        MPID_Segment_init(req->dev.user_buf, req->dev.user_count, req->dev.datatype,
+                        MPIDU_Segment_init(req->dev.user_buf, req->dev.user_count, req->dev.datatype,
                                           &seg, 0);
                         last = unpack_sz;
-                        MPID_Segment_unpack(&seg, 0, &last, REQ_FIELD(req, pack_buf));
+                        MPIDU_Segment_unpack(&seg, 0, &last, REQ_FIELD(req, pack_buf));
                         if (last != unpack_sz) {
                             /* --BEGIN ERROR HANDLING-- */
                             /* received data was not entirely consumed by unpack()
@@ -960,7 +960,7 @@ int MPID_nem_llc_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
     int mpi_errno = MPI_SUCCESS, llc_errno;
     int dt_contig;
     intptr_t data_sz;
-    MPID_Datatype *dt_ptr;
+    MPIDU_Datatype*dt_ptr;
     MPI_Aint dt_true_lb;
     int i;
 
@@ -1039,20 +1039,20 @@ int MPID_nem_llc_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
     }
     else {
         /* See MPIDI_CH3_EagerNoncontigSend (in ch3u_eager.c) */
-        struct MPID_Segment *segment_ptr = MPID_Segment_alloc();
+        struct MPIDU_Segment *segment_ptr = MPIDU_Segment_alloc();
         MPIR_ERR_CHKANDJUMP(!segment_ptr, mpi_errno, MPI_ERR_OTHER, "**outofmemory");
         /* See also MPIDI_CH3_Request_create and _destory() */
         /*     in src/mpid/ch3/src/ch3u_request.c */
         sreq->dev.segment_ptr = segment_ptr;
 
-        MPID_Segment_init(buf, count, datatype, segment_ptr, 0);
+        MPIDU_Segment_init(buf, count, datatype, segment_ptr, 0);
         intptr_t segment_first = 0;
         intptr_t segment_size = data_sz;
         intptr_t last = segment_size;
         MPIU_Assert(last > 0);
         REQ_FIELD(sreq, pack_buf) = MPL_malloc((size_t) data_sz);
         MPIR_ERR_CHKANDJUMP(!REQ_FIELD(sreq, pack_buf), mpi_errno, MPI_ERR_OTHER, "**outofmemory");
-        MPID_Segment_pack(segment_ptr, segment_first, &last, (char *) (REQ_FIELD(sreq, pack_buf)));
+        MPIDU_Segment_pack(segment_ptr, segment_first, &last, (char *) (REQ_FIELD(sreq, pack_buf)));
         MPIU_Assert(last == data_sz);
         write_from_buf = REQ_FIELD(sreq, pack_buf);
     }

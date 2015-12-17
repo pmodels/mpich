@@ -282,7 +282,7 @@ MPID_Request_release_inline(MPID_Request *req)
 
     if (req->comm)              MPIR_Comm_release(req->comm, 0);
     if (req->greq_fns)          MPL_free(req->greq_fns);
-    if (req->mpid.datatype_ptr) MPID_Datatype_release(req->mpid.datatype_ptr);
+    if (req->mpid.datatype_ptr) MPIDU_Datatype_release(req->mpid.datatype_ptr);
     if (req->mpid.uebuf_malloc== mpiuMalloc) {
         MPL_free(req->mpid.uebuf);
     }

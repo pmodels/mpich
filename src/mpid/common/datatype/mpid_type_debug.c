@@ -22,7 +22,7 @@
 
 
 void MPIDI_Datatype_dot_printf(MPI_Datatype type, int depth, int header);
-void MPIDI_Dataloop_dot_printf(MPID_Dataloop *loop_p, int depth, int header);
+void MPIDI_Dataloop_dot_printf(MPIDU_Dataloop *loop_p, int depth, int header);
 void MPIDI_Datatype_contents_printf(MPI_Datatype type, int depth, int acount);
 static char *MPIDI_Datatype_depth_spacing(int depth) ATTRIBUTE((unused));
 
@@ -44,10 +44,10 @@ void MPIDI_Datatype_dot_printf(MPI_Datatype type,
 	return;
     }
     else {
-	MPID_Datatype *dt_p;
-	MPID_Dataloop *loop_p;
+	MPIDU_Datatype *dt_p;
+	MPIDU_Dataloop *loop_p;
 
-	MPID_Datatype_get_ptr(type, dt_p);
+	MPIDU_Datatype_get_ptr(type, dt_p);
 	loop_p = dt_p->dataloop;
 
 	MPIDI_Dataloop_dot_printf(loop_p, depth, header);
@@ -55,7 +55,7 @@ void MPIDI_Datatype_dot_printf(MPI_Datatype type,
     }
 }
 
-void MPIDI_Dataloop_dot_printf(MPID_Dataloop *loop_p,
+void MPIDI_Dataloop_dot_printf(MPIDU_Dataloop *loop_p,
 			       int depth,
 			       int header)
 {
@@ -248,9 +248,9 @@ void MPIDI_Datatype_printf(MPI_Datatype type,
 	else sticky_ub = 0;
     }
     else {
-	MPID_Datatype *type_ptr;
+	MPIDU_Datatype *type_ptr;
 
-	MPID_Datatype_get_ptr(type, type_ptr);
+	MPIDU_Datatype_get_ptr(type, type_ptr);
 	string = MPIDU_Datatype_combiner_to_string(type_ptr->contents->combiner);
 	sticky_lb = type_ptr->has_sticky_lb;
 	sticky_ub = type_ptr->has_sticky_ub;
@@ -441,7 +441,7 @@ void MPIDU_Datatype_debug(MPI_Datatype type,
 			  int array_ct)
 {
     int is_builtin;
-    MPID_Datatype *dtp ATTRIBUTE((unused));
+    MPIDU_Datatype *dtp ATTRIBUTE((unused));
 
     is_builtin = (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN);
 
@@ -462,7 +462,7 @@ void MPIDU_Datatype_debug(MPI_Datatype type,
 
     if (is_builtin) return;
 
-    MPID_Datatype_get_ptr(type, dtp);
+    MPIDU_Datatype_get_ptr(type, dtp);
     MPIU_Assert(dtp != NULL);
 
     MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
@@ -516,8 +516,8 @@ void MPIDI_Datatype_contents_printf(MPI_Datatype type,
 				    int acount)
 {
     int i;
-    MPID_Datatype *dtp;
-    MPID_Datatype_contents *cp;
+    MPIDU_Datatype *dtp;
+    MPIDU_Datatype_contents *cp;
 
     MPI_Aint *aints = NULL;
     MPI_Datatype *types = NULL;
@@ -530,7 +530,7 @@ void MPIDI_Datatype_contents_printf(MPI_Datatype type,
 	return;
     }
 
-    MPID_Datatype_get_ptr(type, dtp);
+    MPIDU_Datatype_get_ptr(type, dtp);
     cp = dtp->contents;
 
     if (cp == NULL) {

@@ -12,7 +12,7 @@
 /* #define MPID_TYPE_ALLOC_DEBUG */
 
 /*@
-  MPID_Type_contiguous - create a contiguous datatype
+  MPIDU_Type_contiguous - create a contiguous datatype
 
 Input Parameters:
 + count - number of elements in the contiguous block
@@ -24,7 +24,7 @@ Output Parameters:
   Return Value:
   MPI_SUCCESS on success, MPI error code on failure.
 @*/
-int MPID_Type_contiguous(int count,
+int MPIDU_Type_contiguous(int count,
 			 MPI_Datatype oldtype,
 			 MPI_Datatype *newtype)
 {
@@ -32,17 +32,17 @@ int MPID_Type_contiguous(int count,
     int is_builtin;
     MPI_Aint el_sz;
     MPI_Datatype el_type;
-    MPID_Datatype *new_dtp;
+    MPIDU_Datatype *new_dtp;
 
-    if (count == 0) return MPID_Type_zerolen(newtype);
+    if (count == 0) return MPIDU_Type_zerolen(newtype);
 
     /* allocate new datatype object and handle */
-    new_dtp = (MPID_Datatype *) MPIU_Handle_obj_alloc(&MPID_Datatype_mem);
+    new_dtp = (MPIDU_Datatype *) MPIU_Handle_obj_alloc(&MPIDU_Datatype_mem);
     /* --BEGIN ERROR HANDLING-- */
     if (!new_dtp)
     {
 	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					 "MPID_Type_contiguous",
+					 "MPIDU_Type_contiguous",
 					 __LINE__, MPI_ERR_OTHER,
 					 "**nomem", 0);
 	return mpi_errno;
@@ -69,7 +69,7 @@ int MPID_Type_contiguous(int count,
 
     if (is_builtin)
     {
-	el_sz   = MPID_Datatype_get_basic_size(oldtype);
+	el_sz   = MPIDU_Datatype_get_basic_size(oldtype);
 	el_type = oldtype;
 
 	new_dtp->size          = count * el_sz;
@@ -92,9 +92,9 @@ int MPID_Type_contiguous(int count,
     else
     {
 	/* user-defined base type (oldtype) */
-	MPID_Datatype *old_dtp;
+	MPIDU_Datatype *old_dtp;
 
-	MPID_Datatype_get_ptr(oldtype, old_dtp);
+	MPIDU_Datatype_get_ptr(oldtype, old_dtp);
 	el_sz   = old_dtp->builtin_element_size;
 	el_type = old_dtp->basic_type;
 
@@ -102,7 +102,7 @@ int MPID_Type_contiguous(int count,
 	new_dtp->has_sticky_ub  = old_dtp->has_sticky_ub;
 	new_dtp->has_sticky_lb  = old_dtp->has_sticky_lb;
 
-	MPID_DATATYPE_CONTIG_LB_UB((MPI_Aint) count,
+	MPIDU_DATATYPE_CONTIG_LB_UB((MPI_Aint) count,
 				   old_dtp->lb,
 				   old_dtp->ub,
 				   old_dtp->extent,

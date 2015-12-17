@@ -48,7 +48,7 @@ int MPIDO_Reduce_scatter(const void *sendbuf,
     if(MPIDI_Process.cuda_aware_support_on)
     {
        MPI_Aint dt_extent;
-       MPID_Datatype_get_extent_macro(datatype, dt_extent);
+       MPIDU_Datatype_get_extent_macro(datatype, dt_extent);
        char *scbuf = NULL;
        char *rcbuf = NULL;
        int is_send_dev_buf = MPIDI_cuda_is_device_buf(sendbuf);
@@ -127,7 +127,7 @@ int MPIDO_Reduce_scatter_block(const void *sendbuf,
     if(MPIDI_Process.cuda_aware_support_on)
     {
        MPI_Aint dt_extent;
-       MPID_Datatype_get_extent_macro(datatype, dt_extent);
+       MPIDU_Datatype_get_extent_macro(datatype, dt_extent);
        char *scbuf = NULL;
        char *rcbuf = NULL;
        int is_send_dev_buf = MPIDI_cuda_is_device_buf(sendbuf);

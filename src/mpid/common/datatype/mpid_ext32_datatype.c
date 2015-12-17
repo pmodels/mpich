@@ -101,17 +101,17 @@ MPI_Aint MPIDI_Datatype_get_basic_size_external32(MPI_Datatype el_type)
     return ret;
 }
 
-MPI_Aint MPID_Datatype_size_external32(MPI_Datatype type)
+MPI_Aint MPIDU_Datatype_size_external32(MPI_Datatype type)
 {
     if (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) {
 	return MPIDI_Datatype_get_basic_size_external32(type);
     }
     else {
-	MPID_Dataloop *dlp = NULL;
+	MPIDU_Dataloop *dlp = NULL;
 
-	MPID_Datatype_get_loopptr_macro(type, dlp, MPID_DATALOOP_HETEROGENEOUS);
+	MPIDU_Datatype_get_loopptr_macro(type, dlp, MPIDU_DATALOOP_HETEROGENEOUS);
 
-	return MPID_Dataloop_stream_size(dlp,
+	return MPIDU_Dataloop_stream_size(dlp,
 					 MPIDI_Datatype_get_basic_size_external32);
     }
 }

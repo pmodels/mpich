@@ -316,7 +316,7 @@ MPIDI_SendMsg_process_userdefined_dt(MPID_Request      * sreq,
   size_t          data_sz;
   int             dt_contig;
   MPI_Aint        dt_true_lb;
-  MPID_Datatype * dt_ptr;
+  MPIDU_Datatype* dt_ptr;
   void          * sndbuf;
 
   /*
@@ -354,7 +354,7 @@ MPIDI_SendMsg_process_userdefined_dt(MPID_Request      * sreq,
       if(MPIDI_Process.cuda_aware_support_on && on_device)
       {
         MPI_Aint dt_extent;
-        MPID_Datatype_get_extent_macro(sreq->mpid.datatype, dt_extent);
+        MPIDU_Datatype_get_extent_macro(sreq->mpid.datatype, dt_extent);
         buf =  MPL_malloc(dt_extent * sreq->mpid.userbufcount);
 
         cudaError_t cudaerr = CudaMemcpy(buf, sreq->mpid.userbuf, dt_extent * sreq->mpid.userbufcount, cudaMemcpyDeviceToHost);
@@ -365,7 +365,7 @@ MPIDI_SendMsg_process_userdefined_dt(MPID_Request      * sreq,
       }
 #endif
 
-      MPID_Segment segment;
+      MPIDU_Segment segment;
 
       if(data_sz != 0) {
         sreq->mpid.uebuf = sndbuf = MPL_malloc(data_sz);
@@ -387,12 +387,12 @@ MPIDI_SendMsg_process_userdefined_dt(MPID_Request      * sreq,
 #endif
         MPID_assert(buf != NULL);
 
-        MPID_Segment_init(buf,
+        MPIDU_Segment_init(buf,
                           sreq->mpid.userbufcount,
                           sreq->mpid.datatype,
                           &segment,
                           0);
-        MPID_Segment_pack(&segment, 0, &last, sndbuf);
+        MPIDU_Segment_pack(&segment, 0, &last, sndbuf);
         MPID_assert(last == data_sz);
 #if CUDA_AWARE_SUPPORT
         if(MPIDI_Process.cuda_aware_support_on && on_device)
@@ -458,7 +458,7 @@ if (!TOKEN_FLOW_CONTROL_ON) {
   if (likely(HANDLE_GET_KIND(sreq->mpid.datatype) == HANDLE_KIND_BUILTIN))
     {
       sndbuf   = sreq->mpid.userbuf;
-      data_sz  = sreq->mpid.userbufcount * MPID_Datatype_get_basic_size(sreq->mpid.datatype);
+      data_sz  = sreq->mpid.userbufcount * MPIDU_Datatype_get_basic_size(sreq->mpid.datatype);
     }
   else
     {
@@ -561,7 +561,7 @@ if (!TOKEN_FLOW_CONTROL_ON) {
        if (likely(HANDLE_GET_KIND(sreq->mpid.datatype) == HANDLE_KIND_BUILTIN))
          {
            sndbuf   = sreq->mpid.userbuf;
-           data_sz  = sreq->mpid.userbufcount * MPID_Datatype_get_basic_size(sreq->mpid.datatype);
+           data_sz  = sreq->mpid.userbufcount * MPIDU_Datatype_get_basic_size(sreq->mpid.datatype);
          }
        else
         {

@@ -226,7 +226,7 @@ int MPIDO_Scatterv(const void *sendbuf,
   int contig ATTRIBUTE((unused));
   int ssize ATTRIBUTE((unused));
   int rsize ATTRIBUTE((unused));
-  MPID_Datatype *dt_ptr = NULL;
+  MPIDU_Datatype*dt_ptr = NULL;
   MPI_Aint send_true_lb=0, recv_true_lb;
   char *sbuf, *rbuf;
   pami_type_t stype, rtype;
@@ -250,8 +250,8 @@ int MPIDO_Scatterv(const void *sendbuf,
     if(MPIDI_Process.cuda_aware_support_on)
     {
        MPI_Aint sdt_extent,rdt_extent;
-       MPID_Datatype_get_extent_macro(sendtype, sdt_extent);
-       MPID_Datatype_get_extent_macro(recvtype, rdt_extent);
+       MPIDU_Datatype_get_extent_macro(sendtype, sdt_extent);
+       MPIDU_Datatype_get_extent_macro(recvtype, rdt_extent);
        char *scbuf = NULL;
        char *rcbuf = NULL;
        int is_send_dev_buf = (rank == root) ? MPIDI_cuda_is_device_buf(sendbuf) : 0;
@@ -392,7 +392,7 @@ int MPIDO_Scatterv(const void *sendbuf,
          if(my_md->check_correct.values.rangeminmax)
          {
            MPI_Aint data_true_lb;
-           MPID_Datatype *data_ptr;
+           MPIDU_Datatype*data_ptr;
            int data_size, data_contig;
            MPIDI_Datatype_get_info(recvcount, recvtype, data_contig, data_size, data_ptr, data_true_lb); 
            if((my_md->range_lo <= data_size) &&
@@ -482,13 +482,13 @@ int MPIDO_Scatterv_simple(const void *sendbuf,
   int rcv_contig = 1;
   int send_size = 0, recv_size = 0;
   int ssize = 0;
-  MPID_Datatype *dt_ptr = NULL;
+  MPIDU_Datatype*dt_ptr = NULL;
   MPI_Aint send_true_lb=0, recv_true_lb=0;
   void *snd_noncontig_buff = NULL, *rcv_noncontig_buff = NULL;
   void *sbuf = NULL, *rbuf = NULL;
   int *sdispls = NULL, *scounts = NULL;
   int sndcount  = 0;
-  MPID_Segment segment;
+  MPIDU_Segment segment;
   int tmp, i;
   pami_type_t stype = PAMI_TYPE_NULL;
   const int rank = comm_ptr->rank;
@@ -580,8 +580,8 @@ int MPIDO_Scatterv_simple(const void *sendbuf,
                 "Fatal:  Cannot allocate pack buffer");
           }
           DLOOP_Offset last = send_size;
-          MPID_Segment_init(sendbuf, sndcount, sendtype, &segment, 0);
-          MPID_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
+          MPIDU_Segment_init(sendbuf, sndcount, sendtype, &segment, 0);
+          MPIDU_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
        }
      }
      if(recvbuf == MPI_IN_PLACE)

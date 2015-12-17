@@ -43,7 +43,7 @@ MPIDI_Win_DoneCB(pami_context_t  context,
                                      req->origin.count,
                                      req->origin.datatype);
           MPID_assert(mpi_errno == MPI_SUCCESS);
-          MPID_Datatype_release(req->origin.dt.pointer);
+          MPIDU_Datatype_release(req->origin.dt.pointer);
           MPL_free(req->buffer);
           MPL_free(req->user_buffer);
           req->buffer_free = 0;
@@ -84,12 +84,12 @@ MPIDI_Win_DoneCB(pami_context_t  context,
     }
   if ((MPIDI_Process.typed_onesided == 1) && (!req->target.dt.contig || !req->origin.dt.contig)) {
     /* We used the PAMI_Rput/Rget_typed call and added a ref so any MPI_Type_free before the context
-     * executes the put/get would not free the MPID_Datatype, which would also free the associated PAMI datatype
+     * executes the put/get would not free the MPIDU_Datatype, which would also free the associated PAMI datatype
      * which was still needed for communication -- that communication has completed, so now release the ref
-     * in the callback to allow the MPID_Datatype to be freed.
+     * in the callback to allow the MPIDU_Datatypeto be freed.
      */
-    MPID_Datatype_release(req->origin.dt.pointer);
-    MPID_Datatype_release(req->target.dt.pointer);
+    MPIDU_Datatype_release(req->origin.dt.pointer);
+    MPIDU_Datatype_release(req->target.dt.pointer);
   }
   MPIDI_Progress_signal();
 }
@@ -129,9 +129,9 @@ MPIDI_Win_datatype_map(MPIDI_Datatype * dt)
       MPID_assert(dt->map != NULL);
 
       DLOOP_Offset last = dt->pointer->size*dt->count;
-      MPID_Segment seg;
-      MPID_Segment_init(NULL, dt->count, dt->type, &seg, 0);
-      MPID_Segment_pack_vector(&seg, 0, &last, dt->map, &dt->num_contig);
+      MPIDU_Segment seg;
+      MPIDU_Segment_init(NULL, dt->count, dt->type, &seg, 0);
+      MPIDU_Segment_pack_vector(&seg, 0, &last, dt->map, &dt->num_contig);
       MPID_assert((unsigned)dt->num_contig <= map_size);
 #ifdef TRACE_ON
       TRACE_ERR("dt->pointer->size=%d  num_contig:  orig=%u  new=%d\n", dt->pointer->size, map_size, dt->num_contig);

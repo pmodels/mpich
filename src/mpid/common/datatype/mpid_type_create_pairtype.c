@@ -23,17 +23,17 @@
 	true_ub_ = (MPIU_VOID_PTR_CAST_TO_MPI_AINT ((char *) &foo.b -     \
                                                   (char *) &foo.a)) +   \
                   (MPI_Aint) sizeof(foo.b);                             \
-	alignsize_ = MPL_MAX(MPID_Datatype_get_basic_size(mt1_),	\
-                             MPID_Datatype_get_basic_size(mt2_));	\
+	alignsize_ = MPL_MAX(MPIDU_Datatype_get_basic_size(mt1_),	\
+                             MPIDU_Datatype_get_basic_size(mt2_));	\
     }
 
 /*@
-  MPID_Type_create_pairtype - create necessary data structures for certain
+  MPIDU_Type_create_pairtype - create necessary data structures for certain
   pair types (all but MPI_2INT etc., which never have the size != extent
   issue).
 
-  This function is different from the other MPID_Type_create functions in that
-  it fills in an already- allocated MPID_Datatype.  This is important for
+  This function is different from the other MPIDU_Type_create functions in that
+  it fills in an already- allocated MPIDU_Datatype.  This is important for
   allowing configure-time determination of the MPI type values (these types
   are stored in the "direct" space, for those familiar with how MPICH deals
   with type allocation).
@@ -63,8 +63,8 @@ Input Parameters:
   Thus in our implementation we have chosen to instead use the actual
   difference in starting locations of the two types in an actual struct.
 @*/
-int MPID_Type_create_pairtype(MPI_Datatype type,
-			      MPID_Datatype *new_dtp)
+int MPIDU_Type_create_pairtype(MPI_Datatype type,
+			      MPIDU_Datatype *new_dtp)
 {
     int err, mpi_errno = MPI_SUCCESS;
     int type_size, alignsize;
@@ -111,7 +111,7 @@ int MPID_Type_create_pairtype(MPI_Datatype type,
 	    /* --BEGIN ERROR HANDLING-- */
 	    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
 					     MPIR_ERR_RECOVERABLE,
-					     "MPID_Type_create_pairtype",
+					     "MPIDU_Type_create_pairtype",
 					     __LINE__,
 					     MPI_ERR_OTHER,
 					     "**dtype", 0);
@@ -186,32 +186,32 @@ int MPID_Type_create_pairtype(MPI_Datatype type,
 #ifdef MPID_NEEDS_DLOOP_ALL_BYTES
     /* If MPID implementation needs use to reduce everything to
        a byte stream, do that. */
-    err = MPID_Dataloop_create_pairtype(type,
+    err = MPIDU_Dataloop_create_pairtype(type,
 					&(new_dtp->dataloop),
 					&(new_dtp->dataloop_size),
 					&(new_dtp->dataloop_depth),
-					MPID_DATALOOP_ALL_BYTES);
+					MPIDU_DATALOOP_ALL_BYTES);
 #else
-    err = MPID_Dataloop_create_pairtype(type,
+    err = MPIDU_Dataloop_create_pairtype(type,
 					&(new_dtp->dataloop),
 					&(new_dtp->dataloop_size),
 					&(new_dtp->dataloop_depth),
-					MPID_DATALOOP_HOMOGENEOUS);
+					MPIDU_DATALOOP_HOMOGENEOUS);
 #endif
 
     if (!err) {
-	err = MPID_Dataloop_create_pairtype(type,
+	err = MPIDU_Dataloop_create_pairtype(type,
 					    &(new_dtp->hetero_dloop),
 					    &(new_dtp->hetero_dloop_size),
 					    &(new_dtp->hetero_dloop_depth),
-					    MPID_DATALOOP_HETEROGENEOUS);
+					    MPIDU_DATALOOP_HETEROGENEOUS);
     }
 
     /* --BEGIN ERROR HANDLING-- */
     if (err) {
 	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
 					 MPIR_ERR_RECOVERABLE,
-					 "MPID_Dataloop_create_pairtype",
+					 "MPIDU_Dataloop_create_pairtype",
 					 __LINE__,
 					 MPI_ERR_OTHER,
 					 "**nomem",

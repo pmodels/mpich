@@ -66,11 +66,11 @@ _dt_contig_out, _data_sz_out, _dt_ptr, _dt_true_lb)             \
         (_dt_contig_out) = TRUE;                                \
         (_dt_true_lb)    = 0;                                   \
         (_data_sz_out)   = (_count) *                           \
-        MPID_Datatype_get_basic_size(_datatype);                \
+        MPIDU_Datatype_get_basic_size(_datatype);                \
     }                                                           \
   else                                                          \
     {                                                           \
-        MPID_Datatype_get_ptr((_datatype), (_dt_ptr));          \
+        MPIDU_Datatype_get_ptr((_datatype), (_dt_ptr));          \
         (_dt_contig_out) = (_dt_ptr)->is_contig;                \
         (_dt_true_lb)    = (_dt_ptr)->true_lb;                  \
         (_data_sz_out)   = (_count) * (_dt_ptr)->size;          \
@@ -86,12 +86,12 @@ _data_sz_out)                                                   \
   if (HANDLE_GET_KIND(_datatype) == HANDLE_KIND_BUILTIN)        \
     {                                                           \
         (_data_sz_out)   = (_count) *                           \
-        MPID_Datatype_get_basic_size(_datatype);                \
+        MPIDU_Datatype_get_basic_size(_datatype);                \
     }                                                           \
   else                                                          \
     {                                                           \
-        MPID_Datatype *_dt_ptr;                                 \
-        MPID_Datatype_get_ptr((_datatype), (_dt_ptr));          \
+        MPIDU_Datatype*_dt_ptr;                                 \
+        MPIDU_Datatype_get_ptr((_datatype), (_dt_ptr));          \
         (_data_sz_out)   = (_count) * (_dt_ptr)->size;          \
     }                                                           \
 })

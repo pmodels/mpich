@@ -175,7 +175,7 @@ MPIDI_RecvShortCB(pami_context_t    context,
       goto fn_exit_short;
     }
 
-  size_t dt_size = rreq->mpid.userbufcount * MPID_Datatype_get_basic_size(rreq->mpid.datatype);
+  size_t dt_size = rreq->mpid.userbufcount * MPIDU_Datatype_get_basic_size(rreq->mpid.datatype);
 
   /* ----------------------------- */
   /*  Test for truncated message.  */

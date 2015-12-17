@@ -56,7 +56,7 @@ int MPIDO_Alltoallv(const void *sendbuf,
    void *sbuf = NULL, *rbuf = NULL;
    int recvok=PAMI_SUCCESS, sendok=PAMI_SUCCESS;
    int sndtypelen, rcvtypelen, snd_contig=0, rcv_contig=0;
-   MPID_Datatype *sdt, *rdt;
+   MPIDU_Datatype*sdt, *rdt;
    pami_type_t stype, rtype;
    MPI_Aint sdt_true_lb, rdt_true_lb;
    MPIDI_Post_coll_t alltoallv_post;
@@ -133,7 +133,7 @@ int MPIDO_Alltoallv(const void *sendbuf,
         else
         {
            size_t extent; 
-           MPID_Datatype_get_extent_macro(sendtype,extent);
+           MPIDU_Datatype_get_extent_macro(sendtype,extent);
            for(i=0; i<size; ++i)
            {
               char* scbuf = (char*)sendbuf + senddispls[i]*extent;
@@ -217,7 +217,7 @@ int MPIDO_Alltoallv(const void *sendbuf,
         else
         {
            size_t extent; 
-           MPID_Datatype_get_extent_macro(recvtype,extent);
+           MPIDU_Datatype_get_extent_macro(recvtype,extent);
            for(i=0; i<size; ++i)
            {
               char* scbuf = (char*)recvbuf + recvdispls[i]*extent;
@@ -296,7 +296,7 @@ int MPIDO_Alltoallv(const void *sendbuf,
          if(my_md->check_correct.values.rangeminmax)
          {
             MPI_Aint data_true_lb;
-            MPID_Datatype *data_ptr;
+            MPIDU_Datatype*data_ptr;
             int data_size, data_contig;
             MPIDI_Datatype_get_info(??, sendtype, data_contig, data_size, data_ptr, data_true_lb); 
             if((my_md->range_lo <= data_size) &&
@@ -369,7 +369,7 @@ int MPIDO_Alltoallv(const void *sendbuf,
       {
          size_t extent; 
          int i;
-         MPID_Datatype_get_extent_macro(recvtype,extent);
+         MPIDU_Datatype_get_extent_macro(recvtype,extent);
          for(i=0; i<size; ++i)
          {
             char* scbuf = (char*)rcv_noncontig_buff+ precvdispls[i];
@@ -418,7 +418,7 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
    TRACE_ERR("Entering MPIDO_Alltoallv_optimized\n");
    volatile unsigned active = 1;
   int sndtypelen, rcvtypelen, snd_contig = 1, rcv_contig = 1;
-   MPID_Datatype *sdt, *rdt;
+   MPIDU_Datatype*sdt, *rdt;
    pami_type_t stype = NULL, rtype;
    MPI_Aint sdt_true_lb = 0, rdt_true_lb;
    MPIDI_Post_coll_t alltoallv_post;
@@ -525,7 +525,7 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
       else
       {
         size_t extent; 
-        MPID_Datatype_get_extent_macro(sendtype,extent);
+        MPIDU_Datatype_get_extent_macro(sendtype,extent);
         for(i=0; i<size; ++i)
         {
           char* scbuf = (char*)sendbuf + senddispls[i]*extent;
@@ -609,7 +609,7 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
       else
       {
         size_t extent; 
-        MPID_Datatype_get_extent_macro(recvtype,extent);
+        MPIDU_Datatype_get_extent_macro(recvtype,extent);
         for(i=0; i<size; ++i)
         {
           char* scbuf = (char*)recvbuf + recvdispls[i]*extent;
@@ -670,7 +670,7 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
     {
       size_t extent; 
       int i;
-      MPID_Datatype_get_extent_macro(recvtype,extent);
+      MPIDU_Datatype_get_extent_macro(recvtype,extent);
       for(i=0; i<size; ++i)
       {
         char* scbuf = (char*)rcv_noncontig_buff+ precvdispls[i];

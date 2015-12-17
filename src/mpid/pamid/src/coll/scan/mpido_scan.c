@@ -103,7 +103,7 @@ int MPIDO_Doscan(const void *sendbuf, void *recvbuf,
     return -1;
   }
 #endif
-   MPID_Datatype *dt_null = NULL;
+   MPIDU_Datatype*dt_null = NULL;
    MPI_Aint true_lb = 0;
    int dt_contig ATTRIBUTE((unused)), tsize ATTRIBUTE((unused));
    int mu;
@@ -139,7 +139,7 @@ int MPIDO_Doscan(const void *sendbuf, void *recvbuf,
       if(MPIDI_Process.cuda_aware_support_on)
       {
          MPI_Aint dt_extent;
-         MPID_Datatype_get_extent_macro(datatype, dt_extent);
+         MPIDU_Datatype_get_extent_macro(datatype, dt_extent);
          char *scbuf = NULL;
          char *rcbuf = NULL;
          int is_send_dev_buf = MPIDI_cuda_is_device_buf(sendbuf);
@@ -242,7 +242,7 @@ int MPIDO_Doscan(const void *sendbuf, void *recvbuf,
          if(my_md->check_correct.values.rangeminmax)
          {
             MPI_Aint data_true_lb ATTRIBUTE((unused));
-            MPID_Datatype *data_ptr;
+            MPIDU_Datatype*data_ptr;
             int data_size ATTRIBUTE((unused)), data_contig ATTRIBUTE((unused));
             MPIDI_Datatype_get_info(count, datatype, data_contig, data_size, data_ptr, data_true_lb); 
             if((my_md->range_lo <= data_size) &&
@@ -320,7 +320,7 @@ int MPIDO_Doscan_simple(const void *sendbuf, void *recvbuf,
     return -1;
   }
 #endif
-   MPID_Datatype *dt_null = NULL;
+   MPIDU_Datatype*dt_null = NULL;
    MPI_Aint true_lb = 0;
    int dt_contig, tsize;
    int mu;

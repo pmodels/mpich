@@ -26,9 +26,9 @@
         if ((datatype_) != MPI_DATATYPE_NULL &&                    \
             HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)   \
         {                                                          \
-            MPID_Datatype *dtp_ = NULL;                            \
-            MPID_Datatype_get_ptr((datatype_), dtp_);              \
-            MPID_Datatype_add_ref(dtp_);                           \
+            MPIDU_Datatype *dtp_ = NULL;                            \
+            MPIDU_Datatype_get_ptr((datatype_), dtp_);              \
+            MPIDU_Datatype_add_ref(dtp_);                           \
         }                                                          \
     } while (0)
 #define dtype_release_if_not_builtin(datatype_)                    \
@@ -36,9 +36,9 @@
         if ((datatype_) != MPI_DATATYPE_NULL &&                    \
             HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)   \
         {                                                          \
-            MPID_Datatype *dtp_ = NULL;                            \
-            MPID_Datatype_get_ptr((datatype_), dtp_);              \
-            MPID_Datatype_release(dtp_);                           \
+            MPIDU_Datatype *dtp_ = NULL;                            \
+            MPIDU_Datatype_get_ptr((datatype_), dtp_);              \
+            MPIDU_Datatype_release(dtp_);                           \
         }                                                          \
     } while (0)
 
@@ -763,8 +763,8 @@ int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype,
 #if defined(HAVE_ERROR_CHECKING) && !defined(NDEBUG)
     {
         MPI_Aint intype_size, outtype_size;
-        MPID_Datatype_get_size_macro(intype, intype_size);
-        MPID_Datatype_get_size_macro(outtype, outtype_size);
+        MPIDU_Datatype_get_size_macro(intype, intype_size);
+        MPIDU_Datatype_get_size_macro(outtype, outtype_size);
         if (incount * intype_size > outcount * outtype_size) {
             MPL_error_printf("truncation: intype=%#x, intype_size=" MPI_AINT_FMT_DEC_SPEC ", incount=" MPI_AINT_FMT_DEC_SPEC ", outtype=%#x, outtype_size=" MPI_AINT_FMT_DEC_SPEC " outcount=" MPI_AINT_FMT_DEC_SPEC "\n",
                               intype, intype_size,

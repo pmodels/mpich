@@ -303,7 +303,7 @@ int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
     return 0;
 }
 
-/* MPID_Segment_blkidx_m2m
+/* MPIDU_Segment_blkidx_m2m
  */
 int PREPEND_PREFIX(Segment_blkidx_m2m)(DLOOP_Offset *blocks_p,
 				       DLOOP_Count count,
@@ -383,7 +383,7 @@ int PREPEND_PREFIX(Segment_blkidx_m2m)(DLOOP_Offset *blocks_p,
     return 0;
 }
 
-/* MPID_Segment_index_m2m
+/* MPIDU_Segment_index_m2m
  */
 int PREPEND_PREFIX(Segment_index_m2m)(DLOOP_Offset *blocks_p,
 				      DLOOP_Count count,

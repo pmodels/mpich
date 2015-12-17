@@ -272,7 +272,7 @@ typedef struct
 struct MPIDI_Request
 {
   struct MPID_Request  *next;         /**< Link to next req. in queue */
-  struct MPID_Datatype *datatype_ptr; /**< Info about the datatype    */
+  struct MPIDU_Datatype*datatype_ptr; /**< Info about the datatype    */
   pami_work_t           post_request; /**<                            */
 
   MPIDI_MsgEnvelope     envelope;

@@ -30,22 +30,22 @@ int MPIR_Type_flatten(MPI_Datatype type,
 {
     int err;
     MPI_Aint first, last;
-    MPID_Datatype *datatype_ptr ATTRIBUTE((unused));
-    MPID_Segment *segp;
+    MPIDU_Datatype *datatype_ptr ATTRIBUTE((unused));
+    MPIDU_Segment *segp;
 
     if (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) {
 	off_array[0] = 0;
-	MPID_Datatype_get_size_macro(type, size_array[0]);
+	MPIDU_Datatype_get_size_macro(type, size_array[0]);
 	*array_len_p = 1;
 	return 0;
     }
 
-    MPID_Datatype_get_ptr(type, datatype_ptr);
+    MPIDU_Datatype_get_ptr(type, datatype_ptr);
     MPIU_Assert(datatype_ptr->is_committed);
     MPIU_Assert(*array_len_p >= datatype_ptr->max_contig_blocks);
 
-    segp = MPID_Segment_alloc();
-    err = MPID_Segment_init(0, 1, type, segp, 0); /* first 0 is bufptr,
+    segp = MPIDU_Segment_alloc();
+    err = MPIDU_Segment_init(0, 1, type, segp, 0); /* first 0 is bufptr,
                                                    * 1 is count
                                                    * last 0 is homogeneous
                                                    */
@@ -54,14 +54,14 @@ int MPIR_Type_flatten(MPI_Datatype type,
     first = 0;
     last  = SEGMENT_IGNORE_LAST;
 
-    MPID_Segment_flatten(segp,
+    MPIDU_Segment_flatten(segp,
 			 first,
 			 &last,
 			 off_array,
 			 size_array,
 			 array_len_p);
 
-    MPID_Segment_free(segp);
+    MPIDU_Segment_free(segp);
 
     return 0;
 }
