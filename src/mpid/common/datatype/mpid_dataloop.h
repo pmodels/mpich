@@ -13,7 +13,7 @@
 /* Note: this is where you define the prefix that will be prepended on
  * all externally visible generic dataloop and segment functions.
  */
-#define PREPEND_PREFIX(fn) MPID_ ## fn
+#define PREPEND_PREFIX(fn) MPIDU_ ## fn
 
 /* These following dataloop-specific types will be used throughout the DLOOP
  * instance:
@@ -44,31 +44,31 @@
  * as we see that we need them elsewhere.
  */
 #define DLOOP_Handle_get_loopdepth_macro(handle_,depth_,flag_) \
-    MPID_Datatype_get_loopdepth_macro(handle_,depth_,flag_)
+    MPIDU_Datatype_get_loopdepth_macro(handle_,depth_,flag_)
 
 #define DLOOP_Handle_get_loopsize_macro(handle_,size_,flag_) \
-    MPID_Datatype_get_loopsize_macro(handle_,size_,flag_)
+    MPIDU_Datatype_get_loopsize_macro(handle_,size_,flag_)
 
 #define DLOOP_Handle_set_loopptr_macro(handle_,lptr_,flag_) \
-    MPID_Datatype_set_loopptr_macro(handle_,lptr_,flag_)
+    MPIDU_Datatype_set_loopptr_macro(handle_,lptr_,flag_)
 
 #define DLOOP_Handle_set_loopdepth_macro(handle_,depth_,flag_) \
-    MPID_Datatype_set_loopdepth_macro(handle_,depth_,flag_)
+    MPIDU_Datatype_set_loopdepth_macro(handle_,depth_,flag_)
 
 #define DLOOP_Handle_set_loopsize_macro(handle_,size_,flag_) \
-    MPID_Datatype_set_loopsize_macro(handle_,size_,flag_)
+    MPIDU_Datatype_set_loopsize_macro(handle_,size_,flag_)
 
 #define DLOOP_Handle_get_loopptr_macro(handle_,lptr_,flag_) \
-    MPID_Datatype_get_loopptr_macro(handle_,lptr_,flag_)
+    MPIDU_Datatype_get_loopptr_macro(handle_,lptr_,flag_)
 
 #define DLOOP_Handle_get_size_macro(handle_,size_) \
-    MPID_Datatype_get_size_macro(handle_,size_)
+    MPIDU_Datatype_get_size_macro(handle_,size_)
 
 #define DLOOP_Handle_get_basic_type_macro(handle_,basic_type_) \
-    MPID_Datatype_get_basic_type(handle_, basic_type_)
+    MPIDU_Datatype_get_basic_type(handle_, basic_type_)
 
 #define DLOOP_Handle_get_extent_macro(handle_,extent_) \
-    MPID_Datatype_get_extent_macro(handle_,extent_)
+    MPIDU_Datatype_get_extent_macro(handle_,extent_)
 
 #define DLOOP_Handle_hasloop_macro(handle_)                           \
     ((HANDLE_GET_KIND(handle_) == HANDLE_KIND_BUILTIN) ? 0 : 1)
@@ -106,9 +106,9 @@
  * Note: DLOOP_DATALOOP_ALL_BYTES is used only when the device
  * defines MPID_NEEDS_DLOOP_ALL_BYTES.
  */
-#define MPID_DATALOOP_HETEROGENEOUS DLOOP_DATALOOP_HETEROGENEOUS
-#define MPID_DATALOOP_HOMOGENEOUS   DLOOP_DATALOOP_HOMOGENEOUS
-#define MPID_DATALOOP_ALL_BYTES     DLOOP_DATALOOP_ALL_BYTES
+#define MPIDU_DATALOOP_HETEROGENEOUS DLOOP_DATALOOP_HETEROGENEOUS
+#define MPIDU_DATALOOP_HOMOGENEOUS   DLOOP_DATALOOP_HOMOGENEOUS
+#define MPIDU_DATALOOP_ALL_BYTES     DLOOP_DATALOOP_ALL_BYTES
 
 #include <mpiimpl.h>
 

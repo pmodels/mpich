@@ -290,7 +290,7 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
     if (data_sz) {
         intptr_t first = sreq->dev.segment_first;
         intptr_t last = sreq->dev.segment_first + sent_sz;
-        MPID_Segment_pack(sreq->dev.segment_ptr, first, &last, sendbuf_ptr);
+        MPIDU_Segment_pack(sreq->dev.segment_ptr, first, &last, sendbuf_ptr);
         sendbuf_ptr += sent_sz;
 
         if (remaining) {  /* Post MEs for the remote gets */
@@ -299,7 +299,7 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
             *offset = (ptl_size_t)TMPBUF(sreq);
             first = last;
             last = sreq->dev.segment_size;
-            MPID_Segment_pack(sreq->dev.segment_ptr, first, &last, TMPBUF(sreq));
+            MPIDU_Segment_pack(sreq->dev.segment_ptr, first, &last, TMPBUF(sreq));
             MPIU_Assert(last == sreq->dev.segment_size);
 
             REQ_PTL(sreq)->num_gets = remaining / MPIDI_nem_ptl_ni_limits.max_msg_size;

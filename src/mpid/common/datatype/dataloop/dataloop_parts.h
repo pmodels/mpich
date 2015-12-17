@@ -52,7 +52,7 @@
  * optimizations may be applied. They are also passed in at Segment_init
  * time to specify which dataloop to use.
  *
- * Note: The flag to MPID_Segment_init() was originally simply "hetero"
+ * Note: The flag to MPIDU_Segment_init() was originally simply "hetero"
  * and was a boolean value (0 meaning homogeneous). Some MPICH code
  * may still rely on HOMOGENEOUS being "0" and HETEROGENEOUS being "1".
  */

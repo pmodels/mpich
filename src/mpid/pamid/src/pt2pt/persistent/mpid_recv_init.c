@@ -48,8 +48,8 @@ int MPID_Recv_init(void * buf,
   MPIDI_Request_setPType(rreq, MPIDI_REQUEST_PTYPE_RECV);
   if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
     {
-      MPID_Datatype_get_ptr(datatype, rreq->mpid.datatype_ptr);
-      MPID_Datatype_add_ref(rreq->mpid.datatype_ptr);
+      MPIDU_Datatype_get_ptr(datatype, rreq->mpid.datatype_ptr);
+      MPIDU_Datatype_add_ref(rreq->mpid.datatype_ptr);
     }
 
   return MPI_SUCCESS;

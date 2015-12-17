@@ -17,13 +17,13 @@
 
 #include "mpid_ext32_segment.h"
 
-/* MPID_Segment_piece_params
+/* MPIDU_Segment_piece_params
  *
  * This structure is used to pass function-specific parameters into our 
  * segment processing function.  This allows us to get additional parameters
  * to the functions it calls without changing the prototype.
  */
-struct MPID_Segment_piece_params {
+struct MPIDU_Segment_piece_params {
     union {
         struct {
             char *pack_buffer;
@@ -169,22 +169,22 @@ static int external32_float_convert(char *dest_buf,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Segment_contig_pack_external32_to_buf
+#define FUNCNAME MPIDU_Segment_contig_pack_external32_to_buf
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPID_Segment_contig_pack_external32_to_buf(DLOOP_Offset *blocks_p,
+static int MPIDU_Segment_contig_pack_external32_to_buf(DLOOP_Offset *blocks_p,
                                                       DLOOP_Type el_type,
                                                       DLOOP_Offset rel_off,
                                                       void *bufp,
                                                       void *v_paramp)
 {
     int src_el_size, dest_el_size;
-    struct MPID_Segment_piece_params *paramp = v_paramp;
+    struct MPIDU_Segment_piece_params *paramp = v_paramp;
     MPIDI_STATE_DECL(MPID_STATE_MPID_SEGMENT_CONTIG_PACK_EXTERNAL32_TO_BUF);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_SEGMENT_CONTIG_PACK_EXTERNAL32_TO_BUF);
 
-    src_el_size = MPID_Datatype_get_basic_size(el_type);
+    src_el_size = MPIDU_Datatype_get_basic_size(el_type);
     dest_el_size = MPIDI_Datatype_get_basic_size_external32(el_type);
     MPIU_Assert(dest_el_size);
 
@@ -232,22 +232,22 @@ static int MPID_Segment_contig_pack_external32_to_buf(DLOOP_Offset *blocks_p,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Segment_contig_unpack_external32_to_buf
+#define FUNCNAME MPIDU_Segment_contig_unpack_external32_to_buf
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPID_Segment_contig_unpack_external32_to_buf(DLOOP_Offset *blocks_p,
+static int MPIDU_Segment_contig_unpack_external32_to_buf(DLOOP_Offset *blocks_p,
                                                         DLOOP_Type el_type,
                                                         DLOOP_Offset rel_off,
                                                         void *bufp,
                                                         void *v_paramp)
 {
     int src_el_size, dest_el_size;
-    struct MPID_Segment_piece_params *paramp = v_paramp;
+    struct MPIDU_Segment_piece_params *paramp = v_paramp;
     MPIDI_STATE_DECL(MPID_STATE_MPID_SEGMENT_CONTIG_UNPACK_EXTERNAL32_TO_BUF);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_SEGMENT_CONTIG_UNPACK_EXTERNAL32_TO_BUF);
 
-    src_el_size = MPID_Datatype_get_basic_size(el_type);
+    src_el_size = MPIDU_Datatype_get_basic_size(el_type);
     dest_el_size = MPIDI_Datatype_get_basic_size_external32(el_type);
     MPIU_Assert(dest_el_size);
 
@@ -295,27 +295,27 @@ static int MPID_Segment_contig_unpack_external32_to_buf(DLOOP_Offset *blocks_p,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Segment_pack_external32
+#define FUNCNAME MPIDU_Segment_pack_external32
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPID_Segment_pack_external32(struct DLOOP_Segment *segp,
+void MPIDU_Segment_pack_external32(struct DLOOP_Segment *segp,
 				  DLOOP_Offset first,
 				  DLOOP_Offset *lastp, 
 				  void *pack_buffer)
 {
-    struct MPID_Segment_piece_params pack_params;
+    struct MPIDU_Segment_piece_params pack_params;
     MPIDI_STATE_DECL(MPID_STATE_MPID_SEGMENT_PACK_EXTERNAL);
     
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_SEGMENT_PACK_EXTERNAL);
 
     pack_params.u.pack.pack_buffer = (DLOOP_Buffer)pack_buffer;
-    MPID_Segment_manipulate(segp,
+    MPIDU_Segment_manipulate(segp,
 			    first,
 			    lastp,
-			    MPID_Segment_contig_pack_external32_to_buf,
-                            NULL, /* MPID_Segment_vector_pack_external32_to_buf, */
+			    MPIDU_Segment_contig_pack_external32_to_buf,
+                            NULL, /* MPIDU_Segment_vector_pack_external32_to_buf, */
 			    NULL, /* blkidx */
-                            NULL, /* MPID_Segment_index_pack_external32_to_buf, */
+                            NULL, /* MPIDU_Segment_index_pack_external32_to_buf, */
                             MPIDI_Datatype_get_basic_size_external32,
 			    &pack_params);
 
@@ -324,27 +324,27 @@ void MPID_Segment_pack_external32(struct DLOOP_Segment *segp,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Segment_unpack_external32
+#define FUNCNAME MPIDU_Segment_unpack_external32
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPID_Segment_unpack_external32(struct DLOOP_Segment *segp,
+void MPIDU_Segment_unpack_external32(struct DLOOP_Segment *segp,
 				    DLOOP_Offset first,
 				    DLOOP_Offset *lastp,
 				    DLOOP_Buffer unpack_buffer)
 {
-    struct MPID_Segment_piece_params pack_params;
+    struct MPIDU_Segment_piece_params pack_params;
     MPIDI_STATE_DECL(MPID_STATE_MPID_SEGMENT_UNPACK_EXTERNAL32);
     
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_SEGMENT_UNPACK_EXTERNAL32);
 
     pack_params.u.unpack.unpack_buffer = unpack_buffer;
-    MPID_Segment_manipulate(segp,
+    MPIDU_Segment_manipulate(segp,
 			    first,
 			    lastp,
-			    MPID_Segment_contig_unpack_external32_to_buf,
-                            NULL, /* MPID_Segment_vector_unpack_external32_to_buf, */
+			    MPIDU_Segment_contig_unpack_external32_to_buf,
+                            NULL, /* MPIDU_Segment_vector_unpack_external32_to_buf, */
 			    NULL, /* blkidx */
-                            NULL, /* MPID_Segment_index_unpack_external32_to_buf, */
+                            NULL, /* MPIDU_Segment_index_unpack_external32_to_buf, */
                             MPIDI_Datatype_get_basic_size_external32,
 			    &pack_params);
 

@@ -126,7 +126,7 @@ int MPID_nem_lmt_shm_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPID_Req
     intptr_t data_sz;
     int dt_contig ATTRIBUTE((unused));
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
-    MPID_Datatype * dt_ptr;
+    MPIDU_Datatype* dt_ptr;
     MPID_nem_pkt_lmt_rts_t * const rts_pkt = (MPID_nem_pkt_lmt_rts_t *)pkt;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_SHM_INITIATE_LMT);
 
@@ -414,9 +414,9 @@ static int get_next_req(MPIDI_VC_t *vc)
         /* Check to see if we've already allocated a seg for this req.
            This can happen if both sides allocated copy buffers, and
            we decided to use the remote side's buffer. */
-        req->dev.segment_ptr = MPID_Segment_alloc();
-        MPIR_ERR_CHKANDJUMP1((req->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
-        MPID_Segment_init(req->dev.user_buf, req->dev.user_count, req->dev.datatype, req->dev.segment_ptr, 0);
+        req->dev.segment_ptr = MPIDU_Segment_alloc();
+        MPIR_ERR_CHKANDJUMP1((req->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIDU_Segment_alloc");
+        MPIDU_Segment_init(req->dev.user_buf, req->dev.user_count, req->dev.datatype, req->dev.segment_ptr, 0);
         req->dev.segment_first = 0;
     }
     vc_ch->lmt_buf_num = 0;
@@ -493,7 +493,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
         else
             copy_limit = MPID_NEM_COPY_BUF_LEN;
         last = (data_sz - first <= copy_limit) ? data_sz : first + copy_limit;
-	MPID_Segment_pack(req->dev.segment_ptr, first, &last, (void *)copy_buf->buf[buf_num]); /* cast away volatile */
+	MPIDU_Segment_pack(req->dev.segment_ptr, first, &last, (void *)copy_buf->buf[buf_num]); /* cast away volatile */
         OPA_write_barrier();
         MPIU_Assign_trunc(copy_buf->len[buf_num].val, (last - first), volatile int);
 
@@ -585,7 +585,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
         src_buf = ((char *)copy_buf->buf[buf_num]) - surfeit; /* cast away volatile */
         last = expected_last = (data_sz - first <= surfeit + len) ? data_sz : first + surfeit + len;
 
-	MPID_Segment_unpack(req->dev.segment_ptr, first, &last, src_buf);
+	MPIDU_Segment_unpack(req->dev.segment_ptr, first, &last, src_buf);
 
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "recvd data.  last=%" PRIdPTR " data_sz=%" PRIdPTR, last, data_sz));
 

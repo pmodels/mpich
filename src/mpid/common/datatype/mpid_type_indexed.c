@@ -12,7 +12,7 @@
 #undef MPID_TYPE_ALLOC_DEBUG
 
 /*@
-  MPID_Type_indexed - create an indexed datatype
+  MPIDU_Type_indexed - create an indexed datatype
 
 Input Parameters:
 + count - number of blocks in type
@@ -31,7 +31,7 @@ Output Parameters:
   0 on success, -1 on failure.
 @*/
 
-int MPID_Type_indexed(int count,
+int MPIDU_Type_indexed(int count,
 		      const int *blocklength_array,
 		      const void *displacement_array,
 		      int dispinbytes,
@@ -47,9 +47,9 @@ int MPID_Type_indexed(int count,
     MPI_Aint min_lb = 0, max_ub = 0, eff_disp;
     MPI_Datatype el_type;
 
-    MPID_Datatype *new_dtp;
+    MPIDU_Datatype *new_dtp;
 
-    if (count == 0) return MPID_Type_zerolen(newtype);
+    if (count == 0) return MPIDU_Type_zerolen(newtype);
 
     /* sanity check that blocklens are all non-negative */
     for (i = 0; i < count; ++i) {
@@ -57,13 +57,13 @@ int MPID_Type_indexed(int count,
     }
 
     /* allocate new datatype object and handle */
-    new_dtp = (MPID_Datatype *) MPIU_Handle_obj_alloc(&MPID_Datatype_mem);
+    new_dtp = (MPIDU_Datatype *) MPIU_Handle_obj_alloc(&MPIDU_Datatype_mem);
     /* --BEGIN ERROR HANDLING-- */
     if (!new_dtp)
     {
 	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
 					 MPIR_ERR_RECOVERABLE,
-					 "MPID_Type_indexed",
+					 "MPIDU_Type_indexed",
 					 __LINE__,
 					 MPI_ERR_OTHER,
 					 "**nomem",
@@ -95,7 +95,7 @@ int MPID_Type_indexed(int count,
 	/* builtins are handled differently than user-defined types because
 	 * they have no associated dataloop or datatype structure.
 	 */
-	el_sz      = MPID_Datatype_get_basic_size(oldtype);
+	el_sz      = MPIDU_Datatype_get_basic_size(oldtype);
 	old_sz     = el_sz;
 	el_ct      = 1;
 	el_type    = oldtype;
@@ -119,9 +119,9 @@ int MPID_Type_indexed(int count,
     else
     {
 	/* user-defined base type (oldtype) */
-	MPID_Datatype *old_dtp;
+	MPIDU_Datatype *old_dtp;
 
-	MPID_Datatype_get_ptr(oldtype, old_dtp);
+	MPIDU_Datatype_get_ptr(oldtype, old_dtp);
 
 	/* Ensure that "builtin_element_size" fits into an int datatype. */
 	MPIU_Ensure_Aint_fits_in_int(old_dtp->builtin_element_size);
@@ -155,8 +155,8 @@ int MPID_Type_indexed(int count,
     while (i < count && blocklength_array[i] == 0) i++;
 
     if (i == count) {
-	MPIU_Handle_obj_free(&MPID_Datatype_mem, new_dtp);
-	return MPID_Type_zerolen(newtype);
+	MPIU_Handle_obj_free(&MPIDU_Datatype_mem, new_dtp);
+	return MPIDU_Type_zerolen(newtype);
     }
 
     /* priming for loop */
@@ -164,7 +164,7 @@ int MPID_Type_indexed(int count,
     eff_disp = (dispinbytes) ? ((MPI_Aint *) displacement_array)[i] :
 	(((MPI_Aint) ((int *) displacement_array)[i]) * old_extent);
 
-    MPID_DATATYPE_BLOCK_LB_UB((MPI_Aint) blocklength_array[i],
+    MPIDU_DATATYPE_BLOCK_LB_UB((MPI_Aint) blocklength_array[i],
 			      eff_disp,
 			      old_lb,
 			      old_ub,
@@ -186,7 +186,7 @@ int MPID_Type_indexed(int count,
 		(((MPI_Aint) ((int *) displacement_array)[i]) * old_extent);
 	
 	    /* calculate ub and lb for this block */
-	    MPID_DATATYPE_BLOCK_LB_UB((MPI_Aint)(blocklength_array[i]),
+	    MPIDU_DATATYPE_BLOCK_LB_UB((MPI_Aint)(blocklength_array[i]),
 				      eff_disp,
 				      old_lb,
 				      old_ub,
@@ -219,7 +219,7 @@ int MPID_Type_indexed(int count,
 	MPI_Aint *blklens = MPL_malloc(count *sizeof(MPI_Aint));
 	for (i=0; i<count; i++)
 		blklens[i] = blocklength_array[i];
-        contig_count = MPID_Type_indexed_count_contig(count,
+        contig_count = MPIDU_Type_indexed_count_contig(count,
 						  blklens,
 						  displacement_array,
 						  dispinbytes,

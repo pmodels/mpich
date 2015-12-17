@@ -13,11 +13,11 @@
 #undef MPID_STRUCT_FLATTEN_DEBUG
 #undef MPID_STRUCT_DEBUG
 
-static MPI_Aint MPID_Type_struct_alignsize(int count,
+static MPI_Aint MPIDU_Type_struct_alignsize(int count,
 				      const MPI_Datatype *oldtype_array,
 				      const MPI_Aint *displacement_array);
 
-/* MPID_Type_struct_alignsize
+/* MPIDU_Type_struct_alignsize
  *
  * This function guesses at how the C compiler would align a structure
  * with the given components.
@@ -39,7 +39,7 @@ static MPI_Aint MPID_Type_struct_alignsize(int count,
  * have different natural alignments).  Linux on X86, however, does not have
  * different rules for this case.
  */
-static MPI_Aint MPID_Type_struct_alignsize(int count,
+static MPI_Aint MPIDU_Type_struct_alignsize(int count,
 				      const MPI_Datatype *oldtype_array,
 				      const MPI_Aint *displacement_array)
 {
@@ -52,7 +52,7 @@ static MPI_Aint MPID_Type_struct_alignsize(int count,
 	if (oldtype_array[i] == MPI_LB || oldtype_array[i] == MPI_UB) continue;
 	else if (HANDLE_GET_KIND(oldtype_array[i]) == HANDLE_KIND_BUILTIN)
 	{
-	    tmp_alignsize = MPID_Datatype_get_basic_size(oldtype_array[i]);
+	    tmp_alignsize = MPIDU_Datatype_get_basic_size(oldtype_array[i]);
 
 #ifdef HAVE_DOUBLE_ALIGNMENT_EXCEPTION
 	    if (oldtype_array[i] == MPI_DOUBLE) {
@@ -112,9 +112,9 @@ static MPI_Aint MPID_Type_struct_alignsize(int count,
 	}
 	else
 	{
-	    MPID_Datatype *dtp;
+	    MPIDU_Datatype *dtp;
 
-	    MPID_Datatype_get_ptr(oldtype_array[i], dtp);
+	    MPIDU_Datatype_get_ptr(oldtype_array[i], dtp);
 	    tmp_alignsize = dtp->alignsize;
 	    if (derived_alignsize < tmp_alignsize)
 		derived_alignsize = tmp_alignsize;
@@ -128,7 +128,7 @@ static MPI_Aint MPID_Type_struct_alignsize(int count,
 
 
 /*@
-  MPID_Type_struct - create a struct datatype
+  MPIDU_Type_struct - create a struct datatype
 
 Input Parameters:
 + count - number of blocks in vector
@@ -142,7 +142,7 @@ Output Parameters:
   Return Value:
   MPI_SUCCESS on success, MPI errno on failure.
 @*/
-int MPID_Type_struct(int count,
+int MPIDU_Type_struct(int count,
 		     const int *blocklength_array,
 		     const MPI_Aint *displacement_array,
 		     const MPI_Datatype *oldtype_array,
@@ -158,9 +158,9 @@ int MPID_Type_struct(int count,
     MPI_Aint true_lb_disp = 0, true_ub_disp = 0, sticky_lb_disp = 0,
 	sticky_ub_disp = 0, lb_disp = 0, ub_disp = 0;
 
-    MPID_Datatype *new_dtp;
+    MPIDU_Datatype *new_dtp;
 
-    if (count == 0) return MPID_Type_zerolen(newtype);
+    if (count == 0) return MPIDU_Type_zerolen(newtype);
 
 #ifdef MPID_STRUCT_DEBUG
     MPIDI_Datatype_printf(oldtype_array[0], 1, displacement_array[0],
@@ -173,12 +173,12 @@ int MPID_Type_struct(int count,
 #endif
 
     /* allocate new datatype object and handle */
-    new_dtp = (MPID_Datatype *) MPIU_Handle_obj_alloc(&MPID_Datatype_mem);
+    new_dtp = (MPIDU_Datatype *) MPIU_Handle_obj_alloc(&MPIDU_Datatype_mem);
     /* --BEGIN ERROR HANDLING-- */
     if (!new_dtp)
     {
 	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					 "MPID_Type_struct",
+					 "MPIDU_Type_struct",
 					 __LINE__, MPI_ERR_OTHER,
 					 "**nomem", 0);
 	return mpi_errno;
@@ -206,8 +206,8 @@ int MPID_Type_struct(int count,
 
     if (i == count)
     {
-	MPIU_Handle_obj_free(&MPID_Datatype_mem, new_dtp);
-	return MPID_Type_zerolen(newtype);
+	MPIU_Handle_obj_free(&MPIDU_Datatype_mem, new_dtp);
+	return MPIDU_Type_zerolen(newtype);
     }
 
     new_dtp->max_contig_blocks = 0;
@@ -218,7 +218,7 @@ int MPID_Type_struct(int count,
 	MPI_Aint tmp_lb, tmp_ub, tmp_true_lb, tmp_true_ub;
 	MPI_Aint tmp_el_sz;
 	MPI_Datatype tmp_el_type;
-	MPID_Datatype *old_dtp = NULL;
+	MPIDU_Datatype *old_dtp = NULL;
 
 	/* Interpreting typemap to not include 0 blklen things, including
 	 * MPI_LB and MPI_UB. -- Rob Ross, 10/31/2005
@@ -227,10 +227,10 @@ int MPID_Type_struct(int count,
 
 	if (is_builtin)
 	{
-	    tmp_el_sz   = MPID_Datatype_get_basic_size(oldtype_array[i]);
+	    tmp_el_sz   = MPIDU_Datatype_get_basic_size(oldtype_array[i]);
 	    tmp_el_type = oldtype_array[i];
 
-	    MPID_DATATYPE_BLOCK_LB_UB((MPI_Aint)(blocklength_array[i]),
+	    MPIDU_DATATYPE_BLOCK_LB_UB((MPI_Aint)(blocklength_array[i]),
 				      displacement_array[i],
 				      0,
 				      tmp_el_sz,
@@ -246,7 +246,7 @@ int MPID_Type_struct(int count,
 	}
 	else
 	{
-	    MPID_Datatype_get_ptr(oldtype_array[i], old_dtp);
+	    MPIDU_Datatype_get_ptr(oldtype_array[i], old_dtp);
 
 	    /* Ensure that "builtin_element_size" fits into an int datatype. */
 	    MPIU_Ensure_Aint_fits_in_int(old_dtp->builtin_element_size);
@@ -254,7 +254,7 @@ int MPID_Type_struct(int count,
 	    tmp_el_sz   = old_dtp->builtin_element_size;
 	    tmp_el_type = old_dtp->basic_type;
 
-	    MPID_DATATYPE_BLOCK_LB_UB((MPI_Aint) blocklength_array[i],
+	    MPIDU_DATATYPE_BLOCK_LB_UB((MPI_Aint) blocklength_array[i],
 				      displacement_array[i],
 				      old_dtp->lb,
 				      old_dtp->ub,
@@ -398,7 +398,7 @@ int MPID_Type_struct(int count,
     new_dtp->true_ub       = true_ub_disp;
     new_dtp->ub = (found_sticky_ub) ? sticky_ub_disp : ub_disp;
 
-    new_dtp->alignsize = MPID_Type_struct_alignsize(count,
+    new_dtp->alignsize = MPIDU_Type_struct_alignsize(count,
 						    oldtype_array,
 						    displacement_array);
 

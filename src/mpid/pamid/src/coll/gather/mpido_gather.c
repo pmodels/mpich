@@ -47,7 +47,7 @@ int MPIDO_Gather_reduce(void * sendbuf,
 			MPID_Comm * comm_ptr,
 			int *mpierrno)
 {
-  MPID_Datatype * data_ptr;
+  MPIDU_Datatype* data_ptr;
   MPI_Aint true_lb ATTRIBUTE((unused));
   const int rank = comm_ptr->rank;
   const int size = comm_ptr->local_size;
@@ -138,7 +138,7 @@ int MPIDO_Gather(const void *sendbuf,
     return -1;
   }
 #endif
-  MPID_Datatype * data_ptr;
+  MPIDU_Datatype* data_ptr;
   MPI_Aint true_lb ATTRIBUTE((unused));
   pami_xfer_t gather;
   MPIDI_Post_coll_t gather_post;
@@ -195,8 +195,8 @@ int MPIDO_Gather(const void *sendbuf,
     if(MPIDI_Process.cuda_aware_support_on)
     {
        MPI_Aint sdt_extent,rdt_extent;
-       MPID_Datatype_get_extent_macro(sendtype, sdt_extent);
-       MPID_Datatype_get_extent_macro(recvtype, rdt_extent);
+       MPIDU_Datatype_get_extent_macro(sendtype, sdt_extent);
+       MPIDU_Datatype_get_extent_macro(recvtype, rdt_extent);
        char *scbuf = NULL;
        char *rcbuf = NULL;
        int is_send_dev_buf = MPIDI_cuda_is_device_buf(sendbuf);
@@ -436,7 +436,7 @@ int MPIDO_Gather_simple(const void *sendbuf,
     return -1;
   }
 #endif
-  MPID_Datatype * data_ptr;
+  MPIDU_Datatype* data_ptr;
   MPI_Aint true_lb = 0;
   pami_xfer_t gather;
   MPIDI_Post_coll_t gather_post;
@@ -445,7 +445,7 @@ int MPIDO_Gather_simple(const void *sendbuf,
   void *sbuf = NULL, *rbuf = NULL;
   int send_size = 0;
   int recv_size = 0;
-  MPID_Segment segment;
+  MPIDU_Segment segment;
   const int rank = comm_ptr->rank;
   const int size = comm_ptr->local_size;
   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
@@ -494,8 +494,8 @@ int MPIDO_Gather_simple(const void *sendbuf,
               "Fatal:  Cannot allocate pack buffer");
         }
         DLOOP_Offset last = send_size;
-        MPID_Segment_init(sendbuf, sendcount, sendtype, &segment, 0);
-        MPID_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
+        MPIDU_Segment_init(sendbuf, sendcount, sendtype, &segment, 0);
+        MPIDU_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
     }
   }
   else
@@ -547,7 +547,7 @@ int MPIDO_Gather_simple(const void *sendbuf,
         if(sendbuf == MPI_IN_PLACE)
         {
           size_t extent;
-          MPID_Datatype_get_extent_macro(recvtype,extent);
+          MPIDU_Datatype_get_extent_macro(recvtype,extent);
           MPIR_Localcopy(recvbuf + (rank*recvcount*extent), recvcount, recvtype,
                          rcv_noncontig_buff + (rank*recv_size), recv_size,MPI_CHAR);
         }

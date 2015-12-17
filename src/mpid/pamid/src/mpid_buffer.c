@@ -54,8 +54,8 @@ void MPIDI_Buffer_copy(
     MPI_Aint sdt_true_lb, rdt_true_lb;
     intptr_t sdata_sz;
     intptr_t rdata_sz;
-    MPID_Datatype * sdt_ptr;
-    MPID_Datatype * rdt_ptr;
+    MPIDU_Datatype* sdt_ptr;
+    MPIDU_Datatype* rdt_ptr;
 
     MPI_Aint  sdt_extent;
     MPI_Aint  rdt_extent;
@@ -103,15 +103,15 @@ void MPIDI_Buffer_copy(
       // 2 - Copy unpacked data into user buffer from temp buffer.
       if(MPIDI_Process.cuda_aware_support_on && MPIDI_cuda_is_device_buf(rbuf))
       {
-        MPID_Datatype_get_extent_macro(rdt, rdt_extent);
+        MPIDU_Datatype_get_extent_macro(rdt, rdt_extent);
         char *buf =  MPL_malloc(rdt_extent * rcount);
         memset(buf, 0, rdt_extent * rcount);        
-        MPID_Segment seg;
+        MPIDU_Segment seg;
         DLOOP_Offset last;
 
-        MPID_Segment_init(buf, rcount, rdt, &seg, 0);
+        MPIDU_Segment_init(buf, rcount, rdt, &seg, 0);
         last = sdata_sz;
-        MPID_Segment_unpack(&seg, 0, &last, (char*)sbuf + sdt_true_lb);
+        MPIDU_Segment_unpack(&seg, 0, &last, (char*)sbuf + sdt_true_lb);
         /* --BEGIN ERROR HANDLING-- */
         if (last != sdata_sz)
         {
@@ -131,12 +131,12 @@ void MPIDI_Buffer_copy(
       }
 #endif
 
-        MPID_Segment seg;
+        MPIDU_Segment seg;
         DLOOP_Offset last;
 
-        MPID_Segment_init(rbuf, rcount, rdt, &seg, 0);
+        MPIDU_Segment_init(rbuf, rcount, rdt, &seg, 0);
         last = sdata_sz;
-        MPID_Segment_unpack(&seg, 0, &last, (char*)sbuf + sdt_true_lb);
+        MPIDU_Segment_unpack(&seg, 0, &last, (char*)sbuf + sdt_true_lb);
         /* --BEGIN ERROR HANDLING-- */
         if (last != sdata_sz)
         {
@@ -148,12 +148,12 @@ void MPIDI_Buffer_copy(
     }
     else if (rdt_contig)
     {
-        MPID_Segment seg;
+        MPIDU_Segment seg;
         DLOOP_Offset last;
 
-        MPID_Segment_init(sbuf, scount, sdt, &seg, 0);
+        MPIDU_Segment_init(sbuf, scount, sdt, &seg, 0);
         last = sdata_sz;
-        MPID_Segment_pack(&seg, 0, &last, (char*)rbuf + rdt_true_lb);
+        MPIDU_Segment_pack(&seg, 0, &last, (char*)rbuf + rdt_true_lb);
         /* --BEGIN ERROR HANDLING-- */
         if (last != sdata_sz)
         {
@@ -167,9 +167,9 @@ void MPIDI_Buffer_copy(
     {
         char * buf;
         intptr_t buf_off;
-        MPID_Segment sseg;
+        MPIDU_Segment sseg;
         intptr_t sfirst;
-        MPID_Segment rseg;
+        MPIDU_Segment rseg;
         intptr_t rfirst;
 
         buf = MPL_malloc(MPIDI_COPY_BUFFER_SZ);
@@ -183,8 +183,8 @@ void MPIDI_Buffer_copy(
         }
         /* --END ERROR HANDLING-- */
 
-        MPID_Segment_init(sbuf, scount, sdt, &sseg, 0);
-        MPID_Segment_init(rbuf, rcount, rdt, &rseg, 0);
+        MPIDU_Segment_init(sbuf, scount, sdt, &sseg, 0);
+        MPIDU_Segment_init(rbuf, rcount, rdt, &rseg, 0);
 
         sfirst = 0;
         rfirst = 0;
@@ -204,7 +204,7 @@ void MPIDI_Buffer_copy(
                 last = sdata_sz;
             }
 
-            MPID_Segment_pack(&sseg, sfirst, &last, buf + buf_off);
+            MPIDU_Segment_pack(&sseg, sfirst, &last, buf + buf_off);
             /* --BEGIN ERROR HANDLING-- */
             MPID_assert(last > sfirst);
             /* --END ERROR HANDLING-- */
@@ -212,7 +212,7 @@ void MPIDI_Buffer_copy(
             buf_end = buf + buf_off + (last - sfirst);
             sfirst = last;
 
-            MPID_Segment_unpack(&rseg, rfirst, &last, buf);
+            MPIDU_Segment_unpack(&rseg, rfirst, &last, buf);
             /* --BEGIN ERROR HANDLING-- */
             MPID_assert(last > rfirst);
             /* --END ERROR HANDLING-- */

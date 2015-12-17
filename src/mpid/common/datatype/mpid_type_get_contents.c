@@ -11,7 +11,7 @@
 #include <mpid_dataloop.h>
 
 /*@
-  MPID_Type_get_contents - get content information from datatype
+  MPIDU_Type_get_contents - get content information from datatype
 
 Input Parameters:
 + datatype - MPI datatype
@@ -25,7 +25,7 @@ Output Parameters:
 - array_of_datatypes - MPI_Datatypes used in creating type
 
 @*/
-int MPID_Type_get_contents(MPI_Datatype datatype, 
+int MPIDU_Type_get_contents(MPI_Datatype datatype, 
 			   int max_integers, 
 			   int max_addresses, 
 			   int max_datatypes, 
@@ -34,8 +34,8 @@ int MPID_Type_get_contents(MPI_Datatype datatype,
 			   MPI_Datatype array_of_datatypes[])
 {
     int i, mpi_errno;
-    MPID_Datatype *dtp;
-    MPID_Datatype_contents *cp;
+    MPIDU_Datatype *dtp;
+    MPIDU_Datatype_contents *cp;
 
     /* --BEGIN ERROR HANDLING-- */
     /* these are checked at the MPI layer, so I feel that asserts
@@ -49,7 +49,7 @@ int MPID_Type_get_contents(MPI_Datatype datatype,
 		datatype != MPI_LONG_DOUBLE_INT);
     /* --END ERROR HANDLING-- */
 
-    MPID_Datatype_get_ptr(datatype, dtp);
+    MPIDU_Datatype_get_ptr(datatype, dtp);
     cp = dtp->contents;
     MPIU_Assert(cp != NULL);
 
@@ -59,7 +59,7 @@ int MPID_Type_get_contents(MPI_Datatype datatype,
 	max_datatypes < cp->nr_types)
     {
 	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					 "MPID_Type_get_contents", __LINE__,
+					 "MPIDU_Type_get_contents", __LINE__,
 					 MPI_ERR_OTHER, "**dtype", 0);
 	return mpi_errno;
     }
@@ -82,8 +82,8 @@ int MPID_Type_get_contents(MPI_Datatype datatype,
     {
     	if (HANDLE_GET_KIND(array_of_datatypes[i]) != HANDLE_KIND_BUILTIN)
 	{
-	    MPID_Datatype_get_ptr(array_of_datatypes[i], dtp);
-	    MPID_Datatype_add_ref(dtp);
+	    MPIDU_Datatype_get_ptr(array_of_datatypes[i], dtp);
+	    MPIDU_Datatype_add_ref(dtp);
 	}
     }
 

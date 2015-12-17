@@ -17,13 +17,13 @@
 #undef MPID_SP_VERBOSE
 #undef MPID_SU_VERBOSE
 
-/* MPID_Segment_piece_params
+/* MPIDU_Segment_piece_params
 *
 * This structure is used to pass function-specific parameters into our
 * segment processing function.  This allows us to get additional parameters
 * to the functions it calls without changing the prototype.
 */
-struct MPID_Segment_piece_params {
+struct MPIDU_Segment_piece_params {
     union {
 	struct {
 	    char *pack_buffer;
@@ -53,7 +53,7 @@ struct MPID_Segment_piece_params {
 };
 
 /* prototypes of internal functions */
-static int MPID_Segment_vector_pack_to_iov(DLOOP_Offset *blocks_p,
+static int MPIDU_Segment_vector_pack_to_iov(DLOOP_Offset *blocks_p,
 				       DLOOP_Count count,
 				       DLOOP_Size blksz,
 				       DLOOP_Offset stride,
@@ -62,19 +62,19 @@ static int MPID_Segment_vector_pack_to_iov(DLOOP_Offset *blocks_p,
 				       void *bufp,
 				       void *v_paramp);
 
-static int MPID_Segment_contig_pack_to_iov(DLOOP_Offset *blocks_p,
+static int MPIDU_Segment_contig_pack_to_iov(DLOOP_Offset *blocks_p,
                                            DLOOP_Type el_type,
 					   DLOOP_Offset rel_off,
 					   void *bufp,
 					   void *v_paramp);
 
-static int MPID_Segment_contig_flatten(DLOOP_Offset *blocks_p,
+static int MPIDU_Segment_contig_flatten(DLOOP_Offset *blocks_p,
 				   DLOOP_Type el_type,
 				   DLOOP_Offset rel_off,
 				   void *bufp,
 				   void *v_paramp);
 
-static int MPID_Segment_vector_flatten(DLOOP_Offset *blocks_p,
+static int MPIDU_Segment_vector_flatten(DLOOP_Offset *blocks_p,
 				   DLOOP_Count count,
 				   DLOOP_Size blksz,
 				   DLOOP_Offset stride,
@@ -86,10 +86,10 @@ static int MPID_Segment_vector_flatten(DLOOP_Offset *blocks_p,
 /********** EXTERNALLY VISIBLE FUNCTIONS FOR TYPE MANIPULATION **********/
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Segment_pack_vector
+#define FUNCNAME MPIDU_Segment_pack_vector
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* MPID_Segment_pack_vector
+/* MPIDU_Segment_pack_vector
 *
 * Parameters:
 * segp    - pointer to segment structure
@@ -101,13 +101,13 @@ static int MPID_Segment_vector_flatten(DLOOP_Offset *blocks_p,
 * lengthp - in/out parameter describing length of array (and afterwards
 *           the amount of the array that has actual data)
 */
-void MPID_Segment_pack_vector(struct DLOOP_Segment *segp,
+void MPIDU_Segment_pack_vector(struct DLOOP_Segment *segp,
 			  DLOOP_Offset first,
 			  DLOOP_Offset *lastp,
 			  DLOOP_VECTOR *vectorp,
 			  int *lengthp)
 {
-struct MPID_Segment_piece_params packvec_params;
+struct MPIDU_Segment_piece_params packvec_params;
 MPIDI_STATE_DECL(MPID_STATE_MPID_SEGMENT_PACK_VECTOR);
 
 MPIDI_FUNC_ENTER(MPID_STATE_MPID_SEGMENT_PACK_VECTOR);
@@ -118,31 +118,31 @@ packvec_params.u.pack_vector.length  = *lengthp;
 
 MPIU_Assert(*lengthp > 0);
 
-MPID_Segment_manipulate(segp,
+MPIDU_Segment_manipulate(segp,
 			first,
 			lastp,
-			MPID_Segment_contig_pack_to_iov,
-			MPID_Segment_vector_pack_to_iov,
+			MPIDU_Segment_contig_pack_to_iov,
+			MPIDU_Segment_vector_pack_to_iov,
 			NULL, /* blkidx fn */
 			NULL, /* index fn */
 			NULL,
 			&packvec_params);
 
-/* last value already handled by MPID_Segment_manipulate */
+/* last value already handled by MPIDU_Segment_manipulate */
 *lengthp = packvec_params.u.pack_vector.index;
 MPIDI_FUNC_EXIT(MPID_STATE_MPID_SEGMENT_PACK_VECTOR);
 return;
 }
 
-/* MPID_Segment_unpack_vector
+/* MPIDU_Segment_unpack_vector
 *
 * Q: Should this be any different from pack vector?
 */
 #undef FUNCNAME
-#define FUNCNAME MPID_Segment_unpack_vector
+#define FUNCNAME MPIDU_Segment_unpack_vector
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPID_Segment_unpack_vector(struct DLOOP_Segment *segp,
+void MPIDU_Segment_unpack_vector(struct DLOOP_Segment *segp,
 			    DLOOP_Offset first,
 			    DLOOP_Offset *lastp,
 			    DLOOP_VECTOR *vectorp,
@@ -150,16 +150,16 @@ void MPID_Segment_unpack_vector(struct DLOOP_Segment *segp,
 {
 MPIDI_STATE_DECL(MPID_STATE_MPID_SEGMENT_UNPACK_VECTOR);
 MPIDI_FUNC_ENTER(MPID_STATE_MPID_SEGMENT_UNPACK_VECTOR);
-MPID_Segment_pack_vector(segp, first, lastp, vectorp, lengthp);
+MPIDU_Segment_pack_vector(segp, first, lastp, vectorp, lengthp);
 MPIDI_FUNC_EXIT(MPID_STATE_MPID_SEGMENT_UNPACK_VECTOR);
 return;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Segment_flatten
+#define FUNCNAME MPIDU_Segment_flatten
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* MPID_Segment_flatten
+/* MPIDU_Segment_flatten
 *
 * offp    - pointer to array to fill in with offsets
 * sizep   - pointer to array to fill in with sizes
@@ -169,14 +169,14 @@ return;
 *
 * TODO: MAKE SIZES Aints IN ROMIO, CHANGE THIS TO USE INTS TOO.
 */
-void MPID_Segment_flatten(struct DLOOP_Segment *segp,
+void MPIDU_Segment_flatten(struct DLOOP_Segment *segp,
 		      DLOOP_Offset first,
 		      DLOOP_Offset *lastp,
 		      DLOOP_Offset *offp,
 		      DLOOP_Size *sizep,
 		      DLOOP_Offset *lengthp)
 {
-struct MPID_Segment_piece_params packvec_params;
+struct MPIDU_Segment_piece_params packvec_params;
 MPIDI_STATE_DECL(MPID_STATE_MPID_SEGMENT_FLATTEN);
 
 MPIDI_FUNC_ENTER(MPID_STATE_MPID_SEGMENT_FLATTEN);
@@ -188,17 +188,17 @@ packvec_params.u.flatten.length  = *lengthp;
 
 MPIU_Assert(*lengthp > 0);
 
-MPID_Segment_manipulate(segp,
+MPIDU_Segment_manipulate(segp,
 			first,
 			lastp,
-			MPID_Segment_contig_flatten,
-			MPID_Segment_vector_flatten,
+			MPIDU_Segment_contig_flatten,
+			MPIDU_Segment_vector_flatten,
 			NULL, /* blkidx fn */
 			NULL,
 			NULL,
 			&packvec_params);
 
-/* last value already handled by MPID_Segment_manipulate */
+/* last value already handled by MPIDU_Segment_manipulate */
 *lengthp = packvec_params.u.flatten.index;
 MPIDI_FUNC_EXIT(MPID_STATE_MPID_SEGMENT_FLATTEN);
 return;
@@ -212,12 +212,12 @@ return;
 /********** FUNCTIONS FOR CREATING AN IOV DESCRIBING BUFFER **********/
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Segment_contig_pack_to_iov
+#define FUNCNAME MPIDU_Segment_contig_pack_to_iov
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* MPID_Segment_contig_pack_to_iov
+/* MPIDU_Segment_contig_pack_to_iov
 */
-static int MPID_Segment_contig_pack_to_iov(DLOOP_Offset *blocks_p,
+static int MPIDU_Segment_contig_pack_to_iov(DLOOP_Offset *blocks_p,
                                            DLOOP_Type el_type,
 					   DLOOP_Offset rel_off,
 					   void *bufp,
@@ -226,12 +226,12 @@ static int MPID_Segment_contig_pack_to_iov(DLOOP_Offset *blocks_p,
     int el_size, last_idx;
     DLOOP_Offset size;
     char *last_end = NULL;
-    struct MPID_Segment_piece_params *paramp = v_paramp;
+    struct MPIDU_Segment_piece_params *paramp = v_paramp;
     MPIDI_STATE_DECL(MPID_STATE_MPID_SEGMENT_CONTIG_PACK_TO_IOV);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_SEGMENT_CONTIG_PACK_TO_IOV);
 
-    el_size = MPID_Datatype_get_basic_size(el_type);
+    el_size = MPIDU_Datatype_get_basic_size(el_type);
     size = *blocks_p * (DLOOP_Offset) el_size;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPL_DBG_FDEST,
@@ -275,10 +275,10 @@ static int MPID_Segment_contig_pack_to_iov(DLOOP_Offset *blocks_p,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Segment_vector_pack_to_iov
+#define FUNCNAME MPIDU_Segment_vector_pack_to_iov
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* MPID_Segment_vector_pack_to_iov
+/* MPIDU_Segment_vector_pack_to_iov
  *
  * Input Parameters:
  * blocks_p - [inout] pointer to a count of blocks (total, for all noncontiguous pieces)
@@ -291,7 +291,7 @@ static int MPID_Segment_contig_pack_to_iov(DLOOP_Offset *blocks_p,
  * Note: this is only called when the starting position is at the beginning
  * of a whole block in a vector type.
  */
-static int MPID_Segment_vector_pack_to_iov(DLOOP_Offset *blocks_p,
+static int MPIDU_Segment_vector_pack_to_iov(DLOOP_Offset *blocks_p,
 					   DLOOP_Count count,
 					   DLOOP_Size blksz,
 					   DLOOP_Offset stride,
@@ -302,12 +302,12 @@ static int MPID_Segment_vector_pack_to_iov(DLOOP_Offset *blocks_p,
 {
     int i;
     DLOOP_Offset size, blocks_left, basic_size;
-    struct MPID_Segment_piece_params *paramp = v_paramp;
+    struct MPIDU_Segment_piece_params *paramp = v_paramp;
     MPIDI_STATE_DECL(MPID_STATE_MPID_SEGMENT_VECTOR_PACK_TO_IOV);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_SEGMENT_VECTOR_PACK_TO_IOV);
 
-    basic_size = (DLOOP_Offset) MPID_Datatype_get_basic_size(el_type);
+    basic_size = (DLOOP_Offset) MPIDU_Datatype_get_basic_size(el_type);
     blocks_left = *blocks_p;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPL_DBG_FDEST,
@@ -397,12 +397,12 @@ static int MPID_Segment_vector_pack_to_iov(DLOOP_Offset *blocks_p,
 /********** FUNCTIONS FOR FLATTENING A TYPE **********/
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Segment_contig_flatten
+#define FUNCNAME MPIDU_Segment_contig_flatten
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* MPID_Segment_contig_flatten
+/* MPIDU_Segment_contig_flatten
  */
-static int MPID_Segment_contig_flatten(DLOOP_Offset *blocks_p,
+static int MPIDU_Segment_contig_flatten(DLOOP_Offset *blocks_p,
 				       DLOOP_Type el_type,
 				       DLOOP_Offset rel_off,
 				       void *bufp,
@@ -410,12 +410,12 @@ static int MPID_Segment_contig_flatten(DLOOP_Offset *blocks_p,
 {
     int idx, el_size;
     DLOOP_Offset size;
-    struct MPID_Segment_piece_params *paramp = v_paramp;
+    struct MPIDU_Segment_piece_params *paramp = v_paramp;
     MPIDI_STATE_DECL(MPID_STATE_MPID_SEGMENT_CONTIG_FLATTEN);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_SEGMENT_CONTIG_FLATTEN);
 
-    el_size = MPID_Datatype_get_basic_size(el_type);
+    el_size = MPIDU_Datatype_get_basic_size(el_type);
     size = *blocks_p * (DLOOP_Offset) el_size;
     idx = paramp->u.flatten.index;
 
@@ -454,20 +454,20 @@ static int MPID_Segment_contig_flatten(DLOOP_Offset *blocks_p,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Segment_vector_flatten
+#define FUNCNAME MPIDU_Segment_vector_flatten
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* MPID_Segment_vector_flatten
+/* MPIDU_Segment_vector_flatten
  *
  * Notes:
  * - this is only called when the starting position is at the beginning
  *   of a whole block in a vector type.
- * - this was a virtual copy of MPID_Segment_pack_to_iov; now it has improvements
- *   that MPID_Segment_pack_to_iov needs.
+ * - this was a virtual copy of MPIDU_Segment_pack_to_iov; now it has improvements
+ *   that MPIDU_Segment_pack_to_iov needs.
  * - we return the number of blocks that we did process in region pointed to by
  *   blocks_p.
  */
-static int MPID_Segment_vector_flatten(DLOOP_Offset *blocks_p,
+static int MPIDU_Segment_vector_flatten(DLOOP_Offset *blocks_p,
 				       DLOOP_Count count,
 				       DLOOP_Size blksz,
 				       DLOOP_Offset stride,
@@ -478,12 +478,12 @@ static int MPID_Segment_vector_flatten(DLOOP_Offset *blocks_p,
 {
     int i;
     DLOOP_Offset size, blocks_left, basic_size;
-    struct MPID_Segment_piece_params *paramp = v_paramp;
+    struct MPIDU_Segment_piece_params *paramp = v_paramp;
     MPIDI_STATE_DECL(MPID_STATE_MPID_SEGMENT_VECTOR_FLATTEN);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_SEGMENT_VECTOR_FLATTEN);
 
-    basic_size = (DLOOP_Offset) MPID_Datatype_get_basic_size(el_type);
+    basic_size = (DLOOP_Offset) MPIDU_Datatype_get_basic_size(el_type);
     blocks_left = *blocks_p;
 
     for (i=0; i < count && blocks_left > 0; i++) {

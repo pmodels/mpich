@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 /*@
-  MPID_Type_commit
+  MPIDU_Type_commit
  
 Input Parameters:
 . datatype_p - pointer to MPI datatype
@@ -20,14 +20,14 @@ Output Parameters:
   0 on success, -1 on failure.
 @*/
 
-int MPID_Type_commit(MPI_Datatype *datatype_p)
+int MPIDU_Type_commit(MPI_Datatype *datatype_p)
 {
     int           mpi_errno=MPI_SUCCESS;
-    MPID_Datatype *datatype_ptr;
+    MPIDU_Datatype *datatype_ptr;
 
     MPIU_Assert(HANDLE_GET_KIND(*datatype_p) != HANDLE_KIND_BUILTIN);
 
-    MPID_Datatype_get_ptr(*datatype_p, datatype_ptr);
+    MPIDU_Datatype_get_ptr(*datatype_p, datatype_ptr);
 
     if (datatype_ptr->is_committed == 0) {
        datatype_ptr->is_committed = 1;
@@ -35,25 +35,25 @@ int MPID_Type_commit(MPI_Datatype *datatype_p)
 #ifdef MPID_NEEDS_DLOOP_ALL_BYTES
         /* If MPID implementation needs use to reduce everything to
            a byte stream, do that. */
-	MPID_Dataloop_create(*datatype_p,
+	MPIDU_Dataloop_create(*datatype_p,
 			     &datatype_ptr->dataloop,
 			     &datatype_ptr->dataloop_size,
 			     &datatype_ptr->dataloop_depth,
-			     MPID_DATALOOP_ALL_BYTES);
+			     MPIDU_DATALOOP_ALL_BYTES);
 #else
-	MPID_Dataloop_create(*datatype_p,
+	MPIDU_Dataloop_create(*datatype_p,
 			     &datatype_ptr->dataloop,
 			     &datatype_ptr->dataloop_size,
 			     &datatype_ptr->dataloop_depth,
-			     MPID_DATALOOP_HOMOGENEOUS);
+			     MPIDU_DATALOOP_HOMOGENEOUS);
 #endif
 
 	/* create heterogeneous dataloop */
-	MPID_Dataloop_create(*datatype_p,
+	MPIDU_Dataloop_create(*datatype_p,
 			     &datatype_ptr->hetero_dloop,
 			     &datatype_ptr->hetero_dloop_size,
 			     &datatype_ptr->hetero_dloop_depth,
-			     MPID_DATALOOP_HETEROGENEOUS);
+			     MPIDU_DATALOOP_HETEROGENEOUS);
 
 	MPL_DBG_MSG_D(MPIR_DBG_DATATYPE,TERSE,"# contig blocks = %d\n",
                        (int) datatype_ptr->max_contig_blocks);
@@ -62,9 +62,9 @@ int MPID_Type_commit(MPI_Datatype *datatype_p)
         MPIDI_Dataloop_dot_printf(datatype_ptr->dataloop, 0, 1);
 #endif
 
-#ifdef MPID_Dev_datatype_commit_hook
-       MPID_Dev_datatype_commit_hook(datatype_p);
-#endif /* MPID_Dev_datatype_commit_hook */
+#ifdef MPIDU_Dev_datatype_commit_hook
+       MPIDU_Dev_datatype_commit_hook(datatype_p);
+#endif /* MPIDU_Dev_datatype_commit_hook */
 
     }
     return mpi_errno;

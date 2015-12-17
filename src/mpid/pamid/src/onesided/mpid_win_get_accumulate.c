@@ -44,7 +44,7 @@ MPIDI_Fetch_data_op(const void   * origin_addr,
            disp_unit = win->mpid.info[target_rank].disp_unit;
         dest_addr = (char *) base + disp_unit * target_disp;
 
-        MPID_Datatype_get_size_macro(origin_datatype, len);
+        MPIDU_Datatype_get_size_macro(origin_datatype, len);
         MPIU_Memcpy(result_addr, dest_addr, len);
         if (op != MPI_NO_OP) {
             uop = MPIR_OP_HDL_TO_FN(op);
@@ -535,8 +535,8 @@ MPID_Get_accumulate(const void   * origin_addr,
   win->mpid.sync.total += (1 + req->target.dt.num_contig);
   {
     MPI_Datatype basic_type = MPI_DATATYPE_NULL;
-    MPID_Datatype_get_basic_type(origin_datatype, basic_type);
-    /* MPID_Datatype_get_basic_type() doesn't handle the struct types */
+    MPIDU_Datatype_get_basic_type(origin_datatype, basic_type);
+    /* MPIDU_Datatype_get_basic_type() doesn't handle the struct types */
     if ((origin_datatype == MPI_FLOAT_INT)  ||
         (origin_datatype == MPI_DOUBLE_INT) ||
         (origin_datatype == MPI_LONG_INT)   ||

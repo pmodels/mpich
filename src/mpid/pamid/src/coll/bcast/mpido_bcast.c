@@ -46,8 +46,8 @@ int MPIDO_Bcast(void *buffer,
         *noncontig_buff = NULL;
    volatile unsigned active = 1;
    MPI_Aint data_true_lb = 0;
-   MPID_Datatype *data_ptr;
-   MPID_Segment segment;
+   MPIDU_Datatype*data_ptr;
+   MPIDU_Segment segment;
    MPIDI_Post_coll_t bcast_post;
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
    const int rank = comm_ptr->rank;
@@ -122,8 +122,8 @@ int MPIDO_Bcast(void *buffer,
       if(rank == root)
       {
          DLOOP_Offset last = data_size;
-         MPID_Segment_init(buffer, count, datatype, &segment, 0);
-         MPID_Segment_pack(&segment, 0, &last, noncontig_buff);
+         MPIDU_Segment_init(buffer, count, datatype, &segment, 0);
+         MPIDU_Segment_pack(&segment, 0, &last, noncontig_buff);
       }
    }
 
@@ -282,8 +282,8 @@ int MPIDO_Bcast_simple(void *buffer,
         *noncontig_buff = NULL;
    volatile unsigned active = 1;
    MPI_Aint data_true_lb = 0;
-   MPID_Datatype *data_ptr;
-   MPID_Segment segment;
+   MPIDU_Datatype*data_ptr;
+   MPIDU_Segment segment;
    MPIDI_Post_coll_t bcast_post;
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
    const int rank = comm_ptr->rank;
@@ -335,8 +335,8 @@ int MPIDO_Bcast_simple(void *buffer,
       if(rank == root)
       {
          DLOOP_Offset last = data_size;
-         MPID_Segment_init(buffer, count, datatype, &segment, 0);
-         MPID_Segment_pack(&segment, 0, &last, noncontig_buff);
+         MPIDU_Segment_init(buffer, count, datatype, &segment, 0);
+         MPIDU_Segment_pack(&segment, 0, &last, noncontig_buff);
       }
    }
 

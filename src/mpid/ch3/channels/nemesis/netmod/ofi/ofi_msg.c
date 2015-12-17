@@ -299,7 +299,7 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc,
         MPIU_Memcpy(pack_buffer + buf_offset, sreq->dev.ext_hdr_ptr, sreq->dev.ext_hdr_sz);
         buf_offset += sreq->dev.ext_hdr_sz;
     }
-    MPID_Segment_pack(sreq->dev.segment_ptr, first, &last, pack_buffer + buf_offset);
+    MPIDU_Segment_pack(sreq->dev.segment_ptr, first, &last, pack_buffer + buf_offset);
     START_COMM();
     MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);
     END_FUNC_RC(FCNAME);

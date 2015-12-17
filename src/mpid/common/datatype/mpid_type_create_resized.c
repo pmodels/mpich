@@ -13,14 +13,14 @@
 
 static int MPIDI_Type_create_resized_memory_error(void);
 
-int MPID_Type_create_resized(MPI_Datatype oldtype,
+int MPIDU_Type_create_resized(MPI_Datatype oldtype,
 			     MPI_Aint lb,
 			     MPI_Aint extent,
 			     MPI_Datatype *newtype_p)
 {
-    MPID_Datatype *new_dtp;
+    MPIDU_Datatype *new_dtp;
 
-    new_dtp = (MPID_Datatype *) MPIU_Handle_obj_alloc(&MPID_Datatype_mem);
+    new_dtp = (MPIDU_Datatype *) MPIU_Handle_obj_alloc(&MPIDU_Datatype_mem);
     /* --BEGIN ERROR HANDLING-- */
     if (!new_dtp) return MPIDI_Type_create_resized_memory_error();
     /* --END ERROR HANDLING-- */
@@ -44,7 +44,7 @@ int MPID_Type_create_resized(MPI_Datatype oldtype,
     /* if oldtype is a basic, we build a contiguous dataloop of count = 1 */
     if (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN)
     {
-	int oldsize = MPID_Datatype_get_basic_size(oldtype);
+	int oldsize = MPIDU_Datatype_get_basic_size(oldtype);
 
 	new_dtp->size           = oldsize;
 	new_dtp->has_sticky_ub  = 0;
@@ -65,9 +65,9 @@ int MPID_Type_create_resized(MPI_Datatype oldtype,
     else
     {
 	/* user-defined base type */
-	MPID_Datatype *old_dtp;
+	MPIDU_Datatype *old_dtp;
 
-	MPID_Datatype_get_ptr(oldtype, old_dtp);
+	MPIDU_Datatype_get_ptr(oldtype, old_dtp);
 
 	new_dtp->size           = old_dtp->size;
 	new_dtp->has_sticky_ub  = 0;
@@ -103,7 +103,7 @@ static int MPIDI_Type_create_resized_memory_error(void)
 
     mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
 				     MPIR_ERR_RECOVERABLE,
-				     "MPID_Type_create_resized",
+				     "MPIDU_Type_create_resized",
 				     __LINE__,
 				     MPI_ERR_OTHER,
 				     "**nomem",

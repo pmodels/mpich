@@ -408,12 +408,12 @@ MPID_Put(const void   *origin_addr,
   }
   if ((MPIDI_Process.typed_onesided == 1) && (!req->target.dt.contig || !req->origin.dt.contig)) {
     /* We will use the PAMI_Rput_typed call so we need to make sure any MPI_Type_free before the context
-     * executes the put does not free the MPID_Datatype, which would also free the associated PAMI datatype which
+     * executes the put does not free the MPIDU_Datatype, which would also free the associated PAMI datatype which
      * is still needed for communication -- decrement the ref in the callback to allow the MPID_Datatype
      * to be freed once the PAMI communication has completed.
      */
-    MPID_Datatype_add_ref(req->origin.dt.pointer);
-    MPID_Datatype_add_ref(req->target.dt.pointer);
+    MPIDU_Datatype_add_ref(req->origin.dt.pointer);
+    MPIDU_Datatype_add_ref(req->target.dt.pointer);
   }
   /* The pamid one-sided design requires context post in order to handle the
    * case where the number of pending rma operation exceeds the

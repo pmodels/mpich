@@ -53,7 +53,7 @@ int MPIDO_Gatherv(const void *sendbuf,
    int i;
    int contig ATTRIBUTE((unused)), rsize ATTRIBUTE((unused)), ssize ATTRIBUTE((unused));
    int pamidt = 1;
-   MPID_Datatype *dt_ptr = NULL;
+   MPIDU_Datatype*dt_ptr = NULL;
    MPI_Aint send_true_lb, recv_true_lb;
    char *sbuf, *rbuf;
    pami_type_t stype, rtype;
@@ -88,8 +88,8 @@ int MPIDO_Gatherv(const void *sendbuf,
     if(MPIDI_Process.cuda_aware_support_on)
     {
        MPI_Aint sdt_extent,rdt_extent;
-       MPID_Datatype_get_extent_macro(sendtype, sdt_extent);
-       MPID_Datatype_get_extent_macro(recvtype, rdt_extent);
+       MPIDU_Datatype_get_extent_macro(sendtype, sdt_extent);
+       MPIDU_Datatype_get_extent_macro(recvtype, rdt_extent);
        char *scbuf = NULL;
        char *rcbuf = NULL;
        int is_send_dev_buf = MPIDI_cuda_is_device_buf(sendbuf);
@@ -223,7 +223,7 @@ int MPIDO_Gatherv(const void *sendbuf,
          if(my_md->check_correct.values.rangeminmax)
          {
             MPI_Aint data_true_lb;
-            MPID_Datatype *data_ptr;
+            MPIDU_Datatype*data_ptr;
             int data_size, data_contig;
             MPIDI_Datatype_get_info(sendcount, sendtype, data_contig, data_size, data_ptr, data_true_lb); 
             if((my_md->range_lo <= data_size) &&
@@ -323,8 +323,8 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
    int rcvlen    = 0;
   int totalrecvcount  = 0;
    pami_type_t rtype = PAMI_TYPE_NULL;
-   MPID_Segment segment;
-   MPID_Datatype *data_ptr = NULL;
+   MPIDU_Segment segment;
+   MPIDU_Datatype*data_ptr = NULL;
    int send_true_lb, recv_true_lb = 0;
    int i, tmp;
    volatile unsigned gatherv_active = 1;
@@ -378,8 +378,8 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
                    "Fatal:  Cannot allocate pack buffer");
       }
       DLOOP_Offset last = send_size;
-      MPID_Segment_init(sendbuf, sendcount, sendtype, &segment, 0);
-      MPID_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
+      MPIDU_Segment_init(sendbuf, sendcount, sendtype, &segment, 0);
+      MPIDU_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
     }
   }
   else
@@ -447,7 +447,7 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
       if(sendbuf == MPI_IN_PLACE)
       {
         size_t extent;
-        MPID_Datatype_get_extent_macro(recvtype,extent);
+        MPIDU_Datatype_get_extent_macro(recvtype,extent);
         MPIR_Localcopy(recvbuf + displs[rank]*extent, recvcounts[rank], recvtype,
                      rcv_noncontig_buff + rdispls[rank], rcounts[rank],MPI_CHAR);
       }
@@ -507,7 +507,7 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
     else
     {
       size_t extent;
-      MPID_Datatype_get_extent_macro(recvtype,extent);
+      MPIDU_Datatype_get_extent_macro(recvtype,extent);
       for(i=0; i<size; ++i)
       {
         char* scbuf = (char*)rcv_noncontig_buff+ rdispls[i];

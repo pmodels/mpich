@@ -12,7 +12,7 @@
 /* #define MPID_TYPE_ALLOC_DEBUG */
 
 /*@
-  MPID_Type_vector - create a vector datatype
+  MPIDU_Type_vector - create a vector datatype
 
 Input Parameters:
 + count - number of blocks in vector
@@ -29,7 +29,7 @@ Output Parameters:
   Return Value:
   0 on success, MPI error code on failure.
 @*/
-int MPID_Type_vector(int count,
+int MPIDU_Type_vector(int count,
 		     int blocklength,
 		     MPI_Aint stride,
 		     int strideinbytes,
@@ -42,16 +42,16 @@ int MPID_Type_vector(int count,
     MPI_Datatype el_type;
     MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub, eff_stride;
 
-    MPID_Datatype *new_dtp;
+    MPIDU_Datatype *new_dtp;
 
-    if (count == 0) return MPID_Type_zerolen(newtype);
+    if (count == 0) return MPIDU_Type_zerolen(newtype);
 
     /* allocate new datatype object and handle */
-    new_dtp = (MPID_Datatype *) MPIU_Handle_obj_alloc(&MPID_Datatype_mem);
+    new_dtp = (MPIDU_Datatype *) MPIU_Handle_obj_alloc(&MPIDU_Datatype_mem);
     if (!new_dtp) {
 	/* --BEGIN ERROR HANDLING-- */
 	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					 "MPID_Type_vector", __LINE__,
+					 "MPIDU_Type_vector", __LINE__,
 					 MPI_ERR_OTHER, "**nomem", 0);
 	return mpi_errno;
 	/* --END ERROR HANDLING-- */
@@ -76,7 +76,7 @@ int MPID_Type_vector(int count,
     is_builtin = (HANDLE_GET_KIND(oldtype) == HANDLE_KIND_BUILTIN);
 
     if (is_builtin) {
-	el_sz   = (MPI_Aint) MPID_Datatype_get_basic_size(oldtype);
+	el_sz   = (MPI_Aint) MPIDU_Datatype_get_basic_size(oldtype);
 	el_type = oldtype;
 
 	old_lb        = 0;
@@ -102,9 +102,9 @@ int MPID_Type_vector(int count,
 	eff_stride = (strideinbytes) ? stride : (stride * el_sz);
     }
     else /* user-defined base type (oldtype) */ {
-	MPID_Datatype *old_dtp;
+	MPIDU_Datatype *old_dtp;
 
-	MPID_Datatype_get_ptr(oldtype, old_dtp);
+	MPIDU_Datatype_get_ptr(oldtype, old_dtp);
 	el_sz   = old_dtp->builtin_element_size;
 	el_type = old_dtp->basic_type;
 
@@ -130,7 +130,7 @@ int MPID_Type_vector(int count,
 	eff_stride = (strideinbytes) ? stride : (stride * old_dtp->extent);
     }
 
-    MPID_DATATYPE_VECTOR_LB_UB((MPI_Aint) count,
+    MPIDU_DATATYPE_VECTOR_LB_UB((MPI_Aint) count,
 			       eff_stride,
 			       (MPI_Aint) blocklength,
 			       old_lb,

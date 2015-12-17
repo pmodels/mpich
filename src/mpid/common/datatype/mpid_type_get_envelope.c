@@ -11,7 +11,7 @@
 #include <mpid_dataloop.h>
 
 /*@
-  MPID_Type_get_envelope - get envelope information from datatype
+  MPIDU_Type_get_envelope - get envelope information from datatype
 
 Input Parameters:
 . datatype - MPI datatype
@@ -23,7 +23,7 @@ Output Parameters:
 - combiner - function type used to create datatype
 @*/
 
-int MPID_Type_get_envelope(MPI_Datatype datatype,
+int MPIDU_Type_get_envelope(MPI_Datatype datatype,
 			   int *num_integers,
 			   int *num_addresses,
 			   int *num_datatypes,
@@ -42,9 +42,9 @@ int MPID_Type_get_envelope(MPI_Datatype datatype,
 	*num_datatypes = 0;
     }
     else {
-	MPID_Datatype *dtp;
+	MPIDU_Datatype *dtp;
 
-	MPID_Datatype_get_ptr(datatype, dtp);
+	MPIDU_Datatype_get_ptr(datatype, dtp);
 
 	*combiner      = dtp->contents->combiner;
 	*num_integers  = dtp->contents->nr_ints;

@@ -294,7 +294,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         /* Immed packet type is used when target datatype is predefined datatype. */
         MPIU_Assert(MPIR_DATATYPE_IS_PREDEFINED(put_pkt->datatype));
 
-        MPID_Datatype_get_size_macro(put_pkt->datatype, type_size);
+        MPIDU_Datatype_get_size_macro(put_pkt->datatype, type_size);
 
         /* copy data from packet header to target buffer */
         MPIU_Memcpy(put_pkt->addr, put_pkt->info.data, put_pkt->count * type_size);
@@ -331,7 +331,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_PUT_RECV);
             req->dev.datatype = put_pkt->datatype;
 
-            MPID_Datatype_get_size_macro(put_pkt->datatype, type_size);
+            MPIDU_Datatype_get_size_macro(put_pkt->datatype, type_size);
 
             req->dev.recv_data_sz = type_size * put_pkt->count;
             MPIU_Assert(req->dev.recv_data_sz > 0);
@@ -510,9 +510,9 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         get_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
 
         /* length of target data */
-        MPID_Datatype_get_size_macro(get_pkt->datatype, type_size);
+        MPIDU_Datatype_get_size_macro(get_pkt->datatype, type_size);
 
-        MPID_Datatype_is_contig(get_pkt->datatype, &is_contig);
+        MPIDU_Datatype_is_contig(get_pkt->datatype, &is_contig);
 
         if (get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP) {
             MPIU_Assign_trunc(len, get_pkt->count * type_size, size_t);
@@ -556,11 +556,11 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) get_resp_pkt;
             iov[0].MPL_IOV_LEN = sizeof(*get_resp_pkt);
 
-            req->dev.segment_ptr = MPID_Segment_alloc();
+            req->dev.segment_ptr = MPIDU_Segment_alloc();
             MPIR_ERR_CHKANDJUMP1(req->dev.segment_ptr == NULL, mpi_errno,
-                                 MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
+                                 MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIDU_Segment_alloc");
 
-            MPID_Segment_init(get_pkt->addr, get_pkt->count,
+            MPIDU_Segment_init(get_pkt->addr, get_pkt->count,
                               get_pkt->datatype, req->dev.segment_ptr, 0);
             req->dev.segment_first = 0;
             req->dev.segment_size = get_pkt->count * type_size;
@@ -748,7 +748,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             else {
                 req->dev.OnFinal = MPIDI_CH3_ReqHandler_AccumRecvComplete;
 
-                MPID_Datatype_get_extent_macro(accum_pkt->datatype, extent);
+                MPIDU_Datatype_get_extent_macro(accum_pkt->datatype, extent);
 
                 MPIU_Assert(!MPIDI_Request_get_srbuf_flag(req));
                 /* allocate a SRBuf for receiving stream unit */
@@ -766,7 +766,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
                 req->dev.user_buf = req->dev.tmpbuf;
 
-                MPID_Datatype_get_size_macro(accum_pkt->datatype, type_size);
+                MPIDU_Datatype_get_size_macro(accum_pkt->datatype, type_size);
 
                 total_len = type_size * accum_pkt->count;
                 stream_elem_count = MPIDI_CH3U_SRBuf_size / extent;
@@ -919,7 +919,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         win_ptr->at_completion_counter++;
 
         /* Calculate the length of reponse data, ensure that it fits into immed packet. */
-        MPID_Datatype_get_size_macro(get_accum_pkt->datatype, type_size);
+        MPIDU_Datatype_get_size_macro(get_accum_pkt->datatype, type_size);
         MPIU_Assign_trunc(len, get_accum_pkt->count * type_size, size_t);
 
         MPIDI_Pkt_init(get_accum_resp_pkt, MPIDI_CH3_PKT_GET_ACCUM_RESP_IMMED);
@@ -1035,7 +1035,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                     complete = 1;
                 }
                 else {
-                    MPID_Datatype_get_extent_macro(get_accum_pkt->datatype, extent);
+                    MPIDU_Datatype_get_extent_macro(get_accum_pkt->datatype, extent);
 
                     MPIU_Assert(!MPIDI_Request_get_srbuf_flag(req));
                     /* allocate a SRBuf for receiving stream unit */
@@ -1053,7 +1053,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
                     req->dev.user_buf = req->dev.tmpbuf;
 
-                    MPID_Datatype_get_size_macro(get_accum_pkt->datatype, type_size);
+                    MPIDU_Datatype_get_size_macro(get_accum_pkt->datatype, type_size);
                     total_len = type_size * get_accum_pkt->count;
                     stream_elem_count = MPIDI_CH3U_SRBuf_size / extent;
 
@@ -1195,7 +1195,7 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         cas_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_ACK;
 
     /* Copy old value into the response packet */
-    MPID_Datatype_get_size_macro(cas_pkt->datatype, len);
+    MPIDU_Datatype_get_size_macro(cas_pkt->datatype, len);
     MPIU_Assert(len <= sizeof(MPIDI_CH3_CAS_Immed_u));
 
     if (win_ptr->shm_allocated == TRUE)
@@ -1293,7 +1293,7 @@ int MPIDI_CH3_PktHandler_CASResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
             MPIR_ERR_POP(mpi_errno);
     }
 
-    MPID_Datatype_get_size_macro(req->dev.datatype, len);
+    MPIDU_Datatype_get_size_macro(req->dev.datatype, len);
 
     MPIU_Memcpy(req->dev.user_buf, (void *) &cas_resp_pkt->info.data, len);
 
@@ -1352,7 +1352,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     (*buflen) = sizeof(MPIDI_CH3_Pkt_t);
     (*rreqp) = NULL;
 
-    MPID_Datatype_get_size_macro(fop_pkt->datatype, type_size);
+    MPIDU_Datatype_get_size_macro(fop_pkt->datatype, type_size);
 
     if (pkt->type == MPIDI_CH3_PKT_FOP_IMMED) {
 
@@ -1462,7 +1462,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
             data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
 
-            MPID_Datatype_get_extent_macro(fop_pkt->datatype, extent);
+            MPIDU_Datatype_get_extent_macro(fop_pkt->datatype, extent);
 
             req->dev.user_buf = MPL_malloc(extent);
             if (!req->dev.user_buf) {
@@ -1549,7 +1549,7 @@ int MPIDI_CH3_PktHandler_FOPResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
     data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
 
-    MPID_Datatype_get_size_macro(req->dev.datatype, type_size);
+    MPIDU_Datatype_get_size_macro(req->dev.datatype, type_size);
     req->dev.recv_data_sz = type_size;
     req->dev.user_count = 1;
 
@@ -1637,7 +1637,7 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
     data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
 
-    MPID_Datatype_get_size_macro(req->dev.datatype, type_size);
+    MPIDU_Datatype_get_size_macro(req->dev.datatype, type_size);
 
     *rreqp = req;
 
@@ -1667,8 +1667,8 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             basic_type = req->dev.datatype_ptr->basic_type;
         }
 
-        MPID_Datatype_get_extent_macro(basic_type, basic_type_extent);
-        MPID_Datatype_get_size_macro(basic_type, basic_type_size);
+        MPIDU_Datatype_get_extent_macro(basic_type, basic_type_extent);
+        MPIDU_Datatype_get_size_macro(basic_type, basic_type_size);
 
         /* Note: here we get the stream_offset from the extended packet header
          * in the response request, which is set in issue_get_acc_op() funcion.
@@ -1697,8 +1697,8 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         else {
             *buflen = sizeof(MPIDI_CH3_Pkt_t);
 
-            req->dev.segment_ptr = MPID_Segment_alloc();
-            MPID_Segment_init(req->dev.user_buf, req->dev.user_count, req->dev.datatype,
+            req->dev.segment_ptr = MPIDU_Segment_alloc();
+            MPIDU_Segment_init(req->dev.user_buf, req->dev.user_count, req->dev.datatype,
                               req->dev.segment_ptr, 0);
             req->dev.segment_first = contig_stream_offset;
             req->dev.segment_size = contig_stream_offset + req->dev.recv_data_sz;
@@ -1832,7 +1832,7 @@ int MPIDI_CH3_PktHandler_GetResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
     data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
 
-    MPID_Datatype_get_size_macro(req->dev.datatype, type_size);
+    MPIDU_Datatype_get_size_macro(req->dev.datatype, type_size);
     req->dev.recv_data_sz = type_size * req->dev.user_count;
 
     *rreqp = req;

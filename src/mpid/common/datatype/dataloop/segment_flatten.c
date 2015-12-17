@@ -52,7 +52,7 @@ struct PREPEND_PREFIX(mpi_flatten_params) {
     MPI_Aint *disps;
 };
 
-/* MPID_Segment_mpi_flatten - flatten a type into a representation
+/* MPIDU_Segment_mpi_flatten - flatten a type into a representation
  *                            appropriate for passing to hindexed create.
  *
  * NOTE: blocks will be in units of bytes when returned.
@@ -96,7 +96,7 @@ void PREPEND_PREFIX(Segment_mpi_flatten)(DLOOP_Segment *segp,
 				       NULL,
 				       &params);
 
-    /* last value already handled by MPID_Segment_manipulate */
+    /* last value already handled by MPIDU_Segment_manipulate */
     *lengthp = params.index;
     return;
 }

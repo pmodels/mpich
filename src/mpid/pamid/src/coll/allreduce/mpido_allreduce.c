@@ -121,7 +121,7 @@ int MPIDO_Allreduce(const void *sendbuf,
     if(MPIDI_Process.cuda_aware_support_on)
     {
        MPI_Aint dt_extent;
-       MPID_Datatype_get_extent_macro(dt, dt_extent);
+       MPIDU_Datatype_get_extent_macro(dt, dt_extent);
        char *scbuf = NULL;
        char *rcbuf = NULL;
        int is_send_dev_buf = MPIDI_cuda_is_device_buf(sendbuf);
@@ -467,7 +467,7 @@ int MPIDO_Allreduce_simple(const void *sendbuf,
    pami_xfer_t allred;
    const pami_metadata_t *my_allred_md = (pami_metadata_t *)NULL;
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
-   MPID_Datatype *data_ptr;
+   MPIDU_Datatype*data_ptr;
    MPI_Aint data_true_lb = 0;
    int data_size, data_contig;
 

@@ -64,7 +64,7 @@ static inline int immed_copy(void *src, void *dest, size_t len)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void fill_in_derived_dtp_info(MPIDI_RMA_dtype_info * dtype_info, void *dataloop,
-                                            MPID_Datatype * dtp)
+                                            MPIDU_Datatype* dtp)
 {
     MPIDI_STATE_DECL(MPID_STATE_FILL_IN_DERIVED_DTP_INFO);
     MPIDI_FUNC_ENTER(MPID_STATE_FILL_IN_DERIVED_DTP_INFO);
@@ -100,7 +100,7 @@ static inline void fill_in_derived_dtp_info(MPIDI_RMA_dtype_info * dtype_info, v
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int init_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
-                              MPID_Datatype * target_dtp, intptr_t stream_offset,
+                              MPIDU_Datatype* target_dtp, intptr_t stream_offset,
                               void **ext_hdr_ptr, MPI_Aint * ext_hdr_sz)
 {
     MPI_Aint _ext_hdr_sz = 0, _total_sz = 0;
@@ -186,7 +186,7 @@ static int init_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int init_get_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
-                                  MPID_Datatype * target_dtp, intptr_t stream_offset,
+                                  MPIDU_Datatype* target_dtp, intptr_t stream_offset,
                                   void **ext_hdr_ptr, MPI_Aint * ext_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -224,7 +224,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
                                     MPID_Request ** req_ptr)
 {
     MPI_Datatype target_datatype;
-    MPID_Datatype *target_dtp = NULL, *origin_dtp = NULL;
+    MPIDU_Datatype*target_dtp = NULL, *origin_dtp = NULL;
     int is_origin_contig;
     MPL_IOV iov[MPL_IOV_LIMIT];
     int iovcnt = 0;
@@ -249,7 +249,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     /* Judge if target datatype is derived datatype. */
     MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE(rma_op->pkt, target_datatype, mpi_errno);
     if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
-        MPID_Datatype_get_ptr(target_datatype, target_dtp);
+        MPIDU_Datatype_get_ptr(target_datatype, target_dtp);
 
         /* Set dataloop size in pkt header */
         MPIDI_CH3_PKT_RMA_SET_DATALOOP_SIZE(rma_op->pkt, target_dtp->dataloop_size, mpi_errno);
@@ -258,12 +258,12 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     if (is_empty_origin == FALSE) {
         /* Judge if origin datatype is derived datatype. */
         if (!MPIR_DATATYPE_IS_PREDEFINED(rma_op->origin_datatype)) {
-            MPID_Datatype_get_ptr(rma_op->origin_datatype, origin_dtp);
+            MPIDU_Datatype_get_ptr(rma_op->origin_datatype, origin_dtp);
         }
 
         /* check if origin data is contiguous and get true lb */
-        MPID_Datatype_is_contig(rma_op->origin_datatype, &is_origin_contig);
-        MPID_Datatype_get_true_lb(rma_op->origin_datatype, &dt_true_lb);
+        MPIDU_Datatype_is_contig(rma_op->origin_datatype, &is_origin_contig);
+        MPIDU_Datatype_get_true_lb(rma_op->origin_datatype, &dt_true_lb);
     }
     else {
         /* origin buffer is empty, mark origin data as contig and true_lb as 0. */
@@ -298,7 +298,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
 
         if (origin_dtp != NULL) {
             if (req == NULL) {
-                MPID_Datatype_release(origin_dtp);
+                MPIDU_Datatype_release(origin_dtp);
             }
             else {
                 /* this will cause the datatype to be freed when the request
@@ -349,11 +349,11 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     }
     else {
         /* origin data is non-contiguous */
-        req->dev.segment_ptr = MPID_Segment_alloc();
+        req->dev.segment_ptr = MPIDU_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1(req->dev.segment_ptr == NULL, mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
+                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIDU_Segment_alloc");
 
-        MPID_Segment_init(rma_op->origin_addr, rma_op->origin_count,
+        MPIDU_Segment_init(rma_op->origin_addr, rma_op->origin_count,
                           rma_op->origin_datatype, req->dev.segment_ptr, 0);
         req->dev.segment_first = stream_offset;
         req->dev.segment_size = stream_offset + stream_size;
@@ -370,7 +370,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
   fn_exit:
     /* release the target datatype */
     if (target_dtp)
-        MPID_Datatype_release(target_dtp);
+        MPIDU_Datatype_release(target_dtp);
     (*req_ptr) = req;
 
     MPIDI_FUNC_EXIT(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER);
@@ -378,7 +378,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
   fn_fail:
     if (req) {
         if (req->dev.datatype_ptr)
-            MPID_Datatype_release(req->dev.datatype_ptr);
+            MPIDU_Datatype_release(req->dev.datatype_ptr);
         if (req->dev.ext_hdr_ptr)
             MPL_free(req->dev.ext_hdr_ptr);
         MPID_Request_release(req);
@@ -402,7 +402,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     MPIDI_CH3_Pkt_put_t *put_pkt = &rma_op->pkt.put;
     MPID_Request *curr_req = NULL;
     MPI_Datatype target_datatype;
-    MPID_Datatype *target_dtp_ptr = NULL;
+    MPIDU_Datatype*target_dtp_ptr = NULL;
     MPIDI_CH3_Ext_pkt_put_derived_t *ext_hdr_ptr = NULL;
     MPI_Aint ext_hdr_sz = 0;
     int mpi_errno = MPI_SUCCESS;
@@ -423,12 +423,12 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     }
     else {
         MPI_Aint origin_type_size;
-        MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
+        MPIDU_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
 
         /* If derived datatype on target, add extended packet header. */
         MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE(rma_op->pkt, target_datatype, mpi_errno);
         if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
-            MPID_Datatype_get_ptr(target_datatype, target_dtp_ptr);
+            MPIDU_Datatype_get_ptr(target_datatype, target_dtp_ptr);
 
             void *dataloop_ptr = NULL;
 
@@ -488,8 +488,8 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     MPI_Aint predefined_dtp_size, predefined_dtp_extent, predefined_dtp_count;
     MPI_Aint total_len, rest_len;
     MPI_Aint origin_dtp_size;
-    MPID_Datatype *origin_dtp_ptr = NULL;
-    MPID_Datatype *target_dtp_ptr = NULL;
+    MPIDU_Datatype*origin_dtp_ptr = NULL;
+    MPIDU_Datatype*target_dtp_ptr = NULL;
     void *ext_hdr_ptr = NULL;
     MPI_Aint ext_hdr_sz = 0;
     int mpi_errno = MPI_SUCCESS;
@@ -520,21 +520,21 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     }
 
     /* Get total length of origin data */
-    MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_dtp_size);
+    MPIDU_Datatype_get_size_macro(rma_op->origin_datatype, origin_dtp_size);
     total_len = origin_dtp_size * rma_op->origin_count;
 
     /* Get size and count for predefined datatype elements */
     if (MPIR_DATATYPE_IS_PREDEFINED(rma_op->origin_datatype)) {
         predefined_dtp_size = origin_dtp_size;
         predefined_dtp_count = rma_op->origin_count;
-        MPID_Datatype_get_extent_macro(rma_op->origin_datatype, predefined_dtp_extent);
+        MPIDU_Datatype_get_extent_macro(rma_op->origin_datatype, predefined_dtp_extent);
     }
     else {
-        MPID_Datatype_get_ptr(rma_op->origin_datatype, origin_dtp_ptr);
+        MPIDU_Datatype_get_ptr(rma_op->origin_datatype, origin_dtp_ptr);
         MPIU_Assert(origin_dtp_ptr != NULL && origin_dtp_ptr->basic_type != MPI_DATATYPE_NULL);
-        MPID_Datatype_get_size_macro(origin_dtp_ptr->basic_type, predefined_dtp_size);
+        MPIDU_Datatype_get_size_macro(origin_dtp_ptr->basic_type, predefined_dtp_size);
         predefined_dtp_count = total_len / predefined_dtp_size;
-        MPID_Datatype_get_extent_macro(origin_dtp_ptr->basic_type, predefined_dtp_extent);
+        MPIDU_Datatype_get_extent_macro(origin_dtp_ptr->basic_type, predefined_dtp_extent);
     }
     MPIU_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 && predefined_dtp_extent > 0);
 
@@ -551,7 +551,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 
     /* Get target datatype */
     if (!MPIR_DATATYPE_IS_PREDEFINED(accum_pkt->datatype))
-        MPID_Datatype_get_ptr(accum_pkt->datatype, target_dtp_ptr);
+        MPIDU_Datatype_get_ptr(accum_pkt->datatype, target_dtp_ptr);
 
     rest_len = total_len;
     MPIU_Assert(rma_op->issued_stream_count >= 0);
@@ -655,7 +655,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     MPI_Aint predefined_dtp_size, predefined_dtp_count, predefined_dtp_extent;
     MPI_Aint total_len, rest_len;
     MPI_Aint target_dtp_size;
-    MPID_Datatype *target_dtp_ptr = NULL;
+    MPIDU_Datatype*target_dtp_ptr = NULL;
     void *ext_hdr_ptr = NULL;
     MPI_Aint ext_hdr_sz = 0;
     int mpi_errno = MPI_SUCCESS;
@@ -706,21 +706,21 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     }
 
     /* Get total length of target data */
-    MPID_Datatype_get_size_macro(get_accum_pkt->datatype, target_dtp_size);
+    MPIDU_Datatype_get_size_macro(get_accum_pkt->datatype, target_dtp_size);
     total_len = target_dtp_size * get_accum_pkt->count;
 
     /* Get size and count for predefined datatype elements */
     if (MPIR_DATATYPE_IS_PREDEFINED(get_accum_pkt->datatype)) {
         predefined_dtp_size = target_dtp_size;
         predefined_dtp_count = get_accum_pkt->count;
-        MPID_Datatype_get_extent_macro(get_accum_pkt->datatype, predefined_dtp_extent);
+        MPIDU_Datatype_get_extent_macro(get_accum_pkt->datatype, predefined_dtp_extent);
     }
     else {
-        MPID_Datatype_get_ptr(get_accum_pkt->datatype, target_dtp_ptr);
+        MPIDU_Datatype_get_ptr(get_accum_pkt->datatype, target_dtp_ptr);
         MPIU_Assert(target_dtp_ptr != NULL && target_dtp_ptr->basic_type != MPI_DATATYPE_NULL);
-        MPID_Datatype_get_size_macro(target_dtp_ptr->basic_type, predefined_dtp_size);
+        MPIDU_Datatype_get_size_macro(target_dtp_ptr->basic_type, predefined_dtp_size);
         predefined_dtp_count = total_len / predefined_dtp_size;
-        MPID_Datatype_get_extent_macro(target_dtp_ptr->basic_type, predefined_dtp_extent);
+        MPIDU_Datatype_get_extent_macro(target_dtp_ptr->basic_type, predefined_dtp_extent);
     }
     MPIU_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 && predefined_dtp_extent > 0);
 
@@ -784,8 +784,8 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         resp_req->dev.flags = flags;
 
         if (!MPIR_DATATYPE_IS_PREDEFINED(resp_req->dev.datatype)) {
-            MPID_Datatype *result_dtp = NULL;
-            MPID_Datatype_get_ptr(resp_req->dev.datatype, result_dtp);
+            MPIDU_Datatype*result_dtp = NULL;
+            MPIDU_Datatype_get_ptr(resp_req->dev.datatype, result_dtp);
             resp_req->dev.datatype_ptr = result_dtp;
             /* this will cause the datatype to be freed when the
              * request is freed. */
@@ -882,7 +882,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_VC_t *vc;
     MPID_Comm *comm_ptr;
-    MPID_Datatype *dtp;
+    MPIDU_Datatype*dtp;
     MPI_Datatype target_datatype;
     MPID_Request *req = NULL;
     MPID_Request *curr_req = NULL;
@@ -912,7 +912,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     curr_req->dev.target_win_handle = MPI_WIN_NULL;
     curr_req->dev.source_win_handle = win_ptr->handle;
     if (!MPIR_DATATYPE_IS_PREDEFINED(curr_req->dev.datatype)) {
-        MPID_Datatype_get_ptr(curr_req->dev.datatype, dtp);
+        MPIDU_Datatype_get_ptr(curr_req->dev.datatype, dtp);
         curr_req->dev.datatype_ptr = dtp;
         /* this will cause the datatype to be freed when the
          * request is freed. */
@@ -934,7 +934,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     }
     else {
         /* derived datatype on target. */
-        MPID_Datatype_get_ptr(target_datatype, dtp);
+        MPIDU_Datatype_get_ptr(target_datatype, dtp);
         void *dataloop_ptr = NULL;
 
         /* set extended packet header.
@@ -964,7 +964,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
 
         /* release the target datatype */
-        MPID_Datatype_release(dtp);
+        MPIDU_Datatype_release(dtp);
 
         /* If send is finished, we free extended header immediately.
          * Otherwise, store its pointer in request thus it can be freed when request is freed.*/
@@ -1110,7 +1110,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     }
     else {
         MPI_Aint origin_dtp_size;
-        MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_dtp_size);
+        MPIDU_Datatype_get_size_macro(rma_op->origin_datatype, origin_dtp_size);
         mpi_errno = issue_from_origin_buffer(rma_op, vc, NULL, 0,       /*ext_hdr_ptr, ext_hdr_sz */
                                              0, 1 * origin_dtp_size, &curr_req);
         if (mpi_errno != MPI_SUCCESS)

@@ -12,7 +12,7 @@
 /* #define MPID_TYPE_ALLOC_DEBUG */
 
 /*@
-  MPID_Type_zerolen - create an empty datatype
+  MPIDU_Type_zerolen - create an empty datatype
  
 Input Parameters:
 . none
@@ -24,18 +24,18 @@ Output Parameters:
   MPI_SUCCESS on success, MPI error code on failure.
 @*/
 
-int MPID_Type_zerolen(MPI_Datatype *newtype)
+int MPIDU_Type_zerolen(MPI_Datatype *newtype)
 {
     int mpi_errno;
-    MPID_Datatype *new_dtp;
+    MPIDU_Datatype *new_dtp;
 
     /* allocate new datatype object and handle */
-    new_dtp = (MPID_Datatype *) MPIU_Handle_obj_alloc(&MPID_Datatype_mem);
+    new_dtp = (MPIDU_Datatype *) MPIU_Handle_obj_alloc(&MPIDU_Datatype_mem);
     /* --BEGIN ERROR HANDLING-- */
     if (!new_dtp)
     {
 	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					 "MPID_Type_zerolen",
+					 "MPIDU_Type_zerolen",
 					 __LINE__, MPI_ERR_OTHER,
 					 "**nomem", 0);
 	return mpi_errno;
