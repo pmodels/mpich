@@ -720,9 +720,6 @@ void MPID_Datatype_free(struct MPID_Datatype *ptr);
 void MPID_Dataloop_update(struct DLOOP_Dataloop *dataloop,
 			  MPI_Aint ptrdiff);
 
-MPI_Count MPIR_Type_get_contig_blocks(MPI_Datatype type,
-				MPI_Count *nr_blocks_p);
-
 int MPIR_Type_flatten(MPI_Datatype type,
 		      MPI_Aint *off_array,
 		      DLOOP_Size *size_array,
