@@ -51,7 +51,7 @@ external_subdirs = @mplsrcdir@ @opasrcdir@
 external_ldflags = @mpllibdir@ @opalibdir@
 external_libs = @WRAPPER_LIBS@
 mpi_convenience_libs =
-pmpi_convenience_libs = @mpllib@ @opalib@
+pmpi_convenience_libs = @opalib@ @mpllib@
 
 # NOTE on our semi-unconventional usage of DIST_SUBDIRS:
 # The automake manual recommends thinking of DIST_SUBDIRS as the list of all

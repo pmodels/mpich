@@ -22,6 +22,12 @@ EXTRA_DIST =
 SUFFIXES = 
 doc1_src_txt =
 
+external_subdirs = @mpl_srcdir@
+external_dist_subdirs = @mpl_dist_srcdir@
+external_includes = @mpl_includedir@
+external_ldflags = @mpl_libdir@
+external_libs = -l$(MPLLIBNAME)
+
 # ------------------------------------------------------------------------
 # variables to be populated by the included Makefile.mk fragments:
 
@@ -44,14 +50,14 @@ AM_CPPFLAGS += $(MPI_H_INCLUDE)
 
 # ------------------------------------------------------------------------
 # handle the "include" directory here
-AM_CPPFLAGS += -I$(top_builddir)/include -I$(top_srcdir)/include
+AM_CPPFLAGS += -I$(top_builddir)/include -I$(top_srcdir)/include $(external_includes)
 # nodist_ b/c these are created by config.status and should not be distributed
 nodist_include_HEADERS += include/mpio.h include/mpiof.h
 
 # ------------------------------------------------------------------------
 
-SUBDIRS =
-DIST_SUBDIRS = test test-internal
+SUBDIRS = $(external_subdirs)
+DIST_SUBDIRS = test test-internal $(external_dist_subdirs)
 
 # for the sake of parallel make and avoiding an excessive number of convenience
 # libs, we use a subdir automake fragment strategy
@@ -83,7 +89,12 @@ if BUILD_PROFILING_LIB
 noinst_LTLIBRARIES += libpromio.la
 libpromio_la_SOURCES = $(romio_mpi_sources)
 libpromio_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPIO_BUILD_PROFILING 
-endif BUILD_PROFILING_LIB
+libpromio_la_LDFLAGS = $(external_ldflags)
+libpromio_la_LIBADD = $(external_libs)
+else !BUILD_PROFILING_LIB
+libromio_la_LDFLAGS = $(external_ldflags)
+libromio_la_LIBADD = $(external_libs)
+endif !BUILD_PROFILING_LIB
 
 else !BUILD_ROMIO_EMBEDDED
 lib_LTLIBRARIES = libromio.la
