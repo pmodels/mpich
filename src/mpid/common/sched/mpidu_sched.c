@@ -15,7 +15,7 @@
 #define dprintf fprintf
 #else
 /* FIXME this requires VA_ARGS macros */
-#define dprintf(...) do{}while(0)
+#define dprintf(...) do {} while (0)
 #endif
 
 /* helper macros to improve code readability */
@@ -44,7 +44,7 @@
 
 /* TODO move to a header somewhere? */
 void MPIDU_Sched_dump(struct MPIDU_Sched *s);
-void MPIDU_Sched_dump_fh(struct MPIDU_Sched *s, FILE *fh);
+void MPIDU_Sched_dump_fh(struct MPIDU_Sched *s, FILE * fh);
 
 struct MPIDU_Sched_state {
     struct MPIDU_Sched *head;
@@ -52,7 +52,7 @@ struct MPIDU_Sched_state {
 };
 
 /* holds on to all incomplete schedules on which progress should be made */
-struct MPIDU_Sched_state all_schedules = {NULL};
+struct MPIDU_Sched_state all_schedules = { NULL };
 
 static int nbc_progress_hook_id = 0;
 
@@ -68,10 +68,10 @@ int MPIDU_Sched_are_pending(void)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Sched_next_tag
+#define FUNCNAME MPIDU_Sched_next_tag
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Sched_next_tag(MPID_Comm *comm_ptr, int *tag)
+int MPIDU_Sched_next_tag(MPID_Comm * comm_ptr, int *tag)
 {
     int mpi_errno = MPI_SUCCESS;
     /* TODO there should be an internal accessor/utility macro for getting the
@@ -113,7 +113,7 @@ int MPID_Sched_next_tag(MPID_Comm *comm_ptr, int *tag)
         comm_ptr->next_sched_tag = MPIR_FIRST_NBC_TAG;
     }
 
-fn_fail:
+  fn_fail:
     return mpi_errno;
 }
 
@@ -133,140 +133,152 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
     MPIU_Assert(e->status == MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED);
 
     switch (e->type) {
-        case MPIDU_SCHED_ENTRY_SEND:
-            comm = e->u.send.comm;
-            MPIU_DBG_MSG_D(COMM, VERBOSE, "starting SEND entry %d\n", (int) idx);
-            if (e->u.send.count_p) {
-                /* deferred send */
-                /* originally there was no branch and send.count_p was set to
-                 * &send.count, but this requires patching up the pointers
-                 * during realloc of entries, so this is easier */
-                ret_errno = MPIC_Isend(e->u.send.buf, *e->u.send.count_p, e->u.send.datatype,
-                                       e->u.send.dest, s->tag, comm, &e->u.send.sreq, &r->errflag);
+    case MPIDU_SCHED_ENTRY_SEND:
+        comm = e->u.send.comm;
+        MPIU_DBG_MSG_D(COMM, VERBOSE, "starting SEND entry %d\n", (int) idx);
+        if (e->u.send.count_p) {
+            /* deferred send */
+            /* originally there was no branch and send.count_p was set to
+             * &send.count, but this requires patching up the pointers
+             * during realloc of entries, so this is easier */
+            ret_errno = MPIC_Isend(e->u.send.buf, *e->u.send.count_p, e->u.send.datatype,
+                                   e->u.send.dest, s->tag, comm, &e->u.send.sreq, &r->errflag);
+        }
+        else {
+            if (e->u.send.is_sync) {
+                ret_errno = MPIC_Issend(e->u.send.buf, e->u.send.count, e->u.send.datatype,
+                                        e->u.send.dest, s->tag, comm, &e->u.send.sreq, &r->errflag);
             }
             else {
-                if (e->u.send.is_sync) {
-                    ret_errno = MPIC_Issend(e->u.send.buf, e->u.send.count, e->u.send.datatype,
-                                            e->u.send.dest, s->tag, comm, &e->u.send.sreq, &r->errflag);
+                ret_errno = MPIC_Isend(e->u.send.buf, e->u.send.count, e->u.send.datatype,
+                                       e->u.send.dest, s->tag, comm, &e->u.send.sreq, &r->errflag);
+            }
+        }
+        /* Check if the error is actually fatal to the NBC or we can continue. */
+        if (unlikely(ret_errno)) {
+            if (MPIR_ERR_NONE == r->errflag) {
+                if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(ret_errno)) {
+                    r->errflag = MPIR_ERR_PROC_FAILED;
                 }
                 else {
-                    ret_errno = MPIC_Isend(e->u.send.buf, e->u.send.count, e->u.send.datatype,
-                                           e->u.send.dest, s->tag, comm, &e->u.send.sreq, &r->errflag);
+                    r->errflag = MPIR_ERR_OTHER;
                 }
             }
-            /* Check if the error is actually fatal to the NBC or we can continue. */
+            e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
+            MPIU_DBG_MSG_D(COMM, VERBOSE, "Sched SEND failed. Errflag: %d\n", (int) r->errflag);
+        }
+        else {
+            e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
+        }
+        break;
+    case MPIDU_SCHED_ENTRY_RECV:
+        MPIU_DBG_MSG_D(COMM, VERBOSE, "starting RECV entry %d\n", (int) idx);
+        comm = e->u.recv.comm;
+        ret_errno = MPIC_Irecv(e->u.recv.buf, e->u.recv.count, e->u.recv.datatype,
+                               e->u.recv.src, s->tag, comm, &e->u.recv.rreq);
+        /* Check if the error is actually fatal to the NBC or we can continue. */
+        if (unlikely(ret_errno)) {
+            if (MPIR_ERR_NONE == r->errflag) {
+                if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(ret_errno)) {
+                    r->errflag = MPIR_ERR_PROC_FAILED;
+                }
+                else {
+                    r->errflag = MPIR_ERR_OTHER;
+                }
+            }
+            /* We should set the status to failed here - since the request is not freed. this
+             * will be handled later in MPIDU_Sched_progress_state, so set to started here */
+            e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
+            MPIU_DBG_MSG_D(COMM, VERBOSE, "Sched RECV failed. Errflag: %d\n", (int) r->errflag);
+        }
+        else {
+            e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
+        }
+        break;
+    case MPIDU_SCHED_ENTRY_REDUCE:
+        MPIU_DBG_MSG_D(COMM, VERBOSE, "starting REDUCE entry %d\n", (int) idx);
+        mpi_errno =
+            MPIR_Reduce_local_impl(e->u.reduce.inbuf, e->u.reduce.inoutbuf, e->u.reduce.count,
+                                   e->u.reduce.datatype, e->u.reduce.op);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+        if (HANDLE_GET_KIND(e->u.reduce.op) != HANDLE_KIND_BUILTIN) {
+            MPID_Op *op_ptr = NULL;
+            MPID_Op_get_ptr(e->u.reduce.op, op_ptr);
+            MPIR_Op_release(op_ptr);
+        }
+        dtype_release_if_not_builtin(e->u.reduce.datatype);
+        e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
+        break;
+    case MPIDU_SCHED_ENTRY_COPY:
+        MPIU_DBG_MSG_D(COMM, VERBOSE, "starting COPY entry %d\n", (int) idx);
+        mpi_errno = MPIR_Localcopy(e->u.copy.inbuf, e->u.copy.incount, e->u.copy.intype,
+                                   e->u.copy.outbuf, e->u.copy.outcount, e->u.copy.outtype);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+        dtype_release_if_not_builtin(e->u.copy.intype);
+        dtype_release_if_not_builtin(e->u.copy.outtype);
+        e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
+        break;
+    case MPIDU_SCHED_ENTRY_NOP:
+        MPIU_DBG_MSG_D(COMM, VERBOSE, "starting NOOP entry %d\n", (int) idx);
+        /* nothing to be done */
+        break;
+    case MPIDU_SCHED_ENTRY_CB:
+        MPIU_DBG_MSG_D(COMM, VERBOSE, "starting CB entry %d\n", (int) idx);
+        if (e->u.cb.cb_type == MPIDU_SCHED_CB_TYPE_1) {
+            ret_errno = e->u.cb.u.cb_p(r->comm, s->tag, e->u.cb.cb_state);
+            /* Sched entries list can be reallocated inside callback */
+            e = &s->entries[idx];
             if (unlikely(ret_errno)) {
                 if (MPIR_ERR_NONE == r->errflag) {
                     if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(ret_errno)) {
                         r->errflag = MPIR_ERR_PROC_FAILED;
-                    } else {
+                    }
+                    else {
                         r->errflag = MPIR_ERR_OTHER;
                     }
                 }
                 e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
-                MPIU_DBG_MSG_D(COMM, VERBOSE, "Sched SEND failed. Errflag: %d\n", (int) r->errflag);
-            } else {
-                e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
             }
-            break;
-        case MPIDU_SCHED_ENTRY_RECV:
-            MPIU_DBG_MSG_D(COMM, VERBOSE, "starting RECV entry %d\n", (int) idx);
-            comm = e->u.recv.comm;
-            ret_errno = MPIC_Irecv(e->u.recv.buf, e->u.recv.count, e->u.recv.datatype,
-                                   e->u.recv.src, s->tag, comm, &e->u.recv.rreq);
-            /* Check if the error is actually fatal to the NBC or we can continue. */
+            else {
+                e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
+            }
+        }
+        else if (e->u.cb.cb_type == MPIDU_SCHED_CB_TYPE_2) {
+            ret_errno = e->u.cb.u.cb2_p(r->comm, s->tag, e->u.cb.cb_state, e->u.cb.cb_state2);
+            /* Sched entries list can be reallocated inside callback */
+            e = &s->entries[idx];
             if (unlikely(ret_errno)) {
                 if (MPIR_ERR_NONE == r->errflag) {
                     if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(ret_errno)) {
                         r->errflag = MPIR_ERR_PROC_FAILED;
-                    } else {
+                    }
+                    else {
                         r->errflag = MPIR_ERR_OTHER;
                     }
                 }
-               /* We should set the status to failed here - since the request is not freed. this
-                * will be handled later in MPIDU_Sched_progress_state, so set to started here */
-                e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
-                MPIU_DBG_MSG_D(COMM, VERBOSE, "Sched RECV failed. Errflag: %d\n", (int) r->errflag);
-            } else {
-                e->status = MPIDU_SCHED_ENTRY_STATUS_STARTED;
-            }
-            break;
-        case MPIDU_SCHED_ENTRY_REDUCE:
-            MPIU_DBG_MSG_D(COMM, VERBOSE, "starting REDUCE entry %d\n", (int) idx);
-            mpi_errno = MPIR_Reduce_local_impl(e->u.reduce.inbuf, e->u.reduce.inoutbuf, e->u.reduce.count,
-                                               e->u.reduce.datatype, e->u.reduce.op);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            if (HANDLE_GET_KIND(e->u.reduce.op) != HANDLE_KIND_BUILTIN) {
-                MPID_Op *op_ptr = NULL;
-                MPID_Op_get_ptr(e->u.reduce.op, op_ptr);
-                MPIR_Op_release(op_ptr);
-            }
-            dtype_release_if_not_builtin(e->u.reduce.datatype);
-            e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
-            break;
-        case MPIDU_SCHED_ENTRY_COPY:
-            MPIU_DBG_MSG_D(COMM, VERBOSE, "starting COPY entry %d\n", (int) idx);
-            mpi_errno = MPIR_Localcopy(e->u.copy.inbuf, e->u.copy.incount, e->u.copy.intype,
-                                       e->u.copy.outbuf, e->u.copy.outcount, e->u.copy.outtype);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            dtype_release_if_not_builtin(e->u.copy.intype);
-            dtype_release_if_not_builtin(e->u.copy.outtype);
-            e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
-            break;
-        case MPIDU_SCHED_ENTRY_NOP:
-            MPIU_DBG_MSG_D(COMM, VERBOSE, "starting NOOP entry %d\n", (int) idx);
-            /* nothing to be done */
-            break;
-        case MPIDU_SCHED_ENTRY_CB:
-            MPIU_DBG_MSG_D(COMM, VERBOSE, "starting CB entry %d\n", (int) idx);
-            if (e->u.cb.cb_type == MPIDU_SCHED_CB_TYPE_1) {
-                ret_errno = e->u.cb.u.cb_p(r->comm, s->tag, e->u.cb.cb_state);
-                /* Sched entries list can be reallocated inside callback */
-                e = &s->entries[idx];
-                if (unlikely(ret_errno)) {
-                    if (MPIR_ERR_NONE == r->errflag) {
-                        if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(ret_errno)) {
-                            r->errflag = MPIR_ERR_PROC_FAILED;
-                        } else {
-                            r->errflag = MPIR_ERR_OTHER;
-                        }
-                    }
-                    e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
-                } else {
-                    e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
-                }
-            }
-            else if (e->u.cb.cb_type == MPIDU_SCHED_CB_TYPE_2) {
-                ret_errno = e->u.cb.u.cb2_p(r->comm, s->tag, e->u.cb.cb_state, e->u.cb.cb_state2);
-                /* Sched entries list can be reallocated inside callback */
-                e = &s->entries[idx];
-                if (unlikely(ret_errno)) {
-                    if (MPIR_ERR_NONE == r->errflag) {
-                        if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(ret_errno)) {
-                            r->errflag = MPIR_ERR_PROC_FAILED;
-                        } else {
-                            r->errflag = MPIR_ERR_OTHER;
-                        }
-                    }
-                    e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
-                } else {
-                    e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
-                }
+                e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
             }
             else {
-                MPIU_DBG_MSG_D(COMM, TYPICAL, "unknown callback type, e->u.cb.cb_type=%d", e->u.cb.cb_type);
                 e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
             }
+        }
+        else {
+            MPIU_DBG_MSG_D(COMM, TYPICAL, "unknown callback type, e->u.cb.cb_type=%d",
+                           e->u.cb.cb_type);
+            e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
+        }
 
-            break;
-        default:
-            MPIU_DBG_MSG_D(COMM, TYPICAL, "unknown entry type, e->type=%d", e->type);
-            break;
+        break;
+    default:
+        MPIU_DBG_MSG_D(COMM, TYPICAL, "unknown entry type, e->type=%d", e->type);
+        break;
     }
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
     if (r)
         r->status.MPI_ERROR = mpi_errno;
@@ -292,34 +304,35 @@ static int MPIDU_Sched_continue(struct MPIDU_Sched *s)
             mpi_errno = MPIDU_Sched_start_entry(s, i, e);
             /* Sched entries list can be reallocated inside callback */
             e = &s->entries[i];
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+            if (mpi_errno)
+                MPIR_ERR_POP(mpi_errno);
         }
 
         /* _start_entry may have completed the operation, but won't update s->idx */
         if (i == s->idx && e->status >= MPIDU_SCHED_ENTRY_STATUS_COMPLETE) {
-            ++s->idx; /* this is valid even for barrier entries */
+            ++s->idx;   /* this is valid even for barrier entries */
         }
 
         /* watch the indexing, s->idx might have been incremented above, so
          * ||-short-circuit matters here */
-        if (e->is_barrier && (e->status < MPIDU_SCHED_ENTRY_STATUS_COMPLETE || (s->idx != i+1))) {
+        if (e->is_barrier && (e->status < MPIDU_SCHED_ENTRY_STATUS_COMPLETE || (s->idx != i + 1))) {
             /* we've hit a barrier but outstanding operations before this
              * barrier remain, so we cannot proceed past the barrier */
             break;
         }
     }
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Sched_create
+#define FUNCNAME MPIDU_Sched_create
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* creates a new opaque schedule object and returns a handle to it in (*sp) */
-int MPID_Sched_create(MPID_Sched_t *sp)
+int MPIDU_Sched_create(MPID_Sched_t * sp)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched *s;
@@ -328,7 +341,8 @@ int MPID_Sched_create(MPID_Sched_t *sp)
     *sp = NULL;
 
     /* this mem will be freed by the progress engine when the request is completed */
-    MPIU_CHKPMEM_MALLOC(s, struct MPIDU_Sched *, sizeof(struct MPIDU_Sched), mpi_errno, "schedule object");
+    MPIU_CHKPMEM_MALLOC(s, struct MPIDU_Sched *, sizeof(struct MPIDU_Sched), mpi_errno,
+                        "schedule object");
 
     s->size = MPIDU_SCHED_INITIAL_ENTRIES;
     s->idx = 0;
@@ -336,29 +350,31 @@ int MPID_Sched_create(MPID_Sched_t *sp)
     s->tag = -1;
     s->req = NULL;
     s->entries = NULL;
-    s->next = NULL; /* only needed for sanity checks */
-    s->prev = NULL; /* only needed for sanity checks */
+    s->next = NULL;     /* only needed for sanity checks */
+    s->prev = NULL;     /* only needed for sanity checks */
 
     /* this mem will be freed by the progress engine when the request is completed */
-    MPIU_CHKPMEM_MALLOC(s->entries, struct MPIDU_Sched_entry *, MPIDU_SCHED_INITIAL_ENTRIES*sizeof(struct MPIDU_Sched_entry), mpi_errno, "schedule entries vector");
+    MPIU_CHKPMEM_MALLOC(s->entries, struct MPIDU_Sched_entry *,
+                        MPIDU_SCHED_INITIAL_ENTRIES * sizeof(struct MPIDU_Sched_entry), mpi_errno,
+                        "schedule entries vector");
 
     /* TODO in a debug build, defensively mark all entries as status=INVALID */
 
     MPIU_CHKPMEM_COMMIT();
     *sp = s;
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     MPIU_CHKPMEM_REAP();
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Sched_clone
+#define FUNCNAME MPIDU_Sched_clone
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* clones orig and returns a handle to the new schedule in (*cloned) */
-int MPID_Sched_clone(MPID_Sched_t orig, MPID_Sched_t *cloned)
+int MPIDU_Sched_clone(MPID_Sched_t orig, MPID_Sched_t * cloned)
 {
     int mpi_errno = MPI_SUCCESS;
     /* TODO implement this function for real */
@@ -368,12 +384,12 @@ int MPID_Sched_clone(MPID_Sched_t orig, MPID_Sched_t *cloned)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Sched_start
+#define FUNCNAME MPIDU_Sched_start
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* sets (*sp) to MPID_SCHED_NULL and gives you back a request pointer in (*req).
  * The caller is giving up ownership of the opaque schedule object. */
-int MPID_Sched_start(MPID_Sched_t *sp, MPID_Comm *comm, int tag, MPID_Request **req)
+int MPIDU_Sched_start(MPID_Sched_t * sp, MPID_Comm * comm, int tag, MPID_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *r;
@@ -392,7 +408,8 @@ int MPID_Sched_start(MPID_Sched_t *sp, MPID_Comm *comm, int tag, MPID_Request **
 
     /* now create and populate the request */
     r = MPID_Request_create();
-    if (!r) MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
+    if (!r)
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     r->kind = MPID_COLL_REQUEST;
     /* FIXME is this right when comm/datatype GC is used? */
     MPIR_Comm_add_ref(comm);
@@ -410,14 +427,15 @@ int MPID_Sched_start(MPID_Sched_t *sp, MPID_Comm *comm, int tag, MPID_Request **
      * engine about this req+sched, otherwise we have more MT issues to worry
      * about.  Skipping this step will increase latency. */
     mpi_errno = MPIDU_Sched_continue(s);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     /* finally, enqueue in the list of all pending schedules so that the
      * progress engine can make progress on it */
     if (all_schedules.head == NULL) {
-        mpi_errno = MPID_Progress_register_hook(MPIDU_Sched_progress,
-                                                &nbc_progress_hook_id);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        mpi_errno = MPID_Progress_register_hook(MPIDU_Sched_progress, &nbc_progress_hook_id);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 
         MPID_Progress_activate_hook(nbc_progress_hook_id);
     }
@@ -426,14 +444,14 @@ int MPID_Sched_start(MPID_Sched_t *sp, MPID_Comm *comm, int tag, MPID_Request **
     MPIU_DBG_MSG_P(COMM, TYPICAL, "started schedule s=%p\n", s);
     MPIDU_Sched_dump(s);
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     if (*req)
         *req = NULL;
     if (r) {
-        MPID_Request_release(r); /* the schedule's ref */
-        MPID_Request_release(r); /* the user's ref */
+        MPID_Request_release(r);        /* the schedule's ref */
+        MPID_Request_release(r);        /* the user's ref */
     }
 
     goto fn_exit;
@@ -456,8 +474,9 @@ static int MPIDU_Sched_add_entry(struct MPIDU_Sched *s, int *idx, struct MPIDU_S
 
     if (s->num_entries == s->size) {
         /* need to grow the entries array */
-        s->entries = MPIU_Realloc(s->entries, 2*s->size*sizeof(struct MPIDU_Sched_entry));
-        if (s->entries == NULL) MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
+        s->entries = MPIU_Realloc(s->entries, 2 * s->size * sizeof(struct MPIDU_Sched_entry));
+        if (s->entries == NULL)
+            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
         s->size *= 2;
     }
 
@@ -468,24 +487,26 @@ static int MPIDU_Sched_add_entry(struct MPIDU_Sched *s, int *idx, struct MPIDU_S
         *idx = i;
     if (e != NULL)
         *e = ei;
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Sched_send
+#define FUNCNAME MPIDU_Sched_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* do these ops need an entry handle returned? */
-int MPID_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s)
+int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
+                     MPID_Comm * comm, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
 
     mpi_errno = MPIDU_Sched_add_entry(s, NULL, &e);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     e->type = MPIDU_SCHED_ENTRY_SEND;
     e->status = MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED;
@@ -496,7 +517,7 @@ int MPID_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int 
     e->u.send.count_p = NULL;
     e->u.send.datatype = datatype;
     e->u.send.dest = dest;
-    e->u.send.sreq = NULL; /* will be populated by _start_entry */
+    e->u.send.sreq = NULL;      /* will be populated by _start_entry */
     e->u.send.comm = comm;
     e->u.send.is_sync = FALSE;
 
@@ -506,24 +527,26 @@ int MPID_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int 
     MPIR_Comm_add_ref(comm);
     dtype_add_ref_if_not_builtin(datatype);
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Sched_ssend
+#define FUNCNAME MPIDU_Sched_ssend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s)
+int MPIDU_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
+                      MPID_Comm * comm, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
 
     mpi_errno = MPIDU_Sched_add_entry(s, NULL, &e);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     e->type = MPIDU_SCHED_ENTRY_SEND;
     e->status = MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED;
@@ -534,7 +557,7 @@ int MPID_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int
     e->u.send.count_p = NULL;
     e->u.send.datatype = datatype;
     e->u.send.dest = dest;
-    e->u.send.sreq = NULL; /* will be populated by _start_entry */
+    e->u.send.sreq = NULL;      /* will be populated by _start_entry */
     e->u.send.comm = comm;
     e->u.send.is_sync = TRUE;
 
@@ -544,24 +567,26 @@ int MPID_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int
     MPIR_Comm_add_ref(comm);
     dtype_add_ref_if_not_builtin(datatype);
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Sched_send_defer
+#define FUNCNAME MPIDU_Sched_send_defer
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Sched_send_defer(const void *buf, const MPI_Aint *count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s)
+int MPIDU_Sched_send_defer(const void *buf, const MPI_Aint * count, MPI_Datatype datatype, int dest,
+                           MPID_Comm * comm, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
 
     mpi_errno = MPIDU_Sched_add_entry(s, NULL, &e);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     e->type = MPIDU_SCHED_ENTRY_SEND;
     e->status = MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED;
@@ -572,7 +597,7 @@ int MPID_Sched_send_defer(const void *buf, const MPI_Aint *count, MPI_Datatype d
     e->u.send.count_p = count;
     e->u.send.datatype = datatype;
     e->u.send.dest = dest;
-    e->u.send.sreq = NULL; /* will be populated by _start_entry */
+    e->u.send.sreq = NULL;      /* will be populated by _start_entry */
     e->u.send.comm = comm;
     e->u.send.is_sync = FALSE;
 
@@ -582,23 +607,25 @@ int MPID_Sched_send_defer(const void *buf, const MPI_Aint *count, MPI_Datatype d
     MPIR_Comm_add_ref(comm);
     dtype_add_ref_if_not_builtin(datatype);
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Sched_recv_status
+#define FUNCNAME MPIDU_Sched_recv_status
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, MPID_Comm *comm, MPI_Status *status, MPID_Sched_t s)
+int MPIDU_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, int src,
+                            MPID_Comm * comm, MPI_Status * status, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
 
     mpi_errno = MPIDU_Sched_add_entry(s, NULL, &e);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     e->type = MPIDU_SCHED_ENTRY_RECV;
     e->status = MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED;
@@ -608,30 +635,32 @@ int MPID_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, int
     e->u.recv.count = count;
     e->u.recv.datatype = datatype;
     e->u.recv.src = src;
-    e->u.recv.rreq = NULL; /* will be populated by _start_entry */
+    e->u.recv.rreq = NULL;      /* will be populated by _start_entry */
     e->u.recv.comm = comm;
     e->u.recv.status = status;
     status->MPI_ERROR = MPI_SUCCESS;
     MPIR_Comm_add_ref(comm);
     dtype_add_ref_if_not_builtin(datatype);
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Sched_recv
+#define FUNCNAME MPIDU_Sched_recv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, MPID_Comm *comm, MPID_Sched_t s)
+int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, MPID_Comm * comm,
+                     MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
 
     mpi_errno = MPIDU_Sched_add_entry(s, NULL, &e);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     e->type = MPIDU_SCHED_ENTRY_RECV;
     e->status = MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED;
@@ -641,31 +670,33 @@ int MPID_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, M
     e->u.recv.count = count;
     e->u.recv.datatype = datatype;
     e->u.recv.src = src;
-    e->u.recv.rreq = NULL; /* will be populated by _start_entry */
+    e->u.recv.rreq = NULL;      /* will be populated by _start_entry */
     e->u.recv.comm = comm;
     e->u.recv.status = MPI_STATUS_IGNORE;
 
     MPIR_Comm_add_ref(comm);
     dtype_add_ref_if_not_builtin(datatype);
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Sched_reduce
+#define FUNCNAME MPIDU_Sched_reduce
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype, MPI_Op op, MPID_Sched_t s)
+int MPIDU_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,
+                       MPI_Op op, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
     struct MPIDU_Sched_reduce *reduce = NULL;
 
     mpi_errno = MPIDU_Sched_add_entry(s, NULL, &e);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     e->type = MPIDU_SCHED_ENTRY_REDUCE;
     e->status = MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED;
@@ -685,14 +716,14 @@ int MPID_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Dat
         MPIR_Op_add_ref(op_ptr);
     }
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Sched_copy
+#define FUNCNAME MPIDU_Sched_copy
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* Schedules a copy of "incount" copies of "intype" from "inbuf" to "outbuf" as
@@ -702,15 +733,16 @@ fn_fail:
  *
  * Packing/unpacking can be accomplished by passing MPI_PACKED as either intype
  * or outtype. */
-int MPID_Sched_copy(const void *inbuf,  MPI_Aint incount,  MPI_Datatype intype,
-                    void *outbuf, MPI_Aint outcount, MPI_Datatype outtype, MPID_Sched_t s)
+int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype,
+                     void *outbuf, MPI_Aint outcount, MPI_Datatype outtype, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
     struct MPIDU_Sched_copy *copy = NULL;
 
     mpi_errno = MPIDU_Sched_add_entry(s, NULL, &e);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     e->type = MPIDU_SCHED_ENTRY_COPY;
     e->status = MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED;
@@ -742,47 +774,48 @@ int MPID_Sched_copy(const void *inbuf,  MPI_Aint incount,  MPI_Datatype intype,
     }
 #endif
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Sched_barrier
+#define FUNCNAME MPIDU_Sched_barrier
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* require that all previously added ops are complete before subsequent ops
  * may begin to execute */
-int MPID_Sched_barrier(MPID_Sched_t s)
+int MPIDU_Sched_barrier(MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
     /* mark the previous entry as a barrier unless we're at the beginning, which
      * would be a pointless barrier */
     if (s->num_entries > 0) {
-        s->entries[s->num_entries-1].is_barrier = TRUE;
+        s->entries[s->num_entries - 1].is_barrier = TRUE;
     }
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Sched_cb
+#define FUNCNAME MPIDU_Sched_cb
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* buffer management, fancy reductions, etc */
-int MPID_Sched_cb(MPID_Sched_cb_t *cb_p, void *cb_state, MPID_Sched_t s)
+int MPIDU_Sched_cb(MPID_Sched_cb_t * cb_p, void *cb_state, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
     struct MPIDU_Sched_cb *cb = NULL;
 
     mpi_errno = MPIDU_Sched_add_entry(s, NULL, &e);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     e->type = MPIDU_SCHED_ENTRY_CB;
     e->status = MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED;
@@ -794,25 +827,26 @@ int MPID_Sched_cb(MPID_Sched_cb_t *cb_p, void *cb_state, MPID_Sched_t s)
     cb->cb_state = cb_state;
     cb->cb_state2 = NULL;
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Sched_cb2
+#define FUNCNAME MPIDU_Sched_cb2
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* buffer management, fancy reductions, etc */
-int MPID_Sched_cb2(MPID_Sched_cb2_t *cb_p, void *cb_state, void *cb_state2, MPID_Sched_t s)
+int MPIDU_Sched_cb2(MPID_Sched_cb2_t * cb_p, void *cb_state, void *cb_state2, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
     struct MPIDU_Sched_cb *cb = NULL;
 
     mpi_errno = MPIDU_Sched_add_entry(s, NULL, &e);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     e->type = MPIDU_SCHED_ENTRY_CB;
     e->status = MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED;
@@ -824,9 +858,9 @@ int MPID_Sched_cb2(MPID_Sched_cb2_t *cb_p, void *cb_state, void *cb_state2, MPID
     cb->cb_state = cb_state;
     cb->cb_state2 = cb_state2;
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -846,49 +880,53 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
         *made_progress = FALSE;
 
     MPL_DL_FOREACH_SAFE(state->head, s, tmp) {
-        /*MPIDU_Sched_dump(s);*/
+        /*MPIDU_Sched_dump(s); */
 
         for (i = s->idx; i < s->num_entries; ++i) {
             struct MPIDU_Sched_entry *e = &s->entries[i];
 
             switch (e->type) {
-                case MPIDU_SCHED_ENTRY_SEND:
-                    if (e->u.send.sreq != NULL && MPID_Request_is_complete(e->u.send.sreq)) {
-                        MPIU_DBG_MSG_FMT(COMM, VERBOSE, (MPIU_DBG_FDEST, "completed SEND entry %d, sreq=%p\n", (int) i, e->u.send.sreq));
-                        if (s->req->errflag != MPIR_ERR_NONE)
-                            e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
-                        else
-                            e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
-                        MPID_Request_release(e->u.send.sreq);
-                        e->u.send.sreq = NULL;
-                        MPIR_Comm_release(e->u.send.comm);
-                        dtype_release_if_not_builtin(e->u.send.datatype);
+            case MPIDU_SCHED_ENTRY_SEND:
+                if (e->u.send.sreq != NULL && MPID_Request_is_complete(e->u.send.sreq)) {
+                    MPIU_DBG_MSG_FMT(COMM, VERBOSE,
+                                     (MPIU_DBG_FDEST, "completed SEND entry %d, sreq=%p\n", (int) i,
+                                      e->u.send.sreq));
+                    if (s->req->errflag != MPIR_ERR_NONE)
+                        e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
+                    else
+                        e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
+                    MPID_Request_release(e->u.send.sreq);
+                    e->u.send.sreq = NULL;
+                    MPIR_Comm_release(e->u.send.comm);
+                    dtype_release_if_not_builtin(e->u.send.datatype);
+                }
+                break;
+            case MPIDU_SCHED_ENTRY_RECV:
+                if (e->u.recv.rreq != NULL && MPID_Request_is_complete(e->u.recv.rreq)) {
+                    MPIU_DBG_MSG_FMT(COMM, VERBOSE,
+                                     (MPIU_DBG_FDEST, "completed RECV entry %d, rreq=%p\n", (int) i,
+                                      e->u.recv.rreq));
+                    MPIR_Process_status(&e->u.recv.rreq->status, &s->req->errflag);
+                    if (e->u.recv.status != MPI_STATUS_IGNORE) {
+                        int recvd;
+                        e->u.recv.status->MPI_ERROR = e->u.recv.rreq->status.MPI_ERROR;
+                        MPIR_Get_count_impl(&e->u.recv.rreq->status, MPI_BYTE, &recvd);
+                        MPIR_STATUS_SET_COUNT(*(e->u.recv.status), recvd);
                     }
-                    break;
-                case MPIDU_SCHED_ENTRY_RECV:
-                    if (e->u.recv.rreq != NULL && MPID_Request_is_complete(e->u.recv.rreq)) {
-                        MPIU_DBG_MSG_FMT(COMM, VERBOSE, (MPIU_DBG_FDEST, "completed RECV entry %d, rreq=%p\n", (int) i, e->u.recv.rreq));
-                        MPIR_Process_status(&e->u.recv.rreq->status, &s->req->errflag);
-                        if (e->u.recv.status != MPI_STATUS_IGNORE) {
-                            int recvd;
-                            e->u.recv.status->MPI_ERROR = e->u.recv.rreq->status.MPI_ERROR;
-                            MPIR_Get_count_impl(&e->u.recv.rreq->status, MPI_BYTE, &recvd);
-                            MPIR_STATUS_SET_COUNT(*(e->u.recv.status), recvd);
-                        }
-                        if (s->req->errflag != MPIR_ERR_NONE)
-                            e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
-                        else
-                            e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
-                        MPID_Request_release(e->u.recv.rreq);
-                        e->u.recv.rreq = NULL;
-                        MPIR_Comm_release(e->u.recv.comm);
-                        dtype_release_if_not_builtin(e->u.recv.datatype);
-                    }
-                    break;
-                default:
-                    /* all other entry types don't have any sub-requests that
-                     * need to be checked */
-                    break;
+                    if (s->req->errflag != MPIR_ERR_NONE)
+                        e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
+                    else
+                        e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
+                    MPID_Request_release(e->u.recv.rreq);
+                    e->u.recv.rreq = NULL;
+                    MPIR_Comm_release(e->u.recv.comm);
+                    dtype_release_if_not_builtin(e->u.recv.datatype);
+                }
+                break;
+            default:
+                /* all other entry types don't have any sub-requests that
+                 * need to be checked */
+                break;
             }
 
             if (i == s->idx && e->status >= MPIDU_SCHED_ENTRY_STATUS_COMPLETE) {
@@ -897,7 +935,8 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                 if (e->is_barrier) {
                     /* post/perform the next round of operations */
                     mpi_errno = MPIDU_Sched_continue(s);
-                    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+                    if (mpi_errno)
+                        MPIR_ERR_POP(mpi_errno);
                 }
             }
             else if (e->is_barrier && e->status < MPIDU_SCHED_ENTRY_STATUS_COMPLETE) {
@@ -907,22 +946,23 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
         }
 
         if (s->idx == s->num_entries) {
-            MPIU_DBG_MSG_FMT(COMM, VERBOSE, (MPIU_DBG_FDEST, "completing and dequeuing s=%p r=%p\n", s, s->req));
+            MPIU_DBG_MSG_FMT(COMM, VERBOSE,
+                             (MPIU_DBG_FDEST, "completing and dequeuing s=%p r=%p\n", s, s->req));
 
             /* dequeue this schedule from the state, it's complete */
             MPL_DL_DELETE(state->head, s);
 
             /* TODO refactor into a sched_complete routine? */
             switch (s->req->errflag) {
-                case MPIR_ERR_PROC_FAILED:
-                    MPIR_ERR_SET(s->req->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**comm");
-                    break;
-                case MPIR_ERR_OTHER:
-                    MPIR_ERR_SET(s->req->status.MPI_ERROR, MPI_ERR_OTHER, "**comm");
-                    break;
-                case MPIR_ERR_NONE:
-                default:
-                    break;
+            case MPIR_ERR_PROC_FAILED:
+                MPIR_ERR_SET(s->req->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**comm");
+                break;
+            case MPIR_ERR_OTHER:
+                MPIR_ERR_SET(s->req->status.MPI_ERROR, MPI_ERR_OTHER, "**comm");
+                break;
+            case MPIR_ERR_NONE:
+            default:
+                break;
             }
 
             mpi_errno = MPID_Request_complete(s->req);
@@ -939,9 +979,9 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
         }
     }
 
-fn_exit:
+  fn_exit:
     return mpi_errno;
-fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -963,24 +1003,24 @@ int MPIDU_Sched_progress(int *made_progress)
     return mpi_errno;
 }
 
-static const char *entry_to_str(enum MPIDU_Sched_entry_type type) ATTRIBUTE((unused,used));
+static const char *entry_to_str(enum MPIDU_Sched_entry_type type) ATTRIBUTE((unused, used));
 static const char *entry_to_str(enum MPIDU_Sched_entry_type type)
 {
-    switch(type) {
-        case MPIDU_SCHED_ENTRY_SEND:
-            return "SEND";
-        case MPIDU_SCHED_ENTRY_RECV:
-            return "RECV";
-        case MPIDU_SCHED_ENTRY_REDUCE:
-            return "REDUCE";
-        case MPIDU_SCHED_ENTRY_COPY:
-            return "COPY";
-        case MPIDU_SCHED_ENTRY_NOP:
-            return "NOP";
-        case MPIDU_SCHED_ENTRY_CB:
-            return "CB";
-        default:
-            return "(out of range)";
+    switch (type) {
+    case MPIDU_SCHED_ENTRY_SEND:
+        return "SEND";
+    case MPIDU_SCHED_ENTRY_RECV:
+        return "RECV";
+    case MPIDU_SCHED_ENTRY_REDUCE:
+        return "REDUCE";
+    case MPIDU_SCHED_ENTRY_COPY:
+        return "COPY";
+    case MPIDU_SCHED_ENTRY_NOP:
+        return "NOP";
+    case MPIDU_SCHED_ENTRY_CB:
+        return "CB";
+    default:
+        return "(out of range)";
     }
 }
 
@@ -989,7 +1029,7 @@ static const char *entry_to_str(enum MPIDU_Sched_entry_type type)
 #define FUNCNAME MPIDU_Sched_dump_fh
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPIDU_Sched_dump_fh(struct MPIDU_Sched *s, FILE *fh)
+void MPIDU_Sched_dump_fh(struct MPIDU_Sched *s, FILE * fh)
 {
     int i;
     dprintf(fh, "--------------------------------\n");
@@ -1005,14 +1045,15 @@ void MPIDU_Sched_dump_fh(struct MPIDU_Sched *s, FILE *fh)
             dprintf(fh, "&s->entries[%d]=%p\n", i, &s->entries[i]);
             dprintf(fh, "s->entries[%d].type=%s\n", i, entry_to_str(s->entries[i].type));
             dprintf(fh, "s->entries[%d].status=%d\n", i, s->entries[i].status);
-            dprintf(fh, "s->entries[%d].is_barrier=%s\n", i, (s->entries[i].is_barrier ? "TRUE" : "FALSE"));
+            dprintf(fh, "s->entries[%d].is_barrier=%s\n", i,
+                    (s->entries[i].is_barrier ? "TRUE" : "FALSE"));
         }
     }
     dprintf(fh, "--------------------------------\n");
     /*
-    dprintf(fh, "s->next=%p\n", s->next);
-    dprintf(fh, "s->prev=%p\n", s->prev);
-    */
+     * dprintf(fh, "s->next=%p\n", s->next);
+     * dprintf(fh, "s->prev=%p\n", s->prev);
+     */
 }
 
 /* utility function for debugging, dumps the given schedule object to stderr */
@@ -1024,4 +1065,3 @@ void MPIDU_Sched_dump(struct MPIDU_Sched *s)
 {
     MPIDU_Sched_dump_fh(s, stderr);
 }
-

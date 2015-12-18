@@ -41,6 +41,8 @@
  * mechanism as well.
  */
 
+#define MPID_SCHED_NULL (NULL)
+
 /* Open question: should tag allocation be rolled into Sched_start?  Keeping it
  * separate potentially allows more parallelism in the future, but it also
  * pushes more work onto the clients of this interface. */
@@ -98,12 +100,6 @@ int MPID_Sched_send_defer(const void *buf, const MPI_Aint *count, MPI_Datatype d
  * useful in conjunction with MPID_Sched_send_defer. */
 int MPID_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, MPID_Comm *comm, MPI_Status *status, MPID_Sched_t s);
 
-/* Sched_cb_t funcitons take a comm parameter, the value of which will be the
- * comm passed to Sched_start */
-/* callback entries must be used judiciously, otherwise they will prevent
- * caching opportunities */
-typedef int (MPID_Sched_cb_t)(MPID_Comm *comm, int tag, void *state);
-typedef int (MPID_Sched_cb2_t)(MPID_Comm *comm, int tag, void *state, void *state2);
 /* buffer management, fancy reductions, etc */
 int MPID_Sched_cb(MPID_Sched_cb_t *cb_p, void *cb_state, MPID_Sched_t s);
 int MPID_Sched_cb2(MPID_Sched_cb2_t *cb_p, void *cb_state, void *cb_state2, MPID_Sched_t s);

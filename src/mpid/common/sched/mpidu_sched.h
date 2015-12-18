@@ -4,16 +4,15 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-/* this file should be included by the using device's mpidimpl.h */
+#ifndef MPIDU_SCHED_H_INCLUDED
+#define MPIDU_SCHED_H_INCLUDED
 
-#ifndef MPID_SCHED_H_INCLUDED
-#define MPID_SCHED_H_INCLUDED
-
+//#include "mpidu_pre.h"
 /* FIXME open questions:
  * - Should the schedule hold a pointer to the nbc request and the nbc request
  *   hold a pointer to the schedule?  This could cause MT issues.
  */
-
+#include "mpidu_pre.h"
 
 enum MPIDU_Sched_entry_type {
     MPIDU_SCHED_ENTRY_INVALID_LB = 0,
@@ -34,9 +33,9 @@ struct MPIDU_Sched_send {
     const MPI_Aint *count_p;
     MPI_Datatype datatype;
     int dest;
-    MPID_Comm *comm;
-    MPID_Request *sreq;
-    int is_sync; /* TRUE iff this send is an ssend */
+    struct MPID_Comm *comm;
+    struct MPID_Request *sreq;
+    int is_sync;                /* TRUE iff this send is an ssend */
 };
 
 struct MPIDU_Sched_recv {
@@ -44,8 +43,8 @@ struct MPIDU_Sched_recv {
     MPI_Aint count;
     MPI_Datatype datatype;
     int src;
-    MPID_Comm *comm;
-    MPID_Request *rreq;
+    struct MPID_Comm *comm;
+    struct MPID_Request *rreq;
     MPI_Status *status;
 };
 
@@ -69,8 +68,8 @@ struct MPIDU_Sched_copy {
 /* nop entries have no args, so no structure is needed */
 
 enum MPIDU_Sched_cb_type {
-    MPIDU_SCHED_CB_TYPE_1 = 0, /* single state arg type --> MPID_Sched_cb_t */
-    MPIDU_SCHED_CB_TYPE_2      /* double state arg type --> MPID_Sched_cb2_t */
+    MPIDU_SCHED_CB_TYPE_1 = 0,  /* single state arg type --> MPID_Sched_cb_t */
+    MPIDU_SCHED_CB_TYPE_2       /* double state arg type --> MPID_Sched_cb2_t */
 };
 
 struct MPIDU_Sched_cb {
@@ -80,15 +79,15 @@ struct MPIDU_Sched_cb {
         MPID_Sched_cb2_t *cb2_p;
     } u;
     void *cb_state;
-    void *cb_state2; /* unused for single-param callbacks */
+    void *cb_state2;            /* unused for single-param callbacks */
 };
 
 enum MPIDU_Sched_entry_status {
     MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED = 0,
     MPIDU_SCHED_ENTRY_STATUS_STARTED,
     MPIDU_SCHED_ENTRY_STATUS_COMPLETE,
-    MPIDU_SCHED_ENTRY_STATUS_FAILED, /* indicates a failure occurred while executing the entry */
-    MPIDU_SCHED_ENTRY_STATUS_INVALID /* indicates an invalid entry, or invalid status value */
+    MPIDU_SCHED_ENTRY_STATUS_FAILED,    /* indicates a failure occurred while executing the entry */
+    MPIDU_SCHED_ENTRY_STATUS_INVALID    /* indicates an invalid entry, or invalid status value */
 };
 
 /* Use a tagged union for schedule entries.  Not always space optimal, but saves
@@ -108,19 +107,35 @@ struct MPIDU_Sched_entry {
 };
 
 struct MPIDU_Sched {
-    size_t size; /* capacity (in entries) of the entries array */
-    size_t idx;  /* index into entries array of first yet-outstanding entry */
-    int num_entries; /* number of populated entries, num_entries <= size */
+    size_t size;                /* capacity (in entries) of the entries array */
+    size_t idx;                 /* index into entries array of first yet-outstanding entry */
+    int num_entries;            /* number of populated entries, num_entries <= size */
     int tag;
-    MPID_Request *req; /* really needed? could cause MT problems... */
+    struct MPID_Request *req;   /* really needed? could cause MT problems... */
     struct MPIDU_Sched_entry *entries;
 
-    struct MPIDU_Sched *next; /* linked-list next pointer */
-    struct MPIDU_Sched *prev; /* linked-list next pointer */
+    struct MPIDU_Sched *next;   /* linked-list next pointer */
+    struct MPIDU_Sched *prev;   /* linked-list next pointer */
 };
 
 /* prototypes */
 int MPIDU_Sched_progress(int *made_progress);
 int MPIDU_Sched_are_pending(void);
+int MPIDU_Sched_next_tag(struct MPID_Comm *comm_ptr, int *tag);
+int MPIDU_Sched_create(MPID_Sched_t * sp);
+int MPIDU_Sched_clone(MPID_Sched_t orig, MPID_Sched_t * cloned);
+int MPIDU_Sched_start(MPID_Sched_t * sp, struct MPID_Comm *comm, int tag,
+                      struct MPID_Request **req);
+int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
+                     struct MPID_Comm *comm, MPID_Sched_t s);
+int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src,
+                     struct MPID_Comm *comm, MPID_Sched_t s);
+int MPID_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
+                     struct MPID_Comm *comm, MPID_Sched_t s);
+int MPID_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,
+                      MPI_Op op, MPID_Sched_t s);
+int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype, void *outbuf,
+                     MPI_Aint outcount, MPI_Datatype outtype, MPID_Sched_t s);
+int MPIDU_Sched_barrier(MPID_Sched_t s);
 
-#endif /* !defined(MPID_SCHED_H_INCLUDED) */
+#endif /* !defined(MPIDU_SCHED_H_INCLUDED) */
