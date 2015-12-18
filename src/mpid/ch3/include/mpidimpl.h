@@ -21,16 +21,10 @@
 
 #include "mpiimpl.h"
 
-#if !defined(MPICH_MPIDPRE_H_INCLUDED)
-#include "mpidpre.h"
-#endif
-
 #include "mpidftb.h"
 
 /* Add the ch3 packet definitions */
 #include "mpidpkt.h"
-
-#include "mpid_sched.h"
 
 /* We need to match the size of MPIU_Pint to the relevant Format control
  */

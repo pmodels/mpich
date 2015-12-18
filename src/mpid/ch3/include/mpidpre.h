@@ -28,6 +28,8 @@ typedef MPIU_Pint MPIDI_msg_sz_t;
 
 #include "mpid_thread.h"
 
+#include "mpid_sched.h"
+
 /* We simply use the fallback timer functionality and do not define
  * our own */
 #include "mpid_timers_fallback.h"
@@ -83,9 +85,6 @@ typedef int32_t MPIDI_Rank_t;
 #define MPID_USE_NODE_IDS
 typedef MPIDI_Rank_t MPID_Node_id_t;
 
-
-/* provides "pre" typedefs and such for NBC scheduling mechanism */
-#include "mpid_sched_pre.h"
 
 /* For the typical communication system for which the ch3 channel is
    appropriate, 16 bits is sufficient for the rank.  By also using 16
