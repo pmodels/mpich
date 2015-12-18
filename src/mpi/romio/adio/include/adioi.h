@@ -1087,4 +1087,6 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
 
 #endif
 
+#include "mpl.h"
+
 #endif  /* ADIOI_INCLUDE */

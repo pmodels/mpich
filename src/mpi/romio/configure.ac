@@ -84,6 +84,44 @@ DEBUG=no
 MIPS=0
 BITS=0
 
+# MPL
+AC_ARG_VAR([MPLLIBNAME],[can be used to override the name of the MPL library (default: "mpl")])
+MPLLIBNAME=${MPLLIBNAME:-"mpl"}
+export MPLLIBNAME
+AC_SUBST(MPLLIBNAME)
+AC_ARG_WITH([mpl-prefix],
+            [AS_HELP_STRING([[--with-mpl-prefix[=DIR]]],
+                            [use the MPL library installed in DIR. Pass
+                             "embedded" to force usage of the MPL source
+                             distributed with Hydra.])],
+            [],dnl action-if-given
+            [with_mpl_prefix=embedded]) dnl action-if-not-given
+mpl_srcdir=""
+AC_SUBST([mpl_srcdir])
+# Controls whether we recurse into the MPL dir when running "dist" rules like
+# "make distclean".  Technically we are cheating whenever DIST_SUBDIRS is not a
+# superset of SUBDIRS, but we don't want to double-distclean and similar.
+mpl_dist_srcdir=""
+AC_SUBST(mpl_dist_srcdir)
+mpl_includedir=""
+AC_SUBST([mpl_includedir])
+mpl_libdir=""
+AC_SUBST([mpl_libdir])
+if test "$with_mpl_prefix" = "embedded" ; then
+    mpl_srcdir="mpl"
+    mpl_dist_srcdir="mpl"
+    mpl_subdir_args="--disable-versioning --enable-embedded"
+    PAC_CONFIG_SUBDIR_ARGS([mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
+    mpl_includedir='-I$(top_builddir)/mpl/include -I$(top_srcdir)/mpl/include'
+else
+    # The user specified an already-installed MPL; just sanity check, don't
+    # subconfigure it
+    AS_IF([test -s "${with_mpl_prefix}/include/mplconfig.h"],
+          [:],[AC_MSG_ERROR([the MPL installation in "${with_mpl_prefix}" appears broken])])
+    mpl_includedir="-I${with_mpl_prefix}/include"
+    mpl_libdir="-L${with_mpl_prefix}/lib"
+fi
+
 AC_ARG_VAR([FROM_MPICH],[set to "yes" if building ROMIO inside of MPICH])
 FROM_MPICH=${FROM_MPICH:-no}
 
