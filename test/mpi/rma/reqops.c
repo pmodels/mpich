@@ -37,7 +37,8 @@ int main(int argc, char *argv[])
     else
         buf = NULL;
 
-    MPI_Win_create(buf, 4 * sizeof(int) * (rank == 0), 1, MPI_INFO_NULL, MPI_COMM_WORLD, &window);
+    MPI_Win_create(buf, 4 * sizeof(int) * (rank == 0), sizeof(int),
+                   MPI_INFO_NULL, MPI_COMM_WORLD, &window);
 
     /* PROC_NULL Communication */
     {
