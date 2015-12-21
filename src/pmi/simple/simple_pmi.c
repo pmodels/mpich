@@ -46,8 +46,7 @@
 #endif
 
 #include "mpl.h"            /* Get ATTRIBUTE, some base functions */
-/* mpimem includes the definitions for MPL_snprintf, MPIU_Malloc, and 
-   MPIU_Free */
+/* mpimem includes the definitions for MPIU_Malloc and MPIU_Free */
 #include "mpimem.h"
 
 /* Temporary debug definitions */

@@ -60,13 +60,13 @@ void ADIOI_PFS_Open(ADIO_File fd, int *error_code)
 	err = fcntl(fd->fd_sys, F_GETSATTR, &attr);
 
 	if (!err) {
-	    ADIOI_Snprintf(value, MPI_MAX_INFO_VAL+1, "%d", attr.s_sunitsize);
+	    MPL_snprintf(value, MPI_MAX_INFO_VAL+1, "%d", attr.s_sunitsize);
 	    ADIOI_Info_set(fd->info, "striping_unit", value);
 
-	    ADIOI_Snprintf(value, MPI_MAX_INFO_VAL+1, "%d", attr.s_sfactor);
+	    MPL_snprintf(value, MPI_MAX_INFO_VAL+1, "%d", attr.s_sfactor);
 	    ADIOI_Info_set(fd->info, "striping_factor", value);
 
-	    ADIOI_Snprintf(value, MPI_MAX_INFO_VAL+1, "%d", attr.s_start_sdir);
+	    MPL_snprintf(value, MPI_MAX_INFO_VAL+1, "%d", attr.s_start_sdir);
 	    ADIOI_Info_set(fd->info, "start_iodevice", value);
 	}
 	ADIOI_Free(value);

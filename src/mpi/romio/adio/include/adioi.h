@@ -942,7 +942,6 @@ char *ADIOI_Strdup( const char * );
     MPI_Info_delete((info_),((char*)key_str_))
 
 
-/* Provide a fallback snprintf for systems that do not have one */
 /* Define attribute as empty if it has no definition */
 #ifndef ATTRIBUTE
 #ifdef HAVE_GCC_ATTRIBUTE
@@ -951,19 +950,6 @@ char *ADIOI_Strdup( const char * );
 #define ATTRIBUTE(a)
 #endif
 #endif
-
-/* style: allow:snprintf:1 sig:0 */
-
-#ifdef HAVE_SNPRINTF
-#define ADIOI_Snprintf snprintf
-/* Sometimes systems don't provide prototypes for snprintf */
-#ifdef NEEDS_SNPRINTF_DECL
-extern int snprintf( char *, size_t, const char *, ... ) ATTRIBUTE((format(printf,3,4)));
-#endif
-#else
-int ADIOI_Snprintf( char *str, size_t size, const char *format, ... ) 
-     ATTRIBUTE((format(printf,3,4)));
-#endif /* HAVE_SNPRINTF */
 
 #define FPRINTF fprintf
 

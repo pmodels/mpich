@@ -50,7 +50,7 @@ static char PMI2U_print_id[PMI2U_IDSIZE] = "unset";
 
 void PMI2U_Set_rank( int PMI_rank )
 {
-    PMI2U_Snprintf( PMI2U_print_id, PMI2U_IDSIZE, "cli_%d", PMI_rank );
+    MPL_snprintf( PMI2U_print_id, PMI2U_IDSIZE, "cli_%d", PMI_rank );
 }
 void PMI2U_SetServer( void )
 {
@@ -77,7 +77,7 @@ void PMI2U_printf( int print_flag, const char *fmt, ... )
 	    char filename[1024];
 	    p = getenv("PMI_ID");
 	    if (p) {
-		PMI2U_Snprintf( filename, sizeof(filename),
+		MPL_snprintf( filename, sizeof(filename),
 			       "testclient-%s.out", p );
 		logfile = fopen( filename, "w" );
 	    }

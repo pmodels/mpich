@@ -73,7 +73,7 @@ static HYD_status send_cmd_downstream(int fd, const char *cmd)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_snprintf(cmdlen, 7, "%6u", (unsigned) strlen(cmd));
+    MPL_snprintf(cmdlen, 7, "%6u", (unsigned) strlen(cmd));
     status = HYDU_sock_write(fd, cmdlen, 6, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "error writing PMI line\n");
     /* FIXME: We cannot abort when we are not able to send data

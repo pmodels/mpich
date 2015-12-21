@@ -48,13 +48,13 @@ void ADIOI_PIOFS_Open(ADIO_File fd, int *error_code)
 	err = piofsioctl(fd->fd_sys, PIOFS_FSTAT, &piofs_fstat);
 
 	if (!err) {
-	    ADIOI_Snprintf(value, MPI_MAX_INFO_VAL+1, "%d", piofs_fstat.st_bsu);
+	    MPL_snprintf(value, MPI_MAX_INFO_VAL+1, "%d", piofs_fstat.st_bsu);
 	    ADIOI_Info_set(fd->info, "striping_unit", value);
 
-	    ADIOI_Snprintf(value, MPI_MAX_INFO_VAL+1, "%d", piofs_fstat.st_cells);
+	    MPL_snprintf(value, MPI_MAX_INFO_VAL+1, "%d", piofs_fstat.st_cells);
 	    ADIOI_Info_set(fd->info, "striping_factor", value);
 
-	    ADIOI_Snprintf(value, MPI_MAX_INFO_VAL+1, "%d", piofs_fstat.st_base_node);
+	    MPL_snprintf(value, MPI_MAX_INFO_VAL+1, "%d", piofs_fstat.st_base_node);
 	    ADIOI_Info_set(fd->info, "start_iodevice", value);
 	}
 	ADIOI_Free(value);

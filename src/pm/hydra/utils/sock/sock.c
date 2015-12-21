@@ -668,7 +668,7 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_rang
 
     sport = HYDU_int_to_str(port);
     HYDU_MALLOC(*port_str, char *, strlen(ip) + 1 + strlen(sport) + 1, status);
-    HYDU_snprintf(*port_str, strlen(ip) + 1 + strlen(sport) + 1, "%s:%s", ip, sport);
+    MPL_snprintf(*port_str, strlen(ip) + 1 + strlen(sport) + 1, "%s:%s", ip, sport);
     HYDU_FREE(sport);
 
   fn_exit:

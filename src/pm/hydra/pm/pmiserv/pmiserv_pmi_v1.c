@@ -435,14 +435,14 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         for (i = 0; i < info_num; i++) {
             char *info_key, *info_val;
 
-            HYDU_snprintf(key, PMI_MAXKEYLEN, "info_key_%d", i);
+            MPL_snprintf(key, PMI_MAXKEYLEN, "info_key_%d", i);
             val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
                                                  segment_list[j].token_count, key);
             HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                                 "unable to find token: %s\n", key);
             info_key = val;
 
-            HYDU_snprintf(key, PMI_MAXKEYLEN, "info_val_%d", i);
+            MPL_snprintf(key, PMI_MAXKEYLEN, "info_val_%d", i);
             val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
                                                  segment_list[j].token_count, key);
             HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
@@ -495,7 +495,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         i = 0;
         exec->exec[i++] = execname;
         for (k = 0; k < argcnt; k++) {
-            HYDU_snprintf(key, PMI_MAXKEYLEN, "arg%d", k + 1);
+            MPL_snprintf(key, PMI_MAXKEYLEN, "arg%d", k + 1);
             val = HYD_pmcd_pmi_find_token_keyval(&tokens[segment_list[j].start_idx],
                                                  segment_list[j].token_count, key);
             HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
@@ -535,13 +535,13 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     for (i = 0; i < preput_num; i++) {
         char *preput_key, *preput_val;
 
-        HYDU_snprintf(key, PMI_MAXKEYLEN, "preput_key_%d", i);
+        MPL_snprintf(key, PMI_MAXKEYLEN, "preput_key_%d", i);
         val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, key);
         HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                             "unable to find token: %s\n", key);
         preput_key = val;
 
-        HYDU_snprintf(key, PMI_MAXKEYLEN, "preput_val_%d", i);
+        MPL_snprintf(key, PMI_MAXKEYLEN, "preput_val_%d", i);
         val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, key);
         HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                             "unable to find token: %s\n", key);

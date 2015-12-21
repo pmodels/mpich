@@ -72,7 +72,7 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	fd->hints->cb_config_list = NULL;
 
 	/* number of processes that perform I/O in collective I/O */
-	ADIOI_Snprintf(value, MPI_MAX_INFO_VAL+1, "%d", nprocs);
+	MPL_snprintf(value, MPI_MAX_INFO_VAL+1, "%d", nprocs);
 	ADIOI_Info_set(info, "cb_nodes", value);
 	fd->hints->cb_nodes = nprocs;
 
@@ -215,7 +215,7 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 		/* can't ask for more aggregators than mpi processes, though it
 		 * might be interesting to think what such oversubscription
 		 * might mean... someday */
-		ADIOI_Snprintf(value, MPI_MAX_INFO_VAL+1, "%d", nprocs);
+		MPL_snprintf(value, MPI_MAX_INFO_VAL+1, "%d", nprocs);
 		ADIOI_Info_set(info, "cb_nodes", value);
 		fd->hints->cb_nodes = nprocs;
 	    }

@@ -332,7 +332,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                 /* This is the first dead process */
                 HYDU_FREE(pg_scratch->dead_processes);
                 HYDU_MALLOC(pg_scratch->dead_processes, char *, PMI_MAXVALLEN, status);
-                HYDU_snprintf(pg_scratch->dead_processes, PMI_MAXVALLEN, "%d", hdr.pid);
+                MPL_snprintf(pg_scratch->dead_processes, PMI_MAXVALLEN, "%d", hdr.pid);
             }
             else {
                 /* FIXME: If the list of dead processes does not fit
@@ -367,7 +367,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                 if (!included) {
                     HYDU_MALLOC(str, char *, PMI_MAXVALLEN, status);
 
-                    HYDU_snprintf(str, PMI_MAXVALLEN, "%s,%d", pg_scratch->dead_processes, hdr.pid);
+                    MPL_snprintf(str, PMI_MAXVALLEN, "%s,%d", pg_scratch->dead_processes, hdr.pid);
                 } else {
                     str = current_list;
                 }

@@ -298,7 +298,7 @@ static int build_cb_config_list(ADIO_File fd,
 	fd->hints->cb_nodes = rank_ct;
 	/* TEMPORARY -- REMOVE WHEN NO LONGER UPDATING INFO FOR FS-INDEP. */
 	value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL+1)*sizeof(char));
-	ADIOI_Snprintf(value, MPI_MAX_INFO_VAL+1, "%d", rank_ct);
+	MPL_snprintf(value, MPI_MAX_INFO_VAL+1, "%d", rank_ct);
 	ADIOI_Info_set(fd->info, "cb_nodes", value);
 	ADIOI_Free(value);
     }
