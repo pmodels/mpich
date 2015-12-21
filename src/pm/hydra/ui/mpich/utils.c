@@ -250,7 +250,7 @@ static HYD_status genvlist_fn(char *arg, char ***argv)
 
     len = strlen("list:") + strlen(**argv) + 1;
     HYDU_MALLOC(HYD_server_info.user_global.global_env.prop, char *, len, status);
-    HYDU_snprintf(HYD_server_info.user_global.global_env.prop, len, "list:%s", **argv);
+    MPL_snprintf(HYD_server_info.user_global.global_env.prop, len, "list:%s", **argv);
 
   fn_exit:
     (*argv)++;
@@ -696,7 +696,7 @@ static HYD_status envlist_fn(char *arg, char ***argv)
 
     len = strlen("list:") + strlen(**argv) + 1;
     HYDU_MALLOC(exec->env_prop, char *, len, status);
-    HYDU_snprintf(exec->env_prop, len, "list:%s", **argv);
+    MPL_snprintf(exec->env_prop, len, "list:%s", **argv);
     (*argv)++;
 
   fn_exit:

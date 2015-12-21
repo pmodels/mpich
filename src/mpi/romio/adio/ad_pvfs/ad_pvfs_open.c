@@ -70,11 +70,11 @@ void ADIOI_PVFS_Open(ADIO_File fd, int *error_code)
 
     if (fd->fd_sys != -1) {
 	pvfs_ioctl(fd->fd_sys, GETMETA, &pstat);
-	ADIOI_Snprintf(value, MPI_MAX_INFO_VAL+1, "%d", pstat.pcount);
+	MPL_snprintf(value, MPI_MAX_INFO_VAL+1, "%d", pstat.pcount);
 	ADIOI_Info_set(fd->info, "striping_factor", value);
-	ADIOI_Snprintf(value, MPI_MAX_INFO_VAL+1, "%d", pstat.ssize);
+	MPL_snprintf(value, MPI_MAX_INFO_VAL+1, "%d", pstat.ssize);
 	ADIOI_Info_set(fd->info, "striping_unit", value);
-	ADIOI_Snprintf(value, MPI_MAX_INFO_VAL+1, "%d", pstat.base);
+	MPL_snprintf(value, MPI_MAX_INFO_VAL+1, "%d", pstat.base);
 	ADIOI_Info_set(fd->info, "start_iodevice", value);
     }
 

@@ -640,8 +640,6 @@ HYD_status HYDU_sock_cloexec(int fd);
 
 #endif /* USE_MEMORY_TRACING */
 
-#define HYDU_snprintf MPL_snprintf
-
 #define HYDU_MALLOC(p, type, size, status)                              \
     {                                                                   \
         (p) = NULL; /* initialize p in case assert fails */             \

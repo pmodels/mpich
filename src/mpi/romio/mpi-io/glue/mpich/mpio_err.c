@@ -92,7 +92,7 @@ int MPIO_Err_return_file(MPI_File mpi_fh, int error_code)
     /* --BEGIN ERROR HANDLING-- */
     if (MPIR_Err_is_fatal(error_code) || kind == 0) 
     {
-	ADIOI_Snprintf(error_msg, 4096, "I/O error: ");
+	MPL_snprintf(error_msg, 4096, "I/O error: ");
 	len = (int)strlen(error_msg);
 	MPIR_Err_get_string(error_code, &error_msg[len], 4096-len, NULL);
 	MPID_Abort(NULL, MPI_SUCCESS, error_code, error_msg);

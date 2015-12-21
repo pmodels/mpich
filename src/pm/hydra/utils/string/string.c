@@ -68,7 +68,7 @@ HYD_status HYDU_str_alloc_and_join(char **strlist, char **strjoin)
     (*strjoin)[0] = 0;
 
     for (i = 0; strlist[i] != NULL; i++) {
-        HYDU_snprintf(*strjoin + count, len - count + 1, "%s", strlist[i]);
+        MPL_snprintf(*strjoin + count, len - count + 1, "%s", strlist[i]);
         count += strlen(strlist[i]);
     }
 
@@ -154,7 +154,7 @@ char *HYDU_size_t_to_str(size_t x)
     for (i = 0; i < len; i++)
         str[i] = '0';
 
-    HYDU_snprintf(str, len, "%llu", (unsigned long long) x);
+    MPL_snprintf(str, len, "%llu", (unsigned long long) x);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -203,7 +203,7 @@ char *HYDU_int_to_str_pad(int x, int maxlen)
     for (i = 0; i < actual_len; i++)
         str[i] = '0';
 
-    HYDU_snprintf(str + actual_len - len - 1, len + 1, "%d", x);
+    MPL_snprintf(str + actual_len - len - 1, len + 1, "%d", x);
 
   fn_exit:
     HYDU_FUNC_EXIT();

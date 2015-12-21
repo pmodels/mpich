@@ -108,7 +108,7 @@ void ADIOI_GPFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	/* number of processes that perform I/O in collective I/O */
 	MPI_Comm_size(fd->comm, &nprocs);
 	nprocs_is_valid = 1;
-	ADIOI_Snprintf(value, MPI_MAX_INFO_VAL+1, "%d", nprocs);
+	MPL_snprintf(value, MPI_MAX_INFO_VAL+1, "%d", nprocs);
 	ADIOI_Info_set(info, "cb_nodes", value);
 	fd->hints->cb_nodes = -1;
 

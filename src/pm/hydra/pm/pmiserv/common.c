@@ -125,7 +125,7 @@ HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs ** kvs, int pgid)
     HYDU_FUNC_ENTER();
 
     HYDU_MALLOC(*kvs, struct HYD_pmcd_pmi_kvs *, sizeof(struct HYD_pmcd_pmi_kvs), status);
-    HYDU_snprintf((*kvs)->kvsname, PMI_MAXKVSLEN, "kvs_%d_%d", (int) getpid(), pgid);
+    MPL_snprintf((*kvs)->kvsname, PMI_MAXKVSLEN, "kvs_%d_%d", (int) getpid(), pgid);
     (*kvs)->key_pair = NULL;
 
   fn_exit:
@@ -162,8 +162,8 @@ HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_
 
     HYDU_MALLOC(key_pair, struct HYD_pmcd_pmi_kvs_pair *, sizeof(struct HYD_pmcd_pmi_kvs_pair),
                 status);
-    HYDU_snprintf(key_pair->key, PMI_MAXKEYLEN, "%s", key);
-    HYDU_snprintf(key_pair->val, PMI_MAXVALLEN, "%s", val);
+    MPL_snprintf(key_pair->key, PMI_MAXKEYLEN, "%s", key);
+    MPL_snprintf(key_pair->val, PMI_MAXVALLEN, "%s", val);
     key_pair->next = NULL;
 
     *ret = 0;

@@ -150,7 +150,7 @@ void ADIOI_GRIDFTP_Resize(ADIO_File fd, ADIO_Offset size, int *error_code)
 
 	    urllen=strlen(fd->filename);
 	    urlold=(char *)ADIOI_Malloc(urllen+5);
-	    ADIOI_Snprintf(urlold,urllen+5,"%s.old",fd->filename);
+	    MPL_snprintf(urlold,urllen+5,"%s.old",fd->filename);
 	    resize_done=GLOBUS_FALSE;
 	    resize_success=GLOBUS_FALSE;
 	    if ( (result=globus_ftp_client_move(&(gridftp_fh[fd->fd_sys]),

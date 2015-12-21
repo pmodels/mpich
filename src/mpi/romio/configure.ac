@@ -1592,11 +1592,6 @@ if test "$ac_cv_func_strdup" = "yes" ; then
     # Do we need to declare strdup?
     PAC_FUNC_NEEDS_DECL([#include <string.h>],strdup)
 fi
-AC_CHECK_FUNCS(snprintf)
-if test "$ac_cv_func_snprintf" = "yes" ; then
-    # Do we need to declare snprintf?
-    PAC_FUNC_NEEDS_DECL([#include <stdio.h>],snprintf)
-fi
 AC_CHECK_FUNCS(lstat)
 if test "$ac_cv_func_lstat" = "yes" ; then
     # Do we need to declare lstat?

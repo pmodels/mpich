@@ -173,7 +173,7 @@ static HYD_status retries_fn(char *arg, char ***argv)
 
 static HYD_status pmi_kvsname_fn(char *arg, char ***argv)
 {
-    HYDU_snprintf(HYD_pmcd_pmip.local.kvs->kvsname, PMI_MAXKVSLEN, "%s", **argv);
+    MPL_snprintf(HYD_pmcd_pmip.local.kvs->kvsname, PMI_MAXKVSLEN, "%s", **argv);
     (*argv)++;
 
     return HYD_SUCCESS;
@@ -185,7 +185,7 @@ static HYD_status pmi_spawner_kvsname_fn(char *arg, char ***argv)
 
     HYDU_MALLOC(HYD_pmcd_pmip.local.spawner_kvsname, char *, PMI_MAXKVSLEN, status);
 
-    HYDU_snprintf(HYD_pmcd_pmip.local.spawner_kvsname, PMI_MAXKVSLEN, "%s", **argv);
+    MPL_snprintf(HYD_pmcd_pmip.local.spawner_kvsname, PMI_MAXKVSLEN, "%s", **argv);
     (*argv)++;
 
   fn_exit:
@@ -732,7 +732,7 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
         HYD_pmcd_pmip.local.retries = 0;
 
     HYDU_dbg_finalize();
-    HYDU_snprintf(dbg_prefix, 2 * MAX_HOSTNAME_LEN, "proxy:%d:%d",
+    MPL_snprintf(dbg_prefix, 2 * MAX_HOSTNAME_LEN, "proxy:%d:%d",
                   HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.local.id);
     status = HYDU_dbg_init((const char *) dbg_prefix);
     HYDU_ERR_POP(status, "unable to initialization debugging\n");
