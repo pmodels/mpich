@@ -10,7 +10,7 @@
 
 #include <mpichconf.h>
 #include <mpiimpl.h>
-#include <mpid_dataloop.h>
+#include <mpidu_dataloop.h>
 
 
 typedef struct external32_basic_size

@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 #include <mpiimpl.h>
-#include <mpid_dataloop.h>
+#include <mpidu_dataloop.h>
 
 /*
  * Define these two names to enable debugging output.

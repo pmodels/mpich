@@ -6,7 +6,7 @@
  */
 
 #include <mpi.h>
-#include <mpid_datatype.h>
+#include <mpidu_datatype.h>
 
 void MPIDU_Type_access_contents(MPI_Datatype type,
 			       int **ints_p,

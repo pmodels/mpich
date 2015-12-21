@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPIDEXT32SEGMENT_H
-#define MPIDEXT32SEGMENT_H
+#ifndef MPIDUEXT32SEGMENT_H
+#define MPIDUEXT32SEGMENT_H
 
 #include "mpichconf.h"
 

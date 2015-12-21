@@ -24,8 +24,8 @@
  * makes it somewhat easier to copy these subtrees around.  Keep this in mind
  * when looking at the functions below.
  *
- * The structures used in this file are defined in mpid_datatype.h.  There is
- * no separate mpid_dataloop.h at this time.
+ * The structures used in this file are defined in mpidu_datatype.h.  There is
+ * no separate mpidu_dataloop.h at this time.
  *
  * OPTIMIZATIONS:
  *

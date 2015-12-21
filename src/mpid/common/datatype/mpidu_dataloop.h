@@ -5,8 +5,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPID_DATALOOP_H
-#define MPID_DATALOOP_H
+#ifndef MPIDU_DATALOOP_H
+#define MPIDU_DATALOOP_H
 
 #include <mpi.h>
 

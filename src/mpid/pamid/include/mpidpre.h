@@ -34,7 +34,7 @@
 #include <unistd.h>
 
 #include "mpiimpl.h"
-#include "mpid_dataloop.h"
+#include "mpidu_dataloop.h"
 #include <pami.h>
 
 /* provides "pre" typedefs and such for NBC scheduling mechanism */

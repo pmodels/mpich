@@ -5,7 +5,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include <mpid_dataloop.h>
+#include <mpidu_dataloop.h>
 #include <stdlib.h>
 
 /*@

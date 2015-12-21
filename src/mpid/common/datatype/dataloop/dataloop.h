@@ -13,7 +13,7 @@
 #define DATALOOP_H
 
 /* This is specific to MPICH */
-#include "mpid_dataloop.h"
+#include "mpidu_dataloop.h"
 #include "mpiimpl.h"
 
 #endif
