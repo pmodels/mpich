@@ -3108,7 +3108,7 @@ system; this program outputs an appropriate file for the --with-cross option])
     #
     # Take len and turn it into two hex digits (there are 8 bits available
     # in the built-in datatype handle for the length; see
-    # src/mpid/common/datatype/mpid_datatype.h)
+    # src/mpid/common/datatype/mpidu_datatype.h)
     if test "$len" -gt 255 ; then
          AC_MSG_ERROR([Type sizes greater than 255 bytes are not supported (type $type is $len bytes)]) 
     fi
@@ -3510,7 +3510,7 @@ if test "$enable_f77" = yes ; then
     #
     # Take len and turn it into two hex digits (there are 8 bits available
     # in the built-in datatype handle for the length; see
-    # src/mpid/common/datatype/mpid_datatype.h).  This code is taken
+    # src/mpid/common/datatype/mpidu_datatype.h).  This code is taken
     # from the code in mpich/configure.ac 
     if test "$len" -gt 255 ; then
         AC_MSG_ERROR([Type sizes greater than 255 bytes are not supported (type INTEGER is $len bytes)]) 
@@ -3557,7 +3557,7 @@ if test "$enable_f77" = yes ; then
     #
     # Take len and turn it into two hex digits (there are 8 bits available
     # in the built-in datatype handle for the length; see
-    # src/mpid/common/datatype/mpid_datatype.h).  This code is taken
+    # src/mpid/common/datatype/mpidu_datatype.h).  This code is taken
     # from the code in mpich/configure.ac 
     if test "$len" -gt 255 ; then
         AC_MSG_ERROR([Type sizes greater than 255 bytes are not supported (type DOUBLE is $len bytes)]) 
@@ -3695,7 +3695,7 @@ dnl     len=$len_doublecplx
 dnl     #
 dnl     # Take len and turn it into two hex digits (there are 8 bits available
 dnl     # in the built-in datatype handle for the length; see
-dnl     # src/mpid/common/datatype/mpid_datatype.h).  This code is taken
+dnl     # src/mpid/common/datatype/mpidu_datatype.h).  This code is taken
 dnl     # from the code in mpich/configure.ac 
 dnl     if test "$len" -gt 255 ; then
 dnl         AC_MSG_ERROR([Type sizes greater than 255 bytes are not supported (type DOUBLE COMPLEX is $len bytes)]) 

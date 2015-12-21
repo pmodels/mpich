@@ -6,7 +6,7 @@
  */
 
 #include <mpiimpl.h>
-#include <mpid_dataloop.h>
+#include <mpidu_dataloop.h>
 #include <stdlib.h>
 
 /* #define MPID_TYPE_ALLOC_DEBUG */

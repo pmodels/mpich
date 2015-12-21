@@ -480,8 +480,8 @@ Makefile.am-stamp
 /src/include/mpif.h
 #/src/include/mpe_thread.h
 /src/include/mpimod.pcl
-/src/include/mpid_datatype.h
-/src/include/mpid_dataloop.h
+/src/include/mpidu_datatype.h
+/src/include/mpidu_dataloop.h
 /src/include/gen_dataloop.h
 /src/include/mpich2info.h
 /src/include/mpio.h

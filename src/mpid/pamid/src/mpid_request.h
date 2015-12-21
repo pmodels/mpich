@@ -23,7 +23,7 @@
 #ifndef __src_mpid_request_h__
 #define __src_mpid_request_h__
 
-#include "mpid_datatype.h"
+#include "mpidu_datatype.h"
 
 /**
  * \addtogroup MPID_REQUEST

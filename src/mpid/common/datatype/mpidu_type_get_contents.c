@@ -7,8 +7,8 @@
 
 #include <mpi.h>
 #include <mpiimpl.h>
-#include <mpid_datatype.h>
-#include <mpid_dataloop.h>
+#include <mpidu_datatype.h>
+#include <mpidu_dataloop.h>
 
 /*@
   MPIDU_Type_get_contents - get content information from datatype

@@ -10,12 +10,12 @@
 
 #include <mpichconf.h>
 #include <mpiimpl.h>
-#include <mpid_dataloop.h>
+#include <mpidu_dataloop.h>
 
 #undef MPID_SP_VERBOSE
 #undef MPID_SU_VERBOSE
 
-#include "mpid_ext32_segment.h"
+#include "mpidu_ext32_segment.h"
 
 /* MPIDU_Segment_piece_params
  *

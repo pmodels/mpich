@@ -138,7 +138,7 @@ int MPIDI_CH3_Comm_connect(char * port_name, int root, MPID_Comm * comm_ptr,
    (mpiimpl.h). */
 #include "mpidi_ch3_post.h"
 
-#include "mpid_datatype.h"
+#include "mpidu_datatype.h"
 
 /*
  * Request utility macros (public - can be used in MPID macros)
