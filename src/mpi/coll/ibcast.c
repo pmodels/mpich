@@ -32,7 +32,7 @@ struct MPIR_Ibcast_status{
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 
-static sched_test_length(MPID_Comm * comm, int tag, void *state)
+static int sched_test_length(MPID_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     int recv_size;
@@ -44,7 +44,7 @@ static sched_test_length(MPID_Comm * comm, int tag, void *state)
                      "**collective_size_mismatch",
 		          "**collective_size_mismatch %d %d", status->n_bytes, recv_size);
     }
-   return mpi_errno;
+    return mpi_errno;
 }
 
 #undef FUNCNAME
@@ -52,7 +52,7 @@ static sched_test_length(MPID_Comm * comm, int tag, void *state)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 
-static sched_test_curr_length(MPID_Comm * comm, int tag, void *state)
+static int sched_test_curr_length(MPID_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     struct  MPIR_Ibcast_status *status = (struct MPIR_Ibcast_status*) state;
@@ -62,7 +62,7 @@ static sched_test_curr_length(MPID_Comm * comm, int tag, void *state)
                      "**collective_size_mismatch",
 		          "**collective_size_mismatch %d %d", status->n_bytes, status->curr_bytes);
     }
-   return mpi_errno;
+    return mpi_errno;
 }
 
 #undef FUNCNAME
@@ -70,7 +70,7 @@ static sched_test_curr_length(MPID_Comm * comm, int tag, void *state)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 
-static sched_add_length(MPID_Comm * comm, int tag, void *state)
+static int sched_add_length(MPID_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     int recv_size;
@@ -850,6 +850,7 @@ fn_exit:
     return mpi_errno;
 fn_fail:
     MPIR_SCHED_CHKPMEM_REAP(s);
+    goto fn_exit;
 }
 
 
