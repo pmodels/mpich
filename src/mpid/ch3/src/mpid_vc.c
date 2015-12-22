@@ -935,7 +935,7 @@ static int populate_ids_from_mapping(char *mapping, MPID_Node_id_t *max_node_id,
     int nblocks = 0;
     int rank;
     int block, block_node, node_proc;
-    int *tmp_rank_list, i;
+    int i;
     int found_wrap;
 
     *did_map = 1; /* reset upon failure */
