@@ -4660,27 +4660,6 @@ if test "$enable_g_mem" != "yes" ; then
         # Do we need to declare strdup?
         PAC_FUNC_NEEDS_DECL([#include <string.h>],strdup)
     fi
-else
-    # search.h is used for fancier output from trmem.  Disabled for now,
-    # since the tsearch routines have problematic prototypes.
-    AC_CHECK_HEADERS(search)
-    AC_CHECK_FUNCS(tsearch)
-    # Check that we can compile tsearch without error.  Try to compile
-    # it with the header and the char * args
-    if test "$ac_cv_func_tsearch" = "yes" ; then
-        AC_CACHE_CHECK([whether tsearch requires char* args],
-	               pac_cv_tsearch_charp,[
-        AC_TRY_COMPILE([#include <search.h>
-    char *tsearch( char *k, char **r, (int (*)())compare ) { return k; }],
-    [int f=0;],pac_cv_tsearch_charp=yes,pac_cv_tsearch_charp=no)])
-        if test "$pac_cv_tsearch_charp" = "yes" ; then
-	    # this should consider defining a name with the argument type
-	    # so that no further ifdefs are needed
-	    AC_DEFINE(USE_TSEARCH_WITH_CHARP,1,[Define if tsearch requires char pointers])
-	fi
-    fi
-    # Note that HPUX and AIX may require _INCLUDE_XOPEN_SOURCE or
-    # _XOPEN_SOURCE be defined respectively.
 fi
 
 # ----------------------------------------------------------------------------
