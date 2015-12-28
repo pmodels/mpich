@@ -16,19 +16,12 @@ void *MPL_trmalloc(size_t, int, const char[]);
 void MPL_trfree(void *, int, const char[]);
 int MPL_trvalid(const char[]);
 int MPL_trvalid2(const char[],int,const char[]);
-void MPL_trspace(size_t *, size_t *);
-void MPL_trid(int);
-void MPL_trlevel(int);
-void MPL_trDebugLevel(int);
 void *MPL_trcalloc(size_t, size_t, int, const char[]);
 void *MPL_trrealloc(void *, size_t, int, const char[]);
 void *MPL_trstrdup(const char *, int, const char[]);
-void MPL_TrSetMaxMem(size_t);
 
 /* Make sure that FILE is defined */
 #include <stdio.h>
 void MPL_trdump(FILE *, int);
-void MPL_trSummary(FILE *, int);
-void MPL_trdumpGrouped(FILE *, int);
 
 #endif /* !defined(MPL_TRMEM_H_INCLUDED) */

@@ -27,58 +27,13 @@
 #endif
 #endif
 
-#if defined(MPL_HAVE_STDLIB_H) || defined(MPL_STDC_HEADERS)
-#include <stdlib.h>
-#else
-/* We should test to see if these will work */
-extern void *malloc(size_t);
-extern void *calloc(size_t, size_t);
-extern int free(void *);
-#endif
-
-/*D
-    MPL_trspace - Routines for tracing space usage
-
-    Description:
-    MPL_trmalloc replaces malloc and MPL_trfree replaces free.
-    These routines
-    have the same syntax and semantics as the routines that they replace,
-    In addition, there are routines to report statistics on the memory
-    usage, and to report the currently allocated space.  These routines
-    are built on top of malloc and free, and can be used together with
-    them as long as any space allocated with MPL_trmalloc is only freed with
-    MPL_trfree.
-
-    Note that the malloced data is scrubbed each time; you don't get
-    random trash (or fortuitous zeros).  What you get is fc (bytes);
-    this will usually create a "bad" value.
-
-    As an aid in developing codes, a maximum memory threshold can
-    be set with MPL_TrSetMaxMem.
- D*/
-
 /* HEADER_DOUBLES is the number of doubles in a trSPACE header */
 /* We have to be careful about alignment rules here */
-#define USE_LONG_NAMES_IN_TRMEM
-#ifdef USE_LONG_NAMES_IN_TRMEM
 /* Assume worst case and align on 8 bytes */
 #define TR_ALIGN_BYTES 8
 #define TR_ALIGN_MASK  0x7
 #define TR_FNAME_LEN   48
 #define HEADER_DOUBLES 19
-#else
-#if SIZEOF_VOID_P > 4
-#define TR_ALIGN_BYTES 8
-#define TR_ALIGN_MASK  0x7
-#define TR_FNAME_LEN   16
-#define HEADER_DOUBLES 12
-#else
-#define TR_ALIGN_BYTES 4
-#define TR_ALIGN_MASK  0x3
-#define TR_FNAME_LEN   12
-#define HEADER_DOUBLES 8
-#endif
-#endif
 
 #define COOKIE_VALUE   0xf0e0d0c9
 #define ALREADY_FREED  0x0f0e0d9c
@@ -118,7 +73,6 @@ static volatile int TRidSet = 0;
 static volatile int TRlevel = 0;
 static unsigned char TRDefaultByte = 0xda;
 static unsigned char TRFreedByte = 0xfc;
-#define MAX_TR_STACK 20
 static int TRdebugLevel = 0;
 static int TRSetBytes   = 0;
 #define TR_MALLOC 0x1
@@ -590,22 +544,6 @@ int MPL_trvalid2(const char str[], int line, const char file[] )
 }
 
 /*+C
-   MPL_trspace - Return space statistics
-
-   Output parameters:
-.   space - number of bytes currently allocated
-.   frags - number of blocks currently allocated
- +*/
-void MPL_trspace(size_t *space, size_t *fr)
-{
-    /* We use ints because systems without prototypes will usually
-     * allow calls with ints instead of longs, leading to unexpected
-     * behavior */
-    *space =  allocated;
-    *fr =  frags;
-}
-
-/*+C
   MPL_trdump - Dump the allocated memory blocks to a file
 
 Input Parameters:
@@ -660,137 +598,6 @@ void MPL_trdump(FILE * fp, int minid)
     msg_fprintf(fp, "# [%d] The maximum space allocated was %ld bytes [%ld]\n",
              world_rank, TRMaxMem, TRMaxMemId);
  */
-}
-
-/* Configure will set HAVE_SEARCH for these systems.  We assume that
-   the system does NOT have search.h unless otherwise noted.
-   The otherwise noted lets the non-configure approach work on our
-   two major systems */
-#if defined(HAVE_SEARCH_H)
-
-/* The following routine uses the tsearch routines to summarize the
-   memory heap by id */
-
-#include <search.h>
-typedef struct TRINFO {
-    int id, size, lineno;
-    char *fname;
-} TRINFO;
-
-static int IntCompare(TRINFO * a, TRINFO * b)
-{
-    return a->id - b->id;
-}
-
-static volatile FILE *TRFP = 0;
-static void PrintSum(TRINFO ** a, VISIT order, int level)
-{
-    if (order == postorder || order == leaf)
-        fprintf(TRFP, "[%d]%s[%d] has %d\n", (*a)->id, (*a)->fname, (*a)->lineno, (*a)->size);
-}
-
-/*+C
-  MPL_trSummary - Summarize the allocate memory blocks by id
-
-Input Parameters:
-+  fp  - file pointer.  If fp is NULL, stderr is assumed.
--  minid - Only print allocated memory blocks whose id is at least 'minid'
-
-  Note:
-  This routine is the same as MPL_trDump on those systems that do not include
-  /usr/include/search.h .
- +*/
-void MPL_trSummary(FILE * fp, int minid)
-{
-    TRSPACE *head;
-    TRINFO *root, *key, **fnd;
-    TRINFO nspace[1000];
-
-    if (fp == 0)
-        fp = stderr;
-    root = 0;
-    if (TRhead[0] != TRHEAD_PRESENTINAL || TRhead[2] != TRHEAD_POSTSENTINAL) {
-        MPL_error_printf("TRhead corrupted - likely memory overwrite.\n");
-        return;
-    }
-    head = TRhead[1];
-    key = nspace;
-    while (head) {
-        if (head->id >= minid) {
-            key->id = head->id;
-            key->size = 0;
-            key->lineno = head->lineno;
-            key->fname = head->fname;
-#if defined(USE_TSEARCH_WITH_CHARP)
-            fnd = (TRINFO **) tsearch((char *) key, (char **) &root, IntCompare);
-#else
-            fnd = (TRINFO **) tsearch((void *) key, (void **) &root, (int (*)()) IntCompare);
-#endif
-            if (*fnd == key) {
-                key->size = 0;
-                key++;
-            }
-            (*fnd)->size += head->size;
-        }
-        head = head->next;
-    }
-
-    /* Print the data */
-    TRFP = fp;
-    twalk((char *) root, (void (*)()) PrintSum);
-    /*
-     * msg_fprintf(fp, "# [%d] The maximum space allocated was %d bytes [%d]\n",
-     * world_rank, TRMaxMem, TRMaxMemId);
-     */
-}
-#else
-void MPL_trSummary(FILE * fp, int minid)
-{
-    if (fp == 0)
-        fp = stderr;
-    fprintf(fp, "# [%d] The maximum space allocated was %lu bytes [%d]\n",
-            world_rank, (unsigned long)TRMaxMem, TRMaxMemId);
-}
-#endif
-
-/*+
-  MPL_trid - set an "id" field to be used with each fragment
- +*/
-void MPL_trid(int id)
-{
-    TRid = id;
-    TRidSet = 1;        /* Recall whether we ever use this feature to
-                         * help clean up output */
-}
-
-/*+C
-  MPL_trlevel - Set the level of output to be used by the tracing routines
-
-Input Parameters:
-. level = 0 - notracing
-. level = 1 - trace mallocs
-. level = 2 - trace frees
-
-  Note:
-  You can add levels together to get combined tracing.
- +*/
-void MPL_trlevel(int level)
-{
-    TRlevel = level;
-}
-
-
-/*+C
-    MPL_trDebugLevel - set the level of debugging for the space management
-    routines
-
-Input Parameters:
-.   level - level of debugging.  Currently, either 0 (no checking) or 1
-    (use MPL_trvalid at each MPL_trmalloc or MPL_trfree).
-+*/
-void MPL_trDebugLevel(int level)
-{
-    TRdebugLevel = level;
 }
 
 /*+C
@@ -904,147 +711,4 @@ void *MPL_trstrdup(const char *str, int lineno, const char fname[])
         memcpy(p, str, len);
     }
     return p;
-}
-
-#define TR_MAX_DUMP 100
-/*
-   The following routine attempts to give useful information about the
-   memory usage when an "out-of-memory" error is encountered.  The rules are:
-   If there are less than TR_MAX_DUMP blocks, output those.
-   Otherwise, try to find multiple instances of the same routine/line #, and
-   print a summary by number:
-   file line number-of-blocks total-number-of-blocks
-
-   We have to do a sort-in-place for this
- */
-
-/*
-  Sort by file/line number.  Do this without calling a system routine or
-  allocating ANY space (space is being optimized here).
-
-  We do this by first recursively sorting halves of the list and then
-  merging them.
- */
-/* Forward refs for these local (hence static) routines */
-static TRSPACE *MPL_trImerge(TRSPACE *, TRSPACE *);
-static TRSPACE *MPL_trIsort(TRSPACE *, int);
-static void MPL_trSortBlocks(void);
-
-/* Merge two lists, returning the head of the merged list */
-static TRSPACE *MPL_trImerge(TRSPACE * l1, TRSPACE * l2)
-{
-    TRSPACE *head = 0, *tail = 0;
-    int sign;
-    while (l1 && l2) {
-        sign = strncmp(l1->fname, l2->fname, TR_FNAME_LEN - 1);
-        if (sign > 0 || (sign == 0 && l1->lineno >= l2->lineno)) {
-            if (head)
-                tail->next = l1;
-            else
-                head = tail = l1;
-            tail = l1;
-            l1 = l1->next;
-        }
-        else {
-            if (head)
-                tail->next = l2;
-            else
-                head = tail = l2;
-            tail = l2;
-            l2 = l2->next;
-        }
-    }
-    /* Add the remaining elements to the end */
-    if (l1)
-        tail->next = l1;
-    if (l2)
-        tail->next = l2;
-
-    return head;
-}
-
-/* Sort head with n elements, returning the head */
-/* assumes that the MEMALLOC critical section is currently held */
-static TRSPACE *MPL_trIsort(TRSPACE * head, int n)
-{
-    TRSPACE *p, *l1, *l2;
-    int m, i;
-
-    if (n <= 1)
-        return head;
-
-    /* This guarentees that m, n are both > 0 */
-    m = n / 2;
-    p = head;
-    for (i = 0; i < m - 1; i++)
-        p = p->next;
-    /* p now points to the END of the first list */
-    l2 = p->next;
-    p->next = 0;
-    l1 = MPL_trIsort(head, m);
-    l2 = MPL_trIsort(l2, n - m);
-    return MPL_trImerge(l1, l2);
-}
-
-/* assumes that the MEMALLOC critical section is currently held */
-static void MPL_trSortBlocks(void)
-{
-    TRSPACE *head;
-    int cnt;
-
-    if (TRhead[0] != TRHEAD_PRESENTINAL || TRhead[2] != TRHEAD_POSTSENTINAL) {
-        MPL_error_printf("TRhead corrupted - likely memory overwrite.\n");
-        return;
-    }
-    head = TRhead[1];
-    cnt = 0;
-    while (head) {
-        cnt++;
-        head = head->next;
-    }
-    TRhead[1] = MPL_trIsort(TRhead[1], cnt);
-}
-
-/* Takes sorted input and dumps as an aggregate */
-void MPL_trdumpGrouped(FILE * fp, int minid)
-{
-    TRSPACE *head, *cur;
-    int nblocks, nbytes;
-
-    if (fp == 0)
-        fp = stderr;
-
-    if (TRhead[0] != TRHEAD_PRESENTINAL || TRhead[2] != TRHEAD_POSTSENTINAL) {
-        MPL_error_printf("TRhead corrupted - likely memory overwrite.\n");
-        return;
-    }
-
-    MPL_trSortBlocks();
-    head = TRhead[1];
-    cur = 0;
-    while (head) {
-        cur = head->next;
-        if (head->id >= minid) {
-            nblocks = 1;
-            nbytes = (int) head->size;
-            while (cur &&
-                   strncmp(cur->fname, head->fname, TR_FNAME_LEN - 1) == 0 &&
-                   cur->lineno == head->lineno) {
-                nblocks++;
-                nbytes += (int) cur->size;
-                cur = cur->next;
-            }
-            fprintf(fp,
-                    "[%d] File %13s line %5d: %d bytes in %d allocation%c\n",
-                    world_rank, head->fname, head->lineno, nbytes, nblocks,
-                    (nblocks > 1) ? 's' : ' ');
-        }
-        head = cur;
-    }
-    fflush(fp);
-}
-
-void MPL_TrSetMaxMem(size_t size)
-{
-    TRMaxMemAllow = size;
 }
