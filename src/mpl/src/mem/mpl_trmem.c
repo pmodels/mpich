@@ -150,7 +150,27 @@ static volatile size_t TRMaxMemAllow = 0;
 /* 8 bytes = 16 hex chars + 0x (2 chars) + the null is 19 */
 #define MAX_ADDRESS_CHARS 19
 
-static void addrToHex(void *addr, char string[MAX_ADDRESS_CHARS]);
+static void addrToHex(void *addr, char string[MAX_ADDRESS_CHARS])
+{
+    int i;
+    static char hex[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
+        '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+    };
+    /* The following construction is used to keep compilers from issuing
+     * a warning message about casting a pointer to an integer type */
+    intptr_t iaddr = (intptr_t) ((char *) addr - (char *) 0);
+
+    /* Initial location */
+    i = sizeof(void *) * 2;
+    string[i + 2] = 0;
+    while (i) {
+        string[i + 1] = hex[iaddr & 0xF];
+        iaddr >>= 4;
+        i--;
+    }
+    string[0] = '0';
+    string[1] = 'x';
+}
 
 /*+C
    MPL_trinit - Setup the space package.  Only needed for
@@ -1047,26 +1067,4 @@ void MPL_trdumpGrouped(FILE * fp, int minid)
 void MPL_TrSetMaxMem(size_t size)
 {
     TRMaxMemAllow = size;
-}
-
-static void addrToHex(void *addr, char string[MAX_ADDRESS_CHARS])
-{
-    int i;
-    static char hex[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
-        '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
-    };
-    /* The following construction is used to keep compilers from issuing
-     * a warning message about casting a pointer to an integer type */
-    intptr_t iaddr = (intptr_t) ((char *) addr - (char *) 0);
-
-    /* Initial location */
-    i = sizeof(void *) * 2;
-    string[i + 2] = 0;
-    while (i) {
-        string[i + 1] = hex[iaddr & 0xF];
-        iaddr >>= 4;
-        i--;
-    }
-    string[0] = '0';
-    string[1] = 'x';
 }
