@@ -87,7 +87,7 @@
 /* We can't use mpimem.h, because the memory routines are no longer available
    as utility routines, and instead now import properties from the device 
    and other parts of the code */
-/* mpimem.h contains prototypes for MPIU_Strncpy etc. */
+/* mpimem.h contains prototypes for MPL_strncpy etc. */
 /* #include "mpimem.h" */
 
 typedef struct { PMISetup pmiinfo; IOLabelSetup labelinfo; } SetupInfo;

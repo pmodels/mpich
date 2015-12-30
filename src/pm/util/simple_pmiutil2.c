@@ -54,7 +54,7 @@ void PMIU_Set_rank( int PMI_rank )
 }
 void PMIU_SetServer( void )
 {
-    MPIU_Strncpy( PMIU_print_id, "server", PMIU_IDSIZE );
+    MPL_strncpy( PMIU_print_id, "server", PMIU_IDSIZE );
 }
 
 /* Note that vfprintf is part of C89 */
@@ -243,14 +243,14 @@ int PMIU_parse_keyvals( char *st )
 	/* Null terminate the key */
 	*p = 0;
 	/* store key */
-        MPIU_Strncpy( PMIU_keyval_tab[PMIU_keyval_tab_idx].key, keystart, 
+        MPL_strncpy( PMIU_keyval_tab[PMIU_keyval_tab_idx].key, keystart, 
 		      MAXKEYLEN );
 
 	valstart = ++p;			/* start of value */
 	while ( *p != ' ' && *p != '\n' && *p != '\0' )
 	    p++;
 	/* store value */
-        MPIU_Strncpy( PMIU_keyval_tab[PMIU_keyval_tab_idx].value, valstart, 
+        MPL_strncpy( PMIU_keyval_tab[PMIU_keyval_tab_idx].value, valstart, 
 		      MAXVALLEN );
 	offset = p - valstart;
 	/* When compiled with -fPIC, the pgcc compiler generates incorrect
@@ -278,9 +278,9 @@ char *PMIU_getval( const char *keystr, char *valstr, int vallen )
     
     for (i = 0; i < PMIU_keyval_tab_idx; i++) {
 	if ( strcmp( keystr, PMIU_keyval_tab[i].key ) == 0 ) { 
-	    rc = MPIU_Strncpy( valstr, PMIU_keyval_tab[i].value, vallen );
+	    rc = MPL_strncpy( valstr, PMIU_keyval_tab[i].value, vallen );
 	    if (rc != 0) {
-		PMIU_printf( 1, "MPIU_Strncpy failed in PMIU_getval\n" );
+		PMIU_printf( 1, "MPL_strncpy failed in PMIU_getval\n" );
 		return NULL;
 	    }
 	    return valstr;
@@ -296,7 +296,7 @@ void PMIU_chgval( const char *keystr, char *valstr )
     
     for ( i = 0; i < PMIU_keyval_tab_idx; i++ ) {
 	if ( strcmp( keystr, PMIU_keyval_tab[i].key ) == 0 ) {
-	    MPIU_Strncpy( PMIU_keyval_tab[i].value, valstr, MAXVALLEN - 1 );
+	    MPL_strncpy( PMIU_keyval_tab[i].value, valstr, MAXVALLEN - 1 );
 	    PMIU_keyval_tab[i].value[MAXVALLEN - 1] = '\0';
 	}
     }

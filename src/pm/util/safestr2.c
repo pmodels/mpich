@@ -15,7 +15,7 @@
  */
 
 /*
- * MPIU_Strncpy - Copy at most n characters.  Stop once a null is reached.
+ * MPL_strncpy - Copy at most n characters.  Stop once a null is reached.
  *
  * This is different from strncpy, which null pads so that exactly
  * n characters are copied.  The strncpy behavior is correct for many 
@@ -28,7 +28,7 @@
  * Question: should we provide a way to request the length of the string,
  * since we know it?
  */
-/*@ MPIU_Strncpy - Copy a string with a maximum length
+/*@ MPL_strncpy - Copy a string with a maximum length
   
 Input Parameters:
 +   instr - String to copy
@@ -53,7 +53,7 @@ Output Parameters:
   Module:
   Utility
   @*/
-int MPIU_Strncpy( char *dest, const char *src, size_t n )
+int MPL_strncpy( char *dest, const char *src, size_t n )
 {
     char * restrict d_ptr = dest;
     const char * restrict s_ptr = src;

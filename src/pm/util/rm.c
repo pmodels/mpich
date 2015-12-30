@@ -229,7 +229,7 @@ MachineTable *MPIE_ReadMachines( const char *arch, int nNeeded,
 	    len = strlen(path);
 	
 	/* Copy path into the file name */
-	MPIU_Strncpy( dirname, path, len+1 );
+	MPL_strncpy( dirname, path, len+1 );
 
 	dirname[len] = 0;
 
@@ -239,7 +239,7 @@ MachineTable *MPIE_ReadMachines( const char *arch, int nNeeded,
 			   "%s/machines.%s", dirname, arch );
 	}
 	else {
-	    MPIU_Strncpy( machinesfile, dirname, PATH_MAX );
+	    MPL_strncpy( machinesfile, dirname, PATH_MAX );
 	    MPIU_Strnapp( machinesfile, "/machines", PATH_MAX );
 	}
 	DBG_PRINTF( ("Attempting to open %s\n", machinesfile) );

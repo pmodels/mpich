@@ -849,7 +849,7 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
     char *basename;
     int ret;
     
-    ret = MPIU_Strncpy(temp_filename, filePattern, MAXPATHLEN);
+    ret = MPL_strncpy(temp_filename, filePattern, MAXPATHLEN);
     if (ret) goto fn_fail;
     
     MPIU_Basename(temp_filename, &basename);
@@ -857,7 +857,7 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
     /* make sure there's enough room in temp_filename to store temp_pattern */
     if (basename - temp_filename > MAXPATHLEN - sizeof(temp_pattern)) goto fn_fail;
     
-    MPIU_Strncpy(basename, temp_pattern, sizeof(temp_pattern));
+    MPL_strncpy(basename, temp_pattern, sizeof(temp_pattern));
     
     fd = mkstemp(temp_filename);
     if (fd == -1) goto fn_fail;
@@ -889,7 +889,7 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
     int ret;
     errno_t ret_errno;
     
-    ret = MPIU_Strncpy(temp_filename, filePattern, MAXPATHLEN);
+    ret = MPL_strncpy(temp_filename, filePattern, MAXPATHLEN);
     if (ret) goto fn_fail;
 
     MPIU_Basename(temp_filename, &basename);
@@ -897,7 +897,7 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
     /* make sure there's enough room in temp_filename to store temp_pattern */
     if (basename - temp_filename > MAXPATHLEN - sizeof(temp_pattern)) goto fn_fail;
 
-    MPIU_Strncpy(basename, temp_pattern, sizeof(temp_pattern));
+    MPL_strncpy(basename, temp_pattern, sizeof(temp_pattern));
     
     ret_errno = _mktemp_s(temp_filename, MAXPATHLEN);
     if (ret_errno != 0) goto fn_fail;

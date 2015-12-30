@@ -96,7 +96,7 @@ int MPI_Win_get_name(MPI_Win win, char *win_name, int *resultlen)
 
     /* ... body of routine ...  */
     
-    MPIU_Strncpy( win_name, win_ptr->name, MPI_MAX_OBJECT_NAME );
+    MPL_strncpy( win_name, win_ptr->name, MPI_MAX_OBJECT_NAME );
     *resultlen = (int)strlen( win_name );
     
     /* ... end of body of routine ... */

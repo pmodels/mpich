@@ -407,11 +407,11 @@ void RLOG_DescribeState(RLOG_Struct* pRLOG, int state, char *name, char *color)
     pHeader->length = sizeof(RLOG_HEADER) + sizeof(RLOG_STATE);
 
     pState->event = state;
-    MPIU_Strncpy(pState->color, (color != NULL) ? color : get_random_color_str(), RLOG_COLOR_LENGTH);
+    MPL_strncpy(pState->color, (color != NULL) ? color : get_random_color_str(), RLOG_COLOR_LENGTH);
     pState->color[RLOG_COLOR_LENGTH-1] = '\0';
     if (name)
     {
-	MPIU_Strncpy(pState->description, name, RLOG_DESCRIPTION_LENGTH);
+	MPL_strncpy(pState->description, name, RLOG_DESCRIPTION_LENGTH);
 	pState->description[RLOG_DESCRIPTION_LENGTH-1] = '\0';
     }
     else

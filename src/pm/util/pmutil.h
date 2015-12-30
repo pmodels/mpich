@@ -90,7 +90,7 @@ extern int MPIE_Debug;
 #define MPIU_Free(a)      free((void *)(a))
 #define MPIU_Realloc(a,b)  realloc((void *)(a),(size_t)(b))
 
-int MPIU_Strncpy( char *outstr, const char *instr, size_t maxlen );
+int MPL_strncpy( char *outstr, const char *instr, size_t maxlen );
 int MPIU_Strnapp( char *, const char *, size_t );
 char *MPIU_Strdup( const char * );
 

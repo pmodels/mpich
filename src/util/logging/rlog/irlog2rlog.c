@@ -213,7 +213,7 @@ void SaveArrow(RLOG_IARROW *pArrow)
 
     if (g_fArrow == NULL)
     {
-	MPIU_Strncpy(g_pszArrowFilename, "ArrowFile.tmp", 1024);
+	MPL_strncpy(g_pszArrowFilename, "ArrowFile.tmp", 1024);
 	g_fArrow = fopen(g_pszArrowFilename, "w+b");
 	if (g_fArrow == NULL)
 	{

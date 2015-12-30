@@ -587,7 +587,7 @@ void MPIR_Err_get_string( int errorcode, char * msg, int length,
 	if (!MPIR_Process.errcode_to_string) {
 	    /* FIXME: not internationalized */
 	    /* --BEGIN ERROR HANDLING-- */
-	    if (MPIU_Strncpy(msg, "Undefined dynamic error code", 
+	    if (MPL_strncpy(msg, "Undefined dynamic error code", 
 			     num_remaining))
 	    {
 		msg[num_remaining - 1] = '\0';
@@ -596,7 +596,7 @@ void MPIR_Err_get_string( int errorcode, char * msg, int length,
 	}
 	else
 	{
-	    if (MPIU_Strncpy(msg, MPIR_Process.errcode_to_string( errorcode ), 
+	    if (MPL_strncpy(msg, MPIR_Process.errcode_to_string( errorcode ), 
 			     num_remaining))
 	    {
 		msg[num_remaining - 1] = '\0';
@@ -606,7 +606,7 @@ void MPIR_Err_get_string( int errorcode, char * msg, int length,
     else if ( (errorcode & ERROR_CLASS_MASK) == errorcode) {
 	error_class = MPIR_ERR_GET_CLASS(errorcode);
 
-        if (MPIU_Strncpy(msg, get_class_msg( errorcode ), num_remaining))
+        if (MPL_strncpy(msg, get_class_msg( errorcode ), num_remaining))
 	    {
 		msg[num_remaining - 1] = '\0';
 	    }
@@ -618,7 +618,7 @@ void MPIR_Err_get_string( int errorcode, char * msg, int length,
            message is supposed to be complete by itself. */
 	error_class = MPIR_ERR_GET_CLASS(errorcode);
 
-        MPIU_Strncpy(msg, get_class_msg(error_class), num_remaining);
+        MPL_strncpy(msg, get_class_msg(error_class), num_remaining);
 	msg[num_remaining - 1] = '\0';
 	len = (int)strlen(msg);
 	msg += len;
@@ -1020,17 +1020,17 @@ int MPIR_Err_create_code_valist( int lastcode, int fatal, const char fcname[],
 				   specific_fmt, Argp );
 		}
 		else {
-		    MPIU_Strncpy( ring_msg, user_ring_msg, MPIR_MAX_ERROR_LINE );
+		    MPL_strncpy( ring_msg, user_ring_msg, MPIR_MAX_ERROR_LINE );
 		}
 	    }
 	    else if (generic_idx >= 0)
 	    {
-		MPIU_Strncpy( ring_msg,generic_err_msgs[generic_idx].long_name,
+		MPL_strncpy( ring_msg,generic_err_msgs[generic_idx].long_name,
 			      MPIR_MAX_ERROR_LINE );
 	    }
 	    else
 	    {
-		MPIU_Strncpy( ring_msg, generic_msg, MPIR_MAX_ERROR_LINE );
+		MPL_strncpy( ring_msg, generic_msg, MPIR_MAX_ERROR_LINE );
 	    }
 
 	    ring_msg[MPIR_MAX_ERROR_LINE] = '\0';
@@ -1381,13 +1381,13 @@ static const char * GetAssertString(int d)
 
     if (d == 0)
     {
-	MPIU_Strncpy(str, "assert=0", ASSERT_STR_MAXLEN);
+	MPL_strncpy(str, "assert=0", ASSERT_STR_MAXLEN);
 	return str;
     }
     cur = str;
     if (d & MPI_MODE_NOSTORE)
     {
-	MPIU_Strncpy(cur, "MPI_MODE_NOSTORE", len);
+	MPL_strncpy(cur, "MPI_MODE_NOSTORE", len);
 	n = strlen(cur);
 	cur += n;
 	len -= n;
@@ -1396,9 +1396,9 @@ static const char * GetAssertString(int d)
     if (d & MPI_MODE_NOCHECK)
     {
 	if (len < ASSERT_STR_MAXLEN)
-	    MPIU_Strncpy(cur, " | MPI_MODE_NOCHECK", len);
+	    MPL_strncpy(cur, " | MPI_MODE_NOCHECK", len);
 	else
-	    MPIU_Strncpy(cur, "MPI_MODE_NOCHECK", len);
+	    MPL_strncpy(cur, "MPI_MODE_NOCHECK", len);
 	n = strlen(cur);
 	cur += n;
 	len -= n;
@@ -1407,9 +1407,9 @@ static const char * GetAssertString(int d)
     if (d & MPI_MODE_NOPUT)
     {
 	if (len < ASSERT_STR_MAXLEN)
-	    MPIU_Strncpy(cur, " | MPI_MODE_NOPUT", len);
+	    MPL_strncpy(cur, " | MPI_MODE_NOPUT", len);
 	else
-	    MPIU_Strncpy(cur, "MPI_MODE_NOPUT", len);
+	    MPL_strncpy(cur, "MPI_MODE_NOPUT", len);
 	n = strlen(cur);
 	cur += n;
 	len -= n;
@@ -1418,9 +1418,9 @@ static const char * GetAssertString(int d)
     if (d & MPI_MODE_NOPRECEDE)
     {
 	if (len < ASSERT_STR_MAXLEN)
-	    MPIU_Strncpy(cur, " | MPI_MODE_NOPRECEDE", len);
+	    MPL_strncpy(cur, " | MPI_MODE_NOPRECEDE", len);
 	else
-	    MPIU_Strncpy(cur, "MPI_MODE_NOPRECEDE", len);
+	    MPL_strncpy(cur, "MPI_MODE_NOPRECEDE", len);
 	n = strlen(cur);
 	cur += n;
 	len -= n;
@@ -1429,9 +1429,9 @@ static const char * GetAssertString(int d)
     if (d & MPI_MODE_NOSUCCEED)
     {
 	if (len < ASSERT_STR_MAXLEN)
-	    MPIU_Strncpy(cur, " | MPI_MODE_NOSUCCEED", len);
+	    MPL_strncpy(cur, " | MPI_MODE_NOSUCCEED", len);
 	else
-	    MPIU_Strncpy(cur, "MPI_MODE_NOSUCCEED", len);
+	    MPL_strncpy(cur, "MPI_MODE_NOSUCCEED", len);
 	n = strlen(cur);
 	cur += n;
 	len -= n;
@@ -1464,7 +1464,7 @@ static const char * GetDTypeString(MPI_Datatype d)
 
     if (d == 0)
     {
-	MPIU_Strncpy(default_str, "dtype=0x0", sizeof(default_str));
+	MPL_strncpy(default_str, "dtype=0x0", sizeof(default_str));
 	return default_str;
     }
 
@@ -1593,9 +1593,9 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	case (int)'s':
 	    s = va_arg(list, char *);
 	    if (s) 
-	        MPIU_Strncpy(str, s, maxlen);
+	        MPL_strncpy(str, s, maxlen);
             else {
-		MPIU_Strncpy(str, "<NULL>", maxlen );
+		MPL_strncpy(str, "<NULL>", maxlen );
 	    }
 	    break;
 	case (int)'d':
@@ -1619,13 +1619,13 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	    switch (i)
 	    {
 	    case MPI_ANY_SOURCE:
-		MPIU_Strncpy(str, "MPI_ANY_SOURCE", maxlen);
+		MPL_strncpy(str, "MPI_ANY_SOURCE", maxlen);
 		break;
 	    case MPI_PROC_NULL:
-		MPIU_Strncpy(str, "MPI_PROC_NULL", maxlen);
+		MPL_strncpy(str, "MPI_PROC_NULL", maxlen);
 		break;
 	    case MPI_ROOT:
-		MPIU_Strncpy(str, "MPI_ROOT", maxlen);
+		MPL_strncpy(str, "MPI_ROOT", maxlen);
 		break;
 	    default:
 		MPL_snprintf(str, maxlen, "%d", i);
@@ -1637,7 +1637,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	    switch (t)
 	    {
 	    case MPI_ANY_TAG:
-		MPIU_Strncpy(str, "MPI_ANY_TAG", maxlen);
+		MPL_strncpy(str, "MPI_ANY_TAG", maxlen);
 		break;
 	    default:
                 /* Note that MPI_UNDEFINED is not a valid tag value,
@@ -1654,7 +1654,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	       where that is valid */
 	    if (p == MPI_IN_PLACE)
 	    {
-		MPIU_Strncpy(str, "MPI_IN_PLACE", maxlen);
+		MPL_strncpy(str, "MPI_IN_PLACE", maxlen);
 	    }
 	    else
 	    {
@@ -1670,13 +1670,13 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	    switch (C)
 	    {
 	    case MPI_COMM_WORLD:
-		MPIU_Strncpy(str, "MPI_COMM_WORLD", maxlen);
+		MPL_strncpy(str, "MPI_COMM_WORLD", maxlen);
 		break;
 	    case MPI_COMM_SELF:
-		MPIU_Strncpy(str, "MPI_COMM_SELF", maxlen);
+		MPL_strncpy(str, "MPI_COMM_SELF", maxlen);
 		break;
 	    case MPI_COMM_NULL:
-		MPIU_Strncpy(str, "MPI_COMM_NULL", maxlen);
+		MPL_strncpy(str, "MPI_COMM_NULL", maxlen);
 		break;
 	    default:
 		MPL_snprintf(str, maxlen, "comm=0x%x", C);
@@ -1687,7 +1687,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	    info = va_arg(list, MPI_Info);
 	    if (info == MPI_INFO_NULL)
 	    {
-		MPIU_Strncpy(str, "MPI_INFO_NULL", maxlen);
+		MPL_strncpy(str, "MPI_INFO_NULL", maxlen);
 	    }
 	    else
 	    {
@@ -1706,7 +1706,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	    F = va_arg(list, MPI_File);
 	    if (F == MPI_FILE_NULL)
 	    {
-		MPIU_Strncpy(str, "MPI_FILE_NULL", maxlen);
+		MPL_strncpy(str, "MPI_FILE_NULL", maxlen);
 	    }
 	    else
 	    {
@@ -1719,7 +1719,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	    W = va_arg(list, MPI_Win);
 	    if (W == MPI_WIN_NULL)
 	    {
-		MPIU_Strncpy(str, "MPI_WIN_NULL", maxlen);
+		MPL_strncpy(str, "MPI_WIN_NULL", maxlen);
 	    }
 	    else
 	    {
@@ -1734,7 +1734,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	    G = va_arg(list, MPI_Group);
 	    if (G == MPI_GROUP_NULL)
 	    {
-		MPIU_Strncpy(str, "MPI_GROUP_NULL", maxlen);
+		MPL_strncpy(str, "MPI_GROUP_NULL", maxlen);
 	    }
 	    else
 	    {
@@ -1749,7 +1749,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	    R = va_arg(list, MPI_Request);
 	    if (R == MPI_REQUEST_NULL)
 	    {
-		MPIU_Strncpy(str, "MPI_REQUEST_NULL", maxlen);
+		MPL_strncpy(str, "MPI_REQUEST_NULL", maxlen);
 	    }
 	    else
 	    {
@@ -1760,7 +1760,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	    E = va_arg(list, MPI_Errhandler);
 	    if (E == MPI_ERRHANDLER_NULL)
 	    {
-		MPIU_Strncpy(str, "MPI_ERRHANDLER_NULL", maxlen);
+		MPL_strncpy(str, "MPI_ERRHANDLER_NULL", maxlen);
 	    }
 	    else
 	    {
@@ -1788,7 +1788,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
     }
     if (*begin != '\0')
     {
-	MPIU_Strncpy(str, begin, maxlen);
+	MPL_strncpy(str, begin, maxlen);
     }
     /* Free the dup'ed format string */
     MPIU_Free( fmt );
@@ -2003,7 +2003,7 @@ static int ErrGetInstanceString( int errorcode, char msg[], int num_remaining )
     int len;
 
     if (MPIR_CVAR_PRINT_ERROR_STACK) {
-	MPIU_Strncpy(msg, ", error stack:\n", num_remaining);
+	MPL_strncpy(msg, ", error stack:\n", num_remaining);
 	msg[num_remaining - 1] = '\0';
 	len = (int)strlen(msg);
 	msg += len;

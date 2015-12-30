@@ -41,9 +41,9 @@ int MPIDU_Ftb_init(void)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_FTB_INIT);
 
-    MPIU_Strncpy(ci.event_space, "ftb.mpi.mpich", sizeof(ci.event_space));
-    MPIU_Strncpy(ci.client_name, "mpich " MPICH_VERSION, sizeof(ci.client_name));
-    MPIU_Strncpy(ci.client_subscription_style, "FTB_SUBSCRIPTION_NONE", sizeof(ci.client_subscription_style));
+    MPL_strncpy(ci.event_space, "ftb.mpi.mpich", sizeof(ci.event_space));
+    MPL_strncpy(ci.client_name, "mpich " MPICH_VERSION, sizeof(ci.client_name));
+    MPL_strncpy(ci.client_subscription_style, "FTB_SUBSCRIPTION_NONE", sizeof(ci.client_subscription_style));
     ci.client_polling_queue_len = -1;
     
 #ifdef USE_PMI2_API
@@ -85,7 +85,7 @@ void MPIDU_Ftb_publish(const char *event_name, const char *event_payload)
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_FTB_PUBLISH);
 
     event_prop.event_type = 1;
-    MPIU_Strncpy(event_prop.event_payload, event_payload, sizeof(event_prop.event_payload));
+    MPL_strncpy(event_prop.event_payload, event_payload, sizeof(event_prop.event_payload));
     
     CHECK_FTB_ERROR(FTB_Publish(client_handle, event_name, &event_prop, &event_handle));
 

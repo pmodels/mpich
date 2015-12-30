@@ -791,7 +791,7 @@ static int MPIDI_getConnInfo( int rank, char *buf, int bufsize, MPIDI_PG_t *pg )
 
     /* printf( "Copying %s to buf\n", connInfo->connStrings[rank] ); fflush(stdout); */
 
-    MPIU_Strncpy( buf, connInfo->connStrings[rank], bufsize );
+    MPL_strncpy( buf, connInfo->connStrings[rank], bufsize );
     return MPI_SUCCESS;
 }
 

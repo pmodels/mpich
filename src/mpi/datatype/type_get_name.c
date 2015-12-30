@@ -181,7 +181,7 @@ int MPIR_Datatype_init_names(void)
 	    MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,
 		   "mpi_names[%d].name = %p", i, mpi_names[i].name));
 
-	    MPIU_Strncpy(datatype_ptr->name, mpi_names[i].name,
+	    MPL_strncpy(datatype_ptr->name, mpi_names[i].name,
 			 MPI_MAX_OBJECT_NAME);
 	}
 	/* Handle the minloc/maxloc types */
@@ -196,7 +196,7 @@ int MPIR_Datatype_init_names(void)
 	    if (!datatype_ptr) {
 		MPIR_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_INTERN, "**typeinitminmaxloc");
 	    }
-	    MPIU_Strncpy(datatype_ptr->name, mpi_maxloc_names[i].name,
+	    MPL_strncpy(datatype_ptr->name, mpi_maxloc_names[i].name,
 			 MPI_MAX_OBJECT_NAME);
 	}
         needsInit = 0;
@@ -290,7 +290,7 @@ int MPI_Type_get_name(MPI_Datatype datatype, char *type_name, int *resultlen)
     }
 
     /* Include the null in MPI_MAX_OBJECT_NAME */
-    MPIU_Strncpy(type_name, datatype_ptr->name, MPI_MAX_OBJECT_NAME);
+    MPL_strncpy(type_name, datatype_ptr->name, MPI_MAX_OBJECT_NAME);
     *resultlen = (int) strlen(type_name);
 
     /* ... end of body of routine ... */

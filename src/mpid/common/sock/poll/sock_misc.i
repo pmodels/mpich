@@ -53,7 +53,7 @@ int MPIDU_Sock_get_host_description(int myRank,
 
     if (env_hostname != NULL)
     {
-	rc = MPIU_Strncpy(host_description, env_hostname, (size_t) len);
+	rc = MPL_strncpy(host_description, env_hostname, (size_t) len);
 	/* --BEGIN ERROR HANDLING-- */
 	if (rc != 0)
 	{
@@ -284,55 +284,55 @@ int MPIDU_Sock_get_error_class_string(int error, char *error_string, size_t leng
     switch (MPIR_ERR_GET_CLASS(error))
     {
     case MPIDU_SOCK_ERR_FAIL:
-	MPIU_Strncpy(error_string, "generic socket failure", length);
+	MPL_strncpy(error_string, "generic socket failure", length);
 	break;
     case MPIDU_SOCK_ERR_INIT:
-	MPIU_Strncpy(error_string, "socket module not initialized", length);
+	MPL_strncpy(error_string, "socket module not initialized", length);
 	break;
     case MPIDU_SOCK_ERR_NOMEM:
-	MPIU_Strncpy(error_string, "not enough memory to complete the socket operation", length);
+	MPL_strncpy(error_string, "not enough memory to complete the socket operation", length);
 	break;
     case MPIDU_SOCK_ERR_BAD_SET:
-	MPIU_Strncpy(error_string, "invalid socket set", length);
+	MPL_strncpy(error_string, "invalid socket set", length);
 	break;
     case MPIDU_SOCK_ERR_BAD_SOCK:
-	MPIU_Strncpy(error_string, "invalid socket", length);
+	MPL_strncpy(error_string, "invalid socket", length);
 	break;
     case MPIDU_SOCK_ERR_BAD_HOST:
-	MPIU_Strncpy(error_string, "host description buffer not large enough", length);
+	MPL_strncpy(error_string, "host description buffer not large enough", length);
 	break;
     case MPIDU_SOCK_ERR_BAD_HOSTNAME:
-	MPIU_Strncpy(error_string, "invalid host name", length);
+	MPL_strncpy(error_string, "invalid host name", length);
 	break;
     case MPIDU_SOCK_ERR_BAD_PORT:
-	MPIU_Strncpy(error_string, "invalid port", length);
+	MPL_strncpy(error_string, "invalid port", length);
 	break;
     case MPIDU_SOCK_ERR_BAD_BUF:
-	MPIU_Strncpy(error_string, "invalid buffer", length);
+	MPL_strncpy(error_string, "invalid buffer", length);
 	break;
     case MPIDU_SOCK_ERR_BAD_LEN:
-	MPIU_Strncpy(error_string, "invalid length", length);
+	MPL_strncpy(error_string, "invalid length", length);
 	break;
     case MPIDU_SOCK_ERR_SOCK_CLOSED:
-	MPIU_Strncpy(error_string, "socket closed", length);
+	MPL_strncpy(error_string, "socket closed", length);
 	break;
     case MPIDU_SOCK_ERR_CONN_CLOSED:
-	MPIU_Strncpy(error_string, "socket connection closed", length);
+	MPL_strncpy(error_string, "socket connection closed", length);
 	break;
     case MPIDU_SOCK_ERR_CONN_FAILED:
-	MPIU_Strncpy(error_string, "socket connection failed", length);
+	MPL_strncpy(error_string, "socket connection failed", length);
 	break;
     case MPIDU_SOCK_ERR_INPROGRESS:
-	MPIU_Strncpy(error_string, "socket operation in progress", length);
+	MPL_strncpy(error_string, "socket operation in progress", length);
 	break;
     case MPIDU_SOCK_ERR_TIMEOUT:
-	MPIU_Strncpy(error_string, "socket operation timed out", length);
+	MPL_strncpy(error_string, "socket operation timed out", length);
 	break;
     case MPIDU_SOCK_ERR_INTR:
-	MPIU_Strncpy(error_string, "socket operation interrupted", length);
+	MPL_strncpy(error_string, "socket operation interrupted", length);
 	break;
     case MPIDU_SOCK_ERR_NO_NEW_SOCK:
-	MPIU_Strncpy(error_string, "no new connection available", length);
+	MPL_strncpy(error_string, "no new connection available", length);
 	break;
     default:
 	MPL_snprintf(error_string, length, "unknown socket error %d", error);

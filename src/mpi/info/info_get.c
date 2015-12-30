@@ -39,7 +39,7 @@ int MPIR_Info_get_impl(MPID_Info *info_ptr, const char *key, int valuelen, char 
 
     while (curr_ptr) {
         if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
-            err = MPIU_Strncpy(value, curr_ptr->value, valuelen+1);
+            err = MPL_strncpy(value, curr_ptr->value, valuelen+1);
             /* +1 because the MPI Standard says "In C, valuelen
              * (passed to MPI_Info_get) should be one less than the
              * amount of allocated space to allow for the null

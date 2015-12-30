@@ -32,11 +32,11 @@ int MPID_Get_processor_name(char * name, int namelen, int * resultlen)
     }
     MPIR_ERR_CHKANDJUMP(processorNameLen <= 0, mpi_errno, MPI_ERR_OTHER, "**procnamefailed");
 
-    /* MPIU_Strncpy only copies until (and including) the null,
+    /* MPL_strncpy only copies until (and including) the null,
        unlike strncpy, it does not blank pad.  This is a good thing
        here, because users don't always allocated MPI_MAX_PROCESSOR_NAME
        characters */
-    MPIU_Strncpy(name, processorName, namelen );
+    MPL_strncpy(name, processorName, namelen );
     if (resultlen)
         *resultlen = processorNameLen;
 

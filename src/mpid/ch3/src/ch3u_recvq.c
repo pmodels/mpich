@@ -1164,7 +1164,7 @@ int MPIDI_CH3U_Complete_posted_with_error(MPIDI_VC_t *vc)
 static char *tag_val_to_str(int tag, char *out, int max)
 {
     if (tag == MPI_ANY_TAG) {
-        MPIU_Strncpy(out, "MPI_ANY_TAG", max);
+        MPL_strncpy(out, "MPI_ANY_TAG", max);
     }
     else {
         MPL_snprintf(out, max, "%d", tag);
@@ -1176,7 +1176,7 @@ static char *tag_val_to_str(int tag, char *out, int max)
 static char *rank_val_to_str(int rank, char *out, int max)
 {
     if (rank == MPI_ANY_SOURCE) {
-        MPIU_Strncpy(out, "MPI_ANY_SOURCE", max);
+        MPL_strncpy(out, "MPI_ANY_SOURCE", max);
     }
     else {
         MPL_snprintf(out, max, "%d", rank);

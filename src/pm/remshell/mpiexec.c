@@ -80,7 +80,7 @@
 #include "rm.h"
 #include "simple_pmiutil.h"
 #include "env.h"             /* MPIE_Putenv */
-/* mpimem.h contains prototypes for MPIU_Strncpy etc. */
+/* mpimem.h contains prototypes for MPL_strncpy etc. */
 /* We no longer can use these because they are MPI device specific */
 /* #include "mpimem.h" */
 
@@ -439,7 +439,7 @@ static int AddEnvSetToCmdLine( const char *envName, const char *envValue,
     else {
 	char tmpBuf[1024];
 	args[nArgs++] = MPIU_Strdup( "export" );
-	MPIU_Strncpy( tmpBuf, envName, sizeof(tmpBuf) );
+	MPL_strncpy( tmpBuf, envName, sizeof(tmpBuf) );
 	MPIU_Strnapp( tmpBuf, "=", sizeof(tmpBuf) );
 	MPIU_Strnapp( tmpBuf, envValue, sizeof(tmpBuf) );
 	args[nArgs++] = MPIU_Strdup( tmpBuf );
