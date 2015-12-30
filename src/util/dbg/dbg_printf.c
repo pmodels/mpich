@@ -77,6 +77,24 @@ static int dbg_rank = -1;
 
 static void dbg_init(void);
 
+/*
+   This function finds the basename in a path (ala "man 1 basename").
+   *basename will point to an element in path.
+   More formally: This function sets basename to the character just after the last '/' in path.
+*/
+static void find_basename(char *path, char **basename)
+{
+    char *c;
+
+    c = *basename = path;
+    while (*c)
+    {
+        if (*c == '/')
+            *basename = c+1;
+        ++c;
+    } 
+}
+
 int MPIU_dbg_init(int rank)
 {
     dbg_rank = rank;
@@ -852,7 +870,7 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
     ret = MPL_strncpy(temp_filename, filePattern, MAXPATHLEN);
     if (ret) goto fn_fail;
     
-    MPIU_Basename(temp_filename, &basename);
+    find_basename(temp_filename, &basename);
 
     /* make sure there's enough room in temp_filename to store temp_pattern */
     if (basename - temp_filename > MAXPATHLEN - sizeof(temp_pattern)) goto fn_fail;
@@ -892,7 +910,7 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
     ret = MPL_strncpy(temp_filename, filePattern, MAXPATHLEN);
     if (ret) goto fn_fail;
 
-    MPIU_Basename(temp_filename, &basename);
+    find_basename(temp_filename, &basename);
 
     /* make sure there's enough room in temp_filename to store temp_pattern */
     if (basename - temp_filename > MAXPATHLEN - sizeof(temp_pattern)) goto fn_fail;
