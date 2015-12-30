@@ -265,7 +265,7 @@ int MPIE_EnvInitData( EnvData *elist, int getValue )
 	    if (!str) {
 		return 1;
 	    }
-	    MPIU_Strncpy( str, elist->name, slen );
+	    MPL_strncpy( str, elist->name, slen );
 	    if (value && *value) {
 		rc = MPIU_Strnapp( str, "=", slen );
 		rc += MPIU_Strnapp( str, value, slen );

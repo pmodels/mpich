@@ -364,7 +364,7 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
     }
     else {
 	/* Copy this name into the output name */
-	MPIU_Strncpy( ifname, ifname_string, maxIfname );
+	MPL_strncpy( ifname, ifname_string, maxIfname );
     }
 
     /* If we don't have an IP address, try to get it from the name */

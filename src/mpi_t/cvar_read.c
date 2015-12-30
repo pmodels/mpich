@@ -63,7 +63,7 @@ int MPIR_T_cvar_read_impl(MPI_T_cvar_handle handle, void *buf)
             ((double *)buf)[i] = ((double *)addr)[i];
         break;
     case MPI_CHAR:
-        MPIU_Strncpy(buf, addr, count);
+        MPL_strncpy(buf, addr, count);
         break;
     default:
          /* FIXME the error handling code may not have been setup yet */

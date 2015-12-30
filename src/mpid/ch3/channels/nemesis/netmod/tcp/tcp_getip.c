@@ -256,7 +256,7 @@ int MPIDI_Get_IP_for_iface(const char *ifname, MPIDU_Sock_ifaddr_t *ifaddr, int 
     fd = socket(AF_INET, SOCK_DGRAM, 0);
     MPIR_ERR_CHKANDJUMP2(fd < 0, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", MPIU_Strerror(errno), errno);
     ifr.ifr_addr.sa_family = AF_INET; /* just IPv4 for now */
-    MPIU_Strncpy(ifr.ifr_name, ifname, IFNAMSIZ-1);
+    MPL_strncpy(ifr.ifr_name, ifname, IFNAMSIZ-1);
     ret = ioctl(fd, SIOCGIFADDR, &ifr);
     MPIR_ERR_CHKANDJUMP2(ret < 0, mpi_errno, MPI_ERR_OTHER, "**ioctl", "**ioctl %d %s", errno, MPIU_Strerror(errno));
 

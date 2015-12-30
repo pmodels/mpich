@@ -389,9 +389,9 @@ int PMI_KVS_Put( const char kvsname[], const char key[], const char value[] )
 
     /* This is a special hack to support singleton initialization */
     if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM) {
-	rc = MPIU_Strncpy(cached_singinit_key,key,PMI_keylen_max);
+	rc = MPL_strncpy(cached_singinit_key,key,PMI_keylen_max);
 	if (rc != 0) return PMI_FAIL;
-	rc = MPIU_Strncpy(cached_singinit_val,value,PMI_vallen_max);
+	rc = MPL_strncpy(cached_singinit_val,value,PMI_vallen_max);
 	if (rc != 0) return PMI_FAIL;
 	return 0;
     }

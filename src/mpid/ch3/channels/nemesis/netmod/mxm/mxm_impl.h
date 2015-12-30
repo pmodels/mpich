@@ -395,7 +395,7 @@ static inline void _dbg_mxm_hexdump(void *ptr, int buflen)
 static inline char *_tag_val_to_str(int tag, char *out, int max)
 {
     if (tag == MPI_ANY_TAG) {
-        MPIU_Strncpy(out, "MPI_ANY_TAG", max);
+        MPL_strncpy(out, "MPI_ANY_TAG", max);
     }
     else {
         MPL_snprintf(out, max, "%d", tag);
@@ -406,7 +406,7 @@ static inline char *_tag_val_to_str(int tag, char *out, int max)
 static inline char *_rank_val_to_str(int rank, char *out, int max)
 {
     if (rank == MPI_ANY_SOURCE) {
-        MPIU_Strncpy(out, "MPI_ANY_SOURCE", max);
+        MPL_strncpy(out, "MPI_ANY_SOURCE", max);
     }
     else {
         MPL_snprintf(out, max, "%d", rank);

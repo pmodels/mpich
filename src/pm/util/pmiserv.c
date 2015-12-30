@@ -494,7 +494,7 @@ static int fPMIKVSGetNewSpace( char kvsname[], int maxlen )
     PMIKVSpace *kvs;
 
     kvs = fPMIKVSAllocate( );
-    MPIU_Strncpy( kvsname, kvs->kvsname, maxlen );
+    MPL_strncpy( kvsname, kvs->kvsname, maxlen );
     return 0;
 }
 static int fPMIKVSFindKey( PMIKVSpace *kvs, 
@@ -508,7 +508,7 @@ static int fPMIKVSFindKey( PMIKVSpace *kvs,
 	rc = strcmp( p->key, key );
 	if (rc == 0) {
 	    /* Found it.  Get the value and return success */
-	    MPIU_Strncpy( val, p->val, maxval );
+	    MPL_strncpy( val, p->val, maxval );
 	    return 0;
 	}
 	if (rc > 0) {
@@ -548,8 +548,8 @@ static int fPMIKVSAddPair( PMIKVSpace *kvs,
     if (!pair) {
 	return -1;
     }
-    MPIU_Strncpy( pair->key, key, sizeof(pair->key) );
-    MPIU_Strncpy( pair->val, val, sizeof(pair->val) );
+    MPL_strncpy( pair->key, key, sizeof(pair->key) );
+    MPL_strncpy( pair->val, val, sizeof(pair->val) );
 
     /* Insert into the list */
     pair->nextPair = p;
@@ -698,7 +698,7 @@ static int fPMI_Handle_put( PMIProcess *pentry )
 	}
 	else {
 	    rc = 0;
-	    MPIU_Strncpy( message, "success", PMIU_MAXLINE );
+	    MPL_strncpy( message, "success", PMIU_MAXLINE );
 	}
     }
     else {
@@ -733,18 +733,18 @@ static int fPMI_Handle_get( PMIProcess *pentry )
 	rc = fPMIKVSFindKey( kvs, key, value, sizeof(value) );
 	if (rc == 0) {
 	    rc = 0;
-	    MPIU_Strncpy( message, "success", PMIU_MAXLINE );
+	    MPL_strncpy( message, "success", PMIU_MAXLINE );
 	}
 	else if (rc) {
 	    rc = -1;
-	    MPIU_Strncpy( value, "unknown", PMIU_MAXLINE );
+	    MPL_strncpy( value, "unknown", PMIU_MAXLINE );
 	    MPL_snprintf( message, PMIU_MAXLINE, "key_%s_not_found", 
 			   kvsname );
 	}
     }
     else { 
 	rc = -1;
-	MPIU_Strncpy( value, "unknown", PMIU_MAXLINE );
+	MPL_strncpy( value, "unknown", PMIU_MAXLINE );
 	MPL_snprintf( message, PMIU_MAXLINE, "kvs_%s_not_found", kvsname );
     }
     MPL_snprintf( outbuf, PMIU_MAXLINE, 
@@ -1142,7 +1142,7 @@ static int fPMI_Handle_spawn( PMIProcess *pentry )
 	}
 	else if (strncmp( "preput_key_", cmdPtr, 11 ) == 0) {
 	    /* Save the key */
-	    MPIU_Strncpy( key, valPtr, sizeof(key) );
+	    MPL_strncpy( key, valPtr, sizeof(key) );
 	}
 	else if (strncmp( "preput_val_", cmdPtr, 11 ) == 0) {
 	    /* Place the key,val into the space associate with the current 
@@ -1166,7 +1166,7 @@ static int fPMI_Handle_spawn( PMIProcess *pentry )
 	    /* The actual name has a digit, which indicates *which* info 
 	       key this is */
 	    curInfoIdx = atoi( cmdPtr + 9 );
-	    MPIU_Strncpy( curInfoKey, valPtr, sizeof(curInfoKey) );
+	    MPL_strncpy( curInfoKey, valPtr, sizeof(curInfoKey) );
 	}
 	else if (strncmp( "info_val_", cmdPtr, 9 ) == 0) {
 	    /* The actual name has a digit, which indicates *which* info 
@@ -1177,7 +1177,7 @@ static int fPMI_Handle_spawn( PMIProcess *pentry )
 		return 1;
 	    }
 	    else {
-		MPIU_Strncpy( curInfoVal, valPtr, sizeof(curInfoVal) );
+		MPL_strncpy( curInfoVal, valPtr, sizeof(curInfoVal) );
 		/* Apply this info item */
 		fPMIInfoKey( app, curInfoKey, curInfoVal );
 		/* printf( "Got info %s+%s\n", curInfoKey, curInfoVal ); */

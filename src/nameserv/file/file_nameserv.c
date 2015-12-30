@@ -92,7 +92,7 @@ int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
         }
     }
 
-    MPIU_Strncpy( (*handle_ptr)->dirname, dirname, MAXPATHLEN );
+    MPL_strncpy( (*handle_ptr)->dirname, dirname, MAXPATHLEN );
     MPIU_Strnapp( (*handle_ptr)->dirname, "/.mpinamepub/", MAXPATHLEN );
 
     /* Make the directory if necessary */
@@ -122,7 +122,7 @@ int MPID_NS_Publish( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 
     /* Determine file and directory name.  The file name is from
        the service name */
-    MPIU_Strncpy( filename, handle->dirname, MAXPATHLEN );
+    MPL_strncpy( filename, handle->dirname, MAXPATHLEN );
     MPIU_Strnapp( filename, service_name, MAXPATHLEN );
 
     /* Add the file name to the known files now, in case there is 
@@ -206,7 +206,7 @@ int MPID_NS_Lookup( MPID_NS_Handle handle, const MPID_Info *info_ptr,
     
     /* Determine file and directory name.  The file name is from
        the service name */
-    MPIU_Strncpy( filename, handle->dirname, MAXPATHLEN );
+    MPL_strncpy( filename, handle->dirname, MAXPATHLEN );
     MPIU_Strnapp( filename, service_name, MAXPATHLEN );
 
     fp = fopen( filename, "r" );
@@ -254,7 +254,7 @@ int MPID_NS_Unpublish( MPID_NS_Handle handle, const MPID_Info *info_ptr,
     /* Remove the file corresponding to the service name */
     /* Determine file and directory name.  The file name is from
        the service name */
-    MPIU_Strncpy( filename, handle->dirname, MAXPATHLEN );
+    MPL_strncpy( filename, handle->dirname, MAXPATHLEN );
     MPIU_Strnapp( filename, service_name, MAXPATHLEN );
 
     /* Find the filename from the list of published files */

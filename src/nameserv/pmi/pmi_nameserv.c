@@ -184,7 +184,7 @@ int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
     pmi_namepub_kvs = getenv("PMI_NAMEPUB_KVS");
     if (pmi_namepub_kvs)
     {
-	MPIU_Strncpy((*handle_ptr)->kvsname, pmi_namepub_kvs, length);
+	MPL_strncpy((*handle_ptr)->kvsname, pmi_namepub_kvs, length);
     }
     else
     {

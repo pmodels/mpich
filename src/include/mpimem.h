@@ -76,10 +76,7 @@ extern "C" {
 
 /* Define the string copy and duplication functions */
 /* Safer string routines */
-int MPIU_Strncpy( char *outstr, const char *instr, size_t maxlen );
-
 int MPIU_Strnapp( char *, const char *, size_t );
-char *MPIU_Strdup( const char * );
 
 /* ---------------------------------------------------------------------- */
 /* FIXME - The string routines do not belong in the memory header file  */
@@ -237,11 +234,6 @@ void MPIU_trdump(FILE *, int);
 #if defined(strdup) || defined(__strdup)
 #undef strdup
 #endif
-    /* We include string.h first, so that if it contains a definition of 
-     strdup, we won't have an obscure failure when a file include string.h
-    later in the compilation process. */
-#include <string.h>
-
     /* The ::: should cause the compiler to choke; the string 
        will give the explanation */
 #undef strdup /* in case strdup is a macro */
@@ -253,16 +245,7 @@ void MPIU_trdump(FILE *, int);
 #define MPIU_Calloc(a,b)  calloc((size_t)(a),(size_t)(b))
 #define MPIU_Free(a)      free((void *)(a))
 #define MPIU_Realloc(a,b)  realloc((void *)(a),(size_t)(b))
-
-#ifdef HAVE_STRDUP
-/* Watch for the case where strdup is defined as a macro by a header include */
-# if defined(NEEDS_STRDUP_DECL) && !defined(strdup)
-extern char *strdup( const char * );
-# endif
-#define MPIU_Strdup(a)    strdup(a)
-#else
-/* Don't define MPIU_Strdup, provide it in safestr.c */
-#endif /* HAVE_STRDUP */
+#define MPIU_Strdup       MPL_strdup
 
 #endif /* USE_MEMORY_TRACING */
 

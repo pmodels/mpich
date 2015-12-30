@@ -306,7 +306,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 
 	MPIR_Process.comm_parent = comm;
 	MPIU_Assert(MPIR_Process.comm_parent != NULL);
-	MPIU_Strncpy(comm->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
+	MPL_strncpy(comm->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
         
 	/* FIXME: Check that this intercommunicator gets freed in MPI_Finalize
 	   if not already freed.  */
@@ -480,7 +480,7 @@ static int init_pg( int *argc, char ***argv,
 	if (pg_id == NULL) {
 	    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomem");
 	}
-	MPIU_Strncpy( pg_id, "0", 2 );
+	MPL_strncpy( pg_id, "0", 2 );
     }
 
     /*

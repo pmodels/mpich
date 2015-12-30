@@ -1372,7 +1372,7 @@ int MPID_Init(int * argc,
 
 	MPIR_Process.comm_parent = comm;
 	MPIU_Assert(MPIR_Process.comm_parent != NULL);
-	MPIU_Strncpy(comm->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
+	MPL_strncpy(comm->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
 
 	/* FIXME: Check that this intercommunicator gets freed in MPI_Finalize
 	   if not already freed.  */
@@ -1651,7 +1651,7 @@ int MPIDI_InitPG( int *argc, char ***argv,
     else {
 	/* Create a default pg id */
 	pg_id = MPIU_Malloc(2);
-	MPIU_Strncpy( pg_id, "0", 2 );
+	MPL_strncpy( pg_id, "0", 2 );
     }
 
 	TRACE_ERR("pg_size=%d pg_id=%s\n", pg_size, pg_id);

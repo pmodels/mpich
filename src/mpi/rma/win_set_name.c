@@ -90,7 +90,7 @@ int MPI_Win_set_name(MPI_Win win, const char *win_name)
 
     /* ... body of routine ...  */
     
-    MPIU_Strncpy( win_ptr->name, win_name, MPI_MAX_OBJECT_NAME );
+    MPL_strncpy( win_ptr->name, win_name, MPI_MAX_OBJECT_NAME );
     
     /* ... end of body of routine ... */
 

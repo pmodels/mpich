@@ -150,7 +150,7 @@ int MPIR_Err_set_msg( int code, const char *msg_string )
     /* --END ERROR HANDLING-- */
 
     /* --------------------------------------------------------------------- */
-    MPIU_Strncpy( str, msg_string, msg_len + 1 );
+    MPL_strncpy( str, msg_string, msg_len + 1 );
     if (errcode) {
 	if (errcode < first_free_code) {
 	    if (user_code_msgs[errcode]) {
