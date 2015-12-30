@@ -414,13 +414,6 @@ if (pointer_) { \
 #   error "No function defined for case-insensitive strncmp"
 #endif
 
-/* MPIU_Basename(path, basename)
-   This function finds the basename in a path (ala "man 1 basename").
-   *basename will point to an element in path.
-   More formally: This function sets basename to the character just after the last '/' in path.
-*/
-void MPIU_Basename(char *path, char **basename);
-
 /* Evaluates to a boolean expression, true if the given byte ranges overlap,
  * false otherwise.  That is, true iff [a_,a_+a_len_) overlaps with [b_,b_+b_len_) */
 #define MPIU_MEM_RANGES_OVERLAP(a_,a_len_,b_,b_len_) \
