@@ -310,7 +310,7 @@ int mypreamble( void *data, ProcessState *pState )
 	ranks[0] = 0;
 	for (i=0; i<size; i++) {
 	    MPL_snprintf( digits, sizeof(digits), "%d,", i );
-	    MPIU_Strnapp( ranks, digits, sizeof(ranks) );
+	    MPL_strnapp( ranks, digits, sizeof(ranks) );
 	}
 	/* Remove the trailing comma */
 	if (size > 0) 

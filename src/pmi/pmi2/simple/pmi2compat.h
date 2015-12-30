@@ -9,8 +9,7 @@
 #define PMI2U_Malloc MPIU_Malloc
 #define PMI2U_Free MPIU_Free
 #define PMI2U_Strdup MPIU_Strdup
-#define PMI2U_Strncpy MPL_strncpy
-#define PMI2U_Strnapp MPIU_Strnapp
+#define PMI2U_Strnapp MPL_strnapp
 #define PMI2U_Assert MPIU_Assert
 #define PMI2U_Exit MPL_exit
 #define PMI2U_Info MPID_Info

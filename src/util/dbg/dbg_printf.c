@@ -1048,7 +1048,7 @@ static int MPIU_DBG_Get_filename(char *filename, int len)
                 MPL_snprintf( rankAsChar, sizeof(rankAsChar), "%d", 
                                worldRank );
                 *pDest = 0;
-                MPIU_Strnapp( filename, rankAsChar, len );
+                MPL_strnapp( filename, rankAsChar, len );
                 pDest += strlen(rankAsChar);
             }
             else if (*p == 't') {
@@ -1061,7 +1061,7 @@ static int MPIU_DBG_Get_filename(char *filename, int len)
                 MPL_snprintf( threadIDAsChar, sizeof(threadIDAsChar), 
                                "%llx", threadID );
                 *pDest = 0;
-                MPIU_Strnapp( filename, threadIDAsChar, len );
+                MPL_strnapp( filename, threadIDAsChar, len );
                 pDest += strlen(threadIDAsChar);
 #else
                 *pDest++ = '0';
@@ -1071,7 +1071,7 @@ static int MPIU_DBG_Get_filename(char *filename, int len)
                 /* FIXME: Get world number */
                 /* *pDest++ = '0'; */
                 *pDest = 0;
-                MPIU_Strnapp( filename, worldNumAsChar, len );
+                MPL_strnapp( filename, worldNumAsChar, len );
                 pDest += strlen(worldNumAsChar);
             }
             else if (*p == 'p') {
@@ -1084,7 +1084,7 @@ static int MPIU_DBG_Get_filename(char *filename, int len)
 #endif /* HAVE_GETPID */
                 MPL_snprintf( pidAsChar, sizeof(pidAsChar), "%d", (int)pid );
                 *pDest = 0;
-                MPIU_Strnapp( filename, pidAsChar, len );
+                MPL_strnapp( filename, pidAsChar, len );
                 pDest += strlen(pidAsChar);
             }
             else {

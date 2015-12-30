@@ -573,7 +573,7 @@ int PMI_Spawn_multiple(int count,
 	if (rc < 0) { 
 	    return PMI_FAIL;
 	}
-	rc = MPIU_Strnapp(buf,tempbuf,PMIU_MAXLINE);
+	rc = MPL_strnapp(buf,tempbuf,PMIU_MAXLINE);
 	if (rc != 0) {
 	    return PMI_FAIL;
 	}
@@ -597,7 +597,7 @@ int PMI_Spawn_multiple(int count,
 		if (rc < 0) {
 		    return PMI_FAIL;
 		}
-                rc = MPIU_Strnapp(buf,tempbuf,PMIU_MAXLINE);
+                rc = MPL_strnapp(buf,tempbuf,PMIU_MAXLINE);
 		if (rc != 0) {
 		    return PMI_FAIL;
 		}
@@ -611,7 +611,7 @@ int PMI_Spawn_multiple(int count,
 	if (rc < 0) {
 	    return PMI_FAIL;
 	}
-        rc = MPIU_Strnapp(buf,tempbuf,PMIU_MAXLINE);
+        rc = MPL_strnapp(buf,tempbuf,PMIU_MAXLINE);
 	if (rc != 0) {
 	    return PMI_FAIL;
 	}
@@ -622,7 +622,7 @@ int PMI_Spawn_multiple(int count,
 	    return PMI_FAIL;
 	}
 
-        rc = MPIU_Strnapp(buf,tempbuf,PMIU_MAXLINE);
+        rc = MPL_strnapp(buf,tempbuf,PMIU_MAXLINE);
 	if (rc != 0) {
 	    return PMI_FAIL;
 	}
@@ -632,7 +632,7 @@ int PMI_Spawn_multiple(int count,
 	    if (rc < 0) {
 		return PMI_FAIL;
 	    }
-	    rc = MPIU_Strnapp(buf,tempbuf,PMIU_MAXLINE); 
+	    rc = MPL_strnapp(buf,tempbuf,PMIU_MAXLINE); 
 	    if (rc != 0) {
 		return PMI_FAIL;
 	    }
@@ -641,7 +641,7 @@ int PMI_Spawn_multiple(int count,
 	    if (rc < 0) {
 		return PMI_FAIL;
 	    }
-	    rc = MPIU_Strnapp(buf,tempbuf,PMIU_MAXLINE); 
+	    rc = MPL_strnapp(buf,tempbuf,PMIU_MAXLINE); 
 	    if (rc != 0) {
 		return PMI_FAIL;
 	    }
@@ -651,7 +651,7 @@ int PMI_Spawn_multiple(int count,
 	if (rc < 0) {
 	    return PMI_FAIL;
 	}
-        rc = MPIU_Strnapp(buf,tempbuf,PMIU_MAXLINE);
+        rc = MPL_strnapp(buf,tempbuf,PMIU_MAXLINE);
 	if (rc != 0) {
 	    return PMI_FAIL;
 	}
@@ -662,7 +662,7 @@ int PMI_Spawn_multiple(int count,
 	    if (rc < 0) {
 		return PMI_FAIL;
 	    }
-	    rc = MPIU_Strnapp(buf,tempbuf,PMIU_MAXLINE); 
+	    rc = MPL_strnapp(buf,tempbuf,PMIU_MAXLINE); 
 	    if (rc != 0) {
 		return PMI_FAIL;
 	    }
@@ -671,13 +671,13 @@ int PMI_Spawn_multiple(int count,
 	    if (rc < 0) {
 		return PMI_FAIL;
 	    }
-	    rc = MPIU_Strnapp(buf,tempbuf,PMIU_MAXLINE); 
+	    rc = MPL_strnapp(buf,tempbuf,PMIU_MAXLINE); 
 	    if (rc != 0) {
 		return PMI_FAIL;
 	    }
 	}
 
-        rc = MPIU_Strnapp(buf, "endcmd\n", PMIU_MAXLINE);
+        rc = MPL_strnapp(buf, "endcmd\n", PMIU_MAXLINE);
 	if (rc != 0) {
 	    return PMI_FAIL;
 	}

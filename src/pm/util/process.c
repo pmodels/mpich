@@ -350,7 +350,7 @@ int MPIE_ExecProgram( ProcessState *pState, char *envp[] )
 	   certain files or libraries, for example cygwin1.dll for
 	   Cygwin */
 #ifdef NEEDS_BIN_IN_PATH
-	MPIU_Strnapp( pathstring, ":/bin", sizeof(pathstring)-1 );
+	MPL_strnapp( pathstring, ":/bin", sizeof(pathstring)-1 );
 #endif
 	putenv( pathstring );
 

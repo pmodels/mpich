@@ -240,7 +240,7 @@ MachineTable *MPIE_ReadMachines( const char *arch, int nNeeded,
 	}
 	else {
 	    MPL_strncpy( machinesfile, dirname, PATH_MAX );
-	    MPIU_Strnapp( machinesfile, "/machines", PATH_MAX );
+	    MPL_strnapp( machinesfile, "/machines", PATH_MAX );
 	}
 	DBG_PRINTF( ("Attempting to open %s\n", machinesfile) );
 	fp = fopen( machinesfile, "r" );

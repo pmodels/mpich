@@ -75,9 +75,6 @@ extern "C" {
   D*/
 
 /* Define the string copy and duplication functions */
-/* Safer string routines */
-int MPIU_Strnapp( char *, const char *, size_t );
-
 /* ---------------------------------------------------------------------- */
 /* FIXME - The string routines do not belong in the memory header file  */
 /* FIXME - The string error code such be MPICH-usable error codes */

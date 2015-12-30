@@ -57,6 +57,8 @@ extern char *strerror(int errnum);
 char *MPL_strerror(int errnum);
 #endif /* MPL_HAVE_STRERROR */
 
+int MPL_strnapp(char *dest, const char *src, size_t n);
+
 /* *INDENT-ON* */
 #if defined(__cplusplus)
 }
