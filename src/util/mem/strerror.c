@@ -4,9 +4,6 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-/* This would live in safestr.c, but it requires thread-private storage support
- * from mpiimpl.h and friends.  safestr.c is meant to be able to be used in
- * different software packages, perhaps someday by moving it to MPL. */
 #include "mpiimpl.h"
 
 #if defined(HAVE_STRERROR_R) && defined(NEEDS_STRERROR_R_DECL)

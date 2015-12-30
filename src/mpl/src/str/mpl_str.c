@@ -312,3 +312,55 @@ char *MPL_strerror(int errnum)
     return msgbuf;
 }
 #endif /* MPL_HAVE_STRERROR */
+
+/*@ MPL_strnapp - Append to a string with a maximum length
+
+Input Parameters:
++   instr - String to copy
+-   maxlen - Maximum total length of 'outstr'
+
+Output Parameters:
+.   outstr - String to copy into
+
+    Notes:
+    This routine is similar to 'strncat' except that the 'maxlen' argument
+    is the maximum total length of 'outstr', rather than the maximum
+    number of characters to move from 'instr'.  Thus, this routine is
+    easier to use when the declared size of 'instr' is known.
+
+  Module:
+  Utility
+  @*/
+int MPL_strnapp(char *dest, const char *src, size_t n)
+{
+    char *mpl_restrict d_ptr = dest;
+    const char *mpl_restrict s_ptr = src;
+    register int i;
+
+    /* Get to the end of dest */
+    i = (int) n;
+    while (i-- > 0 && *d_ptr)
+        d_ptr++;
+    if (i <= 0)
+        return 1;
+
+    /* Append.  d_ptr points at first null and i is remaining space. */
+    while (*s_ptr && i-- > 0) {
+        *d_ptr++ = *s_ptr++;
+    }
+
+    /* We allow i >= (not just >) here because the first while decrements
+     * i by one more than there are characters, leaving room for the null */
+    if (i >= 0) {
+        *d_ptr = 0;
+        return 0;
+    }
+    else {
+        /* Force the null at the end */
+        *--d_ptr = 0;
+
+        /* We may want to force an error message here, at least in the
+         * debugging version */
+        return 1;
+    }
+}

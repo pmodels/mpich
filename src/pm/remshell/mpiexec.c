@@ -440,8 +440,8 @@ static int AddEnvSetToCmdLine( const char *envName, const char *envValue,
 	char tmpBuf[1024];
 	args[nArgs++] = MPIU_Strdup( "export" );
 	MPL_strncpy( tmpBuf, envName, sizeof(tmpBuf) );
-	MPIU_Strnapp( tmpBuf, "=", sizeof(tmpBuf) );
-	MPIU_Strnapp( tmpBuf, envValue, sizeof(tmpBuf) );
+	MPL_strnapp( tmpBuf, "=", sizeof(tmpBuf) );
+	MPL_strnapp( tmpBuf, envValue, sizeof(tmpBuf) );
 	args[nArgs++] = MPIU_Strdup( tmpBuf );
 	args[nArgs++] = MPIU_Strdup( ";" );
     }
