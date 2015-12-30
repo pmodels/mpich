@@ -121,7 +121,6 @@ int MPIU_Str_add_binary_arg(char **str_ptr, int *maxlen_ptr, const char *key,
 			    const char *buffer, int length);
 int MPIU_Str_add_int_arg(char **str_ptr, int *maxlen_ptr, const char *key, 
 			 int val);
-MPIU_BOOL MPIU_Str_hide_string_arg(char *str, const char *key);
 int MPIU_Str_add_string(char **str_ptr, int *maxlen_ptr, const char *val);
 int MPIU_Str_get_string(char **str_ptr, char *val, int maxlen);
 

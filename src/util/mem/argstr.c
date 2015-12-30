@@ -340,62 +340,6 @@ static int token_copy(const char *token, char *str, int maxlen)
     return MPIU_STR_TRUNCATED;
 }
 
-static void token_hide(char *token)
-{
-    /* check parameters */
-    if (token == NULL)
-	return;
-
-    /* cosy up to the token */
-    token = (char*)first_token(token);
-    if (token == NULL)
-	return;
-
-    if (*token == MPIU_STR_DELIM_CHAR)
-    {
-	*token = MPIU_STR_HIDE_CHAR;
-	return;
-    }
-
-    /* quoted */
-    if (*token == MPIU_STR_QUOTE_CHAR)
-    {
-	*token = MPIU_STR_HIDE_CHAR;
-	token++; /* move over the first quote */
-	while (*token != '\0')
-	{
-	    if (*token == MPIU_STR_ESCAPE_CHAR)
-	    {
-		if (*(token+1) == MPIU_STR_QUOTE_CHAR)
-		{
-		    *token = MPIU_STR_HIDE_CHAR;
-		    token++;
-		}
-		*token = MPIU_STR_HIDE_CHAR;
-	    }
-	    else
-	    {
-		if (*token == MPIU_STR_QUOTE_CHAR)
-		{
-		    *token = MPIU_STR_HIDE_CHAR;
-		    return;
-		}
-		*token = MPIU_STR_HIDE_CHAR;
-	    }
-	    token++;
-	}
-	return;
-    }
-
-    /* literal */
-    while (*token != MPIU_STR_DELIM_CHAR && 
-	   (*token != MPIU_STR_SEPAR_CHAR) && *token != '\0')
-    {
-	*token = MPIU_STR_HIDE_CHAR;
-	token++;
-    }
-}
-
 /*@ MPIU_Str_get_string_arg - Extract an option from a string with a 
   maximum length
   
@@ -504,55 +448,6 @@ int MPIU_Str_get_binary_arg(const char *str, const char *flag, char *buffer,
 	}
     } while (str);
     return MPIU_STR_FAIL;
-}
-
-/*@ MPIU_Str_hide_string_arg - Over-write the value of an string option 
-  with * characters
-  
-Input Parameters:
-+   str - input string
--   key - key
-
-Output Parameters:
-.   str - The string data is modified if the key is found in the string
-
-    Return value:
-    MPIU_STR_SUCCESS, MPIU_STR_FAIL
-
-    Notes:
-    This routine covers an option in a string converting "key = value" to 
-    "key = *****"
-
-  Module:
-  Utility
-  @*/
-MPIU_BOOL MPIU_Str_hide_string_arg(char *str, const char *flag)
-{
-    /* line up with the first token */
-    str = (char*)first_token(str);
-    if (str == NULL)
-	return TRUE;
-
-    do
-    {
-	if (compare_token(str, flag) == 0)
-	{
-	    str = (char*)next_token(str);
-	    if (compare_token(str, MPIU_STR_DELIM_STR) == 0)
-	    {
-		str = (char*)next_token(str);
-		if (str == NULL)
-		    return TRUE;
-		token_hide(str);
-		return TRUE;
-	    }
-	}
-	else
-	{
-	    str = (char*)next_token(str);
-	}
-    } while (str);
-    return FALSE;
 }
 
 /*@ MPIU_Str_get_int_arg - Extract an option from a string
@@ -814,7 +709,6 @@ int MPIU_Str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
 	return MPIU_STR_FAIL;
 
     /* add the flag */
-/*     printf("strstr flag\n"); */
     if (strstr(flag, MPIU_STR_SEPAR_STR) || strstr(flag, MPIU_STR_DELIM_STR) ||
 	flag[0] == MPIU_STR_QUOTE_CHAR)
     {
@@ -830,7 +724,6 @@ int MPIU_Str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
 	MPIU_DBG_MSG_S(OTHER,VERBOSE,
                   "partial argument added to string: '%s'", *str_ptr);
 	**str_ptr = '\0';
-	/*(*str_ptr)[num_chars-1] = '\0';*/
 	return MPIU_STR_NOMEM;
     }
     *str_ptr = *str_ptr + num_chars;
@@ -841,7 +734,6 @@ int MPIU_Str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
     *maxlen_ptr = *maxlen_ptr - 1;
 
     /* add the value string */
-/*     printf("strstr val\n"); */
     if (strstr(val, MPIU_STR_SEPAR_STR) || strstr(val, MPIU_STR_DELIM_STR) ||
 	val[0] == MPIU_STR_QUOTE_CHAR)
     {
@@ -866,10 +758,6 @@ int MPIU_Str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
 	MPIU_DBG_MSG_S(OTHER,VERBOSE,
 		       "partial argument added to string: '%s'", *str_ptr);
 	**orig_str_ptr = '\0';
-	/*
-	*str_ptr = *str_ptr - 1;
-	**str_ptr = '\0';
-	*/
 	return MPIU_STR_NOMEM;
     }
     
@@ -967,7 +855,6 @@ int MPIU_Str_add_binary_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
 	MPIU_DBG_MSG_S(OTHER,VERBOSE,
 		       "partial argument added to string: '%s'", *str_ptr);
 	**str_ptr = '\0';
-	/*(*str_ptr)[num_chars-1] = '\0';*/
 	return MPIU_STR_NOMEM;
     }
     *str_ptr = *str_ptr + num_chars;
@@ -992,10 +879,6 @@ int MPIU_Str_add_binary_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
     {
 	MPIU_DBG_MSG_S(OTHER,VERBOSE,
 		       "partial argument added to string: '%s'", *str_ptr);
-	/*
-	*str_ptr = *str_ptr - 1;
-	**str_ptr = '\0';
-	*/
 	**orig_str_ptr = '\0';
 	return MPIU_STR_NOMEM;
     }
@@ -1008,69 +891,3 @@ int MPIU_Str_add_binary_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
 
     return MPIU_STR_SUCCESS;
 }
-
-/*
-int test_argstrings()
-{
-    char buffer[1024];
-    char buffer2[1024];
-    char key[100];
-    char val[1024];
-    int maxlen, maxlen2;
-    char *iter, *iter2;
-    int ibuf[3] = { 1, 2, 3 };
-    int age;
-
-    iter = buffer;
-    maxlen = 1024;
-    MPIU_Str_add_string_arg(&iter, &maxlen, "name", "David Ashton");
-    MPIU_Str_add_string_arg(&iter, &maxlen, "a b", "c d");
-    MPIU_Str_add_binary_arg(&iter, &maxlen, "array", ibuf, 12);
-    MPIU_Str_add_string_arg(&iter, &maxlen, "=", "equals");
-    MPIU_Str_add_string_arg(&iter, &maxlen, "\"help=", "=\"");
-    MPIU_Str_add_int_arg(&iter, &maxlen, "age", 123);
-
-    printf("encoded buffer: <%s>\n", buffer);
-
-    MPIU_Str_get_string_arg(buffer, "name", val, 1024);
-    printf("name = '%s'\n", val);
-    MPIU_Str_get_string_arg(buffer, "a b", val, 1024);
-    printf("a b = '%s'\n", val);
-    MPIU_Str_get_string_arg(buffer, "=", val, 1024);
-    printf("= = '%s'\n", val);
-    MPIU_Str_get_string_arg(buffer, "\"help=", val, 1024);
-    printf("\"help= = '%s'\n", val);
-    MPIU_Str_get_int_arg(buffer, "age", &age);
-    printf("age = %d\n", age);
-    MPIU_Str_get_binary_arg(buffer, "array", ibuf, 12);
-    printf("ibuf[0] = %d\n", ibuf[0]);
-    printf("ibuf[1] = %d\n", ibuf[1]);
-    printf("ibuf[2] = %d\n", ibuf[2]);
-
-    iter = buffer2;
-    maxlen = 1024;
-    MPIU_Str_add_string_arg(&iter, &maxlen, "big arg", buffer);
-    MPIU_Str_add_string(&iter, &maxlen, "Once isn't enough for me");
-    MPIU_Str_add_int_arg(&iter, &maxlen, "size", 100);
-    printf("doubly encoded buffer: <%s>\n", buffer2);
-
-    MPIU_Str_get_string_arg(buffer2, "big arg", buffer, 1024);
-    printf("big arg = '%s'\n", buffer);
-    MPIU_Str_get_string_arg(buffer, "name", val, 1024);
-    printf("name = '%s'\n", val);
-    MPIU_Str_get_string_arg(buffer, "a b", val, 1024);
-    printf("a b = '%s'\n", val);
-    MPIU_Str_get_string_arg(buffer, "=", val, 1024);
-    printf("= = '%s'\n", val);
-    MPIU_Str_get_int_arg(buffer, "age", &age);
-    printf("age = %d\n", age);
-    MPIU_Str_get_binary_arg(buffer, "array", ibuf, 12);
-    printf("ibuf[0] = %d\n", ibuf[0]);
-    printf("ibuf[1] = %d\n", ibuf[1]);
-    printf("ibuf[2] = %d\n", ibuf[2]);
-
-    MPIU_Str_get_int_arg(buffer2, "size", &age);
-    printf("size = %d\n", age);
-    return 0;
-}
-*/
