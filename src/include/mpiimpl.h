@@ -342,12 +342,6 @@ void MPIR_DatatypeAttrFinalize( void );
 /* Should the following be moved into mpihandlemem.h ?*/
 /* ------------------------------------------------------------------------- */
 
-/* Routines to initialize handle allocations */
-/* These are now internal to the handlemem package
-void *MPIU_Handle_direct_init( void *, int, int, int );
-void *MPIU_Handle_indirect_init( void *(**)[], int *, int, int, int, int );
-int MPIU_Handle_free( void *((*)[]), int );
-*/
 /* Convert Handles to objects for MPI types that have predefined objects */
 /* TODO examine generated assembly for this construct, it's probably suboptimal
  * on Blue Gene.  An if/else if/else might help the compiler out.  It also lets
