@@ -185,26 +185,6 @@ void MPL_trinit(int rank)
     /* FIXME: We should use generalized parameter handling here
      * to allow use of the command line as well as environment
      * variables */
-    /* these should properly only be "MPL_" parameters, but for backwards
-     * compatibility we also support "MPICH_" parameters. */
-    s = getenv("MPICH_TRMEM_INIT");
-    if (s && *s && (strcmp(s, "YES") == 0 || strcmp(s, "yes") == 0)) {
-        TRSetBytes = 1;
-    }
-    s = getenv("MPICH_TRMEM_VALIDATE");
-    if (s && *s && (strcmp(s, "YES") == 0 || strcmp(s, "yes") == 0)) {
-        TRdebugLevel = 1;
-    }
-    s = getenv("MPICH_TRMEM_INITZERO");
-    if (s && *s && (strcmp(s, "YES") == 0 || strcmp(s, "yes") == 0)) {
-        TRDefaultByte = 0;
-        TRFreedByte = 0;
-    }
-    s = getenv("MPICH_TRMEM_MAX_OVERHEAD");
-    if (s && *s) {
-        long l = atol(s);
-        TRMaxOverhead = (size_t)l;
-    }
     s = getenv("MPL_TRMEM_INIT");
     if (s && *s && (strcmp(s, "YES") == 0 || strcmp(s, "yes") == 0)) {
         TRSetBytes = 1;
