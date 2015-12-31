@@ -126,13 +126,6 @@ void MPIU_dump_dbg_memlog_to_stdout(void);
 void MPIU_dump_dbg_memlog_to_file(const char *filename);
 void MPIU_dump_dbg_memlog(FILE * fp);
 
-#define MPIU_dbglog_flush()				\
-{							\
-    if (MPIU_dbg_state & MPIU_DBG_STATE_STDOUT)	\
-    {							\
-	fflush(stdout);					\
-    }							\
-}
 int MPIU_DBG_Outevent(const char *, int, int, int, const char *, ...) 
                                         ATTRIBUTE((format(printf,5,6)));
 int MPIU_DBG_Init( int *, char ***, int, int, int );

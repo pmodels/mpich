@@ -316,7 +316,9 @@ int MPIU_dbg_printf(const char * str, ...)
 	va_start(list, str);
 	n = MPIU_dbglog_vprintf(str, list);
 	va_end(list);
-	MPIU_dbglog_flush();
+
+        if (dbg_state & DBG_STATE_STDOUT)
+            fflush(stdout);
     }
     /* MPID_Common_thread_unlock(); */
     
