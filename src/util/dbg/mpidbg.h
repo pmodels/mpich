@@ -117,15 +117,6 @@ enum MPIU_DBG_CLASS { MPIU_DBG_PT2PT         = 0x1,
 
 extern int MPIU_DBG_ActiveClasses;
 extern int MPIU_DBG_MaxLevel;
-typedef enum MPIU_dbg_state_t
-{
-    MPIU_DBG_STATE_NONE = 0,
-    MPIU_DBG_STATE_UNINIT = 1,
-    MPIU_DBG_STATE_STDOUT = 2,
-    MPIU_DBG_STATE_MEMLOG = 4,
-    MPIU_DBG_STATE_FILE = 8
-}
-MPIU_dbg_state_t;
 
 int MPIU_dbg_init(int rank);
 int MPIU_dbg_printf(const char *str, ...) ATTRIBUTE((format(printf,1,2)));
@@ -135,7 +126,6 @@ void MPIU_dump_dbg_memlog_to_stdout(void);
 void MPIU_dump_dbg_memlog_to_file(const char *filename);
 void MPIU_dump_dbg_memlog(FILE * fp);
 
-extern MPIU_dbg_state_t MPIU_dbg_state;
 #define MPIU_dbglog_flush()				\
 {							\
     if (MPIU_dbg_state & MPIU_DBG_STATE_STDOUT)	\
