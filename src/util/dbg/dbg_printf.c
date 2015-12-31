@@ -62,7 +62,7 @@ extern FILE *fdopen(int fd, const char *mode);
 #define DBG_MEMLOG_NUM_LINES 1024
 #define DBG_MEMLOG_LINE_SIZE 256
 
-FILE * MPIU_dbg_fp = NULL;
+static FILE * global_dbg_fp = NULL;
 static char **dbg_memlog = NULL;
 static int dbg_memlog_next = 0;
 static int dbg_memlog_count = 0;
@@ -104,11 +104,11 @@ int MPIU_dbg_init(int rank)
 
 	/* Only open the file only once in case MPIU_dbg_init is called more 
 	   than once */
-	if (MPIU_dbg_fp == NULL)
+	if (global_dbg_fp == NULL)
 	{
 	    MPL_snprintf(fn, 128, "mpich-dbg-%d.log", dbg_rank);
-	    MPIU_dbg_fp = fopen(fn, "w");
-	    setvbuf(MPIU_dbg_fp, NULL, _IONBF, 0);
+	    global_dbg_fp = fopen(fn, "w");
+	    setvbuf(global_dbg_fp, NULL, _IONBF, 0);
 	}
     }
     
@@ -226,10 +226,10 @@ int MPIU_dbglog_printf(const char *str, ...)
 	va_end(list);
     }
 
-    if ((MPIU_dbg_state & MPIU_DBG_STATE_FILE) && MPIU_dbg_fp != NULL)
+    if ((MPIU_dbg_state & MPIU_DBG_STATE_FILE) && global_dbg_fp != NULL)
     {
 	va_start(list, str);
-	n = vfprintf(MPIU_dbg_fp, str, list);
+	n = vfprintf(global_dbg_fp, str, list);
 	va_end(list);
     }
 
@@ -283,10 +283,10 @@ int MPIU_dbglog_vprintf(const char *str, va_list ap)
 	va_copy_end(list);
     }
 
-    if ((MPIU_dbg_state & MPIU_DBG_STATE_FILE) && MPIU_dbg_fp != NULL)
+    if ((MPIU_dbg_state & MPIU_DBG_STATE_FILE) && dbg_global_fp != NULL)
     {
 	va_copy(list, ap);
-	n = vfprintf(MPIU_dbg_fp, str, list);
+	n = vfprintf(global_dbg_fp, str, list);
 	va_end(list);
     }
 
