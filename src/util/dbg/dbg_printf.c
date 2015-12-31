@@ -68,6 +68,15 @@ static int dbg_memlog_next = 0;
 static int dbg_memlog_count = 0;
 static int dbg_rank = -1;
 
+typedef enum {
+    DBG_STATE_NONE = 0,
+    DBG_STATE_UNINIT = 1,
+    DBG_STATE_STDOUT = 2,
+    DBG_STATE_MEMLOG = 4,
+    DBG_STATE_FILE = 8
+} dbg_state_t;
+dbg_state_t dbg_state = DBG_STATE_UNINIT;
+
 static void dbg_init(void);
 
 /*
@@ -92,13 +101,13 @@ int MPIU_dbg_init(int rank)
 {
     dbg_rank = rank;
 
-    if (MPIU_dbg_state == MPIU_DBG_STATE_UNINIT)
+    if (dbg_state == DBG_STATE_UNINIT)
     {
 	dbg_init();
     }
 
     /* If file logging is enable, we need to open a file */
-    if (MPIU_dbg_state & MPIU_DBG_STATE_FILE)
+    if (dbg_state & DBG_STATE_FILE)
     {
 	char fn[128];
 
@@ -119,7 +128,7 @@ static void dbg_init(void)
 {
     char * envstr;
     
-    MPIU_dbg_state = MPIU_DBG_STATE_NONE;
+    dbg_state = DBG_STATE_NONE;
 
     /* FIXME: This should use MPIU_Param_get_string */
     envstr = getenv("MPICH_DBG_OUTPUT");
@@ -140,22 +149,22 @@ static void dbg_init(void)
      */
     if (strstr(envstr, "stdout"))
     {
-	MPIU_dbg_state = (MPIU_dbg_state_t)( MPIU_DBG_STATE_STDOUT |
-					      MPIU_dbg_state );
+	dbg_state = (dbg_state_t)( DBG_STATE_STDOUT |
+					      dbg_state );
     }
     if (strstr(envstr, "memlog"))
     {
-	MPIU_dbg_state = (MPIU_dbg_state_t)( MPIU_DBG_STATE_MEMLOG |
-					      MPIU_dbg_state );
+	dbg_state = (dbg_state_t)( DBG_STATE_MEMLOG |
+					      dbg_state );
     }
     if (strstr(envstr, "file"))
     {
-	MPIU_dbg_state = (MPIU_dbg_state_t) ( MPIU_DBG_STATE_FILE |
-					       MPIU_dbg_state );
+	dbg_state = (dbg_state_t) ( DBG_STATE_FILE |
+					       dbg_state );
     }
 
     /* If memlog is enabled, the we need to allocate some memory for it */
-    if (MPIU_dbg_state & MPIU_DBG_STATE_MEMLOG)
+    if (dbg_state & DBG_STATE_MEMLOG)
     {
 	dbg_memlog = MPIU_Malloc(DBG_MEMLOG_NUM_LINES * sizeof(char *) +
 				 DBG_MEMLOG_NUM_LINES * DBG_MEMLOG_LINE_SIZE);
@@ -171,8 +180,8 @@ static void dbg_init(void)
 	}
 	else
 	{
-	    MPIU_dbg_state = (MPIU_dbg_state_t)( MPIU_dbg_state &
-						  ~MPIU_DBG_STATE_MEMLOG );
+	    dbg_state = (dbg_state_t)( dbg_state &
+						  ~DBG_STATE_MEMLOG );
 	}
     }
 }
@@ -182,12 +191,12 @@ int MPIU_dbglog_printf(const char *str, ...)
     int n = 0;
     va_list list;
 
-    if (MPIU_dbg_state == MPIU_DBG_STATE_UNINIT)
+    if (dbg_state == DBG_STATE_UNINIT)
     {
 	dbg_init();
     }
 
-    if (MPIU_dbg_state & MPIU_DBG_STATE_MEMLOG)
+    if (dbg_state & DBG_STATE_MEMLOG)
     {
 	/* FIXME: put everything on one line until a \n is found */
 	
@@ -219,14 +228,14 @@ int MPIU_dbglog_printf(const char *str, ...)
 	}
     }
 
-    if (MPIU_dbg_state & MPIU_DBG_STATE_STDOUT)
+    if (dbg_state & DBG_STATE_STDOUT)
     {
 	va_start(list, str);
 	n = vprintf(str, list);
 	va_end(list);
     }
 
-    if ((MPIU_dbg_state & MPIU_DBG_STATE_FILE) && global_dbg_fp != NULL)
+    if ((dbg_state & DBG_STATE_FILE) && global_dbg_fp != NULL)
     {
 	va_start(list, str);
 	n = vfprintf(global_dbg_fp, str, list);
@@ -241,12 +250,12 @@ int MPIU_dbglog_vprintf(const char *str, va_list ap)
     int n = 0;
     va_list list;
 
-    if (MPIU_dbg_state == MPIU_DBG_STATE_UNINIT)
+    if (dbg_state == DBG_STATE_UNINIT)
     {
 	dbg_init();
     }
 
-    if (MPIU_dbg_state & MPIU_DBG_STATE_MEMLOG)
+    if (dbg_state & DBG_STATE_MEMLOG)
     {
 	va_copy(list,ap);
 	dbg_memlog[dbg_memlog_next][0] = '\0';
@@ -276,14 +285,14 @@ int MPIU_dbglog_vprintf(const char *str, va_list ap)
 	}
     }
 
-    if (MPIU_dbg_state & MPIU_DBG_STATE_STDOUT)
+    if (dbg_state & DBG_STATE_STDOUT)
     {
 	va_copy(list, ap);
 	n = vprintf(str, list);
 	va_copy_end(list);
     }
 
-    if ((MPIU_dbg_state & MPIU_DBG_STATE_FILE) && dbg_global_fp != NULL)
+    if ((dbg_state & DBG_STATE_FILE) && global_dbg_fp != NULL)
     {
 	va_copy(list, ap);
 	n = vfprintf(global_dbg_fp, str, list);
@@ -296,9 +305,10 @@ int MPIU_dbglog_vprintf(const char *str, va_list ap)
 /* FIXME: */
 int MPIU_dbg_printf(const char * str, ...)
 {
-    int n;
+    int n = 0;
     
     /* MPID_Common_thread_lock(); */
+    if (dbg_state != DBG_STATE_NONE)
     {
 	va_list list;
 

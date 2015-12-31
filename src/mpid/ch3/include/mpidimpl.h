@@ -998,10 +998,7 @@ extern char *MPIDI_DBG_parent_str;
 #if defined(MPICH_DBG_OUTPUT)
 #define MPIDI_DBG_PRINTF(e_)				\
 {                                               	\
-    if (MPIU_dbg_state != MPIU_DBG_STATE_NONE)		\
-    {							\
-	MPIDI_dbg_printf e_;				\
-    }							\
+    MPIDI_dbg_printf e_;				\
 }
 #else
 #   define MPIDI_DBG_PRINTF(e)

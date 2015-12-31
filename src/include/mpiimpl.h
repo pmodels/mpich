@@ -159,10 +159,7 @@ int usleep(useconds_t usec);
 #if defined(MPICH_DBG_OUTPUT)
 #define MPIU_DBG_PRINTF(e)			\
 {						\
-    if (MPIU_dbg_state != MPIU_DBG_STATE_NONE)	\
-    {						\
-	MPIU_dbg_printf e;			\
-    }						\
+    MPIU_dbg_printf e;                          \
 }
 /* The first argument is a place holder to allow the selection of a subset
    of debugging events.  The second is a placeholder to allow a numeric
