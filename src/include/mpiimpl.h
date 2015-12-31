@@ -161,18 +161,9 @@ int usleep(useconds_t usec);
 {						\
     MPIU_dbg_printf e;                          \
 }
-/* The first argument is a place holder to allow the selection of a subset
-   of debugging events.  The second is a placeholder to allow a numeric
-   level of debugging within that class.  The third is the debugging text */
-#define MPIU_DBG_PRINTF_CLASS(_c,_l,_e) MPIU_DBG_PRINTF(_e)
 #else
 #define MPIU_DBG_PRINTF(e)
-#define MPIU_DBG_PRINTF_CLASS(_c,_l,_e)
 #endif
-
-/* The follow is temporarily provided for backward compatibility.  Any code
-   using dbg_printf should be updated to use MPIU_DBG_PRINTF. */
-#define dbg_printf MPIU_dbg_printf
 
 /* ------------------------------------------------------------------------- */
 /* end of mpidebug.h */
