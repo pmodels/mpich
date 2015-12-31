@@ -7,10 +7,7 @@
 /*
  * This file provides a set of routines that can be used to record debug
  * messages in a ring so that the may be dumped at a later time.  For example,
- * this can be used to record debug messages without printing them; when
- * a special event, such as an error occurs, a call to 
- * MPIU_dump_dbg_memlog( stderr ) will print the contents of the file ring
- * to stderr.
+ * this can be used to record debug messages without printing them.
  */
 
 #include "mpiimpl.h"
@@ -323,43 +320,6 @@ int MPIU_dbg_printf(const char * str, ...)
     /* MPID_Common_thread_unlock(); */
     
     return n;
-}
-
-void MPIU_dump_dbg_memlog_to_stdout(void)
-{
-    MPIU_dump_dbg_memlog(stdout);
-}
-
-void MPIU_dump_dbg_memlog_to_file(const char *filename)
-{
-    FILE *fout;
-    fout = fopen(filename, "wb");
-    if (fout != NULL)
-    {
-	MPIU_dump_dbg_memlog(fout);
-	fclose(fout);
-    }
-}
-
-void MPIU_dump_dbg_memlog(FILE * fp){
-    if (dbg_memlog_count != 0)
-    {
-	int ent;
-	int last_ent;
-
-	/* there is a small issue with counter rollover which will need to be
-	   fixed if more than 2^32 lines are going to be logged */
-	ent = (dbg_memlog_next == dbg_memlog_count) ? 0 : dbg_memlog_next;
-	last_ent = (ent + dbg_memlog_num_lines - 1) % dbg_memlog_num_lines;
-	
-	do
-	{
-	    fputs(dbg_memlog[ent], fp);
-	    ent = (ent + 1) % dbg_memlog_num_lines;
-	}
-	while(ent != last_ent);
-	fflush(fp);
-    }
 }
 
 #ifdef USE_DBG_LOGGING
