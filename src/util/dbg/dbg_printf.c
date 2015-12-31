@@ -59,17 +59,10 @@ extern FILE *fdopen(int fd, const char *mode);
 # endif
 #endif
 
-#if !defined(MPICH_DBG_MEMLOG_NUM_LINES)
-#define MPICH_DBG_MEMLOG_NUM_LINES 1024
-#endif
-#if !defined(MPICH_DBG_MEMLOG_LINE_SIZE)
-#define MPICH_DBG_MEMLOG_LINE_SIZE 256
-#endif
+#define DBG_MEMLOG_NUM_LINES 1024
+#define DBG_MEMLOG_LINE_SIZE 256
 
-MPIU_dbg_state_t MPIU_dbg_state = MPIU_DBG_STATE_UNINIT;
 FILE * MPIU_dbg_fp = NULL;
-static int dbg_memlog_num_lines = MPICH_DBG_MEMLOG_NUM_LINES;
-static int dbg_memlog_line_size = MPICH_DBG_MEMLOG_LINE_SIZE;
 static char **dbg_memlog = NULL;
 static int dbg_memlog_next = 0;
 static int dbg_memlog_count = 0;
@@ -164,16 +157,16 @@ static void dbg_init(void)
     /* If memlog is enabled, the we need to allocate some memory for it */
     if (MPIU_dbg_state & MPIU_DBG_STATE_MEMLOG)
     {
-	dbg_memlog = MPIU_Malloc(dbg_memlog_num_lines * sizeof(char *) +
-				 dbg_memlog_num_lines * dbg_memlog_line_size);
+	dbg_memlog = MPIU_Malloc(DBG_MEMLOG_NUM_LINES * sizeof(char *) +
+				 DBG_MEMLOG_NUM_LINES * DBG_MEMLOG_LINE_SIZE);
 	if (dbg_memlog != NULL)
 	{
 	    int i;
 	    
-	    for (i = 0; i < dbg_memlog_num_lines ; i++)
+	    for (i = 0; i < DBG_MEMLOG_NUM_LINES ; i++)
 	    {
-		dbg_memlog[i] = ((char *) &dbg_memlog[dbg_memlog_num_lines]) + 
-		    i * dbg_memlog_line_size;
+		dbg_memlog[i] = ((char *) &dbg_memlog[DBG_MEMLOG_NUM_LINES]) + 
+		    i * DBG_MEMLOG_LINE_SIZE;
 	    }
 	}
 	else
@@ -200,7 +193,7 @@ int MPIU_dbglog_printf(const char *str, ...)
 	
 	dbg_memlog[dbg_memlog_next][0] = '\0';
 	va_start(list, str);
-	n = vsnprintf(dbg_memlog[dbg_memlog_next], dbg_memlog_line_size, str, 
+	n = vsnprintf(dbg_memlog[dbg_memlog_next], DBG_MEMLOG_LINE_SIZE, str, 
 		      list);
 	va_end(list);
 
@@ -213,15 +206,15 @@ int MPIU_dbglog_printf(const char *str, ...)
 	   want to avoid reading past the end of the array or outputing garbage
 	   data. */
 
-	if (n < 0 || n >= dbg_memlog_line_size)
+	if (n < 0 || n >= DBG_MEMLOG_LINE_SIZE)
 	{
-	    dbg_memlog[dbg_memlog_next][dbg_memlog_line_size - 1] = '\0';
+	    dbg_memlog[dbg_memlog_next][DBG_MEMLOG_LINE_SIZE - 1] = '\0';
 	    n = (int)strlen(dbg_memlog[dbg_memlog_next]);
 	}
 
 	if (dbg_memlog[dbg_memlog_next][0] != '\0')
 	{
-	    dbg_memlog_next = (dbg_memlog_next + 1) % dbg_memlog_num_lines;
+	    dbg_memlog_next = (dbg_memlog_next + 1) % DBG_MEMLOG_NUM_LINES;
 	    dbg_memlog_count++;
 	}
     }
@@ -257,7 +250,7 @@ int MPIU_dbglog_vprintf(const char *str, va_list ap)
     {
 	va_copy(list,ap);
 	dbg_memlog[dbg_memlog_next][0] = '\0';
-	n = vsnprintf(dbg_memlog[dbg_memlog_next], dbg_memlog_line_size, str, 
+	n = vsnprintf(dbg_memlog[dbg_memlog_next], DBG_MEMLOG_LINE_SIZE, str, 
 		      list);
         va_copy_end(list);
 
@@ -270,15 +263,15 @@ int MPIU_dbglog_vprintf(const char *str, va_list ap)
 	   want to avoid reading past the end of the array or outputing garbage
 	   data. */
 
-	if (n < 0 || n >= dbg_memlog_line_size)
+	if (n < 0 || n >= DBG_MEMLOG_LINE_SIZE)
 	{
-	    dbg_memlog[dbg_memlog_next][dbg_memlog_line_size - 1] = '\0';
+	    dbg_memlog[dbg_memlog_next][DBG_MEMLOG_LINE_SIZE - 1] = '\0';
 	    n = (int)strlen(dbg_memlog[dbg_memlog_next]);
 	}
 
 	if (dbg_memlog[dbg_memlog_next][0] != '\0')
 	{
-	    dbg_memlog_next = (dbg_memlog_next + 1) % dbg_memlog_num_lines;
+	    dbg_memlog_next = (dbg_memlog_next + 1) % DBG_MEMLOG_NUM_LINES;
 	    dbg_memlog_count++;
 	}
     }
@@ -367,8 +360,8 @@ void MPIU_dump_dbg_memlog(FILE * fp){
 
 int MPIU_DBG_ActiveClasses = 0;
 int MPIU_DBG_MaxLevel      = MPIU_DBG_TYPICAL;
-static enum {MPIU_DBG_UNINIT, MPIU_DBG_PREINIT, MPIU_DBG_INITIALIZED, MPIU_DBG_ERROR}
-    mpiu_dbg_initialized = MPIU_DBG_UNINIT;
+static enum {DBG_UNINIT, DBG_PREINIT, DBG_INITIALIZED, DBG_ERROR}
+    dbg_initialized = DBG_UNINIT;
 static char filePatternBuf[MAXPATHLEN] = "";
 static const char *filePattern = "-stdout-"; /* "log%d.log"; */
 static const char *defaultFilePattern = "dbg@W%w-@%d@T-%t@.log";
@@ -379,11 +372,11 @@ static int whichRank = -1;             /* all ranks */
 static int    resetTimeOrigin = 1;
 static double timeOrigin = 0.0;
 
-static int MPIU_DBG_Usage( const char *, const char * );
-static int MPIU_DBG_OpenFile(FILE **dbg_fp);
+static int dbg_usage( const char *, const char * );
+static int dbg_openfile(FILE **dbg_fp);
 static int setDBGClass( const char * );
 static int SetDBGLevel( const char *, const char *(names[]) );
-static int MPIU_DBG_Get_filename(char *filename, int len);
+static int dbg_get_filename(char *filename, int len);
 
 #ifdef MPICH_IS_THREADED
 static MPID_Thread_tls_t dbg_tls_key;
@@ -408,7 +401,7 @@ static FILE *get_fp(void)
     /* if we're not initialized, use the static fp, since there should
      * only be one thread in here until then */
     MPIU_THREAD_CHECK_BEGIN;
-    if (mpiu_dbg_initialized == MPIU_DBG_INITIALIZED) {
+    if (dbg_initialized == DBG_INITIALIZED) {
         FILE *fp;
         MPID_Thread_tls_get(&dbg_tls_key, (void **) &fp, &err);
         return fp;
@@ -426,7 +419,7 @@ static void set_fp(FILE *fp)
     /* if we're not initialized, use the static fp, since there should
      * only be one thread in here until then */
     MPIU_THREAD_CHECK_BEGIN;
-    if (mpiu_dbg_initialized == MPIU_DBG_INITIALIZED) {
+    if (dbg_initialized == DBG_INITIALIZED) {
         MPID_Thread_tls_set(&dbg_tls_key, (void *)fp, &err);
         return;
     }
@@ -451,7 +444,7 @@ int MPIU_DBG_Outevent( const char *file, int line, int class, int kind,
     int pid = -1;
     FILE *dbg_fp = NULL;
 
-    if (mpiu_dbg_initialized == MPIU_DBG_UNINIT || mpiu_dbg_initialized == MPIU_DBG_ERROR) goto fn_exit;
+    if (dbg_initialized == DBG_UNINIT || dbg_initialized == DBG_ERROR) goto fn_exit;
 
     dbg_fp = get_fp();
 
@@ -470,7 +463,7 @@ int MPIU_DBG_Outevent( const char *file, int line, int class, int kind,
 #endif /* HAVE_GETPID */
 
     if (!dbg_fp) {
-	mpi_errno = MPIU_DBG_OpenFile(&dbg_fp);
+	mpi_errno = dbg_openfile(&dbg_fp);
         if (mpi_errno) goto fn_fail;
         set_fp(dbg_fp);
     }
@@ -526,17 +519,17 @@ int MPIU_DBG_Outevent( const char *file, int line, int class, int kind,
 }
 
 /* These are used to simplify the handling of options.  
-   To add a new name, add an MPIU_DBG_ClassName element to the array
-   MPIU_Classnames.  The "classbits" values are defined by MPIU_DBG_CLASS
+   To add a new name, add an DBG_ClassName element to the array
+   classnames.  The "classbits" values are defined by MPIU_DBG_CLASS
    in src/include/mpidbg.h 
  */
 
-typedef struct MPIU_DBG_ClassName {
+typedef struct DBG_ClassName {
     int        classbits;
     const char *UCName, *LCName; 
-} MPIU_DBG_ClassName;
+} DBG_ClassName;
 
-static const MPIU_DBG_ClassName MPIU_Classnames[] = {
+static const DBG_ClassName classnames[] = {
     { MPIU_DBG_PT2PT,         "PT2PT",         "pt2pt" },
     { MPIU_DBG_RMA,           "RMA",           "rma"   },
     { MPIU_DBG_THREAD,        "THREAD",        "thread" },
@@ -570,11 +563,11 @@ static const MPIU_DBG_ClassName MPIU_Classnames[] = {
 
 /* Because the level values are simpler and are rarely changed, these
    use a simple set of parallel arrays */
-static const int  MPIU_Levelvalues[] = { MPIU_DBG_TERSE,
+static const int  level_values[] = { MPIU_DBG_TERSE,
 					 MPIU_DBG_TYPICAL,
 					 MPIU_DBG_VERBOSE, 100 };
-static const char *MPIU_Levelname[] = { "TERSE", "TYPICAL", "VERBOSE", 0 };
-static const char *MPIU_LCLevelname[] = { "terse", "typical", "verbose", 0 };
+static const char *level_name[] = { "TERSE", "TYPICAL", "VERBOSE", 0 };
+static const char *lc_level_name[] = { "terse", "typical", "verbose", 0 };
 
 /* 
  * Initialize the DBG_MSG system.  This is called during MPI_Init to process
@@ -584,7 +577,7 @@ static const char *MPIU_LCLevelname[] = { "terse", "typical", "verbose", 0 };
  * MPID_Init, where a significant amount of the initialization takes place.
  */
 
-static int MPIU_DBG_ProcessArgs( int *argc_p, char ***argv_p )
+static int DBG_ProcessArgs( int *argc_p, char ***argv_p )
 {
     int i, rc;
 
@@ -612,9 +605,9 @@ static int MPIU_DBG_ProcessArgs( int *argc_p, char ***argv_p )
 		    char *p = s + 6;
 		    if (*p == '=') {
 			p++;
-			rc = SetDBGLevel( p, MPIU_LCLevelname );
+			rc = SetDBGLevel( p, lc_level_name );
 			if (rc) 
-			    MPIU_DBG_Usage( "-mpich-dbg-level", "terse, typical, verbose" );
+			    dbg_usage( "-mpich-dbg-level", "terse, typical, verbose" );
 		    }
 		}
 		else if (strncmp(s,"-class",6) == 0) {
@@ -623,7 +616,7 @@ static int MPIU_DBG_ProcessArgs( int *argc_p, char ***argv_p )
 			p++;
 			rc = setDBGClass( p );
 			if (rc)
-			    MPIU_DBG_Usage( "-mpich-dbg-class", 0 );
+			    dbg_usage( "-mpich-dbg-class", 0 );
 		    }
 		}
 		else if (strncmp( s, "-filename", 9 ) == 0) {
@@ -648,13 +641,13 @@ static int MPIU_DBG_ProcessArgs( int *argc_p, char ***argv_p )
 			p++;
 			whichRank = (int)strtol( p, &sOut, 10 );
 			if (p == sOut) {
-			    MPIU_DBG_Usage( "-mpich-dbg-rank", 0 );
+			    dbg_usage( "-mpich-dbg-rank", 0 );
 			    whichRank = -1;
 			}
 		    }
 		}
 		else {
-		    MPIU_DBG_Usage( (*argv_p)[i], 0 );
+		    dbg_usage( (*argv_p)[i], 0 );
 		}
 		
 		/* Eventually, should null it out and reduce argc value */
@@ -664,7 +657,7 @@ static int MPIU_DBG_ProcessArgs( int *argc_p, char ***argv_p )
     return MPI_SUCCESS;
 }
 
-static int MPIU_DBG_ProcessEnv( void )
+static int DBG_ProcessEnv( void )
 {
     char *s;
     int rc;
@@ -680,15 +673,15 @@ static int MPIU_DBG_ProcessEnv( void )
     }
     s = getenv( "MPICH_DBG_LEVEL" );
     if (s) {
-	rc = SetDBGLevel( s, MPIU_Levelname );
+	rc = SetDBGLevel( s, level_name );
 	if (rc) 
-	    MPIU_DBG_Usage( "MPICH_DBG_LEVEL", "TERSE, TYPICAL, VERBOSE" );
+	    dbg_usage( "MPICH_DBG_LEVEL", "TERSE, TYPICAL, VERBOSE" );
     }
 
     s = getenv( "MPICH_DBG_CLASS" );
     rc = setDBGClass( s );
     if (rc) 
-	MPIU_DBG_Usage( "MPICH_DBG_CLASS", 0 );
+	dbg_usage( "MPICH_DBG_CLASS", 0 );
 
     s = getenv( "MPICH_DBG_FILENAME" );
     if (s) {
@@ -701,7 +694,7 @@ static int MPIU_DBG_ProcessEnv( void )
 	char *sOut;
 	whichRank = (int)strtol( s, &sOut, 10 );
 	if (s == sOut) {
-	    MPIU_DBG_Usage( "MPICH_DBG_RANK", 0 );
+	    dbg_usage( "MPICH_DBG_RANK", 0 );
 	    whichRank = -1;
 	}
     }
@@ -719,7 +712,7 @@ int MPIU_DBG_PreInit( int *argc_p, char ***argv_p, int wtimeNotReady )
 
     /* if the DBG_MSG system was already initialized, say by the device, then
        return immediately */
-    if (mpiu_dbg_initialized != MPIU_DBG_UNINIT) return MPI_SUCCESS;
+    if (dbg_initialized != DBG_UNINIT) return MPI_SUCCESS;
 
     dbg_init_tls();
 
@@ -727,9 +720,9 @@ int MPIU_DBG_PreInit( int *argc_p, char ***argv_p, int wtimeNotReady )
        tests is important, as they allow general defaults to be set,
        followed by more specific modifications */
     /* First, the environment variables */
-    MPIU_DBG_ProcessEnv();
+    DBG_ProcessEnv();
 
-    MPIU_DBG_ProcessArgs( argc_p, argv_p );
+    DBG_ProcessArgs( argc_p, argv_p );
 
     if (wtimeNotReady == 0) {
 	MPL_Wtime( &t );
@@ -737,7 +730,7 @@ int MPIU_DBG_PreInit( int *argc_p, char ***argv_p, int wtimeNotReady )
 	resetTimeOrigin = 0;
     }
 
-    mpiu_dbg_initialized = MPIU_DBG_PREINIT;
+    dbg_initialized = DBG_PREINIT;
 
     return MPI_SUCCESS;
 }
@@ -752,9 +745,9 @@ int MPIU_DBG_Init( int *argc_p, char ***argv_p, int has_args, int has_env,
        return immediately.  Note that the device is then responsible
        for handling the file mode (e.g., reopen when the rank become 
        available) */
-    if (mpiu_dbg_initialized == MPIU_DBG_INITIALIZED || mpiu_dbg_initialized == MPIU_DBG_ERROR) return MPI_SUCCESS;
+    if (dbg_initialized == DBG_INITIALIZED || dbg_initialized == DBG_ERROR) return MPI_SUCCESS;
 
-    if (mpiu_dbg_initialized != MPIU_DBG_PREINIT)
+    if (dbg_initialized != DBG_PREINIT)
         dbg_init_tls();
 
     dbg_fp = get_fp();
@@ -775,10 +768,10 @@ int MPIU_DBG_Init( int *argc_p, char ***argv_p, int has_args, int has_env,
        (as they were already handled in DBG_PreInit) */
     /* First, the environment variables */
     if (!has_env) 
-	MPIU_DBG_ProcessEnv();
+	DBG_ProcessEnv();
     /* Now the command-line arguments */
     if (!has_args) 
-	MPIU_DBG_ProcessArgs( argc_p, argv_p );
+	DBG_ProcessArgs( argc_p, argv_p );
 
     worldRank = wrank;
 
@@ -793,7 +786,7 @@ int MPIU_DBG_Init( int *argc_p, char ***argv_p, int has_args, int has_env,
     {
         char filename[MAXPATHLEN] = "";
         
-        MPIU_DBG_Get_filename(filename, MAXPATHLEN);
+        dbg_get_filename(filename, MAXPATHLEN);
         ret = rename(temp_filename, filename);
         if (ret){
             /* Retry renaming file after closing it */
@@ -814,16 +807,16 @@ int MPIU_DBG_Init( int *argc_p, char ***argv_p, int has_args, int has_env,
         }
     }
 
-    mpiu_dbg_initialized = MPIU_DBG_INITIALIZED;
+    dbg_initialized = DBG_INITIALIZED;
  fn_exit:
     return MPI_SUCCESS;
  fn_fail:
-    mpiu_dbg_initialized = MPIU_DBG_ERROR;
+    dbg_initialized = DBG_ERROR;
     goto fn_exit;
 }
 
 /* Print the usage statement to stderr */
-static int MPIU_DBG_Usage( const char *cmd, const char *vals )
+static int dbg_usage( const char *cmd, const char *vals )
 {
     if (vals) {
 	fprintf( stderr, "Incorrect value for %s, should be one of %s\n",
@@ -856,10 +849,10 @@ Environment variables\n\
 /* creates a temporary file in the same directory the
    user specified for the log file */
 #undef FUNCNAME
-#define FUNCNAME MPIU_DBG_Open_temp_file
+#define FUNCNAME DBG_Open_temp_file
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
+static int DBG_Open_temp_file(FILE **dbg_fp)
 {
     int mpi_errno = MPI_SUCCESS;
     const char temp_pattern[] = "templogXXXXXX";
@@ -887,7 +880,7 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
     return mpi_errno;
  fn_fail:
     MPL_error_printf( "Could not open log file %s\n", temp_filename );
-    mpiu_dbg_initialized = MPIU_DBG_ERROR;
+    dbg_initialized = DBG_ERROR;
     mpi_errno = MPI_ERR_INTERN;
     goto fn_exit;
 }
@@ -895,10 +888,10 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
 /* creates a temporary file in the same directory the
    user specified for the log file */
 #undef FUNCNAME
-#define FUNCNAME MPIU_DBG_Open_temp_file
+#define FUNCNAME DBG_Open_temp_file
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
+static int DBG_Open_temp_file(FILE **dbg_fp)
 {
     int mpi_errno = MPI_SUCCESS;
     const char temp_pattern[] = "templogXXXXXX";
@@ -927,7 +920,7 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
     return mpi_errno;
  fn_fail:
     MPL_error_printf( "Could not open log file %s\n", temp_filename );
-    mpiu_dbg_initialized = MPIU_DBG_ERROR;
+    dbg_initialized = DBG_ERROR;
     mpi_errno = MPI_ERR_INTERN;
     goto fn_exit;
 }
@@ -940,10 +933,10 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
    file with the same name may exist.  That file would get clobbered.
 */
 #undef FUNCNAME
-#define FUNCNAME MPIU_DBG_Open_temp_file
+#define FUNCNAME DBG_Open_temp_file
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
+static int DBG_Open_temp_file(FILE **dbg_fp)
 {
     int mpi_errno = MPI_SUCCESS;
     const char temp_pattern[] = "templogXXXXXX";
@@ -962,7 +955,7 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
     return mpi_errno;
  fn_fail:
     MPL_error_printf( "Could not open log file %s\n", temp_filename );
-    mpiu_dbg_initialized = MPIU_DBG_ERROR;
+    dbg_initialized = DBG_ERROR;
     mpi_errno = MPI_ERR_INTERN;
     goto fn_exit;
 }
@@ -971,7 +964,7 @@ static int MPIU_DBG_Open_temp_file(FILE **dbg_fp)
 
 /* This routine can make no MPI calls, since it may be logging those
    calls. */
-static int MPIU_DBG_Get_filename(char *filename, int len)
+static int dbg_get_filename(char *filename, int len)
 {
     int withinMworld = 0,         /* True if within an @W...@ */
 	withinMthread = 0;        /* True if within an @T...@ */
@@ -1104,7 +1097,7 @@ static int MPIU_DBG_Get_filename(char *filename, int len)
 
 /* This routine can make no MPI calls, since it may be logging those
    calls. */
-static int MPIU_DBG_OpenFile(FILE **dbg_fp)
+static int dbg_openfile(FILE **dbg_fp)
 {
     int mpi_errno = MPI_SUCCESS;
     if (!filePattern || *filePattern == 0 ||
@@ -1117,16 +1110,16 @@ static int MPIU_DBG_OpenFile(FILE **dbg_fp)
     else {
 	char filename[MAXPATHLEN];
 
-        /* if we're not at MPIU_DBG_INITIALIZED, we don't know our
+        /* if we're not at DBG_INITIALIZED, we don't know our
            rank yet, so we create a temp file, to be renamed later */
-        if (mpiu_dbg_initialized != MPIU_DBG_INITIALIZED) 
+        if (dbg_initialized != DBG_INITIALIZED) 
         {
-            mpi_errno = MPIU_DBG_Open_temp_file(dbg_fp);
+            mpi_errno = DBG_Open_temp_file(dbg_fp);
             if (mpi_errno) goto fn_fail;
         }
         else 
         {
-            mpi_errno = MPIU_DBG_Get_filename(filename, MAXPATHLEN);
+            mpi_errno = dbg_get_filename(filename, MAXPATHLEN);
             if (mpi_errno) goto fn_fail;
 
             *dbg_fp = fopen( filename, "w" );
@@ -1139,7 +1132,7 @@ static int MPIU_DBG_OpenFile(FILE **dbg_fp)
  fn_exit:
     return mpi_errno;
  fn_fail:
-    mpiu_dbg_initialized = MPIU_DBG_ERROR;
+    dbg_initialized = DBG_ERROR;
     mpi_errno = MPI_ERR_INTERN;
     goto fn_exit;
 }
@@ -1156,28 +1149,28 @@ static int setDBGClass( const char *s )
     if (s && *s) slen = strlen(s);
 
     while (s && *s) {
-	for (i=0; MPIU_Classnames[i].LCName; i++) {
+	for (i=0; classnames[i].LCName; i++) {
 	    /* The LCLen and UCLen *should* be the same, but
 	       just in case, we separate them */
-	    size_t LClen = strlen(MPIU_Classnames[i].LCName);
-	    size_t UClen = strlen(MPIU_Classnames[i].UCName);
+	    size_t LClen = strlen(classnames[i].LCName);
+	    size_t UClen = strlen(classnames[i].UCName);
 	    int matchClass = 0;
 
 	    /* Allow the upper case and lower case in all cases */
 	    if (slen >= LClen && 
-		strncmp(s,MPIU_Classnames[i].LCName, LClen) == 0 &&
+		strncmp(s,classnames[i].LCName, LClen) == 0 &&
 		(s[LClen] == ',' || s[LClen] == 0) ) {
 		matchClass = 1;
 		len = LClen;
 	    }
 	    else if (slen >= UClen && 
-		strncmp(s,MPIU_Classnames[i].UCName, UClen) == 0 &&
+		strncmp(s,classnames[i].UCName, UClen) == 0 &&
 		(s[UClen] == ',' || s[UClen] == 0) ) {
 		matchClass = 1;
 		len = UClen;
 	    }
 	    if (matchClass) {
-		MPIU_DBG_ActiveClasses |= MPIU_Classnames[i].classbits;
+		MPIU_DBG_ActiveClasses |= classnames[i].classbits;
 		s += len;
 		slen -= len;
 		if (*s == ',') { s++; slen--; }
@@ -1185,7 +1178,7 @@ static int setDBGClass( const char *s )
 		break;
 	    }
 	}
-	if (!MPIU_Classnames[i].LCName) {
+	if (!classnames[i].LCName) {
 	    return 1;
 	}
     }
@@ -1201,7 +1194,7 @@ static int SetDBGLevel( const char *s, const char *(names[]) )
 
     for (i=0; names[i]; i++) {
 	if (strcmp( names[i], s ) == 0) {
-	    MPIU_DBG_MaxLevel = MPIU_Levelvalues[i];
+	    MPIU_DBG_MaxLevel = level_values[i];
 	    return 0;
 	}
     }
