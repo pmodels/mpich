@@ -82,8 +82,6 @@ int MPI_Comm_get_parent(MPI_Comm *parent)
 
     /* ... body of routine ...  */
     
-    /* Note that MPIU_DBG_OpenFile also uses this code (so as to avoid
-       calling an MPI routine while logging it */
     *parent = (MPIR_Process.comm_parent == NULL) ? MPI_COMM_NULL :
                (MPIR_Process.comm_parent)->handle;  
 

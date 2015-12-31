@@ -87,7 +87,7 @@ enum MPIU_DBG_LEVEL { MPIU_DBG_TERSE   = 0,
 		      MPIU_DBG_TYPICAL = 50,
 		      MPIU_DBG_VERBOSE = 99 };
 /* Any change in MPIU_DBG_CLASS must be matched by changes in 
-   MPIU_Classnames in src/util/dbg/dbg_printf.c */
+   "classnames" in src/util/dbg/dbg_printf.c */
 enum MPIU_DBG_CLASS { MPIU_DBG_PT2PT         = 0x1,
 		      MPIU_DBG_RMA           = 0x2,
 		      MPIU_DBG_THREAD        = 0x4,
