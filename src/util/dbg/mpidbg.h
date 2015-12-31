@@ -122,9 +122,6 @@ int MPIU_dbg_init(int rank);
 int MPIU_dbg_printf(const char *str, ...) ATTRIBUTE((format(printf,1,2)));
 int MPIU_dbglog_printf(const char *str, ...) ATTRIBUTE((format(printf,1,2)));
 int MPIU_dbglog_vprintf(const char *str, va_list ap);
-void MPIU_dump_dbg_memlog_to_stdout(void);
-void MPIU_dump_dbg_memlog_to_file(const char *filename);
-void MPIU_dump_dbg_memlog(FILE * fp);
 
 int MPIU_DBG_Outevent(const char *, int, int, int, const char *, ...) 
                                         ATTRIBUTE((format(printf,5,6)));
