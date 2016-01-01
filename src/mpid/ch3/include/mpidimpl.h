@@ -51,6 +51,17 @@ extern char *MPIDI_failed_procs_string;
 
 extern int MPIDI_Use_pmi2_api;
 
+#if defined(USE_DBG_LOGGING)
+extern MPIU_DBG_Class MPIDI_CH3_DBG_CONNECT;
+extern MPIU_DBG_Class MPIDI_CH3_DBG_DISCONNECT;
+extern MPIU_DBG_Class MPIDI_CH3_DBG_PROGRESS;
+extern MPIU_DBG_Class MPIDI_CH3_DBG_CHANNEL;
+extern MPIU_DBG_Class MPIDI_CH3_DBG_OTHER;
+extern MPIU_DBG_Class MPIDI_CH3_DBG_MSG;
+extern MPIU_DBG_Class MPIDI_CH3_DBG_VC;
+extern MPIU_DBG_Class MPIDI_CH3_DBG_REFCOUNT;
+#endif /* USE_DBG_LOGGING */
+
 #define MPIDI_CHANGE_VC_STATE(vc, new_state) do {               \
         MPIU_DBG_VCSTATECHANGE(vc, VC_STATE_##new_state);       \
         (vc)->state = MPIDI_VC_STATE_##new_state;               \
@@ -163,7 +174,7 @@ extern MPIDI_Process_t MPIDI_Process;
 	(dt_contig_out_) = TRUE;					\
         (dt_true_lb_)    = 0;                                           \
 	(data_sz_out_) = (MPIDI_msg_sz_t) (count_) * MPID_Datatype_get_basic_size(datatype_); \
-	MPIU_DBG_MSG_FMT(CH3_OTHER, TERSE, (MPIU_DBG_FDEST,"basic datatype: dt_contig=%d, dt_sz=%d, data_sz=" MPIDI_MSG_SZ_FMT, \
+	MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, TERSE, (MPIU_DBG_FDEST,"basic datatype: dt_contig=%d, dt_sz=%d, data_sz=" MPIDI_MSG_SZ_FMT, \
 			  (dt_contig_out_), MPID_Datatype_get_basic_size(datatype_), (data_sz_out_)));\
     }									\
     else								\
@@ -172,7 +183,7 @@ extern MPIDI_Process_t MPIDI_Process;
 	(dt_contig_out_) = (dt_ptr_)->is_contig;			\
 	(data_sz_out_) = (MPIDI_msg_sz_t) (count_) * (dt_ptr_)->size;	\
         (dt_true_lb_)    = (dt_ptr_)->true_lb;                          \
-	MPIU_DBG_MSG_FMT(CH3_OTHER, TERSE, (MPIU_DBG_FDEST, "user defined datatype: dt_contig=%d, dt_sz=" MPI_AINT_FMT_DEC_SPEC ", data_sz=" MPIDI_MSG_SZ_FMT, \
+	MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, TERSE, (MPIU_DBG_FDEST, "user defined datatype: dt_contig=%d, dt_sz=" MPI_AINT_FMT_DEC_SPEC ", data_sz=" MPIDI_MSG_SZ_FMT, \
 			  (dt_contig_out_), (dt_ptr_)->size, (data_sz_out_)));\
     }									\
 }
@@ -276,7 +287,7 @@ extern MPIDI_Process_t MPIDI_Process;
 #  define MPIDI_Request_tls_alloc(req_) \
     do { \
 	(req_) = MPIU_Handle_obj_alloc(&MPID_Request_mem); \
-        MPIU_DBG_MSG_P(CH3_CHANNEL,VERBOSE,		\
+        MPIU_DBG_MSG_P(MPIDI_CH3_DBG_CHANNEL,VERBOSE,		\
 	       "allocated request, handle=0x%08x", req_);\
     } while (0)
 #else
@@ -349,7 +360,7 @@ extern MPIDI_Process_t MPIDI_Process;
             MPIR_Status_set_procnull(&(rreq_)->status);                    \
         }                                                                  \
         else {                                                             \
-            MPIU_DBG_MSG(CH3_CHANNEL,TYPICAL,"unable to allocate a request");\
+            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,TYPICAL,"unable to allocate a request");\
             (mpi_errno_) = MPIR_ERR_MEMALLOCFAILED;                        \
             FAIL_;                                                         \
         }                                                                  \
@@ -940,43 +951,43 @@ int MPIDI_PrintConnStrToFile( FILE *fd, const char *file, int line,
 
 */
 #define MPIU_DBG_VCSTATECHANGE(_vc,_newstate) do { \
-     MPIU_DBG_MSG_FMT(CH3_CONNECT,TYPICAL,(MPIU_DBG_FDEST, \
+     MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT,TYPICAL,(MPIU_DBG_FDEST, \
      "vc=%p: Setting state (vc) from %s to %s, vcchstate is %s", \
                  _vc, MPIDI_VC_GetStateString((_vc)->state), \
                  #_newstate, MPIDI_CH3_VC_GetStateString( (_vc) ))); \
 } while (0)
 
 #define MPIU_DBG_VCCHSTATECHANGE(_vc,_newstate) \
-     MPIU_DBG_MSG_FMT(CH3_CONNECT,TYPICAL,(MPIU_DBG_FDEST, \
+     MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT,TYPICAL,(MPIU_DBG_FDEST, \
      "vc=%p: Setting state (ch) from %s to %s, vc state is %s", \
            _vc, MPIDI_CH3_VC_GetStateString((_vc)), \
            #_newstate, MPIDI_VC_GetStateString( (_vc)->state )) )
 
 #define MPIU_DBG_CONNSTATECHANGE(_vc,_conn,_newstate) \
-     MPIU_DBG_MSG_FMT(CH3_CONNECT,TYPICAL,(MPIU_DBG_FDEST, \
+     MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT,TYPICAL,(MPIU_DBG_FDEST, \
      "vc=%p,conn=%p: Setting state (conn) from %s to %s, vcstate = %s", \
              _vc, _conn, \
              MPIDI_Conn_GetStateString((_conn)->state), #_newstate, \
              _vc ? MPIDI_VC_GetStateString((_vc)->state) : "<no vc>" ))
 
 #define MPIU_DBG_CONNSTATECHANGE_MSG(_vc,_conn,_newstate,_msg) \
-     MPIU_DBG_MSG_FMT(CH3_CONNECT,TYPICAL,(MPIU_DBG_FDEST, \
+     MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT,TYPICAL,(MPIU_DBG_FDEST, \
      "vc=%p,conn=%p: Setting conn state from %s to %s, vcstate = %s %s", \
              _vc, _conn, \
              MPIDI_Conn_GetStateString((_conn)->state), #_newstate, \
              _vc ? MPIDI_VC_GetStateString((_vc)->state) : "<no vc>", _msg ))
 #define MPIU_DBG_VCUSE(_vc,_msg) \
-     MPIU_DBG_MSG_FMT(CH3_CONNECT,TYPICAL,(MPIU_DBG_FDEST,\
+     MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT,TYPICAL,(MPIU_DBG_FDEST,\
       "vc=%p: Using vc for %s", _vc, _msg ))
 #define MPIU_DBG_PKT(_conn,_pkt,_msg) \
-     MPIU_DBG_MSG_FMT(CH3_OTHER,TYPICAL,(MPIU_DBG_FDEST,\
+     MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,TYPICAL,(MPIU_DBG_FDEST,\
      "conn=%p: %s %s", _conn, _msg, MPIDI_Pkt_GetDescString( _pkt ) ))
 
 const char *MPIDI_Pkt_GetDescString( MPIDI_CH3_Pkt_t *pkt );
 
 /* These macros help trace communication headers */
 #define MPIU_DBG_MSGPKT(_vc,_tag,_contextid,_dest,_size,_kind)	\
-    MPIU_DBG_MSG_FMT(CH3_MSG,TYPICAL,(MPIU_DBG_FDEST,\
+    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_MSG,TYPICAL,(MPIU_DBG_FDEST,\
 		      "%s: vc=%p, tag=%d, context=%d, dest=%d, datasz=" MPIDI_MSG_SZ_FMT,\
 		      _kind,_vc,_tag,_contextid,_dest,_size) )
 
@@ -1204,7 +1215,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
     do {                                                                         \
         MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMPLETION_MUTEX);                                       \
         ++MPIDI_CH3I_progress_completion_count;                                  \
-        MPIU_DBG_MSG_D(CH3_PROGRESS,VERBOSE,                                     \
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_PROGRESS,VERBOSE,                                     \
                      "just incremented MPIDI_CH3I_progress_completion_count=%d", \
                      MPIDI_CH3I_progress_completion_count);                      \
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMPLETION_MUTEX);                                        \

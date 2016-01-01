@@ -287,7 +287,7 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
 
     MPIU_DBG_CONNSTATECHANGE(vc,vcch->conn,CONN_STATE_CLOSING);
     vcch->conn->state = CONN_STATE_CLOSING;
-    MPIU_DBG_MSG(CH3_DISCONNECT,TYPICAL,"Closing sock (Post_close)");
+    MPIU_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,"Closing sock (Post_close)");
     mpi_errno = MPIDU_Sock_post_close(vcch->sock);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIR_ERR_POP(mpi_errno);
@@ -424,7 +424,7 @@ int MPIDI_CH3I_Progress_finalize(void)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIDI_CH3I_Progress_wakeup(void)
 {
-    MPIU_DBG_MSG(CH3_OTHER,TYPICAL,"progress_wakeup called");
+    MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,TYPICAL,"progress_wakeup called");
     MPIDU_Sock_wakeup(MPIDI_CH3I_sock_set);
 }
 #endif
@@ -450,7 +450,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_HANDLE_SOCK_EVENT);
 
-    MPIU_DBG_MSG_D(CH3_OTHER,VERBOSE,"Socket event of type %d", event->op_type );
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,"Socket event of type %d", event->op_type );
 
     switch (event->op_type)
     {
@@ -623,7 +623,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 			}
 			/* --END ERROR HANDLING-- */
 
-			MPIU_DBG_MSG_FMT(CH3_CHANNEL,VERBOSE,
+			MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
        (MPIU_DBG_FDEST,"immediate writev, vc=%p, sreq=0x%08x, nb=" MPIDI_MSG_SZ_FMT,
 	conn->vc, sreq->handle, nb));
 			    
@@ -653,7 +653,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 			}
 			else
 			{
-			    MPIU_DBG_MSG_FMT(CH3_CHANNEL,VERBOSE,
+			    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
        (MPIU_DBG_FDEST,"posting writev, vc=%p, conn=%p, sreq=0x%08x", 
 	conn->vc, conn, sreq->handle));
 			    mpi_errno = MPIDU_Sock_post_writev(conn->sock, iovp, sreq->dev.iov_count, NULL);
@@ -808,7 +808,7 @@ static inline int connection_pop_sendq_req(MPIDI_CH3I_Connection_t * conn)
     conn->send_active = MPIDI_CH3I_SendQ_head(vcch); /* MT */
     if (conn->send_active != NULL)
     {
-	MPIU_DBG_MSG_P(CH3_CONNECT,TYPICAL,"conn=%p: Posting message from connection send queue", conn );
+	MPIU_DBG_MSG_P(MPIDI_CH3_DBG_CONNECT,TYPICAL,"conn=%p: Posting message from connection send queue", conn );
 	mpi_errno = MPIDU_Sock_post_writev(conn->sock, conn->send_active->dev.iov, conn->send_active->dev.iov_count, NULL);
 	if (mpi_errno != MPI_SUCCESS) {
 	    MPIR_ERR_POP(mpi_errno);
@@ -898,7 +898,7 @@ static int ReadMoreData( MPIDI_CH3I_Connection_t * conn, MPID_Request *rreq )
 	}
 	/* --END ERROR HANDLING-- */
 
-	MPIU_DBG_MSG_FMT(CH3_CHANNEL,VERBOSE,
+	MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
 		 (MPIU_DBG_FDEST,"immediate readv, vc=%p nb=" MPIDI_MSG_SZ_FMT ", rreq=0x%08x",
 		  conn->vc, nb, rreq->handle));
 				
@@ -931,7 +931,7 @@ static int ReadMoreData( MPIDI_CH3I_Connection_t * conn, MPID_Request *rreq )
 	    }
 	}
 	else {
-	    MPIU_DBG_MSG_FMT(CH3_CHANNEL,VERBOSE,
+	    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
         (MPIU_DBG_FDEST,"posting readv, vc=%p, rreq=0x%08x", 
 	 conn->vc, rreq->handle));
 	    conn->recv_active = rreq;

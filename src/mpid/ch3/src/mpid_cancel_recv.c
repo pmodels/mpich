@@ -36,7 +36,7 @@ int MPID_Cancel_recv(MPID_Request * rreq)
 
     if (netmod_cancelled && MPIDI_CH3U_Recvq_DP(rreq))
     {
-	MPIU_DBG_MSG_P(CH3_OTHER,VERBOSE,
+	MPIU_DBG_MSG_P(MPIDI_CH3_DBG_OTHER,VERBOSE,
 		       "request 0x%08x cancelled", rreq->handle);
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
         MPIR_STATUS_SET_COUNT(rreq->status, 0);
@@ -47,7 +47,7 @@ int MPID_Cancel_recv(MPID_Request * rreq)
     }
     else
     {
-	MPIU_DBG_MSG_P(CH3_OTHER,VERBOSE,
+	MPIU_DBG_MSG_P(MPIDI_CH3_DBG_OTHER,VERBOSE,
 	    "request 0x%08x already matched, unable to cancel", rreq->handle);
     }
 

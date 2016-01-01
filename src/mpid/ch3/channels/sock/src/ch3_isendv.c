@@ -67,7 +67,7 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq,
     /* The sock channel uses a fixed length header, the size of which is the 
        maximum of all possible packet headers */
     iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
-    MPIU_DBG_STMT(CH3_CHANNEL,VERBOSE,
+    MPIU_DBG_STMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
 	 MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)iov[0].MPL_IOV_BUF));
 
     if (vcch->state == MPIDI_CH3I_VC_STATE_CONNECTED) /* MT */
@@ -79,7 +79,7 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq,
 	    MPIU_Size_t nb;
 	    int rc;
 
-	    MPIU_DBG_MSG(CH3_CHANNEL,VERBOSE,
+	    MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
 			 "send queue empty, attempting to write");
 	    
 	    MPIU_DBG_PKT(vcch->conn,(MPIDI_CH3_Pkt_t*)iov[0].MPL_IOV_BUF,
@@ -97,7 +97,7 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq,
 	    {
 		int offset = 0;
 
-		MPIU_DBG_MSG_D(CH3_CHANNEL,VERBOSE,
+		MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
 			       "wrote %ld bytes", (unsigned long) nb);
 		
 		while (offset < n_iov)
@@ -109,11 +109,11 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq,
 		    }
 		    else
 		    {
-			MPIU_DBG_MSG(CH3_CHANNEL,VERBOSE,
+			MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
 			     "partial write, request enqueued at head");
 			update_request(sreq, iov, n_iov, offset, nb);
 			MPIDI_CH3I_SendQ_enqueue_head(vcch, sreq);
-			MPIU_DBG_MSG_FMT(CH3_CHANNEL,VERBOSE,
+			MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
     (MPIU_DBG_FDEST,"posting writev, vc=0x%p, sreq=0x%08x", vc, sreq->handle));
 			vcch->conn->send_active = sreq;
 			mpi_errno = MPIDU_Sock_post_writev(vcch->conn->sock, 
@@ -134,7 +134,7 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq,
 		}
 		if (offset == n_iov)
 		{
-		    MPIU_DBG_MSG(CH3_CHANNEL,VERBOSE,
+		    MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
 				 "write complete, calling OnDataAvail fcn");
 		    reqFn = sreq->dev.OnDataAvail;
 		    if (!reqFn) {
@@ -150,7 +150,7 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq,
 			if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 			if (!complete) {
 			    MPIDI_CH3I_SendQ_enqueue_head(vcch, sreq);
-			    MPIU_DBG_MSG_FMT(CH3_CHANNEL,VERBOSE,
+			    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
     (MPIU_DBG_FDEST,"posting writev, vc=0x%p, sreq=0x%08x", vc, sreq->handle));
 			    vcch->conn->send_active = sreq;
 			    mpi_errno = MPIDU_Sock_post_writev(
@@ -171,13 +171,13 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq,
 	    /* --BEGIN ERROR HANDLING-- */
 	    else if (MPIR_ERR_GET_CLASS(rc) == MPIDU_SOCK_ERR_NOMEM)
 	    {
-		MPIU_DBG_MSG(CH3_CHANNEL,TYPICAL,
+		MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,TYPICAL,
 			     "MPIDU_Sock_writev failed, out of memory");
 		sreq->status.MPI_ERROR = MPIR_ERR_MEMALLOCFAILED;
 	    }
 	    else
 	    {
-		MPIU_DBG_MSG_D(CH3_CHANNEL,TYPICAL,
+		MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL,TYPICAL,
 			       "MPIDU_Sock_writev failed, rc=%d", rc);
 		/* Connection just failed.  Mark the request complete and 
 		   return an error. */
@@ -198,7 +198,7 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq,
 	}
 	else
 	{
-	    MPIU_DBG_MSG(CH3_CHANNEL,VERBOSE,"send queue not empty, enqueuing");
+	    MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,"send queue not empty, enqueuing");
 	    update_request(sreq, iov, n_iov, 0, 0);
 	    MPIDI_CH3I_SendQ_enqueue(vcch, sreq);
 	}

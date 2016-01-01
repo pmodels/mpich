@@ -53,21 +53,21 @@ typedef GENERIC_Q_DECL(struct MPID_Request) MPID_nem_lmt_rts_queue_t;
 #define MPID_nem_lmt_rtsq_empty(q) GENERIC_Q_EMPTY (q)
 #define MPID_nem_lmt_rtsq_head(q) GENERIC_Q_HEAD (q)
 #define MPID_nem_lmt_rtsq_enqueue(qp, ep) do {                                          \
-        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,                         \
+        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,                         \
                           "MPID_nem_lmt_rtsq_enqueue req=%p (handle=%#x), queue=%p",    \
                           ep, (ep)->handle, qp));                                       \
         GENERIC_Q_ENQUEUE (qp, ep, dev.next);                                           \
     } while (0)
 #define MPID_nem_lmt_rtsq_dequeue(qp, epp)  do {                                        \
         GENERIC_Q_DEQUEUE (qp, epp, dev.next);                                          \
-        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,                         \
+        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,                         \
                           "MPID_nem_lmt_rtsq_dequeue req=%p (handle=%#x), queue=%p",    \
                           *(epp), *(epp) ? (*(epp))->handle : -1, qp));                 \
     } while (0)
 #define MPID_nem_lmt_rtsq_search_remove(qp, req_id, epp) do {                           \
         GENERIC_Q_SEARCH_REMOVE(qp, _e->handle == (req_id), epp,                        \
                 struct MPID_Request, dev.next);                                         \
-        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,                         \
+        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,                         \
                     "MPID_nem_lmt_rtsq_search_remove req=%p (handle=%#x), queue=%p",    \
                     *(epp), req_id, qp));                                               \
 } while (0)
@@ -192,18 +192,18 @@ struct MPIDI_CH3I_Request
 #if 0
 #define DUMP_REQUEST(req) do {                                          \
         int i;                                                          \
-        MPIU_DBG_MSG_P(CH3_OTHER, TERSE, "request %p\n", (req));        \
-        MPIU_DBG_MSG_D(CH3_OTHER, TERSE, "  handle = %d\n", (req)->handle); \
-        MPIU_DBG_MSG_D(CH3_OTHER, TERSE, "  ref_count = %d\n", (req)->ref_count); \
-        MPIU_DBG_MSG_D(CH3_OTHER, TERSE, "  cc = %d\n", (req)->cc);     \
+        MPIU_DBG_MSG_P(MPIDI_CH3_DBG_OTHER, TERSE, "request %p\n", (req));        \
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_OTHER, TERSE, "  handle = %d\n", (req)->handle); \
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_OTHER, TERSE, "  ref_count = %d\n", (req)->ref_count); \
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_OTHER, TERSE, "  cc = %d\n", (req)->cc);     \
         for (i = 0; i < (req)->iov_count; ++i)                          \
-            MPIU_DBG_MSG_FMT(CH3_OTHER, TERSE, (MPIU_DBG_FDEST, "  dev.iov[%d] = (%p, %d)\n", i, \
+            MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, TERSE, (MPIU_DBG_FDEST, "  dev.iov[%d] = (%p, %d)\n", i, \
                                                 (req)->dev.iov[i+(req)->dev.iov_offset].MPL_IOV_BUF, \
                                                 (req)->dev.iov[i+(req)->dev.iov_offset].MPL_IOV_LEN)); \
-        MPIU_DBG_MSG_D(CH3_OTHER, TERSE, "  dev.iov_count = %d\n",      \
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_OTHER, TERSE, "  dev.iov_count = %d\n",      \
                        (req)->dev.iov_count);                           \
-        MPIU_DBG_MSG_FMT(CH3_OTHER, TERSE, (MPIU_DBG_FDEST, "  dev.state = 0x%x\n", (req)->dev.state)); \
-        MPIU_DBG_MSG_D(CH3_OTHER, TERSE, "    type = %d\n",             \
+        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, TERSE, (MPIU_DBG_FDEST, "  dev.state = 0x%x\n", (req)->dev.state)); \
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_OTHER, TERSE, "    type = %d\n",             \
                        MPIDI_Request_get_type(req));                    \
     } while (0)
 #else
@@ -232,7 +232,7 @@ extern OPA_int_t MPIDI_CH3I_progress_completion_count;
 #define MPIDI_CH3I_INCR_PROGRESS_COMPLETION_COUNT do {                                  \
         OPA_write_barrier();                                                            \
         OPA_incr_int(&MPIDI_CH3I_progress_completion_count);                            \
-        MPIU_DBG_MSG_D(CH3_PROGRESS,VERBOSE,                                            \
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_PROGRESS,VERBOSE,                                            \
                        "just incremented MPIDI_CH3I_progress_completion_count=%d",      \
                        OPA_load_int(&MPIDI_CH3I_progress_completion_count));            \
     } while(0)

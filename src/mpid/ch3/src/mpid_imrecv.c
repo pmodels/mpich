@@ -48,7 +48,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
         int recv_pending;
 
         /* This is an eager message */
-        MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"eager message in the request");
+        MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"eager message in the request");
 
         /* If this is an eager synchronous message, then we need to send an
            acknowledgement back to the sender. */

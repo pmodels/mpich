@@ -104,7 +104,7 @@ int MPIDU_CH3I_SetupListener( MPIDU_Sock_set_t sock_set )
 	return mpi_errno;
     }
 
-    MPIU_DBG_MSG(CH3_CONNECT,TYPICAL,
+    MPIU_DBG_MSG(MPIDI_CH3_DBG_CONNECT,TYPICAL,
 		 "Setting listener connect state to CONN_STATE_LISTENING");
     MPIDI_CH3I_listener_conn->sock	  = NULL;
     MPIDI_CH3I_listener_conn->vc	  = NULL;
@@ -116,7 +116,7 @@ int MPIDU_CH3I_SetupListener( MPIDU_Sock_set_t sock_set )
 				  &MPIDI_CH3I_listener_port, &sock);
     if (mpi_errno) return mpi_errno;
 
-    MPIU_DBG_MSG_D(CH3_CONNECT,VERBOSE,"Listener port %d",
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CONNECT,VERBOSE,"Listener port %d",
 		   MPIDI_CH3I_listener_port );
 
     MPIDI_CH3I_listener_conn->sock = sock;
@@ -133,7 +133,7 @@ int MPIDU_CH3I_ShutdownListener( void )
     int mpi_errno;
     MPID_Progress_state progress_state;
 
-    MPIU_DBG_MSG(CH3_DISCONNECT,TYPICAL,"Closing listener sock (Post_close)");
+    MPIU_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,"Closing listener sock (Post_close)");
     mpi_errno = MPIDU_Sock_post_close(MPIDI_CH3I_listener_conn->sock);
     if (mpi_errno != MPI_SUCCESS) {
 	return mpi_errno;
@@ -233,7 +233,7 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
        and the remote process to which the vc will connect). */
     MPIDI_VC_Init(vc, NULL, 0);
 
-    MPIU_DBG_MSG_S(CH3_CONNECT,VERBOSE,"Connect to root with portstring %s",
+    MPIU_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT,VERBOSE,"Connect to root with portstring %s",
 		   port_name );
 
     mpi_errno = MPIDU_Sock_get_conninfo_from_bc( port_name, host_description,
@@ -247,7 +247,7 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**argstr_port_name_tag");
     }
 
-    MPIU_DBG_MSG_D(CH3_CONNECT,VERBOSE,"port tag %d",port_name_tag);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CONNECT,VERBOSE,"port tag %d",port_name_tag);
 
     mpi_errno = MPIDI_CH3I_Connection_alloc(&conn);
     if (mpi_errno != MPI_SUCCESS) {
@@ -262,7 +262,7 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
        socket for a connection and return the connection.  That will
        keep the socket set out of the general ch3 code, even if this
        is the socket utility functions. */
-    MPIU_DBG_MSG_FMT(CH3_CONNECT,VERBOSE,(MPIU_DBG_FDEST,
+    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT,VERBOSE,(MPIU_DBG_FDEST,
 	  "posting connect to host %s, port %d", host_description, port ));
     mpi_errno = MPIDU_Sock_post_connect(MPIDI_CH3I_sock_set, conn, 
 					host_description, port, &conn->sock);
@@ -481,7 +481,7 @@ int MPIDI_CH3U_Get_business_card_sock(int myRank,
 	    p = (unsigned char *)(info->h_addr_list[0]);
 	    MPL_snprintf( ifname, sizeof(ifname), "%u.%u.%u.%u", 
 			   p[0], p[1], p[2], p[3] );
-	    MPIU_DBG_MSG_S(CH3_CONNECT,VERBOSE,"ifname = %s",ifname );
+	    MPIU_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT,VERBOSE,"ifname = %s",ifname );
 	    str_errno = MPIU_Str_add_string_arg( bc_val_p,
 						 val_max_sz_p,
 						 MPIDI_CH3I_IFNAME_KEY,
@@ -502,7 +502,7 @@ int MPIDI_CH3U_Get_business_card_sock(int myRank,
 	    p = (unsigned char *)(ifaddr.ifaddr);
 	    MPL_snprintf( ifname, sizeof(ifname), "%u.%u.%u.%u", 
 			   p[0], p[1], p[2], p[3] );
-	    MPIU_DBG_MSG_S(CH3_CONNECT,VERBOSE,"ifname = %s",ifname );
+	    MPIU_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT,VERBOSE,"ifname = %s",ifname );
 	    str_errno = MPIU_Str_add_string_arg( bc_val_p,
 						 val_max_sz_p,
 						 MPIDI_CH3I_IFNAME_KEY,
@@ -514,7 +514,7 @@ int MPIDI_CH3U_Get_business_card_sock(int myRank,
 	}
     }
 
-    MPIU_DBG_MSG_S(CH3_CONNECT,TYPICAL,"business card is %s", bc_orig );
+    MPIU_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT,TYPICAL,"business card is %s", bc_orig );
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_GET_BUSINESS_CARD_SOCK);
@@ -692,7 +692,7 @@ int MPIDI_CH3_Sockconn_handle_close_event( MPIDI_CH3I_Connection_t * conn )
 	}
         else if(conn->state == CONN_STATE_DISCARD) {
         /* post close, so the socket is closed and memmory leaks are avoided */
-            MPIU_DBG_MSG(CH3_DISCONNECT,TYPICAL,"CLosing sock (Post_close)");
+            MPIU_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,"CLosing sock (Post_close)");
             conn->state = CONN_STATE_CLOSING;
             mpi_errno = MPIDU_Sock_post_close(conn->sock);
             if (mpi_errno != MPI_SUCCESS) {
@@ -847,7 +847,7 @@ int MPIDI_CH3_Sockconn_handle_conn_event( MPIDI_CH3I_Connection_t * conn )
                no longer needed and should be closed. This is initiated with the post
                close command. This also caused that the socket is removed from the
                socket set, so no more polling on this socket*/
-	    MPIU_DBG_MSG(CH3_DISCONNECT,TYPICAL,"CLosing sock (Post_close)");
+	    MPIU_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,"CLosing sock (Post_close)");
 	    mpi_errno = MPIDU_Sock_post_close(conn->sock);
 	    if (mpi_errno != MPI_SUCCESS) {
 		MPIR_ERR_POP(mpi_errno);
@@ -856,7 +856,7 @@ int MPIDI_CH3_Sockconn_handle_conn_event( MPIDI_CH3I_Connection_t * conn )
     }
     /* --BEGIN ERROR HANDLING-- */
     else {
-	MPIU_DBG_STMT(CH3_CONNECT,VERBOSE,MPIDI_DBG_Print_packet(&conn->pkt));
+	MPIU_DBG_STMT(MPIDI_CH3_DBG_CONNECT,VERBOSE,MPIDI_DBG_Print_packet(&conn->pkt));
 	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_INTERN,
 					 "**ch3|sock|badpacket", "**ch3|sock|badpacket %d", conn->pkt.type);
 	goto fn_fail;
@@ -934,7 +934,7 @@ int MPIDI_CH3_Sockconn_handle_connopen_event( MPIDI_CH3I_Connection_t * conn )
 	    /* the other process is in the same comm_world; just compare the 
 	       ranks */
 	    if (MPIR_Process.comm_world->rank < pg_rank) {
-		MPIU_DBG_MSG_FMT(CH3_CONNECT,TYPICAL,(MPIU_DBG_FDEST,
+		MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT,TYPICAL,(MPIU_DBG_FDEST,
                 "vc=%p,conn=%p:Accept head-to-head connection (my process group), discarding vcch->conn=%p",vc,conn, vcch->conn));
 
                 /* mark old connection */
@@ -954,7 +954,7 @@ int MPIDI_CH3_Sockconn_handle_connopen_event( MPIDI_CH3I_Connection_t * conn )
 	    }
 	    else {
 		/* refuse connection */
-		MPIU_DBG_MSG_FMT(CH3_CONNECT,TYPICAL,(MPIU_DBG_FDEST,
+		MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT,TYPICAL,(MPIU_DBG_FDEST,
                 "vc=%p,conn=%p:Refuse head-to-head connection (my process group)",vc,conn));
 		MPIDI_Pkt_init(openresp, MPIDI_CH3I_PKT_SC_OPEN_RESP);
 		openresp->ack = FALSE;
@@ -964,7 +964,7 @@ int MPIDI_CH3_Sockconn_handle_connopen_event( MPIDI_CH3I_Connection_t * conn )
 	    /* the two processes are in different comm_worlds; compare their 
 	       unique pg_ids. */
 	    if (strcmp(MPIDI_Process.my_pg->id, pg->id) < 0) {
-		MPIU_DBG_MSG_FMT(CH3_CONNECT,TYPICAL,(MPIU_DBG_FDEST,
+		MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT,TYPICAL,(MPIU_DBG_FDEST,
                 "vc=%p,conn=%p:Accept head-to-head connection (two process groups), discarding vcch->conn=%p",vc,conn, vcch->conn));
                 /* mark old connection */
                 MPIDI_CH3I_Connection_t *old_conn = vcch->conn;
@@ -982,7 +982,7 @@ int MPIDI_CH3_Sockconn_handle_connopen_event( MPIDI_CH3I_Connection_t * conn )
 	    }
 	    else {
 		/* refuse connection */
-		MPIU_DBG_MSG_FMT(CH3_CONNECT,TYPICAL,(MPIU_DBG_FDEST,
+		MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT,TYPICAL,(MPIU_DBG_FDEST,
 			"vc=%p,conn=%p:Refuse head-to-head connection (two process groups)",vc,conn));
 		MPIDI_Pkt_init(openresp, MPIDI_CH3I_PKT_SC_OPEN_RESP);
 		openresp->ack = FALSE;
@@ -1063,7 +1063,7 @@ int MPIDI_CH3_Sockconn_handle_connwrite( MPIDI_CH3I_Connection_t * conn )
             /* zero out the vc to prevent trouble in _handle_close_event */
             conn->vc = NULL;
 
-	    MPIU_DBG_MSG(CH3_DISCONNECT,TYPICAL,"Closing sock2 (Post_close)");
+	    MPIU_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,"Closing sock2 (Post_close)");
 	    mpi_errno = MPIDU_Sock_post_close(conn->sock);
 	    if (mpi_errno != MPI_SUCCESS) {
 		MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,
@@ -1101,10 +1101,10 @@ int MPIDI_CH3I_VC_post_sockconnect(MPIDI_VC_t * vc)
     if(vcch->state == MPIDI_CH3I_VC_STATE_UNCONNECTED){ 
     	MPIU_DBG_VCCHSTATECHANGE(vc,VC_STATE_CONNECTING);
     	vcch->state = MPIDI_CH3I_VC_STATE_CONNECTING;
-	MPIU_DBG_MSG_P(CH3_CONNECT,TYPICAL,"vc=(%p) Going ahead to obtain connstring", vc);
+	MPIU_DBG_MSG_P(MPIDI_CH3_DBG_CONNECT,TYPICAL,"vc=(%p) Going ahead to obtain connstring", vc);
     }else{
-	MPIU_DBG_MSG_P(CH3_CONNECT,TYPICAL,"MT: vc=(%p) is already connecting/ed", vc);
-	MPIU_DBG_MSG(CH3_CONNECT,TYPICAL,"Aborting posting a connect");
+	MPIU_DBG_MSG_P(MPIDI_CH3_DBG_CONNECT,TYPICAL,"MT: vc=(%p) is already connecting/ed", vc);
+	MPIU_DBG_MSG(MPIDI_CH3_DBG_CONNECT,TYPICAL,"Aborting posting a connect");
 	/*************** MT *****************/
 	/* There are 3 cases here,
          * 1) Another thread posted a connect while the current thread
@@ -1168,10 +1168,10 @@ int MPIDI_CH3I_Sock_connect( MPIDI_VC_t *vc, const char val[], int vallen )
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SOCK_CONNECT);
     
     if(vcch->state == MPIDI_CH3I_VC_STATE_CONNECTING){ 
-	MPIU_DBG_MSG_P(CH3_CONNECT,TYPICAL,"Posting a connect for vc=(%p)", vc);
+	MPIU_DBG_MSG_P(MPIDI_CH3_DBG_CONNECT,TYPICAL,"Posting a connect for vc=(%p)", vc);
     }else{
-	MPIU_DBG_MSG_P(CH3_CONNECT,TYPICAL,"MT: vc=(%p) is already connected", vc);
-	MPIU_DBG_MSG(CH3_CONNECT,TYPICAL,"Aborting posting a connect");
+	MPIU_DBG_MSG_P(MPIDI_CH3_DBG_CONNECT,TYPICAL,"MT: vc=(%p) is already connected", vc);
+	MPIU_DBG_MSG(MPIDI_CH3_DBG_CONNECT,TYPICAL,"Aborting posting a connect");
 	/*************** MT *****************/
         /* 1) Another thread received a connect from the same proc
          *    the current thread is connecting to and opened a 
@@ -1349,7 +1349,7 @@ static int connection_post_sendq_req(MPIDI_CH3I_Connection_t * conn)
     conn->send_active = MPIDI_CH3I_SendQ_head(vcch); /* MT */
     if (conn->send_active != NULL)
     {
-	MPIU_DBG_MSG_P(CH3_CONNECT,TYPICAL,"conn=%p: Posting message from connection send queue", conn );
+	MPIU_DBG_MSG_P(MPIDI_CH3_DBG_CONNECT,TYPICAL,"conn=%p: Posting message from connection send queue", conn );
 	mpi_errno = MPIDU_Sock_post_writev(conn->sock, 
 					   conn->send_active->dev.iov, 
 					   conn->send_active->dev.iov_count, 

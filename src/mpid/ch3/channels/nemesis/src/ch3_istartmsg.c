@@ -56,7 +56,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_
        /* MT */
     {
         MPIU_Assert(hdr_sz <= INT_MAX);
-	MPIU_DBG_MSG_D (CH3_CHANNEL, VERBOSE, "iStartMsg %d", (int) hdr_sz);
+	MPIU_DBG_MSG_D (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "iStartMsg %d", (int) hdr_sz);
 	mpi_errno = MPID_nem_mpich_send_header (hdr, (int)hdr_sz, vc, &again);
         if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 	if (again)
@@ -86,7 +86,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_
     {
 	MPID_Request * sreq = NULL;
 	
-	MPIU_DBG_MSG(CH3_OTHER, TERSE, "enqueuing");
+	MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER, TERSE, "enqueuing");
 
 	/* create a request */
 	sreq = MPID_Request_create();

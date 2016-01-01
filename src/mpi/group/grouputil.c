@@ -396,12 +396,12 @@ int MPIR_Group_check_subset( MPID_Group *group_ptr, MPID_Comm *comm_ptr )
     MPIR_Group_setup_lpid_list( group_ptr );
     g1_idx = group_ptr->idx_of_first_lpid;
     g2_idx = mergesort_lpidarray( vmap, vsize );
-    MPIU_DBG_MSG_FMT(COMM,VERBOSE,(MPIU_DBG_FDEST,
+    MPIU_DBG_MSG_FMT(MPIR_DBG_COMM,VERBOSE,(MPIU_DBG_FDEST,
 			   "initial indices: %d %d\n", g1_idx, g2_idx ));
     while (g1_idx >= 0 && g2_idx >= 0) {
 	l1_pid = group_ptr->lrank_to_lpid[g1_idx].lpid;
 	l2_pid = vmap[g2_idx].lpid;
-	MPIU_DBG_MSG_FMT(COMM,VERBOSE,(MPIU_DBG_FDEST,
+	MPIU_DBG_MSG_FMT(MPIR_DBG_COMM,VERBOSE,(MPIU_DBG_FDEST,
 				       "Lpids are %d, %d\n", l1_pid, l2_pid ));
 	if (l1_pid < l2_pid) {
 	    /* If we have to advance g1, we didn't find a match, so
@@ -416,7 +416,7 @@ int MPIR_Group_check_subset( MPID_Group *group_ptr, MPID_Comm *comm_ptr )
 	    g1_idx = group_ptr->lrank_to_lpid[g1_idx].next_lpid;
 	    g2_idx = vmap[g2_idx].next_lpid;
 	}
-	MPIU_DBG_MSG_FMT(COMM,VERBOSE,(MPIU_DBG_FDEST,
+	MPIU_DBG_MSG_FMT(MPIR_DBG_COMM,VERBOSE,(MPIU_DBG_FDEST,
 				       "g1 = %d, g2 = %d\n", g1_idx, g2_idx ));
     }
 

@@ -64,7 +64,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, MPIDI_msg_sz_t hdr_sz,
     /* The SOCK channel uses a fixed length header, the size of which is the 
        maximum of all possible packet headers */
     hdr_sz = sizeof(MPIDI_CH3_Pkt_t);
-    MPIU_DBG_STMT(CH3_CHANNEL,VERBOSE,
+    MPIU_DBG_STMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
 		  MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t*)hdr));
 
     if (vcch->state == MPIDI_CH3I_VC_STATE_CONNECTED) /* MT */
@@ -76,7 +76,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, MPIDI_msg_sz_t hdr_sz,
 	    MPIU_Size_t nb;
 	    int rc;
 
-	    MPIU_DBG_MSG(CH3_CHANNEL,VERBOSE,
+	    MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
 			 "send queue empty, attempting to write");
 	    
 	    MPIU_DBG_PKT(vcch->conn,hdr,"istartmsg");
@@ -86,18 +86,18 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, MPIDI_msg_sz_t hdr_sz,
 	    rc = MPIDU_Sock_write(vcch->sock, hdr, hdr_sz, &nb);
 	    if (rc == MPI_SUCCESS)
 	    {
-		MPIU_DBG_MSG_D(CH3_CHANNEL,VERBOSE,
+		MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
 			       "wrote %ld bytes", (unsigned long) nb);
 		
 		if (nb == hdr_sz)
 		{ 
-		    MPIU_DBG_MSG_D(CH3_CHANNEL,VERBOSE,
+		    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
 				   "entire write complete, " MPIDI_MSG_SZ_FMT " bytes", nb);
 		    /* done.  get us out of here as quickly as possible. */
 		}
 		else
 		{
-		    MPIU_DBG_MSG_D(CH3_CHANNEL,VERBOSE,
+		    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
                     "partial write of " MPIDI_MSG_SZ_FMT " bytes, request enqueued at head", nb);
 		    sreq = create_request(hdr, hdr_sz, nb);
 		    if (!sreq) {
@@ -105,7 +105,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, MPIDI_msg_sz_t hdr_sz,
 		    }
 
 		    MPIDI_CH3I_SendQ_enqueue_head(vcch, sreq);
-		    MPIU_DBG_MSG_FMT(CH3_CHANNEL,VERBOSE,
+		    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
      (MPIU_DBG_FDEST,"posting write, vc=0x%p, sreq=0x%08x", vc, sreq->handle));
 		    vcch->conn->send_active = sreq;
 		    mpi_errno = MPIDU_Sock_post_write(vcch->conn->sock, sreq->dev.iov[0].MPL_IOV_BUF,
@@ -124,7 +124,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, MPIDI_msg_sz_t hdr_sz,
 	    /* --BEGIN ERROR HANDLING-- */
 	    else
 	    {
-		MPIU_DBG_MSG_D(CH3_CHANNEL,TYPICAL,
+		MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL,TYPICAL,
 			       "ERROR - MPIDU_Sock_write failed, rc=%d", rc);
 		sreq = MPID_Request_create();
 		if (!sreq) {
@@ -143,7 +143,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, MPIDI_msg_sz_t hdr_sz,
 	}
 	else
 	{
-	    MPIU_DBG_MSG(CH3_CHANNEL,VERBOSE,
+	    MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
 			 "send in progress, request enqueued");
 	    sreq = create_request(hdr, hdr_sz, 0);
 	    if (!sreq) {

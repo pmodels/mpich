@@ -207,7 +207,7 @@ static int thread_cs_init( void )
     MPID_THREADPRIV_INITKEY;
     MPID_THREADPRIV_INIT;
 
-    MPIU_DBG_MSG(INIT,TYPICAL,"Created global mutex and private storage");
+    MPIU_DBG_MSG(MPIR_DBG_INIT,TYPICAL,"Created global mutex and private storage");
     return MPI_SUCCESS;
 }
 
@@ -219,7 +219,7 @@ int MPIR_Thread_CS_Finalize( void )
 {
     int err;
 
-    MPIU_DBG_MSG(INIT,TYPICAL,"Freeing global mutex and private storage");
+    MPIU_DBG_MSG(MPIR_DBG_INIT,TYPICAL,"Freeing global mutex and private storage");
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
     MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
@@ -278,6 +278,22 @@ int MPIR_F08_MPI_BOTTOM;
 MPI_F08_Status *MPI_F08_STATUS_IGNORE = &MPIR_F08_MPI_STATUS_IGNORE_OBJ;
 MPI_F08_Status *MPI_F08_STATUSES_IGNORE = &MPIR_F08_MPI_STATUSES_IGNORE_OBJ[0];
 #endif
+
+#if defined (USE_DBG_LOGGING)
+MPIU_DBG_Class MPIR_DBG_INIT;
+MPIU_DBG_Class MPIR_DBG_PT2PT;
+MPIU_DBG_Class MPIR_DBG_THREAD;
+MPIU_DBG_Class MPIR_DBG_DATATYPE;
+MPIU_DBG_Class MPIR_DBG_HANDLE;
+MPIU_DBG_Class MPIR_DBG_COMM;
+MPIU_DBG_Class MPIR_DBG_BSEND;
+MPIU_DBG_Class MPIR_DBG_ERRHAND;
+MPIU_DBG_Class MPIR_DBG_OTHER;
+
+/* these classes might need to move out later */
+MPIU_DBG_Class MPIR_DBG_ASSERT;
+MPIU_DBG_Class MPIR_DBG_STRING;
+#endif /* USE_DBG_LOGGING */
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Init_thread
@@ -505,6 +521,19 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 #ifdef USE_DBG_LOGGING
     MPIU_DBG_Init( argc, argv, has_args, has_env, 
 		   MPIR_Process.comm_world->rank );
+
+    MPIR_DBG_INIT = MPIU_DBG_Class_alloc("INIT", "init");
+    MPIR_DBG_PT2PT = MPIU_DBG_Class_alloc("PT2PT", "pt2pt");
+    MPIR_DBG_THREAD = MPIU_DBG_Class_alloc("THREAD", "thread");
+    MPIR_DBG_DATATYPE = MPIU_DBG_Class_alloc("DATATYPE", "datatype");
+    MPIR_DBG_HANDLE = MPIU_DBG_Class_alloc("HANDLE", "handle");
+    MPIR_DBG_COMM = MPIU_DBG_Class_alloc("COMM", "comm");
+    MPIR_DBG_BSEND = MPIU_DBG_Class_alloc("BSEND", "bsend");
+    MPIR_DBG_ERRHAND = MPIU_DBG_Class_alloc("ERRHAND", "errhand");
+    MPIR_DBG_OTHER = MPIU_DBG_Class_alloc("OTHER", "other");
+
+    MPIR_DBG_ASSERT = MPIU_DBG_Class_alloc("ASSERT", "assert");
+    MPIR_DBG_STRING = MPIU_DBG_Class_alloc("STRING", "string");
 #endif
 
     /* Initialize the C versions of the Fortran link-time constants.

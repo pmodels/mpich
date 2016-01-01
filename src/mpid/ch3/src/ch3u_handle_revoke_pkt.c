@@ -17,7 +17,7 @@ int MPIDI_CH3_PktHandler_Revoke(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
 
-    MPIU_DBG_MSG_D(CH3_OTHER, VERBOSE, "Received revoke pkt from %d", vc->pg_rank);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_OTHER, VERBOSE, "Received revoke pkt from %d", vc->pg_rank);
 
     /* Search through all of the communicators to find the right context_id */
     MPIDI_CH3I_Comm_find(revoke_pkt->revoked_comm, &comm_ptr);

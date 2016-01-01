@@ -430,7 +430,7 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPL_IOV s_co
         if (complete) {
             /* request was completed by the OnDataAvail fn */
             MPID_nem_lmt_send_DONE(vc, rreq); /* tell the other side to complete its request */
-            MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
+            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
 
         }
         else {
@@ -485,7 +485,7 @@ int MPID_nem_lmt_dma_done_send(MPIDI_VC_t *vc, MPID_Request *sreq)
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
         }
-        MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
+        MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
         goto fn_exit;
     }
 
@@ -495,7 +495,7 @@ int MPID_nem_lmt_dma_done_send(MPIDI_VC_t *vc, MPID_Request *sreq)
         
     if (complete) {
         /* request was completed by the OnDataAvail fn */
-        MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
+        MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
         goto fn_exit;
     }
     else {
@@ -584,7 +584,7 @@ int MPID_nem_lmt_dma_progress(void)
                     if (complete) {
                         /* request was completed by the OnDataAvail fn */
                         MPID_nem_lmt_send_DONE(cur->vc, cur->req); /* tell the other side to complete its request */
-                        MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
+                        MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
 
                     }
                     else {

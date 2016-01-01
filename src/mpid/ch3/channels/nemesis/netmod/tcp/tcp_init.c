@@ -111,7 +111,8 @@ MPID_nem_netmod_funcs_t MPIDI_nem_tcp_funcs = {
 
 /* in case there are no packet types defined (e.g., they're ifdef'ed out) make sure the array is not zero length */
 static MPIDI_CH3_PktHandler_Fcn *pkt_handlers[MPIDI_NEM_TCP_PKT_NUM_TYPES ? MPIDI_NEM_TCP_PKT_NUM_TYPES : 1];
-    
+
+MPIU_DBG_Class MPIDI_NEM_TCP_DBG_DET;
 
 #undef FUNCNAME
 #define FUNCNAME set_up_listener
@@ -163,6 +164,10 @@ int MPID_nem_tcp_init (MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_
 
     /* first make sure that our private fields in the vc fit into the area provided  */
     MPIU_Assert(sizeof(MPID_nem_tcp_vc_area) <= MPIDI_NEM_VC_NETMOD_AREA_LEN);
+
+#if defined (USE_DBG_LOGGING)
+    MPIDI_NEM_TCP_DBG_DET = MPIU_DBG_Class_alloc("MPIDI_NEM_TCP_DBG_DET", "nem_sock_det");
+#endif /* USE_DBG_LOGGING */
 
     /* set up listener socket */
     mpi_errno = set_up_listener();
@@ -310,7 +315,7 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
         mpi_errno = MPIDI_Get_IP_for_iface(MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE, ifaddr, &ifaddrFound);
         MPIR_ERR_CHKANDJUMP1(mpi_errno || !ifaddrFound, mpi_errno, MPI_ERR_OTHER, "**iface_notfound", "**iface_notfound %s", MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE);
         
-        MPIU_DBG_MSG_FMT(CH3_CONNECT, VERBOSE, (MPIU_DBG_FDEST,
+        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT, VERBOSE, (MPIU_DBG_FDEST,
                                                 "ifaddrFound=TRUE ifaddr->type=%d ifaddr->len=%d ifaddr->ifaddr[0-3]=%d.%d.%d.%d",
                                                 ifaddr->type, ifaddr->len, ifaddr->ifaddr[0], ifaddr->ifaddr[1], ifaddr->ifaddr[2],
                                                 ifaddr->ifaddr[3]));
@@ -441,7 +446,7 @@ int MPID_nem_tcp_get_business_card (int my_rank, char **bc_val_p, int *val_max_s
         unsigned char *p;
         p = (unsigned char *)(ifaddr.ifaddr);
         MPL_snprintf( ifname, sizeof(ifname), "%u.%u.%u.%u", p[0], p[1], p[2], p[3] );
-        MPIU_DBG_MSG_S(CH3_CONNECT,VERBOSE,"ifname = %s",ifname );
+        MPIU_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT,VERBOSE,"ifname = %s",ifname );
         str_errno = MPIU_Str_add_string_arg(bc_val_p, val_max_sz_p, MPIDI_CH3I_IFNAME_KEY, ifname);
         if (str_errno) {
             MPIR_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
@@ -603,7 +608,7 @@ int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr
     return mpi_errno;
  fn_fail:
 /*     fprintf(stdout, "failure. mpi_errno = %d\n", mpi_errno); */
-    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
+    MPIU_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
     goto fn_exit;
 }
 
@@ -653,7 +658,7 @@ int MPID_nem_tcp_bind (int sockfd)
     return mpi_errno;
  fn_fail:
 /*     fprintf(stdout, "failure. mpi_errno = %d\n", mpi_errno); */
-    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
+    MPIU_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
     goto fn_exit;
 }
 
@@ -724,7 +729,7 @@ int MPID_nem_tcp_vc_terminated(MPIDI_VC_t *vc)
     MPIDI_FUNC_EXIT(MPID_NEM_TCP_VC_TERMINATED);
     return mpi_errno;
  fn_fail:
-    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
+    MPIU_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
     goto fn_exit;
 }
 

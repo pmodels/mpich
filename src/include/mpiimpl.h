@@ -2117,6 +2117,19 @@ typedef struct MPICH_PerProcess_t {
 } MPICH_PerProcess_t;
 extern MPICH_PerProcess_t MPIR_Process;
 
+#if defined (USE_DBG_LOGGING)
+extern MPIU_DBG_Class MPIR_DBG_INIT;
+extern MPIU_DBG_Class MPIR_DBG_PT2PT;
+extern MPIU_DBG_Class MPIR_DBG_THREAD;
+extern MPIU_DBG_Class MPIR_DBG_DATATYPE;
+extern MPIU_DBG_Class MPIR_DBG_COMM;
+extern MPIU_DBG_Class MPIR_DBG_BSEND;
+extern MPIU_DBG_Class MPIR_DBG_ERRHAND;
+extern MPIU_DBG_Class MPIR_DBG_OTHER;
+
+extern MPIU_DBG_Class MPIR_DBG_ASSERT;
+#endif /* USE_DBG_LOGGING */
+
 /* ------------------------------------------------------------------------- */
 /* In MPICH, each function has an "enter" and "exit" macro.  These can be 
  * used to add various features to each function at compile time, or they

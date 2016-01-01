@@ -104,7 +104,7 @@ int MPID_Type_dup(MPI_Datatype oldtype,
       }
     }
 
-    MPIU_DBG_MSG_D(DATATYPE,VERBOSE, "dup type %x created.", *newtype);
+    MPIU_DBG_MSG_D(MPIR_DBG_DATATYPE,VERBOSE, "dup type %x created.", *newtype);
 
  fn_fail:
     return mpi_errno;

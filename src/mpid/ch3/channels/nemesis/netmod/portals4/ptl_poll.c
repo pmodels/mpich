@@ -162,7 +162,7 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
             }
         }
         MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqget", "**ptleqget %s", MPID_nem_ptl_strerror(ret));
-        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Received event %s pt_idx=%d ni_fail=%s list=%s user_ptr=%p hdr_data=%#lx mlength=%lu rlength=%lu",
+        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Received event %s pt_idx=%d ni_fail=%s list=%s user_ptr=%p hdr_data=%#lx mlength=%lu rlength=%lu",
                                                 MPID_nem_ptl_strevent(&event), event.pt_index, MPID_nem_ptl_strnifail(event.ni_fail_type),
                                                 MPID_nem_ptl_strlist(event.ptl_list), event.user_ptr, event.hdr_data, event.mlength, event.rlength));
         MPIR_ERR_CHKANDJUMP2(event.ni_fail_type != PTL_NI_OK && event.ni_fail_type != PTL_NI_NO_MATCH, mpi_errno, MPI_ERR_OTHER, "**ptlni_fail", "**ptlni_fail %s %s", MPID_nem_ptl_strevent(&event), MPID_nem_ptl_strnifail(event.ni_fail_type));
@@ -184,8 +184,8 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
         case PTL_EVENT_REPLY:
         case PTL_EVENT_SEARCH: {
             MPID_Request * const req = event.user_ptr;
-            MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "req = %p", req);
-            MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "REQ_PTL(req)->event_handler = %p", REQ_PTL(req)->event_handler);
+            MPIU_DBG_MSG_P(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "req = %p", req);
+            MPIU_DBG_MSG_P(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "REQ_PTL(req)->event_handler = %p", REQ_PTL(req)->event_handler);
             if (REQ_PTL(req)->event_handler) {
                 mpi_errno = REQ_PTL(req)->event_handler(&event);
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);

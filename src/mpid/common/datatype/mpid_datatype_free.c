@@ -35,7 +35,7 @@ Output Parameters:
   @*/
 void MPID_Datatype_free(MPID_Datatype *ptr)
 {
-    MPIU_DBG_MSG_P(DATATYPE,VERBOSE,"type %x freed.", ptr->handle);
+    MPIU_DBG_MSG_P(MPIR_DBG_DATATYPE,VERBOSE,"type %x freed.", ptr->handle);
 
 #ifdef MPID_Dev_datatype_destroy_hook
        MPID_Dev_datatype_destroy_hook(ptr);

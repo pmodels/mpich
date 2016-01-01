@@ -64,7 +64,7 @@ int PREPEND_PREFIX(Segment_init)(const DLOOP_Buffer buf,
 		 flag == DLOOP_DATALOOP_ALL_BYTES);
 
 #ifdef DLOOP_DEBUG_MANIPULATE
-    MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"DLOOP_Segment_init: count = %d, buf = %x\n",
+    MPIU_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"DLOOP_Segment_init: count = %d, buf = %x\n",
 		    count, buf));
 #endif
 
@@ -371,14 +371,14 @@ void PREPEND_PREFIX(Segment_manipulate)(struct DLOOP_Segment *segp,
 
     if (first == *lastp) {
 	/* nothing to do */
-	MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"dloop_segment_manipulate: warning: first == last (" DLOOP_OFFSET_FMT_DEC_SPEC ")\n", first));
+	MPIU_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"dloop_segment_manipulate: warning: first == last (" DLOOP_OFFSET_FMT_DEC_SPEC ")\n", first));
 	return;
     }
 
     /* first we ensure that stream_off and first are in the same spot */
     if (first != stream_off) {
 #ifdef DLOOP_DEBUG_MANIPULATE
-	MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"first=" DLOOP_OFFSET_FMT_DEC_SPEC "; stream_off=" DLOOP_OFFSET_FMT_DEC_SPEC "; resetting.\n", first, stream_off));
+	MPIU_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"first=" DLOOP_OFFSET_FMT_DEC_SPEC "; stream_off=" DLOOP_OFFSET_FMT_DEC_SPEC "; resetting.\n", first, stream_off));
 #endif
 
 	if (first < stream_off) {
@@ -411,7 +411,7 @@ void PREPEND_PREFIX(Segment_manipulate)(struct DLOOP_Segment *segp,
 	DLOOP_SEGMENT_LOAD_LOCAL_VALUES;
 
 #ifdef DLOOP_DEBUG_MANIPULATE
-	MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"done repositioning stream_off; first=" DLOOP_OFFSET_FMT_DEC_SPEC ", stream_off=" DLOOP_OFFSET_FMT_DEC_SPEC ", last=" DLOOP_OFFSET_FMT_DEC_SPEC "\n",
+	MPIU_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"done repositioning stream_off; first=" DLOOP_OFFSET_FMT_DEC_SPEC ", stream_off=" DLOOP_OFFSET_FMT_DEC_SPEC ", last=" DLOOP_OFFSET_FMT_DEC_SPEC "\n",
                                            first, stream_off, last));
 #endif
     }
@@ -419,7 +419,7 @@ void PREPEND_PREFIX(Segment_manipulate)(struct DLOOP_Segment *segp,
     for (;;) {
 #ifdef DLOOP_DEBUG_MANIPULATE
 #if 0
-        MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"looptop; cur_sp=%d, cur_elmp=%x\n",
+        MPIU_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"looptop; cur_sp=%d, cur_elmp=%x\n",
                                            cur_sp, (unsigned) cur_elmp));
 #endif
 #endif
@@ -496,7 +496,7 @@ void PREPEND_PREFIX(Segment_manipulate)(struct DLOOP_Segment *segp,
 	    }
 
 #ifdef DLOOP_DEBUG_MANIPULATE
-	    MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\thit leaf; cur_sp=%d, elmp=%x, piece_sz=" DLOOP_OFFSET_FMT_DEC_SPEC "\n",
+	    MPIU_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\thit leaf; cur_sp=%d, elmp=%x, piece_sz=" DLOOP_OFFSET_FMT_DEC_SPEC "\n",
 			     cur_sp,
                              (unsigned) cur_elmp, myblocks * local_el_size));
 #endif
@@ -507,7 +507,7 @@ void PREPEND_PREFIX(Segment_manipulate)(struct DLOOP_Segment *segp,
 	    {
 		myblocks = ((last - stream_off) / stream_el_size);
 #ifdef DLOOP_DEBUG_MANIPULATE
-		MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\tpartial block count=" DLOOP_OFFSET_FMT_DEC_SPEC " (" DLOOP_OFFSET_FMT_DEC_SPEC " bytes)\n",
+		MPIU_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\tpartial block count=" DLOOP_OFFSET_FMT_DEC_SPEC " (" DLOOP_OFFSET_FMT_DEC_SPEC " bytes)\n",
 				 myblocks,
                                  myblocks * stream_el_size));
 #endif
@@ -695,7 +695,7 @@ void PREPEND_PREFIX(Segment_manipulate)(struct DLOOP_Segment *segp,
 	} /* end of if leaf */
 	else if (cur_elmp->curblock == 0) {
 #ifdef DLOOP_DEBUG_MANIPULATE
-	    MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\thit end of block; elmp=%x [%d]\n",
+	    MPIU_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\thit end of block; elmp=%x [%d]\n",
                                                (unsigned) cur_elmp, cur_sp));
 #endif
 	    cur_elmp->curcount--;
@@ -726,7 +726,7 @@ void PREPEND_PREFIX(Segment_manipulate)(struct DLOOP_Segment *segp,
 
 	    if (cur_elmp->curcount == 0) {
 #ifdef DLOOP_DEBUG_MANIPULATE
-		MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\talso hit end of count; elmp=%x [%d]\n",
+		MPIU_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\talso hit end of count; elmp=%x [%d]\n",
                                                    (unsigned) cur_elmp, cur_sp));
 #endif
 		DLOOP_SEGMENT_POP_AND_MAYBE_EXIT;
@@ -762,7 +762,7 @@ void PREPEND_PREFIX(Segment_manipulate)(struct DLOOP_Segment *segp,
 		}
 
 #ifdef DLOOP_DEBUG_MANIPULATE
-		MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\tloading dlp=%x, elmp=%x [%d]\n",
+		MPIU_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\tloading dlp=%x, elmp=%x [%d]\n",
 				 (unsigned) load_dlp,
 				 (unsigned) next_elmp,
                                  cur_sp+1));
@@ -774,7 +774,7 @@ void PREPEND_PREFIX(Segment_manipulate)(struct DLOOP_Segment *segp,
 	    }
 
 #ifdef DLOOP_DEBUG_MANIPULATE
-	    MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\tpushing type, elmp=%x [%d], count=%d, block=%d\n",
+	    MPIU_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\tpushing type, elmp=%x [%d], count=%d, block=%d\n",
 			    (unsigned) cur_elmp, cur_sp, count_index,
                             block_index));
 #endif
@@ -817,7 +817,7 @@ void PREPEND_PREFIX(Segment_manipulate)(struct DLOOP_Segment *segp,
 	    }
 
 #ifdef DLOOP_DEBUG_MANIPULATE
-	    MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\tstep 1: next orig_offset = " DLOOP_OFFSET_FMT_DEC_SPEC " (0x" DLOOP_OFFSET_FMT_HEX_SPEC ")\n",
+	    MPIU_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\tstep 1: next orig_offset = " DLOOP_OFFSET_FMT_DEC_SPEC " (0x" DLOOP_OFFSET_FMT_HEX_SPEC ")\n",
 			     next_elmp->orig_offset,
                              next_elmp->orig_offset));
 #endif
@@ -857,7 +857,7 @@ void PREPEND_PREFIX(Segment_manipulate)(struct DLOOP_Segment *segp,
 	    }
 
 #ifdef DLOOP_DEBUG_MANIPULATE
-	    MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\tstep 2: next curoffset = " DLOOP_OFFSET_FMT_DEC_SPEC " (0x" DLOOP_OFFSET_FMT_HEX_SPEC ")\n",
+	    MPIU_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\tstep 2: next curoffset = " DLOOP_OFFSET_FMT_DEC_SPEC " (0x" DLOOP_OFFSET_FMT_HEX_SPEC ")\n",
 			     next_elmp->curoffset,
                              next_elmp->curoffset));
 #endif

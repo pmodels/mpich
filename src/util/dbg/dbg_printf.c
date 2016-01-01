@@ -231,36 +231,13 @@ typedef struct dbg_classname {
     const char *ucname, *lcname; 
 } dbg_classname;
 
-static const dbg_classname classnames[] = {
-    { MPIU_DBG_INIT,          "INIT",          "init" },
-    { MPIU_DBG_PT2PT,         "PT2PT",         "pt2pt" },
-    { MPIU_DBG_THREAD,        "THREAD",        "thread" },
-    { MPIU_DBG_ROUTINE_ENTER, "ROUTINE_ENTER", "routine_enter" },
-    { MPIU_DBG_ROUTINE_EXIT,  "ROUTINE_EXIT",  "routine_exit" },
-    { MPIU_DBG_ROUTINE_ENTER |
-      MPIU_DBG_ROUTINE_EXIT,  "ROUTINE",       "routine" },
-    { MPIU_DBG_DATATYPE,      "DATATYPE",      "datatype" },
-    { MPIU_DBG_HANDLE,        "HANDLE",        "handle" },
-    { MPIU_DBG_COMM,          "COMM",          "comm" },
-    { MPIU_DBG_BSEND,         "BSEND",         "bsend" },
-    { MPIU_DBG_OTHER,         "OTHER",         "other" },
-    { MPIU_DBG_CH3_CONNECT,   "CH3_CONNECT",   "ch3_connect" },
-    { MPIU_DBG_CH3_DISCONNECT,"CH3_DISCONNECT","ch3_disconnect" },
-    { MPIU_DBG_CH3_PROGRESS,  "CH3_PROGRESS",  "ch3_progress" },
-    { MPIU_DBG_CH3_CHANNEL,   "CH3_CHANNEL",   "ch3_channel" },
-    { MPIU_DBG_CH3_OTHER,     "CH3_OTHER",     "ch3_other" },
-    { MPIU_DBG_CH3_MSG,       "CH3_MSG",       "ch3_msg" },
-    { MPIU_DBG_NEM_SOCK_DET,  "NEM_SOCK_DET",  "nem_sock_det"},
-    { MPIU_DBG_VC,            "VC",            "vc"},
-    { MPIU_DBG_REFCOUNT,      "REFCOUNT",      "refcount"},
-    { MPIU_DBG_ROMIO,         "ROMIO",         "romio"},
-    { MPIU_DBG_HCOLL,         "HCOLL",         "hcoll"},
-    { MPIU_DBG_ASSERT,        "ASSERT",        "assert"},
-    { MPIU_DBG_STRING,        "STRING",        "string"},
-    { MPIU_DBG_ERRHAND,       "ERRHAND",       "errhand"},
-    { MPIU_DBG_ALL,           "ALL",           "all" }, 
-    { 0,                      0,               0 }
-};
+#define MAX_DBG_CLASSNAMES (sizeof(unsigned int) * 8)
+
+static dbg_classname classnames[MAX_DBG_CLASSNAMES];
+static int num_classnames = 0;
+
+static const char *unregistered_classes[MAX_DBG_CLASSNAMES];
+static int num_unregistered_classes = 0;
 
 /* Because the level values are simpler and are rarely changed, these
    use a simple set of parallel arrays */
@@ -269,6 +246,47 @@ static const int  level_values[] = { MPIU_DBG_TERSE,
 					 MPIU_DBG_VERBOSE, 100 };
 static const char *level_name[] = { "TERSE", "TYPICAL", "VERBOSE", 0 };
 static const char *lc_level_name[] = { "terse", "typical", "verbose", 0 };
+
+void MPIU_DBG_Class_register(MPIU_DBG_Class class, const char *ucname, const char *lcname)
+{
+    int i, j;
+
+    classnames[num_classnames].classbits = class;
+    classnames[num_classnames].ucname = ucname;
+    classnames[num_classnames].lcname = lcname;
+    num_classnames++;
+
+    if (num_unregistered_classes) {
+        /* there are some unregistered classes.  look through to see
+         * if any of them match this class. */
+        size_t len = strlen(lcname);
+
+        for (i = 0; i < num_unregistered_classes; i++) {
+            size_t slen = strlen(unregistered_classes[i]);
+            if (len == slen && (strncmp(unregistered_classes[i], lcname, len) ||
+                                strncmp(unregistered_classes[i], ucname, len))) {
+                /* got a match */
+                MPIU_DBG_ActiveClasses |= class;
+                for (j = i; j < num_unregistered_classes - 1; j++)
+                    unregistered_classes[j] = unregistered_classes[j + 1];
+                num_unregistered_classes--;
+                break;
+            }
+        }
+    }
+}
+
+MPIU_DBG_Class MPIU_DBG_Class_alloc(const char *ucname, const char *lcname)
+{
+    static unsigned int class = 1;
+
+    /* create a user handle for this class */
+    MPIU_DBG_Class_register(class, ucname, lcname);
+
+    class <<= 1;
+
+    return (class >> 1);
+}
 
 /* 
  * Initialize the DBG_MSG system.  This is called during MPI_Init to process
@@ -404,6 +422,11 @@ static int dbg_process_env( void )
     return MPI_SUCCESS;
 }
 
+MPIU_DBG_Class MPIU_DBG_ROUTINE_ENTER;
+MPIU_DBG_Class MPIU_DBG_ROUTINE_EXIT;
+MPIU_DBG_Class MPIU_DBG_ROUTINE;
+MPIU_DBG_Class MPIU_DBG_ALL = ~(0);  /* pre-initialize the ALL class */
+
 /*
  * Attempt to initialize the logging system.  This works only if MPID_Init
  * is not responsible for updating the environment and/or command-line
@@ -432,6 +455,17 @@ int MPIU_DBG_PreInit( int *argc_p, char ***argv_p, int wtimeNotReady )
 	MPL_Wtime_todouble( &t, &time_origin );
 	reset_time_origin = 0;
     }
+
+    /* Allocate the predefined classes */
+    MPIU_DBG_ROUTINE_ENTER = MPIU_DBG_Class_alloc("ROUTINE_ENTER", "routine_enter");
+    MPIU_DBG_ROUTINE_EXIT = MPIU_DBG_Class_alloc("ROUTINE_EXIT", "routine_exit");
+
+    MPIU_DBG_CLASS_CLR(MPIU_DBG_ROUTINE);
+    MPIU_DBG_CLASS_APPEND(MPIU_DBG_ROUTINE, MPIU_DBG_ROUTINE_ENTER);
+    MPIU_DBG_CLASS_APPEND(MPIU_DBG_ROUTINE, MPIU_DBG_ROUTINE_EXIT);
+    MPIU_DBG_Class_register(MPIU_DBG_ROUTINE, "ROUTINE", "routine");
+
+    MPIU_DBG_Class_register(MPIU_DBG_ALL, "ALL", "all");
 
     dbg_initialized = DBG_PREINIT;
 
@@ -845,46 +879,38 @@ static int dbg_openfile(FILE **dbg_fp)
    the bits corresponding to this name */
 static int dbg_set_class( const char *s )
 {
-    int i;
+    int i, found_match;
     size_t slen = 0;
-    size_t len = 0;
+    char *str;
 
     if (s && *s) slen = strlen(s);
 
-    while (s && *s) {
-	for (i=0; classnames[i].lcname; i++) {
-	    /* The LCLen and UCLen *should* be the same, but
-	       just in case, we separate them */
-	    size_t LClen = strlen(classnames[i].lcname);
-	    size_t UClen = strlen(classnames[i].ucname);
-	    int matchClass = 0;
+    str = strtok((char *) s, ",");
+    while (str) {
+        found_match = 0;
+        for (i = 0; i < num_classnames; i++) {
+            size_t len = strlen(classnames[i].lcname);
 
-	    /* Allow the upper case and lower case in all cases */
-	    if (slen >= LClen && 
-		strncmp(s,classnames[i].lcname, LClen) == 0 &&
-		(s[LClen] == ',' || s[LClen] == 0) ) {
-		matchClass = 1;
-		len = LClen;
-	    }
-	    else if (slen >= UClen && 
-		strncmp(s,classnames[i].ucname, UClen) == 0 &&
-		(s[UClen] == ',' || s[UClen] == 0) ) {
-		matchClass = 1;
-		len = UClen;
-	    }
-	    if (matchClass) {
-		MPIU_DBG_ActiveClasses |= classnames[i].classbits;
-		s += len;
-		slen -= len;
-		if (*s == ',') { s++; slen--; }
-		/* If we found a name, we need to restart the for loop */
-		break;
-	    }
-	}
-	if (!classnames[i].lcname) {
-	    return 1;
-	}
+            if (slen == len && (strncmp(str, classnames[i].lcname, len) ||
+                                strncmp(str, classnames[i].ucname, len))) {
+                /* we have a match */
+                MPIU_DBG_ActiveClasses |= classnames[i].classbits;
+                found_match = 1;
+                break;
+            }
+        }
+
+        if (!found_match) {
+            /* no match was found.  the component might not have
+             * registered yet.  store the user string for later
+             * access. */
+            unregistered_classes[num_unregistered_classes] = str;
+            num_unregistered_classes++;
+        }
+
+        str = strtok(NULL, ",");
     }
+
     return 0;
 }
 
