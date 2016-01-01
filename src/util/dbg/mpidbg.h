@@ -119,7 +119,6 @@ extern int MPIU_DBG_ActiveClasses;
 extern int MPIU_DBG_MaxLevel;
 
 int MPIU_dbg_init(int rank);
-int MPIU_dbg_printf(const char *str, ...) ATTRIBUTE((format(printf,1,2)));
 int MPIU_dbglog_printf(const char *str, ...) ATTRIBUTE((format(printf,1,2)));
 int MPIU_dbglog_vprintf(const char *str, va_list ap);
 
