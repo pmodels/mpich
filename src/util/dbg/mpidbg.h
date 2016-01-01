@@ -118,8 +118,6 @@ enum MPIU_DBG_CLASS { MPIU_DBG_PT2PT         = 0x1,
 extern int MPIU_DBG_ActiveClasses;
 extern int MPIU_DBG_MaxLevel;
 
-int MPIU_dbg_init(int rank);
-
 int MPIU_DBG_Outevent(const char *, int, int, int, const char *, ...) 
                                         ATTRIBUTE((format(printf,5,6)));
 int MPIU_DBG_Init( int *, char ***, int, int, int );

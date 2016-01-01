@@ -43,39 +43,6 @@ extern FILE *fdopen(int fd, const char *mode);
 /* style: allow:printf:2 sig:0 */
 /* style: allow:fprintf:7 sig:0 */
 
-#ifdef HAVE_VA_COPY
-# define va_copy_end(a) va_end(a)
-#else
-# ifdef HAVE___VA_COPY
-#  define va_copy(a,b) __va_copy(a,b)
-#  define va_copy_end(a) 
-# else
-#  define va_copy(a,b) ((a) = (b))
-/* Some writers recommend define va_copy(a,b) memcpy(&a,&b,sizeof(va_list)) */
-#  define va_copy_end(a)
-# endif
-#endif
-
-#define DBG_MEMLOG_NUM_LINES 1024
-#define DBG_MEMLOG_LINE_SIZE 256
-
-static FILE * global_dbg_fp = NULL;
-static char **dbg_memlog = NULL;
-static int dbg_memlog_next = 0;
-static int dbg_memlog_count = 0;
-static int dbg_rank = -1;
-
-typedef enum {
-    DBG_STATE_NONE = 0,
-    DBG_STATE_UNINIT = 1,
-    DBG_STATE_STDOUT = 2,
-    DBG_STATE_MEMLOG = 4,
-    DBG_STATE_FILE = 8
-} dbg_state_t;
-dbg_state_t dbg_state = DBG_STATE_UNINIT;
-
-static void dbg_init(void);
-
 /*
    This function finds the basename in a path (ala "man 1 basename").
    *basename will point to an element in path.
@@ -92,95 +59,6 @@ static void find_basename(char *path, char **basename)
             *basename = c+1;
         ++c;
     } 
-}
-
-int MPIU_dbg_init(int rank)
-{
-    dbg_rank = rank;
-
-    if (dbg_state == DBG_STATE_UNINIT)
-    {
-	dbg_init();
-    }
-
-    /* If file logging is enable, we need to open a file */
-    if (dbg_state & DBG_STATE_FILE)
-    {
-	char fn[128];
-
-	/* Only open the file only once in case MPIU_dbg_init is called more 
-	   than once */
-	if (global_dbg_fp == NULL)
-	{
-	    MPL_snprintf(fn, 128, "mpich-dbg-%d.log", dbg_rank);
-	    global_dbg_fp = fopen(fn, "w");
-	    setvbuf(global_dbg_fp, NULL, _IONBF, 0);
-	}
-    }
-    
-    return 0;
-}
-
-static void dbg_init(void)
-{
-    char * envstr;
-    
-    dbg_state = DBG_STATE_NONE;
-
-    /* FIXME: This should use MPIU_Param_get_string */
-    envstr = getenv("MPICH_DBG_OUTPUT");
-    if (envstr == NULL)
-    {
-	return;
-    }
-
-    /*
-     * TODO:
-     *
-     * - parse environment variable to determine number of log lines, etc.
-     *
-     * - add support for writing to a (per-process or global?) file
-     *
-     * - add support for sending to a log server, perhaps with global time
-     *   sequencing information ???
-     */
-    if (strstr(envstr, "stdout"))
-    {
-	dbg_state = (dbg_state_t)( DBG_STATE_STDOUT |
-					      dbg_state );
-    }
-    if (strstr(envstr, "memlog"))
-    {
-	dbg_state = (dbg_state_t)( DBG_STATE_MEMLOG |
-					      dbg_state );
-    }
-    if (strstr(envstr, "file"))
-    {
-	dbg_state = (dbg_state_t) ( DBG_STATE_FILE |
-					       dbg_state );
-    }
-
-    /* If memlog is enabled, the we need to allocate some memory for it */
-    if (dbg_state & DBG_STATE_MEMLOG)
-    {
-	dbg_memlog = MPIU_Malloc(DBG_MEMLOG_NUM_LINES * sizeof(char *) +
-				 DBG_MEMLOG_NUM_LINES * DBG_MEMLOG_LINE_SIZE);
-	if (dbg_memlog != NULL)
-	{
-	    int i;
-	    
-	    for (i = 0; i < DBG_MEMLOG_NUM_LINES ; i++)
-	    {
-		dbg_memlog[i] = ((char *) &dbg_memlog[DBG_MEMLOG_NUM_LINES]) + 
-		    i * DBG_MEMLOG_LINE_SIZE;
-	    }
-	}
-	else
-	{
-	    dbg_state = (dbg_state_t)( dbg_state &
-						  ~DBG_STATE_MEMLOG );
-	}
-    }
 }
 
 #ifdef USE_DBG_LOGGING
