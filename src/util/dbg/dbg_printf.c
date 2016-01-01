@@ -47,27 +47,27 @@ int MPIU_DBG_ActiveClasses = 0;
 int MPIU_DBG_MaxLevel      = MPIU_DBG_TYPICAL;
 static enum {DBG_UNINIT, DBG_PREINIT, DBG_INITIALIZED, DBG_ERROR}
     dbg_initialized = DBG_UNINIT;
-static char filePatternBuf[MAXPATHLEN] = "";
-static const char *filePattern = "-stdout-"; /* "log%d.log"; */
-static const char *defaultFilePattern = "dbg@W%w-@%d@T-%t@.log";
+static char file_pattern_buf[MAXPATHLEN] = "";
+static const char *file_pattern = "-stdout-"; /* "log%d.log"; */
+static const char *default_file_pattern = "dbg@W%w-@%d@T-%t@.log";
 static char temp_filename[MAXPATHLEN] = "";
-static int worldNum  = 0;
-static int worldRank = -1;
-static int whichRank = -1;             /* all ranks */
-static int    resetTimeOrigin = 1;
-static double timeOrigin = 0.0;
+static int world_num  = 0;
+static int world_rank = -1;
+static int which_rank = -1;             /* all ranks */
+static int    reset_time_origin = 1;
+static double time_origin = 0.0;
 
 static int dbg_usage( const char *, const char * );
 static int dbg_openfile(FILE **dbg_fp);
-static int setDBGClass( const char * );
-static int SetDBGLevel( const char *, const char *(names[]) );
+static int dbg_set_class( const char * );
+static int dbg_set_level( const char *, const char *(names[]) );
 static int dbg_get_filename(char *filename, int len);
 
 #ifdef MPICH_IS_THREADED
 static MPID_Thread_tls_t dbg_tls_key;
 #endif
 
-static FILE *static_dbg_fp = 0;
+static FILE *dbg_static_fp = 0;
 
 /*
    This function finds the basename in a path (ala "man 1 basename").
@@ -112,7 +112,7 @@ static FILE *get_fp(void)
     MPIU_THREAD_CHECK_END;
 #endif
 
-    return static_dbg_fp;
+    return dbg_static_fp;
 }
 
 static void set_fp(FILE *fp)
@@ -129,7 +129,7 @@ static void set_fp(FILE *fp)
     MPIU_THREAD_CHECK_END;
 #endif
 
-    static_dbg_fp = fp;
+    dbg_static_fp = fp;
 }
 
 
@@ -173,7 +173,7 @@ int MPIU_DBG_Outevent( const char *file, int line, int class, int kind,
 
     MPL_Wtime( &t );
     MPL_Wtime_todouble( &t, &curtime );
-    curtime = curtime - timeOrigin;
+    curtime = curtime - time_origin;
 
     /* The kind values are used with the macros to simplify these cases */
     switch (kind) {
@@ -181,7 +181,7 @@ int MPIU_DBG_Outevent( const char *file, int line, int class, int kind,
 	    va_start(list,fmat);
 	    str = va_arg(list,char *);
 	    fprintf( dbg_fp, "%d\t%d\t%llx[%d]\t%d\t%f\t%s\t%d\t%s\n",
-		     worldNum, worldRank, threadID, pid, class, curtime, 
+		     world_num, world_rank, threadID, pid, class, curtime, 
 		     file, line, str );
 	    break;
 	case 1:
@@ -190,7 +190,7 @@ int MPIU_DBG_Outevent( const char *file, int line, int class, int kind,
 	    MPL_snprintf( stmp, sizeof(stmp), fmat, str );
 	    va_end(list);
 	    fprintf( dbg_fp, "%d\t%d\t%llx[%d]\t%d\t%f\t%s\t%d\t%s\n",
-		     worldNum, worldRank, threadID, pid, class, curtime, 
+		     world_num, world_rank, threadID, pid, class, curtime, 
 		     file, line, stmp );
 	    break;
 	case 2: 
@@ -199,7 +199,7 @@ int MPIU_DBG_Outevent( const char *file, int line, int class, int kind,
 	    MPL_snprintf( stmp, sizeof(stmp), fmat, i);
 	    va_end(list);
 	    fprintf( dbg_fp, "%d\t%d\t%llx[%d]\t%d\t%f\t%s\t%d\t%s\n",
-		     worldNum, worldRank, threadID, pid, class, curtime, 
+		     world_num, world_rank, threadID, pid, class, curtime, 
 		     file, line, stmp );
 	    break;
 	case 3: 
@@ -208,7 +208,7 @@ int MPIU_DBG_Outevent( const char *file, int line, int class, int kind,
 	    MPL_snprintf( stmp, sizeof(stmp), fmat, p);
 	    va_end(list);
 	    fprintf( dbg_fp, "%d\t%d\t%llx[%d]\t%d\t%f\t%s\t%d\t%s\n",
-		     worldNum, worldRank, threadID, pid, class, curtime, 
+		     world_num, world_rank, threadID, pid, class, curtime, 
 		     file, line, stmp );
 	    break;
         default:
@@ -222,17 +222,17 @@ int MPIU_DBG_Outevent( const char *file, int line, int class, int kind,
 }
 
 /* These are used to simplify the handling of options.  
-   To add a new name, add an DBG_ClassName element to the array
+   To add a new name, add an dbg_classname element to the array
    classnames.  The "classbits" values are defined by MPIU_DBG_CLASS
    in src/include/mpidbg.h 
  */
 
-typedef struct DBG_ClassName {
+typedef struct dbg_classname {
     int        classbits;
-    const char *UCName, *LCName; 
-} DBG_ClassName;
+    const char *ucname, *lcname; 
+} dbg_classname;
 
-static const DBG_ClassName classnames[] = {
+static const dbg_classname classnames[] = {
     { MPIU_DBG_PT2PT,         "PT2PT",         "pt2pt" },
     { MPIU_DBG_RMA,           "RMA",           "rma"   },
     { MPIU_DBG_THREAD,        "THREAD",        "thread" },
@@ -280,7 +280,7 @@ static const char *lc_level_name[] = { "terse", "typical", "verbose", 0 };
  * MPID_Init, where a significant amount of the initialization takes place.
  */
 
-static int DBG_ProcessArgs( int *argc_p, char ***argv_p )
+static int dbg_process_args( int *argc_p, char ***argv_p )
 {
     int i, rc;
 
@@ -301,14 +301,14 @@ static int DBG_ProcessArgs( int *argc_p, char ***argv_p )
 		    MPIU_DBG_ActiveClasses = MPIU_DBG_ALL;
 		    s++;
 		    if (strncmp( s, "file", 4 ) == 0) {
-			filePattern = defaultFilePattern;
+			file_pattern = default_file_pattern;
 		    }
 		}
 		else if (strncmp(s,"-level",6) == 0) {
 		    char *p = s + 6;
 		    if (*p == '=') {
 			p++;
-			rc = SetDBGLevel( p, lc_level_name );
+			rc = dbg_set_level( p, lc_level_name );
 			if (rc) 
 			    dbg_usage( "-mpich-dbg-level", "terse, typical, verbose" );
 		    }
@@ -317,7 +317,7 @@ static int DBG_ProcessArgs( int *argc_p, char ***argv_p )
 		    char *p = s + 6;
 		    if (*p == '=') {
 			p++;
-			rc = setDBGClass( p );
+			rc = dbg_set_class( p );
 			if (rc)
 			    dbg_usage( "-mpich-dbg-class", 0 );
 		    }
@@ -329,11 +329,11 @@ static int DBG_ProcessArgs( int *argc_p, char ***argv_p )
 			/* A special case for a filepattern of "-default",
 			   use the predefined default pattern */
 			if (strcmp( p, "-default" ) == 0) {
-			    filePattern = defaultFilePattern;
+			    file_pattern = default_file_pattern;
 			}
 			else {
-                            strncpy(filePatternBuf, p, sizeof(filePatternBuf));
-			    filePattern = filePatternBuf;
+                            strncpy(file_pattern_buf, p, sizeof(file_pattern_buf));
+			    file_pattern = file_pattern_buf;
 			}
 		    }
 		}
@@ -342,10 +342,10 @@ static int DBG_ProcessArgs( int *argc_p, char ***argv_p )
 		    if (*p == '=' && p[1] != 0) {
 			char *sOut;
 			p++;
-			whichRank = (int)strtol( p, &sOut, 10 );
+			which_rank = (int)strtol( p, &sOut, 10 );
 			if (p == sOut) {
 			    dbg_usage( "-mpich-dbg-rank", 0 );
-			    whichRank = -1;
+			    which_rank = -1;
 			}
 		    }
 		}
@@ -360,7 +360,7 @@ static int DBG_ProcessArgs( int *argc_p, char ***argv_p )
     return MPI_SUCCESS;
 }
 
-static int DBG_ProcessEnv( void )
+static int dbg_process_env( void )
 {
     char *s;
     int rc;
@@ -371,34 +371,34 @@ static int DBG_ProcessEnv( void )
 	MPIU_DBG_MaxLevel = MPIU_DBG_TYPICAL;
 	MPIU_DBG_ActiveClasses = MPIU_DBG_ALL;
 	if (strncmp(s,"FILE",4) == 0) {
-	    filePattern = defaultFilePattern;
+	    file_pattern = default_file_pattern;
 	}
     }
     s = getenv( "MPICH_DBG_LEVEL" );
     if (s) {
-	rc = SetDBGLevel( s, level_name );
+	rc = dbg_set_level( s, level_name );
 	if (rc) 
 	    dbg_usage( "MPICH_DBG_LEVEL", "TERSE, TYPICAL, VERBOSE" );
     }
 
     s = getenv( "MPICH_DBG_CLASS" );
-    rc = setDBGClass( s );
+    rc = dbg_set_class( s );
     if (rc) 
 	dbg_usage( "MPICH_DBG_CLASS", 0 );
 
     s = getenv( "MPICH_DBG_FILENAME" );
     if (s) {
-        strncpy(filePatternBuf, s, sizeof(filePatternBuf));
-        filePattern = filePatternBuf;
+        strncpy(file_pattern_buf, s, sizeof(file_pattern_buf));
+        file_pattern = file_pattern_buf;
     }
 
     s = getenv( "MPICH_DBG_RANK" );
     if (s) {
 	char *sOut;
-	whichRank = (int)strtol( s, &sOut, 10 );
+	which_rank = (int)strtol( s, &sOut, 10 );
 	if (s == sOut) {
 	    dbg_usage( "MPICH_DBG_RANK", 0 );
-	    whichRank = -1;
+	    which_rank = -1;
 	}
     }
     return MPI_SUCCESS;
@@ -423,14 +423,14 @@ int MPIU_DBG_PreInit( int *argc_p, char ***argv_p, int wtimeNotReady )
        tests is important, as they allow general defaults to be set,
        followed by more specific modifications */
     /* First, the environment variables */
-    DBG_ProcessEnv();
+    dbg_process_env();
 
-    DBG_ProcessArgs( argc_p, argv_p );
+    dbg_process_args( argc_p, argv_p );
 
     if (wtimeNotReady == 0) {
 	MPL_Wtime( &t );
-	MPL_Wtime_todouble( &t, &timeOrigin );
-	resetTimeOrigin = 0;
+	MPL_Wtime_todouble( &t, &time_origin );
+	reset_time_origin = 0;
     }
 
     dbg_initialized = DBG_PREINIT;
@@ -456,11 +456,11 @@ int MPIU_DBG_Init( int *argc_p, char ***argv_p, int has_args, int has_env,
     dbg_fp = get_fp();
 
     /* We may need to wait until the device is set up to initialize the timer */
-    if (resetTimeOrigin) {
+    if (reset_time_origin) {
 	MPL_Time_t t;
 	MPL_Wtime( &t );
-	MPL_Wtime_todouble( &t, &timeOrigin );
-	resetTimeOrigin = 0;
+	MPL_Wtime_todouble( &t, &time_origin );
+	reset_time_origin = 0;
     }
     /* Check to see if any debugging was selected.  The order of these
        tests is important, as they allow general defaults to be set,
@@ -471,14 +471,14 @@ int MPIU_DBG_Init( int *argc_p, char ***argv_p, int has_args, int has_env,
        (as they were already handled in DBG_PreInit) */
     /* First, the environment variables */
     if (!has_env) 
-	DBG_ProcessEnv();
+	dbg_process_env();
     /* Now the command-line arguments */
     if (!has_args) 
-	DBG_ProcessArgs( argc_p, argv_p );
+	dbg_process_args( argc_p, argv_p );
 
-    worldRank = wrank;
+    world_rank = wrank;
 
-    if (whichRank >= 0 && whichRank != wrank) {
+    if (which_rank >= 0 && which_rank != wrank) {
 	/* Turn off logging on this process */
 	MPIU_DBG_ActiveClasses = 0;
     }
@@ -541,7 +541,7 @@ Environment variables\n\
     MPICH_DBG_LEVEL=NAME\n\
     MPICH_DBG_FILENAME=pattern\n\
     MPICH_DBG_RANK=val\n\
-    MPICH_DBG=YES or FILE\n", defaultFilePattern );
+    MPICH_DBG=YES or FILE\n", default_file_pattern );
 
     fflush(stderr);
 
@@ -552,10 +552,10 @@ Environment variables\n\
 /* creates a temporary file in the same directory the
    user specified for the log file */
 #undef FUNCNAME
-#define FUNCNAME DBG_Open_temp_file
+#define FUNCNAME dbg_open_tmpfile
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int DBG_Open_temp_file(FILE **dbg_fp)
+static int dbg_open_tmpfile(FILE **dbg_fp)
 {
     int mpi_errno = MPI_SUCCESS;
     const char temp_pattern[] = "templogXXXXXX";
@@ -563,7 +563,7 @@ static int DBG_Open_temp_file(FILE **dbg_fp)
     char *basename;
     int ret;
     
-    ret = MPL_strncpy(temp_filename, filePattern, MAXPATHLEN);
+    ret = MPL_strncpy(temp_filename, file_pattern, MAXPATHLEN);
     if (ret) goto fn_fail;
     
     find_basename(temp_filename, &basename);
@@ -591,10 +591,10 @@ static int DBG_Open_temp_file(FILE **dbg_fp)
 /* creates a temporary file in the same directory the
    user specified for the log file */
 #undef FUNCNAME
-#define FUNCNAME DBG_Open_temp_file
+#define FUNCNAME dbg_open_tmpfile
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int DBG_Open_temp_file(FILE **dbg_fp)
+static int dbg_open_tmpfile(FILE **dbg_fp)
 {
     int mpi_errno = MPI_SUCCESS;
     const char temp_pattern[] = "templogXXXXXX";
@@ -603,7 +603,7 @@ static int DBG_Open_temp_file(FILE **dbg_fp)
     int ret;
     errno_t ret_errno;
     
-    ret = MPL_strncpy(temp_filename, filePattern, MAXPATHLEN);
+    ret = MPL_strncpy(temp_filename, file_pattern, MAXPATHLEN);
     if (ret) goto fn_fail;
 
     find_basename(temp_filename, &basename);
@@ -636,10 +636,10 @@ static int DBG_Open_temp_file(FILE **dbg_fp)
    file with the same name may exist.  That file would get clobbered.
 */
 #undef FUNCNAME
-#define FUNCNAME DBG_Open_temp_file
+#define FUNCNAME dbg_open_tmpfile
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int DBG_Open_temp_file(FILE **dbg_fp)
+static int dbg_open_tmpfile(FILE **dbg_fp)
 {
     int mpi_errno = MPI_SUCCESS;
     const char temp_pattern[] = "templogXXXXXX";
@@ -679,18 +679,18 @@ static int dbg_get_filename(char *filename, int len)
 #else
     int nThread = 1;
 #endif
-    static char worldNumAsChar[10] = "0";
+    static char world_numAsChar[10] = "0";
     char *pDest;
     const char *p;
 
     /* FIXME: This is a hack to handle the common case of two worlds */
     if (MPIR_Process.comm_parent != NULL) {
 	nWorld = 2;
-	worldNumAsChar[0] = '1';
-	worldNumAsChar[1] = '\0';
+	world_numAsChar[0] = '1';
+	world_numAsChar[1] = '\0';
     }
 
-    p     = filePattern;
+    p     = file_pattern;
     pDest = filename;
     *filename = 0;
     while (*p && (pDest-filename) < len-1) {
@@ -742,7 +742,7 @@ static int dbg_get_filename(char *filename, int len)
             if (*p == 'd') {
                 char rankAsChar[20];
                 MPL_snprintf( rankAsChar, sizeof(rankAsChar), "%d", 
-                               worldRank );
+                               world_rank );
                 *pDest = 0;
                 MPL_strnapp( filename, rankAsChar, len );
                 pDest += strlen(rankAsChar);
@@ -767,8 +767,8 @@ static int dbg_get_filename(char *filename, int len)
                 /* FIXME: Get world number */
                 /* *pDest++ = '0'; */
                 *pDest = 0;
-                MPL_strnapp( filename, worldNumAsChar, len );
-                pDest += strlen(worldNumAsChar);
+                MPL_strnapp( filename, world_numAsChar, len );
+                pDest += strlen(world_numAsChar);
             }
             else if (*p == 'p') {
                 /* Appends the pid of the proceess to the file name. */
@@ -803,11 +803,11 @@ static int dbg_get_filename(char *filename, int len)
 static int dbg_openfile(FILE **dbg_fp)
 {
     int mpi_errno = MPI_SUCCESS;
-    if (!filePattern || *filePattern == 0 ||
-	strcmp(filePattern, "-stdout-" ) == 0) {
+    if (!file_pattern || *file_pattern == 0 ||
+	strcmp(file_pattern, "-stdout-" ) == 0) {
 	*dbg_fp = stdout;
     }
-    else if (strcmp( filePattern, "-stderr-" ) == 0) {
+    else if (strcmp( file_pattern, "-stderr-" ) == 0) {
 	*dbg_fp = stderr;
     }
     else {
@@ -817,7 +817,7 @@ static int dbg_openfile(FILE **dbg_fp)
            rank yet, so we create a temp file, to be renamed later */
         if (dbg_initialized != DBG_INITIALIZED) 
         {
-            mpi_errno = DBG_Open_temp_file(dbg_fp);
+            mpi_errno = dbg_open_tmpfile(dbg_fp);
             if (mpi_errno) goto fn_fail;
         }
         else 
@@ -843,7 +843,7 @@ static int dbg_openfile(FILE **dbg_fp)
 /* Support routines for processing mpich-dbg values */
 /* Update the GLOBAL variable MPIU_DBG_ActiveClasses with
    the bits corresponding to this name */
-static int setDBGClass( const char *s )
+static int dbg_set_class( const char *s )
 {
     int i;
     size_t slen = 0;
@@ -852,22 +852,22 @@ static int setDBGClass( const char *s )
     if (s && *s) slen = strlen(s);
 
     while (s && *s) {
-	for (i=0; classnames[i].LCName; i++) {
+	for (i=0; classnames[i].lcname; i++) {
 	    /* The LCLen and UCLen *should* be the same, but
 	       just in case, we separate them */
-	    size_t LClen = strlen(classnames[i].LCName);
-	    size_t UClen = strlen(classnames[i].UCName);
+	    size_t LClen = strlen(classnames[i].lcname);
+	    size_t UClen = strlen(classnames[i].ucname);
 	    int matchClass = 0;
 
 	    /* Allow the upper case and lower case in all cases */
 	    if (slen >= LClen && 
-		strncmp(s,classnames[i].LCName, LClen) == 0 &&
+		strncmp(s,classnames[i].lcname, LClen) == 0 &&
 		(s[LClen] == ',' || s[LClen] == 0) ) {
 		matchClass = 1;
 		len = LClen;
 	    }
 	    else if (slen >= UClen && 
-		strncmp(s,classnames[i].UCName, UClen) == 0 &&
+		strncmp(s,classnames[i].ucname, UClen) == 0 &&
 		(s[UClen] == ',' || s[UClen] == 0) ) {
 		matchClass = 1;
 		len = UClen;
@@ -881,7 +881,7 @@ static int setDBGClass( const char *s )
 		break;
 	    }
 	}
-	if (!classnames[i].LCName) {
+	if (!classnames[i].lcname) {
 	    return 1;
 	}
     }
@@ -891,7 +891,7 @@ static int setDBGClass( const char *s )
 /* Set the global MPIU_DBG_MaxLevel if there is a match with the known level
    names 
 */
-static int SetDBGLevel( const char *s, const char *(names[]) )
+static int dbg_set_level( const char *s, const char *(names[]) )
 {
     int i;
 
