@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &comm_rank);
 
-    if (size < 3) {
+    if (comm_size < 3) {
         fprintf(stderr, "At least 3 processes required\n");
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
