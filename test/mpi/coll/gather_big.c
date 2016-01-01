@@ -31,6 +31,11 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
+    if (size < (ROOT+1)) {
+        fprintf(stderr, "At least %d processes required\n",ROOT+1);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
     sendbuf = malloc(COUNT * sizeof(long));
     if (sendbuf == NULL) {
         fprintf(stderr, "PE %d:ERROR: malloc of sendbuf failed\n", rank);
