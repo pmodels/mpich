@@ -53,8 +53,8 @@ script:
   - echo '!util:all' > testlist
   - echo "${MPICH_TESTS}" >> testlist
   - cat testlist
-  - ./runtests -tests=testlist -srcdir=. \
-               -np=2 -maxnp=2 -ppn=2 \
+  - ./runtests -tests=testlist \
+               -np=2 -maxnp=3 \
                -verbose -showprogress \
                -mpiexec=${TRAVIS_ROOT}/bin/mpiexec
                #-xmlfile=summary.xml -tapfile=summary.tap -junitfile=summary.junit.xm
