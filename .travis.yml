@@ -2,10 +2,29 @@ sudo: false
 language: c
 os:
   - linux
-  - osx
+#  - osx
 compiler:
-  - clang
+#  - clang
   - gcc
+env:
+  - MPICH_TESTS=init
+  - MPICH_TESTS=info
+  - MPICH_TESTS=attr
+  - MPICH_TESTS=datatype
+  - MPICH_TESTS=pt2pt
+  - MPICH_TESTS=rma
+  - MPICH_TESTS=threads
+  - MPICH_TESTS=comm
+  - MPICH_TESTS=group
+  - MPICH_TESTS=coll
+  - MPICH_TESTS=spawn
+  - MPICH_TESTS=topo
+  - MPICH_TESTS=io
+  - MPICH_TESTS=impls
+  - MPICH_TESTS=mpi_t
+  - MPICH_TESTS=errhan
+  - MPICH_TESTS=errors
+  - MPICH_TESTS=perf
 #addons:
 #  apt:
 #    sources:
@@ -27,11 +46,23 @@ install:
   - ./configure --prefix=$TRAVIS_ROOT --disable-fortran --disable-cxx #--enable-strict
   - make -j2
   - make install
-  - make check
 before_script:
-  -
+  - make check
 script:
-  - cd test/mpi && make testing
+  - cd test/mpi
+  - echo "!util:all\n$MPICH_TESTS" > testlist
+  - ./runtests -tests=testlist -srcdir=. \
+               -np=2 -maxnp=2 -ppn=2 \
+               -verbose -showprogress \
+               -mpiexec=${TRAVIS_ROOT}/bin/mpiexec
+               #-xmlfile=summary.xml -tapfile=summary.tap -junitfile=summary.junit.xm
+#runtests [-tests=testfile] [-np=nprocesses]
+#        [-maxnp=max-nprocesses] [-srcdir=location-of-tests]
+#        [-ppn=max-proc-per-node] [-ppnarg=string]
+#        [-timelimitarg=string] [-mpiversion=major.minor]
+#        [-xmlfile=filename ] [-tapfile=filename ]
+#        [-junitfile=filename ] [-noxmlclose]
+#        [-verbose] [-showprogress] [-debug] [-batch]
 after_failure:
   - echo "Sad Panda"
 notifications:
