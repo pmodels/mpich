@@ -43,24 +43,6 @@ extern FILE *fdopen(int fd, const char *mode);
 /* style: allow:printf:2 sig:0 */
 /* style: allow:fprintf:7 sig:0 */
 
-/*
-   This function finds the basename in a path (ala "man 1 basename").
-   *basename will point to an element in path.
-   More formally: This function sets basename to the character just after the last '/' in path.
-*/
-static void find_basename(char *path, char **basename)
-{
-    char *c;
-
-    c = *basename = path;
-    while (*c)
-    {
-        if (*c == '/')
-            *basename = c+1;
-        ++c;
-    } 
-}
-
 #ifdef USE_DBG_LOGGING
 /* 
  * NEW ROUTINES FOR DEBUGGING
@@ -94,6 +76,24 @@ static MPID_Thread_tls_t dbg_tls_key;
 #endif
 
 static FILE *static_dbg_fp = 0;
+
+/*
+   This function finds the basename in a path (ala "man 1 basename").
+   *basename will point to an element in path.
+   More formally: This function sets basename to the character just after the last '/' in path.
+*/
+static void find_basename(char *path, char **basename)
+{
+    char *c;
+
+    c = *basename = path;
+    while (*c)
+    {
+        if (*c == '/')
+            *basename = c+1;
+        ++c;
+    } 
+}
 
 static void dbg_init_tls(void)
 {
