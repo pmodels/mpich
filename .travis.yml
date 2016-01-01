@@ -16,6 +16,12 @@ addons:
 before_install:
   - export TRAVIS_ROOT=$HOME/travis
   - mkdir $TRAVIS_ROOT
+  - export PATH=$TRAVIS_ROOT/bin:$PATH
+  - sh .travis-install-autotools $TRAVIS_ROOT
+  - which automake
+  - automake --version
+  - which autoconf
+  - autoconf --version
   - ./autogen.sh
 install:
   - ./configure --prefix=$TRAVIS_ROOT --disable-fortran --disable-cxx --enable-strict
