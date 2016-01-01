@@ -236,9 +236,9 @@ static int DLOOP_Leaf_vector_mpi_flatten(DLOOP_Offset *blocks_p,
 	     */
 	    *blocks_p -= (blocks_left + (size / el_size));
 #ifdef MPID_SP_VERBOSE
-	    MPIU_dbg_printf("\t[vector to vec exiting (1): next ind = %d, " DLOOP_OFFSET_FMT_DEC_SPEC " blocks processed.\n",
+	    MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\t[vector to vec exiting (1): next ind = %d, " DLOOP_OFFSET_FMT_DEC_SPEC " blocks processed.\n",
 			    paramp->u.pack_vector.index,
-			    *blocks_p);
+                            *blocks_p));
 #endif
 	    return 1;
 	}
@@ -261,9 +261,9 @@ static int DLOOP_Leaf_vector_mpi_flatten(DLOOP_Offset *blocks_p,
     }
 
 #ifdef MPID_SP_VERBOSE
-    MPIU_dbg_printf("\t[vector to vec exiting (2): next ind = %d, " DLOOP_OFFSET_FMT_DEC_SPEC " blocks processed.\n",
+    MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\t[vector to vec exiting (2): next ind = %d, " DLOOP_OFFSET_FMT_DEC_SPEC " blocks processed.\n",
 		    paramp->u.pack_vector.index,
-		    *blocks_p);
+                    *blocks_p));
 #endif
 
     /* if we get here then we processed ALL the blocks; don't need to update

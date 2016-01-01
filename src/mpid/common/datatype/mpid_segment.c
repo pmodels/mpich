@@ -357,9 +357,9 @@ static int MPID_Segment_vector_pack_to_iov(DLOOP_Offset *blocks_p,
 	     */
 	    *blocks_p -= (blocks_left + (size / basic_size));
 #ifdef MPID_SP_VERBOSE
-	    MPIU_dbg_printf("\t[vector to vec exiting (1): next ind = %d, " MPI_AINT_FMT_DEC_SPEC " blocks processed.\n",
+	    MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\t[vector to vec exiting (1): next ind = %d, " MPI_AINT_FMT_DEC_SPEC " blocks processed.\n",
 			    paramp->u.pack_vector.index,
-			    (MPI_Aint) *blocks_p);
+                            (MPI_Aint) *blocks_p));
 #endif
 	    MPIDI_FUNC_EXIT(MPID_STATE_MPID_SEGMENT_VECTOR_PACK_TO_IOV);
 	    return 1;
@@ -381,9 +381,9 @@ static int MPID_Segment_vector_pack_to_iov(DLOOP_Offset *blocks_p,
     }
 
 #ifdef MPID_SP_VERBOSE
-    MPIU_dbg_printf("\t[vector to vec exiting (2): next ind = %d, " MPI_AINT_FMT_DEC_SPEC " blocks processed.\n",
+    MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\t[vector to vec exiting (2): next ind = %d, " MPI_AINT_FMT_DEC_SPEC " blocks processed.\n",
 		    paramp->u.pack_vector.index,
-		    (MPI_Aint) *blocks_p);
+                    (MPI_Aint) *blocks_p));
 #endif
 
     /* if we get here then we processed ALL the blocks; don't need to update
@@ -420,12 +420,12 @@ static int MPID_Segment_contig_flatten(DLOOP_Offset *blocks_p,
     idx = paramp->u.flatten.index;
 
 #ifdef MPID_SP_VERBOSE
-    MPIU_dbg_printf("\t[contig flatten: idx = %d, loc = (" MPI_AINT_FMT_HEX_SPEC " + " MPI_AINT_FMT_HEX_SPEC ") = " MPI_AINT_FMT_HEX_SPEC ", size = " MPI_AINT_FMT_DEC_SPEC "]\n",
+    MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"\t[contig flatten: idx = %d, loc = (" MPI_AINT_FMT_HEX_SPEC " + " MPI_AINT_FMT_HEX_SPEC ") = " MPI_AINT_FMT_HEX_SPEC ", size = " MPI_AINT_FMT_DEC_SPEC "]\n",
 		    idx,
 		    MPIU_VOID_PTR_CAST_TO_MPI_AINT bufp,
 		    (MPI_Aint) rel_off,
 		    MPIU_VOID_PTR_CAST_TO_MPI_AINT bufp + rel_off,
-		    (MPI_Aint) size);
+                    (MPI_Aint) size));
 #endif
 
     if (idx > 0 && ((DLOOP_Offset) MPIU_VOID_PTR_CAST_TO_MPI_AINT bufp + rel_off) ==
