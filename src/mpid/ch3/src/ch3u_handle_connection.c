@@ -349,8 +349,8 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #ifdef MPICH_DBG_OUTPUT
 int MPIDI_CH3_PktPrint_Close( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 {
-    MPIU_DBG_PRINTF((" type ......... MPIDI_CH3_PKT_CLOSE\n"));
-    MPIU_DBG_PRINTF((" ack ......... %s\n", pkt->close.ack ? "TRUE" : "FALSE"));
+    MPIU_DBG_MSG(CH3_OTHER,TERSE," type ......... MPIDI_CH3_PKT_CLOSE\n");
+    MPIU_DBG_MSG_S(CH3_OTHER,TERSE," ack ......... %s\n", pkt->close.ack ? "TRUE" : "FALSE");
     return MPI_SUCCESS;
 }
 #endif

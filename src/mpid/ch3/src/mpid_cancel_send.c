@@ -347,20 +347,20 @@ int MPIDI_CH3_PktHandler_CancelSendResp( MPIDI_VC_t *vc ATTRIBUTE((unused)),
 #ifdef MPICH_DBG_OUTPUT
 int MPIDI_CH3_PktPrint_CancelSendReq( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 {
-    MPIU_DBG_PRINTF((" type ......... CANCEL_SEND\n"));
-    MPIU_DBG_PRINTF((" sender_reqid . 0x%08X\n", pkt->cancel_send_req.sender_req_id));
-    MPIU_DBG_PRINTF((" context_id ... %d\n", pkt->cancel_send_req.match.parts.context_id));
-    MPIU_DBG_PRINTF((" tag .......... %d\n", pkt->cancel_send_req.match.parts.tag));
-    MPIU_DBG_PRINTF((" rank ......... %d\n", pkt->cancel_send_req.match.parts.rank));
+    MPIU_DBG_MSG(CH3_OTHER,TERSE," type ......... CANCEL_SEND\n");
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," sender_reqid . 0x%08X\n", pkt->cancel_send_req.sender_req_id));
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," context_id ... %d\n", pkt->cancel_send_req.match.parts.context_id);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," tag .......... %d\n", pkt->cancel_send_req.match.parts.tag);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," rank ......... %d\n", pkt->cancel_send_req.match.parts.rank);
 
     return MPI_SUCCESS;
 }
 
 int MPIDI_CH3_PktPrint_CancelSendResp( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 {
-    MPIU_DBG_PRINTF((" type ......... CANCEL_SEND_RESP\n"));
-    MPIU_DBG_PRINTF((" sender_reqid . 0x%08X\n", pkt->cancel_send_resp.sender_req_id));
-    MPIU_DBG_PRINTF((" ack .......... %d\n", pkt->cancel_send_resp.ack));
+    MPIU_DBG_MSG(CH3_OTHER,TERSE," type ......... CANCEL_SEND_RESP\n");
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," sender_reqid . 0x%08X\n", pkt->cancel_send_resp.sender_req_id));
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," ack .......... %d\n", pkt->cancel_send_resp.ack);
     
     return MPI_SUCCESS;
 }

@@ -2147,76 +2147,76 @@ int MPIDI_CH3_PktHandler_Flush(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #ifdef MPICH_DBG_OUTPUT
 int MPIDI_CH3_PktPrint_Put(FILE * fp, MPIDI_CH3_Pkt_t * pkt)
 {
-    MPIU_DBG_PRINTF((" type ......... MPIDI_CH3_PKT_PUT\n"));
-    MPIU_DBG_PRINTF((" addr ......... %p\n", pkt->put.addr));
-    MPIU_DBG_PRINTF((" count ........ %d\n", pkt->put.count));
-    MPIU_DBG_PRINTF((" datatype ..... 0x%08X\n", pkt->put.datatype));
-    MPIU_DBG_PRINTF((" dataloop_size. 0x%08X\n", pkt->put.info.dataloop_size));
-    MPIU_DBG_PRINTF((" target ....... 0x%08X\n", pkt->put.target_win_handle));
-    MPIU_DBG_PRINTF((" source ....... 0x%08X\n", pkt->put.source_win_handle));
-    /*MPIU_DBG_PRINTF((" win_ptr ...... 0x%08X\n", pkt->put.win_ptr)); */
+    MPIU_DBG_MSG(CH3_OTHER,TERSE," type ......... MPIDI_CH3_PKT_PUT\n");
+    MPIU_DBG_MSG_P(CH3_OTHER,TERSE," addr ......... %p\n", pkt->put.addr);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," count ........ %d\n", pkt->put.count);
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," datatype ..... 0x%08X\n", pkt->put.datatype));
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," dataloop_size. 0x%08X\n", pkt->put.info.dataloop_size));
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," target ....... 0x%08X\n", pkt->put.target_win_handle));
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," source ....... 0x%08X\n", pkt->put.source_win_handle));
+    /*MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," win_ptr ...... 0x%08X\n", pkt->put.win_ptr)); */
     return MPI_SUCCESS;
 }
 
 int MPIDI_CH3_PktPrint_Get(FILE * fp, MPIDI_CH3_Pkt_t * pkt)
 {
-    MPIU_DBG_PRINTF((" type ......... MPIDI_CH3_PKT_GET\n"));
-    MPIU_DBG_PRINTF((" addr ......... %p\n", pkt->get.addr));
-    MPIU_DBG_PRINTF((" count ........ %d\n", pkt->get.count));
-    MPIU_DBG_PRINTF((" datatype ..... 0x%08X\n", pkt->get.datatype));
-    MPIU_DBG_PRINTF((" dataloop_size. %d\n", pkt->get.info.dataloop_size));
-    MPIU_DBG_PRINTF((" request ...... 0x%08X\n", pkt->get.request_handle));
-    MPIU_DBG_PRINTF((" target ....... 0x%08X\n", pkt->get.target_win_handle));
-    MPIU_DBG_PRINTF((" source ....... 0x%08X\n", pkt->get.source_win_handle));
+    MPIU_DBG_MSG(CH3_OTHER,TERSE," type ......... MPIDI_CH3_PKT_GET\n");
+    MPIU_DBG_MSG_P(CH3_OTHER,TERSE," addr ......... %p\n", pkt->get.addr);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," count ........ %d\n", pkt->get.count);
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," datatype ..... 0x%08X\n", pkt->get.datatype));
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," dataloop_size. %d\n", pkt->get.info.dataloop_size);
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," request ...... 0x%08X\n", pkt->get.request_handle));
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," target ....... 0x%08X\n", pkt->get.target_win_handle));
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," source ....... 0x%08X\n", pkt->get.source_win_handle));
     /*
-     * MPIU_DBG_PRINTF((" request ...... 0x%08X\n", pkt->get.request));
-     * MPIU_DBG_PRINTF((" win_ptr ...... 0x%08X\n", pkt->get.win_ptr));
+     * MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," request ...... 0x%08X\n", pkt->get.request));
+     * MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," win_ptr ...... 0x%08X\n", pkt->get.win_ptr));
      */
     return MPI_SUCCESS;
 }
 
 int MPIDI_CH3_PktPrint_GetResp(FILE * fp, MPIDI_CH3_Pkt_t * pkt)
 {
-    MPIU_DBG_PRINTF((" type ......... MPIDI_CH3_PKT_GET_RESP\n"));
-    MPIU_DBG_PRINTF((" request ...... 0x%08X\n", pkt->get_resp.request_handle));
-    /*MPIU_DBG_PRINTF((" request ...... 0x%08X\n", pkt->get_resp.request)); */
+    MPIU_DBG_MSG(CH3_OTHER,TERSE," type ......... MPIDI_CH3_PKT_GET_RESP\n");
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," request ...... 0x%08X\n", pkt->get_resp.request_handle));
+    /*MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," request ...... 0x%08X\n", pkt->get_resp.request)); */
     return MPI_SUCCESS;
 }
 
 int MPIDI_CH3_PktPrint_Accumulate(FILE * fp, MPIDI_CH3_Pkt_t * pkt)
 {
-    MPIU_DBG_PRINTF((" type ......... MPIDI_CH3_PKT_ACCUMULATE\n"));
-    MPIU_DBG_PRINTF((" addr ......... %p\n", pkt->accum.addr));
-    MPIU_DBG_PRINTF((" count ........ %d\n", pkt->accum.count));
-    MPIU_DBG_PRINTF((" datatype ..... 0x%08X\n", pkt->accum.datatype));
-    MPIU_DBG_PRINTF((" dataloop_size. %d\n", pkt->accum.info.dataloop_size));
-    MPIU_DBG_PRINTF((" op ........... 0x%08X\n", pkt->accum.op));
-    MPIU_DBG_PRINTF((" target ....... 0x%08X\n", pkt->accum.target_win_handle));
-    MPIU_DBG_PRINTF((" source ....... 0x%08X\n", pkt->accum.source_win_handle));
-    /*MPIU_DBG_PRINTF((" win_ptr ...... 0x%08X\n", pkt->accum.win_ptr)); */
+    MPIU_DBG_MSG(CH3_OTHER,TERSE," type ......... MPIDI_CH3_PKT_ACCUMULATE\n");
+    MPIU_DBG_MSG_P(CH3_OTHER,TERSE," addr ......... %p\n", pkt->accum.addr);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," count ........ %d\n", pkt->accum.count);
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," datatype ..... 0x%08X\n", pkt->accum.datatype));
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," dataloop_size. %d\n", pkt->accum.info.dataloop_size);
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," op ........... 0x%08X\n", pkt->accum.op));
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," target ....... 0x%08X\n", pkt->accum.target_win_handle));
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," source ....... 0x%08X\n", pkt->accum.source_win_handle));
+    /*MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," win_ptr ...... 0x%08X\n", pkt->accum.win_ptr)); */
     return MPI_SUCCESS;
 }
 
 int MPIDI_CH3_PktPrint_Lock(FILE * fp, MPIDI_CH3_Pkt_t * pkt)
 {
-    MPIU_DBG_PRINTF((" type ......... MPIDI_CH3_PKT_LOCK\n"));
-    MPIU_DBG_PRINTF((" lock_type .... %d\n", pkt->lock.lock_type));
-    MPIU_DBG_PRINTF((" target ....... 0x%08X\n", pkt->lock.target_win_handle));
-    MPIU_DBG_PRINTF((" source ....... 0x%08X\n", pkt->lock.source_win_handle));
+    MPIU_DBG_MSG(CH3_OTHER,TERSE," type ......... MPIDI_CH3_PKT_LOCK\n");
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," lock_type .... %d\n", pkt->lock.lock_type);
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," target ....... 0x%08X\n", pkt->lock.target_win_handle));
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," source ....... 0x%08X\n", pkt->lock.source_win_handle));
     return MPI_SUCCESS;
 }
 
 int MPIDI_CH3_PktPrint_Ack(FILE * fp, MPIDI_CH3_Pkt_t * pkt)
 {
-    MPIU_DBG_PRINTF((" type ......... MPIDI_CH3_PKT_ACK\n"));
-    MPIU_DBG_PRINTF((" source ....... 0x%08X\n", pkt->ack.source_win_handle));
+    MPIU_DBG_MSG(CH3_OTHER,TERSE," type ......... MPIDI_CH3_PKT_ACK\n");
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," source ....... 0x%08X\n", pkt->ack.source_win_handle));
     return MPI_SUCCESS;
 }
 
 int MPIDI_CH3_PktPrint_LockAck(FILE * fp, MPIDI_CH3_Pkt_t * pkt)
 {
-    MPIU_DBG_PRINTF((" type ......... MPIDI_CH3_PKT_LOCK_ACK\n"));
-    MPIU_DBG_PRINTF((" source ....... 0x%08X\n", pkt->lock_ack.source_win_handle));
+    MPIU_DBG_MSG(CH3_OTHER,TERSE," type ......... MPIDI_CH3_PKT_LOCK_ACK\n");
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," source ....... 0x%08X\n", pkt->lock_ack.source_win_handle));
     return MPI_SUCCESS;
 }
 #endif

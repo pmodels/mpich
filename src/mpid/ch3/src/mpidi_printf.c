@@ -75,7 +75,7 @@ void MPIDI_err_printf(char *func, char *fmt, ...)
    of packet types (and allowing channels to customize the printing
    of packets). For example, an array of function pointers, indexed by
    packet type, could be used.
-   Also, these routines should not use MPIU_DBG_PRINTF, instead they should
+   Also, these routines should not use MPIU_DBG_MSG_* functions, instead they should
    us a simple fprintf with a style allowance (so that the style checker
    won't flag the use as a possible problem).
 
@@ -89,7 +89,7 @@ void MPIDI_err_printf(char *func, char *fmt, ...)
 void MPIDI_DBG_Print_packet(MPIDI_CH3_Pkt_t * pkt)
 {
     {
-        MPIU_DBG_PRINTF(("MPIDI_CH3_Pkt_t:\n"));
+        MPIU_DBG_MSG(CH3_OTHER,TERSE,"MPIDI_CH3_Pkt_t:\n");
         switch (pkt->type) {
         case MPIDI_CH3_PKT_EAGER_SEND:
             MPIDI_CH3_PktPrint_EagerSend(stdout, pkt);
@@ -146,12 +146,12 @@ void MPIDI_DBG_Print_packet(MPIDI_CH3_Pkt_t * pkt)
             break;
             /*
              * case MPIDI_CH3_PKT_SHARED_LOCK_OPS_DONE:
-             * MPIU_DBG_PRINTF((" type ......... MPIDI_CH3_PKT_SHARED_LOCK_OPS_DONE\n"));
-             * MPIU_DBG_PRINTF((" source ....... 0x%08X\n", pkt->shared_lock_ops_done.source_win_handle));
+             * MPIU_DBG_MSG(CH3_OTHER,TERSE," type ......... MPIDI_CH3_PKT_SHARED_LOCK_OPS_DONE\n");
+             * MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," source ....... 0x%08X\n", pkt->shared_lock_ops_done.source_win_handle));
              * break;
              */
         case MPIDI_CH3_PKT_FLOW_CNTL_UPDATE:
-            MPIU_DBG_PRINTF((" FLOW_CNTRL_UPDATE\n"));
+            MPIU_DBG_MSG(CH3_OTHER,TERSE," FLOW_CNTRL_UPDATE\n");
             break;
 
         case MPIDI_CH3_PKT_CLOSE:
@@ -159,41 +159,41 @@ void MPIDI_DBG_Print_packet(MPIDI_CH3_Pkt_t * pkt)
             break;
 
         default:
-            MPIU_DBG_PRINTF((" INVALID PACKET\n"));
-            MPIU_DBG_PRINTF((" unknown type ... %d\n", pkt->type));
-            MPIU_DBG_PRINTF(("  type .......... EAGER_SEND\n"));
-            MPIU_DBG_PRINTF(("   sender_reqid . 0x%08X\n", pkt->eager_send.sender_req_id));
-            MPIU_DBG_PRINTF(("   context_id ... %d\n", pkt->eager_send.match.parts.context_id));
-            MPIU_DBG_PRINTF(("   data_sz ...... %d\n", pkt->eager_send.data_sz));
-            MPIU_DBG_PRINTF(("   tag .......... %d\n", pkt->eager_send.match.parts.tag));
-            MPIU_DBG_PRINTF(("   rank ......... %d\n", pkt->eager_send.match.parts.rank));
+            MPIU_DBG_MSG(CH3_OTHER,TERSE," INVALID PACKET\n");
+            MPIU_DBG_MSG_D(CH3_OTHER,TERSE," unknown type ... %d\n", pkt->type);
+            MPIU_DBG_MSG(CH3_OTHER,TERSE,"  type .......... EAGER_SEND\n");
+            MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST,"   sender_reqid . 0x%08X\n", pkt->eager_send.sender_req_id));
+            MPIU_DBG_MSG_D(CH3_OTHER,TERSE,"   context_id ... %d\n", pkt->eager_send.match.parts.context_id);
+            MPIU_DBG_MSG_D(CH3_OTHER,TERSE,"   data_sz ...... %d\n", pkt->eager_send.data_sz);
+            MPIU_DBG_MSG_D(CH3_OTHER,TERSE,"   tag .......... %d\n", pkt->eager_send.match.parts.tag);
+            MPIU_DBG_MSG_D(CH3_OTHER,TERSE,"   rank ......... %d\n", pkt->eager_send.match.parts.rank);
 #ifdef MPID_USE_SEQUENCE_NUMBERS
-            MPIU_DBG_PRINTF(("   seqnum ....... %d\n", pkt->eager_send.seqnum));
+            MPIU_DBG_MSG_D(CH3_OTHER,TERSE,"   seqnum ....... %d\n", pkt->eager_send.seqnum);
 #endif
-            MPIU_DBG_PRINTF(("  type .......... REQ_TO_SEND\n"));
-            MPIU_DBG_PRINTF(("   sender_reqid . 0x%08X\n", pkt->rndv_req_to_send.sender_req_id));
-            MPIU_DBG_PRINTF(("   context_id ... %d\n",
-                             pkt->rndv_req_to_send.match.parts.context_id));
-            MPIU_DBG_PRINTF(("   data_sz ...... %d\n", pkt->rndv_req_to_send.data_sz));
-            MPIU_DBG_PRINTF(("   tag .......... %d\n", pkt->rndv_req_to_send.match.parts.tag));
-            MPIU_DBG_PRINTF(("   rank ......... %d\n", pkt->rndv_req_to_send.match.parts.rank));
+            MPIU_DBG_MSG(CH3_OTHER,TERSE,"  type .......... REQ_TO_SEND\n");
+            MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST,"   sender_reqid . 0x%08X\n", pkt->rndv_req_to_send.sender_req_id));
+            MPIU_DBG_MSG_D(CH3_OTHER,TERSE,"   context_id ... %d\n",
+                           pkt->rndv_req_to_send.match.parts.context_id);
+            MPIU_DBG_MSG_D(CH3_OTHER,TERSE,"   data_sz ...... %d\n", pkt->rndv_req_to_send.data_sz);
+            MPIU_DBG_MSG_D(CH3_OTHER,TERSE,"   tag .......... %d\n", pkt->rndv_req_to_send.match.parts.tag);
+            MPIU_DBG_MSG_D(CH3_OTHER,TERSE,"   rank ......... %d\n", pkt->rndv_req_to_send.match.parts.rank);
 #ifdef MPID_USE_SEQUENCE_NUMBERS
-            MPIU_DBG_PRINTF(("   seqnum ....... %d\n", pkt->rndv_req_to_send.seqnum));
+            MPIU_DBG_MSG_D(CH3_OTHER,TERSE,"   seqnum ....... %d\n", pkt->rndv_req_to_send.seqnum);
 #endif
-            MPIU_DBG_PRINTF(("  type .......... CLR_TO_SEND\n"));
-            MPIU_DBG_PRINTF(("   sender_reqid . 0x%08X\n", pkt->rndv_clr_to_send.sender_req_id));
-            MPIU_DBG_PRINTF(("   recvr_reqid .. 0x%08X\n", pkt->rndv_clr_to_send.receiver_req_id));
-            MPIU_DBG_PRINTF(("  type .......... RNDV_SEND\n"));
-            MPIU_DBG_PRINTF(("   recvr_reqid .. 0x%08X\n", pkt->rndv_send.receiver_req_id));
-            MPIU_DBG_PRINTF(("  type .......... CANCEL_SEND\n"));
-            MPIU_DBG_PRINTF(("   context_id ... %d\n",
-                             pkt->cancel_send_req.match.parts.context_id));
-            MPIU_DBG_PRINTF(("   tag .......... %d\n", pkt->cancel_send_req.match.parts.tag));
-            MPIU_DBG_PRINTF(("   rank ......... %d\n", pkt->cancel_send_req.match.parts.rank));
-            MPIU_DBG_PRINTF(("   sender_reqid . 0x%08X\n", pkt->cancel_send_req.sender_req_id));
-            MPIU_DBG_PRINTF(("  type .......... CANCEL_SEND_RESP\n"));
-            MPIU_DBG_PRINTF(("   sender_reqid . 0x%08X\n", pkt->cancel_send_resp.sender_req_id));
-            MPIU_DBG_PRINTF(("   ack .......... %d\n", pkt->cancel_send_resp.ack));
+            MPIU_DBG_MSG(CH3_OTHER,TERSE,"  type .......... CLR_TO_SEND\n");
+            MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST,"   sender_reqid . 0x%08X\n", pkt->rndv_clr_to_send.sender_req_id));
+            MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST,"   recvr_reqid .. 0x%08X\n", pkt->rndv_clr_to_send.receiver_req_id));
+            MPIU_DBG_MSG(CH3_OTHER,TERSE,"  type .......... RNDV_SEND\n");
+            MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST,"   recvr_reqid .. 0x%08X\n", pkt->rndv_send.receiver_req_id));
+            MPIU_DBG_MSG(CH3_OTHER,TERSE,"  type .......... CANCEL_SEND\n");
+            MPIU_DBG_MSG_D(CH3_OTHER,TERSE,"   context_id ... %d\n",
+                           pkt->cancel_send_req.match.parts.context_id);
+            MPIU_DBG_MSG_D(CH3_OTHER,TERSE,"   tag .......... %d\n", pkt->cancel_send_req.match.parts.tag);
+            MPIU_DBG_MSG_D(CH3_OTHER,TERSE,"   rank ......... %d\n", pkt->cancel_send_req.match.parts.rank);
+            MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST,"   sender_reqid . 0x%08X\n", pkt->cancel_send_req.sender_req_id));
+            MPIU_DBG_MSG(CH3_OTHER,TERSE,"  type .......... CANCEL_SEND_RESP\n");
+            MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST,"   sender_reqid . 0x%08X\n", pkt->cancel_send_resp.sender_req_id));
+            MPIU_DBG_MSG_D(CH3_OTHER,TERSE,"   ack .......... %d\n", pkt->cancel_send_resp.ack);
             break;
         }
     }

@@ -445,10 +445,10 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
 	}
 
 #ifdef MPICH_DBG_OUTPUT
-	MPIU_DBG_PRINTF(("[%d]connect:Received remote_translation:\n", rank));
+	MPIU_DBG_MSG_D(CH3_OTHER,TERSE,"[%d]connect:Received remote_translation:\n", rank);
 	for (i=0; i<remote_comm_size; i++)
 	{
-	    MPIU_DBG_PRINTF((" remote_translation[%d].pg_index = %d\n remote_translation[%d].pg_rank = %d\n",
+	    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," remote_translation[%d].pg_index = %d\n remote_translation[%d].pg_rank = %d\n",
 		i, remote_translation[i].pg_index, i, remote_translation[i].pg_rank));
 	}
 #endif
@@ -467,10 +467,10 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
 #ifdef MPICH_DBG_OUTPUT
-    MPIU_DBG_PRINTF(("[%d]connect:Received remote_translation after broadcast:\n", rank));
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE,"[%d]connect:Received remote_translation after broadcast:\n", rank);
     for (i=0; i<remote_comm_size; i++)
     {
-	MPIU_DBG_PRINTF((" remote_translation[%d].pg_index = %d\n remote_translation[%d].pg_rank = %d\n",
+	MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," remote_translation[%d].pg_index = %d\n remote_translation[%d].pg_rank = %d\n",
 	    i, remote_translation[i].pg_index, i, remote_translation[i].pg_rank));
     }
 #endif
@@ -658,7 +658,7 @@ static int ExtractLocalPGInfo( MPID_Comm *comm_p,
 #ifdef MPICH_DBG_OUTPUT
     pg_iter = pg_list;
     while (pg_iter != NULL) {
-	MPIU_DBG_PRINTF(("connect:PG: '%s'\n<%s>\n", pg_iter->pg_id, pg_iter->str));
+	MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST,"connect:PG: '%s'\n<%s>\n", pg_iter->pg_id, pg_iter->str));
 	pg_iter = pg_iter->next;
     }
 #endif
@@ -1015,7 +1015,7 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
     MPIU_CHKLMEM_MALLOC(remote_translation,pg_translation*,
 			remote_comm_size * sizeof(pg_translation),
 			mpi_errno, "remote_translation");
-    MPIU_DBG_PRINTF(("[%d]accept:remote process groups: %d\nremote comm size: %d\n", rank, n_remote_pgs, remote_comm_size));
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST,"[%d]accept:remote process groups: %d\nremote comm size: %d\n", rank, n_remote_pgs, remote_comm_size));
 
     /* Exchange the process groups and their corresponding KVSes */
     if (rank == root)
@@ -1035,10 +1035,10 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
 				  MPI_INT, 0, recvtag++, tmp_comm,
 				  MPI_STATUS_IGNORE, &errflag);
 #ifdef MPICH_DBG_OUTPUT
-	MPIU_DBG_PRINTF(("[%d]accept:Received remote_translation:\n", rank));
+	MPIU_DBG_MSG_D(CH3_OTHER,TERSE,"[%d]accept:Received remote_translation:\n", rank);
 	for (i=0; i<remote_comm_size; i++)
 	{
-	    MPIU_DBG_PRINTF((" remote_translation[%d].pg_index = %d\n remote_translation[%d].pg_rank = %d\n",
+	    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," remote_translation[%d].pg_index = %d\n remote_translation[%d].pg_rank = %d\n",
 		i, remote_translation[i].pg_index, i, remote_translation[i].pg_rank));
 	}
 #endif
@@ -1057,10 +1057,10 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 #ifdef MPICH_DBG_OUTPUT
-    MPIU_DBG_PRINTF(("[%d]accept:Received remote_translation after broadcast:\n", rank));
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE,"[%d]accept:Received remote_translation after broadcast:\n", rank);
     for (i=0; i<remote_comm_size; i++)
     {
-	MPIU_DBG_PRINTF((" remote_translation[%d].pg_index = %d\n remote_translation[%d].pg_rank = %d\n",
+	MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," remote_translation[%d].pg_index = %d\n remote_translation[%d].pg_rank = %d\n",
 	    i, remote_translation[i].pg_index, i, remote_translation[i].pg_rank));
     }
 #endif

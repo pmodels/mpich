@@ -377,22 +377,22 @@ int MPIDI_CH3_PktHandler_EagerSyncAck( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #ifdef MPICH_DBG_OUTPUT
 int MPIDI_CH3_PktPrint_EagerSyncSend( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 {
-    MPIU_DBG_PRINTF((" type ......... EAGER_SYNC_SEND\n"));
-    MPIU_DBG_PRINTF((" sender_reqid . 0x%08X\n", pkt->eager_sync_send.sender_req_id));
-    MPIU_DBG_PRINTF((" context_id ... %d\n", pkt->eager_sync_send.match.parts.context_id));
-    MPIU_DBG_PRINTF((" tag .......... %d\n", pkt->eager_sync_send.match.parts.tag));
-    MPIU_DBG_PRINTF((" rank ......... %d\n", pkt->eager_sync_send.match.parts.rank));
-    MPIU_DBG_PRINTF((" data_sz ...... %d\n", pkt->eager_sync_send.data_sz));
+    MPIU_DBG_MSG(CH3_OTHER,TERSE," type ......... EAGER_SYNC_SEND\n");
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," sender_reqid . 0x%08X\n", pkt->eager_sync_send.sender_req_id));
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," context_id ... %d\n", pkt->eager_sync_send.match.parts.context_id);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," tag .......... %d\n", pkt->eager_sync_send.match.parts.tag);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," rank ......... %d\n", pkt->eager_sync_send.match.parts.rank);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," data_sz ...... %d\n", pkt->eager_sync_send.data_sz);
 #ifdef MPID_USE_SEQUENCE_NUMBERS
-    MPIU_DBG_PRINTF((" seqnum ....... %d\n", pkt->eager_sync_send.seqnum));
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," seqnum ....... %d\n", pkt->eager_sync_send.seqnum);
 #endif
     return MPI_SUCCESS;
 }
 
 int MPIDI_CH3_PktPrint_EagerSyncAck( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 {
-    MPIU_DBG_PRINTF((" type ......... EAGER_SYNC_ACK\n"));
-    MPIU_DBG_PRINTF((" sender_reqid . 0x%08X\n", pkt->eager_sync_ack.sender_req_id));
+    MPIU_DBG_MSG(CH3_OTHER,TERSE," type ......... EAGER_SYNC_ACK\n");
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," sender_reqid . 0x%08X\n", pkt->eager_sync_ack.sender_req_id));
     return MPI_SUCCESS;
 }
 #endif

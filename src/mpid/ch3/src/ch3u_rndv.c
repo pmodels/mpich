@@ -212,7 +212,7 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"received rndv CTS pkt");
     
     MPID_Request_get_ptr(cts_pkt->sender_req_id, sreq);
-    MPIU_DBG_PRINTF(("received cts, count=%d\n", sreq->dev.user_count));
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST,"received cts, count=" MPI_AINT_FMT_DEC_SPEC "\n", sreq->dev.user_count));
 
     sreq->dev.OnDataAvail = 0;
     sreq->dev.OnFinal = 0;
@@ -383,28 +383,28 @@ int MPIDI_CH3_RecvRndv( MPIDI_VC_t * vc, MPID_Request *rreq )
 #ifdef MPICH_DBG_OUTPUT
 int MPIDI_CH3_PktPrint_RndvReqToSend( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 {
-    MPIU_DBG_PRINTF((" type ......... REQ_TO_SEND\n"));
-    MPIU_DBG_PRINTF((" sender_reqid . 0x%08X\n", pkt->rndv_req_to_send.sender_req_id));
-    MPIU_DBG_PRINTF((" context_id ... %d\n", pkt->rndv_req_to_send.match.parts.context_id));
-    MPIU_DBG_PRINTF((" tag .......... %d\n", pkt->rndv_req_to_send.match.parts.tag));
-    MPIU_DBG_PRINTF((" rank ......... %d\n", pkt->rndv_req_to_send.match.parts.rank));
-    MPIU_DBG_PRINTF((" data_sz ...... %d\n", pkt->rndv_req_to_send.data_sz));
+    MPIU_DBG_MSG(CH3_OTHER,TERSE," type ......... REQ_TO_SEND\n");
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," sender_reqid . 0x%08X\n", pkt->rndv_req_to_send.sender_req_id));
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," context_id ... %d\n", pkt->rndv_req_to_send.match.parts.context_id);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," tag .......... %d\n", pkt->rndv_req_to_send.match.parts.tag);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," rank ......... %d\n", pkt->rndv_req_to_send.match.parts.rank);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," data_sz ...... %d\n", pkt->rndv_req_to_send.data_sz);
 #ifdef MPID_USE_SEQUENCE_NUMBERS
-    MPIU_DBG_PRINTF((" seqnum ....... %d\n", pkt->rndv_req_to_send.seqnum));
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," seqnum ....... %d\n", pkt->rndv_req_to_send.seqnum);
 #endif
     return MPI_SUCCESS;
 }
 int MPIDI_CH3_PktPrint_RndvClrToSend( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 {
-    MPIU_DBG_PRINTF((" type ......... CLR_TO_SEND\n"));
-    MPIU_DBG_PRINTF((" sender_reqid . 0x%08X\n", pkt->rndv_clr_to_send.sender_req_id));
-    MPIU_DBG_PRINTF((" recvr_reqid .. 0x%08X\n", pkt->rndv_clr_to_send.receiver_req_id));
+    MPIU_DBG_MSG(CH3_OTHER,TERSE," type ......... CLR_TO_SEND\n");
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," sender_reqid . 0x%08X\n", pkt->rndv_clr_to_send.sender_req_id));
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," recvr_reqid .. 0x%08X\n", pkt->rndv_clr_to_send.receiver_req_id));
     return MPI_SUCCESS;
 }
 int MPIDI_CH3_PktPrint_RndvSend( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 {
-    MPIU_DBG_PRINTF((" type ......... RNDV_SEND\n"));
-    MPIU_DBG_PRINTF((" recvr_reqid .. 0x%08X\n", pkt->rndv_send.receiver_req_id));
+    MPIU_DBG_MSG(CH3_OTHER,TERSE," type ......... RNDV_SEND\n");
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," recvr_reqid .. 0x%08X\n", pkt->rndv_send.receiver_req_id));
     return MPI_SUCCESS;
 }
 #endif
