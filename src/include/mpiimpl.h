@@ -156,15 +156,6 @@ int usleep(useconds_t usec);
 */
 #include "mpidbg.h"
 
-#if defined(MPICH_DBG_OUTPUT)
-#define MPIU_DBG_PRINTF(e)			\
-{						\
-    MPIU_dbg_printf e;                          \
-}
-#else
-#define MPIU_DBG_PRINTF(e)
-#endif
-
 /* ------------------------------------------------------------------------- */
 /* end of mpidebug.h */
 /* ------------------------------------------------------------------------- */

@@ -65,7 +65,7 @@ static int  mpi_to_pmi_keyvals( MPID_Info *info_ptr, PMI_keyval_t **kv_ptr,
 	}
 	MPIR_Info_get_impl( info_ptr, key, vallen+1, kv[i].val, &flag );
         MPIR_ERR_CHKANDJUMP1(!flag, mpi_errno, MPI_ERR_OTHER,"**infonokey", "**infonokey %s", key);
-	MPIU_DBG_PRINTF(("key: <%s>, value: <%s>\n", kv[i].key, kv[i].val));
+	MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST,"key: <%s>, value: <%s>\n", kv[i].key, kv[i].val));
     }
 
  fn_fail:

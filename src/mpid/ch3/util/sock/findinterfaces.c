@@ -37,7 +37,7 @@ static int GetLocalIPs(int32_t *pIP, int max)
 	b = ((unsigned char *)(&pIP[n]))[1];
 	c = ((unsigned char *)(&pIP[n]))[2];
 	d = ((unsigned char *)(&pIP[n]))[3];
-	MPIU_DBG_PRINTF(("ip: %u.%u.%u.%u\n", a, b, c, d));
+	MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST,"ip: %u.%u.%u.%u\n", a, b, c, d));
 	}*/
 
 	hlist++;

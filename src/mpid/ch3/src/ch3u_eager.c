@@ -824,14 +824,14 @@ int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #ifdef MPICH_DBG_OUTPUT
 int MPIDI_CH3_PktPrint_EagerSend( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 {
-    MPIU_DBG_PRINTF((" type ......... EAGER_SEND\n"));
-    MPIU_DBG_PRINTF((" sender_reqid . 0x%08X\n", pkt->eager_send.sender_req_id));
-    MPIU_DBG_PRINTF((" context_id ... %d\n", pkt->eager_send.match.parts.context_id));
-    MPIU_DBG_PRINTF((" tag .......... %d\n", pkt->eager_send.match.parts.tag));
-    MPIU_DBG_PRINTF((" rank ......... %d\n", pkt->eager_send.match.parts.rank));
-    MPIU_DBG_PRINTF((" data_sz ...... %d\n", pkt->eager_send.data_sz));
+    MPIU_DBG_MSG(CH3_OTHER,TERSE," type ......... EAGER_SEND\n");
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," sender_reqid . 0x%08X\n", pkt->eager_send.sender_req_id));
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," context_id ... %d\n", pkt->eager_send.match.parts.context_id);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," tag .......... %d\n", pkt->eager_send.match.parts.tag);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," rank ......... %d\n", pkt->eager_send.match.parts.rank);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," data_sz ...... %d\n", pkt->eager_send.data_sz);
 #ifdef MPID_USE_SEQUENCE_NUMBERS
-    MPIU_DBG_PRINTF((" seqnum ....... %d\n", pkt->eager_send.seqnum));
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," seqnum ....... %d\n", pkt->eager_send.seqnum);
 #endif
 }
 
@@ -840,13 +840,13 @@ int MPIDI_CH3_PktPrint_EagerShortSend( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 {
     int datalen;
     unsigned char *p = (unsigned char *)pkt->eagershort_send.data;
-    MPIU_DBG_PRINTF((" type ......... EAGERSHORT_SEND\n"));
-    MPIU_DBG_PRINTF((" context_id ... %d\n", pkt->eagershort_send.match.parts.context_id));
-    MPIU_DBG_PRINTF((" tag .......... %d\n", pkt->eagershort_send.match.parts.tag));
-    MPIU_DBG_PRINTF((" rank ......... %d\n", pkt->eagershort_send.match.parts.rank));
-    MPIU_DBG_PRINTF((" data_sz ...... %d\n", pkt->eagershort_send.data_sz));
+    MPIU_DBG_MSG(CH3_OTHER,TERSE," type ......... EAGERSHORT_SEND\n");
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," context_id ... %d\n", pkt->eagershort_send.match.parts.context_id);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," tag .......... %d\n", pkt->eagershort_send.match.parts.tag);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," rank ......... %d\n", pkt->eagershort_send.match.parts.rank);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," data_sz ...... %d\n", pkt->eagershort_send.data_sz);
 #ifdef MPID_USE_SEQUENCE_NUMBERS
-    MPIU_DBG_PRINTF((" seqnum ....... %d\n", pkt->eagershort_send.seqnum));
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," seqnum ....... %d\n", pkt->eagershort_send.seqnum);
 #endif
     datalen = pkt->eagershort_send.data_sz;
     if (datalen > 0) {
@@ -856,21 +856,21 @@ int MPIDI_CH3_PktPrint_EagerShortSend( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 	for (i=0; i<datalen; i++) {
 	    MPL_snprintf( &databytes[2*i], 64 - 2*i, "%2x", p[i] );
 	}
-	MPIU_DBG_PRINTF((" data ......... %s\n", databytes));
+	MPIU_DBG_MSG_S(CH3_OTHER,TERSE," data ......... %s\n", databytes);
     }
 }
 #endif /* defined(USE_EAGER_SHORT) */
 
 int MPIDI_CH3_PktPrint_ReadySend( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 {
-    MPIU_DBG_PRINTF((" type ......... READY_SEND\n"));
-    MPIU_DBG_PRINTF((" sender_reqid . 0x%08X\n", pkt->ready_send.sender_req_id));
-    MPIU_DBG_PRINTF((" context_id ... %d\n", pkt->ready_send.match.parts.context_id));
-    MPIU_DBG_PRINTF((" tag .......... %d\n", pkt->ready_send.match.parts.tag));
-    MPIU_DBG_PRINTF((" rank ......... %d\n", pkt->ready_send.match.parts.rank));
-    MPIU_DBG_PRINTF((" data_sz ...... %d\n", pkt->ready_send.data_sz));
+    MPIU_DBG_MSG(CH3_OTHER,TERSE," type ......... READY_SEND\n");
+    MPIU_DBG_MSG_FMT(CH3_OTHER,TERSE,(MPIU_DBG_FDEST," sender_reqid . 0x%08X\n", pkt->ready_send.sender_req_id));
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," context_id ... %d\n", pkt->ready_send.match.parts.context_id);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," tag .......... %d\n", pkt->ready_send.match.parts.tag);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," rank ......... %d\n", pkt->ready_send.match.parts.rank);
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," data_sz ...... %d\n", pkt->ready_send.data_sz);
 #ifdef MPID_USE_SEQUENCE_NUMBERS
-    MPIU_DBG_PRINTF((" seqnum ....... %d\n", pkt->ready_send.seqnum));
+    MPIU_DBG_MSG_D(CH3_OTHER,TERSE," seqnum ....... %d\n", pkt->ready_send.seqnum);
 #endif
 }
 
