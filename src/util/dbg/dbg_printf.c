@@ -299,29 +299,6 @@ int MPIU_dbglog_vprintf(const char *str, va_list ap)
     return n;
 }
 
-/* FIXME: */
-int MPIU_dbg_printf(const char * str, ...)
-{
-    int n = 0;
-    
-    /* MPID_Common_thread_lock(); */
-    if (dbg_state != DBG_STATE_NONE)
-    {
-	va_list list;
-
-	MPIU_dbglog_printf("[%d]", dbg_rank);
-	va_start(list, str);
-	n = MPIU_dbglog_vprintf(str, list);
-	va_end(list);
-
-        if (dbg_state & DBG_STATE_STDOUT)
-            fflush(stdout);
-    }
-    /* MPID_Common_thread_unlock(); */
-    
-    return n;
-}
-
 #ifdef USE_DBG_LOGGING
 /* 
  * NEW ROUTINES FOR DEBUGGING
