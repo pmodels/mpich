@@ -80,9 +80,6 @@
 #define DLOOP_Malloc MPIU_Malloc
 #define DLOOP_Free   MPIU_Free
 
-/* debugging output function */
-#define DLOOP_dbg_printf MPIU_dbg_printf
-
 /* assert function */
 #define DLOOP_Assert MPIU_Assert
 

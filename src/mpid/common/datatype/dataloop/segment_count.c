@@ -103,10 +103,10 @@ static int DLOOP_Leaf_contig_count_block(DLOOP_Offset *blocks_p,
     size = *blocks_p * el_size;
 
 #ifdef MPID_SP_VERBOSE
-    MPIU_dbg_printf("contig count block: count = %d, buf+off = %d, lastloc = " DLOOP_OFFSET_FMT_DEC_SPEC "\n",
+    MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,"contig count block: count = %d, buf+off = %d, lastloc = " DLOOP_OFFSET_FMT_DEC_SPEC "\n",
 		    (int) paramp->count,
 		    (int) ((char *) bufp + rel_off),
-		    paramp->last_loc);
+                    paramp->last_loc));
 #endif
 
     if (paramp->count > 0 && rel_off == paramp->last_loc)
