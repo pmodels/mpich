@@ -162,7 +162,7 @@ static int do_vmsplice(MPID_Request *sreq, int pipe_fd, MPL_IOV iov[],
         if (*complete) {
             err = close(pipe_fd);
             MPIR_ERR_CHKANDJUMP(err < 0, mpi_errno, MPI_ERR_OTHER, "**close");
-            MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
+            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
         }
     }
 
@@ -241,7 +241,7 @@ static int do_readv(MPID_Request *rreq, int pipe_fd, MPL_IOV iov[],
         if (*complete) {
             nread = close(pipe_fd);
             MPIR_ERR_CHKANDJUMP(nread < 0, mpi_errno, MPI_ERR_OTHER, "**close");
-            MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
+            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
         }
     }
 
@@ -340,7 +340,7 @@ int MPID_nem_lmt_vmsplice_progress(void)
         }
 
         if (complete) {
-            MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
+            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
 
             /* remove the node from the list */
             if (cur == outstanding_head) {

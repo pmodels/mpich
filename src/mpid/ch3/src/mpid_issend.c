@@ -33,7 +33,7 @@ int MPID_Issend(const void * buf, int count, MPI_Datatype datatype, int rank, in
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_ISSEND);
 
-    MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPIU_DBG_FDEST,
                  "rank=%d, tag=%d, context=%d", 
                  rank, tag, comm->context_id + context_offset));
 
@@ -122,10 +122,10 @@ int MPID_Issend(const void * buf, int count, MPI_Datatype datatype, int rank, in
   fn_exit:
     *request = sreq;
     
-    MPIU_DBG_STMT(CH3_OTHER,VERBOSE,
+    MPIU_DBG_STMT(MPIDI_CH3_DBG_OTHER,VERBOSE,
     {
 	if (sreq != NULL) {
-	    MPIU_DBG_MSG_P(CH3_OTHER,VERBOSE,
+	    MPIU_DBG_MSG_P(MPIDI_CH3_DBG_OTHER,VERBOSE,
 			   "request allocated, handle=0x%08x", sreq->handle);
 	}
     }

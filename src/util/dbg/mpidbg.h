@@ -22,24 +22,24 @@
 
 #ifdef USE_DBG_LOGGING
 #define MPIU_DBG_SELECTED(_class,_level) \
-   ((MPIU_DBG_##_class & MPIU_DBG_ActiveClasses) && \
+   ((_class & MPIU_DBG_ActiveClasses) && \
           MPIU_DBG_##_level <= MPIU_DBG_MaxLevel)
 #define MPIU_DBG_MSG(_class,_level,_string)  \
-   {if ( (MPIU_DBG_##_class & MPIU_DBG_ActiveClasses) && \
+   {if ( (_class & MPIU_DBG_ActiveClasses) && \
           MPIU_DBG_##_level <= MPIU_DBG_MaxLevel ) {\
-     MPIU_DBG_Outevent( __FILE__, __LINE__, MPIU_DBG_##_class, 0, "%s", _string ); }}
+     MPIU_DBG_Outevent( __FILE__, __LINE__, _class, 0, "%s", _string ); }}
 #define MPIU_DBG_MSG_S(_class,_level,_fmat,_string) \
-   {if ( (MPIU_DBG_##_class & MPIU_DBG_ActiveClasses) && \
+   {if ( (_class & MPIU_DBG_ActiveClasses) && \
           MPIU_DBG_##_level <= MPIU_DBG_MaxLevel ) {\
-     MPIU_DBG_Outevent( __FILE__, __LINE__, MPIU_DBG_##_class, 1, _fmat, _string ); }}
+     MPIU_DBG_Outevent( __FILE__, __LINE__, _class, 1, _fmat, _string ); }}
 #define MPIU_DBG_MSG_D(_class,_level,_fmat,_int) \
-   {if ( (MPIU_DBG_##_class & MPIU_DBG_ActiveClasses) && \
+   {if ( (_class & MPIU_DBG_ActiveClasses) && \
           MPIU_DBG_##_level <= MPIU_DBG_MaxLevel ) {\
-     MPIU_DBG_Outevent( __FILE__, __LINE__, MPIU_DBG_##_class, 2, _fmat, _int ); }}
+     MPIU_DBG_Outevent( __FILE__, __LINE__, _class, 2, _fmat, _int ); }}
 #define MPIU_DBG_MSG_P(_class,_level,_fmat,_pointer) \
-   {if ( (MPIU_DBG_##_class & MPIU_DBG_ActiveClasses) && \
+   {if ( (_class & MPIU_DBG_ActiveClasses) && \
           MPIU_DBG_##_level <= MPIU_DBG_MaxLevel ) {\
-     MPIU_DBG_Outevent( __FILE__, __LINE__, MPIU_DBG_##_class, 3, _fmat, _pointer ); }}
+     MPIU_DBG_Outevent( __FILE__, __LINE__, _class, 3, _fmat, _pointer ); }}
 
 #define MPIU_DBG_MAXLINE 256
 #define MPIU_DBG_FDEST _s,(size_t)MPIU_DBG_MAXLINE
@@ -54,21 +54,21 @@
 .ve  
   M*/
 #define MPIU_DBG_MSG_FMT(_class,_level,_fmatargs) \
-   {if ( (MPIU_DBG_##_class & MPIU_DBG_ActiveClasses) && \
+   {if ( (_class & MPIU_DBG_ActiveClasses) && \
           MPIU_DBG_##_level <= MPIU_DBG_MaxLevel ) {\
           char _s[MPIU_DBG_MAXLINE]; \
           MPL_snprintf _fmatargs ; \
-     MPIU_DBG_Outevent( __FILE__, __LINE__, MPIU_DBG_##_class, 0, "%s", _s ); }}
+     MPIU_DBG_Outevent( __FILE__, __LINE__, _class, 0, "%s", _s ); }}
 #define MPIU_DBG_STMT(_class,_level,_stmt) \
-   {if ( (MPIU_DBG_##_class & MPIU_DBG_ActiveClasses) && \
+   {if ( (_class & MPIU_DBG_ActiveClasses) && \
           MPIU_DBG_##_level <= MPIU_DBG_MaxLevel ) { _stmt; }}
 
 #define MPIU_DBG_OUT(_class,_msg) \
-    MPIU_DBG_Outevent( __FILE__, __LINE__, MPIU_DBG_##_class, 0, "%s", _msg )
+    MPIU_DBG_Outevent( __FILE__, __LINE__, _class, 0, "%s", _msg )
 #define MPIU_DBG_OUT_FMT(_class,_fmatargs) \
     {     char _s[MPIU_DBG_MAXLINE]; \
           MPL_snprintf _fmatargs ; \
-    MPIU_DBG_Outevent( __FILE__, __LINE__, MPIU_DBG_##_class, 0, "%s", _s );}
+    MPIU_DBG_Outevent( __FILE__, __LINE__, _class, 0, "%s", _s );}
 
 #else
 #define MPIU_DBG_SELECTED(_class,_level) 0
@@ -82,41 +82,32 @@
 #define MPIU_DBG_OUT_FMT(_class,_fmtargs)
 #endif
 
+typedef unsigned int MPIU_DBG_Class;
+
 /* Special constants */
 enum MPIU_DBG_LEVEL { MPIU_DBG_TERSE   = 0, 
 		      MPIU_DBG_TYPICAL = 50,
 		      MPIU_DBG_VERBOSE = 99 };
-/* Any change in MPIU_DBG_CLASS must be matched by changes in 
-   "classnames" in src/util/dbg/dbg_printf.c */
-enum MPIU_DBG_CLASS { MPIU_DBG_INIT          = 0x1,
-		      MPIU_DBG_PT2PT         = 0x2,
-		      MPIU_DBG_THREAD        = 0x4,
-		      MPIU_DBG_ROUTINE_ENTER = 0x8,
-		      MPIU_DBG_ROUTINE_EXIT  = 0x10,
-		      MPIU_DBG_DATATYPE      = 0x20,
-		      MPIU_DBG_HANDLE        = 0x40,
-		      MPIU_DBG_COMM          = 0x80,
-		      MPIU_DBG_BSEND         = 0x100,
-		      MPIU_DBG_OTHER         = 0x200,
-		      MPIU_DBG_CH3_CONNECT   = 0x400,
-		      MPIU_DBG_CH3_DISCONNECT= 0x800,
-		      MPIU_DBG_CH3_PROGRESS  = 0x1000,
-		      MPIU_DBG_CH3_CHANNEL   = 0x2000,
-		      MPIU_DBG_CH3_OTHER     = 0x4000,
-		      MPIU_DBG_CH3_MSG       = 0x8000,
-		      MPIU_DBG_CH3           = 0xfc00, /* alias for all CH3 */
-		      MPIU_DBG_NEM_SOCK_DET  = 0x10000,
-		      MPIU_DBG_VC            = 0x20000,
-		      MPIU_DBG_REFCOUNT      = 0x40000,
-		      MPIU_DBG_ROMIO         = 0x80000,
-		      MPIU_DBG_HCOLL         = 0x100000,
-		      MPIU_DBG_ASSERT        = 0x200000,
-		      MPIU_DBG_STRING        = 0x400000,
-		      MPIU_DBG_ERRHAND       = 0x800000,
-		      MPIU_DBG_ALL           = (~0) };   /* alias for all */
 
 extern int MPIU_DBG_ActiveClasses;
 extern int MPIU_DBG_MaxLevel;
+
+extern MPIU_DBG_Class MPIU_DBG_ROUTINE_ENTER;
+extern MPIU_DBG_Class MPIU_DBG_ROUTINE_EXIT;
+extern MPIU_DBG_Class MPIU_DBG_ROUTINE;
+extern MPIU_DBG_Class MPIU_DBG_ALL;
+
+MPIU_DBG_Class MPIU_DBG_Class_alloc(const char *ucname, const char *lcname);
+void MPIU_DBG_Class_register(MPIU_DBG_Class class, const char *ucname, const char *lcname);
+
+#define MPIU_DBG_CLASS_CLR(class)               \
+    do {                                        \
+        (class) = 0;                            \
+    } while (0)
+#define MPIU_DBG_CLASS_APPEND(out_class, in_class)      \
+    do {                                                \
+        (out_class) |= (in_class);                      \
+    } while (0)
 
 int MPIU_DBG_Outevent(const char *, int, int, int, const char *, ...) 
                                         ATTRIBUTE((format(printf,5,6)));

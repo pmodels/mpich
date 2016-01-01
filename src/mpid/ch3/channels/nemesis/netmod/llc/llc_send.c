@@ -177,13 +177,13 @@ int MPID_nem_llc_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_
             MPIDI_Process.my_pg_rank, vc->pg_rank, hdr, hdr_sz, data, data_sz);
 
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
-    MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "llc_iStartContigMsg");
+    MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "llc_iStartContigMsg");
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *) hdr);
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "vc.pg_rank = %d", vc->pg_rank);
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "my_pg_rank = %d", MPIDI_Process.my_pg_rank);
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "hdr_sz     = %d", (int) hdr_sz);
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "data_sz    = %d", (int) data_sz);
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "hdr type   = %d", ((MPIDI_CH3_Pkt_t *) hdr)->type);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "vc.pg_rank = %d", vc->pg_rank);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "my_pg_rank = %d", MPIDI_Process.my_pg_rank);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "hdr_sz     = %d", (int) hdr_sz);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "data_sz    = %d", (int) data_sz);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "hdr type   = %d", ((MPIDI_CH3_Pkt_t *) hdr)->type);
 
     /* create a request */
     sreq = MPID_Request_create();
@@ -202,12 +202,12 @@ int MPID_nem_llc_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_
     sreq->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) & sreq->dev.pending_pkt;
     sreq->dev.iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
     sreq->dev.iov_count = 1;
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "IOV_LEN    = %d", (int) sreq->dev.iov[0].MPL_IOV_LEN);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "IOV_LEN    = %d", (int) sreq->dev.iov[0].MPL_IOV_LEN);
     if (data_sz > 0) {
         sreq->dev.iov[1].MPL_IOV_BUF = data;
         sreq->dev.iov[1].MPL_IOV_LEN = data_sz;
         sreq->dev.iov_count = 2;
-        MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE,
                        "IOV_LEN    = %d", (int) sreq->dev.iov[0].MPL_IOV_LEN);
     }
 
@@ -227,17 +227,17 @@ int MPID_nem_llc_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_
             mpi_errno = MPI_ERR_OTHER;
             MPIR_ERR_POP(mpi_errno);
         }
-        MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE,
                        "IOV_LEN    = %d", (int) sreq->dev.iov[0].MPL_IOV_LEN);
         if (!MPIDI_nem_llc_Rqst_iov_update(sreq, ret)) {
             need_to_queue = 2;  /* YYY */
         }
-        MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE,
                        "IOV_LEN    = %d", (int) sreq->dev.iov[0].MPL_IOV_LEN);
     }
 
   queue_it:
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "need_to_que  %d", need_to_queue);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "need_to_que  %d", need_to_queue);
     if (need_to_queue > 0) {
         MPIDI_CH3I_Sendq_enqueue(&vc_llc->send_queue, sreq);
     }
@@ -271,17 +271,17 @@ int MPID_nem_llc_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, MP
             sreq, hdr, hdr_sz, data, data_sz);
 
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
-    MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "llc_iSendContig");
+    MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "llc_iSendContig");
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *) hdr);
     MPIU_DBG_PKT(vc, hdr, "isendcontig");
     {
         MPIDI_CH3_Pkt_t *pkt = (MPIDI_CH3_Pkt_t *) hdr;
 
-        MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "pkt->type  = %d", pkt->type);
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "pkt->type  = %d", pkt->type);
     }
 
     MPIU_Assert(sreq != NULL);
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "OnDataAvail= %p", sreq->dev.OnDataAvail);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "OnDataAvail= %p", sreq->dev.OnDataAvail);
     sreq->ch.vc = vc;
     sreq->dev.iov_offset = 0;
 
@@ -290,12 +290,12 @@ int MPID_nem_llc_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, MP
     sreq->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) & sreq->dev.pending_pkt;
     sreq->dev.iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
     sreq->dev.iov_count = 1;
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "IOV_LEN    = %d", (int) sreq->dev.iov[0].MPL_IOV_LEN);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "IOV_LEN    = %d", (int) sreq->dev.iov[0].MPL_IOV_LEN);
     if (data_sz > 0) {
         sreq->dev.iov[1].MPL_IOV_BUF = data;
         sreq->dev.iov[1].MPL_IOV_LEN = data_sz;
         sreq->dev.iov_count = 2;
-        MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE,
                        "IOV_LEN    = %d", (int) sreq->dev.iov[1].MPL_IOV_LEN);
     }
 
@@ -315,14 +315,14 @@ int MPID_nem_llc_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, MP
             mpi_errno = MPI_ERR_OTHER;
             MPIR_ERR_POP(mpi_errno);
         }
-        MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "WRITEV()   = %d", ret);
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "WRITEV()   = %d", ret);
         if (!MPIDI_nem_llc_Rqst_iov_update(sreq, ret)) {
             need_to_queue = 2;  /* YYY */
         }
     }
 
   queue_it:
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "need_to_que  %d", need_to_queue);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "need_to_que  %d", need_to_queue);
     if (need_to_queue > 0) {
         MPIDI_CH3I_Sendq_enqueue(&vc_llc->send_queue, sreq);
     }
@@ -344,7 +344,7 @@ int MPID_nem_llc_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_SENDNONCONTIG);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_SENDNONCONTIG);
-    MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "llc_SendNoncontig");
+    MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "llc_SendNoncontig");
 
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 
@@ -359,7 +359,7 @@ int MPID_nem_llc_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     sreq->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) & sreq->dev.pending_pkt;
     sreq->dev.iov[0].MPL_IOV_LEN = sizeof(MPIDI_CH3_Pkt_t);
     sreq->dev.iov_count = 1;
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "IOV_LEN = %d", (int) sreq->dev.iov[0].MPL_IOV_LEN);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "IOV_LEN = %d", (int) sreq->dev.iov[0].MPL_IOV_LEN);
 
     data_sz = sreq->dev.segment_size;
     if (data_sz > 0) {
@@ -371,7 +371,7 @@ int MPID_nem_llc_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
         sreq->dev.iov[1].MPL_IOV_BUF = REQ_FIELD(sreq, rma_buf);
         sreq->dev.iov[1].MPL_IOV_LEN = data_sz;
         sreq->dev.iov_count = 2;
-        MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "IOV_LEN = %d", (int) sreq->dev.iov[1].MPL_IOV_LEN);
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "IOV_LEN = %d", (int) sreq->dev.iov[1].MPL_IOV_LEN);
     }
 
     sreq->ch.vc = vc;
@@ -398,7 +398,7 @@ int MPID_nem_llc_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     }
 
   queue_it:
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "need_to_que %d", need_to_queue);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "need_to_que %d", need_to_queue);
     if (need_to_queue > 0) {
         MPIDI_CH3I_Sendq_enqueue(&vc_llc->send_queue, sreq);
     }
@@ -434,7 +434,7 @@ int MPID_nem_llc_send_queued(MPIDI_VC_t * vc, rque_t * send_queue)
         int niov;
 
         sreq = MPIDI_CH3I_Sendq_head(*send_queue);
-        MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "sreq %p", sreq);
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "sreq %p", sreq);
 
         if (mpi_errno == MPI_SUCCESS) {
             iovs = &sreq->dev.iov[sreq->dev.iov_offset];
@@ -450,12 +450,12 @@ int MPID_nem_llc_send_queued(MPIDI_VC_t * vc, rque_t * send_queue)
             MPIDI_CH3I_Sendq_dequeue(send_queue, &sreq);
             sreq->status.MPI_ERROR = mpi_errno;
 
-            MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "OnDataAvail = %p", sreq->dev.OnDataAvail);
+            MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "OnDataAvail = %p", sreq->dev.OnDataAvail);
             MPID_Request_complete(sreq);
             continue;
         }
         if (!MPIDI_nem_llc_Rqst_iov_update(sreq, ret)) {
-            MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "skip %p", sreq);
+            MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "skip %p", sreq);
             break;
         }
         MPIDI_CH3I_Sendq_dequeue(send_queue, &sreq);
@@ -483,16 +483,16 @@ int MPIDI_nem_llc_Rqst_iov_update(MPID_Request * mreq, MPIDI_msg_sz_t consume)
 
     MPIU_Assert(consume >= 0);
 
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "iov_update() : consume    %d", (int) consume);
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "iov_update() : iov_count  %d", mreq->dev.iov_count);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "iov_update() : consume    %d", (int) consume);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "iov_update() : iov_count  %d", mreq->dev.iov_count);
 
     nv = mreq->dev.iov_count;
     for (iv = mreq->dev.iov_offset; iv < nv; iv++) {
         MPL_IOV *iov = &mreq->dev.iov[iv];
 
-        MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "iov_update() : iov[iv]    %d", iv);
-        MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "iov_update() : consume b  %d", (int) consume);
-        MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "iov_update() : iov[iv]    %d", iv);
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "iov_update() : consume b  %d", (int) consume);
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE,
                        "iov_update() : iov_len b  %d", (int) iov->MPL_IOV_LEN);
         if (iov->MPL_IOV_LEN > consume) {
             iov->MPL_IOV_BUF = ((char *) iov->MPL_IOV_BUF) + consume;
@@ -504,13 +504,13 @@ int MPIDI_nem_llc_Rqst_iov_update(MPID_Request * mreq, MPIDI_msg_sz_t consume)
         consume -= iov->MPL_IOV_LEN;
         iov->MPL_IOV_LEN = 0;
     }
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "iov_update() : consume %d", (int) consume);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "iov_update() : consume %d", (int) consume);
 
     mreq->dev.iov_count = nv - iv;
     mreq->dev.iov_offset = iv;
 
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "iov_update() : iov_offset %ld", mreq->dev.iov_offset);
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "iov_update() = %d", ret);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "iov_update() : iov_offset %ld", mreq->dev.iov_offset);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "iov_update() = %d", ret);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_NEM_LLC_RQST_IOV_UPDATE);
     return ret;
@@ -527,7 +527,7 @@ ssize_t llc_writev(void *endpt, uint64_t raddr,
 
     dprintf("writev,raddr=%ld,niov=%d,sreq=%p", raddr, niov, cbarg);
 
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "llc_writev(%d)", (int) raddr);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "llc_writev(%d)", (int) raddr);
     {
         uint8_t *buff = 0;
 #ifdef	notdef_hsiz_hack
@@ -599,7 +599,7 @@ ssize_t llc_writev(void *endpt, uint64_t raddr,
         char *bp;
         size_t bz;
 
-        MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "llc_writev() : nv %d", nv);
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "llc_writev() : nv %d", nv);
         bp = (void *) lcmd->iov_local[0].addr;
         bz = lcmd->iov_local[0].length;
 
@@ -627,11 +627,11 @@ ssize_t llc_writev(void *endpt, uint64_t raddr,
             }
             bp += len;
         }
-        MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "llc_writev() : iv %d", iv);
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "llc_writev() : iv %d", iv);
         {
             void *bb = (void *) lcmd->iov_local[0].addr;
-            MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "wptr       = %d", (int) (bp - (char *) bb));
-            MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
+            MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "wptr       = %d", (int) (bp - (char *) bb));
+            MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE,
                            "blocklengt = %d", (int) lcmd->iov_local[0].length);
             MPIU_DBG_PKT(endpt, bb, "writev");
         }
@@ -666,7 +666,7 @@ ssize_t llc_writev(void *endpt, uint64_t raddr,
     }
 
   bad:
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "llc_writev() : nw %d", (int) nw);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "llc_writev() : nw %d", (int) nw);
     return nw;
 }
 
@@ -788,7 +788,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
 #endif
 #endif /* notdef_hsiz_hack */
                 {
-                    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "LLC_leng   = %d", (int) bsiz);
+                    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "LLC_leng   = %d", (int) bsiz);
                     MPIU_DBG_PKT(vp_vc, buff, "poll");
                 }
                 dprintf("llc_poll,EVENT_UNSOLICITED_ARRIVED,%d<-%d\n",

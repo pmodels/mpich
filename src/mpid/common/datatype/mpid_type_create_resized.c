@@ -90,7 +90,7 @@ int MPID_Type_create_resized(MPI_Datatype oldtype,
 
     *newtype_p = new_dtp->handle;
 
-    MPIU_DBG_MSG_P(DATATYPE,VERBOSE,"resized type %x created.", 
+    MPIU_DBG_MSG_P(MPIR_DBG_DATATYPE,VERBOSE,"resized type %x created.",
 		   new_dtp->handle);
 
     return MPI_SUCCESS;

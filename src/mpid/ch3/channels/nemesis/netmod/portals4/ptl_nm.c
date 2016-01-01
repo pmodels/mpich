@@ -241,7 +241,7 @@ static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, MPIDI_msg_
                                 vc_ptl->id, vc_ptl->ptc, match_bits, 0, sreq, NPTL_HEADER(0, remaining));
     MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s",
                          MPID_nem_ptl_strerror(ret));
-    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut(size=%lu id=(%#x,%#x) pt=%#x)",
+    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut(size=%lu id=(%#x,%#x) pt=%#x)",
                                             sendbuf_sz, vc_ptl->id.phys.nid,
                                             vc_ptl->id.phys.pid, vc_ptl->ptc));
 
@@ -315,7 +315,7 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
                                 vc_ptl->id, vc_ptl->ptc, match_bits, 0, sreq, NPTL_HEADER(0, remaining));
     MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s",
                          MPID_nem_ptl_strerror(ret));
-    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut(size=%lu id=(%#x,%#x) pt=%#x)",
+    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut(size=%lu id=(%#x,%#x) pt=%#x)",
                                             sendbuf_sz, vc_ptl->id.phys.nid,
                                             vc_ptl->id.phys.pid, vc_ptl->ptc));
 
@@ -427,7 +427,7 @@ static inline int on_data_avail(MPID_Request * req)
             MPIR_ERR_POP(mpi_errno);
         }
 
-        MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
+        MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
     }
     else {
         int complete;
@@ -521,7 +521,7 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
                                                 size, vc_ptl->id, vc_ptl->ptc, NPTL_MATCH(sender_req_id, GET_TAG, MPIDI_Process.my_pg_rank), target_offset, req);
                     MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s",
                                          MPID_nem_ptl_strerror(ret));
-                    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,
+                    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,
                                                             "PtlGet(size=%lu id=(%#x,%#x) pt=%#x tag=%d)", size,
                                                             vc_ptl->id.phys.nid,
                                                             vc_ptl->id.phys.pid, vc_ptl->ptc, sender_req_id));

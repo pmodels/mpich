@@ -291,7 +291,7 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
             else
                 pg_prev->next = pg->next;
 
-            MPIU_DBG_MSG_FMT(CH3_DISCONNECT, VERBOSE, (MPIU_DBG_FDEST, "destroying pg=%p pg->id=%s", pg, (char *)pg->id));
+            MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_DISCONNECT, VERBOSE, (MPIU_DBG_FDEST, "destroying pg=%p pg->id=%s", pg, (char *)pg->id));
 
             for (i = 0; i < pg->size; ++i) {
                 /* FIXME it would be good if we could make this assertion.
@@ -306,7 +306,7 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
                       just haven't hit it in the tests yet.  */
                 /*MPIU_Assert(MPIU_Object_get_ref(pg->vct[i]) == 0);*/
 
-                MPIU_DBG_MSG_FMT(CH3_DISCONNECT, VERBOSE, (MPIU_DBG_FDEST, "about to free pg->vct=%p which contains vc=%p", pg->vct, &pg->vct[i]));
+                MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_DISCONNECT, VERBOSE, (MPIU_DBG_FDEST, "about to free pg->vct=%p which contains vc=%p", pg->vct, &pg->vct[i]));
 
                 /* This used to be handled in MPIDI_VCRT_Release, but that was
                    not the right place to do this.  The VC should only be freed
@@ -1030,8 +1030,8 @@ int MPIDI_PrintConnStr( const char *file, int line,
 {
     int pg_size, i;
 
-    MPIU_DBG_Outevent( file, line, MPIU_DBG_CH3_CONNECT, 0, "%s", label );
-    MPIU_DBG_Outevent( file, line, MPIU_DBG_CH3_CONNECT, 0, "%s", str );
+    MPIU_DBG_Outevent( file, line, MPIDI_CH3_DBG_CONNECT, 0, "%s", label );
+    MPIU_DBG_Outevent( file, line, MPIDI_CH3_DBG_CONNECT, 0, "%s", str );
     
     /* Skip the pg id */
     while (*str) str++; str++;
@@ -1041,7 +1041,7 @@ int MPIDI_PrintConnStr( const char *file, int line,
     while (*str) str++; str++;
 
     for (i=0; i<pg_size; i++) {
-	MPIU_DBG_Outevent( file, line, MPIU_DBG_CH3_CONNECT, 0, "%s", str );
+	MPIU_DBG_Outevent( file, line, MPIDI_CH3_DBG_CONNECT, 0, "%s", str );
 	while (*str) str++;
 	str++;
     }
@@ -1171,7 +1171,7 @@ int MPIDI_PG_Close_VCs( void )
     while (pg) {
 	int i, inuse, n, i_start;
 
-	MPIU_DBG_MSG_S(CH3_DISCONNECT,VERBOSE,"Closing vcs for pg %s",
+	MPIU_DBG_MSG_S(MPIDI_CH3_DBG_DISCONNECT,VERBOSE,"Closing vcs for pg %s",
 		       (char *)pg->id );
 
         /* We want to reduce the chance of having all processes send
@@ -1212,7 +1212,7 @@ int MPIDI_PG_Close_VCs( void )
                 if (vc->state == MPIDI_VC_STATE_INACTIVE)
                     MPIDI_CHANGE_VC_STATE(vc, INACTIVE_CLOSED);
             } else {
-		MPIU_DBG_MSG_FMT(CH3_DISCONNECT,VERBOSE,(MPIU_DBG_FDEST,
+		MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_DISCONNECT,VERBOSE,(MPIU_DBG_FDEST,
 		     "vc=%p: not sending a close to %d, vc in state %s", vc,i,
 		     MPIDI_VC_GetStateString(vc->state)));
 	    }

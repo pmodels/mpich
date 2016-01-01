@@ -62,7 +62,7 @@ int MPIDI_CH3U_Handle_ordered_recv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_HANDLE_ORDERED_RECV_PKT);
 
-    MPIU_DBG_STMT(CH3_OTHER,VERBOSE,MPIDI_DBG_Print_packet(pkt));
+    MPIU_DBG_STMT(MPIDI_CH3_DBG_OTHER,VERBOSE,MPIDI_DBG_Print_packet(pkt));
 
     /* FIXME: We can turn this into something like
 
@@ -114,7 +114,7 @@ int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t 
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_RECEIVE_DATA_FOUND);
 
-    MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"posted request found");
+    MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"posted request found");
 	
     MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype, 
 			    dt_contig, userbuf_sz, dt_ptr, dt_true_lb);
@@ -123,7 +123,7 @@ int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t 
 	data_sz = rreq->dev.recv_data_sz;
     }
     else {
-	MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+	MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPIU_DBG_FDEST,
                "receive buffer too small; message truncated, msg_sz=" MPIDI_MSG_SZ_FMT ", userbuf_sz="
 					    MPIDI_MSG_SZ_FMT,
 				 rreq->dev.recv_data_sz, userbuf_sz));
@@ -146,7 +146,7 @@ int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t 
            now, otherwise build an iov and let the channel unpack */
         if (*buflen >= data_sz)
         {
-            MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"Copying contiguous data to user buffer");
+            MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"Copying contiguous data to user buffer");
             /* copy data out of the receive buffer */
             if (rreq->dev.drop_data == FALSE) {
                 MPIU_Memcpy((char*)(rreq->dev.user_buf) + dt_true_lb, buf, data_sz);
@@ -156,7 +156,7 @@ int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t 
         }
         else
         {
-            MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"IOV loaded for contiguous read");
+            MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"IOV loaded for contiguous read");
             
             rreq->dev.iov[0].MPL_IOV_BUF = 
                 (MPL_IOV_BUF_CAST)((char*)(rreq->dev.user_buf) + dt_true_lb);
@@ -187,7 +187,7 @@ int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t 
         if (data_sz == rreq->dev.recv_data_sz && *buflen >= data_sz)
         {
             MPIDI_msg_sz_t last;
-            MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"Copying noncontiguous data to user buffer");
+            MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"Copying noncontiguous data to user buffer");
             last = data_sz;
             MPID_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, 
 				&last, buf);
@@ -212,7 +212,7 @@ int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t 
         }
         else
         {   
-            MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"IOV loaded for non-contiguous read");
+            MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"IOV loaded for non-contiguous read");
 
             mpi_errno = MPIDI_CH3U_Request_load_recv_iov(rreq);
             if (mpi_errno != MPI_SUCCESS) {
@@ -246,7 +246,7 @@ int MPIDI_CH3U_Receive_data_unexpected(MPID_Request * rreq, char *buf, MPIDI_msg
        specialized buffer pool. */
     /* FIXME: to avoid memory exhaustion, integrate buffer pool management
        with flow control */
-    MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"unexpected request allocated");
+    MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"unexpected request allocated");
     
     rreq->dev.tmpbuf = MPIU_Malloc(rreq->dev.recv_data_sz);
     if (!rreq->dev.tmpbuf) {
@@ -305,7 +305,7 @@ int MPIDI_CH3U_Post_data_receive_found(MPID_Request * rreq)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_POST_DATA_RECEIVE_FOUND);
 
-    MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"posted request found");
+    MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"posted request found");
 	
     MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype, 
 			    dt_contig, userbuf_sz, dt_ptr, dt_true_lb);
@@ -314,7 +314,7 @@ int MPIDI_CH3U_Post_data_receive_found(MPID_Request * rreq)
 	data_sz = rreq->dev.recv_data_sz;
     }
     else {
-	MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+	MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPIU_DBG_FDEST,
                "receive buffer too small; message truncated, msg_sz=" MPIDI_MSG_SZ_FMT ", userbuf_sz="
 					    MPIDI_MSG_SZ_FMT,
 				 rreq->dev.recv_data_sz, userbuf_sz));
@@ -332,7 +332,7 @@ int MPIDI_CH3U_Post_data_receive_found(MPID_Request * rreq)
 	/* user buffer is contiguous and large enough to store the
 	   entire message.  However, we haven't yet *read* the data 
 	   (this code describes how to read the data into the destination) */
-	MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"IOV loaded for contiguous read");
+	MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"IOV loaded for contiguous read");
 	rreq->dev.iov[0].MPL_IOV_BUF = 
 	    (MPL_IOV_BUF_CAST)((char*)(rreq->dev.user_buf) + dt_true_lb);
 	rreq->dev.iov[0].MPL_IOV_LEN = data_sz;
@@ -345,7 +345,7 @@ int MPIDI_CH3U_Post_data_receive_found(MPID_Request * rreq)
     else {
 	/* user buffer is not contiguous or is too small to hold
 	   the entire message */
-	MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"IOV loaded for non-contiguous read");
+	MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"IOV loaded for non-contiguous read");
 	rreq->dev.segment_ptr = MPID_Segment_alloc( );
         MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
 	MPID_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, 
@@ -381,7 +381,7 @@ int MPIDI_CH3U_Post_data_receive_unexpected(MPID_Request * rreq)
        specialized buffer pool. */
     /* FIXME: to avoid memory exhaustion, integrate buffer pool management
        with flow control */
-    MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"unexpected request allocated");
+    MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"unexpected request allocated");
     
     rreq->dev.tmpbuf = MPIU_Malloc(rreq->dev.recv_data_sz);
     if (!rreq->dev.tmpbuf) {

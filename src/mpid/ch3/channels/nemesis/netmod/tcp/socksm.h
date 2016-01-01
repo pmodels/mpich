@@ -103,12 +103,12 @@ extern const char *const CONN_STATE_STR[];
 #define DBG_CHANGE_STATE(_sc, _cstate) do { \
     const char *state_str = NULL; \
     const char *old_state_str = NULL; \
-    if (MPIU_DBG_SELECTED(NEM_SOCK_DET,VERBOSE)) { \
+    if (MPIU_DBG_SELECTED(MPIDI_NEM_TCP_DBG_DET,VERBOSE)) { \
         if ((_sc)) { \
             old_state_str = CONN_STATE_TO_STRING((_sc)->state.cstate); \
             state_str     = CONN_STATE_TO_STRING(_cstate); \
         } \
-        MPIU_DBG_OUT_FMT(NEM_SOCK_DET, (MPIU_DBG_FDEST, "CHANGE_STATE(_sc=%p, _cstate=%d (%s)) - old_state=%s sc->vc=%p", _sc, _cstate, state_str, old_state_str, (_sc)->vc)); \
+        MPIU_DBG_OUT_FMT(MPIDI_NEM_TCP_DBG_DET, (MPIU_DBG_FDEST, "CHANGE_STATE(_sc=%p, _cstate=%d (%s)) - old_state=%s sc->vc=%p", _sc, _cstate, state_str, old_state_str, (_sc)->vc)); \
     } \
 } while (0)
 #else

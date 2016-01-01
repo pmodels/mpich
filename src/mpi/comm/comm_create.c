@@ -87,7 +87,7 @@ int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
             int g_lpid = group_ptr->lrank_to_lpid[i].lpid;
 
             /* This mapping is relative to comm world */
-            MPIU_DBG_MSG_FMT(COMM,VERBOSE,
+            MPIU_DBG_MSG_FMT(MPIR_DBG_COMM,VERBOSE,
                              (MPIU_DBG_FDEST,
                               "comm-create - mapping into world[%d] = %d",
                               i, g_lpid ));
@@ -100,7 +100,7 @@ int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
             }
         }
     }
-    MPIU_DBG_MSG_D(COMM,VERBOSE, "subsetOfWorld=%d", subsetOfWorld );
+    MPIU_DBG_MSG_D(MPIR_DBG_COMM,VERBOSE, "subsetOfWorld=%d", subsetOfWorld );
     if (subsetOfWorld) {
 #           ifdef HAVE_ERROR_CHECKING
         {

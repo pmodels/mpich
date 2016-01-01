@@ -176,7 +176,7 @@ int MPIR_Setup_intercomm_localcomm(MPID_Comm * intercomm_ptr)
         MPID_CONTEXT_SET_FIELD(IS_LOCALCOMM, intercomm_ptr->recvcontext_id, 1);
     localcomm_ptr->context_id = localcomm_ptr->recvcontext_id;
 
-    MPIU_DBG_MSG_FMT(COMM, TYPICAL,
+    MPIU_DBG_MSG_FMT(MPIR_DBG_COMM, TYPICAL,
                      (MPIU_DBG_FDEST,
                       "setup_intercomm_localcomm ic=%p ic->context_id=%d ic->recvcontext_id=%d lc->recvcontext_id=%d",
                       intercomm_ptr, intercomm_ptr->context_id, intercomm_ptr->recvcontext_id,
@@ -562,7 +562,7 @@ int MPIR_Comm_commit(MPID_Comm * comm)
 
             /* Non-fatal errors simply mean that this communicator will not have
              * any node awareness.  Node-aware collectives are an optimization. */
-            MPIU_DBG_MSG_P(COMM, VERBOSE, "MPIU_Find_local_and_external failed for comm_ptr=%p",
+            MPIU_DBG_MSG_P(MPIR_DBG_COMM, VERBOSE, "MPIU_Find_local_and_external failed for comm_ptr=%p",
                            comm);
             if (comm->intranode_table)
                 MPIU_Free(comm->intranode_table);
@@ -598,7 +598,7 @@ int MPIR_Comm_commit(MPID_Comm * comm)
             comm->node_comm->comm_kind = MPID_INTRACOMM;
             comm->node_comm->hierarchy_kind = MPID_HIERARCHY_NODE;
             comm->node_comm->local_comm = NULL;
-            MPIU_DBG_MSG_D(COMM, VERBOSE, "Create node_comm=%p\n", comm->node_comm);
+            MPIU_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Create node_comm=%p\n", comm->node_comm);
 
             comm->node_comm->local_size = num_local;
             comm->node_comm->remote_size = num_local;

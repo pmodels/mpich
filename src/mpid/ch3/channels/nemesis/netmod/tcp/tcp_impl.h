@@ -21,6 +21,8 @@ extern struct pollfd *MPID_nem_tcp_plfd_tbl;
 extern sockconn_t MPID_nem_tcp_g_lstn_sc;
 extern struct pollfd MPID_nem_tcp_g_lstn_plfd;
 
+extern MPIU_DBG_Class MPIDI_NEM_TCP_DBG_DET;
+
 typedef enum{MPID_NEM_TCP_VC_STATE_DISCONNECTED,
              MPID_NEM_TCP_VC_STATE_CONNECTED,
              MPID_NEM_TCP_VC_STATE_ERROR

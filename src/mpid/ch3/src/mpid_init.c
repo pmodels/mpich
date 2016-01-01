@@ -43,6 +43,16 @@ MPIDI_CH3U_Win_fns_t MPIDI_CH3U_Win_fns = { NULL };
 MPIDI_CH3U_Win_hooks_t MPIDI_CH3U_Win_hooks = { NULL };
 MPIDI_CH3U_Win_pkt_ordering_t MPIDI_CH3U_Win_pkt_orderings = { 0 };
 
+#if defined(USE_DBG_LOGGING)
+MPIU_DBG_Class MPIDI_CH3_DBG_CONNECT;
+MPIU_DBG_Class MPIDI_CH3_DBG_DISCONNECT;
+MPIU_DBG_Class MPIDI_CH3_DBG_PROGRESS;
+MPIU_DBG_Class MPIDI_CH3_DBG_CHANNEL;
+MPIU_DBG_Class MPIDI_CH3_DBG_OTHER;
+MPIU_DBG_Class MPIDI_CH3_DBG_MSG;
+MPIU_DBG_Class MPIDI_CH3_DBG_VC;
+MPIU_DBG_Class MPIDI_CH3_DBG_REFCOUNT;
+#endif /* USE_DBG_LOGGING */
 
 #undef FUNCNAME
 #define FUNCNAME finalize_failed_procs_group
@@ -179,6 +189,17 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     MPIDI_CH3_Win_fns_init(&MPIDI_CH3U_Win_fns);
     MPIDI_CH3_Win_hooks_init(&MPIDI_CH3U_Win_hooks);
 
+#ifdef USE_DBG_LOGGING
+    MPIDI_CH3_DBG_CONNECT = MPIU_DBG_Class_alloc("CH3_CONNECT", "ch3_connect");;
+    MPIDI_CH3_DBG_DISCONNECT = MPIU_DBG_Class_alloc("CH3_DISCONNECT", "ch3_disconnect");
+    MPIDI_CH3_DBG_PROGRESS = MPIU_DBG_Class_alloc("CH3_PROGRESS", "ch3_progress");
+    MPIDI_CH3_DBG_CHANNEL = MPIU_DBG_Class_alloc("CH3_CHANNEL", "ch3_channel");
+    MPIDI_CH3_DBG_OTHER = MPIU_DBG_Class_alloc("CH3_OTHER", "ch3_other");
+    MPIDI_CH3_DBG_MSG = MPIU_DBG_Class_alloc("CH3_MSG", "ch3_msg");
+    MPIDI_CH3_DBG_VC = MPIU_DBG_Class_alloc("VC", "vc");
+    MPIDI_CH3_DBG_REFCOUNT = MPIU_DBG_Class_alloc("REFCOUNT", "refcount");
+#endif /* USE_DBG_LOGGING */
+
     /*
      * Let the channel perform any necessary initialization
      * The channel init should assume that PMI_Init has been called and that
@@ -294,7 +315,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 	    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, 
 				"**ch3|get_parent_port");
 	}
-	MPIU_DBG_MSG_S(CH3_CONNECT,VERBOSE,"Parent port is %s", parent_port);
+	MPIU_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT,VERBOSE,"Parent port is %s", parent_port);
 	    
 	mpi_errno = MPID_Comm_connect(parent_port, NULL, 0, 
 				      MPIR_Process.comm_world, &comm);

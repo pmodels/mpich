@@ -55,7 +55,7 @@ int MPID_Type_commit(MPI_Datatype *datatype_p)
 			     &datatype_ptr->hetero_dloop_depth,
 			     MPID_DATALOOP_HETEROGENEOUS);
 
-	MPIU_DBG_MSG_D(DATATYPE,TERSE,"# contig blocks = %d\n",
+	MPIU_DBG_MSG_D(MPIR_DBG_DATATYPE,TERSE,"# contig blocks = %d\n",
                        (int) datatype_ptr->max_contig_blocks);
 
 #if 0

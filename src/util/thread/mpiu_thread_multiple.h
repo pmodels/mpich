@@ -17,7 +17,7 @@
     do {                                                                \
         int err_;                                                       \
         MPIU_THREAD_CHECK_BEGIN;                                        \
-        MPIU_DBG_MSG_S(THREAD, TYPICAL, "locking %s", lockname);        \
+        MPIU_DBG_MSG_S(MPIR_DBG_THREAD, TYPICAL, "locking %s", lockname);        \
         MPIU_Thread_mutex_lock(&mutex, &err_);                          \
         MPIU_THREAD_CHECK_END;                                          \
     } while (0)
@@ -26,7 +26,7 @@
     do {                                                                \
         int err_;                                                       \
         MPIU_THREAD_CHECK_BEGIN;                                        \
-        MPIU_DBG_MSG_S(THREAD, TYPICAL, "unlocking %s", lockname);      \
+        MPIU_DBG_MSG_S(MPIR_DBG_THREAD, TYPICAL, "unlocking %s", lockname);      \
         MPIU_Thread_mutex_unlock(&mutex, &err_);                        \
         MPIU_THREAD_CHECK_END;                                          \
     } while (0)
@@ -34,7 +34,7 @@
 #define MPIUI_THREAD_CS_YIELD_NONRECURSIVE(lockname, mutex)             \
     do {                                                                \
         MPIU_THREAD_CHECK_BEGIN;                                        \
-        MPIU_DBG_MSG_S(THREAD, TYPICAL, "yielding %s", lockname);       \
+        MPIU_DBG_MSG_S(MPIR_DBG_THREAD, TYPICAL, "yielding %s", lockname);       \
         MPIU_Thread_yield(&mutex);                                      \
         MPIU_THREAD_CHECK_END;                                          \
     } while (0)
@@ -51,7 +51,7 @@
                                                                         \
         MPIU_THREAD_CHECK_BEGIN;                                        \
         depth_ = MPIU_THREADPRIV_FIELD(lock_depth);                     \
-        MPIU_DBG_MSG_S(THREAD, TYPICAL, "recursive locking %s", lockname); \
+        MPIU_DBG_MSG_S(MPIR_DBG_THREAD, TYPICAL, "recursive locking %s", lockname); \
         if (depth_ == 0) {                                              \
             MPIUI_THREAD_CS_ENTER_NONRECURSIVE(lockname, mutex);        \
         }                                                               \
@@ -67,7 +67,7 @@
                                                                         \
         MPIU_THREAD_CHECK_BEGIN;                                        \
         depth_ = MPIU_THREADPRIV_FIELD(lock_depth);                     \
-        MPIU_DBG_MSG_S(THREAD, TYPICAL, "recursive unlocking %s", lockname); \
+        MPIU_DBG_MSG_S(MPIR_DBG_THREAD, TYPICAL, "recursive unlocking %s", lockname); \
         if (depth_ == 1) {                                              \
             MPIUI_THREAD_CS_EXIT_NONRECURSIVE(lockname, mutex);         \
         }                                                               \

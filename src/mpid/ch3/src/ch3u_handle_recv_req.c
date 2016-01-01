@@ -677,7 +677,7 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
     MPIDI_CH3U_SRBuf_alloc(rreq, MPIDI_CH3U_SRBuf_size);
     /* --BEGIN ERROR HANDLING-- */
     if (rreq->dev.tmpbuf_sz == 0) {
-        MPIU_DBG_MSG(CH3_CHANNEL, TYPICAL, "SRBuf allocation failure");
+        MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, TYPICAL, "SRBuf allocation failure");
         mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
                                          FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem",
                                          "**nomem %d", MPIDI_CH3U_SRBuf_size);
@@ -807,7 +807,7 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
         MPIDI_CH3U_SRBuf_alloc(rreq, MPIDI_CH3U_SRBuf_size);
         /* --BEGIN ERROR HANDLING-- */
         if (rreq->dev.tmpbuf_sz == 0) {
-            MPIU_DBG_MSG(CH3_CHANNEL, TYPICAL, "SRBuf allocation failure");
+            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, TYPICAL, "SRBuf allocation failure");
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
                                              FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem",
                                              "**nomem %d", MPIDI_CH3U_SRBuf_size);

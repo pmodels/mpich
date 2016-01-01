@@ -141,7 +141,7 @@ typedef union MPIDI_CH3_nem_pkt
         MPID_Request *_rts_req;                                                                         \
         MPL_IOV _iov[2];                                                                               \
                                                                                                         \
-        MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"sending rndv RTS packet");                                      \
+        MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending rndv RTS packet");                                      \
         (rts_pkt)->cookie_len = (s_cookie_len);                                                         \
                                                                                                         \
         _iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)(rts_pkt);                                            \
@@ -185,7 +185,7 @@ typedef union MPIDI_CH3_nem_pkt
         MPID_Request *_cts_req;                                                                         \
         MPL_IOV _iov[2];                                                                               \
                                                                                                         \
-        MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"sending rndv CTS packet");                                      \
+        MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending rndv CTS packet");                                      \
         MPIDI_Pkt_init(_cts_pkt, MPIDI_NEM_PKT_LMT_CTS);                                                \
         _cts_pkt->sender_req_id = (rreq)->ch.lmt_req_id;                                                \
         _cts_pkt->receiver_req_id = (rreq)->handle;                                                     \
@@ -218,7 +218,7 @@ static inline int MPID_nem_lmt_send_COOKIE(MPIDI_VC_t *vc, MPID_Request *req,
     MPID_Request *cookie_req;
     MPL_IOV iov[2];
 
-    MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"sending rndv COOKIE packet");
+    MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending rndv COOKIE packet");
     MPIDI_Pkt_init(cookie_pkt, MPIDI_NEM_PKT_LMT_COOKIE);
     cookie_pkt->cookie_len = (cookie_len);
 
@@ -264,7 +264,7 @@ fn_fail:
         MPID_PKT_DECL_CAST(_upkt, MPID_nem_pkt_lmt_done_t, _done_pkt);                                          \
         MPID_Request *_done_req;                                                                                \
                                                                                                                 \
-        MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"sending rndv DONE packet");                                             \
+        MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending rndv DONE packet");                                             \
         MPIDI_Pkt_init(_done_pkt, MPIDI_NEM_PKT_LMT_DONE);                                                      \
         _done_pkt->req_id = (rreq)->ch.lmt_req_id;                                                              \
                                                                                                                 \

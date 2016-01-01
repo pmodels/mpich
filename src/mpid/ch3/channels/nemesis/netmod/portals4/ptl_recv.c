@@ -108,7 +108,7 @@ static int handler_recv_dequeue_complete(const ptl_event_t *e)
 
     if (e->type == PTL_EVENT_PUT_OVERFLOW) {
         /* unpack the data from unexpected buffer */
-        MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "is_contig = %d", is_contig);
+        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "is_contig = %d", is_contig);
 
         if (is_contig) {
             MPIU_Memcpy((char *)rreq->dev.user_buf + dt_true_lb, e->start, e->mlength);
@@ -197,7 +197,7 @@ static void big_get(void *buf, ptl_size_t left_to_get, MPIDI_VC_t *vc, ptl_match
 
         ret = MPID_nem_ptl_rptl_get(MPIDI_nem_ptl_global_md, start, get_sz, vc_ptl->id, vc_ptl->ptg, match_bits, 0, rreq);
         DBG_MSG_GET("global", get_sz, vc->pg_rank, match_bits);
-        MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "   buf=%p", (char *)start);
+        MPIU_DBG_MSG_P(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "   buf=%p", (char *)start);
         MPIU_Assert(ret == 0);
 
         /* account for what has been sent */
@@ -461,7 +461,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
         me.match_id = vc_ptl->id;
     }
 
-    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "tag=%#x ctx=%#x rank=%#x", rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id, rreq->dev.match.parts.rank));
+    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "tag=%#x ctx=%#x rank=%#x", rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id, rreq->dev.match.parts.rank));
     me.match_bits = NPTL_MATCH(rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id,
                                rreq->dev.match.parts.rank);
     if (rreq->dev.match.parts.tag == MPI_ANY_TAG)
@@ -472,13 +472,13 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
     me.min_free = 0;
 
     MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
-    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "count="MPI_AINT_FMT_DEC_SPEC" datatype=%#x contig=%d data_sz=%lu", rreq->dev.user_count, rreq->dev.datatype, dt_contig, data_sz));
+    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "count="MPI_AINT_FMT_DEC_SPEC" datatype=%#x contig=%d data_sz=%lu", rreq->dev.user_count, rreq->dev.datatype, dt_contig, data_sz));
 
     if (data_sz <= PTL_LARGE_THRESHOLD) {
         if (dt_contig) {
             /* small contig message */
             void *start = (char *)rreq->dev.user_buf + dt_true_lb;
-            MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Small contig message");
+            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Small contig message");
             if (start == NULL)
                 me.start = &dummy;
             else
@@ -487,7 +487,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
             REQ_PTL(rreq)->event_handler = handler_recv_dequeue_complete;
         } else {
             /* small noncontig */
-            MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Small noncontig message");
+            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Small noncontig message");
             rreq->dev.segment_ptr = MPID_Segment_alloc();
             MPIR_ERR_CHKANDJUMP1(rreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
             MPID_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype, rreq->dev.segment_ptr, 0);
@@ -500,7 +500,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
 
             if (last == rreq->dev.segment_size) {
                 /* entire message fits in IOV */
-                MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "    entire message fits in IOV");
+                MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    entire message fits in IOV");
                 me.start = rreq->dev.iov;
                 me.length = rreq->dev.iov_count;
                 me.options |= PTL_IOVEC;
@@ -508,7 +508,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
             } else {
                 /* IOV is not long enough to describe entire message: recv into
                    buffer and unpack later */
-                MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "    IOV too long: using bounce buffer");
+                MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    IOV too long: using bounce buffer");
                 MPIU_CHKPMEM_MALLOC(REQ_PTL(rreq)->chunk_buffer[0], void *, data_sz, mpi_errno, "chunk_buffer");
                 me.start = REQ_PTL(rreq)->chunk_buffer[0];
                 me.length = data_sz;
@@ -519,13 +519,13 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
         /* Large message: Create an ME for the first chunk of data, then do a GET for the rest */
         if (dt_contig) {
             /* large contig message */
-            MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Large contig message");
+            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Large contig message");
             me.start = (char *)rreq->dev.user_buf + dt_true_lb;
             me.length = PTL_LARGE_THRESHOLD;
             REQ_PTL(rreq)->event_handler = handler_recv_dequeue_large;
         } else {
             /* large noncontig */
-            MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Large noncontig message");
+            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Large noncontig message");
             rreq->dev.segment_ptr = MPID_Segment_alloc();
             MPIR_ERR_CHKANDJUMP1(rreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
             MPID_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype, rreq->dev.segment_ptr, 0);
@@ -538,7 +538,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
 
             if (last == PTL_LARGE_THRESHOLD) {
                 /* first chunk fits in IOV */
-                MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "    first chunk fits in IOV");
+                MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    first chunk fits in IOV");
                 rreq->dev.segment_first = last;
                 me.start = rreq->dev.iov;
                 me.length = rreq->dev.iov_count;
@@ -547,7 +547,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
             } else {
                 /* IOV is not long enough to describe the first chunk: recv into
                    buffer and unpack later */
-                MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "    IOV too long: using bounce buffer for first chunk");
+                MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    IOV too long: using bounce buffer for first chunk");
                 MPIU_CHKPMEM_MALLOC(REQ_PTL(rreq)->chunk_buffer[0], void *, PTL_LARGE_THRESHOLD, mpi_errno, "chunk_buffer");
                 me.start = REQ_PTL(rreq)->chunk_buffer[0];
                 me.length = PTL_LARGE_THRESHOLD;
@@ -560,8 +560,8 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
     ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt, &me, PTL_PRIORITY_LIST, rreq, &REQ_PTL(rreq)->put_me);
     MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
     DBG_MSG_MEAPPEND("REG", vc ? vc->pg_rank : MPI_ANY_SOURCE, me, rreq);
-    MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "    buf=%p", me.start);
-    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "MPIDI_nem_ptl_pt = %d", MPIDI_nem_ptl_pt);
+    MPIU_DBG_MSG_P(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    buf=%p", me.start);
+    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "MPIDI_nem_ptl_pt = %d", MPIDI_nem_ptl_pt);
 
  fn_exit:
     MPIU_CHKPMEM_COMMIT();

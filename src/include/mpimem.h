@@ -29,6 +29,12 @@ extern "C" {
 #define ATTRIBUTE(a)
 #endif
 
+#include "mpidbg.h"
+
+#if defined (USE_DBG_LOGGING)
+extern MPIU_DBG_Class MPIR_DBG_STRING;
+#endif /* USE_DBG_LOGGING */
+
 /* ------------------------------------------------------------------------- */
 /* mpimem.h */
 /* ------------------------------------------------------------------------- */

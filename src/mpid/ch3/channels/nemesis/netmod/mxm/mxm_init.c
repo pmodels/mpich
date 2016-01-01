@@ -277,7 +277,7 @@ int MPID_nem_mxm_vc_init(MPIDI_VC_t * vc)
 
     /* local connection is used for any source communication */
     MPIU_Assert(MPID_nem_mem_region.rank != vc->lpid);
-    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE,
+    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE,
                      (MPIU_DBG_FDEST,
                       "[%i]=== connecting  to  %i  \n", MPID_nem_mem_region.rank, vc->lpid));
     {
@@ -410,7 +410,7 @@ static int _mxm_conf(void)
 
     cur_ver = mxm_get_version();
     if (cur_ver != MXM_API) {
-        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE,
+        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE,
                          (MPIU_DBG_FDEST,
                           "WARNING: MPICH was compiled with MXM version %d.%d but version %ld.%ld detected.",
                           MXM_VERNO_MAJOR,
@@ -436,7 +436,7 @@ static int _mxm_conf(void)
         (_mxm_obj.conf.bulk_connect || _mxm_obj.conf.bulk_disconnect)) {
         _mxm_obj.conf.bulk_connect = 0;
         _mxm_obj.conf.bulk_disconnect = 0;
-        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE,
+        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE,
                          (MPIU_DBG_FDEST,
                           "WARNING: MPICH runs with %s version of MXM that is less than 3.2, "
                           "so bulk connect/disconnect cannot work properly and will be turn off.",

@@ -47,13 +47,13 @@ int MPIDI_CH3U_Handle_unordered_recv_pkt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t * pkt,
 	    MPIDI_CH3_Pkt_send_container_t * pc_cur;
 	    MPIDI_CH3_Pkt_send_container_t * pc_last;
 	    
-	    MPIU_DBG_MSG(CH3_OTHER,VERBOSE,
+	    MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,
 			 "received (potentially) out-of-order send pkt");
-	    MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+	    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPIU_DBG_FDEST,
 	          "rank=%d, tag=%d, context=%d seqnum=%d",
 		  send_pkt->match.rank, send_pkt->match.tag, 
 		  send_pkt->match.context_id, send_pkt->seqnum));
-	    MPIU_DBG_MSG_FMAT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+	    MPIU_DBG_MSG_FMAT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPIU_DBG_FDEST,
               "vc - seqnum_send=%d seqnum_recv=%d reorder_msg_queue=0x%08lx",
 	      vc->seqnum_send, vc->seqnum_recv, 
 	      (unsigned long) vc->msg_reorder_queue));

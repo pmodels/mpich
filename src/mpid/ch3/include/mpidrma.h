@@ -130,7 +130,7 @@ static inline int MPIDI_CH3I_Send_lock_ack_pkt(MPIDI_VC_t * vc, MPID_Win * win_p
     lock_ack_pkt->target_rank = win_ptr->comm_ptr->rank;
     lock_ack_pkt->flags = flags;
 
-    MPIU_DBG_MSG_FMT(CH3_OTHER, VERBOSE,
+    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, VERBOSE,
                      (MPIU_DBG_FDEST, "sending lock ack pkt on vc=%p, source_win_handle=%#08x",
                       vc, lock_ack_pkt->source_win_handle));
 
@@ -177,7 +177,7 @@ static inline int MPIDI_CH3I_Send_lock_op_ack_pkt(MPIDI_VC_t * vc, MPID_Win * wi
     lock_op_ack_pkt->target_rank = win_ptr->comm_ptr->rank;
     lock_op_ack_pkt->flags = flags;
 
-    MPIU_DBG_MSG_FMT(CH3_OTHER, VERBOSE,
+    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, VERBOSE,
                      (MPIU_DBG_FDEST, "sending lock op ack pkt on vc=%p, source_win_handle=%#08x",
                       vc, lock_op_ack_pkt->source_win_handle));
 

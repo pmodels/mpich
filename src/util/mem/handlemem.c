@@ -382,7 +382,7 @@ void *MPIU_Handle_obj_alloc_unsafe(MPIU_Object_alloc_t *objmem)
          * annotations instead. */
         MPL_VG_ANNOTATE_NEW_MEMORY(ptr, objmem->size);
 
-        MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,
+        MPIU_DBG_MSG_FMT(MPIR_DBG_HANDLE,TYPICAL,(MPIU_DBG_FDEST,
                                          "Allocating object ptr %p (handle val 0x%08x)",
                                          ptr, ptr->handle));
     }
@@ -407,7 +407,7 @@ void MPIU_Handle_obj_free( MPIU_Object_alloc_t *objmem, void *object )
 
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
 
-    MPIU_DBG_MSG_FMT(HANDLE,TYPICAL,(MPIU_DBG_FDEST,
+    MPIU_DBG_MSG_FMT(MPIR_DBG_HANDLE,TYPICAL,(MPIU_DBG_FDEST,
                                      "Freeing object ptr %p (0x%08x kind=%s) refcount=%d",
                                      (obj),
                                      (obj)->handle,

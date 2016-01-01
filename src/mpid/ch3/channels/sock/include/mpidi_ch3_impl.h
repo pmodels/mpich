@@ -20,7 +20,7 @@
 
 #define MPIDI_CH3I_SendQ_enqueue(vcch, req)				\
 {									\
-    MPIU_DBG_MSG(CH3_MSG,TYPICAL,"Enqueuing this request");\
+    MPIU_DBG_MSG(MPIDI_CH3_DBG_MSG,TYPICAL,"Enqueuing this request");\
     MPIR_Request_add_ref(req);                                          \
     req->dev.next = NULL;						\
     if (vcch->sendq_tail != NULL)					\
@@ -37,7 +37,7 @@
     /* MT - not thread safe! */
 #define MPIDI_CH3I_SendQ_enqueue_head(vcch, req)			\
 {									\
-    MPIU_DBG_MSG(CH3_MSG,TYPICAL,"Enqueuing this request at head");\
+    MPIU_DBG_MSG(MPIDI_CH3_DBG_MSG,TYPICAL,"Enqueuing this request at head");\
     MPIR_Request_add_ref(req);                                          \
     req->dev.next = vcch->sendq_head;					\
     if (vcch->sendq_tail == NULL)					\
@@ -51,7 +51,7 @@
 #define MPIDI_CH3I_SendQ_dequeue(vcch)					\
 {									\
     MPID_Request *req_ = vcch->sendq_head;                              \
-    MPIU_DBG_MSG(CH3_MSG,TYPICAL,"Dequeuing this request");\
+    MPIU_DBG_MSG(MPIDI_CH3_DBG_MSG,TYPICAL,"Dequeuing this request");\
     vcch->sendq_head = vcch->sendq_head->dev.next;			\
     if (vcch->sendq_head == NULL)					\
     {									\

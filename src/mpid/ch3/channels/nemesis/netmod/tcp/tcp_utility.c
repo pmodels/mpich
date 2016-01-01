@@ -41,7 +41,7 @@ int MPID_nem_tcp_get_vc_from_conninfo (char *pg_id, int pg_rank, struct MPIDI_VC
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_GET_VC_FROM_CONNINFO);
 
-    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "pg_id=%s pg_rank=%d", pg_id, pg_rank));
+    MPIU_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE, (MPIU_DBG_FDEST, "pg_id=%s pg_rank=%d", pg_id, pg_rank));
     
     mpi_errno = MPIDI_PG_Find (pg_id, &pg);
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
@@ -148,7 +148,7 @@ MPID_nem_tcp_check_sock_status(const struct pollfd *const plfd)
     if (plfd->revents & POLLERR) 
     {
         rc = MPID_NEM_TCP_SOCK_ERROR_EOF;
-        MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "POLLERR on socket"));
+        MPIU_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE, (MPIU_DBG_FDEST, "POLLERR on socket"));
         goto fn_exit;
     }
     if (plfd->revents & POLLIN || plfd->revents & POLLOUT) 
@@ -160,7 +160,7 @@ MPID_nem_tcp_check_sock_status(const struct pollfd *const plfd)
         if (getsockopt(plfd->fd, SOL_SOCKET, SO_ERROR, &error, &n) < 0 || error != 0) 
         {
             rc = MPID_NEM_TCP_SOCK_ERROR_EOF; /*  (N1) */
-            MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "getsockopt failure. error=%d:%s", error, MPIU_Strerror(error)));
+            MPIU_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE, (MPIU_DBG_FDEST, "getsockopt failure. error=%d:%s", error, MPIU_Strerror(error)));
             goto fn_exit;
         }
         rc = MPID_NEM_TCP_SOCK_CONNECTED;
@@ -186,7 +186,7 @@ int MPID_nem_tcp_is_sock_connected(int fd)
     n = sizeof(error);
     if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &n) < 0 || error != 0) 
     {
-        MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "getsockopt failure. error=%d:%s", error, MPIU_Strerror(error)));
+        MPIU_DBG_MSG_FMT(MPIDI_NEM_TCP_DBG_DET, VERBOSE, (MPIU_DBG_FDEST, "getsockopt failure. error=%d:%s", error, MPIU_Strerror(error)));
         rc = FALSE; /*  error */
         goto fn_exit;
     }

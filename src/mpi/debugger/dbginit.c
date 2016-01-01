@@ -293,7 +293,7 @@ void MPIR_WaitForDebugger( void )
  */
 void * MPIR_Breakpoint( void )
 {
-    MPIU_DBG_MSG(OTHER,VERBOSE,"In MPIR_Breakpoint");
+    MPIU_DBG_MSG(MPIR_DBG_OTHER,VERBOSE,"In MPIR_Breakpoint");
     return 0;
 }
 #endif
@@ -452,9 +452,9 @@ MPIR_Comm_list MPIR_All_communicators = { 0, 0 };
 
 void MPIR_CommL_remember( MPID_Comm *comm_ptr )
 {   
-    MPIU_DBG_MSG_P(COMM,VERBOSE,
+    MPIU_DBG_MSG_P(MPIR_DBG_COMM,VERBOSE,
 		   "Adding communicator %p to remember list",comm_ptr);
-    MPIU_DBG_MSG_P(COMM,VERBOSE,
+    MPIU_DBG_MSG_P(MPIR_DBG_COMM,VERBOSE,
 		   "Remember list structure address is %p",&MPIR_All_communicators);
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
     if (comm_ptr == MPIR_All_communicators.head) {
@@ -464,7 +464,7 @@ void MPIR_CommL_remember( MPID_Comm *comm_ptr )
     comm_ptr->comm_next = MPIR_All_communicators.head;
     MPIR_All_communicators.head = comm_ptr;
     MPIR_All_communicators.sequence_number++;
-    MPIU_DBG_MSG_P(COMM,VERBOSE,
+    MPIU_DBG_MSG_P(MPIR_DBG_COMM,VERBOSE,
 		   "master head is %p", MPIR_All_communicators.head );
 
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
@@ -474,7 +474,7 @@ void MPIR_CommL_forget( MPID_Comm *comm_ptr )
 {
     MPID_Comm *p, *prev;
 
-    MPIU_DBG_MSG_P(COMM,VERBOSE,
+    MPIU_DBG_MSG_P(MPIR_DBG_COMM,VERBOSE,
 		   "Forgetting communicator %p from remember list",comm_ptr);
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
     p = MPIR_All_communicators.head;
