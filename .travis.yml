@@ -6,13 +6,13 @@ os:
 compiler:
   - clang
   - gcc
-addons:
-  apt:
-    sources:
-    - ubuntu-toolchain-r-test
-    packages:
-    - gcc-4.8
-    - g++-4.8
+#addons:
+#  apt:
+#    sources:
+#    - ubuntu-toolchain-r-test
+#    packages:
+#    - gcc-4.8
+#    - g++-4.8
 before_install:
   - export TRAVIS_ROOT=$HOME/travis
   - mkdir $TRAVIS_ROOT
@@ -24,14 +24,14 @@ before_install:
   - autoconf --version
   - ./autogen.sh
 install:
-  - ./configure --prefix=$TRAVIS_ROOT --disable-fortran --disable-cxx --enable-strict
+  - ./configure --prefix=$TRAVIS_ROOT --disable-fortran --disable-cxx #--enable-strict
   - make -j2
   - make install
-  - make check # trivial tests
+  - make check
 before_script:
-  - echo "TODO: create the MPICH test suite tarball"
+  -
 script:
-  - echo "TODO: run MPICH test suite"
+  - cd test/mpi && make testing
 after_failure:
   - echo "Sad Panda"
 notifications:
