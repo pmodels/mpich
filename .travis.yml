@@ -50,7 +50,9 @@ before_script:
   - make check
 script:
   - cd test/mpi
-  - echo "!util:all\n$MPICH_TESTS" > testlist
+  - echo '!util:all' > testlist
+  - echo "${MPICH_TESTS}" >> testlist
+  - cat testlist
   - ./runtests -tests=testlist -srcdir=. \
                -np=2 -maxnp=2 -ppn=2 \
                -verbose -showprogress \
