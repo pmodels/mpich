@@ -24,32 +24,6 @@
  */
 
 /* --BEGIN DEBUG-- */
-#undef MPIDI_dbg_printf
-void MPIDI_dbg_printf(int level, char *func, char *fmt, ...)
-{
-    /* FIXME: This "unreferenced_arg" is an example of a problem with the
-     * API (unneeded level argument) or the code (failure to check the
-     * level argument).  Inserting these "unreference_arg" macros erroneously
-     * suggests that the code is correct with this ununsed argument, and thus
-     * commits the grave harm of obscuring a real problem */
-    MPIU_UNREFERENCED_ARG(level);
-    {
-        va_list list;
-
-        if (MPIR_Process.comm_world) {
-            MPIU_dbglog_printf("[%d] %s(): ", MPIR_Process.comm_world->rank, func);
-        }
-        else {
-            MPIU_dbglog_printf("[-1] %s(): ", func);
-        }
-        va_start(list, fmt);
-        MPIU_dbglog_vprintf(fmt, list);
-        va_end(list);
-        MPIU_dbglog_printf("\n");
-        fflush(stdout);
-    }
-}
-
 #undef MPIDI_err_printf
 void MPIDI_err_printf(char *func, char *fmt, ...)
 {

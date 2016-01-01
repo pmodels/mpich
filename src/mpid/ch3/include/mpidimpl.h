@@ -169,7 +169,7 @@ extern MPIDI_Process_t MPIDI_Process;
 	(dt_contig_out_) = TRUE;					\
         (dt_true_lb_)    = 0;                                           \
 	(data_sz_out_) = (MPIDI_msg_sz_t) (count_) * MPID_Datatype_get_basic_size(datatype_); \
-	MPIDI_DBG_PRINTF((15, FCNAME, "basic datatype: dt_contig=%d, dt_sz=%d, data_sz=" MPIDI_MSG_SZ_FMT,\
+	MPIU_DBG_MSG_FMT(CH3_OTHER, TERSE, (MPIU_DBG_FDEST,"basic datatype: dt_contig=%d, dt_sz=%d, data_sz=" MPIDI_MSG_SZ_FMT, \
 			  (dt_contig_out_), MPID_Datatype_get_basic_size(datatype_), (data_sz_out_)));\
     }									\
     else								\
@@ -178,7 +178,7 @@ extern MPIDI_Process_t MPIDI_Process;
 	(dt_contig_out_) = (dt_ptr_)->is_contig;			\
 	(data_sz_out_) = (MPIDI_msg_sz_t) (count_) * (dt_ptr_)->size;	\
         (dt_true_lb_)    = (dt_ptr_)->true_lb;                          \
-	MPIDI_DBG_PRINTF((15, FCNAME, "user defined datatype: dt_contig=%d, dt_sz=%d, data_sz=" MPIDI_MSG_SZ_FMT,\
+	MPIU_DBG_MSG_FMT(CH3_OTHER, TERSE, (MPIU_DBG_FDEST, "user defined datatype: dt_contig=%d, dt_sz=" MPI_AINT_FMT_DEC_SPEC ", data_sz=" MPIDI_MSG_SZ_FMT, \
 			  (dt_contig_out_), (dt_ptr_)->size, (data_sz_out_)));\
     }									\
 }
@@ -987,7 +987,6 @@ const char *MPIDI_Pkt_GetDescString( MPIDI_CH3_Pkt_t *pkt );
 		      _kind,_vc,_tag,_contextid,_dest,_size) )
 
 /* FIXME: Switch this to use the common debug code */
-void MPIDI_dbg_printf(int, char *, char *, ...);
 void MPIDI_err_printf(char *, char *, ...);
 
 /* FIXME: This does not belong here */
@@ -995,22 +994,9 @@ void MPIDI_err_printf(char *, char *, ...);
 extern char *MPIDI_DBG_parent_str;
 #endif
 
-#if defined(MPICH_DBG_OUTPUT)
-#define MPIDI_DBG_PRINTF(e_)				\
-{                                               	\
-    MPIDI_dbg_printf e_;				\
-}
-#else
-#   define MPIDI_DBG_PRINTF(e)
-#endif
-
 #define MPIDI_ERR_PRINTF(e) MPIDI_err_printf e
 
 #if defined(HAVE_MACRO_VA_ARGS)
-#   define MPIDI_dbg_printf(level, func, fmt, ...)			\
-    {									\
-        MPIU_dbglog_printf("[%d] %s(): " fmt "\n", MPIR_Process.comm_world->rank, func, __VA_ARGS__);   \
-    }
 #   define MPIDI_err_printf(func, fmt, ...)				\
     {									\
         MPL_error_printf("[%d] ERROR - %s(): " fmt "\n", MPIR_Process.comm_world->rank, func, __VA_ARGS__);    \

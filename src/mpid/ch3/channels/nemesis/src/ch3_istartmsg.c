@@ -86,7 +86,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_
     {
 	MPID_Request * sreq = NULL;
 	
-	MPIDI_DBG_PRINTF((55, FCNAME, "enqueuing"));
+	MPIU_DBG_MSG(CH3_OTHER, TERSE, "enqueuing");
 
 	/* create a request */
 	sreq = MPID_Request_create();

@@ -36,7 +36,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
         /* send queue is not empty, enqueue the request then check to
            see if we can send any now */
 
-        MPIDI_DBG_PRINTF((55, FCNAME, "enqueuing"));
+        MPIU_DBG_MSG(CH3_OTHER, TERSE, "enqueuing");
 
 	sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *)header;
         sreq->ch.noncontig    = TRUE;
