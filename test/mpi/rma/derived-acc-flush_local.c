@@ -37,6 +37,11 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+    if (nproc < 3) {
+        fprintf(stderr, "Run this program with at least 3 processes\n");
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
     MPI_Alloc_mem(sizeof(int) * DATA_SIZE, MPI_INFO_NULL, &orig_buf);
     MPI_Alloc_mem(sizeof(int) * DATA_SIZE, MPI_INFO_NULL, &tar_buf);
 
