@@ -37,16 +37,8 @@ extern int mkstemp(char *t);
 extern FILE *fdopen(int fd, const char *mode);
 #endif
 
-/* Temporary.  sig values will change */
-/* style: allow:vprintf:3 sig:0 */
-/* style: allow:fputs:1 sig:0 */
-/* style: allow:printf:2 sig:0 */
-/* style: allow:fprintf:7 sig:0 */
-
 #ifdef USE_DBG_LOGGING
-/* 
- * NEW ROUTINES FOR DEBUGGING
- */
+
 #ifndef MAXPATHLEN
 #define MAXPATHLEN 1024
 #endif
