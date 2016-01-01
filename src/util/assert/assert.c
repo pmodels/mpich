@@ -23,7 +23,7 @@ int MPIR_Assert_fail(const char *cond, const char *file_name, int line_num)
                             file_name, line_num, cond);
     MPL_internal_error_printf("Assertion failed in file %s at line %d: %s\n",
                                file_name, line_num, cond);
-    MPIU_DBG_MSG_FMT(ALL, TERSE,
+    MPIU_DBG_MSG_FMT(OTHER, TERSE,
                      (MPIU_DBG_FDEST,
                       "Assertion failed in file %s at line %d: %s",
                       file_name, line_num, cond));
@@ -48,11 +48,11 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
                                file_name, line_num, cond);
     MPL_internal_error_printf("%s\n", msg);
 
-    MPIU_DBG_MSG_FMT(ALL, TERSE,
+    MPIU_DBG_MSG_FMT(OTHER, TERSE,
                      (MPIU_DBG_FDEST,
                       "Assertion failed in file %s at line %d: %s",
                       file_name, line_num, cond));
-    MPIU_DBG_MSG_FMT(ALL, TERSE, (MPIU_DBG_FDEST,"%s",msg));
+    MPIU_DBG_MSG_FMT(OTHER, TERSE, (MPIU_DBG_FDEST,"%s",msg));
 
     MPID_Abort(NULL, MPI_SUCCESS, 1, NULL);
     return MPI_ERR_INTERN; /* never get here, abort should kill us */

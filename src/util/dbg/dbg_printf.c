@@ -132,7 +132,6 @@ static void set_fp(FILE *fp)
     dbg_static_fp = fp;
 }
 
-
 int MPIU_DBG_Outevent( const char *file, int line, int class, int kind, 
 		       const char *fmat, ... )
 {
@@ -234,14 +233,11 @@ typedef struct dbg_classname {
 
 static const dbg_classname classnames[] = {
     { MPIU_DBG_PT2PT,         "PT2PT",         "pt2pt" },
-    { MPIU_DBG_RMA,           "RMA",           "rma"   },
     { MPIU_DBG_THREAD,        "THREAD",        "thread" },
-    { MPIU_DBG_PM,            "PM",            "pm" },
     { MPIU_DBG_ROUTINE_ENTER, "ROUTINE_ENTER", "routine_enter" },
     { MPIU_DBG_ROUTINE_EXIT,  "ROUTINE_EXIT",  "routine_exit" },
     { MPIU_DBG_ROUTINE_ENTER |
       MPIU_DBG_ROUTINE_EXIT,  "ROUTINE",       "routine" },
-    { MPIU_DBG_SYSCALL,       "SYSCALL",       "syscall" },
     { MPIU_DBG_DATATYPE,      "DATATYPE",      "datatype" },
     { MPIU_DBG_HANDLE,        "HANDLE",        "handle" },
     { MPIU_DBG_COMM,          "COMM",          "comm" },
@@ -253,8 +249,6 @@ static const dbg_classname classnames[] = {
     { MPIU_DBG_CH3_CHANNEL,   "CH3_CHANNEL",   "ch3_channel" },
     { MPIU_DBG_CH3_MSG,       "CH3_MSG",       "ch3_msg" },
     { MPIU_DBG_CH3_OTHER,     "CH3_OTHER",     "ch3_other" },
-    { MPIU_DBG_CH3,           "CH3",           "ch3" },
-    { MPIU_DBG_NEM_SOCK_FUNC, "NEM_SOCK_FUNC", "nem_sock_func"},
     { MPIU_DBG_NEM_SOCK_DET,  "NEM_SOCK_DET",  "nem_sock_det"},
     { MPIU_DBG_VC,            "VC",            "vc"},
     { MPIU_DBG_REFCOUNT,      "REFCOUNT",      "refcount"},

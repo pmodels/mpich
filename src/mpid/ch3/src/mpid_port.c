@@ -310,7 +310,7 @@ static int MPIDI_Open_port(MPID_Info *info_ptr, char *port_name)
        may not use shared memory).  We may need a channel-specific 
        function to create an exportable connection string.  */
     mpi_errno = MPIDI_CH3_Get_business_card(myRank, port_name, len);
-    MPIU_DBG_MSG_FMT(CH3, VERBOSE, (MPIU_DBG_FDEST, "port_name = %s", port_name));
+    MPIU_DBG_MSG_FMT(CH3_OTHER, VERBOSE, (MPIU_DBG_FDEST, "port_name = %s", port_name));
 
 fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_OPEN_PORT);
