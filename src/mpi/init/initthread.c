@@ -493,7 +493,6 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 #endif /* MPICH_IS_THREADED */
 
     /* FIXME: Define these in the interface.  Does Timer init belong here? */
-    MPIU_dbg_init(MPIR_Process.comm_world->rank);
     MPIU_Timer_init(MPIR_Process.comm_world->rank,
 		    MPIR_Process.comm_world->local_size);
 #ifdef USE_MEMORY_TRACING
