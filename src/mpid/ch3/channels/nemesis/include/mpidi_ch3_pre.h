@@ -190,21 +190,21 @@ struct MPIDI_CH3I_Request
 
 
 #if 0
-#define DUMP_REQUEST(req) do {                                                          \
-        int i;                                                                          \
-        MPIDI_DBG_PRINTF((55, FCNAME, "request %p\n", (req)));                          \
-        MPIDI_DBG_PRINTF((55, FCNAME, "  handle = %d\n", (req)->handle));		\
-        MPIDI_DBG_PRINTF((55, FCNAME, "  ref_count = %d\n", (req)->ref_count));         \
-        MPIDI_DBG_PRINTF((55, FCNAME, "  cc = %d\n", (req)->cc));			\
-        for (i = 0; i < (req)->iov_count; ++i)                                          \
-            MPIDI_DBG_PRINTF((55, FCNAME, "  dev.iov[%d] = (%p, %d)\n", i,		\
-                              (req)->dev.iov[i+(req)->dev.iov_offset].MPL_IOV_BUF,     \
-                              (req)->dev.iov[i+(req)->dev.iov_offset].MPL_IOV_LEN));  \
-    MPIDI_DBG_PRINTF((55, FCNAME, "  dev.iov_count = %d\n",                             \
-                      (req)->dev.iov_count));                                           \
-    MPIDI_DBG_PRINTF((55, FCNAME, "  dev.state = 0x%x\n", (req)->dev.state));           \
-    MPIDI_DBG_PRINTF((55, FCNAME, "    type = %d\n",                                    \
-		      MPIDI_Request_get_type(req)));                                    \
+#define DUMP_REQUEST(req) do {                                          \
+        int i;                                                          \
+        MPIU_DBG_MSG_P(CH3_OTHER, TERSE, "request %p\n", (req));        \
+        MPIU_DBG_MSG_D(CH3_OTHER, TERSE, "  handle = %d\n", (req)->handle); \
+        MPIU_DBG_MSG_D(CH3_OTHER, TERSE, "  ref_count = %d\n", (req)->ref_count); \
+        MPIU_DBG_MSG_D(CH3_OTHER, TERSE, "  cc = %d\n", (req)->cc);     \
+        for (i = 0; i < (req)->iov_count; ++i)                          \
+            MPIU_DBG_MSG_FMT(CH3_OTHER, TERSE, (MPIU_DBG_FDEST, "  dev.iov[%d] = (%p, %d)\n", i, \
+                                                (req)->dev.iov[i+(req)->dev.iov_offset].MPL_IOV_BUF, \
+                                                (req)->dev.iov[i+(req)->dev.iov_offset].MPL_IOV_LEN)); \
+        MPIU_DBG_MSG_D(CH3_OTHER, TERSE, "  dev.iov_count = %d\n",      \
+                       (req)->dev.iov_count);                           \
+        MPIU_DBG_MSG_FMT(CH3_OTHER, TERSE, (MPIU_DBG_FDEST, "  dev.state = 0x%x\n", (req)->dev.state)); \
+        MPIU_DBG_MSG_D(CH3_OTHER, TERSE, "    type = %d\n",             \
+                       MPIDI_Request_get_type(req));                    \
     } while (0)
 #else
 #define DUMP_REQUEST(req) do { } while (0)

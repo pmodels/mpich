@@ -146,7 +146,7 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPL_IOV *iov, int n_iov, MPID_Request 
     {
 	int i;
 	
-	MPIDI_DBG_PRINTF((55, FCNAME, "request enqueued"));
+	MPIU_DBG_MSG(CH3_OTHER, TERSE, "request enqueued");
 	/* create a request */
 	sreq = MPID_Request_create();
 	MPIU_Assert(sreq != NULL);
