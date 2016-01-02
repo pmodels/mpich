@@ -27,6 +27,12 @@ struct MPIR_Ibcast_status{
 };
 /* Add some functions for asynchronous error detection */
 
+/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
+   the MPI routines */
+#ifndef MPICH_MPI_FROM_PMPI
+#undef MPI_Ibcast
+#define MPI_Ibcast PMPI_Ibcast
+
 #undef FUNCNAME
 #define FUNCNAME sched_test_length
 #undef FCNAME
@@ -79,11 +85,6 @@ static int sched_add_length(MPID_Comm * comm, int tag, void *state)
     status->curr_bytes+= recv_size;
     return mpi_errno;
 }
-/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
-   the MPI routines */
-#ifndef MPICH_MPI_FROM_PMPI
-#undef MPI_Ibcast
-#define MPI_Ibcast PMPI_Ibcast
 
 /* any non-MPI functions go here, especially non-static ones */
 
