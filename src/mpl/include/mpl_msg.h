@@ -19,6 +19,12 @@
 #define MPL_DBG_INLINE_KEYWORD inline
 #endif
 
+#if defined(MPL_HAVE_MACRO_VA_ARGS)
+#define MPL_error_printf(...) fprintf(stderr,__VA_ARGS__)
+#else
+#define MPL_error_printf printf
+#endif
+
 /* These routines are used to ensure that messages are sent to the
  * appropriate output and (eventually) are properly
  * internationalized */
