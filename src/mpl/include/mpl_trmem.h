@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPLTRMEM_H_INCLUDED
-#define MPLTRMEM_H_INCLUDED
+#ifndef MPL_TRMEM_H_INCLUDED
+#define MPL_TRMEM_H_INCLUDED
 
 /* FIXME: Consider an option of specifying __attribute__((malloc)) for
    gcc - this lets gcc-style compilers know that the returned pointer
@@ -31,4 +31,4 @@ void MPL_trdump(FILE *, int);
 void MPL_trSummary(FILE *, int);
 void MPL_trdumpGrouped(FILE *, int);
 
-#endif /* !defined(MPLTRMEM_H_INCLUDED) */
+#endif /* !defined(MPL_TRMEM_H_INCLUDED) */

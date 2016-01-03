@@ -7,7 +7,7 @@ AC_PREREQ(2.63)
 AC_INIT([MPL], [0.1])
 
 # sanity check that --srcdir was specified correctly
-AC_CONFIG_SRCDIR([src/mplstr.c])
+AC_CONFIG_SRCDIR([src/str/mpl_str.c])
 
 AC_CONFIG_AUX_DIR(confdb)
 AC_CONFIG_MACRO_DIR(confdb)
