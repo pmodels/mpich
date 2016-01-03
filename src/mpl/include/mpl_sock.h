@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPL_SOCK_H_INCLUDED
+#if !defined(MPL_SOCK_H_INCLUDED)
 #define MPL_SOCK_H_INCLUDED
 
 #include "mplconfig.h"
@@ -43,4 +43,4 @@ ssize_t MPL_large_readv(int fd, const struct iovec *iov, int iovcnt);
 #endif
 /* *INDENT-OFF* */
 
-#endif /* MPL_SOCK_H_INCLUDED */
+#endif /* !defined(MPL_SOCK_H_INCLUDED) */

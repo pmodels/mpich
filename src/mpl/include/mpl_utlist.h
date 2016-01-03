@@ -53,8 +53,8 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef MPL_UTLIST_H
-#define MPL_UTLIST_H
+#if !defined(MPL_UTLIST_H_INCLUDED)
+#define MPL_UTLIST_H_INCLUDED
 
 #define MPL_UTLIST_VERSION 1.9.5
 
@@ -573,5 +573,5 @@ do {                                                                            
     }                                                                                          \
 } while(0)
 
-#endif /* MPL_UTLIST_H */
+#endif /* !defined(MPL_UTLIST_H_INCLUDED) */
 
