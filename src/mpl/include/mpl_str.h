@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPLSTR_H_INCLUDED
-#define MPLSTR_H_INCLUDED
+#ifndef MPL_STR_H_INCLUDED
+#define MPL_STR_H_INCLUDED
 
 #include "mplconfig.h"
 
@@ -63,4 +63,4 @@ char *MPL_strerror(int errnum);
 #endif
 /* *INDENT-OFF* */
 
-#endif /* MPLSTR_H_INCLUDED */
+#endif /* MPL_STR_H_INCLUDED */

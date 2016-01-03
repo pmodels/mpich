@@ -111,12 +111,12 @@
 
 /* must come before mpltrmem.h */
 #include "mpl_valgrind.h"
-#include "mplstr.h"
-#include "mpltrmem.h"
-#include "mplenv.h"
-#include "mplsock.h"
-#include "mplmsg.h"
-#include "mpliov.h"
-#include "mplutil.h"
+#include "mpl_str.h"
+#include "mpl_trmem.h"
+#include "mpl_env.h"
+#include "mpl_sock.h"
+#include "mpl_msg.h"
+#include "mpl_iov.h"
+#include "mpl_bt.h"
 
 #endif /* MPL_H_INCLUDED */
