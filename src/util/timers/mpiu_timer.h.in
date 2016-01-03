@@ -31,7 +31,6 @@ int usleep(useconds_t usec);
 #define MPIU_CLOCK_GETTIME           2
 #define MPIU_GETTIMEOFDAY            3
 #define MPIU_LINUX86_CYCLE           4
-#define MPIU_LINUXALPHA_CYCLE        5
 #define MPIU_QUERYPERFORMANCECOUNTER 6
 #define MPIU_WIN86_CYCLE             7
 #define MPIU_GCC_IA64_CYCLE          8
@@ -55,7 +54,6 @@ int usleep(useconds_t usec);
 #include <sys/time.h>
 #elif MPICH_TIMER_KIND == MPIU_LINUX86_CYCLE
 #elif MPICH_TIMER_KIND == MPIU_GCC_IA64_CYCLE
-#elif MPICH_TIMER_KIND == MPIU_LINUXALPHA_CYCLE
 #elif MPICH_TIMER_KIND == MPIU_QUERYPERFORMANCECOUNTER
 #include <winsock2.h>
 #include <windows.h>
@@ -287,9 +285,6 @@ extern double MPIU_Seconds_per_tick;
 #endif
 extern double MPIU_Seconds_per_tick;
 #define MPIUM_Wtime_todouble(t, d) *d = (double)*t * MPIU_Seconds_per_tick
-
-#elif MPICH_TIMER_KIND == MPIU_LINUXALPHA_CYCLE
-#define MPIUM_Wtime_todouble MPIU_Wtime_todouble
 
 #elif MPICH_TIMER_KIND == MPIU_QUERYPERFORMANCECOUNTER
 #define MPIU_Wtime(var) QueryPerformanceCounter(var)

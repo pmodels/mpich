@@ -281,11 +281,6 @@ void MPIU_Wtime_acc(MPIU_Time_t * t1, MPIU_Time_t * t2, MPIU_Time_t * t3)
     *t3 += (*t2 - *t1);
 }
 
-#elif MPICH_TIMER_KIND == MPIU_LINUXALPHA_CYCLE
-/* FIXME: This should have been fixed in the configure, rather than as a
-   make-time error message */
-#error "LinuxAlpha cycle counter not supported"
-
 #elif (MPICH_TIMER_KIND == MPIU_WIN86_CYCLE) || (MPICH_TIMER_KIND == MPIU_WIN64_CYCLE)
 double MPIU_Seconds_per_tick = 0.0;
 double MPIU_Wtick(void)

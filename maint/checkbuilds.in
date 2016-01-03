@@ -50,7 +50,7 @@ $hasDemon   = 0;
 @enable_array = ( 
 		  'error-checking;no;runtime;all', 
 		  'error-messages;all;generic;class;none',
-		  'timer-type;linux86_cycle;gethrtime;clock_gettime;gettimeofday;linuxalpha_cycle',
+		  'timer-type;linux86_cycle;gethrtime;clock_gettime;gettimeofday',
 		  'timing;none;all;runtime;log;log_detailed',
 		  'g;none;all;handle;dbg;log;meminit;handlealloc;instr;mem;mutex;mutexnesting;memarena',
 		  'fast;nochkmsg;notiming;ndebug;all',

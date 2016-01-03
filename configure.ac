@@ -4760,8 +4760,6 @@ AC_ARG_ENABLE(timer-type,
         developers for internal low-level timing.  Normal users should
         not use these as they are not guaranteed to be accurate in
         certain situations.
-
-        linuxalpha_cycle is no longer supported.
 ],timer_type=$enable_timer_type,timer_type=${default_timer_type})
 
 if test -z "$timer_type" ; then 
@@ -4994,10 +4992,6 @@ pac_cv_ia64_cycle,[
      fi
      MPICH_TIMER_TYPE="long"
      ;;
-
-    linuxalpha_cycle)
-    AC_MSG_ERROR([linuxalpha_cycle is no longer supported])
-    ;;
 
     mach_absolute_time)
     AC_CHECK_FUNC(mach_absolute_time,,[AC_MSG_ERROR([mach_absolute_time is not available])])
