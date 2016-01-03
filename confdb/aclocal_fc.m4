@@ -439,7 +439,7 @@ AC_COMPILE_IFELSE([],[
 #      module tests do not always use the module output flag.  See
 #      FC_MODULE_EXT , where this is determined.
 #   f95 -YMOD_OUT_DIR=${dir}   ## the Absoft fortran compiler
-#   lf95 -Am -mod ${dir}       ## the Lahey/Fujitsu fortran compiler
+#   lf95 -M ${dir}             ## the Lahey/Fujitsu fortran compiler
 #   f90 -moddir=${dir}         ## the Sun f90 compiler
 #   g95 -fmod=${dir}
 #
@@ -448,7 +448,7 @@ AC_COMPILE_IFELSE([],[
 # users to use.  Alternatively they can use an older version of MPICH.
 
 pac_cv_fc_module_outflag=
-for mod_flag in '-J' '-J ' '-qmoddir=' '-module ' '-YMOD_OUT_DIR=' '-mdir ' '-moddir=' '-fmod=' ; do
+for mod_flag in '-J' '-J ' '-qmoddir=' '-module ' '-YMOD_OUT_DIR=' '-mdir ' '-moddir=' '-fmod=' '-M '; do
     rm -f conftestdir/NONEXISTENT conftestdir/*
     PAC_PUSH_FLAG([FCFLAGS])
     FCFLAGS="$FCFLAGS ${mod_flag}conftestdir"
