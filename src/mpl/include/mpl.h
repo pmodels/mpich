@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPL_H_INCLUDED
+#if !defined(MPL_H_INCLUDED)
 #define MPL_H_INCLUDED
 
 #include "mpl_base.h"
@@ -18,4 +18,4 @@
 #include "mpl_iov.h"
 #include "mpl_bt.h"
 
-#endif /* MPL_H_INCLUDED */
+#endif /* !defined(MPL_H_INCLUDED) */

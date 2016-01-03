@@ -27,7 +27,7 @@
    preprocessor token "MPL_VG_AVAILABLE".
 
  */
-#ifndef MPL_VALGRIND_H_INCLUDED
+#if !defined(MPL_VALGRIND_H_INCLUDED)
 #define MPL_VALGRIND_H_INCLUDED
 
 #undef MPL_VG_AVAILABLE

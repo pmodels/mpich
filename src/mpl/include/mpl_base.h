@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPL_BASE_H_INCLUDED
+#if !defined(MPL_BASE_H_INCLUDED)
 #define MPL_BASE_H_INCLUDED
 
 /* this file splits off the base functionality in MPL, which does not
@@ -100,4 +100,4 @@
 #define MPL_UNIQUE_IMPL2_(prefix_,line_) MPL_UNIQUE_IMPL3_(prefix_,line_)
 #define MPL_UNIQUE_IMPL3_(prefix_,line_) prefix_##line_
 
-#endif /* MPL_H_INCLUDED */
+#endif /* !defined(MPL_BASE_H_INCLUDED) */

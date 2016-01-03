@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPL_TRMEM_H_INCLUDED
+#if !defined(MPL_TRMEM_H_INCLUDED)
 #define MPL_TRMEM_H_INCLUDED
 
 /* FIXME: Consider an option of specifying __attribute__((malloc)) for
