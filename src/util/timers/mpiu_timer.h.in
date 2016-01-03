@@ -156,7 +156,7 @@ void MPIU_Wtime_diff( MPIU_Time_t *t1, MPIU_Time_t *t2, double *diff );
 void MPIU_Wtime_acc( MPIU_Time_t *t1, MPIU_Time_t *t2, MPIU_Time_t *t3 );
 
 /*@
-  MPIU_Wtime_todouble - Converts an MPID timestamp to a double
+  MPIU_Wtime_todouble - Converts a timestamp to a double
 
   Input Parameter:
 . timeval - 'MPIU_Time_t' time stamp
