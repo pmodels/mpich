@@ -21,15 +21,9 @@
  */
 #include <mpidimpl.h>
 
-#if MPICH_TIMER_KIND == USE_GETTIMEOFDAY
-#warning Compiling mpid/pamid/src/mpid_time.c when MPICH_TIMER_KIND == USE_GETTIMEOFDAY
-#elif MPICH_TIMER_KIND != MPIU_TIMER_KIND__DEVICE
-#error "Not using DEVICE TIMEBASE"
-#else
-
 int MPIDI_PAMID_Timer_is_ready = 0;
 
-static int wtime(MPIU_Time_t *tval)
+static int wtime(MPL_Time_t *tval)
 {
     if (MPIDI_PAMID_Timer_is_ready) {
         *((MPID_Time_t *) tval) = PAMI_Wtime(MPIDI_Client);
@@ -41,7 +35,7 @@ static int wtime(MPIU_Time_t *tval)
 
 int MPID_Wtime(MPID_Time_t *tval)
 {
-    return wtime((MPIU_Time_t *) tval);
+    return wtime((MPL_Time_t *) tval);
 }
 
 static int wtick(double *wtick)
@@ -56,10 +50,10 @@ static int wtick(double *wtick)
 
 int MPID_Wtick(double *tick)
 {
-    return wtick((MPIU_Time_t *) tick);
+    return wtick((MPL_Time_t *) tick);
 }
 
-static int wtime_diff(MPIU_Time_t *t1, MPIU_Time_t *t2, double *diff)
+static int wtime_diff(MPL_Time_t *t1, MPL_Time_t *t2, double *diff)
 {
     if (MPIDI_PAMID_Timer_is_ready) {
         *diff = *((MPID_Time_t *) t2) - *((MPID_Time_t *) t1);
@@ -71,10 +65,10 @@ static int wtime_diff(MPIU_Time_t *t1, MPIU_Time_t *t2, double *diff)
 
 int MPID_Wtime_diff(MPID_Time_t *t1, MPID_Time_t *t2, double *diff)
 {
-    return wtime_diff((MPIU_Time_t *) t1, (MPIU_Time_t *) t2, diff);
+    return wtime_diff((MPL_Time_t *) t1, (MPL_Time_t *) t2, diff);
 }
 
-static int wtime_todouble(MPIU_Time_t *t, double *val)
+static int wtime_todouble(MPL_Time_t *t, double *val)
 {
     if (MPIDI_PAMID_Timer_is_ready) {
         *val = *((MPID_Time_t *) t);
@@ -86,10 +80,10 @@ static int wtime_todouble(MPIU_Time_t *t, double *val)
 
 int MPID_Wtime_todouble(MPID_Time_t *t, double *val)
 {
-    return wtime_todouble((MPIU_Time_t *) t, val);
+    return wtime_todouble((MPL_Time_t *) t, val);
 }
 
-static int wtime_acc(MPIU_Time_t *t1, MPIU_Time_t *t2, MPIU_Time_t *t3)
+static int wtime_acc(MPL_Time_t *t1, MPL_Time_t *t2, MPL_Time_t *t3)
 {
     if (MPIDI_PAMID_Timer_is_ready) {
         *((MPID_Time_t *) t3) += *((MPID_Time_t *) t1) - *((MPID_Time_t *) t2);
@@ -101,16 +95,16 @@ static int wtime_acc(MPIU_Time_t *t1, MPIU_Time_t *t2, MPIU_Time_t *t3)
 
 int MPID_Wtime_acc(MPID_Time_t *t1, MPID_Time_t *t2, MPID_Time_t *t3)
 {
-    return wtime_acc((MPIU_Time_t *) t1, (MPIU_Time_t *) t2, (MPIU_Time_t *) t3);
+    return wtime_acc((MPL_Time_t *) t1, (MPL_Time_t *) t2, (MPL_Time_t *) t3);
 }
 
 int MPID_Wtime_init( void )
 {
-    MPIU_Wtime_fn = wtime;
-    MPIU_Wtick_fn = wtick;
-    MPIU_Wtime_diff_fn = wtime_diff;
-    MPIU_Wtime_todouble_fn = wtime_todouble;
-    MPIU_Wtime_acc_fn = wtime_acc;
+    MPL_Wtime_fn = wtime;
+    MPL_Wtick_fn = wtick;
+    MPL_Wtime_diff_fn = wtime_diff;
+    MPL_Wtime_todouble_fn = wtime_todouble;
+    MPL_Wtime_acc_fn = wtime_acc;
 
     return MPID_TIMER_SUCCESS;
 }

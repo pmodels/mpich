@@ -4,12 +4,12 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPIU_TIMER_GCC_IA64_CYCLE_H_INCLUDED
-#define MPIU_TIMER_GCC_IA64_CYCLE_H_INCLUDED
+#ifndef MPL_TIMER_GCC_IA64_CYCLE_H_INCLUDED
+#define MPL_TIMER_GCC_IA64_CYCLE_H_INCLUDED
 
-static inline void MPIU_Wtime(MPIU_Time_t *timeval)
+static inline void MPL_Wtime(MPL_Time_t *timeval)
 {
-    MPIU_Time_t t_val;
+    MPL_Time_t t_val;
 
 #ifdef __INTEL_COMPILER
 #include "ia64regs.h"
@@ -20,7 +20,7 @@ static inline void MPIU_Wtime(MPIU_Time_t *timeval)
 
     *timeval = t_val;
 
-    return MPIU_TIMER_SUCCESS;
+    return MPL_TIMER_SUCCESS;
 }
 
 #endif

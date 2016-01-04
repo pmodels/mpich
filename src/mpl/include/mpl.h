@@ -17,5 +17,6 @@
 #include "mpl_msg.h"
 #include "mpl_iov.h"
 #include "mpl_bt.h"
+#include "mpl_timer.h"
 
 #endif /* !defined(MPL_H_INCLUDED) */

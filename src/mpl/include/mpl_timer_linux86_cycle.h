@@ -4,10 +4,10 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPIU_TIMER_LINUX86_CYCLE_H_INCLUDED
-#define MPIU_TIMER_LINUX86_CYCLE_H_INCLUDED
+#ifndef MPL_TIMER_LINUX86_CYCLE_H_INCLUDED
+#define MPL_TIMER_LINUX86_CYCLE_H_INCLUDED
 
-static inline int MPIU_Wtime(MPIU_Time_t *timeval)
+static inline int MPL_Wtime(MPL_Time_t *timeval)
 {
 /* The rdtsc instruction is not a "serializing" instruction, so the
    processor is free to reorder it.  In order to get more accurate
@@ -38,7 +38,7 @@ static inline int MPIU_Wtime(MPIU_Time_t *timeval)
 #error Dont know which Linux timer to use
 #endif
 
-    return MPIU_TIMER_SUCCESS;
+    return MPL_TIMER_SUCCESS;
 }
 
 #endif

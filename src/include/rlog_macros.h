@@ -8,7 +8,6 @@
 #define RLOG_MACROS_H_INCLUDED
 
 #include "rlog.h"
-#include "mpiu_timer.h"
 
 #ifndef MPIDM_Wtime_todouble
 #error Failed to select a defintion for MPIDM_Wtime_todouble

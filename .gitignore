@@ -200,6 +200,7 @@ Makefile.am-stamp
 /src/mpl/confdb
 /src/mpl/libtool
 /src/mpl/include/mplconfig.h
+/src/mpl/include/mpl_timer.h
 /src/mpl/include/stamp-h1
 /src/mpl/include/config.h
 /src/mpl/include/stamp-h2
@@ -576,9 +577,6 @@ Makefile.am-stamp
 /src/util/logging/rlog/pprintirlog
 /src/util/logging/rlog/irlog2rlog
 /src/util/logging/rlog/trace_impl.h
-
-# /src/util/timers
-/src/util/timers/mpiu_timer.h
 
 # /test/
 /test/runtests

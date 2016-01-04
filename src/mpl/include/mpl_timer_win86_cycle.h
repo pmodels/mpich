@@ -4,13 +4,13 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPIU_TIMER_WIN86_CYCLE_H_INCLUDED
-#define MPIU_TIMER_WIN86_CYCLE_H_INCLUDED
+#ifndef MPL_TIMER_WIN86_CYCLE_H_INCLUDED
+#define MPL_TIMER_WIN86_CYCLE_H_INCLUDED
 
 #include <winsock2.h>
 #include <windows.h>
 
-static inline void MPIU_Wtime(MPIU_Time_t *timeval)
+static inline void MPL_Wtime(MPL_Time_t *timeval)
 {
     register int *f1 = (int*)var_ptr;
     __asm cpuid;
@@ -19,7 +19,7 @@ static inline void MPIU_Wtime(MPIU_Time_t *timeval)
     __asm mov [ecx], eax;
     __asm mov [ecx + TYPE int], edx;
 
-    return MPIU_TIMER_SUCCESS;
+    return MPL_TIMER_SUCCESS;
 }
 
 #endif

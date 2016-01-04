@@ -54,8 +54,8 @@
  * device is initialized.  Once the device is initialized, it must
  * always return SUCCESS, so the upper layers do not need to check for
  * the return code.  */
-#define MPID_TIMER_SUCCESS              MPIU_TIMER_SUCCESS
-#define MPID_TIMER_ERR_NOT_INITIALIZED  MPIU_TIMER_ERR_NOT_INITIALIZED
+#define MPID_TIMER_SUCCESS              MPL_TIMER_SUCCESS
+#define MPID_TIMER_ERR_NOT_INITIALIZED  MPL_TIMER_ERR_NOT_INITIALIZED
 
 typedef double MPID_Time_t;
 
