@@ -29,6 +29,7 @@
 
 #include "mpl.h"
 
+#include "pmi.h"
 #include "simple_pmiutil.h"
 
 /* Use the memory definitions from mpich/src/include */
@@ -126,7 +127,7 @@ int PMIU_readline( int fd, char *buf, int maxlen )
        replacement version in src/pm/util/pmiserv.c) */
     if (nextChar != lastChar && fd != lastfd) {
 	MPL_internal_error_printf( "Panic - buffer inconsistent\n" );
-	return -1;
+	return PMI_FAIL;
     }
 
     p      = buf;
@@ -192,12 +193,12 @@ int PMIU_writeline( int fd, char *buf )
 	if ( n < 0 ) {
 	    PMIU_printf( 1, "write_line error; fd=%d buf=:%s:\n", fd, buf );
 	    perror("system msg for write_line failure ");
-	    return(-1);
+	    return PMI_FAIL;
 	}
 	if ( n < size)
 	    PMIU_printf( 1, "write_line failed to write entire message\n" );
     }
-    return 0;
+    return PMI_SUCCESS;
 }
 
 /*
@@ -210,7 +211,7 @@ int PMIU_parse_keyvals( char *st )
     int  offset;
 
     if ( !st )
-	return( -1 );
+	return PMI_FAIL;
 
     PMIU_keyval_tab_idx = 0;
     p = st;
@@ -221,10 +222,10 @@ int PMIU_parse_keyvals( char *st )
 	if ( *p == '=' ) {
 	    PMIU_printf( 1, "PMIU_parse_keyvals:  unexpected = at character %d in %s\n",
 		       p - st, st );
-	    return( -1 );
+	    return PMI_FAIL;
 	}
 	if ( *p == '\n' || *p == '\0' )
-	    return( 0 );	/* normal exit */
+	    return PMI_SUCCESS;	/* normal exit */
 	/* got normal character */
 	keystart = p;		/* remember where key started */
 	while ( *p != ' ' && *p != '=' && *p != '\n' && *p != '\0' )
@@ -233,7 +234,7 @@ int PMIU_parse_keyvals( char *st )
 	    PMIU_printf( 1,
        "PMIU_parse_keyvals: unexpected key delimiter at character %d in %s\n",
 		       p - st, st );
-	    return( -1 );
+	    return PMI_FAIL;
 	}
 	/* Null terminate the key */
 	*p = 0;
@@ -256,7 +257,7 @@ int PMIU_parse_keyvals( char *st )
 	if ( *p == ' ' )
 	    continue;
 	if ( *p == '\n' || *p == '\0' )
-	    return( 0 );	/* value has been set to empty */
+	    return PMI_SUCCESS;	/* value has been set to empty */
     }
 }
 
