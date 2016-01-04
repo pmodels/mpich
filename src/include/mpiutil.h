@@ -11,7 +11,6 @@
 #include "mpiu_type_defs.h"
 #include "mpidbg.h"
 #include "mpiassert.h"
-#include "mpiu_timer.h"
 #include "mpiu_pointer.h"
 
 #endif /* !defined(MPIUTIL_H_INCLUDED) */

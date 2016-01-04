@@ -4,35 +4,35 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "mpiu_timer.h"
+#include "mpl.h"
 
 MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
-#if MPICH_TIMER_KIND == MPIU_TIMER_KIND__CLOCK_GETTIME
+#if MPL_TIMER_KIND == MPL_TIMER_KIND__CLOCK_GETTIME
 
-int MPIU_Wtime(MPIU_Time_t * timeval)
+int MPL_Wtime(MPL_Time_t * timeval)
 {
     /* POSIX timer (14.2.1, page 311) */
     clock_gettime(CLOCK_REALTIME, timeval);
 
-    return MPIU_TIMER_SUCCESS;
+    return MPL_TIMER_SUCCESS;
 }
 
-int MPIU_Wtime_diff(MPIU_Time_t * t1, MPIU_Time_t * t2, double *diff)
+int MPL_Wtime_diff(MPL_Time_t * t1, MPL_Time_t * t2, double *diff)
 {
     *diff = ((double) (t2->tv_sec - t1->tv_sec) + 1.0e-9 * (double) (t2->tv_nsec - t1->tv_nsec));
 
-    return MPIU_TIMER_SUCCESS;
+    return MPL_TIMER_SUCCESS;
 }
 
-int MPIU_Wtime_todouble(MPIU_Time_t * t, double *val)
+int MPL_Wtime_todouble(MPL_Time_t * t, double *val)
 {
     *val = ((double) t->tv_sec + 1.0e-9 * (double) t->tv_nsec);
 
-    return MPIU_TIMER_SUCCESS;
+    return MPL_TIMER_SUCCESS;
 }
 
-int MPIU_Wtime_acc(MPIU_Time_t * t1, MPIU_Time_t * t2, MPIU_Time_t * t3)
+int MPL_Wtime_acc(MPL_Time_t * t1, MPL_Time_t * t2, MPL_Time_t * t3)
 {
     int nsec, sec;
 
@@ -46,10 +46,10 @@ int MPIU_Wtime_acc(MPIU_Time_t * t1, MPIU_Time_t * t2, MPIU_Time_t * t3)
         t3->tv_sec++;
     }
 
-    return MPIU_TIMER_SUCCESS;
+    return MPL_TIMER_SUCCESS;
 }
 
-int MPIU_Wtick(double *wtick)
+int MPL_Wtick(double *wtick)
 {
     struct timespec res;
     int rc;
@@ -63,14 +63,14 @@ int MPIU_Wtick(double *wtick)
      * then we need to return the generic tick value */
     *wtick = tickval;
 
-    return MPIU_TIMER_SUCCESS;
+    return MPL_TIMER_SUCCESS;
 }
 
-int MPIU_Wtime_init(void)
+int MPL_Wtime_init(void)
 {
     init_wtick();
 
-    return MPIU_TIMER_SUCCESS;
+    return MPL_TIMER_SUCCESS;
 }
 
 #endif

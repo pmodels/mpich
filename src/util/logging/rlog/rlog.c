@@ -17,7 +17,7 @@
 
 #include "mpi.h"
 /*#define RLOG_timestamp PMPI_Wtime*/
-#include "mpiu_timer.h"
+
 static double RLOG_timestamp(void)
 {
     double d;

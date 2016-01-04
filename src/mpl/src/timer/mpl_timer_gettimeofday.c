@@ -4,11 +4,11 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "mpiu_timer.h"
+#include "mpl.h"
 
 MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
-#if MPICH_TIMER_KIND == MPIU_TIMER_KIND__GETTIMEOFDAY
+#if MPL_TIMER_KIND == MPL_TIMER_KIND__GETTIMEOFDAY
 
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
@@ -16,28 +16,29 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-int MPIU_Wtime(MPIU_Time_t * tval)
+
+int MPL_Wtime(MPL_Time_t * tval)
 {
     gettimeofday(tval, NULL);
 
-    return MPIU_TIMER_SUCCESS;
+    return MPL_TIMER_SUCCESS;
 }
 
-int MPIU_Wtime_diff(MPIU_Time_t * t1, MPIU_Time_t * t2, double *diff)
+int MPL_Wtime_diff(MPL_Time_t * t1, MPL_Time_t * t2, double *diff)
 {
     *diff = ((double) (t2->tv_sec - t1->tv_sec) + .000001 * (double) (t2->tv_usec - t1->tv_usec));
 
-    return MPIU_TIMER_SUCCESS;
+    return MPL_TIMER_SUCCESS;
 }
 
-int MPIU_Wtime_todouble(MPIU_Time_t * t, double *val)
+int MPL_Wtime_todouble(MPL_Time_t * t, double *val)
 {
     *val = (double) t->tv_sec + .000001 * (double) t->tv_usec;
 
-    return MPIU_TIMER_SUCCESS;
+    return MPL_TIMER_SUCCESS;
 }
 
-int MPIU_Wtime_acc(MPIU_Time_t * t1, MPIU_Time_t * t2, MPIU_Time_t * t3)
+int MPL_Wtime_acc(MPL_Time_t * t1, MPL_Time_t * t2, MPL_Time_t * t3)
 {
     int usec, sec;
 
@@ -51,21 +52,21 @@ int MPIU_Wtime_acc(MPIU_Time_t * t1, MPIU_Time_t * t2, MPIU_Time_t * t3)
         t3->tv_sec++;
     }
 
-    return MPIU_TIMER_SUCCESS;
+    return MPL_TIMER_SUCCESS;
 }
 
-int MPIU_Wtick(double *wtick)
+int MPL_Wtick(double *wtick)
 {
     *wtick = tickval;
 
-    return MPIU_TIMER_SUCCESS;
+    return MPL_TIMER_SUCCESS;
 }
 
-int MPIU_Wtime_init(void)
+int MPL_Wtime_init(void)
 {
     init_wtick();
 
-    return MPIU_TIMER_SUCCESS;
+    return MPL_TIMER_SUCCESS;
 }
 
 #endif

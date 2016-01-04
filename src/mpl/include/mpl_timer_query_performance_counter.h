@@ -4,17 +4,17 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPIU_TIMER_QUERY_PERFORMANCE_COUNTER_H_INCLUDED
-#define MPIU_TIMER_QUERY_PERFORMANCE_COUNTER_H_INCLUDED
+#ifndef MPL_TIMER_QUERY_PERFORMANCE_COUNTER_H_INCLUDED
+#define MPL_TIMER_QUERY_PERFORMANCE_COUNTER_H_INCLUDED
 
 #include <winsock2.h>
 #include <windows.h>
 
-static inline void MPIU_Wtime(MPIU_Time_t *timeval)
+static inline void MPL_Wtime(MPL_Time_t *timeval)
 {
     QueryPerformanceCounter(timeval);
 
-    return MPIU_TIMER_SUCCESS;
+    return MPL_TIMER_SUCCESS;
 }
 
 #endif

@@ -4283,9 +4283,7 @@ sub build_specials {
     &set_weak_decl( "MPI_Wtime", "void", "double" );
     &set_weak_decl( "PMPI_Wtime", "void", "double" );
     &print_header( "mpi_", "MPI_Wtime", "wtime", "" );
-    # mpiu_timer.h is needed for the timer definitions
     print $OUTFD "#include \"mpichconf.h\"\n";
-    print $OUTFD "#include \"mpiu_timer.h\"\n";
     &print_routine_type_decl( $OUTFD, $out_prefix, "wtime" );
     print $OUTFD "( void ) ";
     #&print_attr;
@@ -4312,9 +4310,7 @@ sub build_specials {
     &set_weak_decl( "MPI_Wtick", "void", "double" );
     &set_weak_decl( "PMPI_Wtick", "void", "double" );
     &print_header( "mpi_", "MPI_Wtick", "wtick", "" );
-    # mpiu_timer.h is needed for the timer definitions
     print $OUTFD "#include \"mpichconf.h\"\n";
-    print $OUTFD "#include \"mpiu_timer.h\"\n";
     &print_routine_type_decl( $OUTFD, $out_prefix, "wtick" );
     print $OUTFD "( void ) ";
     #&print_attr;

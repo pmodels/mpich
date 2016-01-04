@@ -3,20 +3,18 @@
  *  (C) 2001 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#ifndef MPIU_TIMER_H_INCLUDED
-#define MPIU_TIMER_H_INCLUDED
 
-#include "mpichconf.h"
-#include <stdlib.h>
+#if !defined(MPL_TIMER_H_INCLUDED)
+#define MPL_TIMER_H_INCLUDED
 
-#if defined (HAVE_UNISTD_H)
+#include "mplconfig.h"
+
+#if defined (MPL_HAVE_UNISTD_H)
 #include <unistd.h>
-#if defined (NEEDS_USLEEP_DECL)
+#if defined (MPL_NEEDS_USLEEP_DECL)
 int usleep(useconds_t usec);
 #endif
 #endif
-
-#include "mpl.h"
 
 /*
  * This include file provide the definitions that are necessary to use the
@@ -27,71 +25,72 @@ int usleep(useconds_t usec);
  * is needed only to build the function versions of the timers.
  */
 /* Include the appropriate files */
-#define MPIU_TIMER_KIND__GETHRTIME               1
-#define MPIU_TIMER_KIND__CLOCK_GETTIME           2
-#define MPIU_TIMER_KIND__GETTIMEOFDAY            3
-#define MPIU_TIMER_KIND__LINUX86_CYCLE           4
-#define MPIU_TIMER_KIND__QUERYPERFORMANCECOUNTER 6
-#define MPIU_TIMER_KIND__WIN86_CYCLE             7
-#define MPIU_TIMER_KIND__GCC_IA64_CYCLE          8
-/* The value "MPIU_TIMER_KIND__DEVICE" means that the ADI device provides the timer */
-#define MPIU_TIMER_KIND__DEVICE                  9
-#define MPIU_TIMER_KIND__WIN64_CYCLE             10
-#define MPIU_TIMER_KIND__MACH_ABSOLUTE_TIME      11
-#define MPICH_TIMER_KIND @MPICH_TIMER_KIND@
+#define MPL_TIMER_KIND__GETHRTIME               1
+#define MPL_TIMER_KIND__CLOCK_GETTIME           2
+#define MPL_TIMER_KIND__GETTIMEOFDAY            3
+#define MPL_TIMER_KIND__LINUX86_CYCLE           4
+#define MPL_TIMER_KIND__QUERYPERFORMANCECOUNTER 6
+#define MPL_TIMER_KIND__WIN86_CYCLE             7
+#define MPL_TIMER_KIND__GCC_IA64_CYCLE          8
+/* The value "MPL_TIMER_KIND__DEVICE" means that the ADI device provides the timer */
+#define MPL_TIMER_KIND__DEVICE                  9
+#define MPL_TIMER_KIND__WIN64_CYCLE             10
+#define MPL_TIMER_KIND__MACH_ABSOLUTE_TIME      11
+#define MPL_TIMER_KIND @MPL_TIMER_KIND@
 
 /* Define a time stamp */
-typedef @MPICH_TIMER_TYPE@ MPIU_Time_t;
+typedef @MPL_TIMER_TYPE@ MPL_Time_t;
 
-#if MPICH_TIMER_KIND == MPIU_TIMER_KIND__GETHRTIME
-#include "mpiu_timer_gethrtime.h"
-#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__CLOCK_GETTIME
-#include "mpiu_timer_clock_gettime.h"
-#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__GETTIMEOFDAY
-#include "mpiu_timer_gettimeofday.h"
-#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__LINUX86_CYCLE
-#include "mpiu_timer_linux86_cycle.h"
-#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__QUERYPERFORMANCECOUNTER
-#include "mpiu_timer_query_performance_counter.h"
-#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__WIN86_CYCLE || MPICH_TIMER_KIND == MPIU_TIMER_KIND__WIN64_CYCLE
-#include "mpiu_timer_win86_cycle.h"
-#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__GCC_IA64_CYCLE
-#include "mpiu_timer_gcc_ia64_cycle.h"
-#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__DEVICE
-#include "mpiu_timer_device.h"
-#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__MACH_ABSOLUTE_TIME
-#include "mpiu_timer_mach_absolute_time.h"
+#if MPL_TIMER_KIND == MPL_TIMER_KIND__GETHRTIME
+#include "mpl_timer_gethrtime.h"
+#elif MPL_TIMER_KIND == MPL_TIMER_KIND__CLOCK_GETTIME
+#include "mpl_timer_clock_gettime.h"
+#elif MPL_TIMER_KIND == MPL_TIMER_KIND__GETTIMEOFDAY
+#include "mpl_timer_gettimeofday.h"
+#elif MPL_TIMER_KIND == MPL_TIMER_KIND__LINUX86_CYCLE
+#include "mpl_timer_linux86_cycle.h"
+#elif MPL_TIMER_KIND == MPL_TIMER_KIND__QUERYPERFORMANCECOUNTER
+#include "mpl_timer_query_performance_counter.h"
+#elif MPL_TIMER_KIND == MPL_TIMER_KIND__WIN86_CYCLE || MPL_TIMER_KIND == MPL_TIMER_KIND__WIN64_CYCLE
+#include "mpl_timer_win86_cycle.h"
+#elif MPL_TIMER_KIND == MPL_TIMER_KIND__GCC_IA64_CYCLE
+#include "mpl_timer_gcc_ia64_cycle.h"
+#elif MPL_TIMER_KIND == MPL_TIMER_KIND__DEVICE
+#include "mpl_timer_device.h"
+#elif MPL_TIMER_KIND == MPL_TIMER_KIND__MACH_ABSOLUTE_TIME
+#include "mpl_timer_mach_absolute_time.h"
 #endif
 
 /* The timer code is allowed to return "NOT_INITIALIZED" before the
  * device is initialized.  Once the device is initialized, it must
  * always return SUCCESS, so the upper layers do not need to check for
  * the return code.  */
-#define MPIU_TIMER_SUCCESS                0
-#define MPIU_TIMER_ERR_NOT_INITIALIZED    1
+#define MPL_TIMER_SUCCESS                0
+#define MPL_TIMER_ERR_NOT_INITIALIZED    1
 
 /*
  * Prototypes.  These are defined here so that inlined timer calls can
  * use them, as well as any profiling and timing code that is built into
- * MPICH
+ * MPL
  */
 
-#if defined MPIUI_WTIME_IS_A_FUNCTION
+#if defined MPLI_WTIME_IS_A_FUNCTION
+
 /*@
-  MPIU_Wtime - Return a time stamp
+  MPL_Wtime - Return a time stamp
 
   Output Parameter:
-. timeval - A pointer to an 'MPIU_Wtime_t' variable.
+. timeval - A pointer to an 'MPL_Wtime_t' variable.
 
   Notes:
   This routine returns an `opaque` time value.  This difference between two
-  time values returned by 'MPIU_Wtime' can be converted into an elapsed time
-  in seconds with the routine 'MPIU_Wtime_diff'.
+  time values returned by 'MPL_Wtime' can be converted into an elapsed time
+  in seconds with the routine 'MPL_Wtime_diff'.
 
   This routine is defined this way to simplify its implementation as a macro.
   For example, the for Intel x86 and gcc,
 .vb
-#define MPIU_Wtime(timeval) \
+#define MPL_Wtime(timeval) \
      __asm__ __volatile__("rdtsc" : "=A" (*timeval))
 .ve
 
@@ -111,14 +110,14 @@ typedef @MPICH_TIMER_TYPE@ MPIU_Time_t;
   MPI-2 allows 'MPI_Wtime' to be a macro.  We should make that easy; this
   version does not accomplish that.
   @*/
-int MPIU_Wtime(MPIU_Time_t * timeval);
-#endif /* MPIUI_WTIME_IS_A_FUNCTION */
+int MPL_Wtime(MPL_Time_t * timeval);
+#endif /* MPLI_WTIME_IS_A_FUNCTION */
 
 /*@
-  MPIU_Wtime_diff - Compute the difference between two time stamps
+  MPL_Wtime_diff - Compute the difference between two time stamps
 
   Input Parameters:
-. t1, t2 - Two time values set by 'MPIU_Wtime' on this process.
+. t1, t2 - Two time values set by 'MPL_Wtime' on this process.
 
 
   Output Parameter:
@@ -126,21 +125,21 @@ int MPIU_Wtime(MPIU_Time_t * timeval);
 
   Note:
   If 't1' is null, then 't2' is assumed to be differences accumulated with
-  'MPIU_Wtime_acc', and the output value gives the number of seconds that
+  'MPL_Wtime_acc', and the output value gives the number of seconds that
   were accumulated.
 
   Question:
   Instead of handling a null value of 't1', should we have a separate
-  routine 'MPIU_Wtime_todouble' that converts a single timestamp to a
+  routine 'MPL_Wtime_todouble' that converts a single timestamp to a
   double value?
 
   Module:
   Timer
   @*/
-int MPIU_Wtime_diff( MPIU_Time_t *t1, MPIU_Time_t *t2, double *diff );
+int MPL_Wtime_diff( MPL_Time_t *t1, MPL_Time_t *t2, double *diff );
 
 /*@
-  MPIU_Wtime_acc - Accumulate time values
+  MPL_Wtime_acc - Accumulate time values
 
   Input Parameters:
 . t1,t2,t3 - Three time values.  't3' is updated with the difference between
@@ -149,23 +148,23 @@ int MPIU_Wtime_diff( MPIU_Time_t *t1, MPIU_Time_t *t2, double *diff );
   Notes:
   This routine is used to accumulate the time spent with a block of code
   without first converting the time stamps into a particular arithmetic
-  type such as a 'double'.  For example, if the 'MPIU_Wtime' routine accesses
+  type such as a 'double'.  For example, if the 'MPL_Wtime' routine accesses
   a cycle counter, this routine (or macro) can perform the accumulation using
   integer arithmetic.
 
-  To convert a time value accumulated with this routine, use 'MPIU_Wtime_diff'
+  To convert a time value accumulated with this routine, use 'MPL_Wtime_diff'
   with a 't1' of zero.
 
   Module:
   Timer
   @*/
-int MPIU_Wtime_acc( MPIU_Time_t *t1, MPIU_Time_t *t2, MPIU_Time_t *t3 );
+int MPL_Wtime_acc( MPL_Time_t *t1, MPL_Time_t *t2, MPL_Time_t *t3 );
 
 /*@
-  MPIU_Wtime_todouble - Converts a timestamp to a double
+  MPL_Wtime_todouble - Converts a timestamp to a double
 
   Input Parameter:
-. timeval - 'MPIU_Time_t' time stamp
+. timeval - 'MPL_Time_t' time stamp
 
   Output Parameter:
 . seconds - Time in seconds from an arbitrary (but fixed) time in the past
@@ -175,16 +174,16 @@ int MPIU_Wtime_acc( MPIU_Time_t *t1, MPIU_Time_t *t2, MPIU_Time_t *t3 );
   suitable for 'MPI_Wtime'.
 
   @*/
-int MPIU_Wtime_todouble( MPIU_Time_t *timeval, double *seconds );
+int MPL_Wtime_todouble( MPL_Time_t *timeval, double *seconds );
 
 /*@
-  MPIU_Wtick - Provide the resolution of the 'MPIU_Wtime' timer
+  MPL_Wtick - Provide the resolution of the 'MPL_Wtime' timer
 
   Return value:
   Resolution of the timer in seconds.  In many cases, this is the
-  time between ticks of the clock that 'MPIU_Wtime' returns.  In other
+  time between ticks of the clock that 'MPL_Wtime' returns.  In other
   words, the minimum significant difference that can be computed by
-  'MPIU_Wtime_diff'.
+  'MPL_Wtime_diff'.
 
   Note that in some cases, the resolution may be estimated.  No application
   should expect either the same estimate in different runs or the same
@@ -193,10 +192,10 @@ int MPIU_Wtime_todouble( MPIU_Time_t *timeval, double *seconds );
   Module:
   Timer
   @*/
-int MPIU_Wtick(double *);
+int MPL_Wtick(double *);
 
 /*@
-  MPIU_Wtime_init - Initialize the timer
+  MPL_Wtime_init - Initialize the timer
 
   Note:
   This routine should perform any steps needed to initialize the timer.
@@ -204,15 +203,11 @@ int MPIU_Wtick(double *);
   if the timer is known to be the same for all processes in 'MPI_COMM_WORLD'
   (the value is zero by default).
 
-  If any operations need to be performed when the MPI program calls
-  'MPI_Finalize' this routine should register a handler with 'MPI_Finalize'
-  (see the MPICH Design Document).
-
   Module:
   Timer
 
   @*/
-int MPIU_Wtime_init(void);
+int MPL_Wtime_init(void);
 
 /*
  * For timers that do not have defined resolutions, compute the resolution
@@ -225,25 +220,25 @@ static void init_wtick(void) ATTRIBUTE((unused));
 static void init_wtick(void)
 {
     double timediff;
-    MPIU_Time_t t1, t2;
+    MPL_Time_t t1, t2;
     int cnt;
     int icnt;
 
     tickval = 1.0e6;
     for (icnt = 0; icnt < 10; icnt++) {
         cnt = 1000;
-        MPIU_Wtime(&t1);
+        MPL_Wtime(&t1);
         do {
-            MPIU_Wtime(&t2);
-            MPIU_Wtime_diff(&t1, &t2, &timediff);
+            MPL_Wtime(&t2);
+            MPL_Wtime_diff(&t1, &t2, &timediff);
             if (timediff > 0)
                 break;
         }
         while (cnt--);
         if (cnt && timediff > 0.0 && timediff < tickval) {
-            MPIU_Wtime_diff(&t1, &t2, &tickval);
+            MPL_Wtime_diff(&t1, &t2, &tickval);
         }
     }
 }
 
-#endif
+#endif  /* !defined(MPL_TIMER_H_INCLUDED) */

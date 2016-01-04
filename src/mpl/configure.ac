@@ -156,6 +156,314 @@ char mempool_obj;
     fi
 fi
 
+
+#######################################################################
+## TIMER CODE
+#######################################################################
+
+# ----------------------------------------------------------------------------
+# Support for timers.  The following code processes the 
+#  --enable-timer-type=name argument and selects the timer based on 
+# both that field and what configure is able to determine is available.
+# The file src/include/mpl_timer.h is also created.
+# ----------------------------------------------------------------------------
+
+# clock_gettime is the POSIX gettimeofday
+# gethrtime is the Solaris high-resolution timer
+dnl
+dnl Specific checks that a function works correctly
+dnl
+dnl Now that we know what the options are, choose the timer to use
+dnl
+dnl The default preference is
+dnl    Solaris gethrtime
+dnl    Posix   clock_gettime
+dnl    Unix    gettimeofday (one of two versions)
+dnl
+dnl Also available are various hardware time stamps
+dnl    Linux-x86 cycle counter
+dnl    BG/Q PAMI-based timer
+dnl
+dnl We also allow --enable-timer-type=name to select a timer type
+AC_ARG_ENABLE(timer-type,
+[  --enable-timer-type=name - Select the timer to use for MPI_Wtime and
+                             internal timestamps.
+        gethrtime          - Solaris timer (Solaris systems only)
+        clock_gettime      - Posix timer (where available)
+        gettimeofday       - Most Unix systems
+        linux86_cycle      - Linux x86; returns cycle counts, not time in seconds*
+        gcc_ia64_cycle     - IPF ar.itc timer*
+	mach_absolute_time - Mach absolute time (alternative to clock_gettime
+                             for OSX)
+        device             - The timer is provided by the device
+
+        *Note that the cycle timers are intended to be used by
+        developers for internal low-level timing.  Normal users should
+        not use these as they are not guaranteed to be accurate in
+        certain situations.
+],timer_type=$enable_timer_type)
+
+## The user did not specify a timer type.  Try to find a sane option
+## that is supported by the platform.
+if test -z "$timer_type" ; then 
+    # Try to pick a timer based on what is available
+    AC_CHECK_FUNCS(clock_gettime clock_getres gethrtime mach_absolute_time gettimeofday)
+    if test "$ac_cv_func_gethrtime" = "yes" ; then
+        # Sigh.  The Solaris include files do not define hrtime_t
+	# Before we accept this choice, make sure that we can 
+	# do arithmetic with hrtime_t .
+        AC_CACHE_CHECK([that hrtime_t is properly defined for gethrtime],
+	pac_cv_hrtime_works,[
+	AC_TRY_COMPILE([
+#include <sys/time.h>
+],[hrtime_t t1, t2; t1 = 1; t2 = 2; t1 = t1 + t2;],
+pac_cv_hrtime_works=yes,pac_cv_hrtime_works=no)])
+	# A more ambitious test would look to see if casting an 
+	# hrtime_t to int64_t works, and even more ambitious
+	# would check whether long or long long was 64 bits (or even
+	# better, the sizeof hrtime_t).  
+    fi
+    if test "$ac_cv_func_gethrtime" = "yes" -a \
+            "$pac_cv_hrtime_works" = "yes" ; then
+        timer_type=gethrtime
+    elif test "$ac_cv_func_clock_gettime" = "yes" -a \
+              "$ac_cv_func_clock_getres" = "yes" ; then
+	 # Test on both because some systems (e.g., cygwin) provide
+	 # clock_gettime but not clock_getres
+        timer_type=clock_gettime
+    elif test "$ac_cv_func_mach_absolute_time" = "yes" ; then 
+        timer_type=mach_absolute_time
+    elif test "$ac_cv_func_gettimeofday" = "yes" ; then
+        timer_type=gettimeofday
+    fi
+fi
+if test -z "$timer_type" ; then
+    AC_MSG_ERROR([No timer found])
+fi
+
+# Check for valid timer and select datatypes for the time stamp
+case "$timer_type" in
+
+    gethrtime)
+    MPL_TIMER_TYPE=hrtime_t
+    AC_CHECK_FUNC(gethrtime,,[
+         AC_MSG_ERROR([Requested timer gethrtime is not available])
+])
+    ;;
+
+    clock_gettime)
+    missing_function=no
+    AC_SEARCH_LIBS([clock_gettime],[rt],,AC_MSG_ERROR([clock_gettime is not available]))
+    AC_SEARCH_LIBS([clock_getres],[rt],,AC_MSG_ERROR([clock_getres is not available]))
+    MPL_TIMER_TYPE="struct timespec"
+    # AIX does not always define struct timespec (!)
+    # Make sure that we can use struct timespec
+    AC_CACHE_CHECK([whether struct timespec is defined in time.h],
+                    pac_cv_struct_timespec_defined,[
+    AC_TRY_COMPILE([
+#include <time.h>],[
+    struct timespec t;],pac_cv_struct_timespec_defined=yes,
+    pac_cv_struct_timespec_defined=no)
+])
+    if test "$pac_cv_struct_timespec_defined" != "yes" ; then
+        # Try again, but with -D_XOPEN_SOURCE=500 (works for AIX)
+        AC_CACHE_CHECK([whether struct timespec is defined in time.h with _XOPEN_SOURCE=500],
+                    pac_cv_struct_timespec_defined_with_xopen500,[
+        AC_TRY_COMPILE([
+#define _XOPEN_SOURCE 500
+#include <time.h>],[
+    struct timespec t;],pac_cv_struct_timespec_defined_with_xopen500=yes,
+    pac_cv_struct_timespec_defined_with_xopen500=no)
+])
+	if test "$pac_cv_struct_timespec_defined_with_xopen500" = "yes" ; then
+	    # We need to define _XOPEN_SOURCE=500, but we need to ensure that
+	    # this is done before any include files are loaded.  At
+	    # this point it is really too late to add this definition,
+	    # since it may make other tests incompatible.
+	    AC_MSG_ERROR([The available timer requires _XOPEN_SOURCE=500.  Add -D_XOPEN_SOURCE=500 to CFLAGS and rerun configure])
+        fi
+    fi
+    # 
+    # FreeBSD 4.3 incorrectly puts the header into sys/time.h; 
+    # time.h is required (see pages 45 and 46 in the POSIX standard).
+    # See if we can compile
+    AC_CACHE_CHECK([for CLOCK_REALTIME defined in time.h],pac_cv_posix_clock_realtime,[
+    AC_TRY_COMPILE([
+#include <time.h>],[
+    clockid_t cid = CLOCK_REALTIME;],pac_cv_posix_clock_realtime=yes,
+pac_cv_posix_clock_realtime=no)])
+    if test "$pac_cv_posix_clock_realtime" = "no" ; then
+         AC_MSG_WARN([POSIX timer requires definitions in time.h])
+	 # Check for the definition in sys/time.h, which is where
+	 # OpenBSD and FreeBSD have put it by mistake
+         AC_TRY_COMPILE([
+#include <time.h>
+#include <sys/time.h>],[
+    clockid_t cid = CLOCK_REALTIME;],pac_cv_posix_clock_realtime=yes,
+pac_cv_posix_clock_realtime=no)
+	if test "$pac_cv_posix_clock_realtime" = yes ; then
+	    AC_MSG_WARN([sys/time.h required for POSIX timer])
+	    AC_DEFINE(NEEDS_SYS_TIME_H,1,[Define if sys/time.h is required to get timer definitions])
+	else
+	    AC_MSG_ERROR([Cannot find the definition of CLOCK_REALTIME for the POSIX timer])
+	fi
+    fi
+    ;;
+
+    gettimeofday)
+    MPL_TIMER_TYPE="struct timeval"
+    # We may have already tested for gettimeofday.  If we got a "yes",
+    # we're good to go
+    if test "$ac_cv_func_gettimeofday" != "yes" ; then
+        AC_CHECK_FUNC(gettimeofday,,[
+         AC_MSG_ERROR([Requested timer gettimeofday is not available])
+])
+    fi
+    ;;
+
+    linux86_cycle|linux86_cycle_2)
+    
+# The following AC_TRY_RUN statements are needed because x86_64 compilers
+# usually know about rdtscp but the cpu may or may not actually implement the
+# feature.  This is not cross-compile safe, unfortunately.  In the long run we
+# should allow the user to override this with a configure flag.
+    AC_CACHE_CHECK([that linux86 cycle counter is available],
+        pac_cv_linux86_cycle,
+            AC_TRY_RUN([
+int main()
+{
+    /* rdtscp */
+    long long var, *var_ptr=&var;
+    __asm__ __volatile__("rdtscp; shl \$32, %%rdx; or %%rdx, %%rax" : "=a" (*var_ptr) : : "ecx", "rdx");
+    return 0;
+}
+            ],pac_cv_linux86_cycle=rdtscp,
+                AC_TRY_RUN([[
+int main()
+{
+    /* cpuid 64 */
+    long long var, *var_ptr=&var;
+    __asm__ __volatile__("push %%rbx ; cpuid ; rdtsc ; pop %%rbx ; shl $32, %%rdx; or %%rdx, %%rax" : "=a" (*var_ptr) : : "ecx", "rdx");
+    return 0;
+}
+                ]],pac_cv_linux86_cycle=cpuid_rdtsc64,
+                    AC_TRY_RUN([[[
+int main()
+{
+    /* cpuid 32 */
+    long long var, *var_ptr=&var;
+    __asm__ __volatile__("push %%ebx ; cpuid ; rdtsc ; pop %%ebx" : "=A" (*var_ptr) : : "ecx");
+    return 0;
+}
+                    ]]],pac_cv_linux86_cycle=cpuid_rdtsc32,
+                        AC_TRY_RUN([[[[
+int main()
+{
+    /* simple */
+    long long var, *var_ptr=&var;
+    __asm__ __volatile__("rdtsc" : "=A" (*var_ptr));
+    return 0;
+}
+                        ]]]],pac_cv_linux86_cycle=rdtsc,
+                        pac_cv_linux86_cycle=no)
+                    )
+                ),
+dnl The if-cross-compiling clause from the first AC_TRY_RUN.  Hope that if the
+dnl compiler knows about the instruction then it's supported by the target
+dnl platform.
+                AC_TRY_COMPILE(,[[
+                    long long var, *var_ptr=&var;
+                    __asm__ __volatile__("rdtscp; shl \$32, %%rdx; or %%rdx, %%rax" : "=a" (*var_ptr) : : "ecx", "rdx");
+                ]],pac_cv_linux86_cycle=rdtscp,
+                    AC_TRY_COMPILE(,[[[
+                        long long var, *var_ptr=&var;
+                        __asm__ __volatile__("push %%rbx ; cpuid ; rdtsc ; pop %%rbx ; shl $32, %%rdx; or %%rdx, %%rax" : "=a" (*var_ptr) : : "ecx", "rdx");
+                    ]]],pac_cv_linux86_cycle=cpuid_rdtsc64,
+                        AC_TRY_COMPILE(,[[[[
+                            long long var, *var_ptr=&var;
+                            __asm__ __volatile__("push %%ebx ; cpuid ; rdtsc ; pop %%ebx" : "=A" (*var_ptr) : : "ecx");
+                        ]]]],pac_cv_linux86_cycle=cpuid_rdtsc32,
+                            AC_TRY_COMPILE(,[[[[[
+                                long long var, *var_ptr=&var;
+                                __asm__ __volatile__("rdtsc" : "=A" (*var_ptr));
+                            ]]]]],pac_cv_linux86_cycle=rdtsc,
+                            pac_cv_linux86_cycle=no)
+                        )
+                    )
+                )
+            )
+    )
+
+    case "$pac_cv_linux86_cycle" in
+        "rdtscp")
+            AC_DEFINE(LINUX86_CYCLE_RDTSCP,1,[Define which x86 cycle counter to use])
+	    ;;
+        "cpuid_rdtsc64")
+            AC_DEFINE(LINUX86_CYCLE_CPUID_RDTSC64,1,[Define which x86 cycle counter to use])
+            ;;
+        "cpuid_rdtsc32")
+            AC_DEFINE(LINUX86_CYCLE_CPUID_RDTSC32,1,[Define which x86 cycle counter to use])
+	    ;;
+        "rdtsc")
+            AC_DEFINE(LINUX86_CYCLE_RDTSC,1,[Define which x86 cycle counter to use])
+	    ;;
+        *)
+            cpu_gcc_x86_cycle=no
+	    ;;
+    esac
+
+    if test "$cpu_gcc_x86_cycle" = "no" ; then
+        AC_MSG_ERROR([Linux86 cycle counter is not available on this system and or with the $CC compiler])
+    fi
+    MPL_TIMER_TYPE="long long"
+    ;;
+
+    gcc_ia64_cycle)
+    AC_CACHE_CHECK([that IPF timer is available],
+pac_cv_ia64_cycle,[
+    AC_TRY_COMPILE(,[
+    long var, *var_ptr=&var;
+#ifdef __INTEL_COMPILER
+#include "ia64regs.h"
+    var=__getReg(_IA64_REG_AR_ITC);
+#else
+    __asm__ __volatile__("mov %0=ar.itc" : "=r" (var_ptr));
+#endif
+],pac_cv_gcc_ia64_cycle=yes,pac_cv_gcc_ia64_cycle=no)])
+    if test "$pac_cv_gcc_ia64_cycle" != "yes" ; then
+        AC_MSG_ERROR([IPF cycle counter is not available on this system and or with the $CC compiler])
+     fi
+     MPL_TIMER_TYPE="long"
+     ;;
+
+    mach_absolute_time)
+    AC_CHECK_FUNC(mach_absolute_time,,[AC_MSG_ERROR([mach_absolute_time is not available])])
+    AC_CHECK_FUNC(mach_timebase_info,,[AC_MSG_ERROR([mach_timebase_info is not available])])
+    MPL_TIMER_TYPE="uint64_t"
+    ;;
+
+    device)
+    # The device selected should export the datatype for the timer
+    MPL_TIMER_TYPE="void *"
+    ;;
+
+    *)
+    AC_MSG_ERROR([Invalid timer type $timer_type])
+    ;;
+esac
+# Convert timer type to upper case
+timer_type=`echo $timer_type | \
+    tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
+MPL_TIMER_KIND=MPL_TIMER_KIND__$timer_type
+AC_SUBST(MPL_TIMER_KIND)
+AC_SUBST(MPL_TIMER_TYPE)
+
+#######################################################################
+## END OF TIMER CODE
+#######################################################################
+
+
+
 ## Enable creation of libtool-style versioning or no versioning
 AC_ARG_ENABLE(versioning,
         [AC_HELP_STRING([--enable-versioning],[Enable library versioning])],,
@@ -202,6 +510,12 @@ if test "$ac_cv_func_strerror" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <string.h>],strerror)
 fi
 
+# Check for usleep
+AC_CHECK_FUNCS(usleep)
+if test "$ac_cv_func_usleep" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <unistd.h>],usleep)
+fi
+
 AC_CHECK_FUNCS(backtrace_symbols)
 AC_CHECK_LIB(backtrace, backtrace_create_state)
 AC_CHECK_LIB(unwind, unw_backtrace)
@@ -212,5 +526,5 @@ dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE
 
 dnl Final output
-AC_CONFIG_FILES([Makefile localdefs])
+AC_CONFIG_FILES([Makefile localdefs include/mpl_timer.h])
 AC_OUTPUT

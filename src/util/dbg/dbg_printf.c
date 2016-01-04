@@ -427,7 +427,7 @@ int MPIU_DBG_Outevent( const char *file, int line, int class, int kind,
     char *str, stmp[MPIU_DBG_MAXLINE];
     int  i;
     void *p;
-    MPID_Time_t t;
+    MPL_Time_t t;
     double  curtime;
     unsigned long long int threadID  = 0;
     int pid = -1;
@@ -457,8 +457,8 @@ int MPIU_DBG_Outevent( const char *file, int line, int class, int kind,
         set_fp(dbg_fp);
     }
 
-    MPID_Wtime( &t );
-    MPID_Wtime_todouble( &t, &curtime );
+    MPL_Wtime( &t );
+    MPL_Wtime_todouble( &t, &curtime );
     curtime = curtime - timeOrigin;
 
     /* The kind values are used with the macros to simplify these cases */
@@ -697,7 +697,7 @@ static int MPIU_DBG_ProcessEnv( void )
  */
 int MPIU_DBG_PreInit( int *argc_p, char ***argv_p, int wtimeNotReady )
 {
-    MPID_Time_t t;
+    MPL_Time_t t;
 
     /* if the DBG_MSG system was already initialized, say by the device, then
        return immediately */
@@ -714,8 +714,8 @@ int MPIU_DBG_PreInit( int *argc_p, char ***argv_p, int wtimeNotReady )
     MPIU_DBG_ProcessArgs( argc_p, argv_p );
 
     if (wtimeNotReady == 0) {
-	MPID_Wtime( &t );
-	MPID_Wtime_todouble( &t, &timeOrigin );
+	MPL_Wtime( &t );
+	MPL_Wtime_todouble( &t, &timeOrigin );
 	resetTimeOrigin = 0;
     }
 
@@ -743,9 +743,9 @@ int MPIU_DBG_Init( int *argc_p, char ***argv_p, int has_args, int has_env,
 
     /* We may need to wait until the device is set up to initialize the timer */
     if (resetTimeOrigin) {
-	MPID_Time_t t;
-	MPID_Wtime( &t );
-	MPID_Wtime_todouble( &t, &timeOrigin );
+	MPL_Time_t t;
+	MPL_Wtime( &t );
+	MPL_Wtime_todouble( &t, &timeOrigin );
 	resetTimeOrigin = 0;
     }
     /* Check to see if any debugging was selected.  The order of these

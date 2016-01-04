@@ -14,6 +14,5 @@ include $(top_srcdir)/src/util/thread/Makefile.mk
 include $(top_srcdir)/src/util/type/Makefile.mk
 include $(top_srcdir)/src/util/wrappers/Makefile.mk
 include $(top_srcdir)/src/util/assert/Makefile.mk
-include $(top_srcdir)/src/util/timers/Makefile.mk
 include $(top_srcdir)/src/util/pointer/Makefile.mk
 
