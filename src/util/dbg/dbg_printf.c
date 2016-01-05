@@ -380,9 +380,11 @@ static int dbg_process_env( void )
     }
 
     s = getenv( "MPICH_DBG_CLASS" );
-    rc = dbg_set_class( s );
-    if (rc) 
-	dbg_usage( "MPICH_DBG_CLASS", 0 );
+    if (s) {
+        rc = dbg_set_class( s );
+        if (rc)
+            dbg_usage( "MPICH_DBG_CLASS", 0 );
+    }
 
     s = getenv( "MPICH_DBG_FILENAME" );
     if (s) {
