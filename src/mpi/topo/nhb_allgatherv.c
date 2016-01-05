@@ -40,7 +40,7 @@ int MPIR_Neighbor_allgatherv_default(const void *sendbuf, int sendcount, MPI_Dat
     MPI_Request req;
 
     /* just call the nonblocking version and wait on it */
-    mpi_errno = MPIR_Ineighbor_allgatherv_impl(sendbuf, sendcount, sendtype,
+    mpi_errno = MPID_Ineighbor_allgatherv(sendbuf, sendcount, sendtype,
                                                recvbuf, recvcounts, displs, recvtype,
                                                comm_ptr, &req);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -157,7 +157,7 @@ int MPI_Neighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sen
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Neighbor_allgatherv_impl(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm_ptr);
+    mpi_errno = MPID_Neighbor_allgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */

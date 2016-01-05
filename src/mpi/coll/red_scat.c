@@ -1218,8 +1218,8 @@ int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Reduce_scatter_impl(sendbuf, recvbuf, recvcounts,
-                                         datatype, op, comm_ptr, &errflag);
+    mpi_errno = MPID_Reduce_scatter(sendbuf, recvbuf, recvcounts,
+                                    datatype, op, comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

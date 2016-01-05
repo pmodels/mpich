@@ -980,7 +980,7 @@ int MPIR_Reduce_scatter_block_inter (
 
     newcomm_ptr = comm_ptr->local_comm;
 
-    mpi_errno = MPIR_Scatter_impl(tmp_buf, recvcount, datatype, recvbuf,
+    mpi_errno = MPID_Scatter(tmp_buf, recvcount, datatype, recvbuf,
                                   recvcount, datatype, 0, newcomm_ptr, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
@@ -1185,7 +1185,7 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Reduce_scatter_block_impl(sendbuf, recvbuf, recvcount, 
+    mpi_errno = MPID_Reduce_scatter_block(sendbuf, recvbuf, recvcount,
                                           datatype, op, comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
 

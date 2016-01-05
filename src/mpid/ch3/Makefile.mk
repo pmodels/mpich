@@ -22,7 +22,8 @@ noinst_HEADERS +=                      \
     src/mpid/ch3/include/mpidpre.h     \
     src/mpid/ch3/include/mpid_thread.h \
     src/mpid/ch3/include/mpidrma.h     \
-    src/mpid/ch3/include/mpid_sched.h
+    src/mpid/ch3/include/mpid_sched.h  \
+    src/mpid/ch3/include/mpid_coll.h
 
 include $(top_srcdir)/src/mpid/ch3/src/Makefile.mk
 include $(top_srcdir)/src/mpid/ch3/util/Makefile.mk

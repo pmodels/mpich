@@ -1085,7 +1085,7 @@ int MPI_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Com
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Ibcast_impl(buffer, count, datatype, root, comm_ptr, request);
+    mpi_errno = MPID_Ibcast(buffer, count, datatype, root, comm_ptr, request);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */

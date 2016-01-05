@@ -285,7 +285,7 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Ibarrier_impl(comm_ptr, request);
+    mpi_errno = MPID_Ibarrier(comm_ptr, request);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */

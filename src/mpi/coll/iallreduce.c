@@ -789,7 +789,7 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Iallreduce_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
+    mpi_errno = MPID_Iallreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, request);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */

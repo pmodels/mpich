@@ -1049,7 +1049,7 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Ireduce_scatter_block_impl(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, request);
+    mpi_errno = MPID_Ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, request);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */

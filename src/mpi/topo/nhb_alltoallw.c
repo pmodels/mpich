@@ -38,7 +38,7 @@ int MPIR_Neighbor_alltoallw_default(const void *sendbuf, const int sendcounts[],
     MPI_Request req;
 
     /* just call the nonblocking version and wait on it */
-    mpi_errno = MPIR_Ineighbor_alltoallw_impl(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, &req);
+    mpi_errno = MPID_Ineighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, &req);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Wait_impl(&req, MPI_STATUS_IGNORE);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -140,7 +140,7 @@ int MPI_Neighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MP
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Neighbor_alltoallw_impl(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr);
+    mpi_errno = MPID_Neighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */

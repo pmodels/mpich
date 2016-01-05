@@ -259,10 +259,10 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
         comm_info[1] = final_context_id;
         comm_info[2] = is_low_group;
         MPL_DBG_MSG(MPIR_DBG_COMM,VERBOSE,"About to bcast on local_comm");
-        mpi_errno = MPIR_Bcast_impl( comm_info, 3, MPI_INT, local_leader, local_comm_ptr, &errflag );
+        mpi_errno = MPID_Bcast( comm_info, 3, MPI_INT, local_leader, local_comm_ptr, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-        mpi_errno = MPIR_Bcast_impl( remote_gpids, remote_size*sizeof(MPIR_Gpid), MPI_BYTE, local_leader,
+        mpi_errno = MPID_Bcast( remote_gpids, remote_size*sizeof(MPIR_Gpid), MPI_BYTE, local_leader,
                                      local_comm_ptr, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -273,13 +273,13 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
     {
         /* we're the other processes */
         MPL_DBG_MSG(MPIR_DBG_COMM,VERBOSE,"About to receive bcast on local_comm");
-        mpi_errno = MPIR_Bcast_impl( comm_info, 3, MPI_INT, local_leader, local_comm_ptr, &errflag );
+        mpi_errno = MPID_Bcast( comm_info, 3, MPI_INT, local_leader, local_comm_ptr, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
         remote_size = comm_info[0];
         MPIU_CHKLMEM_MALLOC(remote_gpids,MPIR_Gpid*,remote_size*sizeof(MPIR_Gpid), mpi_errno,"remote_gpids");
         MPIU_CHKLMEM_MALLOC(remote_lpids,int*,remote_size*sizeof(int), mpi_errno,"remote_lpids");
-        mpi_errno = MPIR_Bcast_impl( remote_gpids, remote_size*sizeof(MPIR_Gpid), MPI_BYTE, local_leader,
+        mpi_errno = MPID_Bcast( remote_gpids, remote_size*sizeof(MPIR_Gpid), MPI_BYTE, local_leader,
                                      local_comm_ptr, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");

@@ -781,7 +781,7 @@ int MPIR_Reduce_intra (
         /* do the intranode reduce on all nodes other than the root's node */
         if (comm_ptr->node_comm != NULL &&
             MPIU_Get_intranode_rank(comm_ptr, root) == -1) {
-            mpi_errno = MPIR_Reduce_impl(sendbuf, tmp_buf, count, datatype,
+            mpi_errno = MPID_Reduce(sendbuf, tmp_buf, count, datatype,
                                          op, 0, comm_ptr->node_comm, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -797,7 +797,7 @@ int MPIR_Reduce_intra (
                 /* I am not on root's node.  Use tmp_buf if we
                    participated in the first reduce, otherwise use sendbuf */
                 const void *buf = (comm_ptr->node_comm == NULL ? sendbuf : tmp_buf);
-                mpi_errno = MPIR_Reduce_impl(buf, NULL, count, datatype,
+                mpi_errno = MPID_Reduce(buf, NULL, count, datatype,
                                              op, MPIU_Get_internode_rank(comm_ptr, root),
                                              comm_ptr->node_roots_comm, errflag);
                 if (mpi_errno) {
@@ -812,7 +812,7 @@ int MPIR_Reduce_intra (
                     /* I am not the root though. I don't have a valid recvbuf.
                        Use tmp_buf as recvbuf. */
 
-                    mpi_errno = MPIR_Reduce_impl(sendbuf, tmp_buf, count, datatype,
+                    mpi_errno = MPID_Reduce(sendbuf, tmp_buf, count, datatype,
                                                  op, MPIU_Get_internode_rank(comm_ptr, root),
                                                  comm_ptr->node_roots_comm, errflag);
                     if (mpi_errno) {
@@ -828,7 +828,7 @@ int MPIR_Reduce_intra (
                 else {
                     /* I am the root. in_place is automatically handled. */
 
-                    mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype,
+                    mpi_errno = MPID_Reduce(sendbuf, recvbuf, count, datatype,
                                                  op, MPIU_Get_internode_rank(comm_ptr, root),
                                                  comm_ptr->node_roots_comm, errflag);
                     if (mpi_errno) {
@@ -848,7 +848,7 @@ int MPIR_Reduce_intra (
         /* do the intranode reduce on the root's node */
         if (comm_ptr->node_comm != NULL &&
             MPIU_Get_intranode_rank(comm_ptr, root) != -1) { 
-            mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype,
+            mpi_errno = MPID_Reduce(sendbuf, recvbuf, count, datatype,
                                          op, MPIU_Get_intranode_rank(comm_ptr, root),
                                          comm_ptr->node_comm, errflag);
             if (mpi_errno) {
@@ -1254,7 +1254,7 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, &errflag);
+    mpi_errno = MPID_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
     
     /* ... end of body of routine ... */

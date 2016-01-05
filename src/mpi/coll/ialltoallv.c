@@ -398,7 +398,7 @@ int MPI_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispl
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Ialltoallv_impl(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, request);
+    mpi_errno = MPID_Ialltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, request);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
