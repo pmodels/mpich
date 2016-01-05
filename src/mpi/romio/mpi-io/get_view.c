@@ -75,7 +75,7 @@ int MPI_File_get_view(MPI_File fh, MPI_Offset *disp, MPI_Datatype *etype,
     else {
 	/* FIXME: It is wrong to use MPI_Type_contiguous; the user could choose to
 	   re-implement MPI_Type_contiguous in an unexpected way.  Either use 
-	   MPIR_Barrier_impl as in MPICH or PMPI_Type_contiguous */
+	   MPID_Barrier as in MPICH or PMPI_Type_contiguous */
         MPI_Type_contiguous(1, adio_fh->etype, &copy_etype);
 
 	/* FIXME: Ditto for MPI_Type_commit - use NMPI or PMPI */

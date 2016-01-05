@@ -593,7 +593,7 @@ int MPIR_Gather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
             newcomm_ptr = comm_ptr->local_comm;
 
             /* now do the a local gather on this intracommunicator */
-            mpi_errno = MPIR_Gather_impl(sendbuf, sendcount, sendtype,
+            mpi_errno = MPID_Gather(sendbuf, sendcount, sendtype,
                                          tmp_buf, sendcount, sendtype, 0,
                                          newcomm_ptr, errflag);
             if (mpi_errno) {
@@ -886,7 +886,7 @@ int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Gather_impl(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, &errflag);
+    mpi_errno = MPID_Gather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
         
     /* ... end of body of routine ... */

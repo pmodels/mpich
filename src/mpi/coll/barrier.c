@@ -78,7 +78,7 @@ static int barrier_smp_intra(MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
     /* do the intranode barrier on all nodes */
     if (comm_ptr->node_comm != NULL)
     {
-        mpi_errno = MPIR_Barrier_impl(comm_ptr->node_comm, errflag);
+        mpi_errno = MPID_Barrier(comm_ptr->node_comm, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -89,7 +89,7 @@ static int barrier_smp_intra(MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 
     /* do the barrier across roots of all nodes */
     if (comm_ptr->node_roots_comm != NULL) {
-        mpi_errno = MPIR_Barrier_impl(comm_ptr->node_roots_comm, errflag);
+        mpi_errno = MPID_Barrier(comm_ptr->node_roots_comm, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -104,7 +104,7 @@ static int barrier_smp_intra(MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
     if (comm_ptr->node_comm != NULL)
     {
         int i=0;
-        mpi_errno = MPIR_Bcast_impl(&i, 1, MPI_BYTE, 0, comm_ptr->node_comm, errflag);
+        mpi_errno = MPID_Bcast(&i, 1, MPI_BYTE, 0, comm_ptr->node_comm, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -406,7 +406,7 @@ int MPI_Barrier( MPI_Comm comm )
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Barrier_impl(comm_ptr, &errflag);
+    mpi_errno = MPID_Barrier(comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
     
     /* ... end of body of routine ... */

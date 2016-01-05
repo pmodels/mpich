@@ -366,7 +366,7 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Scatterv_impl(sendbuf, sendcounts, displs, sendtype,
+    mpi_errno = MPID_Scatterv(sendbuf, sendcounts, displs, sendtype,
                                    recvbuf, recvcount, recvtype,
                                    root, comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;

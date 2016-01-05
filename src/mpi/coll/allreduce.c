@@ -223,7 +223,7 @@ int MPIR_Allreduce_intra (
                 /* IN_PLACE and not root of reduce. Data supplied to this
                    allreduce is in recvbuf. Pass that as the sendbuf to reduce. */
 			
-                mpi_errno = MPIR_Reduce_impl(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm, errflag);
+                mpi_errno = MPID_Reduce(recvbuf, NULL, count, datatype, op, 0, comm_ptr->node_comm, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -231,7 +231,7 @@ int MPIR_Allreduce_intra (
                     MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
                 }
             } else {
-                mpi_errno = MPIR_Reduce_impl(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm, errflag);
+                mpi_errno = MPID_Reduce(sendbuf, recvbuf, count, datatype, op, 0, comm_ptr->node_comm, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -261,7 +261,7 @@ int MPIR_Allreduce_intra (
 
         /* now broadcast the result among local processes */
         if (comm_ptr->node_comm != NULL) {
-            mpi_errno = MPIR_Bcast_impl(recvbuf, count, datatype, 0, comm_ptr->node_comm, errflag);
+            mpi_errno = MPID_Bcast(recvbuf, count, datatype, 0, comm_ptr->node_comm, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -284,7 +284,7 @@ int MPIR_Allreduce_intra (
     if (!is_homogeneous) {
         /* heterogeneous. To get the same result on all processes, we
            do a reduce to 0 and then broadcast. */
-        mpi_errno = MPIR_Reduce_impl ( sendbuf, recvbuf, count, datatype,
+        mpi_errno = MPID_Reduce( sendbuf, recvbuf, count, datatype,
                                        op, 0, comm_ptr, errflag );
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
@@ -293,7 +293,7 @@ int MPIR_Allreduce_intra (
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
 
-        mpi_errno = MPIR_Bcast_impl( recvbuf, count, datatype, 0, comm_ptr, errflag );
+        mpi_errno = MPID_Bcast( recvbuf, count, datatype, 0, comm_ptr, errflag );
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -682,7 +682,7 @@ int MPIR_Allreduce_inter (
     }
 
     /* Do a local broadcast on this intracommunicator */
-    mpi_errno = MPIR_Bcast_impl(recvbuf, count, datatype,
+    mpi_errno = MPID_Bcast(recvbuf, count, datatype,
                                 0, newcomm_ptr, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
@@ -889,7 +889,7 @@ int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Allreduce_impl(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
+    mpi_errno = MPID_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

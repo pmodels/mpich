@@ -415,7 +415,7 @@ int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Gatherv_impl(sendbuf, sendcount, sendtype,
+    mpi_errno = MPID_Gatherv(sendbuf, sendcount, sendtype,
                                   recvbuf, recvcounts, displs, recvtype,
                                   root, comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;

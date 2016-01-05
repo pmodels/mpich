@@ -524,7 +524,7 @@ int MPI_Alltoallv(const void *sendbuf, const int *sendcounts,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Alltoallv_impl(sendbuf, sendcounts, sdispls,
+    mpi_errno = MPID_Alltoallv(sendbuf, sendcounts, sdispls,
                                     sendtype, recvbuf, recvcounts,
                                     rdispls, recvtype, comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;

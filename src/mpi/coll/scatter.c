@@ -511,7 +511,7 @@ int MPIR_Scatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype
             newcomm_ptr = comm_ptr->local_comm;
             
             /* now do the usual scatter on this intracommunicator */
-            mpi_errno = MPIR_Scatter_impl(tmp_buf, recvcount, recvtype,
+            mpi_errno = MPID_Scatter(tmp_buf, recvcount, recvtype,
                                           recvbuf, recvcount, recvtype, 0,
                                           newcomm_ptr, errflag);
             if (mpi_errno) {
@@ -784,7 +784,7 @@ int MPI_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Scatter_impl(sendbuf, sendcount, sendtype,
+    mpi_errno = MPID_Scatter(sendbuf, sendcount, sendtype,
                                   recvbuf, recvcount, recvtype, root,
                                   comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;

@@ -1582,7 +1582,7 @@ int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPIR_Bcast_impl( buffer, count, datatype, root, comm_ptr, &errflag );
+    mpi_errno = MPID_Bcast( buffer, count, datatype, root, comm_ptr, &errflag );
     if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */

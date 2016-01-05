@@ -377,10 +377,10 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
         if (mpi_errno) { MPIR_ERR_POP( mpi_errno ); }
 
         /* Broadcast to the other members of the local group */
-        mpi_errno = MPIR_Bcast_impl( rinfo, 2, MPI_INT, 0,
+        mpi_errno = MPID_Bcast( rinfo, 2, MPI_INT, 0,
                                      comm_ptr->local_comm, &errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        mpi_errno = MPIR_Bcast_impl( remote_mapping, remote_size, MPI_INT, 0,
+        mpi_errno = MPID_Bcast( remote_mapping, remote_size, MPI_INT, 0,
                                      comm_ptr->local_comm, &errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -388,7 +388,7 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
     else {
         /* The other processes */
         /* Broadcast to the other members of the local group */
-        mpi_errno = MPIR_Bcast_impl( rinfo, 2, MPI_INT, 0,
+        mpi_errno = MPID_Bcast( rinfo, 2, MPI_INT, 0,
                                      comm_ptr->local_comm, &errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -399,7 +399,7 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
         MPIU_CHKLMEM_MALLOC(remote_mapping,int*,
                             remote_size*sizeof(int),
                             mpi_errno,"remote_mapping");
-        mpi_errno = MPIR_Bcast_impl( remote_mapping, remote_size, MPI_INT, 0,
+        mpi_errno = MPID_Bcast( remote_mapping, remote_size, MPI_INT, 0,
                                      comm_ptr->local_comm, &errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");

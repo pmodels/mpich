@@ -332,7 +332,7 @@ int MPI_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Iscatterv_impl(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, request);
+    mpi_errno = MPID_Iscatterv(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, request);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
