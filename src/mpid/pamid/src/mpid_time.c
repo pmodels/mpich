@@ -29,54 +29,89 @@
 
 int MPIDI_PAMID_Timer_is_ready = 0;
 
-int MPID_Wtime( MPID_Time_t *tval )
+static int wtime(MPIU_Time_t *tval)
 {
     if (MPIDI_PAMID_Timer_is_ready) {
-        *tval = PAMI_Wtime(MPIDI_Client);
-        return MPID_TIMER_SUCCESS;
-    }
-    else
-        return MPID_TIMER_ERR_NOT_INITIALIZED;
-}
-int MPID_Wtick(double *wtick)
-{
-    if (MPIDI_PAMID_Timer_is_ready) {
-        *wtick = PAMIX_Client_query(MPIDI_Client, PAMI_CLIENT_WTICK).value.doubleval;
-        return MPID_TIMER_SUCCESS;
-    }
-    else
-        return MPID_TIMER_ERR_NOT_INITIALIZED;
-}
-int MPID_Wtime_diff( MPID_Time_t *t1, MPID_Time_t *t2, double *diff )
-{
-    if (MPIDI_PAMID_Timer_is_ready) {
-        *diff = *t2 - *t1;
-        return MPID_TIMER_SUCCESS;
-    }
-    else
-        return MPID_TIMER_ERR_NOT_INITIALIZED;
-}
-int MPID_Wtime_todouble( MPID_Time_t *t, double *val )
-{
-    if (MPIDI_PAMID_Timer_is_ready) {
-        *val = *t;
-        return MPID_TIMER_SUCCESS;
-    }
-    else
-        return MPID_TIMER_ERR_NOT_INITIALIZED;
-}
-int MPID_Wtime_acc( MPID_Time_t *t1, MPID_Time_t *t2, MPID_Time_t *t3 )
-{
-    if (MPIDI_PAMID_Timer_is_ready) {
-        *t3 += *t1 - *t2;
+        *((MPID_Time_t *) tval) = PAMI_Wtime(MPIDI_Client);
         return MPID_TIMER_SUCCESS;
     }
     else
         return MPID_TIMER_ERR_NOT_INITIALIZED;
 }
 
+int MPID_Wtime(MPID_Time_t *tval)
+{
+    return wtime((MPIU_Time_t *) tval);
+}
+
+static int wtick(double *wtick)
+{
+    if (MPIDI_PAMID_Timer_is_ready) {
+        *((double *) wtick) = PAMIX_Client_query(MPIDI_Client, PAMI_CLIENT_WTICK).value.doubleval;
+        return MPID_TIMER_SUCCESS;
+    }
+    else
+        return MPID_TIMER_ERR_NOT_INITIALIZED;
+}
+
+int MPID_Wtick(double *tick)
+{
+    return wtick((MPIU_Time_t *) tick);
+}
+
+static int wtime_diff(MPIU_Time_t *t1, MPIU_Time_t *t2, double *diff)
+{
+    if (MPIDI_PAMID_Timer_is_ready) {
+        *diff = *((MPID_Time_t *) t2) - *((MPID_Time_t *) t1);
+        return MPID_TIMER_SUCCESS;
+    }
+    else
+        return MPID_TIMER_ERR_NOT_INITIALIZED;
+}
+
+int MPID_Wtime_diff(MPID_Time_t *t1, MPID_Time_t *t2, double *diff)
+{
+    return wtime_diff((MPIU_Time_t *) t1, (MPIU_Time_t *) t2, diff);
+}
+
+static int wtime_todouble(MPIU_Time_t *t, double *val)
+{
+    if (MPIDI_PAMID_Timer_is_ready) {
+        *val = *((MPID_Time_t *) t);
+        return MPID_TIMER_SUCCESS;
+    }
+    else
+        return MPID_TIMER_ERR_NOT_INITIALIZED;
+}
+
+int MPID_Wtime_todouble(MPID_Time_t *t, double *val)
+{
+    return wtime_todouble((MPIU_Time_t *) t, val);
+}
+
+static int wtime_acc(MPIU_Time_t *t1, MPIU_Time_t *t2, MPIU_Time_t *t3)
+{
+    if (MPIDI_PAMID_Timer_is_ready) {
+        *((MPID_Time_t *) t3) += *((MPID_Time_t *) t1) - *((MPID_Time_t *) t2);
+        return MPID_TIMER_SUCCESS;
+    }
+    else
+        return MPID_TIMER_ERR_NOT_INITIALIZED;
+}
+
+int MPID_Wtime_acc(MPID_Time_t *t1, MPID_Time_t *t2, MPID_Time_t *t3)
+{
+    return wtime_acc((MPIU_Time_t *) t1, (MPIU_Time_t *) t2, (MPIU_Time_t *) t3);
+}
+
 int MPID_Wtime_init( void )
 {
+    MPIU_Wtime_fn = wtime;
+    MPIU_Wtick_fn = wtick;
+    MPIU_Wtime_diff_fn = wtime_diff;
+    MPIU_Wtime_todouble_fn = wtime_todouble;
+    MPIU_Wtime_acc_fn = wtime_acc;
+
     return MPID_TIMER_SUCCESS;
 }
 

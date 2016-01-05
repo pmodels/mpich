@@ -64,15 +64,38 @@ int usleep(useconds_t usec);
 #include <windows.h>
 #endif
 
-/* Define a time stamp */
-typedef @MPICH_TIMER_TYPE@ MPIU_Time_t;
-
 /* The timer code is allowed to return "NOT_INITIALIZED" before the
  * device is initialized.  Once the device is initialized, it must
  * always return SUCCESS, so the upper layers do not need to check for
  * the return code.  */
 #define MPIU_TIMER_SUCCESS                0
 #define MPIU_TIMER_ERR_NOT_INITIALIZED    1
+
+/*
+ * If the timer capability is provided by the device, it would need to
+ * expose it in two ways:
+ *
+ *    1. It would expose it through the MPID_ functionality.  This
+ *       model would be used by the MPICH internal code, and would
+ *       give fast access to the timers.
+ *
+ *    2. It would expose it through the MPIU_Timer_ function pointers.
+ *       This model would be used by "external" code segments (such as
+ *       MPIU) which do not have direct access to the MPICH devices.
+ *       This model might be slightly slower, but would give the same
+ *       functionality.
+ */
+#if MPICH_TIMER_KIND == MPIU_TIMER_KIND__DEVICE
+typedef void * MPIU_Time_t;
+extern int (*MPIU_Wtime_fn)(MPIU_Time_t *timeval);
+extern int (*MPIU_Wtime_diff_fn)(MPIU_Time_t *t1, MPIU_Time_t *t2, double *diff);
+extern int (*MPIU_Wtime_acc_fn)(MPIU_Time_t *t1, MPIU_Time_t *t2, MPIU_Time_t *t3);
+extern int (*MPIU_Wtime_todouble_fn)(MPIU_Time_t *timeval, double *seconds);
+extern int (*MPIU_Wtick_fn)(double *tick);
+#else
+/* Define a time stamp */
+typedef @MPICH_TIMER_TYPE@ MPIU_Time_t;
+#endif
 
 /*
  * Prototypes.  These are defined here so that inlined timer calls can

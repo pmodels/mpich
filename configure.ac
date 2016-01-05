@@ -4721,7 +4721,7 @@ AC_SUBST(MPICH_TIMER_TYPE)
 
 # If the device specified a timer type, use that by default.  Else,
 # try to detect a type that works on this system.
-if test -n "$MPID_DEVICE_TIMER_TYPE" ; then
+if test -n "$MPID_DEVICE_DEFINES_TIMER" ; then
    default_timer_type=device
 else
    default_timer_type=
@@ -5001,10 +5001,7 @@ pac_cv_ia64_cycle,[
 
     device)
     # The device selected should export the datatype for the timer
-    # in MPID_DEVICE_TIMER_TYPE if something other than long is needed
-    if test -n "$MPID_DEVICE_TIMER_TYPE" ; then
-       MPICH_TIMER_TYPE=$MPID_DEVICE_TIMER_TYPE
-    fi
+    MPICH_TIMER_TYPE="void *"
     ;;
 
     *)
@@ -5197,16 +5194,6 @@ fi
 BSEND_OVERHEAD=$ac_cv_sizeof_MPIR_Bsend_data_t
 export BSEND_OVERHEAD
 AC_SUBST(BSEND_OVERHEAD)
-
-#
-# See if we need to update the timer type (which was converted to uppercase)
-if test "$timer_type" = "DEVICE" ; then
-    # The device selected should export the datatype for the timer
-    # in MPID_DEVICE_TIMER_TYPE if something other than long is needed
-    if test -n "$MPID_DEVICE_TIMER_TYPE" ; then 
-       MPICH_TIMER_TYPE=$MPID_DEVICE_TIMER_TYPE
-    fi
-fi
 
 dnl Configure any subdirectories.  Note that config.status will *not* 
 dnl reexecute these!

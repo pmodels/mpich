@@ -57,6 +57,15 @@
 #define MPID_TIMER_SUCCESS              MPIU_TIMER_SUCCESS
 #define MPID_TIMER_ERR_NOT_INITIALIZED  MPIU_TIMER_ERR_NOT_INITIALIZED
 
+typedef double MPID_Time_t;
+
+int MPID_Wtime(MPID_Time_t *tval);
+int MPID_Wtick(double *wtick);
+int MPID_Wtime_diff(MPID_Time_t *t1, MPID_Time_t *t2, double *diff);
+int MPID_Wtime_todouble(MPID_Time_t *t, double *val);
+int MPID_Wtime_acc(MPID_Time_t *t1, MPID_Time_t *t2, MPID_Time_t *t3);
+int MPID_Wtime_init(void);
+
 #include "mpidi_platform.h"
 
 #include "mpidi_constants.h"
