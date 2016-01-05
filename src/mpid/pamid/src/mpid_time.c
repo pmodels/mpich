@@ -23,7 +23,7 @@
 
 #if MPICH_TIMER_KIND == USE_GETTIMEOFDAY
 #warning Compiling mpid/pamid/src/mpid_time.c when MPICH_TIMER_KIND == USE_GETTIMEOFDAY
-#elif MPICH_TIMER_KIND != USE_DEVICE
+#elif MPICH_TIMER_KIND != MPIU_TIMER_KIND__DEVICE
 #error "Not using DEVICE TIMEBASE"
 #else
 
