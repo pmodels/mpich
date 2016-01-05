@@ -62,7 +62,7 @@ elif test "${pamid_platform}" = "BGQ" ; then
   MPID_DEFAULT_PM=no
 fi
 
-MPID_DEVICE_TIMER_TYPE=double
+MPID_DEVICE_DEFINES_TIMER
 MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE
 
 dnl the PAMID device depends on the common NBC scheduler code
