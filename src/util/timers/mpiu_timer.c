@@ -38,7 +38,7 @@ static void init_wtick(void)
     }
 }
 
-#if MPICH_TIMER_KIND == MPIU_GETHRTIME
+#if MPICH_TIMER_KIND == MPIU_TIMER_KIND__GETHRTIME
 /*
  * MPIU_Time_t is hrtime_t, which under Solaris is defined as a 64bit
  * longlong_t .  However, the Solaris header files will define
@@ -85,7 +85,7 @@ int MPIU_Wtime_init(void)
     return 0;
 }
 
-#elif MPICH_TIMER_KIND == MPIU_CLOCK_GETTIME
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__CLOCK_GETTIME
 void MPIU_Wtime(MPIU_Time_t * timeval)
 {
     /* POSIX timer (14.2.1, page 311) */
@@ -139,7 +139,7 @@ int MPIU_Wtime_init(void)
 }
 
 
-#elif MPICH_TIMER_KIND == MPIU_GETTIMEOFDAY
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__GETTIMEOFDAY
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
@@ -188,7 +188,7 @@ int MPIU_Wtime_init(void)
 }
 
 
-#elif MPICH_TIMER_KIND == MPIU_LINUX86_CYCLE
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__LINUX86_CYCLE
 #include <sys/time.h>
 double MPIU_Seconds_per_tick = 0.0;
 double MPIU_Wtick(void)
@@ -235,7 +235,7 @@ void MPIU_Wtime_acc(MPIU_Time_t * t1, MPIU_Time_t * t2, MPIU_Time_t * t3)
 }
 
 
-#elif MPICH_TIMER_KIND == MPIU_GCC_IA64_CYCLE
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__GCC_IA64_CYCLE
 #include <sys/time.h>
 double MPIU_Seconds_per_tick = 0.0;
 double MPIU_Wtick(void)
@@ -281,7 +281,7 @@ void MPIU_Wtime_acc(MPIU_Time_t * t1, MPIU_Time_t * t2, MPIU_Time_t * t3)
     *t3 += (*t2 - *t1);
 }
 
-#elif (MPICH_TIMER_KIND == MPIU_WIN86_CYCLE) || (MPICH_TIMER_KIND == MPIU_WIN64_CYCLE)
+#elif (MPICH_TIMER_KIND == MPIU_TIMER_KIND__WIN86_CYCLE) || (MPICH_TIMER_KIND == MPIU_TIMER_KIND__WIN64_CYCLE)
 double MPIU_Seconds_per_tick = 0.0;
 double MPIU_Wtick(void)
 {
@@ -327,7 +327,7 @@ int MPIU_Wtime_init(void)
      */
     return 0;
 }
-#elif MPICH_TIMER_KIND == MPIU_QUERYPERFORMANCECOUNTER
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__QUERYPERFORMANCECOUNTER
 double MPIU_Seconds_per_tick = 0.0;     /* High performance counter frequency */
 int MPIU_Wtime_init(void)
 {
@@ -360,7 +360,7 @@ void MPIU_Wtime_acc(MPIU_Time_t * t1, MPIU_Time_t * t2, MPIU_Time_t * t3)
 }
 
 
-#elif MPICH_TIMER_KIND == MPIU_MACH_ABSOLUTE_TIME
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__MACH_ABSOLUTE_TIME
 static double MPIR_Wtime_mult;
 
 int MPIU_Wtime_init(void)

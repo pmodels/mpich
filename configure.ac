@@ -5014,7 +5014,7 @@ esac
 # Convert timer type to upper case
 timer_type=`echo $timer_type | \
     tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
-MPICH_TIMER_KIND=MPIU_$timer_type
+MPICH_TIMER_KIND=MPIU_TIMER_KIND__$timer_type
 AC_SUBST(MPICH_TIMER_KIND)
 # ----------------------------------------------------------------------------
 # End of code for timer support (except for ac_ OUTPUT)
