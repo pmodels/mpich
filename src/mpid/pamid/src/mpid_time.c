@@ -27,36 +27,57 @@
 #error "Not using DEVICE TIMEBASE"
 #else
 
+int MPIDI_PAMID_Timer_is_ready = 0;
 
-void MPID_Wtime( MPID_Time_t *tval )
+int MPID_Wtime( MPID_Time_t *tval )
 {
-  *tval = PAMI_Wtime(MPIDI_Client);
+    if (MPIDI_PAMID_Timer_is_ready) {
+        *tval = PAMI_Wtime(MPIDI_Client);
+        return MPID_TIMER_SUCCESS;
+    }
+    else
+        return MPID_TIMER_ERR_NOT_INITIALIZED;
 }
-double MPID_Wtick()
+int MPID_Wtick(double *wtick)
 {
-  return PAMIX_Client_query(MPIDI_Client, PAMI_CLIENT_WTICK).value.doubleval;
+    if (MPIDI_PAMID_Timer_is_ready) {
+        *wtick = PAMIX_Client_query(MPIDI_Client, PAMI_CLIENT_WTICK).value.doubleval;
+        return MPID_TIMER_SUCCESS;
+    }
+    else
+        return MPID_TIMER_ERR_NOT_INITIALIZED;
 }
-void MPID_Wtime_diff( MPID_Time_t *t1, MPID_Time_t *t2, double *diff )
+int MPID_Wtime_diff( MPID_Time_t *t1, MPID_Time_t *t2, double *diff )
 {
-  *diff = *t2 - *t1;
+    if (MPIDI_PAMID_Timer_is_ready) {
+        *diff = *t2 - *t1;
+        return MPID_TIMER_SUCCESS;
+    }
+    else
+        return MPID_TIMER_ERR_NOT_INITIALIZED;
 }
-void MPID_Wtime_todouble( MPID_Time_t *t, double *val )
+int MPID_Wtime_todouble( MPID_Time_t *t, double *val )
 {
-  *val = *t;
+    if (MPIDI_PAMID_Timer_is_ready) {
+        *val = *t;
+        return MPID_TIMER_SUCCESS;
+    }
+    else
+        return MPID_TIMER_ERR_NOT_INITIALIZED;
 }
-void MPID_Wtime_acc( MPID_Time_t *t1, MPID_Time_t *t2, MPID_Time_t *t3 )
+int MPID_Wtime_acc( MPID_Time_t *t1, MPID_Time_t *t2, MPID_Time_t *t3 )
 {
-  *t3 += *t1 - *t2;
+    if (MPIDI_PAMID_Timer_is_ready) {
+        *t3 += *t1 - *t2;
+        return MPID_TIMER_SUCCESS;
+    }
+    else
+        return MPID_TIMER_ERR_NOT_INITIALIZED;
 }
-/*
-  Return Values:
-  0 on success.  -1 on Failure.  1 means that the timer may not be used
-  until after MPID_Init completes.  This allows the device to set up the
-  timer (first needed for Blue Gene support).
-*/
+
 int MPID_Wtime_init( void )
 {
-  return 1;
+    return MPID_TIMER_SUCCESS;
 }
 
 #endif
