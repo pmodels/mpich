@@ -222,24 +222,7 @@ int MPIU_Wtime_init(void);
    MPI_WTIME_IS_GLOBAL is false.
  */
 
-/* MPIUM_Wtime_todouble() is a hack to get a macro version
-   of the todouble function.
-
-   The logging library should save the native MPIU_Timer_t
-   structure to disk and use the todouble function in the
-   post-processsing step to convert the values to doubles.
-   */
-
-#if MPICH_TIMER_KIND == MPIU_TIMER_KIND__GETHRTIME
-#define MPIUM_Wtime_todouble MPIU_Wtime_todouble
-
-#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__CLOCK_GETTIME
-#define MPIUM_Wtime_todouble MPIU_Wtime_todouble
-
-#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__GETTIMEOFDAY
-#define MPIUM_Wtime_todouble MPIU_Wtime_todouble
-
-#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__LINUX86_CYCLE
+#if MPICH_TIMER_KIND == MPIU_TIMER_KIND__LINUX86_CYCLE
 /* The rdtsc instruction is not a "serializing" instruction, so the
    processor is free to reorder it.  In order to get more accurate
    timing numbers with rdtsc, we need to put a serializing
@@ -269,7 +252,6 @@ int MPIU_Wtime_init(void);
 #endif
 
 extern double MPIU_Seconds_per_tick;
-#define MPIUM_Wtime_todouble(t, d) *d = (double)*t * MPIU_Seconds_per_tick
 
 #elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__GCC_IA64_CYCLE
 #ifdef __INTEL_COMPILER
@@ -281,13 +263,10 @@ extern double MPIU_Seconds_per_tick;
 	__asm__ __volatile__("mov %0=ar.itc" : "=r" (t_val)); *var_ptr=t_val;}
 #endif
 extern double MPIU_Seconds_per_tick;
-#define MPIUM_Wtime_todouble(t, d) *d = (double)*t * MPIU_Seconds_per_tick
 
 #elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__QUERYPERFORMANCECOUNTER
 #define MPIU_Wtime(var) QueryPerformanceCounter(var)
 extern double MPIU_Seconds_per_tick;
-#define MPIUM_Wtime_todouble( t, d ) \
-  *d = (double)t->QuadPart * MPIU_Seconds_per_tick /* convert to seconds */
 
 #elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__WIN86_CYCLE
 #define MPIU_Wtime(var_ptr) \
@@ -300,11 +279,6 @@ extern double MPIU_Seconds_per_tick;
     __asm mov [ecx + TYPE int], edx \
 }
 extern double MPIU_Seconds_per_tick;
-#define MPIUM_Wtime_todouble(t, d) *d = (double)(__int64)*t * MPIU_Seconds_per_tick
-#define MPIUM_Wtime_diff(t1,t2,diff) *diff = (double)((__int64)( *t2 - *t1 )) * MPIU_Seconds_per_tick
-
-#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__MACH_ABSOLUTE_TIME
-#define MPIUM_Wtime_todouble MPIU_Wtime_todouble
 
 #endif
 
