@@ -223,6 +223,9 @@ int MPIU_Wtime_init(void);
  */
 
 #if MPICH_TIMER_KIND == MPIU_TIMER_KIND__LINUX86_CYCLE
+
+static inline void MPIU_Wtime(MPIU_Time_t *timeval)
+{
 /* The rdtsc instruction is not a "serializing" instruction, so the
    processor is free to reorder it.  In order to get more accurate
    timing numbers with rdtsc, we need to put a serializing
@@ -230,54 +233,70 @@ int MPIU_Wtime_init(void);
    the rdtscp instruction which is synchronizing, we use this when we
    can. */
 #ifdef LINUX86_CYCLE_RDTSCP
-#define MPIU_Wtime(var_ptr) \
-    __asm__ __volatile__("push %%rbx ; cpuid ; rdtsc ; pop %%rbx ; shl $32, %%rdx; or %%rdx, %%rax" : "=a" (*var_ptr) : : "ecx", "rdx")
+    __asm__ __volatile__("push %%rbx ; cpuid ; rdtsc ; pop %%rbx ; shl $32, %%rdx; or %%rdx, %%rax" : "=a" (*timeval) : : "ecx", "rdx");
+
 #elif defined(LINUX86_CYCLE_CPUID_RDTSC64)
 /* Here we have to save the rbx register for when the compiler is
    generating position independent code (e.g., when it's generating
    shared libraries) */
-#define MPIU_Wtime(var_ptr)                                                                     \
-     __asm__ __volatile__("push %%rbx ; cpuid ; rdtsc ; pop %%rbx" : "=A" (*var_ptr) : : "ecx")
+    __asm__ __volatile__("push %%rbx ; cpuid ; rdtsc ; pop %%rbx" : "=A" (*timeval) : : "ecx");
+
 #elif defined(LINUX86_CYCLE_CPUID_RDTSC32)
 /* Here we have to save the ebx register for when the compiler is
    generating position independent code (e.g., when it's generating
    shared libraries) */
-#define MPIU_Wtime(var_ptr)                                                                     \
-     __asm__ __volatile__("push %%ebx ; cpuid ; rdtsc ; pop %%ebx" : "=A" (*var_ptr) : : "ecx")
+    __asm__ __volatile__("push %%ebx ; cpuid ; rdtsc ; pop %%ebx" : "=A" (*timeval) : : "ecx");
+
 #elif defined(LINUX86_CYCLE_RDTSC)
 /* The configure test using cpuid must have failed, try just rdtsc by itself */
-#define MPIU_Wtime(var_ptr) __asm__ __volatile__("rdtsc" : "=A" (*var_ptr))
+    __asm__ __volatile__("rdtsc" : "=A" (*timeval));
+
 #else
 #error Dont know which Linux timer to use
 #endif
+}
 
 extern double MPIU_Seconds_per_tick;
 
 #elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__GCC_IA64_CYCLE
+
+static inline void MPIU_Wtime(MPIU_Time_t *timeval)
+{
+    MPIU_Time_t t_val;
+
 #ifdef __INTEL_COMPILER
 #include "ia64regs.h"
-#define MPIU_Wtime(var_ptr) { MPIU_Time_t t_val;\
-	t_val=__getReg(_IA64_REG_AR_ITC); *var_ptr=t_val;}
+    t_val = __getReg(_IA64_REG_AR_ITC);
 #else
-#define MPIU_Wtime(var_ptr) { MPIU_Time_t t_val;\
-	__asm__ __volatile__("mov %0=ar.itc" : "=r" (t_val)); *var_ptr=t_val;}
+    __asm__ __volatile__("mov %0=ar.itc" : "=r" (t_val));
 #endif
+
+    *timeval = t_val;
+}
+
 extern double MPIU_Seconds_per_tick;
 
 #elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__QUERYPERFORMANCECOUNTER
-#define MPIU_Wtime(var) QueryPerformanceCounter(var)
+
+static inline void MPIU_Wtime(MPIU_Time_t *timeval)
+{
+    QueryPerformanceCounter(timeval);
+}
+
 extern double MPIU_Seconds_per_tick;
 
 #elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__WIN86_CYCLE
-#define MPIU_Wtime(var_ptr) \
-{ \
-    register int *f1 = (int*)var_ptr; \
-    __asm cpuid \
-    __asm rdtsc \
-    __asm mov ecx, f1 \
-    __asm mov [ecx], eax \
-    __asm mov [ecx + TYPE int], edx \
+
+static inline void MPIU_Wtime(MPIU_Time_t *timeval)
+{
+    register int *f1 = (int*)var_ptr;
+    __asm cpuid;
+    __asm rdtsc;
+    __asm mov ecx, f1;
+    __asm mov [ecx], eax;
+    __asm mov [ecx + TYPE int], edx;
 }
+
 extern double MPIU_Seconds_per_tick;
 
 #endif
