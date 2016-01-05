@@ -230,9 +230,6 @@ int MPIU_Wtime_init(void);
    post-processsing step to convert the values to doubles.
    */
 
-/* The timer kind is set using AC_SUBST in the MPICH configure */
-#define MPICH_TIMER_KIND @MPICH_TIMER_KIND@
-
 #if MPICH_TIMER_KIND == MPIU_TIMER_KIND__GETHRTIME
 #define MPIUM_Wtime_todouble MPIU_Wtime_todouble
 
