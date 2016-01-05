@@ -27,39 +27,39 @@ int usleep(useconds_t usec);
  * is needed only to build the function versions of the timers.
  */
 /* Include the appropriate files */
-#define MPIU_GETHRTIME               1
-#define MPIU_CLOCK_GETTIME           2
-#define MPIU_GETTIMEOFDAY            3
-#define MPIU_LINUX86_CYCLE           4
-#define MPIU_QUERYPERFORMANCECOUNTER 6
-#define MPIU_WIN86_CYCLE             7
-#define MPIU_GCC_IA64_CYCLE          8
-/* The value "MPIU_DEVICE" means that the ADI device provides the timer */
-#define MPIU_DEVICE                  9
-#define MPIU_WIN64_CYCLE             10
-#define MPIU_MACH_ABSOLUTE_TIME      11
+#define MPIU_TIMER_KIND__GETHRTIME               1
+#define MPIU_TIMER_KIND__CLOCK_GETTIME           2
+#define MPIU_TIMER_KIND__GETTIMEOFDAY            3
+#define MPIU_TIMER_KIND__LINUX86_CYCLE           4
+#define MPIU_TIMER_KIND__QUERYPERFORMANCECOUNTER 6
+#define MPIU_TIMER_KIND__WIN86_CYCLE             7
+#define MPIU_TIMER_KIND__GCC_IA64_CYCLE          8
+/* The value "MPIU_TIMER_KIND__DEVICE" means that the ADI device provides the timer */
+#define MPIU_TIMER_KIND__DEVICE                  9
+#define MPIU_TIMER_KIND__WIN64_CYCLE             10
+#define MPIU_TIMER_KIND__MACH_ABSOLUTE_TIME      11
 #define MPICH_TIMER_KIND @MPICH_TIMER_KIND@
 
-#if MPICH_TIMER_KIND == MPIU_GETHRTIME
+#if MPICH_TIMER_KIND == MPIU_TIMER_KIND__GETHRTIME
 #include <sys/time.h>
-#elif MPICH_TIMER_KIND == MPIU_CLOCK_GETTIME
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__CLOCK_GETTIME
 #include <time.h>
 #ifdef NEEDS_SYS_TIME_H
 /* Some OS'es mistakenly require sys/time.h to get the definition of
    CLOCK_REALTIME (POSIX requires the definition to be in time.h) */
 #include <sys/time.h>
 #endif
-#elif MPICH_TIMER_KIND == MPIU_GETTIMEOFDAY
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__GETTIMEOFDAY
 #include <sys/types.h>
 #include <sys/time.h>
-#elif MPICH_TIMER_KIND == MPIU_LINUX86_CYCLE
-#elif MPICH_TIMER_KIND == MPIU_GCC_IA64_CYCLE
-#elif MPICH_TIMER_KIND == MPIU_QUERYPERFORMANCECOUNTER
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__LINUX86_CYCLE
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__GCC_IA64_CYCLE
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__QUERYPERFORMANCECOUNTER
 #include <winsock2.h>
 #include <windows.h>
-#elif MPICH_TIMER_KIND == MPIU_MACH_ABSOLUTE_TIME
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__MACH_ABSOLUTE_TIME
 #include <mach/mach_time.h>
-#elif MPICH_TIMER_KIND == MPIU_WIN86_CYCLE
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__WIN86_CYCLE
 #include <winsock2.h>
 #include <windows.h>
 #endif
@@ -233,16 +233,16 @@ int MPIU_Wtime_init(void);
 /* The timer kind is set using AC_SUBST in the MPICH configure */
 #define MPICH_TIMER_KIND @MPICH_TIMER_KIND@
 
-#if MPICH_TIMER_KIND == MPIU_GETHRTIME
+#if MPICH_TIMER_KIND == MPIU_TIMER_KIND__GETHRTIME
 #define MPIUM_Wtime_todouble MPIU_Wtime_todouble
 
-#elif MPICH_TIMER_KIND == MPIU_CLOCK_GETTIME
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__CLOCK_GETTIME
 #define MPIUM_Wtime_todouble MPIU_Wtime_todouble
 
-#elif MPICH_TIMER_KIND == MPIU_GETTIMEOFDAY
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__GETTIMEOFDAY
 #define MPIUM_Wtime_todouble MPIU_Wtime_todouble
 
-#elif MPICH_TIMER_KIND == MPIU_LINUX86_CYCLE
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__LINUX86_CYCLE
 /* The rdtsc instruction is not a "serializing" instruction, so the
    processor is free to reorder it.  In order to get more accurate
    timing numbers with rdtsc, we need to put a serializing
@@ -274,7 +274,7 @@ int MPIU_Wtime_init(void);
 extern double MPIU_Seconds_per_tick;
 #define MPIUM_Wtime_todouble(t, d) *d = (double)*t * MPIU_Seconds_per_tick
 
-#elif MPICH_TIMER_KIND == MPIU_GCC_IA64_CYCLE
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__GCC_IA64_CYCLE
 #ifdef __INTEL_COMPILER
 #include "ia64regs.h"
 #define MPIU_Wtime(var_ptr) { MPIU_Time_t t_val;\
@@ -286,13 +286,13 @@ extern double MPIU_Seconds_per_tick;
 extern double MPIU_Seconds_per_tick;
 #define MPIUM_Wtime_todouble(t, d) *d = (double)*t * MPIU_Seconds_per_tick
 
-#elif MPICH_TIMER_KIND == MPIU_QUERYPERFORMANCECOUNTER
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__QUERYPERFORMANCECOUNTER
 #define MPIU_Wtime(var) QueryPerformanceCounter(var)
 extern double MPIU_Seconds_per_tick;
 #define MPIUM_Wtime_todouble( t, d ) \
   *d = (double)t->QuadPart * MPIU_Seconds_per_tick /* convert to seconds */
 
-#elif MPICH_TIMER_KIND == MPIU_WIN86_CYCLE
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__WIN86_CYCLE
 #define MPIU_Wtime(var_ptr) \
 { \
     register int *f1 = (int*)var_ptr; \
@@ -306,7 +306,7 @@ extern double MPIU_Seconds_per_tick;
 #define MPIUM_Wtime_todouble(t, d) *d = (double)(__int64)*t * MPIU_Seconds_per_tick
 #define MPIUM_Wtime_diff(t1,t2,diff) *diff = (double)((__int64)( *t2 - *t1 )) * MPIU_Seconds_per_tick
 
-#elif MPICH_TIMER_KIND == MPIU_MACH_ABSOLUTE_TIME
+#elif MPICH_TIMER_KIND == MPIU_TIMER_KIND__MACH_ABSOLUTE_TIME
 #define MPIUM_Wtime_todouble MPIU_Wtime_todouble
 
 #endif
