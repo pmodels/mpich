@@ -22,6 +22,4 @@ static inline void MPIU_Wtime(MPIU_Time_t *timeval)
     return MPIU_TIMER_SUCCESS;
 }
 
-extern double MPIU_Seconds_per_tick;
-
 #endif

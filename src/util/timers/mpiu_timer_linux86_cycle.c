@@ -11,10 +11,12 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #if MPICH_TIMER_KIND == MPIU_TIMER_KIND__LINUX86_CYCLE
 
 #include <sys/time.h>
-double MPIU_Seconds_per_tick = 0.0;
+
+static double seconds_per_tick = 0.0;
+
 int MPIU_Wtick(double *wtick)
 {
-    *wtick = MPIU_Seconds_per_tick;
+    *wtick = seconds_per_tick;
 
     return MPIU_TIMER_SUCCESS;
 }
@@ -34,7 +36,7 @@ int MPIU_Wtime_init(void)
     td1 = tv1.tv_sec + tv1.tv_usec / 1000000.0;
     td2 = tv2.tv_sec + tv2.tv_usec / 1000000.0;
 
-    MPIU_Seconds_per_tick = (td2 - td1) / (double) (t2 - t1);
+    seconds_per_tick = (td2 - td1) / (double) (t2 - t1);
 
     return MPIU_TIMER_SUCCESS;
 }
@@ -42,7 +44,7 @@ int MPIU_Wtime_init(void)
 /* Time stamps created by a macro */
 int MPIU_Wtime_diff(MPIU_Time_t * t1, MPIU_Time_t * t2, double *diff)
 {
-    *diff = (double) (*t2 - *t1) * MPIU_Seconds_per_tick;
+    *diff = (double) (*t2 - *t1) * seconds_per_tick;
 
     return MPIU_TIMER_SUCCESS;
 }
@@ -52,7 +54,7 @@ int MPIU_Wtime_todouble(MPIU_Time_t * t, double *val)
     /* This returns the number of cycles as the "time".  This isn't correct
      * for implementing MPI_Wtime, but it does allow us to insert cycle
      * counters into test programs */
-    *val = (double) *t * MPIU_Seconds_per_tick;
+    *val = (double) *t * seconds_per_tick;
 
     return MPIU_TIMER_SUCCESS;
 }
