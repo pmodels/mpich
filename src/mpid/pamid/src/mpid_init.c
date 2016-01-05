@@ -1382,8 +1382,7 @@ int MPID_Init(int * argc,
   /* ------------------------------- */
   /* Initialize timer data           */
   /* ------------------------------- */
-  MPID_Wtime_init();
-
+  MPIDI_PAMID_Timer_is_ready = 1;
 
   /* ------------------------------- */
   /* ???                             */

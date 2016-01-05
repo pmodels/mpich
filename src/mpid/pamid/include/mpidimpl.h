@@ -28,7 +28,7 @@
 #include "pamix.h"
 #include <mpix.h>
 
-
+extern int MPIDI_PAMID_Timer_is_ready;
 
 static inline void MPIDI_coll_check_in_place(void* src, void** dst)
 {

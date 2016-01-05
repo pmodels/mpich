@@ -67,6 +67,13 @@ int usleep(useconds_t usec);
 /* Define a time stamp */
 typedef @MPICH_TIMER_TYPE@ MPIU_Time_t;
 
+/* The timer code is allowed to return "NOT_INITIALIZED" before the
+ * device is initialized.  Once the device is initialized, it must
+ * always return SUCCESS, so the upper layers do not need to check for
+ * the return code.  */
+#define MPIU_TIMER_SUCCESS                0
+#define MPIU_TIMER_ERR_NOT_INITIALIZED    1
+
 /*
  * Prototypes.  These are defined here so that inlined timer calls can
  * use them, as well as any profiling and timing code that is built into
@@ -95,7 +102,7 @@ typedef @MPICH_TIMER_TYPE@ MPIU_Time_t;
   Module:
   Timer
   @*/
-void MPIU_Wtime_diff( MPIU_Time_t *t1, MPIU_Time_t *t2, double *diff );
+int MPIU_Wtime_diff( MPIU_Time_t *t1, MPIU_Time_t *t2, double *diff );
 
 /*@
   MPIU_Wtime_acc - Accumulate time values
@@ -117,7 +124,7 @@ void MPIU_Wtime_diff( MPIU_Time_t *t1, MPIU_Time_t *t2, double *diff );
   Module:
   Timer
   @*/
-void MPIU_Wtime_acc( MPIU_Time_t *t1, MPIU_Time_t *t2, MPIU_Time_t *t3 );
+int MPIU_Wtime_acc( MPIU_Time_t *t1, MPIU_Time_t *t2, MPIU_Time_t *t3 );
 
 /*@
   MPIU_Wtime_todouble - Converts a timestamp to a double
@@ -133,7 +140,7 @@ void MPIU_Wtime_acc( MPIU_Time_t *t1, MPIU_Time_t *t2, MPIU_Time_t *t3 );
   suitable for 'MPI_Wtime'.
 
   @*/
-void MPIU_Wtime_todouble( MPIU_Time_t *timeval, double *seconds );
+int MPIU_Wtime_todouble( MPIU_Time_t *timeval, double *seconds );
 
 /*@
   MPIU_Wtick - Provide the resolution of the 'MPIU_Wtime' timer
@@ -151,7 +158,7 @@ void MPIU_Wtime_todouble( MPIU_Time_t *timeval, double *seconds );
   Module:
   Timer
   @*/
-double MPIU_Wtick( void );
+int MPIU_Wtick(double *);
 
 /*@
   MPIU_Wtime_init - Initialize the timer
@@ -165,11 +172,6 @@ double MPIU_Wtick( void );
   If any operations need to be performed when the MPI program calls
   'MPI_Finalize' this routine should register a handler with 'MPI_Finalize'
   (see the MPICH Design Document).
-
-  Return Values:
-  0 on success.  -1 on Failure.  1 means that the timer may not be used
-  until after MPIU_Init completes.  This allows the device to set up the
-  timer (first needed for Blue Gene support).
 
   Module:
   Timer
@@ -188,7 +190,7 @@ int MPIU_Wtime_init(void);
 
 #if MPICH_TIMER_KIND == MPIU_TIMER_KIND__LINUX86_CYCLE
 
-static inline void MPIU_Wtime(MPIU_Time_t *timeval)
+static inline int MPIU_Wtime(MPIU_Time_t *timeval)
 {
 /* The rdtsc instruction is not a "serializing" instruction, so the
    processor is free to reorder it.  In order to get more accurate
@@ -218,6 +220,8 @@ static inline void MPIU_Wtime(MPIU_Time_t *timeval)
 #else
 #error Dont know which Linux timer to use
 #endif
+
+    return MPIU_TIMER_SUCCESS;
 }
 
 extern double MPIU_Seconds_per_tick;
@@ -236,6 +240,8 @@ static inline void MPIU_Wtime(MPIU_Time_t *timeval)
 #endif
 
     *timeval = t_val;
+
+    return MPIU_TIMER_SUCCESS;
 }
 
 extern double MPIU_Seconds_per_tick;
@@ -245,6 +251,8 @@ extern double MPIU_Seconds_per_tick;
 static inline void MPIU_Wtime(MPIU_Time_t *timeval)
 {
     QueryPerformanceCounter(timeval);
+
+    return MPIU_TIMER_SUCCESS;
 }
 
 extern double MPIU_Seconds_per_tick;
@@ -259,6 +267,8 @@ static inline void MPIU_Wtime(MPIU_Time_t *timeval)
     __asm mov ecx, f1;
     __asm mov [ecx], eax;
     __asm mov [ecx + TYPE int], edx;
+
+    return MPIU_TIMER_SUCCESS;
 }
 
 extern double MPIU_Seconds_per_tick;
@@ -299,7 +309,7 @@ extern double MPIU_Seconds_per_tick;
   MPI-2 allows 'MPI_Wtime' to be a macro.  We should make that easy; this
   version does not accomplish that.
   @*/
-void MPIU_Wtime(MPIU_Time_t * timeval);
+int MPIU_Wtime(MPIU_Time_t * timeval);
 
 #endif
 
