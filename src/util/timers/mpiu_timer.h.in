@@ -73,42 +73,6 @@ typedef @MPICH_TIMER_TYPE@ MPIU_Time_t;
  * MPICH
  */
 /*@
-  MPIU_Wtime - Return a time stamp
-
-  Output Parameter:
-. timeval - A pointer to an 'MPIU_Wtime_t' variable.
-
-  Notes:
-  This routine returns an `opaque` time value.  This difference between two
-  time values returned by 'MPIU_Wtime' can be converted into an elapsed time
-  in seconds with the routine 'MPIU_Wtime_diff'.
-
-  This routine is defined this way to simplify its implementation as a macro.
-  For example, the for Intel x86 and gcc,
-.vb
-#define MPIU_Wtime(timeval) \
-     __asm__ __volatile__("rdtsc" : "=A" (*timeval))
-.ve
-
-  For some purposes, it is important
-  that the timer calls change the timing of the code as little as possible.
-  This form of a timer routine provides for a very fast timer that has
-  minimal impact on the rest of the code.
-
-  From a semantic standpoint, this format emphasizes that any particular
-  timer value has no meaning; only the difference between two values is
-  meaningful.
-
-  Module:
-  Timer
-
-  Question:
-  MPI-2 allows 'MPI_Wtime' to be a macro.  We should make that easy; this
-  version does not accomplish that.
-  @*/
-void MPIU_Wtime( MPIU_Time_t * timeval);
-
-/*@
   MPIU_Wtime_diff - Compute the difference between two time stamps
 
   Input Parameters:
@@ -298,6 +262,44 @@ static inline void MPIU_Wtime(MPIU_Time_t *timeval)
 }
 
 extern double MPIU_Seconds_per_tick;
+
+#else
+
+/*@
+  MPIU_Wtime - Return a time stamp
+
+  Output Parameter:
+. timeval - A pointer to an 'MPIU_Wtime_t' variable.
+
+  Notes:
+  This routine returns an `opaque` time value.  This difference between two
+  time values returned by 'MPIU_Wtime' can be converted into an elapsed time
+  in seconds with the routine 'MPIU_Wtime_diff'.
+
+  This routine is defined this way to simplify its implementation as a macro.
+  For example, the for Intel x86 and gcc,
+.vb
+#define MPIU_Wtime(timeval) \
+     __asm__ __volatile__("rdtsc" : "=A" (*timeval))
+.ve
+
+  For some purposes, it is important
+  that the timer calls change the timing of the code as little as possible.
+  This form of a timer routine provides for a very fast timer that has
+  minimal impact on the rest of the code.
+
+  From a semantic standpoint, this format emphasizes that any particular
+  timer value has no meaning; only the difference between two values is
+  meaningful.
+
+  Module:
+  Timer
+
+  Question:
+  MPI-2 allows 'MPI_Wtime' to be a macro.  We should make that easy; this
+  version does not accomplish that.
+  @*/
+void MPIU_Wtime(MPIU_Time_t * timeval);
 
 #endif
 
