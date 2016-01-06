@@ -7,7 +7,7 @@
 #if !defined(MPICH_MPIDI_CH3_PRE_H_INCLUDED)
 #define MPICH_MPIDI_CH3_PRE_H_INCLUDED
 #include "mpid_nem_pre.h"
-#include "mpid_nem_generic_queue.h"
+#include "mpidu_generic_queue.h"
 
 #if defined(HAVE_NETINET_IN_H)
     #include <netinet/in.h>

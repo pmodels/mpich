@@ -19,9 +19,9 @@
 
 #define MPID_NEM__BYPASS_Q_MAX_VAL  ((MPID_NEM_MPICH_DATA_LEN) - (sizeof(MPIDI_CH3_Pkt_t)))
 
-int MPIDI_CH3I_Seg_alloc(size_t len, void **ptr_p);
-int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_rank);
-int MPIDI_CH3I_Seg_destroy(void);
+int MPIDU_Seg_alloc(size_t len, void **ptr_p);
+int MPIDU_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_rank);
+int MPIDU_Seg_destroy(void);
 int MPID_nem_check_alloc(int);
 int MPID_nem_mpich_init(void);
 int MPID_nem_coll_init (void);

@@ -9,7 +9,7 @@
 
 #include "mpidimpl.h"
 #include "mpiu_os_wrappers.h"
-#include "mpid_nem_generic_queue.h"
+#include "mpidu_generic_queue.h"
 #include "mpl_utlist.h"
 
 #if defined(HAVE_ASSERT_H)

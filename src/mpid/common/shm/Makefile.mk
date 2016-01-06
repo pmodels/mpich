@@ -1,0 +1,17 @@
+## -*- Mode: Makefile; -*-
+## vim: set ft=automake :
+##
+## (C) 2011 by Argonne National Laboratory.
+##     See COPYRIGHT in top-level directory.
+##
+
+mpi_core_sources +=                          \
+    src/mpid/common/shm/mpidu_shm_alloc.c       
+
+# there are no AC_OUTPUT_FILES headers, so builddir is unnecessary
+AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/common/shm
+
+noinst_HEADERS +=                                 \
+    src/mpid/common/shm/mpidu_generic_queue.h
+
+
