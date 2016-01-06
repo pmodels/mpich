@@ -324,7 +324,7 @@ extern MPIDI_Process_t MPIDI_Process;
         if ((rreq_) != NULL) {                                             \
             MPIU_Object_set_ref((rreq_), 1);                               \
             /* MT FIXME should these be handled by MPID_Request_create? */ \
-            MPID_cc_set(&(rreq_)->cc, 0);                                  \
+            MPIR_cc_set(&(rreq_)->cc, 0);                                  \
             (rreq_)->kind = MPID_REQUEST_RECV;                             \
             MPIR_Status_set_procnull(&(rreq_)->status);                    \
         }                                                                  \

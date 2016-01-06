@@ -165,7 +165,7 @@ static inline int MPID_nem_ofi_handle_packet(cq_tagged_entry_t * wc ATTRIBUTE((u
     MPIDI_VC_t *vc;
 
     BEGIN_FUNC(FCNAME);
-    if (MPID_cc_get(rreq->cc) == 1) {
+    if (MPIR_cc_get(rreq->cc) == 1) {
       vc = REQ_OFI(rreq)->vc;
       MPIU_Assert(vc);
       MPIDI_CH3I_NM_OFI_RC(MPID_nem_handle_pkt(vc, REQ_OFI(rreq)->pack_buffer, REQ_OFI(rreq)->pack_buffer_size));
@@ -224,7 +224,7 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPID_R
       pkt_len = 0;
     c = 1;
     MPID_nem_ofi_create_req(&new_rreq, 1);
-    MPID_cc_incr(new_rreq->cc_ptr, &c);
+    MPIR_cc_incr(new_rreq->cc_ptr, &c);
     new_rreq->dev.OnDataAvail = NULL;
     new_rreq->dev.next = NULL;
     REQ_OFI(new_rreq)->event_callback = MPID_nem_ofi_handle_packet;

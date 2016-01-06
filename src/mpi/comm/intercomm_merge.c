@@ -334,7 +334,7 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
     mpi_errno = MPIR_Intercomm_merge_impl(comm_ptr, high, &new_intracomm_ptr);
     if (mpi_errno) goto fn_fail;
     
-    MPID_OBJ_PUBLISH_HANDLE(*newintracomm, new_intracomm_ptr->handle);
+    MPIR_OBJ_PUBLISH_HANDLE(*newintracomm, new_intracomm_ptr->handle);
 
     /* ... end of body of routine ... */
     

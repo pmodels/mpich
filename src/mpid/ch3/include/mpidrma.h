@@ -673,7 +673,7 @@ static inline int check_and_set_req_completion(MPID_Win * win_ptr, MPIDI_RMA_Tar
             incomplete_req_cnt++;
 
             if (rma_op->ureq != NULL) {
-                MPID_cc_set(&(rma_op->ureq->cc), incomplete_req_cnt);
+                MPIR_cc_set(&(rma_op->ureq->cc), incomplete_req_cnt);
                 (*req)->dev.request_handle = rma_op->ureq->handle;
             }
 

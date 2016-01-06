@@ -202,7 +202,7 @@ MPIDI_Win_GetAccDoneCB(pami_context_t  context,
        * See MPID_Request_release_inline()
        */
       if(req_handle)
-          MPID_cc_set(req_handle->cc_ptr, 0);
+          MPIR_cc_set(req_handle->cc_ptr, 0);
     }
   MPIDI_Progress_signal();
 }
@@ -459,7 +459,7 @@ MPID_Get_accumulate(const void   * origin_addr,
        (target_rank == MPI_PROC_NULL))
     {
       if(req->req_handle)
-         MPID_cc_set(req->req_handle->cc_ptr, 0);
+         MPIR_cc_set(req->req_handle->cc_ptr, 0);
       else
          MPIU_Free(req);
       return MPI_SUCCESS;
@@ -526,7 +526,7 @@ MPID_Get_accumulate(const void   * origin_addr,
        MPIDI_Win_datatype_unmap(&req->result.dt);
 
        if(req->req_handle) {
-          MPID_cc_set(req->req_handle->cc_ptr, 0);
+          MPIR_cc_set(req->req_handle->cc_ptr, 0);
        } else { 
            MPIU_Free(req);
        }

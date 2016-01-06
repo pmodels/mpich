@@ -62,7 +62,7 @@ MPIDI_RecvMsg_Unexp(MPID_Request  * rreq,
     }
   else 
     {
-     if (MPID_cc_is_complete(&rreq->cc))
+     if (MPIR_cc_is_complete(&rreq->cc))
      {
       if (unlikely(MPIDI_Request_isSync(rreq)))
       {

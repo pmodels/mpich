@@ -295,15 +295,6 @@ M*/
 #define MPIDU_Thread_tls_get MPIU_Thread_tls_get
 
 
-#define MPIDU_cc_t            MPIU_cc_t
-#define MPIDU_cc_get          MPIU_cc_get
-#define MPIDU_cc_set          MPIU_cc_set
-#define MPIDU_cc_is_complete  MPIU_cc_is_complete
-#define MPIDU_cc_incr         MPIU_cc_incr
-#define MPIDU_cc_decr         MPIU_cc_decr
-
-#define MPIDU_OBJ_PUBLISH_HANDLE  MPIU_OBJ_PUBLISH_HANDLE
-
 #define MPIDU_THREADPRIV_INITKEY  MPIU_THREADPRIV_INITKEY
 #define MPIDU_THREADPRIV_INIT     MPIU_THREADPRIV_INIT
 #define MPIDU_THREADPRIV_GET      MPIU_THREADPRIV_GET

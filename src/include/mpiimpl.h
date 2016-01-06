@@ -68,6 +68,7 @@ int usleep(useconds_t usec);
 #include "mpi.h"
 #include "mpiutil.h"
 #include "mpidpre.h"
+#include "mpir_refcount.h"
 
 #if defined(HAVE_LONG_LONG_INT)
 /* tt#1776: some platforms have "long long" but not a LLONG_MAX/ULLONG_MAX,
@@ -1428,7 +1429,7 @@ struct MPID_Grequest_fns {
                                                        the generalize req */
 };
 
-#define MPID_Request_is_complete(req_) (MPID_cc_is_complete((req_)->cc_ptr))
+#define MPID_Request_is_complete(req_) (MPIR_cc_is_complete((req_)->cc_ptr))
 
 /*S
   MPID_Request - Description of the Request data structure
@@ -1451,13 +1452,13 @@ typedef struct MPID_Request {
     /* pointer to the completion counter */
     /* This is necessary for the case when an operation is described by a 
        list of requests */
-    MPID_cc_t *cc_ptr;
+    MPIR_cc_t *cc_ptr;
     /* A comm is needed to find the proper error handler */
     MPID_Comm *comm;
     /* completion counter.  Ensure cc and status are in the same cache
        line, assuming the cache line size is a multiple of 32 bytes
        and 32-bit integers */
-    MPID_cc_t cc;
+    MPIR_cc_t cc;
     /* Status is needed for wait/test/recv */
     MPI_Status status;
     /* Persistent requests have their own "real" requests.  Receive requests

@@ -130,7 +130,7 @@ int MPI_Rsend_init(const void *buf, int count, MPI_Datatype datatype, int dest,
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* return the handle of the request to the user */
-    MPID_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
+    MPIR_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
 
     /* ... end of body of routine ... */
     

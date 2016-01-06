@@ -96,7 +96,7 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
 		MPID_Request * prequest_ptr = request_ptr->partner_request;
 
 		/* reset persistent request to inactive state */
-                MPID_cc_set(&request_ptr->cc, 0);
+                MPIR_cc_set(&request_ptr->cc, 0);
 		request_ptr->cc_ptr = &request_ptr->cc;
 		request_ptr->partner_request = NULL;
 		
@@ -164,7 +164,7 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
 		MPID_Request * prequest_ptr = request_ptr->partner_request;
 
 		/* reset persistent request to inactive state */
-                MPID_cc_set(&request_ptr->cc, 0);
+                MPIR_cc_set(&request_ptr->cc, 0);
 		request_ptr->cc_ptr = &request_ptr->cc;
 		request_ptr->partner_request = NULL;
 		

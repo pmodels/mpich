@@ -65,8 +65,8 @@
         GET_PGID_AND_SET_MATCH();                                       \
         VC_READY_CHECK(vc);                                             \
         c = 1;                                                          \
-        MPID_cc_incr(sreq->cc_ptr, &c);                                 \
-        MPID_cc_incr(sreq->cc_ptr, &c);                                 \
+        MPIR_cc_incr(sreq->cc_ptr, &c);                                 \
+        MPIR_cc_incr(sreq->cc_ptr, &c);                                 \
         REQ_OFI(sreq)->event_callback   = MPID_nem_ofi_data_callback;   \
         REQ_OFI(sreq)->pack_buffer      = pack_buffer;                  \
         REQ_OFI(sreq)->pack_buffer_size = pkt_len;                      \
@@ -130,7 +130,7 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sre
          * Multiple DATA events may arrive because we need
          * to store updated TAG values in the sreq.
          */
-        if (MPID_cc_get(sreq->cc) == 1) {
+        if (MPIR_cc_get(sreq->cc) == 1) {
             if (REQ_OFI(sreq)->pack_buffer)
                 MPIU_Free(REQ_OFI(sreq)->pack_buffer);
 

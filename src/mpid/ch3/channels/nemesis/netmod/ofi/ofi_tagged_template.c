@@ -165,7 +165,7 @@ ADD_SUFFIX(do_isend)(struct MPIDI_VC *vc,
         /* matching with MPI level messages.                    */
         /* ---------------------------------------------------- */
         int c = 1;
-        MPID_cc_incr(sreq->cc_ptr, &c);
+        MPIR_cc_incr(sreq->cc_ptr, &c);
         MPID_nem_ofi_create_req(&sync_req, 1);
         sync_req->dev.OnDataAvail = NULL;
         sync_req->dev.next = NULL;

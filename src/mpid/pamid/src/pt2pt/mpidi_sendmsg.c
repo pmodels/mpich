@@ -498,7 +498,7 @@ if (!TOKEN_FLOW_CONTROL_ON) {
                           sndbuf,
                           data_sz);
 #ifdef MPIDI_STATISTICS
-      if (!isLocal && MPID_cc_is_complete(&sreq->cc))
+      if (!isLocal && MPIR_cc_is_complete(&sreq->cc))
         {
           MPID_NSTAT(mpid_statp->sendsComplete);
         }
@@ -529,7 +529,7 @@ if (!TOKEN_FLOW_CONTROL_ON) {
         }
 
 #ifdef MPIDI_STATISTICS
-      if (!isLocal && MPID_cc_is_complete(&sreq->cc))
+      if (!isLocal && MPIR_cc_is_complete(&sreq->cc))
         {
           MPID_NSTAT(mpid_statp->sendsComplete);
         }
@@ -598,7 +598,7 @@ if (!TOKEN_FLOW_CONTROL_ON) {
                                  sndbuf,
                                  data_sz);
 #ifdef MPIDI_STATISTICS
-                    if (MPID_cc_is_complete(&sreq->cc)) {
+                    if (MPIR_cc_is_complete(&sreq->cc)) {
                         MPID_NSTAT(mpid_statp->sendsComplete);
                     }
 #endif
@@ -616,7 +616,7 @@ if (!TOKEN_FLOW_CONTROL_ON) {
                                   sndbuf,
                                   data_sz);
 #ifdef MPIDI_STATISTICS
-                       if (MPID_cc_is_complete(&sreq->cc))
+                       if (MPIR_cc_is_complete(&sreq->cc))
                        {
                           MPID_NSTAT(mpid_statp->sendsComplete);
                        }
@@ -646,7 +646,7 @@ if (!TOKEN_FLOW_CONTROL_ON) {
               MPIDI_SendMsg_rzv_zerobyte(context, sreq, dest);
             }
 #ifdef MPIDI_STATISTICS
-               if (MPID_cc_is_complete(&sreq->cc))
+               if (MPIR_cc_is_complete(&sreq->cc))
                 {
                    MPID_NSTAT(mpid_statp->sendsComplete);
                 }

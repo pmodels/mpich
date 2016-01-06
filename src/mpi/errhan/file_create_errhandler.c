@@ -81,7 +81,7 @@ int MPI_File_create_errhandler(MPI_File_errhandler_function *file_errhandler_fn,
     MPIU_Object_set_ref(errhan_ptr,1);
     errhan_ptr->errfn.C_File_Handler_function = file_errhandler_fn;
 
-    MPID_OBJ_PUBLISH_HANDLE(*errhandler, errhan_ptr->handle);
+    MPIR_OBJ_PUBLISH_HANDLE(*errhandler, errhan_ptr->handle);
     /* ... end of body of routine ... */
 
   fn_exit:

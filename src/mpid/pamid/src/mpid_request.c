@@ -76,13 +76,13 @@ MPIDI_Request_uncomplete(MPID_Request *req)
 {
   int count;
   MPIU_Object_add_ref(req);
-  MPID_cc_incr(req->cc_ptr, &count);
+  MPIR_cc_incr(req->cc_ptr, &count);
 }
 
 
 void
 MPID_Request_set_completed(MPID_Request *req)
 {
-  MPID_cc_set(&req->cc, 0);
+  MPIR_cc_set(&req->cc, 0);
   MPIDI_Progress_signal();
 }

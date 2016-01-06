@@ -61,7 +61,7 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
     /* If the completion counter is 0, that means that the communicator to
      * which this message is being sent has been revoked and we shouldn't
      * bother finishing this. */
-    if (!found && MPID_cc_get(rreq->cc) == 0) {
+    if (!found && MPIR_cc_get(rreq->cc) == 0) {
         /* We release the send request twice, once to release the
          * progress engine reference and the second to release the
          * user reference since the user will never have a chance to

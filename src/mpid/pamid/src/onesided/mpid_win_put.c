@@ -291,7 +291,7 @@ MPID_Put(const void   *origin_addr,
        (target_rank == MPI_PROC_NULL))
     {
       if(req->req_handle)
-       MPID_cc_set(req->req_handle->cc_ptr, 0);
+       MPIR_cc_set(req->req_handle->cc_ptr, 0);
       else
        MPIU_Free(req);
       return MPI_SUCCESS;
@@ -322,7 +322,7 @@ MPID_Put(const void   *origin_addr,
        * See MPID_Request_release_inline()
        */
        if(req->req_handle)
-         MPID_cc_set(req->req_handle->cc_ptr, 0);
+         MPIR_cc_set(req->req_handle->cc_ptr, 0);
        else
          MPIU_Free(req);
        return mpi_errno;

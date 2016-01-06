@@ -152,11 +152,11 @@ int MPIDI_CH3_Comm_connect(char * port_name, int root, MPID_Comm * comm_ptr,
    from the channel level? */
 /* The above comment is accurate, although we do not currently have any channels
  * that do this.  Memory barriers are included in fine-grained multithreaded
- * versions of the MPID_cc_incr/decr macros. */
+ * versions of the MPIR_cc_incr/decr macros. */
 #define MPIDI_CH3U_Request_decrement_cc(req_, incomplete_)   \
-    MPID_cc_decr((req_)->cc_ptr, incomplete_)
+    MPIR_cc_decr((req_)->cc_ptr, incomplete_)
 #define MPIDI_CH3U_Request_increment_cc(req_, was_incomplete_)   \
-    MPID_cc_incr((req_)->cc_ptr, was_incomplete_)
+    MPIR_cc_incr((req_)->cc_ptr, was_incomplete_)
 
 /*
  * Device level request management macros

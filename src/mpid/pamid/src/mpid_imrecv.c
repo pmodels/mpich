@@ -80,7 +80,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
 #endif
 
 #ifdef MPIDI_STATISTICS
-  if (!(MPID_cc_is_complete(&rreq->cc)))
+  if (!(MPIR_cc_is_complete(&rreq->cc)))
     {
         MPID_NSTAT(mpid_statp->recvWaitsComplete);
     }

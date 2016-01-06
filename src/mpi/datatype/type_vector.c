@@ -60,7 +60,7 @@ int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype o
                                            &oldtype);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPID_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+    MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     
  fn_exit:
     return mpi_errno;

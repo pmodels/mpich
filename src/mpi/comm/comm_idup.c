@@ -143,7 +143,7 @@ int MPI_Comm_idup(MPI_Comm comm, MPI_Comm *newcomm, MPI_Request *request)
     /* NOTE: this is a publication for most of the comm, but the context ID
      * won't be valid yet, so we must "republish" relative to the request
      * handle at request completion time. */
-    MPID_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
+    MPIR_OBJ_PUBLISH_HANDLE(*newcomm, newcomm_ptr->handle);
     *request = dreq->handle;
 
     /* ... end of body of routine ... */
