@@ -238,29 +238,29 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 #endif  /*FORCE_ASYM */
 
     /* Request fastboxes region */
-    mpi_errno = MPIDI_CH3I_Seg_alloc(MPL_MAX((num_local*((num_local-1)*sizeof(MPID_nem_fastbox_t))), MPID_NEM_ASYMM_NULL_VAL),
+    mpi_errno = MPIDU_Seg_alloc(MPL_MAX((num_local*((num_local-1)*sizeof(MPID_nem_fastbox_t))), MPID_NEM_ASYMM_NULL_VAL),
                                      (void **)&fastboxes_p);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
     /* Request data cells region */
-    mpi_errno = MPIDI_CH3I_Seg_alloc(num_local * MPID_NEM_NUM_CELLS * sizeof(MPID_nem_cell_t), (void **)&cells_p);
+    mpi_errno = MPIDU_Seg_alloc(num_local * MPID_NEM_NUM_CELLS * sizeof(MPID_nem_cell_t), (void **)&cells_p);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Request free q region */
-    mpi_errno = MPIDI_CH3I_Seg_alloc(num_local * sizeof(MPID_nem_queue_t), (void **)&free_queues_p);
+    mpi_errno = MPIDU_Seg_alloc(num_local * sizeof(MPID_nem_queue_t), (void **)&free_queues_p);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Request recv q region */
-    mpi_errno = MPIDI_CH3I_Seg_alloc(num_local * sizeof(MPID_nem_queue_t), (void **)&recv_queues_p);
+    mpi_errno = MPIDU_Seg_alloc(num_local * sizeof(MPID_nem_queue_t), (void **)&recv_queues_p);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Request shared collectives barrier vars region */
-    mpi_errno = MPIDI_CH3I_Seg_alloc(MPID_NEM_NUM_BARRIER_VARS * sizeof(MPID_nem_barrier_vars_t),
+    mpi_errno = MPIDU_Seg_alloc(MPID_NEM_NUM_BARRIER_VARS * sizeof(MPID_nem_barrier_vars_t),
                                      (void **)&MPID_nem_mem_region.barrier_vars);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Actually allocate the segment and assign regions to the pointers */
-    mpi_errno = MPIDI_CH3I_Seg_commit(&MPID_nem_mem_region.memory, num_local, local_rank);
+    mpi_errno = MPIDU_Seg_commit(&MPID_nem_mem_region.memory, num_local, local_rank);
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
     /* init shared collectives barrier region */
