@@ -553,6 +553,24 @@ extern MPID_Info MPID_Info_builtin[MPID_INFO_N_BUILTIN];
 extern MPID_Info MPID_Info_direct[];
 /* ------------------------------------------------------------------------- */
 
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL || \
+    MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
+extern MPID_Thread_mutex_t MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX;
+extern MPID_Thread_mutex_t MPIR_THREAD_ALLGRAN_MEMALLOC_MUTEX;
+#endif
+
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
+extern MPID_Thread_mutex_t MPIR_THREAD_POBJ_HANDLE_MUTEX;
+extern MPID_Thread_mutex_t MPIR_THREAD_POBJ_MSGQ_MUTEX;
+extern MPID_Thread_mutex_t MPIR_THREAD_POBJ_COMPLETION_MUTEX;
+extern MPID_Thread_mutex_t MPIR_THREAD_POBJ_CTX_MUTEX;
+extern MPID_Thread_mutex_t MPIR_THREAD_POBJ_PMI_MUTEX;
+
+#define MPIR_THREAD_POBJ_COMM_MUTEX(_comm_ptr) _comm_ptr->mutex
+#define MPIR_THREAD_POBJ_WIN_MUTEX(_win_ptr)   _win_ptr->mutex
+#endif
+
+
 /* ------------------------------------------------------------------------- */
 /* Error Handlers */
 /*E
