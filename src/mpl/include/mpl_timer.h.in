@@ -41,6 +41,13 @@ int usleep(useconds_t usec);
 /* Define a time stamp */
 typedef @MPL_TIMER_TYPE@ MPL_Time_t;
 
+/* The timer code is allowed to return "NOT_INITIALIZED" before the
+ * device is initialized.  Once the device is initialized, it must
+ * always return SUCCESS, so the upper layers do not need to check for
+ * the return code.  */
+#define MPL_TIMER_SUCCESS                0
+#define MPL_TIMER_ERR_NOT_INITIALIZED    1
+
 #if MPL_TIMER_KIND == MPL_TIMER_KIND__GETHRTIME
 #include "mpl_timer_gethrtime.h"
 #elif MPL_TIMER_KIND == MPL_TIMER_KIND__CLOCK_GETTIME
@@ -60,13 +67,6 @@ typedef @MPL_TIMER_TYPE@ MPL_Time_t;
 #elif MPL_TIMER_KIND == MPL_TIMER_KIND__MACH_ABSOLUTE_TIME
 #include "mpl_timer_mach_absolute_time.h"
 #endif
-
-/* The timer code is allowed to return "NOT_INITIALIZED" before the
- * device is initialized.  Once the device is initialized, it must
- * always return SUCCESS, so the upper layers do not need to check for
- * the return code.  */
-#define MPL_TIMER_SUCCESS                0
-#define MPL_TIMER_ERR_NOT_INITIALIZED    1
 
 /*
  * Prototypes.  These are defined here so that inlined timer calls can
