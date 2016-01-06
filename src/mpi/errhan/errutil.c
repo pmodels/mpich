@@ -840,18 +840,18 @@ static MPID_Thread_mutex_t error_ring_mutex;
     do {                                                 \
         int err;                                         \
         if (did_err_init) {                              \
-            MPID_THREAD_CHECK_BEGIN                      \
+            MPIR_THREAD_CHECK_BEGIN                      \
             MPID_Thread_mutex_lock(&error_ring_mutex,&err); \
-            MPID_THREAD_CHECK_END                        \
+            MPIR_THREAD_CHECK_END                        \
         }                                                \
     } while (0)
 #define error_ring_mutex_unlock()                        \
     do {                                                 \
         int err;                                         \
         if (did_err_init) {                              \
-            MPID_THREAD_CHECK_BEGIN                      \
+            MPIR_THREAD_CHECK_BEGIN                      \
             MPID_Thread_mutex_unlock(&error_ring_mutex,&err); \
-            MPID_THREAD_CHECK_END                        \
+            MPIR_THREAD_CHECK_END                        \
         }                                                \
     } while (0)
 #else

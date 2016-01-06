@@ -1785,9 +1785,9 @@ int MPIDU_Sock_wait(MPIDU_Sock_set_t set, int timeout, MPIDU_Sock_event_t * out)
             int err;
 	    /* Release the lock so that other threads may make progress while this thread waits for something to do */
 	    MPIU_DBG_MSG(MPIR_DBG_OTHER,TYPICAL,"Exit global critical section");
-	    MPIU_THREAD_CHECK_BEGIN;
+	    MPIR_THREAD_CHECK_BEGIN;
 	    MPID_Thread_mutex_unlock(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
-	    MPIU_THREAD_CHECK_END;
+	    MPIR_THREAD_CHECK_END;
 	}
 #       else
 #           error selected multi-threaded implementation is not supported
@@ -1810,9 +1810,9 @@ int MPIDU_Sock_wait(MPIDU_Sock_set_t set, int timeout, MPIDU_Sock_event_t * out)
                 int err;
 		/* Reaquire the lock before processing any of the information returned from GetQueuedCompletionStatus */
 		MPIU_DBG_MSG(MPIR_DBG_OTHER,TYPICAL,"Enter global critical section");
-		MPIU_THREAD_CHECK_BEGIN;
+		MPIR_THREAD_CHECK_BEGIN;
 		MPID_Thread_mutex_lock(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
-		MPIU_THREAD_CHECK_END;
+		MPIR_THREAD_CHECK_END;
 	    }
 #           else
 #               error selected multi-threaded implementation is not supported
@@ -2403,9 +2403,9 @@ int MPIDU_Sock_wait(MPIDU_Sock_set_t set, int timeout, MPIDU_Sock_event_t * out)
                 int err;
 		/* Reaquire the lock before processing any of the information returned from GetQueuedCompletionStatus */
 		MPIU_DBG_MSG(MPIR_DBG_OTHER,TYPICAL,"Enter global critical section");
-		MPIU_THREAD_CHECK_BEGIN;
+		MPIR_THREAD_CHECK_BEGIN;
 		MPID_Thread_mutex_lock(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
-		MPIU_THREAD_CHECK_END;
+		MPIR_THREAD_CHECK_END;
 	    }
 #           else
 #               error selected multi-threaded implementation is not supported

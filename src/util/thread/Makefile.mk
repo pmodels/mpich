@@ -11,8 +11,6 @@ noinst_HEADERS +=                               \
     src/util/thread/mpiu_thread.h               \
     src/util/thread/mpiu_thread_single.h        \
     src/util/thread/mpiu_thread_multiple.h      \
-    src/util/thread/mpiu_thread_global.h        \
-    src/util/thread/mpiu_thread_pobj.h  	\
     src/util/thread/mpiu_thread_priv.h	      	\
     src/util/thread/mpiu_thread_posix.h   	\
     src/util/thread/mpiu_thread_solaris.h 	\

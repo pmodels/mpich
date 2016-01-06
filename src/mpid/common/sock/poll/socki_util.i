@@ -361,7 +361,7 @@ static struct MPIDU_Socki_eventq_table *MPIDU_Socki_eventq_table_head=NULL;
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDU_Socki_wakeup(struct MPIDU_Sock_set * sock_set)
 {
-    MPIU_THREAD_CHECK_BEGIN;
+    MPIR_THREAD_CHECK_BEGIN;
     if (sock_set->wakeup_posted == FALSE)
     {
 	for(;;)
@@ -380,7 +380,7 @@ static int MPIDU_Socki_wakeup(struct MPIDU_Sock_set * sock_set)
 	
 	sock_set->wakeup_posted = TRUE;
     }
-    MPIU_THREAD_CHECK_END;
+    MPIR_THREAD_CHECK_END;
     return MPIDU_SOCK_SUCCESS;
 }
 /* end MPIDU_Socki_wakeup() */
@@ -722,12 +722,12 @@ static int MPIDU_Socki_sock_alloc(struct MPIDU_Sock_set * sock_set, struct MPIDU
 
 #   ifdef MPICH_IS_THREADED
     {
-        MPIU_THREAD_CHECK_BEGIN;
+        MPIR_THREAD_CHECK_BEGIN;
 	if (sock_set->pollfds_active != NULL)
 	{
 	    sock_set->pollfds_updated = TRUE;
 	}
-        MPIU_THREAD_CHECK_END;
+        MPIR_THREAD_CHECK_END;
     }
 #   endif
     

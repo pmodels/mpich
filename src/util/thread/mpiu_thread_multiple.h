@@ -9,87 +9,54 @@
 
 #include "mpiu_thread_priv.h"
 
-#define MPIU_THREAD_CHECK_BEGIN if (MPIR_ThreadInfo.isThreaded) {
-#define MPIU_THREAD_CHECK_END   }
-
 /* Nonrecursive mutex macros */
-#define MPIUI_THREAD_CS_ENTER_NONRECURSIVE(lockname, mutex)             \
+#define MPIU_THREAD_CS_ENTER_NONRECURSIVE(mutex)                        \
     do {                                                                \
         int err_;                                                       \
-        MPIU_THREAD_CHECK_BEGIN;                                        \
-        MPIU_DBG_MSG_S(MPIR_DBG_THREAD, TYPICAL, "locking %s", lockname);        \
         MPIU_Thread_mutex_lock(&mutex, &err_);                          \
-        MPIU_THREAD_CHECK_END;                                          \
     } while (0)
 
-#define MPIUI_THREAD_CS_EXIT_NONRECURSIVE(lockname, mutex)              \
+#define MPIU_THREAD_CS_EXIT_NONRECURSIVE(mutex)                         \
     do {                                                                \
         int err_;                                                       \
-        MPIU_THREAD_CHECK_BEGIN;                                        \
-        MPIU_DBG_MSG_S(MPIR_DBG_THREAD, TYPICAL, "unlocking %s", lockname);      \
         MPIU_Thread_mutex_unlock(&mutex, &err_);                        \
-        MPIU_THREAD_CHECK_END;                                          \
     } while (0)
 
-#define MPIUI_THREAD_CS_YIELD_NONRECURSIVE(lockname, mutex)             \
+#define MPIU_THREAD_CS_YIELD_NONRECURSIVE(mutex)                        \
     do {                                                                \
-        MPIU_THREAD_CHECK_BEGIN;                                        \
-        MPIU_DBG_MSG_S(MPIR_DBG_THREAD, TYPICAL, "yielding %s", lockname);       \
         MPIU_Thread_yield(&mutex);                                      \
-        MPIU_THREAD_CHECK_END;                                          \
     } while (0)
 
 
 /* Recursive mutex macros */
 /* We don't need to protect the depth variable since it is thread
  * private and sequentially accessed within a thread */
-#define MPIUI_THREAD_CS_ENTER_RECURSIVE(lockname, mutex)                \
-    do {                                                                \
-        int depth_;                                                     \
-        MPIU_THREADPRIV_DECL;                                           \
-        MPIU_THREADPRIV_GET;                                            \
-                                                                        \
-        MPIU_THREAD_CHECK_BEGIN;                                        \
-        depth_ = MPIU_THREADPRIV_FIELD(lock_depth);                     \
-        MPIU_DBG_MSG_S(MPIR_DBG_THREAD, TYPICAL, "recursive locking %s", lockname); \
-        if (depth_ == 0) {                                              \
-            MPIUI_THREAD_CS_ENTER_NONRECURSIVE(lockname, mutex);        \
-        }                                                               \
-        MPIU_THREADPRIV_FIELD(lock_depth) += 1;                         \
-        MPIU_THREAD_CHECK_END;                                          \
+#define MPIU_THREAD_CS_ENTER_RECURSIVE(mutex)           \
+    do {                                                \
+        int depth_;                                     \
+        MPIU_THREADPRIV_DECL;                           \
+        MPIU_THREADPRIV_GET;                            \
+                                                        \
+        depth_ = MPIU_THREADPRIV_FIELD(lock_depth);     \
+        if (depth_ == 0) {                              \
+            MPIU_THREAD_CS_ENTER_NONRECURSIVE(mutex);   \
+        }                                               \
+        MPIU_THREADPRIV_FIELD(lock_depth) += 1;         \
     } while (0)
 
-#define MPIUI_THREAD_CS_EXIT_RECURSIVE(lockname, mutex)                 \
-    do {                                                                \
-        int depth_;                                                     \
-        MPIU_THREADPRIV_DECL;                                           \
-        MPIU_THREADPRIV_GET;                                            \
-                                                                        \
-        MPIU_THREAD_CHECK_BEGIN;                                        \
-        depth_ = MPIU_THREADPRIV_FIELD(lock_depth);                     \
-        MPIU_DBG_MSG_S(MPIR_DBG_THREAD, TYPICAL, "recursive unlocking %s", lockname); \
-        if (depth_ == 1) {                                              \
-            MPIUI_THREAD_CS_EXIT_NONRECURSIVE(lockname, mutex);         \
-        }                                                               \
-        MPIU_THREADPRIV_FIELD(lock_depth) -= 1;                         \
-        MPIU_THREAD_CHECK_END;                                          \
+#define MPIU_THREAD_CS_EXIT_RECURSIVE(mutex)            \
+    do {                                                \
+        int depth_;                                     \
+        MPIU_THREADPRIV_DECL;                           \
+        MPIU_THREADPRIV_GET;                            \
+                                                        \
+        depth_ = MPIU_THREADPRIV_FIELD(lock_depth);     \
+        if (depth_ == 1) {                              \
+            MPIU_THREAD_CS_EXIT_NONRECURSIVE(mutex);    \
+        }                                               \
+        MPIU_THREADPRIV_FIELD(lock_depth) -= 1;         \
     } while (0)
 
-#define MPIUI_THREAD_CS_YIELD_RECURSIVE MPIUI_THREAD_CS_YIELD_NONRECURSIVE
-
-#define MPIU_THREAD_CS_ENTER(name, mutex) MPIUI_THREAD_CS_ENTER_##name(mutex)
-#define MPIU_THREAD_CS_EXIT(name, mutex) MPIUI_THREAD_CS_EXIT_##name(mutex)
-#define MPIU_THREAD_CS_YIELD(name, mutex) MPIUI_THREAD_CS_YIELD_##name(mutex)
-
-/* Definitions of the thread support for various levels of thread granularity */
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL
-#include "mpiu_thread_global.h"
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
-#include "mpiu_thread_pobj.h"
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_LOCK_FREE
-#error lock-free not yet implemented
-#else
-#error Unrecognized thread granularity
-#endif
+#define MPIU_THREAD_CS_YIELD_RECURSIVE MPIU_THREAD_CS_YIELD_NONRECURSIVE
 
 #endif /* !defined(MPIU_THREAD_MULTIPLE_H_INCLUDED) */

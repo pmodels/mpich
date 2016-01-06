@@ -678,7 +678,7 @@ int MPIDU_Sock_wakeup(struct MPIDU_Sock_set * sock_set)
        be implemented as an abstraction (e.g., wakeup_progress_threads?)
        rather than this specific code.  */
 #ifdef MPICH_IS_THREADED
-    MPIU_THREAD_CHECK_BEGIN;
+    MPIR_THREAD_CHECK_BEGIN;
     {
 	struct pollinfo * pollinfo;
 	
@@ -687,7 +687,7 @@ int MPIDU_Sock_wakeup(struct MPIDU_Sock_set * sock_set)
 				  mpi_errno, mpi_errno, fn_exit);
 	MPIDU_Socki_wakeup(sock_set);
     }
-    MPIU_THREAD_CHECK_END;
+    MPIR_THREAD_CHECK_END;
 #   endif
 
 #ifdef MPICH_IS_THREADED

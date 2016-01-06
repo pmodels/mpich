@@ -454,7 +454,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 /* For threaded mode, if another thread is in the progress engine, we
  * don't enter the progress engine */
 #ifdef MPICH_IS_THREADED
-    MPID_THREAD_CHECK_BEGIN;
+    MPIR_THREAD_CHECK_BEGIN;
     {
         while (MPIDI_CH3I_progress_blocked == TRUE)
         {
@@ -482,7 +482,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
             }
         }
     }
-    MPID_THREAD_CHECK_END;
+    MPIR_THREAD_CHECK_END;
 #endif
 
     do
@@ -615,7 +615,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
         }
 
 #ifdef MPICH_IS_THREADED
-        MPID_THREAD_CHECK_BEGIN;
+        MPIR_THREAD_CHECK_BEGIN;
         {
             if (is_blocking) {
                 MPIDI_CH3I_progress_blocked = TRUE;
@@ -635,7 +635,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                 MPIDI_CH3I_progress_wakeup_signalled = FALSE;
             }
         }
-        MPID_THREAD_CHECK_END;
+        MPIR_THREAD_CHECK_END;
 #else
         MPIU_Busy_wait();
 #endif
@@ -644,14 +644,14 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 
     
 #ifdef MPICH_IS_THREADED
-    MPID_THREAD_CHECK_BEGIN;
+    MPIR_THREAD_CHECK_BEGIN;
     {
         if (is_blocking)
         {
             MPIDI_CH3I_Progress_continue(0/*unused*/);
         }
     }
-    MPID_THREAD_CHECK_END;
+    MPIR_THREAD_CHECK_END;
 #endif
 
  fn_exit:
@@ -947,7 +947,7 @@ int MPIDI_CH3I_Progress_init(void)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
 
-    MPID_THREAD_CHECK_BEGIN
+    MPIR_THREAD_CHECK_BEGIN
     /* FIXME should be appropriately abstracted somehow */
 #   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
     {
@@ -956,7 +956,7 @@ int MPIDI_CH3I_Progress_init(void)
         MPIU_Assert(err == 0);
     }
 #   endif
-    MPID_THREAD_CHECK_END
+    MPIR_THREAD_CHECK_END
 
     MPIDI_CH3I_shm_sendq.head = NULL;
     MPIDI_CH3I_shm_sendq.tail = NULL;
