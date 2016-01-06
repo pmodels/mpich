@@ -67,7 +67,7 @@ int MPIR_Type_struct_impl(int count, const int *array_of_blocklengths,
     
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPID_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+    MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 
  fn_exit:
     MPIU_CHKLMEM_FREEALL();

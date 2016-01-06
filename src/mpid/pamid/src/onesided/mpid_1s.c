@@ -79,7 +79,7 @@ MPIDI_Win_DoneCB(pami_context_t  context,
            *
            * See MPID_Request_release_inline()
            */
-          MPID_cc_set(req_handle->cc_ptr, 0);
+          MPIR_cc_set(req_handle->cc_ptr, 0);
       }
     }
   if ((MPIDI_Process.typed_onesided == 1) && (!req->target.dt.contig || !req->origin.dt.contig)) {

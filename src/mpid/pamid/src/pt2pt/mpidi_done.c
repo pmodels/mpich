@@ -215,7 +215,7 @@ void MPIDI_Recvq_process_out_of_order_msgs(pami_task_t src, pami_context_t conte
         else
 #endif
           MPIDI_Recvq_remove(MPIDI_Recvq.unexpected, ooreq, ooreq->mpid.prev);
-	if (!MPID_cc_is_complete(&ooreq->cc)) {
+        if (!MPIR_cc_is_complete(&ooreq->cc)) {
 	  ooreq->mpid.oo_peer = rreq;
           MPIDI_RecvMsg_Unexp(ooreq, rreq->mpid.userbuf, rreq->mpid.userbufcount, rreq->mpid.datatype);
 	} else {

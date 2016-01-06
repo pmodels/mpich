@@ -733,7 +733,7 @@ MPIX_Pset_same_comm_create_from_parent (MPI_Comm parent_comm, MPI_Comm *pset_com
   mpi_errno = _MPIX_Pset_same_comm_create (parent_comm_ptr, &pset_comm_ptr);
   if (mpi_errno) MPIU_ERR_POP(mpi_errno);
   if (pset_comm_ptr)
-    MPIU_OBJ_PUBLISH_HANDLE(*pset_comm, pset_comm_ptr->handle);
+    MPIR_OBJ_PUBLISH_HANDLE(*pset_comm, pset_comm_ptr->handle);
   else
     goto fn_fail;
 
@@ -800,7 +800,7 @@ MPIX_Pset_diff_comm_create_from_parent (MPI_Comm parent_comm, MPI_Comm *pset_com
   mpi_errno = MPIR_Comm_split_impl(parent_comm_ptr, color, key, &pset_diff_comm_ptr);
   if (mpi_errno) MPIU_ERR_POP(mpi_errno);
   if (pset_diff_comm_ptr)
-    MPIU_OBJ_PUBLISH_HANDLE(*pset_comm, pset_diff_comm_ptr->handle);
+    MPIR_OBJ_PUBLISH_HANDLE(*pset_comm, pset_diff_comm_ptr->handle);
   else
     goto fn_fail;
 

@@ -202,7 +202,7 @@ int MPI_Group_range_excl(MPI_Group group, int n, int ranges[][3],
     mpi_errno = MPIR_Group_range_excl_impl(group_ptr, n, ranges, &new_group_ptr);
     if (mpi_errno) goto fn_fail;
 
-    MPID_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
+    MPIR_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
 
     /* ... end of body of routine ... */
 

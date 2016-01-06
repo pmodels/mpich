@@ -205,7 +205,7 @@ static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
     /* If the completion counter is 0, that means that the communicator to
      * which this message is being sent has been revoked and we shouldn't
      * bother finishing this. */
-    if (!found && MPID_cc_get(rreq->cc) == 0) {
+    if (!found && MPIR_cc_get(rreq->cc) == 0) {
         *rreqp = NULL;
         goto fn_exit;
     }

@@ -245,7 +245,7 @@ MPIDI_Recv(void          * buf,
   if (status != MPI_STATUS_IGNORE)
     *status = rreq->status;
 #ifdef MPIDI_STATISTICS
-    if (!(MPID_cc_is_complete(&rreq->cc)))
+    if (!(MPIR_cc_is_complete(&rreq->cc)))
     {
         MPID_NSTAT(mpid_statp->recvWaitsComplete);
     }

@@ -139,7 +139,7 @@ int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win)
     win_ptr->errhandler = 0;
 
     /* return the handle of the window object to the user */
-    MPID_OBJ_PUBLISH_HANDLE(*win, win_ptr->handle);
+    MPIR_OBJ_PUBLISH_HANDLE(*win, win_ptr->handle);
 
     /* ... end of body of routine ... */
 

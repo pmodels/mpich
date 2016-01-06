@@ -58,7 +58,7 @@ int MPIR_Type_hvector_impl(int count, int blocklength, MPI_Aint stride, MPI_Data
 				           &oldtype);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
-    MPID_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+    MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 
  fn_exit:
     return mpi_errno;

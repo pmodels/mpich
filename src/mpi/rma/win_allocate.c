@@ -147,7 +147,7 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
     win_ptr->errhandler = 0;
 
     /* return the handle of the window object to the user */
-    MPID_OBJ_PUBLISH_HANDLE(*win, win_ptr->handle);
+    MPIR_OBJ_PUBLISH_HANDLE(*win, win_ptr->handle);
 
     /* ... end of body of routine ... */
 

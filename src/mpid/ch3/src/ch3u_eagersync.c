@@ -42,7 +42,7 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
 
     /* MT FIXME what are the two operations we are waiting for?  the send and
      * the sync response? */
-    MPID_cc_set(&sreq->cc, 2);
+    MPIR_cc_set(&sreq->cc, 2);
     sreq->dev.OnDataAvail = 0;
     sreq->dev.OnFinal = 0;
 
@@ -129,7 +129,7 @@ int MPIDI_CH3_EagerSyncZero(MPID_Request **sreq_p, int rank, int tag,
     
     /* MT FIXME what are the two operations we are waiting for?  the send and
      * the sync response? */
-    MPID_cc_set(&sreq->cc, 2);
+    MPIR_cc_set(&sreq->cc, 2);
     MPIDI_Request_set_msg_type(sreq, MPIDI_REQUEST_EAGER_MSG);
     sreq->dev.OnDataAvail = 0;
     
@@ -238,7 +238,7 @@ int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     /* If the completion counter is 0, that means that the communicator to
      * which this message is being sent has been revoked and we shouldn't
      * bother finishing this. */
-    if (!found && MPID_cc_get(rreq->cc) == 0) {
+    if (!found && MPIR_cc_get(rreq->cc) == 0) {
         *rreqp = NULL;
         goto fn_fail;
     }

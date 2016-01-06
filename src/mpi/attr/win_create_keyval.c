@@ -119,7 +119,7 @@ int MPI_Win_create_keyval(MPI_Win_copy_attr_function *win_copy_attr_fn,
     keyval_ptr->delfn.user_function = win_delete_attr_fn;
     keyval_ptr->delfn.proxy = MPIR_Attr_delete_c_proxy;
     
-    MPID_OBJ_PUBLISH_HANDLE(*win_keyval, keyval_ptr->handle);
+    MPIR_OBJ_PUBLISH_HANDLE(*win_keyval, keyval_ptr->handle);
     /* ... end of body of routine ... */
 
   fn_exit:

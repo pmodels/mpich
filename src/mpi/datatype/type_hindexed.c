@@ -159,7 +159,7 @@ int MPI_Type_hindexed(int count,
 				           &oldtype);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    MPID_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
+    MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     /* ... end of body of routine ... */
 
   fn_exit:

@@ -70,7 +70,7 @@ int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
     keyval_ptr->delfn.user_function = comm_delete_attr_fn;
     keyval_ptr->delfn.proxy = MPIR_Attr_delete_c_proxy;
 
-    MPID_OBJ_PUBLISH_HANDLE(*comm_keyval, keyval_ptr->handle);
+    MPIR_OBJ_PUBLISH_HANDLE(*comm_keyval, keyval_ptr->handle);
 
  fn_exit:
     return mpi_errno;

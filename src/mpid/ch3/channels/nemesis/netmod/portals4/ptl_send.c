@@ -70,7 +70,7 @@ static int handler_send(const ptl_event_t *e)
     MPIU_Assert(e->type == PTL_EVENT_SEND || e->type == PTL_EVENT_GET);
 
     /* if we are done, release all netmod resources */
-    if (MPID_cc_get(sreq->cc) == 1) {
+    if (MPIR_cc_get(sreq->cc) == 1) {
         if (REQ_PTL(sreq)->md != PTL_INVALID_HANDLE) {
             ret = PtlMDRelease(REQ_PTL(sreq)->md);
             MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdrelease", "**ptlmdrelease %s", MPID_nem_ptl_strerror(ret));

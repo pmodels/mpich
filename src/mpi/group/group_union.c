@@ -218,7 +218,7 @@ int MPI_Group_union(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup)
     mpi_errno = MPIR_Group_union_impl(group_ptr1, group_ptr2, &new_group_ptr);
     if (mpi_errno) goto fn_fail;
 
-    MPID_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
+    MPIR_OBJ_PUBLISH_HANDLE(*newgroup, new_group_ptr->handle);
 
     /* ... end of body of routine ... */
 

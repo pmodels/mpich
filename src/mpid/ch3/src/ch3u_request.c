@@ -65,7 +65,7 @@ MPID_Request * MPID_Request_create(void)
 	   values be set only for RMA requests? */
 	MPIU_Object_set_ref(req, 1);
 	req->kind		   = MPID_REQUEST_UNDEFINED;
-        MPID_cc_set(&req->cc, 1);
+        MPIR_cc_set(&req->cc, 1);
 	req->cc_ptr		   = &req->cc;
 	/* FIXME: status fields meaningful only for receive, and even then
 	   should not need to be set. */

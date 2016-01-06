@@ -10,6 +10,7 @@ include $(top_srcdir)/src/util/logging/Makefile.mk
 include $(top_srcdir)/src/util/mem/Makefile.mk
 include $(top_srcdir)/src/util/cvar/Makefile.mk
 include $(top_srcdir)/src/util/procmap/Makefile.mk
+include $(top_srcdir)/src/util/refcount/Makefile.mk
 include $(top_srcdir)/src/util/thread/Makefile.mk
 include $(top_srcdir)/src/util/type/Makefile.mk
 include $(top_srcdir)/src/util/wrappers/Makefile.mk

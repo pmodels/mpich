@@ -44,7 +44,7 @@ int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function *comm_errhandl
     MPIU_Object_set_ref(errhan_ptr,1);
     errhan_ptr->errfn.C_Comm_Handler_function = comm_errhandler_fn;
 
-    MPID_OBJ_PUBLISH_HANDLE(*errhandler, errhan_ptr->handle);
+    MPIR_OBJ_PUBLISH_HANDLE(*errhandler, errhan_ptr->handle);
  fn_exit:
     return mpi_errno;
  fn_fail:
