@@ -165,7 +165,7 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
 #   endif
 	
 #   ifdef MPICH_IS_THREADED
-    MPID_THREAD_CHECK_BEGIN
+    MPIR_THREAD_CHECK_BEGIN
     {
 	if (MPIDI_CH3I_progress_blocked == TRUE) 
 	{
@@ -185,7 +185,7 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
 	    goto fn_exit;
 	}
     }
-    MPID_THREAD_CHECK_END
+    MPIR_THREAD_CHECK_END
 #   endif
     
     do
@@ -313,7 +313,7 @@ int MPIDI_CH3I_Progress_init(void)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
 
-    MPID_THREAD_CHECK_BEGIN
+    MPIR_THREAD_CHECK_BEGIN
     /* FIXME should be appropriately abstracted somehow */
 #   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
     {
@@ -322,7 +322,7 @@ int MPIDI_CH3I_Progress_init(void)
         MPIU_Assert(err == 0);
     }
 #   endif
-    MPID_THREAD_CHECK_END
+    MPIR_THREAD_CHECK_END
 	
     mpi_errno = MPIDU_Sock_init();
     if (mpi_errno != MPI_SUCCESS) {
@@ -397,7 +397,7 @@ int MPIDI_CH3I_Progress_finalize(void)
     MPIDU_Sock_destroy_set(MPIDI_CH3I_sock_set);
     MPIDU_Sock_finalize();
 
-    MPID_THREAD_CHECK_BEGIN
+    MPIR_THREAD_CHECK_BEGIN
     /* FIXME should be appropriately abstracted somehow */
 #   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
     {
@@ -406,7 +406,7 @@ int MPIDI_CH3I_Progress_finalize(void)
         MPIU_Assert(err == 0);
     }
 #   endif
-    MPID_THREAD_CHECK_END
+    MPIR_THREAD_CHECK_END
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
@@ -760,14 +760,14 @@ static int MPIDI_CH3I_Progress_continue(unsigned int completion_count)
 {
     int mpi_errno = MPI_SUCCESS,err;
 
-    MPID_THREAD_CHECK_BEGIN
+    MPIR_THREAD_CHECK_BEGIN
     /* FIXME should be appropriately abstracted somehow */
 #   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
     {
         MPID_Thread_cond_broadcast(&MPIDI_CH3I_progress_completion_cond,&err);
     }
 #   endif
-    MPID_THREAD_CHECK_END
+    MPIR_THREAD_CHECK_END
 
     return mpi_errno;
 }

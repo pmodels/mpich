@@ -71,7 +71,50 @@ typedef MPIU_Thread_func_t  MPIDU_Thread_func_t;
 - _context - A context (typically an object) of the critical section
 
 M*/
-#define MPIDU_THREAD_CS_ENTER       MPIU_THREAD_CS_ENTER
+#define MPIDU_THREAD_CS_ENTER(name, mutex) MPIDUI_THREAD_CS_ENTER_##name(mutex)
+
+#if defined(MPICH_IS_THREADED)
+
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL
+
+#define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex)                            \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "recursive locking GLOBAL mutex"); \
+            MPIU_THREAD_CS_ENTER_RECURSIVE(mutex);                      \
+        }                                                               \
+    } while (0)
+#define MPIDUI_THREAD_CS_ENTER_ALLGRAN(mutex)                           \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive locking ALLGRAN mutex"); \
+            MPIU_THREAD_CS_ENTER_NONRECURSIVE(mutex);                   \
+        }                                                               \
+    } while (0)
+#define MPIDUI_THREAD_CS_ENTER_POBJ(mutex) do {} while (0)
+
+#else /* MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_POBJ */
+
+#define MPIDUI_THREAD_CS_ENTER_POBJ(mutex)                              \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive locking POBJ mutex"); \
+            MPIU_THREAD_CS_ENTER_NONRECURSIVE(mutex);                   \
+        }                                                               \
+    } while (0)
+#define MPIDUI_THREAD_CS_ENTER_ALLGRAN  MPIDUI_THREAD_CS_ENTER_POBJ
+#define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex) do {} while (0)
+
+#endif  /* MPICH_THREAD_GRANULARITY */
+
+#else  /* !defined(MPICH_IS_THREADED) */
+
+#define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_ALLGRAN(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_ENTER_POBJ(mutex) do {} while (0)
+
+#endif /* MPICH_IS_THREADED */
+
 
 /*M MPIDU_THREAD_CS_EXIT - Exit a named critical section
 
@@ -80,7 +123,50 @@ M*/
 - _context - A context (typically an object) of the critical section
 
 M*/
-#define MPIDU_THREAD_CS_EXIT        MPIU_THREAD_CS_EXIT
+#define MPIDU_THREAD_CS_EXIT(name, mutex) MPIDUI_THREAD_CS_EXIT_##name(mutex)
+
+#if defined(MPICH_IS_THREADED)
+
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL
+
+#define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex)                             \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "recursive unlocking GLOBAL mutex"); \
+            MPIU_THREAD_CS_EXIT_RECURSIVE(mutex);                       \
+        }                                                               \
+    } while (0)
+#define MPIDUI_THREAD_CS_EXIT_ALLGRAN(mutex)                            \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive unlocking ALLGRAN mutex"); \
+            MPIU_THREAD_CS_EXIT_NONRECURSIVE(mutex);                    \
+        }                                                               \
+    } while (0)
+#define MPIDUI_THREAD_CS_EXIT_POBJ(mutex) do {} while (0)
+
+#else /* MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_POBJ */
+
+#define MPIDUI_THREAD_CS_EXIT_POBJ(mutex)                               \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive unlocking POBJ mutex"); \
+            MPIU_THREAD_CS_EXIT_NONRECURSIVE(mutex);                    \
+        }                                                               \
+    } while (0)
+#define MPIDUI_THREAD_CS_EXIT_ALLGRAN  MPIDUI_THREAD_CS_EXIT_POBJ
+#define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex) do {} while (0)
+
+#endif  /* MPICH_THREAD_GRANULARITY */
+
+#else  /* !defined(MPICH_IS_THREADED) */
+
+#define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_ALLGRAN(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_EXIT_POBJ(mutex) do {} while (0)
+
+#endif /* MPICH_IS_THREADED */
+
 
 /*M MPIDU_THREAD_CS_YIELD - Temporarily release a critical section and yield
     to other threads
@@ -90,10 +176,52 @@ M*/
 - _context - A context (typically an object) of the critical section
 
   M*/
-#define MPIDU_THREAD_CS_YIELD       MPIU_THREAD_CS_YIELD
+#define MPIDU_THREAD_CS_YIELD(name, mutex) MPIDUI_THREAD_CS_YIELD_##name(mutex)
 
-#define MPIDU_THREAD_CHECK_BEGIN    MPIU_THREAD_CHECK_BEGIN
-#define MPIDU_THREAD_CHECK_END      MPIU_THREAD_CHECK_END
+#if defined(MPICH_IS_THREADED)
+
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL
+
+#define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex)                            \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "recursive yielding GLOBAL mutex"); \
+            MPIU_THREAD_CS_YIELD_RECURSIVE(mutex);                      \
+        }                                                               \
+    } while (0)
+#define MPIDUI_THREAD_CS_YIELD_ALLGRAN(mutex)                           \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive yielding ALLGRAN mutex"); \
+            MPIU_THREAD_CS_YIELD_NONRECURSIVE(mutex);                   \
+        }                                                               \
+    } while (0)
+#define MPIDUI_THREAD_CS_YIELD_POBJ(mutex) do {} while (0)
+
+#else /* MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_POBJ */
+
+#define MPIDUI_THREAD_CS_YIELD_POBJ(mutex)                              \
+    do {                                                                \
+        if (MPIR_ThreadInfo.isThreaded) {                               \
+            MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive yielding POBJ mutex"); \
+            MPIU_THREAD_CS_YIELD_NONRECURSIVE(mutex);                   \
+        }                                                               \
+    } while (0)
+#define MPIDUI_THREAD_CS_YIELD_ALLGRAN  MPIDUI_THREAD_CS_YIELD_POBJ
+#define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex) do {} while (0)
+
+#endif  /* MPICH_THREAD_GRANULARITY */
+
+#else  /* !defined(MPICH_IS_THREADED) */
+
+#define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_YIELD_ALLGRAN(mutex) do {} while (0)
+#define MPIDUI_THREAD_CS_YIELD_POBJ(mutex) do {} while (0)
+
+#endif /* MPICH_IS_THREADED */
+
+
+
 
 /*@
   MPIDU_Thread_create - create a new thread

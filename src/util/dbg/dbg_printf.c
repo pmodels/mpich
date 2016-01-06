@@ -103,13 +103,13 @@ static FILE *get_fp(void)
     int err;
     /* if we're not initialized, use the static fp, since there should
      * only be one thread in here until then */
-    MPIU_THREAD_CHECK_BEGIN;
+    MPIR_THREAD_CHECK_BEGIN;
     if (dbg_initialized == DBG_INITIALIZED) {
         FILE *fp;
         MPID_Thread_tls_get(&dbg_tls_key, (void **) &fp, &err);
         return fp;
     }
-    MPIU_THREAD_CHECK_END;
+    MPIR_THREAD_CHECK_END;
 #endif
 
     return dbg_static_fp;
@@ -121,12 +121,12 @@ static void set_fp(FILE *fp)
     int err;
     /* if we're not initialized, use the static fp, since there should
      * only be one thread in here until then */
-    MPIU_THREAD_CHECK_BEGIN;
+    MPIR_THREAD_CHECK_BEGIN;
     if (dbg_initialized == DBG_INITIALIZED) {
         MPID_Thread_tls_set(&dbg_tls_key, (void *)fp, &err);
         return;
     }
-    MPIU_THREAD_CHECK_END;
+    MPIR_THREAD_CHECK_END;
 #endif
 
     dbg_static_fp = fp;

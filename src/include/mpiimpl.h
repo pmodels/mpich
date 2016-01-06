@@ -553,6 +553,14 @@ extern MPID_Info MPID_Info_builtin[MPID_INFO_N_BUILTIN];
 extern MPID_Info MPID_Info_direct[];
 /* ------------------------------------------------------------------------- */
 
+#if defined(MPICH_IS_THREADED)
+#define MPIR_THREAD_CHECK_BEGIN if (MPIR_ThreadInfo.isThreaded) {
+#define MPIR_THREAD_CHECK_END   }
+#else
+#define MPIR_THREAD_CHECK_BEGIN
+#define MPIR_THREAD_CHECK_END
+#endif /* MPICH_IS_THREADED */
+
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL || \
     MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
 extern MPID_Thread_mutex_t MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX;
