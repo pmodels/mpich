@@ -43,11 +43,12 @@ void MPIUI_Cleanup_tls(void *a);
 /* For the single threaded case, we use a preallocated structure
    This structure is allocated in src/mpi/init/initthread.c */
 extern MPIUI_Per_thread_t MPIUI_ThreadSingle;
+extern MPIU_Thread_tls_t MPIUI_Thread_storage;   /* Id for perthread data */
 
 #define MPIU_THREADPRIV_INITKEY(is_threaded, initkey_err_ptr_)          \
     do {                                                                \
         if (is_threaded) {                                              \
-            MPIU_Thread_tls_create(MPIUI_Cleanup_tls,&MPIR_ThreadInfo.thread_storage,initkey_err_ptr_); \
+            MPIU_Thread_tls_create(MPIUI_Cleanup_tls,&MPIUI_Thread_storage,initkey_err_ptr_); \
         }                                                               \
     } while (0)
 
@@ -59,7 +60,7 @@ extern MPIUI_Per_thread_t MPIUI_ThreadSingle;
                 *((int *) init_err_ptr_) = MPIU_THREAD_ERROR;           \
                 break;                                                  \
             }                                                           \
-            MPIU_Thread_tls_set(&MPIR_ThreadInfo.thread_storage, (void *)MPIUI_Thread_ptr, init_err_ptr_); \
+            MPIU_Thread_tls_set(&MPIUI_Thread_storage, (void *)MPIUI_Thread_ptr, init_err_ptr_); \
         }                                                               \
     } while (0)
 
@@ -67,7 +68,7 @@ extern MPIUI_Per_thread_t MPIUI_ThreadSingle;
     do {                                                                \
         if (!MPIUI_Thread_ptr) {                                        \
             if (is_threaded) {                                          \
-                MPIU_Thread_tls_get(&MPIR_ThreadInfo.thread_storage, (void **) &MPIUI_Thread_ptr, get_err_ptr_); \
+                MPIU_Thread_tls_get(&MPIUI_Thread_storage, (void **) &MPIUI_Thread_ptr, get_err_ptr_); \
                 if (unlikely(*((int *) get_err_ptr_)))                  \
                     break;                                              \
                 if (!MPIUI_Thread_ptr) {                                \
@@ -94,10 +95,10 @@ extern MPIUI_Per_thread_t MPIUI_ThreadSingle;
         if (is_threaded) {                                              \
             MPIU_THREADPRIV_GET(is_threaded, finalize_err_ptr_);        \
             MPIU_Free(MPIUI_Thread_ptr);                                \
-            MPIU_Thread_tls_set(&MPIR_ThreadInfo.thread_storage,NULL,finalize_err_ptr_); \
+            MPIU_Thread_tls_set(&MPIUI_Thread_storage,NULL,finalize_err_ptr_); \
             if (unlikely(*((int *) finalize_err_ptr_)))                 \
                 break;                                                  \
-            MPIU_Thread_tls_destroy(&MPIR_ThreadInfo.thread_storage,finalize_err_ptr_); \
+            MPIU_Thread_tls_destroy(&MPIUI_Thread_storage,finalize_err_ptr_); \
             if (unlikely(*((int *) finalize_err_ptr_)))                 \
                 break;                                                  \
         }                                                               \

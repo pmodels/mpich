@@ -58,10 +58,6 @@ typedef void (*MPIU_Thread_func_t) (void *data);
 typedef struct {
     int thread_provided;        /* Provided level of thread support */
 
-#if defined(MPICH_IS_THREADED) && !defined(MPICH_TLS_SPECIFIER)
-    MPIU_Thread_tls_t thread_storage;   /* Id for perthread data */
-#endif
-
     /* This is a special case for is_thread_main, which must be
      * implemented even if MPICH itself is single threaded.  */
 #if MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED
