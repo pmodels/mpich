@@ -197,6 +197,24 @@ int usleep(useconds_t usec);
 #define MPIU_SYSCALL(a_,b_,c_) a_ = b_ c_
 #endif
 
+
+typedef struct {
+    int thread_provided;        /* Provided level of thread support */
+
+    /* This is a special case for is_thread_main, which must be
+     * implemented even if MPICH itself is single threaded.  */
+#if MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED
+    MPID_Thread_id_t master_thread;     /* Thread that started MPI */
+#endif
+
+#if defined MPICH_IS_THREADED
+    int isThreaded;             /* Set to true if user requested
+                                 * THREAD_MULTIPLE */
+#endif                          /* MPICH_IS_THREADED */
+} MPIR_Thread_info_t;
+extern MPIR_Thread_info_t MPIR_ThreadInfo;
+
+
 /*TDSOverview.tex
   
   MPI has a number of data structures, most of which are represented by 
