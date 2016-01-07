@@ -47,15 +47,14 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
         *(same_) = pthread_equal(*(id1_), *(id2_)) ? TRUE : FALSE;	\
     } while (0)
 
-#define MPIU_Thread_yield(mutex_ptr_)                                   \
+#define MPIU_Thread_yield(mutex_ptr_, err_ptr_)                         \
     do {                                                                \
-        int err;                                                        \
         MPIU_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"enter MPIU_Thread_yield");         \
         if (OPA_load_int(&(mutex_ptr_)->num_queued_threads) == 0)       \
             break;                                                      \
-        MPIU_Thread_mutex_unlock(mutex_ptr_, &err);                     \
+        MPIU_Thread_mutex_unlock(mutex_ptr_, err_ptr_);                 \
         MPL_sched_yield();                                              \
-        MPIU_Thread_mutex_lock(mutex_ptr_, &err);                       \
+        MPIU_Thread_mutex_lock(mutex_ptr_, err_ptr_);                   \
         MPIU_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"exit MPIU_Thread_yield");          \
     } while (0)
 
@@ -200,8 +199,6 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
                                           "    %s:%d\n", __FILE__, __LINE__); \
 									\
         *(int *)(err_ptr_) = err__;                                     \
-        MPIU_Assert_fmt_msg(err__ == 0,                                 \
-                            ("cond_wait failed, err=%d (%s)",err__,strerror(err__))); \
         MPIU_DBG_MSG_FMT(MPIR_DBG_THREAD,TYPICAL,(MPIU_DBG_FDEST,"Exit cond_wait on cond=%p mutex=%p",(cond_ptr_),(mutex_ptr_))); \
     } while (0)
 
@@ -216,8 +213,6 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
                                           "    %s:%d\n", __FILE__, __LINE__); \
                                                                         \
         *(int *)(err_ptr_) = err__;                                     \
-        MPIU_Assert_fmt_msg(err__ == 0,                                 \
-                            ("cond_broadcast failed, err__=%d (%s)",err__,strerror(err__))); \
     } while (0)
 
 #define MPIU_Thread_cond_signal(cond_ptr_, err_ptr_)                    \
@@ -231,8 +226,6 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
                                           "    %s:%d\n", __FILE__, __LINE__); \
                                                                         \
         *(int *)(err_ptr_) = err__;                                     \
-        MPIU_Assert_fmt_msg(err__ == 0,                                 \
-                            ("cond_signal failed, err__=%d (%s)",err__,strerror(err__))); \
     } while (0)
 
 
@@ -274,8 +267,6 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
                                           "    %s:%d\n", __FILE__, __LINE__); \
                                                                         \
         *(int *)(err_ptr_) = err__;                                     \
-        MPIU_Assert_fmt_msg(err__ == 0,                                 \
-                            ("tls_set failed, err__=%d (%s)",err__,strerror(err__))); \
     } while (0)
 
 #define MPIU_Thread_tls_get(tls_ptr_, value_ptr_, err_ptr_)	\

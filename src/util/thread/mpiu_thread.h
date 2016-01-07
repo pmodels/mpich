@@ -11,7 +11,6 @@
 #include "mpichconf.h"  /* defines MPICH_THREAD_PACKAGE_NAME */
 #include "mpichconfconst.h"
 #include "mpidbg.h"
-#include "mpiassert.h"
 #include "mpiu_strerror.h"
 
 /* FIXME: we should not be including an MPIR-level header here.  But
@@ -47,6 +46,7 @@ typedef void (*MPIU_Thread_func_t) (void *data);
 
 /* Error values */
 #define MPIU_THREAD_SUCCESS 0
+#define MPIU_THREAD_ERROR   1
 /* FIXME: Define other error codes.  For now, any non-zero value is an error. */
 
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_INVALID

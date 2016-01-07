@@ -32,7 +32,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
 void MPIU_Thread_exit(void);
 void MPIU_Thread_self(MPIU_Thread_id_t * id);
 void MPIU_Thread_same(MPIU_Thread_id_t * id1, MPIU_Thread_id_t * id2, int *same);
-void MPIU_Thread_yield(void);
+void MPIU_Thread_yield(MPIU_Thread_mutex_t * mutex, int *err);
 
 void MPIU_Thread_mutex_create(MPIU_Thread_mutex_t * mutex, int *err);
 void MPIU_Thread_mutex_destroy(MPIU_Thread_mutex_t * mutex, int *err);
