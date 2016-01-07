@@ -69,7 +69,11 @@ AC_DEFUN([AX_TLS], [
 	     PAC_APPEND_FLAG([-shared],[LIBS])
 	     if test "$ac_cv_tls" != "none" ; then
                 AC_LINK_IFELSE(
-			[AC_LANG_PROGRAM([extern $ax_tls_keyword int bar;],[++bar;])],
+			[AC_LANG_PROGRAM(
+				[
+					extern $ax_tls_keyword int bar;
+					$ax_tls_keyword int bar = 0;
+				],[++bar;])],
                         [ac_cv_tls=$ax_tls_keyword],
                         [ac_cv_tls=none])
 	     fi
