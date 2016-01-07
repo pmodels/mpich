@@ -4,17 +4,17 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "mpid_nem_impl.h"
+#include "mpidimpl.h"
 #include "mpiu_os_wrappers.h"
 
 static int sense;
 static int barrier_init = 0;
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_barrier_init
+#define FUNCNAME MPIDU_shm_barrier_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_barrier_init(MPID_nem_barrier_t *barrier_region, int init_values)
+int MPIDU_shm_barrier_init(MPID_nem_barrier_t *barrier_region, int init_values)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_BARRIER_INIT);
 
@@ -35,11 +35,11 @@ int MPID_nem_barrier_init(MPID_nem_barrier_t *barrier_region, int init_values)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_barrier
+#define FUNCNAME MPIDU_shm_barrier
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* FIXME: this is not a scalable algorithm because everyone is polling on the same cacheline */
-int MPID_nem_barrier(void)
+int MPIDU_shm_barrier(void)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_BARRIER);

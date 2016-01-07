@@ -216,7 +216,7 @@ int MPIDU_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_rank)
         MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
 
-        mpi_errno = MPID_nem_barrier_init((MPID_nem_barrier_t *) memory->base_addr, TRUE);
+        mpi_errno = MPIDU_shm_barrier_init((MPID_nem_barrier_t *) memory->base_addr, TRUE);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
@@ -243,7 +243,7 @@ int MPIDU_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_rank)
             MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
 
-            mpi_errno = MPID_nem_barrier_init((MPID_nem_barrier_t *) memory->base_addr, TRUE);
+            mpi_errno = MPIDU_shm_barrier_init((MPID_nem_barrier_t *) memory->base_addr, TRUE);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -292,12 +292,12 @@ int MPIDU_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_rank)
              * this behavior. */
 #endif
 
-            mpi_errno = MPID_nem_barrier_init((MPID_nem_barrier_t *) memory->base_addr, FALSE);
+            mpi_errno = MPIDU_shm_barrier_init((MPID_nem_barrier_t *) memory->base_addr, FALSE);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
 
-        mpi_errno = MPID_nem_barrier();
+        mpi_errno = MPIDU_shm_barrier();
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -334,7 +334,7 @@ int MPIDU_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_rank)
         ret = OPA_Interprocess_lock_init(ipc_lock, TRUE /*isLeader */);
         MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
-        mpi_errno = MPID_nem_barrier_init((MPID_nem_barrier_t *) memory->base_addr, TRUE);
+        mpi_errno = MPIDU_shm_barrier_init((MPID_nem_barrier_t *) memory->base_addr, TRUE);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
@@ -383,7 +383,7 @@ int MPIDU_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_rank)
             MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
 
-            mpi_errno = MPID_nem_barrier_init((MPID_nem_barrier_t *) memory->base_addr, TRUE);
+            mpi_errno = MPIDU_shm_barrier_init((MPID_nem_barrier_t *) memory->base_addr, TRUE);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
 
@@ -420,12 +420,12 @@ int MPIDU_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_rank)
             MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
 #endif
 
-            mpi_errno = MPID_nem_barrier_init((MPID_nem_barrier_t *) memory->base_addr, FALSE);
+            mpi_errno = MPIDU_shm_barrier_init((MPID_nem_barrier_t *) memory->base_addr, FALSE);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
         }
 
-        mpi_errno = MPID_nem_barrier();
+        mpi_errno = MPIDU_shm_barrier();
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -538,7 +538,7 @@ static int check_alloc(int num_local, int local_rank)
         OPA_store_int(&asym_check_region_p->is_asym, 0);
     }
 
-    mpi_errno = MPID_nem_barrier();
+    mpi_errno = MPIDU_shm_barrier();
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -547,7 +547,7 @@ static int check_alloc(int num_local, int local_rank)
 
     OPA_read_write_barrier();
 
-    mpi_errno = MPID_nem_barrier();
+    mpi_errno = MPIDU_shm_barrier();
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
