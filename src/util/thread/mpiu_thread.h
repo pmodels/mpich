@@ -13,10 +13,8 @@
 #include "mpidbg.h"
 #include "mpiu_strerror.h"
 
-/* FIXME: we should not be including an MPIR-level header here.  But
- * the code is currently a rat-hole where the MPIU and MPIR functions
- * are all mixed up.  Till that's resolved, adding mpimem.h here as a
- * workaround for using MPIU_Calloc functionality. */
+/* FIXME: Adding mpimem.h here as a workaround for using MPIU_Calloc
+ * functionality. */
 #include "mpimem.h"
 
 /* _INVALID exists to avoid accidental macro evaluations to 0 */
@@ -54,22 +52,6 @@ typedef void (*MPIU_Thread_func_t) (void *data);
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_LOCK_FREE
 #  error MPICH_THREAD_GRANULARITY_LOCK_FREE not implemented yet
 #endif
-
-typedef struct {
-    int thread_provided;        /* Provided level of thread support */
-
-    /* This is a special case for is_thread_main, which must be
-     * implemented even if MPICH itself is single threaded.  */
-#if MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED
-    MPIU_Thread_id_t master_thread;     /* Thread that started MPI */
-#endif
-
-#if defined MPICH_IS_THREADED
-    int isThreaded;             /* Set to true if user requested
-                                 * THREAD_MULTIPLE */
-#endif                          /* MPICH_IS_THREADED */
-} MPIR_Thread_info_t;
-extern MPIR_Thread_info_t MPIR_ThreadInfo;
 
 /* ------------------------------------------------------------------------- */
 /* thread-local storage macros */
