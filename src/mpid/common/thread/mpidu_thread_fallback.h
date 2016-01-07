@@ -104,7 +104,9 @@ M*/
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int err_ = 0;                                               \
             MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive locking ALLGRAN mutex"); \
+            MPIU_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_mutex_lock %p", &mutex); \
             MPIDU_Thread_mutex_lock(&mutex, &err_);                     \
+            MPIU_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_mutex_lock %p", &mutex); \
             MPIU_Assert(err_ == 0);                                     \
         }                                                               \
     } while (0)
@@ -117,7 +119,9 @@ M*/
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int err_ = 0;                                               \
             MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive locking POBJ mutex"); \
+            MPIU_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_mutex_lock %p", &mutex); \
             MPIDU_Thread_mutex_lock(&mutex, &err_);                     \
+            MPIU_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_mutex_lock %p", &mutex); \
             MPIU_Assert(err_ == 0);                                     \
         }                                                               \
     } while (0)
@@ -159,6 +163,7 @@ M*/
             depth_ = MPIDU_THREADPRIV_FIELD(lock_depth);                \
             if (depth_ == 1) {                                          \
                 int err_ = 0;                                           \
+                MPIU_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"MPIDU_Thread_mutex_unlock %p", &mutex); \
                 MPIDU_Thread_mutex_unlock(&mutex, &err_);               \
                 MPIU_Assert(err_ == 0);                                 \
             }                                                           \
@@ -171,6 +176,7 @@ M*/
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int err_ = 0;                                               \
             MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive unlocking ALLGRAN mutex"); \
+            MPIU_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"MPIDU_Thread_mutex_unlock %p", &mutex); \
             MPIDU_Thread_mutex_unlock(&mutex, &err_);                   \
             MPIU_Assert(err_ == 0);                                     \
         }                                                               \
@@ -184,6 +190,7 @@ M*/
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int err_ = 0;                                               \
             MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive unlocking POBJ mutex"); \
+            MPIU_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"MPIDU_Thread_mutex_unlock %p", &mutex); \
             MPIDU_Thread_mutex_unlock(&mutex, &err_);                   \
             MPIU_Assert(err_ == 0);                                     \
         }                                                               \
@@ -221,7 +228,9 @@ M*/
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int err_ = 0;                                               \
             MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive yielding GLOBAL mutex"); \
+            MPIU_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_yield"); \
             MPIDU_Thread_yield(&mutex, &err_);                          \
+            MPIU_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_yield"); \
             MPIU_Assert(err_ == 0);                                     \
         }                                                               \
     } while (0)
@@ -339,6 +348,7 @@ M*/
         OPA_store_int(&(mutex_ptr_)->num_queued_threads, 0);            \
         MPIU_Thread_mutex_create(&(mutex_ptr_)->mutex, err_ptr_);       \
         MPIU_Assert(*err_ptr_ == 0);                                    \
+        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"Created MPIU_Thread_mutex %p", (mutex_ptr_)); \
     } while (0)
 
 /*@
@@ -352,6 +362,7 @@ M*/
 @*/
 #define MPIDU_Thread_mutex_destroy(mutex_ptr_, err_ptr_)                \
     do {                                                                \
+        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to destroy MPIU_Thread_mutex %p", (mutex_ptr_)); \
         MPIU_Thread_mutex_destroy(&(mutex_ptr_)->mutex, err_ptr_);      \
         MPIU_Assert(*err_ptr_ == 0);                                    \
     } while (0)
@@ -365,8 +376,10 @@ M*/
 #define MPIDU_Thread_mutex_lock(mutex_ptr_, err_ptr_)                   \
     do {                                                                \
         OPA_incr_int(&(mutex_ptr_)->num_queued_threads);                \
+        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIU_Thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
         MPIU_Thread_mutex_lock(&(mutex_ptr_)->mutex, err_ptr_);         \
         MPIU_Assert(*err_ptr_ == 0);                                    \
+        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIU_Thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
         OPA_decr_int(&(mutex_ptr_)->num_queued_threads);                \
     } while (0)
 
@@ -397,6 +410,7 @@ M*/
     do {                                                \
         MPIU_Thread_cond_create(cond_ptr_, err_ptr_);   \
         MPIU_Assert(*err_ptr_ == 0);                    \
+        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"Created MPIU_Thread_cond %p", (cond_ptr_)); \
     } while (0)
 
 /*@
@@ -411,6 +425,7 @@ M*/
 @*/
 #define MPIDU_Thread_cond_destroy(cond_ptr_, err_ptr_)  \
     do {                                                \
+        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to destroy MPIU_Thread_cond %p", (cond_ptr_)); \
         MPIU_Thread_cond_destroy(cond_ptr_, err_ptr_);  \
         MPIU_Assert(*err_ptr_ == 0);                    \
     } while (0)
@@ -432,9 +447,11 @@ M*/
 #define MPIDU_Thread_cond_wait(cond_ptr_, mutex_ptr_, err_ptr_)         \
     do {                                                                \
         OPA_incr_int(&(mutex_ptr_)->num_queued_threads);                \
+        MPIU_DBG_MSG_FMT(MPIR_DBG_THREAD,TYPICAL,(MPIU_DBG_FDEST,"Enter cond_wait on cond=%p mutex=%p",(cond_ptr_),&(mutex_ptr_)->mutex)); \
         MPIU_Thread_cond_wait(cond_ptr_, &(mutex_ptr_)->mutex, err_ptr_); \
         MPIU_Assert_fmt_msg(*((int *) err_ptr_) == 0,                   \
                             ("cond_wait failed, err=%d (%s)", *((int *) err_ptr_), strerror(*((int *) err_ptr_)))); \
+        MPIU_DBG_MSG_FMT(MPIR_DBG_THREAD,TYPICAL,(MPIU_DBG_FDEST,"Exit cond_wait on cond=%p mutex=%p",(cond_ptr_),&(mutex_ptr_)->mutex)); \
         OPA_decr_int(&(mutex_ptr_)->num_queued_threads);                \
     } while (0)
 
@@ -446,6 +463,7 @@ M*/
 @*/
 #define MPIDU_Thread_cond_broadcast(cond_ptr_, err_ptr_)                \
     do {                                                                \
+        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to cond_broadcast on MPIU_Thread_cond %p", (cond_ptr_)); \
         MPIU_Thread_cond_broadcast(cond_ptr_, err_ptr_);                \
         MPIU_Assert_fmt_msg(*((int *) err_ptr_) == 0,                   \
                             ("cond_broadcast failed, err=%d (%s)", *((int *) err_ptr_), strerror(*((int *) err_ptr_)))); \
@@ -459,6 +477,7 @@ M*/
 @*/
 #define MPIDU_Thread_cond_signal(cond_ptr_, err_ptr_)                   \
     do {                                                                \
+        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to cond_signal on MPIU_Thread_cond %p", (cond_ptr_)); \
         MPIU_Thread_cond_signal(cond_ptr_, err_ptr_);                   \
         MPIU_Assert_fmt_msg(*((int *) err_ptr_) == 0,                   \
                             ("cond_signal failed, err=%d (%s)", *((int *) err_ptr_), strerror(*((int *) err_ptr_)))); \

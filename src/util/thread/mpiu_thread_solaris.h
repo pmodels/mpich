@@ -36,10 +36,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
         *(same_ptr_) = (*(id1_ptr_) == *(id2_ptr_)) ? TRUE : FALSE;     \
     } while (0)
 
-#define MPIU_Thread_yield()                             \
-    do {                                                \
-        thr_yield();                                    \
-    } while (0)
+#define MPIU_Thread_yield thr_yield
 
 
 /*
