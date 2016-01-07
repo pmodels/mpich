@@ -80,10 +80,18 @@ M*/
 #define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex)                            \
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
-            int err_ = 0;                                               \
+            int depth_;                                                 \
+            MPIDU_THREADPRIV_DECL;                                      \
+                                                                        \
             MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "recursive locking GLOBAL mutex"); \
-            MPIU_THREAD_CS_ENTER_RECURSIVE(mutex, &err_);               \
-            MPIU_Assert(err_ == 0);                                     \
+            MPIDU_THREADPRIV_GET;                                       \
+            depth_ = MPIDU_THREADPRIV_FIELD(lock_depth);                \
+            if (depth_ == 0) {                                          \
+                int err_ = 0;                                           \
+                MPIDU_Thread_mutex_lock(&mutex, &err_);                 \
+                MPIU_Assert(err_ == 0);                                 \
+            }                                                           \
+            MPIDU_THREADPRIV_FIELD(lock_depth) += 1;                    \
         }                                                               \
     } while (0)
 #define MPIDUI_THREAD_CS_ENTER_ALLGRAN(mutex)                           \
@@ -91,7 +99,7 @@ M*/
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int err_ = 0;                                               \
             MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive locking ALLGRAN mutex"); \
-            MPIU_THREAD_CS_ENTER_NONRECURSIVE(mutex, &err_);            \
+            MPIDU_Thread_mutex_lock(&mutex, &err_);                     \
             MPIU_Assert(err_ == 0);                                     \
         }                                                               \
     } while (0)
@@ -104,7 +112,7 @@ M*/
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int err_ = 0;                                               \
             MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive locking POBJ mutex"); \
-            MPIU_THREAD_CS_ENTER_NONRECURSIVE(mutex, &err_);            \
+            MPIDU_Thread_mutex_lock(&mutex, &err_);                     \
             MPIU_Assert(err_ == 0);                                     \
         }                                                               \
     } while (0)
@@ -138,18 +146,27 @@ M*/
 #define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex)                             \
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
-            int err_ = 0;                                               \
+            int depth_;                                                 \
+            MPIDU_THREADPRIV_DECL;                                      \
+                                                                        \
             MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "recursive unlocking GLOBAL mutex"); \
-            MPIU_THREAD_CS_EXIT_RECURSIVE(mutex, &err_);                \
-            MPIU_Assert(err_ == 0);                                     \
+            MPIDU_THREADPRIV_GET;                                       \
+            depth_ = MPIDU_THREADPRIV_FIELD(lock_depth);                \
+            if (depth_ == 1) {                                          \
+                int err_ = 0;                                           \
+                MPIDU_Thread_mutex_unlock(&mutex, &err_);               \
+                MPIU_Assert(err_ == 0);                                 \
+            }                                                           \
+            MPIDU_THREADPRIV_FIELD(lock_depth) -= 1;                    \
         }                                                               \
     } while (0)
+
 #define MPIDUI_THREAD_CS_EXIT_ALLGRAN(mutex)                            \
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int err_ = 0;                                               \
             MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive unlocking ALLGRAN mutex"); \
-            MPIU_THREAD_CS_EXIT_NONRECURSIVE(mutex, &err_);             \
+            MPIDU_Thread_mutex_unlock(&mutex, &err_);                   \
             MPIU_Assert(err_ == 0);                                     \
         }                                                               \
     } while (0)
@@ -162,7 +179,7 @@ M*/
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int err_ = 0;                                               \
             MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive unlocking POBJ mutex"); \
-            MPIU_THREAD_CS_EXIT_NONRECURSIVE(mutex, &err_);             \
+            MPIDU_Thread_mutex_unlock(&mutex, &err_);                   \
             MPIU_Assert(err_ == 0);                                     \
         }                                                               \
     } while (0)
@@ -198,8 +215,8 @@ M*/
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int err_ = 0;                                               \
-            MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "recursive yielding GLOBAL mutex"); \
-            MPIU_THREAD_CS_YIELD_RECURSIVE(mutex, &err_);               \
+            MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive yielding GLOBAL mutex"); \
+            MPIDU_Thread_yield(&mutex, &err_);                          \
             MPIU_Assert(err_ == 0);                                     \
         }                                                               \
     } while (0)
@@ -208,7 +225,7 @@ M*/
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int err_ = 0;                                               \
             MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive yielding ALLGRAN mutex"); \
-            MPIU_THREAD_CS_YIELD_NONRECURSIVE(mutex, &err_);            \
+            MPIDU_Thread_yield(&mutex, &err_);                          \
             MPIU_Assert(err_ == 0);                                     \
         }                                                               \
     } while (0)
@@ -221,7 +238,7 @@ M*/
         if (MPIR_ThreadInfo.isThreaded) {                               \
             int err_ = 0;                                               \
             MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive yielding POBJ mutex"); \
-            MPIU_THREAD_CS_YIELD_NONRECURSIVE(mutex, &err_);            \
+            MPIDU_Thread_yield(&mutex, &err_);                          \
             MPIU_Assert(err_ == 0);                                     \
         }                                                               \
     } while (0)
