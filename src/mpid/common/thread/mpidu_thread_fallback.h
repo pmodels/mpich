@@ -64,7 +64,7 @@ typedef MPIU_Thread_id_t    MPIDU_Thread_id_t;
 typedef MPIU_Thread_tls_t   MPIDU_Thread_tls_t;
 typedef MPIU_Thread_func_t  MPIDU_Thread_func_t;
 
-/*M MPIU_THREAD_CS_ENTER - Enter a named critical section
+/*M MPIDU_THREAD_CS_ENTER - Enter a named critical section
 
   Input Parameters:
 + _name - name of the critical section
@@ -73,7 +73,7 @@ typedef MPIU_Thread_func_t  MPIDU_Thread_func_t;
 M*/
 #define MPIDU_THREAD_CS_ENTER       MPIU_THREAD_CS_ENTER
 
-/*M MPIU_THREAD_CS_EXIT - Exit a named critical section
+/*M MPIDU_THREAD_CS_EXIT - Exit a named critical section
 
   Input Parameters:
 + _name - cname of the critical section
@@ -82,7 +82,7 @@ M*/
 M*/
 #define MPIDU_THREAD_CS_EXIT        MPIU_THREAD_CS_EXIT
 
-/*M MPIU_THREAD_CS_YIELD - Temporarily release a critical section and yield
+/*M MPIDU_THREAD_CS_YIELD - Temporarily release a critical section and yield
     to other threads
 
   Input Parameters:
