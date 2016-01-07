@@ -480,7 +480,7 @@ int MPIDI_nem_ckpt_finish(void)
        channels between local procs), we don't have to flush those
        channels, just make sure no one is sending or receiving during
        the checkpoint */
-    mpi_errno = MPID_nem_barrier();
+    mpi_errno = MPIDU_shm_barrier();
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     do {
@@ -493,7 +493,7 @@ int MPIDI_nem_ckpt_finish(void)
     } while (ret == -1 && errno == EINTR);
     MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**sem_wait", "**sem_wait %s", MPIR_Strerror(errno));
 
-    mpi_errno = MPID_nem_barrier();
+    mpi_errno = MPIDU_shm_barrier();
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     if (ckpt_result == CKPT_CONTINUE) {
