@@ -6,20 +6,15 @@
 
 #include "mpiu_thread.h"
 
-#if !defined(MPICH_IS_THREADED)
-
-/* If single threaded, we preallocate this.  Otherwise, we create it */
+#if !defined(MPICH_IS_THREADED) || !defined(MPICH_TLS_SPECIFIER)
 MPIUI_Per_thread_t MPIUI_Thread = { 0 };
-
-#elif defined(MPICH_TLS_SPECIFIER)
-
+#else
 MPICH_TLS_SPECIFIER MPIUI_Per_thread_t MPIUI_Thread = { 0 };
+#endif
 
-#else /* defined(MPICH_IS_THREADED) && !defined(MPICH_TLS_SPECIFIER) */
+MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
-/* If we may be single threaded, we need a preallocated version to use
- * if we are single threaded case */
-MPIUI_Per_thread_t MPIUI_ThreadSingle = { 0 };
+#if defined(MPICH_IS_THREADED) && !defined(MPICH_TLS_SPECIFIER)
 
 MPIU_Thread_tls_t MPIUI_Thread_storage;
 
