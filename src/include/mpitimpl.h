@@ -1390,7 +1390,7 @@ extern int MPIR_T_is_threaded;
 #define MPIR_T_THREAD_CHECK_END }
 
 #ifdef MPICH_IS_THREADED
-extern MPIU_Thread_mutex_t mpi_t_mutex;
+extern MPID_Thread_mutex_t mpi_t_mutex;
 #define MPIR_T_THREAD_CS_INIT() \
     do { \
         int err_; \
