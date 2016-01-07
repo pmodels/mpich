@@ -8,6 +8,7 @@
 #define MPIDU_THREAD_H_INCLUDED
 
 #include "mpiutil.h"
+#include "opa_primitives.h"
 
 /* some important critical section names:
  *   GLOBAL - entered/exited at beginning/end of (nearly) every MPI_ function
@@ -58,7 +59,11 @@ g * MPI_FINALIZED, MPI_GET_COUNT, MPI_GET_ELEMENTS, MPI_GRAPH_GET,
  * state.  Such situations should be avoided where possible.
  */
 
-typedef MPIU_Thread_mutex_t MPIDU_Thread_mutex_t;
+typedef struct {
+    MPIU_Thread_mutex_t mutex;
+    OPA_int_t num_queued_threads;
+} MPIDU_Thread_mutex_t;
+
 typedef MPIU_Thread_cond_t  MPIDU_Thread_cond_t;
 typedef MPIU_Thread_id_t    MPIDU_Thread_id_t;
 typedef MPIU_Thread_tls_t   MPIDU_Thread_tls_t;
@@ -307,10 +312,15 @@ M*/
 /*@
   MPIDU_Thread_yield - voluntarily relinquish the CPU, giving other threads an opportunity to run
 @*/
-#define MPIDU_Thread_yield(mutex_ptr_, err_ptr_)        \
-    do {                                                \
-        MPIU_Thread_yield(mutex_ptr_, err_ptr_);        \
-        MPIU_Assert(*err_ptr_ == 0);                    \
+#define MPIDU_Thread_yield(mutex_ptr_, err_ptr_)                        \
+    do {                                                                \
+        if (OPA_load_int(&(mutex_ptr_)->num_queued_threads) == 0)       \
+            break;                                                      \
+        MPIDU_Thread_mutex_unlock(mutex_ptr_, err_ptr_);                \
+        MPIU_Assert(*err_ptr_ == 0);                                    \
+        MPIU_Thread_yield();                                            \
+        MPIDU_Thread_mutex_lock(mutex_ptr_, err_ptr_);                  \
+        MPIU_Assert(*err_ptr_ == 0);                                    \
     } while (0)
 
 /*
@@ -324,10 +334,11 @@ M*/
 + mutex - mutex
 - err - error code (non-zero indicates an error has occurred)
 @*/
-#define MPIDU_Thread_mutex_create(mutex_ptr_, err_ptr_) \
-    do {                                                \
-        MPIU_Thread_mutex_create(mutex_ptr_, err_ptr_); \
-        MPIU_Assert(*err_ptr_ == 0);                    \
+#define MPIDU_Thread_mutex_create(mutex_ptr_, err_ptr_)                 \
+    do {                                                                \
+        OPA_store_int(&(mutex_ptr_)->num_queued_threads, 0);            \
+        MPIU_Thread_mutex_create(&(mutex_ptr_)->mutex, err_ptr_);       \
+        MPIU_Assert(*err_ptr_ == 0);                                    \
     } while (0)
 
 /*@
@@ -339,10 +350,10 @@ M*/
   Output Parameter:
 . err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
 @*/
-#define MPIDU_Thread_mutex_destroy(mutex_ptr_, err_ptr_)        \
-    do {                                                        \
-        MPIU_Thread_mutex_destroy(mutex_ptr_, err_ptr_);        \
-        MPIU_Assert(*err_ptr_ == 0);                            \
+#define MPIDU_Thread_mutex_destroy(mutex_ptr_, err_ptr_)                \
+    do {                                                                \
+        MPIU_Thread_mutex_destroy(&(mutex_ptr_)->mutex, err_ptr_);      \
+        MPIU_Assert(*err_ptr_ == 0);                                    \
     } while (0)
 
 /*@
@@ -351,10 +362,12 @@ M*/
   Input Parameter:
 . mutex - mutex
 @*/
-#define MPIDU_Thread_mutex_lock(mutex_ptr_, err_ptr_)   \
-    do {                                                \
-        MPIU_Thread_mutex_lock(mutex_ptr_, err_ptr_);   \
-        MPIU_Assert(*err_ptr_ == 0);                    \
+#define MPIDU_Thread_mutex_lock(mutex_ptr_, err_ptr_)                   \
+    do {                                                                \
+        OPA_incr_int(&(mutex_ptr_)->num_queued_threads);                \
+        MPIU_Thread_mutex_lock(&(mutex_ptr_)->mutex, err_ptr_);         \
+        MPIU_Assert(*err_ptr_ == 0);                                    \
+        OPA_decr_int(&(mutex_ptr_)->num_queued_threads);                \
     } while (0)
 
 /*@
@@ -363,10 +376,10 @@ M*/
   Input Parameter:
 . mutex - mutex
 @*/
-#define MPIDU_Thread_mutex_unlock(mutex_ptr_, err_ptr_) \
-    do {                                                \
-        MPIU_Thread_mutex_unlock(mutex_ptr_, err_ptr_); \
-        MPIU_Assert(*err_ptr_ == 0);                    \
+#define MPIDU_Thread_mutex_unlock(mutex_ptr_, err_ptr_)                 \
+    do {                                                                \
+        MPIU_Thread_mutex_unlock(&(mutex_ptr_)->mutex, err_ptr_);       \
+        MPIU_Assert(*err_ptr_ == 0);                                    \
     } while (0)
 
 /*
@@ -418,9 +431,11 @@ M*/
 @*/
 #define MPIDU_Thread_cond_wait(cond_ptr_, mutex_ptr_, err_ptr_)         \
     do {                                                                \
-        MPIU_Thread_cond_wait(cond_ptr_, mutex_ptr_, err_ptr_);         \
+        OPA_incr_int(&(mutex_ptr_)->num_queued_threads);                \
+        MPIU_Thread_cond_wait(cond_ptr_, &(mutex_ptr_)->mutex, err_ptr_); \
         MPIU_Assert_fmt_msg(*((int *) err_ptr_) == 0,                   \
                             ("cond_wait failed, err=%d (%s)", *((int *) err_ptr_), strerror(*((int *) err_ptr_)))); \
+        OPA_decr_int(&(mutex_ptr_)->num_queued_threads);                \
     } while (0)
 
 /*@

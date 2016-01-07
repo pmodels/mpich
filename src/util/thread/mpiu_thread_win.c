@@ -102,11 +102,9 @@ void MPIU_Thread_same(MPIU_Thread_id_t * id1, MPIU_Thread_id_t * id2, int *same)
     *same = (*id1 == *id2) ? TRUE : FALSE;
 }
 
-void MPIU_Thread_yield(MPIU_Thread_mutex_t * mutex, int *err)
+void MPIU_Thread_yield(void)
 {
-    MPIU_Thread_mutex_unlock(mutex, err);
     Sleep(0);
-    MPIU_Thread_mutex_lock(mutex, err);
 }
 
 /*
