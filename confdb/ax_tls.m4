@@ -46,7 +46,7 @@
 AC_DEFUN([AX_TLS], [
   AC_MSG_CHECKING(for thread local storage specifier)
   AC_CACHE_VAL(ac_cv_tls, [
-    ax_tls_keywords="__thread __declspec(thread) none"
+    ax_tls_keywords="_Thread_local __thread __declspec(thread) none"
     for ax_tls_keyword in $ax_tls_keywords; do
        case $ax_tls_keyword in
           none) ac_cv_tls=none ; break ;;
