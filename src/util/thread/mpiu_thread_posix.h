@@ -15,12 +15,8 @@
 
 #include <errno.h>
 #include <pthread.h>
-#include "opa_primitives.h"
 
-typedef struct {
-    pthread_mutex_t mutex;
-    OPA_int_t num_queued_threads;
-} MPIU_Thread_mutex_t;
+typedef pthread_mutex_t MPIU_Thread_mutex_t;
 typedef pthread_cond_t MPIU_Thread_cond_t;
 typedef pthread_t MPIU_Thread_id_t;
 typedef pthread_key_t MPIU_Thread_tls_t;
@@ -47,14 +43,10 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
         *(same_) = pthread_equal(*(id1_), *(id2_)) ? TRUE : FALSE;	\
     } while (0)
 
-#define MPIU_Thread_yield(mutex_ptr_, err_ptr_)                         \
+#define MPIU_Thread_yield()                                             \
     do {                                                                \
         MPIU_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"enter MPIU_Thread_yield");         \
-        if (OPA_load_int(&(mutex_ptr_)->num_queued_threads) == 0)       \
-            break;                                                      \
-        MPIU_Thread_mutex_unlock(mutex_ptr_, err_ptr_);                 \
         MPL_sched_yield();                                              \
-        MPIU_Thread_mutex_lock(mutex_ptr_, err_ptr_);                   \
         MPIU_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"exit MPIU_Thread_yield");          \
     } while (0)
 
@@ -79,8 +71,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
     do {                                                                \
         int err__;                                                      \
                                                                         \
-        OPA_store_int(&(mutex_ptr_)->num_queued_threads, 0);            \
-        err__ = pthread_mutex_init(&(mutex_ptr_)->mutex, NULL);         \
+        err__ = pthread_mutex_init(mutex_ptr_, NULL);                   \
         if (unlikely(err__))                                            \
             MPL_internal_sys_error_printf("pthread_mutex_init", err__,  \
                                           "    %s:%d\n", __FILE__, __LINE__); \
@@ -95,10 +86,9 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
         int err__;                                                      \
         pthread_mutexattr_t attr__;                                     \
                                                                         \
-        OPA_store_int(&(mutex_ptr_)->num_queued_threads, 0);            \
         pthread_mutexattr_init(&attr__);                                \
         pthread_mutexattr_settype(&attr__, MPICH_PTHREAD_MUTEX_ERRORCHECK_VALUE); \
-        err__ = pthread_mutex_init(&(mutex_ptr_)->mutex, &attr__);      \
+        err__ = pthread_mutex_init(mutex_ptr_, &attr__);                \
         if (unlikely(err__))                                            \
             MPL_internal_sys_error_printf("pthread_mutex_init", err__,  \
                                           "    %s:%d\n", __FILE__, __LINE__); \
@@ -113,7 +103,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
         int err__;							\
                                                                         \
         MPIU_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to destroy MPIU_Thread_mutex %p", (mutex_ptr_)); \
-        err__ = pthread_mutex_destroy(&(mutex_ptr_)->mutex);            \
+        err__ = pthread_mutex_destroy(mutex_ptr_);                      \
         if (unlikely(err__))                                            \
             MPL_internal_sys_error_printf("pthread_mutex_destroy", err__, \
                                           "    %s:%d\n", __FILE__, __LINE__); \
@@ -125,9 +115,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
     do {                                                                \
         int err__;                                                      \
         MPIU_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIU_Thread_mutex_lock %p", (mutex_ptr_)); \
-        OPA_incr_int(&(mutex_ptr_)->num_queued_threads);                \
-        err__ = pthread_mutex_lock(&(mutex_ptr_)->mutex);               \
-        OPA_decr_int(&(mutex_ptr_)->num_queued_threads);                \
+        err__ = pthread_mutex_lock(mutex_ptr_);                         \
         if (unlikely(err__)) {                                          \
             MPIU_DBG_MSG_S(MPIR_DBG_THREAD,TERSE,"  mutex lock error: %s", MPIU_Strerror(err__)); \
             MPL_internal_sys_error_printf("pthread_mutex_lock", err__,  \
@@ -143,7 +131,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
         int err__;                                                      \
                                                                         \
         MPIU_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"MPIU_Thread_mutex_unlock %p", (mutex_ptr_)); \
-        err__ = pthread_mutex_unlock(&(mutex_ptr_)->mutex);             \
+        err__ = pthread_mutex_unlock(mutex_ptr_);                       \
         if (unlikely(err__)) {                                          \
             MPIU_DBG_MSG_S(MPIR_DBG_THREAD,TERSE,"  mutex unlock error: %s", MPIU_Strerror(err__)); \
             MPL_internal_sys_error_printf("pthread_mutex_unlock", err__, \
@@ -190,9 +178,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
          * older implementations still do. */                           \
         MPIU_DBG_MSG_FMT(MPIR_DBG_THREAD,TYPICAL,(MPIU_DBG_FDEST,"Enter cond_wait on cond=%p mutex=%p",(cond_ptr_),(mutex_ptr_))) \
             do {                                                        \
-                OPA_incr_int(&(mutex_ptr_)->num_queued_threads);        \
-                err__ = pthread_cond_wait((cond_ptr_), &(mutex_ptr_)->mutex); \
-                OPA_decr_int(&(mutex_ptr_)->num_queued_threads);        \
+                err__ = pthread_cond_wait((cond_ptr_), mutex_ptr_);     \
             } while (err__ == EINTR);                                   \
         if (unlikely(err__))                                            \
             MPL_internal_sys_error_printf("pthread_cond_wait", err__,   \
