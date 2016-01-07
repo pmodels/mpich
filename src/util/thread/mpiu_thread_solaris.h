@@ -36,12 +36,11 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
         *(same_ptr_) = (*(id1_ptr_) == *(id2_ptr_)) ? TRUE : FALSE;     \
     } while (0)
 
-#define MPIU_Thread_yield(mutex_ptr_)                   \
+#define MPIU_Thread_yield(mutex_ptr_, err_ptr_)         \
     do {                                                \
-        int err;                                        \
-        MPIU_Thread_mutex_unlock(mutex_ptr_, &err);     \
+        MPIU_Thread_mutex_unlock(mutex_ptr_, err_ptr_); \
         thr_yield();                                    \
-        MPIU_Thread_mutex_lock(mutex_ptr_, &err);       \
+        MPIU_Thread_mutex_lock(mutex_ptr_, err_ptr_);   \
     } while (0)
 
 

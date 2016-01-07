@@ -10,49 +10,53 @@
 #include "mpiu_thread_priv.h"
 
 /* Nonrecursive mutex macros */
-#define MPIU_THREAD_CS_ENTER_NONRECURSIVE(mutex)                        \
+#define MPIU_THREAD_CS_ENTER_NONRECURSIVE(mutex, err_ptr_)              \
     do {                                                                \
-        int err_;                                                       \
-        MPIU_Thread_mutex_lock(&mutex, &err_);                          \
+        MPIU_Thread_mutex_lock(&mutex, err_ptr_);                       \
     } while (0)
 
-#define MPIU_THREAD_CS_EXIT_NONRECURSIVE(mutex)                         \
+#define MPIU_THREAD_CS_EXIT_NONRECURSIVE(mutex, err_ptr_)               \
     do {                                                                \
-        int err_;                                                       \
-        MPIU_Thread_mutex_unlock(&mutex, &err_);                        \
+        MPIU_Thread_mutex_unlock(&mutex, err_ptr_);                     \
     } while (0)
 
-#define MPIU_THREAD_CS_YIELD_NONRECURSIVE(mutex)                        \
-    do {                                                                \
-        MPIU_Thread_yield(&mutex);                                      \
+#define MPIU_THREAD_CS_YIELD_NONRECURSIVE(mutex, err_ptr_)      \
+    do {                                                        \
+        MPIU_Thread_yield(&mutex, err_ptr_);                    \
     } while (0)
 
 
 /* Recursive mutex macros */
 /* We don't need to protect the depth variable since it is thread
  * private and sequentially accessed within a thread */
-#define MPIU_THREAD_CS_ENTER_RECURSIVE(mutex)           \
+/* We assume threaded mode over here.  The upper layer should check if
+ * locks are needed before calling this function. */
+#define MPIU_THREAD_CS_ENTER_RECURSIVE(mutex, err_ptr_) \
     do {                                                \
         int depth_;                                     \
         MPIU_THREADPRIV_DECL;                           \
-        MPIU_THREADPRIV_GET;                            \
+        MPIU_THREADPRIV_GET(1, err_ptr_);               \
+        if (unlikely(*(err_ptr_)))                      \
+            break;                                      \
                                                         \
         depth_ = MPIU_THREADPRIV_FIELD(lock_depth);     \
         if (depth_ == 0) {                              \
-            MPIU_THREAD_CS_ENTER_NONRECURSIVE(mutex);   \
+            MPIU_THREAD_CS_ENTER_NONRECURSIVE(mutex, err_ptr_); \
         }                                               \
         MPIU_THREADPRIV_FIELD(lock_depth) += 1;         \
     } while (0)
 
-#define MPIU_THREAD_CS_EXIT_RECURSIVE(mutex)            \
+#define MPIU_THREAD_CS_EXIT_RECURSIVE(mutex, err_ptr_)  \
     do {                                                \
         int depth_;                                     \
         MPIU_THREADPRIV_DECL;                           \
-        MPIU_THREADPRIV_GET;                            \
+        MPIU_THREADPRIV_GET(1, err_ptr_);               \
+        if (unlikely(*(err_ptr_)))                      \
+            break;                                      \
                                                         \
         depth_ = MPIU_THREADPRIV_FIELD(lock_depth);     \
         if (depth_ == 1) {                              \
-            MPIU_THREAD_CS_EXIT_NONRECURSIVE(mutex);    \
+            MPIU_THREAD_CS_EXIT_NONRECURSIVE(mutex, err_ptr_);  \
         }                                               \
         MPIU_THREADPRIV_FIELD(lock_depth) -= 1;         \
     } while (0)
