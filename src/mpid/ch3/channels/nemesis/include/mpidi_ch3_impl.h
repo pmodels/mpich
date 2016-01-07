@@ -135,7 +135,7 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr);
 #define HANDLE_WIN_MUTEX_ERROR()                                                        \
     do {                                                                                \
         HLOCAL str;                                                                     \
-        char error_msg[MPIU_STRERROR_BUF_SIZE];                                         \
+        char error_msg[MPIR_STRERROR_BUF_SIZE];                                         \
         DWORD error = GetLastError();                                                   \
         int num_bytes = FormatMessage(                                                  \
         FORMAT_MESSAGE_FROM_SYSTEM |                                                    \
@@ -149,7 +149,7 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr);
         if (num_bytes != 0) {                                                           \
             int pt_err = 1;                                                             \
             int mpi_errno = MPI_ERR_OTHER;                                              \
-            MPL_strncpy(error_msg, str, MPIU_STRERROR_BUF_SIZE);                       \
+            MPL_strncpy(error_msg, str, MPIR_STRERROR_BUF_SIZE);                       \
             LocalFree(str);                                                             \
             strtok(error_msg, "\r\n");                                                  \
             MPIR_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**windows_mutex",   \

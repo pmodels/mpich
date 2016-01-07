@@ -86,7 +86,6 @@ static int MPIR_Scan_generic (
     MPI_Aint true_extent, true_lb, extent;
     void *partial_scan, *tmp_buf;
     MPID_Op *op_ptr;
-    MPID_THREADPRIV_DECL;
     MPIU_CHKLMEM_DECL(2);
     
     if (count == 0) return MPI_SUCCESS;
@@ -97,9 +96,16 @@ static int MPIR_Scan_generic (
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    MPID_THREADPRIV_GET;
     /* set op_errno to 0. stored in perthread structure */
-    MPID_THREADPRIV_FIELD(op_errno) = 0;
+    {
+        MPIR_Per_thread_t *per_thread = NULL;
+        int err = 0;
+
+        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
+                                     MPIR_Per_thread, per_thread, &err);
+        MPIU_Assert(err == 0);
+        per_thread->op_errno = 0;
+    }
 
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
         is_commutative = 1;
@@ -192,9 +198,17 @@ static int MPIR_Scan_generic (
         mask <<= 1;
     }
     
-    if (MPID_THREADPRIV_FIELD(op_errno)) {
-	mpi_errno = MPID_THREADPRIV_FIELD(op_errno);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    {
+        MPIR_Per_thread_t *per_thread = NULL;
+        int err = 0;
+
+        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
+                                     MPIR_Per_thread, per_thread, &err);
+        MPIU_Assert(err == 0);
+        if (per_thread->op_errno) {
+            mpi_errno = per_thread->op_errno;
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        }
     }
     
  fn_exit:
@@ -233,7 +247,6 @@ int MPIR_Scan(
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     MPIU_CHKLMEM_DECL(3);
-    MPID_THREADPRIV_DECL;
     int rank = comm_ptr->rank;
     MPI_Status status;
     void *tempbuf = NULL, *localfulldata = NULL, *prefulldata = NULL;
@@ -251,7 +264,6 @@ int MPIR_Scan(
         return MPIR_Scan_generic(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
     }
     
-    MPID_THREADPRIV_GET;
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
     MPID_Datatype_get_extent_macro(datatype, extent);

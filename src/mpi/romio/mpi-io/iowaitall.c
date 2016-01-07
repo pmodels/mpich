@@ -31,7 +31,6 @@
 int MPIO_Waitall( int count, MPIO_Request requests[], MPI_Status statuses[] )
 {
     int notdone, i, flag, err; 
-    MPID_THREADPRIV_DECL;
 
     ROMIO_THREAD_CS_ENTER();
 

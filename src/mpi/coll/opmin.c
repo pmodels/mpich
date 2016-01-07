@@ -38,9 +38,15 @@ void MPIR_MINF (
 #undef MPIR_OP_TYPE_MACRO
         /* --BEGIN ERROR HANDLING-- */
         default: {
-            MPID_THREADPRIV_DECL;
-            MPID_THREADPRIV_GET;
-            MPID_THREADPRIV_FIELD(op_errno) = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_MIN" );
+            {
+                MPIR_Per_thread_t *per_thread = NULL;
+                int err = 0;
+
+                MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
+                                             MPIR_Per_thread, per_thread, &err);
+                MPIU_Assert(err == 0);
+                per_thread->op_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_MIN" );
+            }
             break;
         }
         /* --END ERROR HANDLING-- */

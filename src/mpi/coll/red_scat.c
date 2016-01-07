@@ -256,15 +256,21 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
     MPI_Datatype sendtype, recvtype;
     int nprocs_completed, tmp_mask, tree_root, is_commutative;
     MPID_Op *op_ptr;
-    MPID_THREADPRIV_DECL;
     MPIU_CHKLMEM_DECL(5);
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
     /* set op_errno to 0. stored in perthread structure */
-    MPID_THREADPRIV_GET;
-    MPID_THREADPRIV_FIELD(op_errno) = 0;
+    {
+        MPIR_Per_thread_t *per_thread = NULL;
+        int err = 0;
+
+        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
+                                     MPIR_Per_thread, per_thread, &err);
+        MPIU_Assert(err == 0);
+        per_thread->op_errno = 0;
+    }
 
     MPID_Datatype_get_extent_macro(datatype, extent);
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
@@ -873,8 +879,16 @@ fn_exit:
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
 
-    if (MPID_THREADPRIV_FIELD(op_errno)) 
-	mpi_errno = MPID_THREADPRIV_FIELD(op_errno);
+    {
+        MPIR_Per_thread_t *per_thread = NULL;
+        int err = 0;
+
+        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
+                                     MPIR_Per_thread, per_thread, &err);
+        MPIU_Assert(err == 0);
+        if (per_thread->op_errno)
+            mpi_errno = per_thread->op_errno;
+    }
 
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;

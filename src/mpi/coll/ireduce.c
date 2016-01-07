@@ -41,7 +41,6 @@ int MPIR_Ireduce_binomial(const void *sendbuf, void *recvbuf, int count, MPI_Dat
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf;
     MPIR_SCHED_CHKPMEM_DECL(2);
-    MPID_THREADPRIV_DECL;
 
     MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
 
@@ -51,8 +50,15 @@ int MPIR_Ireduce_binomial(const void *sendbuf, void *recvbuf, int count, MPI_Dat
     rank = comm_ptr->rank;
 
     /* set op_errno to 0. stored in perthread structure */
-    MPID_THREADPRIV_GET;
-    MPID_THREADPRIV_FIELD(op_errno) = 0;
+    {
+        MPIR_Per_thread_t *per_thread = NULL;
+        int err = 0;
+
+        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
+                                     MPIR_Per_thread, per_thread, &err);
+        MPIU_Assert(err == 0);
+        per_thread->op_errno = 0;
+    }
 
     /* Create a temporary buffer */
 

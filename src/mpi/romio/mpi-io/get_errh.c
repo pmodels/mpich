@@ -42,7 +42,6 @@ int MPI_File_get_errhandler(MPI_File mpi_fh, MPI_Errhandler *errhandler)
     int error_code = MPI_SUCCESS;
     ADIO_File fh;
     static char myname[] = "MPI_FILE_GET_ERRHANDLER";
-    MPID_THREADPRIV_DECL;
 
     ROMIO_THREAD_CS_ENTER();
 

@@ -19,17 +19,21 @@ const char *MPIU_Strerror(int errnum)
 {
 #if defined(HAVE_STRERROR_R)
     char *buf;
-    MPID_THREADPRIV_DECL;
-    MPID_THREADPRIV_GET;
-    buf = MPID_THREADPRIV_FIELD(strerrbuf);
+    MPIR_Per_thread_t *per_thread = NULL;
+    int err = 0;
+
+    MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
+                                 MPIR_Per_thread, per_thread, &err);
+    MPIU_Assert(err == 0);
+    buf = per_thread->strerrbuf;
 #  if defined(STRERROR_R_CHAR_P)
     /* strerror_r returns char ptr (old GNU-flavor).  Static strings for known
      * errnums are in returned buf, unknown errnums put a message in buf and
      * return buf */
-    buf = strerror_r(errnum, buf, MPIU_STRERROR_BUF_SIZE);
+    buf = strerror_r(errnum, buf, MPIR_STRERROR_BUF_SIZE);
 #  else
     /* strerror_r returns an int */
-    strerror_r(errnum, buf, MPIU_STRERROR_BUF_SIZE);
+    strerror_r(errnum, buf, MPIR_STRERROR_BUF_SIZE);
 #  endif
     return buf;
 

@@ -23,15 +23,8 @@
    the declaration.
 */
 
-#if !defined(MPICH_IS_THREADED) || !defined(MPICH_TLS_SPECIFIER)
-extern MPIUI_Per_thread_t MPIUI_Thread;
-#elif defined(MPICH_TLS_SPECIFIER)
-/* We have proper thread-local storage (TLS) support from the compiler, which
- * should yield the best performance and simplest code, so we'll use that. */
-extern MPICH_TLS_SPECIFIER MPIUI_Per_thread_t MPIUI_Thread;
-#endif
-
 #if defined(MPICH_IS_THREADED) && !defined(MPICH_TLS_SPECIFIER)
+
 /* We need to provide a function that will cleanup the storage attached
  * to the key.  */
 void MPIUI_Cleanup_tls(void *a);
@@ -48,75 +41,74 @@ void MPIUI_Cleanup_tls(void *a);
    whether MPICH is initialized with thread safety, one or the other is used.
 
  */
-extern MPIU_Thread_tls_t MPIUI_Thread_storage;   /* Id for perthread data */
 
-#define MPIU_THREADPRIV_INITKEY(is_threaded, initkey_err_ptr_)          \
+#define MPIU_THREADPRIV_KEY_CREATE(key, var, err_ptr_)                  \
     do {                                                                \
-        if (is_threaded) {                                              \
-            MPIU_Thread_tls_create(MPIUI_Cleanup_tls,&MPIUI_Thread_storage,initkey_err_ptr_); \
-        }                                                               \
-    } while (0)
-
-#define MPIU_THREADPRIV_INIT(is_threaded, init_err_ptr_)                \
-    do {                                                                \
-        if (is_threaded) {                                              \
-            MPIUI_Thread_ptr = (MPIUI_Per_thread_t *) MPIU_Calloc(1, sizeof(MPIUI_Per_thread_t)); \
-            if (unlikely(MPIUI_Thread_ptr == NULL)) {                   \
-                *((int *) init_err_ptr_) = MPIU_THREAD_ERROR;           \
-                break;                                                  \
-            }                                                           \
-            MPIU_Thread_tls_set(&MPIUI_Thread_storage, (void *)MPIUI_Thread_ptr, init_err_ptr_); \
-        }                                                               \
-    } while (0)
-
-#define MPIU_THREADPRIV_GET(is_threaded, get_err_ptr_)                  \
-    do {                                                                \
-        if (!MPIUI_Thread_ptr) {                                        \
-            if (is_threaded) {                                          \
-                MPIU_Thread_tls_get(&MPIUI_Thread_storage, (void **) &MPIUI_Thread_ptr, get_err_ptr_); \
-                if (unlikely(*((int *) get_err_ptr_)))                  \
-                    break;                                              \
-                if (!MPIUI_Thread_ptr) {                                \
-                    MPIU_THREADPRIV_INIT(is_threaded, get_err_ptr_); /* subtle, sets MPIUI_Thread_ptr */ \
-                }                                                       \
-            }                                                           \
-            else {                                                      \
-                MPIUI_Thread_ptr = &MPIUI_Thread;                       \
-            }                                                           \
+        void *thread_ptr;                                               \
                                                                         \
-            if (unlikely(MPIUI_Thread_ptr == NULL)) {                   \
-                *((int *) get_err_ptr_) = MPIU_THREAD_ERROR;            \
+        MPIU_Thread_tls_create(MPIUI_Cleanup_tls, &(key) , err_ptr_);   \
+        if (unlikely(*((int *) err_ptr_)))                              \
+            break;                                                      \
+        thread_ptr = MPIU_Calloc(1, sizeof(var));                       \
+        if (unlikely(!thread_ptr)) {                                    \
+            *((int *) err_ptr_) = MPIU_THREAD_ERROR;                    \
+            break;                                                      \
+        }                                                               \
+        MPIU_Thread_tls_set(&(key), thread_ptr, err_ptr_);              \
+    } while (0)
+
+#define MPIU_THREADPRIV_KEY_GET_ADDR(is_threaded, key, var, addr, err_ptr_) \
+    do {                                                                \
+        if (is_threaded) {                                              \
+            void *thread_ptr;                                           \
+            MPIU_Thread_tls_get(&(key), &thread_ptr, err_ptr_);         \
+            if (unlikely(*((int *) err_ptr_)))                          \
                 break;                                                  \
+            if (!thread_ptr) {                                          \
+                thread_ptr = MPIU_Calloc(1, sizeof(var));               \
+                if (unlikely(!thread_ptr)) {                            \
+                    *((int *) err_ptr_) = MPIU_THREAD_ERROR;            \
+                    break;                                              \
+                }                                                       \
+                MPIU_Thread_tls_set(&(key), thread_ptr, err_ptr_);      \
+                if (unlikely(*((int *) err_ptr_)))                      \
+                    break;                                              \
             }                                                           \
+            addr = thread_ptr;                                          \
+        }                                                               \
+        else {                                                          \
+            addr = &(var);                                              \
         }                                                               \
     } while (0)
 
-/* common definitions when using MPIU_Thread-based TLS */
-#define MPIU_THREADPRIV_DECL MPIUI_Per_thread_t *MPIUI_Thread_ptr = NULL
-#define MPIU_THREADPRIV_FIELD(a_) (MPIUI_Thread_ptr->a_)
-#define MPIU_THREADPRIV_FINALIZE(is_threaded, finalize_err_ptr_)        \
-    do {                                                                \
-        MPIU_THREADPRIV_DECL;                                           \
-        if (is_threaded) {                                              \
-            MPIU_THREADPRIV_GET(is_threaded, finalize_err_ptr_);        \
-            MPIU_Free(MPIUI_Thread_ptr);                                \
-            MPIU_Thread_tls_set(&MPIUI_Thread_storage,NULL,finalize_err_ptr_); \
-            if (unlikely(*((int *) finalize_err_ptr_)))                 \
-                break;                                                  \
-            MPIU_Thread_tls_destroy(&MPIUI_Thread_storage,finalize_err_ptr_); \
-            if (unlikely(*((int *) finalize_err_ptr_)))                 \
-                break;                                                  \
-        }                                                               \
+#define MPIU_THREADPRIV_KEY_DESTROY(key, err_ptr_)              \
+    do {                                                        \
+        void *thread_ptr;                                       \
+                                                                \
+        MPIU_Thread_tls_get(&(key), &thread_ptr, err_ptr_);     \
+        if (unlikely(*((int *) err_ptr_)))                      \
+            break;                                              \
+                                                                \
+        if (thread_ptr)                                         \
+            MPIU_Free(thread_ptr);                              \
+                                                                \
+        MPIU_Thread_tls_set(&(key), NULL, err_ptr_);            \
+        if (unlikely(*((int *) err_ptr_)))                      \
+            break;                                              \
+                                                                \
+        MPIU_Thread_tls_destroy(&(key), err_ptr_);              \
     } while (0)
 
 #else /* !defined(MPICH_IS_THREADED) || defined(MPICH_TLS_SPECIFIER) */
-
-#define MPIU_THREADPRIV_INITKEY(...)
-#define MPIU_THREADPRIV_INIT(...)
-#define MPIU_THREADPRIV_DECL
-#define MPIU_THREADPRIV_GET(...)
-#define MPIU_THREADPRIV_FIELD(a_) (MPIUI_Thread.a_)
-#define MPIU_THREADPRIV_FINALIZE(...) do {} while (0)
+/* We have proper thread-local storage (TLS) support from the compiler, which
+ * should yield the best performance and simplest code, so we'll use that. */
+#define MPIU_THREADPRIV_KEY_CREATE(...)
+#define MPIU_THREADPRIV_KEY_GET_ADDR(is_threaded, key, var, addr, err_ptr_) \
+    do {                                                                \
+        addr = &(var);                                                  \
+        *((int *) err_ptr_) = MPIU_THREAD_SUCCESS;                      \
+    } while (0)
+#define MPIU_THREADPRIV_KEY_DESTROY(...)
 
 #endif /* defined(MPICH_TLS_SPECIFIER) */
 

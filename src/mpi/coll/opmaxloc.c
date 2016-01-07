@@ -112,10 +112,16 @@ void MPIR_MAXLOC(
 #endif
 	/* --BEGIN ERROR HANDLING-- */
     default: {
-	MPID_THREADPRIV_DECL;
-	MPID_THREADPRIV_GET;
         MPIR_ERR_SET1(mpi_errno, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_MAXLOC" );
-        MPID_THREADPRIV_FIELD(op_errno) = mpi_errno;
+        {
+            MPIR_Per_thread_t *per_thread = NULL;
+            int err = 0;
+
+            MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
+                                         MPIR_Per_thread, per_thread, &err);
+            MPIU_Assert(err == 0);
+            per_thread->op_errno = mpi_errno;
+        }
         break;
     }
 	/* --END ERROR HANDLING-- */
