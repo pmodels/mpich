@@ -23,7 +23,15 @@
    the declaration.
 */
 
-#if !defined(MPICH_TLS_SPECIFIER)
+#if !defined(MPICH_IS_THREADED) || !defined(MPICH_TLS_SPECIFIER)
+extern MPIUI_Per_thread_t MPIUI_Thread;
+#elif defined(MPICH_TLS_SPECIFIER)
+/* We have proper thread-local storage (TLS) support from the compiler, which
+ * should yield the best performance and simplest code, so we'll use that. */
+extern MPICH_TLS_SPECIFIER MPIUI_Per_thread_t MPIUI_Thread;
+#endif
+
+#if defined(MPICH_IS_THREADED) && !defined(MPICH_TLS_SPECIFIER)
 /* We need to provide a function that will cleanup the storage attached
  * to the key.  */
 void MPIUI_Cleanup_tls(void *a);
@@ -40,9 +48,6 @@ void MPIUI_Cleanup_tls(void *a);
    whether MPICH is initialized with thread safety, one or the other is used.
 
  */
-/* For the single threaded case, we use a preallocated structure
-   This structure is allocated in src/mpi/init/initthread.c */
-extern MPIUI_Per_thread_t MPIUI_ThreadSingle;
 extern MPIU_Thread_tls_t MPIUI_Thread_storage;   /* Id for perthread data */
 
 #define MPIU_THREADPRIV_INITKEY(is_threaded, initkey_err_ptr_)          \
@@ -76,7 +81,7 @@ extern MPIU_Thread_tls_t MPIUI_Thread_storage;   /* Id for perthread data */
                 }                                                       \
             }                                                           \
             else {                                                      \
-                MPIUI_Thread_ptr = &MPIUI_ThreadSingle;                 \
+                MPIUI_Thread_ptr = &MPIUI_Thread;                       \
             }                                                           \
                                                                         \
             if (unlikely(MPIUI_Thread_ptr == NULL)) {                   \
@@ -104,11 +109,7 @@ extern MPIU_Thread_tls_t MPIUI_Thread_storage;   /* Id for perthread data */
         }                                                               \
     } while (0)
 
-#else /* defined(MPICH_TLS_SPECIFIER) */
-
-/* We have proper thread-local storage (TLS) support from the compiler, which
- * should yield the best performance and simplest code, so we'll use that. */
-extern MPICH_TLS_SPECIFIER MPIUI_Per_thread_t MPIUI_Thread;
+#else /* !defined(MPICH_IS_THREADED) || defined(MPICH_TLS_SPECIFIER) */
 
 #define MPIU_THREADPRIV_INITKEY(...)
 #define MPIU_THREADPRIV_INIT(...)

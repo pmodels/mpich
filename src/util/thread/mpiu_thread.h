@@ -78,10 +78,6 @@ typedef struct {
 #endif
 } MPIUI_Per_thread_t;
 
-#if defined (MPICH_IS_THREADED)
-#include "mpiu_thread_multiple.h"
-#else
-#include "mpiu_thread_single.h"
-#endif
+#include "mpiu_thread_priv.h"
 
 #endif /* !defined(MPIU_THREAD_H_INCLUDED) */
