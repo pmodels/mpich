@@ -85,18 +85,20 @@ M*/
 #define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex)                            \
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
-            int depth_;                                                 \
-            MPIDU_THREADPRIV_DECL;                                      \
+            int rec_err_ = 0;                                           \
+            MPIR_Per_thread_t *per_thread = NULL;                              \
                                                                         \
             MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "recursive locking GLOBAL mutex"); \
-            MPIDU_THREADPRIV_GET;                                       \
-            depth_ = MPIDU_THREADPRIV_FIELD(lock_depth);                \
-            if (depth_ == 0) {                                          \
+            MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key, \
+                                         MPIR_Per_thread, per_thread, &rec_err_); \
+            MPIU_Assert(rec_err_ == 0);                                 \
+                                                                        \
+            if (per_thread->lock_depth == 0) {                          \
                 int err_ = 0;                                           \
                 MPIDU_Thread_mutex_lock(&mutex, &err_);                 \
                 MPIU_Assert(err_ == 0);                                 \
             }                                                           \
-            MPIDU_THREADPRIV_FIELD(lock_depth) += 1;                    \
+            per_thread->lock_depth++;                                   \
         }                                                               \
     } while (0)
 #define MPIDUI_THREAD_CS_ENTER_ALLGRAN(mutex)                           \
@@ -155,19 +157,22 @@ M*/
 #define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex)                             \
     do {                                                                \
         if (MPIR_ThreadInfo.isThreaded) {                               \
-            int depth_;                                                 \
-            MPIDU_THREADPRIV_DECL;                                      \
+            int rec_err_ = 0;                                           \
+            MPIR_Per_thread_t *per_thread = NULL;                              \
                                                                         \
             MPIU_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "recursive unlocking GLOBAL mutex"); \
-            MPIDU_THREADPRIV_GET;                                       \
-            depth_ = MPIDU_THREADPRIV_FIELD(lock_depth);                \
-            if (depth_ == 1) {                                          \
+            MPIU_Assert(rec_err_ == 0);                                 \
+            MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key, \
+                                         MPIR_Per_thread, per_thread, &rec_err_); \
+            MPIU_Assert(rec_err_ == 0);                                 \
+                                                                        \
+            if (per_thread->lock_depth == 1) {                          \
                 int err_ = 0;                                           \
                 MPIU_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"MPIDU_Thread_mutex_unlock %p", &mutex); \
                 MPIDU_Thread_mutex_unlock(&mutex, &err_);               \
                 MPIU_Assert(err_ == 0);                                 \
             }                                                           \
-            MPIDU_THREADPRIV_FIELD(lock_depth) -= 1;                    \
+            per_thread->lock_depth--;                                   \
         }                                                               \
     } while (0)
 
@@ -557,36 +562,20 @@ M*/
     } while (0)
 
 
-#define MPIDU_THREADPRIV_INITKEY                                        \
+#define MPIDU_THREADPRIV_KEY_CREATE                                     \
     do {                                                                \
         int err_ = 0;                                                   \
-        MPIU_THREADPRIV_INITKEY(MPIR_ThreadInfo.isThreaded, &err_);     \
+        MPIU_THREADPRIV_KEY_CREATE(MPIR_Per_thread_key, MPIR_Per_thread, &err_); \
         MPIU_Assert(err_ == 0);                                         \
     } while (0)
 
-#define MPIDU_THREADPRIV_INIT                                   \
+#define MPIDU_THREADPRIV_KEY_GET_ADDR  MPIU_THREADPRIV_KEY_GET_ADDR
+
+#define MPIDU_THREADPRIV_KEY_DESTROY                            \
     do {                                                        \
         int err_ = 0;                                           \
-        MPIU_THREADPRIV_INIT(MPIR_ThreadInfo.isThreaded, &err_);        \
+        MPIU_THREADPRIV_KEY_DESTROY(MPIR_Per_thread_key, &err_); \
         MPIU_Assert(err_ == 0);                                 \
     } while (0)
-
-#define MPIDU_THREADPRIV_GET                                    \
-    do {                                                        \
-        int err_ = 0;                                           \
-        MPIU_THREADPRIV_GET(MPIR_ThreadInfo.isThreaded, &err_);  \
-        MPIU_Assert(err_ == 0);                                 \
-    } while (0)
-
-#define MPIDU_THREADPRIV_DECL     MPIU_THREADPRIV_DECL
-#define MPIDU_THREADPRIV_FIELD    MPIU_THREADPRIV_FIELD
-
-#define MPIDU_THREADPRIV_FINALIZE                                       \
-    do {                                                                \
-        int err_ = 0;                                                   \
-        MPIU_THREADPRIV_FINALIZE(MPIR_ThreadInfo.isThreaded, &err_);    \
-        MPIU_Assert(err_ == 0);                                         \
-    } while (0)
-
 
 #endif /* !defined(MPIDU_THREAD_H_INCLUDED) */

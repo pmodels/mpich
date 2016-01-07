@@ -86,6 +86,14 @@ MPICH_PerProcess_t MPIR_Process = { OPA_INT_T_INITIALIZER(MPICH_PRE_INIT) };
      /* all other fields in MPIR_Process are irrelevant */
 MPIR_Thread_info_t MPIR_ThreadInfo = { 0 };
 
+#if defined(MPICH_IS_THREADED) && defined(MPICH_TLS_SPECIFIER)
+MPICH_TLS_SPECIFIER MPIR_Per_thread_t MPIR_Per_thread = { 0 };
+#else
+MPIR_Per_thread_t MPIR_Per_thread = { 0 };
+#endif
+
+MPID_Thread_tls_t MPIR_Per_thread_key;
+
 /* These are initialized as null (avoids making these into common symbols).
    If the Fortran binding is supported, these can be initialized to 
    their Fortran values (MPI only requires that they be valid between
@@ -180,7 +188,6 @@ MPID_Thread_mutex_t MPIR_THREAD_POBJ_PMI_MUTEX;
 static int thread_cs_init( void )
 {
     int err;
-    MPID_THREADPRIV_DECL;
 
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
@@ -218,8 +225,7 @@ static int thread_cs_init( void )
 #error Unrecognized thread granularity
 #endif
 
-    MPID_THREADPRIV_INITKEY;
-    MPID_THREADPRIV_INIT;
+    MPID_THREADPRIV_KEY_CREATE;
 
     MPIU_DBG_MSG(MPIR_DBG_INIT,TYPICAL,"Created global mutex and private storage");
     return MPI_SUCCESS;
@@ -268,7 +274,7 @@ int MPIR_Thread_CS_Finalize( void )
 #error Unrecognized thread granularity
 #endif
 
-    MPID_THREADPRIV_FINALIZE;
+    MPID_THREADPRIV_KEY_DESTROY;
 
     return MPI_SUCCESS;
 }

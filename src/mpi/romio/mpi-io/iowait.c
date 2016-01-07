@@ -46,7 +46,6 @@ int MPIO_Wait(MPIO_Request *request, MPI_Status *status)
 {
     int error_code;
     static char myname[] = "MPIO_WAIT";
-    MPID_THREADPRIV_DECL;
 
 #ifdef MPI_hpux
     int fl_xmpi;

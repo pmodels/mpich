@@ -32,7 +32,6 @@ int MPIO_Testany(int count, MPIO_Request requests[], int *index,
 		 int *flag, MPI_Status *status)
 {
     int i, err; 
-    MPID_THREADPRIV_DECL;
 
     ROMIO_THREAD_CS_ENTER();
 

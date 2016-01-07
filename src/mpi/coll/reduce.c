@@ -302,14 +302,20 @@ static int MPIR_Reduce_redscat_gather (
     void *tmp_buf;
 
     MPIU_CHKLMEM_DECL(4);
-    MPID_THREADPRIV_DECL;
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
     /* set op_errno to 0. stored in perthread structure */
-    MPID_THREADPRIV_GET;
-    MPID_THREADPRIV_FIELD(op_errno) = 0;
+    {
+        MPIR_Per_thread_t *per_thread = NULL;
+        int err = 0;
+
+        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
+                                     MPIR_Per_thread, per_thread, &err);
+        MPIU_Assert(err == 0);
+        per_thread->op_errno = 0;
+    }
 
     /* Create a temporary buffer */
 
@@ -634,9 +640,17 @@ static int MPIR_Reduce_redscat_gather (
     /* FIXME does this need to be checked after each uop invocation for
        predefined operators? */
     /* --BEGIN ERROR HANDLING-- */
-    if (MPID_THREADPRIV_FIELD(op_errno)) {
-        mpi_errno = MPID_THREADPRIV_FIELD(op_errno);
-        goto fn_fail;
+    {
+        MPIR_Per_thread_t *per_thread = NULL;
+        int err = 0;
+
+        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
+                                     MPIR_Per_thread, per_thread, &err);
+        MPIU_Assert(err == 0);
+        if (per_thread->op_errno) {
+            mpi_errno = per_thread->op_errno;
+            goto fn_fail;
+        }
     }
     /* --END ERROR HANDLING-- */
 

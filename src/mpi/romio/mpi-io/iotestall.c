@@ -32,7 +32,6 @@ int MPIO_Testall(int count, MPIO_Request requests[], int *flag,
 		 MPI_Status statuses[])
 {
     int done, i, err; 
-    MPID_THREADPRIV_DECL;
 
     ROMIO_THREAD_CS_ENTER();
     if (count == 1)  {

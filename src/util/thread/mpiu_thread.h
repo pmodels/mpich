@@ -53,31 +53,6 @@ typedef void (*MPIU_Thread_func_t) (void *data);
 #  error MPICH_THREAD_GRANULARITY_LOCK_FREE not implemented yet
 #endif
 
-/* ------------------------------------------------------------------------- */
-/* thread-local storage macros */
-/* moved here from mpiimpl.h because they logically belong here */
-
-/* arbitrary, just needed to avoid cleaning up heap allocated memory at thread
- * destruction time */
-#define MPIU_STRERROR_BUF_SIZE (1024)
-
-/* This structure contains all thread-local variables and will be zeroed at
- * allocation time.
- *
- * Note that any pointers to dynamically allocated memory stored in this
- * structure must be externally cleaned up.
- * */
-typedef struct {
-    int op_errno;               /* For errors in predefined MPI_Ops */
-
-    /* error string storage for MPIU_Strerror */
-    char strerrbuf[MPIU_STRERROR_BUF_SIZE];
-
-#if (MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE)
-    int lock_depth;
-#endif
-} MPIUI_Per_thread_t;
-
 #include "mpiu_thread_priv.h"
 
 #endif /* !defined(MPIU_THREAD_H_INCLUDED) */

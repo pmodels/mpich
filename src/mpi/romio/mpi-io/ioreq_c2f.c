@@ -47,7 +47,6 @@ MPI_Fint MPIO_Request_c2f(MPIO_Request request)
     return (MPI_Fint) request;
 #else
     int i;
-    MPID_THREADPRIV_DECL;
 
     /* We can make this test outside of the GLOBAL mutex because it does
        not access any shared data */

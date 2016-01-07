@@ -33,7 +33,6 @@ int MPIO_Testsome(int count, MPIO_Request requests[], int *outcount,
 {
     int i, err; 
     int flag;
-    MPID_THREADPRIV_DECL;
 
     ROMIO_THREAD_CS_ENTER();
 

@@ -44,12 +44,18 @@ int MPIR_Reduce_local_impl(const void *inbuf, void *inoutbuf, int count, MPI_Dat
 #if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
     int is_f77_uop = 0;
 #endif
-    MPID_THREADPRIV_DECL;
 
     if (count == 0) goto fn_exit;
 
-    MPID_THREADPRIV_GET;
-    MPID_THREADPRIV_FIELD(op_errno) = MPI_SUCCESS;
+    {
+        MPIR_Per_thread_t *per_thread = NULL;
+        int err = 0;
+
+        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
+                                     MPIR_Per_thread, per_thread, &err);
+        MPIU_Assert(err == 0);
+        per_thread->op_errno = MPI_SUCCESS;
+    }
 
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
         /* get the function by indexing into the op table */
@@ -103,8 +109,16 @@ int MPIR_Reduce_local_impl(const void *inbuf, void *inoutbuf, int count, MPI_Dat
     }
 
     /* --BEGIN ERROR HANDLING-- */
-    if (MPID_THREADPRIV_FIELD(op_errno))
-        mpi_errno = MPID_THREADPRIV_FIELD(op_errno);
+    {
+        MPIR_Per_thread_t *per_thread = NULL;
+        int err = 0;
+
+        MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
+                                     MPIR_Per_thread, per_thread, &err);
+        MPIU_Assert(err == 0);
+        if (per_thread->op_errno)
+            mpi_errno = per_thread->op_errno;
+    }
     /* --END ERROR HANDLING-- */
 
 fn_exit:

@@ -215,6 +215,38 @@ typedef struct {
 extern MPIR_Thread_info_t MPIR_ThreadInfo;
 
 
+/* ------------------------------------------------------------------------- */
+/* thread-local storage macros */
+/* arbitrary, just needed to avoid cleaning up heap allocated memory at thread
+ * destruction time */
+#define MPIR_STRERROR_BUF_SIZE (1024)
+
+/* This structure contains all thread-local variables and will be zeroed at
+ * allocation time.
+ *
+ * Note that any pointers to dynamically allocated memory stored in this
+ * structure must be externally cleaned up.
+ * */
+typedef struct {
+    int op_errno;               /* For errors in predefined MPI_Ops */
+
+    /* error string storage for MPIU_Strerror */
+    char strerrbuf[MPIR_STRERROR_BUF_SIZE];
+
+#if (MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE)
+    int lock_depth;
+#endif
+} MPIR_Per_thread_t;
+
+#if defined(MPICH_IS_THREADED) && defined(MPICH_TLS_SPECIFIER)
+extern MPICH_TLS_SPECIFIER MPIR_Per_thread_t MPIR_Per_thread;
+#else
+extern MPIR_Per_thread_t MPIR_Per_thread;
+#endif
+
+extern MPID_Thread_tls_t MPIR_Per_thread_key;
+
+
 /*TDSOverview.tex
   
   MPI has a number of data structures, most of which are represented by 
