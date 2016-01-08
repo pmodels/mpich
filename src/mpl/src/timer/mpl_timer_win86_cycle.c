@@ -10,20 +10,21 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #if (MPL_TIMER_KIND == MPL_TIMER_KIND__WIN86_CYCLE) || (MPL_TIMER_KIND == MPL_TIMER_KIND__WIN64_CYCLE)
 
-double MPL_Seconds_per_tick = 0.0;
+static double seconds_per_tick = 0.0;
+
 double MPL_wtick(void)
 {
-    return MPL_Seconds_per_tick;
+    return seconds_per_tick;
 }
 
 void MPL_wtime_todouble(MPL_time_t * t, double *d)
 {
-    *d = (double) (__int64) * t * MPL_Seconds_per_tick;
+    *d = (double) (__int64) * t * seconds_per_tick;
 }
 
 void MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff)
 {
-    *diff = (double) ((__int64) (*t2 - *t1)) * MPL_Seconds_per_tick;
+    *diff = (double) ((__int64) (*t2 - *t1)) * seconds_per_tick;
 }
 
 int MPL_wtime_init(void)
@@ -48,10 +49,10 @@ int MPL_wtime_init(void)
     MPL_wtime(&t2);
 
     /* calculate the frequency of the assembly cycle counter */
-    MPL_Seconds_per_tick = ((double) (s2 - s1) / 1000.0) / (double) ((__int64) (t2 - t1));
+    seconds_per_tick = ((double) (s2 - s1) / 1000.0) / (double) ((__int64) (t2 - t1));
     /*
      * printf("t2-t1 %10d\nsystime diff %d\nfrequency %g\n CPU MHz %g\n",
-     * (int)(t2-t1), (int)(s2 - s1), MPL_Seconds_per_tick, MPL_Seconds_per_tick * 1.0e6);
+     * (int)(t2-t1), (int)(s2 - s1), seconds_per_tick, seconds_per_tick * 1.0e6);
      */
     return 0;
 }

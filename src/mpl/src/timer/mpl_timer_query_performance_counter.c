@@ -10,30 +10,31 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #if MPL_TIMER_KIND == MPL_TIMER_KIND__QUERYPERFORMANCECOUNTER
 
-double MPL_Seconds_per_tick = 0.0;     /* High performance counter frequency */
+static double seconds_per_tick = 0.0;     /* High performance counter frequency */
+
 int MPL_wtime_init(void)
 {
     LARGE_INTEGER n;
     QueryPerformanceFrequency(&n);
-    MPL_Seconds_per_tick = 1.0 / (double) n.QuadPart;
+    seconds_per_tick = 1.0 / (double) n.QuadPart;
     return 0;
 }
 
 double MPL_wtick(void)
 {
-    return MPL_Seconds_per_tick;
+    return seconds_per_tick;
 }
 
 void MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
-    *val = (double) t->QuadPart * MPL_Seconds_per_tick;
+    *val = (double) t->QuadPart * seconds_per_tick;
 }
 
 void MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff)
 {
     LARGE_INTEGER n;
     n.QuadPart = t2->QuadPart - t1->QuadPart;
-    *diff = (double) n.QuadPart * MPL_Seconds_per_tick;
+    *diff = (double) n.QuadPart * seconds_per_tick;
 }
 
 void MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3)
