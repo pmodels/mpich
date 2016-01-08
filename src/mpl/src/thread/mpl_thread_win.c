@@ -4,12 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-/* common header includes */
-#include <stdlib.h>
-#include "mpichconf.h"  /* defines MPICH_THREAD_PACKAGE_NAME */
 #include "mpl.h"
-#include "mpiutil.h"    /* for HAS_NO_SYMBOLS_WARNING */
-#include "mpiu_thread.h"
 
 MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
@@ -22,38 +17,35 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 /* Implementation specific function definitions (usually in the form of macros) */
 
-#if defined(MPICH_THREAD_PACKAGE_NAME) && (MPICH_THREAD_PACKAGE_NAME == MPICH_THREAD_PACKAGE_WIN)
-/* begin win impl */
-
-#include "mpimem.h"
+#if MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_WIN
 
 /*
- * struct MPIUI_Thread_info
+ * struct MPLI_thread_info
  *
- * Structure used to pass the user function and data to the intermediate function, MPIUI_Thread_start.  See comment in
- * MPIUI_Thread_start() header for more information.
+ * Structure used to pass the user function and data to the intermediate function, MPLI_thread_start.  See comment in
+ * MPLI_thread_start() header for more information.
  */
-struct MPIUI_Thread_info {
-    MPIU_Thread_func_t func;
+struct MPLI_thread_info {
+    MPL_thread_func_t func;
     void *data;
 };
 
 
-DWORD WINAPI MPIUI_Thread_start(LPVOID arg);
+DWORD WINAPI MPLI_thread_start(LPVOID arg);
 
 /*
- * MPIU_Thread_create()
+ * MPL_thread_create()
  */
-void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * idp, int *errp)
+void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp, int *errp)
 {
-    struct MPIUI_Thread_info *thread_info;
-    int err = MPIU_THREAD_SUCCESS;
+    struct MPLI_thread_info *thread_info;
+    int err = MPL_THREAD_SUCCESS;
 
-    thread_info = (struct MPIUI_Thread_info *) malloc(sizeof(struct MPIUI_Thread_info));
+    thread_info = (struct MPLI_thread_info *) malloc(sizeof(struct MPLI_thread_info));
     if (thread_info != NULL) {
         thread_info->func = func;
         thread_info->data = data;
-        *idp = CreateThread(NULL, 0, MPIUI_Thread_start, thread_info, 0, NULL);
+        *idp = CreateThread(NULL, 0, MPLI_thread_start, thread_info, 0, NULL);
         if (*idp == NULL) {
             err = GetLastError();
         }
@@ -69,15 +61,15 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
 
 
 /*
- * MPIUI_Thread_start()
+ * MPLI_thread_start()
  *
  * Start functions in Windows are expected to return a DWORD.  Since our start functions do not return a value we must
  * use an intermediate function to perform the call to the user's start function and then return a value of 0.
  */
-DWORD WINAPI MPIUI_Thread_start(LPVOID arg)
+DWORD WINAPI MPLI_thread_start(LPVOID arg)
 {
-    struct MPIUI_Thread_info *thread_info = (struct MPIUI_Thread_info *) arg;
-    MPIU_Thread_func_t func = thread_info->func;
+    struct MPLI_thread_info *thread_info = (struct MPLI_thread_info *) arg;
+    MPL_thread_func_t func = thread_info->func;
     void *data = thread_info->data;
 
     free(arg);
@@ -87,22 +79,22 @@ DWORD WINAPI MPIUI_Thread_start(LPVOID arg)
     return 0;
 }
 
-void MPIU_Thread_exit()
+void MPL_thread_exit()
 {
     ExitThread(0);
 }
 
-void MPIU_Thread_self(MPIU_Thread_id_t * id)
+void MPL_thread_self(MPL_thread_id_t * id)
 {
     *id = GetCurrentThread();
 }
 
-void MPIU_Thread_same(MPIU_Thread_id_t * id1, MPIU_Thread_id_t * id2, int *same)
+void MPL_thread_same(MPL_thread_id_t * id1, MPL_thread_id_t * id2, int *same)
 {
     *same = (*id1 == *id2) ? TRUE : FALSE;
 }
 
-void MPIU_Thread_yield(void)
+void MPL_thread_yield(void)
 {
     Sleep(0);
 }
@@ -111,7 +103,7 @@ void MPIU_Thread_yield(void)
  *    Mutexes
  */
 
-void MPIU_Thread_mutex_create(MPIU_Thread_mutex_t * mutex, int *err)
+void MPL_thread_mutex_create(MPL_thread_mutex_t * mutex, int *err)
 {
     *mutex = CreateMutex(NULL, FALSE, NULL);
     if (err != NULL) {
@@ -119,19 +111,19 @@ void MPIU_Thread_mutex_create(MPIU_Thread_mutex_t * mutex, int *err)
             *err = GetLastError();
         }
         else {
-            *err = MPIU_THREAD_SUCCESS;
+            *err = MPL_THREAD_SUCCESS;
         }
     }
 }
 
-void MPIU_Thread_mutex_destroy(MPIU_Thread_mutex_t * mutex, int *err)
+void MPL_thread_mutex_destroy(MPL_thread_mutex_t * mutex, int *err)
 {
     BOOL result;
 
     result = CloseHandle(*mutex);
     if (err != NULL) {
         if (result) {
-            *err = MPIU_THREAD_SUCCESS;
+            *err = MPL_THREAD_SUCCESS;
         }
         else {
             *err = GetLastError();
@@ -139,14 +131,14 @@ void MPIU_Thread_mutex_destroy(MPIU_Thread_mutex_t * mutex, int *err)
     }
 }
 
-void MPIU_Thread_mutex_lock(MPIU_Thread_mutex_t * mutex, int *err)
+void MPL_thread_mutex_lock(MPL_thread_mutex_t * mutex, int *err)
 {
     DWORD result;
 
     result = WaitForSingleObject(*mutex, INFINITE);
     if (err != NULL) {
         if (result == WAIT_OBJECT_0) {
-            *err = MPIU_THREAD_SUCCESS;
+            *err = MPL_THREAD_SUCCESS;
         }
         else {
             if (result == WAIT_FAILED) {
@@ -159,14 +151,14 @@ void MPIU_Thread_mutex_lock(MPIU_Thread_mutex_t * mutex, int *err)
     }
 }
 
-void MPIU_Thread_mutex_unlock(MPIU_Thread_mutex_t * mutex, int *err)
+void MPL_thread_mutex_unlock(MPL_thread_mutex_t * mutex, int *err)
 {
     BOOL result;
 
     result = ReleaseMutex(*mutex);
     if (err != NULL) {
         if (result) {
-            *err = MPIU_THREAD_SUCCESS;
+            *err = MPL_THREAD_SUCCESS;
         }
         else {
             *err = GetLastError();
@@ -179,54 +171,54 @@ void MPIU_Thread_mutex_unlock(MPIU_Thread_mutex_t * mutex, int *err)
  * Condition Variables
  */
 
-void MPIU_Thread_cond_create(MPIU_Thread_cond_t * cond, int *err)
+void MPL_thread_cond_create(MPL_thread_cond_t * cond, int *err)
 {
     /* Create a tls slot to store the events used to wakeup each thread in cond_bcast or cond_signal */
-    MPIU_Thread_tls_create(NULL, &cond->tls, err);
-    if (err != NULL && *err != MPIU_THREAD_SUCCESS) {
+    MPL_thread_tls_create(NULL, &cond->tls, err);
+    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
         return;
     }
     /* Create a mutex to protect the fifo queue.  This is required because the mutex passed in to the
      * cond functions need not be the same in each thread. */
-    MPIU_Thread_mutex_create(&cond->fifo_mutex, err);
-    if (err != NULL && *err != MPIU_THREAD_SUCCESS) {
+    MPL_thread_mutex_create(&cond->fifo_mutex, err);
+    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
         return;
     }
     cond->fifo_head = NULL;
     cond->fifo_tail = NULL;
     if (err != NULL) {
-        *err = MPIU_THREAD_SUCCESS;
+        *err = MPL_THREAD_SUCCESS;
     }
 }
 
-void MPIU_Thread_cond_destroy(MPIU_Thread_cond_t * cond, int *err)
+void MPL_thread_cond_destroy(MPL_thread_cond_t * cond, int *err)
 {
-    MPIUI_Win_thread_cond_fifo_t *iter;
+    MPLI_win_thread_cond_fifo_t *iter;
 
     while (cond->fifo_head) {
         iter = cond->fifo_head;
         cond->fifo_head = cond->fifo_head->next;
         free(iter);
     }
-    MPIU_Thread_mutex_destroy(&cond->fifo_mutex, err);
-    if (err != NULL && *err != MPIU_THREAD_SUCCESS) {
+    MPL_thread_mutex_destroy(&cond->fifo_mutex, err);
+    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
         return;
     }
-    MPIU_Thread_tls_destroy(&cond->tls, err);
+    MPL_thread_tls_destroy(&cond->tls, err);
     /*
      * if (err != NULL)
      * {
-     * *err = MPIU_THREAD_SUCCESS;
+     * *err = MPL_THREAD_SUCCESS;
      * }
      */
 }
 
-void MPIU_Thread_cond_wait(MPIU_Thread_cond_t * cond, MPIU_Thread_mutex_t * mutex, int *err)
+void MPL_thread_cond_wait(MPL_thread_cond_t * cond, MPL_thread_mutex_t * mutex, int *err)
 {
     HANDLE event;
     DWORD result;
-    MPIU_Thread_tls_get(&cond->tls, &event, err);
-    if (err != NULL && *err != MPIU_THREAD_SUCCESS) {
+    MPL_thread_tls_get(&cond->tls, &event, err);
+    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
         return;
     }
     if (event == NULL) {
@@ -237,22 +229,22 @@ void MPIU_Thread_cond_wait(MPIU_Thread_cond_t * cond, MPIU_Thread_mutex_t * mute
             }
             return;
         }
-        MPIU_Thread_tls_set(&cond->tls, event, err);
-        if (err != NULL && *err != MPIU_THREAD_SUCCESS) {
+        MPL_thread_tls_set(&cond->tls, event, err);
+        if (err != NULL && *err != MPL_THREAD_SUCCESS) {
             return;
         }
     }
-    MPIU_Thread_mutex_lock(&cond->fifo_mutex, err);
-    if (err != NULL && *err != MPIU_THREAD_SUCCESS) {
+    MPL_thread_mutex_lock(&cond->fifo_mutex, err);
+    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
         return;
     }
     if (cond->fifo_tail == NULL) {
-        cond->fifo_tail = (MPIUI_Win_thread_cond_fifo_t *) malloc(sizeof(MPIUI_Win_thread_cond_fifo_t));
+        cond->fifo_tail = (MPLI_win_thread_cond_fifo_t *) malloc(sizeof(MPLI_win_thread_cond_fifo_t));
         cond->fifo_head = cond->fifo_tail;
     }
     else {
         cond->fifo_tail->next =
-            (MPIUI_Win_thread_cond_fifo_t *) malloc(sizeof(MPIUI_Win_thread_cond_fifo_t));
+            (MPLI_win_thread_cond_fifo_t *) malloc(sizeof(MPLI_win_thread_cond_fifo_t));
         cond->fifo_tail = cond->fifo_tail->next;
     }
     if (cond->fifo_tail == NULL) {
@@ -263,12 +255,12 @@ void MPIU_Thread_cond_wait(MPIU_Thread_cond_t * cond, MPIU_Thread_mutex_t * mute
     }
     cond->fifo_tail->event = event;
     cond->fifo_tail->next = NULL;
-    MPIU_Thread_mutex_unlock(&cond->fifo_mutex, err);
-    if (err != NULL && *err != MPIU_THREAD_SUCCESS) {
+    MPL_thread_mutex_unlock(&cond->fifo_mutex, err);
+    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
         return;
     }
-    MPIU_Thread_mutex_unlock(mutex, err);
-    if (err != NULL && *err != MPIU_THREAD_SUCCESS) {
+    MPL_thread_mutex_unlock(mutex, err);
+    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
         return;
     }
     result = WaitForSingleObject(event, INFINITE);
@@ -288,27 +280,27 @@ void MPIU_Thread_cond_wait(MPIU_Thread_cond_t * cond, MPIU_Thread_mutex_t * mute
         *err = GetLastError();
         return;
     }
-    MPIU_Thread_mutex_lock(mutex, err);
+    MPL_thread_mutex_lock(mutex, err);
     /*
      * if (err != NULL)
      * {
-     * *err = MPIU_THREAD_SUCCESS;
+     * *err = MPL_THREAD_SUCCESS;
      * }
      */
 }
 
-void MPIU_Thread_cond_broadcast(MPIU_Thread_cond_t * cond, int *err)
+void MPL_thread_cond_broadcast(MPL_thread_cond_t * cond, int *err)
 {
-    MPIUI_Win_thread_cond_fifo_t *fifo, *temp;
-    MPIU_Thread_mutex_lock(&cond->fifo_mutex, err);
-    if (err != NULL && *err != MPIU_THREAD_SUCCESS) {
+    MPLI_win_thread_cond_fifo_t *fifo, *temp;
+    MPL_thread_mutex_lock(&cond->fifo_mutex, err);
+    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
         return;
     }
     /* remove the fifo queue from the cond variable */
     fifo = cond->fifo_head;
     cond->fifo_head = cond->fifo_tail = NULL;
-    MPIU_Thread_mutex_unlock(&cond->fifo_mutex, err);
-    if (err != NULL && *err != MPIU_THREAD_SUCCESS) {
+    MPL_thread_mutex_unlock(&cond->fifo_mutex, err);
+    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
         return;
     }
     /* signal each event in the fifo queue */
@@ -323,15 +315,15 @@ void MPIU_Thread_cond_broadcast(MPIU_Thread_cond_t * cond, int *err)
         free(temp);
     }
     if (err != NULL) {
-        *err = MPIU_THREAD_SUCCESS;
+        *err = MPL_THREAD_SUCCESS;
     }
 }
 
-void MPIU_Thread_cond_signal(MPIU_Thread_cond_t * cond, int *err)
+void MPL_thread_cond_signal(MPL_thread_cond_t * cond, int *err)
 {
-    MPIUI_Win_thread_cond_fifo_t *fifo;
-    MPIU_Thread_mutex_lock(&cond->fifo_mutex, err);
-    if (err != NULL && *err != MPIU_THREAD_SUCCESS) {
+    MPLI_win_thread_cond_fifo_t *fifo;
+    MPL_thread_mutex_lock(&cond->fifo_mutex, err);
+    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
         return;
     }
     fifo = cond->fifo_head;
@@ -340,8 +332,8 @@ void MPIU_Thread_cond_signal(MPIU_Thread_cond_t * cond, int *err)
         if (cond->fifo_head == NULL)
             cond->fifo_tail = NULL;
     }
-    MPIU_Thread_mutex_unlock(&cond->fifo_mutex, err);
-    if (err != NULL && *err != MPIU_THREAD_SUCCESS) {
+    MPL_thread_mutex_unlock(&cond->fifo_mutex, err);
+    if (err != NULL && *err != MPL_THREAD_SUCCESS) {
         return;
     }
     if (fifo) {
@@ -353,14 +345,8 @@ void MPIU_Thread_cond_signal(MPIU_Thread_cond_t * cond, int *err)
         free(fifo);
     }
     if (err != NULL) {
-        *err = MPIU_THREAD_SUCCESS;
+        *err = MPL_THREAD_SUCCESS;
     }
 }
 
-
-/*
- * Thread Local Storage
- * - Defined in src/include/thread/mpiu_thread_win_funcs.h
- */
-/* end win impl */
 #endif

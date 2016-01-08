@@ -155,8 +155,8 @@ int MPIU_DBG_Outevent( const char *file, int line, int class, int kind,
         /* the thread ID is not necessarily unique between processes, so a
          * (pid,tid) pair should be used to uniquely identify output from
          * particular threads on a system */
-	MPIU_Thread_id_t tid;
-	MPIU_Thread_self(&tid);
+	MPL_thread_id_t tid;
+	MPL_thread_self(&tid);
 	threadID = (unsigned long long int)tid;
     }
 #endif
@@ -784,8 +784,8 @@ static int dbg_get_filename(char *filename, int len)
             else if (*p == 't') {
 #ifdef MPICH_IS_THREADED
                 char threadIDAsChar[30];
-                MPIU_Thread_id_t tid;
-                MPIU_Thread_self(&tid);
+                MPL_thread_id_t tid;
+                MPL_thread_self(&tid);
                 threadID = (unsigned long long int)tid;
 
                 MPL_snprintf( threadIDAsChar, sizeof(threadIDAsChar), 

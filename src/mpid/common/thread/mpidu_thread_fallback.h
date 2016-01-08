@@ -60,14 +60,14 @@ g * MPI_FINALIZED, MPI_GET_COUNT, MPI_GET_ELEMENTS, MPI_GRAPH_GET,
  */
 
 typedef struct {
-    MPIU_Thread_mutex_t mutex;
+    MPL_thread_mutex_t mutex;
     OPA_int_t num_queued_threads;
 } MPIDU_Thread_mutex_t;
 
-typedef MPIU_Thread_cond_t  MPIDU_Thread_cond_t;
-typedef MPIU_Thread_id_t    MPIDU_Thread_id_t;
-typedef MPIU_Thread_tls_t   MPIDU_Thread_tls_t;
-typedef MPIU_Thread_func_t  MPIDU_Thread_func_t;
+typedef MPL_thread_cond_t  MPIDU_Thread_cond_t;
+typedef MPL_thread_id_t    MPIDU_Thread_id_t;
+typedef MPL_thread_tls_t   MPIDU_Thread_tls_t;
+typedef MPL_thread_func_t  MPIDU_Thread_func_t;
 
 /*M MPIDU_THREAD_CS_ENTER - Enter a named critical section
 
@@ -294,14 +294,14 @@ M*/
 @*/
 #define MPIDU_Thread_create(func_, data_, id_, err_ptr_)        \
     do {                                                        \
-        MPIU_Thread_create(func_, data_, id_, err_ptr_);        \
+        MPL_thread_create(func_, data_, id_, err_ptr_);         \
         MPIU_Assert(*err_ptr_ == 0);                            \
     } while (0)
 
 /*@
   MPIDU_Thread_exit - exit from the current thread
 @*/
-#define MPIDU_Thread_exit         MPIU_Thread_exit
+#define MPIDU_Thread_exit         MPL_thread_exit
 
 /*@
   MPIDU_Thread_self - get the identifier of the current thread
@@ -309,7 +309,7 @@ M*/
   Output Parameter:
 . id - identifier of current thread
 @*/
-#define MPIDU_Thread_self         MPIU_Thread_self
+#define MPIDU_Thread_self         MPL_thread_self
 
 /*@
   MPIDU_Thread_same - compare two threads identifiers to see if refer to the same thread
@@ -321,7 +321,7 @@ M*/
   Output Parameter:
 . same - TRUE if the two threads identifiers refer to the same thread; FALSE otherwise
 @*/
-#define MPIDU_Thread_same       MPIU_Thread_same
+#define MPIDU_Thread_same       MPL_thread_same
 
 /*@
   MPIDU_Thread_yield - voluntarily relinquish the CPU, giving other threads an opportunity to run
@@ -332,7 +332,7 @@ M*/
             break;                                                      \
         MPIDU_Thread_mutex_unlock(mutex_ptr_, err_ptr_);                \
         MPIU_Assert(*err_ptr_ == 0);                                    \
-        MPIU_Thread_yield();                                            \
+        MPL_thread_yield();                                             \
         MPIDU_Thread_mutex_lock(mutex_ptr_, err_ptr_);                  \
         MPIU_Assert(*err_ptr_ == 0);                                    \
     } while (0)
@@ -351,9 +351,9 @@ M*/
 #define MPIDU_Thread_mutex_create(mutex_ptr_, err_ptr_)                 \
     do {                                                                \
         OPA_store_int(&(mutex_ptr_)->num_queued_threads, 0);            \
-        MPIU_Thread_mutex_create(&(mutex_ptr_)->mutex, err_ptr_);       \
+        MPL_thread_mutex_create(&(mutex_ptr_)->mutex, err_ptr_);        \
         MPIU_Assert(*err_ptr_ == 0);                                    \
-        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"Created MPIU_Thread_mutex %p", (mutex_ptr_)); \
+        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"Created MPL_thread_mutex %p", (mutex_ptr_)); \
     } while (0)
 
 /*@
@@ -367,8 +367,8 @@ M*/
 @*/
 #define MPIDU_Thread_mutex_destroy(mutex_ptr_, err_ptr_)                \
     do {                                                                \
-        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to destroy MPIU_Thread_mutex %p", (mutex_ptr_)); \
-        MPIU_Thread_mutex_destroy(&(mutex_ptr_)->mutex, err_ptr_);      \
+        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to destroy MPL_thread_mutex %p", (mutex_ptr_)); \
+        MPL_thread_mutex_destroy(&(mutex_ptr_)->mutex, err_ptr_);       \
         MPIU_Assert(*err_ptr_ == 0);                                    \
     } while (0)
 
@@ -381,10 +381,10 @@ M*/
 #define MPIDU_Thread_mutex_lock(mutex_ptr_, err_ptr_)                   \
     do {                                                                \
         OPA_incr_int(&(mutex_ptr_)->num_queued_threads);                \
-        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIU_Thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
-        MPIU_Thread_mutex_lock(&(mutex_ptr_)->mutex, err_ptr_);         \
+        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPL_thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
+        MPL_thread_mutex_lock(&(mutex_ptr_)->mutex, err_ptr_);          \
         MPIU_Assert(*err_ptr_ == 0);                                    \
-        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIU_Thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
+        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPL_thread_mutex_lock %p", &(mutex_ptr_)->mutex); \
         OPA_decr_int(&(mutex_ptr_)->num_queued_threads);                \
     } while (0)
 
@@ -396,7 +396,7 @@ M*/
 @*/
 #define MPIDU_Thread_mutex_unlock(mutex_ptr_, err_ptr_)                 \
     do {                                                                \
-        MPIU_Thread_mutex_unlock(&(mutex_ptr_)->mutex, err_ptr_);       \
+        MPL_thread_mutex_unlock(&(mutex_ptr_)->mutex, err_ptr_);        \
         MPIU_Assert(*err_ptr_ == 0);                                    \
     } while (0)
 
@@ -411,11 +411,11 @@ M*/
 + cond - condition variable
 - err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
 @*/
-#define MPIDU_Thread_cond_create(cond_ptr_, err_ptr_)   \
-    do {                                                \
-        MPIU_Thread_cond_create(cond_ptr_, err_ptr_);   \
-        MPIU_Assert(*err_ptr_ == 0);                    \
-        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"Created MPIU_Thread_cond %p", (cond_ptr_)); \
+#define MPIDU_Thread_cond_create(cond_ptr_, err_ptr_)                   \
+    do {                                                                \
+        MPL_thread_cond_create(cond_ptr_, err_ptr_);                    \
+        MPIU_Assert(*err_ptr_ == 0);                                    \
+        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"Created MPL_thread_cond %p", (cond_ptr_)); \
     } while (0)
 
 /*@
@@ -428,11 +428,11 @@ M*/
 . err - location to store the error code; pointer may be NULL; error is zero
         for success, non-zero if a failure occurred
 @*/
-#define MPIDU_Thread_cond_destroy(cond_ptr_, err_ptr_)  \
-    do {                                                \
-        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to destroy MPIU_Thread_cond %p", (cond_ptr_)); \
-        MPIU_Thread_cond_destroy(cond_ptr_, err_ptr_);  \
-        MPIU_Assert(*err_ptr_ == 0);                    \
+#define MPIDU_Thread_cond_destroy(cond_ptr_, err_ptr_)                  \
+    do {                                                                \
+        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to destroy MPL_thread_cond %p", (cond_ptr_)); \
+        MPL_thread_cond_destroy(cond_ptr_, err_ptr_);                   \
+        MPIU_Assert(*err_ptr_ == 0);                                    \
     } while (0)
 
 /*@
@@ -453,7 +453,7 @@ M*/
     do {                                                                \
         OPA_incr_int(&(mutex_ptr_)->num_queued_threads);                \
         MPIU_DBG_MSG_FMT(MPIR_DBG_THREAD,TYPICAL,(MPIU_DBG_FDEST,"Enter cond_wait on cond=%p mutex=%p",(cond_ptr_),&(mutex_ptr_)->mutex)); \
-        MPIU_Thread_cond_wait(cond_ptr_, &(mutex_ptr_)->mutex, err_ptr_); \
+        MPL_thread_cond_wait(cond_ptr_, &(mutex_ptr_)->mutex, err_ptr_); \
         MPIU_Assert_fmt_msg(*((int *) err_ptr_) == 0,                   \
                             ("cond_wait failed, err=%d (%s)", *((int *) err_ptr_), strerror(*((int *) err_ptr_)))); \
         MPIU_DBG_MSG_FMT(MPIR_DBG_THREAD,TYPICAL,(MPIU_DBG_FDEST,"Exit cond_wait on cond=%p mutex=%p",(cond_ptr_),&(mutex_ptr_)->mutex)); \
@@ -468,8 +468,8 @@ M*/
 @*/
 #define MPIDU_Thread_cond_broadcast(cond_ptr_, err_ptr_)                \
     do {                                                                \
-        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to cond_broadcast on MPIU_Thread_cond %p", (cond_ptr_)); \
-        MPIU_Thread_cond_broadcast(cond_ptr_, err_ptr_);                \
+        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to cond_broadcast on MPL_thread_cond %p", (cond_ptr_)); \
+        MPL_thread_cond_broadcast(cond_ptr_, err_ptr_);                 \
         MPIU_Assert_fmt_msg(*((int *) err_ptr_) == 0,                   \
                             ("cond_broadcast failed, err=%d (%s)", *((int *) err_ptr_), strerror(*((int *) err_ptr_)))); \
     } while (0)
@@ -482,8 +482,8 @@ M*/
 @*/
 #define MPIDU_Thread_cond_signal(cond_ptr_, err_ptr_)                   \
     do {                                                                \
-        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to cond_signal on MPIU_Thread_cond %p", (cond_ptr_)); \
-        MPIU_Thread_cond_signal(cond_ptr_, err_ptr_);                   \
+        MPIU_DBG_MSG_P(MPIR_DBG_THREAD,TYPICAL,"About to cond_signal on MPL_thread_cond %p", (cond_ptr_)); \
+        MPL_thread_cond_signal(cond_ptr_, err_ptr_);                    \
         MPIU_Assert_fmt_msg(*((int *) err_ptr_) == 0,                   \
                             ("cond_signal failed, err=%d (%s)", *((int *) err_ptr_), strerror(*((int *) err_ptr_)))); \
     } while (0)
@@ -505,7 +505,7 @@ M*/
 @*/
 #define MPIDU_Thread_tls_create(exit_func_ptr_, tls_ptr_, err_ptr_)     \
     do {                                                                \
-        MPIU_Thread_tls_create(exit_func_ptr_, tls_ptr_, err_ptr_);     \
+        MPL_thread_tls_create(exit_func_ptr_, tls_ptr_, err_ptr_);      \
         MPIU_Assert(*(int *) err_ptr_ == 0);                            \
     } while (0)
 
@@ -525,7 +525,7 @@ M*/
 @*/
 #define MPIDU_Thread_tls_destroy(tls_ptr_, err_ptr_)    \
     do {                                                \
-        MPIU_Thread_tls_destroy(tls_ptr_, err_ptr_);    \
+        MPL_thread_tls_destroy(tls_ptr_, err_ptr_);     \
         MPIU_Assert(*(int *) err_ptr_ == 0);            \
     } while (0)
 
@@ -539,7 +539,7 @@ M*/
 @*/
 #define MPIDU_Thread_tls_set(tls_ptr_, value_, err_ptr_)                \
     do {                                                                \
-        MPIU_Thread_tls_set(tls_ptr_, value_, err_ptr_);                \
+        MPL_thread_tls_set(tls_ptr_, value_, err_ptr_);                 \
         MPIU_Assert_fmt_msg(*((int *) err_ptr_) == 0,                   \
                             ("tls_set failed, err=%d (%s)", *((int *) err_ptr_), strerror(*((int *) err_ptr_)))); \
     } while (0)
@@ -556,7 +556,7 @@ M*/
 @*/
 #define MPIDU_Thread_tls_get(tls_ptr_, value_ptr_, err_ptr_)            \
     do {                                                                \
-        MPIU_Thread_tls_get(tls_ptr_, value_ptr_, err_ptr_);            \
+        MPL_thread_tls_get(tls_ptr_, value_ptr_, err_ptr_);             \
         MPIU_Assert_fmt_msg(*((int *) err_ptr_) == 0,                   \
                             ("tls_get failed, err=%d (%s)", *((int *) err_ptr_), strerror(*((int *) err_ptr_)))); \
     } while (0)
@@ -565,16 +565,16 @@ M*/
 #define MPIDU_THREADPRIV_KEY_CREATE                                     \
     do {                                                                \
         int err_ = 0;                                                   \
-        MPIU_THREADPRIV_KEY_CREATE(MPIR_Per_thread_key, MPIR_Per_thread, &err_); \
+        MPL_THREADPRIV_KEY_CREATE(MPIR_Per_thread_key, MPIR_Per_thread, &err_); \
         MPIU_Assert(err_ == 0);                                         \
     } while (0)
 
-#define MPIDU_THREADPRIV_KEY_GET_ADDR  MPIU_THREADPRIV_KEY_GET_ADDR
+#define MPIDU_THREADPRIV_KEY_GET_ADDR  MPL_THREADPRIV_KEY_GET_ADDR
 
 #define MPIDU_THREADPRIV_KEY_DESTROY                            \
     do {                                                        \
         int err_ = 0;                                           \
-        MPIU_THREADPRIV_KEY_DESTROY(MPIR_Per_thread_key, &err_); \
+        MPL_THREADPRIV_KEY_DESTROY(MPIR_Per_thread_key, &err_);  \
         MPIU_Assert(err_ == 0);                                 \
     } while (0)
 
