@@ -12,7 +12,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 static double MPIR_Wtime_mult;
 
-int MPL_Wtime_init(void)
+int MPL_wtime_init(void)
 {
     mach_timebase_info_data_t info;
     mach_timebase_info(&info);
@@ -22,35 +22,35 @@ int MPL_Wtime_init(void)
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtime(MPL_Time_t * timeval)
+int MPL_wtime(MPL_time_t * timeval)
 {
     *timeval = mach_absolute_time();
 
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtime_diff(MPL_Time_t * t1, MPL_Time_t * t2, double *diff)
+int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff)
 {
     *diff = (*t2 - *t1) * MPIR_Wtime_mult;
 
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtime_todouble(MPL_Time_t * t, double *val)
+int MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
     *val = *t * MPIR_Wtime_mult;
 
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtime_acc(MPL_Time_t * t1, MPL_Time_t * t2, MPL_Time_t * t3)
+int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3)
 {
     *t3 += *t2 - *t1;
 
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtick(double *wtick)
+int MPL_wtick(double *wtick)
 {
     *wtick = tickval;
 

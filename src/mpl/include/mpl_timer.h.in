@@ -39,7 +39,7 @@ int usleep(useconds_t usec);
 #define MPL_TIMER_KIND @MPL_TIMER_KIND@
 
 /* Define a time stamp */
-typedef @MPL_TIMER_TYPE@ MPL_Time_t;
+typedef @MPL_TIMER_TYPE@ MPL_time_t;
 
 /* The timer code is allowed to return "NOT_INITIALIZED" before the
  * device is initialized.  Once the device is initialized, it must
@@ -77,20 +77,20 @@ typedef @MPL_TIMER_TYPE@ MPL_Time_t;
 #if defined MPLI_WTIME_IS_A_FUNCTION
 
 /*@
-  MPL_Wtime - Return a time stamp
+  MPL_wtime - Return a time stamp
 
   Output Parameter:
-. timeval - A pointer to an 'MPL_Wtime_t' variable.
+. timeval - A pointer to an 'MPL_wtime_t' variable.
 
   Notes:
   This routine returns an `opaque` time value.  This difference between two
-  time values returned by 'MPL_Wtime' can be converted into an elapsed time
-  in seconds with the routine 'MPL_Wtime_diff'.
+  time values returned by 'MPL_wtime' can be converted into an elapsed time
+  in seconds with the routine 'MPL_wtime_diff'.
 
   This routine is defined this way to simplify its implementation as a macro.
   For example, the for Intel x86 and gcc,
 .vb
-#define MPL_Wtime(timeval) \
+#define MPL_wtime(timeval) \
      __asm__ __volatile__("rdtsc" : "=A" (*timeval))
 .ve
 
@@ -110,14 +110,14 @@ typedef @MPL_TIMER_TYPE@ MPL_Time_t;
   MPI-2 allows 'MPI_Wtime' to be a macro.  We should make that easy; this
   version does not accomplish that.
   @*/
-int MPL_Wtime(MPL_Time_t * timeval);
+int MPL_wtime(MPL_time_t * timeval);
 #endif /* MPLI_WTIME_IS_A_FUNCTION */
 
 /*@
-  MPL_Wtime_diff - Compute the difference between two time stamps
+  MPL_wtime_diff - Compute the difference between two time stamps
 
   Input Parameters:
-. t1, t2 - Two time values set by 'MPL_Wtime' on this process.
+. t1, t2 - Two time values set by 'MPL_wtime' on this process.
 
 
   Output Parameter:
@@ -125,21 +125,21 @@ int MPL_Wtime(MPL_Time_t * timeval);
 
   Note:
   If 't1' is null, then 't2' is assumed to be differences accumulated with
-  'MPL_Wtime_acc', and the output value gives the number of seconds that
+  'MPL_wtime_acc', and the output value gives the number of seconds that
   were accumulated.
 
   Question:
   Instead of handling a null value of 't1', should we have a separate
-  routine 'MPL_Wtime_todouble' that converts a single timestamp to a
+  routine 'MPL_wtime_todouble' that converts a single timestamp to a
   double value?
 
   Module:
   Timer
   @*/
-int MPL_Wtime_diff( MPL_Time_t *t1, MPL_Time_t *t2, double *diff );
+int MPL_wtime_diff( MPL_time_t *t1, MPL_time_t *t2, double *diff );
 
 /*@
-  MPL_Wtime_acc - Accumulate time values
+  MPL_wtime_acc - Accumulate time values
 
   Input Parameters:
 . t1,t2,t3 - Three time values.  't3' is updated with the difference between
@@ -148,23 +148,23 @@ int MPL_Wtime_diff( MPL_Time_t *t1, MPL_Time_t *t2, double *diff );
   Notes:
   This routine is used to accumulate the time spent with a block of code
   without first converting the time stamps into a particular arithmetic
-  type such as a 'double'.  For example, if the 'MPL_Wtime' routine accesses
+  type such as a 'double'.  For example, if the 'MPL_wtime' routine accesses
   a cycle counter, this routine (or macro) can perform the accumulation using
   integer arithmetic.
 
-  To convert a time value accumulated with this routine, use 'MPL_Wtime_diff'
+  To convert a time value accumulated with this routine, use 'MPL_wtime_diff'
   with a 't1' of zero.
 
   Module:
   Timer
   @*/
-int MPL_Wtime_acc( MPL_Time_t *t1, MPL_Time_t *t2, MPL_Time_t *t3 );
+int MPL_wtime_acc( MPL_time_t *t1, MPL_time_t *t2, MPL_time_t *t3 );
 
 /*@
-  MPL_Wtime_todouble - Converts a timestamp to a double
+  MPL_wtime_todouble - Converts a timestamp to a double
 
   Input Parameter:
-. timeval - 'MPL_Time_t' time stamp
+. timeval - 'MPL_time_t' time stamp
 
   Output Parameter:
 . seconds - Time in seconds from an arbitrary (but fixed) time in the past
@@ -174,16 +174,16 @@ int MPL_Wtime_acc( MPL_Time_t *t1, MPL_Time_t *t2, MPL_Time_t *t3 );
   suitable for 'MPI_Wtime'.
 
   @*/
-int MPL_Wtime_todouble( MPL_Time_t *timeval, double *seconds );
+int MPL_wtime_todouble( MPL_time_t *timeval, double *seconds );
 
 /*@
-  MPL_Wtick - Provide the resolution of the 'MPL_Wtime' timer
+  MPL_wtick - Provide the resolution of the 'MPL_wtime' timer
 
   Return value:
   Resolution of the timer in seconds.  In many cases, this is the
-  time between ticks of the clock that 'MPL_Wtime' returns.  In other
+  time between ticks of the clock that 'MPL_wtime' returns.  In other
   words, the minimum significant difference that can be computed by
-  'MPL_Wtime_diff'.
+  'MPL_wtime_diff'.
 
   Note that in some cases, the resolution may be estimated.  No application
   should expect either the same estimate in different runs or the same
@@ -192,10 +192,10 @@ int MPL_Wtime_todouble( MPL_Time_t *timeval, double *seconds );
   Module:
   Timer
   @*/
-int MPL_Wtick(double *);
+int MPL_wtick(double *);
 
 /*@
-  MPL_Wtime_init - Initialize the timer
+  MPL_wtime_init - Initialize the timer
 
   Note:
   This routine should perform any steps needed to initialize the timer.
@@ -207,7 +207,7 @@ int MPL_Wtick(double *);
   Timer
 
   @*/
-int MPL_Wtime_init(void);
+int MPL_wtime_init(void);
 
 /*
  * For timers that do not have defined resolutions, compute the resolution
@@ -220,23 +220,23 @@ static void init_wtick(void) ATTRIBUTE((unused));
 static void init_wtick(void)
 {
     double timediff;
-    MPL_Time_t t1, t2;
+    MPL_time_t t1, t2;
     int cnt;
     int icnt;
 
     tickval = 1.0e6;
     for (icnt = 0; icnt < 10; icnt++) {
         cnt = 1000;
-        MPL_Wtime(&t1);
+        MPL_wtime(&t1);
         do {
-            MPL_Wtime(&t2);
-            MPL_Wtime_diff(&t1, &t2, &timediff);
+            MPL_wtime(&t2);
+            MPL_wtime_diff(&t1, &t2, &timediff);
             if (timediff > 0)
                 break;
         }
         while (cnt--);
         if (cnt && timediff > 0.0 && timediff < tickval) {
-            MPL_Wtime_diff(&t1, &t2, &tickval);
+            MPL_wtime_diff(&t1, &t2, &tickval);
         }
     }
 }

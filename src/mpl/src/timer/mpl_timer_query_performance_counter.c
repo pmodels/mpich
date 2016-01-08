@@ -11,7 +11,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #if MPL_TIMER_KIND == MPL_TIMER_KIND__QUERYPERFORMANCECOUNTER
 
 double MPL_Seconds_per_tick = 0.0;     /* High performance counter frequency */
-int MPL_Wtime_init(void)
+int MPL_wtime_init(void)
 {
     LARGE_INTEGER n;
     QueryPerformanceFrequency(&n);
@@ -19,24 +19,24 @@ int MPL_Wtime_init(void)
     return 0;
 }
 
-double MPL_Wtick(void)
+double MPL_wtick(void)
 {
     return MPL_Seconds_per_tick;
 }
 
-void MPL_Wtime_todouble(MPL_Time_t * t, double *val)
+void MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
     *val = (double) t->QuadPart * MPL_Seconds_per_tick;
 }
 
-void MPL_Wtime_diff(MPL_Time_t * t1, MPL_Time_t * t2, double *diff)
+void MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff)
 {
     LARGE_INTEGER n;
     n.QuadPart = t2->QuadPart - t1->QuadPart;
     *diff = (double) n.QuadPart * MPL_Seconds_per_tick;
 }
 
-void MPL_Wtime_acc(MPL_Time_t * t1, MPL_Time_t * t2, MPL_Time_t * t3)
+void MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3)
 {
     t3->QuadPart += ((t2->QuadPart) - (t1->QuadPart));
 }

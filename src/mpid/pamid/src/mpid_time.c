@@ -23,7 +23,7 @@
 
 int MPIDI_PAMID_Timer_is_ready = 0;
 
-static int wtime(MPL_Time_t *tval)
+static int wtime(MPL_time_t *tval)
 {
     if (MPIDI_PAMID_Timer_is_ready) {
         *((MPID_Time_t *) tval) = PAMI_Wtime(MPIDI_Client);
@@ -35,7 +35,7 @@ static int wtime(MPL_Time_t *tval)
 
 int MPID_Wtime(MPID_Time_t *tval)
 {
-    return wtime((MPL_Time_t *) tval);
+    return wtime((MPL_time_t *) tval);
 }
 
 static int wtick(double *wtick)
@@ -50,10 +50,10 @@ static int wtick(double *wtick)
 
 int MPID_Wtick(double *tick)
 {
-    return wtick((MPL_Time_t *) tick);
+    return wtick((MPL_time_t *) tick);
 }
 
-static int wtime_diff(MPL_Time_t *t1, MPL_Time_t *t2, double *diff)
+static int wtime_diff(MPL_time_t *t1, MPL_time_t *t2, double *diff)
 {
     if (MPIDI_PAMID_Timer_is_ready) {
         *diff = *((MPID_Time_t *) t2) - *((MPID_Time_t *) t1);
@@ -65,10 +65,10 @@ static int wtime_diff(MPL_Time_t *t1, MPL_Time_t *t2, double *diff)
 
 int MPID_Wtime_diff(MPID_Time_t *t1, MPID_Time_t *t2, double *diff)
 {
-    return wtime_diff((MPL_Time_t *) t1, (MPL_Time_t *) t2, diff);
+    return wtime_diff((MPL_time_t *) t1, (MPL_time_t *) t2, diff);
 }
 
-static int wtime_todouble(MPL_Time_t *t, double *val)
+static int wtime_todouble(MPL_time_t *t, double *val)
 {
     if (MPIDI_PAMID_Timer_is_ready) {
         *val = *((MPID_Time_t *) t);
@@ -80,10 +80,10 @@ static int wtime_todouble(MPL_Time_t *t, double *val)
 
 int MPID_Wtime_todouble(MPID_Time_t *t, double *val)
 {
-    return wtime_todouble((MPL_Time_t *) t, val);
+    return wtime_todouble((MPL_time_t *) t, val);
 }
 
-static int wtime_acc(MPL_Time_t *t1, MPL_Time_t *t2, MPL_Time_t *t3)
+static int wtime_acc(MPL_time_t *t1, MPL_time_t *t2, MPL_time_t *t3)
 {
     if (MPIDI_PAMID_Timer_is_ready) {
         *((MPID_Time_t *) t3) += *((MPID_Time_t *) t1) - *((MPID_Time_t *) t2);
@@ -95,16 +95,16 @@ static int wtime_acc(MPL_Time_t *t1, MPL_Time_t *t2, MPL_Time_t *t3)
 
 int MPID_Wtime_acc(MPID_Time_t *t1, MPID_Time_t *t2, MPID_Time_t *t3)
 {
-    return wtime_acc((MPL_Time_t *) t1, (MPL_Time_t *) t2, (MPL_Time_t *) t3);
+    return wtime_acc((MPL_time_t *) t1, (MPL_time_t *) t2, (MPL_time_t *) t3);
 }
 
 int MPID_Wtime_init( void )
 {
-    MPL_Wtime_fn = wtime;
-    MPL_Wtick_fn = wtick;
-    MPL_Wtime_diff_fn = wtime_diff;
-    MPL_Wtime_todouble_fn = wtime_todouble;
-    MPL_Wtime_acc_fn = wtime_acc;
+    MPL_wtime_fn = wtime;
+    MPL_wtick_fn = wtick;
+    MPL_wtime_diff_fn = wtime_diff;
+    MPL_wtime_todouble_fn = wtime_todouble;
+    MPL_wtime_acc_fn = wtime_acc;
 
     return MPID_TIMER_SUCCESS;
 }

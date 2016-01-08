@@ -10,7 +10,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #if MPL_TIMER_KIND == MPL_TIMER_KIND__CLOCK_GETTIME
 
-int MPL_Wtime(MPL_Time_t * timeval)
+int MPL_wtime(MPL_time_t * timeval)
 {
     /* POSIX timer (14.2.1, page 311) */
     clock_gettime(CLOCK_REALTIME, timeval);
@@ -18,21 +18,21 @@ int MPL_Wtime(MPL_Time_t * timeval)
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtime_diff(MPL_Time_t * t1, MPL_Time_t * t2, double *diff)
+int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff)
 {
     *diff = ((double) (t2->tv_sec - t1->tv_sec) + 1.0e-9 * (double) (t2->tv_nsec - t1->tv_nsec));
 
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtime_todouble(MPL_Time_t * t, double *val)
+int MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
     *val = ((double) t->tv_sec + 1.0e-9 * (double) t->tv_nsec);
 
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtime_acc(MPL_Time_t * t1, MPL_Time_t * t2, MPL_Time_t * t3)
+int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3)
 {
     int nsec, sec;
 
@@ -49,7 +49,7 @@ int MPL_Wtime_acc(MPL_Time_t * t1, MPL_Time_t * t2, MPL_Time_t * t3)
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtick(double *wtick)
+int MPL_wtick(double *wtick)
 {
     struct timespec res;
     int rc;
@@ -66,7 +66,7 @@ int MPL_Wtick(double *wtick)
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtime_init(void)
+int MPL_wtime_init(void)
 {
     init_wtick();
 

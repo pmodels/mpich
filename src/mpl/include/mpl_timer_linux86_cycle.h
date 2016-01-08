@@ -7,7 +7,7 @@
 #ifndef MPL_TIMER_LINUX86_CYCLE_H_INCLUDED
 #define MPL_TIMER_LINUX86_CYCLE_H_INCLUDED
 
-static inline int MPL_Wtime(MPL_Time_t *timeval)
+static inline int MPL_wtime(MPL_time_t *timeval)
 {
 /* The rdtsc instruction is not a "serializing" instruction, so the
    processor is free to reorder it.  In order to get more accurate

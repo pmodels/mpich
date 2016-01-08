@@ -10,7 +10,7 @@
 #include <winsock2.h>
 #include <windows.h>
 
-static inline void MPL_Wtime(MPL_Time_t *timeval)
+static inline void MPL_wtime(MPL_time_t *timeval)
 {
     register int *f1 = (int*)var_ptr;
     __asm cpuid;
