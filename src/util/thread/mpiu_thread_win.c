@@ -49,7 +49,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
     struct MPIUI_Thread_info *thread_info;
     int err = MPIU_THREAD_SUCCESS;
 
-    thread_info = (struct MPIUI_Thread_info *) MPIU_Malloc(sizeof(struct MPIUI_Thread_info));
+    thread_info = (struct MPIUI_Thread_info *) malloc(sizeof(struct MPIUI_Thread_info));
     if (thread_info != NULL) {
         thread_info->func = func;
         thread_info->data = data;
@@ -80,7 +80,7 @@ DWORD WINAPI MPIUI_Thread_start(LPVOID arg)
     MPIU_Thread_func_t func = thread_info->func;
     void *data = thread_info->data;
 
-    MPIU_Free(arg);
+    free(arg);
 
     func(data);
 
@@ -206,7 +206,7 @@ void MPIU_Thread_cond_destroy(MPIU_Thread_cond_t * cond, int *err)
     while (cond->fifo_head) {
         iter = cond->fifo_head;
         cond->fifo_head = cond->fifo_head->next;
-        MPIU_Free(iter);
+        free(iter);
     }
     MPIU_Thread_mutex_destroy(&cond->fifo_mutex, err);
     if (err != NULL && *err != MPIU_THREAD_SUCCESS) {
@@ -247,12 +247,12 @@ void MPIU_Thread_cond_wait(MPIU_Thread_cond_t * cond, MPIU_Thread_mutex_t * mute
         return;
     }
     if (cond->fifo_tail == NULL) {
-        cond->fifo_tail = (MPIUI_Win_thread_cond_fifo_t *) MPIU_Malloc(sizeof(MPIUI_Win_thread_cond_fifo_t));
+        cond->fifo_tail = (MPIUI_Win_thread_cond_fifo_t *) malloc(sizeof(MPIUI_Win_thread_cond_fifo_t));
         cond->fifo_head = cond->fifo_tail;
     }
     else {
         cond->fifo_tail->next =
-            (MPIUI_Win_thread_cond_fifo_t *) MPIU_Malloc(sizeof(MPIUI_Win_thread_cond_fifo_t));
+            (MPIUI_Win_thread_cond_fifo_t *) malloc(sizeof(MPIUI_Win_thread_cond_fifo_t));
         cond->fifo_tail = cond->fifo_tail->next;
     }
     if (cond->fifo_tail == NULL) {
@@ -320,7 +320,7 @@ void MPIU_Thread_cond_broadcast(MPIU_Thread_cond_t * cond, int *err)
         }
         temp = fifo;
         fifo = fifo->next;
-        MPIU_Free(temp);
+        free(temp);
     }
     if (err != NULL) {
         *err = MPIU_THREAD_SUCCESS;
@@ -347,10 +347,10 @@ void MPIU_Thread_cond_signal(MPIU_Thread_cond_t * cond, int *err)
     if (fifo) {
         if (!SetEvent(fifo->event) && err != NULL) {
             *err = GetLastError();
-            MPIU_Free(fifo);
+            free(fifo);
             return;
         }
-        MPIU_Free(fifo);
+        free(fifo);
     }
     if (err != NULL) {
         *err = MPIU_THREAD_SUCCESS;

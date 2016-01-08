@@ -16,7 +16,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 void MPIUI_Cleanup_tls(void *a)
 {
     if (a)
-        MPIU_Free(a);
+        free(a);
 }
 
 #endif
