@@ -9,7 +9,6 @@
 #include "mpir_info.h"    /* MPIR_Info_free */
 
 #include "mpl_utlist.h"
-#include "mpir_uthash.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===

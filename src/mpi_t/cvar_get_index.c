@@ -71,7 +71,7 @@ int MPI_T_cvar_get_index(const char *name, int *cvar_index)
     name2index_hash_t *hash_entry;
 
     /* Do hash lookup by the name */
-    HASH_FIND_STR(cvar_hash, name, hash_entry);
+    MPL_HASH_FIND_STR(cvar_hash, name, hash_entry);
     if (hash_entry != NULL) {
         *cvar_index = hash_entry->idx;
     } else {

@@ -16,7 +16,7 @@
 #include "mpir_assert.h"
 #include "mpir_pointers.h"
 #include "mpir_utarray.h"
-#include "mpir_uthash.h"
+#include "mpl_uthash.h"
 #include "mpir_objects.h"
 
 #ifdef HAVE_ERROR_CHECKING
@@ -58,7 +58,7 @@ typedef struct {
 typedef struct {
     const char *name;
     unsigned idx;
-    UT_hash_handle hh;  /* Makes this structure hashable */
+    MPL_UT_hash_handle hh;  /* Makes this structure hashable */
 } name2index_hash_t;
 
 /* MPI_T control variable (cvar)
