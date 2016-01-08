@@ -17,28 +17,28 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #include <unistd.h>
 #endif
 
-int MPL_Wtime(MPL_Time_t * tval)
+int MPL_wtime(MPL_time_t * tval)
 {
     gettimeofday(tval, NULL);
 
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtime_diff(MPL_Time_t * t1, MPL_Time_t * t2, double *diff)
+int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff)
 {
     *diff = ((double) (t2->tv_sec - t1->tv_sec) + .000001 * (double) (t2->tv_usec - t1->tv_usec));
 
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtime_todouble(MPL_Time_t * t, double *val)
+int MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
     *val = (double) t->tv_sec + .000001 * (double) t->tv_usec;
 
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtime_acc(MPL_Time_t * t1, MPL_Time_t * t2, MPL_Time_t * t3)
+int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3)
 {
     int usec, sec;
 
@@ -55,14 +55,14 @@ int MPL_Wtime_acc(MPL_Time_t * t1, MPL_Time_t * t2, MPL_Time_t * t3)
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtick(double *wtick)
+int MPL_wtick(double *wtick)
 {
     *wtick = tickval;
 
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtime_init(void)
+int MPL_wtime_init(void)
 {
     init_wtick();
 

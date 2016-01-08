@@ -17,16 +17,16 @@
  *       model would be used by the MPICH internal code, and would
  *       give fast access to the timers.
  *
- *    2. It would expose it through the MPL_Timer_ function pointers.
+ *    2. It would expose it through the MPL_timer_ function pointers.
  *       This model would be used by "external" code segments (such as
  *       MPL) which do not have direct access to the MPICH devices.
  *       This model might be slightly slower, but would give the same
  *       functionality.
  */
-extern int (*MPL_Wtime_fn)(MPL_Time_t *timeval);
-extern int (*MPL_Wtime_diff_fn)(MPL_Time_t *t1, MPL_Time_t *t2, double *diff);
-extern int (*MPL_Wtime_acc_fn)(MPL_Time_t *t1, MPL_Time_t *t2, MPL_Time_t *t3);
-extern int (*MPL_Wtime_todouble_fn)(MPL_Time_t *timeval, double *seconds);
-extern int (*MPL_Wtick_fn)(double *tick);
+extern int (*MPL_wtime_fn)(MPL_time_t *timeval);
+extern int (*MPL_wtime_diff_fn)(MPL_time_t *t1, MPL_time_t *t2, double *diff);
+extern int (*MPL_wtime_acc_fn)(MPL_time_t *t1, MPL_time_t *t2, MPL_time_t *t3);
+extern int (*MPL_wtime_todouble_fn)(MPL_time_t *timeval, double *seconds);
+extern int (*MPL_wtick_fn)(double *tick);
 
 #endif

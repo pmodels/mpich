@@ -11,7 +11,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 #if MPL_TIMER_KIND == MPL_TIMER_KIND__GETHRTIME
 
 /*
- * MPL_Time_t is hrtime_t, which under Solaris is defined as a 64bit
+ * MPL_time_t is hrtime_t, which under Solaris is defined as a 64bit
  * longlong_t .  However, the Solaris header files will define
  * longlong_t as a structure in some circumstances, making arithmetic
  * with hrtime_t invalid.  FIXME.
@@ -24,35 +24,35 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
  * supports an 8 byte long long.  We can also cast hrtime_t to long long
  * if long long is available and 8 bytes.
  */
-int MPL_Wtime(MPL_Time_t * timeval)
+int MPL_wtime(MPL_time_t * timeval)
 {
     *timeval = gethrtime();
 
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtime_diff(MPL_Time_t * t1, MPL_Time_t * t2, double *diff)
+int MPL_wtime_diff(MPL_time_t * t1, MPL_time_t * t2, double *diff)
 {
     *diff = 1.0e-9 * (double) (*t2 - *t1);
 
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtime_todouble(MPL_Time_t * t, double *val)
+int MPL_wtime_todouble(MPL_time_t * t, double *val)
 {
     *val = 1.0e-9 * (*t);
 
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtime_acc(MPL_Time_t * t1, MPL_Time_t * t2, MPL_Time_t * t3)
+int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3)
 {
     *t3 += ((*t2) - (*t1));
 
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtick(double *wtick)
+int MPL_wtick(double *wtick)
 {
     /* According to the documentation, ticks should be in nanoseconds.  This
      * is untested */
@@ -61,7 +61,7 @@ int MPL_Wtick(double *wtick)
     return MPL_TIMER_SUCCESS;
 }
 
-int MPL_Wtime_init(void)
+int MPL_wtime_init(void)
 {
     return MPL_TIMER_SUCCESS;
 }

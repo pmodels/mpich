@@ -7,9 +7,9 @@
 #ifndef MPL_TIMER_GCC_IA64_CYCLE_H_INCLUDED
 #define MPL_TIMER_GCC_IA64_CYCLE_H_INCLUDED
 
-static inline void MPL_Wtime(MPL_Time_t *timeval)
+static inline void MPL_wtime(MPL_time_t *timeval)
 {
-    MPL_Time_t t_val;
+    MPL_time_t t_val;
 
 #ifdef __INTEL_COMPILER
 #include "ia64regs.h"

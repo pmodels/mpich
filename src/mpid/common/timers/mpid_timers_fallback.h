@@ -7,12 +7,12 @@
 #if !defined(MPID_TIMERS_FALLBACK_H_INCLUDED)
 #define MPID_TIMERS_FALLBACK_H_INCLUDED
 
-#define MPID_Time_t         MPL_Time_t
-#define MPID_Wtime          MPL_Wtime
-#define MPID_Wtime_diff     MPL_Wtime_diff
-#define MPID_Wtime_acc      MPL_Wtime_acc
-#define MPID_Wtime_todouble MPL_Wtime_todouble
-#define MPID_Wtick          MPL_Wtick
-#define MPID_Wtime_init     MPL_Wtime_init
+#define MPID_Time_t         MPL_time_t
+#define MPID_Wtime          MPL_wtime
+#define MPID_Wtime_diff     MPL_wtime_diff
+#define MPID_Wtime_acc      MPL_wtime_acc
+#define MPID_Wtime_todouble MPL_wtime_todouble
+#define MPID_Wtick          MPL_wtick
+#define MPID_Wtime_init     MPL_wtime_init
 
 #endif /* !defined(MPID_TIMERS_FALLBACK_H_INCLUDED) */
