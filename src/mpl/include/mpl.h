@@ -18,5 +18,6 @@
 #include "mpl_iov.h"
 #include "mpl_bt.h"
 #include "mpl_timer.h"
+#include "mpl_yield.h"
 
 #endif /* !defined(MPL_H_INCLUDED) */

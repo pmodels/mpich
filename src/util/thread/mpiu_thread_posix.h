@@ -11,7 +11,7 @@
 #ifndef MPIU_THREAD_POSIX_H_INCLUDED
 #define MPIU_THREAD_POSIX_H_INCLUDED
 
-#include "mpiu_process_wrappers.h"      /* for MPIU_PW_Sched_yield */
+#include "mpl.h"      /* for MPL_sched_yield */
 
 #include <errno.h>
 #include <pthread.h>
@@ -54,7 +54,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
         if (OPA_load_int(&(mutex_ptr_)->num_queued_threads) == 0)       \
             break;                                                      \
         MPIU_Thread_mutex_unlock(mutex_ptr_, &err);                     \
-        MPIU_PW_Sched_yield();                                          \
+        MPL_sched_yield();                                              \
         MPIU_Thread_mutex_lock(mutex_ptr_, &err);                       \
         MPIU_DBG_MSG(MPIR_DBG_THREAD,VERBOSE,"exit MPIU_Thread_yield");          \
     } while (0)
