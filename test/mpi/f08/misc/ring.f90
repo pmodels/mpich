@@ -6,6 +6,9 @@
 ! Copyright (c) 2006-2012 Cisco Systems, Inc.  All rights reserved.
 ! Copyright (c) 2009-2012 Los Alamos National Security, LLC.
 !                         All rights reserved.
+!  (C) 2014 by Argonne National Laboratory.
+!      See COPYRIGHT in top-level directory.
+!
 ! $COPYRIGHT$
 !
 ! Simple ring test program using the MPI-3 mpi_f08 module.
