@@ -86,8 +86,8 @@ MPICH_PerProcess_t MPIR_Process = { OPA_INT_T_INITIALIZER(MPICH_PRE_INIT) };
      /* all other fields in MPIR_Process are irrelevant */
 MPIR_Thread_info_t MPIR_ThreadInfo = { 0 };
 
-#if defined(MPICH_IS_THREADED) && defined(MPICH_TLS_SPECIFIER)
-MPICH_TLS_SPECIFIER MPIR_Per_thread_t MPIR_Per_thread = { 0 };
+#if defined(MPICH_IS_THREADED) && defined(MPL_TLS_SPECIFIER)
+MPL_TLS_SPECIFIER MPIR_Per_thread_t MPIR_Per_thread = { 0 };
 #else
 MPIR_Per_thread_t MPIR_Per_thread = { 0 };
 #endif

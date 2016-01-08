@@ -533,6 +533,138 @@ AS_CASE([$enable_yield],
 #######################################################################
 
 
+#######################################################################
+## START OF THREADS CODE
+#######################################################################
+AC_ARG_WITH([thread-package],
+[  --with-thread-package=package     Thread package to use. Supported thread packages include:
+        posix or pthreads - POSIX threads (default, if required)
+        solaris - Solaris threads (Solaris OS only)
+        win - windows threads
+        none - no threads
+],,with_thread_package=posix)
+
+if test "${thread_pkg_required}" = "no" -o "${with_thread_package}" = "no" ; then
+   with_thread_package=none
+fi
+
+if test "${with_thread_package}" = "yes" ; then
+   with_thread_package=posix
+fi
+
+if test "${thread_pkg_required}" = "yes" -a "${with_thread_package}" = "none" ; then
+   AC_ERROR([if no thread package is available, use --enable-threads=single or funneled])
+fi
+
+THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_INVALID
+case $with_thread_package in
+    posix|pthreads)
+	with_thread_package=posix
+	AC_CHECK_HEADERS(pthread.h)
+
+        # If pthreads library is found, just include it on the link line. We don't try
+        # to test if the C compiler needs it or not, since the C++ or Fortran
+        # compilers might need it even if the C compiler doesn't
+        # (nvcc with gfortran, for example).
+        #
+        # OSF1 has __pthread_create but not pthread_create (because of
+        # inconsistencies in the pthread spec).  Thus, we look for pthread_key_create
+        AC_CHECK_LIB([pthread],[pthread_key_create],have_pthreads=yes)
+	if test "$have_pthreads" = "yes" ; then
+	   PAC_PREPEND_FLAG([-lpthread],[LIBS])
+	fi
+
+        AC_CHECK_FUNCS(pthread_yield)
+
+        # this check should come after the AC_CHECK_LIB for -lpthread
+        AC_CHECK_FUNC([pthread_key_create],[],[AC_MSG_ERROR([unable to find pthreads library])])
+
+	# Check for a routine that specify a routine to call on
+	# thread exit.  We can use this to release memory that may
+	# be allocated by the MPL library in the thread.
+	# A complication: pthread_cleanup_push may be a macro; in that
+	# case, check_funcs will fail to find it.
+	# Under OSX, pthread_cleanup_push and pop are macros that must
+	# appear together in the same lexical scope, and hence are
+	# really useless in libraries that may allocate data within
+	# a user-managed thread.
+	AC_CHECK_FUNCS(pthread_cleanup_push)
+	if test "$ac_cv_func_pthread_cleanup_push" = "no" ; then
+            AC_CACHE_CHECK([whether pthread_cleanup_push is available (may be a macro in pthread.h)],pac_cv_func_pthread_cleanup_push,[
+	    AC_TRY_LINK([
+#include <pthread.h>
+void f1(void *a) { return; }],
+[pthread_cleanup_push( f1, (void *)0 );],
+            pac_cv_func_pthread_cleanup_push=yes,
+            pac_cv_func_pthread_cleanup_push=no)])
+            if test "$pac_cv_func_pthread_cleanup_push" = yes ; then
+	        AC_DEFINE(HAVE_PTHREAD_CLEANUP_PUSH_MACRO,1,[Define if pthread_cleanup_push is available, even as a macro])
+            fi
+
+        fi
+
+        # Check for PTHREAD_MUTEX_ERRORCHECK_NP and PTHREAD_MUTEX_ERRORCHECK
+        AC_CACHE_CHECK([whether pthread.h defines PTHREAD_MUTEX_ERRORCHECK_NP],
+        pac_cv_has_pthread_mutex_errorcheck_np,[
+        AC_TRY_COMPILE([#include <pthread.h>],
+                       [int a=PTHREAD_MUTEX_ERRORCHECK_NP;],
+                       pac_cv_has_pthread_mutex_errorcheck_np=yes,
+                       pac_cv_has_pthread_mutex_errorcheck_np=no)])
+        AC_CACHE_CHECK([whether pthread.h defines PTHREAD_MUTEX_ERRORCHECK],
+        pac_cv_has_pthread_mutex_errorcheck,[
+        AC_TRY_COMPILE([#include <pthread.h>],
+                       [int a=PTHREAD_MUTEX_ERRORCHECK;],
+                       pac_cv_has_pthread_mutex_errorcheck=yes,
+                       pac_cv_has_pthread_mutex_errorcheck=no)])
+
+        if test "$pac_cv_has_pthread_mutex_errorcheck" = yes ; then
+            AC_DEFINE(MPL_PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK,
+                      [Define to an expression that will result in an error checking mutex type.])
+        elif test "$pac_cv_has_pthread_mutex_errorcheck_np" = yes ; then
+            AC_DEFINE(MPL_PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK_NP,
+                      [Define to an expression that will result in an error checking mutex type.])
+        fi
+
+	PAC_FUNC_NEEDS_DECL([#include <pthread.h>],pthread_mutexattr_settype)
+
+        THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_POSIX
+	;;
+    solaris)
+	AC_CHECK_HEADERS(thread.h)
+	AC_CHECK_FUNCS(thr_yield)
+	AC_SEARCH_LIBS(thr_create,thread,found=yes,found=no)
+	if test "$found" != "yes" ; then
+	   AC_MSG_ERROR([unable to find Solaris threads library])
+	fi
+	# FIXME: need to add -mt if using solaris compilers
+        THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_SOLARIS
+	;;
+    win|windows)
+        with_thread_package=win
+        THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_WIN
+        AC_MSG_ERROR([The 'win' thread package is not supported via autoconf builds at this time.])
+        ;;
+    no|none)
+	with_thread_package=none
+        THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_NONE
+	;;
+    *)
+	AC_MSG_ERROR([The specified thread package, $with_thread_package, is not supported.])
+	;;
+esac
+
+# Define and export the selected thread library so that other packages
+# know what's used in MPL
+AC_DEFINE_UNQUOTED([THREAD_PACKAGE_NAME],[$THREAD_PACKAGE_NAME],[set to the name of the thread package])
+
+# check for compiler-support for thread-local storage (MPL_TLS_SPECIFIER)
+AX_TLS
+
+#######################################################################
+## END OF THREADS CODE
+#######################################################################
+
+
 ## Enable creation of libtool-style versioning or no versioning
 AC_ARG_ENABLE(versioning,
         [AC_HELP_STRING([--enable-versioning],[Enable library versioning])],,

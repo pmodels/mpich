@@ -563,8 +563,8 @@ MPIDO_Allgather(const void *sendbuf,
       if(unlikely(verbose))
       {
          unsigned long long int threadID;
-         MPIU_Thread_id_t tid;
-         MPIU_Thread_self(&tid);
+         MPL_thread_id_t tid;
+         MPL_thread_self(&tid);
          threadID = (unsigned long long int)tid;
          fprintf(stderr,"<%llx> Using protocol %s for allgather on %u\n", 
                  threadID,

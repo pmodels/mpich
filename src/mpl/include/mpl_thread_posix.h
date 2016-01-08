@@ -8,42 +8,42 @@
 /*
  * Threads
  */
-#ifndef MPIU_THREAD_POSIX_H_INCLUDED
-#define MPIU_THREAD_POSIX_H_INCLUDED
+#ifndef MPL_THREAD_POSIX_H_INCLUDED
+#define MPL_THREAD_POSIX_H_INCLUDED
 
 #include "mpl.h"      /* for MPL_sched_yield */
 
 #include <errno.h>
 #include <pthread.h>
 
-typedef pthread_mutex_t MPIU_Thread_mutex_t;
-typedef pthread_cond_t MPIU_Thread_cond_t;
-typedef pthread_t MPIU_Thread_id_t;
-typedef pthread_key_t MPIU_Thread_tls_t;
+typedef pthread_mutex_t MPL_thread_mutex_t;
+typedef pthread_cond_t MPL_thread_cond_t;
+typedef pthread_t MPL_thread_id_t;
+typedef pthread_key_t MPL_thread_tls_t;
 
 #if defined(NEEDS_PTHREAD_MUTEXATTR_SETTYPE_DECL)
 int pthread_mutexattr_settype(pthread_mutexattr_t * attr, int kind);
 #endif /* NEEDS_PTHREAD_MUTEXATTR_SETTYPE_DECL */
 
-typedef void (*MPIU_Thread_func_t) (void *data);
-void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * id, int *err);
+typedef void (*MPL_thread_func_t) (void *data);
+void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * id, int *err);
 
-#define MPIU_Thread_exit()			\
+#define MPL_thread_exit()                       \
     do {                                        \
         pthread_exit(NULL);                     \
     } while (0)
 
-#define MPIU_Thread_self(id_)			\
+#define MPL_thread_self(id_)                    \
     do {                                        \
         *(id_) = pthread_self();                \
     } while (0)
 
-#define MPIU_Thread_same(id1_, id2_, same_)                             \
+#define MPL_thread_same(id1_, id2_, same_)                              \
     do {                                                                \
         *(same_) = pthread_equal(*(id1_), *(id2_)) ? TRUE : FALSE;	\
     } while (0)
 
-#define MPIU_Thread_yield MPL_sched_yield
+#define MPL_thread_yield MPL_sched_yield
 
 
 /*
@@ -58,11 +58,11 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
 
 /* FIXME: using constant initializer if available */
 
-/* FIXME: convert errors to an MPIU_THREAD_ERR value */
+/* FIXME: convert errors to an MPL_THREAD_ERR value */
 
-#if !defined(MPICH_PTHREAD_MUTEX_ERRORCHECK_VALUE)
+#if !defined(MPL_PTHREAD_MUTEX_ERRORCHECK_VALUE)
 
-#define MPIU_Thread_mutex_create(mutex_ptr_, err_ptr_)                  \
+#define MPL_thread_mutex_create(mutex_ptr_, err_ptr_)                   \
     do {                                                                \
         int err__;                                                      \
                                                                         \
@@ -73,15 +73,15 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
 
-#else /* defined(MPICH_PTHREAD_MUTEX_ERRORCHECK_VALUE) */
+#else /* defined(MPL_PTHREAD_MUTEX_ERRORCHECK_VALUE) */
 
-#define MPIU_Thread_mutex_create(mutex_ptr_, err_ptr_)                  \
+#define MPL_thread_mutex_create(mutex_ptr_, err_ptr_)                   \
     do {                                                                \
         int err__;                                                      \
         pthread_mutexattr_t attr__;                                     \
                                                                         \
         pthread_mutexattr_init(&attr__);                                \
-        pthread_mutexattr_settype(&attr__, MPICH_PTHREAD_MUTEX_ERRORCHECK_VALUE); \
+        pthread_mutexattr_settype(&attr__, MPL_PTHREAD_MUTEX_ERRORCHECK_VALUE); \
         err__ = pthread_mutex_init(mutex_ptr_, &attr__);                \
         if (unlikely(err__))                                            \
             MPL_internal_sys_error_printf("pthread_mutex_init", err__,  \
@@ -89,9 +89,9 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
 
-#endif /* defined(MPICH_PTHREAD_MUTEX_ERRORCHECK_VALUE) */
+#endif /* defined(MPL_PTHREAD_MUTEX_ERRORCHECK_VALUE) */
 
-#define MPIU_Thread_mutex_destroy(mutex_ptr_, err_ptr_)                 \
+#define MPL_thread_mutex_destroy(mutex_ptr_, err_ptr_)                  \
     do {                                                                \
         int err__;							\
                                                                         \
@@ -103,7 +103,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
     } while (0)
 
 
-#define MPIU_Thread_mutex_lock(mutex_ptr_, err_ptr_)                    \
+#define MPL_thread_mutex_lock(mutex_ptr_, err_ptr_)                     \
     do {                                                                \
         int err__;                                                      \
         err__ = pthread_mutex_lock(mutex_ptr_);                         \
@@ -115,7 +115,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
     } while (0)
 
 
-#define MPIU_Thread_mutex_unlock(mutex_ptr_, err_ptr_)                  \
+#define MPL_thread_mutex_unlock(mutex_ptr_, err_ptr_)                   \
     do {                                                                \
         int err__;                                                      \
                                                                         \
@@ -132,7 +132,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
  * Condition Variables
  */
 
-#define MPIU_Thread_cond_create(cond_ptr_, err_ptr_)                    \
+#define MPL_thread_cond_create(cond_ptr_, err_ptr_)                     \
     do {                                                                \
         int err__;							\
                                                                         \
@@ -143,7 +143,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
 
-#define MPIU_Thread_cond_destroy(cond_ptr_, err_ptr_)                   \
+#define MPL_thread_cond_destroy(cond_ptr_, err_ptr_)                    \
     do {                                                                \
         int err__;							\
                                                                         \
@@ -154,7 +154,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
 
-#define MPIU_Thread_cond_wait(cond_ptr_, mutex_ptr_, err_ptr_)		\
+#define MPL_thread_cond_wait(cond_ptr_, mutex_ptr_, err_ptr_)		\
     do {                                                                \
         int err__;                                                      \
     									\
@@ -171,7 +171,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
 
-#define MPIU_Thread_cond_broadcast(cond_ptr_, err_ptr_)                 \
+#define MPL_thread_cond_broadcast(cond_ptr_, err_ptr_)                 \
     do {                                                                \
         int err__;							\
                                                                         \
@@ -183,7 +183,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
 
-#define MPIU_Thread_cond_signal(cond_ptr_, err_ptr_)                    \
+#define MPL_thread_cond_signal(cond_ptr_, err_ptr_)                    \
     do {                                                                \
         int err__;							\
                                                                         \
@@ -200,7 +200,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
  * Thread Local Storage
  */
 
-#define MPIU_Thread_tls_create(exit_func_ptr_, tls_ptr_, err_ptr_)	\
+#define MPL_thread_tls_create(exit_func_ptr_, tls_ptr_, err_ptr_)	\
     do {                                                                \
         int err__;                                                      \
     									\
@@ -212,7 +212,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
 
-#define MPIU_Thread_tls_destroy(tls_ptr_, err_ptr_)     \
+#define MPL_thread_tls_destroy(tls_ptr_, err_ptr_)     \
     do {                                                \
         int err__;                                      \
                                                         \
@@ -224,7 +224,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
         *(int *)(err_ptr_) = err__;                     \
     } while (0)
 
-#define MPIU_Thread_tls_set(tls_ptr_, value_, err_ptr_)                 \
+#define MPL_thread_tls_set(tls_ptr_, value_, err_ptr_)                 \
     do {                                                                \
         int err__;							\
                                                                         \
@@ -236,11 +236,11 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
         *(int *)(err_ptr_) = err__;                                     \
     } while (0)
 
-#define MPIU_Thread_tls_get(tls_ptr_, value_ptr_, err_ptr_)	\
+#define MPL_thread_tls_get(tls_ptr_, value_ptr_, err_ptr_)	\
     do {                                                        \
         *(value_ptr_) = pthread_getspecific(*(tls_ptr_));       \
 								\
-        *(int *)(err_ptr_) = MPIU_THREAD_SUCCESS;               \
+        *(int *)(err_ptr_) = MPL_THREAD_SUCCESS;               \
     } while (0)
 
-#endif /* MPIU_THREAD_POSIX_H_INCLUDED */
+#endif /* MPL_THREAD_POSIX_H_INCLUDED */
