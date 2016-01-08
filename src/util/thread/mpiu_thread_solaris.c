@@ -49,7 +49,7 @@ void MPIU_Thread_create(MPIU_Thread_func_t func, void *data, MPIU_Thread_id_t * 
     int err = MPIU_THREAD_SUCCESS;
 
     /* FIXME: faster allocation, or avoid it all together? */
-    thread_info = (struct MPIUI_Thread_info *) MPIU_Malloc(sizeof(struct MPIUI_Thread_info));
+    thread_info = (struct MPIUI_Thread_info *) malloc(sizeof(struct MPIUI_Thread_info));
     if (thread_info != NULL) {
         thread_info->func = func;
         thread_info->data = data;
@@ -79,7 +79,7 @@ void *MPIUI_Thread_start(void *arg)
     MPIU_Thread_func_t func = thread_info->func;
     void *data = thread_info->data;
 
-    MPIU_Free(arg);
+    free(arg);
 
     func(data);
 

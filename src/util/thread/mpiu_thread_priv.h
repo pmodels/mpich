@@ -49,7 +49,7 @@ void MPIUI_Cleanup_tls(void *a);
         MPIU_Thread_tls_create(MPIUI_Cleanup_tls, &(key) , err_ptr_);   \
         if (unlikely(*((int *) err_ptr_)))                              \
             break;                                                      \
-        thread_ptr = MPIU_Calloc(1, sizeof(var));                       \
+        thread_ptr = calloc(1, sizeof(var));                            \
         if (unlikely(!thread_ptr)) {                                    \
             *((int *) err_ptr_) = MPIU_THREAD_ERROR;                    \
             break;                                                      \
@@ -65,7 +65,7 @@ void MPIUI_Cleanup_tls(void *a);
             if (unlikely(*((int *) err_ptr_)))                          \
                 break;                                                  \
             if (!thread_ptr) {                                          \
-                thread_ptr = MPIU_Calloc(1, sizeof(var));               \
+                thread_ptr = calloc(1, sizeof(var));                    \
                 if (unlikely(!thread_ptr)) {                            \
                     *((int *) err_ptr_) = MPIU_THREAD_ERROR;            \
                     break;                                              \
@@ -90,7 +90,7 @@ void MPIUI_Cleanup_tls(void *a);
             break;                                              \
                                                                 \
         if (thread_ptr)                                         \
-            MPIU_Free(thread_ptr);                              \
+            free(thread_ptr);                                   \
                                                                 \
         MPIU_Thread_tls_set(&(key), NULL, err_ptr_);            \
         if (unlikely(*((int *) err_ptr_)))                      \

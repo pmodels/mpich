@@ -229,9 +229,11 @@ void MPIU_trdump(FILE *, int);
 #define MPIU_Realloc(a,b)    MPIU_trrealloc((a),(b),__LINE__,__FILE__)
 
 /* Define these as invalid C to catch their use in the code */
+#if 0
 #define malloc(a)         'Error use MPIU_Malloc' :::
 #define calloc(a,b)       'Error use MPIU_Calloc' :::
 #define free(a)           'Error use MPIU_Free'   :::
+#endif
 #define realloc(a)        'Error use MPIU_Realloc' :::
 #if defined(strdup) || defined(__strdup)
 #undef strdup
