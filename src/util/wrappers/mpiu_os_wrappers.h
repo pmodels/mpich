@@ -7,7 +7,7 @@
 #define MPIU_OS_WRAPPERS_H_INCLUDED
 /* #include "mpiu_os_wrappers_conf.h" */
 #include "mpiu_util_wrappers.h"
-#include "mpiu_process_wrappers.h"
+#include "mpl.h"
 #include "mpiu_shm_wrappers.h"
 #include "mpiu_sock_wrappers.h"
 #endif /* MPIU_OS_WRAPPERS_H_INCLUDED */

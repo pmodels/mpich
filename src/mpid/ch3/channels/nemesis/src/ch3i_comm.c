@@ -216,7 +216,7 @@ static int barrier(MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
     else
     {
         while (OPA_load_int(&barrier_vars->sig) == sense)
-            MPIU_PW_Sched_yield();
+            MPL_sched_yield();
     }
 
  fn_exit:
