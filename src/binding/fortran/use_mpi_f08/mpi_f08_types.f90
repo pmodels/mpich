@@ -1,3 +1,8 @@
+!   -*- Mode: Fortran; -*-
+!
+!   (C) 2014 by Argonne National Laboratory.
+!   See COPYRIGHT in top-level directory.
+!
 ! MPI 3 data types for Fortran.
 ! From A.1.2, pp 676-677
 ! Note added MPI_Message type not in the spec by mistake
