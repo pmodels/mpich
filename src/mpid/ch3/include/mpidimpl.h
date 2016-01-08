@@ -256,43 +256,12 @@ extern MPIDI_Process_t MPIDI_Process;
 /* FIXME XXX DJG for TLS hack */
 #define MPID_REQUEST_TLS_MAX 128
 
-#if MPIU_HANDLE_ALLOCATION_METHOD == MPIU_HANDLE_ALLOCATION_THREAD_LOCAL
-#  define MPIDI_Request_tls_alloc(req) \
-    do { \
-        int i;                                                         \
-        MPID_THREADPRIV_DECL;                                          \
-        MPID_THREADPRIV_GET;                                           \
-        if (!MPID_THREADPRIV_FIELD(request_handles)) {                 \
-            MPID_Request *prev, *cur;                                  \
-            /* batch allocate a linked list of requests */             \
-            MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);                        \
-            prev = MPIU_Handle_obj_alloc_unsafe(&MPID_Request_mem);    \
-            prev->next = NULL;                                         \
-            assert(prev);                                              \
-            for (i = 1; i < MPID_REQUEST_TLS_MAX; ++i) {               \
-                cur = MPIU_Handle_obj_alloc_unsafe(&MPID_Request_mem); \
-                assert(cur);                                           \
-                cur->next = prev;                                      \
-                prev = cur;                                            \
-            }                                                          \
-            MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);                         \
-            MPID_THREADPRIV_FIELD(request_handles) = cur;              \
-            MPID_THREADPRIV_FIELD(request_handle_count) += MPID_REQUEST_TLS_MAX;    \
-        }                                                              \
-        (req) = MPID_THREADPRIV_FIELD(request_handles);                \
-        MPID_THREADPRIV_FIELD(request_handles) = req->next;            \
-        MPID_THREADPRIV_FIELD(request_handle_count) -= 1;              \
-    } while (0)
-#elif MPIU_HANDLE_ALLOCATION_METHOD == MPIU_HANDLE_ALLOCATION_MUTEX
 #  define MPIDI_Request_tls_alloc(req_) \
     do { \
 	(req_) = MPIU_Handle_obj_alloc(&MPID_Request_mem); \
         MPIU_DBG_MSG_P(MPIDI_CH3_DBG_CHANNEL,VERBOSE,		\
 	       "allocated request, handle=0x%08x", req_);\
     } while (0)
-#else
-#  error MPIU_HANDLE_ALLOCATION_METHOD not defined
-#endif
 
 
 /* If the channel doesn't initialize anything in the request, 
