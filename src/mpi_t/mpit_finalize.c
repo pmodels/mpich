@@ -77,13 +77,13 @@ static void MPIR_T_cat_env_finalize(void)
     if (cat_hash) {
         name2index_hash_t *current, *tmp;
         /* Free all entries */
-        HASH_ITER(hh, cat_hash, current, tmp) {
-            HASH_DEL(cat_hash, current);
+        MPL_HASH_ITER(hh, cat_hash, current, tmp) {
+            MPL_HASH_DEL(cat_hash, current);
             MPL_free(current);
         }
 
         /* Free cat_hash itself */
-        HASH_CLEAR(hh, cat_hash);
+        MPL_HASH_CLEAR(hh, cat_hash);
         cat_hash = NULL;
     }
 }
@@ -113,13 +113,13 @@ static void MPIR_T_cvar_env_finalize(void)
     if (cvar_hash) {
         name2index_hash_t *current, *tmp;
         /* Free all entries */
-        HASH_ITER(hh, cvar_hash, current, tmp) {
-            HASH_DEL(cvar_hash, current);
+        MPL_HASH_ITER(hh, cvar_hash, current, tmp) {
+            MPL_HASH_DEL(cvar_hash, current);
             MPL_free(current);
         }
 
         /* Free cvar_hash itself */
-        HASH_CLEAR(hh, cvar_hash);
+        MPL_HASH_CLEAR(hh, cvar_hash);
         cvar_hash = NULL;
     }
 }
@@ -146,13 +146,13 @@ static void MPIR_T_pvar_env_finalize(void)
         if (pvar_hashs[i]) {
             name2index_hash_t *current, *tmp;
             /* Free all entries */
-            HASH_ITER(hh, pvar_hashs[i], current, tmp) {
-                HASH_DEL(pvar_hashs[i], current);
+            MPL_HASH_ITER(hh, pvar_hashs[i], current, tmp) {
+                MPL_HASH_DEL(pvar_hashs[i], current);
                 MPL_free(current);
             }
 
             /* Free pvar_hashs[i] itself */
-            HASH_CLEAR(hh, pvar_hashs[i]);
+            MPL_HASH_CLEAR(hh, pvar_hashs[i]);
             pvar_hashs[i] = NULL;
         }
     }

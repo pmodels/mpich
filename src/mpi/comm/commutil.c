@@ -9,7 +9,7 @@
 #include "mpir_info.h"    /* MPIR_Info_free */
 
 #include "mpl_utlist.h"
-#include "mpir_uthash.h"
+#include "mpl_uthash.h"
 
 /* This is the utility file for comm that contains the basic comm items
    and storage management */
@@ -39,7 +39,7 @@ struct MPIR_Comm_hint_fn_elt {
     char name[MPI_MAX_INFO_KEY];
     MPIR_Comm_hint_fn_t fn;
     void *state;
-    UT_hash_handle hh;
+    MPL_UT_hash_handle hh;
 };
 static struct MPIR_Comm_hint_fn_elt *MPID_hint_fns = NULL;
 
@@ -1091,7 +1091,7 @@ int MPII_Comm_apply_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
 
         strncpy(hint_name, hint->key, MPI_MAX_INFO_KEY);
 
-        HASH_FIND_STR(MPID_hint_fns, hint_name, hint_fn);
+        MPL_HASH_FIND_STR(MPID_hint_fns, hint_name, hint_fn);
 
         /* Skip hints that MPICH doesn't recognize. */
         if (hint_fn) {
@@ -1121,8 +1121,8 @@ static int free_hint_handles(void *ignore)
     MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_FREE_HINT_HANDLES);
 
     if (MPID_hint_fns) {
-        HASH_ITER(hh, MPID_hint_fns, curr_hint, tmp) {
-            HASH_DEL(MPID_hint_fns, curr_hint);
+        MPL_HASH_ITER(hh, MPID_hint_fns, curr_hint, tmp) {
+            MPL_HASH_DEL(MPID_hint_fns, curr_hint);
             MPL_free(curr_hint);
         }
     }
@@ -1154,7 +1154,7 @@ int MPIR_Comm_register_hint(const char *hint_key, MPIR_Comm_hint_fn_t fn, void *
     hint_elt->state = state;
     hint_elt->fn = fn;
 
-    HASH_ADD_STR(MPID_hint_fns, name, hint_elt);
+    MPL_HASH_ADD_STR(MPID_hint_fns, name, hint_elt);
 
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_REGISTER_HINT);
     return mpi_errno;
