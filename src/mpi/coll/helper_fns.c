@@ -760,6 +760,7 @@ int MPIC_Waitall(int numreq, MPID_Request *requests[], MPI_Status statuses[], MP
         to check for the error bit in the tag below, we should initialize all
         tag fields here. */
         status_array[i].MPI_TAG = 0;
+        status_array[i].MPI_SOURCE = MPI_PROC_NULL;
 
         /* Convert the MPID_Request objects to MPI_Request objects */
         request_ptrs[i] = requests[i]->handle;
