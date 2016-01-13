@@ -25,9 +25,6 @@ int MPI_File_get_view(MPI_File fh, MPI_Offset *disp, MPI_Datatype *etype, MPI_Da
 #define MPIO_BUILD_PROFILING
 #include "mpioprof.h"
 #endif
-#ifdef MPISGI
-#include "mpisgi2.h"
-#endif
 
 /*@
     MPI_File_get_view - Returns the file view

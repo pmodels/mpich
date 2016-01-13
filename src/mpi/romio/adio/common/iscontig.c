@@ -5,9 +5,6 @@
  */
 
 #include "adio.h"
-/* #ifdef MPISGI
-#include "mpisgi2.h"
-#endif */
 
 #if defined(MPICH)
 /* MPICH also provides this routine */
@@ -83,12 +80,8 @@ void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
 			      adds, types); 
 	ADIOI_Datatype_iscontig(types[0], flag);
 
-#ifndef MPISGI
-/* There is a bug in SGI's impl. of MPI_Type_get_contents. It doesn't
-   return new datatypes. Therefore no need to free. */
 	MPI_Type_get_envelope(types[0], &ni, &na, &nt, &cb);
 	if (cb != MPI_COMBINER_NAMED) MPI_Type_free(types);
-#endif
 
 	ADIOI_Free(ints);
 	ADIOI_Free(adds);

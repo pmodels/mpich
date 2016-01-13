@@ -6,9 +6,6 @@
 
 #include "adio.h"
 #include "adio_extern.h"
-/* #ifdef MPISGI
-#include "mpisgi2.h"
-#endif */
 
 #ifdef USE_DBG_LOGGING
   #define FLATTEN_DEBUG 1
@@ -816,15 +813,11 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
 	MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-#ifndef MPISGI
-/* There is a bug in SGI's impl. of MPI_Type_get_contents. It doesn't
-   return new datatypes. Therefore no need to free. */
     for (i=0; i<ntypes; i++) {
  	MPI_Type_get_envelope(types[i], &old_nints, &old_nadds, &old_ntypes,
  			      &old_combiner);
  	if (old_combiner != MPI_COMBINER_NAMED) MPI_Type_free(types+i);
     }
-#endif
 
     ADIOI_Free(ints);
     ADIOI_Free(adds);
@@ -1104,15 +1097,11 @@ MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, MPI_Count *curr_i
 	MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-#ifndef MPISGI
-/* There is a bug in SGI's impl. of MPI_Type_get_contents. It doesn't
-   return new datatypes. Therefore no need to free. */
     for (i=0; i<ntypes; i++) {
  	MPI_Type_get_envelope(types[i], &old_nints, &old_nadds, &old_ntypes,
  			      &old_combiner);
  	if (old_combiner != MPI_COMBINER_NAMED) MPI_Type_free(types+i);
     }
-#endif
 
     ADIOI_Free(ints);
     ADIOI_Free(adds);
