@@ -89,7 +89,7 @@ extern FORTRAN_API void FORT_CALL mpi_file_get_group_( MPI_Fint *, MPI_Group*, M
 #endif
 #endif
 
-#if defined(MPIHP) || defined(MPILAM)
+#if defined(MPIHP)
 /* Prototype to keep compiler happy */
 void mpi_file_get_group_(MPI_Fint *fh, MPI_Fint *group, MPI_Fint *ierr );
 

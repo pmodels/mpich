@@ -92,7 +92,7 @@ extern FORTRAN_API void FORT_CALL mpi_file_open_( MPI_Fint *, char * FORT_MIXED_
 #endif
 #endif
 
-#if defined(MPIHP) || defined(MPILAM)
+#if defined(MPIHP)
 /* Prototype to keep compiler happy */
 void mpi_file_open_(MPI_Fint *comm,char *filename,MPI_Fint *amode,
 		    MPI_Fint *info, MPI_Fint *fh, MPI_Fint *ierr, int str_len );

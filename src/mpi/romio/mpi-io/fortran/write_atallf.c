@@ -89,7 +89,7 @@ extern FORTRAN_API void FORT_CALL mpi_file_write_at_all_( MPI_Fint *, MPI_Offset
 #endif
 #endif
 
-#if defined(MPIHP) || defined(MPILAM)
+#if defined(MPIHP)
 /* Prototype to keep compiler happy */
 void mpi_file_write_at_all_(MPI_Fint *fh,MPI_Offset *offset,void *buf,
                           MPI_Fint *count,MPI_Fint *datatype,

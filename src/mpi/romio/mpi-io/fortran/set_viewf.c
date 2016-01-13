@@ -92,7 +92,7 @@ extern FORTRAN_API void FORT_CALL mpi_file_set_view_( MPI_Fint *, MPI_Offset *, 
 #endif
 #endif
 
-#if defined(MPIHP) || defined(MPILAM)
+#if defined(MPIHP)
 /* Prototype to keep compiler happy */
 void mpi_file_set_view_(MPI_Fint *fh,MPI_Offset *disp,MPI_Fint *etype,
    MPI_Fint *filetype,char *datarep,MPI_Fint *info, MPI_Fint *ierr,

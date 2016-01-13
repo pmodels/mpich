@@ -89,7 +89,7 @@ extern FORTRAN_API void FORT_CALL mpi_file_iwrite_shared_( MPI_Fint *, void*, MP
 #endif
 #endif
 
-#if defined(MPIHP) || defined(MPILAM)
+#if defined(MPIHP)
 /* Prototype to keep compiler happy */
 void mpi_file_iwrite_shared_(MPI_Fint *fh,void *buf,MPI_Fint *count,
 			     MPI_Fint *datatype,MPI_Fint *request, MPI_Fint *ierr );

@@ -89,7 +89,7 @@ extern FORTRAN_API void FORT_CALL mpi_file_read_at_( MPI_Fint *, MPI_Offset *, v
 #endif
 #endif
 
-#if defined(MPIHP) || defined(MPILAM)
+#if defined(MPIHP)
 /* Prototype to keep compiler happy */
 void mpi_file_read_at_(MPI_Fint *fh,MPI_Offset *offset,void *buf,
        MPI_Fint *count,MPI_Fint *datatype,MPI_Status *status, MPI_Fint *ierr );
