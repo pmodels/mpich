@@ -8,7 +8,7 @@
 #include "adio.h"
 #include "mpi.h"
 
-#if defined(MPICH2) || (defined(MPICH) && (MPICH_NAME >= 3))
+#if defined(HAVE_MPI_STATUS_SET_ELEMENTS_X)
 /* Not quite correct, but much closer for MPI2 */
 /* TODO: still needs to handle partial datatypes and situations where the mpi
  * implementation fills status with something other than bytes (globus2 might
@@ -22,16 +22,5 @@ int MPIR_Status_set_bytes(MPI_Status *status, MPI_Datatype datatype,
     if (status != MPI_STATUS_IGNORE)
         MPI_Status_set_elements_x(status, MPI_BYTE, nbytes);
     return MPI_SUCCESS;
-}
-#elif defined(MPISGI)
-int MPIR_Status_set_bytes(MPI_Status *status, MPI_Datatype datatype,
-		MPI_Count nbytes)
-{
-  /* Bogusness to silence compiler warnings */
-  if (datatype == MPI_DATATYPE_NULL);
-
-  if (status != MPI_STATUS_IGNORE)
-	  status->st_length = nbytes;
-  return MPI_SUCCESS;
 }
 #endif
