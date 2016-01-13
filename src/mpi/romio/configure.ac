@@ -1386,10 +1386,6 @@ if test -n "$mpi_sgi"; then
    AC_DEFINE(MPISGI,1,[Define if SGI MPI])
 fi
 
-if test -n "$mpi_lam"; then
-   AC_DEFINE(MPILAM,1,[Define if using LAM/MPI])
-fi
-
 if test -n "$mpi_hp"; then
    AC_DEFINE(MPIHP,1,[Define if using HP MPI])
    if test "$NOF77" = 0; then
@@ -1430,8 +1426,6 @@ AC_SUBST(master_topbuild_dir)
 # The following definitions are needed within adio/common/status_setb.c
 if test "$FROM_MPICH" = yes ; then
    AC_DEFINE(ROMIO_INSIDE_MPICH,1,[Define if compiling within MPICH])
-elif test "$FROM_MPILAM" = yes ; then
-   AC_DEFINE(MPILAM,1,[Define if compiling within LAM/MPI])
 fi
 
 if test "$FROM_MPICH" = no ; then
@@ -1511,20 +1505,6 @@ if test $FROM_OMPI = yes ; then
    AC_DEFINE(MPIO_BUILD_PROFILING, 1, [hack to make ROMIO build without profiling])
    DEFINE_HAVE_MPI_GREQUEST="#define HAVE_MPI_GREQUEST"
    AC_DEFINE(HAVE_DECL_MPI_COMBINER_HINDEXED_BLOCK, 1, [Define if MPI library provides HINDEXED_BLOCK datatype])
-elif test $FROM_LAM = yes ; then
-   # LAM does have the status set bytes functionality
-   AC_DEFINE(HAVE_STATUS_SET_BYTES,1,[Define if have MPIR_Status_set_bytes])
-        
-   # Used in the tests/ subdirectory for after ROMIO is built
-   TEST_CC=mpicc
-   TEST_F77=mpifort
-   MPIRUN=mpirun 
-   MPI_LIB=
-   ROMIO_INCLUDE=
-   USER_CFLAGS=
-   USER_FFLAGS=
-   TEST_LIBNAME=
-   EXTRA_DIRS="mpi-io/fortran mpi2-other/info mpi2-other/info/fortran mpi2-other/array mpi2-other/array/fortran"
 elif test $FROM_MPICH = yes ; then
    # For now, separate the mpich from mpich cases
    MPICH_HOME=`dirname $ROMIO_HOME`

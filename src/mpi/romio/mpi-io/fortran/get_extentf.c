@@ -89,7 +89,7 @@ extern FORTRAN_API void FORT_CALL mpi_file_get_type_extent_( MPI_Fint *, MPI_Fin
 #endif
 #endif
 
-#if defined(MPIHP) || defined(MPILAM)
+#if defined(MPIHP)
 /* Prototype to keep compiler happy */
 void mpi_file_get_type_extent_(MPI_Fint *fh,MPI_Fint *datatype,
 			       MPI_Fint *extent, MPI_Fint *ierr );

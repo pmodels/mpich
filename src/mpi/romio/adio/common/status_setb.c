@@ -23,7 +23,7 @@ int MPIR_Status_set_bytes(MPI_Status *status, MPI_Datatype datatype,
         MPI_Status_set_elements_x(status, MPI_BYTE, nbytes);
     return MPI_SUCCESS;
 }
-#elif defined(MPILAM) || defined(MPISGI)
+#elif defined(MPISGI)
 int MPIR_Status_set_bytes(MPI_Status *status, MPI_Datatype datatype,
 		MPI_Count nbytes)
 {
