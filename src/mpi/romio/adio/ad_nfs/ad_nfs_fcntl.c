@@ -7,9 +7,6 @@
 
 #include "ad_nfs.h"
 #include "adio_extern.h"
-/* #ifdef MPISGI
-#include "mpisgi2.h"
-#endif */
 
 void ADIOI_NFS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct, int *error_code)
 {
