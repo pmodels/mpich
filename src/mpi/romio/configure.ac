@@ -1487,6 +1487,7 @@ if test $FROM_OMPI = yes ; then
    # Open MPI does have the status set bytes functionality
 
    AC_DEFINE(HAVE_STATUS_SET_BYTES,1,[Define if have MPIR_Status_set_bytes])
+   AC_DEFINE(HAVE_MPI_STATUS_SET_ELEMENTS_X, 1, [Define if MPI library provides MPI_STATUS_SET_ELEMENTS_X])
 
    # Used in the tests/ subdirectory for after ROMIO is built
 
