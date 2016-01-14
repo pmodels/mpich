@@ -44,7 +44,11 @@ static inline void backtrace_libback(FILE *output)
     btstate = backtrace_create_state(NULL, 1, NULL, NULL);
     backtrace_print(btstate, 0, output);
 }
-#elif defined MPL_HAVE_LIBUNWIND
+/* we need not only the symbols but the header file too (for the cursor and
+ * context), so tighten up when we take the libunwind path.  Thanks
+ * Siegmar.Gross@informatik.hs-fulda.de for the bug report about systems with
+ * libunwind libraries but no libunwind development headers */
+#elif defined MPL_HAVE_LIBUNWIND && defined(MPL_HAVE_LIBUNWIND_H)
 static inline void backtrace_libunwind(FILE *output)
 {
     unw_cursor_t cursor;
@@ -118,7 +122,7 @@ void MPL_backtrace_show(FILE *output)
 {
 #ifdef MPL_HAVE_LIBBACKTRACE
     backtrace_libback(output);
-#elif defined MPL_HAVE_LIBUNWIND
+#elif defined MPL_HAVE_LIBUNWIND && defined(MPL_HAVE_LIBUNWIND_H)
     /* libunwind is not able to get line numbers without forking off to
      * addr2line (?)*/
     backtrace_libunwind(output);
