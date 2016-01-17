@@ -800,7 +800,7 @@ sub RunMPIProgram {
 	}
     }
     if ($found_error) {
-	&RunTestFailed( $programname, $np, $curdir, $inline, $xfail );
+	&RunTestFailed( $programname, $np, $timeout, $curdir, $inline, $xfail );
     }
     else { 
 	&RunTestPassed( $programname, $np, $curdir, $xfail );
@@ -920,7 +920,7 @@ sub BuildMPIProgram {
 	# in the summary file (which is otherwise written by the
 	# RunMPIProgram step)
 	&RunPreMsg( $programname, $np, $curdir );
-	&RunTestFailed( $programname, $np, $curdir, "Failed to build $programname; $output", $xfail );
+	&RunTestFailed( $programname, $np, $timeout, $curdir, "Failed to build $programname; $output", $xfail );
 	&RunPostMsg( $programname, $np, $curdir );
     }
     return $rc;
@@ -1198,6 +1198,7 @@ sub RunTestPassed {
 sub RunTestFailed {
     my $programname = shift;
     my $np = shift;
+    my $timeout = shift;
     my $workdir = shift;
     my $output = shift;
     my $xfail = shift;
@@ -1225,6 +1226,7 @@ sub RunTestFailed {
         print TAPOUT "  Directory: $workdir\n";
         print TAPOUT "  File: $programname\n";
         print TAPOUT "  Num-procs: $np\n";
+        print TAPOUT "  Timeout: $timeout\n";
         print TAPOUT "  Date: \"" . localtime() . "\"\n";
 
         # The following would be nice, but it leads to unfortunate formatting in
@@ -1267,6 +1269,7 @@ sub RunTestFailed {
         print JUNITOUT "  Directory: $workdir\n";
         print JUNITOUT "  File: $programname\n";
         print JUNITOUT "  Num-procs: $np\n";
+        print JUNITOUT "  Timeout: $timeout\n";
         print JUNITOUT "  Date: \"" . localtime() . "\"\n";
 
         print JUNITOUT "  ...\n";
