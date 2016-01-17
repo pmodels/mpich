@@ -65,6 +65,7 @@ $np_default = 2;         # Default number of processes to use
 $np_max     = -1;        # Maximum number of processes to use (overrides any
                          # value in the test list files.  -1 is Infinity
 $defaultTimeLimit = 180; # default timeout
+$defaultTimeLimitMultiplier = 1.0; # default multiplier for timeout limit
 
 $srcdir = ".";           # Used to set the source dir for testlist files
 
@@ -112,6 +113,7 @@ my $program_wrapper = '';
 #   RUNTESTS_SHOWPROGRESS
 #   MPITEST_STOPTEST
 #   MPITEST_TIMEOUT
+#   MPITEST_TIMEOUT_MULTIPLIER
 #   MPITEST_PROGRAM_WRAPPER (Value is added after -np but before test
 #                            executable.  Tools like valgrind may be inserted
 #                            this way.)
@@ -134,6 +136,10 @@ if (defined($ENV{"MPITEST_TIMEOUT"})) {
     $defaultTimeLimit = $ENV{"MPITEST_TIMEOUT"};
 }
  
+if (defined($ENV{"MPITEST_TIMEOUT_MULTIPLIER"})) {
+    $defaultTimeLimitMultiplier = $ENV{"MPITEST_TIMEOUT_MULTIPLIER"};
+}
+
 # Define this to leave the XML output file open to receive additional data
 if (defined($ENV{'NOXMLCLOSE'}) && $ENV{'NOXMLCLOSE'} eq 'YES') {
     $closeXMLOutput = 0;
@@ -694,6 +700,7 @@ sub RunMPIProgram {
     if (defined($timeLimit) && $timeLimit =~ /^\d+$/) {
 	$timeout = $timeLimit;
     }
+    $timeout *= $defaultTimeLimitMultiplier;
     $ENV{"MPIEXEC_TIMEOUT"} = $timeout;
 
     # Handle the ppn (processes per node) option.
@@ -826,6 +833,7 @@ sub AddMPIProgram {
 	# want to treat these also as "run manually".
 	$timeout = $timeLimit;
     }
+    $timeout *= $defaultTimeLimitMultiplier;
     print BATOUT "export MPIEXEC_TIMEOUT=$timeout\n";
     
     # Run the optional setup routine. For example, the timeout tests could
