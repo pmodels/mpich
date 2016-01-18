@@ -88,8 +88,8 @@ void ADIOI_Shfp_fname(ADIO_File fd, int rank, int *error_code)
 	}
 	    
 	MPL_snprintf(tmp, 128, ".shfp.%d.%d", pid, i);
-	/* ADIOI_Strnapp will return non-zero if truncated.  That's ok */
-	ADIOI_Strnapp(fd->shared_fp_fname, tmp, PATH_MAX);
+	/* MPL_strnapp will return non-zero if truncated.  That's ok */
+	MPL_strnapp(fd->shared_fp_fname, tmp, PATH_MAX);
 	
 	len = (int)strlen(fd->shared_fp_fname);
 	MPI_Bcast(&len, 1, MPI_INT, 0, fd->comm);

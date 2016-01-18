@@ -920,7 +920,6 @@ int ADIOI_Set_lock64(FDTYPE fd_sys, int cmd, int type, ADIO_Offset offset, int w
 #define ADIOI_Free(a) ADIOI_Free_fn(a,__LINE__,__FILE__)
 
 int ADIOI_Strncpy( char *outstr, const char *instr, size_t maxlen );
-int ADIOI_Strnapp( char *, const char *, size_t );
 char *ADIOI_Strdup( const char * );
 
 /* the current MPI standard is not const-correct, and modern compilers warn
