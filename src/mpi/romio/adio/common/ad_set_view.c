@@ -48,10 +48,8 @@ void ADIO_Set_view(ADIO_File fd, ADIO_Offset disp, MPI_Datatype etype,
 	    MPI_Type_contiguous(1, filetype, &copy_filetype);
 	    MPI_Type_commit(&copy_filetype);
 	    fd->filetype = copy_filetype;
-	    ADIOI_Flatten_datatype(fd->filetype);
-            /* this function will not flatten the filetype if it turns out
-               to be all contiguous. */
 	}
+	ADIOI_Flatten_datatype(fd->filetype);
 
 	MPI_Type_size_x(fd->etype, &(fd->etype_size));
 	fd->disp = disp;

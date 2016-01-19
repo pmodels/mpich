@@ -78,7 +78,7 @@ void ADIOI_Calc_file_realms (ADIO_File fd, ADIO_Offset min_st_offset,
 	MPI_Type_contiguous ((max_end_offset - min_st_offset + 1), MPI_BYTE,
 			     file_realm_types);
 	MPI_Type_commit (file_realm_types);
-	ADIOI_Add_contig_flattened (*file_realm_types);
+	ADIOI_Flatten_datatype(*file_realm_types);
     }
     else if (fd->file_realm_st_offs == NULL) {
 	file_realm_st_offs = (ADIO_Offset *)
