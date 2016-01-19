@@ -11,6 +11,24 @@
   #define FLATTEN_DEBUG 1
 #endif
 
+static ADIOI_Flatlist_node* flatlist_node_new(MPI_Datatype datatype,
+	MPI_Count count)
+{
+    ADIOI_Flatlist_node * flat;
+    flat = ADIOI_Malloc(sizeof(ADIOI_Flatlist_node));
+
+    flat->type = datatype;
+    flat->blocklens = NULL;
+    flat->indices = NULL;
+    flat->lb_idx = flat->ub_idx = -1;
+    flat->refct = 1;
+    flat->count = count;
+
+    flat->blocklens = (ADIO_Offset *) ADIOI_Malloc(flat->count * sizeof(ADIO_Offset));
+    flat->indices = (ADIO_Offset *) ADIOI_Malloc(flat->count * sizeof(ADIO_Offset));
+    return flat;
+}
+
 void ADIOI_Optimize_flattened(ADIOI_Flatlist_node *flat_type);
 /* flatten datatype and add it to Flatlist */
 ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
@@ -18,7 +36,7 @@ ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
 #ifdef HAVE_MPIR_TYPE_FLATTEN
     MPI_Aint flatten_idx;
 #endif
-    MPI_Count curr_index=0;
+    MPI_Count flat_count, curr_index=0;
     int is_contig, flag;
     ADIOI_Flatlist_node *flat;
 
@@ -31,12 +49,9 @@ ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
 
     /* check if necessary to flatten. */
  
-    /* is it entirely contiguous? */
-    ADIOI_Datatype_iscontig(datatype, &is_contig);
   #ifdef FLATTEN_DEBUG 
   DBG_FPRINTF(stderr,"ADIOI_Flatten_datatype:: is_contig %#X\n",is_contig);
   #endif
-    if (is_contig) return NULL;
 
     /* has it already been flattened? */
     MPI_Type_get_attr(datatype, ADIOI_Flattened_type_keyval, &flat, &flag);
@@ -47,26 +62,26 @@ ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
       return flat;
     }
 
-    /* flatten and add to the list */
-    flat = ADIOI_Malloc(sizeof(ADIOI_Flatlist_node));
+    /* is it entirely contiguous? */
+    ADIOI_Datatype_iscontig(datatype, &is_contig);
+    /* it would be great if ADIOI_Count_contiguous_blocks and the rest of the
+     * flattening code operated on the built-in named types, but
+     * it recursively processes types, stopping when it hits a named type. So
+     * we will do the little bit of work that named types require right here,
+     * and avoid touching the scary flattening code. */
 
-    flat->type = datatype;
-    flat->blocklens = NULL;
-    flat->indices = NULL;
-    flat->lb_idx = flat->ub_idx = -1;
-    flat->refct = 1;
-
-    flat->count = ADIOI_Count_contiguous_blocks(datatype, &curr_index);
-#ifdef FLATTEN_DEBUG 
-    DBG_FPRINTF(stderr,"ADIOI_Flatten_datatype:: count %llX, cur_idx = %#llX\n",flat->count,curr_index);
-#endif
-/*    DBG_FPRINTF(stderr, "%d\n", flat->count);*/
-
-    if (flat->count) {
-	flat->blocklens = (ADIO_Offset *) ADIOI_Malloc(flat->count * sizeof(ADIO_Offset));
-	flat->indices = (ADIO_Offset *) ADIOI_Malloc(flat->count * sizeof(ADIO_Offset));
+    if (is_contig)
+	flat_count = 1;
+    else {
+	flat_count = ADIOI_Count_contiguous_blocks(datatype, &curr_index);
     }
-	
+    /* flatten and add to datatype */
+    flat = flatlist_node_new(datatype, flat_count);
+    if (is_contig) {
+	MPI_Type_size_x(datatype, &(flat->blocklens[0]));
+	flat->indices[0] = 0;
+    } else {
+
     curr_index = 0;
 #ifdef HAVE_MPIR_TYPE_FLATTEN
     flatten_idx = (MPI_Aint) flat->count;
@@ -94,6 +109,7 @@ ADIOI_Flatlist_node *ADIOI_Flatten_datatype(MPI_Datatype datatype)
              );
   }
 #endif
+    }
     MPI_Type_set_attr(datatype, ADIOI_Flattened_type_keyval, flat);
     return flat;
 

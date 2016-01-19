@@ -58,51 +58,6 @@ void ADIOI_Print_flatlist_node(ADIOI_Flatlist_node *flatlist_node_p)
     fprintf(stderr, "\n");
 }
 
-/* delete this function when the flatten code adds a flatteed representation to
- * built-in datatypes */
-/* Since ADIOI_Flatten_datatype won't add a contig datatype to the
- * ADIOI_Flatlist, we can force it to do so with this function. */
-ADIOI_Flatlist_node * ADIOI_Add_contig_flattened(MPI_Datatype contig_type)
-{
-#if 0
-    MPI_Count contig_type_sz = -1;
-    ADIOI_Flatlist_node *flat_node_p = ADIOI_Flatlist;
-    
-    /* Add contig type to the end of the list if it doesn't already
-     * exist. */
-    while (flat_node_p->next)
-    {
-	if (flat_node_p->type == contig_type)
-	    return flat_node_p;
-	flat_node_p = flat_node_p->next;
-    }
-    if (flat_node_p->type == contig_type)
-	return flat_node_p;
-
-    MPI_Type_size_x(contig_type, &contig_type_sz);
-    if ((flat_node_p->next = (ADIOI_Flatlist_node *) ADIOI_Malloc
-	 (sizeof(ADIOI_Flatlist_node))) == NULL)
-    {
-	fprintf(stderr, "ADIOI_Add_contig_flattened: malloc next failed\n");
-    }
-    flat_node_p = flat_node_p->next;
-    flat_node_p->type = contig_type;
-    if ((flat_node_p->blocklens = (ADIO_Offset *) ADIOI_Malloc(sizeof(ADIO_Offset))) == NULL)
-    {
-	fprintf(stderr, "ADIOI_Flatlist_node: malloc blocklens failed\n");
-    }
-    if ((flat_node_p->indices = (ADIO_Offset *) 
-	 ADIOI_Malloc(sizeof(ADIO_Offset))) == NULL)
-    {
-	fprintf(stderr, "ADIOI_Flatlist_node: malloc indices failed\n");
-    }
-    flat_node_p->blocklens[0] = contig_type_sz;
-    flat_node_p->indices[0] = 0;
-    flat_node_p->count = 1;
-    flat_node_p->next = NULL;
-#endif
-    return NULL;
-}
 
 /* ADIOI_Exchange_file_views - Sends all the aggregators the file
  * views and file view states of the clients.  It fills in the
@@ -150,7 +105,7 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
     MPI_Type_extent(datatype, &memtype_extent);
     if (memtype_sz == memtype_extent) {
 	memtype_is_contig = 1;
-	flat_mem_p = ADIOI_Add_contig_flattened(datatype);
+	flat_mem_p = ADIOI_Flatten_and_find(datatype);
 	flat_mem_p->blocklens[0] = memtype_sz*count;
     }
     else {
