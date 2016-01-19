@@ -140,7 +140,7 @@ M*/
 /*@
   MPIDU_Thread_yield - voluntarily relinquish the CPU, giving other threads an opportunity to run
 @*/
-#define MPIDU_Thread_same       MPIU_Thread_same
+#define MPIDU_Thread_yield      MPIU_Thread_yield
 
 /*
  *    Mutexes
