@@ -114,7 +114,7 @@ int ADIOI_Err_create_code(const char *myname, const char *filename, int my_errno
 		    MPIR_ERR_RECOVERABLE, myname, __LINE__,
 		    MPI_ERR_QUOTA,
 		    "**filequota", 0);
-
+	    break;
         default:
             error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                               myname, __LINE__, MPI_ERR_IO, "**io",
