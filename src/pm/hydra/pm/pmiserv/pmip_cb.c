@@ -204,7 +204,7 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
 
 static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 {
-    char *buf = NULL, *pmi_cmd = NULL, *args[MAX_PMI_ARGS] = { 0 };
+    char *buf = NULL, *pmi_cmd = NULL, **args = NULL;
     int closed, repeat, sent, i = -1, linelen, pid = -1;
     struct HYD_pmcd_hdr hdr;
     struct HYD_pmcd_pmip_pmi_handle *h;
@@ -301,6 +301,10 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         else
             HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v2;
 
+        HYDU_MALLOC(args, char **, MAX_PMI_ARGS * sizeof(char *), status);
+        for(i = 0;i < MAX_PMI_ARGS; i++)
+            args[i]= NULL;
+
         status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.pmi_version, &pmi_cmd, args);
         HYDU_ERR_POP(status, "unable to parse PMI command\n");
 
@@ -345,7 +349,10 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
   fn_exit:
     if (pmi_cmd)
         HYDU_FREE(pmi_cmd);
-    HYDU_free_strlist(args);
+    if (args) {
+        HYDU_free_strlist(args);
+        HYDU_free(args);
+    }
     if (buf)
         HYDU_FREE(buf);
     HYDU_FUNC_EXIT();
@@ -357,8 +364,8 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 
 static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
 {
-    int count, closed, sent;
-    char *buf = NULL, *pmi_cmd = NULL, *args[MAX_PMI_INTERNAL_ARGS] = { 0 };
+    int count, closed, sent, i;
+    char *buf = NULL, *pmi_cmd = NULL, **args = NULL;
     struct HYD_pmcd_pmip_pmi_handle *h;
     HYD_status status = HYD_SUCCESS;
 
@@ -371,6 +378,10 @@ static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
     HYDU_ASSERT(!closed, status);
 
     buf[hdr.buflen] = 0;
+
+    HYDU_MALLOC(args, char **, MAX_PMI_INTERNAL_ARGS * sizeof(char *), status);
+    for (i = 0; i < MAX_PMI_INTERNAL_ARGS; i++)
+        args[i] = NULL;
 
     status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.pmi_version, &pmi_cmd, args);
     HYDU_ERR_POP(status, "unable to parse PMI command\n");
@@ -402,7 +413,10 @@ static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
   fn_exit:
     if (pmi_cmd)
         HYDU_FREE(pmi_cmd);
-    HYDU_free_strlist(args);
+    if (args) {
+        HYDU_free_strlist(args);
+        HYDU_free(args);
+    }
     if (buf)
         HYDU_FREE(buf);
     HYDU_FUNC_EXIT();
