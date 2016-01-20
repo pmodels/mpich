@@ -160,7 +160,7 @@ int MPIU_external32_buffer_setup(const void * buf, int count, MPI_Datatype type,
 
     error_code = MPIU_write_external32_conversion_fn(buf, type, count, *newbuf);
     if (error_code != MPI_SUCCESS) {
-	ADIOI_Free(newbuf);
+	ADIOI_Free(*newbuf);
 	return error_code;
     }
     return MPI_SUCCESS;
