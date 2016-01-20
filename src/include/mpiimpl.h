@@ -122,6 +122,9 @@ int usleep(useconds_t usec);
 
 #include "mpir_type_defs.h"
 
+/* Routines for memory management */
+#include "mpimem.h"
+
 /* Overriding memcpy:
      This is a utility function for memory copy.  The device might use
      this directly or override it with a different device-specific
@@ -159,9 +162,6 @@ int usleep(useconds_t usec);
 /* ------------------------------------------------------------------------- */
 /* end of mpidebug.h */
 /* ------------------------------------------------------------------------- */
-
-/* Routines for memory management */
-#include "mpimem.h"
 
 #if defined HAVE_LIBHCOLL
 #include "../mpid/common/hcoll/hcollpre.h"
