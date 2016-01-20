@@ -256,7 +256,11 @@ M*/
   The thread is created in a detach state, meaning that is may not be waited upon.  If another thread needs to wait for this
   thread to complete, the threads must provide their own synchronization mechanism.
 @*/
-#define MPIDU_Thread_create       MPIU_Thread_create
+#define MPIDU_Thread_create(func_, data_, id_, err_ptr_)        \
+    do {                                                        \
+        MPIU_Thread_create(func_, data_, id_, err_ptr_);        \
+        MPIU_Assert(*err_ptr_ == 0);                            \
+    } while (0)
 
 /*@
   MPIDU_Thread_exit - exit from the current thread
@@ -286,7 +290,11 @@ M*/
 /*@
   MPIDU_Thread_yield - voluntarily relinquish the CPU, giving other threads an opportunity to run
 @*/
-#define MPIDU_Thread_yield      MPIU_Thread_yield
+#define MPIDU_Thread_yield(mutex_ptr_, err_ptr_)        \
+    do {                                                \
+        MPIU_Thread_yield(mutex_ptr_, err_ptr_);        \
+        MPIU_Assert(*err_ptr_ == 0);                    \
+    } while (0)
 
 /*
  *    Mutexes
@@ -299,7 +307,11 @@ M*/
 + mutex - mutex
 - err - error code (non-zero indicates an error has occurred)
 @*/
-#define MPIDU_Thread_mutex_create  MPIU_Thread_mutex_create
+#define MPIDU_Thread_mutex_create(mutex_ptr_, err_ptr_) \
+    do {                                                \
+        MPIU_Thread_mutex_create(mutex_ptr_, err_ptr_); \
+        MPIU_Assert(*err_ptr_ == 0);                    \
+    } while (0)
 
 /*@
   MPIDU_Thread_mutex_destroy - destroy an existing mutex
@@ -310,7 +322,11 @@ M*/
   Output Parameter:
 . err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
 @*/
-#define MPIDU_Thread_mutex_destroy  MPIU_Thread_mutex_destroy
+#define MPIDU_Thread_mutex_destroy(mutex_ptr_, err_ptr_)        \
+    do {                                                        \
+        MPIU_Thread_mutex_destroy(mutex_ptr_, err_ptr_);        \
+        MPIU_Assert(*err_ptr_ == 0);                            \
+    } while (0)
 
 /*@
   MPIDU_Thread_lock - acquire a mutex
@@ -318,7 +334,11 @@ M*/
   Input Parameter:
 . mutex - mutex
 @*/
-#define MPIDU_Thread_mutex_lock MPIU_Thread_mutex_lock
+#define MPIDU_Thread_mutex_lock(mutex_ptr_, err_ptr_)   \
+    do {                                                \
+        MPIU_Thread_mutex_lock(mutex_ptr_, err_ptr_);   \
+        MPIU_Assert(*err_ptr_ == 0);                    \
+    } while (0)
 
 /*@
   MPIDU_Thread_unlock - release a mutex
@@ -326,7 +346,11 @@ M*/
   Input Parameter:
 . mutex - mutex
 @*/
-#define MPIDU_Thread_mutex_unlock MPIU_Thread_mutex_unlock
+#define MPIDU_Thread_mutex_unlock(mutex_ptr_, err_ptr_) \
+    do {                                                \
+        MPIU_Thread_mutex_unlock(mutex_ptr_, err_ptr_); \
+        MPIU_Assert(*err_ptr_ == 0);                    \
+    } while (0)
 
 /*
  * Condition Variables
@@ -339,7 +363,11 @@ M*/
 + cond - condition variable
 - err - location to store the error code; pointer may be NULL; error is zero for success, non-zero if a failure occurred
 @*/
-#define MPIDU_Thread_cond_create MPIU_Thread_cond_create
+#define MPIDU_Thread_cond_create(cond_ptr_, err_ptr_)   \
+    do {                                                \
+        MPIU_Thread_cond_create(cond_ptr_, err_ptr_);   \
+        MPIU_Assert(*err_ptr_ == 0);                    \
+    } while (0)
 
 /*@
   MPIDU_Thread_cond_destroy - destroy an existinga condition variable
@@ -351,7 +379,11 @@ M*/
 . err - location to store the error code; pointer may be NULL; error is zero
         for success, non-zero if a failure occurred
 @*/
-#define MPIDU_Thread_cond_destroy MPIU_Thread_cond_destroy
+#define MPIDU_Thread_cond_destroy(cond_ptr_, err_ptr_)  \
+    do {                                                \
+        MPIU_Thread_cond_destroy(cond_ptr_, err_ptr_);  \
+        MPIU_Assert(*err_ptr_ == 0);                    \
+    } while (0)
 
 /*@
   MPIDU_Thread_cond_wait - wait (block) on a condition variable
@@ -415,7 +447,11 @@ M*/
 - err - location to store the error code; pointer may be NULL; error is zero
         for success, non-zero if a failure occurred
 @*/
-#define MPIDU_Thread_tls_create MPIU_Thread_tls_create
+#define MPIDU_Thread_tls_create(exit_func_ptr_, tls_ptr_, err_ptr_)     \
+    do {                                                                \
+        MPIU_Thread_tls_create(exit_func_ptr_, tls_ptr_, err_ptr_);     \
+        MPIU_Assert(*(int *) err_ptr_ == 0);                            \
+    } while (0)
 
 /*@
   MPIDU_Thread_tls_destroy - destroy a thread local storage space
@@ -431,7 +467,11 @@ M*/
   The destroy function associated with the thread local storage will not
   called after the space has been destroyed.
 @*/
-#define MPIDU_Thread_tls_destroy MPIU_Thread_tls_destroy
+#define MPIDU_Thread_tls_destroy(tls_ptr_, err_ptr_)    \
+    do {                                                \
+        MPIU_Thread_tls_destroy(tls_ptr_, err_ptr_);    \
+        MPIU_Assert(*(int *) err_ptr_ == 0);            \
+    } while (0)
 
 /*@
   MPIDU_Thread_tls_set - associate a value with the current thread in the
@@ -458,7 +498,12 @@ M*/
   Output Parameter:
 . value - value associated with current thread
 @*/
-#define MPIDU_Thread_tls_get MPIU_Thread_tls_get
+#define MPIDU_Thread_tls_get(tls_ptr_, value_ptr_, err_ptr_)            \
+    do {                                                                \
+        MPIU_Thread_tls_get(tls_ptr_, value_ptr_, err_ptr_);            \
+        MPIU_Assert_fmt_msg(*((int *) err_ptr_) == 0,                   \
+                            ("tls_get failed, err=%d (%s)", *((int *) err_ptr_), strerror(*((int *) err_ptr_)))); \
+    } while (0)
 
 
 #define MPIDU_THREADPRIV_INITKEY                                        \
