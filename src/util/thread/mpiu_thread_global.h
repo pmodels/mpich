@@ -18,9 +18,9 @@
 #define MPIUI_THREAD_CS_YIELD_ALLGRAN(mutex) MPIUI_THREAD_CS_YIELD_NONRECURSIVE("ALLGRAN", mutex)
 
 /* POBJ locks are all NO-OPs */
-#define MPIUI_THREAD_CS_ENTER_POBJ(mutex)
-#define MPIUI_THREAD_CS_EXIT_POBJ(mutex)
-#define MPIUI_THREAD_CS_YIELD_POBJ(mutex)
+#define MPIUI_THREAD_CS_ENTER_POBJ(mutex) do {} while (0)
+#define MPIUI_THREAD_CS_EXIT_POBJ(mutex) do {} while (0)
+#define MPIUI_THREAD_CS_YIELD_POBJ(mutex) do {} while (0)
 
 
 /* define a type for the completion counter */
