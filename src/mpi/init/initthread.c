@@ -207,7 +207,7 @@ static int thread_cs_init( void )
     MPID_THREADPRIV_INITKEY;
     MPID_THREADPRIV_INIT;
 
-    MPIU_DBG_MSG(THREAD,TYPICAL,"Created global mutex and private storage");
+    MPIU_DBG_MSG(INIT,TYPICAL,"Created global mutex and private storage");
     return MPI_SUCCESS;
 }
 
@@ -219,7 +219,7 @@ int MPIR_Thread_CS_Finalize( void )
 {
     int err;
 
-    MPIU_DBG_MSG(THREAD,TYPICAL,"Freeing global mutex and private storage");
+    MPIU_DBG_MSG(INIT,TYPICAL,"Freeing global mutex and private storage");
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
     MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);

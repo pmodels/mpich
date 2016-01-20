@@ -613,7 +613,7 @@ int MPID_nem_ptl_vc_terminated(MPIDI_VC_t *vc)
     MPIDI_FUNC_EXIT(MPID_NEM_PTL_VC_TERMINATED);
     return mpi_errno;
  fn_fail:
-    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
+    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
     goto fn_exit;
 }
 

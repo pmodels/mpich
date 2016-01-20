@@ -57,7 +57,7 @@ static int encode_buffer(char *dest, int dest_length, const char *src,
 	    *num_encoded = n;
 	    return MPIU_STR_TRUNCATED;
 	}
-	/*MPIU_DBG_MSG_FMT(OTHER,VERBOSE,(MPIU_DBG_FDEST," %c = %c%c", 
+	/*MPIU_DBG_MSG_FMT(STRING,VERBOSE,(MPIU_DBG_FDEST," %c = %c%c",
 	  ch, dest[0], dest[1]));*/
 	dest += num_used;
 	dest_length -= num_used;
@@ -99,7 +99,7 @@ static int decode_buffer(const char *str, char *dest, int length,
 	str++;
 	sscanf(hex, "%X", &value);
 	*dest = (char)value;
-	/*MPIU_DBG_MSG_FMT(OTHER,VERBOSE,(MPIU_DBG_FDEST," %s = %c",
+	/*MPIU_DBG_MSG_FMT(STRING,VERBOSE,(MPIU_DBG_FDEST," %s = %c",
 	  hex, *dest));*/
 	dest++;
 	n++;
@@ -721,7 +721,7 @@ int MPIU_Str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
     *maxlen_ptr = *maxlen_ptr - num_chars;
     if (*maxlen_ptr < 1)
     {
-	MPIU_DBG_MSG_S(OTHER,VERBOSE,
+	MPIU_DBG_MSG_S(STRING,VERBOSE,
                   "partial argument added to string: '%s'", *str_ptr);
 	**str_ptr = '\0';
 	return MPIU_STR_NOMEM;
@@ -755,7 +755,7 @@ int MPIU_Str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
     *maxlen_ptr = *maxlen_ptr - num_chars;
     if (*maxlen_ptr < 2)
     {
-	MPIU_DBG_MSG_S(OTHER,VERBOSE,
+	MPIU_DBG_MSG_S(STRING,VERBOSE,
 		       "partial argument added to string: '%s'", *str_ptr);
 	**orig_str_ptr = '\0';
 	return MPIU_STR_NOMEM;
@@ -852,7 +852,7 @@ int MPIU_Str_add_binary_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
     *maxlen_ptr = *maxlen_ptr - num_chars;
     if (*maxlen_ptr < 1)
     {
-	MPIU_DBG_MSG_S(OTHER,VERBOSE,
+	MPIU_DBG_MSG_S(STRING,VERBOSE,
 		       "partial argument added to string: '%s'", *str_ptr);
 	**str_ptr = '\0';
 	return MPIU_STR_NOMEM;
@@ -877,7 +877,7 @@ int MPIU_Str_add_binary_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
     *maxlen_ptr = *maxlen_ptr - num_chars;
     if (*maxlen_ptr < 2)
     {
-	MPIU_DBG_MSG_S(OTHER,VERBOSE,
+	MPIU_DBG_MSG_S(STRING,VERBOSE,
 		       "partial argument added to string: '%s'", *str_ptr);
 	**orig_str_ptr = '\0';
 	return MPIU_STR_NOMEM;

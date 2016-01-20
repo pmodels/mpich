@@ -232,6 +232,7 @@ typedef struct dbg_classname {
 } dbg_classname;
 
 static const dbg_classname classnames[] = {
+    { MPIU_DBG_INIT,          "INIT",          "init" },
     { MPIU_DBG_PT2PT,         "PT2PT",         "pt2pt" },
     { MPIU_DBG_THREAD,        "THREAD",        "thread" },
     { MPIU_DBG_ROUTINE_ENTER, "ROUTINE_ENTER", "routine_enter" },
@@ -247,12 +248,15 @@ static const dbg_classname classnames[] = {
     { MPIU_DBG_CH3_DISCONNECT,"CH3_DISCONNECT","ch3_disconnect" },
     { MPIU_DBG_CH3_PROGRESS,  "CH3_PROGRESS",  "ch3_progress" },
     { MPIU_DBG_CH3_CHANNEL,   "CH3_CHANNEL",   "ch3_channel" },
-    { MPIU_DBG_CH3_MSG,       "CH3_MSG",       "ch3_msg" },
     { MPIU_DBG_CH3_OTHER,     "CH3_OTHER",     "ch3_other" },
+    { MPIU_DBG_CH3_MSG,       "CH3_MSG",       "ch3_msg" },
     { MPIU_DBG_NEM_SOCK_DET,  "NEM_SOCK_DET",  "nem_sock_det"},
     { MPIU_DBG_VC,            "VC",            "vc"},
     { MPIU_DBG_REFCOUNT,      "REFCOUNT",      "refcount"},
     { MPIU_DBG_ROMIO,         "ROMIO",         "romio"},
+    { MPIU_DBG_HCOLL,         "HCOLL",         "hcoll"},
+    { MPIU_DBG_ASSERT,        "ASSERT",        "assert"},
+    { MPIU_DBG_STRING,        "STRING",        "string"},
     { MPIU_DBG_ERRHAND,       "ERRHAND",       "errhand"},
     { MPIU_DBG_ALL,           "ALL",           "all" }, 
     { 0,                      0,               0 }
