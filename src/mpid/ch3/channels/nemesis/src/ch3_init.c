@@ -208,7 +208,7 @@ int MPIDI_CH3_VC_Destroy(MPIDI_VC_t *vc )
     /* no need to destroy vc to self, this corresponds to the optimization above
      * in MPIDI_CH3_VC_Init */
     if (vc->pg == MPIDI_CH3I_my_pg && vc->pg_rank == MPIDI_CH3I_my_rank) {
-        MPIU_DBG_MSG_P(NEM_SOCK_DET, VERBOSE, "skipping self vc=%p", vc);
+        MPIU_DBG_MSG_P(VC, VERBOSE, "skipping self vc=%p", vc);
         goto fn_exit;
     }
 
