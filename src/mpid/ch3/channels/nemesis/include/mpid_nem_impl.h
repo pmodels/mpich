@@ -37,9 +37,10 @@ int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, MPI_Aint coun
                           MPIDI_msg_sz_t data_sz, MPI_Aint dt_true_lb, int rank, int tag, MPID_Comm * comm, int context_offset);
 int MPID_nem_lmt_RndvRecv(struct MPIDI_VC *vc, MPID_Request *rreq);
 
-#define MPID_nem_mpich_release_fbox(cell)                                                                     \
-    (OPA_store_release_int(&MPID_nem_mem_region.mailboxes.in[(cell)->pkt.mpich.source]->mpich.flag.value, 0), \
-     MPI_SUCCESS)
+#define MPID_nem_mpich_release_fbox(cell)                               \
+    do {                                                                \
+        OPA_store_release_int(&MPID_nem_mem_region.mailboxes.in[(cell)->pkt.mpich.source]->mpich.flag.value, 0); \
+    } while (0)
 
 /* initialize shared-memory MPI_Barrier variables */
 int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region);
