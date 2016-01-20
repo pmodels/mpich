@@ -947,7 +947,7 @@ int MPIDI_CH3I_Progress_init(void)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
 
-    MPIR_THREAD_CHECK_BEGIN
+    MPIR_THREAD_CHECK_BEGIN;
     /* FIXME should be appropriately abstracted somehow */
 #   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
     {
@@ -956,7 +956,7 @@ int MPIDI_CH3I_Progress_init(void)
         MPIU_Assert(err == 0);
     }
 #   endif
-    MPIR_THREAD_CHECK_END
+    MPIR_THREAD_CHECK_END;
 
     MPIDI_CH3I_shm_sendq.head = NULL;
     MPIDI_CH3I_shm_sendq.tail = NULL;
