@@ -85,9 +85,9 @@
 #define MPIUI_THREAD_CS_YIELD_ALLGRAN(mutex) MPIUI_THREAD_CS_YIELD_NONRECURSIVE("ALLGRAN", mutex)
 
 /* GLOBAL locks are all NO-OPs */
-#define MPIUI_THREAD_CS_ENTER_GLOBAL(mutex)
-#define MPIUI_THREAD_CS_EXIT_GLOBAL(mutex)
-#define MPIUI_THREAD_CS_YIELD_GLOBAL(mutex)
+#define MPIUI_THREAD_CS_ENTER_GLOBAL(mutex) do {} while (0)
+#define MPIUI_THREAD_CS_EXIT_GLOBAL(mutex) do {} while (0)
+#define MPIUI_THREAD_CS_YIELD_GLOBAL(mutex) do {} while (0)
 
 /* define a type for the completion counter */
 #include "opa_primitives.h"
