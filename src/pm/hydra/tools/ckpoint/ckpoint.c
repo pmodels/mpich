@@ -6,7 +6,6 @@
 
 #include "hydra.h"
 #include "ckpoint.h"
-#include "hydt_ftb.h"
 #ifdef HAVE_PTHREAD_H
 #include "pthread.h"
 #endif
@@ -66,7 +65,6 @@ HYD_status HYDT_ckpoint_init(const char *user_ckpointlib, int user_ckpoint_num)
 static void *ckpoint_thread(void *arg)
 {
     HYD_status status = HYD_SUCCESS;
-    char ftb_event_payload[HYDT_FTB_MAX_PAYLOAD_DATA];
 
 #if defined HAVE_BLCR
     if (!strcmp(HYDT_ckpoint_info.ckpointlib, "blcr")) {
@@ -77,8 +75,6 @@ static void *ckpoint_thread(void *arg)
     }
 #endif /* HAVE_BLCR */
 
-    HYDT_ftb_publish("FTB_MPI_PROCS_CKPTED", ftb_event_payload);
-
     ++HYDT_ckpoint_info.ckpoint_num;
 
   fn_exit:
@@ -86,7 +82,6 @@ static void *ckpoint_thread(void *arg)
     return (void *) (long) status;
 
   fn_fail:
-    HYDT_ftb_publish("FTB_MPI_PROCS_CKPT_FAIL", ftb_event_payload);
     goto fn_exit;
 
 }
@@ -153,7 +148,6 @@ HYD_status HYDT_ckpoint_restart(int pgid, int id, struct HYD_env * envlist, int 
     HYD_status status = HYD_SUCCESS;
     struct stat st;
     int ret;
-    char ftb_event_payload[HYDT_FTB_MAX_PAYLOAD_DATA];
 
     HYDU_FUNC_ENTER();
 
@@ -176,8 +170,6 @@ HYD_status HYDT_ckpoint_restart(int pgid, int id, struct HYD_env * envlist, int 
     }
 #endif /* HAVE_BLCR */
 
-    HYDT_ftb_publish("FTB_MPI_PROCS_RESTARTED", ftb_event_payload);
-
     /* next checkpoint number should be the one after the one we restarted from */
     ++HYDT_ckpoint_info.ckpoint_num;
 
@@ -186,6 +178,5 @@ HYD_status HYDT_ckpoint_restart(int pgid, int id, struct HYD_env * envlist, int 
     return status;
 
   fn_fail:
-    HYDT_ftb_publish("FTB_MPI_PROCS_RESTART_FAIL", ftb_event_payload);
     goto fn_exit;
 }
