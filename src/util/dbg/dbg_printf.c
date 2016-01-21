@@ -473,7 +473,7 @@ int MPIU_DBG_PreInit( int *argc_p, char ***argv_p, int wtimeNotReady )
 }
 
 int MPIU_DBG_Init( int *argc_p, char ***argv_p, int has_args, int has_env, 
-		   int wrank )
+		   int wnum, int wrank )
 {
     int ret;
     FILE *dbg_fp = NULL;
@@ -510,6 +510,7 @@ int MPIU_DBG_Init( int *argc_p, char ***argv_p, int has_args, int has_env,
     if (!has_args) 
 	dbg_process_args( argc_p, argv_p );
 
+    world_num = wnum;
     world_rank = wrank;
 
     if (which_rank >= 0 && which_rank != wrank) {
@@ -706,7 +707,6 @@ static int dbg_get_filename(char *filename, int len)
     int withinMworld = 0,         /* True if within an @W...@ */
 	withinMthread = 0;        /* True if within an @T...@ */
     /* FIXME: Need to know how many MPI_COMM_WORLDs are known */
-    int nWorld = 1;
 #ifdef MPICH_IS_THREADED
     unsigned long long int threadID = 0;
     int nThread = 2;
@@ -717,9 +717,7 @@ static int dbg_get_filename(char *filename, int len)
     char *pDest;
     const char *p;
 
-    /* FIXME: This is a hack to handle the common case of two worlds */
-    if (MPIR_Process.comm_parent != NULL) {
-	nWorld = 2;
+    if (world_num == 1) {
 	world_numAsChar[0] = '1';
 	world_numAsChar[1] = '\0';
     }
@@ -765,7 +763,7 @@ static int dbg_get_filename(char *filename, int len)
                 }
             }
         }
-        else if ( (withinMworld && nWorld == 1) ||
+        else if ( (withinMworld && world_num == 0) ||
                   (withinMthread && nThread == 1) ) {
             /* Simply skip this character since we're not showing
                this string */
@@ -798,7 +796,6 @@ static int dbg_get_filename(char *filename, int len)
 #endif /* MPICH_IS_THREADED */
             }
             else if (*p == 'w') {
-                /* FIXME: Get world number */
                 /* *pDest++ = '0'; */
                 *pDest = 0;
                 MPL_strnapp( filename, world_numAsChar, len );
