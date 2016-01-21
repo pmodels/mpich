@@ -27,9 +27,7 @@ int MPIR_Barrier_group( MPIR_Comm *comm_ptr, MPIR_Group *group_ptr, int tag, MPI
     if (mpi_errno != MPI_SUCCESS || *errflag != MPIR_ERR_NONE)
         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
 
- fn_exit:
+  fn_exit:
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 

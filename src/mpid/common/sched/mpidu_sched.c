@@ -795,10 +795,7 @@ int MPIDU_Sched_barrier(MPIR_Sched_t s)
         s->entries[s->num_entries - 1].is_barrier = TRUE;
     }
 
-  fn_exit:
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME

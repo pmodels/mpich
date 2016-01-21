@@ -100,10 +100,7 @@ int MPIR_Group_translate_ranks_impl(MPIR_Group *gp1, int n, const int ranks1[],
             }
         }
     }
-fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 

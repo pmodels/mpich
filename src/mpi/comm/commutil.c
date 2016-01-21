@@ -111,7 +111,6 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     /* Fields not set include context_id, remote and local size, and
      * kind, since different communicator construction routines need
      * different values */
-  fn_fail:
     return mpi_errno;
 }
 
@@ -510,11 +509,8 @@ int MPIR_Comm_map_free(MPIR_Comm * comm)
     }
     comm->mapper_head = NULL;
 
-  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_MAP_FREE);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 /* Provides a hook for the top level functions to perform some manipulation on a
@@ -906,7 +902,6 @@ int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr)
     *outcomm_ptr = newcomm_ptr;
 
   fn_fail:
-  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_COPY_DATA);
     return mpi_errno;
 }
@@ -1132,11 +1127,8 @@ static int free_hint_handles(void *ignore)
         }
     }
 
-  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_FREE_HINT_HANDLES);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 /* The hint logic is stored in a uthash, with hint name as key and
@@ -1164,9 +1156,6 @@ int MPIR_Comm_register_hint(const char *hint_key, MPIR_Comm_hint_fn_t fn, void *
 
     HASH_ADD_STR(MPID_hint_fns, name, hint_elt);
 
-  fn_exit:
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_REGISTER_HINT);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }

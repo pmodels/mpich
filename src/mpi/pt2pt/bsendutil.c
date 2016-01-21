@@ -344,10 +344,7 @@ int MPIR_Bsend_free_req_seg( MPIR_Request* req )
 	MPL_DBG_MSG_P(MPIR_DBG_BSEND,TYPICAL,"Next active is %p",active);
     }
 
- fn_exit:
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 /*

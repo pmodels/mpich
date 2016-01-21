@@ -173,11 +173,7 @@ int MPII_Comm_create_map(int         local_n,
         MPIR_Comm_map_irregular(newcomm, mapping_comm, remote_mapping,
                                 remote_n, MPIR_COMM_MAP_DIR__R2R, NULL);
     }
-
-fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 
