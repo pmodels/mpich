@@ -5,8 +5,6 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "mpishared.h"
-
 #include "mpiimpl.h"
 #include "mpidu_sock.h"
 #ifdef HAVE_STRING_H
