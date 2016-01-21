@@ -9,7 +9,6 @@
 #include "mpiexec.h"
 #include "pmci.h"
 #include "bsci.h"
-#include "hydt_ftb.h"
 #include "demux.h"
 #include "ui.h"
 #include "uiu.h"
@@ -144,9 +143,6 @@ int main(int argc, char **argv)
 
     status = HYDU_set_common_signals(signal_cb);
     HYDU_ERR_POP(status, "unable to set signal\n");
-
-    status = HYDT_ftb_init();
-    HYDU_ERR_POP(status, "unable to initialize FTB\n");
 
     /* Get user preferences */
     status = HYD_uii_mpx_get_parameters(argv);
@@ -373,9 +369,6 @@ int main(int argc, char **argv)
     /* Call finalize functions for lower layers to cleanup their resources */
     status = HYD_pmci_finalize();
     HYDU_ERR_POP(status, "process manager error on finalize\n");
-
-    status = HYDT_ftb_finalize();
-    HYDU_ERR_POP(status, "error finalizing FTB\n");
 
 #if defined ENABLE_PROFILING
     if (HYD_server_info.enable_profiling) {
