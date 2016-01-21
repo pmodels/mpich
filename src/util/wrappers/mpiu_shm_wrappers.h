@@ -42,8 +42,8 @@
 #include "mpiu_os_wrappers_pre.h"
 #include "mpiu_util_wrappers.h"
 
-#if !(defined(MPISHARED_H_INCLUDED) || defined(MPIIMPL_H_INCLUDED))
-#error "this header must be included after mpiimpl.h or mpishared.h"
+#if !defined(MPIIMPL_H_INCLUDED)
+#error "this header must be included after mpiimpl.h"
 #endif
 
 /* FIXME: Reduce the conditional checks for wrapper-internal

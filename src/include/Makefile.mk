@@ -41,7 +41,6 @@ noinst_HEADERS +=                   \
     src/include/mpimem.h            \
     src/include/mpir_nbc.h          \
     src/include/mpir_type_defs.h    \
-    src/include/mpishared.h         \
     src/include/mpistates.h         \
     src/include/mpitimerimpl.h      \
     src/include/mpiu_utarray.h      \

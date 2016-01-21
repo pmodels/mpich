@@ -873,7 +873,6 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a 
 					   predefined error class */
-/* WARNING: this is also defined in mpishared.h.  Update both locations */
 #define MPICH_ERR_LAST_CLASS 74     /* It is also helpful to know the
 				       last valid class */
 
