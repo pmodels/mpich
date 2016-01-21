@@ -9,7 +9,6 @@
 #include "bsci.h"
 #include "demux.h"
 #include "topo.h"
-#include "hydt_ftb.h"
 
 #define debug(...)                              \
     {                                           \

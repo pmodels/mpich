@@ -681,25 +681,6 @@ fi
 
 
 #########################################################################
-# FTB integration
-#########################################################################
-# FTB requires pthreads support; add pthreads to LIBS before trying to
-# find FTB
-PAC_PUSH_FLAG([LIBS])
-PAC_PREPEND_FLAG([-lpthread],[LIBS])
-PAC_SET_HEADER_LIB_PATH(ftb)
-PAC_CHECK_HEADER_LIB(libftb.h, ftb, FTB_Connect, have_ftb=yes, have_ftb=no)
-PAC_POP_FLAG([LIBS])
-if test "$have_ftb" = "yes" ; then
-   # FIXME: We need to test to make sure FTB works correctly
-   PAC_APPEND_FLAG([-lpthread],[LIBS])
-   AC_DEFINE(ENABLE_FTB,1,[Define if FTB is enabled])
-   PAC_APPEND_FLAG([-lftb],[WRAPPER_LIBS])
-fi
-AM_CONDITIONAL([hydra_have_ftb], [test "${have_ftb}" = "yes"])
-
-
-#########################################################################
 # Signals and friends
 #########################################################################
 AC_CHECK_FUNCS(strsignal)
