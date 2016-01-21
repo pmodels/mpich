@@ -11,6 +11,7 @@
  */
 
 #include "mpiimpl.h"
+#include "mpl.h"
 
 #include <stdio.h>
 #ifdef HAVE_STDARG_H
@@ -63,7 +64,7 @@ static int dbg_set_class( const char * );
 static int dbg_set_level( const char *, const char *(names[]) );
 static int dbg_get_filename(char *filename, int len);
 
-#ifdef MPICH_IS_THREADED
+#if (MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE)
 static MPID_Thread_tls_t dbg_tls_key;
 #endif
 
@@ -89,7 +90,7 @@ static void find_basename(char *path, char **basename)
 
 static void dbg_init_tls(void)
 {
-#ifdef MPICH_IS_THREADED
+#if (MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE)
     int err;
 
     MPID_Thread_tls_create(NULL, &dbg_tls_key, &err);
@@ -99,7 +100,7 @@ static void dbg_init_tls(void)
 
 static FILE *get_fp(void)
 {
-#ifdef MPICH_IS_THREADED
+#if (MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE)
     int err;
     /* if we're not initialized, use the static fp, since there should
      * only be one thread in here until then */
@@ -117,7 +118,7 @@ static FILE *get_fp(void)
 
 static void set_fp(FILE *fp)
 {
-#ifdef MPICH_IS_THREADED
+#if (MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE)
     int err;
     /* if we're not initialized, use the static fp, since there should
      * only be one thread in here until then */
@@ -150,7 +151,7 @@ int MPIU_DBG_Outevent( const char *file, int line, int class, int kind,
 
     dbg_fp = get_fp();
 
-#ifdef MPICH_IS_THREADED
+#if (MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE)
     {
         /* the thread ID is not necessarily unique between processes, so a
          * (pid,tid) pair should be used to uniquely identify output from
@@ -707,7 +708,7 @@ static int dbg_get_filename(char *filename, int len)
     int withinMworld = 0,         /* True if within an @W...@ */
 	withinMthread = 0;        /* True if within an @T...@ */
     /* FIXME: Need to know how many MPI_COMM_WORLDs are known */
-#ifdef MPICH_IS_THREADED
+#if (MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE)
     unsigned long long int threadID = 0;
     int nThread = 2;
 #else
@@ -780,7 +781,7 @@ static int dbg_get_filename(char *filename, int len)
                 pDest += strlen(rankAsChar);
             }
             else if (*p == 't') {
-#ifdef MPICH_IS_THREADED
+#if (MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE)
                 char threadIDAsChar[30];
                 MPL_thread_id_t tid;
                 MPL_thread_self(&tid);
@@ -793,7 +794,7 @@ static int dbg_get_filename(char *filename, int len)
                 pDest += strlen(threadIDAsChar);
 #else
                 *pDest++ = '0';
-#endif /* MPICH_IS_THREADED */
+#endif /* MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE */
             }
             else if (*p == 'w') {
                 /* *pDest++ = '0'; */
