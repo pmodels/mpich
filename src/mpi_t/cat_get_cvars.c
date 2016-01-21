@@ -44,10 +44,7 @@ int MPIR_T_category_get_cvars_impl(int cat_index, int len, int indices[])
         indices[i] = *(int *)utarray_eltptr(cat->cvar_indices, i);
     }
 
-fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 #endif /* MPICH_MPI_FROM_PMPI */

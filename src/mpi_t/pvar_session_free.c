@@ -49,10 +49,7 @@ int MPIR_T_pvar_session_free_impl(MPI_T_pvar_session *session)
     MPL_free(*session);
     *session = MPI_T_PVAR_SESSION_NULL;
 
-fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 #endif /* MPICH_MPI_FROM_PMPI */

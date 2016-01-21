@@ -61,7 +61,6 @@ static int create_and_map(MPIR_Comm *comm_ptr, int local_high, MPIR_Comm *new_in
         MPIR_Comm_map_dup(new_intracomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__R2L);
     }
 
-fn_fail:
     return mpi_errno;
 }
 

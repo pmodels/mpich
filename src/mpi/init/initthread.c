@@ -594,7 +594,6 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     if (mpi_errno == MPI_SUCCESS) 
 	mpi_errno = MPID_InitCompleted();
 
-fn_exit:
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     /* Make fields of MPIR_Process global visible and set mpich_state
        atomically so that MPI_Initialized() etc. are thread safe */
