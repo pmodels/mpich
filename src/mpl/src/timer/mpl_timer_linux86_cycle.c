@@ -23,7 +23,7 @@ int MPL_Wtick(double *wtick)
 
 int MPL_Wtime_init(void)
 {
-    unsigned long long t1, t2;
+    MPL_Time_t t1, t2;
     struct timeval tv1, tv2;
     double td1, td2;
 
