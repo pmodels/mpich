@@ -543,7 +543,8 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
      * If the parent comm is not NULL, we always give the world number
      * as "1" (false). */
     MPIU_DBG_Init( argc, argv, has_args, has_env, 
-		   MPIR_Process.comm_parent != NULL, MPIR_Process.comm_world->rank );
+		   MPIR_Process.comm_parent != NULL, MPIR_Process.comm_world->rank,
+                   MPIR_ThreadInfo.isThreaded );
 
     MPIR_DBG_INIT = MPIU_DBG_Class_alloc("INIT", "init");
     MPIR_DBG_PT2PT = MPIU_DBG_Class_alloc("PT2PT", "pt2pt");

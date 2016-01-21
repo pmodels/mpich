@@ -58,6 +58,12 @@ static int which_rank = -1;             /* all ranks */
 static int    reset_time_origin = 1;
 static double time_origin = 0.0;
 
+/* This variable is initialized to the appropriate threading level in
+ * the DBG_Init call.  Before the debug init, the application cannot
+ * be threaded, anyway.  So it is safe to statically set it to "0"
+ * here. */
+static int is_threaded = 0;
+
 static int dbg_usage( const char *, const char * );
 static int dbg_openfile(FILE **dbg_fp);
 static int dbg_set_class( const char * );
@@ -104,13 +110,13 @@ static FILE *get_fp(void)
     int err;
     /* if we're not initialized, use the static fp, since there should
      * only be one thread in here until then */
-    MPIR_THREAD_CHECK_BEGIN;
-    if (dbg_initialized == DBG_INITIALIZED) {
-        FILE *fp;
-        MPID_Thread_tls_get(&dbg_tls_key, (void **) &fp, &err);
-        return fp;
+    if (is_threaded) {
+        if (dbg_initialized == DBG_INITIALIZED) {
+            FILE *fp;
+            MPID_Thread_tls_get(&dbg_tls_key, (void **) &fp, &err);
+            return fp;
+        }
     }
-    MPIR_THREAD_CHECK_END;
 #endif
 
     return dbg_static_fp;
@@ -122,12 +128,12 @@ static void set_fp(FILE *fp)
     int err;
     /* if we're not initialized, use the static fp, since there should
      * only be one thread in here until then */
-    MPIR_THREAD_CHECK_BEGIN;
-    if (dbg_initialized == DBG_INITIALIZED) {
-        MPID_Thread_tls_set(&dbg_tls_key, (void *)fp, &err);
-        return;
+    if (is_threaded) {
+        if (dbg_initialized == DBG_INITIALIZED) {
+            MPID_Thread_tls_set(&dbg_tls_key, (void *)fp, &err);
+            return;
+        }
     }
-    MPIR_THREAD_CHECK_END;
 #endif
 
     dbg_static_fp = fp;
@@ -474,7 +480,7 @@ int MPIU_DBG_PreInit( int *argc_p, char ***argv_p, int wtimeNotReady )
 }
 
 int MPIU_DBG_Init( int *argc_p, char ***argv_p, int has_args, int has_env, 
-		   int wnum, int wrank )
+		   int wnum, int wrank, int threaded )
 {
     int ret;
     FILE *dbg_fp = NULL;
@@ -513,6 +519,7 @@ int MPIU_DBG_Init( int *argc_p, char ***argv_p, int has_args, int has_env,
 
     world_num = wnum;
     world_rank = wrank;
+    is_threaded = threaded;
 
     if (which_rank >= 0 && which_rank != wrank) {
 	/* Turn off logging on this process */
