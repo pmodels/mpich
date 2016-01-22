@@ -250,7 +250,7 @@ int main(int argc, char **argv)
 
 
 /* The following three hints related to file striping are accepted only 
-   on Intel PFS and IBM PIOFS file systems and are ignored elsewhere. 
+   on some parallel file systems and are ignored elsewhere. 
    They can be specified only at file-creation time; if specified later 
    they will be ignored. */
 
