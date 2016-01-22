@@ -79,7 +79,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_SEND_QUEUED);
 
-    MPIU_DBG_MSG_P(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "vc = %p", vc);
+    MPL_DBG_MSG_P(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "vc = %p", vc);
     MPIU_Assert(vc != NULL);
 
     if (MPIDI_CH3I_Sendq_empty(*send_queue))
@@ -88,7 +88,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
     while (!MPIDI_CH3I_Sendq_empty(*send_queue))
     {
         sreq = MPIDI_CH3I_Sendq_head(*send_queue);
-        MPIU_DBG_MSG_P(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Sending %p", sreq);
+        MPL_DBG_MSG_P(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Sending %p", sreq);
 
         iov = &sreq->dev.iov[sreq->dev.iov_offset];
         
@@ -107,7 +107,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
             if (errno == EAGAIN)
             {
                 offset = 0;
-                MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "EAGAIN");
+                MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "EAGAIN");
                 break;
             } else {
                 int req_errno = MPI_SUCCESS;
@@ -118,7 +118,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
                 goto fn_exit; /* this vc is closed now, just bail out */
             }
         }
-        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
+        MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
 
         complete = 1;
         for (iov = &sreq->dev.iov[sreq->dev.iov_offset]; iov < &sreq->dev.iov[sreq->dev.iov_offset + sreq->dev.iov_count]; ++iov)
@@ -153,7 +153,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
                 if (mpi_errno != MPI_SUCCESS) {
                     MPIR_ERR_POP(mpi_errno);
                 }
-                MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
+                MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
                 MPIDI_CH3I_Sendq_dequeue(send_queue, &sreq);
                 continue;
             }
@@ -164,7 +164,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
             
             if (complete)
             {
-                MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
+                MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
                 MPIDI_CH3I_Sendq_dequeue(send_queue, &sreq);
                 continue;
             }
@@ -245,7 +245,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
     
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
     
-    MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "tcp_iStartContigMsg");
+    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "tcp_iStartContigMsg");
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)hdr);
 
     if (!MPID_nem_tcp_vc_send_paused(vc_tcp)) {
@@ -283,7 +283,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
                         goto fn_fail;
                     }
                 }
-                MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
+                MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
                 
                 if (offset == sizeof(MPIDI_CH3_Pkt_t) + data_sz)
                 {
@@ -303,7 +303,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
     }
 
     /* create and enqueue request */
-    MPIU_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "enqueuing");
+    MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "enqueuing");
 
     /* create a request */
     sreq = MPID_Request_create();
@@ -385,7 +385,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_
     
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
     
-    MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "tcp_iStartContigMsg");
+    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "tcp_iStartContigMsg");
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)hdr);
 
     if (MPID_nem_tcp_vc_is_connected(vc_tcp))
@@ -423,7 +423,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_
                     goto fn_fail;
                 }
             }
-            MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
+            MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
                 
             if (offset == sizeof(MPIDI_CH3_Pkt_t) + data_sz)
             {
@@ -442,7 +442,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_
     }
 
     /* create and enqueue request */
-    MPIU_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "enqueuing");
+    MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "enqueuing");
 
     /* create a request */
     sreq = MPID_Request_create();
@@ -518,7 +518,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
     
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
     
-    MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "tcp_iSendContig");
+    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "tcp_iSendContig");
 
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *)hdr);
 
@@ -567,7 +567,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
                         goto fn_fail;
                     }
                 }
-                MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
+                MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
                 
                 if (offset == sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.ext_hdr_sz + data_sz)
                 {
@@ -582,7 +582,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
                         if (mpi_errno != MPI_SUCCESS) {
                             MPIR_ERR_POP(mpi_errno);
                         }
-                        MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
+                        MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
                         goto fn_exit;
                     }
                     else
@@ -594,7 +594,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
                         
                         if (complete)
                         {
-                            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
+                            MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
                             goto fn_exit;
                         }
                         
@@ -658,7 +658,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
 
 enqueue_request:
     /* enqueue request */
-    MPIU_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "enqueuing");
+    MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "enqueuing");
     MPIU_Assert(sreq->dev.iov_count >= 1 && sreq->dev.iov[0].MPL_IOV_LEN > 0);
 
     sreq->ch.vc = vc;
@@ -708,7 +708,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_SENDNONCONTIG);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_SENDNONCONTIG);
-    MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "tcp_SendNoncontig");
+    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "tcp_SendNoncontig");
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 
     iov_n = 0;
@@ -760,7 +760,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
                     }
                 }
                 
-                MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write noncontig " MPIDI_MSG_SZ_FMT, offset);
+                MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write noncontig " MPIDI_MSG_SZ_FMT, offset);
             }
         }
         else
@@ -809,7 +809,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
             if (mpi_errno != MPI_SUCCESS) {
                 MPIR_ERR_POP(mpi_errno);
             }
-            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
+            MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
             goto fn_exit;
         }
 
@@ -819,13 +819,13 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
             
         if (complete)
         {
-            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
+            MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
             goto fn_exit;
         }
     }
         
     /* enqueue request */
-    MPIU_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "enqueuing");
+    MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "enqueuing");
     MPIU_Assert(sreq->dev.iov_count >= 1 && sreq->dev.iov[0].MPL_IOV_LEN > 0);
         
     sreq->ch.vc = vc;

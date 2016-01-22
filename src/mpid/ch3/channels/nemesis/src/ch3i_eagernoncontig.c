@@ -36,7 +36,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
         /* send queue is not empty, enqueue the request then check to
            see if we can send any now */
 
-        MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER, TERSE, "enqueuing");
+        MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, TERSE, "enqueuing");
 
 	sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *)header;
         sreq->ch.noncontig    = TRUE;
@@ -83,7 +83,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
         }
-        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete %d bytes", (int) (sreq->dev.segment_size));
+        MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete %d bytes", (int) (sreq->dev.segment_size));
     }
     else
     {
@@ -92,7 +92,7 @@ int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, 
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIU_Assert(complete); /* all data has been sent, we should always complete */
 
-        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete %d bytes", (int) (sreq->dev.segment_size));
+        MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete %d bytes", (int) (sreq->dev.segment_size));
     }
 
  fn_exit:

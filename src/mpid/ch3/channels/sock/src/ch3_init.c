@@ -78,13 +78,13 @@ int MPIDI_CH3_VC_Init( MPIDI_VC_t *vc ) {
     vcch->sendq_tail         = NULL;
     vcch->state              = MPIDI_CH3I_VC_STATE_UNCONNECTED;
     MPIDI_VC_InitSock( vc );
-    MPIU_DBG_MSG_P(MPIDI_CH3_DBG_CONNECT,TYPICAL,"vc=%p: Setting state (ch) to VC_STATE_UNCONNECTED (Initialization)", vc );
+    MPL_DBG_MSG_P(MPIDI_CH3_DBG_CONNECT,TYPICAL,"vc=%p: Setting state (ch) to VC_STATE_UNCONNECTED (Initialization)", vc );
     return 0;
 }
 
 const char * MPIDI_CH3_VC_GetStateString( struct MPIDI_VC *vc )
 {
-#ifdef USE_DBG_LOGGING
+#ifdef MPL_USE_DBG_LOGGING
     return MPIDI_CH3_VC_SockGetStateString( vc );
 #else
     return "unknown";

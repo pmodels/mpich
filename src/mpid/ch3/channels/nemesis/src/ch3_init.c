@@ -208,7 +208,7 @@ int MPIDI_CH3_VC_Destroy(MPIDI_VC_t *vc )
     /* no need to destroy vc to self, this corresponds to the optimization above
      * in MPIDI_CH3_VC_Init */
     if (vc->pg == MPIDI_CH3I_my_pg && vc->pg_rank == MPIDI_CH3I_my_rank) {
-        MPIU_DBG_MSG_P(MPIDI_CH3_DBG_VC, VERBOSE, "skipping self vc=%p", vc);
+        MPL_DBG_MSG_P(MPIDI_CH3_DBG_VC, VERBOSE, "skipping self vc=%p", vc);
         goto fn_exit;
     }
 
@@ -267,7 +267,7 @@ int MPIDI_CH3_Connect_to_root (const char *port_name, MPIDI_VC_t **new_vc)
 }
 
 #ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
-#ifdef USE_DBG_LOGGING
+#ifdef MPL_USE_DBG_LOGGING
 const char * MPIDI_CH3_VC_GetStateString( struct MPIDI_VC *vc )
 {
     /* Nemesis doesn't have connection state associated with the VC */

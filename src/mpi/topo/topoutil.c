@@ -355,15 +355,15 @@ int MPIR_Topo_canon_nhb(MPID_Comm *comm_ptr,
         MPIU_Assert(FALSE);
     }
 
-#ifdef USE_DBG_LOGGING
+#ifdef MPL_USE_DBG_LOGGING
     {
         int i;
-        MPIU_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE, (MPIU_DBG_FDEST, "canonical neighbors for comm=0x%x comm_ptr=%p", comm_ptr->handle, comm_ptr));
+        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE, (MPL_DBG_FDEST, "canonical neighbors for comm=0x%x comm_ptr=%p", comm_ptr->handle, comm_ptr));
         for (i = 0; i < outdegree; ++i) {
-            MPIU_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE, (MPIU_DBG_FDEST, "%d/%d: to   %d", i, outdegree, dests[i]));
+            MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE, (MPL_DBG_FDEST, "%d/%d: to   %d", i, outdegree, dests[i]));
         }
         for (i = 0; i < indegree; ++i) {
-            MPIU_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE, (MPIU_DBG_FDEST, "%d/%d: from %d", i, indegree, sources[i]));
+            MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT, VERBOSE, (MPL_DBG_FDEST, "%d/%d: from %d", i, indegree, sources[i]));
         }
     }
 #endif

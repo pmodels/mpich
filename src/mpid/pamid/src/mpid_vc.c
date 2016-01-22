@@ -333,7 +333,7 @@ int MPID_GPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size,
 	  }
 	  *gpid++ = vc->pg_rank;
 
-          MPIU_DBG_MSG_FMT(MPIR_DBG_COMM,VERBOSE, (MPIU_DBG_FDEST,
+          MPL_DBG_MSG_FMT(MPIR_DBG_COMM,VERBOSE, (MPL_DBG_FDEST,
                            "pgid=%d vc->pg_rank=%d",
                            pgid, vc->pg_rank));
       }

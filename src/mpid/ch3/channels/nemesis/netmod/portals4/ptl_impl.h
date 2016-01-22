@@ -221,10 +221,10 @@ const char *MPID_nem_ptl_strnifail(ptl_ni_fail_t ni_fail);
 const char *MPID_nem_ptl_strlist(ptl_list_t list);
 
 #define DBG_MSG_PUT(md_, data_sz_, pg_rank_, match_, header_) do {                                                                          \
-        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "MPID_nem_ptl_rptl_put: md=%s data_sz=%lu pg_rank=%d", md_, data_sz_, pg_rank_));          \
-        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "        tag=%#lx ctx=%#lx rank=%ld match=%#lx",                            \
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "MPID_nem_ptl_rptl_put: md=%s data_sz=%lu pg_rank=%d", md_, data_sz_, pg_rank_));          \
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "        tag=%#lx ctx=%#lx rank=%ld match=%#lx",                            \
                                                 NPTL_MATCH_GET_TAG(match_), NPTL_MATCH_GET_CTX(match_), NPTL_MATCH_GET_RANK(match_), match_)); \
-        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "        flags=%c%c%c data_sz=%ld header=%#lx",                             \
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "        flags=%c%c%c data_sz=%ld header=%#lx",                             \
                                                 header_ & NPTL_SSEND ? 'S':' ',                                                             \
                                                 header_ & NPTL_LARGE ? 'L':' ',                                                             \
                                                 header_ & NPTL_MULTIPLE ? 'M':' ',                                                          \
@@ -232,22 +232,22 @@ const char *MPID_nem_ptl_strlist(ptl_list_t list);
     } while(0)
 
 #define DBG_MSG_GET(md_, data_sz_, pg_rank_, match_) do {                                                                                   \
-        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlGet: md=%s data_sz=%lu pg_rank=%d", md_, data_sz_, pg_rank_));          \
-        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "        tag=%#lx ctx=%#lx rank=%ld match=%#lx",                            \
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "PtlGet: md=%s data_sz=%lu pg_rank=%d", md_, data_sz_, pg_rank_));          \
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "        tag=%#lx ctx=%#lx rank=%ld match=%#lx",                            \
                                                 NPTL_MATCH_GET_TAG(match_), NPTL_MATCH_GET_CTX(match_), NPTL_MATCH_GET_RANK(match_), match_)); \
     } while(0)
 
 #define DBG_MSG_MEAPPEND(pt_, pg_rank_, me_, usr_ptr_) do {                                                                                 \
-        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlMEAppend: pt=%s pg_rank=%d me.start=%p me.length=%lu is_IOV=%d usr_ptr=%p", \
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "PtlMEAppend: pt=%s pg_rank=%d me.start=%p me.length=%lu is_IOV=%d usr_ptr=%p", \
                                                 pt_, pg_rank_, me_.start, me_.length, me_.options & PTL_IOVEC, usr_ptr_));                  \
-        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "             tag=%#lx ctx=%#lx rank=%ld match=%#lx ignore=%#lx",           \
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "             tag=%#lx ctx=%#lx rank=%ld match=%#lx ignore=%#lx",           \
                                                 NPTL_MATCH_GET_TAG(me_.match_bits), NPTL_MATCH_GET_CTX(me_.match_bits),                     \
                                                 NPTL_MATCH_GET_RANK(me_.match_bits), me_.match_bits, me_.ignore_bits));                     \
     } while(0)
     
 #define DBG_MSG_MESearch(pt_, pg_rank_, me_, usr_ptr_) do {                                                                             \
-        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlMESearch: pt=%s pg_rank=%d usr_ptr=%p", pt_, pg_rank_, usr_ptr_));  \
-        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "             tag=%#lx ctx=%#lx rank=%ld match=%#lx ignore=%#lx",       \
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "PtlMESearch: pt=%s pg_rank=%d usr_ptr=%p", pt_, pg_rank_, usr_ptr_));  \
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "             tag=%#lx ctx=%#lx rank=%ld match=%#lx ignore=%#lx",       \
                                                 NPTL_MATCH_GET_TAG(me_.match_bits), NPTL_MATCH_GET_CTX(me_.match_bits),                 \
                                                 NPTL_MATCH_GET_RANK(me_.match_bits), me_.match_bits, me_.ignore_bits));                 \
     } while(0)

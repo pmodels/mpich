@@ -549,7 +549,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         else
             vc->ready_eager_max_msg_sz = MPIR_CVAR_NEMESIS_SHM_READY_EAGER_MAX_SZ;
 
-        MPIU_DBG_MSG(MPIDI_CH3_DBG_VC, VERBOSE, "vc using shared memory");
+        MPL_DBG_MSG(MPIDI_CH3_DBG_VC, VERBOSE, "vc using shared memory");
     }
     else
     {
@@ -569,7 +569,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->iStartContigMsg = NULL;
         vc_ch->iSendContig     = NULL;
 
-        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_VC, VERBOSE, (MPIU_DBG_FDEST, "vc using %s netmod for rank %d pg %s",
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_VC, VERBOSE, (MPL_DBG_FDEST, "vc using %s netmod for rank %d pg %s",
                                        MPID_nem_netmod_strings[MPID_nem_netmod_id], vc->pg_rank,
                                        ((vc->pg == MPIDI_Process.my_pg) 
                                         ? "my_pg" 

@@ -39,7 +39,7 @@ void MPIDI_Datatype_dot_printf(MPI_Datatype type,
 			       int header)
 {
     if (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) {
-	MPIU_DBG_OUT(MPIR_DBG_DATATYPE,
+	MPL_DBG_OUT(MPIR_DBG_DATATYPE,
 			 "MPIDI_Datatype_dot_printf: type is a basic");
 	return;
     }
@@ -62,19 +62,19 @@ void MPIDI_Dataloop_dot_printf(MPID_Dataloop *loop_p,
     int i;
 
     if (loop_p == NULL) {
-	MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,"<null dataloop>\n"));
+	MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,"<null dataloop>\n"));
 	return;
     }
 
     if (header) {
-	MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+	MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 		    /* graphviz does not like the 0xNNN format */
 				   "digraph %lld {   {", (long long int)loop_p));
     }
 
     switch (loop_p->kind & DLOOP_KIND_MASK) {
 	case DLOOP_KIND_CONTIG:
-	    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+	    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 	    "      dl%d [shape = record, label = \"contig |{ ct = %d; el_sz = " MPI_AINT_FMT_DEC_SPEC "; el_ext = " MPI_AINT_FMT_DEC_SPEC " }\"];",
 			    depth,
 			    (int) loop_p->loop_params.c_t.count,
@@ -82,7 +82,7 @@ void MPIDI_Dataloop_dot_printf(MPID_Dataloop *loop_p,
 			    (MPI_Aint) loop_p->el_extent));
 	    break;
 	case DLOOP_KIND_VECTOR:
-	    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+	    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 	    "      dl%d [shape = record, label = \"vector |{ ct = %d; blk = %d; str = " MPI_AINT_FMT_DEC_SPEC "; el_sz = " MPI_AINT_FMT_DEC_SPEC "; el_ext =  "MPI_AINT_FMT_DEC_SPEC " }\"];",
 			    depth,
 			    (int) loop_p->loop_params.v_t.count,
@@ -92,7 +92,7 @@ void MPIDI_Dataloop_dot_printf(MPID_Dataloop *loop_p,
 			    (MPI_Aint) loop_p->el_extent));
 	    break;
 	case DLOOP_KIND_INDEXED:
-	    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+	    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 	    "      dl%d [shape = record, label = \"indexed |{ ct = %d; tot_blks = %d; regions = ",
 			    depth,
 			    (int) loop_p->loop_params.i_t.count,
@@ -101,29 +101,29 @@ void MPIDI_Dataloop_dot_printf(MPID_Dataloop *loop_p,
 	    for (i=0; i < NR_TYPE_CUTOFF && i < loop_p->loop_params.i_t.count; i++) {
 		if (i + 1 < loop_p->loop_params.i_t.count) {
 		    /* more regions after this one */
-		    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+		    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 		    "\\n(" MPI_AINT_FMT_DEC_SPEC ", %d), ",
 			  (MPI_Aint) loop_p->loop_params.i_t.offset_array[i],
 		          (int) loop_p->loop_params.i_t.blocksize_array[i]));
 		}
 		else {
-		    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+		    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 		           "\\n(" MPI_AINT_FMT_DEC_SPEC ", %d); ",
 		           (MPI_Aint) loop_p->loop_params.i_t.offset_array[i],
 			   (int) loop_p->loop_params.i_t.blocksize_array[i]));
 		}
 	    }
 	    if (i < loop_p->loop_params.i_t.count) {
-		MPIU_DBG_OUT(MPIR_DBG_DATATYPE,"\\n...; ");
+		MPL_DBG_OUT(MPIR_DBG_DATATYPE,"\\n...; ");
 	    }
 
-	    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+	    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 				       "\\nel_sz = " MPI_AINT_FMT_DEC_SPEC "; el_ext = " MPI_AINT_FMT_DEC_SPEC " }\"];\n",
 				       (MPI_Aint) loop_p->el_size,
 				       (MPI_Aint) loop_p->el_extent));
 	    break;
 	case DLOOP_KIND_BLOCKINDEXED:
-	    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+	    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 	    "      dl%d [shape = record, label = \"blockindexed |{ ct = %d; blk = %d; disps = ",
 			    depth,
 			    (int) loop_p->loop_params.bi_t.count,
@@ -132,62 +132,62 @@ void MPIDI_Dataloop_dot_printf(MPID_Dataloop *loop_p,
 	    for (i=0; i < NR_TYPE_CUTOFF && i < loop_p->loop_params.bi_t.count; i++) {
 		if (i + 1 < loop_p->loop_params.bi_t.count) {
 		    /* more regions after this one */
-		    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+		    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 		        MPI_AINT_FMT_DEC_SPEC ",\\n ",
 			(MPI_Aint) loop_p->loop_params.bi_t.offset_array[i]));
 		}
 		else {
-		    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+		    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 		         MPI_AINT_FMT_DEC_SPEC "; ",
 		         (MPI_Aint) loop_p->loop_params.bi_t.offset_array[i]));
 		}
 	    }
 	    if (i < loop_p->loop_params.bi_t.count) {
-		MPIU_DBG_OUT(MPIR_DBG_DATATYPE,"...; ");
+		MPL_DBG_OUT(MPIR_DBG_DATATYPE,"...; ");
 	    }
 
-	    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+	    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 				      "\\nel_sz = " MPI_AINT_FMT_DEC_SPEC "; el_ext = " MPI_AINT_FMT_DEC_SPEC " }\"];",
 				       (MPI_Aint) loop_p->el_size,
 				       (MPI_Aint) loop_p->el_extent));
 	    break;
 	case DLOOP_KIND_STRUCT:
-	    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+	    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 	    "      dl%d [shape = record, label = \"struct | {ct = %d; blks = ",
 			    depth,
 			    (int) loop_p->loop_params.s_t.count));
 	    for (i=0; i < NR_TYPE_CUTOFF && i < loop_p->loop_params.s_t.count; i++) {
 		if (i + 1 < loop_p->loop_params.s_t.count) {
-		    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,"%d, ",
+		    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,"%d, ",
 			    (int) loop_p->loop_params.s_t.blocksize_array[i]));
 		}
 		else {
-		    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,"%d; ",
+		    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,"%d; ",
 			    (int) loop_p->loop_params.s_t.blocksize_array[i]));
 		}
 	    }
 	    if (i < loop_p->loop_params.s_t.count) {
-		MPIU_DBG_OUT(MPIR_DBG_DATATYPE,"...; disps = ");
+		MPL_DBG_OUT(MPIR_DBG_DATATYPE,"...; disps = ");
 	    }
 	    else {
-		MPIU_DBG_OUT(MPIR_DBG_DATATYPE,"disps = ");
+		MPL_DBG_OUT(MPIR_DBG_DATATYPE,"disps = ");
 	    }
 
 	    for (i=0; i < NR_TYPE_CUTOFF && i < loop_p->loop_params.s_t.count; i++) {
 		if (i + 1 < loop_p->loop_params.s_t.count) {
-		    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,MPI_AINT_FMT_DEC_SPEC ", ",
+		    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,MPI_AINT_FMT_DEC_SPEC ", ",
 			    (MPI_Aint) loop_p->loop_params.s_t.offset_array[i]));
 		}
 		else {
-		    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,MPI_AINT_FMT_DEC_SPEC "; ",
+		    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,MPI_AINT_FMT_DEC_SPEC "; ",
 			    (MPI_Aint) loop_p->loop_params.s_t.offset_array[i]));
 		}
 	    }
 	    if (i < loop_p->loop_params.s_t.count) {
-		MPIU_DBG_OUT(MPIR_DBG_DATATYPE,"... }\"];");
+		MPL_DBG_OUT(MPIR_DBG_DATATYPE,"... }\"];");
 	    }
 	    else {
-		MPIU_DBG_OUT(MPIR_DBG_DATATYPE,"}\"];");
+		MPL_DBG_OUT(MPIR_DBG_DATATYPE,"}\"];");
 	    }
 	    break;
 	default:
@@ -196,7 +196,7 @@ void MPIDI_Dataloop_dot_printf(MPID_Dataloop *loop_p,
 
     if (!(loop_p->kind & DLOOP_FINAL_MASK)) {
 	/* more loops to go; recurse */
-	MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+	MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 				   "      dl%d -> dl%d;\n", depth, depth + 1));
 	switch (loop_p->kind & DLOOP_KIND_MASK) {
 	    case DLOOP_KIND_CONTIG:
@@ -218,13 +218,13 @@ void MPIDI_Dataloop_dot_printf(MPID_Dataloop *loop_p,
 		}
 		break;
 	    default:
-		MPIU_DBG_OUT(MPIR_DBG_DATATYPE,"      < unsupported type >");
+		MPL_DBG_OUT(MPIR_DBG_DATATYPE,"      < unsupported type >");
 	}
     }
 
 
     if (header) {
-	MPIU_DBG_OUT(MPIR_DBG_DATATYPE,"   }\n}");
+	MPL_DBG_OUT(MPIR_DBG_DATATYPE,"   }\n}");
     }
     return;
 }
@@ -235,7 +235,7 @@ void MPIDI_Datatype_printf(MPI_Datatype type,
 			   int blocklength,
 			   int header)
 {
-#ifdef USE_DBG_LOGGING
+#ifdef MPL_USE_DBG_LOGGING
     char *string;
     MPI_Aint size;
     MPI_Aint extent, true_lb, true_ub, lb, ub, sticky_lb, sticky_ub;
@@ -264,11 +264,11 @@ void MPIDI_Datatype_printf(MPI_Datatype type,
 
     if (header == 1) {
 	/*               012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789 */
-	MPIU_DBG_OUT(MPIR_DBG_DATATYPE,"------------------------------------------------------------------------------------------------------------------------------------------\n");
-	MPIU_DBG_OUT(MPIR_DBG_DATATYPE,"depth                   type         size       extent      true_lb      true_ub           lb(s)           ub(s)         disp       blklen\n");
-	MPIU_DBG_OUT(MPIR_DBG_DATATYPE,"------------------------------------------------------------------------------------------------------------------------------------------\n");
+	MPL_DBG_OUT(MPIR_DBG_DATATYPE,"------------------------------------------------------------------------------------------------------------------------------------------\n");
+	MPL_DBG_OUT(MPIR_DBG_DATATYPE,"depth                   type         size       extent      true_lb      true_ub           lb(s)           ub(s)         disp       blklen\n");
+	MPL_DBG_OUT(MPIR_DBG_DATATYPE,"------------------------------------------------------------------------------------------------------------------------------------------\n");
     }
-    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,"%5d  %21s  %11d  " MPI_AINT_FMT_DEC_SPEC "  " MPI_AINT_FMT_DEC_SPEC "  " MPI_AINT_FMT_DEC_SPEC "  " MPI_AINT_FMT_DEC_SPEC "(" MPI_AINT_FMT_DEC_SPEC ")  " MPI_AINT_FMT_DEC_SPEC "(" MPI_AINT_FMT_DEC_SPEC ")  " MPI_AINT_FMT_DEC_SPEC "  %11d",
+    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,"%5d  %21s  %11d  " MPI_AINT_FMT_DEC_SPEC "  " MPI_AINT_FMT_DEC_SPEC "  " MPI_AINT_FMT_DEC_SPEC "  " MPI_AINT_FMT_DEC_SPEC "(" MPI_AINT_FMT_DEC_SPEC ")  " MPI_AINT_FMT_DEC_SPEC "(" MPI_AINT_FMT_DEC_SPEC ")  " MPI_AINT_FMT_DEC_SPEC "  %11d",
 		    depth,
 		    string,
 		    (int) size,
@@ -449,13 +449,13 @@ void MPIDU_Datatype_debug(MPI_Datatype type,
      * fortran support included.
      */
     if (type == MPI_DATATYPE_NULL) {
-	MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,
-			 (MPIU_DBG_FDEST,
+	MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,
+			 (MPL_DBG_FDEST,
 			  "# MPIU_Datatype_debug: MPI_Datatype = MPI_DATATYPE_NULL"));
 	return;
     }
 
-    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 	       "# MPIU_Datatype_debug: MPI_Datatype = 0x%0x (%s)", type,
 	       (is_builtin) ? MPIDU_Datatype_builtin_to_string(type) :
 	        "derived"));
@@ -465,7 +465,7 @@ void MPIDU_Datatype_debug(MPI_Datatype type,
     MPID_Datatype_get_ptr(type, dtp);
     MPIU_Assert(dtp != NULL);
 
-    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
       "# Size = " MPI_AINT_FMT_DEC_SPEC ", Extent = " MPI_AINT_FMT_DEC_SPEC ", LB = " MPI_AINT_FMT_DEC_SPEC "%s, UB = " MPI_AINT_FMT_DEC_SPEC "%s, Extent = " MPI_AINT_FMT_DEC_SPEC ", Element Size = " MPI_AINT_FMT_DEC_SPEC " (%s), %s",
 		    (MPI_Aint) dtp->size,
 		    (MPI_Aint) dtp->extent,
@@ -479,10 +479,10 @@ void MPIDU_Datatype_debug(MPI_Datatype type,
 		    MPIDU_Datatype_builtin_to_string(dtp->basic_type),
 		    dtp->is_contig ? "is N contig" : "is not N contig"));
 
-    MPIU_DBG_OUT(MPIR_DBG_DATATYPE,"# Contents:");
+    MPL_DBG_OUT(MPIR_DBG_DATATYPE,"# Contents:");
     MPIDI_Datatype_contents_printf(type, 0, array_ct);
 
-    MPIU_DBG_OUT(MPIR_DBG_DATATYPE,"# Dataloop:");
+    MPL_DBG_OUT(MPIR_DBG_DATATYPE,"# Dataloop:");
     MPIDI_Datatype_dot_printf(type, 0, 1);
 }
 
@@ -524,7 +524,7 @@ void MPIDI_Datatype_contents_printf(MPI_Datatype type,
     int *ints = NULL;
 
     if (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) {
-	MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,"# %stype: %s\n",
+	MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,"# %stype: %s\n",
 			MPIDI_Datatype_depth_spacing(depth),
 			MPIDU_Datatype_builtin_to_string(type)));
 	return;
@@ -534,7 +534,7 @@ void MPIDI_Datatype_contents_printf(MPI_Datatype type,
     cp = dtp->contents;
 
     if (cp == NULL) {
-	MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,"# <NULL>\n"));
+	MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,"# <NULL>\n"));
 	return;
     }
 
@@ -555,7 +555,7 @@ void MPIDI_Datatype_contents_printf(MPI_Datatype type,
     }
 
 
-    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,"# %scombiner: %s",
+    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,"# %scombiner: %s",
 		    MPIDI_Datatype_depth_spacing(depth),
 		    MPIDU_Datatype_combiner_to_string(cp->combiner)));
 
@@ -567,7 +567,7 @@ void MPIDI_Datatype_contents_printf(MPI_Datatype type,
 	    /* not done */
 	    __mpidi_datatype_free_and_return;
 	case MPI_COMBINER_CONTIGUOUS:
-	    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,"# %scontig ct = %d\n",
+	    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,"# %scontig ct = %d\n",
 			    MPIDI_Datatype_depth_spacing(depth),
 				       *ints));
 	    MPIDI_Datatype_contents_printf(*types,
@@ -575,7 +575,7 @@ void MPIDI_Datatype_contents_printf(MPI_Datatype type,
 					   acount);
 	    __mpidi_datatype_free_and_return;
 	case MPI_COMBINER_VECTOR:
-	    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+	    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 	                "# %svector ct = %d, blk = %d, str = %d\n",
 			MPIDI_Datatype_depth_spacing(depth),
 			    ints[0],
@@ -586,7 +586,7 @@ void MPIDI_Datatype_contents_printf(MPI_Datatype type,
 					   acount);
 	    __mpidi_datatype_free_and_return;
         case MPI_COMBINER_HVECTOR:
-	    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+	    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 	                  "# %shvector ct = %d, blk = %d, str = " MPI_AINT_FMT_DEC_SPEC "\n",
 			    MPIDI_Datatype_depth_spacing(depth),
 			    ints[0],
@@ -597,11 +597,11 @@ void MPIDI_Datatype_contents_printf(MPI_Datatype type,
 					   acount);
 	    __mpidi_datatype_free_and_return;
 	case MPI_COMBINER_INDEXED:
-	    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,"# %sindexed ct = %d:",
+	    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,"# %sindexed ct = %d:",
 			    MPIDI_Datatype_depth_spacing(depth),
 			    ints[0]));
 	    for (i=0; i < acount && i < ints[0]; i++) {
-		MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+		MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 		         "# %s  indexed [%d]: blk = %d, disp = %d\n",
 				MPIDI_Datatype_depth_spacing(depth),
 				i,
@@ -613,11 +613,11 @@ void MPIDI_Datatype_contents_printf(MPI_Datatype type,
 	    }
 	    __mpidi_datatype_free_and_return;
 	case MPI_COMBINER_HINDEXED:
-	    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,"# %shindexed ct = %d:",
+	    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,"# %shindexed ct = %d:",
 			    MPIDI_Datatype_depth_spacing(depth),
 			    ints[0]));
 	    for (i=0; i < acount && i < ints[0]; i++) {
-		MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+		MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 		            "# %s  hindexed [%d]: blk = %d, disp = " MPI_AINT_FMT_DEC_SPEC "\n",
 				MPIDI_Datatype_depth_spacing(depth),
 				i,
@@ -629,11 +629,11 @@ void MPIDI_Datatype_contents_printf(MPI_Datatype type,
 	    }
 	    __mpidi_datatype_free_and_return;
 	case MPI_COMBINER_STRUCT:
-	    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,"# %sstruct ct = %d:",
+	    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,"# %sstruct ct = %d:",
 			    MPIDI_Datatype_depth_spacing(depth),
 			    (int) ints[0]));
 	    for (i=0; i < acount && i < ints[0]; i++) {
-		MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+		MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 		           "# %s  struct[%d]: blk = %d, disp = " MPI_AINT_FMT_DEC_SPEC "\n",
 				MPIDI_Datatype_depth_spacing(depth),
 				i,
@@ -645,11 +645,11 @@ void MPIDI_Datatype_contents_printf(MPI_Datatype type,
 	    }
 	    __mpidi_datatype_free_and_return;
 	case MPI_COMBINER_SUBARRAY:
-	    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPIU_DBG_FDEST,"# %ssubarray ct = %d:",
+	    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE, (MPL_DBG_FDEST,"# %ssubarray ct = %d:",
 			MPIDI_Datatype_depth_spacing(depth),
 			(int) ints[0]));
 	    for (i=0; i< acount && i < ints[0]; i++) {
-		MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+		MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 			    "# %s  sizes[%d] = %d subsizes[%d] = %d starts[%d] = %d\n",
 			    MPIDI_Datatype_depth_spacing(depth),
 			    i, (int)ints[i+1],
@@ -662,7 +662,7 @@ void MPIDI_Datatype_contents_printf(MPI_Datatype type,
 	    __mpidi_datatype_free_and_return;
 
 	default:
-	    MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,"# %sunhandled combiner",
+	    MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,"# %sunhandled combiner",
 			MPIDI_Datatype_depth_spacing(depth)));
 	    __mpidi_datatype_free_and_return;
     }

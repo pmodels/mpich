@@ -52,7 +52,7 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPID_Request *sreq, void * hdr, MPIDI_msg_s
     if (MPIDI_CH3I_Sendq_empty(MPIDI_CH3I_shm_sendq))
     {
         MPIU_Assert(hdr_sz <= INT_MAX);
-	MPIU_DBG_MSG_D (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "iSend %d", (int) hdr_sz);
+	MPL_DBG_MSG_D (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "iSend %d", (int) hdr_sz);
 	mpi_errno = MPID_nem_mpich_send_header (hdr, (int)hdr_sz, vc, &again);
         if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 	if (again)
@@ -97,7 +97,7 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPID_Request *sreq, void * hdr, MPIDI_msg_s
     goto fn_exit;
 
  enqueue_it:
-    MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER, TERSE, "enqueuing");
+    MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, TERSE, "enqueuing");
 
     sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;
     sreq->dev.iov[0].MPL_IOV_BUF = (char *) &sreq->dev.pending_pkt;

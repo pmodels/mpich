@@ -59,12 +59,12 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
     MPIDI_Pkt_set_seqnum(es_pkt, seqnum);
     MPIDI_Request_set_seqnum(sreq, seqnum);
     
-    MPIU_DBG_MSGPKT(vc,tag,es_pkt->match.parts.context_id,rank,data_sz,"EagerSync");
+    MPL_DBG_MSGPKT(vc,tag,es_pkt->match.parts.context_id,rank,data_sz,"EagerSync");
 
     if (dt_contig)
     {
         MPL_IOV iov[2];
-	MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                                             "sending contiguous sync eager message, data_sz=" MPIDI_MSG_SZ_FMT, 
 					    data_sz));
 	
@@ -89,7 +89,7 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
     }
     else
     {
-	MPIU_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,
+	MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,
 		       "sending non-contiguous sync eager message, data_sz=" MPIDI_MSG_SZ_FMT, 
 		       data_sz);
 	
@@ -125,7 +125,7 @@ int MPIDI_CH3_EagerSyncZero(MPID_Request **sreq_p, int rank, int tag,
     MPIDI_VC_t * vc;
     MPID_Request *sreq = *sreq_p;
     
-    MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending zero length message");
+    MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending zero length message");
     
     /* MT FIXME what are the two operations we are waiting for?  the send and
      * the sync response? */
@@ -145,7 +145,7 @@ int MPIDI_CH3_EagerSyncZero(MPID_Request **sreq_p, int rank, int tag,
     MPIDI_Pkt_set_seqnum(es_pkt, seqnum);
     MPIDI_Request_set_seqnum(sreq, seqnum);
     
-    MPIU_DBG_MSGPKT(vc,tag,es_pkt->match.parts.context_id,rank,(MPIDI_msg_sz_t)0,"EagerSync0");
+    MPL_DBG_MSGPKT(vc,tag,es_pkt->match.parts.context_id,rank,(MPIDI_msg_sz_t)0,"EagerSync0");
     MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = MPIDI_CH3_iSend(vc, sreq, es_pkt, sizeof(*es_pkt));
     MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
@@ -174,7 +174,7 @@ int MPIDI_CH3_EagerSyncAck( MPIDI_VC_t *vc, MPID_Request *rreq )
     MPIDI_CH3_Pkt_eager_sync_ack_t * const esa_pkt = &upkt.eager_sync_ack;
     MPID_Request * esa_req;
     
-    MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending eager sync ack");
+    MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending eager sync ack");
     MPIDI_Pkt_init(esa_pkt, MPIDI_CH3_PKT_EAGER_SYNC_ACK);
     esa_pkt->sender_req_id = rreq->dev.sender_req_id;
     MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
@@ -223,12 +223,12 @@ int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     MPIDI_msg_sz_t data_len;
     int mpi_errno = MPI_SUCCESS;
     
-    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
      "received eager sync send pkt, sreq=0x%08x, rank=%d, tag=%d, context=%d",
 	      es_pkt->sender_req_id, es_pkt->match.parts.rank, 
 	      es_pkt->match.parts.tag, 
               es_pkt->match.parts.context_id));
-    MPIU_DBG_MSGPKT(vc,es_pkt->match.parts.tag,es_pkt->match.parts.context_id,
+    MPL_DBG_MSGPKT(vc,es_pkt->match.parts.tag,es_pkt->match.parts.context_id,
 		    es_pkt->match.parts.rank,es_pkt->data_sz,
 		    "ReceivedEagerSync");
 	    
@@ -286,7 +286,7 @@ int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
                 *rreqp = rreq;
             }
 	}
-	MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending eager sync ack");
+	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending eager sync ack");
 	
 	MPIDI_Pkt_init(esa_pkt, MPIDI_CH3_PKT_EAGER_SYNC_ACK);
 	esa_pkt->sender_req_id = rreq->dev.sender_req_id;
@@ -352,7 +352,7 @@ int MPIDI_CH3_PktHandler_EagerSyncAck( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     MPID_Request * sreq;
     int mpi_errno = MPI_SUCCESS;
     
-    MPIU_DBG_MSG_P(MPIDI_CH3_DBG_OTHER,VERBOSE,
+    MPL_DBG_MSG_P(MPIDI_CH3_DBG_OTHER,VERBOSE,
 	   "received eager sync ack pkt, sreq=0x%08x", esa_pkt->sender_req_id);
 	    
     MPID_Request_get_ptr(esa_pkt->sender_req_id, sreq);
@@ -377,22 +377,22 @@ int MPIDI_CH3_PktHandler_EagerSyncAck( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #ifdef MPICH_DBG_OUTPUT
 int MPIDI_CH3_PktPrint_EagerSyncSend( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 {
-    MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,TERSE," type ......... EAGER_SYNC_SEND\n");
-    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,TERSE,(MPIU_DBG_FDEST," sender_reqid . 0x%08X\n", pkt->eager_sync_send.sender_req_id));
-    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,TERSE," context_id ... %d\n", pkt->eager_sync_send.match.parts.context_id);
-    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,TERSE," tag .......... %d\n", pkt->eager_sync_send.match.parts.tag);
-    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,TERSE," rank ......... %d\n", pkt->eager_sync_send.match.parts.rank);
-    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,TERSE," data_sz ...... %d\n", pkt->eager_sync_send.data_sz);
+    MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,TERSE," type ......... EAGER_SYNC_SEND\n");
+    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,TERSE,(MPL_DBG_FDEST," sender_reqid . 0x%08X\n", pkt->eager_sync_send.sender_req_id));
+    MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,TERSE," context_id ... %d\n", pkt->eager_sync_send.match.parts.context_id);
+    MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,TERSE," tag .......... %d\n", pkt->eager_sync_send.match.parts.tag);
+    MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,TERSE," rank ......... %d\n", pkt->eager_sync_send.match.parts.rank);
+    MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,TERSE," data_sz ...... %d\n", pkt->eager_sync_send.data_sz);
 #ifdef MPID_USE_SEQUENCE_NUMBERS
-    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,TERSE," seqnum ....... %d\n", pkt->eager_sync_send.seqnum);
+    MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,TERSE," seqnum ....... %d\n", pkt->eager_sync_send.seqnum);
 #endif
     return MPI_SUCCESS;
 }
 
 int MPIDI_CH3_PktPrint_EagerSyncAck( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 {
-    MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,TERSE," type ......... EAGER_SYNC_ACK\n");
-    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,TERSE,(MPIU_DBG_FDEST," sender_reqid . 0x%08X\n", pkt->eager_sync_ack.sender_req_id));
+    MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,TERSE," type ......... EAGER_SYNC_ACK\n");
+    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,TERSE,(MPL_DBG_FDEST," sender_reqid . 0x%08X\n", pkt->eager_sync_ack.sender_req_id));
     return MPI_SUCCESS;
 }
 #endif

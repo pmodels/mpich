@@ -43,7 +43,7 @@ int MPID_nem_mxm_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, MP
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MXM_ISENDCONTIGMSG);
 
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
-    MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "mxm_iSendContig");
+    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "mxm_iSendContig");
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *) hdr);
 
     MPIU_Memcpy(&(sreq->dev.pending_pkt), (char *) hdr, sizeof(MPIDI_CH3_Pkt_t));
@@ -109,7 +109,7 @@ int MPID_nem_mxm_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MXM_ISTARTCONTIGMSG);
 
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
-    MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "mxm_iStartContigMsg");
+    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "mxm_iStartContigMsg");
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *) hdr);
 
     /* create a request */
@@ -174,7 +174,7 @@ int MPID_nem_mxm_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MXM_SENDNONCONTIGMSG);
 
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
-    MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "MPID_nem_mxm_iSendNoncontig");
+    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "MPID_nem_mxm_iSendNoncontig");
 
     MPIU_Memcpy(&(sreq->dev.pending_pkt), (char *) hdr, sizeof(MPIDI_CH3_Pkt_t));
 
@@ -723,7 +723,7 @@ static int _mxm_isend(MPID_nem_mxm_ep_t * ep, MPID_nem_mxm_req_area * req,
         list_grow_mxm_req(free_queue);
         req->mxm_req = list_dequeue_mxm_req(free_queue);
         if (!req->mxm_req) {
-            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "empty free queue");
+            MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "empty free queue");
             mpi_errno = MPI_ERR_OTHER;
             goto fn_fail;
         }

@@ -83,7 +83,7 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
  * 2) It will emit an "Assertion failed..." message via MPL_internal_error_printf.
  *    The supplied error message will also be evaluated and printed.
  * 3) It will similarly emit the assertion failure and caller supplied messages
- *    to the debug log, if enabled, via MPIU_DBG_MSG_FMT.
+ *    to the debug log, if enabled, via MPL_DBG_MSG_FMT.
  * 4) It will invoke MPID_Abort, just like the other MPIU_Assert* macros.
  *
  * If the compiler doesn't support (...)/__VA_ARGS__ in macros then the user

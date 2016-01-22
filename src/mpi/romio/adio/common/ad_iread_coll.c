@@ -9,7 +9,7 @@
 #include "mpiu_greq.h"
 #include "mpioimpl.h"
 
-#ifdef USE_DBG_LOGGING
+#ifdef MPL_USE_DBG_LOGGING
   #define RDCOLL_DEBUG 1
 #endif
 #ifdef AGGREGATION_PROFILE

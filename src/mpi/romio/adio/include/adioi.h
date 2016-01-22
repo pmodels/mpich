@@ -1022,7 +1022,7 @@ int  ADIOI_MPE_iwrite_b;
   #define MPIU_Upint unsigned long
 #endif
 
-#ifdef USE_DBG_LOGGING    /*todo fix dependency on mpich?*/
+#ifdef MPL_USE_DBG_LOGGING    /*todo fix dependency on mpich?*/
 /* DBGT_FPRINTF terse level printing */
 #define DBGT_FPRINTF if (MPIR_Ext_dbg_romio_verbose_enabled) fprintf(stderr,"%s:%d:",__FILE__,__LINE__); \
 if (MPIR_Ext_dbg_romio_terse_enabled) fprintf

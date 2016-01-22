@@ -13,9 +13,9 @@
 
 extern int world_comm_destroying;
 
-#if defined(USE_DBG_LOGGING)
-extern MPIU_DBG_Class MPIR_DBG_HCOLL;
-#endif /* USE_DBG_LOGGING */
+#if defined(MPL_USE_DBG_LOGGING)
+extern MPL_DBG_Class MPIR_DBG_HCOLL;
+#endif /* MPL_USE_DBG_LOGGING */
 
 int hcoll_comm_create(MPID_Comm * comm, void *param);
 int hcoll_comm_destroy(MPID_Comm * comm, void *param);

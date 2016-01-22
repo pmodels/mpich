@@ -77,7 +77,7 @@ void MPID_nem_mxm_get_adi_msg(mxm_conn_h conn, mxm_imm_t imm, void *data,
 {
     MPIDI_VC_t *vc = NULL;
 
-    MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "MPID_nem_mxm_get_adi_msg");
+    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "MPID_nem_mxm_get_adi_msg");
 
     vc = mxm_conn_ctx_get(conn);
 
@@ -273,7 +273,7 @@ static int _mxm_handle_rreq(MPID_Request * req)
     else {
         data_sz = userbuf_sz;
         MPIR_STATUS_SET_COUNT(req->status, userbuf_sz);
-        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, VERBOSE, (MPIU_DBG_FDEST,
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, VERBOSE, (MPL_DBG_FDEST,
                                               "receive buffer too small; message truncated, msg_sz="
                                               MPIDI_MSG_SZ_FMT ", userbuf_sz="
                                               MPIDI_MSG_SZ_FMT, req->dev.recv_data_sz, userbuf_sz));
@@ -395,7 +395,7 @@ static int _mxm_irecv(MPID_nem_mxm_ep_t * ep, MPID_nem_mxm_req_area * req, int i
         list_grow_mxm_req(free_queue);
         req->mxm_req = list_dequeue_mxm_req(free_queue);
         if (!req->mxm_req) {
-            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "empty free queue");
+            MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "empty free queue");
             mpi_errno = MPI_ERR_OTHER;
             goto fn_fail;
         }

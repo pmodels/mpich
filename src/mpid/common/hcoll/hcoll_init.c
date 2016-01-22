@@ -22,9 +22,9 @@ int hcoll_enable_iallreduce = 1;
 int hcoll_comm_attr_keyval = MPI_KEYVAL_INVALID;
 int world_comm_destroying = 0;
 
-#if defined(USE_DBG_LOGGING)
-MPIU_DBG_Class MPIR_DBG_HCOLL;
-#endif /* USE_DBG_LOGGING */
+#if defined(MPL_USE_DBG_LOGGING)
+MPL_DBG_Class MPIR_DBG_HCOLL;
+#endif /* MPL_USE_DBG_LOGGING */
 
 #undef FUNCNAME
 #define FUNCNAME hcoll_destroy
@@ -57,7 +57,7 @@ static int hcoll_comm_attr_del_fn(MPI_Comm comm, int keyval, void *attr_val, voi
         envar = getenv("HCOLL_ENABLE_" #nameEnv); \
         if (NULL != envar) { \
             hcoll_enable_##name = atoi(envar); \
-            MPIU_DBG_MSG_D(MPIR_DBG_HCOLL, VERBOSE, "HCOLL_ENABLE_" #nameEnv " = %d\n", hcoll_enable_##name); \
+            MPL_DBG_MSG_D(MPIR_DBG_HCOLL, VERBOSE, "HCOLL_ENABLE_" #nameEnv " = %d\n", hcoll_enable_##name); \
         } \
     } while (0)
 
@@ -78,9 +78,9 @@ int hcoll_initialize(void)
         goto fn_exit;
     }
 
-#if defined(USE_DBG_LOGGING)
-    MPIR_DBG_HCOLL = MPIU_DBG_Class_alloc("HCOLL", "hcoll");
-#endif /* USE_DBG_LOGGING */
+#if defined(MPL_USE_DBG_LOGGING)
+    MPIR_DBG_HCOLL = MPL_DBG_Class_alloc("HCOLL", "hcoll");
+#endif /* MPL_USE_DBG_LOGGING */
 
     hcoll_rte_fns_setup();
     /*set INT_MAX/2 as tag_base here by the moment.
@@ -132,7 +132,7 @@ int hcoll_initialize(void)
 #define INSTALL_COLL_WRAPPER(check_name, name) \
     if (hcoll_enable_##check_name && (NULL != hcoll_collectives.coll_##check_name)) { \
         comm_ptr->coll_fns->name      = hcoll_##name; \
-        MPIU_DBG_MSG(MPIR_DBG_HCOLL,VERBOSE, #name " wrapper installed"); \
+        MPL_DBG_MSG(MPIR_DBG_HCOLL,VERBOSE, #name " wrapper installed"); \
     }
 
 #undef FUNCNAME
@@ -167,7 +167,7 @@ int hcoll_comm_create(MPID_Comm * comm_ptr, void *param)
     }
     comm_ptr->hcoll_priv.hcoll_context = hcoll_create_context((rte_grp_handle_t) comm_ptr);
     if (NULL == comm_ptr->hcoll_priv.hcoll_context) {
-        MPIU_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "Couldn't create hcoll context.");
+        MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "Couldn't create hcoll context.");
         goto fn_fail;
     }
     mpi_errno =
