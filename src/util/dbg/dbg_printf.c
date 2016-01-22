@@ -71,7 +71,7 @@ static int dbg_set_level( const char *, const char *(names[]) );
 static int dbg_get_filename(char *filename, int len);
 
 #if (MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE)
-static MPID_Thread_tls_t dbg_tls_key;
+static MPL_thread_tls_t dbg_tls_key;
 #endif
 
 static FILE *dbg_static_fp = 0;
@@ -99,7 +99,7 @@ static void dbg_init_tls(void)
 #if (MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE)
     int err;
 
-    MPID_Thread_tls_create(NULL, &dbg_tls_key, &err);
+    MPL_thread_tls_create(NULL, &dbg_tls_key, &err);
     MPIU_Assert(err == 0);
 #endif
 }
@@ -113,7 +113,7 @@ static FILE *get_fp(void)
     if (is_threaded) {
         if (dbg_initialized == DBG_INITIALIZED) {
             FILE *fp;
-            MPID_Thread_tls_get(&dbg_tls_key, (void **) &fp, &err);
+            MPL_thread_tls_get(&dbg_tls_key, (void **) &fp, &err);
             return fp;
         }
     }
@@ -130,7 +130,7 @@ static void set_fp(FILE *fp)
      * only be one thread in here until then */
     if (is_threaded) {
         if (dbg_initialized == DBG_INITIALIZED) {
-            MPID_Thread_tls_set(&dbg_tls_key, (void *)fp, &err);
+            MPL_thread_tls_set(&dbg_tls_key, (void *)fp, &err);
             return;
         }
     }
@@ -296,11 +296,11 @@ MPIU_DBG_Class MPIU_DBG_Class_alloc(const char *ucname, const char *lcname)
 }
 
 /* 
- * Initialize the DBG_MSG system.  This is called during MPI_Init to process
+ * Initialize the DBG_MSG system.  This is called during the job initialization to process
  * command-line arguments as well as checking the MPICH_DBG environment
  * variables.  The initialization is split into two steps: a preinit and an 
- * init. This makes it possible to enable most of the features before calling 
- * MPID_Init, where a significant amount of the initialization takes place.
+ * init. This makes it possible to enable most of the features before
+ * the full initialization, where a significant amount of the initialization takes place.
  */
 
 static int dbg_process_args( int *argc_p, char ***argv_p )
@@ -435,8 +435,8 @@ MPIU_DBG_Class MPIU_DBG_ROUTINE;
 MPIU_DBG_Class MPIU_DBG_ALL = ~(0);  /* pre-initialize the ALL class */
 
 /*
- * Attempt to initialize the logging system.  This works only if MPID_Init
- * is not responsible for updating the environment and/or command-line
+ * Attempt to initialize the logging system.  This works only if the full initialization
+ * is not required for updating the environment and/or command-line
  * arguments. 
  */
 int MPIU_DBG_PreInit( int *argc_p, char ***argv_p, int wtimeNotReady )
@@ -508,7 +508,7 @@ int MPIU_DBG_Init( int *argc_p, char ***argv_p, int has_args, int has_env,
        followed by more specific modifications. */
     /* Both of these may have already been set in the PreInit call; 
        if the command line and/or environment variables are set before
-       MPID_Init, then don't call the routines to check those values 
+       the full initialization, then don't call the routines to check those values
        (as they were already handled in DBG_PreInit) */
     /* First, the environment variables */
     if (!has_env) 
