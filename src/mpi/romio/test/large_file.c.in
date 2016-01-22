@@ -12,7 +12,7 @@
    should be run on one process only*/
 /* The file name is taken as a command-line argument. */
 /* Can be used only on file systems on which ROMIO supports large files, 
-   i.e., PIOFS, XFS, SFS, and HFS. */
+   i.e., any file system created after 1999 */
    
 #define SIZE 1048576*4     /* no. of long longs in each write/read */
 #define NTIMES 128         /* no. of writes/reads */

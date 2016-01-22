@@ -12,7 +12,8 @@
    file. Uses collective I/O. */
 /* The file name is taken as a command-line argument. */
 /* Run it only on a machine with sufficient memory and a file system
-   on which ROMIO supports large files, i.e., PIOFS, XFS, SFS, and HFS */
+   on which ROMIO supports large files, i.e., any file system created after
+   1999 */
 
 /* This program will work only if the MPI implementation defines MPI_Aint 
    as a 64-bit integer. */
