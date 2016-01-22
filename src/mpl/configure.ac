@@ -51,6 +51,7 @@ AC_C_RESTRICT
 AC_C_INLINE
 
 PAC_C_MACRO_VA_ARGS
+PAC_C_BUILTIN_EXPECT
 
 AC_ARG_ENABLE(embedded,
     AC_HELP_STRING([--enable-embedded], [Build MPL in embedded mode (default is no)]),
@@ -92,7 +93,7 @@ if test "$pac_cv_have___typeof" = "yes" ; then
 fi
 
 dnl Check if the necessary headers are available
-AC_CHECK_HEADERS(stdio.h stdlib.h string.h stdarg.h ctype.h sys/types.h sys/uio.h execinfo.h backtrace.h libunwind.h unistd.h errno.h)
+AC_CHECK_HEADERS(stdio.h stdlib.h string.h stdarg.h ctype.h sys/types.h sys/uio.h execinfo.h backtrace.h libunwind.h unistd.h errno.h windows.h)
 
 # A C99 compliant compiler should have inttypes.h for fixed-size int types
 AC_CHECK_HEADERS(inttypes.h stdint.h)
@@ -637,10 +638,10 @@ void f1(void *a) { return; }],
                        pac_cv_has_pthread_mutex_errorcheck=no)])
 
         if test "$pac_cv_has_pthread_mutex_errorcheck" = yes ; then
-            AC_DEFINE(MPL_PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK,
+            AC_DEFINE(PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK,
                       [Define to an expression that will result in an error checking mutex type.])
         elif test "$pac_cv_has_pthread_mutex_errorcheck_np" = yes ; then
-            AC_DEFINE(MPL_PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK_NP,
+            AC_DEFINE(PTHREAD_MUTEX_ERRORCHECK_VALUE,PTHREAD_MUTEX_ERRORCHECK_NP,
                       [Define to an expression that will result in an error checking mutex type.])
         fi
 
