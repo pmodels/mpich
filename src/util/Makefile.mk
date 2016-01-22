@@ -5,7 +5,6 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-include $(top_srcdir)/src/util/dbg/Makefile.mk
 include $(top_srcdir)/src/util/logging/Makefile.mk
 include $(top_srcdir)/src/util/mem/Makefile.mk
 include $(top_srcdir)/src/util/cvar/Makefile.mk

@@ -377,7 +377,7 @@ static int get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_p)
 
     ret = PtlGetId(MPIDI_nem_ptl_ni, &my_ptl_id);
     MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlgetid", "**ptlgetid %s", MPID_nem_ptl_strerror(ret));
-    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Allocated NI and PT id=(%#x,%#x) pt=%#x",
+    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "Allocated NI and PT id=(%#x,%#x) pt=%#x",
                                             my_ptl_id.phys.nid, my_ptl_id.phys.pid, MPIDI_nem_ptl_pt));
 
     str_errno = MPIU_Str_add_binary_arg(bc_val_p, val_max_sz_p, NID_KEY, (char *)&my_ptl_id.phys.nid, sizeof(my_ptl_id.phys.nid));
@@ -613,7 +613,7 @@ int MPID_nem_ptl_vc_terminated(MPIDI_VC_t *vc)
     MPIDI_FUNC_EXIT(MPID_NEM_PTL_VC_TERMINATED);
     return mpi_errno;
  fn_fail:
-    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
+    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
     goto fn_exit;
 }
 

@@ -164,7 +164,7 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
         local_size = local_comm_ptr->local_size;
 
         /* printf( "About to sendrecv in intercomm_create\n" );fflush(stdout);*/
-        MPIU_DBG_MSG_FMT(MPIR_DBG_COMM,VERBOSE,(MPIU_DBG_FDEST,"rank %d sendrecv to rank %d", peer_comm_ptr->rank,
+        MPL_DBG_MSG_FMT(MPIR_DBG_COMM,VERBOSE,(MPL_DBG_FDEST,"rank %d sendrecv to rank %d", peer_comm_ptr->rank,
                                        remote_leader));
         mpi_errno = MPIC_Sendrecv( &local_size,  1, MPI_INT,
                                       remote_leader, cts_tag,
@@ -173,7 +173,7 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
                                       peer_comm_ptr, MPI_STATUS_IGNORE, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-        MPIU_DBG_MSG_FMT(MPIR_DBG_COMM,VERBOSE,(MPIU_DBG_FDEST, "local size = %d, remote size = %d", local_size,
+        MPL_DBG_MSG_FMT(MPIR_DBG_COMM,VERBOSE,(MPL_DBG_FDEST, "local size = %d, remote size = %d", local_size,
                                        remote_size ));
         /* With this information, we can now send and receive the
            global process ids from the peer. */
@@ -231,7 +231,7 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
      * we know that the local and remote groups are disjoint, this
      * step will complete
      */
-    MPIU_DBG_MSG_FMT(MPIR_DBG_COMM,VERBOSE, (MPIU_DBG_FDEST,"About to get contextid (local_size=%d) on rank %d",
+    MPL_DBG_MSG_FMT(MPIR_DBG_COMM,VERBOSE, (MPL_DBG_FDEST,"About to get contextid (local_size=%d) on rank %d",
                                     local_comm_ptr->local_size, local_comm_ptr->rank ));
     /* In the multi-threaded case, MPIR_Get_contextid_sparse assumes that the
        calling routine already holds the single criticial section */
@@ -239,7 +239,7 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
     mpi_errno = MPIR_Get_contextid_sparse( local_comm_ptr, &recvcontext_id, FALSE );
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     MPIU_Assert(recvcontext_id != 0);
-    MPIU_DBG_MSG_FMT(MPIR_DBG_COMM,VERBOSE, (MPIU_DBG_FDEST,"Got contextid=%d", recvcontext_id));
+    MPL_DBG_MSG_FMT(MPIR_DBG_COMM,VERBOSE, (MPL_DBG_FDEST,"Got contextid=%d", recvcontext_id));
 
     /* Leaders can now swap context ids and then broadcast the value
        to the local group of processes */
@@ -258,7 +258,7 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
         comm_info[0] = remote_size;
         comm_info[1] = final_context_id;
         comm_info[2] = is_low_group;
-        MPIU_DBG_MSG(MPIR_DBG_COMM,VERBOSE,"About to bcast on local_comm");
+        MPL_DBG_MSG(MPIR_DBG_COMM,VERBOSE,"About to bcast on local_comm");
         mpi_errno = MPIR_Bcast_impl( comm_info, 3, MPI_INT, local_leader, local_comm_ptr, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -266,13 +266,13 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
                                      local_comm_ptr, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-        MPIU_DBG_MSG_D(MPIR_DBG_COMM,VERBOSE,"end of bcast on local_comm of size %d",
+        MPL_DBG_MSG_D(MPIR_DBG_COMM,VERBOSE,"end of bcast on local_comm of size %d",
                        local_comm_ptr->local_size );
     }
     else
     {
         /* we're the other processes */
-        MPIU_DBG_MSG(MPIR_DBG_COMM,VERBOSE,"About to receive bcast on local_comm");
+        MPL_DBG_MSG(MPIR_DBG_COMM,VERBOSE,"About to receive bcast on local_comm");
         mpi_errno = MPIR_Bcast_impl( comm_info, 3, MPI_INT, local_leader, local_comm_ptr, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");

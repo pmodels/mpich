@@ -12,10 +12,6 @@
 #define MPIU_Pint @MPIU_PINT@
 #define MPIU_Upint unsigned @MPIU_PINT@
 
-#if @USE_DBG_LOGGING@
-#define USE_DBG_LOGGING 1
-#endif
-
 /* used by ROMIO, should be handled by a romio-private version of this macro
  * instead */
 #ifdef HAVE_WINDOWS_H

@@ -153,7 +153,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SHM_SEND_PROGRESS);
 
     sreq = MPIDI_CH3I_shm_active_send;
-    MPIU_DBG_STMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, {if (sreq) MPIU_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Send: cont sreq");});
+    MPL_DBG_STMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, {if (sreq) MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Send: cont sreq");});
     if (sreq)
     {
         if (!sreq->ch.noncontig)
@@ -195,7 +195,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
     else
     {
         sreq = MPIDI_CH3I_Sendq_head(MPIDI_CH3I_shm_sendq);
-        MPIU_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, {if (sreq) MPIU_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Send: new sreq ");});
+        MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, {if (sreq) MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Send: new sreq ");});
 
         if (!sreq->ch.noncontig)
         {
@@ -265,7 +265,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
         /* MT - clear the current active send before dequeuing/destroying the current request */
         MPIDI_CH3I_shm_active_send = NULL;
         MPIDI_CH3I_Sendq_dequeue(&MPIDI_CH3I_shm_sendq, &sreq);
-        MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
+        MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
         mpi_errno = check_terminating_vcs();
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
@@ -279,7 +279,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
         {
             MPIDI_CH3I_shm_active_send = NULL;
             MPIDI_CH3I_Sendq_dequeue(&MPIDI_CH3I_shm_sendq, &sreq);
-            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
+            MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
             mpi_errno = check_terminating_vcs();
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
@@ -526,7 +526,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                     MPIDI_msg_sz_t buflen = payload_len;
 
                     /* This packet must be the first packet of a new message */
-                    MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Recv pkt from fbox");
+                    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Recv pkt from fbox");
                     MPIU_Assert(payload_len >= sizeof (MPIDI_CH3_Pkt_t));
 
                     MPIDI_PG_Get_vc_set_active(MPIDI_Process.my_pg, MPID_NEM_FBOX_SOURCE(cell), &vc);
@@ -563,7 +563,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                 }
 
 
-                MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Recv pkt from queue");
+                MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Recv pkt from queue");
 
                 MPIDI_PG_Get_vc_set_active(MPIDI_Process.my_pg, MPID_NEM_CELL_SOURCE(cell), &vc);
 
@@ -752,7 +752,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
                 MPIDI_msg_sz_t len = buflen;
                 MPIDI_CH3_Pkt_t *pkt = (MPIDI_CH3_Pkt_t *)buf;
 
-                MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "received new message");
+                MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "received new message");
 
                 /* invalid pkt data will result in unpredictable behavior */
                 MPIU_Assert(pkt->type >= 0 && pkt->type < MPIDI_CH3_PKT_END_ALL);
@@ -761,7 +761,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 buflen -= len;
                 buf    += len;
-                MPIU_DBG_STMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, if (!rreq) MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "...completed immediately"));
+                MPL_DBG_STMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, if (!rreq) MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "...completed immediately"));
             }
             while (!rreq && buflen >= sizeof(MPIDI_CH3_Pkt_t));
 
@@ -775,7 +775,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
         else if (vc_ch->recv_active)
         {
             MPIU_Assert(vc_ch->pending_pkt_len == 0);
-            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "continuing recv");
+            MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "continuing recv");
             rreq = vc_ch->recv_active;
         }
         else
@@ -785,7 +785,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
             MPIDI_msg_sz_t pktlen;
             MPIDI_CH3_Pkt_t *pkt = (MPIDI_CH3_Pkt_t *)vc_ch->pending_pkt;
 
-            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "received header fragment");
+            MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "received header fragment");
 
             copylen = ((vc_ch->pending_pkt_len + buflen <= sizeof(MPIDI_CH3_Pkt_t))
                        ? buflen
@@ -796,7 +796,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
                 goto fn_exit;
 
             /* we have a whole header */
-            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    completed header");
+            MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    completed header");
             MPIU_Assert(vc_ch->pending_pkt_len == sizeof(MPIDI_CH3_Pkt_t));
 
             buflen -= copylen;
@@ -814,7 +814,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
 
             if (!rreq)
             {
-                MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "...completed immediately");
+                MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "...completed immediately");
                 continue;
             }
             /* Channel fields don't get initialized on request creation, init them here */
@@ -825,7 +825,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
         MPIU_Assert(rreq);
         MPIU_Assert(rreq->dev.iov_count > 0 && rreq->dev.iov[rreq->dev.iov_offset].MPL_IOV_LEN > 0);
 
-        MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    copying into user buffer from IOV");
+        MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    copying into user buffer from IOV");
 
         if (buflen == 0)
         {
@@ -846,7 +846,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
             while (n_iov && buflen >= iov->MPL_IOV_LEN)
             {
                 size_t iov_len = iov->MPL_IOV_LEN;
-		MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "        %d", (int)iov_len);
+		MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "        %d", (int)iov_len);
                 if (rreq->dev.drop_data == FALSE) {
                     MPIU_Memcpy (iov->MPL_IOV_BUF, buf, iov_len);
                 }
@@ -861,7 +861,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
             {
                 if (buflen > 0)
                 {
-		    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "        " MPIDI_MSG_SZ_FMT, buflen);
+		    MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "        " MPIDI_MSG_SZ_FMT, buflen);
                     if (rreq->dev.drop_data == FALSE) {
                         MPIU_Memcpy (iov->MPL_IOV_BUF, buf, buflen);
                     }
@@ -873,7 +873,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
                 rreq->dev.iov_offset = iov - rreq->dev.iov;
                 rreq->dev.iov_count = n_iov;
                 vc_ch->recv_active = rreq;
-		MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "        remaining: " MPIDI_MSG_SZ_FMT " bytes + %d iov entries", iov->MPL_IOV_LEN, n_iov));
+		MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "        remaining: " MPIDI_MSG_SZ_FMT " bytes + %d iov entries", iov->MPL_IOV_LEN, n_iov));
             }
             else
             {
@@ -904,11 +904,11 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
                     rreq->dev.iov_offset = 0;
                     MPIU_Assert(rreq->dev.iov_count > 0 && rreq->dev.iov[rreq->dev.iov_offset].MPL_IOV_LEN > 0);
                     vc_ch->recv_active = rreq;
-                    MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "...not complete");
+                    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "...not complete");
                 }
                 else
                 {
-                    MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "...complete");
+                    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "...complete");
                     vc_ch->recv_active = NULL;
                 }
             }
@@ -1053,7 +1053,7 @@ static int shm_connection_terminated(MPIDI_VC_t * vc)
     mpi_errno = MPIDI_CH3U_Handle_connection(vc, MPIDI_VC_EVENT_TERMINATED);
     if(mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "Terminated VC %d", vc->pg_rank);
+    MPL_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "Terminated VC %d", vc->pg_rank);
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_SHM_CONNECTION_TERMINATED);
     return mpi_errno;
@@ -1074,7 +1074,7 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_CONNECTION_TERMINATE);
 
-    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "Terminating VC %d", vc->pg_rank);
+    MPL_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "Terminating VC %d", vc->pg_rank);
 
     /* if this is already closed, exit */
     if (vc->state == MPIDI_VC_STATE_MORIBUND ||
@@ -1082,13 +1082,13 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
         goto fn_exit;
 
     if (vc->ch.is_local) {
-        MPIU_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "VC is local");
+        MPL_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "VC is local");
 
         if (vc->state != MPIDI_VC_STATE_CLOSED) {
             /* VC is terminated as a result of a fault.  Complete
                outstanding sends with an error and terminate
                connection immediately. */
-            MPIU_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "VC terminated due to fault");
+            MPL_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "VC terminated due to fault");
             mpi_errno = MPIDI_CH3I_Complete_sendq_with_error(vc);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
@@ -1101,7 +1101,7 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
             if (MPIDI_CH3I_Sendq_empty(MPIDI_CH3I_shm_sendq)) {
                 /* The sendq is empty, so we can immediately terminate
                    the connection. */
-                MPIU_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "Shm send queue empty, terminating immediately");
+                MPL_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "Shm send queue empty, terminating immediately");
                 mpi_errno = shm_connection_terminated(vc);
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             } else {
@@ -1114,7 +1114,7 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
                    VC anymore) we know that all sends on this VC must
                    have completed.  */
                 vc_term_element_t *ep;
-                MPIU_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "Shm send queue not empty, waiting to terminate");
+                MPL_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "Shm send queue not empty, waiting to terminate");
                 MPIU_CHKPMEM_MALLOC(ep, vc_term_element_t *, sizeof(vc_term_element_t), mpi_errno, "vc_term_element");
                 ep->vc = vc;
                 ep->req = MPIDI_CH3I_shm_sendq.tail;
@@ -1124,7 +1124,7 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
         }
     
     } else {
-        MPIU_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "VC is remote");
+        MPL_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, "VC is remote");
         mpi_errno = MPID_nem_netmod_func->vc_terminate(vc);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }

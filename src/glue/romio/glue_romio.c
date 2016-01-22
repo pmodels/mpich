@@ -11,9 +11,9 @@
 #include "mpiimpl.h"
 #include "glue_romio.h"
 
-#if defined (USE_DBG_LOGGING)
-static MPIU_DBG_Class DBG_ROMIO;
-#endif /* USE_DBG_LOGGING */
+#if defined (MPL_USE_DBG_LOGGING)
+static MPL_DBG_Class DBG_ROMIO;
+#endif /* MPL_USE_DBG_LOGGING */
 
 int MPIR_Ext_dbg_romio_terse_enabled = 0;
 int MPIR_Ext_dbg_romio_typical_enabled = 0;
@@ -27,16 +27,16 @@ int MPIR_Ext_init(void)
     MPIR_Ext_dbg_romio_typical_enabled = 0;
     MPIR_Ext_dbg_romio_verbose_enabled = 0;
 
-#if defined (USE_DBG_LOGGING)
-    DBG_ROMIO = MPIU_DBG_Class_alloc("ROMIO", "romio");
+#if defined (MPL_USE_DBG_LOGGING)
+    DBG_ROMIO = MPL_DBG_Class_alloc("ROMIO", "romio");
 
-    if (MPIU_DBG_SELECTED(DBG_ROMIO,TERSE))
+    if (MPL_DBG_SELECTED(DBG_ROMIO,TERSE))
         MPIR_Ext_dbg_romio_terse_enabled = 1;
-    if (MPIU_DBG_SELECTED(DBG_ROMIO,TYPICAL))
+    if (MPL_DBG_SELECTED(DBG_ROMIO,TYPICAL))
         MPIR_Ext_dbg_romio_typical_enabled = 1;
-    if (MPIU_DBG_SELECTED(DBG_ROMIO,VERBOSE))
+    if (MPL_DBG_SELECTED(DBG_ROMIO,VERBOSE))
         MPIR_Ext_dbg_romio_verbose_enabled = 1;
-#endif /* USE_DBG_LOGGING */
+#endif /* MPL_USE_DBG_LOGGING */
 
     return MPI_SUCCESS;
 }

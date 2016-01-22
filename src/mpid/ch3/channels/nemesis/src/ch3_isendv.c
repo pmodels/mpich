@@ -71,7 +71,7 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV *iov, int n_io
 	MPL_IOV *remaining_iov = iov;
 	int remaining_n_iov = n_iov;
 
-        MPIU_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "iSendv");
+        MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "iSendv");
 	mpi_errno = MPID_nem_mpich_sendv_header (&remaining_iov, &remaining_n_iov,
 	                                         sreq->dev.ext_hdr_ptr, sreq->dev.ext_hdr_sz,
 	                                         vc, &again);
@@ -96,13 +96,13 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV *iov, int n_io
 	    {
 		sreq->dev.iov[0] = remaining_iov[0];
 	    }
-            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "  out of cells. remaining iov:");
-            MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    %ld", (long int)sreq->dev.iov[0].MPL_IOV_LEN);
+            MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "  out of cells. remaining iov:");
+            MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    %ld", (long int)sreq->dev.iov[0].MPL_IOV_LEN);
 
 	    for (j = 1; j < remaining_n_iov; ++j)
 	    {
 		sreq->dev.iov[j] = remaining_iov[j];
-                MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    %ld", (long int)remaining_iov[j].MPL_IOV_LEN);
+                MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "    %ld", (long int)remaining_iov[j].MPL_IOV_LEN);
 	    }
 	    sreq->dev.iov_offset = 0;
 	    sreq->dev.iov_count = remaining_n_iov;
@@ -116,7 +116,7 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV *iov, int n_io
                 MPIDI_CH3I_shm_active_send = sreq;
             }
 
-            MPIU_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "  enqueued");
+            MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "  enqueued");
 	}
 	else
 	{
@@ -130,7 +130,7 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV *iov, int n_io
                 if (mpi_errno != MPI_SUCCESS) {
                     MPIR_ERR_POP(mpi_errno);
                 }
-                MPIU_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
+                MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
             }
             else
             {
@@ -147,11 +147,11 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV *iov, int n_io
                     MPIDI_CH3I_Sendq_enqueue(&MPIDI_CH3I_shm_sendq, sreq);
                     MPIU_Assert (MPIDI_CH3I_shm_active_send == NULL);
                     MPIDI_CH3I_shm_active_send = sreq;
-                    MPIU_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... reloaded and enqueued");
+                    MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... reloaded and enqueued");
                 }
                 else
                 {
-                    MPIU_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
+                    MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete");
                 }
             }
         }
@@ -160,7 +160,7 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV *iov, int n_io
     {
 	int i;
 	
-	MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER, TERSE, "enqueuing");
+	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, TERSE, "enqueuing");
 	
 	sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) iov[0].MPL_IOV_BUF;
 	sreq->dev.iov[0].MPL_IOV_BUF = (char *) &sreq->dev.pending_pkt;

@@ -130,7 +130,7 @@ int MPID_Type_contiguous(int count,
 
     *newtype = new_dtp->handle;
 
-    MPIU_DBG_MSG_P(MPIR_DBG_DATATYPE,VERBOSE,"contig type %x created.",
+    MPL_DBG_MSG_P(MPIR_DBG_DATATYPE,VERBOSE,"contig type %x created.",
 		   new_dtp->handle);
 
     return mpi_errno;

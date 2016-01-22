@@ -20,5 +20,6 @@
 #include "mpl_thread.h"
 #include "mpl_timer.h"
 #include "mpl_yield.h"
+#include "mpl_dbg.h"
 
 #endif /* !defined(MPL_H_INCLUDED) */

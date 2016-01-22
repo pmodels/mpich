@@ -500,7 +500,7 @@ static int nonempty_intersection(MPID_Comm *comm, MPID_Group *group, int *flag)
     /* handle common case fast */
     if (comm == MPIR_Process.comm_world || comm == MPIR_Process.icomm_world) {
         *flag = TRUE;
-        MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "comm is comm_world or icomm_world");
+        MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "comm is comm_world or icomm_world");
         goto fn_exit;
     }
     *flag = FALSE;
@@ -554,8 +554,8 @@ int MPIDI_CH3I_Comm_handle_failed_procs(MPID_Group *new_failed_procs)
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         if (flag) {
-            MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, VERBOSE,
-                             (MPIU_DBG_FDEST, "disabling AS on communicator %p (%#08x)",
+            MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, VERBOSE,
+                             (MPL_DBG_FDEST, "disabling AS on communicator %p (%#08x)",
                               comm, comm->handle));
             comm->dev.anysource_enabled = FALSE;
         }
@@ -581,7 +581,7 @@ void MPIDI_CH3I_Comm_find(MPIU_Context_id_t context_id, MPID_Comm **comm)
         if ((*comm)->context_id == context_id || ((*comm)->context_id + MPID_CONTEXT_INTRA_COLL) == context_id ||
             ((*comm)->node_comm && ((*comm)->node_comm->context_id == context_id || ((*comm)->node_comm->context_id + MPID_CONTEXT_INTRA_COLL) == context_id)) ||
             ((*comm)->node_roots_comm && ((*comm)->node_roots_comm->context_id == context_id || ((*comm)->node_roots_comm->context_id + MPID_CONTEXT_INTRA_COLL) == context_id)) ) {
-            MPIU_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,"Found matching context id: %d", (*comm)->context_id);
+            MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,"Found matching context id: %d", (*comm)->context_id);
             break;
         }
     }

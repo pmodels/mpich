@@ -160,7 +160,7 @@ static int recv_nb(struct dte_data_representation_t data,
             /* We have a full data description & buffer pointer simultaneously.
              * It is ambiguous. Throw a warning since the user might have made a
              * mistake with data reps */
-            MPIU_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "Warning: buffer_pointer != NULL for NON-inline data "
+            MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "Warning: buffer_pointer != NULL for NON-inline data "
                          "representation: buffer_pointer is ignored");
         }
         total_entries_number = count_total_dte_repeat_entries(&data);
@@ -227,7 +227,7 @@ static int send_nb(dte_data_representation_t data,
             /* We have a full data description & buffer pointer simultaneously.
              * It is ambiguous. Throw a warning since the user might have made a
              * mistake with data reps */
-            MPIU_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "Warning: buffer_pointer != NULL for NON-inline data "
+            MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "Warning: buffer_pointer != NULL for NON-inline data "
                          "representation: buffer_pointer is ignored");
         }
         total_entries_number = count_total_dte_repeat_entries(&data);

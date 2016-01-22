@@ -124,8 +124,8 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
     errno = 0;
     do {
 	err = fcntl(fd, cmd, &lock);
-#ifdef USE_DBG_LOGGING
-/*      if (MPIU_DBG_SELECTED(ROMIO,TERSE)) */
+#ifdef MPL_USE_DBG_LOGGING
+/*      if (MPL_DBG_SELECTED(ROMIO,TERSE)) */
       {
         if (err && ((errno == EINTR) || (errno == EINPROGRESS)))
         {

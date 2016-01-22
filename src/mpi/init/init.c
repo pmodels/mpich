@@ -123,8 +123,8 @@ int MPI_Init( int *argc, char ***argv )
     MPID_MPI_INIT_STATE_DECL(MPID_STATE_MPI_INIT);
 
     rc = MPID_Wtime_init();
-#ifdef USE_DBG_LOGGING
-    MPIU_DBG_PreInit( argc, argv, rc );
+#ifdef MPL_USE_DBG_LOGGING
+    MPL_DBG_PreInit( argc, argv, rc );
 #endif
 
     MPID_MPI_INIT_FUNC_ENTER(MPID_STATE_MPI_INIT);

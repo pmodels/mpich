@@ -9,7 +9,7 @@
 #include "mpid_nem_datatypes.h"
 
 #include "mpiu_os_wrappers.h"
-#if defined(USE_DBG_LOGGING) && 0
+#if defined(MPL_USE_DBG_LOGGING) && 0
 #define DBG_LMT(x) x
 #else
 #define DBG_LMT(x)
@@ -216,7 +216,7 @@ int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV s_coo
         /* lmt send didn't finish, enqueue it to be completed later */
         lmt_shm_prog_element_t *pe;
 
-        MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "lmt recv not finished:  enqueue");
+        MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "lmt recv not finished:  enqueue");
 
         MPIU_CHKPMEM_MALLOC (pe, lmt_shm_prog_element_t *, sizeof (lmt_shm_prog_element_t), mpi_errno, "lmt progress queue element");
         pe->vc = vc;
@@ -259,7 +259,7 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV r_coo
 
         mpi_errno = MPID_nem_attach_shm_region(&vc_ch->lmt_copy_buf, vc_ch->lmt_copy_buf_handle);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "attached to remote copy_buf");
+        MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "attached to remote copy_buf");
     }
     else{
         char *ser_lmt_copy_buf_handle=NULL;
@@ -286,7 +286,7 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV r_coo
             vc_ch->lmt_active_lmt = NULL;
         }
 
-        MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "deleted my copy_buf and attached to remote");
+        MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "deleted my copy_buf and attached to remote");
     }
 
     queue_initially_empty = LMT_SHM_Q_EMPTY(vc_ch->lmt_queue) && vc_ch->lmt_active_lmt == NULL;
@@ -314,7 +314,7 @@ int MPID_nem_lmt_shm_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV r_coo
         MPID_nem_local_lmt_pending = TRUE;
         MPIU_Assert(!vc_ch->lmt_enqueued);
         vc_ch->lmt_enqueued = TRUE;
-        MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "lmt send not finished:  enqueue");
+        MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "lmt send not finished:  enqueue");
    }
 
     MPIU_Assert(LMT_SHM_Q_EMPTY(vc_ch->lmt_queue) || !LMT_SHM_L_EMPTY());
@@ -348,8 +348,8 @@ static int get_next_req(MPIDI_VC_t *vc)
     if (prev_owner_rank == IN_USE || prev_owner_rank == MPIDI_Process.my_pg_rank)
     {
         /* last lmt is not complete (receiver still receiving */
-        MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "waiting for receiver");
-        DBG_LMT(MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "ctr=%d rank=%d", copy_buf->owner_info.val.ctr, vc->pg_rank)));
+        MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "waiting for receiver");
+        DBG_LMT(MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "ctr=%d rank=%d", copy_buf->owner_info.val.ctr, vc->pg_rank)));
         goto fn_exit;
     }
 
@@ -367,8 +367,8 @@ static int get_next_req(MPIDI_VC_t *vc)
 
         LMT_SHM_Q_DEQUEUE(&vc_ch->lmt_queue, &vc_ch->lmt_active_lmt);
         copy_buf->owner_info.val.remote_req_id = vc_ch->lmt_active_lmt->req->ch.lmt_req_id;
-        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "grabbed idle buf.  remote_req=%d local_req=%d", copy_buf->owner_info.val.remote_req_id, vc_ch->lmt_active_lmt->req->handle));
-        DBG_LMT(MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "ctr=%d rank=%d", copy_buf->owner_info.val.ctr, vc->pg_rank)));
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "grabbed idle buf.  remote_req=%d local_req=%d", copy_buf->owner_info.val.remote_req_id, vc_ch->lmt_active_lmt->req->handle));
+        DBG_LMT(MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "ctr=%d rank=%d", copy_buf->owner_info.val.ctr, vc->pg_rank)));
     }
     else
     {
@@ -377,8 +377,8 @@ static int get_next_req(MPIDI_VC_t *vc)
 
         OPA_read_barrier();
         
-        MPIU_DBG_STMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, if (copy_buf->owner_info.val.remote_req_id == MPI_REQUEST_NULL)
-                                                MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "waiting for owner rank=%d", vc->pg_rank));
+        MPL_DBG_STMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, if (copy_buf->owner_info.val.remote_req_id == MPI_REQUEST_NULL)
+                                                MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "waiting for owner rank=%d", vc->pg_rank));
             
         while (copy_buf->owner_info.val.remote_req_id == MPI_REQUEST_NULL) {
             int p = 0;
@@ -392,13 +392,13 @@ static int get_next_req(MPIDI_VC_t *vc)
         OPA_read_barrier();
         LMT_SHM_Q_SEARCH_REMOVE(&vc_ch->lmt_queue, copy_buf->owner_info.val.remote_req_id, &vc_ch->lmt_active_lmt);
 
-        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "remote side owns buf.  local_req=%d", copy_buf->owner_info.val.remote_req_id);
-        DBG_LMT(MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "ctr=%d rank=%d", copy_buf->owner_info.val.ctr, vc->pg_rank)));
+        MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "remote side owns buf.  local_req=%d", copy_buf->owner_info.val.remote_req_id);
+        DBG_LMT(MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "ctr=%d rank=%d", copy_buf->owner_info.val.ctr, vc->pg_rank)));
 
         if (vc_ch->lmt_active_lmt == NULL)
         {
             /* request not found  */
-            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "request not found in lmt queue");
+            MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "request not found in lmt queue");
             goto fn_exit;
         }
 
@@ -453,7 +453,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
 
     MPIDI_FUNC_ENTER(MPID_STATE_LMT_SHM_SEND_PROGRESS);
 
-    DBG_LMT(MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "ctr=%d rank=%d", copy_buf->owner_info.val.ctr, vc->pg_rank)));
+    DBG_LMT(MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "ctr=%d rank=%d", copy_buf->owner_info.val.ctr, vc->pg_rank)));
 
     copy_buf->sender_present.val = TRUE;
 
@@ -476,8 +476,8 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
                 req->dev.segment_first = first;
                 vc_ch->lmt_buf_num = buf_num;
                 *done = FALSE;
-                MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "first=" MPIDI_MSG_SZ_FMT " data_sz="MPIDI_MSG_SZ_FMT, first, data_sz));
-                MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Waiting on full buffer %d", buf_num);
+                MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "first=" MPIDI_MSG_SZ_FMT " data_sz="MPIDI_MSG_SZ_FMT, first, data_sz));
+                MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Waiting on full buffer %d", buf_num);
                 goto fn_exit;
             }
             ++p;
@@ -500,7 +500,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
         first = last;
         buf_num = (buf_num+1) % NUM_BUFS;
 
-        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "sent data.  last=" MPIDI_MSG_SZ_FMT " data_sz=" MPIDI_MSG_SZ_FMT, last, data_sz));
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "sent data.  last=" MPIDI_MSG_SZ_FMT " data_sz=" MPIDI_MSG_SZ_FMT, last, data_sz));
     }
     while (last < data_sz);
 
@@ -509,7 +509,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
-    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "completed req local_req=%d", req->handle);
+    MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "completed req local_req=%d", req->handle);
 
 
  fn_exit:
@@ -549,7 +549,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
 
     MPIDI_FUNC_ENTER(MPID_STATE_LMT_SHM_RECV_PROGRESS);
 
-    DBG_LMT(MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "ctr=%d rank=%d", copy_buf->owner_info.val.ctr, vc->pg_rank)));
+    DBG_LMT(MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "ctr=%d rank=%d", copy_buf->owner_info.val.ctr, vc->pg_rank)));
 
     copy_buf->receiver_present.val = TRUE;
 
@@ -571,8 +571,8 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
                 vc_ch->lmt_buf_num = buf_num;
                 vc_ch->lmt_surfeit = surfeit;
                 *done = FALSE;
-                MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "first=" MPIDI_MSG_SZ_FMT " data_sz=" MPIDI_MSG_SZ_FMT, first, data_sz));
-                MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Waiting on empty buffer %d", buf_num);
+                MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "first=" MPIDI_MSG_SZ_FMT " data_sz=" MPIDI_MSG_SZ_FMT, first, data_sz));
+                MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Waiting on empty buffer %d", buf_num);
                 goto fn_exit;
             }
             ++p;
@@ -587,7 +587,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
 
 	MPID_Segment_unpack(req->dev.segment_ptr, first, &last, src_buf);
 
-        MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "recvd data.  last=" MPIDI_MSG_SZ_FMT " data_sz=" MPIDI_MSG_SZ_FMT, last, data_sz));
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "recvd data.  last=" MPIDI_MSG_SZ_FMT " data_sz=" MPIDI_MSG_SZ_FMT, last, data_sz));
 
         if (surfeit && buf_num > 0)
         {
@@ -599,7 +599,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
             /* Make sure we copied at least the leftover data from last time */
             MPIU_Assert(last - first > surfeit);
 
-            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "freed previous buffer");
+            MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "freed previous buffer");
         }
 
         if (last < expected_last)
@@ -625,7 +625,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
                 MPIU_Memcpy(((char *)copy_buf->buf[buf_num+1]) - surfeit, tmpbuf, surfeit);
             }
 
-            MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "copied leftover data");
+            MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "copied leftover data");
         }
         else
         {
@@ -644,7 +644,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
     for (i = 0; i < NUM_BUFS; ++i)
         copy_buf->len[i].val = 0;
 
-    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "completed request local_req=%d", req->handle);
+    MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "completed request local_req=%d", req->handle);
     OPA_write_barrier();
     OPA_store_int(&copy_buf->owner_info.val.rank, NO_OWNER);
 
@@ -839,7 +839,7 @@ int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc)
        calls lmt_shm_progress_vc() and it finds an empty queue. */
 
     if (vc_ch->lmt_active_lmt) {
-        MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Clearing active LMT");
+        MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Clearing active LMT");
         vc_ch->lmt_active_lmt->req->status.MPI_ERROR = req_errno;
         MPID_Request_complete(vc_ch->lmt_active_lmt->req);
         MPIU_Free(vc_ch->lmt_active_lmt);
@@ -847,7 +847,7 @@ int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc)
     }
 
     if (!LMT_SHM_Q_EMPTY(vc_ch->lmt_queue)) {
-        MPIU_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Empty LMT queue");
+        MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Empty LMT queue");
     }
 
     while (!LMT_SHM_Q_EMPTY(vc_ch->lmt_queue)) {

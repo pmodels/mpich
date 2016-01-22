@@ -28,7 +28,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_RECV);
 
-    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                       "rank=%d, tag=%d, context=%d", rank, tag,
 		      comm->recvcontext_id + context_offset));
     
@@ -60,7 +60,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
 	MPIDI_VC_t * vc;
 
 	/* Message was found in the unexepected queue */
-	MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"request found in unexpected queue");
+	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"request found in unexpected queue");
 
 	/* Release the message queue - we've removed this request from 
 	   the queue already */
@@ -70,7 +70,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
 	    int recv_pending;
 	    
 	    /* This is an eager message. */
-	    MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"eager message in the request");
+	    MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"eager message in the request");
 
 	    if (MPIDI_Request_get_sync_send_flag(rreq))
 	    {
@@ -163,7 +163,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
 	/* Message has yet to arrived.  The request has been placed on the 
 	   list of posted receive requests and populated with
            information supplied in the arguments. */
-	MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"request allocated in posted queue");
+	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"request allocated in posted queue");
 
 	/* FIXME: We do not need to add a datatype reference if
 	   the request is blocking.  This is currently added because
@@ -185,15 +185,15 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
 
   fn_exit:
     *request = rreq;
-    MPIU_DBG_STMT(MPIDI_CH3_DBG_OTHER,VERBOSE,
+    MPL_DBG_STMT(MPIDI_CH3_DBG_OTHER,VERBOSE,
     if (rreq)
     {
-	MPIU_DBG_MSG_P(MPIDI_CH3_DBG_OTHER,VERBOSE,
+	MPL_DBG_MSG_P(MPIDI_CH3_DBG_OTHER,VERBOSE,
 		       "request allocated, handle=0x%08x", rreq->handle);
     }
     else
     {
-	MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,
+	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,
 		     "operation complete, no requests allocated");
     });
 

@@ -29,7 +29,7 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
     int found;
     int mpi_errno = MPI_SUCCESS;
 	
-    MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending message to self");
+    MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending message to self");
 	
     MPIDI_Request_create_sreq(sreq, mpi_errno, goto fn_exit);
     MPIDI_Request_set_type(sreq, type);
@@ -87,7 +87,7 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
         /* we found a posted req, which we now own, so we can release the CS */
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
 
-	MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,
+	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,
 		     "found posted receive request; copying data");
 	    
 	MPIDI_CH3U_Buffer_copy(buf, count, datatype, &sreq->status.MPI_ERROR,
@@ -111,7 +111,7 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
 	
 	    /* FIXME: Insert code here to buffer small sends in a temporary buffer? */
 
-	    MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,
+	    MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,
           "added receive request to unexpected queue; attaching send request");
 	    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
 	    {
@@ -126,7 +126,7 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
 	else
 	{
 	    /* --BEGIN ERROR HANDLING-- */
-	    MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,TYPICAL,
+	    MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,TYPICAL,
 			 "ready send unable to find matching recv req");
 	    sreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
 							  "**rsendnomatch", "**rsendnomatch %d %d", rank, tag);

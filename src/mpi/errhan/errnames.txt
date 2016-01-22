@@ -839,8 +839,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mktemp_s %s:mktemp_s failed, %s
 **lseek:lseek failed
 **lseek %s:lseek failed - %s
-**fdopen:fdopen failed
-**fdopen %s:fdopen failed %s
 **tmpnam:tmpnam failed
 **tmpnam %s:tmpnam failed %s
 **fopen:fopen failed

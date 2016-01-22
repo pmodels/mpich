@@ -178,7 +178,7 @@ int MPIR_Datatype_init_names(void)
 			      "**typeinitfail", "**typeinitfail %d", i - 1);
 	    }
 
-	    MPIU_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPIU_DBG_FDEST,
+	    MPL_DBG_MSG_FMT(MPIR_DBG_DATATYPE,VERBOSE,(MPL_DBG_FDEST,
 		   "mpi_names[%d].name = %p", i, mpi_names[i].name));
 
 	    MPL_strncpy(datatype_ptr->name, mpi_names[i].name,

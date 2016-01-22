@@ -365,7 +365,6 @@ AC_ARG_ENABLE(g,
                    compiler flags, i.e. MPICHLIB_CFLAGS, MPICHLIB_CXXFLAGS,
                    MPICHLIB_FFLAGS, and MPICHLIB_FCFLAGS.
         debug    - Synonym for dbg
-        log      - Enable debug event logging
         mem      - Memory usage tracing
         meminit  - Preinitialize memory associated structures and unions to
                    eliminate access warnings from programs like valgrind
@@ -1446,9 +1445,6 @@ for option in $enable_g ; do
 	mem)
 	perform_memtracing=yes
 	;;
-	log)
-	perform_dbglog=yes
-	;;
 	mutex)
 	perform_dbgmutex=yes
 	;;
@@ -1457,7 +1453,6 @@ for option in $enable_g ; do
 	;;
         most|yes)
         perform_memtracing=yes
-        perform_dbglog=yes
         enable_append_g=yes
         perform_meminit=yes
         perform_dbgmutex=yes
@@ -1468,7 +1463,6 @@ for option in $enable_g ; do
 	all)
         perform_memarena=yes
 	perform_memtracing=yes
-	perform_dbglog=yes
 	enable_append_g=yes
 	perform_meminit=yes
 	perform_dbgmutex=yes
@@ -1511,17 +1505,6 @@ if test -n "$perform_memtracing" ; then
         AC_DEFINE(MPICH_DEBUG_MEMARENA,1,[Define if each function exit should confirm memory arena correctness])
     fi
 fi
-USE_DBG_LOGGING=0
-if test -n "$perform_dbglog" ; then
-   if test "$with_logging" != "none" ; then
-       AC_MSG_WARN([--with-logging overrides --enable-g=log])
-   else
-       AC_DEFINE(USE_DBG_LOGGING,1,[Define to enable logging macros])
-       USE_DBG_LOGGING=1
-   fi
-fi
-# allow @USE_DBG_LOGGING@ substitution in glue_romio.h
-AC_SUBST([USE_DBG_LOGGING])
 
 if test -n "$perform_dbgmutex" ; then 
    AC_DEFINE(MPICH_DEBUG_MUTEX,1,[Define to enable mutex debugging])
@@ -4670,11 +4653,6 @@ AC_HAVE_FUNCS(mkstemp)
 if test "$ac_cv_func_mkstemp" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],mkstemp)
 fi
-# fdopen() converts from an fd to a FILE*
-AC_HAVE_FUNCS(fdopen)
-if test "$ac_cv_func_fdopen" = "yes" ; then
-    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],fdopen)
-fi
 # putenv() sets environment variable
 AC_HAVE_FUNCS(putenv)
 if test "$ac_cv_func_putenv" = "yes" ; then
@@ -4874,8 +4852,6 @@ dnl uses to handle the subdir configure.  However, later versions of
 dnl autoconf did this in a way that caused problems, paritcularly with 
 dnl errors reported as inconsistent cache files.  Instead, we simply
 dnl invoke the configure scripts (if present) directly.
-
-AC_CHECK_FUNCS(getpid)
 
 # Check for the Linux functions for controlling processor affinity.
 # LINUX: sched_setaffinity

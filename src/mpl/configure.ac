@@ -58,6 +58,25 @@ AC_ARG_ENABLE(embedded,
     [embedded=no])
 AM_CONDITIONAL([MPL_EMBEDDED_MODE],[test "x${embedded}" = "xyes"])
 
+AC_ARG_ENABLE(g,
+    AC_HELP_STRING([--enable-g=option],
+	[
+		Control the level of debugging support in MPL.
+		"option" is a list of comma separated names.  Default
+		is "all".
+
+	    none|no   - No debugging
+	    log       - Enable debug event logging
+	    yes|all   - All of the above choices (except "none", obviously)
+	]),,[enable_g=none])
+
+if test "$enable_g" = "no" -o "$enable_g" = "none" ; then
+   :
+elif test "$enable_g" = "log" -o "$enable_g" = "yes" -o "$enable_g" = "all" ; then
+   AC_DEFINE([USE_DBG_LOGGING],[1],[Define to enable logging macros])
+fi
+
+
 # support gcov test coverage information
 PAC_ENABLE_COVERAGE
 
@@ -73,7 +92,7 @@ if test "$pac_cv_have___typeof" = "yes" ; then
 fi
 
 dnl Check if the necessary headers are available
-AC_CHECK_HEADERS(stdio.h stdlib.h string.h stdarg.h ctype.h sys/types.h sys/uio.h execinfo.h backtrace.h libunwind.h)
+AC_CHECK_HEADERS(stdio.h stdlib.h string.h stdarg.h ctype.h sys/types.h sys/uio.h execinfo.h backtrace.h libunwind.h unistd.h errno.h)
 
 # A C99 compliant compiler should have inttypes.h for fixed-size int types
 AC_CHECK_HEADERS(inttypes.h stdint.h)
@@ -662,6 +681,28 @@ AX_TLS
 
 #######################################################################
 ## END OF THREADS CODE
+#######################################################################
+
+
+#######################################################################
+## START OF DBG CODE
+#######################################################################
+
+# mkstemp() is a better replacement for mktemp()
+AC_HAVE_FUNCS(mkstemp)
+if test "$ac_cv_func_mkstemp" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],mkstemp)
+fi
+# fdopen() converts from an fd to a FILE*
+AC_HAVE_FUNCS(fdopen)
+if test "$ac_cv_func_fdopen" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <stdlib.h>],fdopen)
+fi
+
+AC_CHECK_FUNCS(getpid)
+
+#######################################################################
+## END OF DBG CODE
 #######################################################################
 
 

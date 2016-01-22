@@ -21,7 +21,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_IRECV);
 
-    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
 			"rank=%d, tag=%d, context=%d", 
 			rank, tag, comm->recvcontext_id + context_offset));
 
@@ -35,7 +35,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
     if (comm->revoked &&
             MPIR_AGREE_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_Process.tagged_coll_mask) &&
             MPIR_SHRINK_TAG != MPIR_TAG_MASK_ERROR_BITS(tag & ~MPIR_Process.tagged_coll_mask)) {
-        MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"Comm has been revoked. Returning from MPID_IRECV.");
+        MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"Comm has been revoked. Returning from MPID_IRECV.");
         MPIR_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
     }
 
@@ -54,7 +54,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 	MPIDI_VC_t * vc;
 	
 	/* Message was found in the unexepected queue */
-	MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"request found in unexpected queue");
+	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"request found in unexpected queue");
 
 	/* Release the message queue - we've removed this request from 
 	   the queue already */
@@ -65,7 +65,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 	    int recv_pending;
 	    
 	    /* This is an eager message */
-	    MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"eager message in the request");
+	    MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"eager message in the request");
 	    
 	    /* If this is a eager synchronous message, then we need to send an 
 	       acknowledgement back to the sender. */
@@ -147,7 +147,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 	/* Message has yet to arrived.  The request has been placed on the 
 	   list of posted receive requests and populated with
            information supplied in the arguments. */
-	MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"request allocated in posted queue");
+	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"request allocated in posted queue");
 	
 	if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
 	{
@@ -165,12 +165,12 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 
   fn_exit:
     *request = rreq;
-    MPIU_DBG_MSG_P(MPIDI_CH3_DBG_OTHER,VERBOSE,"request allocated, handle=0x%08x",
+    MPL_DBG_MSG_P(MPIDI_CH3_DBG_OTHER,VERBOSE,"request allocated, handle=0x%08x",
 		   rreq->handle);
 
  fn_fail:
-    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,"IRECV errno: 0x%08x", mpi_errno);
-    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,"(class: %d)", MPIR_ERR_GET_CLASS(mpi_errno));
+    MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,"IRECV errno: 0x%08x", mpi_errno);
+    MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,"(class: %d)", MPIR_ERR_GET_CLASS(mpi_errno));
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_IRECV);
     return mpi_errno;
 }

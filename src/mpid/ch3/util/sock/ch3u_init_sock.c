@@ -101,7 +101,7 @@ int MPIDI_VC_InitSock( MPIDI_VC_t *vc )
     return 0;
 }
 
-#ifdef USE_DBG_LOGGING
+#ifdef MPL_USE_DBG_LOGGING
 const char * MPIDI_Conn_GetStateString(int state) 
 {
     const char *name = "unknown";

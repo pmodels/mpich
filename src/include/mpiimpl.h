@@ -140,30 +140,6 @@ int usleep(useconds_t usec);
     } while (0)
 #endif
 
-/* ------------------------------------------------------------------------- */
-/* mpidebug.h */
-/* ------------------------------------------------------------------------- */
-/* Debugging and printf control */
-/* Use these *only* for debugging output intended for the implementors
-   and maintainers of MPICH.  Do *not* use these for any output that
-   general users may normally see.  Use either the error code creation
-   routines for error messages or MPIU_msg_printf etc. for general messages 
-   (MPIU_msg_printf will go through gettext).  
-
-   FIXME: Document all of these macros
-
-   NOTE: These macros and values are deprecated.  See 
-   www.mcs.anl.gov/mpi/mpich/developer/design/debugmsg.htm for 
-   the new design (only partially implemented at this time).
-   
-   The implementation is in mpidbg.h
-*/
-#include "mpidbg.h"
-
-/* ------------------------------------------------------------------------- */
-/* end of mpidebug.h */
-/* ------------------------------------------------------------------------- */
-
 #if defined HAVE_LIBHCOLL
 #include "../mpid/common/hcoll/hcollpre.h"
 #endif
@@ -2194,18 +2170,18 @@ typedef struct MPICH_PerProcess_t {
 } MPICH_PerProcess_t;
 extern MPICH_PerProcess_t MPIR_Process;
 
-#if defined (USE_DBG_LOGGING)
-extern MPIU_DBG_Class MPIR_DBG_INIT;
-extern MPIU_DBG_Class MPIR_DBG_PT2PT;
-extern MPIU_DBG_Class MPIR_DBG_THREAD;
-extern MPIU_DBG_Class MPIR_DBG_DATATYPE;
-extern MPIU_DBG_Class MPIR_DBG_COMM;
-extern MPIU_DBG_Class MPIR_DBG_BSEND;
-extern MPIU_DBG_Class MPIR_DBG_ERRHAND;
-extern MPIU_DBG_Class MPIR_DBG_OTHER;
+#if defined (MPL_USE_DBG_LOGGING)
+extern MPL_DBG_Class MPIR_DBG_INIT;
+extern MPL_DBG_Class MPIR_DBG_PT2PT;
+extern MPL_DBG_Class MPIR_DBG_THREAD;
+extern MPL_DBG_Class MPIR_DBG_DATATYPE;
+extern MPL_DBG_Class MPIR_DBG_COMM;
+extern MPL_DBG_Class MPIR_DBG_BSEND;
+extern MPL_DBG_Class MPIR_DBG_ERRHAND;
+extern MPL_DBG_Class MPIR_DBG_OTHER;
 
-extern MPIU_DBG_Class MPIR_DBG_ASSERT;
-#endif /* USE_DBG_LOGGING */
+extern MPL_DBG_Class MPIR_DBG_ASSERT;
+#endif /* MPL_USE_DBG_LOGGING */
 
 /* ------------------------------------------------------------------------- */
 /* In MPICH, each function has an "enter" and "exit" macro.  These can be 
@@ -2217,7 +2193,7 @@ extern MPIU_DBG_Class MPIR_DBG_ASSERT;
  *    These collect data on when each function began and finished; the
  *    resulting data can be displayed using special programs
  * 2. Debug logging (selected with --enable-g=log)
- *    Invokes MPIU_DBG_MSG at the entry and exit for each routine            
+ *    Invokes MPL_DBG_MSG at the entry and exit for each routine
  * 3. Additional memory validation of the memory arena (--enable-g=memarena)
  */
 /* ------------------------------------------------------------------------- */

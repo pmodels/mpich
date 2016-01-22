@@ -65,7 +65,7 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
 
 		    /* MT: this is not thread safe */
 		    MPIDI_Outstanding_close_ops -= 1;
-		    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,
+		    MPL_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,
              "outstanding close operations = %d", MPIDI_Outstanding_close_ops);
 	    
 		    if (MPIDI_Outstanding_close_ops == 0)
@@ -81,7 +81,7 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
                     /* VC was terminated before it was activated.
                        This can happen if a failed process was
                        detected before the process used the VC. */
-                    MPIU_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT,TYPICAL, "VC terminated before it was activated.  We probably got a failed"
+                    MPL_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT,TYPICAL, "VC terminated before it was activated.  We probably got a failed"
                                  " process notification.");
                     MPIDI_CH3U_Complete_posted_with_error(vc);
                     ++MPIDI_Failed_vc_count;
@@ -97,7 +97,7 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
                        be outstanding sends or receives on the local
                        side, remote side or both. */
                     
-                    MPIU_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT,TYPICAL, "Connection closed prematurely.");
+                    MPL_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT,TYPICAL, "Connection closed prematurely.");
 
                     MPIDI_CH3U_Complete_posted_with_error(vc);
                     ++MPIDI_Failed_vc_count;
@@ -124,7 +124,7 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
                        outstanding sends or receives on either
                        side. */
 
-                    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT,TYPICAL, "Connection closed prematurely during close protocol.  "
+                    MPL_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT,TYPICAL, "Connection closed prematurely during close protocol.  "
                                    "Outstanding close operations = %d", MPIDI_Outstanding_close_ops);
 
                     MPIDI_CH3U_Complete_posted_with_error(vc);
@@ -146,7 +146,7 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
 
 		default:
 		{
-		    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT,TYPICAL, "Unhandled connection state %d when closing connection",vc->state);
+		    MPL_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT,TYPICAL, "Unhandled connection state %d when closing connection",vc->state);
 		    mpi_errno = MPIR_Err_create_code(
 			MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, 
                         MPI_ERR_INTERN, "**ch3|unhandled_connection_state",
@@ -233,7 +233,7 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
     /* MT: this is not thread safe, the POBJ CS is scoped to the vc and
      * doesn't protect this global correctly */
     MPIDI_Outstanding_close_ops += 1;
-    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,(MPIU_DBG_FDEST,
+    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,(MPL_DBG_FDEST,
 		  "sending close(%s) on vc (pg=%p) %p to rank %d, ops = %d", 
 		  close_pkt->ack ? "TRUE" : "FALSE", vc->pg, vc, 
 		  rank, MPIDI_Outstanding_close_ops));
@@ -291,7 +291,7 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	MPIDI_Pkt_init(resp_pkt, MPIDI_CH3_PKT_CLOSE);
 	resp_pkt->ack = TRUE;
 	
-	MPIU_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,"sending close(TRUE) to %d",
+	MPL_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,"sending close(TRUE) to %d",
 		       vc->pg_rank);
 	mpi_errno = MPIDI_CH3_iStartMsg(vc, resp_pkt, sizeof(*resp_pkt), &resp_sreq);
         MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|send_close_ack");
@@ -308,7 +308,7 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     {
 	if (vc->state == MPIDI_VC_STATE_LOCAL_CLOSE)
 	{
-	    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,
+	    MPL_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,
 		   "received close(FALSE) from %d, moving to CLOSE_ACKED.",
 		   vc->pg_rank);
             MPIDI_CHANGE_VC_STATE(vc, CLOSE_ACKED);
@@ -317,8 +317,8 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
         {
 	    if (vc->state != MPIDI_VC_STATE_ACTIVE)
             {
-		MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, (MPIU_DBG_FDEST, "Unexpected state %s in vc %p (rank=%d) (expecting MPIDI_VC_STATE_ACTIVE)\n", MPIDI_VC_GetStateString(vc->state), vc, vc->pg_rank ));
-	    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,
+		MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_DISCONNECT, TYPICAL, (MPL_DBG_FDEST, "Unexpected state %s in vc %p (rank=%d) (expecting MPIDI_VC_STATE_ACTIVE)\n", MPIDI_VC_GetStateString(vc->state), vc, vc->pg_rank ));
+	    MPL_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,
                      "received close(FALSE) from %d, moving to REMOTE_CLOSE.",
 				   vc->pg_rank);
             }
@@ -328,7 +328,7 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     }
     else /* (close_pkt->ack == TRUE) */
     {
-	MPIU_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,
+	MPL_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,
                        "received close(TRUE) from %d, moving to CLOSED.", 
 			       vc->pg_rank);
 	MPIU_Assert (vc->state == MPIDI_VC_STATE_LOCAL_CLOSE || 
@@ -349,8 +349,8 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #ifdef MPICH_DBG_OUTPUT
 int MPIDI_CH3_PktPrint_Close( FILE *fp, MPIDI_CH3_Pkt_t *pkt )
 {
-    MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,TERSE," type ......... MPIDI_CH3_PKT_CLOSE\n");
-    MPIU_DBG_MSG_S(MPIDI_CH3_DBG_OTHER,TERSE," ack ......... %s\n", pkt->close.ack ? "TRUE" : "FALSE");
+    MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,TERSE," type ......... MPIDI_CH3_PKT_CLOSE\n");
+    MPL_DBG_MSG_S(MPIDI_CH3_DBG_OTHER,TERSE," ack ......... %s\n", pkt->close.ack ? "TRUE" : "FALSE");
     return MPI_SUCCESS;
 }
 #endif
@@ -377,7 +377,7 @@ int MPIDI_CH3U_VC_WaitForClose( void )
 
     MPID_Progress_start(&progress_state);
     while(MPIDI_Outstanding_close_ops > 0) {
-	MPIU_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,
+	MPL_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,
 		       "Waiting for %d close operations",
 		       MPIDI_Outstanding_close_ops);
 	mpi_errno = MPID_Progress_wait(&progress_state);
@@ -453,16 +453,16 @@ int MPIDI_CH3U_Get_failed_group(int last_rank, MPID_Group **failed_group)
 
     MPIDI_FUNC_ENTER(MPID_STATE_GET_FAILED_GROUP);
 
-    MPIU_DBG_MSG_D(MPIDI_CH3_DBG_OTHER, VERBOSE, "Getting failed group with %d as last acknowledged\n", last_rank);
+    MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER, VERBOSE, "Getting failed group with %d as last acknowledged\n", last_rank);
 
     if (-1 == last_rank) {
-        MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "No failure acknowledged");
+        MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "No failure acknowledged");
         *failed_group = MPID_Group_empty;
         goto fn_exit;
     }
 
     if (*MPIDI_failed_procs_string == '\0') {
-        MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "Found no failed ranks");
+        MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, VERBOSE, "Found no failed ranks");
         *failed_group = MPID_Group_empty;
         goto fn_exit;
     }
@@ -476,7 +476,7 @@ int MPIDI_CH3U_Get_failed_group(int last_rank, MPID_Group **failed_group)
     while(1) {
         parse_rank(&rank);
         ++i;
-        MPIU_DBG_MSG_D(MPIDI_CH3_DBG_OTHER, VERBOSE, "Found failed rank: %d", rank);
+        MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER, VERBOSE, "Found failed rank: %d", rank);
         utarray_push_back(failed_procs, &rank);
         MPIDI_last_known_failed = rank;
         MPIR_ERR_CHKINTERNAL(*c != ',' && *c != '\0', mpi_errno, "error parsing failed process list");
@@ -547,7 +547,7 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
         goto fn_exit;
     }
 
-    MPIU_DBG_MSG_S(MPIDI_CH3_DBG_OTHER, TYPICAL, "Received proc fail notification: %s", MPIDI_failed_procs_string);
+    MPL_DBG_MSG_S(MPIDI_CH3_DBG_OTHER, TYPICAL, "Received proc fail notification: %s", MPIDI_failed_procs_string);
 
     /* save reference to previous group so we can identify new failures */
     prev_failed_group = MPIDI_Failed_procs_group;

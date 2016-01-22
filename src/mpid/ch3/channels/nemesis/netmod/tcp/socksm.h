@@ -96,19 +96,19 @@ extern const char *const CONN_STATE_STR[];
 #endif
 #undef M_
 
-#ifdef USE_DBG_LOGGING
+#ifdef MPL_USE_DBG_LOGGING
 #define CONN_STATE_TO_STRING(_cstate) \
     (( (_cstate) >= CONN_STATE_TS_CLOSED && (_cstate) < CONN_STATE_SIZE ) ? CONN_STATE_STR[_cstate] : "out_of_range")
 
 #define DBG_CHANGE_STATE(_sc, _cstate) do { \
     const char *state_str = NULL; \
     const char *old_state_str = NULL; \
-    if (MPIU_DBG_SELECTED(MPIDI_NEM_TCP_DBG_DET,VERBOSE)) { \
+    if (MPL_DBG_SELECTED(MPIDI_NEM_TCP_DBG_DET,VERBOSE)) { \
         if ((_sc)) { \
             old_state_str = CONN_STATE_TO_STRING((_sc)->state.cstate); \
             state_str     = CONN_STATE_TO_STRING(_cstate); \
         } \
-        MPIU_DBG_OUT_FMT(MPIDI_NEM_TCP_DBG_DET, (MPIU_DBG_FDEST, "CHANGE_STATE(_sc=%p, _cstate=%d (%s)) - old_state=%s sc->vc=%p", _sc, _cstate, state_str, old_state_str, (_sc)->vc)); \
+        MPL_DBG_OUT_FMT(MPIDI_NEM_TCP_DBG_DET, (MPL_DBG_FDEST, "CHANGE_STATE(_sc=%p, _cstate=%d (%s)) - old_state=%s sc->vc=%p", _sc, _cstate, state_str, old_state_str, (_sc)->vc)); \
     } \
 } while (0)
 #else

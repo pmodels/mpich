@@ -135,7 +135,7 @@ int MPIDI_VCRT_Add_ref(struct MPIDI_VCRT *vcrt)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_VCRT_ADD_REF);
     MPIU_Object_add_ref(vcrt);
-    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_REFCOUNT,TYPICAL,(MPIU_DBG_FDEST, "Incr VCRT %p ref count",vcrt));
+    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_REFCOUNT,TYPICAL,(MPL_DBG_FDEST, "Incr VCRT %p ref count",vcrt));
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_VCRT_ADD_REF);
     return MPI_SUCCESS;
 }
@@ -161,7 +161,7 @@ int MPIDI_VCRT_Release(struct MPIDI_VCRT *vcrt, int isDisconnect )
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_VCRT_RELEASE);
 
     MPIU_Object_release_ref(vcrt, &in_use);
-    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_REFCOUNT,TYPICAL,(MPIU_DBG_FDEST, "Decr VCRT %p ref count",vcrt));
+    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_REFCOUNT,TYPICAL,(MPL_DBG_FDEST, "Decr VCRT %p ref count",vcrt));
     
     /* If this VC reference table is no longer in use, we can
        decrement the reference count of each of the VCs.  If the
@@ -227,7 +227,7 @@ int MPIDI_VCRT_Release(struct MPIDI_VCRT *vcrt, int isDisconnect )
                         MPIDI_PG_Destroy(vc->pg);
                     }
 
-		    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+		    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                             "vc=%p: not sending a close to %d, vc in state %s",
 			     vc, i, MPIDI_VC_GetStateString(vc->state)));
 		}
@@ -287,7 +287,7 @@ int MPIDI_VCR_Dup(MPIDI_VCR orig_vcr, MPIDI_VCR * new_vcr)
     else {
 	MPIDI_VC_add_ref(orig_vcr);
     }
-    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_REFCOUNT,TYPICAL,(MPIU_DBG_FDEST,"Incr VCR %p ref count",orig_vcr));
+    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_REFCOUNT,TYPICAL,(MPL_DBG_FDEST,"Incr VCR %p ref count",orig_vcr));
     *new_vcr = orig_vcr;
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_VCR_DUP);
     return MPI_SUCCESS;
@@ -356,7 +356,7 @@ int MPID_GPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size,
 	}
 	*gpid++ = vc->pg_rank;
 
-        MPIU_DBG_MSG_FMT(MPIR_DBG_COMM,VERBOSE, (MPIU_DBG_FDEST,
+        MPL_DBG_MSG_FMT(MPIR_DBG_COMM,VERBOSE, (MPL_DBG_FDEST,
                          "pgid=%d vc->pg_rank=%d",
                          pgid, vc->pg_rank));
     }
@@ -784,7 +784,7 @@ static int parse_mapping(char *map_str, mapping_type_t *type, map_block_t **map,
          Y - number of nodes with size Z
          Z - number of processes assigned to each node
      */
-    MPIU_DBG_MSG_S(MPIDI_CH3_DBG_OTHER,VERBOSE,"parsing mapping string '%s'", map_str);
+    MPL_DBG_MSG_S(MPIDI_CH3_DBG_OTHER,VERBOSE,"parsing mapping string '%s'", map_str);
 
     if (!strlen(map_str)) {
         /* An empty-string indicates an inability to determine or express the
@@ -1117,12 +1117,12 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
                 goto odd_even_cliques;
             }
             else {
-                MPIU_DBG_MSG_S(MPIDI_CH3_DBG_OTHER,TERSE,"did_map==0, unable to populate node ids from mapping=%s",value);
+                MPL_DBG_MSG_S(MPIDI_CH3_DBG_OTHER,TERSE,"did_map==0, unable to populate node ids from mapping=%s",value);
             }
             /* else fall through to O(N^2) PMI_KVS_Gets version */
         }
         else {
-            MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,TERSE,"unable to obtain the 'PMI_process_mapping' PMI key");
+            MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,TERSE,"unable to obtain the 'PMI_process_mapping' PMI key");
         }
     }
 

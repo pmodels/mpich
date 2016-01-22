@@ -684,14 +684,14 @@ static int DLOOP_Dataloop_create_flattened_struct(DLOOP_Count count,
     nr_blks = first_ind;
 
 #if 0
-    if (MPIU_DBG_SELECTED(MPIR_DBG_DATATYPE,VERBOSE)) {
-	MPIU_DBG_OUT(MPIR_DBG_DATATYPE,"--- start of flattened type ---");
+    if (MPL_DBG_SELECTED(MPIR_DBG_DATATYPE,VERBOSE)) {
+	MPL_DBG_OUT(MPIR_DBG_DATATYPE,"--- start of flattened type ---");
         for (i=0; i < nr_blks; i++) {
-	MPIU_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPIU_DBG_FDEST,
+	MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
 				   "a[%d] = (%d, " DLOOP_OFFSET_FMT_DEC_SPEC ")", i,
 				   tmp_blklens[i], tmp_disps[i]));
 	}
-	MPIU_DBG_OUT(MPIR_DBG_DATATYPE,"--- end of flattened type ---");
+	MPL_DBG_OUT(MPIR_DBG_DATATYPE,"--- end of flattened type ---");
     }
 #endif
 

@@ -28,7 +28,7 @@
 #endif
 
 
-#ifdef USE_DBG_LOGGING
+#ifdef MPL_USE_DBG_LOGGING
   #define AGG_DEBUG 1
 #endif
 

@@ -57,7 +57,7 @@ void MPIDI_CH3U_Buffer_copy(
     /* --BEGIN ERROR HANDLING-- */
     if (sdata_sz > rdata_sz)
     {
-	MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,TYPICAL,(MPIU_DBG_FDEST,
+	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,TYPICAL,(MPL_DBG_FDEST,
 	    "message truncated, sdata_sz=" MPIDI_MSG_SZ_FMT " rdata_sz=" MPIDI_MSG_SZ_FMT,
 			  sdata_sz, rdata_sz));
 	sdata_sz = rdata_sz;
@@ -85,10 +85,10 @@ void MPIDI_CH3U_Buffer_copy(
 
 	MPID_Segment_init(rbuf, rcount, rdt, &seg, 0);
 	last = sdata_sz;
-	MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                           "pre-unpack last=" MPIDI_MSG_SZ_FMT, last ));
 	MPID_Segment_unpack(&seg, 0, &last, (char*)sbuf + sdt_true_lb);
-	MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
 			 "pre-unpack last=" MPIDI_MSG_SZ_FMT, last ));
 	/* --BEGIN ERROR HANDLING-- */
 	if (last != sdata_sz)
@@ -106,10 +106,10 @@ void MPIDI_CH3U_Buffer_copy(
 
 	MPID_Segment_init(sbuf, scount, sdt, &seg, 0);
 	last = sdata_sz;
-	MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
 			       "pre-pack last=" MPIDI_MSG_SZ_FMT, last ));
 	MPID_Segment_pack(&seg, 0, &last, (char*)rbuf + rdt_true_lb);
-	MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
 			    "post-pack last=" MPIDI_MSG_SZ_FMT, last ));
 	/* --BEGIN ERROR HANDLING-- */
 	if (last != sdata_sz)
@@ -133,7 +133,7 @@ void MPIDI_CH3U_Buffer_copy(
 	/* --BEGIN ERROR HANDLING-- */
 	if (buf == NULL)
 	{
-	    MPIU_DBG_MSG(MPIDI_CH3_DBG_OTHER,TYPICAL,"SRBuf allocation failure");
+	    MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,TYPICAL,"SRBuf allocation failure");
 	    *smpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0);
 	    *rmpi_errno = *smpi_errno;
 	    *rsz = 0;
@@ -162,11 +162,11 @@ void MPIDI_CH3U_Buffer_copy(
 		last = sdata_sz;
 	    }
 	    
-	    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+	    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                "pre-pack first=" MPIDI_MSG_SZ_FMT ", last=" MPIDI_MSG_SZ_FMT, 
 						sfirst, last ));
 	    MPID_Segment_pack(&sseg, sfirst, &last, buf + buf_off);
-	    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+	    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                "post-pack first=" MPIDI_MSG_SZ_FMT ", last=" MPIDI_MSG_SZ_FMT, 
                sfirst, last ));
 	    /* --BEGIN ERROR HANDLING-- */
@@ -176,11 +176,11 @@ void MPIDI_CH3U_Buffer_copy(
 	    buf_end = buf + buf_off + (last - sfirst);
 	    sfirst = last;
 	    
-	    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+	    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
              "pre-unpack first=" MPIDI_MSG_SZ_FMT ", last=" MPIDI_MSG_SZ_FMT, 
 						rfirst, last ));
 	    MPID_Segment_unpack(&rseg, rfirst, &last, buf);
-	    MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+	    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
              "post-unpack first=" MPIDI_MSG_SZ_FMT ", last=" MPIDI_MSG_SZ_FMT, 
 						rfirst, last ));
 	    /* --BEGIN ERROR HANDLING-- */
@@ -207,7 +207,7 @@ void MPIDI_CH3U_Buffer_copy(
 	    buf_off = sfirst - rfirst;
 	    if (buf_off > 0)
 	    {
-		MPIU_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, VERBOSE, (MPIU_DBG_FDEST,
+		MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, VERBOSE, (MPL_DBG_FDEST,
                   "moved " MPIDI_MSG_SZ_FMT " bytes to the beginning of the tmp buffer", buf_off));
 		memmove(buf, buf_end - buf_off, buf_off);
 	    }
