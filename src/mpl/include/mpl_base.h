@@ -66,7 +66,7 @@
  *
  * These macros are not namespaced because the namespacing is cumbersome.
  */
-#ifdef HAVE_BUILTIN_EXPECT
+#ifdef MPL_HAVE_BUILTIN_EXPECT
 #  define unlikely(x_) __builtin_expect(!!(x_),0)
 #  define likely(x_)   __builtin_expect(!!(x_),1)
 #else

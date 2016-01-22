@@ -11,21 +11,21 @@
 
 /* IOVs */
 /* The basic channel interface uses IOVs */
-#ifdef HAVE_WINDOWS_H
+#ifdef MPL_HAVE_WINDOWS_H
     #define MPL_IOV_BUF_CAST char *
 #else
     #define MPL_IOV_BUF_CAST void *
 #endif
-#ifdef HAVE_WINDOWS_H
+#ifdef MPL_HAVE_WINDOWS_H
 #include <winsock2.h>
 #define MPL_IOV         WSABUF
 #define MPL_IOV_LEN     len
 #define MPL_IOV_BUF     buf
 #else
-#ifdef HAVE_SYS_TYPES_H
+#ifdef MPL_HAVE_SYS_TYPES_H
 #include <sys/types.h> /* macs need sys/types.h before uio.h can be included */
 #endif
-#ifdef HAVE_SYS_UIO_H
+#ifdef MPL_HAVE_SYS_UIO_H
 #include <sys/uio.h>
 #endif
 #define MPL_IOV         struct iovec

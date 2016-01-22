@@ -10,7 +10,7 @@
 #define MPLI_WTIME_IS_A_FUNCTION
 
 #include <time.h>
-#ifdef NEEDS_SYS_TIME_H
+#ifdef MPL_NEEDS_SYS_TIME_H
 /* Some OS'es mistakenly require sys/time.h to get the definition of
    CLOCK_REALTIME (POSIX requires the definition to be in time.h) */
 #include <sys/time.h>
