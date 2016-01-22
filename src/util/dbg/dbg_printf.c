@@ -94,14 +94,15 @@ static void find_basename(char *path, char **basename)
     } 
 }
 
-static void dbg_init_tls(void)
+static int dbg_init_tls(void)
 {
-#if (MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE)
-    int err;
+    int err = 0;
 
+#if (MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE)
     MPL_thread_tls_create(NULL, &dbg_tls_key, &err);
-    MPIU_Assert(err == 0);
 #endif
+
+    return err;
 }
 
 static FILE *get_fp(void)
@@ -447,7 +448,8 @@ int MPIU_DBG_PreInit( int *argc_p, char ***argv_p, int wtimeNotReady )
        return immediately */
     if (dbg_initialized != DBG_UNINIT) return MPI_SUCCESS;
 
-    dbg_init_tls();
+    if (dbg_init_tls())
+        return MPIU_DBG_ERROR;
 
     /* Check to see if any debugging was selected.  The order of these
        tests is important, as they allow general defaults to be set,
@@ -476,7 +478,7 @@ int MPIU_DBG_PreInit( int *argc_p, char ***argv_p, int wtimeNotReady )
 
     dbg_initialized = DBG_PREINIT;
 
-    return MPI_SUCCESS;
+    return MPIU_DBG_SUCCESS;
 }
 
 int MPIU_DBG_Init( int *argc_p, char ***argv_p, int has_args, int has_env, 
@@ -491,8 +493,10 @@ int MPIU_DBG_Init( int *argc_p, char ***argv_p, int has_args, int has_env,
        available) */
     if (dbg_initialized == DBG_INITIALIZED || dbg_initialized == DBG_ERROR) return MPI_SUCCESS;
 
-    if (dbg_initialized != DBG_PREINIT)
-        dbg_init_tls();
+    if (dbg_initialized != DBG_PREINIT) {
+        if (dbg_init_tls())
+            return MPIU_DBG_ERROR;
+    }
 
     dbg_fp = get_fp();
 

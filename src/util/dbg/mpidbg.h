@@ -82,6 +82,9 @@
 #define MPIU_DBG_OUT_FMT(_class,_fmtargs)
 #endif
 
+#define MPIU_DBG_SUCCESS  0
+#define MPIU_DBG_ERROR    1
+
 typedef unsigned int MPIU_DBG_Class;
 
 /* Special constants */
