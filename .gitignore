@@ -109,6 +109,7 @@ apply-xfail.sh
 
 # the hooks dir shouldn't be accidentally committed
 /maint/hooks
+/maint/getfuncstack
 
 # directories copied by autogen.sh from other directories and (generally) should
 # not have any contents added directly to them
@@ -562,9 +563,6 @@ Makefile.am-stamp
 # /src/pm/util/test/
 /src/pm/util/test/argstest
 /src/pm/util/test/forktest
-
-# /src/util/dbg/
-/src/util/dbg/getfuncstack
 
 # /src/util/logging/common/
 /src/util/logging/common/describe_states.c
