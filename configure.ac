@@ -5386,8 +5386,6 @@ dnl a build aborts due to an error (this is intended to help developers)
 AC_OUTPUT_COMMANDS([if [ ! -d lib ] ; then mkdir lib ; fi 
 date > lib/newconfig])
 
-AC_OUTPUT_COMMANDS([chmod a+x src/util/dbg/getfuncstack])
-
 AC_OUTPUT_COMMANDS([chmod a+x test/commands/cmdtests])
 
 
@@ -5661,7 +5659,6 @@ AC_OUTPUT(Makefile \
 	  src/env/mpifort.sh \
 	  src/env/mpifort.bash \
           src/env/parkill \
-	  src/util/dbg/getfuncstack \
           src/include/mpi.h \
           doc/design/Makefile \
           doc/installguide/Makefile \
