@@ -2115,20 +2115,20 @@ int _mpi_lineno = __LINE__;
 // FIXME: determine whether the type definition is needed, and include the
 // correct definition.
 typedef unsigned int size_t;
-extern \"C\" void *MPIU_trmalloc( size_t, int, const char [] );
-extern \"C\" void MPIU_trfree( void *, int, const char [] );
-extern \"C\" void MPIU_trdump( void *, int );
+extern \"C\" void *MPL_trmalloc( size_t, int, const char [] );
+extern \"C\" void MPL_trfree( void *, int, const char [] );
+extern \"C\" void MPL_trdump( void *, int );
 void *operator new(size_t size) {
-    void *p = MPIU_trmalloc( size, _mpi_lineno, __FILE__ );
+    void *p = MPL_trmalloc( size, _mpi_lineno, __FILE__ );
     return p;}
 void operator delete(void *p) {
-    MPIU_trfree( p, _mpi_lineno, __FILE__ );}
+    MPL_trfree( p, _mpi_lineno, __FILE__ );}
 void *operator new[]( size_t size) {
-    void *p = MPIU_trmalloc( size, _mpi_lineno, __FILE__ );
+    void *p = MPL_trmalloc( size, _mpi_lineno, __FILE__ );
     return p;}
 void operator delete[](void *p) {
-    MPIU_trfree( p, _mpi_lineno, __FILE__ );}
-#define MPIX_TRSummary() MPIU_trdump( 0, -1 )
+    MPL_trfree( p, _mpi_lineno, __FILE__ );}
+#define MPIX_TRSummary() MPL_trdump( 0, -1 )
 #define MPIX_SetLineno _mpi_lineno = __LINE__ + 1
 #else
 #define MPIX_TRSummary()

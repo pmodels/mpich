@@ -54,12 +54,5 @@ void MPIR_Ext_cs_yield(void);
 /* to facilitate error checking */
 int MPIR_Ext_datatype_iscommitted(MPI_Datatype datatype);
 
-/* prototypes for the mem tracing routines */
-void *MPIU_trmalloc(size_t a, int lineno, const char fname[]);
-void MPIU_trfree(void *a_ptr, int line, const char fname[]);
-void *MPIU_trcalloc(size_t nelem, size_t elsize, int lineno, const char fname[]);
-void *MPIU_trrealloc(void *p, size_t size, int lineno, const char fname[]);
-void *MPIU_trstrdup(const char *str, int lineno, const char fname[]);
-
 #endif /* defined(GLUE_ROMIO_H_INCLUDED) */
 

@@ -26,13 +26,13 @@
 #if defined(MPL_USE_DBG_LOGGING)
 #define MPIR_FUNC_ENTER(a) MPL_DBG_MSG(MPL_DBG_ROUTINE_ENTER,TYPICAL,"Entering "#a)
 #elif defined(MPICH_DEBUG_MEMARENA)
-#define MPIR_FUNC_ENTER(a) MPIU_trvalid("Entering " #a)
+#define MPIR_FUNC_ENTER(a) MPL_trvalid("Entering " #a)
 #endif
 
 #if defined(MPL_USE_DBG_LOGGING)
 #define MPIR_FUNC_EXIT(a) MPL_DBG_MSG(MPL_DBG_ROUTINE_EXIT,TYPICAL,"Leaving "#a)
 #elif defined(MPICH_DEBUG_MEMARENA)
-#define MPIR_FUNC_EXIT(a) MPIU_trvalid("Leaving " #a)
+#define MPIR_FUNC_EXIT(a) MPL_trvalid("Leaving " #a)
 #endif
 
 #endif /* MPIFUNC_H_INCLUDED */

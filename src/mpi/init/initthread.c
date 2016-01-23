@@ -527,7 +527,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     MPIU_Timer_init(MPIR_Process.comm_world->rank,
 		    MPIR_Process.comm_world->local_size);
 #ifdef USE_MEMORY_TRACING
-    MPIU_trinit( MPIR_Process.comm_world->rank, MPIR_ThreadInfo.isThreaded );
+    MPL_trinit( MPIR_Process.comm_world->rank, MPIR_ThreadInfo.isThreaded );
     /* Indicate that we are near the end of the init step; memory 
        allocated already will have an id of zero; this helps 
        separate memory leaks in the initialization code from 

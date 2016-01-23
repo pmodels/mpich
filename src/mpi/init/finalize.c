@@ -275,7 +275,7 @@ int MPI_Finalize( void )
 	    /* The second argument is the min id to print; memory allocated 
 	       after MPI_Init is given an id of one.  This allows us to
 	       ignore, if desired, memory leaks in the MPID_Init call */
-	    MPIU_trdump( (void *)0, -1 );
+	    MPL_trdump( (void *)0, -1 );
 	}
     }
 #endif

@@ -85,15 +85,6 @@ typedef int MPIU_BOOL;
 
 /* ------------------------------------------------------------------------- */
 
-void MPIU_trinit(int, int);
-void *MPIU_trmalloc(size_t, int, const char []);
-void MPIU_trfree(void *, int, const char []);
-int MPIU_trvalid(const char []);
-void *MPIU_trcalloc(size_t, size_t, int, const char []);
-void *MPIU_trrealloc(void *, size_t, int, const char[]);
-void *MPIU_trstrdup(const char *, int, const char[]);
-void MPIU_trdump(FILE *, int);
-
 #ifdef USE_MEMORY_TRACING
 /*M
   MPIU_Malloc - Allocate memory
@@ -116,15 +107,15 @@ void MPIU_trdump(FILE *, int);
 .ve
   However, it can also be defined as 
 .vb
-  #define MPIU_Malloc(n) MPIU_trmalloc(n,__LINE__,__FILE__)
+  #define MPIU_Malloc(n) MPL_trmalloc(n,__LINE__,__FILE__)
 .ve
-  where 'MPIU_trmalloc' is a tracing version of 'malloc' that is included with 
+  where 'MPL_trmalloc' is a tracing version of 'malloc' that is included with
   MPICH.
 
   Module:
   Utility
   M*/
-#define MPIU_Malloc(a)    MPIU_trmalloc((a),__LINE__,__FILE__)
+#define MPIU_Malloc(a)    MPL_trmalloc((a),__LINE__,__FILE__)
 
 /*M
   MPIU_Calloc - Allocate memory that is initialized to zero.
@@ -140,13 +131,13 @@ void MPIU_trdump(FILE *, int);
 
   Notes:
   Like 'MPIU_Malloc' and 'MPIU_Free', this will often be implemented as a 
-  macro but may use 'MPIU_trcalloc' to provide a tracing version.
+  macro but may use 'MPL_trcalloc' to provide a tracing version.
 
   Module:
   Utility
   M*/
 #define MPIU_Calloc(a,b)  \
-    MPIU_trcalloc((a),(b),__LINE__,__FILE__)
+    MPL_trcalloc((a),(b),__LINE__,__FILE__)
 
 /*M
   MPIU_Free - Free memory
@@ -167,19 +158,19 @@ void MPIU_trdump(FILE *, int);
 .ve
   However, it can also be defined as 
 .vb
-  #define MPIU_Free(n) MPIU_trfree(n,__LINE__,__FILE__)
+  #define MPIU_Free(n) MPL_trfree(n,__LINE__,__FILE__)
 .ve
-  where 'MPIU_trfree' is a tracing version of 'free' that is included with 
+  where 'MPL_trfree' is a tracing version of 'free' that is included with
   MPICH.
 
   Module:
   Utility
   M*/
-#define MPIU_Free(a)      MPIU_trfree(a,__LINE__,__FILE__)
+#define MPIU_Free(a)      MPL_trfree(a,__LINE__,__FILE__)
 
-#define MPIU_Strdup(a)    MPIU_trstrdup(a,__LINE__,__FILE__)
+#define MPIU_Strdup(a)    MPL_trstrdup(a,__LINE__,__FILE__)
 
-#define MPIU_Realloc(a,b)    MPIU_trrealloc((a),(b),__LINE__,__FILE__)
+#define MPIU_Realloc(a,b)    MPL_trrealloc((a),(b),__LINE__,__FILE__)
 
 /* Define these as invalid C to catch their use in the code */
 #if 0
