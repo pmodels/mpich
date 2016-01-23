@@ -23,19 +23,6 @@ extern MPL_DBG_Class MPIR_DBG_STRING;
 #define MPL_STR_NOMEM      2
 #define MPL_STR_TRUNCATED  3
 
-#ifdef MPL_USE_HUMAN_READABLE_TOKENS
-
-#define MPL_STR_QUOTE_CHAR     '\"'
-#define MPL_STR_QUOTE_STR      "\""
-#define MPL_STR_DELIM_CHAR     '='
-#define MPL_STR_DELIM_STR      "="
-#define MPL_STR_ESCAPE_CHAR    '\\'
-#define MPL_STR_HIDE_CHAR      '*'
-#define MPL_STR_SEPAR_CHAR     ' '
-#define MPL_STR_SEPAR_STR      " "
-
-#else
-
 #define MPL_STR_QUOTE_CHAR     '\"'
 #define MPL_STR_QUOTE_STR      "\""
 #define MPL_STR_DELIM_CHAR     '#'
@@ -44,8 +31,6 @@ extern MPL_DBG_Class MPIR_DBG_STRING;
 #define MPL_STR_HIDE_CHAR      '*'
 #define MPL_STR_SEPAR_CHAR     '$'
 #define MPL_STR_SEPAR_STR      "$"
-
-#endif
 
 int MPL_str_get_string_arg(const char *str, const char *key, char *val,
 			    int maxlen);

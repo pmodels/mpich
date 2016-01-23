@@ -54,10 +54,6 @@ dnl    MPID_LIBTOOL_STATIC_FLAG - The static compilation flag to use
 dnl                               for the example executables within
 dnl                               mpich.  If not set, -static will be
 dnl                               used.
-dnl    PMI_REQUIRES_READABLE_TOKENS - if yes, define the C-preprocessor
-dnl                            value USE_HUMAN_READABLE_TOKENS, which is
-dnl                            used in src/include/mpimem.h to define token
-dnl                            separators used in src/util/mem/argstr.c
 dnl    PM_REQUIRES_PMI       - if set, provides the name of the PMI 
 dnl                            interface implementation.  If not set,
 dnl                            the "simple" PMI implementation is used.
@@ -1676,11 +1672,6 @@ fi
 # pm_name is the *primary* pm
 pm_name=$first_pm_name
 AC_SUBST(pm_name)
-
-# Some versions of PM and PMI require a special definition
-if test "$PMI_REQUIRES_READABLE_TOKENS" = "yes" ; then
-    AC_DEFINE(USE_HUMAN_READABLE_TOKENS,1,[Define to use ='s and spaces in the string utilities.])
-fi
 
 # Step 2:
 # Once we've selected the process manager (or managers), we can
