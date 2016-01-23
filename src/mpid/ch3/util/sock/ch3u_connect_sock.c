@@ -243,7 +243,7 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
 	MPIR_ERR_POP(mpi_errno);
     }
     mpi_errno = MPIDI_GetTagFromPort(port_name, &port_name_tag);
-    if (mpi_errno != MPIU_STR_SUCCESS) {
+    if (mpi_errno != MPL_STR_SUCCESS) {
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**argstr_port_name_tag");
     }
 
@@ -346,27 +346,27 @@ int MPIDU_Sock_get_conninfo_from_bc( const char *bc,
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_SOCK_GET_CONNINFO_FROM_BC);
 
-    str_errno = MPIU_Str_get_string_arg(bc, MPIDI_CH3I_HOST_DESCRIPTION_KEY, 
+    str_errno = MPL_str_get_string_arg(bc, MPIDI_CH3I_HOST_DESCRIPTION_KEY,
 				 host_description, maxlen);
-    if (str_errno != MPIU_STR_SUCCESS) {
+    if (str_errno != MPL_STR_SUCCESS) {
 	/* --BEGIN ERROR HANDLING */
-	if (str_errno == MPIU_STR_FAIL) {
+	if (str_errno == MPL_STR_FAIL) {
 	    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**argstr_missinghost");
 	}
 	else {
-	    /* MPIU_STR_TRUNCATED or MPIU_STR_NONEM */
+	    /* MPL_STR_TRUNCATED or MPL_STR_NONEM */
 	    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**argstr_hostd");
 	}
 	/* --END ERROR HANDLING-- */
     }
-    str_errno = MPIU_Str_get_int_arg(bc, MPIDI_CH3I_PORT_KEY, port);
-    if (str_errno != MPIU_STR_SUCCESS) {
+    str_errno = MPL_str_get_int_arg(bc, MPIDI_CH3I_PORT_KEY, port);
+    if (str_errno != MPL_STR_SUCCESS) {
 	/* --BEGIN ERROR HANDLING */
-	if (str_errno == MPIU_STR_FAIL) {
+	if (str_errno == MPL_STR_FAIL) {
 	    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**argstr_missingport");
 	}
 	else {
-	    /* MPIU_STR_TRUNCATED or MPIU_STR_NONEM */
+	    /* MPL_STR_TRUNCATED or MPL_STR_NONEM */
 	    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**argstr_port");
 	}
 	/* --END ERROR HANDLING-- */
@@ -381,9 +381,9 @@ int MPIDU_Sock_get_conninfo_from_bc( const char *bc,
        be identified or written.  See also channels/sock/ch3_progress.c */
     *hasIfaddr = 0;
 #if !defined(HAVE_WINDOWS_H) && defined(HAVE_INET_PTON)
-    str_errno = MPIU_Str_get_string_arg(bc, MPIDI_CH3I_IFNAME_KEY, 
+    str_errno = MPL_str_get_string_arg(bc, MPIDI_CH3I_IFNAME_KEY,
 					ifname, sizeof(ifname) );
-    if (str_errno == MPIU_STR_SUCCESS) {
+    if (str_errno == MPL_STR_SUCCESS) {
 	/* Convert ifname into 4-byte ip address */
 	/* Use AF_INET6 for IPv6 (inet_pton may still be used).
 	   An address with more than 3 :'s is an IPv6 address */
@@ -432,7 +432,7 @@ int MPIDI_CH3U_Get_business_card_sock(int myRank,
 				      char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    int str_errno = MPIU_STR_SUCCESS;
+    int str_errno = MPL_STR_SUCCESS;
     MPIDU_Sock_ifaddr_t ifaddr;
     char ifnamestr[MAX_HOST_DESCRIPTION_LEN];
     char *bc_orig = *bc_val_p;
@@ -442,17 +442,17 @@ int MPIDI_CH3U_Get_business_card_sock(int myRank,
 
     MPIDU_CH3U_GetSockInterfaceAddr( myRank, ifnamestr, sizeof(ifnamestr), &ifaddr );
 
-    str_errno = MPIU_Str_add_int_arg(bc_val_p, val_max_sz_p,
+    str_errno = MPL_str_add_int_arg(bc_val_p, val_max_sz_p,
                                      MPIDI_CH3I_PORT_KEY, MPIDI_CH3I_listener_port);
     if (str_errno) {
-        MPIR_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
     
-    str_errno = MPIU_Str_add_string_arg(bc_val_p, val_max_sz_p,
+    str_errno = MPL_str_add_string_arg(bc_val_p, val_max_sz_p,
                                         MPIDI_CH3I_HOST_DESCRIPTION_KEY, ifnamestr );
     if (str_errno) {
-        MPIR_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
 
@@ -482,12 +482,12 @@ int MPIDI_CH3U_Get_business_card_sock(int myRank,
 	    MPL_snprintf( ifname, sizeof(ifname), "%u.%u.%u.%u", 
 			   p[0], p[1], p[2], p[3] );
 	    MPL_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT,VERBOSE,"ifname = %s",ifname );
-	    str_errno = MPIU_Str_add_string_arg( bc_val_p,
+	    str_errno = MPL_str_add_string_arg( bc_val_p,
 						 val_max_sz_p,
 						 MPIDI_CH3I_IFNAME_KEY,
 						 ifname );
             if (str_errno) {
-                MPIR_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+                MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
             }
 	}
@@ -503,12 +503,12 @@ int MPIDI_CH3U_Get_business_card_sock(int myRank,
 	    MPL_snprintf( ifname, sizeof(ifname), "%u.%u.%u.%u", 
 			   p[0], p[1], p[2], p[3] );
 	    MPL_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT,VERBOSE,"ifname = %s",ifname );
-	    str_errno = MPIU_Str_add_string_arg( bc_val_p,
+	    str_errno = MPL_str_add_string_arg( bc_val_p,
 						 val_max_sz_p,
 						 MPIDI_CH3I_IFNAME_KEY,
 						 ifname );
             if (str_errno) {
-                MPIR_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+                MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
             }
 	}

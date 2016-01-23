@@ -284,7 +284,7 @@ static void free_port_name_tag(int tag)
 static int MPIDI_Open_port(MPID_Info *info_ptr, char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
-    int str_errno = MPIU_STR_SUCCESS;
+    int str_errno = MPL_STR_SUCCESS;
     int len;
     int port_name_tag = 0; /* this tag is added to the business card,
                               which is then returned as the port name */
@@ -297,11 +297,11 @@ static int MPIDI_Open_port(MPID_Info *info_ptr, char *port_name)
     MPIR_ERR_CHKANDJUMP(mpi_errno,mpi_errno,MPI_ERR_OTHER,"**argstr_port_name_tag");
 
     len = MPI_MAX_PORT_NAME;
-    str_errno = MPIU_Str_add_int_arg(&port_name, &len,
+    str_errno = MPL_str_add_int_arg(&port_name, &len,
                                      MPIDI_CH3I_PORT_NAME_TAG_KEY, port_name_tag);
     MPIR_ERR_CHKANDJUMP(str_errno, mpi_errno, MPI_ERR_OTHER, "**argstr_port_name_tag");
 
-    /* This works because Get_business_card uses the same MPIU_Str_xxx 
+    /* This works because Get_business_card uses the same MPL_str_xxx
        functions as above to add the business card to the input string */
     /* FIXME: We should instead ask the mpid_pg routines to give us
        a connection string. There may need to be a separate step to 
@@ -353,9 +353,9 @@ fn_fail:
 int MPIDI_GetTagFromPort( const char *port_name, int *port_name_tag )
 {
     int mpi_errno = MPI_SUCCESS;
-    int str_errno = MPIU_STR_SUCCESS;
+    int str_errno = MPL_STR_SUCCESS;
 
-    str_errno = MPIU_Str_get_int_arg(port_name, MPIDI_CH3I_PORT_NAME_TAG_KEY,
+    str_errno = MPL_str_get_int_arg(port_name, MPIDI_CH3I_PORT_NAME_TAG_KEY,
                                      port_name_tag);
     MPIR_ERR_CHKANDJUMP(str_errno, mpi_errno, MPI_ERR_OTHER, "**argstr_no_port_name_tag");
 

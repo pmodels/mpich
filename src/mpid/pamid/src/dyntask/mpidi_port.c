@@ -240,11 +240,11 @@ int MPIDI_Connect_to_root(const char * port_name,
     TRACE_ERR("MPIDI_Connect_to_root - vc->taskid=%d\n", vc->taskid);
 
     mpi_errno = MPIDI_GetTagFromPort(port_name, &port_name_tag);
-    if (mpi_errno != MPIU_STR_SUCCESS) {
+    if (mpi_errno != MPL_STR_SUCCESS) {
       TRACE_ERR("MPIDI_GetTagFromPort returned with mpi_errno=%d", mpi_errno);
     }
     mpi_errno = MPIDI_GetTaskidFromPort(port_name, &taskid_tag);
-    if (mpi_errno != MPIU_STR_SUCCESS) {
+    if (mpi_errno != MPL_STR_SUCCESS) {
       TRACE_ERR("MPIDI_GetTaskidFromPort returned with mpi_errno=%d", mpi_errno);
     }
 
@@ -289,12 +289,12 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
 
     /* extract the tag from the port_name */
     mpi_errno = MPIDI_GetTagFromPort( port_name, &port_name_tag);
-    if (mpi_errno != MPIU_STR_SUCCESS) {
+    if (mpi_errno != MPL_STR_SUCCESS) {
 	TRACE_ERR("MPIDI_GetTagFromPort returned with mpi_errno=%d\n", mpi_errno);
     }
 
     mpi_errno = MPIDI_GetTaskidFromPort(port_name, &taskid_tag);
-    if (mpi_errno != MPIU_STR_SUCCESS) {
+    if (mpi_errno != MPL_STR_SUCCESS) {
 	TRACE_ERR("MPIDI_GetTaskidFromPort returned with mpi_errno=%d\n", mpi_errno);
     }
     connect_vc->taskid=taskid_tag;
@@ -328,7 +328,7 @@ static int MPIDI_Create_inter_root_communicator_accept(const char *port_name,
 
     /* extract the tag from the port_name */
     mpi_errno = MPIDI_GetTagFromPort( port_name, &port_name_tag);
-    if (mpi_errno != MPIU_STR_SUCCESS) {
+    if (mpi_errno != MPL_STR_SUCCESS) {
 	TRACE_ERR("MPIDI_GetTagFromPort returned with mpi_errnp=%d\n", mpi_errno);
     }
 
