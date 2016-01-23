@@ -355,7 +355,7 @@ void *MPIU_Handle_obj_alloc_unsafe(MPIU_Object_alloc_t *objmem)
     if (ptr) {
 #ifdef USE_MEMORY_TRACING
     /* We set the object to an invalid pattern.  This is similar to 
-       what is done by MPIU_trmalloc by default (except that trmalloc uses
+       what is done by MPL_trmalloc by default (except that trmalloc uses
        0xda as the byte in the memset)
     */
         /* if the object was previously freed then MEMPOOL_FREE marked it as

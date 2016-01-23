@@ -11,7 +11,6 @@ noinst_HEADERS +=                               \
     src/util/mem/mpiu_strerror.h
 
 mpi_core_sources += \
-    src/util/mem/trmem.c      \
     src/util/mem/handlemem.c  \
     src/util/mem/strerror.c
 
