@@ -348,21 +348,21 @@ MPID_nem_mpich_serialize_win (void *buf, int buf_len, MPID_nem_mpich_win_t *win,
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_SERIALIZE_WIN);
 
     handle_len = strlen (win->handle);
-    str_errno = MPIU_Str_add_int_arg (&b, &bl, WIN_HANLEN_KEY, handle_len);
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
-    str_errno = MPIU_Str_add_string_arg(&b, &bl, WIN_HANDLE_KEY, win->handle);
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
-    str_errno = MPIU_Str_add_int_arg (&b, &bl, WIN_PROC_KEY, win->proc);
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
-    str_errno = MPIU_Str_add_binary_arg (&b, &bl, WIN_HOME_ADDR_KEY, win->home_address, sizeof (win->home_address));
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
-    str_errno = MPIU_Str_add_int_arg (&b, &bl, WIN_LEN_KEY, win->len);
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
+    str_errno = MPL_str_add_int_arg (&b, &bl, WIN_HANLEN_KEY, handle_len);
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
+    str_errno = MPL_str_add_string_arg(&b, &bl, WIN_HANDLE_KEY, win->handle);
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
+    str_errno = MPL_str_add_int_arg (&b, &bl, WIN_PROC_KEY, win->proc);
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
+    str_errno = MPL_str_add_binary_arg (&b, &bl, WIN_HOME_ADDR_KEY, win->home_address, sizeof (win->home_address));
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
+    str_errno = MPL_str_add_int_arg (&b, &bl, WIN_LEN_KEY, win->len);
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**winserialize");
 
     *len = buf_len - bl;
 
@@ -392,23 +392,23 @@ MPID_nem_mpich_deserialize_win (void *buf, int buf_len, MPID_nem_mpich_win_t **w
 
     MPIU_CHKPMEM_MALLOC (*win, MPID_nem_mpich_win_t *, sizeof (MPID_nem_mpich_win_t), mpi_errno, "win object");
 
-    str_errno = MPIU_Str_get_int_arg (b, WIN_HANLEN_KEY, &handle_len);
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**windeserialize");
+    str_errno = MPL_str_get_int_arg (b, WIN_HANLEN_KEY, &handle_len);
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**windeserialize");
     MPIU_CHKPMEM_MALLOC ((*win)->handle, char *, handle_len, mpi_errno, "window handle");
 
-    str_errno = MPIU_Str_get_string_arg(b, WIN_HANDLE_KEY, (*win)->handle, handle_len);
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**windeserialize");
-    str_errno = MPIU_Str_get_int_arg (b, WIN_PROC_KEY, &(*win)->proc);
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**windeserialize");
-    str_errno = MPIU_Str_get_binary_arg (b, WIN_HOME_ADDR_KEY, (char *)&(*win)->home_address, sizeof ((*win)->home_address), &ol);
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL || ol != sizeof ((*win)->home_address), mpi_errno, MPI_ERR_OTHER, "**windeserialize");
-    str_errno = MPIU_Str_get_int_arg (b, WIN_LEN_KEY, &(*win)->len);
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
-    MPIR_ERR_CHKANDJUMP (str_errno == MPIU_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**windeserialize");
+    str_errno = MPL_str_get_string_arg(b, WIN_HANDLE_KEY, (*win)->handle, handle_len);
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**windeserialize");
+    str_errno = MPL_str_get_int_arg (b, WIN_PROC_KEY, &(*win)->proc);
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**windeserialize");
+    str_errno = MPL_str_get_binary_arg (b, WIN_HOME_ADDR_KEY, (char *)&(*win)->home_address, sizeof ((*win)->home_address), &ol);
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_FAIL || ol != sizeof ((*win)->home_address), mpi_errno, MPI_ERR_OTHER, "**windeserialize");
+    str_errno = MPL_str_get_int_arg (b, WIN_LEN_KEY, &(*win)->len);
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    MPIR_ERR_CHKANDJUMP (str_errno == MPL_STR_FAIL, mpi_errno, MPI_ERR_OTHER, "**windeserialize");
 
     (*win)->local_address = 0;
 

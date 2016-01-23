@@ -136,7 +136,7 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
 
     /* extract the tag from the port_name */
     mpi_errno = MPIDI_GetTagFromPort( port_name, &port_name_tag);
-    if (mpi_errno != MPIU_STR_SUCCESS) {
+    if (mpi_errno != MPL_STR_SUCCESS) {
 	MPIR_ERR_POP(mpi_errno);
     }
 
@@ -177,7 +177,7 @@ static int MPIDI_Create_inter_root_communicator_accept(const char *port_name,
 
     /* extract the tag from the port_name */
     mpi_errno = MPIDI_GetTagFromPort( port_name, &port_name_tag);
-    if (mpi_errno != MPIU_STR_SUCCESS) {
+    if (mpi_errno != MPL_STR_SUCCESS) {
 	MPIR_ERR_POP(mpi_errno);
     }
 

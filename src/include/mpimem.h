@@ -80,53 +80,8 @@ extern MPL_DBG_Class MPIR_DBG_STRING;
 
 /* Define the string copy and duplication functions */
 /* ---------------------------------------------------------------------- */
-/* FIXME - The string routines do not belong in the memory header file  */
-/* FIXME - The string error code such be MPICH-usable error codes */
-#define MPIU_STR_SUCCESS    0
-#define MPIU_STR_FAIL      -1
-#define MPIU_STR_NOMEM      1
-
 /* FIXME: Global types like this need to be discussed and agreed to */
 typedef int MPIU_BOOL;
-
-/* FIXME: These should be scoped to only the routines that need them */
-#ifdef USE_HUMAN_READABLE_TOKENS
-
-#define MPIU_STR_QUOTE_CHAR     '\"'
-#define MPIU_STR_QUOTE_STR      "\""
-#define MPIU_STR_DELIM_CHAR     '='
-#define MPIU_STR_DELIM_STR      "="
-#define MPIU_STR_ESCAPE_CHAR    '\\'
-#define MPIU_STR_HIDE_CHAR      '*'
-#define MPIU_STR_SEPAR_CHAR     ' '
-#define MPIU_STR_SEPAR_STR      " "
-
-#else
-
-#define MPIU_STR_QUOTE_CHAR     '\"'
-#define MPIU_STR_QUOTE_STR      "\""
-#define MPIU_STR_DELIM_CHAR     '#'
-#define MPIU_STR_DELIM_STR      "#"
-#define MPIU_STR_ESCAPE_CHAR    '\\'
-#define MPIU_STR_HIDE_CHAR      '*'
-#define MPIU_STR_SEPAR_CHAR     '$'
-#define MPIU_STR_SEPAR_STR      "$"
-
-#endif
-
-int MPIU_Str_get_string_arg(const char *str, const char *key, char *val, 
-			    int maxlen);
-int MPIU_Str_get_binary_arg(const char *str, const char *key, char *buffer, 
-			    int maxlen, int *out_length);
-int MPIU_Str_get_int_arg(const char *str, const char *key, int *val_ptr);
-int MPIU_Str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *key, 
-			    const char *val);
-int MPIU_Str_add_binary_arg(char **str_ptr, int *maxlen_ptr, const char *key, 
-			    const char *buffer, int length);
-int MPIU_Str_add_int_arg(char **str_ptr, int *maxlen_ptr, const char *key, 
-			 int val);
-int MPIU_Str_add_string(char **str_ptr, int *maxlen_ptr, const char *val);
-int MPIU_Str_get_string(char **str_ptr, char *val, int maxlen);
 
 /* ------------------------------------------------------------------------- */
 

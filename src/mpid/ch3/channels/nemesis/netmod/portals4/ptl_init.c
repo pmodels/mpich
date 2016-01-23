@@ -368,7 +368,7 @@ static int ptl_finalize(void)
 static int get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    int str_errno = MPIU_STR_SUCCESS;
+    int str_errno = MPL_STR_SUCCESS;
     int ret;
     ptl_process_t my_ptl_id;
     MPIDI_STATE_DECL(MPID_STATE_GET_BUSINESS_CARD);
@@ -380,49 +380,49 @@ static int get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_p)
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "Allocated NI and PT id=(%#x,%#x) pt=%#x",
                                             my_ptl_id.phys.nid, my_ptl_id.phys.pid, MPIDI_nem_ptl_pt));
 
-    str_errno = MPIU_Str_add_binary_arg(bc_val_p, val_max_sz_p, NID_KEY, (char *)&my_ptl_id.phys.nid, sizeof(my_ptl_id.phys.nid));
+    str_errno = MPL_str_add_binary_arg(bc_val_p, val_max_sz_p, NID_KEY, (char *)&my_ptl_id.phys.nid, sizeof(my_ptl_id.phys.nid));
     if (str_errno) {
-        MPIR_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
-    str_errno = MPIU_Str_add_binary_arg(bc_val_p, val_max_sz_p, PID_KEY, (char *)&my_ptl_id.phys.pid, sizeof(my_ptl_id.phys.pid));
+    str_errno = MPL_str_add_binary_arg(bc_val_p, val_max_sz_p, PID_KEY, (char *)&my_ptl_id.phys.pid, sizeof(my_ptl_id.phys.pid));
     if (str_errno) {
-        MPIR_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
-    str_errno = MPIU_Str_add_binary_arg(bc_val_p, val_max_sz_p, PTI_KEY, (char *)&MPIDI_nem_ptl_pt, sizeof(MPIDI_nem_ptl_pt));
+    str_errno = MPL_str_add_binary_arg(bc_val_p, val_max_sz_p, PTI_KEY, (char *)&MPIDI_nem_ptl_pt, sizeof(MPIDI_nem_ptl_pt));
     if (str_errno) {
-        MPIR_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
-    str_errno = MPIU_Str_add_binary_arg(bc_val_p, val_max_sz_p, PTIG_KEY, (char *)&MPIDI_nem_ptl_get_pt,
+    str_errno = MPL_str_add_binary_arg(bc_val_p, val_max_sz_p, PTIG_KEY, (char *)&MPIDI_nem_ptl_get_pt,
                                         sizeof(MPIDI_nem_ptl_get_pt));
     if (str_errno) {
-        MPIR_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
-    str_errno = MPIU_Str_add_binary_arg(bc_val_p, val_max_sz_p, PTIC_KEY, (char *)&MPIDI_nem_ptl_control_pt,
+    str_errno = MPL_str_add_binary_arg(bc_val_p, val_max_sz_p, PTIC_KEY, (char *)&MPIDI_nem_ptl_control_pt,
                                         sizeof(MPIDI_nem_ptl_control_pt));
     if (str_errno) {
-        MPIR_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
-    str_errno = MPIU_Str_add_binary_arg(bc_val_p, val_max_sz_p, PTIR_KEY, (char *)&MPIDI_nem_ptl_rpt_pt,
+    str_errno = MPL_str_add_binary_arg(bc_val_p, val_max_sz_p, PTIR_KEY, (char *)&MPIDI_nem_ptl_rpt_pt,
                                         sizeof(MPIDI_nem_ptl_rpt_pt));
     if (str_errno) {
-        MPIR_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
-    str_errno = MPIU_Str_add_binary_arg(bc_val_p, val_max_sz_p, PTIRG_KEY, (char *)&MPIDI_nem_ptl_get_rpt_pt,
+    str_errno = MPL_str_add_binary_arg(bc_val_p, val_max_sz_p, PTIRG_KEY, (char *)&MPIDI_nem_ptl_get_rpt_pt,
                                         sizeof(MPIDI_nem_ptl_get_rpt_pt));
     if (str_errno) {
-        MPIR_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
-    str_errno = MPIU_Str_add_binary_arg(bc_val_p, val_max_sz_p, PTIRC_KEY, (char *)&MPIDI_nem_ptl_control_rpt_pt,
+    str_errno = MPL_str_add_binary_arg(bc_val_p, val_max_sz_p, PTIRC_KEY, (char *)&MPIDI_nem_ptl_control_rpt_pt,
                                         sizeof(MPIDI_nem_ptl_control_rpt_pt));
     if (str_errno) {
-        MPIR_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
 
@@ -526,29 +526,29 @@ int MPID_nem_ptl_get_id_from_bc(const char *business_card, ptl_process_t *id, pt
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_GET_ID_FROM_BC);
 
-    ret = MPIU_Str_get_binary_arg(business_card, NID_KEY, (char *)&id->phys.nid, sizeof(id->phys.nid), &len);
-    MPIR_ERR_CHKANDJUMP(ret != MPIU_STR_SUCCESS || len != sizeof(id->phys.nid), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+    ret = MPL_str_get_binary_arg(business_card, NID_KEY, (char *)&id->phys.nid, sizeof(id->phys.nid), &len);
+    MPIR_ERR_CHKANDJUMP(ret != MPL_STR_SUCCESS || len != sizeof(id->phys.nid), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
 
-    ret = MPIU_Str_get_binary_arg(business_card, PID_KEY, (char *)&id->phys.pid, sizeof(id->phys.pid), &len);
-    MPIR_ERR_CHKANDJUMP(ret != MPIU_STR_SUCCESS || len != sizeof(id->phys.pid), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+    ret = MPL_str_get_binary_arg(business_card, PID_KEY, (char *)&id->phys.pid, sizeof(id->phys.pid), &len);
+    MPIR_ERR_CHKANDJUMP(ret != MPL_STR_SUCCESS || len != sizeof(id->phys.pid), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
 
-    ret = MPIU_Str_get_binary_arg(business_card, PTI_KEY, (char *)pt, sizeof(*pt), &len);
-    MPIR_ERR_CHKANDJUMP(ret != MPIU_STR_SUCCESS || len != sizeof(*pt), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+    ret = MPL_str_get_binary_arg(business_card, PTI_KEY, (char *)pt, sizeof(*pt), &len);
+    MPIR_ERR_CHKANDJUMP(ret != MPL_STR_SUCCESS || len != sizeof(*pt), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
 
-    ret = MPIU_Str_get_binary_arg(business_card, PTIG_KEY, (char *)ptg, sizeof(*ptg), &len);
-    MPIR_ERR_CHKANDJUMP(ret != MPIU_STR_SUCCESS || len != sizeof(*ptg), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+    ret = MPL_str_get_binary_arg(business_card, PTIG_KEY, (char *)ptg, sizeof(*ptg), &len);
+    MPIR_ERR_CHKANDJUMP(ret != MPL_STR_SUCCESS || len != sizeof(*ptg), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
 
-    ret = MPIU_Str_get_binary_arg(business_card, PTIC_KEY, (char *)ptc, sizeof(*ptc), &len);
-    MPIR_ERR_CHKANDJUMP(ret != MPIU_STR_SUCCESS || len != sizeof(*ptc), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+    ret = MPL_str_get_binary_arg(business_card, PTIC_KEY, (char *)ptc, sizeof(*ptc), &len);
+    MPIR_ERR_CHKANDJUMP(ret != MPL_STR_SUCCESS || len != sizeof(*ptc), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
 
-    ret = MPIU_Str_get_binary_arg(business_card, PTIR_KEY, (char *)ptr, sizeof(*ptr), &len);
-    MPIR_ERR_CHKANDJUMP(ret != MPIU_STR_SUCCESS || len != sizeof(*ptr), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+    ret = MPL_str_get_binary_arg(business_card, PTIR_KEY, (char *)ptr, sizeof(*ptr), &len);
+    MPIR_ERR_CHKANDJUMP(ret != MPL_STR_SUCCESS || len != sizeof(*ptr), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
 
-    ret = MPIU_Str_get_binary_arg(business_card, PTIRG_KEY, (char *)ptrg, sizeof(*ptrg), &len);
-    MPIR_ERR_CHKANDJUMP(ret != MPIU_STR_SUCCESS || len != sizeof(*ptrg), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+    ret = MPL_str_get_binary_arg(business_card, PTIRG_KEY, (char *)ptrg, sizeof(*ptrg), &len);
+    MPIR_ERR_CHKANDJUMP(ret != MPL_STR_SUCCESS || len != sizeof(*ptrg), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
 
-    ret = MPIU_Str_get_binary_arg(business_card, PTIRC_KEY, (char *)ptrc, sizeof(*ptrc), &len);
-    MPIR_ERR_CHKANDJUMP(ret != MPIU_STR_SUCCESS || len != sizeof(*ptrc), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+    ret = MPL_str_get_binary_arg(business_card, PTIRC_KEY, (char *)ptrc, sizeof(*ptrc), &len);
+    MPIR_ERR_CHKANDJUMP(ret != MPL_STR_SUCCESS || len != sizeof(*ptrc), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_GET_ID_FROM_BC);

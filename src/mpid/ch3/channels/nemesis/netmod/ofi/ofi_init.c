@@ -251,10 +251,10 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
         sprintf(key, "OFI-%d", i);
 
         PMI_RC(PMI_KVS_Get(kvsname, key, bc, OFI_KVSAPPSTRLEN), pmi);
-        ret = MPIU_Str_get_binary_arg(bc, "OFI",
+        ret = MPL_str_get_binary_arg(bc, "OFI",
                                       (char *) &addrs[i * gl_data.bound_addrlen],
                                       gl_data.bound_addrlen, &len);
-        MPIR_ERR_CHKANDJUMP((ret != MPIU_STR_SUCCESS && ret != MPIU_STR_NOMEM) ||
+        MPIR_ERR_CHKANDJUMP((ret != MPL_STR_SUCCESS && ret != MPL_STR_NOMEM) ||
                             (size_t) len != gl_data.bound_addrlen,
                             mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
     }

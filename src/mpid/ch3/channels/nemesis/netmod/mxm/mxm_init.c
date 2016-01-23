@@ -223,15 +223,15 @@ int MPID_nem_mxm_finalize(void)
 int MPID_nem_mxm_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    int str_errno = MPIU_STR_SUCCESS;
+    int str_errno = MPL_STR_SUCCESS;
 
     MPIDI_STATE_DECL(MPID_STATE_MXM_GET_BUSINESS_CARD);
     MPIDI_FUNC_ENTER(MPID_STATE_MXM_GET_BUSINESS_CARD);
 
-    str_errno = MPIU_Str_add_binary_arg(bc_val_p, val_max_sz_p, MXM_MPICH_ENDPOINT_KEY,
+    str_errno = MPL_str_add_binary_arg(bc_val_p, val_max_sz_p, MXM_MPICH_ENDPOINT_KEY,
                                         _mxm_obj.mxm_ep_addr, _mxm_obj.mxm_ep_addr_size);
     if (str_errno) {
-        MPIR_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIR_ERR_CHKANDJUMP(str_errno == MPL_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
     }
 
@@ -578,13 +578,13 @@ static int _mxm_connect(MPID_nem_mxm_ep_t * ep, const char *business_card,
                         MPID_nem_mxm_vc_area * vc_area)
 {
     int mpi_errno = MPI_SUCCESS;
-    int str_errno = MPIU_STR_SUCCESS;
+    int str_errno = MPL_STR_SUCCESS;
     mxm_error_t ret = MXM_OK;
     char mxm_ep_addr[MXM_MPICH_MAX_ADDR_SIZE];
     int len = 0;
 
     str_errno =
-        MPIU_Str_get_binary_arg(business_card, MXM_MPICH_ENDPOINT_KEY, mxm_ep_addr,
+        MPL_str_get_binary_arg(business_card, MXM_MPICH_ENDPOINT_KEY, mxm_ep_addr,
                                 sizeof(mxm_ep_addr), &len);
     MPIR_ERR_CHKANDJUMP(str_errno, mpi_errno, MPI_ERR_OTHER, "**buscard");
 
