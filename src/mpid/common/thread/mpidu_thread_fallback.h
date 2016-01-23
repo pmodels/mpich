@@ -101,17 +101,6 @@ M*/
             per_thread->lock_depth++;                                   \
         }                                                               \
     } while (0)
-#define MPIDUI_THREAD_CS_ENTER_ALLGRAN(mutex)                           \
-    do {                                                                \
-        if (MPIR_ThreadInfo.isThreaded) {                               \
-            int err_ = 0;                                               \
-            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive locking ALLGRAN mutex"); \
-            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"enter MPIDU_Thread_mutex_lock %p", &mutex); \
-            MPIDU_Thread_mutex_lock(&mutex, &err_);                     \
-            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"exit MPIDU_Thread_mutex_lock %p", &mutex); \
-            MPIU_Assert(err_ == 0);                                     \
-        }                                                               \
-    } while (0)
 #define MPIDUI_THREAD_CS_ENTER_POBJ(mutex) do {} while (0)
 
 #else /* MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_POBJ */
@@ -127,7 +116,6 @@ M*/
             MPIU_Assert(err_ == 0);                                     \
         }                                                               \
     } while (0)
-#define MPIDUI_THREAD_CS_ENTER_ALLGRAN  MPIDUI_THREAD_CS_ENTER_POBJ
 #define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex) do {} while (0)
 
 #endif  /* MPICH_THREAD_GRANULARITY */
@@ -135,7 +123,6 @@ M*/
 #else  /* !defined(MPICH_IS_THREADED) */
 
 #define MPIDUI_THREAD_CS_ENTER_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_ENTER_ALLGRAN(mutex) do {} while (0)
 #define MPIDUI_THREAD_CS_ENTER_POBJ(mutex) do {} while (0)
 
 #endif /* MPICH_IS_THREADED */
@@ -176,16 +163,6 @@ M*/
         }                                                               \
     } while (0)
 
-#define MPIDUI_THREAD_CS_EXIT_ALLGRAN(mutex)                            \
-    do {                                                                \
-        if (MPIR_ThreadInfo.isThreaded) {                               \
-            int err_ = 0;                                               \
-            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive unlocking ALLGRAN mutex"); \
-            MPL_DBG_MSG_P(MPIR_DBG_THREAD,VERBOSE,"MPIDU_Thread_mutex_unlock %p", &mutex); \
-            MPIDU_Thread_mutex_unlock(&mutex, &err_);                   \
-            MPIU_Assert(err_ == 0);                                     \
-        }                                                               \
-    } while (0)
 #define MPIDUI_THREAD_CS_EXIT_POBJ(mutex) do {} while (0)
 
 #else /* MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_POBJ */
@@ -200,7 +177,6 @@ M*/
             MPIU_Assert(err_ == 0);                                     \
         }                                                               \
     } while (0)
-#define MPIDUI_THREAD_CS_EXIT_ALLGRAN  MPIDUI_THREAD_CS_EXIT_POBJ
 #define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex) do {} while (0)
 
 #endif  /* MPICH_THREAD_GRANULARITY */
@@ -208,7 +184,6 @@ M*/
 #else  /* !defined(MPICH_IS_THREADED) */
 
 #define MPIDUI_THREAD_CS_EXIT_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_EXIT_ALLGRAN(mutex) do {} while (0)
 #define MPIDUI_THREAD_CS_EXIT_POBJ(mutex) do {} while (0)
 
 #endif /* MPICH_IS_THREADED */
@@ -239,15 +214,6 @@ M*/
             MPIU_Assert(err_ == 0);                                     \
         }                                                               \
     } while (0)
-#define MPIDUI_THREAD_CS_YIELD_ALLGRAN(mutex)                           \
-    do {                                                                \
-        if (MPIR_ThreadInfo.isThreaded) {                               \
-            int err_ = 0;                                               \
-            MPL_DBG_MSG(MPIR_DBG_THREAD, TYPICAL, "non-recursive yielding ALLGRAN mutex"); \
-            MPIDU_Thread_yield(&mutex, &err_);                          \
-            MPIU_Assert(err_ == 0);                                     \
-        }                                                               \
-    } while (0)
 #define MPIDUI_THREAD_CS_YIELD_POBJ(mutex) do {} while (0)
 
 #else /* MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_POBJ */
@@ -261,7 +227,6 @@ M*/
             MPIU_Assert(err_ == 0);                                     \
         }                                                               \
     } while (0)
-#define MPIDUI_THREAD_CS_YIELD_ALLGRAN  MPIDUI_THREAD_CS_YIELD_POBJ
 #define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex) do {} while (0)
 
 #endif  /* MPICH_THREAD_GRANULARITY */
@@ -269,7 +234,6 @@ M*/
 #else  /* !defined(MPICH_IS_THREADED) */
 
 #define MPIDUI_THREAD_CS_YIELD_GLOBAL(mutex) do {} while (0)
-#define MPIDUI_THREAD_CS_YIELD_ALLGRAN(mutex) do {} while (0)
 #define MPIDUI_THREAD_CS_YIELD_POBJ(mutex) do {} while (0)
 
 #endif /* MPICH_IS_THREADED */

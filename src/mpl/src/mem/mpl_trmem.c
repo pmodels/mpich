@@ -86,6 +86,39 @@ static volatile size_t TRMaxOverhead = 314572800;
 /* Used to limit allocation */
 static volatile size_t TRMaxMemAllow = 0;
 
+static int TR_is_threaded = 0;
+
+#if MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE
+
+static MPL_thread_mutex_t memalloc_mutex;
+
+#define TR_THREAD_CS_ENTER                                              \
+    do {                                                                \
+        if (TR_is_threaded) {                                           \
+            int err;                                                    \
+            MPL_thread_mutex_lock(&memalloc_mutex, &err);               \
+            if (err)                                                    \
+                MPL_error_printf("Error acquiring memalloc mutex lock\n"); \
+        }                                                               \
+    } while (0)
+
+#define TR_THREAD_CS_EXIT                                               \
+    do {                                                                \
+        if (TR_is_threaded) {                                           \
+            int err;                                                    \
+            MPL_thread_mutex_unlock(&memalloc_mutex, &err);             \
+            if (err)                                                    \
+                MPL_error_printf("Error releasing memalloc mutex lock\n"); \
+        }                                                               \
+    } while (0)
+
+#else  /* MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_NONE */
+
+#define TR_THREAD_CS_ENTER
+#define TR_THREAD_CS_EXIT
+
+#endif  /* MPL_THREAD_PACKAGE_NAME */
+
 /*
  * Printing of addresses.
  *
@@ -130,7 +163,7 @@ static void addrToHex(void *addr, char string[MAX_ADDRESS_CHARS])
    MPL_trinit - Setup the space package.  Only needed for
    error messages and flags.
 +*/
-void MPL_trinit(int rank)
+void MPL_trinit(int rank, int need_thread_safety)
 {
     char *s;
 
@@ -163,6 +196,25 @@ void MPL_trinit(int rank)
         TRMaxOverhead = (size_t)l;
     }
 
+    /* If the upper layer asked for thread safety and there's no
+     * threading package available, we need to return an error. */
+#if MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_NONE
+    if (need_thread_safety)
+        MPL_error_printf("No thread package to provide thread-safe memory allocation\n");
+#endif
+
+#if MPL_THREAD_PACKAGE_NAME != MPL_THREAD_PACKAGE_NONE
+    if (need_thread_safety) {
+        int err;
+
+        MPL_thread_mutex_create(&memalloc_mutex, &err);
+        if (err) {
+            MPL_error_printf("Error creating memalloc mutex\n");
+        }
+
+        TR_is_threaded = 1;
+    }
+#endif
 }
 
 /*+C
@@ -177,7 +229,7 @@ Input Parameters:
     double aligned pointer to requested storage, or null if not
     available.
  +*/
-void *MPL_trmalloc(size_t a, int lineno, const char fname[])
+static void *trmalloc(size_t a, int lineno, const char fname[])
 {
     TRSPACE *head;
     char *new = NULL;
@@ -272,6 +324,17 @@ void *MPL_trmalloc(size_t a, int lineno, const char fname[])
     return (void *) new;
 }
 
+void *MPL_trmalloc(size_t a, int lineno, const char fname[])
+{
+    void *retval;
+
+    TR_THREAD_CS_ENTER;
+    retval = trmalloc(a, lineno, fname);
+    TR_THREAD_CS_EXIT;
+
+    return retval;
+}
+
 /*+C
    MPL_trfree - Free with tracing
 
@@ -280,7 +343,7 @@ Input Parameters:
 .  line - line in file where called
 -  file - Name of file where called
  +*/
-void MPL_trfree(void *a_ptr, int line, const char file[])
+static void trfree(void *a_ptr, int line, const char file[])
 {
     TRSPACE *head;
     unsigned long *nend;
@@ -427,6 +490,13 @@ void MPL_trfree(void *a_ptr, int line, const char file[])
     free(head);
 }
 
+void MPL_trfree(void *a_ptr, int line, const char fname[])
+{
+    TR_THREAD_CS_ENTER;
+    trfree(a_ptr, line, fname);
+    TR_THREAD_CS_EXIT;
+}
+
 /*+C
    MPL_trvalid - test the allocated blocks for validity.  This can be used to
    check for memory overwrites.
@@ -454,7 +524,7 @@ $   Block at address %lx is corrupted
 
    No output is generated if there are no problems detected.
 +*/
-int MPL_trvalid( const char str[] )
+static int trvalid( const char str[] )
 {
     return MPL_trvalid2( str, -1, (const char *)0 );
 }
@@ -543,6 +613,15 @@ int MPL_trvalid2(const char str[], int line, const char file[] )
     return errs;
 }
 
+int MPL_trvalid(const char str[])
+{
+    int retval;
+    TR_THREAD_CS_ENTER;
+    retval = trvalid(str);
+    TR_THREAD_CS_EXIT;
+    return retval;
+}
+
 /*+C
   MPL_trdump - Dump the allocated memory blocks to a file
 
@@ -551,7 +630,7 @@ Input Parameters:
 -  minid - Only print allocated memory blocks whose id is at least 'minid'
 
  +*/
-void MPL_trdump(FILE * fp, int minid)
+static void trdump(FILE * fp, int minid)
 {
     TRSPACE *head;
 #ifdef VALGRIND_MAKE_MEM_NOACCESS
@@ -600,6 +679,13 @@ void MPL_trdump(FILE * fp, int minid)
  */
 }
 
+void MPL_trdump(FILE *fp, int minid)
+{
+    TR_THREAD_CS_ENTER;
+    trdump(fp, minid);
+    TR_THREAD_CS_EXIT;
+}
+
 /*+C
     MPL_trcalloc - Calloc with tracing
 
@@ -613,15 +699,24 @@ Input Parameters:
     Double aligned pointer to requested storage, or null if not
     available.
  +*/
-void *MPL_trcalloc(size_t nelem, size_t elsize, int lineno, const char fname[])
+static void *trcalloc(size_t nelem, size_t elsize, int lineno, const char fname[])
 {
     void *p;
 
-    p = MPL_trmalloc(nelem * elsize, lineno, fname);
+    p = trmalloc(nelem * elsize, lineno, fname);
     if (p) {
         memset(p, 0, nelem * elsize);
     }
     return p;
+}
+
+void *MPL_trcalloc(size_t nelem, size_t elsize, int lineno, const char fname[])
+{
+    void *retval;
+    TR_THREAD_CS_ENTER;
+    retval = trcalloc(nelem, elsize, lineno, fname);
+    TR_THREAD_CS_EXIT;
+    return retval;
 }
 
 /*+C
@@ -638,7 +733,7 @@ Input Parameters:
     available.  This implementation ALWAYS allocates new space and copies
     the contents into the new space.
  +*/
-void *MPL_trrealloc(void *p, size_t size, int lineno, const char fname[])
+static void *trrealloc(void *p, size_t size, int lineno, const char fname[])
 {
     void *pnew;
     size_t nsize;
@@ -665,18 +760,18 @@ void *MPL_trrealloc(void *p, size_t size, int lineno, const char fname[])
      * free().  We return NULL here because that is more likely to catch
      * programming errors at higher levels. */
     if (!size) {
-        MPL_trfree(p, lineno, fname);
+        trfree(p, lineno, fname);
         return NULL;
     }
 
-    pnew = MPL_trmalloc(size, lineno, fname);
+    pnew = trmalloc(size, lineno, fname);
 
     if (p && pnew) {
         nsize = size;
         if (head->size < nsize)
             nsize = head->size;
         memcpy(pnew, p, nsize);
-        MPL_trfree(p, lineno, fname);
+        trfree(p, lineno, fname);
     }
 
     /* Re-mark the head as NOACCESS before returning. */
@@ -690,6 +785,15 @@ void *MPL_trrealloc(void *p, size_t size, int lineno, const char fname[])
     return pnew;
 }
 
+void *MPL_trrealloc(void *p, size_t size, int lineno, const char fname[])
+{
+    void *retval;
+    TR_THREAD_CS_ENTER;
+    retval = trrealloc(p, size, lineno, fname);
+    TR_THREAD_CS_EXIT;
+    return retval;
+}
+
 /*+C
     MPL_trstrdup - Strdup with tracing
 
@@ -701,14 +805,23 @@ Input Parameters:
     Returns:
     Pointer to copy of the input string.
  +*/
-void *MPL_trstrdup(const char *str, int lineno, const char fname[])
+static void *trstrdup(const char *str, int lineno, const char fname[])
 {
     void *p;
     size_t len = strlen(str) + 1;
 
-    p = MPL_trmalloc(len, lineno, fname);
+    p = trmalloc(len, lineno, fname);
     if (p) {
         memcpy(p, str, len);
     }
     return p;
+}
+
+void *MPL_trstrdup(const char *str, int lineno, const char fname[])
+{
+    void *retval;
+    TR_THREAD_CS_ENTER;
+    retval = trstrdup(str, lineno, fname);
+    TR_THREAD_CS_EXIT;
+    return retval;
 }

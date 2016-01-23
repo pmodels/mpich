@@ -613,7 +613,7 @@ HYD_status HYDU_sock_cloexec(int fd);
 
 #if defined USE_MEMORY_TRACING
 
-#define HYDU_mem_init()  MPL_trinit(0)
+#define HYDU_mem_init()  MPL_trinit(0,0)
 
 #define HYDU_strdup(a) MPL_trstrdup(a,__LINE__,__FILE__)
 #ifdef strdup
