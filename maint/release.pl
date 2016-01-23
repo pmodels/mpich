@@ -174,7 +174,13 @@ print("\n");
 my $current_ver = `git show ${branch}:maint/version.m4 | grep MPICH_VERSION_m4 | \
                    sed -e 's/^.*\\[MPICH_VERSION_m4\\],\\[\\(.*\\)\\].*/\\1/g'`;
 if ("$current_ver" ne "$version\n") {
-    print("\tWARNING: Version mismatch\n\n");
+    print("\tWARNING: maint/version does not match user version\n\n");
+}
+
+my $changes_ver = `git show ${branch}:CHANGES | grep "http://git.mpich.org/mpich.git/shortlog" | \
+                   sed -e '2,\$d' -e 's/.*\.\.//g'`;
+if ("$changes_ver" ne "$version\n") {
+    print("\tWARNING: CHANGES/version does not match user version\n\n");
 }
 
 if ($append_commit_id) {
