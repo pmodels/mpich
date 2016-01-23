@@ -787,10 +787,10 @@ These instructions can also be found on the MPICH wiki:
 
 9. Developer Builds
 ===================
-For MPICH developers who want to directly work on the svn, there are
-a few additional steps involved (people using the release tarballs do
-not have to follow these steps). Details about these steps can be
-found here:
+For MPICH developers who want to directly work on the primary version
+control system, there are a few additional steps involved (people
+using the release tarballs do not have to follow these steps). Details
+about these steps can be found here:
 http://wiki.mpich.org/mpich/index.php/Getting_And_Building_MPICH
 
 -------------------------------------------------------------------------
