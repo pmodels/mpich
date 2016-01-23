@@ -169,7 +169,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL || \
     MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
 MPID_Thread_mutex_t MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX;
-MPID_Thread_mutex_t MPIR_THREAD_ALLGRAN_MEMALLOC_MUTEX;
 #endif
 
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
@@ -193,8 +192,6 @@ static int thread_cs_init( void )
 /* There is a single, global lock, held for the duration of an MPI call */
     MPID_Thread_mutex_create(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
     MPIU_Assert(err == 0);
-    MPID_Thread_mutex_create(&MPIR_THREAD_ALLGRAN_MEMALLOC_MUTEX, &err);
-    MPIU_Assert(err == 0);
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
     /* MPICH_THREAD_GRANULARITY_PER_OBJECT: Multiple locks */
@@ -209,8 +206,6 @@ static int thread_cs_init( void )
     MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_CTX_MUTEX, &err);
     MPIU_Assert(err == 0);
     MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_PMI_MUTEX, &err);
-    MPIU_Assert(err == 0);
-    MPID_Thread_mutex_create(&MPIR_THREAD_ALLGRAN_MEMALLOC_MUTEX, &err);
     MPIU_Assert(err == 0);
 
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_LOCK_FREE
@@ -532,7 +527,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     MPIU_Timer_init(MPIR_Process.comm_world->rank,
 		    MPIR_Process.comm_world->local_size);
 #ifdef USE_MEMORY_TRACING
-    MPIU_trinit( MPIR_Process.comm_world->rank );
+    MPIU_trinit( MPIR_Process.comm_world->rank, MPIR_ThreadInfo.isThreaded );
     /* Indicate that we are near the end of the init step; memory 
        allocated already will have an id of zero; this helps 
        separate memory leaks in the initialization code from 

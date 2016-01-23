@@ -10,66 +10,42 @@
  * have to be functions because we cannot portably wrap the calls as macros and
  * still use real (non-out-argument) return values. */
 
-void MPIU_trinit(int rank)
+void MPIU_trinit(int rank, int need_thread_safety)
 {
-    MPL_trinit(rank);
+    MPL_trinit(rank, need_thread_safety);
 }
 
 void MPIU_trdump(FILE *fp, int minid)
 {
-    MPID_THREAD_CS_ENTER(ALLGRAN, MPIR_THREAD_ALLGRAN_MEMALLOC_MUTEX);
     MPL_trdump(fp, minid);
-    MPID_THREAD_CS_EXIT(ALLGRAN, MPIR_THREAD_ALLGRAN_MEMALLOC_MUTEX);
 }
 
 void *MPIU_trmalloc(size_t a, int lineno, const char fname[])
 {
-    void *retval;
-    MPID_THREAD_CS_ENTER(ALLGRAN, MPIR_THREAD_ALLGRAN_MEMALLOC_MUTEX);
-    retval = MPL_trmalloc(a, lineno, fname);
-    MPID_THREAD_CS_EXIT(ALLGRAN, MPIR_THREAD_ALLGRAN_MEMALLOC_MUTEX);
-    return retval;
+    return MPL_trmalloc(a, lineno, fname);
 }
 
 void MPIU_trfree(void *a_ptr, int line, const char fname[])
 {
-    MPID_THREAD_CS_ENTER(ALLGRAN, MPIR_THREAD_ALLGRAN_MEMALLOC_MUTEX);
     MPL_trfree(a_ptr, line, fname);
-    MPID_THREAD_CS_EXIT(ALLGRAN, MPIR_THREAD_ALLGRAN_MEMALLOC_MUTEX);
 }
 
 int MPIU_trvalid(const char str[])
 {
-    int retval;
-    MPID_THREAD_CS_ENTER(ALLGRAN, MPIR_THREAD_ALLGRAN_MEMALLOC_MUTEX);
-    retval = MPL_trvalid(str);
-    MPID_THREAD_CS_EXIT(ALLGRAN, MPIR_THREAD_ALLGRAN_MEMALLOC_MUTEX);
-    return retval;
+    return MPL_trvalid(str);
 }
 
 void *MPIU_trcalloc(size_t nelem, size_t elsize, int lineno, const char fname[])
 {
-    void *retval;
-    MPID_THREAD_CS_ENTER(ALLGRAN, MPIR_THREAD_ALLGRAN_MEMALLOC_MUTEX);
-    retval = MPL_trcalloc(nelem, elsize, lineno, fname);
-    MPID_THREAD_CS_EXIT(ALLGRAN, MPIR_THREAD_ALLGRAN_MEMALLOC_MUTEX);
-    return retval;
+    return MPL_trcalloc(nelem, elsize, lineno, fname);
 }
 
 void *MPIU_trrealloc(void *p, size_t size, int lineno, const char fname[])
 {
-    void *retval;
-    MPID_THREAD_CS_ENTER(ALLGRAN, MPIR_THREAD_ALLGRAN_MEMALLOC_MUTEX);
-    retval = MPL_trrealloc(p, size, lineno, fname);
-    MPID_THREAD_CS_EXIT(ALLGRAN, MPIR_THREAD_ALLGRAN_MEMALLOC_MUTEX);
-    return retval;
+    return MPL_trrealloc(p, size, lineno, fname);
 }
 
 void *MPIU_trstrdup(const char *str, int lineno, const char fname[])
 {
-    void *retval;
-    MPID_THREAD_CS_ENTER(ALLGRAN, MPIR_THREAD_ALLGRAN_MEMALLOC_MUTEX);
-    retval = MPL_trstrdup(str, lineno, fname);
-    MPID_THREAD_CS_EXIT(ALLGRAN, MPIR_THREAD_ALLGRAN_MEMALLOC_MUTEX);
-    return retval;
+    return MPL_trstrdup(str, lineno, fname);
 }

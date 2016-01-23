@@ -85,7 +85,7 @@ typedef int MPIU_BOOL;
 
 /* ------------------------------------------------------------------------- */
 
-void MPIU_trinit(int);
+void MPIU_trinit(int, int);
 void *MPIU_trmalloc(size_t, int, const char []);
 void MPIU_trfree(void *, int, const char []);
 int MPIU_trvalid(const char []);
