@@ -88,11 +88,9 @@ typedef int MPIU_BOOL;
 #ifdef USE_MEMORY_TRACING
 
 /* Define these as invalid C to catch their use in the code */
-#if 0
 #define malloc(a)         'Error use MPL_malloc' :::
 #define calloc(a,b)       'Error use MPL_calloc' :::
 #define free(a)           'Error use MPL_free'   :::
-#endif
 #define realloc(a)        'Error use MPL_realloc' :::
 #if defined(strdup) || defined(__strdup)
 #undef strdup

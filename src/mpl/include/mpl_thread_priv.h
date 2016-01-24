@@ -31,7 +31,7 @@ void MPLI_cleanup_tls(void *a);
         MPL_thread_tls_create(MPLI_cleanup_tls, &(key) , err_ptr_);     \
         if (unlikely(*((int *) err_ptr_)))                              \
             break;                                                      \
-        thread_ptr = calloc(1, sizeof(var));                            \
+        thread_ptr = MPL_calloc(1, sizeof(var));                        \
         if (unlikely(!thread_ptr)) {                                    \
             *((int *) err_ptr_) = MPL_THREAD_ERROR;                     \
             break;                                                      \
@@ -47,7 +47,7 @@ void MPLI_cleanup_tls(void *a);
             if (unlikely(*((int *) err_ptr_)))                          \
                 break;                                                  \
             if (!thread_ptr) {                                          \
-                thread_ptr = calloc(1, sizeof(var));                    \
+                thread_ptr = MPL_calloc(1, sizeof(var));                \
                 if (unlikely(!thread_ptr)) {                            \
                     *((int *) err_ptr_) = MPL_THREAD_ERROR;             \
                     break;                                              \
@@ -72,7 +72,7 @@ void MPLI_cleanup_tls(void *a);
             break;                                      \
                                                         \
         if (thread_ptr)                                 \
-            free(thread_ptr);                           \
+            MPL_free(thread_ptr);                       \
                                                         \
         MPL_thread_tls_set(&(key), NULL, err_ptr_);     \
         if (unlikely(*((int *) err_ptr_)))              \

@@ -43,7 +43,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
     int err = MPL_THREAD_SUCCESS;
 
     /* FIXME: faster allocation, or avoid it all together? */
-    thread_info = (struct MPLI_thread_info *) malloc(sizeof(struct MPLI_thread_info));
+    thread_info = (struct MPLI_thread_info *) MPL_malloc(sizeof(struct MPLI_thread_info));
     if (thread_info != NULL) {
         thread_info->func = func;
         thread_info->data = data;
@@ -73,7 +73,7 @@ void *MPLI_thread_start(void *arg)
     MPL_thread_func_t func = thread_info->func;
     void *data = thread_info->data;
 
-    free(arg);
+    MPL_free(arg);
 
     func(data);
 
