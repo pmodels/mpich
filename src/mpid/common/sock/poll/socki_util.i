@@ -421,7 +421,7 @@ int MPIDI_Sock_update_sock_set( struct MPIDU_Sock_set *sock_set,
     }
 
     if (sock_set->pollfds_active != sock_set->pollfds) {
-	MPIU_Free(sock_set->pollfds_active);
+	MPL_free(sock_set->pollfds_active);
     }
 
     sock_set->pollfds_updated = FALSE;
@@ -576,7 +576,7 @@ static int MPIDU_Socki_sock_alloc(struct MPIDU_Sock_set * sock_set, struct MPIDU
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_SOCKI_SOCK_ALLOC);
     
     /* FIXME: Should this use the CHKPMEM macros (perm malloc)? */
-    sock = MPIU_Malloc(sizeof(struct MPIDU_Sock));
+    sock = MPL_malloc(sizeof(struct MPIDU_Sock));
     /* --BEGIN ERROR HANDLING-- */
     if (sock == NULL)
     {
@@ -609,7 +609,7 @@ static int MPIDU_Socki_sock_alloc(struct MPIDU_Sock_set * sock_set, struct MPIDU
     {
 	int elem;
 	
-	pollfds = MPIU_Malloc((sock_set->poll_array_sz + MPIDU_SOCK_SET_DEFAULT_SIZE) * sizeof(struct pollfd));
+	pollfds = MPL_malloc((sock_set->poll_array_sz + MPIDU_SOCK_SET_DEFAULT_SIZE) * sizeof(struct pollfd));
 	/* --BEGIN ERROR HANDLING-- */
 	if (pollfds == NULL)
 	{
@@ -618,7 +618,7 @@ static int MPIDU_Socki_sock_alloc(struct MPIDU_Sock_set * sock_set, struct MPIDU
 	    goto fn_fail;
 	}
 	/* --END ERROR HANDLING-- */
-	pollinfos = MPIU_Malloc((sock_set->poll_array_sz + MPIDU_SOCK_SET_DEFAULT_SIZE) * sizeof(struct pollinfo));
+	pollinfos = MPL_malloc((sock_set->poll_array_sz + MPIDU_SOCK_SET_DEFAULT_SIZE) * sizeof(struct pollinfo));
 	/* --BEGIN ERROR HANDLING-- */
 	if (pollinfos == NULL)
 	{
@@ -642,7 +642,7 @@ static int MPIDU_Socki_sock_alloc(struct MPIDU_Sock_set * sock_set, struct MPIDU
 #	    ifndef MPICH_IS_THREADED
 	    {
 		memcpy(pollfds, sock_set->pollfds, sock_set->poll_array_sz * sizeof(struct pollfd));
-		MPIU_Free(sock_set->pollfds);
+		MPL_free(sock_set->pollfds);
 	    }
 #	    else
 	    {
@@ -652,13 +652,13 @@ static int MPIDU_Socki_sock_alloc(struct MPIDU_Sock_set * sock_set, struct MPIDU
 		}
 		if  (sock_set->pollfds_active != sock_set->pollfds)
 		{
-		    MPIU_Free(sock_set->pollfds);
+		    MPL_free(sock_set->pollfds);
 		}
 	    }
 #           endif
 	    
 	    memcpy(pollinfos, sock_set->pollinfos, sock_set->poll_array_sz * sizeof(struct pollinfo));
-	    MPIU_Free(sock_set->pollinfos);
+	    MPL_free(sock_set->pollinfos);
 	}
 
 	sock_set->poll_array_elems = avail_elem + 1;
@@ -741,17 +741,17 @@ static int MPIDU_Socki_sock_alloc(struct MPIDU_Sock_set * sock_set, struct MPIDU
   fn_fail:
     if (pollinfos != NULL)
     {
-	MPIU_Free(pollinfos);
+	MPL_free(pollinfos);
     }
 
     if (pollfds != NULL)
     {
-	MPIU_Free(pollfds);
+	MPL_free(pollfds);
     }
 	
     if (sock != NULL)
     {
-	MPIU_Free(sock);
+	MPL_free(sock);
     }
     
     goto fn_exit;
@@ -821,7 +821,7 @@ static void MPIDU_Socki_sock_free(struct MPIDU_Sock * sock)
     sock->sock_set = NULL;
     sock->elem = -1;
     
-    MPIU_Free(sock);
+    MPL_free(sock);
     
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_SOCKI_SOCK_FREE);
 }
@@ -852,7 +852,7 @@ static int MPIDU_Socki_event_enqueue(struct pollinfo * pollinfo, MPIDU_Sock_op_t
 	int i;
 	struct MPIDU_Socki_eventq_table *eventq_table;
 
-	eventq_table = MPIU_Malloc(sizeof(struct MPIDU_Socki_eventq_table));
+	eventq_table = MPL_malloc(sizeof(struct MPIDU_Socki_eventq_table));
 	/* --BEGIN ERROR HANDLING-- */
 	if (eventq_table == NULL)
 	{
@@ -959,7 +959,7 @@ static void MPIDU_Socki_free_eventq_mem(void)
     eventq_table = MPIDU_Socki_eventq_table_head;
     while (eventq_table) {
         eventq_table_next = eventq_table->next;
-        MPIU_Free(eventq_table);
+        MPL_free(eventq_table);
         eventq_table = eventq_table_next;
     }
     MPIDU_Socki_eventq_table_head = NULL;

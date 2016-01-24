@@ -110,13 +110,13 @@ static void MPID_nem_llc_send_handler(void *cba, uint64_t * p_reqid)
                 MPID_Datatype_is_contig(sreq->dev.datatype, &is_contig);
                 if (!is_contig && REQ_FIELD(sreq, pack_buf)) {
                     dprintf("llc_send_handler,non-contiguous,free pack_buf\n");
-                    MPIU_Free(REQ_FIELD(sreq, pack_buf));
+                    MPL_free(REQ_FIELD(sreq, pack_buf));
                 }
             }
 
             if ((REQ_FIELD(sreq, rma_buf) != NULL && sreq->dev.datatype_ptr &&
                  sreq->dev.segment_size > 0)) {
-                MPIU_Free(REQ_FIELD(sreq, rma_buf));    // allocated in MPID_nem_llc_SendNoncontig
+                MPL_free(REQ_FIELD(sreq, rma_buf));    // allocated in MPID_nem_llc_SendNoncontig
                 REQ_FIELD(sreq, rma_buf) = NULL;
             }
 
@@ -264,7 +264,7 @@ int MPID_nem_llc_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
         write_to_buf = (void *) ((char *) req->dev.user_buf + dt_true_lb);
     }
     else {
-        REQ_FIELD(req, pack_buf) = MPIU_Malloc(data_sz);
+        REQ_FIELD(req, pack_buf) = MPL_malloc(data_sz);
         MPIR_ERR_CHKANDJUMP(!REQ_FIELD(req, pack_buf), mpi_errno, MPI_ERR_OTHER, "**outofmemory");
         write_to_buf = REQ_FIELD(req, pack_buf);
     }

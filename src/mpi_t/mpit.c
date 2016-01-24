@@ -39,7 +39,7 @@ void MPIR_T_enum_create(const char *enum_name, MPI_T_enum *handle)
 
     utarray_extend_back(enum_table);
     e = (MPIR_T_enum_t *)utarray_back(enum_table);
-    e->name = MPIU_Strdup(enum_name);
+    e->name = MPL_strdup(enum_name);
     MPIU_Assert(e->name);
 #ifdef HAVE_ERROR_CHECKING
     e->kind = MPIR_T_ENUM_HANDLE;
@@ -62,7 +62,7 @@ void MPIR_T_enum_add_item(MPI_T_enum handle, const char *item_name, int item_val
 
     utarray_extend_back(handle->items);
     item = (enum_item_t *)utarray_back(handle->items);
-    item->name = MPIU_Strdup(item_name);
+    item->name = MPL_strdup(item_name);
     MPIU_Assert(item->name);
     item->value = item_value;
 }
@@ -81,7 +81,7 @@ static cat_table_entry_t *MPIR_T_cat_create(const char *cat_name)
     /* New a category */
     utarray_extend_back(cat_table);
     cat =(cat_table_entry_t *)utarray_back(cat_table);
-    cat->name = MPIU_Strdup(cat_name);
+    cat->name = MPL_strdup(cat_name);
     cat->desc = NULL;
     utarray_new(cat->cvar_indices, &ut_int_icd);
     utarray_new(cat->pvar_indices, &ut_int_icd);
@@ -89,7 +89,7 @@ static cat_table_entry_t *MPIR_T_cat_create(const char *cat_name)
 
     /* Record <cat_name, cat_idx> in cat_hash */
     cat_idx = utarray_len(cat_table) - 1;
-    hash_entry = MPIU_Malloc(sizeof(name2index_hash_t));
+    hash_entry = MPL_malloc(sizeof(name2index_hash_t));
     MPIU_Assert(hash_entry);
     /* Need not to Strdup cat_name, since cat_table and cat_hash co-exist */
     hash_entry->name = cat_name;
@@ -251,12 +251,12 @@ int MPIR_T_cat_add_desc(const char *cat_name, const char *cat_desc)
         cat_idx = hash_entry->idx;
         cat = (cat_table_entry_t *)utarray_eltptr(cat_table, cat_idx);
         MPIU_Assert(cat->desc == NULL);
-        cat->desc = MPIU_Strdup(cat_desc);
+        cat->desc = MPL_strdup(cat_desc);
         MPIU_Assert(cat->desc);
     } else {
         /* Not found, so create a new category */
         cat = MPIR_T_cat_create(cat_name);
-        cat->desc = MPIU_Strdup(cat_desc);
+        cat->desc = MPL_strdup(cat_desc);
         MPIU_Assert(cat->desc);
         /* Notify categories have been changed */
         cat_stamp++;
@@ -313,12 +313,12 @@ void MPIR_T_CVAR_REGISTER_impl(
         cvar = (cvar_table_entry_t *)utarray_back(cvar_table);
         cvar->active = TRUE;
         cvar->datatype = dtype;
-        cvar->name = MPIU_Strdup(name);
+        cvar->name = MPL_strdup(name);
         MPIU_Assert(cvar->name);
         if (dtype != MPI_CHAR) {
             cvar->addr = (void *)addr;
         } else {
-            cvar->addr = MPIU_Malloc(count);
+            cvar->addr = MPL_malloc(count);
             MPIU_Assert(cvar->addr);
             if (defaultval.str == NULL) {
                 ((char *)(cvar->addr))[0] = '\0';
@@ -335,12 +335,12 @@ void MPIR_T_CVAR_REGISTER_impl(
         cvar->get_addr = get_addr;
         cvar->get_count = get_count;
         cvar->defaultval = defaultval;
-        cvar->desc = MPIU_Strdup(desc);
+        cvar->desc = MPL_strdup(desc);
         MPIU_Assert(cvar->desc);
 
         /* Record <name, index> in hash table */
         cvar_idx = utarray_len(cvar_table) - 1;
-        hash_entry = MPIU_Malloc(sizeof(name2index_hash_t));
+        hash_entry = MPL_malloc(sizeof(name2index_hash_t));
         MPIU_Assert(hash_entry);
         /* Need not to Strdup name, since cvar_table and cvar_hash co-exist */
         hash_entry->name =name;
@@ -400,7 +400,7 @@ void MPIR_T_PVAR_REGISTER_impl(
         pvar->active = TRUE;
         pvar->varclass = varclass;
         pvar->datatype = dtype;
-        pvar->name = MPIU_Strdup(name);
+        pvar->name = MPL_strdup(name);
         MPIU_Assert(pvar->name);
         pvar->addr = addr;
         pvar->count = count;
@@ -410,12 +410,12 @@ void MPIR_T_PVAR_REGISTER_impl(
         pvar->flags = flags;
         pvar->get_value = get_value;
         pvar->get_count = get_count;
-        pvar->desc = MPIU_Strdup(desc);
+        pvar->desc = MPL_strdup(desc);
         MPIU_Assert(pvar->desc);
 
         /* Record <name, index> in hash table */
         pvar_idx = utarray_len(pvar_table) - 1;
-        hash_entry = MPIU_Malloc(sizeof(name2index_hash_t));
+        hash_entry = MPL_malloc(sizeof(name2index_hash_t));
         MPIU_Assert(hash_entry);
         /* Need not to Strdup name, since pvar_table and pvar_hashs co-exist */
         hash_entry->name = name;

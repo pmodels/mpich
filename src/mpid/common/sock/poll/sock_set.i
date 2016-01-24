@@ -22,7 +22,7 @@ int MPIDU_Sock_create_set(struct MPIDU_Sock_set ** sock_setp)
     /*
      * Allocate and initialized a new sock set structure
      */
-    sock_set = MPIU_Malloc(sizeof(struct MPIDU_Sock_set));
+    sock_set = MPL_malloc(sizeof(struct MPIDU_Sock_set));
     /* --BEGIN ERROR HANDLING-- */
     if (sock_set == NULL)
     { 
@@ -163,7 +163,7 @@ int MPIDU_Sock_create_set(struct MPIDU_Sock_set ** sock_setp)
 	MPIR_THREAD_CHECK_END;
 #	endif
 	
-	MPIU_Free(sock_set);
+	MPL_free(sock_set);
     }
 
     goto fn_exit;
@@ -255,8 +255,8 @@ int MPIDU_Sock_destroy_set(struct MPIDU_Sock_set * sock_set)
     /*
      * Free structures used by the sock set
      */
-    MPIU_Free(sock_set->pollinfos);
-    MPIU_Free(sock_set->pollfds);
+    MPL_free(sock_set->pollinfos);
+    MPL_free(sock_set->pollfds);
 
     /*
      * Reset the sock set fields
@@ -273,7 +273,7 @@ int MPIDU_Sock_destroy_set(struct MPIDU_Sock_set * sock_set)
     /*
      * Free the structure
      */
-    MPIU_Free(sock_set);
+    MPL_free(sock_set);
     
 #ifdef USE_SOCK_VERIFY
   fn_exit:

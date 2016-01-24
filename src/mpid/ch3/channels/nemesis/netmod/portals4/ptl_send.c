@@ -30,7 +30,7 @@ static void big_meappend(void *buf, ptl_size_t left_to_send, MPIDI_VC_t *vc, ptl
     me.min_free = 0;
 
     /* allocate enough handles to cover all get operations */
-    REQ_PTL(sreq)->get_me_p = MPIU_Malloc(sizeof(ptl_handle_me_t) *
+    REQ_PTL(sreq)->get_me_p = MPL_malloc(sizeof(ptl_handle_me_t) *
                                         ((left_to_send / MPIDI_nem_ptl_ni_limits.max_msg_size) + 1));
 
     /* queue up as many entries as necessary to describe the entire message */
@@ -78,10 +78,10 @@ static int handler_send(const ptl_event_t *e)
 
         for (i = 0; i < MPID_NEM_PTL_NUM_CHUNK_BUFFERS; ++i)
             if (REQ_PTL(sreq)->chunk_buffer[i])
-                MPIU_Free(REQ_PTL(sreq)->chunk_buffer[i]);
+                MPL_free(REQ_PTL(sreq)->chunk_buffer[i]);
 
         if (REQ_PTL(sreq)->get_me_p)
-            MPIU_Free(REQ_PTL(sreq)->get_me_p);
+            MPL_free(REQ_PTL(sreq)->get_me_p);
     }
     mpi_errno = MPID_Request_complete(sreq);
     if (mpi_errno != MPI_SUCCESS) {

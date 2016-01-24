@@ -355,7 +355,7 @@ MPIDI_SendMsg_process_userdefined_dt(MPID_Request      * sreq,
       {
         MPI_Aint dt_extent;
         MPID_Datatype_get_extent_macro(sreq->mpid.datatype, dt_extent);
-        buf =  MPIU_Malloc(dt_extent * sreq->mpid.userbufcount);
+        buf =  MPL_malloc(dt_extent * sreq->mpid.userbufcount);
 
         cudaError_t cudaerr = CudaMemcpy(buf, sreq->mpid.userbuf, dt_extent * sreq->mpid.userbufcount, cudaMemcpyDeviceToHost);
         if (cudaSuccess != cudaerr) {
@@ -368,7 +368,7 @@ MPIDI_SendMsg_process_userdefined_dt(MPID_Request      * sreq,
       MPID_Segment segment;
 
       if(data_sz != 0) {
-        sreq->mpid.uebuf = sndbuf = MPIU_Malloc(data_sz);
+        sreq->mpid.uebuf = sndbuf = MPL_malloc(data_sz);
         if (unlikely(sndbuf == NULL))
           {
             sreq->status.MPI_ERROR = MPI_ERR_NO_SPACE;
@@ -396,7 +396,7 @@ MPIDI_SendMsg_process_userdefined_dt(MPID_Request      * sreq,
         MPID_assert(last == data_sz);
 #if CUDA_AWARE_SUPPORT
         if(MPIDI_Process.cuda_aware_support_on && on_device)
-          MPIU_Free(buf);
+          MPL_free(buf);
 #endif
       } else {
 	sndbuf = NULL;

@@ -144,8 +144,8 @@ int MPIR_Info_set_impl(MPID_Info *info_ptr, const char *key, const char *value)
     while (curr_ptr) {
         if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
             /* Key already present; replace value */
-            MPIU_Free(curr_ptr->value);
-            curr_ptr->value = MPIU_Strdup(value);
+            MPL_free(curr_ptr->value);
+            curr_ptr->value = MPL_strdup(value);
             break;
         }
         prev_ptr = curr_ptr;
@@ -159,8 +159,8 @@ int MPIR_Info_set_impl(MPID_Info *info_ptr, const char *key, const char *value)
 
         /*printf( "Inserting new elm %x at %x\n", curr_ptr->id, prev_ptr->id );*/
         prev_ptr->next   = curr_ptr;
-        curr_ptr->key    = MPIU_Strdup(key);
-        curr_ptr->value  = MPIU_Strdup(value);
+        curr_ptr->key    = MPL_strdup(key);
+        curr_ptr->value  = MPL_strdup(value);
     }
 
 fn_exit:

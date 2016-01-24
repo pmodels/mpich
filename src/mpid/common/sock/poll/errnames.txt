@@ -11,7 +11,7 @@
 **sock|poll|connclosed %d %d %d %s:connection closed by peer (set=%d,sock=%d,errno=%d:%s)
 **sock|poll|connfailed %d %d %d %s:connection failure (set=%d,sock=%d,errno=%d:%s)
 **sock|poll|connrefused %d %d %s:connection refused (set=%d,sock=%d,host=%s)
-**sock|poll|eqmalloc:MPIU_Malloc failed to allocate memory for an event queue structure
+**sock|poll|eqmalloc:MPL_malloc failed to allocate memory for an event queue structure
 **sock|poll|eqfail:fatal error: failed to enqueue an event; event was lost
 **sock|poll|eqfail %d %d %d:fatal error: failed to enqueue an event; event was lost (set=%d,sock=%d,op=%d)
 **sock|poll|getport %d %s:failed to obtain port number of listener (errno=%d:%s)

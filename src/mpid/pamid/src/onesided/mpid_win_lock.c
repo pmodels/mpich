@@ -57,7 +57,7 @@ MPIDI_WinLockAdvance(pami_context_t   context,
           MPIDI_WinLockAllAck_post(context, lock->rank, win);
        else
           MPID_assert_always(0);
-      MPIU_Free(lock);
+      MPL_free(lock);
       MPIDI_WinLockAdvance(context, win);
     }
 }
@@ -88,7 +88,7 @@ MPIDI_WinLockReq_proc(pami_context_t              context,
                       unsigned                    peer)
 {
   MPID_Win * win = info->win;
-  struct MPIDI_Win_lock* lock = MPIU_Calloc0(1, struct MPIDI_Win_lock);
+  struct MPIDI_Win_lock* lock = MPL_calloc0(1, struct MPIDI_Win_lock);
   if (info->type == MPIDI_WIN_MSGTYPE_LOCKREQ)
        lock->mtype = MPIDI_REQUEST_LOCK;
   else if (info->type == MPIDI_WIN_MSGTYPE_LOCKALLREQ) {

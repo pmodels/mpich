@@ -3,7 +3,7 @@
  * 1) Rename header from "uthash.h" to "mpiu_uthash.h" to avoid accidentally
  * pulling in a system-installed version of the header.
  *
- * 2) Use MPIU_Malloc/MPIU_Free instead of malloc/free
+ * 2) Use MPL_malloc/MPL_free instead of malloc/free
  *
  * The actual macros themselves have not been namespaced, so if a plain
  * "uthash.h" is included anywhere in the tree then there could be a conflict.
@@ -81,10 +81,10 @@ typedef unsigned char uint8_t;
 #define uthash_fatal(msg) exit(-1)        /* fatal error (out of memory,etc) */
 #endif
 #ifndef uthash_malloc
-#define uthash_malloc(sz) MPIU_Malloc(sz)      /* malloc fcn                      */
+#define uthash_malloc(sz) MPL_malloc(sz)      /* malloc fcn                      */
 #endif
 #ifndef uthash_free
-#define uthash_free(ptr,sz) MPIU_Free(ptr)     /* free fcn                        */
+#define uthash_free(ptr,sz) MPL_free(ptr)     /* free fcn                        */
 #endif
 
 #ifndef uthash_noexpand_fyi

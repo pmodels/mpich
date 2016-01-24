@@ -73,7 +73,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
             if (rreq->dev.recv_data_sz > 0)
             {
                 MPIDI_CH3U_Request_unpack_uebuf(rreq);
-                MPIU_Free(rreq->dev.tmpbuf);
+                MPL_free(rreq->dev.tmpbuf);
             }
 
             mpi_errno = rreq->status.MPI_ERROR;

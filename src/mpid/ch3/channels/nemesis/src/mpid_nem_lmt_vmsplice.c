@@ -195,7 +195,7 @@ int MPID_nem_lmt_vmsplice_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPI
         MPIR_ERR_CHKANDJUMP2(!pipe_name, mpi_errno, MPI_ERR_OTHER, "**tempnam",
                              "**tempnam %d %s", errno, MPIU_Strerror(errno));
 
-        vc_ch->lmt_copy_buf_handle = MPIU_Strdup(pipe_name);
+        vc_ch->lmt_copy_buf_handle = MPL_strdup(pipe_name);
         /* XXX DJG hack */
 #undef free
         free(pipe_name);
@@ -269,7 +269,7 @@ int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPL_IOV
 
     if (vc_ch->lmt_recv_copy_buf_handle == NULL) {
         MPIU_Assert(s_cookie.MPL_IOV_BUF != NULL);
-        vc_ch->lmt_recv_copy_buf_handle = MPIU_Strdup(s_cookie.MPL_IOV_BUF);
+        vc_ch->lmt_recv_copy_buf_handle = MPL_strdup(s_cookie.MPL_IOV_BUF);
     }
 
     /* XXX DJG FIXME in a real version we would want to cache the fd on the vc
@@ -288,7 +288,7 @@ int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPL_IOV
 
     /* push request if not complete for progress checks later */
     if (!complete) {
-        node = MPIU_Malloc(sizeof(struct lmt_vmsplice_node));
+        node = MPL_malloc(sizeof(struct lmt_vmsplice_node));
         node->pipe_fd = pipe_fd;
         node->req = rreq;
         node->next = outstanding_head;
@@ -355,7 +355,7 @@ int MPID_nem_lmt_vmsplice_progress(void)
                 free_me = cur;
                 cur = cur->next;
             }
-            if (free_me) MPIU_Free(free_me);
+            if (free_me) MPL_free(free_me);
             --MPID_nem_local_lmt_pending;
         }
 
@@ -408,7 +408,7 @@ int MPID_nem_lmt_vmsplice_start_send(MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV
 
     if (!complete) {
         /* push for later progress */
-        node = MPIU_Malloc(sizeof(struct lmt_vmsplice_node));
+        node = MPL_malloc(sizeof(struct lmt_vmsplice_node));
         node->pipe_fd = pipe_fd;
         node->req = sreq;
         node->next = outstanding_head;

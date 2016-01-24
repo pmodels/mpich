@@ -357,7 +357,7 @@ int MPIDI_CH3_InitCompleted(void)
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         ep_tmp = ep;
         ep = ep->next;
-        MPIU_Free(ep_tmp);
+        MPL_free(ep_tmp);
     }
 
  fn_exit:

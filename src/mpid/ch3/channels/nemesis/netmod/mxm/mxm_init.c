@@ -291,7 +291,7 @@ int MPID_nem_mxm_vc_init(MPIDI_VC_t * vc)
             MPIR_ERR_POP(mpi_errno);
 #endif
 
-        business_card = (char *) MPIU_Malloc(val_max_sz);
+        business_card = (char *) MPL_malloc(val_max_sz);
         mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, val_max_sz, vc->pg);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -302,7 +302,7 @@ int MPID_nem_mxm_vc_init(MPIDI_VC_t * vc)
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
-        MPIU_Free(business_card);
+        MPL_free(business_card);
     }
 
     MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
@@ -420,9 +420,9 @@ static int _mxm_conf(void)
 
     _mxm_obj.compiletime_version = MXM_VERNO_STRING;
 #if MXM_API >= MXM_VERSION(3,0)
-    _mxm_obj.runtime_version = MPIU_Strdup(mxm_get_version_string());
+    _mxm_obj.runtime_version = MPL_strdup(mxm_get_version_string());
 #else
-    _mxm_obj.runtime_version = MPIU_Malloc(sizeof(MXM_VERNO_STRING) + 10);
+    _mxm_obj.runtime_version = MPL_malloc(sizeof(MXM_VERNO_STRING) + 10);
     snprintf(_mxm_obj.runtime_version, (sizeof(MXM_VERNO_STRING) + 9),
              "%ld.%ld", (cur_ver >> MXM_MAJOR_BIT) & 0xff, (cur_ver >> MXM_MINOR_BIT) & 0xff);
 #endif
@@ -492,7 +492,7 @@ static int _mxm_init(int rank, int size)
     _mxm_obj.mxm_rank = rank;
     _mxm_obj.mxm_np = size;
     _mxm_obj.endpoint =
-        (MPID_nem_mxm_ep_t *) MPIU_Malloc(_mxm_obj.mxm_np * sizeof(MPID_nem_mxm_ep_t));
+        (MPID_nem_mxm_ep_t *) MPL_malloc(_mxm_obj.mxm_np * sizeof(MPID_nem_mxm_ep_t));
     memset(_mxm_obj.endpoint, 0, _mxm_obj.mxm_np * sizeof(MPID_nem_mxm_ep_t));
 
     list_init(&_mxm_obj.free_queue);
@@ -516,7 +516,7 @@ static int _mxm_fini(void)
     if (_mxm_obj.mxm_context) {
 
         while (!list_is_empty(&_mxm_obj.free_queue)) {
-            MPIU_Free(list_dequeue(&_mxm_obj.free_queue));
+            MPL_free(list_dequeue(&_mxm_obj.free_queue));
         }
 
 #if MXM_API >= MXM_VERSION(3,1)
@@ -530,7 +530,7 @@ static int _mxm_fini(void)
         }
 
         if (_mxm_obj.endpoint)
-            MPIU_Free(_mxm_obj.endpoint);
+            MPL_free(_mxm_obj.endpoint);
 
         _mxm_barrier();
 
@@ -546,7 +546,7 @@ static int _mxm_fini(void)
         mxm_config_free_ep_opts(_mxm_obj.mxm_ep_opts);
         mxm_config_free_context_opts(_mxm_obj.mxm_ctx_opts);
 
-        MPIU_Free(_mxm_obj.runtime_version);
+        MPL_free(_mxm_obj.runtime_version);
     }
 
   fn_exit:
@@ -620,7 +620,7 @@ static int _mxm_disconnect(MPID_nem_mxm_ep_t * ep)
                              "**mxm_ep_disconnect %s", mxm_error_string(ret));
 
         while (!list_is_empty(&ep->free_queue)) {
-            MPIU_Free(list_dequeue(&ep->free_queue));
+            MPL_free(list_dequeue(&ep->free_queue));
         }
     }
 
@@ -680,7 +680,7 @@ static int _mxm_del_comm(MPID_Comm * comm, void *param)
     if (mxm_mq[0])
         mxm_mq_destroy(mxm_mq[0]);
 
-    MPIU_Free(mxm_mq);
+    MPL_free(mxm_mq);
 
     comm->dev.ch.netmod_priv = NULL;
 

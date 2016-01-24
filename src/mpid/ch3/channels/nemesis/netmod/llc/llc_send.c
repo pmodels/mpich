@@ -129,7 +129,7 @@ int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
         MPIDI_msg_sz_t segment_size = data_sz;
         MPIDI_msg_sz_t last = segment_size;
         MPIU_Assert(last > 0);
-        REQ_FIELD(sreq, pack_buf) = MPIU_Malloc((size_t) data_sz);
+        REQ_FIELD(sreq, pack_buf) = MPL_malloc((size_t) data_sz);
         MPIR_ERR_CHKANDJUMP(!REQ_FIELD(sreq, pack_buf), mpi_errno, MPI_ERR_OTHER, "**outofmemory");
         MPID_Segment_pack(segment_ptr, segment_first, &last, (char *) (REQ_FIELD(sreq, pack_buf)));
         MPIU_Assert(last == data_sz);
@@ -363,7 +363,7 @@ int MPID_nem_llc_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
 
     data_sz = sreq->dev.segment_size;
     if (data_sz > 0) {
-        REQ_FIELD(sreq, rma_buf) = MPIU_Malloc((size_t) sreq->dev.segment_size);
+        REQ_FIELD(sreq, rma_buf) = MPL_malloc((size_t) sreq->dev.segment_size);
         MPIR_ERR_CHKANDJUMP(!REQ_FIELD(sreq, rma_buf), mpi_errno, MPI_ERR_OTHER, "**outofmemory");
         MPID_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &data_sz,
                           (char *) REQ_FIELD(sreq, rma_buf));
@@ -547,14 +547,14 @@ ssize_t llc_writev(void *endpt, uint64_t raddr,
             }
 #ifdef	notdef_hsiz_hack
             if (bsiz > 0) {
-                buff = MPIU_Malloc(bsiz + sizeof(MPID_nem_llc_netmod_hdr_t));
+                buff = MPL_malloc(bsiz + sizeof(MPID_nem_llc_netmod_hdr_t));
                 if (buff == 0) {
                     nw = -1;    /* ENOMEM */
                     goto bad;
                 }
             }
 #else /* notdef_hsiz_hack */
-            buff = MPIU_Malloc(bsiz + sizeof(MPID_nem_llc_netmod_hdr_t));
+            buff = MPL_malloc(bsiz + sizeof(MPID_nem_llc_netmod_hdr_t));
             if (buff == 0) {
                 nw = -1;        /* ENOMEM */
                 goto bad;
@@ -565,7 +565,7 @@ ssize_t llc_writev(void *endpt, uint64_t raddr,
         lcmd = LLC_cmd_alloc2(1, 1, 1);
         if (lcmd == 0) {
             if (buff != 0) {
-                MPIU_Free(buff);
+                MPL_free(buff);
                 buff = 0;
             }
             nw = -1;    /* ENOMEM */
@@ -645,7 +645,7 @@ ssize_t llc_writev(void *endpt, uint64_t raddr,
             }
             else {
                 if (lcmd->iov_local[0].addr != 0) {
-                    MPIU_Free((void *) lcmd->iov_local[0].addr);
+                    MPL_free((void *) lcmd->iov_local[0].addr);
                     lcmd->iov_local[0].addr = 0;
                 }
                 (void) LLC_cmd_free(lcmd, 1);
@@ -767,7 +767,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
                 (*sfnc) (vp_sreq, &reqid);
 
                 if (lcmd->iov_local[0].addr != 0) {
-                    MPIU_Free((void *) lcmd->iov_local[0].addr);
+                    MPL_free((void *) lcmd->iov_local[0].addr);
                     lcmd->iov_local[0].addr = 0;
                 }
                 llc_errno = LLC_cmd_free(lcmd, 1);
@@ -849,7 +849,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
                         }
                         dprintf("llc_poll,ref_count=%d,pack_buf=%p\n", req->ref_count,
                                 REQ_FIELD(req, pack_buf));
-                        MPIU_Free(REQ_FIELD(req, pack_buf));
+                        MPL_free(REQ_FIELD(req, pack_buf));
                     }
 
                     req->status.MPI_TAG = events[0].side.initiator.tag & 0xffffffff;;
@@ -908,7 +908,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
                     MPID_Request_complete(req);
 
                     if (lcmd->iov_local[0].addr != 0) {
-                        MPIU_Free((void *) lcmd->iov_local[0].addr);
+                        MPL_free((void *) lcmd->iov_local[0].addr);
                         lcmd->iov_local[0].addr = 0;
                     }
                 }
@@ -1050,7 +1050,7 @@ int MPID_nem_llc_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
         MPIDI_msg_sz_t segment_size = data_sz;
         MPIDI_msg_sz_t last = segment_size;
         MPIU_Assert(last > 0);
-        REQ_FIELD(sreq, pack_buf) = MPIU_Malloc((size_t) data_sz);
+        REQ_FIELD(sreq, pack_buf) = MPL_malloc((size_t) data_sz);
         MPIR_ERR_CHKANDJUMP(!REQ_FIELD(sreq, pack_buf), mpi_errno, MPI_ERR_OTHER, "**outofmemory");
         MPID_Segment_pack(segment_ptr, segment_first, &last, (char *) (REQ_FIELD(sreq, pack_buf)));
         MPIU_Assert(last == data_sz);

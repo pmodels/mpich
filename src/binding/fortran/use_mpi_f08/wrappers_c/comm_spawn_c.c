@@ -24,7 +24,7 @@ int MPIR_Comm_spawn_c(const char *command, char *argv_f, int maxprocs, MPI_Info 
     mpi_errno = PMPI_Comm_spawn(command, argv_c, maxprocs, info, root, comm, intercomm, array_of_errcodes);
 
     if (argv_c != MPI_ARGV_NULL) {
-        MPIU_Free(argv_c);
+        MPL_free(argv_c);
     }
 
 fn_exit:

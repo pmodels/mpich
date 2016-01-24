@@ -104,7 +104,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     hints->domain_attr->data_progress    = FI_PROGRESS_AUTO;
     char *provname;
     provname                             = MPIR_CVAR_OFI_USE_PROVIDER?
-      MPIU_Strdup(MPIR_CVAR_OFI_USE_PROVIDER):NULL;
+      MPL_strdup(MPIR_CVAR_OFI_USE_PROVIDER):NULL;
     hints->fabric_attr->prov_name        = provname;
     FI_RC(fi_getinfo(fi_version,    /* Interface version requested               */
                      NULL,          /* Optional name or fabric to resolve        */
@@ -197,7 +197,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* Free providers info         */
     /* --------------------------- */
     if(provname) {
-      MPIU_Free(provname);
+      MPL_free(provname);
       hints->fabric_attr->prov_name = NULL;
     }
 
@@ -264,7 +264,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* The addressing mode is "map", so we must provide     */
     /* storage to store the per destination addresses       */
     /* ---------------------------------------------------- */
-    fi_addrs = MPIU_Malloc(pg_p->size * sizeof(fi_addr_t));
+    fi_addrs = MPL_malloc(pg_p->size * sizeof(fi_addr_t));
     FI_RC(fi_av_insert(gl_data.av, addrs, pg_p->size, fi_addrs, 0ULL, NULL), avmap);
 
     /* ---------------------------------------------------- */
@@ -294,7 +294,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_cm_init(pg_p, pg_rank));
   fn_exit:
     if (fi_addrs)
-        MPIU_Free(fi_addrs);
+        MPL_free(fi_addrs);
     MPIU_CHKLMEM_FREEALL();
     END_FUNC(FCNAME);
     return mpi_errno;

@@ -781,11 +781,11 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
                 /* discard pending events, since we will retransmit
                  * this op anyway */
                 if (op->u.put.ack) {
-                    MPIU_Free(op->u.put.ack);
+                    MPL_free(op->u.put.ack);
                     op->u.put.ack = NULL;
                 }
                 if (op->u.put.send) {
-                    MPIU_Free(op->u.put.send);
+                    MPL_free(op->u.put.send);
                     op->u.put.send = NULL;
                 }
             }
@@ -829,7 +829,7 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
              * events */
             if (op->u.put.pt_type == RPTL_PT_CONTROL) {
                 /* drop the ack event */
-                MPIU_Free(op->u.put.ack);
+                MPL_free(op->u.put.ack);
                 MPL_DL_DELETE(op->target->control_op_list, op);
                 rptli_op_free(op);
 
@@ -847,7 +847,7 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
                     memcpy(&pending_event, op->u.put.ack, sizeof(ptl_event_t));
                     pending_event_valid = 1;
                 }
-                MPIU_Free(op->u.put.ack);
+                MPL_free(op->u.put.ack);
                 MPL_DL_DELETE(op->target->data_op_list, op);
                 rptli_op_free(op);
             }
@@ -866,7 +866,7 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
              * events */
             if (op->u.put.pt_type == RPTL_PT_CONTROL) {
                 /* drop the send event */
-                MPIU_Free(op->u.put.send);
+                MPL_free(op->u.put.send);
                 MPL_DL_DELETE(op->target->control_op_list, op);
                 rptli_op_free(op);
 
@@ -882,7 +882,7 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
                     /* user asked for an ACK, so return it to the user
                      * and queue up the SEND event for next time */
                     memcpy(&pending_event, op->u.put.send, sizeof(ptl_event_t));
-                    MPIU_Free(op->u.put.send);
+                    MPL_free(op->u.put.send);
                     assert(pending_event_valid == 0);
                     pending_event_valid = 1;
                 }
@@ -890,7 +890,7 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
                     /* user didn't ask for an ACK, overwrite the ACK
                      * event with the pending send event */
                     memcpy(event, op->u.put.send, sizeof(ptl_event_t));
-                    MPIU_Free(op->u.put.send);
+                    MPL_free(op->u.put.send);
 
                     /* set the event user pointer again, since we
                      * copied over the original event */

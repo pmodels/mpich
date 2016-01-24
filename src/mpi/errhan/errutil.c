@@ -1564,7 +1564,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
     MPI_Count c;
     void *p;
 
-    fmt = MPIU_Strdup(fmt_orig);
+    fmt = MPL_strdup(fmt_orig);
     if (fmt == NULL)
     {
 	if (maxlen > 0 && str != NULL)
@@ -1791,7 +1791,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	MPL_strncpy(str, begin, maxlen);
     }
     /* Free the dup'ed format string */
-    MPIU_Free( fmt );
+    MPL_free( fmt );
 
     return mpi_errno;
 }

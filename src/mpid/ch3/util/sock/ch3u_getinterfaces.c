@@ -227,7 +227,7 @@ static int MPIDI_CH3U_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 	struct ifconf			ifconf;
 	int				rc;
 
-	buf_ptr = (char *) MPIU_Malloc(buf_len);
+	buf_ptr = (char *) MPL_malloc(buf_len);
 	if (buf_ptr == NULL) {
 	    fprintf( stderr, "Unable to allocate %d bytes\n", buf_len );
 	    return 1;
@@ -253,7 +253,7 @@ static int MPIDI_CH3U_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 	    buf_len_prev = ifconf.ifc_len;
 	}
 	
-	MPIU_Free(buf_ptr);
+	MPL_free(buf_ptr);
 	buf_len += NUM_IFREQS * sizeof(struct ifreq);
     }
 	
@@ -332,7 +332,7 @@ static int MPIDI_CH3U_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 #endif
     }
 
-    MPIU_Free(buf_ptr);
+    MPL_free(buf_ptr);
     close(fd);
     
     /* If we found a unique address, use that */

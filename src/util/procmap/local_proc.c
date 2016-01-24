@@ -179,12 +179,12 @@ int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_
 
     *local_size_p = local_size;
     *local_rank_p = local_rank;
-    *local_ranks_p =  MPIU_Realloc (local_ranks, sizeof(int) * local_size);
+    *local_ranks_p =  MPL_realloc (local_ranks, sizeof(int) * local_size);
     MPIR_ERR_CHKANDJUMP (*local_ranks_p == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem2");
 
     *external_size_p = external_size;
     *external_rank_p = external_rank;
-    *external_ranks_p = MPIU_Realloc (external_ranks, sizeof(int) * external_size);
+    *external_ranks_p = MPL_realloc (external_ranks, sizeof(int) * external_size);
     MPIR_ERR_CHKANDJUMP (*external_ranks_p == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem2");
 
     /* no need to realloc */

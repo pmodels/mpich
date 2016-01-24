@@ -89,7 +89,7 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win ** win_ptr)
     /* Free shared memory region */
     if ((*win_ptr)->shm_allocated) {
         /* free shm_base_addrs that's only used for shared memory windows */
-        MPIU_Free((*win_ptr)->shm_base_addrs);
+        MPL_free((*win_ptr)->shm_base_addrs);
 
         /* Only allocate and allocate_shared allocate new shared segments */
         if (((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_SHARED ||

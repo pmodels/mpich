@@ -58,7 +58,7 @@ IRLOG_IOStruct *IRLOG_CreateInputStruct(const char *filename)
     IRLOG_IOStruct *pInput;
 
     /* allocate an input structure */
-    pInput = (IRLOG_IOStruct*)MPIU_Malloc(sizeof(IRLOG_IOStruct));
+    pInput = (IRLOG_IOStruct*)MPL_malloc(sizeof(IRLOG_IOStruct));
     if (pInput == NULL)
     {
 	MPL_error_printf("malloc failed - %s\n", strerror(errno));
@@ -69,7 +69,7 @@ IRLOG_IOStruct *IRLOG_CreateInputStruct(const char *filename)
     if (pInput->f == NULL)
     {
 	MPL_error_printf("fopen(%s) failed, error: %s\n", filename, strerror(errno));
-	MPIU_Free(pInput);
+	MPL_free(pInput);
 	return NULL;
     }
     /* read some data */
@@ -78,7 +78,7 @@ IRLOG_IOStruct *IRLOG_CreateInputStruct(const char *filename)
     {
 	MPL_error_printf("Unable to read data from the input file.\n");
 	fclose(pInput->f);
-	MPIU_Free(pInput);
+	MPL_free(pInput);
 	return NULL;
     }
     /* set the data fields and get the first record */
@@ -89,7 +89,7 @@ IRLOG_IOStruct *IRLOG_CreateInputStruct(const char *filename)
     {
 	MPL_error_printf("Unable to get the first record from the file.\n");
 	fclose(pInput->f);
-	MPIU_Free(pInput);
+	MPL_free(pInput);
 	return NULL;
     }
     return pInput;
@@ -100,7 +100,7 @@ IRLOG_IOStruct *IRLOG_CreateOutputStruct(const char *filename)
     IRLOG_IOStruct *pOutput = NULL;
 
     /* allocate a data structure */
-    pOutput = (IRLOG_IOStruct*)MPIU_Malloc(sizeof(IRLOG_IOStruct));
+    pOutput = (IRLOG_IOStruct*)MPL_malloc(sizeof(IRLOG_IOStruct));
     if (pOutput == NULL)
     {
 	MPL_error_printf("malloc failed - %s\n", strerror(errno));
@@ -112,7 +112,7 @@ IRLOG_IOStruct *IRLOG_CreateOutputStruct(const char *filename)
     if (pOutput->f == NULL)
     {
 	MPL_error_printf("Unable to open output file '%s' - %s\n", filename, strerror(errno));
-	MPIU_Free(pOutput);
+	MPL_free(pOutput);
 	return NULL;
     }
 
@@ -216,7 +216,7 @@ int IRLOG_WriteRecord(RLOG_HEADER *pRecord, IRLOG_IOStruct *pOutput)
 int IRLOG_CloseInputStruct(IRLOG_IOStruct **ppInput)
 {
     fclose((*ppInput)->f);
-    MPIU_Free(*ppInput);
+    MPL_free(*ppInput);
     *ppInput = NULL;
     return 0;
 }
@@ -225,7 +225,7 @@ int IRLOG_CloseOutputStruct(IRLOG_IOStruct **ppOutput)
 {
     WriteFileData((*ppOutput)->buffer, (int)((*ppOutput)->pCurHeader - (*ppOutput)->buffer), (*ppOutput)->f);
     fclose((*ppOutput)->f);
-    MPIU_Free(*ppOutput);
+    MPL_free(*ppOutput);
     *ppOutput = NULL;
     return 0;
 }

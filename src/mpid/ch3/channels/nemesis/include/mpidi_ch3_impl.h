@@ -250,7 +250,7 @@ static inline void MPIDI_CH3I_SHM_Wins_unlink(MPIDI_SHM_Wins_list_t * list, MPID
     if (elem != NULL) {
         tmp_elem = elem;
         MPL_DL_DELETE(*list, elem);
-        MPIU_Free(tmp_elem);
+        MPL_free(tmp_elem);
     }
 }
 

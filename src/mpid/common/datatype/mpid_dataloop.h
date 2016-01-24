@@ -77,8 +77,8 @@
     MPIU_Ensure_Aint_fits_in_pointer(value_)
 
 /* allocate and free functions must also be defined. */
-#define DLOOP_Malloc MPIU_Malloc
-#define DLOOP_Free   MPIU_Free
+#define DLOOP_Malloc MPL_malloc
+#define DLOOP_Free   MPL_free
 
 /* assert function */
 #define DLOOP_Assert MPIU_Assert

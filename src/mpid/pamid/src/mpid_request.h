@@ -281,12 +281,12 @@ MPID_Request_release_inline(MPID_Request *req)
     MPID_assert(MPIR_cc_is_complete(&req->cc));
 
     if (req->comm)              MPIR_Comm_release(req->comm, 0);
-    if (req->greq_fns)          MPIU_Free(req->greq_fns);
+    if (req->greq_fns)          MPL_free(req->greq_fns);
     if (req->mpid.datatype_ptr) MPID_Datatype_release(req->mpid.datatype_ptr);
     if (req->mpid.uebuf_malloc== mpiuMalloc) {
-        MPIU_Free(req->mpid.uebuf);
+        MPL_free(req->mpid.uebuf);
     }
-    if(req->mpid.win_req)       MPIU_Free(req->mpid.win_req);
+    if(req->mpid.win_req)       MPL_free(req->mpid.win_req);
 #if TOKEN_FLOW_CONTROL
     else if (req->mpid.uebuf_malloc == mpidiBufMM) {
         MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
@@ -304,7 +304,7 @@ static inline void
 MPID_Request_discard_inline(MPID_Request *req)
 {
     if (req->mpid.uebuf_malloc == mpiuMalloc) {
-        MPIU_Free(req->mpid.uebuf);
+        MPL_free(req->mpid.uebuf);
     }
 #if TOKEN_FLOW_CONTROL
     else if (req->mpid.uebuf_malloc == mpidiBufMM) {

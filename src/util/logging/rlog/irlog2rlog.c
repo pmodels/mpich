@@ -144,7 +144,7 @@ ArrowNode *GetArrowNode(int rank)
 	pNode = pNode->pNext;
     }
 
-    pNode = (ArrowNode *)MPIU_Malloc(sizeof(ArrowNode));
+    pNode = (ArrowNode *)MPL_malloc(sizeof(ArrowNode));
     pNode->pEndList = NULL;
     pNode->pStartList = NULL;
     pNode->rank = rank;
@@ -228,7 +228,7 @@ void SaveArrow(RLOG_IARROW *pArrow)
 	pEnd = ExtractEndNode(pNode, pArrow->rank, pArrow->tag);
 	if (pEnd == NULL)
 	{
-	    pStart = (StartArrowStruct *)MPIU_Malloc(sizeof(StartArrowStruct));
+	    pStart = (StartArrowStruct *)MPL_malloc(sizeof(StartArrowStruct));
 	    pStart->src = pArrow->rank;
 	    pStart->tag = pArrow->tag;
 	    pStart->length = pArrow->length;
@@ -256,7 +256,7 @@ void SaveArrow(RLOG_IARROW *pArrow)
 	arrow.leftright = RLOG_ARROW_LEFT;
 	/* fwrite(&arrow, sizeof(RLOG_ARROW), 1, g_fArrow); */
 	WriteFileData(&arrow, sizeof(RLOG_ARROW), g_fArrow);
-	MPIU_Free(pEnd);
+	MPL_free(pEnd);
     }
     else
     {
@@ -273,13 +273,13 @@ void SaveArrow(RLOG_IARROW *pArrow)
 	    arrow.start_time = pStart->start_time;
 	    arrow.length = pStart->length; /* the sender length is more accurate than the receiver length */
 	    arrow.leftright = RLOG_ARROW_RIGHT;
-	    MPIU_Free(pStart);
+	    MPL_free(pStart);
 	    /* fwrite(&arrow, sizeof(RLOG_ARROW), 1, g_fArrow); */
 	    WriteFileData(&arrow, sizeof(RLOG_ARROW), g_fArrow);
 	}
 	else
 	{
-	    pEnd = (EndArrowStruct *)MPIU_Malloc(sizeof(EndArrowStruct));
+	    pEnd = (EndArrowStruct *)MPL_malloc(sizeof(EndArrowStruct));
 	    pEnd->src = pArrow->remote;
 	    pEnd->tag = pArrow->tag;
 	    pEnd->timestamp = pArrow->timestamp;
@@ -314,7 +314,7 @@ RecursionStruct *GetLevel(int rank, int recursion)
 	pLevel = pLevel->next;
     }
 
-    pLevel = (RecursionStruct*)MPIU_Malloc(sizeof(RecursionStruct));
+    pLevel = (RecursionStruct*)MPL_malloc(sizeof(RecursionStruct));
     MPL_snprintf(pLevel->filename, 1024, "irlog.%d.%d.tmp", rank, recursion);
     pLevel->fout = fopen(pLevel->filename, "w+b");
     pLevel->rank = rank;
@@ -352,7 +352,7 @@ void SaveState(RLOG_STATE *pState)
 	pIter = pIter->next;
     }
 
-    pIter = (RLOG_State_list*)MPIU_Malloc(sizeof(RLOG_State_list));
+    pIter = (RLOG_State_list*)MPL_malloc(sizeof(RLOG_State_list));
     memcpy(&pIter->state, pState, sizeof(RLOG_STATE));
     pIter->next = g_pList;
     g_pList = pIter;
@@ -388,7 +388,7 @@ void AppendFile(FILE *fout, FILE *fin)
     int num_read, num_written;
     char *buffer, *buf;
 
-    buffer = (char*)MPIU_Malloc(sizeof(char) * BUFFER_SIZE);
+    buffer = (char*)MPL_malloc(sizeof(char) * BUFFER_SIZE);
 
     total = ftell(fin);
     fseek(fin, 0L, SEEK_SET);
@@ -416,7 +416,7 @@ void AppendFile(FILE *fout, FILE *fin)
 	}
     }
 
-    MPIU_Free(buffer);
+    MPL_free(buffer);
 }
 
 int FindMinRank(RecursionStruct *pLevel)
@@ -493,7 +493,7 @@ void RemoveLevel(int rank)
 		pLevel = pLevel->next;
 		fclose(pTrailer->fout);
 		unlink(pTrailer->filename);
-		MPIU_Free(pTrailer);
+		MPL_free(pTrailer);
 		pTrailer = pLevel;
 	    }
 	    else
@@ -501,7 +501,7 @@ void RemoveLevel(int rank)
 		pTrailer->next = pLevel->next;
 		fclose(pLevel->fout);
 		unlink(pLevel->filename);
-		MPIU_Free(pLevel);
+		MPL_free(pLevel);
 		pLevel = pTrailer->next;
 	    }
 	}
@@ -600,7 +600,7 @@ void GenerateNewArgv(int *pargc, char ***pargv, int n)
     char *buffer, *str;
 
     length = (sizeof(char*) * (n+3)) +strlen((*pargv)[0]) + 1 + strlen((*pargv)[1]) + 1 + (15 * n);
-    buffer = (char*)MPIU_Malloc(length);
+    buffer = (char*)MPL_malloc(length);
 
     argc = n+2;
     argv = (char**)buffer;
@@ -668,7 +668,7 @@ int main(int argc, char *argv[])
     }
 
     /* read the arrows from all the files in order */
-    ppInput = (IRLOG_IOStruct**)MPIU_Malloc(nNumInputs * sizeof(IRLOG_IOStruct*));
+    ppInput = (IRLOG_IOStruct**)MPL_malloc(nNumInputs * sizeof(IRLOG_IOStruct*));
     for (i=0; i<nNumInputs; i++)
     {
 	ppInput[i] = IRLOG_CreateInputStruct(argv[i+2]);
@@ -837,7 +837,7 @@ int main(int argc, char *argv[])
     {
 	pState = g_pList;
 	g_pList = g_pList->next;
-	MPIU_Free(pState);
+	MPL_free(pState);
     }
     if (g_fArrow)
     {
@@ -846,7 +846,7 @@ int main(int argc, char *argv[])
     }
 
     if (s_bFreeArgv)
-	MPIU_Free(argv);
+	MPL_free(argv);
 
     return 0;
 }

@@ -209,7 +209,7 @@ int MPID_nem_mxm_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     MPIU_Assert(last > 0 && last - sreq->dev.segment_first > 0);
 
     if (last > 0) {
-        sreq->dev.tmpbuf = MPIU_Malloc((size_t) (sreq->dev.segment_size - sreq->dev.segment_first));
+        sreq->dev.tmpbuf = MPL_malloc((size_t) (sreq->dev.segment_size - sreq->dev.segment_first));
         MPIU_Assert(sreq->dev.tmpbuf);
         MPID_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, sreq->dev.tmpbuf);
         MPIU_Assert(last == sreq->dev.segment_size);
@@ -306,7 +306,7 @@ int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Data
 
             last = data_sz;
             if (packsize > 0) {
-                sreq->dev.tmpbuf = MPIU_Malloc((size_t) packsize);
+                sreq->dev.tmpbuf = MPL_malloc((size_t) packsize);
                 MPIU_Assert(sreq->dev.tmpbuf);
                 MPID_Segment_init(buf, count, datatype, sreq->dev.segment_ptr, 0);
                 MPID_Segment_pack(sreq->dev.segment_ptr, 0, &last, sreq->dev.tmpbuf);
@@ -409,7 +409,7 @@ int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
 
             last = data_sz;
             if (packsize > 0) {
-                sreq->dev.tmpbuf = MPIU_Malloc((size_t) packsize);
+                sreq->dev.tmpbuf = MPL_malloc((size_t) packsize);
                 MPIU_Assert(sreq->dev.tmpbuf);
                 MPID_Segment_init(buf, count, datatype, sreq->dev.segment_ptr, 0);
                 MPID_Segment_pack(sreq->dev.segment_ptr, 0, &last, sreq->dev.tmpbuf);
@@ -512,7 +512,7 @@ int MPID_nem_mxm_isend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
 
             last = data_sz;
             if (packsize > 0) {
-                sreq->dev.tmpbuf = MPIU_Malloc((size_t) packsize);
+                sreq->dev.tmpbuf = MPL_malloc((size_t) packsize);
                 MPIU_Assert(sreq->dev.tmpbuf);
                 MPID_Segment_init(buf, count, datatype, sreq->dev.segment_ptr, 0);
                 MPID_Segment_pack(sreq->dev.segment_ptr, 0, &last, sreq->dev.tmpbuf);
@@ -616,7 +616,7 @@ int MPID_nem_mxm_issend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Da
 
             last = data_sz;
             if (packsize > 0) {
-                sreq->dev.tmpbuf = MPIU_Malloc((size_t) packsize);
+                sreq->dev.tmpbuf = MPL_malloc((size_t) packsize);
                 MPIU_Assert(sreq->dev.tmpbuf);
                 MPID_Segment_init(buf, count, datatype, sreq->dev.segment_ptr, 0);
                 MPID_Segment_pack(sreq->dev.segment_ptr, 0, &last, sreq->dev.tmpbuf);
@@ -663,12 +663,12 @@ int _mxm_handle_sreq(MPID_Request * req)
     vc_area->pending_sends -= 1;
     if (req->dev.tmpbuf) {
         if (req->dev.datatype_ptr || req->ch.noncontig) {
-            MPIU_Free(req->dev.tmpbuf);
+            MPL_free(req->dev.tmpbuf);
         }
     }
 
     if (req_area->iov_count > MXM_MPICH_MAX_IOV) {
-        MPIU_Free(req_area->iov_buf);
+        MPL_free(req_area->iov_buf);
         req_area->iov_buf = req_area->tmp_buf;
         req_area->iov_count = 0;
     }
@@ -810,7 +810,7 @@ static int _mxm_process_sdtype(MPID_Request ** sreq_p, MPI_Datatype datatype,
     MPID_Segment_count_contig_blocks(sreq->dev.segment_ptr, sreq->dev.segment_first, &last,
                                      (MPI_Aint *) & n_iov);
     MPIU_Assert(n_iov > 0);
-    iov = MPIU_Malloc(n_iov * sizeof(*iov));
+    iov = MPL_malloc(n_iov * sizeof(*iov));
     MPIU_Assert(iov);
 
     last = sreq->dev.segment_size;
@@ -827,7 +827,7 @@ static int _mxm_process_sdtype(MPID_Request ** sreq_p, MPI_Datatype datatype,
 #endif
 
     if (n_iov > MXM_MPICH_MAX_IOV) {
-        *iov_buf = (mxm_req_buffer_t *) MPIU_Malloc(n_iov * sizeof(**iov_buf));
+        *iov_buf = (mxm_req_buffer_t *) MPL_malloc(n_iov * sizeof(**iov_buf));
         MPIU_Assert(*iov_buf);
     }
 
@@ -848,7 +848,7 @@ static int _mxm_process_sdtype(MPID_Request ** sreq_p, MPI_Datatype datatype,
     }
     else {
         int offset = 0;
-        sreq->dev.tmpbuf = MPIU_Malloc(size_to_copy);
+        sreq->dev.tmpbuf = MPL_malloc(size_to_copy);
         sreq->dev.tmpbuf_sz = size_to_copy;
         MPIU_Assert(sreq->dev.tmpbuf);
         for (index = (MXM_REQ_DATA_MAX_IOV - 1); index < n_iov; index++) {
@@ -860,7 +860,7 @@ static int _mxm_process_sdtype(MPID_Request ** sreq_p, MPI_Datatype datatype,
         (*iov_buf)[MXM_REQ_DATA_MAX_IOV - 1].length = size_to_copy;
         *iov_count = MXM_REQ_DATA_MAX_IOV;
     }
-    MPIU_Free(iov);
+    MPL_free(iov);
 
   fn_exit:
     return mpi_errno;

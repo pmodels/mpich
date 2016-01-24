@@ -55,9 +55,9 @@ int MPIDI_SHM_Win_free(MPID_Win **win_ptr)
     MPID_Abort(NULL, MPI_ERR_RMA_SHARED, -1, "MPI_Win_free error");
 #endif
   } else {/* one task on a node */
-    MPIU_Free((*win_ptr)->mpid.shm->base_addr);
+    MPL_free((*win_ptr)->mpid.shm->base_addr);
   }
-  MPIU_Free((*win_ptr)->mpid.shm);
+  MPL_free((*win_ptr)->mpid.shm);
   (*win_ptr)->mpid.shm = NULL;
 
  fn_fail:
@@ -100,7 +100,7 @@ MPID_Win_free(MPID_Win **win_ptr)
 
 
   if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE)
-    MPIU_Free(win->base);
+    MPL_free(win->base);
 
   struct MPIDI_Win_info *winfo = &win->mpid.info[rank];
 #ifdef USE_PAMI_RDMA
@@ -119,9 +119,9 @@ MPID_Win_free(MPID_Win **win_ptr)
     }
 #endif
 
-  MPIU_Free(win->mpid.info);
+  MPL_free(win->mpid.info);
   if (win->mpid.work.msgQ) 
-      MPIU_Free(win->mpid.work.msgQ);
+      MPL_free(win->mpid.work.msgQ);
 
   MPIR_Comm_release(win->comm_ptr, 0);
 

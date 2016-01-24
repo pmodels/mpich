@@ -99,7 +99,7 @@ void MPIX_Dump_stacks()
     }
   /* This is #ifdef'd out:  In debug libraries, it causes a compile error. */
 #if 0
-  free(bt_strings); /* Since this is not allocated by MPIU_Malloc, do not use MPIU_Free */
+  free(bt_strings); /* Since this is not allocated by MPL_malloc, do not use MPL_free */
 #endif
 }
 #else

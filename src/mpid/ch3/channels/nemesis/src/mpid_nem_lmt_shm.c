@@ -742,7 +742,7 @@ static inline int lmt_shm_progress_vc(MPIDI_VC_t *vc, int *done)
 
     if (done_req)
     {
-        MPIU_Free(vc_ch->lmt_active_lmt);
+        MPL_free(vc_ch->lmt_active_lmt);
         vc_ch->lmt_active_lmt = NULL;
 
         if (LMT_SHM_Q_EMPTY(vc_ch->lmt_queue))
@@ -788,7 +788,7 @@ int MPID_nem_lmt_shm_progress(void)
             f = pe;
             pe = pe->next;
             LMT_SHM_L_REMOVE(f);
-            MPIU_Free(f);
+            MPL_free(f);
         }
         else
             pe = pe->next;
@@ -842,7 +842,7 @@ int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc)
         MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Clearing active LMT");
         vc_ch->lmt_active_lmt->req->status.MPI_ERROR = req_errno;
         MPID_Request_complete(vc_ch->lmt_active_lmt->req);
-        MPIU_Free(vc_ch->lmt_active_lmt);
+        MPL_free(vc_ch->lmt_active_lmt);
         vc_ch->lmt_active_lmt = NULL;
     }
 
@@ -854,7 +854,7 @@ int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc)
         LMT_SHM_Q_DEQUEUE(&vc_ch->lmt_queue, &we);
         we->req->status.MPI_ERROR = req_errno;
         MPID_Request_complete(we->req);
-        MPIU_Free(we);
+        MPL_free(we);
     }
 
  fn_exit:

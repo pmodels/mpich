@@ -220,10 +220,10 @@ typedef char *MPID_FCHAR_T;
 /* style: allow:malloc:1 sig:0 */
 /* style: allow:free:1 sig:0 */
 /* style: allow:calloc:1 sig:0 */
-#ifndef MPIU_Malloc
-#define MPIU_Malloc(a)    malloc((unsigned)(a))
-#define MPIU_Calloc(a,b)  calloc((unsigned)(a),(unsigned)(b))
-#define MPIU_Free(a)      free((void *)(a))
+#ifndef MPL_malloc
+#define MPL_malloc(a)    malloc((unsigned)(a))
+#define MPL_calloc(a,b)  calloc((unsigned)(a),(unsigned)(b))
+#define MPL_free(a)      free((void *)(a))
 #endif
 
 /* To avoid constant allocation/deallocation of temporary arrays, define

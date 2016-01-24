@@ -242,7 +242,7 @@ MPID_Put(const void   *origin_addr,
   int mpi_errno = MPI_SUCCESS;
   int shm_locked=0;
   void * target_addr;
-  MPIDI_Win_request *req = MPIU_Calloc0(1, MPIDI_Win_request);
+  MPIDI_Win_request *req = MPL_calloc0(1, MPIDI_Win_request);
   req->win          = win;
   if(win->mpid.request_based != 1) 
     req->type         = MPIDI_WIN_REQUEST_PUT;
@@ -293,7 +293,7 @@ MPID_Put(const void   *origin_addr,
       if(req->req_handle)
        MPIR_cc_set(req->req_handle->cc_ptr, 0);
       else
-       MPIU_Free(req);
+       MPL_free(req);
       return MPI_SUCCESS;
     }
 
@@ -324,7 +324,7 @@ MPID_Put(const void   *origin_addr,
        if(req->req_handle)
          MPIR_cc_set(req->req_handle->cc_ptr, 0);
        else
-         MPIU_Free(req);
+         MPL_free(req);
        return mpi_errno;
      }
   req->target.rank = target_rank;
@@ -345,7 +345,7 @@ MPID_Put(const void   *origin_addr,
   else
     {
       req->buffer_free = 1;
-      req->buffer      = MPIU_Malloc(req->origin.dt.size);
+      req->buffer      = MPL_malloc(req->origin.dt.size);
       MPID_assert(req->buffer != NULL);
 
       int mpi_errno = 0;

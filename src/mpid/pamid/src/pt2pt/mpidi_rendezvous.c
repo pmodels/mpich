@@ -92,7 +92,7 @@ MPIDI_RendezvousTransfer(pami_context_t   context,
   else
     {
       MPIDI_Request_setCA(rreq, MPIDI_CA_UNPACK_UEBUF_AND_COMPLETE);
-      rcvbuf = MPIU_Malloc(rcvlen);
+      rcvbuf = MPL_malloc(rcvlen);
       MPID_assert(rcvbuf != NULL);
       rreq->mpid.uebuf    = rcvbuf;
       rreq->mpid.uebuflen = rcvlen;

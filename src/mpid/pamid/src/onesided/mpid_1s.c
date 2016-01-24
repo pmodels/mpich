@@ -44,8 +44,8 @@ MPIDI_Win_DoneCB(pami_context_t  context,
                                      req->origin.datatype);
           MPID_assert(mpi_errno == MPI_SUCCESS);
           MPID_Datatype_release(req->origin.dt.pointer);
-          MPIU_Free(req->buffer);
-          MPIU_Free(req->user_buffer);
+          MPL_free(req->buffer);
+          MPL_free(req->user_buffer);
           req->buffer_free = 0;
         }
     }
@@ -58,16 +58,16 @@ MPIDI_Win_DoneCB(pami_context_t  context,
       MPID_Request * req_handle = req->req_handle;
 
       if (req->buffer_free) {
-          MPIU_Free(req->buffer);
-          MPIU_Free(req->user_buffer);
+          MPL_free(req->buffer);
+          MPL_free(req->user_buffer);
           req->buffer_free = 0;
       }
       MPIDI_Win_datatype_unmap(&req->target.dt);
       if (req->accum_headers)
-          MPIU_Free(req->accum_headers);
+          MPL_free(req->accum_headers);
 
       if (!((req->type > MPIDI_WIN_REQUEST_GET_ACCUMULATE) && (req->type <=MPIDI_WIN_REQUEST_RGET_ACCUMULATE)))
-          MPIU_Free(req);
+          MPL_free(req);
 
       if(req_handle) {
 
@@ -125,7 +125,7 @@ MPIDI_Win_datatype_map(MPIDI_Datatype * dt)
     {
       unsigned map_size = dt->pointer->max_contig_blocks*dt->count + 1;
       dt->num_contig = map_size;
-      dt->map = (DLOOP_VECTOR*)MPIU_Malloc(map_size * sizeof(DLOOP_VECTOR));
+      dt->map = (DLOOP_VECTOR*)MPL_malloc(map_size * sizeof(DLOOP_VECTOR));
       MPID_assert(dt->map != NULL);
 
       DLOOP_Offset last = dt->pointer->size*dt->count;
@@ -147,5 +147,5 @@ void
 MPIDI_Win_datatype_unmap(MPIDI_Datatype * dt)
 {
   if (dt->map != &dt->__map)
-    MPIU_Free(dt->map);;
+    MPL_free(dt->map);;
 }

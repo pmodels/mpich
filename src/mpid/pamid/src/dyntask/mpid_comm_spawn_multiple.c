@@ -37,7 +37,7 @@ static int  MPIDI_mpi_to_pmi_keyvals( MPID_Info *info_ptr, PMI_keyval_t **kv_ptr
     if (nkeys == 0) {
 	goto fn_exit;
     }
-    kv = (PMI_keyval_t *)MPIU_Malloc( nkeys * sizeof(PMI_keyval_t) );
+    kv = (PMI_keyval_t *)MPL_malloc( nkeys * sizeof(PMI_keyval_t) );
 
     for (i=0; i<nkeys; i++) {
 	mpi_errno = MPIR_Info_get_nthkey_impl( info_ptr, i, key );
@@ -45,8 +45,8 @@ static int  MPIDI_mpi_to_pmi_keyvals( MPID_Info *info_ptr, PMI_keyval_t **kv_ptr
           TRACE_ERR("MPIR_Info_get_nthkey_impl returned with mpi_errno=%d\n", mpi_errno);
 	MPIR_Info_get_valuelen_impl( info_ptr, key, &vallen, &flag );
 
-	kv[i].key = MPIU_Strdup(key);
-	kv[i].val = MPIU_Malloc( vallen + 1 );
+        kv[i].key = MPL_strdup(key);
+        kv[i].val = MPL_malloc( vallen + 1 );
 	MPIR_Info_get_impl( info_ptr, key, vallen+1, kv[i].val, &flag );
 	TRACE_OUT("key: <%s>, value: <%s>\n", kv[i].key, kv[i].val);
     }
@@ -69,13 +69,13 @@ static void MPIDI_free_pmi_keyvals(PMI_keyval_t **kv, int size, int *counts)
 	for (j=0; j<counts[i]; j++)
 	{
 	    if (kv[i][j].key != NULL)
-		MPIU_Free((char *)kv[i][j].key);
+                MPL_free((char *)kv[i][j].key);
 	    if (kv[i][j].val != NULL)
-		MPIU_Free(kv[i][j].val);
+                MPL_free(kv[i][j].val);
 	}
 	if (kv[i] != NULL)
 	{
-	    MPIU_Free(kv[i]);
+            MPL_free(kv[i]);
 	}
     }
 }
@@ -159,7 +159,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 	for (i=0; i<count; i++) {
 	    total_num_processes += maxprocs[i];
 	}
-	pmi_errcodes = (int*)MPIU_Malloc(sizeof(int) * total_num_processes);
+        pmi_errcodes = (int*)MPL_malloc(sizeof(int) * total_num_processes);
 
 	/* initialize them to 0 */
 	for (i=0; i<total_num_processes; i++)
@@ -174,13 +174,13 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 #ifdef USE_PMI2_API
         MPIU_Assert(count > 0);
         {
-            int *argcs = MPIU_Malloc(count*sizeof(int));
+            int *argcs = MPL_malloc(count*sizeof(int));
             struct MPID_Info preput;
             struct MPID_Info *preput_p[2] = { &preput, &tmp_info_ptr };
 
             MPIU_Assert(argcs);
 
-            info_keyval_sizes = MPIU_Malloc(count * sizeof(int));
+            info_keyval_sizes = MPL_malloc(count * sizeof(int));
 
             /* FIXME cheating on constness */
             preput.key = (char *)MPIDI_PARENT_PORT_KVSKEY;
@@ -217,7 +217,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 	    TRACE_ERR("after PMI2_Job_Spawn - pmi_errno=%d jobId=%s\n", pmi_errno, jobId);
             MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
-	    tmp=MPIU_Strdup(jobId);
+            tmp=MPL_strdup(jobId);
 	    tmp_ret = atoi(strtok(tmp, ";"));
 
 	    if( (pmi_errno == PMI2_SUCCESS) && (tmp_ret != -1) ) {
@@ -229,9 +229,9 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
               PAMI_Resume(MPIDI_Context[0], &ldest, 1);
             }
 
-            MPIU_Free(tmp);
+            MPL_free(tmp);
 
-            MPIU_Free(argcs);
+            MPL_free(argcs);
             if (pmi_errno != PMI2_SUCCESS) {
                TRACE_ERR("PMI2_Job_Spawn returned with pmi_errno=%d\n", pmi_errno);
             }
@@ -243,9 +243,9 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
            the necessary arrays of key/value pairs */
 
         /* convert the infos into PMI keyvals */
-        info_keyval_sizes   = (int *) MPIU_Malloc(count * sizeof(int));
+        info_keyval_sizes   = (int *) MPL_malloc(count * sizeof(int));
         info_keyval_vectors =
-            (PMI_keyval_t**) MPIU_Malloc(count * sizeof(PMI_keyval_t*));
+            (PMI_keyval_t**) MPL_malloc(count * sizeof(PMI_keyval_t*));
 
         if (!info_ptrs) {
             for (i=0; i<count; i++) {
@@ -338,13 +338,13 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
  fn_exit:
     if (info_keyval_vectors) {
 	MPIDI_free_pmi_keyvals(info_keyval_vectors, count, info_keyval_sizes);
-	MPIU_Free(info_keyval_vectors);
+        MPL_free(info_keyval_vectors);
     }
     if (info_keyval_sizes) {
-	MPIU_Free(info_keyval_sizes);
+        MPL_free(info_keyval_sizes);
     }
     if (pmi_errcodes) {
-	MPIU_Free(pmi_errcodes);
+        MPL_free(pmi_errcodes);
     }
     return mpi_errno;
  fn_fail:
@@ -390,7 +390,7 @@ int MPIDI_GetParentPort(char ** parent_port)
             goto fn_exit;
 	}
 #endif
-	parent_port_name = MPIU_Strdup(val);
+        parent_port_name = MPL_strdup(val);
     }
 
     *parent_port = parent_port_name;
@@ -405,7 +405,7 @@ int MPIDI_GetParentPort(char ** parent_port)
 void MPIDI_FreeParentPort(void)
 {
     if (parent_port_name) {
-	MPIU_Free( parent_port_name );
+        MPL_free( parent_port_name );
 	parent_port_name = 0;
     }
 }

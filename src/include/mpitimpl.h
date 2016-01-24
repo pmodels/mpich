@@ -1317,7 +1317,7 @@ void get_timer_time_in_double(MPIR_T_pvar_timer_t *timer, void *obj_handle,
                 (pvar_table_entry_t *)utarray_eltptr(pvar_table, idx_); \
             if (pvar != NULL) { \
                 pvar->active = FALSE; \
-                /* Do not do MPIU_Free(pvar->info), since it may be re-activated */ \
+                /* Do not do MPL_free(pvar->info), since it may be re-activated */ \
             } \
         } \
     } while (0)

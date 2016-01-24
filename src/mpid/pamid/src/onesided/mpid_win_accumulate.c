@@ -162,7 +162,7 @@ MPID_Accumulate(const void   *origin_addr,
 {
   int mpi_errno = MPI_SUCCESS;
   int shm_locked = 0;
-  MPIDI_Win_request *req = MPIU_Calloc0(1, MPIDI_Win_request);
+  MPIDI_Win_request *req = MPL_calloc0(1, MPIDI_Win_request);
   req->win          = win;
   if(win->mpid.request_based != 1)
     req->type         = MPIDI_WIN_REQUEST_ACCUMULATE;
@@ -247,7 +247,7 @@ MPID_Accumulate(const void   *origin_addr,
       if(req->req_handle)
         MPIR_cc_set(req->req_handle->cc_ptr, 0);
       else
-        MPIU_Free(req);
+        MPL_free(req);
       return MPI_SUCCESS;
     }
 
@@ -262,7 +262,7 @@ MPID_Accumulate(const void   *origin_addr,
   else
     {
       req->buffer_free = 1;
-      req->buffer      = MPIU_Malloc(req->origin.dt.size);
+      req->buffer      = MPL_malloc(req->origin.dt.size);
       MPID_assert(req->buffer != NULL);
       int mpi_errno = 0;
       mpi_errno = MPIR_Localcopy(origin_addr,
@@ -310,7 +310,7 @@ MPID_Accumulate(const void   *origin_addr,
        (*uop)((void *) origin_addr, dest_addr, &one, &origin_datatype);
 
 
-        MPIU_Free(req);
+        MPL_free(req);
         ++win->mpid.sync.complete;
 
    } else { /* non-shared    */
@@ -331,7 +331,7 @@ MPID_Accumulate(const void   *origin_addr,
     MPID_assert(basic_type != MPI_DATATYPE_NULL);
 
     unsigned index;
-    MPIDI_Win_MsgInfo * headers = MPIU_Calloc0(req->target.dt.num_contig, MPIDI_Win_MsgInfo);
+    MPIDI_Win_MsgInfo * headers = MPL_calloc0(req->target.dt.num_contig, MPIDI_Win_MsgInfo);
     req->accum_headers = headers;
     for (index=0; index < req->target.dt.num_contig; ++index) {
      headers[index].addr = win->mpid.info[target_rank].base_addr + req->offset +

@@ -532,7 +532,7 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
         /* free the temporary buffer.
          * When origin data is zero, there
          * is no temporary buffer allocated */
-        MPIU_Free((char *) rreq->dev.user_buf);
+        MPL_free((char *) rreq->dev.user_buf);
     }
 
     /* mark data transfer as complete and decrement CC */
@@ -960,7 +960,7 @@ int MPIDI_CH3_ReqHandler_UnpackUEBufComplete(MPIDI_VC_t * vc ATTRIBUTE((unused))
     if (!recv_pending) {
         if (rreq->dev.recv_data_sz > 0) {
             MPIDI_CH3U_Request_unpack_uebuf(rreq);
-            MPIU_Free(rreq->dev.tmpbuf);
+            MPL_free(rreq->dev.tmpbuf);
         }
     }
     else {
@@ -1463,7 +1463,7 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
     recv_count = MPL_MIN((total_len / type_size), (MPIDI_CH3U_SRBuf_size / type_extent));
     MPIU_Assert(recv_count > 0);
 
-    sreq->dev.user_buf = (void *) MPIU_Malloc(recv_count * type_size);
+    sreq->dev.user_buf = (void *) MPL_malloc(recv_count * type_size);
 
     MPID_Datatype_is_contig(get_accum_pkt->datatype, &is_contig);
 
@@ -1600,7 +1600,7 @@ static inline int perform_fop_in_lock_queue(MPID_Win * win_ptr,
         resp_req->dev.target_win_handle = win_ptr->handle;
         resp_req->dev.flags = fop_pkt->flags;
 
-        resp_req->dev.user_buf = (void *) MPIU_Malloc(type_size);
+        resp_req->dev.user_buf = (void *) MPL_malloc(type_size);
 
         /* here we increment the Active Target counter to guarantee the GET-like
          * operation are completed when counter reaches zero. */

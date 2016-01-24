@@ -102,7 +102,7 @@ static int *MPIR_Copy_array( int n, const int a[], int *err )
         return NULL;
     }
 
-    new_p = (int *)MPIU_Malloc( n * sizeof(int) );
+    new_p = (int *)MPL_malloc( n * sizeof(int) );
 
     /* --BEGIN ERROR HANDLING-- */
     if (!new_p) {
@@ -217,24 +217,24 @@ static int MPIR_Topology_delete_fn ( MPI_Comm comm ATTRIBUTE((unused)),
     /* FIXME - free the attribute data structure */
     
     if (topology->kind == MPI_CART) {
-	MPIU_Free( topology->topo.cart.dims );
-	MPIU_Free( topology->topo.cart.periodic );
-	MPIU_Free( topology->topo.cart.position );
-	MPIU_Free( topology );
+	MPL_free( topology->topo.cart.dims );
+	MPL_free( topology->topo.cart.periodic );
+	MPL_free( topology->topo.cart.position );
+	MPL_free( topology );
     }
     else if (topology->kind == MPI_GRAPH) {
-	MPIU_Free( topology->topo.graph.index );
-	MPIU_Free( topology->topo.graph.edges );
-	MPIU_Free( topology );
+	MPL_free( topology->topo.graph.index );
+	MPL_free( topology->topo.graph.edges );
+	MPL_free( topology );
     }
     else if (topology->kind == MPI_DIST_GRAPH) {
-        MPIU_Free(topology->topo.dist_graph.in);
-        MPIU_Free(topology->topo.dist_graph.out);
+        MPL_free(topology->topo.dist_graph.in);
+        MPL_free(topology->topo.dist_graph.out);
         if (topology->topo.dist_graph.in_weights)
-            MPIU_Free(topology->topo.dist_graph.in_weights);
+            MPL_free(topology->topo.dist_graph.in_weights);
         if (topology->topo.dist_graph.out_weights)
-            MPIU_Free(topology->topo.dist_graph.out_weights);
-        MPIU_Free(topology );
+            MPL_free(topology->topo.dist_graph.out_weights);
+        MPL_free(topology );
     }
     /* --BEGIN ERROR HANDLING-- */
     else {

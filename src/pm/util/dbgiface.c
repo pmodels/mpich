@@ -80,7 +80,7 @@ int MPIE_InitForDebugger( ProcessWorld *pWorld )
     static char myhostname[MAX_HOST_NAME+1];
 
     MPIR_proctable = (struct MPIR_PROCDESC *)
-	MPIU_Malloc( np * sizeof(struct MPIR_PROCDESC) );
+	MPL_malloc( np * sizeof(struct MPIR_PROCDESC) );
 
     i = 0;
     while (apps && i < np) {
@@ -126,7 +126,7 @@ int MPIE_InitForDebugger( ProcessWorld *pWorld )
 /* This routine is provided to free memory allocated in this routine */
 int MPIE_FreeFromDebugger( void )
 {
-    if (MPIR_proctable) { MPIU_Free( MPIR_proctable ); }
+    if (MPIR_proctable) { MPL_free( MPIR_proctable ); }
     return 0;
 }
 

@@ -12,7 +12,7 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Sched_cb_free_buf(MPID_Comm *comm, int tag, void *state)
 {
-    MPIU_Free(state);
+    MPL_free(state);
     return MPI_SUCCESS;
 }
 

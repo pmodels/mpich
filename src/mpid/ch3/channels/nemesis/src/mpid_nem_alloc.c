@@ -419,7 +419,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
         size_left -= ep->len;
         current_addr = (char *)current_addr + ep->len;
 
-        MPIU_Free(ep);
+        MPL_free(ep);
 
         MPIU_Assert((char *)current_addr <= (char *)start_addr + segment_len);
     }
@@ -455,7 +455,7 @@ int MPIDI_CH3I_Seg_destroy(void)
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SEG_DESTROY);
 
     if (MPID_nem_mem_region.num_local == 1)
-        MPIU_Free(MPID_nem_mem_region.memory.base_addr);
+        MPL_free(MPID_nem_mem_region.memory.base_addr);
     else
     {
         mpi_errno = MPIU_SHMW_Seg_detach(MPID_nem_mem_region.memory.hnd, 

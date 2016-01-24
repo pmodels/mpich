@@ -374,7 +374,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
         first = stream_offset;
         last = stream_offset + stream_size;
 
-        packed_buf = MPIU_Malloc(stream_size);
+        packed_buf = MPL_malloc(stream_size);
 
         seg = MPID_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
@@ -386,12 +386,12 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
         MPID_Datatype_is_contig(basic_type, &is_predef_contig);
 
         if (!is_predef_contig) {
-            void *tmpbuf = MPIU_Malloc(stream_count * predefined_dtp_extent);
+            void *tmpbuf = MPL_malloc(stream_count * predefined_dtp_extent);
             mpi_errno = MPIR_Localcopy(tmpbuf, stream_count, basic_type,
                                        packed_buf, stream_size, MPI_BYTE);
             if (mpi_errno != MPI_SUCCESS)
                 MPIR_ERR_POP(mpi_errno);
-            MPIU_Free(packed_buf);
+            MPL_free(packed_buf);
             packed_buf = tmpbuf;
         }
 
@@ -411,7 +411,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_POP(mpi_errno);
 
-        MPIU_Free(packed_buf);
+        MPL_free(packed_buf);
     }
 
   fn_exit:
@@ -521,7 +521,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
         first = stream_offset;
         last = stream_offset + stream_size;
 
-        packed_buf = MPIU_Malloc(stream_size);
+        packed_buf = MPL_malloc(stream_size);
 
         seg = MPID_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
@@ -533,12 +533,12 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
         MPID_Datatype_is_contig(basic_type, &is_predef_contig);
 
         if (!is_predef_contig) {
-            void *tmpbuf = MPIU_Malloc(stream_count * predefined_dtp_extent);
+            void *tmpbuf = MPL_malloc(stream_count * predefined_dtp_extent);
             mpi_errno = MPIR_Localcopy(tmpbuf, stream_count, basic_type,
                                        packed_buf, stream_size, MPI_BYTE);
             if (mpi_errno != MPI_SUCCESS)
                 MPIR_ERR_POP(mpi_errno);
-            MPIU_Free(packed_buf);
+            MPL_free(packed_buf);
             packed_buf = tmpbuf;
         }
 
@@ -550,7 +550,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_POP(mpi_errno);
 
-        MPIU_Free(packed_buf);
+        MPL_free(packed_buf);
     }
 
     if (shm_locked) {

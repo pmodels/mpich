@@ -228,7 +228,7 @@ void MPIDI_calc_tokens(int nTasks,uint *eager_limit_in, unsigned long *buf_mem_i
           /* putenv MP_EAGER_LIMIT if it is changed                          */
           /* MP_EAGER_LIMIT always has a value.                              */
           /* need to check whether MP_EAGER_LIMIT has been export            */
-          EagerLimit = (char*)MPIU_Malloc(32 * sizeof(char));
+          EagerLimit = (char*)MPL_malloc(32 * sizeof(char));
           sprintf(EagerLimit, "MP_EAGER_LIMIT=%d",val);
           rc = putenv(EagerLimit);
           if (rc !=0) {
@@ -280,7 +280,7 @@ static char *MPIDI_init_flex(char *hp)
        OVERHEAD * fcount * FLEX_NUM;
    kk=fcount *FLEX_NUM *sizeof(char *);
    size = ALIGN8(kk);
-   area = (char **) MPIU_Malloc(size);
+   area = (char **) MPL_malloc(size);
    malloc_list[nMallocs].ptr=(void *) area;
    malloc_list[nMallocs].size=size;
    malloc_list[nMallocs].type=FLEX;
@@ -415,7 +415,7 @@ int MPIDI_mm_init(int nTasks,uint *eager_limit_in,unsigned long *buf_mem_in)
 #   endif
     if (eager_limit_in == 0) return 0;  /* no EA buffer is needed */
     maxMallocs=MAX_MALLOCS;
-    malloc_list=(malloc_list_t *) MPIU_Malloc(maxMallocs * sizeof(malloc_list_t));
+    malloc_list=(malloc_list_t *) MPL_malloc(maxMallocs * sizeof(malloc_list_t));
     if (malloc_list == NULL) return errno;
     nMallocs=0;
     mem_inuse=0;
@@ -439,7 +439,7 @@ int MPIDI_mm_init(int nTasks,uint *eager_limit_in,unsigned long *buf_mem_in)
     }
     sizetrans[i] = sizetrans[i-1];
      /* 65536 is for flex stack which is not part of buf_mem_size */
-     heap = MPIU_Malloc(buf_mem + 65536);
+     heap = MPL_malloc(buf_mem + 65536);
      if (heap == NULL) return errno;
     malloc_list[nMallocs].ptr=(void *) heap;
     malloc_list[nMallocs].size=buf_mem + 65536;
@@ -479,9 +479,9 @@ void MPIDI_close_mm()
 
     if (nMallocs != 0) {
       for (i=0; i< nMallocs; i++) {
-        MPIU_Free((void *) (malloc_list[i].ptr));
+        MPL_free((void *) (malloc_list[i].ptr));
       }
-     MPIU_Free(malloc_list);
+     MPL_free(malloc_list);
     }
 }
 
@@ -619,8 +619,8 @@ static void MPIDI_buddy_free(void *ptr)
 #  ifdef TRACE
    int nAllocs =0;   /* number of times MPIDI_mm_alloc() is called */
    int nFree =0;   /* number of times MPIDI_mm_free() is called */
-   int nM=0;       /* number of times MPIU_Malloc() is called   */
-   int nF=0;       /* number of times MPIU_Free() is called     */
+   int nM=0;       /* number of times MPL_malloc() is called   */
+   int nF=0;       /* number of times MPL_free() is called     */
 #  endif 
 void *MPIDI_mm_alloc(size_t size)
 {
@@ -641,7 +641,7 @@ void *MPIDI_mm_alloc(size_t size)
    }
    if (pt == NULL) {
        MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
-       pt=MPIU_Malloc(size);
+       pt=MPL_malloc(size);
        MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
        if (MPIDI_Process.mp_statistics) {
            mem_inuse = mem_inuse + sizetable[tmp];
@@ -705,7 +705,7 @@ void MPIDI_mm_free(void *ptr, size_t size)
      nF++;
      printf("free nF=%d size=%d ptr=0x%p \n",nF,sizetable[bucket],ptr); fflush(stdout);
 #    endif
-     MPIU_Free(ptr);
+     MPL_free(ptr);
      MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
    }
 #  ifdef TRACE

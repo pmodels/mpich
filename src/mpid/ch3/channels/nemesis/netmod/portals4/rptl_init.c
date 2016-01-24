@@ -116,11 +116,11 @@ int MPID_nem_ptl_rptl_drain_eq(int eq_count, ptl_handle_eq_t *eq)
         while (target->op_segment_list) {
             op_segment = target->op_segment_list;
             MPL_DL_DELETE(target->op_segment_list, op_segment);
-            MPIU_Free(op_segment);
+            MPL_free(op_segment);
         }
 
         t = target->next;
-        MPIU_Free(target);
+        MPL_free(target);
         target = t;
     }
 
@@ -224,11 +224,11 @@ int MPID_nem_ptl_rptl_ptfini(ptl_pt_index_t pt_index)
             ret = PtlMEUnlink(rptl->control.me[i]);
             RPTLU_ERR_POP(ret, "Error unlinking control buffers\n");
         }
-        MPIU_Free(rptl->control.me);
+        MPL_free(rptl->control.me);
     }
 
     MPL_DL_DELETE(rptl_info.rptl_list, rptl);
-    MPIU_Free(rptl);
+    MPL_free(rptl);
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_RPTL_PTFINI);

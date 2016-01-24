@@ -30,13 +30,13 @@
 void *MPID_Alloc_mem( size_t size, MPID_Info *info_ptr )
 {
     void *ap;
-    ap = MPIU_Malloc(size);
+    ap = MPL_malloc(size);
     return ap;
 }
 
 int MPID_Free_mem( void *ptr )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIU_Free(ptr);
+    MPL_free(ptr);
     return mpi_errno;
 }

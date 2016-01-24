@@ -102,7 +102,7 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 	struct ifconf			ifconf;
 	int				rc;
 
-	buf_ptr = (char *) MPIU_Malloc(buf_len);
+	buf_ptr = (char *) MPL_malloc(buf_len);
 	if (buf_ptr == NULL) {
 	    MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %d", buf_len);
 	}
@@ -125,7 +125,7 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 	    buf_len_prev = ifconf.ifc_len;
 	}
 	
-	MPIU_Free(buf_ptr);
+	MPL_free(buf_ptr);
 	buf_len += NUM_IFREQS * sizeof(struct ifreq);
     }
 
@@ -212,7 +212,7 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 
 fn_exit:
     if (NULL != buf_ptr)
-        MPIU_Free(buf_ptr);
+        MPL_free(buf_ptr);
     if (fd >= 0)
         close(fd);
     

@@ -807,7 +807,7 @@ MPIDI_Env_setup(int rank, int requested)
     if (env != NULL)
       {
         size_t i, n = strlen(env);
-        char * tmp = (char *) MPIU_Malloc(n+1);
+        char * tmp = (char *) MPL_malloc(n+1);
         strncpy(tmp,env,n);
         if (n>0) tmp[n]=0;
 
@@ -831,7 +831,7 @@ MPIDI_Env_setup(int rank, int requested)
               }
           }
 
-        MPIU_Free (tmp);
+        MPL_free (tmp);
       }
   }
 
@@ -1027,8 +1027,8 @@ MPIDI_Env_setup(int rank, int requested)
       ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);
     }
 #if (MPIDI_STATISTICS || MPIDI_PRINTENV)
-    mpich_env=(MPIDI_printenv_t *) MPIU_Malloc(sizeof(MPIDI_printenv_t)+1);
-    mpid_statp=(MPIX_stats_t *) MPIU_Malloc(sizeof(MPIX_stats_t)+1);
+    mpich_env=(MPIDI_printenv_t *) MPL_malloc(sizeof(MPIDI_printenv_t)+1);
+    mpid_statp=(MPIX_stats_t *) MPL_malloc(sizeof(MPIX_stats_t)+1);
     memset((void *)mpich_env,0,sizeof(MPIDI_printenv_t));
     memset((void *)mpid_statp,0,sizeof(MPIX_stats_t));
     /* If MP_STATISTICS is set, each task prints statistics data at the end of an MPI jobs */

@@ -119,7 +119,7 @@ MPIDI_Callback_process_trunc(pami_context_t  context,
     {
       MPIDI_Request_setCA(rreq, MPIDI_CA_UNPACK_UEBUF_AND_COMPLETE);
       rreq->mpid.uebuflen = MPIR_STATUS_GET_COUNT(rreq->status);
-      rreq->mpid.uebuf    = MPIU_Malloc(MPIR_STATUS_GET_COUNT(rreq->status));
+      rreq->mpid.uebuf    = MPL_malloc(MPIR_STATUS_GET_COUNT(rreq->status));
       MPID_assert(rreq->mpid.uebuf != NULL);
       rreq->mpid.uebuf_malloc = mpiuMalloc;
 

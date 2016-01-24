@@ -103,7 +103,7 @@ int MPIR_Comm_create_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr, int tag
 
 fn_exit:
     if (mapping)
-        MPIU_Free(mapping);
+        MPL_free(mapping);
 
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_CREATE_GROUP);
     return mpi_errno;

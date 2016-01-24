@@ -68,7 +68,7 @@ static int handler_recv_complete(const ptl_event_t *e)
 
     for (i = 0; i < MPID_NEM_PTL_NUM_CHUNK_BUFFERS; ++i)
         if (REQ_PTL(rreq)->chunk_buffer[i])
-            MPIU_Free(REQ_PTL(rreq)->chunk_buffer[i]);
+            MPL_free(REQ_PTL(rreq)->chunk_buffer[i]);
     
     mpi_errno = MPID_Request_complete(rreq);
     if (mpi_errno) {
@@ -404,7 +404,7 @@ static int handler_recv_dequeue_unpack_large(const ptl_event_t *e)
     MPID_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, buf);
     MPIU_Assert(last == PTL_LARGE_THRESHOLD);
     rreq->dev.segment_first += PTL_LARGE_THRESHOLD;
-    MPIU_Free(REQ_PTL(rreq)->chunk_buffer[0]);
+    MPL_free(REQ_PTL(rreq)->chunk_buffer[0]);
 
     MPIU_CHKPMEM_MALLOC(REQ_PTL(rreq)->chunk_buffer[0], void *, rreq->dev.segment_size - rreq->dev.segment_first,
                         mpi_errno, "chunk_buffer");
@@ -770,7 +770,7 @@ int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPID_Request *rreq, MPL_IOV s_c
             big_get(REQ_PTL(rreq)->chunk_buffer[0], rreq->dev.segment_size - rreq->dev.segment_first, vc, match_bits, rreq);
         }
     }
-    MPIU_Free(rreq->dev.tmpbuf);
+    MPL_free(rreq->dev.tmpbuf);
     rreq->ch.lmt_tmp_cookie.MPL_IOV_LEN = 0;  /* Required for do_cts in mpid_nem_lmt.c */
 
  fn_exit:

@@ -794,7 +794,7 @@ define(PAC_TEST_MPIU_FUNCS,[
 #include "stdio.h"
   main(Int argc, char **argv)
   {
-      MPIU_Free(NULL);
+      MPL_free(NULL);
   }
 EOF
   rm -f conftest$EXEEXT

@@ -243,9 +243,9 @@ static int reinit_pmi(void)
     ret = PMI_KVS_Get_name_length_max(&pg_id_sz);
     CHECK_ERR(ret, "pmi_get_id_length_max");
     
-    MPIU_Free(MPIDI_Process.my_pg->id);
+    MPL_free(MPIDI_Process.my_pg->id);
    
-    MPIDI_Process.my_pg->id = MPIU_Malloc(pg_id_sz + 1);
+    MPIDI_Process.my_pg->id = MPL_malloc(pg_id_sz + 1);
     CHECK_ERR(MPIDI_Process.my_pg->id == NULL, "malloc failed");
 
     ret = PMI_KVS_Get_my_name(MPIDI_Process.my_pg->id, pg_id_sz);
@@ -255,9 +255,9 @@ static int reinit_pmi(void)
     ret = PMI_KVS_Get_name_length_max(&kvs_name_sz);
     CHECK_ERR(ret, "PMI_KVS_Get_name_length_max");
     
-    MPIU_Free(MPIDI_Process.my_pg->connData);
+    MPL_free(MPIDI_Process.my_pg->connData);
    
-    MPIDI_Process.my_pg->connData = MPIU_Malloc(kvs_name_sz + 1);
+    MPIDI_Process.my_pg->connData = MPL_malloc(kvs_name_sz + 1);
     CHECK_ERR(MPIDI_Process.my_pg->connData == NULL, "malloc failed");
 
     ret = PMI_KVS_Get_my_name(MPIDI_Process.my_pg->connData, kvs_name_sz);
@@ -294,7 +294,7 @@ static int restore_env(pid_t parent_pid, int rank)
         /* remove newline */
         if (var_val[len-1] == '\n')
             var_val[len-1] = '\0';
-        ret = MPL_putenv(MPIU_Strdup(var_val));
+        ret = MPL_putenv(MPL_strdup(var_val));
         CHECK_ERR(ret != 0, MPIU_Strerror (errno));
     }
 

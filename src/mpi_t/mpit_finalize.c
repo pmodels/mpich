@@ -36,12 +36,12 @@ static void MPIR_T_enum_env_finalize(void)
         /* Free all entries */
         for (i = 0; i < utarray_len(enum_table); i++) {
             e = (MPIR_T_enum_t *)utarray_eltptr(enum_table, i);
-            MPIU_Free((void *)e->name);
+            MPL_free((void *)e->name);
 
             /* Free items in this enum */
             for (j = 0; j < utarray_len(e->items); j++) {
                 item = (enum_item_t *)utarray_eltptr(e->items, j);
-                MPIU_Free((void *)item->name);
+                MPL_free((void *)item->name);
             }
 
             utarray_free(e->items);
@@ -62,8 +62,8 @@ static void MPIR_T_cat_env_finalize(void)
         /* Free all entries */
         for (i = 0; i < utarray_len(cat_table); i++) {
             cat = (cat_table_entry_t *)utarray_eltptr(cat_table, i);
-            MPIU_Free((void *)cat->name);
-            MPIU_Free((void *)cat->desc);
+            MPL_free((void *)cat->name);
+            MPL_free((void *)cat->desc);
             utarray_free(cat->cvar_indices);
             utarray_free(cat->pvar_indices);
             utarray_free(cat->subcat_indices);
@@ -79,7 +79,7 @@ static void MPIR_T_cat_env_finalize(void)
         /* Free all entries */
         HASH_ITER(hh, cat_hash, current, tmp) {
             HASH_DEL(cat_hash, current);
-            MPIU_Free(current);
+            MPL_free(current);
         }
 
         /* Free cat_hash itself */
@@ -100,9 +100,9 @@ static void MPIR_T_cvar_env_finalize(void)
         /* Free all entries */
         for (i = 0; i < utarray_len(cvar_table); i++) {
             cvar = (cvar_table_entry_t *)utarray_eltptr(cvar_table, i);
-            MPIU_Free((void *)cvar->name);
-            MPIU_Free((void *)cvar->desc);
-            if (cvar->datatype == MPI_CHAR) MPIU_Free(cvar->addr);
+            MPL_free((void *)cvar->name);
+            MPL_free((void *)cvar->desc);
+            if (cvar->datatype == MPI_CHAR) MPL_free(cvar->addr);
         }
 
         /* Free pvar_table itself */
@@ -115,7 +115,7 @@ static void MPIR_T_cvar_env_finalize(void)
         /* Free all entries */
         HASH_ITER(hh, cvar_hash, current, tmp) {
             HASH_DEL(cvar_hash, current);
-            MPIU_Free(current);
+            MPL_free(current);
         }
 
         /* Free cvar_hash itself */
@@ -133,8 +133,8 @@ static void MPIR_T_pvar_env_finalize(void)
         /* Free all entries */
         for (i = 0; i < utarray_len(pvar_table); i++) {
             pvar = (pvar_table_entry_t *)utarray_eltptr(pvar_table, i);
-            MPIU_Free((void *)pvar->name);
-            MPIU_Free((void *)pvar->desc);
+            MPL_free((void *)pvar->name);
+            MPL_free((void *)pvar->desc);
         }
 
         /* Free pvar_table itself */
@@ -148,7 +148,7 @@ static void MPIR_T_pvar_env_finalize(void)
             /* Free all entries */
             HASH_ITER(hh, pvar_hashs[i], current, tmp) {
                 HASH_DEL(pvar_hashs[i], current);
-                MPIU_Free(current);
+                MPL_free(current);
             }
 
             /* Free pvar_hashs[i] itself */

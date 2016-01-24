@@ -68,13 +68,45 @@ AC_ARG_ENABLE(g,
 
 	    none|no   - No debugging
 	    log       - Enable debug event logging
+	    mem       - Enable memory tracing
 	    yes|all   - All of the above choices (except "none", obviously)
 	]),,[enable_g=none])
 
-if test "$enable_g" = "no" -o "$enable_g" = "none" ; then
-   :
-elif test "$enable_g" = "log" -o "$enable_g" = "yes" -o "$enable_g" = "all" ; then
+# enable-g
+# strip off multiple options, separated by commas
+PAC_PUSH_FLAG(IFS)
+IFS=","
+for option in $enable_g ; do
+    case "$option" in
+	 log)
+	 enable_g_log=yes
+	 ;;
+
+	 mem)
+	 enable_g_mem=yes
+	 ;;
+
+	 all|yes)
+	 enable_g_log=yes
+	 enable_g_mem=yes
+	 ;;
+
+	 no|none)
+	 ;;
+
+	 *)
+	 AC_MSG_WARN([Unknown value $option for enable-g])
+	 ;;
+    esac
+done
+PAC_POP_FLAG(IFS)
+
+if test "$enable_g_log" = "yes" ; then
    AC_DEFINE([USE_DBG_LOGGING],[1],[Define to enable logging macros])
+fi
+
+if test "$enable_g_mem" = "yes" ; then
+   AC_DEFINE([USE_MEMORY_TRACING],[1],[Define to enable memory tracing])
 fi
 
 

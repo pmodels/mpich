@@ -65,7 +65,7 @@ RLOG_Struct* RLOG_InitLog(int rank, int size)
 {
     RLOG_Struct* pRLOG;
 
-    pRLOG = (RLOG_Struct*)MPIU_Malloc(sizeof(RLOG_Struct));
+    pRLOG = (RLOG_Struct*)MPL_malloc(sizeof(RLOG_Struct));
     if (pRLOG == NULL)
 	return NULL;
 
@@ -81,7 +81,7 @@ RLOG_Struct* RLOG_InitLog(int rank, int size)
     if (pRLOG->pOutput == NULL)
     {
 	MPL_error_printf("RLOG Error: unable to allocate an output structure.\n");
-	MPIU_Free(pRLOG);
+	MPL_free(pRLOG);
 	return NULL;
     }
 

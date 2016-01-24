@@ -236,7 +236,7 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
     }  
   }
 
-  req = (MPIDI_Win_request *) MPIU_Calloc0(1, MPIDI_Win_request);
+  req = (MPIDI_Win_request *) MPL_calloc0(1, MPIDI_Win_request);
   req->win          = win;
   req->type         = MPIDI_WIN_REQUEST_FETCH_AND_OP;
 
@@ -283,7 +283,7 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
 
   if (req->origin.dt.size == 0) 
     {
-      MPIU_Free(req);
+      MPL_free(req);
       return MPI_SUCCESS;
     }
 

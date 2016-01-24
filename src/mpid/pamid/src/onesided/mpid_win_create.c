@@ -56,7 +56,7 @@ MPIDI_Win_init( MPI_Aint length,
   size = comm_ptr->local_size;
   rank = comm_ptr->rank;
 
-  win->mpid.info = MPIU_Malloc(size * sizeof(struct MPIDI_Win_info));
+  win->mpid.info = MPL_malloc(size * sizeof(struct MPIDI_Win_info));
   MPID_assert(win->mpid.info != NULL);
   memset((void *) win->mpid.info,0,(size * sizeof(struct MPIDI_Win_info)));
   winfo = &win->mpid.info[rank];

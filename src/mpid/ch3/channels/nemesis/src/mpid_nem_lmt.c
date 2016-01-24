@@ -564,7 +564,7 @@ static int do_cts(MPIDI_VC_t *vc, MPID_Request *rreq, int *complete)
     /* free cookie buffer allocated in RTS handler */
     if (rreq->ch.lmt_tmp_cookie.MPL_IOV_LEN)
     {
-        MPIU_Free(rreq->ch.lmt_tmp_cookie.MPL_IOV_BUF);
+        MPL_free(rreq->ch.lmt_tmp_cookie.MPL_IOV_BUF);
         rreq->ch.lmt_tmp_cookie.MPL_IOV_LEN = 0;
     }
 
@@ -598,7 +598,7 @@ static int do_send(MPIDI_VC_t *vc, MPID_Request *rreq, int *complete)
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* free cookie buffer allocated in CTS handler */
-    MPIU_Free(sreq->ch.lmt_tmp_cookie.MPL_IOV_BUF);
+    MPL_free(sreq->ch.lmt_tmp_cookie.MPL_IOV_BUF);
     sreq->ch.lmt_tmp_cookie.MPL_IOV_LEN = 0;
 
     *complete = TRUE;
@@ -631,7 +631,7 @@ static int do_cookie(MPIDI_VC_t *vc, MPID_Request *rreq, int *complete)
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
     /* free cookie buffer allocated in COOKIE handler */
-    MPIU_Free(req->ch.lmt_tmp_cookie.MPL_IOV_BUF);
+    MPL_free(req->ch.lmt_tmp_cookie.MPL_IOV_BUF);
     req->ch.lmt_tmp_cookie.MPL_IOV_LEN = 0;
 
     *complete = TRUE;

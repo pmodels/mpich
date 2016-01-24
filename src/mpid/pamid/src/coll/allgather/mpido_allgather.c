@@ -84,7 +84,7 @@ int MPIDO_Allgather_allreduce(const void *sendbuf,
        (send_size & 0x3)==0 &&  /*integer/long allgathers only*/
        (sendtype != MPI_DOUBLE || recvtype != MPI_DOUBLE))       
   {
-    double *tmprbuf = (double *)MPIU_Malloc(recv_size*2);
+    double *tmprbuf = (double *)MPL_malloc(recv_size*2);
     if (tmprbuf == NULL)
       goto direct_algo; /*skip int to fp conversion and go to direct
 			  algo*/
@@ -114,7 +114,7 @@ int MPIDO_Allgather_allreduce(const void *sendbuf,
     for(i = (rank+1)*send_size/sizeof(int); i < recv_size/sizeof(int); ++i) 
       sibuf[i] = (int)tmprbuf[i];
 
-    MPIU_Free(tmprbuf);
+    MPL_free(tmprbuf);
     return rc;
   }
 
@@ -368,7 +368,7 @@ MPIDO_Allgather(const void *sendbuf,
        int is_recv_dev_buf = MPIDI_cuda_is_device_buf(recvbuf);
        if(is_send_dev_buf)
        {
-         scbuf = MPIU_Malloc(sdt_extent * sendcount);
+         scbuf = MPL_malloc(sdt_extent * sendcount);
          cudaError_t cudaerr = CudaMemcpy(scbuf, sendbuf, sdt_extent * sendcount, cudaMemcpyDeviceToHost);
          if (cudaSuccess != cudaerr)
            fprintf(stderr, "cudaMemcpy failed: %s\n", CudaGetErrorString(cudaerr));
@@ -377,7 +377,7 @@ MPIDO_Allgather(const void *sendbuf,
          scbuf = sendbuf;
        if(is_recv_dev_buf)
        {
-         rcbuf = MPIU_Malloc(rdt_extent * recvcount);
+         rcbuf = MPL_malloc(rdt_extent * recvcount);
          if(sendbuf == MPI_IN_PLACE)
          {
            cudaError_t cudaerr = CudaMemcpy(rcbuf, recvbuf, rdt_extent * recvcount, cudaMemcpyDeviceToHost);
@@ -390,13 +390,13 @@ MPIDO_Allgather(const void *sendbuf,
        else
          rcbuf = recvbuf;
        int cuda_res =  MPIR_Allgather(scbuf, sendcount, sendtype, rcbuf, recvcount, recvtype, comm_ptr, mpierrno);
-       if(is_send_dev_buf)MPIU_Free(scbuf);
+       if(is_send_dev_buf)MPL_free(scbuf);
        if(is_recv_dev_buf)
          {
            cudaError_t cudaerr = CudaMemcpy(recvbuf, rcbuf, rdt_extent * recvcount, cudaMemcpyHostToDevice);
            if (cudaSuccess != cudaerr)
              fprintf(stderr, "cudaMemcpy failed: %s\n", CudaGetErrorString(cudaerr));
-           MPIU_Free(rcbuf);
+           MPL_free(rcbuf);
          }
        return cuda_res;
     }
@@ -709,7 +709,7 @@ MPIDO_Allgather_simple(const void *sendbuf,
 
   if(!rcv_data_contig)
   {
-    rcv_noncontig_buff = MPIU_Malloc(recv_size * size);
+    rcv_noncontig_buff = MPL_malloc(recv_size * size);
     rbuf = rcv_noncontig_buff;
     if(rcv_noncontig_buff == NULL)
     {
@@ -739,7 +739,7 @@ MPIDO_Allgather_simple(const void *sendbuf,
 
      if(!snd_data_contig)
      {
-        snd_noncontig_buff = MPIU_Malloc(send_size);
+        snd_noncontig_buff = MPL_malloc(send_size);
         sbuf = snd_noncontig_buff;
         if(snd_noncontig_buff == NULL)
         {
@@ -778,9 +778,9 @@ MPIDO_Allgather_simple(const void *sendbuf,
    {
       MPIR_Localcopy(rcv_noncontig_buff, recv_size * size, MPI_CHAR,
                         recvbuf,         recvcount,     recvtype);
-      MPIU_Free(rcv_noncontig_buff);   
+      MPL_free(rcv_noncontig_buff);
    }
-   if(!snd_data_contig)  MPIU_Free(snd_noncontig_buff);
+   if(!snd_data_contig)  MPL_free(snd_noncontig_buff);
    TRACE_ERR("Allgather done\n");
    return MPI_SUCCESS;
 }

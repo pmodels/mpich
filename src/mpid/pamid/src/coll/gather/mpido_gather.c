@@ -75,11 +75,11 @@ int MPIDO_Gather_reduce(void * sendbuf,
     /* this will likely suck */
     else
     {
-      inplacetemp = MPIU_Malloc(rbytes * sizeof(char));
+      inplacetemp = MPL_malloc(rbytes * sizeof(char));
       memcpy(inplacetemp, recvbuf+(rank * rbytes), rbytes);
       memset(tempbuf, 0, sbytes * size * sizeof(char));
       memcpy(tempbuf+(rank * rbytes), inplacetemp, rbytes);
-      MPIU_Free(inplacetemp);
+      MPL_free(inplacetemp);
     }
   }
   /* everyone might need to speciifcally allocate a tempbuf, or
@@ -91,7 +91,7 @@ int MPIDO_Gather_reduce(void * sendbuf,
    * then copy our contribution to the right spot in the big buffer */
   else
   {
-    tempbuf = MPIU_Malloc(sbytes * size * sizeof(char));
+    tempbuf = MPL_malloc(sbytes * size * sizeof(char));
     if(!tempbuf)
       return MPIR_Err_create_code(MPI_SUCCESS,
                                   MPIR_ERR_RECOVERABLE,
@@ -114,7 +114,7 @@ int MPIDO_Gather_reduce(void * sendbuf,
                     mpierrno);
 
   if(rank != root)
-    MPIU_Free(tempbuf);
+    MPL_free(tempbuf);
 
   return rc;
 }
@@ -203,7 +203,7 @@ int MPIDO_Gather(const void *sendbuf,
        int is_recv_dev_buf = (rank == root) ? MPIDI_cuda_is_device_buf(recvbuf) : 0;
        if(is_send_dev_buf)
        {
-         scbuf = MPIU_Malloc(sdt_extent * sendcount);
+         scbuf = MPL_malloc(sdt_extent * sendcount);
          cudaError_t cudaerr = CudaMemcpy(scbuf, sendbuf, sdt_extent * sendcount, cudaMemcpyDeviceToHost);
          if (cudaSuccess != cudaerr)
            fprintf(stderr, "cudaMemcpy failed: %s\n", CudaGetErrorString(cudaerr));
@@ -212,7 +212,7 @@ int MPIDO_Gather(const void *sendbuf,
          scbuf = sendbuf;
        if(is_recv_dev_buf)
        {
-         rcbuf = MPIU_Malloc(rdt_extent * recvcount);
+         rcbuf = MPL_malloc(rdt_extent * recvcount);
          if(sendbuf == MPI_IN_PLACE)
          {
            cudaError_t cudaerr = CudaMemcpy(rcbuf, recvbuf, rdt_extent * recvcount, cudaMemcpyDeviceToHost);
@@ -225,13 +225,13 @@ int MPIDO_Gather(const void *sendbuf,
        else
          rcbuf = recvbuf;
        int cuda_res =  MPIR_Gather(scbuf, sendcount, sendtype, rcbuf, recvcount, recvtype, root, comm_ptr, mpierrno);
-       if(is_send_dev_buf)MPIU_Free(scbuf);
+       if(is_send_dev_buf)MPL_free(scbuf);
        if(is_recv_dev_buf)
          {
            cudaError_t cudaerr = CudaMemcpy(recvbuf, rcbuf, rdt_extent * recvcount, cudaMemcpyHostToDevice);
            if (cudaSuccess != cudaerr)
              fprintf(stderr, "cudaMemcpy failed: %s\n", CudaGetErrorString(cudaerr));
-           MPIU_Free(rcbuf);
+           MPL_free(rcbuf);
          }
        return cuda_res;
     }
@@ -486,7 +486,7 @@ int MPIDO_Gather_simple(const void *sendbuf,
     sbuf = (char *)sendbuf + true_lb;
     if (!snd_contig)
     {
-        snd_noncontig_buff = MPIU_Malloc(send_size);
+        snd_noncontig_buff = MPL_malloc(send_size);
         sbuf = snd_noncontig_buff;
         if(snd_noncontig_buff == NULL)
         {
@@ -537,7 +537,7 @@ int MPIDO_Gather_simple(const void *sendbuf,
       rbuf = (char *)recvbuf + true_lb;
       if (!rcv_contig)
       {
-        rcv_noncontig_buff = MPIU_Malloc(recv_size * size);
+        rcv_noncontig_buff = MPL_malloc(recv_size * size);
         rbuf = rcv_noncontig_buff;
         if(rcv_noncontig_buff == NULL)
         {
@@ -599,9 +599,9 @@ int MPIDO_Gather_simple(const void *sendbuf,
    {
       MPIR_Localcopy(rcv_noncontig_buff, recv_size*size, MPI_CHAR,
                         recvbuf,         recvcount*size,     recvtype);
-      MPIU_Free(rcv_noncontig_buff);
+      MPL_free(rcv_noncontig_buff);
    }
-   if(!snd_contig)  MPIU_Free(snd_noncontig_buff);
+   if(!snd_contig)  MPL_free(snd_noncontig_buff);
 
    TRACE_ERR("Leaving MPIDO_Gather_optimized\n");
    return MPI_SUCCESS;

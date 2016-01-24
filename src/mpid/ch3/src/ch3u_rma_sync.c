@@ -1029,7 +1029,7 @@ int MPID_Win_complete(MPID_Win * win_ptr)
     win_ptr->states.access_state = MPIDI_RMA_NONE;
 
     /* free start group stored in window */
-    MPIU_Free(win_ptr->start_ranks_in_win_grp);
+    MPL_free(win_ptr->start_ranks_in_win_grp);
     win_ptr->start_ranks_in_win_grp = NULL;
 
   fn_exit:

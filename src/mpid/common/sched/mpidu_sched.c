@@ -474,7 +474,7 @@ static int MPIDU_Sched_add_entry(struct MPIDU_Sched *s, int *idx, struct MPIDU_S
 
     if (s->num_entries == s->size) {
         /* need to grow the entries array */
-        s->entries = MPIU_Realloc(s->entries, 2 * s->size * sizeof(struct MPIDU_Sched_entry));
+        s->entries = MPL_realloc(s->entries, 2 * s->size * sizeof(struct MPIDU_Sched_entry));
         if (s->entries == NULL)
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
         s->size *= 2;
@@ -971,8 +971,8 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
             }
 
             s->req = NULL;
-            MPIU_Free(s->entries);
-            MPIU_Free(s);
+            MPL_free(s->entries);
+            MPL_free(s);
 
             if (made_progress)
                 *made_progress = TRUE;

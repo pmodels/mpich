@@ -127,9 +127,9 @@ int MPIDI_PG_Finalize(void)
    if(world_max_worldid != -1) {
      world_max_worldid++;
      wid_bit_array_size = (world_max_worldid + CHAR_BIT -1) / CHAR_BIT;
-     wid_bit_array = MPIU_Malloc(wid_bit_array_size*sizeof(unsigned char));
+     wid_bit_array = MPL_malloc(wid_bit_array_size*sizeof(unsigned char));
      memset(wid_bit_array, 0, wid_bit_array_size*sizeof(unsigned char));
-     root_wid_barray = MPIU_Malloc(wid_bit_array_size*sizeof(unsigned char));
+     root_wid_barray = MPL_malloc(wid_bit_array_size*sizeof(unsigned char));
 
      memset(root_wid_barray, 0, wid_bit_array_size*sizeof(unsigned char));
      conn_node     = _conn_info_list;
@@ -146,7 +146,7 @@ int MPIDI_PG_Finalize(void)
      MPIR_Reduce_impl(wid_bit_array,root_wid_barray,wid_bit_array_size,
 		   MPI_UNSIGNED_CHAR,MPI_BOR,0,MPIR_Process.comm_world,&mpi_errno);
 
-     MPIU_Free(wid_bit_array);
+     MPL_free(wid_bit_array);
    }
 
    if(MPIR_Process.comm_world->rank == 0) {
@@ -168,7 +168,7 @@ int MPIDI_PG_Finalize(void)
    mpi_errno = PMI2_KVS_Fence();
    TRACE_ERR("PMI2_KVS_Fence returned with mpi_errno=%d\n", mpi_errno);
 
-   MPIU_Free(root_wid_barray); /* root_wid_barray is now NULL for non-root */
+   MPL_free(root_wid_barray); /* root_wid_barray is now NULL for non-root */
 
 #if 0
    pthread_create(&finalize_req_thread, NULL, mpidi_finalize_req, NULL);
@@ -190,9 +190,9 @@ int MPIDI_PG_Finalize(void)
 
    if(_conn_info_list) {
      if(_conn_info_list->rem_taskids)
-       MPIU_Free(_conn_info_list->rem_taskids);
+       MPL_free(_conn_info_list->rem_taskids);
      else
-       MPIU_Free(_conn_info_list);
+       MPL_free(_conn_info_list);
    }
    /* Free the storage associated with the process groups */
    pg = MPIDI_PG_list;
@@ -240,8 +240,8 @@ int MPIDI_PG_Create(int vct_sz, void * pg_id, MPIDI_PG_t ** pg_ptr)
     int mpi_errno = MPI_SUCCESS;
     char *cp, *world_tasks, *cp1;
 
-    pg = MPIU_Malloc(sizeof(MPIDI_PG_t));
-    pg->vct = MPIU_Malloc(sizeof(struct MPID_VCR_t)*vct_sz);
+    pg = MPL_malloc(sizeof(MPIDI_PG_t));
+    pg->vct = MPL_malloc(sizeof(struct MPID_VCR_t)*vct_sz);
 
     pg->handle = 0;
     /* The reference count indicates the number of vc's that are or
@@ -249,7 +249,7 @@ int MPIDI_PG_Create(int vct_sz, void * pg_id, MPIDI_PG_t ** pg_ptr)
        except for MPI_COMM_WORLD. */
     MPIU_Object_set_ref(pg, 0);
     pg->size = vct_sz;
-    pg->id   = MPIU_Strdup(pg_id);
+    pg->id   = MPL_strdup(pg_id);
     TRACE_ERR("PG_Create - pg=%x pg->id=%s pg->vct=%x\n", pg, pg->id, pg->vct);
     /* Initialize the connection information to null.  Use
        the appropriate MPIDI_PG_InitConnXXX routine to set up these
@@ -349,7 +349,7 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
 
 	    MPIDI_PG_Destroy_fn(pg);
 	    TRACE_ERR("destroying pg->vct=%x\n", pg->vct);
-	    MPIU_Free(pg->vct);
+            MPL_free(pg->vct);
 	    TRACE_ERR("after destroying pg->vct=%x\n", pg->vct);
 
 	    if (pg->connData) {
@@ -359,12 +359,12 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
 		}
 		else {
                     TRACE_ERR("free pg->connData\n");
-		    MPIU_Free(pg->connData);
+                    MPL_free(pg->connData);
 		}
 	    }
 
 	    TRACE_ERR("final destroying pg\n");
-	    MPIU_Free(pg);
+            MPL_free(pg);
 
 	    goto fn_exit;
 	}
@@ -498,7 +498,7 @@ int MPIDI_PG_Create_from_string(const char * str, MPIDI_PG_t ** pg_pptr,
     vct_sz = atoi(p);
 
     while (*p) p++;p++;
-    char *p_tmp = MPIU_Strdup(p);
+    char *p_tmp = MPL_strdup(p);
     TRACE_ERR("before MPIDI_PG_Create - p=%s p_tmp=%s vct_sz=%d\n", p, p_tmp, vct_sz);
     mpi_errno = MPIDI_PG_Create(vct_sz, (void *)str, pg_pptr);
     if (mpi_errno != MPI_SUCCESS) {
@@ -511,7 +511,7 @@ int MPIDI_PG_Create_from_string(const char * str, MPIDI_PG_t ** pg_pptr,
 	pg_ptr->vct[i].taskid=atoi(strtok(NULL,":"));
     }
     TRACE_ERR("pg_ptr->id = %s\n",(*pg_pptr)->id);
-    MPIU_Free(p_tmp);
+    MPL_free(p_tmp);
 
     if(verbose)
       MPIU_PG_Printall(stderr);
@@ -609,7 +609,7 @@ int MPIDI_connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
        needed space */
     len = 0;
     curSlen = 10 + pg->size * 128;
-    string = (char *)MPIU_Malloc( curSlen );
+    string = (char *)MPL_malloc( curSlen );
 
     /* Start with the id of the pg */
     while (*pg_idStr && len < curSlen)
@@ -628,7 +628,7 @@ int MPIDI_connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
       if (len+vallen+1 >= curSlen) {
         char *nstring = 0;
         curSlen += (pg->size - i) * (vallen + 1 );
-        nstring = MPIU_Realloc( string, curSlen);
+        nstring = MPL_realloc( string, curSlen);
         MPID_assert(nstring != NULL);
         string = nstring;
       }
@@ -670,7 +670,7 @@ int MPIDI_connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
 	if (len + vallen + 1 >= curSlen) {
 	    char *nstring = 0;
             curSlen += (pg->size - i) * (vallen + 1 );
-	    nstring = MPIU_Realloc( string, curSlen);
+            nstring = MPL_realloc( string, curSlen);
 	    if (!nstring) {
 		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
 	    }
@@ -690,7 +690,7 @@ int MPIDI_connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
  fn_exit:
     return mpi_errno;
  fn_fail:
-    if (string) MPIU_Free(string);
+    if (string) MPL_free(string);
     goto fn_exit;
 }
 
@@ -703,7 +703,7 @@ static int MPIDI_connFromStringKVS( const char *buf ATTRIBUTE((unused)),
 static int MPIDI_connFreeKVS( MPIDI_PG_t *pg )
 {
     if (pg->connData) {
-	MPIU_Free( pg->connData );
+        MPL_free( pg->connData );
     }
     return MPI_SUCCESS;
 }
@@ -714,9 +714,9 @@ int MPIDI_PG_InitConnKVS( MPIDI_PG_t *pg )
 #ifdef USE_PMI2_API
     int mpi_errno = MPI_SUCCESS;
 
-    pg->connData = (char *)MPIU_Malloc(MAX_JOBID_LEN);
+    pg->connData = (char *)MPL_malloc(MAX_JOBID_LEN);
     if (pg->connData == NULL) {
-	TRACE_ERR("MPIDI_PG_InitConnKVS - MPIU_Malloc failure\n");
+        TRACE_ERR("MPIDI_PG_InitConnKVS - MPL_malloc failure\n");
     }
 
     mpi_errno = PMI2_Job_GetId(pg->connData, MAX_JOBID_LEN);
@@ -732,7 +732,7 @@ int MPIDI_PG_InitConnKVS( MPIDI_PG_t *pg )
 			     "**pmi_kvs_get_name_length_max %d", pmi_errno);
     }
 
-    pg->connData = (char *)MPIU_Malloc(kvs_name_sz + 1);
+    pg->connData = (char *)MPL_malloc(kvs_name_sz + 1);
     if (pg->connData == NULL) {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**nomem");
     }
@@ -752,7 +752,7 @@ int MPIDI_PG_InitConnKVS( MPIDI_PG_t *pg )
  fn_exit:
     return mpi_errno;
  fn_fail:
-    if (pg->connData) { MPIU_Free(pg->connData); }
+    if (pg->connData) { MPL_free(pg->connData); }
     goto fn_exit;
 }
 
@@ -804,7 +804,7 @@ static int MPIDI_connToString( char **buf_p, int *slen, MPIDI_PG_t *pg )
     MPIDI_ConnInfo *connInfo = (MPIDI_ConnInfo *)pg->connData;
 
     /* Create this from the string array */
-    str = (char *)MPIU_Malloc(connInfo->toStringLen);
+    str = (char *)MPL_malloc(connInfo->toStringLen);
 
 #if defined(MPICH_DEBUG_MEMINIT)
     memset(str, 0, connInfo->toStringLen);
@@ -871,13 +871,13 @@ static int MPIDI_connFromString( const char *buf, MPIDI_PG_t *pg )
     pg->size = atoi( buf );
     while (*buf) buf++; buf++;
 
-    conninfo = (MPIDI_ConnInfo *)MPIU_Malloc( sizeof(MPIDI_ConnInfo) );
-    conninfo->connStrings = (char **)MPIU_Malloc( pg->size * sizeof(char *));
+    conninfo = (MPIDI_ConnInfo *)MPL_malloc( sizeof(MPIDI_ConnInfo) );
+    conninfo->connStrings = (char **)MPL_malloc( pg->size * sizeof(char *));
 
     /* For now, make a copy of each item */
     for (i=0; i<pg->size; i++) {
 	/* printf( "Adding conn[%d] = %s\n", i, buf );fflush(stdout); */
-	conninfo->connStrings[i] = MPIU_Strdup( buf );
+        conninfo->connStrings[i] = MPL_strdup( buf );
 	while (*buf) buf++;
 	buf++;
     }
@@ -897,10 +897,10 @@ static int MPIDI_connFree( MPIDI_PG_t *pg )
     int i;
 
     for (i=0; i<pg->size; i++) {
-	MPIU_Free( conninfo->connStrings[i] );
+        MPL_free( conninfo->connStrings[i] );
     }
-    MPIU_Free( conninfo->connStrings );
-    MPIU_Free( conninfo );
+    MPL_free( conninfo->connStrings );
+    MPL_free( conninfo );
 
     return MPI_SUCCESS;
 }
@@ -928,7 +928,7 @@ int MPIDI_PG_Dup_vcr( MPIDI_PG_t *pg, int rank, pami_task_t taskid, MPID_VCR *vc
     TRACE_ERR("ENTER MPIDI_PG_Dup_vcr - pg->id=%s rank=%d taskid=%d\n", pg->id, rank, taskid);
     pg->vct[rank].taskid = taskid;
 
-    vcr = MPIU_Malloc(sizeof(struct MPID_VCR_t));
+    vcr = MPL_malloc(sizeof(struct MPID_VCR_t));
     TRACE_ERR("MPIDI_PG_Dup_vcr- pg->vct[%d].pg=%x pg=%x vcr=%x vcr->pg=%x\n", rank, pg->vct[rank].pg, pg, vcr, vcr->pg);
     vcr->pg = pg;
     vcr->pg_rank = rank;

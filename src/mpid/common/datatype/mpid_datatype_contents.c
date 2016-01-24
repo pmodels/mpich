@@ -59,7 +59,7 @@ int MPID_Datatype_set_contents(MPID_Datatype *new_dtp,
 
     contents_size = struct_sz + types_sz + ints_sz + aints_sz;
 
-    cp = (MPID_Datatype_contents *) MPIU_Malloc(contents_size);
+    cp = (MPID_Datatype_contents *) MPL_malloc(contents_size);
     /* --BEGIN ERROR HANDLING-- */
     if (cp == NULL) {
 	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
@@ -130,7 +130,7 @@ void MPID_Datatype_free_contents(MPID_Datatype *dtp)
 	}
     }
 
-    MPIU_Free(dtp->contents);
+    MPL_free(dtp->contents);
     dtp->contents = NULL;
 }
 

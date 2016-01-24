@@ -62,7 +62,7 @@ int MPIDO_Reduce_scatter(const void *sendbuf,
 
        if(is_send_dev_buf)
        {
-         scbuf = MPIU_Malloc(dt_extent * total_buf);
+         scbuf = MPL_malloc(dt_extent * total_buf);
          cudaError_t cudaerr = CudaMemcpy(scbuf, sendbuf, dt_extent * total_buf, cudaMemcpyDeviceToHost);
          if (cudaSuccess != cudaerr) 
            fprintf(stderr, "cudaMemcpy failed: %s\n", CudaGetErrorString(cudaerr));
@@ -72,7 +72,7 @@ int MPIDO_Reduce_scatter(const void *sendbuf,
 
        if(is_recv_dev_buf)
        {
-         rcbuf = MPIU_Malloc(total_buf * dt_extent);
+         rcbuf = MPL_malloc(total_buf * dt_extent);
          if(sendbuf == MPI_IN_PLACE)
          {
            cudaError_t cudaerr = CudaMemcpy(rcbuf, recvbuf, dt_extent * total_buf, cudaMemcpyDeviceToHost);
@@ -86,13 +86,13 @@ int MPIDO_Reduce_scatter(const void *sendbuf,
          rcbuf = recvbuf;
 
        int cuda_res =  MPIR_Reduce_scatter(scbuf, rcbuf, recvcounts, datatype, op, comm_ptr, mpierrno);
-       if(is_send_dev_buf)MPIU_Free(scbuf);
+       if(is_send_dev_buf)MPL_free(scbuf);
        if(is_recv_dev_buf)
        {
          cudaError_t cudaerr = CudaMemcpy(recvbuf, rcbuf, dt_extent * total_buf, cudaMemcpyHostToDevice);
          if (cudaSuccess != cudaerr)
            fprintf(stderr, "cudaMemcpy failed: %s\n", CudaGetErrorString(cudaerr));
-         MPIU_Free(rcbuf);
+         MPL_free(rcbuf);
        }
        return cuda_res;
     }
@@ -135,7 +135,7 @@ int MPIDO_Reduce_scatter_block(const void *sendbuf,
        int i;
        if(is_send_dev_buf)
        {
-         scbuf = MPIU_Malloc(dt_extent * recvcount * size);
+         scbuf = MPL_malloc(dt_extent * recvcount * size);
          cudaError_t cudaerr = CudaMemcpy(scbuf, sendbuf, dt_extent * recvcount * size, cudaMemcpyDeviceToHost);
          if (cudaSuccess != cudaerr) 
            fprintf(stderr, "cudaMemcpy failed: %s recvbuf: %p scbuf: %p is_send_dev_buf: %d is_recv_dev_buf: %p sendbuf: %p\n", CudaGetErrorString(cudaerr), recvbuf, scbuf, is_send_dev_buf,is_recv_dev_buf, sendbuf );
@@ -145,7 +145,7 @@ int MPIDO_Reduce_scatter_block(const void *sendbuf,
 
        if(is_recv_dev_buf)
        {
-         rcbuf = MPIU_Malloc(dt_extent * recvcount * size);
+         rcbuf = MPL_malloc(dt_extent * recvcount * size);
          if(sendbuf == MPI_IN_PLACE)
          {
            cudaError_t cudaerr = CudaMemcpy(rcbuf, recvbuf, dt_extent * recvcount * size, cudaMemcpyDeviceToHost);
@@ -163,13 +163,13 @@ int MPIDO_Reduce_scatter_block(const void *sendbuf,
          cuda_res =  MPIR_Reduce_scatter_block_intra(scbuf, rcbuf, recvcount, datatype, op, comm_ptr, mpierrno);
        else 
          cuda_res =  MPIR_Reduce_scatter_block_inter(scbuf, rcbuf, recvcount, datatype, op, comm_ptr, mpierrno);
-       if(is_send_dev_buf)MPIU_Free(scbuf);
+       if(is_send_dev_buf)MPL_free(scbuf);
        if(is_recv_dev_buf)
        {
          cudaError_t cudaerr = CudaMemcpy(recvbuf, rcbuf, dt_extent * recvcount * size, cudaMemcpyHostToDevice);
          if (cudaSuccess != cudaerr)
            fprintf(stderr, "cudaMemcpy failed: %s recvbuf: %p rcbuf: %p is_send_dev_buf: %d is_recv_dev_buf: %p sendbuf: %p\n", CudaGetErrorString(cudaerr), recvbuf, rcbuf, is_send_dev_buf,is_recv_dev_buf, sendbuf );
-         MPIU_Free(rcbuf);
+         MPL_free(rcbuf);
        }
        return cuda_res;
     }
