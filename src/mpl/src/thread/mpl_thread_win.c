@@ -41,7 +41,7 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
     struct MPLI_thread_info *thread_info;
     int err = MPL_THREAD_SUCCESS;
 
-    thread_info = (struct MPLI_thread_info *) malloc(sizeof(struct MPLI_thread_info));
+    thread_info = (struct MPLI_thread_info *) MPL_malloc(sizeof(struct MPLI_thread_info));
     if (thread_info != NULL) {
         thread_info->func = func;
         thread_info->data = data;
@@ -72,7 +72,7 @@ DWORD WINAPI MPLI_thread_start(LPVOID arg)
     MPL_thread_func_t func = thread_info->func;
     void *data = thread_info->data;
 
-    free(arg);
+    MPL_free(arg);
 
     func(data);
 
@@ -198,7 +198,7 @@ void MPL_thread_cond_destroy(MPL_thread_cond_t * cond, int *err)
     while (cond->fifo_head) {
         iter = cond->fifo_head;
         cond->fifo_head = cond->fifo_head->next;
-        free(iter);
+        MPL_free(iter);
     }
     MPL_thread_mutex_destroy(&cond->fifo_mutex, err);
     if (err != NULL && *err != MPL_THREAD_SUCCESS) {
@@ -239,12 +239,12 @@ void MPL_thread_cond_wait(MPL_thread_cond_t * cond, MPL_thread_mutex_t * mutex, 
         return;
     }
     if (cond->fifo_tail == NULL) {
-        cond->fifo_tail = (MPLI_win_thread_cond_fifo_t *) malloc(sizeof(MPLI_win_thread_cond_fifo_t));
+        cond->fifo_tail = (MPLI_win_thread_cond_fifo_t *) MPL_malloc(sizeof(MPLI_win_thread_cond_fifo_t));
         cond->fifo_head = cond->fifo_tail;
     }
     else {
         cond->fifo_tail->next =
-            (MPLI_win_thread_cond_fifo_t *) malloc(sizeof(MPLI_win_thread_cond_fifo_t));
+            (MPLI_win_thread_cond_fifo_t *) MPL_malloc(sizeof(MPLI_win_thread_cond_fifo_t));
         cond->fifo_tail = cond->fifo_tail->next;
     }
     if (cond->fifo_tail == NULL) {
@@ -312,7 +312,7 @@ void MPL_thread_cond_broadcast(MPL_thread_cond_t * cond, int *err)
         }
         temp = fifo;
         fifo = fifo->next;
-        free(temp);
+        MPL_free(temp);
     }
     if (err != NULL) {
         *err = MPL_THREAD_SUCCESS;
@@ -339,10 +339,10 @@ void MPL_thread_cond_signal(MPL_thread_cond_t * cond, int *err)
     if (fifo) {
         if (!SetEvent(fifo->event) && err != NULL) {
             *err = GetLastError();
-            free(fifo);
+            MPL_free(fifo);
             return;
         }
-        free(fifo);
+        MPL_free(fifo);
     }
     if (err != NULL) {
         *err = MPL_THREAD_SUCCESS;

@@ -16,7 +16,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 void MPLI_cleanup_tls(void *a)
 {
     if (a)
-        free(a);
+        MPL_free(a);
 }
 
 #endif
