@@ -61,12 +61,12 @@ MPID_Win_create_dynamic( MPID_Info  * info,
   void *base = NULL;
   size_t length = 0;
   Kernel_MemoryRegion_t memregion;
-  void *tmpbuf = MPIU_Malloc(sizeof(int));
+  void *tmpbuf = MPL_malloc(sizeof(int));
   Kernel_CreateMemoryRegion(&memregion, tmpbuf, sizeof(int));
   //Reset base to base VA of local heap
   base = memregion.BaseVa;
   length = memregion.Bytes;
-  MPIU_Free(tmpbuf);
+  MPL_free(tmpbuf);
   
   if (length != 0)
     {

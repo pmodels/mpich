@@ -59,7 +59,7 @@ int MPIR_T_pvar_handle_free_impl(MPI_T_pvar_session session, MPI_T_pvar_handle *
         }
     }
 
-    MPIU_Free(hnd);
+    MPL_free(hnd);
     *handle = MPI_T_PVAR_HANDLE_NULL;
 
 fn_exit:

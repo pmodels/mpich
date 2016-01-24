@@ -207,10 +207,10 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
     for (i = 0; i < comm_size; ++i) {
         /* can't use CHKLMEM macros b/c we are in a loop */
         if (rin_sizes[i]) {
-            rin[i] = MPIU_Malloc(rin_sizes[i] * sizeof(int));
+            rin[i] = MPL_malloc(rin_sizes[i] * sizeof(int));
         }
         if (rout_sizes[i]) {
-            rout[i] = MPIU_Malloc(rout_sizes[i] * sizeof(int));
+            rout[i] = MPL_malloc(rout_sizes[i] * sizeof(int));
         }
     }
 
@@ -300,13 +300,13 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
 
     /* can't use CHKPMEM macros for this b/c we need to realloc */
     in_capacity = 10; /* arbitrary */
-    dist_graph_ptr->in = MPIU_Malloc(in_capacity*sizeof(int));
+    dist_graph_ptr->in = MPL_malloc(in_capacity*sizeof(int));
     if (dist_graph_ptr->is_weighted)
-        dist_graph_ptr->in_weights = MPIU_Malloc(in_capacity*sizeof(int));
+        dist_graph_ptr->in_weights = MPL_malloc(in_capacity*sizeof(int));
     out_capacity = 10; /* arbitrary */
-    dist_graph_ptr->out = MPIU_Malloc(out_capacity*sizeof(int));
+    dist_graph_ptr->out = MPL_malloc(out_capacity*sizeof(int));
     if (dist_graph_ptr->is_weighted)
-        dist_graph_ptr->out_weights = MPIU_Malloc(out_capacity*sizeof(int));
+        dist_graph_ptr->out_weights = MPL_malloc(out_capacity*sizeof(int));
 
     for (i = 0; i < in_out_peers[0]; ++i) {
         MPI_Status status;
@@ -319,7 +319,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
         /* can't use CHKLMEM macros b/c we are in a loop */
         /* FIXME: Why not - there is only one allocated at a time. Is it only 
            that there is no defined macro to pop and free an item? */
-        buf = MPIU_Malloc(count*sizeof(int));
+        buf = MPL_malloc(count*sizeof(int));
         MPIR_ERR_CHKANDJUMP(!buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         mpi_errno = MPIC_Recv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_A_TAG, comm_ptr, MPI_STATUS_IGNORE, &errflag);
@@ -340,7 +340,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
             if (dist_graph_ptr->is_weighted)
                 dist_graph_ptr->in_weights[deg] = buf[2*j+1];
         }
-        MPIU_Free(buf);
+        MPL_free(buf);
     }
 
     for (i = 0; i < in_out_peers[1]; ++i) {
@@ -353,7 +353,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
         MPIR_Get_count_impl(&status, MPI_INT, &count);
         /* can't use CHKLMEM macros b/c we are in a loop */
         /* Why not? */
-        buf = MPIU_Malloc(count*sizeof(int));
+        buf = MPL_malloc(count*sizeof(int));
         MPIR_ERR_CHKANDJUMP(!buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         mpi_errno = MPIC_Recv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_B_TAG, comm_ptr, MPI_STATUS_IGNORE, &errflag);
@@ -374,7 +374,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
             if (dist_graph_ptr->is_weighted)
                 dist_graph_ptr->out_weights[deg] = buf[2*j+1];
         }
-        MPIU_Free(buf);
+        MPL_free(buf);
     }
 
     mpi_errno = MPIC_Waitall(idx, reqs, MPI_STATUSES_IGNORE, &errflag);
@@ -400,9 +400,9 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
   fn_exit:
     for (i = 0; i < comm_size; ++i) {
         if (rin[i])
-            MPIU_Free(rin[i]);
+            MPL_free(rin[i]);
         if (rout[i])
-            MPIU_Free(rout[i]);
+            MPL_free(rout[i]);
     }
 
     MPIU_CHKLMEM_FREEALL();
@@ -414,13 +414,13 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     if (dist_graph_ptr && dist_graph_ptr->in)
-        MPIU_Free(dist_graph_ptr->in);
+        MPL_free(dist_graph_ptr->in);
     if (dist_graph_ptr && dist_graph_ptr->in_weights)
-        MPIU_Free(dist_graph_ptr->in_weights);
+        MPL_free(dist_graph_ptr->in_weights);
     if (dist_graph_ptr && dist_graph_ptr->out)
-        MPIU_Free(dist_graph_ptr->out);
+        MPL_free(dist_graph_ptr->out);
     if (dist_graph_ptr && dist_graph_ptr->out_weights)
-        MPIU_Free(dist_graph_ptr->out_weights);
+        MPL_free(dist_graph_ptr->out_weights);
     MPIU_CHKPMEM_REAP();
 #ifdef HAVE_ERROR_CHECKING
     mpi_errno = MPIR_Err_create_code(

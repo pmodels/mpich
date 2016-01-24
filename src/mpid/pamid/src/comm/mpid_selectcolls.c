@@ -617,13 +617,13 @@ void MPIDI_Comm_coll_query(MPID_Comm *comm)
       if(num_algorithms[0] || num_algorithms[1])
       {
          comm->mpid.coll_algorithm[i][0] = (pami_algorithm_t *)
-               MPIU_Malloc(sizeof(pami_algorithm_t) * num_algorithms[0]);
+               MPL_malloc(sizeof(pami_algorithm_t) * num_algorithms[0]);
          comm->mpid.coll_metadata[i][0] = (pami_metadata_t *)
-               MPIU_Malloc(sizeof(pami_metadata_t) * num_algorithms[0]);
+               MPL_malloc(sizeof(pami_metadata_t) * num_algorithms[0]);
          comm->mpid.coll_algorithm[i][1] = (pami_algorithm_t *)
-               MPIU_Malloc(sizeof(pami_algorithm_t) * num_algorithms[1]);
+               MPL_malloc(sizeof(pami_algorithm_t) * num_algorithms[1]);
          comm->mpid.coll_metadata[i][1] = (pami_metadata_t *)
-               MPIU_Malloc(sizeof(pami_metadata_t) * num_algorithms[1]);
+               MPL_malloc(sizeof(pami_metadata_t) * num_algorithms[1]);
          comm->mpid.coll_count[i][0] = num_algorithms[0];
          comm->mpid.coll_count[i][1] = num_algorithms[1];
 

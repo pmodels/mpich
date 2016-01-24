@@ -66,7 +66,7 @@ int MPI_T_cvar_handle_free(MPI_T_cvar_handle *handle)
     /* ... body of routine ...  */
 
     hnd = *handle;
-    MPIU_Free(hnd);
+    MPL_free(hnd);
     *handle = MPI_T_CVAR_HANDLE_NULL;
 
     /* ... end of body of routine ... */

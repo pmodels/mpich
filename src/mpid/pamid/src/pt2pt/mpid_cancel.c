@@ -109,7 +109,7 @@ MPID_Cancel_send(MPID_Request * sreq)
        * required to avoid a leak here just isn't worth it.
        * Hopefully people aren't cancelling sends too much.
        */
-      pami_work_t  * work    = MPIU_Malloc(sizeof(pami_work_t));
+      pami_work_t  * work    = MPL_malloc(sizeof(pami_work_t));
       PAMI_Context_post(context, work, MPIDI_CancelReq_post, sreq);
     }
   else

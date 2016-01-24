@@ -235,7 +235,7 @@ static inline void list_grow_mxm_req(list_head_t * list_head)
     int count = MXM_MPICH_MAX_REQ;
 
     while (count--) {
-        mxm_req = (MPID_nem_mxm_req_t *) MPIU_Malloc(sizeof(MPID_nem_mxm_req_t));
+        mxm_req = (MPID_nem_mxm_req_t *) MPL_malloc(sizeof(MPID_nem_mxm_req_t));
         list_enqueue(list_head, &mxm_req->queue);
     }
 }
@@ -376,7 +376,7 @@ static inline void _dbg_mxm_hexdump(void *ptr, int buflen)
         return;
 
     len = 80 * (buflen / 16 + 1);
-    str = (char *) MPIU_Malloc(len);
+    str = (char *) MPL_malloc(len);
     for (i = 0; i < buflen; i += 16) {
         cur_len += MPL_snprintf(str + cur_len, len - cur_len, "%06x: ", i);
         for (j = 0; j < 16; j++)
@@ -393,7 +393,7 @@ static inline void _dbg_mxm_hexdump(void *ptr, int buflen)
         cur_len += MPL_snprintf(str + cur_len, len - cur_len, "\n");
     }
     _dbg_mxm_out(8, NULL, 1, NULL, NULL, -1, "%s", str);
-    MPIU_Free(str);
+    MPL_free(str);
 }
 
 static inline char *_tag_val_to_str(int tag, char *out, int max)

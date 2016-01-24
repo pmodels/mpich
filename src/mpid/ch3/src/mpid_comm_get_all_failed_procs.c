@@ -18,7 +18,7 @@ static void group_to_bitarray(MPID_Group *group, MPID_Comm *orig_comm, int **bit
 
     /* Calculate the bitarray size in ints and allocate space */
     *bitarray_size = (orig_comm->local_size / (8 * sizeof(int)) + (orig_comm->local_size % (8 * sizeof(int)) ? 1 : 0));
-    *bitarray = (int *) MPIU_Malloc(sizeof(int) * *bitarray_size);
+    *bitarray = (int *) MPL_malloc(sizeof(int) * *bitarray_size);
 
     /* If the group is empty, return an empty bitarray. */
     if (group == MPID_Group_empty) {
@@ -27,8 +27,8 @@ static void group_to_bitarray(MPID_Group *group, MPID_Comm *orig_comm, int **bit
     }
 
     /* Get the ranks of group in orig_comm */
-    group_ranks = (int *) MPIU_Malloc(sizeof(int) * group->size);
-    comm_ranks = (int *) MPIU_Malloc(sizeof(int) * group->size);
+    group_ranks = (int *) MPL_malloc(sizeof(int) * group->size);
+    comm_ranks = (int *) MPL_malloc(sizeof(int) * group->size);
 
     for (i = 0; i < group->size; i++) group_ranks[i] = i;
     for (i = 0; i < *bitarray_size; i++) *bitarray[i] = 0;
@@ -45,8 +45,8 @@ static void group_to_bitarray(MPID_Group *group, MPID_Comm *orig_comm, int **bit
         *bitarray[index] |= mask;
     }
 
-    MPIU_Free(group_ranks);
-    MPIU_Free(comm_ranks);
+    MPL_free(group_ranks);
+    MPL_free(comm_ranks);
 }
 
 /* Generates an MPID_Group from a bitarray */
@@ -109,7 +109,7 @@ int MPID_Comm_get_all_failed_procs(MPID_Comm *comm_ptr, MPID_Group **failed_grou
 
     /* Generate a bitarray based on the list of failed procs */
     group_to_bitarray(local_fail, comm_ptr, &bitarray, &bitarray_size);
-    remote_bitarray = MPIU_Malloc(sizeof(int) * bitarray_size);
+    remote_bitarray = MPL_malloc(sizeof(int) * bitarray_size);
     if (local_fail != MPID_Group_empty)
         MPIR_Group_release(local_fail);
 
@@ -152,8 +152,8 @@ int MPID_Comm_get_all_failed_procs(MPID_Comm *comm_ptr, MPID_Group **failed_grou
         *failed_group = bitarray_to_group(comm_ptr, remote_bitarray);
     }
 
-    MPIU_Free(bitarray);
-    MPIU_Free(remote_bitarray);
+    MPL_free(bitarray);
+    MPL_free(remote_bitarray);
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_COMM_GET_ALL_FAILED_PROCS);

@@ -119,7 +119,7 @@ int MPIR_Sched_cb_free_buf(MPID_Comm *comm, int tag, void *state);
 
 #define MPIR_SCHED_CHKPMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,stmt_)  \
     do {                                                                          \
-        (pointer_) = (type_)MPIU_Malloc(nbytes_);                                 \
+        (pointer_) = (type_)MPL_malloc(nbytes_);                                 \
         if (pointer_) {                                                           \
             MPIU_Assert(mpir_sched_chkpmem_stk_sp_ < mpir_sched_chkpmem_stk_sz_); \
             mpir_sched_chkpmem_stk_[mpir_sched_chkpmem_stk_sp_++] = (pointer_);   \
@@ -136,7 +136,7 @@ int MPIR_Sched_cb_free_buf(MPID_Comm *comm, int tag, void *state);
 #define MPIR_SCHED_CHKPMEM_REAP(sched_)                                       \
     do {                                                                      \
         while (mpir_sched_chkpmem_stk_sp_ > 0) {                              \
-            MPIU_Free(mpir_sched_chkpmem_stk_[--mpir_sched_chkpmem_stk_sp_]); \
+            MPL_free(mpir_sched_chkpmem_stk_[--mpir_sched_chkpmem_stk_sp_]); \
         }                                                                     \
     } while (0)
 

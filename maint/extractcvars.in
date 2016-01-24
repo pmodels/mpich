@@ -347,7 +347,7 @@ EOT
     if ($p->{type} eq 'string') {
 print OUTPUT_C <<EOT;
     if (tmp_str != NULL) {
-        ${var_name} = MPIU_Strdup(tmp_str);
+        ${var_name} = MPL_strdup(tmp_str);
         ${ns}_assert(${var_name});
         if (${var_name} == NULL) {
             MPIU_CHKMEM_SETERR(mpi_errno, strlen(tmp_str), "dup of string for ${var_name}");
@@ -385,7 +385,7 @@ foreach my $p (@cvars) {
         # Need to cleanup after whatever was strduped by the init routine
 print OUTPUT_C <<EOT;
     if (${var_name} != NULL) {
-        MPIU_Free(${var_name});
+        MPL_free(${var_name});
         ${var_name} = NULL;
     }
 

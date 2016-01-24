@@ -252,7 +252,7 @@ int MPIDI_CH3_PktHandler_CancelSendReq( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,TYPICAL,"message cancelled");
 	if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_EAGER_MSG && rreq->dev.recv_data_sz > 0)
 	{
-	    MPIU_Free(rreq->dev.tmpbuf);
+	    MPL_free(rreq->dev.tmpbuf);
 	}
 	if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_RNDV_MSG)
 	{

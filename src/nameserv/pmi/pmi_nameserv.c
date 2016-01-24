@@ -155,7 +155,7 @@ int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
     int length;
     char *pmi_namepub_kvs;
 
-    *handle_ptr = (MPID_NS_Handle)MPIU_Malloc( sizeof(struct MPID_NS_Handle) );
+    *handle_ptr = (MPID_NS_Handle)MPL_malloc( sizeof(struct MPID_NS_Handle) );
     /* --BEGIN ERROR HANDLING-- */
     if (!*handle_ptr)
     {
@@ -172,7 +172,7 @@ int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
     }
     /* --END ERROR HANDLING-- */
 
-    (*handle_ptr)->kvsname = (char*)MPIU_Malloc(length);
+    (*handle_ptr)->kvsname = (char*)MPL_malloc(length);
     /* --BEGIN ERROR HANDLING-- */
     if (!(*handle_ptr)->kvsname)
     {
@@ -292,8 +292,8 @@ int MPID_NS_Free( MPID_NS_Handle *handle_ptr )
     static const char FCNAME[] = "MPID_NS_Free";
     int err;
 
-    MPIU_Free( (*handle_ptr)->kvsname );
-    MPIU_Free( *handle_ptr );
+    MPL_free( (*handle_ptr)->kvsname );
+    MPL_free( *handle_ptr );
     *handle_ptr = 0;
 
     return 0;

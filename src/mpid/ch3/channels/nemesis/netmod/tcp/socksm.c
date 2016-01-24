@@ -201,8 +201,8 @@ static int free_sc_plfd_tbls (void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIU_Free(g_sc_tbl);
-    MPIU_Free(MPID_nem_tcp_plfd_tbl);
+    MPL_free(g_sc_tbl);
+    MPL_free(MPID_nem_tcp_plfd_tbl);
     return mpi_errno;
 }
 
@@ -253,8 +253,8 @@ static int expand_sc_plfd_tbls (void)
         }
     }
 
-    MPIU_Free(g_sc_tbl);
-    MPIU_Free(MPID_nem_tcp_plfd_tbl);
+    MPL_free(g_sc_tbl);
+    MPL_free(MPID_nem_tcp_plfd_tbl);
     g_sc_tbl = new_sc_tbl;
     MPID_nem_tcp_plfd_tbl = new_plfd_tbl;
     for (i = g_tbl_capacity; i < new_capacity; i++) {
@@ -312,7 +312,7 @@ static int find_free_entry(int *idx)
     if (!Q_EMPTY(freeq)) {
         Q_DEQUEUE(&freeq, ((freenode_t **)&node)); 
         *idx = node->index;
-        MPIU_Free(node);
+        MPL_free(node);
         goto fn_exit;
     }
 
@@ -1761,12 +1761,12 @@ int MPID_nem_tcp_sm_finalize(void)
     /* walk the freeq and free all the elements */
     while (!Q_EMPTY(freeq)) {
         Q_DEQUEUE(&freeq, ((freenode_t **)&node)); 
-        MPIU_Free(node);
+        MPL_free(node);
     }
 
     free_sc_plfd_tbls();
 
-    MPIU_Free(recv_buf);
+    MPL_free(recv_buf);
 
     return MPI_SUCCESS;
 }

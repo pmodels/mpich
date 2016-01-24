@@ -248,7 +248,7 @@ static int ckpt_restart(void)
     /* publish business card */
     mpi_errno = MPIDI_PG_SetConnInfo(MPIDI_Process.my_pg_rank, (const char *)publish_bc_orig);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    MPIU_Free(publish_bc_orig);
+    MPL_free(publish_bc_orig);
 
     for (i = 0; i < MPIDI_Process.my_pg->size; ++i) {
         MPIDI_VC_t *vc;

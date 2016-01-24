@@ -106,7 +106,7 @@ int MPIDI_CH3I_comm_destroy(MPID_Comm *comm, void *param)
         --cf->ref_count;
         if (cf->ref_count == 0) {
             utarray_erase(coll_fns_array, utarray_eltidx(coll_fns_array, cf), 1);
-            MPIU_Free(cf);
+            MPL_free(cf);
         }
             
         if (comm->dev.ch.barrier_vars && OPA_fetch_and_decr_int(&comm->dev.ch.barrier_vars->usage_cnt) == 1) {

@@ -75,7 +75,7 @@ int MPIE_ChooseHosts( ProcessWorld *pWorld,
     app = pWorld->apps;
     while (app) {
 	if (!app->pState) {
-	    pState = (ProcessState *)MPIU_Malloc( 
+            pState = (ProcessState *)MPL_malloc(
 		app->nProcess * sizeof(ProcessState) );
 	    if (!pState) {
 		return -1;
@@ -141,7 +141,7 @@ int MPIE_ChooseHosts( ProcessWorld *pWorld,
 				mt->desc[curHost].hostname, i ));
 		    nNeeded --;
 		    nForApp--;
-		    pState[i].hostname = MPIU_Strdup( mt->desc[curHost].hostname );
+		    pState[i].hostname = MPL_strdup( mt->desc[curHost].hostname );
 		    mt->desc[curHost].np--;
 		    if (mt->desc[curHost].np == 0) 
 			curHost++;
@@ -256,7 +256,7 @@ MachineTable *MPIE_ReadMachines( const char *arch, int nNeeded,
 	MPL_error_printf( "Could not open machines file %s\n", machinesfile );
 	return 0;
     }
-    mt = (MachineTable *)MPIU_Malloc( sizeof(MachineTable) );
+    mt = (MachineTable *)MPL_malloc( sizeof(MachineTable) );
     if (!mt) {
 	MPL_internal_error_printf( "Could not allocate machine table\n" );
 	return 0;
@@ -264,7 +264,7 @@ MachineTable *MPIE_ReadMachines( const char *arch, int nNeeded,
     
     /* This may be larger than needed if the machines file has
        fewer entries than nNeeded */
-    mt->desc = (MachineDesc *)MPIU_Malloc( nNeeded * sizeof(MachineDesc) );
+    mt->desc = (MachineDesc *)MPL_malloc( nNeeded * sizeof(MachineDesc) );
     if (!mt->desc) {
 	return 0;
     }
@@ -335,9 +335,9 @@ MachineTable *MPIE_ReadMachines( const char *arch, int nNeeded,
 	/* Save the names */
 
 	/* Initialize the fields for this new entry */
-	mt->desc[nFound].hostname    = MPIU_Strdup( name );
+	mt->desc[nFound].hostname    = MPL_strdup( name );
 	if (login) 
-	    mt->desc[nFound].login   = MPIU_Strdup( login );
+	    mt->desc[nFound].login   = MPL_strdup( login );
 	else
 	    mt->desc[nFound].login = 0;
 	if (npstring) {
@@ -354,7 +354,7 @@ MachineTable *MPIE_ReadMachines( const char *arch, int nNeeded,
 	else 
 	    mt->desc[nFound].np      = 1;
 	if (netname) 
-	    mt->desc[nFound].netname = MPIU_Strdup( netname );
+	    mt->desc[nFound].netname = MPL_strdup( netname );
 	else
 	    mt->desc[nFound].netname = 0;
 
@@ -374,11 +374,11 @@ int MPIE_RMProcessArg( int argc, char *argv[], void *extra )
 	cmd = argv[0] + 12;
 
 	if (cmd[0] == 0) {
-	    machinefile = MPIU_Strdup( argv[1] );
+	    machinefile = MPL_strdup( argv[1] );
 	    incr = 2;
 	}
 	else if (strcmp( cmd, "path" ) == 0) {
-	    machinefilePath = MPIU_Strdup( argv[1] );
+	    machinefilePath = MPL_strdup( argv[1] );
 	    incr = 2;
 	}
 	/* else not an argument for this routine */
@@ -391,16 +391,16 @@ int MPIE_FreeMachineTable( MachineTable *mt )
 {
     int i;
     for (i=0; i<mt->nHosts; i++) {
-	MPIU_Free( mt->desc[i].hostname );
+	MPL_free( mt->desc[i].hostname );
 	if (mt->desc[i].login) {
-	    MPIU_Free( mt->desc[i].login );
+	    MPL_free( mt->desc[i].login );
 	}
 	if (mt->desc[i].netname) {
-	    MPIU_Free( mt->desc[i].netname );
+	    MPL_free( mt->desc[i].netname );
 	}
     }
-    MPIU_Free( mt->desc );
-    MPIU_Free( mt );
+    MPL_free( mt->desc );
+    MPL_free( mt );
 
     return 0;
 }

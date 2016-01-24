@@ -103,8 +103,8 @@ int MPIDO_Alltoallv(const void *sendbuf,
         size_t totalsendcount = sendcounts[0];
         sendcontinuous = senddispls[0] == 0? 1 : 0 ;
         int i;
-        psenddispls = lsenddispls = MPIU_Malloc(size*sizeof(int));
-        psendcounts = lsendcounts = MPIU_Malloc(size*sizeof(int));
+        psenddispls = lsenddispls = MPL_malloc(size*sizeof(int));
+        psendcounts = lsendcounts = MPL_malloc(size*sizeof(int));
         lsenddispls[0]= 0;
         lsendcounts[0]= sndtypelen * sendcounts[0];
         for(i=1; i<size; ++i)
@@ -118,7 +118,7 @@ int MPIDO_Alltoallv(const void *sendbuf,
         send_size = sndtypelen * totalsendcount;
         TRACE_ERR("Pack receive sndv_contig %zu, sendok %zd, totalsendcount %zu, sendcontinuous %zu, sndtypelen %zu,  send_size %zu\n",
                 (size_t)snd_contig, (size_t)sendok, (size_t)totalsendcount, (size_t)sendcontinuous, (size_t) sndtypelen, (size_t)send_size);
-        snd_noncontig_buff = MPIU_Malloc(send_size);
+        snd_noncontig_buff = MPL_malloc(send_size);
         sbuf = snd_noncontig_buff;
         if(snd_noncontig_buff == NULL)
         {
@@ -157,8 +157,8 @@ int MPIDO_Alltoallv(const void *sendbuf,
       totalrecvcount = recvcounts[0];
       recvcontinuous = recvdispls[0] == 0? 1 : 0 ;
       int i;
-      precvdispls = lrecvdispls = MPIU_Malloc(size*sizeof(int));
-      precvcounts = lrecvcounts = MPIU_Malloc(size*sizeof(int));
+      precvdispls = lrecvdispls = MPL_malloc(size*sizeof(int));
+      precvcounts = lrecvcounts = MPL_malloc(size*sizeof(int));
       lrecvdispls[0]= 0;
       lrecvcounts[0]= rcvtypelen * recvcounts[0];
       for(i=1; i<size; ++i)
@@ -172,7 +172,7 @@ int MPIDO_Alltoallv(const void *sendbuf,
       recv_size = rcvtypelen * totalrecvcount;
       TRACE_ERR("Pack receive rcv_contig %zu, recvok %zd, totalrecvcount %zu, recvcontinuous %zu, rcvtypelen %zu, recv_size %zu\n",
                 (size_t)rcv_contig, (size_t)recvok, (size_t)totalrecvcount, (size_t)recvcontinuous,(size_t)rcvtypelen, (size_t)recv_size);
-      rcv_noncontig_buff = MPIU_Malloc(recv_size);
+      rcv_noncontig_buff = MPL_malloc(recv_size);
       rbuf = rcv_noncontig_buff;
       if(rcv_noncontig_buff == NULL)
       {
@@ -187,8 +187,8 @@ int MPIDO_Alltoallv(const void *sendbuf,
         size_t totalsendcount = recvcounts[0];
         sendcontinuous = recvdispls[0] == 0? 1 : 0 ;
         int i;
-        psenddispls = lsenddispls = MPIU_Malloc(size*sizeof(int));
-        psendcounts = lsendcounts = MPIU_Malloc(size*sizeof(int));
+        psenddispls = lsenddispls = MPL_malloc(size*sizeof(int));
+        psendcounts = lsendcounts = MPL_malloc(size*sizeof(int));
         lsenddispls[0]= 0;
         lsendcounts[0]= rcvtypelen * recvcounts[0];
         for(i=1; i<size; ++i)
@@ -202,7 +202,7 @@ int MPIDO_Alltoallv(const void *sendbuf,
         send_size = rcvtypelen * totalsendcount;
         TRACE_ERR("Pack MPI_IN_PLACE receive sndv_contig %zu, sendok %zd, totalsendcount %zu, sendcontinuous %zu, rcvtypelen %zu,  send_size %zu\n",
                 (size_t)snd_contig, (size_t)sendok, (size_t)totalsendcount, (size_t)sendcontinuous, (size_t) rcvtypelen, (size_t)send_size);
-        snd_noncontig_buff = MPIU_Malloc(send_size);
+        snd_noncontig_buff = MPL_malloc(send_size);
         sbuf = snd_noncontig_buff;
         if(snd_noncontig_buff == NULL)
         {
@@ -382,13 +382,13 @@ int MPIDO_Alltoallv(const void *sendbuf,
                       (size_t)extent, (size_t)i,(size_t)recvdispls[i],(size_t)i,(size_t)recvcounts[i],(size_t)recvdispls[i], *(int*)rcbuf);
          }
       }
-      MPIU_Free(rcv_noncontig_buff);
+      MPL_free(rcv_noncontig_buff);
    }
-   if(!snd_contig || (sendok != PAMI_SUCCESS))  MPIU_Free(snd_noncontig_buff);
-   if(lrecvdispls) MPIU_Free(lrecvdispls);
-   if(lsenddispls) MPIU_Free(lsenddispls);
-   if(lrecvcounts) MPIU_Free(lrecvcounts);
-   if(lsendcounts) MPIU_Free(lsendcounts);
+   if(!snd_contig || (sendok != PAMI_SUCCESS))  MPL_free(snd_noncontig_buff);
+   if(lrecvdispls) MPL_free(lrecvdispls);
+   if(lsenddispls) MPL_free(lsenddispls);
+   if(lrecvcounts) MPL_free(lrecvcounts);
+   if(lsendcounts) MPL_free(lsendcounts);
 
    TRACE_ERR("Leaving alltoallv\n");
 
@@ -495,8 +495,8 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
       size_t totalsendcount = sendcounts[0];
       sendcontinuous = senddispls[0] == 0? 1 : 0 ;
       int i;
-      psenddispls = lsenddispls = MPIU_Malloc(size*sizeof(int));
-      psendcounts = lsendcounts = MPIU_Malloc(size*sizeof(int));
+      psenddispls = lsenddispls = MPL_malloc(size*sizeof(int));
+      psendcounts = lsendcounts = MPL_malloc(size*sizeof(int));
       lsenddispls[0]= 0;
       lsendcounts[0]= sndtypelen * sendcounts[0];
       for(i=1; i<size; ++i)
@@ -510,7 +510,7 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
       send_size = sndtypelen * totalsendcount;
       TRACE_ERR("Pack receive sndv_contig %zu, sendok %zd, totalsendcount %zu, sendcontinuous %zu, sndtypelen %zu,  send_size %zu\n",
                 (size_t)snd_contig, (size_t)sendok, (size_t)totalsendcount, (size_t)sendcontinuous, (size_t) sndtypelen, (size_t)send_size);
-      snd_noncontig_buff = MPIU_Malloc(send_size);
+      snd_noncontig_buff = MPL_malloc(send_size);
       sbuf = snd_noncontig_buff;
       if(snd_noncontig_buff == NULL)
    {
@@ -549,8 +549,8 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
     totalrecvcount = recvcounts[0];
     recvcontinuous = recvdispls[0] == 0? 1 : 0 ;
     int i;
-    precvdispls = lrecvdispls = MPIU_Malloc(size*sizeof(int));
-    precvcounts = lrecvcounts = MPIU_Malloc(size*sizeof(int));
+    precvdispls = lrecvdispls = MPL_malloc(size*sizeof(int));
+    precvcounts = lrecvcounts = MPL_malloc(size*sizeof(int));
     lrecvdispls[0]= 0;
     lrecvcounts[0]= rcvtypelen * recvcounts[0];
     for(i=1; i<size; ++i)
@@ -564,7 +564,7 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
     recv_size = rcvtypelen * totalrecvcount;
     TRACE_ERR("Pack receive rcv_contig %zu, recvok %zd, totalrecvcount %zu, recvcontinuous %zu, rcvtypelen %zu, recv_size %zu\n",
               (size_t)rcv_contig, (size_t)recvok, (size_t)totalrecvcount, (size_t)recvcontinuous,(size_t)rcvtypelen, (size_t)recv_size);
-    rcv_noncontig_buff = MPIU_Malloc(recv_size);
+    rcv_noncontig_buff = MPL_malloc(recv_size);
     rbuf = rcv_noncontig_buff;
     if(rcv_noncontig_buff == NULL)
     {
@@ -579,8 +579,8 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
       size_t totalsendcount = recvcounts[0];
       sendcontinuous = recvdispls[0] == 0? 1 : 0 ;
       int i;
-      psenddispls = lsenddispls = MPIU_Malloc(size*sizeof(int));
-      psendcounts = lsendcounts = MPIU_Malloc(size*sizeof(int));
+      psenddispls = lsenddispls = MPL_malloc(size*sizeof(int));
+      psendcounts = lsendcounts = MPL_malloc(size*sizeof(int));
       lsenddispls[0]= 0;
       lsendcounts[0]= rcvtypelen * recvcounts[0];
       for(i=1; i<size; ++i)
@@ -594,7 +594,7 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
       send_size = rcvtypelen * totalsendcount;
       TRACE_ERR("Pack MPI_IN_PLACE receive sndv_contig %zu, sendok %zd, totalsendcount %zu, sendcontinuous %zu, rcvtypelen %zu,  send_size %zu\n",
                 (size_t)snd_contig, (size_t)sendok, (size_t)totalsendcount, (size_t)sendcontinuous, (size_t) rcvtypelen, (size_t)send_size);
-      snd_noncontig_buff = MPIU_Malloc(send_size);
+      snd_noncontig_buff = MPL_malloc(send_size);
       sbuf = snd_noncontig_buff;
       if(snd_noncontig_buff == NULL)
       {
@@ -683,13 +683,13 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
                   (size_t)extent, (size_t)i,(size_t)recvdispls[i],(size_t)i,(size_t)recvcounts[i],(size_t)recvdispls[i], *(int*)rcbuf);
       }
     }
-    MPIU_Free(rcv_noncontig_buff);
+    MPL_free(rcv_noncontig_buff);
   }
-  if(!snd_contig || (sendok != PAMI_SUCCESS))  MPIU_Free(snd_noncontig_buff);
-  if(lrecvdispls) MPIU_Free(lrecvdispls);
-  if(lsenddispls) MPIU_Free(lsenddispls);
-  if(lrecvcounts) MPIU_Free(lrecvcounts);
-  if(lsendcounts) MPIU_Free(lsendcounts);
+  if(!snd_contig || (sendok != PAMI_SUCCESS))  MPL_free(snd_noncontig_buff);
+  if(lrecvdispls) MPL_free(lrecvdispls);
+  if(lsenddispls) MPL_free(lsenddispls);
+  if(lrecvcounts) MPL_free(lrecvcounts);
+  if(lsendcounts) MPL_free(lsendcounts);
 
 
    TRACE_ERR("Leaving alltoallv\n");

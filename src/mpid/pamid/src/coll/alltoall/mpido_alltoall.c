@@ -103,7 +103,7 @@ int MPIDO_Alltoall(const void *sendbuf,
        int is_recv_dev_buf = MPIDI_cuda_is_device_buf(recvbuf);
        if(is_send_dev_buf)
        {
-         scbuf = MPIU_Malloc(sdt_extent * sendcount);
+         scbuf = MPL_malloc(sdt_extent * sendcount);
          cudaError_t cudaerr = CudaMemcpy(scbuf, sendbuf, sdt_extent * sendcount, cudaMemcpyDeviceToHost);
          if (cudaSuccess != cudaerr)
            fprintf(stderr, "cudaMemcpy failed: %s\n", CudaGetErrorString(cudaerr));
@@ -112,7 +112,7 @@ int MPIDO_Alltoall(const void *sendbuf,
          scbuf = sendbuf;
        if(is_recv_dev_buf)
        {
-         rcbuf = MPIU_Malloc(recvcount * rdt_extent);
+         rcbuf = MPL_malloc(recvcount * rdt_extent);
          if(sendbuf == MPI_IN_PLACE)
          {
            cudaError_t cudaerr = CudaMemcpy(rcbuf, recvbuf, recvcount * rdt_extent, cudaMemcpyDeviceToHost);
@@ -125,13 +125,13 @@ int MPIDO_Alltoall(const void *sendbuf,
        else
          rcbuf = recvbuf;
        int cuda_res =  MPIR_Alltoall_intra(scbuf, sendcount, sendtype, rcbuf, recvcount, recvtype, comm_ptr, mpierrno);
-       if(is_send_dev_buf)MPIU_Free(scbuf);
+       if(is_send_dev_buf)MPL_free(scbuf);
        if(is_recv_dev_buf)
          {
            cudaError_t cudaerr = CudaMemcpy(recvbuf, rcbuf, recvcount * rdt_extent, cudaMemcpyHostToDevice);
            if (cudaSuccess != cudaerr)
              fprintf(stderr, "cudaMemcpy failed: %s\n", CudaGetErrorString(cudaerr));
-           MPIU_Free(rcbuf);
+           MPL_free(rcbuf);
          }
        return cuda_res;
     }
@@ -338,7 +338,7 @@ int MPIDO_Alltoall_simple(const void *sendbuf,
     send_size = sndlen * sendcount;
     if(!snd_contig)
     {
-      snd_noncontig_buff = MPIU_Malloc(send_size*size);
+      snd_noncontig_buff = MPL_malloc(send_size*size);
       sbuf = snd_noncontig_buff;
       if(snd_noncontig_buff == NULL)
       {
@@ -354,7 +354,7 @@ int MPIDO_Alltoall_simple(const void *sendbuf,
 
   if(!rcv_contig)
   {
-    rcv_noncontig_buff = MPIU_Malloc(recv_size*size);
+    rcv_noncontig_buff = MPL_malloc(recv_size*size);
     rbuf = rcv_noncontig_buff;
     if(rcv_noncontig_buff == NULL)
     {
@@ -406,9 +406,9 @@ int MPIDO_Alltoall_simple(const void *sendbuf,
    {
       MPIR_Localcopy(rcv_noncontig_buff, recv_size*size, MPI_CHAR,
                         recvbuf,         recvcount*size,     recvtype);
-      MPIU_Free(rcv_noncontig_buff);
+      MPL_free(rcv_noncontig_buff);
    }
-   if(!snd_contig)  MPIU_Free(snd_noncontig_buff);
+   if(!snd_contig)  MPL_free(snd_noncontig_buff);
 
    TRACE_ERR("Leaving MPIDO_Alltoall_optimized\n");
    return MPI_SUCCESS;

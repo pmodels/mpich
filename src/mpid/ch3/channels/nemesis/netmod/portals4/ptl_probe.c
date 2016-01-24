@@ -366,7 +366,7 @@ int MPID_nem_ptl_pkt_cancel_send_req_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pk
 
     /* if the message was found, free the temporary buffer used to copy the data */
     if (REQ_PTL(search_req)->found)
-        MPIU_Free(search_req->dev.tmpbuf);
+        MPL_free(search_req->dev.tmpbuf);
 
     MPID_Request_release(search_req);
     if (resp_req != NULL)
@@ -405,7 +405,7 @@ int MPID_nem_ptl_pkt_cancel_send_resp_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *p
             }
         }
         if (REQ_PTL(sreq)->get_me_p)
-            MPIU_Free(REQ_PTL(sreq)->get_me_p);
+            MPL_free(REQ_PTL(sreq)->get_me_p);
 
         MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,TYPICAL,"message cancelled");
     } else {

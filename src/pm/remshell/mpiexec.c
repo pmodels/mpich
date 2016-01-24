@@ -266,7 +266,7 @@ int mypostfork( void *predata, void *data, ProcessState *pState )
 	char rankStr[12];
 
 	/* Insert into app->args */
-	newargs = (const char **) MPIU_Malloc( (app->nArgs + 14 + 1) * 
+        newargs = (const char **) MPL_malloc( (app->nArgs + 14 + 1) *
 					  sizeof(char *) );
 	if (!pState->hostname) {
 	    MPL_error_printf( "No hostname avaliable for %s\n", app->exename );
@@ -276,7 +276,7 @@ int mypostfork( void *predata, void *data, ProcessState *pState )
 	snprintf( rankStr, sizeof(rankStr)-1, "%d", pState->id );
 	rankStr[12-1] = 0;
 	curarg = 0;
-        newargs[curarg++] = MPIU_Strdup( "-Y" );
+        newargs[curarg++] = MPL_strdup( "-Y" );
 
 	newargs[curarg++] = pState->hostname;
 	curarg += AddEnvSetToCmdLine( "PMI_PORT", s->pmiinfo.portName, 
@@ -294,7 +294,7 @@ int mypostfork( void *predata, void *data, ProcessState *pState )
 	    newargs[j+curarg] = app->args[j];
 	}
 	newargs[j+curarg] = 0;
-	app->exename = MPIU_Strdup( "/usr/bin/ssh" );
+	app->exename = MPL_strdup( "/usr/bin/ssh" );
 
 	app->args = newargs;
 	app->nArgs += curarg;
@@ -431,19 +431,19 @@ static int AddEnvSetToCmdLine( const char *envName, const char *envValue,
     }
 
     if (useCSHFormat) {
-	args[nArgs++] = MPIU_Strdup( "setenv" );
-	args[nArgs++] = MPIU_Strdup( envName );
-	args[nArgs++] = MPIU_Strdup( envValue ); 
-	args[nArgs++] = MPIU_Strdup( ";" );
+	args[nArgs++] = MPL_strdup( "setenv" );
+	args[nArgs++] = MPL_strdup( envName );
+        args[nArgs++] = MPL_strdup( envValue );
+	args[nArgs++] = MPL_strdup( ";" );
     }
     else {
 	char tmpBuf[1024];
-	args[nArgs++] = MPIU_Strdup( "export" );
+	args[nArgs++] = MPL_strdup( "export" );
 	MPL_strncpy( tmpBuf, envName, sizeof(tmpBuf) );
 	MPL_strnapp( tmpBuf, "=", sizeof(tmpBuf) );
 	MPL_strnapp( tmpBuf, envValue, sizeof(tmpBuf) );
-	args[nArgs++] = MPIU_Strdup( tmpBuf );
-	args[nArgs++] = MPIU_Strdup( ";" );
+	args[nArgs++] = MPL_strdup( tmpBuf );
+	args[nArgs++] = MPL_strdup( ";" );
     }
     return nArgs;
 }

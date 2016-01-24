@@ -96,7 +96,7 @@ int MPIDO_Gatherv(const void *sendbuf,
        int is_recv_dev_buf = (rank == root) ? MPIDI_cuda_is_device_buf(recvbuf) : 0;
        if(is_send_dev_buf)
        {
-         scbuf = MPIU_Malloc(sdt_extent * sendcount);
+         scbuf = MPL_malloc(sdt_extent * sendcount);
          cudaError_t cudaerr = CudaMemcpy(scbuf, sendbuf, sdt_extent * sendcount, cudaMemcpyDeviceToHost);
          if (cudaSuccess != cudaerr)
            fprintf(stderr, "cudaMemcpy failed: %s\n", CudaGetErrorString(cudaerr));
@@ -118,7 +118,7 @@ int MPIDO_Gatherv(const void *sendbuf,
            }
          }
          rtotal_buf = (highest_displs+highest_recvcount)*rdt_extent;
-         rcbuf = MPIU_Malloc(rtotal_buf);
+         rcbuf = MPL_malloc(rtotal_buf);
          if(sendbuf == MPI_IN_PLACE)
          {
            cudaError_t cudaerr = CudaMemcpy(rcbuf, recvbuf, rtotal_buf, cudaMemcpyDeviceToHost);
@@ -131,13 +131,13 @@ int MPIDO_Gatherv(const void *sendbuf,
        else
          rcbuf = recvbuf;
        int cuda_res =  MPIR_Gatherv(scbuf, sendcount, sendtype, rcbuf, recvcounts, displs, recvtype, root, comm_ptr, mpierrno);
-       if(is_send_dev_buf)MPIU_Free(scbuf);
+       if(is_send_dev_buf)MPL_free(scbuf);
        if(is_recv_dev_buf)
          {
            cudaError_t cudaerr = CudaMemcpy(recvbuf, rcbuf, rtotal_buf, cudaMemcpyHostToDevice);
            if (cudaSuccess != cudaerr)
              fprintf(stderr, "cudaMemcpy failed: %s\n", CudaGetErrorString(cudaerr));
-           MPIU_Free(rcbuf);
+           MPL_free(rcbuf);
          }
        return cuda_res;
     }
@@ -370,7 +370,7 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
     sbuf = (char *)sendbuf + send_true_lb;
     if(!snd_contig)
     {
-      snd_noncontig_buff = MPIU_Malloc(send_size);
+      snd_noncontig_buff = MPL_malloc(send_size);
       sbuf = snd_noncontig_buff;
       if(snd_noncontig_buff == NULL)
       {
@@ -422,8 +422,8 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
                                 rcvlen, data_ptr, recv_true_lb);
       totalrecvcount = recvcounts[0];
       recvcontinuous = displs[0] == 0? 1 : 0 ;
-          rcounts = (int*)MPIU_Malloc(size);
-          rdispls = (int*)MPIU_Malloc(size);
+          rcounts = (int*)MPL_malloc(size);
+          rdispls = (int*)MPL_malloc(size);
       rdispls[0] = 0;
       rcounts[0] = rcvlen * recvcounts[0];
       for(i = 1; i < size; i++)
@@ -436,7 +436,7 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
           }
       recv_size = rcvlen * totalrecvcount;
 
-          rcv_noncontig_buff = MPIU_Malloc(recv_size);
+          rcv_noncontig_buff = MPL_malloc(recv_size);
           rbuf = rcv_noncontig_buff;
           rtype = PAMI_TYPE_BYTE;
           if(rcv_noncontig_buff == NULL)
@@ -521,14 +521,14 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
       }
 
     }
-      MPIU_Free(rcv_noncontig_buff);
+      MPL_free(rcv_noncontig_buff);
       if(rank == root)
       {
-         MPIU_Free(rcounts);
-         MPIU_Free(rdispls);
+         MPL_free(rcounts);
+         MPL_free(rdispls);
       }
    }
-   if(!snd_contig)  MPIU_Free(snd_noncontig_buff);
+   if(!snd_contig)  MPL_free(snd_noncontig_buff);
 
 
    TRACE_ERR("Leaving MPIDO_Gatherv_optimized\n");

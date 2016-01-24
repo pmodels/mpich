@@ -125,7 +125,7 @@ MPIDI_RecvCB(pami_context_t    context,
         newreq->mpid.uebuflen = sndlen;
         if (!(TOKEN_FLOW_CONTROL_ON))
           {
-            newreq->mpid.uebuf = MPIU_Malloc(sndlen);
+            newreq->mpid.uebuf = MPL_malloc(sndlen);
             newreq->mpid.uebuf_malloc = mpiuMalloc ;
           }
         else
@@ -276,7 +276,7 @@ MPIDI_RecvCB(pami_context_t    context,
         {
           if (!TOKEN_FLOW_CONTROL_ON)
             {
-              rreq->mpid.uebuf    = MPIU_Malloc(sndlen);
+              rreq->mpid.uebuf    = MPL_malloc(sndlen);
               rreq->mpid.uebuf_malloc = mpiuMalloc;
             }
           else

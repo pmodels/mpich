@@ -194,7 +194,7 @@ int MPID_nem_tcp_send_finalize(void)
     {
         MPID_nem_tcp_send_q_element_t *e;
         S_POP (&free_buffers, &e);
-        MPIU_Free (e);
+        MPL_free (e);
     }
     return mpi_errno;
 }

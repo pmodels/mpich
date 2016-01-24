@@ -140,14 +140,14 @@ int MPID_Finalize(void)
 	p = MPIDI_CH3U_SRBuf_pool;
 	while (p) {
 	    pNext = p->next;
-	    MPIU_Free(p);
+	    MPL_free(p);
 	    p = pNext;
 	}
     }
 
     MPIDI_RMA_finalize();
     
-    MPIU_Free(MPIDI_failed_procs_string);
+    MPL_free(MPIDI_failed_procs_string);
 
     MPIDU_Ftb_finalize();
 

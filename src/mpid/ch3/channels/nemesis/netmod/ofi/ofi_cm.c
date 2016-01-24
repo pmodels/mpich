@@ -117,10 +117,10 @@ static inline int MPID_nem_ofi_conn_req_callback(cq_tagged_entry_t * wc, MPID_Re
                    GET_RCD_IGNORE_MASK(),
                    (void *) &(REQ_OFI(gl_data.conn_req)->ofi_context)), trecv);
 
-    addr = MPIU_Malloc(gl_data.bound_addrlen);
+    addr = MPL_malloc(gl_data.bound_addrlen);
     MPIU_Assertp(addr);
 
-    vc = MPIU_Malloc(sizeof(MPIDI_VC_t));
+    vc = MPL_malloc(sizeof(MPIDI_VC_t));
     MPIU_Assertp(vc);
 
     MPIDI_VC_Init(vc, NULL, 0);
@@ -140,12 +140,12 @@ static inline int MPID_nem_ofi_conn_req_callback(cq_tagged_entry_t * wc, MPID_Re
     MPIDI_CH3I_Acceptq_enqueue(vc, vc->port_name_tag);
     MPIDI_CH3I_INCR_PROGRESS_COMPLETION_COUNT;
   fn_exit:
-    MPIU_Free(addr);
+    MPL_free(addr);
     END_FUNC(FCNAME);
     return mpi_errno;
   fn_fail:
     if (vc)
-        MPIU_Free(vc);
+        MPL_free(vc);
     goto fn_exit;
 }
 
@@ -169,7 +169,7 @@ static inline int MPID_nem_ofi_handle_packet(cq_tagged_entry_t * wc ATTRIBUTE((u
       vc = REQ_OFI(rreq)->vc;
       MPIU_Assert(vc);
       MPIDI_CH3I_NM_OFI_RC(MPID_nem_handle_pkt(vc, REQ_OFI(rreq)->pack_buffer, REQ_OFI(rreq)->pack_buffer_size));
-      MPIU_Free(REQ_OFI(rreq)->pack_buffer);
+      MPL_free(REQ_OFI(rreq)->pack_buffer);
     }
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(rreq));
     END_FUNC_RC(FCNAME);
@@ -216,7 +216,7 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPID_R
     VC_READY_CHECK(vc);
 
     pkt_len = REQ_OFI(rreq)->msg_bytes;
-    pack_buffer = (char *) MPIU_Malloc(pkt_len);
+    pack_buffer = (char *) MPL_malloc(pkt_len);
     /* If the pack buffer is NULL, let OFI handle the truncation
      * in the progress loop
      */
@@ -278,7 +278,7 @@ int MPID_nem_ofi_connect_to_root_callback(cq_tagged_entry_t * wc ATTRIBUTE((unus
     BEGIN_FUNC(FCNAME);
 
     if (REQ_OFI(sreq)->pack_buffer)
-        MPIU_Free(REQ_OFI(sreq)->pack_buffer);
+        MPL_free(REQ_OFI(sreq)->pack_buffer);
 
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(sreq));
 
@@ -337,7 +337,7 @@ int MPID_nem_ofi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
     /* Post recv for connection requests */
     /* --------------------------------- */
     MPID_nem_ofi_create_req(&conn_req, 1);
-    conn_req->dev.user_buf = MPIU_Malloc(OFI_KVSAPPSTRLEN * sizeof(char));
+    conn_req->dev.user_buf = MPL_malloc(OFI_KVSAPPSTRLEN * sizeof(char));
     conn_req->dev.OnDataAvail = NULL;
     conn_req->dev.next = NULL;
     REQ_OFI(conn_req)->vc = NULL;       /* We don't know the source yet */
@@ -378,7 +378,7 @@ int MPID_nem_ofi_cm_finalize()
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(gl_data.persistent_req));
 
     FI_RC(fi_cancel((fid_t) gl_data.endpoint, &(REQ_OFI(gl_data.conn_req)->ofi_context)), cancel);
-    MPIU_Free(gl_data.conn_req->dev.user_buf);
+    MPL_free(gl_data.conn_req->dev.user_buf);
     MPIR_STATUS_SET_CANCEL_BIT(gl_data.conn_req->status, TRUE);
     MPIR_STATUS_SET_COUNT(gl_data.conn_req->status, 0);
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(gl_data.conn_req));
@@ -400,7 +400,7 @@ int MPID_nem_ofi_vc_connect(MPIDI_VC_t * vc)
     char bc[OFI_KVSAPPSTRLEN], *addr = NULL;
 
     BEGIN_FUNC(FCNAME);
-    addr = MPIU_Malloc(gl_data.bound_addrlen);
+    addr = MPL_malloc(gl_data.bound_addrlen);
     MPIU_Assert(addr);
     MPIU_Assert(1 != VC_OFI(vc)->ready);
 
@@ -418,7 +418,7 @@ int MPID_nem_ofi_vc_connect(MPIDI_VC_t * vc)
 
   fn_exit:
     if (addr)
-        MPIU_Free(addr);
+        MPL_free(addr);
     END_FUNC(FCNAME);
     return mpi_errno;
 
@@ -528,8 +528,8 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     uint64_t conn_req_send_bits;
 
     BEGIN_FUNC(FCNAME);
-    addr = MPIU_Malloc(gl_data.bound_addrlen);
-    bc = MPIU_Malloc(OFI_KVSAPPSTRLEN);
+    addr = MPL_malloc(gl_data.bound_addrlen);
+    bc = MPL_malloc(OFI_KVSAPPSTRLEN);
     MPIU_Assertp(addr);
     MPIU_Assertp(bc);
     my_bc = bc;
@@ -580,12 +580,12 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     gl_data.cm_vcs = new_vc;
   fn_exit:
     if (addr)
-        MPIU_Free(addr);
+        MPL_free(addr);
     END_FUNC(FCNAME);
     return mpi_errno;
   fn_fail:
     if (my_bc)
-        MPIU_Free(my_bc);
+        MPL_free(my_bc);
     goto fn_exit;
 }
 

@@ -44,9 +44,9 @@ int MPIR_T_pvar_session_free_impl(MPI_T_pvar_session *session)
      * view.*/
     MPL_DL_FOREACH_SAFE((*session)->hlist, hnd, tmp) {
         MPL_DL_DELETE((*session)->hlist, hnd);
-        MPIU_Free(hnd);
+        MPL_free(hnd);
     }
-    MPIU_Free(*session);
+    MPL_free(*session);
     *session = MPI_T_PVAR_SESSION_NULL;
 
 fn_exit:

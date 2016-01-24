@@ -342,7 +342,7 @@ MPID_getSharedSegment(MPI_Aint     size,
                 new_size += size;
         }
 
-        base_pp = MPIU_Malloc(new_size);
+        base_pp = MPL_malloc(new_size);
         MPID_assert(base_pp !=NULL);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -366,13 +366,13 @@ MPID_getSharedSegment(MPI_Aint     size,
          * the node to determine the amount of shared memory to allocate
          */
         MPI_Aint * size_array;
-        size_array = MPIU_Malloc (2*comm_size*sizeof(MPI_Aint));
+        size_array = MPL_malloc (2*comm_size*sizeof(MPI_Aint));
         size_array[rank] = (MPI_Aint) size;
         mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
                                         size_array, 1 * sizeof(MPI_Aint), MPI_BYTE,
                                         (*win_ptr)->comm_ptr, &errflag);
         if (mpi_errno) {
-            MPIU_Free(size_array);
+            MPL_free(size_array);
             MPIU_ERR_POP(mpi_errno);
         }
 
@@ -418,7 +418,7 @@ MPID_getSharedSegment(MPI_Aint     size,
         win->base = (void *) ((long) win->mpid.shm->base_addr + (long ) MPIDI_ROUND_UP_PAGESIZE((sizeof(MPIDI_Win_shm_ctrl_t) + ((comm_size+1) * sizeof(void *))),pageSize));
 
 
-        MPIU_Free(size_array);
+        MPL_free(size_array);
 
         /* increment the shared counter */
         OPA_fetch_and_add_int((OPA_int_t *) &win->mpid.shm->ctrl->shm_count,(int) 1);
@@ -503,7 +503,7 @@ MPID_Win_allocate_shared(MPI_Aint     size,
   mpi_errno =MPIDI_Win_init(size,disp_unit,win_ptr, info, comm_ptr, MPI_WIN_FLAVOR_SHARED, MPI_WIN_UNIFIED);
   if (mpi_errno) MPIU_ERR_POP(mpi_errno);
   win = *win_ptr;
-  win->mpid.shm = MPIU_Malloc(sizeof(MPIDI_Win_shm_t));
+  win->mpid.shm = MPL_malloc(sizeof(MPIDI_Win_shm_t));
   MPID_assert(win->mpid.shm != NULL);
   memset(win->mpid.shm, 0, sizeof(MPIDI_Win_shm_t));
 
@@ -553,7 +553,7 @@ fn_exit:
 fn_fail:
     if (win != NULL)
       if (win->mpid.shm != NULL)
-        MPIU_Free(win->mpid.shm);
+        MPL_free(win->mpid.shm);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 

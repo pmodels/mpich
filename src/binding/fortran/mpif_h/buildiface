@@ -37,8 +37,8 @@ $routine_pattern = "[A-Z][a-z0-9_]*";
 my @routine_prefixes = qw(MPI_ MPIX_);
 my @out_prefixes = qw(mpi_ mpix_);
 
-$malloc = "MPIU_Malloc";
-$free   = "MPIU_Free";
+$malloc = "MPL_malloc";
+$free   = "MPL_free";
 $header_file = "mpi_fortimpl.h";
 $debug = 0;
 $writeRoutineList = 0;   # Set to 1 to get a list of MPI routines

@@ -216,7 +216,7 @@ int MPID_Type_indexed(int count,
     new_dtp->is_contig = 0;
     if(old_is_contig)
     {
-	MPI_Aint *blklens = MPIU_Malloc(count *sizeof(MPI_Aint));
+	MPI_Aint *blklens = MPL_malloc(count *sizeof(MPI_Aint));
 	for (i=0; i<count; i++)
 		blklens[i] = blocklength_array[i];
         contig_count = MPID_Type_indexed_count_contig(count,
@@ -230,7 +230,7 @@ int MPID_Type_indexed(int count,
         {
             new_dtp->is_contig = 1;
         }
-	MPIU_Free(blklens);
+	MPL_free(blklens);
     }
 
     *newtype = new_dtp->handle;

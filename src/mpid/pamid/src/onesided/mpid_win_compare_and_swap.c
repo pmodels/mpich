@@ -87,7 +87,7 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
      logical, or byte, per the classes given on page 165. */
   MPIR_ERRTEST_TYPE_RMA_ATOMIC(datatype, mpi_errno);
 
-  req = (MPIDI_Win_request *) MPIU_Calloc0(1, MPIDI_Win_request);
+  req = (MPIDI_Win_request *) MPL_calloc0(1, MPIDI_Win_request);
   req->win          = win;
   req->type         = MPIDI_WIN_REQUEST_COMPARE_AND_SWAP;
 
@@ -104,7 +104,7 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 
   if (req->origin.dt.size == 0)
     {
-      MPIU_Free(req);
+      MPL_free(req);
       return MPI_SUCCESS;
     }
 

@@ -123,7 +123,7 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *mypUniv,
        override the environment */
 
     /* Allocate the members of the ProcessUniverse structure */
-    mypUniv->worlds = (ProcessWorld*) MPIU_Malloc( sizeof(ProcessWorld) );
+    mypUniv->worlds = (ProcessWorld*) MPL_malloc( sizeof(ProcessWorld) );
     mypUniv->worlds->nApps     = 0;
     mypUniv->worlds->nProcess  = 0;
     mypUniv->worlds->nextWorld = 0;
@@ -189,8 +189,8 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *mypUniv,
  	else if ( strncmp( argv[i], "-pmi_args", 8 ) == 0) {
 	    if (i+4 < argc ) {
 		mypUniv->fromSingleton   = 1;
-		mypUniv->portKey         = MPIU_Strdup( argv[i+3] );
-		mypUniv->singletonIfname = MPIU_Strdup( argv[i+2] );
+		mypUniv->portKey         = MPL_strdup( argv[i+3] );
+		mypUniv->singletonIfname = MPL_strdup( argv[i+2] );
 		mypUniv->singletonPID    = atoi(argv[i+4] );
 		mypUniv->singletonPort   = atoi(argv[i+1] );
 		i += 4;
@@ -273,7 +273,7 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *mypUniv,
 	    }
 	    
 	    /* Create a new app and add to the app list*/
-	    pApp = (ProcessApp*) MPIU_Malloc( sizeof(ProcessApp) );
+	    pApp = (ProcessApp*) MPL_malloc( sizeof(ProcessApp) );
 	    *nextAppPtr = pApp;
 	    nextAppPtr = &(pApp->nextApp);
 	    pApp->nextApp = 0;
@@ -584,7 +584,7 @@ int MPIE_ParseSoftspec( const char *str, ProcessSoftSpec *sspec )
 	p1++;
     }
     sspec->nelm   = nelm;
-    sspec->tuples = (int (*)[3]) MPIU_Malloc( nelm * sizeof(int [3]));
+    sspec->tuples = (int (*)[3]) MPL_malloc( nelm * sizeof(int [3]));
 
     nelm = 0;
     while ( *p ) {
@@ -704,7 +704,7 @@ static int LineToArgv( char *linebuf, char *(argv[]), int maxargv )
 	while (*p && !isspace(*p)) p++;
 
 	/* Convert the entry into a copy */
-	argv[argc] = MPIU_Strdup( argv[argc] );
+	argv[argc] = MPL_strdup( argv[argc] );
 	argc++;
 	*p++ = 0;
     }

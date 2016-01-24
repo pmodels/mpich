@@ -39,8 +39,8 @@ void MPIU_Info_free( MPID_Info *info_ptr )
     /* printf( "Returning info %x\n", info_ptr->id ); */
     /* First, free the string storage */
     while (curr_ptr) {
-	MPIU_Free(curr_ptr->key);
-	MPIU_Free(curr_ptr->value);
+	MPL_free(curr_ptr->key);
+	MPL_free(curr_ptr->value);
 	last_ptr = curr_ptr;
 	curr_ptr = curr_ptr->next;
         MPIU_Handle_obj_free(&MPID_Info_mem, last_ptr);

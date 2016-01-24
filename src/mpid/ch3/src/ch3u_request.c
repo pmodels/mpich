@@ -681,7 +681,7 @@ void MPID_Request_release(MPID_Request *req)
         }
 
         if (req->greq_fns != NULL) {
-            MPIU_Free(req->greq_fns);
+            MPL_free(req->greq_fns);
         }
 
         if (req->dev.datatype_ptr != NULL) {
@@ -697,7 +697,7 @@ void MPID_Request_release(MPID_Request *req)
         }
 
         if (req->dev.ext_hdr_ptr != NULL) {
-            MPIU_Free(req->dev.ext_hdr_ptr);
+            MPL_free(req->dev.ext_hdr_ptr);
         }
 
         MPIU_Handle_obj_free(&MPID_Request_mem, req);

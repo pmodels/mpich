@@ -37,7 +37,7 @@ static int MPIDI_Check_FCA_envvar(char *string, int *user_range_hi)
       return 1;
     int len = strlen(env);
     len++;
-    char *temp = MPIU_Malloc(sizeof(char) * len);
+    char *temp = MPL_malloc(sizeof(char) * len);
     char *ptrToFree = temp;
     strcpy(temp, env);
     char *sepptr;
@@ -51,7 +51,7 @@ static int MPIDI_Check_FCA_envvar(char *string, int *user_range_hi)
         if(strcasecmp(subsepptr, string) == 0)
         {
           *user_range_hi = atoi(temp_sepptr);
-          MPIU_Free(ptrToFree);
+          MPL_free(ptrToFree);
           return 1;
         }
         else
@@ -62,7 +62,7 @@ static int MPIDI_Check_FCA_envvar(char *string, int *user_range_hi)
         if(strcasecmp(sepptr, string) == 0)
         {
           *user_range_hi = -1;
-          MPIU_Free(ptrToFree);
+          MPL_free(ptrToFree);
           return 1;
         }
         else
@@ -70,7 +70,7 @@ static int MPIDI_Check_FCA_envvar(char *string, int *user_range_hi)
       }
     }
     /* We didn't find it, but the end var was set, so return 0 */
-    MPIU_Free(ptrToFree);
+    MPL_free(ptrToFree);
     return 0;
   }
   if(MPIDI_Process.optimized.collectives == MPID_COLL_FCA)

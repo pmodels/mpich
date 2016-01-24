@@ -27,23 +27,23 @@ int MPID_nem_finalize(void)
 /*     MPIU_Assert(MPID_nem_queue_empty( MPID_nem_mem_region.RecvQ[MPID_nem_mem_region.rank])); */
 
     /* these are allocated in MPID_nem_mpich_init, not MPID_nem_init */
-    MPIU_Free(MPID_nem_recv_seqno);
-    MPIU_Free(MPID_nem_fboxq_elem_list);
+    MPL_free(MPID_nem_recv_seqno);
+    MPL_free(MPID_nem_fboxq_elem_list);
 
     /* from MPID_nem_init */
-    MPIU_Free(MPID_nem_mem_region.FreeQ);
-    MPIU_Free(MPID_nem_mem_region.RecvQ);
-    MPIU_Free(MPID_nem_mem_region.local_ranks);
+    MPL_free(MPID_nem_mem_region.FreeQ);
+    MPL_free(MPID_nem_mem_region.RecvQ);
+    MPL_free(MPID_nem_mem_region.local_ranks);
     if (MPID_nem_mem_region.ext_procs > 0)
-        MPIU_Free(MPID_nem_mem_region.ext_ranks);
-    MPIU_Free(MPID_nem_mem_region.seg);
-    MPIU_Free(MPID_nem_mem_region.mailboxes.out);
-    MPIU_Free(MPID_nem_mem_region.mailboxes.in);
+        MPL_free(MPID_nem_mem_region.ext_ranks);
+    MPL_free(MPID_nem_mem_region.seg);
+    MPL_free(MPID_nem_mem_region.mailboxes.out);
+    MPL_free(MPID_nem_mem_region.mailboxes.in);
 
-    MPIU_Free(MPID_nem_mem_region.local_procs);
+    MPL_free(MPID_nem_mem_region.local_procs);
 
 #ifdef MEM_REGION_IN_HEAP
-    MPIU_Free(MPID_nem_mem_region_ptr);
+    MPL_free(MPID_nem_mem_region_ptr);
 #endif /* MEM_REGION_IN_HEAP */
 
     mpi_errno = MPID_nem_netmod_func->finalize();
@@ -58,7 +58,7 @@ int MPID_nem_finalize(void)
 #endif /*PAPI_MONITOR */
     
     if (ENABLE_PVAR_NEM) {
-        MPIU_Free(MPID_nem_fbox_fall_back_to_queue_count);
+        MPL_free(MPID_nem_fbox_fall_back_to_queue_count);
     }
 
  fn_exit:

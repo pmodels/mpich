@@ -601,7 +601,7 @@ static int ExtractLocalPGInfo( MPID_Comm *comm_p,
     MPIU_CHKPMEM_MALLOC(pg_list,pg_node*,sizeof(pg_node),mpi_errno,
 			"pg_list");
     
-    pg_list->pg_id = MPIU_Strdup(comm_p->dev.vcrt->vcr_table[0]->pg->id);
+    pg_list->pg_id = MPL_strdup(comm_p->dev.vcrt->vcr_table[0]->pg->id);
     pg_list->index = cur_index++;
     pg_list->next = NULL;
     /* XXX DJG FIXME-MT should we be checking this?  the add/release macros already check this */
@@ -632,13 +632,13 @@ static int ExtractLocalPGInfo( MPID_Comm *comm_p,
 	    pg_iter = pg_iter->next;
 	}
 	if (pg_iter == NULL) {
-	    /* We use MPIU_Malloc directly because we do not know in 
+	    /* We use MPL_malloc directly because we do not know in
 	       advance how many nodes we may allocate */
-	    pg_iter = (pg_node*)MPIU_Malloc(sizeof(pg_node));
+	    pg_iter = (pg_node*)MPL_malloc(sizeof(pg_node));
 	    if (!pg_iter) {
 		MPIR_ERR_POP(mpi_errno);
 	    }
-	    pg_iter->pg_id = MPIU_Strdup(comm_p->dev.vcrt->vcr_table[i]->pg->id);
+	    pg_iter->pg_id = MPL_strdup(comm_p->dev.vcrt->vcr_table[i]->pg->id);
 	    pg_iter->index = cur_index++;
 	    pg_iter->next = NULL;
 	    mpi_errno = MPIDI_PG_To_string(comm_p->dev.vcrt->vcr_table[i]->pg, &pg_iter->str,
@@ -705,7 +705,7 @@ static int ReceivePGAndDistribute( MPID_Comm *tmp_comm, MPID_Comm *comm_ptr,
 	    if (mpi_errno != MPI_SUCCESS) {
 		MPIR_ERR_POP(mpi_errno);
 	    }
-	    pg_str = (char*)MPIU_Malloc(j);
+	    pg_str = (char*)MPL_malloc(j);
 	    if (pg_str == NULL) {
 		MPIR_ERR_POP(mpi_errno);
 	    }
@@ -725,7 +725,7 @@ static int ReceivePGAndDistribute( MPID_Comm *tmp_comm, MPID_Comm *comm_ptr,
 
 	if (rank != root) {
 	    /* The root has already allocated this string */
-	    pg_str = (char*)MPIU_Malloc(j);
+	    pg_str = (char*)MPL_malloc(j);
 	    if (pg_str == NULL) {
 		MPIR_ERR_POP(mpi_errno);
 	    }
@@ -743,7 +743,7 @@ static int ReceivePGAndDistribute( MPID_Comm *tmp_comm, MPID_Comm *comm_ptr,
 	    MPIR_ERR_POP(mpi_errno);
 	}
 	
-	MPIU_Free(pg_str);
+	MPL_free(pg_str);
     }
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_RECEIVEPGANDDISTRIBUTE);
@@ -808,7 +808,7 @@ int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	if (rank != root) {
-	    pg_str = (char *)MPIU_Malloc(len);
+	    pg_str = (char *)MPL_malloc(len);
             if (!pg_str) {
                 MPIU_CHKMEM_SETERR(mpi_errno, len, "pg_str");
                 goto fn_exit;
@@ -817,7 +817,7 @@ int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
 	mpi_errno = MPIR_Bcast_impl( pg_str, len, MPI_CHAR, root, comm_p, &errflag);
         if (mpi_errno) {
             if (rank != root)
-                MPIU_Free( pg_str );
+                MPL_free( pg_str );
             MPIR_ERR_POP(mpi_errno);
         }
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -832,7 +832,7 @@ int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
 			(char *)pgptr->id );
 			fflush(stdout); */
 	    }
-	    MPIU_Free( pg_str );
+	    MPL_free( pg_str );
 	}
     }
 
@@ -843,11 +843,11 @@ int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
        the PG fields are valid for that function */
     while (pg_list) {
 	pg_next = pg_list->next;
-	MPIU_Free( pg_list->str );
+	MPL_free( pg_list->str );
 	if (pg_list->pg_id ) {
-	    MPIU_Free( pg_list->pg_id );
+	    MPL_free( pg_list->pg_id );
 	}
-	MPIU_Free( pg_list );
+	MPL_free( pg_list );
 	pg_list = pg_next;
     }
 
@@ -894,9 +894,9 @@ static int SendPGtoPeerAndFree( MPID_Comm *tmp_comm, int *sendtag_p,
 	}
 	
 	pg_list = pg_list->next;
-	MPIU_Free(pg_iter->str);
-	MPIU_Free(pg_iter->pg_id);
-	MPIU_Free(pg_iter);
+	MPL_free(pg_iter->str);
+	MPL_free(pg_iter->pg_id);
+	MPL_free(pg_iter);
     }
 
  fn_exit:
@@ -1223,7 +1223,7 @@ static int FreeNewVC( MPIDI_VC_t *new_vc )
     }
 
     MPIDI_CH3_VC_Destroy(new_vc);
-    MPIU_Free(new_vc);
+    MPL_free(new_vc);
 
  fn_fail:
     return mpi_errno;
@@ -1272,7 +1272,7 @@ int MPIDI_CH3I_Acceptq_enqueue(MPIDI_VC_t * vc, int port_name_tag )
 
     /* FIXME: Use CHKPMEM */
     q_item = (MPIDI_CH3I_Acceptq_t *)
-        MPIU_Malloc(sizeof(MPIDI_CH3I_Acceptq_t)); 
+        MPL_malloc(sizeof(MPIDI_CH3I_Acceptq_t));
     /* --BEGIN ERROR HANDLING-- */
     if (q_item == NULL)
     {
@@ -1329,7 +1329,7 @@ int MPIDI_CH3I_Acceptq_dequeue(MPIDI_VC_t ** vc, int port_name_tag)
 	    else
 		prev->next = q_item->next;
 
-	    MPIU_Free(q_item);
+	    MPL_free(q_item);
 	    AcceptQueueSize--;
 	    break;;
 	}

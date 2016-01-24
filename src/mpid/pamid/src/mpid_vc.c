@@ -67,11 +67,11 @@ int MPID_VCRT_Create(int size, MPID_VCRT *vcrt_ptr)
     struct MPIDI_VCRT * vcrt;
     int i,result;
 
-    vcrt = MPIU_Malloc(sizeof(struct MPIDI_VCRT));
-    vcrt->vcr_table = MPIU_Malloc(size*sizeof(MPID_VCR));
+    vcrt = MPL_malloc(sizeof(struct MPIDI_VCRT));
+    vcrt->vcr_table = MPL_malloc(size*sizeof(MPID_VCR));
 
     for(i = 0; i < size; i++) {
-	vcrt->vcr_table[i] = MPIU_Malloc(sizeof(struct MPID_VCR_t));
+        vcrt->vcr_table[i] = MPL_malloc(sizeof(struct MPID_VCR_t));
     }
     if (vcrt != NULL)
     {
@@ -116,7 +116,7 @@ int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect)
                 if (inuse == 0)
                  {
                    MPIDI_PG_Destroy(vcr->pg);
-                   MPIU_Free(vcr);
+                   MPL_free(vcr);
                  }
                  continue;
               }
@@ -125,21 +125,21 @@ int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect)
             MPIDI_PG_release_ref(vcr->pg, &inuse);
             if (inuse == 0)
               MPIDI_PG_Destroy(vcr->pg);
-        if(vcr) MPIU_Free(vcr);
+        if(vcr) MPL_free(vcr);
        }
-       MPIU_Free(vcrt->vcr_table);
+       MPL_free(vcrt->vcr_table);
      } /** CHECK */
      else {
       for (i = 0; i < vcrt->size; i++)
-	MPIU_Free(vcrt->vcr_table[i]);
-      MPIU_Free(vcrt->vcr_table);vcrt->vcr_table=NULL;
+          MPL_free(vcrt->vcr_table[i]);
+      MPL_free(vcrt->vcr_table);vcrt->vcr_table=NULL;
      }
 #else
       for (i = 0; i < vcrt->size; i++)
-	MPIU_Free(vcrt->vcr_table[i]);
-      MPIU_Free(vcrt->vcr_table);vcrt->vcr_table=NULL;
+          MPL_free(vcrt->vcr_table[i]);
+      MPL_free(vcrt->vcr_table);vcrt->vcr_table=NULL;
 #endif
-     MPIU_Free(vcrt);vcrt=NULL;
+     MPL_free(vcrt);vcrt=NULL;
     }
     return MPI_SUCCESS;
 }

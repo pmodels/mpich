@@ -57,7 +57,7 @@ static inline int MPIDI_CH3I_Win_target_lock_entry_free(MPID_Win * win_ptr,
 
     if (target_lock_entry->data != NULL) {
         win_ptr->current_target_lock_data_bytes -= target_lock_entry->buf_size;
-        MPIU_Free(target_lock_entry->data);
+        MPL_free(target_lock_entry->data);
     }
 
     /* use PREPEND when return objects back to the pool

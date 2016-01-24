@@ -66,7 +66,7 @@ MPID_Win_allocate(MPI_Aint     size,
   win = *win_ptr;
 
   if (size > 0) {
-      baseP = MPIU_Malloc(size);
+      baseP = MPL_malloc(size);
   #ifndef MPIDI_NO_ASSERT
       MPID_assert(baseP != NULL);
   #else

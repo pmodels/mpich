@@ -339,7 +339,7 @@ int _mpi_world_exiting_handler(int world_id)
     rc = -2;
   }
 
-/*  if(cookie) MPIU_Free(cookie);*/
+/*  if(cookie) MPL_free(cookie);*/
   return PAMI_SUCCESS;
 }
 
@@ -392,7 +392,7 @@ int _mpi_reduce_for_dyntask(int *sendbuf, int *recvbuf)
   MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
   int TASKS= world_size;
-  children = MPIU_Malloc(TASKS*sizeof(int));
+  children = MPL_malloc(TASKS*sizeof(int));
 
   comm_ptr = MPIR_Process.comm_world;
 
@@ -444,6 +444,6 @@ int _mpi_reduce_for_dyntask(int *sendbuf, int *recvbuf)
   if(world_rank == 0) {
     *recvbuf = result;
   }
-  MPIU_Free(children);
+  MPL_free(children);
   return 0;
 }

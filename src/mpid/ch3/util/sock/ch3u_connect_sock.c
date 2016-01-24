@@ -305,7 +305,7 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
 	}
     	vcch = &vc->ch;
         vcch->state = MPIDI_CH3I_VC_STATE_FAILED;
-        MPIU_Free(conn);
+        MPL_free(conn);
         goto fn_fail;
     }
     /* --END ERROR HANDLING-- */
@@ -757,7 +757,7 @@ int MPIDI_CH3_Sockconn_handle_conn_event( MPIDI_CH3I_Connection_t * conn )
 	MPIDI_CH3I_Pkt_sc_open_resp_t *openresp = 
 	    (MPIDI_CH3I_Pkt_sc_open_resp_t *)&conn->pkt.type;
 
-	vc = (MPIDI_VC_t *) MPIU_Malloc(sizeof(MPIDI_VC_t));
+	vc = (MPIDI_VC_t *) MPL_malloc(sizeof(MPIDI_VC_t));
 	/* --BEGIN ERROR HANDLING-- */
 	if (vc == NULL) {
 	    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER,
@@ -1379,8 +1379,8 @@ static void connection_destroy(MPIDI_CH3I_Connection_t * conn)
 
     MPIDI_FUNC_ENTER(MPID_STATE_CONNECTION_DESTROY);
 
-    MPIU_Free(conn->pg_id);
-    MPIU_Free(conn);
+    MPL_free(conn->pg_id);
+    MPL_free(conn);
     
     MPIDI_FUNC_EXIT(MPID_STATE_CONNECTION_DESTROY);
 }

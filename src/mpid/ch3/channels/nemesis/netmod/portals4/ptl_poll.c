@@ -65,7 +65,7 @@ int MPID_nem_ptl_poll_finalize(void)
             ret = PtlMEUnlink(overflow_me_handle[i]);
             MPIR_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeunlink", "**ptlmeunlink %s", MPID_nem_ptl_strerror(ret));
         }
-        MPIU_Free(overflow_buf[i]);
+        MPL_free(overflow_buf[i]);
     }
     
  fn_exit:

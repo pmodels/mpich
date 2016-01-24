@@ -62,8 +62,8 @@ MPIDI_Win_GetAccSendAckDoneCB(pami_context_t   context,
 			     pami_result_t    result)
 {
   MPIDI_Win_GetAccMsgInfo *msginfo = (MPIDI_Win_GetAccMsgInfo *) _info;
-  MPIU_Free(msginfo->tptr);
-  MPIU_Free(msginfo);
+  MPL_free(msginfo->tptr);
+  MPL_free(msginfo);
 }
 
 static void 
@@ -78,7 +78,7 @@ MPIDI_Win_GetAccumSendAck(pami_context_t   context,
   //Copy from msginfo->addr to a contiguous buffer
   char *buffer = NULL;
 
-  buffer      = MPIU_Malloc(msginfo->size);
+  buffer      = MPL_malloc(msginfo->size);
   MPID_assert(buffer != NULL);
   
   if (msginfo->num_contig == 1)
@@ -136,7 +136,7 @@ MPIDI_WinGetAccumCB(pami_context_t    context,
   MPID_assert(msginfo_size == sizeof(MPIDI_Win_GetAccMsgInfo));
   MPID_assert(_msginfo != NULL);
   MPIDI_Win_GetAccMsgInfo * msginfo = (MPIDI_Win_GetAccMsgInfo *) 
-    MPIU_Malloc(sizeof(MPIDI_Win_GetAccMsgInfo));
+    MPL_malloc(sizeof(MPIDI_Win_GetAccMsgInfo));
 
   *msginfo = *(MPIDI_Win_GetAccMsgInfo *)_msginfo;
   msginfo->src_endpoint = sender;
@@ -161,7 +161,7 @@ MPIDI_WinGetAccumCB(pami_context_t    context,
     //send
     MPIDI_Win_GetAccumSendAck (context, msginfo, PAMI_SUCCESS);  
   else 
-    MPIU_Free(msginfo);
+    MPL_free(msginfo);
 }
 
 static void
@@ -178,11 +178,11 @@ MPIDI_Win_GetAccDoneCB(pami_context_t  context,
       MPID_Request * req_handle = req->req_handle;
 
       if (req->buffer_free) {
-          MPIU_Free(req->buffer);
+          MPL_free(req->buffer);
           req->buffer_free = 0;
       }
       if (req->accum_headers)
-          MPIU_Free(req->accum_headers);
+          MPL_free(req->accum_headers);
 
       MPIDI_Win_datatype_unmap(&req->target.dt);
       MPIDI_Win_datatype_unmap(&req->result.dt);      
@@ -191,7 +191,7 @@ MPIDI_Win_GetAccDoneCB(pami_context_t  context,
           if (req_handle) {
               req_handle->mpid.win_req = NULL;
           }
-          MPIU_Free(req);
+          MPL_free(req);
       }
       /* The instant this completion counter is set to zero another thread
        * may notice the change and begin freeing request resources. The
@@ -222,9 +222,9 @@ MPIDI_Win_GetAccAckDoneCB(pami_context_t   context,
 		   msginfo->tptr,
 		   msginfo->size,
 		   MPI_CHAR);
-    MPIU_Free(msginfo->tptr);
+    MPL_free(msginfo->tptr);
   }
-  MPIU_Free(msginfo);
+  MPL_free(msginfo);
   
   MPIDI_Win_GetAccDoneCB(context, req, result);
 }
@@ -243,14 +243,14 @@ MPIDI_WinGetAccumAckCB(pami_context_t    context,
   MPID_assert(recv   != NULL);
   MPID_assert(sndbuf == NULL);
   MPID_assert(_msginfo != NULL);
-  MPIDI_Win_GetAccMsgInfo * msginfo =MPIU_Malloc(sizeof(MPIDI_Win_GetAccMsgInfo));
+  MPIDI_Win_GetAccMsgInfo * msginfo =MPL_malloc(sizeof(MPIDI_Win_GetAccMsgInfo));
   *msginfo = *(const MPIDI_Win_GetAccMsgInfo *)_msginfo;
   MPIDI_Win_request *req = (MPIDI_Win_request *) msginfo->request;
   
   msginfo->tptr = NULL;
   recv->addr = req->result.addr;
   if (req->result_num_contig > 1)
-    recv->addr = msginfo->tptr = MPIU_Malloc(msginfo->size); 
+    recv->addr = msginfo->tptr = MPL_malloc(msginfo->size);
   
   recv->type        = PAMI_TYPE_BYTE;
   recv->offset      = 0;
@@ -376,7 +376,7 @@ MPID_Get_accumulate(const void   * origin_addr,
   }
   
   MPIDI_Win_request *req;
-  req = MPIU_Calloc0(1, MPIDI_Win_request);
+  req = MPL_calloc0(1, MPIDI_Win_request);
   req->win      = win;
   if(win->mpid.request_based != 1) 
     req->type         = MPIDI_WIN_REQUEST_GET_ACCUMULATE;
@@ -461,7 +461,7 @@ MPID_Get_accumulate(const void   * origin_addr,
       if(req->req_handle)
          MPIR_cc_set(req->req_handle->cc_ptr, 0);
       else
-         MPIU_Free(req);
+         MPL_free(req);
       return MPI_SUCCESS;
     }
 
@@ -476,7 +476,7 @@ MPID_Get_accumulate(const void   * origin_addr,
   else
     {
       req->buffer_free = 1;
-      req->buffer      = MPIU_Malloc(req->origin.dt.size);
+      req->buffer      = MPL_malloc(req->origin.dt.size);
       MPID_assert(req->buffer != NULL);
 
       int mpi_errno = 0;
@@ -518,8 +518,8 @@ MPID_Get_accumulate(const void   * origin_addr,
         ++win->mpid.sync.complete;
 
        if (req->buffer_free) {
-           MPIU_Free(req->buffer);
-           MPIU_Free(req->user_buffer);
+           MPL_free(req->buffer);
+           MPL_free(req->user_buffer);
            req->buffer_free = 0;
        }
        MPIDI_Win_datatype_unmap(&req->target.dt);
@@ -528,7 +528,7 @@ MPID_Get_accumulate(const void   * origin_addr,
        if(req->req_handle) {
           MPIR_cc_set(req->req_handle->cc_ptr, 0);
        } else { 
-           MPIU_Free(req);
+           MPL_free(req);
        }
    } else {    /* non-shared  */
   //We wait for #messages depending on target and result_datatype
@@ -549,7 +549,7 @@ MPID_Get_accumulate(const void   * origin_addr,
     MPID_assert(basic_type != MPI_DATATYPE_NULL);
 
     unsigned index;
-    MPIDI_Win_GetAccMsgInfo * headers = MPIU_Calloc0(req->target.dt.num_contig, MPIDI_Win_GetAccMsgInfo);
+    MPIDI_Win_GetAccMsgInfo * headers = MPL_calloc0(req->target.dt.num_contig, MPIDI_Win_GetAccMsgInfo);
     req->accum_headers = headers;
     for (index=0; index < req->target.dt.num_contig; ++index) {
      headers[index].addr = win->mpid.info[target_rank].base_addr + req->offset +

@@ -63,8 +63,8 @@ MPID_nem_mpich_free_win (MPID_nem_mpich_win_t *win)
     mpi_errno = MPID_nem_detach_shared_memory (win->home_address, win->len);
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
-    MPIU_Free (win->handle);
-    MPIU_Free (win);
+    MPL_free (win->handle);
+    MPL_free (win);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_FREE_WIN);

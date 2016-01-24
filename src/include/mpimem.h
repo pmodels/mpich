@@ -56,9 +56,9 @@ extern MPL_DBG_Class MPIR_DBG_STRING;
   MPICH explicity prohibits the appearence of 'malloc', 'free', 
   'calloc', 'realloc', or 'strdup' in any code implementing a device or 
   MPI call (of course, users may use any of these calls in their code).  
-  Instead, you must use 'MPIU_Malloc' etc.; if these are defined
+  Instead, you must use 'MPL_malloc' etc.; if these are defined
   as 'malloc', that is allowed, but an explicit use of 'malloc' instead of
-  'MPIU_Malloc' in the source code is not allowed.  This restriction is
+  'MPL_malloc' in the source code is not allowed.  This restriction is
   made to simplify the use of portable tools to test for memory leaks, 
   overwrites, and other consistency checks.
 
@@ -86,114 +86,21 @@ typedef int MPIU_BOOL;
 /* ------------------------------------------------------------------------- */
 
 #ifdef USE_MEMORY_TRACING
-/*M
-  MPIU_Malloc - Allocate memory
-
-  Synopsis:
-.vb
-  void *MPIU_Malloc( size_t len )
-.ve
-
-  Input Parameter:
-. len - Length of memory to allocate in bytes
-
-  Return Value:
-  Pointer to allocated memory, or null if memory could not be allocated.
-
-  Notes:
-  This routine will often be implemented as the simple macro
-.vb
-  #define MPIU_Malloc(n) malloc(n)
-.ve
-  However, it can also be defined as 
-.vb
-  #define MPIU_Malloc(n) MPL_trmalloc(n,__LINE__,__FILE__)
-.ve
-  where 'MPL_trmalloc' is a tracing version of 'malloc' that is included with
-  MPICH.
-
-  Module:
-  Utility
-  M*/
-#define MPIU_Malloc(a)    MPL_trmalloc((a),__LINE__,__FILE__)
-
-/*M
-  MPIU_Calloc - Allocate memory that is initialized to zero.
-
-  Synopsis:
-.vb
-    void *MPIU_Calloc( size_t nelm, size_t elsize )
-.ve
-
-  Input Parameters:
-+ nelm - Number of elements to allocate
-- elsize - Size of each element.
-
-  Notes:
-  Like 'MPIU_Malloc' and 'MPIU_Free', this will often be implemented as a 
-  macro but may use 'MPL_trcalloc' to provide a tracing version.
-
-  Module:
-  Utility
-  M*/
-#define MPIU_Calloc(a,b)  \
-    MPL_trcalloc((a),(b),__LINE__,__FILE__)
-
-/*M
-  MPIU_Free - Free memory
-
-  Synopsis:
-.vb
-   void MPIU_Free( void *ptr )
-.ve
-
-  Input Parameter:
-. ptr - Pointer to memory to be freed.  This memory must have been allocated
-  with 'MPIU_Malloc'.
-
-  Notes:
-  This routine will often be implemented as the simple macro
-.vb
-  #define MPIU_Free(n) free(n)
-.ve
-  However, it can also be defined as 
-.vb
-  #define MPIU_Free(n) MPL_trfree(n,__LINE__,__FILE__)
-.ve
-  where 'MPL_trfree' is a tracing version of 'free' that is included with
-  MPICH.
-
-  Module:
-  Utility
-  M*/
-#define MPIU_Free(a)      MPL_trfree(a,__LINE__,__FILE__)
-
-#define MPIU_Strdup(a)    MPL_trstrdup(a,__LINE__,__FILE__)
-
-#define MPIU_Realloc(a,b)    MPL_trrealloc((a),(b),__LINE__,__FILE__)
 
 /* Define these as invalid C to catch their use in the code */
 #if 0
-#define malloc(a)         'Error use MPIU_Malloc' :::
-#define calloc(a,b)       'Error use MPIU_Calloc' :::
-#define free(a)           'Error use MPIU_Free'   :::
+#define malloc(a)         'Error use MPL_malloc' :::
+#define calloc(a,b)       'Error use MPL_calloc' :::
+#define free(a)           'Error use MPL_free'   :::
 #endif
-#define realloc(a)        'Error use MPIU_Realloc' :::
+#define realloc(a)        'Error use MPL_realloc' :::
 #if defined(strdup) || defined(__strdup)
 #undef strdup
 #endif
     /* The ::: should cause the compiler to choke; the string 
        will give the explanation */
 #undef strdup /* in case strdup is a macro */
-#define strdup(a)         'Error use MPIU_Strdup' :::
-
-#else /* USE_MEMORY_TRACING */
-/* No memory tracing; just use native functions */
-#define MPIU_Malloc(a)    malloc((size_t)(a))
-#define MPIU_Calloc(a,b)  calloc((size_t)(a),(size_t)(b))
-#define MPIU_Free(a)      free((void *)(a))
-#define MPIU_Realloc(a,b)  realloc((void *)(a),(size_t)(b))
-#define MPIU_Strdup       MPL_strdup
+#define strdup(a)         'Error use MPL_strdup' :::
 
 #endif /* USE_MEMORY_TRACING */
 
@@ -237,7 +144,7 @@ typedef int MPIU_BOOL;
  MPIU_AssertDeclValue(const int mpiu_chklmem_stk_sz_,n_)
 
 #define MPIU_CHKLMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,stmt_) \
-{pointer_ = (type_)MPIU_Malloc(nbytes_); \
+{pointer_ = (type_)MPL_malloc(nbytes_); \
 if (pointer_) { \
     MPIU_Assert(mpiu_chklmem_stk_sp_<mpiu_chklmem_stk_sz_);\
     mpiu_chklmem_stk_[mpiu_chklmem_stk_sp_++] = pointer_;\
@@ -247,7 +154,7 @@ if (pointer_) { \
 }}
 #define MPIU_CHKLMEM_FREEALL() \
     do { while (mpiu_chklmem_stk_sp_ > 0) {\
-       MPIU_Free( mpiu_chklmem_stk_[--mpiu_chklmem_stk_sp_] ); } } while(0)
+       MPL_free( mpiu_chklmem_stk_[--mpiu_chklmem_stk_sp_] ); } } while(0)
 #endif /* HAVE_ALLOCA */
 #define MPIU_CHKLMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_) \
     MPIU_CHKLMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_)
@@ -264,7 +171,7 @@ if (pointer_) { \
  MPIU_AssertDeclValue(const int mpiu_chklbigmem_stk_sz_,n_)
 
 #define MPIU_CHKLBIGMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,stmt_) \
-{pointer_ = (type_)MPIU_Malloc(nbytes_); \
+{pointer_ = (type_)MPL_malloc(nbytes_); \
 if (pointer_) { \
     MPIU_Assert(mpiu_chklbigmem_stk_sp_<mpiu_chklbigmem_stk_sz_);\
     mpiu_chklbigmem_stk_[mpiu_chklbigmem_stk_sp_++] = pointer_;\
@@ -274,7 +181,7 @@ if (pointer_) { \
 }}
 #define MPIU_CHKLBIGMEM_FREEALL() \
     { while (mpiu_chklbigmem_stk_sp_ > 0) {\
-       MPIU_Free( mpiu_chklbigmem_stk_[--mpiu_chklbigmem_stk_sp_] ); } }
+       MPL_free( mpiu_chklbigmem_stk_[--mpiu_chklbigmem_stk_sp_] ); } }
 
 #define MPIU_CHKLBIGMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_) \
     MPIU_CHKLBIGMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_)
@@ -287,7 +194,7 @@ if (pointer_) { \
  int mpiu_chkpmem_stk_sp_=0;\
  MPIU_AssertDeclValue(const int mpiu_chkpmem_stk_sz_,n_)
 #define MPIU_CHKPMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,stmt_) \
-{pointer_ = (type_)MPIU_Malloc(nbytes_); \
+{pointer_ = (type_)MPL_malloc(nbytes_); \
 if (pointer_) { \
     MPIU_Assert(mpiu_chkpmem_stk_sp_<mpiu_chkpmem_stk_sz_);\
     mpiu_chkpmem_stk_[mpiu_chkpmem_stk_sp_++] = pointer_;\
@@ -300,7 +207,7 @@ if (pointer_) { \
     mpiu_chkpmem_stk_[mpiu_chkpmem_stk_sp_++] = pointer_;}
 #define MPIU_CHKPMEM_REAP() \
     { while (mpiu_chkpmem_stk_sp_ > 0) {\
-       MPIU_Free( mpiu_chkpmem_stk_[--mpiu_chkpmem_stk_sp_] ); } }
+       MPL_free( mpiu_chkpmem_stk_[--mpiu_chkpmem_stk_sp_] ); } }
 #define MPIU_CHKPMEM_COMMIT() \
     mpiu_chkpmem_stk_sp_ = 0
 #define MPIU_CHKPMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_) \
@@ -315,7 +222,7 @@ if (pointer_) { \
     MPIU_CHKPMEM_CALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,goto fn_fail)
 #define MPIU_CHKPMEM_CALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,stmt_) \
     do {                                                                   \
-        pointer_ = (type_)MPIU_Calloc(1, (nbytes_));                       \
+        pointer_ = (type_)MPL_calloc(1, (nbytes_));                       \
         if (pointer_) {                                                    \
             MPIU_Assert(mpiu_chkpmem_stk_sp_<mpiu_chkpmem_stk_sz_);        \
             mpiu_chkpmem_stk_[mpiu_chkpmem_stk_sp_++] = pointer_;          \
@@ -328,7 +235,7 @@ if (pointer_) { \
 
 /* A special version for routines that only allocate one item */
 #define MPIU_CHKPMEM_MALLOC1(pointer_,type_,nbytes_,rc_,name_,stmt_) \
-{pointer_ = (type_)MPIU_Malloc(nbytes_); \
+{pointer_ = (type_)MPL_malloc(nbytes_); \
     if (!(pointer_) && (nbytes_ > 0)) {	   \
     MPIU_CHKMEM_SETERR(rc_,nbytes_,name_); \
     stmt_;\
@@ -338,16 +245,16 @@ if (pointer_) { \
  * realloc unsafely (direct ptr assignment).  Zero-size reallocs returning NULL
  * are handled and are not considered an error. */
 #define MPIU_REALLOC_OR_FREE_AND_JUMP(ptr_,size_,rc_) do { \
-    void *realloc_tmp_ = MPIU_Realloc((ptr_), (size_)); \
+    void *realloc_tmp_ = MPL_realloc((ptr_), (size_)); \
     if ((size_) && !realloc_tmp_) { \
-        MPIU_Free(ptr_); \
+        MPL_free(ptr_); \
         MPIR_ERR_SETANDJUMP2(rc_,MPI_ERR_OTHER,"**nomem2","**nomem2 %d %s",(size_),MPL_QUOTE(ptr_)); \
     } \
     (ptr_) = realloc_tmp_; \
 } while (0)
 /* this version does not free ptr_ */
 #define MPIU_REALLOC_ORJUMP(ptr_,size_,rc_) do { \
-    void *realloc_tmp_ = MPIU_Realloc((ptr_), (size_)); \
+    void *realloc_tmp_ = MPL_realloc((ptr_), (size_)); \
     if (size_) \
         MPIR_ERR_CHKANDJUMP2(!realloc_tmp_,rc_,MPI_ERR_OTHER,"**nomem2","**nomem2 %d %s",(size_),MPL_QUOTE(ptr_)); \
     (ptr_) = realloc_tmp_; \

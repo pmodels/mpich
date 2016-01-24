@@ -59,7 +59,7 @@ static inline int MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((u
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
     if (REQ_OFI(sreq)->pack_buffer)
-        MPIU_Free(REQ_OFI(sreq)->pack_buffer);
+        MPL_free(REQ_OFI(sreq)->pack_buffer);
     MPIDI_CH3I_NM_OFI_RC(MPID_Request_complete(sreq));
     END_FUNC_RC(FCNAME);
 }
@@ -125,7 +125,7 @@ int MPID_nem_ofi_anysource_matched(MPID_Request * rreq)
          * to clean up tmp space.
          */
         if (REQ_OFI(rreq)->pack_buffer) {
-            MPIU_Free(REQ_OFI(rreq)->pack_buffer);
+            MPL_free(REQ_OFI(rreq)->pack_buffer);
         }
         matched = FALSE;
     }else{

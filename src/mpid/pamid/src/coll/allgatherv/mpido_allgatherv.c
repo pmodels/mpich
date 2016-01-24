@@ -87,7 +87,7 @@ int MPIDO_Allgatherv_allreduce(const void *sendbuf,
   if ( buffer_sum <= MAX_ALLGATHERV_ALLREDUCE_BUFFER_SIZE &&
        (send_size & 0x3)==0 && (recv_size & 0x3)==0)  
   {
-    double *tmprbuf = (double *)MPIU_Malloc(buffer_sum*2);
+    double *tmprbuf = (double *)MPL_malloc(buffer_sum*2);
     if (tmprbuf == NULL)
       goto direct_algo; /*skip int to fp conversion and go to direct
 			  algo*/
@@ -119,7 +119,7 @@ int MPIDO_Allgatherv_allreduce(const void *sendbuf,
     for(i = start/sizeof(int); i < buffer_sum/sizeof(int); ++i) 
       sibuf[i] = (int)tmprbuf[i];
 
-    MPIU_Free(tmprbuf);
+    MPL_free(tmprbuf);
     return rc;
   }
 
@@ -382,7 +382,7 @@ MPIDO_Allgatherv(const void *sendbuf,
        int is_recv_dev_buf = MPIDI_cuda_is_device_buf(recvbuf);
        if(is_send_dev_buf)
        {
-         scbuf = MPIU_Malloc(sdt_extent * sendcount);
+         scbuf = MPL_malloc(sdt_extent * sendcount);
          cudaError_t cudaerr = CudaMemcpy(scbuf, sendbuf, sdt_extent * sendcount, cudaMemcpyDeviceToHost);
          if (cudaSuccess != cudaerr)
            fprintf(stderr, "cudaMemcpy failed: %s\n", CudaGetErrorString(cudaerr));
@@ -404,7 +404,7 @@ MPIDO_Allgatherv(const void *sendbuf,
            }
          }
          rtotal_buf = (highest_displs+highest_recvcount)*rdt_extent;
-         rcbuf = MPIU_Malloc(rtotal_buf);
+         rcbuf = MPL_malloc(rtotal_buf);
          if(sendbuf == MPI_IN_PLACE)
          {
            cudaError_t cudaerr = CudaMemcpy(rcbuf, recvbuf, rtotal_buf, cudaMemcpyDeviceToHost);
@@ -417,13 +417,13 @@ MPIDO_Allgatherv(const void *sendbuf,
        else
          rcbuf = recvbuf;
        int cuda_res =  MPIR_Allgatherv(scbuf, sendcount, sendtype, rcbuf, recvcounts, displs, recvtype, comm_ptr, mpierrno);
-       if(is_send_dev_buf)MPIU_Free(scbuf);
+       if(is_send_dev_buf)MPL_free(scbuf);
        if(is_recv_dev_buf)
          {
            cudaError_t cudaerr = CudaMemcpy(recvbuf, rcbuf, rtotal_buf, cudaMemcpyHostToDevice);
            if (cudaSuccess != cudaerr)
              fprintf(stderr, "cudaMemcpy failed: %s\n", CudaGetErrorString(cudaerr));
-           MPIU_Free(rcbuf);
+           MPL_free(rcbuf);
          }
        return cuda_res;
     }
@@ -769,7 +769,7 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
       scount = send_size;
       if(!snd_data_contig)
    {
-        snd_noncontig_buff = MPIU_Malloc(send_size);
+        snd_noncontig_buff = MPL_malloc(send_size);
         sbuf = snd_noncontig_buff;
         if(snd_noncontig_buff == NULL)
    {
@@ -792,8 +792,8 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
     totalrecvcount = recvcounts[0];
     recvcontinuous = displs[0] == 0? 1 : 0 ;
     int i;
-    precvdispls = lrecvdispls = MPIU_Malloc(size*sizeof(int));
-    precvcounts = lrecvcounts = MPIU_Malloc(size*sizeof(int));
+    precvdispls = lrecvdispls = MPL_malloc(size*sizeof(int));
+    precvcounts = lrecvcounts = MPL_malloc(size*sizeof(int));
     lrecvdispls[0]= 0;
     lrecvcounts[0]= rcvtypelen * recvcounts[0];
     for(i=1; i<size; ++i)
@@ -808,7 +808,7 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
     TRACE_ERR("Pack receive rcv_contig %zu, recvok %zd, totalrecvcount %zu, recvcontinuous %zu, rcvtypelen %zu, recv_size %zu\n",
               (size_t)rcv_data_contig, (size_t)recvok, (size_t)totalrecvcount, (size_t)recvcontinuous,(size_t)rcvtypelen, (size_t)recv_size);
 
-    rcv_noncontig_buff = MPIU_Malloc(recv_size);
+    rcv_noncontig_buff = MPL_malloc(recv_size);
     rbuf = rcv_noncontig_buff;
     if(rcv_noncontig_buff == NULL)
     {
@@ -875,11 +875,11 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
                   (size_t)extent, (size_t)i,(size_t)displs[i],(size_t)i,(size_t)recvcounts[i],(size_t)displs[i], *(int*)rcbuf);
       }
     }
-    MPIU_Free(rcv_noncontig_buff);
+    MPL_free(rcv_noncontig_buff);
   }
-  if(!snd_data_contig)  MPIU_Free(snd_noncontig_buff);
-  if(lrecvdispls) MPIU_Free(lrecvdispls);
-  if(lrecvcounts) MPIU_Free(lrecvcounts);
+  if(!snd_data_contig)  MPL_free(snd_noncontig_buff);
+  if(lrecvdispls) MPL_free(lrecvdispls);
+  if(lrecvcounts) MPL_free(lrecvcounts);
 
    return MPI_SUCCESS;
 }

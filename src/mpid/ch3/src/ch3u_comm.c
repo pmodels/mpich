@@ -416,12 +416,12 @@ static int register_hook_finalize(void *param)
 
     MPL_LL_FOREACH_SAFE(create_hooks_head, elt, tmp) {
         MPL_LL_DELETE(create_hooks_head, create_hooks_tail, elt);
-        MPIU_Free(elt);
+        MPL_free(elt);
     }
     
     MPL_LL_FOREACH_SAFE(destroy_hooks_head, elt, tmp) {
         MPL_LL_DELETE(destroy_hooks_head, destroy_hooks_tail, elt);
-        MPIU_Free(elt);
+        MPL_free(elt);
     }
 
  fn_exit:

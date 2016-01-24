@@ -46,9 +46,9 @@ void MPIDI_close_pe_extension() {
          TRACE_ERR("ERROR close PAMI_Extension failed rc %d", rc);
      }
      if (mpich_env)
-         MPIU_Free(mpich_env);
+         MPL_free(mpich_env);
      if (mpid_statp)
-         MPIU_Free(mpid_statp);
+         MPL_free(mpid_statp);
 
 }
 #endif
@@ -88,7 +88,7 @@ int MPID_Finalize()
     MPIDI_FreeParentPort();
   }
   if(_conn_info_list) 
-    MPIU_Free(_conn_info_list);
+    MPL_free(_conn_info_list);
   MPIDI_free_all_tranid_node();
 #endif
 
@@ -117,19 +117,19 @@ int MPID_Finalize()
  {  int i;
   for (i=0; i< MPIDI_Process.numTasks; i++) {
       if (MPIDI_Trace_buf[i].R)
-          MPIU_Free(MPIDI_Trace_buf[i].R);
+          MPL_free(MPIDI_Trace_buf[i].R);
       if (MPIDI_Trace_buf[i].PR)
-          MPIU_Free(MPIDI_Trace_buf[i].PR);
+          MPL_free(MPIDI_Trace_buf[i].PR);
       if (MPIDI_Trace_buf[i].S)
-          MPIU_Free(MPIDI_Trace_buf[i].S);
+          MPL_free(MPIDI_Trace_buf[i].S);
   }
  }
- MPIU_Free(MPIDI_Trace_buf);
+ MPL_free(MPIDI_Trace_buf);
 #endif
 
 #ifdef OUT_OF_ORDER_HANDLING
-  MPIU_Free(MPIDI_In_cntr);
-  MPIU_Free(MPIDI_Out_cntr);
+  MPL_free(MPIDI_In_cntr);
+  MPL_free(MPIDI_Out_cntr);
 #endif
 
  if (TOKEN_FLOW_CONTROL_ON)
@@ -137,8 +137,8 @@ int MPID_Finalize()
      #if TOKEN_FLOW_CONTROL
      extern char *EagerLimit;
 
-     if (EagerLimit) MPIU_Free(EagerLimit);
-     MPIU_Free(MPIDI_Token_cntr);
+     if (EagerLimit) MPL_free(EagerLimit);
+     MPL_free(MPIDI_Token_cntr);
      MPIDI_close_mm();
      #else
      MPID_assert_always(0);

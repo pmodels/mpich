@@ -18,8 +18,8 @@ int MPIDI_CH3U_Handle_unordered_recv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt)
 
 #if defined(MPIDI_CH3_MSGS_UNORDERED)
 
-#define MPIDI_CH3U_Pkt_send_container_alloc() (MPIU_Malloc(sizeof(MPIDI_CH3_Pkt_send_container_t)))
-#define MPIDI_CH3U_Pkt_send_container_free(pc_) MPIU_Free(pc_)
+#define MPIDI_CH3U_Pkt_send_container_alloc() (MPL_malloc(sizeof(MPIDI_CH3_Pkt_send_container_t)))
+#define MPIDI_CH3U_Pkt_send_container_free(pc_) MPL_free(pc_)
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Handle_unordered_recv_pkt

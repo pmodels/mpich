@@ -85,23 +85,23 @@ extern int MPIE_Debug;
    second option is used for now. */
 /* No memory tracing; just use native functions */
 #include <stdlib.h>
-#define MPIU_Malloc(a)    malloc((size_t)(a))
-#define MPIU_Calloc(a,b)  calloc((size_t)(a),(size_t)(b))
-#define MPIU_Free(a)      free((void *)(a))
-#define MPIU_Realloc(a,b)  realloc((void *)(a),(size_t)(b))
+#define MPL_malloc(a)    malloc((size_t)(a))
+#define MPL_calloc(a,b)  calloc((size_t)(a),(size_t)(b))
+#define MPL_free(a)      free((void *)(a))
+#define MPL_realloc(a,b)  realloc((void *)(a),(size_t)(b))
 
 int MPL_strncpy( char *outstr, const char *instr, size_t maxlen );
 int MPL_strnapp( char *, const char *, size_t );
-char *MPIU_Strdup( const char * );
+char *MPL_strdup( const char * );
 
 #ifdef HAVE_STRDUP
 /* Watch for the case where strdup is defined as a macro by a header include */
 # if defined(NEEDS_STRDUP_DECL) && !defined(strdup)
 extern char *strdup( const char * );
 # endif
-#define MPIU_Strdup(a)    strdup(a)
+#define MPL_strdup(a)    strdup(a)
 #else
-/* Don't define MPIU_Strdup, provide it in safestr.c */
+/* Don't define MPL_strdup, provide it in safestr.c */
 #endif /* HAVE_STRDUP */
 /* Provide a fallback snprintf for systems that do not have one */
 #ifdef HAVE_SNPRINTF

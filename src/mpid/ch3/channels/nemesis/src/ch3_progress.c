@@ -122,7 +122,7 @@ static int check_terminating_vcs(void)
         MPID_Request_release(ep->req);
         mpi_errno = shm_connection_terminated(ep->vc);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPIU_Free(ep);
+        MPL_free(ep);
     }
     
  fn_exit:
@@ -1017,7 +1017,7 @@ int MPIDI_CH3I_Progress_finalize(void)
 
     while(qn_head) {
         ent = qn_head->next;
-        MPIU_Free(qn_head);
+        MPL_free(qn_head);
         qn_head = ent;
     }
 

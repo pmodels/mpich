@@ -104,7 +104,7 @@ void MPIDI_Buffer_copy(
       if(MPIDI_Process.cuda_aware_support_on && MPIDI_cuda_is_device_buf(rbuf))
       {
         MPID_Datatype_get_extent_macro(rdt, rdt_extent);
-        char *buf =  MPIU_Malloc(rdt_extent * rcount);
+        char *buf =  MPL_malloc(rdt_extent * rcount);
         memset(buf, 0, rdt_extent * rcount);        
         MPID_Segment seg;
         DLOOP_Offset last;
@@ -124,7 +124,7 @@ void MPIDI_Buffer_copy(
         
         cudaError_t cudaerr = CudaMemcpy(rbuf + rdt_true_lb, buf, rdt_extent * rcount, cudaMemcpyHostToDevice);
 
-        MPIU_Free(buf);
+        MPL_free(buf);
 
         goto fn_exit;
 
@@ -172,7 +172,7 @@ void MPIDI_Buffer_copy(
         MPID_Segment rseg;
         MPIDI_msg_sz_t rfirst;
 
-        buf = MPIU_Malloc(MPIDI_COPY_BUFFER_SZ);
+        buf = MPL_malloc(MPIDI_COPY_BUFFER_SZ);
         /* --BEGIN ERROR HANDLING-- */
         if (buf == NULL)
         {
@@ -242,7 +242,7 @@ void MPIDI_Buffer_copy(
         }
 
         *rsz = rfirst;
-        MPIU_Free(buf);
+        MPL_free(buf);
     }
 
   fn_exit:

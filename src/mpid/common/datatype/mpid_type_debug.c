@@ -506,9 +506,9 @@ static char *MPIDI_Datatype_depth_spacing(int depth)
 }
 
 #define __mpidi_datatype_free_and_return { \
- if (cp->nr_ints  > 0) MPIU_Free(ints);   \
- if (cp->nr_aints > 0) MPIU_Free(aints);   \
- if (cp->nr_types > 0) MPIU_Free(types);   \
+ if (cp->nr_ints  > 0) MPL_free(ints);   \
+ if (cp->nr_aints > 0) MPL_free(aints);   \
+ if (cp->nr_types > 0) MPL_free(types);   \
  return;                                 }
 
 void MPIDI_Datatype_contents_printf(MPI_Datatype type,
@@ -540,17 +540,17 @@ void MPIDI_Datatype_contents_printf(MPI_Datatype type,
 
     if (cp->nr_ints > 0)
     {
-      ints = (int *) MPIU_Malloc(cp->nr_ints * sizeof(int));
+      ints = (int *) MPL_malloc(cp->nr_ints * sizeof(int));
       MPIDI_Datatype_get_contents_ints(cp, ints);
     }
 
     if (cp->nr_aints > 0) {
-      aints = (MPI_Aint *) MPIU_Malloc(cp->nr_aints * sizeof(MPI_Aint));
+      aints = (MPI_Aint *) MPL_malloc(cp->nr_aints * sizeof(MPI_Aint));
       MPIDI_Datatype_get_contents_aints(cp, aints);
     }
 
     if (cp->nr_types > 0) {
-      types = (MPI_Datatype *) MPIU_Malloc(cp->nr_types * sizeof(MPI_Datatype));
+      types = (MPI_Datatype *) MPL_malloc(cp->nr_types * sizeof(MPI_Datatype));
       MPIDI_Datatype_get_contents_types(cp, types);
     }
 

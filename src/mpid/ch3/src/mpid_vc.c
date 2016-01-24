@@ -240,7 +240,7 @@ int MPIDI_VCRT_Release(struct MPIDI_VCRT *vcrt, int isDisconnect )
 	    }
 	}
 
-	MPIU_Free(vcrt);
+	MPL_free(vcrt);
     }
 
  fn_exit:    
@@ -984,7 +984,7 @@ static int populate_ids_from_mapping(char *mapping, MPID_Node_id_t *max_node_id,
             *max_node_id = pg->vct[i].node_id;
 
 fn_exit:
-    MPIU_Free(mb);
+    MPL_free(mb);
     return mpi_errno;
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */

@@ -553,7 +553,7 @@ static int already_used_or_add(char *host, socki_host_name_t **list)
     }
 
     /* the host has not been used so add a node for it */
-    iter = (socki_host_name_t*)MPIU_Malloc(sizeof(socki_host_name_t));
+    iter = (socki_host_name_t*)MPL_malloc(sizeof(socki_host_name_t));
     if (!iter)
     {
 	/* if out of memory then treat it as not found */
@@ -587,7 +587,7 @@ static void socki_free_host_list(socki_host_name_t *list)
     {
 	iter = list;
 	list = list->next;
-	MPIU_Free(iter);
+	MPL_free(iter);
     }
 }
 
@@ -844,7 +844,7 @@ int MPIDU_Sock_native_to_sock(MPIDU_Sock_set_t set, MPIDU_SOCK_NATIVE_FD fd, voi
     }
 
     /* setup the structures */
-    sock_state = (sock_state_t*)MPIU_Malloc(sizeof(sock_state_t));
+    sock_state = (sock_state_t*)MPL_malloc(sizeof(sock_state_t));
     if (sock_state == NULL)
     {
 	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDU_SOCK_ERR_NOMEM, "**nomem", 0);
@@ -902,7 +902,7 @@ int MPIDU_Sock_listen(MPIDU_Sock_set_t set, void * user_ptr, int * port, MPIDU_S
 	return mpi_errno;
     }
 
-    listen_state = (sock_state_t*)MPIU_Malloc(sizeof(sock_state_t));
+    listen_state = (sock_state_t*)MPL_malloc(sizeof(sock_state_t));
     init_state_struct(listen_state);
     mpi_errno = easy_create_ranged(&listen_state->listen_sock, *port, INADDR_ANY);
     if (mpi_errno != MPI_SUCCESS)
@@ -933,10 +933,10 @@ int MPIDU_Sock_listen(MPIDU_Sock_set_t set, void * user_ptr, int * port, MPIDU_S
     /* post the accept(s) last to make sure the listener state structure is completely initialized before
        a completion thread has the chance to satisfy the AcceptEx call */
 
-    listener_copies = (sock_state_t**)MPIU_Malloc(g_num_posted_accepts * sizeof(sock_state_t*));
+    listener_copies = (sock_state_t**)MPL_malloc(g_num_posted_accepts * sizeof(sock_state_t*));
     for (i=0; i<g_num_posted_accepts; i++)
     {
-	listener_copies[i] = (sock_state_t*)MPIU_Malloc(sizeof(sock_state_t));
+	listener_copies[i] = (sock_state_t*)MPL_malloc(sizeof(sock_state_t));
 	MPIDI_FUNC_ENTER(MPID_STATE_MEMCPY);
 	memcpy(listener_copies[i], listen_state, sizeof(*listen_state));
 	MPIDI_FUNC_EXIT(MPID_STATE_MEMCPY);
@@ -947,14 +947,14 @@ int MPIDU_Sock_listen(MPIDU_Sock_set_t set, void * user_ptr, int * port, MPIDU_S
 	mpi_errno = post_next_accept(listener_copies[i]);
 	if (mpi_errno != MPI_SUCCESS)
 	{
-	    MPIU_Free(listener_copies);
+	    MPL_free(listener_copies);
 	    mpi_errno = MPIR_Err_create_code(mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDU_SOCK_ERR_FAIL, "**post_accept", 0);
 	    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_SOCK_LISTEN);
 	    return mpi_errno;
 	}
     }
     listen_state->list = listener_copies[g_num_posted_accepts-1];
-    MPIU_Free(listener_copies);
+    MPL_free(listener_copies);
 
     *sock = listen_state;
     /*printf("listening socket %d\n", listen_state->listen_sock);fflush(stdout);*/
@@ -984,7 +984,7 @@ int MPIDU_Sock_accept(MPIDU_Sock_t listener_sock, MPIDU_Sock_set_t set, void * u
 	return mpi_errno;
     }
 
-    accept_state = MPIU_Malloc(sizeof(sock_state_t));
+    accept_state = MPL_malloc(sizeof(sock_state_t));
     if (accept_state == NULL)
     {
 	*sock = NULL;
@@ -1158,7 +1158,7 @@ int MPIDU_Sock_post_connect(MPIDU_Sock_set_t set, void * user_ptr, char * host_d
     memset(&sockAddr,0,sizeof(sockAddr));
 
     /* setup the structures */
-    connect_state = (sock_state_t*)MPIU_Malloc(sizeof(sock_state_t));
+    connect_state = (sock_state_t*)MPL_malloc(sizeof(sock_state_t));
     init_state_struct(connect_state);
     connect_state->cur_host = connect_state->host_description;
     MPL_strncpy(connect_state->host_description, host_description, SOCKI_DESCRIPTION_LENGTH);

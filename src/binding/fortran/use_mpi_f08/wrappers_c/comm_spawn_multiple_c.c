@@ -54,12 +54,12 @@ int MPIR_Comm_spawn_multiple_c(int count, char* array_of_commands_f,
     if ((char***)array_of_argv_f == MPI_ARGVS_NULL) {
         array_of_argv_c = MPI_ARGVS_NULL;
     } else {
-        array_of_argv_c = (char***) MPIU_Malloc(sizeof(char**)*count);
+        array_of_argv_c = (char***) MPL_malloc(sizeof(char**)*count);
         if (!array_of_argv_c) MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         /* Allocate a temp buf to put args of a command */
         len = 256; /* length of buf. Initialized with an arbitrary value */
-        buf = (char*)MPIU_Malloc(sizeof(char)*len);
+        buf = (char*)MPL_malloc(sizeof(char)*len);
         if (!buf) MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         for (i = 0; i < count; i++) {
@@ -70,9 +70,9 @@ int MPIR_Comm_spawn_multiple_c(int count, char* array_of_commands_f,
             do {
                 if (offset + argv_elem_len > len) { /* Make sure buf is big enough */
                     len = offset + argv_elem_len;
-                    newbuf = (char*)MPIU_Realloc(buf, len);
+                    newbuf = (char*)MPL_realloc(buf, len);
                     if (!newbuf) {
-                        MPIU_Free(buf);
+                        MPL_free(buf);
                         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
                     }
                     buf = newbuf;
@@ -94,24 +94,24 @@ int MPIR_Comm_spawn_multiple_c(int count, char* array_of_commands_f,
             mpi_errno = MPIR_Fortran_array_of_string_f2c(buf, &(array_of_argv_c[i]), argv_elem_len, 0, 0);
             if (mpi_errno != MPI_SUCCESS) {
                 for (j = i - 1; j >= 0; j--)
-                    MPIU_Free(array_of_argv_c[j]);
-                MPIU_Free(buf);
+                    MPL_free(array_of_argv_c[j]);
+                MPL_free(buf);
                 goto fn_fail;
             }
         }
 
-        MPIU_Free(buf);
+        MPL_free(buf);
     }
 
     mpi_errno = PMPI_Comm_spawn_multiple(count, array_of_commands_c, array_of_argv_c,
             array_of_maxprocs, array_of_info, root, comm, intercomm, array_of_errcodes);
 
-    MPIU_Free(array_of_commands_c);
+    MPL_free(array_of_commands_c);
 
     if (array_of_argv_c != MPI_ARGVS_NULL) {
         for (i = 0; i < count; i++)
-            MPIU_Free(array_of_argv_c[i]);
-        MPIU_Free(array_of_argv_c);
+            MPL_free(array_of_argv_c[i]);
+        MPL_free(array_of_argv_c);
     }
 
 fn_exit:

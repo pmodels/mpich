@@ -138,7 +138,7 @@ int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq
      * is finished. Only GACC used user_buf. FOP and CAS can fit all data
      * in response packet. */
     if (rreq->dev.user_buf != NULL)
-        MPIU_Free(rreq->dev.user_buf);
+        MPL_free(rreq->dev.user_buf);
 
     MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
@@ -207,7 +207,7 @@ int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
      * is finished. Only GACC used user_buf. FOP and CAS can fit all data
      * in response packet. */
     if (rreq->dev.user_buf != NULL)
-        MPIU_Free(rreq->dev.user_buf);
+        MPL_free(rreq->dev.user_buf);
 
     MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
@@ -275,7 +275,7 @@ int MPIDI_CH3_ReqHandler_FOPSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
      * is finished. Only GACC used user_buf. FOP and CAS can fit all data
      * in response packet. */
     if (rreq->dev.user_buf != NULL)
-        MPIU_Free(rreq->dev.user_buf);
+        MPL_free(rreq->dev.user_buf);
 
     MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 

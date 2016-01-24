@@ -210,7 +210,7 @@ void MPIR_WaitForDebugger( void )
 	int  hostlen;
 	int  val;
 
-	MPIR_proctable    = (MPIR_PROCDESC *)MPIU_Malloc( 
+	MPIR_proctable    = (MPIR_PROCDESC *)MPL_malloc(
 					 size * sizeof(MPIR_PROCDESC) );
 	for (i=0; i<size; i++) {
 	    /* Initialize the proctable */
@@ -220,7 +220,7 @@ void MPIR_WaitForDebugger( void )
 	}
 
 	PMPI_Get_processor_name( hostname, &hostlen );
-	MPIR_proctable[0].host_name       = (char *)MPIU_Strdup( hostname );
+	MPIR_proctable[0].host_name       = (char *)MPL_strdup( hostname );
 	MPIR_proctable[0].executable_name = 0;
 	MPIR_proctable[0].pid             = getpid();
 
@@ -228,7 +228,7 @@ void MPIR_WaitForDebugger( void )
 	    int msg[2];
 	    PMPI_Recv( msg, 2, MPI_INT, i, 0, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 	    MPIR_proctable[i].pid = msg[1];
-	    MPIR_proctable[i].host_name = (char *)MPIU_Malloc( msg[0] + 1 );
+	    MPIR_proctable[i].host_name = (char *)MPL_malloc( msg[0] + 1 );
 	    PMPI_Recv( MPIR_proctable[i].host_name, msg[0]+1, MPI_CHAR, 
 		       i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE );
 	    MPIR_proctable[i].host_name[msg[0]] = 0;
@@ -359,7 +359,7 @@ void MPIR_Sendq_remember( MPID_Request *req,
 	pool = p->next;
     }
     else {
-	p = (MPIR_Sendq *)MPIU_Malloc( sizeof(MPIR_Sendq) );
+	p = (MPIR_Sendq *)MPL_malloc( sizeof(MPIR_Sendq) );
 	if (!p) {
 	    /* Just ignore it */
             req->dbg_next = NULL;
@@ -408,14 +408,14 @@ static int SendqFreePool( void *d )
     p = pool;
     while (p) {
 	pool = p->next;
-	MPIU_Free( p );
+	MPL_free( p );
 	p = pool;
     }
     /* Free the list of pending sends */
     p    = MPIR_Sendq_head;
     while (p) {
 	MPIR_Sendq_head = p->next;
-	MPIU_Free( p );
+	MPL_free( p );
 	p = MPIR_Sendq_head;
     }
     return 0;
@@ -427,7 +427,7 @@ static void SendqInit( void )
 
     /* Preallocated a few send requests */
     for (i=0; i<10; i++) {
-	p = (MPIR_Sendq *)MPIU_Malloc( sizeof(MPIR_Sendq) );
+	p = (MPIR_Sendq *)MPL_malloc( sizeof(MPIR_Sendq) );
 	if (!p) {
 	    /* Just ignore it */
 	    break;
@@ -504,9 +504,9 @@ static int MPIR_FreeProctable( void *ptable )
     int i;
     MPIR_PROCDESC *proctable = (MPIR_PROCDESC *)ptable;
     for (i=0; i<MPIR_proctable_size; i++) {
-	if (proctable[i].host_name) { MPIU_Free( proctable[i].host_name ); }
+	if (proctable[i].host_name) { MPL_free( proctable[i].host_name ); }
     }
-    MPIU_Free( proctable );
+    MPL_free( proctable );
 
     return 0;
 }

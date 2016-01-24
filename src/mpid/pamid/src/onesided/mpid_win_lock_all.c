@@ -104,9 +104,9 @@ MPID_Win_lock_all(int      assert,
    nMask=(win->mpid.max_ctrlsends - 1);
    if (!win->mpid.work.msgQ) {
        if (size < (win->mpid.max_ctrlsends)) {
-           win->mpid.work.msgQ = (void *) MPIU_Calloc0(size, MPIDI_WinLock_info);
+           win->mpid.work.msgQ = (void *) MPL_calloc0(size, MPIDI_WinLock_info);
        }  else {
-           win->mpid.work.msgQ = (void *) MPIU_Calloc0((win->mpid.max_ctrlsends), MPIDI_WinLock_info);
+           win->mpid.work.msgQ = (void *) MPL_calloc0((win->mpid.max_ctrlsends), MPIDI_WinLock_info);
        }
        MPID_assert(win->mpid.work.msgQ != NULL);
        win->mpid.work.count=0;

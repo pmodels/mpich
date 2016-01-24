@@ -132,8 +132,8 @@ void MPIDI_RMA_finalize(void)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_RMA_FINALIZE);
 
-    MPIU_Free(global_rma_op_pool_start);
-    MPIU_Free(global_rma_target_pool_start);
+    MPL_free(global_rma_op_pool_start);
+    MPL_free(global_rma_target_pool_start);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RMA_FINALIZE);
 }
@@ -207,11 +207,11 @@ int MPID_Win_free(MPID_Win ** win_ptr)
         MPIR_ERR_POP(mpi_errno);
 
     if ((*win_ptr)->basic_info_table != NULL)
-        MPIU_Free((*win_ptr)->basic_info_table);
-    MPIU_Free((*win_ptr)->op_pool_start);
-    MPIU_Free((*win_ptr)->target_pool_start);
-    MPIU_Free((*win_ptr)->slots);
-    MPIU_Free((*win_ptr)->target_lock_entry_pool_start);
+        MPL_free((*win_ptr)->basic_info_table);
+    MPL_free((*win_ptr)->op_pool_start);
+    MPL_free((*win_ptr)->target_pool_start);
+    MPL_free((*win_ptr)->slots);
+    MPL_free((*win_ptr)->target_lock_entry_pool_start);
 
     MPIU_Assert((*win_ptr)->current_target_lock_data_bytes == 0);
 
@@ -219,7 +219,7 @@ int MPID_Win_free(MPID_Win ** win_ptr)
     if ((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE ||
         (*win_ptr)->create_flavor == MPI_WIN_FLAVOR_SHARED) {
         if ((*win_ptr)->shm_allocated == FALSE && (*win_ptr)->size > 0) {
-            MPIU_Free((*win_ptr)->base);
+            MPL_free((*win_ptr)->base);
         }
     }
 

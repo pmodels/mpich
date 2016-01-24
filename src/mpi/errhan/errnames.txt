@@ -560,7 +560,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 #
 **MPIDI_CH3I_SHM_Attach_to_mem:MPIDI_CH3I_SHM_Attach_to_mem failed
 **MPIDI_CH3I_SHM_Attach_to_mem %d:MPIDI_CH3I_SHM_Attach_to_mem failed, error %d
-**MPIU_Strdup:MPIU_Strdup failed
+**MPL_strdup:MPL_strdup failed
 **business_card:Invalid business card
 **business_card %s:Invalid business card (%s)
 **OpenProcess:OpenProcess failed

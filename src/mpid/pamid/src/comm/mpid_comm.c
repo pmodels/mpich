@@ -76,7 +76,7 @@ pami_result_t MPIDI_Comm_create_from_pami_geom(pami_geometry_range_t  *task_slic
   {
     num_tasks += (task_slices[i].hi - task_slices[i].lo) + 1;
   }
-  ranks = MPIU_Calloc0(num_tasks, int);
+  ranks = MPL_calloc0(num_tasks, int);
   for(i = 0; i < slice_count; i++)
   {
     int slice_sz = (task_slices[i].hi - task_slices[i].lo) + 1;
@@ -230,7 +230,7 @@ void MPIDI_Coll_comm_create(MPID_Comm *comm)
   if(comm->comm_kind != MPID_INTRACOMM) return;
   /* Create a geometry */
 
-  comm->coll_fns = MPIU_Calloc0(1, MPID_Collops);
+  comm->coll_fns = MPL_calloc0(1, MPID_Collops);
   MPID_assert(comm->coll_fns != NULL);
 
    if(comm->mpid.geometry != MPIDI_Process.world_geometry)

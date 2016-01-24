@@ -58,7 +58,7 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t * pg_p, int pg_rank )
     return mpi_errno;
  fn_fail:
     if (publish_bc_orig != NULL) {
-        MPIU_Free(publish_bc_orig);
+        MPL_free(publish_bc_orig);
     }           
     goto fn_exit;
 }

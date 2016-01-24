@@ -90,10 +90,10 @@ static int handle_free( void *((*indirect)[]), int indirect_size )
     
     /* Remove any allocated storage */
     for (i=0; i<indirect_size; i++) {
-	MPIU_Free( (*indirect)[i] );
+	MPL_free( (*indirect)[i] );
     }
     if (indirect) {
-	MPIU_Free( indirect );
+	MPL_free( indirect );
     }
     /* This does *not* remove any objects that the user created 
        and then did not destroy */
@@ -163,7 +163,7 @@ static void *handle_indirect_init( void *(**indirect)[],
     /* Create the table */
     if (!*indirect) {
 	/* printf( "Creating indirect table with %d pointers to blocks in it\n", indirect_num_blocks ); */
-	*indirect = (void *)MPIU_Calloc(indirect_num_blocks, sizeof(void *));
+	*indirect = (void *)MPL_calloc(indirect_num_blocks, sizeof(void *));
 	if (!*indirect) {
 	    return 0;
 	}
@@ -178,7 +178,7 @@ static void *handle_indirect_init( void *(**indirect)[],
 
     /* Create the next block */
     /* printf("Creating indirect block number %d with %d objects in it\n", *indirect_size, indirect_num_indices); */
-    block_ptr = (void *)MPIU_Calloc( indirect_num_indices, obj_size );
+    block_ptr = (void *)MPL_calloc( indirect_num_indices, obj_size );
     if (!block_ptr) { 
 	return 0;
     }
@@ -557,7 +557,7 @@ static int check_handles_on_finalize( void *objmem_ptr )
     }
 
     if (objmem->indirect_size > 0) {
-	nIndirect = (int *)MPIU_Calloc( objmem->indirect_size, sizeof(int) );
+	nIndirect = (int *)MPL_calloc( objmem->indirect_size, sizeof(int) );
     }
     /* Count the number of items in the avail list.  These include
        all objects, whether direct or indirect allocation */
@@ -612,7 +612,7 @@ static int check_handles_on_finalize( void *objmem_ptr )
     }
 
     if (nIndirect) { 
-	MPIU_Free( nIndirect );
+	MPL_free( nIndirect );
     }
 
     if (leaked_handles && MPIR_CVAR_ABORT_ON_LEAKED_HANDLES) {

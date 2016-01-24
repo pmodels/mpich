@@ -56,8 +56,8 @@ int MPIR_Info_dup_impl(MPID_Info *info_ptr, MPID_Info **new_info_ptr)
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         curr_new         = curr_new->next;
-        curr_new->key    = MPIU_Strdup(curr_old->key);
-        curr_new->value  = MPIU_Strdup(curr_old->value);
+        curr_new->key    = MPL_strdup(curr_old->key);
+        curr_new->value  = MPL_strdup(curr_old->value);
 
         curr_old         = curr_old->next;
     }

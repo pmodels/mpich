@@ -46,7 +46,7 @@ int MPIR_Group_release(MPID_Group *group_ptr)
     MPIR_Group_release_ref(group_ptr, &inuse);
     if (!inuse) {
         /* Only if refcount is 0 do we actually free. */
-        MPIU_Free(group_ptr->lrank_to_lpid);
+        MPL_free(group_ptr->lrank_to_lpid);
         MPIU_Handle_obj_free( &MPID_Group_mem, group_ptr );
     }
     return mpi_errno;
@@ -71,7 +71,7 @@ int MPIR_Group_create( int nproc, MPID_Group **new_group_ptr )
     /* --END ERROR HANDLING-- */
     MPIU_Object_set_ref( *new_group_ptr, 1 );
     (*new_group_ptr)->lrank_to_lpid = 
-	(MPID_Group_pmap_t *)MPIU_Malloc( nproc * sizeof(MPID_Group_pmap_t) );
+	(MPID_Group_pmap_t *)MPL_malloc( nproc * sizeof(MPID_Group_pmap_t) );
     /* --BEGIN ERROR HANDLING-- */
     if (!(*new_group_ptr)->lrank_to_lpid) {
 	MPIU_Handle_obj_free( &MPID_Group_mem, *new_group_ptr );

@@ -51,7 +51,7 @@ int MPIDO_Scatterv_bcast(void *sendbuf,
 
   if (rank != root)
   {
-    tempbuf = MPIU_Malloc(dtsize * sum);
+    tempbuf = MPL_malloc(dtsize * sum);
     if (!tempbuf)
       return MPIR_Err_create_code(MPI_SUCCESS,
                                   MPIR_ERR_RECOVERABLE,
@@ -72,7 +72,7 @@ int MPIDO_Scatterv_bcast(void *sendbuf,
   memcpy(recvbuf, tempbuf + displs[rank], sendcounts[rank] * dtsize);
 
   if (rank != root)
-    MPIU_Free(tempbuf);
+    MPL_free(tempbuf);
 
   return rc;
 }
@@ -103,7 +103,7 @@ int MPIDO_Scatterv_alltoallv(void * sendbuf,
                           recvtype,
                           rbytes);
 
-  rbuf = MPIU_Malloc(size * rbytes * sizeof(char));
+  rbuf = MPL_malloc(size * rbytes * sizeof(char));
   if(!rbuf)
   {
     return MPIR_Err_create_code(MPI_SUCCESS,
@@ -122,15 +122,15 @@ int MPIDO_Scatterv_alltoallv(void * sendbuf,
   }
   else
   {
-    sdispls = MPIU_Malloc(size * sizeof(int));
-    scounts = MPIU_Malloc(size * sizeof(int));
-    sbuf = MPIU_Malloc(rbytes * sizeof(char));
+    sdispls = MPL_malloc(size * sizeof(int));
+    scounts = MPL_malloc(size * sizeof(int));
+    sbuf = MPL_malloc(rbytes * sizeof(char));
     if(!sdispls || !scounts || !sbuf)
     {
       if(sdispls)
-        MPIU_Free(sdispls);
+        MPL_free(sdispls);
       if(scounts)
-        MPIU_Free(scounts);
+        MPL_free(scounts);
       return MPIR_Err_create_code(MPI_SUCCESS,
                                   MPIR_ERR_RECOVERABLE,
                                   __FUNCTION__,
@@ -142,12 +142,12 @@ int MPIDO_Scatterv_alltoallv(void * sendbuf,
     memset(scounts, 0, size*sizeof(int));
   }
 
-  rdispls = MPIU_Malloc(size * sizeof(int));
-  rcounts = MPIU_Malloc(size * sizeof(int));
+  rdispls = MPL_malloc(size * sizeof(int));
+  rcounts = MPL_malloc(size * sizeof(int));
   if(!rdispls || !rcounts)
   {
     if(rdispls)
-      MPIU_Free(rdispls);
+      MPL_free(rdispls);
     return MPIR_Err_create_code(MPI_SUCCESS,
                                 MPIR_ERR_RECOVERABLE,
                                 __FUNCTION__,
@@ -175,22 +175,22 @@ int MPIDO_Scatterv_alltoallv(void * sendbuf,
 
   if(rank == root && recvbuf == MPI_IN_PLACE)
   {
-    MPIU_Free(rbuf);
-    MPIU_Free(rdispls);
-    MPIU_Free(rcounts);
+    MPL_free(rbuf);
+    MPL_free(rdispls);
+    MPL_free(rcounts);
     return rc;
   }
   else
   {
     memcpy(recvbuf, rbuf, rbytes);
-    MPIU_Free(rbuf);
-    MPIU_Free(rdispls);
-    MPIU_Free(rcounts);
+    MPL_free(rbuf);
+    MPL_free(rdispls);
+    MPL_free(rcounts);
     if(rank != root)
     {
-      MPIU_Free(sbuf);
-      MPIU_Free(sdispls);
-      MPIU_Free(scounts);
+      MPL_free(sbuf);
+      MPL_free(sdispls);
+      MPL_free(scounts);
     }
   }
 
@@ -271,7 +271,7 @@ int MPIDO_Scatterv(const void *sendbuf,
            }
          }
          stotal_buf = (highest_displs+highest_sendcount)*sdt_extent;
-         scbuf = MPIU_Malloc(stotal_buf);
+         scbuf = MPL_malloc(stotal_buf);
          cudaError_t cudaerr = CudaMemcpy(scbuf, sendbuf, stotal_buf, cudaMemcpyDeviceToHost);
          if (cudaSuccess != cudaerr)
            fprintf(stderr, "cudaMemcpy failed: %s\n", CudaGetErrorString(cudaerr));
@@ -280,19 +280,19 @@ int MPIDO_Scatterv(const void *sendbuf,
          scbuf = sendbuf;
        if(is_recv_dev_buf)
        {
-         rcbuf = MPIU_Malloc(recvcount * rdt_extent);
+         rcbuf = MPL_malloc(recvcount * rdt_extent);
          CudaMemcpy(rcbuf, recvbuf, recvcount * rdt_extent, cudaMemcpyDeviceToHost);
        }
        else
          rcbuf = recvbuf;
        int cuda_res =  MPIR_Scatterv(scbuf, sendcounts, displs, sendtype, rcbuf, recvcount, recvtype, root, comm_ptr, mpierrno);
-       if(is_send_dev_buf)MPIU_Free(scbuf);
+       if(is_send_dev_buf)MPL_free(scbuf);
        if(is_recv_dev_buf)
          {
            cudaError_t cudaerr = CudaMemcpy(recvbuf, rcbuf, recvcount * rdt_extent, cudaMemcpyHostToDevice);
            if (cudaSuccess != cudaerr)
              fprintf(stderr, "cudaMemcpy failed: %s\n", CudaGetErrorString(cudaerr));
-           MPIU_Free(rcbuf);
+           MPL_free(rcbuf);
          }
        return cuda_res;
     }
@@ -562,8 +562,8 @@ int MPIDO_Scatterv_simple(const void *sendbuf,
      {
        if (!snd_contig)
        {
-          scounts = (int*)MPIU_Malloc(size);
-          sdispls = (int*)MPIU_Malloc(size);
+          scounts = (int*)MPL_malloc(size);
+          sdispls = (int*)MPL_malloc(size);
           for(i = 0; i < size; i++)
           {
             scounts[i] = ssize * sendcounts[i];
@@ -571,7 +571,7 @@ int MPIDO_Scatterv_simple(const void *sendbuf,
             send_size += scounts[i];
             sndcount  += sendcounts[i];
           }
-          snd_noncontig_buff = MPIU_Malloc(send_size);
+          snd_noncontig_buff = MPL_malloc(send_size);
           sbuf = snd_noncontig_buff;
           stype = PAMI_TYPE_BYTE;
           if(snd_noncontig_buff == NULL)
@@ -594,7 +594,7 @@ int MPIDO_Scatterv_simple(const void *sendbuf,
    {
      if (!rcv_contig)
      {
-       rcv_noncontig_buff = MPIU_Malloc(recv_size);
+       rcv_noncontig_buff = MPL_malloc(recv_size);
        rbuf = rcv_noncontig_buff;
        if(rcv_noncontig_buff == NULL)
        {
@@ -635,13 +635,13 @@ int MPIDO_Scatterv_simple(const void *sendbuf,
    {
       MPIR_Localcopy(rcv_noncontig_buff, recv_size, MPI_CHAR,
                         recvbuf,         recvcount,     recvtype);
-      MPIU_Free(rcv_noncontig_buff);
+      MPL_free(rcv_noncontig_buff);
    }
    if(!snd_contig) 
    {
-     MPIU_Free(snd_noncontig_buff);
-     MPIU_Free(scounts);
-     MPIU_Free(sdispls);
+     MPL_free(snd_noncontig_buff);
+     MPL_free(scounts);
+     MPL_free(sdispls);
    }
 
    TRACE_ERR("Leaving MPIDO_Scatterv_optimized\n");

@@ -846,7 +846,7 @@ static int sched_cb_gcn_allocate_cid(MPID_Comm * comm, int tag, void *state)
      * So we need to clean the memory allocated for it. */
     MPIR_Comm_map_free(st->new_comm);
     MPIU_Handle_obj_free(&MPID_Comm_mem, st->new_comm);
-    MPIU_Free(st);
+    MPL_free(st);
     goto fn_exit;
 }
 

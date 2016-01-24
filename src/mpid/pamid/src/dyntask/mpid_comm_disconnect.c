@@ -261,8 +261,8 @@ int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
 	    }
 	  }
 	  k=0;
-	  /*	  local_list = MPIU_Malloc(local_tasks*sizeof(pami_task_t)); */
-	  ranks = MPIU_Malloc(local_tasks*sizeof(int));
+          /*	  local_list = MPL_malloc(local_tasks*sizeof(pami_task_t)); */
+          ranks = MPL_malloc(local_tasks*sizeof(int));
 
 	  for(i=0;i<comm_ptr->local_size;i++) {
 	    for(j=0;j<gsize;j++) {
@@ -371,7 +371,7 @@ int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
 	      total_leaders++;
 	  }
 	  TRACE_ERR("total_leaders=%d\n", total_leaders);
-	  leader_tids = MPIU_Malloc(total_leaders*sizeof(int));
+          leader_tids = MPL_malloc(total_leaders*sizeof(int));
 	  MPIDI_get_allremote_leaders(leader_tids, comm_ptr);
 	  
 	  { /* First Pair of Send / Recv -- All smaller task send to all larger tasks */
@@ -425,7 +425,7 @@ int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
 	    MPIDI_wait_for_AM(comm_ptr->mpid.world_intercomm_cntr, expected_lastAM,
 			      LAST_AM);
 	  }
-	  MPIU_Free(leader_tids);
+          MPL_free(leader_tids);
 	}
 
 	TRACE_ERR("_try_to_disconnect: Going inside final barrier for tranid %lld\n",comm_ptr->mpid.world_intercomm_cntr);
@@ -439,8 +439,8 @@ int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
 	MPIDI_free_tranid_node(comm_ptr->mpid.world_intercomm_cntr);
         mpi_errno = MPIR_Comm_release(comm_ptr,1);
         if (mpi_errno) TRACE_ERR("MPIR_Comm_release returned with mpi_errno=%d\n", mpi_errno);
-	/*	MPIU_Free(local_list); */
-	MPIU_Free(ranks);
+        /*	MPL_free(local_list); */
+        MPL_free(ranks);
     }
     return mpi_errno;
 }

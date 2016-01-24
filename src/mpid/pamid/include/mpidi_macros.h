@@ -108,10 +108,10 @@ _data_sz_out)                                                   \
  * \param[in] type  The type of the memory, excluding "*"
  * \return Address or NULL
  */
-#define MPIU_Calloc0(count, type)               \
+#define MPL_calloc0(count, type)               \
 ({                                              \
   size_t __size = (count) * sizeof(type);       \
-  type* __p = MPIU_Malloc(__size);              \
+  type* __p = MPL_malloc(__size);              \
   MPID_assert(__p != NULL);                     \
   if (__p != NULL)                              \
     memset(__p, 0, __size);                     \
@@ -122,7 +122,7 @@ _data_sz_out)                                                   \
 ({                                              \
   if (*(p) != NULL)                             \
     {                                           \
-      MPIU_Free(*(p));                          \
+      MPL_free(*(p));                          \
       *(p) = NULL;                              \
     }                                           \
 })
@@ -136,12 +136,12 @@ _data_sz_out)                                                   \
 #define MPID_VCR_GET_LPIDS(comm, taskids)                      \
 ({                                                             \
   int i;                                                       \
-  taskids=MPIU_Malloc((comm->local_size)*sizeof(pami_task_t)); \
+  taskids=MPL_malloc((comm->local_size)*sizeof(pami_task_t)); \
   MPID_assert(taskids != NULL);                                \
   for(i=0; i<comm->local_size; i++)                            \
     taskids[i] = comm->vcr[i]->taskid;                         \
 })
-#define MPID_VCR_FREE_LPIDS(taskids) MPIU_Free(taskids)
+#define MPID_VCR_FREE_LPIDS(taskids) MPL_free(taskids)
 
 #define MPID_GPID_Get(comm_ptr, rank, gpid)             \
 ({                                                      \

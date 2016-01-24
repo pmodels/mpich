@@ -2,7 +2,7 @@
  * - The file name has been changed to avoid conflicts with any system-installed
  *   "utlist.h" header files.
  * - malloc/free/realloc usages have been substituted with utarray_malloc_
- *   (etc.) indirection macros and then changed to use MPIU_Malloc and friends
+ *   (etc.) indirection macros and then changed to use MPL_malloc and friends
  * - add a ut_ptr_icd for the common case of dynamic tables of pointers
  * - intentionally omitted from "mpiimpl.h" in order to require using code to
  *   opt-in
@@ -50,10 +50,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* MPICH modification: override these to change what malloc/free/realloc
  * routines are used by the utarray code */
-#define utarray_malloc_(x_)     MPIU_Malloc(x_)
-#define utarray_free_(x_)       MPIU_Free(x_)
-#define utarray_realloc_(x_,y_) MPIU_Realloc(x_,y_)
-#define utarray_strdup_(x_)     MPIU_Strdup(x_)
+#define utarray_malloc_(x_)     MPL_malloc(x_)
+#define utarray_free_(x_)       MPL_free(x_)
+#define utarray_realloc_(x_,y_) MPL_realloc(x_,y_)
+#define utarray_strdup_(x_)     MPL_strdup(x_)
 
 #ifndef utarray_oom
 #define utarray_oom() exit(-1)

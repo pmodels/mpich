@@ -138,7 +138,7 @@ void MPIDI_Setup_networkenv()
       }
 
       if ( NULL != network )  {
-           mpich_env->network_string = (char *) MPIU_Malloc(strlen(network)+1);
+           mpich_env->network_string = (char *) MPL_malloc(strlen(network)+1);
            if( NULL !=   mpich_env->network_string )  {
               memcpy(mpich_env->network_string,network,strlen(network)+1);
            }
@@ -190,7 +190,7 @@ int  MPIDI_Update_mpenv()
         CopySendBufSize = SendBufSize - sizeof(MPIDI_MsgInfo);
         mpich_env->copySendBufSize = CopySendBufSize;
 
-        pami_config = (pami_configuration_t *) MPIU_Malloc(10 * sizeof(pami_configuration_t));
+        pami_config = (pami_configuration_t *) MPL_malloc(10 * sizeof(pami_configuration_t));
         memset((void *) pami_config,0, sizeof(pami_config));
         pami_config[0].name = (pami_attribute_name_t)PAMI_CONTEXT_MAX_PKT_SZ;
         pami_config[1].name = (pami_attribute_name_t)PAMI_CONTEXT_RFIFO_SZ;
@@ -219,7 +219,7 @@ int  MPIDI_Update_mpenv()
         }
         /* obtain minimum message size for bulk xfer (rdma)  */
         mpich_env->rdma_min_msg_size = (long) pami_config[4].value.intval;
-        MPIU_Free(pami_config);
+        MPL_free(pami_config);
 }
 
 
@@ -639,7 +639,7 @@ int MPIDI_Print_mpenv(int rank,int size)
         strcpy(sender.striping_type, striping_type_set[(mpich_env->strip_type)]);
 
 
-        pami_config = (pami_configuration_t *) MPIU_Malloc(10 * sizeof(pami_configuration_t));
+        pami_config = (pami_configuration_t *) MPL_malloc(10 * sizeof(pami_configuration_t));
         memset((void *) pami_config,0, sizeof(pami_config));
         pami_config[0].name = (pami_attribute_name_t)PAMI_CONTEXT_ACK_THRESH;
         pami_config[1].name = (pami_attribute_name_t)PAMI_CONTEXT_REXMIT_BUF_CNT;
@@ -659,7 +659,7 @@ int MPIDI_Print_mpenv(int rank,int size)
             strcpy(sender.rc_qp_use_lmc, "YES");
         else
             strcpy(sender.rc_qp_use_lmc, "NO");
-        MPIU_Free(pami_config);
+        MPL_free(pami_config);
 
         /* - Begin Bulk transfer/RDMA & IB settings */
         if ( mpich_env->use_rdma == PAMI_HINT_DISABLE )
@@ -700,9 +700,9 @@ int MPIDI_Print_mpenv(int rank,int size)
         }
 
         if (mytask == 0) {  /* allocate a receive buffer for the gather of the base structure */
-                gatherer = (MPIDI_printenv_t*) MPIU_Malloc(task_count * sizeof(MPIDI_printenv_t));
+                gatherer = (MPIDI_printenv_t*) MPL_malloc(task_count * sizeof(MPIDI_printenv_t));
                 if (!gatherer) {
-                        TRACE_ERR("_mpi_printenv gatherer MPIU_Malloc failed rc=%d\n",rc);
+                        TRACE_ERR("_mpi_printenv gatherer MPL_malloc failed rc=%d\n",rc);
                         return 1;
                 }
                 memset(gatherer,0,task_count*sizeof(MPIDI_printenv_t));
@@ -775,7 +775,7 @@ int MPIDI_Print_mpenv(int rank,int size)
 
 
         if (mytask == 0) {
-            MPIU_Free(gatherer);
+            MPL_free(gatherer);
         }
 
         return 0;
@@ -791,13 +791,13 @@ void MPIDI_print_statistics() {
        if (MPIDI_Process.mp_statistics) {
            MPIDI_Statistics_write(stdout);
            if (mpid_statp) {
-               MPIU_Free(mpid_statp);
+               MPL_free(mpid_statp);
                mpid_statp=NULL;
            }
        }
     if (MPIDI_Process.mp_printenv) {
         if (mpich_env) {
-            MPIU_Free(mpich_env);
+            MPL_free(mpich_env);
             mpich_env=NULL;
         }
     }
@@ -1334,10 +1334,10 @@ static void MPIDI_collsel_init_advisor_params(advisor_params_t *params)
 
 static void MPIDI_collsel_free_advisor_params(advisor_params_t *params)
 {
-  if(params->collectives) MPIU_Free(params->collectives);
-  if(params->procs_per_node) MPIU_Free(params->procs_per_node);
-  if(params->geometry_sizes) MPIU_Free(params->geometry_sizes);
-  if(params->message_sizes) MPIU_Free(params->message_sizes);
+  if(params->collectives) MPL_free(params->collectives);
+  if(params->procs_per_node) MPL_free(params->procs_per_node);
+  if(params->geometry_sizes) MPL_free(params->geometry_sizes);
+  if(params->message_sizes) MPL_free(params->message_sizes);
 }
 
 
@@ -1370,7 +1370,7 @@ static void MPIDI_collsel_init_xfer_tables()
 static int MPIDI_collsel_process_collectives(char *coll_arg, advisor_params_t *params)
 {
   int i, ret = 0, arg_len = strlen(coll_arg);
-  char *collectives = (char *) MPIU_Malloc(arg_len + 1);
+  char *collectives = (char *) MPL_malloc(arg_len + 1);
   char *coll;
   int infolevel = 0;
 #if (MPIDI_STATISTICS || MPIDI_PRINTENV)
@@ -1380,11 +1380,11 @@ static int MPIDI_collsel_process_collectives(char *coll_arg, advisor_params_t *p
   /* if already set via config file, free it */
   if(params->collectives)
   {
-    MPIU_Free(params->collectives);
+    MPL_free(params->collectives);
     params->num_collectives = 0;
   }
   /* Allocating some extra space should be fine */
-  params->collectives = (pami_xfer_type_t *)MPIU_Malloc(sizeof(pami_xfer_type_t)*PAMI_XFER_COUNT);
+  params->collectives = (pami_xfer_type_t *)MPL_malloc(sizeof(pami_xfer_type_t)*PAMI_XFER_COUNT);
 
   strcpy(collectives, coll_arg);
   coll = strtok(collectives,",");
@@ -1443,12 +1443,12 @@ static int MPIDI_collsel_process_collectives(char *coll_arg, advisor_params_t *p
   }
   if(params->num_collectives == 0)
   {
-    MPIU_Free(params->collectives);
+    MPL_free(params->collectives);
     params->collectives = NULL;
     ret = 1;
   }
 
-  MPIU_Free(collectives);
+  MPL_free(collectives);
   return ret;
 }
 
@@ -1456,18 +1456,18 @@ static int MPIDI_collsel_process_collectives(char *coll_arg, advisor_params_t *p
 static int MPIDI_collsel_process_msg_sizes(char *msg_sizes_arg, advisor_params_t *params)
 {
   int ret = 0, arg_len = strlen(msg_sizes_arg);
-  char *msg_sizes = (char *) MPIU_Malloc(arg_len + 1);
+  char *msg_sizes = (char *) MPL_malloc(arg_len + 1);
   char *msg_sz;
   size_t tmp;
   size_t array_size = 50;
   /* if already set via config file, free it */
   if(params->message_sizes)
   {
-    MPIU_Free(params->message_sizes);
+    MPL_free(params->message_sizes);
     params->num_message_sizes = 0;
   }
   /* Allocating some extra space should be fine */
-  params->message_sizes = (size_t *)MPIU_Malloc(sizeof(size_t) * array_size);
+  params->message_sizes = (size_t *)MPL_malloc(sizeof(size_t) * array_size);
 
   strcpy(msg_sizes, msg_sizes_arg);
   msg_sz = strtok(msg_sizes,",");
@@ -1476,7 +1476,7 @@ static int MPIDI_collsel_process_msg_sizes(char *msg_sizes_arg, advisor_params_t
     tmp = strtol(msg_sz, NULL, 10);
     if(tmp == 0)
     {
-      MPIU_Free(params->message_sizes);
+      MPL_free(params->message_sizes);
       params->message_sizes = NULL;
       if(!task_id)
       {
@@ -1489,13 +1489,13 @@ static int MPIDI_collsel_process_msg_sizes(char *msg_sizes_arg, advisor_params_t
     if(params->num_message_sizes >= array_size)
     {
       array_size *= 2;
-      params->message_sizes = (size_t *) MPIU_Realloc(params->message_sizes,
+      params->message_sizes = (size_t *) MPL_realloc(params->message_sizes,
                                                       sizeof(size_t) * array_size);
     }
     params->message_sizes[params->num_message_sizes++] = tmp;
     msg_sz = strtok(NULL,",");
   }
-  MPIU_Free(msg_sizes);
+  MPL_free(msg_sizes);
   return ret;
 }
 
@@ -1503,18 +1503,18 @@ static int MPIDI_collsel_process_msg_sizes(char *msg_sizes_arg, advisor_params_t
 static int MPIDI_collsel_process_geo_sizes(char *geo_sizes_arg, advisor_params_t *params)
 {
   int ret = 0, arg_len = strlen(geo_sizes_arg);
-  char *geo_sizes = (char *) MPIU_Malloc(arg_len + 1);
+  char *geo_sizes = (char *) MPL_malloc(arg_len + 1);
   char *geo_sz;
   size_t tmp;
   size_t array_size = 50;
   /* if already set via config file, free it */
   if(params->geometry_sizes)
   {
-    MPIU_Free(params->geometry_sizes);
+    MPL_free(params->geometry_sizes);
     params->num_geometry_sizes = 0;
   }
   /* Allocating some extra space should be fine */
-  params->geometry_sizes = (size_t *)MPIU_Malloc(sizeof(size_t) * array_size);
+  params->geometry_sizes = (size_t *)MPL_malloc(sizeof(size_t) * array_size);
 
   strcpy(geo_sizes, geo_sizes_arg);
   geo_sz = strtok(geo_sizes,",");
@@ -1523,7 +1523,7 @@ static int MPIDI_collsel_process_geo_sizes(char *geo_sizes_arg, advisor_params_t
     tmp = strtol(geo_sz, NULL, 10);
     if(tmp < 2 || tmp > num_tasks)
     {
-      MPIU_Free(params->geometry_sizes);
+      MPL_free(params->geometry_sizes);
       params->geometry_sizes = NULL;
       if(!task_id)
       {
@@ -1536,13 +1536,13 @@ static int MPIDI_collsel_process_geo_sizes(char *geo_sizes_arg, advisor_params_t
     if(params->num_geometry_sizes >= array_size)
     {
       array_size *= 2;
-      params->geometry_sizes = (size_t *) MPIU_Realloc(params->geometry_sizes,
+      params->geometry_sizes = (size_t *) MPL_realloc(params->geometry_sizes,
                                                        sizeof(size_t) * array_size);
     }
     params->geometry_sizes[params->num_geometry_sizes++] = tmp;
     geo_sz = strtok(NULL,",");
   }
-  MPIU_Free(geo_sizes);
+  MPL_free(geo_sizes);
   return ret;
 }
 
@@ -1565,7 +1565,7 @@ static int MPIDI_collsel_process_output_file(char *filename, char **out_file)
     }
     fprintf(stderr, "File %s already exists, renaming existing file\n", filename);
 
-    newname = (char *) MPIU_Malloc(filename_len + 5);
+    newname = (char *) MPL_malloc(filename_len + 5);
     for (i = 0; i < 500; ++i)
     {
       sprintf(newname,"%s.%d", filename, i);
@@ -1575,7 +1575,7 @@ static int MPIDI_collsel_process_output_file(char *filename, char **out_file)
         break;
       }
     }
-    MPIU_Free(newname);
+    MPL_free(newname);
     if(i == 500 || ret != 0)
     {
       fprintf(stderr, "Error renaming file\n");
@@ -1583,8 +1583,8 @@ static int MPIDI_collsel_process_output_file(char *filename, char **out_file)
     }
   }
   /* if file name is already set via config file, free it */
-  if(*out_file) MPIU_Free(*out_file);
-  *out_file = (char *)MPIU_Malloc(filename_len + 1);
+  if(*out_file) MPL_free(*out_file);
+  *out_file = (char *)MPL_malloc(filename_len + 1);
   strcpy(*out_file, filename);
 
   return ret;
@@ -1648,7 +1648,7 @@ static int MPIDI_collsel_process_ini_file(const char *filename, advisor_params_t
             filename, strerror(errno));
     return 1;
   }
-  line = (char *) MPIU_Malloc(2000);
+  line = (char *) MPL_malloc(2000);
 
   while (fgets(line, 2000, file) != NULL)
   {
@@ -1718,7 +1718,7 @@ static int MPIDI_collsel_process_ini_file(const char *filename, advisor_params_t
     }
     if(ret) break;
   }
-  MPIU_Free(line);
+  MPL_free(line);
   fclose(file);
 
   return ret;
@@ -1825,7 +1825,7 @@ static int MPIDI_collsel_process_arg(int argc, char *argv[], advisor_params_t *p
    /* If user did not specify any collectives, benchmark all */
    if(params->num_collectives == 0)
    {
-     params->collectives = (pami_xfer_type_t *)MPIU_Malloc(sizeof(pami_xfer_type_t)*PAMI_XFER_COUNT);
+     params->collectives = (pami_xfer_type_t *)MPL_malloc(sizeof(pami_xfer_type_t)*PAMI_XFER_COUNT);
      for(i = 0; i < PAMI_XFER_COUNT; i++)
      {
        if(i == 4 || i == 7 || i == 10 || i == 14)
@@ -1881,7 +1881,7 @@ int MPIDI_collsel_pami_tune_parse_params(int argc, char ** argv)
     MPIDI_collsel_print_usage();
     return PAMI_ERROR;
   }
-  MPIDI_Collsel_advisor_params.procs_per_node = (size_t*)MPIU_Malloc(1 * sizeof(size_t));
+  MPIDI_Collsel_advisor_params.procs_per_node = (size_t*)MPL_malloc(1 * sizeof(size_t));
   MPIDI_Collsel_advisor_params.num_procs_per_node = 1;
   MPIDI_Collsel_advisor_params.procs_per_node[0] = PAMIX_Client_query(MPIDI_Client, PAMI_CLIENT_NUM_LOCAL_TASKS  ).value.intval;
 

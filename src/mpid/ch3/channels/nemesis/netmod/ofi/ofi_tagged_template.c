@@ -48,7 +48,7 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_callback)(cq_tagged_entry_t * wc, MPID_Request 
                                MPI_BYTE, &err0, rreq->dev.user_buf,
                                rreq->dev.user_count, rreq->dev.datatype, &sz, &err1);
         MPIR_STATUS_SET_COUNT(rreq->status, sz);
-        MPIU_Free(REQ_OFI(rreq)->pack_buffer);
+        MPL_free(REQ_OFI(rreq)->pack_buffer);
         if (err0 || err1) {
             rreq->status.MPI_ERROR = MPI_ERR_TYPE;
         }
@@ -150,7 +150,7 @@ ADD_SUFFIX(do_isend)(struct MPIDI_VC *vc,
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     send_buffer = (char *) buf + dt_true_lb;
     if (!dt_contig) {
-        send_buffer = (char *) MPIU_Malloc(data_sz);
+        send_buffer = (char *) MPL_malloc(data_sz);
         MPIR_ERR_CHKANDJUMP1(send_buffer == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send buffer alloc");
         MPIDI_CH3U_Buffer_copy(buf, count, datatype, &err0,
@@ -315,7 +315,7 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_posted)(struct MPIDI_VC *vc, struct MPID_Reques
         recv_buffer = (char *) rreq->dev.user_buf + dt_true_lb;
     }
     else {
-        recv_buffer = (char *) MPIU_Malloc(data_sz);
+        recv_buffer = (char *) MPL_malloc(data_sz);
         MPIR_ERR_CHKANDJUMP1(recv_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
                              "**nomem", "**nomem %s", "Recv Pack Buffer alloc");
         REQ_OFI(rreq)->pack_buffer = recv_buffer;

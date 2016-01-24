@@ -54,7 +54,7 @@
 /* Returns 0 on success, -1 on error */
 #define MPIU_SHMW_Hnd_ref_alloc(hnd)(                               \
     ((hnd)->ghnd = (MPIU_SHMW_Ghnd_t)                               \
-                    MPIU_Malloc(MPIU_SHMW_GHND_SZ)) ? 0 : -1        \
+                    MPL_malloc(MPIU_SHMW_GHND_SZ)) ? 0 : -1        \
 )
 
 #ifdef  USE_SYSV_SHM
@@ -185,7 +185,7 @@ static inline int MPIU_SHMW_Ghnd_set_uniq(MPIU_SHMW_Hnd_t hnd)
 static inline int MPIU_SHMW_Ghnd_alloc(MPIU_SHMW_Hnd_t hnd)
 {
     if(!(hnd->ghnd)){
-        hnd->ghnd = (MPIU_SHMW_Ghnd_t)MPIU_Malloc(MPIU_SHMW_GHND_SZ);
+        hnd->ghnd = (MPIU_SHMW_Ghnd_t)MPL_malloc(MPIU_SHMW_GHND_SZ);
         if(!(hnd->ghnd)){ return -1; }
     }
     /* Global handle is no longer static */
@@ -214,7 +214,7 @@ static inline int MPIU_SHMW_Ghnd_alloc(MPIU_SHMW_Hnd_t hnd)
 static inline int MPIU_SHMW_Hnd_alloc(MPIU_SHMW_Hnd_t *hnd_ptr)
 {
     MPIU_Assert(hnd_ptr);
-    *hnd_ptr = (MPIU_SHMW_Hnd_t) MPIU_Malloc(MPIU_SHMW_HND_SZ);
+    *hnd_ptr = (MPIU_SHMW_Hnd_t) MPL_malloc(MPIU_SHMW_HND_SZ);
     if(*hnd_ptr){
         (*hnd_ptr)->flag = MPIU_SHMW_FLAG_GHND_STATIC;
     }
@@ -244,9 +244,9 @@ static inline void MPIU_SHMW_Hnd_free(MPIU_SHMW_Hnd_t hnd)
 {
     if(MPIU_SHMW_Hnd_is_init(hnd)){
         if(!(hnd->flag & MPIU_SHMW_FLAG_GHND_STATIC)){
-            MPIU_Free(hnd->ghnd);
+            MPL_free(hnd->ghnd);
         }
-        MPIU_Free(hnd);
+        MPL_free(hnd);
     }
 }
 

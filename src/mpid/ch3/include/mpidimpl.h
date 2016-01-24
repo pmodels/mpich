@@ -827,7 +827,7 @@ extern MPIDI_CH3U_SRBuf_element_t * MPIDI_CH3U_SRBuf_pool;
         MPIDI_CH3U_SRBuf_element_t * tmp;                               \
         if (!MPIDI_CH3U_SRBuf_pool) {                                   \
              MPIDI_CH3U_SRBuf_pool =                                    \
-                MPIU_Malloc(sizeof(MPIDI_CH3U_SRBuf_element_t));        \
+                MPL_malloc(sizeof(MPIDI_CH3U_SRBuf_element_t));        \
             MPIDI_CH3U_SRBuf_pool->next = NULL;                         \
         }                                                               \
         tmp = MPIDI_CH3U_SRBuf_pool;                                    \
@@ -1110,15 +1110,15 @@ int MPIDI_CH3U_Win_gather_info(void *, MPI_Aint, int, MPID_Info *, MPID_Comm *,
 
 #ifdef MPIDI_CH3I_HAS_ALLOC_MEM
 void* MPIDI_CH3I_Alloc_mem(size_t size, MPID_Info *info_ptr);
-/* fallback to MPIU_Malloc if channel does not have its own RMA memory allocator */
+/* fallback to MPL_malloc if channel does not have its own RMA memory allocator */
 #else
-#define MPIDI_CH3I_Alloc_mem(size, info_ptr)    MPIU_Malloc(size)
+#define MPIDI_CH3I_Alloc_mem(size, info_ptr)    MPL_malloc(size)
 #endif
 
 #ifdef MPIDI_CH3I_HAS_FREE_MEM
 int MPIDI_CH3I_Free_mem(void *ptr);
 #else
-#define MPIDI_CH3I_Free_mem(ptr)    MPIU_Free(ptr);
+#define MPIDI_CH3I_Free_mem(ptr)    MPL_free(ptr);
 #endif
 
 /* Pvars */
