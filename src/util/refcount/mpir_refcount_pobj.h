@@ -42,7 +42,7 @@ static inline void MPIR_cc_set(MPIR_cc_t * cc_ptr, int val)
 }
 
 ATTRIBUTE((unused))
-static MPL_DBG_INLINE_KEYWORD int MPIR_cc_is_complete(MPIR_cc_t * cc_ptr)
+static inline int MPIR_cc_is_complete(MPIR_cc_t * cc_ptr)
 {
     int complete;
 
