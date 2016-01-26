@@ -1,16 +1,16 @@
-process 0 binding: 1 1 1 1 1 1 1 1 
-process 1 binding: 1 1 1 1 1 1 1 1 
-process 2 binding: 1 1 1 1 1 1 1 1 
-process 3 binding: 1 1 1 1 1 1 1 1 
-process 4 binding: 1 1 1 1 1 1 1 1 
-process 5 binding: 1 1 1 1 1 1 1 1 
-process 6 binding: 1 1 1 1 1 1 1 1 
-process 7 binding: 1 1 1 1 1 1 1 1 
-process 8 binding: 1 1 1 1 1 1 1 1 
-process 9 binding: 1 1 1 1 1 1 1 1 
-process 10 binding: 1 1 1 1 1 1 1 1 
-process 11 binding: 1 1 1 1 1 1 1 1 
-process 12 binding: 1 1 1 1 1 1 1 1 
-process 13 binding: 1 1 1 1 1 1 1 1 
-process 14 binding: 1 1 1 1 1 1 1 1 
-process 15 binding: 1 1 1 1 1 1 1 1 
+process 0 binding: 11111111
+process 1 binding: 11111111
+process 2 binding: 11111111
+process 3 binding: 11111111
+process 4 binding: 11111111
+process 5 binding: 11111111
+process 6 binding: 11111111
+process 7 binding: 11111111
+process 8 binding: 11111111
+process 9 binding: 11111111
+process 10 binding: 11111111
+process 11 binding: 11111111
+process 12 binding: 11111111
+process 13 binding: 11111111
+process 14 binding: 11111111
+process 15 binding: 11111111
