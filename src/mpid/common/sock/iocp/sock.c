@@ -723,7 +723,7 @@ int MPIDU_Sock_get_host_description(int myRank,
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_SOCK_GET_HOST_DESCRIPTION);
 
-    MPIU_UNREFERENCED_ARG(myRank);
+    MPL_UNREFERENCED_ARG(myRank);
 
     if (!g_init_called)
     {
@@ -1532,7 +1532,7 @@ int MPIDU_Sock_post_read(MPIDU_Sock_t sock, void * buf, MPIU_Size_t minbr, MPIU_
     MPIDI_STATE_DECL(MPID_STATE_MPIDU_SOCK_POST_READ);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_SOCK_POST_READ);
-    MPIU_UNREFERENCED_ARG(maxbr);
+    MPL_UNREFERENCED_ARG(maxbr);
     sock->read.tiov.MPL_IOV_BUF = (MPL_IOV_BUF_CAST)buf;
     sock->read.tiov.MPL_IOV_LEN = minbr;
     mpi_errno = MPIDU_Sock_post_readv(sock, &sock->read.tiov, 1, fn);
@@ -1657,7 +1657,7 @@ int MPIDU_Sock_post_write(MPIDU_Sock_t sock, void * buf, MPIU_Size_t min, MPIU_S
     MPIDI_STATE_DECL(MPID_STATE_MPIDU_SOCK_POST_WRITE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_SOCK_POST_WRITE);
-    MPIU_UNREFERENCED_ARG(max);
+    MPL_UNREFERENCED_ARG(max);
     sock->write.tiov.MPL_IOV_BUF = (MPL_IOV_BUF_CAST)buf;
     sock->write.tiov.MPL_IOV_LEN = min;
     mpi_errno = MPIDU_Sock_post_writev(sock, &sock->write.tiov, 1, fn);

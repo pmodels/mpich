@@ -66,7 +66,7 @@ PMPI_LOCAL int MPIR_Ibsend_cancel( void *extra, int complete )
     /* Note that this value should always be 1 because 
        Grequest_complete is called on this request when it is
        created */
-    MPIU_UNREFERENCED_ARG(complete);
+    MPL_UNREFERENCED_ARG(complete);
 
 
     /* Try to cancel the underlying request */

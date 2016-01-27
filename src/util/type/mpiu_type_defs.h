@@ -43,13 +43,6 @@
 #define BOOL int
 #endif
 #endif
-/* Use this macro for each parameter to a function that is not referenced in
-   the body of the function */
-#ifdef HAVE_WINDOWS_H
-#define MPIU_UNREFERENCED_ARG(a) a
-#else
-#define MPIU_UNREFERENCED_ARG(a)
-#endif
 
 #include "mpl.h"
 

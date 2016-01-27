@@ -30,7 +30,7 @@ ADIO_Offset ADIOI_GEN_SeekIndividual(ADIO_File fd, ADIO_Offset offset,
     int filetype_is_contig;
     MPI_Aint filetype_extent;
 
-    ADIOI_UNREFERENCED_ARG(whence);
+    MPL_UNREFERENCED_ARG(whence);
 
     ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
     etype_size = fd->etype_size;

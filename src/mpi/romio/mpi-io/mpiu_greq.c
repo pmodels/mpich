@@ -41,8 +41,8 @@ int MPIU_Greq_free_fn(void *extra_state)
 }
 int MPIU_Greq_cancel_fn(void *extra_state, int complete)
 {
-    MPIU_UNREFERENCED_ARG(extra_state);
-    MPIU_UNREFERENCED_ARG(complete);
+    MPL_UNREFERENCED_ARG(extra_state);
+    MPL_UNREFERENCED_ARG(complete);
 
     /* can't cancel */
     return MPI_SUCCESS;

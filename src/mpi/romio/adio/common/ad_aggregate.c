@@ -81,7 +81,7 @@ int ADIOI_Calc_aggregator(ADIO_File fd,
     int rank_index, rank;
     ADIO_Offset avail_bytes;
 
-    ADIOI_UNREFERENCED_ARG(fd_start);
+    MPL_UNREFERENCED_ARG(fd_start);
 
     /* get an index into our array of aggregators */
     rank_index = (int) ((off - min_off + fd_size)/ fd_size - 1);

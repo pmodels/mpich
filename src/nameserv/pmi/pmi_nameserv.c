@@ -30,7 +30,7 @@ int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
 {
     static struct MPID_NS_Handle nsHandleWithNoData;
 
-    MPIU_UNREFERENCED_ARG(info_ptr);
+    MPL_UNREFERENCED_ARG(info_ptr);
     /* MPID_NS_Create() should always create a valid handle */
     *handle_ptr = &nsHandleWithNoData;	/* The name service needs no local data */
     return 0;
@@ -45,8 +45,8 @@ int MPID_NS_Publish( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 {
     int mpi_errno = MPI_SUCCESS;
     int rc;
-    MPIU_UNREFERENCED_ARG(info_ptr);
-    MPIU_UNREFERENCED_ARG(handle);
+    MPL_UNREFERENCED_ARG(info_ptr);
+    MPL_UNREFERENCED_ARG(handle);
 
 #ifdef USE_PMI2_API
     /* release the global CS for PMI calls */
@@ -71,8 +71,8 @@ int MPID_NS_Lookup( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 {
     int mpi_errno = MPI_SUCCESS;
     int rc;
-    MPIU_UNREFERENCED_ARG(info_ptr);
-    MPIU_UNREFERENCED_ARG(handle);
+    MPL_UNREFERENCED_ARG(info_ptr);
+    MPL_UNREFERENCED_ARG(handle);
 
 #ifdef USE_PMI2_API
     /* release the global CS for PMI calls */
@@ -97,8 +97,8 @@ int MPID_NS_Unpublish( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 {
     int mpi_errno = MPI_SUCCESS;
     int rc;
-    MPIU_UNREFERENCED_ARG(info_ptr);
-    MPIU_UNREFERENCED_ARG(handle);
+    MPL_UNREFERENCED_ARG(info_ptr);
+    MPL_UNREFERENCED_ARG(handle);
 
 #ifdef USE_PMI2_API
     /* release the global CS for PMI calls */
@@ -119,7 +119,7 @@ fn_fail:
 int MPID_NS_Free( MPID_NS_Handle *handle_ptr )
 {
     /* MPID_NS_Handle is Null */
-    MPIU_UNREFERENCED_ARG(handle_ptr);
+    MPL_UNREFERENCED_ARG(handle_ptr);
     return 0;
 }
 

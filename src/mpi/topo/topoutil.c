@@ -81,7 +81,7 @@ int MPIR_Topology_put( MPID_Comm *comm_ptr, MPIR_Topology *topo_ptr )
 
 static int MPIR_Topology_finalize( void *p ATTRIBUTE((unused)) )
 {
-    MPIU_UNREFERENCED_ARG(p);
+    MPL_UNREFERENCED_ARG(p);
 
     if (MPIR_Topology_keyval != MPI_KEYVAL_INVALID) {
 	/* Just in case */
@@ -136,9 +136,9 @@ static int MPIR_Topology_copy_fn ( MPI_Comm comm ATTRIBUTE((unused)),
     MPIU_CHKPMEM_DECL(5);
     int mpi_errno = 0;
 
-    MPIU_UNREFERENCED_ARG(comm);
-    MPIU_UNREFERENCED_ARG(keyval);
-    MPIU_UNREFERENCED_ARG(extra_data);
+    MPL_UNREFERENCED_ARG(comm);
+    MPL_UNREFERENCED_ARG(keyval);
+    MPL_UNREFERENCED_ARG(extra_data);
 
     *flag = 0;
     *(void **)attr_out = NULL;
@@ -210,9 +210,9 @@ static int MPIR_Topology_delete_fn ( MPI_Comm comm ATTRIBUTE((unused)),
 {
     MPIR_Topology *topology = (MPIR_Topology *)attr_val;
 
-    MPIU_UNREFERENCED_ARG(comm);
-    MPIU_UNREFERENCED_ARG(keyval);
-    MPIU_UNREFERENCED_ARG(extra_data);
+    MPL_UNREFERENCED_ARG(comm);
+    MPL_UNREFERENCED_ARG(keyval);
+    MPL_UNREFERENCED_ARG(extra_data);
 
     /* FIXME - free the attribute data structure */
     
