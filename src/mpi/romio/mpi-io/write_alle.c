@@ -57,7 +57,7 @@ int MPIOI_File_write_all_end(MPI_File fh,
     int error_code;
     ADIO_File adio_fh;
 
-    MPIU_UNREFERENCED_ARG(buf);
+    MPL_UNREFERENCED_ARG(buf);
 
     ROMIO_THREAD_CS_ENTER();
 

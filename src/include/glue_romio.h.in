@@ -12,14 +12,6 @@
 #define MPIU_Pint @MPIU_PINT@
 #define MPIU_Upint unsigned @MPIU_PINT@
 
-/* used by ROMIO, should be handled by a romio-private version of this macro
- * instead */
-#ifdef HAVE_WINDOWS_H
-#define MPIU_UNREFERENCED_ARG(a) a
-#else
-#define MPIU_UNREFERENCED_ARG(a)
-#endif
-
 int MPIR_Ext_assert_fail(const char *cond, const char *file_name, int line_num);
 
 #if (!defined(NDEBUG) && (@HAVE_ERROR_CHECKING@))

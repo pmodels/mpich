@@ -395,9 +395,9 @@ int ADIOI_cb_copy_name_array(MPI_Comm comm,
 {
     ADIO_cb_name_array array;
 
-    ADIOI_UNREFERENCED_ARG(comm);
-    ADIOI_UNREFERENCED_ARG(keyval); 
-    ADIOI_UNREFERENCED_ARG(extra);
+    MPL_UNREFERENCED_ARG(comm);
+    MPL_UNREFERENCED_ARG(keyval);
+    MPL_UNREFERENCED_ARG(extra);
 
     array = (ADIO_cb_name_array) attr_in;
     if (array != NULL) array->refct++;
@@ -417,8 +417,8 @@ int ADIOI_cb_delete_name_array(MPI_Comm comm,
 {
     ADIO_cb_name_array array;
 
-    ADIOI_UNREFERENCED_ARG(comm);
-    ADIOI_UNREFERENCED_ARG(extra);
+    MPL_UNREFERENCED_ARG(comm);
+    MPL_UNREFERENCED_ARG(extra);
 
     array = (ADIO_cb_name_array) attr_val;
     ADIOI_Assert(array != NULL);

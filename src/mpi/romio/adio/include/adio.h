@@ -55,13 +55,6 @@
 # define FORTRAN_API
 #endif
 
-/* Use this macro for each parameter to a function that is not referenced in the body of the function */
-#ifdef HAVE_WINDOWS_H
-#define ADIOI_UNREFERENCED_ARG(a) a
-#else
-#define ADIOI_UNREFERENCED_ARG(a)
-#endif
-
 /* Include romioconf.h if we haven't already (some include files may
    need to include romioconf before some system includes) */
 #ifndef ROMIOCONF_H_INCLUDED

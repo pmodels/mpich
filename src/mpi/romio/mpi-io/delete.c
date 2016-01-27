@@ -46,7 +46,7 @@ int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
                 MPI_FILE_NULL, MPI_DATATYPE_NULL, -1);
 #endif /* MPI_hpux */
 
-    MPIU_UNREFERENCED_ARG(info);
+    MPL_UNREFERENCED_ARG(info);
 
     ROMIO_THREAD_CS_ENTER();
 

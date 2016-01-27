@@ -460,8 +460,8 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
 #endif /* STAT APPROACH */
 
 #ifdef ROMIO_NTFS
-    ADIOI_UNREFERENCED_ARG(filename);
-    ADIOI_UNREFERENCED_ARG(error_code);
+    MPL_UNREFERENCED_ARG(filename);
+    MPL_UNREFERENCED_ARG(error_code);
     *fstype = ADIO_NTFS; /* only supported FS on Windows */
 #elif defined(ROMIO_NFS)
     *fstype = ADIO_NFS;

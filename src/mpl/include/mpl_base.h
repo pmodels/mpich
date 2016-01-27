@@ -80,6 +80,14 @@
 #define MPL_MAX(a,b)    (((a) > (b)) ? (a) : (b))
 #define MPL_MIN(a,b)    (((a) < (b)) ? (a) : (b))
 
+/* Use this macro for each parameter to a function that is not referenced in
+   the body of the function */
+#ifdef MPL_HAVE_WINDOWS_H
+#define MPL_UNREFERENCED_ARG(a) a
+#else
+#define MPL_UNREFERENCED_ARG(a)
+#endif
+
 /* This macro is used to silence warnings from the Mac OS X linker when
  * an object file "has no symbols".  The unused attribute prevents a
  * warning about the unused dummy variable while the used attribute

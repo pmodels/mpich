@@ -19,9 +19,9 @@ int MPIR_Dup_fn ( MPI_Comm comm ATTRIBUTE((unused)),
 {
     /* No error checking at present */
 
-    MPIU_UNREFERENCED_ARG(comm);
-    MPIU_UNREFERENCED_ARG(keyval);
-    MPIU_UNREFERENCED_ARG(extra_state);
+    MPL_UNREFERENCED_ARG(comm);
+    MPL_UNREFERENCED_ARG(keyval);
+    MPL_UNREFERENCED_ARG(extra_state);
 
     /* Set attr_out, the flag and return success */
     (*(void **)attr_out) = attr_in;

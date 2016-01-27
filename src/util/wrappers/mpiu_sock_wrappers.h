@@ -440,7 +440,7 @@ static inline void MPIU_SOCKW_Waitset_curindex_inc_(MPIU_SOCKW_Waitset_hnd_t wai
 static inline void MPIU_SOCKW_Waitset_expand_(MPIU_SOCKW_Waitset_hnd_t waitset_hnd,
     int *index_ptr)
 {
-    MPIU_UNREFERENCED_ARG(index_ptr);
+    MPL_UNREFERENCED_ARG(index_ptr);
     (waitset_hnd)->nfds++;
     MPIU_Assert((waitset_hnd)->nfds < FD_SETSIZE);
 }

@@ -795,7 +795,7 @@ static inline int MPIU_SHMW_Seg_detach(
     int mpi_errno = MPI_SUCCESS;
     int rc = -1;
 
-    MPIU_UNREFERENCED_ARG(seg_sz);
+    MPL_UNREFERENCED_ARG(seg_sz);
     MPIR_ERR_CHKANDJUMP(!MPIU_SHMW_Hnd_is_valid(hnd),
         mpi_errno, MPI_ERR_OTHER, "**shmw_badhnd");
     MPIU_Assert(shm_addr_ptr);

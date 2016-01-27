@@ -129,7 +129,7 @@ void mpirinitf_(void);
 /* style: allow:fprintf:1 sig:0 */
 static int assert_hook( int reportType, char *message, int *returnValue )
 {
-    MPIU_UNREFERENCED_ARG(reportType);
+    MPL_UNREFERENCED_ARG(reportType);
     fprintf(stderr, "%s", message);
     if (returnValue != NULL)
 	ExitProcess((UINT)(*returnValue));

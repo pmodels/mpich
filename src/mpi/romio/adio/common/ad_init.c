@@ -52,8 +52,8 @@ void ADIO_Init(int *argc, char ***argv, int *error_code)
     char *c;
 #endif
 
-    ADIOI_UNREFERENCED_ARG(argc);
-    ADIOI_UNREFERENCED_ARG(argv);
+    MPL_UNREFERENCED_ARG(argc);
+    MPL_UNREFERENCED_ARG(argv);
     
 #ifdef ROMIO_INSIDE_MPICH
     MPIR_Ext_init();

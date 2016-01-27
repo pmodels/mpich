@@ -971,8 +971,8 @@ void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
     /* Not sure unsigned is necessary, but it makes the math safer */
     unsigned *curr_from_proc, *done_from_proc, *recv_buf_idx;
 
-    ADIOI_UNREFERENCED_ARG(requests);
-    ADIOI_UNREFERENCED_ARG(statuses);
+    MPL_UNREFERENCED_ARG(requests);
+    MPL_UNREFERENCED_ARG(statuses);
 
 /*  curr_from_proc[p] = amount of data recd from proc. p that has already
                         been accounted for so far

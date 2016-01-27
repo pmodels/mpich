@@ -43,7 +43,7 @@ int MPI_File_read_ordered_end(MPI_File fh, void *buf, MPI_Status *status)
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_READ_ORDERED_END";
 
-    MPIU_UNREFERENCED_ARG(buf);
+    MPL_UNREFERENCED_ARG(buf);
 
     ROMIO_THREAD_CS_ENTER();
 

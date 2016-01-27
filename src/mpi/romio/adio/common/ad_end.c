@@ -50,9 +50,9 @@ int ADIOI_End_call(MPI_Comm comm, int keyval, void *attribute_val, void
 {
     int error_code;
 
-    ADIOI_UNREFERENCED_ARG(comm);
-    ADIOI_UNREFERENCED_ARG(attribute_val);
-    ADIOI_UNREFERENCED_ARG(extra_state);
+    MPL_UNREFERENCED_ARG(comm);
+    MPL_UNREFERENCED_ARG(attribute_val);
+    MPL_UNREFERENCED_ARG(extra_state);
 
     MPI_Keyval_free(&keyval);
 

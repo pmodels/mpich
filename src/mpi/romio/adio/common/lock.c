@@ -19,7 +19,7 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
     OVERLAPPED Overlapped;
     DWORD dwFlags;
 
-    ADIOI_UNREFERENCED_ARG(whence);
+    MPL_UNREFERENCED_ARG(whence);
 
     if (len == 0) return MPI_SUCCESS;
 

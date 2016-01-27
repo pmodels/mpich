@@ -67,7 +67,7 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t * pg_p, int pg_rank )
    MPI Port functions */
 int MPIDI_CH3_PortFnsInit( MPIDI_PortFns *portFns ATTRIBUTE((unused)) ) 
 {
-    MPIU_UNREFERENCED_ARG(portFns);
+    MPL_UNREFERENCED_ARG(portFns);
     return 0;
 }
 

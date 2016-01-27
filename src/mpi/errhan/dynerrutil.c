@@ -316,7 +316,7 @@ static int MPIR_Dynerrcodes_finalize( void *p ATTRIBUTE((unused)) )
 {
     int i;
 
-    MPIU_UNREFERENCED_ARG(p);
+    MPL_UNREFERENCED_ARG(p);
 
     if (not_initialized == 0) {
 
