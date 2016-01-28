@@ -11,8 +11,7 @@
 #include "mpi.h"
 #include "mpiimpl.h"
 #include "mpiu_os_wrappers_pre.h"
-
-#define MPID_NEM_MAX_FNAME_LEN 256
+#include "mpidu_shm.h"
 
 /* FIXME: This definition should be gotten from mpidi_ch3_impl.h */
 #ifndef MAX_HOSTNAME_LEN
@@ -60,32 +59,6 @@ static inline MPID_nem_cell_rel_ptr_t MPID_NEM_ABS_TO_REL (MPID_nem_cell_ptr_t a
 #define MPID_NEM_ABS_TO_REL(ptr) (ptr)
 #endif /*MPID_NEM_SYMMETRIC_QUEUES */
 
-typedef struct MPID_nem_barrier
-{
-    OPA_int_t val;
-    OPA_int_t wait;
-} 
-MPID_nem_barrier_t;
-
-typedef struct MPID_nem_seg
-{
-    size_t segment_len;
-    /* Handle to shm seg */
-    MPIU_SHMW_Hnd_t hnd;
-    /* Pointers */
-    char *base_addr;
-    /* Misc */
-    char  file_name[MPID_NEM_MAX_FNAME_LEN];
-    int   base_descs; 
-    int   symmetrical;
-} MPID_nem_seg_t, *MPID_nem_seg_ptr_t;
-
-typedef struct MPID_nem_seg_info
-{
-    size_t size;
-    char *addr; 
-} MPID_nem_seg_info_t, *MPID_nem_seg_info_ptr_t; 
-
 /* NOTE: MPID_NEM_IS_LOCAL should only be used when the process is known to be
    in your comm_world (such as at init time).  This will generally not work for
    dynamic processes.  Check vc_ch->is_local instead.  If that is true, then
@@ -111,8 +84,8 @@ MPID_nem_barrier_vars_t;
 
 typedef struct MPID_nem_mem_region
 {
-    MPID_nem_seg_t              memory;
-    MPID_nem_seg_info_t        *seg;
+    MPIDU_shm_seg_t             memory;
+    MPIDU_shm_seg_info_t       *seg;
     int                         num_seg;
     int                         map_lock;
     int                         num_local;
@@ -126,7 +99,7 @@ typedef struct MPID_nem_mem_region
     MPID_nem_cell_ptr_t         Elements;
     MPID_nem_queue_ptr_t       *FreeQ;
     MPID_nem_queue_ptr_t       *RecvQ;
-    MPID_nem_barrier_t         *barrier;
+    MPIDU_shm_barrier_t        *barrier;
     MPID_nem_queue_ptr_t        my_freeQ;
     MPID_nem_queue_ptr_t        my_recvQ;
     MPID_nem_barrier_vars_t    *barrier_vars;

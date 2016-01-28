@@ -167,7 +167,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 #endif /* MEM_REGION_IN_HEAP */
 
     MPID_nem_mem_region.num_seg        = 7;
-    MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region.seg, MPID_nem_seg_info_ptr_t, MPID_nem_mem_region.num_seg * sizeof(MPID_nem_seg_info_t), mpi_errno, "mem_region segments");
+    MPIR_CHKPMEM_MALLOC (MPID_nem_mem_region.seg, MPIDU_shm_seg_info_ptr_t, MPID_nem_mem_region.num_seg * sizeof(MPIDU_shm_seg_info_t), mpi_errno, "mem_region segments");
     MPID_nem_mem_region.rank           = pg_rank;
     MPID_nem_mem_region.num_local      = num_local;
     MPID_nem_mem_region.num_procs      = num_procs;
@@ -260,7 +260,19 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Actually allocate the segment and assign regions to the pointers */
-    mpi_errno = MPIDU_Seg_commit(&MPID_nem_mem_region.memory, num_local, local_rank);
+    mpi_errno = MPIDU_Seg_commit(&MPID_nem_mem_region.memory, &MPID_nem_mem_region.barrier,
+                                 num_local, local_rank, MPID_nem_mem_region.local_procs[0],
+                                 MPID_nem_mem_region.rank);
+    /* check_alloc steps */
+    if (MPID_nem_mem_region.memory.symmetrical == 1) {
+        MPID_nem_asymm_base_addr = NULL;
+    } else {
+        MPID_nem_asymm_base_addr = MPID_nem_mem_region.memory.base_addr;
+#ifdef MPID_NEM_SYMMETRIC_QUEUES
+        MPIR_ERR_INTERNALANDJUMP(mpi_errno, "queues are not symmetrically allocated as expected");
+#endif
+    }
+
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
     /* init shared collectives barrier region */
@@ -268,7 +280,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
     /* local procs barrier */
-    mpi_errno = MPIDU_shm_barrier();
+    mpi_errno = MPIDU_shm_barrier(MPID_nem_mem_region.barrier, num_local);
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
     /* find our cell region */
@@ -343,7 +355,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 
     
     /* local barrier */
-    mpi_errno = MPIDU_shm_barrier();
+    mpi_errno = MPIDU_shm_barrier(MPID_nem_mem_region.barrier, num_local);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     
@@ -394,11 +406,11 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPL_free(publish_bc_orig);
 
 
-    mpi_errno = MPIDU_shm_barrier();
+    mpi_errno = MPIDU_shm_barrier(MPID_nem_mem_region.barrier, num_local);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPID_nem_mpich_init();
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPIDU_shm_barrier();
+    mpi_errno = MPIDU_shm_barrier(MPID_nem_mem_region.barrier, num_local);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 #ifdef ENABLE_CHECKPOINTING
     mpi_errno = MPIDI_nem_ckpt_init();

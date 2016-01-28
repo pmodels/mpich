@@ -7,6 +7,8 @@
 #ifndef MPID_NEM_POST_H
 #define MPID_NEM_POST_H
 
+#include "mpidu_shm.h"
+
 struct MPIDI_PG;
 union MPIDI_CH3_Pkt;
 
@@ -19,8 +21,6 @@ extern int (*MPID_nem_local_lmt_progress)(void);
    will happen if this is included in mpidpost.h or mpidpre.h) */
 int MPID_nem_init(int rank, struct MPIDI_PG *pg_p, int has_parent);
 int MPID_nem_finalize(void);
-int MPIDU_shm_barrier_init(MPID_nem_barrier_t *barrier_region, int init_values);
-int MPIDU_shm_barrier(void);
 int MPID_nem_vc_init(struct MPIDI_VC *vc);
 int MPID_nem_vc_destroy(struct MPIDI_VC *vc);
 int MPID_nem_get_business_card(int myRank, char *value, int length);

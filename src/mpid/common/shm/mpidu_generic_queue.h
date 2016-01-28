@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPID_NEM_GENERIC_QUEUE_H
-#define MPID_NEM_GENERIC_QUEUE_H
+#ifndef MPIDU_SHM_GENERIC_QUEUE_H
+#define MPIDU_SHM_GENERIC_QUEUE_H
 
 /* Generic queue macros -- "next_field" should be set to the name of
    the next pointer field in the element (e.g., "ch.tcp_sendq_next") */
@@ -336,4 +336,4 @@
         *(epp) = (sp)->top;                      \
         (sp)->top = (*(epp))->next_field;        \
     } while (0)
-#endif /* MPID_NEM_GENERIC_QUEUE_H */
+#endif /* MPIDU_SHM_GENERIC_QUEUE_H */

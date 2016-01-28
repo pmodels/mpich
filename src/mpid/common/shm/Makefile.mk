@@ -13,6 +13,8 @@ mpi_core_sources +=                          \
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/common/shm
 
 noinst_HEADERS +=                                 \
-    src/mpid/common/shm/mpidu_generic_queue.h
+    src/mpid/common/shm/mpidu_generic_queue.h	  \
+    src/mpid/common/shm/mpidu_shm_impl.h	  \
+	src/mpid/common/shm/mpidu_shm.h
 
 
