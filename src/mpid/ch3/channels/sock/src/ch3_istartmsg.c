@@ -10,7 +10,7 @@
 #define FUNCNAME create_request
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static MPID_Request * create_request(void * hdr, MPIDI_msg_sz_t hdr_sz, 
+static MPID_Request * create_request(void * hdr, intptr_t hdr_sz,
 				     MPIU_Size_t nb)
 {
     MPID_Request * sreq;
@@ -49,7 +49,7 @@ static MPID_Request * create_request(void * hdr, MPIDI_msg_sz_t hdr_sz,
 #define FUNCNAME MPIDI_CH3_iStartMsg
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, MPIDI_msg_sz_t hdr_sz, 
+int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, intptr_t hdr_sz,
 			MPID_Request ** sreq_ptr)
 {
     MPID_Request * sreq = NULL;
@@ -92,13 +92,13 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, MPIDI_msg_sz_t hdr_sz,
 		if (nb == hdr_sz)
 		{ 
 		    MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
-				   "entire write complete, " MPIDI_MSG_SZ_FMT " bytes", nb);
+				   "entire write complete, %" PRIdPTR " bytes", nb);
 		    /* done.  get us out of here as quickly as possible. */
 		}
 		else
 		{
 		    MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
-                    "partial write of " MPIDI_MSG_SZ_FMT " bytes, request enqueued at head", nb);
+                    "partial write of %" PRIdPTR " bytes, request enqueued at head", nb);
 		    sreq = create_request(hdr, hdr_sz, nb);
 		    if (!sreq) {
 			MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");

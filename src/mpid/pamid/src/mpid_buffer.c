@@ -47,13 +47,13 @@
  */
 void MPIDI_Buffer_copy(
     const void * const sbuf, MPI_Aint scount, MPI_Datatype sdt,                       int * smpi_errno,
-          void * const rbuf, MPI_Aint rcount, MPI_Datatype rdt, MPIDI_msg_sz_t * rsz, int * rmpi_errno)
+          void * const rbuf, MPI_Aint rcount, MPI_Datatype rdt, intptr_t * rsz, int * rmpi_errno)
 {
     int sdt_contig;
     int rdt_contig;
     MPI_Aint sdt_true_lb, rdt_true_lb;
-    MPIDI_msg_sz_t sdata_sz;
-    MPIDI_msg_sz_t rdata_sz;
+    intptr_t sdata_sz;
+    intptr_t rdata_sz;
     MPID_Datatype * sdt_ptr;
     MPID_Datatype * rdt_ptr;
 
@@ -166,11 +166,11 @@ void MPIDI_Buffer_copy(
     else
     {
         char * buf;
-        MPIDI_msg_sz_t buf_off;
+        intptr_t buf_off;
         MPID_Segment sseg;
-        MPIDI_msg_sz_t sfirst;
+        intptr_t sfirst;
         MPID_Segment rseg;
-        MPIDI_msg_sz_t rfirst;
+        intptr_t rfirst;
 
         buf = MPL_malloc(MPIDI_COPY_BUFFER_SZ);
         /* --BEGIN ERROR HANDLING-- */

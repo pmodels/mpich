@@ -191,7 +191,7 @@ int MPID_nem_ptl_nm_finalize(void)
 #define FUNCNAME send_pkt
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, MPIDI_msg_sz_t data_sz,
+static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, intptr_t data_sz,
                            MPID_Request *sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -288,8 +288,8 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
     REQ_PTL(sreq)->put_done = 0;
 
     if (data_sz) {
-        MPIDI_msg_sz_t first = sreq->dev.segment_first;
-        MPIDI_msg_sz_t last = sreq->dev.segment_first + sent_sz;
+        intptr_t first = sreq->dev.segment_first;
+        intptr_t last = sreq->dev.segment_first + sent_sz;
         MPID_Segment_pack(sreq->dev.segment_ptr, first, &last, sendbuf_ptr);
         sendbuf_ptr += sent_sz;
 
@@ -333,7 +333,7 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
 #define FUNCNAME MPID_nem_ptl_SendNoncontig
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_ptl_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz)
+int MPID_nem_ptl_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, intptr_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_SENDNONCONTIG);
@@ -355,8 +355,8 @@ int MPID_nem_ptl_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MP
 #define FUNCNAME MPID_nem_ptl_iStartContigMsg
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_ptl_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data,
-                                 MPIDI_msg_sz_t data_sz, MPID_Request **sreq_ptr)
+int MPID_nem_ptl_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, void *data,
+                                 intptr_t data_sz, MPID_Request **sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_ISTARTCONTIGMSG);
@@ -386,8 +386,8 @@ int MPID_nem_ptl_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
 #define FUNCNAME MPID_nem_ptl_iSendContig
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_ptl_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz,
-                               void *data, MPIDI_msg_sz_t data_sz)
+int MPID_nem_ptl_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, intptr_t hdr_sz,
+                               void *data, intptr_t data_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_ISENDCONTIG);

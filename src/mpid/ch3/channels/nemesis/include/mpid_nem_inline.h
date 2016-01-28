@@ -20,17 +20,17 @@ static inline int MPID_nem_mpich_sendv (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *v
 static inline void MPID_nem_mpich_dequeue_fastbox (int local_rank);
 static inline void MPID_nem_mpich_enqueue_fastbox (int local_rank);
 static inline int MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov,
-                                               void *ext_header, MPIDI_msg_sz_t ext_header_sz,
+                                               void *ext_header, intptr_t ext_header_sz,
                                                MPIDI_VC_t *vc, int *again);
 static inline int MPID_nem_recv_seqno_matches (MPID_nem_queue_ptr_t qhead);
 static inline int MPID_nem_mpich_test_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocking_progress);
 static inline int MPID_nem_mpich_blocking_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox, int completions);
 static inline int MPID_nem_mpich_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int timeout);
 static inline int MPID_nem_mpich_release_cell (MPID_nem_cell_ptr_t cell, MPIDI_VC_t *vc);
-static inline void MPID_nem_mpich_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first,
-                                                   MPIDI_msg_sz_t segment_size, void *header, MPIDI_msg_sz_t header_sz,
-                                                   void *ext_header, MPIDI_msg_sz_t ext_header_sz, MPIDI_VC_t *vc, int *again);
-static inline void MPID_nem_mpich_send_seg (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_size,
+static inline void MPID_nem_mpich_send_seg_header (MPID_Segment *segment, intptr_t *segment_first,
+                                                   intptr_t segment_size, void *header, intptr_t header_sz,
+                                                   void *ext_header, intptr_t ext_header_sz, MPIDI_VC_t *vc, int *again);
+static inline void MPID_nem_mpich_send_seg (MPID_Segment *segment, intptr_t *segment_first, intptr_t segment_size,
                                                     MPIDI_VC_t *vc, int *again);
 
 
@@ -226,7 +226,7 @@ MPID_nem_mpich_sendv (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_cell_ptr_t el;
     char *cell_buf;
-    MPIDI_msg_sz_t payload_len;    
+    intptr_t payload_len;
     int my_rank;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_SENDV);
@@ -324,13 +324,13 @@ MPID_nem_mpich_sendv (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int
 MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov,
-                             void *ext_hdr_ptr, MPIDI_msg_sz_t ext_hdr_sz,
+                             void *ext_hdr_ptr, intptr_t ext_hdr_sz,
                              MPIDI_VC_t *vc, int *again)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_cell_ptr_t el;
     char *cell_buf;
-    MPIDI_msg_sz_t payload_len;    
+    intptr_t payload_len;
     int my_rank;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPI_Aint buf_offset = 0;
@@ -484,14 +484,14 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void
-MPID_nem_mpich_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_size,
-                                void *header, MPIDI_msg_sz_t header_sz, void *ext_header, MPIDI_msg_sz_t ext_header_sz,
+MPID_nem_mpich_send_seg_header (MPID_Segment *segment, intptr_t *segment_first, intptr_t segment_size,
+                                void *header, intptr_t header_sz, void *ext_header, intptr_t ext_header_sz,
                                 MPIDI_VC_t *vc, int *again)
 {
     MPID_nem_cell_ptr_t el;
-    MPIDI_msg_sz_t datalen;
+    intptr_t datalen;
     int my_rank;
-    MPIDI_msg_sz_t last;
+    intptr_t last;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPI_Aint buf_offset = 0;
 
@@ -630,12 +630,12 @@ MPID_nem_mpich_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_f
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void
-MPID_nem_mpich_send_seg (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_size, MPIDI_VC_t *vc, int *again)
+MPID_nem_mpich_send_seg (MPID_Segment *segment, intptr_t *segment_first, intptr_t segment_size, MPIDI_VC_t *vc, int *again)
 {
     MPID_nem_cell_ptr_t el;
-    MPIDI_msg_sz_t datalen;
+    intptr_t datalen;
     int my_rank;
-    MPIDI_msg_sz_t last;
+    intptr_t last;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
 
     MPIU_Assert(vc_ch->is_local); /* netmods will have their own implementation */    

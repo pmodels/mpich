@@ -21,7 +21,7 @@ int MPID_Rput(const void *origin_addr, int origin_count,
     int dt_contig ATTRIBUTE((unused));
     MPID_Datatype *dtp;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     MPID_Request *ureq;
     MPIDI_STATE_DECL(MPID_STATE_MPID_RPUT);
 
@@ -84,7 +84,7 @@ int MPID_Rget(void *origin_addr, int origin_count,
     int dt_contig ATTRIBUTE((unused));
     MPID_Datatype *dtp;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     MPID_Request *ureq;
     MPIDI_STATE_DECL(MPID_STATE_MPID_RGET);
 
@@ -147,7 +147,7 @@ int MPID_Raccumulate(const void *origin_addr, int origin_count,
     int dt_contig ATTRIBUTE((unused));
     MPID_Datatype *dtp;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     MPID_Request *ureq;
     MPIDI_STATE_DECL(MPID_STATE_MPID_RACCUMULATE);
 
@@ -211,7 +211,7 @@ int MPID_Rget_accumulate(const void *origin_addr, int origin_count,
     int dt_contig ATTRIBUTE((unused));
     MPID_Datatype *dtp;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
-    MPIDI_msg_sz_t data_sz, trg_data_sz;
+    intptr_t data_sz, trg_data_sz;
     MPID_Request *ureq;
     MPIDI_STATE_DECL(MPID_STATE_MPID_RGET_ACCUMULATE);
 

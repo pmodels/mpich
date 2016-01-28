@@ -18,11 +18,11 @@
 /* MPIDI_CH3I_SendNoncontig - Sends a message by packing
    directly into cells.  The caller must initialize sreq->dev.segment
    as well as segment_first and segment_size. */
-int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, MPIDI_msg_sz_t hdr_sz )
+int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, intptr_t hdr_sz )
 {
     int mpi_errno = MPI_SUCCESS;
     int again = 0;
-    MPIDI_msg_sz_t orig_segment_first = sreq->dev.segment_first;
+    intptr_t orig_segment_first = sreq->dev.segment_first;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SENDNONCONTIG);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SENDNONCONTIG);

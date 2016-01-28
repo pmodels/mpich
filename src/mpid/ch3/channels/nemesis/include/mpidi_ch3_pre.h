@@ -85,12 +85,12 @@ typedef struct MPIDI_CH3I_VC
     MPID_nem_queue_ptr_t free_queue;
 
 #ifdef ENABLE_CHECKPOINTING
-    MPIDI_msg_sz_t ckpt_msg_len;
+    intptr_t ckpt_msg_len;
     void *ckpt_msg_buf;
 #endif
 
     /* temp buffer to store partially received header */
-    MPIDI_msg_sz_t pending_pkt_len;
+    intptr_t pending_pkt_len;
     union MPIDI_CH3_Pkt *pending_pkt;
 
     /* can be used by netmods to put this vc on a send queue or list */
@@ -101,12 +101,12 @@ typedef struct MPIDI_CH3I_VC
     /* iStartContigMsg -- sends a message consisting of a header (hdr) and contiguous data (data), possibly of 0 size.  If the
        message cannot be sent immediately, the function should create a request and return a pointer in sreq_ptr.  The network
        module should complete the request once the message has been completely sent. */
-    int (* iStartContigMsg)(struct MPIDI_VC *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz,
+    int (* iStartContigMsg)(struct MPIDI_VC *vc, void *hdr, intptr_t hdr_sz, void *data, intptr_t data_sz,
                             struct MPID_Request **sreq_ptr);
     /* iSentContig -- sends a message consisting of a header (hdr) and contiguous data (data), possibly of 0 size.  The
        network module should complete the request once the message has been completely sent. */
-    int (* iSendContig)(struct MPIDI_VC *vc, struct MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz,
-                        void *data, MPIDI_msg_sz_t data_sz);
+    int (* iSendContig)(struct MPIDI_VC *vc, struct MPID_Request *sreq, void *hdr, intptr_t hdr_sz,
+                        void *data, intptr_t data_sz);
 
 #ifdef ENABLE_CHECKPOINTING
     /* ckpt_pause_send -- netmod should stop sending on this vc and queue messages to be sent after ckpt_continue()*/
@@ -131,7 +131,7 @@ typedef struct MPIDI_CH3I_VC
     MPIU_SHMW_Hnd_t lmt_copy_buf_handle;
     MPIU_SHMW_Hnd_t lmt_recv_copy_buf_handle;
     int lmt_buf_num;
-    MPIDI_msg_sz_t lmt_surfeit;
+    intptr_t lmt_surfeit;
     struct {struct MPID_nem_lmt_shm_wait_element *head, *tail;} lmt_queue;
     struct MPID_nem_lmt_shm_wait_element *lmt_active_lmt;
     int lmt_enqueued; /* FIXME: used for debugging */
@@ -164,11 +164,11 @@ struct MPIDI_CH3I_Request
 {
     struct MPIDI_VC     *vc;
     int                  noncontig;
-    MPIDI_msg_sz_t       header_sz;
+    intptr_t       header_sz;
 
     MPI_Request          lmt_req_id;     /* request id of remote side */
     struct MPID_Request *lmt_req;        /* pointer to original send/recv request */
-    MPIDI_msg_sz_t       lmt_data_sz;    /* data size to be transferred, after checking for truncation */
+    intptr_t       lmt_data_sz;    /* data size to be transferred, after checking for truncation */
     MPL_IOV             lmt_tmp_cookie; /* temporary storage for received cookie */
     void                *s_cookie;       /* temporary storage for the cookie data in case the packet can't be sent immediately */
 

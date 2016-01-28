@@ -1591,7 +1591,7 @@ static int MPID_nem_tcp_recv_handler(sockconn_t *const sc)
             }
         }
     
-        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "New recv " MPIDI_MSG_SZ_FMT " (fd=%d, vc=%p, sc=%p)", bytes_recvd, sc_fd, sc_vc, sc));
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "New recv %" PRIdPTR " (fd=%d, vc=%p, sc=%p)", bytes_recvd, sc_fd, sc_vc, sc));
 
         mpi_errno = MPID_nem_handle_pkt(sc_vc, recv_buf, bytes_recvd);
         if (mpi_errno) MPIR_ERR_POP_LABEL(mpi_errno, fn_noncomm_fail);

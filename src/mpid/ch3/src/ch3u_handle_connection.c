@@ -277,7 +277,7 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, 
-				MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
+				intptr_t *buflen, MPID_Request **rreqp )
 {
     MPIDI_CH3_Pkt_close_t * close_pkt = &pkt->close;
     int mpi_errno = MPI_SUCCESS;

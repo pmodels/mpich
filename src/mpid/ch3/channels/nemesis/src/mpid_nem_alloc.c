@@ -197,7 +197,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
         MPIU_CHKPMEM_MALLOC (addr, char *, segment_len + MPID_NEM_CACHE_LINE_LEN, mpi_errno, "segment");
 
         memory->base_addr = addr;
-        current_addr = (char *)(((MPIU_Upint)addr + (MPIU_Upint)MPID_NEM_CACHE_LINE_LEN-1) & (~((MPIU_Upint)MPID_NEM_CACHE_LINE_LEN-1)));
+        current_addr = (char *)(((uintptr_t)addr + (uintptr_t)MPID_NEM_CACHE_LINE_LEN-1) & (~((uintptr_t)MPID_NEM_CACHE_LINE_LEN-1)));
         memory->symmetrical = 0;
 
         /* must come before barrier_init since we use OPA in that function */
@@ -293,7 +293,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
         MPIU_CHKPMEM_MALLOC (addr, char *, segment_len + MPID_NEM_CACHE_LINE_LEN, mpi_errno, "segment");
 
         memory->base_addr = addr;
-        current_addr = (char *)(((MPIU_Upint)addr + (MPIU_Upint)MPID_NEM_CACHE_LINE_LEN-1) & (~((MPIU_Upint)MPID_NEM_CACHE_LINE_LEN-1)));
+        current_addr = (char *)(((uintptr_t)addr + (uintptr_t)MPID_NEM_CACHE_LINE_LEN-1) & (~((uintptr_t)MPID_NEM_CACHE_LINE_LEN-1)));
         memory->symmetrical = 0 ;
 
         /* we still need to call barrier */

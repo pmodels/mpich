@@ -212,14 +212,14 @@ const char *MPIDI_Pkt_GetDescString(MPIDI_CH3_Pkt_t * pkt)
     switch (pkt->type) {
     case MPIDI_CH3_PKT_EAGER_SEND:
         MPL_snprintf(pktmsg, sizeof(pktmsg),
-                     "EAGER_SEND - (%d,%d,%d,)" MPIDI_MSG_SZ_FMT,
+                     "EAGER_SEND - (%d,%d,%d,)%" PRIdPTR,
                      pkt->eager_send.match.parts.context_id,
                      (int) pkt->eager_send.match.parts.tag,
                      pkt->eager_send.match.parts.rank, pkt->eager_send.data_sz);
         break;
     case MPIDI_CH3_PKT_EAGER_SYNC_SEND:
         MPL_snprintf(pktmsg, sizeof(pktmsg),
-                     "EAGER_SYNC_SEND - (%d,%d,%d,)" MPIDI_MSG_SZ_FMT " req=%d",
+                     "EAGER_SYNC_SEND - (%d,%d,%d,)%" PRIdPTR " req=%d",
                      pkt->eager_sync_send.match.parts.context_id,
                      (int) pkt->eager_sync_send.match.parts.tag,
                      pkt->eager_sync_send.match.parts.rank,
@@ -231,14 +231,14 @@ const char *MPIDI_Pkt_GetDescString(MPIDI_CH3_Pkt_t * pkt)
         break;
     case MPIDI_CH3_PKT_READY_SEND:
         MPL_snprintf(pktmsg, sizeof(pktmsg),
-                     "READY_SEND - (%d,%d,%d,)" MPIDI_MSG_SZ_FMT,
+                     "READY_SEND - (%d,%d,%d,)%" PRIdPTR,
                      pkt->ready_send.match.parts.context_id,
                      (int) pkt->ready_send.match.parts.tag,
                      pkt->ready_send.match.parts.rank, pkt->ready_send.data_sz);
         break;
     case MPIDI_CH3_PKT_RNDV_REQ_TO_SEND:
         MPL_snprintf(pktmsg, sizeof(pktmsg),
-                     "RNDV_REQ_TO_SEND - (%d,%d,%d,)" MPIDI_MSG_SZ_FMT " req=%d",
+                     "RNDV_REQ_TO_SEND - (%d,%d,%d,)%" PRIdPTR " req=%d",
                      pkt->rndv_req_to_send.match.parts.context_id,
                      (int) pkt->rndv_req_to_send.match.parts.tag,
                      pkt->rndv_req_to_send.match.parts.rank,

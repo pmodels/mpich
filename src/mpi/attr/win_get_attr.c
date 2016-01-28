@@ -52,9 +52,9 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
             /* A common user error is to pass the address of a 4-byte
 	       int when the address of a pointer (or an address-sized int)
 	       should have been used.  We can test for this specific
-	       case.  Note that this code assumes sizeof(MPIU_Pint) is
+	       case.  Note that this code assumes sizeof(intptr_t) is
 	       a power of 2. */
-	    if ((MPIU_Pint)attribute_val & (sizeof(MPIU_Pint)-1)) {
+	    if ((intptr_t)attribute_val & (sizeof(intptr_t)-1)) {
 		MPIR_ERR_SETANDSTMT(mpi_errno,MPI_ERR_ARG,goto fn_fail,"**attrnotptr");
 	    }
 #           endif
@@ -94,7 +94,7 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 #ifdef HAVE_FORTRAN_BINDING
 	/* Note that this routine only has a Fortran 90 binding,
 	   so the attribute value is an address-sized int */
-	MPIU_Pint  *attr_int = (MPIU_Pint *)attribute_val;
+	intptr_t  *attr_int = (intptr_t *)attribute_val;
 #endif
 	*flag = 1;
 
@@ -180,11 +180,11 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 			*(void**)attribute_val = &(p->value);
 		    }
 		    else {
-			*(void**)attribute_val = (void *)(MPIU_Pint)(p->value);
+			*(void**)attribute_val = (void *)(intptr_t)(p->value);
 		    }
 		}
 		else
-		    *(void**)attribute_val = (void *)(MPIU_Pint)(p->value);
+		    *(void**)attribute_val = (void *)(intptr_t)(p->value);
 		
 		break;
 	    }

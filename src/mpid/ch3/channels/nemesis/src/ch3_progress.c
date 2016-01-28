@@ -66,7 +66,7 @@ static int my_sigusr1_count = 0;
 MPIDI_CH3I_shm_sendq_t MPIDI_CH3I_shm_sendq = {NULL, NULL};
 struct MPID_Request *MPIDI_CH3I_shm_active_send = NULL;
 
-static int pkt_NETMOD_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t *buflen, MPID_Request **rreqp);
+static int pkt_NETMOD_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPID_Request **rreqp);
 static int shm_connection_terminated(MPIDI_VC_t * vc);
 static int check_terminating_vcs(void);
 
@@ -514,7 +514,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
             if (cell)
             {
                 char            *cell_buf    = (char *)cell->pkt.mpich.p.payload;
-                MPIDI_msg_sz_t   payload_len = cell->pkt.mpich.datalen;
+                intptr_t   payload_len = cell->pkt.mpich.datalen;
                 MPIDI_CH3_Pkt_t *pkt         = (MPIDI_CH3_Pkt_t *)cell_buf;
 
                 /* Empty packets are not allowed */
@@ -523,7 +523,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                 if (in_fbox)
                 {
                     MPIDI_CH3I_VC *vc_ch;
-                    MPIDI_msg_sz_t buflen = payload_len;
+                    intptr_t buflen = payload_len;
 
                     /* This packet must be the first packet of a new message */
                     MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Recv pkt from fbox");
@@ -732,7 +732,7 @@ void MPIDI_CH3I_Progress_wakeup(void)
 #define FUNCNAME MPID_nem_handle_pkt
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
+int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *rreq = NULL;
@@ -749,7 +749,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
             /* handle fast-path first: received a new whole message */
             do
             {
-                MPIDI_msg_sz_t len = buflen;
+                intptr_t len = buflen;
                 MPIDI_CH3_Pkt_t *pkt = (MPIDI_CH3_Pkt_t *)buf;
 
                 MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "received new message");
@@ -781,8 +781,8 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
         else
         {
             /* collect header fragments in vc's pending_pkt */
-            MPIDI_msg_sz_t copylen;
-            MPIDI_msg_sz_t pktlen;
+            intptr_t copylen;
+            intptr_t pktlen;
             MPIDI_CH3_Pkt_t *pkt = (MPIDI_CH3_Pkt_t *)vc_ch->pending_pkt;
 
             MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "received header fragment");
@@ -861,7 +861,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
             {
                 if (buflen > 0)
                 {
-		    MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "        " MPIDI_MSG_SZ_FMT, buflen);
+		    MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "        %" PRIdPTR, buflen);
                     if (rreq->dev.drop_data == FALSE) {
                         MPIU_Memcpy (iov->MPL_IOV_BUF, buf, buflen);
                     }
@@ -873,7 +873,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
                 rreq->dev.iov_offset = iov - rreq->dev.iov;
                 rreq->dev.iov_count = n_iov;
                 vc_ch->recv_active = rreq;
-		MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "        remaining: " MPIDI_MSG_SZ_FMT " bytes + %d iov entries", iov->MPL_IOV_LEN, n_iov));
+		MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "        remaining: %" PRIdPTR " bytes + %d iov entries", iov->MPL_IOV_LEN, n_iov));
             }
             else
             {
@@ -1191,7 +1191,7 @@ int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
 #define FUNCNAME pkt_NETMOD_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int pkt_NETMOD_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t *buflen, MPID_Request **rreqp)
+static int pkt_NETMOD_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPID_Request **rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_pkt_netmod_t * const netmod_pkt = (MPID_nem_pkt_netmod_t *)pkt;

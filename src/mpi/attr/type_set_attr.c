@@ -95,7 +95,7 @@ int MPIR_TypeSetAttr(MPI_Datatype datatype, int type_keyval, void *attribute_val
 		goto fn_fail;
 	    }
 	    /* --END ERROR HANDLING-- */
-	    p->value    = (MPID_AttrVal_t)(MPIU_Pint)attribute_val;
+	    p->value    = (MPID_AttrVal_t)(intptr_t)attribute_val;
 	    p->attrType = attrType;
 	    break;
 	}
@@ -106,7 +106,7 @@ int MPIR_TypeSetAttr(MPI_Datatype datatype, int type_keyval, void *attribute_val
 	    new_p->keyval	 = keyval_ptr;
 	    new_p->attrType      = attrType;
 	    new_p->pre_sentinal	 = 0;
-	    new_p->value	 = (MPID_AttrVal_t)(MPIU_Pint)attribute_val;
+	    new_p->value	 = (MPID_AttrVal_t)(intptr_t)attribute_val;
 	    new_p->post_sentinal = 0;
 	    new_p->next		 = p->next;
 	    MPIR_Keyval_add_ref( keyval_ptr );
@@ -125,7 +125,7 @@ int MPIR_TypeSetAttr(MPI_Datatype datatype, int type_keyval, void *attribute_val
 	new_p->keyval	     = keyval_ptr;
 	new_p->attrType      = attrType;
 	new_p->pre_sentinal  = 0;
-	new_p->value	     = (MPID_AttrVal_t)(MPIU_Pint)attribute_val;
+	new_p->value	     = (MPID_AttrVal_t)(intptr_t)attribute_val;
 	new_p->post_sentinal = 0;
 	new_p->next	     = 0;
 	MPIR_Keyval_add_ref( keyval_ptr );

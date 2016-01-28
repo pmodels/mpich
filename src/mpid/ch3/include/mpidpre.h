@@ -17,10 +17,6 @@ struct MPID_Request;
 #include <sys/types.h>
 #endif
 
-/* The maximum message size is the size of a pointer; this allows MPI_Aint 
-   to be larger than a pointer */
-typedef MPIU_Pint MPIDI_msg_sz_t;
-
 #include "mpid_dataloop.h"
 
 /* FIXME: Include here? */
@@ -50,7 +46,7 @@ struct MPID_Request;
    (This decl needs to come before mpidi_ch3_pre.h)
 */
 typedef int MPIDI_CH3_PktHandler_Fcn(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *pkt,
-				     MPIDI_msg_sz_t *buflen, struct MPID_Request **req );
+				     intptr_t *buflen, struct MPID_Request **req );
 
 /* Include definitions from the channel which must exist before items in this 
    file (mpidpre.h) or the file it includes (mpiimpl.h) can be defined. */
@@ -92,7 +88,7 @@ typedef MPIDI_Rank_t MPID_Node_id_t;
    information, which is beneficial for slower communication
    links. Further, this allows the total structure size to be 64 bits
    and the search operations can be optimized on 64-bit platforms. We
-   use a union of the actual required structure with a MPIU_Upint, so
+   use a union of the actual required structure with a uintptr_t, so
    in this optimized case, the "whole" field can be used for
    comparisons.
 
@@ -115,7 +111,7 @@ typedef struct MPIDI_Message_match_parts {
 } MPIDI_Message_match_parts_t;
 typedef union {
     MPIDI_Message_match_parts_t parts;
-    MPIU_Upint whole;
+    uintptr_t whole;
 } MPIDI_Message_match;
 
 /* Provides MPIDI_CH3_Pkt_t.  Must come after MPIDI_Message_match definition. */
@@ -386,8 +382,8 @@ typedef struct MPIDI_Request {
        non-contiguous datatypes */
     /*    MPID_Segment   segment; */
     struct MPID_Segment *segment_ptr;
-    MPIDI_msg_sz_t segment_first;
-    MPIDI_msg_sz_t segment_size;
+    intptr_t segment_first;
+    intptr_t segment_size;
 
     /* Pointer to datatype for reference counting purposes */
     struct MPID_Datatype * datatype_ptr;
@@ -417,10 +413,10 @@ typedef struct MPIDI_Request {
        unexpected eager messages and packing/unpacking
        buffers.  tmpuf_off is the current offset into the temporary buffer. */
     void          *tmpbuf;
-    MPIDI_msg_sz_t tmpbuf_off;
-    MPIDI_msg_sz_t tmpbuf_sz;
+    intptr_t tmpbuf_off;
+    intptr_t tmpbuf_sz;
 
-    MPIDI_msg_sz_t recv_data_sz;
+    intptr_t recv_data_sz;
     MPI_Request    sender_req_id;
 
     unsigned int   state;
@@ -455,7 +451,7 @@ typedef struct MPIDI_Request {
     void *ext_hdr_ptr; /* Pointer to extended packet header.
                         * It is allocated in RMA issuing/pkt_handler functions,
                         * and freed when release request. */
-    MPIDI_msg_sz_t ext_hdr_sz;
+    intptr_t ext_hdr_sz;
 
     struct MPIDI_RMA_Target *rma_target_ptr;
 

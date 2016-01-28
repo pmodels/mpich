@@ -68,7 +68,7 @@ typedef union
 
 typedef union
 {
-    volatile MPIDI_msg_sz_t val;
+    volatile intptr_t val;
     char padding[MPID_NEM_CACHE_LINE_LEN];
 } MPID_nem_cacheline_msg_sz_t;
 
@@ -123,7 +123,7 @@ static int MPID_nem_delete_shm_region(MPID_nem_copy_buf_t **buf, MPIU_SHMW_Hnd_t
 int MPID_nem_lmt_shm_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPID_Request *req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     int dt_contig ATTRIBUTE((unused));
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPID_Datatype * dt_ptr;
@@ -445,10 +445,10 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPID_nem_copy_buf_t * const copy_buf = vc_ch->lmt_copy_buf;
-    MPIDI_msg_sz_t first;
-    MPIDI_msg_sz_t last;
+    intptr_t first;
+    intptr_t last;
     int buf_num;
-    MPIDI_msg_sz_t data_sz, copy_limit;
+    intptr_t data_sz, copy_limit;
     MPIDI_STATE_DECL(MPID_STATE_LMT_SHM_SEND_PROGRESS);
 
     MPIDI_FUNC_ENTER(MPID_STATE_LMT_SHM_SEND_PROGRESS);
@@ -476,7 +476,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
                 req->dev.segment_first = first;
                 vc_ch->lmt_buf_num = buf_num;
                 *done = FALSE;
-                MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "first=" MPIDI_MSG_SZ_FMT " data_sz="MPIDI_MSG_SZ_FMT, first, data_sz));
+                MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "first=%" PRIdPTR " data_sz=%" PRIdPTR, first, data_sz));
                 MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Waiting on full buffer %d", buf_num);
                 goto fn_exit;
             }
@@ -500,7 +500,7 @@ static int lmt_shm_send_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
         first = last;
         buf_num = (buf_num+1) % NUM_BUFS;
 
-        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "sent data.  last=" MPIDI_MSG_SZ_FMT " data_sz=" MPIDI_MSG_SZ_FMT, last, data_sz));
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "sent data.  last=%" PRIdPTR " data_sz=%" PRIdPTR, last, data_sz));
     }
     while (last < data_sz);
 
@@ -537,12 +537,12 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPID_nem_copy_buf_t * const copy_buf = vc_ch->lmt_copy_buf;
-    MPIDI_msg_sz_t first;
-    MPIDI_msg_sz_t last, expected_last;
+    intptr_t first;
+    intptr_t last, expected_last;
     int buf_num;
-    MPIDI_msg_sz_t data_sz, len;
+    intptr_t data_sz, len;
     int i;
-    MPIDI_msg_sz_t surfeit;
+    intptr_t surfeit;
     char *src_buf;
     char tmpbuf[MPID_NEM_CACHE_LINE_LEN];
     MPIDI_STATE_DECL(MPID_STATE_LMT_SHM_RECV_PROGRESS);
@@ -571,7 +571,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
                 vc_ch->lmt_buf_num = buf_num;
                 vc_ch->lmt_surfeit = surfeit;
                 *done = FALSE;
-                MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "first=" MPIDI_MSG_SZ_FMT " data_sz=" MPIDI_MSG_SZ_FMT, first, data_sz));
+                MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "first=%" PRIdPTR " data_sz=%" PRIdPTR, first, data_sz));
                 MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "Waiting on empty buffer %d", buf_num);
                 goto fn_exit;
             }
@@ -587,7 +587,7 @@ static int lmt_shm_recv_progress(MPIDI_VC_t *vc, MPID_Request *req, int *done)
 
 	MPID_Segment_unpack(req->dev.segment_ptr, first, &last, src_buf);
 
-        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "recvd data.  last=" MPIDI_MSG_SZ_FMT " data_sz=" MPIDI_MSG_SZ_FMT, last, data_sz));
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST, "recvd data.  last=%" PRIdPTR " data_sz=%" PRIdPTR, last, data_sz));
 
         if (surfeit && buf_num > 0)
         {

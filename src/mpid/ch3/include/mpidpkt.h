@@ -137,7 +137,7 @@ typedef struct MPIDI_CH3_Pkt_send {
     MPIDI_CH3_Pkt_type_t type;  /* XXX - uint8_t to conserve space ??? */
     MPIDI_Message_match match;
     MPI_Request sender_req_id;  /* needed for ssend and send cancel */
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
 #if defined(MPID_USE_SEQUENCE_NUMBERS)
     MPID_Seqnum_t seqnum;
 #endif
@@ -153,7 +153,7 @@ typedef MPIDI_CH3_Pkt_send_t MPIDI_CH3_Pkt_ready_send_t;
 typedef struct MPIDI_CH3_Pkt_eagershort_send {
     MPIDI_CH3_Pkt_type_t type;  /* XXX - uint8_t to conserve space ??? */
     MPIDI_Message_match match;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
 #if defined(MPID_USE_SEQUENCE_NUMBERS)
     MPID_Seqnum_t seqnum;
 #endif

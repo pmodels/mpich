@@ -17,7 +17,7 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPIDI_CH3_RndvSend - Send a request to perform a rendezvous send */
 int MPIDI_CH3_RndvSend( MPID_Request **sreq_p, const void * buf, MPI_Aint count,
-			MPI_Datatype datatype, int dt_contig, MPIDI_msg_sz_t data_sz, 
+			MPI_Datatype datatype, int dt_contig, intptr_t data_sz,
 			MPI_Aint dt_true_lb,
 			int rank, 
 			int tag, MPID_Comm * comm, int context_offset )
@@ -30,7 +30,7 @@ int MPIDI_CH3_RndvSend( MPID_Request **sreq_p, const void * buf, MPI_Aint count,
     int          mpi_errno = MPI_SUCCESS;
 	
     MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,
-		   "sending rndv RTS, data_sz=" MPIDI_MSG_SZ_FMT, data_sz);
+		   "sending rndv RTS, data_sz=%" PRIdPTR, data_sz);
 
     sreq->dev.OnDataAvail = 0;
     
@@ -108,7 +108,7 @@ int MPIDI_CH3_RndvSend( MPID_Request **sreq_p, const void * buf, MPI_Aint count,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_RndvReqToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-					MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
+					intptr_t *buflen, MPID_Request **rreqp )
 {
     MPID_Request * rreq;
     int found;
@@ -116,7 +116,7 @@ int MPIDI_CH3_PktHandler_RndvReqToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     int mpi_errno = MPI_SUCCESS;
     
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
- "received rndv RTS pkt, sreq=0x%08x, rank=%d, tag=%d, context=%d, data_sz=" MPIDI_MSG_SZ_FMT,
+ "received rndv RTS pkt, sreq=0x%08x, rank=%d, tag=%d, context=%d, data_sz=%" PRIdPTR,
 	      rts_pkt->sender_req_id, rts_pkt->match.parts.rank, 
 					rts_pkt->match.parts.tag, 
               rts_pkt->match.parts.context_id, rts_pkt->data_sz));
@@ -196,7 +196,7 @@ int MPIDI_CH3_PktHandler_RndvReqToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-					MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
+					intptr_t *buflen, MPID_Request **rreqp )
 {
     MPIDI_CH3_Pkt_rndv_clr_to_send_t * cts_pkt = &pkt->rndv_clr_to_send;
     MPID_Request * sreq;
@@ -205,7 +205,7 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     MPIDI_CH3_Pkt_rndv_send_t * rs_pkt = &upkt.rndv_send;
     int dt_contig;
     MPI_Aint dt_true_lb;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     MPID_Datatype * dt_ptr;
     int mpi_errno = MPI_SUCCESS;
     
@@ -242,7 +242,7 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	MPL_IOV iov[MPL_IOV_LIMIT];
 
 	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-		    "sending contiguous rndv data, data_sz=" MPIDI_MSG_SZ_FMT, 
+		    "sending contiguous rndv data, data_sz=%" PRIdPTR,
 					    data_sz));
 	
 	iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)rs_pkt;
@@ -281,13 +281,13 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_RndvSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, 
-				   MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
+				   intptr_t *buflen, MPID_Request **rreqp )
 {
     MPIDI_CH3_Pkt_rndv_send_t * rs_pkt = &pkt->rndv_send;
     int mpi_errno = MPI_SUCCESS;
     int complete;
     char *data_buf;
-    MPIDI_msg_sz_t data_len;
+    intptr_t data_len;
     MPID_Request *req;
     
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"received rndv send (data) pkt");

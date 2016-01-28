@@ -47,7 +47,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
     int dt_contig ATTRIBUTE((unused)), rank;
     MPID_Datatype *dtp;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
     int made_progress = 0;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PUT);
@@ -221,7 +221,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
                    MPID_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_msg_sz_t orig_data_sz, target_data_sz;
+    intptr_t orig_data_sz, target_data_sz;
     int dt_contig ATTRIBUTE((unused)), rank;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPID_Datatype *dtp;
@@ -318,7 +318,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         MPID_Datatype_is_contig(target_datatype, &is_target_contig);
 
         MPID_Datatype_get_size_macro(target_datatype, target_type_size);
-        MPIU_Assign_trunc(target_data_sz, target_count * target_type_size, MPIDI_msg_sz_t);
+        MPIU_Assign_trunc(target_data_sz, target_count * target_type_size, intptr_t);
 
         /* Judge if we can use IMMED data response packet */
         if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) &&
@@ -391,7 +391,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
                           MPID_Win * win_ptr, MPID_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     int dt_contig ATTRIBUTE((unused)), rank;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPID_Datatype *dtp;
@@ -603,7 +603,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                               MPID_Win * win_ptr, MPID_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_msg_sz_t orig_data_sz, target_data_sz;
+    intptr_t orig_data_sz, target_data_sz;
     int rank;
     int dt_contig ATTRIBUTE((unused));
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
@@ -715,7 +715,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 
         if (is_empty_origin == FALSE) {
             MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
-            MPIU_Assign_trunc(orig_data_sz, origin_count * origin_type_size, MPIDI_msg_sz_t);
+            MPIU_Assign_trunc(orig_data_sz, origin_count * origin_type_size, intptr_t);
         }
         else {
             /* If origin buffer is empty, set origin data size to 0 */

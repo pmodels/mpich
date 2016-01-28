@@ -44,7 +44,7 @@ typedef struct {
     int put_done;
     void *recv_ptr;  /* used for reordering in ptl_nm */
     void *chunk_buffer[MPID_NEM_PTL_NUM_CHUNK_BUFFERS];
-    MPIDI_msg_sz_t bytes_put;
+    intptr_t bytes_put;
     int found; /* used in probes with PtlMESearch() */
     event_handler_fn event_handler;
 } MPID_nem_ptl_req_area;
@@ -86,7 +86,7 @@ typedef struct {
     ptl_pt_index_t ptrg;
     ptl_pt_index_t ptrc;
     int id_initialized; /* TRUE iff id and pt have been initialized */
-    MPIDI_msg_sz_t num_queued_sends; /* number of reqs for this vc in sendq */
+    intptr_t num_queued_sends; /* number of reqs for this vc in sendq */
 } MPID_nem_ptl_vc_area;
 
 /* macro for ptl private in VC */
@@ -141,11 +141,11 @@ int MPID_nem_ptl_nm_init(void);
 int MPID_nem_ptl_nm_finalize(void);
 int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e);
 int MPID_nem_ptl_sendq_complete_with_error(MPIDI_VC_t *vc, int req_errno);
-int MPID_nem_ptl_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz);
-int MPID_nem_ptl_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz,
+int MPID_nem_ptl_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, intptr_t hdr_sz);
+int MPID_nem_ptl_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, void *data, intptr_t data_sz,
                                    MPID_Request **sreq_ptr);
-int MPID_nem_ptl_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz,
-                               void *data, MPIDI_msg_sz_t data_sz);
+int MPID_nem_ptl_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, intptr_t hdr_sz,
+                               void *data, intptr_t data_sz);
 int MPID_nem_ptl_poll_init(void);
 int MPID_nem_ptl_poll_finalize(void);
 int MPID_nem_ptl_poll(int is_blocking_poll);
@@ -186,9 +186,9 @@ int MPID_nem_ptl_lmt_done_recv(MPIDI_VC_t *vc, MPID_Request *req);
 /* packet handlers */
 
 int MPID_nem_ptl_pkt_cancel_send_req_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-                                             MPIDI_msg_sz_t *buflen, MPID_Request **rreqp);
+                                             intptr_t *buflen, MPID_Request **rreqp);
 int MPID_nem_ptl_pkt_cancel_send_resp_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-                                              MPIDI_msg_sz_t *buflen, MPID_Request **rreqp);
+                                              intptr_t *buflen, MPID_Request **rreqp);
 
 /* local packet types */
 

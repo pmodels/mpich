@@ -82,7 +82,7 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
     
     if (found)
     {
-	MPIDI_msg_sz_t data_sz;
+	intptr_t data_sz;
 	
         /* we found a posted req, which we now own, so we can release the CS */
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);

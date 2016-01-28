@@ -92,7 +92,7 @@ static int populate_iov_from_req(MPID_Request *req)
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
     MPI_Aint dt_true_lb;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     MPID_Datatype * dt_ptr;
 
     /* find out contig/noncontig, size, and lb for the datatype */

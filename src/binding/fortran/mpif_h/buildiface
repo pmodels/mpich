@@ -2363,7 +2363,7 @@ sub handle_array_in_arg {
 # where an address is larger than an MPI_Fint.  This is correct; these
 # routines are for the MPI-1 routines that use an MPI_Fint where the 
 # C code uses a void * (MPI_Aint in MPI-2).  
-# Instead of using MPI_Aint, we use MPIU_Pint.  This allows the MPI 
+# Instead of using MPI_Aint, we use intptr_t.  This allows the MPI
 # implementation to set MPI_Aint to be *larger* than a pointer-sized-int,
 # which is needed (as a temporary workaround) on systems like Blue Gene, which 
 # have 4 byte pointers but file systems that need 8 byte datatypes (not just 
@@ -2380,7 +2380,7 @@ sub addrint_in_decl {
 }
 sub addrint_in_arg {
     my $count = $_[0];
-    print $OUTFD "(void *)((MPIU_Pint)*(MPI_Fint *)v$count)";
+    print $OUTFD "(void *)((intptr_t)*(MPI_Fint *)v$count)";
 }
 
 sub attrint_ctof {
@@ -2399,7 +2399,7 @@ sub attrint_ctof {
         *(MPI_Fint*)$cvar = 0;
     }
     else {
-        *(MPI_Fint*)$cvar = (MPI_Fint)(MPIU_Pint)attr$cvar;
+        *(MPI_Fint*)$cvar = (MPI_Fint)(intptr_t)attr$cvar;
     }\n";
 }
 

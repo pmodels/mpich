@@ -692,7 +692,7 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
 		    }
 		    if (req_off < real_off + real_size) {
 			count[i]++;
-      ADIOI_Assert((((ADIO_Offset)(MPIU_Upint)read_buf)+req_off-real_off) == (ADIO_Offset)(MPIU_Upint)(read_buf+req_off-real_off));
+      ADIOI_Assert((((ADIO_Offset)(uintptr_t)read_buf)+req_off-real_off) == (ADIO_Offset)(uintptr_t)(read_buf+req_off-real_off));
 			MPI_Address(read_buf+req_off-real_off, 
                                &(others_req[i].mem_ptrs[j]));
       ADIOI_Assert((real_off + real_size - req_off) == (int)(real_off + real_size - req_off));
@@ -776,7 +776,7 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
 
 	if (for_next_iter) {
 	    tmp_buf = (char *) ADIOI_Malloc(for_next_iter);
-      ADIOI_Assert((((ADIO_Offset)(MPIU_Upint)read_buf)+real_size-for_next_iter) == (ADIO_Offset)(MPIU_Upint)(read_buf+real_size-for_next_iter));
+      ADIOI_Assert((((ADIO_Offset)(uintptr_t)read_buf)+real_size-for_next_iter) == (ADIO_Offset)(uintptr_t)(read_buf+real_size-for_next_iter));
       ADIOI_Assert((for_next_iter+coll_bufsize) == (size_t)(for_next_iter+coll_bufsize));
 	    memcpy(tmp_buf, read_buf+real_size-for_next_iter, for_next_iter);
 	    ADIOI_Free(fd->io_buf);
@@ -991,7 +991,7 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 { \
     while (size) { \
 	size_in_buf = MPL_MIN(size, flat_buf_sz); \
-  ADIOI_Assert((((ADIO_Offset)(MPIU_Upint)buf) + user_buf_idx) == (ADIO_Offset)(MPIU_Upint)(buf + user_buf_idx)); \
+  ADIOI_Assert((((ADIO_Offset)(uintptr_t)buf) + user_buf_idx) == (ADIO_Offset)(uintptr_t)(buf + user_buf_idx)); \
   ADIOI_Assert(size_in_buf == (size_t)size_in_buf); \
 	memcpy(((char *) buf) + user_buf_idx, \
 	       &(recv_buf[p][recv_buf_idx[p]]), size_in_buf); \

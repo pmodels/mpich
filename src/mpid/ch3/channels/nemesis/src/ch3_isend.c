@@ -15,7 +15,7 @@
 #define FUNCNAME MPIDI_CH3_iSend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPID_Request *sreq, void * hdr, MPIDI_msg_sz_t hdr_sz)
+int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPID_Request *sreq, void * hdr, intptr_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     int again = 0;

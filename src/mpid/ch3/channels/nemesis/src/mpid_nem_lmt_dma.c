@@ -233,7 +233,7 @@ static int send_sreq_data(MPIDI_VC_t *vc, MPID_Request *sreq, knem_cookie_t *s_c
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
     MPI_Aint dt_true_lb;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     MPID_Datatype * dt_ptr;
 
     /* MT: this code assumes only one thread can be at this point at a time */
@@ -357,7 +357,7 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPL_IOV s_co
     int nodma;
     int dt_contig;
     MPI_Aint dt_true_lb;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     MPID_Datatype * dt_ptr;
     volatile knem_status_t *status;
     knem_status_t current_status;
