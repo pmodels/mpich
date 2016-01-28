@@ -124,8 +124,6 @@ AC_CHECK_FUNCS(strsignal)
 if test "$ac_cv_func_strsignal" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <string.h>],strsignal)
 fi
-AC_CHECK_FUNCS(snprintf)
-AC_CHECK_FUNCS(strdup)
 dnl 
 dnl Check for signal handlers
 AC_CHECK_FUNCS(sigaction signal sigset)
@@ -170,14 +168,6 @@ dnl
 # change the compilers behavior, such as the _POSIX_SOURCE test above
 # FIXME: need to include the test, at least for any file that
 # might set _POSIX_SOURCE
-if test "$ac_cv_func_snprintf" = "yes" ; then
-    PAC_FUNC_NEEDS_DECL([#include <stdio.h>],snprintf)
-fi
-if test "$ac_cv_func_strdup" = "yes" ; then
-    # Do we need to declare strdup?
-    PAC_FUNC_NEEDS_DECL([#include <string.h>],strdup)
-fi
-
 # putenv() sets environment variable
 AC_HAVE_FUNCS(putenv)
 if test "$ac_cv_func_putenv" = "yes" ; then
