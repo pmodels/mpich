@@ -41,19 +41,6 @@ AC_ARG_ENABLE([allowport],
               [],
               [enable_allowport=yes])
 
-dnl check for library functions
-
-dnl [goodell@] the following functions are already checked by the top level configure
-dnl AC_CHECK_FUNCS(snprintf)
-dnl if test "$ac_cv_func_snprintf" = "yes" ; then
-dnl     PAC_FUNC_NEEDS_DECL([#include <stdio.h>],snprintf)
-dnl fi
-dnl AC_CHECK_FUNCS(strdup)
-dnl if test "$ac_cv_func_strdup" = "yes" ; then
-dnl     # Do we need to declare strdup?
-dnl     PAC_FUNC_NEEDS_DECL([#include <string.h>],strdup)
-dnl fi
-
 dnl
 dnl Check for special compile characteristics
 dnl
