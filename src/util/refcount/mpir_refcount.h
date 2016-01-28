@@ -15,7 +15,7 @@
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL
 #include "mpir_refcount_global.h"
 #elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
-#include "mpir_refcount_obj.h"
+#include "mpir_refcount_pobj.h"
 #endif
 
 #else
