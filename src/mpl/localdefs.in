@@ -4,4 +4,4 @@
 # back upstream.
 
 CPPFLAGS="@CPPFLAGS@"
-
+WRAPPER_LIBS="$WRAPPER_LIBS @LIBS@"
