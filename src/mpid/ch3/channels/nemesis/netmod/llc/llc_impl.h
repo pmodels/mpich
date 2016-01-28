@@ -83,14 +83,14 @@ int MPID_nem_llc_anysource_improbe(int tag, MPID_Comm * comm, int context_offset
                                    MPID_Request ** message, MPI_Status * status);
 int MPID_nem_llc_get_ordering(int *ordering);
 
-int MPID_nem_llc_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, MPIDI_msg_sz_t hdr_sz,
-                             void *data, MPIDI_msg_sz_t data_sz);
-int MPID_nem_llc_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data,
-                                 MPIDI_msg_sz_t data_sz, MPID_Request ** sreq_ptr);
+int MPID_nem_llc_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, intptr_t hdr_sz,
+                             void *data, intptr_t data_sz);
+int MPID_nem_llc_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, void *data,
+                                 intptr_t data_sz, MPID_Request ** sreq_ptr);
 int MPID_nem_llc_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
-                               MPIDI_msg_sz_t hdr_sz);
+                               intptr_t hdr_sz);
 
-int MPIDI_nem_llc_Rqst_iov_update(MPID_Request * mreq, MPIDI_msg_sz_t consume);
+int MPIDI_nem_llc_Rqst_iov_update(MPID_Request * mreq, intptr_t consume);
 int MPID_nem_llc_send_queued(MPIDI_VC_t * vc, rque_t * send_queue);
 
 int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,

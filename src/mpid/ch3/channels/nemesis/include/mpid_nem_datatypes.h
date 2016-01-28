@@ -147,7 +147,7 @@
 #define MPID_NEM_PKT_HEADER_FIELDS   	    \
     int source;                             \
     int dest;                               \
-    MPIU_Pint datalen;                      \
+    intptr_t datalen;                      \
     unsigned short seqno;                   \
     unsigned short type; /* currently used only with checkpointing */
 

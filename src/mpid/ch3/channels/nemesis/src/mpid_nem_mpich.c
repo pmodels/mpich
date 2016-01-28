@@ -82,7 +82,7 @@ fn_fail:
 int MPID_nem_send_iov(MPIDI_VC_t *vc, MPID_Request **sreq_ptr, MPL_IOV *iov, int n_iov)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     int i;
     int iov_data_copied;
     MPID_Request *sreq = *sreq_ptr;

@@ -53,7 +53,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Handle_ordered_recv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, 
-				       MPIDI_msg_sz_t *buflen, MPID_Request ** rreqp)
+				       intptr_t *buflen, MPID_Request ** rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
     static MPIDI_CH3_PktHandler_Fcn *pktArray[MPIDI_CH3_PKT_END_CH3+1];
@@ -102,13 +102,13 @@ int MPIDI_CH3U_Handle_ordered_recv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #define FUNCNAME MPIDI_CH3U_Receive_data_found
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t *buflen, int *complete)
+int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, intptr_t *buflen, int *complete)
 {
     int dt_contig;
     MPI_Aint dt_true_lb;
-    MPIDI_msg_sz_t userbuf_sz;
+    intptr_t userbuf_sz;
     MPID_Datatype * dt_ptr = NULL;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_RECEIVE_DATA_FOUND);
 
@@ -124,8 +124,8 @@ int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t 
     }
     else {
 	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-               "receive buffer too small; message truncated, msg_sz=" MPIDI_MSG_SZ_FMT ", userbuf_sz="
-					    MPIDI_MSG_SZ_FMT,
+               "receive buffer too small; message truncated, msg_sz=%" PRIdPTR ", userbuf_sz=%"
+					    PRIdPTR,
 				 rreq->dev.recv_data_sz, userbuf_sz));
 	rreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, 
                      MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TRUNCATE,
@@ -186,7 +186,7 @@ int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t 
            iov and let the channel unpack */
         if (data_sz == rreq->dev.recv_data_sz && *buflen >= data_sz)
         {
-            MPIDI_msg_sz_t last;
+            intptr_t last;
             MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"Copying noncontiguous data to user buffer");
             last = data_sz;
             MPID_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, 
@@ -235,7 +235,7 @@ fn_fail:
 #define FUNCNAME MPIDI_CH3U_Receive_data_unexpected
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Receive_data_unexpected(MPID_Request * rreq, char *buf, MPIDI_msg_sz_t *buflen, int *complete)
+int MPIDI_CH3U_Receive_data_unexpected(MPID_Request * rreq, char *buf, intptr_t *buflen, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_RECEIVE_DATA_UNEXPECTED);
@@ -298,9 +298,9 @@ int MPIDI_CH3U_Post_data_receive_found(MPID_Request * rreq)
     int mpi_errno = MPI_SUCCESS;	
     int dt_contig;
     MPI_Aint dt_true_lb;
-    MPIDI_msg_sz_t userbuf_sz;
+    intptr_t userbuf_sz;
     MPID_Datatype * dt_ptr = NULL;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_POST_DATA_RECEIVE_FOUND);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_POST_DATA_RECEIVE_FOUND);
@@ -315,8 +315,8 @@ int MPIDI_CH3U_Post_data_receive_found(MPID_Request * rreq)
     }
     else {
 	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-               "receive buffer too small; message truncated, msg_sz=" MPIDI_MSG_SZ_FMT ", userbuf_sz="
-					    MPIDI_MSG_SZ_FMT,
+               "receive buffer too small; message truncated, msg_sz=%" PRIdPTR ", userbuf_sz=%"
+					    PRIdPTR,
 				 rreq->dev.recv_data_sz, userbuf_sz));
 	rreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, 
                      MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TRUNCATE,
@@ -484,7 +484,7 @@ int MPIDI_CH3I_Try_acquire_win_lock(MPID_Win *win_ptr, int requested_lock)
 #define FUNCNAME MPIDI_CH3_PktHandler_FlowCntlUpdate
 #undef FCNAME
 int MPIDI_CH3_PktHandler_FlowCntlUpdate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-					 MPIDI_msg_sz_t *buflen, MPID_Request **rreqp)
+					 intptr_t *buflen, MPID_Request **rreqp)
 {
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
     return MPI_SUCCESS;
@@ -497,7 +497,7 @@ int MPIDI_CH3_PktHandler_FlowCntlUpdate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EndCH3( MPIDI_VC_t *vc ATTRIBUTE((unused)), 
 				 MPIDI_CH3_Pkt_t *pkt ATTRIBUTE((unused)),
-				 MPIDI_msg_sz_t *buflen ATTRIBUTE((unused)), 
+				 intptr_t *buflen ATTRIBUTE((unused)),
 				 MPID_Request **rreqp ATTRIBUTE((unused)) )
 {
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_ENDCH3);

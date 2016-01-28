@@ -11,7 +11,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_Revoke(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-                                MPIDI_msg_sz_t *buflen, MPID_Request **rreqp)
+                                intptr_t *buflen, MPID_Request **rreqp)
 {
     MPIDI_CH3_Pkt_revoke_t *revoke_pkt = &pkt->revoke;
     int mpi_errno = MPI_SUCCESS;

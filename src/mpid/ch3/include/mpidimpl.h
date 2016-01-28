@@ -26,10 +26,6 @@
 /* Add the ch3 packet definitions */
 #include "mpidpkt.h"
 
-/* We need to match the size of MPIU_Pint to the relevant Format control
- */
-#define MPIDI_MSG_SZ_FMT MPIU_PINT_FMT_DEC_SPEC
-
 #if !defined(MPIDI_IOV_DENSITY_MIN)
 #   define MPIDI_IOV_DENSITY_MIN (16 * 1024)
 #endif
@@ -173,17 +169,17 @@ extern MPIDI_Process_t MPIDI_Process;
 	(dt_ptr_) = NULL;						\
 	(dt_contig_out_) = TRUE;					\
         (dt_true_lb_)    = 0;                                           \
-	(data_sz_out_) = (MPIDI_msg_sz_t) (count_) * MPID_Datatype_get_basic_size(datatype_); \
-	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, TERSE, (MPL_DBG_FDEST,"basic datatype: dt_contig=%d, dt_sz=%d, data_sz=" MPIDI_MSG_SZ_FMT, \
+	(data_sz_out_) = (intptr_t) (count_) * MPID_Datatype_get_basic_size(datatype_); \
+	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, TERSE, (MPL_DBG_FDEST,"basic datatype: dt_contig=%d, dt_sz=%d, data_sz=%" PRIdPTR, \
 			  (dt_contig_out_), MPID_Datatype_get_basic_size(datatype_), (data_sz_out_)));\
     }									\
     else								\
     {									\
 	MPID_Datatype_get_ptr((datatype_), (dt_ptr_));			\
 	(dt_contig_out_) = (dt_ptr_)->is_contig;			\
-	(data_sz_out_) = (MPIDI_msg_sz_t) (count_) * (dt_ptr_)->size;	\
+	(data_sz_out_) = (intptr_t) (count_) * (dt_ptr_)->size;	\
         (dt_true_lb_)    = (dt_ptr_)->true_lb;                          \
-	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, TERSE, (MPL_DBG_FDEST, "user defined datatype: dt_contig=%d, dt_sz=" MPI_AINT_FMT_DEC_SPEC ", data_sz=" MPIDI_MSG_SZ_FMT, \
+	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, TERSE, (MPL_DBG_FDEST, "user defined datatype: dt_contig=%d, dt_sz=" MPI_AINT_FMT_DEC_SPEC ", data_sz=%" PRIdPTR, \
 			  (dt_contig_out_), (dt_ptr_)->size, (data_sz_out_)));\
     }									\
 }
@@ -723,7 +719,7 @@ typedef struct MPIDI_VC
     /* rendezvous function pointers.  Called to send a rendevous
        message or when one is matched */
     int (* rndvSend_fn)( struct MPID_Request **sreq_p, const void * buf, MPI_Aint count,
-                         MPI_Datatype datatype, int dt_contig, MPIDI_msg_sz_t data_sz, 
+                         MPI_Datatype datatype, int dt_contig, intptr_t data_sz,
                          MPI_Aint dt_true_lb, int rank, int tag,
                          struct MPID_Comm * comm, int context_offset );
     int (* rndvRecv_fn)( struct MPIDI_VC * vc, struct MPID_Request *rreq );
@@ -738,7 +734,7 @@ typedef struct MPIDI_VC
        sreq->dev.segment, _first and _size.  Contiguous messages are
        called directly from CH3 and cannot be overridden. */
     int (* sendNoncontig_fn)( struct MPIDI_VC *vc, struct MPID_Request *sreq,
-			      void *header, MPIDI_msg_sz_t hdr_sz );
+			      void *header, intptr_t hdr_sz );
 
 #ifdef ENABLE_COMM_OVERRIDES
     MPIDI_Comm_ops_t *comm_ops;
@@ -957,7 +953,7 @@ const char *MPIDI_Pkt_GetDescString( MPIDI_CH3_Pkt_t *pkt );
 /* These macros help trace communication headers */
 #define MPL_DBG_MSGPKT(_vc,_tag,_contextid,_dest,_size,_kind)	\
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_MSG,TYPICAL,(MPL_DBG_FDEST,\
-		      "%s: vc=%p, tag=%d, context=%d, dest=%d, datasz=" MPIDI_MSG_SZ_FMT,\
+		      "%s: vc=%p, tag=%d, context=%d, dest=%d, datasz=%" PRIdPTR,\
 		      _kind,_vc,_tag,_contextid,_dest,_size) )
 
 /* FIXME: Switch this to use the common debug code */
@@ -1287,7 +1283,7 @@ int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root );
   If the send completes immediately, the channel implementation should return 
   NULL.
 @*/
-int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * pkt, MPIDI_msg_sz_t pkt_sz, 
+int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * pkt, intptr_t pkt_sz,
 			MPID_Request **sreq_ptr);
 
 
@@ -1353,7 +1349,7 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int iov_n,
   must set the request as complete.
 @*/
 int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPID_Request * sreq, void * pkt, 
-		    MPIDI_msg_sz_t pkt_sz);
+		    intptr_t pkt_sz);
 
 
 /*@
@@ -1432,12 +1428,12 @@ int MPIDI_CH3U_Request_unpack_srbuf(MPID_Request * rreq);
 void MPIDI_CH3U_Buffer_copy(const void * const sbuf, MPI_Aint scount,
 			    MPI_Datatype sdt, int * smpi_errno,
 			    void * const rbuf, MPI_Aint rcount, MPI_Datatype rdt,
-			    MPIDI_msg_sz_t * rdata_sz, int * rmpi_errno);
+			    intptr_t * rdata_sz, int * rmpi_errno);
 int MPIDI_CH3U_Post_data_receive(int found, MPID_Request ** rreqp);
 int MPIDI_CH3U_Post_data_receive_found(MPID_Request * rreqp);
 int MPIDI_CH3U_Post_data_receive_unexpected(MPID_Request * rreqp);
-int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t *buflen, int *complete);
-int MPIDI_CH3U_Receive_data_unexpected(MPID_Request * rreq, char *buf, MPIDI_msg_sz_t *buflen, int *complete);
+int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, intptr_t *buflen, int *complete);
+int MPIDI_CH3U_Receive_data_unexpected(MPID_Request * rreq, char *buf, intptr_t *buflen, int *complete);
 
 /* Initialization routine for ch3u_comm.c */
 int MPIDI_CH3I_Comm_init(void);
@@ -1545,7 +1541,7 @@ int MPIDI_CH3_Get_business_card(int myRank, char *value, int length);
   if the channel has made guarantees about ordering.
 E*/
 int MPIDI_CH3U_Handle_recv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, 
-			       MPIDI_msg_sz_t *buflen, MPID_Request ** rreqp);
+			       intptr_t *buflen, MPID_Request ** rreqp);
 
 /*@
   MPIDI_CH3U_Handle_recv_req - Process a receive request for which all of the 
@@ -1675,69 +1671,69 @@ int MPIDI_GetTagFromPort( const char *, int * );
 
 /* Here are the packet handlers */
 int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-				   MPIDI_msg_sz_t *, MPID_Request ** );
+				   intptr_t *, MPID_Request ** );
 #ifdef USE_EAGER_SHORT
 int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-					 MPIDI_msg_sz_t *, MPID_Request ** );
+					 intptr_t *, MPID_Request ** );
 #endif
 int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-				    MPIDI_msg_sz_t *, MPID_Request ** );
+				    intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-					MPIDI_msg_sz_t *, MPID_Request ** );
+					intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_EagerSyncAck( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-				       MPIDI_msg_sz_t *, MPID_Request ** );
+				       intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_RndvReqToSend( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-					MPIDI_msg_sz_t *, MPID_Request ** );
+					intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-					MPIDI_msg_sz_t *, MPID_Request ** );
+					intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_RndvSend( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-				   MPIDI_msg_sz_t *, MPID_Request ** );
+				   intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_CancelSendReq( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-					MPIDI_msg_sz_t *, MPID_Request ** );
+					intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_CancelSendResp( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-					 MPIDI_msg_sz_t *, MPID_Request ** );
+					 intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_Put( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-			      MPIDI_msg_sz_t *, MPID_Request ** );
+			      intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_Accumulate( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-				     MPIDI_msg_sz_t *, MPID_Request ** );
+				     intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_GetAccumulate( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
-                                        MPIDI_msg_sz_t *, MPID_Request ** );
+                                        intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_CAS( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-                              MPIDI_msg_sz_t *, MPID_Request ** );
+                              intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_CASResp( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-                                  MPIDI_msg_sz_t *, MPID_Request ** );
+                                  intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_FOP( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-                              MPIDI_msg_sz_t *, MPID_Request ** );
+                              intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_FOPResp( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-                                  MPIDI_msg_sz_t *, MPID_Request ** );
+                                  intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_Get_AccumResp( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-                                        MPIDI_msg_sz_t *, MPID_Request ** );
+                                        intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_Get( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-			      MPIDI_msg_sz_t *, MPID_Request ** );
+			      intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_GetResp( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-				 MPIDI_msg_sz_t *, MPID_Request ** );
+				 intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_Lock( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-			      MPIDI_msg_sz_t *, MPID_Request ** );
+			      intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_LockAck( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
-				      MPIDI_msg_sz_t *, MPID_Request ** );
+				      intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_LockOpAck( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
-                                    MPIDI_msg_sz_t *, MPID_Request ** );
+                                    intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_Unlock( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
-                                 MPIDI_msg_sz_t *, MPID_Request ** );
+                                 intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_Flush( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
-                                MPIDI_msg_sz_t *, MPID_Request ** );
+                                intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_Ack( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
-                              MPIDI_msg_sz_t *, MPID_Request ** );
+                              intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_DecrAtCnt( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
-                                    MPIDI_msg_sz_t *, MPID_Request ** );
+                                    intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_FlowCntlUpdate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-					 MPIDI_msg_sz_t *, MPID_Request ** );
+					 intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-				MPIDI_msg_sz_t *, MPID_Request ** );
+				intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_EndCH3( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
-				 MPIDI_msg_sz_t *, MPID_Request ** );
+				 intptr_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_Revoke(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-                                MPIDI_msg_sz_t *buflen, MPID_Request **rreqp);
+                                intptr_t *buflen, MPID_Request **rreqp);
 int MPIDI_CH3_PktHandler_Init( MPIDI_CH3_PktHandler_Fcn *[], int );
 
 int MPIDI_CH3I_RMA_Make_progress_global(int *made_progress);
@@ -1757,29 +1753,29 @@ int MPIDI_CH3_PktPrint_EagerSyncAck( FILE *fp, MPIDI_CH3_Pkt_t *pkt );
 /* Routines to create packets (used in implementing MPI communications */
 int MPIDI_CH3_EagerNoncontigSend( MPID_Request **, MPIDI_CH3_Pkt_type_t, 
 				  const void *, MPI_Aint,
-				  MPI_Datatype, MPIDI_msg_sz_t, int, int, MPID_Comm *, 
+				  MPI_Datatype, intptr_t, int, int, MPID_Comm *,
 				  int );
 int MPIDI_CH3_EagerContigSend( MPID_Request **, MPIDI_CH3_Pkt_type_t, 
-			       const void *, MPIDI_msg_sz_t, int, 
+			       const void *, intptr_t, int,
 			       int, MPID_Comm *, int );
 int MPIDI_CH3_EagerContigShortSend( MPID_Request **, MPIDI_CH3_Pkt_type_t, 
-				    const void *, MPIDI_msg_sz_t, 
+				    const void *, intptr_t,
 				    int, int, MPID_Comm *, int );
 int MPIDI_CH3_EagerContigIsend( MPID_Request **, MPIDI_CH3_Pkt_type_t, 
-				const void *, MPIDI_msg_sz_t, int, 
+				const void *, intptr_t, int,
 				int, MPID_Comm *, int );
 
 
 int MPIDI_CH3_RndvSend( MPID_Request **, const void *, MPI_Aint, MPI_Datatype,
-			int, MPIDI_msg_sz_t, MPI_Aint, int, int, MPID_Comm *, int );
+			int, intptr_t, MPI_Aint, int, int, MPID_Comm *, int );
 
 int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **, const void *, int, 
-				      MPI_Datatype, MPIDI_msg_sz_t, int, MPI_Aint,
+				      MPI_Datatype, intptr_t, int, MPI_Aint,
 				      int, int, MPID_Comm *, int );
 int MPIDI_CH3_EagerSyncZero(MPID_Request **, int, int, MPID_Comm *, int );
 
 int MPIDI_CH3_SendNoncontig_iov( struct MPIDI_VC *vc, struct MPID_Request *sreq,
-                                 void *header, MPIDI_msg_sz_t hdr_sz );
+                                 void *header, intptr_t hdr_sz );
 
 /* Routines to ack packets, called in the receive routines when a 
    message is matched */

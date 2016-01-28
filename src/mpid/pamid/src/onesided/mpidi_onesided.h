@@ -188,7 +188,7 @@ typedef struct
   int             count;
   int             contig;
   MPI_Aint        true_lb;
-  MPIDI_msg_sz_t  size;
+  intptr_t  size;
 
   int             num_contig;
   DLOOP_VECTOR  * map;

@@ -18,7 +18,7 @@ static void _mxm_recv_completion_cb(void *context);
 static int _mxm_irecv(MPID_nem_mxm_ep_t * ep, MPID_nem_mxm_req_area * req, int id, mxm_mq_h mxm_mq,
                       mxm_tag_t mxm_tag);
 static int _mxm_process_rdtype(MPID_Request ** rreq_p, MPI_Datatype datatype,
-                               MPID_Datatype * dt_ptr, MPIDI_msg_sz_t data_sz, const void *buf,
+                               MPID_Datatype * dt_ptr, intptr_t data_sz, const void *buf,
                                int count, mxm_req_buffer_t ** iov_buf, int *iov_count);
 
 #undef FUNCNAME
@@ -84,7 +84,7 @@ void MPID_nem_mxm_get_adi_msg(mxm_conn_h conn, mxm_imm_t imm, void *data,
     _dbg_mxm_output(5, "========> Getting ADI msg (from=%d data_size %d) \n", vc->pg_rank, length);
     _dbg_mxm_out_buf(data, (length > 16 ? 16 : length));
 
-    MPID_nem_handle_pkt(vc, data, (MPIDI_msg_sz_t) (length));
+    MPID_nem_handle_pkt(vc, data, (intptr_t) (length));
 }
 
 
@@ -155,7 +155,7 @@ int MPID_nem_mxm_anysource_matched(MPID_Request * req)
 int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPID_Datatype *dt_ptr;
@@ -233,9 +233,9 @@ static int _mxm_handle_rreq(MPID_Request * req)
     int complete = FALSE, found = FALSE;
     int dt_contig;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
-    MPIDI_msg_sz_t userbuf_sz;
+    intptr_t userbuf_sz;
     MPID_Datatype *dt_ptr;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     MPID_nem_mxm_vc_area *vc_area ATTRIBUTE((unused)) = NULL;
     MPID_nem_mxm_req_area *req_area = NULL;
     void *tmp_buf = NULL;
@@ -275,8 +275,8 @@ static int _mxm_handle_rreq(MPID_Request * req)
         MPIR_STATUS_SET_COUNT(req->status, userbuf_sz);
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, VERBOSE, (MPL_DBG_FDEST,
                                               "receive buffer too small; message truncated, msg_sz="
-                                              MPIDI_MSG_SZ_FMT ", userbuf_sz="
-                                              MPIDI_MSG_SZ_FMT, req->dev.recv_data_sz, userbuf_sz));
+                                              PRIdPTR ", userbuf_sz="
+                                              PRIdPTR, req->dev.recv_data_sz, userbuf_sz));
         req->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS,
                                                      MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
                                                      MPI_ERR_TRUNCATE, "**truncate",
@@ -286,7 +286,7 @@ static int _mxm_handle_rreq(MPID_Request * req)
     }
 
     if (!dt_contig) {
-        MPIDI_msg_sz_t last = 0;
+        intptr_t last = 0;
 
         if (req->dev.tmpbuf != NULL) {
             last = req->dev.recv_data_sz;
@@ -437,12 +437,12 @@ static int _mxm_irecv(MPID_nem_mxm_ep_t * ep, MPID_nem_mxm_req_area * req, int i
 
 
 static int _mxm_process_rdtype(MPID_Request ** rreq_p, MPI_Datatype datatype,
-                               MPID_Datatype * dt_ptr, MPIDI_msg_sz_t data_sz, const void *buf,
+                               MPID_Datatype * dt_ptr, intptr_t data_sz, const void *buf,
                                int count, mxm_req_buffer_t ** iov_buf, int *iov_count)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *rreq = *rreq_p;
-    MPIDI_msg_sz_t last;
+    intptr_t last;
     MPL_IOV *iov;
     int n_iov = 0;
     int index;

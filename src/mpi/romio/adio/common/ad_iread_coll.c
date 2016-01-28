@@ -787,7 +787,7 @@ static void ADIOI_Iread_and_exch_l1_begin(ADIOI_NBC_Request *nbc_req,
                 }
                 if (req_off < real_off + real_size) {
                     count[i]++;
-                    ADIOI_Assert((((ADIO_Offset)(MPIU_Upint)read_buf) + req_off - real_off) == (ADIO_Offset)(MPIU_Upint)(read_buf + req_off - real_off));
+                    ADIOI_Assert((((ADIO_Offset)(uintptr_t)read_buf) + req_off - real_off) == (ADIO_Offset)(uintptr_t)(read_buf + req_off - real_off));
                     MPI_Address(read_buf + req_off - real_off,
                                 &(others_req[i].mem_ptrs[j]));
                     ADIOI_Assert((real_off + real_size - req_off) == (int)(real_off + real_size - req_off));
@@ -883,7 +883,7 @@ static void ADIOI_Iread_and_exch_l1_end(ADIOI_NBC_Request *nbc_req,
 
     if (for_next_iter) {
         tmp_buf = (char *)ADIOI_Malloc(for_next_iter);
-        ADIOI_Assert((((ADIO_Offset)(MPIU_Upint)read_buf)+real_size-for_next_iter) == (ADIO_Offset)(MPIU_Upint)(read_buf+real_size-for_next_iter));
+        ADIOI_Assert((((ADIO_Offset)(uintptr_t)read_buf)+real_size-for_next_iter) == (ADIO_Offset)(uintptr_t)(read_buf+real_size-for_next_iter));
         ADIOI_Assert((for_next_iter+vars->coll_bufsize) == (size_t)(for_next_iter+vars->coll_bufsize));
         memcpy(tmp_buf, read_buf+real_size-for_next_iter, for_next_iter);
         ADIOI_Free(fd->io_buf);

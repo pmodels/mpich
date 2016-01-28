@@ -486,7 +486,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 	    {
 		if (conn->recv_active == NULL)
 		{
-                    MPIDI_msg_sz_t buflen = sizeof (MPIDI_CH3_Pkt_t);
+                    intptr_t buflen = sizeof (MPIDI_CH3_Pkt_t);
 		    MPIU_Assert(conn->pkt.type < MPIDI_CH3_PKT_END_CH3);
                     
 		    mpi_errno = pktArray[conn->pkt.type]( conn->vc, &conn->pkt,
@@ -624,7 +624,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 			/* --END ERROR HANDLING-- */
 
 			MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
-       (MPL_DBG_FDEST,"immediate writev, vc=%p, sreq=0x%08x, nb=" MPIDI_MSG_SZ_FMT,
+       (MPL_DBG_FDEST,"immediate writev, vc=%p, sreq=0x%08x, nb=%" PRIdPTR,
 	conn->vc, sreq->handle, nb));
 			    
 			if (nb > 0 && adjust_iov(&iovp, &sreq->dev.iov_count, nb))
@@ -899,7 +899,7 @@ static int ReadMoreData( MPIDI_CH3I_Connection_t * conn, MPID_Request *rreq )
 	/* --END ERROR HANDLING-- */
 
 	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
-		 (MPL_DBG_FDEST,"immediate readv, vc=%p nb=" MPIDI_MSG_SZ_FMT ", rreq=0x%08x",
+		 (MPL_DBG_FDEST,"immediate readv, vc=%p nb=%" PRIdPTR ", rreq=0x%08x",
 		  conn->vc, nb, rreq->handle));
 				
 	if (nb > 0 && adjust_iov(&iovp, &rreq->dev.iov_count, nb)) {

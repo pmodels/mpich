@@ -26,7 +26,7 @@ int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
 {
     int mpi_errno = MPI_SUCCESS, llc_errno;
     int dt_contig;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     MPID_Datatype *dt_ptr;
     MPI_Aint dt_true_lb;
     int i;
@@ -125,9 +125,9 @@ int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
 #endif /* notdef_leak_0001_hack */
 
         MPID_Segment_init(buf, count, datatype, segment_ptr, 0);
-        MPIDI_msg_sz_t segment_first = 0;
-        MPIDI_msg_sz_t segment_size = data_sz;
-        MPIDI_msg_sz_t last = segment_size;
+        intptr_t segment_first = 0;
+        intptr_t segment_size = data_sz;
+        intptr_t last = segment_size;
         MPIU_Assert(last > 0);
         REQ_FIELD(sreq, pack_buf) = MPL_malloc((size_t) data_sz);
         MPIR_ERR_CHKANDJUMP(!REQ_FIELD(sreq, pack_buf), mpi_errno, MPI_ERR_OTHER, "**outofmemory");
@@ -162,8 +162,8 @@ int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
 #define FUNCNAME MPID_nem_llc_iStartContigMsg
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_llc_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data,
-                                 MPIDI_msg_sz_t data_sz, MPID_Request ** sreq_ptr)
+int MPID_nem_llc_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, void *data,
+                                 intptr_t data_sz, MPID_Request ** sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *sreq = NULL;
@@ -254,8 +254,8 @@ int MPID_nem_llc_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_
 #define FUNCNAME MPID_nem_llc_iSendContig
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_llc_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, MPIDI_msg_sz_t hdr_sz,
-                             void *data, MPIDI_msg_sz_t data_sz)
+int MPID_nem_llc_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, intptr_t hdr_sz,
+                             void *data, intptr_t data_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_llc_vc_area *vc_llc = 0;
@@ -339,7 +339,7 @@ int MPID_nem_llc_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, MP
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
-                               MPIDI_msg_sz_t hdr_sz)
+                               intptr_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_SENDNONCONTIG);
@@ -348,7 +348,7 @@ int MPID_nem_llc_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
 
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     MPID_nem_llc_vc_area *vc_llc = 0;
     int need_to_queue = 0;
 
@@ -472,10 +472,10 @@ int MPID_nem_llc_send_queued(MPIDI_VC_t * vc, rque_t * send_queue)
 #define FUNCNAME MPIDI_nem_llc_Rqst_iov_update
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_nem_llc_Rqst_iov_update(MPID_Request * mreq, MPIDI_msg_sz_t consume)
+int MPIDI_nem_llc_Rqst_iov_update(MPID_Request * mreq, intptr_t consume)
 {
     int ret = TRUE;
-    /* MPIDI_msg_sz_t oconsume = consume; */
+    /* intptr_t oconsume = consume; */
     int iv, nv;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_NEM_LLC_RQST_IOV_UPDATE);
 
@@ -827,7 +827,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
                         /* set_request_info() sets req->dev.recv_data_sz to pkt->data_sz.
                          * pkt->data_sz is sender's request size.
                          */
-                        MPIDI_msg_sz_t unpack_sz = events[0].side.initiator.length;
+                        intptr_t unpack_sz = events[0].side.initiator.length;
                         MPID_Segment seg;
                         MPI_Aint last;
 
@@ -959,7 +959,7 @@ int MPID_nem_llc_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
 {
     int mpi_errno = MPI_SUCCESS, llc_errno;
     int dt_contig;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     MPID_Datatype *dt_ptr;
     MPI_Aint dt_true_lb;
     int i;
@@ -1046,9 +1046,9 @@ int MPID_nem_llc_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
         sreq->dev.segment_ptr = segment_ptr;
 
         MPID_Segment_init(buf, count, datatype, segment_ptr, 0);
-        MPIDI_msg_sz_t segment_first = 0;
-        MPIDI_msg_sz_t segment_size = data_sz;
-        MPIDI_msg_sz_t last = segment_size;
+        intptr_t segment_first = 0;
+        intptr_t segment_size = data_sz;
+        intptr_t last = segment_size;
         MPIU_Assert(last > 0);
         REQ_FIELD(sreq, pack_buf) = MPL_malloc((size_t) data_sz);
         MPIR_ERR_CHKANDJUMP(!REQ_FIELD(sreq, pack_buf), mpi_errno, MPI_ERR_OTHER, "**outofmemory");

@@ -53,7 +53,7 @@
  * \param[in]  aint  Variable of type MPI_Aint
  */
 #define MPIU_Ensure_Aint_fits_in_pointer(aint) \
-  MPIU_Assert((aint) == (MPI_Aint)(MPIU_Upint) MPIU_AINT_CAST_TO_VOID_PTR(aint));
+  MPIU_Assert((aint) == (MPI_Aint)(uintptr_t) MPIU_AINT_CAST_TO_VOID_PTR(aint));
 
 
 #endif /* !defined(MPIU_POINTER_H_INCLUDED) */

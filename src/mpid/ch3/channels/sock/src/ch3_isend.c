@@ -11,7 +11,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static void update_request(MPID_Request * sreq, void * hdr, 
-			   MPIDI_msg_sz_t hdr_sz, MPIU_Size_t nb)
+			   intptr_t hdr_sz, MPIU_Size_t nb)
 {
     MPIDI_STATE_DECL(MPID_STATE_UPDATE_REQUEST);
 
@@ -29,7 +29,7 @@ static void update_request(MPID_Request * sreq, void * hdr,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPID_Request * sreq, void * hdr, 
-		    MPIDI_msg_sz_t hdr_sz)
+		    intptr_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
@@ -70,7 +70,7 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPID_Request * sreq, void * hdr,
 		if (nb == hdr_sz)
 		{
 		    MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
-                     "write complete " MPIDI_MSG_SZ_FMT " bytes, calling OnDataAvail fcn", nb);
+                     "write complete %" PRIdPTR " bytes, calling OnDataAvail fcn", nb);
 		    reqFn = sreq->dev.OnDataAvail;
 		    if (!reqFn) {
 			MPIU_Assert(MPIDI_Request_get_type(sreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
@@ -106,7 +106,7 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPID_Request * sreq, void * hdr,
 		else
 		{
 		    MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
-                     "partial write of " MPIDI_MSG_SZ_FMT " bytes, request enqueued at head", nb);
+                     "partial write of %" PRIdPTR " bytes, request enqueued at head", nb);
 		    update_request(sreq, hdr, hdr_sz, nb);
 		    MPIDI_CH3I_SendQ_enqueue_head(vcch, sreq);
 		    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,

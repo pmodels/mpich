@@ -64,7 +64,7 @@ typedef MPIU_SIZE_T MPIU_Size_t;
 /* An MPI_Aint may be *larger* than a pointer.  By using 2 casts, we can
    keep some compilers from complaining about converting a pointer to an
    integer of a different size */
-#define MPIU_PtrToAint(a) ((MPI_Aint)(MPIU_Upint)(a))
+#define MPIU_PtrToAint(a) ((MPI_Aint)(uintptr_t)(a))
 #endif
 
 /* AintToPtr converts an MPI_Aint to a pointer type, extending bits if necessary */
@@ -76,9 +76,9 @@ typedef MPIU_SIZE_T MPIU_Size_t;
 
 /* Adding the 32-bit compute/64-bit I/O related type-casts in here as
  * they are not a part of the MPI standard yet. */
-#define MPIU_AINT_CAST_TO_VOID_PTR (void *)(MPIU_Pint)
-#define MPIU_VOID_PTR_CAST_TO_MPI_AINT (MPI_Aint)(MPIU_Upint)
-#define MPIU_PTR_DISP_CAST_TO_MPI_AINT (MPI_Aint)(MPIU_Pint)
+#define MPIU_AINT_CAST_TO_VOID_PTR (void *)(intptr_t)
+#define MPIU_VOID_PTR_CAST_TO_MPI_AINT (MPI_Aint)(uintptr_t)
+#define MPIU_PTR_DISP_CAST_TO_MPI_AINT (MPI_Aint)(intptr_t)
 
 #define MPIU_CONTEXT_ID_T_DATATYPE MPI_UINT16_T
 typedef uint16_t MPIU_Context_id_t;

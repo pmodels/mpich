@@ -91,7 +91,7 @@ int MPIR_Call_attr_delete( int handle, MPID_Attribute *attr_p )
                 handle,
                 attr_p->keyval->handle,
                 attr_p->attrType,
-                (void *)(MPIU_Pint)attr_p->value,
+                (void *)(intptr_t)attr_p->value,
                 attr_p->keyval->extra_state
                 );
     /* --BEGIN ERROR HANDLING-- */
@@ -149,7 +149,7 @@ int MPIR_Call_attr_copy( int handle, MPID_Attribute *attr_p, void** value_copy, 
                 attr_p->keyval->handle,
                 attr_p->keyval->extra_state,
                 attr_p->attrType,
-                (void *)(MPIU_Pint)attr_p->value,
+                (void *)(intptr_t)attr_p->value,
                 value_copy,
                 flag
                 );
@@ -222,8 +222,8 @@ int MPIR_Attr_dup_list( int handle, MPID_Attribute *old_attrs,
         new_p->attrType         = p->attrType;
         new_p->pre_sentinal     = 0;
 	/* FIXME: This is not correct in some cases (size(MPI_Aint)>
-	 sizeof(MPIU_Pint)) */
-        new_p->value            = (MPID_AttrVal_t)(MPIU_Pint)new_value;
+	 sizeof(intptr_t)) */
+        new_p->value            = (MPID_AttrVal_t)(intptr_t)new_value;
         new_p->post_sentinal    = 0;
         new_p->next             = 0;
 

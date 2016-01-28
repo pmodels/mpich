@@ -100,7 +100,7 @@ static inline void fill_in_derived_dtp_info(MPIDI_RMA_dtype_info * dtype_info, v
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int init_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
-                              MPID_Datatype * target_dtp, MPIDI_msg_sz_t stream_offset,
+                              MPID_Datatype * target_dtp, intptr_t stream_offset,
                               void **ext_hdr_ptr, MPI_Aint * ext_hdr_sz)
 {
     MPI_Aint _ext_hdr_sz = 0, _total_sz = 0;
@@ -183,7 +183,7 @@ static int init_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int init_get_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
-                                  MPID_Datatype * target_dtp, MPIDI_msg_sz_t stream_offset,
+                                  MPID_Datatype * target_dtp, intptr_t stream_offset,
                                   void **ext_hdr_ptr, MPI_Aint * ext_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -217,7 +217,7 @@ static int init_get_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
                                     void *ext_hdr_ptr, MPI_Aint ext_hdr_sz,
-                                    MPIDI_msg_sz_t stream_offset, MPIDI_msg_sz_t stream_size,
+                                    intptr_t stream_offset, intptr_t stream_size,
                                     MPID_Request ** req_ptr)
 {
     MPI_Datatype target_datatype;
@@ -552,7 +552,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     rest_len = total_len;
     MPIU_Assert(rma_op->issued_stream_count >= 0);
     for (j = 0; j < stream_unit_count; j++) {
-        MPIDI_msg_sz_t stream_offset, stream_size;
+        intptr_t stream_offset, stream_size;
         MPID_Request *curr_req = NULL;
 
         if (j < rma_op->issued_stream_count)
@@ -745,7 +745,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     MPIU_Assert(rma_op->issued_stream_count >= 0);
 
     for (j = 0; j < stream_unit_count; j++) {
-        MPIDI_msg_sz_t stream_offset, stream_size;
+        intptr_t stream_offset, stream_size;
         MPID_Request *resp_req = NULL;
         MPID_Request *curr_req = NULL;
 

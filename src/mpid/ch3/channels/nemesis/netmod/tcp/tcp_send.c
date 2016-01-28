@@ -71,7 +71,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *sreq;
-    MPIDI_msg_sz_t offset;
+    intptr_t offset;
     MPL_IOV *iov;
     int complete;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
@@ -118,7 +118,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
                 goto fn_exit; /* this vc is closed now, just bail out */
             }
         }
-        MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
+        MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write %" PRIdPTR, offset);
 
         complete = 1;
         for (iov = &sreq->dev.iov[sreq->dev.iov_offset]; iov < &sreq->dev.iov[sreq->dev.iov_offset + sreq->dev.iov_count]; ++iov)
@@ -231,12 +231,12 @@ int MPID_nem_tcp_conn_est (MPIDI_VC_t *vc)
 #define FUNCNAME MPID_nem_tcp_iStartContigMsg
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz,
+int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, void *data, intptr_t data_sz,
                                  MPID_Request **sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request * sreq = NULL;
-    MPIDI_msg_sz_t offset = 0;
+    intptr_t offset = 0;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
     sockconn_t *sc = vc_tcp->sc;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_ISTARTCONTIGMSG);
@@ -283,7 +283,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
                         goto fn_fail;
                     }
                 }
-                MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
+                MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write %" PRIdPTR, offset);
                 
                 if (offset == sizeof(MPIDI_CH3_Pkt_t) + data_sz)
                 {
@@ -371,12 +371,12 @@ fn_fail:
 #define FUNCNAME MPID_nem_tcp_iStartContigMsg_paused
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz,
+int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, void *data, intptr_t data_sz,
                                         MPID_Request **sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request * sreq = NULL;
-    MPIDI_msg_sz_t offset = 0;
+    intptr_t offset = 0;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
     sockconn_t *sc = vc_tcp->sc;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_ISTARTCONTIGMSG_PAUSED);
@@ -423,7 +423,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_
                     goto fn_fail;
                 }
             }
-            MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
+            MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write %" PRIdPTR, offset);
                 
             if (offset == sizeof(MPIDI_CH3_Pkt_t) + data_sz)
             {
@@ -505,11 +505,11 @@ fn_fail:
 #define FUNCNAME MPID_nem_tcp_iSendContig
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz,
-                             void *data, MPIDI_msg_sz_t data_sz)
+int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, intptr_t hdr_sz,
+                             void *data, intptr_t data_sz)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_msg_sz_t offset = 0;
+    intptr_t offset = 0;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
     sockconn_t *sc = vc_tcp->sc;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_ISENDCONTIGMSG);
@@ -567,7 +567,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
                         goto fn_fail;
                     }
                 }
-                MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write " MPIDI_MSG_SZ_FMT, offset);
+                MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write %" PRIdPTR, offset);
                 
                 if (offset == sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.ext_hdr_sz + data_sz)
                 {
@@ -695,13 +695,13 @@ fn_fail:
 #define FUNCNAME MPID_nem_tcp_SendNoncontig
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header, MPIDI_msg_sz_t hdr_sz)
+int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header, intptr_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     int iov_n;
     MPL_IOV iov[MPL_IOV_LIMIT];
     MPL_IOV *iov_p;
-    MPIDI_msg_sz_t offset;
+    intptr_t offset;
     int complete;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
     int iov_offset;
@@ -760,7 +760,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
                     }
                 }
                 
-                MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write noncontig " MPIDI_MSG_SZ_FMT, offset);
+                MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "write noncontig %" PRIdPTR, offset);
             }
         }
         else

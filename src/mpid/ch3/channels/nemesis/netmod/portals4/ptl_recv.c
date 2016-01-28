@@ -93,7 +93,7 @@ static int handler_recv_dequeue_complete(const ptl_event_t *e)
     int is_contig;
     MPI_Aint last;
     MPI_Aint dt_true_lb;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     MPID_Datatype *dt_ptr ATTRIBUTE((unused));
 
     MPIDI_STATE_DECL(MPID_STATE_HANDLER_RECV_DEQUEUE_COMPLETE);
@@ -278,7 +278,7 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
     MPID_nem_ptl_vc_area *vc_ptl;
     int ret;
     int dt_contig;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     MPID_Datatype *dt_ptr;
     MPI_Aint dt_true_lb;
     MPI_Aint last;
@@ -430,7 +430,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
     MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
     ptl_me_t me;
     int dt_contig;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     MPID_Datatype *dt_ptr;
     MPI_Aint dt_true_lb;
     MPI_Aint last;
@@ -693,7 +693,7 @@ int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPID_Request *rreq, MPL_IOV s_c
        regular large transfers because we handle them directly on the netmod. */
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     MPID_Datatype *dt_ptr;
     MPI_Aint dt_true_lb;
     ptl_match_bits_t match_bits;

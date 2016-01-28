@@ -320,7 +320,7 @@ static inline int send_flush_msg(int dest, MPID_Win * win_ptr)
 /* enqueue an unsatisfied origin in passive target at target side. */
 static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
                                       MPIDI_CH3_Pkt_t * pkt,
-                                      MPIDI_msg_sz_t * buflen, MPID_Request ** reqp)
+                                      intptr_t * buflen, MPID_Request ** reqp)
 {
     MPIDI_RMA_Target_lock_entry_t *new_ptr = NULL;
     MPIDI_CH3_Pkt_flags_t flag;
@@ -355,13 +355,13 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
     else {
         MPI_Aint type_size = 0;
         MPI_Aint type_extent;
-        MPIDI_msg_sz_t recv_data_sz = 0;
-        MPIDI_msg_sz_t buf_size = 0;
+        intptr_t recv_data_sz = 0;
+        intptr_t buf_size = 0;
         MPID_Request *req = NULL;
         MPI_Datatype target_dtp;
         int target_count;
         int complete = 0;
-        MPIDI_msg_sz_t data_len;
+        intptr_t data_len;
         char *data_buf = NULL;
         MPIDI_CH3_Pkt_flags_t flags;
 
@@ -1035,7 +1035,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
 
 static inline int check_piggyback_lock(MPID_Win * win_ptr, MPIDI_VC_t * vc,
                                        MPIDI_CH3_Pkt_t * pkt,
-                                       MPIDI_msg_sz_t * buflen,
+                                       intptr_t * buflen,
                                        int *acquire_lock_fail, MPID_Request ** reqp)
 {
     int lock_type;

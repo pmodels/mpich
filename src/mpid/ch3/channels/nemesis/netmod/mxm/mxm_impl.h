@@ -33,12 +33,12 @@ int MPID_nem_mxm_vc_terminate(MPIDI_VC_t * vc);
 int MPID_nem_mxm_get_ordering(int *ordering);
 
 /* alternate interface */
-int MPID_nem_mxm_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, MPIDI_msg_sz_t hdr_sz,
-                             void *data, MPIDI_msg_sz_t data_sz);
-int MPID_nem_mxm_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data,
-                                 MPIDI_msg_sz_t data_sz, MPID_Request ** sreq_ptr);
+int MPID_nem_mxm_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, intptr_t hdr_sz,
+                             void *data, intptr_t data_sz);
+int MPID_nem_mxm_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, void *data,
+                                 intptr_t data_sz, MPID_Request ** sreq_ptr);
 int MPID_nem_mxm_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *header,
-                               MPIDI_msg_sz_t hdr_sz);
+                               intptr_t hdr_sz);
 
 /* direct interface */
 int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq);

@@ -84,7 +84,7 @@ MPIDI_RecvMsg_Unexp(MPID_Request  * rreq,
         {
           if (likely(MPIR_STATUS_GET_CANCEL_BIT(rreq->status) == FALSE))
             {
-              MPIDI_msg_sz_t _count=0;
+              intptr_t _count=0;
               MPIDI_Buffer_copy(rreq->mpid.uebuf,
                                 rreq->mpid.uebuflen,
                                 MPI_CHAR,

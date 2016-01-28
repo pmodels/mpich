@@ -23,7 +23,7 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_callback)(cq_tagged_entry_t * wc, MPID_Request 
 {
     int err0, err1, src, mpi_errno = MPI_SUCCESS;
     uint64_t ssend_bits;
-    MPIDI_msg_sz_t sz;
+    intptr_t sz;
     MPIDI_VC_t *vc;
     MPID_Request *sync_req;
     BEGIN_FUNC(FCNAME);
@@ -122,7 +122,7 @@ ADD_SUFFIX(do_isend)(struct MPIDI_VC *vc,
     uint64_t match_bits, ssend_match, ssend_mask;
     MPI_Aint dt_true_lb;
     MPID_Request *sreq = NULL, *sync_req = NULL;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     MPID_Datatype *dt_ptr;
     BEGIN_FUNC(FCNAME);
     VC_READY_CHECK(vc);
@@ -282,7 +282,7 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_posted)(struct MPIDI_VC *vc, struct MPID_Reques
     int mpi_errno = MPI_SUCCESS, dt_contig, src, tag;
     uint64_t match_bits = 0, mask_bits = 0;
     fi_addr_t remote_proc = 0;
-    MPIDI_msg_sz_t data_sz;
+    intptr_t data_sz;
     MPI_Aint dt_true_lb;
     MPID_Datatype *dt_ptr;
     MPIU_Context_id_t context_id;

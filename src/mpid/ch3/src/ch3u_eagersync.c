@@ -28,7 +28,7 @@
 */
 int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p, 
 				      const void * buf, int count, 
-				      MPI_Datatype datatype, MPIDI_msg_sz_t data_sz, 
+				      MPI_Datatype datatype, intptr_t data_sz,
 				      int dt_contig, MPI_Aint dt_true_lb,
 				      int rank, 
 				      int tag, MPID_Comm * comm, 
@@ -65,7 +65,7 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
     {
         MPL_IOV iov[2];
 	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-                                            "sending contiguous sync eager message, data_sz=" MPIDI_MSG_SZ_FMT, 
+                                            "sending contiguous sync eager message, data_sz=%" PRIdPTR,
 					    data_sz));
 	
         iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)es_pkt;
@@ -90,7 +90,7 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
     else
     {
 	MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,
-		       "sending non-contiguous sync eager message, data_sz=" MPIDI_MSG_SZ_FMT, 
+		       "sending non-contiguous sync eager message, data_sz=%" PRIdPTR,
 		       data_sz);
 	
 	sreq->dev.segment_ptr = MPID_Segment_alloc( );
@@ -145,7 +145,7 @@ int MPIDI_CH3_EagerSyncZero(MPID_Request **sreq_p, int rank, int tag,
     MPIDI_Pkt_set_seqnum(es_pkt, seqnum);
     MPIDI_Request_set_seqnum(sreq, seqnum);
     
-    MPL_DBG_MSGPKT(vc,tag,es_pkt->match.parts.context_id,rank,(MPIDI_msg_sz_t)0,"EagerSync0");
+    MPL_DBG_MSGPKT(vc,tag,es_pkt->match.parts.context_id,rank,(intptr_t)0,"EagerSync0");
     MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
     mpi_errno = MPIDI_CH3_iSend(vc, sreq, es_pkt, sizeof(*es_pkt));
     MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
@@ -213,14 +213,14 @@ int MPIDI_CH3_EagerSyncAck( MPIDI_VC_t *vc, MPID_Request *rreq )
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-					MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
+					intptr_t *buflen, MPID_Request **rreqp )
 {
     MPIDI_CH3_Pkt_eager_send_t * es_pkt = &pkt->eager_send;
     MPID_Request * rreq;
     int found;
     int complete;
     char *data_buf;
-    MPIDI_msg_sz_t data_len;
+    intptr_t data_len;
     int mpi_errno = MPI_SUCCESS;
     
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
@@ -346,7 +346,7 @@ int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EagerSyncAck( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-				       MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
+				       intptr_t *buflen, MPID_Request **rreqp )
 {
     MPIDI_CH3_Pkt_eager_sync_ack_t * esa_pkt = &pkt->eager_sync_ack;
     MPID_Request * sreq;

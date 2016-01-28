@@ -40,7 +40,7 @@ typedef struct MPID_VCR_t * MPID_VCR ;
 typedef struct MPIDI_VCRT * MPID_VCRT;
 
 
-typedef size_t              MPIDI_msg_sz_t;
+typedef size_t              intptr_t;
 
 #define MPID_Irsend     MPID_Isend
 #define MPID_Rsend      MPID_Send

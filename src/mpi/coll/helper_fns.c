@@ -126,11 +126,11 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
     else
     {
 	char * buf;
-	MPIDI_msg_sz_t buf_off;
+	intptr_t buf_off;
 	MPID_Segment sseg;
-	MPIDI_msg_sz_t sfirst;
+	intptr_t sfirst;
 	MPID_Segment rseg;
-	MPIDI_msg_sz_t rfirst;
+	intptr_t rfirst;
 
         MPIU_CHKLMEM_MALLOC(buf, char *, COPY_BUFFER_SZ, mpi_errno, "buf");
 

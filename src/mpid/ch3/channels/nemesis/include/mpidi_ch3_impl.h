@@ -57,7 +57,7 @@ int MPIDI_CH3I_Progress_deactivate_hook(int id);
 int MPIDI_CH3I_Shm_send_progress(void);
 int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc);
 
-int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, MPIDI_msg_sz_t hdr_sz );
+int MPIDI_CH3I_SendNoncontig( MPIDI_VC_t *vc, MPID_Request *sreq, void *header, intptr_t hdr_sz );
 
 int MPID_nem_lmt_shm_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *rts_pkt, MPID_Request *req);
 int MPID_nem_lmt_shm_start_recv(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV s_cookie);
@@ -83,7 +83,7 @@ int MPID_nem_lmt_vmsplice_done_send(MPIDI_VC_t *vc, MPID_Request *req);
 int MPID_nem_lmt_vmsplice_done_recv(MPIDI_VC_t *vc, MPID_Request *req);
 int MPID_nem_lmt_vmsplice_vc_terminated(MPIDI_VC_t *vc);
 
-int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen);
+int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen);
 
 /* Nemesis-provided RMA implementation */
 int MPIDI_CH3_SHM_Win_shared_query(MPID_Win *win_ptr, int target_rank, MPI_Aint *size, int *disp_unit, void *baseptr);

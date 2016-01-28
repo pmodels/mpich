@@ -21,7 +21,7 @@
    IOV and calling iSendv.  The caller must initialize
    sreq->dev.segment as well as segment_first and segment_size. */
 int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPID_Request *sreq,
-                                 void *header, MPIDI_msg_sz_t hdr_sz )
+                                 void *header, intptr_t hdr_sz )
 {
     int mpi_errno = MPI_SUCCESS;
     int iov_n;
@@ -88,7 +88,7 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPID_Request *sreq,
 int MPIDI_CH3_EagerNoncontigSend( MPID_Request **sreq_p, 
 				  MPIDI_CH3_Pkt_type_t reqtype, 
 				  const void * buf, MPI_Aint count,
-				  MPI_Datatype datatype, MPIDI_msg_sz_t data_sz,
+				  MPI_Datatype datatype, intptr_t data_sz,
 				  int rank, 
 				  int tag, MPID_Comm * comm, 
 				  int context_offset )
@@ -100,7 +100,7 @@ int MPIDI_CH3_EagerNoncontigSend( MPID_Request **sreq_p,
     MPIDI_CH3_Pkt_eager_send_t * const eager_pkt = &upkt.eager_send;
     
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-                     "sending non-contiguous eager message, data_sz=" MPIDI_MSG_SZ_FMT,
+                     "sending non-contiguous eager message, data_sz=%" PRIdPTR,
 					data_sz));
     sreq->dev.OnDataAvail = 0;
     sreq->dev.OnFinal = 0;
@@ -153,7 +153,7 @@ int MPIDI_CH3_EagerNoncontigSend( MPID_Request **sreq_p,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_EagerContigSend( MPID_Request **sreq_p, 
 			       MPIDI_CH3_Pkt_type_t reqtype, 
-			       const void * buf, MPIDI_msg_sz_t data_sz, int rank, 
+			       const void * buf, intptr_t data_sz, int rank,
 			       int tag, MPID_Comm * comm, int context_offset )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -174,7 +174,7 @@ int MPIDI_CH3_EagerContigSend( MPID_Request **sreq_p,
     iov[0].MPL_IOV_LEN = sizeof(*eager_pkt);
     
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-	       "sending contiguous eager message, data_sz=" MPIDI_MSG_SZ_FMT,
+	       "sending contiguous eager message, data_sz=%" PRIdPTR,
 					data_sz));
 	    
     iov[1].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) buf;
@@ -219,7 +219,7 @@ int MPIDI_CH3_EagerContigSend( MPID_Request **sreq_p,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_EagerContigShortSend( MPID_Request **sreq_p, 
 				    MPIDI_CH3_Pkt_type_t reqtype, 
-				    const void * buf, MPIDI_msg_sz_t data_sz, int rank, 
+				    const void * buf, intptr_t data_sz, int rank,
 				    int tag, MPID_Comm * comm, 
 				    int context_offset )
 {
@@ -238,7 +238,7 @@ int MPIDI_CH3_EagerContigShortSend( MPID_Request **sreq_p,
     eagershort_pkt->data_sz	     = data_sz;
     
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-       "sending contiguous short eager message, data_sz=" MPIDI_MSG_SZ_FMT,
+       "sending contiguous short eager message, data_sz=%" PRIdPTR,
 					data_sz));
 	    
     MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
@@ -289,7 +289,7 @@ int MPIDI_CH3_EagerContigShortSend( MPID_Request **sreq_p,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, 
-					 MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
+					 intptr_t *buflen, MPID_Request **rreqp )
 {
     MPIDI_CH3_Pkt_eagershort_send_t * eagershort_pkt = &pkt->eagershort_send;
     MPID_Request * rreq;
@@ -340,9 +340,9 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	if (found) {
 	    int            dt_contig;
 	    MPI_Aint       dt_true_lb;
-	    MPIDI_msg_sz_t userbuf_sz;
+	    intptr_t userbuf_sz;
 	    MPID_Datatype *dt_ptr;
-	    MPIDI_msg_sz_t data_sz;
+	    intptr_t data_sz;
 
 	    /* Make sure that we handle the general (non-contiguous)
 	       datatypes correctly while optimizing for the 
@@ -355,9 +355,9 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	    }
 	    else {
 		MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-		    "receive buffer too small; message truncated, msg_sz=" 
-					  MPIDI_MSG_SZ_FMT ", userbuf_sz="
-				          MPIDI_MSG_SZ_FMT,
+		    "receive buffer too small; message truncated, msg_sz=%"
+					  PRIdPTR ", userbuf_sz=%"
+				          PRIdPTR,
 				 rreq->dev.recv_data_sz, userbuf_sz));
 		rreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, 
                      MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TRUNCATE,
@@ -396,7 +396,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		   to fix this, but it will require a sweep of the code */
 	    }
 	    else {
-		MPIDI_msg_sz_t recv_data_sz;
+		intptr_t recv_data_sz;
 		MPI_Aint last;
 		/* user buffer is not contiguous.  Use the segment
 		   code to unpack it, handling various errors and 
@@ -436,7 +436,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
              * cool in this case?  No upper layer has a pointer to rreq yet
              * (it's unexpected and freshly allocated) 
              */
-	    MPIDI_msg_sz_t recv_data_sz;
+	    intptr_t recv_data_sz;
 	    /* This is easy; copy the data into a temporary buffer.
 	       To begin with, we use the same temporary location as
 	       is used in receiving eager unexpected data.
@@ -527,7 +527,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_EagerContigIsend( MPID_Request **sreq_p, 
 				MPIDI_CH3_Pkt_type_t reqtype, 
-				const void * buf, MPIDI_msg_sz_t data_sz, int rank, 
+				const void * buf, intptr_t data_sz, int rank,
 				int tag, MPID_Comm * comm, int context_offset )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -538,7 +538,7 @@ int MPIDI_CH3_EagerContigIsend( MPID_Request **sreq_p,
     MPL_IOV iov[MPL_IOV_LIMIT];
 
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
-	       "sending contiguous eager message, data_sz=" MPIDI_MSG_SZ_FMT,
+	       "sending contiguous eager message, data_sz=%" PRIdPTR,
 					data_sz));
 	    
     sreq->dev.OnDataAvail = 0;
@@ -605,14 +605,14 @@ int MPIDI_CH3_EagerContigIsend( MPID_Request **sreq_p,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, 
-				    MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
+				    intptr_t *buflen, MPID_Request **rreqp )
 {
     MPIDI_CH3_Pkt_eager_send_t * eager_pkt = &pkt->eager_send;
     MPID_Request * rreq;
     int found;
     int complete;
     char *data_buf;
-    MPIDI_msg_sz_t data_len;
+    intptr_t data_len;
     int mpi_errno = MPI_SUCCESS;
 
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
@@ -695,14 +695,14 @@ int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-				    MPIDI_msg_sz_t *buflen, MPID_Request **rreqp )
+				    intptr_t *buflen, MPID_Request **rreqp )
 {
     MPIDI_CH3_Pkt_ready_send_t * ready_pkt = &pkt->ready_send;
     MPID_Request * rreq;
     int found;
     int complete;
     char *data_buf;
-    MPIDI_msg_sz_t data_len;
+    intptr_t data_len;
     int mpi_errno = MPI_SUCCESS;
     
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,

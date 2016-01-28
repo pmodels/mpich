@@ -65,7 +65,7 @@ void MPIDI_Buffer_copy(const void     * const sbuf,
                        void           * const rbuf,
                        MPI_Aint               rcount,
                        MPI_Datatype           rdt,
-                       MPIDI_msg_sz_t *       rsz,
+                       intptr_t *       rsz,
                        int            *       rmpi_errno);
 
 pami_result_t MPIDI_Send_handoff (pami_context_t context, void * sreq);

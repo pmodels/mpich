@@ -4722,49 +4722,6 @@ if test "$ac_cv_sizeof_int" = "$aint_size" ; then
     AC_DEFINE(SIZEOF_INT_IS_AINT,1,[define if sizeof(int) = sizeof(MPI_Aint)])
 fi
 
-# Find a pointer-sized int
-for type in int long long_long short ; do
-    eval len=\$ac_cv_sizeof_$type
-    if test "$len" = "$ac_cv_sizeof_void_p" ; then
-        case $type in
-            int)
-                MPIU_PINT_FMT_DEC_SPEC="\"%d\""
-                MPIU_UPINT_FMT_DEC_SPEC="\"%u\""
-                ;;
-            long)
-                MPIU_PINT_FMT_DEC_SPEC="\"%ld\""
-                MPIU_UPINT_FMT_DEC_SPEC="\"%lu\""
-                ;;
-            long_long)
-                MPIU_PINT_FMT_DEC_SPEC="\"%lld\""
-                MPIU_UPINT_FMT_DEC_SPEC="\"%llu\""
-                ;;
-            short)
-                MPIU_PINT_FMT_DEC_SPEC="\"%hd\""
-                MPIU_UPINT_FMT_DEC_SPEC="\"%hu\""
-                ;;
-            *)
-                AC_MSG_WARN([unable to determine format specifiers for MPIU_Pint, defaulting to int])
-                MPIU_PINT_FMT_DEC_SPEC="\"%d\""
-                MPIU_UPINT_FMT_DEC_SPEC="\"%u\""
-            ;;
-        esac
-        MPIU_PINT=`echo $type | sed -e 's/_/ /'`
-        break
-    fi
-done
-AC_DEFINE_UNQUOTED(MPIU_Pint,$MPIU_PINT,[MPIU_Pint is a pointer-sized integer])
-# allow @MPIU_PINT@ substitution in glue_romio.h
-AC_SUBST([MPIU_PINT])
-
-AC_DEFINE_UNQUOTED(MPIU_PINT_FMT_DEC_SPEC,
-    $MPIU_PINT_FMT_DEC_SPEC,[MPIU_PINT_FMT_DEC_SPEC is the format
-    specifier for printing Pint as a decimal])
-AC_DEFINE_UNQUOTED(MPIU_Upint,unsigned $MPIU_PINT,[MPIU_Upint is an unsigned pointer-sized integer])
-AC_DEFINE_UNQUOTED(MPIU_UPINT_FMT_DEC_SPEC,
-    $MPIU_UPINT_FMT_DEC_SPEC,[MPIU_UPINT_FMT_DEC_SPEC is the format
-    specifier for printing Upint as a decimal])
-
 # ----------------------------------------------------------------------------
 # MPI_AINT datatype
 # ----------------------------------------------------------------------------

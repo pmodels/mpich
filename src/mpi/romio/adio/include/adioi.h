@@ -1011,7 +1011,7 @@ int  ADIOI_MPE_iwrite_b;
          MPIU_AINT_CAST_TO_VOID_PTR from configure (mpi.h) */
   #include "glue_romio.h"
 
-  #define ADIOI_AINT_CAST_TO_VOID_PTR (void*)(MPIU_Pint)
+  #define ADIOI_AINT_CAST_TO_VOID_PTR (void*)(intptr_t)
   /* The next two casts are only used when you don't want sign extension
      when casting a (possible 4 byte) aint to a (8 byte) long long or offset */
   #define ADIOI_AINT_CAST_TO_LONG_LONG (long long)
@@ -1026,7 +1026,6 @@ int  ADIOI_MPE_iwrite_b;
   #define ADIOI_AINT_CAST_TO_OFFSET ADIOI_AINT_CAST_TO_LONG_LONG
   #define ADIOI_ENSURE_AINT_FITS_IN_PTR(aint_value) 
   #define ADIOI_Assert assert
-  #define MPIU_Upint unsigned long
 #endif
 
 #ifdef MPL_USE_DBG_LOGGING    /*todo fix dependency on mpich?*/

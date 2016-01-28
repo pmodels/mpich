@@ -45,7 +45,7 @@ MPIDI_RecvDoneCB_copy(MPID_Request * rreq)
 {
   int smpi_errno;
   MPID_assert(rreq->mpid.uebuf != NULL);
-  MPIDI_msg_sz_t _count=0;
+  intptr_t _count=0;
   MPIDI_Buffer_copy(rreq->mpid.uebuf,        /* source buffer */
                     rreq->mpid.uebuflen,
                     MPI_CHAR,
@@ -146,7 +146,7 @@ void MPIDI_Recvq_process_out_of_order_msgs(pami_task_t src, pami_context_t conte
    MPIDI_In_cntr_t *in_cntr;
    MPID_Request *ooreq, *rreq, *prev_rreq;
    pami_get_simple_t xferP;
-   MPIDI_msg_sz_t _count=0;
+   intptr_t _count=0;
    int matched;
    void * it;
 

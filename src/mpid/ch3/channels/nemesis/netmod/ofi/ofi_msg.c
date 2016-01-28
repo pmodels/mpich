@@ -215,16 +215,16 @@ static int MPID_nem_ofi_cts_recv_callback(cq_tagged_entry_t * wc, MPID_Request *
 #define FCNAME DECL_FUNC(MPID_nem_ofi_iSendContig)
 int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
                              MPID_Request * sreq,
-                             void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz)
+                             void *hdr, intptr_t hdr_sz, void *data, intptr_t data_sz)
 {
     int pgid, c, mpi_errno = MPI_SUCCESS;
     char *pack_buffer = NULL;
     uint64_t match_bits;
     MPID_Request *cts_req;
-    MPIDI_msg_sz_t buf_offset = 0;
+    intptr_t buf_offset = 0;
     size_t         pkt_len;
     BEGIN_FUNC(FCNAME);
-    MPIU_Assert(hdr_sz <= (MPIDI_msg_sz_t) sizeof(MPIDI_CH3_Pkt_t));
+    MPIU_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));
     MPID_nem_ofi_init_req(sreq);
     pkt_len = sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.ext_hdr_sz + data_sz;
     if (sreq->dev.ext_hdr_sz > 0 && gl_data.iov_limit > 2) {
@@ -272,19 +272,19 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPID_nem_ofi_SendNoncontig)
 int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc,
-                               MPID_Request * sreq, void *hdr, MPIDI_msg_sz_t hdr_sz)
+                               MPID_Request * sreq, void *hdr, intptr_t hdr_sz)
 {
     int c, pgid, mpi_errno = MPI_SUCCESS;
     char *pack_buffer;
     MPI_Aint data_sz;
     uint64_t match_bits;
     MPID_Request *cts_req;
-    MPIDI_msg_sz_t first, last;
-    MPIDI_msg_sz_t buf_offset = 0;
+    intptr_t first, last;
+    intptr_t buf_offset = 0;
     void          *data       = NULL;
     size_t         pkt_len;
     BEGIN_FUNC(FCNAME);
-    MPIU_Assert(hdr_sz <= (MPIDI_msg_sz_t) sizeof(MPIDI_CH3_Pkt_t));
+    MPIU_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));
     MPID_nem_ofi_init_req(sreq);
     first = sreq->dev.segment_first;
     last = sreq->dev.segment_size;
@@ -309,8 +309,8 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc,
 #define FCNAME DECL_FUNC(MPID_nem_ofi_iStartContigMsg)
 int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc,
                                  void *hdr,
-                                 MPIDI_msg_sz_t hdr_sz,
-                                 void *data, MPIDI_msg_sz_t data_sz, MPID_Request ** sreq_ptr)
+                                 intptr_t hdr_sz,
+                                 void *data, intptr_t data_sz, MPID_Request ** sreq_ptr)
 {
     int c, pgid, mpi_errno = MPI_SUCCESS;
     MPID_Request *sreq;
@@ -319,7 +319,7 @@ int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc,
     uint64_t match_bits;
     size_t   pkt_len;
     BEGIN_FUNC(FCNAME);
-    MPIU_Assert(hdr_sz <= (MPIDI_msg_sz_t) sizeof(MPIDI_CH3_Pkt_t));
+    MPIU_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));
 
     MPID_nem_ofi_create_req(&sreq, 2);
     sreq->kind = MPID_REQUEST_SEND;
