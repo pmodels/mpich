@@ -76,45 +76,6 @@ extern int MPIE_Debug;
 #define MPIE_SYSCALL(a_,b_,c_) a_ = (int)b_ c_
 #endif
 
-
-/* Use the memory defintions from mpich/src/include */
-/* #include "mpimem.h" */
-/* The memory routines no longer are available as utility routines.
-   The choices are to use the original memory tracing routines or
-   to select the option of using the basic memory routines.  The 
-   second option is used for now. */
-/* No memory tracing; just use native functions */
-#include <stdlib.h>
-#define MPL_malloc(a)    malloc((size_t)(a))
-#define MPL_calloc(a,b)  calloc((size_t)(a),(size_t)(b))
-#define MPL_free(a)      free((void *)(a))
-#define MPL_realloc(a,b)  realloc((void *)(a),(size_t)(b))
-
-int MPL_strncpy( char *outstr, const char *instr, size_t maxlen );
-int MPL_strnapp( char *, const char *, size_t );
-char *MPL_strdup( const char * );
-
-#ifdef HAVE_STRDUP
-/* Watch for the case where strdup is defined as a macro by a header include */
-# if defined(NEEDS_STRDUP_DECL) && !defined(strdup)
-extern char *strdup( const char * );
-# endif
-#define MPL_strdup(a)    strdup(a)
-#else
-/* Don't define MPL_strdup, provide it in safestr.c */
-#endif /* HAVE_STRDUP */
-/* Provide a fallback snprintf for systems that do not have one */
-#ifdef HAVE_SNPRINTF
-#define MPL_snprintf snprintf
-/* Sometimes systems don't provide prototypes for snprintf */
-#ifdef NEEDS_SNPRINTF_DECL
-extern int snprintf( char *, size_t, const char *, ... ) ATTRIBUTE((format(printf,3,4)));
-#endif
-#else
-int MPL_snprintf( char *str, size_t size, const char *format, ... ) 
-     ATTRIBUTE((format(printf,3,4)));
-#endif /* HAVE_SNPRINTF */
-
 #include "mpl.h"
 
 #endif
