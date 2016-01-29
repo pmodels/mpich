@@ -103,14 +103,14 @@ char *MPL_strdup(const char *str);
 
 #define MPL_realloc(a,b)    MPL_trrealloc((a),(b),__LINE__,__FILE__)
 
-#else /* USE_MEMORY_TRACING */
+#else /* MPL_USE_MEMORY_TRACING */
 /* No memory tracing; just use native functions */
 #define MPL_malloc(a)    malloc((size_t)(a))
 #define MPL_calloc(a,b)  calloc((size_t)(a),(size_t)(b))
 #define MPL_free(a)      free((void *)(a))
 #define MPL_realloc(a,b)  realloc((void *)(a),(size_t)(b))
 
-#endif /* USE_MEMORY_TRACING */
+#endif /* MPL_USE_MEMORY_TRACING */
 
 
 /* FIXME: Consider an option of specifying __attribute__((malloc)) for
