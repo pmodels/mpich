@@ -32,10 +32,10 @@ typedef struct MPIDU_shm_seg_info
     char *addr;
 } MPIDU_shm_seg_info_t, *MPIDU_shm_seg_info_ptr_t;
 
-int MPIDU_Seg_alloc(size_t len, void **ptr_p);
-int MPIDU_Seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *barrier,
+int MPIDU_shm_seg_alloc(size_t len, void **ptr_p);
+int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *barrier,
                      int num_local, int local_rank, int local_procs_0, int rank);
-int MPIDU_Seg_destroy(MPIDU_shm_seg_ptr_t memory, int num_local);
+int MPIDU_shm_seg_destroy(MPIDU_shm_seg_ptr_t memory, int num_local);
 
 int MPIDU_shm_barrier_init(MPIDU_shm_barrier_t *barrier_region,
                            MPIDU_shm_barrier_ptr_t *barrier, int init_values);

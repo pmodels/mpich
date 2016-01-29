@@ -59,7 +59,7 @@ typedef struct asym_check_region
 
 static asym_check_region* asym_check_region_p = NULL;
 
-/* MPIDU_Seg_alloc(len, ptr_p)
+/* MPIDU_shm_seg_alloc(len, ptr_p)
 
    This function is used to allow the caller to reserve a len sized
    region in the shared memory segment.  Once the shared memory
@@ -72,10 +72,10 @@ static asym_check_region* asym_check_region_p = NULL;
    MPIDU_SHM_Seg_commit() is called.
 */
 #undef FUNCNAME
-#define FUNCNAME MPIDU_Seg_alloc
+#define FUNCNAME MPIDU_shm_seg_alloc
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_Seg_alloc(size_t len, void **ptr_p)
+int MPIDU_shm_seg_alloc(size_t len, void **ptr_p)
 {
     int mpi_errno = MPI_SUCCESS;
     alloc_elem_t *ep;
@@ -109,11 +109,11 @@ int MPIDU_Seg_alloc(size_t len, void **ptr_p)
     goto fn_exit;
 }
 
-/* MPIDU_Seg_commit(memory, num_local, local_rank)
+/* MPIDU_shm_seg_commit(memory, num_local, local_rank)
 
    This function allocates a shared memory segment large enough to
    hold all of the regions previously requested by calls to
-   MPIDU_Seg_alloc().  For each request, this function sets the
+   MPIDU_shm_seg_alloc().  For each request, this function sets the
    associated pointer to point to the reserved region in the allocated
    shared memory segment.
 
@@ -125,10 +125,10 @@ int MPIDU_Seg_alloc(size_t len, void **ptr_p)
    calling MPIDU_SHM_Seg_commit().
  */
 #undef FUNCNAME
-#define FUNCNAME MPIDU_Seg_commit
+#define FUNCNAME MPIDU_shm_seg_commit
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_Seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *barrier,
+int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *barrier,
                      int num_local, int local_rank, int local_procs_0, int rank)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -158,7 +158,7 @@ int MPIDU_Seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *barrie
     MPIU_Assert(segment_len > 0);
 
     /* allocate an area to check if the segment was allocated symmetrically */
-    mpi_errno = MPIDU_Seg_alloc(sizeof(asym_check_region), (void **) &asym_check_region_p);
+    mpi_errno = MPIDU_shm_seg_alloc(sizeof(asym_check_region), (void **) &asym_check_region_p);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIU_SHMW_Hnd_init(&(memory->hnd));
@@ -455,10 +455,10 @@ int MPIDU_Seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *barrie
 
 /* MPIDU_SHM_Seg_destroy() free the shared memory segment */
 #undef FUNCNAME
-#define FUNCNAME MPIDU_Seg_destroy
+#define FUNCNAME MPIDU_shm_seg_destroy
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_Seg_destroy(MPIDU_shm_seg_ptr_t memory, int num_local)
+int MPIDU_shm_seg_destroy(MPIDU_shm_seg_ptr_t memory, int num_local)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDU_SHM_SEG_DESTROY);
