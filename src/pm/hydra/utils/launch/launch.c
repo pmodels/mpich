@@ -16,13 +16,13 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
     HYDU_FUNC_ENTER();
 
     if (in && (pipe(inpipe) < 0))
-        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "pipe error (%s)\n", HYDU_strerror(errno));
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "pipe error (%s)\n", MPL_strerror(errno));
 
     if (out && (pipe(outpipe) < 0))
-        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "pipe error (%s)\n", HYDU_strerror(errno));
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "pipe error (%s)\n", MPL_strerror(errno));
 
     if (err && (pipe(errpipe) < 0))
-        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "pipe error (%s)\n", HYDU_strerror(errno));
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "pipe error (%s)\n", MPL_strerror(errno));
 
     /* Fork off the process */
     tpid = fork();
@@ -37,7 +37,7 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
             close(inpipe[1]);
             if (inpipe[0] != STDIN_FILENO && dup2(inpipe[0], STDIN_FILENO) < 0)
                 HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
-                                    HYDU_strerror(errno));
+                                    MPL_strerror(errno));
         }
 
         close(STDOUT_FILENO);
@@ -45,7 +45,7 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
             close(outpipe[0]);
             if (outpipe[1] != STDOUT_FILENO && dup2(outpipe[1], STDOUT_FILENO) < 0)
                 HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
-                                    HYDU_strerror(errno));
+                                    MPL_strerror(errno));
         }
 
         close(STDERR_FILENO);
@@ -53,7 +53,7 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
             close(errpipe[0]);
             if (errpipe[1] != STDERR_FILENO && dup2(errpipe[1], STDERR_FILENO) < 0)
                 HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "dup2 error (%s)\n",
-                                    HYDU_strerror(errno));
+                                    MPL_strerror(errno));
         }
 
         /* Forced environment overwrites existing environment */
@@ -72,7 +72,7 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
              * code; if there is an error, just throw it here and
              * exit. */
             HYDU_error_printf("execvp error on file %s (%s)\n", client_arg[0],
-                              HYDU_strerror(errno));
+                              MPL_strerror(errno));
             exit(-1);
         }
     }

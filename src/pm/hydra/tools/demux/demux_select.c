@@ -51,7 +51,7 @@ HYD_status HYDT_dmxu_select_wait_for_event(int wtime)
             status = HYD_SUCCESS;
             goto fn_exit;
         }
-        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "select error (%s)\n", HYDU_strerror(errno));
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "select error (%s)\n", MPL_strerror(errno));
     }
 
     work_done = 0;
