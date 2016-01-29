@@ -524,6 +524,7 @@ M*/
                             ("tls_get failed, err=%d (%s)", *((int *) err_ptr_), strerror(*((int *) err_ptr_)))); \
     } while (0)
 
+#if defined(MPICH_IS_THREADED)
 
 #define MPIDU_THREADPRIV_KEY_CREATE                                     \
     do {                                                                \
@@ -533,12 +534,17 @@ M*/
     } while (0)
 
 #define MPIDU_THREADPRIV_KEY_GET_ADDR  MPL_THREADPRIV_KEY_GET_ADDR
-
 #define MPIDU_THREADPRIV_KEY_DESTROY                            \
     do {                                                        \
         int err_ = 0;                                           \
         MPL_THREADPRIV_KEY_DESTROY(MPIR_Per_thread_key, &err_);  \
         MPIR_Assert(err_ == 0);                                 \
     } while (0)
+#else  /* !defined(MPICH_IS_THREADED) */
 
+#define MPIDU_THREADPRIV_KEY_CREATE(key, var, err_ptr_)
+#define MPIDU_THREADPRIV_KEY_GET_ADDR(is_threaded, key, var, addr, err_ptr_) \
+    MPL_THREADPRIV_KEY_GET_ADDR(0, key, var, addr, err_ptr_)
+#define MPIDU_THREADPRIV_KEY_DESTROY(key, err_ptr_)
+#endif /* MPICH_IS_THREADED */
 #endif /* !defined(MPIDU_THREAD_H_INCLUDED) */
