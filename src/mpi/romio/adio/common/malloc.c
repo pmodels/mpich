@@ -45,7 +45,7 @@ void *ADIOI_Malloc_fn(size_t size, int lineno, const char *fname)
     new = (void *) memalign(XFS_MEMALIGN, size);
 #else
 #ifdef HAVE_MPIU_FUNCS
-    new = (void *) MPL_trmalloc(size, lineno, fname);
+    new = (void *) MPL_malloc(size);
 #else
     new = (void *) malloc(size);
 #endif
@@ -64,7 +64,7 @@ void *ADIOI_Calloc_fn(size_t nelem, size_t elsize, int lineno, const char *fname
     void *new;
 
 #ifdef HAVE_MPIU_FUNCS
-    new = (void *) MPL_trcalloc(nelem, elsize, lineno, fname);
+    new = (void *) MPL_calloc(nelem, elsize);
 #else
     new = (void *) calloc(nelem, elsize);
 #endif
@@ -82,7 +82,7 @@ void *ADIOI_Realloc_fn(void *ptr, size_t size, int lineno, const char *fname)
     void *new;
 
 #ifdef HAVE_MPIU_FUNCS
-    new = (void *) MPL_trrealloc(ptr, size, lineno, fname);
+    new = (void *) MPL_realloc(ptr, size);
 #else
     new = (void *) realloc(ptr, size);
 #endif
@@ -104,7 +104,7 @@ void ADIOI_Free_fn(void *ptr, int lineno, const char *fname)
     }
 
 #ifdef HAVE_MPIU_FUNCS
-    MPL_trfree(ptr, lineno, fname);
+    MPL_free(ptr);
 #else
     free(ptr);
 #endif
