@@ -352,6 +352,8 @@ static HYD_status alloc_fwd_hash(struct fwd_hash **fwd_hash, int in, int out)
     goto fn_exit;
 }
 
+static struct fwd_hash *fwd_hash_list = NULL;
+
 /* This function does not provide any flow control. We just read from
  * the incoming socket as much as we can and push out to the outgoing
  * socket as much as we can. This can result in the process calling it
@@ -360,7 +362,6 @@ static HYD_status alloc_fwd_hash(struct fwd_hash **fwd_hash, int in, int out)
  * functionality for). */
 HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed)
 {
-    static struct fwd_hash *fwd_hash_list = NULL;
     struct fwd_hash *fwd_hash, *tmp;
     int count;
     HYD_status status = HYD_SUCCESS;
@@ -437,6 +438,17 @@ HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed)
 
   fn_fail:
     goto fn_exit;
+}
+
+void HYDU_sock_finalize(void)
+{
+    struct fwd_hash *tmp, *fwd_hash;
+
+    for (fwd_hash = fwd_hash_list; fwd_hash;) {
+        tmp = fwd_hash->next;
+        HYDU_FREE(fwd_hash);
+        fwd_hash = tmp;
+    }
 }
 
 HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip)
