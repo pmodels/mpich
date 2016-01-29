@@ -640,7 +640,7 @@ static HYD_status launch_procs(void)
         if (exec->wdir && chdir(exec->wdir) < 0)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                 "unable to change wdir to %s (%s)\n", exec->wdir,
-                                HYDU_strerror(errno));
+                                MPL_strerror(errno));
 
         for (i = 0; i < exec->proc_count; i++) {
             if (using_pmi_port) {

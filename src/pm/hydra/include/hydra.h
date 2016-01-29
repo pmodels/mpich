@@ -643,12 +643,6 @@ char *HYDU_size_t_to_str(size_t x);
 char *HYDU_int_to_str(int x);
 char *HYDU_int_to_str_pad(int x, int maxlen);
 
-#if defined HAVE_STRERROR
-#define HYDU_strerror strerror
-#else
-#define HYDU_strerror HYDU_int_to_str
-#endif /* HAVE_STRERROR */
-
 #if defined HAVE_HERROR
 #define HYDU_herror herror
 #else
