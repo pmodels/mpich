@@ -384,6 +384,7 @@ int main(int argc, char **argv)
     /* Free the mpiexec params */
     HYD_uiu_free_params();
     HYDU_free_exec_list(HYD_uii_mpx_exec_list);
+    HYDU_sock_finalize();
 
   fn_exit:
     HYDU_dbg_finalize();
