@@ -475,6 +475,19 @@ static int send_id_info(const sockconn_t *const sc)
 /*     store ending NULL also */
 /*     FIXME better keep pg_id_len itself as part of MPIDI_Process.my_pg structure to */
 /*     avoid computing the length of string everytime this function is called. */
+
+#if defined(MPL_VG_AVAILABLE)
+    /* Valgrind has a bug
+     * (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=524488) that
+     * causes it to report a warning when we initialize the compiler
+     * adds padding to structures.  Even when we initialize all the
+     * fields, the padding bytes are not initialized.  The idea here
+     * is to detect when we are in "valgrind mode" and in such cases
+     * initialize all bytes of the structure. */
+    if (MPL_VG_RUNNING_ON_VALGRIND()) {
+        memset(&hdr, 0, sizeof(hdr));
+    }
+#endif
     
     hdr.pkt_type = MPIDI_NEM_TCP_SOCKSM_PKT_ID_INFO;
     hdr.datalen = sizeof(MPIDI_nem_tcp_idinfo_t) + pg_id_len;    
@@ -710,6 +723,19 @@ static int send_cmd_pkt(int fd, MPIDI_nem_tcp_socksm_pkt_type_t pkt_type)
 		pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_ACK ||
 		pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_TMPVC_NAK ||
                 pkt_type == MPIDI_NEM_TCP_SOCKSM_PKT_CLOSED);
+
+#if defined(MPL_VG_AVAILABLE)
+    /* Valgrind has a bug
+     * (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=524488) that
+     * causes it to report a warning when we initialize the compiler
+     * adds padding to structures.  Even when we initialize all the
+     * fields, the padding bytes are not initialized.  The idea here
+     * is to detect when we are in "valgrind mode" and in such cases
+     * initialize all bytes of the structure. */
+    if (MPL_VG_RUNNING_ON_VALGRIND()) {
+        memset(&pkt, 0, sizeof(pkt));
+    }
+#endif
 
     pkt.pkt_type = pkt_type;
     pkt.datalen = 0;
