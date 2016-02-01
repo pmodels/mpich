@@ -408,7 +408,7 @@ AC_ARG_ENABLE(fast,
 ],,enable_fast=O2)
 
 AC_ARG_ENABLE(interlib-deps,
-	[AC_HELP_STRING([--interlib-deps - Enable interlibrary dependencies])],,enable_interlib_deps=yes)
+	[AC_HELP_STRING([--enable-interlib-deps - Enable interlibrary dependencies])],,enable_interlib_deps=yes)
 
 AC_ARG_ENABLE(check-compiler-flags,
 	AC_HELP_STRING([--enable-check-compiler-flags], [enable the checks for all compiler
