@@ -112,7 +112,7 @@ MPID_nem_netmod_funcs_t MPIDI_nem_tcp_funcs = {
 /* in case there are no packet types defined (e.g., they're ifdef'ed out) make sure the array is not zero length */
 static MPIDI_CH3_PktHandler_Fcn *pkt_handlers[MPIDI_NEM_TCP_PKT_NUM_TYPES ? MPIDI_NEM_TCP_PKT_NUM_TYPES : 1];
 
-MPL_DBG_Class MPIDI_NEM_TCP_DBG_DET;
+MPL_dbg_class MPIDI_NEM_TCP_DBG_DET;
 
 #undef FUNCNAME
 #define FUNCNAME set_up_listener
@@ -166,7 +166,7 @@ int MPID_nem_tcp_init (MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_
     MPIU_Assert(sizeof(MPID_nem_tcp_vc_area) <= MPIDI_NEM_VC_NETMOD_AREA_LEN);
 
 #if defined (MPL_USE_DBG_LOGGING)
-    MPIDI_NEM_TCP_DBG_DET = MPL_DBG_Class_alloc("MPIDI_NEM_TCP_DBG_DET", "nem_sock_det");
+    MPIDI_NEM_TCP_DBG_DET = MPL_dbg_class_alloc("MPIDI_NEM_TCP_DBG_DET", "nem_sock_det");
 #endif /* MPL_USE_DBG_LOGGING */
 
     /* set up listener socket */

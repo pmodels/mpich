@@ -33,8 +33,8 @@ extern FILE *fdopen(int fd, const char *mode);
 #define MAXPATHLEN 1024
 #endif
 
-int MPL_DBG_ActiveClasses = 0;
-int MPL_DBG_MaxLevel = MPL_DBG_TYPICAL;
+int MPL_dbg_active_classes = 0;
+int MPL_dbg_max_level = MPL_DBG_TYPICAL;
 
 static enum {
     DBG_UNINIT,
@@ -136,7 +136,7 @@ static void set_fp(FILE * fp)
     dbg_static_fp = fp;
 }
 
-int MPL_DBG_Outevent(const char *file, int line, int class, int kind, const char *fmat, ...)
+int MPL_dbg_outevent(const char *file, int line, int class, int kind, const char *fmat, ...)
 {
     int mpl_errno = MPL_DBG_SUCCESS;
     va_list list;
@@ -251,7 +251,7 @@ static const int level_values[] = {
 static const char *level_name[] = { "TERSE", "TYPICAL", "VERBOSE", 0 };
 static const char *lc_level_name[] = { "terse", "typical", "verbose", 0 };
 
-void MPL_DBG_Class_register(MPL_DBG_Class class, const char *ucname, const char *lcname)
+void MPL_dbg_class_register(MPL_dbg_class class, const char *ucname, const char *lcname)
 {
     int i, j;
 
@@ -270,7 +270,7 @@ void MPL_DBG_Class_register(MPL_DBG_Class class, const char *ucname, const char 
             if (len == slen && (strncmp(unregistered_classes[i], lcname, len) ||
                                 strncmp(unregistered_classes[i], ucname, len))) {
                 /* got a match */
-                MPL_DBG_ActiveClasses |= class;
+                MPL_dbg_active_classes |= class;
                 for (j = i; j < num_unregistered_classes - 1; j++)
                     unregistered_classes[j] = unregistered_classes[j + 1];
                 num_unregistered_classes--;
@@ -280,12 +280,12 @@ void MPL_DBG_Class_register(MPL_DBG_Class class, const char *ucname, const char 
     }
 }
 
-MPL_DBG_Class MPL_DBG_Class_alloc(const char *ucname, const char *lcname)
+MPL_dbg_class MPL_dbg_class_alloc(const char *ucname, const char *lcname)
 {
     static unsigned int class = 1;
 
     /* create a user handle for this class */
-    MPL_DBG_Class_register(class, ucname, lcname);
+    MPL_dbg_class_register(class, ucname, lcname);
 
     class <<= 1;
 
@@ -314,13 +314,13 @@ static int dbg_process_args(int *argc_p, char ***argv_p)
                 /* Found a command */
                 if (*s == 0) {
                     /* Just -mpich-dbg */
-                    MPL_DBG_MaxLevel = MPL_DBG_TYPICAL;
-                    MPL_DBG_ActiveClasses = MPL_DBG_ALL;
+                    MPL_dbg_max_level = MPL_DBG_TYPICAL;
+                    MPL_dbg_active_classes = MPL_DBG_ALL;
                 }
                 else if (*s == '=') {
                     /* look for file */
-                    MPL_DBG_MaxLevel = MPL_DBG_TYPICAL;
-                    MPL_DBG_ActiveClasses = MPL_DBG_ALL;
+                    MPL_dbg_max_level = MPL_DBG_TYPICAL;
+                    MPL_dbg_active_classes = MPL_DBG_ALL;
                     s++;
                     if (strncmp(s, "file", 4) == 0) {
                         file_pattern = default_file_pattern;
@@ -390,8 +390,8 @@ static int dbg_process_env(void)
     s = getenv("MPICH_DBG");
     if (s) {
         /* Set the defaults */
-        MPL_DBG_MaxLevel = MPL_DBG_TYPICAL;
-        MPL_DBG_ActiveClasses = MPL_DBG_ALL;
+        MPL_dbg_max_level = MPL_DBG_TYPICAL;
+        MPL_dbg_active_classes = MPL_DBG_ALL;
         if (strncmp(s, "FILE", 4) == 0) {
             file_pattern = default_file_pattern;
         }
@@ -428,17 +428,17 @@ static int dbg_process_env(void)
     return MPL_DBG_SUCCESS;
 }
 
-MPL_DBG_Class MPL_DBG_ROUTINE_ENTER;
-MPL_DBG_Class MPL_DBG_ROUTINE_EXIT;
-MPL_DBG_Class MPL_DBG_ROUTINE;
-MPL_DBG_Class MPL_DBG_ALL = ~(0);       /* pre-initialize the ALL class */
+MPL_dbg_class MPL_DBG_ROUTINE_ENTER;
+MPL_dbg_class MPL_DBG_ROUTINE_EXIT;
+MPL_dbg_class MPL_DBG_ROUTINE;
+MPL_dbg_class MPL_DBG_ALL = ~(0);       /* pre-initialize the ALL class */
 
 /*
  * Attempt to initialize the logging system.  This works only if the
  * full initialization is not required for updating the environment
  * and/or command-line arguments.
  */
-int MPL_DBG_PreInit(int *argc_p, char ***argv_p, int wtimeNotReady)
+int MPL_dbg_pre_init(int *argc_p, char ***argv_p, int wtimeNotReady)
 {
     MPL_time_t t;
 
@@ -465,22 +465,22 @@ int MPL_DBG_PreInit(int *argc_p, char ***argv_p, int wtimeNotReady)
     }
 
     /* Allocate the predefined classes */
-    MPL_DBG_ROUTINE_ENTER = MPL_DBG_Class_alloc("ROUTINE_ENTER", "routine_enter");
-    MPL_DBG_ROUTINE_EXIT = MPL_DBG_Class_alloc("ROUTINE_EXIT", "routine_exit");
+    MPL_DBG_ROUTINE_ENTER = MPL_dbg_class_alloc("ROUTINE_ENTER", "routine_enter");
+    MPL_DBG_ROUTINE_EXIT = MPL_dbg_class_alloc("ROUTINE_EXIT", "routine_exit");
 
     MPL_DBG_CLASS_CLR(MPL_DBG_ROUTINE);
     MPL_DBG_CLASS_APPEND(MPL_DBG_ROUTINE, MPL_DBG_ROUTINE_ENTER);
     MPL_DBG_CLASS_APPEND(MPL_DBG_ROUTINE, MPL_DBG_ROUTINE_EXIT);
-    MPL_DBG_Class_register(MPL_DBG_ROUTINE, "ROUTINE", "routine");
+    MPL_dbg_class_register(MPL_DBG_ROUTINE, "ROUTINE", "routine");
 
-    MPL_DBG_Class_register(MPL_DBG_ALL, "ALL", "all");
+    MPL_dbg_class_register(MPL_DBG_ALL, "ALL", "all");
 
     dbg_initialized = DBG_PREINIT;
 
     return MPL_DBG_SUCCESS;
 }
 
-int MPL_DBG_Init(int *argc_p, char ***argv_p, int has_args, int has_env,
+int MPL_dbg_init(int *argc_p, char ***argv_p, int has_args, int has_env,
                  int wnum, int wrank, int threaded)
 {
     int ret;
@@ -528,7 +528,7 @@ int MPL_DBG_Init(int *argc_p, char ***argv_p, int has_args, int has_env,
 
     if (which_rank >= 0 && which_rank != wrank) {
         /* Turn off logging on this process */
-        MPL_DBG_ActiveClasses = 0;
+        MPL_dbg_active_classes = 0;
     }
 
     /* If the file has already been opened with a temp filename,
@@ -891,7 +891,7 @@ static int dbg_openfile(FILE ** dbg_fp)
 }
 
 /* Support routines for processing mpich-dbg values */
-/* Update the GLOBAL variable MPL_DBG_ActiveClasses with the bits
+/* Update the GLOBAL variable MPL_dbg_active_classes with the bits
  * corresponding to this name */
 static int dbg_set_class(const char *s)
 {
@@ -911,7 +911,7 @@ static int dbg_set_class(const char *s)
             if (slen == len && (strncmp(str, classnames[i].lcname, len) ||
                                 strncmp(str, classnames[i].ucname, len))) {
                 /* we have a match */
-                MPL_DBG_ActiveClasses |= classnames[i].classbits;
+                MPL_dbg_active_classes |= classnames[i].classbits;
                 found_match = 1;
                 break;
             }
@@ -931,7 +931,7 @@ static int dbg_set_class(const char *s)
     return 0;
 }
 
-/* Set the global MPL_DBG_MaxLevel if there is a match with the known
+/* Set the global MPL_dbg_max_level if there is a match with the known
  * level names */
 static int dbg_set_level(const char *s, const char *(names[]))
 {
@@ -939,7 +939,7 @@ static int dbg_set_level(const char *s, const char *(names[]))
 
     for (i = 0; names[i]; i++) {
         if (strcmp(names[i], s) == 0) {
-            MPL_DBG_MaxLevel = level_values[i];
+            MPL_dbg_max_level = level_values[i];
             return 0;
         }
     }

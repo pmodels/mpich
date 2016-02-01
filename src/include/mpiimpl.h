@@ -2170,16 +2170,16 @@ typedef struct MPICH_PerProcess_t {
 extern MPICH_PerProcess_t MPIR_Process;
 
 #if defined (MPL_USE_DBG_LOGGING)
-extern MPL_DBG_Class MPIR_DBG_INIT;
-extern MPL_DBG_Class MPIR_DBG_PT2PT;
-extern MPL_DBG_Class MPIR_DBG_THREAD;
-extern MPL_DBG_Class MPIR_DBG_DATATYPE;
-extern MPL_DBG_Class MPIR_DBG_COMM;
-extern MPL_DBG_Class MPIR_DBG_BSEND;
-extern MPL_DBG_Class MPIR_DBG_ERRHAND;
-extern MPL_DBG_Class MPIR_DBG_OTHER;
+extern MPL_dbg_class MPIR_DBG_INIT;
+extern MPL_dbg_class MPIR_DBG_PT2PT;
+extern MPL_dbg_class MPIR_DBG_THREAD;
+extern MPL_dbg_class MPIR_DBG_DATATYPE;
+extern MPL_dbg_class MPIR_DBG_COMM;
+extern MPL_dbg_class MPIR_DBG_BSEND;
+extern MPL_dbg_class MPIR_DBG_ERRHAND;
+extern MPL_dbg_class MPIR_DBG_OTHER;
 
-extern MPL_DBG_Class MPIR_DBG_ASSERT;
+extern MPL_dbg_class MPIR_DBG_ASSERT;
 #endif /* MPL_USE_DBG_LOGGING */
 
 /* ------------------------------------------------------------------------- */

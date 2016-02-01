@@ -44,14 +44,14 @@ MPIDI_CH3U_Win_hooks_t MPIDI_CH3U_Win_hooks = { NULL };
 MPIDI_CH3U_Win_pkt_ordering_t MPIDI_CH3U_Win_pkt_orderings = { 0 };
 
 #if defined(MPL_USE_DBG_LOGGING)
-MPL_DBG_Class MPIDI_CH3_DBG_CONNECT;
-MPL_DBG_Class MPIDI_CH3_DBG_DISCONNECT;
-MPL_DBG_Class MPIDI_CH3_DBG_PROGRESS;
-MPL_DBG_Class MPIDI_CH3_DBG_CHANNEL;
-MPL_DBG_Class MPIDI_CH3_DBG_OTHER;
-MPL_DBG_Class MPIDI_CH3_DBG_MSG;
-MPL_DBG_Class MPIDI_CH3_DBG_VC;
-MPL_DBG_Class MPIDI_CH3_DBG_REFCOUNT;
+MPL_dbg_class MPIDI_CH3_DBG_CONNECT;
+MPL_dbg_class MPIDI_CH3_DBG_DISCONNECT;
+MPL_dbg_class MPIDI_CH3_DBG_PROGRESS;
+MPL_dbg_class MPIDI_CH3_DBG_CHANNEL;
+MPL_dbg_class MPIDI_CH3_DBG_OTHER;
+MPL_dbg_class MPIDI_CH3_DBG_MSG;
+MPL_dbg_class MPIDI_CH3_DBG_VC;
+MPL_dbg_class MPIDI_CH3_DBG_REFCOUNT;
 #endif /* MPL_USE_DBG_LOGGING */
 
 #undef FUNCNAME
@@ -190,14 +190,14 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     MPIDI_CH3_Win_hooks_init(&MPIDI_CH3U_Win_hooks);
 
 #ifdef MPL_USE_DBG_LOGGING
-    MPIDI_CH3_DBG_CONNECT = MPL_DBG_Class_alloc("CH3_CONNECT", "ch3_connect");;
-    MPIDI_CH3_DBG_DISCONNECT = MPL_DBG_Class_alloc("CH3_DISCONNECT", "ch3_disconnect");
-    MPIDI_CH3_DBG_PROGRESS = MPL_DBG_Class_alloc("CH3_PROGRESS", "ch3_progress");
-    MPIDI_CH3_DBG_CHANNEL = MPL_DBG_Class_alloc("CH3_CHANNEL", "ch3_channel");
-    MPIDI_CH3_DBG_OTHER = MPL_DBG_Class_alloc("CH3_OTHER", "ch3_other");
-    MPIDI_CH3_DBG_MSG = MPL_DBG_Class_alloc("CH3_MSG", "ch3_msg");
-    MPIDI_CH3_DBG_VC = MPL_DBG_Class_alloc("VC", "vc");
-    MPIDI_CH3_DBG_REFCOUNT = MPL_DBG_Class_alloc("REFCOUNT", "refcount");
+    MPIDI_CH3_DBG_CONNECT = MPL_dbg_class_alloc("CH3_CONNECT", "ch3_connect");;
+    MPIDI_CH3_DBG_DISCONNECT = MPL_dbg_class_alloc("CH3_DISCONNECT", "ch3_disconnect");
+    MPIDI_CH3_DBG_PROGRESS = MPL_dbg_class_alloc("CH3_PROGRESS", "ch3_progress");
+    MPIDI_CH3_DBG_CHANNEL = MPL_dbg_class_alloc("CH3_CHANNEL", "ch3_channel");
+    MPIDI_CH3_DBG_OTHER = MPL_dbg_class_alloc("CH3_OTHER", "ch3_other");
+    MPIDI_CH3_DBG_MSG = MPL_dbg_class_alloc("CH3_MSG", "ch3_msg");
+    MPIDI_CH3_DBG_VC = MPL_dbg_class_alloc("VC", "vc");
+    MPIDI_CH3_DBG_REFCOUNT = MPL_dbg_class_alloc("REFCOUNT", "refcount");
 #endif /* MPL_USE_DBG_LOGGING */
 
     /*
