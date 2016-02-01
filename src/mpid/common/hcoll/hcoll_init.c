@@ -23,7 +23,7 @@ int hcoll_comm_attr_keyval = MPI_KEYVAL_INVALID;
 int world_comm_destroying = 0;
 
 #if defined(MPL_USE_DBG_LOGGING)
-MPL_DBG_Class MPIR_DBG_HCOLL;
+MPL_dbg_class MPIR_DBG_HCOLL;
 #endif /* MPL_USE_DBG_LOGGING */
 
 #undef FUNCNAME
@@ -79,7 +79,7 @@ int hcoll_initialize(void)
     }
 
 #if defined(MPL_USE_DBG_LOGGING)
-    MPIR_DBG_HCOLL = MPL_DBG_Class_alloc("HCOLL", "hcoll");
+    MPIR_DBG_HCOLL = MPL_dbg_class_alloc("HCOLL", "hcoll");
 #endif /* MPL_USE_DBG_LOGGING */
 
     hcoll_rte_fns_setup();

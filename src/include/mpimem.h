@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 #if defined (MPL_USE_DBG_LOGGING)
-extern MPL_DBG_Class MPIR_DBG_STRING;
+extern MPL_dbg_class MPIR_DBG_STRING;
 #endif /* MPL_USE_DBG_LOGGING */
 
 /* ------------------------------------------------------------------------- */

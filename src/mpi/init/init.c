@@ -127,7 +127,7 @@ int MPI_Init( int *argc, char ***argv )
 
     rc = MPID_Wtime_init();
 #ifdef MPL_USE_DBG_LOGGING
-    MPL_DBG_PreInit( argc, argv, rc );
+    MPL_dbg_pre_init( argc, argv, rc );
 #endif
 
     MPID_MPI_INIT_FUNC_ENTER(MPID_STATE_MPI_INIT);

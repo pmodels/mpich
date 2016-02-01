@@ -295,19 +295,19 @@ MPI_F08_Status *MPI_F08_STATUSES_IGNORE = &MPIR_F08_MPI_STATUSES_IGNORE_OBJ[0];
 #endif
 
 #if defined (MPL_USE_DBG_LOGGING)
-MPL_DBG_Class MPIR_DBG_INIT;
-MPL_DBG_Class MPIR_DBG_PT2PT;
-MPL_DBG_Class MPIR_DBG_THREAD;
-MPL_DBG_Class MPIR_DBG_DATATYPE;
-MPL_DBG_Class MPIR_DBG_HANDLE;
-MPL_DBG_Class MPIR_DBG_COMM;
-MPL_DBG_Class MPIR_DBG_BSEND;
-MPL_DBG_Class MPIR_DBG_ERRHAND;
-MPL_DBG_Class MPIR_DBG_OTHER;
+MPL_dbg_class MPIR_DBG_INIT;
+MPL_dbg_class MPIR_DBG_PT2PT;
+MPL_dbg_class MPIR_DBG_THREAD;
+MPL_dbg_class MPIR_DBG_DATATYPE;
+MPL_dbg_class MPIR_DBG_HANDLE;
+MPL_dbg_class MPIR_DBG_COMM;
+MPL_dbg_class MPIR_DBG_BSEND;
+MPL_dbg_class MPIR_DBG_ERRHAND;
+MPL_dbg_class MPIR_DBG_OTHER;
 
 /* these classes might need to move out later */
-MPL_DBG_Class MPIR_DBG_ASSERT;
-MPL_DBG_Class MPIR_DBG_STRING;
+MPL_dbg_class MPIR_DBG_ASSERT;
+MPL_dbg_class MPIR_DBG_STRING;
 #endif /* MPL_USE_DBG_LOGGING */
 
 #undef FUNCNAME
@@ -542,27 +542,27 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
      * If the parent comm is not NULL, we always give the world number
      * as "1" (false). */
 #ifdef MPICH_IS_THREADED
-    MPL_DBG_Init( argc, argv, has_args, has_env,
+    MPL_dbg_init( argc, argv, has_args, has_env,
 		   MPIR_Process.comm_parent != NULL, MPIR_Process.comm_world->rank,
                    MPIR_ThreadInfo.isThreaded );
 #else
-    MPL_DBG_Init( argc, argv, has_args, has_env,
+    MPL_dbg_init( argc, argv, has_args, has_env,
 		   MPIR_Process.comm_parent != NULL, MPIR_Process.comm_world->rank,
                   0 );
 #endif
 
-    MPIR_DBG_INIT = MPL_DBG_Class_alloc("INIT", "init");
-    MPIR_DBG_PT2PT = MPL_DBG_Class_alloc("PT2PT", "pt2pt");
-    MPIR_DBG_THREAD = MPL_DBG_Class_alloc("THREAD", "thread");
-    MPIR_DBG_DATATYPE = MPL_DBG_Class_alloc("DATATYPE", "datatype");
-    MPIR_DBG_HANDLE = MPL_DBG_Class_alloc("HANDLE", "handle");
-    MPIR_DBG_COMM = MPL_DBG_Class_alloc("COMM", "comm");
-    MPIR_DBG_BSEND = MPL_DBG_Class_alloc("BSEND", "bsend");
-    MPIR_DBG_ERRHAND = MPL_DBG_Class_alloc("ERRHAND", "errhand");
-    MPIR_DBG_OTHER = MPL_DBG_Class_alloc("OTHER", "other");
+    MPIR_DBG_INIT = MPL_dbg_class_alloc("INIT", "init");
+    MPIR_DBG_PT2PT = MPL_dbg_class_alloc("PT2PT", "pt2pt");
+    MPIR_DBG_THREAD = MPL_dbg_class_alloc("THREAD", "thread");
+    MPIR_DBG_DATATYPE = MPL_dbg_class_alloc("DATATYPE", "datatype");
+    MPIR_DBG_HANDLE = MPL_dbg_class_alloc("HANDLE", "handle");
+    MPIR_DBG_COMM = MPL_dbg_class_alloc("COMM", "comm");
+    MPIR_DBG_BSEND = MPL_dbg_class_alloc("BSEND", "bsend");
+    MPIR_DBG_ERRHAND = MPL_dbg_class_alloc("ERRHAND", "errhand");
+    MPIR_DBG_OTHER = MPL_dbg_class_alloc("OTHER", "other");
 
-    MPIR_DBG_ASSERT = MPL_DBG_Class_alloc("ASSERT", "assert");
-    MPIR_DBG_STRING = MPL_DBG_Class_alloc("STRING", "string");
+    MPIR_DBG_ASSERT = MPL_dbg_class_alloc("ASSERT", "assert");
+    MPIR_DBG_STRING = MPL_dbg_class_alloc("STRING", "string");
 #endif
 
     /* Initialize the C versions of the Fortran link-time constants.
@@ -662,7 +662,7 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
 
     rc = MPID_Wtime_init();
 #ifdef MPL_USE_DBG_LOGGING
-    MPL_DBG_PreInit( argc, argv, rc );
+    MPL_dbg_pre_init( argc, argv, rc );
 #endif
 
     MPID_MPI_INIT_FUNC_ENTER(MPID_STATE_MPI_INIT_THREAD);

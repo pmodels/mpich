@@ -48,14 +48,14 @@ extern char *MPIDI_failed_procs_string;
 extern int MPIDI_Use_pmi2_api;
 
 #if defined(MPL_USE_DBG_LOGGING)
-extern MPL_DBG_Class MPIDI_CH3_DBG_CONNECT;
-extern MPL_DBG_Class MPIDI_CH3_DBG_DISCONNECT;
-extern MPL_DBG_Class MPIDI_CH3_DBG_PROGRESS;
-extern MPL_DBG_Class MPIDI_CH3_DBG_CHANNEL;
-extern MPL_DBG_Class MPIDI_CH3_DBG_OTHER;
-extern MPL_DBG_Class MPIDI_CH3_DBG_MSG;
-extern MPL_DBG_Class MPIDI_CH3_DBG_VC;
-extern MPL_DBG_Class MPIDI_CH3_DBG_REFCOUNT;
+extern MPL_dbg_class MPIDI_CH3_DBG_CONNECT;
+extern MPL_dbg_class MPIDI_CH3_DBG_DISCONNECT;
+extern MPL_dbg_class MPIDI_CH3_DBG_PROGRESS;
+extern MPL_dbg_class MPIDI_CH3_DBG_CHANNEL;
+extern MPL_dbg_class MPIDI_CH3_DBG_OTHER;
+extern MPL_dbg_class MPIDI_CH3_DBG_MSG;
+extern MPL_dbg_class MPIDI_CH3_DBG_VC;
+extern MPL_dbg_class MPIDI_CH3_DBG_REFCOUNT;
 #endif /* MPL_USE_DBG_LOGGING */
 
 #define MPIDI_CHANGE_VC_STATE(vc, new_state) do {               \

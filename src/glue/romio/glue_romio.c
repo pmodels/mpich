@@ -12,7 +12,7 @@
 #include "glue_romio.h"
 
 #if defined (MPL_USE_DBG_LOGGING)
-static MPL_DBG_Class DBG_ROMIO;
+static MPL_dbg_class DBG_ROMIO;
 #endif /* MPL_USE_DBG_LOGGING */
 
 int MPIR_Ext_dbg_romio_terse_enabled = 0;
@@ -28,7 +28,7 @@ int MPIR_Ext_init(void)
     MPIR_Ext_dbg_romio_verbose_enabled = 0;
 
 #if defined (MPL_USE_DBG_LOGGING)
-    DBG_ROMIO = MPL_DBG_Class_alloc("ROMIO", "romio");
+    DBG_ROMIO = MPL_dbg_class_alloc("ROMIO", "romio");
 
     if (MPL_DBG_SELECTED(DBG_ROMIO,TERSE))
         MPIR_Ext_dbg_romio_terse_enabled = 1;

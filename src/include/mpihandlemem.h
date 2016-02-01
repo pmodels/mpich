@@ -119,7 +119,7 @@ const char *MPIU_Handle_get_kind_str(int kind);
 #define HANDLE_INDEX(a) ((a)& HANDLE_MASK)
 
 #if defined (MPL_USE_DBG_LOGGING)
-extern MPL_DBG_Class MPIR_DBG_HANDLE;
+extern MPL_dbg_class MPIR_DBG_HANDLE;
 #endif /* MPL_USE_DBG_LOGGING */
 
 /* ------------------------------------------------------------------------- */
