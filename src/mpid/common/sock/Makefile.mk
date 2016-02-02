@@ -18,10 +18,5 @@ noinst_HEADERS += src/mpid/common/sock/mpidu_sock.h
 
 include $(top_srcdir)/src/mpid/common/sock/poll/Makefile.mk
 
-# we don't provide an automake Makefile.mk for the iocp directory because it is
-# a Windows-only subsystem and our Windows build does not use the autotools at
-# this time
-#include $(top_srcdir)/src/mpid/common/sock/iocp/Makefile.mk
-
 endif BUILD_MPID_COMMON_SOCK
 
