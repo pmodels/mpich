@@ -988,7 +988,7 @@ int MPIDU_Sock_SetSockBufferSize( int fd, int firm )
 	if (rc <= 0) {
 	    sockBufSize = 0;
 	}
-	MPL_DBG_MSG_D(MPIDI_CH3_DBG_CONNECT,TYPICAL,"Sock buf size = %d",sockBufSize);
+	MPL_DBG_MSG_D(MPIDU_DBG_SOCK_CONNECT,TYPICAL,"Sock buf size = %d",sockBufSize);
     }
 
     if (sockBufSize > 0) {
