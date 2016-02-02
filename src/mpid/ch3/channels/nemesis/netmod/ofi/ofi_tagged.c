@@ -10,6 +10,10 @@
 #include "ofi_impl.h"
 
 #define MPID_NORMAL_SEND 0
+
+#define MPID_CREATE_REQ      0
+#define MPID_DONT_CREATE_REQ 1
+
 static inline int
 MPID_nem_ofi_sync_recv_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
                                 MPID_Request * rreq);
