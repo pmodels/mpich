@@ -268,12 +268,6 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     fi_addrs = MPIU_Malloc(pg_p->size * sizeof(fi_addr_t));
     FI_RC(fi_av_insert(gl_data.av, addrs, pg_p->size, fi_addrs, 0ULL, NULL), avmap);
 
-    /* ---------------------------------------------------- */
-    /* Insert the ANY_SRC address                           */
-    /* ---------------------------------------------------- */
-
-    gl_data.any_addr = FI_ADDR_UNSPEC;
-
     /* --------------------------------- */
     /* Store the direct addresses in     */
     /* the ranks' respective VCs         */
