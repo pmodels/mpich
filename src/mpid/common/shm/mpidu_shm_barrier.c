@@ -61,7 +61,7 @@ int MPIDU_shm_barrier(MPIDU_shm_barrier_t *barrier, int num_local)
     {
 	/* wait */
 	while (OPA_load_int(&barrier->wait) == sense)
-            MPIU_PW_Sched_yield(); /* skip */
+            MPL_sched_yield(); /* skip */
     }
     sense = 1 - sense;
 
