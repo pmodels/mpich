@@ -170,13 +170,13 @@ static inline int ADD_SUFFIX(send_normal)(struct MPIDI_VC *vc,
         ssend_match = init_recvtag_2(&ssend_mask, comm->context_id + context_offset, tag);
 #endif
         ssend_match |= MPID_SYNC_SEND_ACK;
-        FI_RC_RETRY(fi_trecv(gl_data.endpoint,    /* endpoint    */
-                           NULL,        /* recvbuf     */
-                           0,   /* data sz     */
-                           gl_data.mr,  /* dynamic mr  */
-                           VC_OFI(vc)->direct_addr,     /* remote proc */
-                           ssend_match, /* match bits  */
-                           0ULL,        /* mask bits   */
+        FI_RC_RETRY(fi_trecv(gl_data.endpoint,      /* endpoint    */
+                           NULL,                    /* recvbuf     */
+                           0,                       /* data sz     */
+                           gl_data.mr,              /* dynamic mr  */
+                           VC_OFI(vc)->direct_addr, /* remote proc */
+                           ssend_match,             /* match bits  */
+                           0ULL,                    /* mask bits   */
                            &(REQ_OFI(sync_req)->ofi_context)), trecv);
     }
 
@@ -197,19 +197,19 @@ static inline int ADD_SUFFIX(send_normal)(struct MPIDI_VC *vc,
     }
     else
 #if API_SET == API_SET_1
-    FI_RC_RETRY(fi_tsend(gl_data.endpoint,  /* Endpoint                       */
+        FI_RC_RETRY(fi_tsend(gl_data.endpoint,          /* Endpoint                       */
 #elif API_SET == API_SET_2
-    FI_RC_RETRY(fi_tsenddata(gl_data.endpoint,  /* Endpoint                       */
+        FI_RC_RETRY(fi_tsenddata(gl_data.endpoint,      /* Endpoint                       */
 #endif
-        send_buffer,       /* Send buffer(packed or user)    */
-        data_sz,   /* Size of the send               */
-        gl_data.mr,        /* Dynamic memory region          */
+                               send_buffer,             /* Send buffer(packed or user)    */
+                               data_sz,                 /* Size of the send               */
+                               gl_data.mr,              /* Dynamic memory region          */
 #if API_SET == API_SET_2
-        comm->rank,
+                               comm->rank,
 #endif
-        VC_OFI(vc)->direct_addr,   /* Use the address of this VC     */
-        match_bits,        /* Match bits                     */
-        &(REQ_OFI(sreq)->ofi_context)), tsend);
+                               VC_OFI(vc)->direct_addr, /* Use the address of this VC     */
+                               match_bits,              /* Match bits                     */
+                               &(REQ_OFI(sreq)->ofi_context)), tsend);
 
     *request = sreq;
 
