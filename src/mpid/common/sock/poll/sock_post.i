@@ -125,10 +125,10 @@ int MPIDU_Sock_post_connect_ifaddr( struct MPIDU_Sock_set * sock_set,
     /*
      * Attempt to establish the connection
      */
-    MPL_DBG_STMT(MPIDI_CH3_DBG_CONNECT,TYPICAL,{
+    MPL_DBG_STMT(MPIDU_DBG_SOCK_CONNECT,TYPICAL,{
 	char addrString[64];
 	MPIDU_Sock_AddrToStr( ifaddr, addrString, sizeof(addrString) );
-	MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT,TYPICAL,(MPL_DBG_FDEST,
+	MPL_DBG_MSG_FMT(MPIDU_DBG_SOCK_CONNECT,TYPICAL,(MPL_DBG_FDEST,
 			      "Connecting to %s:%d", addrString, port )); 
 	})
 
@@ -141,7 +141,7 @@ int MPIDU_Sock_post_connect_ifaddr( struct MPIDU_Sock_set * sock_set,
     if (rc == 0)
     {
 	/* connection succeeded */
-	MPL_DBG_MSG_P(MPIDI_CH3_DBG_CONNECT,TYPICAL,"Setting state to SOCKI_STATE_CONNECTED_RW for sock %p",sock);
+	MPL_DBG_MSG_P(MPIDU_DBG_SOCK_CONNECT,TYPICAL,"Setting state to SOCKI_STATE_CONNECTED_RW for sock %p",sock);
 	pollinfo->state = MPIDU_SOCKI_STATE_CONNECTED_RW;
 	MPIDU_SOCKI_EVENT_ENQUEUE(pollinfo, MPIDU_SOCK_OP_CONNECT, 0, user_ptr, MPI_SUCCESS, mpi_errno, fn_fail);
     }
@@ -149,13 +149,13 @@ int MPIDU_Sock_post_connect_ifaddr( struct MPIDU_Sock_set * sock_set,
     else if (errno == EINPROGRESS)
     {
 	/* connection pending */
-	MPL_DBG_MSG_P(MPIDI_CH3_DBG_CONNECT,TYPICAL,"Setting state to SOCKI_STATE_CONNECTING for sock %p",sock);
+	MPL_DBG_MSG_P(MPIDU_DBG_SOCK_CONNECT,TYPICAL,"Setting state to SOCKI_STATE_CONNECTING for sock %p",sock);
 	pollinfo->state = MPIDU_SOCKI_STATE_CONNECTING;
 	MPIDU_SOCKI_POLLFD_OP_SET(pollfd, pollinfo, POLLOUT);
     }
     else
     {
-	MPL_DBG_MSG_P(MPIDI_CH3_DBG_CONNECT,TYPICAL,"Setting state to SOCKI_STATE_DISCONNECTED (failure in connect) for sock %p",sock);
+	MPL_DBG_MSG_P(MPIDU_DBG_SOCK_CONNECT,TYPICAL,"Setting state to SOCKI_STATE_DISCONNECTED (failure in connect) for sock %p",sock);
 	pollinfo->os_errno = errno;
 	pollinfo->state = MPIDU_SOCKI_STATE_DISCONNECTED;
 

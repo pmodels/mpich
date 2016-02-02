@@ -5,6 +5,10 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+#if defined (MPL_USE_DBG_LOGGING)
+MPL_dbg_class MPIDU_DBG_SOCK_CONNECT;
+#endif /* MPL_USE_DBG_LOGGING */
+
 /* FIXME: The usual missing documentation (what are these routines for?
    preconditions?  who calls? post conditions? */
 #undef FUNCNAME
@@ -16,6 +20,10 @@ int MPIDU_Sock_init(void)
     MPIDI_STATE_DECL(MPID_STATE_MPIDU_SOCK_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_SOCK_INIT);
+
+#if defined (MPL_USE_DBG_LOGGING)
+    MPIDU_DBG_SOCK_CONNECT = MPL_dbg_class_alloc("SOCK_CONNECT", "sock_connect");
+#endif
 
     MPIDU_Socki_initialized++;
 

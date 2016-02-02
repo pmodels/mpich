@@ -55,4 +55,8 @@ MPID_STATE_WRITE, \
 MPID_STATE_WRITEV, \
 MPID_STATE_POLL,
 
+#if defined (MPL_USE_DBG_LOGGING)
+extern MPL_dbg_class MPIDU_DBG_SOCK_CONNECT;
+#endif /* MPL_USE_DBG_LOGGING */
+
 #endif /* !defined(SOCKI_H_INCLUDED) */
