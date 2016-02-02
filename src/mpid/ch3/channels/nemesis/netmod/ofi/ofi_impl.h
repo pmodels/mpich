@@ -69,9 +69,8 @@ typedef int (*req_fn) (MPIDI_VC_t *, MPID_Request *, int *);
 /* ******************************** */
 /* Global Object for state tracking */
 /* ******************************** */
-typedef struct {
+typedef struct MPID_nem_ofi_global_t {
     char bound_addr[OFI_MAX_ADDR_LEN];       /* This ranks bound address    */
-    fi_addr_t any_addr;         /* Specifies any source        */
     size_t bound_addrlen;       /* length of the bound address */
     struct fid_fabric *fabric;  /* fabric object               */
     struct fid_domain *domain;  /* domain object               */
@@ -79,16 +78,15 @@ typedef struct {
     struct fid_cq *cq;          /* completion queue            */
     struct fid_av *av;          /* address vector              */
     struct fid_mr *mr;          /* memory region               */
-    MPIDI_PG_t *pg_p;           /* MPI Process group           */
-    MPIDI_VC_t *cm_vcs;         /* temporary VC's              */
-    MPID_Request *persistent_req;       /* Unexpected request queue    */
-    MPID_Request *conn_req;     /* Connection request          */
-    MPIDI_Comm_ops_t comm_ops;
     size_t iov_limit;           /* Max send iovec limit        */
     size_t max_buffered_send;   /* Buffered send threshold     */
     int rts_cts_in_flight;
     int api_set;
-} MPID_nem_ofi_global_t;
+    MPID_Request *persistent_req;       /* Unexpected request queue    */
+    MPID_Request *conn_req;      /* Connection request          */
+    MPIDI_PG_t *pg_p;            /* MPI Process group           */
+    MPIDI_VC_t *cm_vcs;          /* temporary VC's              */
+} MPID_nem_ofi_global_t __attribute__ ((aligned (MPID_NEM_CACHE_LINE_LEN)));
 
 /* ******************************** */
 /* Device channel specific data     */
@@ -224,7 +222,7 @@ fn_fail:                      \
     remote_proc = VC_OFI(vc)->direct_addr;  \
   } else {                                  \
     MPIU_Assert(vc == NULL);                \
-    remote_proc = gl_data.any_addr;         \
+    remote_proc = FI_ADDR_UNSPEC;           \
   }                                         \
 })
 
