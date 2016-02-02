@@ -3,7 +3,6 @@
  *  (C) 2006 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-
 #include <mpidimpl.h>
 #include "mpiu_shm_wrappers.h"
 
@@ -329,7 +328,8 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *ba
         MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
         MPIU_CHKLMEM_MALLOC(val, char *, val_max_sz, mpi_errno, "val");
 
-        mpi_errno = MPIDI_PG_GetConnKVSname (&kvs_name);
+        //mpi_errno = MPIDI_PG_GetConnKVSname (&kvs_name);
+        kvs_name = "my_kvs_name";
         if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
         if (local_rank == 0){
