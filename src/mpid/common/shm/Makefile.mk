@@ -5,6 +5,8 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
+if BUILD_MPID_COMMON_SHM
+
 mpi_core_sources +=                          \
     src/mpid/common/shm/mpidu_shm_alloc.c    \
     src/mpid/common/shm/mpidu_shm_barrier.c
@@ -17,4 +19,4 @@ noinst_HEADERS +=                                 \
     src/mpid/common/shm/mpidu_shm_impl.h	  \
 	src/mpid/common/shm/mpidu_shm.h
 
-
+endif BUILD_MPID_COMMON_SHM
