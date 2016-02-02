@@ -129,6 +129,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
                     NULL), openfabric); /* Context: fabric events  */
 
     gl_data.iov_limit = prov_use->tx_attr->iov_limit;
+    gl_data.max_buffered_send = prov_use->tx_attr->inject_size;
     gl_data.api_set = API_SET_1;
     /* ------------------------------------------------------------------------ */
     /* Create the access domain, which is the physical or virtual network or    */
