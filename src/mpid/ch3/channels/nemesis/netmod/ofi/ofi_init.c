@@ -124,9 +124,9 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* returns a list.  see man fi_fabric for details                           */
     /* ------------------------------------------------------------------------ */
     dump_and_choose_providers(prov_tagged, &prov_use);
-    FI_RC(fi_fabric(prov_use->fabric_attr,      /* In:   Fabric attributes */
-                    &gl_data.fabric,    /* Out:  Fabric descriptor */
-                    NULL), openfabric); /* Context: fabric events  */
+    FI_RC(fi_fabric(prov_use->fabric_attr, /* In:   Fabric attributes */
+                    &gl_data.fabric,       /* Out:  Fabric descriptor */
+                    NULL), openfabric);    /* Context: fabric events  */
 
     gl_data.iov_limit = prov_use->tx_attr->iov_limit;
     gl_data.max_buffered_send = prov_use->tx_attr->inject_size;
@@ -142,7 +142,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /*            In this case, we want remote completion to be set by default  */
     /* ------------------------------------------------------------------------ */
     FI_RC(fi_domain(gl_data.fabric,     /* In:  Fabric object             */
-                    prov_use,   /* In:  default domain attributes */
+                    prov_use,           /* In:  default domain attributes */
                     &gl_data.domain,    /* Out: domain object             */
                     NULL), opendomain); /* Context: Domain events         */
 
@@ -153,10 +153,10 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* completion queues, etc.                                                  */
     /* see man fi_endpoint for more details                                     */
     /* ------------------------------------------------------------------------ */
-    FI_RC(fi_endpoint(gl_data.domain,   /* In: Domain Object        */
-                      prov_use, /* In: Configuration object */
-                      &gl_data.endpoint,        /* Out: Endpoint Object     */
-                      NULL), openep);   /* Context: endpoint events */
+    FI_RC(fi_endpoint(gl_data.domain,    /* In: Domain Object        */
+                      prov_use,          /* In: Configuration object */
+                      &gl_data.endpoint, /* Out: Endpoint Object     */
+                      NULL), openep);    /* Context: endpoint events */
 
     /* ------------------------------------------------------------------------ */
     /* Create the objects that will be bound to the endpoint.                   */
@@ -171,14 +171,14 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     memset(&cq_attr, 0, sizeof(cq_attr));
     cq_attr.format = FI_CQ_FORMAT_TAGGED;
     FI_RC(fi_cq_open(gl_data.domain,    /* In:  Domain Object         */
-                     &cq_attr,  /* In:  Configuration object  */
+                     &cq_attr,          /* In:  Configuration object  */
                      &gl_data.cq,       /* Out: CQ Object             */
                      NULL), opencq);    /* Context: CQ events         */
 
     memset(&av_attr, 0, sizeof(av_attr));
-    av_attr.type = FI_AV_MAP;   /* Mapped addressing mode     */
+    av_attr.type = FI_AV_MAP;           /* Mapped addressing mode     */
     FI_RC(fi_av_open(gl_data.domain,    /* In:  Domain Object         */
-                     &av_attr,  /* In:  Configuration object  */
+                     &av_attr,          /* In:  Configuration object  */
                      &gl_data.av,       /* Out: AV Object             */
                      NULL), avopen);    /* Context: AV events         */
 

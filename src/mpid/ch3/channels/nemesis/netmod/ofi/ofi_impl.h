@@ -69,23 +69,25 @@ typedef int (*req_fn) (MPIDI_VC_t *, MPID_Request *, int *);
 /* ******************************** */
 /* Global Object for state tracking */
 /* ******************************** */
-typedef struct MPID_nem_ofi_global_t {
-    char bound_addr[OFI_MAX_ADDR_LEN];       /* This ranks bound address    */
-    size_t bound_addrlen;       /* length of the bound address */
-    struct fid_fabric *fabric;  /* fabric object               */
-    struct fid_domain *domain;  /* domain object               */
-    struct fid_ep *endpoint;    /* endpoint object             */
-    struct fid_cq *cq;          /* completion queue            */
-    struct fid_av *av;          /* address vector              */
-    struct fid_mr *mr;          /* memory region               */
-    size_t iov_limit;           /* Max send iovec limit        */
-    size_t max_buffered_send;   /* Buffered send threshold     */
-    int rts_cts_in_flight;
-    int api_set;
-    MPID_Request *persistent_req;       /* Unexpected request queue    */
-    MPID_Request *conn_req;      /* Connection request          */
-    MPIDI_PG_t *pg_p;            /* MPI Process group           */
-    MPIDI_VC_t *cm_vcs;          /* temporary VC's              */
+typedef struct {
+    char bound_addr[OFI_MAX_ADDR_LEN]; /* This ranks bound address    */
+    size_t bound_addrlen;              /* length of the bound address */
+    struct fid_fabric *fabric;         /* fabric object               */
+    struct fid_domain *domain;         /* domain object               */
+    struct fid_ep *endpoint;           /* endpoint object             */
+    struct fid_cq *cq;                 /* completion queue            */
+    struct fid_av *av;                 /* address vector              */
+    struct fid_mr *mr;                 /* memory region               */
+    size_t iov_limit;                  /* Max send iovec limit        */
+    size_t max_buffered_send;          /* Buffered send threshold     */
+    int rts_cts_in_flight;             /* Count of incompleted        */
+                                       /*   RTS-CTS-DATA exchanges    */
+    int api_set;                       /* Used OFI API for send       */
+                                       /*   operations                */
+    MPID_Request *persistent_req;      /* Unexpected request queue    */
+    MPID_Request *conn_req;            /* Connection request          */
+    MPIDI_PG_t *pg_p;                  /* MPI Process group           */
+    MPIDI_VC_t *cm_vcs;                /* temporary VC's              */
 } MPID_nem_ofi_global_t __attribute__ ((aligned (MPID_NEM_CACHE_LINE_LEN)));
 
 /* ******************************** */
