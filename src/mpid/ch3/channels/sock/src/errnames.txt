@@ -1,3 +1,89 @@
 **ch3|sock|connectionfailed:Connection failed for virtual channel
 **ch3|sock|writefailed:Write to socket failed
 **ch3|sock|writefailed %d:Write to socket failed with code %d
+
+**sock|setalloc:unable to allocate a new sock set object
+**sock|sockalloc:unable to allocate a new sock object
+**sock|badbuf:the supplied buffer contains invalid memory
+**sock|badhandle:sock contains an invalid handle
+**sock|badhdbuf:a memory fault occurred while accessing the host description string
+**sock|badhdmax:the length of the host description string must be non-negative
+**sock|badhdlen:host description string to small to store description
+**sock|badiovn:size of iov is invalid
+**sock|badiovn %d %d %d:size of iov is invalid (set=%d,sock=%d,iov_n=%d)
+**sock|badlen:bad length parameter(s)
+**sock|badlen %d %d %d %d:bad length parameter(s) (set=%d,sock=%d,min=%d,max=%d)
+**sock|badport:port number is out of range
+**sock|badport %d:port number is out of range (sock=%d)
+**sock|badsock:supplied sock is corrupt
+**sock|connclosed:connection closed by peer
+**sock|connclosed %d %d:connection closed by peer (set=%d,sock=%d)
+**sock|connfailed:connection failure
+**sock|connrefused:connection refused
+**sock|close_cancel:operation cancelled because sock was closed locally
+**sock|close_cancel %d %d:operation cancelled because sock was closed locally (set=%d,sock=%d)
+**sock|closing:sock is in the process of being closed locally
+**sock|closing %d %d:sock is in the process of being closed locally (set=%d,sock=%d)
+**sock|closing_already:a close operation is already posted
+**sock|closing_already %d %d:a close operation is already post (set=%d,sock=%d)
+**sock|getport:failed to obtain port number of the listener
+**sock|listener_bad_sock:supplied sock is not a listener
+**sock|listener_bad_sock %d %d:supplied sock is not a listener (set=%d,sock=%d)
+**sock|listener_bad_state:supplied listener sock is in a bad state
+**sock|listener_bad_state %d %d %d:supplied listener sock is in a bad state (set=%d,sock=%d,state=%d)
+**sock|listener_read:read operation not allowed on a listener
+**sock|listener_read %d %d:read operation not allowed on a listener (set=%d,sock=%d)
+**sock|listener_write:write operation not allowed on a listener
+**sock|listener_write %d %d:write operation not allowed on a listener (set=%d,sock=%d)
+**sock|notconnected:sock is not connected
+**sock|notconnected %d %d:sock is not connected (set=%d,sock=%d)
+**sock|nosock:no new sock was available to accept
+**sock|oserror:unexpected operating system error
+**sock|osnomem:operating system routine failed due to lack of memory
+**sock|osnomem %s %d %d:operating system routine %s failed due to lack of memory (set=%d,sock=%d)
+**sock|reads:attempt to perform multiple simultaneous reads
+**sock|reads %d %d:attempt to perform multiple simultaneous reads (set=%d,sock=%d)
+**sock|uninit:Sock library has not been initialized
+**sock|writes:attempt to perform multiple simultaneous writes
+**sock|writes %d %d:attempt to perform multiple simultaneous writes (set=%d,sock=%d)
+
+**sock|poll|accept:accept failed to acquire a new socket
+**sock|poll|accept %d %s:accept failed to acquire a new socket (errno=%d:%s)
+**sock|poll|badbuf %d %d %d %s:the supplied buffer contains invalid memory (set=%d,sock=%d,errno=%d:%s)
+**sock|poll|badhandle %d %d %d:sock contains an invalid file descriptor (set=%d,sock=%d,fd=%d)
+**sock|poll|badhandle %d %d %d %d:sock contains an invalid file descriptor (set=%d,sock=%d,fd=%d:%d)
+**sock|poll|bind:unable to bind socket to port
+**sock|poll|bind %d %d %s:unable to bind socket to port (port=%d,errno=%d:%s)
+**sock|poll|connclosed %d %d %d %s:connection closed by peer (set=%d,sock=%d,errno=%d:%s)
+**sock|poll|connfailed %d %d %d %s:connection failure (set=%d,sock=%d,errno=%d:%s)
+**sock|poll|connrefused %d %d %s:connection refused (set=%d,sock=%d,host=%s)
+**sock|poll|eqmalloc:MPL_malloc failed to allocate memory for an event queue structure
+**sock|poll|eqfail:fatal error: failed to enqueue an event; event was lost
+**sock|poll|eqfail %d %d %d:fatal error: failed to enqueue an event; event was lost (set=%d,sock=%d,op=%d)
+**sock|poll|getport %d %s:failed to obtain port number of listener (errno=%d:%s)
+**sock|poll|listen:listen() failed
+**sock|poll|listen %d %s:listen() failed (errno=%d:%s)
+**sock|poll|nodelay:unable to set TCP no delay attribute on socket
+**sock|poll|nodelay %d %s:unable to set TCP no delay attribute on socket (errno=%d:%s)
+**sock|poll|nonblock:unable to set socket to nonblocking
+**sock|poll|nonblock %d %s:unable to set socket to nonblocking (errno=%d:%s)
+**sock|poll|oserror %d %s:unexpected operating system error (errno=%d:%s)
+**sock|poll|oserror %d %d %d %s:unexpected operating system error (set=%d,sock=%d,errno=%d:%s)
+**sock|poll|oserror %s %d %d %d %s:unpected operating system error from %s (set=%d,sock=%d,errno=%d:%s)
+**sock|poll|osnomem %d %d %d %s:operating system routine failed due to lack of memory (set=%d,sock=%d,errno=%d:%s)
+**sock|poll|pipe:unable to allocate pipe to wakeup a blocking poll()
+**sock|poll|pipe %d %s:unable to allocate pipe to wakeup a blocking poll() (errno=%d:%s)
+**sock|poll|pipenonblock:unable to set wakeup pipe to nonblocking
+**sock|poll|pipenonblock %d %s:unable to set wakeup pipe to nonblocking (errno=%d:%s)
+**sock|poll|reuseaddr:unable to set reuseaddr attribute on socket
+**sock|poll|reuseaddr %d %s:unable to set reuseaddr attribute on socket (errno=%d:%s)
+**sock|poll|setrcvbufsz: unable to set the receive socket buffer size
+**sock|poll|setrcvbufsz %d %d %s: unable to set the receive socket buffer size (size=%d,errno=%d:%s)
+**sock|poll|setsndbufsz: unable to set the send socket buffer size
+**sock|poll|setsndbufsz %d %d %s: unable to set the send socket buffer size (size=%d,errno=%d:%s)
+**sock|poll|socket:unable to obtain new socket
+**sock|poll|socket %d %s:unable to obtain new socket (errno=%d:%s)
+**sock|poll|unhandledstate:encountered an unexpected state
+**sock|poll|unhandledstate %d:encountered an unexpected state (%d)
+**sock|poll|unhandledtype:encountered an unexpected sock type
+**sock|poll|unhandledtype %d:encountered an unexpected sock type (%d)
