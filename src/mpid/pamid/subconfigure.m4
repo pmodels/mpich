@@ -20,6 +20,7 @@ dnl -*- mode: makefile-gmake; -*-
 dnl MPICH_SUBCFG_BEFORE=src/mpid/common/sched
 dnl MPICH_SUBCFG_BEFORE=src/mpid/common/datatype
 dnl MPICH_SUBCFG_BEFORE=src/mpid/common/thread
+dnl MPICH_SUBCFG_BEFORE=src/mpid/common/shm
 
 dnl _PREREQ handles the former role of mpichprereq, setup_device, etc
 [#] expansion is: PAC_SUBCFG_PREREQ_[]PAC_SUBCFG_AUTO_SUFFIX
@@ -64,10 +65,11 @@ fi
 
 MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE
 
-dnl the PAMID device depends on the common NBC scheduler code
+dnl the PAMID device depends on the common NBC scheduler SHM code
 build_mpid_common_sched=yes
 build_mpid_common_datatype=yes
 build_mpid_common_thread=yes
+build_mpid_common_shm=yes
 
 
 ])dnl end AM_COND_IF(BUILD_PAMID,...)

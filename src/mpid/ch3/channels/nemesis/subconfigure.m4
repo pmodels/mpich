@@ -1,4 +1,5 @@
 [#] start of __file__
+dnl MPICH_SUBCFG_BEFORE=src/mpid/common/shm
 dnl
 dnl _PREREQ handles the former role of mpichprereq, setup_device, etc
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
@@ -24,6 +25,8 @@ else
 fi
 export nemesis_networks
 
+# the nemesis channel depends on the common shm code
+build_mpid_common_shm=yes
 ])dnl end AM_COND_IF(BUILD_CH3_NEMESIS,...)
 ])dnl
 dnl
