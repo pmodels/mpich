@@ -29,4 +29,4 @@
 **ch3|sock|badhost %s %d %s:[ch3:sock] invalid host description, %s:%d (%s)
 **pglookup:unable to find the process group structure
 **pglookup %s:unable to find the process group structure with id <%s>
-**ch3|sock|handle_sock_event:an error occurred while handling an event returned by MPIDU_Sock_Wait()
+**ch3|sock|handle_sock_event:an error occurred while handling an event returned by MPIDI_CH3I_Sock_Wait()
