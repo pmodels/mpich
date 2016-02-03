@@ -65,7 +65,7 @@ int MPIDI_CH3U_Init_sock(int has_parent, MPIDI_PG_t *pg_p, int pg_rank,
 	vcch->sendq_head = NULL;
 	vcch->sendq_tail = NULL;
 	vcch->state      = MPIDI_CH3I_VC_STATE_UNCONNECTED;
-	vcch->sock       = MPIDU_SOCK_INVALID_SOCK;
+	vcch->sock       = MPIDI_CH3I_SOCK_INVALID_SOCK;
 	vcch->conn       = NULL;
     }    
 
@@ -96,7 +96,7 @@ int MPIDI_CH3U_Init_sock(int has_parent, MPIDI_PG_t *pg_p, int pg_rank,
 int MPIDI_VC_InitSock( MPIDI_VC_t *vc ) 
 {
     MPIDI_CH3I_VC *vcch = &vc->ch;
-    vcch->sock               = MPIDU_SOCK_INVALID_SOCK;
+    vcch->sock               = MPIDI_CH3I_SOCK_INVALID_SOCK;
     vcch->conn               = NULL;
     return 0;
 }

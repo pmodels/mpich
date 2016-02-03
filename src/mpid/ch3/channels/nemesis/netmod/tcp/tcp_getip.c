@@ -58,13 +58,13 @@ static int dbg_ifname = 0;
 #define FUNCNAME MPIDI_GetIPInterface
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
+int MPIDI_GetIPInterface( MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr, int *found )
 {
     int mpi_errno = MPI_SUCCESS;
     char *buf_ptr = NULL, *ptr;
     int buf_len, buf_len_prev;
     int fd;
-    MPIDU_Sock_ifaddr_t myifaddr;
+    MPIDI_CH3I_nem_tcp_ifaddr_t myifaddr;
     int nfound = 0, foundLocalhost = 0;
     /* We predefine the LSB and MSB localhost addresses */
     unsigned int localhost = 0x0100007f;
@@ -225,7 +225,7 @@ fn_fail:
 #else /* things needed to find the interfaces */
 
 /* In this case, just return false for interfaces found */
-int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
+int MPIDI_GetIPInterface( MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr, int *found )
 {
     *found = 0;
     return MPI_SUCCESS;
@@ -244,7 +244,7 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 #define FUNCNAME MPIDI_Get_IP_for_iface
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_Get_IP_for_iface(const char *ifname, MPIDU_Sock_ifaddr_t *ifaddr, int *found)
+int MPIDI_Get_IP_for_iface(const char *ifname, MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr, int *found)
 {
     int mpi_errno = MPI_SUCCESS;
     int fd, ret;
@@ -283,7 +283,7 @@ fn_fail:
 #define FUNCNAME MPIDI_Get_IP_for_iface
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_Get_IP_for_iface(const char *ifname, MPIDU_Sock_ifaddr_t *ifaddr, int *found)
+int MPIDI_Get_IP_for_iface(const char *ifname, MPIDI_CH3I_nem_tcp_ifaddr_t *ifaddr, int *found)
 {
     if (found != NULL)
         *found = FALSE;

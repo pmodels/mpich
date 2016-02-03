@@ -88,16 +88,16 @@ static int MPIDI_CH3I_listener_port = 0;
 static MPIDI_CH3I_Connection_t * MPIDI_CH3I_listener_conn = NULL;
 
 /* Required for (socket version) upcall to Connect_to_root (see FIXME) */
-extern MPIDU_Sock_set_t MPIDI_CH3I_sock_set;
+extern MPIDI_CH3I_Sock_set_t MPIDI_CH3I_sock_set;
 
 #undef FUNCNAME
 #define FUNCNAME MPIDU_CH3I_SetupListener
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_CH3I_SetupListener( MPIDU_Sock_set_t sock_set )
+int MPIDU_CH3I_SetupListener( MPIDI_CH3I_Sock_set_t sock_set )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDU_Sock_t sock;
+    MPIDI_CH3I_Sock_t sock;
 
     mpi_errno = MPIDI_CH3I_Connection_alloc(&MPIDI_CH3I_listener_conn);
     if (mpi_errno != MPI_SUCCESS) {
@@ -112,7 +112,7 @@ int MPIDU_CH3I_SetupListener( MPIDU_Sock_set_t sock_set )
     MPIDI_CH3I_listener_conn->send_active = NULL;
     MPIDI_CH3I_listener_conn->recv_active = NULL;
     
-    mpi_errno = MPIDU_Sock_listen(sock_set, MPIDI_CH3I_listener_conn,
+    mpi_errno = MPIDI_CH3I_Sock_listen(sock_set, MPIDI_CH3I_listener_conn,
 				  &MPIDI_CH3I_listener_port, &sock);
     if (mpi_errno) return mpi_errno;
 
@@ -134,7 +134,7 @@ int MPIDU_CH3I_ShutdownListener( void )
     MPID_Progress_state progress_state;
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,"Closing listener sock (Post_close)");
-    mpi_errno = MPIDU_Sock_post_close(MPIDI_CH3I_listener_conn->sock);
+    mpi_errno = MPIDI_CH3I_Sock_post_close(MPIDI_CH3I_listener_conn->sock);
     if (mpi_errno != MPI_SUCCESS) {
 	return mpi_errno;
     }
@@ -214,7 +214,7 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
     MPIR_CHKPMEM_DECL(1);
     char host_description[MAX_HOST_DESCRIPTION_LEN];
     int port, port_name_tag;
-    MPIDU_Sock_ifaddr_t ifaddr;
+    MPIDI_CH3I_Sock_ifaddr_t ifaddr;
     int hasIfaddr = 0;
     MPIDI_CH3I_Connection_t * conn;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_CONNECT_TO_ROOT_SOCK);
@@ -236,7 +236,7 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
     MPL_DBG_MSG_S(MPIDI_CH3_DBG_CONNECT,VERBOSE,"Connect to root with portstring %s",
 		   port_name );
 
-    mpi_errno = MPIDU_Sock_get_conninfo_from_bc( port_name, host_description,
+    mpi_errno = MPIDI_CH3I_Sock_get_conninfo_from_bc( port_name, host_description,
 						 sizeof(host_description),
 						 &port, &ifaddr, &hasIfaddr );
     if (mpi_errno) {
@@ -264,7 +264,7 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
        is the socket utility functions. */
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT,VERBOSE,(MPL_DBG_FDEST,
 	  "posting connect to host %s, port %d", host_description, port ));
-    mpi_errno = MPIDU_Sock_post_connect(MPIDI_CH3I_sock_set, conn, 
+    mpi_errno = MPIDI_CH3I_Sock_post_connect(MPIDI_CH3I_sock_set, conn,
 					host_description, port, &conn->sock);
     if (mpi_errno == MPI_SUCCESS)
     {
@@ -287,13 +287,13 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
     /* --BEGIN ERROR HANDLING-- */
     else
     {
-	if (MPIR_ERR_GET_CLASS(mpi_errno) == MPIDU_SOCK_ERR_BAD_HOST)
+	if (MPIR_ERR_GET_CLASS(mpi_errno) == MPIDI_CH3I_SOCK_ERR_BAD_HOST)
         { 
             mpi_errno = MPIR_Err_create_code(
 		MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**ch3|sock|badhost",
 		"**ch3|sock|badhost %s %d %s", conn->pg_id, conn->vc->pg_rank, port_name);
         }
-        else if (MPIR_ERR_GET_CLASS(mpi_errno) == MPIDU_SOCK_ERR_CONN_FAILED)
+        else if (MPIR_ERR_GET_CLASS(mpi_errno) == MPIDI_CH3I_SOCK_ERR_CONN_FAILED)
         { 
             mpi_errno = MPIR_Err_create_code(
 		MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**ch3|sock|connrefused",
@@ -329,12 +329,12 @@ int MPIDI_CH3I_Connect_to_root_sock(const char * port_name,
 /* The host_description should be of length MAX_HOST_DESCRIPTION_LEN */
 
 #undef FUNCNAME
-#define FUNCNAME MPIDU_Sock_get_conninfo_from_bc
+#define FUNCNAME MPIDI_CH3I_Sock_get_conninfo_from_bc
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_Sock_get_conninfo_from_bc( const char *bc, 
+int MPIDI_CH3I_Sock_get_conninfo_from_bc( const char *bc,
 				     char *host_description, int maxlen,
-				     int *port, MPIDU_Sock_ifaddr_t *ifaddr, 
+				     int *port, MPIDI_CH3I_Sock_ifaddr_t *ifaddr,
 				     int *hasIfaddr )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -342,9 +342,9 @@ int MPIDU_Sock_get_conninfo_from_bc( const char *bc,
 #if !defined(HAVE_WINDOWS_H) && defined(HAVE_INET_PTON)
     char ifname[256];
 #endif
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SOCK_GET_CONNINFO_FROM_BC);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SOCK_GET_CONNINFO_FROM_BC);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SOCK_GET_CONNINFO_FROM_BC);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_SOCK_GET_CONNINFO_FROM_BC);
 
     str_errno = MPL_str_get_string_arg(bc, MPIDI_CH3I_HOST_DESCRIPTION_KEY,
 				 host_description, maxlen);
@@ -406,7 +406,7 @@ int MPIDU_Sock_get_conninfo_from_bc( const char *bc,
 #endif
     
  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_SOCK_GET_CONNINFO_FROM_BC);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_SOCK_GET_CONNINFO_FROM_BC);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -433,7 +433,7 @@ int MPIDI_CH3U_Get_business_card_sock(int myRank,
 {
     int mpi_errno = MPI_SUCCESS;
     int str_errno = MPL_STR_SUCCESS;
-    MPIDU_Sock_ifaddr_t ifaddr;
+    MPIDI_CH3I_Sock_ifaddr_t ifaddr;
     char ifnamestr[MAX_HOST_DESCRIPTION_LEN];
     char *bc_orig = *bc_val_p;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_GET_BUSINESS_CARD_SOCK);
@@ -462,7 +462,7 @@ int MPIDI_CH3U_Get_business_card_sock(int myRank,
     /* FIXME: We don't make use of the ifname in Windows in order to 
        provide backward compatibility with the (undocumented) host
        description string used by the socket connection routine 
-       MPIDU_Sock_post_connect.  We need to change to an interface-address
+       MPIDI_CH3I_Sock_post_connect.  We need to change to an interface-address
        (already resolved) based description for better scalability and
        to eliminate reliance on fragile DNS services. Note that this is
        also more scalable, since the DNS server may serialize address 
@@ -534,7 +534,7 @@ static int connection_post_send_pkt_and_pgid(MPIDI_CH3I_Connection_t * conn);
 static int connection_post_sendq_req(MPIDI_CH3I_Connection_t * conn);
 static void connection_destroy(MPIDI_CH3I_Connection_t * conn);
 
-/* This routine is called in response to an MPIDU_SOCK_OP_ACCEPT event 
+/* This routine is called in response to an MPIDI_CH3I_SOCK_OP_ACCEPT event
    in ch3_progress */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Sockconn_handle_accept_event
@@ -552,7 +552,7 @@ int MPIDI_CH3_Sockconn_handle_accept_event( void )
     if (mpi_errno != MPI_SUCCESS) {
 	MPIR_ERR_POP(mpi_errno);
     }
-    mpi_errno = MPIDU_Sock_accept(MPIDI_CH3I_listener_conn->sock, 
+    mpi_errno = MPIDI_CH3I_Sock_accept(MPIDI_CH3I_listener_conn->sock,
 				  MPIDI_CH3I_sock_set, conn, &conn->sock);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**ch3|sock|accept");
@@ -663,7 +663,7 @@ int MPIDI_CH3_Sockconn_handle_close_event( MPIDI_CH3I_Connection_t * conn )
 	    if (conn->vc != NULL) {
 		MPIDI_CH3I_VC *vcch = &conn->vc->ch;
 
-                conn->sock = MPIDU_SOCK_INVALID_SOCK;
+                conn->sock = MPIDI_CH3I_SOCK_INVALID_SOCK;
                 MPL_DBG_CONNSTATECHANGE(conn->vc,conn,CONN_STATE_CLOSED);
                 conn->state = CONN_STATE_CLOSED;
 
@@ -672,7 +672,7 @@ int MPIDI_CH3_Sockconn_handle_close_event( MPIDI_CH3I_Connection_t * conn )
                 if (vcch && vcch->conn == conn) {
                     MPL_DBG_VCCHSTATECHANGE(conn->vc,VC_STATE_UNCONNECTED);
                     vcch->state = MPIDI_CH3I_VC_STATE_UNCONNECTED;
-                    vcch->sock  = MPIDU_SOCK_INVALID_SOCK;
+                    vcch->sock  = MPIDI_CH3I_SOCK_INVALID_SOCK;
 
                     /* This step is important; without this, test
                        disconnect_reconnect fails because the vc->ch.conn 
@@ -694,7 +694,7 @@ int MPIDI_CH3_Sockconn_handle_close_event( MPIDI_CH3I_Connection_t * conn )
         /* post close, so the socket is closed and memmory leaks are avoided */
             MPL_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,"CLosing sock (Post_close)");
             conn->state = CONN_STATE_CLOSING;
-            mpi_errno = MPIDU_Sock_post_close(conn->sock);
+            mpi_errno = MPIDI_CH3I_Sock_post_close(conn->sock);
             if (mpi_errno != MPI_SUCCESS) {
                 MPIR_ERR_POP(mpi_errno);
 	    }
@@ -741,7 +741,7 @@ int MPIDI_CH3_Sockconn_handle_conn_event( MPIDI_CH3I_Connection_t * conn )
 	MPIR_Assert( conn->state == CONN_STATE_OPEN_LRECV_PKT);
 	MPL_DBG_CONNSTATECHANGE(conn->vc,conn,CONN_STATE_OPEN_LRECV_DATA);
 	conn->state = CONN_STATE_OPEN_LRECV_DATA;
-	mpi_errno = MPIDU_Sock_post_read(conn->sock, conn->pg_id, 
+	mpi_errno = MPIDI_CH3I_Sock_post_read(conn->sock, conn->pg_id,
 					 openpkt->pg_id_len, 
 					 openpkt->pg_id_len, NULL);   
 	if (mpi_errno != MPI_SUCCESS) {
@@ -848,7 +848,7 @@ int MPIDI_CH3_Sockconn_handle_conn_event( MPIDI_CH3I_Connection_t * conn )
                close command. This also caused that the socket is removed from the
                socket set, so no more polling on this socket*/
 	    MPL_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,"CLosing sock (Post_close)");
-	    mpi_errno = MPIDU_Sock_post_close(conn->sock);
+	    mpi_errno = MPIDI_CH3I_Sock_post_close(conn->sock);
 	    if (mpi_errno != MPI_SUCCESS) {
 		MPIR_ERR_POP(mpi_errno);
 	    }
@@ -1064,7 +1064,7 @@ int MPIDI_CH3_Sockconn_handle_connwrite( MPIDI_CH3I_Connection_t * conn )
             conn->vc = NULL;
 
 	    MPL_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,"Closing sock2 (Post_close)");
-	    mpi_errno = MPIDU_Sock_post_close(conn->sock);
+	    mpi_errno = MPIDI_CH3I_Sock_post_close(conn->sock);
 	    if (mpi_errno != MPI_SUCCESS) {
 		MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,
 				    "**sock_post_close");
@@ -1158,7 +1158,7 @@ int MPIDI_CH3I_VC_post_sockconnect(MPIDI_VC_t * vc)
 int MPIDI_CH3I_Sock_connect( MPIDI_VC_t *vc, const char val[], int vallen )
 {
     char host_description[MAX_HOST_DESCRIPTION_LEN];
-    MPIDU_Sock_ifaddr_t ifaddr;
+    MPIDI_CH3I_Sock_ifaddr_t ifaddr;
     int hasIfaddr = 0, port;
     MPIDI_CH3I_Connection_t * conn = 0;
     int mpi_errno = MPI_SUCCESS;
@@ -1188,7 +1188,7 @@ int MPIDI_CH3I_Sock_connect( MPIDI_VC_t *vc, const char val[], int vallen )
          goto fn_exit;
     }
 
-    mpi_errno = MPIDU_Sock_get_conninfo_from_bc( val, host_description,
+    mpi_errno = MPIDI_CH3I_Sock_get_conninfo_from_bc( val, host_description,
 						 sizeof(host_description),
 						 &port, &ifaddr, &hasIfaddr );
     if (mpi_errno) {
@@ -1205,14 +1205,14 @@ int MPIDI_CH3I_Sock_connect( MPIDI_VC_t *vc, const char val[], int vallen )
 	   address. */
 #ifndef HAVE_WINDOWS_H
 	if (hasIfaddr) {
-	    mpi_errno = MPIDU_Sock_post_connect_ifaddr(MPIDI_CH3I_sock_set, 
+	    mpi_errno = MPIDI_CH3I_Sock_post_connect_ifaddr(MPIDI_CH3I_sock_set,
 						       conn, &ifaddr, port, 
 						       &conn->sock);
 	}
 	else 
 #endif
 	{
-	    mpi_errno = MPIDU_Sock_post_connect(MPIDI_CH3I_sock_set, conn, 
+	    mpi_errno = MPIDI_CH3I_Sock_post_connect(MPIDI_CH3I_sock_set, conn,
 						host_description, port, 
 						&conn->sock);
 	}
@@ -1269,7 +1269,7 @@ static int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONNECTION_POST_RECV_PKT);
 
-    mpi_errno = MPIDU_Sock_post_read(conn->sock, &conn->pkt, sizeof(conn->pkt),
+    mpi_errno = MPIDI_CH3I_Sock_post_read(conn->sock, &conn->pkt, sizeof(conn->pkt),
 				     sizeof(conn->pkt), NULL);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIR_ERR_POP(mpi_errno);
@@ -1293,7 +1293,7 @@ static int connection_post_send_pkt(MPIDI_CH3I_Connection_t * conn)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONNECTION_POST_SEND_PKT);
  
     MPL_DBG_PKT(conn,&conn->pkt,"connect");
-    mpi_errno = MPIDU_Sock_post_write(conn->sock, &conn->pkt, sizeof(conn->pkt),
+    mpi_errno = MPIDI_CH3I_Sock_post_write(conn->sock, &conn->pkt, sizeof(conn->pkt),
 				      sizeof(conn->pkt), NULL);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIR_ERR_POP(mpi_errno);
@@ -1322,7 +1322,7 @@ static int connection_post_send_pkt_and_pgid(MPIDI_CH3I_Connection_t * conn)
     conn->iov[1].MPL_IOV_LEN = (int) strlen(MPIDI_Process.my_pg->id) + 1;
 
     MPL_DBG_PKT(conn,&conn->pkt,"connect-pgid");
-    mpi_errno = MPIDU_Sock_post_writev(conn->sock, conn->iov, 2, NULL);
+    mpi_errno = MPIDI_CH3I_Sock_post_writev(conn->sock, conn->iov, 2, NULL);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIR_ERR_POP(mpi_errno);
     }
@@ -1350,7 +1350,7 @@ static int connection_post_sendq_req(MPIDI_CH3I_Connection_t * conn)
     if (conn->send_active != NULL)
     {
 	MPL_DBG_MSG_P(MPIDI_CH3_DBG_CONNECT,TYPICAL,"conn=%p: Posting message from connection send queue", conn );
-	mpi_errno = MPIDU_Sock_post_writev(conn->sock, 
+	mpi_errno = MPIDI_CH3I_Sock_post_writev(conn->sock,
 					   conn->send_active->dev.iov, 
 					   conn->send_active->dev.iov_count, 
 					   NULL);

@@ -92,7 +92,7 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq,
 	       Eventually it should be changed to agressively write
                as much as possible.  Ideally, the code would be shared between 
 	       the send routines and the progress engine. */
-	    rc = MPIDU_Sock_writev(vcch->sock, iov, n_iov, &nb);
+	    rc = MPIDI_CH3I_Sock_writev(vcch->sock, iov, n_iov, &nb);
 	    if (rc == MPI_SUCCESS)
 	    {
 		int offset = 0;
@@ -116,7 +116,7 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq,
 			MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
     (MPL_DBG_FDEST,"posting writev, vc=0x%p, sreq=0x%08x", vc, sreq->handle));
 			vcch->conn->send_active = sreq;
-			mpi_errno = MPIDU_Sock_post_writev(vcch->conn->sock, 
+			mpi_errno = MPIDI_CH3I_Sock_post_writev(vcch->conn->sock,
 					   sreq->dev.iov + offset,
 					   sreq->dev.iov_count - offset, NULL);
 			/* --BEGIN ERROR HANDLING-- */
@@ -153,7 +153,7 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq,
 			    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
     (MPL_DBG_FDEST,"posting writev, vc=0x%p, sreq=0x%08x", vc, sreq->handle));
 			    vcch->conn->send_active = sreq;
-			    mpi_errno = MPIDU_Sock_post_writev(
+			    mpi_errno = MPIDI_CH3I_Sock_post_writev(
 				vcch->conn->sock, sreq->dev.iov, 
 				sreq->dev.iov_count, NULL);
 			    /* --BEGIN ERROR HANDLING-- */
@@ -169,16 +169,16 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq,
 		}
 	    }
 	    /* --BEGIN ERROR HANDLING-- */
-	    else if (MPIR_ERR_GET_CLASS(rc) == MPIDU_SOCK_ERR_NOMEM)
+	    else if (MPIR_ERR_GET_CLASS(rc) == MPIDI_CH3I_SOCK_ERR_NOMEM)
 	    {
 		MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,TYPICAL,
-			     "MPIDU_Sock_writev failed, out of memory");
+			     "MPIDI_CH3I_Sock_writev failed, out of memory");
 		sreq->status.MPI_ERROR = MPIR_ERR_MEMALLOCFAILED;
 	    }
 	    else
 	    {
 		MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL,TYPICAL,
-			       "MPIDU_Sock_writev failed, rc=%d", rc);
+			       "MPIDI_CH3I_Sock_writev failed, rc=%d", rc);
 		/* Connection just failed.  Mark the request complete and 
 		   return an error. */
 		MPL_DBG_VCCHSTATECHANGE(vc,VC_STATE_FAILED);

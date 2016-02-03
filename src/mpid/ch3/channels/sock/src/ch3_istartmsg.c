@@ -83,7 +83,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, intptr_t hdr_sz,
 	    /* MT: need some signalling to lock down our right to use the 
 	       channel, thus insuring that the progress engine does
                not also try to write */
-	    rc = MPIDU_Sock_write(vcch->sock, hdr, hdr_sz, &nb);
+	    rc = MPIDI_CH3I_Sock_write(vcch->sock, hdr, hdr_sz, &nb);
 	    if (rc == MPI_SUCCESS)
 	    {
 		MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
@@ -108,7 +108,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, intptr_t hdr_sz,
 		    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
      (MPL_DBG_FDEST,"posting write, vc=0x%p, sreq=0x%08x", vc, sreq->handle));
 		    vcch->conn->send_active = sreq;
-		    mpi_errno = MPIDU_Sock_post_write(vcch->conn->sock, sreq->dev.iov[0].MPL_IOV_BUF,
+		    mpi_errno = MPIDI_CH3I_Sock_post_write(vcch->conn->sock, sreq->dev.iov[0].MPL_IOV_BUF,
 						      sreq->dev.iov[0].MPL_IOV_LEN, sreq->dev.iov[0].MPL_IOV_LEN, NULL);
 		    /* --BEGIN ERROR HANDLING-- */
 		    if (mpi_errno != MPI_SUCCESS)
@@ -125,7 +125,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, intptr_t hdr_sz,
 	    else
 	    {
 		MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL,TYPICAL,
-			       "ERROR - MPIDU_Sock_write failed, rc=%d", rc);
+			       "ERROR - MPIDI_CH3I_Sock_write failed, rc=%d", rc);
 		sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
 		if (!sreq) {
 		    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");

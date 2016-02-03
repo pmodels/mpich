@@ -49,7 +49,7 @@ typedef struct MPIDI_CH3I_VC
     struct MPIR_Request * sendq_head;
     struct MPIR_Request * sendq_tail;
     MPIDI_CH3I_VC_state_t state;
-    struct MPIDU_Sock *sock;
+    struct MPIDI_CH3I_Sock *sock;
     struct MPIDI_CH3I_Connection * conn;
 }
 MPIDI_CH3I_VC;

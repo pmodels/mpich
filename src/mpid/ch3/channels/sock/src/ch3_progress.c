@@ -37,8 +37,8 @@ volatile unsigned int MPIDI_CH3I_progress_completion_count = 0;
 #endif
 
 
-MPIDU_Sock_set_t MPIDI_CH3I_sock_set = NULL; 
-static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event);
+MPIDI_CH3I_Sock_set_t MPIDI_CH3I_sock_set = NULL;
+static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event);
 
 static inline int connection_pop_sendq_req(MPIDI_CH3I_Connection_t * conn);
 static inline int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn);
@@ -61,7 +61,7 @@ static progress_hook_slot_t progress_hooks[MAX_PROGRESS_HOOKS];
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3i_Progress_test(void)
 {
-    MPIDU_Sock_event_t event;
+    MPIDI_CH3I_Sock_event_t event;
     int mpi_errno = MPI_SUCCESS;
     int made_progress;
     int i;
@@ -85,7 +85,7 @@ static int MPIDI_CH3i_Progress_test(void)
 	     * MT: Another thread is already blocking in poll.  Right now, 
 	     * calls to the progress routines are effectively
 	     * serialized by the device.  The only way another thread may 
-	     * enter this function is if MPIDU_Sock_wait() blocks.  If
+	     * enter this function is if MPIDI_CH3I_Sock_wait() blocks.  If
 	     * this changes, a flag other than MPIDI_CH3I_Progress_blocked 
 	     * may be required to determine if another thread is in
 	     * the progress engine.
@@ -104,7 +104,7 @@ static int MPIDI_CH3i_Progress_test(void)
         }
     }
 
-    mpi_errno = MPIDU_Sock_wait(MPIDI_CH3I_sock_set, 0, &event);
+    mpi_errno = MPIDI_CH3I_Sock_wait(MPIDI_CH3I_sock_set, 0, &event);
 
     if (mpi_errno == MPI_SUCCESS)
     {
@@ -114,7 +114,7 @@ static int MPIDI_CH3i_Progress_test(void)
 				"**ch3|sock|handle_sock_event");
 	}
     }
-    else if (MPIR_ERR_GET_CLASS(mpi_errno) == MPIDU_SOCK_ERR_TIMEOUT)
+    else if (MPIR_ERR_GET_CLASS(mpi_errno) == MPIDI_CH3I_SOCK_ERR_TIMEOUT)
     {
 	mpi_errno = MPI_SUCCESS;
 	goto fn_exit;
@@ -138,7 +138,7 @@ static int MPIDI_CH3i_Progress_test(void)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
 {
-    MPIDU_Sock_event_t event;
+    MPIDI_CH3I_Sock_event_t event;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_WAIT);
 
@@ -175,7 +175,7 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
 	     * MT: Another thread is already blocking in poll.  Right now, 
 	     * calls to MPIDI_CH3_Progress_wait() are effectively
 	     * serialized by the device.  The only way another thread may 
-	     * enter this function is if MPIDU_Sock_wait() blocks.  If
+	     * enter this function is if MPIDI_CH3I_Sock_wait() blocks.  If
 	     * this changes, a flag other than MPIDI_CH3I_Progress_blocked 
 	     * may be required to determine if another thread is in
 	     * the progress engine.
@@ -212,25 +212,25 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
 	   we write separate code for each possibility */
 	if (MPIR_ThreadInfo.isThreaded) {
 	    MPIDI_CH3I_progress_blocked = TRUE;
-	    mpi_errno = MPIDU_Sock_wait(MPIDI_CH3I_sock_set, 
-				    MPIDU_SOCK_INFINITE_TIME, &event);
+	    mpi_errno = MPIDI_CH3I_Sock_wait(MPIDI_CH3I_sock_set,
+				    MPIDI_CH3I_SOCK_INFINITE_TIME, &event);
 	    MPIDI_CH3I_progress_blocked = FALSE;
 	    MPIDI_CH3I_progress_wakeup_signalled = FALSE;
 	}
 	else {
-	    mpi_errno = MPIDU_Sock_wait(MPIDI_CH3I_sock_set, 
-				    MPIDU_SOCK_INFINITE_TIME, &event);
+	    mpi_errno = MPIDI_CH3I_Sock_wait(MPIDI_CH3I_sock_set,
+				    MPIDI_CH3I_SOCK_INFINITE_TIME, &event);
 	}
 
 #       else
-	mpi_errno = MPIDU_Sock_wait(MPIDI_CH3I_sock_set, 
-				    MPIDU_SOCK_INFINITE_TIME, &event);
+	mpi_errno = MPIDI_CH3I_Sock_wait(MPIDI_CH3I_sock_set,
+				    MPIDI_CH3I_SOCK_INFINITE_TIME, &event);
 #	endif
 
 	/* --BEGIN ERROR HANDLING-- */
 	if (mpi_errno != MPI_SUCCESS)
 	{
-	    MPIR_Assert(MPIR_ERR_GET_CLASS(mpi_errno) != MPIDU_SOCK_ERR_TIMEOUT);
+	    MPIR_Assert(MPIR_ERR_GET_CLASS(mpi_errno) != MPIDI_CH3I_SOCK_ERR_TIMEOUT);
 	    MPIR_ERR_SET(mpi_errno,MPI_ERR_OTHER,"**progress_sock_wait");
 	    goto fn_fail;
 	}
@@ -288,7 +288,7 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
     MPL_DBG_CONNSTATECHANGE(vc,vcch->conn,CONN_STATE_CLOSING);
     vcch->conn->state = CONN_STATE_CLOSING;
     MPL_DBG_MSG(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,"Closing sock (Post_close)");
-    mpi_errno = MPIDU_Sock_post_close(vcch->sock);
+    mpi_errno = MPIDI_CH3I_Sock_post_close(vcch->sock);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIR_ERR_POP(mpi_errno);
     }
@@ -324,13 +324,13 @@ int MPIDI_CH3I_Progress_init(void)
 #   endif
     MPIR_THREAD_CHECK_END;
 	
-    mpi_errno = MPIDU_Sock_init();
+    mpi_errno = MPIDI_CH3I_Sock_init();
     if (mpi_errno != MPI_SUCCESS) {
 	MPIR_ERR_POP(mpi_errno);
     }
     
     /* create sock set */
-    mpi_errno = MPIDU_Sock_create_set(&MPIDI_CH3I_sock_set);
+    mpi_errno = MPIDI_CH3I_Sock_create_set(&MPIDI_CH3I_sock_set);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIR_ERR_POP(mpi_errno);
     }
@@ -377,25 +377,25 @@ int MPIDI_CH3I_Progress_finalize(void)
     
 
     /* Close open connections */
-    MPIDU_Sock_close_open_sockets(MPIDI_CH3I_sock_set,(void**) &conn);
+    MPIDI_CH3I_Sock_close_open_sockets(MPIDI_CH3I_sock_set,(void**) &conn);
     while (conn != NULL) {
         conn->state = CONN_STATE_CLOSING;
         mpi_errno = MPIDI_CH3_Sockconn_handle_close_event(conn);
 	if (mpi_errno) { MPIR_ERR_POP(mpi_errno); }
-        MPIDU_Sock_close_open_sockets(MPIDI_CH3I_sock_set,(void**) &conn);
+        MPIDI_CH3I_Sock_close_open_sockets(MPIDI_CH3I_sock_set,(void**) &conn);
     }
 
 
 
     /*
      * MT: in a multi-threaded environment, finalize() should signal any 
-     * thread(s) blocking on MPIDU_Sock_wait() and wait for
+     * thread(s) blocking on MPIDI_CH3I_Sock_wait() and wait for
      * those * threads to complete before destroying the progress engine 
      * data structures.
      */
 
-    MPIDU_Sock_destroy_set(MPIDI_CH3I_sock_set);
-    MPIDU_Sock_finalize();
+    MPIDI_CH3I_Sock_destroy_set(MPIDI_CH3I_sock_set);
+    MPIDI_CH3I_Sock_finalize();
 
     MPIR_THREAD_CHECK_BEGIN;
     /* FIXME should be appropriately abstracted somehow */
@@ -425,7 +425,7 @@ int MPIDI_CH3I_Progress_finalize(void)
 void MPIDI_CH3I_Progress_wakeup(void)
 {
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,TYPICAL,"progress_wakeup called");
-    MPIDU_Sock_wakeup(MPIDI_CH3I_sock_set);
+    MPIDI_CH3I_Sock_wakeup(MPIDI_CH3I_sock_set);
 }
 #endif
 
@@ -443,7 +443,7 @@ int MPIDI_CH3_Get_business_card(int myRank, char *value, int length)
 #define FUNCNAME MPIDI_CH3I_Progress_handle_sock_event
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
+static int MPIDI_CH3I_Progress_handle_sock_event(MPIDI_CH3I_Sock_event_t * event)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_HANDLE_SOCK_EVENT);
@@ -454,7 +454,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 
     switch (event->op_type)
     {
-	case MPIDU_SOCK_OP_READ:
+	case MPIDI_CH3I_SOCK_OP_READ:
 	{
 	    MPIDI_CH3I_Connection_t * conn = 
 		(MPIDI_CH3I_Connection_t *) event->user_ptr;
@@ -474,7 +474,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 	    {
 		/* FIXME: the following should be handled by the close 
 		   protocol */
-		if (MPIR_ERR_GET_CLASS(event->error) != MPIDU_SOCK_ERR_CONN_CLOSED) {
+		if (MPIR_ERR_GET_CLASS(event->error) != MPIDI_CH3I_SOCK_ERR_CONN_CLOSED) {
 		    mpi_errno = event->error;
 		    MPIR_ERR_POP(mpi_errno);
 		}		    
@@ -564,7 +564,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 
 	/* END OF SOCK_OP_READ */
 
-	case MPIDU_SOCK_OP_WRITE:
+	case MPIDI_CH3I_SOCK_OP_WRITE:
 	{
 	    MPIDI_CH3I_Connection_t * conn = 
 		(MPIDI_CH3I_Connection_t *) event->user_ptr;
@@ -612,7 +612,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 				
 			iovp = sreq->dev.iov;
 			    
-			mpi_errno = MPIDU_Sock_writev(conn->sock, iovp, sreq->dev.iov_count, &nb);
+			mpi_errno = MPIDI_CH3I_Sock_writev(conn->sock, iovp, sreq->dev.iov_count, &nb);
 			/* --BEGIN ERROR HANDLING-- */
 			if (mpi_errno != MPI_SUCCESS)
 			{
@@ -656,7 +656,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 			    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
        (MPL_DBG_FDEST,"posting writev, vc=%p, conn=%p, sreq=0x%08x",
 	conn->vc, conn, sreq->handle));
-			    mpi_errno = MPIDU_Sock_post_writev(conn->sock, iovp, sreq->dev.iov_count, NULL);
+			    mpi_errno = MPIDI_CH3I_Sock_post_writev(conn->sock, iovp, sreq->dev.iov_count, NULL);
 			    /* --BEGIN ERROR HANDLING-- */
 			    if (mpi_errno != MPI_SUCCESS)
 			    {
@@ -682,14 +682,14 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 	}
 	/* END OF SOCK_OP_WRITE */
 
-	case MPIDU_SOCK_OP_ACCEPT:
+	case MPIDI_CH3I_SOCK_OP_ACCEPT:
 	{
 	    mpi_errno = MPIDI_CH3_Sockconn_handle_accept_event();
 	    if (mpi_errno) { MPIR_ERR_POP(mpi_errno); }
 	    break;
 	}
 	    
-	case MPIDU_SOCK_OP_CONNECT:
+	case MPIDI_CH3I_SOCK_OP_CONNECT:
 	{
 	    mpi_errno = MPIDI_CH3_Sockconn_handle_connect_event( 
 				(MPIDI_CH3I_Connection_t *) event->user_ptr,
@@ -698,7 +698,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 	    break;
 	}
 	    
-	case MPIDU_SOCK_OP_CLOSE:
+	case MPIDI_CH3I_SOCK_OP_CLOSE:
 	{
 	    mpi_errno = MPIDI_CH3_Sockconn_handle_close_event( 
 			      (MPIDI_CH3I_Connection_t *) event->user_ptr );
@@ -706,7 +706,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 	    break;
 	}
 
-	case MPIDU_SOCK_OP_WAKEUP:
+	case MPIDI_CH3I_SOCK_OP_WAKEUP:
 	{
 	    MPIDI_CH3_Progress_signal_completion();
 	    /* MPIDI_CH3I_progress_completion_count++; */
@@ -809,7 +809,7 @@ static inline int connection_pop_sendq_req(MPIDI_CH3I_Connection_t * conn)
     if (conn->send_active != NULL)
     {
 	MPL_DBG_MSG_P(MPIDI_CH3_DBG_CONNECT,TYPICAL,"conn=%p: Posting message from connection send queue", conn );
-	mpi_errno = MPIDU_Sock_post_writev(conn->sock, conn->send_active->dev.iov, conn->send_active->dev.iov_count, NULL);
+	mpi_errno = MPIDI_CH3I_Sock_post_writev(conn->sock, conn->send_active->dev.iov, conn->send_active->dev.iov_count, NULL);
 	if (mpi_errno != MPI_SUCCESS) {
 	    MPIR_ERR_POP(mpi_errno);
 	}
@@ -833,7 +833,7 @@ static inline int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONNECTION_POST_RECV_PKT);
 
-    mpi_errno = MPIDU_Sock_post_read(conn->sock, &conn->pkt, sizeof(conn->pkt), sizeof(conn->pkt), NULL);
+    mpi_errno = MPIDI_CH3I_Sock_post_read(conn->sock, &conn->pkt, sizeof(conn->pkt), sizeof(conn->pkt), NULL);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIR_ERR_SET(mpi_errno,MPI_ERR_OTHER, "**fail");
     }
@@ -887,7 +887,7 @@ static int ReadMoreData( MPIDI_CH3I_Connection_t * conn, MPIR_Request *rreq )
 	
 	iovp = rreq->dev.iov;
 			    
-	mpi_errno = MPIDU_Sock_readv(conn->sock, iovp, 
+	mpi_errno = MPIDI_CH3I_Sock_readv(conn->sock, iovp,
 				     rreq->dev.iov_count, &nb);
 	/* --BEGIN ERROR HANDLING-- */
 	if (mpi_errno != MPI_SUCCESS) {
@@ -935,7 +935,7 @@ static int ReadMoreData( MPIDI_CH3I_Connection_t * conn, MPIR_Request *rreq )
         (MPL_DBG_FDEST,"posting readv, vc=%p, rreq=0x%08x",
 	 conn->vc, rreq->handle));
 	    conn->recv_active = rreq;
-	    mpi_errno = MPIDU_Sock_post_readv(conn->sock, iovp, rreq->dev.iov_count, NULL);
+	    mpi_errno = MPIDI_CH3I_Sock_post_readv(conn->sock, iovp, rreq->dev.iov_count, NULL);
 	    /* --BEGIN ERROR HANDLING-- */
 	    if (mpi_errno != MPI_SUCCESS) {
 		mpi_errno = MPIR_Err_create_code(

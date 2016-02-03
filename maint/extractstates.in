@@ -57,8 +57,8 @@ require "$maintdir/extractstrings";
                     'MPID_STATE_READV'  => 'readv', 
                     'MPID_STATE_WRITEV' => 'writev', 
                     'MPID_STATE_MEMCPY' => 'memcpy',
-                    'MPID_STATE_MPIDU_SOCK_LISTEN',   # used in sock code
-                    'MPID_STATE_MPIDU_SOCK_ACCEPT',
+                    'MPID_STATE_MPIDI_CH3I_SOCK_LISTEN',   # used in sock code
+                    'MPID_STATE_MPIDI_CH3I_SOCK_ACCEPT',
                     'MPID_STATE_POLL'   => 'poll',
                     # MPICH internal implementation routines
                     'MPID_STATE_UPDATE_REQUEST' => 'update_request',
