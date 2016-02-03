@@ -214,15 +214,6 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
 
     HYD_pmcd_init_header(&hdr);
 
-    /* PMI-1 does not tell us how much to read. We read how much ever
-     * we can, parse out full PMI commands from it, and process
-     * them. When we don't have a full PMI command, we store the
-     * rest. */
-    status =
-        HYDU_sock_read(fd, pmi_storage + pmi_storage_len, HYD_TMPBUF_SIZE - pmi_storage_len,
-                       &linelen, &closed, HYDU_SOCK_COMM_NONE);
-    HYDU_ERR_POP(status, "unable to read PMI command\n");
-
     /* Try to find the PMI FD */
     for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
         if (HYD_pmcd_pmip.downstream.pmi_fd[i] == fd) {
@@ -230,6 +221,17 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
             break;
         }
     }
+
+ read_cmd:
+    /* PMI-1 does not tell us how much to read. We read how much ever
+     * we can, parse out full PMI commands from it, and process
+     * them. When we don't have a full PMI command, we go back and
+     * read from the same FD until we do. PMI clients (1 and 2) always
+     * send full commands, then wait for response. */
+    status =
+        HYDU_sock_read(fd, pmi_storage + pmi_storage_len, HYD_TMPBUF_SIZE - pmi_storage_len,
+                       &linelen, &closed, HYDU_SOCK_COMM_NONE);
+    HYDU_ERR_POP(status, "unable to read PMI command\n");
 
     if (closed) {
         /* If a PMI application terminates, we clean up the remaining
@@ -282,6 +284,14 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         pmi_storage[pmi_storage_len] = 0;
     }
 
+ check_cmd:
+    status = check_pmi_cmd(&buf, &hdr.pmi_version, &repeat);
+    HYDU_ERR_POP(status, "error checking the PMI command\n");
+
+    if (buf == NULL)
+        /* read more to get a full command. */
+        goto read_cmd;
+
     /* We were able to read the PMI command correctly. If we were able
      * to identify what PMI FD this is, activate it. If we were not
      * able to identify the PMI FD, we will activate it when we get
@@ -289,62 +299,57 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     if (pid != -1 && !HYD_pmcd_pmip.downstream.pmi_fd_active[pid])
         HYD_pmcd_pmip.downstream.pmi_fd_active[pid] = 1;
 
-    do {
-        status = check_pmi_cmd(&buf, &hdr.pmi_version, &repeat);
-        HYDU_ERR_POP(status, "error checking the PMI command\n");
+    if (hdr.pmi_version == 1)
+        HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v1;
+    else
+        HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v2;
 
-        if (buf == NULL)
-            break;
+    HYDU_MALLOC(args, char **, MAX_PMI_ARGS * sizeof(char *), status);
+    for(i = 0;i < MAX_PMI_ARGS; i++)
+        args[i]= NULL;
 
-        if (hdr.pmi_version == 1)
-            HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v1;
-        else
-            HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v2;
+    status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.pmi_version, &pmi_cmd, args);
+    HYDU_ERR_POP(status, "unable to parse PMI command\n");
 
-        HYDU_MALLOC(args, char **, MAX_PMI_ARGS * sizeof(char *), status);
-        for(i = 0;i < MAX_PMI_ARGS; i++)
-            args[i]= NULL;
+    if (HYD_pmcd_pmip.user_global.debug) {
+        HYDU_dump(stdout, "got pmi command (from %d): %s\n", fd, pmi_cmd);
+        HYDU_print_strlist(args);
+    }
 
-        status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.pmi_version, &pmi_cmd, args);
-        HYDU_ERR_POP(status, "unable to parse PMI command\n");
-
-        if (HYD_pmcd_pmip.user_global.debug) {
-            HYDU_dump(stdout, "got pmi command (from %d): %s\n", fd, pmi_cmd);
-            HYDU_print_strlist(args);
+    h = HYD_pmcd_pmip_pmi_handle;
+    while (h->handler) {
+        if (!strcmp(pmi_cmd, h->cmd)) {
+            status = h->handler(fd, args);
+            HYDU_ERR_POP(status, "PMI handler returned error\n");
+            goto fn_exit;
         }
+        h++;
+    }
 
-        h = HYD_pmcd_pmip_pmi_handle;
-        while (h->handler) {
-            if (!strcmp(pmi_cmd, h->cmd)) {
-                status = h->handler(fd, args);
-                HYDU_ERR_POP(status, "PMI handler returned error\n");
-                goto fn_exit;
-            }
-            h++;
-        }
+    if (HYD_pmcd_pmip.user_global.debug) {
+        HYDU_dump(stdout, "we don't understand this command %s; forwarding upstream\n",
+                  pmi_cmd);
+    }
 
-        if (HYD_pmcd_pmip.user_global.debug) {
-            HYDU_dump(stdout, "we don't understand this command %s; forwarding upstream\n",
-                      pmi_cmd);
-        }
+    /* We don't understand the command; forward it upstream */
+    hdr.cmd = PMI_CMD;
+    hdr.pid = fd;
+    hdr.buflen = strlen(buf);
+    status =
+        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
+                        HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
+    HYDU_ASSERT(!closed, status);
 
-        /* We don't understand the command; forward it upstream */
-        hdr.cmd = PMI_CMD;
-        hdr.pid = fd;
-        hdr.buflen = strlen(buf);
-        status =
-            HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
-                            HYDU_SOCK_COMM_MSGWAIT);
-        HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
-        HYDU_ASSERT(!closed, status);
+    status =
+        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen, &sent, &closed,
+                        HYDU_SOCK_COMM_MSGWAIT);
+    HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
+    HYDU_ASSERT(!closed, status);
 
-        status =
-            HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen, &sent, &closed,
-                            HYDU_SOCK_COMM_MSGWAIT);
-        HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
-        HYDU_ASSERT(!closed, status);
-
-    } while (repeat);
+    if (repeat)
+        /* there are more commands to process. */
+        goto check_cmd;
 
   fn_exit:
     if (pmi_cmd)
