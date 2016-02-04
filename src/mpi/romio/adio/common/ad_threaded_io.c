@@ -21,11 +21,11 @@ void *ADIOI_IO_Thread_Func(void *vptr_args) {
     if (args->io_kind == ADIOI_READ) {
 	ADIO_ReadContig(args->fd, args->buf, args->size, MPI_BYTE,
 		ADIO_EXPLICIT_OFFSET, args->offset,
-		&(args->status), &(args->error_code));
+		args->status, &(args->error_code));
     } else {
 	ADIO_WriteContig(args->fd, args->buf, args->size, MPI_BYTE,
 		ADIO_EXPLICIT_OFFSET, args->offset,
-		&(args->status), &(args->error_code));
+		args->status, &(args->error_code));
     }
     pthread_exit(&(args->error_code));
     return NULL;

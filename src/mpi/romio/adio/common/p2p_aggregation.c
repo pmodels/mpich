@@ -423,7 +423,7 @@ void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
 		io_thread_args.io_kind = ADIOI_WRITE;
 		io_thread_args.size = totalDataReceivedThisRound;
 		io_thread_args.offset = currentRoundFDStart;
-		io_thread_args.status = status;
+		io_thread_args.status = &status;
 		io_thread_args.error_code = *error_code;
 		if ( (pthread_create(&io_thread, NULL,
 				ADIOI_IO_Thread_Func, &(io_thread_args))) != 0)
@@ -722,7 +722,7 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
 		    io_thread_args.io_kind = ADIOI_READ;
 		    io_thread_args.size = amountDataToReadNextRound;
 		    io_thread_args.offset = nextRoundFDStart;
-		    io_thread_args.status = status;
+		    io_thread_args.status = &status;
 		    io_thread_args.error_code = *error_code;
 		    if ( (pthread_create(&io_thread, NULL,
 				    ADIOI_IO_Thread_Func, &(io_thread_args))) != 0)

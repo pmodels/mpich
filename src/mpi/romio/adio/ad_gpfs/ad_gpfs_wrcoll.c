@@ -918,7 +918,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 		io_thread_args.io_kind = ADIOI_WRITE;
 		io_thread_args.size = size;
 		io_thread_args.offset = off;
-		io_thread_args.status = status;
+		io_thread_args.status = &status;
 		io_thread_args.error_code = *error_code;
 		if ( (pthread_create(&io_thread, NULL,
 			ADIOI_IO_Thread_Func, &(io_thread_args))) != 0)

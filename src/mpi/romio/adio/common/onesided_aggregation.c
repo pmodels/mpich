@@ -1124,7 +1124,7 @@ printf("first barrier roundIter %d\n",roundIter);
         io_thread_args.io_kind = ADIOI_WRITE;
         io_thread_args.size = (currentRoundFDEnd-currentRoundFDStart) + 1;
         io_thread_args.offset = currentRoundFDStart;
-        io_thread_args.status = status;
+        io_thread_args.status = &status;
         io_thread_args.error_code = *error_code;
 
         if ( (pthread_create(&io_thread, NULL,
@@ -1898,7 +1898,7 @@ printf("iAmUsedAgg - currentRoundFDStart initialized "
             io_thread_args.io_kind = ADIOI_READ;
             io_thread_args.size = amountDataToReadNextRound;
             io_thread_args.offset = nextRoundFDStart;
-            io_thread_args.status = status;
+            io_thread_args.status = &status;
             io_thread_args.error_code = *error_code;
             if ( (pthread_create(&io_thread, NULL,
                     ADIOI_IO_Thread_Func, &(io_thread_args))) != 0)
