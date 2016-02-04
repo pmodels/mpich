@@ -1064,7 +1064,7 @@ typedef struct wcThreadFuncData {
     char *buf;
     int size;
     ADIO_Offset offset;
-    ADIO_Status status;
+    ADIO_Status *status;
     int error_code;
 } ADIOI_IO_ThreadFuncData;
 
