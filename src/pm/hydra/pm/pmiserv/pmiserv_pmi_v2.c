@@ -93,7 +93,7 @@ static HYD_status poke_progress(char *key)
 
             /* Free the dequeued request */
             HYDU_free_strlist(req->args);
-            HYDU_FREE(req);
+            MPL_free(req);
         }
     }
 
@@ -170,7 +170,7 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
 
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
   fn_exit:
     HYD_pmcd_pmi_free_tokens(tokens, token_count);
@@ -232,7 +232,7 @@ static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[])
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
     for (req = pending_reqs; req; req = req->next) {
         if (!strcmp(req->key, key)) {
@@ -334,7 +334,7 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
   fn_exit:
     HYD_pmcd_pmi_free_tokens(tokens, token_count);
@@ -398,7 +398,7 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
     fence_count++;
     if (fence_count % proxy->pg->pg_process_count == 0) {
@@ -491,7 +491,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR, "unable to find token: ncmds\n");
     ncmds = atoi(val);
 
-    HYDU_MALLOC(segment_list, struct HYD_pmcd_token_segment *,
+    HYDU_MALLOC_OR_JUMP(segment_list, struct HYD_pmcd_token_segment *,
                 (ncmds + 1) * sizeof(struct HYD_pmcd_token_segment), status);
     segment_tokens(tokens, token_count, segment_list, &num_segments);
     HYDU_ASSERT((ncmds + 1) == num_segments, status);
@@ -702,7 +702,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
     status = HYD_pmcd_pmi_fill_in_proxy_args(&proxy_stash, control_port, new_pgid);
     HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
-    HYDU_FREE(control_port);
+    MPL_free(control_port);
 
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
@@ -730,14 +730,14 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
         status = cmd_response(fd, pid, cmd);
         HYDU_ERR_POP(status, "send command failed\n");
-        HYDU_FREE(cmd);
+        MPL_free(cmd);
     }
 
   fn_exit:
     HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYD_STRING_STASH_FREE(proxy_stash);
     if (segment_list)
-        HYDU_FREE(segment_list);
+        MPL_free(segment_list);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -790,15 +790,15 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
   fn_exit:
     if (tokens)
         HYD_pmcd_pmi_free_tokens(tokens, token_count);
     if (name)
-        HYDU_FREE(name);
+        MPL_free(name);
     if (port)
-        HYDU_FREE(port);
+        MPL_free(port);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -846,7 +846,7 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
   fn_exit:
     if (tokens)
@@ -899,7 +899,7 @@ static HYD_status fn_name_lookup(int fd, int pid, int pgid, char *args[])
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
   fn_exit:
     if (tokens)

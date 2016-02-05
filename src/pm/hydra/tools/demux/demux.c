@@ -106,9 +106,9 @@ HYD_status HYDT_dmx_register_fd(int num_fds, int *fd, HYD_event_t events, void *
     }
 #endif /* HAVE_ERROR_CHECKING */
 
-    HYDU_MALLOC(cb_element, struct HYDT_dmxu_callback *, sizeof(struct HYDT_dmxu_callback), status);
+    HYDU_MALLOC_OR_JUMP(cb_element, struct HYDT_dmxu_callback *, sizeof(struct HYDT_dmxu_callback), status);
     cb_element->num_fds = num_fds;
-    HYDU_MALLOC(cb_element->fd, int *, num_fds * sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(cb_element->fd, int *, num_fds * sizeof(int), status);
     memcpy(cb_element->fd, fd, num_fds * sizeof(int));
     cb_element->events = events;
     cb_element->userp = userp;
@@ -206,8 +206,8 @@ HYD_status HYDT_dmx_finalize(void)
     while (run1) {
         run2 = run1->next;
         if (run1->fd)
-            HYDU_FREE(run1->fd);
-        HYDU_FREE(run1);
+            MPL_free(run1->fd);
+        MPL_free(run1);
         run1 = run2;
     }
     HYDT_dmxu_cb_list = NULL;

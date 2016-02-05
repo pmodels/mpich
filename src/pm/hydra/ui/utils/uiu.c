@@ -56,19 +56,19 @@ void HYD_uiu_free_params(void)
     HYDU_finalize_user_global(&HYD_server_info.user_global);
 
     if (HYD_server_info.base_path)
-        HYDU_FREE(HYD_server_info.base_path);
+        MPL_free(HYD_server_info.base_path);
 
     if (HYD_server_info.port_range)
-        HYDU_FREE(HYD_server_info.port_range);
+        MPL_free(HYD_server_info.port_range);
 
     if (HYD_server_info.iface_ip_env_name)
-        HYDU_FREE(HYD_server_info.iface_ip_env_name);
+        MPL_free(HYD_server_info.iface_ip_env_name);
 
     if (HYD_server_info.nameserver)
-        HYDU_FREE(HYD_server_info.nameserver);
+        MPL_free(HYD_server_info.nameserver);
 
     if (HYD_server_info.localhost)
-        HYDU_FREE(HYD_server_info.localhost);
+        MPL_free(HYD_server_info.localhost);
 
     if (HYD_server_info.node_list)
         HYDU_free_node_list(HYD_server_info.node_list);
@@ -80,18 +80,18 @@ void HYD_uiu_free_params(void)
         HYDU_free_pg_list(HYD_server_info.pg_list.next);
 
     if (HYD_ui_info.prepend_pattern)
-        HYDU_FREE(HYD_ui_info.prepend_pattern);
+        MPL_free(HYD_ui_info.prepend_pattern);
 
     if (HYD_ui_info.outfile_pattern)
-        HYDU_FREE(HYD_ui_info.outfile_pattern);
+        MPL_free(HYD_ui_info.outfile_pattern);
 
     if (HYD_ui_info.errfile_pattern)
-        HYDU_FREE(HYD_ui_info.errfile_pattern);
+        MPL_free(HYD_ui_info.errfile_pattern);
 
     for (run = stdoe_fd_list; run;) {
         close(run->fd);
         tmp = run->next;
-        HYDU_FREE(run);
+        MPL_free(run);
         run = tmp;
     }
 
@@ -180,7 +180,7 @@ static HYD_status resolve_pattern_string(const char *pattern, char **str, int pg
     tpos = 0;
     pos = 0;
     i = 0;
-    HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
+    HYDU_MALLOC_OR_JUMP(tmp[i], char *, HYD_TMP_STRLEN, status);
     tmp[i][0] = '\0';
 
     while (1) {
@@ -202,7 +202,7 @@ static HYD_status resolve_pattern_string(const char *pattern, char **str, int pg
             tmp[i][tpos] = '\0';
             ++i;
             tpos = 0;
-            HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
+            HYDU_MALLOC_OR_JUMP(tmp[i], char *, HYD_TMP_STRLEN, status);
             tmp[i][0] = '\0';
 
             switch (pattern[pos]) {
@@ -240,7 +240,7 @@ static HYD_status resolve_pattern_string(const char *pattern, char **str, int pg
 
             ++i;
             tpos = 0;
-            HYDU_MALLOC(tmp[i], char *, HYD_TMP_STRLEN, status);
+            HYDU_MALLOC_OR_JUMP(tmp[i], char *, HYD_TMP_STRLEN, status);
             tmp[i][0] = '\0';
         }
     }
@@ -283,10 +283,10 @@ static HYD_status stdoe_cb(int _fd, int pgid, int proxy_id, int rank, void *_buf
 
         if (run) {
             fd = run->fd;
-            HYDU_FREE(pattern_resolve);
+            MPL_free(pattern_resolve);
         }
         else {
-            HYDU_MALLOC(tmp, struct stdoe_fd *, sizeof(struct stdoe_fd), status);
+            HYDU_MALLOC_OR_JUMP(tmp, struct stdoe_fd *, sizeof(struct stdoe_fd), status);
             tmp->pattern = pattern_resolve;
             tmp->fd = open(tmp->pattern, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
             HYDU_ASSERT(tmp->fd >= 0, status);
@@ -330,7 +330,7 @@ static HYD_status stdoe_cb(int _fd, int pgid, int proxy_id, int rank, void *_buf
             }
         }
 
-        HYDU_FREE(prepend);
+        MPL_free(prepend);
     }
 
   fn_exit:

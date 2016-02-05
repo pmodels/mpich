@@ -37,7 +37,7 @@ static HYD_status proxy_list_to_node_str(struct HYD_proxy *proxy_list, char **no
 
             i = 0;
             tmp[i++] = MPL_strdup(foo);
-            HYDU_FREE(foo);
+            MPL_free(foo);
         }
     }
 
@@ -51,7 +51,7 @@ static HYD_status proxy_list_to_node_str(struct HYD_proxy *proxy_list, char **no
   fn_exit:
     HYDU_free_strlist(tmp);
     if (foo)
-        HYDU_FREE(foo);
+        MPL_free(foo);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -124,17 +124,17 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_lis
         targs[idx++] = MPL_strdup(args[i]);
 
     /* Increase pid list to accommodate the new pid */
-    HYDU_MALLOC(pid, int *, (HYD_bscu_pid_count + 1) * sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(pid, int *, (HYD_bscu_pid_count + 1) * sizeof(int), status);
     for (i = 0; i < HYD_bscu_pid_count; i++)
         pid[i] = HYD_bscu_pid_list[i];
-    HYDU_FREE(HYD_bscu_pid_list);
+    MPL_free(HYD_bscu_pid_list);
     HYD_bscu_pid_list = pid;
 
     /* Increase fd list to accommodate these new fds */
-    HYDU_MALLOC(fd_list, int *, (HYD_bscu_fd_count + 3) * sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(fd_list, int *, (HYD_bscu_fd_count + 3) * sizeof(int), status);
     for (i = 0; i < HYD_bscu_fd_count; i++)
         fd_list[i] = HYD_bscu_fd_list[i];
-    HYDU_FREE(HYD_bscu_fd_list);
+    MPL_free(HYD_bscu_fd_list);
     HYD_bscu_fd_list = fd_list;
 
     /* append proxy ID as -1 */
@@ -163,10 +163,10 @@ HYD_status HYDT_bscd_slurm_launch_procs(char **args, struct HYD_proxy *proxy_lis
 
   fn_exit:
     if (node_list_str)
-        HYDU_FREE(node_list_str);
+        MPL_free(node_list_str);
     HYDU_free_strlist(targs);
     if (path)
-        HYDU_FREE(path);
+        MPL_free(path);
     HYDU_FUNC_EXIT();
     return status;
 

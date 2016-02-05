@@ -329,7 +329,7 @@ static HYD_status alloc_fwd_hash(struct fwd_hash **fwd_hash, int in, int out)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(*fwd_hash, struct fwd_hash *, sizeof(struct fwd_hash), status);
+    HYDU_MALLOC_OR_JUMP(*fwd_hash, struct fwd_hash *, sizeof(struct fwd_hash), status);
     (*fwd_hash)->in = in;
     (*fwd_hash)->out = out;
 
@@ -446,7 +446,7 @@ void HYDU_sock_finalize(void)
 
     for (fwd_hash = fwd_hash_list; fwd_hash;) {
         tmp = fwd_hash->next;
-        HYDU_FREE(fwd_hash);
+        MPL_free(fwd_hash);
         fwd_hash = tmp;
     }
 }
@@ -607,7 +607,7 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
                 goto fn_exit;
             }
 
-            HYDU_FREE(lhost_ip);
+            MPL_free(lhost_ip);
             lhost_ip = NULL;
         }
     }
@@ -616,9 +616,9 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
 
   fn_exit:
     if (host_ip)
-        HYDU_FREE(host_ip);
+        MPL_free(host_ip);
     if (lhost_ip)
-        HYDU_FREE(lhost_ip);
+        MPL_free(lhost_ip);
     return status;
 
   fn_fail:
@@ -686,13 +686,13 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_rang
     }
 
     sport = HYDU_int_to_str(port);
-    HYDU_MALLOC(*port_str, char *, strlen(ip) + 1 + strlen(sport) + 1, status);
+    HYDU_MALLOC_OR_JUMP(*port_str, char *, strlen(ip) + 1 + strlen(sport) + 1, status);
     MPL_snprintf(*port_str, strlen(ip) + 1 + strlen(sport) + 1, "%s:%s", ip, sport);
-    HYDU_FREE(sport);
+    MPL_free(sport);
 
   fn_exit:
     if (ip)
-        HYDU_FREE(ip);
+        MPL_free(ip);
     return status;
 
   fn_fail:

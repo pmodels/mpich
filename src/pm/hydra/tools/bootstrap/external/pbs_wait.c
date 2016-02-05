@@ -18,8 +18,8 @@ HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(taskobits, int *, HYDT_bscd_pbs_sys->spawn_count * sizeof(int), status);
-    HYDU_MALLOC(obit_events, tm_event_t *, HYDT_bscd_pbs_sys->spawn_count * sizeof(tm_event_t),
+    HYDU_MALLOC_OR_JUMP(taskobits, int *, HYDT_bscd_pbs_sys->spawn_count * sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(obit_events, tm_event_t *, HYDT_bscd_pbs_sys->spawn_count * sizeof(tm_event_t),
                 status);
 
     for (idx = 0; idx < HYDT_bscd_pbs_sys->spawn_count; idx++)

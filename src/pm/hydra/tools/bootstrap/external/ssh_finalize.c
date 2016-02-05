@@ -16,9 +16,9 @@ HYD_status HYDT_bscd_ssh_launcher_finalize(void)
     HYDU_FUNC_ENTER();
 
     for (e = HYDT_bscd_ssh_time; e;) {
-        HYDU_FREE(e->hostname);
+        MPL_free(e->hostname);
         tmp = e->next;
-        HYDU_FREE(e);
+        MPL_free(e);
         e = tmp;
     }
 

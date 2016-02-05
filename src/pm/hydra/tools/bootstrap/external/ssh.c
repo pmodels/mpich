@@ -18,8 +18,8 @@ static HYD_status create_element(char *hostname, struct HYDT_bscd_ssh_time **e)
     HYD_status status = HYD_SUCCESS;
 
     /* FIXME: These are never getting freed */
-    HYDU_MALLOC((*e), struct HYDT_bscd_ssh_time *, sizeof(struct HYDT_bscd_ssh_time), status);
-    HYDU_MALLOC((*e)->init_time, struct timeval *,
+    HYDU_MALLOC_OR_JUMP((*e), struct HYDT_bscd_ssh_time *, sizeof(struct HYDT_bscd_ssh_time), status);
+    HYDU_MALLOC_OR_JUMP((*e)->init_time, struct timeval *,
                 HYDT_bscd_ssh_limit_time * sizeof(struct timeval), status);
 
     (*e)->hostname = MPL_strdup(hostname);

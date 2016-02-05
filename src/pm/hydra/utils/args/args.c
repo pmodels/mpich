@@ -86,7 +86,7 @@ HYD_status HYDU_find_in_path(const char *execname, char **path)
                 goto fn_exit;   /* We are done */
             }
 
-            HYDU_FREE(path_loc);
+            MPL_free(path_loc);
             path_loc = NULL;
 
             status = get_abs_wd(strtok(NULL, ";:"), &test_loc);
@@ -100,9 +100,9 @@ HYD_status HYDU_find_in_path(const char *execname, char **path)
 
   fn_exit:
     if (user_path)
-        HYDU_FREE(user_path);
+        MPL_free(user_path);
     if (path_loc)
-        HYDU_FREE(path_loc);
+        MPL_free(path_loc);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -228,7 +228,7 @@ char *HYDU_getcwd(void)
 
     if (MPL_env2str("PWD", &pwdval) == 0)
         pwdval = NULL;
-    HYDU_MALLOC(cwdval, char *, HYDRA_MAX_PATH, status);
+    HYDU_MALLOC_OR_JUMP(cwdval, char *, HYDRA_MAX_PATH, status);
     if (getcwd(cwdval, HYDRA_MAX_PATH) == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "allocated space is too small for absolute path\n");
@@ -344,7 +344,7 @@ HYD_status HYDU_parse_hostfile(const char *hostfile, struct HYD_node **node_list
         }
 
         HYDU_free_strlist(tokens);
-        HYDU_FREE(tokens);
+        MPL_free(tokens);
     }
 
     fclose(fp);
@@ -380,7 +380,7 @@ char *HYDU_find_full_path(const char *execname)
   fn_exit:
     HYDU_free_strlist(tmp);
     if (test_path)
-        HYDU_FREE(test_path);
+        MPL_free(test_path);
     HYDU_FUNC_EXIT();
     return path;
 

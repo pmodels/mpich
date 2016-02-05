@@ -49,7 +49,7 @@ static HYD_status control_port_fn(char *arg, char ***argv)
 
   fn_exit:
     if (port)
-        HYDU_FREE(port);
+        MPL_free(port);
     return status;
 
   fn_fail:
@@ -183,7 +183,7 @@ static HYD_status pmi_spawner_kvsname_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    HYDU_MALLOC(HYD_pmcd_pmip.local.spawner_kvsname, char *, PMI_MAXKVSLEN, status);
+    HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.local.spawner_kvsname, char *, PMI_MAXKVSLEN, status);
 
     MPL_snprintf(HYD_pmcd_pmip.local.spawner_kvsname, PMI_MAXKVSLEN, "%s", **argv);
     (*argv)++;
@@ -287,7 +287,7 @@ static HYD_status parse_ckpoint_prefix(char *pathlist)
     /* Add one more to the prefix list for a NULL ending string */
     prefixes++;
 
-    HYDU_MALLOC(HYD_pmcd_pmip.local.ckpoint_prefix_list, char **, prefixes * sizeof(char *),
+    HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.local.ckpoint_prefix_list, char **, prefixes * sizeof(char *),
                 status);
 
     dummy = strtok(pathlist, ":");
@@ -390,7 +390,7 @@ static HYD_status global_core_map_fn(char *arg, char ***argv)
     HYDU_ASSERT(tmp, status);
     HYD_pmcd_pmip.system_global.global_core_map.global_count = atoi(tmp);
 
-    HYDU_FREE(map);
+    MPL_free(map);
 
     (*argv)++;
 
@@ -419,7 +419,7 @@ static HYD_status pmi_id_map_fn(char *arg, char ***argv)
     HYDU_ASSERT(tmp, status);
     HYD_pmcd_pmip.system_global.pmi_id_map.non_filler_start = atoi(tmp);
 
-    HYDU_FREE(map);
+    MPL_free(map);
 
     (*argv)++;
 

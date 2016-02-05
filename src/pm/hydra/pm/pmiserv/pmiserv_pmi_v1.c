@@ -69,7 +69,7 @@ static HYD_status bcast_keyvals(int fd, int pid)
     /* Each keyval has the following four items: 'key' '=' 'val'
      * '<space>'.  Two additional items for the command at the start
      * and the NULL at the end. */
-    HYDU_MALLOC(tmp, char **, (4 * keyval_count + 3) * sizeof(char *), status);
+    HYDU_MALLOC_OR_JUMP(tmp, char **, (4 * keyval_count + 3) * sizeof(char *), status);
 
     /* send all available keyvals downstream */
     if (keyval_count) {
@@ -99,7 +99,7 @@ static HYD_status bcast_keyvals(int fd, int pid)
                     status = cmd_response(tproxy->control_fd, pid, cmd);
                     HYDU_ERR_POP(status, "error writing PMI line\n");
                 }
-                HYDU_FREE(cmd);
+                MPL_free(cmd);
 
                 i = 0;
                 tmp[i++] = MPL_strdup("cmd=keyval_cache ");
@@ -118,14 +118,14 @@ static HYD_status bcast_keyvals(int fd, int pid)
                 status = cmd_response(tproxy->control_fd, pid, cmd);
                 HYDU_ERR_POP(status, "error writing PMI line\n");
             }
-            HYDU_FREE(cmd);
+            MPL_free(cmd);
         }
         HYDU_free_strlist(tmp);
     }
 
   fn_exit:
     if (tmp)
-        HYDU_FREE(tmp);
+        MPL_free(tmp);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -268,7 +268,7 @@ static HYD_status fn_get(int fd, int pid, int pgid, char *args[])
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "error writing PMI line\n");
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
   fn_exit:
     HYD_pmcd_pmi_free_tokens(tokens, token_count);
@@ -365,7 +365,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
                         "unable to find token: totspawns\n");
     total_spawns = atoi(val);
 
-    HYDU_MALLOC(segment_list, struct HYD_pmcd_token_segment *,
+    HYDU_MALLOC_OR_JUMP(segment_list, struct HYD_pmcd_token_segment *,
                 total_spawns * sizeof(struct HYD_pmcd_token_segment), status);
 
     segment_tokens(tokens, token_count, segment_list, &num_segments);
@@ -587,7 +587,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
     status = HYD_pmcd_pmi_fill_in_proxy_args(&proxy_stash, control_port, new_pgid);
     HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
-    HYDU_FREE(control_port);
+    MPL_free(control_port);
 
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
@@ -606,7 +606,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
         status = cmd_response(fd, pid, cmd);
         HYDU_ERR_POP(status, "error writing PMI line\n");
-        HYDU_FREE(cmd);
+        MPL_free(cmd);
     }
 
     /* Cache the pre-initialized keyvals on the new proxies */
@@ -617,7 +617,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYD_STRING_STASH_FREE(proxy_stash);
     if (segment_list)
-        HYDU_FREE(segment_list);
+        MPL_free(segment_list);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -664,15 +664,15 @@ static HYD_status fn_publish_name(int fd, int pid, int pgid, char *args[])
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
   fn_exit:
     if (tokens)
         HYD_pmcd_pmi_free_tokens(tokens, token_count);
     if (name)
-        HYDU_FREE(name);
+        MPL_free(name);
     if (port)
-        HYDU_FREE(port);
+        MPL_free(port);
 
     HYDU_FUNC_EXIT();
     return status;
@@ -714,7 +714,7 @@ static HYD_status fn_unpublish_name(int fd, int pid, int pgid, char *args[])
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
   fn_exit:
     if (tokens)
@@ -760,13 +760,13 @@ static HYD_status fn_lookup_name(int fd, int pid, int pgid, char *args[])
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
   fn_exit:
     if (tokens)
         HYD_pmcd_pmi_free_tokens(tokens, token_count);
     if (value)
-        HYDU_FREE(value);
+        MPL_free(value);
     HYDU_FUNC_EXIT();
     return status;
 

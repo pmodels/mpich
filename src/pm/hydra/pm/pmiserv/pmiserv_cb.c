@@ -30,7 +30,7 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_v
     if (HYD_server_info.user_global.debug)
         HYDU_dump(stdout, "[pgid: %d] got PMI command: %s\n", pgid, buf);
 
-    HYDU_MALLOC(args, char **, MAX_PMI_ARGS * sizeof(char *), status);
+    HYDU_MALLOC_OR_JUMP(args, char **, MAX_PMI_ARGS * sizeof(char *), status);
     for (i = 0; i < MAX_PMI_ARGS; i++)
         args[i] = NULL;
 
@@ -59,7 +59,7 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_v
 
   fn_exit:
     if (cmd)
-        HYDU_FREE(cmd);
+        MPL_free(cmd);
     if (args) {
         HYDU_free_strlist(args);
         MPL_free(args);
@@ -209,7 +209,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
     }
 
     if (hdr.cmd == PID_LIST) {  /* Got PIDs */
-        HYDU_MALLOC(proxy->pid, int *, proxy->proxy_process_count * sizeof(int), status);
+        HYDU_MALLOC_OR_JUMP(proxy->pid, int *, proxy->proxy_process_count * sizeof(int), status);
         status = HYDU_sock_read(fd, (void *) proxy->pid,
                                 proxy->proxy_process_count * sizeof(int),
                                 &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
@@ -232,7 +232,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "debugger setup failed\n");
     }
     else if (hdr.cmd == EXIT_STATUS) {
-        HYDU_MALLOC(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int), status);
+        HYDU_MALLOC_OR_JUMP(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int), status);
         status =
             HYDU_sock_read(fd, (void *) proxy->exit_status,
                            proxy->proxy_process_count * sizeof(int), &count, &closed,
@@ -275,7 +275,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         }
     }
     else if (hdr.cmd == PMI_CMD) {
-        HYDU_MALLOC(buf, char *, hdr.buflen + 1, status);
+        HYDU_MALLOC_OR_JUMP(buf, char *, hdr.buflen + 1, status);
 
         status = HYDU_sock_read(fd, buf, hdr.buflen, &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to read PMI command from proxy\n");
@@ -286,10 +286,10 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         status = handle_pmi_cmd(fd, proxy->pg->pgid, hdr.pid, buf, hdr.pmi_version);
         HYDU_ERR_POP(status, "unable to process PMI command\n");
 
-        HYDU_FREE(buf);
+        MPL_free(buf);
     }
     else if (hdr.cmd == STDOUT || hdr.cmd == STDERR) {
-        HYDU_MALLOC(buf, char *, hdr.buflen, status);
+        HYDU_MALLOC_OR_JUMP(buf, char *, hdr.buflen, status);
 
         status = HYDU_sock_read(fd, buf, hdr.buflen, &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to read PMI command from proxy\n");
@@ -301,10 +301,10 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
             status = HYD_server_info.stderr_cb(hdr.pgid, hdr.proxy_id, hdr.rank, buf, hdr.buflen);
         HYDU_ERR_POP(status, "error in the UI defined callback\n");
 
-        HYDU_FREE(buf);
+        MPL_free(buf);
     }
     else if (hdr.cmd == STDIN) {
-        HYDU_MALLOC(buf, char *, HYD_TMPBUF_SIZE, status);
+        HYDU_MALLOC_OR_JUMP(buf, char *, HYD_TMPBUF_SIZE, status);
         HYDU_ERR_POP(status, "unable to allocate memory\n");
 
         HYDU_sock_read(STDIN_FILENO, buf, HYD_TMPBUF_SIZE, &count, &closed, HYDU_SOCK_COMM_NONE);
@@ -323,7 +323,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
             HYDU_ERR_POP(status, "error writing to control socket\n");
             HYDU_ASSERT(!closed, status);
 
-            HYDU_FREE(buf);
+            MPL_free(buf);
         }
         else {
             status = HYDT_dmx_deregister_fd(STDIN_FILENO);
@@ -338,8 +338,8 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
             if (pg_scratch->dead_process_count == 1) {
                 /* This is the first dead process */
-                HYDU_FREE(pg_scratch->dead_processes);
-                HYDU_MALLOC(pg_scratch->dead_processes, char *, PMI_MAXVALLEN, status);
+                MPL_free(pg_scratch->dead_processes);
+                HYDU_MALLOC_OR_JUMP(pg_scratch->dead_processes, char *, PMI_MAXVALLEN, status);
                 MPL_snprintf(pg_scratch->dead_processes, PMI_MAXVALLEN, "%d", hdr.pid);
             }
             else {
@@ -373,7 +373,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
                 /* Add this process to the end of the list */
                 if (!included) {
-                    HYDU_MALLOC(str, char *, PMI_MAXVALLEN, status);
+                    HYDU_MALLOC_OR_JUMP(str, char *, PMI_MAXVALLEN, status);
 
                     MPL_snprintf(str, PMI_MAXVALLEN, "%s,%d", pg_scratch->dead_processes, hdr.pid);
                 } else {

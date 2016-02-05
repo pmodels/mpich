@@ -74,7 +74,7 @@ HYD_status HYDT_bscd_persist_launch_procs(char **args, struct HYD_proxy *proxy_l
     for (idx = 0; args[idx]; idx++);
     args[idx + 1] = NULL;
 
-    HYDU_MALLOC(HYDT_bscd_persist_control_fd, int *,
+    HYDU_MALLOC_OR_JUMP(HYDT_bscd_persist_control_fd, int *,
                 HYDT_bscd_persist_node_count * sizeof(int), status);
 
     for (proxy = proxy_list, i = 0; proxy; proxy = proxy->next, i++) {
