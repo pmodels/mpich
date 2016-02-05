@@ -47,6 +47,7 @@ struct ADIOI_Hints_struct {
     int ind_rd_buffer_size;
     int ind_wr_buffer_size;
     int deferred_open;
+    int start_iodevice;
     int min_fdomain_size;
     char *cb_config_list;
     int *ranklist;
@@ -65,7 +66,6 @@ struct ADIOI_Hints_struct {
 		    int dtype_write;
 	    } pvfs2;
             struct {
-                    int start_iodevice;
                     int co_ratio;
                     int coll_threshold;
                     int ds_in_coll;
