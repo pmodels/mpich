@@ -41,8 +41,8 @@ static HYD_status control_port_fn(char *arg, char ***argv)
     HYDU_ERR_CHKANDJUMP(status, HYD_pmcd_pmip.upstream.server_name, HYD_INTERNAL_ERROR,
                         "duplicate control port setting\n");
 
-    port = HYDU_strdup(**argv);
-    HYD_pmcd_pmip.upstream.server_name = HYDU_strdup(strtok(port, ":"));
+    port = MPL_strdup(**argv);
+    HYD_pmcd_pmip.upstream.server_name = MPL_strdup(strtok(port, ":"));
     HYD_pmcd_pmip.upstream.server_port = atoi(strtok(NULL, ":"));
 
     (*argv)++;
@@ -293,7 +293,7 @@ static HYD_status parse_ckpoint_prefix(char *pathlist)
     dummy = strtok(pathlist, ":");
     i = 0;
     while (dummy) {
-        HYD_pmcd_pmip.local.ckpoint_prefix_list[i] = HYDU_strdup(dummy);
+        HYD_pmcd_pmip.local.ckpoint_prefix_list[i] = MPL_strdup(dummy);
         dummy = strtok(NULL, ":");
         i++;
     }
@@ -375,7 +375,7 @@ static HYD_status global_core_map_fn(char *arg, char ***argv)
     HYD_status status = HYD_SUCCESS;
 
     /* Split the core map into three different segments */
-    map = HYDU_strdup(**argv);
+    map = MPL_strdup(**argv);
     HYDU_ASSERT(map, status);
 
     tmp = strtok(map, ",");
@@ -408,7 +408,7 @@ static HYD_status pmi_id_map_fn(char *arg, char ***argv)
     HYD_status status = HYD_SUCCESS;
 
     /* Split the core map into three different segments */
-    map = HYDU_strdup(**argv);
+    map = MPL_strdup(**argv);
     HYDU_ASSERT(map, status);
 
     tmp = strtok(map, ",");
@@ -618,7 +618,7 @@ static HYD_status exec_args_fn(char *arg, char ***argv)
     count = atoi(**argv);
     for (i = 0; i < count; i++) {
         (*argv)++;
-        exec->exec[i] = HYDU_strdup(**argv);
+        exec->exec[i] = MPL_strdup(**argv);
     }
     exec->exec[i] = NULL;
     (*argv)++;

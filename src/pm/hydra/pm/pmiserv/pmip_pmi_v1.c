@@ -49,11 +49,11 @@ static HYD_status send_cmd_upstream(const char *start, int fd, int num_args, cha
     HYDU_MALLOC(tmp, char **, (2 * num_args + 2) * sizeof(char *), status);
 
     j = 0;
-    tmp[j++] = HYDU_strdup(start);
+    tmp[j++] = MPL_strdup(start);
     for (i = 0; i < num_args; i++) {
-        tmp[j++] = HYDU_strdup(args[i]);
+        tmp[j++] = MPL_strdup(args[i]);
         if (args[i + 1])
-            tmp[j++] = HYDU_strdup(" ");
+            tmp[j++] = MPL_strdup(" ");
     }
     tmp[j] = NULL;
 
@@ -156,9 +156,9 @@ static HYD_status fn_init(int fd, char *args[])
     pmi_subversion = atoi(strtok(NULL, "="));
 
     if (pmi_version == 1 && pmi_subversion <= 1)
-        tmp = HYDU_strdup("cmd=response_to_init pmi_version=1 pmi_subversion=1 rc=0\n");
+        tmp = MPL_strdup("cmd=response_to_init pmi_version=1 pmi_subversion=1 rc=0\n");
     else if (pmi_version == 2 && pmi_subversion == 0)
-        tmp = HYDU_strdup("cmd=response_to_init pmi_version=2 pmi_subversion=0 rc=0\n");
+        tmp = MPL_strdup("cmd=response_to_init pmi_version=2 pmi_subversion=0 rc=0\n");
     else        /* PMI version mismatch */
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "PMI version mismatch; %d.%d\n", pmi_version, pmi_subversion);
@@ -214,16 +214,16 @@ static HYD_status fn_initack(int fd, char *args[])
     HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
 
     HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup("cmd=initack\ncmd=set size="), status);
+    HYD_STRING_STASH(stash, MPL_strdup("cmd=initack\ncmd=set size="), status);
     HYD_STRING_STASH(stash, HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_process_count),
                      status);
 
-    HYD_STRING_STASH(stash, HYDU_strdup("\ncmd=set rank="), status);
+    HYD_STRING_STASH(stash, MPL_strdup("\ncmd=set rank="), status);
     HYD_STRING_STASH(stash, HYDU_int_to_str(id), status);
 
-    HYD_STRING_STASH(stash, HYDU_strdup("\ncmd=set debug="), status);
+    HYD_STRING_STASH(stash, MPL_strdup("\ncmd=set debug="), status);
     HYD_STRING_STASH(stash, HYDU_int_to_str(HYD_pmcd_pmip.user_global.debug), status);
-    HYD_STRING_STASH(stash, HYDU_strdup("\n"), status);
+    HYD_STRING_STASH(stash, MPL_strdup("\n"), status);
 
     HYD_STRING_SPIT(stash, cmd, status);
 
@@ -249,13 +249,13 @@ static HYD_status fn_get_maxes(int fd, char *args[])
     HYDU_FUNC_ENTER();
 
     HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup("cmd=maxes kvsname_max="), status);
+    HYD_STRING_STASH(stash, MPL_strdup("cmd=maxes kvsname_max="), status);
     HYD_STRING_STASH(stash, HYDU_int_to_str(PMI_MAXKVSLEN), status);
-    HYD_STRING_STASH(stash, HYDU_strdup(" keylen_max="), status);
+    HYD_STRING_STASH(stash, MPL_strdup(" keylen_max="), status);
     HYD_STRING_STASH(stash, HYDU_int_to_str(PMI_MAXKEYLEN), status);
-    HYD_STRING_STASH(stash, HYDU_strdup(" vallen_max="), status);
+    HYD_STRING_STASH(stash, MPL_strdup(" vallen_max="), status);
     HYD_STRING_STASH(stash, HYDU_int_to_str(PMI_MAXVALLEN), status);
-    HYD_STRING_STASH(stash, HYDU_strdup("\n"), status);
+    HYD_STRING_STASH(stash, MPL_strdup("\n"), status);
 
     HYD_STRING_SPIT(stash, cmd, status);
 
@@ -296,9 +296,9 @@ static HYD_status fn_get_appnum(int fd, char *args[])
     }
 
     HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup("cmd=appnum appnum="), status);
+    HYD_STRING_STASH(stash, MPL_strdup("cmd=appnum appnum="), status);
     HYD_STRING_STASH(stash, HYDU_int_to_str(exec->appnum), status);
-    HYD_STRING_STASH(stash, HYDU_strdup("\n"), status);
+    HYD_STRING_STASH(stash, MPL_strdup("\n"), status);
 
     HYD_STRING_SPIT(stash, cmd, status);
 
@@ -323,9 +323,9 @@ static HYD_status fn_get_my_kvsname(int fd, char *args[])
     HYDU_FUNC_ENTER();
 
     HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup("cmd=my_kvsname kvsname="), status);
-    HYD_STRING_STASH(stash, HYDU_strdup(HYD_pmcd_pmip.local.kvs->kvsname), status);
-    HYD_STRING_STASH(stash, HYDU_strdup("\n"), status);
+    HYD_STRING_STASH(stash, MPL_strdup("cmd=my_kvsname kvsname="), status);
+    HYD_STRING_STASH(stash, MPL_strdup(HYD_pmcd_pmip.local.kvs->kvsname), status);
+    HYD_STRING_STASH(stash, MPL_strdup("\n"), status);
 
     HYD_STRING_SPIT(stash, cmd, status);
 
@@ -350,7 +350,7 @@ static HYD_status fn_get_usize(int fd, char *args[])
     HYDU_FUNC_ENTER();
 
     HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup("cmd=universe_size size="), status);
+    HYD_STRING_STASH(stash, MPL_strdup("cmd=universe_size size="), status);
     if (HYD_pmcd_pmip.user_global.usize == HYD_USIZE_SYSTEM)
         HYD_STRING_STASH(stash,
                          HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_core_map.global_count),
@@ -359,7 +359,7 @@ static HYD_status fn_get_usize(int fd, char *args[])
         HYD_STRING_STASH(stash, HYDU_int_to_str(-1), status);
     else
         HYD_STRING_STASH(stash, HYDU_int_to_str(HYD_pmcd_pmip.user_global.usize), status);
-    HYD_STRING_STASH(stash, HYDU_strdup("\n"), status);
+    HYD_STRING_STASH(stash, MPL_strdup("\n"), status);
 
     HYD_STRING_SPIT(stash, cmd, status);
 
@@ -393,10 +393,10 @@ static HYD_status fn_get(int fd, char *args[])
 
     if (!strcmp(key, "PMI_process_mapping")) {
         HYD_STRING_STASH_INIT(stash);
-        HYD_STRING_STASH(stash, HYDU_strdup("cmd=get_result rc=0 msg=success value="), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(HYD_pmcd_pmip.system_global.pmi_process_mapping),
+        HYD_STRING_STASH(stash, MPL_strdup("cmd=get_result rc=0 msg=success value="), status);
+        HYD_STRING_STASH(stash, MPL_strdup(HYD_pmcd_pmip.system_global.pmi_process_mapping),
                          status);
-        HYD_STRING_STASH(stash, HYDU_strdup("\n"), status);
+        HYD_STRING_STASH(stash, MPL_strdup("\n"), status);
 
         HYD_STRING_SPIT(stash, cmd, status);
 
@@ -415,10 +415,10 @@ static HYD_status fn_get(int fd, char *args[])
 
         if (val) {
             HYD_STRING_STASH_INIT(stash);
-            HYD_STRING_STASH(stash, HYDU_strdup("cmd=get_result rc="), status);
-            HYD_STRING_STASH(stash, HYDU_strdup("0 msg=success value="), status);
-            HYD_STRING_STASH(stash, HYDU_strdup(val), status);
-            HYD_STRING_STASH(stash, HYDU_strdup("\n"), status);
+            HYD_STRING_STASH(stash, MPL_strdup("cmd=get_result rc="), status);
+            HYD_STRING_STASH(stash, MPL_strdup("0 msg=success value="), status);
+            HYD_STRING_STASH(stash, MPL_strdup(val), status);
+            HYD_STRING_STASH(stash, MPL_strdup("\n"), status);
 
             HYD_STRING_SPIT(stash, cmd, status);
 
@@ -461,13 +461,13 @@ static HYD_status fn_put(int fd, char *args[])
 
     val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "value");
     if (val == NULL)
-        val = HYDU_strdup("");
+        val = MPL_strdup("");
 
     /* add to the cache */
     HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup(key), status);
-    HYD_STRING_STASH(stash, HYDU_strdup("="), status);
-    HYD_STRING_STASH(stash, HYDU_strdup(val), status);
+    HYD_STRING_STASH(stash, MPL_strdup(key), status);
+    HYD_STRING_STASH(stash, MPL_strdup("="), status);
+    HYD_STRING_STASH(stash, MPL_strdup(val), status);
 
     HYD_STRING_SPIT(stash, cmd, status);
 
@@ -508,8 +508,8 @@ static HYD_status fn_keyval_cache(int fd, char *args[])
                  status);
 
     for (i = 0; i < token_count; i++) {
-        cache_get.key[cache_get.keyval_len + i] = HYDU_strdup(tokens[i].key);
-        cache_get.val[cache_get.keyval_len + i] = HYDU_strdup(tokens[i].val);
+        cache_get.key[cache_get.keyval_len + i] = MPL_strdup(tokens[i].key);
+        cache_get.val[cache_get.keyval_len + i] = MPL_strdup(tokens[i].val);
     }
     cache_get.keyval_len += token_count;
 
@@ -555,7 +555,7 @@ static HYD_status fn_barrier_out(int fd, char *args[])
 
     HYDU_FUNC_ENTER();
 
-    cmd = HYDU_strdup("cmd=barrier_out\n");
+    cmd = MPL_strdup("cmd=barrier_out\n");
 
     for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {
         status = send_cmd_downstream(HYD_pmcd_pmip.downstream.pmi_fd[i], cmd);
@@ -581,7 +581,7 @@ static HYD_status fn_finalize(int fd, char *args[])
 
     HYDU_FUNC_ENTER();
 
-    cmd = HYDU_strdup("cmd=finalize_ack\n");
+    cmd = MPL_strdup("cmd=finalize_ack\n");
 
     status = send_cmd_downstream(fd, cmd);
     HYDU_ERR_POP(status, "error sending PMI response\n");

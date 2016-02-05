@@ -59,15 +59,15 @@ HYD_status HYDU_find_in_path(const char *execname, char **path)
 
     /* The executable is somewhere in the user's path. Find it. */
     if (MPL_env2str("PATH", (const char **) &user_path))
-        user_path = HYDU_strdup(user_path);
+        user_path = MPL_strdup(user_path);
 
     if (user_path) {    /* If the PATH environment exists */
         status = get_abs_wd(strtok(user_path, ";:"), &test_loc);
         HYDU_ERR_POP(status, "error getting absolute working dir\n");
         do {
-            tmp[0] = HYDU_strdup(test_loc);
-            tmp[1] = HYDU_strdup("/");
-            tmp[2] = HYDU_strdup(execname);
+            tmp[0] = MPL_strdup(test_loc);
+            tmp[1] = MPL_strdup("/");
+            tmp[2] = MPL_strdup(execname);
             tmp[3] = NULL;
 
             status = HYDU_str_alloc_and_join(tmp, &path_loc);
@@ -75,8 +75,8 @@ HYD_status HYDU_find_in_path(const char *execname, char **path)
             HYDU_free_strlist(tmp);
 
             if (exists(path_loc)) {
-                tmp[0] = HYDU_strdup(test_loc);
-                tmp[1] = HYDU_strdup("/");
+                tmp[0] = MPL_strdup(test_loc);
+                tmp[1] = MPL_strdup("/");
                 tmp[2] = NULL;
 
                 status = HYDU_str_alloc_and_join(tmp, path);
@@ -96,7 +96,7 @@ HYD_status HYDU_find_in_path(const char *execname, char **path)
 
     /* There is either no PATH environment or we could not find the
      * file in the PATH. Just return an empty path */
-    *path = HYDU_strdup("");
+    *path = MPL_strdup("");
 
   fn_exit:
     if (user_path)
@@ -193,7 +193,7 @@ HYD_status HYDU_set_str(char *arg, char **var, const char *val)
     if (val == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cannot assign NULL object\n");
 
-    *var = HYDU_strdup(val);
+    *var = MPL_strdup(val);
 
   fn_exit:
     return status;
@@ -237,8 +237,8 @@ char *HYDU_getcwd(void)
     if (pwdval && stat(pwdval, &spwd) != -1 && stat(cwdval, &scwd) != -1 &&
         spwd.st_dev == scwd.st_dev && spwd.st_ino == scwd.st_ino) {
         /* PWD and getcwd() match; use the PWD value */
-        retval = HYDU_strdup(pwdval);
-        HYDU_free(cwdval);
+        retval = MPL_strdup(pwdval);
+        MPL_free(cwdval);
     }
     else
 #endif /* HAVE_STAT */
@@ -280,7 +280,7 @@ HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **
                 HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                     "duplicate local binding setting\n");
 
-            node->local_binding = HYDU_strdup(binding);
+            node->local_binding = MPL_strdup(binding);
         }
         else if (!strcmp(tmp, "user")) {
             user = strtok_r(NULL, "=", &saveptr);
@@ -289,7 +289,7 @@ HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **
             if (node->user)
                 HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate username setting\n");
 
-            node->user = HYDU_strdup(user);
+            node->user = MPL_strdup(user);
         }
         else {
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
@@ -369,8 +369,8 @@ char *HYDU_find_full_path(const char *execname)
     HYDU_ERR_POP(status, "error while searching for executable in user path\n");
 
     if (test_path) {
-        tmp[0] = HYDU_strdup(test_path);
-        tmp[1] = HYDU_strdup(execname);
+        tmp[0] = MPL_strdup(test_path);
+        tmp[1] = MPL_strdup(execname);
         tmp[2] = NULL;
 
         status = HYDU_str_alloc_and_join(tmp, &path);

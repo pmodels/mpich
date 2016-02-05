@@ -13,7 +13,9 @@ HYD_status HYDU_dbg_init(const char *str)
     char hostname[MAX_HOSTNAME_LEN];
     HYD_status status = HYD_SUCCESS;
 
-    HYDU_mem_init();
+#ifdef USE_MEMORY_TRACING
+    MPL_trinit(0,0);
+#endif
 
     if (gethostname(hostname, MAX_HOSTNAME_LEN) < 0)
         HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local host name\n");

@@ -24,11 +24,11 @@ HYD_status HYDT_topo_init(char *user_topolib, char *user_binding, char *user_map
     HYDU_FUNC_ENTER();
 
     if (user_topolib)
-        HYDT_topo_info.topolib = HYDU_strdup(user_topolib);
+        HYDT_topo_info.topolib = MPL_strdup(user_topolib);
     else if (MPL_env2str("HYDRA_TOPOLIB", &topolib))
-        HYDT_topo_info.topolib = HYDU_strdup(topolib);
+        HYDT_topo_info.topolib = MPL_strdup(topolib);
     else if (HYDRA_DEFAULT_TOPOLIB)
-        HYDT_topo_info.topolib = HYDU_strdup(HYDRA_DEFAULT_TOPOLIB);
+        HYDT_topo_info.topolib = MPL_strdup(HYDRA_DEFAULT_TOPOLIB);
     else
         HYDT_topo_info.topolib = NULL;
 

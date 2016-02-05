@@ -30,7 +30,7 @@ HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cm
     HYDU_FUNC_ENTER();
 
     /* Make a copy of the original buffer */
-    buf = HYDU_strdup(obuf);
+    buf = MPL_strdup(obuf);
     if (buf[strlen(obuf) - 1] == '\n')
         buf[strlen(obuf) - 1] = '\0';
 
@@ -49,7 +49,7 @@ HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cm
         args[i] = strtok(NULL, delim);
         if (args[i] == NULL)
             break;
-        args[i] = HYDU_strdup(args[i]);
+        args[i] = MPL_strdup(args[i]);
     }
 
     /* Search for the PMI command in our table */
@@ -78,7 +78,7 @@ HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tok
     HYDU_MALLOC(*tokens, struct HYD_pmcd_token *, *count * sizeof(struct HYD_pmcd_token), status);
 
     for (i = 0; args[i]; i++) {
-        arg = HYDU_strdup(args[i]);
+        arg = MPL_strdup(args[i]);
         (*tokens)[i].key = arg;
         for (j = 0; arg[j] && arg[j] != '='; j++);
         if (!arg[j]) {

@@ -75,19 +75,19 @@ static HYD_status bcast_keyvals(int fd, int pid)
     if (keyval_count) {
         arg_count = 1;
         i = 0;
-        tmp[i++] = HYDU_strdup("cmd=keyval_cache ");
+        tmp[i++] = MPL_strdup("cmd=keyval_cache ");
         for (run = pg_scratch->kvs->key_pair, j = 0; run; run = run->next, j++) {
             if (j < pg_scratch->keyval_dist_count)
                 continue;
 
-            tmp[i++] = HYDU_strdup(run->key);
-            tmp[i++] = HYDU_strdup("=");
-            tmp[i++] = HYDU_strdup(run->val);
-            tmp[i++] = HYDU_strdup(" ");
+            tmp[i++] = MPL_strdup(run->key);
+            tmp[i++] = MPL_strdup("=");
+            tmp[i++] = MPL_strdup(run->val);
+            tmp[i++] = MPL_strdup(" ");
 
             arg_count++;
             if (arg_count >= MAX_PMI_INTERNAL_ARGS) {
-                tmp[i++] = HYDU_strdup("\n");
+                tmp[i++] = MPL_strdup("\n");
                 tmp[i++] = NULL;
 
                 status = HYDU_str_alloc_and_join(tmp, &cmd);
@@ -102,11 +102,11 @@ static HYD_status bcast_keyvals(int fd, int pid)
                 HYDU_FREE(cmd);
 
                 i = 0;
-                tmp[i++] = HYDU_strdup("cmd=keyval_cache ");
+                tmp[i++] = MPL_strdup("cmd=keyval_cache ");
                 arg_count = 1;
             }
         }
-        tmp[i++] = HYDU_strdup("\n");
+        tmp[i++] = MPL_strdup("\n");
         tmp[i++] = NULL;
 
         if (arg_count > 1) {
@@ -249,17 +249,17 @@ static HYD_status fn_get(int fd, int pid, int pgid, char *args[])
 
   found_val:
     i = 0;
-    tmp[i++] = HYDU_strdup("cmd=get_result rc=");
+    tmp[i++] = MPL_strdup("cmd=get_result rc=");
     if (val) {
-        tmp[i++] = HYDU_strdup("0 msg=success value=");
-        tmp[i++] = HYDU_strdup(val);
+        tmp[i++] = MPL_strdup("0 msg=success value=");
+        tmp[i++] = MPL_strdup(val);
     }
     else {
-        tmp[i++] = HYDU_strdup("-1 msg=key_");
-        tmp[i++] = HYDU_strdup(key);
-        tmp[i++] = HYDU_strdup("_not_found value=unknown");
+        tmp[i++] = MPL_strdup("-1 msg=key_");
+        tmp[i++] = MPL_strdup(key);
+        tmp[i++] = MPL_strdup("_not_found value=unknown");
     }
-    tmp[i++] = HYDU_strdup("\n");
+    tmp[i++] = MPL_strdup("\n");
     tmp[i++] = NULL;
 
     status = HYDU_str_alloc_and_join(tmp, &cmd);
@@ -330,7 +330,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     HYDU_FUNC_ENTER();
 
     for (i = 0; args[i]; i++)
-        mcmd_args[mcmd_num_args++] = HYDU_strdup(args[i]);
+        mcmd_args[mcmd_num_args++] = MPL_strdup(args[i]);
     mcmd_args[mcmd_num_args] = NULL;
 
     /* Initialize the proxy stash, so it can be freed if we jump to
@@ -450,10 +450,10 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
             info_val = val;
 
             if (!strcmp(info_key, "path")) {
-                path = HYDU_strdup(info_val);
+                path = MPL_strdup(info_val);
             }
             else if (!strcmp(info_key, "wdir")) {
-                exec->wdir = HYDU_strdup(info_val);
+                exec->wdir = MPL_strdup(info_val);
             }
             else if (!strcmp(info_key, "host") || !strcmp(info_key, "hosts")) {
                 char *saveptr;
@@ -482,12 +482,12 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                             "unable to find token: execname\n");
         if (path == NULL)
-            execname = HYDU_strdup(val);
+            execname = MPL_strdup(val);
         else {
             HYD_STRING_STASH_INIT(stash);
-            HYD_STRING_STASH(stash, HYDU_strdup(path), status);
-            HYD_STRING_STASH(stash, HYDU_strdup("/"), status);
-            HYD_STRING_STASH(stash, HYDU_strdup(val), status);
+            HYD_STRING_STASH(stash, MPL_strdup(path), status);
+            HYD_STRING_STASH(stash, MPL_strdup("/"), status);
+            HYD_STRING_STASH(stash, MPL_strdup(val), status);
 
             HYD_STRING_SPIT(stash, execname, status);
         }
@@ -500,7 +500,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
                                                  segment_list[j].token_count, key);
             HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
                                 "unable to find token: %s\n", key);
-            exec->exec[i++] = HYDU_strdup(val);
+            exec->exec[i++] = MPL_strdup(val);
         }
         exec->exec[i++] = NULL;
 
@@ -599,8 +599,8 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         char *cmd;
 
         HYD_STRING_STASH_INIT(stash);
-        HYD_STRING_STASH(stash, HYDU_strdup("cmd=spawn_result rc=0"), status);
-        HYD_STRING_STASH(stash, HYDU_strdup("\n"), status);
+        HYD_STRING_STASH(stash, MPL_strdup("cmd=spawn_result rc=0"), status);
+        HYD_STRING_STASH(stash, MPL_strdup("\n"), status);
 
         HYD_STRING_SPIT(stash, cmd, status);
 
@@ -642,22 +642,22 @@ static HYD_status fn_publish_name(int fd, int pid, int pgid, char *args[])
 
     if ((val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "service")) == NULL)
         HYDU_ERR_POP(status, "cannot find token: service\n");
-    name = HYDU_strdup(val);
+    name = MPL_strdup(val);
 
     if ((val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "port")) == NULL)
         HYDU_ERR_POP(status, "cannot find token: port\n");
-    port = HYDU_strdup(val);
+    port = MPL_strdup(val);
 
     status = HYD_pmcd_pmi_publish(name, port, &success);
     HYDU_ERR_POP(status, "error publishing service\n");
 
     HYD_STRING_STASH_INIT(stash);
     if (success)
-        HYD_STRING_STASH(stash, HYDU_strdup("cmd=publish_result info=ok rc=0 msg=success\n"),
+        HYD_STRING_STASH(stash, MPL_strdup("cmd=publish_result info=ok rc=0 msg=success\n"),
                          status);
     else
         HYD_STRING_STASH(stash,
-                         HYDU_strdup("cmd=publish_result info=ok rc=1 msg=key_already_present\n"),
+                         MPL_strdup("cmd=publish_result info=ok rc=1 msg=key_already_present\n"),
                          status);
 
     HYD_STRING_SPIT(stash, cmd, status);
@@ -703,11 +703,11 @@ static HYD_status fn_unpublish_name(int fd, int pid, int pgid, char *args[])
 
     HYD_STRING_STASH_INIT(stash);
     if (success)
-        HYD_STRING_STASH(stash, HYDU_strdup("cmd=unpublish_result info=ok rc=0 msg=success\n"),
+        HYD_STRING_STASH(stash, MPL_strdup("cmd=unpublish_result info=ok rc=0 msg=success\n"),
                          status);
     else
         HYD_STRING_STASH(stash,
-                         HYDU_strdup("cmd=unpublish_result info=ok rc=1 msg=service_not_found\n"),
+                         MPL_strdup("cmd=unpublish_result info=ok rc=1 msg=service_not_found\n"),
                          status);
 
     HYD_STRING_SPIT(stash, cmd, status);
@@ -746,14 +746,14 @@ static HYD_status fn_lookup_name(int fd, int pid, int pgid, char *args[])
     HYDU_ERR_POP(status, "error while looking up service\n");
 
     HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup("cmd=lookup_result"), status);
+    HYD_STRING_STASH(stash, MPL_strdup("cmd=lookup_result"), status);
     if (value) {
-        HYD_STRING_STASH(stash, HYDU_strdup(" port="), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(value), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(" info=ok rc=0 msg=success\n"), status);
+        HYD_STRING_STASH(stash, MPL_strdup(" port="), status);
+        HYD_STRING_STASH(stash, MPL_strdup(value), status);
+        HYD_STRING_STASH(stash, MPL_strdup(" info=ok rc=0 msg=success\n"), status);
     }
     else {
-        HYD_STRING_STASH(stash, HYDU_strdup(" rc=1 msg=service_not_found\n"), status);
+        HYD_STRING_STASH(stash, MPL_strdup(" rc=1 msg=service_not_found\n"), status);
     }
 
     HYD_STRING_SPIT(stash, cmd, status);

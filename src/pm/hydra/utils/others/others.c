@@ -29,7 +29,7 @@ HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs, struct HYD
         status = HYDU_alloc_node(node_list);
         HYDU_ERR_POP(status, "unable to allocate node\n");
 
-        (*node_list)->hostname = HYDU_strdup(hostname);
+        (*node_list)->hostname = MPL_strdup(hostname);
         (*node_list)->core_count = num_procs;
         (*node_list)->node_id = 0;
     }
@@ -44,7 +44,7 @@ HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs, struct HYD
             node->next->node_id = node->node_id + 1;
 
             node = node->next;
-            node->hostname = HYDU_strdup(hostname);
+            node->hostname = MPL_strdup(hostname);
         }
 
         node->core_count += num_procs;
