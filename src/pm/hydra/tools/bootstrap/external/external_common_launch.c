@@ -51,7 +51,7 @@ static HYD_status lsf_get_path(char **path)
         MPL_env2str("LSF_BINDIR", (const char **) &bin_dir);
         if (bin_dir) {
             length = strlen(bin_dir) + 2 + strlen("blaunch");
-            HYDU_MALLOC(*path, char *, length, status);
+            HYDU_MALLOC_OR_JUMP(*path, char *, length, status);
             MPL_snprintf(*path, length, "%s/blaunch", bin_dir);
         }
     }
@@ -81,7 +81,7 @@ static HYD_status sge_get_path(char **path)
         MPL_env2str("ARC", (const char **) &arc);
         if (sge_root && arc) {
             length = strlen(sge_root) + strlen("/bin/") + strlen(arc) + 1 + strlen("qrsh") + 1;
-            HYDU_MALLOC(*path, char *, length, status);
+            HYDU_MALLOC_OR_JUMP(*path, char *, length, status);
             MPL_snprintf(*path, length, "%s/bin/%s/qrsh", sge_root, arc);
         }
     }
@@ -191,17 +191,17 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
         num_hosts++;
 
     /* Increase pid list to accommodate these new pids */
-    HYDU_MALLOC(pid, int *, (HYD_bscu_pid_count + num_hosts) * sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(pid, int *, (HYD_bscu_pid_count + num_hosts) * sizeof(int), status);
     for (i = 0; i < HYD_bscu_pid_count; i++)
         pid[i] = HYD_bscu_pid_list[i];
-    HYDU_FREE(HYD_bscu_pid_list);
+    MPL_free(HYD_bscu_pid_list);
     HYD_bscu_pid_list = pid;
 
     /* Increase fd list to accommodate these new fds */
-    HYDU_MALLOC(fd_list, int *, (HYD_bscu_fd_count + (2 * num_hosts) + 1) * sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(fd_list, int *, (HYD_bscu_fd_count + (2 * num_hosts) + 1) * sizeof(int), status);
     for (i = 0; i < HYD_bscu_fd_count; i++)
         fd_list[i] = HYD_bscu_fd_list[i];
-    HYDU_FREE(HYD_bscu_fd_list);
+    MPL_free(HYD_bscu_fd_list);
     HYD_bscu_fd_list = fd_list;
 
     /* Check if the user disabled automatic forking */
@@ -213,20 +213,20 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
     for (proxy = proxy_list; proxy; proxy = proxy->next) {
 
         if (targs[host_idx])
-            HYDU_FREE(targs[host_idx]);
+            MPL_free(targs[host_idx]);
         if (proxy->node->user == NULL) {
             targs[host_idx] = MPL_strdup(proxy->node->hostname);
         }
         else {
             len = strlen(proxy->node->user) + strlen("@") + strlen(proxy->node->hostname) + 1;
 
-            HYDU_MALLOC(targs[host_idx], char *, len, status);
+            HYDU_MALLOC_OR_JUMP(targs[host_idx], char *, len, status);
             MPL_snprintf(targs[host_idx], len, "%s@%s", proxy->node->user, proxy->node->hostname);
         }
 
         /* append proxy ID */
         if (targs[idx])
-            HYDU_FREE(targs[idx]);
+            MPL_free(targs[idx]);
         targs[idx] = HYDU_int_to_str(proxy->proxy_id);
         targs[idx + 1] = NULL;
 
@@ -248,7 +248,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
                 str = HYDU_int_to_str(sockpair[1]);
                 status = HYDU_env_create(&env, "HYDI_CONTROL_FD", str);
                 HYDU_ERR_POP(status, "unable to create env\n");
-                HYDU_FREE(str);
+                MPL_free(str);
 
                 control_fd[proxy->proxy_id] = sockpair[0];
 
@@ -336,7 +336,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
   fn_exit:
     HYDU_free_strlist(targs);
     if (path)
-        HYDU_FREE(path);
+        MPL_free(path);
     HYDU_FUNC_EXIT();
     return status;
 

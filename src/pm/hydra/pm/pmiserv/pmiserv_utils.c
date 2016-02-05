@@ -158,7 +158,7 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
         core_count = filler_round ? proxy->filler_processes : proxy->node->core_count;
 
         if (blocklist_head == NULL) {
-            HYDU_MALLOC(block, struct block *, sizeof(struct block), status);
+            HYDU_MALLOC_OR_JUMP(block, struct block *, sizeof(struct block), status);
             block->start_idx = node->node_id;
             block->num_nodes = 1;
             block->core_count = core_count;
@@ -174,7 +174,7 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
             blocklist_tail->core_count += core_count;
         }
         else {
-            HYDU_MALLOC(blocklist_tail->next, struct block *, sizeof(struct block), status);
+            HYDU_MALLOC_OR_JUMP(blocklist_tail->next, struct block *, sizeof(struct block), status);
             blocklist_tail = blocklist_tail->next;
             blocklist_tail->start_idx = node->node_id;
             blocklist_tail->num_nodes = 1;
@@ -196,7 +196,7 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
         for (block = blocklist_head; block->next;) {
             nblock = block->next;
             block->next = nblock->next;
-            HYDU_FREE(nblock);
+            MPL_free(nblock);
         }
         blocklist_tail = blocklist_head;
     }
@@ -222,7 +222,7 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
 
     for (block = blocklist_head; block; block = nblock) {
         nblock = block->next;
-        HYDU_FREE(block);
+        MPL_free(block);
     }
 
   fn_exit:
@@ -253,7 +253,7 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 
     /* Make sure the mapping is within the size allowed by PMI */
     if (strlen(mapping) > PMI_MAXVALLEN) {
-        HYDU_FREE(mapping);
+        MPL_free(mapping);
         mapping = NULL;
     }
 
@@ -269,8 +269,8 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
     for (node = HYD_server_info.node_list; node; node = node->next)
         total_core_count += node->core_count;
 
-    HYDU_MALLOC(filler_pmi_ids, int *, proxy_count * sizeof(int), status);
-    HYDU_MALLOC(nonfiller_pmi_ids, int *, proxy_count * sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(filler_pmi_ids, int *, proxy_count * sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(nonfiller_pmi_ids, int *, proxy_count * sizeof(int), status);
 
     pmi_id = 0;
     for (proxy = pg->proxy_list, i = 0; proxy; proxy = proxy->next, i++) {
@@ -501,9 +501,9 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 
   fn_exit:
     if (mapping)
-        HYDU_FREE(mapping);
-    HYDU_FREE(filler_pmi_ids);
-    HYDU_FREE(nonfiller_pmi_ids);
+        MPL_free(mapping);
+    MPL_free(filler_pmi_ids);
+    MPL_free(nonfiller_pmi_ids);
     return status;
 
   fn_fail:
@@ -518,12 +518,12 @@ HYD_status HYD_pmcd_pmi_alloc_pg_scratch(struct HYD_pg *pg)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(pg->pg_scratch, void *, sizeof(struct HYD_pmcd_pmi_pg_scratch), status);
+    HYDU_MALLOC_OR_JUMP(pg->pg_scratch, void *, sizeof(struct HYD_pmcd_pmi_pg_scratch), status);
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
 
     pg_scratch->barrier_count = 0;
 
-    HYDU_MALLOC(pg_scratch->ecount, struct HYD_pmcd_pmi_ecount *,
+    HYDU_MALLOC_OR_JUMP(pg_scratch->ecount, struct HYD_pmcd_pmi_ecount *,
                 pg->pg_process_count * sizeof(struct HYD_pmcd_pmi_ecount), status);
     for (i = 0; i < pg->pg_process_count; i++) {
         pg_scratch->ecount[i].fd = HYD_FD_UNSET;
@@ -561,14 +561,14 @@ HYD_status HYD_pmcd_pmi_free_pg_scratch(struct HYD_pg *pg)
         pg_scratch = pg->pg_scratch;
 
         if (pg_scratch->ecount)
-            HYDU_FREE(pg_scratch->ecount);
+            MPL_free(pg_scratch->ecount);
 
         if (pg_scratch->dead_processes)
-            HYDU_FREE(pg_scratch->dead_processes);
+            MPL_free(pg_scratch->dead_processes);
 
         HYD_pmcd_free_pmi_kvs_list(pg_scratch->kvs);
 
-        HYDU_FREE(pg_scratch);
+        MPL_free(pg_scratch);
         pg->pg_scratch = NULL;
     }
 

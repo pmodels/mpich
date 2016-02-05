@@ -57,7 +57,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
 
   fn_exit:
     if (buf)
-        HYDU_FREE(buf);
+        MPL_free(buf);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -132,7 +132,7 @@ static HYD_status poke_progress(char *key)
 
             /* Free the dequeued request */
             HYDU_free_strlist(req->args);
-            HYDU_FREE(req);
+            MPL_free(req);
         }
     }
 
@@ -203,7 +203,7 @@ static HYD_status fn_fullinit(int fd, char *args[])
     HYD_STRING_SPIT(stash, cmd, status);
 
     send_cmd_downstream(fd, cmd);
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
   fn_exit:
     HYD_pmcd_pmi_free_tokens(tokens, token_count);
@@ -243,7 +243,7 @@ static HYD_status fn_job_getid(int fd, char *args[])
     HYD_STRING_SPIT(stash, cmd, status);
 
     send_cmd_downstream(fd, cmd);
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
   fn_exit:
     if (tokens)
@@ -294,7 +294,7 @@ static HYD_status fn_info_putnodeattr(int fd, char *args[])
     HYD_STRING_SPIT(stash, cmd, status);
 
     send_cmd_downstream(fd, cmd);
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
     for (req = pending_reqs; req; req = req->next) {
         if (!strcmp(req->key, key)) {
@@ -363,7 +363,7 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
         HYD_STRING_SPIT(stash, cmd, status);
 
         send_cmd_downstream(fd, cmd);
-        HYDU_FREE(cmd);
+        MPL_free(cmd);
     }
     else if (waitval && !strcmp(waitval, "TRUE")) {
         /* The client wants to wait for a response; queue up the request */
@@ -386,7 +386,7 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
         HYD_STRING_SPIT(stash, cmd, status);
 
         send_cmd_downstream(fd, cmd);
-        HYDU_FREE(cmd);
+        MPL_free(cmd);
     }
 
   fn_exit:
@@ -433,7 +433,7 @@ static HYD_status fn_info_getjobattr(int fd, char *args[])
         HYD_STRING_SPIT(stash, cmd, status);
 
         send_cmd_downstream(fd, cmd);
-        HYDU_FREE(cmd);
+        MPL_free(cmd);
     }
     else {
         status = send_cmd_upstream("cmd=info-getjobattr;", fd, args);
@@ -477,7 +477,7 @@ static HYD_status fn_finalize(int fd, char *args[])
     HYD_STRING_SPIT(stash, cmd, status);
 
     send_cmd_downstream(fd, cmd);
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
     status = HYDT_dmx_deregister_fd(fd);
     HYDU_ERR_POP(status, "unable to deregister fd\n");

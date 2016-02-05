@@ -47,7 +47,7 @@ HYD_status HYDT_bscd_lsf_query_node_list(struct HYD_node **node_list)
         }
 
         if (thosts)
-            HYDU_FREE(thosts);
+            MPL_free(thosts);
     }
 
   fn_exit:

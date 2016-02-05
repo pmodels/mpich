@@ -24,7 +24,7 @@ HYD_status HYDT_bsci_launcher_pbs_init(void)
     HYDT_bsci_fns.wait_for_completion = HYDT_bscd_pbs_wait_for_completion;
     HYDT_bsci_fns.launcher_finalize = HYDT_bscd_pbs_launcher_finalize;
 
-    HYDU_MALLOC(HYDT_bscd_pbs_sys, struct HYDT_bscd_pbs_sys_s *,
+    HYDU_MALLOC_OR_JUMP(HYDT_bscd_pbs_sys, struct HYDT_bscd_pbs_sys_s *,
                 sizeof(struct HYDT_bscd_pbs_sys_s), status);
 
     /* Initialize TM and Hydra's PBS data structure */

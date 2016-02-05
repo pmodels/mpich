@@ -46,7 +46,7 @@ void HYDU_free_strlist(char **strlist)
     HYDU_FUNC_ENTER();
 
     for (arg = 0; strlist[arg]; arg++)
-        HYDU_FREE(strlist[arg]);
+        MPL_free(strlist[arg]);
 
     HYDU_FUNC_EXIT();
 }
@@ -63,7 +63,7 @@ HYD_status HYDU_str_alloc_and_join(char **strlist, char **strjoin)
         len += strlen(strlist[i]);
     }
 
-    HYDU_MALLOC(*strjoin, char *, len + 1, status);
+    HYDU_MALLOC_OR_JUMP(*strjoin, char *, len + 1, status);
     count = 0;
     (*strjoin)[0] = 0;
 
@@ -118,7 +118,7 @@ HYD_status HYDU_strdup_list(char *src[], char **dest[])
     HYDU_FUNC_ENTER();
 
     count = HYDU_strlist_lastidx(src);
-    HYDU_MALLOC(*dest, char **, (count + 1) * sizeof(char *), status);
+    HYDU_MALLOC_OR_JUMP(*dest, char **, (count + 1) * sizeof(char *), status);
 
     for (i = 0; i < count; i++)
         (*dest)[i] = MPL_strdup(src[i]);
@@ -148,7 +148,7 @@ char *HYDU_size_t_to_str(size_t x)
     }
     len++;
 
-    HYDU_MALLOC(str, char *, len, status);
+    HYDU_MALLOC_OR_JUMP(str, char *, len, status);
     HYDU_ERR_POP(status, "unable to allocate memory\n");
 
     for (i = 0; i < len; i++)
@@ -197,7 +197,7 @@ char *HYDU_int_to_str_pad(int x, int maxlen)
     else
         actual_len = maxlen + 1;
 
-    HYDU_MALLOC(str, char *, actual_len, status);
+    HYDU_MALLOC_OR_JUMP(str, char *, actual_len, status);
     HYDU_ERR_POP(status, "unable to allocate memory\n");
 
     for (i = 0; i < actual_len; i++)
@@ -231,7 +231,7 @@ char **HYDU_str_to_strlist(char *str)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(strlist, char **, HYD_NUM_TMP_STRINGS * sizeof(char *), status);
+    HYDU_MALLOC_OR_JUMP(strlist, char **, HYD_NUM_TMP_STRINGS * sizeof(char *), status);
     if (!strlist)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "Unable to allocate mem for strlist\n");
 
@@ -246,7 +246,7 @@ char **HYDU_str_to_strlist(char *str)
         if (argc >= HYD_NUM_TMP_STRINGS)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "too many arguments in line\n");
 
-        HYDU_MALLOC(strlist[argc], char *, HYD_TMP_STRLEN, status);
+        HYDU_MALLOC_OR_JUMP(strlist[argc], char *, HYD_TMP_STRLEN, status);
 
         /* Copy till you hit a space */
         i = 0;
@@ -261,7 +261,7 @@ char **HYDU_str_to_strlist(char *str)
         }
     }
     if (strlist[argc])
-        HYDU_FREE(strlist[argc]);
+        MPL_free(strlist[argc]);
     strlist[argc] = NULL;
 
   fn_exit:

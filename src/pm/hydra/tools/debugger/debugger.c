@@ -33,7 +33,7 @@ HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg * pg)
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(MPIR_proctable, struct MPIR_PROCDESC *,
+    HYDU_MALLOC_OR_JUMP(MPIR_proctable, struct MPIR_PROCDESC *,
                 pg->pg_process_count * sizeof(struct MPIR_PROCDESC), status);
 
     round = 0;
@@ -103,13 +103,13 @@ void HYDT_dbg_free_procdesc(void)
         /* skip over duplicate pointers when freeing */
         if (MPIR_proctable[i].host_name) {
             if (i == 0 || MPIR_proctable[i].host_name != MPIR_proctable[i - 1].host_name)
-                HYDU_FREE(MPIR_proctable[i].host_name);
+                MPL_free(MPIR_proctable[i].host_name);
         }
         if (MPIR_proctable[i].executable_name) {
             if (i == 0 ||
                 MPIR_proctable[i].executable_name != MPIR_proctable[i - 1].executable_name)
-                HYDU_FREE(MPIR_proctable[i].executable_name);
+                MPL_free(MPIR_proctable[i].executable_name);
         }
     }
-    HYDU_FREE(MPIR_proctable);
+    MPL_free(MPIR_proctable);
 }

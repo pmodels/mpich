@@ -73,21 +73,21 @@ HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_proxy *proxy_list, 
      * when the executable is not launched directly, but through an
      * actual launcher */
     MPL_snprintf(quoted_exec_string, HYD_TMP_STRLEN, "\"%s\"", targs[exec_idx]);
-    HYDU_FREE(targs[exec_idx]);
+    MPL_free(targs[exec_idx]);
     targs[exec_idx] = quoted_exec_string;
 
     /* Increase pid list to accommodate the new pid */
-    HYDU_MALLOC(pid, int *, (HYD_bscu_pid_count + 1) * sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(pid, int *, (HYD_bscu_pid_count + 1) * sizeof(int), status);
     for (i = 0; i < HYD_bscu_pid_count; i++)
         pid[i] = HYD_bscu_pid_list[i];
-    HYDU_FREE(HYD_bscu_pid_list);
+    MPL_free(HYD_bscu_pid_list);
     HYD_bscu_pid_list = pid;
 
     /* Increase fd list to accommodate these new fds */
-    HYDU_MALLOC(fd_list, int *, (HYD_bscu_fd_count + 3) * sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(fd_list, int *, (HYD_bscu_fd_count + 3) * sizeof(int), status);
     for (i = 0; i < HYD_bscu_fd_count; i++)
         fd_list[i] = HYD_bscu_fd_list[i];
-    HYDU_FREE(HYD_bscu_fd_list);
+    MPL_free(HYD_bscu_fd_list);
     HYD_bscu_fd_list = fd_list;
 
     /* append proxy ID as -1 */
@@ -111,10 +111,10 @@ HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_proxy *proxy_list, 
 
   fn_exit:
     if (node_list_str)
-        HYDU_FREE(node_list_str);
+        MPL_free(node_list_str);
     HYDU_free_strlist(targs);
     if (path)
-        HYDU_FREE(path);
+        MPL_free(path);
     HYDU_FUNC_EXIT();
     return status;
 

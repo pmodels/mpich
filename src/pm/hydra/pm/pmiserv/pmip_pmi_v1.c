@@ -46,7 +46,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, int num_args, cha
     /* We need two slots for each argument (one for the argument
      * itself and one for a space character), one slot for the
      * command, and one for the NULL character at the end. */
-    HYDU_MALLOC(tmp, char **, (2 * num_args + 2) * sizeof(char *), status);
+    HYDU_MALLOC_OR_JUMP(tmp, char **, (2 * num_args + 2) * sizeof(char *), status);
 
     j = 0;
     tmp[j++] = MPL_strdup(start);
@@ -60,7 +60,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, int num_args, cha
     status = HYDU_str_alloc_and_join(tmp, &buf);
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(tmp);
-    HYDU_FREE(tmp);
+    MPL_free(tmp);
 
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = PMI_CMD;
@@ -80,7 +80,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, int num_args, cha
     HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
     HYDU_ASSERT(!closed, status);
 
-    HYDU_FREE(buf);
+    MPL_free(buf);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -130,7 +130,7 @@ static HYD_status cache_put_flush(int fd)
     HYDU_ERR_POP(status, "error sending command upstream\n");
 
     for (i = 0; i < cache_put.keyval_len; i++)
-        HYDU_FREE(cache_put.keyval[i]);
+        MPL_free(cache_put.keyval[i]);
     cache_put.keyval_len = 0;
 
   fn_exit:
@@ -165,7 +165,7 @@ static HYD_status fn_init(int fd, char *args[])
 
     status = send_cmd_downstream(fd, tmp);
     HYDU_ERR_POP(status, "error sending PMI response\n");
-    HYDU_FREE(tmp);
+    MPL_free(tmp);
 
     /* initialize some structures; these are initialized exactly once,
      * even if the init command is sent once from each process. */
@@ -229,7 +229,7 @@ static HYD_status fn_initack(int fd, char *args[])
 
     status = send_cmd_downstream(fd, cmd);
     HYDU_ERR_POP(status, "error sending PMI response\n");
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
   fn_exit:
     HYD_pmcd_pmi_free_tokens(tokens, token_count);
@@ -261,7 +261,7 @@ static HYD_status fn_get_maxes(int fd, char *args[])
 
     status = send_cmd_downstream(fd, cmd);
     HYDU_ERR_POP(status, "error sending PMI response\n");
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -304,7 +304,7 @@ static HYD_status fn_get_appnum(int fd, char *args[])
 
     status = send_cmd_downstream(fd, cmd);
     HYDU_ERR_POP(status, "error sending PMI response\n");
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -331,7 +331,7 @@ static HYD_status fn_get_my_kvsname(int fd, char *args[])
 
     status = send_cmd_downstream(fd, cmd);
     HYDU_ERR_POP(status, "error sending PMI response\n");
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -365,7 +365,7 @@ static HYD_status fn_get_usize(int fd, char *args[])
 
     status = send_cmd_downstream(fd, cmd);
     HYDU_ERR_POP(status, "error sending PMI response\n");
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -402,7 +402,7 @@ static HYD_status fn_get(int fd, char *args[])
 
         status = send_cmd_downstream(fd, cmd);
         HYDU_ERR_POP(status, "error sending PMI response\n");
-        HYDU_FREE(cmd);
+        MPL_free(cmd);
     }
     else {
         val = NULL;
@@ -424,7 +424,7 @@ static HYD_status fn_get(int fd, char *args[])
 
             status = send_cmd_downstream(fd, cmd);
             HYDU_ERR_POP(status, "error sending PMI response\n");
-            HYDU_FREE(cmd);
+            MPL_free(cmd);
         }
         else {
             /* if we can't find the key locally, ask upstream */
@@ -502,9 +502,9 @@ static HYD_status fn_keyval_cache(int fd, char *args[])
 
     /* allocate a larger space for the cached keyvals, copy over the
      * older keyvals and add the new ones in */
-    HYDU_REALLOC(cache_get.key, char **, (cache_get.keyval_len + token_count) * sizeof(char *),
+    HYDU_REALLOC_OR_JUMP(cache_get.key, char **, (cache_get.keyval_len + token_count) * sizeof(char *),
                  status);
-    HYDU_REALLOC(cache_get.val, char **, (cache_get.keyval_len + token_count) * sizeof(char *),
+    HYDU_REALLOC_OR_JUMP(cache_get.val, char **, (cache_get.keyval_len + token_count) * sizeof(char *),
                  status);
 
     for (i = 0; i < token_count; i++) {
@@ -562,7 +562,7 @@ static HYD_status fn_barrier_out(int fd, char *args[])
         HYDU_ERR_POP(status, "error sending PMI response\n");
     }
 
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -585,7 +585,7 @@ static HYD_status fn_finalize(int fd, char *args[])
 
     status = send_cmd_downstream(fd, cmd);
     HYDU_ERR_POP(status, "error sending PMI response\n");
-    HYDU_FREE(cmd);
+    MPL_free(cmd);
 
     status = HYDT_dmx_deregister_fd(fd);
     HYDU_ERR_POP(status, "unable to deregister fd\n");
@@ -596,11 +596,11 @@ static HYD_status fn_finalize(int fd, char *args[])
     if (finalize_count == HYD_pmcd_pmip.local.proxy_process_count) {
         /* All processes have finalized */
         for (i = 0; i < cache_get.keyval_len; i++) {
-            HYDU_FREE(cache_get.key[i]);
-            HYDU_FREE(cache_get.val[i]);
+            MPL_free(cache_get.key[i]);
+            MPL_free(cache_get.val[i]);
         }
-        HYDU_FREE(cache_get.key);
-        HYDU_FREE(cache_get.val);
+        MPL_free(cache_get.key);
+        MPL_free(cache_get.val);
     }
 
   fn_exit:

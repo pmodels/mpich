@@ -148,7 +148,7 @@ extern char *HYD_dbg_prefix;
         else if (!strcasecmp((x), "none") || !strcasecmp((x), "no") ||  \
                  !strcasecmp((x), "dummy") || !strcasecmp((x), "null") || \
                  !strcasecmp((x), "nil") || !strcasecmp((x), "false")) { \
-            HYDU_FREE((x));                                             \
+            MPL_free((x));                                             \
             (x) = NULL;                                                 \
         }                                                               \
     }
@@ -193,7 +193,7 @@ struct HYD_string_stash {
 #define HYD_STRING_STASH(stash, str, status)                            \
     do {                                                                \
         if ((stash).cur_count >= (stash).max_count - 1) {               \
-            HYDU_REALLOC((stash).strlist, char **,                      \
+            HYDU_REALLOC_OR_JUMP((stash).strlist, char **,                      \
                          ((stash).max_count + HYD_NUM_TMP_STRINGS) * sizeof(char *), \
                          (status));                                     \
             (stash).max_count += HYD_NUM_TMP_STRINGS;                   \
@@ -211,7 +211,7 @@ struct HYD_string_stash {
             (status) = HYDU_str_alloc_and_join((stash).strlist, &(str)); \
             HYDU_ERR_POP((status), "unable to join strings\n");         \
             HYDU_free_strlist((stash).strlist);                         \
-            HYDU_FREE((stash).strlist);                                 \
+            MPL_free((stash).strlist);                                 \
             HYD_STRING_STASH_INIT((stash));                             \
         }                                                               \
     } while (0)
@@ -221,7 +221,7 @@ struct HYD_string_stash {
         if ((stash).strlist == NULL)            \
             break;                              \
         HYDU_free_strlist((stash).strlist);     \
-        HYDU_FREE((stash).strlist);             \
+        MPL_free((stash).strlist);             \
         (stash).max_count = 0;                  \
         (stash).cur_count = 0;                  \
     } while (0)
@@ -612,7 +612,7 @@ HYD_status HYDU_sock_cloexec(int fd);
 /* Memory utilities */
 #include <ctype.h>
 
-#define HYDU_MALLOC(p, type, size, status)                              \
+#define HYDU_MALLOC_OR_JUMP(p, type, size, status)                              \
     {                                                                   \
         (p) = NULL; /* initialize p in case assert fails */             \
         HYDU_ASSERT(size, status);                                      \
@@ -623,7 +623,7 @@ HYD_status HYDU_sock_cloexec(int fd);
                                 (int) (size));                          \
     }
 
-#define HYDU_REALLOC(p, type, size, status)                             \
+#define HYDU_REALLOC_OR_JUMP(p, type, size, status)                             \
     {                                                                   \
         HYDU_ASSERT(size, status);                                      \
         (p) = (type) MPL_realloc((p),(size));                           \
@@ -631,11 +631,6 @@ HYD_status HYDU_sock_cloexec(int fd);
             HYDU_ERR_SETANDJUMP((status), HYD_NO_MEM,                   \
                                 "failed to allocate %d bytes\n",        \
                                 (int) (size));                          \
-    }
-
-#define HYDU_FREE(p)                            \
-    {                                           \
-        MPL_free((void *) p);                   \
     }
 
 HYD_status HYDU_list_append_strlist(char **exec, char **client_arg);

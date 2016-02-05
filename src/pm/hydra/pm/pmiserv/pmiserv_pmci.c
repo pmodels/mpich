@@ -126,7 +126,7 @@ HYD_status HYD_pmci_launch_procs(void)
     for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next)
         node_count++;
 
-    HYDU_MALLOC(control_fd, int *, node_count * sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(control_fd, int *, node_count * sizeof(int), status);
     for (i = 0; i < node_count; i++)
         control_fd[i] = HYD_FD_UNSET;
 
@@ -143,11 +143,11 @@ HYD_status HYD_pmci_launch_procs(void)
             HYDU_ERR_POP(status, "unable to register fd\n");
         }
 
-    HYDU_FREE(control_fd);
+    MPL_free(control_fd);
 
   fn_exit:
     if (control_port)
-        HYDU_FREE(control_port);
+        MPL_free(control_port);
     HYD_STRING_STASH_FREE(proxy_stash);
     HYDU_FUNC_EXIT();
     return status;
