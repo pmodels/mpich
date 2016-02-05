@@ -356,7 +356,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         HYDU_FREE(pmi_cmd);
     if (args) {
         HYDU_free_strlist(args);
-        HYDU_free(args);
+        MPL_free(args);
     }
     if (buf)
         HYDU_FREE(buf);
@@ -420,7 +420,7 @@ static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
         HYDU_FREE(pmi_cmd);
     if (args) {
         HYDU_free_strlist(args);
-        HYDU_free(args);
+        MPL_free(args);
     }
     if (buf)
         HYDU_FREE(buf);
@@ -564,7 +564,7 @@ static HYD_status launch_procs(void)
          * written value if needed. */
 
         if (!exec->env_prop && HYD_pmcd_pmip.user_global.global_env.prop)
-            exec->env_prop = HYDU_strdup(HYD_pmcd_pmip.user_global.global_env.prop);
+            exec->env_prop = MPL_strdup(HYD_pmcd_pmip.user_global.global_env.prop);
 
         if (!exec->env_prop) {
             /* user didn't specify anything; add inherited env to optional env */
@@ -582,9 +582,9 @@ static HYD_status launch_procs(void)
         }
         else if (!strncmp(exec->env_prop, "list", strlen("list"))) {
             if (exec->env_prop)
-                list = HYDU_strdup(exec->env_prop + strlen("list:"));
+                list = MPL_strdup(exec->env_prop + strlen("list:"));
             else
-                list = HYDU_strdup(HYD_pmcd_pmip.user_global.global_env.prop + strlen("list:"));
+                list = MPL_strdup(HYD_pmcd_pmip.user_global.global_env.prop + strlen("list:"));
 
             envstr = strtok(list, ",");
             while (envstr) {
@@ -688,7 +688,7 @@ static HYD_status launch_procs(void)
 
             HYD_STRING_STASH_INIT(stash);
             for (j = 0; exec->exec[j]; j++)
-                HYD_STRING_STASH(stash, HYDU_strdup(exec->exec[j]), status);
+                HYD_STRING_STASH(stash, MPL_strdup(exec->exec[j]), status);
 
             /* For non rank-0 processes, store the stdin socket in a
              * dummy variable instead of passing NULL.  Passing NULL
@@ -805,14 +805,14 @@ static HYD_status parse_exec_params(char **t_argv)
 
     /* Set default values */
     if (HYD_pmcd_pmip.user_global.binding == NULL)
-        HYD_pmcd_pmip.user_global.binding = HYDU_strdup("none");
+        HYD_pmcd_pmip.user_global.binding = MPL_strdup("none");
 
     if (HYD_pmcd_pmip.user_global.topolib == NULL && HYDRA_DEFAULT_TOPOLIB)
-        HYD_pmcd_pmip.user_global.topolib = HYDU_strdup(HYDRA_DEFAULT_TOPOLIB);
+        HYD_pmcd_pmip.user_global.topolib = MPL_strdup(HYDRA_DEFAULT_TOPOLIB);
 
 #ifdef HYDRA_DEFAULT_CKPOINTLIB
     if (HYD_pmcd_pmip.user_global.ckpointlib == NULL)
-        HYD_pmcd_pmip.user_global.ckpointlib = HYDU_strdup(HYDRA_DEFAULT_CKPOINTLIB);
+        HYD_pmcd_pmip.user_global.ckpointlib = MPL_strdup(HYDRA_DEFAULT_CKPOINTLIB);
 #endif
 
   fn_exit:

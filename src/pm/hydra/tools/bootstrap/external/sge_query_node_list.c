@@ -22,7 +22,7 @@ static HYD_status process_mfile_token(char *token, int newline, struct HYD_node 
         entry_count = 1;
         if (hostname)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unexpected token %s\n", token);
-        hostname = HYDU_strdup(token);
+        hostname = MPL_strdup(token);
     }
     else {      /* Not a new line */
         if (entry_count != 2)

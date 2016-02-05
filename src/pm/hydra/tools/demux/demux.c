@@ -38,11 +38,11 @@ HYD_status HYDT_dmx_init(char **demux)
 #if defined HAVE_POLL
         HYDT_dmxu_fns.wait_for_event = HYDT_dmxu_poll_wait_for_event;
         HYDT_dmxu_fns.stdin_valid = HYDT_dmxu_poll_stdin_valid;
-        *demux = HYDU_strdup("poll");
+        *demux = MPL_strdup("poll");
 #elif defined HAVE_SELECT
         HYDT_dmxu_fns.wait_for_event = HYDT_dmxu_select_wait_for_event;
         HYDT_dmxu_fns.stdin_valid = HYDT_dmxu_select_stdin_valid;
-        *demux = HYDU_strdup("select");
+        *demux = MPL_strdup("select");
 #endif /* HAVE_SELECT */
     }
     else if (!strcmp(*demux, "poll")) { /* user wants to use poll */

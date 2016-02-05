@@ -22,7 +22,7 @@ static HYD_status create_element(char *hostname, struct HYDT_bscd_ssh_time **e)
     HYDU_MALLOC((*e)->init_time, struct timeval *,
                 HYDT_bscd_ssh_limit_time * sizeof(struct timeval), status);
 
-    (*e)->hostname = HYDU_strdup(hostname);
+    (*e)->hostname = MPL_strdup(hostname);
     for (i = 0; i < HYDT_bscd_ssh_limit; i++) {
         (*e)->init_time[i].tv_sec = 0;
         (*e)->init_time[i].tv_usec = 0;

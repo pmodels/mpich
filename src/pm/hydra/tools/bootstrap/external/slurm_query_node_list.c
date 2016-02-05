@@ -35,7 +35,7 @@ static HYD_status group_to_nodes(char *str)
     *tmp = 0;   /* remove the closing ']' */
 
     /* Find the number of sets */
-    tnodes = HYDU_strdup(nodes);
+    tnodes = MPL_strdup(nodes);
     tmp = strtok(tnodes, ",");
     for (i = 1; tmp; i++)
         tmp = strtok(NULL, ",");
@@ -58,7 +58,7 @@ static HYD_status group_to_nodes(char *str)
         for (j = start; j <= end; j++) {
             char *node_str[HYD_NUM_TMP_STRINGS];
 
-            node_str[0] = HYDU_strdup(str);
+            node_str[0] = MPL_strdup(str);
             node_str[1] = HYDU_int_to_str_pad(j, strlen(start_str));
             node_str[2] = NULL;
 

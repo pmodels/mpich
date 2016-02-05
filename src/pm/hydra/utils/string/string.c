@@ -15,7 +15,7 @@ HYD_status HYDU_list_append_strlist(char **src_strlist, char **dest_strlist)
 
     i = HYDU_strlist_lastidx(dest_strlist);
     for (j = 0; src_strlist[j]; j++)
-        dest_strlist[i++] = HYDU_strdup(src_strlist[j]);
+        dest_strlist[i++] = MPL_strdup(src_strlist[j]);
     dest_strlist[i++] = NULL;
 
     HYDU_FUNC_EXIT();
@@ -91,13 +91,13 @@ HYD_status HYDU_strsplit(char *str, char **str1, char **str2, char sep)
     if (str == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "%s", "");
 
-    *str1 = HYDU_strdup(str);
+    *str1 = MPL_strdup(str);
     for (i = 0; (*str1)[i] && ((*str1)[i] != sep); i++);
 
     if ((*str1)[i] == 0)        /* End of the string */
         *str2 = NULL;
     else {
-        *str2 = HYDU_strdup(&((*str1)[i + 1]));
+        *str2 = MPL_strdup(&((*str1)[i + 1]));
         (*str1)[i] = 0;
     }
 
@@ -121,7 +121,7 @@ HYD_status HYDU_strdup_list(char *src[], char **dest[])
     HYDU_MALLOC(*dest, char **, (count + 1) * sizeof(char *), status);
 
     for (i = 0; i < count; i++)
-        (*dest)[i] = HYDU_strdup(src[i]);
+        (*dest)[i] = MPL_strdup(src[i]);
     (*dest)[i] = NULL;
 
   fn_exit:

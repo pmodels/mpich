@@ -17,11 +17,11 @@ static int fd_stdout, fd_stderr;
 static HYD_status ssh_get_path(char **path)
 {
     if (HYDT_bsci_info.launcher_exec)
-        *path = HYDU_strdup(HYDT_bsci_info.launcher_exec);
+        *path = MPL_strdup(HYDT_bsci_info.launcher_exec);
     if (*path == NULL)
         *path = HYDU_find_full_path("ssh");
     if (*path == NULL)
-        *path = HYDU_strdup("/usr/bin/ssh");
+        *path = MPL_strdup("/usr/bin/ssh");
 
     return HYD_SUCCESS;
 }
@@ -29,11 +29,11 @@ static HYD_status ssh_get_path(char **path)
 static HYD_status rsh_get_path(char **path)
 {
     if (HYDT_bsci_info.launcher_exec)
-        *path = HYDU_strdup(HYDT_bsci_info.launcher_exec);
+        *path = MPL_strdup(HYDT_bsci_info.launcher_exec);
     if (*path == NULL)
         *path = HYDU_find_full_path("rsh");
     if (*path == NULL)
-        *path = HYDU_strdup("/usr/bin/rsh");
+        *path = MPL_strdup("/usr/bin/rsh");
 
     return HYD_SUCCESS;
 }
@@ -45,7 +45,7 @@ static HYD_status lsf_get_path(char **path)
     HYD_status status = HYD_SUCCESS;
 
     if (HYDT_bsci_info.launcher_exec)
-        *path = HYDU_strdup(HYDT_bsci_info.launcher_exec);
+        *path = MPL_strdup(HYDT_bsci_info.launcher_exec);
 
     if (*path == NULL) {
         MPL_env2str("LSF_BINDIR", (const char **) &bin_dir);
@@ -58,7 +58,7 @@ static HYD_status lsf_get_path(char **path)
     if (*path == NULL)
         *path = HYDU_find_full_path("blaunch");
     if (*path == NULL)
-        *path = HYDU_strdup("/usr/bin/blaunch");
+        *path = MPL_strdup("/usr/bin/blaunch");
 
   fn_exit:
     return status;
@@ -74,7 +74,7 @@ static HYD_status sge_get_path(char **path)
     HYD_status status = HYD_SUCCESS;
 
     if (HYDT_bsci_info.launcher_exec)
-        *path = HYDU_strdup(HYDT_bsci_info.launcher_exec);
+        *path = MPL_strdup(HYDT_bsci_info.launcher_exec);
 
     if (*path == NULL) {
         MPL_env2str("SGE_ROOT", (const char **) &sge_root);
@@ -88,7 +88,7 @@ static HYD_status sge_get_path(char **path)
     if (*path == NULL)
         *path = HYDU_find_full_path("qrsh");
     if (*path == NULL)
-        *path = HYDU_strdup("/usr/bin/qrsh");
+        *path = MPL_strdup("/usr/bin/qrsh");
 
   fn_exit:
     return status;
@@ -140,31 +140,31 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
 
     idx = 0;
     if (path)
-        targs[idx++] = HYDU_strdup(path);
+        targs[idx++] = MPL_strdup(path);
     targs[idx] = NULL;
 
     /* Allow X forwarding only if explicitly requested */
     if (!strcmp(HYDT_bsci_info.launcher, "ssh")) {
         if (HYDT_bsci_info.enablex == 1)
-            targs[idx++] = HYDU_strdup("-X");
+            targs[idx++] = MPL_strdup("-X");
         else if (HYDT_bsci_info.enablex == 0)
-            targs[idx++] = HYDU_strdup("-x");
+            targs[idx++] = MPL_strdup("-x");
         else    /* default mode is disable X */
-            targs[idx++] = HYDU_strdup("-x");
+            targs[idx++] = MPL_strdup("-x");
     }
     else if (!strcmp(HYDT_bsci_info.launcher, "lsf")) {
-        targs[idx++] = HYDU_strdup("-n");
+        targs[idx++] = MPL_strdup("-n");
     }
     else if (!strcmp(HYDT_bsci_info.launcher, "sge")) {
-        targs[idx++] = HYDU_strdup("-inherit");
-        targs[idx++] = HYDU_strdup("-V");
+        targs[idx++] = MPL_strdup("-inherit");
+        targs[idx++] = MPL_strdup("-V");
     }
 
     MPL_env2str("HYDRA_LAUNCHER_EXTRA_ARGS", (const char **) &extra_arg_list);
     if (extra_arg_list) {
         extra_arg = strtok(extra_arg_list, " ");
         while (extra_arg) {
-            targs[idx++] = HYDU_strdup(extra_arg);
+            targs[idx++] = MPL_strdup(extra_arg);
             extra_arg = strtok(NULL, " ");
         }
     }
@@ -175,7 +175,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
     /* Fill in the remaining arguments */
     exec_idx = idx;     /* Store the executable index */
     for (i = 0; args[i]; i++)
-        targs[idx++] = HYDU_strdup(args[i]);
+        targs[idx++] = MPL_strdup(args[i]);
 
     /* Store the original exec string */
     original_exec_string = targs[exec_idx];
@@ -215,7 +215,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
         if (targs[host_idx])
             HYDU_FREE(targs[host_idx]);
         if (proxy->node->user == NULL) {
-            targs[host_idx] = HYDU_strdup(proxy->node->hostname);
+            targs[host_idx] = MPL_strdup(proxy->node->hostname);
         }
         else {
             len = strlen(proxy->node->user) + strlen("@") + strlen(proxy->node->hostname) + 1;

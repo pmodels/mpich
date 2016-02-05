@@ -62,7 +62,7 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_v
         HYDU_FREE(cmd);
     if (args) {
         HYDU_free_strlist(args);
-        HYDU_free(args);
+        MPL_free(args);
     }
     HYDU_FUNC_EXIT();
     return status;
@@ -357,7 +357,7 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                 int included = 0, value;
 
                 /* Create a sorted list of processes */
-                current_list = HYDU_strdup(pg_scratch->dead_processes);
+                current_list = MPL_strdup(pg_scratch->dead_processes);
 
                 /* Search to see if this process is already in the list */
                 included = 0;

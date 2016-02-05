@@ -308,12 +308,12 @@ static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *pro
         HYDU_ERR_POP(status, "unable to allocate proxy exec\n");
 
         for (i = 0; exec->exec[i]; i++)
-            proxy->exec_list->exec[i] = HYDU_strdup(exec->exec[i]);
+            proxy->exec_list->exec[i] = MPL_strdup(exec->exec[i]);
         proxy->exec_list->exec[i] = NULL;
 
-        proxy->exec_list->wdir = HYDU_strdup(exec->wdir);
+        proxy->exec_list->wdir = MPL_strdup(exec->wdir);
         proxy->exec_list->proc_count = num_procs;
-        proxy->exec_list->env_prop = exec->env_prop ? HYDU_strdup(exec->env_prop) : NULL;
+        proxy->exec_list->env_prop = exec->env_prop ? MPL_strdup(exec->env_prop) : NULL;
         proxy->exec_list->user_env = HYDU_env_list_dup(exec->user_env);
         proxy->exec_list->appnum = exec->appnum;
     }
@@ -325,12 +325,12 @@ static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *pro
         texec = texec->next;
 
         for (i = 0; exec->exec[i]; i++)
-            texec->exec[i] = HYDU_strdup(exec->exec[i]);
+            texec->exec[i] = MPL_strdup(exec->exec[i]);
         texec->exec[i] = NULL;
 
-        texec->wdir = HYDU_strdup(exec->wdir);
+        texec->wdir = MPL_strdup(exec->wdir);
         texec->proc_count = num_procs;
-        texec->env_prop = exec->env_prop ? HYDU_strdup(exec->env_prop) : NULL;
+        texec->env_prop = exec->env_prop ? MPL_strdup(exec->env_prop) : NULL;
         texec->user_env = HYDU_env_list_dup(exec->user_env);
         texec->appnum = exec->appnum;
     }
@@ -501,8 +501,8 @@ HYD_status HYDU_correct_wdir(char **wdir)
     }
     else if (*wdir[0] != '/') {
         tmp[0] = HYDU_getcwd();
-        tmp[1] = HYDU_strdup("/");
-        tmp[2] = HYDU_strdup(*wdir);
+        tmp[1] = MPL_strdup("/");
+        tmp[2] = MPL_strdup(*wdir);
         tmp[3] = NULL;
 
         HYDU_FREE(*wdir);

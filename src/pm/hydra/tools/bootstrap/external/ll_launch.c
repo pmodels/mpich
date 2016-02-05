@@ -28,14 +28,14 @@ HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_proxy *proxy_list, 
      * (1) user-specified; (2) search in path; (3) Hard-coded
      * location */
     if (HYDT_bsci_info.launcher_exec)
-        path = HYDU_strdup(HYDT_bsci_info.launcher_exec);
+        path = MPL_strdup(HYDT_bsci_info.launcher_exec);
     if (!path)
         path = HYDU_find_full_path("poe");
     if (!path)
-        path = HYDU_strdup("/usr/bin/poe");
+        path = MPL_strdup("/usr/bin/poe");
 
     idx = 0;
-    targs[idx++] = HYDU_strdup(path);
+    targs[idx++] = MPL_strdup(path);
 
     if (!strcmp(HYDT_bsci_info.rmk, "ll")) {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
@@ -59,7 +59,7 @@ HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_proxy *proxy_list, 
     if (extra_arg_list) {
         extra_arg = strtok(extra_arg_list, " ");
         while (extra_arg) {
-            targs[idx++] = HYDU_strdup(extra_arg);
+            targs[idx++] = MPL_strdup(extra_arg);
             extra_arg = strtok(NULL, " ");
         }
     }
@@ -67,7 +67,7 @@ HYD_status HYDT_bscd_ll_launch_procs(char **args, struct HYD_proxy *proxy_list, 
     /* Fill in the remaining arguments */
     exec_idx = idx;
     for (i = 0; args[i]; i++)
-        targs[idx++] = HYDU_strdup(args[i]);
+        targs[idx++] = MPL_strdup(args[i]);
 
     /* Create a quoted version of the exec string, which is only used
      * when the executable is not launched directly, but through an

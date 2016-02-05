@@ -194,7 +194,7 @@ AC_SEARCH_LIBS(gethostbyname,nsl,)
 AC_SEARCH_LIBS(hstrerror, resolv,)
 
 # Check for necessary functions
-AC_CHECK_FUNCS(gettimeofday time strdup sigaction signal usleep alloca unsetenv \
+AC_CHECK_FUNCS(gettimeofday time sigaction signal usleep alloca unsetenv \
 	       strerror strsignal stat fcntl alarm isatty inet_ntop getpgid \
 	       setsid killpg hstrerror)
 

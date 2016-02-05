@@ -61,7 +61,7 @@ HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg * pg)
                 if (i > 0 && strcmp(MPIR_proctable[i - 1].host_name, proxy->node->hostname) == 0)
                     MPIR_proctable[i].host_name = MPIR_proctable[i - 1].host_name;
                 else
-                    MPIR_proctable[i].host_name = HYDU_strdup(proxy->node->hostname);
+                    MPIR_proctable[i].host_name = MPL_strdup(proxy->node->hostname);
                 MPIR_proctable[i].pid = proxy->pid[(proxy->node->core_count * round) + j];
                 j++;
                 if (exec->exec[0]) {
@@ -69,7 +69,7 @@ HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg * pg)
                     if (i > 0 && strcmp(exec->exec[0], MPIR_proctable[i - 1].executable_name) == 0)
                         MPIR_proctable[i].executable_name = MPIR_proctable[i - 1].executable_name;
                     else
-                        MPIR_proctable[i].executable_name = HYDU_strdup(exec->exec[0]);
+                        MPIR_proctable[i].executable_name = MPL_strdup(exec->exec[0]);
                 }
                 else {
                     MPIR_proctable[i].executable_name = NULL;

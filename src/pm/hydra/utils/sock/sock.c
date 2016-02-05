@@ -474,7 +474,7 @@ HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip)
 
     sa = (struct sockaddr_in *) ifa->ifa_addr;
 #if defined HAVE_INET_NTOP
-    (*ip) = HYDU_strdup((char *)
+    (*ip) = MPL_strdup((char *)
                         inet_ntop(AF_INET, (const void *) &(sa->sin_addr), buf, MAX_HOSTNAME_LEN));
 #else
     (*ip) = NULL;
@@ -553,7 +553,7 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
         memcpy(&sa.sin_addr, ht->h_addr_list[0], ht->h_length);
 
         /* Find the IP address of the host */
-        host_ip = HYDU_strdup((char *) inet_ntop(AF_INET, (const void *) &sa.sin_addr, buf,
+        host_ip = MPL_strdup((char *) inet_ntop(AF_INET, (const void *) &sa.sin_addr, buf,
                                                  MAX_HOSTNAME_LEN));
         HYDU_ASSERT(host_ip, status);
     }
@@ -569,7 +569,7 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
         memcpy(&sa.sin_addr, ht->h_addr_list[0], ht->h_length);
 
         /* Find the IP address of the host */
-        lhost_ip = HYDU_strdup((char *) inet_ntop(AF_INET, (const void *) &sa.sin_addr, buf,
+        lhost_ip = MPL_strdup((char *) inet_ntop(AF_INET, (const void *) &sa.sin_addr, buf,
                                                   MAX_HOSTNAME_LEN));
         HYDU_ASSERT(lhost_ip, status);
 
@@ -594,7 +594,7 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
         if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_INET) {
             struct sockaddr_in *sa_ptr = (struct sockaddr_in *) ifa->ifa_addr;
 
-            lhost_ip = HYDU_strdup((char *)
+            lhost_ip = MPL_strdup((char *)
                                    inet_ntop(AF_INET, (const void *) &(sa_ptr->sin_addr), buf,
                                              MAX_HOSTNAME_LEN));
             HYDU_ASSERT(lhost_ip, status);
@@ -660,7 +660,7 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_rang
 
     /* Listen on a port in the port range */
     port = 0;
-    real_port_range = port_range ? HYDU_strdup(port_range) : NULL;
+    real_port_range = port_range ? MPL_strdup(port_range) : NULL;
     status = HYDU_sock_listen(&listenfd, real_port_range, &port);
     HYDU_ERR_POP(status, "unable to listen on port\n");
 
@@ -674,7 +674,7 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_rang
         HYDU_ERR_POP(status, "unable to get network interface IP\n");
     }
     else if (hostname) {
-        ip = HYDU_strdup(hostname);
+        ip = MPL_strdup(hostname);
     }
     else {
         char localhost[MAX_HOSTNAME_LEN] = { 0 };
@@ -682,7 +682,7 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_rang
         if (gethostname(localhost, MAX_HOSTNAME_LEN) < 0)
             HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local hostname\n");
 
-        ip = HYDU_strdup(localhost);
+        ip = MPL_strdup(localhost);
     }
 
     sport = HYDU_int_to_str(port);

@@ -291,7 +291,7 @@ int main(int argc, char **argv)
         }
 
         if (node)
-            HYD_server_info.localhost = HYDU_strdup(node->hostname);
+            HYD_server_info.localhost = MPL_strdup(node->hostname);
         else {
             HYDU_MALLOC(HYD_server_info.localhost, char *, MAX_HOSTNAME_LEN, status);
             if (gethostname(HYD_server_info.localhost, MAX_HOSTNAME_LEN) < 0)
@@ -321,7 +321,7 @@ int main(int argc, char **argv)
         MPL_env2str("MPICH_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
         MPL_env2str("MPIEXEC_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
         MPL_env2str("MPIEXEC_PORT_RANGE", (const char **) &HYD_server_info.port_range))
-        HYD_server_info.port_range = HYDU_strdup(HYD_server_info.port_range);
+        HYD_server_info.port_range = MPL_strdup(HYD_server_info.port_range);
 
     /* Add the stdout/stderr callback handlers */
     HYD_server_info.stdout_cb = HYD_uiu_stdout_cb;

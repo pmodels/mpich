@@ -123,7 +123,7 @@ static HYD_status handle_rr_binding(void)
 
 static HYD_status split_count_field(const char *str, char **split_str, int *count)
 {
-    char *full_str = HYDU_strdup(str), *count_str;
+    char *full_str = MPL_strdup(str), *count_str;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -150,7 +150,7 @@ static int parse_cache_string(const char *str)
     if (str[0] != 'l')
         return 0;
 
-    t1 = HYDU_strdup(str + 1);
+    t1 = MPL_strdup(str + 1);
     for (t2 = t1;; t2++) {
         if (*t2 == 'c') {
             *t2 = 0;
