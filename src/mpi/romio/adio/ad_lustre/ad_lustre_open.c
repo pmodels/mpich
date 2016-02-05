@@ -91,8 +91,9 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
     /* It was strange and buggy to open the file in the hint path.  Instead,
      * we'll apply the file tunings at open time */
     if ((amode & O_CREAT) && set_layout ) {
-	/* if user has specified striping info, process 0 tries to set it */
-	if (!myrank) {
+	/* if user has specified striping info, first aggregator tries to set
+	 * it */
+	if (myrank == fd->hints->ranklist[0] || fd->comm == MPI_COMM_SELF) {
 	    lum->lmm_magic = LOV_USER_MAGIC;
 	    lum->lmm_pattern = 0;
 	    /* crude check for overflow of lustre internal datatypes.
@@ -138,7 +139,7 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
 	sprintf(value, "%d", lum->lmm_stripe_count);
 	ADIOI_Info_set(fd->info, "striping_factor", value);
 
-	fd->hints->fs_hints.lustre.start_iodevice = lum->lmm_stripe_offset;
+	fd->hints->start_iodevice = lum->lmm_stripe_offset;
 	sprintf(value, "%d", lum->lmm_stripe_offset);
 	ADIOI_Info_set(fd->info, "romio_lustre_start_iodevice", value);
 
