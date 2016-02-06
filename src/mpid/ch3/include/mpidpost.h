@@ -194,4 +194,14 @@ int MPID_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
 int MPIDI_CH3I_Comm_create_hook(struct MPIR_Comm *);
 int MPIDI_CH3I_Comm_destroy_hook(struct MPIR_Comm *);
 
+int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*), int *id);
+int MPIDI_CH3I_Progress_deregister_hook(int id);
+int MPIDI_CH3I_Progress_activate_hook(int id);
+int MPIDI_CH3I_Progress_deactivate_hook(int id);
+
+#define MPID_Progress_register_hook(fn_, id_) MPIDI_CH3I_Progress_register_hook(fn_, id_)
+#define MPID_Progress_deregister_hook(id_) MPIDI_CH3I_Progress_deregister_hook(id_)
+#define MPID_Progress_activate_hook(id_) MPIDI_CH3I_Progress_activate_hook(id_)
+#define MPID_Progress_deactivate_hook(id_) MPIDI_CH3I_Progress_deactivate_hook(id_)
+
 #endif /* !defined(MPIDPOST_H_INCLUDED) */
