@@ -178,18 +178,6 @@ int MPIR_Ibarrier_impl(MPID_Comm *comm_ptr, MPI_Request *request)
 
     *request = MPI_REQUEST_NULL;
 
-    MPIU_Assert(comm_ptr->coll_fns != NULL);
-    if (comm_ptr->coll_fns->Ibarrier_req != NULL) {
-        /* --BEGIN USEREXTENSION-- */
-        mpi_errno = comm_ptr->coll_fns->Ibarrier_req(comm_ptr, &reqp);
-        if (reqp) {
-            *request = reqp->handle;
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            goto fn_exit;
-        }
-        /* --END USEREXTENSION-- */
-    }
-
     if (comm_ptr->local_size != 1 || comm_ptr->comm_kind == MPID_INTERCOMM) {
         mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
