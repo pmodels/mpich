@@ -34,6 +34,10 @@ static inline int immed_copy(void *src, void *dest, size_t len)
     case 1:
         *(uint8_t *) dest = *(uint8_t *) src;
         break;
+#ifndef NEEDS_STRICT_ALIGNMENT
+        /* Following copy is unsafe on platforms that require strict
+         * alignment (e.g., SPARC). Because the buffers may not be aligned
+         * for data type access except char. */
     case 2:
         *(uint16_t *) dest = *(uint16_t *) src;
         break;
@@ -43,6 +47,7 @@ static inline int immed_copy(void *src, void *dest, size_t len)
     case 8:
         *(uint64_t *) dest = *(uint64_t *) src;
         break;
+#endif
     default:
         MPIR_Memcpy(dest, (void *) src, len);
     }
