@@ -319,7 +319,7 @@ static inline int send_flush_msg(int dest, MPID_Win * win_ptr)
 
 /* enqueue an unsatisfied origin in passive target at target side. */
 static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
-                                      MPIDI_CH3_Pkt_t * pkt,
+                                      MPIDI_CH3_Pkt_t * pkt, void * data,
                                       MPIDI_msg_sz_t * buflen, MPID_Request ** reqp)
 {
     MPIDI_RMA_Target_lock_entry_t *new_ptr = NULL;
@@ -345,7 +345,7 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
     if (MPIDI_CH3I_RMA_PKT_IS_IMMED_OP(*pkt) || pkt->type == MPIDI_CH3_PKT_LOCK ||
         pkt->type == MPIDI_CH3_PKT_GET) {
         /* return bytes of data processed in this pkt handler */
-        (*buflen) = sizeof(MPIDI_CH3_Pkt_t);
+        (*buflen) = 0;
 
         if (new_ptr != NULL)
             new_ptr->all_data_recved = 1;
@@ -362,7 +362,6 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
         int target_count;
         int complete = 0;
         MPIDI_msg_sz_t data_len;
-        char *data_buf = NULL;
         MPIDI_CH3_Pkt_flags_t flags;
 
         /* This is PUT, ACC, GACC, FOP */
@@ -469,8 +468,7 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
             req->dev.OnFinal = MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete;
             req->dev.target_lock_queue_entry = new_ptr;
 
-            data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
-            data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
+            data_len = *buflen;
             MPIU_Assert(req->dev.recv_data_sz >= 0);
         }
         else {
@@ -482,17 +480,16 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
             req->dev.OnFinal = MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete;
             req->dev.target_lock_queue_entry = new_ptr;
 
-            data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
-            data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
+            data_len = *buflen;
             MPIU_Assert(req->dev.recv_data_sz >= 0);
         }
 
-        mpi_errno = MPIDI_CH3U_Receive_data_found(req, data_buf, &data_len, &complete);
+        mpi_errno = MPIDI_CH3U_Receive_data_found(req, data, &data_len, &complete);
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_POP(mpi_errno);
 
         /* return bytes of data processed in this pkt handler */
-        (*buflen) = sizeof(MPIDI_CH3_Pkt_t) + data_len;
+        (*buflen) = data_len;
 
         if (complete) {
             mpi_errno = MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete(vc, req, &complete);
@@ -1034,7 +1031,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
 
 
 static inline int check_piggyback_lock(MPID_Win * win_ptr, MPIDI_VC_t * vc,
-                                       MPIDI_CH3_Pkt_t * pkt,
+                                       MPIDI_CH3_Pkt_t * pkt, void * data,
                                        MPIDI_msg_sz_t * buflen,
                                        int *acquire_lock_fail, MPID_Request ** reqp)
 {
@@ -1057,7 +1054,7 @@ static inline int check_piggyback_lock(MPID_Win * win_ptr, MPIDI_VC_t * vc,
 
         if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, lock_type) == 0) {
             /* cannot acquire the lock, queue up this operation. */
-            mpi_errno = enqueue_lock_origin(win_ptr, vc, pkt, buflen, reqp);
+            mpi_errno = enqueue_lock_origin(win_ptr, vc, pkt, data, buflen, reqp);
             if (mpi_errno != MPI_SUCCESS)
                 MPIR_ERR_POP(mpi_errno);
             (*acquire_lock_fail) = 1;

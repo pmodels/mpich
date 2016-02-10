@@ -186,8 +186,10 @@ int MPID_nem_ptl_lmt_done_recv(MPIDI_VC_t *vc, MPID_Request *req);
 /* packet handlers */
 
 int MPID_nem_ptl_pkt_cancel_send_req_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
+                                             void *data ATTRIBUTE((unused)),
                                              MPIDI_msg_sz_t *buflen, MPID_Request **rreqp);
 int MPID_nem_ptl_pkt_cancel_send_resp_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
+                                              void *data ATTRIBUTE((unused)),
                                               MPIDI_msg_sz_t *buflen, MPID_Request **rreqp);
 
 /* local packet types */
