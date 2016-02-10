@@ -756,9 +756,21 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
             {
                 MPIDI_msg_sz_t len;
                 MPIDI_CH3_Pkt_t *pkt = (MPIDI_CH3_Pkt_t *)buf;
+#ifdef NEEDS_STRICT_ALIGNMENT
+                MPIDI_CH3_Pkt_t aligned_buf;
+#endif
 
                 MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "received new message");
 
+#ifdef NEEDS_STRICT_ALIGNMENT
+                /* Copy packet header to temporary buffer to ensure aligned access.
+                 * Note that we intentionally perform the extra copy on all platforms
+                 * that require strict alignment without checking whether the original
+                 * buffer is aligned. This is because we cannot find a good way to
+                 * get correct alignment for general structure on all platforms. */
+                MPIR_Memcpy(&aligned_buf, buf, sizeof(MPIDI_CH3_Pkt_t));
+                pkt = &aligned_buf;
+#endif
                 /* deduct packet header */
                 buflen -= sizeof(MPIDI_CH3_Pkt_t);
                 buf += sizeof(MPIDI_CH3_Pkt_t);
@@ -794,6 +806,9 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
             MPIDI_msg_sz_t copylen;
             MPIDI_msg_sz_t datalen = 0;
             MPIDI_CH3_Pkt_t *pkt = (MPIDI_CH3_Pkt_t *)vc_ch->pending_pkt;
+
+            /* pending_pkt is allocated by malloc which guarantees the allocated
+             * space is suitably aligned for storage of any type of object. */
 
             MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "received header fragment");
 
