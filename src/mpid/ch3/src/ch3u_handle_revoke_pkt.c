@@ -11,6 +11,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_Revoke(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
+                                void *data ATTRIBUTE((unused)),
                                 MPIDI_msg_sz_t *buflen, MPID_Request **rreqp)
 {
     MPIDI_CH3_Pkt_revoke_t *revoke_pkt = &pkt->revoke;
