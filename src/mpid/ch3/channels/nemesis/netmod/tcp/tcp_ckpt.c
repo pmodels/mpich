@@ -37,7 +37,9 @@ fn_fail:
 #define FUNCNAME MPID_nem_tcp_ckpt_unpause_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPIR_Request **rreqp)
+int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
+                                     void *data ATTRIBUTE((unused)),
+                                     intptr_t *buflen, MPIR_Request **rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
@@ -59,7 +61,7 @@ int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intpt
     }
 
 fn_exit:
-    *buflen = sizeof(MPIDI_CH3_Pkt_t);
+    *buflen = 0;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_CKPT_UNPAUSE_HANDLER);
     return mpi_errno;

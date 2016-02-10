@@ -1733,6 +1733,7 @@ static int MPIDI_CH3I_Revokeq_cleanup(void)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_ConnAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
+                                 void *data ATTRIBUTE((unused)),
                                  intptr_t * buflen, MPIR_Request ** rreqp)
 {
     MPIDI_CH3_Pkt_conn_ack_t *ack_pkt = &pkt->conn_ack;
@@ -1798,7 +1799,7 @@ int MPIDI_CH3_PktHandler_ConnAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         }
     }
 
-    *buflen = sizeof(MPIDI_CH3_Pkt_t);
+    *buflen = 0;
     *rreqp = NULL;
 
   fn_exit:
@@ -1813,6 +1814,7 @@ int MPIDI_CH3_PktHandler_ConnAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_AcceptAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
+                                   void *data ATTRIBUTE((unused)),
                                    intptr_t * buflen, MPIR_Request ** rreqp)
 {
     MPIDI_CH3_Pkt_accept_ack_t *ack_pkt = &pkt->accept_ack;
@@ -1843,7 +1845,7 @@ int MPIDI_CH3_PktHandler_AcceptAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         MPIDI_CH3I_PORT_CONNREQ_SET_STAT(connreq, FREE);
     }
 
-    *buflen = sizeof(MPIDI_CH3_Pkt_t);
+    *buflen = 0;
     *rreqp = NULL;
 
   fn_exit:

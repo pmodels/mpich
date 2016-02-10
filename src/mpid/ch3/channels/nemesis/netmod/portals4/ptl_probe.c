@@ -307,6 +307,7 @@ int MPID_nem_ptl_anysource_improbe(int tag, MPIR_Comm * comm, int context_offset
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_pkt_cancel_send_req_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
+                                             void *data ATTRIBUTE((unused)),
                                                     intptr_t *buflen, MPIR_Request **rreqp)
 {
     int ret, mpi_errno = MPI_SUCCESS;
@@ -383,6 +384,7 @@ int MPID_nem_ptl_pkt_cancel_send_req_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pk
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_pkt_cancel_send_resp_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
+                                              void *data ATTRIBUTE((unused)),
                                               intptr_t *buflen, MPIR_Request **rreqp)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -113,7 +113,9 @@ int MPID_nem_tcp_vc_terminated(MPIDI_VC_t *vc);
 int MPID_nem_tcp_get_ordering(int *ordering);
 
 
-int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPIR_Request **rreqp);
+int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
+                                     void *data ATTRIBUTE((unused)),
+                                     intptr_t *buflen, MPIR_Request **rreqp);
 
 
 /* Macros */
