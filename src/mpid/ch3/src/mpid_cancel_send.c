@@ -226,7 +226,7 @@ int MPID_Cancel_send(MPIR_Request * sreq)
  * Handler routines called when cancel send packets arrive
  */
 
-int MPIDI_CH3_PktHandler_CancelSendReq( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
+int MPIDI_CH3_PktHandler_CancelSendReq( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data ATTRIBUTE((unused)),
 					intptr_t *buflen, MPIR_Request **rreqp )
 {
     MPIDI_CH3_Pkt_cancel_send_req_t * req_pkt = &pkt->cancel_send_req;
@@ -242,7 +242,7 @@ int MPIDI_CH3_PktHandler_CancelSendReq( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		      req_pkt->sender_req_id, req_pkt->match.parts.rank, 
 		      req_pkt->match.parts.tag, req_pkt->match.parts.context_id));
 	    
-    *buflen = sizeof(MPIDI_CH3_Pkt_t);
+    *buflen = 0;
     /* FIXME: Note that this routine is called from within the packet handler. 
        If the message queue mutex is different from the progress mutex, this 
        must be protected within a message-queue mutex */
@@ -290,7 +290,7 @@ int MPIDI_CH3_PktHandler_CancelSendReq( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 }
 
 int MPIDI_CH3_PktHandler_CancelSendResp( MPIDI_VC_t *vc ATTRIBUTE((unused)), 
-					 MPIDI_CH3_Pkt_t *pkt,
+					 MPIDI_CH3_Pkt_t *pkt, void *data ATTRIBUTE((unused)),
 					 intptr_t *buflen, MPIR_Request **rreqp )
 {
     MPIDI_CH3_Pkt_cancel_send_resp_t * resp_pkt = &pkt->cancel_send_resp;
@@ -301,7 +301,7 @@ int MPIDI_CH3_PktHandler_CancelSendResp( MPIDI_VC_t *vc ATTRIBUTE((unused)),
 			"received cancel send resp pkt, sreq=0x%08x, ack=%d",
 			resp_pkt->sender_req_id, resp_pkt->ack));
 	    
-    *buflen = sizeof(MPIDI_CH3_Pkt_t);
+    *buflen = 0;
 
     MPIR_Request_get_ptr(resp_pkt->sender_req_id, sreq);
     
