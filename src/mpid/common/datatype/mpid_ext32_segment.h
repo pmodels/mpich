@@ -348,11 +348,13 @@ static inline void BASIC_convert128(char *src, char *dest)
            BASIC_convert64((char *)&src,  \
                            (char *)&dest);\
         }                                     \
+        break;                                \
         case 12:                              \
         {                                     \
            BASIC_convert96((char *)&src,      \
                            (char *)&dest);    \
         }                                     \
+        break;                                \
         case 16:                              \
         {                                     \
            BASIC_convert128((char *)&src,     \
