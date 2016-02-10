@@ -38,7 +38,8 @@ struct MPID_Request;
 
 /* PktHandler function:
    vc  (INPUT) -- vc on which the packet was received
-   pkt (INPUT) -- pointer to packet header at beginning of receive buffer
+   pkt (INPUT) -- pointer to packet header (aligned access).
+   data (INPUT) -- pointer to beginning of data
    buflen (I/O) -- IN: number of bytes received into receive buffer
                    OUT: number of bytes processed by the handler function
    req (OUTPUT) -- NULL, if the whole message has been processed by the handler
@@ -47,7 +48,7 @@ struct MPID_Request;
                    message should be received.
    (This decl needs to come before mpidi_ch3_pre.h)
 */
-typedef int MPIDI_CH3_PktHandler_Fcn(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *pkt,
+typedef int MPIDI_CH3_PktHandler_Fcn(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *pkt, void *data,
 				     MPIDI_msg_sz_t *buflen, struct MPID_Request **req );
 
 /* Include definitions from the channel which must exist before items in this 

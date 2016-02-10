@@ -486,15 +486,16 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 	    {
 		if (conn->recv_active == NULL)
 		{
-                    MPIDI_msg_sz_t buflen = sizeof (MPIDI_CH3_Pkt_t);
+                    MPIDI_msg_sz_t buflen = 0;
 		    MPIU_Assert(conn->pkt.type < MPIDI_CH3_PKT_END_CH3);
                     
-		    mpi_errno = pktArray[conn->pkt.type]( conn->vc, &conn->pkt,
+		    /* conn->pkt is always aligned */
+		    mpi_errno = pktArray[conn->pkt.type]( conn->vc, &conn->pkt, NULL,
 							  &buflen, &rreq );
 		    if (mpi_errno != MPI_SUCCESS) {
 			MPIR_ERR_POP(mpi_errno);
 		    }
-                    MPIU_Assert(buflen == sizeof (MPIDI_CH3_Pkt_t));
+                    MPIU_Assert(buflen == 0);
 
 		    if (rreq == NULL)
 		    {
