@@ -528,7 +528,8 @@ fn_fail:
 #define FUNCNAME pkt_ckpt_marker_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int pkt_ckpt_marker_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPIR_Request **req)
+static int pkt_ckpt_marker_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data ATTRIBUTE((unused)),
+                                   intptr_t *buflen, MPIR_Request **req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_pkt_ckpt_marker_t * const ckpt_pkt = (MPID_nem_pkt_ckpt_marker_t *)pkt;
@@ -555,7 +556,7 @@ static int pkt_ckpt_marker_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_
         MPIDI_CH3_Progress_signal_completion();
     }
     
-    *buflen = sizeof(MPIDI_CH3_Pkt_t);
+    *buflen = 0;
     *req = NULL;
 
 fn_exit:

@@ -276,7 +276,7 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
 #define FUNCNAME MPIDI_CH3_PktHandler_Close
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, 
+int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data ATTRIBUTE((unused)),
 				intptr_t *buflen, MPIR_Request **rreqp )
 {
     MPIDI_CH3_Pkt_close_t * close_pkt = &pkt->close;
@@ -339,7 +339,7 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	mpi_errno = MPIDI_CH3_Connection_terminate(vc);
     }
     
-    *buflen = sizeof(MPIDI_CH3_Pkt_t);
+    *buflen = 0;
     *rreqp = NULL;
 
  fn_fail:
