@@ -2981,6 +2981,11 @@ else
    AC_MSG_RESULT([int or better])
 fi
 
+# Require strict alignment memory access for alignment-sensitive platform (e.g., SPARC)
+if test "$host_cpu" = "sparc" ; then
+    AC_DEFINE(NEEDS_STRICT_ALIGNMENT,1,[Define if strict alignment memory access is required])
+fi
+
 # There are further alignment checks after we test for int64_t etc. below.
 
 # Get the size of the C types for encoding in the basic datatypes and for
