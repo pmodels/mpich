@@ -50,6 +50,7 @@ void *receiver(void *ptr)
 void *sender_bsend(void *ptr)
 {
     char buffer[MSGSIZE];
+    MTEST_VG_MEM_INIT(buffer, MSGSIZE * sizeof(char));
     MPI_Bsend(buffer, MSGSIZE, MPI_CHAR, (rank + 1) % size, 0, MPI_COMM_WORLD);
 
     return NULL;
@@ -59,6 +60,7 @@ void *sender_ibsend(void *ptr)
 {
     char buffer[MSGSIZE];
     MPI_Request req;
+    MTEST_VG_MEM_INIT(buffer, MSGSIZE * sizeof(char));
     MPI_Ibsend(buffer, MSGSIZE, MPI_CHAR, (rank + 1) % size, 0, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
@@ -69,6 +71,7 @@ void *sender_isend(void *ptr)
 {
     char buffer[MSGSIZE];
     MPI_Request req;
+    MTEST_VG_MEM_INIT(buffer, MSGSIZE * sizeof(char));
     MPI_Isend(buffer, MSGSIZE, MPI_CHAR, (rank + 1) % size, 0, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
@@ -78,6 +81,7 @@ void *sender_isend(void *ptr)
 void *sender_send(void *ptr)
 {
     char buffer[MSGSIZE];
+    MTEST_VG_MEM_INIT(buffer, MSGSIZE * sizeof(char));
     MPI_Send(buffer, MSGSIZE, MPI_CHAR, (rank + 1) % size, 0, MPI_COMM_WORLD);
 
     return NULL;
@@ -89,6 +93,7 @@ int main(int argc, char *argv[])
     int provided, i[2], k;
     char *buffer, *ptr_dt;
     buffer = (char *) malloc(BUFSIZE * sizeof(char));
+    MTEST_VG_MEM_INIT(buffer, BUFSIZE * sizeof(char));
     MPI_Status status;
     pthread_t receiver_thread, sender_thread[NUMSENDS];
     pthread_attr_t attr;

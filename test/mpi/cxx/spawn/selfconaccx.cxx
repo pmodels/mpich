@@ -26,6 +26,8 @@ int main( int argc, char *argv[] )
     MPI::Status status;
     MPI::Intercomm comm;
 
+    MTEST_VG_MEM_INIT(port, MPI_MAX_PORT_NAME * sizeof(char));
+
     MPI::Init(argc, argv);
 
     size = MPI::COMM_WORLD.Get_size();

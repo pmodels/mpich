@@ -151,6 +151,8 @@ int MPI_Comm_join(int fd, MPI_Comm *intercomm)
     
     MPIU_CHKLMEM_MALLOC(local_port, char *, MPI_MAX_PORT_NAME, mpi_errno, "local port name");
     MPIU_CHKLMEM_MALLOC(remote_port, char *, MPI_MAX_PORT_NAME, mpi_errno, "remote port name");
+
+    MPL_VG_MEM_INIT(local_port, MPI_MAX_PORT_NAME * sizeof(char));
     
     mpi_errno = MPIR_Open_port_impl(NULL, local_port);
     MPIR_ERR_CHKANDJUMP((mpi_errno != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER, "**openportfailed");

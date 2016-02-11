@@ -22,6 +22,8 @@ int main(int argc, char *argv[])
     char str[MPI_MAX_ERROR_STRING + 1];
     int slen;
 
+    MTEST_VG_MEM_INIT(buf, 10 * sizeof(int));
+
     MTest_Init(&argc, &argv);
 
     MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);

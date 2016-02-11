@@ -75,6 +75,7 @@ int main(int argc, char **argv)
         MPI_Comm_free(&comm_hdls[i]);
 
     free(comm_hdls);
+    free(ranks);
     MPI_Group_free(&world_group);
 
     MTest_Finalize(errors);

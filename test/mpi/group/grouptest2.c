@@ -207,6 +207,8 @@ int main(int argc, char **argv)
             printf("Found %d errors in MPI Group routines\n", toterr);
     }
 
+    free(ranks);
+    free(ranks_out);
     MPI_Finalize();
     return toterr;
 }

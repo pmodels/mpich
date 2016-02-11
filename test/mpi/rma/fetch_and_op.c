@@ -76,6 +76,8 @@ int main(int argc, char **argv)
 
     val_ptr = malloc(sizeof(TYPE_C) * nproc);
     res_ptr = malloc(sizeof(TYPE_C) * nproc);
+    MTEST_VG_MEM_INIT(val_ptr, sizeof(TYPE_C) * nproc);
+    MTEST_VG_MEM_INIT(res_ptr, sizeof(TYPE_C) * nproc);
 
     MPI_Win_create(val_ptr, sizeof(TYPE_C) * nproc, sizeof(TYPE_C), MPI_INFO_NULL, MPI_COMM_WORLD,
                    &win);

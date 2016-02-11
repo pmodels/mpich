@@ -145,6 +145,8 @@ static int MPIR_Topology_copy_fn ( MPI_Comm comm ATTRIBUTE((unused)),
 
     MPIU_CHKPMEM_MALLOC(copy_topology, MPIR_Topology *, sizeof(MPIR_Topology), mpi_errno, "copy_topology");
 
+    MPL_VG_MEM_INIT(copy_topology, sizeof(MPIR_Topology));
+
     /* simplify copying and error handling */
 #define MPIR_ARRAY_COPY_HELPER(kind_,array_field_,count_field_) \
         do { \

@@ -163,6 +163,7 @@ int main(int argc, char *argv[])
     if (getbuf) {
         free(getbuf);
     }
+    free(srcbuf);
     MPI_Win_free(&win);
     MPI_Type_free(&vectype);
 

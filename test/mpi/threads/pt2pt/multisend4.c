@@ -46,6 +46,7 @@ MTEST_THREAD_RETURN_TYPE run_test_sendrecv(void *arg)
 
     for (cnt = 1; cnt < MAX_CNT; cnt = 2 * cnt) {
         buf = (int *) malloc(2 * cnt * sizeof(int));
+        MTEST_VG_MEM_INIT(buf, 2 * cnt * sizeof(int));
 
         /* Wait for all senders to be ready */
         MTest_thread_barrier(nthreads);

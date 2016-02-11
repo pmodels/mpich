@@ -144,6 +144,8 @@ int main(int argc, char **argv)
         free(sdispls);
     if (rdispls)
         free(rdispls);
+    if (types)
+        free(types);
 
     if (rank == 0) {
         if (errs)

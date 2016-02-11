@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
     for (cs = 0; cs < 4; cs++) {
         n = bufsizes[cs];
         buf = (char *) malloc(n);
+        MTEST_VG_MEM_INIT(buf, n);
         if (!buf) {
             fprintf(stderr, "Unable to allocate %d bytes\n", n);
             MPI_Abort(MPI_COMM_WORLD, 1);

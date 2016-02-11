@@ -55,6 +55,8 @@ int main(int argc, char **argv)
     if (rank == 0)
         printf(" No Errors\n");
 
+    free(ranks);
+    free(included);
     MPI_Finalize();
 
     return 0;

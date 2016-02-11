@@ -105,6 +105,7 @@ int main(int argc, char *argv[])
         }
     }
 
+    free(buffer);
     MPI_Type_free(&str);
     MPI_Type_free(&con);
     MTest_Finalize(errs);

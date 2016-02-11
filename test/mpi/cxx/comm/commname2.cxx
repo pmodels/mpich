@@ -74,7 +74,7 @@ int main( int argc, char **argv )
 	    errs++;
 	    cout << "comm[" << i << "] gave name " << name << "\n";
 	}
-        MTestFreeComm ( *comm[i] );
+        MTestFreeComm ( comm[i] );
     }
     
     MTest_Finalize( errs );

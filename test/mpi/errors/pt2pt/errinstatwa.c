@@ -22,6 +22,9 @@ int main(int argc, char *argv[])
     int errval, errclass;
     int b1[20], b2[20], rank, size, src, dest, i;
 
+    MTEST_VG_MEM_INIT(b1, 20 * sizeof(int));
+    MTEST_VG_MEM_INIT(b2, 20 * sizeof(int));
+
     MTest_Init(&argc, &argv);
 
     /* Create some receive requests.  tags 0-9 will succeed, tags 10-19
