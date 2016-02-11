@@ -379,6 +379,7 @@ void MTestDatatype2Free(MPI_Datatype * types, void **inbufs, void **outbufs,
         if (i >= nbasic_types)
             MPI_Type_free(types + i);
     }
+    free(types);
     free(inbufs);
     free(outbufs);
     free(counts);

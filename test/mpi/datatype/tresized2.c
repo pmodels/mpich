@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
                 }
             }
         }
+        free(buf);
     }
     MPI_Type_free(&newtype);
 

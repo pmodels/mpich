@@ -178,6 +178,7 @@ int vector_of_vectors_test(void)
         }
     }
 
+    free(buf);
     MPI_Type_free(&inner_vector);
     MPI_Type_free(&outer_vector);
     return errs;
@@ -258,6 +259,7 @@ int optimizable_vector_of_basics_test(void)
         }
     }
 
+    free(buf);
     MPI_Type_free(&parent_type);
     return errs;
 }
@@ -347,6 +349,7 @@ int struct_of_basics_test(void)
         }
     }
 
+    free(buf);
     MPI_Type_free(&parent_type);
     return errs;
 }

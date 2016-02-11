@@ -95,6 +95,7 @@ int main(int argc, char *argv[])
         MPI_Start(&r);
         MPI_Wait(&r, &s);
         MPI_Waitall(size, rr, MPI_STATUSES_IGNORE);
+        free(rr);
     }
     else {
         MPI_Start(&r);

@@ -119,6 +119,8 @@ int main(int argc, char **argv)
         llist_ptr_t new_elem_ptr;
         int success = 0;
 
+        MTEST_VG_MEM_INIT(&new_elem_ptr, sizeof(llist_ptr_t));
+
         /* Create a new list element and register it with the window */
         new_elem_ptr.rank = procid;
         new_elem_ptr.disp = alloc_elem(procid, llist_win);

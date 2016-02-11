@@ -57,6 +57,7 @@ MTEST_THREAD_RETURN_TYPE test_intracomm(void *arg)
     MPI_Comm parentcomm = parentcomms[tid];
     MPI_Comm nbrcomm = nbrcomms[tid];
 
+    MPI_Comm_rank(parentcomm, &rank);
     for (i = 0; i < NUM_ITER; i++) {
         cnt = 0;
         if (*(int *) arg == rank)
@@ -70,7 +71,6 @@ MTEST_THREAD_RETURN_TYPE test_intracomm(void *arg)
             MPI_Comm_idup(parentcomm, &comms[j], &reqs[cnt++]);
 
         /* Issue an iscan on parent comm to overlap with the pending idups */
-        MPI_Comm_rank(parentcomm, &rank);
         MPI_Iscan(&rank, &ans[0], 1, MPI_INT, MPI_SUM, parentcomm, &reqs[cnt++]);
         expected[0] = rank * (rank + 1) / 2;
         /* Wait for the first child comm to be ready */

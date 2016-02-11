@@ -38,6 +38,8 @@ int main(int argc, char **argv)
     MPI::Datatype etype, filetype;
     char datarep[25], *filename;
 
+    MTEST_VG_MEM_INIT(buf, 1024 * sizeof(int));
+
     MPI::Init();
 
     try {

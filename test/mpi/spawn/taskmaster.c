@@ -158,6 +158,9 @@ int main(int argc, char *argv[])
 #ifdef USE_THREADS
     if (threads)
         free(threads);
+#else
+    if (child)
+        free(child);
 #endif
     MPI_Finalize();
 

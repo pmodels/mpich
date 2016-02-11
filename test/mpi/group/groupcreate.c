@@ -79,6 +79,7 @@ implementation\n");
     }
 
     free(group_array);
+    free(ranks);
 
     MPI_Finalize();
     return 0;

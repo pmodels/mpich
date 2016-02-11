@@ -52,6 +52,8 @@ int main(int argc, char **argv)
         else
             printf(" No Errors\n");
     }
+    free(vecin);
+    free(vecout);
     MPI_Type_free(&vec);
     MPI_Finalize();
     return 0;

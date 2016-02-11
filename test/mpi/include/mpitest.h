@@ -7,6 +7,7 @@
 #ifndef MPITEST_H_INCLUDED
 #define MPITEST_H_INCLUDED
 
+#include <string.h>
 #include "mpitestconf.h"
 
 /*
@@ -126,5 +127,11 @@ void MTestFreeWin(MPI_Win *);
 #define MTEST_HAVE_MIN_MPI_VERSION(major_,minor_) \
     ((MTEST_MPI_VERSION == (major_) && MTEST_MPI_SUBVERSION >= (minor_)) ||   \
     (MTEST_MPI_VERSION > (major_)))
+
+/* useful for avoid valgrind warnings about padding bytes */
+#define MTEST_VG_MEM_INIT(addr_, size_) \
+do {                                    \
+    memset(addr_, 0, size_);            \
+} while (0)
 
 #endif

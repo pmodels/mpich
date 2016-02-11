@@ -51,6 +51,7 @@ int main(int argc, char *argv[])
     if (rank == 0)
         printf(" No errors\n");
 
+    free(excl);
     MPI_Finalize();
     return 0;
 }

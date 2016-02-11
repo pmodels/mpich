@@ -92,6 +92,8 @@ int main(int argc, char *argv[])
     MPI_Ssend(buffer, 0, MPI_INT, rank, 1, MPI_COMM_WORLD);
     MPI_Recv(buffer, 0, MPI_INT, rank, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
+    MTest_Join_threads();
+
     MPI_Comm_free(&comm4);
     MPI_Comm_free(&comm1);
     MPI_Comm_free(&comm2);

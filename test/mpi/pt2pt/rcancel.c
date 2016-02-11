@@ -78,6 +78,9 @@ int main(int argc, char *argv[])
             printf("Incorrectly cancelled Irecv[1]\n");
             fflush(stdout);
         }
+        for (i = 0; i < 4; i++) {
+            free(bufs[i]);
+        }
     }
 
     MTest_Finalize(errs);
