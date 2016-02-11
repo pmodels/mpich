@@ -213,6 +213,10 @@ static int verify_comm(MPI_Comm comm)
     if (dupcomm != MPI_COMM_NULL)
         MPI_Comm_free(&dupcomm);
 
+    free(sources);
+    free(sweights);
+    free(destinations);
+    free(dweights);
     return local_errs;
 }
 
@@ -563,6 +567,11 @@ int main(int argc, char *argv[])
     for (i = 0; i < size; i++)
         free(layout[i]);
     free(layout);
+    free(sources);
+    free(sweights);
+    free(destinations);
+    free(dweights);
+    free(degrees);
 #endif
 
     MTest_Finalize(errs);

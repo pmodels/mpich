@@ -47,6 +47,8 @@ int main(int argc, char *argv[])
         assert(buf[i] == wrank * NELEM + i);
     }
 
+    free(buf);
+
     MPI_Type_free(&type);
     MPI_Finalize();
 

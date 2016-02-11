@@ -100,6 +100,7 @@ int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr)
     }
     /* --END ERROR HANDLING-- */
 
+    MPL_VG_MEM_INIT(ap, size);
     *(void **)baseptr = ap;
 
     /* ... end of body of routine ... */

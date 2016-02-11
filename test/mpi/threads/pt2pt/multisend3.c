@@ -38,6 +38,7 @@ MTEST_THREAD_RETURN_TYPE run_test_send(void *arg)
     /* Create the buf just once to avoid finding races in malloc instead
      * of the MPI library */
     buf = (int *) malloc(MAX_CNT * sizeof(int));
+    MTEST_VG_MEM_INIT(buf, MAX_CNT * sizeof(int));
     MTestPrintfMsg(1, "buf address %p (size %d)\n", buf, MAX_CNT * sizeof(int));
     MPI_Comm_size(MPI_COMM_WORLD, &wsize);
     if (wsize >= MAX_NTHREAD)
@@ -83,6 +84,7 @@ void run_test_recv(void)
 
     for (cnt = 1; cnt < MAX_CNT; cnt = 2 * cnt) {
         buf = (int *) malloc(cnt * sizeof(int));
+        MTEST_VG_MEM_INIT(buf, cnt * sizeof(int));
         t = MPI_Wtime();
         for (j = 0; j < MAX_LOOP; j++)
             MPI_Recv(buf, cnt, MPI_INT, 0, cnt, MPI_COMM_WORLD, &status);

@@ -60,6 +60,7 @@ void *ADIOI_Malloc_fn(size_t size, int lineno, const char *fname)
 	FPRINTF(stderr, "Out of memory in file %s, line %d\n", fname, lineno);
 	MPI_Abort(MPI_COMM_WORLD, 1);
     }
+    MPL_VG_MEM_INIT(new, size);
     DBG_FPRINTF(stderr, "ADIOI_Malloc %s:<%d> %p (%#zX)\n", fname, lineno, new, size);
     return new;
 }

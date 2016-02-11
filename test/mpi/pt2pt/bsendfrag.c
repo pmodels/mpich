@@ -83,6 +83,7 @@ int main(int argc, char *argv[])
         MPI_Barrier(comm);
         /* Detach waits until all messages received */
         MPI_Buffer_detach(&buf, &bsize);
+        free(buf);
     }
     else if (rank == dest) {
 

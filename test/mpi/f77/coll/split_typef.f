@@ -19,6 +19,7 @@ C
       call mtest_init( ierr )
 
       call mpi_comm_dup( MPI_COMM_WORLD, comm, ierr )
+      call mpi_comm_rank( comm, rank , ierr )
 
       call mpi_comm_split_type( comm, MPI_COMM_TYPE_SHARED, rank,
      &     MPI_INFO_NULL, newcomm, ierr )

@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 #define BUFSIZE (128*1024)
 
@@ -24,6 +25,7 @@ int main(int argc, char *argv[])
     MPI_Init(&argc, &argv);
 
     buf = malloc(BUFSIZE);
+    MTEST_VG_MEM_INIT(buf, BUFSIZE);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);

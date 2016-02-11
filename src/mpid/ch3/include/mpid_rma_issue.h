@@ -119,6 +119,7 @@ static int init_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
         _total_sz = _ext_hdr_sz + target_dtp->dataloop_size;
 
         _ext_hdr_ptr = (MPIDI_CH3_Ext_pkt_accum_stream_derived_t *) MPL_malloc(_total_sz);
+        MPL_VG_MEM_INIT(_ext_hdr_ptr, _total_sz);
         if (_ext_hdr_ptr == NULL) {
             MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem",
                                  "**nomem %s", "MPIDI_CH3_Ext_pkt_accum_stream_derived_t");
@@ -137,6 +138,7 @@ static int init_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
         _total_sz = sizeof(MPIDI_CH3_Ext_pkt_accum_stream_t);
 
         _ext_hdr_ptr = (MPIDI_CH3_Ext_pkt_accum_stream_t *) MPL_malloc(_total_sz);
+        MPL_VG_MEM_INIT(_ext_hdr_ptr, _total_sz);
         if (_ext_hdr_ptr == NULL) {
             MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem",
                                  "**nomem %s", "MPIDI_CH3_Ext_pkt_accum_stream_t");
@@ -154,6 +156,7 @@ static int init_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
         _total_sz = _ext_hdr_sz + target_dtp->dataloop_size;
 
         _ext_hdr_ptr = (MPIDI_CH3_Ext_pkt_accum_derived_t *) MPL_malloc(_total_sz);
+        MPL_VG_MEM_INIT(_ext_hdr_ptr, _total_sz);
         if (_ext_hdr_ptr == NULL) {
             MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem",
                                  "**nomem %s", "MPIDI_CH3_Ext_pkt_accum_derived_t");
@@ -433,6 +436,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
              * TODO: support extended header array */
             ext_hdr_sz = sizeof(MPIDI_CH3_Ext_pkt_put_derived_t) + target_dtp_ptr->dataloop_size;
             ext_hdr_ptr = MPL_malloc(ext_hdr_sz);
+            MPL_VG_MEM_INIT(ext_hdr_ptr, ext_hdr_sz);
             if (!ext_hdr_ptr) {
                 MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem",
                                      "**nomem %s", "MPIDI_CH3_Ext_pkt_put_derived_t");
@@ -938,6 +942,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
          * TODO: support extended header array */
         ext_hdr_sz = sizeof(MPIDI_CH3_Ext_pkt_get_derived_t) + dtp->dataloop_size;
         ext_hdr_ptr = MPL_malloc(ext_hdr_sz);
+        MPL_VG_MEM_INIT(ext_hdr_ptr, ext_hdr_sz);
         if (!ext_hdr_ptr) {
             MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem",
                                  "**nomem %s", "MPIDI_CH3_Ext_pkt_get_derived_t");
