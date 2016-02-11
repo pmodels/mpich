@@ -59,6 +59,7 @@ int main(int argc, char **argv)
                 i++;
                 len = (int) strlen(*argv);
                 filename = (char *) malloc(len + 10);
+                MTEST_VG_MEM_INIT(filename, (len + 10) * sizeof(char));
                 strcpy(filename, *argv);
             }
             else if (strcmp(*argv, "-size") == 0) {
@@ -83,6 +84,7 @@ int main(int argc, char **argv)
             /* Use a default filename of testfile */
             len = 8;
             filename = (char *) malloc(len + 10);
+            MTEST_VG_MEM_INIT(filename, (len + 10) * sizeof(char));
             strcpy(filename, "testfile");
         }
         MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);

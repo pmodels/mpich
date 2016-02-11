@@ -41,6 +41,7 @@ int main(int argc, char *argv[])
     MPI_Comm comm;
     MPI_Errhandler newerr, olderr;
 
+    MTEST_VG_MEM_INIT(buf, 2 * sizeof(int));
 
     MTest_Init(&argc, &argv);
     comm = MPI_COMM_WORLD;

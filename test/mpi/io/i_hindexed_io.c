@@ -110,5 +110,6 @@ int main(int argc, char **argv)
     MPI_Finalize();
 
     free(data);
+    free(verify);
     return 0;
 }

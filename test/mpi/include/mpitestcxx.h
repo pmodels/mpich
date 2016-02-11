@@ -10,6 +10,8 @@
 
 #ifndef MTEST_INCLUDED
 #define MTEST_INCLUDED
+
+#include <string.h>
 /*
  * Init and finalize test
  */
@@ -63,5 +65,11 @@ int MTestGetWin(MPI::Win &, bool);
 const char *MTestGetWinName(void);
 void MTestFreeWin(MPI::Win &);
 #endif
+
+/* useful for avoid valgrind warnings about padding bytes */
+#define MTEST_VG_MEM_INIT(addr_, size_) \
+do {                                    \
+    memset(addr_, 0, size_);            \
+} while (0)
 
 #endif

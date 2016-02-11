@@ -35,6 +35,7 @@ MTEST_THREAD_RETURN_TYPE send_thread(void *p)
     int rank;
 
     buffer = malloc(sizeof(char) * MSG_SIZE);
+    MTEST_VG_MEM_INIT(buffer, MSG_SIZE * sizeof(char));
     if (buffer == NULL) {
         printf("malloc failed to allocate %d bytes for the send buffer.\n", MSG_SIZE);
         fflush(stdout);
@@ -58,6 +59,7 @@ MTEST_THREAD_RETURN_TYPE send_thread(void *p)
     else {
         sendok = 1;
     }
+    free(buffer);
     return (MTEST_THREAD_RETURN_TYPE) (long) err;
 }
 
@@ -100,6 +102,7 @@ int main(int argc, char *argv[])
     MTestSleep(3);
 
     buffer = malloc(sizeof(char) * MSG_SIZE);
+    MTEST_VG_MEM_INIT(buffer, MSG_SIZE * sizeof(char));
     if (buffer == NULL) {
         printf("malloc failed to allocate %d bytes for the recv buffer.\n", MSG_SIZE);
         fflush(stdout);
@@ -125,6 +128,8 @@ int main(int argc, char *argv[])
         errs++;
     }
 
+    MTest_Join_threads();
+    free(buffer);
     MTest_Finalize(errs);
     MPI_Finalize();
     return 0;

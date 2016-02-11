@@ -81,6 +81,8 @@ static MPI_Datatype make_largexfer_type_hindexed(MPI_Offset nbytes)
     MPI_Type_create_hindexed(count, blocklens, disp, MPI_BYTE, &memtype);
     MPI_Type_commit(&memtype);
 
+    free(blocklens);
+    free(disp);
     return memtype;
 }
 

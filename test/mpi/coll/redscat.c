@@ -51,6 +51,9 @@ int main(int argc, char **argv)
     if (rank == 0 && toterr == 0) {
         printf(" No Errors\n");
     }
+
+    free(sendbuf);
+    free(recvcounts);
     MPI_Finalize();
 
     return toterr;

@@ -6,6 +6,7 @@
  */
 #include "mpi.h"
 #include <stdio.h>
+#include <string.h>
 #include "mpitest.h"
 
 /*
@@ -40,6 +41,7 @@ int main(int argc, char *argv[])
 
     if (rank == src) {
         int buf[128], position, cnt;
+        MTEST_VG_MEM_INIT(buf, 128 * sizeof(buf[0]));
         /* sender */
 
         /* Create a datatype and send it (multiple of sizeof(int)) */

@@ -83,6 +83,7 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "Wrong buffer size returned\n");
                 errs++;
             }
+            free(buf);
         }
         else if (rank == dest) {
             double tstart;

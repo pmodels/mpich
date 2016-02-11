@@ -97,6 +97,7 @@ int main( int argc, char *argv[] )
 	}
     }
 
+    delete[] filename;
     MPI::Finalize();
 
     return 0;

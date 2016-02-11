@@ -99,6 +99,8 @@ int main(int argc, char **argv)
 
     MPI_Type_free(&mem_dtype);
 
+    free(mem_buf);
+    free(unpack_buf);
     MTest_Finalize(errs);
     MPI_Finalize();
 

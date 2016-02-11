@@ -28,6 +28,7 @@ int main(int argc, char *argv[])
     reqs = (MPI_Request *) malloc(2 * nproc * sizeof(MPI_Request));
     in_buf = (float *) malloc(elems * nproc * sizeof(float));
     out_buf = (float *) malloc(elems * nproc * sizeof(float));
+    MTEST_VG_MEM_INIT(out_buf, elems * nproc * sizeof(float));
 
     for (i = 0; i < nproc; i++) {
         MPI_Irecv(&in_buf[elems * i], elems, MPI_FLOAT, i, 0, comm, &reqs[i]);
@@ -39,6 +40,9 @@ int main(int argc, char *argv[])
 
     MPI_Waitall(nproc * 2, reqs, MPI_STATUSES_IGNORE);
 
+    free(reqs);
+    free(in_buf);
+    free(out_buf);
     MTest_Finalize(errors);
     MPI_Finalize();
     return 0;

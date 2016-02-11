@@ -31,6 +31,7 @@ MTEST_THREAD_RETURN_TYPE run_test_send(void *arg)
 
     for (cnt = 1; cnt < MAX_CNT; cnt = 2 * cnt) {
         buf = (int *) malloc(cnt * sizeof(int));
+        MTEST_VG_MEM_INIT(buf, cnt * sizeof(int));
 
         /* Wait for all senders to be ready */
         MTest_thread_barrier(nthreads);
@@ -55,6 +56,7 @@ void run_test_recv(void)
 
     for (cnt = 1; cnt < MAX_CNT; cnt = 2 * cnt) {
         buf = (int *) malloc(cnt * sizeof(int));
+        MTEST_VG_MEM_INIT(buf, cnt * sizeof(int));
         t = MPI_Wtime();
         for (j = 0; j < MAX_LOOP; j++)
             MPI_Recv(buf, cnt, MPI_INT, 0, cnt, MPI_COMM_WORLD, &status);

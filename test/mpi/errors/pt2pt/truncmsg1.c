@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
     dest = size - 1;
 
     buf = (int *) malloc(LongLen * sizeof(int));
+    MTEST_VG_MEM_INIT(buf, LongLen * sizeof(int));
     if (!buf) {
         fprintf(stderr, "Unable to allocate communication buffer of size %d\n", LongLen);
         MPI_Abort(MPI_COMM_WORLD, 1);

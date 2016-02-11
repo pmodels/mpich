@@ -103,7 +103,7 @@ int main( int argc, char *argv[] )
 	cerr << "Returned buffer from detach is not the same as the initial buffer\n";
     }
 
-    delete buf;
+    delete[] buf;
 
     MTest_Finalize( errs );
 

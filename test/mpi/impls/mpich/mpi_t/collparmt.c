@@ -5,8 +5,10 @@
  */
 /* */
 #include <stdio.h>
+#include <string.h>
 #include "mpi.h"
 #include "mpitestconf.h"
+#include "mpitest.h"
 
 int main(int argc, char *argv[])
 {
@@ -22,6 +24,10 @@ int main(int argc, char *argv[])
     int gatherScope, gatherCvar = -1;
     int newval;
     int errs = 0;
+
+    MTEST_VG_MEM_INIT(buf1, 400 * sizeof(char));
+    MTEST_VG_MEM_INIT(buf2, 400 * sizeof(char));
+    MTEST_VG_MEM_INIT(buf3, 400 * sizeof(char));
 
     MPI_Init(&argc, &argv);
     MPI_T_init_thread(MPI_THREAD_SINGLE, &provided);

@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank_world);
     MPI_Comm_size(MPI_COMM_WORLD, &nranks_world);
 
-    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, rank, MPI_INFO_NULL, &shr_comm);
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, rank_world, MPI_INFO_NULL, &shr_comm);
 
     MPI_Comm_rank(shr_comm, &rank);
     MPI_Comm_size(shr_comm, &nranks);

@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "mpitest.h"
 
 void check_error(int, const char *);
 void check_error(int error, const char *fcname)
@@ -29,6 +30,8 @@ int main(int argc, char *argv[])
     MPI_Status status;
     MPI_Comm comm;
     int verbose = 0;
+
+    MTEST_VG_MEM_INIT(port, MPI_MAX_PORT_NAME * sizeof(char));
 
     if (getenv("MPITEST_VERBOSE")) {
         verbose = 1;

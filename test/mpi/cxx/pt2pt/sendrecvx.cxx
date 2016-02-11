@@ -45,6 +45,7 @@ int main( int argc, char *argv[] )
 	int i;
 	for (i=0; i<100; i++) buf[i] = i;
 	MPI::COMM_WORLD.Send( buf, 100, MPI::INT, size-1, 0 );
+    delete[] buf;
     }
     else if (rank == size - 1) {
 	int *buf = new int[100];
@@ -56,6 +57,7 @@ int main( int argc, char *argv[] )
 		cerr << "Error: buf[" << i << "] = " << buf[i] << "\n";
 	    }
 	}
+    delete[] buf;
     }
 
     MTest_Finalize( errs );

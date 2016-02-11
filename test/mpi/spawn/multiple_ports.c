@@ -32,6 +32,9 @@ int main(int argc, char *argv[])
     int verbose = 0;
     int data = 0;
 
+    MTEST_VG_MEM_INIT(port1, MPI_MAX_PORT_NAME * sizeof(char));
+    MTEST_VG_MEM_INIT(port2, MPI_MAX_PORT_NAME * sizeof(char));
+
     if (getenv("MPITEST_VERBOSE")) {
         verbose = 1;
     }

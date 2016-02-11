@@ -37,6 +37,8 @@ MTEST_THREAD_RETURN_TYPE test_iallred(void *arg)
     int tid = *(int *) arg;
     int buf[BUF_SIZE];
 
+    MTEST_VG_MEM_INIT(buf, BUF_SIZE * sizeof(int));
+
     if (tid == rank)
         MTestSleep(1);
     MPI_Allreduce(MPI_IN_PLACE, buf, BUF_SIZE, MPI_INT, MPI_BAND, comms[tid]);

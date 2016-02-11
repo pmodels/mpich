@@ -84,6 +84,7 @@ int main(int argc, char *argv[])
     else {
         printf(" No Errors\n");
     }
+    free(buffer);
     MPI_Finalize();
     return 0;
 }

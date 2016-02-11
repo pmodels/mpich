@@ -31,6 +31,7 @@ int main( int argc, char **argv )
     complex<double> cd[2], cd_out[2];
 #ifdef HAVE_LONG_DOUBLE
     complex<long double> cld[2], cld_out[2];
+    MTEST_VG_MEM_INIT(cld, 2 * sizeof(complex<long double>));
 #endif
 
     MTest_Init( );

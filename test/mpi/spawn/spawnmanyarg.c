@@ -114,6 +114,12 @@ int main(int argc, char *argv[])
         if (parentcomm == MPI_COMM_NULL) {
             MTest_Finalize(errs);
         }
+        /* free the argument vectors */
+        for (i = 0; i < MAX_ARGV; i++) {
+            free(inargv[i]);
+            free(outargv[i]);
+        }
+
     }
     else {
         MTest_Finalize(errs);

@@ -138,6 +138,14 @@
 #  define MPL_VG_CREATE_BLOCK(addr_,len_,desc_)       do { (void) VALGRIND_CREATE_BLOCK((addr_),(len_),(desc_)); } while (0)
 #  define MPL_VG_RUNNING_ON_VALGRIND()                RUNNING_ON_VALGRIND
 #  define MPL_VG_PRINTF_BACKTRACE                     VALGRIND_PRINTF_BACKTRACE
+/* Valgrind has a bug
+ * (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=524488) that
+ * causes it to report a warning when the compiler adds padding to
+ * structures.  Even when we initialize all the fields in the
+ * structure, the padding bytes are not initialized.  The idea here is
+ * to detect when we are in "valgrind mode" and in such cases
+ * initialize all bytes of the structure. */
+#  define MPL_VG_MEM_INIT(addr_,len_)                 do { memset(addr_, 0, len_); } while (0)
 
 /* custom allocator client requests, you probably shouldn't use these unless you
  * really know what you are doing */
@@ -154,6 +162,7 @@
 #  define MPL_VG_CHECK_MEM_IS_ADDRESSABLE(addr_,len_) do {} while (0)
 #  define MPL_VG_CREATE_BLOCK(addr_,len_,desc_)       do {} while (0)
 #  define MPL_VG_RUNNING_ON_VALGRIND()                (0)       /*always false */
+#  define MPL_VG_MEM_INIT(addr_,len_)                 do {} while (0)
 #  if defined(MPL_HAVE_MACRO_VA_ARGS)
 #    define MPL_VG_PRINTF_BACKTRACE(...)              do {} while (0)
 #  else
