@@ -97,3 +97,16 @@ fn_fail:
     return mpi_errno;
 }
 
+/* ROMIO could parse hostnames but it's easier if we can let it know
+ * node ids */
+int MPIR_Get_node_id(MPI_Comm comm, int rank, int *id)
+{
+    MPID_Comm *comm_ptr;
+    MPID_Node_id_t node_id;
+
+    MPID_Comm_get_ptr(comm, comm_ptr);
+    MPID_Get_node_id(comm_ptr, rank, &node_id);
+    *id = node_id;
+
+    return MPI_SUCCESS;
+}
