@@ -360,7 +360,7 @@ HYD_status HYDU_parse_hostfile(const char *hostfile, struct HYD_node **node_list
 
 char *HYDU_find_full_path(const char *execname)
 {
-    char *tmp[HYD_NUM_TMP_STRINGS], *path = NULL, *test_path = NULL;
+    char *tmp[HYD_NUM_TMP_STRINGS] = { NULL }, *path = NULL, *test_path = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
