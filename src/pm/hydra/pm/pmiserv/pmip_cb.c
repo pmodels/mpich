@@ -549,6 +549,8 @@ static HYD_status launch_procs(void)
                                       HYD_pmcd_pmip.downstream.err,
                                       HYD_pmcd_pmip.downstream.pid,
                                       HYD_pmcd_pmip.local.ckpoint_prefix_list[0]);
+        HYDU_ERR_POP(status, "unable to restart from checkpoint\n");
+
         goto fn_spawn_complete;
     }
 
