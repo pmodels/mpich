@@ -1327,7 +1327,7 @@ static inline int perform_acc_in_lock_queue(MPID_Win * win_ptr,
 
         /* Note: here stream_offset is 0 because when piggybacking LOCK, we must use
          * the first stream unit. */
-        MPIU_Assert(recv_count = (int) recv_count);
+        MPIU_Assert(recv_count == (int) recv_count);
         mpi_errno = do_accumulate_op(target_lock_entry->data, (int) recv_count, acc_pkt->datatype,
                                      acc_pkt->addr, acc_pkt->count, acc_pkt->datatype,
                                      0, acc_pkt->op);
