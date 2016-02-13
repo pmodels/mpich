@@ -320,6 +320,7 @@ static HYD_status stdoe_cb(int _fd, int pgid, int proxy_id, int rank, void *_buf
                     status = HYDU_sock_write(fd, (const void *) prepend,
                                              strlen(prepend), &sent, &closed,
                                              HYDU_SOCK_COMM_MSGWAIT);
+                    HYDU_ERR_POP(status, "unable to write data to stdout/stderr\n");
                 }
                 status = HYDU_sock_write(fd, (const void *) &buf[mark], i - mark + 1,
                                          &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);

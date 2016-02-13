@@ -1024,8 +1024,10 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
 	   distributes them to the processes in comm_ptr */
 	mpi_errno = ReceivePGAndDistribute( tmp_comm, comm_ptr, root, &recvtag,
 					n_remote_pgs, remote_pg );
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	
 	mpi_errno = SendPGtoPeerAndFree( tmp_comm, &sendtag, pg_list );
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 	/* Receive the translations from remote process rank to process group index */
 	/*printf("accept:sending %d ints and receiving %d ints\n", local_comm_size * 2, remote_comm_size * 2);fflush(stdout);*/
@@ -1034,6 +1036,8 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
 				  remote_translation, remote_comm_size * 2, 
 				  MPI_INT, 0, recvtag++, tmp_comm,
 				  MPI_STATUS_IGNORE, &errflag);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
 #ifdef MPICH_DBG_OUTPUT
 	MPIU_DBG_PRINTF(("[%d]accept:Received remote_translation:\n", rank));
 	for (i=0; i<remote_comm_size; i++)

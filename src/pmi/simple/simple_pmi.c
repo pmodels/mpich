@@ -604,6 +604,8 @@ int PMI_Spawn_multiple(int count,
 		}
                 argcnt++;
 		rc = PMIU_writeline( PMI_fd, buf );
+                if (rc)
+                    return PMI_FAIL;
 		buf[0] = 0;
 
             }
