@@ -66,7 +66,7 @@ MPI_Fint MPIO_File_c2f(MPI_File fh)
 #else
     int i;
 
-    if ((fh <= (MPI_File) 0) || (fh->cookie != ADIOI_FILE_COOKIE))
+    if ((fh == NULL) || (fh->cookie != ADIOI_FILE_COOKIE))
 	return (MPI_Fint) 0;
     if (!ADIOI_Ftable) {
 	ADIOI_Ftable_max = 1024;
