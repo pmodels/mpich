@@ -45,7 +45,7 @@ static void init_bsci_info(void)
 
 static const char *detect_rmk(int debug)
 {
-    int i, ret;
+    int i, ret = 0;
     HYD_status status = HYD_SUCCESS;
 
     for (i = 0; rmk_array[i]; i++) {
