@@ -829,10 +829,13 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
 			    mpi_errno = MPIR_Reduce_local_impl( 
                                tmp_recvbuf, tmp_results, blklens[0],
 			       datatype, op); 
+                            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
 			    mpi_errno = MPIR_Reduce_local_impl( 
                                ((char *)tmp_recvbuf + dis[1]*extent),
 			       ((char *)tmp_results + dis[1]*extent),
 			       blklens[1], datatype, op); 
+                            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                         }
                     }
                     else {
@@ -840,10 +843,13 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
 			    mpi_errno = MPIR_Reduce_local_impl(
                                    tmp_results, tmp_recvbuf, blklens[0],
                                    datatype, op); 
+                            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
 			    mpi_errno = MPIR_Reduce_local_impl(
                                    ((char *)tmp_results + dis[1]*extent),
                                    ((char *)tmp_recvbuf + dis[1]*extent),
                                    blklens[1], datatype, op); 
+                            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                         }
                         /* copy result back into tmp_results */
                         mpi_errno = MPIR_Localcopy(tmp_recvbuf, 1, recvtype, 
