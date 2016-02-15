@@ -457,7 +457,7 @@ HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip)
 
 #if defined(HAVE_GETIFADDRS)
     struct ifaddrs *ifaddr, *ifa;
-    char buf[INET_ADDRSTRLEN];
+    char buf[MAX_HOSTNAME_LEN];
     struct sockaddr_in *sa;
 
     /* Got the interface name; let's query for the IP address */
@@ -508,7 +508,7 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
     char lhost[MAX_HOSTNAME_LEN];
     struct sockaddr_in sa;
     struct ifaddrs *ifaddr, *ifa;
-    char buf[INET_ADDRSTRLEN];
+    char buf[MAX_HOSTNAME_LEN];
     HYD_status status = HYD_SUCCESS;
 
     *is_local = 0;
