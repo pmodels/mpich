@@ -49,7 +49,7 @@ int MPI_File_sync(MPI_File fh)
 
     adio_fh = MPIO_File_resolve(fh);
     /* --BEGIN ERROR HANDLING-- */
-    if ((adio_fh <= (MPI_File) 0) || ((adio_fh)->cookie != ADIOI_FILE_COOKIE))
+    if ((adio_fh == NULL) || ((adio_fh)->cookie != ADIOI_FILE_COOKIE))
     {
 	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
 					  myname, __LINE__, MPI_ERR_ARG,
