@@ -359,7 +359,7 @@ static void hostlist_help_fn(void)
 
 static HYD_status hostlist_fn(char *arg, char ***argv)
 {
-    char *hostlist[HYD_NUM_TMP_STRINGS];
+    char *hostlist[HYD_NUM_TMP_STRINGS+1]; /* +1 for null termination of list */
     int count = 0;
     HYD_status status = HYD_SUCCESS;
 
