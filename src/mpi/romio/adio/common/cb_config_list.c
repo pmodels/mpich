@@ -202,6 +202,7 @@ int ADIOI_cb_gather_name_array(MPI_Comm comm,
 	
 	procname[0] = ADIOI_Malloc(alloc_size);
 	if (procname[0] == NULL) {
+	    ADIOI_Free(array);
 	    return -1;
 	}
 

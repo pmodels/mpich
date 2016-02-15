@@ -259,6 +259,7 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	len = (strlen(ADIOI_CB_CONFIG_LIST_DFLT)+1) * sizeof(char);
 	fd->hints->cb_config_list = ADIOI_Malloc(len);
 	if (fd->hints->cb_config_list == NULL) {
+	    ADIOI_Free(value);
             *error_code = MPIO_Err_create_code(*error_code,
                                                MPIR_ERR_RECOVERABLE,
                                                myname,

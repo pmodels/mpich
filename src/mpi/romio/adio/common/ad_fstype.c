@@ -192,8 +192,8 @@ static void ADIO_FileSysType_parentdir(const char *filename, char **dirnamep)
 	    /* successfully read the link */
 	    linkbuf[namelen] = '\0'; /* readlink doesn't null terminate */
 	    dir = ADIOI_Strdup(linkbuf);
-	    ADIOI_Free(linkbuf);
 	}
+	ADIOI_Free(linkbuf);
     }
 
     slash = strrchr(dir, '/');
