@@ -162,6 +162,8 @@ int ADIOI_GEN_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
 	    if (aio_req != NULL) ADIOI_Free(aio_req);
 	    return 0;
 	} else {
+	    ADIOI_Free(aio_req);
+	    ADIOI_Free(aiocbp);
 	    return errno;
 	}
     }
