@@ -684,7 +684,10 @@ int PMI_Spawn_multiple(int count,
 	if (rc != 0) {
 	    return PMI_FAIL;
 	}
-        PMIU_writeline( PMI_fd, buf );
+        rc = PMIU_writeline( PMI_fd, buf );
+	if (rc) {
+	    return PMI_FAIL;
+	}
     }
 
     PMIU_readline( PMI_fd, buf, PMIU_MAXLINE );
