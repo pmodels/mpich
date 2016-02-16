@@ -45,7 +45,9 @@ int MPIR_Info_get_nthkey_impl(MPID_Info *info_ptr, int n, char *key)
     /* verify that n is valid */
     MPIR_ERR_CHKANDJUMP2((!curr_ptr), mpi_errno, MPI_ERR_ARG, "**infonkey", "**infonkey %d %d", n, nkeys);
 
-    MPL_strncpy( key, curr_ptr->key, MPI_MAX_INFO_KEY+1 );
+    /* if key is MPI_MAX_INFO_KEY long, MPL_strncpy will null-terminate it for
+     * us */
+    MPL_strncpy( key, curr_ptr->key, MPI_MAX_INFO_KEY);
     /* Eventually, we could remember the location of this key in
        the head using the key/value locations (and a union datatype?) */
  
