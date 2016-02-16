@@ -1,7 +1,7 @@
 dnl -*- Autoconf -*-
 dnl
 dnl Copyright © 2009-2015 Inria.  All rights reserved.
-dnl Copyright © 2009-2012 Université Bordeaux
+dnl Copyright © 2009-2012, 2015 Université Bordeaux
 dnl Copyright © 2004-2005 The Trustees of Indiana University and Indiana
 dnl                         University Research and Technology
 dnl                         Corporation.  All rights reserved.
@@ -398,7 +398,8 @@ EOF])
                     GROUP_RELATIONSHIP,
                     SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX,
 		    PSAPI_WORKING_SET_EX_BLOCK,
-		    PSAPI_WORKING_SET_EX_INFORMATION],
+		    PSAPI_WORKING_SET_EX_INFORMATION,
+		    PROCESSOR_NUMBER],
                     [],[],[[#include <windows.h>]])
     CPPFLAGS="$old_CPPFLAGS"
     AC_CHECK_LIB([gdi32], [main],
@@ -573,15 +574,13 @@ EOF])
          AC_MSG_RESULT([yes])],
         [AC_MSG_RESULT([no])])
 
-    AC_MSG_CHECKING([for working _syscall3])
+    AC_MSG_CHECKING([for working syscall])
     AC_LINK_IFELSE([
       AC_LANG_PROGRAM([[
-          #include <linux/unistd.h>
-          #include <errno.h>
-          #define __NR_hwloc_test 123
-          _syscall3(int, hwloc_test, int, param1, int, param2, int, param3);
-        ]], [[ hwloc_test(1, 2, 3); ]])],
-        [AC_DEFINE([HWLOC_HAVE__SYSCALL3], [1], [Define to 1 if the _syscall3 macro works])
+          #include <unistd.h>
+          #include <sys/syscall.h>
+          ]], [[syscall(1, 2, 3);]])],
+        [AC_DEFINE([HWLOC_HAVE_SYSCALL], [1], [Define to 1 if function `syscall' is available])
          AC_MSG_RESULT([yes])],
         [AC_MSG_RESULT([no])])
 
@@ -885,8 +884,11 @@ EOF])
              # lstopo needs more
              AC_CHECK_HEADERS([X11/Xutil.h],
                 [AC_CHECK_HEADERS([X11/keysym.h],
-                    [AC_DEFINE([HWLOC_HAVE_X11_KEYSYM], [1], [Define to 1 if X11 headers including Xutil.h and keysym.h are available.])])
-                     AC_SUBST([HWLOC_X11_LIBS], ["-lX11"])
+                    [AC_DEFINE([HWLOC_HAVE_X11_KEYSYM], [1], [Define to 1 if X11 headers including Xutil.h and keysym.h are available.])
+                     HWLOC_X11_CPPFLAGS="$X_CFLAGS"
+                     AC_SUBST([HWLOC_X11_CPPFLAGS])
+                     HWLOC_X11_LIBS="$X_PRE_LIBS $X_LIBS -lX11 $X_EXTRA_LIBS"
+                     AC_SUBST([HWLOC_X11_LIBS])])
                 ], [], [#include <X11/Xlib.h>])
             ])
          ])
@@ -1211,6 +1213,7 @@ AC_DEFUN([HWLOC_DO_AM_CONDITIONALS],[
         AM_CONDITIONAL([HWLOC_HAVE_WINDOWS], [test "x$hwloc_windows" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_MINGW32], [test "x$target_os" = "xmingw32"])
 
+        AM_CONDITIONAL([HWLOC_HAVE_X86], [test "x$hwloc_x86_32" = "xyes" -o "x$hwloc_x86_64" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_X86_32], [test "x$hwloc_x86_32" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_X86_64], [test "x$hwloc_x86_64" = "xyes"])
         AM_CONDITIONAL([HWLOC_HAVE_X86_CPUID], [test "x$hwloc_have_x86_cpuid" = "xyes"])

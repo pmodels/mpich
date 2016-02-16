@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2014 Inria.  All rights reserved.
+ * Copyright © 2009-2015 Inria.  All rights reserved.
  * Copyright © 2009-2010, 2012 Université Bordeaux
  * Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -16,6 +16,11 @@
 #include <errno.h>
 
 #include "misc.h"
+
+#if defined(HWLOC_WIN_SYS) && !defined(__CYGWIN__)
+#include <process.h>
+#define execvp(a,b) (int)_execvp((a), (const char * const *)(b))
+#endif
 
 void usage(const char *name, FILE *where)
 {
@@ -338,9 +343,11 @@ int main(int argc, char *argv[])
       char *s;
       hwloc_bitmap_asprintf(&s, membind_set);
       if (pid_number > 0)
-        fprintf(stderr, "hwloc_set_proc_membind %s %d failed (errno %d %s)\n", s, pid_number, bind_errno, errmsg);
+        fprintf(stderr, "hwloc_set_proc_membind %s (policy %u flags %x) PID %d failed (errno %d %s)\n",
+		s, membind_policy, membind_flags, pid_number, bind_errno, errmsg);
       else
-        fprintf(stderr, "hwloc_set_membind %s failed (errno %d %s)\n", s, bind_errno, errmsg);
+        fprintf(stderr, "hwloc_set_membind %s (policy %u flags %x) failed (errno %d %s)\n",
+		s, membind_policy, membind_flags, bind_errno, errmsg);
       free(s);
     }
     if (ret && !force)
@@ -360,6 +367,11 @@ int main(int argc, char *argv[])
       fprintf(stderr, "binding on cpu set %s\n", s);
       free(s);
     }
+    if (got_membind && !hwloc_bitmap_isequal(membind_set, cpubind_set)) {
+      if (verbose)
+	fprintf(stderr, "Conflicting CPU and memory binding requested, adding HWLOC_CPUBIND_NOMEMBIND flag.\n");
+      cpubind_flags |= HWLOC_CPUBIND_NOMEMBIND;
+    }
     if (single)
       hwloc_bitmap_singlify(cpubind_set);
     if (pid_number > 0)
@@ -372,9 +384,11 @@ int main(int argc, char *argv[])
       char *s;
       hwloc_bitmap_asprintf(&s, cpubind_set);
       if (pid_number > 0)
-        fprintf(stderr, "hwloc_set_proc_cpubind %s %d failed (errno %d %s)\n", s, pid_number, bind_errno, errmsg);
+        fprintf(stderr, "hwloc_set_proc_cpubind %s (flags %x) PID %d failed (errno %d %s)\n",
+		s, cpubind_flags, pid_number, bind_errno, errmsg);
       else
-        fprintf(stderr, "hwloc_set_cpubind %s failed (errno %d %s)\n", s, bind_errno, errmsg);
+        fprintf(stderr, "hwloc_set_cpubind %s (flags %x) failed (errno %d %s)\n",
+		s, cpubind_flags, bind_errno, errmsg);
       free(s);
     }
     if (ret && !force)
@@ -396,6 +410,10 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE;
   }
 
+  /* FIXME: check whether Windows execvp() passes INHERIT_PARENT_AFFINITY to CreateProcess()
+   * because we need to propagate processor group affinity. However process-wide affinity
+   * isn't supported with processor groups so far.
+   */
   ret = execvp(argv[0], argv);
   if (ret) {
       fprintf(stderr, "%s: Failed to launch executable \"%s\"\n",

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Inria.  All rights reserved.
+ * Copyright © 2013-2015 Inria.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -7,7 +7,9 @@
 #include <hwloc.h>
 #include <hwloc/diff.h>
 
-static void usage(const char *callname __hwloc_attribute_unused, FILE *where)
+#include "misc.h"
+
+void usage(const char *callname __hwloc_attribute_unused, FILE *where)
 {
 	fprintf(where, "Usage: hwloc-diff [options] <old.xml> <new.xml> [<output.diff.xml>]\n");
 	fprintf(where, "Options:\n");
@@ -20,7 +22,7 @@ int main(int argc, char *argv[])
 {
 	hwloc_topology_t topo1, topo2;
 	hwloc_topology_diff_t firstdiff = NULL, diff;
-	unsigned long flags = HWLOC_TOPOLOGY_FLAG_WHOLE_IO | HWLOC_TOPOLOGY_FLAG_ICACHES;
+	unsigned long flags = HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM | HWLOC_TOPOLOGY_FLAG_WHOLE_IO | HWLOC_TOPOLOGY_FLAG_ICACHES;
 	char *callname, *input1, *input2, *output, *outputname, *refname = NULL;
 	char *xmlbuffer;
 	int xmlbuflen;

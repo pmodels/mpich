@@ -33,6 +33,10 @@ typedef enum _PROCESSOR_CACHE_TYPE {
 #define CACHE_FULLY_ASSOCIATIVE 0xFF
 #endif
 
+#ifndef MAXIMUM_PROC_PER_GROUP /* missing in MinGW */
+#define MAXIMUM_PROC_PER_GROUP 64
+#endif
+
 #ifndef HAVE_CACHE_DESCRIPTOR
 typedef struct _CACHE_DESCRIPTOR {
   BYTE Level;
@@ -172,34 +176,259 @@ typedef struct _PSAPI_WORKING_SET_EX_INFORMATION {
 } PSAPI_WORKING_SET_EX_INFORMATION;
 #endif
 
-static void hwloc_bitmap_set_ith_ULONG_PTR(hwloc_bitmap_t set, unsigned i, ULONG_PTR mask)
+#ifndef HAVE_PROCESSOR_NUMBER
+typedef struct _PROCESSOR_NUMBER {
+  WORD Group;
+  BYTE Number;
+  BYTE Reserved;
+} PROCESSOR_NUMBER, *PPROCESSOR_NUMBER;
+#endif
+
+/* Function pointers */
+
+typedef WORD (WINAPI *PFN_GETACTIVEPROCESSORGROUPCOUNT)(void);
+static PFN_GETACTIVEPROCESSORGROUPCOUNT GetActiveProcessorGroupCountProc;
+
+static unsigned long nr_processor_groups = 1;
+
+typedef WORD (WINAPI *PFN_GETACTIVEPROCESSORCOUNT)(WORD);
+static PFN_GETACTIVEPROCESSORCOUNT GetActiveProcessorCountProc;
+
+typedef DWORD (WINAPI *PFN_GETCURRENTPROCESSORNUMBER)(void);
+static PFN_GETCURRENTPROCESSORNUMBER GetCurrentProcessorNumberProc;
+
+typedef VOID (WINAPI *PFN_GETCURRENTPROCESSORNUMBEREX)(PPROCESSOR_NUMBER);
+static PFN_GETCURRENTPROCESSORNUMBEREX GetCurrentProcessorNumberExProc;
+
+typedef BOOL (WINAPI *PFN_GETLOGICALPROCESSORINFORMATION)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffer, PDWORD ReturnLength);
+static PFN_GETLOGICALPROCESSORINFORMATION GetLogicalProcessorInformationProc;
+
+typedef BOOL (WINAPI *PFN_GETLOGICALPROCESSORINFORMATIONEX)(LOGICAL_PROCESSOR_RELATIONSHIP relationship, PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX Buffer, PDWORD ReturnLength);
+static PFN_GETLOGICALPROCESSORINFORMATIONEX GetLogicalProcessorInformationExProc;
+
+typedef BOOL (WINAPI *PFN_SETTHREADGROUPAFFINITY)(HANDLE hThread, const GROUP_AFFINITY *GroupAffinity, PGROUP_AFFINITY PreviousGroupAffinity);
+static PFN_SETTHREADGROUPAFFINITY SetThreadGroupAffinityProc;
+
+typedef BOOL (WINAPI *PFN_GETTHREADGROUPAFFINITY)(HANDLE hThread, PGROUP_AFFINITY GroupAffinity);
+static PFN_GETTHREADGROUPAFFINITY GetThreadGroupAffinityProc;
+
+typedef BOOL (WINAPI *PFN_GETNUMAAVAILABLEMEMORYNODE)(UCHAR Node, PULONGLONG AvailableBytes);
+static PFN_GETNUMAAVAILABLEMEMORYNODE GetNumaAvailableMemoryNodeProc;
+
+typedef BOOL (WINAPI *PFN_GETNUMAAVAILABLEMEMORYNODEEX)(USHORT Node, PULONGLONG AvailableBytes);
+static PFN_GETNUMAAVAILABLEMEMORYNODEEX GetNumaAvailableMemoryNodeExProc;
+
+typedef LPVOID (WINAPI *PFN_VIRTUALALLOCEXNUMA)(HANDLE hProcess, LPVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect, DWORD nndPreferred);
+static PFN_VIRTUALALLOCEXNUMA VirtualAllocExNumaProc;
+
+typedef BOOL (WINAPI *PFN_VIRTUALFREEEX)(HANDLE hProcess, LPVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType);
+static PFN_VIRTUALFREEEX VirtualFreeExProc;
+
+typedef BOOL (WINAPI *PFN_QUERYWORKINGSETEX)(HANDLE hProcess, PVOID pv, DWORD cb);
+static PFN_QUERYWORKINGSETEX QueryWorkingSetExProc;
+
+static void hwloc_win_get_function_ptrs(void)
 {
-	/* ULONG_PTR is 64/32bits depending on the arch
-	 * while unsigned long is always 32bits */
+  static int done = 0;
+  if (!done) {
+    HMODULE kernel32;
+
+    kernel32 = LoadLibrary("kernel32.dll");
+    if (kernel32) {
+      GetActiveProcessorGroupCountProc =
+	(PFN_GETACTIVEPROCESSORGROUPCOUNT) GetProcAddress(kernel32, "GetActiveProcessorGroupCount");
+      GetActiveProcessorCountProc =
+	(PFN_GETACTIVEPROCESSORCOUNT) GetProcAddress(kernel32, "GetActiveProcessorCount");
+      GetLogicalProcessorInformationProc =
+	(PFN_GETLOGICALPROCESSORINFORMATION) GetProcAddress(kernel32, "GetLogicalProcessorInformation");
+      GetCurrentProcessorNumberProc =
+	(PFN_GETCURRENTPROCESSORNUMBER) GetProcAddress(kernel32, "GetCurrentProcessorNumber");
+      GetCurrentProcessorNumberExProc =
+	(PFN_GETCURRENTPROCESSORNUMBEREX) GetProcAddress(kernel32, "GetCurrentProcessorNumberEx");
+      SetThreadGroupAffinityProc =
+	(PFN_SETTHREADGROUPAFFINITY) GetProcAddress(kernel32, "SetThreadGroupAffinity");
+      GetThreadGroupAffinityProc =
+	(PFN_GETTHREADGROUPAFFINITY) GetProcAddress(kernel32, "GetThreadGroupAffinity");
+      GetNumaAvailableMemoryNodeProc =
+	(PFN_GETNUMAAVAILABLEMEMORYNODE) GetProcAddress(kernel32, "GetNumaAvailableMemoryNode");
+      GetNumaAvailableMemoryNodeExProc =
+	(PFN_GETNUMAAVAILABLEMEMORYNODEEX) GetProcAddress(kernel32, "GetNumaAvailableMemoryNodeEx");
+      GetLogicalProcessorInformationExProc =
+	(PFN_GETLOGICALPROCESSORINFORMATIONEX)GetProcAddress(kernel32, "GetLogicalProcessorInformationEx");
+      VirtualAllocExNumaProc =
+	(PFN_VIRTUALALLOCEXNUMA) GetProcAddress(kernel32, "K32QueryWorkingSetEx");
+      VirtualAllocExNumaProc =*
+	(PFN_VIRTUALALLOCEXNUMA) GetProcAddress(kernel32, "VirtualAllocExNuma");
+      VirtualFreeExProc =
+	(PFN_VIRTUALFREEEX) GetProcAddress(kernel32, "VirtualFreeEx");
+    }
+
+    if (GetActiveProcessorGroupCountProc)
+      nr_processor_groups = GetActiveProcessorGroupCountProc();
+
+    if (!VirtualAllocExNumaProc) {
+      HMODULE psapi = LoadLibrary("psapi.dll");
+      if (psapi)
+        VirtualAllocExNumaProc = (PFN_VIRTUALALLOCEXNUMA) GetProcAddress(psapi, "QueryWorkingSetEx");
+    }
+
+    done = 1;
+  }
+}
+
+/*
+ * ULONG_PTR and DWORD_PTR are 64/32bits depending on the arch
+ * while bitmaps use unsigned long (always 32bits)
+ */
+
+static void hwloc_bitmap_from_ULONG_PTR(hwloc_bitmap_t set, ULONG_PTR mask)
+{
 #if SIZEOF_VOID_P == 8
-	hwloc_bitmap_set_ith_ulong(set, 2*i, mask & 0xffffffff);
-	hwloc_bitmap_set_ith_ulong(set, 2*i+1, mask >> 32);
+  hwloc_bitmap_from_ulong(set, mask & 0xffffffff);
+  hwloc_bitmap_set_ith_ulong(set, 1, mask >> 32);
 #else
-	hwloc_bitmap_set_ith_ulong(set, i, mask);
+  hwloc_bitmap_from_ulong(set, mask);
 #endif
 }
 
-/* TODO: SetThreadIdealProcessor */
+static void hwloc_bitmap_from_ith_ULONG_PTR(hwloc_bitmap_t set, unsigned i, ULONG_PTR mask)
+{
+#if SIZEOF_VOID_P == 8
+  hwloc_bitmap_from_ith_ulong(set, 2*i, mask & 0xffffffff);
+  hwloc_bitmap_set_ith_ulong(set, 2*i+1, mask >> 32);
+#else
+  hwloc_bitmap_from_ith_ulong(set, i, mask);
+#endif
+}
+
+static void hwloc_bitmap_set_ith_ULONG_PTR(hwloc_bitmap_t set, unsigned i, ULONG_PTR mask)
+{
+#if SIZEOF_VOID_P == 8
+  hwloc_bitmap_set_ith_ulong(set, 2*i, mask & 0xffffffff);
+  hwloc_bitmap_set_ith_ulong(set, 2*i+1, mask >> 32);
+#else
+  hwloc_bitmap_set_ith_ulong(set, i, mask);
+#endif
+}
+
+static ULONG_PTR hwloc_bitmap_to_ULONG_PTR(hwloc_const_bitmap_t set)
+{
+#if SIZEOF_VOID_P == 8
+  ULONG_PTR up = hwloc_bitmap_to_ith_ulong(set, 1);
+  up <<= 32;
+  up |= hwloc_bitmap_to_ulong(set);
+  return up;
+#else
+  return hwloc_bitmap_to_ulong(set);
+#endif
+}
+
+static ULONG_PTR hwloc_bitmap_to_ith_ULONG_PTR(hwloc_const_bitmap_t set, unsigned i)
+{
+#if SIZEOF_VOID_P == 8
+  ULONG_PTR up = hwloc_bitmap_to_ith_ulong(set, 2*i+1);
+  up <<= 32;
+  up |= hwloc_bitmap_to_ith_ulong(set, 2*i);
+  return up;
+#else
+  return hwloc_bitmap_to_ith_ulong(set, i);
+#endif
+}
+
+/* convert set into index+mask if all set bits are in the same ULONG.
+ * otherwise return -1.
+ */
+static int hwloc_bitmap_to_single_ULONG_PTR(hwloc_const_bitmap_t set, unsigned *index, ULONG_PTR *mask)
+{
+  unsigned first_ulp, last_ulp;
+  if (hwloc_bitmap_weight(set) == -1)
+    return -1;
+  first_ulp = hwloc_bitmap_first(set) / (sizeof(ULONG_PTR)*8);
+  last_ulp = hwloc_bitmap_last(set) / (sizeof(ULONG_PTR)*8);
+  if (first_ulp != last_ulp)
+    return -1;
+  *mask = hwloc_bitmap_to_ith_ULONG_PTR(set, first_ulp);
+  *index = first_ulp;
+  return 0;
+}
+
+/**************************************************************
+ * hwloc PU numbering with respect to Windows processor groups
+ *
+ * Everywhere below we reserve 64 physical indexes per processor groups because that's
+ * the maximum (MAXIMUM_PROC_PER_GROUP). Windows may actually use less bits than that
+ * in some groups (either to avoid splitting NUMA nodes across groups, or because of OS
+ * tweaks such as "bcdedit /set groupsize 8") but we keep some unused indexes for simplicity.
+ * That means PU physical indexes and cpusets may be non-contigous.
+ * That also means hwloc_fallback_nbprocessors() below must return the last PU index + 1
+ * instead the actual number of processors.
+ */
+
+/********************
+ * last_cpu_location
+ */
+
+static int
+hwloc_win_get_thisthread_last_cpu_location(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_cpuset_t set, int flags __hwloc_attribute_unused)
+{
+  assert(GetCurrentProcessorNumberExProc || (GetCurrentProcessorNumberProc && nr_processor_groups == 1));
+
+  if (nr_processor_groups > 1 || !GetCurrentProcessorNumberProc) {
+    PROCESSOR_NUMBER num;
+    GetCurrentProcessorNumberExProc(&num);
+    hwloc_bitmap_from_ith_ULONG_PTR(set, num.Group, ((ULONG_PTR)1) << num.Number);
+    return 0;
+  }
+
+  hwloc_bitmap_from_ith_ULONG_PTR(set, 0, ((ULONG_PTR)1) << GetCurrentProcessorNumberProc());
+  return 0;
+}
+
+/* TODO: hwloc_win_get_thisproc_last_cpu_location() using
+ * CreateToolhelp32Snapshot(), Thread32First/Next()
+ * th.th32OwnerProcessID == GetCurrentProcessId() for filtering within process
+ * OpenThread(THREAD_SET_INFORMATION|THREAD_QUERY_INFORMATION, FALSE, te32.th32ThreadID) to get a handle.
+ */
+
+
+/******************************
+ * set cpu/membind for threads
+ */
+
+/* TODO: SetThreadIdealProcessor{,Ex} */
 
 static int
 hwloc_win_set_thread_cpubind(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_thread_t thread, hwloc_const_bitmap_t hwloc_set, int flags)
 {
-  DWORD mask;
+  DWORD_PTR mask;
+  unsigned group;
 
   if (flags & HWLOC_CPUBIND_NOMEMBIND) {
     errno = ENOSYS;
     return -1;
   }
-  /* TODO: groups SetThreadGroupAffinity */
-  /* The resulting binding is always strict */
-  mask = hwloc_bitmap_to_ulong(hwloc_set);
-  if (!SetThreadAffinityMask(thread, mask))
+
+  if (hwloc_bitmap_to_single_ULONG_PTR(hwloc_set, &group, &mask) < 0) {
+    errno = ENOSYS;
     return -1;
+  }
+
+  assert(nr_processor_groups == 1 || SetThreadGroupAffinityProc);
+
+  if (nr_processor_groups > 1) {
+    GROUP_AFFINITY aff;
+    memset(&aff, 0, sizeof(aff)); /* we get Invalid Parameter error if Reserved field isn't cleared */
+    aff.Group = group;
+    aff.Mask = mask;
+    if (!SetThreadGroupAffinityProc(thread, &aff, NULL))
+      return -1;
+
+  } else {
+    /* SetThreadAffinityMask() only changes the mask inside the current processor group */
+    /* The resulting binding is always strict */
+    if (!SetThreadAffinityMask(thread, mask))
+      return -1;
+  }
   return 0;
 }
 
@@ -230,21 +459,82 @@ hwloc_win_set_thisthread_membind(hwloc_topology_t topology, hwloc_const_nodeset_
   return ret;
 }
 
+
+/******************************
+ * get cpu/membind for threads
+ */
+
+  static int
+hwloc_win_get_thread_cpubind(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_thread_t thread, hwloc_cpuset_t set, int flags __hwloc_attribute_unused)
+{
+  GROUP_AFFINITY aff;
+
+  assert(GetThreadGroupAffinityProc);
+
+  if (!GetThreadGroupAffinityProc(thread, &aff))
+    return -1;
+  hwloc_bitmap_from_ith_ULONG_PTR(set, aff.Group, aff.Mask);
+  return 0;
+}
+
+static int
+hwloc_win_get_thisthread_cpubind(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_cpuset_t set, int flags __hwloc_attribute_unused)
+{
+  return hwloc_win_get_thread_cpubind(topology, GetCurrentThread(), set, flags);
+}
+
+static int
+hwloc_win_get_thisthread_membind(hwloc_topology_t topology, hwloc_nodeset_t nodeset, hwloc_membind_policy_t * policy, int flags)
+{
+  int ret;
+  hwloc_cpuset_t cpuset = hwloc_bitmap_alloc();
+  ret = hwloc_win_get_thread_cpubind(topology, GetCurrentThread(), cpuset, flags);
+  if (!ret) {
+    *policy = HWLOC_MEMBIND_BIND;
+    hwloc_cpuset_to_nodeset(topology, cpuset, nodeset);
+  }
+  hwloc_bitmap_free(cpuset);
+  return ret;
+}
+
+
+/********************************
+ * set cpu/membind for processes
+ */
+
 static int
 hwloc_win_set_proc_cpubind(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_pid_t proc, hwloc_const_bitmap_t hwloc_set, int flags)
 {
-  DWORD mask;
+  DWORD_PTR mask;
+
+  assert(nr_processor_groups == 1);
+
   if (flags & HWLOC_CPUBIND_NOMEMBIND) {
     errno = ENOSYS;
     return -1;
   }
-  /* TODO: groups, hard: has to manually bind all threads into the other group,
-   * and the bind the process inside the group */
+
+  /* TODO: SetThreadGroupAffinity() for all threads doesn't enforce the whole process affinity,
+   * maybe because of process-specific resource locality */
+  /* TODO: if we are in a single group (check with GetProcessGroupAffinity()),
+   * SetProcessAffinityMask() changes the binding within that same group.
+   */
+  /* TODO: NtSetInformationProcess() works very well for binding to any mask in a single group,
+   * but it's an internal routine.
+   */
+  /* TODO: checks whether hwloc-bind.c needs to pass INHERIT_PARENT_AFFINITY to CreateProcess() instead of execvp(). */
+
   /* The resulting binding is always strict */
-  mask = hwloc_bitmap_to_ulong(hwloc_set);
+  mask = hwloc_bitmap_to_ULONG_PTR(hwloc_set);
   if (!SetProcessAffinityMask(proc, mask))
     return -1;
   return 0;
+}
+
+static int
+hwloc_win_set_thisproc_cpubind(hwloc_topology_t topology, hwloc_const_bitmap_t hwloc_set, int flags)
+{
+  return hwloc_win_set_proc_cpubind(topology, GetCurrentProcess(), hwloc_set, flags);
 }
 
 static int
@@ -267,17 +557,41 @@ hwloc_win_set_proc_membind(hwloc_topology_t topology, hwloc_pid_t pid, hwloc_con
 }
 
 static int
+hwloc_win_set_thisproc_membind(hwloc_topology_t topology, hwloc_const_nodeset_t nodeset, hwloc_membind_policy_t policy, int flags)
+{
+  return hwloc_win_set_proc_membind(topology, GetCurrentProcess(), nodeset, policy, flags);
+}
+
+
+/********************************
+ * get cpu/membind for processes
+ */
+
+static int
 hwloc_win_get_proc_cpubind(hwloc_topology_t topology __hwloc_attribute_unused, hwloc_pid_t proc, hwloc_bitmap_t hwloc_set, int flags)
 {
   DWORD_PTR proc_mask, sys_mask;
+
+  assert(nr_processor_groups == 1);
+
   if (flags & HWLOC_CPUBIND_NOMEMBIND) {
     errno = ENOSYS;
     return -1;
   }
-  /* TODO: groups, GetProcessGroupAffinity, or merge SetThreadGroupAffinity for all threads */
+
+  /* TODO: if we are in a single group (check with GetProcessGroupAffinity()),
+   * GetProcessAffinityMask() gives the mask within that group.
+   */
+  /* TODO: if we are in multiple groups, GetProcessGroupAffinity() gives their IDs,
+   * but we don't know their masks.
+   */
+  /* TODO: GetThreadGroupAffinity() for all threads can be smaller than the whole process affinity,
+   * maybe because of process-specific resource locality.
+   */
+
   if (!GetProcessAffinityMask(proc, &proc_mask, &sys_mask))
     return -1;
-  hwloc_bitmap_from_ulong(hwloc_set, proc_mask);
+  hwloc_bitmap_from_ULONG_PTR(hwloc_set, proc_mask);
   return 0;
 }
 
@@ -296,18 +610,6 @@ hwloc_win_get_proc_membind(hwloc_topology_t topology, hwloc_pid_t pid, hwloc_nod
 }
 
 static int
-hwloc_win_set_thisproc_cpubind(hwloc_topology_t topology, hwloc_const_bitmap_t hwloc_set, int flags)
-{
-  return hwloc_win_set_proc_cpubind(topology, GetCurrentProcess(), hwloc_set, flags);
-}
-
-static int
-hwloc_win_set_thisproc_membind(hwloc_topology_t topology, hwloc_const_nodeset_t nodeset, hwloc_membind_policy_t policy, int flags)
-{
-  return hwloc_win_set_proc_membind(topology, GetCurrentProcess(), nodeset, policy, flags);
-}
-
-static int
 hwloc_win_get_thisproc_cpubind(hwloc_topology_t topology, hwloc_bitmap_t hwloc_cpuset, int flags)
 {
   return hwloc_win_get_proc_cpubind(topology, GetCurrentProcess(), hwloc_cpuset, flags);
@@ -319,36 +621,10 @@ hwloc_win_get_thisproc_membind(hwloc_topology_t topology, hwloc_nodeset_t nodese
   return hwloc_win_get_proc_membind(topology, GetCurrentProcess(), nodeset, policy, flags);
 }
 
-static LPVOID (WINAPI *VirtualAllocExNumaProc)(HANDLE hProcess, LPVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect, DWORD nndPreferred);
-static BOOL (WINAPI *VirtualFreeExProc)(HANDLE hProcess, LPVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType);
-static BOOL (WINAPI *QueryWorkingSetExProc)(HANDLE hProcess, PVOID pv, DWORD cb);
 
-static int hwloc_win_get_VirtualAllocExNumaProc(void) {
-  if (VirtualAllocExNumaProc == NULL) {
-    FARPROC alloc_fun = NULL, free_fun = NULL;
-    HMODULE kernel32;
-
-    kernel32 = LoadLibrary("kernel32.dll");
-    if (kernel32) {
-      alloc_fun = GetProcAddress(kernel32, "VirtualAllocExNuma");
-      free_fun = GetProcAddress(kernel32, "VirtualFreeEx");
-    }
-
-    if (!alloc_fun || !free_fun) {
-      VirtualAllocExNumaProc = (FARPROC) -1;
-      errno = ENOSYS;
-      return -1;
-    }
-
-    VirtualAllocExNumaProc = alloc_fun;
-    VirtualFreeExProc = free_fun;
-  } else if ((FARPROC) VirtualAllocExNumaProc == (FARPROC)-1) {
-    errno = ENOSYS;
-    return -1;
-  }
-
-  return 0;
-}
+/************************
+ * membind alloc/free
+ */
 
 static void *
 hwloc_win_alloc(hwloc_topology_t topology __hwloc_attribute_unused, size_t len) {
@@ -392,34 +668,10 @@ hwloc_win_free_membind(hwloc_topology_t topology __hwloc_attribute_unused, void 
   return 0;
 }
 
-static int hwloc_win_get_QueryWorkingSetExProc(void) {
-  if (QueryWorkingSetExProc == NULL) {
-    FARPROC fun = NULL;
-    HMODULE kernel32, psapi;
 
-    kernel32 = LoadLibrary("kernel32.dll");
-    if (kernel32)
-      fun = GetProcAddress(kernel32, "K32QueryWorkingSetEx");
-    if (!fun) {
-      psapi = LoadLibrary("psapi.dll");
-      if (psapi)
-        fun = GetProcAddress(psapi, "QueryWorkingSetEx");
-    }
-
-    if (!fun) {
-      QueryWorkingSetExProc = (FARPROC) -1;
-      errno = ENOSYS;
-      return -1;
-    }
-
-    QueryWorkingSetExProc = fun;
-  } else if ((FARPROC) QueryWorkingSetExProc == (FARPROC)-1) {
-    errno = ENOSYS;
-    return -1;
-  }
-
-  return 0;
-}
+/**********************
+ * membind for areas
+ */
 
 static int
 hwloc_win_get_area_membind(hwloc_topology_t topology __hwloc_attribute_unused, const void *addr, size_t len, hwloc_nodeset_t nodeset, hwloc_membind_policy_t * policy, int flags)
@@ -433,7 +685,7 @@ hwloc_win_get_area_membind(hwloc_topology_t topology __hwloc_attribute_unused, c
   page_size = SystemInfo.dwPageSize;
 
   start = (((uintptr_t) addr) / page_size) * page_size;
-  nb = (((uintptr_t) addr + len - start) + page_size - 1) / page_size;
+  nb = (unsigned)((((uintptr_t) addr + len - start) + page_size - 1) / page_size);
 
   if (!nb)
     nb = 1;
@@ -472,19 +724,20 @@ hwloc_win_get_area_membind(hwloc_topology_t topology __hwloc_attribute_unused, c
   }
 }
 
+
+/*************************
+ * discovery
+ */
+
 static int
 hwloc_look_windows(struct hwloc_backend *backend)
 {
   struct hwloc_topology *topology = backend->topology;
-  BOOL (WINAPI *GetLogicalProcessorInformationProc)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffer, PDWORD ReturnLength);
-  BOOL (WINAPI *GetLogicalProcessorInformationExProc)(LOGICAL_PROCESSOR_RELATIONSHIP relationship, PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX Buffer, PDWORD ReturnLength);
-  BOOL (WINAPI *GetNumaAvailableMemoryNodeProc)(UCHAR Node, PULONGLONG AvailableBytes);
-  BOOL (WINAPI *GetNumaAvailableMemoryNodeExProc)(USHORT Node, PULONGLONG AvailableBytes);
+  hwloc_bitmap_t groups_pu_set = NULL;
   SYSTEM_INFO SystemInfo;
-
   DWORD length;
 
-  HMODULE kernel32;
+  hwloc_win_get_function_ptrs();
 
   if (topology->levels[0][0]->cpuset)
     /* somebody discovered things */
@@ -494,14 +747,7 @@ hwloc_look_windows(struct hwloc_backend *backend)
 
   GetSystemInfo(&SystemInfo);
 
-  kernel32 = LoadLibrary("kernel32.dll");
-  if (kernel32) {
-    GetLogicalProcessorInformationProc = GetProcAddress(kernel32, "GetLogicalProcessorInformation");
-    GetNumaAvailableMemoryNodeProc = GetProcAddress(kernel32, "GetNumaAvailableMemoryNode");
-    GetNumaAvailableMemoryNodeExProc = GetProcAddress(kernel32, "GetNumaAvailableMemoryNodeEx");
-    GetLogicalProcessorInformationExProc = GetProcAddress(kernel32, "GetLogicalProcessorInformationEx");
-
-    if (!GetLogicalProcessorInformationExProc && GetLogicalProcessorInformationProc) {
+  if (!GetLogicalProcessorInformationExProc && GetLogicalProcessorInformationProc) {
       PSYSTEM_LOGICAL_PROCESSOR_INFORMATION procInfo;
       unsigned id;
       unsigned i;
@@ -608,9 +854,9 @@ hwloc_look_windows(struct hwloc_backend *backend)
       }
 
       free(procInfo);
-    }
+  }
 
-    if (GetLogicalProcessorInformationExProc) {
+  if (GetLogicalProcessorInformationExProc) {
       PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX procInfoTotal, procInfo;
 
       unsigned id;
@@ -676,6 +922,12 @@ hwloc_look_windows(struct hwloc_backend *backend)
 	      /* KAFFINITY is ULONG_PTR */
 	      hwloc_bitmap_set_ith_ULONG_PTR(obj->cpuset, id, mask);
 	      hwloc_debug_2args_bitmap("group %u %d bitmap %s\n", id, procInfo->Group.GroupInfo[id].ActiveProcessorCount, obj->cpuset);
+
+	      /* save the set of PUs so that we can create them at the end */
+	      if (!groups_pu_set)
+		groups_pu_set = hwloc_bitmap_alloc();
+	      hwloc_bitmap_or(groups_pu_set, groups_pu_set, obj->cpuset);
+
 	      hwloc_insert_object_by_cpuset(topology, obj);
 	    }
 	    continue;
@@ -692,7 +944,7 @@ hwloc_look_windows(struct hwloc_backend *backend)
 	  /* GROUP_AFFINITY.Mask is KAFFINITY, which is ULONG_PTR */
 	  hwloc_bitmap_set_ith_ULONG_PTR(obj->cpuset, GroupMask[i].Group, GroupMask[i].Mask);
         }
-	hwloc_debug("%s#%u bitmap %s\n", hwloc_obj_type_string(type), id, obj->cpuset);
+	hwloc_debug_2args_bitmap("%s#%u bitmap %s\n", hwloc_obj_type_string(type), id, obj->cpuset);
 
 	switch (type) {
 	  case HWLOC_OBJ_NUMANODE:
@@ -739,11 +991,39 @@ hwloc_look_windows(struct hwloc_backend *backend)
 	hwloc_insert_object_by_cpuset(topology, obj);
       }
       free(procInfoTotal);
-    }
   }
 
-  /* add PU objects */
-  hwloc_setup_pu_level(topology, hwloc_fallback_nbprocessors(topology));
+  if (groups_pu_set) {
+    /* the system supports multiple Groups.
+     * PU indexes may be discontiguous, especially if Groups contain less than 64 procs.
+     */
+    hwloc_obj_t obj;
+    unsigned idx;
+    hwloc_bitmap_foreach_begin(idx, groups_pu_set) {
+      obj = hwloc_alloc_setup_object(HWLOC_OBJ_PU, idx);
+      obj->cpuset = hwloc_bitmap_alloc();
+      hwloc_bitmap_only(obj->cpuset, idx);
+      hwloc_debug_1arg_bitmap("cpu %u has cpuset %s\n",
+			      idx, obj->cpuset);
+      hwloc_insert_object_by_cpuset(topology, obj);
+    } hwloc_bitmap_foreach_end();
+    hwloc_bitmap_free(groups_pu_set);
+  } else {
+    /* no processor groups */
+    SYSTEM_INFO sysinfo;
+    hwloc_obj_t obj;
+    unsigned idx;
+    GetSystemInfo(&sysinfo);
+    for(idx=0; idx<32; idx++)
+      if (sysinfo.dwActiveProcessorMask & (((DWORD_PTR)1)<<idx)) {
+	obj = hwloc_alloc_setup_object(HWLOC_OBJ_PU, idx);
+	obj->cpuset = hwloc_bitmap_alloc();
+	hwloc_bitmap_only(obj->cpuset, idx);
+	hwloc_debug_1arg_bitmap("cpu %u has cpuset %s\n",
+				idx, obj->cpuset);
+	hwloc_insert_object_by_cpuset(topology, obj);
+      }
+  }
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "Windows");
   if (topology->is_thissystem)
@@ -755,28 +1035,40 @@ void
 hwloc_set_windows_hooks(struct hwloc_binding_hooks *hooks,
 			struct hwloc_topology_support *support)
 {
-  hooks->set_proc_cpubind = hwloc_win_set_proc_cpubind;
-  hooks->get_proc_cpubind = hwloc_win_get_proc_cpubind;
-  hooks->set_thread_cpubind = hwloc_win_set_thread_cpubind;
-  hooks->set_thisproc_cpubind = hwloc_win_set_thisproc_cpubind;
-  hooks->get_thisproc_cpubind = hwloc_win_get_thisproc_cpubind;
-  hooks->set_thisthread_cpubind = hwloc_win_set_thisthread_cpubind;
-  /* TODO: get_last_cpu_location: use GetCurrentProcessorNumber */
+  hwloc_win_get_function_ptrs();
 
-  hooks->set_proc_membind = hwloc_win_set_proc_membind;
-  hooks->get_proc_membind = hwloc_win_get_proc_membind;
-  hooks->set_thisproc_membind = hwloc_win_set_thisproc_membind;
-  hooks->get_thisproc_membind = hwloc_win_get_thisproc_membind;
-  hooks->set_thisthread_membind = hwloc_win_set_thisthread_membind;
+  if (GetCurrentProcessorNumberExProc || (GetCurrentProcessorNumberProc && nr_processor_groups == 1))
+    hooks->get_thisthread_last_cpu_location = hwloc_win_get_thisthread_last_cpu_location;
 
-  if (!hwloc_win_get_VirtualAllocExNumaProc()) {
+  if (nr_processor_groups == 1) {
+    hooks->set_proc_cpubind = hwloc_win_set_proc_cpubind;
+    hooks->get_proc_cpubind = hwloc_win_get_proc_cpubind;
+    hooks->set_thisproc_cpubind = hwloc_win_set_thisproc_cpubind;
+    hooks->get_thisproc_cpubind = hwloc_win_get_thisproc_cpubind;
+    hooks->set_proc_membind = hwloc_win_set_proc_membind;
+    hooks->get_proc_membind = hwloc_win_get_proc_membind;
+    hooks->set_thisproc_membind = hwloc_win_set_thisproc_membind;
+    hooks->get_thisproc_membind = hwloc_win_get_thisproc_membind;
+  }
+  if (nr_processor_groups == 1 || SetThreadGroupAffinityProc) {
+    hooks->set_thread_cpubind = hwloc_win_set_thread_cpubind;
+    hooks->set_thisthread_cpubind = hwloc_win_set_thisthread_cpubind;
+    hooks->set_thisthread_membind = hwloc_win_set_thisthread_membind;
+  }
+  if (GetThreadGroupAffinityProc) {
+    hooks->get_thread_cpubind = hwloc_win_get_thread_cpubind;
+    hooks->get_thisthread_cpubind = hwloc_win_get_thisthread_cpubind;
+    hooks->get_thisthread_membind = hwloc_win_get_thisthread_membind;
+  }
+
+  if (VirtualAllocExNumaProc) {
     hooks->alloc_membind = hwloc_win_alloc_membind;
     hooks->alloc = hwloc_win_alloc;
     hooks->free_membind = hwloc_win_free_membind;
     support->membind->bind_membind = 1;
   }
 
-  if (!hwloc_win_get_QueryWorkingSetExProc())
+  if (QueryWorkingSetExProc)
     hooks->get_area_membind = hwloc_win_get_area_membind;
 }
 
@@ -810,3 +1102,30 @@ const struct hwloc_component hwloc_windows_component = {
   0,
   &hwloc_windows_disc_component
 };
+
+unsigned
+hwloc_fallback_nbprocessors(struct hwloc_topology *topology) {
+  int n;
+  SYSTEM_INFO sysinfo;
+
+  /* by default, ignore groups (return only the number in the current group) */
+  GetSystemInfo(&sysinfo);
+  n = sysinfo.dwNumberOfProcessors; /* FIXME could be non-contigous, rather return a mask from dwActiveProcessorMask? */
+
+  hwloc_win_get_function_ptrs();
+
+  if (nr_processor_groups > 1) {
+    /* assume n-1 groups are complete, since that's how we store things in cpusets */
+    if (GetActiveProcessorCountProc)
+      n = MAXIMUM_PROC_PER_GROUP*(nr_processor_groups-1)
+	+ GetActiveProcessorCountProc((WORD)nr_processor_groups-1);
+    else
+      n = MAXIMUM_PROC_PER_GROUP*nr_processor_groups;
+  }
+
+  if (n >= 1)
+    topology->support.discovery->pu = 1;
+  else
+    n = 1;
+  return n;
+}

@@ -771,8 +771,8 @@ os_device_draw(hwloc_topology_t topology __hwloc_attribute_unused, struct draw_m
     n = lstopo_obj_snprintf(text, sizeof(text), level, logical);
     textwidth = get_textwidth(output, methods, text, n, fontsize, gridsize);
     for(i=0; i<nmorelines; i++) {
-      int nn = strlen(morelines[i]);
-      int ntextwidth = get_textwidth(output, methods, morelines[i], nn, fontsize, gridsize);
+      unsigned nn = (unsigned)strlen(morelines[i]);
+      unsigned ntextwidth = get_textwidth(output, methods, morelines[i], nn, fontsize, gridsize);
       if (ntextwidth > textwidth)
 	textwidth = ntextwidth;
     }
@@ -1326,6 +1326,8 @@ get_type_fun(hwloc_obj_type_t type)
     case HWLOC_OBJ_MISC: return misc_draw;
     case HWLOC_OBJ_TYPE_MAX: assert(0);
   }
+  /* for dumb compilers */
+  return misc_draw;
 }
 
 void
@@ -1365,7 +1367,7 @@ output_compute_pu_min_textwidth(struct lstopo_output *output)
 
   if (output->logical) {
     unsigned depth = hwloc_get_type_depth(topology, HWLOC_OBJ_PU);
-    lastpu = hwloc_get_obj_by_depth(topology, HWLOC_OBJ_PU, hwloc_get_nbobjs_by_depth(topology, depth)-1);
+    lastpu = hwloc_get_obj_by_depth(topology, depth, hwloc_get_nbobjs_by_depth(topology, depth)-1);
   } else {
     unsigned lastidx = hwloc_bitmap_last(hwloc_topology_get_topology_cpuset(topology));
     lastpu = hwloc_get_pu_obj_by_os_index(topology, lastidx);
