@@ -36,10 +36,10 @@
     <ClCompile Include="..\..\src\misc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\topology-custom.c">
+    <ClCompile Include="..\..\src\pci-common.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\topology-fake.c">
+    <ClCompile Include="..\..\src\topology-custom.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\topology-noos.c">

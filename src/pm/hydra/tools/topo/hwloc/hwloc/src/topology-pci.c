@@ -1,8 +1,10 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2014 Inria.  All rights reserved.
+ * Copyright © 2009-2015 Inria.  All rights reserved.
  * Copyright © 2009-2011, 2013 Université Bordeaux
  * Copyright © 2014 Cisco Systems, Inc.  All rights reserved.
+ * Copyright © 2015      Research Organization for Information Science
+ *                       and Technology (RIST). All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -206,7 +208,8 @@ hwloc_look_pci(struct hwloc_backend *backend)
     if (offset > 0 && offset + 20 /* size of PCI express block up to link status */ <= CONFIG_SPACE_CACHESIZE)
       hwloc_pci_find_linkspeed(config_space_cache, offset, &obj->attr->pcidev.linkspeed);
 
-    hwloc_pci_prepare_bridge(obj, config_space_cache);
+    if (hwloc_pci_prepare_bridge(obj, config_space_cache) < 0)
+      continue;
 
     if (obj->type == HWLOC_OBJ_PCI_DEVICE) {
       memcpy(&tmp16, &config_space_cache[PCI_SUBSYSTEM_VENDOR_ID], sizeof(tmp16));
@@ -273,10 +276,8 @@ hwloc_look_pci(struct hwloc_backend *backend)
 	  while (obj) {
 	    if (obj->attr->pcidev.domain == domain
 		&& obj->attr->pcidev.bus == bus
-		&& obj->attr->pcidev.dev == dev
-		&& obj->attr->pcidev.func == 0) {
+		&& obj->attr->pcidev.dev == dev) {
 	      hwloc_obj_add_info(obj, "PCISlot", dirent->d_name);
-	      break;
 	    }
 	    obj = obj->next_sibling;
 	  }
@@ -305,7 +306,12 @@ hwloc_pci_component_instantiate(struct hwloc_disc_component *component,
   if (!backend)
     return NULL;
   backend->flags = HWLOC_BACKEND_FLAG_NEED_LEVELS;
-  backend->discover = hwloc_look_pci;
+#ifdef HWLOC_SOLARIS_SYS
+  if ((uid_t)0 != geteuid())
+    backend->discover = NULL;
+  else
+#endif
+    backend->discover = hwloc_look_pci;
   return backend;
 }
 

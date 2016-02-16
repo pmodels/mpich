@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{9DE76C6D-4773-4766-9F93-69C56166CB8E}</ProjectGuid>
+    <ProjectGuid>{9DE76C6D-4773-4766-9F93-69C56166CB93}</ProjectGuid>
     <RootNamespace>hwloc-bind</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
@@ -17,6 +17,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -59,7 +60,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetMachine>MachineX64</TargetMachine>
       <LinkErrorReporting>NoErrorReport</LinkErrorReporting>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\ReleaseDll;$(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\Release;$(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libhwloc.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -77,7 +78,6 @@
     <ClInclude Include="..\..\include\hwloc\plugins.h" />
     <ClInclude Include="..\..\include\hwloc\rename.h" />
     <ClInclude Include="..\..\include\private\components.h" />
-    <ClInclude Include="..\..\include\private\cpuid.h" />
     <ClInclude Include="..\..\include\private\debug.h" />
     <ClInclude Include="..\..\include\private\misc.h" />
     <ClInclude Include="..\..\include\private\private.h" />

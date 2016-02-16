@@ -80,7 +80,10 @@ extern "C" {
 /** \brief Indicate at build time which hwloc API version is being used. */
 #define HWLOC_API_VERSION 0x00010b00
 
-/** \brief Indicate at runtime which hwloc API version was used at build time. */
+/** \brief Indicate at runtime which hwloc API version was used at build time.
+ *
+ * Should be ::HWLOC_API_VERSION if running on the same version.
+ */
 HWLOC_DECLSPEC unsigned hwloc_get_api_version(void);
 
 /** \brief Current component and plugin ABI version (see hwloc/plugins.h) */
@@ -208,6 +211,7 @@ typedef enum {
 			  * expose their arbitrary processors aggregation this
 			  * way.  And hwloc may insert such objects to group
 			  * NUMA nodes according to their distances.
+			  * See also \ref faq_groups.
 			  *
 			  * These objects are ignored when they do not bring
 			  * any structure.
@@ -216,7 +220,7 @@ typedef enum {
   HWLOC_OBJ_MISC,	/**< \brief Miscellaneous objects.
 			  * Objects without particular meaning, that can e.g. be
 			  * added by the application for its own use, or by hwloc
-			  * for miscellaneous objects such as MemoryDevice.
+			  * for miscellaneous objects such as MemoryModule (DIMMs).
 			  */
 
   HWLOC_OBJ_BRIDGE,	/**< \brief Bridge.
@@ -254,7 +258,7 @@ typedef enum hwloc_obj_cache_type_e {
   HWLOC_OBJ_CACHE_UNIFIED,      /**< \brief Unified cache. */
   HWLOC_OBJ_CACHE_DATA,         /**< \brief Data cache. */
   HWLOC_OBJ_CACHE_INSTRUCTION   /**< \brief Instruction cache.
-				  * Only used when the HWLOC_TOPOLOGY_FLAG_ICACHES topology flag is set. */
+				  * Only used when the ::HWLOC_TOPOLOGY_FLAG_ICACHES topology flag is set. */
 } hwloc_obj_cache_type_t;
 
 /** \brief Type of one side (upstream or downstream) of an I/O bridge. */
@@ -289,12 +293,12 @@ typedef enum hwloc_obj_osdev_type_e {
  * respectively if \p type1 objects usually include \p type2 objects, are the
  * same as \p type2 objects, or are included in \p type2 objects. If the types
  * can not be compared (because neither is usually contained in the other),
- * HWLOC_TYPE_UNORDERED is returned.  Object types containing CPUs can always
+ * ::HWLOC_TYPE_UNORDERED is returned.  Object types containing CPUs can always
  * be compared (usually, a system contains machines which contain nodes which
  * contain packages which contain caches, which contain cores, which contain
  * processors).
  *
- * \note HWLOC_OBJ_PU will always be the deepest.
+ * \note ::HWLOC_OBJ_PU will always be the deepest.
  * \note This does not mean that the actual topology will respect that order:
  * e.g. as of today cores may also contain caches, and packages may also contain
  * nodes. This is thus just to be seen as a fallback comparison method.
@@ -302,7 +306,7 @@ typedef enum hwloc_obj_osdev_type_e {
 HWLOC_DECLSPEC int hwloc_compare_types (hwloc_obj_type_t type1, hwloc_obj_type_t type2) __hwloc_attribute_const;
 
 enum hwloc_compare_types_e {
-    HWLOC_TYPE_UNORDERED = INT_MAX	/**< \brief Value returned by hwloc_compare_types when types can not be compared. \hideinitializer */
+    HWLOC_TYPE_UNORDERED = INT_MAX	/**< \brief Value returned by hwloc_compare_types() when types can not be compared. \hideinitializer */
 };
 
 /** @} */
@@ -393,22 +397,22 @@ struct hwloc_obj {
                                           * object and known how (the children path between this object and the PU
                                           * objects).
                                           *
-                                          * If the HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM configuration flag is set, some of
+                                          * If the ::HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM configuration flag is set, some of
                                           * these CPUs may be offline, or not allowed for binding, see online_cpuset
                                           * and allowed_cpuset.
                                           *
-                                          * \note Its value must not be changed, hwloc_bitmap_dup must be used instead.
+                                          * \note Its value must not be changed, hwloc_bitmap_dup() must be used instead.
                                           */
   hwloc_cpuset_t complete_cpuset;       /**< \brief The complete CPU set of logical processors of this object,
                                           *
                                           * This includes not only the same as the cpuset field, but also the CPUs for
                                           * which topology information is unknown or incomplete, and the CPUs that are
-                                          * ignored when the HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM flag is not set.
+                                          * ignored when the ::HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM flag is not set.
                                           * Thus no corresponding PU object may be found in the topology, because the
                                           * precise position is undefined. It is however known that it would be somewhere
                                           * under this object.
                                           *
-                                          * \note Its value must not be changed, hwloc_bitmap_dup must be used instead.
+                                          * \note Its value must not be changed, hwloc_bitmap_dup() must be used instead.
                                           */
   hwloc_cpuset_t online_cpuset;         /**< \brief The CPU set of online logical processors
                                           *
@@ -416,7 +420,7 @@ struct hwloc_obj {
                                           * power and can execute threads.  It may however not be allowed to bind to
                                           * them due to administration rules, see allowed_cpuset.
                                           *
-                                          * \note Its value must not be changed, hwloc_bitmap_dup must be used instead.
+                                          * \note Its value must not be changed, hwloc_bitmap_dup() must be used instead.
                                           */
   hwloc_cpuset_t allowed_cpuset;        /**< \brief The CPU set of allowed logical processors
                                           *
@@ -426,7 +430,7 @@ struct hwloc_obj {
                                           * Some of them may however be offline so binding to them may still not be
                                           * possible, see online_cpuset.
                                           *
-                                          * \note Its value must not be changed, hwloc_bitmap_dup must be used instead.
+                                          * \note Its value must not be changed, hwloc_bitmap_dup() must be used instead.
                                           */
 
   hwloc_nodeset_t nodeset;              /**< \brief NUMA nodes covered by this object or containing this object
@@ -438,19 +442,19 @@ struct hwloc_obj {
                                           *
                                           * In the end, these nodes are those that are close to the current object.
                                           *
-                                          * If the HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM configuration flag is set, some of
+                                          * If the ::HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM configuration flag is set, some of
                                           * these nodes may not be allowed for allocation, see allowed_nodeset.
                                           *
                                           * If there are no NUMA nodes in the machine, all the memory is close to this
                                           * object, so \p nodeset is full.
                                           *
-                                          * \note Its value must not be changed, hwloc_bitmap_dup must be used instead.
+                                          * \note Its value must not be changed, hwloc_bitmap_dup() must be used instead.
                                           */
   hwloc_nodeset_t complete_nodeset;     /**< \brief The complete NUMA node set of this object,
                                           *
                                           * This includes not only the same as the nodeset field, but also the NUMA
                                           * nodes for which topology information is unknown or incomplete, and the nodes
-                                          * that are ignored when the HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM flag is not set.
+                                          * that are ignored when the ::HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM flag is not set.
                                           * Thus no corresponding NODE object may be found in the topology, because the
                                           * precise position is undefined. It is however known that it would be
                                           * somewhere under this object.
@@ -458,7 +462,7 @@ struct hwloc_obj {
                                           * If there are no NUMA nodes in the machine, all the memory is close to this
                                           * object, so \p complete_nodeset is full.
                                           *
-                                          * \note Its value must not be changed, hwloc_bitmap_dup must be used instead.
+                                          * \note Its value must not be changed, hwloc_bitmap_dup() must be used instead.
                                           */
   hwloc_nodeset_t allowed_nodeset;      /**< \brief The set of allowed NUMA memory nodes
                                           *
@@ -470,7 +474,7 @@ struct hwloc_obj {
                                           * If there are no NUMA nodes in the machine, all the memory is close to this
                                           * object, so \p allowed_nodeset is full.
                                           *
-                                          * \note Its value must not be changed, hwloc_bitmap_dup must be used instead.
+                                          * \note Its value must not be changed, hwloc_bitmap_dup() must be used instead.
                                           */
 
   struct hwloc_distances_s **distances;	/**< \brief Distances between all objects at same depth below this object */
@@ -679,7 +683,7 @@ HWLOC_DECLSPEC void hwloc_topology_check(hwloc_topology_t topology);
 /** \brief Ignore an object type.
  *
  * Ignore all objects from the given type.
- * The bottom-level type HWLOC_OBJ_PU may not be ignored.
+ * The bottom-level type ::HWLOC_OBJ_PU may not be ignored.
  * The top-level object of the hierarchy will never be ignored, even if this function
  * succeeds.
  * Group objects are always ignored if they do not bring any structure
@@ -693,7 +697,7 @@ HWLOC_DECLSPEC int hwloc_topology_ignore_type(hwloc_topology_t topology, hwloc_o
  *
  * Ignore all objects from the given type as long as they do not bring any structure:
  * Each ignored object should have a single children or be the only child of its parent.
- * The bottom-level type HWLOC_OBJ_PU may not be ignored.
+ * The bottom-level type ::HWLOC_OBJ_PU may not be ignored.
  * I/O objects may not be ignored, topology flags should be used to configure
  * their discovery instead.
  */
@@ -702,9 +706,8 @@ HWLOC_DECLSPEC int hwloc_topology_ignore_type_keep_structure(hwloc_topology_t to
 /** \brief Ignore all objects that do not bring any structure.
  *
  * Ignore all objects that do not bring any structure:
- * Each ignored object should have a single children or be the only child of its parent.
- * I/O objects may not be ignored, topology flags should be used to configure
- * their discovery instead.
+ * This is equivalent to calling hwloc_topology_ignore_type_keep_structure()
+ * for all object types.
  */
 HWLOC_DECLSPEC int hwloc_topology_ignore_all_keep_structure(hwloc_topology_t topology);
 
@@ -719,6 +722,10 @@ enum hwloc_topology_flags_e {
    * Gather all resources, even if some were disabled by the administrator.
    * For instance, ignore Linux Cgroup/Cpusets and gather all processors and memory nodes,
    * and ignore the fact that some resources may be offline.
+   *
+   * When this flag is not set, PUs that are disallowed are not added to the topology.
+   * Parent objects (package, core, cache, etc.) are added only if some of their children are allowed.
+   * NUMA nodes are always added but their available memory is set to 0 when disallowed.
    * \hideinitializer
    */
   HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM = (1UL<<0),
@@ -726,7 +733,7 @@ enum hwloc_topology_flags_e {
  /** \brief Assume that the selected backend provides the topology for the
    * system on which we are running.
    *
-   * This forces hwloc_topology_is_thissystem to return 1, i.e. makes hwloc assume that
+   * This forces hwloc_topology_is_thissystem() to return 1, i.e. makes hwloc assume that
    * the selected backend provides the topology for the system on which we are running,
    * even if it is not the OS-specific backend but the XML backend for instance.
    * This means making the binding functions actually call the OS-specific
@@ -749,7 +756,7 @@ enum hwloc_topology_flags_e {
    * detection using the pci backend. Only the common PCI devices (GPUs,
    * NICs, block devices, ...) and host bridges (objects that connect the host
    * objects to an I/O subsystem) will be added to the topology.
-   * Additionally it also enables MemoryDevice misc objects.
+   * Additionally it also enables MemoryModule misc objects.
    * Uncommon devices and other bridges (such as PCI-to-PCI bridges) will be
    * ignored.
    * \hideinitializer
@@ -758,7 +765,7 @@ enum hwloc_topology_flags_e {
 
   /** \brief Detect PCI bridges.
    *
-   * This flag should be combined with HWLOC_TOPOLOGY_FLAG_IO_DEVICES to enable
+   * This flag should be combined with ::HWLOC_TOPOLOGY_FLAG_IO_DEVICES to enable
    * the detection of both common devices and of all useful bridges (bridges that
    * have at least one device behind them).
    * \hideinitializer
@@ -767,10 +774,10 @@ enum hwloc_topology_flags_e {
 
   /** \brief Detect the whole PCI hierarchy.
    *
-   * This flag enables detection of all I/O devices (even the uncommon ones)
-   * and bridges (even those that have no device behind them) using the pci
-   * backend.
-   * This implies HWLOC_TOPOLOGY_FLAG_IO_DEVICES.
+   * This flag enables detection of all I/O devices (even the uncommon ones
+   * such as DMA channels) and bridges (even those that have no device behind
+   * them) using the pci backend.
+   * This implies ::HWLOC_TOPOLOGY_FLAG_IO_DEVICES.
    * \hideinitializer
    */
   HWLOC_TOPOLOGY_FLAG_WHOLE_IO = (1UL<<4),
@@ -803,7 +810,7 @@ HWLOC_DECLSPEC int hwloc_topology_set_flags (hwloc_topology_t topology, unsigned
  */
 HWLOC_DECLSPEC unsigned long hwloc_topology_get_flags (hwloc_topology_t topology);
 
-/** \brief Change which pid the topology is viewed from
+/** \brief Change which process the topology is viewed from
  *
  * On some systems, processes may have different views of the machine, for
  * instance the set of allowed CPUs. By default, hwloc exposes the view from
@@ -838,7 +845,7 @@ HWLOC_DECLSPEC int hwloc_topology_set_pid(hwloc_topology_t __hwloc_restrict topo
  *
  * \note For convenience, this backend provides empty binding hooks which just
  * return success.  To have hwloc still actually call OS-specific hooks, the
- * HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM has to be set to assert that the loaded
+ * ::HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM has to be set to assert that the loaded
  * file is really the underlying system.
  *
  * \note On success, the Linux component replaces the previously enabled
@@ -895,7 +902,7 @@ HWLOC_DECLSPEC int hwloc_topology_set_synthetic(hwloc_topology_t __hwloc_restric
  *
  * \note For convenience, this backend provides empty binding hooks which just
  * return success.  To have hwloc still actually call OS-specific hooks, the
- * HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM has to be set to assert that the loaded
+ * ::HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM has to be set to assert that the loaded
  * file is really the underlying system.
  *
  * \note On success, the XML component replaces the previously enabled
@@ -923,7 +930,7 @@ HWLOC_DECLSPEC int hwloc_topology_set_xml(hwloc_topology_t __hwloc_restrict topo
  *
  * \note For convenience, this backend provides empty binding hooks which just
  * return success.  To have hwloc still actually call OS-specific hooks, the
- * HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM has to be set to assert that the loaded
+ * ::HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM has to be set to assert that the loaded
  * file is really the underlying system.
  *
  * \note On success, the XML component replaces the previously enabled
@@ -1099,7 +1106,7 @@ HWLOC_DECLSPEC void * hwloc_topology_get_userdata(hwloc_topology_t topology);
 
 /** \brief Get the depth of the hierarchical tree of objects.
  *
- * This is the depth of HWLOC_OBJ_PU objects plus one.
+ * This is the depth of ::HWLOC_OBJ_PU objects plus one.
  */
 HWLOC_DECLSPEC unsigned hwloc_topology_get_depth(hwloc_topology_t __hwloc_restrict topology) __hwloc_attribute_pure;
 
@@ -1107,14 +1114,14 @@ HWLOC_DECLSPEC unsigned hwloc_topology_get_depth(hwloc_topology_t __hwloc_restri
  *
  * If no object of this type is present on the underlying architecture, or if
  * the OS doesn't provide this kind of information, the function returns
- * HWLOC_TYPE_DEPTH_UNKNOWN.
+ * ::HWLOC_TYPE_DEPTH_UNKNOWN.
  *
  * If type is absent but a similar type is acceptable, see also
  * hwloc_get_type_or_below_depth() and hwloc_get_type_or_above_depth().
  *
  * If some objects of the given type exist in different levels,
  * for instance L1 and L2 caches, or L1i and L1d caches,
- * the function returns HWLOC_TYPE_DEPTH_MULTIPLE.
+ * the function returns ::HWLOC_TYPE_DEPTH_MULTIPLE.
  * See hwloc_get_cache_type_depth() in hwloc/helper.h to better handle this
  * case.
  *
@@ -1142,7 +1149,7 @@ enum hwloc_get_type_depth_e {
  * inside \p type.
  *
  * If some objects of the given type exist in different levels, for instance
- * L1 and L2 caches, the function returns HWLOC_TYPE_DEPTH_MULTIPLE.
+ * L1 and L2 caches, the function returns ::HWLOC_TYPE_DEPTH_MULTIPLE.
  */
 static __hwloc_inline int
 hwloc_get_type_or_below_depth (hwloc_topology_t topology, hwloc_obj_type_t type) __hwloc_attribute_pure;
@@ -1154,12 +1161,14 @@ hwloc_get_type_or_below_depth (hwloc_topology_t topology, hwloc_obj_type_t type)
  * containing \p type.
  *
  * If some objects of the given type exist in different levels, for instance
- * L1 and L2 caches, the function returns HWLOC_TYPE_DEPTH_MULTIPLE.
+ * L1 and L2 caches, the function returns ::HWLOC_TYPE_DEPTH_MULTIPLE.
  */
 static __hwloc_inline int
 hwloc_get_type_or_above_depth (hwloc_topology_t topology, hwloc_obj_type_t type) __hwloc_attribute_pure;
 
 /** \brief Returns the type of objects at depth \p depth.
+ *
+ * \p depth should between 0 and hwloc_topology_get_depth()-1.
  *
  * \return -1 if depth \p depth does not exist.
  */
@@ -1243,7 +1252,7 @@ HWLOC_DECLSPEC const char * hwloc_obj_type_string (hwloc_obj_type_t type) __hwlo
  * Attributes that are not specified in the string (for instance "Group"
  * without a depth, or "L2Cache" without a cache type) are set to -1.
  *
- * \p typeattrd is only filled if the size specified in \p typeattrsize
+ * \p typeattrp is only filled if the size specified in \p typeattrsize
  * is large enough. It is currently only used for caches, and the required
  * size is at least the size of hwloc_obj_cache_type_t.
  *
@@ -1457,10 +1466,10 @@ HWLOC_DECLSPEC int hwloc_get_cpubind(hwloc_topology_t topology, hwloc_cpuset_t s
  * and \p HANDLE on native Windows platforms.
  *
  * \note As a special case on Linux, if a tid (thread ID) is supplied
- * instead of a pid (process ID) and HWLOC_CPUBIND_THREAD is passed in flags,
+ * instead of a pid (process ID) and ::HWLOC_CPUBIND_THREAD is passed in flags,
  * the binding is applied to that specific thread.
  *
- * \note On non-Linux systems, HWLOC_CPUBIND_THREAD can not be used in \p flags.
+ * \note On non-Linux systems, ::HWLOC_CPUBIND_THREAD can not be used in \p flags.
  */
 HWLOC_DECLSPEC int hwloc_set_proc_cpubind(hwloc_topology_t topology, hwloc_pid_t pid, hwloc_const_cpuset_t set, int flags);
 
@@ -1470,10 +1479,10 @@ HWLOC_DECLSPEC int hwloc_set_proc_cpubind(hwloc_topology_t topology, hwloc_pid_t
  * and \p HANDLE on native Windows platforms.
  *
  * \note As a special case on Linux, if a tid (thread ID) is supplied
- * instead of a pid (process ID) and HWLOC_CPUBIND_THREAD is passed in flags,
+ * instead of a pid (process ID) and ::HWLOC_CPUBIND_THREAD is passed in flags,
  * the binding for that specific thread is returned.
  *
- * \note On non-Linux systems, HWLOC_CPUBIND_THREAD can not be used in \p flags.
+ * \note On non-Linux systems, ::HWLOC_CPUBIND_THREAD can not be used in \p flags.
  */
 HWLOC_DECLSPEC int hwloc_get_proc_cpubind(hwloc_topology_t topology, hwloc_pid_t pid, hwloc_cpuset_t set, int flags);
 
@@ -1483,7 +1492,7 @@ HWLOC_DECLSPEC int hwloc_get_proc_cpubind(hwloc_topology_t topology, hwloc_pid_t
  * \note \p hwloc_thread_t is \p pthread_t on Unix platforms,
  * and \p HANDLE on native Windows platforms.
  *
- * \note HWLOC_CPUBIND_PROCESS can not be used in \p flags.
+ * \note ::HWLOC_CPUBIND_PROCESS can not be used in \p flags.
  */
 HWLOC_DECLSPEC int hwloc_set_thread_cpubind(hwloc_topology_t topology, hwloc_thread_t thread, hwloc_const_cpuset_t set, int flags);
 #endif
@@ -1494,7 +1503,7 @@ HWLOC_DECLSPEC int hwloc_set_thread_cpubind(hwloc_topology_t topology, hwloc_thr
  * \note \p hwloc_thread_t is \p pthread_t on Unix platforms,
  * and \p HANDLE on native Windows platforms.
  *
- * \note HWLOC_CPUBIND_PROCESS can not be used in \p flags.
+ * \note ::HWLOC_CPUBIND_PROCESS can not be used in \p flags.
  */
 HWLOC_DECLSPEC int hwloc_get_thread_cpubind(hwloc_topology_t topology, hwloc_thread_t thread, hwloc_cpuset_t set, int flags);
 #endif
@@ -1506,7 +1515,7 @@ HWLOC_DECLSPEC int hwloc_get_thread_cpubind(hwloc_topology_t topology, hwloc_thr
  * so this function may return something that is already
  * outdated.
  *
- * \p flags can include either HWLOC_CPUBIND_PROCESS or HWLOC_CPUBIND_THREAD to
+ * \p flags can include either ::HWLOC_CPUBIND_PROCESS or ::HWLOC_CPUBIND_THREAD to
  * specify whether the query should be for the whole process (union of all CPUs
  * on which all threads are running), or only the current thread. If the
  * process is single-threaded, flags can be set to zero to let hwloc use
@@ -1525,10 +1534,10 @@ HWLOC_DECLSPEC int hwloc_get_last_cpu_location(hwloc_topology_t topology, hwloc_
  * and \p HANDLE on native Windows platforms.
  *
  * \note As a special case on Linux, if a tid (thread ID) is supplied
- * instead of a pid (process ID) and HWLOC_CPUBIND_THREAD is passed in flags,
+ * instead of a pid (process ID) and ::HWLOC_CPUBIND_THREAD is passed in flags,
  * the last CPU location of that specific thread is returned.
  *
- * \note On non-Linux systems, HWLOC_CPUBIND_THREAD can not be used in \p flags.
+ * \note On non-Linux systems, ::HWLOC_CPUBIND_THREAD can not be used in \p flags.
  */
 HWLOC_DECLSPEC int hwloc_get_proc_last_cpu_location(hwloc_topology_t topology, hwloc_pid_t pid, hwloc_cpuset_t set, int flags);
 
@@ -1611,8 +1620,8 @@ HWLOC_DECLSPEC int hwloc_get_proc_last_cpu_location(hwloc_topology_t topology, h
 typedef enum {
   /** \brief Reset the memory allocation policy to the system default.
    * Depending on the operating system, this may correspond to
-   * HWLOC_MEMBIND_FIRSTTOUCH (Linux),
-   * or HWLOC_MEMBIND_BIND (AIX, HP-UX, OSF, Solaris, Windows).
+   * ::HWLOC_MEMBIND_FIRSTTOUCH (Linux),
+   * or ::HWLOC_MEMBIND_BIND (AIX, HP-UX, OSF, Solaris, Windows).
    * \hideinitializer */
   HWLOC_MEMBIND_DEFAULT =	0,
 
@@ -2041,7 +2050,7 @@ HWLOC_DECLSPEC void *hwloc_alloc_membind(hwloc_topology_t topology, size_t len, 
 
 /** \brief Allocate some memory on the given nodeset \p nodeset
  *
- * This is similar to hwloc_alloc_membind except that it is allowed to change
+ * This is similar to hwloc_alloc_membind() except that it is allowed to change
  * the current memory binding policy, thus providing more binding support, at
  * the expense of changing the current state.
  */
@@ -2050,7 +2059,7 @@ hwloc_alloc_membind_policy_nodeset(hwloc_topology_t topology, size_t len, hwloc_
 
 /** \brief Allocate some memory on the memory nodes near given cpuset \p cpuset
  *
- * This is similar to hwloc_alloc_membind_policy_nodeset, but for a given cpuset.
+ * This is similar to hwloc_alloc_membind_policy_nodeset(), but for a given cpuset.
  */
 static __hwloc_inline void *
 hwloc_alloc_membind_policy(hwloc_topology_t topology, size_t len, hwloc_const_cpuset_t set, hwloc_membind_policy_t policy, int flags) __hwloc_attribute_malloc;

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Inria.  All rights reserved.
+ * Copyright © 2013-2015 Inria.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -7,7 +7,9 @@
 #include <hwloc.h>
 #include <hwloc/diff.h>
 
-static void usage(const char *callname __hwloc_attribute_unused, FILE *where)
+#include "misc.h"
+
+void usage(const char *callname __hwloc_attribute_unused, FILE *where)
 {
 	fprintf(where, "Usage: hwloc-patch [options] [<old.xml> | refname] [<diff.xml> | -] [<output.xml>]\n");
 	fprintf(where, "Options:\n");
@@ -48,7 +50,7 @@ static int hwloc_diff_read(hwloc_topology_t topo, const char *inputdiff,
 		readlen = buflen/2;
 	}
 
-	err = hwloc_topology_diff_load_xmlbuffer(topo, buffer, offset+1, firstdiffp, refnamep);
+	err = hwloc_topology_diff_load_xmlbuffer(topo, buffer, (int)(offset+1), firstdiffp, refnamep);
 	free(buffer);
 	return err;
 
@@ -62,7 +64,7 @@ int main(int argc, char *argv[])
 {
 	hwloc_topology_t topo;
 	hwloc_topology_diff_t firstdiff = NULL;
-	unsigned long flags = HWLOC_TOPOLOGY_FLAG_WHOLE_IO | HWLOC_TOPOLOGY_FLAG_ICACHES;
+	unsigned long flags = HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM | HWLOC_TOPOLOGY_FLAG_WHOLE_IO | HWLOC_TOPOLOGY_FLAG_ICACHES;
 	unsigned long patchflags = 0;
 	char *callname, *input, *inputdiff, *output = NULL, *refname = NULL;
 	int err;
@@ -126,14 +128,14 @@ int main(int argc, char *argv[])
 		err = hwloc_topology_set_xml(topo, refname);
 		if (err < 0) {
 			fprintf(stderr, "Failed to load XML topology %s (from input diff %s refname)\n", refname, inputdiff);
-			goto out;
+			goto out_with_diff;
 		}
 	} else {
 		/* use the given input */
 		err = hwloc_topology_set_xml(topo, input);
 		if (err < 0) {
 			fprintf(stderr, "Failed to load XML topology %s\n", input);
-			goto out;
+			goto out_with_diff;
 		}
 	}
 
@@ -162,6 +164,5 @@ out_with_diff:
 	hwloc_topology_diff_destroy(topo, firstdiff);
 out_with_topo:
 	hwloc_topology_destroy(topo);
-out:
 	exit(EXIT_FAILURE);
 }

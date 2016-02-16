@@ -7,11 +7,13 @@
 #include <hwloc-calc.h>
 #include <hwloc.h>
 
+#include "misc.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-static void usage(const char *callname __hwloc_attribute_unused, FILE *where)
+void usage(const char *callname __hwloc_attribute_unused, FILE *where)
 {
 	fprintf(where, "Usage: hwloc-annotate [options] <input.xml> <output.xml> <location> <annotation>\n");
 	fprintf(where, "  <location> may be:\n");
@@ -165,7 +167,7 @@ int main(int argc, char *argv[])
 	}
 
 	hwloc_topology_init(&topology);
-	hwloc_topology_set_flags(topology, HWLOC_TOPOLOGY_FLAG_WHOLE_IO|HWLOC_TOPOLOGY_FLAG_ICACHES);
+	hwloc_topology_set_flags(topology, HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM | HWLOC_TOPOLOGY_FLAG_WHOLE_IO | HWLOC_TOPOLOGY_FLAG_ICACHES);
 	err = hwloc_topology_set_xml(topology, input);
 	if (err < 0)
 		goto out;

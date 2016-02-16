@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
- * Copyright © 2010-2014 Inria.  All rights reserved.
+ * Copyright © 2010-2015 Inria.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -510,6 +510,7 @@ extern "C" {
 
 /* private/debug.h */
 
+#define hwloc_debug_enabled HWLOC_NAME(debug_enabled)
 #define hwloc_debug HWLOC_NAME(debug)
 
 /* private/misc.h */
@@ -603,6 +604,10 @@ extern "C" {
 #define hwloc_set_freebsd_hooks HWLOC_NAME(set_freebsd_hooks)
 #define hwloc_set_netbsd_hooks HWLOC_NAME(set_netbsd_hooks)
 #define hwloc_set_hpux_hooks HWLOC_NAME(set_hpux_hooks)
+
+#define hwloc_look_hardwired_fujitsu_k HWLOC_NAME(look_hardwired_fujitsu_k)
+#define hwloc_look_hardwired_fujitsu_fx10 HWLOC_NAME(look_hardwired_fujitsu_fx10)
+#define hwloc_look_hardwired_fujitsu_fx100 HWLOC_NAME(look_hardwired_fujitsu_fx100)
 
 #define hwloc_add_uname_info HWLOC_NAME(add_uname_info)
 #define hwloc_free_unlinked_object HWLOC_NAME(free_unlinked_object)

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2009 inria.  All rights reserved.
+ * Copyright © 2009-2015 Inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux
  * See COPYING in top-level directory.
  */
@@ -20,8 +20,9 @@ typedef unsigned char BYTE, UCHAR;
 typedef unsigned short WORD, USHORT;
 typedef unsigned long ULONG_PTR, DWORD_PTR, DWORD, *PDWORD, *PDWORD_PTR;
 typedef const char *LPCSTR;
-typedef int (*FARPROC)();
+typedef int (*FARPROC)(void);
 typedef void *PVOID,*LPVOID;
+typedef void VOID;
 typedef ULONG_PTR SIZE_T;
 
 /* This is to cope with linux using integers for hwloc_pid_t and hwloc_thread_t
@@ -65,6 +66,8 @@ BOOL GetNumaAvailableMemoryNode(UCHAR Node, PULONGLONG AvailableBytes);
 
 typedef struct _SYSTEM_INFO {
   DWORD dwPageSize;
+  DWORD_PTR dwActiveProcessorMask;
+  DWORD dwNumberOfProcessors;
 } SYSTEM_INFO, *LPSYSTEM_INFO;
 
 void WINAPI GetSystemInfo(LPSYSTEM_INFO lpSystemInfo);
