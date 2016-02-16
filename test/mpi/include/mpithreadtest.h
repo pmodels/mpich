@@ -23,7 +23,6 @@
 #define MTEST_THREAD_HANDLE HANDLE
 #define MTEST_THREAD_LOCK_TYPE HANDLE
 #elif defined(HAVE_PTHREAD_H)
-#define USE_PTHREADS 1
 #include <pthread.h>
 #define MTEST_THREAD_RETURN_TYPE void *
 #define MTEST_THREAD_HANDLE pthread_t
