@@ -190,7 +190,7 @@ int MTest_thread_lock_free(MTEST_THREAD_LOCK_TYPE * lock)
 }
 #endif
 
-#if defined(HAVE_PTHREAD_BARRIER_INIT) && defined(USE_PTHREADS)
+#if defined(HAVE_PTHREAD_H) && defined(HAVE_PTHREAD_BARRIER_INIT)
 static MTEST_THREAD_LOCK_TYPE barrierLock;
 static pthread_barrier_t barrier;
 static int bcount = -1;
