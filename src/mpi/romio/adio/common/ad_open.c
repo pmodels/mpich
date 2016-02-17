@@ -38,6 +38,7 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     /* obtain MPI_File handle */
     mpi_fh = MPIO_File_create(sizeof(struct ADIOI_FileD));
     if (mpi_fh == MPI_FILE_NULL) {
+	fd = MPI_FILE_NULL;
 	*error_code = MPIO_Err_create_code(*error_code,
 					   MPIR_ERR_RECOVERABLE,
 					   myname,
