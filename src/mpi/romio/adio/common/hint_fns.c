@@ -148,7 +148,7 @@ fn_exit:
 int ADIOI_Info_check_and_install_str(ADIO_File fd, MPI_Info info, const char *key, 
 	char **local_cache, char *funcname, int *error_code)
 {
-    int flag, ret;
+    int flag, ret=0;
     size_t len;
     char *value;
 
