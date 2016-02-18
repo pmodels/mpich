@@ -37,27 +37,27 @@ int main( int argc, char *argv[] )
     size = MPI::COMM_WORLD.Get_size();
 
     if (size < 2) {
-	cerr << "Size of comm_world must be at least 2\n";
-	MPI::COMM_WORLD.Abort(1);
+        cerr << "Size of comm_world must be at least 2\n";
+        MPI::COMM_WORLD.Abort(1);
     }
     if (rank == 0) {
-	int *buf = new int[100];
-	int i;
-	for (i=0; i<100; i++) buf[i] = i;
-	MPI::COMM_WORLD.Send( buf, 100, MPI::INT, size-1, 0 );
-    delete[] buf;
+        int *buf = new int[100];
+        int i;
+        for (i=0; i<100; i++) buf[i] = i;
+        MPI::COMM_WORLD.Send( buf, 100, MPI::INT, size-1, 0 );
+        delete[] buf;
     }
     else if (rank == size - 1) {
-	int *buf = new int[100];
-	int i;
-	MPI::COMM_WORLD.Recv( buf, 100, MPI::INT, 0, 0 );
-	for (i=0; i<100; i++) {
-	    if (buf[i] != i) {
-		errs++;
-		cerr << "Error: buf[" << i << "] = " << buf[i] << "\n";
-	    }
-	}
-    delete[] buf;
+        int *buf = new int[100];
+        int i;
+        MPI::COMM_WORLD.Recv( buf, 100, MPI::INT, 0, 0 );
+        for (i=0; i<100; i++) {
+            if (buf[i] != i) {
+                errs++;
+                cerr << "Error: buf[" << i << "] = " << buf[i] << "\n";
+            }
+        }
+        delete[] buf;
     }
 
     MTest_Finalize( errs );
