@@ -186,6 +186,7 @@ int MPL_dbg_outevent(const char *file, int line, int class, int kind, const char
         str = va_arg(list, char *);
         fprintf(dbg_fp, "%d\t%d\t%llx[%d]\t%d\t%f\t%s\t%d\t%s\n",
                 world_num, world_rank, threadID, pid, class, curtime, file, line, str);
+        va_end(list);
         break;
     case 1:
         va_start(list, fmat);
