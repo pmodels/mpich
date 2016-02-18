@@ -34,7 +34,7 @@ HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg * pg)
     HYDU_FUNC_ENTER();
 
     HYDU_MALLOC_OR_JUMP(MPIR_proctable, struct MPIR_PROCDESC *,
-                pg->pg_process_count * sizeof(struct MPIR_PROCDESC), status);
+                        pg->pg_process_count * sizeof(struct MPIR_PROCDESC), status);
 
     round = 0;
     /* We need to allocate the MPIR_proctable in COMM_WORLD rank

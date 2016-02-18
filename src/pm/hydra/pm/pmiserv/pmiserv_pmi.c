@@ -82,7 +82,7 @@ HYD_status HYD_pmcd_pmi_publish(char *name, char *port, int *success)
         *success = 1;
 
         HYDU_MALLOC_OR_JUMP(publish, struct HYD_pmcd_pmi_publish *,
-                    sizeof(struct HYD_pmcd_pmi_publish), status);
+                            sizeof(struct HYD_pmcd_pmi_publish), status);
         publish->name = MPL_strdup(name);
         publish->port = MPL_strdup(port);
         publish->infokeycount = 0;

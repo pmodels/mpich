@@ -475,7 +475,7 @@ HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip)
     sa = (struct sockaddr_in *) ifa->ifa_addr;
 #if defined HAVE_INET_NTOP
     (*ip) = MPL_strdup((char *)
-                        inet_ntop(AF_INET, (const void *) &(sa->sin_addr), buf, MAX_HOSTNAME_LEN));
+                       inet_ntop(AF_INET, (const void *) &(sa->sin_addr), buf, MAX_HOSTNAME_LEN));
 #else
     (*ip) = NULL;
 #endif /* HAVE_INET_NTOP */
@@ -554,7 +554,7 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
 
         /* Find the IP address of the host */
         host_ip = MPL_strdup((char *) inet_ntop(AF_INET, (const void *) &sa.sin_addr, buf,
-                                                 MAX_HOSTNAME_LEN));
+                                                MAX_HOSTNAME_LEN));
         HYDU_ASSERT(host_ip, status);
     }
 
@@ -570,7 +570,7 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
 
         /* Find the IP address of the host */
         lhost_ip = MPL_strdup((char *) inet_ntop(AF_INET, (const void *) &sa.sin_addr, buf,
-                                                  MAX_HOSTNAME_LEN));
+                                                 MAX_HOSTNAME_LEN));
         HYDU_ASSERT(lhost_ip, status);
 
         /* See if the IP address of the hostname we got matches the IP
@@ -595,8 +595,8 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
             struct sockaddr_in *sa_ptr = (struct sockaddr_in *) ifa->ifa_addr;
 
             lhost_ip = MPL_strdup((char *)
-                                   inet_ntop(AF_INET, (const void *) &(sa_ptr->sin_addr), buf,
-                                             MAX_HOSTNAME_LEN));
+                                  inet_ntop(AF_INET, (const void *) &(sa_ptr->sin_addr), buf,
+                                            MAX_HOSTNAME_LEN));
             HYDU_ASSERT(lhost_ip, status);
 
             /* For each local IP address, see if it matches the "host"
