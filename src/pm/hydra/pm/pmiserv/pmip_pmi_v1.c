@@ -502,10 +502,10 @@ static HYD_status fn_keyval_cache(int fd, char *args[])
 
     /* allocate a larger space for the cached keyvals, copy over the
      * older keyvals and add the new ones in */
-    HYDU_REALLOC_OR_JUMP(cache_get.key, char **, (cache_get.keyval_len + token_count) * sizeof(char *),
-                 status);
-    HYDU_REALLOC_OR_JUMP(cache_get.val, char **, (cache_get.keyval_len + token_count) * sizeof(char *),
-                 status);
+    HYDU_REALLOC_OR_JUMP(cache_get.key, char **,
+                         (cache_get.keyval_len + token_count) * sizeof(char *), status);
+    HYDU_REALLOC_OR_JUMP(cache_get.val, char **,
+                         (cache_get.keyval_len + token_count) * sizeof(char *), status);
 
     for (i = 0; i < token_count; i++) {
         cache_get.key[cache_get.keyval_len + i] = MPL_strdup(tokens[i].key);

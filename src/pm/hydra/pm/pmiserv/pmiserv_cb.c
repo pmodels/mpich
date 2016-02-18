@@ -232,7 +232,8 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
         HYDU_ERR_POP(status, "debugger setup failed\n");
     }
     else if (hdr.cmd == EXIT_STATUS) {
-        HYDU_MALLOC_OR_JUMP(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int), status);
+        HYDU_MALLOC_OR_JUMP(proxy->exit_status, int *, proxy->proxy_process_count * sizeof(int),
+                            status);
         status =
             HYDU_sock_read(fd, (void *) proxy->exit_status,
                            proxy->proxy_process_count * sizeof(int), &count, &closed,
@@ -376,7 +377,8 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                     HYDU_MALLOC_OR_JUMP(str, char *, PMI_MAXVALLEN, status);
 
                     MPL_snprintf(str, PMI_MAXVALLEN, "%s,%d", pg_scratch->dead_processes, hdr.pid);
-                } else {
+                }
+                else {
                     str = current_list;
                 }
                 pg_scratch->dead_processes = str;

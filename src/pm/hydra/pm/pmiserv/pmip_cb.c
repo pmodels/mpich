@@ -222,7 +222,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         }
     }
 
- read_cmd:
+  read_cmd:
     /* PMI-1 does not tell us how much to read. We read how much ever
      * we can, parse out full PMI commands from it, and process
      * them. When we don't have a full PMI command, we go back and
@@ -284,7 +284,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         pmi_storage[pmi_storage_len] = 0;
     }
 
- check_cmd:
+  check_cmd:
     status = check_pmi_cmd(&buf, &hdr.pmi_version, &repeat);
     HYDU_ERR_POP(status, "error checking the PMI command\n");
 
@@ -305,8 +305,8 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         HYD_pmcd_pmip_pmi_handle = HYD_pmcd_pmip_pmi_v2;
 
     HYDU_MALLOC_OR_JUMP(args, char **, MAX_PMI_ARGS * sizeof(char *), status);
-    for(i = 0;i < MAX_PMI_ARGS; i++)
-        args[i]= NULL;
+    for (i = 0; i < MAX_PMI_ARGS; i++)
+        args[i] = NULL;
 
     status = HYD_pmcd_pmi_parse_pmi_cmd(buf, hdr.pmi_version, &pmi_cmd, args);
     HYDU_ERR_POP(status, "unable to parse PMI command\n");
@@ -327,8 +327,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
     }
 
     if (HYD_pmcd_pmip.user_global.debug) {
-        HYDU_dump(stdout, "we don't understand this command %s; forwarding upstream\n",
-                  pmi_cmd);
+        HYDU_dump(stdout, "we don't understand this command %s; forwarding upstream\n", pmi_cmd);
     }
 
     /* We don't understand the command; forward it upstream */
@@ -489,19 +488,19 @@ static HYD_status launch_procs(void)
         HYD_pmcd_pmip.local.proxy_process_count += exec->proc_count;
 
     HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.downstream.out, int *,
-                HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
+                        HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
     HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.downstream.err, int *,
-                HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
+                        HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
     HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.downstream.pid, int *,
-                HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
+                        HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
     HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.downstream.exit_status, int *,
-                HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
+                        HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
     HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.downstream.pmi_rank, int *,
-                HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
+                        HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
     HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.downstream.pmi_fd, int *,
-                HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
+                        HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
     HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.downstream.pmi_fd_active, int *,
-                HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
+                        HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), status);
 
     /* Initialize the PMI_FD and PMI FD active state, and exit status */
     for (i = 0; i < HYD_pmcd_pmip.local.proxy_process_count; i++) {

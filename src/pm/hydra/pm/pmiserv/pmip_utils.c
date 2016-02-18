@@ -288,7 +288,7 @@ static HYD_status parse_ckpoint_prefix(char *pathlist)
     prefixes++;
 
     HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.local.ckpoint_prefix_list, char **, prefixes * sizeof(char *),
-                status);
+                        status);
 
     dummy = strtok(pathlist, ":");
     i = 0;
@@ -733,7 +733,7 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
 
     HYDU_dbg_finalize();
     MPL_snprintf(dbg_prefix, 2 * MAX_HOSTNAME_LEN, "proxy:%d:%d",
-                  HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.local.id);
+                 HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.local.id);
     status = HYDU_dbg_init((const char *) dbg_prefix);
     HYDU_ERR_POP(status, "unable to initialization debugging\n");
 

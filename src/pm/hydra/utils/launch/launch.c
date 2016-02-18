@@ -71,8 +71,7 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
             /* The child process should never get back to the proxy
              * code; if there is an error, just throw it here and
              * exit. */
-            HYDU_error_printf("execvp error on file %s (%s)\n", client_arg[0],
-                              MPL_strerror(errno));
+            HYDU_error_printf("execvp error on file %s (%s)\n", client_arg[0], MPL_strerror(errno));
             exit(-1);
         }
     }

@@ -366,7 +366,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     total_spawns = atoi(val);
 
     HYDU_MALLOC_OR_JUMP(segment_list, struct HYD_pmcd_token_segment *,
-                total_spawns * sizeof(struct HYD_pmcd_token_segment), status);
+                        total_spawns * sizeof(struct HYD_pmcd_token_segment), status);
 
     segment_tokens(tokens, token_count, segment_list, &num_segments);
 

@@ -148,7 +148,8 @@ static HYD_status request_cb(int fd, HYD_event_t events, void *userp)
     HYDU_ASSERT(!closed, status);
 
     if (!strcmp(cmd, "PUBLISH")) {
-        HYDU_MALLOC_OR_JUMP(publish, struct HYDT_ns_publish *, sizeof(struct HYDT_ns_publish), status);
+        HYDU_MALLOC_OR_JUMP(publish, struct HYDT_ns_publish *, sizeof(struct HYDT_ns_publish),
+                            status);
 
         status = HYDU_sock_read(fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data\n");
