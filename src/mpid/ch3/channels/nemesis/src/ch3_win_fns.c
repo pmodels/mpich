@@ -14,7 +14,7 @@
 #define MPIDI_CH3_PAGESIZE_MASK (~(MPIDI_CH3_PAGESIZE-1))
 #define MPIDI_CH3_ROUND_UP_PAGESIZE(x) ((((MPI_Aint)x)+(~MPIDI_CH3_PAGESIZE_MASK)) & MPIDI_CH3_PAGESIZE_MASK)
 
-MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_wincreate_allgather);
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_wincreate_allgather;
 
 MPIDI_SHM_Wins_list_t shm_wins_list;
 

@@ -92,15 +92,15 @@ MPID_Request ** const MPID_Recvq_unexpected_head_ptr = &recvq_unexpected_head;
       ((match1).parts.context_id == (match2).parts.context_id)))
 
 
-MPIR_T_PVAR_UINT_LEVEL_DECL_STATIC(RECVQ, posted_recvq_length);
-MPIR_T_PVAR_UINT_LEVEL_DECL_STATIC(RECVQ, unexpected_recvq_length);
-MPIR_T_PVAR_ULONG2_COUNTER_DECL_STATIC(RECVQ, posted_recvq_match_attempts);
-MPIR_T_PVAR_ULONG2_COUNTER_DECL_STATIC(RECVQ, unexpected_recvq_match_attempts);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL_STATIC(RECVQ, time_failed_matching_postedq);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL_STATIC(RECVQ, time_matching_unexpectedq);
+static unsigned PVAR_LEVEL_posted_recvq_length;
+static unsigned PVAR_LEVEL_unexpected_recvq_length;
+static unsigned long long PVAR_COUNTER_posted_recvq_match_attempts;
+static unsigned long long PVAR_COUNTER_unexpected_recvq_match_attempts;
+static MPIR_T_pvar_timer_t PVAR_TIMER_time_failed_matching_postedq;
+static MPIR_T_pvar_timer_t PVAR_TIMER_time_matching_unexpectedq;
 
 /* used in ch3u_eager.c and ch3u_handle_recv_pkt.c */
-MPIR_T_PVAR_ULONG2_LEVEL_DECL(RECVQ, unexpected_recvq_buffer_size);
+unsigned long long PVAR_LEVEL_unexpected_recvq_buffer_size;
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Recvq_init

@@ -8,7 +8,7 @@
 #include "mpiinfo.h"
 #include "mpidrma.h"
 
-MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_wincreate_allgather);
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_wincreate_allgather;
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Win_fns_init
