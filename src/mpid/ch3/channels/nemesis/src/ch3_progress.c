@@ -513,8 +513,8 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 
             if (cell)
             {
-                char            *cell_buf    = (char *)cell->pkt.mpich.p.payload;
-                intptr_t   payload_len = cell->pkt.mpich.datalen;
+                char            *cell_buf    = (char *)cell->pkt.p.payload;
+                intptr_t   payload_len = cell->pkt.header.datalen;
                 MPIDI_CH3_Pkt_t *pkt         = (MPIDI_CH3_Pkt_t *)cell_buf;
 
                 /* Empty packets are not allowed */
