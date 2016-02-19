@@ -227,8 +227,18 @@ static int barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
     }
     else
     {
-        while (OPA_load_int(&barrier_vars->sig) == sense)
+        while (OPA_load_int(&barrier_vars->sig) == sense) {
+            /* Poke progress engine to make progress on other incoming messages */
+            MPID_Progress_state progress_state;
+
+            MPID_Progress_start(&progress_state);
+            mpi_errno = MPID_Progress_poke();
+            if (mpi_errno != MPI_SUCCESS)
+                MPIR_ERR_POP(mpi_errno);
+            MPID_Progress_end(&progress_state);
+
             MPL_sched_yield();
+        }
     }
 
  fn_exit:
