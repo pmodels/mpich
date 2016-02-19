@@ -10,8 +10,8 @@
 #include "mpl_utlist.h"
 #include "mpid_rma_types.h"
 
-extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_lockqueue_alloc;
-extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_winlock_getlocallock;
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_lockqueue_alloc ATTRIBUTE((unused));
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_winlock_getlocallock ATTRIBUTE((unused));
 
 /* MPIDI_CH3I_Win_target_lock_entry_alloc(): return a new lock queue entry and
  * initialize it. If we cannot get one, return NULL. */

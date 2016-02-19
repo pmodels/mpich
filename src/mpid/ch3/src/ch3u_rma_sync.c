@@ -256,12 +256,12 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_lockqueue_alloc;
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_winlock_getlocallock;
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_wincreate_allgather;
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_lockqueue_alloc ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_winlock_getlocallock ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_wincreate_allgather ATTRIBUTE((unused));
 
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmaqueue_alloc;
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmaqueue_set;
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmaqueue_alloc ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmaqueue_set ATTRIBUTE((unused));
 
 void MPIDI_CH3_RMA_Init_sync_pvars(void)
 {

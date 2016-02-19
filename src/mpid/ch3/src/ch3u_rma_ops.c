@@ -6,7 +6,7 @@
 
 #include "mpidrma.h"
 
-extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmaqueue_set;
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmaqueue_set ATTRIBUTE((unused));
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===

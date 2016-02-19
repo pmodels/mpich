@@ -8,7 +8,7 @@
 #include "mpiinfo.h"
 #include "mpidrma.h"
 
-extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_wincreate_allgather;
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_wincreate_allgather ATTRIBUTE((unused));
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Win_fns_init
