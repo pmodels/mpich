@@ -39,7 +39,7 @@ int MPID_nem_lmt_RndvRecv(struct MPIDI_VC *vc, MPID_Request *rreq);
 
 #define MPID_nem_mpich_release_fbox(cell)                               \
     do {                                                                \
-        OPA_store_release_int(&MPID_nem_mem_region.mailboxes.in[(cell)->pkt.mpich.source]->mpich.flag.value, 0); \
+        OPA_store_release_int(&MPID_nem_mem_region.mailboxes.in[(cell)->pkt.header.source]->mpich.flag.value, 0); \
     } while (0)
 
 /* initialize shared-memory MPI_Barrier variables */

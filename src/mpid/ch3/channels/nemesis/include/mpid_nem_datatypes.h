@@ -135,40 +135,33 @@
 #define MPID_NEM_PKT_MPICH      1
 #define MPID_NEM_PKT_MPICH_HEAD 2
 
-#define MPID_NEM_FBOX_SOURCE(cell) (MPID_nem_mem_region.local_procs[(cell)->pkt.mpich.source])
-#define MPID_NEM_CELL_SOURCE(cell) ((cell)->pkt.mpich.source)
-#define MPID_NEM_CELL_DEST(cell)   ((cell)->pkt.mpich.dest)
-#define MPID_NEM_CELL_DLEN(cell)   ((cell)->pkt.mpich.datalen)
-#define MPID_NEM_CELL_SEQN(cell)   ((cell)->pkt.mpich.seqno)
+#define MPID_NEM_FBOX_SOURCE(cell) (MPID_nem_mem_region.local_procs[(cell)->pkt.header.source])
+#define MPID_NEM_CELL_SOURCE(cell) ((cell)->pkt.header.source)
+#define MPID_NEM_CELL_DEST(cell)   ((cell)->pkt.header.dest)
+#define MPID_NEM_CELL_DLEN(cell)   ((cell)->pkt.header.datalen)
+#define MPID_NEM_CELL_SEQN(cell)   ((cell)->pkt.header.seqno)
 
 #define MPID_NEM_MPICH_HEAD_LEN sizeof(MPID_nem_pkt_header_t)
 #define MPID_NEM_MPICH_DATA_LEN (MPID_NEM_CELL_PAYLOAD_LEN - MPID_NEM_MPICH_HEAD_LEN)
 
 #define MPID_NEM_PKT_HEADER_FIELDS   	    \
-    int source;                             \
-    int dest;                               \
-    intptr_t datalen;                      \
-    unsigned short seqno;                   \
-    unsigned short type; /* currently used only with checkpointing */
 
 typedef struct MPID_nem_pkt_header
 {
-    MPID_NEM_PKT_HEADER_FIELDS;
+    int source;
+    int dest;
+    intptr_t datalen;
+    unsigned short seqno;
+    unsigned short type; /* currently used only with checkpointing */
 } MPID_nem_pkt_header_t;
 
-typedef struct MPID_nem_pkt_mpich
+typedef struct MPID_nem_pkt
 {
-    MPID_NEM_PKT_HEADER_FIELDS;
+    MPID_nem_pkt_header_t header;
     union {
         char payload[MPID_NEM_MPICH_DATA_LEN];
         double dummy; /* align paylod to double */
     } p;
-} MPID_nem_pkt_mpich_t;
-
-typedef union
-{
-    MPID_nem_pkt_header_t      header;
-    MPID_nem_pkt_mpich_t      mpich;
 } MPID_nem_pkt_t;
 
 /* Nemesis cells which are to be used in shared memory need to use
@@ -217,16 +210,16 @@ typedef MPID_nem_abs_cell_t *MPID_nem_abs_cell_ptr_t;
     ((MPID_nem_cell_ptr_t) ((char*)(packetp) - (char *)MPID_NEM_CELL_TO_PACKET((MPID_nem_cell_ptr_t)0)))
 #define MPID_NEM_MIN_PACKET_LEN (sizeof (MPID_nem_pkt_header_t))
 #define MPID_NEM_MAX_PACKET_LEN (sizeof (MPID_nem_pkt_t))
-#define MPID_NEM_PACKET_LEN(pkt) ((pkt)->mpich.datalen + MPID_NEM_MPICH_HEAD_LEN)
+#define MPID_NEM_PACKET_LEN(pkt) ((pkt)->header.datalen + MPID_NEM_MPICH_HEAD_LEN)
 
 #define MPID_NEM_OPT_LOAD     16 
 #define MPID_NEM_OPT_SIZE     ((sizeof(MPIDI_CH3_Pkt_t)) + (MPID_NEM_OPT_LOAD))
 #define MPID_NEM_OPT_HEAD_LEN ((MPID_NEM_MPICH_HEAD_LEN) + (MPID_NEM_OPT_SIZE))
 
 #define MPID_NEM_PACKET_OPT_LEN(pkt) \
-    (((pkt)->mpich.datalen < MPID_NEM_OPT_SIZE) ? (MPID_NEM_OPT_HEAD_LEN) : (MPID_NEM_PACKET_LEN(pkt)))
+    (((pkt)->header.datalen < MPID_NEM_OPT_SIZE) ? (MPID_NEM_OPT_HEAD_LEN) : (MPID_NEM_PACKET_LEN(pkt)))
 
-#define MPID_NEM_PACKET_PAYLOAD(pkt) ((pkt)->mpich.payload)
+#define MPID_NEM_PACKET_PAYLOAD(pkt) ((pkt)->header.payload)
 
 typedef struct MPID_nem_queue
 {

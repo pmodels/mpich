@@ -147,7 +147,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPIU_Assert(MPID_NEM_CELL_PAYLOAD_LEN + MPID_NEM_CELL_HEAD_LEN == sizeof(MPID_nem_cell_t));
     MPIU_Assert(sizeof(MPID_nem_cell_t) == sizeof(MPID_nem_abs_cell_t));
     /* Make sure payload is aligned on a double */
-    MPIU_Assert(MPID_NEM_ALIGNED(&((MPID_nem_cell_t*)0)->pkt.mpich.p.payload[0], sizeof(double)));
+    MPIU_Assert(MPID_NEM_ALIGNED(&((MPID_nem_cell_t*)0)->pkt.p.payload[0], sizeof(double)));
 
     /* Initialize the business card */
     mpi_errno = MPIDI_CH3I_BCInit( &bc_val, &val_max_remaining );
