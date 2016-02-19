@@ -215,11 +215,6 @@ typedef struct {
             action_; \
         #endif \
     } while (0)
-
-#define PVAR_GATED_DECL(MODULE, declaration_) \
-    #ifdef ENABLE_PVAR_##MODULE \
-        declaration_; \
-    #endif
 */
 
 /* ENABLE_PVAR_##MODULE must be defined by configure script either to 0 or 1 */
@@ -229,11 +224,6 @@ typedef struct {
             action_; \
         } \
     } while (0)
-
-/* The declaration is not gated. But any compiler should optimize it away if
- * there are no references to the declared varaible */
-#define PVAR_GATED_DECL(MODULE_, declaration_) \
-    declaration_
 
 /* For some classes of pvars, internally we can not represent them
  * in basic data types. So come the following typedefs.
@@ -365,14 +355,6 @@ extern void MPIR_T_PVAR_REGISTER_impl(
 /* MPI_T_PVAR_CLASS_STATE (continuous only)
  */
 
-/* Declaration -- static pvar */
-#define MPIR_T_PVAR_INT_STATE_DECL_impl(name_) \
-    int PVAR_STATE_##name_;
-#define MPIR_T_PVAR_INT_STATE_DECL_STATIC_impl(name_) \
-    static int PVAR_STATE_##name_;
-#define MPIR_T_PVAR_INT_STATE_DECL_EXTERN_impl(name_) \
-    extern int PVAR_STATE_##name_;
-
 /* Interfaces through pointer or name */
 #define MPIR_T_PVAR_STATE_SET_VAR_impl(ptr_, val_) \
     do { *(ptr_) = (val_); } while (0)
@@ -418,34 +400,6 @@ extern void MPIR_T_PVAR_REGISTER_impl(
 
 /* MPI_T_PVAR_CLASS_LEVEL (continuous only)
  */
-
-/* Declaration -- static pvar */
-#define MPIR_T_PVAR_UINT_LEVEL_DECL_impl(name_) \
-    unsigned int PVAR_LEVEL_##name_;
-#define MPIR_T_PVAR_ULONG_LEVEL_DECL_impl(name_) \
-    unsigned long PVAR_LEVEL_##name_;
-#define MPIR_T_PVAR_ULONG2_LEVEL_DECL_impl(name_) \
-    unsigned long long PVAR_LEVEL_##name_;
-#define MPIR_T_PVAR_DOUBLE_LEVEL_DECL_impl(name_) \
-    double PVAR_LEVEL_##name_;
-
-#define MPIR_T_PVAR_UINT_LEVEL_DECL_STATIC_impl(name_) \
-    static unsigned PVAR_LEVEL_##name_;
-#define MPIR_T_PVAR_ULONG_LEVEL_DECL_STATIC_impl(name_) \
-    static unsigned long PVAR_LEVEL_##name_;
-#define MPIR_T_PVAR_ULONG2_LEVEL_DECL_STATIC_impl(name_) \
-    static unsigned long long PVAR_LEVEL_##name_;
-#define MPIR_T_PVAR_DOUBLE_LEVEL_DECL_STATIC_impl(name_) \
-    static double PVAR_LEVEL_##name_;
-
-#define MPIR_T_PVAR_UINT_LEVEL_DECL_EXTERN_impl(name_) \
-    extern unsigned PVAR_LEVEL_##name_;
-#define MPIR_T_PVAR_ULONG_LEVEL_DECL_EXTERN_impl(name_) \
-    extern unsigned long PVAR_LEVEL_##name_;
-#define MPIR_T_PVAR_ULONG2_LEVEL_DECL_EXTERN_impl(name_) \
-    extern unsigned long long PVAR_LEVEL_##name_;
-#define MPIR_T_PVAR_DOUBLE_LEVEL_DECL_EXTERN_impl(name_) \
-    extern double PVAR_LEVEL_##name_;
 
 /* Interfaces through pointer or name */
 #define MPIR_T_PVAR_LEVEL_SET_VAR_impl(ptr_, val_) \
@@ -501,34 +455,6 @@ extern void MPIR_T_PVAR_REGISTER_impl(
 /* MPI_T_PVAR_CLASS_SIZE (continuous only)
  */
 
-/* Declaration -- static pvar */
-#define MPIR_T_PVAR_UINT_SIZE_DECL_impl(name_) \
-    unsigned PVAR_SIZE_##name_;
-#define MPIR_T_PVAR_ULONG_SIZE_DECL_impl(name_) \
-    unsigned long PVAR_SIZE_##name_;
-#define MPIR_T_PVAR_ULONG2_SIZE_DECL_impl(name_) \
-    unsigned long long PVAR_SIZE_##name_;
-#define MPIR_T_PVAR_DOUBLE_SIZE_DECL_impl(name_) \
-    double PVAR_SIZE_##name_;
-
-#define MPIR_T_PVAR_UINT_SIZE_DECL_STATIC_impl(name_) \
-    static unsigned PVAR_SIZE_##name_;
-#define MPIR_T_PVAR_ULONG_SIZE_DECL_STATIC_impl(name_) \
-    static unsigned long PVAR_SIZE_##name_;
-#define MPIR_T_PVAR_ULONG2_SIZE_DECL_STATIC_impl(name_) \
-    static unsigned long long PVAR_SIZE_##name_;
-#define MPIR_T_PVAR_DOUBLE_SIZE_DECL_STATIC_impl(name_) \
-    static double PVAR_SIZE_##name_;
-
-#define MPIR_T_PVAR_UINT_SIZE_DECL_EXTERN_impl(name_) \
-    extern unsigned PVAR_SIZE_##name_;
-#define MPIR_T_PVAR_ULONG_SIZE_DECL_EXTERN_impl(name_) \
-    extern unsigned long PVAR_SIZE_##name_;
-#define MPIR_T_PVAR_ULONG2_SIZE_DECL_EXTERN_impl(name_) \
-    extern unsigned long long PVAR_SIZE_##name_;
-#define MPIR_T_PVAR_DOUBLE_SIZE_DECL_EXTERN_impl(name_) \
-    extern double PVAR_SIZE_##name_;
-
 /* Interfaces through pointer or name */
 #define MPIR_T_PVAR_SIZE_SET_VAR_impl(ptr_, val_) \
     do { *(ptr_) = (val_); } while (0)
@@ -574,16 +500,6 @@ extern void MPIR_T_PVAR_REGISTER_impl(
 
 /* MPI_T_PVAR_CLASS_PERCENTAGE (continuous only)
  */
-
-/* Declaration -- static pvar */
-#define MPIR_T_PVAR_DOUBLE_PERCENTAGE_DECL_impl(name_) \
-    double PVAR_PERCENTAGE_##name_;
-
-#define MPIR_T_PVAR_DOUBLE_PERCENTAGE_DECL_STATIC_impl(name_) \
-    static double PVAR_PERCENTAGE_##name_;
-
-#define MPIR_T_PVAR_DOUBLE_PERCENTAGE_DECL_EXTERN_impl(name_) \
-    extern double PVAR_PERCENTAGE_##name_;
 
 /* Interfaces through pointer or name */
 #define MPIR_T_PVAR_PERCENTAGE_SET_VAR_impl(ptr_, val_) \
@@ -632,28 +548,6 @@ extern void MPIR_T_PVAR_REGISTER_impl(
 /* MPI_T_PVAR_CLASS_COUNTER (continuous or not)
  */
 
-/* Declaration -- static pvar */
-#define MPIR_T_PVAR_UINT_COUNTER_DECL_impl(name_) \
-    unsigned PVAR_COUNTER_##name_;
-#define MPIR_T_PVAR_ULONG_COUNTER_DECL_impl(name_) \
-    unsigned long PVAR_COUNTER_##name_;
-#define MPIR_T_PVAR_ULONG2_COUNTER_DECL_impl(name_) \
-    unsigned long long PVAR_COUNTER_##name_;
-
-#define MPIR_T_PVAR_UINT_COUNTER_DECL_STATIC_impl(name_) \
-    static unsigned PVAR_COUNTER_##name_;
-#define MPIR_T_PVAR_ULONG_COUNTER_DECL_STATIC_impl(name_) \
-    static unsigned long PVAR_COUNTER_##name_;
-#define MPIR_T_PVAR_ULONG2_COUNTER_DECL_STATIC_impl(name_) \
-    static unsigned long long PVAR_COUNTER_##name_;
-
-#define MPIR_T_PVAR_UINT_COUNTER_DECL_EXTERN_impl(name_) \
-    extern unsigned PVAR_COUNTER_##name_;
-#define MPIR_T_PVAR_ULONG_COUNTER_DECL_EXTERN_impl(name_) \
-    extern unsigned long PVAR_COUNTER_##name_;
-#define MPIR_T_PVAR_ULONG2_COUNTER_DECL_EXTERN_impl(name_) \
-    extern unsigned long long PVAR_COUNTER_##name_;
-
 /* Interfaces through pointer or name */
 #define MPIR_T_PVAR_COUNTER_INIT_VAR_impl(ptr_) \
     do { *(ptr_) = 0; } while (0)
@@ -701,28 +595,6 @@ extern void MPIR_T_PVAR_REGISTER_impl(
             get_count_, cat_, desc_); \
     } while (0)
 
-/* Declaration of a counter array -- static pvar */
-#define MPIR_T_PVAR_UINT_COUNTER_ARRAY_DECL_impl(name_, len_) \
-    unsigned PVAR_COUNTER_##name_[len_];
-#define MPIR_T_PVAR_ULONG_COUNTER_ARRAY_DECL_impl(name_, len_) \
-    unsigned long PVAR_COUNTER_##name_[len_];
-#define MPIR_T_PVAR_ULONG2_COUNTER_ARRAY_DECL_impl(name_, len_) \
-    unsigned long long PVAR_COUNTER_##name_[len_];
-
-#define MPIR_T_PVAR_UINT_COUNTER_ARRAY_DECL_STATIC_impl(name_, len_) \
-    static unsigned PVAR_COUNTER_##name_[len_];
-#define MPIR_T_PVAR_ULONG_COUNTER_ARRAY_DECL_STATIC_impl(name_, len_) \
-    static unsigned long PVAR_COUNTER_##name_[len_];
-#define MPIR_T_PVAR_ULONG2_COUNTER_ARRAY_DECL_STATIC_impl(name_, len_) \
-    static unsigned long long PVAR_COUNTER_##name_[len_];
-
-#define MPIR_T_PVAR_UINT_COUNTER_ARRAY_DECL_EXTERN_impl(name_, len_) \
-    extern unsigned PVAR_COUNTER_##name_[len_];
-#define MPIR_T_PVAR_ULONG_COUNTER_ARRAY_DECL_EXTERN_impl(name_, len_) \
-    extern unsigned long PVAR_COUNTER_##name_[len_];
-#define MPIR_T_PVAR_ULONG2_COUNTER_ARRAY_DECL_EXTERN_impl(name_, len_) \
-    extern unsigned long long PVAR_COUNTER_##name_[len_];
-
 /* Interfaces through pointer or name */
 #define MPIR_T_PVAR_COUNTER_ARRAY_INIT_VAR_impl(ptr_, count_) \
     do { \
@@ -769,34 +641,6 @@ extern void MPIR_T_PVAR_REGISTER_impl(
 
 /* MPI_T_PVAR_CLASS_AGGREGATE (continuous or not)
  */
-
-/* Declaration -- static aggregate */
-#define MPIR_T_PVAR_UINT_AGGREGATE_DECL_impl(name_) \
-    unsigned PVAR_AGGREGATE_##name_;
-#define MPIR_T_PVAR_ULONG_AGGREGATE_DECL_impl(name_) \
-    unsigned long PVAR_AGGREGATE_##name_;
-#define MPIR_T_PVAR_ULONG2_AGGREGATE_DECL_impl(name_) \
-    unsigned long long PVAR_AGGREGATE_##name_;
-#define MPIR_T_PVAR_DOUBLE_AGGREGATE_DECL_impl(name_) \
-    double PVAR_AGGREGATE_##name_;
-
-#define MPIR_T_PVAR_UINT_AGGREGATE_DECL_STATIC_impl(name_) \
-    static unsigned PVAR_AGGREGATE_##name_;
-#define MPIR_T_PVAR_ULONG_AGGREGATE_DECL_STATIC_impl(name_) \
-    static unsigned long PVAR_AGGREGATE_##name_;
-#define MPIR_T_PVAR_ULONG2_AGGREGATE_DECL_STATIC_impl(name_) \
-    static unsigned long long PVAR_AGGREGATE_##name_;
-#define MPIR_T_PVAR_DOUBLE_AGGREGATE_DECL_STATIC_impl(name_) \
-    static double PVAR_AGGREGATE_##name_;
-
-#define MPIR_T_PVAR_UINT_AGGREGATE_DECL_EXTERN_impl(name_) \
-    extern unsigned PVAR_AGGREGATE_##name_;
-#define MPIR_T_PVAR_ULONG_AGGREGATE_DECL_EXTERN_impl(name_) \
-    extern unsigned long PVAR_AGGREGATE_##name_;
-#define MPIR_T_PVAR_ULONG2_AGGREGATE_DECL_EXTERN_impl(name_) \
-    extern unsigned long long PVAR_AGGREGATE_##name_;
-#define MPIR_T_PVAR_DOUBLE_AGGREGATE_DECL_EXTERN_impl(name_) \
-    extern double PVAR_AGGREGATE_##name_;
 
 /* Interfaces through pointer or name */
 #define MPIR_T_PVAR_AGGREGATE_INIT_VAR_impl(ptr_) \
@@ -846,16 +690,6 @@ extern void MPIR_T_PVAR_REGISTER_impl(
 
 /* MPI_T_PVAR_CLASS_TIMER (continuous or not)
  */
-
-/* Declaration -- static timer */
-#define MPIR_T_PVAR_DOUBLE_TIMER_DECL_impl(name_) \
-    MPIR_T_pvar_timer_t PVAR_TIMER_##name_;
-
-#define MPIR_T_PVAR_DOUBLE_TIMER_DECL_STATIC_impl(name_) \
-    static MPIR_T_pvar_timer_t PVAR_TIMER_##name_;
-
-#define MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN_impl(name_) \
-    extern MPIR_T_pvar_timer_t PVAR_TIMER_##name_;
 
 /* Interfaces through pointer or name */
 #define MPIR_T_PVAR_TIMER_INIT_VAR_impl(ptr_) \
@@ -922,34 +756,6 @@ void get_timer_time_in_double(MPIR_T_pvar_timer_t *timer, void *obj_handle,
 
 /* MPI_T_PVAR_CLASS_HIGHWATERMARK (continuous or not)
  */
-
-/* Declaration -- static pvar */
-#define MPIR_T_PVAR_UINT_HIGHWATERMARK_DECL_impl(name_) \
-    MPIR_T_pvar_watermark_t PVAR_HIGHWATERMARK_##name_;
-#define MPIR_T_PVAR_ULONG_HIGHWATERMARK_DECL_impl(name_) \
-    MPIR_T_pvar_watermark_t PVAR_HIGHWATERMARK_##name_;
-#define MPIR_T_PVAR_ULONG2_HIGHWATERMARK_DECL_impl(name_) \
-    MPIR_T_pvar_watermark_t PVAR_HIGHWATERMARK_##name_;
-#define MPIR_T_PVAR_DOUBLE_HIGHWATERMARK_DECL_impl(name_) \
-    MPIR_T_pvar_watermark_t PVAR_HIGHWATERMARK_##name_;
-
-#define MPIR_T_PVAR_UINT_HIGHWATERMARK_DECL_STATIC_impl(name_) \
-    static MPIR_T_pvar_watermark_t PVAR_HIGHWATERMARK_##name_;
-#define MPIR_T_PVAR_ULONG_HIGHWATERMARK_DECL_STATIC_impl(name_) \
-    static MPIR_T_pvar_watermark_t PVAR_HIGHWATERMARK_##name_;
-#define MPIR_T_PVAR_ULONG2_HIGHWATERMARK_DECL_STATIC_impl(name_) \
-    static MPIR_T_pvar_watermark_t PVAR_HIGHWATERMARK_##name_;
-#define MPIR_T_PVAR_DOUBLE_HIGHWATERMARK_DECL_STATIC_impl(name_) \
-    static MPIR_T_pvar_watermark_t PVAR_HIGHWATERMARK_##name_;
-
-#define MPIR_T_PVAR_UINT_HIGHWATERMARK_DECL_EXTERN_impl(name_) \
-    extern MPIR_T_pvar_watermark_t PVAR_HIGHWATERMARK_##name_;
-#define MPIR_T_PVAR_ULONG_HIGHWATERMARK_DECL_EXTERN_impl(name_) \
-    extern MPIR_T_pvar_watermark_t PVAR_HIGHWATERMARK_##name_;
-#define MPIR_T_PVAR_ULONG2_HIGHWATERMARK_DECL_EXTERN_impl(name_) \
-    extern MPIR_T_pvar_watermark_t PVAR_HIGHWATERMARK_##name_;
-#define MPIR_T_PVAR_DOUBLE_HIGHWATERMARK_DECL_EXTERN_impl(name_) \
-    extern MPIR_T_pvar_watermark_t PVAR_HIGHWATERMARK_##name_;
 
 /* Interfaces through pointer or name.
  * In contrast to previous pvar classes, for each type we create a set
@@ -1119,34 +925,6 @@ void get_timer_time_in_double(MPIR_T_pvar_timer_t *timer, void *obj_handle,
 
 /* MPI_T_PVAR_CLASS_LOWWATERMARK (continuous or not)
  */
-
-/* Declaration -- static pvar */
-#define MPIR_T_PVAR_UINT_LOWWATERMARK_DECL_impl(name_) \
-    MPIR_T_pvar_watermark_t PVAR_LOWWATERMARK_##name_;
-#define MPIR_T_PVAR_ULONG_LOWWATERMARK_DECL_impl(name_) \
-    MPIR_T_pvar_watermark_t PVAR_LOWWATERMARK_##name_;
-#define MPIR_T_PVAR_ULONG2_LOWWATERMARK_DECL_impl(name_) \
-    MPIR_T_pvar_watermark_t PVAR_LOWWATERMARK_##name_;
-#define MPIR_T_PVAR_DOUBLE_LOWWATERMARK_DECL_impl(name_) \
-    MPIR_T_pvar_watermark_t PVAR_LOWWATERMARK_##name_;
-
-#define MPIR_T_PVAR_UINT_LOWWATERMARK_DECL_STATIC_impl(name_) \
-    static MPIR_T_pvar_watermark_t PVAR_LOWWATERMARK_##name_;
-#define MPIR_T_PVAR_ULONG_LOWWATERMARK_DECL_STATIC_impl(name_) \
-    static MPIR_T_pvar_watermark_t PVAR_LOWWATERMARK_##name_;
-#define MPIR_T_PVAR_ULONG2_LOWWATERMARK_DECL_STATIC_impl(name_) \
-    static MPIR_T_pvar_watermark_t PVAR_LOWWATERMARK_##name_;
-#define MPIR_T_PVAR_DOUBLE_LOWWATERMARK_DECL_STATIC_impl(name_) \
-    static MPIR_T_pvar_watermark_t PVAR_LOWWATERMARK_##name_;
-
-#define MPIR_T_PVAR_UINT_LOWWATERMARK_DECL_EXTERN_impl(name_) \
-    extern MPIR_T_pvar_watermark_t PVAR_LOWWATERMARK_##name_;
-#define MPIR_T_PVAR_ULONG_LOWWATERMARK_DECL_EXTERN_impl(name_) \
-    extern MPIR_T_pvar_watermark_t PVAR_LOWWATERMARK_##name_;
-#define MPIR_T_PVAR_ULONG2_LOWWATERMARK_DECL_EXTERN_impl(name_) \
-    extern MPIR_T_pvar_watermark_t PVAR_LOWWATERMARK_##name_;
-#define MPIR_T_PVAR_DOUBLE_LOWWATERMARK_DECL_EXTERN_impl(name_) \
-    extern MPIR_T_pvar_watermark_t PVAR_LOWWATERMARK_##name_;
 
 #define MPIR_T_PVAR_UINT_LOWWATERMARK_INIT_VAR_impl(ptr_, val_) \
     do { \

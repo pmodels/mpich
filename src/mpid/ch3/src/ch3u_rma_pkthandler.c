@@ -7,22 +7,22 @@
 #include "mpidimpl.h"
 #include "mpidrma.h"
 
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_put);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_get);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_acc);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_get_accum);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_cas);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_fop);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_get_resp);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_get_accum_resp);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_cas_resp);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_fop_resp);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_lock);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_lock_ack);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_unlock);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_flush);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_ack);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_decr_at_cnt);
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_put;
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_get;
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_acc;
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_get_accum;
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_cas;
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_fop;
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_get_resp;
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_get_accum_resp;
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_cas_resp;
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_fop_resp;
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_lock;
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_lock_ack;
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_unlock;
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_flush;
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_ack;
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_decr_at_cnt;
 
 void MPIDI_CH3_RMA_Init_pkthandler_pvars(void)
 {

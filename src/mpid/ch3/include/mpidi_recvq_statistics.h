@@ -10,6 +10,6 @@
 #include "mpit.h"
 
 /* from ch3u_recvq.c */
-MPIR_T_PVAR_ULONG2_LEVEL_DECL_EXTERN(RECVQ, unexpected_recvq_buffer_size);
+extern unsigned long long PVAR_LEVEL_unexpected_recvq_buffer_size;
 
 #endif  /* _MPIDI_RECVQ_STATISTICS_H_ */
