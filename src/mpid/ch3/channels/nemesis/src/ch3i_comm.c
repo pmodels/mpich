@@ -95,9 +95,9 @@ int MPIDI_CH3I_comm_destroy(MPIR_Comm *comm, void *param)
 #ifndef ENABLED_SHM_COLLECTIVES
     goto fn_exit;
 #endif
-    
+
     if (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__NODE) {
-        MPIR_Collops *cf = comm->coll_fns;
+        MPIR_Collops *cf = comm->coll_fns, **cf_p = NULL;
 
         /* replace previous coll_fns table */
         comm->coll_fns = cf->prev_coll_fns;
@@ -105,7 +105,13 @@ int MPIDI_CH3I_comm_destroy(MPIR_Comm *comm, void *param)
         /* free coll_fns if it's no longer used */
         --cf->ref_count;
         if (cf->ref_count == 0) {
-            utarray_erase(coll_fns_array, utarray_eltidx(coll_fns_array, cf), 1);
+            /* Find an element with value `cf`, then erase it from the array */
+            while ( (cf_p = (MPIR_Collops **)utarray_next(coll_fns_array, cf_p)) ) {
+                if (*cf_p == cf) {
+                    utarray_erase(coll_fns_array, utarray_eltidx(coll_fns_array, cf_p), 1);
+                    break;
+                }
+            }
             MPL_free(cf);
         }
             
