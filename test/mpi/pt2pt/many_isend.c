@@ -9,7 +9,7 @@
 #include <mpi.h>
 
 #define ITER 5
-#define BUF_COUNT 4096
+#define BUF_COUNT (16*1024)
 
 int rank, nprocs;
 char recvbuf[BUF_COUNT], sendbuf[BUF_COUNT];
