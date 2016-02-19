@@ -18,7 +18,7 @@ int MPIDI_CH3I_RMA_Make_progress_win(MPID_Win * win_ptr, int *made_progress);
 extern MPIDI_RMA_Op_t *global_rma_op_pool_head, *global_rma_op_pool_start;
 extern MPIDI_RMA_Target_t *global_rma_target_pool_head, *global_rma_target_pool_start;
 
-extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmaqueue_alloc;
+extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmaqueue_alloc ATTRIBUTE((unused));
 
 /* This macro returns two flags: local_completed and remote_completed,
  * to indicate if the completion is reached on this target. */

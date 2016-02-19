@@ -7,22 +7,22 @@
 #include "mpidimpl.h"
 #include "mpidrma.h"
 
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_put;
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_get;
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_acc;
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_get_accum;
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_cas;
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_fop;
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_get_resp;
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_get_accum_resp;
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_cas_resp;
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_fop_resp;
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_lock;
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_lock_ack;
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_unlock;
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_flush;
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_ack;
-MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_decr_at_cnt;
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_put ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_get ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_acc ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_get_accum ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_cas ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_fop ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_get_resp ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_get_accum_resp ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_cas_resp ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_fop_resp ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_lock ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_lock_ack ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_unlock ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_flush ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_ack ATTRIBUTE((unused));
+MPIR_T_pvar_timer_t PVAR_TIMER_rma_rmapkt_decr_at_cnt ATTRIBUTE((unused));
 
 void MPIDI_CH3_RMA_Init_pkthandler_pvars(void)
 {
