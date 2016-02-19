@@ -67,9 +67,18 @@ static inline MPID_nem_cell_rel_ptr_t MPID_NEM_ABS_TO_REL (MPID_nem_cell_ptr_t a
 #define MPID_NEM_LOCAL_RANK(grank) (MPID_nem_mem_region.local_ranks[grank])
 
 #define MPID_NEM_NUM_BARRIER_VARS 16
+
+enum MPIDI_CH3I_nem_barrier_var_occupation {
+    MPIDI_CH3I_NEM_BARRIER_VAR_EMPTY = 0,
+    MPIDI_CH3I_NEM_BARRIER_VAR_OCCUPIED,
+};
+
 typedef struct MPID_nem_barrier_vars
 {
-    OPA_int_t context_id;
+/* Represents if this slot is occupied, by a value of with type
+   enum MPIDI_CH3I_nem_barrier_var_occupation.
+   FIXME: essentially a one-bit information. Opportunity for packing? */
+    OPA_int_t occupied;
     OPA_int_t usage_cnt;
     OPA_int_t cnt;
 #if MPID_NEM_CACHE_LINE_LEN != SIZEOF_INT

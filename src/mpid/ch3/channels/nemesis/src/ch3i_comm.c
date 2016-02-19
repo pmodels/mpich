@@ -111,7 +111,7 @@ int MPIDI_CH3I_comm_destroy(MPIR_Comm *comm, void *param)
             
         if (comm->dev.ch.barrier_vars && OPA_fetch_and_decr_int(&comm->dev.ch.barrier_vars->usage_cnt) == 1) {
             OPA_write_barrier();
-            OPA_store_int(&comm->dev.ch.barrier_vars->context_id, NULL_CONTEXT_ID);
+            OPA_store_int(&comm->dev.ch.barrier_vars->occupied, MPIDI_CH3I_NEM_BARRIER_VAR_EMPTY);
         }
     }
     
@@ -127,33 +127,42 @@ int MPIDI_CH3I_comm_destroy(MPIR_Comm *comm, void *param)
 static int alloc_barrier_vars (MPIR_Comm *comm, MPID_nem_barrier_vars_t **vars)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int i;
     int c;
 
-    /* FIXME:  This has a serious design bug.  It assumes that context ids are
-       globally unique (i.e., that if two processes have communicators with the
-       same context id, they're the same communicator), but this is not true.
-       This may result in two different communicators using the same
-       barier_vars.  This code is being left in for now as an example of how to
-       override collective operations. */
-    MPIR_Assert(0);
-
-    for (i = 0; i < MPID_NEM_NUM_BARRIER_VARS; ++i)
-    {
-	c = OPA_cas_int(&MPID_nem_mem_region.barrier_vars[i].context_id, NULL_CONTEXT_ID, comm->context_id);
-        if (c == NULL_CONTEXT_ID || c == comm->context_id)
-        {
-            *vars = &MPID_nem_mem_region.barrier_vars[i];
-	    OPA_write_barrier();
-            OPA_incr_int(&(*vars)->usage_cnt);
-            goto fn_exit;
+    /* Algorithm to find an available barrier_vars:
+       First rank 0 searches for an available slot, then broadcast answer to neighbors */
+    if (comm->rank == 0) {
+        for (i = 0; i < MPID_NEM_NUM_BARRIER_VARS; ++i) {
+            c = OPA_cas_int(&MPID_nem_mem_region.barrier_vars[i].occupied,
+                            MPIDI_CH3I_NEM_BARRIER_VAR_EMPTY,   /* expected old value */
+                            MPIDI_CH3I_NEM_BARRIER_VAR_OCCUPIED /* value to set */);
+            if (c == MPIDI_CH3I_NEM_BARRIER_VAR_EMPTY) {
+                /* This slot was empty */
+                *vars = &MPID_nem_mem_region.barrier_vars[i];
+                OPA_write_barrier();
+                OPA_incr_int(&(*vars)->usage_cnt);
+                break;
+            }
         }
     }
 
-    *vars = NULL;
+    /* Rank 0 broadcasts the available slot number to the neighbors */
+    mpi_errno = MPIR_Bcast_impl(&i, 1, MPI_INT, 0, comm, &errflag);
+    MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+
+    if (i < MPID_NEM_NUM_BARRIER_VARS)
+        *vars = &MPID_nem_mem_region.barrier_vars[i];
+    else
+        /* No barrier vars avaialble */
+        *vars = NULL;
 
  fn_exit:
     return mpi_errno;
+
+ fn_fail:
+    goto fn_exit;
 }
 
 
@@ -236,7 +245,7 @@ int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region)
     if (MPID_nem_mem_region.local_rank == 0)
         for (i = 0; i < MPID_NEM_NUM_BARRIER_VARS; ++i)
         {
-            OPA_store_int(&barrier_region[i].context_id, NULL_CONTEXT_ID);
+            OPA_store_int(&barrier_region[i].occupied, MPIDI_CH3I_NEM_BARRIER_VAR_EMPTY);
             OPA_store_int(&barrier_region[i].usage_cnt, 0);
             OPA_store_int(&barrier_region[i].cnt, 0);
             OPA_store_int(&barrier_region[i].sig0, 0);
