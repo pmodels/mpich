@@ -53,10 +53,10 @@ int MPIR_Comm_split_type_impl(MPID_Comm * comm_ptr, int split_type, int key,
 	MPIR_Info_get_impl(info_ptr, "nbhd_common_dirname", MPI_MAX_INFO_VAL, hintval,
                            &flag);
 	if (flag) {
+#ifdef HAVE_ROMIO
 	    MPI_Comm dummycomm;
 	    MPID_Comm * dummycomm_ptr;
 
-#ifdef HAVE_ROMIO
 	    mpi_errno = MPIR_Comm_split_filesystem(comm_ptr->handle, key,
                                                    hintval, &dummycomm);
 	    MPID_Comm_get_ptr(dummycomm, dummycomm_ptr);
