@@ -56,12 +56,16 @@ int MPIR_Comm_split_type_impl(MPID_Comm * comm_ptr, int split_type, int key,
 	    MPI_Comm dummycomm;
 	    MPID_Comm * dummycomm_ptr;
 
+#ifdef HAVE_ROMIO
 	    mpi_errno = MPIR_Comm_split_filesystem(comm_ptr->handle, key,
                                                    hintval, &dummycomm);
 	    MPID_Comm_get_ptr(dummycomm, dummycomm_ptr);
 	    *newcomm_ptr = dummycomm_ptr;
 
 	    goto fn_exit;
+#endif
+	    /* fall through to the "not supported" case if ROMIO was not
+	     * enabled for some reason */
 	}
 	/* we don't work with other hints yet, but if we did (e.g.
 	 * nbhd_network, nbhd_partition), we'd do so here */
