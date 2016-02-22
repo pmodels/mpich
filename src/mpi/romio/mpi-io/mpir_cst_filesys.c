@@ -105,15 +105,15 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
     filename = MPL_calloc(PATH_MAX, sizeof(char));
 
     if (rank == 0) {
-        int i, pid;
+        int r, pid;
 
         /* same algorithim as shared file pointer name */
         srand(time(NULL));
-        i = rand();
+        r = rand();
         pid = (int) getpid();
 
         MPL_snprintf(filename, PATH_MAX, "%s/.commonfstest.%d.%d.%d",
-                     dirname == NULL ? "." : dirname, rank, i, pid);
+                     dirname == NULL ? "." : dirname, rank, r, pid);
     }
 
     MPI_Bcast(filename, PATH_MAX, MPI_BYTE, 0, comm);
