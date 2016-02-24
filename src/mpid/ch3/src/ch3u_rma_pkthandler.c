@@ -297,7 +297,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
         MPIDU_Datatype_get_size_macro(put_pkt->datatype, type_size);
 
         /* copy data from packet header to target buffer */
-        MPIR_Memcpy(put_pkt->addr, put_pkt->info.data, put_pkt->count * type_size);
+        MPIR_Memcpy(put_pkt->addr, (void *) &put_pkt->info.data, put_pkt->count * type_size);
 
         /* trigger final action */
         mpi_errno = finish_op_on_target(win_ptr, vc, FALSE /* has no response data */ ,
@@ -515,7 +515,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
 
         if (get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP) {
             MPIR_Assign_trunc(len, get_pkt->count * type_size, size_t);
-            void *src = (void *) (get_pkt->addr), *dest = (void *) (get_resp_pkt->info.data);
+            void *src = (void *) (get_pkt->addr), *dest = (void *) &(get_resp_pkt->info.data);
             mpi_errno = immed_copy(src, dest, len);
             if (mpi_errno != MPI_SUCCESS)
                 MPIR_ERR_POP(mpi_errno);
@@ -683,9 +683,9 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void
 
         if (win_ptr->shm_allocated == TRUE)
             MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
-        mpi_errno = do_accumulate_op(accum_pkt->info.data, accum_pkt->count, accum_pkt->datatype,
-                                     accum_pkt->addr, accum_pkt->count, accum_pkt->datatype,
-                                     0, accum_pkt->op);
+        mpi_errno = do_accumulate_op((void *) &accum_pkt->info.data, accum_pkt->count,
+                                     accum_pkt->datatype, accum_pkt->addr, accum_pkt->count,
+                                     accum_pkt->datatype, 0, accum_pkt->op);
         if (win_ptr->shm_allocated == TRUE)
             MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
         if (mpi_errno) {
@@ -937,7 +937,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
             MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
 
         /* copy data from target buffer to response packet header */
-        src = (void *) (get_accum_pkt->addr), dest = (void *) (get_accum_resp_pkt->info.data);
+        src = (void *) (get_accum_pkt->addr), dest = (void *) &(get_accum_resp_pkt->info.data);
         mpi_errno = immed_copy(src, dest, len);
         if (mpi_errno != MPI_SUCCESS) {
             if (win_ptr->shm_allocated == TRUE)
@@ -947,7 +947,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
 
         /* perform accumulate operation. */
         mpi_errno =
-            do_accumulate_op(get_accum_pkt->info.data, get_accum_pkt->count,
+            do_accumulate_op((void *) &get_accum_pkt->info.data, get_accum_pkt->count,
                              get_accum_pkt->datatype, get_accum_pkt->addr, get_accum_pkt->count,
                              get_accum_pkt->datatype, 0, get_accum_pkt->op);
 
@@ -1370,7 +1370,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
             MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
 
         /* copy data to resp pkt header */
-        void *src = fop_pkt->addr, *dest = fop_resp_pkt->info.data;
+        void *src = fop_pkt->addr, *dest = (void *) &fop_resp_pkt->info.data;
         mpi_errno = immed_copy(src, dest, type_size);
         if (mpi_errno != MPI_SUCCESS) {
             if (win_ptr->shm_allocated == TRUE)
@@ -1379,7 +1379,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, void *data,
         }
 
         /* Apply the op */
-        mpi_errno = do_accumulate_op(fop_pkt->info.data, 1, fop_pkt->datatype,
+        mpi_errno = do_accumulate_op((void *) &fop_pkt->info.data, 1, fop_pkt->datatype,
                                      fop_pkt->addr, 1, fop_pkt->datatype, 0, fop_pkt->op);
 
         if (win_ptr->shm_allocated == TRUE)
@@ -1549,7 +1549,7 @@ int MPIDI_CH3_PktHandler_FOPResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     *rreqp = req;
 
     if (fop_resp_pkt->type == MPIDI_CH3_PKT_FOP_RESP_IMMED) {
-        MPIR_Memcpy(req->dev.user_buf, fop_resp_pkt->info.data, req->dev.recv_data_sz);
+        MPIR_Memcpy(req->dev.user_buf, (void *) &fop_resp_pkt->info.data, req->dev.recv_data_sz);
 
         /* return the number of bytes processed in this function */
         *buflen = 0;
@@ -1635,7 +1635,8 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, v
     if (get_accum_resp_pkt->type == MPIDI_CH3_PKT_GET_ACCUM_RESP_IMMED) {
         req->dev.recv_data_sz = type_size * req->dev.user_count;
 
-        MPIR_Memcpy(req->dev.user_buf, get_accum_resp_pkt->info.data, req->dev.recv_data_sz);
+        MPIR_Memcpy(req->dev.user_buf, (void *) &get_accum_resp_pkt->info.data,
+                    req->dev.recv_data_sz);
         /* return the number of bytes processed in this function */
         *buflen = 0;
         complete = 1;
@@ -1827,7 +1828,7 @@ int MPIDI_CH3_PktHandler_GetResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     *rreqp = req;
 
     if (get_resp_pkt->type == MPIDI_CH3_PKT_GET_RESP_IMMED) {
-        MPIR_Memcpy(req->dev.user_buf, get_resp_pkt->info.data, req->dev.recv_data_sz);
+        MPIR_Memcpy(req->dev.user_buf, (void *) &get_resp_pkt->info.data, req->dev.recv_data_sz);
 
         /* return the number of bytes processed in this function */
         *buflen = 0;
