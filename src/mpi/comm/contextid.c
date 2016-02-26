@@ -618,8 +618,11 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
         if (st.first_iter == 1) {
             st.first_iter = 0;
             /* to avoid deadlocks, the element is not added to the list bevore the first iteration */
-            if (!ignore_id && *context_id == 0)
+            if (!ignore_id && *context_id == 0) {
+                MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
                 add_gcn_to_list(&st);
+                MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
+            }
         }
     }
 
@@ -633,8 +636,8 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
     /* Release the masks */
+    MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
     if (st.own_mask) {
-        /* is it safe to access this without holding the CS? */
         mask_in_use = 0;
     }
     /*If in list, remove it */
@@ -647,6 +650,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             tmp->next = st.next;
         }
     }
+    MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_CTX_MUTEX);
 
 
     goto fn_exit;
