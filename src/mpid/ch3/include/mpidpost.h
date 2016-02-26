@@ -174,13 +174,13 @@ int MPIDI_CH3_Comm_connect(char * port_name, int root, MPID_Comm * comm_ptr,
 
 /* Dynamic process support */
 int MPID_GPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size, 
-			    MPID_Gpid local_gpids[], int *singlePG );
-int MPID_GPID_Get( MPID_Comm *comm_ptr, int rank, MPID_Gpid *gpid );
-int MPID_GPID_ToLpidArray( int size, MPID_Gpid gpid[], int lpid[] );
+			    MPIR_Gpid local_gpids[], int *singlePG );
+int MPID_GPID_Get( MPID_Comm *comm_ptr, int rank, MPIR_Gpid *gpid );
+int MPID_GPID_ToLpidArray( int size, MPIR_Gpid gpid[], int lpid[] );
 int MPID_Create_intercomm_from_lpids( MPID_Comm *newcomm_ptr,
 			    int size, const int lpids[] );
 int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr, 
-			   int nPGids, const MPID_Gpid gpids[],
+			   int nPGids, const MPIR_Gpid gpids[],
 			   int root );
 /* PG_ForwardPGInfo is used as the implementation of the intercomm-create
    hook that is needed with dynamic processes because of limitations
