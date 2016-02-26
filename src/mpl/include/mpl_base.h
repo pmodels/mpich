@@ -88,6 +88,9 @@
 #define MPL_UNREFERENCED_ARG(a)
 #endif
 
+/* macro for finding the enclosing structure of an element */
+#define MPL_container_of(ptr, type, member) (type *)((char *)(ptr) - offsetof(type,member))
+
 /* This macro is used to silence warnings from the Mac OS X linker when
  * an object file "has no symbols".  The unused attribute prevents a
  * warning about the unused dummy variable while the used attribute

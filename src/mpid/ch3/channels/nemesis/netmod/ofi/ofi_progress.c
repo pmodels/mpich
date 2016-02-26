@@ -17,7 +17,7 @@
 /* ------------------------------------------------------------------------ */
 static inline MPID_Request *context_to_req(void *ofi_context)
 {
-    return (MPID_Request *) container_of(ofi_context, MPID_Request, ch.netmod_area.padding);
+    return (MPID_Request *) MPL_container_of(ofi_context, MPID_Request, ch.netmod_area.padding);
 }
 
 #define ADD_SUFFIX(name) name
