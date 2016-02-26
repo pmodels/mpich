@@ -226,9 +226,8 @@ typedef struct MPID_nem_mxm_module_t {
 
 extern MPID_nem_mxm_module_t *mxm_obj;
 
-#define container_of(ptr, type, member) (type *)((char *)(ptr) - offsetof(type,member))
 #define list_dequeue_mxm_req(head) \
-    container_of(list_dequeue(head), MPID_nem_mxm_req_t, queue)
+    MPL_container_of(list_dequeue(head), MPID_nem_mxm_req_t, queue)
 static inline void list_grow_mxm_req(list_head_t * list_head)
 {
     MPID_nem_mxm_req_t *mxm_req = NULL;
