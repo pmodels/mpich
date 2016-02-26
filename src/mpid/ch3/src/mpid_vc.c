@@ -328,7 +328,7 @@ int MPID_Comm_get_lpid(MPID_Comm *comm_ptr, int idx, int * lpid_ptr, MPIU_BOOL i
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_GPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size, 
-			    MPID_Gpid local_gpids[], int *singlePG )
+			    MPIR_Gpid local_gpids[], int *singlePG )
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -369,7 +369,7 @@ int MPID_GPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size,
 #define FUNCNAME MPID_GPID_Get
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_GPID_Get( MPID_Comm *comm_ptr, int rank, MPID_Gpid *in_gpid )
+int MPID_GPID_Get( MPID_Comm *comm_ptr, int rank, MPIR_Gpid *in_gpid )
 {
     int      pgid;
     MPIDI_VCR vc;
@@ -394,7 +394,7 @@ int MPID_GPID_Get( MPID_Comm *comm_ptr, int rank, MPID_Gpid *in_gpid )
 #define FUNCNAME MPID_GPID_ToLpidArray
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_GPID_ToLpidArray( int size, MPID_Gpid in_gpid[], int lpid[] )
+int MPID_GPID_ToLpidArray( int size, MPIR_Gpid in_gpid[], int lpid[] )
 {
     int i, mpi_errno = MPI_SUCCESS;
     int pgid;
@@ -546,7 +546,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr, 
-			   int nPGids, const MPID_Gpid in_gpids[],
+			   int nPGids, const MPIR_Gpid in_gpids[],
 			   int root )
 {
     int mpi_errno = MPI_SUCCESS;

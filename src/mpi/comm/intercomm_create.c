@@ -127,7 +127,7 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
     MPIU_Context_id_t final_context_id, recvcontext_id;
     int remote_size, *remote_lpids=0, singlePG;
     int local_size,*local_lpids=0;
-    MPID_Gpid *local_gpids=NULL, *remote_gpids=NULL;
+    MPIR_Gpid *local_gpids=NULL, *remote_gpids=NULL;
     int comm_info[3];
     int is_low_group = 0;
     int cts_tag;
@@ -177,18 +177,18 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
                                        remote_size ));
         /* With this information, we can now send and receive the
            global process ids from the peer. */
-        MPIU_CHKLMEM_MALLOC(remote_gpids,MPID_Gpid*,remote_size*sizeof(MPID_Gpid), mpi_errno,"remote_gpids");
+        MPIU_CHKLMEM_MALLOC(remote_gpids,MPIR_Gpid*,remote_size*sizeof(MPIR_Gpid), mpi_errno,"remote_gpids");
         MPIU_CHKLMEM_MALLOC(remote_lpids,int*,remote_size*sizeof(int), mpi_errno,"remote_lpids");
-        MPIU_CHKLMEM_MALLOC(local_gpids,MPID_Gpid*,local_size*sizeof(MPID_Gpid), mpi_errno,"local_gpids");
+        MPIU_CHKLMEM_MALLOC(local_gpids,MPIR_Gpid*,local_size*sizeof(MPIR_Gpid), mpi_errno,"local_gpids");
         MPIU_CHKLMEM_MALLOC(local_lpids,int*,local_size*sizeof(int), mpi_errno,"local_lpids");
 
         mpi_errno = MPID_GPID_GetAllInComm( local_comm_ptr, local_size, local_gpids, &singlePG );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         /* Exchange the lpid arrays */
-        mpi_errno = MPIC_Sendrecv( local_gpids, local_size*sizeof(MPID_Gpid), MPI_BYTE,
+        mpi_errno = MPIC_Sendrecv( local_gpids, local_size*sizeof(MPIR_Gpid), MPI_BYTE,
                                       remote_leader, cts_tag,
-                                      remote_gpids, remote_size*sizeof(MPID_Gpid), MPI_BYTE,
+                                      remote_gpids, remote_size*sizeof(MPIR_Gpid), MPI_BYTE,
                                       remote_leader, cts_tag, peer_comm_ptr,
                                       MPI_STATUS_IGNORE, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -262,7 +262,7 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
         mpi_errno = MPIR_Bcast_impl( comm_info, 3, MPI_INT, local_leader, local_comm_ptr, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-        mpi_errno = MPIR_Bcast_impl( remote_gpids, remote_size*sizeof(MPID_Gpid), MPI_BYTE, local_leader,
+        mpi_errno = MPIR_Bcast_impl( remote_gpids, remote_size*sizeof(MPIR_Gpid), MPI_BYTE, local_leader,
                                      local_comm_ptr, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -277,9 +277,9 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
         remote_size = comm_info[0];
-        MPIU_CHKLMEM_MALLOC(remote_gpids,MPID_Gpid*,remote_size*sizeof(MPID_Gpid), mpi_errno,"remote_gpids");
+        MPIU_CHKLMEM_MALLOC(remote_gpids,MPIR_Gpid*,remote_size*sizeof(MPIR_Gpid), mpi_errno,"remote_gpids");
         MPIU_CHKLMEM_MALLOC(remote_lpids,int*,remote_size*sizeof(int), mpi_errno,"remote_lpids");
-        mpi_errno = MPIR_Bcast_impl( remote_gpids, remote_size*sizeof(MPID_Gpid), MPI_BYTE, local_leader,
+        mpi_errno = MPIR_Bcast_impl( remote_gpids, remote_size*sizeof(MPIR_Gpid), MPI_BYTE, local_leader,
                                      local_comm_ptr, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -302,7 +302,7 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
     */
 #ifdef MPID_ICCREATE_REMOTECOMM_HOOK
     MPID_ICCREATE_REMOTECOMM_HOOK( peer_comm_ptr, local_comm_ptr,
-                                   remote_size, (const MPID_Gpid*)remote_gpids, local_leader );
+                                   remote_size, (const MPIR_Gpid*)remote_gpids, local_leader );
 
 #endif
 

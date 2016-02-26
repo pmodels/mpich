@@ -1279,13 +1279,13 @@ typedef struct MPID_Comm {
 } MPID_Comm;
 extern MPIU_Object_alloc_t MPID_Comm_mem;
 
-typedef struct MPID_Gpid {
+typedef struct MPIR_Gpid {
 #ifdef MPID_DEV_GPID_DECL
     MPID_DEV_GPID_DECL
 #else
     int dummy;   /* don't create an empty structure */
 #endif
-}MPID_Gpid;
+}MPIR_Gpid;
 
 /* this function should not be called by normal code! */
 int MPIR_Comm_delete_internal(MPID_Comm * comm_ptr);

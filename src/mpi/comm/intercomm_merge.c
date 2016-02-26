@@ -101,19 +101,19 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
            we use the gpids of the rank 0 member of the local and remote
            groups to choose an order in this case. */
         if (local_high == remote_high) {
-            MPID_Gpid ingpid, outgpid;
+            MPIR_Gpid ingpid, outgpid;
             
             mpi_errno = MPID_GPID_Get( comm_ptr, 0, &ingpid );
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             
-            mpi_errno = MPIC_Sendrecv( &ingpid, sizeof(MPID_Gpid), MPI_BYTE, 0, 1,
-                                          &outgpid, sizeof(MPID_Gpid), MPI_BYTE, 0, 1, comm_ptr,
+            mpi_errno = MPIC_Sendrecv( &ingpid, sizeof(MPIR_Gpid), MPI_BYTE, 0, 1,
+                                          &outgpid, sizeof(MPIR_Gpid), MPI_BYTE, 0, 1, comm_ptr,
                                           MPI_STATUS_IGNORE, &errflag );
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
             /* Note that the gpids cannot be the same because we are
                starting from a valid intercomm */
-            int rc = memcmp(&ingpid,&outgpid,sizeof(MPID_Gpid));
+            int rc = memcmp(&ingpid,&outgpid,sizeof(MPIR_Gpid));
             if(rc < 0)
                 local_high = 1;
             else if(rc > 0)
