@@ -717,6 +717,9 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
 		    DBG_FPRINTF(stderr,"ADIOI_Flatten:: simple adds[%#X] "MPI_AINT_FMT_HEX_SPEC", flat->indices[%#llX] %#llX, flat->blocklens[%#llX] %#llX\n",n,adds[n],j, flat->indices[j], j, flat->blocklens[j]);
 #endif
 		    (*curr_index)++;
+		} else {
+		    flat->count--; /* don't count/consider any zero-length
+				      blocklens */
 		}
 	    }
 	    else {
