@@ -61,7 +61,7 @@ int MPID_Cancel_send(MPIR_Request * sreq)
 	MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
 	if (rreq)
 	{
-	    MPIU_Assert(rreq->partner_request == sreq);
+	    MPIU_Assert(rreq->dev.partner_request == sreq);
 	    
 	    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
              "send-to-self cancellation successful, sreq=0x%08x, rreq=0x%08x",

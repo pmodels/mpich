@@ -136,7 +136,7 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
         
         case MPIR_PREQUEST_SEND:
         {
-            MPIR_Request * prequest_ptr = request_ptr->partner_request;
+            MPIR_Request * prequest_ptr = request_ptr->u.persist.real_request;
             
             if (prequest_ptr != NULL)
             {
@@ -191,7 +191,7 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
         
         case MPIR_PREQUEST_RECV:
         {
-            MPIR_Request * prequest_ptr = request_ptr->partner_request;
+            MPIR_Request * prequest_ptr = request_ptr->u.persist.real_request;
             
             if (prequest_ptr != NULL)
             {

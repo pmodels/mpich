@@ -123,15 +123,15 @@ int MPI_Request_free(MPI_Request *request)
 	{
 	    /* If this is an active persistent request, we must also 
 	       release the partner request. */
-	    if (request_ptr->partner_request != NULL)
+	    if (request_ptr->u.persist.real_request != NULL)
 	    {
-		if (request_ptr->partner_request->kind == MPIR_UREQUEST)
+		if (request_ptr->u.persist.real_request->kind == MPIR_UREQUEST)
 		{
 		    /* This is needed for persistent Bsend requests */
 		    mpi_errno = MPIR_Grequest_free(
-			request_ptr->partner_request);
+			request_ptr->u.persist.real_request);
 		}
-		MPIR_Request_free(request_ptr->partner_request);
+		MPIR_Request_free(request_ptr->u.persist.real_request);
 	    }
 	    break;
 	}
@@ -141,9 +141,9 @@ int MPI_Request_free(MPI_Request *request)
 	{
 	    /* If this is an active persistent request, we must also 
 	       release the partner request. */
-	    if (request_ptr->partner_request != NULL)
+	    if (request_ptr->u.persist.real_request != NULL)
 	    {
-		MPIR_Request_free(request_ptr->partner_request);
+		MPIR_Request_free(request_ptr->u.persist.real_request);
 	    }
 	    break;
 	}

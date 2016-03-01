@@ -62,7 +62,7 @@ int MPIR_Wait_impl(MPI_Request *request, MPI_Status *status)
 	{
 	    mpi_errno = MPIR_Grequest_progress_poke(1, &request_ptr, status);
 	    if (request_ptr->kind == MPIR_UREQUEST &&
-                request_ptr->greq_fns->wait_fn != NULL)
+                request_ptr->u.ureq.greq_fns->wait_fn != NULL)
 	    {
 		if (mpi_errno) {
 		    /* --BEGIN ERROR HANDLING-- */

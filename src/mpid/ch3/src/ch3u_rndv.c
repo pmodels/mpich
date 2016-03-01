@@ -34,7 +34,7 @@ int MPIDI_CH3_RndvSend( MPIR_Request **sreq_p, const void * buf, MPI_Aint count,
 
     sreq->dev.OnDataAvail = 0;
     
-    sreq->partner_request = NULL;
+    sreq->dev.partner_request = NULL;
 	
     MPIDI_Pkt_init(rts_pkt, MPIDI_CH3_PKT_RNDV_REQ_TO_SEND);
     rts_pkt->match.parts.rank	      = comm->rank;

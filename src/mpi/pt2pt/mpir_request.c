@@ -96,14 +96,14 @@ int MPIR_Request_complete(MPI_Request * request, MPIR_Request * request_ptr,
 			
 	case MPIR_PREQUEST_SEND:
 	{
-	    if (request_ptr->partner_request != NULL)
+	    if (request_ptr->u.persist.real_request != NULL)
 	    {
-		MPIR_Request * prequest_ptr = request_ptr->partner_request;
+		MPIR_Request * prequest_ptr = request_ptr->u.persist.real_request;
 
 		/* reset persistent request to inactive state */
                 MPIR_cc_set(&request_ptr->cc, 0);
 		request_ptr->cc_ptr = &request_ptr->cc;
-		request_ptr->partner_request = NULL;
+		request_ptr->u.persist.real_request = NULL;
 		
 		if (prequest_ptr->kind != MPIR_UREQUEST)
 		{
@@ -164,14 +164,14 @@ int MPIR_Request_complete(MPI_Request * request, MPIR_Request * request_ptr,
 	
 	case MPIR_PREQUEST_RECV:
 	{
-	    if (request_ptr->partner_request != NULL)
+	    if (request_ptr->u.persist.real_request != NULL)
 	    {
-		MPIR_Request * prequest_ptr = request_ptr->partner_request;
+		MPIR_Request * prequest_ptr = request_ptr->u.persist.real_request;
 
 		/* reset persistent request to inactive state */
                 MPIR_cc_set(&request_ptr->cc, 0);
 		request_ptr->cc_ptr = &request_ptr->cc;
-		request_ptr->partner_request = NULL;
+		request_ptr->u.persist.real_request = NULL;
 		
 		MPIR_Request_extract_status(prequest_ptr, status);
 		mpi_errno = prequest_ptr->status.MPI_ERROR;
@@ -270,17 +270,17 @@ int MPIR_Request_get_error(MPIR_Request * request_ptr)
 
 	case MPIR_PREQUEST_SEND:
 	{
-	    if (request_ptr->partner_request != NULL)
+	    if (request_ptr->u.persist.real_request != NULL)
 	    {
-		if (request_ptr->partner_request->kind == MPIR_UREQUEST)
+		if (request_ptr->u.persist.real_request->kind == MPIR_UREQUEST)
 		{
 		    /* This is needed for persistent Bsend requests */
 		    mpi_errno = MPIR_Grequest_query(
-			request_ptr->partner_request);
+			request_ptr->u.persist.real_request);
 		}
 		if (mpi_errno == MPI_SUCCESS)
 		{
-		    mpi_errno = request_ptr->partner_request->status.MPI_ERROR;
+		    mpi_errno = request_ptr->u.persist.real_request->status.MPI_ERROR;
 		}
 	    }
 	    else
@@ -293,9 +293,9 @@ int MPIR_Request_get_error(MPIR_Request * request_ptr)
 
 	case MPIR_PREQUEST_RECV:
 	{
-	    if (request_ptr->partner_request != NULL)
+	    if (request_ptr->u.persist.real_request != NULL)
 	    {
-		mpi_errno = request_ptr->partner_request->status.MPI_ERROR;
+		mpi_errno = request_ptr->u.persist.real_request->status.MPI_ERROR;
 	    }
 	    else
 	    {
@@ -311,14 +311,14 @@ int MPIR_Request_get_error(MPIR_Request * request_ptr)
 	    
 	    /* Note that we've acquired the thread private storage above */
     
-	    switch (request_ptr->greq_fns->greq_lang)
+	    switch (request_ptr->u.ureq.greq_fns->greq_lang)
 	    {
 		case MPIR_LANG_C:
 #ifdef HAVE_CXX_BINDING
 		case MPIR_LANG_CXX:
 #endif
-		    rc = (request_ptr->greq_fns->query_fn)(
-			request_ptr->greq_fns->grequest_extra_state,
+		    rc = (request_ptr->u.ureq.greq_fns->query_fn)(
+			request_ptr->u.ureq.greq_fns->grequest_extra_state,
 			&request_ptr->status);
 		    MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno,
 			MPI_ERR_OTHER,;, "**user", "**userquery %d", rc);
@@ -329,8 +329,8 @@ int MPIR_Request_get_error(MPIR_Request * request_ptr)
 		{
 		    MPI_Fint ierr;
 		    MPI_Fint is[sizeof(MPI_Status)/sizeof(int)];
-		    ((MPIR_Grequest_f77_query_function*)(request_ptr->greq_fns->query_fn))( 
-			request_ptr->greq_fns->grequest_extra_state, is,
+		    ((MPIR_Grequest_f77_query_function*)(request_ptr->u.ureq.greq_fns->query_fn))(
+			request_ptr->u.ureq.greq_fns->grequest_extra_state, is,
 			&ierr );
 		    rc = (int) ierr;
 		    if (rc == MPI_SUCCESS)
@@ -347,7 +347,7 @@ int MPIR_Request_get_error(MPIR_Request * request_ptr)
 		    /* This should not happen */
 		    MPIR_ERR_SETANDSTMT1(mpi_errno, MPI_ERR_INTERN,;, 
 				 "**badcase", 
-				 "**badcase %d", request_ptr->greq_fns->greq_lang);
+				 "**badcase %d", request_ptr->u.ureq.greq_fns->greq_lang);
 		    break;
 		    /* --END ERROR HANDLING-- */
 		}
@@ -378,7 +378,7 @@ void MPIR_Grequest_set_lang_f77( MPI_Request greq )
 
     MPIR_Request_get_ptr( greq, greq_ptr );
 
-    greq_ptr->greq_fns->greq_lang = MPIR_LANG_FORTRAN;
+    greq_ptr->u.ureq.greq_fns->greq_lang = MPIR_LANG_FORTRAN;
 }
 #endif
 
@@ -392,14 +392,14 @@ int MPIR_Grequest_cancel(MPIR_Request * request_ptr, int complete)
     int rc;
     int mpi_errno = MPI_SUCCESS;
     
-    switch (request_ptr->greq_fns->greq_lang)
+    switch (request_ptr->u.ureq.greq_fns->greq_lang)
     {
 	case MPIR_LANG_C:
 #ifdef HAVE_CXX_BINDING
 	case MPIR_LANG_CXX:
 #endif
-	    rc = (request_ptr->greq_fns->cancel_fn)(
-		request_ptr->greq_fns->grequest_extra_state, complete);
+	    rc = (request_ptr->u.ureq.greq_fns->cancel_fn)(
+		request_ptr->u.ureq.greq_fns->grequest_extra_state, complete);
 	    MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno,
 		MPI_ERR_OTHER,;, "**user", "**usercancel %d", rc);
 	    break;
@@ -410,8 +410,8 @@ int MPIR_Grequest_cancel(MPIR_Request * request_ptr, int complete)
 	    MPI_Fint ierr;
 	    MPI_Fint icomplete = complete;
 
-	    ((MPIR_Grequest_f77_cancel_function *)(request_ptr->greq_fns->cancel_fn))(
-		request_ptr->greq_fns->grequest_extra_state, &icomplete, &ierr);
+	    ((MPIR_Grequest_f77_cancel_function *)(request_ptr->u.ureq.greq_fns->cancel_fn))(
+		request_ptr->u.ureq.greq_fns->grequest_extra_state, &icomplete, &ierr);
 	    rc = (int) ierr;
 	    MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER,
 		{;}, "**user", "**usercancel %d", rc);
@@ -424,7 +424,7 @@ int MPIR_Grequest_cancel(MPIR_Request * request_ptr, int complete)
 	    /* --BEGIN ERROR HANDLING-- */
 	    /* This should not happen */
 	    MPIR_ERR_SETANDSTMT1(mpi_errno, MPI_ERR_INTERN,;, "**badcase",
-		"**badcase %d", request_ptr->greq_fns->greq_lang);
+		"**badcase %d", request_ptr->u.ureq.greq_fns->greq_lang);
 	    break;
 	    /* --END ERROR HANDLING-- */
 	}
@@ -443,13 +443,13 @@ int MPIR_Grequest_query(MPIR_Request * request_ptr)
     int rc;
     int mpi_errno = MPI_SUCCESS;
     
-    switch (request_ptr->greq_fns->greq_lang)
+    switch (request_ptr->u.ureq.greq_fns->greq_lang)
     {
 	case MPIR_LANG_C:
 #ifdef HAVE_CXX_BINDING
 	case MPIR_LANG_CXX:
 #endif
-	    rc = (request_ptr->greq_fns->query_fn)(request_ptr->greq_fns->grequest_extra_state,
+	    rc = (request_ptr->u.ureq.greq_fns->query_fn)(request_ptr->u.ureq.greq_fns->grequest_extra_state,
 		&request_ptr->status);
 	    MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER,
 		{;}, "**user", "**userquery %d", rc);
@@ -460,8 +460,8 @@ int MPIR_Grequest_query(MPIR_Request * request_ptr)
 	{
 	    MPI_Fint ierr;
 	    MPI_Fint is[sizeof(MPI_Status)/sizeof(int)];
-	    ((MPIR_Grequest_f77_query_function *)(request_ptr->greq_fns->query_fn))( 
-		request_ptr->greq_fns->grequest_extra_state, is, &ierr );
+	    ((MPIR_Grequest_f77_query_function *)(request_ptr->u.ureq.greq_fns->query_fn))(
+		request_ptr->u.ureq.greq_fns->grequest_extra_state, is, &ierr );
 	    rc = (int)ierr;
 	    if (rc == MPI_SUCCESS) 
 		PMPI_Status_f2c( is, &request_ptr->status );
@@ -475,7 +475,7 @@ int MPIR_Grequest_query(MPIR_Request * request_ptr)
 	    /* --BEGIN ERROR HANDLING-- */
 	    /* This should not happen */
 	    MPIR_ERR_SETANDSTMT1(mpi_errno, MPI_ERR_INTERN,;, "**badcase",
-		"**badcase %d", request_ptr->greq_fns->greq_lang);
+		"**badcase %d", request_ptr->u.ureq.greq_fns->greq_lang);
 	    break;
 	    /* --END ERROR HANDLING-- */
 	}
@@ -494,13 +494,13 @@ int MPIR_Grequest_free(MPIR_Request * request_ptr)
     int rc;
     int mpi_errno = MPI_SUCCESS;
     
-    switch (request_ptr->greq_fns->greq_lang)
+    switch (request_ptr->u.ureq.greq_fns->greq_lang)
     {
 	case MPIR_LANG_C:
 #ifdef HAVE_CXX_BINDING
 	case MPIR_LANG_CXX:
 #endif
-	    rc = (request_ptr->greq_fns->free_fn)(request_ptr->greq_fns->grequest_extra_state);
+	    rc = (request_ptr->u.ureq.greq_fns->free_fn)(request_ptr->u.ureq.greq_fns->grequest_extra_state);
 	    MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER,
 		{;}, "**user", "**userfree %d", rc);
 	    break;
@@ -510,8 +510,8 @@ int MPIR_Grequest_free(MPIR_Request * request_ptr)
 	{
 	    MPI_Fint ierr;
 		    
-	    ((MPIR_Grequest_f77_free_function *)(request_ptr->greq_fns->free_fn))(
-		request_ptr->greq_fns->grequest_extra_state, &ierr);
+	    ((MPIR_Grequest_f77_free_function *)(request_ptr->u.ureq.greq_fns->free_fn))(
+		request_ptr->u.ureq.greq_fns->grequest_extra_state, &ierr);
 	    rc = (int) ierr;
 	    MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER,
 		{;}, "**user", "**userfree %d", rc);
@@ -524,7 +524,7 @@ int MPIR_Grequest_free(MPIR_Request * request_ptr)
 	    /* --BEGIN ERROR HANDLING-- */
 	    /* This should not happen */
 	    MPIR_ERR_SETANDSTMT1(mpi_errno, MPI_ERR_INTERN, {;}, "**badcase",
-		"**badcase %d", request_ptr->greq_fns->greq_lang);
+		"**badcase %d", request_ptr->u.ureq.greq_fns->greq_lang);
 	    break;
 	    /* --END ERROR HANDLING-- */
 	}
@@ -562,13 +562,13 @@ int MPIR_Grequest_progress_poke(int count,
 	if (request_ptrs[i]->kind == MPIR_UREQUEST)
 	{
 	    n_greq += 1;
-	    wait_fn = request_ptrs[i]->greq_fns->wait_fn;
-	    state_ptrs[j] = request_ptrs[i]->greq_fns->grequest_extra_state;
+	    wait_fn = request_ptrs[i]->u.ureq.greq_fns->wait_fn;
+	    state_ptrs[j] = request_ptrs[i]->u.ureq.greq_fns->grequest_extra_state;
 	    j++;
 	    if (i+1 < count) {
 	        if (request_ptrs[i+1] == NULL ||
-			(request_ptrs[i]->greq_fns->greq_class != 
-				request_ptrs[i+1]->greq_fns->greq_class) )
+			(request_ptrs[i]->u.ureq.greq_fns->greq_class !=
+				request_ptrs[i+1]->u.ureq.greq_fns->greq_class) )
 	            n_classes += 1;
 	    }
 	} else {
@@ -582,11 +582,11 @@ int MPIR_Grequest_progress_poke(int count,
 	for (i = 0; i< count; i++ )
 	{
 	    if (request_ptrs[i] != NULL && 
-                request_ptrs[i]->kind == MPIR_UREQUEST &&
+                request_ptrs[i]->kind == MPIR_UREQUEST && 
                 !MPIR_Request_is_complete(request_ptrs[i]) &&
-                request_ptrs[i]->greq_fns->poll_fn != NULL)
+                request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL)
             {
-		mpi_errno = (request_ptrs[i]->greq_fns->poll_fn)(request_ptrs[i]->greq_fns->grequest_extra_state, &(array_of_statuses[i]));
+		mpi_errno = (request_ptrs[i]->u.ureq.greq_fns->poll_fn)(request_ptrs[i]->u.ureq.greq_fns->grequest_extra_state, &(array_of_statuses[i]));
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	    }
 	}
@@ -638,13 +638,13 @@ int MPIR_Grequest_waitall(int count, MPIR_Request * const * request_ptrs)
         if (request_ptrs[i] == NULL || *request_ptrs[i]->cc_ptr == 0 ||  request_ptrs[i]->kind != MPIR_UREQUEST)
             continue;
         
-        if (n_greq == 0 || request_ptrs[i]->greq_fns->greq_class == curr_class)
+        if (n_greq == 0 || request_ptrs[i]->u.ureq.greq_fns->greq_class == curr_class)
         {
             /* if this is the first grequest of a group, or if it's the
                same class as the last one, add its state to the list  */
-            curr_class = request_ptrs[i]->greq_fns->greq_class;
-            wait_fn = request_ptrs[i]->greq_fns->wait_fn;
-            state_ptrs[n_greq] = request_ptrs[i]->greq_fns->grequest_extra_state;
+            curr_class = request_ptrs[i]->u.ureq.greq_fns->greq_class;
+            wait_fn = request_ptrs[i]->u.ureq.greq_fns->wait_fn;
+            state_ptrs[n_greq] = request_ptrs[i]->u.ureq.greq_fns->grequest_extra_state;
             ++n_greq;
         }
         else
@@ -654,9 +654,9 @@ int MPIR_Grequest_waitall(int count, MPIR_Request * const * request_ptrs)
             mpi_error = (wait_fn)(n_greq, state_ptrs, 0, NULL);
             if (mpi_error) MPIR_ERR_POP(mpi_error);
 
-            curr_class = request_ptrs[i]->greq_fns->greq_class;
-            wait_fn = request_ptrs[i]->greq_fns->wait_fn;
-            state_ptrs[0] = request_ptrs[i]->greq_fns->grequest_extra_state;
+            curr_class = request_ptrs[i]->u.ureq.greq_fns->greq_class;
+            wait_fn = request_ptrs[i]->u.ureq.greq_fns->wait_fn;
+            state_ptrs[0] = request_ptrs[i]->u.ureq.greq_fns->grequest_extra_state;
             n_greq = 1;
         }
     }
@@ -675,12 +675,12 @@ int MPIR_Grequest_waitall(int count, MPIR_Request * const * request_ptrs)
         if (request_ptrs[i] == NULL ||
             MPIR_Request_is_complete(request_ptrs[i]) ||
             request_ptrs[i]->kind != MPIR_UREQUEST ||
-            request_ptrs[i]->greq_fns->wait_fn == NULL)
+            request_ptrs[i]->u.ureq.greq_fns->wait_fn == NULL)
         {
             continue;
         }
 
-        mpi_error = (request_ptrs[i]->greq_fns->wait_fn)(1, &request_ptrs[i]->greq_fns->grequest_extra_state, 0, NULL);
+        mpi_error = (request_ptrs[i]->u.ureq.greq_fns->wait_fn)(1, &request_ptrs[i]->u.ureq.greq_fns->grequest_extra_state, 0, NULL);
         if (mpi_error) MPIR_ERR_POP(mpi_error);
         MPIU_Assert(MPIR_Request_is_complete(request_ptrs[i]));
     }

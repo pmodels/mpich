@@ -267,7 +267,7 @@ extern MPIDI_Process_t MPIDI_Process;
 #endif
 
 #ifdef HAVE_DEBUGGER_SUPPORT
-#define MPIDI_Request_clear_dbg(sreq_) ((sreq_)->dbg_next = NULL)
+#define MPIDI_Request_clear_dbg(sreq_) ((sreq_)->u.send.dbg_next = NULL)
 #else
 #define MPIDI_Request_clear_dbg(sreq_)
 #endif
@@ -291,7 +291,7 @@ extern MPIDI_Process_t MPIDI_Process;
     MPIU_Object_set_ref((sreq_), 2);				\
     (sreq_)->kind = MPIR_REQUEST_SEND;				\
     (sreq_)->comm = comm;					\
-    (sreq_)->partner_request   = NULL;                          \
+    (sreq_)->dev.partner_request   = NULL;                         \
     MPIR_Comm_add_ref(comm);					\
     (sreq_)->dev.match.parts.rank = rank;			\
     (sreq_)->dev.match.parts.tag = tag;				\
@@ -309,7 +309,7 @@ extern MPIDI_Process_t MPIDI_Process;
     (rreq_) = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);           \
     MPIU_Object_set_ref((rreq_), 2);				\
     (rreq_)->kind = MPIR_REQUEST_RECV;				\
-    (rreq_)->partner_request   = NULL;                          \
+    (rreq_)->dev.partner_request   = NULL;                         \
 }
 
 /* creates a new, trivially complete recv request that is suitable for
@@ -425,8 +425,8 @@ extern MPIDI_Process_t MPIDI_Process;
    partner RTS sreq and nullify partner request */
 #define MPIDI_Request_fetch_and_clear_rts_sreq(sreq_, rts_sreq_)	\
     {									\
-    	*(rts_sreq_) = (sreq_)->partner_request;			\
-    	(sreq_)->partner_request = NULL;				\
+        *(rts_sreq_) = (sreq_)->dev.partner_request;			\
+        (sreq_)->dev.partner_request = NULL;				\
     }
 
 /* FIXME: We've moved to allow finer-grain critical sections... */

@@ -229,7 +229,7 @@ void MPIDI_CH3U_Buffer_copy(
 int MPIDI_CH3_RecvFromSelf( MPIR_Request *rreq, void *buf, MPI_Aint count,
 			    MPI_Datatype datatype )
 {
-    MPIR_Request * const sreq = rreq->partner_request;
+    MPIR_Request * const sreq = rreq->dev.partner_request;
     int mpi_errno = MPI_SUCCESS;
 
     if (sreq != NULL)

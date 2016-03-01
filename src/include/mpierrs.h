@@ -199,7 +199,7 @@ cvars:
 
 #define MPIR_ERRTEST_PERSISTENT_ACTIVE(reqp,err)                        \
     if (((reqp)->kind == MPIR_PREQUEST_SEND ||                          \
-         reqp->kind == MPIR_PREQUEST_RECV) && reqp->partner_request != NULL) { \
+         reqp->kind == MPIR_PREQUEST_RECV) && reqp->u.persist.real_request != NULL) { \
         err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
                                    MPI_ERR_REQUEST, "**requestpersistactive", 0 ); \
         goto fn_fail;                                                   \
