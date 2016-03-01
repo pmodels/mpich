@@ -270,7 +270,7 @@ int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Data
         MPIDU_Datatype_get_ptr(datatype, sreq->dev.datatype_ptr);
         MPIDU_Datatype_add_ref(sreq->dev.datatype_ptr);
     }
-    sreq->partner_request = NULL;
+    sreq->dev.partner_request = NULL;
     sreq->dev.OnDataAvail = NULL;
     sreq->dev.tmpbuf = NULL;
     sreq->ch.vc = vc;
@@ -373,7 +373,7 @@ int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
         MPIDU_Datatype_get_ptr(datatype, sreq->dev.datatype_ptr);
         MPIDU_Datatype_add_ref(sreq->dev.datatype_ptr);
     }
-    sreq->partner_request = NULL;
+    sreq->dev.partner_request = NULL;
     sreq->dev.OnDataAvail = NULL;
     sreq->dev.tmpbuf = NULL;
     sreq->ch.vc = vc;
@@ -476,7 +476,7 @@ int MPID_nem_mxm_isend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Dat
         MPIDU_Datatype_get_ptr(datatype, sreq->dev.datatype_ptr);
         MPIDU_Datatype_add_ref(sreq->dev.datatype_ptr);
     }
-    sreq->partner_request = NULL;
+    sreq->dev.partner_request = NULL;
     sreq->dev.OnDataAvail = NULL;
     sreq->dev.tmpbuf = NULL;
     sreq->ch.vc = vc;
@@ -579,7 +579,7 @@ int MPID_nem_mxm_issend(MPIDI_VC_t * vc, const void *buf, MPI_Aint count, MPI_Da
         MPIDU_Datatype_get_ptr(datatype, sreq->dev.datatype_ptr);
         MPIDU_Datatype_add_ref(sreq->dev.datatype_ptr);
     }
-    sreq->partner_request = NULL;
+    sreq->dev.partner_request = NULL;
     sreq->dev.OnDataAvail = NULL;
     sreq->dev.tmpbuf = NULL;
     sreq->ch.vc = vc;

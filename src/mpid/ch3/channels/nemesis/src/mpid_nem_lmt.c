@@ -107,7 +107,7 @@ int MPID_nem_lmt_RndvSend(MPIR_Request **sreq_p, const void * buf, MPI_Aint coun
 
     MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,
 		   "sending lmt RTS, data_sz=%" PRIdPTR, data_sz);
-    sreq->partner_request = NULL;
+    sreq->dev.partner_request = NULL;
     sreq->ch.lmt_tmp_cookie.MPL_IOV_LEN = 0;
 	
     MPIDI_Pkt_init(rts_pkt, MPIDI_NEM_PKT_LMT_RTS);

@@ -118,7 +118,7 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
 		MPIDU_Datatype_get_ptr(datatype, sreq->dev.datatype_ptr);
 		MPIDU_Datatype_add_ref(sreq->dev.datatype_ptr);
 	    }
-	    rreq->partner_request = sreq;
+	    rreq->dev.partner_request = sreq;
 	    rreq->dev.sender_req_id = sreq->handle;
 	    MPIDU_Datatype_get_size_macro(datatype, dt_sz);
 	    MPIR_STATUS_SET_COUNT(rreq->status, count * dt_sz);
@@ -132,7 +132,7 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
 							  "**rsendnomatch", "**rsendnomatch %d %d", rank, tag);
 	    rreq->status.MPI_ERROR = sreq->status.MPI_ERROR;
 	    
-	    rreq->partner_request = NULL;
+	    rreq->dev.partner_request = NULL;
 	    rreq->dev.sender_req_id = MPI_REQUEST_NULL;
 	    MPIR_STATUS_SET_COUNT(rreq->status, 0);
 	    

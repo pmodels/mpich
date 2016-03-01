@@ -362,7 +362,7 @@ void MPIR_Sendq_remember( MPIR_Request *req,
 	p = (MPIR_Sendq *)MPL_malloc( sizeof(MPIR_Sendq) );
 	if (!p) {
 	    /* Just ignore it */
-            req->dbg_next = NULL;
+            req->u.send.dbg_next = NULL;
             goto fn_exit;
 	}
     }
@@ -374,7 +374,7 @@ void MPIR_Sendq_remember( MPIR_Request *req,
     p->prev       = NULL;
     MPIR_Sendq_head = p;
     if (p->next) p->next->prev = p;
-    req->dbg_next = p;
+    req->u.send.dbg_next = p;
 fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, req->pobj_mutex);
 }
@@ -384,7 +384,7 @@ void MPIR_Sendq_forget( MPIR_Request *req )
     MPIR_Sendq *p, *prev;
 
     MPID_THREAD_CS_ENTER(POBJ, req->pobj_mutex);
-    p    = req->dbg_next;
+    p    = req->u.send.dbg_next;
     if (!p) {
         /* Just ignore it */
         MPID_THREAD_CS_EXIT(POBJ, req->pobj_mutex);

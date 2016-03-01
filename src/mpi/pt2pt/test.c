@@ -53,10 +53,10 @@ int MPIR_Test_impl(MPI_Request *request, int *flag, MPI_Status *status)
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     if (request_ptr->kind == MPIR_UREQUEST &&
-        request_ptr->greq_fns != NULL &&
-        request_ptr->greq_fns->poll_fn != NULL)
+        request_ptr->u.ureq.greq_fns != NULL &&
+        request_ptr->u.ureq.greq_fns->poll_fn != NULL)
     {
-        mpi_errno = (request_ptr->greq_fns->poll_fn)(request_ptr->greq_fns->grequest_extra_state, status);
+        mpi_errno = (request_ptr->u.ureq.greq_fns->poll_fn)(request_ptr->u.ureq.greq_fns->grequest_extra_state, status);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 

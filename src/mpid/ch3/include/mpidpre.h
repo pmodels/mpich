@@ -464,6 +464,11 @@ typedef struct MPIDI_Request {
        Question: do we want to make this a link instead of reserving 
        a fixed spot in the request? */
     MPIDI_CH3_Pkt_t pending_pkt;
+
+    /* partner send request when a receive request is created by the
+     * sender (only used for self send) */
+    struct MPIR_Request * partner_request;
+
     struct MPIR_Request * next;
 } MPIDI_Request;
 #define MPIR_REQUEST_DECL MPIDI_Request dev;

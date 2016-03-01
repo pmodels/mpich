@@ -41,7 +41,7 @@
     (sreq_)->dev.user_buf = (void *) buf;				\
     (sreq_)->dev.user_count = count;					\
     (sreq_)->dev.datatype = datatype;					\
-    (sreq_)->partner_request = NULL;					\
+    (sreq_)->u.persist.real_request = NULL;                             \
 }
 
 	
@@ -74,7 +74,7 @@ int MPID_Startall(int count, MPIR_Request * requests[])
 	    {
 		rc = MPID_Irecv(preq->dev.user_buf, preq->dev.user_count, preq->dev.datatype, preq->dev.match.parts.rank,
 		    preq->dev.match.parts.tag, preq->comm, preq->dev.match.parts.context_id - preq->comm->recvcontext_id,
-		    &preq->partner_request);
+		    &preq->u.persist.real_request);
 		break;
 	    }
 	    
@@ -82,7 +82,7 @@ int MPID_Startall(int count, MPIR_Request * requests[])
 	    {
 		rc = MPID_Isend(preq->dev.user_buf, preq->dev.user_count, preq->dev.datatype, preq->dev.match.parts.rank,
 		    preq->dev.match.parts.tag, preq->comm, preq->dev.match.parts.context_id - preq->comm->context_id,
-		    &preq->partner_request);
+		    &preq->u.persist.real_request);
 		break;
 	    }
 		
@@ -90,7 +90,7 @@ int MPID_Startall(int count, MPIR_Request * requests[])
 	    {
 		rc = MPID_Irsend(preq->dev.user_buf, preq->dev.user_count, preq->dev.datatype, preq->dev.match.parts.rank,
 		    preq->dev.match.parts.tag, preq->comm, preq->dev.match.parts.context_id - preq->comm->context_id,
-		    &preq->partner_request);
+		    &preq->u.persist.real_request);
 		break;
 	    }
 		
@@ -98,7 +98,7 @@ int MPID_Startall(int count, MPIR_Request * requests[])
 	    {
 		rc = MPID_Issend(preq->dev.user_buf, preq->dev.user_count, preq->dev.datatype, preq->dev.match.parts.rank,
 		    preq->dev.match.parts.tag, preq->comm, preq->dev.match.parts.context_id - preq->comm->context_id,
-		    &preq->partner_request);
+		    &preq->u.persist.real_request);
 		break;
 	    }
 
@@ -112,7 +112,7 @@ int MPID_Startall(int count, MPIR_Request * requests[])
                                       &sreq_handle);
                 if (rc == MPI_SUCCESS)
                 {
-                    MPIR_Request_get_ptr(sreq_handle, preq->partner_request);
+                    MPIR_Request_get_ptr(sreq_handle, preq->u.persist.real_request);
                 }
 		break;
 	    }
@@ -129,7 +129,7 @@ int MPID_Startall(int count, MPIR_Request * requests[])
 	if (rc == MPI_SUCCESS)
 	{
 	    preq->status.MPI_ERROR = MPI_SUCCESS;
-	    preq->cc_ptr = &preq->partner_request->cc;
+	    preq->cc_ptr = &preq->u.persist.real_request->cc;
 	}
 	/* --BEGIN ERROR HANDLING-- */
 	else
@@ -139,7 +139,7 @@ int MPID_Startall(int count, MPIR_Request * requests[])
 	       the error code in the persistent request.  The wait and test
 	       routines will look at the error code in the persistent
 	       request if a partner request is not present. */
-	    preq->partner_request = NULL;
+	    preq->u.persist.real_request = NULL;
 	    preq->status.MPI_ERROR = rc;
 	    preq->cc_ptr = &preq->cc;
             MPIR_cc_set(&preq->cc, 0);
@@ -319,7 +319,7 @@ int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int t
     rreq->dev.user_buf = (void *) buf;
     rreq->dev.user_count = count;
     rreq->dev.datatype = datatype;
-    rreq->partner_request = NULL;
+    rreq->u.persist.real_request = NULL;
     MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_RECV);
     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
     {

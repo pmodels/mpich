@@ -52,8 +52,8 @@ int MPIR_Cancel_impl(MPIR_Request *request_ptr)
 
 	case MPIR_PREQUEST_SEND:
 	{
-	    if (request_ptr->partner_request != NULL) {
-		if (request_ptr->partner_request->kind != MPIR_UREQUEST) {
+	    if (request_ptr->u.persist.real_request != NULL) {
+		if (request_ptr->u.persist.real_request->kind != MPIR_UREQUEST) {
                     /* jratt@us.ibm.com: I don't know about the bsend
                      * comment below, but the CC stuff on the next
                      * line is *really* needed for persistent Bsend
@@ -68,16 +68,16 @@ int MPIR_Cancel_impl(MPIR_Request *request_ptr)
                      * causing an MPI_Wait on the parent to block
                      * until the child is canceled or completed.
                      */
-		    request_ptr->cc_ptr = request_ptr->partner_request->cc_ptr;
-		    mpi_errno = MPID_Cancel_send(request_ptr->partner_request);
+		    request_ptr->cc_ptr = request_ptr->u.persist.real_request->cc_ptr;
+		    mpi_errno = MPID_Cancel_send(request_ptr->u.persist.real_request);
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 		} else {
 		    /* This is needed for persistent Bsend requests */
                     /* FIXME why do we directly access the partner request's
                      * cc field?  shouldn't our cc_ptr be set to the address
                      * of the partner req's cc field? */
-                    mpi_errno = MPIR_Grequest_cancel(request_ptr->partner_request,
-                                                     MPIR_cc_is_complete(&request_ptr->partner_request->cc));
+                    mpi_errno = MPIR_Grequest_cancel(request_ptr->u.persist.real_request,
+                                                     MPIR_cc_is_complete(&request_ptr->u.persist.real_request->cc));
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 		}
 	    } else {
@@ -88,8 +88,8 @@ int MPIR_Cancel_impl(MPIR_Request *request_ptr)
 
 	case MPIR_PREQUEST_RECV:
 	{
-	    if (request_ptr->partner_request != NULL) {
-		mpi_errno = MPID_Cancel_recv(request_ptr->partner_request);
+	    if (request_ptr->u.persist.real_request != NULL) {
+		mpi_errno = MPID_Cancel_recv(request_ptr->u.persist.real_request);
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	    } else {
 		MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_REQUEST,"**requestpersistactive");

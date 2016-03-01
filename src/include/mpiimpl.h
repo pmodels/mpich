@@ -1600,18 +1600,22 @@ typedef struct MPIR_Request {
     MPIR_Comm *comm;
     /* Status is needed for wait/test/recv */
     MPI_Status status;
-    /* Persistent requests have their own "real" requests.  Receive requests
-       have partnering send requests when src=dest. etc. */
-    struct MPIR_Request *partner_request;
 
-    /* User-defined request support via a "vtable".  Saves space in the already
-     * bloated request for regular pt2pt and NBC requests. */
-    struct MPIR_Grequest_fns *greq_fns;
-
-    struct MPIR_Sendq *dbg_next;
-
-    /* Errflag for NBC requests. Not used by other requests. */
-    MPIR_Errflag_t errflag;
+    union {
+        struct {
+            struct MPIR_Grequest_fns *greq_fns;
+        } ureq; /* kind : MPIR_UREQUEST */
+        struct {
+            MPIR_Errflag_t errflag;
+        } nbc;  /* kind : MPIR_COLL_REQUEST */
+        struct {
+            struct MPIR_Sendq *dbg_next;
+        } send; /* kind : MPID_REQUEST_SEND */
+        struct {
+            /* Persistent requests have their own "real" requests */
+            struct MPIR_Request *real_request;
+        } persist;  /* kind : MPID_PREQUEST_SEND or MPID_PREQUEST_RECV */
+    } u;
 
     /* Notes about request_completed_cb:
      *
@@ -1719,9 +1723,15 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
         MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);
 
 	req->comm		   = NULL;
-        req->greq_fns              = NULL;
-        req->errflag               = MPIR_ERR_NONE;
         req->request_completed_cb  = NULL;
+
+        switch(kind) {
+        case MPIR_COLL_REQUEST:
+            req->u.nbc.errflag = MPIR_ERR_NONE;
+            break;
+        default:
+            break;
+        }
 
         MPID_Request_init(req);
     }
@@ -1776,8 +1786,8 @@ static inline void MPIR_Request_free(MPIR_Request *req)
             MPIR_Comm_release(req->comm);
         }
 
-        if (req->greq_fns != NULL) {
-            MPL_free(req->greq_fns);
+        if (req->kind == MPIR_UREQUEST && req->u.ureq.greq_fns != NULL) {
+            MPL_free(req->u.ureq.greq_fns);
         }
 
         MPID_Request_finalize(req);

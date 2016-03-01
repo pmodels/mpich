@@ -91,15 +91,14 @@ int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
     (*request_ptr)->cc_ptr               = &(*request_ptr)->cc;
     MPIR_cc_set((*request_ptr)->cc_ptr, 1);
     (*request_ptr)->comm                 = NULL;
-    (*request_ptr)->greq_fns             = NULL;
-    MPIU_CHKPMEM_MALLOC((*request_ptr)->greq_fns, struct MPIR_Grequest_fns *, sizeof(struct MPIR_Grequest_fns), mpi_errno, "greq_fns");
-    (*request_ptr)->greq_fns->cancel_fn            = cancel_fn;
-    (*request_ptr)->greq_fns->free_fn              = free_fn;
-    (*request_ptr)->greq_fns->query_fn             = query_fn;
-    (*request_ptr)->greq_fns->poll_fn              = NULL;
-    (*request_ptr)->greq_fns->wait_fn              = NULL;
-    (*request_ptr)->greq_fns->grequest_extra_state = extra_state;
-    (*request_ptr)->greq_fns->greq_lang            = MPIR_LANG_C;
+    MPIU_CHKPMEM_MALLOC((*request_ptr)->u.ureq.greq_fns, struct MPIR_Grequest_fns *, sizeof(struct MPIR_Grequest_fns), mpi_errno, "greq_fns");
+    (*request_ptr)->u.ureq.greq_fns->cancel_fn            = cancel_fn;
+    (*request_ptr)->u.ureq.greq_fns->free_fn              = free_fn;
+    (*request_ptr)->u.ureq.greq_fns->query_fn             = query_fn;
+    (*request_ptr)->u.ureq.greq_fns->poll_fn              = NULL;
+    (*request_ptr)->u.ureq.greq_fns->wait_fn              = NULL;
+    (*request_ptr)->u.ureq.greq_fns->grequest_extra_state = extra_state;
+    (*request_ptr)->u.ureq.greq_fns->greq_lang            = MPIR_LANG_C;
 
     /* Add an additional reference to the greq.  One of them will be
      * released when we complete the request, and the second one, when
@@ -362,9 +361,9 @@ int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class,
 	if (mpi_errno == MPI_SUCCESS)
 	{
             *request = lrequest_ptr->handle;
-            lrequest_ptr->greq_fns->poll_fn     = class_ptr->poll_fn;
-            lrequest_ptr->greq_fns->wait_fn     = class_ptr->wait_fn;
-            lrequest_ptr->greq_fns->greq_class  = greq_class;
+            lrequest_ptr->u.ureq.greq_fns->poll_fn     = class_ptr->poll_fn;
+            lrequest_ptr->u.ureq.greq_fns->wait_fn     = class_ptr->wait_fn;
+            lrequest_ptr->u.ureq.greq_fns->greq_class  = greq_class;
 	}
 	return mpi_errno;
 }
@@ -436,8 +435,8 @@ int MPIX_Grequest_start_impl( MPI_Grequest_query_function *query_fn,
     mpi_errno = MPIR_Grequest_start_impl(query_fn, free_fn, cancel_fn, extra_state, request);
 
     if (mpi_errno == MPI_SUCCESS) {
-        (*request)->greq_fns->poll_fn = poll_fn;
-        (*request)->greq_fns->wait_fn = wait_fn;
+        (*request)->u.ureq.greq_fns->poll_fn = poll_fn;
+        (*request)->u.ureq.greq_fns->wait_fn = wait_fn;
     }
 
     return mpi_errno;

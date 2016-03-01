@@ -136,7 +136,7 @@ void    MPIDI_Request_allocate_pool();
 #endif
 
 #ifdef HAVE_DEBUGGER_SUPPORT
-#define MPIDI_Request_clear_dbg(req_) ((req_)->dbg_next = NULL)
+#define MPIDI_Request_clear_dbg(req_) ((req_)->u.send.dbg_next = NULL)
 #else
 #define MPIDI_Request_clear_dbg(req_)
 #endif
