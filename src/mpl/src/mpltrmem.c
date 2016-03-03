@@ -57,15 +57,11 @@ extern int free(void *);
     be set with MPL_TrSetMaxMem.
  D*/
 
-/* HEADER_DOUBLES is the number of doubles in a trSPACE header */
-/* We have to be careful about alignment rules here */
 #define USE_LONG_NAMES_IN_TRMEM
 #ifdef USE_LONG_NAMES_IN_TRMEM
-/* Assume worst case and align on 8 bytes */
 #define TR_ALIGN_BYTES 8
 #define TR_ALIGN_MASK  0x7
 #define TR_FNAME_LEN   48
-#define HEADER_DOUBLES 19
 #else
 #if SIZEOF_VOID_P > 4
 #define TR_ALIGN_BYTES 8
@@ -99,7 +95,9 @@ typedef struct TRSPACE {
    aligned on a double boundary */
 typedef union TrSPACE {
     TRSPACE sp;
-    double v[HEADER_DOUBLES];
+    /* Ensure trSPACE header follows the alignment rules for all predefined types.
+     * Because any internal buffer is allocated as (TrSPACE)header + (void*)buffer.*/
+    MPL_mem_alignment_t alignment;
 } TrSPACE;
 
 /*
