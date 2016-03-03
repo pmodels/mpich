@@ -27,13 +27,9 @@
 #endif
 #endif
 
-/* HEADER_DOUBLES is the number of doubles in a trSPACE header */
-/* We have to be careful about alignment rules here */
-/* Assume worst case and align on 8 bytes */
 #define TR_ALIGN_BYTES 8
 #define TR_ALIGN_MASK  0x7
 #define TR_FNAME_LEN   48
-#define HEADER_DOUBLES 19
 
 #define COOKIE_VALUE   0xf0e0d0c9
 #define ALREADY_FREED  0x0f0e0d9c
@@ -54,7 +50,9 @@ typedef struct TRSPACE {
    aligned on a double boundary */
 typedef union TrSPACE {
     TRSPACE sp;
-    double v[HEADER_DOUBLES];
+    /* Ensure trSPACE header follows the alignment rules for all predefined types.
+     * Because any internal buffer is allocated as (TrSPACE)header + (void*)buffer.*/
+    MPL_mem_alignment_t alignment;
 } TrSPACE;
 
 /*
