@@ -46,6 +46,7 @@ MPI_ERR_IO
     MPIR_ERR_NO_UFS "ROMIO has not been configured to use the UFS file system"
     MPIR_ERR_NO_NFS "ROMIO has not been configured to use the NFS file system"
     MPIR_ERR_NO_XFS "ROMIO has not been configured to use the XFS file system"
+    MPIR_ERR_NO_PVFS2 "ROMIO has not been configured to use the PVFS2 file system"
     MPIR_ERR_NO_PANFS "ROMIO has not been configured to use the PANFS file system"
     MPIR_ERR_MULTIPLE_SPLIT_COLL "Only one active split collective I/O operation allowed per file handle"
     MPIR_ERR_NO_SPLIT_COLL "No previous split collective begin"
@@ -56,6 +57,7 @@ MPI_ERR_IO
     MPIR_ERR_FILETYPE  "Filetype must be constructed out of one or more etypes"
     MPIR_ERR_NO_TESTFS "ROMIO has not been configured to use the TESTFS file system"
     MPIR_ERR_DEFERRED "independent IO attempted even though no_indep_rw hint given"
+    MPIR_ERR_NO_GPFS "ROMIO has not been configured to use the GPFS file system"
 
 MPI_ERR_COMM
     MPIR_ERR_COMM_NULL (null communicator. from MPICH)
