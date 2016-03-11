@@ -26,21 +26,14 @@ noinst_HEADERS +=                      \
 include $(top_srcdir)/adio/ad_gpfs/Makefile.mk
 include $(top_srcdir)/adio/ad_gpfs/bg/Makefile.mk
 include $(top_srcdir)/adio/ad_gpfs/pe/Makefile.mk
-include $(top_srcdir)/adio/ad_gridftp/Makefile.mk
-include $(top_srcdir)/adio/ad_hfs/Makefile.mk
 include $(top_srcdir)/adio/ad_lustre/Makefile.mk
 include $(top_srcdir)/adio/ad_nfs/Makefile.mk
 ## NTFS builds are handled entirely by the separate Windows build system
 ##include $(top_srcdir)/adio/ad_ntfs/Makefile.mk
 include $(top_srcdir)/adio/ad_panfs/Makefile.mk
-include $(top_srcdir)/adio/ad_pfs/Makefile.mk
-include $(top_srcdir)/adio/ad_piofs/Makefile.mk
-include $(top_srcdir)/adio/ad_pvfs/Makefile.mk
 include $(top_srcdir)/adio/ad_pvfs2/Makefile.mk
-include $(top_srcdir)/adio/ad_sfs/Makefile.mk
 include $(top_srcdir)/adio/ad_testfs/Makefile.mk
 include $(top_srcdir)/adio/ad_ufs/Makefile.mk
 include $(top_srcdir)/adio/ad_xfs/Makefile.mk
-include $(top_srcdir)/adio/ad_zoidfs/Makefile.mk
 include $(top_srcdir)/adio/common/Makefile.mk
 

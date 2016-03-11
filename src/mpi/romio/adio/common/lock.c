@@ -179,7 +179,7 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
 }
 #endif
 
-#if (defined(ROMIO_HFS) || defined(ROMIO_XFS))
+#if defined(ROMIO_XFS)
 int ADIOI_Set_lock64(FDTYPE fd, int cmd, int type, ADIO_Offset offset,
                      int whence,
 	             ADIO_Offset len) 

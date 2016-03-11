@@ -147,12 +147,6 @@ typedef struct ADIOI_AIO_req_str {
 	PVFS_Request file_req;
 	PVFS_Request mem_req;
 #endif
-#ifdef ROMIO_NTFS
-    /* Ptr to Overlapped struct */
-    LPOVERLAPPED    lpOvl;
-    /* Ptr to file handle */
-	HANDLE fd;
-#endif
 } ADIOI_AIO_Request;
 
 struct ADIOI_Fns_struct {
@@ -863,7 +857,7 @@ int MPIOI_File_iread_all(MPI_File fh,
 
 /* Unix-style file locking */
 
-#if (defined(ROMIO_HFS) || defined(ROMIO_XFS))
+#if defined(ROMIO_XFS)
 
 # define ADIOI_WRITE_LOCK(fd, offset, whence, len) \
    do {if (((fd)->file_system == ADIO_XFS) || ((fd)->file_system == ADIO_HFS)) \
@@ -879,18 +873,6 @@ int MPIOI_File_iread_all(MPI_File fh,
    do {if (((fd)->file_system == ADIO_XFS) || ((fd)->file_system == ADIO_HFS)) \
      ADIOI_Set_lock64((fd)->fd_sys, F_SETLK64, F_UNLCK, offset, whence, len); \
    else ADIOI_Set_lock((fd)->fd_sys, F_SETLK, F_UNLCK, offset, whence, len); }while (0)
-
-#elif (defined(ROMIO_NTFS))
-
-#define ADIOI_LOCK_CMD		0
-#define ADIOI_UNLOCK_CMD	1
-
-#   define ADIOI_WRITE_LOCK(fd, offset, whence, len) \
-          ADIOI_Set_lock((fd)->fd_sys, ADIOI_LOCK_CMD, LOCKFILE_EXCLUSIVE_LOCK, offset, whence, len)
-#   define ADIOI_READ_LOCK(fd, offset, whence, len) \
-          ADIOI_Set_lock((fd)->fd_sys, ADIOI_LOCK_CMD, 0, offset, whence, len)
-#   define ADIOI_UNLOCK(fd, offset, whence, len) \
-          ADIOI_Set_lock((fd)->fd_sys, ADIOI_UNLOCK_CMD, LOCKFILE_FAIL_IMMEDIATELY, offset, whence, len)
 
 #else
 
