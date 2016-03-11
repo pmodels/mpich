@@ -177,7 +177,7 @@ dnl An m4 macro for use with m4_foreach_w and friends.  You should modify this
 dnl list if you want to add a known file system.  The list is just whitespace
 dnl separated, so you can use newlines and tabs as well.
 m4_define([known_filesystems_m4_w],
-          [nfs ufs pfs pvfs pvfs2 testfs xfs panfs gridftp lustre gpfs zoidfs hfs piofs sfs])dnl
+          [nfs ufs pvfs2 testfs xfs panfs lustre gpfs])dnl
 dnl
 dnl An m4 macro for use with m4_foreach and friends.  Expands to a quoted list of
 dnl quoted elements.  A bit easier to use without unintended expansion than the
@@ -862,16 +862,6 @@ fi
 
 # echo "with_file_system is :"$with_file_system": file_system_args is :"$file_system_args": FILE_SYSTEM is :"$FILE_SYSTEM":"
 
-if test -n "$file_system_hfs"; then
-    AC_DEFINE(ROMIO_HFS,1,[Define for ROMIO with HFS])
-fi
-if test -n "$file_system_sfs"; then
-    AC_DEFINE(ROMIO_SFS,1,[Define for ROMIO with SFS])
-fi
-
-if test -n "$file_system_pfs"; then
-    AC_DEFINE(ROMIO_PFS,1,[Define for ROMIO with PFS])
-fi
 
 if test -n "$file_system_testfs"; then
     AC_DEFINE(ROMIO_TESTFS,1,[Define for ROMIO with TESTFS])
@@ -926,56 +916,6 @@ int main(int argc, char **argv) {
 fi
 
 #
-# Verify presence of pvfs.h, issue with int64
-#
-if test -n "$file_system_pvfs"; then
-    CPPFLAGS="$CPPFLAGS $CFLAGS"
-    AC_CHECK_HEADERS(pvfs.h,
-    	AC_DEFINE(ROMIO_PVFS,1,[Define for ROMIO with PVFS]),
-	AC_MSG_ERROR([PVFS support requested but cannot find pvfs.h header file])
-	)
-    # Check for missing int64_t (intel version 8 compiler and -no-gcc
-    # selected)
-    AC_MSG_CHECKING([that pvfs.h can be compiled])
-    AC_TRY_COMPILE([
-#include <pvfs.h>
-        ],[
-        ],pvfs_header_ok=yes,pvfs_header_ok=no
-    )
-    AC_MSG_RESULT($pvfs_header_ok)
-    if test "$pvfs_header_ok" = no -a "$ac_cv_sizeof_long_long" = 8 ; then
-        AC_MSG_CHECKING([if pvfs.h can be compiled if we define int64_t])
-        # Try again, but with int64_t
-        AC_TRY_COMPILE([
-            typedef long long int int64_t;
-#include <pvfs.h>
-            ],[
-            ],
-            pvfs_header_ok="yes with int64 definition"
-        )
-        AC_MSG_RESULT($pvfs_header_ok)
-    fi
-    if test "$pvfs_header_ok" = "yes with int64 definition" ; then
-        AC_DEFINE(ROMIO_PVFS_NEEDS_INT64_DEFINITION,1,[Define if int64_t must be defined for PVFS])
-    fi
-    if test "$pvfs_header_ok" != "no" ; then
-        AC_DEFINE(ROMIO_PVFS,1,[Define for ROMIO with PVFS])
-	AC_DEFINE(HAVE_PVFS_SUPER_MAGIC, 1, [Define if PVFS_SUPER_MAGIC defined.])
-    else
-	AC_MSG_WARN(missing or broken pvfs.h header file; disabling ROMIO PVFS support)
-    fi
-fi
-
-
-
-if test -n "$file_system_zoidfs"; then
-	AC_CHECK_HEADERS(zoidfs.h,
-		AC_DEFINE(ROMIO_ZOIDFS,1,[Define for ROMIO with ZoidFD]),
-		AC_MSG_ERROR([ZoidFS support requested but cannot find zoidfs.h header file])
-	)
-fi
-
-#
 # Verify presence of pvfs2.h
 #
 if test -n "$file_system_pvfs2"; then
@@ -1004,10 +944,6 @@ if test -n "$file_system_pvfs2"; then
        )
 fi
 
-
-if test -n "$file_system_gridftp"; then
-	AC_DEFINE(ROMIO_GRIDFTP, 1, [Define for ROMIO with gridftp])
-fi
 
 AS_IF([test -n "$file_system_gpfs"],
     [SYSDEP_INC=-I${prefix}/include], [SYSDEP_INC=])

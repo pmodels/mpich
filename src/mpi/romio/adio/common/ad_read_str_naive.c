@@ -356,8 +356,7 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, int count,
 	}
 
 	/* unlock the file region if we locked it */
-        if ((fd->atomicity) && (fd->file_system != ADIO_PIOFS) && 
-	   (fd->file_system != ADIO_PVFS) && (fd->file_system != ADIO_PVFS2))
+	if ((fd->atomicity) && ADIO_Feature(fd, ADIO_LOCKS))
 	{
             ADIOI_UNLOCK(fd, start_off, SEEK_SET, end_offset-start_off+1);
 	}

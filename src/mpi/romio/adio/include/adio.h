@@ -275,25 +275,16 @@ typedef struct {
 #define ADIO_REQUEST_NULL        ((ADIO_Request) 0)
 #define ADIO_FILE_NULL           ((ADIO_File) 0)
 
-/* file systems */
+/* file systems:
+ * the numbering is slightly strange because we have deleted file
+ * systems over time */
 #define ADIO_NFS                 150
-#define ADIO_PIOFS               151   /* IBM */
 #define ADIO_UFS                 152   /* Unix file system */
-#define ADIO_PFS                 153   /* Intel */
 #define ADIO_XFS                 154   /* SGI */
-#define ADIO_HFS                 155   /* HP/Convex */
-#define ADIO_SFS                 156   /* NEC */
-#define ADIO_PVFS                157   /* PVFS for Linux Clusters from Clemson Univ. */
-#define ADIO_NTFS                158   /* NTFS for Windows NT */
 #define ADIO_TESTFS              159   /* fake file system for testing */
 #define ADIO_PVFS2               160   /* PVFS2: 2nd generation PVFS */
 #define ADIO_PANFS               161   /* Panasas FS */
-#define ADIO_GRIDFTP             162   /* Globus GridFTP */
 #define ADIO_LUSTRE              163   /* Lustre */
-/* #define ADIO_BGL              164 */  /* IBM BGL */
-/* #define ADIO_BGLOCKLESS       165 */  /* IBM BGL (lock-free) */
-#define ADIO_ZOIDFS              167   /* ZoidFS: the I/O forwarding fs */
-/* #define ADIO_BG               168 */
 #define ADIO_GPFS                  168
 
 #define ADIO_SEEK_SET            SEEK_SET

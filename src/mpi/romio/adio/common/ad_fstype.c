@@ -519,13 +519,7 @@ static void ADIO_FileSysType_prefix(const char *filename, int *fstype, int *erro
     static char myname[] = "ADIO_RESOLVEFILETYPE_PREFIX";
     *error_code = MPI_SUCCESS;
 
-    if (!strncmp(filename, "pfs:", 4) || !strncmp(filename, "PFS:", 4)) {
-	*fstype = ADIO_PFS;
-    }
-    else if (!strncmp(filename, "piofs:", 6) || !strncmp(filename, "PIOFS:", 6)) {
-	*fstype = ADIO_PIOFS;
-    }
-    else if (!strncmp(filename, "ufs:", 4) || !strncmp(filename, "UFS:", 4)) {
+    if (!strncmp(filename, "ufs:", 4) || !strncmp(filename, "UFS:", 4)) {
 	*fstype = ADIO_UFS;
     }
     else if (!strncmp(filename, "nfs:", 4) || !strncmp(filename, "NFS:", 4)) {
@@ -534,34 +528,16 @@ static void ADIO_FileSysType_prefix(const char *filename, int *fstype, int *erro
     else if (!strncmp(filename, "panfs:", 6) || !strncmp(filename, "PANFS:", 6)) {
 	*fstype = ADIO_PANFS;
     }
-    else if (!strncmp(filename, "hfs:", 4) || !strncmp(filename, "HFS:", 4)) {
-	*fstype = ADIO_HFS;
-    }
     else if (!strncmp(filename, "xfs:", 4) || !strncmp(filename, "XFS:", 4)) {
 	*fstype = ADIO_XFS;
     }
-    else if (!strncmp(filename, "sfs:", 4) || !strncmp(filename, "SFS:", 4)) {
-	*fstype = ADIO_SFS;
-    }
-    else if (!strncmp(filename, "pvfs:", 5) || !strncmp(filename, "PVFS:", 5)) {
-	*fstype = ADIO_PVFS;
-    }
     else if (!strncmp(filename, "pvfs2:", 6)||!strncmp(filename, "PVFS2:", 6)) {
 	*fstype = ADIO_PVFS2;
-    }
-    else if (!strncmp(filename, "zoidfs:", 7)||
-		    !strncmp(filename, "ZOIDFS:", 7)) {
-	    *fstype = ADIO_ZOIDFS;
     } 
     else if (!strncmp(filename, "testfs:", 7) 
 	     || !strncmp(filename, "TESTFS:", 7))
     {
 	*fstype = ADIO_TESTFS;
-    }
-    else if (!strncmp(filename, "ftp:", 4) 
-		    || !strncmp(filename, "gsiftp:", 7))
-    {
-	*fstype = ADIO_GRIDFTP;
     }
     else if (!strncmp(filename, "lustre:", 7) 
 	     || !strncmp(filename, "LUSTRE:", 7))
@@ -572,16 +548,12 @@ static void ADIO_FileSysType_prefix(const char *filename, int *fstype, int *erro
 	*fstype = ADIO_GPFS;
     }
     else {
-#ifdef ROMIO_NTFS
-	*fstype = ADIO_NTFS;
-#else
 	*fstype = 0;
         /* --BEGIN ERROR HANDLING-- */
         *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
 				           myname, __LINE__, MPI_ERR_NO_SUCH_FILE,
 				           "**filename", "**filename %s", filename);
         /* --END ERROR HANDLING-- */
-#endif
     }
 }
 
@@ -703,26 +675,6 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
     }
 
     /* verify that we support this file system type and set ops pointer */
-    if (file_system == ADIO_PFS) {
-#ifndef ROMIO_PFS
-	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					   myname, __LINE__, MPI_ERR_IO,
-					   "**iofstypeunsupported", 0);
-	return;
-#else
-	*ops = &ADIO_PFS_operations;
-#endif
-    }
-    if (file_system == ADIO_PIOFS) {
-#ifndef ROMIO_PIOFS
-	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					   myname, __LINE__, MPI_ERR_IO,
-					   "**iofstypeunsupported", 0);
-	return;
-#else
-	*ops = &ADIO_PIOFS_operations;
-#endif
-    }
     if (file_system == ADIO_UFS) {
 #ifndef ROMIO_UFS
 	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
@@ -753,16 +705,6 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
 	*ops = &ADIO_PANFS_operations;
 #endif
     }
-    if (file_system == ADIO_HFS) {
-#ifndef ROMIO_HFS
-	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					   myname, __LINE__, MPI_ERR_IO,
-					   "**iofstypeunsupported", 0);
-	return;
-#else
-	*ops = &ADIO_HFS_operations;
-#endif
-    }
     if (file_system == ADIO_XFS) {
 #ifndef ROMIO_XFS
 	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
@@ -773,26 +715,6 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
 	*ops = &ADIO_XFS_operations;
 #endif
     }
-    if (file_system == ADIO_SFS) {
-#ifndef ROMIO_SFS
-	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					   myname, __LINE__, MPI_ERR_IO,
-					   "**iofstypeunsupported", 0);
-	return;
-#else
-	*ops = &ADIO_SFS_operations;
-#endif
-    }
-    if (file_system == ADIO_PVFS) {
-#ifndef ROMIO_PVFS
-	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					   myname, __LINE__, MPI_ERR_IO,
-					   "**iofstypeunsupported", 0);
-	return;
-#else
-	*ops = &ADIO_PVFS_operations;
-#endif
-    }
     if (file_system == ADIO_PVFS2) {
 #ifndef ROMIO_PVFS2
 	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
@@ -801,16 +723,6 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
 	return;
 #else
 	*ops = &ADIO_PVFS2_operations;
-#endif
-    }
-    if (file_system == ADIO_NTFS) {
-#ifndef ROMIO_NTFS
-	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					   myname, __LINE__, MPI_ERR_IO,
-					   "**iofstypeunsupported", 0);
-	return;
-#else
-	*ops = &ADIO_NTFS_operations;
 #endif
     }
     if (file_system == ADIO_TESTFS) {
@@ -835,32 +747,12 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
 #endif
     }
 
-    if (file_system == ADIO_GRIDFTP) {
-#ifndef ROMIO_GRIDFTP
-	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					   myname, __LINE__, MPI_ERR_IO,
-					   "**iofstypeunsupported", 0);
-	return;
-#else
-	*ops = &ADIO_GRIDFTP_operations;
-#endif
-    }
     if (file_system == ADIO_LUSTRE) {
 #ifndef ROMIO_LUSTRE 
 	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname, __LINE__, MPI_ERR_IO, "**iofstypeunsupported", 0);
 	return;
 #else
 	*ops = &ADIO_LUSTRE_operations;
-#endif
-    }
-    if (file_system == ADIO_ZOIDFS) {
-#ifndef ROMIO_ZOIDFS
-	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					   myname, __LINE__, MPI_ERR_IO,
-					   "**iofstypeunsupported", 0);
-	return;
-#else
-	*ops = &ADIO_ZOIDFS_operations;
 #endif
     }
     *error_code = MPI_SUCCESS;
