@@ -208,6 +208,13 @@ static int barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 
     barrier_vars = comm_ptr->dev.ch.barrier_vars;
 
+    /*
+      Perform the barrier, based on the centralized sense-reversing barrier [1]
+
+      [1] John M. Mellor-Crummey and Michael L. Scott. 1991. Algorithms for
+      scalable synchronization on shared-memory multiprocessors. ACM
+      Trans. Comput. Syst. 9, 1 (February 1991), 21-65.
+    */
     sense = OPA_load_int(&barrier_vars->sig);
     OPA_read_barrier();
 
