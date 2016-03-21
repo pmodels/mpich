@@ -179,14 +179,14 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
     /* One-sided aggregation needs the amount of data per rank as well because the difference in
      * starting and ending offsets for 1 byte is 0 the same as 0 bytes so it cannot be distiguished.
      */
-    if ((gpfsmpio_read_aggmethod == 1) || (gpfsmpio_read_aggmethod == 2)) {
+    if ((romio_read_aggmethod == 1) || (romio_read_aggmethod == 2)) {
         count_sizes = (ADIO_Offset *) ADIOI_Malloc(nprocs*sizeof(ADIO_Offset));
         MPI_Count buftype_size;
         MPI_Type_size_x(datatype, &buftype_size);
         my_count_size = (ADIO_Offset) count  * (ADIO_Offset)buftype_size;
     }
     if (gpfsmpio_tunegather) {
-      if ((gpfsmpio_read_aggmethod == 1) || (gpfsmpio_read_aggmethod == 2)) {
+      if ((romio_read_aggmethod == 1) || (romio_read_aggmethod == 2)) {
         gpfs_offsets0 = (ADIO_Offset *) ADIOI_Malloc(3*nprocs*sizeof(ADIO_Offset));
         gpfs_offsets  = (ADIO_Offset *) ADIOI_Malloc(3*nprocs*sizeof(ADIO_Offset));
         for (ii=0; ii<nprocs; ii++)  {
@@ -228,7 +228,7 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
                       ADIO_OFFSET, fd->comm);
         MPI_Allgather(&end_offset, 1, ADIO_OFFSET, end_offsets, 1,
                       ADIO_OFFSET, fd->comm);
-        if ((gpfsmpio_read_aggmethod == 1) || (gpfsmpio_read_aggmethod == 2)) {
+        if ((romio_read_aggmethod == 1) || (romio_read_aggmethod == 2)) {
 	      MPI_Allgather(&count_sizes, 1, ADIO_OFFSET, count_sizes, 1,
                         ADIO_OFFSET, fd->comm);
         }
@@ -295,7 +295,7 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
      *
      */
     int currentNonZeroDataIndex = 0;
-    if ((gpfsmpio_read_aggmethod == 1) || (gpfsmpio_read_aggmethod == 2)) {
+    if ((romio_read_aggmethod == 1) || (romio_read_aggmethod == 2)) {
       /* Take out the 0-data offsets by shifting the indexes with data to the
        * front and keeping track of the non-zero data index for use as the
        * length.  By doing this we will optimally use all available aggs
@@ -312,7 +312,7 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
       }
     }
     if (gpfsmpio_tuneblocking) {
-    if ((gpfsmpio_read_aggmethod == 1) || (gpfsmpio_read_aggmethod == 2)) {
+    if ((romio_read_aggmethod == 1) || (romio_read_aggmethod == 2)) {
     ADIOI_GPFS_Calc_file_domains(fd, st_offsets, end_offsets, currentNonZeroDataIndex,
 			    nprocs_for_coll, &min_st_offset,
 			    &fd_start, &fd_end, &fd_size, fd->fs_ptr);
@@ -324,7 +324,7 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
     }
     }
     else {
-    if ((gpfsmpio_read_aggmethod == 1) || (gpfsmpio_read_aggmethod == 2)) {
+    if ((romio_read_aggmethod == 1) || (romio_read_aggmethod == 2)) {
     ADIOI_Calc_file_domains(st_offsets, end_offsets, currentNonZeroDataIndex,
 			    nprocs_for_coll, &min_st_offset,
 			    &fd_start, &fd_end,
@@ -341,7 +341,7 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
     }
 
     GPFSMPIO_T_CIO_SET_GET( r, 1, 1, GPFSMPIO_CIO_T_MYREQ, GPFSMPIO_CIO_T_FD_PART );
-    if ((gpfsmpio_read_aggmethod == 1) || (gpfsmpio_read_aggmethod == 2)) {
+    if ((romio_read_aggmethod == 1) || (romio_read_aggmethod == 2)) {
     /* If the user has specified to use a one-sided aggregation method then do that at
      * this point instead of the two-phase I/O.
      */

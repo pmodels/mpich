@@ -8,6 +8,7 @@
 #include "adio.h"
 #include "adio_extern.h"
 #include "hint_fns.h"
+#include "ad_tuning.h"
 
 void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 {
@@ -31,6 +32,7 @@ void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 	    *error_code = MPI_SUCCESS;
 	    return;
     }
+	ad_get_env_vars();
 
     if (fd->info == MPI_INFO_NULL) MPI_Info_create(&(fd->info));
     info = fd->info;

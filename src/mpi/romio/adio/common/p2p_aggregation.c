@@ -6,6 +6,7 @@
 
 #include "adio.h"
 #include "adio_extern.h"
+#include "ad_tuning.h"
 #include "../ad_gpfs/ad_gpfs_tuning.h"
 
 #include <pthread.h>
