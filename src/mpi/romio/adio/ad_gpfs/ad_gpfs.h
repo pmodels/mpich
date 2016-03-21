@@ -67,6 +67,7 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 
 void ADIOI_GPFS_Flush(ADIO_File fd, int *error_code);
 
+#include "ad_tuning.h"
 #include "ad_gpfs_tuning.h"
 
 

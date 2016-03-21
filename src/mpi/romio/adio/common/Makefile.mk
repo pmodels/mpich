@@ -72,5 +72,6 @@ romio_other_sources +=                  \
     adio/common/ad_threaded_io.c        \
     adio/common/p2p_aggregation.c       \
     adio/common/onesided_aggregation.c  \
+    adio/common/ad_tuning.c             \
     adio/common/utils.c
 

@@ -6,15 +6,11 @@
 
 #include "adio.h"
 #include "adio_extern.h"
+#include "ad_tuning.h"
 #ifdef ROMIO_GPFS
-/* right now this is GPFS only but TODO: extend this to all file systems */
 #include "../ad_gpfs/ad_gpfs_tuning.h"
-#else
-int gpfsmpio_onesided_no_rmw = 0;
-int gpfsmpio_write_aggmethod = 0;
-int gpfsmpio_read_aggmethod = 0;
-int gpfsmpio_onesided_always_rmw = 0;
 #endif
+
 
 #include <pthread.h>
 
@@ -776,7 +772,7 @@ printf("end_offsets[%d] is %ld st_offsets[%d] is %ld\n",j,end_offsets[j],j,st_of
     MPI_Win write_buf_window = fd->io_buf_window;
 
     int *write_buf_put_amounts = fd->io_buf_put_amounts;
-    if(!gpfsmpio_onesided_no_rmw) {
+    if(!romio_onesided_no_rmw) {
       *hole_found = 0;
       for (i=0;i<nprocs;i++)
         write_buf_put_amounts[i] = 0;
@@ -800,7 +796,7 @@ printf("end_offsets[%d] is %ld st_offsets[%d] is %ld\n",j,end_offsets[j],j,st_of
 #ifdef onesidedtrace
 printf("iAmUsedAgg - currentRoundFDStart initialized to %ld currentRoundFDEnd to %ld\n",currentRoundFDStart,currentRoundFDEnd);
 #endif
-      if (gpfsmpio_onesided_always_rmw) { // read in the first buffer
+      if (romio_onesided_always_rmw) { // read in the first buffer
         ADIO_Offset tmpCurrentRoundFDEnd = 0;
         if ((fd_end[myAggRank] - currentRoundFDStart) < coll_bufsize) {
           if (myAggRank == greatestFileDomainAggRank) {
@@ -815,14 +811,14 @@ printf("iAmUsedAgg - currentRoundFDStart initialized to %ld currentRoundFDEnd to
         else
         tmpCurrentRoundFDEnd = currentRoundFDStart + coll_bufsize - (ADIO_Offset)1;
 #ifdef onesidedtrace
-printf("gpfsmpio_onesided_always_rmw - first buffer pre-read for file offsets %ld to %ld total is %d\n",currentRoundFDStart,tmpCurrentRoundFDEnd,(int)(tmpCurrentRoundFDEnd - currentRoundFDStart)+1);
+printf("romio_onesided_always_rmw - first buffer pre-read for file offsets %ld to %ld total is %d\n",currentRoundFDStart,tmpCurrentRoundFDEnd,(int)(tmpCurrentRoundFDEnd - currentRoundFDStart)+1);
 #endif
         ADIO_ReadContig(fd, write_buf, (int)(tmpCurrentRoundFDEnd - currentRoundFDStart)+1,
           MPI_BYTE, ADIO_EXPLICIT_OFFSET,currentRoundFDStart, &status, error_code);
 
       }
     }
-    if (gpfsmpio_onesided_always_rmw) // wait until the first buffer is read
+    if (romio_onesided_always_rmw) // wait until the first buffer is read
       MPI_Barrier(fd->comm);
 
 #ifdef ROMIO_GPFS
@@ -832,10 +828,10 @@ printf("gpfsmpio_onesided_always_rmw - first buffer pre-read for file offsets %l
 #endif
 
     /* This is the second main loop of the algorithm, actually nested loop of target aggs within rounds.  There are 2 flavors of this.
-     * For gpfsmpio_write_aggmethod of 1 each nested iteration for the target
+     * For romio_write_aggmethod of 1 each nested iteration for the target
      * agg does an mpi_put on a contiguous chunk using a primative datatype
      * determined using the data structures from the first main loop.  For
-     * gpfsmpio_write_aggmethod of 2 each nested iteration for the target agg
+     * romio_write_aggmethod of 2 each nested iteration for the target agg
      * builds up data to use in created a derived data type for 1 mpi_put that is done for the target agg for each round.
      * To support lustre there will need to be an additional layer of nesting
      * for the multiple file domains within target aggs.
@@ -859,7 +855,7 @@ printf("gpfsmpio_onesided_always_rmw - first buffer pre-read for file offsets %l
       int targetAggContigAccessCount = 0;
 
       /* These data structures are used for the derived datatype mpi_put
-       * in the gpfsmpio_write_aggmethod of 2 case.
+       * in the romio_write_aggmethod of 2 case.
        */
       int *targetAggBlockLengths=NULL;
       MPI_Aint *targetAggDisplacements=NULL, *sourceBufferDisplacements=NULL;
@@ -920,7 +916,7 @@ printf("gpfsmpio_onesided_always_rmw - first buffer pre-read for file offsets %l
         printf("bufferAmountToSend is %d\n",bufferAmountToSend);
 #endif
         if (bufferAmountToSend > 0) { /* we have data to send this round */
-          if (gpfsmpio_write_aggmethod == 2) {
+          if (romio_write_aggmethod == 2) {
             /* Only allocate these arrays if we are using method 2 and only do it once for this round/target agg.
              */
             if (!allocatedDerivedTypeArrays) {
@@ -955,11 +951,11 @@ printf("gpfsmpio_onesided_always_rmw - first buffer pre-read for file offsets %l
             targetDisplacementToUseThisRound += (MPI_Aint) coll_bufsize;
           }
 
-          /* For gpfsmpio_write_aggmethod of 1 do the mpi_put using the primitive MPI_BYTE type for each contiguous
+          /* For romio_write_aggmethod of 1 do the mpi_put using the primitive MPI_BYTE type for each contiguous
            * chunk in the target, of source data is non-contiguous then pack the data first.
            */
 
-          if (gpfsmpio_write_aggmethod == 1) {
+          if (romio_write_aggmethod == 1) {
             MPI_Win_lock(MPI_LOCK_SHARED, targetAggsForMyData[aggIter], 0, write_buf_window);
             if (bufTypeIsContig) {
               MPI_Put(((char*)buf) + currentFDSourceBufferState[aggIter].sourceBufferOffset,bufferAmountToSend, MPI_BYTE,targetAggsForMyData[aggIter],targetDisplacementToUseThisRound, bufferAmountToSend,MPI_BYTE,write_buf_window);
@@ -974,11 +970,11 @@ printf("gpfsmpio_onesided_always_rmw - first buffer pre-read for file offsets %l
             MPI_Win_unlock(targetAggsForMyData[aggIter], write_buf_window);
           }
 
-          /* For gpfsmpio_write_aggmethod of 2 populate the data structures for this round/agg for this offset iter
+          /* For romio_write_aggmethod of 2 populate the data structures for this round/agg for this offset iter
            * to be used subsequently when building the derived type for 1 mpi_put for all the data for this
            * round/agg.
            */
-          else if (gpfsmpio_write_aggmethod == 2) {
+          else if (romio_write_aggmethod == 2) {
 
             if (bufTypeIsContig) {
               targetAggBlockLengths[targetAggContigAccessCount]= bufferAmountToSend;
@@ -1005,9 +1001,9 @@ printf("gpfsmpio_onesided_always_rmw - first buffer pre-read for file offsets %l
         } // bufferAmountToSend > 0
       } // contig list
 
-      /* For gpfsmpio_write_aggmethod of 2 now build the derived type using the data from this round/agg and do 1 single mpi_put.
+      /* For romio_write_aggmethod of 2 now build the derived type using the data from this round/agg and do 1 single mpi_put.
        */
-      if (gpfsmpio_write_aggmethod == 2) {
+      if (romio_write_aggmethod == 2) {
 
         MPI_Datatype sourceBufferDerivedDataType, targetBufferDerivedDataType;
         MPI_Type_create_struct(targetAggContigAccessCount, targetAggBlockLengths, sourceBufferDisplacements, targetAggDataTypes, &sourceBufferDerivedDataType);
@@ -1045,7 +1041,7 @@ printf("gpfsmpio_onesided_always_rmw - first buffer pre-read for file offsets %l
         MPI_Type_free(&targetBufferDerivedDataType);
         }
       }
-      if (!gpfsmpio_onesided_no_rmw) {
+      if (!romio_onesided_no_rmw) {
         MPI_Win_lock(MPI_LOCK_SHARED, targetAggsForMyData[aggIter], 0, fd->io_buf_put_amounts_window);
         MPI_Put(&numBytesPutThisAggRound,1, MPI_INT,targetAggsForMyData[aggIter],myrank, 1,MPI_INT,fd->io_buf_put_amounts_window);
         MPI_Win_unlock(targetAggsForMyData[aggIter], fd->io_buf_put_amounts_window);
@@ -1080,7 +1076,7 @@ printf("first barrier roundIter %d\n",roundIter);
 #endif
 
         int doWriteContig = 1;
-        if (!gpfsmpio_onesided_no_rmw) {
+        if (!romio_onesided_no_rmw) {
           int numBytesPutIntoBuf = 0;
           for (i=0;i<nprocs;i++) {
             numBytesPutIntoBuf += write_buf_put_amounts[i];
@@ -1149,7 +1145,7 @@ printf("first barrier roundIter %d\n",roundIter);
     if (iAmUsedAgg) {
       currentRoundFDStart += coll_bufsize;
 
-      if (gpfsmpio_onesided_always_rmw && (roundIter<(numberOfRounds-1))) { // read in the buffer for the next round unless this is the last round
+      if (romio_onesided_always_rmw && (roundIter<(numberOfRounds-1))) { // read in the buffer for the next round unless this is the last round
         ADIO_Offset tmpCurrentRoundFDEnd = 0;
         if ((fd_end[myAggRank] - currentRoundFDStart) < coll_bufsize) {
           if (myAggRank == greatestFileDomainAggRank) {
@@ -1164,7 +1160,7 @@ printf("first barrier roundIter %d\n",roundIter);
         else
         tmpCurrentRoundFDEnd = currentRoundFDStart + coll_bufsize - (ADIO_Offset)1;
 #ifdef onesidedtrace
-printf("gpfsmpio_onesided_always_rmw - round %d buffer pre-read for file offsets %ld to %ld total is %d\n",roundIter, currentRoundFDStart,tmpCurrentRoundFDEnd,(int)(tmpCurrentRoundFDEnd - currentRoundFDStart)+1);
+printf("romio_onesided_always_rmw - round %d buffer pre-read for file offsets %ld to %ld total is %d\n",roundIter, currentRoundFDStart,tmpCurrentRoundFDEnd,(int)(tmpCurrentRoundFDEnd - currentRoundFDStart)+1);
 #endif
         ADIO_ReadContig(fd, write_buf, (int)(tmpCurrentRoundFDEnd - currentRoundFDStart)+1,
           MPI_BYTE, ADIO_EXPLICIT_OFFSET,currentRoundFDStart, &status, error_code);
@@ -1720,7 +1716,7 @@ printf("end_offsets[%d] is %ld st_offsets[%d] is %ld\n",j,end_offsets[j],j,st_of
             }
 
             additionalFDCounter++;
- 
+
 
 #ifdef onesidedtrace
             printf("block extended beyond fd init settings numSourceAggs %d offset_list[%d] with value %ld past fd border %ld with len %ld\n",numSourceAggs,i,offset_list[blockIter],fd_start[currentAggRankListIndex],len_list[blockIter]);
@@ -1820,8 +1816,8 @@ printf("iAmUsedAgg - currentRoundFDStart initialized "
 
 
     /* This is the second main loop of the algorithm, actually nested loop of target aggs within rounds.  There are 2 flavors of this.
-     * For gpfsmpio_read_aggmethod of 1 each nested iteration for the source agg does an mpi_put on a contiguous chunk using a primative datatype
-     * determined using the data structures from the first main loop.  For gpfsmpio_read_aggmethod of 2 each nested iteration for the source agg
+     * For romio_read_aggmethod of 1 each nested iteration for the source agg does an mpi_put on a contiguous chunk using a primative datatype
+     * determined using the data structures from the first main loop.  For romio_read_aggmethod of 2 each nested iteration for the source agg
      * builds up data to use in created a derived data type for 1 mpi_put that is done for the target agg for each round.
      * To support lustre there will need to be an additional layer of nesting for the multiple file domains
      * within target aggs.
@@ -1959,7 +1955,7 @@ printf("iAmUsedAgg - currentRoundFDStart initialized "
       int sourceAggContigAccessCount = 0;
 
       /* These data structures are used for the derived datatype mpi_get
-       * in the gpfsmpio_read_aggmethod of 2 case.
+       * in the romio_read_aggmethod of 2 case.
        */
       int *sourceAggBlockLengths=NULL;
       MPI_Aint *sourceAggDisplacements=NULL, *recvBufferDisplacements=NULL;
@@ -2004,7 +2000,7 @@ printf("iAmUsedAgg - currentRoundFDStart initialized "
         }
 
         if (bufferAmountToRecv > 0) { /* we have data to recv this round */
-          if (gpfsmpio_read_aggmethod == 2) {
+          if (romio_read_aggmethod == 2) {
             /* Only allocate these arrays if we are using method 2 and only do it once for this round/source agg.
              */
             if (!allocatedDerivedTypeArrays) {
@@ -2039,11 +2035,11 @@ printf("iAmUsedAgg - currentRoundFDStart initialized "
             sourceDisplacementToUseThisRound += (MPI_Aint)coll_bufsize;
           }
 
-          /* For gpfsmpio_read_aggmethod of 1 do the mpi_get using the primitive MPI_BYTE type from each
+          /* For romio_read_aggmethod of 1 do the mpi_get using the primitive MPI_BYTE type from each
            * contiguous chunk from the target, if the source is non-contiguous then unpack the data after
            * the MPI_Win_unlock is done to make sure the data has arrived first.
            */
-          if (gpfsmpio_read_aggmethod == 1) {
+          if (romio_read_aggmethod == 1) {
             MPI_Win_lock(MPI_LOCK_SHARED, sourceAggsForMyData[aggIter], 0, read_buf_window);
             char *getSourceData = NULL;
             if (bufTypeIsContig) {
@@ -2063,11 +2059,11 @@ printf("iAmUsedAgg - currentRoundFDStart initialized "
             }
           }
 
-          /* For gpfsmpio_read_aggmethod of 2 populate the data structures for this round/agg for this offset iter
+          /* For romio_read_aggmethod of 2 populate the data structures for this round/agg for this offset iter
            * to be used subsequently when building the derived type for 1 mpi_put for all the data for this
            * round/agg.
            */
-          else if (gpfsmpio_read_aggmethod == 2) {
+          else if (romio_read_aggmethod == 2) {
             if (bufTypeIsContig) {
               sourceAggBlockLengths[sourceAggContigAccessCount]= bufferAmountToRecv;
               sourceAggDataTypes[sourceAggContigAccessCount] = MPI_BYTE;
@@ -2088,9 +2084,9 @@ printf("iAmUsedAgg - currentRoundFDStart initialized "
           } // bufferAmountToRecv > 0
       } // contig list
 
-      /* For gpfsmpio_read_aggmethod of 2 now build the derived type using the data from this round/agg and do 1 single mpi_put.
+      /* For romio_read_aggmethod of 2 now build the derived type using the data from this round/agg and do 1 single mpi_put.
        */
-      if (gpfsmpio_read_aggmethod == 2) {
+      if (romio_read_aggmethod == 2) {
         MPI_Datatype recvBufferDerivedDataType, sourceBufferDerivedDataType;
 
         MPI_Type_create_struct(sourceAggContigAccessCount, sourceAggBlockLengths, recvBufferDisplacements, sourceAggDataTypes, &recvBufferDerivedDataType);
