@@ -957,17 +957,19 @@ printf("romio_onesided_always_rmw - first buffer pre-read for file offsets %ld t
 
           if (romio_write_aggmethod == 1) {
             MPI_Win_lock(MPI_LOCK_SHARED, targetAggsForMyData[aggIter], 0, write_buf_window);
+            char *putSourceData;
             if (bufTypeIsContig) {
               MPI_Put(((char*)buf) + currentFDSourceBufferState[aggIter].sourceBufferOffset,bufferAmountToSend, MPI_BYTE,targetAggsForMyData[aggIter],targetDisplacementToUseThisRound, bufferAmountToSend,MPI_BYTE,write_buf_window);
               currentFDSourceBufferState[aggIter].sourceBufferOffset += (ADIO_Offset)bufferAmountToSend;
             }
             else {
-              char *putSourceData = (char *) ADIOI_Malloc(bufferAmountToSend*sizeof(char));
+              putSourceData = (char *) ADIOI_Malloc(bufferAmountToSend*sizeof(char));
               nonContigSourceDataBufferAdvance(((char*)buf), flatBuf, bufferAmountToSend, 1, &currentFDSourceBufferState[aggIter], putSourceData);
               MPI_Put(putSourceData,bufferAmountToSend, MPI_BYTE,targetAggsForMyData[aggIter],targetDisplacementToUseThisRound, bufferAmountToSend,MPI_BYTE,write_buf_window);
-              ADIOI_Free(putSourceData);
             }
             MPI_Win_unlock(targetAggsForMyData[aggIter], write_buf_window);
+            if (!bufTypeIsContig)
+              ADIOI_Free(putSourceData);
           }
 
           /* For romio_write_aggmethod of 2 populate the data structures for this round/agg for this offset iter
