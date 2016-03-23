@@ -56,8 +56,8 @@ static int ADIOI_OneSidedSetup(ADIO_File fd, int procs) {
     ret = MPI_Win_create(fd->io_buf,fd->hints->cb_buffer_size,1,
 	    MPI_INFO_NULL,fd->comm, &fd->io_buf_window);
     if (ret != MPI_SUCCESS) goto fn_exit;
-    fd->io_buf_put_amounts = (int *) ADIOI_Malloc(procs*sizeof(int));
-    ret =MPI_Win_create(fd->io_buf_put_amounts,procs*sizeof(int),sizeof(int),
+    fd->io_buf_put_amounts = 0;
+    ret =MPI_Win_create(&(fd->io_buf_put_amounts),sizeof(int),sizeof(int),
 	    MPI_INFO_NULL,fd->comm, &fd->io_buf_put_amounts_window);
 fn_exit:
     return ret;
@@ -70,8 +70,6 @@ int ADIOI_OneSidedCleanup(ADIO_File fd)
 	ret = MPI_Win_free(&fd->io_buf_window);
     if (fd->io_buf_put_amounts_window != MPI_WIN_NULL)
 	ret = MPI_Win_free(&fd->io_buf_put_amounts_window);
-    if (fd->io_buf_put_amounts != NULL)
-	ADIOI_Free(fd->io_buf_put_amounts);
 
     return ret;
 }
@@ -771,11 +769,8 @@ printf("end_offsets[%d] is %ld st_offsets[%d] is %ld\n",j,end_offsets[j],j,st_of
     char *write_buf = write_buf0;
     MPI_Win write_buf_window = fd->io_buf_window;
 
-    int *write_buf_put_amounts = fd->io_buf_put_amounts;
     if(!romio_onesided_no_rmw) {
       *hole_found = 0;
-      for (i=0;i<nprocs;i++)
-        write_buf_put_amounts[i] = 0;
     }
 
     /* Counters to track the offset range being written by the used aggs.
@@ -1045,7 +1040,7 @@ printf("romio_onesided_always_rmw - first buffer pre-read for file offsets %ld t
       }
       if (!romio_onesided_no_rmw) {
         MPI_Win_lock(MPI_LOCK_SHARED, targetAggsForMyData[aggIter], 0, fd->io_buf_put_amounts_window);
-        MPI_Put(&numBytesPutThisAggRound,1, MPI_INT,targetAggsForMyData[aggIter],myrank, 1,MPI_INT,fd->io_buf_put_amounts_window);
+        MPI_Accumulate(&numBytesPutThisAggRound,1, MPI_INT,targetAggsForMyData[aggIter],0, 1, MPI_INT, MPI_SUM, fd->io_buf_put_amounts_window);
         MPI_Win_unlock(targetAggsForMyData[aggIter], fd->io_buf_put_amounts_window);
       }
       } // baseoffset != -1
@@ -1079,15 +1074,11 @@ printf("first barrier roundIter %d\n",roundIter);
 
         int doWriteContig = 1;
         if (!romio_onesided_no_rmw) {
-          int numBytesPutIntoBuf = 0;
-          for (i=0;i<nprocs;i++) {
-            numBytesPutIntoBuf += write_buf_put_amounts[i];
-            write_buf_put_amounts[i] = 0;
-          }
-          if (numBytesPutIntoBuf != ((int)(currentRoundFDEnd - currentRoundFDStart)+1)) {
+          if (fd->io_buf_put_amounts != ((int)(currentRoundFDEnd - currentRoundFDStart)+1)) {
             doWriteContig = 0;
             *hole_found = 1;
           }
+          fd->io_buf_put_amounts = 0;
         }
 
         if (!useIOBuffer) {
