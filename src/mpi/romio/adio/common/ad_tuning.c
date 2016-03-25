@@ -26,6 +26,7 @@ int     romio_read_aggmethod;
 int     romio_onesided_no_rmw;
 int     romio_onesided_always_rmw;
 int     romio_onesided_inform_rmw;
+int 	romio_tunegather;
 
 /* set internal variables for tuning environment variables */
 /** \page mpiio_vars MPIIO Configuration
@@ -71,6 +72,12 @@ int     romio_onesided_inform_rmw;
  *   - 0 (disabled) or 1 (enabled)
  *   - Default is 0
  *
+ * - ROMIO_TUNEGATHER - Tune how starting and ending offsets are communicated
+ *   for aggregator collective i/o.  Possible values:
+ *   - 0 - Use two or three MPI_Allgather's to collect starting and ending offsets.
+ *   - 1 - Use MPI_Allreduce(MPI_MAX) to collect starting and ending offsets.
+ *   - Default is 1.
+ *
  */
 
 void ad_get_env_vars() {
@@ -97,4 +104,8 @@ void ad_get_env_vars() {
     romio_onesided_inform_rmw = 0;
     x = getenv( "ROMIO_ONESIDED_INFORM_RMW" );
     if (x) romio_onesided_inform_rmw = atoi(x);
+
+    romio_tunegather = 1;
+	x = getenv( "ROMIO_TUNEGATHER"   );
+	if (x) romio_tunegather   = atoi(x);
 }

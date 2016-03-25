@@ -185,7 +185,7 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
         MPI_Type_size_x(datatype, &buftype_size);
         my_count_size = (ADIO_Offset) count  * (ADIO_Offset)buftype_size;
     }
-    if (gpfsmpio_tunegather) {
+    if (romio_tunegather) {
       if ((romio_read_aggmethod == 1) || (romio_read_aggmethod == 2)) {
         gpfs_offsets0 = (ADIO_Offset *) ADIOI_Malloc(3*nprocs*sizeof(ADIO_Offset));
         gpfs_offsets  = (ADIO_Offset *) ADIOI_Malloc(3*nprocs*sizeof(ADIO_Offset));
