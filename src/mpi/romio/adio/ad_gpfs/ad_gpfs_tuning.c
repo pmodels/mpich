@@ -31,7 +31,6 @@ int 	gpfsmpio_timing;
 int 	gpfsmpio_timing2;
 int     gpfsmpio_timing_cw_level;
 int 	gpfsmpio_comm;
-int 	gpfsmpio_tunegather;
 int 	gpfsmpio_tuneblocking;
 long    bglocklessmpio_f_type;
 int     gpfsmpio_bg_nagg_pset;
@@ -58,12 +57,6 @@ double	gpfsmpio_prof_cr    [GPFSMPIO_CIO_LAST+1];
  *   - 0 - Do not collect/report timing.
  *   - 1 - Collect/report timing.
  *   - Default is 0.
- *
- * - GPFSMPIO_TUNEGATHER - Tune how starting and ending offsets are communicated
- *   for aggregator collective i/o.  Possible values:
- *   - 0 - Use two MPI_Allgather's to collect starting and ending offsets.
- *   - 1 - Use MPI_Allreduce(MPI_MAX) to collect starting and ending offsets.
- *   - Default is 1.
  *
  * - GPFSMPIO_TUNEBLOCKING - Tune how aggregate file domains are
  *   calculated (block size).  Possible values:
@@ -139,9 +132,6 @@ void ad_gpfs_get_env_vars() {
     gpfsmpio_timing = 0;
 	x = getenv( "GPFSMPIO_TIMING"       );
 	if (x) gpfsmpio_timing       = atoi(x);
-    gpfsmpio_tunegather = 1;
-	x = getenv( "GPFSMPIO_TUNEGATHER"   );
-	if (x) gpfsmpio_tunegather   = atoi(x);
     gpfsmpio_tuneblocking = 1;
     x = getenv( "GPFSMPIO_TUNEBLOCKING" );
     if (x) gpfsmpio_tuneblocking = atoi(x);

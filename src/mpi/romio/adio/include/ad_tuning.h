@@ -10,7 +10,6 @@
  * ad_tuning.h
  *
  * declares common global variables and functions for performance tuning
- * and functional debugging.
  *---------------------------------------------------------------------*/
 
 #ifndef AD_TUNING_H_
@@ -23,14 +22,13 @@
  *  Global variables for the control of performance tuning.
  *-----------------------------------------*/
 
-/* corresponds to environment variables to select optimizations and timing level */
-extern int      romio_pthreadio;
-extern int      romio_p2pcontig;
+/* corresponds to environment variables to select optimizations */
 extern int      romio_write_aggmethod;
 extern int      romio_read_aggmethod;
 extern int      romio_onesided_no_rmw;
 extern int      romio_onesided_always_rmw;
 extern int      romio_onesided_inform_rmw;
+extern int      romio_tunegather;
 
 /* set internal variables for tuning environment variables */
 void ad_get_env_vars(void);

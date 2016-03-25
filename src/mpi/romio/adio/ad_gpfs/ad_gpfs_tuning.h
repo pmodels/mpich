@@ -61,7 +61,6 @@ extern double 	gpfsmpio_prof_cr    [GPFSMPIO_CIO_LAST+1];
 extern int 	gpfsmpio_timing;
 extern int      gpfsmpio_timing_cw_level;
 extern int 	gpfsmpio_comm;
-extern int 	gpfsmpio_tunegather;
 extern int 	gpfsmpio_tuneblocking;
 extern long bglocklessmpio_f_type;
 extern int      gpfsmpio_pthreadio;
