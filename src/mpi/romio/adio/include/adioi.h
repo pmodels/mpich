@@ -692,6 +692,28 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
 				     ADIO_Offset *fd_start,
 				     ADIO_Offset *fd_end);
 
+/* This data structure holds parameters releated to file   */
+/* striping needed by the one-sided aggregation algorithm. */
+/* A stripeSize of 0 indicates there is no striping.       */
+typedef struct ADIOI_OneSidedStripeParms {    
+    int stripeSize; /* size in bytes of the striping unit - a size of 0 indicates to the */
+                    /* onesided algorithm that we are a non-striping file system         */
+    ADIO_Offset segmentLen; /* size in bytes of the segment (stripeSize*number of aggs) */
+                            /* up to the size of the file)                              */
+    int stripesPerAgg; /* the number of stripes to be packed into an agg cb for this segment */
+    int segmentIter; /* segment number for the group of stripes currently being packed into  */
+                     /* the agg cb - resets to 0 for each cb flush to the file system        */
+    int flushCB; /* once we have fully packed the cb on an agg this flags */
+                 /* tells us to now write to the file                     */
+    ADIO_Offset stripedLastFileOffset; /* since we are now just calling the onesided algorithm */
+                                       /* with the offset range of segment, we still need to   */
+                                       /* know the actual last offset of the file.             */
+    int firstStripedWriteCall; /* whether this is the first call in the first segement of the  */
+                               /* onesided algorithm.                                          */
+    int lastStripedWriteCall; /* whether this is the last call in the last segement of the  */
+                              /* onesided algorithm.                                        */
+} ADIOI_OneSidedStripeParms;
+
 int ADIOI_OneSidedCleanup(ADIO_File fd);
 void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         ADIO_Offset *offset_list,
@@ -700,12 +722,13 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         const void *buf,
         MPI_Datatype datatype,
         int *error_code,
-        ADIO_Offset *st_offsets,
-        ADIO_Offset *end_offsets,
+        ADIO_Offset firstFileOffset,
+        ADIO_Offset lastFileOffset,
         int numNonZeroDataOffsets,
         ADIO_Offset *fd_start,
         ADIO_Offset* fd_end,
-        int *hole_found);
+        int *hole_found,
+        ADIOI_OneSidedStripeParms stripe_parms);
 void ADIOI_OneSidedReadAggregation(ADIO_File fd,
         ADIO_Offset *offset_list,
         ADIO_Offset *len_list,
