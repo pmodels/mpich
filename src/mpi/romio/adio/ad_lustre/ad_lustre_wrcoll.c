@@ -96,7 +96,7 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     int *striping_info = NULL;
     ADIO_Offset **buf_idx = NULL;
     int old_error, tmp_error;
-    ADIO_Offset *count_sizes;
+    ADIO_Offset *lustre_offsets0, *lustre_offsets, *count_sizes;
 
     MPI_Comm_size(fd->comm, &nprocs);
     MPI_Comm_rank(fd->comm, &myrank);
@@ -133,6 +133,46 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
       MPI_Type_size_x(datatype, &buftype_size);
       my_count_size = (ADIO_Offset) count  * (ADIO_Offset)buftype_size;
     }
+    if (romio_tunegather) {
+      if ((romio_write_aggmethod == 1) || (romio_write_aggmethod == 2)) {
+        lustre_offsets0 = (ADIO_Offset *) ADIOI_Malloc(3*nprocs*sizeof(ADIO_Offset));
+        lustre_offsets  = (ADIO_Offset *) ADIOI_Malloc(3*nprocs*sizeof(ADIO_Offset));
+        for (i=0; i<nprocs; i++)  {
+          lustre_offsets0[i*3]   = 0;
+          lustre_offsets0[i*3+1] = 0;
+          lustre_offsets0[i*3+2] = 0;
+        }
+        lustre_offsets0[myrank*3]   = start_offset;
+        lustre_offsets0[myrank*3+1] =   end_offset;
+        lustre_offsets0[myrank*3+2] =   my_count_size;
+        MPI_Allreduce( lustre_offsets0, lustre_offsets, nprocs*3, ADIO_OFFSET, MPI_MAX, fd->comm );
+        for (i=0; i<nprocs; i++)  {
+          st_offsets [i] = lustre_offsets[i*3]  ;
+          end_offsets[i] = lustre_offsets[i*3+1];
+          count_sizes[i] = lustre_offsets[i*3+2];
+        }
+      }
+      else {
+        lustre_offsets0 = (ADIO_Offset *) ADIOI_Malloc(2*nprocs*sizeof(ADIO_Offset));
+        lustre_offsets  = (ADIO_Offset *) ADIOI_Malloc(2*nprocs*sizeof(ADIO_Offset));
+        for (i=0; i<nprocs; i++)  {
+          lustre_offsets0[i*2]   = 0;
+          lustre_offsets0[i*2+1] = 0;
+        }
+        lustre_offsets0[myrank*2]   = start_offset;
+        lustre_offsets0[myrank*2+1] =   end_offset;
+
+        MPI_Allreduce( lustre_offsets0, lustre_offsets, nprocs*2, ADIO_OFFSET, MPI_MAX, fd->comm );
+
+        for (i=0; i<nprocs; i++)  {
+          st_offsets [i] = lustre_offsets[i*2]  ;
+          end_offsets[i] = lustre_offsets[i*2+1];
+        }
+      }
+      ADIOI_Free( lustre_offsets0 );
+      ADIOI_Free( lustre_offsets  );
+    }
+    else {	
 	MPI_Allgather(&start_offset, 1, ADIO_OFFSET, st_offsets, 1,
 		      ADIO_OFFSET, fd->comm);
 	MPI_Allgather(&end_offset, 1, ADIO_OFFSET, end_offsets, 1,
@@ -140,6 +180,7 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     if ((romio_write_aggmethod == 1) || (romio_write_aggmethod == 2)) {
 	  MPI_Allgather(&my_count_size, 1, ADIO_OFFSET, count_sizes, 1,
                 ADIO_OFFSET, fd->comm);
+    }
     }
 	/* are the accesses of different processes interleaved? */
 	for (i = 1; i < nprocs; i++)
