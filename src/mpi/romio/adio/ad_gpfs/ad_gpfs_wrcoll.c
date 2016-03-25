@@ -286,6 +286,7 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
    done by (logically) dividing the file into file domains (FDs); each
    process may directly access only its own file domain. */
 
+    ADIO_Offset lastFileOffset = 0, firstFileOffset = -1;
     int currentValidDataIndex = 0;
     if ((romio_write_aggmethod == 1) || (romio_write_aggmethod == 2)) {
       /* Take out the 0-data offsets by shifting the indexes with data to the front
@@ -295,6 +296,12 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
         if (count_sizes[i] > 0) {
           st_offsets[currentValidDataIndex] = st_offsets[i];
           end_offsets[currentValidDataIndex] = end_offsets[i];
+          lastFileOffset = MPL_MAX(lastFileOffset,end_offsets[currentValidDataIndex]);
+          if (firstFileOffset == -1)
+            firstFileOffset = st_offsets[currentValidDataIndex];
+          else
+            firstFileOffset = MPL_MIN(firstFileOffset,st_offsets[currentValidDataIndex]);
+
           currentValidDataIndex++;
         }
       }
@@ -337,10 +344,22 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     /* If the user has specified to use a one-sided aggregation method then do that at
      * this point instead of the two-phase I/O.
      */
+      /* pass this datastructure to indicate we are a non-striping filesystem
+       * to the onesided algorithm by setting stripe size to 0.
+       */
+      ADIOI_OneSidedStripeParms noStripeParms;
+      noStripeParms.stripeSize = 0;
+      noStripeParms.segmentLen = 0;
+      noStripeParms.stripesPerAgg = 0;
+      noStripeParms.segmentIter = 0;
+      noStripeParms.flushCB = 1;
+      noStripeParms.stripedLastFileOffset = 0;
+      noStripeParms.firstStripedWriteCall = 0;
+      noStripeParms.lastStripedWriteCall = 0;
       int holeFound = 0;
       ADIOI_OneSidedWriteAggregation(fd, offset_list, len_list, contig_access_count,
-	      buf, datatype, error_code, st_offsets, end_offsets,
-	      currentValidDataIndex, fd_start, fd_end, &holeFound);
+	      buf, datatype, error_code, firstFileOffset, lastFileOffset,
+	      currentValidDataIndex, fd_start, fd_end, &holeFound, noStripeParms);
       int anyHolesFound = 0;
       if (!romio_onesided_no_rmw)
         MPI_Allreduce(&holeFound, &anyHolesFound, 1, MPI_INT, MPI_MAX, fd->comm);
@@ -366,11 +385,11 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
         if (romio_onesided_inform_rmw && (myrank ==0))
           FPRINTF(stderr,"Information: Holes found during one-sided "
 		  "write aggregation algorithm --- re-running one-sided "
-		  "write aggregation with GPFSMPIO_ONESIDED_ALWAYS_RMW set to 1.\n");
+		  "write aggregation with ROMIO_ONESIDED_ALWAYS_RMW set to 1.\n");
           romio_onesided_always_rmw = 1;
           int prev_romio_onesided_no_rmw = romio_onesided_no_rmw;
           romio_onesided_no_rmw = 1;
-          ADIOI_OneSidedWriteAggregation(fd, offset_list, len_list, contig_access_count, buf, datatype, error_code, st_offsets, end_offsets, currentValidDataIndex, fd_start, fd_end, &holeFound);
+          ADIOI_OneSidedWriteAggregation(fd, offset_list, len_list, contig_access_count, buf, datatype, error_code, st_offsets, end_offsets, currentValidDataIndex, fd_start, fd_end, &holeFound, noStripeParms);
           romio_onesided_no_rmw = prev_romio_onesided_no_rmw;
           GPFSMPIO_T_CIO_REPORT( 1, fd, myrank, nprocs)
           ADIOI_Free(offset_list);
