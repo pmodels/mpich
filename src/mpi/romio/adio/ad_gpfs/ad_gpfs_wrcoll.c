@@ -231,7 +231,7 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 	MPI_Allgather(&end_offset, 1, ADIO_OFFSET, end_offsets, 1,
 		      ADIO_OFFSET, fd->comm);
         if ((romio_write_aggmethod == 1) || (romio_write_aggmethod == 2)) {
-	    MPI_Allgather(&count_sizes, 1, ADIO_OFFSET, count_sizes, 1,
+	    MPI_Allgather(&my_count_size, 1, ADIO_OFFSET, count_sizes, 1,
                      ADIO_OFFSET, fd->comm);
         }
     }
@@ -389,7 +389,7 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
           romio_onesided_always_rmw = 1;
           int prev_romio_onesided_no_rmw = romio_onesided_no_rmw;
           romio_onesided_no_rmw = 1;
-          ADIOI_OneSidedWriteAggregation(fd, offset_list, len_list, contig_access_count, buf, datatype, error_code, st_offsets, end_offsets, currentValidDataIndex, fd_start, fd_end, &holeFound, noStripeParms);
+          ADIOI_OneSidedWriteAggregation(fd, offset_list, len_list, contig_access_count, buf, datatype, error_code, firstFileOffset, lastFileOffset, currentValidDataIndex, fd_start, fd_end, &holeFound, noStripeParms);
           romio_onesided_no_rmw = prev_romio_onesided_no_rmw;
           GPFSMPIO_T_CIO_REPORT( 1, fd, myrank, nprocs)
           ADIOI_Free(offset_list);
