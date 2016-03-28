@@ -110,6 +110,10 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
 			req = context_to_req(error.op_context);
 			MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
 		}
+                else if (error.err == FI_ENOMSG) {
+                        req = context_to_req(error.op_context);
+                        REQ_OFI(req)->match_state = PEEK_NOT_FOUND;
+                }
 		else {
                         mpi_errno = MPI_ERR_OTHER;
 		}

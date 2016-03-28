@@ -234,6 +234,7 @@ fn_fail:                      \
 
 #define PEEK_INIT      0
 #define PEEK_FOUND     1
+#define PEEK_NOT_FOUND 2
 
 #define MEM_TAG_FORMAT (0xFFFF00000000LLU)
 /* ******************************** */
