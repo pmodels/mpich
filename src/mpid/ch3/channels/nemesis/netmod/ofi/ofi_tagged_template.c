@@ -391,7 +391,9 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_posted)(struct MPIDI_VC *vc, struct MPID_Reques
     /* ------------------------ */
     /* Initialize the request   */
     /* ------------------------ */
-    MPID_nem_ofi_init_req(rreq);
+    if (REQ_OFI(rreq)->match_state != PEEK_FOUND)
+        MPID_nem_ofi_init_req(rreq);
+
     REQ_OFI(rreq)->event_callback = ADD_SUFFIX(MPID_nem_ofi_recv_callback);
     REQ_OFI(rreq)->vc = vc;
 
@@ -428,10 +430,12 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_posted)(struct MPIDI_VC *vc, struct MPID_Reques
     msg_tagged_t msg;
     iov.iov_base = recv_buffer;
     iov.iov_len  = data_sz;
-    if(REQ_OFI(rreq)->match_state == PEEK_FOUND)
-      msgflags = FI_CLAIM;
+    if (REQ_OFI(rreq)->match_state == PEEK_FOUND) {
+        msgflags = FI_CLAIM;
+        REQ_OFI(rreq)->match_state = PEEK_INIT;
+    }
     else
-      msgflags = 0ULL;
+        msgflags = 0ULL;
 
     msg.msg_iov   = &iov;
     msg.desc      = NULL;
