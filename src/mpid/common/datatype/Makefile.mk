@@ -38,7 +38,8 @@ noinst_HEADERS +=                                 \
     src/mpid/common/datatype/mpidu_dataloop.h      \
     src/mpid/common/datatype/mpidu_datatype.h      \
     src/mpid/common/datatype/mpidu_ext32_segment.h \
-    src/mpid/common/datatype/segment_states.h
+    src/mpid/common/datatype/segment_states.h      \
+    src/mpid/common/datatype/mpid_datatype_fallback.h
 
 endif BUILD_MPID_COMMON_DATATYPE
 

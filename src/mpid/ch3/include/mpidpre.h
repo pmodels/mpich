@@ -17,7 +17,7 @@ struct MPID_Request;
 #include <sys/types.h>
 #endif
 
-#include "mpidu_dataloop.h"
+#include "mpid_datatype_fallback.h"
 
 /* FIXME: Include here? */
 #include "opa_primitives.h"
