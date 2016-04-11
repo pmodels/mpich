@@ -21,6 +21,7 @@
 /* helper macros to improve code readability */
 /* we pessimistically assume that MPI_DATATYPE_NULL may be passed as a "valid" type
  * for send/recv when MPI_PROC_NULL is the destination/src */
+#ifndef dtype_add_ref_if_not_builtin
 #define dtype_add_ref_if_not_builtin(datatype_)                    \
     do {                                                           \
         if ((datatype_) != MPI_DATATYPE_NULL &&                    \
@@ -31,6 +32,8 @@
             MPID_Datatype_add_ref(dtp_);                           \
         }                                                          \
     } while (0)
+#endif
+#ifndef dtype_release_if_not_builtin
 #define dtype_release_if_not_builtin(datatype_)                    \
     do {                                                           \
         if ((datatype_) != MPI_DATATYPE_NULL &&                    \
@@ -41,6 +44,7 @@
             MPID_Datatype_release(dtp_);                           \
         }                                                          \
     } while (0)
+#endif
 
 /* TODO move to a header somewhere? */
 void MPIDU_Sched_dump(struct MPIDU_Sched *s);
