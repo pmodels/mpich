@@ -141,7 +141,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *ba
     int val_max_sz;
     char *key;
     char *val;
-    char *kvs_name;
+    char kvs_name[256];
     char *serialized_hnd = NULL;
     void *current_addr;
     void *start_addr ATTRIBUTE((unused));
@@ -328,8 +328,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *ba
         MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
         MPIU_CHKLMEM_MALLOC(val, char *, val_max_sz, mpi_errno, "val");
 
-        //mpi_errno = MPIDI_PG_GetConnKVSname (&kvs_name);
-        kvs_name = "my_kvs_name";
+        mpi_errno = PMI_KVS_Get_my_name(kvs_name, 256);
         if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
         if (local_rank == 0){
