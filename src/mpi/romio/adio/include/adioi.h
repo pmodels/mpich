@@ -215,10 +215,6 @@ struct ADIOI_Fns_struct {
 #define ADIOI_READ                26
 #define ADIOI_WRITE               27
 
-/* thanks stackoverflow:
- * http://stackoverflow.com/questions/3982348/implement-generic-swap-macro-in-c */
-#define ADIOI_SWAP(x, y, T) do { T temp##x##y = x; x = y; y = temp##x##y; } while (0);
-
 #define ADIOI_PREALLOC_BUFSZ      16777216    /* buffer size used to 
                                                 preallocate disk space */
 

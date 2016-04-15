@@ -913,7 +913,8 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 		/* do a little pointer shuffling: background I/O works from one
 		 * buffer while two-phase machinery fills up another */
 		io_thread_args.buf = write_buf;
-		ADIOI_SWAP(write_buf, write_buf2, char*);
+		write_buf = write_buf2;
+		write_buf2 = io_thread_args.buf;
 		io_thread_args.io_kind = ADIOI_WRITE;
 		io_thread_args.size = size;
 		io_thread_args.offset = off;
