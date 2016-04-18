@@ -55,7 +55,7 @@ int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_Attribute *p, **old_p;
-    MPID_Keyval *keyval_ptr=0;
+    MPIR_Keyval *keyval_ptr=0;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_DELETE_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -80,7 +80,7 @@ int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
     
     /* Convert MPI object handles to object pointers */
     MPIR_Win_get_ptr( win, win_ptr );
-    MPID_Keyval_get_ptr( win_keyval, keyval_ptr );
+    MPIR_Keyval_get_ptr( win_keyval, keyval_ptr );
     
 #   ifdef HAVE_ERROR_CHECKING
     {
@@ -90,7 +90,7 @@ int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
             MPIR_Win_valid_ptr( win_ptr, mpi_errno );
 	    /* If win_ptr is not valid, it will be reset to null */
 	    /* Validate keyval_ptr */
-	    MPID_Keyval_valid_ptr( keyval_ptr, mpi_errno );
+	    MPIR_Keyval_valid_ptr( keyval_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
@@ -131,7 +131,7 @@ int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
 	    MPIR_Keyval_release_ref( p->keyval, &in_use);
 	    if (!in_use)
 	    {
-		MPIU_Handle_obj_free( &MPID_Keyval_mem, p->keyval );
+		MPIU_Handle_obj_free( &MPIR_Keyval_mem, p->keyval );
 	    }
 	    MPID_Attr_free(p);
 	}

@@ -412,18 +412,18 @@ void MPIR_DatatypeAttrFinalize( void );
    For the indirect case, we mask off the part of the keyval that is
    in the bits normally used for the indirect block index.
 */
-#define MPID_Keyval_get_ptr(a,ptr)     \
+#define MPIR_Keyval_get_ptr(a,ptr)     \
 {                                                                       \
    switch (HANDLE_GET_KIND(a)) {                                        \
       case HANDLE_KIND_BUILTIN:                                         \
           ptr=0;                                                        \
           break;                                                        \
       case HANDLE_KIND_DIRECT:                                          \
-          ptr=MPID_Keyval_direct+((a)&0x3fffff);                        \
+          ptr=MPIR_Keyval_direct+((a)&0x3fffff);                        \
           break;                                                        \
       case HANDLE_KIND_INDIRECT:                                        \
-          ptr=((MPID_Keyval*)                                           \
-             MPIU_Handle_get_ptr_indirect((a)&0xfc3fffff,&MPID_Keyval_mem)); \
+          ptr=((MPIR_Keyval*)                                           \
+             MPIU_Handle_get_ptr_indirect((a)&0xfc3fffff,&MPIR_Keyval_mem)); \
           break;                                                        \
       case HANDLE_KIND_INVALID:                                         \
       default:								\
@@ -462,7 +462,7 @@ void MPIR_DatatypeAttrFinalize( void );
 #define MPID_Op_valid_ptr(ptr,err) MPID_Valid_ptr_class(Op,ptr,MPI_ERR_OP,err)
 #define MPIR_Errhandler_valid_ptr(ptr,err) MPID_Valid_ptr_class(Errhandler,ptr,MPI_ERR_ARG,err)
 #define MPID_Request_valid_ptr(ptr,err) MPID_Valid_ptr_class(Request,ptr,MPI_ERR_REQUEST,err)
-#define MPID_Keyval_valid_ptr(ptr,err) MPID_Valid_ptr_class(Keyval,ptr,MPI_ERR_KEYVAL,err)
+#define MPIR_Keyval_valid_ptr(ptr,err) MPID_Valid_ptr_class(Keyval,ptr,MPI_ERR_KEYVAL,err)
 
 #define MPIR_DATATYPE_IS_PREDEFINED(type) \
     ((HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) || \
@@ -893,13 +893,13 @@ typedef struct MPIR_Delete_function {
 } MPIR_Delete_function;
 
 /*S
-  MPID_Keyval - Structure of an MPID keyval
+  MPIR_Keyval - Structure of an MPID keyval
 
   Module:
   Attribute-DS
 
   S*/
-typedef struct MPID_Keyval {
+typedef struct MPIR_Keyval {
     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
     MPID_Object_kind     kind;
     int                  was_freed;
@@ -910,7 +910,7 @@ typedef struct MPID_Keyval {
 #ifdef MPID_DEV_KEYVAL_DECL
     MPID_DEV_KEYVAL_DECL
 #endif
-} MPID_Keyval;
+} MPIR_Keyval;
 
 #define MPIR_Keyval_add_ref( _keyval )                                  \
     do {                                                                \
@@ -977,7 +977,7 @@ typedef void * MPID_AttrVal_t;
  S*/
 typedef struct MPIR_Attribute {
     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
-    MPID_Keyval  *keyval;           /* Keyval structure for this attribute */
+    MPIR_Keyval  *keyval;           /* Keyval structure for this attribute */
 
     struct MPIR_Attribute *next;    /* Pointer to next in the list */
     MPIR_AttrType attrType;         /* Type of the attribute */
@@ -4266,7 +4266,7 @@ int MPIR_Info_get_nthkey_impl(MPIR_Info *info, int n, char *key);
 void MPIR_Info_get_valuelen_impl(MPIR_Info *info_ptr, const char *key, int *valuelen, int *flag);
 int MPIR_Info_set_impl(MPIR_Info *info_ptr, const char *key, const char *value);
 int MPIR_Info_dup_impl(MPIR_Info *info_ptr, MPIR_Info **new_info_ptr);
-int MPIR_Comm_delete_attr_impl(MPIR_Comm *comm_ptr, MPID_Keyval *keyval_ptr);
+int MPIR_Comm_delete_attr_impl(MPIR_Comm *comm_ptr, MPIR_Keyval *keyval_ptr);
 int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
                                  MPI_Comm_delete_attr_function *comm_delete_attr_fn,
                                  int *comm_keyval, void *extra_state);

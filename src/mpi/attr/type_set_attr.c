@@ -34,7 +34,7 @@ int MPIR_TypeSetAttr(MPI_Datatype datatype, int type_keyval, void *attribute_val
     static const char FCNAME[] = "MPIR_TypeSetAttr";
     int mpi_errno = MPI_SUCCESS;
     MPID_Datatype *type_ptr = NULL;
-    MPID_Keyval *keyval_ptr = NULL;
+    MPIR_Keyval *keyval_ptr = NULL;
     MPIR_Attribute *p, **old_p;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_TYPE_SET_ATTR);
 
@@ -60,7 +60,7 @@ int MPIR_TypeSetAttr(MPI_Datatype datatype, int type_keyval, void *attribute_val
 
     /* Convert MPI object handles to object pointers */
     MPID_Datatype_get_ptr( datatype, type_ptr );
-    MPID_Keyval_get_ptr( type_keyval, keyval_ptr );
+    MPIR_Keyval_get_ptr( type_keyval, keyval_ptr );
     
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -71,7 +71,7 @@ int MPIR_TypeSetAttr(MPI_Datatype datatype, int type_keyval, void *attribute_val
             MPID_Datatype_valid_ptr( type_ptr, mpi_errno );
 	    /* If type_ptr is not valid, it will be reset to null */
 	    /* Validate keyval_ptr */
-		MPID_Keyval_valid_ptr( keyval_ptr, mpi_errno );
+		MPIR_Keyval_valid_ptr( keyval_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;

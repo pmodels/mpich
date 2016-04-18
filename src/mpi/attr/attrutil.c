@@ -27,10 +27,10 @@
 #endif
 
 /* Preallocated keyval objects */
-MPID_Keyval MPID_Keyval_direct[MPID_KEYVAL_PREALLOC] = { {0} };
-MPIU_Object_alloc_t MPID_Keyval_mem = { 0, 0, 0, 0, MPID_KEYVAL, 
-					    sizeof(MPID_Keyval), 
-					    MPID_Keyval_direct,
+MPIR_Keyval MPIR_Keyval_direct[MPID_KEYVAL_PREALLOC] = { {0} };
+MPIU_Object_alloc_t MPIR_Keyval_mem = { 0, 0, 0, 0, MPID_KEYVAL,
+					    sizeof(MPIR_Keyval),
+					    MPIR_Keyval_direct,
 					    MPID_KEYVAL_PREALLOC, };
 
 #ifndef MPID_ATTR_PREALLOC 
@@ -81,7 +81,7 @@ int MPIR_Call_attr_delete( int handle, MPIR_Attribute *attr_p )
 {
     int rc;
     int mpi_errno = MPI_SUCCESS;
-    MPID_Keyval* kv = attr_p->keyval;
+    MPIR_Keyval* kv = attr_p->keyval;
 
     if(kv->delfn.user_function == NULL)
         goto fn_exit;
@@ -138,7 +138,7 @@ int MPIR_Call_attr_copy( int handle, MPIR_Attribute *attr_p, void** value_copy, 
 {
     int mpi_errno = MPI_SUCCESS;
     int rc;
-    MPID_Keyval* kv = attr_p->keyval;
+    MPIR_Keyval* kv = attr_p->keyval;
 
     if(kv->copyfn.user_function == NULL)
         goto fn_exit;
@@ -279,7 +279,7 @@ int MPIR_Attr_delete_list( int handle, MPIR_Attribute **attr )
 	    /* Decrement the use of the keyval */
 	    MPIR_Keyval_release_ref( p->keyval, &in_use);
 	    if (!in_use) {
-		MPIU_Handle_obj_free( &MPID_Keyval_mem, p->keyval );
+		MPIU_Handle_obj_free( &MPIR_Keyval_mem, p->keyval );
 	    }
 	}
 	
@@ -372,8 +372,8 @@ MPIR_Keyval_set_proxy(
     MPID_Attr_delete_proxy delete_proxy
     )
 {
-    MPID_Keyval*  keyval_ptr;
-    MPID_Keyval_get_ptr( keyval, keyval_ptr );
+    MPIR_Keyval*  keyval_ptr;
+    MPIR_Keyval_get_ptr( keyval, keyval_ptr );
     if(keyval_ptr == NULL)
         return;
 

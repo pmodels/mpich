@@ -16,9 +16,9 @@
 /*
   Keyval and attribute storage
  */
-extern MPIU_Object_alloc_t MPID_Keyval_mem;
+extern MPIU_Object_alloc_t MPIR_Keyval_mem;
 extern MPIU_Object_alloc_t MPID_Attr_mem;
-extern MPID_Keyval MPID_Keyval_direct[];
+extern MPIR_Keyval MPIR_Keyval_direct[];
 
 extern int MPIR_Attr_dup_list( int, MPIR_Attribute *, MPIR_Attribute ** );
 extern int MPIR_Attr_delete_list( int, MPIR_Attribute ** );
