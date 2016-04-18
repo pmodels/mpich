@@ -31,7 +31,7 @@ int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info) __attribute__((weak,alias("P
 #define FUNCNAME MPIR_Comm_set_info_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_set_info_impl(MPID_Comm * comm_ptr, MPID_Info * info_ptr)
+int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPID_Info * info_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Info *curr_info = NULL;
@@ -98,7 +98,7 @@ Input Parameters:
 int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_Info *info_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SET_INFO);
 
@@ -119,7 +119,7 @@ int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info)
 #endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr(comm, comm_ptr);
+    MPIR_Comm_get_ptr(comm, comm_ptr);
     MPID_Info_get_ptr(info, info_ptr);
 
     /* Validate parameters and objects (post conversion) */
@@ -128,7 +128,7 @@ int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate pointers */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;

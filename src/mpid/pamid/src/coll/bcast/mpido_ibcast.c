@@ -28,7 +28,7 @@ int MPIDO_Ibcast(void *buffer,
                  int count,
                  MPI_Datatype datatype,
                  int root,
-                 MPID_Comm *comm_ptr,
+                 MPIR_Comm *comm_ptr,
                  MPID_Request **request)
 {
    TRACE_ERR("in mpido_ibcast\n");

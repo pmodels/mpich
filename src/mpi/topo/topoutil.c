@@ -26,7 +26,7 @@ static int MPIR_Topology_finalize ( void * );
   Return a poiner to the topology structure on a communicator.
   Returns null if no topology structure is defined 
 */
-MPIR_Topology *MPIR_Topology_get( MPID_Comm *comm_ptr )
+MPIR_Topology *MPIR_Topology_get( MPIR_Comm *comm_ptr )
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Topology *topo_ptr;
@@ -49,7 +49,7 @@ MPIR_Topology *MPIR_Topology_get( MPID_Comm *comm_ptr )
 #define FUNCNAME MPIR_Topology_put
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Topology_put( MPID_Comm *comm_ptr, MPIR_Topology *topo_ptr )
+int MPIR_Topology_put( MPIR_Comm *comm_ptr, MPIR_Topology *topo_ptr )
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -274,7 +274,7 @@ static int MPIR_Topology_delete_fn ( MPI_Comm comm ATTRIBUTE((unused)),
 #define FUNCNAME MPIR_Topo_canon_nhb_count
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Topo_canon_nhb_count(MPID_Comm *comm_ptr, int *indegree, int *outdegree, int *weighted)
+int MPIR_Topo_canon_nhb_count(MPIR_Comm *comm_ptr, int *indegree, int *outdegree, int *weighted)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Topology *topo_ptr;
@@ -312,7 +312,7 @@ fn_fail:
 #define FUNCNAME MPIR_Topo_canon_nhb
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Topo_canon_nhb(MPID_Comm *comm_ptr,
+int MPIR_Topo_canon_nhb(MPIR_Comm *comm_ptr,
                         int indegree, int sources[], int inweights[],
                         int outdegree, int dests[], int outweights[])
 {

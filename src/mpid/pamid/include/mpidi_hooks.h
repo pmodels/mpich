@@ -53,15 +53,15 @@ typedef size_t              intptr_t;
 /** \brief This defines the portion of MPID_Request that is specific to the Device */
 #define MPID_DEV_REQUEST_DECL    struct MPIDI_Request mpid;
 
-/** \brief This defines the portion of MPID_Comm that is specific to the Device */
+/** \brief This defines the portion of MPIR_Comm that is specific to the Device */
 #define MPID_DEV_COMM_DECL       struct MPIDI_Comm    mpid;
 
 /** \brief This defines the portion of MPID_Win that is specific to the Device */
 #define MPID_DEV_WIN_DECL        struct MPIDI_Win     mpid;
 
 #define HAVE_DEV_COMM_HOOK
-#define MPID_Dev_comm_create_hook(a)  ({ int MPIDI_Comm_create (MPID_Comm *comm); MPIDI_Comm_create (a); })
-#define MPID_Dev_comm_destroy_hook(a) ({ int MPIDI_Comm_destroy(MPID_Comm *comm); MPIDI_Comm_destroy(a); })
+#define MPID_Dev_comm_create_hook(a)  ({ int MPIDI_Comm_create (MPIR_Comm *comm); MPIDI_Comm_create (a); })
+#define MPID_Dev_comm_destroy_hook(a) ({ int MPIDI_Comm_destroy(MPIR_Comm *comm); MPIDI_Comm_destroy(a); })
 
 
 #endif

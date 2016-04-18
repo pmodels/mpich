@@ -65,7 +65,7 @@ int MPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source,
 {
     static const char FCNAME[] = "MPI_Recv_init";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_Request *request_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_RECV_INIT);
 
@@ -86,14 +86,14 @@ int MPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source,
 #   endif /* HAVE_ERROR_CHECKING */
     
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr( comm, comm_ptr );
 
     /* Validate parameters if error checking is enabled */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno) goto fn_fail;
 	    
 	    MPIR_ERRTEST_COUNT(count, mpi_errno);

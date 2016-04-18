@@ -16,7 +16,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
-	      int tag, MPID_Comm * comm, int context_offset,
+	      int tag, MPIR_Comm * comm, int context_offset,
 	      MPID_Request ** request)
 {
     intptr_t data_sz;

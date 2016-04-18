@@ -17,25 +17,25 @@ extern int world_comm_destroying;
 extern MPL_dbg_class MPIR_DBG_HCOLL;
 #endif /* MPL_USE_DBG_LOGGING */
 
-int hcoll_comm_create(MPID_Comm * comm, void *param);
-int hcoll_comm_destroy(MPID_Comm * comm, void *param);
+int hcoll_comm_create(MPIR_Comm * comm, void *param);
+int hcoll_comm_destroy(MPIR_Comm * comm, void *param);
 
-int hcoll_Barrier(MPID_Comm * comm_ptr, MPIR_Errflag_t *err);
+int hcoll_Barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t *err);
 int hcoll_Bcast(void *buffer, int count, MPI_Datatype datatype, int root,
-                MPID_Comm * comm_ptr, MPIR_Errflag_t *err);
+                MPIR_Comm * comm_ptr, MPIR_Errflag_t *err);
 int hcoll_Allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
-                    void *rbuf, int rcount, MPI_Datatype rdtype, MPID_Comm * comm_ptr, MPIR_Errflag_t *err);
+                    void *rbuf, int rcount, MPI_Datatype rdtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t *err);
 int hcoll_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                    MPI_Op op, MPID_Comm * comm_ptr, MPIR_Errflag_t *err);
+                    MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t *err);
 
-int hcoll_Ibarrier_req(MPID_Comm * comm_ptr, MPID_Request ** request);
+int hcoll_Ibarrier_req(MPIR_Comm * comm_ptr, MPID_Request ** request);
 int hcoll_Ibcast_req(void *buffer, int count, MPI_Datatype datatype, int root,
-                     MPID_Comm * comm_ptr, MPID_Request ** request);
+                     MPIR_Comm * comm_ptr, MPID_Request ** request);
 int hcoll_Iallgather_req(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
-                         int recvcount, MPI_Datatype recvtype, MPID_Comm * comm_ptr,
+                         int recvcount, MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                          MPID_Request ** request);
 int hcoll_Iallreduce_req(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                         MPI_Op op, MPID_Comm * comm_ptr, MPID_Request ** request);
+                         MPI_Op op, MPIR_Comm * comm_ptr, MPID_Request ** request);
 int hcoll_do_progress(int *made_progress);
 
 #endif

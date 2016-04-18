@@ -151,11 +151,11 @@ int MPID_VCRT_Get_ptr(MPID_VCRT vcrt, MPID_VCR **vc_pptr)
 }
 
 #ifdef DYNAMIC_TASKING
-int MPID_VCR_CommFromLpids( MPID_Comm *newcomm_ptr,
+int MPID_VCR_CommFromLpids( MPIR_Comm *newcomm_ptr,
 			    int size, const int lpids[] )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *commworld_ptr;
+    MPIR_Comm *commworld_ptr;
     int i;
     MPIDI_PG_iterator iter;
 
@@ -306,7 +306,7 @@ int MPID_GPID_ToLpidArray( int size, int gpid[], int lpid[] )
  */
 
 /* FIXME: These routines belong in a different place */
-int MPID_GPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size,
+int MPID_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
 			    int local_gpids[], int *singlePG )
 {
     int mpi_errno = MPI_SUCCESS;

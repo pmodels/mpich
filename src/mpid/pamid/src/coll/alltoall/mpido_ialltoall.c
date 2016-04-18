@@ -30,7 +30,7 @@ int MPIDO_Ialltoall(const void *sendbuf,
                     void *recvbuf,
                     int recvcount,
                     MPI_Datatype recvtype,
-                    MPID_Comm *comm_ptr,
+                    MPIR_Comm *comm_ptr,
                     MPID_Request **request)
 {
    TRACE_ERR("Entering MPIDO_Ialltoall\n");

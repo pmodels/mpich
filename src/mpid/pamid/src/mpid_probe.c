@@ -25,7 +25,7 @@
 int
 MPID_Probe(int source,
            int tag,
-           MPID_Comm * comm,
+           MPIR_Comm * comm,
            int context_offset,
            MPI_Status * status)
 {

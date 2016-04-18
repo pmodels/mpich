@@ -38,17 +38,17 @@ typedef struct pg_node {
 } pg_node;
 
 /* These functions help implement the connect/accept algorithm */
-static int ExtractLocalPGInfo( MPID_Comm *, pg_translation [], 
+static int ExtractLocalPGInfo( MPIR_Comm *, pg_translation [],
 			       pg_node **, int * );
-static int ReceivePGAndDistribute( MPID_Comm *, MPID_Comm *, int, int *,
+static int ReceivePGAndDistribute( MPIR_Comm *, MPIR_Comm *, int, int *,
 				   int, MPIDI_PG_t *[] );
-static int SendPGtoPeerAndFree( MPID_Comm *, int *, pg_node * );
+static int SendPGtoPeerAndFree( MPIR_Comm *, int *, pg_node * );
 static int FreeNewVC( MPIDI_VC_t *new_vc );
-static int SetupNewIntercomm( MPID_Comm *comm_ptr, int remote_comm_size, 
+static int SetupNewIntercomm( MPIR_Comm *comm_ptr, int remote_comm_size,
 			      pg_translation remote_translation[],
 			      MPIDI_PG_t **remote_pg, 
-			      MPID_Comm *intercomm );
-static int MPIDI_CH3I_Initialize_tmp_comm(MPID_Comm **comm_pptr, 
+			      MPIR_Comm *intercomm );
+static int MPIDI_CH3I_Initialize_tmp_comm(MPIR_Comm **comm_pptr,
 					  MPIDI_VC_t *vc_ptr, int is_low_group, int context_id_offset);
 /* ------------------------------------------------------------------------- */
 /*
@@ -114,11 +114,11 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPID_Comm **comm_pptr,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_Create_inter_root_communicator_connect(const char *port_name, 
-							MPID_Comm **comm_pptr, 
+							MPIR_Comm **comm_pptr,
 							MPIDI_VC_t **vc_pptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *tmp_comm;
+    MPIR_Comm *tmp_comm;
     MPIDI_VC_t *connect_vc = NULL;
     int port_name_tag;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CREATE_INTER_ROOT_COMMUNICATOR_CONNECT);
@@ -163,11 +163,11 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_Create_inter_root_communicator_accept(const char *port_name, 
-						MPID_Comm **comm_pptr, 
+						MPIR_Comm **comm_pptr,
 						MPIDI_VC_t **vc_pptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *tmp_comm;
+    MPIR_Comm *tmp_comm;
     MPIDI_VC_t *new_vc = NULL;
     MPID_Progress_state progress_state;
     int port_name_tag;
@@ -234,16 +234,16 @@ fn_fail:
 #define FUNCNAME  MPIDI_CH3I_Initialize_tmp_comm
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPIDI_CH3I_Initialize_tmp_comm(MPID_Comm **comm_pptr, 
+static int MPIDI_CH3I_Initialize_tmp_comm(MPIR_Comm **comm_pptr,
 					  MPIDI_VC_t *vc_ptr, int is_low_group, int context_id_offset)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *tmp_comm, *commself_ptr;
+    MPIR_Comm *tmp_comm, *commself_ptr;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_INITIALIZE_TMP_COMM);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_INITIALIZE_TMP_COMM);
 
-    MPID_Comm_get_ptr( MPI_COMM_SELF, commself_ptr );
+    MPIR_Comm_get_ptr( MPI_COMM_SELF, commself_ptr );
 
     /* WDG-old code allocated a context id that was then discarded */
     mpi_errno = MPIR_Comm_create(&tmp_comm);
@@ -331,12 +331,12 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root, 
-		       MPID_Comm *comm_ptr, MPID_Comm **newcomm)
+		       MPIR_Comm *comm_ptr, MPIR_Comm **newcomm)
 {
     int mpi_errno=MPI_SUCCESS;
     int j, i, rank, recv_ints[3], send_ints[3], context_id;
     int remote_comm_size=0;
-    MPID_Comm *tmp_comm = NULL;
+    MPIR_Comm *tmp_comm = NULL;
     MPIDI_VC_t *new_vc = NULL;
     int sendtag=100, recvtag=100, n_remote_pgs;
     int n_local_pgs=1, local_comm_size;
@@ -574,7 +574,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
 #define FUNCNAME ExtractLocalPGInfo
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int ExtractLocalPGInfo( MPID_Comm *comm_p, 
+static int ExtractLocalPGInfo( MPIR_Comm *comm_p,
 			       pg_translation local_translation[], 
 			       pg_node **pg_list_p,
 			       int *n_local_pgs_p )
@@ -681,7 +681,7 @@ static int ExtractLocalPGInfo( MPID_Comm *comm_p,
 #define FUNCNAME ReceivePGAndDistribute
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int ReceivePGAndDistribute( MPID_Comm *tmp_comm, MPID_Comm *comm_ptr, 
+static int ReceivePGAndDistribute( MPIR_Comm *tmp_comm, MPIR_Comm *comm_ptr,
 				   int root, int *recvtag_p, 
 				   int n_remote_pgs, MPIDI_PG_t *remote_pg[] )
 {
@@ -760,7 +760,7 @@ static int ReceivePGAndDistribute( MPID_Comm *tmp_comm, MPID_Comm *comm_ptr,
 #define FUNCNAME MPID_PG_BCast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
+int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
 {
     int n_local_pgs=0, mpi_errno = MPI_SUCCESS;
     pg_translation *local_translation = 0;
@@ -864,7 +864,7 @@ int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
 #define FUNCNAME SendPGtoPeerAndFree
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int SendPGtoPeerAndFree( MPID_Comm *tmp_comm, int *sendtag_p, 
+static int SendPGtoPeerAndFree( MPIR_Comm *tmp_comm, int *sendtag_p,
 				pg_node *pg_list )
 {
     int mpi_errno = 0;
@@ -927,12 +927,12 @@ static int SendPGtoPeerAndFree( MPID_Comm *tmp_comm, int *sendtag_p,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root, 
-		      MPID_Comm *comm_ptr, MPID_Comm **newcomm)
+		      MPIR_Comm *comm_ptr, MPIR_Comm **newcomm)
 {
     int mpi_errno=MPI_SUCCESS;
     int i, j, rank, recv_ints[3], send_ints[3], context_id;
     int remote_comm_size=0;
-    MPID_Comm *tmp_comm = NULL, *intercomm;
+    MPIR_Comm *tmp_comm = NULL, *intercomm;
     MPIDI_VC_t *new_vc = NULL;
     int sendtag=100, recvtag=100, local_comm_size;
     int n_local_pgs=1, n_remote_pgs;
@@ -1147,10 +1147,10 @@ Input/Output Parameters:
 #define FUNCNAME SetupNewIntercomm
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int SetupNewIntercomm( MPID_Comm *comm_ptr, int remote_comm_size, 
+static int SetupNewIntercomm( MPIR_Comm *comm_ptr, int remote_comm_size,
 			      pg_translation remote_translation[],
 			      MPIDI_PG_t **remote_pg, 
-			      MPID_Comm *intercomm )
+			      MPIR_Comm *intercomm )
 {
     int mpi_errno = MPI_SUCCESS, i;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;

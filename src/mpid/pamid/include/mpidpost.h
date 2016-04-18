@@ -45,7 +45,7 @@
    so provide one here. **/
 
 /* FIXME: A temporary version for lpids within my comm world */
-static inline int MPID_GPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size,
+static inline int MPID_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
                                           int local_gpids[], int *singlePG )
 {
     int i;
@@ -72,10 +72,10 @@ static inline int MPID_GPID_ToLpidArray( int size, int gpid[], int lpid[] )
 }
 /* FIXME: for MPI1, all process ids are relative to MPI_COMM_WORLD.
    For MPI2, we'll need to do something more complex */
-static inline int MPID_VCR_CommFromLpids( MPID_Comm *newcomm_ptr,
+static inline int MPID_VCR_CommFromLpids( MPIR_Comm *newcomm_ptr,
                                           int size, const int lpids[] )
 {
-    MPID_Comm *commworld_ptr;
+    MPIR_Comm *commworld_ptr;
     int i;
 
     commworld_ptr = MPIR_Process.comm_world;

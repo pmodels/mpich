@@ -31,7 +31,7 @@ int MPIX_Comm_agree(MPI_Comm comm, int *flag) __attribute__((weak,alias("PMPIX_C
 #define FUNCNAME MPIR_Comm_agree
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_agree(MPID_Comm *comm_ptr, int *flag)
+int MPIR_Comm_agree(MPIR_Comm *comm_ptr, int *flag)
 {
     int mpi_errno = MPI_SUCCESS, mpi_errno_tmp = MPI_SUCCESS;
     MPID_Group *comm_grp, *failed_grp, *new_group_ptr, *global_failed;
@@ -131,7 +131,7 @@ Output Parameters:
 int MPIX_Comm_agree(MPI_Comm comm, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIX_COMM_AGREE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -148,19 +148,19 @@ int MPIX_Comm_agree(MPI_Comm comm, int *flag)
         }
         MPID_END_ERROR_CHECKS;
 
-        MPID_Comm_get_ptr( comm, comm_ptr );
+        MPIR_Comm_get_ptr( comm, comm_ptr );
 
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }
 #else
     {
-        MPID_Comm_get_ptr( comm, comm_ptr );
+        MPIR_Comm_get_ptr( comm, comm_ptr );
     }
 #endif
 

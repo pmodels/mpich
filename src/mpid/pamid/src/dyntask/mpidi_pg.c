@@ -1003,7 +1003,7 @@ void MPIDI_PG_IdToNum( MPIDI_PG_t *pg, int *id )
 }
 
 
-int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr,
+int MPID_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
 			   int nPGids, const int gpids[],
 			   int root )
 {

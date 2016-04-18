@@ -108,7 +108,7 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_callback)(cq_tagged_entry_t * wc, MPID_Request 
 #define FCNAME DECL_FUNC(send_normal)
 static inline int ADD_SUFFIX(send_normal)(struct MPIDI_VC *vc,
                               const void *buf, int count, MPI_Datatype datatype,
-                              int dest, int tag, MPID_Comm *comm,
+                              int dest, int tag, MPIR_Comm *comm,
                               int context_offset, MPID_Request **request,
                               int dt_contig,
                               intptr_t data_sz,
@@ -226,7 +226,7 @@ ADD_SUFFIX(send_lightweight)(struct MPIDI_VC *vc,
                              intptr_t data_sz,
                              int rank,
                              int tag,
-                             MPID_Comm *comm,
+                             MPIR_Comm *comm,
                              int context_offset)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -267,7 +267,7 @@ ADD_SUFFIX(do_isend)(struct MPIDI_VC *vc,
          MPI_Datatype datatype,
          int dest,
          int tag,
-         MPID_Comm * comm,
+         MPIR_Comm * comm,
          int context_offset,
          struct MPID_Request **request,
          int should_create_req,
@@ -309,7 +309,7 @@ int ADD_SUFFIX(MPID_nem_ofi_send)(struct MPIDI_VC *vc,
                       MPI_Aint count,
                       MPI_Datatype datatype,
                       int dest,
-                      int tag, MPID_Comm * comm, int context_offset, struct MPID_Request **request)
+                      int tag, MPIR_Comm * comm, int context_offset, struct MPID_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -327,7 +327,7 @@ int ADD_SUFFIX(MPID_nem_ofi_isend)(struct MPIDI_VC *vc,
                        MPI_Aint count,
                        MPI_Datatype datatype,
                        int dest,
-                       int tag, MPID_Comm * comm, int context_offset, struct MPID_Request **request)
+                       int tag, MPIR_Comm * comm, int context_offset, struct MPID_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
@@ -344,7 +344,7 @@ int ADD_SUFFIX(MPID_nem_ofi_ssend)(struct MPIDI_VC *vc,
                        MPI_Aint count,
                        MPI_Datatype datatype,
                        int dest,
-                       int tag, MPID_Comm * comm, int context_offset, struct MPID_Request **request)
+                       int tag, MPIR_Comm * comm, int context_offset, struct MPID_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
@@ -362,7 +362,7 @@ int ADD_SUFFIX(MPID_nem_ofi_issend)(struct MPIDI_VC *vc,
                         MPI_Datatype datatype,
                         int dest,
                         int tag,
-                        MPID_Comm * comm, int context_offset, struct MPID_Request **request)
+                        MPIR_Comm * comm, int context_offset, struct MPID_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);

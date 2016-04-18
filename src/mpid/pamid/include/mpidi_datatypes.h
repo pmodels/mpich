@@ -310,7 +310,7 @@ struct MPIDI_Request
 };
 
 typedef void* fast_query_t;
-/** \brief This defines the portion of MPID_Comm that is specific to the Device */
+/** \brief This defines the portion of MPIR_Comm that is specific to the Device */
 struct MPIDI_Comm
 {
   pami_geometry_t geometry; /**< Geometry component for collectives      */
@@ -379,8 +379,8 @@ typedef struct
 } MPIDI_Post_coll_t;
 
 
-/** \brief Forward declaration of the MPID_Comm structure */
-struct MPID_Comm;
+/** \brief Forward declaration of the MPIR_Comm structure */
+struct MPIR_Comm;
 /** \brief Forward declaration of the MPID_Win structure */
 struct MPID_Win;
 /** \brief Forward declaration of the MPID_Group structure */

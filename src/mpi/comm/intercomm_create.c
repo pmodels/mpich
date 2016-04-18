@@ -28,7 +28,7 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader, MPI_Comm peer_co
 #ifdef HAVE_ERROR_CHECKING
 PMPI_LOCAL int MPIR_CheckDisjointLpids( int [], int, int [], int );
 #endif /* HAVE_ERROR_CHECKING */
-PMPI_LOCAL int MPID_LPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size, 
+PMPI_LOCAL int MPID_LPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
 				       int local_lpids[] );
 
 #ifndef MPICH_MPI_FROM_PMPI
@@ -102,7 +102,7 @@ PMPI_LOCAL int MPIR_CheckDisjointLpids( int lpids1[], int n1,
 }
 #endif /* HAVE_ERROR_CHECKING */
 
-PMPI_LOCAL int MPID_LPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size, 
+PMPI_LOCAL int MPID_LPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
 				       int local_lpids[] )
 {
     int i;
@@ -119,9 +119,9 @@ PMPI_LOCAL int MPID_LPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size,
 #define FUNCNAME MPIR_Intercomm_create_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
-                               MPID_Comm *peer_comm_ptr, int remote_leader, int tag,
-                               MPID_Comm **new_intercomm_ptr)
+int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
+                               MPIR_Comm *peer_comm_ptr, int remote_leader, int tag,
+                               MPIR_Comm **new_intercomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIU_Context_id_t final_context_id, recvcontext_id;
@@ -420,9 +420,9 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 			 MPI_Comm *newintercomm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *local_comm_ptr = NULL;
-    MPID_Comm *peer_comm_ptr = NULL;
-    MPID_Comm *new_intercomm_ptr;
+    MPIR_Comm *local_comm_ptr = NULL;
+    MPIR_Comm *peer_comm_ptr = NULL;
+    MPIR_Comm *new_intercomm_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INTERCOMM_CREATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -443,7 +443,7 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 #   endif /* HAVE_ERROR_CHECKING */
     
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( local_comm, local_comm_ptr );
+    MPIR_Comm_get_ptr( local_comm, local_comm_ptr );
     
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -451,7 +451,7 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate local_comm_ptr */
-            MPID_Comm_valid_ptr( local_comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( local_comm_ptr, mpi_errno, FALSE );
 	    if (local_comm_ptr) {
 		/*  Only check if local_comm_ptr valid */
 		MPIR_ERRTEST_COMM_INTRA(local_comm_ptr, mpi_errno );
@@ -474,12 +474,12 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 
     if (local_comm_ptr->rank == local_leader) {
 
-	MPID_Comm_get_ptr( peer_comm, peer_comm_ptr );
+	MPIR_Comm_get_ptr( peer_comm, peer_comm_ptr );
 #       ifdef HAVE_ERROR_CHECKING
 	{
 	    MPID_BEGIN_ERROR_CHECKS;
 	    {
-		MPID_Comm_valid_ptr( peer_comm_ptr, mpi_errno, FALSE );
+		MPIR_Comm_valid_ptr( peer_comm_ptr, mpi_errno, FALSE );
 		/* Note: In MPI 1.0, peer_comm was restricted to 
 		   intracommunicators.  In 1.1, it may be any communicator */
 

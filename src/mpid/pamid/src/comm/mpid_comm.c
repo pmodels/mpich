@@ -23,8 +23,8 @@
 /*#define TRACE_ON */
 
 #include <mpidimpl.h>
-extern void MPIDI_Comm_coll_query(MPID_Comm *);
-extern void MPIDI_Comm_coll_envvars(MPID_Comm *);
+extern void MPIDI_Comm_coll_query(MPIR_Comm *);
+extern void MPIDI_Comm_coll_envvars(MPIR_Comm *);
 
 void geom_create_cb_done(void *ctxt, void *data, pami_result_t err)
 {
@@ -38,13 +38,13 @@ void geom_destroy_cb_done(void *ctxt, void *data, pami_result_t err)
    (*active)--;
 }
 
-int MPIDI_Comm_create (MPID_Comm *comm)
+int MPIDI_Comm_create (MPIR_Comm *comm)
 {
   MPIDI_Coll_comm_create(comm);
   return MPI_SUCCESS;
 }
 
-int MPIDI_Comm_destroy (MPID_Comm *comm)
+int MPIDI_Comm_destroy (MPIR_Comm *comm)
 {
   MPIDI_Coll_comm_destroy(comm);
   return MPI_SUCCESS;
@@ -58,12 +58,12 @@ pami_result_t MPIDI_Comm_create_from_pami_geom(pami_geometry_range_t  *task_slic
   int         mpi_errno = MPI_SUCCESS;
   int         num_tasks = 0;
   int        *ranks     = NULL;
-  MPID_Comm  *comm_ptr  = NULL,  *new_comm_ptr  = NULL;
+  MPIR_Comm  *comm_ptr  = NULL,  *new_comm_ptr  = NULL;
   MPID_Group *group_ptr = NULL,  *new_group_ptr = NULL;
   int i = 0, j = 0;
 
   /* Get comm_ptr for MPI_COMM_WORLD and get the group_ptr for it */
-  MPID_Comm_get_ptr( MPI_COMM_WORLD, comm_ptr );
+  MPIR_Comm_get_ptr( MPI_COMM_WORLD, comm_ptr );
   mpi_errno = MPIR_Comm_group_impl(comm_ptr, &group_ptr);
   if (mpi_errno) 
   {
@@ -125,7 +125,7 @@ pami_result_t MPIDI_Comm_create_from_pami_geom(pami_geometry_range_t  *task_slic
 pami_result_t MPIDI_Comm_destroy_external(void *comm_ext)
 {
   int mpi_errno = 0;
-  MPID_Comm* comm_ptr = (MPID_Comm*)comm_ext;
+  MPIR_Comm* comm_ptr = (MPIR_Comm*)comm_ext;
   mpi_errno = MPIR_Comm_free_impl(comm_ptr);
   if (mpi_errno)
   {
@@ -217,7 +217,7 @@ static pami_result_t geom_destroy_wrapper(pami_context_t context, void *cookie)
 
 
 
-void MPIDI_Coll_comm_create(MPID_Comm *comm)
+void MPIDI_Coll_comm_create(MPIR_Comm *comm)
 {
    volatile int geom_init = 1;
    int i;
@@ -363,7 +363,7 @@ void MPIDI_Coll_comm_create(MPID_Comm *comm)
   TRACE_ERR("MPIDI_Coll_comm_create exit\n");
 }
 
-void MPIDI_Coll_comm_destroy(MPID_Comm *comm)
+void MPIDI_Coll_comm_destroy(MPIR_Comm *comm)
 {
   TRACE_ERR("MPIDI_Coll_comm_destroy enter\n");
   int i;

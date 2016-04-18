@@ -351,7 +351,7 @@ MPIDI_Win_init( MPI_Aint length,
                 int disp_unit,
                 MPID_Win  **win_ptr,
                 MPID_Info  *info,
-                MPID_Comm *comm_ptr,
+                MPIR_Comm *comm_ptr,
                 int create_flavor,
                 int model);
 int

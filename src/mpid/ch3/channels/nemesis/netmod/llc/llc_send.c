@@ -21,7 +21,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
-                       int dest, int tag, MPID_Comm * comm, int context_offset,
+                       int dest, int tag, MPIR_Comm * comm, int context_offset,
                        struct MPID_Request **req_out)
 {
     int mpi_errno = MPI_SUCCESS, llc_errno;
@@ -670,7 +670,7 @@ ssize_t llc_writev(void *endpt, uint64_t raddr,
     return nw;
 }
 
-int convert_rank_llc2mpi(MPID_Comm * comm, int llc_rank, int *mpi_rank)
+int convert_rank_llc2mpi(MPIR_Comm * comm, int llc_rank, int *mpi_rank)
 {
     int size, rank;
     int found = 0;
@@ -954,7 +954,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
-                        int dest, int tag, MPID_Comm * comm, int context_offset,
+                        int dest, int tag, MPIR_Comm * comm, int context_offset,
                         struct MPID_Request **request)
 {
     int mpi_errno = MPI_SUCCESS, llc_errno;

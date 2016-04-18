@@ -90,7 +90,7 @@ int MPIDI_CH3_EagerNoncontigSend( MPID_Request **sreq_p,
 				  const void * buf, MPI_Aint count,
 				  MPI_Datatype datatype, intptr_t data_sz,
 				  int rank, 
-				  int tag, MPID_Comm * comm, 
+				  int tag, MPIR_Comm * comm,
 				  int context_offset )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -154,7 +154,7 @@ int MPIDI_CH3_EagerNoncontigSend( MPID_Request **sreq_p,
 int MPIDI_CH3_EagerContigSend( MPID_Request **sreq_p, 
 			       MPIDI_CH3_Pkt_type_t reqtype, 
 			       const void * buf, intptr_t data_sz, int rank,
-			       int tag, MPID_Comm * comm, int context_offset )
+			       int tag, MPIR_Comm * comm, int context_offset )
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_VC_t * vc;
@@ -220,7 +220,7 @@ int MPIDI_CH3_EagerContigSend( MPID_Request **sreq_p,
 int MPIDI_CH3_EagerContigShortSend( MPID_Request **sreq_p, 
 				    MPIDI_CH3_Pkt_type_t reqtype, 
 				    const void * buf, intptr_t data_sz, int rank,
-				    int tag, MPID_Comm * comm, 
+				    int tag, MPIR_Comm * comm,
 				    int context_offset )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -528,7 +528,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 int MPIDI_CH3_EagerContigIsend( MPID_Request **sreq_p, 
 				MPIDI_CH3_Pkt_type_t reqtype, 
 				const void * buf, intptr_t data_sz, int rank,
-				int tag, MPID_Comm * comm, int context_offset )
+				int tag, MPIR_Comm * comm, int context_offset )
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_VC_t * vc;

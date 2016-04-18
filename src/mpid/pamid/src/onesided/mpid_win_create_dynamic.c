@@ -39,7 +39,7 @@
 
 int
 MPID_Win_create_dynamic( MPID_Info  * info,
-                  MPID_Comm  * comm_ptr,
+                  MPIR_Comm  * comm_ptr,
                   MPID_Win  ** win_ptr)
 {
   int mpi_errno  = MPI_SUCCESS;

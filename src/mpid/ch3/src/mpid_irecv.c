@@ -11,7 +11,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
-	       MPID_Comm * comm, int context_offset,
+	       MPIR_Comm * comm, int context_offset,
                MPID_Request ** request)
 {
     MPID_Request * rreq;

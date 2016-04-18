@@ -35,7 +35,7 @@ static int init_pg( int *argc_p, char ***argv_p,
 		   int *pg_rank_p, MPIDI_PG_t **pg_p );
 static int pg_compare_ids(void * id1, void * id2);
 static int pg_destroy(MPIDI_PG_t * pg );
-static int set_eager_threshold(MPID_Comm *comm_ptr, MPID_Info *info, void *state);
+static int set_eager_threshold(MPIR_Comm *comm_ptr, MPID_Info *info, void *state);
 
 MPIDI_Process_t MPIDI_Process = { NULL };
 MPIDI_CH3U_SRBuf_element_t * MPIDI_CH3U_SRBuf_pool = NULL;
@@ -74,7 +74,7 @@ static int finalize_failed_procs_group(void *param)
 #define FUNCNAME set_eager_threshold
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int set_eager_threshold(MPID_Comm *comm_ptr, MPID_Info *info, void *state)
+static int set_eager_threshold(MPIR_Comm *comm_ptr, MPID_Info *info, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     char *endptr;
@@ -108,7 +108,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     MPIDI_PG_t * pg=NULL;
     int pg_rank=-1;
     int pg_size;
-    MPID_Comm * comm;
+    MPIR_Comm * comm;
     int p;
     int val;
     MPIDI_STATE_DECL(MPID_STATE_MPID_INIT);

@@ -30,7 +30,7 @@ int MPI_Comm_idup(MPI_Comm comm, MPI_Comm *newcomm, MPI_Request *request) __attr
 #define FUNCNAME MPIR_Comm_idup_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_idup_impl(MPID_Comm *comm_ptr, MPID_Comm **newcommp, MPID_Request **reqp)
+int MPIR_Comm_idup_impl(MPIR_Comm *comm_ptr, MPIR_Comm **newcommp, MPID_Request **reqp)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Attribute *new_attributes = 0;
@@ -95,8 +95,8 @@ Output Parameters:
 int MPI_Comm_idup(MPI_Comm comm, MPI_Comm *newcomm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
-    MPID_Comm *newcomm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
+    MPIR_Comm *newcomm_ptr = NULL;
     MPID_Request *dreq = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_IDUP);
 
@@ -116,14 +116,14 @@ int MPI_Comm_idup(MPI_Comm comm, MPI_Comm *newcomm, MPI_Request *request)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr(comm, comm_ptr);
+    MPIR_Comm_get_ptr(comm, comm_ptr);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             MPIR_ERRTEST_ARGNULL(request, "request", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */

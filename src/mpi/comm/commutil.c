@@ -19,17 +19,17 @@
 
 /* Preallocated comm objects */
 /* initialized in initthread.c */
-MPID_Comm MPID_Comm_builtin[MPID_COMM_N_BUILTIN] = { {0} };
-MPID_Comm MPID_Comm_direct[MPID_COMM_PREALLOC] = { {0} };
+MPIR_Comm MPID_Comm_builtin[MPID_COMM_N_BUILTIN] = { {0} };
+MPIR_Comm MPIR_Comm_direct[MPID_COMM_PREALLOC] = { {0} };
 
-MPIU_Object_alloc_t MPID_Comm_mem = {
+MPIU_Object_alloc_t MPIR_Comm_mem = {
     0,
     0,
     0,
     0,
     MPID_COMM,
-    sizeof(MPID_Comm),
-    MPID_Comm_direct,
+    sizeof(MPIR_Comm),
+    MPIR_Comm_direct,
     MPID_COMM_PREALLOC
 };
 
@@ -68,7 +68,7 @@ static struct MPIR_Comm_hint_fn_elt *MPID_hint_fns = NULL;
  * to it.
  *
  * !!! The resulting struct is _not_ ready for communication !!! */
-int MPIR_Comm_init(MPID_Comm * comm_p)
+int MPIR_Comm_init(MPIR_Comm * comm_p)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -120,15 +120,15 @@ int MPIR_Comm_init(MPID_Comm * comm_p)
 #define FUNCNAME MPIR_Comm_create
 #undef FCNAME
 #define FCNAME "MPIR_Comm_create"
-int MPIR_Comm_create(MPID_Comm ** newcomm_ptr)
+int MPIR_Comm_create(MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *newptr;
+    MPIR_Comm *newptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_CREATE);
 
-    newptr = (MPID_Comm *) MPIU_Handle_obj_alloc(&MPID_Comm_mem);
+    newptr = (MPIR_Comm *) MPIU_Handle_obj_alloc(&MPIR_Comm_mem);
     MPIR_ERR_CHKANDJUMP(!newptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     *newcomm_ptr = newptr;
@@ -155,15 +155,15 @@ int MPIR_Comm_create(MPID_Comm ** newcomm_ptr)
 #define FUNCNAME MPIR_Setup_intercomm_localcomm
 #undef FCNAME
 #define FCNAME "MPIR_Setup_intercomm_localcomm"
-int MPIR_Setup_intercomm_localcomm(MPID_Comm * intercomm_ptr)
+int MPIR_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
 {
-    MPID_Comm *localcomm_ptr;
+    MPIR_Comm *localcomm_ptr;
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_SETUP_INTERCOMM_LOCALCOMM);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_SETUP_INTERCOMM_LOCALCOMM);
 
-    localcomm_ptr = (MPID_Comm *) MPIU_Handle_obj_alloc(&MPID_Comm_mem);
+    localcomm_ptr = (MPIR_Comm *) MPIU_Handle_obj_alloc(&MPIR_Comm_mem);
     MPIR_ERR_CHKANDJUMP(!localcomm_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     /* get sensible default values for most fields (usually zeros) */
@@ -372,7 +372,7 @@ static int init_default_collops(void)
 #define FUNCNAME set_collops
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int set_collops(MPID_Comm * comm)
+static int set_collops(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     static int initialized = FALSE;
@@ -408,7 +408,7 @@ static int set_collops(MPID_Comm * comm)
 #define FUNCNAME MPIR_Comm_map_irregular
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_map_irregular(MPID_Comm * newcomm, MPID_Comm * src_comm,
+int MPIR_Comm_map_irregular(MPIR_Comm * newcomm, MPIR_Comm * src_comm,
                             int *src_mapping, int src_mapping_size,
                             MPIR_Comm_map_dir_t dir, MPIR_Comm_map_t ** map)
 {
@@ -456,7 +456,7 @@ int MPIR_Comm_map_irregular(MPID_Comm * newcomm, MPID_Comm * src_comm,
 #define FUNCNAME MPIR_Comm_map_dup
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_map_dup(MPID_Comm * newcomm, MPID_Comm * src_comm, MPIR_Comm_map_dir_t dir)
+int MPIR_Comm_map_dup(MPIR_Comm * newcomm, MPIR_Comm * src_comm, MPIR_Comm_map_dir_t dir)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm_map_t *mapper;
@@ -489,7 +489,7 @@ int MPIR_Comm_map_dup(MPID_Comm * newcomm, MPID_Comm * src_comm, MPIR_Comm_map_d
 #define FUNCNAME MPIR_Comm_map_free
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_map_free(MPID_Comm * comm)
+int MPIR_Comm_map_free(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm_map_t *mapper, *tmp;
@@ -522,7 +522,7 @@ int MPIR_Comm_map_free(MPID_Comm * comm)
 #define FUNCNAME MPIR_Comm_commit
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_commit(MPID_Comm * comm)
+int MPIR_Comm_commit(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     int num_local = -1, num_external = -1;
@@ -670,7 +670,7 @@ int MPIR_Comm_commit(MPID_Comm * comm)
 /* Returns true if the given communicator is aware of node topology information,
    false otherwise.  Such information could be used to implement more efficient
    collective communication, for example. */
-int MPIR_Comm_is_node_aware(MPID_Comm * comm)
+int MPIR_Comm_is_node_aware(MPIR_Comm * comm)
 {
     return (comm->hierarchy_kind == MPID_HIERARCHY_PARENT);
 }
@@ -678,7 +678,7 @@ int MPIR_Comm_is_node_aware(MPID_Comm * comm)
 /* Returns true if the communicator is node-aware and processes in all the nodes
    are consecutive. For example, if node 0 contains "0, 1, 2, 3", node 1
    contains "4, 5, 6", and node 2 contains "7", we shall return true. */
-int MPIR_Comm_is_node_consecutive(MPID_Comm * comm)
+int MPIR_Comm_is_node_consecutive(MPIR_Comm * comm)
 {
     int i = 0, curr_nodeidx = 0;
     int *internode_table = comm->internode_table;
@@ -712,11 +712,11 @@ int MPIR_Comm_is_node_consecutive(MPID_Comm * comm)
 #define FUNCNAME MPIR_Comm_copy
 #undef FCNAME
 #define FCNAME "MPIR_Comm_copy"
-int MPIR_Comm_copy(MPID_Comm * comm_ptr, int size, MPID_Comm ** outcomm_ptr)
+int MPIR_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIU_Context_id_t new_context_id, new_recvcontext_id;
-    MPID_Comm *newcomm_ptr = NULL;
+    MPIR_Comm *newcomm_ptr = NULL;
     MPIR_Comm_map_t *map;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_COPY);
 
@@ -850,10 +850,10 @@ int MPIR_Comm_copy(MPID_Comm * comm_ptr, int size, MPID_Comm ** outcomm_ptr)
 #define FUNCNAME MPIR_Comm_copy_data
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_copy_data(MPID_Comm * comm_ptr, MPID_Comm ** outcomm_ptr)
+int MPIR_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *newcomm_ptr = NULL;
+    MPIR_Comm *newcomm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_COPY_DATA);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_COPY_DATA);
@@ -907,7 +907,7 @@ int MPIR_Comm_copy_data(MPID_Comm * comm_ptr, MPID_Comm ** outcomm_ptr)
 }
 
 /* Common body between MPIR_Comm_release and MPIR_comm_release_always.  This
- * helper function frees the actual MPID_Comm structure and any associated
+ * helper function frees the actual MPIR_Comm structure and any associated
  * storage.  It also releases any references to other objects.
  * This function should only be called when the communicator's reference count
  * has dropped to 0.
@@ -918,7 +918,7 @@ int MPIR_Comm_copy_data(MPID_Comm * comm_ptr, MPID_Comm ** outcomm_ptr)
 #define FUNCNAME MPIR_Comm_delete_internal
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_delete_internal(MPID_Comm * comm_ptr)
+int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
 {
     int in_use;
     int mpi_errno = MPI_SUCCESS;
@@ -1017,7 +1017,7 @@ int MPIR_Comm_delete_internal(MPID_Comm * comm_ptr)
         /* Check for predefined communicators - these should not
          * be freed */
         if (!(HANDLE_GET_KIND(comm_ptr->handle) == HANDLE_KIND_BUILTIN))
-            MPIU_Handle_obj_free(&MPID_Comm_mem, comm_ptr);
+            MPIU_Handle_obj_free(&MPIR_Comm_mem, comm_ptr);
     }
     else {
         /* If the user attribute free function returns an error,
@@ -1040,7 +1040,7 @@ int MPIR_Comm_delete_internal(MPID_Comm * comm_ptr)
 #define FUNCNAME MPIR_Comm_release_always
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_release_always(MPID_Comm * comm_ptr)
+int MPIR_Comm_release_always(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int in_use;
@@ -1070,7 +1070,7 @@ int MPIR_Comm_release_always(MPID_Comm * comm_ptr)
 #define FUNCNAME MPIR_Comm_apply_hints
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_apply_hints(MPID_Comm * comm_ptr, MPID_Info * info_ptr)
+int MPIR_Comm_apply_hints(MPIR_Comm * comm_ptr, MPID_Info * info_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Info *hint = NULL;

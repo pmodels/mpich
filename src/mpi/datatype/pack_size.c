@@ -77,7 +77,7 @@ int MPI_Pack_size(int incount,
 		  int *size)
 {
 #ifdef HAVE_ERROR_CHECKING
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
 #endif
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint size_x = MPI_UNDEFINED;
@@ -101,7 +101,7 @@ int MPI_Pack_size(int incount,
 #   ifdef HAVE_ERROR_CHECKING
     {
         /* Convert MPI object handles to object pointers */
-        MPID_Comm_get_ptr( comm, comm_ptr );
+        MPIR_Comm_get_ptr( comm, comm_ptr );
 
         MPID_BEGIN_ERROR_CHECKS;
         {
@@ -110,7 +110,7 @@ int MPI_Pack_size(int incount,
 	    MPIR_ERRTEST_COUNT(incount, mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(size, "size", mpi_errno);
 	    
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno) goto fn_fail;
 	    
 	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);

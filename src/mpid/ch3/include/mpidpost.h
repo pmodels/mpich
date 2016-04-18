@@ -125,14 +125,14 @@ int MPIDI_CH3_Open_port(char *port_name);
 int MPIDI_CH3_Comm_spawn_multiple(int count, char ** commands, char *** argvs,
 				  int * maxprocs, MPID_Info ** info_ptrs, 
 				  int root,
-                                  MPID_Comm * comm_ptr, MPID_Comm ** intercomm,
+                                  MPIR_Comm * comm_ptr, MPIR_Comm ** intercomm,
 				  int * errcodes);
 
-int MPIDI_CH3_Comm_accept(char * port_name, int root, MPID_Comm * comm_ptr, 
-			  MPID_Comm ** newcomm); 
+int MPIDI_CH3_Comm_accept(char * port_name, int root, MPIR_Comm * comm_ptr,
+			  MPIR_Comm ** newcomm);
 
-int MPIDI_CH3_Comm_connect(char * port_name, int root, MPID_Comm * comm_ptr, 
-			   MPID_Comm ** newcomm);
+int MPIDI_CH3_Comm_connect(char * port_name, int root, MPIR_Comm * comm_ptr,
+			   MPIR_Comm ** newcomm);
 
 
 /* Include definitions from the channel which require items defined by this 
@@ -175,13 +175,13 @@ int MPIDI_CH3_Comm_connect(char * port_name, int root, MPID_Comm * comm_ptr,
 #define MPID_Progress_poke()		     MPIDI_CH3_Progress_poke()
 
 /* Dynamic process support */
-int MPID_GPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size, 
+int MPID_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
 			    MPIR_Gpid local_gpids[], int *singlePG );
-int MPID_GPID_Get( MPID_Comm *comm_ptr, int rank, MPIR_Gpid *gpid );
+int MPID_GPID_Get( MPIR_Comm *comm_ptr, int rank, MPIR_Gpid *gpid );
 int MPID_GPID_ToLpidArray( int size, MPIR_Gpid gpid[], int lpid[] );
-int MPID_Create_intercomm_from_lpids( MPID_Comm *newcomm_ptr,
+int MPID_Create_intercomm_from_lpids( MPIR_Comm *newcomm_ptr,
 			    int size, const int lpids[] );
-int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr, 
+int MPID_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
 			   int nPGids, const MPIR_Gpid gpids[],
 			   int root );
 /* PG_ForwardPGInfo is used as the implementation of the intercomm-create
@@ -191,7 +191,7 @@ int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr,
      MPID_PG_ForwardPGInfo(_p,_c,_np,_gp,_r)
 
 /* communicator hooks */
-int MPIDI_CH3I_Comm_create_hook(struct MPID_Comm *);
-int MPIDI_CH3I_Comm_destroy_hook(struct MPID_Comm *);
+int MPIDI_CH3I_Comm_create_hook(struct MPIR_Comm *);
+int MPIDI_CH3I_Comm_destroy_hook(struct MPIR_Comm *);
 
 #endif /* !defined(MPICH_MPIDPOST_H_INCLUDED) */

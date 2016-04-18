@@ -430,7 +430,7 @@ void MPIDI_Get_net_param(char *cp, int MPI_only, int  my_taskid, int total_task,
 int MPIDI_Print_mpenv(int rank,int size)
 {
         MPI_Comm comm = MPI_COMM_WORLD;
-        MPID_Comm *comm_ptr;
+        MPIR_Comm *comm_ptr;
         MPIDI_printenv_t sender;
         MPIDI_printenv_t *gatherer = NULL;
         int mytask;
@@ -710,7 +710,7 @@ int MPIDI_Print_mpenv(int rank,int size)
 
 
         mpi_errno = MPI_SUCCESS;
-        MPID_Comm_get_ptr( comm, comm_ptr );
+        MPIR_Comm_get_ptr( comm, comm_ptr );
         mpi_errno = MPIR_Gather_impl(&sender, sizeof(MPIDI_printenv_t), MPI_BYTE, gatherer,
                                     sizeof(MPIDI_printenv_t),MPI_BYTE, 0,comm_ptr,
                                     (int *) &errflag);
@@ -2001,7 +2001,7 @@ inline bool MPIDI_cuda_is_device_buf(const void* ptr)
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static int _g_max_node_id = -1;
-int MPID_Get_node_id(MPID_Comm *comm, int rank, MPID_Node_id_t *id_p)
+int MPID_Get_node_id(MPIR_Comm *comm, int rank, MPID_Node_id_t *id_p)
 {
   int mpi_errno = MPI_SUCCESS;
   uint32_t node_id;
@@ -2030,7 +2030,7 @@ int MPID_Get_node_id(MPID_Comm *comm, int rank, MPID_Node_id_t *id_p)
 #define FUNCNAME MPID_Get_max_node_id
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_Get_max_node_id(MPID_Comm *comm, MPID_Node_id_t *max_id_p)
+int MPID_Get_max_node_id(MPIR_Comm *comm, MPID_Node_id_t *max_id_p)
 {
   int mpi_errno = MPI_SUCCESS;
   uint32_t node_id;

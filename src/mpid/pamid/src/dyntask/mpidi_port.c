@@ -109,16 +109,16 @@ void MPIDI_Recvfrom_remote_world(pami_context_t    context,
 
 
 /* These functions help implement the connect/accept algorithm */
-static int MPIDI_ExtractLocalPGInfo( struct MPID_Comm *, pg_translation [],
+static int MPIDI_ExtractLocalPGInfo( struct MPIR_Comm *, pg_translation [],
 			       pg_node **, int * );
-static int MPIDI_ReceivePGAndDistribute( struct MPID_Comm *, struct MPID_Comm *, int, int *,
+static int MPIDI_ReceivePGAndDistribute( struct MPIR_Comm *, struct MPIR_Comm *, int, int *,
 				   int, MPIDI_PG_t *[] );
-static int MPIDI_SendPGtoPeerAndFree( struct MPID_Comm *, int *, pg_node * );
-static int MPIDI_SetupNewIntercomm( struct MPID_Comm *comm_ptr, int remote_comm_size,
+static int MPIDI_SendPGtoPeerAndFree( struct MPIR_Comm *, int *, pg_node * );
+static int MPIDI_SetupNewIntercomm( struct MPIR_Comm *comm_ptr, int remote_comm_size,
 			      pg_translation remote_translation[],
 			      int n_remote_pgs, MPIDI_PG_t **remote_pg,
-			      struct MPID_Comm *intercomm );
-static int MPIDI_Initialize_tmp_comm(struct MPID_Comm **comm_pptr,
+                              struct MPIR_Comm *intercomm );
+static int MPIDI_Initialize_tmp_comm(struct MPIR_Comm **comm_pptr,
 					  struct MPID_VCR_t *vcr_ptr, int is_low_group, int context_id_offset);
 
 
@@ -271,11 +271,11 @@ int MPIDI_Connect_to_root(const char * port_name,
 
 
 static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
-							struct MPID_Comm **comm_pptr,
+                                                        struct MPIR_Comm **comm_pptr,
 							MPID_VCR *vc_pptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct MPID_Comm *tmp_comm;
+    struct MPIR_Comm *tmp_comm;
     struct MPID_VCR_t *connect_vc= NULL;
     int port_name_tag, taskid_tag;
     /* Connect to the root on the other side. Create a
@@ -316,11 +316,11 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
    process (the root of the other group).  It also returns the virtual
    connection */
 static int MPIDI_Create_inter_root_communicator_accept(const char *port_name,
-						struct MPID_Comm **comm_pptr,
+                                                struct MPIR_Comm **comm_pptr,
 						MPID_VCR *vc_pptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct MPID_Comm *tmp_comm;
+    struct MPIR_Comm *tmp_comm;
     MPID_VCR new_vc;
 
     MPID_Progress_state progress_state;
@@ -373,13 +373,13 @@ fn_fail:
 /* This is a utility routine used to initialize temporary communicators
    used in connect/accept operations, and is only used in the above two
    routines */
-static int MPIDI_Initialize_tmp_comm(struct MPID_Comm **comm_pptr,
+static int MPIDI_Initialize_tmp_comm(struct MPIR_Comm **comm_pptr,
 					  struct MPID_VCR_t *vc_ptr, int is_low_group, int context_id_offset)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct MPID_Comm *tmp_comm, *commself_ptr;
+    struct MPIR_Comm *tmp_comm, *commself_ptr;
 
-    MPID_Comm_get_ptr( MPI_COMM_SELF, commself_ptr );
+    MPIR_Comm_get_ptr( MPI_COMM_SELF, commself_ptr );
 
     /* WDG-old code allocated a context id that was then discarded */
     mpi_errno = MPIR_Comm_create(&tmp_comm);
@@ -497,12 +497,12 @@ void MPIDI_add_new_tranid(long long tranid)
    because there can be multiple process groups on each side.
 */
 int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
-		       struct MPID_Comm *comm_ptr, struct MPID_Comm **newcomm)
+                       struct MPIR_Comm *comm_ptr, struct MPIR_Comm **newcomm)
 {
     int mpi_errno=MPI_SUCCESS;
     int j, i, rank, recv_ints[3], send_ints[3], context_id;
     int remote_comm_size=0;
-    struct MPID_Comm *tmp_comm = NULL;
+    struct MPIR_Comm *tmp_comm = NULL;
     MPID_VCR new_vc= NULL;
     int sendtag=100, recvtag=100, n_remote_pgs;
     int n_local_pgs=1, local_comm_size;
@@ -714,7 +714,7 @@ fn_fail:
  * all of the process groups that have made up the communicator that
  * will define the "remote group".
  */
-static int MPIDI_ExtractLocalPGInfo( struct MPID_Comm *comm_p,
+static int MPIDI_ExtractLocalPGInfo( struct MPIR_Comm *comm_p,
 			       pg_translation local_translation[],
 			       pg_node **pg_list_p,
 			       int *n_local_pgs_p )
@@ -805,7 +805,7 @@ static int MPIDI_ExtractLocalPGInfo( struct MPID_Comm *comm_p,
    process groups and then distributes them to the other processes
    in comm_ptr.
    See SendPGToPeer for the routine that sends the descriptions */
-static int MPIDI_ReceivePGAndDistribute( struct MPID_Comm *tmp_comm, struct MPID_Comm *comm_ptr,
+static int MPIDI_ReceivePGAndDistribute( struct MPIR_Comm *tmp_comm, struct MPIR_Comm *comm_ptr,
 				   int root, int *recvtag_p,
 				   int n_remote_pgs, MPIDI_PG_t *remote_pg[] )
 {
@@ -1082,7 +1082,7 @@ void MPIDI_free_all_tranid_node()
 
 /* Sends the process group information to the peer and frees the
    pg_list */
-static int MPIDI_SendPGtoPeerAndFree( struct MPID_Comm *tmp_comm, int *sendtag_p,
+static int MPIDI_SendPGtoPeerAndFree( struct MPIR_Comm *tmp_comm, int *sendtag_p,
 				pg_node *pg_list )
 {
     int mpi_errno = 0;
@@ -1137,12 +1137,12 @@ static int MPIDI_SendPGtoPeerAndFree( struct MPID_Comm *tmp_comm, int *sendtag_p
 
  */
 int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
-		      struct MPID_Comm *comm_ptr, struct MPID_Comm **newcomm)
+                      struct MPIR_Comm *comm_ptr, struct MPIR_Comm **newcomm)
 {
     int mpi_errno=MPI_SUCCESS;
     int i, j, rank, recv_ints[3], send_ints[3], context_id;
     int remote_comm_size=0;
-    struct MPID_Comm *tmp_comm = NULL, *intercomm;
+    struct MPIR_Comm *tmp_comm = NULL, *intercomm;
     MPID_VCR new_vc = NULL;
     int sendtag=100, recvtag=100, local_comm_size;
     int n_local_pgs=1, n_remote_pgs;
@@ -1378,10 +1378,10 @@ fn_fail:
    Note:
    This routine performance a barrier over 'comm_ptr'.  Why?
 */
-static int MPIDI_SetupNewIntercomm( struct MPID_Comm *comm_ptr, int remote_comm_size,
+static int MPIDI_SetupNewIntercomm( struct MPIR_Comm *comm_ptr, int remote_comm_size,
 			      pg_translation remote_translation[],
 			      int n_remote_pgs, MPIDI_PG_t **remote_pg,
-			      struct MPID_Comm *intercomm )
+                              struct MPIR_Comm *intercomm )
 {
     int mpi_errno = MPI_SUCCESS, i, j, index=0;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
@@ -1392,7 +1392,7 @@ static int MPIDI_SetupNewIntercomm( struct MPID_Comm *comm_ptr, int remote_comm_
     MPID_VCR *worldlist;
     int worldsize;
     pami_endpoint_t dest;
-    MPID_Comm *comm;
+    MPIR_Comm *comm;
     pami_task_t leader1=-1, leader2=-1, leader_taskid=-1;
     long long comm_cntr=0, lcomm_cntr=-1;
     int jobIdSize=64;
@@ -1494,7 +1494,7 @@ static int MPIDI_SetupNewIntercomm( struct MPID_Comm *comm_ptr, int remote_comm_
 
    leader_taskid = comm_ptr->vcr[0]->taskid;
 
-   MPID_Comm *comm_world_ptr = MPIR_Process.comm_world;
+   MPIR_Comm *comm_world_ptr = MPIR_Process.comm_world;
    worldlist = comm_world_ptr->vcr;
    worldsize = comm_world_ptr->local_size;
    comm = intercomm;
@@ -1677,7 +1677,7 @@ void MPIDI_delete_conn_record(int wid) {
 }
 
 
-int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
+int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
 {
     int n_local_pgs=0, mpi_errno = MPI_SUCCESS;
     pg_translation *local_translation = 0;

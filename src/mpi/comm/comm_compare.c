@@ -71,8 +71,8 @@ this routine is only thread-safe.)
 int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr1 = NULL;
-    MPID_Comm *comm_ptr2 = NULL;
+    MPIR_Comm *comm_ptr1 = NULL;
+    MPIR_Comm *comm_ptr2 = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_COMPARE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -92,8 +92,8 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
 #   endif /* HAVE_ERROR_CHECKING */
     
     /* Get handles to MPI objects. */
-    MPID_Comm_get_ptr( comm1, comm_ptr1 );
-    MPID_Comm_get_ptr( comm2, comm_ptr2 );
+    MPIR_Comm_get_ptr( comm1, comm_ptr1 );
+    MPIR_Comm_get_ptr( comm2, comm_ptr2 );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -101,9 +101,9 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr1, mpi_errno, TRUE );
+            MPIR_Comm_valid_ptr( comm_ptr1, mpi_errno, TRUE );
             if (mpi_errno) goto fn_fail;
-            MPID_Comm_valid_ptr( comm_ptr2, mpi_errno, TRUE );
+            MPIR_Comm_valid_ptr( comm_ptr2, mpi_errno, TRUE );
             if (mpi_errno) goto fn_fail;
 	    MPIR_ERRTEST_ARGNULL( result, "result", mpi_errno );
         }

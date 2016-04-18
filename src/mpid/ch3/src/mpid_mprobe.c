@@ -10,7 +10,7 @@
 #define FUNCNAME MPID_Mprobe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Mprobe(int source, int tag, MPID_Comm *comm, int context_offset,
+int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
                 MPID_Request **message, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;

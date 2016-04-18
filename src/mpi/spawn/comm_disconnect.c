@@ -54,7 +54,7 @@ int MPI_Comm_disconnect(MPI_Comm * comm)
 {
     static const char FCNAME[] = "MPI_Comm_disconnect";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_DISCONNECT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -74,7 +74,7 @@ int MPI_Comm_disconnect(MPI_Comm * comm)
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( *comm, comm_ptr );
+    MPIR_Comm_get_ptr( *comm, comm_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -82,7 +82,7 @@ int MPI_Comm_disconnect(MPI_Comm * comm)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
 	    /* If comm_ptr is not valid, it will be reset to null */
             if (mpi_errno)
 	    {

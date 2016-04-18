@@ -515,7 +515,7 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
             MPI_Request fence_sync_req;
 
             if (win_ptr->shm_allocated == TRUE) {
-                MPID_Comm *node_comm_ptr = win_ptr->comm_ptr->node_comm;
+                MPIR_Comm *node_comm_ptr = win_ptr->comm_ptr->node_comm;
 
                 mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
                 if (mpi_errno != MPI_SUCCESS)
@@ -676,7 +676,7 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
             }
 
             if (win_ptr->shm_allocated == TRUE) {
-                MPID_Comm *node_comm_ptr = win_ptr->comm_ptr->node_comm;
+                MPIR_Comm *node_comm_ptr = win_ptr->comm_ptr->node_comm;
                 mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
                 if (mpi_errno != MPI_SUCCESS)
                     MPIR_ERR_POP(mpi_errno);
@@ -736,7 +736,7 @@ int MPID_Win_post(MPID_Group * post_grp_ptr, int assert, MPID_Win * win_ptr)
         MPI_Request *req;
         MPI_Status *status;
         int i, post_grp_size, dst, rank;
-        MPID_Comm *win_comm_ptr;
+        MPIR_Comm *win_comm_ptr;
 
         /* NOCHECK not specified. We need to notify the source
          * processes that Post has been called. */
@@ -869,7 +869,7 @@ int MPID_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
         int i, intra_cnt;
         MPI_Request *intra_start_req = NULL;
         MPI_Status *intra_start_status = NULL;
-        MPID_Comm *comm_ptr = win_ptr->comm_ptr;
+        MPIR_Comm *comm_ptr = win_ptr->comm_ptr;
         int rank = comm_ptr->rank;
 
         /* wait for messages from local processes */

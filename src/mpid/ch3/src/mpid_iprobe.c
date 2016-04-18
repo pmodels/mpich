@@ -6,14 +6,14 @@
 
 #include "mpidimpl.h"
 
-int (*MPIDI_Anysource_iprobe_fn)(int tag, MPID_Comm * comm, int context_offset, int *flag,
+int (*MPIDI_Anysource_iprobe_fn)(int tag, MPIR_Comm * comm, int context_offset, int *flag,
                                  MPI_Status * status) = NULL;
 
 #undef FUNCNAME
 #define FUNCNAME MPID_Iprobe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Iprobe(int source, int tag, MPID_Comm *comm, int context_offset, 
+int MPID_Iprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
 		int *flag, MPI_Status *status)
 {
     const int context = comm->recvcontext_id + context_offset;

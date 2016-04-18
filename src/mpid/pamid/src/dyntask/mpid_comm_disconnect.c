@@ -45,7 +45,7 @@ typedef struct {
 
 
 extern transactionID_struct *_transactionID_list;
-void MPIDI_get_allremote_leaders(int *tid_arr, MPID_Comm *comm_ptr);
+void MPIDI_get_allremote_leaders(int *tid_arr, MPIR_Comm *comm_ptr);
 
 void MPIDI_send_AM_to_remote_leader_on_disconnect(int taskid, long long comm_cntr, int whichAM)
 {
@@ -196,7 +196,7 @@ static void _qsort_dyntask(int t[],int left,int right)
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
+int MPID_Comm_disconnect(MPIR_Comm *comm_ptr)
 {
     int rc, i,j, k, ref_count,mpi_errno=0, probe_flag=0;
     pami_task_t *local_list;
@@ -206,10 +206,10 @@ int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
     int total_leaders=0, gsize;
     pami_task_t *leader_tids;
     int expected_firstAM=0, expected_secondAM=0, expected_lastAM=0;
-    MPID_Comm *commworld_ptr;
+    MPIR_Comm *commworld_ptr;
     MPID_Group *group_ptr = NULL,  *new_group_ptr = NULL;
     MPID_VCR *glist;
-    MPID_Comm *lcomm;
+    MPIR_Comm *lcomm;
     int *ranks;
     int local_tasks=0, localtasks_in_remglist=0;
     int jobIdSize=64;
@@ -226,7 +226,7 @@ int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
 
 	/* make commSubWorld */
 	{
-	  /*           MPID_Comm_get_ptr( MPI_COMM_WORLD, commworld_ptr ); */
+          /*           MPIR_Comm_get_ptr( MPI_COMM_WORLD, commworld_ptr ); */
 	  commworld_ptr = MPIR_Process.comm_world;
 	  mpi_errno = MPIR_Comm_group_impl(commworld_ptr, &group_ptr);
 	  if (mpi_errno)
@@ -462,7 +462,7 @@ int MPIDI_Decrement_ref_count(int wid) {
   return ref_count;
 }
 
-void MPIDI_get_allremote_leaders(int *tid_arr, MPID_Comm *comm_ptr)
+void MPIDI_get_allremote_leaders(int *tid_arr, MPIR_Comm *comm_ptr)
 {
   conn_info  *tmp_node;
   int        i,j,k,arr_len,gsize, found=0;

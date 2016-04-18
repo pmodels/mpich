@@ -373,7 +373,7 @@ int MPIR_Group_check_valid_ranges( MPID_Group *group_ptr,
    We sort the lpids for the group and the comm.  If the group has an
    lpid that is not in the comm, then report an error.
 */
-int MPIR_Group_check_subset( MPID_Group *group_ptr, MPID_Comm *comm_ptr )
+int MPIR_Group_check_subset( MPID_Group *group_ptr, MPIR_Comm *comm_ptr )
 {
     int mpi_errno = MPI_SUCCESS;
     int g1_idx, g2_idx, l1_pid, l2_pid, i;

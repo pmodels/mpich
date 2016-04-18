@@ -87,7 +87,7 @@ int MPI_Win_flush_local(int rank, MPI_Win win)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPID_Comm * comm_ptr;
+            MPIR_Comm * comm_ptr;
             
             /* Validate win_ptr */
             MPID_Win_valid_ptr( win_ptr, mpi_errno );

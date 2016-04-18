@@ -373,7 +373,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id,
 #define FUNCNAME MPIDI_CH3U_Recvq_FDU_matchonly
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPID_Request * MPIDI_CH3U_Recvq_FDU_matchonly(int source, int tag, int context_id, MPID_Comm *comm, int *foundp)
+MPID_Request * MPIDI_CH3U_Recvq_FDU_matchonly(int source, int tag, int context_id, MPIR_Comm *comm, int *foundp)
 {
     int found = FALSE;
     MPID_Request *rreq, *prev_rreq;
@@ -491,7 +491,7 @@ lock_exit:
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag, 
-                                           int context_id, MPID_Comm *comm, void *user_buf,
+                                           int context_id, MPIR_Comm *comm, void *user_buf,
                                            MPI_Aint user_count, MPI_Datatype datatype, int * foundp)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -806,7 +806,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
      * revoked. If so, just throw this request away since it won't be used
      * anyway. */
     {
-        MPID_Comm *comm_ptr;
+        MPIR_Comm *comm_ptr;
         int mpi_errno ATTRIBUTE((unused)) = MPI_SUCCESS;
 
         MPIDI_CH3I_Comm_find(match->parts.context_id, &comm_ptr);
@@ -912,7 +912,7 @@ static inline void dequeue_and_set_error(MPID_Request **req,  MPID_Request *prev
  * may then find it and dequeue it.
  *
  */
-int MPIDI_CH3U_Clean_recvq(MPID_Comm *comm_ptr)
+int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int error = MPI_SUCCESS;

@@ -29,12 +29,12 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPID_Request **sreq_ptr, MPL_IOV *iov, int
 int MPID_nem_lmt_pkthandler_init(MPIDI_CH3_PktHandler_Fcn *pktArray[], int arraySize);
 int MPID_nem_register_initcomp_cb(int (* callback)(void));
 int MPID_nem_choose_netmod(void);
-int MPIDI_CH3I_comm_create(MPID_Comm *comm, void *param);
-int MPIDI_CH3I_comm_destroy(MPID_Comm *comm, void *param);
+int MPIDI_CH3I_comm_create(MPIR_Comm *comm, void *param);
+int MPIDI_CH3I_comm_destroy(MPIR_Comm *comm, void *param);
 
 /* rendezvous hooks */
 int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, MPI_Aint count, MPI_Datatype datatype, int dt_contig,
-                          intptr_t data_sz, MPI_Aint dt_true_lb, int rank, int tag, MPID_Comm * comm, int context_offset);
+                          intptr_t data_sz, MPI_Aint dt_true_lb, int rank, int tag, MPIR_Comm * comm, int context_offset);
 int MPID_nem_lmt_RndvRecv(struct MPIDI_VC *vc, MPID_Request *rreq);
 
 #define MPID_nem_mpich_release_fbox(cell)                               \

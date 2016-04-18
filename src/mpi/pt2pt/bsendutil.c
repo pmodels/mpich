@@ -208,7 +208,7 @@ int MPIR_Bsend_detach( void *bufferp, int *size )
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
-                     int dest, int tag, MPID_Comm *comm_ptr,
+                     int dest, int tag, MPIR_Comm *comm_ptr,
                      MPIR_Bsend_kind_t kind, MPID_Request **request )
 {
     int mpi_errno = MPI_SUCCESS;

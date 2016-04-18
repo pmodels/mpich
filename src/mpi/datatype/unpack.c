@@ -141,7 +141,7 @@ int MPI_Unpack(const void *inbuf, int insize, int *position,
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint position_x;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_UNPACK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -160,7 +160,7 @@ int MPI_Unpack(const void *inbuf, int insize, int *position,
 #   endif
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr(comm, comm_ptr);
+    MPIR_Comm_get_ptr(comm, comm_ptr);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -175,7 +175,7 @@ int MPI_Unpack(const void *inbuf, int insize, int *position,
 	    MPIR_ERRTEST_COUNT(outcount, mpi_errno);
 
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
 	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	    /* If comm_ptr is not valid, it will be reset to null */
 

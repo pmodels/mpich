@@ -101,7 +101,7 @@ static int handle_mprobe(const ptl_event_t *e)
 #define FUNCNAME MPID_nem_ptl_probe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_ptl_probe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, int context_offset, MPI_Status *status)
+int MPID_nem_ptl_probe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, int context_offset, MPI_Status *status)
 {
     MPIU_Assertp(0 && "This function shouldn't be called.");
     return MPI_SUCCESS;
@@ -111,7 +111,7 @@ int MPID_nem_ptl_probe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, int
 #define FUNCNAME MPID_nem_ptl_iprobe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, int context_offset, int *flag, MPI_Status *status)
+int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, int context_offset, int *flag, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
@@ -184,7 +184,7 @@ int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, in
 #define FUNCNAME MPID_nem_ptl_improbe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_ptl_improbe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, int context_offset, int *flag,
+int MPID_nem_ptl_improbe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, int context_offset, int *flag,
                          MPID_Request **message, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -265,7 +265,7 @@ int MPID_nem_ptl_improbe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, i
 #define FUNCNAME MPID_nem_ptl_anysource_iprobe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_ptl_anysource_iprobe(int tag, MPID_Comm * comm, int context_offset, int *flag, MPI_Status * status)
+int MPID_nem_ptl_anysource_iprobe(int tag, MPIR_Comm * comm, int context_offset, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_IPROBE);
@@ -285,7 +285,7 @@ int MPID_nem_ptl_anysource_iprobe(int tag, MPID_Comm * comm, int context_offset,
 #define FUNCNAME MPID_nem_ptl_anysource_improbe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_ptl_anysource_improbe(int tag, MPID_Comm * comm, int context_offset, int *flag, MPID_Request **message,
+int MPID_nem_ptl_anysource_improbe(int tag, MPIR_Comm * comm, int context_offset, int *flag, MPID_Request **message,
                                    MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;

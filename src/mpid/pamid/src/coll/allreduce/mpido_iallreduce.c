@@ -29,7 +29,7 @@ int MPIDO_Iallreduce(const void *sendbuf,
                     int count,
                     MPI_Datatype dt,
                     MPI_Op op,
-                    MPID_Comm *comm_ptr,
+                    MPIR_Comm *comm_ptr,
                     MPID_Request **request)
 {
    TRACE_ERR("Entering mpido_iallreduce\n");

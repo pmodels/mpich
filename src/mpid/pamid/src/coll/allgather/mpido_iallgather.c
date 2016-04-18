@@ -30,7 +30,7 @@ MPIDO_Iallgather(const void *sendbuf,
                  void *recvbuf,
                  int recvcount,
                  MPI_Datatype recvtype,
-                 MPID_Comm * comm_ptr,
+                 MPIR_Comm * comm_ptr,
                  MPID_Request ** request)
 {
    /*if (unlikely((data_size == 0) || (user_selected_type == MPID_COLL_USE_MPICH)))*/

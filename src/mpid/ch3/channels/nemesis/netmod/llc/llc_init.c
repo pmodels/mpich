@@ -205,7 +205,7 @@ int MPID_nem_llc_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
 #define FUNCNAME MPID_nem_llc_anysource_iprobe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_llc_anysource_iprobe(int tag, MPID_Comm * comm, int context_offset, int *flag,
+int MPID_nem_llc_anysource_iprobe(int tag, MPIR_Comm * comm, int context_offset, int *flag,
                                   MPI_Status * status)
 {
     return MPID_nem_llc_iprobe(NULL, MPI_ANY_SOURCE, tag, comm, context_offset, flag, status);
@@ -216,7 +216,7 @@ int MPID_nem_llc_anysource_iprobe(int tag, MPID_Comm * comm, int context_offset,
 #define FUNCNAME MPID_nem_llc_anysource_improbe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_llc_anysource_improbe(int tag, MPID_Comm * comm, int context_offset, int *flag,
+int MPID_nem_llc_anysource_improbe(int tag, MPIR_Comm * comm, int context_offset, int *flag,
                                    MPID_Request ** message, MPI_Status * status)
 {
     return MPID_nem_llc_improbe(NULL, MPI_ANY_SOURCE, tag, comm, context_offset, flag, message,

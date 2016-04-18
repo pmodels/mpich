@@ -55,7 +55,7 @@ The replacement for this routine is 'MPI_Comm_set_errhandler'.
 int MPI_Errhandler_set(MPI_Comm comm, MPI_Errhandler errhandler)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_Errhandler *errhan_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ERRHANDLER_SET);
 
@@ -76,7 +76,7 @@ int MPI_Errhandler_set(MPI_Comm comm, MPI_Errhandler errhandler)
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr( comm, comm_ptr );
     MPID_Errhandler_get_ptr( errhandler, errhan_ptr );
 
     /* Validate parameters and objects (post conversion) */
@@ -85,7 +85,7 @@ int MPI_Errhandler_set(MPI_Comm comm, MPI_Errhandler errhandler)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr; if comm_ptr is not value, it will be reset to null */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
             if (mpi_errno) goto fn_fail;
 	    MPIR_ERRTEST_ERRHANDLER(errhandler, mpi_errno);
 

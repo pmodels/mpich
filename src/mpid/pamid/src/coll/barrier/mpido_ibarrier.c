@@ -30,7 +30,7 @@ static void cb_ibarrier(void *ctxt, void *clientdata, pami_result_t err)
    MPIDI_Request_complete_norelease_inline(mpid_request);
 }
 
-int MPIDO_Ibarrier(MPID_Comm *comm_ptr, MPID_Request **request)
+int MPIDO_Ibarrier(MPIR_Comm *comm_ptr, MPID_Request **request)
 {
    TRACE_ERR("Entering MPIDO_Ibarrier\n");
 

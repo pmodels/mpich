@@ -35,7 +35,7 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm) __
 #define FUNCNAME create_and_map
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int create_and_map(MPID_Comm *comm_ptr, int local_high, MPID_Comm *new_intracomm_ptr)
+static int create_and_map(MPIR_Comm *comm_ptr, int local_high, MPIR_Comm *new_intracomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -69,7 +69,7 @@ fn_fail:
 #define FUNCNAME MPIR_Intercomm_merge_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_intracomm_ptr)
+int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_intracomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int  local_high, remote_high, new_size;
@@ -253,8 +253,8 @@ Algorithm:
 int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
-    MPID_Comm *new_intracomm_ptr;
+    MPIR_Comm *comm_ptr = NULL;
+    MPIR_Comm *new_intracomm_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INTERCOMM_MERGE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -274,7 +274,7 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( intercomm, comm_ptr );
+    MPIR_Comm_get_ptr( intercomm, comm_ptr );
     
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -282,7 +282,7 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    if (comm_ptr && comm_ptr->comm_kind != MPID_INTERCOMM) {
 		mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 

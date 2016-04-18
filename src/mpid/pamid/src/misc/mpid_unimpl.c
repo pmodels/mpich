@@ -37,8 +37,8 @@ int MPID_Open_port(MPID_Info *info_ptr,
 int MPID_Comm_accept(const char *port_name,
                      MPID_Info *info_ptr,
                      int root,
-                     MPID_Comm *comm_ptr,
-                     MPID_Comm **newcomm)
+                     MPIR_Comm *comm_ptr,
+                     MPIR_Comm **newcomm)
 {
   MPID_abort();
   return 0;
@@ -46,13 +46,13 @@ int MPID_Comm_accept(const char *port_name,
 int MPID_Comm_connect(const char *port_name,
                       MPID_Info *info_ptr,
                       int root,
-                      MPID_Comm *comm_ptr,
-                      MPID_Comm **newcomm)
+                      MPIR_Comm *comm_ptr,
+                      MPIR_Comm **newcomm)
 {
   MPID_abort();
   return 0;
 }
-int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
+int MPID_Comm_disconnect(MPIR_Comm *comm_ptr)
 {
   MPID_abort();
   return 0;
@@ -63,8 +63,8 @@ int MPID_Comm_spawn_multiple(int count,
                              const int array_of_maxprocs[],
                              MPID_Info *array_of_info[],
                              int root,
-                             MPID_Comm *comm_ptr,
-                             MPID_Comm **intercomm,
+                             MPIR_Comm *comm_ptr,
+                             MPIR_Comm **intercomm,
                              int array_of_errcodes[])
 {
   MPID_abort();
@@ -72,31 +72,31 @@ int MPID_Comm_spawn_multiple(int count,
 }
 #endif
 
-int MPID_Comm_failure_ack(MPID_Comm *comm_ptr)
+int MPID_Comm_failure_ack(MPIR_Comm *comm_ptr)
 {
   MPID_abort();
   return 0;
 }
 
-int MPID_Comm_failure_get_acked(MPID_Comm *comm_ptr, MPID_Group **failed_group_ptr)
+int MPID_Comm_failure_get_acked(MPIR_Comm *comm_ptr, MPID_Group **failed_group_ptr)
 {
   MPID_abort();
   return 0;
 }
 
-int MPID_Comm_get_all_failed_procs(MPID_Comm *comm_ptr, MPID_Group **failed_group, int tag)
+int MPID_Comm_get_all_failed_procs(MPIR_Comm *comm_ptr, MPID_Group **failed_group, int tag)
 {
   MPID_abort();
   return 0;
 }
 
-int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
+int MPID_Comm_revoke(MPIR_Comm *comm_ptr, int is_remote)
 {
   MPID_abort();
   return 0;
 }
 
-int MPID_Comm_AS_enabled(MPID_Comm *comm_ptr)
+int MPID_Comm_AS_enabled(MPIR_Comm *comm_ptr)
 {
   /* This function must return 1 in the default case and should not be ignored
    * by the implementation. */

@@ -11,7 +11,7 @@
 #define FUNCNAME hcoll_Barrier
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int hcoll_Barrier(MPID_Comm * comm_ptr, MPIR_Errflag_t *err)
+int hcoll_Barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t *err)
 {
     int rc;
     MPI_Comm comm = comm_ptr->handle;
@@ -35,7 +35,7 @@ int hcoll_Barrier(MPID_Comm * comm_ptr, MPIR_Errflag_t *err)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_Bcast(void *buffer, int count, MPI_Datatype datatype, int root,
-                MPID_Comm * comm_ptr, MPIR_Errflag_t *err)
+                MPIR_Comm * comm_ptr, MPIR_Errflag_t *err)
 {
     dte_data_representation_t dtype;
     int rc;
@@ -79,7 +79,7 @@ int hcoll_Bcast(void *buffer, int count, MPI_Datatype datatype, int root,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                    MPI_Op op, MPID_Comm * comm_ptr, MPIR_Errflag_t *err)
+                    MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Errflag_t *err)
 {
     dte_data_representation_t Dtype;
     hcoll_dte_op_t *Op;
@@ -130,7 +130,7 @@ int hcoll_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype 
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_Allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
-                    void *rbuf, int rcount, MPI_Datatype rdtype, MPID_Comm * comm_ptr, MPIR_Errflag_t *err)
+                    void *rbuf, int rcount, MPI_Datatype rdtype, MPIR_Comm * comm_ptr, MPIR_Errflag_t *err)
 {
     int is_homogeneous = 1, use_fallback = 0;
     MPI_Comm comm = comm_ptr->handle;
@@ -181,7 +181,7 @@ int hcoll_Allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
 #define FUNCNAME hcoll_Ibarrier_req
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int hcoll_Ibarrier_req(MPID_Comm * comm_ptr, MPID_Request ** request)
+int hcoll_Ibarrier_req(MPIR_Comm * comm_ptr, MPID_Request ** request)
 {
     int rc;
     void **rt_handle;
@@ -210,7 +210,7 @@ int hcoll_Ibarrier_req(MPID_Comm * comm_ptr, MPID_Request ** request)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_Ibcast_req(void *buffer, int count, MPI_Datatype datatype, int root,
-                     MPID_Comm * comm_ptr, MPID_Request ** request)
+                     MPIR_Comm * comm_ptr, MPID_Request ** request)
 {
     int rc;
     void **rt_handle;
@@ -258,7 +258,7 @@ int hcoll_Ibcast_req(void *buffer, int count, MPI_Datatype datatype, int root,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_Iallgather_req(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
-                         int recvcount, MPI_Datatype recvtype, MPID_Comm * comm_ptr,
+                         int recvcount, MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
                          MPID_Request ** request)
 {
     int is_homogeneous = 1, use_fallback = 0;
@@ -316,7 +316,7 @@ int hcoll_Iallgather_req(const void *sendbuf, int sendcount, MPI_Datatype sendty
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_Iallreduce_req(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                         MPI_Op op, MPID_Comm * comm_ptr, MPID_Request ** request)
+                         MPI_Op op, MPIR_Comm * comm_ptr, MPID_Request ** request)
 {
     dte_data_representation_t Dtype;
     hcoll_dte_op_t *Op;

@@ -21,7 +21,7 @@
 #define FUNCNAME MPID_nem_llc_probe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_llc_probe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, int context_offset,
+int MPID_nem_llc_probe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, int context_offset,
                        MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -42,7 +42,7 @@ int MPID_nem_llc_probe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, i
 #define FUNCNAME MPID_nem_llc_iprobe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_llc_iprobe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, int context_offset,
+int MPID_nem_llc_iprobe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, int context_offset,
                         int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS, llc_errno;
@@ -112,7 +112,7 @@ int MPID_nem_llc_iprobe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, 
 #define FUNCNAME MPID_nem_llc_improbe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_llc_improbe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, int context_offset,
+int MPID_nem_llc_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, int context_offset,
                          int *flag, MPID_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;

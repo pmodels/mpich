@@ -33,7 +33,7 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm, int maxindegree, int sources[], int 
 #define FUNCNAME MPIR_Dist_graph_neighbors_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Dist_graph_neighbors_impl(MPID_Comm *comm_ptr,
+int MPIR_Dist_graph_neighbors_impl(MPIR_Comm *comm_ptr,
                                    int maxindegree, int sources[], int sourceweights[],
                                    int maxoutdegree, int destinations[], int destweights[])
 {
@@ -91,7 +91,7 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
                              int maxoutdegree, int destinations[], int destweights[])
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -112,7 +112,7 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
 #   endif
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr(comm, comm_ptr);
+    MPIR_Comm_get_ptr(comm, comm_ptr);
 
     /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING

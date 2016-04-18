@@ -138,8 +138,8 @@ MPIX_Comm_rank2global(MPI_Comm comm, int crank, int *grank)
   if (grank == NULL)
     return MPI_ERR_ARG;
 
-  MPID_Comm *comm_ptr = NULL;
-  MPID_Comm_get_ptr(comm, comm_ptr);
+  MPIR_Comm *comm_ptr = NULL;
+  MPIR_Comm_get_ptr(comm, comm_ptr);
   if (comm_ptr == NULL)
     return MPI_ERR_COMM;
 
@@ -463,12 +463,12 @@ MPIX_Comm_update_post(pami_context_t context, void *cookie)
 int
 MPIX_Comm_update(MPI_Comm comm, int optimize)
 {
-   MPID_Comm * comm_ptr;
+   MPIR_Comm * comm_ptr;
    volatile int geom_update = 1;
    MPIX_Comm_update_data_t data;
    pami_configuration_t config;
 
-   MPID_Comm_get_ptr(comm, comm_ptr);
+   MPIR_Comm_get_ptr(comm, comm_ptr);
    if (!comm_ptr || comm == MPI_COMM_NULL)
       return MPI_ERR_COMM;
 
@@ -508,8 +508,8 @@ MPIX_Comm_update(MPI_Comm comm, int optimize)
 int
 MPIX_Get_last_algorithm_name(MPI_Comm comm, char *protocol, int length)
 {
-   MPID_Comm *comm_ptr;
-   MPID_Comm_get_ptr(comm, comm_ptr);
+   MPIR_Comm *comm_ptr;
+   MPIR_Comm_get_ptr(comm, comm_ptr);
 
    if(!comm_ptr || comm == MPI_COMM_NULL)
       return MPI_ERR_COMM;
@@ -685,7 +685,7 @@ MPIX_Pset_io_node (int *io_node_route_id, int *distance_to_io_node)
  *
  * \return MPI status
  */
-int _MPIX_Pset_same_comm_create (MPID_Comm *parent_comm_ptr, MPID_Comm **pset_comm_ptr)
+int _MPIX_Pset_same_comm_create (MPIR_Comm *parent_comm_ptr, MPIR_Comm **pset_comm_ptr)
 {
   int color, key;
   int mpi_errno;
@@ -718,7 +718,7 @@ int
 MPIX_Pset_same_comm_create_from_parent (MPI_Comm parent_comm, MPI_Comm *pset_comm)
 {
   int mpi_errno;
-  MPID_Comm *parent_comm_ptr, *pset_comm_ptr;
+  MPIR_Comm *parent_comm_ptr, *pset_comm_ptr;
 
   *pset_comm = MPI_COMM_NULL;
 
@@ -727,7 +727,7 @@ MPIX_Pset_same_comm_create_from_parent (MPI_Comm parent_comm, MPI_Comm *pset_com
    * needed by the error handling code.
    */
   parent_comm_ptr = NULL;
-  MPID_Comm_get_ptr(parent_comm, parent_comm_ptr);
+  MPIR_Comm_get_ptr(parent_comm, parent_comm_ptr);
 
   mpi_errno = MPI_SUCCESS;
   mpi_errno = _MPIX_Pset_same_comm_create (parent_comm_ptr, &pset_comm_ptr);
@@ -762,7 +762,7 @@ MPIX_Pset_same_comm_create (MPI_Comm *pset_comm)
 int
 MPIX_Pset_diff_comm_create_from_parent (MPI_Comm parent_comm, MPI_Comm *pset_comm)
 {
-  MPID_Comm *parent_comm_ptr, *pset_same_comm_ptr, *pset_diff_comm_ptr;
+  MPIR_Comm *parent_comm_ptr, *pset_same_comm_ptr, *pset_diff_comm_ptr;
   int color, key;
   int mpi_errno;
 
@@ -773,7 +773,7 @@ MPIX_Pset_diff_comm_create_from_parent (MPI_Comm parent_comm, MPI_Comm *pset_com
    * needed by the error handling code.
    */
   parent_comm_ptr = NULL;
-  MPID_Comm_get_ptr(parent_comm, parent_comm_ptr);
+  MPIR_Comm_get_ptr(parent_comm, parent_comm_ptr);
 
   /*
    * Determine the 'color' of this rank to create the new communicator - which

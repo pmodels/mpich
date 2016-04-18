@@ -52,7 +52,7 @@ static int MPIR_Reduce_scatter_block_noncomm (
     int recvcount,
     MPI_Datatype datatype,
     MPI_Op op,
-    MPID_Comm *comm_ptr,
+    MPIR_Comm *comm_ptr,
     MPIR_Errflag_t *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -239,7 +239,7 @@ int MPIR_Reduce_scatter_block_intra (
     int recvcount, 
     MPI_Datatype datatype, 
     MPI_Op op, 
-    MPID_Comm *comm_ptr,
+    MPIR_Comm *comm_ptr,
     MPIR_Errflag_t *errflag )
 {
     int   rank, comm_size, i;
@@ -892,7 +892,7 @@ int MPIR_Reduce_scatter_block_inter (
     int recvcount, 
     MPI_Datatype datatype, 
     MPI_Op op, 
-    MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag )
+    MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
 /* Intercommunicator Reduce_scatter_block.
    We first do an intercommunicator reduce to rank 0 on left group,
@@ -904,7 +904,7 @@ int MPIR_Reduce_scatter_block_inter (
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Aint true_extent, true_lb = 0, extent;
     void *tmp_buf=NULL;
-    MPID_Comm *newcomm_ptr = NULL;
+    MPIR_Comm *newcomm_ptr = NULL;
     MPIU_CHKLMEM_DECL(1);
 
     rank = comm_ptr->rank;
@@ -1013,7 +1013,7 @@ int MPIR_Reduce_scatter_block_inter (
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf, 
                               int recvcount, MPI_Datatype datatype,
-                              MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+                              MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -1044,7 +1044,7 @@ int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf, 
                                    int recvcount, MPI_Datatype datatype,
-                                   MPI_Op op, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+                                   MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -1112,7 +1112,7 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
                              MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_REDUCE_SCATTER_BLOCK);
 
@@ -1133,7 +1133,7 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr( comm, comm_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -1143,7 +1143,7 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
 	    MPID_Datatype *datatype_ptr = NULL;
             MPID_Op *op_ptr = NULL;
 	    
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
             MPIR_ERRTEST_COUNT(recvcount,mpi_errno);

@@ -113,7 +113,7 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win ** win_ptr)
     if (((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_SHARED ||
          (*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE) &&
         (*win_ptr)->shm_mutex && (*win_ptr)->shm_segment_len > 0) {
-        MPID_Comm *node_comm_ptr = NULL;
+        MPIR_Comm *node_comm_ptr = NULL;
 
         /* When allocating shared memory region segment, we need comm of processes
          * that are on the same node as this process (node_comm).

@@ -56,7 +56,7 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 
 #if defined(MPID_USE_NODE_IDS)
-int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_rank_p, int **local_ranks_p,
+int MPIU_Find_local_and_external(MPIR_Comm *comm, int *local_size_p, int *local_rank_p, int **local_ranks_p,
                                  int *external_size_p, int *external_rank_p, int **external_ranks_p,
                                  int **intranode_table_p, int **internode_table_p)
 {
@@ -204,7 +204,7 @@ int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_
 }
 
 #else /* !defined(MPID_USE_NODE_IDS) */
-int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_rank_p, int **local_ranks_p,
+int MPIU_Find_local_and_external(MPIR_Comm *comm, int *local_size_p, int *local_rank_p, int **local_ranks_p,
                                  int *external_size_p, int *external_rank_p, int **external_ranks_p,
                                  int **intranode_table_p, int **internode_table_p)
 {
@@ -229,10 +229,10 @@ fn_fail:
 #define FUNCNAME MPIU_Get_internode_rank
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIU_Get_internode_rank(MPID_Comm *comm_ptr, int r)
+int MPIU_Get_internode_rank(MPIR_Comm *comm_ptr, int r)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
+    MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
     MPIU_Assert(mpi_errno == MPI_SUCCESS);
     MPIU_Assert(r < comm_ptr->remote_size);
     MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
@@ -250,10 +250,10 @@ int MPIU_Get_internode_rank(MPID_Comm *comm_ptr, int r)
 #define FUNCNAME MPIU_Get_intranode_rank
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIU_Get_intranode_rank(MPID_Comm *comm_ptr, int r)
+int MPIU_Get_intranode_rank(MPIR_Comm *comm_ptr, int r)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
+    MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
     MPIU_Assert(mpi_errno == MPI_SUCCESS);
     MPIU_Assert(r < comm_ptr->remote_size);
     MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);

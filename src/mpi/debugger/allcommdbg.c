@@ -10,7 +10,7 @@
 /* style: allow:printf:6 sig:0 */
 
 /* This definition is almost the same as the MPIR_Comm_list in dbginit, 
-   except a void * is used instead of MPID_Comm * for head; for the use
+   except a void * is used instead of MPIR_Comm * for head; for the use
    here, void * is all that is needed */
 typedef struct MPIR_Comm_list {
     int sequence_number;   /* Used to detect changes in the list */

@@ -60,7 +60,7 @@ int MPI_Win_get_group(MPI_Win win, MPI_Group *group)
     static const char FCNAME[] = "MPI_Win_get_group";
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
-    MPID_Comm *win_comm_ptr;
+    MPIR_Comm *win_comm_ptr;
     MPID_Group *group_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_GET_GROUP);
 

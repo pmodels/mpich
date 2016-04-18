@@ -30,7 +30,7 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm *newcomm) __attribute__((weak,alias("PM
 #define FUNCNAME MPIR_Comm_dup_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_dup_impl(MPID_Comm *comm_ptr, MPID_Comm **newcomm_ptr)
+int MPIR_Comm_dup_impl(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Attribute *new_attributes = 0;
@@ -119,7 +119,7 @@ Notes:
 int MPI_Comm_dup(MPI_Comm comm, MPI_Comm *newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL, *newcomm_ptr;
+    MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_DUP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -139,7 +139,7 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm *newcomm)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr( comm, comm_ptr );
     
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -147,7 +147,7 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm *newcomm)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno) goto fn_fail;
 	    /* If comm_ptr is not valid, it will be reset to null */
             MPIR_ERRTEST_ARGNULL(newcomm, "newcomm", mpi_errno);

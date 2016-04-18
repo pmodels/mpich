@@ -36,7 +36,7 @@ int MPIDO_Reduce(const void *sendbuf,
                  MPI_Datatype datatype,
                  MPI_Op op, 
                  int root, 
-                 MPID_Comm *comm_ptr, 
+                 MPIR_Comm *comm_ptr,
                  int *mpierrno)
 
 {
@@ -295,7 +295,7 @@ int MPIDO_Reduce_simple(const void *sendbuf,
                  MPI_Datatype datatype,
                  MPI_Op op, 
                  int root, 
-                 MPID_Comm *comm_ptr, 
+                 MPIR_Comm *comm_ptr,
                  int *mpierrno)
 
 {
@@ -398,7 +398,7 @@ MPIDO_CSWrapper_reduce(pami_xfer_t *reduce,
                        void        *comm)
 {
    int mpierrno = 0;
-   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPIR_Comm   *comm_ptr = (MPIR_Comm*)comm;
    MPI_Datatype type;
    MPI_Op op;
    void *sbuf;

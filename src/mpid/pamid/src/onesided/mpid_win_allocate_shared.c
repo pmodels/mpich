@@ -40,7 +40,7 @@ extern int mpidi_dynamic_tasking;
 #define ALIGN_BOUNDARY 128     /* Align data structures to cache line */
 #define PAD_SIZE(s) (ALIGN_BOUNDARY - (sizeof(s) & (ALIGN_BOUNDARY-1)))
 
-int CheckRankOnNode(MPID_Comm  * comm_ptr,int *onNode ) {
+int CheckRankOnNode(MPIR_Comm  * comm_ptr,int *onNode ) {
     int comm_size, i;
     int mpi_errno = PAMI_SUCCESS;
 
@@ -301,7 +301,7 @@ fn_fail:
 int
 MPID_getSharedSegment(MPI_Aint     size,
                       int          disp_unit,
-                      MPID_Comm  * comm_ptr,
+                      MPIR_Comm  * comm_ptr,
                       MPID_Win   **win_ptr,
                       MPI_Aint   * pSize,
                       int        * noncontig)
@@ -479,7 +479,7 @@ int
 MPID_Win_allocate_shared(MPI_Aint     size,   
                          int          disp_unit,
                          MPID_Info  * info,
-                         MPID_Comm  * comm_ptr,
+                         MPIR_Comm  * comm_ptr,
                          void *base_ptr,
                          MPID_Win  ** win_ptr)
 {

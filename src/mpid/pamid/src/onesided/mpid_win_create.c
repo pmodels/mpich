@@ -33,7 +33,7 @@ MPIDI_Win_init( MPI_Aint length,
                 int disp_unit,
                 MPID_Win  **win_ptr,
                 MPID_Info  *info,
-                MPID_Comm *comm_ptr,
+                MPIR_Comm *comm_ptr,
                 int create_flavor,
                 int model)
 {
@@ -108,7 +108,7 @@ MPIDI_Win_allgather( MPI_Aint size, MPID_Win **win_ptr )
   MPIR_Errflag_t errflag=MPIR_ERR_NONE;
   MPID_Win *win;
   int rank;
-  MPID_Comm *comm_ptr;
+  MPIR_Comm *comm_ptr;
   size_t length_out = 0;
   pami_result_t rc;
   MPIDI_Win_info  *winfo;
@@ -183,7 +183,7 @@ MPID_Win_create(void       * base,
                 MPI_Aint     size,
                 int          disp_unit,
                 MPID_Info  * info,
-                MPID_Comm  * comm_ptr,
+                MPIR_Comm  * comm_ptr,
                 MPID_Win  ** win_ptr)
 {
   int mpi_errno  = MPI_SUCCESS;

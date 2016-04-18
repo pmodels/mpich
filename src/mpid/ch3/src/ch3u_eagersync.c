@@ -31,7 +31,7 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
 				      MPI_Datatype datatype, intptr_t data_sz,
 				      int dt_contig, MPI_Aint dt_true_lb,
 				      int rank, 
-				      int tag, MPID_Comm * comm, 
+				      int tag, MPIR_Comm * comm,
 				      int context_offset )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -117,7 +117,7 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
    routine, as we may want to replace this with a counterpart to the
    Eager Short message */
 int MPIDI_CH3_EagerSyncZero(MPID_Request **sreq_p, int rank, int tag, 
-			    MPID_Comm * comm, int context_offset )
+			    MPIR_Comm * comm, int context_offset )
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3_Pkt_t upkt;

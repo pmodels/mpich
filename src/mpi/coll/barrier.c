@@ -67,7 +67,7 @@ int MPI_Barrier(MPI_Comm comm) __attribute__((weak,alias("PMPI_Barrier")));
 #define FUNCNAME barrier_smp_intra
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int barrier_smp_intra(MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+static int barrier_smp_intra(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno=MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -128,7 +128,7 @@ static int barrier_smp_intra(MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 #define FUNCNAME MPIR_Barrier_intra
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Barrier_intra( MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag )
+int MPIR_Barrier_intra( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
     int size, rank, src, dst, mask, mpi_errno=MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -189,12 +189,12 @@ int MPIR_Barrier_intra( MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 #define FUNCNAME MPIR_Barrier_inter
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Barrier_inter( MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag )
+int MPIR_Barrier_inter( MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 {
     int rank, mpi_errno = MPI_SUCCESS, root;
     int mpi_errno_ret = MPI_SUCCESS;
     int i = 0;
-    MPID_Comm *newcomm_ptr = NULL;
+    MPIR_Comm *newcomm_ptr = NULL;
     
     rank = comm_ptr->rank;
 
@@ -281,7 +281,7 @@ int MPIR_Barrier_inter( MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag )
 #define FUNCNAME MPIR_Barrier
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Barrier(MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -310,7 +310,7 @@ int MPIR_Barrier(MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 #define FUNCNAME MPIR_Barrier_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Barrier_impl(MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+int MPIR_Barrier_impl(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Barrier != NULL)
@@ -368,7 +368,7 @@ communicator have entered the call.
 int MPI_Barrier( MPI_Comm comm )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_BARRIER);
 
@@ -389,7 +389,7 @@ int MPI_Barrier( MPI_Comm comm )
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr( comm, comm_ptr );
     
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -397,7 +397,7 @@ int MPI_Barrier( MPI_Comm comm )
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    /* Validate communicator */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;

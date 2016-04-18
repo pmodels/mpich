@@ -114,12 +114,12 @@ static char* MPIDI_Coll_type_name(int i)
 static void MPIDI_Update_coll(pami_algorithm_t coll, 
                               int type,
                               int index,
-                              MPID_Comm *comm);
+                              MPIR_Comm *comm);
 
 static void MPIDI_Update_coll(pami_algorithm_t coll, 
                        int type,  /* must query vs always works */
                        int index,
-                       MPID_Comm *comm)
+                       MPIR_Comm *comm)
 {
 
    comm->mpid.user_selected_type[coll] = type;
@@ -160,7 +160,7 @@ static void MPIDI_Update_coll(pami_algorithm_t coll,
           sizeof(pami_metadata_t));
 }
    
-static void MPIDI_Check_preallreduce(char *env, MPID_Comm *comm, char *name, int constant)
+static void MPIDI_Check_preallreduce(char *env, MPIR_Comm *comm, char *name, int constant)
 {
    /* If a given protocol only requires a check for nonlocal conditions and preallreduce
     * is turned off, we can consider it a always works protocol instead 
@@ -176,7 +176,7 @@ static void MPIDI_Check_preallreduce(char *env, MPID_Comm *comm, char *name, int
       }
    }
 }
-static int MPIDI_Check_protocols(char *names[], MPID_Comm *comm, char *name, int constant)
+static int MPIDI_Check_protocols(char *names[], MPIR_Comm *comm, char *name, int constant)
 {
    int i = 0;
    char *envopts;
@@ -239,7 +239,7 @@ static int MPIDI_Check_protocols(char *names[], MPID_Comm *comm, char *name, int
    return 0;
 }
 
-void MPIDI_Comm_coll_envvars(MPID_Comm *comm)
+void MPIDI_Comm_coll_envvars(MPIR_Comm *comm)
 {
    char *envopts;
    int i;
@@ -590,7 +590,7 @@ void MPIDI_Comm_coll_envvars(MPID_Comm *comm)
 
 
 /* Determine how many of each collective type this communicator supports */
-void MPIDI_Comm_coll_query(MPID_Comm *comm)
+void MPIDI_Comm_coll_query(MPIR_Comm *comm)
 {
    TRACE_ERR("MPIDI_Comm_coll_query enter\n");
    int rc = 0, i, j;

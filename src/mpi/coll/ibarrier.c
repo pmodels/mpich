@@ -53,7 +53,7 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request) __attribute__((weak,alias(
 #define FUNCNAME MPIR_Ibarrier_intra
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_intra(MPID_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Ibarrier_intra(MPIR_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int size, rank, src, dst, mask;
@@ -96,7 +96,7 @@ fn_fail:
 #define FUNCNAME MPIR_Ibarrier_inter
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_inter(MPID_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Ibarrier_inter(MPIR_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, root;
@@ -169,7 +169,7 @@ fn_fail:
 #define FUNCNAME MPIR_Ibarrier_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_impl(MPID_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Ibarrier_impl(MPIR_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *reqp = NULL;
@@ -235,7 +235,7 @@ group have called MPI_Ibarrier.
 int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_IBARRIER);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -255,14 +255,14 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr(comm, comm_ptr);
+    MPIR_Comm_get_ptr(comm, comm_ptr);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */

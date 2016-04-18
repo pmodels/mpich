@@ -77,9 +77,9 @@ int MPID_nem_llc_vc_init(MPIDI_VC_t * vc);
 int MPID_nem_llc_vc_destroy(MPIDI_VC_t * vc);
 int MPID_nem_llc_vc_terminate(MPIDI_VC_t * vc);
 
-int MPID_nem_llc_anysource_iprobe(int tag, MPID_Comm * comm, int context_offset, int *flag,
+int MPID_nem_llc_anysource_iprobe(int tag, MPIR_Comm * comm, int context_offset, int *flag,
                                   MPI_Status * status);
-int MPID_nem_llc_anysource_improbe(int tag, MPID_Comm * comm, int context_offset, int *flag,
+int MPID_nem_llc_anysource_improbe(int tag, MPIR_Comm * comm, int context_offset, int *flag,
                                    MPID_Request ** message, MPI_Status * status);
 int MPID_nem_llc_get_ordering(int *ordering);
 
@@ -94,21 +94,21 @@ int MPIDI_nem_llc_Rqst_iov_update(MPID_Request * mreq, intptr_t consume);
 int MPID_nem_llc_send_queued(MPIDI_VC_t * vc, rque_t * send_queue);
 
 int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
-                       int dest, int tag, MPID_Comm * comm, int context_offset,
+                       int dest, int tag, MPIR_Comm * comm, int context_offset,
                        struct MPID_Request **request);
 int MPID_nem_llc_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
-                        int dest, int tag, MPID_Comm * comm, int context_offset,
+                        int dest, int tag, MPIR_Comm * comm, int context_offset,
                         struct MPID_Request **request);
 int MPID_nem_llc_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req);
 int MPID_nem_llc_kvs_put_binary(int from, const char *postfix, const uint8_t * buf, int length);
 int MPID_nem_llc_kvs_get_binary(int from, const char *postfix, char *buf, int length);
 void MPID_nem_llc_anysource_posted(MPID_Request * req);
 int MPID_nem_llc_anysource_matched(MPID_Request * req);
-int MPID_nem_llc_probe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, int context_offset,
+int MPID_nem_llc_probe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, int context_offset,
                        MPI_Status * status);
-int MPID_nem_llc_iprobe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, int context_offset,
+int MPID_nem_llc_iprobe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, int context_offset,
                         int *flag, MPI_Status * status);
-int MPID_nem_llc_improbe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, int context_offset,
+int MPID_nem_llc_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, int context_offset,
                          int *flag, MPID_Request ** message, MPI_Status * status);
 int MPID_nem_llc_cancel_recv(struct MPIDI_VC *vc, struct MPID_Request *req);
 
@@ -126,7 +126,7 @@ extern int llc_unbind(void *endpt);
 
 extern int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc);
 
-extern int convert_rank_llc2mpi(MPID_Comm * comm, int llc_rank, int *mpi_rank);
+extern int convert_rank_llc2mpi(MPIR_Comm * comm, int llc_rank, int *mpi_rank);
 typedef struct MPID_nem_llc_netmod_hdr {
     int initiator_pg_rank;
 #ifndef	notdef_hsiz_hack
