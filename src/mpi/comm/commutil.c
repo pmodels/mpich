@@ -1070,10 +1070,10 @@ int MPIR_Comm_release_always(MPIR_Comm * comm_ptr)
 #define FUNCNAME MPIR_Comm_apply_hints
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_apply_hints(MPIR_Comm * comm_ptr, MPID_Info * info_ptr)
+int MPIR_Comm_apply_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Info *hint = NULL;
+    MPIR_Info *hint = NULL;
     char hint_name[MPI_MAX_INFO_KEY] = { 0 };
     struct MPIR_Comm_hint_fn_elt *hint_fn = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_APPLY_HINTS);

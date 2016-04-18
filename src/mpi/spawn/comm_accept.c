@@ -30,7 +30,7 @@ int MPI_Comm_accept(const char *port_name, MPI_Info info, int root, MPI_Comm com
 #define FUNCNAME MPIR_Comm_accept_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_accept_impl(const char * port_name, MPID_Info * info_ptr, int root,
+int MPIR_Comm_accept_impl(const char * port_name, MPIR_Info * info_ptr, int root,
                           MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr)
 {
     return MPID_Comm_accept(port_name, info_ptr, root, comm_ptr, newcomm_ptr);
@@ -70,7 +70,7 @@ int MPI_Comm_accept(const char *port_name, MPI_Info info, int root, MPI_Comm com
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
-    MPID_Info *info_ptr = NULL;
+    MPIR_Info *info_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_ACCEPT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -92,7 +92,7 @@ int MPI_Comm_accept(const char *port_name, MPI_Info info, int root, MPI_Comm com
     
     /* Convert MPI object handles to object pointers */
     MPIR_Comm_get_ptr( comm, comm_ptr );
-    MPID_Info_get_ptr( info, info_ptr );
+    MPIR_Info_get_ptr( info, info_ptr );
     
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING

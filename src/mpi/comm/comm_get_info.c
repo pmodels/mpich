@@ -30,7 +30,7 @@ int MPI_Comm_get_info(MPI_Comm comm, MPI_Info *info) __attribute__((weak,alias("
 #define FUNCNAME MPIR_Comm_get_info_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPID_Info ** info_p_p)
+int MPIR_Comm_get_info_impl(MPIR_Comm * comm_ptr, MPIR_Info ** info_p_p)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -79,7 +79,7 @@ int MPI_Comm_get_info(MPI_Comm comm, MPI_Info * info_used)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_Info *info_used_ptr = NULL;
+    MPIR_Info *info_used_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_GET_INFO);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

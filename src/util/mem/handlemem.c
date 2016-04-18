@@ -473,7 +473,7 @@ void *MPIU_Handle_get_ptr_indirect( int handle, MPIU_Object_alloc_t *objmem )
     index_num = HANDLE_BLOCK_INDEX(handle);
     /* If we could declare the blocks to a known size object, we
      could do something like 
-       return &( (MPID_Info**)*MPIU_Info_mem.indirect)[block_num][index_num];
+       return &( (MPIR_Info**)*MPIU_Info_mem.indirect)[block_num][index_num];
      since we cannot, we do the calculation by hand.
     */
     /* Get the pointer to the block of addresses.  This is an array of 

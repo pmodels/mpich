@@ -496,7 +496,7 @@ void MPIDI_add_new_tranid(long long tranid)
    intercommunicator between the roots. Most of the complexity is
    because there can be multiple process groups on each side.
 */
-int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
+int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
                        struct MPIR_Comm *comm_ptr, struct MPIR_Comm **newcomm)
 {
     int mpi_errno=MPI_SUCCESS;
@@ -1136,7 +1136,7 @@ static int MPIDI_SendPGtoPeerAndFree( struct MPIR_Comm *tmp_comm, int *sendtag_p
    process groups on each side.
 
  */
-int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
+int MPIDI_Comm_accept(const char *port_name, MPIR_Info *info, int root,
                       struct MPIR_Comm *comm_ptr, struct MPIR_Comm **newcomm)
 {
     int mpi_errno=MPI_SUCCESS;

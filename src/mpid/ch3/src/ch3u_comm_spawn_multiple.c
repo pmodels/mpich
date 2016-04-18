@@ -34,7 +34,7 @@
 #define FUNCNAME mpi_to_pmi_keyvals
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int  mpi_to_pmi_keyvals( MPID_Info *info_ptr, PMI_keyval_t **kv_ptr, 
+static int  mpi_to_pmi_keyvals( MPIR_Info *info_ptr, PMI_keyval_t **kv_ptr,
 				int *nkeys_ptr )
 {
     char key[MPI_MAX_INFO_KEY];
@@ -104,7 +104,7 @@ static void free_pmi_keyvals(PMI_keyval_t **kv, int size, int *counts)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_Comm_spawn_multiple(int count, char **commands,
                                   char ***argvs, const int *maxprocs,
-                                  MPID_Info **info_ptrs, int root,
+                                  MPIR_Info **info_ptrs, int root,
                                   MPIR_Comm *comm_ptr, MPIR_Comm
                                   **intercomm, int *errcodes) 
 {
@@ -145,8 +145,8 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
         MPIU_Assert(count > 0);
         {
             int *argcs = MPL_malloc(count*sizeof(int));
-            struct MPID_Info preput;
-            struct MPID_Info *preput_p[1] = { &preput };
+            struct MPIR_Info preput;
+            struct MPIR_Info *preput_p[1] = { &preput };
 
             MPIU_Assert(argcs);
             /*
@@ -179,8 +179,8 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
             pmi_errno = PMI2_Job_Spawn(count, (const char **)commands,
                                        argcs, (const char ***)argvs,
                                        maxprocs,
-                                       info_keyval_sizes, (const MPID_Info **)info_ptrs,
-                                       1, (const struct MPID_Info **)preput_p,
+                                       info_keyval_sizes, (const MPIR_Info **)info_ptrs,
+                                       1, (const struct MPIR_Info **)preput_p,
                                        NULL, 0,
                                        /*jobId, jobIdSize,*/ /* XXX DJG job stuff? */
                                        pmi_errcodes);

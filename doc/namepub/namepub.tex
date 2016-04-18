@@ -88,17 +88,17 @@ error code mechanism or, for external packages, use the MPI routines
 for adding error codes and classes.
 
 \begin{verbatim}
-int MPID_NS_Create( const MPID_Info *, MPID_NS_Handle * )
-int MPID_NS_Publish( MPID_NS_Handle, const MPID_Info *, 
+int MPID_NS_Create( const MPIR_Info *, MPID_NS_Handle * )
+int MPID_NS_Publish( MPID_NS_Handle, const MPIR_Info *,
                      const char service_name[], const char port[] )
-int MPID_NS_Lookup( MPID_NS_Handle, const MPID_Info *,
+int MPID_NS_Lookup( MPID_NS_Handle, const MPIR_Info *,
                     const char service_name[], char port[] )
-int MPID_NS_Unpublish( MPID_NS_Handle, const MPID_Info *, 
+int MPID_NS_Unpublish( MPID_NS_Handle, const MPIR_Info *,
                        const char service_name[] )
 int MPID_NS_Free( MPID_NS_Handle * )
 \end{verbatim}
 
-These calls make use of the \code{MPID_Info} pointer (a pointer to the
+These calls make use of the \code{MPIR_Info} pointer (a pointer to the
 info object passed into the MPI name publisher routines) to provide other
 information that the name service may require.
 Predefined \code{MPI_Info} keys and values for name service are:

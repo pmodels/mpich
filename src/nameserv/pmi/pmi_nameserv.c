@@ -26,7 +26,7 @@ struct MPID_NS_Handle { int dummy; };    /* unused for now */
 #define FUNCNAME MPID_NS_Create
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
+int MPID_NS_Create( const MPIR_Info *info_ptr, MPID_NS_Handle *handle_ptr )
 {
     static struct MPID_NS_Handle nsHandleWithNoData;
 
@@ -40,7 +40,7 @@ int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
 #define FUNCNAME MPID_NS_Publish
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_NS_Publish( MPID_NS_Handle handle, const MPID_Info *info_ptr, 
+int MPID_NS_Publish( MPID_NS_Handle handle, const MPIR_Info *info_ptr,
                      const char service_name[], const char port[] )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -66,7 +66,7 @@ fn_fail:
 #define FUNCNAME MPID_NS_Lookup
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_NS_Lookup( MPID_NS_Handle handle, const MPID_Info *info_ptr,
+int MPID_NS_Lookup( MPID_NS_Handle handle, const MPIR_Info *info_ptr,
                     const char service_name[], char port[] )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -92,7 +92,7 @@ fn_fail:
 #define FUNCNAME MPID_NS_Unpublish
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_NS_Unpublish( MPID_NS_Handle handle, const MPID_Info *info_ptr, 
+int MPID_NS_Unpublish( MPID_NS_Handle handle, const MPIR_Info *info_ptr,
                        const char service_name[] )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -148,7 +148,7 @@ struct MPID_NS_Handle
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Create
-int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
+int MPID_NS_Create( const MPIR_Info *info_ptr, MPID_NS_Handle *handle_ptr )
 {
     static const char FCNAME[] = "MPID_NS_Create";
     int err;
@@ -203,7 +203,7 @@ int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Publish
-int MPID_NS_Publish( MPID_NS_Handle handle, const MPID_Info *info_ptr, 
+int MPID_NS_Publish( MPID_NS_Handle handle, const MPIR_Info *info_ptr,
                      const char service_name[], const char port[] )
 {
     static const char FCNAME[] = "MPID_NS_Publish";
@@ -232,7 +232,7 @@ int MPID_NS_Publish( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Lookup
-int MPID_NS_Lookup( MPID_NS_Handle handle, const MPID_Info *info_ptr,
+int MPID_NS_Lookup( MPID_NS_Handle handle, const MPIR_Info *info_ptr,
                     const char service_name[], char port[] )
 {
     static const char FCNAME[] = "MPID_NS_Lookup";
@@ -257,7 +257,7 @@ int MPID_NS_Lookup( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Unpublish
-int MPID_NS_Unpublish( MPID_NS_Handle handle, const MPID_Info *info_ptr, 
+int MPID_NS_Unpublish( MPID_NS_Handle handle, const MPIR_Info *info_ptr,
                        const char service_name[] )
 {
     static const char FCNAME[] = "MPID_NS_Unpublish";

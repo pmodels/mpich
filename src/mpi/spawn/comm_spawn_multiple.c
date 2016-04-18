@@ -72,7 +72,7 @@ int MPI_Comm_spawn_multiple(int count, char *array_of_commands[],
     int mpi_errno = MPI_SUCCESS, i;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Comm *intercomm_ptr = NULL;
-    MPID_Info **array_of_info_ptrs = NULL;
+    MPIR_Info **array_of_info_ptrs = NULL;
     MPIU_CHKLMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SPAWN_MULTIPLE);
 
@@ -127,10 +127,10 @@ int MPI_Comm_spawn_multiple(int count, char *array_of_commands[],
     /* ... body of routine ...  */
     
     if (comm_ptr->rank == root) {
-	MPIU_CHKLMEM_MALLOC(array_of_info_ptrs, MPID_Info **, count * sizeof(MPID_Info*), mpi_errno, "array of info pointers");
+	MPIU_CHKLMEM_MALLOC(array_of_info_ptrs, MPIR_Info **, count * sizeof(MPIR_Info*), mpi_errno, "array of info pointers");
 	for (i=0; i<count; i++)
 	{
-	    MPID_Info_get_ptr(array_of_info[i], array_of_info_ptrs[i]);
+	    MPIR_Info_get_ptr(array_of_info[i], array_of_info_ptrs[i]);
 	}
     }
 

@@ -38,7 +38,7 @@
  */
 
 int
-MPID_Win_create_dynamic( MPID_Info  * info,
+MPID_Win_create_dynamic( MPIR_Info  * info,
                   MPIR_Comm  * comm_ptr,
                   MPIR_Win  ** win_ptr)
 {

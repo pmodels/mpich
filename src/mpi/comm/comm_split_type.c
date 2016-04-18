@@ -31,7 +31,7 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
-                              MPID_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
+                              MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -136,7 +136,7 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
-    MPID_Info *info_ptr = NULL;
+    MPIR_Info *info_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SPLIT_TYPE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -158,7 +158,7 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
 
     /* Get handles to MPI objects. */
     MPIR_Comm_get_ptr(comm, comm_ptr);
-    MPID_Info_get_ptr(info, info_ptr);
+    MPIR_Info_get_ptr(info, info_ptr);
 
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING

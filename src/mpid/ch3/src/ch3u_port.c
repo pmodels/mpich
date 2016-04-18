@@ -330,7 +330,7 @@ fn_fail:
 #define FUNCNAME MPIDI_Comm_connect
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root, 
+int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
 		       MPIR_Comm *comm_ptr, MPIR_Comm **newcomm)
 {
     int mpi_errno=MPI_SUCCESS;
@@ -926,7 +926,7 @@ static int SendPGtoPeerAndFree( MPIR_Comm *tmp_comm, int *sendtag_p,
 #define FUNCNAME MPIDI_Comm_accept
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root, 
+int MPIDI_Comm_accept(const char *port_name, MPIR_Info *info, int root,
 		      MPIR_Comm *comm_ptr, MPIR_Comm **newcomm)
 {
     int mpi_errno=MPI_SUCCESS;

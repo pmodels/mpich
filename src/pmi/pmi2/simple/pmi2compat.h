@@ -12,6 +12,6 @@
 #define PMI2U_Strnapp MPL_strnapp
 #define PMI2U_Assert MPIU_Assert
 #define PMI2U_Exit MPL_exit
-#define PMI2U_Info MPID_Info
+#define PMI2U_Info MPIR_Info
 #define PMI2U_Memcpy MPIU_Memcpy
 

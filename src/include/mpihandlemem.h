@@ -64,7 +64,7 @@ typedef enum MPID_Object_kind {
   MPID_FILE       = 0x4, /* only used obliquely inside MPIR_Errhandler objs */
   MPID_ERRHANDLER = 0x5,
   MPID_OP         = 0x6,
-  MPID_INFO       = 0x7,
+  MPIR_INFO       = 0x7,
   MPID_WIN        = 0x8,
   MPID_KEYVAL     = 0x9,
   MPID_ATTR       = 0xa,

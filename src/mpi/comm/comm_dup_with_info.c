@@ -30,7 +30,7 @@ int MPI_Comm_dup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm *newcomm) __at
 #define FUNCNAME MPIR_Comm_dup_with_info_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_dup_with_info_impl(MPIR_Comm * comm_ptr, MPID_Info * info_ptr,
+int MPIR_Comm_dup_with_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr,
                                  MPIR_Comm ** newcomm_p_p)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -89,7 +89,7 @@ int MPI_Comm_dup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
-    MPID_Info *info_ptr = NULL;
+    MPIR_Info *info_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_DUP_WITH_INFO);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -110,7 +110,7 @@ int MPI_Comm_dup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm)
 
     /* Convert MPI object handles to object pointers */
     MPIR_Comm_get_ptr(comm, comm_ptr);
-    MPID_Info_get_ptr(info, info_ptr);
+    MPIR_Info_get_ptr(info, info_ptr);
 
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING

@@ -123,7 +123,7 @@ int MPIDI_CH3_Progress_poke(void);
 int MPIDI_CH3_Open_port(char *port_name);
 
 int MPIDI_CH3_Comm_spawn_multiple(int count, char ** commands, char *** argvs,
-				  int * maxprocs, MPID_Info ** info_ptrs, 
+				  int * maxprocs, MPIR_Info ** info_ptrs,
 				  int root,
                                   MPIR_Comm * comm_ptr, MPIR_Comm ** intercomm,
 				  int * errcodes);

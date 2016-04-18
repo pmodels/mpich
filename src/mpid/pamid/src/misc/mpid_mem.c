@@ -27,7 +27,7 @@
 
 #include <mpidimpl.h>
 
-void *MPID_Alloc_mem( size_t size, MPID_Info *info_ptr )
+void *MPID_Alloc_mem( size_t size, MPIR_Info *info_ptr )
 {
     void *ap;
     ap = MPL_malloc(size);

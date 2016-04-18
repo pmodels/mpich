@@ -71,7 +71,7 @@ int MPI_Win_get_info(MPI_Win win, MPI_Info *info_used)
     static const char FCNAME[] = "MPI_Win_get_info";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
-    MPID_Info *info_ptr = NULL;
+    MPIR_Info *info_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_GET_INFO);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

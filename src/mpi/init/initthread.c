@@ -321,7 +321,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     int has_env;
     int thread_provided;
     int exit_init_cs_on_failure = 0;
-    MPID_Info *info_ptr;
+    MPIR_Info *info_ptr;
 
     /* For any code in the device that wants to check for runtime 
        decisions on the value of isThreaded, set a provisional
@@ -493,7 +493,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     /* create MPI_INFO_NULL object */
     /* FIXME: Currently this info object is empty, we need to add data to this
        as defined by the standard. */
-    info_ptr = MPID_Info_builtin + 1;
+    info_ptr = MPIR_Info_builtin + 1;
     info_ptr->handle = MPI_INFO_ENV;
     MPIU_Object_set_ref(info_ptr, 1);
     info_ptr->next  = NULL;

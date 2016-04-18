@@ -27,7 +27,7 @@ int MPID_Close_port(const char *port_name)
   MPID_abort();
   return 0;
 }
-int MPID_Open_port(MPID_Info *info_ptr,
+int MPID_Open_port(MPIR_Info *info_ptr,
                    char *port_name)
 {
   MPID_abort();
@@ -35,7 +35,7 @@ int MPID_Open_port(MPID_Info *info_ptr,
 }
 
 int MPID_Comm_accept(const char *port_name,
-                     MPID_Info *info_ptr,
+                     MPIR_Info *info_ptr,
                      int root,
                      MPIR_Comm *comm_ptr,
                      MPIR_Comm **newcomm)
@@ -44,7 +44,7 @@ int MPID_Comm_accept(const char *port_name,
   return 0;
 }
 int MPID_Comm_connect(const char *port_name,
-                      MPID_Info *info_ptr,
+                      MPIR_Info *info_ptr,
                       int root,
                       MPIR_Comm *comm_ptr,
                       MPIR_Comm **newcomm)
@@ -61,7 +61,7 @@ int MPID_Comm_spawn_multiple(int count,
                              char *array_of_commands[],
                              char* *array_of_argv[],
                              const int array_of_maxprocs[],
-                             MPID_Info *array_of_info[],
+                             MPIR_Info *array_of_info[],
                              int root,
                              MPIR_Comm *comm_ptr,
                              MPIR_Comm **intercomm,

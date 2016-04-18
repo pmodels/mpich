@@ -63,7 +63,7 @@ int CheckRankOnNode(MPIR_Comm  * comm_ptr,int *onNode ) {
      return mpi_errno;
 }
 
-int CheckSpaceType(MPIR_Win **win_ptr, MPID_Info *info,int *noncontig) {
+int CheckSpaceType(MPIR_Win **win_ptr, MPIR_Info *info,int *noncontig) {
     int mpi_errno=MPI_SUCCESS;
   /* Check if we are allowed to allocate space non-contiguously */
     if (info != NULL) {
@@ -478,7 +478,7 @@ fn_fail:
 int
 MPID_Win_allocate_shared(MPI_Aint     size,   
                          int          disp_unit,
-                         MPID_Info  * info,
+                         MPIR_Info  * info,
                          MPIR_Comm  * comm_ptr,
                          void *base_ptr,
                          MPIR_Win  ** win_ptr)

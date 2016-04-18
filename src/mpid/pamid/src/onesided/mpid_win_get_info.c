@@ -30,7 +30,7 @@
  * \param[in] info_p_p         Info hint
  * \return MPI_SUCCESS
  */
-int MPIDI_Win_get_info(MPIR_Win *win, MPID_Info **info_used)
+int MPIDI_Win_get_info(MPIR_Win *win, MPIR_Info **info_used)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -91,7 +91,7 @@ int MPIDI_Win_get_info(MPIR_Win *win, MPID_Info **info_used)
 
 int
 MPID_Win_get_info(MPIR_Win     *win,
-                  MPID_Info   **info_p)
+                  MPIR_Info   **info_p)
 {
     int mpi_errno = MPI_SUCCESS;
 
