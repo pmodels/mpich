@@ -65,7 +65,7 @@ int MPI_Errhandler_get(MPI_Comm comm, MPI_Errhandler *errhandler)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_Errhandler *errhandler_ptr;
+    MPIR_Errhandler *errhandler_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ERRHANDLER_GET);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

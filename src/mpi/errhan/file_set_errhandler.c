@@ -56,7 +56,7 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
     int mpi_errno = MPI_SUCCESS;
 #ifdef MPI_MODE_RDONLY
     int in_use;
-    MPID_Errhandler *errhan_ptr = NULL, *old_errhandler_ptr;
+    MPIR_Errhandler *errhan_ptr = NULL, *old_errhandler_ptr;
     MPI_Errhandler old_errhandler;
 #endif
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_FILE_SET_ERRHANDLER);
@@ -80,7 +80,7 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
     }
 #   endif /* HAVE_ERROR_CHECKING */
     
-    MPID_Errhandler_get_ptr( errhandler, errhan_ptr );
+    MPIR_Errhandler_get_ptr( errhandler, errhan_ptr );
     
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -88,7 +88,7 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    if (HANDLE_GET_KIND(errhandler) != HANDLE_KIND_BUILTIN) {
-		MPID_Errhandler_valid_ptr( errhan_ptr,mpi_errno );
+		MPIR_Errhandler_valid_ptr( errhan_ptr,mpi_errno );
 		/* Also check for a valid errhandler kind */
 		if (!mpi_errno) {
 		    if (errhan_ptr->kind != MPID_FILE) {
@@ -109,16 +109,16 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
         /* MPI_File objects default to the errhandler set on MPI_FILE_NULL
          * at file open time, or MPI_ERRORS_RETURN if no errhandler is set
          * on MPI_FILE_NULL. (MPI-2.2, sec 13.7) */
-        MPID_Errhandler_get_ptr( MPI_ERRORS_RETURN, old_errhandler_ptr );
+        MPIR_Errhandler_get_ptr( MPI_ERRORS_RETURN, old_errhandler_ptr );
     }
     else {
-        MPID_Errhandler_get_ptr( old_errhandler, old_errhandler_ptr );
+        MPIR_Errhandler_get_ptr( old_errhandler, old_errhandler_ptr );
     }
 
     if (old_errhandler_ptr) {
         MPIR_Errhandler_release_ref(old_errhandler_ptr,&in_use);
         if (!in_use) {
-            MPID_Errhandler_free( old_errhandler_ptr );
+            MPIR_Errhandler_free( old_errhandler_ptr );
         }
     }
 
@@ -168,10 +168,10 @@ void MPIR_Get_file_error_routine( MPI_Errhandler e,
 				  void (**c)(MPI_File *, int *, ...), 
 				   int *kind )
 {
-    MPID_Errhandler *e_ptr = 0;
+    MPIR_Errhandler *e_ptr = 0;
     int mpi_errno = MPI_SUCCESS;
 
-    /* Convert the MPI_Errhandler into an MPID_Errhandler */
+    /* Convert the MPI_Errhandler into an MPIR_Errhandler */
 
     if (!e) {
 	*c = 0;
@@ -185,7 +185,7 @@ void MPIR_Get_file_error_routine( MPI_Errhandler e,
 	    *kind = 1;
 	    return;
 	}
-	MPID_Errhandler_get_ptr(e,e_ptr);
+	MPIR_Errhandler_get_ptr(e,e_ptr);
 	if (!e_ptr) {
 	    /* FIXME: We need an error return */
 	    *c = 0;

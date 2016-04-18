@@ -401,7 +401,7 @@ void MPIR_DatatypeAttrFinalize( void );
 #define MPIR_Comm_get_ptr(a,ptr)       MPID_Getb_ptr(Comm,a,0x03ffffff,ptr)
 #define MPIR_Group_get_ptr(a,ptr)      MPID_Getb_ptr(Group,a,0x03ffffff,ptr)
 #define MPID_File_get_ptr(a,ptr)       MPID_Get_ptr(File,a,ptr)
-#define MPID_Errhandler_get_ptr(a,ptr) MPID_Getb_ptr(Errhandler,a,0x3,ptr)
+#define MPIR_Errhandler_get_ptr(a,ptr) MPID_Getb_ptr(Errhandler,a,0x3,ptr)
 #define MPID_Op_get_ptr(a,ptr)         MPID_Getb_ptr(Op,a,0x000000ff,ptr)
 #define MPID_Info_get_ptr(a,ptr)       MPID_Getb_ptr(Info,a,0x03ffffff,ptr)
 #define MPID_Win_get_ptr(a,ptr)        MPID_Get_ptr(Win,a,ptr)
@@ -461,7 +461,7 @@ void MPIR_DatatypeAttrFinalize( void );
 #define MPIR_Group_valid_ptr(ptr,err) MPID_Valid_ptr_class(Group,ptr,MPI_ERR_GROUP,err)
 #define MPID_Win_valid_ptr(ptr,err) MPID_Valid_ptr_class(Win,ptr,MPI_ERR_WIN,err)
 #define MPID_Op_valid_ptr(ptr,err) MPID_Valid_ptr_class(Op,ptr,MPI_ERR_OP,err)
-#define MPID_Errhandler_valid_ptr(ptr,err) MPID_Valid_ptr_class(Errhandler,ptr,MPI_ERR_ARG,err)
+#define MPIR_Errhandler_valid_ptr(ptr,err) MPID_Valid_ptr_class(Errhandler,ptr,MPI_ERR_ARG,err)
 #define MPID_File_valid_ptr(ptr,err) MPID_Valid_ptr_class(File,ptr,MPI_ERR_FILE,err)
 #define MPID_Request_valid_ptr(ptr,err) MPID_Valid_ptr_class(Request,ptr,MPI_ERR_REQUEST,err)
 #define MPID_Keyval_valid_ptr(ptr,err) MPID_Valid_ptr_class(Keyval,ptr,MPI_ERR_KEYVAL,err)
@@ -611,7 +611,7 @@ extern MPID_Thread_mutex_t MPIR_THREAD_POBJ_PMI_MUTEX;
 /* ------------------------------------------------------------------------- */
 /* Error Handlers */
 /*E
-  MPID_Errhandler_fn - MPID Structure to hold an error handler function
+  MPIR_Errhandler_fn - MPID Structure to hold an error handler function
 
   Notes:
   The MPI-1 Standard declared only the C version of this, implicitly 
@@ -632,15 +632,15 @@ extern MPID_Thread_mutex_t MPIR_THREAD_POBJ_PMI_MUTEX;
   of the union)?
 
   E*/
-typedef union MPID_Errhandler_fn {
+typedef union MPIR_Errhandler_fn {
    void (*C_Comm_Handler_function) ( MPI_Comm *, int *, ... );
    void (*F77_Handler_function) ( MPI_Fint *, MPI_Fint * );
    void (*C_Win_Handler_function) ( MPI_Win *, int *, ... );
    void (*C_File_Handler_function) ( MPI_File *, int *, ... );
-} MPID_Errhandler_fn;
+} MPIR_Errhandler_fn;
 
 /*S
-  MPID_Errhandler - Description of the error handler structure
+  MPIR_Errhandler - Description of the error handler structure
 
   Notes:
   Device-specific information may indicate whether the error handler is active;
@@ -657,20 +657,20 @@ typedef union MPID_Errhandler_fn {
   Module:
   ErrHand-DS
   S*/
-typedef struct MPID_Errhandler {
+typedef struct MPIR_Errhandler {
   MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
   MPID_Lang_t        language;
   MPID_Object_kind   kind;
-  MPID_Errhandler_fn errfn;
+  MPIR_Errhandler_fn errfn;
   /* Other, device-specific information */
 #ifdef MPID_DEV_ERRHANDLER_DECL
     MPID_DEV_ERRHANDLER_DECL
 #endif
-} MPID_Errhandler;
-extern MPIU_Object_alloc_t MPID_Errhandler_mem;
+} MPIR_Errhandler;
+extern MPIU_Object_alloc_t MPIR_Errhandler_mem;
 /* Preallocated errhandler objects */
-extern MPID_Errhandler MPID_Errhandler_builtin[];
-extern MPID_Errhandler MPID_Errhandler_direct[];
+extern MPIR_Errhandler MPIR_Errhandler_builtin[];
+extern MPIR_Errhandler MPIR_Errhandler_direct[];
 
 /* We never reference count the builtin error handler objects, regardless of how
  * we decide to reference count the other predefined objects.  If we get to the
@@ -1222,7 +1222,7 @@ typedef struct MPIR_Comm {
                                     same for intra communicators */
     MPIR_Comm_kind_t comm_kind;  /* MPID_INTRACOMM or MPID_INTERCOMM */
     char          name[MPI_MAX_OBJECT_NAME];  /* Required for MPI-2 */
-    MPID_Errhandler *errhandler; /* Pointer to the error handler structure */
+    MPIR_Errhandler *errhandler; /* Pointer to the error handler structure */
     struct MPIR_Comm    *local_comm; /* Defined only for intercomms, holds
 				        an intracomm for the local group */
 
@@ -1663,7 +1663,7 @@ MPID_Progress_state;
 typedef struct MPID_Win {
     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
     MPID_Thread_mutex_t mutex;
-    MPID_Errhandler *errhandler;  /* Pointer to the error handler structure */
+    MPIR_Errhandler *errhandler;  /* Pointer to the error handler structure */
     void *base;
     MPI_Aint    size;        
     int          disp_unit;      /* Displacement unit of *local* window */
@@ -3675,7 +3675,7 @@ int MPID_Topo_cluster_info( MPIR_Comm *comm,
   @*/
 int MPID_Get_processor_name( char *name, int namelen, int *resultlen);
 
-void MPID_Errhandler_free(MPID_Errhandler *errhan_ptr);
+void MPIR_Errhandler_free(MPIR_Errhandler *errhan_ptr);
 
 /*@
   MPID_Get_universe_size - Return the number of processes that the current
@@ -4284,8 +4284,8 @@ int MPIR_Comm_get_info_impl(MPIR_Comm *comm_ptr, MPID_Info **info_ptr);
 int MPIR_Comm_set_info_impl(MPIR_Comm *comm_ptr, MPID_Info *info_ptr);
 int MPIR_Comm_free_impl(MPIR_Comm * comm_ptr);
 void MPIR_Comm_free_keyval_impl(int keyval);
-void MPIR_Comm_get_errhandler_impl(MPIR_Comm *comm_ptr, MPID_Errhandler **errhandler_ptr);
-void MPIR_Comm_set_errhandler_impl(MPIR_Comm *comm_ptr, MPID_Errhandler *errhandler_ptr);
+void MPIR_Comm_get_errhandler_impl(MPIR_Comm *comm_ptr, MPIR_Errhandler **errhandler_ptr);
+void MPIR_Comm_set_errhandler_impl(MPIR_Comm *comm_ptr, MPIR_Errhandler *errhandler_ptr);
 void MPIR_Comm_get_name_impl(MPIR_Comm *comm, char *comm_name, int *resultlen);
 int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_intracomm_ptr);
 int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
