@@ -405,7 +405,7 @@ void MPIR_DatatypeAttrFinalize( void );
 #define MPIR_Info_get_ptr(a,ptr)       MPID_Getb_ptr(Info,a,0x03ffffff,ptr)
 #define MPIR_Win_get_ptr(a,ptr)        MPID_Get_ptr(Win,a,ptr)
 #define MPID_Request_get_ptr(a,ptr)    MPID_Get_ptr(Request,a,ptr)
-#define MPID_Grequest_class_get_ptr(a,ptr) MPID_Get_ptr(Grequest_class,a,ptr)
+#define MPIR_Grequest_class_get_ptr(a,ptr) MPID_Get_ptr(Grequest_class,a,ptr)
 /* Keyvals have a special format. This is roughly MPID_Get_ptrb, but
    the handle index is in a smaller bit field.  In addition, 
    there is no storage for the builtin keyvals.  
@@ -1470,7 +1470,7 @@ typedef void (MPIR_Grequest_f77_query_function)(void *, MPI_Fint *, MPI_Fint *);
 
 /* vtable-ish structure holding generalized request function pointers and other
  * state.  Saves ~48 bytes in pt2pt requests on many platforms. */
-struct MPID_Grequest_fns {
+struct MPIR_Grequest_fns {
     MPI_Grequest_cancel_function *cancel_fn;
     MPI_Grequest_free_function   *free_fn;
     MPI_Grequest_query_function  *query_fn;
@@ -1520,7 +1520,7 @@ typedef struct MPID_Request {
 
     /* User-defined request support via a "vtable".  Saves space in the already
      * bloated request for regular pt2pt and NBC requests. */
-    struct MPID_Grequest_fns *greq_fns;
+    struct MPIR_Grequest_fns *greq_fns;
 
     struct MPIR_Sendq *dbg_next;
 
@@ -3538,15 +3538,15 @@ void MPID_Request_release(MPID_Request *);
 @*/
 int MPID_Request_complete(MPID_Request *);
 
-typedef struct MPID_Grequest_class {
+typedef struct MPIR_Grequest_class {
      MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
      MPI_Grequest_query_function *query_fn;
      MPI_Grequest_free_function *free_fn;
      MPI_Grequest_cancel_function *cancel_fn;
      MPIX_Grequest_poll_function *poll_fn;
      MPIX_Grequest_wait_function *wait_fn;
-     struct MPID_Grequest_class *next;
-} MPID_Grequest_class;
+     struct MPIR_Grequest_class *next;
+} MPIR_Grequest_class;
 
 
 /* Interfaces exposed by MPI_T */
