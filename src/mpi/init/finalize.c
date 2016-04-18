@@ -200,7 +200,7 @@ int MPI_Finalize( void )
 	MPIR_Errhandler_release_ref( MPIR_Process.comm_world->errhandler,
 				     &in_use);
 	if (!in_use) {
-	    MPIU_Handle_obj_free( &MPID_Errhandler_mem, 
+	    MPIU_Handle_obj_free( &MPIR_Errhandler_mem,
 				  MPIR_Process.comm_world->errhandler );
 	}
         /* always set to NULL to avoid a double-release later in finalize */
@@ -213,7 +213,7 @@ int MPI_Finalize( void )
 	MPIR_Errhandler_release_ref( MPIR_Process.comm_self->errhandler,
 				     &in_use);
 	if (!in_use) {
-	    MPIU_Handle_obj_free( &MPID_Errhandler_mem, 
+	    MPIU_Handle_obj_free( &MPIR_Errhandler_mem,
 				  MPIR_Process.comm_self->errhandler );
 	}
         /* always set to NULL to avoid a double-release later in finalize */

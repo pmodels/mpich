@@ -34,9 +34,9 @@ int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function *comm_errhandl
                                      MPI_Errhandler *errhandler)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Errhandler *errhan_ptr;
+    MPIR_Errhandler *errhan_ptr;
         
-    errhan_ptr = (MPID_Errhandler *)MPIU_Handle_obj_alloc( &MPID_Errhandler_mem );
+    errhan_ptr = (MPIR_Errhandler *)MPIU_Handle_obj_alloc( &MPIR_Errhandler_mem );
     MPIR_ERR_CHKANDJUMP(!errhan_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     errhan_ptr->language = MPID_LANG_C;

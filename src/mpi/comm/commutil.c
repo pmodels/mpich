@@ -1004,7 +1004,7 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
             int errhInuse;
             MPIR_Errhandler_release_ref(comm_ptr->errhandler, &errhInuse);
             if (!errhInuse) {
-                MPIU_Handle_obj_free(&MPID_Errhandler_mem, comm_ptr->errhandler);
+                MPIU_Handle_obj_free(&MPIR_Errhandler_mem, comm_ptr->errhandler);
             }
         }
 

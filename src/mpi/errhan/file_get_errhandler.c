@@ -58,7 +58,7 @@ int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler *errhandler)
     int mpi_errno = MPI_SUCCESS;
 #ifdef MPI_MODE_RDONLY
     MPI_Errhandler eh;
-    MPID_Errhandler *e;
+    MPIR_Errhandler *e;
 #endif
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_FILE_GET_ERRHANDLER);
 
@@ -86,10 +86,10 @@ int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler *errhandler)
     
     MPIR_ROMIO_Get_file_errhand( file, &eh );
     if (!eh) {
-	MPID_Errhandler_get_ptr( MPI_ERRORS_RETURN, e );
+	MPIR_Errhandler_get_ptr( MPI_ERRORS_RETURN, e );
     }
     else {
-	MPID_Errhandler_get_ptr( eh, e );
+	MPIR_Errhandler_get_ptr( eh, e );
     }
     MPIR_Errhandler_add_ref( e );
     *errhandler = e->handle;

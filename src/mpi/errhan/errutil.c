@@ -70,7 +70,7 @@ cvars:
  * This file contains several groups of routines user for error handling
  * and reporting.  
  *
- * The first group provides memory for the MPID_Errhandler objects 
+ * The first group provides memory for the MPIR_Errhandler objects
  * and the routines to free and manipulate them
  *
  * The second group provides routines to call the appropriate error handler,
@@ -130,7 +130,7 @@ static int checkForUserErrcode( int );
 
 
 /* ------------------------------------------------------------------------- */
-/* Provide the MPID_Errhandler space and the routines to free and set them
+/* Provide the MPIR_Errhandler space and the routines to free and set them
    from C++ and Fortran */
 /* ------------------------------------------------------------------------- */
 /*
@@ -143,26 +143,26 @@ static int checkForUserErrcode( int );
 #endif
 
 /* Preallocated errorhandler objects */
-MPID_Errhandler MPID_Errhandler_builtin[3] = { {0} };
-MPID_Errhandler MPID_Errhandler_direct[MPID_ERRHANDLER_PREALLOC] = 
+MPIR_Errhandler MPIR_Errhandler_builtin[3] = { {0} };
+MPIR_Errhandler MPIR_Errhandler_direct[MPID_ERRHANDLER_PREALLOC] =
     { {0} };
-MPIU_Object_alloc_t MPID_Errhandler_mem = { 0, 0, 0, 0, MPID_ERRHANDLER, 
-					    sizeof(MPID_Errhandler), 
-					    MPID_Errhandler_direct,
+MPIU_Object_alloc_t MPIR_Errhandler_mem = { 0, 0, 0, 0, MPID_ERRHANDLER,
+					    sizeof(MPIR_Errhandler),
+					    MPIR_Errhandler_direct,
 					    MPID_ERRHANDLER_PREALLOC, };
 
-void MPID_Errhandler_free(MPID_Errhandler *errhan_ptr)
+void MPIR_Errhandler_free(MPIR_Errhandler *errhan_ptr)
 {
-    MPIU_Handle_obj_free(&MPID_Errhandler_mem, errhan_ptr);
+    MPIU_Handle_obj_free(&MPIR_Errhandler_mem, errhan_ptr);
 }
 
 void MPIR_Err_init( void )
 {
     /* these are "stub" objects, so the other fields (which are statically
      * initialized to zero) don't really matter */
-    MPID_Errhandler_builtin[0].handle = MPI_ERRORS_ARE_FATAL;
-    MPID_Errhandler_builtin[1].handle = MPI_ERRORS_RETURN;
-    MPID_Errhandler_builtin[2].handle = MPIR_ERRORS_THROW_EXCEPTIONS;
+    MPIR_Errhandler_builtin[0].handle = MPI_ERRORS_ARE_FATAL;
+    MPIR_Errhandler_builtin[1].handle = MPI_ERRORS_RETURN;
+    MPIR_Errhandler_builtin[2].handle = MPIR_ERRORS_THROW_EXCEPTIONS;
 
 #   if MPICH_ERROR_MSG_LEVEL >= MPICH_ERROR_MSG_ALL
     MPIR_Err_stack_init();
@@ -178,9 +178,9 @@ void MPIR_Err_init( void )
  defined in the C++ binding. */
 void MPIR_Errhandler_set_cxx( MPI_Errhandler errhand, void (*errcall)(void) )
 {
-    MPID_Errhandler *errhand_ptr;
+    MPIR_Errhandler *errhand_ptr;
     
-    MPID_Errhandler_get_ptr( errhand, errhand_ptr );
+    MPIR_Errhandler_get_ptr( errhand, errhand_ptr );
     errhand_ptr->language		= MPID_LANG_CXX;
     MPIR_Process.cxx_call_errfn	= (void (*)( int, int *, int *, 
 					    void (*)(void) ))errcall;
@@ -190,9 +190,9 @@ void MPIR_Errhandler_set_cxx( MPI_Errhandler errhand, void (*errcall)(void) )
 #if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
 void MPIR_Errhandler_set_fc( MPI_Errhandler errhand )
 {
-    MPID_Errhandler *errhand_ptr;
+    MPIR_Errhandler *errhand_ptr;
     
-    MPID_Errhandler_get_ptr( errhand, errhand_ptr );
+    MPIR_Errhandler_get_ptr( errhand, errhand_ptr );
     errhand_ptr->language = MPID_LANG_FORTRAN;
 }
 
@@ -238,7 +238,7 @@ int MPIR_Err_return_comm( MPIR_Comm  *comm_ptr, const char fcname[],
 			  int errcode )
 {
     const int error_class = ERROR_GET_CLASS(errcode);
-    MPID_Errhandler *errhandler = NULL;
+    MPIR_Errhandler *errhandler = NULL;
 
     checkValidErrcode( error_class, fcname, &errcode );
 

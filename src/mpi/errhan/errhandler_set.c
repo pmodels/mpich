@@ -56,7 +56,7 @@ int MPI_Errhandler_set(MPI_Comm comm, MPI_Errhandler errhandler)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_Errhandler *errhan_ptr;
+    MPIR_Errhandler *errhan_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ERRHANDLER_SET);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -77,7 +77,7 @@ int MPI_Errhandler_set(MPI_Comm comm, MPI_Errhandler errhandler)
     
     /* Convert MPI object handles to object pointers */
     MPIR_Comm_get_ptr( comm, comm_ptr );
-    MPID_Errhandler_get_ptr( errhandler, errhan_ptr );
+    MPIR_Errhandler_get_ptr( errhandler, errhan_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -90,7 +90,7 @@ int MPI_Errhandler_set(MPI_Comm comm, MPI_Errhandler errhandler)
 	    MPIR_ERRTEST_ERRHANDLER(errhandler, mpi_errno);
 
 	    if (HANDLE_GET_KIND(errhandler) != HANDLE_KIND_BUILTIN) {
-                MPID_Errhandler_valid_ptr( errhan_ptr, mpi_errno );
+                MPIR_Errhandler_valid_ptr( errhan_ptr, mpi_errno );
                 if (mpi_errno) goto fn_fail;
             }
         }

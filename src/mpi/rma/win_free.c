@@ -112,7 +112,7 @@ int MPI_Win_free(MPI_Win *win)
 	int in_use;
 	MPIR_Errhandler_release_ref( win_ptr->errhandler,&in_use);
 	if (!in_use) {
-	    MPIU_Handle_obj_free( &MPID_Errhandler_mem, win_ptr->errhandler );
+	    MPIU_Handle_obj_free( &MPIR_Errhandler_mem, win_ptr->errhandler );
 	}
     }
     

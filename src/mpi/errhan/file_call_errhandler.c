@@ -54,7 +54,7 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
 {
     int mpi_errno = MPI_SUCCESS;
 #ifdef MPI_MODE_RDONLY
-    MPID_Errhandler *e;
+    MPIR_Errhandler *e;
     MPI_Errhandler eh;
 #endif
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_FILE_CALL_ERRHANDLER);
@@ -82,10 +82,10 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
     }
 #endif
     if (!eh) {
-	MPID_Errhandler_get_ptr( MPI_ERRORS_RETURN, e );
+	MPIR_Errhandler_get_ptr( MPI_ERRORS_RETURN, e );
     }
     else {
-	MPID_Errhandler_get_ptr( eh, e );
+	MPIR_Errhandler_get_ptr( eh, e );
     }
 
     /* Note that, unlike the rest of MPICH, MPI_File objects are pointers,
