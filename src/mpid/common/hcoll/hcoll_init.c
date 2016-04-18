@@ -181,11 +181,11 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
         MPIR_ERR_POP(mpi_errno);
     }
     comm_ptr->hcoll_priv.hcoll_origin_coll_fns = comm_ptr->coll_fns;
-    comm_ptr->coll_fns = (MPID_Collops *) MPL_malloc(sizeof(MPID_Collops));
-    memset(comm_ptr->coll_fns, 0, sizeof(MPID_Collops));
+    comm_ptr->coll_fns = (MPIR_Collops *) MPL_malloc(sizeof(MPIR_Collops));
+    memset(comm_ptr->coll_fns, 0, sizeof(MPIR_Collops));
     if (comm_ptr->hcoll_priv.hcoll_origin_coll_fns != 0) {
         memcpy(comm_ptr->coll_fns, comm_ptr->hcoll_priv.hcoll_origin_coll_fns,
-               sizeof(MPID_Collops));
+               sizeof(MPIR_Collops));
     }
     INSTALL_COLL_WRAPPER(barrier, Barrier);
     INSTALL_COLL_WRAPPER(bcast, Bcast);
