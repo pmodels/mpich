@@ -1099,13 +1099,13 @@ typedef enum MPIR_Comm_kind_t {
 
 /* ideally we could add these to MPIR_Comm_kind_t, but there's too much existing
  * code that assumes that the only valid values are INTRACOMM or INTERCOMM */
-typedef enum MPID_Comm_hierarchy_kind_t {
+typedef enum MPIR_Comm_hierarchy_kind_t {
     MPID_HIERARCHY_FLAT = 0,        /* no hierarchy */
     MPID_HIERARCHY_PARENT = 1,      /* has subcommunicators */
     MPID_HIERARCHY_NODE_ROOTS = 2,  /* is the subcomm for node roots */
     MPID_HIERARCHY_NODE = 3,        /* is the subcomm for a node */
     MPID_HIERARCHY_SIZE             /* cardinality of this enum */
-} MPID_Comm_hierarchy_kind_t;
+} MPIR_Comm_hierarchy_kind_t;
 /* Communicators */
 
 typedef enum {
@@ -1226,7 +1226,7 @@ typedef struct MPIR_Comm {
     struct MPIR_Comm    *local_comm; /* Defined only for intercomms, holds
 				        an intracomm for the local group */
 
-    MPID_Comm_hierarchy_kind_t hierarchy_kind; /* flat, parent, node, or node_roots */
+    MPIR_Comm_hierarchy_kind_t hierarchy_kind; /* flat, parent, node, or node_roots */
     struct MPIR_Comm *node_comm; /* Comm of processes in this comm that are on
                                     the same node as this process. */
     struct MPIR_Comm *node_roots_comm; /* Comm of root processes for other nodes. */
