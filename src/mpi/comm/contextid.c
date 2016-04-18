@@ -311,7 +311,7 @@ struct gcn_state {
     MPIR_Comm *comm_ptr_inter;
     MPID_Sched_t s;
     MPIR_Comm *new_comm;
-    MPID_Comm_kind_t gcn_cid_kind;
+    MPIR_Comm_kind_t gcn_cid_kind;
     uint32_t local_mask[MPIR_MAX_CONTEXT_MASK + 1];
     struct gcn_state *next;
 };
@@ -953,7 +953,7 @@ static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
                                   MPIU_Context_id_t * ctx0, MPIU_Context_id_t * ctx1,
-                                  MPID_Sched_t s, MPID_Comm_kind_t gcn_cid_kind)
+                                  MPID_Sched_t s, MPIR_Comm_kind_t gcn_cid_kind)
 {
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state *st = NULL;
