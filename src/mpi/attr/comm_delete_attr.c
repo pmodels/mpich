@@ -33,7 +33,7 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval) __attribute__((weak,ali
 int MPIR_Comm_delete_attr_impl(MPIR_Comm *comm_ptr, MPID_Keyval *keyval_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Attribute *p, **old_p;
+    MPIR_Attribute *p, **old_p;
          
     /* Look for attribute.  They are ordered by keyval handle */
 

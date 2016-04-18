@@ -231,7 +231,7 @@ int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	}
     }
     else {
-	MPID_Attribute *p = comm_ptr->attributes;
+	MPIR_Attribute *p = comm_ptr->attributes;
 
 	/*   */
 	*flag = 0;

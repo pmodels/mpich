@@ -35,7 +35,7 @@ int MPIR_TypeSetAttr(MPI_Datatype datatype, int type_keyval, void *attribute_val
     int mpi_errno = MPI_SUCCESS;
     MPID_Datatype *type_ptr = NULL;
     MPID_Keyval *keyval_ptr = NULL;
-    MPID_Attribute *p, **old_p;
+    MPIR_Attribute *p, **old_p;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_TYPE_SET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -100,9 +100,9 @@ int MPIR_TypeSetAttr(MPI_Datatype datatype, int type_keyval, void *attribute_val
 	    break;
 	}
 	else if (p->keyval->handle > keyval_ptr->handle) {
-	    MPID_Attribute *new_p = MPID_Attr_alloc();
+	    MPIR_Attribute *new_p = MPID_Attr_alloc();
 	    MPIR_ERR_CHKANDJUMP1(!new_p,mpi_errno,MPI_ERR_OTHER,
-				 "**nomem","**nomem %s", "MPID_Attribute" );
+				 "**nomem","**nomem %s", "MPIR_Attribute" );
 	    new_p->keyval	 = keyval_ptr;
 	    new_p->attrType      = attrType;
 	    new_p->pre_sentinal	 = 0;
@@ -118,9 +118,9 @@ int MPIR_TypeSetAttr(MPI_Datatype datatype, int type_keyval, void *attribute_val
     }
     if (!p)
     {
-	MPID_Attribute *new_p = MPID_Attr_alloc();
+	MPIR_Attribute *new_p = MPID_Attr_alloc();
 	MPIR_ERR_CHKANDJUMP1(!new_p,mpi_errno,MPI_ERR_OTHER,
-			     "**nomem","**nomem %s", "MPID_Attribute" );
+			     "**nomem","**nomem %s", "MPIR_Attribute" );
 	/* Did not find in list.  Add at end */
 	new_p->keyval	     = keyval_ptr;
 	new_p->attrType      = attrType;

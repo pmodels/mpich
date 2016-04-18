@@ -414,7 +414,7 @@ typedef struct MPIDU_Datatype {
     int                   hetero_dloop_depth;
 #endif /* MPID_HAS_HETERO */
     /* MPI-2 attributes and name */
-    struct MPID_Attribute *attributes;
+    struct MPIR_Attribute *attributes;
     char                  name[MPI_MAX_OBJECT_NAME];
 
     /* not yet used; will be used to track what processes have cached

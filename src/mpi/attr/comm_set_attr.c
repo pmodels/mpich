@@ -35,7 +35,7 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm *comm_ptr, int comm_keyval, void *attribut
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Keyval *keyval_ptr = NULL;
-    MPID_Attribute *p;
+    MPIR_Attribute *p;
 
     MPIR_ERR_CHKANDJUMP(comm_keyval == MPI_KEYVAL_INVALID, mpi_errno, MPI_ERR_KEYVAL, "**keyvalinvalid");
 
@@ -74,7 +74,7 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm *comm_ptr, int comm_keyval, void *attribut
     }
     /* CHANGE FOR MPI 2.2: If not found, add at the beginning */
     if (!p) {
-	MPID_Attribute *new_p = MPID_Attr_alloc();
+	MPIR_Attribute *new_p = MPID_Attr_alloc();
 	MPIR_ERR_CHKANDJUMP(!new_p,mpi_errno,MPI_ERR_OTHER,"**nomem");
 	/* Did not find in list.  Add at end */
 	new_p->keyval	     = keyval_ptr;

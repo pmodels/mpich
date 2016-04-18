@@ -33,7 +33,7 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm *newcomm) __attribute__((weak,alias("PM
 int MPIR_Comm_dup_impl(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Attribute *new_attributes = 0;
+    MPIR_Attribute *new_attributes = 0;
 
     /* Copy attributes, executing the attribute copy functions */
     /* This accesses the attribute dup function through the perprocess

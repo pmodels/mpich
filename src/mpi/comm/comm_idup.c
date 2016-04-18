@@ -33,7 +33,7 @@ int MPI_Comm_idup(MPI_Comm comm, MPI_Comm *newcomm, MPI_Request *request) __attr
 int MPIR_Comm_idup_impl(MPIR_Comm *comm_ptr, MPIR_Comm **newcommp, MPID_Request **reqp)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Attribute *new_attributes = 0;
+    MPIR_Attribute *new_attributes = 0;
 
     /* Copy attributes, executing the attribute copy functions */
     /* This accesses the attribute dup function through the perprocess

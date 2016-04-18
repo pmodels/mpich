@@ -940,7 +940,7 @@ typedef void * MPID_AttrVal_t;
    common block allocator for them, we must provide those elements 
 */
 /*S
-  MPID_Attribute - Structure of an MPID attribute
+  MPIR_Attribute - Structure of an MPID attribute
 
   Notes:
   Attributes don''t have 'ref_count's because they don''t have reference
@@ -977,11 +977,11 @@ typedef void * MPID_AttrVal_t;
   Attribute-DS
 
  S*/
-typedef struct MPID_Attribute {
+typedef struct MPIR_Attribute {
     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
     MPID_Keyval  *keyval;           /* Keyval structure for this attribute */
 
-    struct MPID_Attribute *next;    /* Pointer to next in the list */
+    struct MPIR_Attribute *next;    /* Pointer to next in the list */
     MPIR_AttrType attrType;         /* Type of the attribute */
     long        pre_sentinal;       /* Used to detect user errors in accessing
 				       the value */
@@ -993,7 +993,7 @@ typedef struct MPID_Attribute {
 #ifdef MPID_DEV_ATTR_DECL
     MPID_DEV_ATTR_DECL
 #endif
-} MPID_Attribute;
+} MPIR_Attribute;
 /* ------------------------------------------------------------------------- */
 
 /*---------------------------------------------------------------------------
@@ -1215,7 +1215,7 @@ typedef struct MPIR_Comm {
     MPIU_Context_id_t recvcontext_id; /* Send context id.  See notes */
     int           remote_size;   /* Value of MPI_Comm_(remote)_size */
     int           rank;          /* Value of MPI_Comm_rank */
-    MPID_Attribute *attributes;  /* List of attributes */
+    MPIR_Attribute *attributes;  /* List of attributes */
     int           local_size;    /* Value of MPI_Comm_size for local group */
     MPID_Group   *local_group,   /* Groups in communicator. */
                  *remote_group;  /* The local and remote groups are the
@@ -1667,7 +1667,7 @@ typedef struct MPID_Win {
     void *base;
     MPI_Aint    size;        
     int          disp_unit;      /* Displacement unit of *local* window */
-    MPID_Attribute *attributes;
+    MPIR_Attribute *attributes;
     MPIR_Comm *comm_ptr;         /* Pointer to comm of window (dup) */
 #ifdef USE_THREADED_WINDOW_CODE
     /* These were causing compilation errors.  We need to figure out how to
@@ -2106,8 +2106,8 @@ typedef struct MPICH_PerProcess_t {
     int (*dimsCreate)( int, int, int *);
 
     /* Attribute dup functions.  Here for lazy initialization */
-    int (*attr_dup)( int, MPID_Attribute *, MPID_Attribute ** );
-    int (*attr_free)( int, MPID_Attribute ** );
+    int (*attr_dup)( int, MPIR_Attribute *, MPIR_Attribute ** );
+    int (*attr_free)( int, MPIR_Attribute ** );
     /* There is no win_attr_dup function because there can be no MPI_Win_dup
        function */
     /* Routine to get the messages corresponding to dynamically created
@@ -2333,8 +2333,8 @@ void MPIR_Add_finalize( int (*routine)( void * ), void *extra, int priority );
 #define MPIR_FINALIZE_CALLBACK_DEFAULT_PRIO 0
 #define MPIR_FINALIZE_CALLBACK_MAX_PRIO 10
 
-/*int MPIR_Comm_attr_dup(MPIR_Comm *, MPID_Attribute **);
-  int MPIR_Comm_attr_delete(MPIR_Comm *, MPID_Attribute *);*/
+/*int MPIR_Comm_attr_dup(MPIR_Comm *, MPIR_Attribute **);
+  int MPIR_Comm_attr_delete(MPIR_Comm *, MPIR_Attribute *);*/
 int MPIR_Comm_copy( MPIR_Comm *, int, MPIR_Comm ** );
 int MPIR_Comm_copy_data(MPIR_Comm *comm_ptr, MPIR_Comm **outcomm_ptr);
 
