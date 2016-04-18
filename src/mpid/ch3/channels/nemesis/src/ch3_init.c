@@ -65,7 +65,7 @@ int MPIDI_CH3I_Shm_supported(void)
     return !mutex_err;
 }
 
-static MPID_CommOps comm_fns = {
+static MPIR_Commops comm_fns = {
     split_type
 };
 

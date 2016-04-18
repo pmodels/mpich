@@ -2059,10 +2059,10 @@ typedef struct MPIR_TopoOps {
 /* ------------------------------------------------------------------------- */
 
 
-typedef struct MPID_CommOps {
+typedef struct MPIR_Commops {
     int (*split_type)(MPIR_Comm *, int, int, MPIR_Info *, MPIR_Comm **);
-} MPID_CommOps;
-extern struct MPID_CommOps  *MPID_Comm_fns; /* Communicator creation functions */
+} MPIR_Commops;
+extern struct MPIR_Commops  *MPID_Comm_fns; /* Communicator creation functions */
 
 
 /* Per process data */
