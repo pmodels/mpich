@@ -1800,7 +1800,7 @@ typedef enum MPIR_Op_kind { MPID_OP_NULL=0, MPID_OP_MAX=1, MPID_OP_MIN=2,
   MPIR_Op_kind;
 
 /*S
-  MPID_User_function - Definition of a user function for MPI_Op types.
+  MPIR_User_function - Definition of a user function for MPI_Op types.
 
   Notes:
   This includes a 'const' to make clear which is the 'in' argument and 
@@ -1834,12 +1834,12 @@ typedef enum MPIR_Op_kind { MPID_OP_NULL=0, MPID_OP_MAX=1, MPID_OP_MIN=2,
   Module:
   Collective-DS
   S*/
-typedef union MPID_User_function {
+typedef union MPIR_User_function {
     void (*c_function) ( const void *, void *, 
 			 const int *, const MPI_Datatype * ); 
     void (*f77_function) ( const void *, void *,
 			  const MPI_Fint *, const MPI_Fint * );
-} MPID_User_function;
+} MPIR_User_function;
 /* FIXME: Should there be "restrict" in the definitions above, e.g., 
    (*c_function)( const void restrict * , void restrict *, ... )? */
 
@@ -1862,7 +1862,7 @@ typedef struct MPIR_Op {
      MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
      MPIR_Op_kind       kind;
      MPID_Lang_t        language;
-     MPID_User_function function;
+     MPIR_User_function function;
   } MPIR_Op;
 #define MPID_OP_N_BUILTIN 15
 extern MPIR_Op MPIR_Op_builtin[MPID_OP_N_BUILTIN];
