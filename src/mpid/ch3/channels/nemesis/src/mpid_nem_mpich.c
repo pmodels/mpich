@@ -96,7 +96,7 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int
     if (*sreq_ptr == NULL)
     {
 	/* create a request */
-	sreq = MPIR_Request_create();
+	sreq = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
 	MPIU_Assert(sreq != NULL);
 	MPIU_Object_set_ref(sreq, 2);
 	sreq->kind = MPIR_REQUEST_SEND;

@@ -365,7 +365,7 @@ int MPID_nem_ptl_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, voi
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 
     /* create a request */
-    *sreq_ptr = MPIR_Request_create();
+    *sreq_ptr = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
     MPIU_Assert(*sreq_ptr != NULL);
     MPIU_Object_set_ref(*sreq_ptr, 2);
     (*sreq_ptr)->kind = MPIR_REQUEST_SEND;
@@ -484,7 +484,7 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
                         MPIR_ERR_POP(mpi_errno);
                 }
                 else {
-                    MPIR_Request *req = MPIR_Request_create();
+                    MPIR_Request *req = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
                     /* This request is actually complete; just needs to wait to enforce ordering */
                     TMPBUF(req) = MPL_malloc(packet_sz);
                     MPIU_Assert(TMPBUF(req));
@@ -501,7 +501,7 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
                 char *buf_ptr;
                 ptl_size_t target_offset;
 
-                MPIR_Request *req = MPIR_Request_create();
+                MPIR_Request *req = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
                 MPIU_Assert(req != NULL);
                 MPIDI_CH3U_Request_decrement_cc(req, &incomplete);  /* We'll increment it below */
                 REQ_PTL(req)->event_handler = MPID_nem_ptl_nm_ctl_event_handler;

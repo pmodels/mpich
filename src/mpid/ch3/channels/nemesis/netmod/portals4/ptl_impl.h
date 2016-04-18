@@ -68,7 +68,7 @@ static inline MPID_nem_ptl_req_area * REQ_PTL(MPIR_Request *req) {
     } while (0)
 
 #define MPID_nem_ptl_request_create_sreq(sreq_, errno_, comm_) do {                                             \
-        (sreq_) = MPIR_Request_create();                                                                        \
+        (sreq_) = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);               \
         MPIU_Object_set_ref((sreq_), 2);                                                                        \
         (sreq_)->kind               = MPIR_REQUEST_SEND;                                                        \
         MPIR_Comm_add_ref(comm_);                                                                               \

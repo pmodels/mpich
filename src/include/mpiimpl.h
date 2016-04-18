@@ -1685,7 +1685,7 @@ void MPID_Request_finalize(MPIR_Request *);
 @*/
 int MPID_Request_complete(MPIR_Request *);
 
-static inline MPIR_Request *MPIR_Request_create(void)
+static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
 {
     MPIR_Request *req;
 
@@ -1711,7 +1711,7 @@ static inline MPIR_Request *MPIR_Request_create(void)
          * kind to UNDEFINED? And should the RMA values be set only
          * for RMA requests? */
 	MPIU_Object_set_ref(req, 1);
-	req->kind = MPIR_REQUEST_UNDEFINED;
+	req->kind = kind;
         MPIR_cc_set(&req->cc, 1);
 	req->cc_ptr		   = &req->cc;
 
