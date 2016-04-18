@@ -36,11 +36,11 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[], const int pe
 #define FUNCNAME MPIR_Cart_create
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Cart_create( MPID_Comm *comm_ptr, int ndims, const int dims[], 
+int MPIR_Cart_create( MPIR_Comm *comm_ptr, int ndims, const int dims[],
 		      const int periods[], int reorder, MPI_Comm *comm_cart )
 {
     int i, newsize, rank, nranks, mpi_errno = MPI_SUCCESS;
-    MPID_Comm *newcomm_ptr = NULL;
+    MPIR_Comm *newcomm_ptr = NULL;
     MPIR_Topology *cart_ptr = NULL;
     MPIU_CHKPMEM_DECL(4);
     
@@ -65,8 +65,8 @@ int MPIR_Cart_create( MPID_Comm *comm_ptr, int ndims, const int dims[],
 	rank = comm_ptr->rank;
 
 	if (rank == 0) {
-            MPID_Comm *comm_self_ptr;
-            MPID_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
+            MPIR_Comm *comm_self_ptr;
+            MPIR_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
 	    mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, &newcomm_ptr);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	    
@@ -113,7 +113,7 @@ int MPIR_Cart_create( MPID_Comm *comm_ptr, int ndims, const int dims[],
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         } else {
-	    mpi_errno = MPIR_Comm_copy( (MPID_Comm *)comm_ptr, newsize, 
+	    mpi_errno = MPIR_Comm_copy( (MPIR_Comm *)comm_ptr, newsize,
 					&newcomm_ptr );
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	    rank   = comm_ptr->rank;
@@ -172,7 +172,7 @@ int MPIR_Cart_create( MPID_Comm *comm_ptr, int ndims, const int dims[],
 #define FUNCNAME MPIR_Cart_create_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Cart_create_impl(MPID_Comm *comm_ptr, int ndims, const int dims[],
+int MPIR_Cart_create_impl(MPIR_Comm *comm_ptr, int ndims, const int dims[],
                           const int periods[], int reorder, MPI_Comm *comm_cart)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -240,7 +240,7 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[],
                     const int periods[], int reorder, MPI_Comm *comm_cart)
 {
     int       mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_CART_CREATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -260,7 +260,7 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[],
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( comm_old, comm_ptr );
+    MPIR_Comm_get_ptr( comm_old, comm_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -268,7 +268,7 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[],
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    if (comm_ptr) {

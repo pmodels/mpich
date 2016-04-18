@@ -12,7 +12,7 @@
 #endif
 
 /* Generates a bitarray based on orig_comm where all procs in group are marked with 1 */
-static void group_to_bitarray(MPID_Group *group, MPID_Comm *orig_comm, int **bitarray, int *bitarray_size) {
+static void group_to_bitarray(MPID_Group *group, MPIR_Comm *orig_comm, int **bitarray, int *bitarray_size) {
     int mask;
     int *group_ranks, *comm_ranks, i, index;
 
@@ -50,7 +50,7 @@ static void group_to_bitarray(MPID_Group *group, MPID_Comm *orig_comm, int **bit
 }
 
 /* Generates an MPID_Group from a bitarray */
-static MPID_Group *bitarray_to_group(MPID_Comm *comm_ptr, int *bitarray)
+static MPID_Group *bitarray_to_group(MPIR_Comm *comm_ptr, int *bitarray)
 {
     MPID_Group *ret_group;
     MPID_Group *comm_group;
@@ -86,7 +86,7 @@ static MPID_Group *bitarray_to_group(MPID_Comm *comm_ptr, int *bitarray)
 #define FUNCNAME MPID_Comm_get_all_failed_procs
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Comm_get_all_failed_procs(MPID_Comm *comm_ptr, MPID_Group **failed_group, int tag)
+int MPID_Comm_get_all_failed_procs(MPIR_Comm *comm_ptr, MPID_Group **failed_group, int tag)
 {
     int mpi_errno = MPI_SUCCESS, ret_errno;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;

@@ -293,7 +293,7 @@ static volatile int mask_in_use = 0;
 #define FUNCNAME MPIR_Get_contextid_sparse
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Get_contextid_sparse(MPID_Comm * comm_ptr, MPIU_Context_id_t * context_id, int ignore_id)
+int MPIR_Get_contextid_sparse(MPIR_Comm * comm_ptr, MPIU_Context_id_t * context_id, int ignore_id)
 {
     return MPIR_Get_contextid_sparse_group(comm_ptr, NULL /*group_ptr */ ,
                                            MPIR_Process.attrs.tag_ub /*tag */ ,
@@ -307,10 +307,10 @@ struct gcn_state {
     int own_eager_mask;
     int first_iter;
     uint64_t tag;
-    MPID_Comm *comm_ptr;
-    MPID_Comm *comm_ptr_inter;
+    MPIR_Comm *comm_ptr;
+    MPIR_Comm *comm_ptr_inter;
     MPID_Sched_t s;
-    MPID_Comm *new_comm;
+    MPIR_Comm *new_comm;
     MPID_Comm_kind_t gcn_cid_kind;
     uint32_t local_mask[MPIR_MAX_CONTEXT_MASK + 1];
     struct gcn_state *next;
@@ -372,7 +372,7 @@ static int add_gcn_to_list(struct gcn_state *new_state)
 #define FUNCNAME MPIR_Get_contextid_sparse_group
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr, int tag,
+int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPID_Group * group_ptr, int tag,
                                     MPIU_Context_id_t * context_id, int ignore_id)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -655,14 +655,14 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr
 
 
 
-static int sched_cb_gcn_copy_mask(MPID_Comm * comm, int tag, void *state);
-static int sched_cb_gcn_allocate_cid(MPID_Comm * comm, int tag, void *state);
-static int sched_cb_gcn_bcast(MPID_Comm * comm, int tag, void *state);
+static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state);
+static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state);
+static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state);
 #undef FUNCNAME
 #define FUNCNAME sched_cb_commit_comm
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int sched_cb_commit_comm(MPID_Comm * comm, int tag, void *state)
+static int sched_cb_commit_comm(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state *st = state;
@@ -680,7 +680,7 @@ static int sched_cb_commit_comm(MPID_Comm * comm, int tag, void *state)
 #define FUNCNAME sched_cb_gcn_bcast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int sched_cb_gcn_bcast(MPID_Comm * comm, int tag, void *state)
+static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state *st = state;
@@ -736,7 +736,7 @@ static int sched_cb_gcn_bcast(MPID_Comm * comm, int tag, void *state)
 #define FUNCNAME sched_cb_gcn_allocate_cid
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int sched_cb_gcn_allocate_cid(MPID_Comm * comm, int tag, void *state)
+static int sched_cb_gcn_allocate_cid(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state *st = state, *tmp;
@@ -845,7 +845,7 @@ static int sched_cb_gcn_allocate_cid(MPID_Comm * comm, int tag, void *state)
     /* In the case of failure, the new communicator was half created.
      * So we need to clean the memory allocated for it. */
     MPIR_Comm_map_free(st->new_comm);
-    MPIU_Handle_obj_free(&MPID_Comm_mem, st->new_comm);
+    MPIU_Handle_obj_free(&MPIR_Comm_mem, st->new_comm);
     MPL_free(st);
     goto fn_exit;
 }
@@ -854,7 +854,7 @@ static int sched_cb_gcn_allocate_cid(MPID_Comm * comm, int tag, void *state)
 #define FUNCNAME sched_cb_gcn_copy_mask
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int sched_cb_gcn_copy_mask(MPID_Comm * comm, int tag, void *state)
+static int sched_cb_gcn_copy_mask(MPIR_Comm * comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state *st = state;
@@ -951,7 +951,7 @@ static int sched_cb_gcn_copy_mask(MPID_Comm * comm, int tag, void *state)
 #define FUNCNAME sched_get_cid_nonblock
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int sched_get_cid_nonblock(MPID_Comm * comm_ptr, MPID_Comm * newcomm,
+static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
                                   MPIU_Context_id_t * ctx0, MPIU_Context_id_t * ctx1,
                                   MPID_Sched_t s, MPID_Comm_kind_t gcn_cid_kind)
 {
@@ -1007,7 +1007,7 @@ static int sched_get_cid_nonblock(MPID_Comm * comm_ptr, MPID_Comm * newcomm,
 #define FUNCNAME MPIR_Get_contextid_nonblock
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Get_contextid_nonblock(MPID_Comm * comm_ptr, MPID_Comm * newcommp, MPID_Request ** req)
+int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPID_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag;
@@ -1050,7 +1050,7 @@ int MPIR_Get_contextid_nonblock(MPID_Comm * comm_ptr, MPID_Comm * newcommp, MPID
 #define FUNCNAME MPIR_Get_intercomm_contextid_nonblock
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Get_intercomm_contextid_nonblock(MPID_Comm * comm_ptr, MPID_Comm * newcommp,
+int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp,
                                           MPID_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1119,7 +1119,7 @@ int MPIR_Get_intercomm_contextid_nonblock(MPID_Comm * comm_ptr, MPID_Comm * newc
 #define FUNCNAME MPIR_Get_intercomm_contextid
 #undef FCNAME
 #define FCNAME "MPIR_Get_intercomm_contextid"
-int MPIR_Get_intercomm_contextid(MPID_Comm * comm_ptr, MPIU_Context_id_t * context_id,
+int MPIR_Get_intercomm_contextid(MPIR_Comm * comm_ptr, MPIU_Context_id_t * context_id,
                                  MPIU_Context_id_t * recvcontext_id)
 {
     MPIU_Context_id_t mycontext_id, remote_context_id;

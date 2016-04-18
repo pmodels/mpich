@@ -34,7 +34,7 @@ int MPI_Ineighbor_alltoallw(const void *sendbuf, const int sendcounts[],
 #define FUNCNAME MPIR_Ineighbor_alltoallw_default
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ineighbor_alltoallw_default(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPID_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Ineighbor_alltoallw_default(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPIR_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int indegree, outdegree, weighted;
@@ -82,7 +82,7 @@ fn_fail:
 #define FUNCNAME MPIR_Ineighbor_alltoallw_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ineighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPID_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Ineighbor_alltoallw_impl(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPIR_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
@@ -145,7 +145,7 @@ Output Parameters:
 int MPI_Ineighbor_alltoallw(const void *sendbuf, const int sendcounts[], const MPI_Aint sdispls[], const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[], const MPI_Datatype recvtypes[], MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INEIGHBOR_ALLTOALLW);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -166,14 +166,14 @@ int MPI_Ineighbor_alltoallw(const void *sendbuf, const int sendcounts[], const M
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr(comm, comm_ptr);
+    MPIR_Comm_get_ptr(comm, comm_ptr);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             MPIR_ERRTEST_ARGNULL(request, "request", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;

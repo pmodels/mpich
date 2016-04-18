@@ -19,7 +19,7 @@
 #define FUNCNAME MPID_Comm_revoke
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
+int MPID_Comm_revoke(MPIR_Comm *comm_ptr, int is_remote)
 {
     MPIDI_VC_t *vc;
     MPL_IOV iov[MPL_IOV_LIMIT];

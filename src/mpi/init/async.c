@@ -10,7 +10,7 @@
 #ifndef MPICH_MPI_FROM_PMPI
 
 #if MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE
-static MPID_Comm *progress_comm_ptr;
+static MPIR_Comm *progress_comm_ptr;
 static MPID_Thread_id_t progress_thread_id;
 static MPID_Thread_mutex_t progress_mutex;
 static MPID_Thread_cond_t progress_cond;
@@ -79,7 +79,7 @@ int MPIR_Init_async_thread(void)
 {
 #if MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_self_ptr;
+    MPIR_Comm *comm_self_ptr;
     int err = 0;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_INIT_ASYNC_THREAD);
 
@@ -87,7 +87,7 @@ int MPIR_Init_async_thread(void)
 
 
     /* Dup comm world for the progress thread */
-    MPID_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
+    MPIR_Comm_get_ptr(MPI_COMM_SELF, comm_self_ptr);
     mpi_errno = MPIR_Comm_dup_impl(comm_self_ptr, &progress_comm_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 

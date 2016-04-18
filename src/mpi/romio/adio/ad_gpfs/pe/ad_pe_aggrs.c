@@ -143,9 +143,9 @@ ADIOI_PE_gen_agg_ranklist(ADIO_File fd)
       }
     }
     if (numAggs == 0)  {
-      MPID_Comm *mpidCommData;
+      MPIR_Comm *mpidCommData;
 
-      MPID_Comm_get_ptr(fd->comm,mpidCommData);
+      MPIR_Comm_get_ptr(fd->comm,mpidCommData);
       int localSize = mpidCommData->local_size;
 
       // get my node rank
@@ -157,7 +157,7 @@ ADIOI_PE_gen_agg_ranklist(ADIO_File fd)
       MPI_Allgather(MPI_IN_PLACE, 1, MPI_INT, allNodeRanks, 1, MPI_INT, fd->comm);
 
 #ifdef AGG_DEBUG
-      printf("MPID_Comm data: local_size is %d\nintranode_table entries:\n",mpidCommData->local_size);
+      printf("MPIR_Comm data: local_size is %d\nintranode_table entries:\n",mpidCommData->local_size);
       for (i=0;i<localSize;i++) {
         printf("%d ",mpidCommData->intranode_table[i]);
       }

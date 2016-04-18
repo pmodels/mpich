@@ -39,7 +39,7 @@ ADD_SUFFIX(peek_callback)(cq_tagged_entry_t * wc, MPID_Request * rreq)
 int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl)(struct MPIDI_VC *vc,
                              int source,
                              int tag,
-                             MPID_Comm * comm,
+                             MPIR_Comm * comm,
                              int context_offset,
                              int *flag, MPI_Status * status, MPID_Request ** rreq_ptr)
 {
@@ -137,7 +137,7 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl)(struct MPIDI_VC *vc,
 int ADD_SUFFIX(MPID_nem_ofi_iprobe)(struct MPIDI_VC *vc,
                         int source,
                         int tag,
-                        MPID_Comm * comm, int context_offset, int *flag, MPI_Status * status)
+                        MPIR_Comm * comm, int context_offset, int *flag, MPI_Status * status)
 {
     int rc;
     BEGIN_FUNC(FCNAME);
@@ -153,7 +153,7 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe)(struct MPIDI_VC *vc,
 int ADD_SUFFIX(MPID_nem_ofi_improbe)(struct MPIDI_VC *vc,
                          int source,
                          int tag,
-                         MPID_Comm * comm,
+                         MPIR_Comm * comm,
                          int context_offset,
                          int *flag, MPID_Request ** message, MPI_Status * status)
 {
@@ -174,7 +174,7 @@ int ADD_SUFFIX(MPID_nem_ofi_improbe)(struct MPIDI_VC *vc,
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPID_nem_ofi_anysource_iprobe)
 int ADD_SUFFIX(MPID_nem_ofi_anysource_iprobe)(int tag,
-                                  MPID_Comm * comm,
+                                  MPIR_Comm * comm,
                                   int context_offset, int *flag, MPI_Status * status)
 {
     int rc;
@@ -189,7 +189,7 @@ int ADD_SUFFIX(MPID_nem_ofi_anysource_iprobe)(int tag,
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPID_nem_ofi_anysource_improbe)
 int ADD_SUFFIX(MPID_nem_ofi_anysource_improbe)(int tag,
-                                   MPID_Comm * comm,
+                                   MPIR_Comm * comm,
                                    int context_offset,
                                    int *flag, MPID_Request ** message, MPI_Status * status)
 {

@@ -31,7 +31,7 @@ int MPIDO_Igatherv(const void *sendbuf,
                    const int *displs,
                    MPI_Datatype recvtype,
                    int root,
-                   MPID_Comm * comm_ptr,
+                   MPIR_Comm * comm_ptr,
                    MPID_Request **request)
 
 {

@@ -40,7 +40,7 @@ int MPIDO_Alltoallv(const void *sendbuf,
                    const int *recvcounts,
                    const int *recvdispls,
                    MPI_Datatype recvtype,
-                   MPID_Comm *comm_ptr,
+                   MPIR_Comm *comm_ptr,
                    int *mpierrno)
 {
 #ifndef HAVE_PAMI_IN_PLACE
@@ -405,7 +405,7 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
                    const int *recvcounts,
                    const int *recvdispls,
                    MPI_Datatype recvtype,
-                   MPID_Comm *comm_ptr,
+                   MPIR_Comm *comm_ptr,
                    int *mpierrno)
 {
 #ifndef HAVE_PAMI_IN_PLACE
@@ -703,7 +703,7 @@ MPIDO_CSWrapper_alltoallv(pami_xfer_t *alltoallv,
                           void        *comm)
 {
    int mpierrno = 0;
-   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPIR_Comm   *comm_ptr = (MPIR_Comm*)comm;
    MPI_Datatype sendtype, recvtype;
    void *sbuf;
    MPIDI_coll_check_in_place(alltoallv->cmd.xfer_alltoallv_int.sndbuf, &sbuf);

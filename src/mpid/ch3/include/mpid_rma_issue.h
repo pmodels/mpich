@@ -398,7 +398,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
                         MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_VC_t *vc = NULL;
-    MPID_Comm *comm_ptr = win_ptr->comm_ptr;
+    MPIR_Comm *comm_ptr = win_ptr->comm_ptr;
     MPIDI_CH3_Pkt_put_t *put_pkt = &rma_op->pkt.put;
     MPID_Request *curr_req = NULL;
     MPI_Datatype target_datatype;
@@ -481,7 +481,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
                         MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_VC_t *vc = NULL;
-    MPID_Comm *comm_ptr = win_ptr->comm_ptr;
+    MPIR_Comm *comm_ptr = win_ptr->comm_ptr;
     MPIDI_CH3_Pkt_accum_t *accum_pkt = &rma_op->pkt.accum;
     int i, j;
     MPI_Aint stream_elem_count, stream_unit_count;
@@ -648,7 +648,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
                             MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_VC_t *vc = NULL;
-    MPID_Comm *comm_ptr = win_ptr->comm_ptr;
+    MPIR_Comm *comm_ptr = win_ptr->comm_ptr;
     MPIDI_CH3_Pkt_get_accum_t *get_accum_pkt = &rma_op->pkt.get_accum;
     int i, j;
     MPI_Aint stream_elem_count, stream_unit_count;
@@ -881,7 +881,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     MPIDI_CH3_Pkt_get_t *get_pkt = &rma_op->pkt.get;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_VC_t *vc;
-    MPID_Comm *comm_ptr;
+    MPIR_Comm *comm_ptr;
     MPIDU_Datatype*dtp;
     MPI_Datatype target_datatype;
     MPID_Request *req = NULL;
@@ -1008,7 +1008,7 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
                         MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_VC_t *vc = NULL;
-    MPID_Comm *comm_ptr = win_ptr->comm_ptr;
+    MPIR_Comm *comm_ptr = win_ptr->comm_ptr;
     MPIDI_CH3_Pkt_cas_t *cas_pkt = &rma_op->pkt.cas;
     MPID_Request *rmw_req = NULL;
     MPID_Request *curr_req = NULL;
@@ -1071,7 +1071,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
                         MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_VC_t *vc = NULL;
-    MPID_Comm *comm_ptr = win_ptr->comm_ptr;
+    MPIR_Comm *comm_ptr = win_ptr->comm_ptr;
     MPIDI_CH3_Pkt_fop_t *fop_pkt = &rma_op->pkt.fop;
     MPID_Request *resp_req = NULL;
     MPID_Request *curr_req = NULL;

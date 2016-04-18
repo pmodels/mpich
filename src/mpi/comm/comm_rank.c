@@ -52,7 +52,7 @@ Output Parameters:
 int MPI_Comm_rank( MPI_Comm comm, int *rank ) 
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = 0;
+    MPIR_Comm *comm_ptr = 0;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_RANK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -72,7 +72,7 @@ int MPI_Comm_rank( MPI_Comm comm, int *rank )
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr( comm, comm_ptr );
     
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -81,7 +81,7 @@ int MPI_Comm_rank( MPI_Comm comm, int *rank )
         {
             MPIR_ERRTEST_ARGNULL(rank,"rank",mpi_errno);
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
             /* If comm_ptr is not value, it will be reset to null */
             if (mpi_errno) goto fn_fail;
         }

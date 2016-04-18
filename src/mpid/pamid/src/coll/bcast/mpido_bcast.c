@@ -36,7 +36,7 @@ int MPIDO_Bcast(void *buffer,
                 int count,
                 MPI_Datatype datatype,
                 int root,
-                MPID_Comm *comm_ptr,
+                MPIR_Comm *comm_ptr,
                 int *mpierrno)
 {
    TRACE_ERR("in mpido_bcast\n");
@@ -272,7 +272,7 @@ int MPIDO_Bcast_simple(void *buffer,
                 int count,
                 MPI_Datatype datatype,
                 int root,
-                MPID_Comm *comm_ptr,
+                MPIR_Comm *comm_ptr,
                 int *mpierrno)
 {
    TRACE_ERR("Entering MPIDO_Bcast_optimized\n");
@@ -376,7 +376,7 @@ MPIDO_CSWrapper_bcast(pami_xfer_t *bcast,
                       void        *comm)
 {
    int mpierrno = 0;
-   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPIR_Comm   *comm_ptr = (MPIR_Comm*)comm;
    MPI_Datatype type;
    int rc = MPIDI_Dtpami_to_dtmpi(  bcast->cmd.xfer_broadcast.type,
                                    &type,

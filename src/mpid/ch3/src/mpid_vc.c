@@ -300,7 +300,7 @@ int MPIDI_VCR_Dup(MPIDI_VCR orig_vcr, MPIDI_VCR * new_vcr)
 #define FUNCNAME MPID_Comm_get_lpid
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Comm_get_lpid(MPID_Comm *comm_ptr, int idx, int * lpid_ptr, MPIU_BOOL is_remote)
+int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int * lpid_ptr, MPIU_BOOL is_remote)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPID_VCR_GET_LPID);
 
@@ -327,7 +327,7 @@ int MPID_Comm_get_lpid(MPID_Comm *comm_ptr, int idx, int * lpid_ptr, MPIU_BOOL i
 #define FUNCNAME MPID_GPID_GetAllInComm
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_GPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size, 
+int MPID_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
 			    MPIR_Gpid local_gpids[], int *singlePG )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -369,7 +369,7 @@ int MPID_GPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size,
 #define FUNCNAME MPID_GPID_Get
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_GPID_Get( MPID_Comm *comm_ptr, int rank, MPIR_Gpid *in_gpid )
+int MPID_GPID_Get( MPIR_Comm *comm_ptr, int rank, MPIR_Gpid *in_gpid )
 {
     int      pgid;
     MPIDI_VCR vc;
@@ -462,11 +462,11 @@ int MPID_GPID_ToLpidArray( int size, MPIR_Gpid in_gpid[], int lpid[] )
 #define FUNCNAME MPID_Create_intercomm_from_lpids
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Create_intercomm_from_lpids( MPID_Comm *newcomm_ptr,
+int MPID_Create_intercomm_from_lpids( MPIR_Comm *newcomm_ptr,
 			    int size, const int lpids[] )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *commworld_ptr;
+    MPIR_Comm *commworld_ptr;
     int i;
     MPIDI_PG_iterator iter;
 
@@ -545,7 +545,7 @@ fn_fail:
 #define FUNCNAME MPID_PG_ForwardPGInfo
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr, 
+int MPID_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
 			   int nPGids, const MPIR_Gpid in_gpids[],
 			   int root )
 {
@@ -663,7 +663,7 @@ char MPIU_hostname[MAX_HOSTNAME_LEN] = "_UNKNOWN_"; /* '_' is an illegal char fo
 #define FUNCNAME MPID_Get_node_id
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Get_node_id(MPID_Comm *comm, int rank, MPID_Node_id_t *id_p)
+int MPID_Get_node_id(MPIR_Comm *comm, int rank, MPID_Node_id_t *id_p)
 {
     *id_p = comm->dev.vcrt->vcr_table[rank]->node_id;
     return MPI_SUCCESS;
@@ -675,7 +675,7 @@ int MPID_Get_node_id(MPID_Comm *comm, int rank, MPID_Node_id_t *id_p)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* Providing a comm argument permits optimization, but this function is always
    allowed to return the max for the universe. */
-int MPID_Get_max_node_id(MPID_Comm *comm, MPID_Node_id_t *max_id_p)
+int MPID_Get_max_node_id(MPIR_Comm *comm, MPID_Node_id_t *max_id_p)
 {
     /* easiest way to implement this is to track it at PG create/destroy time */
     *max_id_p = g_max_node_id;

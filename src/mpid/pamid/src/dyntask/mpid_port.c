@@ -95,7 +95,7 @@ int MPID_Close_port(const char *port_name)
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Comm_accept(const char * port_name, MPID_Info * info, int root,
-		     MPID_Comm * comm, MPID_Comm ** newcomm_ptr)
+                     MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -123,7 +123,7 @@ int MPID_Comm_accept(const char * port_name, MPID_Info * info, int root,
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Comm_connect(const char * port_name, MPID_Info * info, int root,
-		      MPID_Comm * comm, MPID_Comm ** newcomm_ptr)
+                      MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno=MPI_SUCCESS;
 

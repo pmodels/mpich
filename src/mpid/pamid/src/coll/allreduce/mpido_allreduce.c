@@ -40,7 +40,7 @@ int MPIDO_Allreduce(const void *sendbuf,
                     int count,
                     MPI_Datatype dt,
                     MPI_Op op,
-                    MPID_Comm *comm_ptr,
+                    MPIR_Comm *comm_ptr,
                     int *mpierrno)
 {
 #ifndef HAVE_PAMI_IN_PLACE
@@ -440,7 +440,7 @@ int MPIDO_Allreduce_simple(const void *sendbuf,
                     int count,
                     MPI_Datatype dt,
                     MPI_Op op,
-                    MPID_Comm *comm_ptr,
+                    MPIR_Comm *comm_ptr,
                     int *mpierrno)
 {
 #ifndef HAVE_PAMI_IN_PLACE
@@ -539,7 +539,7 @@ MPIDO_CSWrapper_allreduce(pami_xfer_t *allreduce,
                           void        *comm)
 {
    int mpierrno = 0;
-   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPIR_Comm   *comm_ptr = (MPIR_Comm*)comm;
    MPI_Datatype type;
    MPI_Op op;
    void *sbuf;

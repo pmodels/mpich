@@ -30,8 +30,8 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info, M
 #define FUNCNAME MPIR_Comm_split_type_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_split_type_impl(MPID_Comm * comm_ptr, int split_type, int key,
-                              MPID_Info * info_ptr, MPID_Comm ** newcomm_ptr)
+int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
+                              MPID_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -55,11 +55,11 @@ int MPIR_Comm_split_type_impl(MPID_Comm * comm_ptr, int split_type, int key,
 	if (flag) {
 #ifdef HAVE_ROMIO
 	    MPI_Comm dummycomm;
-	    MPID_Comm * dummycomm_ptr;
+	    MPIR_Comm * dummycomm_ptr;
 
 	    mpi_errno = MPIR_Comm_split_filesystem(comm_ptr->handle, key,
                                                    hintval, &dummycomm);
-	    MPID_Comm_get_ptr(dummycomm, dummycomm_ptr);
+	    MPIR_Comm_get_ptr(dummycomm, dummycomm_ptr);
 	    *newcomm_ptr = dummycomm_ptr;
 
 	    goto fn_exit;
@@ -135,7 +135,7 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
                         MPI_Comm * newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL, *newcomm_ptr;
+    MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
     MPID_Info *info_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SPLIT_TYPE);
 
@@ -157,7 +157,7 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
 #endif /* HAVE_ERROR_CHECKING */
 
     /* Get handles to MPI objects. */
-    MPID_Comm_get_ptr(comm, comm_ptr);
+    MPIR_Comm_get_ptr(comm, comm_ptr);
     MPID_Info_get_ptr(info, info_ptr);
 
     /* Validate parameters and objects (post conversion) */
@@ -166,7 +166,7 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             /* If comm_ptr is not valid, it will be reset to null */
             if (mpi_errno)
                 goto fn_fail;

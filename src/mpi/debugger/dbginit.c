@@ -445,12 +445,12 @@ static void SendqInit( void )
    debugger message queue interface */
 typedef struct MPIR_Comm_list {
     int sequence_number;   /* Used to detect changes in the list */
-    MPID_Comm *head;       /* Head of the list */
+    MPIR_Comm *head;       /* Head of the list */
 } MPIR_Comm_list;
 
 MPIR_Comm_list MPIR_All_communicators = { 0, 0 };
 
-void MPIR_CommL_remember( MPID_Comm *comm_ptr )
+void MPIR_CommL_remember( MPIR_Comm *comm_ptr )
 {   
     MPL_DBG_MSG_P(MPIR_DBG_COMM,VERBOSE,
 		   "Adding communicator %p to remember list",comm_ptr);
@@ -470,9 +470,9 @@ void MPIR_CommL_remember( MPID_Comm *comm_ptr )
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
 }
 
-void MPIR_CommL_forget( MPID_Comm *comm_ptr )
+void MPIR_CommL_forget( MPIR_Comm *comm_ptr )
 {
-    MPID_Comm *p, *prev;
+    MPIR_Comm *p, *prev;
 
     MPL_DBG_MSG_P(MPIR_DBG_COMM,VERBOSE,
 		   "Forgetting communicator %p from remember list",comm_ptr);

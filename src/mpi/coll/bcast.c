@@ -126,7 +126,7 @@ static int MPIR_Bcast_binomial(
     int count, 
     MPI_Datatype datatype, 
     int root, 
-    MPID_Comm *comm_ptr,
+    MPIR_Comm *comm_ptr,
     MPIR_Errflag_t *errflag)
 {
     int        rank, comm_size, src, dst;
@@ -333,7 +333,7 @@ static int scatter_for_bcast(
     int count ATTRIBUTE((unused)), 
     MPI_Datatype datatype ATTRIBUTE((unused)),
     int root,
-    MPID_Comm *comm_ptr,
+    MPIR_Comm *comm_ptr,
     int nbytes,
     void *tmp_buf,
     int is_contig,
@@ -479,7 +479,7 @@ static int MPIR_Bcast_scatter_doubling_allgather(
     int count, 
     MPI_Datatype datatype, 
     int root, 
-    MPID_Comm *comm_ptr,
+    MPIR_Comm *comm_ptr,
     MPIR_Errflag_t *errflag)
 {
     MPI_Status status;
@@ -787,7 +787,7 @@ static int MPIR_Bcast_scatter_ring_allgather(
     int count, 
     MPI_Datatype datatype, 
     int root, 
-    MPID_Comm *comm_ptr,
+    MPIR_Comm *comm_ptr,
     MPIR_Errflag_t *errflag)
 {
     int rank, comm_size;
@@ -993,7 +993,7 @@ static int MPIR_SMP_Bcast(
         int count, 
         MPI_Datatype datatype, 
         int root, 
-        MPID_Comm *comm_ptr,
+        MPIR_Comm *comm_ptr,
         MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1220,7 +1220,7 @@ int MPIR_Bcast_intra (
         int count, 
         MPI_Datatype datatype, 
         int root, 
-        MPID_Comm *comm_ptr,
+        MPIR_Comm *comm_ptr,
         MPIR_Errflag_t *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1344,7 +1344,7 @@ int MPIR_Bcast_inter (
     int count, 
     MPI_Datatype datatype, 
     int root, 
-    MPID_Comm *comm_ptr,
+    MPIR_Comm *comm_ptr,
     MPIR_Errflag_t *errflag)
 {
 /*  Intercommunicator broadcast.
@@ -1354,7 +1354,7 @@ int MPIR_Bcast_inter (
     int rank, mpi_errno;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
-    MPID_Comm *newcomm_ptr = NULL;
+    MPIR_Comm *newcomm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_BCAST_INTER);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_BCAST_INTER);
@@ -1434,7 +1434,7 @@ fn_fail:
 #define FUNCNAME MPIR_Bcast_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1466,7 +1466,7 @@ int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MP
 #define FUNCNAME MPIR_Bcast
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-inline int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+inline int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1524,7 +1524,7 @@ int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
                MPI_Comm comm )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_BCAST);
 
@@ -1545,7 +1545,7 @@ int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr( comm, comm_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -1554,7 +1554,7 @@ int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
         {
             MPID_Datatype *datatype_ptr = NULL;
 	    
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	    MPIR_ERRTEST_COUNT(count, mpi_errno);
 	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);

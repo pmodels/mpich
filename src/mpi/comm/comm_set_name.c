@@ -50,7 +50,7 @@ Input Parameters:
 int MPI_Comm_set_name(MPI_Comm comm, const char *comm_name)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SET_NAME);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -69,7 +69,7 @@ int MPI_Comm_set_name(MPI_Comm comm, const char *comm_name)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr( comm, comm_ptr );
     
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -77,7 +77,7 @@ int MPI_Comm_set_name(MPI_Comm comm, const char *comm_name)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
             if (mpi_errno) goto fn_fail;
 	    MPIR_ERRTEST_ARGNULL( comm_name, "comm_name", mpi_errno );
 	    /* If comm_ptr is not valid, it will be reset to null */

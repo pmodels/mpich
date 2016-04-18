@@ -335,8 +335,8 @@ static struct
 #define FUNCNAME split_type
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static int split_type(MPID_Comm * comm_ptr, int stype, int key,
-                      MPID_Info *info_ptr, MPID_Comm ** newcomm_ptr)
+static int split_type(MPIR_Comm * comm_ptr, int stype, int key,
+                      MPID_Info *info_ptr, MPIR_Comm ** newcomm_ptr)
 {
     MPID_Node_id_t id;
     int nid;
@@ -1112,7 +1112,7 @@ MPIDI_VCRT_init(int rank, int size, char *world_tasks, MPIDI_PG_t *pg)
 #endif
 {
   int i, rc;
-  MPID_Comm * comm;
+  MPIR_Comm * comm;
 #ifdef DYNAMIC_TASKING
   int p, mpi_errno=0;
   char *world_tasks_save,*cp;
@@ -1231,7 +1231,7 @@ int MPID_Init(int * argc,
   int pg_rank=-1;
   int pg_size;
   int appnum,mpi_errno;
-  MPID_Comm * comm;
+  MPIR_Comm * comm;
   int i,j;
   pami_configuration_t config;
   int world_size;

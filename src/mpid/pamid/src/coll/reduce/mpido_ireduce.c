@@ -29,7 +29,7 @@ int MPIDO_Ireduce(const void *sendbuf,
                   MPI_Datatype datatype,
                   MPI_Op op,
                   int root,
-                  MPID_Comm *comm_ptr,
+                  MPIR_Comm *comm_ptr,
                   MPID_Request **request)
 
 {

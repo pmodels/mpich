@@ -40,7 +40,7 @@ int MPIDO_Scatter_bcast(void * sendbuf,
 			int recvcount,
 			MPI_Datatype recvtype,
 			int root,
-			MPID_Comm *comm_ptr,
+                        MPIR_Comm *comm_ptr,
                         int *mpierrno)
 {
   /* Pretty simple - bcast a temp buffer and copy our little chunk out */
@@ -96,7 +96,7 @@ int MPIDO_Scatter(const void *sendbuf,
                   int recvcount,
                   MPI_Datatype recvtype,
                   int root,
-                  MPID_Comm *comm_ptr,
+                  MPIR_Comm *comm_ptr,
                   int *mpierrno)
 {
 #ifndef HAVE_PAMI_IN_PLACE
@@ -355,7 +355,7 @@ int MPIDO_Scatter_simple(const void *sendbuf,
                   int recvcount,
                   MPI_Datatype recvtype,
                   int root,
-                  MPID_Comm *comm_ptr,
+                  MPIR_Comm *comm_ptr,
                   int *mpierrno)
 {
 #ifndef HAVE_PAMI_IN_PLACE
@@ -536,7 +536,7 @@ MPIDO_CSWrapper_scatter(pami_xfer_t *scatter,
                         void        *comm)
 {
    int mpierrno = 0;
-   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPIR_Comm   *comm_ptr = (MPIR_Comm*)comm;
    MPI_Datatype sendtype, recvtype;
    void *rbuf;
    MPIDI_coll_check_in_place(scatter->cmd.xfer_scatter.rcvbuf, &rbuf);

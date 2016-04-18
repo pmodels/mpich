@@ -86,7 +86,7 @@ MPIDI_Coll_comm_check_FCA(char *coll_name,
                           int pami_xfer, 
                           int query_type,
                           int proto_num,
-                          MPID_Comm *comm_ptr)
+                          MPIR_Comm *comm_ptr)
 {
   int opt_proto = -1;
   int i;
@@ -169,7 +169,7 @@ MPIDI_Coll_comm_check_FCA(char *coll_name,
 }
 
 
-void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
+void MPIDI_Comm_coll_select(MPIR_Comm *comm_ptr)
 {
   TRACE_ERR("Entering MPIDI_Comm_coll_select\n");
   int opt_proto = -1;

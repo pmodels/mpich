@@ -30,7 +30,7 @@ int MPI_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val) __att
 #define FUNCNAME MPIR_Comm_set_attr_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_set_attr_impl(MPID_Comm *comm_ptr, int comm_keyval, void *attribute_val, 
+int MPIR_Comm_set_attr_impl(MPIR_Comm *comm_ptr, int comm_keyval, void *attribute_val,
                             MPIR_AttrType attrType)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -110,7 +110,7 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 		      MPIR_AttrType attrType )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_SET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -132,7 +132,7 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 #   endif
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr( comm, comm_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -142,7 +142,7 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
             MPID_Keyval *keyval_ptr = NULL;
 
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    /* Validate keyval_ptr */
             MPID_Keyval_get_ptr( comm_keyval, keyval_ptr );
@@ -219,7 +219,7 @@ corresponding keyval was created) will be called.
 int MPI_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SET_ATTR);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -239,7 +239,7 @@ int MPI_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val)
 #   endif
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr( comm, comm_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -249,7 +249,7 @@ int MPI_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val)
             MPID_Keyval *keyval_ptr = NULL;
 
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    /* Validate keyval_ptr */
             MPID_Keyval_get_ptr( comm_keyval, keyval_ptr );

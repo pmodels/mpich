@@ -37,7 +37,7 @@
  *
  * MPIDI_Abort_core() simply uses the same params from MPID_Abort().
  */
-void MPIDI_Abort_core(MPID_Comm * comm, int mpi_errno, int exit_code, const char *user_str)
+void MPIDI_Abort_core(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *user_str)
 {
   char sys_str[MPI_MAX_ERROR_STRING+5] = "";
   char comm_str[MPI_MAX_ERROR_STRING] = "";
@@ -80,7 +80,7 @@ void MPIDI_Abort_core(MPID_Comm * comm, int mpi_errno, int exit_code, const char
  *
  * This function MUST NEVER return.
  */
-int MPID_Abort(MPID_Comm * comm, int mpi_errno, int exit_code, const char *error_msg)
+int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error_msg)
 {
   MPIDI_Abort_core(comm, mpi_errno, exit_code, error_msg);
 

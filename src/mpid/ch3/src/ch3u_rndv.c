@@ -20,7 +20,7 @@ int MPIDI_CH3_RndvSend( MPID_Request **sreq_p, const void * buf, MPI_Aint count,
 			MPI_Datatype datatype, int dt_contig, intptr_t data_sz,
 			MPI_Aint dt_true_lb,
 			int rank, 
-			int tag, MPID_Comm * comm, int context_offset )
+			int tag, MPIR_Comm * comm, int context_offset )
 {
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_rndv_req_to_send_t * const rts_pkt = &upkt.rndv_req_to_send;

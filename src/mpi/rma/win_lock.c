@@ -104,7 +104,7 @@ int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPID_Comm *comm_ptr;
+            MPIR_Comm *comm_ptr;
 
             /* Validate win_ptr */
             MPID_Win_valid_ptr( win_ptr, mpi_errno );

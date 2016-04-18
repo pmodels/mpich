@@ -113,7 +113,7 @@ int MPI_Raccumulate(const void *origin_addr, int origin_count, MPI_Datatype
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPID_Comm * comm_ptr;
+            MPIR_Comm * comm_ptr;
             
             /* Validate win_ptr */
             MPID_Win_valid_ptr( win_ptr, mpi_errno );

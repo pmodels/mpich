@@ -71,7 +71,7 @@ int MPIDU_Sched_are_pending(void)
 #define FUNCNAME MPIDU_Sched_next_tag
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_Sched_next_tag(MPID_Comm * comm_ptr, int *tag)
+int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
 {
     int mpi_errno = MPI_SUCCESS;
     /* TODO there should be an internal accessor/utility macro for getting the
@@ -128,7 +128,7 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
 {
     int mpi_errno = MPI_SUCCESS, ret_errno = MPI_SUCCESS;
     MPID_Request *r = s->req;
-    MPID_Comm *comm;
+    MPIR_Comm *comm;
 
     MPIU_Assert(e->status == MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED);
 
@@ -389,7 +389,7 @@ int MPIDU_Sched_clone(MPID_Sched_t orig, MPID_Sched_t * cloned)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* sets (*sp) to MPID_SCHED_NULL and gives you back a request pointer in (*req).
  * The caller is giving up ownership of the opaque schedule object. */
-int MPIDU_Sched_start(MPID_Sched_t * sp, MPID_Comm * comm, int tag, MPID_Request ** req)
+int MPIDU_Sched_start(MPID_Sched_t * sp, MPIR_Comm * comm, int tag, MPID_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *r;
@@ -499,7 +499,7 @@ static int MPIDU_Sched_add_entry(struct MPIDU_Sched *s, int *idx, struct MPIDU_S
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* do these ops need an entry handle returned? */
 int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
-                     MPID_Comm * comm, MPID_Sched_t s)
+                     MPIR_Comm * comm, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -539,7 +539,7 @@ int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
-                      MPID_Comm * comm, MPID_Sched_t s)
+                      MPIR_Comm * comm, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -579,7 +579,7 @@ int MPIDU_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, in
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sched_send_defer(const void *buf, const MPI_Aint * count, MPI_Datatype datatype, int dest,
-                           MPID_Comm * comm, MPID_Sched_t s)
+                           MPIR_Comm * comm, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -618,7 +618,7 @@ int MPIDU_Sched_send_defer(const void *buf, const MPI_Aint * count, MPI_Datatype
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, int src,
-                            MPID_Comm * comm, MPI_Status * status, MPID_Sched_t s)
+                            MPIR_Comm * comm, MPI_Status * status, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -652,7 +652,7 @@ int MPIDU_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, in
 #define FUNCNAME MPIDU_Sched_recv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, MPID_Comm * comm,
+int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, MPIR_Comm * comm,
                      MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;

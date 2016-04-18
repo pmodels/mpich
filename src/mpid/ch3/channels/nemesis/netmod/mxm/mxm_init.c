@@ -114,8 +114,8 @@ static int _mxm_post_init(void);
 static int _mxm_connect(MPID_nem_mxm_ep_t * ep, const char *business_card,
                         MPID_nem_mxm_vc_area * vc_area);
 static int _mxm_disconnect(MPID_nem_mxm_ep_t * ep);
-static int _mxm_add_comm(MPID_Comm * comm, void *param);
-static int _mxm_del_comm(MPID_Comm * comm, void *param);
+static int _mxm_add_comm(MPIR_Comm * comm, void *param);
+static int _mxm_del_comm(MPIR_Comm * comm, void *param);
 static int _mxm_conf(void);
 
 
@@ -631,7 +631,7 @@ static int _mxm_disconnect(MPID_nem_mxm_ep_t * ep)
     goto fn_exit;
 }
 
-static int _mxm_add_comm(MPID_Comm * comm, void *param)
+static int _mxm_add_comm(MPIR_Comm * comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
     mxm_error_t ret = MXM_OK;
@@ -669,7 +669,7 @@ static int _mxm_add_comm(MPID_Comm * comm, void *param)
     goto fn_exit;
 }
 
-static int _mxm_del_comm(MPID_Comm * comm, void *param)
+static int _mxm_del_comm(MPIR_Comm * comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
     mxm_mq_h *mxm_mq = (mxm_mq_h *) comm->dev.ch.netmod_priv;

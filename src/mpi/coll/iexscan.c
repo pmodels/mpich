@@ -76,7 +76,7 @@ int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 #define FUNCNAME MPIR_Iexscan
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;
@@ -184,7 +184,7 @@ fn_fail:
 #define FUNCNAME MPIR_Iexscan_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *reqp = NULL;
@@ -246,7 +246,7 @@ int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
                 MPI_Op op, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_IEXSCAN);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -268,14 +268,14 @@ int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr(comm, comm_ptr);
+    MPIR_Comm_get_ptr(comm, comm_ptr);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             MPIR_ERRTEST_COMM_INTRA(comm_ptr, mpi_errno);
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
                 MPID_Datatype *datatype_ptr = NULL;

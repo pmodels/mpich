@@ -55,7 +55,7 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
                   MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                  int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+                  int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int rank, comm_size, mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -166,7 +166,7 @@ fn_fail:
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts, const int *displs,
                        MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                       int root, MPID_Comm *comm_ptr, MPIR_Errflag_t *errflag)
+                       int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -233,7 +233,7 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
                  int root, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_SCATTERV);
 
@@ -254,7 +254,7 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr( comm, comm_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -264,7 +264,7 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 	    MPID_Datatype *sendtype_ptr=NULL, *recvtype_ptr=NULL;
             int i, comm_size, rank;
 	    
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
             if (comm_ptr->comm_kind == MPID_INTRACOMM) {

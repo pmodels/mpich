@@ -105,7 +105,7 @@ int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPID_Comm *comm_ptr;
+            MPIR_Comm *comm_ptr;
             
             /* Validate win_ptr */
             MPID_Win_valid_ptr( win_ptr, mpi_errno );

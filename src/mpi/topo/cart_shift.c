@@ -30,7 +30,7 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int disp, int *rank_source, int
 #define FUNCNAME MPIR_Cart_shift_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Cart_shift_impl(MPID_Comm *comm_ptr, int direction, int disp, int *rank_source, int *rank_dest)
+int MPIR_Cart_shift_impl(MPIR_Comm *comm_ptr, int direction, int disp, int *rank_source, int *rank_dest)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Topology *cart_ptr;
@@ -123,7 +123,7 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int disp, int *rank_source,
 		   int *rank_dest)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_CART_SHIFT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -142,7 +142,7 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int disp, int *rank_source,
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr( comm, comm_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -150,7 +150,7 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int disp, int *rank_source,
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
             if (mpi_errno) goto fn_fail;
 	    /* If comm_ptr is not valid, it will be reset to null */
 

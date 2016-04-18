@@ -125,20 +125,20 @@ typedef struct transactionID_struct {
   BEGIN MPI PORT SECTION
   --------------------------*/
 /* These are the default functions */
-int MPIDI_Comm_connect(const char *, struct MPID_Info *, int, struct MPID_Comm *, struct MPID_Comm **);
-int MPIDI_Comm_accept(const char *, struct MPID_Info *, int, struct MPID_Comm *, struct MPID_Comm **);
+int MPIDI_Comm_connect(const char *, struct MPID_Info *, int, struct MPIR_Comm *, struct MPIR_Comm **);
+int MPIDI_Comm_accept(const char *, struct MPID_Info *, int, struct MPIR_Comm *, struct MPIR_Comm **);
 
 int MPIDI_Comm_spawn_multiple(int, char **, char ***, int *, struct MPID_Info **,
-                              int, struct MPID_Comm *, struct MPID_Comm **, int *);
+                              int, struct MPIR_Comm *, struct MPIR_Comm **, int *);
 
 
 typedef struct MPIDI_Port_Ops {
     int (*OpenPort)( struct MPID_Info *, char *);
     int (*ClosePort)( const char * );
-    int (*CommAccept)( const char *, struct MPID_Info *, int, struct MPID_Comm *,
-                       struct MPID_Comm ** );
-    int (*CommConnect)( const char *, struct MPID_Info *, int, struct MPID_Comm *,
-                        struct MPID_Comm ** );
+    int (*CommAccept)( const char *, struct MPID_Info *, int, struct MPIR_Comm *,
+                       struct MPIR_Comm ** );
+    int (*CommConnect)( const char *, struct MPID_Info *, int, struct MPIR_Comm *,
+                        struct MPIR_Comm ** );
 } MPIDI_PortFns;
 
 

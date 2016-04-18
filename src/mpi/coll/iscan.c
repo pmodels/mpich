@@ -69,7 +69,7 @@ int MPI_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dataty
 #define FUNCNAME MPIR_Iscan_rec_dbl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscan_rec_dbl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Iscan_rec_dbl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint true_extent, true_lb, extent;
@@ -174,12 +174,12 @@ fn_fail:
 #define FUNCNAME MPIR_Iscan_rec_dbl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank = comm_ptr->rank;
-    MPID_Comm *node_comm;
-    MPID_Comm *roots_comm;
+    MPIR_Comm *node_comm;
+    MPIR_Comm *roots_comm;
     MPI_Aint true_extent, true_lb, extent;
     void *tempbuf = NULL;
     void *prefulldata = NULL;
@@ -318,7 +318,7 @@ fn_fail:
 #define FUNCNAME MPIR_Iscan_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Iscan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *reqp = NULL;
@@ -378,7 +378,7 @@ int MPI_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dataty
               MPI_Op op, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ISCAN);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -401,14 +401,14 @@ int MPI_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dataty
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr(comm, comm_ptr);
+    MPIR_Comm_get_ptr(comm, comm_ptr);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
             MPIR_ERRTEST_COMM_INTRA(comm_ptr, mpi_errno);

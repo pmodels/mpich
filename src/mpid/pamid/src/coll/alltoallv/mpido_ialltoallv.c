@@ -31,7 +31,7 @@ int MPIDO_Ialltoallv(const void *sendbuf,
                     const int *recvcounts,
                     const int *recvdispls,
                     MPI_Datatype recvtype,
-                    MPID_Comm *comm_ptr,
+                    MPIR_Comm *comm_ptr,
                     MPID_Request **request)
 {
    if(comm_ptr->rank == 0)

@@ -11,12 +11,12 @@
 #define MPIR_ERR_FATAL 1
 #define MPIR_ERR_RECOVERABLE 0
 
-struct MPID_Comm;
+struct MPIR_Comm;
 struct MPID_Win;
 /*struct MPID_File;*/
 
 /* Bindings for internal routines */
-int MPIR_Err_return_comm( struct MPID_Comm *, const char [], int );
+int MPIR_Err_return_comm( struct MPIR_Comm *, const char [], int );
 int MPIR_Err_return_win( struct MPID_Win *, const char [], int );
 /*int MPIR_Err_return_file( struct MPID_File *, const char [], int );*/
 #ifdef MPI__FILE_DEFINED
@@ -181,7 +181,7 @@ int MPIR_Err_set_msg( int code, const char *msg_string );
 /* This routine is called when there is a fatal error. Now public because file
  * error handling is defined in a separate file from comm and win, but all
  * three need to call it */
-void MPIR_Handle_fatal_error(struct MPID_Comm *comm_ptr,
+void MPIR_Handle_fatal_error(struct MPIR_Comm *comm_ptr,
 	const char fcname[], int errcode);
 
 #define MPIR_ERR_CLASS_MASK 0x0000007f

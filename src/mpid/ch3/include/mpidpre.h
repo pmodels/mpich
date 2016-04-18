@@ -188,8 +188,8 @@ typedef struct MPIDI_CH3I_comm
     struct MPIDI_VCRT *vcrt;          /* virtual connecton reference table */
     struct MPIDI_VCRT *local_vcrt;    /* local virtual connecton reference table */
 
-    struct MPID_Comm *next; /* next pointer for list of communicators */
-    struct MPID_Comm *prev; /* prev pointer for list of communicators */
+    struct MPIR_Comm *next; /* next pointer for list of communicators */
+    struct MPIR_Comm *prev; /* prev pointer for list of communicators */
     MPIDI_CH3I_CH_comm_t ch;
 }
 MPIDI_CH3I_comm_t;

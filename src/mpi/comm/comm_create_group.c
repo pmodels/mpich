@@ -33,8 +33,8 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm *new
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* comm create group impl; assumes that the standard error checking
  * has already taken place in the calling function */
-int MPIR_Comm_create_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr, int tag,
-                           MPID_Comm ** newcomm_ptr)
+int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPID_Group * group_ptr, int tag,
+                           MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIU_Context_id_t new_context_id = 0;
@@ -52,7 +52,7 @@ int MPIR_Comm_create_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr, int tag
     /* Create a new communicator from the specified group members */
 
     if (group_ptr->rank != MPI_UNDEFINED) {
-        MPID_Comm *mapping_comm = NULL;
+        MPIR_Comm *mapping_comm = NULL;
 
         /* For this routine, creation of the id is collective over the input
            *group*, so processes not in the group do not participate. */
@@ -152,7 +152,7 @@ Output Parameters:
 int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL, *newcomm_ptr;
+    MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
     MPID_Group *group_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_CREATE_GROUP);
 
@@ -170,12 +170,12 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * ne
         }
         MPID_END_ERROR_CHECKS;
 
-        MPID_Comm_get_ptr( comm, comm_ptr );
+        MPIR_Comm_get_ptr( comm, comm_ptr );
 
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno) goto fn_fail;
             /* If comm_ptr is not valid, it will be reset to null */
             MPIR_ERRTEST_COMM_INTRA(comm_ptr, mpi_errno);
@@ -199,7 +199,7 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * ne
     }
 #   else
     {
-        MPID_Comm_get_ptr( comm, comm_ptr );
+        MPIR_Comm_get_ptr( comm, comm_ptr );
         MPID_Group_get_ptr( group, group_ptr );
     }
 #   endif

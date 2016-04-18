@@ -28,18 +28,18 @@ cvars:
 */
 
 static int register_hook_finalize(void *param);
-static int comm_created(MPID_Comm *comm, void *param);
-static int comm_destroyed(MPID_Comm *comm, void *param);
+static int comm_created(MPIR_Comm *comm, void *param);
+static int comm_destroyed(MPIR_Comm *comm, void *param);
 
 /* macros and head for list of communicators */
 #define COMM_ADD(comm) MPL_DL_PREPEND_NP(comm_list, comm, dev.next, dev.prev)
 #define COMM_DEL(comm) MPL_DL_DELETE_NP(comm_list, comm, dev.next, dev.prev)
 #define COMM_FOREACH(elt) MPL_DL_FOREACH_NP(comm_list, elt, dev.next, dev.prev)
-static MPID_Comm *comm_list = NULL;
+static MPIR_Comm *comm_list = NULL;
 
 typedef struct hook_elt
 {
-    int (*hook_fn)(struct MPID_Comm *, void *);
+    int (*hook_fn)(struct MPIR_Comm *, void *);
     void *param;
     struct hook_elt *prev;
     struct hook_elt *next;
@@ -182,12 +182,12 @@ static inline int map_size(MPIR_Comm_map_t map)
 #define FUNCNAME MPIDI_CH3U_Comm_create_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3I_Comm_create_hook(MPID_Comm *comm)
+int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
 {
     int mpi_errno = MPI_SUCCESS;
     hook_elt *elt;
     MPIR_Comm_map_t *mapper;
-    MPID_Comm *src_comm;
+    MPIR_Comm *src_comm;
     int vcrt_size, vcrt_offset;
     
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_COMM_CREATE_HOOK);
@@ -316,7 +316,7 @@ int MPIDI_CH3I_Comm_create_hook(MPID_Comm *comm)
 #define FUNCNAME MPIDI_CH3U_Comm_destroy_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3I_Comm_destroy_hook(MPID_Comm *comm)
+int MPIDI_CH3I_Comm_destroy_hook(MPIR_Comm *comm)
 {
     int mpi_errno = MPI_SUCCESS;
     hook_elt *elt;
@@ -349,7 +349,7 @@ int MPIDI_CH3I_Comm_destroy_hook(MPID_Comm *comm)
 #define FUNCNAME MPIDI_CH3U_Comm_register_create_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Comm_register_create_hook(int (*hook_fn)(struct MPID_Comm *, void *), void *param)
+int MPIDI_CH3U_Comm_register_create_hook(int (*hook_fn)(struct MPIR_Comm *, void *), void *param)
 {
     int mpi_errno = MPI_SUCCESS;
     hook_elt *elt;
@@ -378,7 +378,7 @@ int MPIDI_CH3U_Comm_register_create_hook(int (*hook_fn)(struct MPID_Comm *, void
 #define FUNCNAME MPIDI_CH3U_Comm_register_destroy_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Comm_register_destroy_hook(int (*hook_fn)(struct MPID_Comm *, void *), void *param)
+int MPIDI_CH3U_Comm_register_destroy_hook(int (*hook_fn)(struct MPIR_Comm *, void *), void *param)
 {
     int mpi_errno = MPI_SUCCESS;
     hook_elt *elt;
@@ -436,7 +436,7 @@ static int register_hook_finalize(void *param)
 #define FUNCNAME comm_created
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int comm_created(MPID_Comm *comm, void *param)
+int comm_created(MPIR_Comm *comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_COMM_CREATED);
@@ -464,7 +464,7 @@ int comm_created(MPID_Comm *comm, void *param)
 #define FUNCNAME comm_destroyed
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int comm_destroyed(MPID_Comm *comm, void *param)
+int comm_destroyed(MPIR_Comm *comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_COMM_DESTROYED);
@@ -488,7 +488,7 @@ int comm_destroyed(MPID_Comm *comm, void *param)
 #define FUNCNAME nonempty_intersection
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int nonempty_intersection(MPID_Comm *comm, MPID_Group *group, int *flag)
+static int nonempty_intersection(MPIR_Comm *comm, MPID_Group *group, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
     int i_g, i_c;
@@ -536,7 +536,7 @@ static int nonempty_intersection(MPID_Comm *comm, MPID_Group *group, int *flag)
 int MPIDI_CH3I_Comm_handle_failed_procs(MPID_Group *new_failed_procs)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm;
+    MPIR_Comm *comm;
     int flag = FALSE;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_COMM_HANDLE_FAILED_PROCS);
 
@@ -572,7 +572,7 @@ int MPIDI_CH3I_Comm_handle_failed_procs(MPID_Group *new_failed_procs)
     goto fn_exit;
 }
 
-void MPIDI_CH3I_Comm_find(MPIU_Context_id_t context_id, MPID_Comm **comm)
+void MPIDI_CH3I_Comm_find(MPIU_Context_id_t context_id, MPIR_Comm **comm)
 {
     MPIDI_STATE_DECL(MPIDI_STATE_MPIDI_CH3I_COMM_FIND);
     MPIDI_FUNC_ENTER(MPIDI_STATE_MPIDI_CH3I_COMM_FIND);

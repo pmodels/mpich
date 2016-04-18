@@ -33,7 +33,7 @@ int MPIDO_Scatterv_bcast(void *sendbuf,
                          int recvcount,
                          MPI_Datatype recvtype,
                          int root,
-                         MPID_Comm *comm_ptr,
+                         MPIR_Comm *comm_ptr,
                          int *mpierrno)
 {
   const int rank = comm_ptr->rank;
@@ -87,7 +87,7 @@ int MPIDO_Scatterv_alltoallv(void * sendbuf,
                              int recvcount,
                              MPI_Datatype recvtype,
                              int root,
-                             MPID_Comm * comm_ptr,
+                             MPIR_Comm * comm_ptr,
                              int *mpierrno)
 {
   const int rank = comm_ptr->rank;
@@ -212,7 +212,7 @@ int MPIDO_Scatterv(const void *sendbuf,
                    int recvcount,
                    MPI_Datatype recvtype,
                    int root,
-                   MPID_Comm *comm_ptr,
+                   MPIR_Comm *comm_ptr,
                    int *mpierrno)
 {
 #ifndef HAVE_PAMI_IN_PLACE
@@ -468,7 +468,7 @@ int MPIDO_Scatterv_simple(const void *sendbuf,
                    int recvcount,
                    MPI_Datatype recvtype,
                    int root,
-                   MPID_Comm *comm_ptr,
+                   MPIR_Comm *comm_ptr,
                    int *mpierrno)
 {
 #ifndef HAVE_PAMI_IN_PLACE
@@ -654,7 +654,7 @@ MPIDO_CSWrapper_scatterv(pami_xfer_t *scatterv,
                          void        *comm)
 {
    int mpierrno = 0, rc = 0;
-   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPIR_Comm   *comm_ptr = (MPIR_Comm*)comm;
    MPI_Datatype sendtype, recvtype;
    void *rbuf;
    MPIDI_coll_check_in_place(scatterv->cmd.xfer_scatterv_int.rcvbuf, &rbuf);

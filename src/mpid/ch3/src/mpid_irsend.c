@@ -15,7 +15,7 @@
 #define FUNCNAME MPID_Irsend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Irsend(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPID_Comm * comm, int context_offset,
+int MPID_Irsend(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
 		MPID_Request ** request)
 {
     MPIDI_CH3_Pkt_t upkt;

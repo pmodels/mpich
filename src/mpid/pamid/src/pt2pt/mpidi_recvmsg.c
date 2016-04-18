@@ -137,7 +137,7 @@ MPIDI_RecvMsg_Unexp(MPID_Request  * rreq,
 
 
 void
-MPIDI_RecvMsg_procnull(MPID_Comm     * comm,
+MPIDI_RecvMsg_procnull(MPIR_Comm     * comm,
                        unsigned        is_blocking,
                        MPI_Status    * status,
                        MPID_Request ** request)

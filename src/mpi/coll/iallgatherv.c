@@ -33,7 +33,7 @@ int MPI_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, v
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgatherv_rec_dbl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                              void *recvbuf, const int recvcounts[], const int displs[],
-                             MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPID_Sched_t s)
+                             MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, i, j, k;
@@ -275,7 +275,7 @@ fn_fail:
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgatherv_bruck(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                            void *recvbuf, const int recvcounts[], const int displs[],
-                           MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPID_Sched_t s)
+                           MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, j, i;
@@ -414,7 +414,7 @@ fn_fail:
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgatherv_ring(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                           void *recvbuf, const int recvcounts[], const int displs[],
-                          MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPID_Sched_t s)
+                          MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, total_count;
@@ -556,7 +556,7 @@ fn_fail:
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgatherv_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                            void *recvbuf, const int recvcounts[], const int displs[],
-                           MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPID_Sched_t s)
+                           MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, comm_size, total_count, recvtype_size;
@@ -604,7 +604,7 @@ fn_fail:
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgatherv_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                            void *recvbuf, const int recvcounts[], const int displs[],
-                           MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPID_Sched_t s)
+                           MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPID_Sched_t s)
 {
 /* Intercommunicator Allgatherv.
    This is done differently from the intercommunicator allgather
@@ -616,7 +616,7 @@ int MPIR_Iallgatherv_inter(const void *sendbuf, int sendcount, MPI_Datatype send
 */
     int mpi_errno = MPI_SUCCESS;
     int remote_size, root, rank;
-    MPID_Comm *newcomm_ptr = NULL;
+    MPIR_Comm *newcomm_ptr = NULL;
     MPI_Datatype newtype = MPI_DATATYPE_NULL;
 
     remote_size = comm_ptr->remote_size;
@@ -692,7 +692,7 @@ fn_fail:
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iallgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                           void *recvbuf, const int recvcounts[], const int displs[],
-                          MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPI_Request *request)
+                          MPI_Datatype recvtype, MPIR_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *reqp = NULL;
@@ -756,7 +756,7 @@ int MPI_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, v
                     MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_IALLGATHERV);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -781,14 +781,14 @@ int MPI_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, v
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr(comm, comm_ptr);
+    MPIR_Comm_get_ptr(comm, comm_ptr);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
             if (sendbuf != MPI_IN_PLACE) {

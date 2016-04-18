@@ -84,7 +84,7 @@ MPID_Isend_inline(const void    * buf,
                   MPI_Datatype    datatype,
                   int             rank,
                   int             tag,
-                  MPID_Comm     * comm,
+                  MPIR_Comm     * comm,
                   int             context_offset,
                   MPID_Request ** request)
 {

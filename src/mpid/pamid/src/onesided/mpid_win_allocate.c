@@ -49,7 +49,7 @@ int
 MPID_Win_allocate(MPI_Aint     size,
                   int          disp_unit,
                   MPID_Info  * info,
-                  MPID_Comm  * comm_ptr,
+                  MPIR_Comm  * comm_ptr,
                   void *base_ptr,
                   MPID_Win  ** win_ptr)
 {

@@ -57,7 +57,7 @@ int MPI_Graphdims_get(MPI_Comm comm, int *nnodes, int *nedges)
 {
     static const char FCNAME[] = "MPI_Graphdims_get";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPIR_Topology *topo_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GRAPHDIMS_GET);
 
@@ -77,7 +77,7 @@ int MPI_Graphdims_get(MPI_Comm comm, int *nnodes, int *nedges)
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr( comm, comm_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -85,7 +85,7 @@ int MPI_Graphdims_get(MPI_Comm comm, int *nnodes, int *nedges)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
             if (mpi_errno) goto fn_fail;
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    MPIR_ERRTEST_ARGNULL(nnodes, "nnodes", mpi_errno );

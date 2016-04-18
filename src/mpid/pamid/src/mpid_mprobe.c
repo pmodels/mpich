@@ -6,7 +6,7 @@
 
 #include "mpidimpl.h"
 
-int MPID_Mprobe(int source, int tag, MPID_Comm *comm, int context_offset,
+int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
                 MPID_Request **message, MPI_Status *status)
 {
     const int context = comm->recvcontext_id + context_offset;

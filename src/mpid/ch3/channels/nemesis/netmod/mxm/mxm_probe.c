@@ -17,7 +17,7 @@
 #define FUNCNAME MPID_nem_mxm_probe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_mxm_probe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, int context_offset,
+int MPID_nem_mxm_probe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, int context_offset,
                        MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -63,7 +63,7 @@ int MPID_nem_mxm_probe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, i
 #define FUNCNAME MPID_nem_mxm_iprobe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_mxm_iprobe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, int context_offset,
+int MPID_nem_mxm_iprobe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, int context_offset,
                         int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -109,7 +109,7 @@ int MPID_nem_mxm_iprobe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, 
 #define FUNCNAME MPID_nem_mxm_improbe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_mxm_improbe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, int context_offset,
+int MPID_nem_mxm_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, int context_offset,
                          int *flag, MPID_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -201,7 +201,7 @@ int MPID_nem_mxm_improbe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm,
 #define FUNCNAME MPID_nem_mxm_anysource_iprobe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_mxm_anysource_iprobe(int tag, MPID_Comm * comm, int context_offset, int *flag,
+int MPID_nem_mxm_anysource_iprobe(int tag, MPIR_Comm * comm, int context_offset, int *flag,
                                   MPI_Status * status)
 {
     return MPID_nem_mxm_iprobe(NULL, MPI_ANY_SOURCE, tag, comm, context_offset, flag, status);
@@ -212,7 +212,7 @@ int MPID_nem_mxm_anysource_iprobe(int tag, MPID_Comm * comm, int context_offset,
 #define FUNCNAME MPID_nem_mxm_anysource_iprobe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_mxm_anysource_improbe(int tag, MPID_Comm * comm, int context_offset, int *flag,
+int MPID_nem_mxm_anysource_improbe(int tag, MPIR_Comm * comm, int context_offset, int *flag,
                                    MPID_Request ** message, MPI_Status * status)
 {
     return MPID_nem_mxm_improbe(NULL, MPI_ANY_SOURCE, tag, comm, context_offset, flag, message,

@@ -234,7 +234,7 @@ int MPIR_Err_is_fatal(int errcode)
  * report an error.  It is legitimate to pass NULL for comm_ptr in order to get
  * the default (MPI_COMM_WORLD) error handling.
  */
-int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[], 
+int MPIR_Err_return_comm( MPIR_Comm  *comm_ptr, const char fcname[],
 			  int errcode )
 {
     const int error_class = ERROR_GET_CLASS(errcode);
@@ -431,7 +431,7 @@ static void CombineSpecificCodes( int, int, int );
 static const char *get_class_msg( int );
 
 /* --BEGIN ERROR HANDLING-- */
-void MPIR_Handle_fatal_error( MPID_Comm *comm_ptr,
+void MPIR_Handle_fatal_error( MPIR_Comm *comm_ptr,
 			      const char fcname[], int errcode )
 {
     /* Define length of the the maximum error message line (or string with 

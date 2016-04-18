@@ -44,7 +44,7 @@ int MPIDO_Gather_reduce(void * sendbuf,
 			int recvcount,
 			MPI_Datatype recvtype,
 			int root,
-			MPID_Comm * comm_ptr,
+                        MPIR_Comm * comm_ptr,
 			int *mpierrno)
 {
   MPIDU_Datatype* data_ptr;
@@ -128,7 +128,7 @@ int MPIDO_Gather(const void *sendbuf,
                  int recvcount,
                  MPI_Datatype recvtype,
                  int root,
-                 MPID_Comm *comm_ptr,
+                 MPIR_Comm *comm_ptr,
 		 int *mpierrno)
 {
 #ifndef HAVE_PAMI_IN_PLACE
@@ -426,7 +426,7 @@ int MPIDO_Gather_simple(const void *sendbuf,
                  int recvcount,
                  MPI_Datatype recvtype,
                  int root,
-                 MPID_Comm *comm_ptr,
+                 MPIR_Comm *comm_ptr,
 		 int *mpierrno)
 {
 #ifndef HAVE_PAMI_IN_PLACE
@@ -612,7 +612,7 @@ MPIDO_CSWrapper_gather(pami_xfer_t *gather,
                        void        *comm)
 {
    int mpierrno = 0;
-   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPIR_Comm   *comm_ptr = (MPIR_Comm*)comm;
    MPI_Datatype sendtype, recvtype;
    void *sbuf;
    MPIDI_coll_check_in_place(gather->cmd.xfer_gather.sndbuf, &sbuf);

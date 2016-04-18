@@ -85,7 +85,7 @@ int MPID_nem_lmt_pkthandler_init(MPIDI_CH3_PktHandler_Fcn *pktArray[], int array
 int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, MPI_Aint count,
                           MPI_Datatype datatype, int dt_contig ATTRIBUTE((unused)),
                           intptr_t data_sz, MPI_Aint dt_true_lb ATTRIBUTE((unused)),
-                          int rank, int tag, MPID_Comm * comm, int context_offset)
+                          int rank, int tag, MPIR_Comm * comm, int context_offset)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_PKT_DECL_CAST(upkt, MPID_nem_pkt_lmt_rts_t, rts_pkt);

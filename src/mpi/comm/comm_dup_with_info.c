@@ -30,8 +30,8 @@ int MPI_Comm_dup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm *newcomm) __at
 #define FUNCNAME MPIR_Comm_dup_with_info_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_dup_with_info_impl(MPID_Comm * comm_ptr, MPID_Info * info_ptr,
-                                 MPID_Comm ** newcomm_p_p)
+int MPIR_Comm_dup_with_info_impl(MPIR_Comm * comm_ptr, MPID_Info * info_ptr,
+                                 MPIR_Comm ** newcomm_p_p)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -88,7 +88,7 @@ Notes:
 int MPI_Comm_dup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL, *newcomm_ptr;
+    MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
     MPID_Info *info_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_DUP_WITH_INFO);
 
@@ -109,7 +109,7 @@ int MPI_Comm_dup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm)
 #endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr(comm, comm_ptr);
+    MPIR_Comm_get_ptr(comm, comm_ptr);
     MPID_Info_get_ptr(info, info_ptr);
 
     /* Validate parameters and objects (post conversion) */
@@ -118,7 +118,7 @@ int MPI_Comm_dup_with_info(MPI_Comm comm, MPI_Info info, MPI_Comm * newcomm)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno) goto fn_fail;
             /* If comm_ptr is not valid, it will be reset to null */
             MPIR_ERRTEST_ARGNULL(newcomm, "newcomm", mpi_errno);

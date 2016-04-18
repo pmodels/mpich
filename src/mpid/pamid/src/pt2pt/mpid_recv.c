@@ -42,7 +42,7 @@ int MPID_Recv(void          * buf,
               MPI_Datatype    datatype,
               int             rank,
               int             tag,
-              MPID_Comm     * comm,
+              MPIR_Comm     * comm,
               int             context_offset,
               MPI_Status    * status,
               MPID_Request ** request)

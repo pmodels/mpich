@@ -56,7 +56,7 @@ int MPI_Attr_delete(MPI_Comm comm, int keyval)
 {
     static const char FCNAME[] = "MPI_Attr_delete";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_Keyval *keyval_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ATTR_DELETE);
 
@@ -77,7 +77,7 @@ int MPI_Attr_delete(MPI_Comm comm, int keyval)
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr( comm, comm_ptr );
     MPID_Keyval_get_ptr( keyval, keyval_ptr );
 
     /* Validate parameters and objects (post conversion) */
@@ -86,7 +86,7 @@ int MPI_Attr_delete(MPI_Comm comm, int keyval)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
 	    /* If comm_ptr is not valid, it will be reset to null */
             /* Validate keyval_ptr */
 	    MPID_Keyval_valid_ptr( keyval_ptr, mpi_errno );

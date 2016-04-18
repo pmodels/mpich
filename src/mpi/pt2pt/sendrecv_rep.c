@@ -71,7 +71,7 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
 {
     static const char FCNAME[] = "MPI_Sendrecv_replace";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
 #ifdef MPID_LOG_ARROWS
     /* This isn't the right test, but it is close enough for now */
     int sendcount = count, recvcount = count;
@@ -85,14 +85,14 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     MPID_MPI_PT2PT_FUNC_ENTER_BOTH(MPID_STATE_MPI_SENDRECV_REPLACE);
 
     /* Convert handles to MPI objects. */
-    MPID_Comm_get_ptr(comm, comm_ptr);
+    MPIR_Comm_get_ptr(comm, comm_ptr);
     
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    /* Validate communicator */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno) goto fn_fail;
 	    
 	    /* Validate count */

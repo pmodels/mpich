@@ -33,7 +33,7 @@ int MPI_Neighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sen
 #define FUNCNAME MPIR_Neighbor_allgatherv_default
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Neighbor_allgatherv_default(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPID_Comm *comm_ptr)
+int MPIR_Neighbor_allgatherv_default(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -57,7 +57,7 @@ fn_fail:
 #define FUNCNAME MPIR_Neighbor_allgatherv_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Neighbor_allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPID_Comm *comm_ptr)
+int MPIR_Neighbor_allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPIR_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -104,7 +104,7 @@ Output Parameters:
 int MPI_Neighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int recvcounts[], const int displs[], MPI_Datatype recvtype, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_NEIGHBOR_ALLGATHERV);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -126,7 +126,7 @@ int MPI_Neighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sen
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr(comm, comm_ptr);
+    MPIR_Comm_get_ptr(comm, comm_ptr);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -147,7 +147,7 @@ int MPI_Neighbor_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sen
                 MPID_Datatype_committed_ptr(recvtype_ptr, mpi_errno);
             }
 
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }

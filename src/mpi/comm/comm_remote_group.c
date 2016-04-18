@@ -30,7 +30,7 @@ int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group *group) __attribute__((weak,a
 #define FUNCNAME MPIR_Comm_remote_group_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_remote_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr)
+int MPIR_Comm_remote_group_impl(MPIR_Comm *comm_ptr, MPID_Group **group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, lpid, n;
@@ -99,7 +99,7 @@ The user is responsible for freeing the group when it is no longer needed.
 int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group *group)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_Group *group_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_REMOTE_GROUP);
 
@@ -120,7 +120,7 @@ int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group *group)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr( comm, comm_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -128,7 +128,7 @@ int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group *group)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    if (comm_ptr && comm_ptr->comm_kind != MPID_INTERCOMM) {
 		mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 

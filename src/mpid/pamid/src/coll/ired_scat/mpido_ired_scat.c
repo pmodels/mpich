@@ -28,7 +28,7 @@ int MPIDO_Ireduce_scatter(const void *sendbuf,
                           const int *recvcounts,
                           MPI_Datatype datatype,
                           MPI_Op op,
-                          MPID_Comm *comm_ptr,
+                          MPIR_Comm *comm_ptr,
                           MPID_Request **request)
 {
    TRACE_ERR("Entering MPIDO_Ireduce_scatter\n");

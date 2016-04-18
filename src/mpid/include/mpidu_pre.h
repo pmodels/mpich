@@ -12,14 +12,14 @@
 /* some common MPI forward declarations */
 
 struct MPID_Request;
-struct MPID_Comm;
+struct MPIR_Comm;
 
 /* Scheduling forward declarations */
 
 struct MPIDU_Sched;
 typedef struct MPIDU_Sched *MPID_Sched_t;
 
-typedef int (MPID_Sched_cb_t) (struct MPID_Comm * comm, int tag, void *state);
-typedef int (MPID_Sched_cb2_t) (struct MPID_Comm * comm, int tag, void *state, void *state2);
+typedef int (MPID_Sched_cb_t) (struct MPIR_Comm * comm, int tag, void *state);
+typedef int (MPID_Sched_cb2_t) (struct MPIR_Comm * comm, int tag, void *state, void *state2);
 
 #endif

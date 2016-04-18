@@ -29,7 +29,7 @@ int MPIDO_Reduce_scatter(const void *sendbuf,
                  int *recvcounts, 
                  MPI_Datatype datatype,
                  MPI_Op op,
-                 MPID_Comm *comm_ptr, 
+                 MPIR_Comm *comm_ptr,
                  int *mpierrno)
 
 {
@@ -109,7 +109,7 @@ int MPIDO_Reduce_scatter_block(const void *sendbuf,
                  int recvcount, 
                  MPI_Datatype datatype,
                  MPI_Op op,
-                 MPID_Comm *comm_ptr, 
+                 MPIR_Comm *comm_ptr,
                  int *mpierrno)
 
 {

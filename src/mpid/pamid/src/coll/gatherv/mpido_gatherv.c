@@ -38,7 +38,7 @@ int MPIDO_Gatherv(const void *sendbuf,
                   const int *displs, 
                   MPI_Datatype recvtype,
                   int root, 
-                  MPID_Comm * comm_ptr, 
+                  MPIR_Comm * comm_ptr,
                   int *mpierrno)
 
 {
@@ -301,7 +301,7 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
                   const int *displs, 
                   MPI_Datatype recvtype,
                   int root, 
-                  MPID_Comm * comm_ptr, 
+                  MPIR_Comm * comm_ptr,
                   int *mpierrno)
 
 {
@@ -540,7 +540,7 @@ MPIDO_CSWrapper_gatherv(pami_xfer_t *gatherv,
                         void        *comm)
 {
    int mpierrno = 0;
-   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPIR_Comm   *comm_ptr = (MPIR_Comm*)comm;
    MPI_Datatype sendtype, recvtype;
    void *sbuf;
    MPIDI_coll_check_in_place(gatherv->cmd.xfer_gatherv_int.sndbuf, &sbuf);

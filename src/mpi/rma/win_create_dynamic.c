@@ -90,7 +90,7 @@ int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win)
     static const char FCNAME[] = "MPI_Win_create_dynamic";
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_Info *info_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_CREATE_DYNAMIC);
 
@@ -113,7 +113,7 @@ int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr( comm, comm_ptr );
     MPID_Info_get_ptr( info, info_ptr );
 
     /* Validate parameters and objects (post conversion) */
@@ -122,7 +122,7 @@ int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate pointers */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;

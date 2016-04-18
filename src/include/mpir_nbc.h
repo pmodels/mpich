@@ -46,7 +46,7 @@
 /* Open question: should tag allocation be rolled into Sched_start?  Keeping it
  * separate potentially allows more parallelism in the future, but it also
  * pushes more work onto the clients of this interface. */
-int MPID_Sched_next_tag(MPID_Comm *comm_ptr, int *tag);
+int MPID_Sched_next_tag(MPIR_Comm *comm_ptr, int *tag);
 
 /* the device must provide a typedef for MPID_Sched_t in mpidpre.h */
 
@@ -60,14 +60,14 @@ int MPID_Sched_clone(MPID_Sched_t orig, MPID_Sched_t *cloned);
  * comm should be the primary (user) communicator with which this collective is
  * associated, even if other hidden communicators are used for a subset of the
  * operations.  It will be used for error handling and similar operations. */
-int MPID_Sched_start(MPID_Sched_t *sp, MPID_Comm *comm, int tag, MPID_Request **req);
+int MPID_Sched_start(MPID_Sched_t *sp, MPIR_Comm *comm, int tag, MPID_Request **req);
 
 /* send and recv take a comm ptr to enable hierarchical collectives */
-int MPID_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s);
-int MPID_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, MPID_Comm *comm, MPID_Sched_t s);
+int MPID_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, MPIR_Comm *comm, MPID_Sched_t s);
+int MPID_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, MPIR_Comm *comm, MPID_Sched_t s);
 
 /* just like MPI_Issend, can't complete until the matching recv is posted */
-int MPID_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s);
+int MPID_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, MPIR_Comm *comm, MPID_Sched_t s);
 
 int MPID_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype, MPI_Op op, MPID_Sched_t s);
 /* packing/unpacking can be accomplished by passing MPI_PACKED as either intype
@@ -94,11 +94,11 @@ int MPID_Sched_barrier(MPID_Sched_t s);
  * A corresponding _recv_defer function is not currently provided because there
  * is no known use case.  The recv count is just an upper bound, not an exact
  * amount to be received, so an oversized recv is used instead of deferral. */
-int MPID_Sched_send_defer(const void *buf, const MPI_Aint *count, MPI_Datatype datatype, int dest, MPID_Comm *comm, MPID_Sched_t s);
+int MPID_Sched_send_defer(const void *buf, const MPI_Aint *count, MPI_Datatype datatype, int dest, MPIR_Comm *comm, MPID_Sched_t s);
 /* Just like MPID_Sched_recv except it populates the given status object with
  * the received count and error information, much like a normal recv.  Often
  * useful in conjunction with MPID_Sched_send_defer. */
-int MPID_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, MPID_Comm *comm, MPI_Status *status, MPID_Sched_t s);
+int MPID_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, MPIR_Comm *comm, MPI_Status *status, MPID_Sched_t s);
 
 /* buffer management, fancy reductions, etc */
 int MPID_Sched_cb(MPID_Sched_cb_t *cb_p, void *cb_state, MPID_Sched_t s);
@@ -108,7 +108,7 @@ int MPID_Sched_cb2(MPID_Sched_cb2_t *cb_p, void *cb_state, void *cb_state2, MPID
  * hopefully s.t. uthash can be used somehow */
 
 /* common callback utility functions */
-int MPIR_Sched_cb_free_buf(MPID_Comm *comm, int tag, void *state);
+int MPIR_Sched_cb_free_buf(MPIR_Comm *comm, int tag, void *state);
 
 /* an upgraded version of MPIU_CHKPMEM_MALLOC/_DECL/_REAP/_COMMIT that adds
  * corresponding cleanup callbacks to the given schedule at _COMMIT time */

@@ -105,7 +105,7 @@ static void free_pmi_keyvals(PMI_keyval_t **kv, int size, int *counts)
 int MPIDI_Comm_spawn_multiple(int count, char **commands,
                                   char ***argvs, const int *maxprocs,
                                   MPID_Info **info_ptrs, int root,
-                                  MPID_Comm *comm_ptr, MPID_Comm
+                                  MPIR_Comm *comm_ptr, MPIR_Comm
                                   **intercomm, int *errcodes) 
 {
     char port_name[MPI_MAX_PORT_NAME];

@@ -60,7 +60,7 @@ int MPIDO_Allgather_allreduce(const void *sendbuf,
 			      MPI_Aint recv_true_lb,
 			      size_t send_size,
 			      size_t recv_size,
-			      MPID_Comm * comm_ptr,
+                              MPIR_Comm * comm_ptr,
                               int *mpierrno)
 
 {
@@ -164,7 +164,7 @@ int MPIDO_Allgather_bcast(const void *sendbuf,
                           MPI_Aint recv_true_lb,
                           size_t send_size,
                           size_t recv_size,
-                          MPID_Comm * comm_ptr,
+                          MPIR_Comm * comm_ptr,
                           int *mpierrno)
 {
   int i, np, rc = 0;
@@ -224,7 +224,7 @@ int MPIDO_Allgather_alltoall(const void *sendbuf,
 			     MPI_Aint recv_true_lb,
 			     size_t send_size,
 			     size_t recv_size,
-			     MPID_Comm * comm_ptr,
+                             MPIR_Comm * comm_ptr,
                              int *mpierrno)
 {
   int i, rc;
@@ -286,7 +286,7 @@ MPIDO_Allgather(const void *sendbuf,
                 void *recvbuf,
                 int recvcount,
                 MPI_Datatype recvtype,
-                MPID_Comm * comm_ptr,
+                MPIR_Comm * comm_ptr,
                 int *mpierrno)
 {
 #ifndef HAVE_PAMI_IN_PLACE
@@ -631,7 +631,7 @@ MPIDO_Allgather_simple(const void *sendbuf,
                 void *recvbuf,
                 int recvcount,
                 MPI_Datatype recvtype,
-                MPID_Comm * comm_ptr,
+                MPIR_Comm * comm_ptr,
                 int *mpierrno)
 {
 #ifndef HAVE_PAMI_IN_PLACE
@@ -791,7 +791,7 @@ MPIDO_CSWrapper_allgather(pami_xfer_t *allgather,
                           void        *comm)
 {
    int mpierrno = 0;
-   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPIR_Comm   *comm_ptr = (MPIR_Comm*)comm;
    MPI_Datatype sendtype, recvtype;
    void *sbuf;
    MPIDI_coll_check_in_place(allgather->cmd.xfer_allgather.sndbuf, &sbuf);

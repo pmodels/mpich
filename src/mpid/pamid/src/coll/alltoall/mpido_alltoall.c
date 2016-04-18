@@ -39,7 +39,7 @@ int MPIDO_Alltoall(const void *sendbuf,
                    void *recvbuf,
                    int recvcount,
                    MPI_Datatype recvtype,
-                   MPID_Comm *comm_ptr,
+                   MPIR_Comm *comm_ptr,
                    int *mpierrno)
 {
 #ifndef HAVE_PAMI_IN_PLACE
@@ -272,7 +272,7 @@ int MPIDO_Alltoall_simple(const void *sendbuf,
                    void *recvbuf,
                    int recvcount,
                    MPI_Datatype recvtype,
-                   MPID_Comm *comm_ptr,
+                   MPIR_Comm *comm_ptr,
                    int *mpierrno)
 {
 #ifndef HAVE_PAMI_IN_PLACE
@@ -420,7 +420,7 @@ MPIDO_CSWrapper_alltoall(pami_xfer_t *alltoall,
                          void        *comm)
 {
    int mpierrno = 0;
-   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPIR_Comm   *comm_ptr = (MPIR_Comm*)comm;
    MPI_Datatype sendtype, recvtype;
    void *sbuf;
    MPIDI_coll_check_in_place(alltoall->cmd.xfer_alltoall.sndbuf, &sbuf);

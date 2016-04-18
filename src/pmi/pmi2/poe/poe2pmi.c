@@ -296,7 +296,7 @@ int _mpi_world_exiting_handler(int world_id)
   int mpi_errno = MPI_SUCCESS;
   pami_endpoint_t dest;
 /*  struct worldExitReq *req = (struct worldExitReq *)cookie; */
-  MPID_Comm *comm = MPIR_Process.comm_world;
+  MPIR_Comm *comm = MPIR_Process.comm_world;
 
   MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
   ref_count = MPIDI_get_refcnt_of_world(world_id);
@@ -387,7 +387,7 @@ int _mpi_reduce_for_dyntask(int *sendbuf, int *recvbuf)
 {
   int         *children, gid, child_rank, parent_rank, rc;
   int         numchildren, parent=0, i, result=0,tag, remaining_child_count;
-  MPID_Comm   *comm_ptr;
+  MPIR_Comm   *comm_ptr;
   int         mpi_errno;
   MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 

@@ -101,7 +101,7 @@ static int handler_send(const ptl_event_t *e)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
-                    int tag, MPID_Comm *comm, int context_offset, struct MPID_Request **request)
+                    int tag, MPIR_Comm *comm, int context_offset, struct MPID_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
@@ -336,7 +336,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_isend(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-                       MPID_Comm *comm, int context_offset, struct MPID_Request **request)
+                       MPIR_Comm *comm, int context_offset, struct MPID_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_ISEND);
@@ -355,7 +355,7 @@ int MPID_nem_ptl_isend(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_issend(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-                        MPID_Comm *comm, int context_offset, struct MPID_Request **request)
+                        MPIR_Comm *comm, int context_offset, struct MPID_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_ISSEND);

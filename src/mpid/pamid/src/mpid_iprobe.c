@@ -25,7 +25,7 @@
 int
 MPID_Iprobe(int source,
             int tag,
-            MPID_Comm * comm,
+            MPIR_Comm * comm,
             int context_offset,
             int *flag,
             MPI_Status * status)

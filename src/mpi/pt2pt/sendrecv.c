@@ -75,7 +75,7 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 {
     static const char FCNAME[] = "MPI_Sendrecv";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPID_Request * sreq;
     MPID_Request * rreq;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_SENDRECV);
@@ -97,14 +97,14 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #   endif /* HAVE_ERROR_CHECKING */
     
     /* Convert handles to MPI objects. */
-    MPID_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr( comm, comm_ptr );
     
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    /* Validate communicator */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno) goto fn_fail;
 	    
 	    /* Validate count */

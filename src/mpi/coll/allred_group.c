@@ -8,7 +8,7 @@
 #include "collutil.h"
 
 int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
-                               MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
+                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
                                MPID_Group *group_ptr, int tag, MPIR_Errflag_t *errflag);
 
 /* Local utility macro: takes an two args and sets lvalue cr_ equal to the rank
@@ -26,7 +26,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
-                               MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
+                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
                                MPID_Group *group_ptr, int tag, MPIR_Errflag_t *errflag)
 {
     MPI_Aint type_size;
@@ -365,7 +365,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Allreduce_group(void *sendbuf, void *recvbuf, int count,
-                         MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
+                         MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
                          MPID_Group *group_ptr, int tag, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -20,7 +20,7 @@ typedef struct
     int sequence_number_offs;
     int comm_head_offs;
     
-    /* Fields in MPID_Comm */
+    /* Fields in MPIR_Comm */
     int comm_rsize_offs;
     int lrank_to_grank_offs;
     int comm_rank_offs;

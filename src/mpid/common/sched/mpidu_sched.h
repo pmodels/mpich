@@ -33,7 +33,7 @@ struct MPIDU_Sched_send {
     const MPI_Aint *count_p;
     MPI_Datatype datatype;
     int dest;
-    struct MPID_Comm *comm;
+    struct MPIR_Comm *comm;
     struct MPID_Request *sreq;
     int is_sync;                /* TRUE iff this send is an ssend */
 };
@@ -43,7 +43,7 @@ struct MPIDU_Sched_recv {
     MPI_Aint count;
     MPI_Datatype datatype;
     int src;
-    struct MPID_Comm *comm;
+    struct MPIR_Comm *comm;
     struct MPID_Request *rreq;
     MPI_Status *status;
 };
@@ -121,17 +121,17 @@ struct MPIDU_Sched {
 /* prototypes */
 int MPIDU_Sched_progress(int *made_progress);
 int MPIDU_Sched_are_pending(void);
-int MPIDU_Sched_next_tag(struct MPID_Comm *comm_ptr, int *tag);
+int MPIDU_Sched_next_tag(struct MPIR_Comm *comm_ptr, int *tag);
 int MPIDU_Sched_create(MPID_Sched_t * sp);
 int MPIDU_Sched_clone(MPID_Sched_t orig, MPID_Sched_t * cloned);
-int MPIDU_Sched_start(MPID_Sched_t * sp, struct MPID_Comm *comm, int tag,
+int MPIDU_Sched_start(MPID_Sched_t * sp, struct MPIR_Comm *comm, int tag,
                       struct MPID_Request **req);
 int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
-                     struct MPID_Comm *comm, MPID_Sched_t s);
+                     struct MPIR_Comm *comm, MPID_Sched_t s);
 int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src,
-                     struct MPID_Comm *comm, MPID_Sched_t s);
+                     struct MPIR_Comm *comm, MPID_Sched_t s);
 int MPID_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
-                     struct MPID_Comm *comm, MPID_Sched_t s);
+                     struct MPIR_Comm *comm, MPID_Sched_t s);
 int MPID_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,
                       MPI_Op op, MPID_Sched_t s);
 int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype, void *outbuf,

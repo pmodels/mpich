@@ -31,7 +31,7 @@ MPIDO_Iallgatherv(const void *sendbuf,
                   const int *recvcounts,
                   const int *displs,
                   MPI_Datatype recvtype,
-                  MPID_Comm * comm_ptr,
+                  MPIR_Comm * comm_ptr,
                   MPID_Request ** request)
 {
    TRACE_ERR("Entering MPIDO_Iallgatherv\n");

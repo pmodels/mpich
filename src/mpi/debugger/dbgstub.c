@@ -25,7 +25,7 @@ extern MPIR_Sendq *MPIR_Sendq_head;
 /* This is from dbginit.c; it is not exported to other files */
 typedef struct MPIR_Comm_list {
     int sequence_number;   /* Used to detect changes in the list */
-    MPID_Comm *head;       /* Head of the list */
+    MPIR_Comm *head;       /* Head of the list */
 } MPIR_Comm_list;
 
 extern MPIR_Comm_list MPIR_All_communicators;
@@ -104,7 +104,7 @@ int dbgrI_field_offset(mqs_type *type, char *name)
     switch (curType) {
     case TYPE_MPID_COMM:
 	{
-	    MPID_Comm c;
+	    MPIR_Comm c;
 	    if (strcmp( name, "name" ) == 0) {
 		off = ((char*)&(c.name[0]) - (char*)&c.handle);
 	    }

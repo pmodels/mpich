@@ -139,7 +139,7 @@ int hcoll_initialize(void)
 #define FUNCNAME hcoll_comm_create
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int hcoll_comm_create(MPID_Comm * comm_ptr, void *param)
+int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
 {
     int mpi_errno;
     int num_ranks;
@@ -207,7 +207,7 @@ int hcoll_comm_create(MPID_Comm * comm_ptr, void *param)
 #define FUNCNAME hcoll_comm_destroy
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int hcoll_comm_destroy(MPID_Comm * comm_ptr, void *param)
+int hcoll_comm_destroy(MPIR_Comm * comm_ptr, void *param)
 {
     int mpi_errno;
     int context_destroyed;

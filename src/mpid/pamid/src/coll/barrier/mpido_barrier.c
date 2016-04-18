@@ -32,7 +32,7 @@ static void cb_barrier(void *ctxt, void *clientdata, pami_result_t err)
    (*active)--;
 }
 
-int MPIDO_Barrier(MPID_Comm *comm_ptr, int *mpierrno)
+int MPIDO_Barrier(MPIR_Comm *comm_ptr, int *mpierrno)
 {
    TRACE_ERR("Entering MPIDO_Barrier\n");
    volatile unsigned active=1;
@@ -102,7 +102,7 @@ int MPIDO_Barrier(MPID_Comm *comm_ptr, int *mpierrno)
 }
 
 
-int MPIDO_Barrier_simple(MPID_Comm *comm_ptr, int *mpierrno)
+int MPIDO_Barrier_simple(MPIR_Comm *comm_ptr, int *mpierrno)
 {
    TRACE_ERR("Entering MPIDO_Barrier_optimized\n");
    volatile unsigned active=1;
@@ -136,7 +136,7 @@ MPIDO_CSWrapper_barrier(pami_xfer_t *barrier,
                         void        *comm)
 {
    int mpierrno = 0;
-   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPIR_Comm   *comm_ptr = (MPIR_Comm*)comm;
    int rc = MPIR_Barrier(comm_ptr, &mpierrno);
    if(barrier->cb_done && rc == 0)
      barrier->cb_done(NULL, barrier->cookie, PAMI_SUCCESS);

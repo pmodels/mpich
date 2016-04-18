@@ -15,7 +15,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *rreq;
-    MPID_Comm *comm;
+    MPIR_Comm *comm;
     MPIDI_VC_t *vc = NULL;
 
     /* message==NULL is equivalent to MPI_MESSAGE_NO_PROC being passed at the

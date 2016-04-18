@@ -91,7 +91,7 @@ Notes:
 int MPI_Cart_rank(MPI_Comm comm, const int coords[], int *rank)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm *comm_ptr = NULL;
+    MPIR_Comm *comm_ptr = NULL;
     MPIR_Topology *cart_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_CART_RANK);
 
@@ -111,13 +111,13 @@ int MPI_Cart_rank(MPI_Comm comm, const int coords[], int *rank)
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( comm, comm_ptr );
+    MPIR_Comm_get_ptr( comm, comm_ptr );
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
+            MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
             if (mpi_errno) goto fn_fail;
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    MPIR_ERRTEST_ARGNULL(rank,"rank",mpi_errno);

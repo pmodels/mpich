@@ -157,19 +157,19 @@ int MPID_nem_ptl_get_id_from_bc(const char *business_card, ptl_process_t *id, pt
 int MPID_nem_ptl_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req);
 /* isend is also used to implement send, rsend and irsend */
 int MPID_nem_ptl_isend(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-                       MPID_Comm *comm, int context_offset, struct MPID_Request **request);
+                       MPIR_Comm *comm, int context_offset, struct MPID_Request **request);
 /* issend is also used to implement ssend */
 int MPID_nem_ptl_issend(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-                        MPID_Comm *comm, int context_offset, struct MPID_Request **request);
+                        MPIR_Comm *comm, int context_offset, struct MPID_Request **request);
 int MPID_nem_ptl_cancel_send(struct MPIDI_VC *vc,  struct MPID_Request *sreq);
 int MPID_nem_ptl_cancel_recv(struct MPIDI_VC *vc,  struct MPID_Request *rreq);
-int MPID_nem_ptl_probe(struct MPIDI_VC *vc,  int source, int tag, MPID_Comm *comm, int context_offset, MPI_Status *status);
-int MPID_nem_ptl_iprobe(struct MPIDI_VC *vc,  int source, int tag, MPID_Comm *comm, int context_offset, int *flag,
+int MPID_nem_ptl_probe(struct MPIDI_VC *vc,  int source, int tag, MPIR_Comm *comm, int context_offset, MPI_Status *status);
+int MPID_nem_ptl_iprobe(struct MPIDI_VC *vc,  int source, int tag, MPIR_Comm *comm, int context_offset, int *flag,
                         MPI_Status *status);
-int MPID_nem_ptl_improbe(struct MPIDI_VC *vc,  int source, int tag, MPID_Comm *comm, int context_offset, int *flag,
+int MPID_nem_ptl_improbe(struct MPIDI_VC *vc,  int source, int tag, MPIR_Comm *comm, int context_offset, int *flag,
                          MPID_Request **message, MPI_Status *status);
-int MPID_nem_ptl_anysource_iprobe(int tag, MPID_Comm * comm, int context_offset, int *flag, MPI_Status * status);
-int MPID_nem_ptl_anysource_improbe(int tag, MPID_Comm * comm, int context_offset, int *flag, MPID_Request **message,
+int MPID_nem_ptl_anysource_iprobe(int tag, MPIR_Comm * comm, int context_offset, int *flag, MPI_Status * status);
+int MPID_nem_ptl_anysource_improbe(int tag, MPIR_Comm * comm, int context_offset, int *flag, MPID_Request **message,
                                    MPI_Status * status);
 void MPID_nem_ptl_anysource_posted(MPID_Request *rreq);
 int MPID_nem_ptl_anysource_matched(MPID_Request *rreq);
