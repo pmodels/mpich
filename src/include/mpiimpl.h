@@ -1178,7 +1178,7 @@ int MPIR_Comm_map_free(struct MPIR_Comm *comm);
   corresponding to the 'local_group' (we may want this anyway to simplify
   the implementation of the intercommunicator collective routines).
 
-  The pointer to the structure 'MPID_Collops' containing pointers to the 
+  The pointer to the structure 'MPIR_Collops' containing pointers to the
   collective  
   routines allows an implementation to replace each routine on a 
   routine-by-routine basis.  By default, this pointer is null, as are the 
@@ -1247,8 +1247,8 @@ typedef struct MPIR_Comm {
 				    to implement a full-duplex operation */
     struct MPIR_Comm     *comm_next;/* Provides a chain through all active
 				       communicators */
-    struct MPID_Collops  *coll_fns; /* Pointer to a table of functions 
-                                              implementing the collective 
+    struct MPIR_Collops  *coll_fns; /* Pointer to a table of functions
+                                              implementing the collective
                                               routines */
     struct MPID_TopoOps  *topo_fns; /* Pointer to a table of functions
 				       implementting the topology routines */
@@ -1910,7 +1910,7 @@ extern MPIU_Object_alloc_t MPID_Op_mem;
 /* ------------------------------------------------------------------------- */
 
 /* Collective operations */
-typedef struct MPID_Collops {
+typedef struct MPIR_Collops {
     int ref_count;   /* Supports lazy copies */
     /* Contains pointers to the functions for the MPI collectives */
     int (*Barrier) (MPIR_Comm *, MPIR_Errflag_t *);
@@ -1992,7 +1992,7 @@ typedef struct MPID_Collops {
     int (*Iexscan_sched)(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
                    MPIR_Comm *comm_ptr, MPID_Sched_t s);
 
-    struct MPID_Collops *prev_coll_fns; /* when overriding this table, set this to point to the old table */
+    struct MPIR_Collops *prev_coll_fns; /* when overriding this table, set this to point to the old table */
 
     /* MPI-3 neighborhood collectives (blocking & nonblocking) */
     int (*Neighbor_allgather)(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
@@ -2028,7 +2028,7 @@ typedef struct MPID_Collops {
                                const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                                const MPI_Aint rdispls[], const MPI_Datatype recvtypes[],
                                MPIR_Comm *comm_ptr, MPID_Sched_t s);
-} MPID_Collops;
+} MPIR_Collops;
 
 #define MPIR_BARRIER_TAG 1
 /* ------------------------------------------------------------------------- */
@@ -2042,7 +2042,7 @@ typedef struct MPID_Collops {
  * functions that are used to implement the topology routines.  If either
  * the pointer to this structure is null or any individual entry is null,
  * the default function is used (this follows exactly the same rules as the
- * collective operations, provided in the MPID_Collops structure).
+ * collective operations, provided in the MPIR_Collops structure).
  */
 /* ------------------------------------------------------------------------- */
 

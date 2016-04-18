@@ -213,10 +213,10 @@ int MPIR_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
 /* holds default collop "vtables" for _intracomms_, where
  * default[hierarchy_kind] is the pointer to the collop struct for that
  * hierarchy kind */
-static struct MPID_Collops *default_collops[MPID_HIERARCHY_SIZE] = { NULL };
+static struct MPIR_Collops *default_collops[MPID_HIERARCHY_SIZE] = { NULL };
 
 /* default for intercomms */
-static struct MPID_Collops *ic_default_collops = NULL;
+static struct MPIR_Collops *ic_default_collops = NULL;
 
 #undef FUNCNAME
 #define FUNCNAME cleanup_default_collops
@@ -249,12 +249,12 @@ static int init_default_collops(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    struct MPID_Collops *ops = NULL;
+    struct MPIR_Collops *ops = NULL;
     MPIU_CHKPMEM_DECL(MPID_HIERARCHY_SIZE + 1);
 
     /* first initialize the intracomms */
     for (i = 0; i < MPID_HIERARCHY_SIZE; ++i) {
-        MPIU_CHKPMEM_CALLOC(ops, struct MPID_Collops *, sizeof(struct MPID_Collops), mpi_errno,
+        MPIU_CHKPMEM_CALLOC(ops, struct MPIR_Collops *, sizeof(struct MPIR_Collops), mpi_errno,
                             "default intracomm collops");
         ops->ref_count = 1;     /* force existence until finalize time */
 
@@ -317,7 +317,7 @@ static int init_default_collops(void)
 
     /* now the intercomm table */
     {
-        MPIU_CHKPMEM_CALLOC(ops, struct MPID_Collops *, sizeof(struct MPID_Collops), mpi_errno,
+        MPIU_CHKPMEM_CALLOC(ops, struct MPIR_Collops *, sizeof(struct MPIR_Collops), mpi_errno,
                             "default intercomm collops");
         ops->ref_count = 1;     /* force existence until finalize time */
 

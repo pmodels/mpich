@@ -9,7 +9,7 @@
 
 typedef struct {
     int is_hcoll_init;
-    struct MPID_Collops *hcoll_origin_coll_fns;
+    struct MPIR_Collops *hcoll_origin_coll_fns;
     void *hcoll_context;
 } hcoll_comm_priv_t;
 

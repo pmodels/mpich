@@ -34,7 +34,7 @@ int MPIDI_CH3I_comm_create(MPIR_Comm *comm, void *param)
     
     /* set up intranode barrier iff this is an intranode communicator */
     if (comm->hierarchy_kind == MPID_HIERARCHY_NODE) {
-        MPID_Collops *cf, **cf_p;
+        MPIR_Collops *cf, **cf_p;
         comm->dev.ch.barrier_vars = NULL;
 
         /* We can't use a static coll_fns override table for our collectives
@@ -49,7 +49,7 @@ int MPIDI_CH3I_comm_create(MPIR_Comm *comm, void *param)
            currently have a use case for it.
         */
         cf_p = NULL;
-        while ( (cf_p = (MPID_Collops **)utarray_next(coll_fns_array, cf_p)) ) {
+        while ( (cf_p = (MPIR_Collops **)utarray_next(coll_fns_array, cf_p)) ) {
             /* we can reuse a coll_fns table if the prev_coll_fns pointer is
                the same as the coll_fns of this communicator */
             if ((*cf_p)->prev_coll_fns == comm->coll_fns) {
@@ -60,7 +60,7 @@ int MPIDI_CH3I_comm_create(MPIR_Comm *comm, void *param)
         }
 
         /* allocate and init new coll_fns table */
-        MPIU_CHKPMEM_MALLOC(cf, MPID_Collops *, sizeof(*cf), mpi_errno, "cf");
+        MPIU_CHKPMEM_MALLOC(cf, MPIR_Collops *, sizeof(*cf), mpi_errno, "cf");
         *cf = *comm->coll_fns;
         cf->ref_count = 1;
         cf->Barrier = barrier;
@@ -97,7 +97,7 @@ int MPIDI_CH3I_comm_destroy(MPIR_Comm *comm, void *param)
 #endif
     
     if (comm->hierarchy_kind == MPID_HIERARCHY_NODE) {
-        MPID_Collops *cf = comm->coll_fns;
+        MPIR_Collops *cf = comm->coll_fns;
 
         /* replace previous coll_fns table */
         comm->coll_fns = cf->prev_coll_fns;

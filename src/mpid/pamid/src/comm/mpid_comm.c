@@ -230,7 +230,7 @@ void MPIDI_Coll_comm_create(MPIR_Comm *comm)
   if(comm->comm_kind != MPID_INTRACOMM) return;
   /* Create a geometry */
 
-  comm->coll_fns = MPL_calloc0(1, MPID_Collops);
+  comm->coll_fns = MPL_calloc0(1, MPIR_Collops);
   MPID_assert(comm->coll_fns != NULL);
 
    if(comm->mpid.geometry != MPIDI_Process.world_geometry)
