@@ -34,7 +34,7 @@ MPIU_Object_alloc_t MPIR_Comm_mem = {
 };
 
 /* Communicator creation functions */
-struct MPID_CommOps *MPID_Comm_fns = NULL;
+struct MPIR_Commops *MPID_Comm_fns = NULL;
 struct MPIR_Comm_hint_fn_elt {
     char name[MPI_MAX_INFO_KEY];
     MPIR_Comm_hint_fn_t fn;

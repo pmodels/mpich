@@ -358,7 +358,7 @@ static int split_type(MPIR_Comm * comm_ptr, int stype, int key,
     /* --END ERROR HANDLING-- */
 }
 
-static MPID_CommOps comm_fns = {
+static MPIR_Commops comm_fns = {
     split_type
 };
 
