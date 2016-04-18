@@ -12,7 +12,7 @@
 #endif
 
 /* Generates a bitarray based on orig_comm where all procs in group are marked with 1 */
-static void group_to_bitarray(MPID_Group *group, MPIR_Comm *orig_comm, int **bitarray, int *bitarray_size) {
+static void group_to_bitarray(MPIR_Group *group, MPIR_Comm *orig_comm, int **bitarray, int *bitarray_size) {
     int mask;
     int *group_ranks, *comm_ranks, i, index;
 
@@ -21,7 +21,7 @@ static void group_to_bitarray(MPID_Group *group, MPIR_Comm *orig_comm, int **bit
     *bitarray = (int *) MPL_malloc(sizeof(int) * *bitarray_size);
 
     /* If the group is empty, return an empty bitarray. */
-    if (group == MPID_Group_empty) {
+    if (group == MPIR_Group_empty) {
         for (i = 0; i < *bitarray_size; i++) *bitarray[i] = 0;
         return;
     }
@@ -49,11 +49,11 @@ static void group_to_bitarray(MPID_Group *group, MPIR_Comm *orig_comm, int **bit
     MPL_free(comm_ranks);
 }
 
-/* Generates an MPID_Group from a bitarray */
-static MPID_Group *bitarray_to_group(MPIR_Comm *comm_ptr, int *bitarray)
+/* Generates an MPIR_Group from a bitarray */
+static MPIR_Group *bitarray_to_group(MPIR_Comm *comm_ptr, int *bitarray)
 {
-    MPID_Group *ret_group;
-    MPID_Group *comm_group;
+    MPIR_Group *ret_group;
+    MPIR_Group *comm_group;
     UT_array *ranks_array;
     int i, found = 0;
 
@@ -74,7 +74,7 @@ static MPID_Group *bitarray_to_group(MPIR_Comm *comm_ptr, int *bitarray)
         /* Converts the utarray into a group */
         MPIR_Group_incl_impl(comm_group, found, ut_int_array(ranks_array), &ret_group);
     else
-        ret_group = MPID_Group_empty;
+        ret_group = MPIR_Group_empty;
 
     utarray_free(ranks_array);
     MPIR_Group_release(comm_group);
@@ -86,13 +86,13 @@ static MPID_Group *bitarray_to_group(MPIR_Comm *comm_ptr, int *bitarray)
 #define FUNCNAME MPID_Comm_get_all_failed_procs
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Comm_get_all_failed_procs(MPIR_Comm *comm_ptr, MPID_Group **failed_group, int tag)
+int MPID_Comm_get_all_failed_procs(MPIR_Comm *comm_ptr, MPIR_Group **failed_group, int tag)
 {
     int mpi_errno = MPI_SUCCESS, ret_errno;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int i, j, bitarray_size;
     int *bitarray, *remote_bitarray;
-    MPID_Group *local_fail;
+    MPIR_Group *local_fail;
     MPIDI_STATE_DECL(MPID_STATE_MPID_COMM_GET_ALL_FAILED_PROCS);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_COMM_GET_ALL_FAILED_PROCS);
@@ -110,7 +110,7 @@ int MPID_Comm_get_all_failed_procs(MPIR_Comm *comm_ptr, MPID_Group **failed_grou
     /* Generate a bitarray based on the list of failed procs */
     group_to_bitarray(local_fail, comm_ptr, &bitarray, &bitarray_size);
     remote_bitarray = MPL_malloc(sizeof(int) * bitarray_size);
-    if (local_fail != MPID_Group_empty)
+    if (local_fail != MPIR_Group_empty)
         MPIR_Group_release(local_fail);
 
     /* For now, this will be implemented as a star with rank 0 serving as

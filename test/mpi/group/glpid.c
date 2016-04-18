@@ -10,7 +10,7 @@
 
 int main(int argc, char *argv[])
 {
-    MPID_Group group, *group_ptr = &group;
+    MPIR_Group group, *group_ptr = &group;
     int i;
 
     MPI_Init(&argc, &argv);
@@ -21,8 +21,8 @@ int main(int argc, char *argv[])
     group.size = 4;
     group.rank = 0;
     group.idx_of_first_lpid = -1;
-    group.lrank_to_lpid = (MPID_Group_pmap_t *)
-        MPL_malloc(group.size * sizeof(MPID_Group_pmap_t));
+    group.lrank_to_lpid = (MPIR_Group_pmap_t *)
+        MPL_malloc(group.size * sizeof(MPIR_Group_pmap_t));
     for (i = 0; i < group.size; i++) {
         group.lrank_to_lpid[i].lrank = i;
         group.lrank_to_lpid[i].lpid = group.size - i - 1;

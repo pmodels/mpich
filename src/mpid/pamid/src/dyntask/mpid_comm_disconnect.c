@@ -207,7 +207,7 @@ int MPID_Comm_disconnect(MPIR_Comm *comm_ptr)
     pami_task_t *leader_tids;
     int expected_firstAM=0, expected_secondAM=0, expected_lastAM=0;
     MPIR_Comm *commworld_ptr;
-    MPID_Group *group_ptr = NULL,  *new_group_ptr = NULL;
+    MPIR_Group *group_ptr = NULL,  *new_group_ptr = NULL;
     MPID_VCR *glist;
     MPIR_Comm *lcomm;
     int *ranks;

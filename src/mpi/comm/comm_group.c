@@ -30,7 +30,7 @@ int MPI_Comm_group(MPI_Comm comm, MPI_Group *group) __attribute__((weak,alias("P
 #define FUNCNAME MPIR_Comm_group_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_group_impl(MPIR_Comm *comm_ptr, MPID_Group **group_ptr)
+int MPIR_Comm_group_impl(MPIR_Comm *comm_ptr, MPIR_Group **group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, lpid, n;
@@ -110,7 +110,7 @@ int MPI_Comm_group(MPI_Comm comm, MPI_Group *group)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_Group *group_ptr;
+    MPIR_Group *group_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_GROUP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

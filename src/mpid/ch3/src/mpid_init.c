@@ -61,7 +61,7 @@ MPL_dbg_class MPIDI_CH3_DBG_REFCOUNT;
 static int finalize_failed_procs_group(void *param)
 {
     int mpi_errno = MPI_SUCCESS;
-    if (MPIDI_Failed_procs_group != MPID_Group_empty) {
+    if (MPIDI_Failed_procs_group != MPIR_Group_empty) {
         mpi_errno = MPIR_Group_free_impl(MPIDI_Failed_procs_group);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
@@ -120,7 +120,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
     /* init group of failed processes, and set finalize callback */
-    MPIDI_Failed_procs_group = MPID_Group_empty;
+    MPIDI_Failed_procs_group = MPIR_Group_empty;
     MPIR_Add_finalize(finalize_failed_procs_group, NULL, MPIR_FINALIZE_CALLBACK_PRIO-1);
 
     /* FIXME: This is a good place to check for environment variables

@@ -31,8 +31,8 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[], MPI_G
 #define FUNCNAME MPIR_Group_translate_ranks_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Group_translate_ranks_impl(MPID_Group *gp1, int n, const int ranks1[],
-                                    MPID_Group *gp2, int ranks2[])
+int MPIR_Group_translate_ranks_impl(MPIR_Group *gp1, int n, const int ranks1[],
+                                    MPIR_Group *gp2, int ranks2[])
 {
     int mpi_errno = MPI_SUCCESS;
     int i, g2_idx, l1_pid, l2_pid;
@@ -141,8 +141,8 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
 			      MPI_Group group2, int ranks2[])
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Group *group_ptr1 = NULL;
-    MPID_Group *group_ptr2 = NULL;
+    MPIR_Group *group_ptr1 = NULL;
+    MPIR_Group *group_ptr2 = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_TRANSLATE_RANKS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -166,8 +166,8 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Group_get_ptr( group1, group_ptr1 );
-    MPID_Group_get_ptr( group2, group_ptr2 );
+    MPIR_Group_get_ptr( group1, group_ptr1 );
+    MPIR_Group_get_ptr( group2, group_ptr2 );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -175,8 +175,8 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate group_ptr */
-            MPID_Group_valid_ptr( group_ptr1, mpi_errno );
-            MPID_Group_valid_ptr( group_ptr2, mpi_errno );
+            MPIR_Group_valid_ptr( group_ptr1, mpi_errno );
+            MPIR_Group_valid_ptr( group_ptr2, mpi_errno );
 	    /* If either group_ptr is not valid, it will be reset to null */
 
 	    MPIR_ERRTEST_ARGNEG(n,"n",mpi_errno);

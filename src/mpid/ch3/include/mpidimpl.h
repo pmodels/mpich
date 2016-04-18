@@ -41,7 +41,7 @@ int gethostname(char *name, size_t len);
 
 /* group of processes detected to have failed.  This is a subset of
    comm_world group. */
-extern MPID_Group *MPIDI_Failed_procs_group;
+extern MPIR_Group *MPIDI_Failed_procs_group;
 extern int MPIDI_last_known_failed;
 extern char *MPIDI_failed_procs_string;
 
@@ -1439,7 +1439,7 @@ int MPIDI_CH3U_Receive_data_unexpected(MPID_Request * rreq, char *buf, intptr_t 
 /* Initialization routine for ch3u_comm.c */
 int MPIDI_CH3I_Comm_init(void);
 
-int MPIDI_CH3I_Comm_handle_failed_procs(MPID_Group *new_failed_procs);
+int MPIDI_CH3I_Comm_handle_failed_procs(MPIR_Group *new_failed_procs);
 void MPIDI_CH3I_Comm_find(MPIU_Context_id_t context_id, MPIR_Comm **comm);
 
 /* The functions below allow channels to register functions to be
@@ -1577,7 +1577,7 @@ int MPIDI_CH3_Channel_close( void );
 
 /* MPIDI_CH3U_Get_failed_group() generates a group of failed processes based
  * on the last list generated during MPIDI_CH3U_Check_for_failed_procs */
-int MPIDI_CH3U_Get_failed_group(int last_rank, MPID_Group **failed_group);
+int MPIDI_CH3U_Get_failed_group(int last_rank, MPIR_Group **failed_group);
 /* MPIDI_CH3U_Check_for_failed_procs() reads PMI_dead_processes key
    and marks VCs to those processes as failed */
 int MPIDI_CH3U_Check_for_failed_procs(void);

@@ -12,13 +12,13 @@
 #endif
 
 /* Preallocated group objects */
-MPID_Group MPID_Group_builtin[MPID_GROUP_N_BUILTIN] = { {0} };
-MPID_Group MPID_Group_direct[MPID_GROUP_PREALLOC] = { {0} };
-MPIU_Object_alloc_t MPID_Group_mem = { 0, 0, 0, 0, MPID_GROUP, 
-				      sizeof(MPID_Group), MPID_Group_direct,
+MPIR_Group MPIR_Group_builtin[MPID_GROUP_N_BUILTIN] = { {0} };
+MPIR_Group MPIR_Group_direct[MPID_GROUP_PREALLOC] = { {0} };
+MPIU_Object_alloc_t MPIR_Group_mem = { 0, 0, 0, 0, MPID_GROUP,
+				      sizeof(MPIR_Group), MPIR_Group_direct,
 				       MPID_GROUP_PREALLOC};
 
-MPID_Group * const MPID_Group_empty = &MPID_Group_builtin[0];
+MPIR_Group * const MPIR_Group_empty = &MPIR_Group_builtin[0];
 
 int MPIR_Group_init(void)
 {
@@ -26,19 +26,19 @@ int MPIR_Group_init(void)
 
     MPIU_Assert(MPID_GROUP_N_BUILTIN == 1); /* update this func if this ever triggers */
 
-    MPID_Group_builtin[0].handle = MPI_GROUP_EMPTY;
-    MPIU_Object_set_ref(&MPID_Group_builtin[0], 1);
-    MPID_Group_builtin[0].size = 0;
-    MPID_Group_builtin[0].rank = MPI_UNDEFINED;
-    MPID_Group_builtin[0].idx_of_first_lpid = -1;
-    MPID_Group_builtin[0].lrank_to_lpid = NULL;
+    MPIR_Group_builtin[0].handle = MPI_GROUP_EMPTY;
+    MPIU_Object_set_ref(&MPIR_Group_builtin[0], 1);
+    MPIR_Group_builtin[0].size = 0;
+    MPIR_Group_builtin[0].rank = MPI_UNDEFINED;
+    MPIR_Group_builtin[0].idx_of_first_lpid = -1;
+    MPIR_Group_builtin[0].lrank_to_lpid = NULL;
 
     /* TODO hook for device here? */
     return mpi_errno;
 }
 
 
-int MPIR_Group_release(MPID_Group *group_ptr)
+int MPIR_Group_release(MPIR_Group *group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int inuse;
@@ -47,7 +47,7 @@ int MPIR_Group_release(MPID_Group *group_ptr)
     if (!inuse) {
         /* Only if refcount is 0 do we actually free. */
         MPL_free(group_ptr->lrank_to_lpid);
-        MPIU_Handle_obj_free( &MPID_Group_mem, group_ptr );
+        MPIU_Handle_obj_free( &MPIR_Group_mem, group_ptr );
     }
     return mpi_errno;
 }
@@ -58,11 +58,11 @@ int MPIR_Group_release(MPID_Group *group_ptr)
  * initialize any arrays, but does set the reference count.
  */
 #define FCNAME "MPIR_Group_create"
-int MPIR_Group_create( int nproc, MPID_Group **new_group_ptr )
+int MPIR_Group_create( int nproc, MPIR_Group **new_group_ptr )
 {
     int mpi_errno = MPI_SUCCESS;
 
-    *new_group_ptr = (MPID_Group *)MPIU_Handle_obj_alloc( &MPID_Group_mem );
+    *new_group_ptr = (MPIR_Group *)MPIU_Handle_obj_alloc( &MPIR_Group_mem );
     /* --BEGIN ERROR HANDLING-- */
     if (!*new_group_ptr) {
 	mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, "MPIR_Group_create", __LINE__, MPI_ERR_OTHER, "**nomem", 0 );
@@ -71,12 +71,12 @@ int MPIR_Group_create( int nproc, MPID_Group **new_group_ptr )
     /* --END ERROR HANDLING-- */
     MPIU_Object_set_ref( *new_group_ptr, 1 );
     (*new_group_ptr)->lrank_to_lpid = 
-	(MPID_Group_pmap_t *)MPL_malloc( nproc * sizeof(MPID_Group_pmap_t) );
+	(MPIR_Group_pmap_t *)MPL_malloc( nproc * sizeof(MPIR_Group_pmap_t) );
     /* --BEGIN ERROR HANDLING-- */
     if (!(*new_group_ptr)->lrank_to_lpid) {
-	MPIU_Handle_obj_free( &MPID_Group_mem, *new_group_ptr );
+	MPIU_Handle_obj_free( &MPIR_Group_mem, *new_group_ptr );
 	*new_group_ptr = NULL;
-	MPIU_CHKMEM_SETERR(mpi_errno,nproc*sizeof(MPID_Group_pmap_t),
+	MPIU_CHKMEM_SETERR(mpi_errno,nproc*sizeof(MPIR_Group_pmap_t),
 			   "newgroup->lrank_to_lpid");
 	return mpi_errno;
     }
@@ -99,7 +99,7 @@ int MPIR_Group_create( int nproc, MPID_Group **new_group_ptr )
  * in group rank order).  Instead it builds the traversal order (in increasing
  * lpid order) through the maparray given by the "next_lpid" fields.
  */
-static int mergesort_lpidarray( MPID_Group_pmap_t maparray[], int n )
+static int mergesort_lpidarray( MPIR_Group_pmap_t maparray[], int n )
 {
     int idx1, idx2, first_idx, cur_idx, next_lpid, idx2_offset;
 
@@ -199,7 +199,7 @@ static int mergesort_lpidarray( MPID_Group_pmap_t maparray[], int n )
  * be held on entry to this routine.  This forces some of the routines
  * noted above to hold the SINGLE_CS; which would otherwise not be required.
  */
-void MPIR_Group_setup_lpid_list( MPID_Group *group_ptr )
+void MPIR_Group_setup_lpid_list( MPIR_Group *group_ptr )
 {
     if (group_ptr->idx_of_first_lpid == -1) {
 	group_ptr->idx_of_first_lpid = 
@@ -208,8 +208,8 @@ void MPIR_Group_setup_lpid_list( MPID_Group *group_ptr )
     }
 }
 
-void MPIR_Group_setup_lpid_pairs( MPID_Group *group_ptr1, 
-				  MPID_Group *group_ptr2 )
+void MPIR_Group_setup_lpid_pairs( MPIR_Group *group_ptr1,
+				  MPIR_Group *group_ptr2 )
 {
     /* If the lpid list hasn't been created, do it now */
     if (group_ptr1->idx_of_first_lpid < 0) { 
@@ -237,7 +237,7 @@ void MPIR_Group_setup_lpid_pairs( MPID_Group *group_ptr1,
  * must be used by only on thread at a time (per group).  For the SINGLE_CS
  * case, that means that the SINGLE_CS must be held on entry to this routine.
  */
-int MPIR_Group_check_valid_ranks( MPID_Group *group_ptr, const int ranks[], int n )
+int MPIR_Group_check_valid_ranks( MPIR_Group *group_ptr, const int ranks[], int n )
 {
     int mpi_errno = MPI_SUCCESS, i;
 
@@ -276,7 +276,7 @@ int MPIR_Group_check_valid_ranks( MPID_Group *group_ptr, const int ranks[], int 
 #define FUNCNAME MPIR_Group_check_valid_ranges
 #undef FCNAME
 #define FCNAME "MPIR_Group_check_valid_ranges"
-int MPIR_Group_check_valid_ranges( MPID_Group *group_ptr, 
+int MPIR_Group_check_valid_ranges( MPIR_Group *group_ptr,
 				   int ranges[][3], int n )
 {
     int i, j, size, first, last, stride, mpi_errno = MPI_SUCCESS;
@@ -373,19 +373,19 @@ int MPIR_Group_check_valid_ranges( MPID_Group *group_ptr,
    We sort the lpids for the group and the comm.  If the group has an
    lpid that is not in the comm, then report an error.
 */
-int MPIR_Group_check_subset( MPID_Group *group_ptr, MPIR_Comm *comm_ptr )
+int MPIR_Group_check_subset( MPIR_Group *group_ptr, MPIR_Comm *comm_ptr )
 {
     int mpi_errno = MPI_SUCCESS;
     int g1_idx, g2_idx, l1_pid, l2_pid, i;
-    MPID_Group_pmap_t *vmap=0;
+    MPIR_Group_pmap_t *vmap=0;
     int vsize = comm_ptr->comm_kind == MPID_INTERCOMM ? comm_ptr->local_size :
         comm_ptr->remote_size;
     MPIU_CHKLMEM_DECL(1);
 
     MPIU_Assert(group_ptr != NULL);
 
-    MPIU_CHKLMEM_MALLOC(vmap,MPID_Group_pmap_t*,
-			vsize*sizeof(MPID_Group_pmap_t),mpi_errno, "" );
+    MPIU_CHKLMEM_MALLOC(vmap,MPIR_Group_pmap_t*,
+			vsize*sizeof(MPIR_Group_pmap_t),mpi_errno, "" );
     /* Initialize the vmap */
     for (i=0; i<vsize; i++) {
 	MPID_Comm_get_lpid(comm_ptr, i, &vmap[i].lpid, FALSE);

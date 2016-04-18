@@ -66,7 +66,7 @@ int MPI_Win_post(MPI_Group group, int assert, MPI_Win win)
     static const char FCNAME[] = "MPI_Win_post";
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
-    MPID_Group *group_ptr=NULL;
+    MPIR_Group *group_ptr=NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_POST);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -88,7 +88,7 @@ int MPI_Win_post(MPI_Group group, int assert, MPI_Win win)
     
     /* Convert MPI object handles to object pointers */
     MPID_Win_get_ptr( win, win_ptr );
-    MPID_Group_get_ptr(group, group_ptr);
+    MPIR_Group_get_ptr(group, group_ptr);
             
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -98,7 +98,7 @@ int MPI_Win_post(MPI_Group group, int assert, MPI_Win win)
             /* Validate win_ptr */
             MPID_Win_valid_ptr( win_ptr, mpi_errno );
 
-            MPID_Group_valid_ptr(group_ptr, mpi_errno);
+            MPIR_Group_valid_ptr(group_ptr, mpi_errno);
 
             /* TODO: Validate assert argument */
             /* TODO: Validate that window is not in passive mode */

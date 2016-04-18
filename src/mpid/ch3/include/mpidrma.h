@@ -1150,12 +1150,12 @@ static inline int finish_op_on_target(MPID_Win * win_ptr, MPIDI_VC_t * vc,
 }
 
 
-static inline int fill_ranks_in_win_grp(MPID_Win * win_ptr, MPID_Group * group_ptr,
+static inline int fill_ranks_in_win_grp(MPID_Win * win_ptr, MPIR_Group * group_ptr,
                                         int *ranks_in_win_grp)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, *ranks_in_grp;
-    MPID_Group *win_grp_ptr;
+    MPIR_Group *win_grp_ptr;
     MPIU_CHKLMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_FILL_RANKS_IN_WIN_GRP);
 

@@ -30,7 +30,7 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup
 #define FUNCNAME MPIR_Group_difference_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Group_difference_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, MPID_Group **new_group_ptr)
+int MPIR_Group_difference_impl(MPIR_Group *group_ptr1, MPIR_Group *group_ptr2, MPIR_Group **new_group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int size1, i, k, g1_idx, g2_idx, l1_pid, l2_pid, nnew;
@@ -72,7 +72,7 @@ int MPIR_Group_difference_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, M
         /* See 5.3.2, Group Constructors.  For many group routines,
            the standard explicitly says to return MPI_GROUP_EMPTY;
            for others it is implied */
-        *new_group_ptr = MPID_Group_empty;
+        *new_group_ptr = MPIR_Group_empty;
         goto fn_exit;
     }
     else {
@@ -139,9 +139,9 @@ The generated group containc the members of 'group1' that are not in 'group2'.
 int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Group *group_ptr1 = NULL;
-    MPID_Group *group_ptr2 = NULL;
-    MPID_Group *new_group_ptr;
+    MPIR_Group *group_ptr1 = NULL;
+    MPIR_Group *group_ptr2 = NULL;
+    MPIR_Group *new_group_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_DIFFERENCE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -162,8 +162,8 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Group_get_ptr( group1, group_ptr1 );
-    MPID_Group_get_ptr( group2, group_ptr2 );
+    MPIR_Group_get_ptr( group1, group_ptr1 );
+    MPIR_Group_get_ptr( group2, group_ptr2 );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -171,8 +171,8 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate group_ptr */
-            MPID_Group_valid_ptr( group_ptr1, mpi_errno );
-            MPID_Group_valid_ptr( group_ptr2, mpi_errno );
+            MPIR_Group_valid_ptr( group_ptr1, mpi_errno );
+            MPIR_Group_valid_ptr( group_ptr2, mpi_errno );
 	    /* If either group_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
         }

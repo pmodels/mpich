@@ -50,7 +50,7 @@ int MPIX_Comm_shrink(MPI_Comm comm, MPI_Comm *newcomm) __attribute__((weak,alias
 int MPIR_Comm_shrink(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Group *global_failed, *comm_grp, *new_group_ptr;
+    MPIR_Group *global_failed, *comm_grp, *new_group_ptr;
     int attempts = 0;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
@@ -69,7 +69,7 @@ int MPIR_Comm_shrink(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm_ptr)
 
         mpi_errno = MPIR_Group_difference_impl(comm_grp, global_failed, &new_group_ptr);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        if (MPID_Group_empty != global_failed) MPIR_Group_release(global_failed);
+        if (MPIR_Group_empty != global_failed) MPIR_Group_release(global_failed);
 
         mpi_errno = MPIR_Comm_create_group(comm_ptr, new_group_ptr, MPIR_SHRINK_TAG, newcomm_ptr);
         if (*newcomm_ptr == NULL) {

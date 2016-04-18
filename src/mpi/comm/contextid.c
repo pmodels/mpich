@@ -372,7 +372,7 @@ static int add_gcn_to_list(struct gcn_state *new_state)
 #define FUNCNAME MPIR_Get_contextid_sparse_group
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPID_Group * group_ptr, int tag,
+int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag,
                                     MPIU_Context_id_t * context_id, int ignore_id)
 {
     int mpi_errno = MPI_SUCCESS;

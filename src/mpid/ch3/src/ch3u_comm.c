@@ -488,7 +488,7 @@ int comm_destroyed(MPIR_Comm *comm, void *param)
 #define FUNCNAME nonempty_intersection
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int nonempty_intersection(MPIR_Comm *comm, MPID_Group *group, int *flag)
+static int nonempty_intersection(MPIR_Comm *comm, MPIR_Group *group, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
     int i_g, i_c;
@@ -533,7 +533,7 @@ static int nonempty_intersection(MPIR_Comm *comm, MPID_Group *group, int *flag)
 #define FUNCNAME MPIDI_CH3I_Comm_handle_failed_procs
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3I_Comm_handle_failed_procs(MPID_Group *new_failed_procs)
+int MPIDI_CH3I_Comm_handle_failed_procs(MPIR_Group *new_failed_procs)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm;

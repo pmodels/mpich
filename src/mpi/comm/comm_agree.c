@@ -34,7 +34,7 @@ int MPIX_Comm_agree(MPI_Comm comm, int *flag) __attribute__((weak,alias("PMPIX_C
 int MPIR_Comm_agree(MPIR_Comm *comm_ptr, int *flag)
 {
     int mpi_errno = MPI_SUCCESS, mpi_errno_tmp = MPI_SUCCESS;
-    MPID_Group *comm_grp, *failed_grp, *new_group_ptr, *global_failed;
+    MPIR_Group *comm_grp, *failed_grp, *new_group_ptr, *global_failed;
     int result, success = 1;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     int values[2];
@@ -84,11 +84,11 @@ int MPIR_Comm_agree(MPIR_Comm *comm_ptr, int *flag)
      * failure in between the first allreduce and the second one, it's ignored
      * here. */
 
-    if (failed_grp != MPID_Group_empty)
+    if (failed_grp != MPIR_Group_empty)
         MPIR_Group_release(failed_grp);
     MPIR_Group_release(new_group_ptr);
     MPIR_Group_release(comm_grp);
-    if (global_failed != MPID_Group_empty)
+    if (global_failed != MPIR_Group_empty)
         MPIR_Group_release(global_failed);
 
     success = values[0];

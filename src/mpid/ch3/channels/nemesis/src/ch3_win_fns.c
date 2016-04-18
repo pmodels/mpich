@@ -155,7 +155,7 @@ static int MPIDI_CH3I_SHM_Wins_match(MPID_Win ** win_ptr, MPID_Win ** matched_wi
 
     MPIR_Comm *node_comm_ptr = NULL, *shm_node_comm_ptr = NULL;
     int *node_ranks = NULL, *node_ranks_in_shm_node = NULL;
-    MPID_Group *node_group_ptr = NULL, *shm_node_group_ptr = NULL;
+    MPIR_Group *node_group_ptr = NULL, *shm_node_group_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPI_Aint *base_shm_offs;
 
