@@ -315,7 +315,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
         data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
 
-        req = MPIR_Request_create();
+        req = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
         MPIU_Object_set_ref(req, 1);
 
         req->dev.user_buf = put_pkt->addr;
@@ -464,7 +464,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         goto fn_exit;
     }
 
-    req = MPIR_Request_create();
+    req = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
     req->dev.target_win_handle = get_pkt->target_win_handle;
     req->dev.flags = get_pkt->flags;
 
@@ -705,7 +705,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     else {
         MPIU_Assert(pkt->type == MPIDI_CH3_PKT_ACCUMULATE);
 
-        req = MPIR_Request_create();
+        req = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
         MPIU_Object_set_ref(req, 1);
         *rreqp = req;
 
@@ -905,7 +905,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         /* Immed packet type is used when target datatype is predefined datatype. */
         MPIU_Assert(MPIR_DATATYPE_IS_PREDEFINED(get_accum_pkt->datatype));
 
-        resp_req = MPIR_Request_create();
+        resp_req = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
         resp_req->dev.target_win_handle = get_accum_pkt->target_win_handle;
         resp_req->dev.flags = get_accum_pkt->flags;
 
@@ -978,7 +978,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
         MPIU_Assert(pkt->type == MPIDI_CH3_PKT_GET_ACCUM);
 
-        req = MPIR_Request_create();
+        req = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
         MPIU_Object_set_ref(req, 1);
         *rreqp = req;
 
@@ -1436,7 +1436,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         if (fop_pkt->op == MPI_NO_OP)
             is_empty_origin = TRUE;
 
-        req = MPIR_Request_create();
+        req = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
         MPIU_Object_set_ref(req, 1);
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_FOP_RECV);
         *rreqp = req;

@@ -117,7 +117,7 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPL_IOV *iov, int n_iov, MPIR_Request 
 	{
             /* Create a new request and save remaining portions of the
 	     * iov in it. */
-            sreq = MPIR_Request_create();
+            sreq = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
 	    MPIU_Assert(sreq != NULL);
 	    MPIU_Object_set_ref(sreq, 2);
 	    sreq->kind = MPIR_REQUEST_SEND;
@@ -148,7 +148,7 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPL_IOV *iov, int n_iov, MPIR_Request 
 	
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, TERSE, "request enqueued");
 	/* create a request */
-	sreq = MPIR_Request_create();
+	sreq = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
 	MPIU_Assert(sreq != NULL);
 	MPIU_Object_set_ref(sreq, 2);
 	sreq->kind = MPIR_REQUEST_SEND;

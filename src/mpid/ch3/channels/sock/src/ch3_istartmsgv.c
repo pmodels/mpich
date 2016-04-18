@@ -19,7 +19,7 @@ static MPIR_Request * create_request(MPL_IOV * iov, int iov_count,
 
     MPIDI_FUNC_ENTER(MPID_STATE_CREATE_REQUEST);
     
-    sreq = MPIR_Request_create();
+    sreq = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
     /* --BEGIN ERROR HANDLING-- */
     if (sreq == NULL)
 	return NULL;
@@ -57,7 +57,7 @@ static MPIR_Request * create_request(MPL_IOV * iov, int iov_count,
  * the request.
  */
 
-/* XXX - What do we do if MPIR_Request_create() returns NULL???
+/* XXX - What do we do if MPIR_Request_create returns NULL???
    If MPIDI_CH3_iStartMsgv() returns NULL, the calling code
    assumes the request completely successfully, but the reality is that we 
    couldn't allocate the memory for a request.  This
@@ -158,7 +158,7 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov,
 	    {
 		MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL,TYPICAL,
 			       "ERROR - MPIDU_Sock_writev failed, rc=%d", rc);
-		sreq = MPIR_Request_create();
+		sreq = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
 		if (sreq == NULL) {
 		    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
 		}
@@ -226,7 +226,7 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov,
     {
 	/* Connection failed, so allocate a request and return an error. */
 	MPL_DBG_VCUSE(vc,"ERROR - connection failed");
-	sreq = MPIR_Request_create();
+	sreq = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
 	if (sreq == NULL) {
 	    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
 	}

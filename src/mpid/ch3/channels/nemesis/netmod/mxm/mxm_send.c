@@ -113,7 +113,7 @@ int MPID_nem_mxm_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, vo
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *) hdr);
 
     /* create a request */
-    sreq = MPIR_Request_create();
+    sreq = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
     MPIU_Assert(sreq != NULL);
     MPIU_Object_set_ref(sreq, 2);
     MPIU_Memcpy(&(sreq->dev.pending_pkt), (char *) hdr, sizeof(MPIDI_CH3_Pkt_t));
