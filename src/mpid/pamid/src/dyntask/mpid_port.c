@@ -30,7 +30,7 @@ static MPIDI_PortFns portFns = { MPIDI_Open_port,
 				 MPIDI_Comm_connect };
 
 /*@
-   MPID_Open_port - Open an MPI Port
+   MPIR_Open_port - Open an MPI Port
 
    Input Arguments:
 .  MPI_Info info - info
@@ -45,7 +45,7 @@ static MPIDI_PortFns portFns = { MPIDI_Open_port,
 .N MPI_SUCCESS
 .N MPI_ERR_OTHER
 @*/
-int MPID_Open_port(MPIR_Info *info_ptr, char *port_name)
+int MPIR_Open_port(MPIR_Info *info_ptr, char *port_name)
 {
     int mpi_errno=MPI_SUCCESS;
 

@@ -740,7 +740,7 @@ int MPIR_Reduce_intra (
     int mpi_errno_ret = MPI_SUCCESS;
     int comm_size, is_commutative, type_size, pof2;
     int nbytes = 0;
-    MPID_Op *op_ptr;
+    MPIR_Op *op_ptr;
     MPIU_CHKLMEM_DECL(1);
 
     if (count == 0) return MPI_SUCCESS;
@@ -752,7 +752,7 @@ int MPIR_Reduce_intra (
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN)
         is_commutative = 1;
     else {
-        MPID_Op_get_ptr(op, op_ptr);
+        MPIR_Op_get_ptr(op, op_ptr);
         is_commutative = (op_ptr->kind == MPID_OP_USER_NONCOMMUTE) ? 0 : 1;
     }
 
@@ -1169,7 +1169,7 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPID_Datatype *datatype_ptr = NULL;
-            MPID_Op *op_ptr = NULL;
+            MPIR_Op *op_ptr = NULL;
             int rank;
 	    
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
@@ -1239,8 +1239,8 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
-                MPID_Op_get_ptr(op, op_ptr);
-                MPID_Op_valid_ptr( op_ptr, mpi_errno );
+                MPIR_Op_get_ptr(op, op_ptr);
+                MPIR_Op_valid_ptr( op_ptr, mpi_errno );
             }
             if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
                 mpi_errno = 

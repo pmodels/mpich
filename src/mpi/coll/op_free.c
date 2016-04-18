@@ -57,7 +57,7 @@ int MPI_Op_free(MPI_Op *op)
 #ifdef HAVE_ERROR_CHECKING
     static const char FCNAME[] = "MPI_Op_free";
 #endif
-    MPID_Op *op_ptr = NULL;
+    MPIR_Op *op_ptr = NULL;
     int     in_use;
     int     mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_OP_FREE);
@@ -67,12 +67,12 @@ int MPI_Op_free(MPI_Op *op)
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_OP_FREE);
     
-    MPID_Op_get_ptr( *op, op_ptr );
+    MPIR_Op_get_ptr( *op, op_ptr );
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPID_Op_valid_ptr( op_ptr, mpi_errno );
+	    MPIR_Op_valid_ptr( op_ptr, mpi_errno );
 	    if (!mpi_errno) {
 		if (op_ptr->kind < MPID_OP_USER_NONCOMMUTE) {
 		    mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
@@ -90,7 +90,7 @@ int MPI_Op_free(MPI_Op *op)
     
     MPIR_Op_release_ref( op_ptr, &in_use);
     if (!in_use) {
-	MPIU_Handle_obj_free( &MPID_Op_mem, op_ptr );
+	MPIU_Handle_obj_free( &MPIR_Op_mem, op_ptr );
     }
     *op = MPI_OP_NULL;
     

@@ -100,7 +100,7 @@ int MPIR_Exscan (
     int mask, dst, is_commutative, flag; 
     MPI_Aint true_extent, true_lb, extent;
     void *partial_scan, *tmp_buf;
-    MPID_Op *op_ptr;
+    MPIR_Op *op_ptr;
     MPIU_CHKLMEM_DECL(2);
     
     if (count == 0) return MPI_SUCCESS;
@@ -123,7 +123,7 @@ int MPIR_Exscan (
         is_commutative = 1;
     }
     else {
-        MPID_Op_get_ptr(op, op_ptr);
+        MPIR_Op_get_ptr(op, op_ptr);
         if (op_ptr->kind == MPID_OP_USER_NONCOMMUTE)
             is_commutative = 0;
         else
@@ -347,7 +347,7 @@ int MPI_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPID_Datatype *datatype_ptr = NULL;
-            MPID_Op *op_ptr = NULL;
+            MPIR_Op *op_ptr = NULL;
             int rank;
 	    
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
@@ -377,8 +377,8 @@ int MPI_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
-                MPID_Op_get_ptr(op, op_ptr);
-                MPID_Op_valid_ptr( op_ptr, mpi_errno );
+                MPIR_Op_get_ptr(op, op_ptr);
+                MPIR_Op_valid_ptr( op_ptr, mpi_errno );
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
             if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
