@@ -421,7 +421,7 @@ cvars:
         }                                                               \
         else								\
         {                                                               \
-            MPIR_ERRTEST_VALID_HANDLE((win_), MPID_WIN, (err_), MPI_ERR_WIN, "**win"); \
+            MPIR_ERRTEST_VALID_HANDLE((win_), MPIR_WIN, (err_), MPI_ERR_WIN, "**win"); \
         }                                                               \
     }
 

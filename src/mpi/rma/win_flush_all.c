@@ -57,7 +57,7 @@ int MPI_Win_flush_all(MPI_Win win)
 {
     static const char FCNAME[] = "MPI_Win_flush_all";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr = NULL;
+    MPIR_Win *win_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_FLUSH_ALL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -77,7 +77,7 @@ int MPI_Win_flush_all(MPI_Win win)
 #   endif /* HAVE_ERROR_CHECKING */
     
     /* Convert MPI object handles to object pointers */
-    MPID_Win_get_ptr( win, win_ptr );
+    MPIR_Win_get_ptr( win, win_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -85,7 +85,7 @@ int MPI_Win_flush_all(MPI_Win win)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate win_ptr */
-            MPID_Win_valid_ptr( win_ptr, mpi_errno );
+            MPIR_Win_valid_ptr( win_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
 
             /* TODO: Validate that the given window is in passive mode */

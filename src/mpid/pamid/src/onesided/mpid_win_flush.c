@@ -40,7 +40,7 @@
 
 int
 MPID_Win_flush(int       rank,
-               MPID_Win *win)
+               MPIR_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
   struct MPIDI_Win_sync* sync;
@@ -76,7 +76,7 @@ MPID_Win_flush(int       rank,
 
 
 int
-MPID_Win_flush_all(MPID_Win *win)
+MPID_Win_flush_all(MPIR_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
   struct MPIDI_Win_sync* sync;
@@ -118,7 +118,7 @@ MPID_Win_flush_all(MPID_Win *win)
  */
 
 int
-MPID_Win_flush_local(int rank, MPID_Win *win)
+MPID_Win_flush_local(int rank, MPIR_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
   struct MPIDI_Win_sync* sync;
@@ -153,7 +153,7 @@ MPID_Win_flush_local(int rank, MPID_Win *win)
  */
 
 int
-MPID_Win_flush_local_all(MPID_Win *win)
+MPID_Win_flush_local_all(MPIR_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
   struct MPIDI_Win_sync* sync;

@@ -93,7 +93,7 @@ int MPIDI_CH3_ReqHandler_RecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 int MPIDI_CH3_ReqHandler_PutRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr;
+    MPIR_Win *win_ptr;
     MPI_Win source_win_handle = rreq->dev.source_win_handle;
     MPIDI_CH3_Pkt_flags_t flags = rreq->dev.flags;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_PUTRECVCOMPLETE);
@@ -118,7 +118,7 @@ int MPIDI_CH3_ReqHandler_PutRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
         goto fn_exit;
     }
 
-    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
+    MPIR_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
     /* mark data transfer as complete and decrement CC */
     mpi_errno = MPID_Request_complete(rreq);
@@ -155,7 +155,7 @@ int MPIDI_CH3_ReqHandler_PutRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
 int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr;
+    MPIR_Win *win_ptr;
     MPI_Win source_win_handle = rreq->dev.source_win_handle;
     MPIDI_CH3_Pkt_flags_t flags = rreq->dev.flags;
     MPI_Datatype basic_type;
@@ -183,7 +183,7 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq,
         goto fn_exit;
     }
 
-    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
+    MPIR_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
     MPIU_Assert(MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_ACCUM_RECV);
 
@@ -254,7 +254,7 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq,
 int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr;
+    MPIR_Win *win_ptr;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_get_accum_resp_t *get_accum_resp_pkt = &upkt.get_accum_resp;
     MPID_Request *resp_req;
@@ -278,7 +278,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
         is_empty_origin = TRUE;
     }
 
-    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
+    MPIR_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
     if (MPIR_DATATYPE_IS_PREDEFINED(rreq->dev.datatype))
         basic_type = rreq->dev.datatype;
@@ -427,7 +427,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
 int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr = NULL;
+    MPIR_Win *win_ptr = NULL;
     MPI_Aint type_size;
     MPID_Request *resp_req = NULL;
     MPL_IOV iov[MPL_IOV_LIMIT];
@@ -448,7 +448,7 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
 
     MPIU_Assert(MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_FOP_RECV);
 
-    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
+    MPIR_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
     MPIDU_Datatype_get_size_macro(rreq->dev.datatype, type_size);
 
@@ -864,12 +864,12 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_get_resp_t *get_resp_pkt = &upkt.get_resp;
     MPID_Request *sreq;
-    MPID_Win *win_ptr;
+    MPIR_Win *win_ptr;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GETDERIVEDDTRECVCOMPLETE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_GETDERIVEDDTRECVCOMPLETE);
 
-    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
+    MPIR_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
     MPIU_Assert(!(rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP));
 
@@ -1137,7 +1137,7 @@ static int create_derived_datatype(MPID_Request * req, MPIDI_RMA_dtype_info * dt
 }
 
 
-static inline int perform_put_in_lock_queue(MPID_Win * win_ptr,
+static inline int perform_put_in_lock_queue(MPIR_Win * win_ptr,
                                             MPIDI_RMA_Target_lock_entry_t * target_lock_entry)
 {
     MPIDI_CH3_Pkt_put_t *put_pkt = &((target_lock_entry->pkt).put);
@@ -1178,7 +1178,7 @@ static inline int perform_put_in_lock_queue(MPID_Win * win_ptr,
     goto fn_exit;
 }
 
-static inline int perform_get_in_lock_queue(MPID_Win * win_ptr,
+static inline int perform_get_in_lock_queue(MPIR_Win * win_ptr,
                                             MPIDI_RMA_Target_lock_entry_t * target_lock_entry)
 {
     MPIDI_CH3_Pkt_t upkt;
@@ -1293,7 +1293,7 @@ static inline int perform_get_in_lock_queue(MPID_Win * win_ptr,
 }
 
 
-static inline int perform_acc_in_lock_queue(MPID_Win * win_ptr,
+static inline int perform_acc_in_lock_queue(MPIR_Win * win_ptr,
                                             MPIDI_RMA_Target_lock_entry_t * target_lock_entry)
 {
     MPIDI_CH3_Pkt_accum_t *acc_pkt = &((target_lock_entry->pkt).accum);
@@ -1352,7 +1352,7 @@ static inline int perform_acc_in_lock_queue(MPID_Win * win_ptr,
 }
 
 
-static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
+static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
                                                 MPIDI_RMA_Target_lock_entry_t * target_lock_entry)
 {
     MPIDI_CH3_Pkt_t upkt;
@@ -1544,7 +1544,7 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
 }
 
 
-static inline int perform_fop_in_lock_queue(MPID_Win * win_ptr,
+static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
                                             MPIDI_RMA_Target_lock_entry_t * target_lock_entry)
 {
     MPIDI_CH3_Pkt_t upkt;
@@ -1715,7 +1715,7 @@ static inline int perform_fop_in_lock_queue(MPID_Win * win_ptr,
 }
 
 
-static inline int perform_cas_in_lock_queue(MPID_Win * win_ptr,
+static inline int perform_cas_in_lock_queue(MPIR_Win * win_ptr,
                                             MPIDI_RMA_Target_lock_entry_t * target_lock_entry)
 {
     MPIDI_CH3_Pkt_t upkt;
@@ -1799,7 +1799,7 @@ static inline int perform_cas_in_lock_queue(MPID_Win * win_ptr,
 }
 
 
-static inline int perform_op_in_lock_queue(MPID_Win * win_ptr,
+static inline int perform_op_in_lock_queue(MPIR_Win * win_ptr,
                                            MPIDI_RMA_Target_lock_entry_t * target_lock_entry)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1887,7 +1887,7 @@ static int entered_count = 0;
 #define FUNCNAME MPIDI_CH3I_Release_lock
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3I_Release_lock(MPID_Win * win_ptr)
+int MPIDI_CH3I_Release_lock(MPIR_Win * win_ptr)
 {
     MPIDI_RMA_Target_lock_entry_t *target_lock_entry, *target_lock_entry_next;
     int requested_lock, mpi_errno = MPI_SUCCESS, temp_entered_count;
@@ -1993,7 +1993,7 @@ int MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete(MPIDI_VC_t * vc,
 {
     int requested_lock;
     MPI_Win target_win_handle;
-    MPID_Win *win_ptr = NULL;
+    MPIR_Win *win_ptr = NULL;
     MPIDI_CH3_Pkt_flags_t flags;
     MPIDI_RMA_Target_lock_entry_t *target_lock_queue_entry = rreq->dev.target_lock_queue_entry;
     int mpi_errno = MPI_SUCCESS;
@@ -2015,7 +2015,7 @@ int MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete(MPIDI_VC_t * vc,
         MPIDI_CH3_PKT_RMA_GET_FLAGS(target_lock_queue_entry->pkt, flags, mpi_errno);
         MPIDI_CH3_PKT_RMA_GET_TARGET_WIN_HANDLE(target_lock_queue_entry->pkt, target_win_handle,
                                                 mpi_errno);
-        MPID_Win_get_ptr(target_win_handle, win_ptr);
+        MPIR_Win_get_ptr(target_win_handle, win_ptr);
 
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM &&
             (rreq->dev.target_lock_queue_entry)->data != NULL) {

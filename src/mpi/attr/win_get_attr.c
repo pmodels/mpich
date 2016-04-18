@@ -33,7 +33,7 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 		     int *flag, MPIR_AttrType outAttrType )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr = NULL;
+    MPIR_Win *win_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_WIN_GET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -47,7 +47,7 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_WIN(win, mpi_errno);
-	    MPIR_ERRTEST_KEYVAL(win_keyval, MPID_WIN, "window", mpi_errno);
+	    MPIR_ERRTEST_KEYVAL(win_keyval, MPIR_WIN, "window", mpi_errno);
 #           ifdef NEEDS_POINTER_ALIGNMENT_ADJUST
             /* A common user error is to pass the address of a 4-byte
 	       int when the address of a pointer (or an address-sized int)
@@ -64,7 +64,7 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Win_get_ptr( win, win_ptr );
+    MPIR_Win_get_ptr( win, win_ptr );
     
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -72,7 +72,7 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 	MPID_BEGIN_ERROR_CHECKS;
 	{
             /* Validate win_ptr */
-            MPID_Win_valid_ptr( win_ptr, mpi_errno );
+            MPIR_Win_valid_ptr( win_ptr, mpi_errno );
 	    /* If win_ptr is not valid, it will be reset to null */
 	    MPIR_ERRTEST_ARGNULL(attribute_val, "attribute_val", mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(flag, "flag", mpi_errno);
@@ -255,7 +255,7 @@ int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
 {
     int mpi_errno = MPI_SUCCESS;
 #ifdef HAVE_ERROR_CHECKING
-    MPID_Win *win_ptr = NULL;
+    MPIR_Win *win_ptr = NULL;
 #endif
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_GET_ATTR);
 
@@ -283,7 +283,7 @@ int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val,
 	    "**mpi_win_get_attr %W %d %p %p", 
 	    win, win_keyval, attribute_val, flag);
     }
-    MPID_Win_get_ptr( win, win_ptr );
+    MPIR_Win_get_ptr( win, win_ptr );
     mpi_errno = MPIR_Err_return_win( win_ptr, FCNAME, mpi_errno );
 #endif
     goto fn_exit;

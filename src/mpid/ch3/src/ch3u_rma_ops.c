@@ -40,7 +40,7 @@ cvars:
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
                    origin_datatype, int target_rank, MPI_Aint target_disp,
-                   int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
+                   int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr,
                    MPID_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -217,7 +217,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
                    origin_datatype, int target_rank, MPI_Aint target_disp,
-                   int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
+                   int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr,
                    MPID_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -388,7 +388,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
 int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
                           origin_datatype, int target_rank, MPI_Aint target_disp,
                           int target_count, MPI_Datatype target_datatype, MPI_Op op,
-                          MPID_Win * win_ptr, MPID_Request * ureq)
+                          MPIR_Win * win_ptr, MPID_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
     intptr_t data_sz;
@@ -600,7 +600,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                               MPI_Datatype origin_datatype, void *result_addr, int result_count,
                               MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
                               int target_count, MPI_Datatype target_datatype, MPI_Op op,
-                              MPID_Win * win_ptr, MPID_Request * ureq)
+                              MPIR_Win * win_ptr, MPID_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
     intptr_t orig_data_sz, target_data_sz;
@@ -850,7 +850,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Put(const void *origin_addr, int origin_count, MPI_Datatype
              origin_datatype, int target_rank, MPI_Aint target_disp,
-             int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr)
+             int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -877,7 +877,7 @@ int MPID_Put(const void *origin_addr, int origin_count, MPI_Datatype
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Get(void *origin_addr, int origin_count, MPI_Datatype
              origin_datatype, int target_rank, MPI_Aint target_disp,
-             int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr)
+             int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -904,7 +904,7 @@ int MPID_Get(void *origin_addr, int origin_count, MPI_Datatype
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
                     origin_datatype, int target_rank, MPI_Aint target_disp,
-                    int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win * win_ptr)
+                    int target_count, MPI_Datatype target_datatype, MPI_Op op, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -933,7 +933,7 @@ int MPID_Get_accumulate(const void *origin_addr, int origin_count,
                         MPI_Datatype origin_datatype, void *result_addr, int result_count,
                         MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
                         int target_count, MPI_Datatype target_datatype, MPI_Op op,
-                        MPID_Win * win_ptr)
+                        MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -962,7 +962,7 @@ int MPID_Get_accumulate(const void *origin_addr, int origin_count,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
                           void *result_addr, MPI_Datatype datatype, int target_rank,
-                          MPI_Aint target_disp, MPID_Win * win_ptr)
+                          MPI_Aint target_disp, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
@@ -1096,7 +1096,7 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
                       MPI_Datatype datatype, int target_rank,
-                      MPI_Aint target_disp, MPI_Op op, MPID_Win * win_ptr)
+                      MPI_Aint target_disp, MPI_Op op, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;

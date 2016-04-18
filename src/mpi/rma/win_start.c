@@ -66,7 +66,7 @@ int MPI_Win_start(MPI_Group group, int assert, MPI_Win win)
 {
     static const char FCNAME[] = "MPI_Win_start";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr = NULL;
+    MPIR_Win *win_ptr = NULL;
     MPIR_Group *group_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_START);
 
@@ -88,7 +88,7 @@ int MPI_Win_start(MPI_Group group, int assert, MPI_Win win)
 #   endif /* HAVE_ERROR_CHECKING */
     
     /* Get handles to MPI objects. */
-    MPID_Win_get_ptr( win, win_ptr );
+    MPIR_Win_get_ptr( win, win_ptr );
     MPIR_Group_get_ptr(group, group_ptr);
 
 #   ifdef HAVE_ERROR_CHECKING
@@ -96,7 +96,7 @@ int MPI_Win_start(MPI_Group group, int assert, MPI_Win win)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate win_ptr */
-            MPID_Win_valid_ptr( win_ptr, mpi_errno );
+            MPIR_Win_valid_ptr( win_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
 
             MPIR_Group_valid_ptr(group_ptr, mpi_errno);

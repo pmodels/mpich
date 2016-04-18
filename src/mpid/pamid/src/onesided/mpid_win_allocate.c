@@ -24,7 +24,7 @@
 /**
  * \brief MPI-PAMI glue for MPI_Win_allocate function
  *
- * Create a window object. Allocates a MPID_Win object and initializes it,
+ * Create a window object. Allocates a MPIR_Win object and initializes it,
  * then allocates the collective info array, initalizes our entry, and
  * performs an Allgather to distribute/collect the rest of the array entries.
  * On each process, it allocates memory of at least size bytes, returns a
@@ -51,7 +51,7 @@ MPID_Win_allocate(MPI_Aint     size,
                   MPID_Info  * info,
                   MPIR_Comm  * comm_ptr,
                   void *base_ptr,
-                  MPID_Win  ** win_ptr)
+                  MPIR_Win  ** win_ptr)
 {
   int mpi_errno  = MPI_SUCCESS;
   int rc = MPI_SUCCESS;
@@ -59,7 +59,7 @@ MPID_Win_allocate(MPI_Aint     size,
   void *baseP; 
   static char FCNAME[] = "MPID_Win_allocate";
   MPIDI_Win_info  *winfo;
-  MPID_Win   *win;
+  MPIR_Win   *win;
   int        rank;
 
   rc=MPIDI_Win_init(size,disp_unit,win_ptr, info, comm_ptr, MPI_WIN_FLAVOR_ALLOCATE, MPI_WIN_UNIFIED);

@@ -254,7 +254,7 @@ static inline int shm_copy(const void *src, int scount, MPI_Datatype stype,
 static inline int MPIDI_CH3I_Shm_put_op(const void *origin_addr, int origin_count, MPI_Datatype
                                         origin_datatype, int target_rank, MPI_Aint target_disp,
                                         int target_count, MPI_Datatype target_datatype,
-                                        MPID_Win * win_ptr)
+                                        MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     void *base = NULL;
@@ -297,7 +297,7 @@ static inline int MPIDI_CH3I_Shm_put_op(const void *origin_addr, int origin_coun
 static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_count, MPI_Datatype
                                         origin_datatype, int target_rank, MPI_Aint target_disp,
                                         int target_count, MPI_Datatype target_datatype, MPI_Op op,
-                                        MPID_Win * win_ptr)
+                                        MPIR_Win * win_ptr)
 {
     void *base = NULL;
     int disp_unit, shm_op = 0;
@@ -433,7 +433,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
                                             MPI_Datatype result_datatype, int target_rank, MPI_Aint
                                             target_disp, int target_count,
                                             MPI_Datatype target_datatype, MPI_Op op,
-                                            MPID_Win * win_ptr)
+                                            MPIR_Win * win_ptr)
 {
     int disp_unit, shm_locked = 0;
     void *base = NULL;
@@ -578,7 +578,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
 static inline int MPIDI_CH3I_Shm_get_op(void *origin_addr, int origin_count,
                                         MPI_Datatype origin_datatype, int target_rank,
                                         MPI_Aint target_disp, int target_count,
-                                        MPI_Datatype target_datatype, MPID_Win * win_ptr)
+                                        MPI_Datatype target_datatype, MPIR_Win * win_ptr)
 {
     void *base = NULL;
     int disp_unit;
@@ -620,7 +620,7 @@ static inline int MPIDI_CH3I_Shm_get_op(void *origin_addr, int origin_count,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Shm_cas_op(const void *origin_addr, const void *compare_addr,
                                         void *result_addr, MPI_Datatype datatype, int target_rank,
-                                        MPI_Aint target_disp, MPID_Win * win_ptr)
+                                        MPI_Aint target_disp, MPIR_Win * win_ptr)
 {
     void *base = NULL, *dest_addr = NULL;
     int disp_unit;
@@ -678,7 +678,7 @@ static inline int MPIDI_CH3I_Shm_cas_op(const void *origin_addr, const void *com
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Shm_fop_op(const void *origin_addr, void *result_addr,
                                         MPI_Datatype datatype, int target_rank,
-                                        MPI_Aint target_disp, MPI_Op op, MPID_Win * win_ptr)
+                                        MPI_Aint target_disp, MPI_Op op, MPIR_Win * win_ptr)
 {
     void *base = NULL, *dest_addr = NULL;
     MPI_User_function *uop = NULL;

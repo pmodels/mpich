@@ -17,7 +17,7 @@
 #define FUNCNAME send_lock_msg
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int send_lock_msg(int dest, int lock_type, MPID_Win * win_ptr)
+static inline int send_lock_msg(int dest, int lock_type, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3_Pkt_t upkt;
@@ -64,7 +64,7 @@ static inline int send_lock_msg(int dest, int lock_type, MPID_Win * win_ptr)
 #define FUNCNAME send_unlock_msg
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int send_unlock_msg(int dest, MPID_Win * win_ptr, MPIDI_CH3_Pkt_flags_t flags)
+static inline int send_unlock_msg(int dest, MPIR_Win * win_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3_Pkt_t upkt;
@@ -108,7 +108,7 @@ static inline int send_unlock_msg(int dest, MPID_Win * win_ptr, MPIDI_CH3_Pkt_fl
 #define FUNCNAME MPIDI_CH3I_Send_lock_ack_pkt
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH3I_Send_lock_ack_pkt(MPIDI_VC_t * vc, MPID_Win * win_ptr,
+static inline int MPIDI_CH3I_Send_lock_ack_pkt(MPIDI_VC_t * vc, MPIR_Win * win_ptr,
                                                MPIDI_CH3_Pkt_flags_t flags,
                                                MPI_Win source_win_handle,
                                                MPI_Request request_handle)
@@ -155,7 +155,7 @@ static inline int MPIDI_CH3I_Send_lock_ack_pkt(MPIDI_VC_t * vc, MPID_Win * win_p
 #define FUNCNAME MPIDI_CH3I_Send_lock_op_ack_pkt
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH3I_Send_lock_op_ack_pkt(MPIDI_VC_t * vc, MPID_Win * win_ptr,
+static inline int MPIDI_CH3I_Send_lock_op_ack_pkt(MPIDI_VC_t * vc, MPIR_Win * win_ptr,
                                                   MPIDI_CH3_Pkt_flags_t flags,
                                                   MPI_Win source_win_handle,
                                                   MPI_Request request_handle)
@@ -202,7 +202,7 @@ static inline int MPIDI_CH3I_Send_lock_op_ack_pkt(MPIDI_VC_t * vc, MPID_Win * wi
 #define FUNCNAME MPIDI_CH3I_Send_ack_pkt
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH3I_Send_ack_pkt(MPIDI_VC_t * vc, MPID_Win * win_ptr,
+static inline int MPIDI_CH3I_Send_ack_pkt(MPIDI_VC_t * vc, MPIR_Win * win_ptr,
                                           MPI_Win source_win_handle)
 {
     MPIDI_CH3_Pkt_t upkt;
@@ -239,7 +239,7 @@ static inline int MPIDI_CH3I_Send_ack_pkt(MPIDI_VC_t * vc, MPID_Win * win_ptr,
 #define FUNCNAME send_decr_at_cnt_msg
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int send_decr_at_cnt_msg(int dst, MPID_Win * win_ptr, MPIDI_CH3_Pkt_flags_t flags)
+static inline int send_decr_at_cnt_msg(int dst, MPIR_Win * win_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_decr_at_counter_t *decr_at_cnt_pkt = &upkt.decr_at_cnt;
@@ -281,7 +281,7 @@ static inline int send_decr_at_cnt_msg(int dst, MPID_Win * win_ptr, MPIDI_CH3_Pk
 #define FUNCNAME send_flush_msg
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int send_flush_msg(int dest, MPID_Win * win_ptr)
+static inline int send_flush_msg(int dest, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3_Pkt_t upkt;
@@ -318,7 +318,7 @@ static inline int send_flush_msg(int dest, MPID_Win * win_ptr)
 
 
 /* enqueue an unsatisfied origin in passive target at target side. */
-static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
+static inline int enqueue_lock_origin(MPIR_Win * win_ptr, MPIDI_VC_t * vc,
                                       MPIDI_CH3_Pkt_t * pkt,
                                       intptr_t * buflen, MPID_Request ** reqp)
 {
@@ -551,7 +551,7 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
 }
 
 
-static inline int handle_lock_ack(MPID_Win * win_ptr, int target_rank, MPIDI_CH3_Pkt_flags_t flags)
+static inline int handle_lock_ack(MPIR_Win * win_ptr, int target_rank, MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_RMA_Target_t *t = NULL;
     int mpi_errno = MPI_SUCCESS;
@@ -640,7 +640,7 @@ static inline int handle_lock_ack(MPID_Win * win_ptr, int target_rank, MPIDI_CH3
 #define FUNCNAME check_and_set_req_completion
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int check_and_set_req_completion(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
+static inline int check_and_set_req_completion(MPIR_Win * win_ptr, MPIDI_RMA_Target_t * target,
                                                MPIDI_RMA_Op_t * rma_op, int *op_completed)
 {
     int i, mpi_errno = MPI_SUCCESS;
@@ -713,7 +713,7 @@ static inline int check_and_set_req_completion(MPID_Win * win_ptr, MPIDI_RMA_Tar
 }
 
 
-static inline int handle_lock_ack_with_op(MPID_Win * win_ptr,
+static inline int handle_lock_ack_with_op(MPIR_Win * win_ptr,
                                           int target_rank, MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_RMA_Target_t *target = NULL;
@@ -797,7 +797,7 @@ static inline int handle_lock_ack_with_op(MPID_Win * win_ptr,
 #define FUNCNAME acquire_local_lock
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
+static inline int acquire_local_lock(MPIR_Win * win_ptr, int lock_type)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_ACQUIRE_LOCAL_LOCK);
@@ -859,7 +859,7 @@ static inline int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
 #define FUNCNAME MPIDI_CH3I_RMA_Handle_ack
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH3I_RMA_Handle_ack(MPID_Win * win_ptr, int target_rank)
+static inline int MPIDI_CH3I_RMA_Handle_ack(MPIR_Win * win_ptr, int target_rank)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_RMA_Target_t *t;
@@ -1033,7 +1033,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
 }
 
 
-static inline int check_piggyback_lock(MPID_Win * win_ptr, MPIDI_VC_t * vc,
+static inline int check_piggyback_lock(MPIR_Win * win_ptr, MPIDI_VC_t * vc,
                                        MPIDI_CH3_Pkt_t * pkt,
                                        intptr_t * buflen,
                                        int *acquire_lock_fail, MPID_Request ** reqp)
@@ -1070,7 +1070,7 @@ static inline int check_piggyback_lock(MPID_Win * win_ptr, MPIDI_VC_t * vc,
     goto fn_exit;
 }
 
-static inline int finish_op_on_target(MPID_Win * win_ptr, MPIDI_VC_t * vc,
+static inline int finish_op_on_target(MPIR_Win * win_ptr, MPIDI_VC_t * vc,
                                       int has_response_data,
                                       MPIDI_CH3_Pkt_flags_t flags, MPI_Win source_win_handle)
 {
@@ -1150,7 +1150,7 @@ static inline int finish_op_on_target(MPID_Win * win_ptr, MPIDI_VC_t * vc,
 }
 
 
-static inline int fill_ranks_in_win_grp(MPID_Win * win_ptr, MPIR_Group * group_ptr,
+static inline int fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Group * group_ptr,
                                         int *ranks_in_win_grp)
 {
     int mpi_errno = MPI_SUCCESS;

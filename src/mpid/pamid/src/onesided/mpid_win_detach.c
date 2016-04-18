@@ -35,7 +35,7 @@
  */
 
 int
-MPID_Win_detach(MPID_Win *win, const void *base)
+MPID_Win_detach(MPIR_Win *win, const void *base)
 {
     int mpi_errno = MPI_SUCCESS;
     static char FCNAME[] = "MPID_Win_detach";

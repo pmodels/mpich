@@ -36,7 +36,7 @@
  */
 
 int
-MPID_Win_attach(MPID_Win *win, void *base, MPI_Aint size)
+MPID_Win_attach(MPIR_Win *win, void *base, MPI_Aint size)
 {
     int mpi_errno = MPI_SUCCESS;
     static char FCNAME[] = "MPID_Win_attach";

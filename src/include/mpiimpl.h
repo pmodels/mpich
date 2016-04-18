@@ -404,7 +404,7 @@ void MPIR_DatatypeAttrFinalize( void );
 #define MPIR_Errhandler_get_ptr(a,ptr) MPID_Getb_ptr(Errhandler,a,0x3,ptr)
 #define MPID_Op_get_ptr(a,ptr)         MPID_Getb_ptr(Op,a,0x000000ff,ptr)
 #define MPID_Info_get_ptr(a,ptr)       MPID_Getb_ptr(Info,a,0x03ffffff,ptr)
-#define MPID_Win_get_ptr(a,ptr)        MPID_Get_ptr(Win,a,ptr)
+#define MPIR_Win_get_ptr(a,ptr)        MPID_Get_ptr(Win,a,ptr)
 #define MPID_Request_get_ptr(a,ptr)    MPID_Get_ptr(Request,a,ptr)
 #define MPID_Grequest_class_get_ptr(a,ptr) MPID_Get_ptr(Grequest_class,a,ptr)
 /* Keyvals have a special format. This is roughly MPID_Get_ptrb, but
@@ -459,7 +459,7 @@ void MPIR_DatatypeAttrFinalize( void );
      }                                                \
 }
 #define MPIR_Group_valid_ptr(ptr,err) MPID_Valid_ptr_class(Group,ptr,MPI_ERR_GROUP,err)
-#define MPID_Win_valid_ptr(ptr,err) MPID_Valid_ptr_class(Win,ptr,MPI_ERR_WIN,err)
+#define MPIR_Win_valid_ptr(ptr,err) MPID_Valid_ptr_class(Win,ptr,MPI_ERR_WIN,err)
 #define MPID_Op_valid_ptr(ptr,err) MPID_Valid_ptr_class(Op,ptr,MPI_ERR_OP,err)
 #define MPIR_Errhandler_valid_ptr(ptr,err) MPID_Valid_ptr_class(Errhandler,ptr,MPI_ERR_ARG,err)
 #define MPID_File_valid_ptr(ptr,err) MPID_Valid_ptr_class(File,ptr,MPI_ERR_FILE,err)
@@ -1250,7 +1250,7 @@ typedef struct MPIR_Comm {
     struct MPIR_Collops  *coll_fns; /* Pointer to a table of functions
                                               implementing the collective
                                               routines */
-    struct MPID_TopoOps  *topo_fns; /* Pointer to a table of functions
+    struct MPIR_TopoOps  *topo_fns; /* Pointer to a table of functions
 				       implementting the topology routines */
     int next_sched_tag;             /* used by the NBC schedule code to allocate tags */
 
@@ -1629,7 +1629,7 @@ MPID_Progress_state;
 /* ------------------------------------------------------------------------- */
 
 /*S
-  MPID_Win - Description of the Window Object data structure.
+  MPIR_Win - Description of the Window Object data structure.
 
   Module:
   Win-DS
@@ -1660,7 +1660,7 @@ MPID_Progress_state;
   (or 'MPID_Request')s?
 
   S*/
-typedef struct MPID_Win {
+typedef struct MPIR_Win {
     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
     MPID_Thread_mutex_t mutex;
     MPIR_Errhandler *errhandler;  /* Pointer to the error handler structure */
@@ -1702,10 +1702,10 @@ typedef struct MPID_Win {
 #ifdef MPID_DEV_WIN_DECL
     MPID_DEV_WIN_DECL
 #endif
-} MPID_Win;
-extern MPIU_Object_alloc_t MPID_Win_mem;
+} MPIR_Win;
+extern MPIU_Object_alloc_t MPIR_Win_mem;
 /* Preallocated win objects */
-extern MPID_Win MPID_Win_direct[];
+extern MPIR_Win MPIR_Win_direct[];
 
 /* ------------------------------------------------------------------------- */
 /* also in mpirma.h ?*/
@@ -2046,7 +2046,7 @@ typedef struct MPIR_Collops {
  */
 /* ------------------------------------------------------------------------- */
 
-typedef struct MPID_TopoOps {
+typedef struct MPIR_TopoOps {
     int (*cartCreate)( const MPIR_Comm *, int, const int[], const int [],
 		       int, MPI_Comm * );
     int (*cartMap)   ( const MPIR_Comm *, int, const int[], const int [],
@@ -2055,7 +2055,7 @@ typedef struct MPID_TopoOps {
 			int, MPI_Comm * );
     int (*graphMap)   ( const MPIR_Comm *, int, const int[], const int[],
 			int * );
-} MPID_TopoOps;
+} MPIR_TopoOps;
 /* ------------------------------------------------------------------------- */
 /* end of mpitopo.h (in src/mpi/topo? */
 /* ------------------------------------------------------------------------- */
@@ -3322,75 +3322,75 @@ MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2);
 /* MPI-2 RMA Routines */
 
 int MPID_Win_create(void *, MPI_Aint, int, MPID_Info *, MPIR_Comm *,
-                    MPID_Win **);
-int MPID_Win_free(MPID_Win **); 
+                    MPIR_Win **);
+int MPID_Win_free(MPIR_Win **);
 
 int MPID_Put(const void *, int, MPI_Datatype, int, MPI_Aint, int,
-             MPI_Datatype, MPID_Win *); 
+             MPI_Datatype, MPIR_Win *);
 int MPID_Get(void *, int, MPI_Datatype, int, MPI_Aint, int,
-             MPI_Datatype, MPID_Win *);
+             MPI_Datatype, MPIR_Win *);
 int MPID_Accumulate(const void *, int, MPI_Datatype, int, MPI_Aint, int, 
-                    MPI_Datatype, MPI_Op, MPID_Win *);
+                    MPI_Datatype, MPI_Op, MPIR_Win *);
 
-int MPID_Win_fence(int, MPID_Win *);
-int MPID_Win_post(MPIR_Group *group_ptr, int assert, MPID_Win *win_ptr);
-int MPID_Win_start(MPIR_Group *group_ptr, int assert, MPID_Win *win_ptr);
-int MPID_Win_test(MPID_Win *win_ptr, int *flag);
-int MPID_Win_wait(MPID_Win *win_ptr);
-int MPID_Win_complete(MPID_Win *win_ptr);
+int MPID_Win_fence(int, MPIR_Win *);
+int MPID_Win_post(MPIR_Group *group_ptr, int assert, MPIR_Win *win_ptr);
+int MPID_Win_start(MPIR_Group *group_ptr, int assert, MPIR_Win *win_ptr);
+int MPID_Win_test(MPIR_Win *win_ptr, int *flag);
+int MPID_Win_wait(MPIR_Win *win_ptr);
+int MPID_Win_complete(MPIR_Win *win_ptr);
 
-int MPID_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr);
-int MPID_Win_unlock(int dest, MPID_Win *win_ptr);
+int MPID_Win_lock(int lock_type, int dest, int assert, MPIR_Win *win_ptr);
+int MPID_Win_unlock(int dest, MPIR_Win *win_ptr);
 
 /* MPI-3 RMA Routines */
 
 int MPID_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info *info,
-                      MPIR_Comm *comm, void *baseptr, MPID_Win **win);
+                      MPIR_Comm *comm, void *baseptr, MPIR_Win **win);
 int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info *info_ptr, MPIR_Comm *comm_ptr,
-                             void *base_ptr, MPID_Win **win_ptr);
-int MPID_Win_shared_query(MPID_Win *win, int rank, MPI_Aint *size, int *disp_unit,
+                             void *base_ptr, MPIR_Win **win_ptr);
+int MPID_Win_shared_query(MPIR_Win *win, int rank, MPI_Aint *size, int *disp_unit,
                           void *baseptr);
-int MPID_Win_create_dynamic(MPID_Info *info, MPIR_Comm *comm, MPID_Win **win);
-int MPID_Win_attach(MPID_Win *win, void *base, MPI_Aint size);
-int MPID_Win_detach(MPID_Win *win, const void *base);
-int MPID_Win_get_info(MPID_Win *win, MPID_Info **info_used);
-int MPID_Win_set_info(MPID_Win *win, MPID_Info *info);
+int MPID_Win_create_dynamic(MPID_Info *info, MPIR_Comm *comm, MPIR_Win **win);
+int MPID_Win_attach(MPIR_Win *win, void *base, MPI_Aint size);
+int MPID_Win_detach(MPIR_Win *win, const void *base);
+int MPID_Win_get_info(MPIR_Win *win, MPID_Info **info_used);
+int MPID_Win_set_info(MPIR_Win *win, MPID_Info *info);
 
 int MPID_Get_accumulate(const void *origin_addr, int origin_count,
                         MPI_Datatype origin_datatype, void *result_addr, int result_count,
                         MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
-                        int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win *win);
+                        int target_count, MPI_Datatype target_datatype, MPI_Op op, MPIR_Win *win);
 int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
                       MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
-                      MPI_Op op, MPID_Win *win);
+                      MPI_Op op, MPIR_Win *win);
 int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
                           void *result_addr, MPI_Datatype datatype, int target_rank,
-                          MPI_Aint target_disp, MPID_Win *win);
+                          MPI_Aint target_disp, MPIR_Win *win);
 int MPID_Rput(const void *origin_addr, int origin_count,
               MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
-              int target_count, MPI_Datatype target_datatype, MPID_Win *win,
+              int target_count, MPI_Datatype target_datatype, MPIR_Win *win,
               MPID_Request **request);
 int MPID_Rget(void *origin_addr, int origin_count,
               MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
-              int target_count, MPI_Datatype target_datatype, MPID_Win *win,
+              int target_count, MPI_Datatype target_datatype, MPIR_Win *win,
               MPID_Request **request);
 int MPID_Raccumulate(const void *origin_addr, int origin_count,
                      MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
-                     int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win *win,
+                     int target_count, MPI_Datatype target_datatype, MPI_Op op, MPIR_Win *win,
                      MPID_Request **request);
 int MPID_Rget_accumulate(const void *origin_addr, int origin_count,
                          MPI_Datatype origin_datatype, void *result_addr, int result_count,
                          MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
-                         int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win *win,
+                         int target_count, MPI_Datatype target_datatype, MPI_Op op, MPIR_Win *win,
                          MPID_Request **request);
 
-int MPID_Win_lock_all(int assert, MPID_Win *win);
-int MPID_Win_unlock_all(MPID_Win *win);
-int MPID_Win_flush(int rank, MPID_Win *win);
-int MPID_Win_flush_all(MPID_Win *win);
-int MPID_Win_flush_local(int rank, MPID_Win *win);
-int MPID_Win_flush_local_all(MPID_Win *win);
-int MPID_Win_sync(MPID_Win *win);
+int MPID_Win_lock_all(int assert, MPIR_Win *win);
+int MPID_Win_unlock_all(MPIR_Win *win);
+int MPID_Win_flush(int rank, MPIR_Win *win);
+int MPID_Win_flush_all(MPIR_Win *win);
+int MPID_Win_flush_local(int rank, MPIR_Win *win);
+int MPID_Win_flush_local_all(MPIR_Win *win);
+int MPID_Win_sync(MPIR_Win *win);
 
 
 /*@

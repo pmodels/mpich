@@ -52,7 +52,7 @@ int MPIDI_CH3_ReqHandler_GetSendComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
                                          MPID_Request * sreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr;
+    MPIR_Win *win_ptr;
     MPIDI_CH3_Pkt_flags_t flags = sreq->dev.flags;
 
     /* NOTE: It is possible that this request is already completed before
@@ -73,7 +73,7 @@ int MPIDI_CH3_ReqHandler_GetSendComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
         goto fn_exit;
     }
 
-    MPID_Win_get_ptr(sreq->dev.target_win_handle, win_ptr);
+    MPIR_Win_get_ptr(sreq->dev.target_win_handle, win_ptr);
 
     /* here we decrement the Active Target counter to guarantee the GET-like
      * operation are completed when counter reaches zero. */
@@ -110,7 +110,7 @@ int MPIDI_CH3_ReqHandler_GetSendComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr;
+    MPIR_Win *win_ptr;
     MPIDI_CH3_Pkt_flags_t flags = rreq->dev.flags;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMSENDCOMPLETE);
 
@@ -140,7 +140,7 @@ int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     if (rreq->dev.user_buf != NULL)
         MPL_free(rreq->dev.user_buf);
 
-    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
+    MPIR_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
     /* here we decrement the Active Target counter to guarantee the GET-like
      * operation are completed when counter reaches zero. */
@@ -179,7 +179,7 @@ int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq
 int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr;
+    MPIR_Win *win_ptr;
     MPIDI_CH3_Pkt_flags_t flags = rreq->dev.flags;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_CASSENDCOMPLETE);
 
@@ -209,7 +209,7 @@ int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
     if (rreq->dev.user_buf != NULL)
         MPL_free(rreq->dev.user_buf);
 
-    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
+    MPIR_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
     /* here we decrement the Active Target counter to guarantee the GET-like
      * operation are completed when counter reaches zero. */
@@ -247,7 +247,7 @@ int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
 int MPIDI_CH3_ReqHandler_FOPSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr;
+    MPIR_Win *win_ptr;
     MPIDI_CH3_Pkt_flags_t flags = rreq->dev.flags;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_FOPSENDCOMPLETE);
 
@@ -277,7 +277,7 @@ int MPIDI_CH3_ReqHandler_FOPSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
     if (rreq->dev.user_buf != NULL)
         MPL_free(rreq->dev.user_buf);
 
-    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
+    MPIR_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
     /* here we decrement the Active Target counter to guarantee the GET-like
      * operation are completed when counter reaches zero. */

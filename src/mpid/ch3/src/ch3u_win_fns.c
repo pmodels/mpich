@@ -39,7 +39,7 @@ int MPIDI_Win_fns_init(MPIDI_CH3U_Win_fns_t * win_fns)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
-                               MPID_Info * info, MPIR_Comm * comm_ptr, MPID_Win ** win_ptr)
+                               MPID_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS, i, k, comm_size, rank;
     MPI_Aint *tmp_buf;
@@ -106,7 +106,7 @@ int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info * info,
-                          MPIR_Comm * comm_ptr, MPID_Win ** win_ptr)
+                          MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_WIN_CREATE);
@@ -140,7 +140,7 @@ int MPIDI_CH3U_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info * 
 #define FUNCNAME MPIDI_CH3U_Win_create_dynamic
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Win_create_dynamic(MPID_Info * info, MPIR_Comm * comm_ptr, MPID_Win ** win_ptr)
+int MPIDI_CH3U_Win_create_dynamic(MPID_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_WIN_CREATE_DYNAMIC);
@@ -164,7 +164,7 @@ int MPIDI_CH3U_Win_create_dynamic(MPID_Info * info, MPIR_Comm * comm_ptr, MPID_W
 #define FUNCNAME MPID_Win_attach
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_attach(MPID_Win * win, void *base, MPI_Aint size)
+int MPID_Win_attach(MPIR_Win * win, void *base, MPI_Aint size)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -187,7 +187,7 @@ int MPID_Win_attach(MPID_Win * win, void *base, MPI_Aint size)
 #define FUNCNAME MPID_Win_detach
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_detach(MPID_Win * win, const void *base)
+int MPID_Win_detach(MPIR_Win * win, const void *base)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -211,7 +211,7 @@ int MPID_Win_detach(MPID_Win * win, const void *base)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info * info,
-                            MPIR_Comm * comm_ptr, void *baseptr, MPID_Win ** win_ptr)
+                            MPIR_Comm * comm_ptr, void *baseptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_WIN_ALLOCATE);
@@ -245,7 +245,7 @@ int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info * info,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPID_Info * info,
-                                   MPIR_Comm * comm_ptr, void *baseptr, MPID_Win ** win_ptr)
+                                   MPIR_Comm * comm_ptr, void *baseptr, MPIR_Win ** win_ptr)
 {
     void **base_pp = (void **) baseptr;
     int mpi_errno = MPI_SUCCESS;
@@ -287,7 +287,7 @@ int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPID_Info * inf
 #define FUNCNAME MPIDI_CH3U_Win_shared_query
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Win_shared_query(MPID_Win * win_ptr, int target_rank, MPI_Aint * size,
+int MPIDI_CH3U_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint * size,
                                 int *disp_unit, void *baseptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -313,7 +313,7 @@ int MPIDI_CH3U_Win_shared_query(MPID_Win * win_ptr, int target_rank, MPI_Aint * 
 #define FUNCNAME MPID_Win_set_info
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_set_info(MPID_Win * win, MPID_Info * info)
+int MPID_Win_set_info(MPIR_Win * win, MPID_Info * info)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_WIN_SET_INFO);
@@ -392,7 +392,7 @@ int MPID_Win_set_info(MPID_Win * win, MPID_Info * info)
 #define FUNCNAME MPID_Win_get_info
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_get_info(MPID_Win * win, MPID_Info ** info_used)
+int MPID_Win_get_info(MPIR_Win * win, MPID_Info ** info_used)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_WIN_GET_INFO);

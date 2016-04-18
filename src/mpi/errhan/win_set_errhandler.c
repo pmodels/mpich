@@ -51,7 +51,7 @@ int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler)
     static const char FCNAME[] = "MPI_Win_set_errhandler";
 #endif
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr = NULL;
+    MPIR_Win *win_ptr = NULL;
     int  in_use;
     MPIR_Errhandler *errhan_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_SET_ERRHANDLER);
@@ -73,7 +73,7 @@ int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler)
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Win_get_ptr( win, win_ptr );
+    MPIR_Win_get_ptr( win, win_ptr );
     MPIR_Errhandler_get_ptr( errhandler, errhan_ptr );
     
     /* Validate parameters and objects (post conversion) */
@@ -82,7 +82,7 @@ int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate win_ptr */
-            MPID_Win_valid_ptr( win_ptr, mpi_errno );
+            MPIR_Win_valid_ptr( win_ptr, mpi_errno );
 	    /* If win_ptr is not value, it will be reset to null */
 
 	    if (HANDLE_GET_KIND(errhandler) != HANDLE_KIND_BUILTIN) {

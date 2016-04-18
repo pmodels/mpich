@@ -78,7 +78,7 @@ int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 {
     static const char FCNAME[] = "MPI_Compare_and_swap";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr = NULL;
+    MPIR_Win *win_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMPARE_AND_SWAP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -98,7 +98,7 @@ int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 #   endif /* HAVE_ERROR_CHECKING */
     
     /* Convert MPI object handles to object pointers */
-    MPID_Win_get_ptr( win, win_ptr );
+    MPIR_Win_get_ptr( win, win_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -108,7 +108,7 @@ int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
             MPIR_Comm *comm_ptr;
             
             /* Validate win_ptr */
-            MPID_Win_valid_ptr( win_ptr, mpi_errno );
+            MPIR_Win_valid_ptr( win_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
 
             MPIR_ERRTEST_ARGNULL(origin_addr, "origin_addr", mpi_errno);

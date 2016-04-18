@@ -19,15 +19,15 @@ extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_wincreate_allgather ATTRIBUTE((unused)
 MPIDI_SHM_Wins_list_t shm_wins_list;
 
 static int MPIDI_CH3I_Win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
-                               MPID_Info * info, MPIR_Comm * comm_ptr, MPID_Win ** win_ptr);
+                               MPID_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr);
 
 static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info * info,
-                                       MPIR_Comm * comm_ptr, void *base_ptr, MPID_Win ** win_ptr);
+                                       MPIR_Comm * comm_ptr, void *base_ptr, MPIR_Win ** win_ptr);
 
-static int MPIDI_CH3I_Win_detect_shm(MPID_Win ** win_ptr);
+static int MPIDI_CH3I_Win_detect_shm(MPIR_Win ** win_ptr);
 
 static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, MPID_Info * info,
-                                      MPIR_Comm * comm_ptr, MPID_Win ** win_ptr);
+                                      MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr);
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Win_fns_init
@@ -114,7 +114,7 @@ int MPIDI_CH3_Win_pkt_orderings_init(MPIDI_CH3U_Win_pkt_ordering_t * win_pkt_ord
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
-                               MPID_Info * info, MPIR_Comm * comm_ptr, MPID_Win ** win_ptr)
+                               MPID_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_WIN_INIT);
@@ -144,7 +144,7 @@ static int MPIDI_CH3I_Win_init(MPI_Aint size, int disp_unit, int create_flavor, 
 #define FUNCNAME MPIDI_CH3I_SHM_Wins_match
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPIDI_CH3I_SHM_Wins_match(MPID_Win ** win_ptr, MPID_Win ** matched_win,
+static int MPIDI_CH3I_SHM_Wins_match(MPIR_Win ** win_ptr, MPIR_Win ** matched_win,
                                      MPI_Aint ** base_shm_offs_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -187,7 +187,7 @@ static int MPIDI_CH3I_SHM_Wins_match(MPID_Win ** win_ptr, MPID_Win ** matched_wi
         MPIR_ERR_POP(mpi_errno);
 
     while (elem != NULL) {
-        MPID_Win *shm_win = elem->win;
+        MPIR_Win *shm_win = elem->win;
         if (!shm_win)
             MPIDI_SHM_Wins_next_and_continue(elem);
 
@@ -286,10 +286,10 @@ static int MPIDI_CH3I_SHM_Wins_match(MPID_Win ** win_ptr, MPID_Win ** matched_wi
 #define FUNCNAME MPIDI_CH3I_Win_detect_shm
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPIDI_CH3I_Win_detect_shm(MPID_Win ** win_ptr)
+static int MPIDI_CH3I_Win_detect_shm(MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *shm_win_ptr = NULL;
+    MPIR_Win *shm_win_ptr = NULL;
     int i, node_size;
     MPI_Aint *base_shm_offs;
 
@@ -348,7 +348,7 @@ static int MPIDI_CH3I_Win_detect_shm(MPID_Win ** win_ptr)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, MPID_Info * info,
-                                      MPIR_Comm * comm_ptr, MPID_Win ** win_ptr)
+                                      MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
 {
     MPIR_Comm *node_comm_ptr = NULL;
     int node_rank;
@@ -491,7 +491,7 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info * info,
-                                       MPIR_Comm * comm_ptr, void *base_ptr, MPID_Win ** win_ptr)
+                                       MPIR_Comm * comm_ptr, void *base_ptr, MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     void **base_pp = (void **) base_ptr;

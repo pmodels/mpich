@@ -13,7 +13,7 @@
 #endif
 
 /* Preallocated window objects */
-MPID_Win MPID_Win_direct[MPID_WIN_PREALLOC] = { {0} };
-MPIU_Object_alloc_t MPID_Win_mem = { 0, 0, 0, 0, MPID_WIN, 
-				      sizeof(MPID_Win), MPID_Win_direct,
+MPIR_Win MPIR_Win_direct[MPID_WIN_PREALLOC] = { {0} };
+MPIU_Object_alloc_t MPIR_Win_mem = { 0, 0, 0, 0, MPID_WIN,
+				      sizeof(MPIR_Win), MPIR_Win_direct,
                                       MPID_WIN_PREALLOC};

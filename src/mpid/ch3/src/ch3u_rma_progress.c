@@ -45,11 +45,11 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
+static inline int check_and_switch_target_state(MPIR_Win * win_ptr, MPIDI_RMA_Target_t * target,
                                                 int *is_able_to_issue, int *made_progress);
-static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
+static inline int issue_ops_target(MPIR_Win * win_ptr, MPIDI_RMA_Target_t * target,
                                    int *made_progress);
-static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress);
+static inline int issue_ops_win(MPIR_Win * win_ptr, int *made_progress);
 
 
 /* This macro checks if window state is ready for issuing RMA operations. */
@@ -65,7 +65,7 @@ static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress);
 #define FUNCNAME check_and_switch_target_state
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
+static inline int check_and_switch_target_state(MPIR_Win * win_ptr, MPIDI_RMA_Target_t * target,
                                                 int *is_able_to_issue, int *made_progress)
 {
     int rank = win_ptr->comm_ptr->rank;
@@ -239,7 +239,7 @@ static inline int check_and_switch_target_state(MPID_Win * win_ptr, MPIDI_RMA_Ta
 #define FUNCNAME issue_ops_target
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * target,
+static inline int issue_ops_target(MPIR_Win * win_ptr, MPIDI_RMA_Target_t * target,
                                    int *made_progress)
 {
     MPIDI_RMA_Op_t *curr_op = NULL;
@@ -381,7 +381,7 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
 #define FUNCNAME issue_ops_win
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress)
+static inline int issue_ops_win(MPIR_Win * win_ptr, int *made_progress)
 {
     int mpi_errno = MPI_SUCCESS;
     int start_slot, end_slot, i, idx;
@@ -433,7 +433,7 @@ static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress)
 #define FUNCNAME MPIDI_CH3I_RMA_Cleanup_ops_aggressive
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3I_RMA_Cleanup_ops_aggressive(MPID_Win * win_ptr)
+int MPIDI_CH3I_RMA_Cleanup_ops_aggressive(MPIR_Win * win_ptr)
 {
     int i, local_completed = 0, remote_completed ATTRIBUTE((unused)) = 0;
     int mpi_errno = MPI_SUCCESS;
@@ -486,7 +486,7 @@ int MPIDI_CH3I_RMA_Cleanup_ops_aggressive(MPID_Win * win_ptr)
 #define FUNCNAME MPIDI_CH3I_RMA_Cleanup_target_aggressive
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPID_Win * win_ptr, MPIDI_RMA_Target_t ** target)
+int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPIR_Win * win_ptr, MPIDI_RMA_Target_t ** target)
 {
     int i, local_completed ATTRIBUTE((unused)) = 0, remote_completed = 0;
     int made_progress = 0;
@@ -568,7 +568,7 @@ int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPID_Win * win_ptr, MPIDI_RMA_Targe
 #define FUNCNAME MPIDI_CH3I_RMA_Make_progress_target
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3I_RMA_Make_progress_target(MPID_Win * win_ptr, int target_rank, int *made_progress)
+int MPIDI_CH3I_RMA_Make_progress_target(MPIR_Win * win_ptr, int target_rank, int *made_progress)
 {
     int temp_progress = 0;
     int is_able_to_issue = 0;
@@ -628,7 +628,7 @@ int MPIDI_CH3I_RMA_Make_progress_target(MPID_Win * win_ptr, int target_rank, int
 #define FUNCNAME MPIDI_CH3I_RMA_Make_progress_win
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3I_RMA_Make_progress_win(MPID_Win * win_ptr, int *made_progress)
+int MPIDI_CH3I_RMA_Make_progress_win(MPIR_Win * win_ptr, int *made_progress)
 {
     int mpi_errno = MPI_SUCCESS;
     int temp_progress = 0;
@@ -670,7 +670,7 @@ int MPIDI_CH3I_RMA_Make_progress_win(MPID_Win * win_ptr, int *made_progress)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3I_RMA_Make_progress_global(int *made_progress)
 {
-    MPID_Win *win_ptr;
+    MPIR_Win *win_ptr;
     int mpi_errno = MPI_SUCCESS;
 
     (*made_progress) = 0;

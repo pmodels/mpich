@@ -179,7 +179,7 @@ static inline pami_endpoint_t MPIDI_Task_to_endpoint(pami_task_t task, size_t of
 }
 
 int
-MPIDI_Win_set_info(MPID_Win *win,
+MPIDI_Win_set_info(MPIR_Win *win,
 	           MPID_Info *info);
 
 MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp);

@@ -21,7 +21,7 @@ struct MPIR_Win
 
 MPI_Win_create(base, size, disp_unit, info, comm, win)
 {
-    dwin = malloc(sizeof(MPID_Win));
+    dwin = malloc(sizeof(MPIR_Win));
     dwin->rank = MPI_Comm_rank(comm);
     dwin->np = MPI_Comm_size(comm);
     MPI_Comm_dup(comm, dwin_p.comm);
@@ -33,8 +33,8 @@ MPI_Win_create(base, size, disp_unit, info, comm, win)
     dwin->displ = disp_unit;
     
     dwin->bases = malloc(sizeof(void *) * dwin->np);
-    dwin->sizes = malloc(sizeof(MPID_Win * dwin->np);
-    dwin->displs = malloc(sizeof(MPID_Win) * dwin->np);
+    dwin->sizes = malloc(sizeof(MPIR_Win * dwin->np);
+    dwin->displs = malloc(sizeof(MPIR_Win) * dwin->np);
     
     rc = MPI_Allgather(dwin->base, dwin->bases, dwin->comm);
     rc = MPI_Allgather(dwin->size, dwin->sizes, dwin->comm);

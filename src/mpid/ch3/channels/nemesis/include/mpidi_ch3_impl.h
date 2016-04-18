@@ -86,8 +86,8 @@ int MPID_nem_lmt_vmsplice_vc_terminated(MPIDI_VC_t *vc);
 int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen);
 
 /* Nemesis-provided RMA implementation */
-int MPIDI_CH3_SHM_Win_shared_query(MPID_Win *win_ptr, int target_rank, MPI_Aint *size, int *disp_unit, void *baseptr);
-int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr);
+int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win *win_ptr, int target_rank, MPI_Aint *size, int *disp_unit, void *baseptr);
+int MPIDI_CH3_SHM_Win_free(MPIR_Win **win_ptr);
 
 /* Shared memory window atomic/accumulate mutex implementation */
 
@@ -196,7 +196,7 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr);
 typedef struct MPIDI_SHM_Win {
     struct MPIDI_SHM_Win *prev;
     struct MPIDI_SHM_Win *next;
-    MPID_Win *win;
+    MPIR_Win *win;
 } MPIDI_SHM_Win_t;
 
 typedef MPIDI_SHM_Win_t *MPIDI_SHM_Wins_list_t;
@@ -209,7 +209,7 @@ extern MPIDI_SHM_Wins_list_t shm_wins_list;
 #define FUNCNAME MPIDI_CH3I_SHM_Wins_append
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH3I_SHM_Wins_append(MPIDI_SHM_Wins_list_t * list, MPID_Win * win)
+static inline int MPIDI_CH3I_SHM_Wins_append(MPIDI_SHM_Wins_list_t * list, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_SHM_Win_t *tmp_ptr;
@@ -241,7 +241,7 @@ static inline int MPIDI_CH3I_SHM_Wins_append(MPIDI_SHM_Wins_list_t * list, MPID_
 #define FUNCNAME MPIDI_CH3I_SHM_Wins_unlink
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline void MPIDI_CH3I_SHM_Wins_unlink(MPIDI_SHM_Wins_list_t * list, MPID_Win * shm_win)
+static inline void MPIDI_CH3I_SHM_Wins_unlink(MPIDI_SHM_Wins_list_t * list, MPIR_Win * shm_win)
 {
     MPIDI_SHM_Win_t *elem = NULL;
     MPIDI_SHM_Win_t *tmp_elem = NULL;
