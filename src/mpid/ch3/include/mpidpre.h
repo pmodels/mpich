@@ -489,13 +489,13 @@ MPID_REQUEST_DECL
 /* FIXME: The progress routines will be made into ch3-common definitions, not
    channel specific.  Channels that need more will need to piggy back or 
    otherwise override */
-#ifndef MPID_PROGRESS_STATE_DECL
+typedef struct {
 #if defined(MPIDI_CH3_PROGRESS_STATE_DECL)
-#   define MPID_PROGRESS_STATE_DECL MPIDI_CH3_PROGRESS_STATE_DECL
+    MPIDI_CH3_PROGRESS_STATE_DECL
 #else
-#   define MPID_PROGRESS_STATE_DECL int foo;
+    int foo;
 #endif
-#endif
+} MPID_Progress_state;
 
 #define MPID_DEV_GPID_DECL int gpid[2];
 

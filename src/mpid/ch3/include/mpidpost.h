@@ -58,7 +58,7 @@ void MPIDI_CH3_Progress_start(MPID_Progress_state * state);
   make progress on outstanding communication requests.
 
   Input Parameters:
-. state - pointer to the same MPID_Progress_state object passed to 
+. state - pointer to the same MPID_Progress_state object passed to
   MPIDI_CH3_Progress_start
 
   Return value:
@@ -82,7 +82,7 @@ int MPIDI_CH3_Progress_wait(MPID_Progress_state * state);
   MPIDI_CH3_Progress_end - Mark the end of a progress epoch.
   
   Input Parameters:
-. state - pointer to the same MPID_Progress_state object passed to 
+. state - pointer to the same MPID_Progress_state object passed to
   MPIDI_CH3_Progress_start
 
   Return value:
