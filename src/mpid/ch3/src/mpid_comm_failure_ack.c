@@ -42,10 +42,10 @@ fn_fail:
 #define FUNCNAME MPID_Comm_failure_get_acked
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Comm_failure_get_acked(MPIR_Comm *comm_ptr, MPID_Group **group_ptr)
+int MPID_Comm_failure_get_acked(MPIR_Comm *comm_ptr, MPIR_Group **group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Group *failed_group, *comm_group;
+    MPIR_Group *failed_group, *comm_group;
     MPIDI_STATE_DECL(MPID_STATE_MPID_COMM_FAILURE_GET_ACKED);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_COMM_FAILURE_GET_ACKED);
@@ -53,8 +53,8 @@ int MPID_Comm_failure_get_acked(MPIR_Comm *comm_ptr, MPID_Group **group_ptr)
     /* Get the group of all failed processes */
     MPIDI_CH3U_Check_for_failed_procs();
     MPIDI_CH3U_Get_failed_group(comm_ptr->dev.last_ack_rank, &failed_group);
-    if (failed_group == MPID_Group_empty) {
-        *group_ptr = MPID_Group_empty;
+    if (failed_group == MPIR_Group_empty) {
+        *group_ptr = MPIR_Group_empty;
         goto fn_exit;
     }
 

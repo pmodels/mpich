@@ -30,7 +30,7 @@ int MPI_Group_intersection(MPI_Group group1, MPI_Group group2, MPI_Group *newgro
 #define FUNCNAME MPIR_Group_intersection_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Group_intersection_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, MPID_Group **new_group_ptr)
+int MPIR_Group_intersection_impl(MPIR_Group *group_ptr1, MPIR_Group *group_ptr2, MPIR_Group **new_group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int size1, i, k, g1_idx, g2_idx, l1_pid, l2_pid, nnew;
@@ -69,7 +69,7 @@ int MPIR_Group_intersection_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2,
     }
     /* Create the group.  Handle the trivial case first */
     if (nnew == 0) {
-        *new_group_ptr = MPID_Group_empty;
+        *new_group_ptr = MPIR_Group_empty;
         goto fn_exit;
     }
     
@@ -139,9 +139,9 @@ The output group contains those processes that are in both 'group1' and
 int MPI_Group_intersection(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Group *group_ptr1 = NULL;
-    MPID_Group *group_ptr2 = NULL;
-    MPID_Group *new_group_ptr;
+    MPIR_Group *group_ptr1 = NULL;
+    MPIR_Group *group_ptr2 = NULL;
+    MPIR_Group *new_group_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_INTERSECTION);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -162,8 +162,8 @@ int MPI_Group_intersection(MPI_Group group1, MPI_Group group2, MPI_Group *newgro
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Group_get_ptr( group1, group_ptr1 );
-    MPID_Group_get_ptr( group2, group_ptr2 );
+    MPIR_Group_get_ptr( group1, group_ptr1 );
+    MPIR_Group_get_ptr( group2, group_ptr2 );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -171,8 +171,8 @@ int MPI_Group_intersection(MPI_Group group1, MPI_Group group2, MPI_Group *newgro
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate group_ptr */
-            MPID_Group_valid_ptr( group_ptr1, mpi_errno );
-            MPID_Group_valid_ptr( group_ptr2, mpi_errno );
+            MPIR_Group_valid_ptr( group_ptr1, mpi_errno );
+            MPIR_Group_valid_ptr( group_ptr2, mpi_errno );
 	    /* If either group_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
         }

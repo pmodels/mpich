@@ -29,7 +29,7 @@ int MPI_Group_free(MPI_Group *group) __attribute__((weak,alias("PMPI_Group_free"
 #define FUNCNAME MPIR_Group_free_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Group_free_impl(MPID_Group *group_ptr)
+int MPIR_Group_free_impl(MPIR_Group *group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -73,7 +73,7 @@ On output, group is set to 'MPI_GROUP_NULL'.
 int MPI_Group_free(MPI_Group *group)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Group *group_ptr = NULL;
+    MPIR_Group *group_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_FREE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -93,7 +93,7 @@ int MPI_Group_free(MPI_Group *group)
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Group_get_ptr( *group, group_ptr );
+    MPIR_Group_get_ptr( *group, group_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -101,7 +101,7 @@ int MPI_Group_free(MPI_Group *group)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate group_ptr */
-            MPID_Group_valid_ptr( group_ptr, mpi_errno );
+            MPIR_Group_valid_ptr( group_ptr, mpi_errno );
 	    /* If group_ptr is not valid, it will be reset to null */
 
 	    /* Cannot free the predefined groups, but allow GROUP_EMPTY 

@@ -119,7 +119,7 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
 	*result = MPI_IDENT;
     }
     else if (comm_ptr1->comm_kind == MPID_INTRACOMM) {
-	MPID_Group *group_ptr1, *group_ptr2;
+	MPIR_Group *group_ptr1, *group_ptr2;
 
         mpi_errno = MPIR_Comm_group_impl(comm_ptr1, &group_ptr1);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -139,8 +139,8 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
     else { 
 	/* INTER_COMM */
 	int       lresult, rresult;
-	MPID_Group *group_ptr1, *group_ptr2;
-	MPID_Group *rgroup_ptr1, *rgroup_ptr2;
+	MPIR_Group *group_ptr1, *group_ptr2;
+	MPIR_Group *rgroup_ptr1, *rgroup_ptr2;
 	
 	/* Get the groups and see what their relationship is */
 	mpi_errno = MPIR_Comm_group_impl(comm_ptr1, &group_ptr1);

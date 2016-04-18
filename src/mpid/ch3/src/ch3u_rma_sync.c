@@ -706,7 +706,7 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
 #define FUNCNAME MPID_Win_post
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_post(MPID_Group * post_grp_ptr, int assert, MPID_Win * win_ptr)
+int MPID_Win_post(MPIR_Group * post_grp_ptr, int assert, MPID_Win * win_ptr)
 {
     int *post_ranks_in_win_grp;
     int mpi_errno = MPI_SUCCESS;
@@ -836,7 +836,7 @@ static int start_req_complete(MPID_Request * req)
 #define FUNCNAME MPID_Win_start
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
+int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPID_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKLMEM_DECL(2);

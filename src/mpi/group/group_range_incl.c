@@ -30,7 +30,7 @@ int MPI_Group_range_incl(MPI_Group group, int n, int ranges[][3], MPI_Group *new
 #define FUNCNAME MPIR_Group_range_incl_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Group_range_incl_impl(MPID_Group *group_ptr, int n, int ranges[][3], MPID_Group **new_group_ptr)
+int MPIR_Group_range_incl_impl(MPIR_Group *group_ptr, int n, int ranges[][3], MPIR_Group **new_group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int first, last, stride, nnew, i, j, k;
@@ -48,7 +48,7 @@ int MPIR_Group_range_incl_impl(MPID_Group *group_ptr, int n, int ranges[][3], MP
     }
 
     if (nnew == 0) {
-        *new_group_ptr = MPID_Group_empty;
+        *new_group_ptr = MPIR_Group_empty;
         goto fn_exit;
     }
         
@@ -133,7 +133,7 @@ int MPI_Group_range_incl(MPI_Group group, int n, int ranges[][3],
                          MPI_Group *newgroup)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Group *group_ptr = NULL, *new_group_ptr;
+    MPIR_Group *group_ptr = NULL, *new_group_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_RANGE_INCL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -153,7 +153,7 @@ int MPI_Group_range_incl(MPI_Group group, int n, int ranges[][3],
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Group_get_ptr( group, group_ptr );
+    MPIR_Group_get_ptr( group, group_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -161,7 +161,7 @@ int MPI_Group_range_incl(MPI_Group group, int n, int ranges[][3],
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate group_ptr */
-            MPID_Group_valid_ptr( group_ptr, mpi_errno );
+            MPIR_Group_valid_ptr( group_ptr, mpi_errno );
 	    /* If group_ptr is not value, it will be reset to null */
 	    if (group_ptr) {
 		mpi_errno = MPIR_Group_check_valid_ranges( group_ptr, 

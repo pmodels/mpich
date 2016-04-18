@@ -78,13 +78,13 @@ int MPID_Comm_failure_ack(MPIR_Comm *comm_ptr)
   return 0;
 }
 
-int MPID_Comm_failure_get_acked(MPIR_Comm *comm_ptr, MPID_Group **failed_group_ptr)
+int MPID_Comm_failure_get_acked(MPIR_Comm *comm_ptr, MPIR_Group **failed_group_ptr)
 {
   MPID_abort();
   return 0;
 }
 
-int MPID_Comm_get_all_failed_procs(MPIR_Comm *comm_ptr, MPID_Group **failed_group, int tag)
+int MPID_Comm_get_all_failed_procs(MPIR_Comm *comm_ptr, MPIR_Group **failed_group, int tag)
 {
   MPID_abort();
   return 0;

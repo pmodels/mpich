@@ -816,7 +816,7 @@ void MPIDI_print_statistics() {
  * \return TRUE is lpid is in group
  */
 
-int MPIDI_valid_group_rank(int lpid, MPID_Group *grp) {
+int MPIDI_valid_group_rank(int lpid, MPIR_Group *grp) {
         int size = grp->size;
         int z;
 

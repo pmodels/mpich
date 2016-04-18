@@ -379,7 +379,7 @@ MPIDI_Datatype_is_pami_rmw_supported(MPI_Datatype datatype,
 
 int
 MPIDI_valid_group_rank(int lpid,
-                       MPID_Group *grp);
+                       MPIR_Group *grp);
 void
 MPIDI_WinLockAllAck_post(pami_context_t   context,
                          unsigned         peer,

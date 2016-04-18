@@ -59,7 +59,7 @@ pami_result_t MPIDI_Comm_create_from_pami_geom(pami_geometry_range_t  *task_slic
   int         num_tasks = 0;
   int        *ranks     = NULL;
   MPIR_Comm  *comm_ptr  = NULL,  *new_comm_ptr  = NULL;
-  MPID_Group *group_ptr = NULL,  *new_group_ptr = NULL;
+  MPIR_Group *group_ptr = NULL,  *new_group_ptr = NULL;
   int i = 0, j = 0;
 
   /* Get comm_ptr for MPI_COMM_WORLD and get the group_ptr for it */

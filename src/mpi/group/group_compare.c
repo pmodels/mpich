@@ -26,7 +26,7 @@ int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result) __attribu
 #undef MPI_Group_compare
 #define MPI_Group_compare PMPI_Group_compare
 
-int MPIR_Group_compare_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, int *result)
+int MPIR_Group_compare_impl(MPIR_Group *group_ptr1, MPIR_Group *group_ptr2, int *result)
 {
     int mpi_errno = MPI_SUCCESS;
     int g1_idx, g2_idx, size, i;
@@ -110,8 +110,8 @@ and 'MPI_UNEQUAL' otherwise
 int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Group *group_ptr1 = NULL;
-    MPID_Group *group_ptr2 = NULL;
+    MPIR_Group *group_ptr1 = NULL;
+    MPIR_Group *group_ptr2 = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_COMPARE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -136,8 +136,8 @@ int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Group_get_ptr( group1, group_ptr1 );
-    MPID_Group_get_ptr( group2, group_ptr2 );
+    MPIR_Group_get_ptr( group1, group_ptr1 );
+    MPIR_Group_get_ptr( group2, group_ptr2 );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -145,8 +145,8 @@ int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate group_ptr */
-            MPID_Group_valid_ptr( group_ptr1, mpi_errno );
-            MPID_Group_valid_ptr( group_ptr2, mpi_errno );
+            MPIR_Group_valid_ptr( group_ptr1, mpi_errno );
+            MPIR_Group_valid_ptr( group_ptr2, mpi_errno );
 	    /* If group_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
         }

@@ -55,7 +55,7 @@ process is not a member (integer)
 int MPI_Group_rank(MPI_Group group, int *rank)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Group *group_ptr = NULL;
+    MPIR_Group *group_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_RANK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -74,7 +74,7 @@ int MPI_Group_rank(MPI_Group group, int *rank)
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Group_get_ptr( group, group_ptr );
+    MPIR_Group_get_ptr( group, group_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -82,7 +82,7 @@ int MPI_Group_rank(MPI_Group group, int *rank)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate group_ptr */
-            MPID_Group_valid_ptr( group_ptr, mpi_errno );
+            MPIR_Group_valid_ptr( group_ptr, mpi_errno );
 	    /* If group_ptr is not value, it will be reset to null */
             if (mpi_errno) goto fn_fail;
         }

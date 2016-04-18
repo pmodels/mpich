@@ -383,8 +383,8 @@ typedef struct
 struct MPIR_Comm;
 /** \brief Forward declaration of the MPID_Win structure */
 struct MPID_Win;
-/** \brief Forward declaration of the MPID_Group structure */
-struct MPID_Group;
+/** \brief Forward declaration of the MPIR_Group structure */
+struct MPIR_Group;
 
 typedef enum
   {
@@ -504,7 +504,7 @@ struct MPIDI_Win
 
     struct MPIDI_Win_sync_pscw
     {
-      struct MPID_Group * group;
+      struct MPIR_Group * group;
       volatile unsigned   count;
     } sc, pw;
     struct MPIDI_Win_sync_lock

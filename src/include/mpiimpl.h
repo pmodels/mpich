@@ -399,7 +399,7 @@ void MPIR_DatatypeAttrFinalize( void );
 /* FIXME: the masks should be defined with the handle definitions instead
    of inserted here as literals */
 #define MPIR_Comm_get_ptr(a,ptr)       MPID_Getb_ptr(Comm,a,0x03ffffff,ptr)
-#define MPID_Group_get_ptr(a,ptr)      MPID_Getb_ptr(Group,a,0x03ffffff,ptr)
+#define MPIR_Group_get_ptr(a,ptr)      MPID_Getb_ptr(Group,a,0x03ffffff,ptr)
 #define MPID_File_get_ptr(a,ptr)       MPID_Get_ptr(File,a,ptr)
 #define MPID_Errhandler_get_ptr(a,ptr) MPID_Getb_ptr(Errhandler,a,0x3,ptr)
 #define MPID_Op_get_ptr(a,ptr)         MPID_Getb_ptr(Op,a,0x000000ff,ptr)
@@ -458,7 +458,7 @@ void MPIR_DatatypeAttrFinalize( void );
          MPIR_ERR_SET(err,MPIX_ERR_REVOKED,"**comm"); \
      }                                                \
 }
-#define MPID_Group_valid_ptr(ptr,err) MPID_Valid_ptr_class(Group,ptr,MPI_ERR_GROUP,err)
+#define MPIR_Group_valid_ptr(ptr,err) MPID_Valid_ptr_class(Group,ptr,MPI_ERR_GROUP,err)
 #define MPID_Win_valid_ptr(ptr,err) MPID_Valid_ptr_class(Win,ptr,MPI_ERR_WIN,err)
 #define MPID_Op_valid_ptr(ptr,err) MPID_Valid_ptr_class(Op,ptr,MPI_ERR_OP,err)
 #define MPID_Errhandler_valid_ptr(ptr,err) MPID_Valid_ptr_class(Errhandler,ptr,MPI_ERR_ARG,err)
@@ -1003,17 +1003,17 @@ typedef struct MPIR_Attribute {
  *---------------------------------------------------------------------------*/
 /* This structure is used to implement the group operations such as 
    MPI_Group_translate_ranks */
-typedef struct MPID_Group_pmap_t {
+typedef struct MPIR_Group_pmap_t {
     int          lpid;      /* local process id, from VCONN */
     int          next_lpid; /* Index of next lpid (in lpid order) */
     int          flag;      /* marker, used to implement group operations */
-} MPID_Group_pmap_t;
+} MPIR_Group_pmap_t;
 
-/* Any changes in the MPID_Group structure must be made to the
-   predefined value in MPID_Group_builtin for MPI_GROUP_EMPTY in 
+/* Any changes in the MPIR_Group structure must be made to the
+   predefined value in MPIR_Group_builtin for MPI_GROUP_EMPTY in
    src/mpi/group/grouputil.c */
 /*S
- MPID_Group - Description of the Group data structure
+ MPIR_Group - Description of the Group data structure
 
  The processes in the group of 'MPI_COMM_WORLD' have lpid values 0 to 'size'-1,
  where 'size' is the size of 'MPI_COMM_WORLD'.  Processes created by 
@@ -1042,13 +1042,13 @@ typedef struct MPID_Group_pmap_t {
  Group-DS
 
  S*/
-typedef struct MPID_Group {
+typedef struct MPIR_Group {
     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
     int          size;           /* Size of a group */
     int          rank;           /* rank of this process relative to this 
 				    group */
     int          idx_of_first_lpid;
-    MPID_Group_pmap_t *lrank_to_lpid; /* Array mapping a local rank to local 
+    MPIR_Group_pmap_t *lrank_to_lpid; /* Array mapping a local rank to local
 					 process number */
     int          is_local_dense_monotonic; /* see NOTE-G1 */
 
@@ -1057,7 +1057,7 @@ typedef struct MPID_Group {
 #ifdef MPID_DEV_GROUP_DECL
     MPID_DEV_GROUP_DECL
 #endif
-} MPID_Group;
+} MPIR_Group;
 
 /* NOTE-G1: is_local_dense_monotonic will be true iff the group meets the
  * following criteria:
@@ -1071,14 +1071,14 @@ typedef struct MPID_Group {
  * case for many MPI tool libraries, such as Scalasca.
  */
 
-extern MPIU_Object_alloc_t MPID_Group_mem;
+extern MPIU_Object_alloc_t MPIR_Group_mem;
 /* Preallocated group objects */
 #define MPID_GROUP_N_BUILTIN 1
-extern MPID_Group MPID_Group_builtin[MPID_GROUP_N_BUILTIN];
-extern MPID_Group MPID_Group_direct[];
+extern MPIR_Group MPIR_Group_builtin[MPID_GROUP_N_BUILTIN];
+extern MPIR_Group MPIR_Group_direct[];
 
 /* Object for empty group */
-extern MPID_Group * const MPID_Group_empty;
+extern MPIR_Group * const MPIR_Group_empty;
 
 #define MPIR_Group_add_ref( _group ) \
     do { MPIU_Object_add_ref( _group ); } while (0)
@@ -1086,7 +1086,7 @@ extern MPID_Group * const MPID_Group_empty;
 #define MPIR_Group_release_ref( _group, _inuse ) \
      do { MPIU_Object_release_ref( _group, _inuse ); } while (0)
 
-void MPIR_Group_setup_lpid_list( MPID_Group * );
+void MPIR_Group_setup_lpid_list( MPIR_Group * );
 
 /* ------------------------------------------------------------------------- */
 
@@ -1217,7 +1217,7 @@ typedef struct MPIR_Comm {
     int           rank;          /* Value of MPI_Comm_rank */
     MPIR_Attribute *attributes;  /* List of attributes */
     int           local_size;    /* Value of MPI_Comm_size for local group */
-    MPID_Group   *local_group,   /* Groups in communicator. */
+    MPIR_Group   *local_group,   /* Groups in communicator. */
                  *remote_group;  /* The local and remote groups are the
                                     same for intra communicators */
     MPIR_Comm_kind_t comm_kind;  /* MPID_INTRACOMM or MPID_INTERCOMM */
@@ -1428,7 +1428,7 @@ extern MPIR_Comm MPIR_Comm_direct[];
    to create a new communicator after a spawn or connect-accept operation, 
    the device may need to create a new contextid */
 int MPIR_Get_contextid_sparse(MPIR_Comm *comm_ptr, MPIU_Context_id_t *context_id, int ignore_id);
-int MPIR_Get_contextid_sparse_group(MPIR_Comm *comm_ptr, MPID_Group *group_ptr, int tag, MPIU_Context_id_t *context_id, int ignore_id);
+int MPIR_Get_contextid_sparse_group(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr, int tag, MPIU_Context_id_t *context_id, int ignore_id);
 void MPIR_Free_contextid( MPIU_Context_id_t );
 
 /* ------------------------------------------------------------------------- */
@@ -2345,8 +2345,8 @@ extern void MPIR_Op_set_cxx( MPI_Op, void (*)(void) );
 extern void MPIR_Errhandler_set_cxx( MPI_Errhandler, void (*)(void) );
 #endif
 
-int MPIR_Group_create( int, MPID_Group ** );
-int MPIR_Group_release(MPID_Group *group_ptr);
+int MPIR_Group_create( int, MPIR_Group ** );
+int MPIR_Group_release(MPIR_Group *group_ptr);
 
 int MPIR_dup_fn ( MPI_Comm, int, void *, void *, void *, int * );
 /* marks a request as complete, extracting the status */
@@ -2598,7 +2598,7 @@ int MPID_Finalize(void);
   be invoked with 'MPI_COMM_SELF' on each process in the group.
 
   Question:
-  An alternative design is to provide an 'MPID_Group' instead of a
+  An alternative design is to provide an 'MPIR_Group' instead of a
   communicator.  This would allow a process manager to ask the ADI 
   to kill an entire group of processes without needing a communicator.
   However, the implementation of 'MPID_Abort' will either do this by
@@ -2704,7 +2704,7 @@ int MPID_Comm_failure_ack(MPIR_Comm *comm);
   Return Value:
   'MPI_SUCCESS' or a valid MPI error code.
 @*/
-int MPID_Comm_failure_get_acked(MPIR_Comm *comm, MPID_Group **failed_group_ptr);
+int MPID_Comm_failure_get_acked(MPIR_Comm *comm, MPIR_Group **failed_group_ptr);
 
 /*@
   MPID_Comm_get_all_failed_procs - Constructs a group of failed processes that it uniform over a communicator
@@ -2719,7 +2719,7 @@ int MPID_Comm_failure_get_acked(MPIR_Comm *comm, MPID_Group **failed_group_ptr);
   Return Value:
   'MPI_SUCCESS' or a valid MPI error code.
 @*/
-int MPID_Comm_get_all_failed_procs(MPIR_Comm *comm_ptr, MPID_Group **failed_group, int tag);
+int MPID_Comm_get_all_failed_procs(MPIR_Comm *comm_ptr, MPIR_Group **failed_group, int tag);
 
 /*@
   MPID_Comm_revoke - MPID entry point for MPI_Comm_revoke
@@ -3333,8 +3333,8 @@ int MPID_Accumulate(const void *, int, MPI_Datatype, int, MPI_Aint, int,
                     MPI_Datatype, MPI_Op, MPID_Win *);
 
 int MPID_Win_fence(int, MPID_Win *);
-int MPID_Win_post(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr);
-int MPID_Win_start(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr);
+int MPID_Win_post(MPIR_Group *group_ptr, int assert, MPID_Win *win_ptr);
+int MPID_Win_start(MPIR_Group *group_ptr, int assert, MPID_Win *win_ptr);
 int MPID_Win_test(MPID_Win *win_ptr, int *flag);
 int MPID_Win_wait(MPID_Win *win_ptr);
 int MPID_Win_complete(MPID_Win *win_ptr);
@@ -4023,11 +4023,11 @@ int MPIR_Reduce_local_impl(const void *inbuf, void *inoutbuf, int count, MPI_Dat
 int MPIR_Setup_intercomm_localcomm( MPIR_Comm * );
 
 int MPIR_Comm_create( MPIR_Comm ** );
-int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPID_Group * group_ptr, int tag,
+int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag,
                            MPIR_Comm ** newcomm);
 
 /* comm_create helper functions, used by both comm_create and comm_create_group */
-int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
+int MPIR_Comm_create_calculate_mapping(MPIR_Group  *group_ptr,
                                        MPIR_Comm   *comm_ptr,
                                        int        **mapping_out,
                                        MPIR_Comm **mapping_comm);
@@ -4040,7 +4040,7 @@ int MPIR_Comm_create_map(int local_n,
                          MPIR_Comm *newcomm);
 
 /* implements the logic for MPI_Comm_create for intracommunicators only */
-int MPIR_Comm_create_intra(MPIR_Comm *comm_ptr, MPID_Group *group_ptr,
+int MPIR_Comm_create_intra(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr,
                            MPIR_Comm **newcomm_ptr);
 
 
@@ -4059,13 +4059,13 @@ int MPIR_Comm_agree(MPIR_Comm *comm_ptr, int *flag);
 
 int MPIR_Allreduce_group(void *sendbuf, void *recvbuf, int count,
                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
-                         MPID_Group *group_ptr, int tag, MPIR_Errflag_t *errflag);
+                         MPIR_Group *group_ptr, int tag, MPIR_Errflag_t *errflag);
 int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
                                MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
-                               MPID_Group *group_ptr, int tag, MPIR_Errflag_t *errflag);
+                               MPIR_Group *group_ptr, int tag, MPIR_Errflag_t *errflag);
 
 
-int MPIR_Barrier_group(MPIR_Comm *comm_ptr, MPID_Group *group_ptr, int tag, MPIR_Errflag_t *errflag);
+int MPIR_Barrier_group(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr, int tag, MPIR_Errflag_t *errflag);
 
 
 /* topology impl functions */
@@ -4186,7 +4186,7 @@ int MPIR_Ialltoallw_intra(const void *sendbuf, const int *sendcounts, const int 
 int MPIR_Ialltoallw_inter(const void *sendbuf, const int *sendcounts, const int *sdispls, const MPI_Datatype *sendtypes, void *recvbuf, const int *recvcounts, const int *rdispls, const MPI_Datatype *recvtypes, MPIR_Comm *comm_ptr, MPID_Sched_t s);
 
 /* group functionality */
-int MPIR_Group_check_subset(MPID_Group * group_ptr, MPIR_Comm * comm_ptr);
+int MPIR_Group_check_subset(MPIR_Group * group_ptr, MPIR_Comm * comm_ptr);
 
 /* begin impl functions for MPI_T (MPI_T_ right now) */
 int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPI_T_cvar_handle *handle, int *count);
@@ -4291,24 +4291,24 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_int
 int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
                                MPIR_Comm *peer_comm_ptr, int remote_leader, int tag,
                                MPIR_Comm **new_intercomm_ptr);
-int MPIR_Comm_group_impl(MPIR_Comm *comm_ptr, MPID_Group **group_ptr);
-int MPIR_Comm_remote_group_impl(MPIR_Comm *comm_ptr, MPID_Group **group_ptr);
-int MPIR_Comm_group_failed_impl(MPIR_Comm *comm, MPID_Group **failed_group_ptr);
-int MPIR_Comm_remote_group_failed_impl(MPIR_Comm *comm, MPID_Group **failed_group_ptr);
+int MPIR_Comm_group_impl(MPIR_Comm *comm_ptr, MPIR_Group **group_ptr);
+int MPIR_Comm_remote_group_impl(MPIR_Comm *comm_ptr, MPIR_Group **group_ptr);
+int MPIR_Comm_group_failed_impl(MPIR_Comm *comm, MPIR_Group **failed_group_ptr);
+int MPIR_Comm_remote_group_failed_impl(MPIR_Comm *comm, MPIR_Group **failed_group_ptr);
 int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **newcomm_ptr);
 int MPIR_Comm_split_type_impl(MPIR_Comm *comm_ptr, int split_type, int key, MPID_Info *info_ptr,
                               MPIR_Comm **newcomm_ptr);
-int MPIR_Group_compare_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, int *result);
-int MPIR_Group_difference_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, MPID_Group **new_group_ptr);
-int MPIR_Group_excl_impl(MPID_Group *group_ptr, int n, const int *ranks, MPID_Group **new_group_ptr);
-int MPIR_Group_free_impl(MPID_Group *group_ptr);
-int MPIR_Group_incl_impl(MPID_Group *group_ptr, int n, const int *ranks, MPID_Group **new_group_ptr);
-int MPIR_Group_intersection_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, MPID_Group **new_group_ptr);
-int MPIR_Group_range_excl_impl(MPID_Group *group_ptr, int n, int ranges[][3], MPID_Group **new_group_ptr);
-int MPIR_Group_range_incl_impl(MPID_Group *group_ptr, int n, int ranges[][3], MPID_Group **new_group_ptr);
-int MPIR_Group_translate_ranks_impl(MPID_Group *group_ptr1, int n, const int *ranks1,
-                                     MPID_Group *group_ptr2, int *ranks2);
-int MPIR_Group_union_impl(MPID_Group *group_ptr1, MPID_Group *group_ptr2, MPID_Group **new_group_ptr);
+int MPIR_Group_compare_impl(MPIR_Group *group_ptr1, MPIR_Group *group_ptr2, int *result);
+int MPIR_Group_difference_impl(MPIR_Group *group_ptr1, MPIR_Group *group_ptr2, MPIR_Group **new_group_ptr);
+int MPIR_Group_excl_impl(MPIR_Group *group_ptr, int n, const int *ranks, MPIR_Group **new_group_ptr);
+int MPIR_Group_free_impl(MPIR_Group *group_ptr);
+int MPIR_Group_incl_impl(MPIR_Group *group_ptr, int n, const int *ranks, MPIR_Group **new_group_ptr);
+int MPIR_Group_intersection_impl(MPIR_Group *group_ptr1, MPIR_Group *group_ptr2, MPIR_Group **new_group_ptr);
+int MPIR_Group_range_excl_impl(MPIR_Group *group_ptr, int n, int ranges[][3], MPIR_Group **new_group_ptr);
+int MPIR_Group_range_incl_impl(MPIR_Group *group_ptr, int n, int ranges[][3], MPIR_Group **new_group_ptr);
+int MPIR_Group_translate_ranks_impl(MPIR_Group *group_ptr1, int n, const int *ranks1,
+                                     MPIR_Group *group_ptr2, int *ranks2);
+int MPIR_Group_union_impl(MPIR_Group *group_ptr1, MPIR_Group *group_ptr2, MPIR_Group **new_group_ptr);
 void MPIR_Get_count_impl(const MPI_Status *status, MPI_Datatype datatype, int *count);
 void MPIR_Grequest_complete_impl(MPID_Request *request_ptr);
 int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,

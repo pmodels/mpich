@@ -22,7 +22,7 @@ int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm) __attribu
 
 /* prototypes to make the compiler happy in the case that PMPI_LOCAL expands to
  * nothing instead of "static" */
-PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm *comm_ptr, MPID_Group *group_ptr,
+PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr,
                                       MPIR_Comm **newcomm_ptr);
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
@@ -41,7 +41,7 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm *comm_ptr, MPID_Group *group_ptr
 #define FUNCNAME MPIR_Comm_create_calculate_mapping
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
+int MPIR_Comm_create_calculate_mapping(MPIR_Group  *group_ptr,
                                        MPIR_Comm   *comm_ptr,
                                        int        **mapping_out,
                                        MPIR_Comm **mapping_comm)
@@ -187,7 +187,7 @@ fn_fail:
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* comm create impl for intracommunicators, assumes that the standard error
  * checking has already taken place in the calling function */
-int MPIR_Comm_create_intra(MPIR_Comm *comm_ptr, MPID_Group *group_ptr,
+int MPIR_Comm_create_intra(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr,
                            MPIR_Comm **newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -283,7 +283,7 @@ fn_fail:
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* comm create impl for intercommunicators, assumes that the standard error
  * checking has already taken place in the calling function */
-PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm *comm_ptr, MPID_Group *group_ptr,
+PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr,
                                       MPIR_Comm **newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -486,7 +486,7 @@ int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
-    MPID_Group *group_ptr;
+    MPIR_Group *group_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_CREATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -517,12 +517,12 @@ int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm)
         }
         MPID_END_ERROR_CHECKS;
 
-        MPID_Group_get_ptr( group, group_ptr );
+        MPIR_Group_get_ptr( group, group_ptr );
 
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Check the group ptr */
-            MPID_Group_valid_ptr( group_ptr, mpi_errno );
+            MPIR_Group_valid_ptr( group_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
@@ -530,7 +530,7 @@ int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm)
 #   else
     {
         MPIR_Comm_get_ptr( comm, comm_ptr );
-        MPID_Group_get_ptr( group, group_ptr );
+        MPIR_Group_get_ptr( group, group_ptr );
     }
 #   endif
 

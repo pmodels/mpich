@@ -33,7 +33,7 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm *new
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* comm create group impl; assumes that the standard error checking
  * has already taken place in the calling function */
-int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPID_Group * group_ptr, int tag,
+int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag,
                            MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -153,7 +153,7 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * ne
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
-    MPID_Group *group_ptr;
+    MPIR_Group *group_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_CREATE_GROUP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -187,12 +187,12 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * ne
         }
         MPID_END_ERROR_CHECKS;
 
-        MPID_Group_get_ptr( group, group_ptr );
+        MPIR_Group_get_ptr( group, group_ptr );
 
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Check the group ptr */
-            MPID_Group_valid_ptr( group_ptr, mpi_errno );
+            MPIR_Group_valid_ptr( group_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
@@ -200,7 +200,7 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * ne
 #   else
     {
         MPIR_Comm_get_ptr( comm, comm_ptr );
-        MPID_Group_get_ptr( group, group_ptr );
+        MPIR_Group_get_ptr( group, group_ptr );
     }
 #   endif
 
