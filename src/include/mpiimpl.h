@@ -708,7 +708,7 @@ extern MPIR_Errhandler MPIR_Errhandler_direct[];
   Unfortunately, these have a slightly different calling sequence for
   each language, particularly when the size of a pointer is 
   different from the size of a Fortran integer.  The unions 
-  'MPID_Copy_function' and 'MPID_Delete_function' capture the differences
+  'MPIR_Copy_function' and 'MPID_Delete_function' capture the differences
   in a single union type.
 
   The above comment is out of date but has never been updated as it should
@@ -804,7 +804,7 @@ extern MPIR_Errhandler MPIR_Errhandler_direct[];
    only store generic copy and delete functions.  This allows us to use
    common code for the attribute set, delete, and dup functions */
 /*E
-  MPID_Copy_function - MPID Structure to hold an attribute copy function
+  MPIR_Copy_function - MPID Structure to hold an attribute copy function
 
   Notes:
   The appropriate element of this union is selected by using the language
@@ -834,7 +834,7 @@ MPIR_Attr_copy_c_proxy(
     int* flag
     );
 
-typedef struct MPID_Copy_function {
+typedef struct MPIR_Copy_function {
   int  (*C_CopyFunction)( int, int, void *, void *, void *, int * );
   void (*F77_CopyFunction)  ( MPI_Fint *, MPI_Fint *, MPI_Fint *, MPI_Fint *, 
                               MPI_Fint *, MPI_Fint *, MPI_Fint * );
@@ -847,7 +847,7 @@ typedef struct MPID_Copy_function {
   MPI_Comm_copy_attr_function *user_function;
   MPID_Attr_copy_proxy *proxy;
   /* The C++ function is the same as the C function */
-} MPID_Copy_function;
+} MPIR_Copy_function;
 
 /*E
   MPID_Delete_function - MPID Structure to hold an attribute delete function
@@ -904,7 +904,7 @@ typedef struct MPID_Keyval {
     MPID_Object_kind     kind;
     int                  was_freed;
     void                 *extra_state;
-    MPID_Copy_function   copyfn;
+    MPIR_Copy_function   copyfn;
     MPID_Delete_function delfn;
   /* other, device-specific information */
 #ifdef MPID_DEV_KEYVAL_DECL
