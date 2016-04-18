@@ -9,12 +9,12 @@
 
 typedef struct MPID_NS_Handle *MPID_NS_Handle;
 
-int MPID_NS_Create( const MPID_Info *, MPID_NS_Handle * );
-int MPID_NS_Publish( MPID_NS_Handle, const MPID_Info *, 
+int MPID_NS_Create( const MPIR_Info *, MPID_NS_Handle * );
+int MPID_NS_Publish( MPID_NS_Handle, const MPIR_Info *,
                      const char service_name[], const char port[] );
-int MPID_NS_Lookup( MPID_NS_Handle, const MPID_Info *,
+int MPID_NS_Lookup( MPID_NS_Handle, const MPIR_Info *,
                     const char service_name[], char port[] );
-int MPID_NS_Unpublish( MPID_NS_Handle, const MPID_Info *, 
+int MPID_NS_Unpublish( MPID_NS_Handle, const MPIR_Info *,
                        const char service_name[] );
 int MPID_NS_Free( MPID_NS_Handle * );
 

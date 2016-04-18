@@ -32,7 +32,7 @@ int
 MPIDI_Win_init( MPI_Aint length,
                 int disp_unit,
                 MPIR_Win  **win_ptr,
-                MPID_Info  *info,
+                MPIR_Info  *info,
                 MPIR_Comm *comm_ptr,
                 int create_flavor,
                 int model)
@@ -182,7 +182,7 @@ int
 MPID_Win_create(void       * base,
                 MPI_Aint     size,
                 int          disp_unit,
-                MPID_Info  * info,
+                MPIR_Info  * info,
                 MPIR_Comm  * comm_ptr,
                 MPIR_Win  ** win_ptr)
 {

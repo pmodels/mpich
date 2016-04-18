@@ -403,7 +403,7 @@ void MPIR_DatatypeAttrFinalize( void );
 #define MPID_File_get_ptr(a,ptr)       MPID_Get_ptr(File,a,ptr)
 #define MPIR_Errhandler_get_ptr(a,ptr) MPID_Getb_ptr(Errhandler,a,0x3,ptr)
 #define MPID_Op_get_ptr(a,ptr)         MPID_Getb_ptr(Op,a,0x000000ff,ptr)
-#define MPID_Info_get_ptr(a,ptr)       MPID_Getb_ptr(Info,a,0x03ffffff,ptr)
+#define MPIR_Info_get_ptr(a,ptr)       MPID_Getb_ptr(Info,a,0x03ffffff,ptr)
 #define MPIR_Win_get_ptr(a,ptr)        MPID_Get_ptr(Win,a,ptr)
 #define MPID_Request_get_ptr(a,ptr)    MPID_Get_ptr(Request,a,ptr)
 #define MPID_Grequest_class_get_ptr(a,ptr) MPID_Get_ptr(Grequest_class,a,ptr)
@@ -443,7 +443,7 @@ void MPIR_DatatypeAttrFinalize( void );
   {if (!(ptr)) { err = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, errclass, \
                                              "**nullptrtype", "**nullptrtype %s", #kind ); } }
 
-#define MPID_Info_valid_ptr(ptr,err) MPID_Valid_ptr_class(Info,ptr,MPI_ERR_INFO,err)
+#define MPIR_Info_valid_ptr(ptr,err) MPID_Valid_ptr_class(Info,ptr,MPI_ERR_INFO,err)
 /* Check not only for a null pointer but for an invalid communicator,
    such as one that has been freed.  Let's try the ref_count as the test
    for now */
@@ -513,7 +513,7 @@ void MPIR_DatatypeAttrFinalize( void );
   routines that want to work with the linked list may do so directly.
   Because the 'MPI_Info' type is a handle and not a pointer, an MPIU
   (utility) routine is provided to handle the 
-  deallocation of 'MPID_Info' elements.  See the implementation of
+  deallocation of 'MPIR_Info' elements.  See the implementation of
   'MPI_Info_create' for how an Info type is allocated.
 
   Thread Safety:
@@ -539,7 +539,7 @@ void MPIR_DatatypeAttrFinalize( void );
 
   T*/
 /*S
-  MPID_Info - Structure of an MPID info
+  MPIR_Info - Structure of an MPID info
 
   Notes:
   There is no reference count because 'MPI_Info' values, unlike other MPI 
@@ -561,7 +561,7 @@ void MPIR_DatatypeAttrFinalize( void );
   the same routines to manage this list as are used to manage the 
   list of free objects (in the file 'src/util/mem/handlemem.c').  In 
   particular, if lock-free routines for updating a linked list are 
-  provided, they can be used for managing the 'MPID_Info' structure as well.
+  provided, they can be used for managing the 'MPIR_Info' structure as well.
 
   The MPI standard requires that keys can be no less that 32 characters and
   no more than 255 characters.  There is no mandated limit on the size 
@@ -570,17 +570,17 @@ void MPIR_DatatypeAttrFinalize( void );
   Module:
   Info-DS
   S*/
-typedef struct MPID_Info {
+typedef struct MPIR_Info {
     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
-    struct MPID_Info   *next;
+    struct MPIR_Info   *next;
     char               *key;
     char               *value;
-} MPID_Info;
-extern MPIU_Object_alloc_t MPID_Info_mem;
+} MPIR_Info;
+extern MPIU_Object_alloc_t MPIR_Info_mem;
 /* Preallocated info objects */
 #define MPID_INFO_N_BUILTIN 2
-extern MPID_Info MPID_Info_builtin[MPID_INFO_N_BUILTIN];
-extern MPID_Info MPID_Info_direct[];
+extern MPIR_Info MPIR_Info_builtin[MPID_INFO_N_BUILTIN];
+extern MPIR_Info MPIR_Info_direct[];
 /* ------------------------------------------------------------------------- */
 
 #if defined(MPICH_IS_THREADED)
@@ -1256,7 +1256,7 @@ typedef struct MPIR_Comm {
 
     int revoked;                    /* Flag to track whether the communicator
                                      * has been revoked */
-    MPID_Info *info;                /* Hints to the communicator */
+    MPIR_Info *info;                /* Hints to the communicator */
 
 #ifdef MPID_HAS_HETERO
     int is_hetero;
@@ -1332,7 +1332,7 @@ static inline int MPIR_Comm_release(MPIR_Comm * comm_ptr)
 int MPIR_Comm_release_always(MPIR_Comm *comm_ptr);
 
 /* applies the specified info chain to the specified communicator */
-int MPIR_Comm_apply_hints(MPIR_Comm *comm_ptr, MPID_Info *info_ptr);
+int MPIR_Comm_apply_hints(MPIR_Comm *comm_ptr, MPIR_Info *info_ptr);
 
 /* Preallocated comm objects.  There are 3: comm_world, comm_self, and 
    a private (non-user accessible) dup of comm world that is provided 
@@ -1747,7 +1747,7 @@ extern MPIR_Win MPIR_Win_direct[];
   Module:
   Win
   @*/
-void *MPID_Alloc_mem( size_t size, MPID_Info *info );
+void *MPID_Alloc_mem( size_t size, MPIR_Info *info );
 
 /*@
   MPID_Free_mem - Frees memory allocated with 'MPID_Alloc_mem'
@@ -2062,7 +2062,7 @@ typedef struct MPIR_TopoOps {
 
 
 typedef struct MPID_CommOps {
-    int (*split_type)(MPIR_Comm *, int, int, MPID_Info *, MPIR_Comm **);
+    int (*split_type)(MPIR_Comm *, int, int, MPIR_Info *, MPIR_Comm **);
 } MPID_CommOps;
 extern struct MPID_CommOps  *MPID_Comm_fns; /* Communicator creation functions */
 
@@ -2639,7 +2639,7 @@ int MPID_Finalize(void);
 
 int MPID_Abort( MPIR_Comm *comm, int mpi_errno, int exit_code, const char *error_msg );
 
-int MPID_Open_port(MPID_Info *, char *);
+int MPID_Open_port(MPIR_Info *, char *);
 int MPID_Close_port(const char *);
 
 /*@
@@ -2657,7 +2657,7 @@ int MPID_Close_port(const char *);
   Return Value:
   'MPI_SUCCESS' or a valid MPI error code.
 @*/
-int MPID_Comm_accept(const char *, MPID_Info *, int, MPIR_Comm *, MPIR_Comm **);
+int MPID_Comm_accept(const char *, MPIR_Info *, int, MPIR_Comm *, MPIR_Comm **);
 
 /*@
    MPID_Comm_connect - MPID entry point for MPI_Comm_connect
@@ -2674,11 +2674,11 @@ int MPID_Comm_accept(const char *, MPID_Info *, int, MPIR_Comm *, MPIR_Comm **);
   Return Value:
   'MPI_SUCCESS' or a valid MPI error code.
 @*/
-int MPID_Comm_connect(const char *, MPID_Info *, int, MPIR_Comm *, MPIR_Comm **);
+int MPID_Comm_connect(const char *, MPIR_Info *, int, MPIR_Comm *, MPIR_Comm **);
 
 int MPID_Comm_disconnect(MPIR_Comm *);
 
-int MPID_Comm_spawn_multiple(int, char *[], char **[], const int [], MPID_Info* [],
+int MPID_Comm_spawn_multiple(int, char *[], char **[], const int [], MPIR_Info* [],
                              int, MPIR_Comm *, MPIR_Comm **, int []);
 
 /*@
@@ -3321,7 +3321,7 @@ MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2);
 
 /* MPI-2 RMA Routines */
 
-int MPID_Win_create(void *, MPI_Aint, int, MPID_Info *, MPIR_Comm *,
+int MPID_Win_create(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *,
                     MPIR_Win **);
 int MPID_Win_free(MPIR_Win **);
 
@@ -3344,17 +3344,17 @@ int MPID_Win_unlock(int dest, MPIR_Win *win_ptr);
 
 /* MPI-3 RMA Routines */
 
-int MPID_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info *info,
+int MPID_Win_allocate(MPI_Aint size, int disp_unit, MPIR_Info *info,
                       MPIR_Comm *comm, void *baseptr, MPIR_Win **win);
-int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info *info_ptr, MPIR_Comm *comm_ptr,
+int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPIR_Info *info_ptr, MPIR_Comm *comm_ptr,
                              void *base_ptr, MPIR_Win **win_ptr);
 int MPID_Win_shared_query(MPIR_Win *win, int rank, MPI_Aint *size, int *disp_unit,
                           void *baseptr);
-int MPID_Win_create_dynamic(MPID_Info *info, MPIR_Comm *comm, MPIR_Win **win);
+int MPID_Win_create_dynamic(MPIR_Info *info, MPIR_Comm *comm, MPIR_Win **win);
 int MPID_Win_attach(MPIR_Win *win, void *base, MPI_Aint size);
 int MPID_Win_detach(MPIR_Win *win, const void *base);
-int MPID_Win_get_info(MPIR_Win *win, MPID_Info **info_used);
-int MPID_Win_set_info(MPIR_Win *win, MPID_Info *info);
+int MPID_Win_get_info(MPIR_Win *win, MPIR_Info **info_used);
+int MPID_Win_set_info(MPIR_Win *win, MPIR_Info *info);
 
 int MPID_Get_accumulate(const void *origin_addr, int origin_count,
                         MPI_Datatype origin_datatype, void *result_addr, int result_count,
@@ -4229,7 +4229,7 @@ int MPIR_Comm_init(MPIR_Comm *);
 void MPIU_SetTimeout( int );
 
 /* Communicator info hint functions */
-typedef int (*MPIR_Comm_hint_fn_t)(MPIR_Comm *, MPID_Info *, void *);
+typedef int (*MPIR_Comm_hint_fn_t)(MPIR_Comm *, MPIR_Info *, void *);
 int MPIR_Comm_register_hint(const char *hint_key, MPIR_Comm_hint_fn_t fn, void *state);
 
 #if defined(HAVE_VSNPRINTF) && defined(NEEDS_VSNPRINTF_DECL) && !defined(vsnprintf)
@@ -4261,27 +4261,27 @@ int MPIR_Cart_create_impl(MPIR_Comm *comm_ptr, int ndims, const int dims[],
 int MPIR_Cart_map_impl(const MPIR_Comm *comm_ptr, int ndims, const int dims[],
                        const int periodic[], int *newrank);
 int MPIR_Close_port_impl(const char *port_name);
-int MPIR_Open_port_impl(MPID_Info *info_ptr, char *port_name);
-int MPIR_Info_get_impl(MPID_Info *info_ptr, const char *key, int valuelen, char *value, int *flag);
-void MPIR_Info_get_nkeys_impl(MPID_Info *info_ptr, int *nkeys);
-int MPIR_Info_get_nthkey_impl(MPID_Info *info, int n, char *key);
-void MPIR_Info_get_valuelen_impl(MPID_Info *info_ptr, const char *key, int *valuelen, int *flag);
-int MPIR_Info_set_impl(MPID_Info *info_ptr, const char *key, const char *value);
-int MPIR_Info_dup_impl(MPID_Info *info_ptr, MPID_Info **new_info_ptr);
+int MPIR_Open_port_impl(MPIR_Info *info_ptr, char *port_name);
+int MPIR_Info_get_impl(MPIR_Info *info_ptr, const char *key, int valuelen, char *value, int *flag);
+void MPIR_Info_get_nkeys_impl(MPIR_Info *info_ptr, int *nkeys);
+int MPIR_Info_get_nthkey_impl(MPIR_Info *info, int n, char *key);
+void MPIR_Info_get_valuelen_impl(MPIR_Info *info_ptr, const char *key, int *valuelen, int *flag);
+int MPIR_Info_set_impl(MPIR_Info *info_ptr, const char *key, const char *value);
+int MPIR_Info_dup_impl(MPIR_Info *info_ptr, MPIR_Info **new_info_ptr);
 int MPIR_Comm_delete_attr_impl(MPIR_Comm *comm_ptr, MPID_Keyval *keyval_ptr);
 int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
                                  MPI_Comm_delete_attr_function *comm_delete_attr_fn,
                                  int *comm_keyval, void *extra_state);
-int MPIR_Comm_accept_impl(const char * port_name, MPID_Info * info_ptr, int root,
+int MPIR_Comm_accept_impl(const char * port_name, MPIR_Info * info_ptr, int root,
                           MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
-int MPIR_Comm_connect_impl(const char * port_name, MPID_Info * info_ptr, int root,
+int MPIR_Comm_connect_impl(const char * port_name, MPIR_Info * info_ptr, int root,
                            MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm_ptr);
 int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function *function,
                                      MPI_Errhandler *errhandler);
 int MPIR_Comm_dup_impl(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm_ptr);
-int MPIR_Comm_dup_with_info_impl(MPIR_Comm *comm_ptr, MPID_Info *info_ptr, MPIR_Comm **newcomm_ptr);
-int MPIR_Comm_get_info_impl(MPIR_Comm *comm_ptr, MPID_Info **info_ptr);
-int MPIR_Comm_set_info_impl(MPIR_Comm *comm_ptr, MPID_Info *info_ptr);
+int MPIR_Comm_dup_with_info_impl(MPIR_Comm *comm_ptr, MPIR_Info *info_ptr, MPIR_Comm **newcomm_ptr);
+int MPIR_Comm_get_info_impl(MPIR_Comm *comm_ptr, MPIR_Info **info_ptr);
+int MPIR_Comm_set_info_impl(MPIR_Comm *comm_ptr, MPIR_Info *info_ptr);
 int MPIR_Comm_free_impl(MPIR_Comm * comm_ptr);
 void MPIR_Comm_free_keyval_impl(int keyval);
 void MPIR_Comm_get_errhandler_impl(MPIR_Comm *comm_ptr, MPIR_Errhandler **errhandler_ptr);
@@ -4296,7 +4296,7 @@ int MPIR_Comm_remote_group_impl(MPIR_Comm *comm_ptr, MPIR_Group **group_ptr);
 int MPIR_Comm_group_failed_impl(MPIR_Comm *comm, MPIR_Group **failed_group_ptr);
 int MPIR_Comm_remote_group_failed_impl(MPIR_Comm *comm, MPIR_Group **failed_group_ptr);
 int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **newcomm_ptr);
-int MPIR_Comm_split_type_impl(MPIR_Comm *comm_ptr, int split_type, int key, MPID_Info *info_ptr,
+int MPIR_Comm_split_type_impl(MPIR_Comm *comm_ptr, int split_type, int key, MPIR_Info *info_ptr,
                               MPIR_Comm **newcomm_ptr);
 int MPIR_Group_compare_impl(MPIR_Group *group_ptr1, MPIR_Group *group_ptr2, int *result);
 int MPIR_Group_difference_impl(MPIR_Group *group_ptr1, MPIR_Group *group_ptr2, MPIR_Group **new_group_ptr);

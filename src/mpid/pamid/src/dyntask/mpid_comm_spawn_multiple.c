@@ -23,7 +23,7 @@ extern mpidi_dynamic_tasking;
    MPI info values */
 /* Turn a SINGLE MPI_Info into an array of PMI_keyvals (return the pointer
    to the array of PMI keyvals) */
-static int  MPIDI_mpi_to_pmi_keyvals( MPID_Info *info_ptr, PMI_keyval_t **kv_ptr, int *nkeys_ptr )
+static int  MPIDI_mpi_to_pmi_keyvals( MPIR_Info *info_ptr, PMI_keyval_t **kv_ptr, int *nkeys_ptr )
 {
     char key[MPI_MAX_INFO_KEY];
     PMI_keyval_t *kv = 0;
@@ -106,10 +106,10 @@ static void MPIDI_free_pmi_keyvals(PMI_keyval_t **kv, int size, int *counts)
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Comm_spawn_multiple(int count, char *array_of_commands[],
-			     char ** array_of_argv[], const int array_of_maxprocs[],
-			     MPID_Info * array_of_info_ptrs[], int root,
+                             char ** array_of_argv[], const int array_of_maxprocs[],
+                             MPIR_Info * array_of_info_ptrs[], int root,
                              MPIR_Comm * comm_ptr, MPIR_Comm ** intercomm,
-			     int array_of_errcodes[])
+                             int array_of_errcodes[])
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -136,7 +136,7 @@ int MPID_Comm_spawn_multiple(int count, char *array_of_commands[],
  */
 int MPIDI_Comm_spawn_multiple(int count, char **commands,
                               char ***argvs, int *maxprocs,
-                              MPID_Info **info_ptrs, int root,
+                              MPIR_Info **info_ptrs, int root,
                               MPIR_Comm *comm_ptr, MPIR_Comm
                               **intercomm, int *errcodes)
 {
@@ -149,7 +149,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
     PMI_keyval_t **info_keyval_vectors=0, preput_keyval_vector;
     int *pmi_errcodes = 0, pmi_errno=0;
     int total_num_processes, should_accept = 1;
-    MPID_Info tmp_info_ptr;
+    MPIR_Info tmp_info_ptr;
     char *tmp;
     int tmp_ret = 0;
 
@@ -175,8 +175,8 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
         MPIU_Assert(count > 0);
         {
             int *argcs = MPL_malloc(count*sizeof(int));
-            struct MPID_Info preput;
-            struct MPID_Info *preput_p[2] = { &preput, &tmp_info_ptr };
+            struct MPIR_Info preput;
+            struct MPIR_Info *preput_p[2] = { &preput, &tmp_info_ptr };
 
             MPIU_Assert(argcs);
 
@@ -210,8 +210,8 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
             pmi_errno = PMI2_Job_Spawn(count, (const char **)commands,
                                        argcs, (const char ***)argvs,
                                        maxprocs,
-                                       info_keyval_sizes, (const MPID_Info **)info_ptrs,
-                                       2, (const struct MPID_Info **)preput_p,
+                                       info_keyval_sizes, (const MPIR_Info **)info_ptrs,
+                                       2, (const struct MPIR_Info **)preput_p,
                                        jobId, jobIdSize,
                                        pmi_errcodes);
 	    TRACE_ERR("after PMI2_Job_Spawn - pmi_errno=%d jobId=%s\n", pmi_errno, jobId);

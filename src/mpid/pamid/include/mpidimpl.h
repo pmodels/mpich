@@ -125,19 +125,19 @@ typedef struct transactionID_struct {
   BEGIN MPI PORT SECTION
   --------------------------*/
 /* These are the default functions */
-int MPIDI_Comm_connect(const char *, struct MPID_Info *, int, struct MPIR_Comm *, struct MPIR_Comm **);
-int MPIDI_Comm_accept(const char *, struct MPID_Info *, int, struct MPIR_Comm *, struct MPIR_Comm **);
+int MPIDI_Comm_connect(const char *, struct MPIR_Info *, int, struct MPIR_Comm *, struct MPIR_Comm **);
+int MPIDI_Comm_accept(const char *, struct MPIR_Info *, int, struct MPIR_Comm *, struct MPIR_Comm **);
 
-int MPIDI_Comm_spawn_multiple(int, char **, char ***, int *, struct MPID_Info **,
+int MPIDI_Comm_spawn_multiple(int, char **, char ***, int *, struct MPIR_Info **,
                               int, struct MPIR_Comm *, struct MPIR_Comm **, int *);
 
 
 typedef struct MPIDI_Port_Ops {
-    int (*OpenPort)( struct MPID_Info *, char *);
+    int (*OpenPort)( struct MPIR_Info *, char *);
     int (*ClosePort)( const char * );
-    int (*CommAccept)( const char *, struct MPID_Info *, int, struct MPIR_Comm *,
+    int (*CommAccept)( const char *, struct MPIR_Info *, int, struct MPIR_Comm *,
                        struct MPIR_Comm ** );
-    int (*CommConnect)( const char *, struct MPID_Info *, int, struct MPIR_Comm *,
+    int (*CommConnect)( const char *, struct MPIR_Info *, int, struct MPIR_Comm *,
                         struct MPIR_Comm ** );
 } MPIDI_PortFns;
 
@@ -180,7 +180,7 @@ static inline pami_endpoint_t MPIDI_Task_to_endpoint(pami_task_t task, size_t of
 
 int
 MPIDI_Win_set_info(MPIR_Win *win,
-	           MPID_Info *info);
+                   MPIR_Info *info);
 
 MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp);
 MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2);

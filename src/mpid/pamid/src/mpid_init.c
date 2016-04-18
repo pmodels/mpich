@@ -336,7 +336,7 @@ static struct
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static int split_type(MPIR_Comm * comm_ptr, int stype, int key,
-                      MPID_Info *info_ptr, MPIR_Comm ** newcomm_ptr)
+                      MPIR_Info *info_ptr, MPIR_Comm ** newcomm_ptr)
 {
     MPID_Node_id_t id;
     int nid;

@@ -9,7 +9,7 @@
 static int setupPortFunctions = 1;
 
 #ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
-static int MPIDI_Open_port(MPID_Info *, char *);
+static int MPIDI_Open_port(MPIR_Info *, char *);
 static int MPIDI_Close_port(const char *);
 
 /* Define the functions that are used to implement the port
@@ -41,7 +41,7 @@ static MPIDI_PortFns portFns = { 0, 0, 0, 0 };
 #define FUNCNAME MPID_Open_port
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Open_port(MPID_Info *info_ptr, char *port_name)
+int MPID_Open_port(MPIR_Info *info_ptr, char *port_name)
 {
     int mpi_errno=MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_OPEN_PORT);
@@ -128,7 +128,7 @@ int MPID_Close_port(const char *port_name)
 #define FUNCNAME MPID_Comm_accept
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Comm_accept(const char * port_name, MPID_Info * info, int root,
+int MPID_Comm_accept(const char * port_name, MPIR_Info * info, int root,
 		     MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -166,7 +166,7 @@ int MPID_Comm_accept(const char * port_name, MPID_Info * info, int root,
 #define FUNCNAME MPID_Comm_connect
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Comm_connect(const char * port_name, MPID_Info * info, int root, 
+int MPID_Comm_connect(const char * port_name, MPIR_Info * info, int root,
 		      MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno=MPI_SUCCESS;
@@ -281,7 +281,7 @@ static void free_port_name_tag(int tag)
 #define FUNCNAME MPIDI_Open_port
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPIDI_Open_port(MPID_Info *info_ptr, char *port_name)
+static int MPIDI_Open_port(MPIR_Info *info_ptr, char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
     int str_errno = MPL_STR_SUCCESS;

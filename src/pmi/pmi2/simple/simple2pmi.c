@@ -404,9 +404,9 @@ int PMI2_Job_Spawn(int count, const char * cmds[],
                    int argcs[], const char ** argvs[],
                    const int maxprocs[],
                    const int info_keyval_sizes[],
-                   const struct MPID_Info *info_keyval_vectors[],
+                   const struct MPIR_Info *info_keyval_vectors[],
                    int preput_keyval_size,
-                   const struct MPID_Info *preput_keyval_vector[],
+                   const struct MPIR_Info *preput_keyval_vector[],
                    char jobId[], int jobIdSize,
                    int errors[])
 {

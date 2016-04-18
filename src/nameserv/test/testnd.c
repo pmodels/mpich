@@ -12,8 +12,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 /* This is incomplete for the purposes of testing */
-typedef struct { int handle; } MPID_Info;
-#define MPID_INFO_NULL ((MPID_Info *)0)
+typedef struct { int handle; } MPIR_Info;
+#define MPIR_INFO_NULL ((MPIR_Info *)0)
 #include "namepub.h"
 
 void Error( const char *fmat, ... );
@@ -27,26 +27,26 @@ int main( int argc, char *argv[] )
     int            rc;
 
     /* Create a name service */
-    rc = MPID_NS_Create( MPID_INFO_NULL, &ns );
+    rc = MPID_NS_Create( MPIR_INFO_NULL, &ns );
     if (rc) {
 	Error( "Could not create name service; rc = %d\n", rc );
     }
     /* publish several names */
-    rc = MPID_NS_Publish( ns, MPID_INFO_NULL, "name1", "foo$$12" );
+    rc = MPID_NS_Publish( ns, MPIR_INFO_NULL, "name1", "foo$$12" );
     if (rc) {
 	Error( "Could not publish name1; rc = %d\n", rc );
     }
-    rc = MPID_NS_Publish( ns, MPID_INFO_NULL, "namea", "bar--14" );
+    rc = MPID_NS_Publish( ns, MPIR_INFO_NULL, "namea", "bar--14" );
     if (rc) {
 	Error( "Could not publish namea; rc = %d\n", rc );
     }
-    rc = MPID_NS_Publish( ns, MPID_INFO_NULL, "1-2-3", "testname" );
+    rc = MPID_NS_Publish( ns, MPIR_INFO_NULL, "1-2-3", "testname" );
     if (rc) {
 	Error( "Could not publish 1-2-3; rc = %d\n", rc );
     }
 
     /* Try look ups */
-    rc = MPID_NS_Lookup( ns, MPID_INFO_NULL, "name1", port );
+    rc = MPID_NS_Lookup( ns, MPIR_INFO_NULL, "name1", port );
     if (rc) {
 	Error( "Could not lookup name1; rc = %d\n", rc );
     }
@@ -56,7 +56,7 @@ int main( int argc, char *argv[] )
 	}
     }
 
-    rc = MPID_NS_Lookup( ns, MPID_INFO_NULL, "namea", port );
+    rc = MPID_NS_Lookup( ns, MPIR_INFO_NULL, "namea", port );
     if (rc) {
 	Error( "Could not lookup namea; rc = %d\n", rc );
     }
@@ -66,7 +66,7 @@ int main( int argc, char *argv[] )
 	}
     }
 
-    rc = MPID_NS_Lookup( ns, MPID_INFO_NULL, "1-2-3", port );
+    rc = MPID_NS_Lookup( ns, MPIR_INFO_NULL, "1-2-3", port );
     if (rc) {
 	Error( "Could not lookup 1-2-3; rc = %d\n", rc );
     }
@@ -78,16 +78,16 @@ int main( int argc, char *argv[] )
 
     /* Try a name that isn't published */
     port[0] = 0;
-    rc = MPID_NS_Lookup( ns, MPID_INFO_NULL, "name", port );
+    rc = MPID_NS_Lookup( ns, MPIR_INFO_NULL, "name", port );
     if (!rc) {
 	Error( "Found port (%s) for unpublished name\n", port );
     }
 
-    rc = MPID_NS_Publish( ns, MPID_INFO_NULL, "name 1", "foo 12" );
+    rc = MPID_NS_Publish( ns, MPIR_INFO_NULL, "name 1", "foo 12" );
     if (rc) {
 	Error( "Could not publish \"name 1\"; rc = %d\n", rc );
     }
-    rc = MPID_NS_Lookup( ns, MPID_INFO_NULL, "name 1", port );
+    rc = MPID_NS_Lookup( ns, MPIR_INFO_NULL, "name 1", port );
     if (rc) {
 	Error( "Could not lookup \"name 1\"; rc = %d\n", rc );
     }
@@ -98,13 +98,13 @@ int main( int argc, char *argv[] )
     }
 
     /* Note that there are some restrictions in the file-based version */
-    rc = MPID_NS_Publish( ns, MPID_INFO_NULL, "name/1", "foo/12a" );
+    rc = MPID_NS_Publish( ns, MPIR_INFO_NULL, "name/1", "foo/12a" );
     if (rc) {
 	/* Allow publish to fail with some names */
 	;
     }
     else {
-	rc = MPID_NS_Lookup( ns, MPID_INFO_NULL, "name/1", port );
+	rc = MPID_NS_Lookup( ns, MPIR_INFO_NULL, "name/1", port );
 	if (rc) {
 	    Error( "Could not lookup name/1; rc = %d\n", rc );
 	}
@@ -113,26 +113,26 @@ int main( int argc, char *argv[] )
 		Error( "Wrong value for port, got %s\n", port );
 	    }
 	}
-	rc = MPID_NS_Unpublish( ns, MPID_INFO_NULL, "name/1" );
+	rc = MPID_NS_Unpublish( ns, MPIR_INFO_NULL, "name/1" );
 	if (rc) {
 	    Error( "Could not unpublish name/1; rc = %d\n", rc );
 	}
     }
 
     /* Try to unpublish the names */
-    rc = MPID_NS_Unpublish( ns, MPID_INFO_NULL, "name1" );
+    rc = MPID_NS_Unpublish( ns, MPIR_INFO_NULL, "name1" );
     if (rc) {
 	Error( "Could not unpublish name1; rc = %d\n", rc );
     }
-    rc = MPID_NS_Unpublish( ns, MPID_INFO_NULL, "name 1" );
+    rc = MPID_NS_Unpublish( ns, MPIR_INFO_NULL, "name 1" );
     if (rc) {
 	Error( "Could not unpublish \"name 1\"; rc = %d\n", rc );
     }
-    rc = MPID_NS_Unpublish( ns, MPID_INFO_NULL, "namea" );
+    rc = MPID_NS_Unpublish( ns, MPIR_INFO_NULL, "namea" );
     if (rc) {
 	Error( "Could not unpublish namea; rc = %d\n", rc );
     }
-    rc = MPID_NS_Unpublish( ns, MPID_INFO_NULL, "1-2-3" );
+    rc = MPID_NS_Unpublish( ns, MPIR_INFO_NULL, "1-2-3" );
     if (rc) {
 	Error( "Could not unpublish 1-2-3; rc = %d\n", rc );
     }

@@ -997,24 +997,24 @@ int MPIDI_Isend_self(const void *, MPI_Aint, MPI_Datatype, int, int, MPIR_Comm *
 		     int, int, MPID_Request **);
 
 /*--------------------------
-  BEGIN MPI PORT SECTION 
+  BEGIN MPI PORT SECTION
   --------------------------*/
 /* These are the default functions */
-int MPIDI_Comm_connect(const char *, MPID_Info *, int, MPIR_Comm *, MPIR_Comm **);
-int MPIDI_Comm_accept(const char *, MPID_Info *, int, MPIR_Comm *, MPIR_Comm **);
+int MPIDI_Comm_connect(const char *, MPIR_Info *, int, MPIR_Comm *, MPIR_Comm **);
+int MPIDI_Comm_accept(const char *, MPIR_Info *, int, MPIR_Comm *, MPIR_Comm **);
 
-int MPIDI_Comm_spawn_multiple(int, char **, char ***, const int *, MPID_Info **,
+int MPIDI_Comm_spawn_multiple(int, char **, char ***, const int *, MPIR_Info **,
 			      int, MPIR_Comm *, MPIR_Comm **, int *);
 
 
-/* This structure defines a module that handles the routines that 
+/* This structure defines a module that handles the routines that
    work with MPI port names */
 typedef struct MPIDI_Port_Ops {
-    int (*OpenPort)( MPID_Info *, char * );
+    int (*OpenPort)( MPIR_Info *, char * );
     int (*ClosePort)( const char * );
-    int (*CommAccept)( const char *, MPID_Info *, int, MPIR_Comm *,
+    int (*CommAccept)( const char *, MPIR_Info *, int, MPIR_Comm *,
 		       MPIR_Comm ** );
-    int (*CommConnect)( const char *, MPID_Info *, int, MPIR_Comm *,
+    int (*CommConnect)( const char *, MPIR_Info *, int, MPIR_Comm *,
 			MPIR_Comm ** );
 } MPIDI_PortFns;
 #define MPIDI_PORTFNS_VERSION 1
@@ -1048,20 +1048,20 @@ void MPIDI_RMA_finalize(void);
  */
 
 typedef struct {
-    int (*create)(void *, MPI_Aint, int, MPID_Info *, MPIR_Comm *, MPIR_Win **);
-    int (*allocate)(MPI_Aint, int, MPID_Info *, MPIR_Comm *, void *, MPIR_Win **);
-    int (*allocate_shared)(MPI_Aint, int, MPID_Info *, MPIR_Comm *, void *, MPIR_Win **);
-    int (*allocate_shm)(MPI_Aint, int, MPID_Info *, MPIR_Comm *, void *, MPIR_Win **);
-    int (*create_dynamic)(MPID_Info *, MPIR_Comm *, MPIR_Win **);
+    int (*create)(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *, MPIR_Win **);
+    int (*allocate)(MPI_Aint, int, MPIR_Info *, MPIR_Comm *, void *, MPIR_Win **);
+    int (*allocate_shared)(MPI_Aint, int, MPIR_Info *, MPIR_Comm *, void *, MPIR_Win **);
+    int (*allocate_shm)(MPI_Aint, int, MPIR_Info *, MPIR_Comm *, void *, MPIR_Win **);
+    int (*create_dynamic)(MPIR_Info *, MPIR_Comm *, MPIR_Win **);
     int (*detect_shm)(MPIR_Win **);
-    int (*gather_info)(void *, MPI_Aint, int, MPID_Info *, MPIR_Comm *, MPIR_Win **);
+    int (*gather_info)(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *, MPIR_Win **);
     int (*shared_query)(MPIR_Win *, int, MPI_Aint *, int *, void *);
 } MPIDI_CH3U_Win_fns_t;
 
 extern MPIDI_CH3U_Win_fns_t MPIDI_CH3U_Win_fns;
 
 typedef struct {
-    int (*win_init)(MPI_Aint, int, int, int, MPID_Info *, MPIR_Comm *, MPIR_Win **);
+    int (*win_init)(MPI_Aint, int, int, int, MPIR_Info *, MPIR_Comm *, MPIR_Win **);
     int (*win_free)(MPIR_Win **);
 } MPIDI_CH3U_Win_hooks_t;
 
@@ -1089,24 +1089,24 @@ int MPIDI_CH3_Win_hooks_init(MPIDI_CH3U_Win_hooks_t *win_hooks);
 int MPIDI_CH3_Win_pkt_orderings_init(MPIDI_CH3U_Win_pkt_ordering_t * win_pkt_orderings);
 
 /* Default window creation functions provided by CH3 */
-int MPIDI_CH3U_Win_create(void *, MPI_Aint, int, MPID_Info *, MPIR_Comm *,
+int MPIDI_CH3U_Win_create(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *,
                          MPIR_Win **);
-int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info *info,
+int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPIR_Info *info,
                            MPIR_Comm *comm, void *baseptr, MPIR_Win **win);
-int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPID_Info *info,
+int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPIR_Info *info,
                                    MPIR_Comm *comm_ptr, void *baseptr, MPIR_Win **win_ptr);
-int MPIDI_CH3U_Win_create_dynamic(MPID_Info *info, MPIR_Comm *comm, MPIR_Win **win);
+int MPIDI_CH3U_Win_create_dynamic(MPIR_Info *info, MPIR_Comm *comm, MPIR_Win **win);
 int MPIDI_CH3U_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint * size,
                                 int *disp_unit, void *baseptr);
 
 /* MPI RMA Utility functions */
 
-int MPIDI_CH3U_Win_gather_info(void *, MPI_Aint, int, MPID_Info *, MPIR_Comm *,
+int MPIDI_CH3U_Win_gather_info(void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *,
                                  MPIR_Win **);
 
 
 #ifdef MPIDI_CH3I_HAS_ALLOC_MEM
-void* MPIDI_CH3I_Alloc_mem(size_t size, MPID_Info *info_ptr);
+void* MPIDI_CH3I_Alloc_mem(size_t size, MPIR_Info *info_ptr);
 /* fallback to MPL_malloc if channel does not have its own RMA memory allocator */
 #else
 #define MPIDI_CH3I_Alloc_mem(size, info_ptr)    MPL_malloc(size)

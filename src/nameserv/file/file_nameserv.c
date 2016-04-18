@@ -64,7 +64,7 @@ struct MPID_NS_Handle {
    publishing.  */
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Create
-int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
+int MPID_NS_Create( const MPIR_Info *info_ptr, MPID_NS_Handle *handle_ptr )
 {
     static const char FCNAME[] = "MPID_NS_Create";
     const char *dirname;
@@ -112,7 +112,7 @@ int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Publish
-int MPID_NS_Publish( MPID_NS_Handle handle, const MPID_Info *info_ptr, 
+int MPID_NS_Publish( MPID_NS_Handle handle, const MPIR_Info *info_ptr,
                      const char service_name[], const char port[] )
 {
     static const char FCNAME[] = "MPID_NS_Publish";
@@ -194,7 +194,7 @@ int MPID_NS_Publish( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Lookup
-int MPID_NS_Lookup( MPID_NS_Handle handle, const MPID_Info *info_ptr,
+int MPID_NS_Lookup( MPID_NS_Handle handle, const MPIR_Info *info_ptr,
                     const char service_name[], char port[] )
 {
     FILE *fp;
@@ -243,7 +243,7 @@ int MPID_NS_Lookup( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 
 #undef FUNCNAME
 #define FUNCNAME MPID_NS_Unpublish
-int MPID_NS_Unpublish( MPID_NS_Handle handle, const MPID_Info *info_ptr, 
+int MPID_NS_Unpublish( MPID_NS_Handle handle, const MPIR_Info *info_ptr,
                        const char service_name[] )
 {
     static const char FCNAME[] = "MPID_NS_Unpublish";

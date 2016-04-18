@@ -67,7 +67,7 @@ int MPI_Comm_spawn(const char *command, char *argv[], int maxprocs, MPI_Info inf
     static const char FCNAME[] = "MPI_Comm_spawn";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *intercomm_ptr;
-    MPID_Info *info_ptr=NULL;
+    MPIR_Info *info_ptr=NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SPAWN);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -113,7 +113,7 @@ int MPI_Comm_spawn(const char *command, char *argv[], int maxprocs, MPI_Info inf
 #   endif /* HAVE_ERROR_CHECKING */
 
     if (comm_ptr->rank == root) {
-	MPID_Info_get_ptr( info, info_ptr );
+	MPIR_Info_get_ptr( info, info_ptr );
     }
 
     /* ... body of routine ...  */

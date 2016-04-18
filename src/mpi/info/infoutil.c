@@ -10,16 +10,16 @@
 
 /* This is the utility file for info that contains the basic info items
    and storage management */
-#ifndef MPID_INFO_PREALLOC 
-#define MPID_INFO_PREALLOC 8
+#ifndef MPIR_INFO_PREALLOC
+#define MPIR_INFO_PREALLOC 8
 #endif
 
 /* Preallocated info objects */
-MPID_Info MPID_Info_builtin[MPID_INFO_N_BUILTIN] = { { 0 } };
-MPID_Info MPID_Info_direct[MPID_INFO_PREALLOC] = { { 0 } };
-MPIU_Object_alloc_t MPID_Info_mem = { 0, 0, 0, 0, MPID_INFO, 
-				      sizeof(MPID_Info), MPID_Info_direct,
-                                      MPID_INFO_PREALLOC, };
+MPIR_Info MPIR_Info_builtin[MPIR_INFO_N_BUILTIN] = { { 0 } };
+MPIR_Info MPIR_Info_direct[MPIR_INFO_PREALLOC] = { { 0 } };
+MPIU_Object_alloc_t MPIR_Info_mem = { 0, 0, 0, 0, MPIR_INFO,
+				      sizeof(MPIR_Info), MPIR_Info_direct,
+                                      MPIR_INFO_PREALLOC, };
 
 /* Free an info structure.  In the multithreaded case, this routine
    relies on the SINGLE_CS in the info routines (particularly MPI_Info_free) */
@@ -27,14 +27,14 @@ MPIU_Object_alloc_t MPID_Info_mem = { 0, 0, 0, 0, MPID_INFO,
 #define FUNCNAME MPIU_Info_free
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPIU_Info_free( MPID_Info *info_ptr )
+void MPIU_Info_free( MPIR_Info *info_ptr )
 {
-    MPID_Info *curr_ptr, *last_ptr;
+    MPIR_Info *curr_ptr, *last_ptr;
 
     curr_ptr = info_ptr->next;
     last_ptr = NULL;
 
-    MPIU_Handle_obj_free(&MPID_Info_mem, info_ptr);
+    MPIU_Handle_obj_free(&MPIR_Info_mem, info_ptr);
 
     /* printf( "Returning info %x\n", info_ptr->id ); */
     /* First, free the string storage */
@@ -43,21 +43,21 @@ void MPIU_Info_free( MPID_Info *info_ptr )
 	MPL_free(curr_ptr->value);
 	last_ptr = curr_ptr;
 	curr_ptr = curr_ptr->next;
-        MPIU_Handle_obj_free(&MPID_Info_mem, last_ptr);
+        MPIU_Handle_obj_free(&MPIR_Info_mem, last_ptr);
     }
 }
 
-/* Allocate and initialize an MPID_Info object.
+/* Allocate and initialize an MPIR_Info object.
  *
  * Returns MPICH error codes */
 #undef FUNCNAME
 #define FUNCNAME MPIU_Info_alloc
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIU_Info_alloc(MPID_Info **info_p_p)
+int MPIU_Info_alloc(MPIR_Info **info_p_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    *info_p_p = (MPID_Info *)MPIU_Handle_obj_alloc(&MPID_Info_mem);
+    *info_p_p = (MPIR_Info *)MPIU_Handle_obj_alloc(&MPIR_Info_mem);
     MPIR_ERR_CHKANDJUMP1(!*info_p_p, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPI_Info");
 
     MPIU_Object_set_ref(*info_p_p, 0);

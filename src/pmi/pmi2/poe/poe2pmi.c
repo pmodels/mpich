@@ -153,9 +153,9 @@ int PMI2_Job_Spawn(int count, const char * cmds[],
                    int argcs[], const char ** argvs[],
                    const int maxprocs[],
                    const int info_keyval_sizes[],
-                   const struct MPID_Info *info_keyval_vectors[],
+                   const struct MPIR_Info *info_keyval_vectors[],
                    int preput_keyval_size,
-                   const struct MPID_Info *preput_keyval_vector[],
+                   const struct MPIR_Info *preput_keyval_vector[],
                    char jobId[], int jobIdSize,
                    int errors[])
 {
@@ -168,7 +168,7 @@ int PMI2_Job_Spawn(int count, const char * cmds[],
     const char *errmsg = NULL;
     int pmi2_errno = 0;
 
-    int (*pmi2_job_spawn)(int , const char * [], int [], const char ** [],const int [],const int [],const struct MPID_Info *[],int ,const struct MPID_Info *[],char jobId[],int ,int []);
+    int (*pmi2_job_spawn)(int , const char * [], int [], const char ** [],const int [],const int [],const struct MPIR_Info *[],int ,const struct MPIR_Info *[],char jobId[],int ,int []);
 
     pmi2_job_spawn = (int (*)())dlsym(poeptr, "PMI2_Job_Spawn");
     if (pmi2_job_spawn == NULL) {

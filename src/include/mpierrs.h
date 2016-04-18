@@ -479,7 +479,7 @@ cvars:
         }                                                               \
         else								\
         {                                                               \
-            MPIR_ERRTEST_VALID_HANDLE((info_), MPID_INFO, (err_), MPI_ERR_ARG, "**info"); \
+            MPIR_ERRTEST_VALID_HANDLE((info_), MPIR_INFO, (err_), MPI_ERR_ARG, "**info"); \
         }                                                               \
     }
 
@@ -487,7 +487,7 @@ cvars:
     {									\
         if ((info_) != MPI_INFO_NULL)					\
         {                                                               \
-            MPIR_ERRTEST_VALID_HANDLE((info_), MPID_INFO, (err_), MPI_ERR_ARG, "**info"); \
+            MPIR_ERRTEST_VALID_HANDLE((info_), MPIR_INFO, (err_), MPI_ERR_ARG, "**info"); \
         }                                                               \
     }
 

@@ -29,9 +29,9 @@ int MPI_Info_get_valuelen(MPI_Info info, const char *key, int *valuelen, int *fl
 #define FUNCNAME MPIR_Info_get_valuelen_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPIR_Info_get_valuelen_impl(MPID_Info *info_ptr, const char *key, int *valuelen, int *flag)
+void MPIR_Info_get_valuelen_impl(MPIR_Info *info_ptr, const char *key, int *valuelen, int *flag)
 {
-    MPID_Info *curr_ptr;
+    MPIR_Info *curr_ptr;
 
     curr_ptr = info_ptr->next;
     *flag = 0;
@@ -77,7 +77,7 @@ Output Parameters:
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPI_Info_get_valuelen( MPI_Info info, const char *key, int *valuelen, int *flag )
 {
-    MPID_Info *info_ptr=0;
+    MPIR_Info *info_ptr=0;
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INFO_GET_VALUELEN);
 
@@ -98,7 +98,7 @@ int MPI_Info_get_valuelen( MPI_Info info, const char *key, int *valuelen, int *f
 #   endif /* HAVE_ERROR_CHECKING */
     
     /* Convert MPI object handles to object pointers */
-    MPID_Info_get_ptr( info, info_ptr );
+    MPIR_Info_get_ptr( info, info_ptr );
     
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -108,7 +108,7 @@ int MPI_Info_get_valuelen( MPI_Info info, const char *key, int *valuelen, int *f
 	    int keylen;
 
             /* Validate info_ptr */
-            MPID_Info_valid_ptr( info_ptr, mpi_errno );
+            MPIR_Info_valid_ptr( info_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
 	    
 	    /* Check key */
