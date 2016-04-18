@@ -24,7 +24,7 @@
 
 typedef struct
 {
-  MPID_Win          * win;
+  MPIR_Win          * win;
 
   volatile unsigned   done;
   pami_work_t         work;
@@ -108,7 +108,7 @@ MPIDI_WinComplete_proc(pami_context_t              context,
 int
 MPID_Win_start(MPIR_Group *group,
                int         assert,
-               MPID_Win   *win)
+               MPIR_Win   *win)
 {
   int mpi_errno = MPI_SUCCESS;
   static char FCNAME[] = "MPID_Win_start";
@@ -138,7 +138,7 @@ fn_fail:
 
 
 int
-MPID_Win_complete(MPID_Win *win)
+MPID_Win_complete(MPIR_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
   static char FCNAME[] = "MPID_Win_complete";
@@ -176,7 +176,7 @@ MPID_Win_complete(MPID_Win *win)
 int
 MPID_Win_post(MPIR_Group *group,
               int         assert,
-              MPID_Win   *win)
+              MPIR_Win   *win)
 {
   int mpi_errno = MPI_SUCCESS;
   static char FCNAME[] = "MPID_Win_post";
@@ -207,7 +207,7 @@ fn_fail:
 
 
 int
-MPID_Win_wait(MPID_Win *win)
+MPID_Win_wait(MPIR_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
   static char FCNAME[] = "MPID_Win_wait";
@@ -235,7 +235,7 @@ MPID_Win_wait(MPID_Win *win)
 
 
 int
-MPID_Win_test(MPID_Win *win,
+MPID_Win_test(MPIR_Win *win,
               int      *flag)
 {
   int mpi_errno = MPI_SUCCESS;

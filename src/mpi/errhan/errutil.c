@@ -345,7 +345,7 @@ int MPIR_Err_return_comm( MPIR_Comm  *comm_ptr, const char fcname[],
 /* 
  * MPI routines that detect errors on window objects use this to report errors
  */
-int MPIR_Err_return_win( MPID_Win  *win_ptr, const char fcname[], int errcode )
+int MPIR_Err_return_win( MPIR_Win  *win_ptr, const char fcname[], int errcode )
 {
     const int error_class = ERROR_GET_CLASS(errcode);
 

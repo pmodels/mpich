@@ -53,7 +53,7 @@ int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
 {
     static const char FCNAME[] = "MPI_Win_delete_attr";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr = NULL;
+    MPIR_Win *win_ptr = NULL;
     MPIR_Attribute *p, **old_p;
     MPID_Keyval *keyval_ptr=0;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_DELETE_ATTR);
@@ -71,7 +71,7 @@ int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_WIN(win, mpi_errno);
-	    MPIR_ERRTEST_KEYVAL(win_keyval, MPID_WIN, "window", mpi_errno);
+	    MPIR_ERRTEST_KEYVAL(win_keyval, MPIR_WIN, "window", mpi_errno);
 	    MPIR_ERRTEST_KEYVAL_PERM(win_keyval, mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
@@ -79,7 +79,7 @@ int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Win_get_ptr( win, win_ptr );
+    MPIR_Win_get_ptr( win, win_ptr );
     MPID_Keyval_get_ptr( win_keyval, keyval_ptr );
     
 #   ifdef HAVE_ERROR_CHECKING
@@ -87,7 +87,7 @@ int MPI_Win_delete_attr(MPI_Win win, int win_keyval)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate win_ptr */
-            MPID_Win_valid_ptr( win_ptr, mpi_errno );
+            MPIR_Win_valid_ptr( win_ptr, mpi_errno );
 	    /* If win_ptr is not valid, it will be reset to null */
 	    /* Validate keyval_ptr */
 	    MPID_Keyval_valid_ptr( keyval_ptr, mpi_errno );

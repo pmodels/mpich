@@ -26,7 +26,7 @@ void
 MPIDI_WinCtrlSend(pami_context_t       context,
                   MPIDI_Win_control_t *control,
                   int                  rank,
-                  MPID_Win            *win)
+                  MPIR_Win            *win)
 {
   pami_task_t  taskid;
   MPIDI_WinLock_info *winLock;
@@ -86,7 +86,7 @@ MPIDI_WinUnlockDoneCB(pami_context_t   context,
                       void           * cookie,
                       pami_result_t    result)
 {
-  MPID_Win *win = (MPID_Win *)cookie;
+  MPIR_Win *win = (MPIR_Win *)cookie;
   if (win->mpid.sync.origin_epoch_type == MPID_EPOTYPE_LOCK) {
      win->mpid.sync.lock.remote.locked = 0;
   }

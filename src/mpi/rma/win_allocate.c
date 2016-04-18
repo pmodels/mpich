@@ -73,7 +73,7 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
 {
     static const char FCNAME[] = "MPI_Win_allocate";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr = NULL;
+    MPIR_Win *win_ptr = NULL;
     MPIR_Comm *comm_ptr = NULL;
     MPID_Info *info_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_ALLOCATE);

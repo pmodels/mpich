@@ -36,7 +36,7 @@
  */
 
 int
-MPID_Win_shared_query(MPID_Win *win, int rank, MPI_Aint *size,
+MPID_Win_shared_query(MPIR_Win *win, int rank, MPI_Aint *size,
                            int *disp_unit, void *base_ptr)
 {
     int i, mpi_errno = MPI_SUCCESS;

@@ -2,7 +2,7 @@
 		       Distributed Memory Implementation
 ******************************************************************************/
 
-struct MPID_Win
+struct MPIR_Win
 {
     /*** insert struct MPIR_Win here ***/
 

@@ -143,7 +143,7 @@ void MPIDI_RMA_finalize(void)
 #define FUNCNAME MPID_Win_free
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_free(MPID_Win ** win_ptr)
+int MPID_Win_free(MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int in_use;
@@ -226,7 +226,7 @@ int MPID_Win_free(MPID_Win ** win_ptr)
     MPIU_Object_release_ref(*win_ptr, &in_use);
     /* MPI windows don't have reference count semantics, so this should always be true */
     MPIU_Assert(!in_use);
-    MPIU_Handle_obj_free(&MPID_Win_mem, *win_ptr);
+    MPIU_Handle_obj_free(&MPIR_Win_mem, *win_ptr);
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPID_WIN_FREE);

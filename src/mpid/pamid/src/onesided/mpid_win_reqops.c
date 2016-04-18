@@ -47,7 +47,7 @@ MPID_Rput(const void  *origin_addr,
          MPI_Aint      target_disp,
          int           target_count,
          MPI_Datatype  target_datatype,
-         MPID_Win     *win,
+         MPIR_Win     *win,
          MPID_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -99,7 +99,7 @@ MPID_Rget(void         *origin_addr,
          MPI_Aint      target_disp,
          int           target_count,
          MPI_Datatype  target_datatype,
-         MPID_Win     *win,
+         MPIR_Win     *win,
          MPID_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -158,7 +158,7 @@ MPID_Raccumulate(const void  *origin_addr,
                 int           target_count,
                 MPI_Datatype  target_datatype,
                 MPI_Op        op,
-                MPID_Win     *win,
+                MPIR_Win     *win,
                 MPID_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -222,7 +222,7 @@ MPID_Rget_accumulate(const void         *origin_addr,
                 int           target_count,
                 MPI_Datatype  target_datatype,
                 MPI_Op        op,
-                MPID_Win     *win,
+                MPIR_Win     *win,
 		MPID_Request **request)
 {
 

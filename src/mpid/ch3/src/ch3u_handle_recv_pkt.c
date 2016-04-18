@@ -413,7 +413,7 @@ int MPIDI_CH3U_Post_data_receive_unexpected(MPID_Request * rreq)
 #define FUNCNAME MPIDI_CH3I_Try_acquire_win_lock
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3I_Try_acquire_win_lock(MPID_Win *win_ptr, int requested_lock)
+int MPIDI_CH3I_Try_acquire_win_lock(MPIR_Win *win_ptr, int requested_lock)
 {
     int existing_lock;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_TRY_ACQUIRE_WIN_LOCK);

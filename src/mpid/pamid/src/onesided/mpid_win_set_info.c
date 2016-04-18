@@ -30,7 +30,7 @@
  * \return MPI_SUCCESS
  */
 
-int MPIDI_Win_set_info(MPID_Win *win, MPID_Info *info)
+int MPIDI_Win_set_info(MPIR_Win *win, MPID_Info *info)
 {
 
     int mpi_errno = MPI_SUCCESS;
@@ -90,7 +90,7 @@ int MPIDI_Win_set_info(MPID_Win *win, MPID_Info *info)
 }
 
 int
-MPID_Win_set_info(MPID_Win     *win, MPID_Info    *info)
+MPID_Win_set_info(MPIR_Win     *win, MPID_Info    *info)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;

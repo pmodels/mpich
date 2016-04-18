@@ -394,7 +394,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
 #define FUNCNAME issue_put_op
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
+static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
                         MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_VC_t *vc = NULL;
@@ -477,7 +477,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 #define FUNCNAME issue_acc_op
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
+static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
                         MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_VC_t *vc = NULL;
@@ -644,7 +644,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 #define FUNCNAME issue_get_acc_op
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
+static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
                             MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_VC_t *vc = NULL;
@@ -875,7 +875,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 #define FUNCNAME issue_get_op
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
+static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
                         MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_CH3_Pkt_get_t *get_pkt = &rma_op->pkt.get;
@@ -1004,7 +1004,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
-                        MPID_Win * win_ptr, MPIDI_RMA_Target_t * target_ptr,
+                        MPIR_Win * win_ptr, MPIDI_RMA_Target_t * target_ptr,
                         MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_VC_t *vc = NULL;
@@ -1067,7 +1067,7 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
-                        MPID_Win * win_ptr, MPIDI_RMA_Target_t * target_ptr,
+                        MPIR_Win * win_ptr, MPIDI_RMA_Target_t * target_ptr,
                         MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_VC_t *vc = NULL;
@@ -1141,7 +1141,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
 #define FUNCNAME issue_rma_op
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPID_Win * win_ptr,
+static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPIR_Win * win_ptr,
                                MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
     int mpi_errno = MPI_SUCCESS;

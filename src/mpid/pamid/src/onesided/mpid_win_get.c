@@ -234,7 +234,7 @@ MPID_Get(void         *origin_addr,
          MPI_Aint      target_disp,
          int           target_count,
          MPI_Datatype  target_datatype,
-         MPID_Win     *win)
+         MPIR_Win     *win)
 {
 
   int mpi_errno = MPI_SUCCESS;

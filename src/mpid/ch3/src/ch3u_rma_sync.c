@@ -329,7 +329,7 @@ void MPIDI_CH3_RMA_Init_sync_pvars(void)
 #define FUNCNAME flush_local_all
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int flush_local_all(MPID_Win * win_ptr)
+static inline int flush_local_all(MPIR_Win * win_ptr)
 {
     int i, made_progress = 0;
     int local_completed = 0;
@@ -380,7 +380,7 @@ static inline int flush_local_all(MPID_Win * win_ptr)
 #define FUNCNAME flush_all
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int flush_all(MPID_Win * win_ptr)
+static inline int flush_all(MPIR_Win * win_ptr)
 {
     int i, made_progress = 0;
     int remote_completed = 0;
@@ -434,12 +434,12 @@ static inline int flush_all(MPID_Win * win_ptr)
 static int fence_barrier_complete(MPID_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr = NULL;
+    MPIR_Win *win_ptr = NULL;
 
     MPIDI_STATE_DECL(MPID_STATE_FENCE_BARRIER_COMPLETE);
     MPIDI_FUNC_ENTER(MPID_STATE_FENCE_BARRIER_COMPLETE);
 
-    MPID_Win_get_ptr(sreq->dev.source_win_handle, win_ptr);
+    MPIR_Win_get_ptr(sreq->dev.source_win_handle, win_ptr);
     MPIU_Assert(win_ptr != NULL);
 
     /* decrement incomplete ibarrier request counter */
@@ -477,7 +477,7 @@ static int fence_barrier_complete(MPID_Request * sreq)
 #define FUNCNAME MPID_Win_fence
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_fence(int assert, MPID_Win * win_ptr)
+int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
 {
     int i;
     MPIDI_RMA_Target_t *curr_target = NULL;
@@ -706,7 +706,7 @@ int MPID_Win_fence(int assert, MPID_Win * win_ptr)
 #define FUNCNAME MPID_Win_post
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_post(MPIR_Group * post_grp_ptr, int assert, MPID_Win * win_ptr)
+int MPID_Win_post(MPIR_Group * post_grp_ptr, int assert, MPIR_Win * win_ptr)
 {
     int *post_ranks_in_win_grp;
     int mpi_errno = MPI_SUCCESS;
@@ -806,12 +806,12 @@ int MPID_Win_post(MPIR_Group * post_grp_ptr, int assert, MPID_Win * win_ptr)
 static int start_req_complete(MPID_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr = NULL;
+    MPIR_Win *win_ptr = NULL;
 
     MPIDI_STATE_DECL(MPID_STATE_START_REQ_COMPLETE);
     MPIDI_FUNC_ENTER(MPID_STATE_START_REQ_COMPLETE);
 
-    MPID_Win_get_ptr(req->dev.source_win_handle, win_ptr);
+    MPIR_Win_get_ptr(req->dev.source_win_handle, win_ptr);
     MPIU_Assert(win_ptr != NULL);
 
     win_ptr->sync_request_cnt--;
@@ -836,7 +836,7 @@ static int start_req_complete(MPID_Request * req)
 #define FUNCNAME MPID_Win_start
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPID_Win * win_ptr)
+int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKLMEM_DECL(2);
@@ -959,7 +959,7 @@ int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPID_Win * win_ptr)
 #define FUNCNAME MPID_Win_complete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_complete(MPID_Win * win_ptr)
+int MPID_Win_complete(MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, dst, rank = win_ptr->comm_ptr->rank;
@@ -1047,7 +1047,7 @@ int MPID_Win_complete(MPID_Win * win_ptr)
 #define FUNCNAME MPID_Win_wait
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_wait(MPID_Win * win_ptr)
+int MPID_Win_wait(MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_WIN_WAIT);
@@ -1086,7 +1086,7 @@ int MPID_Win_wait(MPID_Win * win_ptr)
 #define FUNCNAME MPID_Win_test
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_test(MPID_Win * win_ptr, int *flag)
+int MPID_Win_test(MPIR_Win * win_ptr, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_WIN_TEST);
@@ -1132,7 +1132,7 @@ int MPID_Win_test(MPID_Win * win_ptr, int *flag)
 #define FUNCNAME MPID_Win_lock
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_lock(int lock_type, int dest, int assert, MPID_Win * win_ptr)
+int MPID_Win_lock(int lock_type, int dest, int assert, MPIR_Win * win_ptr)
 {
     int made_progress = 0;
     int shm_target = FALSE;
@@ -1242,7 +1242,7 @@ int MPID_Win_lock(int lock_type, int dest, int assert, MPID_Win * win_ptr)
 #define FUNCNAME MPID_Win_unlock
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_unlock(int dest, MPID_Win * win_ptr)
+int MPID_Win_unlock(int dest, MPIR_Win * win_ptr)
 {
     int made_progress = 0;
     int local_completed ATTRIBUTE((unused)) = 0, remote_completed = 0;
@@ -1341,7 +1341,7 @@ int MPID_Win_unlock(int dest, MPID_Win * win_ptr)
 #define FUNCNAME MPID_Win_flush
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_flush(int dest, MPID_Win * win_ptr)
+int MPID_Win_flush(int dest, MPIR_Win * win_ptr)
 {
     int made_progress = 0;
     int local_completed ATTRIBUTE((unused)) = 0, remote_completed = 0;
@@ -1432,7 +1432,7 @@ int MPID_Win_flush(int dest, MPID_Win * win_ptr)
 #define FUNCNAME MPID_Win_flush_local
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_flush_local(int dest, MPID_Win * win_ptr)
+int MPID_Win_flush_local(int dest, MPIR_Win * win_ptr)
 {
     int made_progress = 0;
     int local_completed = 0, remote_completed ATTRIBUTE((unused)) = 0;
@@ -1508,7 +1508,7 @@ int MPID_Win_flush_local(int dest, MPID_Win * win_ptr)
 #define FUNCNAME MPID_Win_lock_all
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_lock_all(int assert, MPID_Win * win_ptr)
+int MPID_Win_lock_all(int assert, MPIR_Win * win_ptr)
 {
     int i, rank = win_ptr->comm_ptr->rank;
     int mpi_errno = MPI_SUCCESS;
@@ -1587,7 +1587,7 @@ int MPID_Win_lock_all(int assert, MPID_Win * win_ptr)
 #define FUNCNAME MPID_Win_unlock_all
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_unlock_all(MPID_Win * win_ptr)
+int MPID_Win_unlock_all(MPIR_Win * win_ptr)
 {
     int i, made_progress = 0;
     int remote_completed = 0;
@@ -1719,7 +1719,7 @@ int MPID_Win_unlock_all(MPID_Win * win_ptr)
 #define FUNCNAME MPID_Win_flush_all
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_flush_all(MPID_Win * win_ptr)
+int MPID_Win_flush_all(MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPIDI_STATE_MPID_WIN_FLUSH_ALL);
@@ -1755,7 +1755,7 @@ int MPID_Win_flush_all(MPID_Win * win_ptr)
 #define FUNCNAME MPID_Win_flush_local_all
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_flush_local_all(MPID_Win * win_ptr)
+int MPID_Win_flush_local_all(MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_WIN_FLUSH_LOCAL_ALL);
@@ -1791,7 +1791,7 @@ int MPID_Win_flush_local_all(MPID_Win * win_ptr)
 #define FUNCNAME MPID_Win_sync
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Win_sync(MPID_Win * win_ptr)
+int MPID_Win_sync(MPIR_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_WIN_SYNC);

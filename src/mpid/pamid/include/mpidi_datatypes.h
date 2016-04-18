@@ -381,8 +381,8 @@ typedef struct
 
 /** \brief Forward declaration of the MPIR_Comm structure */
 struct MPIR_Comm;
-/** \brief Forward declaration of the MPID_Win structure */
-struct MPID_Win;
+/** \brief Forward declaration of the MPIR_Win structure */
+struct MPIR_Win;
 /** \brief Forward declaration of the MPIR_Group structure */
 struct MPIR_Group;
 
@@ -445,7 +445,7 @@ typedef struct workQ_t {
 typedef struct MPIDI_Win_info
 {
   void             * base_addr;     /**< Node's exposure window base address                  */
-  struct MPID_Win  * win;
+  struct MPIR_Win  * win;
   uint32_t           disp_unit;     /**< Node's exposure window displacement units            */
   pami_memregion_t   memregion;     /**< Memory region descriptor for each node               */
   uint32_t           memregion_used;
@@ -477,7 +477,7 @@ typedef struct MPIDI_Win_shm_t
 } MPIDI_Win_shm_t;
 
 /**
- * \brief Structure of PAMI extensions to MPID_Win structure
+ * \brief Structure of PAMI extensions to MPIR_Win structure
  */
 struct MPIDI_Win
 {

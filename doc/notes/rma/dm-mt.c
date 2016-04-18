@@ -11,7 +11,7 @@ MPID_Win_fence().
 
 ******************************************************************************/
 
-struct MPID_Win
+struct MPIR_Win
 {
     /*** insert struct MPIR_Win here ***/
     

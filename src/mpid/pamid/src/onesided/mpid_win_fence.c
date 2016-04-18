@@ -24,7 +24,7 @@
 
 int
 MPID_Win_fence(int       assert,
-               MPID_Win *win)
+               MPIR_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
   MPIR_Errflag_t errflag = MPIR_ERR_NONE;

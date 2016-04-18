@@ -24,7 +24,7 @@
 /**
  * \brief MPI-PAMI glue for MPI_Win_create_dynamic function
  *
- * Create a window object. Allocates a MPID_Win object and initializes it,
+ * Create a window object. Allocates a MPIR_Win object and initializes it,
  * then allocates the collective info array, initalizes our entry, and
  * performs an Allgather to distribute/collect the rest of the array entries.
  * The function returns a window win without memory attached.
@@ -40,13 +40,13 @@
 int
 MPID_Win_create_dynamic( MPID_Info  * info,
                   MPIR_Comm  * comm_ptr,
-                  MPID_Win  ** win_ptr)
+                  MPIR_Win  ** win_ptr)
 {
   int mpi_errno  = MPI_SUCCESS;
   MPIR_Errflag_t errflag = MPIR_ERR_NONE;
   int rc = MPI_SUCCESS;
   MPIDI_Win_info  *winfo;
-  MPID_Win     *win;
+  MPIR_Win     *win;
   int          rank;  
 
   rc=MPIDI_Win_init(0,1,win_ptr, info, comm_ptr, MPI_WIN_FLAVOR_DYNAMIC, MPI_WIN_UNIFIED);

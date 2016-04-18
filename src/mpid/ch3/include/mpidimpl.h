@@ -1048,21 +1048,21 @@ void MPIDI_RMA_finalize(void);
  */
 
 typedef struct {
-    int (*create)(void *, MPI_Aint, int, MPID_Info *, MPIR_Comm *, MPID_Win **);
-    int (*allocate)(MPI_Aint, int, MPID_Info *, MPIR_Comm *, void *, MPID_Win **);
-    int (*allocate_shared)(MPI_Aint, int, MPID_Info *, MPIR_Comm *, void *, MPID_Win **);
-    int (*allocate_shm)(MPI_Aint, int, MPID_Info *, MPIR_Comm *, void *, MPID_Win **);
-    int (*create_dynamic)(MPID_Info *, MPIR_Comm *, MPID_Win **);
-    int (*detect_shm)(MPID_Win **);
-    int (*gather_info)(void *, MPI_Aint, int, MPID_Info *, MPIR_Comm *, MPID_Win **);
-    int (*shared_query)(MPID_Win *, int, MPI_Aint *, int *, void *);
+    int (*create)(void *, MPI_Aint, int, MPID_Info *, MPIR_Comm *, MPIR_Win **);
+    int (*allocate)(MPI_Aint, int, MPID_Info *, MPIR_Comm *, void *, MPIR_Win **);
+    int (*allocate_shared)(MPI_Aint, int, MPID_Info *, MPIR_Comm *, void *, MPIR_Win **);
+    int (*allocate_shm)(MPI_Aint, int, MPID_Info *, MPIR_Comm *, void *, MPIR_Win **);
+    int (*create_dynamic)(MPID_Info *, MPIR_Comm *, MPIR_Win **);
+    int (*detect_shm)(MPIR_Win **);
+    int (*gather_info)(void *, MPI_Aint, int, MPID_Info *, MPIR_Comm *, MPIR_Win **);
+    int (*shared_query)(MPIR_Win *, int, MPI_Aint *, int *, void *);
 } MPIDI_CH3U_Win_fns_t;
 
 extern MPIDI_CH3U_Win_fns_t MPIDI_CH3U_Win_fns;
 
 typedef struct {
-    int (*win_init)(MPI_Aint, int, int, int, MPID_Info *, MPIR_Comm *, MPID_Win **);
-    int (*win_free)(MPID_Win **);
+    int (*win_init)(MPI_Aint, int, int, int, MPID_Info *, MPIR_Comm *, MPIR_Win **);
+    int (*win_free)(MPIR_Win **);
 } MPIDI_CH3U_Win_hooks_t;
 
 extern MPIDI_CH3U_Win_hooks_t MPIDI_CH3U_Win_hooks;
@@ -1090,19 +1090,19 @@ int MPIDI_CH3_Win_pkt_orderings_init(MPIDI_CH3U_Win_pkt_ordering_t * win_pkt_ord
 
 /* Default window creation functions provided by CH3 */
 int MPIDI_CH3U_Win_create(void *, MPI_Aint, int, MPID_Info *, MPIR_Comm *,
-                         MPID_Win **);
+                         MPIR_Win **);
 int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info *info,
-                           MPIR_Comm *comm, void *baseptr, MPID_Win **win);
+                           MPIR_Comm *comm, void *baseptr, MPIR_Win **win);
 int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPID_Info *info,
-                                   MPIR_Comm *comm_ptr, void *baseptr, MPID_Win **win_ptr);
-int MPIDI_CH3U_Win_create_dynamic(MPID_Info *info, MPIR_Comm *comm, MPID_Win **win);
-int MPIDI_CH3U_Win_shared_query(MPID_Win * win_ptr, int target_rank, MPI_Aint * size,
+                                   MPIR_Comm *comm_ptr, void *baseptr, MPIR_Win **win_ptr);
+int MPIDI_CH3U_Win_create_dynamic(MPID_Info *info, MPIR_Comm *comm, MPIR_Win **win);
+int MPIDI_CH3U_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint * size,
                                 int *disp_unit, void *baseptr);
 
 /* MPI RMA Utility functions */
 
 int MPIDI_CH3U_Win_gather_info(void *, MPI_Aint, int, MPID_Info *, MPIR_Comm *,
-                                 MPID_Win **);
+                                 MPIR_Win **);
 
 
 #ifdef MPIDI_CH3I_HAS_ALLOC_MEM
@@ -1123,8 +1123,8 @@ void MPIDI_CH3_RMA_Init_sync_pvars(void);
 void MPIDI_CH3_RMA_Init_pkthandler_pvars(void);
 
 /* internal */
-int MPIDI_CH3I_Release_lock(MPID_Win * win_ptr);
-int MPIDI_CH3I_Try_acquire_win_lock(MPID_Win * win_ptr, int requested_lock);
+int MPIDI_CH3I_Release_lock(MPIR_Win * win_ptr);
+int MPIDI_CH3I_Try_acquire_win_lock(MPIR_Win * win_ptr, int requested_lock);
 
 int MPIDI_CH3I_Progress_finalize(void);
 
@@ -1133,21 +1133,21 @@ int MPIDI_CH3I_Progress_finalize(void);
  * Called by normal RMA operations and request-based RMA operations . */
 int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
                    origin_datatype, int target_rank, MPI_Aint target_disp,
-                   int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
+                   int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr,
                    MPID_Request * ureq);
 int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
                    origin_datatype, int target_rank, MPI_Aint target_disp,
-                   int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
+                   int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr,
                    MPID_Request * ureq);
 int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
                           origin_datatype, int target_rank, MPI_Aint target_disp,
                           int target_count, MPI_Datatype target_datatype, MPI_Op op,
-                          MPID_Win * win_ptr, MPID_Request * ureq);
+                          MPIR_Win * win_ptr, MPID_Request * ureq);
 int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                               MPI_Datatype origin_datatype, void *result_addr, int result_count,
                               MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
                               int target_count, MPI_Datatype target_datatype, MPI_Op op,
-                              MPID_Win * win_ptr, MPID_Request * ureq);
+                              MPIR_Win * win_ptr, MPID_Request * ureq);
 
 /*@
   MPIDI_CH3_Progress_signal_completion - Inform the progress engine that a 

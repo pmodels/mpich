@@ -68,7 +68,7 @@ int MPI_Win_free_keyval(int *win_keyval)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_ARGNULL(*win_keyval, "win_keyval", mpi_errno);
-	    MPIR_ERRTEST_KEYVAL(*win_keyval, MPID_WIN, "window", mpi_errno);
+	    MPIR_ERRTEST_KEYVAL(*win_keyval, MPIR_WIN, "window", mpi_errno);
 	    MPIR_ERRTEST_KEYVAL_PERM(*win_keyval, mpi_errno);
         }
         MPID_END_ERROR_CHECKS;

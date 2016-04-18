@@ -33,7 +33,7 @@ int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 {
     static const char FCNAME[] = "MPI_Win_set_attr";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr = NULL;
+    MPIR_Win *win_ptr = NULL;
     MPID_Keyval *keyval_ptr = NULL;
     MPIR_Attribute *p, **old_p;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_WIN_SET_ATTR);
@@ -51,7 +51,7 @@ int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val,
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_WIN(win, mpi_errno);
-	    MPIR_ERRTEST_KEYVAL(win_keyval, MPID_WIN, "window", mpi_errno);
+	    MPIR_ERRTEST_KEYVAL(win_keyval, MPIR_WIN, "window", mpi_errno);
 	    MPIR_ERRTEST_KEYVAL_PERM(win_keyval, mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
@@ -59,7 +59,7 @@ int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 #   endif
 
     /* Convert MPI object handles to object pointers */
-    MPID_Win_get_ptr( win, win_ptr );
+    MPIR_Win_get_ptr( win, win_ptr );
     MPID_Keyval_get_ptr( win_keyval, keyval_ptr );
 
     /* Validate parameters and objects (post conversion) */
@@ -68,7 +68,7 @@ int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val,
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate win_ptr */
-            MPID_Win_valid_ptr( win_ptr, mpi_errno );
+            MPIR_Win_valid_ptr( win_ptr, mpi_errno );
 	    /* If win_ptr is not valid, it will be reset to null */
 	    /* Validate keyval */
 	    MPID_Keyval_valid_ptr( keyval_ptr, mpi_errno );

@@ -24,12 +24,12 @@
 void
 MPIDI_WinLockAck_post(pami_context_t   context,
                       unsigned         peer,
-                      MPID_Win       * win);
+                      MPIR_Win       * win);
 
 
 void
 MPIDI_WinLockAdvance(pami_context_t   context,
-                     MPID_Win       * win)
+                     MPIR_Win       * win)
 {
   struct MPIDI_Win_sync_lock* slock = &win->mpid.sync.lock;
   struct MPIDI_Win_queue*     q     = &slock->local.requested;
@@ -87,7 +87,7 @@ MPIDI_WinLockReq_proc(pami_context_t              context,
                       const MPIDI_Win_control_t * info,
                       unsigned                    peer)
 {
-  MPID_Win * win = info->win;
+  MPIR_Win * win = info->win;
   struct MPIDI_Win_lock* lock = MPL_calloc0(1, struct MPIDI_Win_lock);
   if (info->type == MPIDI_WIN_MSGTYPE_LOCKREQ)
        lock->mtype = MPIDI_REQUEST_LOCK;
@@ -113,7 +113,7 @@ MPIDI_WinLockReq_proc(pami_context_t              context,
 void
 MPIDI_WinLockAck_post(pami_context_t   context,
                       unsigned         peer,
-                      MPID_Win       * win)
+                      MPIR_Win       * win)
 {
   MPIDI_Win_control_t info = {
   .type       = MPIDI_WIN_MSGTYPE_LOCKACK,
@@ -154,7 +154,7 @@ MPIDI_WinUnlock_proc(pami_context_t              context,
                      const MPIDI_Win_control_t * info,
                      unsigned                    peer)
 {
-  MPID_Win *win = info->win;
+  MPIR_Win *win = info->win;
   --win->mpid.sync.lock.local.count;
   MPID_assert((int)win->mpid.sync.lock.local.count >= 0);
   MPIDI_WinLockAdvance(context, win);
@@ -165,7 +165,7 @@ int
 MPID_Win_lock(int       lock_type,
               int       rank,
               int       assert,
-              MPID_Win *win)
+              MPIR_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
   struct MPIDI_Win_sync_lock* slock = &win->mpid.sync.lock;
@@ -196,7 +196,7 @@ fn_exit:
 
 int
 MPID_Win_unlock(int       rank,
-                MPID_Win *win)
+                MPIR_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
   static char FCNAME[] = "MPID_Win_unlock";

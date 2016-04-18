@@ -347,12 +347,12 @@ typedef struct MPIDI_Win_basic_info {
                              incomplete sync requests (used in          \
                              Win_fence and PSCW). */                    \
     int active; /* specify if this window is active or not */           \
-    struct MPID_Win *prev;                                              \
-    struct MPID_Win *next;                                              \
+    struct MPIR_Win *prev;                                              \
+    struct MPIR_Win *next;                                              \
     int outstanding_acks; /* keep track of # of outstanding ACKs window \
                              wide. */                                   \
 
-extern struct MPID_Win *MPIDI_RMA_Win_active_list_head, *MPIDI_RMA_Win_inactive_list_head;
+extern struct MPIR_Win *MPIDI_RMA_Win_active_list_head, *MPIDI_RMA_Win_inactive_list_head;
 
 extern int MPIDI_CH3I_RMA_Active_req_cnt;
 extern int MPIDI_CH3I_RMA_Progress_hook_id;

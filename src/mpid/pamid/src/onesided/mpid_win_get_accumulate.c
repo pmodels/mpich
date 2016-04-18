@@ -31,7 +31,7 @@ MPIDI_Fetch_data_op(const void   * origin_addr,
                     int            target_count,
                     MPI_Datatype   target_datatype,
                     MPI_Op         op,
-                    MPID_Win      *win)
+                    MPIR_Win      *win)
 {
         static char FCNAME[] = "MPIDI_Fetch_data_op";
         int shm_locked=0;
@@ -351,7 +351,7 @@ MPID_Get_accumulate(const void   * origin_addr,
 		    int            target_count, 
 		    MPI_Datatype   target_datatype, 
 		    MPI_Op         op, 
-		    MPID_Win      *win)
+                    MPIR_Win      *win)
 {
   int mpi_errno = MPI_SUCCESS;
 

@@ -12,12 +12,12 @@
 #define MPIR_ERR_RECOVERABLE 0
 
 struct MPIR_Comm;
-struct MPID_Win;
+struct MPIR_Win;
 /*struct MPID_File;*/
 
 /* Bindings for internal routines */
 int MPIR_Err_return_comm( struct MPIR_Comm *, const char [], int );
-int MPIR_Err_return_win( struct MPID_Win *, const char [], int );
+int MPIR_Err_return_win( struct MPIR_Win *, const char [], int );
 /*int MPIR_Err_return_file( struct MPID_File *, const char [], int );*/
 #ifdef MPI__FILE_DEFINED
 /* Only define if we have MPI_File */

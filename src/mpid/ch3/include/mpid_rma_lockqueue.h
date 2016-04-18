@@ -19,7 +19,7 @@ extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_winlock_getlocallock ATTRIBUTE((unused
 #define FUNCNAME MPIDI_CH3I_Win_target_lock_entry_alloc
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline MPIDI_RMA_Target_lock_entry_t *MPIDI_CH3I_Win_target_lock_entry_alloc(MPID_Win *
+static inline MPIDI_RMA_Target_lock_entry_t *MPIDI_CH3I_Win_target_lock_entry_alloc(MPIR_Win *
                                                                                     win_ptr,
                                                                                     MPIDI_CH3_Pkt_t
                                                                                     * pkt)
@@ -49,7 +49,7 @@ static inline MPIDI_RMA_Target_lock_entry_t *MPIDI_CH3I_Win_target_lock_entry_al
 #define FUNCNAME MPIDI_CH3I_Win_target_lock_entry_free
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH3I_Win_target_lock_entry_free(MPID_Win * win_ptr,
+static inline int MPIDI_CH3I_Win_target_lock_entry_free(MPIR_Win * win_ptr,
                                                         MPIDI_RMA_Target_lock_entry_t *
                                                         target_lock_entry)
 {

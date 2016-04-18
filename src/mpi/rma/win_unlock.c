@@ -53,7 +53,7 @@ int MPI_Win_unlock(int rank, MPI_Win win)
 {
     static const char FCNAME[] = "MPI_Win_unlock";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr = NULL;
+    MPIR_Win *win_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_UNLOCK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -73,7 +73,7 @@ int MPI_Win_unlock(int rank, MPI_Win win)
 #   endif /* HAVE_ERROR_CHECKING */
     
     /* Convert MPI object handles to object pointers */
-    MPID_Win_get_ptr( win, win_ptr );
+    MPIR_Win_get_ptr( win, win_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -83,7 +83,7 @@ int MPI_Win_unlock(int rank, MPI_Win win)
 	    MPIR_Comm * comm_ptr;
 	    
             /* Validate win_ptr */
-            MPID_Win_valid_ptr( win_ptr, mpi_errno );
+            MPIR_Win_valid_ptr( win_ptr, mpi_errno );
 	    /* If win_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
 

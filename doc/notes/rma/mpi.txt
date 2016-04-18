@@ -46,17 +46,17 @@ Data structures
 MPI_Win_create
 
   
-* Allocate a MPID_Win structure and fill in the device independent portion
+* Allocate a MPIR_Win structure and fill in the device independent portion
   (MPIR_Win).
 
   * Create a copy of the communcator provided by the user so the
     window has its own communcation context.
   
   Q: Which layer (MPI/ADI3) should manage (be responsible for
-  creating, destroying, etc.) the MPID_Win object?
+  creating, destroying, etc.) the MPIR_Win object?
   
-  Q: Assuming the MPI layer managed the MPID_Win object, should
-  MPID_Win be allocated using an MPID function?  Would this buy us
+  Q: Assuming the MPI layer managed the MPIR_Win object, should
+  MPIR_Win be allocated using an MPID function?  Would this buy us
   anything?
 
 * Acquire information about all of the processes involved in this window.

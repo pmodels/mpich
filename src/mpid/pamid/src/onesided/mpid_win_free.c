@@ -28,7 +28,7 @@
 #endif
 
 
-int MPIDI_SHM_Win_free(MPID_Win **win_ptr)
+int MPIDI_SHM_Win_free(MPIR_Win **win_ptr)
 {
   static char FCNAME[] = "MPID_SHM_Win_free";
   int    rc;
@@ -77,11 +77,11 @@ int MPIDI_SHM_Win_free(MPID_Win **win_ptr)
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int
-MPID_Win_free(MPID_Win **win_ptr)
+MPID_Win_free(MPIR_Win **win_ptr)
 {
   int mpi_errno = MPI_SUCCESS;
 
-  MPID_Win *win = *win_ptr;
+  MPIR_Win *win = *win_ptr;
   size_t rank = win->comm_ptr->rank;
   MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
@@ -125,7 +125,7 @@ MPID_Win_free(MPID_Win **win_ptr)
 
   MPIR_Comm_release(win->comm_ptr, 0);
 
-  MPIU_Handle_obj_free(&MPID_Win_mem, win);
+  MPIU_Handle_obj_free(&MPIR_Win_mem, win);
 
 fn_fail:
   return mpi_errno;

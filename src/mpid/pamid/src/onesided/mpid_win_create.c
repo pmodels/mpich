@@ -31,7 +31,7 @@
 int
 MPIDI_Win_init( MPI_Aint length,
                 int disp_unit,
-                MPID_Win  **win_ptr,
+                MPIR_Win  **win_ptr,
                 MPID_Info  *info,
                 MPIR_Comm *comm_ptr,
                 int create_flavor,
@@ -45,7 +45,7 @@ MPIDI_Win_init( MPI_Aint length,
   /* ----------------------------------------- */
   /*  Setup the common sections of the window  */
   /* ----------------------------------------- */
-  MPID_Win *win = (MPID_Win*)MPIU_Handle_obj_alloc(&MPID_Win_mem);
+  MPIR_Win *win = (MPIR_Win*)MPIU_Handle_obj_alloc(&MPIR_Win_mem);
 
   MPIU_ERR_CHKANDSTMT(win == NULL, mpi_errno, MPI_ERR_NO_MEM,
                      return mpi_errno, "**nomem");
@@ -102,11 +102,11 @@ MPIDI_Win_init( MPI_Aint length,
 /*                                                                         */
 /***************************************************************************/
 int
-MPIDI_Win_allgather( MPI_Aint size, MPID_Win **win_ptr )
+MPIDI_Win_allgather( MPI_Aint size, MPIR_Win **win_ptr )
 {
   int mpi_errno = MPI_SUCCESS;
   MPIR_Errflag_t errflag=MPIR_ERR_NONE;
-  MPID_Win *win;
+  MPIR_Win *win;
   int rank;
   MPIR_Comm *comm_ptr;
   size_t length_out = 0;
@@ -160,7 +160,7 @@ fn_fail:
 /**
  * \brief MPI-PAMI glue for MPI_Win_create function
  *
- * Create a window object. Allocates a MPID_Win object and initializes it,
+ * Create a window object. Allocates a MPIR_Win object and initializes it,
  * then allocates the collective info array, initalizes our entry, and
  * performs an Allgather to distribute/collect the rest of the array entries.
  *
@@ -184,12 +184,12 @@ MPID_Win_create(void       * base,
                 int          disp_unit,
                 MPID_Info  * info,
                 MPIR_Comm  * comm_ptr,
-                MPID_Win  ** win_ptr)
+                MPIR_Win  ** win_ptr)
 {
   int mpi_errno  = MPI_SUCCESS;
   MPIR_Errflag_t errflag = MPIR_ERR_NONE;
   int rc  = MPI_SUCCESS;
-  MPID_Win *win;
+  MPIR_Win *win;
   size_t  rank;
   MPIDI_Win_info *winfo;
 

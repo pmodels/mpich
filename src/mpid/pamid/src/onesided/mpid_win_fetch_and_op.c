@@ -185,7 +185,7 @@ MPIDI_Atomic (pami_context_t   context,
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
                       MPI_Datatype datatype, int target_rank,
-                      MPI_Aint target_disp, MPI_Op op, MPID_Win *win)
+                      MPI_Aint target_disp, MPI_Op op, MPIR_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
   MPIDI_Win_request *req;

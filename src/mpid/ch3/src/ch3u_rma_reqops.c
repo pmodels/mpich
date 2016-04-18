@@ -14,7 +14,7 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Rput(const void *origin_addr, int origin_count,
               MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
-              int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
+              int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr,
               MPID_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -77,7 +77,7 @@ int MPID_Rput(const void *origin_addr, int origin_count,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Rget(void *origin_addr, int origin_count,
               MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
-              int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
+              int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr,
               MPID_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -140,7 +140,7 @@ int MPID_Rget(void *origin_addr, int origin_count,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Raccumulate(const void *origin_addr, int origin_count,
                      MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
-                     int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win * win_ptr,
+                     int target_count, MPI_Datatype target_datatype, MPI_Op op, MPIR_Win * win_ptr,
                      MPID_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -205,7 +205,7 @@ int MPID_Rget_accumulate(const void *origin_addr, int origin_count,
                          MPI_Datatype origin_datatype, void *result_addr, int result_count,
                          MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
                          int target_count, MPI_Datatype target_datatype, MPI_Op op,
-                         MPID_Win * win_ptr, MPID_Request ** request)
+                         MPIR_Win * win_ptr, MPID_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig ATTRIBUTE((unused));

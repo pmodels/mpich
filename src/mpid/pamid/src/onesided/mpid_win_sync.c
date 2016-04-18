@@ -37,7 +37,7 @@
 
 
 int
-MPID_Win_sync(MPID_Win *win)
+MPID_Win_sync(MPIR_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
   static char FCNAME[] = "MPID_Win_flush";
