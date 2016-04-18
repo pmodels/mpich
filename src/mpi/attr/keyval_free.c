@@ -80,12 +80,12 @@ int MPI_Keyval_free(int *keyval)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPID_Keyval *keyval_ptr = NULL;
+            MPIR_Keyval *keyval_ptr = NULL;
 
             /* Convert MPI object handles to object pointers */
-            MPID_Keyval_get_ptr( *keyval, keyval_ptr );
+            MPIR_Keyval_get_ptr( *keyval, keyval_ptr );
 
-	    MPID_Keyval_valid_ptr( keyval_ptr, mpi_errno );
+	    MPIR_Keyval_valid_ptr( keyval_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;

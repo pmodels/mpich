@@ -54,7 +54,7 @@ int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
     int mpi_errno = MPI_SUCCESS;
     MPID_Datatype *type_ptr = NULL;
     MPIR_Attribute *p, **old_p;
-    MPID_Keyval *keyval_ptr = 0;
+    MPIR_Keyval *keyval_ptr = 0;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_DELETE_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -79,7 +79,7 @@ int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
 
     /* Validate parameters and objects (post conversion) */
     MPID_Datatype_get_ptr( datatype, type_ptr );
-    MPID_Keyval_get_ptr( type_keyval, keyval_ptr );
+    MPIR_Keyval_get_ptr( type_keyval, keyval_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -132,7 +132,7 @@ int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
 	    MPIR_Keyval_release_ref( p->keyval, &in_use);
 	    if (!in_use)
 	    {
-		MPIU_Handle_obj_free( &MPID_Keyval_mem, p->keyval );
+		MPIU_Handle_obj_free( &MPIR_Keyval_mem, p->keyval );
 	    }
 	    MPID_Attr_free(p);
 	}

@@ -34,7 +34,7 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm *comm_ptr, int comm_keyval, void *attribut
                             MPIR_AttrType attrType)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Keyval *keyval_ptr = NULL;
+    MPIR_Keyval *keyval_ptr = NULL;
     MPIR_Attribute *p;
 
     MPIR_ERR_CHKANDJUMP(comm_keyval == MPI_KEYVAL_INVALID, mpi_errno, MPI_ERR_KEYVAL, "**keyvalinvalid");
@@ -44,7 +44,7 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm *comm_ptr, int comm_keyval, void *attribut
        a simple linear list algorithm because few applications use more than a 
        handful of attributes */
 
-    MPID_Keyval_get_ptr( comm_keyval, keyval_ptr );
+    MPIR_Keyval_get_ptr( comm_keyval, keyval_ptr );
     MPIU_Assert(keyval_ptr != NULL);
 
     /* printf( "Setting attr val to %x\n", attribute_val ); */
@@ -139,14 +139,14 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPID_Keyval *keyval_ptr = NULL;
+            MPIR_Keyval *keyval_ptr = NULL;
 
             /* Validate comm_ptr */
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    /* Validate keyval_ptr */
-            MPID_Keyval_get_ptr( comm_keyval, keyval_ptr );
-	    MPID_Keyval_valid_ptr( keyval_ptr, mpi_errno );
+            MPIR_Keyval_get_ptr( comm_keyval, keyval_ptr );
+	    MPIR_Keyval_valid_ptr( keyval_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
 	}
         MPID_END_ERROR_CHECKS;
@@ -246,14 +246,14 @@ int MPI_Comm_set_attr(MPI_Comm comm, int comm_keyval, void *attribute_val)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPID_Keyval *keyval_ptr = NULL;
+            MPIR_Keyval *keyval_ptr = NULL;
 
             /* Validate comm_ptr */
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
 	    /* If comm_ptr is not valid, it will be reset to null */
 	    /* Validate keyval_ptr */
-            MPID_Keyval_get_ptr( comm_keyval, keyval_ptr );
-	    MPID_Keyval_valid_ptr( keyval_ptr, mpi_errno );
+            MPIR_Keyval_get_ptr( comm_keyval, keyval_ptr );
+	    MPIR_Keyval_valid_ptr( keyval_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
 	}
         MPID_END_ERROR_CHECKS;

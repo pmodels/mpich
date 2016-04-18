@@ -76,7 +76,7 @@ int MPI_Win_create_keyval(MPI_Win_copy_attr_function *win_copy_attr_fn,
 {
     static const char FCNAME[] = "MPI_Win_create_keyval";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Keyval *keyval_ptr;
+    MPIR_Keyval *keyval_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_CREATE_KEYVAL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -97,9 +97,9 @@ int MPI_Win_create_keyval(MPI_Win_copy_attr_function *win_copy_attr_fn,
 
     /* ... body of routine ...  */
     
-    keyval_ptr = (MPID_Keyval *)MPIU_Handle_obj_alloc( &MPID_Keyval_mem );
+    keyval_ptr = (MPIR_Keyval *)MPIU_Handle_obj_alloc( &MPIR_Keyval_mem );
     MPIR_ERR_CHKANDJUMP1(!keyval_ptr,mpi_errno,MPI_ERR_OTHER,"**nomem",
-			 "**nomem %s", "MPID_Keyval" );
+			 "**nomem %s", "MPIR_Keyval" );
     /* Initialize the attribute dup function */
     if (!MPIR_Process.attr_dup) {
 	MPIR_Process.attr_dup  = MPIR_Attr_dup_list;

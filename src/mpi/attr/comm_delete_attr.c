@@ -30,7 +30,7 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval) __attribute__((weak,ali
 #define FUNCNAME MPIR_Comm_delete_attr_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_delete_attr_impl(MPIR_Comm *comm_ptr, MPID_Keyval *keyval_ptr)
+int MPIR_Comm_delete_attr_impl(MPIR_Comm *comm_ptr, MPIR_Keyval *keyval_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *p, **old_p;
@@ -69,7 +69,7 @@ int MPIR_Comm_delete_attr_impl(MPIR_Comm *comm_ptr, MPID_Keyval *keyval_ptr)
         /* Decrement the use of the keyval */
         MPIR_Keyval_release_ref( p->keyval, &in_use);
         if (!in_use) {
-            MPIU_Handle_obj_free( &MPID_Keyval_mem, p->keyval );
+            MPIU_Handle_obj_free( &MPIR_Keyval_mem, p->keyval );
         }
         MPID_Attr_free(p);
     }
@@ -109,7 +109,7 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_Keyval *keyval_ptr;
+    MPIR_Keyval *keyval_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_DELETE_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -132,7 +132,7 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
 
     /* Convert MPI object handles to object pointers */
     MPIR_Comm_get_ptr( comm, comm_ptr );
-    MPID_Keyval_get_ptr( comm_keyval, keyval_ptr );
+    MPIR_Keyval_get_ptr( comm_keyval, keyval_ptr );
     
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -143,7 +143,7 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
 	    /* If comm_ptr is not valid, it will be reset to null */
             /* Validate keyval_ptr */
-	    MPID_Keyval_valid_ptr( keyval_ptr, mpi_errno );
+	    MPIR_Keyval_valid_ptr( keyval_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
 	}
         MPID_END_ERROR_CHECKS;

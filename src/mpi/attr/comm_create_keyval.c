@@ -46,9 +46,9 @@ int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
                                  int *comm_keyval, void *extra_state)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Keyval *keyval_ptr;
+    MPIR_Keyval *keyval_ptr;
         
-    keyval_ptr = (MPID_Keyval *)MPIU_Handle_obj_alloc( &MPID_Keyval_mem );
+    keyval_ptr = (MPIR_Keyval *)MPIU_Handle_obj_alloc( &MPIR_Keyval_mem );
     MPIR_ERR_CHKANDJUMP(!keyval_ptr, mpi_errno, MPI_ERR_OTHER,"**nomem");
 
     /* Initialize the attribute dup function */
