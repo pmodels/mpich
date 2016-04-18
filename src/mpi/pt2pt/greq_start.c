@@ -34,11 +34,11 @@ PMPI_LOCAL int MPIR_Grequest_free_classes_on_finalize(void *extra_data);
 #define MPID_GREQ_CLASS_PREALLOC 2
 #endif
 
-MPID_Grequest_class MPID_Grequest_class_direct[MPID_GREQ_CLASS_PREALLOC] = 
+MPIR_Grequest_class MPIR_Grequest_class_direct[MPID_GREQ_CLASS_PREALLOC] =
                                               { {0} };
-MPIU_Object_alloc_t MPID_Grequest_class_mem = {0, 0, 0, 0, MPID_GREQ_CLASS,
-	                                       sizeof(MPID_Grequest_class),
-					       MPID_Grequest_class_direct,
+MPIU_Object_alloc_t MPIR_Grequest_class_mem = {0, 0, 0, 0, MPID_GREQ_CLASS,
+	                                       sizeof(MPIR_Grequest_class),
+					       MPIR_Grequest_class_direct,
 					       MPID_GREQ_CLASS_PREALLOC, };
 
 /* We jump through some minor hoops to manage the list of classes ourselves and
@@ -47,7 +47,7 @@ MPIU_Object_alloc_t MPID_Grequest_class_mem = {0, 0, 0, 0, MPID_GREQ_CLASS,
  * is a good candidate for registering one callback per greq class and trimming
  * some of this logic. */
 int MPIR_Grequest_registered_finalizer = 0;
-MPID_Grequest_class *MPIR_Grequest_class_list = NULL;
+MPIR_Grequest_class *MPIR_Grequest_class_list = NULL;
 
 /* Any internal routines can go here.  Make them static if possible.  If they
    are used by both the MPI and PMPI versions, use PMPI_LOCAL instead of 
@@ -56,15 +56,15 @@ MPID_Grequest_class *MPIR_Grequest_class_list = NULL;
 PMPI_LOCAL int MPIR_Grequest_free_classes_on_finalize(void *extra_data ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Grequest_class *last = NULL;
-    MPID_Grequest_class *cur = MPIR_Grequest_class_list;
+    MPIR_Grequest_class *last = NULL;
+    MPIR_Grequest_class *cur = MPIR_Grequest_class_list;
 
     /* FIXME MT this function is not thread safe when using fine-grained threading */
     MPIR_Grequest_class_list = NULL;
     while (cur) {
         last = cur;
         cur = last->next;
-        MPIU_Handle_obj_free(&MPID_Grequest_class_mem, last);
+        MPIU_Handle_obj_free(&MPIR_Grequest_class_mem, last);
     }
 
     return mpi_errno;
@@ -93,7 +93,7 @@ int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
     MPIR_cc_set((*request_ptr)->cc_ptr, 1);
     (*request_ptr)->comm                 = NULL;
     (*request_ptr)->greq_fns             = NULL;
-    MPIU_CHKPMEM_MALLOC((*request_ptr)->greq_fns, struct MPID_Grequest_fns *, sizeof(struct MPID_Grequest_fns), mpi_errno, "greq_fns");
+    MPIU_CHKPMEM_MALLOC((*request_ptr)->greq_fns, struct MPIR_Grequest_fns *, sizeof(struct MPIR_Grequest_fns), mpi_errno, "greq_fns");
     (*request_ptr)->greq_fns->cancel_fn            = cancel_fn;
     (*request_ptr)->greq_fns->free_fn              = free_fn;
     (*request_ptr)->greq_fns->query_fn             = query_fn;
@@ -117,10 +117,10 @@ int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
 
 
 #else
-extern MPID_Grequest_class MPID_Grequest_class_direct[];
-extern MPIU_Object_alloc_t MPID_Grequest_class_mem;
+extern MPIR_Grequest_class MPIR_Grequest_class_direct[];
+extern MPIU_Object_alloc_t MPIR_Grequest_class_mem;
 extern int MPIR_Grequest_registered_finalizer;
-extern MPID_Grequest_class *MPIR_Grequest_class_list;
+extern MPIR_Grequest_class *MPIR_Grequest_class_list;
 #endif
 
 #undef FUNCNAME
@@ -264,11 +264,11 @@ int MPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn,
 			       MPIX_Grequest_wait_function *wait_fn,
 			       MPIX_Grequest_class *greq_class)
 {
-	MPID_Grequest_class *class_ptr;
+	MPIR_Grequest_class *class_ptr;
 	int mpi_errno = MPI_SUCCESS;
 
-	class_ptr = (MPID_Grequest_class *) 
-		MPIU_Handle_obj_alloc(&MPID_Grequest_class_mem);
+	class_ptr = (MPIR_Grequest_class *)
+		MPIU_Handle_obj_alloc(&MPIR_Grequest_class_mem);
         /* --BEGIN ERROR HANDLING-- */
 	if (!class_ptr)
 	{
@@ -353,10 +353,10 @@ int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class,
 {
 	int mpi_errno;
 	MPID_Request *lrequest_ptr;
-	MPID_Grequest_class *class_ptr;
+	MPIR_Grequest_class *class_ptr;
 
         *request = MPI_REQUEST_NULL;
-	MPID_Grequest_class_get_ptr(greq_class, class_ptr);
+	MPIR_Grequest_class_get_ptr(greq_class, class_ptr);
         mpi_errno = MPIR_Grequest_start_impl(class_ptr->query_fn, class_ptr->free_fn,
                                              class_ptr->cancel_fn, extra_state,
                                              &lrequest_ptr);
