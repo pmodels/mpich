@@ -13,12 +13,10 @@
 
 struct MPIR_Comm;
 struct MPIR_Win;
-/*struct MPID_File;*/
 
 /* Bindings for internal routines */
 int MPIR_Err_return_comm( struct MPIR_Comm *, const char [], int );
 int MPIR_Err_return_win( struct MPIR_Win *, const char [], int );
-/*int MPIR_Err_return_file( struct MPID_File *, const char [], int );*/
 #ifdef MPI__FILE_DEFINED
 /* Only define if we have MPI_File */
 int MPIR_Err_return_file( MPI_File, const char [], int ); /* Romio version */
