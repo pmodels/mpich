@@ -215,7 +215,7 @@ struct MPIDI_CH3I_Request
 #define MPIDI_POSTED_RECV_DEQUEUE_HOOK(req) MPIDI_CH3I_Posted_recv_dequeued(req)
 
 /*
- * MPID_Progress_state - device/channel dependent state to be passed between 
+ * MPID_Progress_state - device/channel dependent state to be passed between
  * MPID_Progress_{start,wait,end}
  *
  */

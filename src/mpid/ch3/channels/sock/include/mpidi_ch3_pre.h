@@ -62,7 +62,7 @@ MPIDI_CH3I_VC;
  */
 
 /*
- * MPID_Progress_state - device/channel dependent state to be passed between 
+ * MPID_Progress_state - device/channel dependent state to be passed between
  * MPID_Progress_{start,wait,end}
  *
  */

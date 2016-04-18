@@ -1604,23 +1604,6 @@ int MPID_Get_max_node_id(MPIR_Comm *comm, MPID_Node_id_t *max_id_p);
 #endif
 
 /* ------------------------------------------------------------------------- */
-/*S
-  MPID_Progress_state - object to hold progress state when using the blocking
-  progress routines.
-
-  Module:
-  Misc
-
-  Notes:
-  The device must define MPID_PROGRESS_STATE_DECL.  It should  include any state
-  that needs to be maintained between calls to MPID_Progress_{start,wait,end}.
-  S*/
-typedef struct MPID_Progress_state
-{
-    MPID_PROGRESS_STATE_DECL
-}
-MPID_Progress_state;
-/* ------------------------------------------------------------------------- */
 
 /* ------------------------------------------------------------------------- */
 /* end of mpirma.h (in src/mpi/rma?) */
