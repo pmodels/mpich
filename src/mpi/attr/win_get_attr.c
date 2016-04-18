@@ -152,7 +152,7 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 	}
     }
     else {
-	MPID_Attribute *p = win_ptr->attributes;
+	MPIR_Attribute *p = win_ptr->attributes;
 
 	*flag = 0;
 	while (p) {

@@ -53,7 +53,7 @@ int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
     static const char FCNAME[] = "MPI_Type_delete_attr";
     int mpi_errno = MPI_SUCCESS;
     MPID_Datatype *type_ptr = NULL;
-    MPID_Attribute *p, **old_p;
+    MPIR_Attribute *p, **old_p;
     MPID_Keyval *keyval_ptr = 0;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_DELETE_ATTR);
 
