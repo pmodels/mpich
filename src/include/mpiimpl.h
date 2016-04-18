@@ -401,7 +401,7 @@ void MPIR_DatatypeAttrFinalize( void );
 #define MPIR_Comm_get_ptr(a,ptr)       MPID_Getb_ptr(Comm,a,0x03ffffff,ptr)
 #define MPIR_Group_get_ptr(a,ptr)      MPID_Getb_ptr(Group,a,0x03ffffff,ptr)
 #define MPIR_Errhandler_get_ptr(a,ptr) MPID_Getb_ptr(Errhandler,a,0x3,ptr)
-#define MPID_Op_get_ptr(a,ptr)         MPID_Getb_ptr(Op,a,0x000000ff,ptr)
+#define MPIR_Op_get_ptr(a,ptr)         MPID_Getb_ptr(Op,a,0x000000ff,ptr)
 #define MPIR_Info_get_ptr(a,ptr)       MPID_Getb_ptr(Info,a,0x03ffffff,ptr)
 #define MPIR_Win_get_ptr(a,ptr)        MPID_Get_ptr(Win,a,ptr)
 #define MPID_Request_get_ptr(a,ptr)    MPID_Get_ptr(Request,a,ptr)
@@ -459,7 +459,7 @@ void MPIR_DatatypeAttrFinalize( void );
 }
 #define MPIR_Group_valid_ptr(ptr,err) MPID_Valid_ptr_class(Group,ptr,MPI_ERR_GROUP,err)
 #define MPIR_Win_valid_ptr(ptr,err) MPID_Valid_ptr_class(Win,ptr,MPI_ERR_WIN,err)
-#define MPID_Op_valid_ptr(ptr,err) MPID_Valid_ptr_class(Op,ptr,MPI_ERR_OP,err)
+#define MPIR_Op_valid_ptr(ptr,err) MPID_Valid_ptr_class(Op,ptr,MPI_ERR_OP,err)
 #define MPIR_Errhandler_valid_ptr(ptr,err) MPID_Valid_ptr_class(Errhandler,ptr,MPI_ERR_ARG,err)
 #define MPID_Request_valid_ptr(ptr,err) MPID_Valid_ptr_class(Request,ptr,MPI_ERR_REQUEST,err)
 #define MPIR_Keyval_valid_ptr(ptr,err) MPID_Valid_ptr_class(Keyval,ptr,MPI_ERR_KEYVAL,err)
@@ -1794,7 +1794,7 @@ int MPID_Mem_was_alloced( void *ptr );  /* brad : this isn't used or implemented
 /* ------------------------------------------------------------------------- */
 /* Reduction and accumulate operations */
 /*E
-  MPID_Op_kind - Enumerates types of MPI_Op types
+  MPIR_Op_kind - Enumerates types of MPI_Op types
 
   Notes:
   These are needed for implementing 'MPI_Accumulate', since only predefined
@@ -1807,14 +1807,14 @@ int MPID_Mem_was_alloced( void *ptr );  /* brad : this isn't used or implemented
   Module:
   Collective-DS
   E*/
-typedef enum MPID_Op_kind { MPID_OP_NULL=0, MPID_OP_MAX=1, MPID_OP_MIN=2,
+typedef enum MPIR_Op_kind { MPID_OP_NULL=0, MPID_OP_MAX=1, MPID_OP_MIN=2,
 			    MPID_OP_SUM=3, MPID_OP_PROD=4, 
 	       MPID_OP_LAND=5, MPID_OP_BAND=6, MPID_OP_LOR=7, MPID_OP_BOR=8,
 	       MPID_OP_LXOR=9, MPID_OP_BXOR=10, MPID_OP_MAXLOC=11, 
                MPID_OP_MINLOC=12, MPID_OP_REPLACE=13, 
                MPID_OP_NO_OP=14,
                MPID_OP_USER_NONCOMMUTE=32, MPID_OP_USER=33 }
-  MPID_Op_kind;
+  MPIR_Op_kind;
 
 /*S
   MPID_User_function - Definition of a user function for MPI_Op types.
@@ -1861,7 +1861,7 @@ typedef union MPID_User_function {
    (*c_function)( const void restrict * , void restrict *, ... )? */
 
 /*S
-  MPID_Op - MPI_Op structure
+  MPIR_Op - MPI_Op structure
 
   Notes:
   All of the predefined functions are commutative.  Only user functions may 
@@ -1875,16 +1875,16 @@ typedef union MPID_User_function {
   Module:
   Collective-DS
   S*/
-typedef struct MPID_Op {
+typedef struct MPIR_Op {
      MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
-     MPID_Op_kind       kind;
+     MPIR_Op_kind       kind;
      MPID_Lang_t        language;
      MPID_User_function function;
-  } MPID_Op;
+  } MPIR_Op;
 #define MPID_OP_N_BUILTIN 15
-extern MPID_Op MPID_Op_builtin[MPID_OP_N_BUILTIN];
-extern MPID_Op MPID_Op_direct[];
-extern MPIU_Object_alloc_t MPID_Op_mem;
+extern MPIR_Op MPIR_Op_builtin[MPID_OP_N_BUILTIN];
+extern MPIR_Op MPIR_Op_direct[];
+extern MPIU_Object_alloc_t MPIR_Op_mem;
 
 #define MPIR_Op_add_ref(_op) \
     do { MPIU_Object_add_ref(_op); } while (0)
@@ -1897,7 +1897,7 @@ extern MPIU_Object_alloc_t MPID_Op_mem;
         int in_use_;                                     \
         MPIR_Op_release_ref((op_p_), &in_use_);          \
         if (!in_use_) {                                  \
-            MPIU_Handle_obj_free(&MPID_Op_mem, (op_p_)); \
+            MPIU_Handle_obj_free(&MPIR_Op_mem, (op_p_)); \
         }                                                \
     } while (0)
 
@@ -2637,7 +2637,7 @@ int MPID_Finalize(void);
 
 int MPID_Abort( MPIR_Comm *comm, int mpi_errno, int exit_code, const char *error_msg );
 
-int MPID_Open_port(MPIR_Info *, char *);
+int MPIR_Open_port(MPIR_Info *, char *);
 int MPID_Close_port(const char *);
 
 /*@

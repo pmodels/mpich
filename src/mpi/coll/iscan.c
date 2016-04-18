@@ -422,9 +422,9 @@ int MPI_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dataty
             }
 
             if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
-                MPID_Op *op_ptr = NULL;
-                MPID_Op_get_ptr(op, op_ptr);
-                MPID_Op_valid_ptr(op_ptr, mpi_errno);
+                MPIR_Op *op_ptr = NULL;
+                MPIR_Op_get_ptr(op, op_ptr);
+                MPIR_Op_valid_ptr(op_ptr, mpi_errno);
             }
             else if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
                 mpi_errno = ( * MPIR_OP_HDL_TO_DTYPE_FN(op) )(datatype);

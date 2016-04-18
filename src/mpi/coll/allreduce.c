@@ -844,7 +844,7 @@ int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
         MPID_BEGIN_ERROR_CHECKS;
         {
             MPID_Datatype *datatype_ptr = NULL;
-            MPID_Op *op_ptr = NULL;
+            MPIR_Op *op_ptr = NULL;
 
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
@@ -874,8 +874,8 @@ int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
 	    MPIR_ERRTEST_USERBUFFER(recvbuf,count,datatype,mpi_errno);
 
             if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
-                MPID_Op_get_ptr(op, op_ptr);
-                MPID_Op_valid_ptr( op_ptr, mpi_errno );
+                MPIR_Op_get_ptr(op, op_ptr);
+                MPIR_Op_valid_ptr( op_ptr, mpi_errno );
             }
             if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
                 mpi_errno = 
