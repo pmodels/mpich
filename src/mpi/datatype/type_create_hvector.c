@@ -62,7 +62,7 @@ int MPI_Type_create_hvector(int count,
     static const char FCNAME[] = "MPI_Type_create_hvector";
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
-    MPID_Datatype *new_dtp;
+    MPIR_Datatype *new_dtp;
     int ints[2];
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_HVECTOR);
 
@@ -75,7 +75,7 @@ int MPI_Type_create_hvector(int count,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPID_Datatype *datatype_ptr = NULL;
+	    MPIR_Datatype *datatype_ptr = NULL;
 
 	    MPIR_ERRTEST_COUNT(count, mpi_errno);
 	    MPIR_ERRTEST_ARGNEG(blocklength, "blocklen", mpi_errno);
@@ -83,7 +83,7 @@ int MPI_Type_create_hvector(int count,
 
             if (HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
                 MPID_Datatype_get_ptr(oldtype, datatype_ptr);
-                MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
             MPIR_ERRTEST_ARGNULL(newtype, "newtype", mpi_errno);

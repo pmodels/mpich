@@ -80,7 +80,7 @@ int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner,
 
     /* Initialize the contents data */
     {
-	MPID_Datatype *new_dtp = NULL;
+	MPIR_Datatype *new_dtp = NULL;
 	int vals[2];
 	int nvals=0;
 
@@ -191,7 +191,7 @@ static int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner,
 
     /* Initialize the contents data */
     if (mpi_errno == MPI_SUCCESS) {
-	MPID_Datatype *new_dtp;
+	MPIR_Datatype *new_dtp;
 	int vals[2];
 	int nvals=0;
 

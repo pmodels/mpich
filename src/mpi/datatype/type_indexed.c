@@ -37,7 +37,7 @@ int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
-    MPID_Datatype *new_dtp;
+    MPIR_Datatype *new_dtp;
     int i, *ints;
     MPIU_CHKLMEM_DECL(1);
 
@@ -154,7 +154,7 @@ int MPI_Type_indexed(int count,
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    int j;
-	    MPID_Datatype *datatype_ptr = NULL;
+	    MPIR_Datatype *datatype_ptr = NULL;
 
 	    MPIR_ERRTEST_COUNT(count,mpi_errno);
 	    if (count > 0) {
@@ -165,7 +165,7 @@ int MPI_Type_indexed(int count,
 
             if (HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
                 MPID_Datatype_get_ptr( oldtype, datatype_ptr );
-                MPID_Datatype_valid_ptr( datatype_ptr, mpi_errno );
+                MPIR_Datatype_valid_ptr( datatype_ptr, mpi_errno );
             }
             /* verify that all blocklengths are >= 0 */
             for (j=0; j < count; j++) {

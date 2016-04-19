@@ -64,7 +64,7 @@ int MPI_Status_set_elements(MPI_Status *status, MPI_Datatype datatype,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPID_Datatype *datatype_ptr = NULL;
+	    MPIR_Datatype *datatype_ptr = NULL;
 
 	    MPIR_ERRTEST_COUNT(count,mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(status,"status",mpi_errno);
@@ -72,7 +72,7 @@ int MPI_Status_set_elements(MPI_Status *status, MPI_Datatype datatype,
 
             /* Validate datatype_ptr */
 	    MPID_Datatype_get_ptr( datatype, datatype_ptr );
-            MPID_Datatype_valid_ptr( datatype_ptr, mpi_errno );
+            MPIR_Datatype_valid_ptr( datatype_ptr, mpi_errno );
 	    /* If datatype_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
         }

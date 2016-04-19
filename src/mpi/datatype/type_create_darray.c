@@ -386,7 +386,7 @@ int MPI_Type_create_darray(int size,
 #   endif
 
     int *ints;
-    MPID_Datatype *datatype_ptr = NULL;
+    MPIR_Datatype *datatype_ptr = NULL;
     MPIU_CHKLMEM_DECL(3);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_DARRAY);
 
@@ -513,7 +513,7 @@ int MPI_Type_create_darray(int size,
 	    }
 
             /* Validate datatype_ptr */
-            MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+            MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
 	    /* If datatype_ptr is not valid, it will be reset to null */
 	    /* --BEGIN ERROR HANDLING-- */
             if (mpi_errno) goto fn_fail;

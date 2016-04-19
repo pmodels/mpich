@@ -115,10 +115,10 @@ int MPI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 
             if (HANDLE_GET_KIND(origin_datatype) != HANDLE_KIND_BUILTIN)
             {
-                MPID_Datatype *datatype_ptr = NULL;
+                MPIR_Datatype *datatype_ptr = NULL;
                 
                 MPID_Datatype_get_ptr(origin_datatype, datatype_ptr);
-                MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
@@ -126,10 +126,10 @@ int MPI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 
             if (HANDLE_GET_KIND(target_datatype) != HANDLE_KIND_BUILTIN)
             {
-                MPID_Datatype *datatype_ptr = NULL;
+                MPIR_Datatype *datatype_ptr = NULL;
                 
                 MPID_Datatype_get_ptr(target_datatype, datatype_ptr);
-                MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;

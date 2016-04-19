@@ -31,7 +31,7 @@ int MPI_Type_free(MPI_Datatype *datatype) __attribute__((weak,alias("PMPI_Type_f
 #define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Type_free_impl(MPI_Datatype *datatype)
 {
-    MPID_Datatype *datatype_ptr = NULL;
+    MPIR_Datatype *datatype_ptr = NULL;
 
     MPID_Datatype_get_ptr( *datatype, datatype_ptr );
     MPID_Datatype_release(datatype_ptr);
@@ -97,7 +97,7 @@ int MPI_Type_free(MPI_Datatype *datatype)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPID_Datatype *datatype_ptr = NULL;
+            MPIR_Datatype *datatype_ptr = NULL;
 
 	    /* Check for built-in type */
 	    if (HANDLE_GET_KIND(*datatype) == HANDLE_KIND_BUILTIN) {
@@ -129,7 +129,7 @@ int MPI_Type_free(MPI_Datatype *datatype)
             MPID_Datatype_get_ptr( *datatype, datatype_ptr );
 
             /* Validate datatype_ptr */
-            MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+            MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;

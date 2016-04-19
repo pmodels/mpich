@@ -112,7 +112,7 @@ static inline int ADD_SUFFIX(send_normal)(struct MPIDI_VC *vc,
                               int context_offset, MPIR_Request **request,
                               int dt_contig,
                               intptr_t data_sz,
-                              MPID_Datatype *dt_ptr,
+                              MPIR_Datatype *dt_ptr,
                               MPI_Aint dt_true_lb,
                               uint64_t send_type)
 {
@@ -276,7 +276,7 @@ ADD_SUFFIX(do_isend)(struct MPIDI_VC *vc,
     int dt_contig, mpi_errno = MPI_SUCCESS;
     MPI_Aint dt_true_lb;
     intptr_t data_sz;
-    MPID_Datatype *dt_ptr;
+    MPIR_Datatype *dt_ptr;
     BEGIN_FUNC(FCNAME);
 
     VC_READY_CHECK(vc);

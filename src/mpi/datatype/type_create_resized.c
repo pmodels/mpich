@@ -59,7 +59,7 @@ int MPI_Type_create_resized(MPI_Datatype oldtype,
     static const char FCNAME[] = "MPI_Type_create_resized";
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
-    MPID_Datatype *new_dtp;
+    MPIR_Datatype *new_dtp;
     MPI_Aint aints[2];
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_RESIZED);
 
@@ -73,13 +73,13 @@ int MPI_Type_create_resized(MPI_Datatype oldtype,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPID_Datatype *datatype_ptr = NULL;
+	    MPIR_Datatype *datatype_ptr = NULL;
 
 	    MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
 
             /* Validate datatype_ptr */
 	    MPID_Datatype_get_ptr(oldtype, datatype_ptr);
-            MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+            MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
 	    /* If datatype_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
         }

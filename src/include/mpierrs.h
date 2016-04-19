@@ -224,7 +224,7 @@ cvars:
  */
 #define MPIR_ERRTEST_DATATYPE(datatype, name_, err_)                    \
     {                                                                   \
-        if (HANDLE_GET_MPI_KIND(datatype) != MPID_DATATYPE ||           \
+        if (HANDLE_GET_MPI_KIND(datatype) != MPIR_DATATYPE ||           \
             (HANDLE_GET_KIND(datatype) == HANDLE_KIND_INVALID &&        \
              datatype != MPI_DATATYPE_NULL))                            \
         {                                                               \
@@ -316,7 +316,7 @@ cvars:
         if (HANDLE_GET_KIND(dtype) == HANDLE_KIND_BUILTIN) { ferr=1; }	\
         else {								\
             MPI_Aint errsize;                                           \
-            MPID_Datatype *errdtypeptr;					\
+            MPIR_Datatype *errdtypeptr;					\
             MPID_Datatype_get_ptr(dtype,errdtypeptr);			\
             MPID_Datatype_get_size_macro(dtype,errsize);                \
             if (errdtypeptr && errdtypeptr->true_lb == 0 &&             \

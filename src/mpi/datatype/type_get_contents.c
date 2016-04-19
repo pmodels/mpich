@@ -86,7 +86,7 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPID_Datatype *datatype_ptr = NULL;
+            MPIR_Datatype *datatype_ptr = NULL;
 
 	    /* Check for built-in type */
 	    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
@@ -119,7 +119,7 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
             MPID_Datatype_get_ptr(datatype, datatype_ptr);
 
             /* Validate datatype_ptr */
-            MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+            MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
 	    /* If comm_ptr is not value, it will be reset to null */
             if (mpi_errno) goto fn_fail;
         }

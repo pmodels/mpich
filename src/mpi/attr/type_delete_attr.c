@@ -52,7 +52,7 @@ int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
 {
     static const char FCNAME[] = "MPI_Type_delete_attr";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Datatype *type_ptr = NULL;
+    MPIR_Datatype *type_ptr = NULL;
     MPIR_Attribute *p, **old_p;
     MPIR_Keyval *keyval_ptr = 0;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_DELETE_ATTR);
@@ -70,7 +70,7 @@ int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
-	    MPIR_ERRTEST_KEYVAL(type_keyval, MPID_DATATYPE, "datatype", mpi_errno);
+	    MPIR_ERRTEST_KEYVAL(type_keyval, MPIR_DATATYPE, "datatype", mpi_errno);
 	    MPIR_ERRTEST_KEYVAL_PERM(type_keyval, mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
@@ -87,7 +87,7 @@ int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate type_ptr */
-            MPID_Datatype_valid_ptr( type_ptr, mpi_errno );
+            MPIR_Datatype_valid_ptr( type_ptr, mpi_errno );
 	    /* If type_ptr is not valid, it will be reset to null */
 	    /* Validate keyval_ptr */
             if (mpi_errno) goto fn_fail;

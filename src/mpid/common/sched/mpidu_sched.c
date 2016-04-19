@@ -26,7 +26,7 @@
         if ((datatype_) != MPI_DATATYPE_NULL &&                    \
             HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)   \
         {                                                          \
-            MPID_Datatype *dtp_ = NULL;                            \
+            MPIR_Datatype *dtp_ = NULL;                            \
             MPID_Datatype_get_ptr((datatype_), dtp_);              \
             MPID_Datatype_add_ref(dtp_);                           \
         }                                                          \
@@ -36,7 +36,7 @@
         if ((datatype_) != MPI_DATATYPE_NULL &&                    \
             HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)   \
         {                                                          \
-            MPID_Datatype *dtp_ = NULL;                            \
+            MPIR_Datatype *dtp_ = NULL;                            \
             MPID_Datatype_get_ptr((datatype_), dtp_);              \
             MPID_Datatype_release(dtp_);                           \
         }                                                          \

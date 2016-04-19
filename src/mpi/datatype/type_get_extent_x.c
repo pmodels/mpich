@@ -32,7 +32,7 @@ int MPI_Type_get_extent_x(MPI_Datatype datatype, MPI_Count *lb, MPI_Count *exten
 #define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count *lb, MPI_Count *extent)
 {
-    MPID_Datatype *datatype_ptr = NULL;
+    MPIR_Datatype *datatype_ptr = NULL;
 
     MPID_Datatype_get_ptr(datatype, datatype_ptr);
 
@@ -98,9 +98,9 @@ int MPI_Type_get_extent_x(MPI_Datatype datatype, MPI_Count *lb, MPI_Count *exten
         MPID_BEGIN_ERROR_CHECKS
         {
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-                MPID_Datatype *datatype_ptr = NULL;
+                MPIR_Datatype *datatype_ptr = NULL;
                 MPID_Datatype_get_ptr(datatype, datatype_ptr);
-                MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
             }
 
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */

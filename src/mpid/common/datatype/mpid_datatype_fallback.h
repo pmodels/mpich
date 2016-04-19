@@ -3,23 +3,23 @@
  *  (C) 2016 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#ifndef MPID_DATATYPE_FALLBACK_H_INCLUDED
-#define MPID_DATATYPE_FALLBACK_H_INCLUDED
+#ifndef MPIR_DATATYPE_FALLBACK_H_INCLUDED
+#define MPIR_DATATYPE_FALLBACK_H_INCLUDED
 
 #include "mpidu_datatype.h"
 
 /* Variables */
-#define MPID_Datatype_direct MPIDU_Datatype_direct
-#define MPID_Datatype_builtin MPIDU_Datatype_builtin
-#define MPID_Datatype_mem MPIDU_Datatype_mem
+#define MPIR_Datatype_direct MPIDU_Datatype_direct
+#define MPIR_Datatype_builtin MPIDU_Datatype_builtin
+#define MPIR_Datatype_mem MPIDU_Datatype_mem
 
 /* Macros */
-#define MPID_DATATYPE_N_BUILTIN MPIDU_DATATYPE_N_BUILTIN
+#define MPIR_DATATYPE_N_BUILTIN MPIDU_DATATYPE_N_BUILTIN
 #define MPID_DTYPE_BEGINNING MPIDU_DTYPE_BEGINNING
 #define MPID_DTYPE_END MPIDU_DTYPE_END
 
-typedef MPIDU_Datatype MPID_Datatype;
-typedef MPIDU_Datatype_contents MPID_Datatype_contents;
+typedef MPIDU_Datatype MPIR_Datatype;
+typedef MPIDU_Datatype_contents MPIR_Datatype_contents;
 
 #define MPID_Datatype_add_ref MPIDU_Datatype_add_ref
 #define MPID_Datatype_committed_ptr MPIDU_Datatype_committed_ptr
@@ -31,7 +31,7 @@ typedef MPIDU_Datatype_contents MPID_Datatype_contents;
 #define MPID_Datatype_get_extent_macro MPIDU_Datatype_get_extent_macro
 #define MPID_Datatype_is_contig MPIDU_Datatype_is_contig
 #define MPID_Datatype_release MPIDU_Datatype_release
-#define MPID_Datatype_valid_ptr MPIDU_Datatype_valid_ptr
+#define MPIR_Datatype_valid_ptr MPIDU_Datatype_valid_ptr
 
 #define MPID_Datatype_get_loopdepth_macro MPIDU_Datatype_get_loopdepth_macro
 #define MPID_Datatype_get_loopptr_macro MPIDU_Datatype_get_loopptr_macro

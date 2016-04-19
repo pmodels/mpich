@@ -64,7 +64,7 @@ int MPI_Type_create_hindexed(int count,
     static const char FCNAME[] = "MPI_Type_create_hindexed";
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
-    MPID_Datatype *new_dtp;
+    MPIR_Datatype *new_dtp;
     int i, *ints;
     MPIU_CHKLMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_HINDEXED);
@@ -79,7 +79,7 @@ int MPI_Type_create_hindexed(int count,
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    int j;
-	    MPID_Datatype *datatype_ptr = NULL;
+	    MPIR_Datatype *datatype_ptr = NULL;
 
 	    MPIR_ERRTEST_COUNT(count, mpi_errno);
 	    if (count > 0) {
@@ -91,7 +91,7 @@ int MPI_Type_create_hindexed(int count,
 
 	    if (HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
 		MPID_Datatype_get_ptr(oldtype, datatype_ptr);
-		MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+		MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	    }
 	    for (j=0; j < count; j++) {
