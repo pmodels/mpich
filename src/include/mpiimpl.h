@@ -1608,9 +1608,11 @@ typedef struct MPIR_Request {
         struct {
             MPIR_Errflag_t errflag;
         } nbc;  /* kind : MPIR_COLL_REQUEST */
+#if defined HAVE_DEBUGGER_SUPPORT
         struct {
             struct MPIR_Sendq *dbg_next;
         } send; /* kind : MPID_REQUEST_SEND */
+#endif  /* HAVE_DEBUGGER_SUPPORT */
         struct {
             /* Persistent requests have their own "real" requests */
             struct MPIR_Request *real_request;

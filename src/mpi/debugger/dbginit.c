@@ -351,6 +351,7 @@ static MPIR_Sendq *pool = 0;
 void MPIR_Sendq_remember( MPIR_Request *req,
 			  int rank, int tag, int context_id )
 {
+#if defined HAVE_DEBUGGER_SUPPORT
     MPIR_Sendq *p;
 
     MPID_THREAD_CS_ENTER(POBJ, req->pobj_mutex);
@@ -377,10 +378,12 @@ void MPIR_Sendq_remember( MPIR_Request *req,
     req->u.send.dbg_next = p;
 fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, req->pobj_mutex);
+#endif  /* HAVE_DEBUGGER_SUPPORT */
 }
 
 void MPIR_Sendq_forget( MPIR_Request *req )
 {
+#if defined HAVE_DEBUGGER_SUPPORT
     MPIR_Sendq *p, *prev;
 
     MPID_THREAD_CS_ENTER(POBJ, req->pobj_mutex);
@@ -398,6 +401,7 @@ void MPIR_Sendq_forget( MPIR_Request *req )
     p->next = pool;
     pool    = p;
     MPID_THREAD_CS_EXIT(POBJ, req->pobj_mutex);
+#endif  /* HAVE_DEBUGGER_SUPPORT */
 }
 
 static int SendqFreePool( void *d )
