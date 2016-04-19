@@ -285,7 +285,7 @@ int MPIR_Barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+    if (comm_ptr->comm_kind == MPIR_INTRACOMM) {
         /* intracommunicator */
         mpi_errno = MPIR_Barrier_intra( comm_ptr, errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);

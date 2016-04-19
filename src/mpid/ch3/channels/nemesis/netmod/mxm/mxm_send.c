@@ -117,7 +117,7 @@ int MPID_nem_mxm_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, vo
     MPIU_Assert(sreq != NULL);
     MPIU_Object_set_ref(sreq, 2);
     MPIU_Memcpy(&(sreq->dev.pending_pkt), (char *) hdr, sizeof(MPIDI_CH3_Pkt_t));
-    sreq->kind = MPID_REQUEST_SEND;
+    sreq->kind = MPIR_REQUEST_SEND;
     sreq->dev.OnDataAvail = NULL;
     sreq->dev.tmpbuf = NULL;
 

@@ -491,7 +491,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_RESP);
         req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetSendComplete;
         req->dev.OnFinal = MPIDI_CH3_ReqHandler_GetSendComplete;
-        req->kind = MPID_REQUEST_SEND;
+        req->kind = MPIR_REQUEST_SEND;
 
         if (get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP) {
             MPIDI_Pkt_init(get_resp_pkt, MPIDI_CH3_PKT_GET_RESP_IMMED);
@@ -912,7 +912,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         MPIDI_Request_set_type(resp_req, MPIDI_REQUEST_TYPE_GET_ACCUM_RESP);
         resp_req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumSendComplete;
         resp_req->dev.OnFinal = MPIDI_CH3_ReqHandler_GaccumSendComplete;
-        resp_req->kind = MPID_REQUEST_SEND;
+        resp_req->kind = MPIR_REQUEST_SEND;
 
         /* here we increment the Active Target counter to guarantee the GET-like
          * operation are completed when counter reaches zero. */

@@ -100,11 +100,11 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
     }
 
     switch (e->language) {
-    case MPID_LANG_C:
+    case MPIR_LANG_C:
 	(*e->errfn.C_File_Handler_function)( &fh, &errorcode );
 	break;
 #ifdef HAVE_CXX_BINDING
-    case MPID_LANG_CXX:
+    case MPIR_LANG_CXX:
 	/* See HAVE_LANGUAGE_FORTRAN below for an explanation */
     { void *fh1 = (void *)&fh;
 	(*MPIR_Process.cxx_call_errfn)( 1, fh1, &errorcode, 
@@ -113,8 +113,8 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
 	break;
 #endif
 #ifdef HAVE_FORTRAN_BINDING
-    case MPID_LANG_FORTRAN90:
-    case MPID_LANG_FORTRAN:
+    case MPIR_LANG_FORTRAN90:
+    case MPIR_LANG_FORTRAN:
 	/* The assignemt to a local variable prevents the compiler
 	   from generating a warning about a type-punned pointer.  Since
 	   the value is really const (but MPI didn't define error handlers 

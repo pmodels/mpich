@@ -320,7 +320,7 @@ extern MPID_Thread_tls_t MPIR_Per_thread_key;
 #include "mpi_lang.h"
 /* Known language bindings */
 /*E
-  MPID_Lang_t - Known language bindings for MPI
+  MPIR_Lang_t - Known language bindings for MPI
 
   A few operations in MPI need to know what language they were called from
   or created by.  This type enumerates the possible languages so that
@@ -330,15 +330,15 @@ extern MPID_Thread_tls_t MPIR_Per_thread_key;
   Module:
   Attribute-DS
   E*/
-typedef enum MPID_Lang_t { MPID_LANG_C 
+typedef enum MPIR_Lang_t { MPIR_LANG_C
 #ifdef HAVE_FORTRAN_BINDING
-			   , MPID_LANG_FORTRAN
-			   , MPID_LANG_FORTRAN90
+			   , MPIR_LANG_FORTRAN
+			   , MPIR_LANG_FORTRAN90
 #endif
 #ifdef HAVE_CXX_BINDING
-			   , MPID_LANG_CXX
+			   , MPIR_LANG_CXX
 #endif
-} MPID_Lang_t;
+} MPIR_Lang_t;
 
 /* Macros for the MPI handles (e.g., the object that encodes an
    MPI_Datatype) */
@@ -356,18 +356,18 @@ void MPIR_DatatypeAttrFinalize( void );
 /* TODO examine generated assembly for this construct, it's probably suboptimal
  * on Blue Gene.  An if/else if/else might help the compiler out.  It also lets
  * us hint that one case is likely(), usually the BUILTIN case. */
-#define MPID_Getb_ptr(kind,a,bmsk,ptr)                                  \
+#define MPIR_Getb_ptr(kind,a,bmsk,ptr)                                  \
 {                                                                       \
    switch (HANDLE_GET_KIND(a)) {                                        \
       case HANDLE_KIND_BUILTIN:                                         \
-          ptr=MPID_##kind##_builtin+((a)&(bmsk));                       \
+          ptr=MPIR_##kind##_builtin+((a)&(bmsk));                       \
           break;                                                        \
       case HANDLE_KIND_DIRECT:                                          \
-          ptr=MPID_##kind##_direct+HANDLE_INDEX(a);                     \
+          ptr=MPIR_##kind##_direct+HANDLE_INDEX(a);                     \
           break;                                                        \
       case HANDLE_KIND_INDIRECT:                                        \
-          ptr=((MPID_##kind*)                                           \
-               MPIU_Handle_get_ptr_indirect(a,&MPID_##kind##_mem));     \
+          ptr=((MPIR_##kind*)                                           \
+               MPIU_Handle_get_ptr_indirect(a,&MPIR_##kind##_mem));     \
           break;                                                        \
       case HANDLE_KIND_INVALID:                                         \
       default:								\
@@ -378,15 +378,15 @@ void MPIR_DatatypeAttrFinalize( void );
 
 /* Convert handles to objects for MPI types that do _not_ have any predefined
    objects */
-#define MPID_Get_ptr(kind,a,ptr)					\
+#define MPIR_Get_ptr(kind,a,ptr)					\
 {									\
    switch (HANDLE_GET_KIND(a)) {					\
       case HANDLE_KIND_DIRECT:						\
-          ptr=MPID_##kind##_direct+HANDLE_INDEX(a);			\
+          ptr=MPIR_##kind##_direct+HANDLE_INDEX(a);			\
           break;							\
       case HANDLE_KIND_INDIRECT:					\
-          ptr=((MPID_##kind*)						\
-               MPIU_Handle_get_ptr_indirect(a,&MPID_##kind##_mem));	\
+          ptr=((MPIR_##kind*)						\
+               MPIU_Handle_get_ptr_indirect(a,&MPIR_##kind##_mem));	\
           break;							\
       case HANDLE_KIND_INVALID:						\
       case HANDLE_KIND_BUILTIN:						\
@@ -398,14 +398,14 @@ void MPIR_DatatypeAttrFinalize( void );
 
 /* FIXME: the masks should be defined with the handle definitions instead
    of inserted here as literals */
-#define MPIR_Comm_get_ptr(a,ptr)       MPID_Getb_ptr(Comm,a,0x03ffffff,ptr)
-#define MPIR_Group_get_ptr(a,ptr)      MPID_Getb_ptr(Group,a,0x03ffffff,ptr)
-#define MPIR_Errhandler_get_ptr(a,ptr) MPID_Getb_ptr(Errhandler,a,0x3,ptr)
-#define MPIR_Op_get_ptr(a,ptr)         MPID_Getb_ptr(Op,a,0x000000ff,ptr)
-#define MPIR_Info_get_ptr(a,ptr)       MPID_Getb_ptr(Info,a,0x03ffffff,ptr)
-#define MPIR_Win_get_ptr(a,ptr)        MPID_Get_ptr(Win,a,ptr)
-#define MPID_Request_get_ptr(a,ptr)    MPID_Get_ptr(Request,a,ptr)
-#define MPIR_Grequest_class_get_ptr(a,ptr) MPID_Get_ptr(Grequest_class,a,ptr)
+#define MPIR_Comm_get_ptr(a,ptr)       MPIR_Getb_ptr(Comm,a,0x03ffffff,ptr)
+#define MPIR_Group_get_ptr(a,ptr)      MPIR_Getb_ptr(Group,a,0x03ffffff,ptr)
+#define MPIR_Errhandler_get_ptr(a,ptr) MPIR_Getb_ptr(Errhandler,a,0x3,ptr)
+#define MPIR_Op_get_ptr(a,ptr)         MPIR_Getb_ptr(Op,a,0x000000ff,ptr)
+#define MPIR_Info_get_ptr(a,ptr)       MPIR_Getb_ptr(Info,a,0x03ffffff,ptr)
+#define MPIR_Win_get_ptr(a,ptr)        MPIR_Get_ptr(Win,a,ptr)
+#define MPID_Request_get_ptr(a,ptr)    MPIR_Get_ptr(Request,a,ptr)
+#define MPIR_Grequest_class_get_ptr(a,ptr) MPIR_Get_ptr(Grequest_class,a,ptr)
 /* Keyvals have a special format. This is roughly MPID_Get_ptrb, but
    the handle index is in a smaller bit field.  In addition, 
    there is no storage for the builtin keyvals.  
@@ -435,21 +435,21 @@ void MPIR_DatatypeAttrFinalize( void );
 /* Valid pointer checks */
 /* This test is lame.  Should eventually include cookie test 
    and in-range addresses */
-#define MPID_Valid_ptr(kind,ptr,err) \
+#define MPIR_Valid_ptr(kind,ptr,err) \
   {if (!(ptr)) { err = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, \
                                              "**nullptrtype", "**nullptrtype %s", #kind ); } }
-#define MPID_Valid_ptr_class(kind,ptr,errclass,err) \
+#define MPIR_Valid_ptr_class(kind,ptr,errclass,err) \
   {if (!(ptr)) { err = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, errclass, \
                                              "**nullptrtype", "**nullptrtype %s", #kind ); } }
 
-#define MPIR_Info_valid_ptr(ptr,err) MPID_Valid_ptr_class(Info,ptr,MPI_ERR_INFO,err)
+#define MPIR_Info_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Info,ptr,MPI_ERR_INFO,err)
 /* Check not only for a null pointer but for an invalid communicator,
    such as one that has been freed.  Let's try the ref_count as the test
    for now */
 /* ticket #1441: check (refcount<=0) to cover the case of 0, an "over-free" of
  * -1 or similar, and the 0xecec... case when --enable-g=mem is used */
 #define MPIR_Comm_valid_ptr(ptr,err,ignore_rev) {     \
-     MPID_Valid_ptr_class(Comm,ptr,MPI_ERR_COMM,err); \
+     MPIR_Valid_ptr_class(Comm,ptr,MPI_ERR_COMM,err); \
      if ((ptr) && MPIU_Object_get_ref(ptr) <= 0) {    \
          MPIR_ERR_SET(err,MPI_ERR_COMM,"**comm");     \
          ptr = 0;                                     \
@@ -457,12 +457,11 @@ void MPIR_DatatypeAttrFinalize( void );
          MPIR_ERR_SET(err,MPIX_ERR_REVOKED,"**comm"); \
      }                                                \
 }
-#define MPIR_Group_valid_ptr(ptr,err) MPID_Valid_ptr_class(Group,ptr,MPI_ERR_GROUP,err)
-#define MPIR_Win_valid_ptr(ptr,err) MPID_Valid_ptr_class(Win,ptr,MPI_ERR_WIN,err)
-#define MPIR_Op_valid_ptr(ptr,err) MPID_Valid_ptr_class(Op,ptr,MPI_ERR_OP,err)
-#define MPIR_Errhandler_valid_ptr(ptr,err) MPID_Valid_ptr_class(Errhandler,ptr,MPI_ERR_ARG,err)
-#define MPID_Request_valid_ptr(ptr,err) MPID_Valid_ptr_class(Request,ptr,MPI_ERR_REQUEST,err)
-#define MPIR_Keyval_valid_ptr(ptr,err) MPID_Valid_ptr_class(Keyval,ptr,MPI_ERR_KEYVAL,err)
+#define MPIR_Win_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Win,ptr,MPI_ERR_WIN,err)
+#define MPIR_Op_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Op,ptr,MPI_ERR_OP,err)
+#define MPIR_Errhandler_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Errhandler,ptr,MPI_ERR_ARG,err)
+#define MPID_Request_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Request,ptr,MPI_ERR_REQUEST,err)
+#define MPIR_Keyval_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Keyval,ptr,MPI_ERR_KEYVAL,err)
 
 #define MPIR_DATATYPE_IS_PREDEFINED(type) \
     ((HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) || \
@@ -481,16 +480,16 @@ void MPIR_DatatypeAttrFinalize( void );
    properly aligned quantity.  For systems with no alignment rules, 
    all of these masks are zero, and this part of test can be eliminated.
  */
-#define MPID_Pointer_is_invalid(p,alignment) ((p) == 0)
+#define MPIR_Pointer_is_invalid(p,alignment) ((p) == 0)
 /* Fixme: The following MPID_ALIGNED_xxx values are temporary.  They 
    need to be computed by configure and included in the mpichconf.h file.
    Note that they cannot be set conservatively (i.e., as sizeof(object)),
    since the runtime system may generate objects with lesser alignment
    rules if the processor allows them.
  */
-#define MPID_ALIGNED_PTR_INT   1
-#define MPID_ALIGNED_PTR_LONG  1
-#define MPID_ALIGNED_PTR_VOIDP 1
+#define MPIR_ALIGNED_PTR_INT   1
+#define MPIR_ALIGNED_PTR_LONG  1
+#define MPIR_ALIGNED_PTR_VOIDP 1
 /* ------------------------------------------------------------------------- */
 /* end of code that should the following be moved into mpihandlemem.h ?*/
 /* ------------------------------------------------------------------------- */
@@ -576,8 +575,8 @@ typedef struct MPIR_Info {
 } MPIR_Info;
 extern MPIU_Object_alloc_t MPIR_Info_mem;
 /* Preallocated info objects */
-#define MPID_INFO_N_BUILTIN 2
-extern MPIR_Info MPIR_Info_builtin[MPID_INFO_N_BUILTIN];
+#define MPIR_INFO_N_BUILTIN 2
+extern MPIR_Info MPIR_Info_builtin[MPIR_INFO_N_BUILTIN];
 extern MPIR_Info MPIR_Info_direct[];
 /* ------------------------------------------------------------------------- */
 
@@ -657,8 +656,8 @@ typedef union MPIR_Errhandler_fn {
   S*/
 typedef struct MPIR_Errhandler {
   MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
-  MPID_Lang_t        language;
-  MPID_Object_kind   kind;
+  MPIR_Lang_t        language;
+  MPIR_Object_kind   kind;
   MPIR_Errhandler_fn errfn;
   /* Other, device-specific information */
 #ifdef MPID_DEV_ERRHANDLER_DECL
@@ -845,7 +844,7 @@ typedef struct MPIR_Copy_function {
    * Currently the lang-indpendent funcs are used only for keyvals
    */
   MPI_Comm_copy_attr_function *user_function;
-  MPID_Attr_copy_proxy *proxy;
+  MPIR_Attr_copy_proxy *proxy;
   /* The C++ function is the same as the C function */
 } MPIR_Copy_function;
 
@@ -889,7 +888,7 @@ typedef struct MPIR_Delete_function {
    * Currently the lang-indpendent funcs are used only for keyvals
    */
   MPI_Comm_delete_attr_function *user_function;
-  MPID_Attr_delete_proxy *proxy;
+  MPIR_Attr_delete_proxy *proxy;
 } MPIR_Delete_function;
 
 /*S
@@ -901,7 +900,7 @@ typedef struct MPIR_Delete_function {
   S*/
 typedef struct MPIR_Keyval {
     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
-    MPID_Object_kind     kind;
+    MPIR_Object_kind     kind;
     int                  was_freed;
     void                 *extra_state;
     MPIR_Copy_function   copyfn;
@@ -929,9 +928,9 @@ typedef struct MPIR_Keyval {
    to work with the datatype code used in the I/O library.  While this
    is really a limitation in the current Datatype implementation. */
 #ifdef USE_AINT_FOR_ATTRVAL
-typedef MPI_Aint MPID_AttrVal_t;
+typedef MPI_Aint MPIR_AttrVal_t;
 #else
-typedef void * MPID_AttrVal_t;
+typedef void * MPIR_AttrVal_t;
 #endif
 
 /* Attributes need no ref count or handle, but since we want to use the
@@ -983,7 +982,7 @@ typedef struct MPIR_Attribute {
     MPIR_AttrType attrType;         /* Type of the attribute */
     long        pre_sentinal;       /* Used to detect user errors in accessing
 				       the value */
-    MPID_AttrVal_t value;           /* Stored value. An Aint must be at least
+    MPIR_AttrVal_t value;           /* Stored value. An Aint must be at least
 				       as large as an address - some builds
 				       may make an Aint larger than a void * */
     long        post_sentinal;      /* Like pre_sentinal */
@@ -1071,8 +1070,8 @@ typedef struct MPIR_Group {
 
 extern MPIU_Object_alloc_t MPIR_Group_mem;
 /* Preallocated group objects */
-#define MPID_GROUP_N_BUILTIN 1
-extern MPIR_Group MPIR_Group_builtin[MPID_GROUP_N_BUILTIN];
+#define MPIR_GROUP_N_BUILTIN 1
+extern MPIR_Group MPIR_Group_builtin[MPIR_GROUP_N_BUILTIN];
 extern MPIR_Group MPIR_Group_direct[];
 
 /* Object for empty group */
@@ -1092,17 +1091,17 @@ void MPIR_Group_setup_lpid_list( MPIR_Group * );
   MPIR_Comm_kind_t - Name the two types of communicators
   E*/
 typedef enum MPIR_Comm_kind_t {
-    MPID_INTRACOMM = 0, 
-    MPID_INTERCOMM = 1 } MPIR_Comm_kind_t;
+    MPIR_INTRACOMM = 0,
+    MPIR_INTERCOMM = 1 } MPIR_Comm_kind_t;
 
 /* ideally we could add these to MPIR_Comm_kind_t, but there's too much existing
  * code that assumes that the only valid values are INTRACOMM or INTERCOMM */
 typedef enum MPIR_Comm_hierarchy_kind_t {
-    MPID_HIERARCHY_FLAT = 0,        /* no hierarchy */
-    MPID_HIERARCHY_PARENT = 1,      /* has subcommunicators */
-    MPID_HIERARCHY_NODE_ROOTS = 2,  /* is the subcomm for node roots */
-    MPID_HIERARCHY_NODE = 3,        /* is the subcomm for a node */
-    MPID_HIERARCHY_SIZE             /* cardinality of this enum */
+    MPIR_HIERARCHY_FLAT = 0,        /* no hierarchy */
+    MPIR_HIERARCHY_PARENT = 1,      /* has subcommunicators */
+    MPIR_HIERARCHY_NODE_ROOTS = 2,  /* is the subcomm for node roots */
+    MPIR_HIERARCHY_NODE = 3,        /* is the subcomm for a node */
+    MPIR_HIERARCHY_SIZE             /* cardinality of this enum */
 } MPIR_Comm_hierarchy_kind_t;
 /* Communicators */
 
@@ -1218,7 +1217,7 @@ typedef struct MPIR_Comm {
     MPIR_Group   *local_group,   /* Groups in communicator. */
                  *remote_group;  /* The local and remote groups are the
                                     same for intra communicators */
-    MPIR_Comm_kind_t comm_kind;  /* MPID_INTRACOMM or MPID_INTERCOMM */
+    MPIR_Comm_kind_t comm_kind;  /* MPIR_INTRACOMM or MPIR_INTERCOMM */
     char          name[MPI_MAX_OBJECT_NAME];  /* Required for MPI-2 */
     MPIR_Errhandler *errhandler; /* Pointer to the error handler structure */
     struct MPIR_Comm    *local_comm; /* Defined only for intercomms, holds
@@ -1336,8 +1335,8 @@ int MPIR_Comm_apply_hints(MPIR_Comm *comm_ptr, MPIR_Info *info_ptr);
    a private (non-user accessible) dup of comm world that is provided 
    if needed in MPI_Finalize.  Having a separate version of comm_world
    avoids possible interference with User code */
-#define MPID_COMM_N_BUILTIN 3
-extern MPIR_Comm MPID_Comm_builtin[MPID_COMM_N_BUILTIN];
+#define MPIR_COMM_N_BUILTIN 3
+extern MPIR_Comm MPIR_Comm_builtin[MPIR_COMM_N_BUILTIN];
 extern MPIR_Comm MPIR_Comm_direct[];
 /* This is the handle for the internal MPI_COMM_WORLD .  The "2" at the end
    of the handle is 3-1 (e.g., the index in the builtin array) */
@@ -1346,10 +1345,10 @@ extern MPIR_Comm MPIR_Comm_direct[];
 /* The following preprocessor macros provide bitfield access information for
  * context ID values.  They follow a uniform naming pattern:
  *
- * MPID_CONTEXT_foo_WIDTH - the width in bits of the field
- * MPID_CONTEXT_foo_MASK  - A valid bit mask for bit-wise AND and OR operations
+ * MPIR_CONTEXT_foo_WIDTH - the width in bits of the field
+ * MPIR_CONTEXT_foo_MASK  - A valid bit mask for bit-wise AND and OR operations
  *                          with exactly all of the bits in the field set.
- * MPID_CONTEXT_foo_SHIFT - The number of bits that the field should be shifted
+ * MPIR_CONTEXT_foo_SHIFT - The number of bits that the field should be shifted
  *                          rightwards to place it in the least significant bits
  *                          of the ID.  There may still be higher order bits
  *                          from other fields, so the _MASK should be used first
@@ -1358,39 +1357,39 @@ extern MPIR_Comm MPIR_Comm_direct[];
  */
 
 /* yields an rvalue that is the value of the field_name_ in the least significant bits */
-#define MPID_CONTEXT_READ_FIELD(field_name_,id_) \
-    (((id_) & MPID_CONTEXT_##field_name_##_MASK) >> MPID_CONTEXT_##field_name_##_SHIFT)
+#define MPIR_CONTEXT_READ_FIELD(field_name_,id_) \
+    (((id_) & MPIR_CONTEXT_##field_name_##_MASK) >> MPIR_CONTEXT_##field_name_##_SHIFT)
 /* yields an rvalue that is the old_id_ with field_name_ set to field_val_ */
-#define MPID_CONTEXT_SET_FIELD(field_name_,old_id_,field_val_) \
-    ((old_id_ & ~MPID_CONTEXT_##field_name_##_MASK) | ((field_val_) << MPID_CONTEXT_##field_name_##_SHIFT))
+#define MPIR_CONTEXT_SET_FIELD(field_name_,old_id_,field_val_) \
+    ((old_id_ & ~MPIR_CONTEXT_##field_name_##_MASK) | ((field_val_) << MPIR_CONTEXT_##field_name_##_SHIFT))
 
 /* Context suffixes for separating pt2pt and collective communication */
-#define MPID_CONTEXT_SUFFIX_WIDTH (1)
-#define MPID_CONTEXT_SUFFIX_SHIFT (0)
-#define MPID_CONTEXT_SUFFIX_MASK ((1 << MPID_CONTEXT_SUFFIX_WIDTH) - 1)
-#define MPID_CONTEXT_INTRA_PT2PT (0)
-#define MPID_CONTEXT_INTRA_COLL  (1)
-#define MPID_CONTEXT_INTER_PT2PT (0)
-#define MPID_CONTEXT_INTER_COLL  (1)
+#define MPIR_CONTEXT_SUFFIX_WIDTH (1)
+#define MPIR_CONTEXT_SUFFIX_SHIFT (0)
+#define MPIR_CONTEXT_SUFFIX_MASK ((1 << MPIR_CONTEXT_SUFFIX_WIDTH) - 1)
+#define MPIR_CONTEXT_INTRA_PT2PT (0)
+#define MPIR_CONTEXT_INTRA_COLL  (1)
+#define MPIR_CONTEXT_INTER_PT2PT (0)
+#define MPIR_CONTEXT_INTER_COLL  (1)
 
 /* Used to derive context IDs for sub-communicators from a parent communicator's
    context ID value.  This field comes after the one bit suffix.
    values are shifted left by 1. */
-#define MPID_CONTEXT_SUBCOMM_WIDTH (2)
-#define MPID_CONTEXT_SUBCOMM_SHIFT (MPID_CONTEXT_SUFFIX_WIDTH + MPID_CONTEXT_SUFFIX_SHIFT)
-#define MPID_CONTEXT_SUBCOMM_MASK      (((1 << MPID_CONTEXT_SUBCOMM_WIDTH) - 1) << MPID_CONTEXT_SUBCOMM_SHIFT)
+#define MPIR_CONTEXT_SUBCOMM_WIDTH (2)
+#define MPIR_CONTEXT_SUBCOMM_SHIFT (MPIR_CONTEXT_SUFFIX_WIDTH + MPIR_CONTEXT_SUFFIX_SHIFT)
+#define MPIR_CONTEXT_SUBCOMM_MASK      (((1 << MPIR_CONTEXT_SUBCOMM_WIDTH) - 1) << MPIR_CONTEXT_SUBCOMM_SHIFT)
 
 /* these values may be added/subtracted directly to/from an existing context ID
  * in order to determine the context ID of the child/parent */
-#define MPID_CONTEXT_PARENT_OFFSET    (0 << MPID_CONTEXT_SUBCOMM_SHIFT)
-#define MPID_CONTEXT_INTRANODE_OFFSET (1 << MPID_CONTEXT_SUBCOMM_SHIFT)
-#define MPID_CONTEXT_INTERNODE_OFFSET (2 << MPID_CONTEXT_SUBCOMM_SHIFT)
+#define MPIR_CONTEXT_PARENT_OFFSET    (0 << MPIR_CONTEXT_SUBCOMM_SHIFT)
+#define MPIR_CONTEXT_INTRANODE_OFFSET (1 << MPIR_CONTEXT_SUBCOMM_SHIFT)
+#define MPIR_CONTEXT_INTERNODE_OFFSET (2 << MPIR_CONTEXT_SUBCOMM_SHIFT)
 
 /* this field (IS_LOCALCOM) is used to derive a context ID for local
  * communicators of intercommunicators without communication */
-#define MPID_CONTEXT_IS_LOCALCOMM_WIDTH (1)
-#define MPID_CONTEXT_IS_LOCALCOMM_SHIFT (MPID_CONTEXT_SUBCOMM_SHIFT + MPID_CONTEXT_SUBCOMM_WIDTH)
-#define MPID_CONTEXT_IS_LOCALCOMM_MASK (((1 << MPID_CONTEXT_IS_LOCALCOMM_WIDTH) - 1) << MPID_CONTEXT_IS_LOCALCOMM_SHIFT)
+#define MPIR_CONTEXT_IS_LOCALCOMM_WIDTH (1)
+#define MPIR_CONTEXT_IS_LOCALCOMM_SHIFT (MPIR_CONTEXT_SUBCOMM_SHIFT + MPIR_CONTEXT_SUBCOMM_WIDTH)
+#define MPIR_CONTEXT_IS_LOCALCOMM_MASK (((1 << MPIR_CONTEXT_IS_LOCALCOMM_WIDTH) - 1) << MPIR_CONTEXT_IS_LOCALCOMM_SHIFT)
 
 /* MPIR_MAX_CONTEXT_MASK is the number of ints that make up the bit vector that
  * describes the context ID prefix space.
@@ -1398,7 +1397,7 @@ extern MPIR_Comm MPIR_Comm_direct[];
  * The following must hold:
  * (num_bits_in_vector) <= (maximum_context_id_prefix)
  *   which is the following in concrete terms:
- * MPIR_MAX_CONTEXT_MASK*MPIR_CONTEXT_INT_BITS <= 2**(MPIR_CONTEXT_ID_BITS - (MPID_CONTEXT_PREFIX_SHIFT + MPID_CONTEXT_DYNAMIC_PROC_WIDTH))
+ * MPIR_MAX_CONTEXT_MASK*MPIR_CONTEXT_INT_BITS <= 2**(MPIR_CONTEXT_ID_BITS - (MPIR_CONTEXT_PREFIX_SHIFT + MPIR_CONTEXT_DYNAMIC_PROC_WIDTH))
  *
  * We currently always assume MPIR_CONTEXT_INT_BITS is 32, regardless of the
  * value of sizeof(int)*CHAR_BITS.  We also make the assumption that CHAR_BITS==8.
@@ -1407,19 +1406,19 @@ extern MPIR_Comm MPIR_Comm_direct[];
  */
 
 /* number of bits to shift right by in order to obtain the context ID prefix */
-#define MPID_CONTEXT_PREFIX_SHIFT (MPID_CONTEXT_IS_LOCALCOMM_SHIFT + MPID_CONTEXT_IS_LOCALCOMM_WIDTH)
-#define MPID_CONTEXT_PREFIX_WIDTH (MPIR_CONTEXT_ID_BITS - (MPID_CONTEXT_PREFIX_SHIFT + MPID_CONTEXT_DYNAMIC_PROC_WIDTH))
-#define MPID_CONTEXT_PREFIX_MASK (((1 << MPID_CONTEXT_PREFIX_WIDTH) - 1) << MPID_CONTEXT_PREFIX_SHIFT)
+#define MPIR_CONTEXT_PREFIX_SHIFT (MPIR_CONTEXT_IS_LOCALCOMM_SHIFT + MPIR_CONTEXT_IS_LOCALCOMM_WIDTH)
+#define MPIR_CONTEXT_PREFIX_WIDTH (MPIR_CONTEXT_ID_BITS - (MPIR_CONTEXT_PREFIX_SHIFT + MPIR_CONTEXT_DYNAMIC_PROC_WIDTH))
+#define MPIR_CONTEXT_PREFIX_MASK (((1 << MPIR_CONTEXT_PREFIX_WIDTH) - 1) << MPIR_CONTEXT_PREFIX_SHIFT)
 
-#define MPID_CONTEXT_DYNAMIC_PROC_WIDTH (1) /* the upper half is reserved for dynamic procs */
-#define MPID_CONTEXT_DYNAMIC_PROC_SHIFT (MPIR_CONTEXT_ID_BITS - MPID_CONTEXT_DYNAMIC_PROC_WIDTH) /* the upper half is reserved for dynamic procs */
-#define MPID_CONTEXT_DYNAMIC_PROC_MASK (((1 << MPID_CONTEXT_DYNAMIC_PROC_WIDTH) - 1) << MPID_CONTEXT_DYNAMIC_PROC_SHIFT)
+#define MPIR_CONTEXT_DYNAMIC_PROC_WIDTH (1) /* the upper half is reserved for dynamic procs */
+#define MPIR_CONTEXT_DYNAMIC_PROC_SHIFT (MPIR_CONTEXT_ID_BITS - MPIR_CONTEXT_DYNAMIC_PROC_WIDTH) /* the upper half is reserved for dynamic procs */
+#define MPIR_CONTEXT_DYNAMIC_PROC_MASK (((1 << MPIR_CONTEXT_DYNAMIC_PROC_WIDTH) - 1) << MPIR_CONTEXT_DYNAMIC_PROC_SHIFT)
 
 /* should probably be (sizeof(int)*CHAR_BITS) once we make the code CHAR_BITS-clean */
 #define MPIR_CONTEXT_INT_BITS (32)
 #define MPIR_CONTEXT_ID_BITS (sizeof(MPIU_Context_id_t)*8) /* 8 --> CHAR_BITS eventually */
 #define MPIR_MAX_CONTEXT_MASK \
-    ((1 << (MPIR_CONTEXT_ID_BITS - (MPID_CONTEXT_PREFIX_SHIFT + MPID_CONTEXT_DYNAMIC_PROC_WIDTH))) / MPIR_CONTEXT_INT_BITS)
+    ((1 << (MPIR_CONTEXT_ID_BITS - (MPIR_CONTEXT_PREFIX_SHIFT + MPIR_CONTEXT_DYNAMIC_PROC_WIDTH))) / MPIR_CONTEXT_INT_BITS)
 
 /* Utility routines.  Where possible, these are kept in the source directory
    with the other comm routines (src/mpi/comm, in mpicomm.h).  However,
@@ -1434,12 +1433,12 @@ void MPIR_Free_contextid( MPIU_Context_id_t );
 /* Requests */
 /* This currently defines a single structure type for all requests.  
    Eventually, we may want a union type, as used in MPICH-1 */
-/* NOTE-R1: MPID_REQUEST_MPROBE signifies that this is a request created by
+/* NOTE-R1: MPIR_REQUEST_MPROBE signifies that this is a request created by
  * MPI_Mprobe or MPI_Improbe.  Since we use MPI_Request objects as our
  * MPI_Message objects, we use this separate kind in order to provide stronger
  * error checking.  Once a message (backed by a request) is promoted to a real
  * request by calling MPI_Mrecv/MPI_Imrecv, we actually modify the kind to be
- * MPID_REQUEST_RECV in order to keep completion logic as simple as possible. */
+ * MPIR_REQUEST_RECV in order to keep completion logic as simple as possible. */
 /*E
   MPID_Request_kind - Kinds of MPI Requests
 
@@ -1448,14 +1447,14 @@ void MPIR_Free_contextid( MPIU_Context_id_t );
 
   E*/
 typedef enum MPID_Request_kind_t {
-    MPID_REQUEST_UNDEFINED,
-    MPID_REQUEST_SEND,
-    MPID_REQUEST_RECV,
+    MPIR_REQUEST_UNDEFINED,
+    MPIR_REQUEST_SEND,
+    MPIR_REQUEST_RECV,
     MPID_PREQUEST_SEND,
     MPID_PREQUEST_RECV,
     MPID_UREQUEST,
     MPID_COLL_REQUEST,
-    MPID_REQUEST_MPROBE, /* see NOTE-R1 */
+    MPIR_REQUEST_MPROBE, /* see NOTE-R1 */
     MPID_WIN_REQUEST,
     MPID_LAST_REQUEST_KIND
 #ifdef MPID_DEV_REQUEST_KIND_DECL
@@ -1478,7 +1477,7 @@ struct MPIR_Grequest_fns {
     MPIX_Grequest_wait_function   *wait_fn;
     void             *grequest_extra_state;
     MPIX_Grequest_class         greq_class;
-    MPID_Lang_t                  greq_lang;         /* language that defined
+    MPIR_Lang_t                  greq_lang;         /* language that defined
                                                        the generalize req */
 };
 
@@ -1790,13 +1789,13 @@ int MPID_Mem_was_alloced( void *ptr );  /* brad : this isn't used or implemented
   Module:
   Collective-DS
   E*/
-typedef enum MPIR_Op_kind { MPID_OP_NULL=0, MPID_OP_MAX=1, MPID_OP_MIN=2,
-			    MPID_OP_SUM=3, MPID_OP_PROD=4, 
-	       MPID_OP_LAND=5, MPID_OP_BAND=6, MPID_OP_LOR=7, MPID_OP_BOR=8,
-	       MPID_OP_LXOR=9, MPID_OP_BXOR=10, MPID_OP_MAXLOC=11, 
-               MPID_OP_MINLOC=12, MPID_OP_REPLACE=13, 
-               MPID_OP_NO_OP=14,
-               MPID_OP_USER_NONCOMMUTE=32, MPID_OP_USER=33 }
+typedef enum MPIR_Op_kind { MPIR_OP_NULL=0, MPIR_OP_MAX=1, MPIR_OP_MIN=2,
+			    MPIR_OP_SUM=3, MPIR_OP_PROD=4,
+	       MPIR_OP_LAND=5, MPIR_OP_BAND=6, MPIR_OP_LOR=7, MPIR_OP_BOR=8,
+	       MPIR_OP_LXOR=9, MPIR_OP_BXOR=10, MPIR_OP_MAXLOC=11,
+               MPIR_OP_MINLOC=12, MPIR_OP_REPLACE=13,
+               MPIR_OP_NO_OP=14,
+               MPIR_OP_USER_NONCOMMUTE=32, MPIR_OP_USER=33 }
   MPIR_Op_kind;
 
 /*S
@@ -1861,11 +1860,11 @@ typedef union MPIR_User_function {
 typedef struct MPIR_Op {
      MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
      MPIR_Op_kind       kind;
-     MPID_Lang_t        language;
+     MPIR_Lang_t        language;
      MPIR_User_function function;
   } MPIR_Op;
-#define MPID_OP_N_BUILTIN 15
-extern MPIR_Op MPIR_Op_builtin[MPID_OP_N_BUILTIN];
+#define MPIR_OP_N_BUILTIN 15
+extern MPIR_Op MPIR_Op_builtin[MPIR_OP_N_BUILTIN];
 extern MPIR_Op MPIR_Op_direct[];
 extern MPIU_Object_alloc_t MPIR_Op_mem;
 
@@ -2045,7 +2044,7 @@ typedef struct MPIR_TopoOps {
 typedef struct MPIR_Commops {
     int (*split_type)(MPIR_Comm *, int, int, MPIR_Info *, MPIR_Comm **);
 } MPIR_Commops;
-extern struct MPIR_Commops  *MPID_Comm_fns; /* Communicator creation functions */
+extern struct MPIR_Commops  *MPIR_Comm_fns; /* Communicator creation functions */
 
 
 /* Per process data */
@@ -3764,7 +3763,7 @@ int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int * lpid_ptr, MPIU_BOOL i
 /* These functions are used in the implementation of collective and
    other internal operations. They are wrappers around MPID send/recv
    functions. They do sends/receives by setting the context offset to
-   MPID_CONTEXT_INTRA(INTER)_COLL. */
+   MPIR_CONTEXT_INTRA(INTER)_COLL. */
 int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype);
 int MPIC_Wait(MPID_Request * request_ptr, MPIR_Errflag_t *errflag);

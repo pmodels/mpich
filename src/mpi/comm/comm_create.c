@@ -79,7 +79,7 @@ int MPIR_Comm_create_calculate_mapping(MPIR_Group  *group_ptr,
     MPIR_Group_setup_lpid_list( group_ptr );
 
     /* Optimize for groups contained within MPI_COMM_WORLD. */
-    if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+    if (comm_ptr->comm_kind == MPIR_INTRACOMM) {
         int wsize;
         subsetOfWorld = 1;
         wsize         = MPIR_Process.comm_world->local_size;
@@ -169,7 +169,7 @@ int MPIR_Comm_create_map(int         local_n,
 
     MPIR_Comm_map_irregular(newcomm, mapping_comm, local_mapping,
                             local_n, MPIR_COMM_MAP_DIR_L2L, NULL);
-    if (mapping_comm->comm_kind == MPID_INTERCOMM) {
+    if (mapping_comm->comm_kind == MPIR_INTERCOMM) {
         MPIR_Comm_map_irregular(newcomm, mapping_comm, remote_mapping,
                                 remote_n, MPIR_COMM_MAP_DIR_R2R, NULL);
     }
@@ -198,7 +198,7 @@ int MPIR_Comm_create_intra(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr,
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_CREATE_INTRA);
 
-    MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
+    MPIU_Assert(comm_ptr->comm_kind == MPIR_INTRACOMM);
 
     n = group_ptr->size;
     *newcomm_ptr = NULL;
@@ -299,7 +299,7 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_CREATE_INTER);
 
-    MPIU_Assert(comm_ptr->comm_kind == MPID_INTERCOMM);
+    MPIU_Assert(comm_ptr->comm_kind == MPIR_INTERCOMM);
 
     /* Create a new communicator from the specified group members */
 
@@ -536,12 +536,12 @@ int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm)
 
 
     /* ... body of routine ...  */
-    if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+    if (comm_ptr->comm_kind == MPIR_INTRACOMM) {
         mpi_errno = MPIR_Comm_create_intra(comm_ptr, group_ptr, &newcomm_ptr);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else {
-        MPIU_Assert(comm_ptr->comm_kind == MPID_INTERCOMM);
+        MPIU_Assert(comm_ptr->comm_kind == MPIR_INTERCOMM);
         mpi_errno = MPIR_Comm_create_inter(comm_ptr, group_ptr, &newcomm_ptr);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }

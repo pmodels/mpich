@@ -68,7 +68,7 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
     *active = TRUE;
     switch(request_ptr->kind)
     {
-	case MPID_REQUEST_SEND:
+	case MPIR_REQUEST_SEND:
 	{
 	    if (status != MPI_STATUS_IGNORE)
 	    {
@@ -80,7 +80,7 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
             if (NULL != request) *request = MPI_REQUEST_NULL;
 	    break;
 	}
-	case MPID_REQUEST_RECV:
+	case MPIR_REQUEST_RECV:
 	{
 	    MPIR_Request_extract_status(request_ptr, status);
 	    mpi_errno = request_ptr->status.MPI_ERROR;
@@ -255,8 +255,8 @@ int MPIR_Request_get_error(MPID_Request * request_ptr)
 
     switch(request_ptr->kind)
     {
-	case MPID_REQUEST_SEND:
-	case MPID_REQUEST_RECV:
+	case MPIR_REQUEST_SEND:
+	case MPIR_REQUEST_RECV:
         case MPID_COLL_REQUEST:
 	{
 	    mpi_errno = request_ptr->status.MPI_ERROR;
@@ -308,9 +308,9 @@ int MPIR_Request_get_error(MPID_Request * request_ptr)
     
 	    switch (request_ptr->greq_fns->greq_lang)
 	    {
-		case MPID_LANG_C:
+		case MPIR_LANG_C:
 #ifdef HAVE_CXX_BINDING
-		case MPID_LANG_CXX:
+		case MPIR_LANG_CXX:
 #endif
 		    rc = (request_ptr->greq_fns->query_fn)(
 			request_ptr->greq_fns->grequest_extra_state,
@@ -319,8 +319,8 @@ int MPIR_Request_get_error(MPID_Request * request_ptr)
 			MPI_ERR_OTHER,;, "**user", "**userquery %d", rc);
 		    break;
 #ifdef HAVE_FORTRAN_BINDING
-		case MPID_LANG_FORTRAN:
-		case MPID_LANG_FORTRAN90:
+		case MPIR_LANG_FORTRAN:
+		case MPIR_LANG_FORTRAN90:
 		{
 		    MPI_Fint ierr;
 		    MPI_Fint is[sizeof(MPI_Status)/sizeof(int)];
@@ -373,7 +373,7 @@ void MPIR_Grequest_set_lang_f77( MPI_Request greq )
 
     MPID_Request_get_ptr( greq, greq_ptr );
 
-    greq_ptr->greq_fns->greq_lang = MPID_LANG_FORTRAN;
+    greq_ptr->greq_fns->greq_lang = MPIR_LANG_FORTRAN;
 }
 #endif
 
@@ -389,9 +389,9 @@ int MPIR_Grequest_cancel(MPID_Request * request_ptr, int complete)
     
     switch (request_ptr->greq_fns->greq_lang)
     {
-	case MPID_LANG_C:
+	case MPIR_LANG_C:
 #ifdef HAVE_CXX_BINDING
-	case MPID_LANG_CXX:
+	case MPIR_LANG_CXX:
 #endif
 	    rc = (request_ptr->greq_fns->cancel_fn)(
 		request_ptr->greq_fns->grequest_extra_state, complete);
@@ -399,8 +399,8 @@ int MPIR_Grequest_cancel(MPID_Request * request_ptr, int complete)
 		MPI_ERR_OTHER,;, "**user", "**usercancel %d", rc);
 	    break;
 #ifdef HAVE_FORTRAN_BINDING
-	case MPID_LANG_FORTRAN:
-	case MPID_LANG_FORTRAN90:
+	case MPIR_LANG_FORTRAN:
+	case MPIR_LANG_FORTRAN90:
 	{
 	    MPI_Fint ierr;
 	    MPI_Fint icomplete = complete;
@@ -440,9 +440,9 @@ int MPIR_Grequest_query(MPID_Request * request_ptr)
     
     switch (request_ptr->greq_fns->greq_lang)
     {
-	case MPID_LANG_C:
+	case MPIR_LANG_C:
 #ifdef HAVE_CXX_BINDING
-	case MPID_LANG_CXX:
+	case MPIR_LANG_CXX:
 #endif
 	    rc = (request_ptr->greq_fns->query_fn)(request_ptr->greq_fns->grequest_extra_state,
 		&request_ptr->status);
@@ -450,8 +450,8 @@ int MPIR_Grequest_query(MPID_Request * request_ptr)
 		{;}, "**user", "**userquery %d", rc);
 	    break;
 #ifdef HAVE_FORTRAN_BINDING
-	case MPID_LANG_FORTRAN:
-	case MPID_LANG_FORTRAN90:
+	case MPIR_LANG_FORTRAN:
+	case MPIR_LANG_FORTRAN90:
 	{
 	    MPI_Fint ierr;
 	    MPI_Fint is[sizeof(MPI_Status)/sizeof(int)];
@@ -491,17 +491,17 @@ int MPIR_Grequest_free(MPID_Request * request_ptr)
     
     switch (request_ptr->greq_fns->greq_lang)
     {
-	case MPID_LANG_C:
+	case MPIR_LANG_C:
 #ifdef HAVE_CXX_BINDING
-	case MPID_LANG_CXX:
+	case MPIR_LANG_CXX:
 #endif
 	    rc = (request_ptr->greq_fns->free_fn)(request_ptr->greq_fns->grequest_extra_state);
 	    MPIR_ERR_CHKANDSTMT1((rc != MPI_SUCCESS), mpi_errno, MPI_ERR_OTHER,
 		{;}, "**user", "**userfree %d", rc);
 	    break;
 #ifdef HAVE_FORTRAN_BINDING
-	case MPID_LANG_FORTRAN:
-	case MPID_LANG_FORTRAN90:
+	case MPIR_LANG_FORTRAN:
+	case MPIR_LANG_FORTRAN90:
 	{
 	    MPI_Fint ierr;
 		    

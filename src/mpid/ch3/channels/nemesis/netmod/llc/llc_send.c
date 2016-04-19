@@ -46,7 +46,7 @@ int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
     struct MPID_Request *sreq = MPID_Request_create();
     MPIU_Assert(sreq != NULL);
     MPIU_Object_set_ref(sreq, 2);
-    sreq->kind = MPID_REQUEST_SEND;
+    sreq->kind = MPIR_REQUEST_SEND;
 
     /* Used in llc_poll --> MPID_nem_llc_send_handler */
     sreq->ch.vc = vc;
@@ -189,7 +189,7 @@ int MPID_nem_llc_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, vo
     sreq = MPID_Request_create();
     MPIU_Assert(sreq != NULL);
     MPIU_Object_set_ref(sreq, 2);
-    sreq->kind = MPID_REQUEST_SEND;
+    sreq->kind = MPIR_REQUEST_SEND;
 
     sreq->ch.vc = vc;
     sreq->dev.OnDataAvail = 0;
@@ -264,8 +264,8 @@ int MPID_nem_llc_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, in
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_ISENDCONTIGMSG);
 
-    if (sreq->kind == MPID_REQUEST_UNDEFINED) {
-        sreq->kind = MPID_REQUEST_SEND;
+    if (sreq->kind == MPIR_REQUEST_UNDEFINED) {
+        sreq->kind = MPIR_REQUEST_SEND;
     }
     dprintf("llc_iSendConitig,sreq=%p,hdr=%p,hdr_sz=%ld,data=%p,data_sz=%ld\n",
             sreq, hdr, hdr_sz, data, data_sz);
@@ -814,7 +814,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
                 lcmd = (LLC_cmd_t *) events[0].side.initiator.req_id;
                 MPID_Request *req = ((struct llc_cmd_area *) lcmd->usr_area)->cbarg;
 
-                if (req->kind != MPID_REQUEST_MPROBE) {
+                if (req->kind != MPIR_REQUEST_MPROBE) {
                     /* Unpack non-contiguous dt */
                     int is_contig;
                     MPIDU_Datatype_is_contig(req->dev.datatype, &is_contig);
@@ -979,7 +979,7 @@ int MPID_nem_llc_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
     struct MPID_Request *sreq = MPID_Request_create();
     MPIU_Assert(sreq != NULL);
     MPIU_Object_set_ref(sreq, 2);
-    sreq->kind = MPID_REQUEST_SEND;
+    sreq->kind = MPIR_REQUEST_SEND;
 
     /* Used in llc_poll --> MPID_nem_llc_send_handler */
     sreq->ch.vc = vc;

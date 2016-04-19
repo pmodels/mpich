@@ -83,7 +83,7 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_INIT);
 
     /* Override split_type */
-    MPID_Comm_fns = &comm_fns;
+    MPIR_Comm_fns = &comm_fns;
 
     mpi_errno = MPID_nem_init (pg_rank, pg_p, has_parent);
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);

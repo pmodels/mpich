@@ -120,7 +120,7 @@ int MPI_Bsend_init(const void *buf, int count, MPI_Datatype datatype,
     /* ... body of routine ...  */
     
     mpi_errno = MPID_Bsend_init(buf, count, datatype, dest, tag, comm_ptr,
-				MPID_CONTEXT_INTRA_PT2PT, &request_ptr);
+				MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
     MPIR_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
 

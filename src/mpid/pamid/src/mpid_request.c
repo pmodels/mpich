@@ -21,30 +21,30 @@
  */
 #include <mpidimpl.h>
 
-#ifndef MPID_REQUEST_PREALLOC
+#ifndef MPIR_REQUEST_PREALLOC
 #if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
-#define  MPID_REQUEST_PREALLOC 16
+#define  MPIR_REQUEST_PREALLOC 16
 #elif (MPIU_HANDLE_ALLOCATION_METHOD == MPIU_HANDLE_ALLOCATION_THREAD_LOCAL)
-#define  MPID_REQUEST_PREALLOC 512  //Have direct more reqyests for all threads
+#define  MPIR_REQUEST_PREALLOC 512  //Have direct more reqyests for all threads
 #else
-#define MPID_REQUEST_PREALLOC 8
+#define MPIR_REQUEST_PREALLOC 8
 #endif
 #endif
 
 /**
- * \defgroup MPID_REQUEST MPID Request object management
+ * \defgroup MPIR_REQUEST MPID Request object management
  *
  * Accessors and actors for MPID Requests
  */
 
 
 /* these are referenced by src/mpi/pt2pt/wait.c in PMPI_Wait! */
-MPID_Request MPID_Request_direct[MPID_REQUEST_PREALLOC] __attribute__((__aligned__(64)));
+MPID_Request MPID_Request_direct[MPIR_REQUEST_PREALLOC] __attribute__((__aligned__(64)));
 MPIU_Object_alloc_t MPID_Request_mem =
   {
-    0, 0, 0, 0, MPID_REQUEST, sizeof(MPID_Request),
+    0, 0, 0, 0, MPIR_REQUEST, sizeof(MPID_Request),
     MPID_Request_direct,
-    MPID_REQUEST_PREALLOC
+    MPIR_REQUEST_PREALLOC
   };
 
 
@@ -58,7 +58,7 @@ void MPIDI_Request_allocate_pool()
   prev = MPIU_Handle_obj_alloc_unsafe(&MPID_Request_mem);
   MPID_assert(prev != NULL);
   prev->mpid.next = NULL;
-  for (i = 1; i < MPID_REQUEST_TLS_MAX; ++i) {
+  for (i = 1; i < MPIR_REQUEST_TLS_MAX; ++i) {
     cur = MPIU_Handle_obj_alloc_unsafe(&MPID_Request_mem);
     MPID_assert(cur != NULL);
     cur->mpid.next = prev;
@@ -66,7 +66,7 @@ void MPIDI_Request_allocate_pool()
   }
   MPIU_THREAD_CS_EXIT(HANDLEALLOC,);
   MPIDI_Process.request_handles[MPIDI_THREAD_ID()].head = cur;
-  MPIDI_Process.request_handles[MPIDI_THREAD_ID()].count += MPID_REQUEST_TLS_MAX;
+  MPIDI_Process.request_handles[MPIDI_THREAD_ID()].count += MPIR_REQUEST_TLS_MAX;
 }
 #endif
 

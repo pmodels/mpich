@@ -28,10 +28,10 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
     }
 
     MPIU_Assert(message != NULL);
-    MPIU_Assert(message->kind == MPID_REQUEST_MPROBE);
+    MPIU_Assert(message->kind == MPIR_REQUEST_MPROBE);
 
     /* promote the request object to be a "real" recv request */
-    message->kind = MPID_REQUEST_RECV;
+    message->kind = MPIR_REQUEST_RECV;
 
     *rreqp = rreq = message;
 

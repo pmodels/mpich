@@ -466,15 +466,15 @@ typedef struct MPIDI_Request {
     MPIDI_CH3_Pkt_t pending_pkt;
     struct MPID_Request * next;
 } MPIDI_Request;
-#define MPID_REQUEST_DECL MPIDI_Request dev;
+#define MPIR_REQUEST_DECL MPIDI_Request dev;
 
 #if defined(MPIDI_CH3_REQUEST_DECL)
 #define MPID_DEV_REQUEST_DECL			\
-MPID_REQUEST_DECL				\
+MPIR_REQUEST_DECL				\
 MPIDI_CH3_REQUEST_DECL
 #else
 #define MPID_DEV_REQUEST_DECL			\
-MPID_REQUEST_DECL
+MPIR_REQUEST_DECL
 #endif
 
 #ifdef MPIDI_CH3_REQUEST_KIND_DECL

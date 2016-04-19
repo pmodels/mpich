@@ -97,7 +97,7 @@ int MPI_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status)
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPID_Probe(source, tag, comm_ptr, MPID_CONTEXT_INTRA_PT2PT, status);
+    mpi_errno = MPID_Probe(source, tag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, status);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

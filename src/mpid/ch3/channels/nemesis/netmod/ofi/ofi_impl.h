@@ -268,10 +268,10 @@ static inline int MPID_nem_ofi_create_req_lw(MPID_Request ** request, int refcnt
         MPID_Abort(NULL, MPI_ERR_NO_SPACE, -1, "Cannot allocate Request");
 
     MPIU_Assert(req != NULL);
-    MPIU_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPID_REQUEST);
+    MPIU_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);
 
     MPIU_Object_set_ref(req, refcnt);
-    req->kind = MPID_REQUEST_SEND;
+    req->kind = MPIR_REQUEST_SEND;
     MPIR_cc_set(&req->cc, 0); // request is already completed
     req->cc_ptr  = &req->cc;
     req->status.MPI_ERROR  = MPI_SUCCESS;

@@ -34,7 +34,7 @@
    and for the handles.  This is a 4 bit value.  0 is reserved for so 
    that all-zero handles can be flagged as an error. */
 /*E
-  MPID_Object_kind - Object kind (communicator, window, or file)
+  MPIR_Object_kind - Object kind (communicator, window, or file)
 
   Notes:
   This enum is used by keyvals and errhandlers to indicate the type of
@@ -57,7 +57,7 @@
   Module:
   Attribute-DS
   E*/
-typedef enum MPID_Object_kind { 
+typedef enum MPIR_Object_kind {
   MPID_COMM       = 0x1, 
   MPID_GROUP      = 0x2,
   MPID_DATATYPE   = 0x3,
@@ -68,11 +68,11 @@ typedef enum MPID_Object_kind {
   MPID_WIN        = 0x8,
   MPID_KEYVAL     = 0x9,
   MPID_ATTR       = 0xa,
-  MPID_REQUEST    = 0xb,
+  MPIR_REQUEST    = 0xb,
   MPID_PROCGROUP  = 0xc,               /* These are internal device objects */
   MPID_VCONN      = 0xd,
   MPID_GREQ_CLASS = 0xf
-  } MPID_Object_kind;
+  } MPIR_Object_kind;
 
 #define HANDLE_MPI_KIND_SHIFT 26
 #define HANDLE_GET_MPI_KIND(a) ( ((a)&0x3c000000) >> HANDLE_MPI_KIND_SHIFT )
@@ -381,7 +381,7 @@ typedef struct MPIU_Object_alloc_t {
     int                initialized;     /* */
     void              *(*indirect)[];   /* Pointer to indirect object blocks */
     int                indirect_size;   /* Number of allocated indirect blocks */
-    MPID_Object_kind   kind;            /* Kind of object this is for */
+    MPIR_Object_kind   kind;            /* Kind of object this is for */
     int                size;            /* Size of an individual object */
     void               *direct;         /* Pointer to direct block, used 
                                            for allocation */

@@ -62,10 +62,10 @@ int MPIR_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs
     rank = comm_ptr->rank;
 
     /* If I'm the root, then scatter */
-    if (((comm_ptr->comm_kind == MPID_INTRACOMM) && (root == rank)) ||
-        ((comm_ptr->comm_kind == MPID_INTERCOMM) && (root == MPI_ROOT)))
+    if (((comm_ptr->comm_kind == MPIR_INTRACOMM) && (root == rank)) ||
+        ((comm_ptr->comm_kind == MPIR_INTERCOMM) && (root == MPI_ROOT)))
     {
-        if (comm_ptr->comm_kind == MPID_INTRACOMM)
+        if (comm_ptr->comm_kind == MPIR_INTRACOMM)
             comm_size = comm_ptr->local_size;
         else
             comm_size = comm_ptr->remote_size;
@@ -81,7 +81,7 @@ int MPIR_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs
 
         for (i = 0; i < comm_size; i++) {
             if (sendcounts[i]) {
-                if ((comm_ptr->comm_kind == MPID_INTRACOMM) && (i == rank)) {
+                if ((comm_ptr->comm_kind == MPIR_INTRACOMM) && (i == rank)) {
                     if (recvbuf != MPI_IN_PLACE) {
                         mpi_errno = MPID_Sched_copy(((char *)sendbuf+displs[rank]*extent),
                                                     sendcounts[rank], sendtype,
@@ -218,7 +218,7 @@ int MPI_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-            if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+            if (comm_ptr->comm_kind == MPIR_INTRACOMM) {
                 MPIR_ERRTEST_INTRA_ROOT(comm_ptr, root, mpi_errno);
                 rank = comm_ptr->rank;
                 comm_size = comm_ptr->local_size;
@@ -272,7 +272,7 @@ int MPI_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[
                 }
             }
 
-            if (comm_ptr->comm_kind == MPID_INTERCOMM) {
+            if (comm_ptr->comm_kind == MPIR_INTERCOMM) {
                 MPIR_ERRTEST_INTER_ROOT(comm_ptr, root, mpi_errno);
                 if (root == MPI_ROOT) {
                     comm_size = comm_ptr->remote_size;

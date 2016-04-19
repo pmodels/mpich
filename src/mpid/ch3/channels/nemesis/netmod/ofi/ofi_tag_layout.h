@@ -13,7 +13,7 @@
  *
  *********************************************************************************/
 #define MPID_PROTOCOL_MASK       (0x00000000F0000000ULL)
-#define MPID_CONTEXT_MASK        (0x0000FFFF00000000ULL)
+#define MPIR_CONTEXT_MASK        (0x0000FFFF00000000ULL)
 #define MPID_SOURCE_MASK         (0xFFFF000000000000ULL)
 #define MPID_TAG_MASK            (0x000000000FFFFFFFULL)
 #define MPID_PGID_MASK           (0xFFFFFFFF00000000ULL)

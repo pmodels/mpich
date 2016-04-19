@@ -330,7 +330,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
     (*new_intercomm_ptr)->remote_size    = remote_size;
     (*new_intercomm_ptr)->local_size     = local_comm_ptr->local_size;
     (*new_intercomm_ptr)->rank           = local_comm_ptr->rank;
-    (*new_intercomm_ptr)->comm_kind      = MPID_INTERCOMM;
+    (*new_intercomm_ptr)->comm_kind      = MPIR_INTERCOMM;
     (*new_intercomm_ptr)->local_comm     = 0;
     (*new_intercomm_ptr)->is_low_group   = is_low_group;
 
@@ -503,7 +503,7 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 		   process that is the local leader (local_comm_ptr->rank == 
 		   local_leader because we can then use peer_comm_ptr->rank
 		   to get the rank in peer_comm of the local leader. */
-		if (peer_comm_ptr->comm_kind == MPID_INTRACOMM &&
+		if (peer_comm_ptr->comm_kind == MPIR_INTRACOMM &&
 		    local_comm_ptr->rank == local_leader && 
 		    peer_comm_ptr->rank == remote_leader) {
 		    MPIR_ERR_SET(mpi_errno,MPI_ERR_RANK,"**ranksdistinct");

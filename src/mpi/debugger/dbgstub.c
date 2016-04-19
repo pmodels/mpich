@@ -46,7 +46,7 @@ enum { TYPE_UNKNOWN = 0,
        TYPE_MPIR_COMM_LIST = 2, 
        TYPE_MPIDI_REQUEST = 3, 
        TYPE_MPIDI_MESSAGE_MATCH = 4,
-       TYPE_MPID_REQUEST = 5, 
+       TYPE_MPIR_REQUEST = 5,
        TYPE_MPIR_SENDQ = 6,
        TYPE_MPIDI_MESSAGE_MATCH_PARTS = 7,
 } KnownTypes;
@@ -57,7 +57,7 @@ enum { TYPE_UNKNOWN = 0,
 
 static int knownTypesArray[] = { TYPE_UNKNOWN, TYPE_MPID_COMM, 
 				 TYPE_MPIR_COMM_LIST, TYPE_MPIDI_REQUEST, 
-				 TYPE_MPIDI_MESSAGE_MATCH, TYPE_MPID_REQUEST, 
+				 TYPE_MPIDI_MESSAGE_MATCH, TYPE_MPIR_REQUEST,
 				 TYPE_MPIR_SENDQ, 
 				 TYPE_MPIDI_MESSAGE_MATCH_PARTS };
 
@@ -82,7 +82,7 @@ mqs_type * dbgrI_find_type(mqs_image *image, char *name,
 	curType = TYPE_MPIDI_MESSAGE_MATCH_PARTS;
     }
     else if (strcmp( name, "MPID_Request" ) == 0) {
-	curType = TYPE_MPID_REQUEST;
+	curType = TYPE_MPIR_REQUEST;
     }
     else if (strcmp( name, "MPIR_Sendq" ) == 0) {
 	curType = TYPE_MPIR_SENDQ;
@@ -192,7 +192,7 @@ int dbgrI_field_offset(mqs_type *type, char *name)
 	    }
 	}
 	break;
-    case TYPE_MPID_REQUEST:
+    case TYPE_MPIR_REQUEST:
 	{
 	    MPID_Request c;
 	    if (strcmp( name, "dev" ) == 0) {

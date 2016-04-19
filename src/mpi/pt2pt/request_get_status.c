@@ -117,7 +117,7 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
     {
 	switch(request_ptr->kind)
 	{
-        case MPID_REQUEST_SEND:
+        case MPIR_REQUEST_SEND:
         {
             if (status != MPI_STATUS_IGNORE)
             {
@@ -127,7 +127,7 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
             break;
         }
         
-        case MPID_REQUEST_RECV:
+        case MPIR_REQUEST_RECV:
         {
             MPIR_Request_extract_status(request_ptr, status);
             mpi_errno = request_ptr->status.MPI_ERROR;

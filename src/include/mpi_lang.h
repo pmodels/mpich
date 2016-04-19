@@ -41,7 +41,7 @@ extern "C" {
  */
 typedef
 int
-(MPID_Attr_copy_proxy)(
+(MPIR_Attr_copy_proxy)(
     MPI_Comm_copy_attr_function* user_function,
     int handle,
     int keyval,
@@ -54,7 +54,7 @@ int
 
 typedef
 int
-(MPID_Attr_delete_proxy)(
+(MPIR_Attr_delete_proxy)(
     MPI_Comm_delete_attr_function* user_function,
     int handle,
     int keyval,
@@ -66,8 +66,8 @@ int
 void
 MPIR_Keyval_set_proxy(
     int keyval,
-    MPID_Attr_copy_proxy copy_proxy,
-    MPID_Attr_delete_proxy delete_proxy
+    MPIR_Attr_copy_proxy copy_proxy,
+    MPIR_Attr_delete_proxy delete_proxy
     );
 
 #if defined(__cplusplus)

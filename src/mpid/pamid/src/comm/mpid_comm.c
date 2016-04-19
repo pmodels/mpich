@@ -227,7 +227,7 @@ void MPIDI_Coll_comm_create(MPIR_Comm *comm)
   if (!MPIDI_Process.optimized.collectives)
     return;
 
-  if(comm->comm_kind != MPID_INTRACOMM) return;
+  if(comm->comm_kind != MPIR_INTRACOMM) return;
   /* Create a geometry */
 
   comm->coll_fns = MPL_calloc0(1, MPIR_Collops);
@@ -372,7 +372,7 @@ void MPIDI_Coll_comm_destroy(MPIR_Comm *comm)
   if (!MPIDI_Process.optimized.collectives)
     return;
 
-  if(comm->comm_kind != MPID_INTRACOMM)
+  if(comm->comm_kind != MPIR_INTRACOMM)
     return;
 
   /* It's possible (MPIR_Setup_intercomm_localcomm) to have an intracomm

@@ -791,7 +791,7 @@ int MPIR_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+    if (comm_ptr->comm_kind == MPIR_INTRACOMM) {
         /* intracommunicator */
         mpi_errno = MPIR_Allgather_intra(sendbuf, sendcount, sendtype,
                                          recvbuf, recvcount, recvtype,
@@ -934,7 +934,7 @@ int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-            if (comm_ptr->comm_kind == MPID_INTERCOMM) {
+            if (comm_ptr->comm_kind == MPIR_INTERCOMM) {
                 MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, sendcount, mpi_errno);
             } else {
                 /* catch common aliasing cases */

@@ -85,7 +85,7 @@ static void MPID_nem_llc_send_handler(void *cba, uint64_t * p_reqid)
     kind = sreq->kind;
     switch (kind) {
         unsigned int reqtype;
-    case MPID_REQUEST_SEND:
+    case MPIR_REQUEST_SEND:
     case MPID_PREQUEST_SEND:{
             reqtype = MPIDI_Request_get_type(sreq);
 

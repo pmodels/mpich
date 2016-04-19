@@ -106,7 +106,7 @@ int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     if (*message) {
-        (*message)->kind = MPID_REQUEST_MPROBE;
+        (*message)->kind = MPIR_REQUEST_MPROBE;
         MPIR_Request_extract_status((*message), status);
     }
 

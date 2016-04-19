@@ -103,7 +103,7 @@ int MPI_Iprobe(int source, int tag, MPI_Comm comm, int *flag,
     /* ... body of routine ...  */
     
     /* FIXME: Is this correct for intercomms? */
-    mpi_errno = MPID_Iprobe(source, tag, comm_ptr, MPID_CONTEXT_INTRA_PT2PT, 
+    mpi_errno = MPID_Iprobe(source, tag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT,
 			    flag, status);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 

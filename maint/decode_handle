@@ -60,7 +60,7 @@ while (scalar @ARGV) {
 ## code from src/include/mpihandlemem.h from which this script was derived
 ## ----8<----
 ##  
-## typedef enum MPID_Object_kind { 
+## typedef enum MPIR_Object_kind {
 ##   MPID_COMM       = 0x1, 
 ##   MPID_GROUP      = 0x2,
 ##   MPID_DATATYPE   = 0x3,
@@ -71,11 +71,11 @@ while (scalar @ARGV) {
 ##   MPID_WIN        = 0x8,
 ##   MPID_KEYVAL     = 0x9,
 ##   MPID_ATTR       = 0xa,
-##   MPID_REQUEST    = 0xb,
+##   MPIR_REQUEST    = 0xb,
 ##   MPID_PROCGROUP  = 0xc,               /* These are internal device objects */
 ##   MPID_VCONN      = 0xd,
 ##   MPID_GREQ_CLASS = 0xf
-##   } MPID_Object_kind;
+##   } MPIR_Object_kind;
 ## 
 ## #define HANDLE_MPI_KIND_SHIFT 26
 ## #define HANDLE_GET_MPI_KIND(a) ( ((a)&0x3c000000) >> HANDLE_MPI_KIND_SHIFT )

@@ -131,7 +131,7 @@ static int recv_nb(struct dte_data_representation_t data,
     int context_offset;
     size_t size;
     mpi_errno = MPI_SUCCESS;
-    context_offset = MPID_CONTEXT_INTRA_COLL;
+    context_offset = MPIR_CONTEXT_INTRA_COLL;
     comm = (MPIR_Comm *) grp_h;
     if (!ec_h.handle) {
         MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**hcoll_wrong_arg",
@@ -198,7 +198,7 @@ static int send_nb(dte_data_representation_t data,
     int context_offset;
     size_t size;
     mpi_errno = MPI_SUCCESS;
-    context_offset = MPID_CONTEXT_INTRA_COLL;
+    context_offset = MPIR_CONTEXT_INTRA_COLL;
     comm = (MPIR_Comm *) grp_h;
     if (!ec_h.handle) {
         MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**hcoll_wrong_arg",

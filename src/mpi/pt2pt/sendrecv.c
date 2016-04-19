@@ -160,11 +160,11 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPID_Irecv(recvbuf, recvcount, recvtype, source, recvtag, comm_ptr, MPID_CONTEXT_INTRA_PT2PT, &rreq);
+    mpi_errno = MPID_Irecv(recvbuf, recvcount, recvtype, source, recvtag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, &rreq);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* FIXME - Performance for small messages might be better if MPID_Send() were used here instead of MPID_Isend() */
-    mpi_errno = MPID_Isend(sendbuf, sendcount, sendtype, dest, sendtag, comm_ptr, MPID_CONTEXT_INTRA_PT2PT, &sreq);
+    mpi_errno = MPID_Isend(sendbuf, sendcount, sendtype, dest, sendtag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, &sreq);
     if (mpi_errno != MPI_SUCCESS)
     {
 	/* --BEGIN ERROR HANDLING-- */

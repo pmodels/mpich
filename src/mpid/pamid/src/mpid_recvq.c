@@ -742,7 +742,7 @@ MPIDI_Recvq_AEU(MPID_Request *newreq, int source, pami_task_t pami_source, int t
      queue */
   MPID_Request *rreq;
   rreq = newreq;
-  rreq->kind = MPID_REQUEST_RECV;
+  rreq->kind = MPIR_REQUEST_RECV;
   TRACE_MEMSET_R(pami_source,msg_seqno,recv_status);
   TRACE_SET_REQ_VAL(rreq->mpid.envelope.msginfo.MPIseqno,-1);
   TRACE_SET_REQ_VAL(rreq->mpid.envelope.length,-1);

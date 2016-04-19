@@ -70,7 +70,7 @@ static inline MPID_nem_ptl_req_area * REQ_PTL(MPID_Request *req) {
 #define MPID_nem_ptl_request_create_sreq(sreq_, errno_, comm_) do {                                             \
         (sreq_) = MPID_Request_create();                                                                        \
         MPIU_Object_set_ref((sreq_), 2);                                                                        \
-        (sreq_)->kind               = MPID_REQUEST_SEND;                                                        \
+        (sreq_)->kind               = MPIR_REQUEST_SEND;                                                        \
         MPIR_Comm_add_ref(comm_);                                                                               \
         (sreq_)->comm               = comm_;                                                                    \
         (sreq_)->status.MPI_ERROR   = MPI_SUCCESS;                                                              \

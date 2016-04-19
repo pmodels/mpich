@@ -99,7 +99,7 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPID_Request **sreq_ptr, MPL_IOV *iov, int
 	sreq = MPID_Request_create();
 	MPIU_Assert(sreq != NULL);
 	MPIU_Object_set_ref(sreq, 2);
-	sreq->kind = MPID_REQUEST_SEND;
+	sreq->kind = MPIR_REQUEST_SEND;
         sreq->dev.OnDataAvail = 0;
     }
 

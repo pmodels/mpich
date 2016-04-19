@@ -96,7 +96,7 @@ int MPI_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPI_Message *mess
     /* ... body of routine ...  */
 
     *message = MPI_MESSAGE_NULL;
-    mpi_errno = MPID_Improbe(source, tag, comm_ptr, MPID_CONTEXT_INTRA_PT2PT, flag, &msgp, status);
+    mpi_errno = MPID_Improbe(source, tag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, flag, &msgp, status);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     if (*flag) {

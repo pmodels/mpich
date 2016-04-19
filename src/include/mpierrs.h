@@ -206,7 +206,7 @@ cvars:
     }
 
 #define MPIR_ERRTEST_COMM_INTRA(comm_ptr, err )                         \
-    if ((comm_ptr)->comm_kind != MPID_INTRACOMM) {                      \
+    if ((comm_ptr)->comm_kind != MPIR_INTRACOMM) {                      \
         err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
                                    MPI_ERR_COMM,"**commnotintra",0);    \
         goto fn_fail;                                                   \
@@ -433,7 +433,7 @@ cvars:
         }                                                               \
         else								\
         {                                                               \
-            MPIR_ERRTEST_VALID_HANDLE((request_), MPID_REQUEST, (err_), MPI_ERR_REQUEST, "**request"); \
+            MPIR_ERRTEST_VALID_HANDLE((request_), MPIR_REQUEST, (err_), MPI_ERR_REQUEST, "**request"); \
         }                                                               \
     }
 
@@ -441,7 +441,7 @@ cvars:
     {									\
         if ((request_) != MPI_REQUEST_NULL)                             \
         {                                                               \
-            MPIR_ERRTEST_VALID_HANDLE((request_), MPID_REQUEST, (err_), MPI_ERR_REQUEST, "**request"); \
+            MPIR_ERRTEST_VALID_HANDLE((request_), MPIR_REQUEST, (err_), MPI_ERR_REQUEST, "**request"); \
         }                                                               \
     }
 
@@ -450,7 +450,7 @@ cvars:
     {									\
         if ((request_) != MPI_REQUEST_NULL)                             \
         {                                                               \
-            if (HANDLE_GET_MPI_KIND(request_) != MPID_REQUEST) {        \
+            if (HANDLE_GET_MPI_KIND(request_) != MPIR_REQUEST) {        \
                 MPIR_ERR_SETANDSTMT2(err_,MPI_ERR_REQUEST,goto fn_fail, \
                                      "**request_invalid_kind","**request_invalid_kind %d %d", \
                                      i_, HANDLE_GET_MPI_KIND(request_)); \

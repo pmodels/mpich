@@ -33,7 +33,7 @@ int MPIDI_CH3I_comm_create(MPIR_Comm *comm, void *param)
 #endif
     
     /* set up intranode barrier iff this is an intranode communicator */
-    if (comm->hierarchy_kind == MPID_HIERARCHY_NODE) {
+    if (comm->hierarchy_kind == MPIR_HIERARCHY_NODE) {
         MPIR_Collops *cf, **cf_p;
         comm->dev.ch.barrier_vars = NULL;
 
@@ -96,7 +96,7 @@ int MPIDI_CH3I_comm_destroy(MPIR_Comm *comm, void *param)
     goto fn_exit;
 #endif
     
-    if (comm->hierarchy_kind == MPID_HIERARCHY_NODE) {
+    if (comm->hierarchy_kind == MPIR_HIERARCHY_NODE) {
         MPIR_Collops *cf = comm->coll_fns;
 
         /* replace previous coll_fns table */
@@ -168,7 +168,7 @@ static int barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
     int prev;
     int sense;
     
-    MPIU_Assert(comm_ptr->hierarchy_kind == MPID_HIERARCHY_NODE);
+    MPIU_Assert(comm_ptr->hierarchy_kind == MPIR_HIERARCHY_NODE);
     
     /* Trivial barriers return immediately */
     if (comm_ptr->local_size == 1)

@@ -551,7 +551,7 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     my_bc_len = OFI_KVSAPPSTRLEN - my_bc_len;
 
     MPID_nem_ofi_create_req(&sreq, 1);
-    sreq->kind = MPID_REQUEST_SEND;
+    sreq->kind = MPIR_REQUEST_SEND;
     sreq->dev.OnDataAvail = NULL;
     sreq->dev.next = NULL;
     REQ_OFI(sreq)->event_callback = MPID_nem_ofi_connect_to_root_callback;

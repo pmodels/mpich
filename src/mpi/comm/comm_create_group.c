@@ -44,7 +44,7 @@ int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_GROUP);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_CREATE_GROUP);
 
-    MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
+    MPIU_Assert(comm_ptr->comm_kind == MPIR_INTRACOMM);
 
     n = group_ptr->size;
     *newcomm_ptr = NULL;

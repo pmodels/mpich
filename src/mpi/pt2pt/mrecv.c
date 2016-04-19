@@ -96,7 +96,7 @@ int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message *message,
             if (*message != MPI_MESSAGE_NO_PROC) {
                 MPID_Request_valid_ptr(msgp, mpi_errno);
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                MPIR_ERR_CHKANDJUMP((msgp->kind != MPID_REQUEST_MPROBE),
+                MPIR_ERR_CHKANDJUMP((msgp->kind != MPIR_REQUEST_MPROBE),
                                     mpi_errno, MPI_ERR_ARG, "**reqnotmsg");
             }
 

@@ -882,7 +882,7 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
     sreq = MPID_Request_create();
     MPIR_ERR_CHKANDJUMP(sreq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
-    sreq->kind = MPID_REQUEST_SEND;
+    sreq->kind = MPIR_REQUEST_SEND;
     MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_GET_RESP);
     sreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetSendComplete;
     sreq->dev.OnFinal = MPIDI_CH3_ReqHandler_GetSendComplete;
@@ -1205,7 +1205,7 @@ static inline int perform_get_in_lock_queue(MPIR_Win * win_ptr,
     MPIU_Object_set_ref(sreq, 1);
 
     MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_GET_RESP);
-    sreq->kind = MPID_REQUEST_SEND;
+    sreq->kind = MPIR_REQUEST_SEND;
     sreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetSendComplete;
     sreq->dev.OnFinal = MPIDI_CH3_ReqHandler_GetSendComplete;
 
@@ -1381,7 +1381,7 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
     MPIU_Object_set_ref(sreq, 1);
 
     MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_GET_ACCUM_RESP);
-    sreq->kind = MPID_REQUEST_SEND;
+    sreq->kind = MPIR_REQUEST_SEND;
     sreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumSendComplete;
     sreq->dev.OnFinal = MPIDI_CH3_ReqHandler_GaccumSendComplete;
 

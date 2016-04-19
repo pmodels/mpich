@@ -38,7 +38,7 @@ int MPID_Improbe(int source, int tag, MPIR_Comm *comm, int context_offset,
       MPID_Progress_poke();
     }
     else {
-      rreq->kind = MPID_REQUEST_MPROBE;
+      rreq->kind = MPIR_REQUEST_MPROBE;
       MPIR_Request_extract_status(rreq, status);
     }
 

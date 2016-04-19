@@ -207,7 +207,7 @@ int MPID_nem_ptl_improbe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, i
     MPIR_ERR_CHKANDJUMP1(!req, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Request_create");
     MPIU_Object_set_ref(req, 2); /* 1 ref for progress engine and 1 ref for us */
     REQ_PTL(req)->event_handler = handle_mprobe;
-    req->kind = MPID_REQUEST_MPROBE;
+    req->kind = MPIR_REQUEST_MPROBE;
 
     /* create a dummy ME to use for searching the list */
     me.start = NULL;
@@ -327,7 +327,7 @@ int MPID_nem_ptl_pkt_cancel_send_req_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pk
     MPID_nem_ptl_init_req(search_req);
     MPIR_ERR_CHKANDJUMP1(!search_req, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Request_create");
     MPIU_Object_set_ref(search_req, 2); /* 1 ref for progress engine and 1 ref for us */
-    search_req->kind = MPID_REQUEST_MPROBE;
+    search_req->kind = MPIR_REQUEST_MPROBE;
 
     /* create a dummy ME to use for searching the list */
     me.start = NULL;

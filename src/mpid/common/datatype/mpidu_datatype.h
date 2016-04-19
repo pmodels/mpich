@@ -16,7 +16,7 @@
  * - MPIU_Object_alloc_t is defined in src/include/mpihandle.h
  */
 
-#define MPIDU_Datatype_get_ptr(a,ptr)   MPID_Getb_ptr(Datatype,a,0x000000ff,ptr)
+#define MPIDU_Datatype_get_ptr(a,ptr)   MPIR_Getb_ptr(Datatype,a,0x000000ff,ptr)
 /* MPIDU_Datatype_get_basic_id() is useful for creating and indexing into arrays
    that store data on a per-basic type basis */
 #define MPIDU_Datatype_get_basic_id(a) ((a)&0x000000ff)
@@ -275,7 +275,7 @@
     }									    \
 } while(0)
 
-#define MPIDU_Datatype_valid_ptr(ptr,err) MPID_Valid_ptr_class(Datatype,ptr,MPI_ERR_TYPE,err)
+#define MPIDU_Datatype_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Datatype,ptr,MPI_ERR_TYPE,err)
 
 /* to be used only after MPIDU_Datatype_valid_ptr(); the check on
  * err == MPI_SUCCESS ensures that we won't try to dereference the
