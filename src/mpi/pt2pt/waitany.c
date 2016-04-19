@@ -7,8 +7,8 @@
 
 #include "mpiimpl.h"
 
-#if !defined(MPID_REQUEST_PTR_ARRAY_SIZE)
-#define MPID_REQUEST_PTR_ARRAY_SIZE 16
+#if !defined(MPIR_REQUEST_PTR_ARRAY_SIZE)
+#define MPIR_REQUEST_PTR_ARRAY_SIZE 16
 #endif
 
 /* -- Begin Profiling Symbol Block for routine MPI_Waitany */
@@ -69,7 +69,7 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx,
 		MPI_Status *status)
 {
     static const char FCNAME[] = "MPI_Waitany";
-    MPID_Request * request_ptr_array[MPID_REQUEST_PTR_ARRAY_SIZE];
+    MPID_Request * request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
     MPID_Request ** request_ptrs = request_ptr_array;
     MPID_Progress_state progress_state;
     int i;
@@ -108,7 +108,7 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx,
     /* ... body of routine ...  */
     
     /* Convert MPI request handles to a request object pointers */
-    if (count > MPID_REQUEST_PTR_ARRAY_SIZE)
+    if (count > MPIR_REQUEST_PTR_ARRAY_SIZE)
     {
 	MPIU_CHKLMEM_MALLOC_ORJUMP(request_ptrs, MPID_Request **, count * sizeof(MPID_Request *), mpi_errno, "request pointers");
     }
@@ -220,7 +220,7 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx,
     /* ... end of body of routine ... */
     
   fn_exit:
-    if (count > MPID_REQUEST_PTR_ARRAY_SIZE)
+    if (count > MPIR_REQUEST_PTR_ARRAY_SIZE)
     {
 	MPIU_CHKLMEM_FREEALL();
     }

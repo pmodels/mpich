@@ -124,7 +124,7 @@ int MPI_Issend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
     /* ... body of routine ...  */
     
     mpi_errno = MPID_Issend(buf, count, datatype, dest, tag, comm_ptr,
-			    MPID_CONTEXT_INTRA_PT2PT, &request_ptr);
+			    MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
     MPIR_SENDQ_REMEMBER(request_ptr,dest,tag,comm_ptr->context_id);
 

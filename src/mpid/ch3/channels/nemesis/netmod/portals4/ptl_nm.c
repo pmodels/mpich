@@ -368,7 +368,7 @@ int MPID_nem_ptl_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, voi
     *sreq_ptr = MPID_Request_create();
     MPIU_Assert(*sreq_ptr != NULL);
     MPIU_Object_set_ref(*sreq_ptr, 2);
-    (*sreq_ptr)->kind = MPID_REQUEST_SEND;
+    (*sreq_ptr)->kind = MPIR_REQUEST_SEND;
     (*sreq_ptr)->dev.OnDataAvail = NULL;
     (*sreq_ptr)->dev.user_buf = NULL;
 

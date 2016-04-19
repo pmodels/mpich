@@ -77,7 +77,7 @@ int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
 	split_type = MPI_UNDEFINED;
     }
 
-    if (MPID_Comm_fns == NULL || MPID_Comm_fns->split_type == NULL) {
+    if (MPIR_Comm_fns == NULL || MPIR_Comm_fns->split_type == NULL) {
         int color = (split_type == MPI_COMM_TYPE_SHARED) ? comm_ptr->rank : MPI_UNDEFINED;
 
         /* The default implementation is to either pass MPI_UNDEFINED
@@ -87,7 +87,7 @@ int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
     }
     else {
         mpi_errno =
-            MPID_Comm_fns->split_type(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
+            MPIR_Comm_fns->split_type(comm_ptr, split_type, key, info_ptr, newcomm_ptr);
     }
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);

@@ -65,7 +65,7 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm *comm_ptr, int comm_keyval, void *attribut
 	       dual casts are a sign that this is faulty. This will 
 	       need to be fixed in the type/win set_attr routines as 
 	       well. */
-	    p->value    = (MPID_AttrVal_t)(intptr_t)attribute_val;
+	    p->value    = (MPIR_AttrVal_t)(intptr_t)attribute_val;
 	    /* printf( "Updating attr at %x\n", &p->value ); */
 	    /* Does not change the reference count on the keyval */
 	    break;
@@ -81,7 +81,7 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm *comm_ptr, int comm_keyval, void *attribut
 	new_p->attrType      = attrType;
 	new_p->pre_sentinal  = 0;
 	/* FIXME: See the comment above on this dual cast. */
-	new_p->value	     = (MPID_AttrVal_t)(intptr_t)attribute_val;
+	new_p->value	     = (MPIR_AttrVal_t)(intptr_t)attribute_val;
 	new_p->post_sentinal = 0;
 	new_p->next	     = comm_ptr->attributes;
 	MPIR_Keyval_add_ref( keyval_ptr );

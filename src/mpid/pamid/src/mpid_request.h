@@ -26,7 +26,7 @@
 #include "mpidu_datatype.h"
 
 /**
- * \addtogroup MPID_REQUEST
+ * \addtogroup MPIR_REQUEST
  * \{
  */
 
@@ -90,7 +90,7 @@ void    MPIDI_Request_allocate_pool();
 #define MPIU_HANDLE_ALLOCATION_THREAD_LOCAL  1
 
 /* XXX DJG for TLS hack */
-#define MPID_REQUEST_TLS_MAX 128
+#define MPIR_REQUEST_TLS_MAX 128
 
 #if (MPIU_HANDLE_ALLOCATION_METHOD == MPIU_HANDLE_ALLOCATION_THREAD_LOCAL) && defined(__BGQ__)
 
@@ -109,7 +109,7 @@ void    MPIDI_Request_allocate_pool();
 ({                                                                      \
   size_t tid = MPIDI_THREAD_ID();                                       \
   MPIDI_RequestHandle_t *rh = &MPIDI_Process.request_handles[tid];      \
-  if (likely(rh->count < MPID_REQUEST_TLS_MAX))				\
+  if (likely(rh->count < MPIR_REQUEST_TLS_MAX))				\
     {                                                                   \
       /* push request onto the top of the stack */                      \
       req->mpid.next = rh->head;                                        \
@@ -152,7 +152,7 @@ MPIDI_Request_create_basic()
 
   MPIDI_Request_tls_alloc(req);
   MPID_assert(req != NULL);
-  MPID_assert(HANDLE_GET_MPI_KIND(req->handle) == MPID_REQUEST);
+  MPID_assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);
   MPIR_cc_set(&req->cc, 1);
   req->cc_ptr = &req->cc;
 
@@ -271,7 +271,7 @@ static inline void
 MPID_Request_release_inline(MPID_Request *req)
 {
   int count;
-  MPID_assert(HANDLE_GET_MPI_KIND(req->handle) == MPID_REQUEST);
+  MPID_assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);
   MPIU_Object_release_ref(req, &count);
   MPID_assert(count >= 0);
 
@@ -316,7 +316,7 @@ MPID_Request_discard_inline(MPID_Request *req)
     MPIDI_Request_tls_free(req);
 }
 
-#define MPID_REQUEST_SET_COMPLETED(req_) \
+#define MPIR_REQUEST_SET_COMPLETED(req_) \
   MPIDI_Request_complete_norelease_inline(req_)
 
 static inline void

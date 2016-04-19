@@ -38,7 +38,7 @@ static inline int MPIR_Op_is_commutative(MPI_Op op)
     }
     else {
         MPIR_Op_get_ptr(op, op_ptr);
-        if (op_ptr->kind == MPID_OP_USER_NONCOMMUTE)
+        if (op_ptr->kind == MPIR_OP_USER_NONCOMMUTE)
             return FALSE;
         else
             return TRUE;

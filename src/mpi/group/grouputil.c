@@ -12,7 +12,7 @@
 #endif
 
 /* Preallocated group objects */
-MPIR_Group MPIR_Group_builtin[MPID_GROUP_N_BUILTIN] = { {0} };
+MPIR_Group MPIR_Group_builtin[MPIR_GROUP_N_BUILTIN] = { {0} };
 MPIR_Group MPIR_Group_direct[MPID_GROUP_PREALLOC] = { {0} };
 MPIU_Object_alloc_t MPIR_Group_mem = { 0, 0, 0, 0, MPID_GROUP,
 				      sizeof(MPIR_Group), MPIR_Group_direct,
@@ -24,7 +24,7 @@ int MPIR_Group_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIU_Assert(MPID_GROUP_N_BUILTIN == 1); /* update this func if this ever triggers */
+    MPIU_Assert(MPIR_GROUP_N_BUILTIN == 1); /* update this func if this ever triggers */
 
     MPIR_Group_builtin[0].handle = MPI_GROUP_EMPTY;
     MPIU_Object_set_ref(&MPIR_Group_builtin[0], 1);
@@ -378,7 +378,7 @@ int MPIR_Group_check_subset( MPIR_Group *group_ptr, MPIR_Comm *comm_ptr )
     int mpi_errno = MPI_SUCCESS;
     int g1_idx, g2_idx, l1_pid, l2_pid, i;
     MPIR_Group_pmap_t *vmap=0;
-    int vsize = comm_ptr->comm_kind == MPID_INTERCOMM ? comm_ptr->local_size :
+    int vsize = comm_ptr->comm_kind == MPIR_INTERCOMM ? comm_ptr->local_size :
         comm_ptr->remote_size;
     MPIU_CHKLMEM_DECL(1);
 

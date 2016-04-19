@@ -250,7 +250,7 @@ extern MPIDI_Process_t MPIDI_Process;
  */
 
 /* FIXME XXX DJG for TLS hack */
-#define MPID_REQUEST_TLS_MAX 128
+#define MPIR_REQUEST_TLS_MAX 128
 
 #  define MPIDI_Request_tls_alloc(req_) \
     do { \
@@ -289,7 +289,7 @@ extern MPIDI_Process_t MPIDI_Process;
 {								\
     (sreq_) = MPID_Request_create();                            \
     MPIU_Object_set_ref((sreq_), 2);				\
-    (sreq_)->kind = MPID_REQUEST_SEND;				\
+    (sreq_)->kind = MPIR_REQUEST_SEND;				\
     (sreq_)->comm = comm;					\
     (sreq_)->partner_request   = NULL;                          \
     MPIR_Comm_add_ref(comm);					\
@@ -308,7 +308,7 @@ extern MPIDI_Process_t MPIDI_Process;
 {								\
     (rreq_) = MPID_Request_create();                            \
     MPIU_Object_set_ref((rreq_), 2);				\
-    (rreq_)->kind = MPID_REQUEST_RECV;				\
+    (rreq_)->kind = MPIR_REQUEST_RECV;				\
     (rreq_)->partner_request   = NULL;                          \
 }
 
@@ -321,7 +321,7 @@ extern MPIDI_Process_t MPIDI_Process;
             MPIU_Object_set_ref((rreq_), 1);                               \
             /* MT FIXME should these be handled by MPID_Request_create? */ \
             MPIR_cc_set(&(rreq_)->cc, 0);                                  \
-            (rreq_)->kind = MPID_REQUEST_RECV;                             \
+            (rreq_)->kind = MPIR_REQUEST_RECV;                             \
             MPIR_Status_set_procnull(&(rreq_)->status);                    \
         }                                                                  \
         else {                                                             \

@@ -395,7 +395,7 @@ static int MPIDI_Initialize_tmp_comm(struct MPIR_Comm **comm_pptr,
      * If the same process opens connections to the multiple
      * processes, this context ID might get out of sync.
      */
-    tmp_comm->context_id     = MPID_CONTEXT_SET_FIELD(DYNAMIC_PROC, context_id_offset, 1);
+    tmp_comm->context_id     = MPIR_CONTEXT_SET_FIELD(DYNAMIC_PROC, context_id_offset, 1);
     tmp_comm->recvcontext_id = tmp_comm->context_id;
 
     /* sanity: the INVALID context ID value could potentially conflict with the
@@ -409,7 +409,7 @@ static int MPIDI_Initialize_tmp_comm(struct MPIR_Comm **comm_pptr,
     /* Fill in new intercomm */
     tmp_comm->local_size   = 1;
     tmp_comm->rank         = 0;
-    tmp_comm->comm_kind    = MPID_INTERCOMM;
+    tmp_comm->comm_kind    = MPIR_INTERCOMM;
     tmp_comm->local_comm   = NULL;
     tmp_comm->is_low_group = is_low_group;
 
@@ -1409,7 +1409,7 @@ static int MPIDI_SetupNewIntercomm( struct MPIR_Comm *comm_ptr, int remote_comm_
     intercomm->rank         = comm_ptr->rank;
     intercomm->local_group  = NULL;
     intercomm->remote_group = NULL;
-    intercomm->comm_kind    = MPID_INTERCOMM;
+    intercomm->comm_kind    = MPIR_INTERCOMM;
     intercomm->local_comm   = NULL;
     intercomm->coll_fns     = NULL;
     intercomm->mpid.world_ids = NULL; /*FIXME*/

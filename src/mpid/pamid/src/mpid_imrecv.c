@@ -20,7 +20,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
     {
       rreq = MPIDI_Request_create2();
       MPIR_Status_set_procnull(&rreq->status);
-      rreq->kind = MPID_REQUEST_RECV;
+      rreq->kind = MPIR_REQUEST_RECV;
       MPIDI_Request_complete(rreq);
       *rreqp = rreq;
       return MPI_SUCCESS;
@@ -28,10 +28,10 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
     }
 
   MPIU_Assert(message != NULL);
-  MPIU_Assert(message->kind == MPID_REQUEST_MPROBE);
+  MPIU_Assert(message->kind == MPIR_REQUEST_MPROBE);
 
   /* promote the request object to be a "real" recv request */
-  message->kind = MPID_REQUEST_RECV;
+  message->kind = MPIR_REQUEST_RECV;
 
   *rreqp = rreq = message;
 

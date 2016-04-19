@@ -94,10 +94,10 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
                     /* Other kinds of requests, this is fatal.               */
                     /* ----------------------------------------------------- */
                     req = context_to_req(error.op_context);
-                    if (req->kind == MPID_REQUEST_SEND) {
+                    if (req->kind == MPIR_REQUEST_SEND) {
                         mpi_errno = REQ_OFI(req)->event_callback(NULL, req);
                     }
-                    else if (req->kind == MPID_REQUEST_RECV) {
+                    else if (req->kind == MPIR_REQUEST_RECV) {
                         mpi_errno = REQ_OFI(req)->event_callback(&wc, req);
                         req->status.MPI_ERROR = MPI_ERR_TRUNCATE;
                         req->status.MPI_TAG = error.tag;

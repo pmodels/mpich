@@ -235,7 +235,7 @@ int MPIU_Get_internode_rank(MPIR_Comm *comm_ptr, int r)
     MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
     MPIU_Assert(mpi_errno == MPI_SUCCESS);
     MPIU_Assert(r < comm_ptr->remote_size);
-    MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
+    MPIU_Assert(comm_ptr->comm_kind == MPIR_INTRACOMM);
     MPIU_Assert(comm_ptr->internode_table != NULL);
 
     return comm_ptr->internode_table[r];
@@ -256,7 +256,7 @@ int MPIU_Get_intranode_rank(MPIR_Comm *comm_ptr, int r)
     MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
     MPIU_Assert(mpi_errno == MPI_SUCCESS);
     MPIU_Assert(r < comm_ptr->remote_size);
-    MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
+    MPIU_Assert(comm_ptr->comm_kind == MPIR_INTRACOMM);
     MPIU_Assert(comm_ptr->intranode_table != NULL);
 
     /* FIXME this could/should be a list of ranks on the local node, which

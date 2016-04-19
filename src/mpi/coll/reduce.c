@@ -753,7 +753,7 @@ int MPIR_Reduce_intra (
         is_commutative = 1;
     else {
         MPIR_Op_get_ptr(op, op_ptr);
-        is_commutative = (op_ptr->kind == MPID_OP_USER_NONCOMMUTE) ? 0 : 1;
+        is_commutative = (op_ptr->kind == MPIR_OP_USER_NONCOMMUTE) ? 0 : 1;
     }
 
     MPID_Datatype_get_size_macro(datatype, type_size);
@@ -1039,7 +1039,7 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 {
     int mpi_errno = MPI_SUCCESS;
         
-    if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+    if (comm_ptr->comm_kind == MPIR_INTRACOMM) {
         /* intracommunicator */
         mpi_errno = MPIR_Reduce_intra(sendbuf, recvbuf, count, datatype,
                                       op, root, comm_ptr, errflag);
@@ -1077,7 +1077,7 @@ int MPIR_Reduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	/* --END USEREXTENSION-- */
     } else {
-        if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+        if (comm_ptr->comm_kind == MPIR_INTRACOMM) {
             /* intracommunicator */
             mpi_errno = MPIR_Reduce_intra(sendbuf, recvbuf, count, datatype,
                                           op, root, comm_ptr, errflag);
@@ -1175,7 +1175,7 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-	    if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+	    if (comm_ptr->comm_kind == MPIR_INTRACOMM) {
 		MPIR_ERRTEST_INTRA_ROOT(comm_ptr, root, mpi_errno);
 
                 MPIR_ERRTEST_COUNT(count, mpi_errno);
@@ -1203,7 +1203,7 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
                     MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, count, mpi_errno);
             }
 
-	    if (comm_ptr->comm_kind == MPID_INTERCOMM) {
+	    if (comm_ptr->comm_kind == MPIR_INTERCOMM) {
 		MPIR_ERRTEST_INTER_ROOT(comm_ptr, root, mpi_errno);
 
                 if (root == MPI_ROOT) {

@@ -36,14 +36,14 @@ int MPIR_Cancel_impl(MPID_Request *request_ptr)
         
     switch (request_ptr->kind)
     {
-	case MPID_REQUEST_SEND:
+	case MPIR_REQUEST_SEND:
 	{
 	    mpi_errno = MPID_Cancel_send(request_ptr);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	    break;
 	}
 
-	case MPID_REQUEST_RECV:
+	case MPIR_REQUEST_RECV:
 	{
 	    mpi_errno = MPID_Cancel_recv(request_ptr);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);

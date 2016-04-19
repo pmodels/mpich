@@ -306,7 +306,7 @@ int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int * lpid_ptr, MPIU_BOOL i
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_VCR_GET_LPID);
 
-    if (comm_ptr->comm_kind == MPID_INTRACOMM)
+    if (comm_ptr->comm_kind == MPIR_INTRACOMM)
         *lpid_ptr = comm_ptr->dev.vcrt->vcr_table[idx]->lpid;
     else if (is_remote)
         *lpid_ptr = comm_ptr->dev.vcrt->vcr_table[idx]->lpid;

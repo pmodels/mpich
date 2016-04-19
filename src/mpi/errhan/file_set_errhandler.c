@@ -207,7 +207,7 @@ void MPIR_Get_file_error_routine( MPI_Errhandler e,
 	       interface.  This is MPIR_File_call_cxx_errhandler.  
 	       See file_call_errhandler.c */
 #ifdef HAVE_CXX_BINDING
-	    if (e_ptr->language == MPID_LANG_CXX) *kind = 3;
+	    if (e_ptr->language == MPIR_LANG_CXX) *kind = 3;
 #endif
 	}
     }

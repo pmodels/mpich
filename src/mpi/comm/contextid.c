@@ -48,7 +48,7 @@ const int ALL_OWN_MASK_FLAG = MPIR_MAX_CONTEXT_MASK;
 #ifdef MPL_USE_DBG_LOGGING
 static void dump_context_id(MPIU_Context_id_t context_id, char *out_str, int len)
 {
-    int subcomm_type = MPID_CONTEXT_READ_FIELD(SUBCOMM, context_id);
+    int subcomm_type = MPIR_CONTEXT_READ_FIELD(SUBCOMM, context_id);
     const char *subcomm_type_name = NULL;
 
     switch (subcomm_type) {
@@ -69,11 +69,11 @@ static void dump_context_id(MPIU_Context_id_t context_id, char *out_str, int len
                   "context_id=%d (%#x): DYNAMIC_PROC=%d PREFIX=%#x IS_LOCALCOMM=%d SUBCOMM=%s SUFFIX=%s",
                   context_id,
                   context_id,
-                  MPID_CONTEXT_READ_FIELD(DYNAMIC_PROC, context_id),
-                  MPID_CONTEXT_READ_FIELD(PREFIX, context_id),
-                  MPID_CONTEXT_READ_FIELD(IS_LOCALCOMM, context_id),
+                  MPIR_CONTEXT_READ_FIELD(DYNAMIC_PROC, context_id),
+                  MPIR_CONTEXT_READ_FIELD(PREFIX, context_id),
+                  MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, context_id),
                   subcomm_type_name,
-                  (MPID_CONTEXT_READ_FIELD(SUFFIX, context_id) ? "coll" : "pt2pt"));
+                  (MPIR_CONTEXT_READ_FIELD(SUFFIX, context_id) ? "coll" : "pt2pt"));
 }
 #endif
 
@@ -223,7 +223,7 @@ static int locate_context_bit(uint32_t local_mask[])
             if (val & 0xAAAAAAAA) {
                 j += 1;
             }
-            context_id = (MPIR_CONTEXT_INT_BITS * i + j) << MPID_CONTEXT_PREFIX_SHIFT;
+            context_id = (MPIR_CONTEXT_INT_BITS * i + j) << MPIR_CONTEXT_PREFIX_SHIFT;
             return context_id;
         }
     }
@@ -236,7 +236,7 @@ static int locate_context_bit(uint32_t local_mask[])
 static int allocate_context_bit(uint32_t mask[], MPIU_Context_id_t id)
 {
     int raw_prefix, idx, bitpos;
-    raw_prefix = MPID_CONTEXT_READ_FIELD(PREFIX, id);
+    raw_prefix = MPIR_CONTEXT_READ_FIELD(PREFIX, id);
     idx = raw_prefix / MPIR_CONTEXT_INT_BITS;
     bitpos = raw_prefix % MPIR_CONTEXT_INT_BITS;
 
@@ -481,7 +481,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             st.local_mask[ALL_OWN_MASK_FLAG] = 0;
 
         /* Now, try to get a context id */
-        MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
+        MPIU_Assert(comm_ptr->comm_kind == MPIR_INTRACOMM);
         /* In the global and brief-global cases, note that this routine will
          * release that global lock when it needs to wait.  That will allow
          * other processes to enter the global or brief global critical section.
@@ -685,7 +685,7 @@ static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state)
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state *st = state;
 
-    if (st->gcn_cid_kind == MPID_INTERCOMM) {
+    if (st->gcn_cid_kind == MPIR_INTERCOMM) {
         if (st->comm_ptr_inter->rank == 0) {
             mpi_errno =
                 MPID_Sched_recv(st->ctx1, 1, MPIU_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr_inter,
@@ -966,7 +966,7 @@ static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
     MPIU_CHKPMEM_MALLOC(st, struct gcn_state *, sizeof(struct gcn_state), mpi_errno, "gcn_state");
     st->ctx0 = ctx0;
     st->ctx1 = ctx1;
-    if (gcn_cid_kind == MPID_INTRACOMM) {
+    if (gcn_cid_kind == MPIR_INTRACOMM) {
         st->comm_ptr = comm_ptr;
         st->comm_ptr_inter = NULL;
     }
@@ -1028,7 +1028,7 @@ int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPID
     /* add some entries to it */
     mpi_errno =
         sched_get_cid_nonblock(comm_ptr, newcommp, &newcommp->context_id, &newcommp->recvcontext_id,
-                               s, MPID_INTRACOMM);
+                               s, MPIR_INTRACOMM);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -1080,7 +1080,7 @@ int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newc
     /* first get a context ID over the local comm */
     mpi_errno =
         sched_get_cid_nonblock(comm_ptr, newcommp, &newcommp->recvcontext_id, &newcommp->context_id,
-                               s, MPID_INTERCOMM);
+                               s, MPIR_INTERCOMM);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -1187,7 +1187,7 @@ void MPIR_Free_contextid(MPIU_Context_id_t context_id)
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_FREE_CONTEXTID);
 
     /* Convert the context id to the bit position */
-    raw_prefix = MPID_CONTEXT_READ_FIELD(PREFIX, context_id);
+    raw_prefix = MPIR_CONTEXT_READ_FIELD(PREFIX, context_id);
     idx = raw_prefix / MPIR_CONTEXT_INT_BITS;
     bitpos = raw_prefix % MPIR_CONTEXT_INT_BITS;
 
@@ -1200,7 +1200,7 @@ void MPIR_Free_contextid(MPIU_Context_id_t context_id)
     /* The low order bits for dynamic context IDs don't have meaning the
      * same way that low bits of non-dynamic ctx IDs do.  So we have to
      * check the dynamic case first. */
-    if (MPID_CONTEXT_READ_FIELD(DYNAMIC_PROC, context_id)) {
+    if (MPIR_CONTEXT_READ_FIELD(DYNAMIC_PROC, context_id)) {
         MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "skipping dynamic process ctx id, context_id=%d", context_id);
         goto fn_exit;
     }
@@ -1209,7 +1209,7 @@ void MPIR_Free_contextid(MPIU_Context_id_t context_id)
          * localcomms have the same value.  To avoid a double-free situation we just
          * don't free the context ID for localcomms and assume it will be cleaned up
          * when the parent intercomm is itself completely freed. */
-        if (MPID_CONTEXT_READ_FIELD(IS_LOCALCOMM, context_id)) {
+        if (MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, context_id)) {
 #ifdef MPL_USE_DBG_LOGGING
             char dump_str[1024];
             dump_context_id(context_id, dump_str, sizeof(dump_str));
@@ -1217,7 +1217,7 @@ void MPIR_Free_contextid(MPIU_Context_id_t context_id)
 #endif
             goto fn_exit;
         }
-        else if (MPID_CONTEXT_READ_FIELD(SUBCOMM, context_id)) {
+        else if (MPIR_CONTEXT_READ_FIELD(SUBCOMM, context_id)) {
             MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "skipping non-parent communicator ctx id, context_id=%d",
                            context_id);
             goto fn_exit;

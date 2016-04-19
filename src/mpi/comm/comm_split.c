@@ -153,7 +153,7 @@ int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **ne
 
     /* Get the communicator to use in collectives on the local group of 
        processes */
-    if (comm_ptr->comm_kind == MPID_INTERCOMM) {
+    if (comm_ptr->comm_kind == MPIR_INTERCOMM) {
 	if (!comm_ptr->local_comm) {
 	    MPIR_Setup_intercomm_localcomm( comm_ptr );
 	}
@@ -191,7 +191,7 @@ int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **ne
     /* If we're an intercomm, we need to do the same thing for the remote
        table, as we need to know the size of the remote group of the
        same color before deciding to create the communicator */
-    if (comm_ptr->comm_kind == MPID_INTERCOMM) {
+    if (comm_ptr->comm_kind == MPIR_INTERCOMM) {
 	splittype mypair;
 	/* For the remote group, the situation is more complicated.
 	   We need to find the size of our "partner" group in the
@@ -253,7 +253,7 @@ int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **ne
     MPIU_Assert(new_context_id != 0);
 
     /* In the intercomm case, we need to exchange the context ids */
-    if (comm_ptr->comm_kind == MPID_INTERCOMM) {
+    if (comm_ptr->comm_kind == MPIR_INTERCOMM) {
 	if (comm_ptr->rank == 0) {
 	    mpi_errno = MPIC_Sendrecv( &new_context_id, 1, MPIU_CONTEXT_ID_T_DATATYPE, 0, 0,
 				       &remote_context_id, 1, MPIU_CONTEXT_ID_T_DATATYPE, 
@@ -301,7 +301,7 @@ int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **ne
 	   process in the input communicator */
 	MPIU_Sort_inttable( keytable, new_size );
 
-	if (comm_ptr->comm_kind == MPID_INTERCOMM) {
+	if (comm_ptr->comm_kind == MPIR_INTERCOMM) {
 	    MPIU_CHKLMEM_MALLOC(remotekeytable,sorttype*,
 				new_remote_size*sizeof(sorttype),
 				mpi_errno,"remote keytable");

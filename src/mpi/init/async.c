@@ -46,7 +46,7 @@ static void progress_fn(void * data)
      * this comment. */
 
     mpi_errno = MPID_Irecv(NULL, 0, MPI_CHAR, 0, WAKE_TAG, progress_comm_ptr,
-                           MPID_CONTEXT_INTRA_PT2PT, &request_ptr);
+                           MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     MPIU_Assert(!mpi_errno);
     request = request_ptr->handle;
     mpi_errno = MPIR_Wait_impl(&request, &status);
@@ -127,7 +127,7 @@ int MPIR_Finalize_async_thread(void)
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_FINALIZE_ASYNC_THREAD);
 
     mpi_errno = MPID_Isend(NULL, 0, MPI_CHAR, 0, WAKE_TAG, progress_comm_ptr,
-                           MPID_CONTEXT_INTRA_PT2PT, &request_ptr);
+                           MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     MPIU_Assert(!mpi_errno);
     request = request_ptr->handle;
     mpi_errno = MPIR_Wait_impl(&request, &status);

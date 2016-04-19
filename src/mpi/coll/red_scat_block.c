@@ -284,7 +284,7 @@ int MPIR_Reduce_scatter_block_intra (
     }
     else {
         MPIR_Op_get_ptr(op, op_ptr);
-        if (op_ptr->kind == MPID_OP_USER_NONCOMMUTE)
+        if (op_ptr->kind == MPIR_OP_USER_NONCOMMUTE)
             is_commutative = 0;
         else
             is_commutative = 1;
@@ -1017,7 +1017,7 @@ int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
 {
     int mpi_errno = MPI_SUCCESS;
         
-    if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+    if (comm_ptr->comm_kind == MPIR_INTRACOMM) {
         /* intracommunicator */
         mpi_errno = MPIR_Reduce_scatter_block_intra(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -1054,7 +1054,7 @@ int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf,
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	/* --END USEREXTENSION-- */
     } else {
-        if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+        if (comm_ptr->comm_kind == MPIR_INTRACOMM) {
             /* intracommunicator */
             mpi_errno = MPIR_Reduce_scatter_block_intra(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, errflag);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -1158,7 +1158,7 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
             }
 
             MPIR_ERRTEST_RECVBUF_INPLACE(recvbuf, recvcount, mpi_errno);
-            if (comm_ptr->comm_kind == MPID_INTERCOMM) {
+            if (comm_ptr->comm_kind == MPIR_INTERCOMM) {
                 MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, recvcount, mpi_errno);
             } else if (sendbuf != MPI_IN_PLACE && recvcount != 0)
                 MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno)

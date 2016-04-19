@@ -118,7 +118,7 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
     else if (comm1 == comm2) {
 	*result = MPI_IDENT;
     }
-    else if (comm_ptr1->comm_kind == MPID_INTRACOMM) {
+    else if (comm_ptr1->comm_kind == MPIR_INTRACOMM) {
 	MPIR_Group *group_ptr1, *group_ptr2;
 
         mpi_errno = MPIR_Comm_group_impl(comm_ptr1, &group_ptr1);

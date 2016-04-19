@@ -32,7 +32,7 @@ int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
 #endif
 
     if (rreq) {
-       rreq->kind = MPID_REQUEST_MPROBE;
+       rreq->kind = MPIR_REQUEST_MPROBE;
        MPIR_Request_extract_status(rreq, status);
     }
      *message = rreq;

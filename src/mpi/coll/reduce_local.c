@@ -65,14 +65,14 @@ int MPIR_Reduce_local_impl(const void *inbuf, void *inoutbuf, int count, MPI_Dat
         MPIR_Op_get_ptr(op, op_ptr);
 
 #ifdef HAVE_CXX_BINDING
-        if (op_ptr->language == MPID_LANG_CXX) {
+        if (op_ptr->language == MPIR_LANG_CXX) {
             uop = (MPI_User_function *) op_ptr->function.c_function;
             is_cxx_uop = 1;
         }
         else
 #endif
         {
-            if (op_ptr->language == MPID_LANG_C) {
+            if (op_ptr->language == MPIR_LANG_C) {
                 uop = (MPI_User_function *) op_ptr->function.c_function;
             }
             else {

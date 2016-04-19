@@ -58,7 +58,7 @@ int MPIR_Ibarrier_intra(MPIR_Comm *comm_ptr, MPID_Sched_t s)
     int mpi_errno = MPI_SUCCESS;
     int size, rank, src, dst, mask;
 
-    MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
+    MPIU_Assert(comm_ptr->comm_kind == MPIR_INTRACOMM);
 
     size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -103,7 +103,7 @@ int MPIR_Ibarrier_inter(MPIR_Comm *comm_ptr, MPID_Sched_t s)
     MPIR_SCHED_CHKPMEM_DECL(1);
     char *buf = NULL;
 
-    MPIU_Assert(comm_ptr->comm_kind == MPID_INTERCOMM);
+    MPIU_Assert(comm_ptr->comm_kind == MPIR_INTERCOMM);
 
     rank = comm_ptr->rank;
 
@@ -178,7 +178,7 @@ int MPIR_Ibarrier_impl(MPIR_Comm *comm_ptr, MPI_Request *request)
 
     *request = MPI_REQUEST_NULL;
 
-    if (comm_ptr->local_size != 1 || comm_ptr->comm_kind == MPID_INTERCOMM) {
+    if (comm_ptr->local_size != 1 || comm_ptr->comm_kind == MPIR_INTERCOMM) {
         mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         mpi_errno = MPID_Sched_create(&s);

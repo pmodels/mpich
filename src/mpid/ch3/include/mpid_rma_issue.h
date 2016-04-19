@@ -318,7 +318,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     MPIR_ERR_CHKANDJUMP(req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
     MPIU_Object_set_ref(req, 2);
-    req->kind = MPID_REQUEST_SEND;
+    req->kind = MPIR_REQUEST_SEND;
 
     /* set extended packet header, it is freed when the request is freed.  */
     if (ext_hdr_sz > 0) {

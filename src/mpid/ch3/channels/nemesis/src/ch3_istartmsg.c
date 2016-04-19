@@ -92,7 +92,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, MPID_Reques
 	sreq = MPID_Request_create();
 	MPIU_Assert (sreq != NULL);
 	MPIU_Object_set_ref (sreq, 2);
-	sreq->kind = MPID_REQUEST_SEND;
+	sreq->kind = MPIR_REQUEST_SEND;
 
 	sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;
 	sreq->dev.iov[0].MPL_IOV_BUF = (char *) &sreq->dev.pending_pkt;

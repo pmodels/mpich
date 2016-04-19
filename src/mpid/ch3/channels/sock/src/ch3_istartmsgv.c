@@ -25,7 +25,7 @@ static MPID_Request * create_request(MPL_IOV * iov, int iov_count,
 	return NULL;
     /* --END ERROR HANDLING-- */
     MPIU_Object_set_ref(sreq, 2);
-    sreq->kind = MPID_REQUEST_SEND;
+    sreq->kind = MPIR_REQUEST_SEND;
     
     for (i = 0; i < iov_count; i++)
     {
@@ -162,7 +162,7 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov,
 		if (sreq == NULL) {
 		    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
 		}
-		sreq->kind = MPID_REQUEST_SEND;
+		sreq->kind = MPIR_REQUEST_SEND;
         MPIR_cc_set(&(sreq->cc), 0);
 		sreq->status.MPI_ERROR = MPIR_Err_create_code( rc,
 			       MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, 
@@ -230,7 +230,7 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov,
 	if (sreq == NULL) {
 	    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
 	}
-	sreq->kind = MPID_REQUEST_SEND;
+	sreq->kind = MPIR_REQUEST_SEND;
     MPIR_cc_set(&(sreq->cc), 0);
 	sreq->status.MPI_ERROR = MPIR_Err_create_code( MPI_SUCCESS,
 		       MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, 

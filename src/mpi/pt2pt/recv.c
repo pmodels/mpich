@@ -135,7 +135,7 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
        decides to block internally.  MPID_Recv in that case will
        re-aquire the SINGLE_CS before returnning */
     mpi_errno = MPID_Recv(buf, count, datatype, source, tag, comm_ptr, 
-			  MPID_CONTEXT_INTRA_PT2PT, status, &request_ptr);
+			  MPIR_CONTEXT_INTRA_PT2PT, status, &request_ptr);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     if (request_ptr == NULL)

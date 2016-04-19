@@ -223,7 +223,7 @@ int MPIR_Attr_dup_list( int handle, MPIR_Attribute *old_attrs,
         new_p->pre_sentinal     = 0;
 	/* FIXME: This is not correct in some cases (size(MPI_Aint)>
 	 sizeof(intptr_t)) */
-        new_p->value            = (MPID_AttrVal_t)(intptr_t)new_value;
+        new_p->value            = (MPIR_AttrVal_t)(intptr_t)new_value;
         new_p->post_sentinal    = 0;
         new_p->next             = 0;
 
@@ -368,8 +368,8 @@ MPIR_Attr_delete_c_proxy(
 void
 MPIR_Keyval_set_proxy(
     int keyval,
-    MPID_Attr_copy_proxy copy_proxy,
-    MPID_Attr_delete_proxy delete_proxy
+    MPIR_Attr_copy_proxy copy_proxy,
+    MPIR_Attr_delete_proxy delete_proxy
     )
 {
     MPIR_Keyval*  keyval_ptr;

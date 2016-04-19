@@ -92,7 +92,7 @@ int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message *message, MPI_Sta
     /* ... body of routine ...  */
 
     *message = MPI_MESSAGE_NULL;
-    mpi_errno = MPID_Mprobe(source, tag, comm_ptr, MPID_CONTEXT_INTRA_PT2PT, &msgp, status);
+    mpi_errno = MPID_Mprobe(source, tag, comm_ptr, MPIR_CONTEXT_INTRA_PT2PT, &msgp, status);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     if (msgp == NULL) {

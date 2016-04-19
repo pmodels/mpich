@@ -17,17 +17,17 @@
  */
 
 /* Routines and data structures for request allocation and deallocation */
-#ifndef MPID_REQUEST_PREALLOC
-#define MPID_REQUEST_PREALLOC 8
+#ifndef MPIR_REQUEST_PREALLOC
+#define MPIR_REQUEST_PREALLOC 8
 #endif
 
 /* Max depth of recursive calls of MPID_Request_complete */
 #define REQUEST_CB_DEPTH 2
 
-MPID_Request MPID_Request_direct[MPID_REQUEST_PREALLOC] = {{0}};
+MPID_Request MPID_Request_direct[MPIR_REQUEST_PREALLOC] = {{0}};
 MPIU_Object_alloc_t MPID_Request_mem = {
-    0, 0, 0, 0, MPID_REQUEST, sizeof(MPID_Request), MPID_Request_direct,
-    MPID_REQUEST_PREALLOC };
+    0, 0, 0, 0, MPIR_REQUEST, sizeof(MPID_Request), MPID_Request_direct,
+    MPIR_REQUEST_PREALLOC };
 
 /* See the comments above about request creation.  Some routines will
    use macros in mpidimpl.h *instead* of this routine */
@@ -38,9 +38,9 @@ MPIU_Object_alloc_t MPID_Request_mem = {
 MPID_Request * MPID_Request_create(void)
 {
     MPID_Request * req;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_REQUEST_CREATE);
+    MPIDI_STATE_DECL(MPID_STATE_MPIR_REQUEST_CREATE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_REQUEST_CREATE);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIR_REQUEST_CREATE);
     
     req = MPIU_Handle_obj_alloc(&MPID_Request_mem);
     if (req != NULL)
@@ -48,8 +48,8 @@ MPID_Request * MPID_Request_create(void)
 	MPL_DBG_MSG_P(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
 		       "allocated request, handle=0x%08x", req->handle);
 #ifdef MPICH_DBG_OUTPUT
-	/*MPIU_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPID_REQUEST);*/
-	if (HANDLE_GET_MPI_KIND(req->handle) != MPID_REQUEST)
+	/*MPIU_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);*/
+	if (HANDLE_GET_MPI_KIND(req->handle) != MPIR_REQUEST)
 	{
 	    int mpi_errno;
 	    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, 
@@ -64,7 +64,7 @@ MPID_Request * MPID_Request_create(void)
 	   *really* want to set the kind to UNDEFINED? And should the RMA 
 	   values be set only for RMA requests? */
 	MPIU_Object_set_ref(req, 1);
-	req->kind		   = MPID_REQUEST_UNDEFINED;
+	req->kind		   = MPIR_REQUEST_UNDEFINED;
         MPIR_cc_set(&req->cc, 1);
 	req->cc_ptr		   = &req->cc;
 	/* FIXME: status fields meaningful only for receive, and even then
@@ -112,7 +112,7 @@ MPID_Request * MPID_Request_create(void)
 	MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,TYPICAL,"unable to allocate a request");
     }
     
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_REQUEST_CREATE);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIR_REQUEST_CREATE);
     return req;
 }
 
@@ -652,8 +652,8 @@ void MPID_Request_release(MPID_Request *req)
                        "freeing request, handle=0x%08x", req->handle);
 
 #ifdef MPICH_DBG_OUTPUT
-        /*MPIU_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPID_REQUEST);*/
-        if (HANDLE_GET_MPI_KIND(req->handle) != MPID_REQUEST)
+        /*MPIU_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);*/
+        if (HANDLE_GET_MPI_KIND(req->handle) != MPIR_REQUEST)
         {
             int mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
                                                  FCNAME, __LINE__, MPI_ERR_OTHER,

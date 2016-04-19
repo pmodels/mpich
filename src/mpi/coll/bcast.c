@@ -1470,7 +1470,7 @@ inline int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, 
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+    if (comm_ptr->comm_kind == MPIR_INTRACOMM) {
         /* intracommunicator */
         mpi_errno = MPIR_Bcast_intra( buffer, count, datatype, root, comm_ptr, errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -1558,7 +1558,7 @@ int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	    MPIR_ERRTEST_COUNT(count, mpi_errno);
 	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
-	    if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+	    if (comm_ptr->comm_kind == MPIR_INTRACOMM) {
 		MPIR_ERRTEST_INTRA_ROOT(comm_ptr, root, mpi_errno);
 	    }
 	    else {

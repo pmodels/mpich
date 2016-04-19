@@ -19,7 +19,7 @@ int MPID_Cancel_recv(MPID_Request * rreq)
     
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_CANCEL_RECV);
     
-    MPIU_Assert(rreq->kind == MPID_REQUEST_RECV);
+    MPIU_Assert(rreq->kind == MPIR_REQUEST_RECV);
     
     /* If the netmod has its own cancel_recv function, we need to call
        it here. ANYSOURCE cancels (netmod and otherwise) are handled by

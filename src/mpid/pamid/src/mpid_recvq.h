@@ -209,7 +209,7 @@ MPIDI_Recvq_FDU_or_AEP(MPID_Request *newreq, int source, pami_task_t pami_source
   TRACE_SET_REQ_VAL(rreq->mpid.envelope.msginfo.MPIseqno,-1);
   TRACE_SET_REQ_VAL(rreq->mpid.envelope.length,-1);
   TRACE_SET_REQ_VAL(rreq->mpid.envelope.data,(void *) 0);
-  rreq->kind = MPID_REQUEST_RECV;
+  rreq->kind = MPIR_REQUEST_RECV;
   MPIDI_Request_setMatch(rreq, tag, source, context_id);
 #ifdef QUEUE_BINARY_SEARCH_SUPPORT
   if(MPIDI_Process.queue_binary_search_support_on)

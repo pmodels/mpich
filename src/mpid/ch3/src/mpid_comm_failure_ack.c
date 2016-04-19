@@ -89,7 +89,7 @@ int MPID_Comm_AS_enabled(MPIR_Comm *comm_ptr) {
 int MPID_Request_is_anysource(MPID_Request *request_ptr) {
     int ret = 0;
 
-    if (request_ptr->kind == MPID_REQUEST_RECV)
+    if (request_ptr->kind == MPIR_REQUEST_RECV)
         ret = request_ptr->dev.match.parts.rank == MPI_ANY_SOURCE;
 
     return ret;

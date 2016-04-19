@@ -309,7 +309,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, voi
     sreq = MPID_Request_create();
     MPIU_Assert (sreq != NULL);
     MPIU_Object_set_ref (sreq, 2);
-    sreq->kind = MPID_REQUEST_SEND;
+    sreq->kind = MPIR_REQUEST_SEND;
 
     sreq->dev.OnDataAvail = 0;
     sreq->ch.vc = vc;
@@ -448,7 +448,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_
     sreq = MPID_Request_create();
     MPIU_Assert (sreq != NULL);
     MPIU_Object_set_ref (sreq, 2);
-    sreq->kind = MPID_REQUEST_SEND;
+    sreq->kind = MPIR_REQUEST_SEND;
 
     sreq->dev.OnDataAvail = 0;
     sreq->ch.vc = vc;

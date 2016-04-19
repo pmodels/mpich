@@ -1240,7 +1240,7 @@ int MPID_Init(int * argc,
   pami_result_t rc;
 
   /* Override split_type */
-  MPID_Comm_fns = &comm_fns;
+  MPIR_Comm_fns = &comm_fns;
 
   /* ------------------------------------------------------------------------------- */
   /*  Initialize the pami client to get the process rank; needed for env var output. */

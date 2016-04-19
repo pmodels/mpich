@@ -152,7 +152,7 @@ MPIDI_RecvMsg_procnull(MPIR_Comm     * comm,
       MPID_Request * rreq;
       rreq = MPIDI_Request_create2();
       MPIR_Status_set_procnull(&rreq->status);
-      rreq->kind = MPID_REQUEST_RECV;
+      rreq->kind = MPIR_REQUEST_RECV;
       rreq->comm = comm;
       MPIR_Comm_add_ref(comm);
       MPIDI_Request_complete(rreq);

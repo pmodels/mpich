@@ -112,7 +112,7 @@ static int MPIR_Scan_generic (
     }
     else {
         MPIR_Op_get_ptr(op, op_ptr);
-        if (op_ptr->kind == MPID_OP_USER_NONCOMMUTE)
+        if (op_ptr->kind == MPIR_OP_USER_NONCOMMUTE)
             is_commutative = 0;
         else
             is_commutative = 1;

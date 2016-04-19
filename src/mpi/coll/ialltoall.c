@@ -637,7 +637,7 @@ int MPI_Ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
 
-            if (comm_ptr->comm_kind == MPID_INTRACOMM &&
+            if (comm_ptr->comm_kind == MPIR_INTRACOMM &&
                     sendbuf != MPI_IN_PLACE &&
                     sendcount == recvcount &&
                     sendtype == recvtype &&

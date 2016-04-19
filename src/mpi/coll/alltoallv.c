@@ -334,7 +334,7 @@ int MPIR_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispl
 {
     int mpi_errno = MPI_SUCCESS;
         
-    if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+    if (comm_ptr->comm_kind == MPIR_INTRACOMM) {
         /* intracommunicator */
         mpi_errno = MPIR_Alltoallv_intra(sendbuf, sendcounts, sdispls,
                                          sendtype, recvbuf, recvcounts,
@@ -465,12 +465,12 @@ int MPI_Alltoallv(const void *sendbuf, const int *sendcounts,
         {
 	    MPID_Datatype *sendtype_ptr=NULL, *recvtype_ptr=NULL;
             int i, comm_size;
-            int check_send = (comm_ptr->comm_kind == MPID_INTRACOMM && sendbuf != MPI_IN_PLACE);
+            int check_send = (comm_ptr->comm_kind == MPIR_INTRACOMM && sendbuf != MPI_IN_PLACE);
 
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-            if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+            if (comm_ptr->comm_kind == MPIR_INTRACOMM) {
                 comm_size = comm_ptr->local_size;
 
                 if (sendbuf != MPI_IN_PLACE && sendtype == recvtype && sendcounts == recvcounts)
@@ -478,7 +478,7 @@ int MPI_Alltoallv(const void *sendbuf, const int *sendcounts,
             } else
                 comm_size = comm_ptr->remote_size;
 
-            if (comm_ptr->comm_kind == MPID_INTERCOMM && sendbuf == MPI_IN_PLACE) {
+            if (comm_ptr->comm_kind == MPIR_INTERCOMM && sendbuf == MPI_IN_PLACE) {
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sendbuf_inplace");
             }
 

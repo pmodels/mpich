@@ -137,7 +137,7 @@ int MPID_nem_mxm_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm,
 
         req = MPID_Request_create();
         MPIU_Object_set_ref(req, 2);
-        req->kind = MPID_REQUEST_MPROBE;
+        req->kind = MPIR_REQUEST_MPROBE;
         req->comm = comm;
         MPIR_Comm_add_ref(comm);
         req->ch.vc = vc;

@@ -7,8 +7,8 @@
 
 #include "mpiimpl.h"
 
-#if !defined(MPID_REQUEST_PTR_ARRAY_SIZE)
-#define MPID_REQUEST_PTR_ARRAY_SIZE 16
+#if !defined(MPIR_REQUEST_PTR_ARRAY_SIZE)
+#define MPIR_REQUEST_PTR_ARRAY_SIZE 16
 #endif
 
 /* -- Begin Profiling Symbol Block for routine MPI_Testall */
@@ -38,7 +38,7 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 int MPIR_Testall_impl(int count, MPI_Request array_of_requests[], int *flag,
                       MPI_Status array_of_statuses[])
 {
-    MPID_Request * request_ptr_array[MPID_REQUEST_PTR_ARRAY_SIZE];
+    MPID_Request * request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
     MPID_Request ** request_ptrs = request_ptr_array;
     MPI_Status * status_ptr;
     int i;
@@ -50,7 +50,7 @@ int MPIR_Testall_impl(int count, MPI_Request array_of_requests[], int *flag,
     MPIU_CHKLMEM_DECL(1);
 
     /* Convert MPI request handles to a request object pointers */
-    if (count > MPID_REQUEST_PTR_ARRAY_SIZE)
+    if (count > MPIR_REQUEST_PTR_ARRAY_SIZE)
     {
         MPIU_CHKLMEM_MALLOC_ORJUMP(request_ptrs, MPID_Request **,
                 count * sizeof(MPID_Request *), mpi_errno, "request pointers");
@@ -172,7 +172,7 @@ int MPIR_Testall_impl(int count, MPI_Request array_of_requests[], int *flag,
     *flag = (n_completed == count) ? TRUE : FALSE;
 
  fn_exit:
-    if (count > MPID_REQUEST_PTR_ARRAY_SIZE)
+    if (count > MPIR_REQUEST_PTR_ARRAY_SIZE)
     {
         MPIU_CHKLMEM_FREEALL();
     }

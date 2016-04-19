@@ -126,7 +126,7 @@ int MPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source,
     /* ... body of routine ...  */
     
     mpi_errno = MPID_Recv_init(buf, count, datatype, source, tag, comm_ptr, 
-			       MPID_CONTEXT_INTRA_PT2PT, &request_ptr);
+			       MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* return the handle of the request to the user */
