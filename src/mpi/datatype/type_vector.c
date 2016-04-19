@@ -34,7 +34,7 @@ int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype o
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
-    MPID_Datatype *new_dtp;
+    MPIR_Datatype *new_dtp;
     int ints[3];
 
     mpi_errno = MPID_Type_vector(count,
@@ -115,7 +115,7 @@ int MPI_Type_vector(int count,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPID_Datatype *old_ptr = NULL;
+	    MPIR_Datatype *old_ptr = NULL;
 
 	    MPIR_ERRTEST_COUNT(count, mpi_errno);
 	    MPIR_ERRTEST_ARGNEG(blocklength, "blocklen", mpi_errno);
@@ -123,7 +123,7 @@ int MPI_Type_vector(int count,
 	    
 	    if (oldtype != MPI_DATATYPE_NULL && HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
 		MPID_Datatype_get_ptr(oldtype, old_ptr);
-		MPID_Datatype_valid_ptr(old_ptr, mpi_errno);
+		MPIR_Datatype_valid_ptr(old_ptr, mpi_errno);
                 if (mpi_errno) goto fn_fail;
 	    }
         }

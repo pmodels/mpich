@@ -395,7 +395,7 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather(void *buffer, int count, MPI_Datatype 
     int type_size, j, k, i, tmp_mask, is_contig, is_homogeneous ATTRIBUTE((unused));
     int relative_dst, dst_tree_root, my_tree_root, send_offset;
     int recv_offset, tree_root, nprocs_completed, offset;
-    MPID_Datatype *dtp;
+    MPIR_Datatype *dtp;
     MPI_Aint true_extent, true_lb;
     void *tmp_buf;
     struct MPIR_Ibcast_status *status;
@@ -650,7 +650,7 @@ int MPIR_Ibcast_scatter_ring_allgather(void *buffer, int count, MPI_Datatype dat
     int i, j, jnext, left, right;
     MPI_Aint true_extent, true_lb;
     void *tmp_buf = NULL;
-    MPID_Datatype *dtp = NULL;
+    MPIR_Datatype *dtp = NULL;
 
     struct MPIR_Ibcast_status *status;
     MPIR_SCHED_CHKPMEM_DECL(4);
@@ -1056,9 +1056,9 @@ int MPI_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Com
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-                MPID_Datatype *datatype_ptr = NULL;
+                MPIR_Datatype *datatype_ptr = NULL;
                 MPID_Datatype_get_ptr(datatype, datatype_ptr);
-                MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;

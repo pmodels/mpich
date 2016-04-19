@@ -49,7 +49,7 @@ void MPIR_Type_get_envelope_impl(MPI_Datatype datatype,
 	*num_datatypes = 0;
     }
     else {
-	MPID_Datatype *dtp;
+	MPIR_Datatype *dtp;
 
 	MPID_Datatype_get_ptr(datatype, dtp);
 
@@ -115,13 +115,13 @@ int MPI_Type_get_envelope(MPI_Datatype datatype,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPID_Datatype *datatype_ptr = NULL;
+            MPIR_Datatype *datatype_ptr = NULL;
 
             /* Convert MPI object handles to object pointers */
             MPID_Datatype_get_ptr( datatype, datatype_ptr );
 
 	    /* Validate datatype_ptr */
-            MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+            MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
 	    /* If comm_ptr is not value, it will be reset to null */
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }

@@ -159,7 +159,7 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_elements(MPI_Count *bytes_p,
                                             MPI_Count count,
                                             MPI_Datatype datatype)
 {
-    MPID_Datatype *datatype_ptr = NULL;
+    MPIR_Datatype *datatype_ptr = NULL;
 
     MPID_Datatype_get_ptr(datatype, datatype_ptr); /* invalid if builtin */
 
@@ -282,7 +282,7 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_elements(MPI_Count *bytes_p,
 int MPIR_Get_elements_x_impl(const MPI_Status *status, MPI_Datatype datatype, MPI_Count *elements)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Datatype *datatype_ptr = NULL;
+    MPIR_Datatype *datatype_ptr = NULL;
     MPI_Count byte_count;
 
     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
@@ -411,9 +411,9 @@ int MPI_Get_elements_x(const MPI_Status *status, MPI_Datatype datatype, MPI_Coun
         MPID_BEGIN_ERROR_CHECKS
         {
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-                MPID_Datatype *datatype_ptr = NULL;
+                MPIR_Datatype *datatype_ptr = NULL;
                 MPID_Datatype_get_ptr(datatype, datatype_ptr);
-                MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
             }
 

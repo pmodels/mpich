@@ -34,7 +34,7 @@ int MPIR_Type_contiguous_impl(int count,
                               MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Datatype *new_dtp;
+    MPIR_Datatype *new_dtp;
     MPI_Datatype new_handle;
     
     mpi_errno = MPID_Type_contiguous(count,
@@ -153,14 +153,14 @@ int MPI_Type_contiguous(int count,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPID_Datatype *datatype_ptr = NULL;
+            MPIR_Datatype *datatype_ptr = NULL;
 
 	    MPIR_ERRTEST_COUNT(count, mpi_errno);
             MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
 	    
             if (HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
                 MPID_Datatype_get_ptr(oldtype, datatype_ptr);
-                MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+                MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	    }
         }

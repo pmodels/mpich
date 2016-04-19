@@ -58,9 +58,9 @@
   Attribute-DS
   E*/
 typedef enum MPIR_Object_kind {
-  MPID_COMM       = 0x1, 
+  MPID_COMM       = 0x1,
   MPID_GROUP      = 0x2,
-  MPID_DATATYPE   = 0x3,
+  MPIR_DATATYPE   = 0x3,
   MPID_FILE       = 0x4, /* only used obliquely inside MPIR_Errhandler objs */
   MPID_ERRHANDLER = 0x5,
   MPID_OP         = 0x6,

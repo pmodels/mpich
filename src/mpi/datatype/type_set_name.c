@@ -51,7 +51,7 @@ Input Parameters:
 int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Datatype *datatype_ptr = NULL;
+    MPIR_Datatype *datatype_ptr = NULL;
     static int setup = 0;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_SET_NAME);
 
@@ -81,7 +81,7 @@ int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
 	    int slen;
 	    
             /* Validate datatype_ptr */
-            MPID_Datatype_valid_ptr( datatype_ptr, mpi_errno );
+            MPIR_Datatype_valid_ptr( datatype_ptr, mpi_errno );
 	    /* If datatype_ptr is not valid, it will be reset to null */
 	    MPIR_ERRTEST_ARGNULL(type_name,"type_name", mpi_errno);
 

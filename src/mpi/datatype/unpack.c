@@ -49,7 +49,7 @@ int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint *position,
         dt_true_lb = 0;
         data_sz    = outcount * MPID_Datatype_get_basic_size(datatype);
     } else {
-        MPID_Datatype *dt_ptr;
+        MPIR_Datatype *dt_ptr;
         MPID_Datatype_get_ptr(datatype, dt_ptr);
 	contig     = dt_ptr->is_contig;
         dt_true_lb = dt_ptr->true_lb;
@@ -183,10 +183,10 @@ int MPI_Unpack(const void *inbuf, int insize, int *position,
 
 	    if (datatype != MPI_DATATYPE_NULL &&
 		HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-		MPID_Datatype *datatype_ptr = NULL;
+		MPIR_Datatype *datatype_ptr = NULL;
 
 		MPID_Datatype_get_ptr(datatype, datatype_ptr);
-		MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+		MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
 		MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
 	    }
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;

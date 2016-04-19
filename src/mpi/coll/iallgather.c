@@ -46,7 +46,7 @@ static int get_count(MPIR_Comm *comm, int tag, void *state)
 }
 static int dtp_release_ref(MPIR_Comm *comm, int tag, void *state)
 {
-    MPID_Datatype *recv_dtp = state;
+    MPIR_Datatype *recv_dtp = state;
     MPID_Datatype_release(recv_dtp);
     return MPI_SUCCESS;
 }
@@ -67,7 +67,7 @@ int MPIR_Iallgather_rec_dbl(const void *sendbuf, int sendcount, MPI_Datatype sen
     int dst_tree_root, my_tree_root, tree_root;
     int offset, send_offset, recv_offset;
     MPI_Aint recvtype_extent;
-    MPID_Datatype *recv_dtp;
+    MPIR_Datatype *recv_dtp;
     MPIR_SCHED_CHKPMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;
@@ -688,18 +688,18 @@ int MPI_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         {
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (sendbuf != MPI_IN_PLACE && HANDLE_GET_KIND(sendtype) != HANDLE_KIND_BUILTIN) {
-                MPID_Datatype *sendtype_ptr = NULL;
+                MPIR_Datatype *sendtype_ptr = NULL;
                 MPID_Datatype_get_ptr(sendtype, sendtype_ptr);
-                MPID_Datatype_valid_ptr(sendtype_ptr, mpi_errno);
+                MPIR_Datatype_valid_ptr(sendtype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 MPID_Datatype_committed_ptr(sendtype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
 
             if (HANDLE_GET_KIND(recvtype) != HANDLE_KIND_BUILTIN) {
-                MPID_Datatype *recvtype_ptr = NULL;
+                MPIR_Datatype *recvtype_ptr = NULL;
                 MPID_Datatype_get_ptr(recvtype, recvtype_ptr);
-                MPID_Datatype_valid_ptr(recvtype_ptr, mpi_errno);
+                MPIR_Datatype_valid_ptr(recvtype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 MPID_Datatype_committed_ptr(recvtype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;

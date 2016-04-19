@@ -53,7 +53,7 @@
         basic_type_ = MPI_DATATYPE_NULL;                                    \
  } while(0)
 
-/* MPIDU_Datatype_release decrements the reference count on the MPID_Datatype
+/* MPIDU_Datatype_release decrements the reference count on the MPIR_Datatype
  * and, if the refct is then zero, frees the MPIDU_Datatype and associated
  * structures.
  */

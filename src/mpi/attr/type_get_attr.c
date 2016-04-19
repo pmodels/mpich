@@ -36,7 +36,7 @@ int MPIR_TypeGetAttr( MPI_Datatype datatype, int type_keyval, void *attribute_va
     static const char FCNAME[] = "MPI_Type_get_attr";
 #endif
     int mpi_errno = MPI_SUCCESS;
-    MPID_Datatype *type_ptr = NULL;
+    MPIR_Datatype *type_ptr = NULL;
     MPIR_Attribute *p;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_TYPE_GET_ATTR);
 
@@ -51,7 +51,7 @@ int MPIR_TypeGetAttr( MPI_Datatype datatype, int type_keyval, void *attribute_va
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
-	    MPIR_ERRTEST_KEYVAL(type_keyval, MPID_DATATYPE, "datatype", mpi_errno);
+	    MPIR_ERRTEST_KEYVAL(type_keyval, MPIR_DATATYPE, "datatype", mpi_errno);
 #           ifdef NEEDS_POINTER_ALIGNMENT_ADJUST
             /* A common user error is to pass the address of a 4-byte
 	       int when the address of a pointer (or an address-sized int)
@@ -76,7 +76,7 @@ int MPIR_TypeGetAttr( MPI_Datatype datatype, int type_keyval, void *attribute_va
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    /* Validate datatype pointer */
-	    MPID_Datatype_valid_ptr( type_ptr, mpi_errno );
+	    MPIR_Datatype_valid_ptr( type_ptr, mpi_errno );
 	    /* If type_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
         }

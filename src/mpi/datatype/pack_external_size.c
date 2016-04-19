@@ -83,13 +83,13 @@ int MPI_Pack_external_size(const char datarep[],
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPID_Datatype *datatype_ptr = NULL;
+            MPIR_Datatype *datatype_ptr = NULL;
 
             /* Convert MPI object handles to object pointers */
             MPID_Datatype_get_ptr(datatype, datatype_ptr);
 
             /* Validate datatype_ptr */
-            MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+            MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
 	    /* If datatype_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
         }

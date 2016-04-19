@@ -81,7 +81,7 @@ int MPI_Type_create_subarray(int ndims,
 
     /* for saving contents */
     int *ints;
-    MPID_Datatype *new_dtp;
+    MPIR_Datatype *new_dtp;
 
     MPIU_CHKLMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_SUBARRAY);
@@ -95,7 +95,7 @@ int MPI_Type_create_subarray(int ndims,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPID_Datatype *datatype_ptr = NULL;
+            MPIR_Datatype *datatype_ptr = NULL;
 
 	    /* Check parameters */
 	    MPIR_ERRTEST_ARGNONPOS(ndims, "ndims", mpi_errno, MPI_ERR_DIMS);
@@ -172,7 +172,7 @@ int MPI_Type_create_subarray(int ndims,
             MPID_Datatype_get_ptr(oldtype, datatype_ptr);
 
             /* Validate datatype_ptr */
-            MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+            MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
 	    /* If datatype_ptr is not valid, it will be reset to null */
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }

@@ -40,7 +40,7 @@ int MPIR_Type_create_struct_impl(int count,
     int mpi_errno = MPI_SUCCESS;
     int i, *ints;
     MPI_Datatype new_handle;
-    MPID_Datatype *new_dtp;
+    MPIR_Datatype *new_dtp;
     MPIU_CHKLMEM_DECL(1);
 
     mpi_errno = MPID_Type_struct(count,
@@ -127,7 +127,7 @@ int MPI_Type_create_struct(int count,
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    int j;
-	    MPID_Datatype *datatype_ptr = NULL;
+	    MPIR_Datatype *datatype_ptr = NULL;
 
 	    MPIR_ERRTEST_COUNT(count,mpi_errno);
 
@@ -143,7 +143,7 @@ int MPI_Type_create_struct(int count,
 
 		if (array_of_types[j] != MPI_DATATYPE_NULL && HANDLE_GET_KIND(array_of_types[j]) != HANDLE_KIND_BUILTIN) {
 		    MPID_Datatype_get_ptr(array_of_types[j], datatype_ptr);
-		    MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+		    MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
 		    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 		}
 	    }
