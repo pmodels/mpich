@@ -59,7 +59,7 @@ void MPID_nem_dbg_print_vc_sendq(FILE *stream, MPIDI_VC_t *vc);
 #define FCNAME MPL_QUOTE(FUNCNAME)
 void MPID_nem_dbg_print_vc_sendq(FILE *stream, MPIDI_VC_t *vc)
 {
-    MPID_Request * sreq;
+    MPIR_Request * sreq;
     int i;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
 

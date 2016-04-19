@@ -25,9 +25,9 @@ int MPIDI_CH3I_Progress(MPID_Progress_state *progress_state, int blocking);
 #define MPIDI_CH3_Progress_wait(progress_state) MPIDI_CH3I_Progress(progress_state, TRUE)
 #define MPIDI_CH3_Progress_poke() MPIDI_CH3I_Progress(NULL, FALSE)
 
-void MPIDI_CH3I_Posted_recv_enqueued(MPID_Request *rreq);
+void MPIDI_CH3I_Posted_recv_enqueued(MPIR_Request *rreq);
 /* returns non-zero when req has been matched by channel */
-int  MPIDI_CH3I_Posted_recv_dequeued(MPID_Request *rreq);
+int  MPIDI_CH3I_Posted_recv_dequeued(MPIR_Request *rreq);
 
 /*
  * Enable optional functionality
@@ -36,6 +36,6 @@ int  MPIDI_CH3I_Posted_recv_dequeued(MPID_Request *rreq);
 
 #include "mpid_nem_post.h"
 
-int MPIDI_CH3I_Register_anysource_notification(void (*enqueue_fn)(MPID_Request *rreq), int (*dequeue_fn)(MPID_Request *rreq));
+int MPIDI_CH3I_Register_anysource_notification(void (*enqueue_fn)(MPIR_Request *rreq), int (*dequeue_fn)(MPIR_Request *rreq));
 
 #endif /* !defined(MPICH_MPIDI_CH3_POST_H_INCLUDED) */

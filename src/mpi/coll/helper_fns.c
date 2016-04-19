@@ -203,7 +203,7 @@ int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtyp
 #define FUNCNAME MPIC_Wait
 #undef FCNAME
 #define FCNAME "MPIC_Wait"
-int MPIC_Wait(MPID_Request * request_ptr, MPIR_Errflag_t *errflag)
+int MPIC_Wait(MPIR_Request * request_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_WAIT);
@@ -215,12 +215,12 @@ int MPIC_Wait(MPID_Request * request_ptr, MPIR_Errflag_t *errflag)
     if (request_ptr->kind == MPIR_REQUEST_SEND)
         request_ptr->status.MPI_TAG = 0;
 
-    if (!MPID_Request_is_complete(request_ptr))
+    if (!MPIR_Request_is_complete(request_ptr))
     {
 	MPID_Progress_state progress_state;
 	
 	MPID_Progress_start(&progress_state);
-        while (!MPID_Request_is_complete(request_ptr))
+        while (!MPIR_Request_is_complete(request_ptr))
 	{
 	    mpi_errno = MPID_Progress_wait(&progress_state);
 	    if (mpi_errno) { MPIR_ERR_POP(mpi_errno); }
@@ -273,7 +273,7 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
-    MPID_Request *request_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_SEND);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_SEND);
@@ -332,7 +332,7 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
     int mpi_errno = MPI_SUCCESS;
     int context_id;
     MPI_Status mystatus;
-    MPID_Request *request_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_RECV);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_RECV);
@@ -389,7 +389,7 @@ int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
-    MPID_Request *request_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_SSEND);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_SSEND);
@@ -450,7 +450,7 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
     int mpi_errno = MPI_SUCCESS;
     int context_id;
     MPI_Status mystatus;
-    MPID_Request *recv_req_ptr = NULL, *send_req_ptr = NULL;
+    MPIR_Request *recv_req_ptr = NULL, *send_req_ptr = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_SENDRECV);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_SENDRECV);
@@ -528,8 +528,8 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     int mpi_errno = MPI_SUCCESS;
     MPI_Status mystatus;
     MPIU_Context_id_t context_id_offset;
-    MPID_Request *sreq = NULL;
-    MPID_Request *rreq = NULL;
+    MPIR_Request *sreq = NULL;
+    MPIR_Request *rreq = NULL;
     void *tmpbuf = NULL;
     MPI_Aint tmpbuf_size = 0;
     MPI_Aint tmpbuf_count = 0;
@@ -619,7 +619,7 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-                  MPIR_Comm *comm_ptr, MPID_Request **request_ptr, MPIR_Errflag_t *errflag)
+                  MPIR_Comm *comm_ptr, MPIR_Request **request_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
@@ -660,7 +660,7 @@ int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-                  MPIR_Comm *comm_ptr, MPID_Request **request_ptr, MPIR_Errflag_t *errflag)
+                  MPIR_Comm *comm_ptr, MPIR_Request **request_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
@@ -701,7 +701,7 @@ int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
-                  int tag, MPIR_Comm *comm_ptr, MPID_Request **request_ptr)
+                  int tag, MPIR_Comm *comm_ptr, MPIR_Request **request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
@@ -731,7 +731,7 @@ int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
 #define FUNCNAME MPIC_Waitall
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIC_Waitall(int numreq, MPID_Request *requests[], MPI_Status statuses[], MPIR_Errflag_t *errflag)
+int MPIC_Waitall(int numreq, MPIR_Request *requests[], MPI_Status statuses[], MPIR_Errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -762,7 +762,7 @@ int MPIC_Waitall(int numreq, MPID_Request *requests[], MPI_Status statuses[], MP
         status_array[i].MPI_TAG = 0;
         status_array[i].MPI_SOURCE = MPI_PROC_NULL;
 
-        /* Convert the MPID_Request objects to MPI_Request objects */
+        /* Convert the MPIR_Request objects to MPI_Request objects */
         request_ptrs[i] = requests[i]->handle;
     }
 

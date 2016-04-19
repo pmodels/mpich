@@ -127,7 +127,7 @@ int MPIDU_Sched_next_tag(MPIR_Comm * comm_ptr, int *tag)
 static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPIDU_Sched_entry *e)
 {
     int mpi_errno = MPI_SUCCESS, ret_errno = MPI_SUCCESS;
-    MPID_Request *r = s->req;
+    MPIR_Request *r = s->req;
     MPIR_Comm *comm;
 
     MPIU_Assert(e->status == MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED);
@@ -389,10 +389,10 @@ int MPIDU_Sched_clone(MPID_Sched_t orig, MPID_Sched_t * cloned)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* sets (*sp) to MPID_SCHED_NULL and gives you back a request pointer in (*req).
  * The caller is giving up ownership of the opaque schedule object. */
-int MPIDU_Sched_start(MPID_Sched_t * sp, MPIR_Comm * comm, int tag, MPID_Request ** req)
+int MPIDU_Sched_start(MPID_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *r;
+    MPIR_Request *r;
     struct MPIDU_Sched *s = *sp;
 
     *req = NULL;
@@ -410,7 +410,7 @@ int MPIDU_Sched_start(MPID_Sched_t * sp, MPIR_Comm * comm, int tag, MPID_Request
     r = MPID_Request_create();
     if (!r)
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
-    r->kind = MPID_COLL_REQUEST;
+    r->kind = MPIR_COLL_REQUEST;
     /* FIXME is this right when comm/datatype GC is used? */
     MPIR_Comm_add_ref(comm);
     r->comm = comm;
@@ -887,7 +887,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
 
             switch (e->type) {
             case MPIDU_SCHED_ENTRY_SEND:
-                if (e->u.send.sreq != NULL && MPID_Request_is_complete(e->u.send.sreq)) {
+                if (e->u.send.sreq != NULL && MPIR_Request_is_complete(e->u.send.sreq)) {
                     MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE,
                                      (MPL_DBG_FDEST, "completed SEND entry %d, sreq=%p\n", (int) i,
                                       e->u.send.sreq));
@@ -902,7 +902,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                 }
                 break;
             case MPIDU_SCHED_ENTRY_RECV:
-                if (e->u.recv.rreq != NULL && MPID_Request_is_complete(e->u.recv.rreq)) {
+                if (e->u.recv.rreq != NULL && MPIR_Request_is_complete(e->u.recv.rreq)) {
                     MPL_DBG_MSG_FMT(MPIR_DBG_COMM, VERBOSE,
                                      (MPL_DBG_FDEST, "completed RECV entry %d, rreq=%p\n", (int) i,
                                       e->u.recv.rreq));

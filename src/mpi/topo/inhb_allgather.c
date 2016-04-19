@@ -86,7 +86,7 @@ int MPIR_Ineighbor_allgather_impl(const void *sendbuf, int sendcount, MPI_Dataty
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
-    MPID_Request *reqp = NULL;
+    MPIR_Request *reqp = NULL;
     MPID_Sched_t s = MPID_SCHED_NULL;
 
     *request = MPI_REQUEST_NULL;

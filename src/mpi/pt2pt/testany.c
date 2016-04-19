@@ -68,8 +68,8 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
 		int *flag, MPI_Status *status)
 {
     static const char FCNAME[] = "MPI_Testany";
-    MPID_Request * request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
-    MPID_Request ** request_ptrs = request_ptr_array;
+    MPIR_Request * request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
+    MPIR_Request ** request_ptrs = request_ptr_array;
     int i;
     int n_inactive;
     int active_flag;
@@ -111,7 +111,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     /* Convert MPI request handles to a request object pointers */
     if (count > MPIR_REQUEST_PTR_ARRAY_SIZE)
     {
-	MPIU_CHKLMEM_MALLOC_ORJUMP(request_ptrs, MPID_Request **, count * sizeof(MPID_Request *), mpi_errno, "request pointers");
+	MPIU_CHKLMEM_MALLOC_ORJUMP(request_ptrs, MPIR_Request **, count * sizeof(MPIR_Request *), mpi_errno, "request pointers");
     }
 
     n_inactive = 0;
@@ -119,13 +119,13 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     {
 	if (array_of_requests[i] != MPI_REQUEST_NULL)
 	{
-	    MPID_Request_get_ptr(array_of_requests[i], request_ptrs[i]);
+	    MPIR_Request_get_ptr(array_of_requests[i], request_ptrs[i]);
 	    /* Validate object pointers if error checking is enabled */
 #           ifdef HAVE_ERROR_CHECKING
 	    {
 		MPID_BEGIN_ERROR_CHECKS;
 		{
-		    MPID_Request_valid_ptr( request_ptrs[i], mpi_errno );
+		    MPIR_Request_valid_ptr( request_ptrs[i], mpi_errno );
 		    if (mpi_errno) goto fn_fail;
 		}
 		MPID_END_ERROR_CHECKS;
@@ -162,7 +162,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     for (i = 0; i < count; i++)
     {
 	if (request_ptrs[i] != NULL && 
-            request_ptrs[i]->kind == MPID_UREQUEST &&
+            request_ptrs[i]->kind == MPIR_UREQUEST &&
             request_ptrs[i]->greq_fns->poll_fn != NULL)
 	{
             mpi_errno = (request_ptrs[i]->greq_fns->poll_fn)(request_ptrs[i]->greq_fns->grequest_extra_state,
@@ -171,7 +171,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
 	}
         if (request_ptrs[i] != NULL)
         {
-            if (MPID_Request_is_complete(request_ptrs[i]))
+            if (MPIR_Request_is_complete(request_ptrs[i]))
             {
                 mpi_errno = MPIR_Request_complete(&array_of_requests[i],
                         request_ptrs[i],

@@ -60,7 +60,7 @@ int MPID_Sched_clone(MPID_Sched_t orig, MPID_Sched_t *cloned);
  * comm should be the primary (user) communicator with which this collective is
  * associated, even if other hidden communicators are used for a subset of the
  * operations.  It will be used for error handling and similar operations. */
-int MPID_Sched_start(MPID_Sched_t *sp, MPIR_Comm *comm, int tag, MPID_Request **req);
+int MPID_Sched_start(MPID_Sched_t *sp, MPIR_Comm *comm, int tag, MPIR_Request **req);
 
 /* send and recv take a comm ptr to enable hierarchical collectives */
 int MPID_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, MPIR_Comm *comm, MPID_Sched_t s);

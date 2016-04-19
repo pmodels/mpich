@@ -20,7 +20,7 @@
 /* MPIDI_CH3_SendNoncontig_iov - Sends a message by loading an
    IOV and calling iSendv.  The caller must initialize
    sreq->dev.segment as well as segment_first and segment_size. */
-int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPID_Request *sreq,
+int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPIR_Request *sreq,
                                  void *header, intptr_t hdr_sz )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -85,7 +85,7 @@ int MPIDI_CH3_SendNoncontig_iov( MPIDI_VC_t *vc, MPID_Request *sreq,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPIDI_CH3_EagerNoncontigSend - Eagerly send noncontiguous data */
-int MPIDI_CH3_EagerNoncontigSend( MPID_Request **sreq_p, 
+int MPIDI_CH3_EagerNoncontigSend( MPIR_Request **sreq_p,
 				  MPIDI_CH3_Pkt_type_t reqtype, 
 				  const void * buf, MPI_Aint count,
 				  MPI_Datatype datatype, intptr_t data_sz,
@@ -95,7 +95,7 @@ int MPIDI_CH3_EagerNoncontigSend( MPID_Request **sreq_p,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_VC_t * vc;
-    MPID_Request *sreq = *sreq_p;
+    MPIR_Request *sreq = *sreq_p;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_eager_send_t * const eager_pkt = &upkt.eager_send;
     
@@ -151,7 +151,7 @@ int MPIDI_CH3_EagerNoncontigSend( MPID_Request **sreq_p,
 #define FUNCNAME MPIDI_EagerContigSend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_EagerContigSend( MPID_Request **sreq_p, 
+int MPIDI_CH3_EagerContigSend( MPIR_Request **sreq_p,
 			       MPIDI_CH3_Pkt_type_t reqtype, 
 			       const void * buf, intptr_t data_sz, int rank,
 			       int tag, MPIR_Comm * comm, int context_offset )
@@ -160,7 +160,7 @@ int MPIDI_CH3_EagerContigSend( MPID_Request **sreq_p,
     MPIDI_VC_t * vc;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_eager_send_t * const eager_pkt = &upkt.eager_send;
-    MPID_Request *sreq = *sreq_p;
+    MPIR_Request *sreq = *sreq_p;
     MPL_IOV iov[2];
     
     MPIDI_Pkt_init(eager_pkt, reqtype);
@@ -217,8 +217,8 @@ int MPIDI_CH3_EagerContigSend( MPID_Request **sreq_p,
 #define FUNCNAME MPIDI_EagerContigShortSend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_EagerContigShortSend( MPID_Request **sreq_p, 
-				    MPIDI_CH3_Pkt_type_t reqtype, 
+int MPIDI_CH3_EagerContigShortSend( MPIR_Request **sreq_p,
+				    MPIDI_CH3_Pkt_type_t reqtype,
 				    const void * buf, intptr_t data_sz, int rank,
 				    int tag, MPIR_Comm * comm,
 				    int context_offset )
@@ -228,7 +228,7 @@ int MPIDI_CH3_EagerContigShortSend( MPID_Request **sreq_p,
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_eagershort_send_t * const eagershort_pkt = 
 	&upkt.eagershort_send;
-    MPID_Request *sreq = *sreq_p;
+    MPIR_Request *sreq = *sreq_p;
     
     /*    printf( "Sending short eager\n"); fflush(stdout); */
     MPIDI_Pkt_init(eagershort_pkt, reqtype);
@@ -289,10 +289,10 @@ int MPIDI_CH3_EagerContigShortSend( MPID_Request **sreq_p,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, 
-					 intptr_t *buflen, MPID_Request **rreqp )
+					 intptr_t *buflen, MPIR_Request **rreqp )
 {
     MPIDI_CH3_Pkt_eagershort_send_t * eagershort_pkt = &pkt->eagershort_send;
-    MPID_Request * rreq;
+    MPIR_Request * rreq;
     int found;
     int mpi_errno = MPI_SUCCESS;
 
@@ -525,7 +525,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #define FUNCNAME MPIDI_EagerContigIsend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_EagerContigIsend( MPID_Request **sreq_p, 
+int MPIDI_CH3_EagerContigIsend( MPIR_Request **sreq_p,
 				MPIDI_CH3_Pkt_type_t reqtype, 
 				const void * buf, intptr_t data_sz, int rank,
 				int tag, MPIR_Comm * comm, int context_offset )
@@ -534,7 +534,7 @@ int MPIDI_CH3_EagerContigIsend( MPID_Request **sreq_p,
     MPIDI_VC_t * vc;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_eager_send_t * const eager_pkt = &upkt.eager_send;
-    MPID_Request *sreq = *sreq_p;
+    MPIR_Request *sreq = *sreq_p;
     MPL_IOV iov[MPL_IOV_LIMIT];
 
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
@@ -605,10 +605,10 @@ int MPIDI_CH3_EagerContigIsend( MPID_Request **sreq_p,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, 
-				    intptr_t *buflen, MPID_Request **rreqp )
+				    intptr_t *buflen, MPIR_Request **rreqp )
 {
     MPIDI_CH3_Pkt_eager_send_t * eager_pkt = &pkt->eager_send;
-    MPID_Request * rreq;
+    MPIR_Request * rreq;
     int found;
     int complete;
     char *data_buf;
@@ -695,10 +695,10 @@ int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-				    intptr_t *buflen, MPID_Request **rreqp )
+				    intptr_t *buflen, MPIR_Request **rreqp )
 {
     MPIDI_CH3_Pkt_ready_send_t * ready_pkt = &pkt->ready_send;
-    MPID_Request * rreq;
+    MPIR_Request * rreq;
     int found;
     int complete;
     char *data_buf;

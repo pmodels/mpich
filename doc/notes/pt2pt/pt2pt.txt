@@ -204,12 +204,12 @@ a transfer block defines 0 or 1 envelope/payloads for sources and 0 to N envelop
   account that there might be incoming active message or error conditions, so
   we should poll all methods (and all vcs) periodically.
 
-- We believe that a MPID_Request might simply contain enough information for
+- We believe that a MPIR_Request might simply contain enough information for
   signalling that one or more CARs have completed.  This implies that a
-  MPID_Request might consist of a integer counter of outstanding CARs.  When
+  MPIR_Request might consist of a integer counter of outstanding CARs.  When
   the counter reached zero, the request is complete.  David suggests making
-  CARs and MPID_Requests reside in the same physical structure so that in the
-  MPI_Send/Recv() case, two logical allocations (one for MPID_Request and CAR)
+  CARs and MPIR_Requests reside in the same physical structure so that in the
+  MPI_Send/Recv() case, two logical allocations (one for MPIR_Request and CAR)
   are combined into one.
 
 - operations within a block are prioritized by the order in which they are
@@ -259,4 +259,4 @@ MPID_Issend(buf, count, datatype, dest, tag, comm, request, error)
 
 Items which make life more difficult:
 
-- 
+-

@@ -103,7 +103,7 @@ int MPID_Comm_AS_enabled(MPIR_Comm *comm_ptr)
   return 1;
 }
 
-int MPID_Request_is_anysource(MPID_Request *request_ptr)
+int MPID_Request_is_anysource(MPIR_Request *request_ptr)
 {
   /* This function must not abort in the default case since it is used in many
    * MPI functions. As long as the device does not implement FT, it doesn't

@@ -34,7 +34,7 @@ struct MPIDU_Sched_send {
     MPI_Datatype datatype;
     int dest;
     struct MPIR_Comm *comm;
-    struct MPID_Request *sreq;
+    struct MPIR_Request *sreq;
     int is_sync;                /* TRUE iff this send is an ssend */
 };
 
@@ -44,7 +44,7 @@ struct MPIDU_Sched_recv {
     MPI_Datatype datatype;
     int src;
     struct MPIR_Comm *comm;
-    struct MPID_Request *rreq;
+    struct MPIR_Request *rreq;
     MPI_Status *status;
 };
 
@@ -111,7 +111,7 @@ struct MPIDU_Sched {
     size_t idx;                 /* index into entries array of first yet-outstanding entry */
     int num_entries;            /* number of populated entries, num_entries <= size */
     int tag;
-    struct MPID_Request *req;   /* really needed? could cause MT problems... */
+    struct MPIR_Request *req;   /* really needed? could cause MT problems... */
     struct MPIDU_Sched_entry *entries;
 
     struct MPIDU_Sched *next;   /* linked-list next pointer */
@@ -125,7 +125,7 @@ int MPIDU_Sched_next_tag(struct MPIR_Comm *comm_ptr, int *tag);
 int MPIDU_Sched_create(MPID_Sched_t * sp);
 int MPIDU_Sched_clone(MPID_Sched_t orig, MPID_Sched_t * cloned);
 int MPIDU_Sched_start(MPID_Sched_t * sp, struct MPIR_Comm *comm, int tag,
-                      struct MPID_Request **req);
+                      struct MPIR_Request **req);
 int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
                      struct MPIR_Comm *comm, MPID_Sched_t s);
 int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src,

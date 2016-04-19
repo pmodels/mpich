@@ -24,7 +24,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 struct lmt_vmsplice_node {
     struct lmt_vmsplice_node *next;
     int pipe_fd;
-    MPID_Request *req;
+    MPIR_Request *req;
 };
 
 /* MT: this stack is not thread-safe */
@@ -58,10 +58,10 @@ static int adjust_partially_xferred_iov(MPL_IOV iov[], int *iov_offset,
     return complete;
 }
 
-static inline int check_req_complete(MPIDI_VC_t *vc, MPID_Request *req, int *complete)
+static inline int check_req_complete(MPIDI_VC_t *vc, MPIR_Request *req, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
-    int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+    int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
     reqFn = req->dev.OnDataAvail;
     if (reqFn) {
         *complete = 0;
@@ -87,7 +87,7 @@ fn_fail:
 
 /* fills in req->dev.iov{,_offset,_count} based on the datatype info in the
    request, creating a segment if necessary */
-static int populate_iov_from_req(MPID_Request *req)
+static int populate_iov_from_req(MPIR_Request *req)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
@@ -135,7 +135,7 @@ fn_fail:
     return mpi_errno;
 }
 
-static int do_vmsplice(MPID_Request *sreq, int pipe_fd, MPL_IOV iov[],
+static int do_vmsplice(MPIR_Request *sreq, int pipe_fd, MPL_IOV iov[],
                        int *iov_offset, int *iov_count, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -175,7 +175,7 @@ fn_exit:
 #define FUNCNAME MPID_nem_lmt_vmsplice_initiate_lmt
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_lmt_vmsplice_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPID_Request *sreq)
+int MPID_nem_lmt_vmsplice_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIR_Request *sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_pkt_lmt_rts_t * const rts_pkt = (MPID_nem_pkt_lmt_rts_t *)pkt;
@@ -216,7 +216,7 @@ fn_exit:
     return mpi_errno;
 }
 
-static int do_readv(MPID_Request *rreq, int pipe_fd, MPL_IOV iov[],
+static int do_readv(MPIR_Request *rreq, int pipe_fd, MPL_IOV iov[],
                     int *iov_offset, int *iov_count, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -255,7 +255,7 @@ fn_exit:
 #define FUNCNAME MPID_nem_lmt_vmsplice_start_recv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPL_IOV s_cookie)
+int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPIR_Request *rreq, MPL_IOV s_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -377,14 +377,14 @@ fn_fail:
 #define FUNCNAME MPID_nem_lmt_vmsplice_start_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_lmt_vmsplice_start_send(MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV r_cookie)
+int MPID_nem_lmt_vmsplice_start_send(MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV r_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_SEND);
     int pipe_fd;
     int complete;
     struct lmt_vmsplice_node *node = NULL;
-    int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+    int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_SEND);
@@ -455,7 +455,7 @@ int MPIDI_CH3_MPID_nem_lmt_vmsplice_vc_terminated(MPIDI_VC_t *vc)
 #define FUNCNAME MPID_nem_lmt_vmsplice_done_recv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_lmt_vmsplice_done_recv(MPIDI_VC_t *vc, MPID_Request *rreq)
+int MPID_nem_lmt_vmsplice_done_recv(MPIDI_VC_t *vc, MPIR_Request *rreq)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_DONE_RECV);
 
@@ -471,7 +471,7 @@ int MPID_nem_lmt_vmsplice_done_recv(MPIDI_VC_t *vc, MPID_Request *rreq)
 #define FUNCNAME MPID_nem_lmt_vmsplice_done_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_lmt_vmsplice_done_send(MPIDI_VC_t *vc, MPID_Request *sreq)
+int MPID_nem_lmt_vmsplice_done_send(MPIDI_VC_t *vc, MPIR_Request *sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_DONE_SEND);
@@ -489,7 +489,7 @@ int MPID_nem_lmt_vmsplice_done_send(MPIDI_VC_t *vc, MPID_Request *sreq)
 #define FUNCNAME MPID_nem_lmt_vmsplice_handle_cookie
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_lmt_vmsplice_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV cookie)
+int MPID_nem_lmt_vmsplice_handle_cookie(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV cookie)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_HANDLE_COOKIE);

@@ -404,7 +404,7 @@ void MPIR_DatatypeAttrFinalize( void );
 #define MPIR_Op_get_ptr(a,ptr)         MPIR_Getb_ptr(Op,a,0x000000ff,ptr)
 #define MPIR_Info_get_ptr(a,ptr)       MPIR_Getb_ptr(Info,a,0x03ffffff,ptr)
 #define MPIR_Win_get_ptr(a,ptr)        MPIR_Get_ptr(Win,a,ptr)
-#define MPID_Request_get_ptr(a,ptr)    MPIR_Get_ptr(Request,a,ptr)
+#define MPIR_Request_get_ptr(a,ptr)    MPIR_Get_ptr(Request,a,ptr)
 #define MPIR_Grequest_class_get_ptr(a,ptr) MPIR_Get_ptr(Grequest_class,a,ptr)
 /* Keyvals have a special format. This is roughly MPID_Get_ptrb, but
    the handle index is in a smaller bit field.  In addition, 
@@ -460,7 +460,7 @@ void MPIR_DatatypeAttrFinalize( void );
 #define MPIR_Win_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Win,ptr,MPI_ERR_WIN,err)
 #define MPIR_Op_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Op,ptr,MPI_ERR_OP,err)
 #define MPIR_Errhandler_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Errhandler,ptr,MPI_ERR_ARG,err)
-#define MPID_Request_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Request,ptr,MPI_ERR_REQUEST,err)
+#define MPIR_Request_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Request,ptr,MPI_ERR_REQUEST,err)
 #define MPIR_Keyval_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Keyval,ptr,MPI_ERR_KEYVAL,err)
 
 #define MPIR_DATATYPE_IS_PREDEFINED(type) \
@@ -1440,27 +1440,27 @@ void MPIR_Free_contextid( MPIU_Context_id_t );
  * request by calling MPI_Mrecv/MPI_Imrecv, we actually modify the kind to be
  * MPIR_REQUEST_RECV in order to keep completion logic as simple as possible. */
 /*E
-  MPID_Request_kind - Kinds of MPI Requests
+  MPIR_Request_kind - Kinds of MPI Requests
 
   Module:
   Request-DS
 
   E*/
-typedef enum MPID_Request_kind_t {
+typedef enum MPIR_Request_kind_t {
     MPIR_REQUEST_UNDEFINED,
     MPIR_REQUEST_SEND,
     MPIR_REQUEST_RECV,
-    MPID_PREQUEST_SEND,
-    MPID_PREQUEST_RECV,
-    MPID_UREQUEST,
-    MPID_COLL_REQUEST,
+    MPIR_PREQUEST_SEND,
+    MPIR_PREQUEST_RECV,
+    MPIR_UREQUEST,
+    MPIR_COLL_REQUEST,
     MPIR_REQUEST_MPROBE, /* see NOTE-R1 */
-    MPID_WIN_REQUEST,
-    MPID_LAST_REQUEST_KIND
+    MPIR_WIN_REQUEST,
+    MPIR_LAST_REQUEST_KIND
 #ifdef MPID_DEV_REQUEST_KIND_DECL
     , MPID_DEV_REQUEST_KIND_DECL
 #endif
-} MPID_Request_kind_t;
+} MPIR_Request_kind_t;
 
 /* Typedefs for Fortran generalized requests */
 typedef void (MPIR_Grequest_f77_cancel_function)(void *, MPI_Fint*, MPI_Fint *); 
@@ -1481,10 +1481,10 @@ struct MPIR_Grequest_fns {
                                                        the generalize req */
 };
 
-#define MPID_Request_is_complete(req_) (MPIR_cc_is_complete((req_)->cc_ptr))
+#define MPIR_Request_is_complete(req_) (MPIR_cc_is_complete((req_)->cc_ptr))
 
 /*S
-  MPID_Request - Description of the Request data structure
+  MPIR_Request - Description of the Request data structure
 
   Module:
   Request-DS
@@ -1495,12 +1495,12 @@ struct MPIR_Grequest_fns {
 
   Requests come in many flavors, as stored in the 'kind' field.  It is 
   expected that each kind of request will have its own structure type 
-  (e.g., 'MPID_Request_send_t') that extends the 'MPID_Request'.
+  (e.g., 'MPIR_Request_send_t') that extends the 'MPIR_Request'.
   
   S*/
-typedef struct MPID_Request {
+typedef struct MPIR_Request {
     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
-    MPID_Request_kind_t kind;
+    MPIR_Request_kind_t kind;
     /* pointer to the completion counter */
     /* This is necessary for the case when an operation is described by a 
        list of requests */
@@ -1515,7 +1515,7 @@ typedef struct MPID_Request {
     MPI_Status status;
     /* Persistent requests have their own "real" requests.  Receive requests
        have partnering send requests when src=dest. etc. */
-    struct MPID_Request *partner_request;
+    struct MPIR_Request *partner_request;
 
     /* User-defined request support via a "vtable".  Saves space in the already
      * bloated request for regular pt2pt and NBC requests. */
@@ -1548,17 +1548,19 @@ typedef struct MPID_Request {
      *      never yield the lock to other threads.  So the recursion
      *      should be multithreading-safe.
      */
-    int (*request_completed_cb)(struct MPID_Request *);
+    int (*request_completed_cb)(struct MPIR_Request *);
 
     /* Other, device-specific information */
 #ifdef MPID_DEV_REQUEST_DECL
     MPID_DEV_REQUEST_DECL
 #endif
-} MPID_Request ATTRIBUTE((__aligned__(32)));
+} MPIR_Request ATTRIBUTE((__aligned__(32)));
 
-extern MPIU_Object_alloc_t MPID_Request_mem;
+#define MPIR_REQUEST_PREALLOC 8
+
+extern MPIU_Object_alloc_t MPIR_Request_mem;
 /* Preallocated request objects */
-extern MPID_Request MPID_Request_direct[];
+extern MPIR_Request MPIR_Request_direct[];
 
 #define MPIR_Request_add_ref( _req ) \
     do { MPIU_Object_add_ref( _req ); } while (0)
@@ -1573,8 +1575,8 @@ extern MPID_Request MPID_Request_direct[];
 #ifdef HAVE_DEBUGGER_SUPPORT
 void MPIR_WaitForDebugger( void );
 void MPIR_DebuggerSetAborting( const char * );
-void MPIR_Sendq_remember(MPID_Request *, int, int, int );
-void MPIR_Sendq_forget(MPID_Request *);
+void MPIR_Sendq_remember(MPIR_Request *, int, int, int );
+void MPIR_Sendq_forget(MPIR_Request *);
 void MPIR_CommL_remember( MPIR_Comm * );
 void MPIR_CommL_forget( MPIR_Comm * );
 
@@ -1590,8 +1592,8 @@ void MPIR_CommL_forget( MPIR_Comm * );
 #endif
 
 /* must come after MPIR_Comm is declared/defined */
-int MPIR_Get_contextid_nonblock(MPIR_Comm *comm_ptr, MPIR_Comm *newcommp, MPID_Request **req);
-int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm *comm_ptr, MPIR_Comm *newcommp, MPID_Request **req);
+int MPIR_Get_contextid_nonblock(MPIR_Comm *comm_ptr, MPIR_Comm *newcommp, MPIR_Request **req);
+int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm *comm_ptr, MPIR_Comm *newcommp, MPIR_Request **req);
 
 /* ------------------------------------------------------------------------- */
 /* Prototypes and definitions for the node ID code.  This is used to support
@@ -1637,7 +1639,7 @@ int MPID_Get_max_node_id(MPIR_Comm *comm, MPID_Node_id_t *max_id_p);
   Should a 'MPID_Win' be defined after 'MPID_Segment' in case the device 
   wants to 
   store a queue of pending put/get operations, described with 'MPID_Segment'
-  (or 'MPID_Request')s?
+  (or 'MPIR_Request')s?
 
   S*/
 typedef struct MPIR_Win {
@@ -2330,25 +2332,25 @@ int MPIR_Group_release(MPIR_Group *group_ptr);
 
 int MPIR_dup_fn ( MPI_Comm, int, void *, void *, void *, int * );
 /* marks a request as complete, extracting the status */
-int MPIR_Request_complete(MPI_Request *, MPID_Request *, MPI_Status *, int *);
+int MPIR_Request_complete(MPI_Request *, MPIR_Request *, MPI_Status *, int *);
 
-int MPIR_Request_get_error(MPID_Request *);
+int MPIR_Request_get_error(MPIR_Request *);
 /* run the progress engine until the given request is complete */
-int MPIR_Progress_wait_request(MPID_Request *req);
+int MPIR_Progress_wait_request(MPIR_Request *req);
 
 /* The following routines perform the callouts to the user routines registered
    as part of a generalized request.  They handle any language binding issues
    that are necessary. They are used when completing, freeing, cancelling or
    extracting the status from a generalized request. */
-int MPIR_Grequest_cancel(MPID_Request * request_ptr, int complete);
-int MPIR_Grequest_query(MPID_Request * request_ptr);
-int MPIR_Grequest_free(MPID_Request * request_ptr);
+int MPIR_Grequest_cancel(MPIR_Request * request_ptr, int complete);
+int MPIR_Grequest_query(MPIR_Request * request_ptr);
+int MPIR_Grequest_free(MPIR_Request * request_ptr);
 
 /* this routine was added to support our extension relaxing the progress rules
  * for generalized requests */
-int MPIR_Grequest_progress_poke(int count, MPID_Request **request_ptrs, 
+int MPIR_Grequest_progress_poke(int count, MPIR_Request **request_ptrs,
 		MPI_Status array_of_statuses[] );
-int MPIR_Grequest_waitall(int count, MPID_Request * const *  request_ptrs);
+int MPIR_Grequest_waitall(int count, MPIR_Request * const *  request_ptrs);
 
 /* ------------------------------------------------------------------------- */
 /* Prototypes for language-specific routines, such as routines to set
@@ -2391,7 +2393,7 @@ int MPIR_Grequest_waitall(int count, MPID_Request * const *  request_ptrs);
   `depend` on using command-line arguments).
 
   This call also initializes all MPID data needed by the device.  This
-  includes the 'MPID_Request's and any other data structures used by 
+  includes the 'MPIR_Request's and any other data structures used by
   the device.
 
   The arguments 'has_args' and 'has_env' indicate whether the process was
@@ -2736,7 +2738,7 @@ int MPID_Comm_revoke(MPIR_Comm *comm, int is_remote);
   @*/
 int MPID_Send( const void *buf, MPI_Aint count, MPI_Datatype datatype,
 	       int dest, int tag, MPIR_Comm *comm, int context_offset,
-	       MPID_Request **request );
+	       MPIR_Request **request );
 
 /*@
   MPID_Rsend - MPID entry point for MPI_Rsend
@@ -2761,7 +2763,7 @@ int MPID_Send( const void *buf, MPI_Aint count, MPI_Datatype datatype,
   @*/
 int MPID_Rsend( const void *buf, int count, MPI_Datatype datatype,
 		int dest, int tag, MPIR_Comm *comm, int context_offset,
-		MPID_Request **request );
+		MPIR_Request **request );
 
 /*@
   MPID_Ssend - MPID entry point for MPI_Ssend
@@ -2786,7 +2788,7 @@ int MPID_Rsend( const void *buf, int count, MPI_Datatype datatype,
   @*/
 int MPID_Ssend( const void *buf, MPI_Aint count, MPI_Datatype datatype,
 		int dest, int tag, MPIR_Comm *comm, int context_offset,
-		MPID_Request **request );
+		MPIR_Request **request );
 
 /*@
   MPID_tBsend - Attempt a send and return if it would block
@@ -2841,7 +2843,7 @@ int MPID_tBsend( const void *buf, int count, MPI_Datatype datatype,
   @*/
 int MPID_Isend( const void *buf, MPI_Aint count, MPI_Datatype datatype,
 		int dest, int tag, MPIR_Comm *comm, int context_offset,
-		MPID_Request **request );
+		MPIR_Request **request );
 
 /*@
   MPID_Irsend - MPID entry point for MPI_Irsend
@@ -2860,7 +2862,7 @@ int MPID_Isend( const void *buf, MPI_Aint count, MPI_Datatype datatype,
   @*/
 int MPID_Irsend( const void *buf, int count, MPI_Datatype datatype,
 		 int dest, int tag, MPIR_Comm *comm, int context_offset,
-		 MPID_Request **request );
+		 MPIR_Request **request );
 
 /*@
   MPID_Issend - MPID entry point for MPI_Issend
@@ -2879,7 +2881,7 @@ int MPID_Irsend( const void *buf, int count, MPI_Datatype datatype,
   @*/
 int MPID_Issend( const void *buf, int count, MPI_Datatype datatype,
 		 int dest, int tag, MPIR_Comm *comm, int context_offset,
-		 MPID_Request **request );
+		 MPIR_Request **request );
 
 /*@
   MPID_Recv - MPID entry point for MPI_Recv
@@ -2901,7 +2903,7 @@ int MPID_Issend( const void *buf, int count, MPI_Datatype datatype,
   @*/
 int MPID_Recv( void *buf, MPI_Aint count, MPI_Datatype datatype,
 	       int source, int tag, MPIR_Comm *comm, int context_offset,
-	       MPI_Status *status, MPID_Request **request );
+	       MPI_Status *status, MPIR_Request **request );
 
 
 /*@
@@ -2921,7 +2923,7 @@ int MPID_Recv( void *buf, MPI_Aint count, MPI_Datatype datatype,
   @*/
 int MPID_Irecv( void *buf, MPI_Aint count, MPI_Datatype datatype,
 		int source, int tag, MPIR_Comm *comm, int context_offset,
-		MPID_Request **request );
+		MPIR_Request **request );
 
 /*@
   MPID_Send_init - MPID entry point for MPI_Send_init
@@ -2940,10 +2942,10 @@ int MPID_Irecv( void *buf, MPI_Aint count, MPI_Datatype datatype,
   @*/
 int MPID_Send_init( const void *buf, int count, MPI_Datatype datatype,
 		    int dest, int tag, MPIR_Comm *comm, int context_offset,
-		    MPID_Request **request );
+		    MPIR_Request **request );
 
 int MPID_Bsend_init(const void *, int, MPI_Datatype, int, int, MPIR_Comm *,
-		   int, MPID_Request **);
+		   int, MPIR_Request **);
 /*@
   MPID_Rsend_init - MPID entry point for MPI_Rsend_init
 
@@ -2961,7 +2963,7 @@ int MPID_Bsend_init(const void *, int, MPI_Datatype, int, int, MPIR_Comm *,
   @*/
 int MPID_Rsend_init( const void *buf, int count, MPI_Datatype datatype,
 		     int dest, int tag, MPIR_Comm *comm, int context_offset,
-		     MPID_Request **request );
+		     MPIR_Request **request );
 /*@
   MPID_Ssend_init - MPID entry point for MPI_Ssend_init
 
@@ -2979,7 +2981,7 @@ int MPID_Rsend_init( const void *buf, int count, MPI_Datatype datatype,
   @*/
 int MPID_Ssend_init( const void *buf, int count, MPI_Datatype datatype,
 		     int dest, int tag, MPIR_Comm *comm, int context_offset,
-		     MPID_Request **request );
+		     MPIR_Request **request );
 
 /*@
   MPID_Recv_init - MPID entry point for MPI_Recv_init
@@ -2998,7 +3000,7 @@ int MPID_Ssend_init( const void *buf, int count, MPI_Datatype datatype,
   @*/
 int MPID_Recv_init( void *buf, int count, MPI_Datatype datatype,
 		    int source, int tag, MPIR_Comm *comm, int context_offset,
-		    MPID_Request **request );
+		    MPIR_Request **request );
 
 /*@
   MPID_Startall - MPID entry point for MPI_Startall
@@ -3013,7 +3015,7 @@ int MPID_Recv_init( void *buf, int count, MPI_Datatype datatype,
   whereas an implementation built on just 'MPID_Start' would force the
   ADI to initiate the communication in the order encountered.
   @*/
-int MPID_Startall(int count, MPID_Request *requests[]);
+int MPID_Startall(int count, MPIR_Request *requests[]);
 
 /*@
    MPID_Probe - Block until a matching request is found and return information 
@@ -3104,7 +3106,7 @@ int MPID_Iprobe(int, int, MPIR_Comm *, int, int *, MPI_Status *);
 - context_offset - context id offset of communicator to match
 
   Output Parameter:
-+ message - 'MPID_Request' (logically a message) set as defined by 'MPI_Mprobe'
++ message - 'MPIR_Request' (logically a message) set as defined by 'MPI_Mprobe'
 - status - 'MPI_Status' set as defined by 'MPI_Mprobe'
 
   Return Value:
@@ -3121,7 +3123,7 @@ int MPID_Iprobe(int, int, MPIR_Comm *, int, int *, MPI_Status *);
 
   @*/
 int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
-                MPID_Request **message, MPI_Status *status);
+                MPIR_Request **message, MPI_Status *status);
 
 /*@
    MPID_Improbe - Look for a matching request in the receive queue and return
@@ -3135,7 +3137,7 @@ int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
 
   Output Parameter:
 + flag - 'flag' set as defined by 'MPI_Improbe'
-. message - 'MPID_Request' (logically a message) set as defined by 'MPI_Improbe'
+. message - 'MPIR_Request' (logically a message) set as defined by 'MPI_Improbe'
 - status - 'MPI_Status' set as defined by 'MPI_Improbe'
 
   Return Value:
@@ -3152,7 +3154,7 @@ int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
 
   @*/
 int MPID_Improbe(int source, int tag, MPIR_Comm *comm, int context_offset,
-                 int *flag, MPID_Request **message, MPI_Status *status);
+                 int *flag, MPIR_Request **message, MPI_Status *status);
 
 /*@
    MPID_Imrecv - Begin receiving the message indicated by the given message
@@ -3161,7 +3163,7 @@ int MPID_Improbe(int source, int tag, MPIR_Comm *comm, int context_offset,
   Input Parameters:
 + count - number of elements to receive
 . datatype - datatype of each recv buffer element
-- message - 'MPID_Request' (logically a message) set as defined by 'MPI_Mprobe'
+- message - 'MPIR_Request' (logically a message) set as defined by 'MPI_Mprobe'
 
   Output Parameter:
 + buf - receive buffer
@@ -3178,7 +3180,7 @@ int MPID_Improbe(int source, int tag, MPIR_Comm *comm, int context_offset,
 
   @*/
 int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
-                MPID_Request *message, MPID_Request **rreqp);
+                MPIR_Request *message, MPIR_Request **rreqp);
 
 /*@
    MPID_Mrecv - Receive the message indicated by the given message handle.
@@ -3186,7 +3188,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
   Input Parameters:
 + count - number of elements to receive
 . datatype - datatype of each recv buffer element
-- message - 'MPID_Request' (logically a message) set as defined by 'MPI_Mprobe'
+- message - 'MPIR_Request' (logically a message) set as defined by 'MPI_Mprobe'
 
   Output Parameter:
 + buf - receive buffer
@@ -3203,7 +3205,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
 
   @*/
 int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
-               MPID_Request *message, MPI_Status *status);
+               MPIR_Request *message, MPI_Status *status);
 
 /*@
   MPID_Cancel_send - Cancel the indicated send request
@@ -3225,7 +3227,7 @@ int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
   Request
 
   @*/
-int MPID_Cancel_send(MPID_Request *);
+int MPID_Cancel_send(MPIR_Request *);
 /*@
   MPID_Cancel_recv - Cancel the indicated recv request
 
@@ -3248,7 +3250,7 @@ int MPID_Cancel_send(MPID_Request *);
   Request
 
   @*/
-int MPID_Cancel_recv(MPID_Request *);
+int MPID_Cancel_recv(MPIR_Request *);
 
 /*@
   MPID_Comm_AS_enabled - Query whether anysource operations are enabled for a communicator
@@ -3273,7 +3275,7 @@ int MPID_Comm_AS_enabled(MPIR_Comm *);
   1 - The request is anysource
 
   @*/
-int MPID_Request_is_anysource(MPID_Request *);
+int MPID_Request_is_anysource(MPIR_Request *);
 
 /*@
   MPID_Aint_add - Returns the sum of base and disp
@@ -3349,20 +3351,20 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 int MPID_Rput(const void *origin_addr, int origin_count,
               MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
               int target_count, MPI_Datatype target_datatype, MPIR_Win *win,
-              MPID_Request **request);
+              MPIR_Request **request);
 int MPID_Rget(void *origin_addr, int origin_count,
               MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
               int target_count, MPI_Datatype target_datatype, MPIR_Win *win,
-              MPID_Request **request);
+              MPIR_Request **request);
 int MPID_Raccumulate(const void *origin_addr, int origin_count,
                      MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
                      int target_count, MPI_Datatype target_datatype, MPI_Op op, MPIR_Win *win,
-                     MPID_Request **request);
+                     MPIR_Request **request);
 int MPID_Rget_accumulate(const void *origin_addr, int origin_count,
                          MPI_Datatype origin_datatype, void *result_addr, int result_count,
                          MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
                          int target_count, MPI_Datatype target_datatype, MPI_Op op, MPIR_Win *win,
-                         MPID_Request **request);
+                         MPIR_Request **request);
 
 int MPID_Win_lock_all(int assert, MPIR_Win *win);
 int MPID_Win_unlock_all(MPIR_Win *win);
@@ -3382,7 +3384,7 @@ int MPID_Win_sync(MPIR_Win *win);
     
   Notes:
   This routine is informs the progress engine that a block of code follows that
-  will examine the completion counter of some 'MPID_Request' objects and then
+  will examine the completion counter of some 'MPIR_Request' objects and then
   call 'MPID_Progress_wait' zero or more times followed by a call to
   'MPID_Progress_end'.
   
@@ -3485,7 +3487,7 @@ int MPID_Progress_poke(void);
   The request object returned by this routine should be initialized such that
   ref_count is one and handle contains a valid handle referring to the object.
   @*/
-MPID_Request * MPID_Request_create(void);
+MPIR_Request * MPID_Request_create(void);
 
 /*@
   MPID_Request_release - Release a request 
@@ -3501,7 +3503,7 @@ MPID_Request * MPID_Request_create(void);
   Module:
   Request
 @*/
-void MPID_Request_release(MPID_Request *);
+void MPID_Request_release(MPIR_Request *);
 
 /*@
   MPID_Request_complete - Complete a request
@@ -3518,7 +3520,7 @@ void MPID_Request_release(MPID_Request *);
   Module:
   Request
 @*/
-int MPID_Request_complete(MPID_Request *);
+int MPID_Request_complete(MPIR_Request *);
 
 typedef struct MPIR_Grequest_class {
      MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
@@ -3766,7 +3768,7 @@ int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int * lpid_ptr, MPIU_BOOL i
    MPIR_CONTEXT_INTRA(INTER)_COLL. */
 int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype);
-int MPIC_Wait(MPID_Request * request_ptr, MPIR_Errflag_t *errflag);
+int MPIC_Wait(MPIR_Request * request_ptr, MPIR_Errflag_t *errflag);
 int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status);
 
 /* FT versions of te MPIC_ functions */
@@ -3785,12 +3787,12 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
                              int source, int recvtag,
                              MPIR_Comm *comm_ptr, MPI_Status *status, MPIR_Errflag_t *errflag);
 int MPIC_Isend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-                  MPIR_Comm *comm_ptr, MPID_Request **request, MPIR_Errflag_t *errflag);
+                  MPIR_Comm *comm_ptr, MPIR_Request **request, MPIR_Errflag_t *errflag);
 int MPIC_Issend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-                  MPIR_Comm *comm_ptr, MPID_Request **request, MPIR_Errflag_t *errflag);
+                  MPIR_Comm *comm_ptr, MPIR_Request **request, MPIR_Errflag_t *errflag);
 int MPIC_Irecv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source,
-                  int tag, MPIR_Comm *comm_ptr, MPID_Request **request);
-int MPIC_Waitall(int numreq, MPID_Request *requests[], MPI_Status statuses[], MPIR_Errflag_t *errflag);
+                  int tag, MPIR_Comm *comm_ptr, MPIR_Request **request);
+int MPIC_Waitall(int numreq, MPIR_Request *requests[], MPI_Status statuses[], MPIR_Errflag_t *errflag);
 
 
 void MPIR_MAXF  ( void *, void *, int *, MPI_Datatype * ) ;
@@ -4032,7 +4034,7 @@ int MPIR_Comm_is_node_consecutive( MPIR_Comm *);
 
 void MPIR_Free_err_dyncodes( void );
 
-int MPIR_Comm_idup_impl(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm, MPID_Request **reqp);
+int MPIR_Comm_idup_impl(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm, MPIR_Request **reqp);
 
 int MPIR_Comm_shrink(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm_ptr);
 int MPIR_Comm_agree(MPIR_Comm *comm_ptr, int *flag);
@@ -4233,7 +4235,7 @@ int MPIU_Get_intranode_rank(MPIR_Comm *comm_ptr, int r);
 #define MPIR_Test_cancelled_impl(status, flag) *(flag) = MPIR_STATUS_GET_CANCEL_BIT(*(status))
 
 /* MPIR_ functions.  These are versions of MPI_ functions appropriate for calling within MPI */
-int MPIR_Cancel_impl(MPID_Request *request_ptr);
+int MPIR_Cancel_impl(MPIR_Request *request_ptr);
 struct MPIR_Topology;
 void MPIR_Cart_rank_impl(struct MPIR_Topology *cart_ptr, const int *coords, int *rank);
 int MPIR_Cart_create_impl(MPIR_Comm *comm_ptr, int ndims, const int dims[],
@@ -4290,17 +4292,17 @@ int MPIR_Group_translate_ranks_impl(MPIR_Group *group_ptr1, int n, const int *ra
                                      MPIR_Group *group_ptr2, int *ranks2);
 int MPIR_Group_union_impl(MPIR_Group *group_ptr1, MPIR_Group *group_ptr2, MPIR_Group **new_group_ptr);
 void MPIR_Get_count_impl(const MPI_Status *status, MPI_Datatype datatype, int *count);
-void MPIR_Grequest_complete_impl(MPID_Request *request_ptr);
+void MPIR_Grequest_complete_impl(MPIR_Request *request_ptr);
 int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
                              MPI_Grequest_free_function *free_fn,
                              MPI_Grequest_cancel_function *cancel_fn,
-                             void *extra_state, MPID_Request **request_ptr);
+                             void *extra_state, MPIR_Request **request_ptr);
 int MPIX_Grequest_start_impl(MPI_Grequest_query_function *,
                              MPI_Grequest_free_function *,
                              MPI_Grequest_cancel_function *,
                              MPIX_Grequest_poll_function *,
                              MPIX_Grequest_wait_function *, void *,
-                             MPID_Request **);
+                             MPIR_Request **);
 int MPIR_Graph_map_impl(const MPIR_Comm *comm_ptr, int nnodes,
                         const int indx[], const int edges[], int *newrank);
 int MPIR_Type_commit_impl(MPI_Datatype *datatype);

@@ -7,18 +7,18 @@
 #include "mpidimpl.h"
 #include "mpidrma.h"
 
-static int create_derived_datatype(MPID_Request * req, MPIDI_RMA_dtype_info * dtype_info,
+static int create_derived_datatype(MPIR_Request * req, MPIDI_RMA_dtype_info * dtype_info,
                                    MPIDU_Datatype** dtp);
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Handle_recv_req
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Handle_recv_req(MPIDI_VC_t * vc, MPID_Request * rreq, int *complete)
+int MPIDI_CH3U_Handle_recv_req(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     static int in_routine ATTRIBUTE((unused)) = FALSE;
     int mpi_errno = MPI_SUCCESS;
-    int (*reqFn) (MPIDI_VC_t *, MPID_Request *, int *);
+    int (*reqFn) (MPIDI_VC_t *, MPIR_Request *, int *);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_HANDLE_RECV_REQ);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_HANDLE_RECV_REQ);
@@ -55,7 +55,7 @@ int MPIDI_CH3U_Handle_recv_req(MPIDI_VC_t * vc, MPID_Request * rreq, int *comple
  *
  * The convention for the names of routines that are called when data is
  * available is
- *    MPIDI_CH3_ReqHandler_<type>(MPIDI_VC_t *, MPID_Request *, int *)
+ *    MPIDI_CH3_ReqHandler_<type>(MPIDI_VC_t *, MPIR_Request *, int *)
  * as in
  *    MPIDI_CH3_ReqHandler_...
  *
@@ -68,7 +68,7 @@ int MPIDI_CH3U_Handle_recv_req(MPIDI_VC_t * vc, MPID_Request * rreq, int *comple
  */
 /* ----------------------------------------------------------------------- */
 int MPIDI_CH3_ReqHandler_RecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
-                                      MPID_Request * rreq, int *complete)
+                                      MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -90,7 +90,7 @@ int MPIDI_CH3_ReqHandler_RecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 #define FUNCNAME MPIDI_CH3_ReqHandler_PutRecvComplete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_ReqHandler_PutRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, int *complete)
+int MPIDI_CH3_ReqHandler_PutRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr;
@@ -113,7 +113,7 @@ int MPIDI_CH3_ReqHandler_PutRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
      * which leads to wrong execution.
      * Here we check if req is already completed to prevent processing the
      * same request twice. */
-    if (MPID_Request_is_complete(rreq)) {
+    if (MPIR_Request_is_complete(rreq)) {
         *complete = FALSE;
         goto fn_exit;
     }
@@ -152,7 +152,7 @@ int MPIDI_CH3_ReqHandler_PutRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
 #define FUNCNAME MPIDI_CH3_ReqHandler_AccumRecvComplete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, int *complete)
+int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr;
@@ -178,7 +178,7 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq,
      * which leads to wrong execution.
      * Here we check if req is already completed to prevent processing the
      * same request twice. */
-    if (MPID_Request_is_complete(rreq)) {
+    if (MPIR_Request_is_complete(rreq)) {
         *complete = FALSE;
         goto fn_exit;
     }
@@ -251,13 +251,13 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq,
 #define FUNCNAME MPIDI_CH3_ReqHandler_GaccumRecvComplete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, int *complete)
+int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_get_accum_resp_t *get_accum_resp_pkt = &upkt.get_accum_resp;
-    MPID_Request *resp_req;
+    MPIR_Request *resp_req;
     MPL_IOV iov[MPL_IOV_LIMIT];
     int iovcnt;
     int is_contig;
@@ -424,12 +424,12 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
 #define FUNCNAME MPIDI_CH3_ReqHandler_FOPRecvComplete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, int *complete)
+int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPI_Aint type_size;
-    MPID_Request *resp_req = NULL;
+    MPIR_Request *resp_req = NULL;
     MPL_IOV iov[MPL_IOV_LIMIT];
     int iovcnt;
     MPIDI_CH3_Pkt_t upkt;
@@ -560,7 +560,7 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_PutDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
-                                                  MPID_Request * rreq, int *complete)
+                                                  MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDU_Datatype*new_dtp = NULL;
@@ -608,7 +608,7 @@ int MPIDI_CH3_ReqHandler_PutDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unu
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
-                                                   MPID_Request * rreq, int *complete)
+                                                   MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDU_Datatype*new_dtp = NULL;
@@ -723,7 +723,7 @@ int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((un
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
-                                                    MPID_Request * rreq, int *complete)
+                                                    MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDU_Datatype*new_dtp = NULL;
@@ -856,14 +856,14 @@ int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
-                                                  MPID_Request * rreq, int *complete)
+                                                  MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDU_Datatype*new_dtp = NULL;
     MPIDI_RMA_dtype_info *dtype_info = NULL;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_get_resp_t *get_resp_pkt = &upkt.get_resp;
-    MPID_Request *sreq;
+    MPIR_Request *sreq;
     MPIR_Win *win_ptr;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GETDERIVEDDTRECVCOMPLETE);
 
@@ -947,7 +947,7 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_UnpackUEBufComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
-                                             MPID_Request * rreq, int *complete)
+                                             MPIR_Request * rreq, int *complete)
 {
     int recv_pending;
     int mpi_errno = MPI_SUCCESS;
@@ -987,7 +987,7 @@ int MPIDI_CH3_ReqHandler_UnpackUEBufComplete(MPIDI_VC_t * vc ATTRIBUTE((unused))
 #define FUNCNAME MPIDI_CH3_ReqHandler_UnpackSRBufComplete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_ReqHandler_UnpackSRBufComplete(MPIDI_VC_t * vc, MPID_Request * rreq, int *complete)
+int MPIDI_CH3_ReqHandler_UnpackSRBufComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_UNPACKSRBUFCOMPLETE);
@@ -1030,7 +1030,7 @@ int MPIDI_CH3_ReqHandler_UnpackSRBufComplete(MPIDI_VC_t * vc, MPID_Request * rre
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_UnpackSRBufReloadIOV(MPIDI_VC_t * vc ATTRIBUTE((unused)),
-                                              MPID_Request * rreq, int *complete)
+                                              MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_UNPACKSRBUFRELOADIOV);
@@ -1053,7 +1053,7 @@ int MPIDI_CH3_ReqHandler_UnpackSRBufReloadIOV(MPIDI_VC_t * vc ATTRIBUTE((unused)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_ReloadIOV(MPIDI_VC_t * vc ATTRIBUTE((unused)),
-                                   MPID_Request * rreq, int *complete)
+                                   MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_RELOADIOV);
@@ -1077,7 +1077,7 @@ int MPIDI_CH3_ReqHandler_ReloadIOV(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 #define FUNCNAME create_derived_datatype
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int create_derived_datatype(MPID_Request * req, MPIDI_RMA_dtype_info * dtype_info,
+static int create_derived_datatype(MPIR_Request * req, MPIDI_RMA_dtype_info * dtype_info,
                                    MPIDU_Datatype** dtp)
 {
     MPIDU_Datatype*new_dtp;
@@ -1184,7 +1184,7 @@ static inline int perform_get_in_lock_queue(MPIR_Win * win_ptr,
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_get_resp_t *get_resp_pkt = &upkt.get_resp;
     MPIDI_CH3_Pkt_get_t *get_pkt = &((target_lock_entry->pkt).get);
-    MPID_Request *sreq = NULL;
+    MPIR_Request *sreq = NULL;
     MPI_Aint type_size;
     size_t len;
     int iovcnt;
@@ -1358,7 +1358,7 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_get_accum_resp_t *get_accum_resp_pkt = &upkt.get_accum_resp;
     MPIDI_CH3_Pkt_get_accum_t *get_accum_pkt = &((target_lock_entry->pkt).get_accum);
-    MPID_Request *sreq = NULL;
+    MPIR_Request *sreq = NULL;
     MPI_Aint type_size;
     size_t len;
     int iovcnt;
@@ -1550,7 +1550,7 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_fop_resp_t *fop_resp_pkt = &upkt.fop_resp;
     MPIDI_CH3_Pkt_fop_t *fop_pkt = &((target_lock_entry->pkt).fop);
-    MPID_Request *resp_req = NULL;
+    MPIR_Request *resp_req = NULL;
     MPI_Aint type_size;
     MPL_IOV iov[MPL_IOV_LIMIT];
     int iovcnt;
@@ -1668,7 +1668,7 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
         MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
         if (resp_req != NULL) {
-            if (!MPID_Request_is_complete(resp_req)) {
+            if (!MPIR_Request_is_complete(resp_req)) {
                 /* sending process is not completed, set proper OnDataAvail
                  * (it is initialized to NULL by lower layer) */
                 resp_req->dev.target_win_handle = fop_pkt->target_win_handle;
@@ -1721,7 +1721,7 @@ static inline int perform_cas_in_lock_queue(MPIR_Win * win_ptr,
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_cas_resp_t *cas_resp_pkt = &upkt.cas_resp;
     MPIDI_CH3_Pkt_cas_t *cas_pkt = &((target_lock_entry->pkt).cas);
-    MPID_Request *send_req = NULL;
+    MPIR_Request *send_req = NULL;
     MPI_Aint len;
     int mpi_errno = MPI_SUCCESS;
 
@@ -1768,7 +1768,7 @@ static inline int perform_cas_in_lock_queue(MPIR_Win * win_ptr,
     MPIR_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
     if (send_req != NULL) {
-        if (!MPID_Request_is_complete(send_req)) {
+        if (!MPIR_Request_is_complete(send_req)) {
             /* sending process is not completed, set proper OnDataAvail
              * (it is initialized to NULL by lower layer) */
             send_req->dev.target_win_handle = cas_pkt->target_win_handle;
@@ -1989,7 +1989,7 @@ int MPIDI_CH3I_Release_lock(MPIR_Win * win_ptr)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete(MPIDI_VC_t * vc,
-                                                     MPID_Request * rreq, int *complete)
+                                                     MPIR_Request * rreq, int *complete)
 {
     int requested_lock;
     MPI_Win target_win_handle;

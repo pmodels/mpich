@@ -10,7 +10,7 @@
 #define FUNCNAME MPID_Cancel_recv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Cancel_recv(MPID_Request * rreq)
+int MPID_Cancel_recv(MPIR_Request * rreq)
 {
     int netmod_cancelled = TRUE;
     int mpi_errno = MPI_SUCCESS;

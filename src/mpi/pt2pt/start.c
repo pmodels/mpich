@@ -48,7 +48,7 @@ Input Parameters:
 int MPI_Start(MPI_Request *request)
 {
     static const char FCNAME[] = "MPI_Start";
-    MPID_Request * request_ptr = NULL;
+    MPIR_Request * request_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_START);
 
@@ -70,14 +70,14 @@ int MPI_Start(MPI_Request *request)
 #   endif /* HAVE_ERROR_CHECKING */
     
     /* Convert MPI request handle to a request object pointer */
-    MPID_Request_get_ptr( *request, request_ptr );
+    MPIR_Request_get_ptr( *request, request_ptr );
     
     /* Validate object pointers if error checking is enabled */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPID_Request_valid_ptr( request_ptr, mpi_errno );
+            MPIR_Request_valid_ptr( request_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
 	    MPIR_ERRTEST_PERSISTENT(request_ptr, mpi_errno);
 	    MPIR_ERRTEST_PERSISTENT_ACTIVE(request_ptr, mpi_errno);

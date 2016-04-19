@@ -12,10 +12,10 @@
 #define FUNCNAME MPIDI_CH3_Req_handler_rma_op_complete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_Req_handler_rma_op_complete(MPID_Request * sreq)
+int MPIDI_CH3_Req_handler_rma_op_complete(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *ureq = NULL;
+    MPIR_Request *ureq = NULL;
     MPIR_Win *win_ptr = NULL;
 
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQ_HANDLER_RMA_OP_COMPLETE);
@@ -33,7 +33,7 @@ int MPIDI_CH3_Req_handler_rma_op_complete(MPID_Request * sreq)
 
     if (sreq->dev.request_handle != MPI_REQUEST_NULL) {
         /* get user request */
-        MPID_Request_get_ptr(sreq->dev.request_handle, ureq);
+        MPIR_Request_get_ptr(sreq->dev.request_handle, ureq);
         mpi_errno = MPID_Request_complete(ureq);
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);

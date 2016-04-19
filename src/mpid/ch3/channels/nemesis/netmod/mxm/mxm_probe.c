@@ -110,7 +110,7 @@ int MPID_nem_mxm_iprobe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, 
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_mxm_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, int context_offset,
-                         int *flag, MPID_Request ** message, MPI_Status * status)
+                         int *flag, MPIR_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     mxm_error_t err;
@@ -131,7 +131,7 @@ int MPID_nem_mxm_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm,
 
     err = mxm_req_mprobe(&mxm_req, &mxm_msg);
     if (MXM_OK == err) {
-        MPID_Request *req;
+        MPIR_Request *req;
 
         *flag = 1;
 
@@ -213,7 +213,7 @@ int MPID_nem_mxm_anysource_iprobe(int tag, MPIR_Comm * comm, int context_offset,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_mxm_anysource_improbe(int tag, MPIR_Comm * comm, int context_offset, int *flag,
-                                   MPID_Request ** message, MPI_Status * status)
+                                   MPIR_Request ** message, MPI_Status * status)
 {
     return MPID_nem_mxm_improbe(NULL, MPI_ANY_SOURCE, tag, comm, context_offset, flag, message,
                                 status);

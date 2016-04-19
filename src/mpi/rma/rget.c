@@ -81,7 +81,7 @@ int MPI_Rget(void *origin_addr, int origin_count, MPI_Datatype
     static const char FCNAME[] = "MPI_Rget";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
-    MPID_Request *request_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_RGET);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

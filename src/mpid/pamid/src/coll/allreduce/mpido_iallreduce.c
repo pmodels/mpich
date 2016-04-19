@@ -30,7 +30,7 @@ int MPIDO_Iallreduce(const void *sendbuf,
                     MPI_Datatype dt,
                     MPI_Op op,
                     MPIR_Comm *comm_ptr,
-                    MPID_Request **request)
+                    MPIR_Request **request)
 {
    TRACE_ERR("Entering mpido_iallreduce\n");
 
@@ -38,7 +38,7 @@ int MPIDO_Iallreduce(const void *sendbuf,
    {
       /*
        * If the mpich mpir non-blocking collectives are enabled, return without
-       * first constructing the MPID_Request. This signals to the
+       * first constructing the MPIR_Request. This signals to the
        * MPIR_Iallreduce_impl() function to invoke the mpich nbc implementation
        * of MPI_Iallreduce().
        */
@@ -58,11 +58,11 @@ int MPIDO_Iallreduce(const void *sendbuf,
 
       /*
        * The blocking allreduce has completed - create and complete a
-       * MPID_Request object so the MPIR_Iallreduce_impl() function does not
+       * MPIR_Request object so the MPIR_Iallreduce_impl() function does not
        * perform an additional iallreduce.
        */
-      MPID_Request * mpid_request = MPID_Request_create_inline();
-      mpid_request->kind = MPID_COLL_REQUEST;
+      MPIR_Request * mpid_request = MPID_Request_create_inline();
+      mpid_request->kind = MPIR_COLL_REQUEST;
       *request = mpid_request;
       MPIDI_Request_complete_norelease_inline(mpid_request);
 

@@ -441,7 +441,7 @@ void MPIU_Handle_obj_free( MPIU_Object_alloc_t *objmem, void *object )
         /* Necessary to prevent annotations from being misinterpreted.  HB/HA arcs
          * will be drawn between a req object in across a free/alloc boundary
          * otherwise.  Specifically, stores to obj->next when obj is actually an
-         * MPID_Request falsely look like a race to DRD and Helgrind because of the
+         * MPIR_Request falsely look like a race to DRD and Helgrind because of the
          * other lockfree synchronization used with requests. */
         MPL_VG_ANNOTATE_NEW_MEMORY(obj, objmem->size);
     }

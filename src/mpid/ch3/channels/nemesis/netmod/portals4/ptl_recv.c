@@ -14,7 +14,7 @@
 static void dequeue_req(const ptl_event_t *e)
 {
     int found;
-    MPID_Request *const rreq = e->user_ptr;
+    MPIR_Request *const rreq = e->user_ptr;
     MPI_Aint s_len, r_len;
 
     /* At this point we know the ME is unlinked. Invalidate the handle to
@@ -52,7 +52,7 @@ static void dequeue_req(const ptl_event_t *e)
 static int handler_recv_complete(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *const rreq = e->user_ptr;
+    MPIR_Request *const rreq = e->user_ptr;
     int ret;
     int i;
     MPIDI_STATE_DECL(MPID_STATE_HANDLER_RECV_COMPLETE);
@@ -89,7 +89,7 @@ static int handler_recv_complete(const ptl_event_t *e)
 static int handler_recv_dequeue_complete(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *const rreq = e->user_ptr;
+    MPIR_Request *const rreq = e->user_ptr;
     int is_contig;
     MPI_Aint last;
     MPI_Aint dt_true_lb;
@@ -145,7 +145,7 @@ static int handler_recv_dequeue_complete(const ptl_event_t *e)
 static int handler_recv_big_get(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *const rreq = e->user_ptr;
+    MPIR_Request *const rreq = e->user_ptr;
     MPI_Aint last;
 
     MPIDI_STATE_DECL(MPID_STATE_HANDLER_RECV_UNPACK);
@@ -179,7 +179,7 @@ static int handler_recv_big_get(const ptl_event_t *e)
 #define FUNCNAME big_get
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static void big_get(void *buf, ptl_size_t left_to_get, MPIDI_VC_t *vc, ptl_match_bits_t match_bits, MPID_Request *rreq)
+static void big_get(void *buf, ptl_size_t left_to_get, MPIDI_VC_t *vc, ptl_match_bits_t match_bits, MPIR_Request *rreq)
 {
     int ret;
     MPID_nem_ptl_vc_area *vc_ptl;
@@ -214,7 +214,7 @@ static void big_get(void *buf, ptl_size_t left_to_get, MPIDI_VC_t *vc, ptl_match
 static int handler_recv_unpack_complete(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *const rreq = e->user_ptr;
+    MPIR_Request *const rreq = e->user_ptr;
     void *buf;
     MPI_Aint last;
 
@@ -273,7 +273,7 @@ static int handler_recv_dequeue_unpack_complete(const ptl_event_t *e)
 static int handler_recv_dequeue_large(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *const rreq = e->user_ptr;
+    MPIR_Request *const rreq = e->user_ptr;
     MPIDI_VC_t *vc;
     MPID_nem_ptl_vc_area *vc_ptl;
     int ret;
@@ -373,7 +373,7 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
 static int handler_recv_dequeue_unpack_large(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *const rreq = e->user_ptr;
+    MPIR_Request *const rreq = e->user_ptr;
     MPIDI_VC_t *vc;
     MPI_Aint last;
     void *buf;
@@ -424,7 +424,7 @@ static int handler_recv_dequeue_unpack_large(const ptl_event_t *e)
 #define FUNCNAME MPID_nem_ptl_recv_posted
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
+int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPIR_Request *rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
@@ -577,7 +577,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
 #define FUNCNAME MPID_nem_ptl_anysource_posted
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPID_nem_ptl_anysource_posted(MPID_Request *rreq)
+void MPID_nem_ptl_anysource_posted(MPIR_Request *rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_POSTED);
@@ -598,7 +598,7 @@ void MPID_nem_ptl_anysource_posted(MPID_Request *rreq)
 #define FUNCNAME cancel_recv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int cancel_recv(MPID_Request *rreq, int *cancelled)
+static int cancel_recv(MPIR_Request *rreq, int *cancelled)
 {
     int mpi_errno = MPI_SUCCESS;
     int ptl_err   = PTL_OK;
@@ -630,7 +630,7 @@ static int cancel_recv(MPID_Request *rreq, int *cancelled)
 #define FUNCNAME MPID_nem_ptl_anysource_matched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_ptl_anysource_matched(MPID_Request *rreq)
+int MPID_nem_ptl_anysource_matched(MPIR_Request *rreq)
 {
     int mpi_errno, cancelled;
 
@@ -657,7 +657,7 @@ int MPID_nem_ptl_anysource_matched(MPID_Request *rreq)
 #define FUNCNAME MPID_nem_ptl_cancel_recv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_ptl_cancel_recv(MPIDI_VC_t *vc,  MPID_Request *rreq)
+int MPID_nem_ptl_cancel_recv(MPIDI_VC_t *vc,  MPIR_Request *rreq)
 {
     int mpi_errno, cancelled;
 
@@ -684,7 +684,7 @@ int MPID_nem_ptl_cancel_recv(MPIDI_VC_t *vc,  MPID_Request *rreq)
 #define FUNCNAME MPID_nem_ptl_lmt_start_recv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPID_Request *rreq, MPL_IOV s_cookie)
+int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPIR_Request *rreq, MPL_IOV s_cookie)
 {
     /* This function should only be called as a result of an Mrecv because of the CH3 protocol for
        Rendezvous Mrecvs. The regular CH3 protocol is not optimal for portals, since we don't need

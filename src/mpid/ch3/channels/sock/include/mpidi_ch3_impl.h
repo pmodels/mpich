@@ -50,7 +50,7 @@
     /* MT - not thread safe! */
 #define MPIDI_CH3I_SendQ_dequeue(vcch)					\
 {									\
-    MPID_Request *req_ = vcch->sendq_head;                              \
+    MPIR_Request *req_ = vcch->sendq_head;                              \
     MPL_DBG_MSG(MPIDI_CH3_DBG_MSG,TYPICAL,"Dequeuing this request");\
     vcch->sendq_head = vcch->sendq_head->dev.next;			\
     if (vcch->sendq_head == NULL)					\

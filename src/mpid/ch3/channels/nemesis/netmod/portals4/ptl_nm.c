@@ -25,7 +25,7 @@ static ptl_handle_me_t get_me_handle;
 
 
 /* AUX STUFF FOR REORDERING LOGIC */
-static GENERIC_Q_DECL(struct MPID_Request) reorder_queue;
+static GENERIC_Q_DECL(struct MPIR_Request) reorder_queue;
 static char *expected_recv_ptr, *max_recv_ptr[NUM_RECV_BUFS];
 static int expected_recv_idx;
 
@@ -48,7 +48,7 @@ static inline void incr_expected_recv_ptr(size_t size)
 #define FUNCNAME handle_request
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int handle_request(MPID_Request *req)
+static inline int handle_request(MPIR_Request *req)
 {
     int mpi_errno = MPID_nem_handle_pkt(req->ch.vc, TMPBUF(req), REQ_PTL(req)->bytes_put);
     incr_expected_recv_ptr(REQ_PTL(req)->bytes_put);
@@ -64,19 +64,19 @@ static inline int handle_request(MPID_Request *req)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int progress_reorder(void)
 {
-    MPID_Request *req;
+    MPIR_Request *req;
     int mpi_errno = MPI_SUCCESS;
 
     GENERIC_Q_SEARCH_REMOVE(&reorder_queue,
                             REQ_PTL(_e)->recv_ptr == expected_recv_ptr,
-                            &req, MPID_Request, dev.next);
+                            &req, MPIR_Request, dev.next);
     while (req) {
         mpi_errno = handle_request(req);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         GENERIC_Q_SEARCH_REMOVE(&reorder_queue,
                                 REQ_PTL(_e)->recv_ptr == expected_recv_ptr,
-                                &req, MPID_Request, dev.next);
+                                &req, MPIR_Request, dev.next);
     }
  fn_exit:
     return mpi_errno;
@@ -192,7 +192,7 @@ int MPID_nem_ptl_nm_finalize(void)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, intptr_t data_sz,
-                           MPID_Request *sreq)
+                           MPIR_Request *sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
@@ -258,7 +258,7 @@ static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, intptr_t d
 #define FUNCNAME send_noncontig_pkt
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
+static int send_noncontig_pkt(MPIDI_VC_t *vc, MPIR_Request *sreq, void *hdr_p)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
@@ -333,7 +333,7 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
 #define FUNCNAME MPID_nem_ptl_SendNoncontig
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_ptl_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, intptr_t hdr_sz)
+int MPID_nem_ptl_SendNoncontig(MPIDI_VC_t *vc, MPIR_Request *sreq, void *hdr, intptr_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_SENDNONCONTIG);
@@ -356,7 +356,7 @@ int MPID_nem_ptl_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, in
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, void *data,
-                                 intptr_t data_sz, MPID_Request **sreq_ptr)
+                                 intptr_t data_sz, MPIR_Request **sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_ISTARTCONTIGMSG);
@@ -386,7 +386,7 @@ int MPID_nem_ptl_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, voi
 #define FUNCNAME MPID_nem_ptl_iSendContig
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_ptl_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, intptr_t hdr_sz,
+int MPID_nem_ptl_iSendContig(MPIDI_VC_t *vc, MPIR_Request *sreq, void *hdr, intptr_t hdr_sz,
                                void *data, intptr_t data_sz)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -409,9 +409,9 @@ int MPID_nem_ptl_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, intp
 #define FUNCNAME on_data_avail
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int on_data_avail(MPID_Request * req)
+static inline int on_data_avail(MPIR_Request * req)
 {
-    int (*reqFn) (MPIDI_VC_t *, MPID_Request *, int *);
+    int (*reqFn) (MPIDI_VC_t *, MPIR_Request *, int *);
     MPIDI_VC_t *vc = req->ch.vc;
     MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
     int mpi_errno = MPI_SUCCESS;
@@ -484,7 +484,7 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
                         MPIR_ERR_POP(mpi_errno);
                 }
                 else {
-                    MPID_Request *req = MPID_Request_create();
+                    MPIR_Request *req = MPID_Request_create();
                     /* This request is actually complete; just needs to wait to enforce ordering */
                     TMPBUF(req) = MPL_malloc(packet_sz);
                     MPIU_Assert(TMPBUF(req));
@@ -501,7 +501,7 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
                 char *buf_ptr;
                 ptl_size_t target_offset;
 
-                MPID_Request *req = MPID_Request_create();
+                MPIR_Request *req = MPID_Request_create();
                 MPIU_Assert(req != NULL);
                 MPIDI_CH3U_Request_decrement_cc(req, &incomplete);  /* We'll increment it below */
                 REQ_PTL(req)->event_handler = MPID_nem_ptl_nm_ctl_event_handler;
@@ -544,9 +544,9 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
     case PTL_EVENT_GET:
         {
             MPI_Request handle = NPTL_MATCH_GET_TAG(e->match_bits);
-            MPID_Request *req = NULL;
+            MPIR_Request *req = NULL;
 
-            MPID_Request_get_ptr(handle, req);
+            MPIR_Request_get_ptr(handle, req);
             if (--REQ_PTL(req)->num_gets == 0) {
                 MPL_free(TMPBUF(req));
                 if (REQ_PTL(req)->put_done) {
@@ -561,7 +561,7 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
 
     case PTL_EVENT_SEND:
         {
-            MPID_Request *const req = e->user_ptr;
+            MPIR_Request *const req = e->user_ptr;
 
             MPL_free(SENDBUF(req));
             REQ_PTL(req)->put_done = 1;
@@ -577,7 +577,7 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
     case PTL_EVENT_REPLY:
         {
             int incomplete;
-            MPID_Request *const req = e->user_ptr;
+            MPIR_Request *const req = e->user_ptr;
 
             MPIDI_CH3U_Request_decrement_cc(req, &incomplete);
             if (!incomplete) {

@@ -65,7 +65,7 @@ int MPI_Irsend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
     static const char FCNAME[] = "MPI_Irsend";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_Request *request_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_IRSEND);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

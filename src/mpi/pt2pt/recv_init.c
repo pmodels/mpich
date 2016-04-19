@@ -66,7 +66,7 @@ int MPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source,
     static const char FCNAME[] = "MPI_Recv_init";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_Request *request_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_RECV_INIT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

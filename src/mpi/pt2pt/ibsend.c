@@ -22,7 +22,7 @@ int MPI_Ibsend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 /* -- End Profiling Symbol Block */
 
 typedef struct {
-    MPID_Request *req;
+    MPIR_Request *req;
     int           cancelled;
 } ibsend_req_info;
 
@@ -59,7 +59,7 @@ PMPI_LOCAL int MPIR_Ibsend_cancel( void *extra, int complete )
     int mpi_errno = MPI_SUCCESS;
     ibsend_req_info *ibsend_info = (ibsend_req_info *)extra;
     MPI_Status status;
-    MPID_Request *req = ibsend_info->req;
+    MPIR_Request *req = ibsend_info->req;
     MPI_Request req_hdl = req->handle;
 
     /* FIXME: There should be no unreferenced args! */
@@ -96,7 +96,7 @@ int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest
                      MPIR_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *request_ptr, *new_request_ptr;
+    MPIR_Request *request_ptr, *new_request_ptr;
     ibsend_req_info *ibinfo=0;
         
     /* We don't try tbsend in for MPI_Ibsend because we must create a

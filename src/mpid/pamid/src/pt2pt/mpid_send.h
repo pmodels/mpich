@@ -49,7 +49,7 @@ MPID_Send_inline(const void    * buf,
                  int             tag,
                  MPIR_Comm     * comm,
                  int             context_offset,
-                 MPID_Request ** request)
+                 MPIR_Request ** request)
 {
   return MPIDI_Send(buf,
                     count,

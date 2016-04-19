@@ -50,7 +50,7 @@ typedef struct {
 } MPID_nem_ptl_req_area;
 
 /* macro for ptl private in req */
-static inline MPID_nem_ptl_req_area * REQ_PTL(MPID_Request *req) {
+static inline MPID_nem_ptl_req_area * REQ_PTL(MPIR_Request *req) {
     return (MPID_nem_ptl_req_area *)req->ch.netmod_area.padding;
 }
 
@@ -141,10 +141,10 @@ int MPID_nem_ptl_nm_init(void);
 int MPID_nem_ptl_nm_finalize(void);
 int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e);
 int MPID_nem_ptl_sendq_complete_with_error(MPIDI_VC_t *vc, int req_errno);
-int MPID_nem_ptl_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, intptr_t hdr_sz);
+int MPID_nem_ptl_SendNoncontig(MPIDI_VC_t *vc, MPIR_Request *sreq, void *hdr, intptr_t hdr_sz);
 int MPID_nem_ptl_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, void *data, intptr_t data_sz,
-                                   MPID_Request **sreq_ptr);
-int MPID_nem_ptl_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, intptr_t hdr_sz,
+                                   MPIR_Request **sreq_ptr);
+int MPID_nem_ptl_iSendContig(MPIDI_VC_t *vc, MPIR_Request *sreq, void *hdr, intptr_t hdr_sz,
                                void *data, intptr_t data_sz);
 int MPID_nem_ptl_poll_init(void);
 int MPID_nem_ptl_poll_finalize(void);
@@ -154,41 +154,41 @@ int MPID_nem_ptl_get_id_from_bc(const char *business_card, ptl_process_t *id, pt
                                 ptl_pt_index_t *ptc, ptl_pt_index_t *ptr, ptl_pt_index_t *ptrg, ptl_pt_index_t *ptrc);
 
 /* comm override functions */
-int MPID_nem_ptl_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req);
+int MPID_nem_ptl_recv_posted(struct MPIDI_VC *vc, struct MPIR_Request *req);
 /* isend is also used to implement send, rsend and irsend */
 int MPID_nem_ptl_isend(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-                       MPIR_Comm *comm, int context_offset, struct MPID_Request **request);
+                       MPIR_Comm *comm, int context_offset, struct MPIR_Request **request);
 /* issend is also used to implement ssend */
 int MPID_nem_ptl_issend(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-                        MPIR_Comm *comm, int context_offset, struct MPID_Request **request);
-int MPID_nem_ptl_cancel_send(struct MPIDI_VC *vc,  struct MPID_Request *sreq);
-int MPID_nem_ptl_cancel_recv(struct MPIDI_VC *vc,  struct MPID_Request *rreq);
+                        MPIR_Comm *comm, int context_offset, struct MPIR_Request **request);
+int MPID_nem_ptl_cancel_send(struct MPIDI_VC *vc,  struct MPIR_Request *sreq);
+int MPID_nem_ptl_cancel_recv(struct MPIDI_VC *vc,  struct MPIR_Request *rreq);
 int MPID_nem_ptl_probe(struct MPIDI_VC *vc,  int source, int tag, MPIR_Comm *comm, int context_offset, MPI_Status *status);
 int MPID_nem_ptl_iprobe(struct MPIDI_VC *vc,  int source, int tag, MPIR_Comm *comm, int context_offset, int *flag,
                         MPI_Status *status);
 int MPID_nem_ptl_improbe(struct MPIDI_VC *vc,  int source, int tag, MPIR_Comm *comm, int context_offset, int *flag,
-                         MPID_Request **message, MPI_Status *status);
+                         MPIR_Request **message, MPI_Status *status);
 int MPID_nem_ptl_anysource_iprobe(int tag, MPIR_Comm * comm, int context_offset, int *flag, MPI_Status * status);
-int MPID_nem_ptl_anysource_improbe(int tag, MPIR_Comm * comm, int context_offset, int *flag, MPID_Request **message,
+int MPID_nem_ptl_anysource_improbe(int tag, MPIR_Comm * comm, int context_offset, int *flag, MPIR_Request **message,
                                    MPI_Status * status);
-void MPID_nem_ptl_anysource_posted(MPID_Request *rreq);
-int MPID_nem_ptl_anysource_matched(MPID_Request *rreq);
+void MPID_nem_ptl_anysource_posted(MPIR_Request *rreq);
+int MPID_nem_ptl_anysource_matched(MPIR_Request *rreq);
 int MPID_nem_ptl_init_id(MPIDI_VC_t *vc);
 int MPID_nem_ptl_get_ordering(int *ordering);
 
-int MPID_nem_ptl_lmt_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *rts_pkt, MPID_Request *req);
-int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPID_Request *rreq, MPL_IOV s_cookie);
-int MPID_nem_ptl_lmt_start_send(MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV r_cookie);
-int MPID_nem_ptl_lmt_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV s_cookie);
-int MPID_nem_ptl_lmt_done_send(MPIDI_VC_t *vc, MPID_Request *req);
-int MPID_nem_ptl_lmt_done_recv(MPIDI_VC_t *vc, MPID_Request *req);
+int MPID_nem_ptl_lmt_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *rts_pkt, MPIR_Request *req);
+int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPIR_Request *rreq, MPL_IOV s_cookie);
+int MPID_nem_ptl_lmt_start_send(MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV r_cookie);
+int MPID_nem_ptl_lmt_handle_cookie(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV s_cookie);
+int MPID_nem_ptl_lmt_done_send(MPIDI_VC_t *vc, MPIR_Request *req);
+int MPID_nem_ptl_lmt_done_recv(MPIDI_VC_t *vc, MPIR_Request *req);
 
 /* packet handlers */
 
 int MPID_nem_ptl_pkt_cancel_send_req_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-                                             intptr_t *buflen, MPID_Request **rreqp);
+                                             intptr_t *buflen, MPIR_Request **rreqp);
 int MPID_nem_ptl_pkt_cancel_send_resp_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-                                              intptr_t *buflen, MPID_Request **rreqp);
+                                              intptr_t *buflen, MPIR_Request **rreqp);
 
 /* local packet types */
 

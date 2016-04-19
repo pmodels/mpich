@@ -19,7 +19,7 @@ typedef struct vc_term_element
 {
     struct vc_term_element *next;
     MPIDI_VC_t *vc;
-    MPID_Request *req;
+    MPIR_Request *req;
 } vc_term_element_t;
 
 static struct { vc_term_element_t *head, *tail; } vc_term_queue;
@@ -39,10 +39,10 @@ static MPIDI_CH3_PktHandler_Fcn *pktArray[PKTARRAY_SIZE];
 #endif
 
 #ifdef BY_PASS_PROGRESS
-extern MPID_Request ** const MPID_Recvq_posted_head_ptr;
-extern MPID_Request ** const MPID_Recvq_unexpected_head_ptr;
-extern MPID_Request ** const MPID_Recvq_posted_tail_ptr;
-extern MPID_Request ** const MPID_Recvq_unexpected_tail_ptr;
+extern MPIR_Request ** const MPID_Recvq_posted_head_ptr;
+extern MPIR_Request ** const MPID_Recvq_unexpected_head_ptr;
+extern MPIR_Request ** const MPID_Recvq_posted_tail_ptr;
+extern MPIR_Request ** const MPID_Recvq_unexpected_tail_ptr;
 #endif
 
 OPA_int_t MPIDI_CH3I_progress_completion_count = OPA_INT_T_INITIALIZER(0);
@@ -64,9 +64,9 @@ static volatile int sigusr1_count = 0;
 static int my_sigusr1_count = 0;
 
 MPIDI_CH3I_shm_sendq_t MPIDI_CH3I_shm_sendq = {NULL, NULL};
-struct MPID_Request *MPIDI_CH3I_shm_active_send = NULL;
+struct MPIR_Request *MPIDI_CH3I_shm_active_send = NULL;
 
-static int pkt_NETMOD_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPID_Request **rreqp);
+static int pkt_NETMOD_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPIR_Request **rreqp);
 static int shm_connection_terminated(MPIDI_VC_t * vc);
 static int check_terminating_vcs(void);
 
@@ -78,8 +78,8 @@ int MPID_nem_local_lmt_pending = FALSE;
 typedef struct qn_ent
 {
     struct qn_ent *next;
-    void (*enqueue_fn)(MPID_Request *rreq);
-    int (*dequeue_fn)(MPID_Request *rreq);
+    void (*enqueue_fn)(MPIR_Request *rreq);
+    int (*dequeue_fn)(MPIR_Request *rreq);
 } qn_ent_t;
 
 static qn_ent_t *qn_head = NULL;
@@ -116,7 +116,7 @@ static int check_terminating_vcs(void)
 
     MPIDI_FUNC_ENTER(MPID_STATE_CHECK_TERMINATING_VCS);
 
-    while (!TERMQ_EMPTY() && MPID_Request_is_complete(TERMQ_HEAD()->req)) {
+    while (!TERMQ_EMPTY() && MPIR_Request_is_complete(TERMQ_HEAD()->req)) {
         vc_term_element_t *ep;
         TERMQ_DEQUEUE(&ep);
         MPID_Request_release(ep->req);
@@ -145,7 +145,7 @@ int MPIDI_CH3I_Shm_send_progress(void)
     int mpi_errno = MPI_SUCCESS;
     MPL_IOV *iov;
     int n_iov;
-    MPID_Request *sreq;
+    MPIR_Request *sreq;
     int again = 0;
 
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_SEND_PROGRESS);
@@ -487,7 +487,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 
     do
     {
-	MPID_Request        *rreq;
+	MPIR_Request        *rreq;
 	MPID_nem_cell_ptr_t  cell;
 	int                  in_fbox = 0;
 	MPIDI_VC_t          *vc;
@@ -735,7 +735,7 @@ void MPIDI_CH3I_Progress_wakeup(void)
 int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *rreq = NULL;
+    MPIR_Request *rreq = NULL;
     int complete;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_HANDLE_PKT);
@@ -877,7 +877,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, intptr_t buflen)
             }
             else
             {
-                int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+                int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
 
                 reqFn = rreq->dev.OnDataAvail;
                 if (!reqFn)
@@ -1146,7 +1146,7 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
 int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *req, *prev;
+    MPIR_Request *req, *prev;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_COMPLETE_SENDQ_WITH_ERROR);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_COMPLETE_SENDQ_WITH_ERROR);
@@ -1155,7 +1155,7 @@ int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
     prev = NULL;
     while (req) {
         if (req->ch.vc == vc) {
-            MPID_Request *next = req->dev.next;
+            MPIR_Request *next = req->dev.next;
             if (prev)
                 prev->dev.next = next;
             else
@@ -1191,7 +1191,7 @@ int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
 #define FUNCNAME pkt_NETMOD_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int pkt_NETMOD_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPID_Request **rreqp)
+static int pkt_NETMOD_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPIR_Request **rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_pkt_netmod_t * const netmod_pkt = (MPID_nem_pkt_netmod_t *)pkt;
@@ -1214,7 +1214,7 @@ fn_exit:
 #define FUNCNAME MPIDI_CH3I_Register_anysource_notification
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3I_Register_anysource_notification(void (*enqueue_fn)(MPID_Request *rreq), int (*dequeue_fn)(MPID_Request *rreq))
+int MPIDI_CH3I_Register_anysource_notification(void (*enqueue_fn)(MPIR_Request *rreq), int (*dequeue_fn)(MPIR_Request *rreq))
 {
     int mpi_errno = MPI_SUCCESS;
     qn_ent_t *ent;
@@ -1239,7 +1239,7 @@ int MPIDI_CH3I_Register_anysource_notification(void (*enqueue_fn)(MPID_Request *
 #define FUNCNAME MPIDI_CH3I_Anysource_posted
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static void anysource_posted(MPID_Request *rreq)
+static void anysource_posted(MPIR_Request *rreq)
 {
     qn_ent_t *ent = qn_head;
 
@@ -1258,7 +1258,7 @@ static void anysource_posted(MPID_Request *rreq)
 #define FUNCNAME MPIDI_CH3I_Anysource_matched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int anysource_matched(MPID_Request *rreq)
+static int anysource_matched(MPIR_Request *rreq)
 {
     int matched = FALSE;
     qn_ent_t *ent = qn_head;
@@ -1288,7 +1288,7 @@ static int anysource_matched(MPID_Request *rreq)
 #define FUNCNAME MPIDI_CH3I_Posted_recv_enqueued
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPIDI_CH3I_Posted_recv_enqueued(MPID_Request *rreq)
+void MPIDI_CH3I_Posted_recv_enqueued(MPIR_Request *rreq)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_POSTED_RECV_ENQUEUED);
 
@@ -1354,7 +1354,7 @@ void MPIDI_CH3I_Posted_recv_enqueued(MPID_Request *rreq)
 #define FUNCNAME MPIDI_CH3I_Posted_recv_dequeued
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3I_Posted_recv_dequeued(MPID_Request *rreq)
+int MPIDI_CH3I_Posted_recv_dequeued(MPIR_Request *rreq)
 {
     int local_rank = -1;
     MPIDI_VC_t *vc;

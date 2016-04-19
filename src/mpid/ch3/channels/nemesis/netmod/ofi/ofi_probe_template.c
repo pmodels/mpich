@@ -17,7 +17,7 @@
 #undef FCNAME
 #define FCNAME DECL_FUNC(peek_callback)
 static int
-ADD_SUFFIX(peek_callback)(cq_tagged_entry_t * wc, MPID_Request * rreq)
+ADD_SUFFIX(peek_callback)(cq_tagged_entry_t * wc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
@@ -41,13 +41,13 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl)(struct MPIDI_VC *vc,
                              int tag,
                              MPIR_Comm * comm,
                              int context_offset,
-                             int *flag, MPI_Status * status, MPID_Request ** rreq_ptr)
+                             int *flag, MPI_Status * status, MPIR_Request ** rreq_ptr)
 {
     int ret, mpi_errno = MPI_SUCCESS;
     fi_addr_t remote_proc = 0;
     uint64_t match_bits, mask_bits;
     size_t len;
-    MPID_Request rreq_s, *rreq;
+    MPIR_Request rreq_s, *rreq;
 
     BEGIN_FUNC(FCNAME);
     if (rreq_ptr) {
@@ -155,7 +155,7 @@ int ADD_SUFFIX(MPID_nem_ofi_improbe)(struct MPIDI_VC *vc,
                          int tag,
                          MPIR_Comm * comm,
                          int context_offset,
-                         int *flag, MPID_Request ** message, MPI_Status * status)
+                         int *flag, MPIR_Request ** message, MPI_Status * status)
 {
     int old_error = status->MPI_ERROR;
     int s;
@@ -191,7 +191,7 @@ int ADD_SUFFIX(MPID_nem_ofi_anysource_iprobe)(int tag,
 int ADD_SUFFIX(MPID_nem_ofi_anysource_improbe)(int tag,
                                    MPIR_Comm * comm,
                                    int context_offset,
-                                   int *flag, MPID_Request ** message, MPI_Status * status)
+                                   int *flag, MPIR_Request ** message, MPI_Status * status)
 {
     int rc;
     BEGIN_FUNC(FCNAME);

@@ -76,7 +76,7 @@ MPIDI_RecvCB(pami_context_t    context,
   MPID_assert(_msginfo != NULL);
   MPID_assert(msginfo_size == sizeof(MPIDI_MsgInfo));
 
-  MPID_Request * rreq = NULL;
+  MPIR_Request * rreq = NULL;
   source=PAMIX_Endpoint_query(sender);
 
   /* -------------------- */
@@ -109,7 +109,7 @@ MPIDI_RecvCB(pami_context_t    context,
       MPID_NSTAT(mpid_statp->earlyArrivals);
 #endif
       MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
-      MPID_Request *newreq = MPIDI_Request_create2();
+      MPIR_Request *newreq = MPIDI_Request_create2();
       MPID_assert(newreq != NULL);
       if (TOKEN_FLOW_CONTROL_ON)
         {
@@ -152,7 +152,7 @@ MPIDI_RecvCB(pami_context_t    context,
       if (unlikely(rreq == NULL))
       {
         MPIDI_Callback_process_unexp(newreq, context, msginfo, sndlen, sender, sndbuf, recv, msginfo->isSync);
-        int completed = MPID_Request_is_complete(newreq);
+        int completed = MPIR_Request_is_complete(newreq);
         if (TOKEN_FLOW_CONTROL_ON)
           {
             #if TOKEN_FLOW_CONTROL

@@ -48,7 +48,7 @@ static volatile knem_status_t *knem_status = MAP_FAILED;
 struct lmt_dma_node {
     struct lmt_dma_node *next;
     MPIDI_VC_t *vc; /* seems like this should be in the request somewhere, but it's not */
-    MPID_Request *req; /* do we need to store type too? */
+    MPIR_Request *req; /* do we need to store type too? */
     volatile knem_status_t *status_p;
 };
 
@@ -113,7 +113,7 @@ fn_fail:
 #define FUNCNAME do_dma_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int do_dma_send(MPIDI_VC_t *vc,  MPID_Request *sreq, int send_iov_n,
+static int do_dma_send(MPIDI_VC_t *vc,  MPIR_Request *sreq, int send_iov_n,
                        MPL_IOV send_iov[], knem_cookie_t *s_cookiep)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -228,7 +228,7 @@ fn_fail:
 #define FUNCNAME send_sreq_data
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int send_sreq_data(MPIDI_VC_t *vc, MPID_Request *sreq, knem_cookie_t *s_cookiep)
+static int send_sreq_data(MPIDI_VC_t *vc, MPIR_Request *sreq, knem_cookie_t *s_cookiep)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
@@ -293,10 +293,10 @@ fn_fail:
 #define FUNCNAME check_req_complete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int check_req_complete(MPIDI_VC_t *vc, MPID_Request *req, int *complete)
+static inline int check_req_complete(MPIDI_VC_t *vc, MPIR_Request *req, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
-    int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+    int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
     reqFn = req->dev.OnDataAvail;
     if (reqFn) {
         *complete = 0;
@@ -320,7 +320,7 @@ fn_fail:
 #define FUNCNAME MPID_nem_lmt_dma_initiate_lmt
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_lmt_dma_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPID_Request *sreq)
+int MPID_nem_lmt_dma_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIR_Request *sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_pkt_lmt_rts_t * const rts_pkt = (MPID_nem_pkt_lmt_rts_t *)pkt;
@@ -351,7 +351,7 @@ fn_fail:
 #define FUNCNAME MPID_nem_lmt_dma_start_recv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPL_IOV s_cookie)
+int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPIR_Request *rreq, MPL_IOV s_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
     int nodma;
@@ -462,11 +462,11 @@ fn_fail:
 #define FUNCNAME MPID_nem_lmt_dma_done_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_lmt_dma_done_send(MPIDI_VC_t *vc, MPID_Request *sreq)
+int MPID_nem_lmt_dma_done_send(MPIDI_VC_t *vc, MPIR_Request *sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     int complete = 0;
-    int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+    int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_DONE_SEND);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_DONE_SEND);
@@ -515,7 +515,7 @@ fn_fail:
 #define FUNCNAME MPID_nem_lmt_dma_handle_cookie
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_lmt_dma_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV cookie)
+int MPID_nem_lmt_dma_handle_cookie(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV cookie)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_HANDLE_COOKIE);
@@ -689,7 +689,7 @@ int MPID_nem_lmt_dma_vc_terminated(MPIDI_VC_t *vc)
 #define FUNCNAME MPID_nem_lmt_dma_start_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_lmt_dma_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV r_cookie)
+int MPID_nem_lmt_dma_start_send(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV r_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_START_SEND);
@@ -705,7 +705,7 @@ int MPID_nem_lmt_dma_start_send(MPIDI_VC_t *vc, MPID_Request *req, MPL_IOV r_coo
 #define FUNCNAME MPID_nem_lmt_dma_done_recv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_lmt_dma_done_recv(MPIDI_VC_t *vc, MPID_Request *rreq)
+int MPID_nem_lmt_dma_done_recv(MPIDI_VC_t *vc, MPIR_Request *rreq)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_DONE_RECV);
 

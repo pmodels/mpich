@@ -43,7 +43,7 @@ MPIDI_RecvRzvCB_impl(pami_context_t    context,
   const MPIDI_MsgEnvelope * envelope = (const MPIDI_MsgEnvelope *)_msginfo;
   const MPIDI_MsgInfo * msginfo = (const MPIDI_MsgInfo *)&envelope->msginfo;
 
-  MPID_Request * rreq = NULL;
+  MPIR_Request * rreq = NULL;
   int found;
   pami_task_t source;
 #if TOKEN_FLOW_CONTROL
@@ -57,7 +57,7 @@ MPIDI_RecvRzvCB_impl(pami_context_t    context,
   unsigned tag        = msginfo->MPItag;
   unsigned context_id = msginfo->MPIctxt;
 
-  MPID_Request *newreq = MPIDI_Request_create2();
+  MPIR_Request *newreq = MPIDI_Request_create2();
   MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
   source = PAMIX_Endpoint_query(sender);
   MPIDI_Receive_tokens(msginfo,source);

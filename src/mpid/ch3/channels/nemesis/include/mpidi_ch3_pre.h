@@ -49,7 +49,7 @@ MPIDI_CH3I_VC_state_t;
 #define MPIDI_NEM_REQ_NETMOD_AREA_LEN 192
 
 /* define functions for access MPID_nem_lmt_rts_queue_t */
-typedef GENERIC_Q_DECL(struct MPID_Request) MPID_nem_lmt_rts_queue_t;
+typedef GENERIC_Q_DECL(struct MPIR_Request) MPID_nem_lmt_rts_queue_t;
 #define MPID_nem_lmt_rtsq_empty(q) GENERIC_Q_EMPTY (q)
 #define MPID_nem_lmt_rtsq_head(q) GENERIC_Q_HEAD (q)
 #define MPID_nem_lmt_rtsq_enqueue(qp, ep) do {                                          \
@@ -66,7 +66,7 @@ typedef GENERIC_Q_DECL(struct MPID_Request) MPID_nem_lmt_rts_queue_t;
     } while (0)
 #define MPID_nem_lmt_rtsq_search_remove(qp, req_id, epp) do {                           \
         GENERIC_Q_SEARCH_REMOVE(qp, _e->handle == (req_id), epp,                        \
-                struct MPID_Request, dev.next);                                         \
+                struct MPIR_Request, dev.next);                                         \
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST,                         \
                     "MPID_nem_lmt_rtsq_search_remove req=%p (handle=%#x), queue=%p",    \
                     *(epp), req_id, qp));                                               \
@@ -75,7 +75,7 @@ typedef GENERIC_Q_DECL(struct MPID_Request) MPID_nem_lmt_rts_queue_t;
 typedef struct MPIDI_CH3I_VC
 {
     int pg_rank;
-    struct MPID_Request *recv_active;
+    struct MPIR_Request *recv_active;
 
     int is_local;
     unsigned short send_seqno;
@@ -102,10 +102,10 @@ typedef struct MPIDI_CH3I_VC
        message cannot be sent immediately, the function should create a request and return a pointer in sreq_ptr.  The network
        module should complete the request once the message has been completely sent. */
     int (* iStartContigMsg)(struct MPIDI_VC *vc, void *hdr, intptr_t hdr_sz, void *data, intptr_t data_sz,
-                            struct MPID_Request **sreq_ptr);
+                            struct MPIR_Request **sreq_ptr);
     /* iSentContig -- sends a message consisting of a header (hdr) and contiguous data (data), possibly of 0 size.  The
        network module should complete the request once the message has been completely sent. */
-    int (* iSendContig)(struct MPIDI_VC *vc, struct MPID_Request *sreq, void *hdr, intptr_t hdr_sz,
+    int (* iSendContig)(struct MPIDI_VC *vc, struct MPIR_Request *sreq, void *hdr, intptr_t hdr_sz,
                         void *data, intptr_t data_sz);
 
 #ifdef ENABLE_CHECKPOINTING
@@ -118,12 +118,12 @@ typedef struct MPIDI_CH3I_VC
 #endif
 
     /* LMT function pointers */
-    int (* lmt_initiate_lmt)(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts_pkt, struct MPID_Request *req);
-    int (* lmt_start_recv)(struct MPIDI_VC *vc, struct MPID_Request *req, MPL_IOV s_cookie);
-    int (* lmt_start_send)(struct MPIDI_VC *vc, struct MPID_Request *sreq, MPL_IOV r_cookie);
-    int (* lmt_handle_cookie)(struct MPIDI_VC *vc, struct MPID_Request *req, MPL_IOV cookie);
-    int (* lmt_done_send)(struct MPIDI_VC *vc, struct MPID_Request *req);
-    int (* lmt_done_recv)(struct MPIDI_VC *vc, struct MPID_Request *req);
+    int (* lmt_initiate_lmt)(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts_pkt, struct MPIR_Request *req);
+    int (* lmt_start_recv)(struct MPIDI_VC *vc, struct MPIR_Request *req, MPL_IOV s_cookie);
+    int (* lmt_start_send)(struct MPIDI_VC *vc, struct MPIR_Request *sreq, MPL_IOV r_cookie);
+    int (* lmt_handle_cookie)(struct MPIDI_VC *vc, struct MPIR_Request *req, MPL_IOV cookie);
+    int (* lmt_done_send)(struct MPIDI_VC *vc, struct MPIR_Request *req);
+    int (* lmt_done_recv)(struct MPIDI_VC *vc, struct MPIR_Request *req);
     int (* lmt_vc_terminated)(struct MPIDI_VC *vc);
 
     /* LMT shared memory copy-buffer ptr */
@@ -167,7 +167,7 @@ struct MPIDI_CH3I_Request
     intptr_t       header_sz;
 
     MPI_Request          lmt_req_id;     /* request id of remote side */
-    struct MPID_Request *lmt_req;        /* pointer to original send/recv request */
+    struct MPIR_Request *lmt_req;        /* pointer to original send/recv request */
     intptr_t       lmt_data_sz;    /* data size to be transferred, after checking for truncation */
     MPL_IOV             lmt_tmp_cookie; /* temporary storage for received cookie */
     void                *s_cookie;       /* temporary storage for the cookie data in case the packet can't be sent immediately */
@@ -184,7 +184,7 @@ struct MPIDI_CH3I_Request
 };
 
 /*
- * MPIDI_CH3_REQUEST_DECL (additions to MPID_Request)
+ * MPIDI_CH3_REQUEST_DECL (additions to MPIR_Request)
  */
 #define MPIDI_CH3_REQUEST_DECL struct MPIDI_CH3I_Request ch;
 

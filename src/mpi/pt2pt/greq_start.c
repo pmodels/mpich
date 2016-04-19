@@ -77,7 +77,7 @@ PMPI_LOCAL int MPIR_Grequest_free_classes_on_finalize(void *extra_data ATTRIBUTE
 int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
                              MPI_Grequest_free_function *free_fn,
                              MPI_Grequest_cancel_function *cancel_fn,
-                             void *extra_state, MPID_Request **request_ptr)
+                             void *extra_state, MPIR_Request **request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKPMEM_DECL(1);
@@ -87,7 +87,7 @@ int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
     *request_ptr = MPID_Request_create();
     MPIR_ERR_CHKANDJUMP1(request_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "generalized request");
     
-    (*request_ptr)->kind                 = MPID_UREQUEST;
+    (*request_ptr)->kind                 = MPIR_UREQUEST;
     MPIU_Object_set_ref( *request_ptr, 1 );
     (*request_ptr)->cc_ptr               = &(*request_ptr)->cc;
     MPIR_cc_set((*request_ptr)->cc_ptr, 1);
@@ -179,7 +179,7 @@ int MPI_Grequest_start( MPI_Grequest_query_function *query_fn,
 			void *extra_state, MPI_Request *request )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *request_ptr;
+    MPIR_Request *request_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GREQUEST_START);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -352,7 +352,7 @@ int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class,
 				MPI_Request *request)
 {
 	int mpi_errno;
-	MPID_Request *lrequest_ptr;
+	MPIR_Request *lrequest_ptr;
 	MPIR_Grequest_class *class_ptr;
 
         *request = MPI_REQUEST_NULL;
@@ -406,7 +406,7 @@ int MPIX_Grequest_start( MPI_Grequest_query_function *query_fn,
 			void *extra_state, MPI_Request *request )
 {
     int mpi_errno;
-    MPID_Request *lrequest_ptr;
+    MPIR_Request *lrequest_ptr;
 
     *request = MPI_REQUEST_NULL;
     mpi_errno = MPIX_Grequest_start_impl(query_fn, free_fn, cancel_fn, poll_fn, wait_fn, extra_state, &lrequest_ptr);
@@ -430,7 +430,7 @@ int MPIX_Grequest_start_impl( MPI_Grequest_query_function *query_fn,
                               MPI_Grequest_cancel_function *cancel_fn,
                               MPIX_Grequest_poll_function *poll_fn,
                               MPIX_Grequest_wait_function *wait_fn,
-                              void *extra_state, MPID_Request **request )
+                              void *extra_state, MPIR_Request **request )
 {
     int mpi_errno;
 

@@ -86,7 +86,7 @@ int MPID_Comm_AS_enabled(MPIR_Comm *comm_ptr) {
 #define FUNCNAME MPID_Request_is_anysource
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Request_is_anysource(MPID_Request *request_ptr) {
+int MPID_Request_is_anysource(MPIR_Request *request_ptr) {
     int ret = 0;
 
     if (request_ptr->kind == MPIR_REQUEST_RECV)

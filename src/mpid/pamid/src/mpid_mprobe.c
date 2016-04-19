@@ -7,11 +7,11 @@
 #include "mpidimpl.h"
 
 int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
-                MPID_Request **message, MPI_Status *status)
+                MPIR_Request **message, MPI_Status *status)
 {
     const int context = comm->recvcontext_id + context_offset;
     int foundp;
-    MPID_Request * rreq = NULL;
+    MPIR_Request * rreq = NULL;
 
     if (source == MPI_PROC_NULL)
       {

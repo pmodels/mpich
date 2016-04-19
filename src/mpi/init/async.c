@@ -27,7 +27,7 @@ static volatile int progress_thread_done = 0;
 static void progress_fn(void * data)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *request_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
     MPI_Request request;
     MPI_Status status;
 
@@ -119,7 +119,7 @@ int MPIR_Finalize_async_thread(void)
 {
     int mpi_errno = MPI_SUCCESS;
 #if MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE
-    MPID_Request *request_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
     MPI_Request request;
     MPI_Status status;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_FINALIZE_ASYNC_THREAD);

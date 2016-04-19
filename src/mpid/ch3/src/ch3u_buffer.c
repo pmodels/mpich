@@ -226,10 +226,10 @@ void MPIDI_CH3U_Buffer_copy(
  * This routine is called by mpid_recv and mpid_irecv when a request
  * matches a send-to-self message 
  */
-int MPIDI_CH3_RecvFromSelf( MPID_Request *rreq, void *buf, MPI_Aint count,
+int MPIDI_CH3_RecvFromSelf( MPIR_Request *rreq, void *buf, MPI_Aint count,
 			    MPI_Datatype datatype )
 {
-    MPID_Request * const sreq = rreq->partner_request;
+    MPIR_Request * const sreq = rreq->partner_request;
     int mpi_errno = MPI_SUCCESS;
 
     if (sreq != NULL)

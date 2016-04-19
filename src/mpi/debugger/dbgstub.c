@@ -10,14 +10,14 @@
 /* These are pointers to the static variables in src/mpid/ch3/src/ch3u_recvq.c
    that contains the *addresses* of the posted and unexpected queue head 
    pointers */
-extern MPID_Request ** const MPID_Recvq_posted_head_ptr, 
+extern MPIR_Request ** const MPID_Recvq_posted_head_ptr,
     ** const MPID_Recvq_unexpected_head_ptr;
 
 #include "mpi_interface.h"
 
 /* This is from dbginit.c; it is not exported to other files */
 typedef struct MPIR_Sendq {
-    MPID_Request *sreq;
+    MPIR_Request *sreq;
     int tag, rank, context_id;
     struct MPIR_Sendq *next;
 } MPIR_Sendq;
@@ -81,7 +81,7 @@ mqs_type * dbgrI_find_type(mqs_image *image, char *name,
     else if (strcmp( name, "MPIDI_Message_match_parts_t" ) == 0) {
 	curType = TYPE_MPIDI_MESSAGE_MATCH_PARTS;
     }
-    else if (strcmp( name, "MPID_Request" ) == 0) {
+    else if (strcmp( name, "MPIR_Request" ) == 0) {
 	curType = TYPE_MPIR_REQUEST;
     }
     else if (strcmp( name, "MPIR_Sendq" ) == 0) {
@@ -194,7 +194,7 @@ int dbgrI_field_offset(mqs_type *type, char *name)
 	break;
     case TYPE_MPIR_REQUEST:
 	{
-	    MPID_Request c;
+	    MPIR_Request c;
 	    if (strcmp( name, "dev" ) == 0) {
 		off = ((char *)&c.dev - (char *)&c);
 	    }

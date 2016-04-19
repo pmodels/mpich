@@ -17,11 +17,11 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
-		     int type, MPID_Request ** request)
+		     int type, MPIR_Request ** request)
 {
     MPIDI_Message_match match;
-    MPID_Request * sreq;
-    MPID_Request * rreq;
+    MPIR_Request * sreq;
+    MPIR_Request * rreq;
     MPIDI_VC_t * vc;
 #if defined(MPID_USE_SEQUENCE_NUMBERS)
     MPID_Seqnum_t seqnum;

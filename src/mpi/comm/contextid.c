@@ -1007,7 +1007,7 @@ static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
 #define FUNCNAME MPIR_Get_contextid_nonblock
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPID_Request ** req)
+int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag;
@@ -1051,7 +1051,7 @@ int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPID
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp,
-                                          MPID_Request ** req)
+                                          MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag;

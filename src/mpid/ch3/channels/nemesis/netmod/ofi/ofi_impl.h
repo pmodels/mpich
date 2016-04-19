@@ -63,8 +63,8 @@ typedef struct fi_cq_tagged_entry cq_tagged_entry_t;
 typedef struct fi_cq_err_entry cq_err_entry_t;
 typedef struct fi_context context_t;
 typedef struct fi_msg_tagged msg_tagged_t;
-typedef int (*event_callback_fn) (cq_tagged_entry_t * wc, MPID_Request *);
-typedef int (*req_fn) (MPIDI_VC_t *, MPID_Request *, int *);
+typedef int (*event_callback_fn) (cq_tagged_entry_t * wc, MPIR_Request *);
+typedef int (*req_fn) (MPIDI_VC_t *, MPIR_Request *, int *);
 
 /* ******************************** */
 /* Global Object for state tracking */
@@ -84,8 +84,8 @@ typedef struct {
                                        /*   RTS-CTS-DATA exchanges    */
     int api_set;                       /* Used OFI API for send       */
                                        /*   operations                */
-    MPID_Request *persistent_req;      /* Unexpected request queue    */
-    MPID_Request *conn_req;            /* Connection request          */
+    MPIR_Request *persistent_req;      /* Unexpected request queue    */
+    MPIR_Request *conn_req;            /* Connection request          */
     MPIDI_PG_t *pg_p;                  /* MPI Process group           */
     MPIDI_VC_t *cm_vcs;                /* temporary VC's              */
 } MPID_nem_ofi_global_t __attribute__ ((aligned (MPID_NEM_CACHE_LINE_LEN)));
@@ -120,7 +120,7 @@ typedef struct {
     MPIDI_VC_t *vc;             /* VC paired with this request */
     uint64_t tag;               /* 64 bit tag request          */
     struct iovec iov[3];        /* scatter gather list         */
-    MPID_Request *parent;       /* Parent request              */
+    MPIR_Request *parent;       /* Parent request              */
 } MPID_nem_ofi_req_t;
 #define REQ_OFI(req) ((MPID_nem_ofi_req_t *)((req)->ch.netmod_area.padding))
 
@@ -240,15 +240,15 @@ fn_fail:                      \
 /* ******************************** */
 /* Request manipulation inlines     */
 /* ******************************** */
-static inline void MPID_nem_ofi_init_req(MPID_Request * req)
+static inline void MPID_nem_ofi_init_req(MPIR_Request * req)
 {
     memset(REQ_OFI(req), 0, sizeof(MPID_nem_ofi_req_t));
 }
 
-static inline int MPID_nem_ofi_create_req(MPID_Request ** request, int refcnt)
+static inline int MPID_nem_ofi_create_req(MPIR_Request ** request, int refcnt)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *req;
+    MPIR_Request *req;
     req = MPID_Request_create();
     MPIU_Assert(req);
     MPIDI_Request_clear_dbg(req);
@@ -258,12 +258,12 @@ static inline int MPID_nem_ofi_create_req(MPID_Request ** request, int refcnt)
     return mpi_errno;
 }
 
-static inline int MPID_nem_ofi_create_req_lw(MPID_Request ** request, int refcnt)
+static inline int MPID_nem_ofi_create_req_lw(MPIR_Request ** request, int refcnt)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *req;
+    MPIR_Request *req;
 
-    req = (MPID_Request *) MPIU_Handle_obj_alloc(&MPID_Request_mem);
+    req = (MPIR_Request *) MPIU_Handle_obj_alloc(&MPIR_Request_mem);
     if (req == NULL)
         MPID_Abort(NULL, MPI_ERR_NO_SPACE, -1, "Cannot allocate Request");
 
@@ -301,41 +301,41 @@ static inline int MPID_nem_ofi_create_req_lw(MPID_Request ** request, int refcnt
     _ret _fc_name(__VA_ARGS__);                   \
     _ret _fc_name##_2(__VA_ARGS__);
 
-DECLARE_TWO_API_SETS(int, MPID_nem_ofi_recv_posted, struct MPIDI_VC *vc, struct MPID_Request *req);
+DECLARE_TWO_API_SETS(int, MPID_nem_ofi_recv_posted, struct MPIDI_VC *vc, struct MPIR_Request *req);
 
 DECLARE_TWO_API_SETS(int, MPID_nem_ofi_send, struct MPIDI_VC *vc, const void *buf, MPI_Aint count,\
                      MPI_Datatype datatype, int dest, int tag, MPIR_Comm * comm,\
-                     int context_offset, struct MPID_Request **request);
+                     int context_offset, struct MPIR_Request **request);
 DECLARE_TWO_API_SETS(int, MPID_nem_ofi_isend, struct MPIDI_VC *vc, const void *buf, MPI_Aint count,\
                      MPI_Datatype datatype, int dest, int tag, MPIR_Comm * comm,\
-                     int context_offset, struct MPID_Request **request);
+                     int context_offset, struct MPIR_Request **request);
 DECLARE_TWO_API_SETS(int, MPID_nem_ofi_ssend, struct MPIDI_VC *vc, const void *buf, MPI_Aint count,\
                      MPI_Datatype datatype, int dest, int tag, MPIR_Comm * comm,
-                     int context_offset, struct MPID_Request **request);
+                     int context_offset, struct MPIR_Request **request);
 DECLARE_TWO_API_SETS(int, MPID_nem_ofi_issend, struct MPIDI_VC *vc, const void *buf, MPI_Aint count,\
                      MPI_Datatype datatype, int dest, int tag, MPIR_Comm * comm,\
-                     int context_offset, struct MPID_Request **request);
-int MPID_nem_ofi_cancel_send(struct MPIDI_VC *vc, struct MPID_Request *sreq);
-int MPID_nem_ofi_cancel_recv(struct MPIDI_VC *vc, struct MPID_Request *rreq);
+                     int context_offset, struct MPIR_Request **request);
+int MPID_nem_ofi_cancel_send(struct MPIDI_VC *vc, struct MPIR_Request *sreq);
+int MPID_nem_ofi_cancel_recv(struct MPIDI_VC *vc, struct MPIR_Request *rreq);
 
 DECLARE_TWO_API_SETS(int, MPID_nem_ofi_iprobe, struct MPIDI_VC *vc, int source, int tag, MPIR_Comm * comm,
                      int context_offset, int *flag, MPI_Status * status);
 DECLARE_TWO_API_SETS(int, MPID_nem_ofi_improbe,struct MPIDI_VC *vc, int source, int tag, MPIR_Comm * comm,
-                     int context_offset, int *flag, MPID_Request ** message,
+                     int context_offset, int *flag, MPIR_Request ** message,
                      MPI_Status * status);
 DECLARE_TWO_API_SETS(int, MPID_nem_ofi_anysource_iprobe,int tag, MPIR_Comm * comm, int context_offset,
                      int *flag, MPI_Status * status);
 DECLARE_TWO_API_SETS(int, MPID_nem_ofi_anysource_improbe,int tag, MPIR_Comm * comm, int context_offset,
-                     int *flag, MPID_Request ** message, MPI_Status * status);
-DECLARE_TWO_API_SETS(void, MPID_nem_ofi_anysource_posted, MPID_Request * rreq);
+                     int *flag, MPIR_Request ** message, MPI_Status * status);
+DECLARE_TWO_API_SETS(void, MPID_nem_ofi_anysource_posted, MPIR_Request * rreq);
 
-int MPID_nem_ofi_anysource_matched(MPID_Request * rreq);
-int MPID_nem_ofi_send_data(cq_tagged_entry_t * wc, MPID_Request * sreq);
-int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq,
+int MPID_nem_ofi_anysource_matched(MPIR_Request * rreq);
+int MPID_nem_ofi_send_data(cq_tagged_entry_t * wc, MPIR_Request * sreq);
+int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq,
                                void *hdr, intptr_t hdr_sz);
 int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz,
-                                 void *data, intptr_t data_sz, MPID_Request ** sreq_ptr);
-int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
+                                 void *data, intptr_t data_sz, MPIR_Request ** sreq_ptr);
+int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr,
                              intptr_t hdr_sz, void *data, intptr_t data_sz);
 
 /* ************************************************************************** */

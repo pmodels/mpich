@@ -27,7 +27,7 @@
 #if TOKEN_FLOW_CONTROL
 #define MPIDI_Piggy_back_tokens    MPIDI_Piggy_back_tokens_inline
 static inline void *
-MPIDI_Piggy_back_tokens_inline(int dest,MPID_Request *shd,size_t len)
+MPIDI_Piggy_back_tokens_inline(int dest,MPIR_Request *shd,size_t len)
   {
          int rettoks=0;
          if (MPIDI_Token_cntr[dest].rettoks)
@@ -41,7 +41,7 @@ MPIDI_Piggy_back_tokens_inline(int dest,MPID_Request *shd,size_t len)
 
 static inline void
 MPIDI_SendMsg_short(pami_context_t    context,
-                    MPID_Request    * sreq,
+                    MPIR_Request    * sreq,
                     pami_endpoint_t   dest,
                     void            * sndbuf,
                     unsigned          sndlen,
@@ -89,14 +89,14 @@ MPIDI_SendMsg_short(pami_context_t    context,
 
 static void
 MPIDI_SendMsg_eager(pami_context_t    context,
-                    MPID_Request    * sreq,
+                    MPIR_Request    * sreq,
                     pami_endpoint_t   dest,
                     void            * sndbuf,
                     unsigned          sndlen)
   __attribute__((__noinline__));
 static void
 MPIDI_SendMsg_eager(pami_context_t    context,
-                    MPID_Request    * sreq,
+                    MPIR_Request    * sreq,
                     pami_endpoint_t   dest,
                     void            * sndbuf,
                     unsigned          sndlen)
@@ -133,14 +133,14 @@ MPIDI_SendMsg_eager(pami_context_t    context,
 
 static void
 MPIDI_SendMsg_rzv(pami_context_t    context,
-                  MPID_Request    * sreq,
+                  MPIR_Request    * sreq,
                   pami_endpoint_t   dest,
                   void            * sndbuf,
                   size_t            sndlen)
   __attribute__((__noinline__));
 static void
 MPIDI_SendMsg_rzv(pami_context_t    context,
-                  MPID_Request    * sreq,
+                  MPIR_Request    * sreq,
                   pami_endpoint_t   dest,
                   void            * sndbuf,
                   size_t            sndlen)
@@ -246,12 +246,12 @@ MPIDI_SendMsg_rzv(pami_context_t    context,
 
 static void
 MPIDI_SendMsg_rzv_zerobyte(pami_context_t    context,
-                           MPID_Request    * sreq,
+                           MPIR_Request    * sreq,
                            pami_endpoint_t   dest)
   __attribute__((__noinline__));
 static void
 MPIDI_SendMsg_rzv_zerobyte(pami_context_t    context,
-                           MPID_Request    * sreq,
+                           MPIR_Request    * sreq,
                            pami_endpoint_t   dest)
 {
   pami_result_t rc;
@@ -304,12 +304,12 @@ MPIDI_SendMsg_rzv_zerobyte(pami_context_t    context,
 
 
 static void
-MPIDI_SendMsg_process_userdefined_dt(MPID_Request      * sreq,
+MPIDI_SendMsg_process_userdefined_dt(MPIR_Request      * sreq,
                                      void             ** sndbuf,
                                      size_t            * data_sz)
   __attribute__((__noinline__));
 static void
-MPIDI_SendMsg_process_userdefined_dt(MPID_Request      * sreq,
+MPIDI_SendMsg_process_userdefined_dt(MPIR_Request      * sreq,
                                      void             ** _sndbuf,
                                      size_t            * _data_sz)
 {
@@ -410,7 +410,7 @@ MPIDI_SendMsg_process_userdefined_dt(MPID_Request      * sreq,
 
 static inline void
 MPIDI_SendMsg(pami_context_t   context,
-              MPID_Request   * sreq,
+              MPIR_Request   * sreq,
               unsigned         isSync,
               const unsigned   isInternal)
 {
@@ -678,7 +678,7 @@ pami_result_t
 MPIDI_Send_handoff(pami_context_t   context,
                    void           * _sreq)
 {
-  MPID_Request * sreq = (MPID_Request*)_sreq;
+  MPIR_Request * sreq = (MPIR_Request*)_sreq;
   MPID_assert(sreq != NULL);
 
   MPIDI_SendMsg(context, sreq, 0, 0);
@@ -690,7 +690,7 @@ pami_result_t
 MPIDI_Ssend_handoff(pami_context_t   context,
                    void           * _sreq)
 {
-  MPID_Request * sreq = (MPID_Request*)_sreq;
+  MPIR_Request * sreq = (MPIR_Request*)_sreq;
   MPID_assert(sreq != NULL);
 
   MPIDI_SendMsg(context, sreq, 1, 0);
@@ -716,7 +716,7 @@ pami_result_t
 MPIDI_Isend_handoff(pami_context_t   context,
                     void           * _sreq)
 {
-  MPID_Request * sreq = (MPID_Request*)_sreq;
+  MPIR_Request * sreq = (MPIR_Request*)_sreq;
   MPID_assert(sreq != NULL);
 
   /* This initializes all the fields not set in MPI_Isend() */
@@ -731,7 +731,7 @@ pami_result_t
 MPIDI_Isend_handoff_internal(pami_context_t   context,
                              void           * _sreq)
 {
-  MPID_Request * sreq = (MPID_Request*)_sreq;
+  MPIR_Request * sreq = (MPIR_Request*)_sreq;
   MPID_assert(sreq != NULL);
 
   /* This initializes all the fields not set in MPI_Isend() */

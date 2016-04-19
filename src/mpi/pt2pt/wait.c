@@ -32,7 +32,7 @@ int MPIR_Wait_impl(MPI_Request *request, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
     int active_flag;
-    MPID_Request *request_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
 
     /* If this is a null request handle, then return an empty status */
     if (*request == MPI_REQUEST_NULL)
@@ -41,9 +41,9 @@ int MPIR_Wait_impl(MPI_Request *request, MPI_Status *status)
 	goto fn_exit;
     }
 
-    MPID_Request_get_ptr(*request, request_ptr);
+    MPIR_Request_get_ptr(*request, request_ptr);
 
-    if (!MPID_Request_is_complete(request_ptr))
+    if (!MPIR_Request_is_complete(request_ptr))
     {
 	MPID_Progress_state progress_state;
 
@@ -58,10 +58,10 @@ int MPIR_Wait_impl(MPI_Request *request, MPI_Status *status)
         }
 
 	MPID_Progress_start(&progress_state);
-        while (!MPID_Request_is_complete(request_ptr))
+        while (!MPIR_Request_is_complete(request_ptr))
 	{
 	    mpi_errno = MPIR_Grequest_progress_poke(1, &request_ptr, status);
-	    if (request_ptr->kind == MPID_UREQUEST &&
+	    if (request_ptr->kind == MPIR_UREQUEST &&
                 request_ptr->greq_fns->wait_fn != NULL)
 	    {
 		if (mpi_errno) {
@@ -85,7 +85,7 @@ int MPIR_Wait_impl(MPI_Request *request, MPI_Status *status)
             if (unlikely(
                         MPIR_CVAR_ENABLE_FT &&
                         MPID_Request_is_anysource(request_ptr) &&
-                        !MPID_Request_is_complete(request_ptr) &&
+                        !MPIR_Request_is_complete(request_ptr) &&
                         !MPID_Comm_AS_enabled(request_ptr->comm))) {
                 MPID_Progress_end(&progress_state);
                 MPIR_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
@@ -135,7 +135,7 @@ Output Parameters:
 @*/
 int MPI_Wait(MPI_Request *request, MPI_Status *status)
 {
-    MPID_Request * request_ptr = NULL;
+    MPIR_Request * request_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm * comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WAIT);
@@ -167,14 +167,14 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status)
     }
     
     /* Convert MPI request handle to a request object pointer */
-    MPID_Request_get_ptr(*request, request_ptr);
+    MPIR_Request_get_ptr(*request, request_ptr);
     
     /* Validate object pointers if error checking is enabled */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPID_Request_valid_ptr( request_ptr, mpi_errno );
+            MPIR_Request_valid_ptr( request_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;

@@ -17,7 +17,7 @@ extern void *MPIDI_CH3_packet_buffer;
 #define FUNCNAME MPIDI_CH3_iSendv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV *iov, int n_iov)
+int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV *iov, int n_iov)
 {
     int mpi_errno = MPI_SUCCESS;
     int again = 0;
@@ -120,7 +120,7 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPL_IOV *iov, int n_io
 	}
 	else
 	{
-            int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+            int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
 
             reqFn = sreq->dev.OnDataAvail;
             if (!reqFn)

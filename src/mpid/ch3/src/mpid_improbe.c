@@ -7,7 +7,7 @@
 #include "mpidimpl.h"
 
 int (*MPIDI_Anysource_improbe_fn)(int tag, MPIR_Comm * comm, int context_offset,
-                                  int *flag, MPID_Request **message,
+                                  int *flag, MPIR_Request **message,
                                   MPI_Status * status) = NULL;
 
 #undef FUNCNAME
@@ -15,7 +15,7 @@ int (*MPIDI_Anysource_improbe_fn)(int tag, MPIR_Comm * comm, int context_offset,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Improbe(int source, int tag, MPIR_Comm *comm, int context_offset,
-                 int *flag, MPID_Request **message, MPI_Status *status)
+                 int *flag, MPIR_Request **message, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id = comm->recvcontext_id + context_offset;

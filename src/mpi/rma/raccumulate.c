@@ -86,7 +86,7 @@ int MPI_Raccumulate(const void *origin_addr, int origin_count, MPI_Datatype
     static const char FCNAME[] = "MPI_Raccumulate";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
-    MPID_Request *request_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_RACCUMULATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

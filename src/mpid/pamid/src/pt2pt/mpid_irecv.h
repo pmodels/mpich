@@ -50,7 +50,7 @@ MPID_Irecv_inline(void          * buf,
                   int             tag,
                   MPIR_Comm     * comm,
                   int             context_offset,
-                  MPID_Request ** request)
+                  MPIR_Request ** request)
 {
   return MPIDI_Recv(buf,
                     count,

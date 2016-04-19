@@ -44,8 +44,8 @@ typedef struct MPIDI_RMA_Op {
     int result_count;
     MPI_Datatype result_datatype;
 
-    struct MPID_Request *single_req;    /* used for unstreamed RMA ops */
-    struct MPID_Request **multi_reqs;   /* used for streamed RMA ops */
+    struct MPIR_Request *single_req;    /* used for unstreamed RMA ops */
+    struct MPIR_Request **multi_reqs;   /* used for streamed RMA ops */
     MPI_Aint reqs_size;         /* when reqs_size == 0, neither single_req nor multi_reqs is used;
                                  * when reqs_size == 1, single_req is used;
                                  * when reqs_size > 1, multi_reqs is used. */
@@ -59,7 +59,7 @@ typedef struct MPIDI_RMA_Op {
     int issued_stream_count;    /* when >= 0, it specifies number of stream units that have been issued;
                                  * when < 0, it means all stream units of this operation haven been issued. */
 
-    MPID_Request *ureq;
+    MPIR_Request *ureq;
 
 } MPIDI_RMA_Op_t;
 

@@ -32,7 +32,7 @@
 									\
     MPIU_Object_set_ref((sreq_), 1);					\
     MPIR_cc_set(&(sreq_)->cc, 0);                                       \
-    (sreq_)->kind = MPID_PREQUEST_SEND;					\
+    (sreq_)->kind = MPIR_PREQUEST_SEND;					\
     (sreq_)->comm = comm;						\
     MPIR_Comm_add_ref(comm);						\
     (sreq_)->dev.match.parts.rank = rank;				\
@@ -52,7 +52,7 @@
 #define FUNCNAME MPID_Startall
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Startall(int count, MPID_Request * requests[])
+int MPID_Startall(int count, MPIR_Request * requests[])
 {
     int i;
     int rc;
@@ -63,7 +63,7 @@ int MPID_Startall(int count, MPID_Request * requests[])
 
     for (i = 0; i < count; i++)
     {
-	MPID_Request * const preq = requests[i];
+	MPIR_Request * const preq = requests[i];
 
 	/* FIXME: The odd 7th arg (match.context_id - comm->context_id) 
 	   is probably to get the context offset.  Do we really need the
@@ -112,7 +112,7 @@ int MPID_Startall(int count, MPID_Request * requests[])
                                       &sreq_handle);
                 if (rc == MPI_SUCCESS)
                 {
-                    MPID_Request_get_ptr(sreq_handle, preq->partner_request);
+                    MPIR_Request_get_ptr(sreq_handle, preq->partner_request);
                 }
 		break;
 	    }
@@ -163,9 +163,9 @@ int MPID_Startall(int count, MPID_Request * requests[])
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Send_init(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
-		   MPID_Request ** request)
+		   MPIR_Request ** request)
 {
-    MPID_Request * sreq;
+    MPIR_Request * sreq;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_SEND_INIT);
 
@@ -193,9 +193,9 @@ int MPID_Send_init(const void * buf, int count, MPI_Datatype datatype, int rank,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Ssend_init(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
-		    MPID_Request ** request)
+		    MPIR_Request ** request)
 {
-    MPID_Request * sreq;
+    MPIR_Request * sreq;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_SSEND_INIT);
 
@@ -223,9 +223,9 @@ int MPID_Ssend_init(const void * buf, int count, MPI_Datatype datatype, int rank
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Rsend_init(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
-		    MPID_Request ** request)
+		    MPIR_Request ** request)
 {
-    MPID_Request * sreq;
+    MPIR_Request * sreq;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_RSEND_INIT);
 
@@ -253,9 +253,9 @@ int MPID_Rsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Bsend_init(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
-		    MPID_Request ** request)
+		    MPIR_Request ** request)
 {
-    MPID_Request * sreq;
+    MPIR_Request * sreq;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_BSEND_INIT);
 
@@ -291,9 +291,9 @@ int MPID_Bsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
-		   MPID_Request ** request)
+		   MPIR_Request ** request)
 {
-    MPID_Request * rreq;
+    MPIR_Request * rreq;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_RECV_INIT);
 
@@ -309,7 +309,7 @@ int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int t
     }
     
     MPIU_Object_set_ref(rreq, 1);
-    rreq->kind = MPID_PREQUEST_RECV;
+    rreq->kind = MPIR_PREQUEST_RECV;
     rreq->comm = comm;
     MPIR_cc_set(&rreq->cc, 0);
     MPIR_Comm_add_ref(comm);

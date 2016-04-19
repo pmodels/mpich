@@ -143,9 +143,9 @@ MPIDI_Recv(void          * buf,
            int             context_offset,
            unsigned        is_blocking,
            MPI_Status    * status,
-           MPID_Request ** request)
+           MPIR_Request ** request)
 {
-  MPID_Request * rreq;
+  MPIR_Request * rreq;
   int found;
   int mpi_errno = MPI_SUCCESS;
 
@@ -166,7 +166,7 @@ MPIDI_Recv(void          * buf,
   /* find our request in the unexpected queue */
   /* or allocate one in the posted queue      */
   /* ---------------------------------------- */
-  MPID_Request *newreq = MPIDI_Request_create2();
+  MPIR_Request *newreq = MPIDI_Request_create2();
   MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
 #ifndef OUT_OF_ORDER_HANDLING
   rreq = MPIDI_Recvq_FDU_or_AEP(newreq, rank,

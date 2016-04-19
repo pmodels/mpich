@@ -96,7 +96,7 @@ int MPI_Rget_accumulate(const void *origin_addr, int origin_count,
     static const char FCNAME[] = "MPI_Rget_accumulate";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
-    MPID_Request *request_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_RGET_ACCUMULATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

@@ -10,7 +10,7 @@
 #define FUNCNAME update_request
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static void update_request(MPID_Request * sreq, void * hdr, 
+static void update_request(MPIR_Request * sreq, void * hdr,
 			   intptr_t hdr_sz, MPIU_Size_t nb)
 {
     MPIDI_STATE_DECL(MPID_STATE_UPDATE_REQUEST);
@@ -28,11 +28,11 @@ static void update_request(MPID_Request * sreq, void * hdr,
 #define FUNCNAME MPIDI_CH3_iSend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPID_Request * sreq, void * hdr, 
+int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPIR_Request * sreq, void * hdr,
 		    intptr_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
-    int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+    int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
     MPIDI_CH3I_VC *vcch = &vc->ch;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_ISEND);
 

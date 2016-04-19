@@ -52,7 +52,7 @@ MPIDI_RecvShortCB(pami_context_t    context,
   MPID_assert(_msginfo != NULL);
 
   const MPIDI_MsgInfo *msginfo = (const MPIDI_MsgInfo *)_msginfo;
-  MPID_Request * rreq = NULL;
+  MPIR_Request * rreq = NULL;
   pami_task_t source;
 #if TOKEN_FLOW_CONTROL
   int          rettoks=0;
@@ -81,7 +81,7 @@ MPIDI_RecvShortCB(pami_context_t    context,
          MPID_NSTAT(mpid_statp->earlyArrivals);
 #endif
       MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
-      MPID_Request *newreq = MPIDI_Request_create2();
+      MPIR_Request *newreq = MPIDI_Request_create2();
       MPID_assert(newreq != NULL);
       if (sndlen)
       {

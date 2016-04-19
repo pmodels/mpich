@@ -53,7 +53,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Handle_ordered_recv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, 
-				       intptr_t *buflen, MPID_Request ** rreqp)
+				       intptr_t *buflen, MPIR_Request ** rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
     static MPIDI_CH3_PktHandler_Fcn *pktArray[MPIDI_CH3_PKT_END_CH3+1];
@@ -102,7 +102,7 @@ int MPIDI_CH3U_Handle_ordered_recv_pkt(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #define FUNCNAME MPIDI_CH3U_Receive_data_found
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, intptr_t *buflen, int *complete)
+int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, char *buf, intptr_t *buflen, int *complete)
 {
     int dt_contig;
     MPI_Aint dt_true_lb;
@@ -235,7 +235,7 @@ fn_fail:
 #define FUNCNAME MPIDI_CH3U_Receive_data_unexpected
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Receive_data_unexpected(MPID_Request * rreq, char *buf, intptr_t *buflen, int *complete)
+int MPIDI_CH3U_Receive_data_unexpected(MPIR_Request * rreq, char *buf, intptr_t *buflen, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_RECEIVE_DATA_UNEXPECTED);
@@ -293,7 +293,7 @@ int MPIDI_CH3U_Receive_data_unexpected(MPID_Request * rreq, char *buf, intptr_t 
 #define FUNCNAME MPIDI_CH3U_Post_data_receive_found
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Post_data_receive_found(MPID_Request * rreq)
+int MPIDI_CH3U_Post_data_receive_found(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;	
     int dt_contig;
@@ -370,7 +370,7 @@ int MPIDI_CH3U_Post_data_receive_found(MPID_Request * rreq)
 #define FUNCNAME MPIDI_CH3U_Post_data_receive_unexpected
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Post_data_receive_unexpected(MPID_Request * rreq)
+int MPIDI_CH3U_Post_data_receive_unexpected(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_POST_DATA_RECEIVE_UNEXPECTED);
@@ -484,7 +484,7 @@ int MPIDI_CH3I_Try_acquire_win_lock(MPIR_Win *win_ptr, int requested_lock)
 #define FUNCNAME MPIDI_CH3_PktHandler_FlowCntlUpdate
 #undef FCNAME
 int MPIDI_CH3_PktHandler_FlowCntlUpdate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-					 intptr_t *buflen, MPID_Request **rreqp)
+					 intptr_t *buflen, MPIR_Request **rreqp)
 {
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
     return MPI_SUCCESS;
@@ -498,7 +498,7 @@ int MPIDI_CH3_PktHandler_FlowCntlUpdate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 int MPIDI_CH3_PktHandler_EndCH3( MPIDI_VC_t *vc ATTRIBUTE((unused)), 
 				 MPIDI_CH3_Pkt_t *pkt ATTRIBUTE((unused)),
 				 intptr_t *buflen ATTRIBUTE((unused)),
-				 MPID_Request **rreqp ATTRIBUTE((unused)) )
+				 MPIR_Request **rreqp ATTRIBUTE((unused)) )
 {
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_ENDCH3);
     

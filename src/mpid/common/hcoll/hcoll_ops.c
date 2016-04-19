@@ -181,7 +181,7 @@ int hcoll_Allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
 #define FUNCNAME hcoll_Ibarrier_req
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int hcoll_Ibarrier_req(MPIR_Comm * comm_ptr, MPID_Request ** request)
+int hcoll_Ibarrier_req(MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int rc;
     void **rt_handle;
@@ -198,7 +198,7 @@ int hcoll_Ibarrier_req(MPIR_Comm * comm_ptr, MPID_Request ** request)
             (comm_ptr->hcoll_priv.hcoll_origin_coll_fns !=
              NULL) ? comm_ptr->hcoll_priv.hcoll_origin_coll_fns->Ibarrier_req : NULL;
         rc = MPI_Ibarrier(comm, &req);
-        MPID_Request_get_ptr(req, *request);
+        MPIR_Request_get_ptr(req, *request);
         comm_ptr->coll_fns->Ibarrier_req = ptr;
         MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING FALLBACK IBARRIER - done.");
     }
@@ -210,7 +210,7 @@ int hcoll_Ibarrier_req(MPIR_Comm * comm_ptr, MPID_Request ** request)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_Ibcast_req(void *buffer, int count, MPI_Datatype datatype, int root,
-                     MPIR_Comm * comm_ptr, MPID_Request ** request)
+                     MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     int rc;
     void **rt_handle;
@@ -246,7 +246,7 @@ int hcoll_Ibcast_req(void *buffer, int count, MPI_Datatype datatype, int root,
             (comm_ptr->hcoll_priv.hcoll_origin_coll_fns !=
              NULL) ? comm_ptr->hcoll_priv.hcoll_origin_coll_fns->Ibcast_req : NULL;
         rc = MPI_Ibcast(buffer, count, datatype, root, comm, &req);
-        MPID_Request_get_ptr(req, *request);
+        MPIR_Request_get_ptr(req, *request);
         comm_ptr->coll_fns->Ibcast_req = ptr;
         MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING FALLBACK IBCAST - done.");
     }
@@ -259,7 +259,7 @@ int hcoll_Ibcast_req(void *buffer, int count, MPI_Datatype datatype, int root,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_Iallgather_req(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                          int recvcount, MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                         MPID_Request ** request)
+                         MPIR_Request ** request)
 {
     int is_homogeneous = 1, use_fallback = 0;
     MPI_Comm comm = comm_ptr->handle;
@@ -304,7 +304,7 @@ int hcoll_Iallgather_req(const void *sendbuf, int sendcount, MPI_Datatype sendty
             (comm_ptr->hcoll_priv.hcoll_origin_coll_fns !=
              NULL) ? comm_ptr->hcoll_priv.hcoll_origin_coll_fns->Iallgather_req : NULL;
         rc = MPI_Iallgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, &req);
-        MPID_Request_get_ptr(req, *request);
+        MPIR_Request_get_ptr(req, *request);
         comm_ptr->coll_fns->Iallgather_req = ptr;
         MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING FALLBACK IALLGATHER - done.");
     }
@@ -316,7 +316,7 @@ int hcoll_Iallgather_req(const void *sendbuf, int sendcount, MPI_Datatype sendty
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int hcoll_Iallreduce_req(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                         MPI_Op op, MPIR_Comm * comm_ptr, MPID_Request ** request)
+                         MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request ** request)
 {
     dte_data_representation_t Dtype;
     hcoll_dte_op_t *Op;
@@ -359,7 +359,7 @@ int hcoll_Iallreduce_req(const void *sendbuf, void *recvbuf, int count, MPI_Data
             (comm_ptr->hcoll_priv.hcoll_origin_coll_fns !=
              NULL) ? comm_ptr->hcoll_priv.hcoll_origin_coll_fns->Iallreduce_req : NULL;
         rc = MPI_Iallreduce(sendbuf, recvbuf, count, datatype, op, comm, &req);
-        MPID_Request_get_ptr(req, *request);
+        MPIR_Request_get_ptr(req, *request);
         comm_ptr->coll_fns->Iallreduce_req = ptr;
         MPL_DBG_MSG(MPIR_DBG_HCOLL, VERBOSE, "RUNNING FALLBACK IALLREDUCE done.");
     }

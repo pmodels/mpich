@@ -11,10 +11,10 @@
 #define FUNCNAME MPIDI_CH3U_Handle_send_req
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Handle_send_req(MPIDI_VC_t * vc, MPID_Request * sreq, int *complete)
+int MPIDI_CH3U_Handle_send_req(MPIDI_VC_t * vc, MPIR_Request * sreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
-    int (*reqFn) (MPIDI_VC_t *, MPID_Request *, int *);
+    int (*reqFn) (MPIDI_VC_t *, MPIR_Request *, int *);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_HANDLE_SEND_REQ);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_HANDLE_SEND_REQ);
@@ -49,7 +49,7 @@ int MPIDI_CH3U_Handle_send_req(MPIDI_VC_t * vc, MPID_Request * sreq, int *comple
 /* ----------------------------------------------------------------------- */
 
 int MPIDI_CH3_ReqHandler_GetSendComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
-                                         MPID_Request * sreq, int *complete)
+                                         MPIR_Request * sreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr;
@@ -68,7 +68,7 @@ int MPIDI_CH3_ReqHandler_GetSendComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
      * which leads to wrong execution.
      * Here we check if req is already completed to prevent processing the
      * same request twice. */
-    if (MPID_Request_is_complete(sreq)) {
+    if (MPIR_Request_is_complete(sreq)) {
         *complete = FALSE;
         goto fn_exit;
     }
@@ -107,7 +107,7 @@ int MPIDI_CH3_ReqHandler_GetSendComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 #define FUNCNAME MPIDI_CH3_ReqHandler_GaccumSendComplete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, int *complete)
+int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr;
@@ -129,7 +129,7 @@ int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq
      * which leads to wrong execution.
      * Here we check if req is already completed to prevent processing the
      * same request twice. */
-    if (MPID_Request_is_complete(rreq)) {
+    if (MPIR_Request_is_complete(rreq)) {
         *complete = FALSE;
         goto fn_exit;
     }
@@ -176,7 +176,7 @@ int MPIDI_CH3_ReqHandler_GaccumSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq
 #define FUNCNAME MPIDI_CH3_ReqHandler_CASSendComplete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, int *complete)
+int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr;
@@ -198,7 +198,7 @@ int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
      * which leads to wrong execution.
      * Here we check if req is already completed to prevent processing the
      * same request twice. */
-    if (MPID_Request_is_complete(rreq)) {
+    if (MPIR_Request_is_complete(rreq)) {
         *complete = FALSE;
         goto fn_exit;
     }
@@ -244,7 +244,7 @@ int MPIDI_CH3_ReqHandler_CASSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
 #define FUNCNAME MPIDI_CH3_ReqHandler_FOPSendComplete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_ReqHandler_FOPSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, int *complete)
+int MPIDI_CH3_ReqHandler_FOPSendComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr;
@@ -266,7 +266,7 @@ int MPIDI_CH3_ReqHandler_FOPSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
      * which leads to wrong execution.
      * Here we check if req is already completed to prevent processing the
      * same request twice. */
-    if (MPID_Request_is_complete(rreq)) {
+    if (MPIR_Request_is_complete(rreq)) {
         *complete = FALSE;
         goto fn_exit;
     }
@@ -309,7 +309,7 @@ int MPIDI_CH3_ReqHandler_FOPSendComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
 }
 
 
-int MPIDI_CH3_ReqHandler_SendReloadIOV(MPIDI_VC_t * vc ATTRIBUTE((unused)), MPID_Request * sreq,
+int MPIDI_CH3_ReqHandler_SendReloadIOV(MPIDI_VC_t * vc ATTRIBUTE((unused)), MPIR_Request * sreq,
                                        int *complete)
 {
     int mpi_errno;

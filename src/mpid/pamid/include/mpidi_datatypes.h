@@ -41,10 +41,10 @@
 
 
 #if (MPIU_HANDLE_ALLOCATION_METHOD == MPIU_HANDLE_ALLOCATION_THREAD_LOCAL) && defined(__BGQ__)
-struct MPID_Request;
+struct MPIR_Request;
 typedef struct
 {
-  struct MPID_Request  * head;
+  struct MPIR_Request  * head;
   size_t                 count;
 } MPIDI_RequestHandle_t;
 #endif
@@ -268,10 +268,10 @@ typedef struct
   size_t           length;
 } MPIDI_MsgEnvelope;
 
-/** \brief This defines the portion of MPID_Request that is specific to the Device */
+/** \brief This defines the portion of MPIR_Request that is specific to the Device */
 struct MPIDI_Request
 {
-  struct MPID_Request  *next;         /**< Link to next req. in queue */
+  struct MPIR_Request  *next;         /**< Link to next req. in queue */
   struct MPIDU_Datatype*datatype_ptr; /**< Info about the datatype    */
   pami_work_t           post_request; /**<                            */
 
@@ -292,10 +292,10 @@ struct MPIDI_Request
   MPIDI_CA              ca;           /**< Completion action          */
   pami_memregion_t      memregion;    /**< Rendezvous recv memregion  */
 #ifdef OUT_OF_ORDER_HANDLING
-  struct MPID_Request  *prev;         /**< Link to prev req. in queue */
+  struct MPIR_Request  *prev;         /**< Link to prev req. in queue */
   void                 *nextR;        /** < pointer to next recv for the out-of-order list, the out-of-order list is a list per source */
   void                 *prevR;        /** < pointer to prev recv for the out-of-order list, the out-of-order list is a list per source */
-  struct MPID_Request  *oo_peer;      /** < pointer to the matched post recv request to complete in the out-of-order case */
+  struct MPIR_Request  *oo_peer;      /** < pointer to the matched post recv request to complete in the out-of-order case */
 #endif
 #ifdef RDMA_FAILOVER
   uint32_t             memregion_used:16;
@@ -523,7 +523,7 @@ struct MPIDI_Win
     } lock;
   } sync;
   int request_based;          /* flag for request based rma */
-  struct MPID_Request *rreq;  /* anchor of MPID_Request for request based rma */
+  struct MPIR_Request *rreq;  /* anchor of MPIR_Request for request based rma */
 };
 
 /**

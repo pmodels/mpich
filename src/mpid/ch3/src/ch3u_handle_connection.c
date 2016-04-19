@@ -216,7 +216,7 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
 {
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_close_t * close_pkt = &upkt.close;
-    MPID_Request * sreq;
+    MPIR_Request * sreq;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_VC_SENDCLOSE);
 
@@ -277,7 +277,7 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, 
-				intptr_t *buflen, MPID_Request **rreqp )
+				intptr_t *buflen, MPIR_Request **rreqp )
 {
     MPIDI_CH3_Pkt_close_t * close_pkt = &pkt->close;
     int mpi_errno = MPI_SUCCESS;
@@ -286,7 +286,7 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     {
 	MPIDI_CH3_Pkt_t upkt;
 	MPIDI_CH3_Pkt_close_t * resp_pkt = &upkt.close;
-	MPID_Request * resp_sreq;
+	MPIR_Request * resp_sreq;
 	
 	MPIDI_Pkt_init(resp_pkt, MPIDI_CH3_PKT_CLOSE);
 	resp_pkt->ack = TRUE;

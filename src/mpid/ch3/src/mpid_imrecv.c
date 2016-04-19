@@ -11,10 +11,10 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
-                MPID_Request *message, MPID_Request **rreqp)
+                MPIR_Request *message, MPIR_Request **rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *rreq;
+    MPIR_Request *rreq;
     MPIR_Comm *comm;
     MPIDI_VC_t *vc = NULL;
 
@@ -74,7 +74,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
         MPIDI_Request_decr_pending(rreq);
         MPIDI_Request_check_pending(rreq, &recv_pending);
 
-        if (MPID_Request_is_complete(rreq)) {
+        if (MPIR_Request_is_complete(rreq)) {
             /* is it ever possible to have (cc==0 && recv_pending>0) ? */
             MPIU_Assert(!recv_pending);
 

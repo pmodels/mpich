@@ -23,7 +23,7 @@
 
 
 int
-MPID_Cancel_recv(MPID_Request * rreq)
+MPID_Cancel_recv(MPIR_Request * rreq)
 {
   MPID_assert(rreq->kind == MPIR_REQUEST_RECV);
   if (MPIDI_Recvq_FDPR(rreq))
@@ -47,7 +47,7 @@ MPID_Cancel_recv(MPID_Request * rreq)
 static inline pami_result_t
 MPIDI_CancelReq_post(pami_context_t context, void * _req)
 {
-  MPID_Request * req = (MPID_Request*)_req;
+  MPIR_Request * req = (MPIR_Request*)_req;
   MPID_assert(req != NULL);
 
   /* ------------------------------------------------- */
@@ -90,7 +90,7 @@ MPIDI_CancelReq_post(pami_context_t context, void * _req)
 
 
 int
-MPID_Cancel_send(MPID_Request * sreq)
+MPID_Cancel_send(MPIR_Request * sreq)
 {
   MPID_assert(sreq != NULL);
 

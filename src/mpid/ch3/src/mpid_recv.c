@@ -12,7 +12,7 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int tag,
 	      MPIR_Comm * comm, int context_offset,
-	      MPI_Status * status, MPID_Request ** request)
+	      MPI_Status * status, MPIR_Request ** request)
 {
     /* FIXME: in the common case, we want to simply complete the message
        and make as few updates as possible.
@@ -22,7 +22,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
        message was not found in the unexpected queue. */
 
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request * rreq;
+    MPIR_Request * rreq;
     int found;
     MPIDI_STATE_DECL(MPID_STATE_MPID_RECV);
 
@@ -85,7 +85,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
             MPIDI_Request_decr_pending(rreq);
             MPIDI_Request_check_pending(rreq, &recv_pending);
 
-            if (MPID_Request_is_complete(rreq)) {
+            if (MPIR_Request_is_complete(rreq)) {
                 /* is it ever possible to have (cc==0 && recv_pending>0) ? */
                 MPIU_Assert(!recv_pending);
 

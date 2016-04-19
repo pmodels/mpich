@@ -48,7 +48,7 @@ MPID_Rput(const void  *origin_addr,
          int           target_count,
          MPI_Datatype  target_datatype,
          MPIR_Win     *win,
-         MPID_Request **request)
+         MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -58,9 +58,9 @@ MPID_Rput(const void  *origin_addr,
                           return mpi_errno, "**rmasync");
     }
   
-    MPID_Request *rreq = MPIDI_Request_create1();
+    MPIR_Request *rreq = MPIDI_Request_create1();
     *request = rreq;
-    rreq->kind = MPID_WIN_REQUEST;
+    rreq->kind = MPIR_WIN_REQUEST;
     win->mpid.rreq = rreq;
     win->mpid.request_based = 1;
 
@@ -100,7 +100,7 @@ MPID_Rget(void         *origin_addr,
          int           target_count,
          MPI_Datatype  target_datatype,
          MPIR_Win     *win,
-         MPID_Request **request)
+         MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -110,8 +110,8 @@ MPID_Rget(void         *origin_addr,
                           return mpi_errno, "**rmasync");
     }
 
-    MPID_Request *rreq = MPIDI_Request_create1();
-    rreq->kind = MPID_WIN_REQUEST;
+    MPIR_Request *rreq = MPIDI_Request_create1();
+    rreq->kind = MPIR_WIN_REQUEST;
     *request = rreq;
     win->mpid.rreq = rreq;
     win->mpid.request_based = 1;
@@ -159,7 +159,7 @@ MPID_Raccumulate(const void  *origin_addr,
                 MPI_Datatype  target_datatype,
                 MPI_Op        op,
                 MPIR_Win     *win,
-                MPID_Request **request)
+                MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -169,8 +169,8 @@ MPID_Raccumulate(const void  *origin_addr,
                           return mpi_errno, "**rmasync");
     }
 
-    MPID_Request *rreq = MPIDI_Request_create1();
-    rreq->kind = MPID_WIN_REQUEST;
+    MPIR_Request *rreq = MPIDI_Request_create1();
+    rreq->kind = MPIR_WIN_REQUEST;
     *request = rreq;
     win->mpid.rreq = rreq;
     win->mpid.request_based = 1;
@@ -223,7 +223,7 @@ MPID_Rget_accumulate(const void         *origin_addr,
                 MPI_Datatype  target_datatype,
                 MPI_Op        op,
                 MPIR_Win     *win,
-		MPID_Request **request)
+                MPIR_Request **request)
 {
 
     int mpi_errno = MPI_SUCCESS;
@@ -234,8 +234,8 @@ MPID_Rget_accumulate(const void         *origin_addr,
                           return mpi_errno, "**rmasync");
     }
 
-    MPID_Request *rreq = MPIDI_Request_create1();
-    rreq->kind = MPID_WIN_REQUEST;
+    MPIR_Request *rreq = MPIDI_Request_create1();
+    rreq->kind = MPIR_WIN_REQUEST;
     *request = rreq;
     win->mpid.rreq = rreq;
     win->mpid.request_based = 1;

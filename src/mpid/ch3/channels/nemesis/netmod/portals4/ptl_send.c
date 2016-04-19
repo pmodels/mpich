@@ -11,7 +11,7 @@
 #define FUNCNAME big_meappend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static void big_meappend(void *buf, ptl_size_t left_to_send, MPIDI_VC_t *vc, ptl_match_bits_t match_bits, MPID_Request *sreq)
+static void big_meappend(void *buf, ptl_size_t left_to_send, MPIDI_VC_t *vc, ptl_match_bits_t match_bits, MPIR_Request *sreq)
 {
     int i, ret, was_incomplete;
     MPID_nem_ptl_vc_area *vc_ptl;
@@ -59,7 +59,7 @@ static void big_meappend(void *buf, ptl_size_t left_to_send, MPIDI_VC_t *vc, ptl
 static int handler_send(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *const sreq = e->user_ptr;
+    MPIR_Request *const sreq = e->user_ptr;
 
     int i, ret;
 
@@ -101,7 +101,7 @@ static int handler_send(const ptl_event_t *e)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
-                    int tag, MPIR_Comm *comm, int context_offset, struct MPID_Request **request)
+                    int tag, MPIR_Comm *comm, int context_offset, struct MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
@@ -110,7 +110,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPIDU_Datatype*dt_ptr;
-    MPID_Request *sreq = NULL;
+    MPIR_Request *sreq = NULL;
     ptl_me_t me;
     int initial_iov_count, remaining_iov_count;
     ptl_md_t md;
@@ -336,7 +336,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_isend(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-                       MPIR_Comm *comm, int context_offset, struct MPID_Request **request)
+                       MPIR_Comm *comm, int context_offset, struct MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_ISEND);
@@ -355,7 +355,7 @@ int MPID_nem_ptl_isend(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_issend(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, int tag,
-                        MPIR_Comm *comm, int context_offset, struct MPID_Request **request)
+                        MPIR_Comm *comm, int context_offset, struct MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_ISSEND);
@@ -372,11 +372,11 @@ int MPID_nem_ptl_issend(struct MPIDI_VC *vc, const void *buf, MPI_Aint count, MP
 #define FUNCNAME MPID_nem_ptl_cancel_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_ptl_cancel_send(struct MPIDI_VC *vc,  struct MPID_Request *sreq)
+int MPID_nem_ptl_cancel_send(struct MPIDI_VC *vc,  struct MPIR_Request *sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_PKT_DECL_CAST(upkt, MPIDI_nem_ptl_pkt_cancel_send_req_t, csr_pkt);
-    MPID_Request *csr_sreq;
+    MPIR_Request *csr_sreq;
     int was_incomplete;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_CANCEL_SEND);
