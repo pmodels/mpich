@@ -360,7 +360,7 @@ cvars:
             MPIR_ERR_SETANDSTMT(err,MPI_ERR_OP,goto fn_fail,"**opnotallowed");  \
         }                                                                       \
         else {                                                                  \
-            MPIR_ERRTEST_VALID_HANDLE(op,MPID_OP,err,MPI_ERR_OP,"**op");        \
+            MPIR_ERRTEST_VALID_HANDLE(op,MPIR_OP,err,MPI_ERR_OP,"**op");        \
         }                                                                       \
     } while (0)
 
@@ -373,7 +373,7 @@ cvars:
             MPIR_ERR_SETANDSTMT(err,MPI_ERR_OP,goto fn_fail,"**opnotallowed");  \
         }                                                                       \
         else {                                                                  \
-            MPIR_ERRTEST_VALID_HANDLE(op,MPID_OP,err,MPI_ERR_OP,"**op");        \
+            MPIR_ERRTEST_VALID_HANDLE(op,MPIR_OP,err,MPI_ERR_OP,"**op");        \
         }                                                                       \
         if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {                       \
             MPIR_ERR_SETANDSTMT(err,MPI_ERR_OP,goto fn_fail,"**opnotpredefined"); \
@@ -386,7 +386,7 @@ cvars:
             MPIR_ERR_SETANDSTMT(err,MPI_ERR_OP,goto fn_fail,"**opnull");        \
         }                                                                       \
         else {                                                                  \
-            MPIR_ERRTEST_VALID_HANDLE(op,MPID_OP,err,MPI_ERR_OP,"**op");        \
+            MPIR_ERRTEST_VALID_HANDLE(op,MPIR_OP,err,MPI_ERR_OP,"**op");        \
         }                                                                       \
         if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {                       \
             MPIR_ERR_SETANDSTMT(err,MPI_ERR_OP,goto fn_fail,"**opnotpredefined"); \
@@ -398,7 +398,7 @@ cvars:
         MPIR_ERR_SETANDSTMT(err,MPI_ERR_GROUP,goto fn_fail,"**groupnull"); \
     }                                                                   \
     else {                                                              \
-        MPIR_ERRTEST_VALID_HANDLE(group,MPID_GROUP,err,MPI_ERR_GROUP,"**group"); \
+        MPIR_ERRTEST_VALID_HANDLE(group,MPIR_GROUP,err,MPI_ERR_GROUP,"**group"); \
     }
 
 #define MPIR_ERRTEST_COMM(comm_, err_)					\
@@ -409,7 +409,7 @@ cvars:
         }                                                               \
         else								\
         {                                                               \
-            MPIR_ERRTEST_VALID_HANDLE((comm_), MPID_COMM, (err_), MPI_ERR_COMM, "**comm"); \
+            MPIR_ERRTEST_VALID_HANDLE((comm_), MPIR_COMM, (err_), MPI_ERR_COMM, "**comm"); \
         }                                                               \
     }
 
@@ -467,7 +467,7 @@ cvars:
         MPIR_ERR_SETANDSTMT(err_,MPI_ERR_ARG,goto fn_fail,"**errhandlernull"); \
     }									\
     else {								\
-        MPIR_ERRTEST_VALID_HANDLE(errhandler_,MPID_ERRHANDLER,		\
+        MPIR_ERRTEST_VALID_HANDLE(errhandler_,MPIR_ERRHANDLER,		\
 				  err_,MPI_ERR_ARG,"**errhandler");	\
     }
 
@@ -497,7 +497,7 @@ cvars:
         {                                                               \
             MPIR_ERR_SETANDSTMT(err_, MPI_ERR_KEYVAL,goto fn_fail, "**keyvalinvalid"); \
         }                                                               \
-        else if (HANDLE_GET_MPI_KIND(keyval_) != MPID_KEYVAL)		\
+        else if (HANDLE_GET_MPI_KIND(keyval_) != MPIR_KEYVAL)		\
         {                                                               \
             MPIR_ERR_SETANDSTMT(err_, MPI_ERR_KEYVAL,goto fn_fail, "**keyval"); \
         }                                                               \
@@ -510,7 +510,7 @@ cvars:
 
 #define MPIR_ERRTEST_KEYVAL_PERM(keyval_, err_)				\
     {									\
-        if (HANDLE_GET_MPI_KIND(keyval_) == MPID_KEYVAL &&              \
+        if (HANDLE_GET_MPI_KIND(keyval_) == MPIR_KEYVAL &&              \
             HANDLE_GET_KIND(keyval_) == HANDLE_KIND_BUILTIN)		\
         {                                                               \
             MPIR_ERR_SETANDSTMT(err_, MPI_ERR_KEYVAL,goto fn_fail, "**permattr"); \

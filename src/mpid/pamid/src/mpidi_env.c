@@ -113,8 +113,8 @@
  *   Possible values:
  *   - 0 - Collectives are not memory optimized.
  *   - n - Collectives are memory optimized. Levels are bitwise values :
- *        MPID_OPT_LVL_IRREG     = 1,   Do not optimize irregular communicators 
- *        MPID_OPT_LVL_NONCONTIG = 2,   Disable some non-contig collectives 
+ *        MPIR_OPT_LVL_IRREG     = 1,   Do not optimize irregular communicators
+ *        MPIR_OPT_LVL_NONCONTIG = 2,   Disable some non-contig collectives
  *
  *   PAMID_OPTIMIZED_SUBCOMMS - Use PAMI 'optimized' collectives. Defaullt is 1.
  *   - 0 - Some optimized protocols may be disabled.

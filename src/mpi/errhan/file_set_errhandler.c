@@ -91,7 +91,7 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
 		MPIR_Errhandler_valid_ptr( errhan_ptr,mpi_errno );
 		/* Also check for a valid errhandler kind */
 		if (!mpi_errno) {
-		    if (errhan_ptr->kind != MPID_FILE) {
+		    if (errhan_ptr->kind != MPIR_FILE) {
 			mpi_errno = MPIR_Err_create_code(
 			    MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_ARG, "**errhandnotfile", NULL );
 		    }

@@ -30,16 +30,16 @@ PMPI_LOCAL int MPIR_Grequest_free_classes_on_finalize(void *extra_data);
 #define MPI_Grequest_start PMPI_Grequest_start
 
 /* preallocated grequest classes */
-#ifndef MPID_GREQ_CLASS_PREALLOC
-#define MPID_GREQ_CLASS_PREALLOC 2
+#ifndef MPIR_GREQ_CLASS_PREALLOC
+#define MPIR_GREQ_CLASS_PREALLOC 2
 #endif
 
-MPIR_Grequest_class MPIR_Grequest_class_direct[MPID_GREQ_CLASS_PREALLOC] =
+MPIR_Grequest_class MPIR_Grequest_class_direct[MPIR_GREQ_CLASS_PREALLOC] =
                                               { {0} };
-MPIU_Object_alloc_t MPIR_Grequest_class_mem = {0, 0, 0, 0, MPID_GREQ_CLASS,
+MPIU_Object_alloc_t MPIR_Grequest_class_mem = {0, 0, 0, 0, MPIR_GREQ_CLASS,
 	                                       sizeof(MPIR_Grequest_class),
 					       MPIR_Grequest_class_direct,
-					       MPID_GREQ_CLASS_PREALLOC, };
+					       MPIR_GREQ_CLASS_PREALLOC, };
 
 /* We jump through some minor hoops to manage the list of classes ourselves and
  * only register a single finalizer to avoid hitting limitations in the current

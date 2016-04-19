@@ -14,7 +14,7 @@
 /* Preallocated group objects */
 MPIR_Group MPIR_Group_builtin[MPIR_GROUP_N_BUILTIN] = { {0} };
 MPIR_Group MPIR_Group_direct[MPID_GROUP_PREALLOC] = { {0} };
-MPIU_Object_alloc_t MPIR_Group_mem = { 0, 0, 0, 0, MPID_GROUP,
+MPIU_Object_alloc_t MPIR_Group_mem = { 0, 0, 0, 0, MPIR_GROUP,
 				      sizeof(MPIR_Group), MPIR_Group_direct,
 				       MPID_GROUP_PREALLOC};
 

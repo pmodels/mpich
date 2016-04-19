@@ -27,7 +27,7 @@ MPIU_Object_alloc_t MPIR_Comm_mem = {
     0,
     0,
     0,
-    MPID_COMM,
+    MPIR_COMM,
     sizeof(MPIR_Comm),
     MPIR_Comm_direct,
     MPID_COMM_PREALLOC

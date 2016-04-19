@@ -44,9 +44,9 @@ static MPIDI_PortFns portFns = { 0, 0, 0, 0 };
 int MPIR_Open_port(MPIR_Info *info_ptr, char *port_name)
 {
     int mpi_errno=MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_OPEN_PORT);
+    MPIDI_STATE_DECL(MPID_STATE_MPIR_OPEN_PORT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_OPEN_PORT);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIR_OPEN_PORT);
 
     /* Check to see if we need to setup channel-specific functions
        for handling the port operations */
@@ -71,7 +71,7 @@ int MPIR_Open_port(MPIR_Info *info_ptr, char *port_name)
     }
 
  fn_fail:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_OPEN_PORT);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIR_OPEN_PORT);
     return mpi_errno;
 }
 

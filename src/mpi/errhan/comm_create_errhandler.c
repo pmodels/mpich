@@ -40,7 +40,7 @@ int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function *comm_errhandl
     MPIR_ERR_CHKANDJUMP(!errhan_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     errhan_ptr->language = MPIR_LANG_C;
-    errhan_ptr->kind	 = MPID_COMM;
+    errhan_ptr->kind	 = MPIR_COMM;
     MPIU_Object_set_ref(errhan_ptr,1);
     errhan_ptr->errfn.C_Comm_Handler_function = comm_errhandler_fn;
 
