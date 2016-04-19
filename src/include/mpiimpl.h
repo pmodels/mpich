@@ -3754,10 +3754,6 @@ int MPID_Comm_get_lpid(MPID_Comm *comm_ptr, int idx, int * lpid_ptr, MPIU_BOOL i
  * collectives */
 #include "mpir_nbc.h"
 
-/* Include definitions from the device which require items defined by this 
-   file (mpiimpl.h). */
-#include "mpidpost.h"
-
 /* tunable cvar values */
 #include "mpich_cvars.h"
 
@@ -4450,6 +4446,10 @@ extern const char MPIR_Version_CC[];
 extern const char MPIR_Version_CXX[];
 extern const char MPIR_Version_F77[];
 extern const char MPIR_Version_FC[];
+
+/* Include definitions from the device which require items defined by this
+   file (mpiimpl.h). */
+#include "mpidpost.h"
 
 /* avoid conflicts in source files with old-style "char FCNAME[]" vars */
 #undef FUNCNAME
