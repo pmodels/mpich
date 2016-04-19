@@ -1715,12 +1715,7 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
         MPIR_cc_set(&req->cc, 1);
 	req->cc_ptr		   = &req->cc;
 
-	/* FIXME: status fields meaningful only for receive, and even
-         * then should not need to be set. */
-	req->status.MPI_SOURCE	   = MPI_UNDEFINED;
-	req->status.MPI_TAG	   = MPI_UNDEFINED;
 	req->status.MPI_ERROR	   = MPI_SUCCESS;
-        MPIR_STATUS_SET_COUNT(req->status, 0);
         MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);
 
 	req->comm		   = NULL;
