@@ -491,7 +491,7 @@ void *MPIU_Handle_get_ptr_indirect( int handle, MPIU_Object_alloc_t *objmem )
 /* returns the name of the handle kind for debugging/logging purposes */
 const char *MPIU_Handle_get_kind_str(int kind)
 {
-#define mpiu_name_case_(name_) case MPID_##name_: return (#name_)
+#define mpiu_name_case_(name_) case MPIR_##name_: return (#name_)
     switch (kind) {
         mpiu_name_case_(COMM);
         mpiu_name_case_(GROUP);

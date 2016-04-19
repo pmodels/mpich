@@ -458,6 +458,7 @@ void MPIR_DatatypeAttrFinalize( void );
      }                                                \
 }
 #define MPIR_Win_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Win,ptr,MPI_ERR_WIN,err)
+#define MPIR_Group_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Win,ptr,MPI_ERR_GROUP,err)
 #define MPIR_Op_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Op,ptr,MPI_ERR_OP,err)
 #define MPIR_Errhandler_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Errhandler,ptr,MPI_ERR_ARG,err)
 #define MPIR_Request_valid_ptr(ptr,err) MPIR_Valid_ptr_class(Request,ptr,MPI_ERR_REQUEST,err)

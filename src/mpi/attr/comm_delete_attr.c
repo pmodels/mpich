@@ -123,7 +123,7 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_COMM(comm, mpi_errno);
-	    MPIR_ERRTEST_KEYVAL(comm_keyval, MPID_COMM, "communicator", mpi_errno);
+	    MPIR_ERRTEST_KEYVAL(comm_keyval, MPIR_COMM, "communicator", mpi_errno);
 	    MPIR_ERRTEST_KEYVAL_PERM(comm_keyval, mpi_errno);
         }
         MPID_END_ERROR_CHECKS;

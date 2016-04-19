@@ -42,7 +42,7 @@ extern MPIR_Comm_list MPIR_All_communicators;
    These routines (more precisely, the field_offset routine) need to 
    known the layout of the internal data structures */
 enum { TYPE_UNKNOWN = 0, 
-       TYPE_MPID_COMM = 1, 
+       TYPE_MPIR_COMM = 1,
        TYPE_MPIR_COMM_LIST = 2, 
        TYPE_MPIDI_REQUEST = 3, 
        TYPE_MPIDI_MESSAGE_MATCH = 4,
@@ -55,10 +55,10 @@ enum { TYPE_UNKNOWN = 0,
    recent type, so a static current type will not work.  Instead, we
    have an example of each type, and return that value. */
 
-static int knownTypesArray[] = { TYPE_UNKNOWN, TYPE_MPID_COMM, 
-				 TYPE_MPIR_COMM_LIST, TYPE_MPIDI_REQUEST, 
+static int knownTypesArray[] = { TYPE_UNKNOWN, TYPE_MPIR_COMM,
+				 TYPE_MPIR_COMM_LIST, TYPE_MPIDI_REQUEST,
 				 TYPE_MPIDI_MESSAGE_MATCH, TYPE_MPIR_REQUEST,
-				 TYPE_MPIR_SENDQ, 
+				 TYPE_MPIR_SENDQ,
 				 TYPE_MPIDI_MESSAGE_MATCH_PARTS };
 
 mqs_type * dbgrI_find_type(mqs_image *image, char *name, 
@@ -67,7 +67,7 @@ mqs_type * dbgrI_find_type(mqs_image *image, char *name,
     int curType = TYPE_UNKNOWN;
 
     if (strcmp(name,"MPID_Comm") == 0) {
-	curType = TYPE_MPID_COMM;
+	curType = TYPE_MPIR_COMM;
     }
     else if (strcmp( name, "MPIR_Comm_list" ) == 0) {
 	curType = TYPE_MPIR_COMM_LIST;

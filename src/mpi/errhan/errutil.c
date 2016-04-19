@@ -138,18 +138,18 @@ static int checkForUserErrcode( int );
  * in MPICH
  */
 
-#ifndef MPID_ERRHANDLER_PREALLOC 
-#define MPID_ERRHANDLER_PREALLOC 8
+#ifndef MPIR_ERRHANDLER_PREALLOC
+#define MPIR_ERRHANDLER_PREALLOC 8
 #endif
 
 /* Preallocated errorhandler objects */
 MPIR_Errhandler MPIR_Errhandler_builtin[3] = { {0} };
-MPIR_Errhandler MPIR_Errhandler_direct[MPID_ERRHANDLER_PREALLOC] =
+MPIR_Errhandler MPIR_Errhandler_direct[MPIR_ERRHANDLER_PREALLOC] =
     { {0} };
-MPIU_Object_alloc_t MPIR_Errhandler_mem = { 0, 0, 0, 0, MPID_ERRHANDLER,
+MPIU_Object_alloc_t MPIR_Errhandler_mem = { 0, 0, 0, 0, MPIR_ERRHANDLER,
 					    sizeof(MPIR_Errhandler),
 					    MPIR_Errhandler_direct,
-					    MPID_ERRHANDLER_PREALLOC, };
+					    MPIR_ERRHANDLER_PREALLOC, };
 
 void MPIR_Errhandler_free(MPIR_Errhandler *errhan_ptr)
 {

@@ -88,7 +88,7 @@ int MPI_Attr_put(MPI_Comm comm, int keyval, void *attribute_val)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_COMM(comm, mpi_errno);
-            MPIR_ERRTEST_KEYVAL(keyval, MPID_COMM, "communicator", mpi_errno);
+            MPIR_ERRTEST_KEYVAL(keyval, MPIR_COMM, "communicator", mpi_errno);
             MPIR_ERRTEST_KEYVAL_PERM(keyval, mpi_errno);
         }
         MPID_END_ERROR_CHECKS;

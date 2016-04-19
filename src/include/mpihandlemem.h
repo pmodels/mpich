@@ -45,33 +45,33 @@
   MPI handle represents.  It is an enum because only this applies only the
   the MPI and internal MPICH objects.
 
-  The 'MPID_PROCGROUP' kind is used to manage process groups (different
+  The 'MPIR_PROCGROUP' kind is used to manage process groups (different
   from MPI Groups) that are used to keep track of collections of
-  processes (each 'MPID_PROCGROUP' corresponds to a group of processes
-  that define an 'MPI_COMM_WORLD'.  This becomes important only 
-  when MPI-2 dynamic process features are supported.  'MPID_VCONN' is
+  processes (each 'MPIR_PROCGROUP' corresponds to a group of processes
+  that define an 'MPI_COMM_WORLD'.  This becomes important only
+  when MPI-2 dynamic process features are supported.  'MPIR_VCONN' is
   a virtual connection; while this is not part of the overall ADI3
   design, an object that manages connections to other processes is
-  a common need, and 'MPID_VCONN' may be used for that.
+  a common need, and 'MPIR_VCONN' may be used for that.
 
   Module:
   Attribute-DS
   E*/
 typedef enum MPIR_Object_kind {
-  MPID_COMM       = 0x1,
-  MPID_GROUP      = 0x2,
+  MPIR_COMM       = 0x1,
+  MPIR_GROUP      = 0x2,
   MPIR_DATATYPE   = 0x3,
-  MPID_FILE       = 0x4, /* only used obliquely inside MPIR_Errhandler objs */
-  MPID_ERRHANDLER = 0x5,
-  MPID_OP         = 0x6,
+  MPIR_FILE       = 0x4, /* only used obliquely inside MPIR_Errhandler objs */
+  MPIR_ERRHANDLER = 0x5,
+  MPIR_OP         = 0x6,
   MPIR_INFO       = 0x7,
-  MPID_WIN        = 0x8,
-  MPID_KEYVAL     = 0x9,
-  MPID_ATTR       = 0xa,
+  MPIR_WIN        = 0x8,
+  MPIR_KEYVAL     = 0x9,
+  MPIR_ATTR       = 0xa,
   MPIR_REQUEST    = 0xb,
-  MPID_PROCGROUP  = 0xc,               /* These are internal device objects */
-  MPID_VCONN      = 0xd,
-  MPID_GREQ_CLASS = 0xf
+  MPIR_PROCGROUP  = 0xc,               /* These are internal device objects */
+  MPIR_VCONN      = 0xd,
+  MPIR_GREQ_CLASS = 0xf
   } MPIR_Object_kind;
 
 #define HANDLE_MPI_KIND_SHIFT 26

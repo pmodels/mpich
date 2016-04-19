@@ -620,7 +620,7 @@ static int lpid_counter = 0;
 int MPIDI_VC_Init( MPIDI_VC_t *vc, MPIDI_PG_t *pg, int rank )
 {
     vc->state = MPIDI_VC_STATE_INACTIVE;
-    vc->handle  = HANDLE_SET_MPI_KIND(0, MPID_VCONN);
+    vc->handle  = HANDLE_SET_MPI_KIND(0, MPIR_VCONN);
     MPIU_Object_set_ref(vc, 0);
     vc->pg      = pg;
     vc->pg_rank = rank;

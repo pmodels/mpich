@@ -80,7 +80,7 @@ int MPI_Win_create_errhandler(MPI_Win_errhandler_function *win_errhandler_fn,
     MPIR_ERR_CHKANDJUMP1(!errhan_ptr,mpi_errno,MPI_ERR_OTHER,"**nomem",
 			 "**nomem %s", "MPI_Errhandler");
     errhan_ptr->language = MPIR_LANG_C;
-    errhan_ptr->kind	 = MPID_WIN;
+    errhan_ptr->kind	 = MPIR_WIN;
     MPIU_Object_set_ref(errhan_ptr,1);
     errhan_ptr->errfn.C_Win_Handler_function = win_errhandler_fn;
 
