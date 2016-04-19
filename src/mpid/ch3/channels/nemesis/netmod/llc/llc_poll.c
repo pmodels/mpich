@@ -55,8 +55,8 @@ int MPID_nem_llc_poll(int in_blocking_progress)
 static void MPID_nem_llc_send_handler(void *cba, uint64_t * p_reqid)
 {
     /* int mpi_errno = 0; */
-    MPID_Request *sreq = cba;   /* from llc_writev(,,,,cbarg,) */
-    MPID_Request_kind_t kind;
+    MPIR_Request *sreq = cba;   /* from llc_writev(,,,,cbarg,) */
+    MPIR_Request_kind_t kind;
     /* MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_SEND_HANDLER); */
 
     /* MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_SEND_HANDLER); */
@@ -86,7 +86,7 @@ static void MPID_nem_llc_send_handler(void *cba, uint64_t * p_reqid)
     switch (kind) {
         unsigned int reqtype;
     case MPIR_REQUEST_SEND:
-    case MPID_PREQUEST_SEND:{
+    case MPIR_PREQUEST_SEND:{
             reqtype = MPIDI_Request_get_type(sreq);
 
             /* Free temporal buffer for non-contiguous data.
@@ -123,7 +123,7 @@ static void MPID_nem_llc_send_handler(void *cba, uint64_t * p_reqid)
             /* sreq: src/mpid/ch3/include/mpidpre.h */
             {
                 MPIDI_VC_t *vc;
-                int (*reqFn) (MPIDI_VC_t * vc, MPID_Request * sreq, int *complete);
+                int (*reqFn) (MPIDI_VC_t * vc, MPIR_Request * sreq, int *complete);
                 int complete;
                 int r_mpi_errno;
 
@@ -231,7 +231,7 @@ static void MPID_nem_llc_recv_handler(void *vp_vc, uint64_t raddr, void *buf, si
 #define FUNCNAME MPID_nem_llc_recv_posted
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_llc_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
+int MPID_nem_llc_recv_posted(struct MPIDI_VC *vc, struct MPIR_Request *req)
 {
     int mpi_errno = MPI_SUCCESS, llc_errno;
     int dt_contig;
@@ -346,7 +346,7 @@ int MPID_nem_llc_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
 #define FUNCNAME MPID_nem_llc_anysource_posted
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPID_nem_llc_anysource_posted(MPID_Request * req)
+void MPID_nem_llc_anysource_posted(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_AYSOURCE_POSTED);
@@ -362,7 +362,7 @@ void MPID_nem_llc_anysource_posted(MPID_Request * req)
 #define FUNCNAME MPID_nem_llc_anysource_matched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_llc_anysource_matched(MPID_Request * req)
+int MPID_nem_llc_anysource_matched(MPIR_Request * req)
 {
     int matched = FALSE;
 

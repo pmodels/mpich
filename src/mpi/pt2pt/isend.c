@@ -63,7 +63,7 @@ int MPI_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_Request *request_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ISEND);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

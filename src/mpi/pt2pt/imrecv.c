@@ -56,8 +56,8 @@ Output Parameters:
 int MPI_Imrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message *message, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *rreq = NULL;
-    MPID_Request *msgp = NULL;
+    MPIR_Request *rreq = NULL;
+    MPIR_Request *msgp = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_IMRECV);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -77,7 +77,7 @@ int MPI_Imrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message *message
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Request_get_ptr(*message, msgp);
+    MPIR_Request_get_ptr(*message, msgp);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -95,7 +95,7 @@ int MPI_Imrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message *message
 
             /* MPI_MESSAGE_NO_PROC should yield a "proc null" status */
             if (*message != MPI_MESSAGE_NO_PROC) {
-                MPID_Request_valid_ptr(msgp, mpi_errno);
+                MPIR_Request_valid_ptr(msgp, mpi_errno);
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 MPIR_ERR_CHKANDJUMP((msgp->kind != MPIR_REQUEST_MPROBE),
                                      mpi_errno, MPI_ERR_ARG, "**reqnotmsg");

@@ -35,7 +35,7 @@ MPIDI_SendDoneCB_inline(pami_context_t   context,
                         void           * clientdata,
                         pami_result_t    result)
 {
-  MPID_Request * sreq = (MPID_Request*)clientdata;
+  MPIR_Request * sreq = (MPIR_Request*)clientdata;
   MPID_assert(sreq != NULL);
   MPIDI_Request_complete(sreq);
 }
@@ -82,9 +82,9 @@ MPIDI_Send(const void    * buf,
            int             context_offset,
            unsigned        is_blocking,
            unsigned        is_sync,
-           MPID_Request ** request)
+           MPIR_Request ** request)
 {
-  MPID_Request * sreq = NULL;
+  MPIR_Request * sreq = NULL;
 
   /* --------------------- */
   /* create a send request */

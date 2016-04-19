@@ -33,7 +33,7 @@ int MPIR_Test_impl(MPI_Request *request, int *flag, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
     int active_flag;
-    MPID_Request *request_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
 
     /* If this is a null request handle, then return an empty status */
     if (*request == MPI_REQUEST_NULL) {
@@ -44,7 +44,7 @@ int MPIR_Test_impl(MPI_Request *request, int *flag, MPI_Status *status)
     
     *flag = FALSE;
 
-    MPID_Request_get_ptr( *request, request_ptr );
+    MPIR_Request_get_ptr( *request, request_ptr );
 
     /* If the request is already completed AND we want to avoid calling
      the progress engine, we could make the call to MPID_Progress_test
@@ -52,7 +52,7 @@ int MPIR_Test_impl(MPI_Request *request, int *flag, MPI_Status *status)
     mpi_errno = MPID_Progress_test();
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    if (request_ptr->kind == MPID_UREQUEST &&
+    if (request_ptr->kind == MPIR_UREQUEST &&
         request_ptr->greq_fns != NULL &&
         request_ptr->greq_fns->poll_fn != NULL)
     {
@@ -60,7 +60,7 @@ int MPIR_Test_impl(MPI_Request *request, int *flag, MPI_Status *status)
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
-    if (MPID_Request_is_complete(request_ptr)) {
+    if (MPIR_Request_is_complete(request_ptr)) {
 	mpi_errno = MPIR_Request_complete(request, request_ptr, status,
 					  &active_flag);
 	*flag = TRUE;
@@ -112,7 +112,7 @@ Output Parameters:
 int MPI_Test(MPI_Request *request, int *flag, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *request_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
    MPID_MPI_STATE_DECL(MPID_STATE_MPI_TEST);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -132,7 +132,7 @@ int MPI_Test(MPI_Request *request, int *flag, MPI_Status *status)
     }
 #   endif /* HAVE_ERROR_CHECKING */
     
-    MPID_Request_get_ptr( *request, request_ptr );
+    MPIR_Request_get_ptr( *request, request_ptr );
     
    /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -142,7 +142,7 @@ int MPI_Test(MPI_Request *request, int *flag, MPI_Status *status)
 	    if (*request != MPI_REQUEST_NULL)
 	    {
 		/* Validate request_ptr */
-		MPID_Request_valid_ptr( request_ptr, mpi_errno );
+		MPIR_Request_valid_ptr( request_ptr, mpi_errno );
                 if (mpi_errno) goto fn_fail;
 	    }
 	    

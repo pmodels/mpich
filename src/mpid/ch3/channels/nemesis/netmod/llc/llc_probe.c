@@ -113,7 +113,7 @@ int MPID_nem_llc_iprobe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, 
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, int context_offset,
-                         int *flag, MPID_Request ** message, MPI_Status * status)
+                         int *flag, MPIR_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
@@ -153,7 +153,7 @@ int MPID_nem_llc_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm,
 
     msg = LLC_mprobe(LLC_COMM_MPICH, rank, _tag, &mask, &probe);
     if (msg) {
-        MPID_Request *req;
+        MPIR_Request *req;
 
         *flag = 1;
 
@@ -211,7 +211,7 @@ int MPID_nem_llc_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm,
         /* Wait until the reception of data is completed */
         do {
             mpi_errno = MPID_nem_llc_poll(0);
-        } while (!MPID_Request_is_complete(req));
+        } while (!MPIR_Request_is_complete(req));
 
 //        MPID_Request_complete(req); // This operation is done in llc_poll.
 

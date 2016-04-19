@@ -175,7 +175,7 @@ MPIDI_Win_GetAccDoneCB(pami_context_t  context,
 
   if (req->origin.completed == req->target.dt.num_contig + 1)
     {
-      MPID_Request * req_handle = req->req_handle;
+      MPIR_Request * req_handle = req->req_handle;
 
       if (req->buffer_free) {
           MPL_free(req->buffer);

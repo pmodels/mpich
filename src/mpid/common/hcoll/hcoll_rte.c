@@ -126,7 +126,7 @@ static int recv_nb(struct dte_data_representation_t data,
 {
     int mpi_errno;
     MPI_Datatype dtype;
-    MPID_Request *request;
+    MPIR_Request *request;
     MPIR_Comm *comm;
     int context_offset;
     size_t size;
@@ -193,7 +193,7 @@ static int send_nb(dte_data_representation_t data,
 {
     int mpi_errno;
     MPI_Datatype dtype;
-    MPID_Request *request;
+    MPIR_Request *request;
     MPIR_Comm *comm;
     int context_offset;
     size_t size;
@@ -254,14 +254,14 @@ static int send_nb(dte_data_representation_t data,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int test(rte_request_handle_t * request, int *completed)
 {
-    MPID_Request *req;
-    req = (MPID_Request *) request->data;
+    MPIR_Request *req;
+    req = (MPIR_Request *) request->data;
     if (HCOLRTE_REQUEST_ACTIVE != request->status) {
         *completed = true;
         return HCOLL_SUCCESS;
     }
 
-    *completed = (int) MPID_Request_is_complete(req);
+    *completed = (int) MPIR_Request_is_complete(req);
     if (*completed) {
         MPID_Request_release(req);
         request->status = HCOLRTE_REQUEST_DONE;
@@ -385,9 +385,9 @@ static int group_id(rte_grp_handle_t group)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static void *get_coll_handle(void)
 {
-    MPID_Request *req;
+    MPIR_Request *req;
     req = MPID_Request_create();
-    req->kind = MPID_COLL_REQUEST;
+    req->kind = MPIR_COLL_REQUEST;
     return (void *) req;
 }
 
@@ -398,9 +398,9 @@ static void *get_coll_handle(void)
 static int coll_handle_test(void *handle)
 {
     int completed;
-    MPID_Request *req;
-    req = (MPID_Request *) handle;
-    completed = (int) MPID_Request_is_complete(req);
+    MPIR_Request *req;
+    req = (MPIR_Request *) handle;
+    completed = (int) MPIR_Request_is_complete(req);
     return completed;
 }
 
@@ -410,9 +410,9 @@ static int coll_handle_test(void *handle)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static void coll_handle_free(void *handle)
 {
-    MPID_Request *req;
+    MPIR_Request *req;
     if (NULL != handle) {
-        req = (MPID_Request *) handle;
+        req = (MPIR_Request *) handle;
         MPID_Request_release(req);
     }
 }
@@ -423,9 +423,9 @@ static void coll_handle_free(void *handle)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static void coll_handle_complete(void *handle)
 {
-    MPID_Request *req;
+    MPIR_Request *req;
     if (NULL != handle) {
-        req = (MPID_Request *) handle;
+        req = (MPIR_Request *) handle;
         MPID_Request_complete(req);
     }
 }

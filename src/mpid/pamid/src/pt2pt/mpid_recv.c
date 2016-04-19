@@ -45,7 +45,7 @@ int MPID_Recv(void          * buf,
               MPIR_Comm     * comm,
               int             context_offset,
               MPI_Status    * status,
-              MPID_Request ** request)
+              MPIR_Request ** request)
 {
   return MPIDI_Recv(buf,
                     count,

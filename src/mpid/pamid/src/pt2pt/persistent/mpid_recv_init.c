@@ -31,11 +31,11 @@ int MPID_Recv_init(void * buf,
                    int tag,
                    MPIR_Comm * comm,
                    int context_offset,
-                   MPID_Request ** request)
+                   MPIR_Request ** request)
 {
-  MPID_Request * rreq = *request = MPIDI_Request_create2();
+  MPIR_Request * rreq = *request = MPIDI_Request_create2();
 
-  rreq->kind = MPID_PREQUEST_RECV;
+  rreq->kind = MPIR_PREQUEST_RECV;
   rreq->comm = comm;
   MPIR_Comm_add_ref(comm);
   MPIDI_Request_setMatch(rreq, tag, rank, comm->recvcontext_id+context_offset);

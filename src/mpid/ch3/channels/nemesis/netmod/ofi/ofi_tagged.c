@@ -16,11 +16,11 @@
 
 static inline int
 MPID_nem_ofi_sync_recv_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
-                                MPID_Request * rreq);
+                                MPIR_Request * rreq);
 
 static inline int
 MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
-                           MPID_Request * sreq);
+                           MPIR_Request * sreq);
 
 #define ADD_SUFFIX(name) name
 #undef API_SET
@@ -38,7 +38,7 @@ MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPID_nem_ofi_sync_recv_callback)
 static inline int MPID_nem_ofi_sync_recv_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
-                                                  MPID_Request * rreq)
+                                                  MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -58,7 +58,7 @@ static inline int MPID_nem_ofi_sync_recv_callback(cq_tagged_entry_t * wc ATTRIBU
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPID_nem_ofi_send_callback)
 static inline int MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
-                                             MPID_Request * sreq)
+                                             MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
@@ -94,14 +94,14 @@ static inline int MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((u
 
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPID_nem_ofi_cancel_send)
-int MPID_nem_ofi_cancel_send(struct MPIDI_VC *vc ATTRIBUTE((unused)), struct MPID_Request *sreq)
+int MPID_nem_ofi_cancel_send(struct MPIDI_VC *vc ATTRIBUTE((unused)), struct MPIR_Request *sreq)
 {
     DO_CANCEL(sreq);
 }
 
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPID_nem_ofi_cancel_recv)
-int MPID_nem_ofi_cancel_recv(struct MPIDI_VC *vc ATTRIBUTE((unused)), struct MPID_Request *rreq)
+int MPID_nem_ofi_cancel_recv(struct MPIDI_VC *vc ATTRIBUTE((unused)), struct MPIR_Request *rreq)
 {
     DO_CANCEL(rreq);
 }
@@ -109,7 +109,7 @@ int MPID_nem_ofi_cancel_recv(struct MPIDI_VC *vc ATTRIBUTE((unused)), struct MPI
 
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPID_nem_ofi_anysource_matched)
-int MPID_nem_ofi_anysource_matched(MPID_Request * rreq)
+int MPID_nem_ofi_anysource_matched(MPIR_Request * rreq)
 {
     int matched = FALSE;
     int ret;

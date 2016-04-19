@@ -334,7 +334,7 @@ void MPIR_DebuggerSetAborting( const char *msg )
    be included in the request.  Saving the context_id also simplifies
    matching these entries with a communicator */
 typedef struct MPIR_Sendq {
-    MPID_Request *sreq;
+    MPIR_Request *sreq;
     int tag, rank, context_id;
     struct MPIR_Sendq *next;
     struct MPIR_Sendq *prev;
@@ -348,7 +348,7 @@ static MPIR_Sendq *pool = 0;
 /* This routine is used to establish a queue of send requests to allow the
    debugger easier access to the active requests.  Some devices may be able
    to provide this information without requiring this separate queue. */
-void MPIR_Sendq_remember( MPID_Request *req, 
+void MPIR_Sendq_remember( MPIR_Request *req,
 			  int rank, int tag, int context_id )
 {
     MPIR_Sendq *p;
@@ -379,7 +379,7 @@ fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, req->pobj_mutex);
 }
 
-void MPIR_Sendq_forget( MPID_Request *req )
+void MPIR_Sendq_forget( MPIR_Request *req )
 {
     MPIR_Sendq *p, *prev;
 

@@ -30,7 +30,7 @@ int MPI_Comm_idup(MPI_Comm comm, MPI_Comm *newcomm, MPI_Request *request) __attr
 #define FUNCNAME MPIR_Comm_idup_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_idup_impl(MPIR_Comm *comm_ptr, MPIR_Comm **newcommp, MPID_Request **reqp)
+int MPIR_Comm_idup_impl(MPIR_Comm *comm_ptr, MPIR_Comm **newcommp, MPIR_Request **reqp)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *new_attributes = 0;
@@ -97,7 +97,7 @@ int MPI_Comm_idup(MPI_Comm comm, MPI_Comm *newcomm, MPI_Request *request)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
-    MPID_Request *dreq = NULL;
+    MPIR_Request *dreq = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_IDUP);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);

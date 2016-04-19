@@ -79,13 +79,13 @@ fn_fail:
 #define FUNCNAME MPID_nem_send_iov
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_send_iov(MPIDI_VC_t *vc, MPID_Request **sreq_ptr, MPL_IOV *iov, int n_iov)
+int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int n_iov)
 {
     int mpi_errno = MPI_SUCCESS;
     intptr_t data_sz;
     int i;
     int iov_data_copied;
-    MPID_Request *sreq = *sreq_ptr;
+    MPIR_Request *sreq = *sreq_ptr;
     MPL_IOV *data_iov = &iov[1]; /* iov of just the data, not the header */
     int data_n_iov = n_iov - 1;
 

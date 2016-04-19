@@ -1580,9 +1580,9 @@ static int MPID_nem_tcp_recv_handler(sockconn_t *const sc)
     {
         /* there is a pending receive, receive it directly into the user buffer */
         MPIDI_CH3I_VC *const sc_vc_ch = &sc_vc->ch;
-        MPID_Request *const rreq = sc_vc_ch->recv_active;
+        MPIR_Request *const rreq = sc_vc_ch->recv_active;
         MPL_IOV *iov = &rreq->dev.iov[rreq->dev.iov_offset];
-        int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+        int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
 
         MPIU_Assert(rreq->dev.iov_count > 0);
         MPIU_Assert(rreq->dev.iov_count + rreq->dev.iov_offset <= MPL_IOV_LIMIT);

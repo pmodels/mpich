@@ -24,14 +24,14 @@
 inline void
 MPIDI_RendezvousTransfer_use_pami_rget(pami_context_t   context,
                                        pami_endpoint_t  dest,
-                                       MPID_Request     *rreq)
+                                       MPIR_Request     *rreq)
 __attribute__((__always_inline__));
 #ifdef RDMA_FAILOVER
 inline void
 MPIDI_RendezvousTransfer_use_pami_get(pami_context_t   context,
                                       pami_endpoint_t  dest,
 	                              void             *rcvbuf,
-                                      MPID_Request     *rreq)
+                                      MPIR_Request     *rreq)
 __attribute__((__always_inline__));
 #endif
 
@@ -40,7 +40,7 @@ pami_result_t
 MPIDI_RendezvousTransfer(pami_context_t   context,
                          void           * _rreq)
 {
-  MPID_Request * rreq = (MPID_Request*) _rreq;
+  MPIR_Request * rreq = (MPIR_Request*) _rreq;
 
   void *rcvbuf;
   size_t rcvlen;
@@ -174,7 +174,7 @@ MPIDI_RendezvousTransfer(pami_context_t   context,
 inline void
 MPIDI_RendezvousTransfer_use_pami_rget(pami_context_t   context,
                                        pami_endpoint_t  dest,
-                                       MPID_Request     *rreq)
+                                       MPIR_Request     *rreq)
 {
   pami_result_t rc;
   pami_rget_simple_t params = {
@@ -212,7 +212,7 @@ inline void
 MPIDI_RendezvousTransfer_use_pami_get(pami_context_t   context,
                                       pami_endpoint_t  dest,
 	                              void             *rcvbuf,
-	                              MPID_Request     *rreq)
+                                      MPIR_Request     *rreq)
 {
   pami_result_t rc;
   int val=0;
@@ -250,7 +250,7 @@ MPIDI_RendezvousTransfer_use_pami_get(pami_context_t   context,
 
 pami_result_t MPIDI_RendezvousTransfer_SyncAck (pami_context_t context, void * _rreq)
 {
-  MPID_Request *rreq = (MPID_Request*)_rreq;
+  MPIR_Request *rreq = (MPIR_Request*)_rreq;
 
   // Do the sync ack transfer here.
   MPIDI_SyncAck_post (context, rreq, MPIDI_Request_getPeerRank_pami(rreq));

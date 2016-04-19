@@ -11,7 +11,7 @@
 
 /* some common MPI forward declarations */
 
-struct MPID_Request;
+struct MPIR_Request;
 struct MPIR_Comm;
 
 /* Scheduling forward declarations */

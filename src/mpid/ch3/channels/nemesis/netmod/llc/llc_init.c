@@ -217,7 +217,7 @@ int MPID_nem_llc_anysource_iprobe(int tag, MPIR_Comm * comm, int context_offset,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_anysource_improbe(int tag, MPIR_Comm * comm, int context_offset, int *flag,
-                                   MPID_Request ** message, MPI_Status * status)
+                                   MPIR_Request ** message, MPI_Status * status)
 {
     return MPID_nem_llc_improbe(NULL, MPI_ANY_SOURCE, tag, comm, context_offset, flag, message,
                                 status);

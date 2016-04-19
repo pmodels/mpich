@@ -50,7 +50,7 @@ typedef size_t              intptr_t;
 /** \brief Our progress engine does not require state */
 #define MPID_PROGRESS_STATE_DECL
 
-/** \brief This defines the portion of MPID_Request that is specific to the Device */
+/** \brief This defines the portion of MPIR_Request that is specific to the Device */
 #define MPID_DEV_REQUEST_DECL    struct MPIDI_Request mpid;
 
 /** \brief This defines the portion of MPIR_Comm that is specific to the Device */

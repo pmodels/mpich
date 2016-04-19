@@ -34,8 +34,8 @@ typedef struct MPIDI_CH3I_Connection
     MPIDI_VC_t * vc;
     MPIDU_Sock_t sock;
     MPIDI_CH3I_Conn_state state;
-    struct MPID_Request * send_active;
-    struct MPID_Request * recv_active;
+    struct MPIR_Request * send_active;
+    struct MPIR_Request * recv_active;
     MPIDI_CH3_Pkt_t pkt;
     char * pg_id;
     MPL_IOV iov[2];

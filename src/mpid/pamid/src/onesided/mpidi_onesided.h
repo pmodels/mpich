@@ -286,7 +286,7 @@ typedef struct MPIDI_Win_request
   pami_type_t        pami_datatype;  
  
   int request_based;            /* flag for request based rma */
-  MPID_Request *req_handle;     /* anchor of MPID_Request struc for request based rma*/
+  MPIR_Request *req_handle;     /* anchor of MPIR_Request struc for request based rma*/
 } MPIDI_Win_request;
 
 MPIDI_Win_request  zero_req;    /* used for init. request structure to 0 */

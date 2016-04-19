@@ -11,7 +11,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Mprobe(int source, int tag, MPIR_Comm *comm, int context_offset,
-                MPID_Request **message, MPI_Status *status)
+                MPIR_Request **message, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Progress_state progress_state;

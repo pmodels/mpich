@@ -141,8 +141,8 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     }
 #   else
     {
-	MPID_Request * sreq;
-	MPID_Request * rreq;
+	MPIR_Request * sreq;
+	MPIR_Request * rreq;
 	void * tmpbuf = NULL;
 	MPI_Aint tmpbuf_size = 0;
 	MPI_Aint tmpbuf_count = 0;
@@ -173,12 +173,12 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
 	    /* --END ERROR HANDLING-- */
 	}
 	
-        if (!MPID_Request_is_complete(sreq) || !MPID_Request_is_complete(rreq))
+        if (!MPIR_Request_is_complete(sreq) || !MPIR_Request_is_complete(rreq))
 	{
 	    MPID_Progress_state progress_state;
 	
 	    MPID_Progress_start(&progress_state);
-            while (!MPID_Request_is_complete(sreq) || !MPID_Request_is_complete(rreq))
+            while (!MPIR_Request_is_complete(sreq) || !MPIR_Request_is_complete(rreq))
 	    {
 		mpi_errno = MPID_Progress_wait(&progress_state);
 		if (mpi_errno != MPI_SUCCESS)

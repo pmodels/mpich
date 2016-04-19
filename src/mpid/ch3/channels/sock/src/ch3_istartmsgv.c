@@ -10,10 +10,10 @@
 #define FUNCNAME create_request
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static MPID_Request * create_request(MPL_IOV * iov, int iov_count, 
+static MPIR_Request * create_request(MPL_IOV * iov, int iov_count,
 				     int iov_offset, MPIU_Size_t nb)
 {
-    MPID_Request * sreq;
+    MPIR_Request * sreq;
     int i;
     MPIDI_STATE_DECL(MPID_STATE_CREATE_REQUEST);
 
@@ -74,9 +74,9 @@ static MPID_Request * create_request(MPL_IOV * iov, int iov_count,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov, 
-			 MPID_Request ** sreq_ptr)
+			 MPIR_Request ** sreq_ptr)
 {
-    MPID_Request * sreq = NULL;
+    MPIR_Request * sreq = NULL;
     MPIDI_CH3I_VC *vcch = &vc->ch;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_ISTARTMSGV);

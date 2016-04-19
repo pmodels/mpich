@@ -40,7 +40,7 @@ MPIDI_Context_hash(pami_task_t rank, unsigned ctxt, unsigned bias, unsigned ncon
 #endif
 }
 static inline void
-MPIDI_Context_endpoint(MPID_Request * req, pami_endpoint_t * e)
+MPIDI_Context_endpoint(MPIR_Request * req, pami_endpoint_t * e)
 {
   pami_task_t remote = MPIDI_Request_getPeerRank_pami(req);
   pami_task_t local  = MPIR_Process.comm_world->rank;
@@ -51,7 +51,7 @@ MPIDI_Context_endpoint(MPID_Request * req, pami_endpoint_t * e)
   MPID_assert(rc == PAMI_SUCCESS);
 }
 static inline pami_context_t
-MPIDI_Context_local(MPID_Request * req)
+MPIDI_Context_local(MPIR_Request * req)
 {
   pami_task_t remote = MPIDI_Request_getPeerRank_comm(req);
   unsigned    lctxt  = MPIDI_Context_hash(remote, req->comm->context_id, 0, MPIDI_Process.avail_contexts);
@@ -86,7 +86,7 @@ MPID_Isend_inline(const void    * buf,
                   int             tag,
                   MPIR_Comm     * comm,
                   int             context_offset,
-                  MPID_Request ** request)
+                  MPIR_Request ** request)
 {
   /* ---------------------------------------------------- */
   /* special case: PROC null handled by handoff function  */
@@ -95,7 +95,7 @@ MPID_Isend_inline(const void    * buf,
   /* --------------------- */
   /* create a send request */
   /* --------------------- */
-  MPID_Request * sreq = *request = MPIDI_Request_create2_fast();
+  MPIR_Request * sreq = *request = MPIDI_Request_create2_fast();
 
   unsigned context_id = comm->context_id;
   /* match info */

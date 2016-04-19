@@ -7,11 +7,11 @@
 #include "mpidimpl.h"
 
 int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
-                MPID_Request *message, MPID_Request **rreqp)
+                MPIR_Request *message, MPIR_Request **rreqp)
 {
   int mpi_errno = MPI_SUCCESS;
 
-  MPID_Request * rreq;
+  MPIR_Request * rreq;
 
   /* ---------------------------------------- */
   /* NULL rank means empty request            */

@@ -7,12 +7,12 @@
 #include "mpidimpl.h"
 
 int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
-               MPID_Request *message, MPI_Status *status)
+               MPIR_Request *message, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Request req_handle; /* dummy for MPIR_Request_complete */
     int active_flag; /* dummy for MPIR_Request_complete */
-    MPID_Request *rreq = NULL;
+    MPIR_Request *rreq = NULL;
 
     if (message == NULL) {
         /* treat as though MPI_MESSAGE_NO_PROC was passed */
@@ -26,7 +26,7 @@ int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
      * and eligible for immediate completion. */
     mpi_errno = MPID_Imrecv(buf, count, datatype, message, &rreq);
 
-    MPID_PROGRESS_WAIT_WHILE(!MPID_Request_is_complete(rreq));
+    MPID_PROGRESS_WAIT_WHILE(!MPIR_Request_is_complete(rreq));
 
     mpi_errno = MPIR_Request_complete(&req_handle, rreq, status, &active_flag);
     return mpi_errno;

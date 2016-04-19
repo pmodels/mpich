@@ -70,7 +70,7 @@ int MPID_nem_tcp_send_init(void)
 int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send_queue)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *sreq;
+    MPIR_Request *sreq;
     intptr_t offset;
     MPL_IOV *iov;
     int complete;
@@ -143,7 +143,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
         else
         {
             /* sent whole message */
-            int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+            int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
 
             reqFn = sreq->dev.OnDataAvail;
             if (!reqFn)
@@ -232,10 +232,10 @@ int MPID_nem_tcp_conn_est (MPIDI_VC_t *vc)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, void *data, intptr_t data_sz,
-                                 MPID_Request **sreq_ptr)
+                                 MPIR_Request **sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request * sreq = NULL;
+    MPIR_Request * sreq = NULL;
     intptr_t offset = 0;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
     sockconn_t *sc = vc_tcp->sc;
@@ -372,10 +372,10 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, void *data, intptr_t data_sz,
-                                        MPID_Request **sreq_ptr)
+                                        MPIR_Request **sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request * sreq = NULL;
+    MPIR_Request * sreq = NULL;
     intptr_t offset = 0;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
     sockconn_t *sc = vc_tcp->sc;
@@ -505,7 +505,7 @@ fn_fail:
 #define FUNCNAME MPID_nem_tcp_iSendContig
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, intptr_t hdr_sz,
+int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPIR_Request *sreq, void *hdr, intptr_t hdr_sz,
                              void *data, intptr_t data_sz)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -572,7 +572,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, intp
                 if (offset == sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.ext_hdr_sz + data_sz)
                 {
                     /* sent whole message */
-                    int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+                    int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
                     
                     reqFn = sreq->dev.OnDataAvail;
                     if (!reqFn)
@@ -695,7 +695,7 @@ fn_fail:
 #define FUNCNAME MPID_nem_tcp_SendNoncontig
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header, intptr_t hdr_sz)
+int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, intptr_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     int iov_n;
@@ -800,7 +800,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
     if (complete)
     {
         /* sent whole iov */
-        int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+        int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
 
         reqFn = sreq->dev.OnDataAvail;
         if (!reqFn)
@@ -865,7 +865,7 @@ fn_fail:
 int MPID_nem_tcp_error_out_send_queue(struct MPIDI_VC *const vc, int req_errno)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *req;
+    MPIR_Request *req;
     MPID_nem_tcp_vc_area *const vc_tcp = VC_TCP(vc);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_ERROR_OUT_SEND_QUEUE);
 

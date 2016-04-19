@@ -13,11 +13,11 @@
 #include "mxm_impl.h"
 
 static int _mxm_poll(void);
-static int _mxm_handle_rreq(MPID_Request * req);
+static int _mxm_handle_rreq(MPIR_Request * req);
 static void _mxm_recv_completion_cb(void *context);
 static int _mxm_irecv(MPID_nem_mxm_ep_t * ep, MPID_nem_mxm_req_area * req, int id, mxm_mq_h mxm_mq,
                       mxm_tag_t mxm_tag);
-static int _mxm_process_rdtype(MPID_Request ** rreq_p, MPI_Datatype datatype,
+static int _mxm_process_rdtype(MPIR_Request ** rreq_p, MPI_Datatype datatype,
                                MPIDU_Datatype* dt_ptr, intptr_t data_sz, const void *buf,
                                int count, mxm_req_buffer_t ** iov_buf, int *iov_count);
 
@@ -28,7 +28,7 @@ static int _mxm_process_rdtype(MPID_Request ** rreq_p, MPI_Datatype datatype,
 int MPID_nem_mxm_poll(int in_blocking_progress)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *req = NULL;
+    MPIR_Request *req = NULL;
 
     MPIDI_STATE_DECL(MPID_STATE_MXM_POLL);
     MPIDI_FUNC_ENTER(MPID_STATE_MXM_POLL);
@@ -92,7 +92,7 @@ void MPID_nem_mxm_get_adi_msg(mxm_conn_h conn, mxm_imm_t imm, void *data,
 #define FUNCNAME MPID_nem_mxm_anysource_posted
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPID_nem_mxm_anysource_posted(MPID_Request * req)
+void MPID_nem_mxm_anysource_posted(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -114,7 +114,7 @@ void MPID_nem_mxm_anysource_posted(MPID_Request * req)
 #define FUNCNAME MPID_nem_mxm_anysource_matched
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_mxm_anysource_matched(MPID_Request * req)
+int MPID_nem_mxm_anysource_matched(MPIR_Request * req)
 {
     mxm_error_t ret = MXM_OK;
     MPID_nem_mxm_req_area *req_area = NULL;
@@ -152,7 +152,7 @@ int MPID_nem_mxm_anysource_matched(MPID_Request * req)
 #define FUNCNAME MPID_nem_mxm_recv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
+int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     intptr_t data_sz;
@@ -228,7 +228,7 @@ int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
 }
 
 
-static int _mxm_handle_rreq(MPID_Request * req)
+static int _mxm_handle_rreq(MPIR_Request * req)
 {
     int complete = FALSE, found = FALSE;
     int dt_contig;
@@ -345,7 +345,7 @@ static int _mxm_handle_rreq(MPID_Request * req)
 
 static void _mxm_recv_completion_cb(void *context)
 {
-    MPID_Request *req = (MPID_Request *) context;
+    MPIR_Request *req = (MPIR_Request *) context;
     mxm_recv_req_t *mxm_rreq;
     MPID_nem_mxm_req_area *req_area = NULL;
 
@@ -436,12 +436,12 @@ static int _mxm_irecv(MPID_nem_mxm_ep_t * ep, MPID_nem_mxm_req_area * req, int i
 }
 
 
-static int _mxm_process_rdtype(MPID_Request ** rreq_p, MPI_Datatype datatype,
+static int _mxm_process_rdtype(MPIR_Request ** rreq_p, MPI_Datatype datatype,
                                MPIDU_Datatype* dt_ptr, intptr_t data_sz, const void *buf,
                                int count, mxm_req_buffer_t ** iov_buf, int *iov_count)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *rreq = *rreq_p;
+    MPIR_Request *rreq = *rreq_p;
     intptr_t last;
     MPL_IOV *iov;
     int n_iov = 0;

@@ -33,7 +33,7 @@ int MPI_Grequest_complete(MPI_Request request) __attribute__((weak,alias("PMPI_G
 #define FUNCNAME MPIR_Grequest_complete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPIR_Grequest_complete_impl(MPID_Request *request_ptr)
+void MPIR_Grequest_complete_impl(MPIR_Request *request_ptr)
 {
     /* Set the request as completed.  This does not change the
        reference count on the generalized request */
@@ -67,7 +67,7 @@ Input Parameters:
 int MPI_Grequest_complete( MPI_Request request )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *request_ptr;
+    MPIR_Request *request_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GREQUEST_COMPLETE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -87,15 +87,15 @@ int MPI_Grequest_complete( MPI_Request request )
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Request_get_ptr( request, request_ptr );
+    MPIR_Request_get_ptr( request, request_ptr );
 
     /* Validate parameters if error checking is enabled */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPID_Request_valid_ptr(request_ptr,mpi_errno);
-	    if (request_ptr && request_ptr->kind != MPID_UREQUEST) {
+	    MPIR_Request_valid_ptr(request_ptr,mpi_errno);
+	    if (request_ptr && request_ptr->kind != MPIR_UREQUEST) {
  	        mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_ARG, 
 						  "**notgenreq", 0 );
 	    }

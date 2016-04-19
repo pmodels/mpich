@@ -425,7 +425,7 @@ int MPIDI_nem_ckpt_start(void)
     /* send markers to all other processes */
     /* FIXME: we're only handling processes in our pg, so no dynamic connections */
     for (i = 0; i <  MPIDI_Process.my_pg->size; ++i) {
-        MPID_Request *req;
+        MPIR_Request *req;
         MPIDI_VC_t *vc;
         MPIDI_CH3I_VC *vc_ch;
         MPID_PKT_DECL_CAST(upkt, MPID_nem_pkt_ckpt_marker_t, ckpt_pkt);
@@ -528,7 +528,7 @@ fn_fail:
 #define FUNCNAME pkt_ckpt_marker_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int pkt_ckpt_marker_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPID_Request **req)
+static int pkt_ckpt_marker_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPIR_Request **req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_pkt_ckpt_marker_t * const ckpt_pkt = (MPID_nem_pkt_ckpt_marker_t *)pkt;

@@ -16,7 +16,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* MPIDI_CH3_RndvSend - Send a request to perform a rendezvous send */
-int MPIDI_CH3_RndvSend( MPID_Request **sreq_p, const void * buf, MPI_Aint count,
+int MPIDI_CH3_RndvSend( MPIR_Request **sreq_p, const void * buf, MPI_Aint count,
 			MPI_Datatype datatype, int dt_contig, intptr_t data_sz,
 			MPI_Aint dt_true_lb,
 			int rank, 
@@ -25,8 +25,8 @@ int MPIDI_CH3_RndvSend( MPID_Request **sreq_p, const void * buf, MPI_Aint count,
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_rndv_req_to_send_t * const rts_pkt = &upkt.rndv_req_to_send;
     MPIDI_VC_t * vc;
-    MPID_Request * rts_sreq;
-    MPID_Request *sreq =*sreq_p;
+    MPIR_Request * rts_sreq;
+    MPIR_Request *sreq =*sreq_p;
     int          mpi_errno = MPI_SUCCESS;
 	
     MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,
@@ -108,9 +108,9 @@ int MPIDI_CH3_RndvSend( MPID_Request **sreq_p, const void * buf, MPI_Aint count,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_RndvReqToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-					intptr_t *buflen, MPID_Request **rreqp )
+					intptr_t *buflen, MPIR_Request **rreqp )
 {
-    MPID_Request * rreq;
+    MPIR_Request * rreq;
     int found;
     MPIDI_CH3_Pkt_rndv_req_to_send_t * rts_pkt = &pkt->rndv_req_to_send;
     int mpi_errno = MPI_SUCCESS;
@@ -144,7 +144,7 @@ int MPIDI_CH3_PktHandler_RndvReqToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     
     if (found)
     {
-	MPID_Request * cts_req;
+	MPIR_Request * cts_req;
 	MPIDI_CH3_Pkt_t upkt;
 	MPIDI_CH3_Pkt_rndv_clr_to_send_t * cts_pkt = &upkt.rndv_clr_to_send;
 	
@@ -196,11 +196,11 @@ int MPIDI_CH3_PktHandler_RndvReqToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-					intptr_t *buflen, MPID_Request **rreqp )
+					intptr_t *buflen, MPIR_Request **rreqp )
 {
     MPIDI_CH3_Pkt_rndv_clr_to_send_t * cts_pkt = &pkt->rndv_clr_to_send;
-    MPID_Request * sreq;
-    MPID_Request * rts_sreq;
+    MPIR_Request * sreq;
+    MPIR_Request * rts_sreq;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_rndv_send_t * rs_pkt = &upkt.rndv_send;
     int dt_contig;
@@ -211,7 +211,7 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"received rndv CTS pkt");
     
-    MPID_Request_get_ptr(cts_pkt->sender_req_id, sreq);
+    MPIR_Request_get_ptr(cts_pkt->sender_req_id, sreq);
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,TERSE,(MPL_DBG_FDEST,"received cts, count=" MPI_AINT_FMT_DEC_SPEC "\n", sreq->dev.user_count));
 
     sreq->dev.OnDataAvail = 0;
@@ -281,18 +281,18 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_RndvSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, 
-				   intptr_t *buflen, MPID_Request **rreqp )
+				   intptr_t *buflen, MPIR_Request **rreqp )
 {
     MPIDI_CH3_Pkt_rndv_send_t * rs_pkt = &pkt->rndv_send;
     int mpi_errno = MPI_SUCCESS;
     int complete;
     char *data_buf;
     intptr_t data_len;
-    MPID_Request *req;
+    MPIR_Request *req;
     
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"received rndv send (data) pkt");
 
-    MPID_Request_get_ptr(rs_pkt->receiver_req_id, req);
+    MPIR_Request_get_ptr(rs_pkt->receiver_req_id, req);
 
     data_len = ((*buflen - sizeof(MPIDI_CH3_Pkt_t) >= req->dev.recv_data_sz)
                 ? req->dev.recv_data_sz : *buflen - sizeof(MPIDI_CH3_Pkt_t));
@@ -342,13 +342,13 @@ int MPIDI_CH3_PktHandler_RndvSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #define FUNCNAME MPIDI_CH3_RecvRndv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_RecvRndv( MPIDI_VC_t * vc, MPID_Request *rreq )
+int MPIDI_CH3_RecvRndv( MPIDI_VC_t * vc, MPIR_Request *rreq )
 {
     int mpi_errno = MPI_SUCCESS;
 
     /* A rendezvous request-to-send (RTS) message has arrived.  We need
        to send a CTS message to the remote process. */
-    MPID_Request * cts_req;
+    MPIR_Request * cts_req;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_rndv_clr_to_send_t * cts_pkt = &upkt.rndv_clr_to_send;
     

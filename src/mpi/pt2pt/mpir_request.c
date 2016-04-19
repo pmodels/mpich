@@ -9,6 +9,11 @@
 
 /* style:PMPIuse:PMPI_Status_f2c:2 sig:0 */
 
+MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC] = {{0}};
+MPIU_Object_alloc_t MPIR_Request_mem = {
+    0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct,
+    MPIR_REQUEST_PREALLOC };
+
 #undef FUNCNAME
 #define FUNCNAME MPIR_Progress_wait_request
 #undef FCNAME
@@ -19,16 +24,16 @@
   A helper routine that implements the very common case of running the progress
   engine until the given request is complete.
   @*/
-int MPIR_Progress_wait_request(MPID_Request *req)
+int MPIR_Progress_wait_request(MPIR_Request *req)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (!MPID_Request_is_complete(req))
+    if (!MPIR_Request_is_complete(req))
     {
         MPID_Progress_state progress_state;
 
         MPID_Progress_start(&progress_state);
-        while (!MPID_Request_is_complete(req))
+        while (!MPIR_Request_is_complete(req))
         {
             mpi_errno = MPID_Progress_wait(&progress_state);
             if (mpi_errno != MPI_SUCCESS)
@@ -60,7 +65,7 @@ fn_exit:
    call the routine MPIR_Sendq_forget; otherwise that macro will be a no-op.
    The implementation of the MPIR_Sendq_xxx is in src/mpi/debugger/dbginit.c .
 */
-int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr, 
+int MPIR_Request_complete(MPI_Request * request, MPIR_Request * request_ptr,
 			  MPI_Status * status, int * active)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -89,18 +94,18 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
 	    break;
 	}
 			
-	case MPID_PREQUEST_SEND:
+	case MPIR_PREQUEST_SEND:
 	{
 	    if (request_ptr->partner_request != NULL)
 	    {
-		MPID_Request * prequest_ptr = request_ptr->partner_request;
+		MPIR_Request * prequest_ptr = request_ptr->partner_request;
 
 		/* reset persistent request to inactive state */
                 MPIR_cc_set(&request_ptr->cc, 0);
 		request_ptr->cc_ptr = &request_ptr->cc;
 		request_ptr->partner_request = NULL;
 		
-		if (prequest_ptr->kind != MPID_UREQUEST)
+		if (prequest_ptr->kind != MPIR_UREQUEST)
 		{
 		    if (status != MPI_STATUS_IGNORE)
 		    {
@@ -157,11 +162,11 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
 	    break;
 	}
 	
-	case MPID_PREQUEST_RECV:
+	case MPIR_PREQUEST_RECV:
 	{
 	    if (request_ptr->partner_request != NULL)
 	    {
-		MPID_Request * prequest_ptr = request_ptr->partner_request;
+		MPIR_Request * prequest_ptr = request_ptr->partner_request;
 
 		/* reset persistent request to inactive state */
                 MPIR_cc_set(&request_ptr->cc, 0);
@@ -193,7 +198,7 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
 	    break;
 	}
 
-	case MPID_UREQUEST:
+	case MPIR_UREQUEST:
 	{
             int rc;
             
@@ -215,8 +220,8 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
 	    break;
 	}
 
-        case MPID_COLL_REQUEST:
-        case MPID_WIN_REQUEST:
+        case MPIR_COLL_REQUEST:
+        case MPIR_WIN_REQUEST:
         {
             mpi_errno = request_ptr->status.MPI_ERROR;
             MPIR_Request_extract_status(request_ptr, status);
@@ -249,7 +254,7 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
  * [BRT] it is used by testall, although looking at testall now, I think the
  * algorithm can be change slightly and eliminate the need for this routine
  */
-int MPIR_Request_get_error(MPID_Request * request_ptr)
+int MPIR_Request_get_error(MPIR_Request * request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -257,17 +262,17 @@ int MPIR_Request_get_error(MPID_Request * request_ptr)
     {
 	case MPIR_REQUEST_SEND:
 	case MPIR_REQUEST_RECV:
-        case MPID_COLL_REQUEST:
+        case MPIR_COLL_REQUEST:
 	{
 	    mpi_errno = request_ptr->status.MPI_ERROR;
 	    break;
 	}
 
-	case MPID_PREQUEST_SEND:
+	case MPIR_PREQUEST_SEND:
 	{
 	    if (request_ptr->partner_request != NULL)
 	    {
-		if (request_ptr->partner_request->kind == MPID_UREQUEST)
+		if (request_ptr->partner_request->kind == MPIR_UREQUEST)
 		{
 		    /* This is needed for persistent Bsend requests */
 		    mpi_errno = MPIR_Grequest_query(
@@ -286,7 +291,7 @@ int MPIR_Request_get_error(MPID_Request * request_ptr)
 	    break;
 	}
 
-	case MPID_PREQUEST_RECV:
+	case MPIR_PREQUEST_RECV:
 	{
 	    if (request_ptr->partner_request != NULL)
 	    {
@@ -300,7 +305,7 @@ int MPIR_Request_get_error(MPID_Request * request_ptr)
 	    break;
 	}
 
-	case MPID_UREQUEST:
+	case MPIR_UREQUEST:
 	{
 	    int rc;
 	    
@@ -369,9 +374,9 @@ int MPIR_Request_get_error(MPID_Request * request_ptr)
 /* Set the language type to Fortran for this (generalized) request */
 void MPIR_Grequest_set_lang_f77( MPI_Request greq )
 {
-    MPID_Request *greq_ptr;
+    MPIR_Request *greq_ptr;
 
-    MPID_Request_get_ptr( greq, greq_ptr );
+    MPIR_Request_get_ptr( greq, greq_ptr );
 
     greq_ptr->greq_fns->greq_lang = MPIR_LANG_FORTRAN;
 }
@@ -382,7 +387,7 @@ void MPIR_Grequest_set_lang_f77( MPI_Request greq )
 #define FUNCNAME MPIR_Grequest_cancel
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Grequest_cancel(MPID_Request * request_ptr, int complete)
+int MPIR_Grequest_cancel(MPIR_Request * request_ptr, int complete)
 {
     int rc;
     int mpi_errno = MPI_SUCCESS;
@@ -433,7 +438,7 @@ int MPIR_Grequest_cancel(MPID_Request * request_ptr, int complete)
 #define FUNCNAME MPIR_Grequest_query
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Grequest_query(MPID_Request * request_ptr)
+int MPIR_Grequest_query(MPIR_Request * request_ptr)
 {
     int rc;
     int mpi_errno = MPI_SUCCESS;
@@ -484,7 +489,7 @@ int MPIR_Grequest_query(MPID_Request * request_ptr)
 #define FUNCNAME MPIR_Grequest_free
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Grequest_free(MPID_Request * request_ptr)
+int MPIR_Grequest_free(MPIR_Request * request_ptr)
 {
     int rc;
     int mpi_errno = MPI_SUCCESS;
@@ -537,7 +542,7 @@ int MPIR_Grequest_free(MPID_Request * request_ptr)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Grequest_progress_poke(int count, 
-		MPID_Request **request_ptrs, 
+		MPIR_Request **request_ptrs,
 		MPI_Status array_of_statuses[] )
 {
     MPIX_Grequest_wait_function *wait_fn = NULL;
@@ -553,8 +558,8 @@ int MPIR_Grequest_progress_poke(int count,
      * request classes those grequests are members of */
     for (i=0, j=0, n_classes=1, n_native=0, n_greq=0; i< count; i++)
     {
-	if (request_ptrs[i] == NULL || MPID_Request_is_complete(request_ptrs[i])) continue;
-	if (request_ptrs[i]->kind == MPID_UREQUEST)
+	if (request_ptrs[i] == NULL || MPIR_Request_is_complete(request_ptrs[i])) continue;
+	if (request_ptrs[i]->kind == MPIR_UREQUEST)
 	{
 	    n_greq += 1;
 	    wait_fn = request_ptrs[i]->greq_fns->wait_fn;
@@ -577,8 +582,8 @@ int MPIR_Grequest_progress_poke(int count,
 	for (i = 0; i< count; i++ )
 	{
 	    if (request_ptrs[i] != NULL && 
-                request_ptrs[i]->kind == MPID_UREQUEST && 
-                !MPID_Request_is_complete(request_ptrs[i]) &&
+                request_ptrs[i]->kind == MPIR_UREQUEST &&
+                !MPIR_Request_is_complete(request_ptrs[i]) &&
                 request_ptrs[i]->greq_fns->poll_fn != NULL)
             {
 		mpi_errno = (request_ptrs[i]->greq_fns->poll_fn)(request_ptrs[i]->greq_fns->grequest_extra_state, &(array_of_statuses[i]));
@@ -600,7 +605,7 @@ fn_fail:
 #define FUNCNAME MPIR_Grequest_waitall
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Grequest_waitall(int count, MPID_Request * const * request_ptrs)
+int MPIR_Grequest_waitall(int count, MPIR_Request * const * request_ptrs)
 {
     void ** state_ptrs;
     int i;
@@ -630,7 +635,7 @@ int MPIR_Grequest_waitall(int count, MPID_Request * const * request_ptrs)
     for (i = 0; i < count; ++i)
     {
         /* skip over requests we're not interested in */
-        if (request_ptrs[i] == NULL || *request_ptrs[i]->cc_ptr == 0 ||  request_ptrs[i]->kind != MPID_UREQUEST)
+        if (request_ptrs[i] == NULL || *request_ptrs[i]->cc_ptr == 0 ||  request_ptrs[i]->kind != MPIR_UREQUEST)
             continue;
         
         if (n_greq == 0 || request_ptrs[i]->greq_fns->greq_class == curr_class)
@@ -668,8 +673,8 @@ int MPIR_Grequest_waitall(int count, MPID_Request * const * request_ptrs)
     {
         /* skip over requests we're not interested in */
         if (request_ptrs[i] == NULL ||
-            MPID_Request_is_complete(request_ptrs[i]) ||
-            request_ptrs[i]->kind != MPID_UREQUEST ||
+            MPIR_Request_is_complete(request_ptrs[i]) ||
+            request_ptrs[i]->kind != MPIR_UREQUEST ||
             request_ptrs[i]->greq_fns->wait_fn == NULL)
         {
             continue;
@@ -677,15 +682,15 @@ int MPIR_Grequest_waitall(int count, MPID_Request * const * request_ptrs)
 
         mpi_error = (request_ptrs[i]->greq_fns->wait_fn)(1, &request_ptrs[i]->greq_fns->grequest_extra_state, 0, NULL);
         if (mpi_error) MPIR_ERR_POP(mpi_error);
-        MPIU_Assert(MPID_Request_is_complete(request_ptrs[i]));
+        MPIU_Assert(MPIR_Request_is_complete(request_ptrs[i]));
     }
 
     MPID_Progress_start(&progress_state);
     for (i = 0; i < count; ++i)
     {
         if (request_ptrs[i] == NULL ||
-            MPID_Request_is_complete(request_ptrs[i]) ||
-            request_ptrs[i]->kind != MPID_UREQUEST)
+            MPIR_Request_is_complete(request_ptrs[i]) ||
+            request_ptrs[i]->kind != MPIR_UREQUEST)
         {
             continue;
         }
@@ -695,7 +700,7 @@ int MPIR_Grequest_waitall(int count, MPID_Request * const * request_ptrs)
            other thread, we'll make progress on regular requests too.  The
            progress engine should permit the other thread to run at some
            point. */
-        while (!MPID_Request_is_complete(request_ptrs[i]))
+        while (!MPIR_Request_is_complete(request_ptrs[i]))
         {
             mpi_error = MPID_Progress_wait(&progress_state);
             if (mpi_error != MPI_SUCCESS)

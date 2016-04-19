@@ -31,13 +31,13 @@ MPIDO_Iallgather(const void *sendbuf,
                  int recvcount,
                  MPI_Datatype recvtype,
                  MPIR_Comm * comm_ptr,
-                 MPID_Request ** request)
+                 MPIR_Request ** request)
 {
    /*if (unlikely((data_size == 0) || (user_selected_type == MPID_COLL_USE_MPICH)))*/
    {
       /*
        * If the mpich mpir non-blocking collectives are enabled, return without
-       * first constructing the MPID_Request. This signals to the
+       * first constructing the MPIR_Request. This signals to the
        * MPIR_Iallgather_impl() function to invoke the mpich nbc implementation
        * of MPI_Iallgather().
        */
@@ -58,11 +58,11 @@ MPIDO_Iallgather(const void *sendbuf,
 
       /*
        * The blocking allgather has completed - create and complete a
-       * MPID_Request object so the MPIR_Iallgather_impl() function does not
+       * MPIR_Request object so the MPIR_Iallgather_impl() function does not
        * perform an additional iallgather.
        */
-      MPID_Request * mpid_request = MPID_Request_create_inline();
-      mpid_request->kind = MPID_COLL_REQUEST;
+      MPIR_Request * mpid_request = MPID_Request_create_inline();
+      mpid_request->kind = MPIR_COLL_REQUEST;
       *request = mpid_request;
       MPIDI_Request_complete_norelease_inline(mpid_request);
 

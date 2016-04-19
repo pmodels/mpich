@@ -44,13 +44,13 @@ int MPIDO_Scan(const void *sendbuf, void *recvbuf,
 
 int MPIDO_Iscan(const void *sendbuf, void *recvbuf,
                 int count, MPI_Datatype datatype,
-                MPI_Op op, MPIR_Comm * comm_ptr, MPID_Request **request)
+                MPI_Op op, MPIR_Comm * comm_ptr, MPIR_Request **request)
 {
    /*if (unlikely((data_size == 0) || (user_selected_type == MPID_COLL_USE_MPICH)))*/
    {
       /*
        * If the mpich mpir non-blocking collectives are enabled, return without
-       * first constructing the MPID_Request. This signals to the
+       * first constructing the MPIR_Request. This signals to the
        * MPIR_Iscan_impl() function to invoke the mpich nbc
        * implementation of MPI_Iscan().
        */
@@ -70,11 +70,11 @@ int MPIDO_Iscan(const void *sendbuf, void *recvbuf,
 
       /*
        * The blocking scan has completed - create and complete a
-       * MPID_Request object so the MPIR_Iscan_impl() function
+       * MPIR_Request object so the MPIR_Iscan_impl() function
        * does not perform an additional iscan.
        */
-      MPID_Request * mpid_request = MPID_Request_create_inline();
-      mpid_request->kind = MPID_COLL_REQUEST;
+      MPIR_Request * mpid_request = MPID_Request_create_inline();
+      mpid_request->kind = MPIR_COLL_REQUEST;
       *request = mpid_request;
       MPIDI_Request_complete_norelease_inline(mpid_request);
 

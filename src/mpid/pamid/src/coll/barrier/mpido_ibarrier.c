@@ -26,11 +26,11 @@
 
 static void cb_ibarrier(void *ctxt, void *clientdata, pami_result_t err)
 {
-   MPID_Request *mpid_request = (MPID_Request *) clientdata;
+   MPIR_Request *mpid_request = (MPIR_Request *) clientdata;
    MPIDI_Request_complete_norelease_inline(mpid_request);
 }
 
-int MPIDO_Ibarrier(MPIR_Comm *comm_ptr, MPID_Request **request)
+int MPIDO_Ibarrier(MPIR_Comm *comm_ptr, MPIR_Request **request)
 {
    TRACE_ERR("Entering MPIDO_Ibarrier\n");
 
@@ -53,8 +53,8 @@ int MPIDO_Ibarrier(MPIR_Comm *comm_ptr, MPID_Request **request)
       int mpierrno = 0;
       int rc = MPIR_Barrier(comm_ptr, &mpierrno);
 
-      MPID_Request * mpid_request = MPID_Request_create_inline();
-      mpid_request->kind = MPID_COLL_REQUEST;
+      MPIR_Request * mpid_request = MPID_Request_create_inline();
+      mpid_request->kind = MPIR_COLL_REQUEST;
       *request = mpid_request;
       MPIDI_Request_complete_norelease_inline(mpid_request);
 

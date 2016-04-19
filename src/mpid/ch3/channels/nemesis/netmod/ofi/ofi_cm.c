@@ -94,7 +94,7 @@ static inline MPIDI_VC_t *ofi_wc_to_vc(cq_tagged_entry_t * wc)
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPID_nem_ofi_conn_req_callback)
-static inline int MPID_nem_ofi_conn_req_callback(cq_tagged_entry_t * wc, MPID_Request * rreq)
+static inline int MPID_nem_ofi_conn_req_callback(cq_tagged_entry_t * wc, MPIR_Request * rreq)
 {
     int ret, len, mpi_errno = MPI_SUCCESS;
     char bc[OFI_KVSAPPSTRLEN];
@@ -159,7 +159,7 @@ static inline int MPID_nem_ofi_conn_req_callback(cq_tagged_entry_t * wc, MPID_Re
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPID_nem_ofi_handle_packet)
 static inline int MPID_nem_ofi_handle_packet(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
-                                             MPID_Request * rreq)
+                                             MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_VC_t *vc;
@@ -182,7 +182,7 @@ static inline int MPID_nem_ofi_handle_packet(cq_tagged_entry_t * wc ATTRIBUTE((u
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPID_nem_ofi_cts_send_callback)
-static inline int MPID_nem_ofi_cts_send_callback(cq_tagged_entry_t * wc, MPID_Request * sreq)
+static inline int MPID_nem_ofi_cts_send_callback(cq_tagged_entry_t * wc, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
@@ -202,13 +202,13 @@ static inline int MPID_nem_ofi_cts_send_callback(cq_tagged_entry_t * wc, MPID_Re
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPID_nem_ofi_preposted_callback)
-static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPID_Request * rreq)
+static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPIR_Request * rreq)
 {
     int c, mpi_errno = MPI_SUCCESS;
     size_t pkt_len;
     char *pack_buffer = NULL;
     MPIDI_VC_t *vc;
-    MPID_Request *new_rreq, *sreq;
+    MPIR_Request *new_rreq, *sreq;
     BEGIN_FUNC(FCNAME);
 
     vc = ofi_wc_to_vc(wc);
@@ -272,7 +272,7 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPID_R
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPID_nem_ofi_connect_to_root_callback)
 int MPID_nem_ofi_connect_to_root_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
-                                          MPID_Request * sreq)
+                                          MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
@@ -296,7 +296,7 @@ int MPID_nem_ofi_connect_to_root_callback(cq_tagged_entry_t * wc ATTRIBUTE((unus
 int MPID_nem_ofi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *persistent_req, *conn_req;
+    MPIR_Request *persistent_req, *conn_req;
     BEGIN_FUNC(FCNAME);
 
     /* ------------------------------------- */
@@ -524,7 +524,7 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     int len, ret, mpi_errno = MPI_SUCCESS, str_errno = MPI_SUCCESS;
     int my_bc_len = OFI_KVSAPPSTRLEN;
     char *addr = NULL, *bc = NULL, *my_bc = NULL;
-    MPID_Request *sreq;
+    MPIR_Request *sreq;
     uint64_t conn_req_send_bits;
 
     BEGIN_FUNC(FCNAME);

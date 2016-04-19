@@ -117,7 +117,7 @@
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPID_nem_ofi_data_callback)
-static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sreq)
+static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPIR_Request * sreq)
 {
     int complete = 0, mpi_errno = MPI_SUCCESS;
     MPIDI_VC_t *vc;
@@ -166,10 +166,10 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sre
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPID_nem_ofi_cts_recv_callback)
-static int MPID_nem_ofi_cts_recv_callback(cq_tagged_entry_t * wc, MPID_Request * rreq)
+static int MPID_nem_ofi_cts_recv_callback(cq_tagged_entry_t * wc, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *preq;
+    MPIR_Request *preq;
     MPIDI_VC_t *vc;
     BEGIN_FUNC(FCNAME);
     preq = REQ_OFI(rreq)->parent;
@@ -214,13 +214,13 @@ static int MPID_nem_ofi_cts_recv_callback(cq_tagged_entry_t * wc, MPID_Request *
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPID_nem_ofi_iSendContig)
 int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
-                             MPID_Request * sreq,
+                             MPIR_Request * sreq,
                              void *hdr, intptr_t hdr_sz, void *data, intptr_t data_sz)
 {
     int pgid, c, mpi_errno = MPI_SUCCESS;
     char *pack_buffer = NULL;
     uint64_t match_bits;
-    MPID_Request *cts_req;
+    MPIR_Request *cts_req;
     intptr_t buf_offset = 0;
     size_t         pkt_len;
     BEGIN_FUNC(FCNAME);
@@ -272,13 +272,13 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPID_nem_ofi_SendNoncontig)
 int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc,
-                               MPID_Request * sreq, void *hdr, intptr_t hdr_sz)
+                               MPIR_Request * sreq, void *hdr, intptr_t hdr_sz)
 {
     int c, pgid, mpi_errno = MPI_SUCCESS;
     char *pack_buffer;
     MPI_Aint data_sz;
     uint64_t match_bits;
-    MPID_Request *cts_req;
+    MPIR_Request *cts_req;
     intptr_t first, last;
     intptr_t buf_offset = 0;
     void          *data       = NULL;
@@ -310,11 +310,11 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc,
 int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc,
                                  void *hdr,
                                  intptr_t hdr_sz,
-                                 void *data, intptr_t data_sz, MPID_Request ** sreq_ptr)
+                                 void *data, intptr_t data_sz, MPIR_Request ** sreq_ptr)
 {
     int c, pgid, mpi_errno = MPI_SUCCESS;
-    MPID_Request *sreq;
-    MPID_Request *cts_req;
+    MPIR_Request *sreq;
+    MPIR_Request *cts_req;
     char    *pack_buffer = NULL;
     uint64_t match_bits;
     size_t   pkt_len;

@@ -37,7 +37,7 @@ int MPIDI_nem_ckpt_finalize(void);
 int MPIDI_nem_ckpt_start(void);
 int MPIDI_nem_ckpt_finish(void);
 int MPIDI_nem_ckpt_pkthandler_init(int (*pktArray[])(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *pkt,
-				     intptr_t *buflen, MPID_Request **req ), int arraySize);
+				     intptr_t *buflen, MPIR_Request **req ), int arraySize);
 #endif
 
 /* one-sided */

@@ -53,7 +53,7 @@ Output Parameters:
 int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message *message, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *msgp = NULL;
+    MPIR_Request *msgp = NULL;
     MPIR_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_MPROBE);
 

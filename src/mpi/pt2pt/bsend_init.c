@@ -64,7 +64,7 @@ int MPI_Bsend_init(const void *buf, int count, MPI_Datatype datatype,
 {
     static const char FCNAME[] = "MPI_Bsend_init";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *request_ptr = NULL;
+    MPIR_Request *request_ptr = NULL;
     MPIR_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_BSEND_INIT);
 

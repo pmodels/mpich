@@ -10,7 +10,7 @@
 #define FUNCNAME update_request
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static void update_request(MPID_Request * sreq, MPL_IOV * iov, int iov_count,
+static void update_request(MPIR_Request * sreq, MPL_IOV * iov, int iov_count,
 			   int iov_offset, MPIU_Size_t nb)
 {
     int i;
@@ -40,12 +40,12 @@ static void update_request(MPID_Request * sreq, MPL_IOV * iov, int iov_count,
 #define FUNCNAME MPIDI_CH3_iSendv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPID_Request * sreq, 
+int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq,
 		     MPL_IOV * iov, int n_iov)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vcch = &vc->ch;
-    int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+    int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_ISENDV);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ISENDV);

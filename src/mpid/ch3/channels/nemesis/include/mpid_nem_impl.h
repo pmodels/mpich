@@ -25,7 +25,7 @@ int MPIDI_CH3I_Seg_destroy(void);
 int MPID_nem_check_alloc(int);
 int MPID_nem_mpich_init(void);
 int MPID_nem_coll_init (void);
-int MPID_nem_send_iov(MPIDI_VC_t *vc, MPID_Request **sreq_ptr, MPL_IOV *iov, int n_iov);
+int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int n_iov);
 int MPID_nem_lmt_pkthandler_init(MPIDI_CH3_PktHandler_Fcn *pktArray[], int arraySize);
 int MPID_nem_register_initcomp_cb(int (* callback)(void));
 int MPID_nem_choose_netmod(void);
@@ -33,9 +33,9 @@ int MPIDI_CH3I_comm_create(MPIR_Comm *comm, void *param);
 int MPIDI_CH3I_comm_destroy(MPIR_Comm *comm, void *param);
 
 /* rendezvous hooks */
-int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, MPI_Aint count, MPI_Datatype datatype, int dt_contig,
+int MPID_nem_lmt_RndvSend(MPIR_Request **sreq_p, const void * buf, MPI_Aint count, MPI_Datatype datatype, int dt_contig,
                           intptr_t data_sz, MPI_Aint dt_true_lb, int rank, int tag, MPIR_Comm * comm, int context_offset);
-int MPID_nem_lmt_RndvRecv(struct MPIDI_VC *vc, MPID_Request *rreq);
+int MPID_nem_lmt_RndvRecv(struct MPIDI_VC *vc, MPIR_Request *rreq);
 
 #define MPID_nem_mpich_release_fbox(cell)                               \
     do {                                                                \
@@ -138,7 +138,7 @@ typedef union MPIDI_CH3_nem_pkt
 */
 
 #define MPID_nem_lmt_send_RTS(vc, rts_pkt, s_cookie_buf, s_cookie_len) do {                             \
-        MPID_Request *_rts_req;                                                                         \
+        MPIR_Request *_rts_req;                                                                         \
         MPL_IOV _iov[2];                                                                               \
                                                                                                         \
         MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending rndv RTS packet");                                      \
@@ -182,7 +182,7 @@ typedef union MPIDI_CH3_nem_pkt
 
 #define MPID_nem_lmt_send_CTS(vc, rreq, r_cookie_buf, r_cookie_len) do {                                \
         MPID_PKT_DECL_CAST(_upkt, MPID_nem_pkt_lmt_cts_t, _cts_pkt);                                    \
-        MPID_Request *_cts_req;                                                                         \
+        MPIR_Request *_cts_req;                                                                         \
         MPL_IOV _iov[2];                                                                               \
                                                                                                         \
         MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending rndv CTS packet");                                      \
@@ -210,12 +210,12 @@ typedef union MPIDI_CH3_nem_pkt
 #define FUNCNAME MPID_nem_lmt_send_COOKIE
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPID_nem_lmt_send_COOKIE(MPIDI_VC_t *vc, MPID_Request *req,
+static inline int MPID_nem_lmt_send_COOKIE(MPIDI_VC_t *vc, MPIR_Request *req,
                                            void *cookie_buf, MPI_Aint cookie_len)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_PKT_DECL_CAST(_upkt, MPID_nem_pkt_lmt_cookie_t, cookie_pkt);
-    MPID_Request *cookie_req;
+    MPIR_Request *cookie_req;
     MPL_IOV iov[2];
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending rndv COOKIE packet");
@@ -262,7 +262,7 @@ fn_fail:
         
 #define MPID_nem_lmt_send_DONE(vc, rreq) do {                                                                   \
         MPID_PKT_DECL_CAST(_upkt, MPID_nem_pkt_lmt_done_t, _done_pkt);                                          \
-        MPID_Request *_done_req;                                                                                \
+        MPIR_Request *_done_req;                                                                                \
                                                                                                                 \
         MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending rndv DONE packet");                                             \
         MPIDI_Pkt_init(_done_pkt, MPIDI_NEM_PKT_LMT_DONE);                                                      \

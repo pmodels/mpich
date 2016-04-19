@@ -46,8 +46,8 @@ MPIDI_CH3I_VC_state_t;
 /* channel-specific fields for the VC structure */
 typedef struct MPIDI_CH3I_VC
 {
-    struct MPID_Request * sendq_head;
-    struct MPID_Request * sendq_tail;
+    struct MPIR_Request * sendq_head;
+    struct MPIR_Request * sendq_tail;
     MPIDI_CH3I_VC_state_t state;
     struct MPIDU_Sock *sock;
     struct MPIDI_CH3I_Connection * conn;
@@ -57,7 +57,7 @@ MPIDI_CH3I_VC;
 #define MPIDI_CH3_VC_DECL struct MPIDI_CH3I_VC ch;
 
 /*
- * MPIDI_CH3_REQUEST_DECL (additions to MPID_Request)
+ * MPIDI_CH3_REQUEST_DECL (additions to MPIR_Request)
  * The socket channel makes no additions
  */
 

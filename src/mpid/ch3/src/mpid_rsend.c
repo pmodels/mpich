@@ -20,13 +20,13 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Rsend(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
-	       MPID_Request ** request)
+	       MPIR_Request ** request)
 {
     intptr_t data_sz;
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPIDU_Datatype* dt_ptr;
-    MPID_Request * sreq = NULL;
+    MPIR_Request * sreq = NULL;
     MPIDI_VC_t * vc;
 #if defined(MPID_USE_SEQUENCE_NUMBERS)
     MPID_Seqnum_t seqnum;

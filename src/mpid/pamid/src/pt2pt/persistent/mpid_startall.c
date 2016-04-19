@@ -22,12 +22,12 @@
 #include <mpidimpl.h>
 #include <../mpi/pt2pt/bsendutil.h>
 
-int MPID_Startall(int count, MPID_Request * requests[])
+int MPID_Startall(int count, MPIR_Request * requests[])
 {
   int rc=MPI_SUCCESS, i;
   for (i = 0; i < count; i++)
     {
-      MPID_Request * const preq = requests[i];
+      MPIR_Request * const preq = requests[i];
       switch(MPIDI_Request_getPType(preq))
         {
         case MPIDI_REQUEST_PTYPE_RECV:

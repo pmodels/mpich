@@ -38,9 +38,9 @@
 struct MPIDI_Recvq_t MPIDI_Recvq;
 
 #ifdef HAVE_DEBUGGER_SUPPORT
-struct MPID_Request ** const MPID_Recvq_posted_head_ptr =
+struct MPIR_Request ** const MPID_Recvq_posted_head_ptr =
   &MPIDI_Recvq.posted_head;
-struct MPID_Request ** const MPID_Recvq_unexpected_head_ptr =
+struct MPIR_Request ** const MPID_Recvq_unexpected_head_ptr =
   &MPIDI_Recvq.unexpected_head;
 #endif /* HAVE_DEBUGGER_SUPPORT */
 
@@ -82,7 +82,7 @@ MPIDI_Recvq_finalize()
 int
 MPIDI_Recvq_FU(int source, int tag, int context_id, MPI_Status * status)
 {
-  MPID_Request * rreq;
+  MPIR_Request * rreq;
   int found = FALSE;
   void * it;
 #ifdef USE_STATISTICS
@@ -311,13 +311,13 @@ MPIDI_Recvq_FU(int source, int tag, int context_id, MPI_Status * status)
  * \param[in]  context_id Find by Context ID (communicator)
  * \return     The matching UE request or NULL
  */
-MPID_Request *
+MPIR_Request *
 MPIDI_Recvq_FDUR(MPI_Request req, int source, int tag, int context_id)
 {
-  MPID_Request * prev_rreq          = NULL; /* previous request in queue */
-  MPID_Request * cur_rreq           = NULL; /* current request in queue */
-  MPID_Request * matching_cur_rreq  = NULL; /* matching request in queue */
-  MPID_Request * matching_prev_rreq = NULL; /* previous in queue to match */
+  MPIR_Request * prev_rreq          = NULL; /* previous request in queue */
+  MPIR_Request * cur_rreq           = NULL; /* current request in queue */
+  MPIR_Request * matching_cur_rreq  = NULL; /* matching request in queue */
+  MPIR_Request * matching_prev_rreq = NULL; /* previous in queue to match */
   void         * it                 = NULL;
 #ifdef USE_STATISTICS
   unsigned search_length = 0;
@@ -403,16 +403,16 @@ MPIDI_Recvq_FDUR(MPI_Request req, int source, int tag, int context_id)
  * \return     The matching UE request or the new posted request
  */
 #ifndef OUT_OF_ORDER_HANDLING
-MPID_Request *
+MPIR_Request *
 MPIDI_Recvq_FDU(int source, int tag, int context_id, int * foundp)
 #else
-MPID_Request *
+MPIR_Request *
 MPIDI_Recvq_FDU(int source, pami_task_t pami_source, int tag, int context_id, int * foundp)
 #endif
 {
   int found = FALSE;
-  MPID_Request * rreq = NULL;
-  MPID_Request * prev_rreq;
+  MPIR_Request * rreq = NULL;
+  MPIR_Request * prev_rreq;
   void         * it;
 #ifdef USE_STATISTICS
   unsigned search_length = 0;
@@ -631,10 +631,10 @@ MPIDI_Recvq_FDU(int source, pami_task_t pami_source, int tag, int context_id, in
  * \return     The matching posted request or NULL
  */
 int
-MPIDI_Recvq_FDPR(MPID_Request * req)
+MPIDI_Recvq_FDPR(MPIR_Request * req)
 {
-  MPID_Request * cur_rreq  = NULL;
-  MPID_Request * prev_rreq = NULL;
+  MPIR_Request * cur_rreq  = NULL;
+  MPIR_Request * prev_rreq = NULL;
   int found = FALSE;
 #ifdef USE_STATISTICS
   unsigned search_length = 0;
@@ -692,14 +692,14 @@ MPIDI_Recvq_FDPR(MPID_Request * req)
  * \return     The matching posted request or the new UE request
  */
 #ifndef OUT_OF_ORDER_HANDLING
-MPID_Request *
-MPIDI_Recvq_FDP_or_AEU(MPID_Request *newreq, int source, int tag, int context_id, int * foundp)
+MPIR_Request *
+MPIDI_Recvq_FDP_or_AEU(MPIR_Request *newreq, int source, int tag, int context_id, int * foundp)
 #else
-MPID_Request *
-MPIDI_Recvq_FDP_or_AEU(MPID_Request *newreq, int source, pami_task_t pami_source, int tag, int context_id, int msg_seqno, int * foundp)
+MPIR_Request *
+MPIDI_Recvq_FDP_or_AEU(MPIR_Request *newreq, int source, pami_task_t pami_source, int tag, int context_id, int msg_seqno, int * foundp)
 #endif
 {
-  MPID_Request * rreq;
+  MPIR_Request * rreq;
   int found = FALSE;
 
 #ifndef OUT_OF_ORDER_HANDLING
@@ -730,17 +730,17 @@ MPIDI_Recvq_FDP_or_AEU(MPID_Request *newreq, int source, pami_task_t pami_source
  * \return     The matching posted request or the new UE request
  */
 #ifndef OUT_OF_ORDER_HANDLING
-MPID_Request *
-MPIDI_Recvq_AEU(MPID_Request *newreq, int source, int tag, int context_id)
+MPIR_Request *
+MPIDI_Recvq_AEU(MPIR_Request *newreq, int source, int tag, int context_id)
 #else
-MPID_Request *
-MPIDI_Recvq_AEU(MPID_Request *newreq, int source, pami_task_t pami_source, int tag, int context_id, int msg_seqno)
+MPIR_Request *
+MPIDI_Recvq_AEU(MPIR_Request *newreq, int source, pami_task_t pami_source, int tag, int context_id, int msg_seqno)
 #endif
 {
   /* A matching request was not found in the posted queue, so we
      need to allocate a new request and add it to the unexpected
      queue */
-  MPID_Request *rreq;
+  MPIR_Request *rreq;
   rreq = newreq;
   rreq->kind = MPIR_REQUEST_RECV;
   TRACE_MEMSET_R(pami_source,msg_seqno,recv_status);
@@ -756,7 +756,7 @@ MPIDI_Recvq_AEU(MPID_Request *newreq, int source, pami_task_t pami_source, int t
 #endif
     MPIDI_Recvq_append(MPIDI_Recvq.unexpected, rreq);
 #else /* OUT_OF_ORDER_HANDLING */
-  MPID_Request *q;
+  MPIR_Request *q;
   MPIDI_In_cntr_t *in_cntr;
   int insert, i;
 
@@ -822,7 +822,7 @@ MPIDI_Recvq_DumpQueues(int verbose)
   if(verbose < MPIDI_VERBOSE_SUMMARY_ALL)
     return;
 
-  MPID_Request * rreq = MPIDI_Recvq.posted_head;
+  MPIR_Request * rreq = MPIDI_Recvq.posted_head;
   unsigned i=0, numposted=0, numue=0;
   unsigned postedbytes=0, uebytes=0;
 
@@ -884,9 +884,9 @@ MPIDI_Recvq_DumpQueues(int verbose)
  * Insert a request in the OutOfOrderList, make sure this list is
  * arranged in the ascending order.
  */
-void MPIDI_Recvq_enqueue_ool(pami_task_t src, MPID_Request *req)
+void MPIDI_Recvq_enqueue_ool(pami_task_t src, MPIR_Request *req)
 {
-  MPID_Request  *q;
+  MPIR_Request  *q;
   void *head;
   int insert,i;
   MPIDI_In_cntr_t *in_cntr;
@@ -916,7 +916,7 @@ void MPIDI_Recvq_enqueue_ool(pami_task_t src, MPID_Request *req)
           in_cntr->OutOfOrderList=req;
         }
       } else {
-        MPIDI_Recvq_insert_ool((MPID_Request *)q->mpid.nextR,req);
+        MPIDI_Recvq_insert_ool((MPIR_Request *)q->mpid.nextR,req);
       }
     }
   } else {   /*  empty list    */
@@ -928,17 +928,17 @@ void MPIDI_Recvq_enqueue_ool(pami_task_t src, MPID_Request *req)
 #if (MPIDI_STATISTICS)
   MPID_NSTAT(mpid_statp->unorderedMsgs);
 #endif
-} /* void MPIDI_Recvq_insert_ool(pami_task_t src, MPID_Request *N) */
+} /* void MPIDI_Recvq_insert_ool(pami_task_t src, MPIR_Request *N) */
 
 
 /**
  *  MPIDI_Recvq_insert_ool: place e between q and q->prevR
  *
  */
-void  MPIDI_Recvq_insert_ool(MPID_Request *q,MPID_Request *e)
+void  MPIDI_Recvq_insert_ool(MPIR_Request *q,MPIR_Request *e)
 {
   (e)->mpid.prevR = (q)->mpid.prevR;
-  ((MPID_Request *)((q)->mpid.prevR))->mpid.nextR = (e);
+  ((MPIR_Request *)((q)->mpid.prevR))->mpid.nextR = (e);
   (e)->mpid.nextR = (q);
   (q)->mpid.prevR = (e);
 }

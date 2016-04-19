@@ -256,7 +256,7 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int 
                          MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *reqp = NULL;
+    MPIR_Request *reqp = NULL;
     int tag = -1;
     MPID_Sched_t s = MPID_SCHED_NULL;
 

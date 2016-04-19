@@ -76,8 +76,8 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     static const char FCNAME[] = "MPI_Sendrecv";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_Request * sreq;
-    MPID_Request * rreq;
+    MPIR_Request * sreq;
+    MPIR_Request * rreq;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_SENDRECV);
     
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -174,12 +174,12 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 	/* --END ERROR HANDLING-- */
     }
 
-    if (!MPID_Request_is_complete(sreq) || !MPID_Request_is_complete(rreq))
+    if (!MPIR_Request_is_complete(sreq) || !MPIR_Request_is_complete(rreq))
     {
 	MPID_Progress_state progress_state;
 	
 	MPID_Progress_start(&progress_state);
-        while (!MPID_Request_is_complete(sreq) || !MPID_Request_is_complete(rreq))
+        while (!MPIR_Request_is_complete(sreq) || !MPIR_Request_is_complete(rreq))
 	{
 	    mpi_errno = MPID_Progress_wait(&progress_state);
 	    if (mpi_errno != MPI_SUCCESS)
@@ -191,7 +191,7 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 	    }
 
             if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                        !MPID_Request_is_complete(rreq) &&
+                        !MPIR_Request_is_complete(rreq) &&
                         MPID_Request_is_anysource(rreq) &&
                         !MPID_Comm_AS_enabled(rreq->comm))) {
                 /* --BEGIN ERROR HANDLING-- */
@@ -199,7 +199,7 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                 MPIR_STATUS_SET_CANCEL_BIT(rreq->status, FALSE);
                 MPIR_ERR_SET(rreq->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**proc_failed");
                 mpi_errno = rreq->status.MPI_ERROR;
-                if (!MPID_Request_is_complete(sreq)) {
+                if (!MPIR_Request_is_complete(sreq)) {
                     MPID_Cancel_send(sreq);
                     MPIR_STATUS_SET_CANCEL_BIT(sreq->status, FALSE);
                 }

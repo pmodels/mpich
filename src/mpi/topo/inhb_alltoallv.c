@@ -95,7 +95,7 @@ int MPIR_Ineighbor_alltoallv_impl(const void *sendbuf, const int sendcounts[], c
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
-    MPID_Request *reqp = NULL;
+    MPIR_Request *reqp = NULL;
     MPID_Sched_t s = MPID_SCHED_NULL;
 
     *request = MPI_REQUEST_NULL;

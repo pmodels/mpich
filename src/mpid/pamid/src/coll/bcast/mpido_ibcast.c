@@ -29,13 +29,13 @@ int MPIDO_Ibcast(void *buffer,
                  MPI_Datatype datatype,
                  int root,
                  MPIR_Comm *comm_ptr,
-                 MPID_Request **request)
+                 MPIR_Request **request)
 {
    TRACE_ERR("in mpido_ibcast\n");
 
       /*
        * If the mpich mpir non-blocking collectives are enabled, return without
-       * first constructing the MPID_Request. This signals to MPIR_Ibcast_impl
+       * first constructing the MPIR_Request. This signals to MPIR_Ibcast_impl
        * to invoke the mpich nbc implementation of MPI_Ibcast().
        */
       if (MPIDI_Process.mpir_nbc != 0)
@@ -52,11 +52,11 @@ int MPIDO_Ibcast(void *buffer,
       int rc = MPIR_Bcast_intra(buffer, count, datatype, root, comm_ptr, &mpierrno);
 
       /*
-       * The blocking bcast has completed - create and complete a MPID_Request
+       * The blocking bcast has completed - create and complete a MPIR_Request
        * object so the MPIR_Ibcast_impl() function does not perform the bcast.
        */
-      MPID_Request * mpid_request = MPID_Request_create_inline();
-      mpid_request->kind = MPID_COLL_REQUEST;
+      MPIR_Request * mpid_request = MPID_Request_create_inline();
+      mpid_request->kind = MPIR_COLL_REQUEST;
       *request = mpid_request;
       MPIDI_Request_complete_norelease_inline(mpid_request);
 

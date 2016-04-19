@@ -70,7 +70,7 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
     static const char FCNAME[] = "MPI_Recv";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_Request * request_ptr = NULL;
+    MPIR_Request * request_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_RECV);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -145,12 +145,12 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
     
     /* If a request was returned, then we need to block until the request is 
        complete */
-    if (!MPID_Request_is_complete(request_ptr))
+    if (!MPIR_Request_is_complete(request_ptr))
     {
 	MPID_Progress_state progress_state;
 	    
 	MPID_Progress_start(&progress_state);
-        while (!MPID_Request_is_complete(request_ptr))
+        while (!MPIR_Request_is_complete(request_ptr))
 	{
 	    /* MT: Progress_wait may release the SINGLE_CS while it
 	       waits */
@@ -164,7 +164,7 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 	    }
 
             if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                        !MPID_Request_is_complete(request_ptr) &&
+                        !MPIR_Request_is_complete(request_ptr) &&
                         MPID_Request_is_anysource(request_ptr) &&
                         !MPID_Comm_AS_enabled(request_ptr->comm))) {
                 /* --BEGIN ERROR HANDLING-- */

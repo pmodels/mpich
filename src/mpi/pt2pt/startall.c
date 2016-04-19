@@ -61,8 +61,8 @@ Input Parameters:
 int MPI_Startall(int count, MPI_Request array_of_requests[])
 {
     static const char FCNAME[] = "MPI_Startall";
-    MPID_Request * request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
-    MPID_Request ** request_ptrs = request_ptr_array;
+    MPIR_Request * request_ptr_array[MPIR_REQUEST_PTR_ARRAY_SIZE];
+    MPIR_Request ** request_ptrs = request_ptr_array;
     int i;
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKLMEM_DECL(1);
@@ -92,12 +92,12 @@ int MPI_Startall(int count, MPI_Request array_of_requests[])
     /* Convert MPI request handles to a request object pointers */
     if (count > MPIR_REQUEST_PTR_ARRAY_SIZE)
     {
-	MPIU_CHKLMEM_MALLOC_ORJUMP(request_ptrs, MPID_Request **, count * sizeof(MPID_Request *), mpi_errno, "request pointers");
+	MPIU_CHKLMEM_MALLOC_ORJUMP(request_ptrs, MPIR_Request **, count * sizeof(MPIR_Request *), mpi_errno, "request pointers");
     }
 
     for (i = 0; i < count; i++)
     {
-	MPID_Request_get_ptr(array_of_requests[i], request_ptrs[i]);
+	MPIR_Request_get_ptr(array_of_requests[i], request_ptrs[i]);
     }
     
     /* Validate object pointers if error checking is enabled */
@@ -106,7 +106,7 @@ int MPI_Startall(int count, MPI_Request array_of_requests[])
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    for (i = 0; i < count; i++) {
-		MPID_Request_valid_ptr( request_ptrs[i], mpi_errno );
+		MPIR_Request_valid_ptr( request_ptrs[i], mpi_errno );
                 if (mpi_errno) goto fn_fail;
 	    }
 	    for (i = 0; i < count; i++) {

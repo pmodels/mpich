@@ -41,7 +41,7 @@ cvars:
 int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
                    origin_datatype, int target_rank, MPI_Aint target_disp,
                    int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr,
-                   MPID_Request * ureq)
+                   MPIR_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig ATTRIBUTE((unused)), rank;
@@ -218,7 +218,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
 int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
                    origin_datatype, int target_rank, MPI_Aint target_disp,
                    int target_count, MPI_Datatype target_datatype, MPIR_Win * win_ptr,
-                   MPID_Request * ureq)
+                   MPIR_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
     intptr_t orig_data_sz, target_data_sz;
@@ -388,7 +388,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
 int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
                           origin_datatype, int target_rank, MPI_Aint target_disp,
                           int target_count, MPI_Datatype target_datatype, MPI_Op op,
-                          MPIR_Win * win_ptr, MPID_Request * ureq)
+                          MPIR_Win * win_ptr, MPIR_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
     intptr_t data_sz;
@@ -600,7 +600,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                               MPI_Datatype origin_datatype, void *result_addr, int result_count,
                               MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
                               int target_count, MPI_Datatype target_datatype, MPI_Op op,
-                              MPIR_Win * win_ptr, MPID_Request * ureq)
+                              MPIR_Win * win_ptr, MPIR_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
     intptr_t orig_data_sz, target_data_sz;

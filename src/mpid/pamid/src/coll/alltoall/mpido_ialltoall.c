@@ -31,7 +31,7 @@ int MPIDO_Ialltoall(const void *sendbuf,
                     int recvcount,
                     MPI_Datatype recvtype,
                     MPIR_Comm *comm_ptr,
-                    MPID_Request **request)
+                    MPIR_Request **request)
 {
    TRACE_ERR("Entering MPIDO_Ialltoall\n");
 
@@ -39,7 +39,7 @@ int MPIDO_Ialltoall(const void *sendbuf,
    {
       /*
        * If the mpich mpir non-blocking collectives are enabled, return without
-       * first constructing the MPID_Request. This signals to the
+       * first constructing the MPIR_Request. This signals to the
        * MPIR_Ialltoall_impl() function to invoke the mpich nbc implementation
        * of MPI_Ialltoall().
        */
@@ -60,11 +60,11 @@ int MPIDO_Ialltoall(const void *sendbuf,
 
       /*
        * The blocking allitoall has completed - create and complete a
-       * MPID_Request object so the MPIR_Ialltoall_impl() function does not
+       * MPIR_Request object so the MPIR_Ialltoall_impl() function does not
        * perform an additional ialltoall.
        */
-      MPID_Request * mpid_request = MPID_Request_create_inline();
-      mpid_request->kind = MPID_COLL_REQUEST;
+      MPIR_Request * mpid_request = MPID_Request_create_inline();
+      mpid_request->kind = MPIR_COLL_REQUEST;
       *request = mpid_request;
       MPIDI_Request_complete_norelease_inline(mpid_request);
 

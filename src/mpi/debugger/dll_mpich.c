@@ -298,13 +298,13 @@ int mqs_image_has_queues (mqs_image *image, char **message)
 	}
     }
 
-    /* Now the receive queues.  The receive queues contain MPID_Request
+    /* Now the receive queues.  The receive queues contain MPIR_Request
        objects, and the various fields are within types in that object.
        To simplify the eventual access, we compute all offsets relative to the
        request.  This means diving into the types that make of the 
        request definition */
     {
-	mqs_type *req_type = dbgr_find_type( image, (char *)"MPID_Request", mqs_lang_c );
+	mqs_type *req_type = dbgr_find_type( image, (char *)"MPIR_Request", mqs_lang_c );
 	if (req_type) {
 	    int dev_offs;
 	    dev_offs = dbgr_field_offset( req_type, (char *)"dev" );

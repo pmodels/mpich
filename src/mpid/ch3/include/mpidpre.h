@@ -10,8 +10,8 @@
 #if !defined(MPICH_MPIDPRE_H_INCLUDED)
 #define MPICH_MPIDPRE_H_INCLUDED
 
-/* Tell the compiler that we're going to declare struct MPID_Request later */
-struct MPID_Request;
+/* Tell the compiler that we're going to declare struct MPIR_Request later */
+struct MPIR_Request;
 
 #if defined(HAVE_SYS_TYPES_H)
 #include <sys/types.h>
@@ -32,7 +32,7 @@ struct MPID_Request;
 
 union MPIDI_CH3_Pkt;
 struct MPIDI_VC;
-struct MPID_Request;
+struct MPIR_Request;
 
 /* PktHandler function:
    vc  (INPUT) -- vc on which the packet was received
@@ -46,7 +46,7 @@ struct MPID_Request;
    (This decl needs to come before mpidi_ch3_pre.h)
 */
 typedef int MPIDI_CH3_PktHandler_Fcn(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *pkt,
-				     intptr_t *buflen, struct MPID_Request **req );
+				     intptr_t *buflen, struct MPIR_Request **req );
 
 /* Include definitions from the channel which must exist before items in this 
    file (mpidpre.h) or the file it includes (mpiimpl.h) can be defined. */
@@ -398,7 +398,7 @@ typedef struct MPIDI_Request {
        For example, when an operation described by an iov has 
        completed.  This replaces the MPIDI_CA_t (completion action)
        field used through MPICH 1.0.4. */
-    int (*OnDataAvail)( struct MPIDI_VC *, struct MPID_Request *, int * );
+    int (*OnDataAvail)( struct MPIDI_VC *, struct MPIR_Request *, int * );
     /* OnFinal is used in the following case:
        OnDataAvail is set to a function, and that function has processed
        all of the data.  At that point, the OnDataAvail function can
@@ -407,7 +407,7 @@ typedef struct MPIDI_Request {
        as a get-response) when processing of the non-contiguous data 
        completes. This value need not be initialized unless OnDataAvail
        is set to a non-null value (and then only in certain cases) */
-    int (*OnFinal)( struct MPIDI_VC *, struct MPID_Request *, int * );
+    int (*OnFinal)( struct MPIDI_VC *, struct MPIR_Request *, int * );
 
     /* tmpbuf and tmpbuf_sz describe temporary storage used for things like 
        unexpected eager messages and packing/unpacking
@@ -464,7 +464,7 @@ typedef struct MPIDI_Request {
        Question: do we want to make this a link instead of reserving 
        a fixed spot in the request? */
     MPIDI_CH3_Pkt_t pending_pkt;
-    struct MPID_Request * next;
+    struct MPIR_Request * next;
 } MPIDI_Request;
 #define MPIR_REQUEST_DECL MPIDI_Request dev;
 

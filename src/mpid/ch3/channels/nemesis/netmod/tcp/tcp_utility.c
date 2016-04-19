@@ -209,7 +209,7 @@ int MPID_nem_tcp_is_sock_connected(int fd)
 void MPID_nem_tcp_vc_dbg_print_sendq(FILE *stream, MPIDI_VC_t *vc)
 {
     int i;
-    MPID_Request *sreq;
+    MPIR_Request *sreq;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
 
     fprintf(stream, "..   sc=%p fd=%d vc_tcp->state=%d\n", vc_tcp->sc, (vc_tcp->sc ? vc_tcp->sc->fd : -1), vc_tcp->state);

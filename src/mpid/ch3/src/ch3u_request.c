@@ -17,17 +17,9 @@
  */
 
 /* Routines and data structures for request allocation and deallocation */
-#ifndef MPIR_REQUEST_PREALLOC
-#define MPIR_REQUEST_PREALLOC 8
-#endif
 
 /* Max depth of recursive calls of MPID_Request_complete */
 #define REQUEST_CB_DEPTH 2
-
-MPID_Request MPID_Request_direct[MPIR_REQUEST_PREALLOC] = {{0}};
-MPIU_Object_alloc_t MPID_Request_mem = {
-    0, 0, 0, 0, MPIR_REQUEST, sizeof(MPID_Request), MPID_Request_direct,
-    MPIR_REQUEST_PREALLOC };
 
 /* See the comments above about request creation.  Some routines will
    use macros in mpidimpl.h *instead* of this routine */
@@ -35,14 +27,14 @@ MPIU_Object_alloc_t MPID_Request_mem = {
 #define FUNCNAME MPID_Request_create
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPID_Request * MPID_Request_create(void)
+MPIR_Request * MPID_Request_create(void)
 {
-    MPID_Request * req;
+    MPIR_Request * req;
     MPIDI_STATE_DECL(MPID_STATE_MPIR_REQUEST_CREATE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIR_REQUEST_CREATE);
     
-    req = MPIU_Handle_obj_alloc(&MPID_Request_mem);
+    req = MPIU_Handle_obj_alloc(&MPIR_Request_mem);
     if (req != NULL)
     {
 	MPL_DBG_MSG_P(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
@@ -80,7 +72,7 @@ MPID_Request * MPID_Request_create(void)
         req->request_completed_cb  = NULL;
 	req->dev.datatype_ptr	   = NULL;
 	req->dev.segment_ptr	   = NULL;
-	/* Masks and flags for channel device state in an MPID_Request */
+	/* Masks and flags for channel device state in an MPIR_Request */
 	req->dev.state		   = 0;
 	req->dev.cancel_pending	   = FALSE;
 	/* FIXME: RMA ops shouldn't need to be set except when creating a
@@ -137,7 +129,7 @@ MPID_Request * MPID_Request_create(void)
 #define FUNCNAME MPIDI_CH3U_Request_load_send_iov
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Request_load_send_iov(MPID_Request * const sreq, 
+int MPIDI_CH3U_Request_load_send_iov(MPIR_Request * const sreq,
 				     MPL_IOV * const iov, int * const iov_n)
 {
     MPI_Aint last;
@@ -249,7 +241,7 @@ int MPIDI_CH3U_Request_load_send_iov(MPID_Request * const sreq,
 #define FUNCNAME MPIDI_CH3U_Request_load_recv_iov
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Request_load_recv_iov(MPID_Request * const rreq)
+int MPIDI_CH3U_Request_load_recv_iov(MPIR_Request * const rreq)
 {
     MPI_Aint last;
     static intptr_t orig_segment_first = MPIDI_LOAD_RECV_IOV_ORIG_SEGMENT_FIRST_UNSET;
@@ -458,7 +450,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPID_Request * const rreq)
 #define FUNCNAME MPIDI_CH3U_Request_unpack_srbuf
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Request_unpack_srbuf(MPID_Request * rreq)
+int MPIDI_CH3U_Request_unpack_srbuf(MPIR_Request * rreq)
 {
     MPI_Aint last;
     int tmpbuf_last;
@@ -535,7 +527,7 @@ int MPIDI_CH3U_Request_unpack_srbuf(MPID_Request * rreq)
 #define FUNCNAME MPIDI_CH3U_Request_unpack_uebuf
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Request_unpack_uebuf(MPID_Request * rreq)
+int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
 {
     int dt_contig;
     MPI_Aint dt_true_lb;
@@ -612,7 +604,7 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPID_Request * rreq)
     return mpi_errno;
 }
 
-int MPID_Request_complete(MPID_Request *req)
+int MPID_Request_complete(MPIR_Request *req)
 {
     int incomplete;
     int mpi_errno = MPI_SUCCESS;
@@ -642,7 +634,7 @@ int MPID_Request_complete(MPID_Request *req)
     goto fn_exit;
 }
 
-void MPID_Request_release(MPID_Request *req)
+void MPID_Request_release(MPIR_Request *req)
 {
     int inuse;
 
@@ -700,6 +692,6 @@ void MPID_Request_release(MPID_Request *req)
             MPL_free(req->dev.ext_hdr_ptr);
         }
 
-        MPIU_Handle_obj_free(&MPID_Request_mem, req);
+        MPIU_Handle_obj_free(&MPIR_Request_mem, req);
     }
 }

@@ -30,7 +30,7 @@ typedef enum{MPID_NEM_TCP_VC_STATE_DISCONNECTED,
 
 #define MPIDI_NEM_TCP_MAX_CONNECT_RETRIES 100
 
-typedef GENERIC_Q_DECL(struct MPID_Request) MPIDI_nem_tcp_request_queue_t;
+typedef GENERIC_Q_DECL(struct MPIR_Request) MPIDI_nem_tcp_request_queue_t;
 
 /* The vc provides a generic buffer in which network modules can store
    private fields This removes all dependencies from the VC struction
@@ -97,12 +97,12 @@ int MPID_nem_tcp_ckpt_cleanup(void);
 int MPID_nem_tcp_state_listening_handler(struct pollfd *const l_plfd, sockconn_t *const l_sc);
 int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send_queue);
 
-int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, intptr_t hdr_sz, void *data, intptr_t data_sz);
+int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPIR_Request *sreq, void *hdr, intptr_t hdr_sz, void *data, intptr_t data_sz);
 int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, void *data, intptr_t data_sz,
-                                    MPID_Request **sreq_ptr);
+                                    MPIR_Request **sreq_ptr);
 int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, void *data, intptr_t data_sz,
-                                        MPID_Request **sreq_ptr);
-int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header, intptr_t hdr_sz);
+                                        MPIR_Request **sreq_ptr);
+int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPIR_Request *sreq, void *header, intptr_t hdr_sz);
 int MPID_nem_tcp_get_addr_port_from_bc(const char *business_card, struct in_addr *addr, in_port_t *port);
 
 void MPID_nem_tcp_vc_dbg_print_sendq(FILE *stream, MPIDI_VC_t *vc);
@@ -113,7 +113,7 @@ int MPID_nem_tcp_vc_terminated(MPIDI_VC_t *vc);
 int MPID_nem_tcp_get_ordering(int *ordering);
 
 
-int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPID_Request **rreqp);
+int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPIR_Request **rreqp);
 
 
 /* Macros */

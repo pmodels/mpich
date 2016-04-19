@@ -22,7 +22,7 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
                        int dest, int tag, MPIR_Comm * comm, int context_offset,
-                       struct MPID_Request **req_out)
+                       struct MPIR_Request **req_out)
 {
     int mpi_errno = MPI_SUCCESS, llc_errno;
     int dt_contig;
@@ -43,7 +43,7 @@ int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
     LLC_comm_rank(LLC_COMM_MPICH, &LLC_my_rank);
     dprintf("llc_isend,LLC_my_rank=%d\n", LLC_my_rank);
 
-    struct MPID_Request *sreq = MPID_Request_create();
+    struct MPIR_Request *sreq = MPID_Request_create();
     MPIU_Assert(sreq != NULL);
     MPIU_Object_set_ref(sreq, 2);
     sreq->kind = MPIR_REQUEST_SEND;
@@ -163,10 +163,10 @@ int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, void *data,
-                                 intptr_t data_sz, MPID_Request ** sreq_ptr)
+                                 intptr_t data_sz, MPIR_Request ** sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *sreq = NULL;
+    MPIR_Request *sreq = NULL;
     MPID_nem_llc_vc_area *vc_llc = 0;
     int need_to_queue = 0;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_ISTARTCONTIGMSG);
@@ -254,7 +254,7 @@ int MPID_nem_llc_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, vo
 #define FUNCNAME MPID_nem_llc_iSendContig
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_llc_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, intptr_t hdr_sz,
+int MPID_nem_llc_iSendContig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr, intptr_t hdr_sz,
                              void *data, intptr_t data_sz)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -338,7 +338,7 @@ int MPID_nem_llc_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, in
 #define FUNCNAME MPID_nem_llc_SendNoncontig
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_nem_llc_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
+int MPID_nem_llc_SendNoncontig(MPIDI_VC_t * vc, MPIR_Request * sreq, void *hdr,
                                intptr_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -428,7 +428,7 @@ int MPID_nem_llc_send_queued(MPIDI_VC_t * vc, rque_t * send_queue)
 
     while (!MPIDI_CH3I_Sendq_empty(*send_queue)) {
         ssize_t ret = 0;
-        MPID_Request *sreq;
+        MPIR_Request *sreq;
         void *endpt = vc_llc->endpoint;
         MPL_IOV *iovs;
         int niov;
@@ -472,7 +472,7 @@ int MPID_nem_llc_send_queued(MPIDI_VC_t * vc, rque_t * send_queue)
 #define FUNCNAME MPIDI_nem_llc_Rqst_iov_update
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_nem_llc_Rqst_iov_update(MPID_Request * mreq, intptr_t consume)
+int MPIDI_nem_llc_Rqst_iov_update(MPIR_Request * mreq, intptr_t consume)
 {
     int ret = TRUE;
     /* intptr_t oconsume = consume; */
@@ -738,7 +738,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
                     MPID_nem_llc_segv;
                 }
 
-                /* Call send_handler. First arg is a pointer to MPID_Request */
+                /* Call send_handler. First arg is a pointer to MPIR_Request */
                 (*sfnc) (((struct llc_cmd_area *) lcmd->usr_area)->cbarg, &reqid);
 
                 /* Don't free iov_local[0].addr */
@@ -812,7 +812,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
         case LLC_EVENT_RECV_MATCHED:{
                 dprintf("llc_poll,EVENT_RECV_MATCHED\n");
                 lcmd = (LLC_cmd_t *) events[0].side.initiator.req_id;
-                MPID_Request *req = ((struct llc_cmd_area *) lcmd->usr_area)->cbarg;
+                MPIR_Request *req = ((struct llc_cmd_area *) lcmd->usr_area)->cbarg;
 
                 if (req->kind != MPIR_REQUEST_MPROBE) {
                     /* Unpack non-contiguous dt */
@@ -888,7 +888,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
                 break;
             }
         case LLC_EVENT_TARGET_PROC_FAIL:{
-                MPID_Request *req;
+                MPIR_Request *req;
 
                 lcmd = (LLC_cmd_t *) events[0].side.initiator.req_id;
                 MPIU_Assert(lcmd != 0);
@@ -955,7 +955,7 @@ int llc_poll(int in_blocking_poll, llc_send_f sfnc, llc_recv_f rfnc)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_llc_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
                         int dest, int tag, MPIR_Comm * comm, int context_offset,
-                        struct MPID_Request **request)
+                        struct MPIR_Request **request)
 {
     int mpi_errno = MPI_SUCCESS, llc_errno;
     int dt_contig;
@@ -976,7 +976,7 @@ int MPID_nem_llc_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
     LLC_comm_rank(LLC_COMM_MPICH, &LLC_my_rank);
     dprintf("llc_isend,LLC_my_rank=%d\n", LLC_my_rank);
 
-    struct MPID_Request *sreq = MPID_Request_create();
+    struct MPIR_Request *sreq = MPID_Request_create();
     MPIU_Assert(sreq != NULL);
     MPIU_Object_set_ref(sreq, 2);
     sreq->kind = MPIR_REQUEST_SEND;

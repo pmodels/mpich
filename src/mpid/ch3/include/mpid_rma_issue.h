@@ -221,14 +221,14 @@ static int init_get_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
 static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
                                     void *ext_hdr_ptr, MPI_Aint ext_hdr_sz,
                                     intptr_t stream_offset, intptr_t stream_size,
-                                    MPID_Request ** req_ptr)
+                                    MPIR_Request ** req_ptr)
 {
     MPI_Datatype target_datatype;
     MPIDU_Datatype*target_dtp = NULL, *origin_dtp = NULL;
     int is_origin_contig;
     MPL_IOV iov[MPL_IOV_LIMIT];
     int iovcnt = 0;
-    MPID_Request *req = NULL;
+    MPIR_Request *req = NULL;
     MPI_Aint dt_true_lb;
     MPIDI_CH3_Pkt_flags_t flags;
     int is_empty_origin = FALSE;
@@ -400,7 +400,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     MPIDI_VC_t *vc = NULL;
     MPIR_Comm *comm_ptr = win_ptr->comm_ptr;
     MPIDI_CH3_Pkt_put_t *put_pkt = &rma_op->pkt.put;
-    MPID_Request *curr_req = NULL;
+    MPIR_Request *curr_req = NULL;
     MPI_Datatype target_datatype;
     MPIDU_Datatype*target_dtp_ptr = NULL;
     MPIDI_CH3_Ext_pkt_put_derived_t *ext_hdr_ptr = NULL;
@@ -500,7 +500,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
     if (rma_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {
-        MPID_Request *curr_req = NULL;
+        MPIR_Request *curr_req = NULL;
 
         accum_pkt->flags |= flags;
 
@@ -557,7 +557,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     MPIU_Assert(rma_op->issued_stream_count >= 0);
     for (j = 0; j < stream_unit_count; j++) {
         intptr_t stream_offset, stream_size;
-        MPID_Request *curr_req = NULL;
+        MPIR_Request *curr_req = NULL;
 
         if (j < rma_op->issued_stream_count)
             continue;
@@ -593,7 +593,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 
                 if (stream_unit_count > 1) {
                     rma_op->multi_reqs =
-                        (MPID_Request **) MPL_malloc(sizeof(MPID_Request *) * rma_op->reqs_size);
+                        (MPIR_Request **) MPL_malloc(sizeof(MPIR_Request *) * rma_op->reqs_size);
                     for (i = 0; i < rma_op->reqs_size; i++)
                         rma_op->multi_reqs[i] = NULL;
                 }
@@ -666,8 +666,8 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
     if (rma_op->pkt.type == MPIDI_CH3_PKT_GET_ACCUM_IMMED) {
-        MPID_Request *resp_req = NULL;
-        MPID_Request *curr_req = NULL;
+        MPIR_Request *resp_req = NULL;
+        MPIR_Request *curr_req = NULL;
 
         get_accum_pkt->flags |= flags;
 
@@ -741,7 +741,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 
     if (rma_op->reqs_size > 1) {
         rma_op->multi_reqs =
-            (MPID_Request **) MPL_malloc(sizeof(MPID_Request *) * rma_op->reqs_size);
+            (MPIR_Request **) MPL_malloc(sizeof(MPIR_Request *) * rma_op->reqs_size);
         for (i = 0; i < rma_op->reqs_size; i++)
             rma_op->multi_reqs[i] = NULL;
     }
@@ -750,8 +750,8 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 
     for (j = 0; j < stream_unit_count; j++) {
         intptr_t stream_offset, stream_size;
-        MPID_Request *resp_req = NULL;
-        MPID_Request *curr_req = NULL;
+        MPIR_Request *resp_req = NULL;
+        MPIR_Request *curr_req = NULL;
 
         if (j < rma_op->issued_stream_count)
             continue;
@@ -884,8 +884,8 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     MPIR_Comm *comm_ptr;
     MPIDU_Datatype*dtp;
     MPI_Datatype target_datatype;
-    MPID_Request *req = NULL;
-    MPID_Request *curr_req = NULL;
+    MPIR_Request *req = NULL;
+    MPIR_Request *curr_req = NULL;
     MPIDI_CH3_Ext_pkt_get_derived_t *ext_hdr_ptr = NULL;
     MPI_Aint ext_hdr_sz = 0;
     MPL_IOV iov[MPL_IOV_LIMIT];
@@ -1010,8 +1010,8 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     MPIDI_VC_t *vc = NULL;
     MPIR_Comm *comm_ptr = win_ptr->comm_ptr;
     MPIDI_CH3_Pkt_cas_t *cas_pkt = &rma_op->pkt.cas;
-    MPID_Request *rmw_req = NULL;
-    MPID_Request *curr_req = NULL;
+    MPIR_Request *rmw_req = NULL;
+    MPIR_Request *curr_req = NULL;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_ISSUE_CAS_OP);
 
@@ -1073,8 +1073,8 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     MPIDI_VC_t *vc = NULL;
     MPIR_Comm *comm_ptr = win_ptr->comm_ptr;
     MPIDI_CH3_Pkt_fop_t *fop_pkt = &rma_op->pkt.fop;
-    MPID_Request *resp_req = NULL;
-    MPID_Request *curr_req = NULL;
+    MPIR_Request *resp_req = NULL;
+    MPIR_Request *curr_req = NULL;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_ISSUE_FOP_OP);
 

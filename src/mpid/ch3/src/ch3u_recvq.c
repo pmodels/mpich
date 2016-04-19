@@ -43,10 +43,10 @@
  * 
  */
 
-static MPID_Request * recvq_posted_head = 0;
-static MPID_Request * recvq_posted_tail = 0;
-static MPID_Request * recvq_unexpected_head = 0;
-static MPID_Request * recvq_unexpected_tail = 0;
+static MPIR_Request * recvq_posted_head = 0;
+static MPIR_Request * recvq_posted_tail = 0;
+static MPIR_Request * recvq_unexpected_head = 0;
+static MPIR_Request * recvq_unexpected_tail = 0;
 
 /* Export the location of the queue heads if debugger support is enabled.
  * This allows the queue code to rely on the local variables for the
@@ -55,8 +55,8 @@ static MPID_Request * recvq_unexpected_tail = 0;
  * access the message queues.
  */
 #ifdef HAVE_DEBUGGER_SUPPORT
-MPID_Request ** const MPID_Recvq_posted_head_ptr     = &recvq_posted_head;
-MPID_Request ** const MPID_Recvq_unexpected_head_ptr = &recvq_unexpected_head;
+MPIR_Request ** const MPID_Recvq_posted_head_ptr     = &recvq_posted_head;
+MPIR_Request ** const MPID_Recvq_unexpected_head_ptr = &recvq_unexpected_head;
 #endif
 
 /* If the MPIDI_Message_match structure fits into a pointer size, we
@@ -213,7 +213,7 @@ fn_fail:
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Recvq_FU(int source, int tag, int context_id, MPI_Status *s)
 {
-    MPID_Request * rreq;
+    MPIR_Request * rreq;
     int found = 0;
     MPIDI_Message_match match, mask;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_RECVQ_FU);
@@ -290,14 +290,14 @@ int MPIDI_CH3U_Recvq_FU(int source, int tag, int context_id, MPI_Status *s)
 #define FUNCNAME MPIDI_CH3U_Recvq_FDU
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPID_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id, 
+MPIR_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id,
 				    MPIDI_Message_match * match)
 {
-    MPID_Request * rreq;
-    MPID_Request * prev_rreq;
-    MPID_Request * cur_rreq;
-    MPID_Request * matching_prev_rreq;
-    MPID_Request * matching_cur_rreq;
+    MPIR_Request * rreq;
+    MPIR_Request * prev_rreq;
+    MPIR_Request * cur_rreq;
+    MPIR_Request * matching_prev_rreq;
+    MPIR_Request * matching_cur_rreq;
     MPIDI_Message_match mask;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_RECVQ_FDU);
 
@@ -373,10 +373,10 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id,
 #define FUNCNAME MPIDI_CH3U_Recvq_FDU_matchonly
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPID_Request * MPIDI_CH3U_Recvq_FDU_matchonly(int source, int tag, int context_id, MPIR_Comm *comm, int *foundp)
+MPIR_Request * MPIDI_CH3U_Recvq_FDU_matchonly(int source, int tag, int context_id, MPIR_Comm *comm, int *foundp)
 {
     int found = FALSE;
-    MPID_Request *rreq, *prev_rreq;
+    MPIR_Request *rreq, *prev_rreq;
     MPIDI_Message_match match;
     MPIDI_Message_match mask;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_RECVQ_FDU_MATCHONLY);
@@ -490,13 +490,13 @@ lock_exit:
 #define FUNCNAME MPIDI_CH3U_Recvq_FDU_or_AEP
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag, 
+MPIR_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
                                            int context_id, MPIR_Comm *comm, void *user_buf,
                                            MPI_Aint user_count, MPI_Datatype datatype, int * foundp)
 {
     int mpi_errno = MPI_SUCCESS;
     int found = FALSE;
-    MPID_Request *rreq, *prev_rreq;
+    MPIR_Request *rreq, *prev_rreq;
     MPIDI_Message_match match;
     MPIDI_Message_match mask;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_RECVQ_FDU_OR_AEP);
@@ -669,11 +669,11 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 #define FUNCNAME MPIDI_CH3U_Recvq_DP
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq)
+int MPIDI_CH3U_Recvq_DP(MPIR_Request * rreq)
 {
     int found;
-    MPID_Request * cur_rreq;
-    MPID_Request * prev_rreq;
+    MPIR_Request * cur_rreq;
+    MPIR_Request * prev_rreq;
     int dequeue_failed;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_RECVQ_DP);
 
@@ -742,12 +742,12 @@ int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq)
 #define FUNCNAME MPIDI_CH3U_Recvq_FDP_or_AEU
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match, 
+MPIR_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 					   int * foundp)
 {
     int found;
-    MPID_Request * rreq;
-    MPID_Request * prev_rreq;
+    MPIR_Request * rreq;
+    MPIR_Request * prev_rreq;
     int channel_matched;
     int error_bit_masked = 0, proc_failure_bit_masked = 0;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_RECVQ_FDP_OR_AEU);
@@ -861,7 +861,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 }
 
 /* returns TRUE iff the request was sent on the vc */
-static inline int req_uses_vc(const MPID_Request* req, const MPIDI_VC_t *vc)
+static inline int req_uses_vc(const MPIR_Request* req, const MPIDI_VC_t *vc)
 {
     MPIDI_VC_t *vc1;
     
@@ -875,9 +875,9 @@ static inline int req_uses_vc(const MPID_Request* req, const MPIDI_VC_t *vc)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* This dequeues req from the posted recv queue, set req's error code to comm_fail, and updates the req pointer.
    Note that this creates a new error code if one hasn't already been created (i.e., if *error is MPI_SUCCESS). */
-static inline void dequeue_and_set_error(MPID_Request **req,  MPID_Request *prev_req, MPID_Request **head, MPID_Request **tail, int *error, int rank)
+static inline void dequeue_and_set_error(MPIR_Request **req,  MPIR_Request *prev_req, MPIR_Request **head, MPIR_Request **tail, int *error, int rank)
 {
-    MPID_Request *next = (*req)->dev.next;
+    MPIR_Request *next = (*req)->dev.next;
     
     /* remove from queue */
     if (*head == *req) {
@@ -916,7 +916,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int error = MPI_SUCCESS;
-    MPID_Request *rreq, *prev_rreq = NULL;
+    MPIR_Request *rreq, *prev_rreq = NULL;
     MPIDI_Message_match match;
     MPIDI_Message_match mask;
     MPIDI_STATE_DECL(MPIDI_CH3U_CLEAN_RECVQ);
@@ -1126,7 +1126,7 @@ int MPIDI_CH3U_Clean_recvq(MPIR_Comm *comm_ptr)
 int MPIDI_CH3U_Complete_posted_with_error(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Request *req, *prev_req;
+    MPIR_Request *req, *prev_req;
     int error = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDU_COMPLETE_POSTED_WITH_ERROR);
 
@@ -1197,7 +1197,7 @@ void MPIDI_CH3U_Dbg_print_recvq(FILE *stream);
 #define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIDI_CH3U_Dbg_print_recvq(FILE *stream)
 {
-    MPID_Request * rreq;
+    MPIR_Request * rreq;
     int i;
     char tag_buf[128];
     char rank_buf[128];
@@ -1252,7 +1252,7 @@ void MPIDI_CH3U_Dbg_print_recvq(FILE *stream)
 int MPIDI_CH3U_Recvq_count_unexp(void)
 {
     int count = 0;
-    MPID_Request *req = recvq_unexpected_head;
+    MPIR_Request *req = recvq_unexpected_head;
 
     while (req)
     {

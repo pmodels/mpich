@@ -16,7 +16,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Irsend(const void * buf, int count, MPI_Datatype datatype, int rank, int tag, MPIR_Comm * comm, int context_offset,
-		MPID_Request ** request)
+		MPIR_Request ** request)
 {
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_ready_send_t * const ready_pkt = &upkt.ready_send;
@@ -24,7 +24,7 @@ int MPID_Irsend(const void * buf, int count, MPI_Datatype datatype, int rank, in
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPIDU_Datatype* dt_ptr;
-    MPID_Request * sreq;
+    MPIR_Request * sreq;
     MPIDI_VC_t * vc;
 #if defined(MPID_USE_SEQUENCE_NUMBERS)
     MPID_Seqnum_t seqnum;

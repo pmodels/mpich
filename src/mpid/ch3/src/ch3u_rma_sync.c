@@ -431,7 +431,7 @@ static inline int flush_all(MPIR_Win * win_ptr)
 #define FUNCNAME fence_barrier_complete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int fence_barrier_complete(MPID_Request * sreq)
+static int fence_barrier_complete(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
@@ -532,13 +532,13 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
                 win_ptr->states.access_state = MPIDI_RMA_FENCE_GRANTED;
             }
             else {
-                MPID_Request *req_ptr;
+                MPIR_Request *req_ptr;
 
                 /* Set window access state properly. */
                 win_ptr->states.access_state = MPIDI_RMA_FENCE_ISSUED;
 
-                MPID_Request_get_ptr(fence_sync_req, req_ptr);
-                if (!MPID_Request_is_complete(req_ptr)) {
+                MPIR_Request_get_ptr(fence_sync_req, req_ptr);
+                if (!MPIR_Request_is_complete(req_ptr)) {
                     req_ptr->dev.source_win_handle = win_ptr->handle;
                     req_ptr->request_completed_cb = fence_barrier_complete;
                     win_ptr->sync_request_cnt++;
@@ -657,12 +657,12 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
                 win_ptr->states.access_state = MPIDI_RMA_FENCE_GRANTED;
             }
             else {
-                MPID_Request *req_ptr;
+                MPIR_Request *req_ptr;
 
                 win_ptr->states.access_state = MPIDI_RMA_FENCE_ISSUED;
 
-                MPID_Request_get_ptr(fence_sync_req, req_ptr);
-                if (!MPID_Request_is_complete(req_ptr)) {
+                MPIR_Request_get_ptr(fence_sync_req, req_ptr);
+                if (!MPIR_Request_is_complete(req_ptr)) {
                     req_ptr->dev.source_win_handle = win_ptr->handle;
                     req_ptr->request_completed_cb = fence_barrier_complete;
                     win_ptr->sync_request_cnt++;
@@ -761,7 +761,7 @@ int MPID_Win_post(MPIR_Group * post_grp_ptr, int assert, MPIR_Win * win_ptr)
             dst = post_ranks_in_win_grp[i];
 
             if (dst != rank) {
-                MPID_Request *req_ptr;
+                MPIR_Request *req_ptr;
                 mpi_errno = MPID_Isend(&i, 0, MPI_INT, dst, SYNC_POST_TAG, win_comm_ptr,
                                        MPIR_CONTEXT_INTRA_PT2PT, &req_ptr);
                 if (mpi_errno != MPI_SUCCESS)
@@ -803,7 +803,7 @@ int MPID_Win_post(MPIR_Group * post_grp_ptr, int assert, MPIR_Win * win_ptr)
 #define FUNCNAME start_req_complete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int start_req_complete(MPID_Request * req)
+static int start_req_complete(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
@@ -886,7 +886,7 @@ int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
 
         intra_cnt = 0;
         for (i = 0; i < win_ptr->start_grp_size; i++) {
-            MPID_Request *req_ptr;
+            MPIR_Request *req_ptr;
             MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
             int src = win_ptr->start_ranks_in_win_grp[i];
 
@@ -903,7 +903,7 @@ int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
                     intra_start_req[intra_cnt++] = req_ptr->handle;
                 }
                 else {
-                    if (!MPID_Request_is_complete(req_ptr)) {
+                    if (!MPIR_Request_is_complete(req_ptr)) {
                         req_ptr->dev.source_win_handle = win_ptr->handle;
                         req_ptr->request_completed_cb = start_req_complete;
                         win_ptr->sync_request_cnt++;

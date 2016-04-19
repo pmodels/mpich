@@ -26,7 +26,7 @@
    most application codes should not be using synchronous sends in
    performance-critical operations.
 */
-int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p, 
+int MPIDI_CH3_EagerSyncNoncontigSend( MPIR_Request **sreq_p,
 				      const void * buf, int count, 
 				      MPI_Datatype datatype, intptr_t data_sz,
 				      int dt_contig, MPI_Aint dt_true_lb,
@@ -38,7 +38,7 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_eager_sync_send_t * const es_pkt = &upkt.eager_sync_send;
     MPIDI_VC_t * vc;
-    MPID_Request *sreq = *sreq_p;
+    MPIR_Request *sreq = *sreq_p;
 
     /* MT FIXME what are the two operations we are waiting for?  the send and
      * the sync response? */
@@ -116,14 +116,14 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPID_Request **sreq_p,
 /* Send a zero-sized message with eager synchronous.  This is a temporary
    routine, as we may want to replace this with a counterpart to the
    Eager Short message */
-int MPIDI_CH3_EagerSyncZero(MPID_Request **sreq_p, int rank, int tag, 
+int MPIDI_CH3_EagerSyncZero(MPIR_Request **sreq_p, int rank, int tag,
 			    MPIR_Comm * comm, int context_offset )
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_eager_sync_send_t * const es_pkt = &upkt.eager_sync_send;
     MPIDI_VC_t * vc;
-    MPID_Request *sreq = *sreq_p;
+    MPIR_Request *sreq = *sreq_p;
     
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending zero length message");
     
@@ -167,12 +167,12 @@ int MPIDI_CH3_EagerSyncZero(MPID_Request **sreq_p, int rank, int tag,
 /* 
  * These routines are called when a receive matches an eager sync send 
  */
-int MPIDI_CH3_EagerSyncAck( MPIDI_VC_t *vc, MPID_Request *rreq )
+int MPIDI_CH3_EagerSyncAck( MPIDI_VC_t *vc, MPIR_Request *rreq )
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_eager_sync_ack_t * const esa_pkt = &upkt.eager_sync_ack;
-    MPID_Request * esa_req;
+    MPIR_Request * esa_req;
     
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"sending eager sync ack");
     MPIDI_Pkt_init(esa_pkt, MPIDI_CH3_PKT_EAGER_SYNC_ACK);
@@ -213,10 +213,10 @@ int MPIDI_CH3_EagerSyncAck( MPIDI_VC_t *vc, MPID_Request *rreq )
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-					intptr_t *buflen, MPID_Request **rreqp )
+					intptr_t *buflen, MPIR_Request **rreqp )
 {
     MPIDI_CH3_Pkt_eager_send_t * es_pkt = &pkt->eager_send;
-    MPID_Request * rreq;
+    MPIR_Request * rreq;
     int found;
     int complete;
     char *data_buf;
@@ -253,7 +253,7 @@ int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     {
 	MPIDI_CH3_Pkt_t upkt;
 	MPIDI_CH3_Pkt_eager_sync_ack_t * const esa_pkt = &upkt.eager_sync_ack;
-	MPID_Request * esa_req;
+	MPIR_Request * esa_req;
 
 	if (rreq->dev.recv_data_sz == 0) {
             *buflen = sizeof(MPIDI_CH3_Pkt_t);
@@ -346,16 +346,16 @@ int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDI_CH3_PktHandler_EagerSyncAck( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-				       intptr_t *buflen, MPID_Request **rreqp )
+				       intptr_t *buflen, MPIR_Request **rreqp )
 {
     MPIDI_CH3_Pkt_eager_sync_ack_t * esa_pkt = &pkt->eager_sync_ack;
-    MPID_Request * sreq;
+    MPIR_Request * sreq;
     int mpi_errno = MPI_SUCCESS;
     
     MPL_DBG_MSG_P(MPIDI_CH3_DBG_OTHER,VERBOSE,
 	   "received eager sync ack pkt, sreq=0x%08x", esa_pkt->sender_req_id);
 	    
-    MPID_Request_get_ptr(esa_pkt->sender_req_id, sreq);
+    MPIR_Request_get_ptr(esa_pkt->sender_req_id, sreq);
     /* decrement CC (but don't mark data transfer as complete since the 
        transfer could still be in progress) */
 

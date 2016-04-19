@@ -15,7 +15,7 @@
 
 static MPIDI_CH3_PktHandler_Fcn *pktArray[MPIDI_CH3_PKT_END_CH3+1];
 
-static int ReadMoreData( MPIDI_CH3I_Connection_t *, MPID_Request * );
+static int ReadMoreData( MPIDI_CH3I_Connection_t *, MPIR_Request * );
 
 static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * );
 static int MPIDI_CH3i_Progress_test(void);
@@ -467,7 +467,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
                 break;
             }
 		
-	    MPID_Request * rreq = conn->recv_active;
+	    MPIR_Request * rreq = conn->recv_active;
 
 	    /* --BEGIN ERROR HANDLING-- */
 	    if (event->error != MPI_SUCCESS)
@@ -516,7 +516,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 		}
 		else /* incoming data */
 		{
-		    int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+		    int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
 		    int complete;
 
 		    reqFn = rreq->dev.OnDataAvail;
@@ -577,8 +577,8 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 		
 	    if (conn->send_active)
 	    {
-		MPID_Request * sreq = conn->send_active;
-		int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+		MPIR_Request * sreq = conn->send_active;
+		int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
 		int complete;
 
 		reqFn = sreq->dev.OnDataAvail;
@@ -877,7 +877,7 @@ static int adjust_iov(MPL_IOV ** iovp, int * countp, MPIU_Size_t nb)
 /* end adjust_iov() */
 
 
-static int ReadMoreData( MPIDI_CH3I_Connection_t * conn, MPID_Request *rreq )
+static int ReadMoreData( MPIDI_CH3I_Connection_t * conn, MPIR_Request *rreq )
 {
     int mpi_errno = MPI_SUCCESS;
     
@@ -903,7 +903,7 @@ static int ReadMoreData( MPIDI_CH3I_Connection_t * conn, MPID_Request *rreq )
 		  conn->vc, nb, rreq->handle));
 				
 	if (nb > 0 && adjust_iov(&iovp, &rreq->dev.iov_count, nb)) {
-	    int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+	    int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
 	    int complete;
 	    
 	    reqFn = rreq->dev.OnDataAvail;

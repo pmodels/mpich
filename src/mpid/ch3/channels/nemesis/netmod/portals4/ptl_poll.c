@@ -183,7 +183,7 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
         case PTL_EVENT_SEND:
         case PTL_EVENT_REPLY:
         case PTL_EVENT_SEARCH: {
-            MPID_Request * const req = event.user_ptr;
+            MPIR_Request * const req = event.user_ptr;
             MPL_DBG_MSG_P(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "req = %p", req);
             MPL_DBG_MSG_P(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "REQ_PTL(req)->event_handler = %p", REQ_PTL(req)->event_handler);
             if (REQ_PTL(req)->event_handler) {

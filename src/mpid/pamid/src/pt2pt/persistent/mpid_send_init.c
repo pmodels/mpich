@@ -37,11 +37,11 @@ MPID_PSendRequest(const void    * buf,
                   int             tag,
                   MPIR_Comm     * comm,
                   int             context_offset,
-                  MPID_Request ** request)
+                  MPIR_Request ** request)
 {
-  MPID_Request* sreq = *request = MPIDI_Request_create2();
+  MPIR_Request* sreq = *request = MPIDI_Request_create2();
 
-  sreq->kind              = MPID_PREQUEST_SEND;
+  sreq->kind              = MPIR_PREQUEST_SEND;
   sreq->comm              = comm;
   MPIR_Comm_add_ref(comm);
   MPIDI_Request_setMatch(sreq, tag, rank, comm->context_id+context_offset);
@@ -73,7 +73,7 @@ int MPID_Send_init(const void * buf,
                    int tag,
                    MPIR_Comm * comm,
                    int context_offset,
-                   MPID_Request ** request)
+                   MPIR_Request ** request)
 {
   int mpi_errno = MPID_PSendRequest(buf,
                                     count,
@@ -102,7 +102,7 @@ int MPID_Ssend_init(const void * buf,
                    int tag,
                    MPIR_Comm * comm,
                    int context_offset,
-                   MPID_Request ** request)
+                   MPIR_Request ** request)
 {
   int mpi_errno = MPID_PSendRequest(buf,
                                     count,
@@ -131,7 +131,7 @@ int MPID_Bsend_init(const void * buf,
                     int tag,
                     MPIR_Comm * comm,
                     int context_offset,
-                    MPID_Request ** request)
+                    MPIR_Request ** request)
 {
   int mpi_errno = MPID_PSendRequest(buf,
                                     count,

@@ -15,7 +15,7 @@
 #define FUNCNAME MPIDI_CH3_iSend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPID_Request *sreq, void * hdr, intptr_t hdr_sz)
+int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPIR_Request *sreq, void * hdr, intptr_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     int again = 0;
@@ -61,7 +61,7 @@ int MPIDI_CH3_iSend (MPIDI_VC_t *vc, MPID_Request *sreq, void * hdr, intptr_t hd
 	}
 	else
 	{
-            int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+            int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
 
             reqFn = sreq->dev.OnDataAvail;
             if (!reqFn)
