@@ -131,7 +131,7 @@ typedef union {
  * MPIDI_CH3_CA_COMPLETE - The last operation for this request has completed.
  * The completion counter should be decremented.  If
  * it has reached zero, then the request should be released by calling 
- * MPID_Request_release().
+ * MPIR_Request_free().
  *
  * MPIDI_CH3_CA_UNPACK_UEBUF_AND_COMPLETE - This is a special case of the 
  * MPIDI_CH3_CA_COMPLETE.  The data for an unexpected

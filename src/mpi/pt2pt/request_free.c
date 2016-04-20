@@ -131,7 +131,7 @@ int MPI_Request_free(MPI_Request *request)
 		    mpi_errno = MPIR_Grequest_free(
 			request_ptr->partner_request);
 		}
-		MPID_Request_release(request_ptr->partner_request);
+		MPIR_Request_free(request_ptr->partner_request);
 	    }
 	    break;
 	}
@@ -143,7 +143,7 @@ int MPI_Request_free(MPI_Request *request)
 	       release the partner request. */
 	    if (request_ptr->partner_request != NULL)
 	    {
-		MPID_Request_release(request_ptr->partner_request);
+		MPIR_Request_free(request_ptr->partner_request);
 	    }
 	    break;
 	}
@@ -165,7 +165,7 @@ int MPI_Request_free(MPI_Request *request)
 	/* --END ERROR HANDLING-- */
     }
 
-    MPID_Request_release(request_ptr);
+    MPIR_Request_free(request_ptr);
     *request = MPI_REQUEST_NULL;
 
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;

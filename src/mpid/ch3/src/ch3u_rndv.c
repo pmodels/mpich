@@ -56,7 +56,7 @@ int MPIDI_CH3_RndvSend( MPIR_Request **sreq_p, const void * buf, MPI_Aint count,
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)
     {
-        MPID_Request_release(sreq);
+        MPIR_Request_free(sreq);
 	*sreq_p = NULL;
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rtspkt");
     }
@@ -65,13 +65,13 @@ int MPIDI_CH3_RndvSend( MPIR_Request **sreq_p, const void * buf, MPI_Aint count,
     {
 	if (rts_sreq->status.MPI_ERROR != MPI_SUCCESS)
 	{
-            MPID_Request_release(sreq);
+            MPIR_Request_free(sreq);
 	    *sreq_p = NULL;
             mpi_errno = rts_sreq->status.MPI_ERROR;
-            MPID_Request_release(rts_sreq);
+            MPIR_Request_free(rts_sreq);
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rtspkt");
 	}
-	MPID_Request_release(rts_sreq);
+	MPIR_Request_free(rts_sreq);
     }
 
     /* FIXME: fill temporary IOV or pack temporary buffer after send to hide 
@@ -165,7 +165,7 @@ int MPIDI_CH3_PktHandler_RndvReqToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 				"**ch3|ctspkt");
 	}
 	if (cts_req != NULL) {
-	    MPID_Request_release(cts_req);
+	    MPIR_Request_free(cts_req);
 	}
     }
     else
@@ -227,7 +227,7 @@ int MPIDI_CH3_PktHandler_RndvClrToSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     MPIDI_Request_fetch_and_clear_rts_sreq(sreq, &rts_sreq);
     if (rts_sreq != NULL)
     {
-	MPID_Request_release(rts_sreq);
+	MPIR_Request_free(rts_sreq);
     }
 
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
@@ -369,7 +369,7 @@ int MPIDI_CH3_RecvRndv( MPIDI_VC_t * vc, MPIR_Request *rreq )
 	/* FIXME: Ideally we could specify that a req not be returned.  
 	   This would avoid our having to decrement the
 	   reference count on a req we don't want/need. */
-	MPID_Request_release(cts_req);
+	MPIR_Request_free(cts_req);
     }
 
  fn_fail:    

@@ -56,7 +56,7 @@ static inline int request_complete_fastpath(MPI_Request *request, MPIR_Request *
     /* the completion path for SEND and RECV is the same at this time, modulo
      * the SENDQ hook above */
     mpi_errno = request_ptr->status.MPI_ERROR;
-    MPID_Request_release(request_ptr);
+    MPIR_Request_free(request_ptr);
     *request = MPI_REQUEST_NULL;
 
     /* avoid normal fn_exit/fn_fail jump pattern to reduce jumps and compiler confusion */

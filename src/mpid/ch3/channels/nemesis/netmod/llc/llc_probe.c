@@ -157,7 +157,7 @@ int MPID_nem_llc_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm,
 
         *flag = 1;
 
-        req = MPID_Request_create();
+        req = MPIR_Request_create();
         MPIU_Object_set_ref(req, 2);
         req->kind = MPIR_REQUEST_MPROBE;
         req->comm = comm;

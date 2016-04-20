@@ -81,7 +81,7 @@ int MPIDI_CH3_EagerSyncNoncontigSend( MPIR_Request **sreq_p,
 	{
         /* Make sure to destroy the request before setting the pointer to
          * NULL, otherwise we lose the handle on the request */
-            MPID_Request_release(sreq);
+            MPIR_Request_free(sreq);
 	    *sreq_p = NULL;
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|eagermsg");
 	}
@@ -152,7 +152,7 @@ int MPIDI_CH3_EagerSyncZero(MPIR_Request **sreq_p, int rank, int tag,
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)
     {
-	MPID_Request_release(sreq);
+	MPIR_Request_free(sreq);
 	*sreq_p = NULL;
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|eagermsg");
     }
@@ -185,7 +185,7 @@ int MPIDI_CH3_EagerSyncAck( MPIDI_VC_t *vc, MPIR_Request *rreq )
     }
     if (esa_req != NULL)
     {
-	MPID_Request_release(esa_req);
+	MPIR_Request_free(esa_req);
     }
  fn_fail:
     return mpi_errno;
@@ -299,7 +299,7 @@ int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 				"**ch3|syncack");
 	}
 	if (esa_req != NULL) {
-	    MPID_Request_release(esa_req);
+	    MPIR_Request_free(esa_req);
 	}
     }
     else

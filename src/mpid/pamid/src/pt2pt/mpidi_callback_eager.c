@@ -162,7 +162,7 @@ MPIDI_RecvCB(pami_context_t    context,
             #endif
           }
         MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
-        if (completed) MPID_Request_release(newreq);
+        if (completed) MPIR_Request_free(newreq);
         goto fn_exit_eager;
       }
       else

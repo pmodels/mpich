@@ -72,8 +72,8 @@ int MPID_Cancel_send(MPIR_Request * sreq)
              * reference.  We explicitly drop a second reference,
              * because the receive request will never be visible to
              * the user. */
-            MPID_Request_release(rreq);
-            MPID_Request_release(rreq);
+            MPIR_Request_free(rreq);
+            MPIR_Request_free(rreq);
 
 	    MPIR_STATUS_SET_CANCEL_BIT(sreq->status, TRUE);
             mpi_errno = MPID_Request_complete(sreq);
@@ -126,7 +126,7 @@ int MPID_Cancel_send(MPIR_Request * sreq)
 		
 		/* since we attempted to cancel a RTS request, then we are 
 		   responsible for releasing that request */
-		MPID_Request_release(rts_sreq);
+		MPIR_Request_free(rts_sreq);
 
 		/* --BEGIN ERROR HANDLING-- */
 		if (mpi_errno != MPI_SUCCESS)
@@ -204,7 +204,7 @@ int MPID_Cancel_send(MPIR_Request * sreq)
 	}
 	if (csr_sreq != NULL)
 	{
-	    MPID_Request_release(csr_sreq);
+	    MPIR_Request_free(csr_sreq);
 	}
     }
     
@@ -256,9 +256,9 @@ int MPIDI_CH3_PktHandler_CancelSendReq( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	}
 	if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_RNDV_MSG)
 	{
-	    MPID_Request_release(rreq);
+	    MPIR_Request_free(rreq);
 	}
-	MPID_Request_release(rreq);
+	MPIR_Request_free(rreq);
 	ack = TRUE;
     }
     else
@@ -280,7 +280,7 @@ int MPIDI_CH3_PktHandler_CancelSendReq( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     }
     if (resp_sreq != NULL)
     {
-	MPID_Request_release(resp_sreq);
+	MPIR_Request_free(resp_sreq);
     }
     
     *rreqp = NULL;

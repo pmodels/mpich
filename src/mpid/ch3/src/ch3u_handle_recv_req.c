@@ -318,7 +318,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
     MPIDU_Datatype_is_contig(rreq->dev.datatype, &is_contig);
     MPIDU_Datatype_get_true_lb(rreq->dev.datatype, &dt_true_lb);
 
-    resp_req = MPID_Request_create();
+    resp_req = MPIR_Request_create();
     MPIR_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     MPIU_Object_set_ref(resp_req, 1);
     MPIDI_Request_set_type(resp_req, MPIDI_REQUEST_TYPE_GET_ACCUM_RESP);
@@ -455,7 +455,7 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
     MPIDU_Datatype_is_contig(rreq->dev.datatype, &is_contig);
 
     /* Create response request */
-    resp_req = MPID_Request_create();
+    resp_req = MPIR_Request_create();
     MPIR_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     MPIDI_Request_set_type(resp_req, MPIDI_REQUEST_TYPE_FOP_RESP);
     MPIU_Object_set_ref(resp_req, 1);
@@ -879,7 +879,7 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
     create_derived_datatype(rreq, dtype_info, &new_dtp);
 
     /* create request for sending data */
-    sreq = MPID_Request_create();
+    sreq = MPIR_Request_create();
     MPIR_ERR_CHKANDJUMP(sreq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
     sreq->kind = MPIR_REQUEST_SEND;
@@ -919,7 +919,7 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
     /* MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex); */
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS) {
-        MPID_Request_release(sreq);
+        MPIR_Request_free(sreq);
         sreq = NULL;
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
@@ -1198,7 +1198,7 @@ static inline int perform_get_in_lock_queue(MPIR_Win * win_ptr,
     /* Make sure that all data is received for this op. */
     MPIU_Assert(target_lock_entry->all_data_recved == 1);
 
-    sreq = MPID_Request_create();
+    sreq = MPIR_Request_create();
     if (sreq == NULL) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     }
@@ -1251,7 +1251,7 @@ static inline int perform_get_in_lock_queue(MPIR_Win * win_ptr,
 
         mpi_errno = MPIDI_CH3_iSendv(target_lock_entry->vc, sreq, iov, iovcnt);
         if (mpi_errno != MPI_SUCCESS) {
-            MPID_Request_release(sreq);
+            MPIR_Request_free(sreq);
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
         }
     }
@@ -1264,7 +1264,7 @@ static inline int perform_get_in_lock_queue(MPIR_Win * win_ptr,
 
         mpi_errno = MPIDI_CH3_iSendv(target_lock_entry->vc, sreq, iov, iovcnt);
         if (mpi_errno != MPI_SUCCESS) {
-            MPID_Request_release(sreq);
+            MPIR_Request_free(sreq);
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
         }
     }
@@ -1374,7 +1374,7 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
     /* Make sure that all data is received for this op. */
     MPIU_Assert(target_lock_entry->all_data_recved == 1);
 
-    sreq = MPID_Request_create();
+    sreq = MPIR_Request_create();
     if (sreq == NULL) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     }
@@ -1448,7 +1448,7 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
 
         mpi_errno = MPIDI_CH3_iSendv(target_lock_entry->vc, sreq, iov, iovcnt);
         if (mpi_errno != MPI_SUCCESS) {
-            MPID_Request_release(sreq);
+            MPIR_Request_free(sreq);
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
         }
 
@@ -1533,7 +1533,7 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
 
     mpi_errno = MPIDI_CH3_iSendv(target_lock_entry->vc, sreq, iov, iovcnt);
     if (mpi_errno != MPI_SUCCESS) {
-        MPID_Request_release(sreq);
+        MPIR_Request_free(sreq);
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
 
@@ -1588,7 +1588,7 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
         fop_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_ACK;
 
     if (fop_pkt->type == MPIDI_CH3_PKT_FOP) {
-        resp_req = MPID_Request_create();
+        resp_req = MPIR_Request_create();
         if (resp_req == NULL) {
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomemreq");
         }
@@ -1679,11 +1679,11 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
                  * operation are completed when counter reaches zero. */
                 win_ptr->at_completion_counter++;
 
-                MPID_Request_release(resp_req);
+                MPIR_Request_free(resp_req);
                 goto fn_exit;
             }
             else {
-                MPID_Request_release(resp_req);
+                MPIR_Request_free(resp_req);
             }
         }
     }
@@ -1696,7 +1696,7 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
 
         mpi_errno = MPIDI_CH3_iSendv(target_lock_entry->vc, resp_req, iov, iovcnt);
         if (mpi_errno != MPI_SUCCESS) {
-            MPID_Request_release(resp_req);
+            MPIR_Request_free(resp_req);
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
         }
         goto fn_exit;
@@ -1779,11 +1779,11 @@ static inline int perform_cas_in_lock_queue(MPIR_Win * win_ptr,
              * operation are completed when counter reaches zero. */
             win_ptr->at_completion_counter++;
 
-            MPID_Request_release(send_req);
+            MPIR_Request_free(send_req);
             goto fn_exit;
         }
         else
-            MPID_Request_release(send_req);
+            MPIR_Request_free(send_req);
     }
 
     /* do final action */

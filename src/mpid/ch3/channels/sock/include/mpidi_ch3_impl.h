@@ -57,7 +57,7 @@
     {									\
 	vcch->sendq_tail = NULL;					\
     }									\
-    MPID_Request_release(req_);                                         \
+    MPIR_Request_free(req_);                                         \
 }
 
 

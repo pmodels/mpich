@@ -49,8 +49,8 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
          * progress engine reference and the second to release the
          * user reference since the user will never have a chance to
          * release their reference. */
-        MPID_Request_release(sreq);
-        MPID_Request_release(sreq);
+        MPIR_Request_free(sreq);
+        MPIR_Request_free(sreq);
 	sreq = NULL;
         MPIR_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**nomem", 
 		      "**nomemuereq %d", MPIDI_CH3U_Recvq_count_unexp());
@@ -66,8 +66,8 @@ int MPIDI_Isend_self(const void * buf, MPI_Aint count, MPI_Datatype datatype, in
          * progress engine reference and the second to release the
          * user reference since the user will never have a chance to
          * release their reference. */
-        MPID_Request_release(sreq);
-        MPID_Request_release(sreq);
+        MPIR_Request_free(sreq);
+        MPIR_Request_free(sreq);
         sreq = NULL;
         goto fn_exit;
     }

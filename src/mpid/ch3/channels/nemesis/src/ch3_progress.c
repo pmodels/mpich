@@ -119,7 +119,7 @@ static int check_terminating_vcs(void)
     while (!TERMQ_EMPTY() && MPIR_Request_is_complete(TERMQ_HEAD()->req)) {
         vc_term_element_t *ep;
         TERMQ_DEQUEUE(&ep);
-        MPID_Request_release(ep->req);
+        MPIR_Request_free(ep->req);
         mpi_errno = shm_connection_terminated(ep->vc);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPL_free(ep);
@@ -1166,7 +1166,7 @@ int MPIDI_CH3I_Complete_sendq_with_error(MPIDI_VC_t * vc)
             req->status.MPI_ERROR = MPI_SUCCESS;
             MPIR_ERR_SET1(req->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
             
-            MPID_Request_release(req); /* ref count was incremented when added to queue */
+            MPIR_Request_free(req); /* ref count was incremented when added to queue */
             mpi_errno = MPID_Request_complete(req);
             if (mpi_errno != MPI_SUCCESS) {
                 MPIR_ERR_POP(mpi_errno);

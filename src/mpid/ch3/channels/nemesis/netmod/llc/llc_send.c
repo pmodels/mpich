@@ -43,7 +43,7 @@ int MPID_nem_llc_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Data
     LLC_comm_rank(LLC_COMM_MPICH, &LLC_my_rank);
     dprintf("llc_isend,LLC_my_rank=%d\n", LLC_my_rank);
 
-    struct MPIR_Request *sreq = MPID_Request_create();
+    struct MPIR_Request *sreq = MPIR_Request_create();
     MPIU_Assert(sreq != NULL);
     MPIU_Object_set_ref(sreq, 2);
     sreq->kind = MPIR_REQUEST_SEND;
@@ -186,7 +186,7 @@ int MPID_nem_llc_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, intptr_t hdr_sz, vo
     MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "hdr type   = %d", ((MPIDI_CH3_Pkt_t *) hdr)->type);
 
     /* create a request */
-    sreq = MPID_Request_create();
+    sreq = MPIR_Request_create();
     MPIU_Assert(sreq != NULL);
     MPIU_Object_set_ref(sreq, 2);
     sreq->kind = MPIR_REQUEST_SEND;
@@ -976,7 +976,7 @@ int MPID_nem_llc_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
     LLC_comm_rank(LLC_COMM_MPICH, &LLC_my_rank);
     dprintf("llc_isend,LLC_my_rank=%d\n", LLC_my_rank);
 
-    struct MPIR_Request *sreq = MPID_Request_create();
+    struct MPIR_Request *sreq = MPIR_Request_create();
     MPIU_Assert(sreq != NULL);
     MPIU_Object_set_ref(sreq, 2);
     sreq->kind = MPIR_REQUEST_SEND;

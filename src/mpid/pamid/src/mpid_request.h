@@ -30,8 +30,8 @@
  * \{
  */
 
-#define MPID_Request_create    MPID_Request_create_inline
-#define MPID_Request_release   MPID_Request_release_inline
+#define MPIR_Request_create    MPID_Request_create_inline
+#define MPIR_Request_free   MPID_Request_free_inline
 #define MPIDI_Request_complete MPIDI_Request_complete_inline
 #define MPIDI_Request_complete_norelease MPIDI_Request_complete_norelease_inline
 #define MPID_Request_discard   MPID_Request_discard_inline
@@ -238,7 +238,7 @@ static inline MPIR_Request *
 MPIDI_Request_create2()
 {
   MPIR_Request * req;
-  req = MPID_Request_create();
+  req = MPIR_Request_create();
   MPIU_Object_set_ref(req, 2);
 
   return req;
@@ -248,7 +248,7 @@ static inline MPIR_Request *
 MPIDI_Request_create1()
 {
   MPIR_Request * req;
-  req = MPID_Request_create();
+  req = MPIR_Request_create();
   MPIU_Object_set_ref(req, 1);
 
   return req;
@@ -268,7 +268,7 @@ MPIDI_Request_create1()
 
 
 static inline void
-MPID_Request_release_inline(MPIR_Request *req)
+MPID_Request_free_inline(MPIR_Request *req)
 {
   int count;
   MPID_assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);
@@ -326,7 +326,7 @@ MPIDI_Request_complete_inline(MPIR_Request *req)
     MPIR_cc_decr(req->cc_ptr, &count);
     MPID_assert(count >= 0);
 
-    MPID_Request_release(req);
+    MPIR_Request_free(req);
     if (count == 0) /* decrement completion count; if 0, signal progress engine */
     {
       MPIDI_Progress_signal();

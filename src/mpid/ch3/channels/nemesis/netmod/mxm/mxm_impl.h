@@ -200,7 +200,7 @@ typedef GENERIC_Q_DECL(struct MPIR_Request) MPID_nem_mxm_reqq_t;
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST,                         \
                           "MPID_nem_mxm_queue_dequeuereq=%p (handle=%#x), queue=%p",      \
                           *(ep), *(ep) ? (*(ep))->handle : -1, qp));                    \
-        MPID_Request_release(*(ep));                                                    \
+        MPIR_Request_free(*(ep));                                                    \
     } while (0)
 
 typedef struct MPID_nem_mxm_module_t {

@@ -304,6 +304,7 @@ MPL_dbg_class MPIR_DBG_COMM;
 MPL_dbg_class MPIR_DBG_BSEND;
 MPL_dbg_class MPIR_DBG_ERRHAND;
 MPL_dbg_class MPIR_DBG_OTHER;
+MPL_dbg_class MPIR_DBG_REQUEST;
 
 /* these classes might need to move out later */
 MPL_dbg_class MPIR_DBG_ASSERT;
@@ -560,6 +561,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     MPIR_DBG_BSEND = MPL_dbg_class_alloc("BSEND", "bsend");
     MPIR_DBG_ERRHAND = MPL_dbg_class_alloc("ERRHAND", "errhand");
     MPIR_DBG_OTHER = MPL_dbg_class_alloc("OTHER", "other");
+    MPIR_DBG_REQUEST = MPL_dbg_class_alloc("REQUEST", "request");
 
     MPIR_DBG_ASSERT = MPL_dbg_class_alloc("ASSERT", "assert");
     MPIR_DBG_STRING = MPL_dbg_class_alloc("STRING", "string");

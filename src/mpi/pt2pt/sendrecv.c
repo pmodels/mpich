@@ -169,7 +169,7 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     {
 	/* --BEGIN ERROR HANDLING-- */
 	/* FIXME: should we cancel the pending (possibly completed) receive request or wait for it to complete? */
-	MPID_Request_release(rreq);
+	MPIR_Request_free(rreq);
 	goto fn_fail;
 	/* --END ERROR HANDLING-- */
     }
@@ -212,13 +212,13 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     mpi_errno = rreq->status.MPI_ERROR;
     MPIR_Request_extract_status(rreq, status);
-    MPID_Request_release(rreq);
+    MPIR_Request_free(rreq);
     
     if (mpi_errno == MPI_SUCCESS)
     {
 	mpi_errno = sreq->status.MPI_ERROR;
     }
-    MPID_Request_release(sreq);
+    MPIR_Request_free(sreq);
 
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
     

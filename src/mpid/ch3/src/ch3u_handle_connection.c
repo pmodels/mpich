@@ -258,7 +258,7 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
     if (sreq != NULL) {
 	/* There is still another reference being held by the channel.  It
 	   will not be released until the pkt is actually sent. */
-	MPID_Request_release(sreq);
+	MPIR_Request_free(sreq);
     }
 
  fn_exit:
@@ -300,7 +300,7 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	{
 	    /* There is still another reference being held by the channel.  It
 	       will not be released until the pkt is actually sent. */
-	    MPID_Request_release(resp_sreq);
+	    MPIR_Request_free(resp_sreq);
 	}
     }
     

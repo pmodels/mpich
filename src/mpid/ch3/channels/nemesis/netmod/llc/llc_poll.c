@@ -96,7 +96,7 @@ static void MPID_nem_llc_send_handler(void *cba, uint64_t * p_reqid)
              * control message send follows
              * MPIDI_CH3_iStartMsg/v-->MPID_nem_llc_iStartContigMsg-->MPID_nem_llc_iSendContig
              * and MPID_nem_llc_iSendContig set req->dev.state to zero
-             * because MPID_Request_create (in src/mpid/ch3/src/ch3u_request.c)
+             * because MPIR_Request_create
              * sets it to zero. In addition, eager-short message has req->comm of zero. */
 #ifndef	notdef_leak_0001_hack
             /* See also MPIDI_CH3_Request_create and _destory() */

@@ -168,7 +168,7 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
 	{
 	    /* --BEGIN ERROR HANDLING-- */
 	    /* FIXME: should we cancel the pending (possibly completed) receive request or wait for it to complete? */
-	    MPID_Request_release(rreq);
+	    MPIR_Request_free(rreq);
 	    goto fn_fail;
 	    /* --END ERROR HANDLING-- */
 	}
@@ -208,8 +208,8 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
 	    }
 	}
     
-	MPID_Request_release(sreq);
-	MPID_Request_release(rreq);
+	MPIR_Request_free(sreq);
+	MPIR_Request_free(rreq);
     }
 #   endif
 

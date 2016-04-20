@@ -324,7 +324,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     return mpi_errno;
  fn_fail:
     if (sreq) {
-        MPID_Request_release(sreq);
+        MPIR_Request_free(sreq);
         sreq = NULL;
     }
     MPIU_CHKPMEM_REAP();
@@ -405,7 +405,7 @@ int MPID_nem_ptl_cancel_send(struct MPIDI_VC *vc,  struct MPIR_Request *sreq)
                                  0, &csr_sreq);
 
     if (csr_sreq != NULL)
-        MPID_Request_release(csr_sreq);
+        MPIR_Request_free(csr_sreq);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_CANCEL_SEND);

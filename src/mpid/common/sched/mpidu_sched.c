@@ -407,7 +407,7 @@ int MPIDU_Sched_start(MPID_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
     MPIU_Assert(s->entries != NULL);
 
     /* now create and populate the request */
-    r = MPID_Request_create();
+    r = MPIR_Request_create();
     if (!r)
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     r->kind = MPIR_COLL_REQUEST;
@@ -450,8 +450,8 @@ int MPIDU_Sched_start(MPID_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
     if (*req)
         *req = NULL;
     if (r) {
-        MPID_Request_release(r);        /* the schedule's ref */
-        MPID_Request_release(r);        /* the user's ref */
+        MPIR_Request_free(r);        /* the schedule's ref */
+        MPIR_Request_free(r);        /* the user's ref */
     }
 
     goto fn_exit;
@@ -895,7 +895,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                         e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
                     else
                         e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
-                    MPID_Request_release(e->u.send.sreq);
+                    MPIR_Request_free(e->u.send.sreq);
                     e->u.send.sreq = NULL;
                     MPIR_Comm_release(e->u.send.comm);
                     dtype_release_if_not_builtin(e->u.send.datatype);
@@ -917,7 +917,7 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                         e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
                     else
                         e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
-                    MPID_Request_release(e->u.recv.rreq);
+                    MPIR_Request_free(e->u.recv.rreq);
                     e->u.recv.rreq = NULL;
                     MPIR_Comm_release(e->u.recv.comm);
                     dtype_release_if_not_builtin(e->u.recv.datatype);

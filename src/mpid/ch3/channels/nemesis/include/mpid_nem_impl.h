@@ -159,8 +159,8 @@ typedef union MPIDI_CH3_nem_pkt
             if (NULL != _rts_req) {                                                                     \
                 /* error case: drop both the ch3 and nemesis                                            \
                  * references, so the request can be cleanly freed */                                   \
-                MPID_Request_release(_rts_req);                                                         \
-                MPID_Request_release(_rts_req);                                                         \
+                MPIR_Request_free(_rts_req);                                                         \
+                MPIR_Request_free(_rts_req);                                                         \
             }                                                                                           \
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**rtspkt");                                  \
         }                                                                                               \
@@ -172,11 +172,11 @@ typedef union MPIDI_CH3_nem_pkt
                 mpi_errno = _rts_req->status.MPI_ERROR;                                                 \
                 /* error case: drop both the ch3 and nemesis                                            \
                  * references, so the request can be cleanly freed */                                   \
-                MPID_Request_release(_rts_req);                                                         \
-                MPID_Request_release(_rts_req);                                                         \
+                MPIR_Request_free(_rts_req);                                                         \
+                MPIR_Request_free(_rts_req);                                                         \
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**rtspkt");                              \
             }                                                                                           \
-            MPID_Request_release(_rts_req);                                                             \
+            MPIR_Request_free(_rts_req);                                                             \
         }                                                                                               \
     } while (0)
 
@@ -202,7 +202,7 @@ typedef union MPIDI_CH3_nem_pkt
         if (_cts_req != NULL)                                                                           \
         {                                                                                               \
             MPIR_ERR_CHKANDJUMP(_cts_req->status.MPI_ERROR, mpi_errno, MPI_ERR_OTHER, "**ctspkt");      \
-            MPID_Request_release(_cts_req);                                                             \
+            MPIR_Request_free(_cts_req);                                                             \
         }                                                                                               \
     } while (0)
         
@@ -253,7 +253,7 @@ static inline int MPID_nem_lmt_send_COOKIE(MPIDI_VC_t *vc, MPIR_Request *req,
     if (cookie_req != NULL)
     {
         MPIR_ERR_CHKANDJUMP(cookie_req->status.MPI_ERROR, mpi_errno, MPI_ERR_OTHER, "**cookiepkt");
-        MPID_Request_release(cookie_req);
+        MPIR_Request_free(cookie_req);
     }
 
 fn_fail:
@@ -273,7 +273,7 @@ fn_fail:
         if (_done_req != NULL)                                                                                  \
         {                                                                                                       \
             MPIR_ERR_CHKANDJUMP(_done_req->status.MPI_ERROR, mpi_errno, MPI_ERR_OTHER, "**donepkt");            \
-            MPID_Request_release(_done_req);                                                                    \
+            MPIR_Request_free(_done_req);                                                                    \
         }                                                                                                       \
     } while (0)   
 

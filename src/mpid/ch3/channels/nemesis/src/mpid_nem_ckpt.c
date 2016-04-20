@@ -445,7 +445,7 @@ int MPIDI_nem_ckpt_start(void)
         if (req != NULL)
         {
             MPIR_ERR_CHKANDJUMP(req->status.MPI_ERROR, mpi_errno, MPI_ERR_OTHER, "**ckptpkt");
-            MPID_Request_release(req);
+            MPIR_Request_free(req);
         }
 
         if (!vc_ch->is_local) {
