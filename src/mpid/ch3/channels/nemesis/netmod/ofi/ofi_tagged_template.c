@@ -124,7 +124,7 @@ static inline int ADD_SUFFIX(send_normal)(struct MPIDI_VC *vc,
     /* Create the MPI request                               */
     /* ---------------------------------------------------- */
     MPID_nem_ofi_create_req(&sreq, 2);
-    sreq->kind = MPIR_REQUEST_SEND;
+    sreq->kind = MPIR_REQUEST_KIND__SEND;
     sreq->dev.OnDataAvail = NULL;
     REQ_OFI(sreq)->event_callback = MPID_nem_ofi_send_callback;
     REQ_OFI(sreq)->vc = vc;

@@ -61,7 +61,7 @@ int MPIR_Wait_impl(MPI_Request *request, MPI_Status *status)
         while (!MPIR_Request_is_complete(request_ptr))
 	{
 	    mpi_errno = MPIR_Grequest_progress_poke(1, &request_ptr, status);
-	    if (request_ptr->kind == MPIR_UREQUEST &&
+	    if (request_ptr->kind == MPIR_REQUEST_KIND__GREQUEST &&
                 request_ptr->u.ureq.greq_fns->wait_fn != NULL)
 	    {
 		if (mpi_errno) {

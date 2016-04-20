@@ -117,10 +117,10 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPL_IOV *iov, int n_iov, MPIR_Request 
 	{
             /* Create a new request and save remaining portions of the
 	     * iov in it. */
-            sreq = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
+            sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
 	    MPIU_Assert(sreq != NULL);
 	    MPIU_Object_set_ref(sreq, 2);
-	    sreq->kind = MPIR_REQUEST_SEND;
+	    sreq->kind = MPIR_REQUEST_KIND__SEND;
 	    for (j = 0; j < remaining_n_iov; ++j)
 	    {
 		sreq->dev.iov[j] = remaining_iov[j];
@@ -148,10 +148,10 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPL_IOV *iov, int n_iov, MPIR_Request 
 	
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, TERSE, "request enqueued");
 	/* create a request */
-	sreq = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
+	sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
 	MPIU_Assert(sreq != NULL);
 	MPIU_Object_set_ref(sreq, 2);
-	sreq->kind = MPIR_REQUEST_SEND;
+	sreq->kind = MPIR_REQUEST_KIND__SEND;
 
 	sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) iov[0].MPL_IOV_BUF;
 	sreq->dev.iov[0].MPL_IOV_BUF = (char *) &sreq->dev.pending_pkt;

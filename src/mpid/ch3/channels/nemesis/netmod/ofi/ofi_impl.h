@@ -249,7 +249,7 @@ static inline int MPID_nem_ofi_create_req(MPIR_Request ** request, int refcnt)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req;
-    req = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
+    req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     MPIU_Assert(req);
     MPIDI_Request_clear_dbg(req);
     MPIU_Object_set_ref(req, refcnt);
@@ -271,7 +271,7 @@ static inline int MPID_nem_ofi_create_req_lw(MPIR_Request ** request, int refcnt
     MPIU_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);
 
     MPIU_Object_set_ref(req, refcnt);
-    req->kind = MPIR_REQUEST_SEND;
+    req->kind = MPIR_REQUEST_KIND__SEND;
     MPIR_cc_set(&req->cc, 0); // request is already completed
     req->cc_ptr  = &req->cc;
     req->status.MPI_ERROR  = MPI_SUCCESS;

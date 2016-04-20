@@ -95,7 +95,7 @@ int MPI_Grequest_complete( MPI_Request request )
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_Request_valid_ptr(request_ptr,mpi_errno);
-	    if (request_ptr && request_ptr->kind != MPIR_UREQUEST) {
+	    if (request_ptr && request_ptr->kind != MPIR_REQUEST_KIND__GREQUEST) {
  	        mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_ARG, 
 						  "**notgenreq", 0 );
 	    }

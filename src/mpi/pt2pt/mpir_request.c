@@ -73,7 +73,7 @@ int MPIR_Request_complete(MPI_Request * request, MPIR_Request * request_ptr,
     *active = TRUE;
     switch(request_ptr->kind)
     {
-	case MPIR_REQUEST_SEND:
+	case MPIR_REQUEST_KIND__SEND:
 	{
 	    if (status != MPI_STATUS_IGNORE)
 	    {
@@ -85,7 +85,7 @@ int MPIR_Request_complete(MPI_Request * request, MPIR_Request * request_ptr,
             if (NULL != request) *request = MPI_REQUEST_NULL;
 	    break;
 	}
-	case MPIR_REQUEST_RECV:
+	case MPIR_REQUEST_KIND__RECV:
 	{
 	    MPIR_Request_extract_status(request_ptr, status);
 	    mpi_errno = request_ptr->status.MPI_ERROR;
@@ -94,7 +94,7 @@ int MPIR_Request_complete(MPI_Request * request, MPIR_Request * request_ptr,
 	    break;
 	}
 			
-	case MPIR_PREQUEST_SEND:
+	case MPIR_REQUEST_KIND__PREQUEST_SEND:
 	{
 	    if (request_ptr->u.persist.real_request != NULL)
 	    {
@@ -105,7 +105,7 @@ int MPIR_Request_complete(MPI_Request * request, MPIR_Request * request_ptr,
 		request_ptr->cc_ptr = &request_ptr->cc;
 		request_ptr->u.persist.real_request = NULL;
 		
-		if (prequest_ptr->kind != MPIR_UREQUEST)
+		if (prequest_ptr->kind != MPIR_REQUEST_KIND__GREQUEST)
 		{
 		    if (status != MPI_STATUS_IGNORE)
 		    {
@@ -162,7 +162,7 @@ int MPIR_Request_complete(MPI_Request * request, MPIR_Request * request_ptr,
 	    break;
 	}
 	
-	case MPIR_PREQUEST_RECV:
+	case MPIR_REQUEST_KIND__PREQUEST_RECV:
 	{
 	    if (request_ptr->u.persist.real_request != NULL)
 	    {
@@ -198,7 +198,7 @@ int MPIR_Request_complete(MPI_Request * request, MPIR_Request * request_ptr,
 	    break;
 	}
 
-	case MPIR_UREQUEST:
+	case MPIR_REQUEST_KIND__GREQUEST:
 	{
             int rc;
             
@@ -220,8 +220,8 @@ int MPIR_Request_complete(MPI_Request * request, MPIR_Request * request_ptr,
 	    break;
 	}
 
-        case MPIR_COLL_REQUEST:
-        case MPIR_WIN_REQUEST:
+        case MPIR_REQUEST_KIND__COLL:
+        case MPIR_REQUEST_KIND__RMA:
         {
             mpi_errno = request_ptr->status.MPI_ERROR;
             MPIR_Request_extract_status(request_ptr, status);
@@ -260,19 +260,19 @@ int MPIR_Request_get_error(MPIR_Request * request_ptr)
 
     switch(request_ptr->kind)
     {
-	case MPIR_REQUEST_SEND:
-	case MPIR_REQUEST_RECV:
-        case MPIR_COLL_REQUEST:
+	case MPIR_REQUEST_KIND__SEND:
+	case MPIR_REQUEST_KIND__RECV:
+        case MPIR_REQUEST_KIND__COLL:
 	{
 	    mpi_errno = request_ptr->status.MPI_ERROR;
 	    break;
 	}
 
-	case MPIR_PREQUEST_SEND:
+	case MPIR_REQUEST_KIND__PREQUEST_SEND:
 	{
 	    if (request_ptr->u.persist.real_request != NULL)
 	    {
-		if (request_ptr->u.persist.real_request->kind == MPIR_UREQUEST)
+		if (request_ptr->u.persist.real_request->kind == MPIR_REQUEST_KIND__GREQUEST)
 		{
 		    /* This is needed for persistent Bsend requests */
 		    mpi_errno = MPIR_Grequest_query(
@@ -291,7 +291,7 @@ int MPIR_Request_get_error(MPIR_Request * request_ptr)
 	    break;
 	}
 
-	case MPIR_PREQUEST_RECV:
+	case MPIR_REQUEST_KIND__PREQUEST_RECV:
 	{
 	    if (request_ptr->u.persist.real_request != NULL)
 	    {
@@ -305,7 +305,7 @@ int MPIR_Request_get_error(MPIR_Request * request_ptr)
 	    break;
 	}
 
-	case MPIR_UREQUEST:
+	case MPIR_REQUEST_KIND__GREQUEST:
 	{
 	    int rc;
 	    
@@ -559,7 +559,7 @@ int MPIR_Grequest_progress_poke(int count,
     for (i=0, j=0, n_classes=1, n_native=0, n_greq=0; i< count; i++)
     {
 	if (request_ptrs[i] == NULL || MPIR_Request_is_complete(request_ptrs[i])) continue;
-	if (request_ptrs[i]->kind == MPIR_UREQUEST)
+	if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST)
 	{
 	    n_greq += 1;
 	    wait_fn = request_ptrs[i]->u.ureq.greq_fns->wait_fn;
@@ -582,7 +582,7 @@ int MPIR_Grequest_progress_poke(int count,
 	for (i = 0; i< count; i++ )
 	{
 	    if (request_ptrs[i] != NULL && 
-                request_ptrs[i]->kind == MPIR_UREQUEST && 
+                request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
                 !MPIR_Request_is_complete(request_ptrs[i]) &&
                 request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL)
             {
@@ -635,7 +635,7 @@ int MPIR_Grequest_waitall(int count, MPIR_Request * const * request_ptrs)
     for (i = 0; i < count; ++i)
     {
         /* skip over requests we're not interested in */
-        if (request_ptrs[i] == NULL || *request_ptrs[i]->cc_ptr == 0 ||  request_ptrs[i]->kind != MPIR_UREQUEST)
+        if (request_ptrs[i] == NULL || *request_ptrs[i]->cc_ptr == 0 ||  request_ptrs[i]->kind != MPIR_REQUEST_KIND__GREQUEST)
             continue;
         
         if (n_greq == 0 || request_ptrs[i]->u.ureq.greq_fns->greq_class == curr_class)
@@ -674,7 +674,7 @@ int MPIR_Grequest_waitall(int count, MPIR_Request * const * request_ptrs)
         /* skip over requests we're not interested in */
         if (request_ptrs[i] == NULL ||
             MPIR_Request_is_complete(request_ptrs[i]) ||
-            request_ptrs[i]->kind != MPIR_UREQUEST ||
+            request_ptrs[i]->kind != MPIR_REQUEST_KIND__GREQUEST ||
             request_ptrs[i]->u.ureq.greq_fns->wait_fn == NULL)
         {
             continue;
@@ -690,7 +690,7 @@ int MPIR_Grequest_waitall(int count, MPIR_Request * const * request_ptrs)
     {
         if (request_ptrs[i] == NULL ||
             MPIR_Request_is_complete(request_ptrs[i]) ||
-            request_ptrs[i]->kind != MPIR_UREQUEST)
+            request_ptrs[i]->kind != MPIR_REQUEST_KIND__GREQUEST)
         {
             continue;
         }

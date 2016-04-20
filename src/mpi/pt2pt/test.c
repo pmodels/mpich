@@ -52,7 +52,7 @@ int MPIR_Test_impl(MPI_Request *request, int *flag, MPI_Status *status)
     mpi_errno = MPID_Progress_test();
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    if (request_ptr->kind == MPIR_UREQUEST &&
+    if (request_ptr->kind == MPIR_REQUEST_KIND__GREQUEST &&
         request_ptr->u.ureq.greq_fns != NULL &&
         request_ptr->u.ureq.greq_fns->poll_fn != NULL)
     {

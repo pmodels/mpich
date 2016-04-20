@@ -52,7 +52,7 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl)(struct MPIDI_VC *vc,
     BEGIN_FUNC(FCNAME);
     if (rreq_ptr) {
         MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_create_req(&rreq, 1));
-        rreq->kind = MPIR_REQUEST_RECV;
+        rreq->kind = MPIR_REQUEST_KIND__RECV;
 
         *rreq_ptr = rreq;
         rreq->comm = comm;
@@ -165,7 +165,7 @@ int ADD_SUFFIX(MPID_nem_ofi_improbe)(struct MPIDI_VC *vc,
                                              tag, comm, context_offset, flag, status, message);
     if (*flag) {
         status->MPI_ERROR = old_error;
-        (*message)->kind = MPIR_REQUEST_MPROBE;
+        (*message)->kind = MPIR_REQUEST_KIND__MPROBE;
     }
     END_FUNC(FCNAME);
     return s;

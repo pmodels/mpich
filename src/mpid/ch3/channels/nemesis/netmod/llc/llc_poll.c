@@ -85,8 +85,8 @@ static void MPID_nem_llc_send_handler(void *cba, uint64_t * p_reqid)
     kind = sreq->kind;
     switch (kind) {
         unsigned int reqtype;
-    case MPIR_REQUEST_SEND:
-    case MPIR_PREQUEST_SEND:{
+    case MPIR_REQUEST_KIND__SEND:
+    case MPIR_REQUEST_KIND__PREQUEST_SEND:{
             reqtype = MPIDI_Request_get_type(sreq);
 
             /* Free temporal buffer for non-contiguous data.

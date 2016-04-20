@@ -89,10 +89,10 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, TERSE, "enqueuing");
 
 	/* create a request */
-	sreq = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
+	sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
 	MPIU_Assert (sreq != NULL);
 	MPIU_Object_set_ref (sreq, 2);
-	sreq->kind = MPIR_REQUEST_SEND;
+	sreq->kind = MPIR_REQUEST_KIND__SEND;
 
 	sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;
 	sreq->dev.iov[0].MPL_IOV_BUF = (char *) &sreq->dev.pending_pkt;

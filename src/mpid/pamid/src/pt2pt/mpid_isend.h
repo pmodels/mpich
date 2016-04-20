@@ -113,7 +113,7 @@ MPID_Isend_inline(const void    * buf,
   unsigned ncontexts = MPIDI_Process.avail_contexts;
   /* communicator & destination info */
   sreq->comm = comm;
-  sreq->kind = MPIR_REQUEST_SEND;
+  sreq->kind = MPIR_REQUEST_KIND__SEND;
   MPIR_Comm_add_ref(comm);
 
   pami_context_t context = MPIDI_Context[MPIDI_Context_hash(rank, context_id, 0, ncontexts)];
