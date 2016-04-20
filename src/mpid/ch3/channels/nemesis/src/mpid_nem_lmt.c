@@ -339,7 +339,7 @@ static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *bufle
        the RTS request object. */
     MPIDI_Request_fetch_and_clear_rts_sreq(sreq, &rts_sreq);
     if (rts_sreq != NULL)
-        MPID_Request_release(rts_sreq);
+        MPIR_Request_free(rts_sreq);
 
     if (cts_pkt->cookie_len != 0)
     {

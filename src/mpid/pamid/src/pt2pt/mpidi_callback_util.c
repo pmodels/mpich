@@ -131,7 +131,7 @@ MPIDI_Callback_process_trunc(pami_context_t  context,
       rreq->mpid.uebuflen = MPIR_STATUS_GET_COUNT(rreq->status);
       rreq->mpid.uebuf    = (void*)sndbuf;
       MPIDI_RecvDoneCB(context, rreq, PAMI_SUCCESS);
-      MPID_Request_release(rreq);
+      MPIR_Request_free(rreq);
     }
 }
 
@@ -191,5 +191,5 @@ MPIDI_Callback_process_userdefined_dt(pami_context_t      context,
   rreq->mpid.uebuflen = sndlen;
   rreq->mpid.uebuf    = (void*)sndbuf;
   MPIDI_RecvDoneCB(context, rreq, PAMI_SUCCESS);
-  MPID_Request_release(rreq);
+  MPIR_Request_free(rreq);
 }

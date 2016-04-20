@@ -199,7 +199,7 @@ MPIDI_Win_GetAccDoneCB(pami_context_t  context,
        * portion of the request structure after decrementing the completion
        * counter.
        *
-       * See MPID_Request_release_inline()
+       * See MPID_Request_free_inline()
        */
       if(req_handle)
           MPIR_cc_set(req_handle->cc_ptr, 0);

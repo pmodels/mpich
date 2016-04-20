@@ -104,7 +104,7 @@ MPIDI_RecvRzvDoneCB(pami_context_t  context,
 #endif
 
   MPIDI_RecvDoneCB(context, rreq, PAMI_SUCCESS);
-  MPID_Request_release(rreq);
+  MPIR_Request_free(rreq);
 }
 
 /**
@@ -135,7 +135,7 @@ MPIDI_RecvRzvDoneCB_zerobyte(pami_context_t  context,
   TRACE_SET_R_BIT(MPIDI_Request_getPeerRank_pami(rreq),(rreq->mpid.idx),fl.f.sync_com_in_HH);
   TRACE_SET_R_BIT(MPIDI_Request_getPeerRank_pami(rreq),(rreq->mpid.idx),fl.f.matchedInHH);
   TRACE_SET_R_VAL(MPIDI_Request_getPeerRank_pami(rreq),(rreq->mpid.idx),bufadd,rreq->mpid.userbuf);
-  MPID_Request_release(rreq);
+  MPIR_Request_free(rreq);
 }
 
 /**
@@ -273,7 +273,7 @@ MPIDI_CancelReq_proc(pami_context_t        context,
                         info->MPIctxt);
   if(sreq)
     {
-      MPID_Request_release(sreq);
+      MPIR_Request_free(sreq);
       type = MPIDI_CONTROL_CANCEL_ACKNOWLEDGE;
     }
   else

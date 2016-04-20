@@ -127,8 +127,8 @@ int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, in
     id_any.phys.pid = PTL_PID_ANY;
     
     /* create a request */
-    req = MPID_Request_create();
-    MPIR_ERR_CHKANDJUMP1(!req, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Request_create");
+    req = MPIR_Request_create();
+    MPIR_ERR_CHKANDJUMP1(!req, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Request_create");
     MPIU_Object_set_ref(req, 2); /* 1 ref for progress engine and 1 ref for us */
     REQ_PTL(req)->event_handler = handle_probe;
 
@@ -171,7 +171,7 @@ int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, in
     if (status != MPI_STATUS_IGNORE)
         *status = req->status;
     
-    MPID_Request_release(req);
+    MPIR_Request_free(req);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_IPROBE);
@@ -202,9 +202,9 @@ int MPID_nem_ptl_improbe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, i
     id_any.phys.pid = PTL_PID_ANY;
 
     /* create a request */
-    req = MPID_Request_create();
+    req = MPIR_Request_create();
     MPID_nem_ptl_init_req(req);
-    MPIR_ERR_CHKANDJUMP1(!req, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Request_create");
+    MPIR_ERR_CHKANDJUMP1(!req, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Request_create");
     MPIU_Object_set_ref(req, 2); /* 1 ref for progress engine and 1 ref for us */
     REQ_PTL(req)->event_handler = handle_mprobe;
     req->kind = MPIR_REQUEST_MPROBE;
@@ -251,7 +251,7 @@ int MPID_nem_ptl_improbe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, i
         *message = req;
     }
     else {
-        MPID_Request_release(req);
+        MPIR_Request_free(req);
     }
 
  fn_exit:
@@ -323,9 +323,9 @@ int MPID_nem_ptl_pkt_cancel_send_req_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pk
 
     /* create a dummy request and search for the message */
     /* create a request */
-    search_req = MPID_Request_create();
+    search_req = MPIR_Request_create();
     MPID_nem_ptl_init_req(search_req);
-    MPIR_ERR_CHKANDJUMP1(!search_req, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Request_create");
+    MPIR_ERR_CHKANDJUMP1(!search_req, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Request_create");
     MPIU_Object_set_ref(search_req, 2); /* 1 ref for progress engine and 1 ref for us */
     search_req->kind = MPIR_REQUEST_MPROBE;
 
@@ -368,9 +368,9 @@ int MPID_nem_ptl_pkt_cancel_send_req_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pk
     if (REQ_PTL(search_req)->found)
         MPL_free(search_req->dev.tmpbuf);
 
-    MPID_Request_release(search_req);
+    MPIR_Request_free(search_req);
     if (resp_req != NULL)
-        MPID_Request_release(resp_req);
+        MPIR_Request_free(resp_req);
 
  fn_exit:
     return mpi_errno;

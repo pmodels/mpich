@@ -70,7 +70,7 @@ int MPID_Comm_revoke(MPIR_Comm *comm_ptr, int is_remote)
                 /* We don't need to keep a reference to this request. The
                  * progress engine will keep a reference until it completes
                  * later */
-                MPID_Request_release(request);
+                MPIR_Request_free(request);
         }
 
         /* Check to see if we are done revoking */

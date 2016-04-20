@@ -99,7 +99,7 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl)(struct MPIDI_VC *vc,
     ret = fi_trecvmsg(gl_data.endpoint,&msg,msgflags);
     if(ret == -ENOMSG) {
       if (rreq_ptr) {
-        MPID_Request_release(rreq);
+        MPIR_Request_free(rreq);
         *rreq_ptr = NULL;
         *flag = 0;
       }
@@ -115,7 +115,7 @@ int ADD_SUFFIX(MPID_nem_ofi_iprobe_impl)(struct MPIDI_VC *vc,
 
     if (PEEK_NOT_FOUND == REQ_OFI(rreq)->match_state) {
         if (rreq_ptr) {
-            MPID_Request_release(rreq);
+            MPIR_Request_free(rreq);
             *rreq_ptr = NULL;
             *flag = 0;
         }

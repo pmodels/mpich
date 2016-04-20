@@ -81,7 +81,7 @@ int MPIR_Request_complete(MPI_Request * request, MPIR_Request * request_ptr,
 	    }
 	    mpi_errno = request_ptr->status.MPI_ERROR;
 	    MPIR_SENDQ_FORGET(request_ptr);
-	    MPID_Request_release(request_ptr);
+	    MPIR_Request_free(request_ptr);
             if (NULL != request) *request = MPI_REQUEST_NULL;
 	    break;
 	}
@@ -89,7 +89,7 @@ int MPIR_Request_complete(MPI_Request * request, MPIR_Request * request_ptr,
 	{
 	    MPIR_Request_extract_status(request_ptr, status);
 	    mpi_errno = request_ptr->status.MPI_ERROR;
-	    MPID_Request_release(request_ptr);
+	    MPIR_Request_free(request_ptr);
             if (NULL != request) *request = MPI_REQUEST_NULL;
 	    break;
 	}
@@ -138,7 +138,7 @@ int MPIR_Request_complete(MPI_Request * request, MPIR_Request * request_ptr,
                     }
 		}
 
-		MPID_Request_release(prequest_ptr);
+		MPIR_Request_free(prequest_ptr);
 	    }
 	    else
 	    {
@@ -176,7 +176,7 @@ int MPIR_Request_complete(MPI_Request * request, MPIR_Request * request_ptr,
 		MPIR_Request_extract_status(prequest_ptr, status);
 		mpi_errno = prequest_ptr->status.MPI_ERROR;
 
-		MPID_Request_release(prequest_ptr);
+		MPIR_Request_free(prequest_ptr);
 	    }
 	    else
 	    {
@@ -214,7 +214,7 @@ int MPIR_Request_complete(MPI_Request * request, MPIR_Request * request_ptr,
                 mpi_errno = rc;
             }
             
-            MPID_Request_release(request_ptr);
+            MPIR_Request_free(request_ptr);
             if (NULL != request) *request = MPI_REQUEST_NULL;
 	    
 	    break;
@@ -225,7 +225,7 @@ int MPIR_Request_complete(MPI_Request * request, MPIR_Request * request_ptr,
         {
             mpi_errno = request_ptr->status.MPI_ERROR;
             MPIR_Request_extract_status(request_ptr, status);
-            MPID_Request_release(request_ptr);
+            MPIR_Request_free(request_ptr);
             if (NULL != request) *request = MPI_REQUEST_NULL;
             break;
         }

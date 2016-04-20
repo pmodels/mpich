@@ -88,7 +88,7 @@ int MPID_nem_tcp_ckpt_continue_vc(MPIDI_VC_t *vc)
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     if (unpause_req) {
         if (unpause_req->status.MPI_ERROR) MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
-        MPID_Request_release(unpause_req);
+        MPIR_Request_free(unpause_req);
         if (mpi_errno) goto fn_fail;
     }
 
@@ -125,10 +125,10 @@ int MPID_nem_tcp_ckpt_restart_vc(MPIDI_VC_t *vc)
     if (sreq != NULL) {
         if (sreq->status.MPI_ERROR != MPI_SUCCESS) {
             mpi_errno = sreq->status.MPI_ERROR;
-            MPID_Request_release(sreq);
+            MPIR_Request_free(sreq);
             MPIR_ERR_INTERNALANDJUMP(mpi_errno, "Failed to send checkpoint unpause pkt.");
         }
-        MPID_Request_release(sreq);
+        MPIR_Request_free(sreq);
     }
     
 fn_exit:

@@ -314,7 +314,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
      * always need a request to be passed in. */
 
     /* create a new request */
-    req = MPID_Request_create();
+    req = MPIR_Request_create();
     MPIR_ERR_CHKANDJUMP(req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
     MPIU_Object_set_ref(req, 2);
@@ -381,7 +381,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
             MPIDU_Datatype_release(req->dev.datatype_ptr);
         if (req->dev.ext_hdr_ptr)
             MPL_free(req->dev.ext_hdr_ptr);
-        MPID_Request_release(req);
+        MPIR_Request_free(req);
     }
 
     (*req_ptr) = NULL;
@@ -676,7 +676,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         /* Create a request for the GACC response.  Store the response buf, count, and
          * datatype in it, and pass the request's handle in the GACC packet. When the
          * response comes from the target, it will contain the request handle. */
-        resp_req = MPID_Request_create();
+        resp_req = MPIR_Request_create();
         MPIR_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
         MPIU_Object_set_ref(resp_req, 2);
@@ -697,7 +697,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
         if (curr_req != NULL) {
-            MPID_Request_release(curr_req);
+            MPIR_Request_free(curr_req);
         }
 
         rma_op->single_req = resp_req;
@@ -771,7 +771,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         /* Create a request for the GACC response.  Store the response buf, count, and
          * datatype in it, and pass the request's handle in the GACC packet. When the
          * response comes from the target, it will contain the request handle. */
-        resp_req = MPID_Request_create();
+        resp_req = MPIR_Request_create();
         MPIR_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
         MPIU_Object_set_ref(resp_req, 2);
@@ -814,7 +814,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
             MPIR_ERR_POP(mpi_errno);
 
         if (curr_req != NULL) {
-            MPID_Request_release(curr_req);
+            MPIR_Request_free(curr_req);
         }
 
         if (rma_op->reqs_size == 1)
@@ -847,8 +847,8 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         /* error case: drop both our reference to the request and the
          * progress engine's reference to it, since the progress
          * engine didn't get a chance to see it yet. */
-        MPID_Request_release(rma_op->single_req);
-        MPID_Request_release(rma_op->single_req);
+        MPIR_Request_free(rma_op->single_req);
+        MPIR_Request_free(rma_op->single_req);
         rma_op->single_req = NULL;
     }
     else if (rma_op->reqs_size > 1) {
@@ -858,8 +858,8 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
                  * and the progress engine's reference to it, since
                  * the progress engine didn't get a chance to see it
                  * yet. */
-                MPID_Request_release(rma_op->multi_reqs[i]);
-                MPID_Request_release(rma_op->multi_reqs[i]);
+                MPIR_Request_free(rma_op->multi_reqs[i]);
+                MPIR_Request_free(rma_op->multi_reqs[i]);
             }
         }
         MPL_free(rma_op->multi_reqs);
@@ -899,7 +899,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
      * and pass a handle to it in the get packet. When the get
      * response comes from the target, it will contain the request
      * handle. */
-    curr_req = MPID_Request_create();
+    curr_req = MPIR_Request_create();
     if (curr_req == NULL) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     }
@@ -982,7 +982,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 
     /* release the request returned by iStartMsg or iStartMsgv */
     if (req != NULL) {
-        MPID_Request_release(req);
+        MPIR_Request_free(req);
     }
 
     rma_op->single_req = curr_req;
@@ -1022,7 +1022,7 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     /* Create a request for the RMW response.  Store the origin buf, count, and
      * datatype in it, and pass the request's handle RMW packet. When the
      * response comes from the target, it will contain the request handle. */
-    curr_req = MPID_Request_create();
+    curr_req = MPIR_Request_create();
     MPIR_ERR_CHKANDJUMP(curr_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
     /* Set refs on the request to 2: one for the response message, and one for
@@ -1045,7 +1045,7 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
     if (rmw_req != NULL) {
-        MPID_Request_release(rmw_req);
+        MPIR_Request_free(rmw_req);
     }
 
     rma_op->single_req = curr_req;
@@ -1085,7 +1085,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     /* Create a request for the GACC response.  Store the response buf, count, and
      * datatype in it, and pass the request's handle in the GACC packet. When the
      * response comes from the target, it will contain the request handle. */
-    resp_req = MPID_Request_create();
+    resp_req = MPIR_Request_create();
     MPIR_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
     MPIU_Object_set_ref(resp_req, 2);
@@ -1118,7 +1118,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     }
 
     if (curr_req != NULL) {
-        MPID_Request_release(curr_req);
+        MPIR_Request_free(curr_req);
     }
 
     rma_op->single_req = resp_req;

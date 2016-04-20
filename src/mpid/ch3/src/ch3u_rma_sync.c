@@ -548,7 +548,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
                     win_ptr->states.access_state = MPIDI_RMA_FENCE_GRANTED;
                 }
 
-                MPID_Request_release(req_ptr);
+                MPIR_Request_free(req_ptr);
             }
 
             goto finish_fence;
@@ -672,7 +672,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
                     win_ptr->states.access_state = MPIDI_RMA_FENCE_GRANTED;
                 }
 
-                MPID_Request_release(req_ptr);
+                MPIR_Request_free(req_ptr);
             }
 
             if (win_ptr->shm_allocated == TRUE) {
@@ -909,7 +909,7 @@ int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
                         win_ptr->sync_request_cnt++;
                     }
 
-                    MPID_Request_release(req_ptr);
+                    MPIR_Request_free(req_ptr);
                 }
             }
         }

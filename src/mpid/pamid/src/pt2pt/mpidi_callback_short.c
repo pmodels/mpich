@@ -124,7 +124,7 @@ MPIDI_RecvShortCB(pami_context_t    context,
             #endif
           }
         MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
-        MPID_Request_release(newreq);
+        MPIR_Request_free(newreq);
         goto fn_exit_short;
       }
       else

@@ -128,7 +128,7 @@ MPIDI_RecvDoneCB_mutexed(pami_context_t   context,
   MPIDI_RecvDoneCB(context, clientdata, result);
 
   MPIU_THREAD_CS_EXIT(MSGQUEUE, 0);
-  MPID_Request_release(rreq);
+  MPIR_Request_free(rreq);
 }
 
 
@@ -226,7 +226,7 @@ void MPIDI_Recvq_process_out_of_order_msgs(pami_task_t src, pami_context_t conte
           rreq->mpid.envelope.msginfo.MPIseqno = ooreq->mpid.envelope.msginfo.MPIseqno;
 	  MPIDI_Request_complete(rreq);
         }
-        MPID_Request_release(ooreq);
+        MPIR_Request_free(ooreq);
 
       } else {
         if (MPIDI_Request_getMatchSeq(ooreq) == (in_cntr->nMsgs+ 1))

@@ -40,7 +40,7 @@ extern struct MPIR_Request *MPIDI_CH3I_shm_active_send;
         MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CHANNEL, VERBOSE, (MPL_DBG_FDEST,                         \
                           "MPIDI_CH3I_Sendq_dequeuereq=%p (handle=%#x), queue=%p",      \
                           *(ep), *(ep) ? (*(ep))->handle : -1, qp));                    \
-        MPID_Request_release(*(ep));                                                    \
+        MPIR_Request_free(*(ep));                                                    \
     } while (0)
 #define MPIDI_CH3I_Sendq_enqueue_multiple_no_refcount(qp, ep0, ep1)             \
     /* used to move reqs from one queue to another, so we don't update */       \

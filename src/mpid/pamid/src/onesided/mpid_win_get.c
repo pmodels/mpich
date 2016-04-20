@@ -316,7 +316,7 @@ MPID_Get(void         *origin_addr,
        * portion of the request structure after decrementing the completion
        * counter.
        *
-       * See MPID_Request_release_inline()
+       * See MPID_Request_free_inline()
        */
       if(req->req_handle)
         MPIR_cc_set(req->req_handle->cc_ptr, 0);

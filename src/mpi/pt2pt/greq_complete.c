@@ -40,7 +40,7 @@ void MPIR_Grequest_complete_impl(MPIR_Request *request_ptr)
     MPID_Request_complete( request_ptr );
 
     /* The request release comes with the wait/test, not this complete
-       routine, so we don't call the MPID_Request_release routine */
+       routine, so we don't call the MPIR_Request_free routine */
 }
 
 #endif

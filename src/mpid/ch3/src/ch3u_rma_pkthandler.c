@@ -315,7 +315,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
         data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
 
-        req = MPID_Request_create();
+        req = MPIR_Request_create();
         MPIU_Object_set_ref(req, 1);
 
         req->dev.user_buf = put_pkt->addr;
@@ -464,7 +464,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         goto fn_exit;
     }
 
-    req = MPID_Request_create();
+    req = MPIR_Request_create();
     req->dev.target_win_handle = get_pkt->target_win_handle;
     req->dev.flags = get_pkt->flags;
 
@@ -530,7 +530,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
             /* --BEGIN ERROR HANDLING-- */
             if (mpi_errno != MPI_SUCCESS) {
-                MPID_Request_release(req);
+                MPIR_Request_free(req);
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
             }
             /* --END ERROR HANDLING-- */
@@ -547,7 +547,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
             /* --BEGIN ERROR HANDLING-- */
             if (mpi_errno != MPI_SUCCESS) {
-                MPID_Request_release(req);
+                MPIR_Request_free(req);
                 MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
             }
             /* --END ERROR HANDLING-- */
@@ -705,7 +705,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     else {
         MPIU_Assert(pkt->type == MPIDI_CH3_PKT_ACCUMULATE);
 
-        req = MPID_Request_create();
+        req = MPIR_Request_create();
         MPIU_Object_set_ref(req, 1);
         *rreqp = req;
 
@@ -905,7 +905,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         /* Immed packet type is used when target datatype is predefined datatype. */
         MPIU_Assert(MPIR_DATATYPE_IS_PREDEFINED(get_accum_pkt->datatype));
 
-        resp_req = MPID_Request_create();
+        resp_req = MPIR_Request_create();
         resp_req->dev.target_win_handle = get_accum_pkt->target_win_handle;
         resp_req->dev.flags = get_accum_pkt->flags;
 
@@ -968,7 +968,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno != MPI_SUCCESS) {
-            MPID_Request_release(resp_req);
+            MPIR_Request_free(resp_req);
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
         }
         /* --END ERROR HANDLING-- */
@@ -978,7 +978,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
         MPIU_Assert(pkt->type == MPIDI_CH3_PKT_GET_ACCUM);
 
-        req = MPID_Request_create();
+        req = MPIR_Request_create();
         MPIU_Object_set_ref(req, 1);
         *rreqp = req;
 
@@ -1230,11 +1230,11 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
              * operation are completed when counter reaches zero. */
             win_ptr->at_completion_counter++;
 
-            MPID_Request_release(req);
+            MPIR_Request_free(req);
             goto fn_exit;
         }
         else
-            MPID_Request_release(req);
+            MPIR_Request_free(req);
     }
 
     mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */ ,
@@ -1409,11 +1409,11 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                  * operation are completed when counter reaches zero. */
                 win_ptr->at_completion_counter++;
 
-                MPID_Request_release(resp_req);
+                MPIR_Request_free(resp_req);
                 goto fn_exit;
             }
             else {
-                MPID_Request_release(resp_req);
+                MPIR_Request_free(resp_req);
             }
         }
 
@@ -1436,7 +1436,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         if (fop_pkt->op == MPI_NO_OP)
             is_empty_origin = TRUE;
 
-        req = MPID_Request_create();
+        req = MPIR_Request_create();
         MPIU_Object_set_ref(req, 1);
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_FOP_RECV);
         *rreqp = req;

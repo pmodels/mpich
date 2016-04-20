@@ -1482,6 +1482,90 @@ struct MPIR_Grequest_fns {
                                                        the generalize req */
 };
 
+#if defined (MPL_USE_DBG_LOGGING)
+extern MPL_dbg_class MPIR_DBG_INIT;
+extern MPL_dbg_class MPIR_DBG_PT2PT;
+extern MPL_dbg_class MPIR_DBG_THREAD;
+extern MPL_dbg_class MPIR_DBG_DATATYPE;
+extern MPL_dbg_class MPIR_DBG_COMM;
+extern MPL_dbg_class MPIR_DBG_BSEND;
+extern MPL_dbg_class MPIR_DBG_ERRHAND;
+extern MPL_dbg_class MPIR_DBG_OTHER;
+extern MPL_dbg_class MPIR_DBG_REQUEST;
+extern MPL_dbg_class MPIR_DBG_ASSERT;
+#endif /* MPL_USE_DBG_LOGGING */
+
+/* MPI_Status manipulation macros */
+#define MPIR_BITS_IN_INT (8 * SIZEOF_INT)
+
+/* We use bits from the "count_lo" and "count_hi_and_cancelled" fields
+ * to represent the 'count' and 'cancelled' objects.  The LSB of the
+ * "count_hi_and_cancelled" field represents the 'cancelled' object.
+ * The 'count' object is split between the "count_lo" and
+ * "count_hi_and_cancelled" fields, with the lower order bits going
+ * into the "count_lo" field, and the higher order bits goin into the
+ * "count_hi_and_cancelled" field.  This gives us 2N-1 bits for the
+ * 'count' object, where N is the size of int.  However, the value
+ * returned to the user is bounded by the definition on MPI_Count. */
+/* NOTE: The below code assumes that the count value is never
+ * negative.  For negative values, right-shifting can have weird
+ * implementation specific consequences. */
+#define MPIR_STATUS_SET_COUNT(status_, count_)                          \
+    {                                                                   \
+        (status_).count_lo = ((int) count_);                            \
+        (status_).count_hi_and_cancelled &= 1;                          \
+        (status_).count_hi_and_cancelled |= (int) ((MPIR_Ucount) count_ >> MPIR_BITS_IN_INT << 1); \
+    }
+
+#define MPIR_STATUS_GET_COUNT(status_)                                  \
+    ((MPI_Count) ((((MPIR_Ucount) (((unsigned int) (status_).count_hi_and_cancelled) >> 1)) << MPIR_BITS_IN_INT) + (unsigned int) (status_).count_lo))
+
+#define MPIR_STATUS_SET_CANCEL_BIT(status_, cancelled_)	\
+    {                                                   \
+        (status_).count_hi_and_cancelled &= ~1;         \
+        (status_).count_hi_and_cancelled |= cancelled_; \
+    }
+
+#define MPIR_STATUS_GET_CANCEL_BIT(status_)	((status_).count_hi_and_cancelled & 1)
+
+/* Do not set MPI_ERROR (only set if ERR_IN_STATUS is returned */
+#define MPIR_Status_set_empty(status_)                          \
+    {                                                           \
+        if ((status_) != MPI_STATUS_IGNORE)                     \
+        {                                                       \
+            (status_)->MPI_SOURCE = MPI_ANY_SOURCE;             \
+            (status_)->MPI_TAG = MPI_ANY_TAG;                   \
+            MPIR_STATUS_SET_COUNT(*(status_), 0);               \
+            MPIR_STATUS_SET_CANCEL_BIT(*(status_), FALSE);      \
+        }                                                       \
+    }
+/* See MPI 1.1, section 3.11, Null Processes */
+/* Do not set MPI_ERROR (only set if ERR_IN_STATUS is returned */
+#define MPIR_Status_set_procnull(status_)                       \
+    {                                                           \
+        if ((status_) != MPI_STATUS_IGNORE)                     \
+        {                                                       \
+            (status_)->MPI_SOURCE = MPI_PROC_NULL;              \
+            (status_)->MPI_TAG = MPI_ANY_TAG;                   \
+            MPIR_STATUS_SET_COUNT(*(status_), 0);               \
+            MPIR_STATUS_SET_CANCEL_BIT(*(status_), FALSE);      \
+        }                                                       \
+    }
+
+#define MPIR_Request_extract_status(request_ptr_, status_)								\
+{															\
+    if ((status_) != MPI_STATUS_IGNORE)											\
+    {															\
+	int error__;													\
+															\
+	/* According to the MPI 1.1 standard page 22 lines 9-12, the MPI_ERROR field may not be modified except by the	\
+	   functions in section 3.7.5 which return MPI_ERR_IN_STATUSES (MPI_Wait{all,some} and MPI_Test{all,some}). */	\
+	error__ = (status_)->MPI_ERROR;											\
+	*(status_) = (request_ptr_)->status;										\
+	(status_)->MPI_ERROR = error__;											\
+    }															\
+}
+
 #define MPIR_Request_is_complete(req_) (MPIR_cc_is_complete((req_)->cc_ptr))
 
 /*S
@@ -1563,11 +1647,147 @@ extern MPIU_Object_alloc_t MPIR_Request_mem;
 /* Preallocated request objects */
 extern MPIR_Request MPIR_Request_direct[];
 
+/*@
+  MPID_Request_init - Initialize device parts of request
+
+  Return value:
+  None
+  @*/
+void MPID_Request_init(MPIR_Request *);
+
+/*@
+  MPID_Request_finalize - Deallocate device parts of request
+
+  Input Parameter:
+. request - request to release
+
+  Module:
+  Request
+@*/
+void MPID_Request_finalize(MPIR_Request *);
+
+/*@
+  MPID_Request_complete - Complete a request
+
+  Input Parameter:
+. request - request to complete
+
+  Notes:
+  This routine is called to decrement the completion count of a
+  request object.  If the completion count of the request object has
+  reached zero, the reference count for the object will be
+  decremented.
+
+  Module:
+  Request
+@*/
+int MPID_Request_complete(MPIR_Request *);
+
+static inline MPIR_Request *MPIR_Request_create(void)
+{
+    MPIR_Request *req;
+
+    req = MPIU_Handle_obj_alloc(&MPIR_Request_mem);
+    if (req != NULL) {
+	MPL_DBG_MSG_P(MPIR_DBG_REQUEST,VERBOSE,
+                      "allocated request, handle=0x%08x", req->handle);
+#ifdef MPICH_DBG_OUTPUT
+	/*MPIU_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);*/
+	if (HANDLE_GET_MPI_KIND(req->handle) != MPIR_REQUEST)
+	{
+	    int mpi_errno;
+	    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
+                                             FCNAME, __LINE__, MPI_ERR_OTHER,
+                                             "**invalid_handle", "**invalid_handle %d", req->handle);
+	    MPID_Abort(MPIR_Process.comm_world, mpi_errno, -1, NULL);
+	}
+#endif
+	/* FIXME: This makes request creation expensive.  We need to
+         * trim this to the basics, with additional setup for
+         * special-purpose requests (think base class and
+         * inheritance).  For example, do we really* want to set the
+         * kind to UNDEFINED? And should the RMA values be set only
+         * for RMA requests? */
+	MPIU_Object_set_ref(req, 1);
+	req->kind = MPIR_REQUEST_UNDEFINED;
+        MPIR_cc_set(&req->cc, 1);
+	req->cc_ptr		   = &req->cc;
+
+	/* FIXME: status fields meaningful only for receive, and even
+         * then should not need to be set. */
+	req->status.MPI_SOURCE	   = MPI_UNDEFINED;
+	req->status.MPI_TAG	   = MPI_UNDEFINED;
+	req->status.MPI_ERROR	   = MPI_SUCCESS;
+        MPIR_STATUS_SET_COUNT(req->status, 0);
+        MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);
+
+	req->comm		   = NULL;
+        req->greq_fns              = NULL;
+        req->errflag               = MPIR_ERR_NONE;
+        req->request_completed_cb  = NULL;
+
+        MPID_Request_init(req);
+    }
+    else
+    {
+	/* FIXME: This fails to fail if debugging is turned off */
+	MPL_DBG_MSG(MPIR_DBG_REQUEST,TYPICAL,"unable to allocate a request");
+    }
+
+    return req;
+}
+
 #define MPIR_Request_add_ref( _req ) \
     do { MPIU_Object_add_ref( _req ); } while (0)
 
 #define MPIR_Request_release_ref( _req, _inuse ) \
     do { MPIU_Object_release_ref( _req, _inuse ); } while (0)
+
+static inline void MPIR_Request_free(MPIR_Request *req)
+{
+    int inuse;
+
+    MPIR_Request_release_ref(req, &inuse);
+    if (inuse == 0) {
+        MPL_DBG_MSG_P(MPIR_DBG_REQUEST,VERBOSE,
+                       "freeing request, handle=0x%08x", req->handle);
+
+#ifdef MPICH_DBG_OUTPUT
+        if (HANDLE_GET_MPI_KIND(req->handle) != MPIR_REQUEST)
+        {
+            int mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
+                                                 FCNAME, __LINE__, MPI_ERR_OTHER,
+                                                 "**invalid_handle", "**invalid_handle %d", req->handle);
+            MPID_Abort(MPIR_Process.comm_world, mpi_errno, -1, NULL);
+        }
+
+        if (req->ref_count != 0)
+        {
+            int mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
+                                                 FCNAME, __LINE__, MPI_ERR_OTHER,
+                                                 "**invalid_refcount", "**invalid_refcount %d", req->ref_count);
+            MPID_Abort(MPIR_Process.comm_world, mpi_errno, -1, NULL);
+        }
+#endif
+
+        /* FIXME: We need a better way to handle these so that we do
+         * not always need to initialize these fields and check them
+         * when we destroy a request */
+        /* FIXME: We need a way to call these routines ONLY when the
+         * related ref count has become zero. */
+        if (req->comm != NULL) {
+            MPIR_Comm_release(req->comm);
+        }
+
+        if (req->greq_fns != NULL) {
+            MPL_free(req->greq_fns);
+        }
+
+        MPID_Request_finalize(req);
+
+        MPIU_Handle_obj_free(&MPIR_Request_mem, req);
+    }
+}
 
 /* These macros allow us to implement a sendq when debugger support is
    selected.  As there is extra overhead for this, we only do this
@@ -2111,19 +2331,6 @@ typedef struct MPICH_PerProcess_t {
 } MPICH_PerProcess_t;
 extern MPICH_PerProcess_t MPIR_Process;
 
-#if defined (MPL_USE_DBG_LOGGING)
-extern MPL_dbg_class MPIR_DBG_INIT;
-extern MPL_dbg_class MPIR_DBG_PT2PT;
-extern MPL_dbg_class MPIR_DBG_THREAD;
-extern MPL_dbg_class MPIR_DBG_DATATYPE;
-extern MPL_dbg_class MPIR_DBG_COMM;
-extern MPL_dbg_class MPIR_DBG_BSEND;
-extern MPL_dbg_class MPIR_DBG_ERRHAND;
-extern MPL_dbg_class MPIR_DBG_OTHER;
-
-extern MPL_dbg_class MPIR_DBG_ASSERT;
-#endif /* MPL_USE_DBG_LOGGING */
-
 /* ------------------------------------------------------------------------- */
 /* In MPICH, each function has an "enter" and "exit" macro.  These can be 
  * used to add various features to each function at compile time, or they
@@ -2215,76 +2422,6 @@ void MPIR_Err_print_stack(FILE *, int);
 /* ------------------------------------------------------------------------- */
 
 
-/* MPI_Status manipulation macros */
-#define MPIR_BITS_IN_INT (8 * SIZEOF_INT)
-
-/* We use bits from the "count_lo" and "count_hi_and_cancelled" fields
- * to represent the 'count' and 'cancelled' objects.  The LSB of the
- * "count_hi_and_cancelled" field represents the 'cancelled' object.
- * The 'count' object is split between the "count_lo" and
- * "count_hi_and_cancelled" fields, with the lower order bits going
- * into the "count_lo" field, and the higher order bits goin into the
- * "count_hi_and_cancelled" field.  This gives us 2N-1 bits for the
- * 'count' object, where N is the size of int.  However, the value
- * returned to the user is bounded by the definition on MPI_Count. */
-/* NOTE: The below code assumes that the count value is never
- * negative.  For negative values, right-shifting can have weird
- * implementation specific consequences. */
-#define MPIR_STATUS_SET_COUNT(status_, count_)                          \
-    {                                                                   \
-        (status_).count_lo = ((int) count_);                            \
-        (status_).count_hi_and_cancelled &= 1;                          \
-        (status_).count_hi_and_cancelled |= (int) ((MPIR_Ucount) count_ >> MPIR_BITS_IN_INT << 1); \
-    }
-
-#define MPIR_STATUS_GET_COUNT(status_)                                  \
-    ((MPI_Count) ((((MPIR_Ucount) (((unsigned int) (status_).count_hi_and_cancelled) >> 1)) << MPIR_BITS_IN_INT) + (unsigned int) (status_).count_lo))
-
-#define MPIR_STATUS_SET_CANCEL_BIT(status_, cancelled_)	\
-    {                                                   \
-        (status_).count_hi_and_cancelled &= ~1;         \
-        (status_).count_hi_and_cancelled |= cancelled_; \
-    }
-
-#define MPIR_STATUS_GET_CANCEL_BIT(status_)	((status_).count_hi_and_cancelled & 1)
-
-/* Do not set MPI_ERROR (only set if ERR_IN_STATUS is returned */
-#define MPIR_Status_set_empty(status_)                          \
-    {                                                           \
-        if ((status_) != MPI_STATUS_IGNORE)                     \
-        {                                                       \
-            (status_)->MPI_SOURCE = MPI_ANY_SOURCE;             \
-            (status_)->MPI_TAG = MPI_ANY_TAG;                   \
-            MPIR_STATUS_SET_COUNT(*(status_), 0);               \
-            MPIR_STATUS_SET_CANCEL_BIT(*(status_), FALSE);      \
-        }                                                       \
-    }
-/* See MPI 1.1, section 3.11, Null Processes */
-/* Do not set MPI_ERROR (only set if ERR_IN_STATUS is returned */
-#define MPIR_Status_set_procnull(status_)                       \
-    {                                                           \
-        if ((status_) != MPI_STATUS_IGNORE)                     \
-        {                                                       \
-            (status_)->MPI_SOURCE = MPI_PROC_NULL;              \
-            (status_)->MPI_TAG = MPI_ANY_TAG;                   \
-            MPIR_STATUS_SET_COUNT(*(status_), 0);               \
-            MPIR_STATUS_SET_CANCEL_BIT(*(status_), FALSE);      \
-        }                                                       \
-    }
-
-#define MPIR_Request_extract_status(request_ptr_, status_)								\
-{															\
-    if ((status_) != MPI_STATUS_IGNORE)											\
-    {															\
-	int error__;													\
-															\
-	/* According to the MPI 1.1 standard page 22 lines 9-12, the MPI_ERROR field may not be modified except by the	\
-	   functions in section 3.7.5 which return MPI_ERR_IN_STATUSES (MPI_Wait{all,some} and MPI_Test{all,some}). */	\
-	error__ = (status_)->MPI_ERROR;											\
-	*(status_) = (request_ptr_)->status;										\
-	(status_)->MPI_ERROR = error__;											\
-    }															\
-}
 /* ------------------------------------------------------------------------- */
 
 /* FIXME: The bindings should be divided into three groups:
@@ -3472,56 +3609,6 @@ int MPID_Progress_test(void);
   Communication
   @*/
 int MPID_Progress_poke(void);
-
-/*@
-  MPID_Request_create - Create and return a bare request
-
-  Return value:
-  A pointer to a new request object.
-
-  Notes:
-  This routine is intended for use by 'MPI_Grequest_start' only.  Note that 
-  once a request is created with this routine, any progress engine must assume 
-  that an outside function can complete a request with 
-  'MPID_Request_complete'.
-
-  The request object returned by this routine should be initialized such that
-  ref_count is one and handle contains a valid handle referring to the object.
-  @*/
-MPIR_Request * MPID_Request_create(void);
-
-/*@
-  MPID_Request_release - Release a request 
-
-  Input Parameter:
-. request - request to release
-
-  Notes:
-  This routine is called to release a reference to request object.  If
-  the reference count of the request object has reached zero, the object will
-  be deallocated.
-
-  Module:
-  Request
-@*/
-void MPID_Request_release(MPIR_Request *);
-
-/*@
-  MPID_Request_complete - Complete a request
-
-  Input Parameter:
-. request - request to complete
-
-  Notes:
-  This routine is called to decrement the completion count of a
-  request object.  If the completion count of the request object has
-  reached zero, the reference count for the object will be
-  decremented.
-
-  Module:
-  Request
-@*/
-int MPID_Request_complete(MPIR_Request *);
 
 typedef struct MPIR_Grequest_class {
      MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */

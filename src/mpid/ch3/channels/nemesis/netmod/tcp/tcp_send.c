@@ -306,7 +306,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, voi
     MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "enqueuing");
 
     /* create a request */
-    sreq = MPID_Request_create();
+    sreq = MPIR_Request_create();
     MPIU_Assert (sreq != NULL);
     MPIU_Object_set_ref (sreq, 2);
     sreq->kind = MPIR_REQUEST_SEND;
@@ -445,7 +445,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, intptr_t hdr_
     MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "enqueuing");
 
     /* create a request */
-    sreq = MPID_Request_create();
+    sreq = MPIR_Request_create();
     MPIU_Assert (sreq != NULL);
     MPIU_Object_set_ref (sreq, 2);
     sreq->kind = MPIR_REQUEST_SEND;
@@ -854,7 +854,7 @@ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_SENDNONCONTIG);
     return mpi_errno;
 fn_fail:
-    MPID_Request_release(sreq);
+    MPIR_Request_free(sreq);
     goto fn_exit;
 }
 

@@ -301,7 +301,7 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
     if (request_ptr) {
         mpi_errno = MPIC_Wait(request_ptr, errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPID_Request_release(request_ptr);
+        MPIR_Request_free(request_ptr);
     }
 
  fn_exit:
@@ -310,7 +310,7 @@ int MPIC_Send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest, 
     return mpi_errno;
  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-    if (request_ptr) MPID_Request_release(request_ptr);
+    if (request_ptr) MPIR_Request_free(request_ptr);
     if (mpi_errno && !*errflag) {
         if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(mpi_errno)) {
             *errflag = MPIR_ERR_PROC_FAILED;
@@ -358,7 +358,7 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
 
         *status = request_ptr->status;
         mpi_errno = status->MPI_ERROR;
-        MPID_Request_release(request_ptr);
+        MPIR_Request_free(request_ptr);
     } else {
         MPIR_Process_status(status, errflag);
 
@@ -375,7 +375,7 @@ int MPIC_Recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int source, int 
     return mpi_errno;
  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-    if (request_ptr) MPID_Request_release(request_ptr);
+    if (request_ptr) MPIR_Request_free(request_ptr);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -417,7 +417,7 @@ int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
     if (request_ptr) {
         mpi_errno = MPIC_Wait(request_ptr, errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPID_Request_release(request_ptr);
+        MPIR_Request_free(request_ptr);
     }
 
  fn_exit:
@@ -426,7 +426,7 @@ int MPIC_Ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
     return mpi_errno;
  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-    if (request_ptr) MPID_Request_release(request_ptr);
+    if (request_ptr) MPIR_Request_free(request_ptr);
     if (mpi_errno && !*errflag) {
         if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(mpi_errno)) {
             *errflag = MPIR_ERR_PROC_FAILED;
@@ -497,8 +497,8 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
         }
     }
 
-    MPID_Request_release(send_req_ptr);
-    MPID_Request_release(recv_req_ptr);
+    MPIR_Request_free(send_req_ptr);
+    MPIR_Request_free(recv_req_ptr);
 
  fn_exit:
     MPL_DBG_MSG_D(MPIR_DBG_PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
@@ -507,9 +507,9 @@ int MPIC_Sendrecv(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype
     return mpi_errno;
  fn_fail:
     if (send_req_ptr)
-        MPID_Request_release(send_req_ptr);
+        MPIR_Request_free(send_req_ptr);
     if (recv_req_ptr)
-        MPID_Request_release(recv_req_ptr);
+        MPIR_Request_free(recv_req_ptr);
     goto fn_exit;
 }
 
@@ -578,7 +578,7 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
         /* --BEGIN ERROR HANDLING-- */
         /* FIXME: should we cancel the pending (possibly completed) receive
          * request or wait for it to complete? */
-        MPID_Request_release(rreq);
+        MPIR_Request_free(rreq);
         MPIR_ERR_POP(mpi_errno);
         /* --END ERROR HANDLING-- */
     }
@@ -598,8 +598,8 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
         }
     }
 
-    MPID_Request_release(sreq);
-    MPID_Request_release(rreq);
+    MPIR_Request_free(sreq);
+    MPIR_Request_free(rreq);
 
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
@@ -608,9 +608,9 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     return mpi_errno;
  fn_fail:
      if (sreq)
-         MPID_Request_release(sreq);
+         MPIR_Request_free(sreq);
      if (rreq)
-         MPID_Request_release(rreq);
+         MPIR_Request_free(rreq);
     goto fn_exit;
 }
 

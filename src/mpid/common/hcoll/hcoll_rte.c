@@ -263,7 +263,7 @@ static int test(rte_request_handle_t * request, int *completed)
 
     *completed = (int) MPIR_Request_is_complete(req);
     if (*completed) {
-        MPID_Request_release(req);
+        MPIR_Request_free(req);
         request->status = HCOLRTE_REQUEST_DONE;
     }
 
@@ -386,7 +386,7 @@ static int group_id(rte_grp_handle_t group)
 static void *get_coll_handle(void)
 {
     MPIR_Request *req;
-    req = MPID_Request_create();
+    req = MPIR_Request_create();
     req->kind = MPIR_COLL_REQUEST;
     return (void *) req;
 }
@@ -413,7 +413,7 @@ static void coll_handle_free(void *handle)
     MPIR_Request *req;
     if (NULL != handle) {
         req = (MPIR_Request *) handle;
-        MPID_Request_release(req);
+        MPIR_Request_free(req);
     }
 }
 

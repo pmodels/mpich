@@ -48,7 +48,7 @@ static inline int send_lock_msg(int dest, int lock_type, MPIR_Win * win_ptr)
 
     /* release the request returned by iStartMsg */
     if (req != NULL) {
-        MPID_Request_release(req);
+        MPIR_Request_free(req);
     }
 
   fn_exit:
@@ -91,7 +91,7 @@ static inline int send_unlock_msg(int dest, MPIR_Win * win_ptr, MPIDI_CH3_Pkt_fl
 
     /* Release the request returned by iStartMsg */
     if (req != NULL) {
-        MPID_Request_release(req);
+        MPIR_Request_free(req);
     }
 
   fn_exit:
@@ -142,7 +142,7 @@ static inline int MPIDI_CH3I_Send_lock_ack_pkt(MPIDI_VC_t * vc, MPIR_Win * win_p
     }
 
     if (req != NULL) {
-        MPID_Request_release(req);
+        MPIR_Request_free(req);
     }
 
   fn_fail:
@@ -189,7 +189,7 @@ static inline int MPIDI_CH3I_Send_lock_op_ack_pkt(MPIDI_VC_t * vc, MPIR_Win * wi
     }
 
     if (req != NULL) {
-        MPID_Request_release(req);
+        MPIR_Request_free(req);
     }
 
   fn_fail:
@@ -226,7 +226,7 @@ static inline int MPIDI_CH3I_Send_ack_pkt(MPIDI_VC_t * vc, MPIR_Win * win_ptr,
     }
 
     if (req != NULL) {
-        MPID_Request_release(req);
+        MPIR_Request_free(req);
     }
 
   fn_fail:
@@ -264,7 +264,7 @@ static inline int send_decr_at_cnt_msg(int dst, MPIR_Win * win_ptr, MPIDI_CH3_Pk
     }
 
     if (request != NULL) {
-        MPID_Request_release(request);
+        MPIR_Request_free(request);
     }
 
   fn_exit:
@@ -304,7 +304,7 @@ static inline int send_flush_msg(int dest, MPIR_Win * win_ptr)
 
     /* Release the request returned by iStartMsg */
     if (req != NULL) {
-        MPID_Request_release(req);
+        MPIR_Request_free(req);
     }
 
   fn_exit:
@@ -455,7 +455,7 @@ static inline int enqueue_lock_origin(MPIR_Win * win_ptr, MPIDI_VC_t * vc,
         }
 
         /* create request to receive upcoming requests */
-        req = MPID_Request_create();
+        req = MPIR_Request_create();
         MPIU_Object_set_ref(req, 1);
 
         /* fill in area in req that will be used in Receive_data_found() */
@@ -662,7 +662,7 @@ static inline int check_and_set_req_completion(MPIR_Win * win_ptr, MPIDI_RMA_Tar
             continue;
 
         if (MPIR_Request_is_complete((*req))) {
-            MPID_Request_release((*req));
+            MPIR_Request_free((*req));
             (*req) = NULL;
         }
         else {
@@ -677,7 +677,7 @@ static inline int check_and_set_req_completion(MPIR_Win * win_ptr, MPIDI_RMA_Tar
                 (*req)->dev.request_handle = rma_op->ureq->handle;
             }
 
-            MPID_Request_release((*req));
+            MPIR_Request_free((*req));
         }
     }
 
@@ -769,13 +769,13 @@ static inline int handle_lock_ack_with_op(MPIR_Win * win_ptr,
          * operation. */
         if (op->reqs_size == 1) {
             MPIU_Assert(op->single_req != NULL);
-            MPID_Request_release(op->single_req);
+            MPIR_Request_free(op->single_req);
             op->single_req = NULL;
             op->reqs_size = 0;
         }
         else if (op->reqs_size > 1) {
             MPIU_Assert(op->multi_reqs != NULL && op->multi_reqs[0] != NULL);
-            MPID_Request_release(op->multi_reqs[0]);
+            MPIR_Request_free(op->multi_reqs[0]);
             /* free req array in this op */
             MPL_free(op->multi_reqs);
             op->multi_reqs = NULL;

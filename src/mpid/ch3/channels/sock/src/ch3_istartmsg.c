@@ -18,7 +18,7 @@ static MPIR_Request * create_request(void * hdr, intptr_t hdr_sz,
 
     MPIDI_FUNC_ENTER(MPID_STATE_CREATE_REQUEST);
 
-    sreq = MPID_Request_create();
+    sreq = MPIR_Request_create();
     /* --BEGIN ERROR HANDLING-- */
     if (sreq == NULL)
 	return NULL;
@@ -126,7 +126,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, intptr_t hdr_sz,
 	    {
 		MPL_DBG_MSG_D(MPIDI_CH3_DBG_CHANNEL,TYPICAL,
 			       "ERROR - MPIDU_Sock_write failed, rc=%d", rc);
-		sreq = MPID_Request_create();
+		sreq = MPIR_Request_create();
 		if (!sreq) {
 		    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
 		}
@@ -194,7 +194,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, intptr_t hdr_sz,
     {
 	/* Connection failed, so allocate a request and return an error. */
 	MPL_DBG_VCUSE(vc,"ERROR - connection failed");
-	sreq = MPID_Request_create();
+	sreq = MPIR_Request_create();
 	if (!sreq) {
 	    MPIR_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
 	}

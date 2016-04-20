@@ -249,7 +249,7 @@ static inline int MPID_nem_ofi_create_req(MPIR_Request ** request, int refcnt)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req;
-    req = MPID_Request_create();
+    req = MPIR_Request_create();
     MPIU_Assert(req);
     MPIDI_Request_clear_dbg(req);
     MPIU_Object_set_ref(req, refcnt);
