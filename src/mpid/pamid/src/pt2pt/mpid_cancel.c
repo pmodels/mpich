@@ -25,7 +25,7 @@
 int
 MPID_Cancel_recv(MPIR_Request * rreq)
 {
-  MPID_assert(rreq->kind == MPIR_REQUEST_RECV);
+  MPID_assert(rreq->kind == MPIR_REQUEST_KIND__RECV);
   if (MPIDI_Recvq_FDPR(rreq))
     {
       MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);

@@ -41,7 +41,7 @@ MPID_PSendRequest(const void    * buf,
 {
   MPIR_Request* sreq = *request = MPIDI_Request_create2();
 
-  sreq->kind              = MPIR_PREQUEST_SEND;
+  sreq->kind              = MPIR_REQUEST_KIND__PREQUEST_SEND;
   sreq->comm              = comm;
   MPIR_Comm_add_ref(comm);
   MPIDI_Request_setMatch(sreq, tag, rank, comm->context_id+context_offset);

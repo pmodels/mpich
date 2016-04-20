@@ -62,7 +62,7 @@ MPIDO_Iallgather(const void *sendbuf,
        * perform an additional iallgather.
        */
       MPIR_Request * mpid_request = MPID_Request_create_inline();
-      mpid_request->kind = MPIR_COLL_REQUEST;
+      mpid_request->kind = MPIR_REQUEST_KIND__COLL;
       *request = mpid_request;
       MPIDI_Request_complete_norelease_inline(mpid_request);
 

@@ -60,7 +60,7 @@ MPID_Rput(const void  *origin_addr,
   
     MPIR_Request *rreq = MPIDI_Request_create1();
     *request = rreq;
-    rreq->kind = MPIR_WIN_REQUEST;
+    rreq->kind = MPIR_REQUEST_KIND__RMA;
     win->mpid.rreq = rreq;
     win->mpid.request_based = 1;
 
@@ -111,7 +111,7 @@ MPID_Rget(void         *origin_addr,
     }
 
     MPIR_Request *rreq = MPIDI_Request_create1();
-    rreq->kind = MPIR_WIN_REQUEST;
+    rreq->kind = MPIR_REQUEST_KIND__RMA;
     *request = rreq;
     win->mpid.rreq = rreq;
     win->mpid.request_based = 1;
@@ -170,7 +170,7 @@ MPID_Raccumulate(const void  *origin_addr,
     }
 
     MPIR_Request *rreq = MPIDI_Request_create1();
-    rreq->kind = MPIR_WIN_REQUEST;
+    rreq->kind = MPIR_REQUEST_KIND__RMA;
     *request = rreq;
     win->mpid.rreq = rreq;
     win->mpid.request_based = 1;
@@ -235,7 +235,7 @@ MPID_Rget_accumulate(const void         *origin_addr,
     }
 
     MPIR_Request *rreq = MPIDI_Request_create1();
-    rreq->kind = MPIR_WIN_REQUEST;
+    rreq->kind = MPIR_REQUEST_KIND__RMA;
     *request = rreq;
     win->mpid.rreq = rreq;
     win->mpid.request_based = 1;

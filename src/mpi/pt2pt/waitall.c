@@ -32,7 +32,7 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_
 
 
 /* The "fastpath" version of MPIR_Request_complete.  It only handles
- * MPIR_REQUEST_SEND and MPIR_REQUEST_RECV kinds, and it does not attempt to
+ * MPIR_REQUEST_KIND__SEND and MPIR_REQUEST_KIND__RECV kinds, and it does not attempt to
  * deal with status structures under the assumption that bleeding fast code will
  * pass either MPI_STATUS_IGNORE or MPI_STATUSES_IGNORE as appropriate.  This
  * routine (or some a variation of it) is an unfortunately necessary stunt to
@@ -46,9 +46,9 @@ static inline int request_complete_fastpath(MPI_Request *request, MPIR_Request *
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIU_Assert(request_ptr->kind == MPIR_REQUEST_SEND || request_ptr->kind == MPIR_REQUEST_RECV);
+    MPIU_Assert(request_ptr->kind == MPIR_REQUEST_KIND__SEND || request_ptr->kind == MPIR_REQUEST_KIND__RECV);
 
-    if (request_ptr->kind == MPIR_REQUEST_SEND) {
+    if (request_ptr->kind == MPIR_REQUEST_KIND__SEND) {
         /* FIXME: are Ibsend requests added to the send queue? */
         MPIR_SENDQ_FORGET(request_ptr);
     }
@@ -106,19 +106,19 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
 		{
 		    MPIR_Request_valid_ptr( request_ptrs[i], mpi_errno );
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                    MPIR_ERR_CHKANDJUMP1((request_ptrs[i]->kind == MPIR_REQUEST_MPROBE),
+                    MPIR_ERR_CHKANDJUMP1((request_ptrs[i]->kind == MPIR_REQUEST_KIND__MPROBE),
                                          mpi_errno, MPI_ERR_ARG, "**msgnotreq", "**msgnotreq %d", i);
 		}
 		MPID_END_ERROR_CHECKS;
 	    }
 #           endif
-            if (request_ptrs[i]->kind != MPIR_REQUEST_RECV &&
-                request_ptrs[i]->kind != MPIR_REQUEST_SEND)
+            if (request_ptrs[i]->kind != MPIR_REQUEST_KIND__RECV &&
+                request_ptrs[i]->kind != MPIR_REQUEST_KIND__SEND)
             {
                 optimize = FALSE;
             }
 
-            if (request_ptrs[i]->kind == MPIR_UREQUEST)
+            if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST)
                 ++n_greqs;
 
             /* If one of the requests is an anysource on a communicator that's
@@ -212,7 +212,7 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
         while (!MPIR_Request_is_complete(request_ptrs[i]))
         {
             /* generalized requests should already be finished */
-            MPIU_Assert(request_ptrs[i]->kind != MPIR_UREQUEST);
+            MPIU_Assert(request_ptrs[i]->kind != MPIR_REQUEST_KIND__GREQUEST);
             
             mpi_errno = MPID_Progress_wait(&progress_state);
             if (mpi_errno != MPI_SUCCESS) {

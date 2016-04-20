@@ -106,7 +106,7 @@ MPIDI_Send(const void    * buf,
   MPIDI_Request_setPeerRank_comm(sreq, rank);
 
   /* message type info */
-  sreq->kind = MPIR_REQUEST_SEND;
+  sreq->kind = MPIR_REQUEST_KIND__SEND;
   /* ----------------------------------------- */
   /*      start the message                    */
   /* ----------------------------------------- */

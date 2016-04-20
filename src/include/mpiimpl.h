@@ -1434,12 +1434,12 @@ void MPIR_Free_contextid( MPIU_Context_id_t );
 /* Requests */
 /* This currently defines a single structure type for all requests.  
    Eventually, we may want a union type, as used in MPICH-1 */
-/* NOTE-R1: MPIR_REQUEST_MPROBE signifies that this is a request created by
+/* NOTE-R1: MPIR_REQUEST_KIND__MPROBE signifies that this is a request created by
  * MPI_Mprobe or MPI_Improbe.  Since we use MPI_Request objects as our
  * MPI_Message objects, we use this separate kind in order to provide stronger
  * error checking.  Once a message (backed by a request) is promoted to a real
  * request by calling MPI_Mrecv/MPI_Imrecv, we actually modify the kind to be
- * MPIR_REQUEST_RECV in order to keep completion logic as simple as possible. */
+ * MPIR_REQUEST_KIND__RECV in order to keep completion logic as simple as possible. */
 /*E
   MPIR_Request_kind - Kinds of MPI Requests
 
@@ -1448,18 +1448,18 @@ void MPIR_Free_contextid( MPIU_Context_id_t );
 
   E*/
 typedef enum MPIR_Request_kind_t {
-    MPIR_REQUEST_UNDEFINED,
-    MPIR_REQUEST_SEND,
-    MPIR_REQUEST_RECV,
-    MPIR_PREQUEST_SEND,
-    MPIR_PREQUEST_RECV,
-    MPIR_UREQUEST,
-    MPIR_COLL_REQUEST,
-    MPIR_REQUEST_MPROBE, /* see NOTE-R1 */
-    MPIR_WIN_REQUEST,
-    MPIR_LAST_REQUEST_KIND
-#ifdef MPID_DEV_REQUEST_KIND_DECL
-    , MPID_DEV_REQUEST_KIND_DECL
+    MPIR_REQUEST_KIND__UNDEFINED,
+    MPIR_REQUEST_KIND__SEND,
+    MPIR_REQUEST_KIND__RECV,
+    MPIR_REQUEST_KIND__PREQUEST_SEND,
+    MPIR_REQUEST_KIND__PREQUEST_RECV,
+    MPIR_REQUEST_KIND__GREQUEST,
+    MPIR_REQUEST_KIND__COLL,
+    MPIR_REQUEST_KIND__MPROBE, /* see NOTE-R1 */
+    MPIR_REQUEST_KIND__RMA,
+    MPIR_REQUEST_KIND__LAST
+#ifdef MPID_REQUEST_KIND_DECL
+    , MPID_REQUEST_KIND_DECL
 #endif
 } MPIR_Request_kind_t;
 
@@ -1604,10 +1604,10 @@ typedef struct MPIR_Request {
     union {
         struct {
             struct MPIR_Grequest_fns *greq_fns;
-        } ureq; /* kind : MPIR_UREQUEST */
+        } ureq; /* kind : MPIR_REQUEST_KIND__GREQUEST */
         struct {
             MPIR_Errflag_t errflag;
-        } nbc;  /* kind : MPIR_COLL_REQUEST */
+        } nbc;  /* kind : MPIR_REQUEST_KIND__COLL */
 #if defined HAVE_DEBUGGER_SUPPORT
         struct {
             struct MPIR_Sendq *dbg_next;
@@ -1728,7 +1728,7 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
         req->request_completed_cb  = NULL;
 
         switch(kind) {
-        case MPIR_COLL_REQUEST:
+        case MPIR_REQUEST_KIND__COLL:
             req->u.nbc.errflag = MPIR_ERR_NONE;
             break;
         default:
@@ -1788,7 +1788,7 @@ static inline void MPIR_Request_free(MPIR_Request *req)
             MPIR_Comm_release(req->comm);
         }
 
-        if (req->kind == MPIR_UREQUEST && req->u.ureq.greq_fns != NULL) {
+        if (req->kind == MPIR_REQUEST_KIND__GREQUEST && req->u.ureq.greq_fns != NULL) {
             MPL_free(req->u.ureq.greq_fns);
         }
 

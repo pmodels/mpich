@@ -24,7 +24,7 @@ int MPID_Cancel_send(MPIR_Request * sreq)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_CANCEL_SEND);
     
-    MPIU_Assert(sreq->kind == MPIR_REQUEST_SEND);
+    MPIU_Assert(sreq->kind == MPIR_REQUEST_KIND__SEND);
 
     MPIDI_Request_cancel_pending(sreq, &flag);
     if (flag)

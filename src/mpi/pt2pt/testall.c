@@ -87,7 +87,7 @@ int MPIR_Testall_impl(int count, MPI_Request array_of_requests[], int *flag,
     for (i = 0; i < count; i++)
     {
         if (request_ptrs[i] != NULL &&
-                request_ptrs[i]->kind == MPIR_UREQUEST &&
+                request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST &&
                 request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL)
         {
             mpi_errno = (request_ptrs[i]->u.ureq.greq_fns->poll_fn)(request_ptrs[i]->u.ureq.greq_fns->grequest_extra_state,

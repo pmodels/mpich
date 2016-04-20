@@ -99,7 +99,7 @@ int MPID_Improbe(int source, int tag, MPIR_Comm *comm, int context_offset,
     }
 
     if (*flag && *message) {
-        (*message)->kind = MPIR_REQUEST_MPROBE;
+        (*message)->kind = MPIR_REQUEST_KIND__MPROBE;
         MPIR_Request_extract_status((*message), status);
     }
 

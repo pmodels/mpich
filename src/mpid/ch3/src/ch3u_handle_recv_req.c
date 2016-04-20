@@ -318,7 +318,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq
     MPIDU_Datatype_is_contig(rreq->dev.datatype, &is_contig);
     MPIDU_Datatype_get_true_lb(rreq->dev.datatype, &dt_true_lb);
 
-    resp_req = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
+    resp_req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     MPIR_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     MPIU_Object_set_ref(resp_req, 1);
     MPIDI_Request_set_type(resp_req, MPIDI_REQUEST_TYPE_GET_ACCUM_RESP);
@@ -455,7 +455,7 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPIR_Request * rreq, i
     MPIDU_Datatype_is_contig(rreq->dev.datatype, &is_contig);
 
     /* Create response request */
-    resp_req = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
+    resp_req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     MPIR_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     MPIDI_Request_set_type(resp_req, MPIDI_REQUEST_TYPE_FOP_RESP);
     MPIU_Object_set_ref(resp_req, 1);
@@ -879,10 +879,10 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(MPIDI_VC_t * vc,
     create_derived_datatype(rreq, dtype_info, &new_dtp);
 
     /* create request for sending data */
-    sreq = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     MPIR_ERR_CHKANDJUMP(sreq == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
-    sreq->kind = MPIR_REQUEST_SEND;
+    sreq->kind = MPIR_REQUEST_KIND__SEND;
     MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_GET_RESP);
     sreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetSendComplete;
     sreq->dev.OnFinal = MPIDI_CH3_ReqHandler_GetSendComplete;
@@ -1198,14 +1198,14 @@ static inline int perform_get_in_lock_queue(MPIR_Win * win_ptr,
     /* Make sure that all data is received for this op. */
     MPIU_Assert(target_lock_entry->all_data_recved == 1);
 
-    sreq = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     if (sreq == NULL) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     }
     MPIU_Object_set_ref(sreq, 1);
 
     MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_GET_RESP);
-    sreq->kind = MPIR_REQUEST_SEND;
+    sreq->kind = MPIR_REQUEST_KIND__SEND;
     sreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetSendComplete;
     sreq->dev.OnFinal = MPIDI_CH3_ReqHandler_GetSendComplete;
 
@@ -1374,14 +1374,14 @@ static inline int perform_get_acc_in_lock_queue(MPIR_Win * win_ptr,
     /* Make sure that all data is received for this op. */
     MPIU_Assert(target_lock_entry->all_data_recved == 1);
 
-    sreq = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
+    sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     if (sreq == NULL) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     }
     MPIU_Object_set_ref(sreq, 1);
 
     MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_GET_ACCUM_RESP);
-    sreq->kind = MPIR_REQUEST_SEND;
+    sreq->kind = MPIR_REQUEST_KIND__SEND;
     sreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumSendComplete;
     sreq->dev.OnFinal = MPIDI_CH3_ReqHandler_GaccumSendComplete;
 
@@ -1588,7 +1588,7 @@ static inline int perform_fop_in_lock_queue(MPIR_Win * win_ptr,
         fop_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_ACK;
 
     if (fop_pkt->type == MPIDI_CH3_PKT_FOP) {
-        resp_req = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
+        resp_req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
         if (resp_req == NULL) {
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomemreq");
         }

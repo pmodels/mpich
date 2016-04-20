@@ -212,7 +212,7 @@ int MPIC_Wait(MPIR_Request * request_ptr, MPIR_Errflag_t *errflag)
 
     MPL_DBG_MSG_S(MPIR_DBG_PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
 
-    if (request_ptr->kind == MPIR_REQUEST_SEND)
+    if (request_ptr->kind == MPIR_REQUEST_KIND__SEND)
         request_ptr->status.MPI_TAG = 0;
 
     if (!MPIR_Request_is_complete(request_ptr))
@@ -228,7 +228,7 @@ int MPIC_Wait(MPIR_Request * request_ptr, MPIR_Errflag_t *errflag)
 	MPID_Progress_end(&progress_state);
     }
 
-    if (request_ptr->kind == MPIR_REQUEST_RECV)
+    if (request_ptr->kind == MPIR_REQUEST_KIND__RECV)
         MPIR_Process_status(&request_ptr->status, errflag);
 
     MPIR_TAG_CLEAR_ERROR_BITS(request_ptr->status.MPI_TAG);

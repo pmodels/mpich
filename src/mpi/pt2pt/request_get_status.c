@@ -117,7 +117,7 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
     {
 	switch(request_ptr->kind)
 	{
-        case MPIR_REQUEST_SEND:
+        case MPIR_REQUEST_KIND__SEND:
         {
             if (status != MPI_STATUS_IGNORE)
             {
@@ -127,20 +127,20 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
             break;
         }
         
-        case MPIR_REQUEST_RECV:
+        case MPIR_REQUEST_KIND__RECV:
         {
             MPIR_Request_extract_status(request_ptr, status);
             mpi_errno = request_ptr->status.MPI_ERROR;
             break;
         }
         
-        case MPIR_PREQUEST_SEND:
+        case MPIR_REQUEST_KIND__PREQUEST_SEND:
         {
             MPIR_Request * prequest_ptr = request_ptr->u.persist.real_request;
             
             if (prequest_ptr != NULL)
             {
-		if (prequest_ptr->kind != MPIR_UREQUEST)
+		if (prequest_ptr->kind != MPIR_REQUEST_KIND__GREQUEST)
 		{
 		    if (status != MPI_STATUS_IGNORE)
 		    {
@@ -189,7 +189,7 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
             break;
         }
         
-        case MPIR_PREQUEST_RECV:
+        case MPIR_REQUEST_KIND__PREQUEST_RECV:
         {
             MPIR_Request * prequest_ptr = request_ptr->u.persist.real_request;
             
@@ -209,7 +209,7 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
             break;
         }
 
-        case MPIR_UREQUEST:
+        case MPIR_REQUEST_KIND__GREQUEST:
         {
             int rc;
             

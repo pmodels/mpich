@@ -36,24 +36,24 @@ int MPIR_Cancel_impl(MPIR_Request *request_ptr)
         
     switch (request_ptr->kind)
     {
-	case MPIR_REQUEST_SEND:
+	case MPIR_REQUEST_KIND__SEND:
 	{
 	    mpi_errno = MPID_Cancel_send(request_ptr);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	    break;
 	}
 
-	case MPIR_REQUEST_RECV:
+	case MPIR_REQUEST_KIND__RECV:
 	{
 	    mpi_errno = MPID_Cancel_recv(request_ptr);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	    break;
 	}
 
-	case MPIR_PREQUEST_SEND:
+	case MPIR_REQUEST_KIND__PREQUEST_SEND:
 	{
 	    if (request_ptr->u.persist.real_request != NULL) {
-		if (request_ptr->u.persist.real_request->kind != MPIR_UREQUEST) {
+		if (request_ptr->u.persist.real_request->kind != MPIR_REQUEST_KIND__GREQUEST) {
                     /* jratt@us.ibm.com: I don't know about the bsend
                      * comment below, but the CC stuff on the next
                      * line is *really* needed for persistent Bsend
@@ -86,7 +86,7 @@ int MPIR_Cancel_impl(MPIR_Request *request_ptr)
 	    break;
 	}
 
-	case MPIR_PREQUEST_RECV:
+	case MPIR_REQUEST_KIND__PREQUEST_RECV:
 	{
 	    if (request_ptr->u.persist.real_request != NULL) {
 		mpi_errno = MPID_Cancel_recv(request_ptr->u.persist.real_request);
@@ -97,7 +97,7 @@ int MPIR_Cancel_impl(MPIR_Request *request_ptr)
 	    break;
 	}
 
-	case MPIR_UREQUEST:
+	case MPIR_REQUEST_KIND__GREQUEST:
 	{
             mpi_errno = MPIR_Grequest_cancel(request_ptr, MPIR_cc_is_complete(&request_ptr->cc));
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);

@@ -157,7 +157,7 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx,
             /* we found at least one non-null request */
             found_nonnull_req = TRUE;
 
-            if (request_ptrs[i]->kind == MPIR_UREQUEST && request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL)
+            if (request_ptrs[i]->kind == MPIR_REQUEST_KIND__GREQUEST && request_ptrs[i]->u.ureq.greq_fns->poll_fn != NULL)
 	    {
                 /* this is a generalized request; make progress on it */
                 mpi_errno = (request_ptrs[i]->u.ureq.greq_fns->poll_fn)(request_ptrs[i]->u.ureq.greq_fns->grequest_extra_state, status);

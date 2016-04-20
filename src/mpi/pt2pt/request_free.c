@@ -109,23 +109,23 @@ int MPI_Request_free(MPI_Request *request)
     
     switch (request_ptr->kind)
     {
-	case MPIR_REQUEST_SEND:
+	case MPIR_REQUEST_KIND__SEND:
 	{
 	    MPIR_SENDQ_FORGET(request_ptr);
 	    break;
 	}
-	case MPIR_REQUEST_RECV:
+	case MPIR_REQUEST_KIND__RECV:
 	{
 	    break;
 	}
 	
-	case MPIR_PREQUEST_SEND:
+	case MPIR_REQUEST_KIND__PREQUEST_SEND:
 	{
 	    /* If this is an active persistent request, we must also 
 	       release the partner request. */
 	    if (request_ptr->u.persist.real_request != NULL)
 	    {
-		if (request_ptr->u.persist.real_request->kind == MPIR_UREQUEST)
+		if (request_ptr->u.persist.real_request->kind == MPIR_REQUEST_KIND__GREQUEST)
 		{
 		    /* This is needed for persistent Bsend requests */
 		    mpi_errno = MPIR_Grequest_free(
@@ -137,7 +137,7 @@ int MPI_Request_free(MPI_Request *request)
 	}
 
 	    
-	case MPIR_PREQUEST_RECV:
+	case MPIR_REQUEST_KIND__PREQUEST_RECV:
 	{
 	    /* If this is an active persistent request, we must also 
 	       release the partner request. */
@@ -148,7 +148,7 @@ int MPI_Request_free(MPI_Request *request)
 	    break;
 	}
 	
-	case MPIR_UREQUEST:
+	case MPIR_REQUEST_KIND__GREQUEST:
 	{
 	    mpi_errno = MPIR_Grequest_free(request_ptr);
 	    break;

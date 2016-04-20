@@ -191,15 +191,15 @@ cvars:
     }
 
 #define MPIR_ERRTEST_PERSISTENT(reqp,err)                               \
-    if ((reqp)->kind != MPIR_PREQUEST_SEND && reqp->kind != MPIR_PREQUEST_RECV) { \
+    if ((reqp)->kind != MPIR_REQUEST_KIND__PREQUEST_SEND && reqp->kind != MPIR_REQUEST_KIND__PREQUEST_RECV) { \
         err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
                                    MPI_ERR_REQUEST, "**requestnotpersist", 0 ); \
         goto fn_fail;                                                   \
     }
 
 #define MPIR_ERRTEST_PERSISTENT_ACTIVE(reqp,err)                        \
-    if (((reqp)->kind == MPIR_PREQUEST_SEND ||                          \
-         reqp->kind == MPIR_PREQUEST_RECV) && reqp->u.persist.real_request != NULL) { \
+    if (((reqp)->kind == MPIR_REQUEST_KIND__PREQUEST_SEND ||                          \
+         reqp->kind == MPIR_REQUEST_KIND__PREQUEST_RECV) && reqp->u.persist.real_request != NULL) { \
         err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
                                    MPI_ERR_REQUEST, "**requestpersistactive", 0 ); \
         goto fn_fail;                                                   \

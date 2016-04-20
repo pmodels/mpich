@@ -322,7 +322,7 @@ int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc,
     MPIU_Assert(hdr_sz <= (intptr_t) sizeof(MPIDI_CH3_Pkt_t));
 
     MPID_nem_ofi_create_req(&sreq, 2);
-    sreq->kind = MPIR_REQUEST_SEND;
+    sreq->kind = MPIR_REQUEST_KIND__SEND;
     sreq->dev.OnDataAvail = NULL;
     sreq->dev.next = NULL;
     pkt_len = sizeof(MPIDI_CH3_Pkt_t) + data_sz;

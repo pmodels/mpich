@@ -407,7 +407,7 @@ int MPIDU_Sched_start(MPID_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request
     MPIU_Assert(s->entries != NULL);
 
     /* now create and populate the request */
-    r = MPIR_Request_create(MPIR_COLL_REQUEST);
+    r = MPIR_Request_create(MPIR_REQUEST_KIND__COLL);
     if (!r)
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
     /* FIXME is this right when comm/datatype GC is used? */

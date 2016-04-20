@@ -22,7 +22,7 @@
 /* This macro initializes all of the fields in a persistent request */
 #define MPIDI_Request_create_psreq(sreq_, mpi_errno_, FAIL_)		\
 {									\
-    (sreq_) = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);                  \
+    (sreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);                  \
     if ((sreq_) == NULL)						\
     {									\
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"send request allocation failed");\
@@ -32,7 +32,7 @@
 									\
     MPIU_Object_set_ref((sreq_), 1);					\
     MPIR_cc_set(&(sreq_)->cc, 0);                                       \
-    (sreq_)->kind = MPIR_PREQUEST_SEND;					\
+    (sreq_)->kind = MPIR_REQUEST_KIND__PREQUEST_SEND;					\
     (sreq_)->comm = comm;						\
     MPIR_Comm_add_ref(comm);						\
     (sreq_)->dev.match.parts.rank = rank;				\
@@ -299,7 +299,7 @@ int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int t
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_RECV_INIT);
     
-    rreq = MPIR_Request_create(MPIR_REQUEST_UNDEFINED);
+    rreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     if (rreq == NULL)
     {
 	/* --BEGIN ERROR HANDLING-- */
@@ -309,7 +309,7 @@ int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int t
     }
     
     MPIU_Object_set_ref(rreq, 1);
-    rreq->kind = MPIR_PREQUEST_RECV;
+    rreq->kind = MPIR_REQUEST_KIND__PREQUEST_RECV;
     rreq->comm = comm;
     MPIR_cc_set(&rreq->cc, 0);
     MPIR_Comm_add_ref(comm);
