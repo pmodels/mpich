@@ -300,18 +300,18 @@ int MPIDI_VCR_Dup(MPIDI_VCR orig_vcr, MPIDI_VCR * new_vcr)
 #define FUNCNAME MPID_Comm_get_lpid
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int * lpid_ptr, MPIU_BOOL is_remote)
+int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int64_t * lpid_ptr, MPIU_BOOL is_remote)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPID_VCR_GET_LPID);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_VCR_GET_LPID);
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-        *lpid_ptr = comm_ptr->dev.vcrt->vcr_table[idx]->lpid;
+        *lpid_ptr = (int64_t) comm_ptr->dev.vcrt->vcr_table[idx]->lpid;
     else if (is_remote)
-        *lpid_ptr = comm_ptr->dev.vcrt->vcr_table[idx]->lpid;
+        *lpid_ptr = (int64_t) comm_ptr->dev.vcrt->vcr_table[idx]->lpid;
     else
-        *lpid_ptr = comm_ptr->dev.local_vcrt->vcr_table[idx]->lpid;
+        *lpid_ptr = (int64_t) comm_ptr->dev.local_vcrt->vcr_table[idx]->lpid;
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_VCR_GET_LPID);
     return MPI_SUCCESS;
@@ -394,7 +394,7 @@ int MPID_GPID_Get( MPIR_Comm *comm_ptr, int rank, MPIR_Gpid *in_gpid )
 #define FUNCNAME MPID_GPID_ToLpidArray
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_GPID_ToLpidArray( int size, MPIR_Gpid in_gpid[], int lpid[] )
+int MPID_GPID_ToLpidArray( int size, MPIR_Gpid in_gpid[], int64_t lpid[] )
 {
     int i, mpi_errno = MPI_SUCCESS;
     int pgid;
@@ -428,7 +428,7 @@ int MPID_GPID_ToLpidArray( int size, MPIR_Gpid in_gpid[], int lpid[] )
 		   this process group */
 		/* Sanity check on size */
 		if (pg->size > gpid[1]) {
-		    lpid[i] = pg->vct[gpid[1]].lpid;
+		    lpid[i] = (int64_t) pg->vct[gpid[1]].lpid;
 		}
 		else {
 		    /* --BEGIN ERROR HANDLING-- */
@@ -463,7 +463,7 @@ int MPID_GPID_ToLpidArray( int size, MPIR_Gpid in_gpid[], int lpid[] )
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_Create_intercomm_from_lpids( MPIR_Comm *newcomm_ptr,
-			    int size, const int lpids[] )
+			    int size, const int64_t lpids[] )
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *commworld_ptr;
@@ -504,7 +504,7 @@ int MPID_Create_intercomm_from_lpids( MPIR_Comm *newcomm_ptr,
 		    /*printf( "Checking lpid %d against %d in pg %s\n",
 			    lpids[i], pg->vct[j].lpid, (char *)pg->id );
 			    fflush(stdout); */
-		    if (pg->vct[j].lpid == lpids[i]) {
+		    if (pg->vct[j].lpid == (int) lpids[i]) {
 			vc = &pg->vct[j];
 			/*printf( "found vc %x for lpid = %d in another pg\n", 
 			  (int)vc, lpids[i] );*/

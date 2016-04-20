@@ -33,7 +33,8 @@ int MPI_Comm_remote_group(MPI_Comm comm, MPI_Group *group) __attribute__((weak,a
 int MPIR_Comm_remote_group_impl(MPIR_Comm *comm_ptr, MPIR_Group **group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, lpid, n;
+    int i, n;
+    int64_t lpid;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_REMOTE_GROUP_IMPL);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_REMOTE_GROUP_IMPL);
@@ -45,7 +46,7 @@ int MPIR_Comm_remote_group_impl(MPIR_Comm *comm_ptr, MPIR_Group **group_ptr)
 
         for (i=0; i<n; i++) {
             (void) MPID_Comm_get_lpid( comm_ptr, i, &lpid, TRUE );
-            (*group_ptr)->lrank_to_lpid[i].lpid  = lpid;
+            (*group_ptr)->lrank_to_lpid[i].lpid = lpid;
             /* TODO calculate is_local_dense_monotonic */
         }
         (*group_ptr)->size = n;

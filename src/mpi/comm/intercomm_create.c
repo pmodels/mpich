@@ -26,10 +26,10 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader, MPI_Comm peer_co
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifdef HAVE_ERROR_CHECKING
-PMPI_LOCAL int MPIR_CheckDisjointLpids( int [], int, int [], int );
+PMPI_LOCAL int MPIR_CheckDisjointLpids( int64_t [], int, int64_t [], int );
 #endif /* HAVE_ERROR_CHECKING */
 PMPI_LOCAL int MPID_LPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
-				       int local_lpids[] );
+				       int64_t local_lpids[] );
 
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Intercomm_create
@@ -42,8 +42,8 @@ PMPI_LOCAL int MPID_LPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
 #define FUNCNAME MPIR_CheckDisjointLpids
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-PMPI_LOCAL int MPIR_CheckDisjointLpids( int lpids1[], int n1, 
-					 int lpids2[], int n2 )
+PMPI_LOCAL int MPIR_CheckDisjointLpids( int64_t lpids1[], int n1,
+					 int64_t lpids2[], int n2 )
 {
     int i, mask_size, idx, bit, maxlpid = -1;
     int mpi_errno = MPI_SUCCESS;
@@ -103,7 +103,7 @@ PMPI_LOCAL int MPIR_CheckDisjointLpids( int lpids1[], int n1,
 #endif /* HAVE_ERROR_CHECKING */
 
 PMPI_LOCAL int MPID_LPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
-				       int local_lpids[] )
+				       int64_t local_lpids[] )
 {
     int i;
     
@@ -125,8 +125,8 @@ int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIU_Context_id_t final_context_id, recvcontext_id;
-    int remote_size, *remote_lpids=0, singlePG;
-    int local_size,*local_lpids=0;
+    int remote_size, local_size, singlePG;
+    int64_t *remote_lpids = 0, *local_lpids = 0;
     MPIR_Gpid *local_gpids=NULL, *remote_gpids=NULL;
     int comm_info[3];
     int is_low_group = 0;
@@ -178,9 +178,9 @@ int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
         /* With this information, we can now send and receive the
            global process ids from the peer. */
         MPIU_CHKLMEM_MALLOC(remote_gpids,MPIR_Gpid*,remote_size*sizeof(MPIR_Gpid), mpi_errno,"remote_gpids");
-        MPIU_CHKLMEM_MALLOC(remote_lpids,int*,remote_size*sizeof(int), mpi_errno,"remote_lpids");
+        MPIU_CHKLMEM_MALLOC(remote_lpids,int64_t*,remote_size*sizeof(int64_t), mpi_errno,"remote_lpids");
         MPIU_CHKLMEM_MALLOC(local_gpids,MPIR_Gpid*,local_size*sizeof(MPIR_Gpid), mpi_errno,"local_gpids");
-        MPIU_CHKLMEM_MALLOC(local_lpids,int*,local_size*sizeof(int), mpi_errno,"local_lpids");
+        MPIU_CHKLMEM_MALLOC(local_lpids,int64_t*,local_size*sizeof(int64_t), mpi_errno,"local_lpids");
 
         mpi_errno = MPID_GPID_GetAllInComm( local_comm_ptr, local_size, local_gpids, &singlePG );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -278,7 +278,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
         remote_size = comm_info[0];
         MPIU_CHKLMEM_MALLOC(remote_gpids,MPIR_Gpid*,remote_size*sizeof(MPIR_Gpid), mpi_errno,"remote_gpids");
-        MPIU_CHKLMEM_MALLOC(remote_lpids,int*,remote_size*sizeof(int), mpi_errno,"remote_lpids");
+        MPIU_CHKLMEM_MALLOC(remote_lpids,int64_t*,remote_size*sizeof(int64_t), mpi_errno,"remote_lpids");
         mpi_errno = MPID_Bcast( remote_gpids, remote_size*sizeof(MPIR_Gpid), MPI_BYTE, local_leader,
                                      local_comm_ptr, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
