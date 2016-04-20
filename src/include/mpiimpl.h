@@ -1003,7 +1003,7 @@ typedef struct MPIR_Attribute {
 /* This structure is used to implement the group operations such as 
    MPI_Group_translate_ranks */
 typedef struct MPIR_Group_pmap_t {
-    int          lpid;      /* local process id, from VCONN */
+    int64_t      lpid;      /* local process id, from VCONN */
     int          next_lpid; /* Index of next lpid (in lpid order) */
     int          flag;      /* marker, used to implement group operations */
 } MPIR_Group_pmap_t;
@@ -3795,7 +3795,7 @@ int MPID_Get_universe_size(int  * universe_size);
    to which it is connected.  These are local process ids because different
    processes may use different ids to identify the same target process
   @*/
-int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int * lpid_ptr, MPIU_BOOL is_remote);
+int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int64_t * lpid_ptr, MPIU_BOOL is_remote);
 
 /* prototypes and declarations for the MPID_Sched interface for nonblocking
  * collectives */

@@ -376,7 +376,8 @@ int MPIR_Group_check_valid_ranges( MPIR_Group *group_ptr,
 int MPIR_Group_check_subset( MPIR_Group *group_ptr, MPIR_Comm *comm_ptr )
 {
     int mpi_errno = MPI_SUCCESS;
-    int g1_idx, g2_idx, l1_pid, l2_pid, i;
+    int64_t l1_pid, l2_pid;
+    int g1_idx, g2_idx, i;
     MPIR_Group_pmap_t *vmap=0;
     int vsize = comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM ? comm_ptr->local_size :
         comm_ptr->remote_size;
@@ -402,7 +403,7 @@ int MPIR_Group_check_subset( MPIR_Group *group_ptr, MPIR_Comm *comm_ptr )
 	l1_pid = group_ptr->lrank_to_lpid[g1_idx].lpid;
 	l2_pid = vmap[g2_idx].lpid;
 	MPL_DBG_MSG_FMT(MPIR_DBG_COMM,VERBOSE,(MPL_DBG_FDEST,
-				       "Lpids are %d, %d\n", l1_pid, l2_pid ));
+				       "Lpids are %" PRId64 ", %" PRId64 "\n", l1_pid, l2_pid ));
 	if (l1_pid < l2_pid) {
 	    /* If we have to advance g1, we didn't find a match, so
 	       that's an error. */
