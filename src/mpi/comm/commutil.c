@@ -6,10 +6,10 @@
 
 #include "mpiimpl.h"
 #include "mpicomm.h"
-#include "mpiinfo.h"    /* MPIU_Info_free */
+#include "mpir_info.h"    /* MPIU_Info_free */
 
 #include "mpl_utlist.h"
-#include "mpiu_uthash.h"
+#include "mpir_uthash.h"
 
 /* This is the utility file for comm that contains the basic comm items
    and storage management */

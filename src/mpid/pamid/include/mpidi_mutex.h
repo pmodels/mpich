@@ -27,7 +27,7 @@
 #define __include_mpidi_mutex_h__
 
 #include <opa_primitives.h>
-#include <mpiutil.h>
+#include <mpiimpl.h>
 #include <malloc.h>
 
 #define MPIDI_THREAD_ID() Kernel_ProcessorID()

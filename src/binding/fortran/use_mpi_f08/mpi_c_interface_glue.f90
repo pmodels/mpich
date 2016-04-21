@@ -22,7 +22,7 @@ public :: MPIR_Win_delete_attr_f08_proxy
 public :: MPIR_Keyval_set_proxy
 public :: MPIR_Grequest_set_lang_fortran
 
-! Bind to C's enum MPIR_AttrType in mpi_attr.h
+! Bind to C's enum MPIR_AttrType in mpir_attr_generic.h
 enum, bind(C)
     enumerator :: MPIR_ATTR_PTR  = 0
     enumerator :: MPIR_ATTR_AINT = 1

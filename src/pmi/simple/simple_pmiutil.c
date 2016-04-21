@@ -33,7 +33,7 @@
 #include "simple_pmiutil.h"
 
 /* Use the memory definitions from mpich/src/include */
-#include "mpimem.h"
+#include "mpir_mem.h"
 
 #define MAXVALLEN 1024
 #define MAXKEYLEN   32

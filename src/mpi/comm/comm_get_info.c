@@ -6,7 +6,7 @@
  */
 
 #include "mpiimpl.h"
-#include "mpiinfo.h"
+#include "mpir_info.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Comm_get_info */
 #if defined(HAVE_PRAGMA_WEAK)

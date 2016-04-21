@@ -5,7 +5,6 @@
  *      See COPYRIGHT in top-level directory.
  */
 #include "mpiimpl.h"
-#include "topo.h"
 
 static int unweighted_dummy = 0x46618;
 static int weights_empty_dummy = 0x022284;

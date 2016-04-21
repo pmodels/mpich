@@ -2349,8 +2349,7 @@ print $OUTFD "\
 
     # Keyval and attribute routines
     print $OUTFD <<EOT;
-#include \"mpi_attr.h\"
-#include \"mpi_lang.h\"
+#include \"mpir_attr_generic.h\"
 static
 int
 MPIR_Comm_delete_attr_cxx_proxy(

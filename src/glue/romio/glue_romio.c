@@ -9,7 +9,7 @@
  * the headers it includes) directly inside of ROMIO. */
 
 #include "mpiimpl.h"
-#include "glue_romio.h"
+#include "mpir_ext.h"
 
 #if defined (MPL_USE_DBG_LOGGING)
 static MPL_dbg_class DBG_ROMIO;

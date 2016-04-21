@@ -19,10 +19,12 @@
 #include "mpl.h"
 #include "mpichconf.h"
 #include "mpi.h"
-#include "mpierror.h"
-#include "mpierrs.h"
-#include "mpimem.h"
-#include "mpiutil.h"
+#include "mpir_err.h"
+#include "mpir_mem.h"
+#include "mpir_strerror.h"
+#include "mpir_type_defs.h"
+#include "mpir_assert.h"
+#include "mpir_pointers.h"
 
 #ifdef USE_NT_SOCK
 

@@ -913,7 +913,7 @@ fi
 if test "$enable_error_checking" = "yes" ; then
    enable_error_checking=all
 fi
-# glue_romio.h needs the variable HAVE_ERROR_CHECKING to have the value 0 or 1
+# mpir_ext.h needs the variable HAVE_ERROR_CHECKING to have the value 0 or 1
 HAVE_ERROR_CHECKING=0
 case "$enable_error_checking" in 
     no)
@@ -932,7 +932,7 @@ case "$enable_error_checking" in
     AC_MSG_WARN([Unknown value $enable_error_checking for enable-error-checking])
     ;;
 esac
-# permit @HAVE_ERROR_CHECKING@ substitution in glue_romio.h 
+# permit @HAVE_ERROR_CHECKING@ substitution in mpir_ext.h
 AC_SUBST([HAVE_ERROR_CHECKING])
 
 # error-messages
@@ -4726,7 +4726,7 @@ export MPI_F77_AINT
 # ----------------------------------------------------------------------------
 
 # define MPIU_Size_t - used to express the size of objects
-# This is used in mpiu_type_defs.h to define MPIU_SIZE_T, 
+# This is used in mpir_type_defs.h to define MPIU_SIZE_T,
 # and is used in various parts of ch3 and mpid/common/sock.  
 # This is used to handle the potential problem that a message is 
 # too long to fit with an int.  However, we may still need to make
@@ -4754,7 +4754,7 @@ typedef $MPI_AINT MPI_Aint;
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
-#include "${master_top_srcdir}/src/include/mpibsend.h"]
+#include "${master_top_srcdir}/src/include/mpir_bsend.h"]
 )
 if test "$ac_cv_sizeof_MPIR_Bsend_data_t" = "0" ; then
     AC_MSG_ERROR([Unable to determine the size of MPI_BSEND_OVERHEAD])
@@ -5540,7 +5540,7 @@ AC_OUTPUT(Makefile \
           test/commands/Makefile \
           src/include/mpichinfo.h \
 	  mpich-doxygen \
-          src/include/glue_romio.h \
+          src/include/mpir_ext.h \
           src/binding/cxx/mpicxx.h \
 	  src/binding/fortran/mpif_h/mpif.h \
 	  src/binding/fortran/mpif_h/setbotf.f \

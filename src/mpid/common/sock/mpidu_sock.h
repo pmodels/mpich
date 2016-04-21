@@ -22,8 +22,11 @@ CPLUSPLUS_BEGIN
 /* Load just the utility definitions that we need */
 #include "mpichconf.h"
 #include "mpl.h"
-#include "mpiutil.h"
-#include "mpich_cvars.h"
+#include "mpir_strerror.h"
+#include "mpir_type_defs.h"
+#include "mpir_assert.h"
+#include "mpir_pointers.h"
+#include "mpir_cvars.h"
 /* implementation specific header file */    
 #include "mpidu_socki.h"
 

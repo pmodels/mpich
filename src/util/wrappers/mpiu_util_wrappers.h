@@ -19,7 +19,7 @@
 #endif
 
 #include "mpichconf.h"
-#include "mpimem.h"
+#include "mpir_mem.h"
 
 #ifdef HAVE_GETLASTERROR
 #   define MPIU_OSW_Get_errno()   GetLastError()

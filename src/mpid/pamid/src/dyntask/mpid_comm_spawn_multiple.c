@@ -167,8 +167,8 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 
 	/* Open a port for the spawned processes to connect to */
 	/* FIXME: info may be needed for port name */
-        mpi_errno = MPIR_Open_port(NULL, port_name);
-        TRACE_ERR("mpi_errno from MPIR_Open_port=%d\n", mpi_errno);
+        mpi_errno = MPID_Open_port(NULL, port_name);
+        TRACE_ERR("mpi_errno from MPID_Open_port=%d\n", mpi_errno);
 
 	/* Spawn the processes */
 #ifdef USE_PMI2_API

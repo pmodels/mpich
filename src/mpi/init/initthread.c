@@ -14,7 +14,7 @@
  */
 
 #include "mpiimpl.h"
-#include "mpiinfo.h"
+#include "mpir_info.h"
 #include "datatype.h"
 #include "mpi_init.h"
 #ifdef HAVE_CRTDBG_H

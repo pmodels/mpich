@@ -27,7 +27,7 @@ int MPID_Close_port(const char *port_name)
   MPID_abort();
   return 0;
 }
-int MPIR_Open_port(MPIR_Info *info_ptr,
+int MPID_Open_port(MPIR_Info *info_ptr,
                    char *port_name)
 {
   MPID_abort();

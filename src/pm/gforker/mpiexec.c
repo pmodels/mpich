@@ -84,11 +84,11 @@
 #include "env.h"
 #include "simple_pmiutil.h"
 
-/* We can't use mpimem.h, because the memory routines are no longer available
+/* We can't use mpir_mem.h, because the memory routines are no longer available
    as utility routines, and instead now import properties from the device 
    and other parts of the code */
-/* mpimem.h contains prototypes for MPL_strncpy etc. */
-/* #include "mpimem.h" */
+/* mpir_mem.h contains prototypes for MPL_strncpy etc. */
+/* #include "mpir_mem.h" */
 
 typedef struct { PMISetup pmiinfo; IOLabelSetup labelinfo; } SetupInfo;
 

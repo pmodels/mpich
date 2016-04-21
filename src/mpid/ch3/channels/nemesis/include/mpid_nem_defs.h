@@ -9,7 +9,7 @@
 
 #include "mpid_nem_datatypes.h"
 #include "mpi.h"
-#include "mpiutil.h"
+#include "mpiimpl.h"
 #include "mpiu_os_wrappers_pre.h"
 
 #define MPID_NEM_MAX_FNAME_LEN 256

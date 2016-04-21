@@ -11,7 +11,7 @@
 #define OFI_IMPL_H
 
 #include "mpid_nem_impl.h"
-#include "mpihandlemem.h"
+#include "mpir_objects.h"
 #include "pmi.h"
 #include <rdma/fabric.h>
 #include <rdma/fi_errno.h>

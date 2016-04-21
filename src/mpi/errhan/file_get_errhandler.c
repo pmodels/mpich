@@ -6,10 +6,7 @@
  */
 
 #include "mpiimpl.h"
-
-/* mpiext.h contains the prototypes for functions to interface MPICH
-   and ROMIO */
-#include "mpiext.h"
+#include "mpir_ext.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_File_get_errhandler */
 #if defined(HAVE_PRAGMA_WEAK)

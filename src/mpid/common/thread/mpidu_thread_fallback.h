@@ -7,7 +7,6 @@
 #if !defined(MPIDU_THREAD_H_INCLUDED)
 #define MPIDU_THREAD_H_INCLUDED
 
-#include "mpiutil.h"
 #include "opa_primitives.h"
 
 /* some important critical section names:

@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "mpibsend.h"
+#include "mpir_bsend.h"
 #include "bsendutil.h"
 
 /*

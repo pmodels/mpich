@@ -8,7 +8,7 @@
 
 #include "mpiimpl.h"
 #include "mpidu_dataloop.h"
-#include "mpihandlemem.h"
+#include "mpir_objects.h"
 
 /* NOTE: 
  * - struct MPIDU_Dataloop and MPIDU_Segment are defined in 
