@@ -316,7 +316,7 @@ int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **ne
 	    MPIU_Sort_inttable( remotekeytable, new_remote_size );
 
             MPIR_Comm_map_irregular(*newcomm_ptr, comm_ptr, NULL,
-                                    new_size, MPIR_COMM_MAP_DIR_L2L,
+                                    new_size, MPIR_COMM_MAP_DIR__L2L,
                                     &mapper);
 
             for (i = 0; i < new_size; i++) {
@@ -342,7 +342,7 @@ int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **ne
 
             MPIR_Comm_map_irregular(*newcomm_ptr, comm_ptr, NULL,
                                     new_remote_size,
-                                    MPIR_COMM_MAP_DIR_R2R, &mapper);
+                                    MPIR_COMM_MAP_DIR__R2R, &mapper);
 
             for (i = 0; i < new_remote_size; i++)
                 mapper->src_mapping[i] = remotekeytable[i].color;
@@ -359,7 +359,7 @@ int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **ne
 	    (*newcomm_ptr)->remote_size    = new_size;
 
             MPIR_Comm_map_irregular(*newcomm_ptr, comm_ptr, NULL,
-                                    new_size, MPIR_COMM_MAP_DIR_L2L,
+                                    new_size, MPIR_COMM_MAP_DIR__L2L,
                                     &mapper);
 
             for (i = 0; i < new_size; i++) {

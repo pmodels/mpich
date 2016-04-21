@@ -172,7 +172,7 @@ static inline int map_size(MPIR_Comm_map_t map)
 {
     if (map.type == MPIR_COMM_MAP_TYPE__IRREGULAR)
         return map.src_mapping_size;
-    else if (map.dir == MPIR_COMM_MAP_DIR_L2L || map.dir == MPIR_COMM_MAP_DIR_L2R)
+    else if (map.dir == MPIR_COMM_MAP_DIR__L2L || map.dir == MPIR_COMM_MAP_DIR__L2R)
         return map.src_comm->local_size;
     else
         return map.src_comm->remote_size;
@@ -202,19 +202,19 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
     /* do some sanity checks */
     MPL_LL_FOREACH(comm->mapper_head, mapper) {
         if (mapper->src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-            MPIU_Assert(mapper->dir == MPIR_COMM_MAP_DIR_L2L ||
-                        mapper->dir == MPIR_COMM_MAP_DIR_L2R);
+            MPIU_Assert(mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
+                        mapper->dir == MPIR_COMM_MAP_DIR__L2R);
         if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-            MPIU_Assert(mapper->dir == MPIR_COMM_MAP_DIR_L2L ||
-                        mapper->dir == MPIR_COMM_MAP_DIR_R2L);
+            MPIU_Assert(mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
+                        mapper->dir == MPIR_COMM_MAP_DIR__R2L);
     }
 
     /* First, handle all the mappers that contribute to the local part
      * of the comm */
     vcrt_size = 0;
     MPL_LL_FOREACH(comm->mapper_head, mapper) {
-        if (mapper->dir == MPIR_COMM_MAP_DIR_L2R ||
-            mapper->dir == MPIR_COMM_MAP_DIR_R2R)
+        if (mapper->dir == MPIR_COMM_MAP_DIR__L2R ||
+            mapper->dir == MPIR_COMM_MAP_DIR__R2R)
             continue;
 
         vcrt_size += map_size(*mapper);
@@ -223,11 +223,11 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
     MPL_LL_FOREACH(comm->mapper_head, mapper) {
         src_comm = mapper->src_comm;
 
-        if (mapper->dir == MPIR_COMM_MAP_DIR_L2R ||
-            mapper->dir == MPIR_COMM_MAP_DIR_R2R)
+        if (mapper->dir == MPIR_COMM_MAP_DIR__L2R ||
+            mapper->dir == MPIR_COMM_MAP_DIR__R2R)
             continue;
 
-        if (mapper->dir == MPIR_COMM_MAP_DIR_L2L) {
+        if (mapper->dir == MPIR_COMM_MAP_DIR__L2L) {
             if (src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
                 dup_vcrt(src_comm->dev.vcrt, &comm->dev.vcrt, mapper, mapper->src_comm->local_size,
                          vcrt_size, vcrt_offset);
@@ -243,7 +243,7 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
                 dup_vcrt(src_comm->dev.local_vcrt, &comm->dev.local_vcrt, mapper,
                          mapper->src_comm->local_size, vcrt_size, vcrt_offset);
         }
-        else {  /* mapper->dir == MPIR_COMM_MAP_DIR_R2L */
+        else {  /* mapper->dir == MPIR_COMM_MAP_DIR__R2L */
             MPIU_Assert(src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM);
             if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
                 dup_vcrt(src_comm->dev.vcrt, &comm->dev.vcrt, mapper, mapper->src_comm->remote_size,
@@ -260,8 +260,8 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
      * of the comm (only valid for intercomms) */
     vcrt_size = 0;
     MPL_LL_FOREACH(comm->mapper_head, mapper) {
-        if (mapper->dir == MPIR_COMM_MAP_DIR_L2L ||
-            mapper->dir == MPIR_COMM_MAP_DIR_R2L)
+        if (mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
+            mapper->dir == MPIR_COMM_MAP_DIR__R2L)
             continue;
 
         vcrt_size += map_size(*mapper);
@@ -270,13 +270,13 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
     MPL_LL_FOREACH(comm->mapper_head, mapper) {
         src_comm = mapper->src_comm;
 
-        if (mapper->dir == MPIR_COMM_MAP_DIR_L2L ||
-            mapper->dir == MPIR_COMM_MAP_DIR_R2L)
+        if (mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
+            mapper->dir == MPIR_COMM_MAP_DIR__R2L)
             continue;
 
         MPIU_Assert(comm->comm_kind == MPIR_COMM_KIND__INTERCOMM);
 
-        if (mapper->dir == MPIR_COMM_MAP_DIR_L2R) {
+        if (mapper->dir == MPIR_COMM_MAP_DIR__L2R) {
             if (src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
                 dup_vcrt(src_comm->dev.vcrt, &comm->dev.vcrt, mapper, mapper->src_comm->local_size,
                          vcrt_size, vcrt_offset);
@@ -284,7 +284,7 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
                 dup_vcrt(src_comm->dev.local_vcrt, &comm->dev.vcrt, mapper,
                          mapper->src_comm->local_size, vcrt_size, vcrt_offset);
         }
-        else {  /* mapper->dir == MPIR_COMM_MAP_DIR_R2R */
+        else {  /* mapper->dir == MPIR_COMM_MAP_DIR__R2R */
             MPIU_Assert(src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM);
             dup_vcrt(src_comm->dev.vcrt, &comm->dev.vcrt, mapper, mapper->src_comm->remote_size,
                      vcrt_size, vcrt_offset);

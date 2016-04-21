@@ -168,10 +168,10 @@ int MPIR_Comm_create_map(int         local_n,
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_Comm_map_irregular(newcomm, mapping_comm, local_mapping,
-                            local_n, MPIR_COMM_MAP_DIR_L2L, NULL);
+                            local_n, MPIR_COMM_MAP_DIR__L2L, NULL);
     if (mapping_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         MPIR_Comm_map_irregular(newcomm, mapping_comm, remote_mapping,
-                                remote_n, MPIR_COMM_MAP_DIR_R2R, NULL);
+                                remote_n, MPIR_COMM_MAP_DIR__R2R, NULL);
     }
 
 fn_exit:
