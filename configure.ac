@@ -518,13 +518,6 @@ AC_ARG_ENABLE(mutex-timing,
 	AC_HELP_STRING([--enable-mutex-timing], [calculate the time spent waiting on mutexes]),
 	AC_DEFINE(MPIU_MUTEX_WAIT_TIME,1,[Define to enable timing mutexes]))
 
-AC_ARG_ENABLE(handle-allocation,
-	AC_HELP_STRING([--enable-handle-allocation=type],
-			[Choose the method used for allocating MPI
-			 object handles.  Values may be 'tls' for
-			 thread-local storage or 'mutex' for simple
-			 locking.  'mutex' is the default.]),,enable_handle_allocation=default)
-
 AC_ARG_ENABLE([predefined-refcount],
 	AS_HELP_STRING([--enable-predefined-refcount],
                        [control whether predefined objects like
@@ -1397,20 +1390,6 @@ AC_DEFINE_UNQUOTED([MPICH_THREAD_GRANULARITY],$thread_granularity,[Method used t
 if test "$enable_predefined_refcount" = "no" ; then
     AC_DEFINE([MPIU_THREAD_SUPPRESS_PREDEFINED_REFCOUNTS],[1],[define to disable reference counting predefined objects like MPI_COMM_WORLD])
 fi
-
-case $enable_handle_allocation in
-    mutex|default)
-        handle_allocation_method=MPIU_HANDLE_ALLOCATION_MUTEX
-    ;;
-    tls)
-        handle_allocation_method=MPIU_HANDLE_ALLOCATION_THREAD_LOCAL
-    ;;
-    *)
-        AC_MSG_ERROR([Unrecognized value $enable_handle_allocation for --enable-handle-allocation])
-    ;;
-esac
-AC_DEFINE_UNQUOTED([MPIU_HANDLE_ALLOCATION_METHOD],$handle_allocation_method,[Method used to allocate MPI object handles])
-
 
 AC_DEFINE_UNQUOTED([MPIU_THREAD_REFCOUNT],$thread_refcount,[Method used to implement refcount updates])
 

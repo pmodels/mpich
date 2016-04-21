@@ -36,11 +36,6 @@
 /* _SINGLE is the "null" granularity, where all processes are single-threaded */
 #define MPICH_THREAD_GRANULARITY_SINGLE 4
 
-/* controls the allocation mechanism for MPIR_Request handles, which can greatly
- * affect concurrency on the critical path */
-#define MPIU_HANDLE_ALLOCATION_MUTEX         0
-#define MPIU_HANDLE_ALLOCATION_THREAD_LOCAL  1
-
 /* _NONE means no concurrency control, such as when using MPI_THREAD_SINGLE */
 #define MPIU_REFCOUNT_NONE 1
 #define MPIU_REFCOUNT_LOCKFREE 2
