@@ -117,9 +117,6 @@ int MPIR_Allgatherv_intra (
 #endif
     MPIU_CHKLMEM_DECL(1);
     
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
     
@@ -741,8 +738,6 @@ int MPIR_Allgatherv_intra (
 
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
-  /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)

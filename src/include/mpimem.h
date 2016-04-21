@@ -159,33 +159,6 @@ if (pointer_) { \
 #define MPIU_CHKLMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_) \
     MPIU_CHKLMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,goto fn_fail)
 
-/* In some cases, we need to allocate large amounts of memory. This can
-   be a problem if alloca is used, as the available stack space may be small.
-   This is the same approach for the temporary memory as is used when alloca
-   is not available. */
-#define MPIU_CHKLBIGMEM_DECL(n_) \
- void *(mpiu_chklbigmem_stk_[n_]);\
- int mpiu_chklbigmem_stk_sp_=0;\
- MPIU_AssertDeclValue(const int mpiu_chklbigmem_stk_sz_,n_)
-
-#define MPIU_CHKLBIGMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,stmt_) \
-{pointer_ = (type_)MPL_malloc(nbytes_); \
-if (pointer_) { \
-    MPIU_Assert(mpiu_chklbigmem_stk_sp_<mpiu_chklbigmem_stk_sz_);\
-    mpiu_chklbigmem_stk_[mpiu_chklbigmem_stk_sp_++] = pointer_;\
- } else if (nbytes_ > 0) {				       \
-    MPIU_CHKMEM_SETERR(rc_,nbytes_,name_); \
-    stmt_;\
-}}
-#define MPIU_CHKLBIGMEM_FREEALL() \
-    { while (mpiu_chklbigmem_stk_sp_ > 0) {\
-       MPL_free( mpiu_chklbigmem_stk_[--mpiu_chklbigmem_stk_sp_] ); } }
-
-#define MPIU_CHKLBIGMEM_MALLOC(pointer_,type_,nbytes_,rc_,name_) \
-    MPIU_CHKLBIGMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_)
-#define MPIU_CHKLBIGMEM_MALLOC_ORJUMP(pointer_,type_,nbytes_,rc_,name_) \
-    MPIU_CHKLBIGMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,goto fn_fail)
-
 /* Persistent memory that we may want to recover if something goes wrong */
 #define MPIU_CHKPMEM_DECL(n_) \
  void *(mpiu_chkpmem_stk_[n_]) = { NULL };     \
@@ -242,15 +215,6 @@ if (pointer_) { \
 /* Provides a easy way to use realloc safely and avoid the temptation to use
  * realloc unsafely (direct ptr assignment).  Zero-size reallocs returning NULL
  * are handled and are not considered an error. */
-#define MPIU_REALLOC_OR_FREE_AND_JUMP(ptr_,size_,rc_) do { \
-    void *realloc_tmp_ = MPL_realloc((ptr_), (size_)); \
-    if ((size_) && !realloc_tmp_) { \
-        MPL_free(ptr_); \
-        MPIR_ERR_SETANDJUMP2(rc_,MPI_ERR_OTHER,"**nomem2","**nomem2 %d %s",(size_),MPL_QUOTE(ptr_)); \
-    } \
-    (ptr_) = realloc_tmp_; \
-} while (0)
-/* this version does not free ptr_ */
 #define MPIU_REALLOC_ORJUMP(ptr_,size_,rc_) do { \
     void *realloc_tmp_ = MPL_realloc((ptr_), (size_)); \
     if (size_) \

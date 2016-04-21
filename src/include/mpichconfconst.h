@@ -41,8 +41,6 @@
 #define MPIU_HANDLE_ALLOCATION_MUTEX         0
 #define MPIU_HANDLE_ALLOCATION_THREAD_LOCAL  1
 
-/* _INVALID exists to avoid accidental macro evaluations to 0 */
-#define MPIU_REFCOUNT_INVALID 0
 /* _NONE means no concurrency control, such as when using MPI_THREAD_SINGLE */
 #define MPIU_REFCOUNT_NONE 1
 #define MPIU_REFCOUNT_LOCKFREE 2

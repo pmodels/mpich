@@ -174,10 +174,6 @@ static int barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
     if (comm_ptr->local_size == 1)
         return MPI_SUCCESS;
 
-    /* Only one collective operation per communicator can be active at any
-       time */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER (comm_ptr);
-
     if (comm_ptr->dev.ch.barrier_vars == NULL) {
         mpi_errno = alloc_barrier_vars (comm_ptr, &comm_ptr->dev.ch.barrier_vars);
         if (mpi_errno) MPIR_ERR_POP (mpi_errno);
@@ -220,7 +216,6 @@ static int barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
     }
 
  fn_exit:
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
     return mpi_errno;
  fn_fail:
     goto fn_exit;

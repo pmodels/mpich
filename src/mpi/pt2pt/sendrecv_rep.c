@@ -72,10 +72,6 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     static const char FCNAME[] = "MPI_Sendrecv_replace";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-#ifdef MPID_LOG_ARROWS
-    /* This isn't the right test, but it is close enough for now */
-    int sendcount = count, recvcount = count;
-#endif
     MPIU_CHKLMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_SENDRECV_REPLACE);
     

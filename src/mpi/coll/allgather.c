@@ -150,9 +150,6 @@ int MPIR_Allgather_intra (
     MPIU_Ensure_Aint_fits_in_pointer(MPIU_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
 				     (comm_size * recvcount * recvtype_extent));
 
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-
     tot_bytes = (MPI_Aint)recvcount * comm_size * type_size;
     if ((tot_bytes < MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE) && !(comm_size & (comm_size - 1))) {
 
@@ -626,8 +623,6 @@ int MPIR_Allgather_intra (
 
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)

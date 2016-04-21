@@ -300,9 +300,6 @@ int MPIR_Reduce_scatter_block_intra (
     MPID_Datatype_get_size_macro(datatype, type_size);
     nbytes = total_count * type_size;
     
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-
     /* total_count*extent eventually gets malloced. it isn't added to
      * a user-passed in buffer */
     MPIU_Ensure_Aint_fits_in_pointer(total_count * MPL_MAX(true_extent, extent));
@@ -853,9 +850,6 @@ int MPIR_Reduce_scatter_block_intra (
 
 fn_exit:
     MPIU_CHKLMEM_FREEALL();
-
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
 
     {
         MPIR_Per_thread_t *per_thread = NULL;

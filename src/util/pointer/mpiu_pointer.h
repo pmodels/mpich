@@ -37,16 +37,6 @@
   MPIU_Assert((aint) == (MPI_Aint)(int)(aint));
 
 /*
- * Ensure an MPI_Aint value fits into an unsigned int.
- * Useful for detecting overflow when MPI_Aint is larger than an
- * unsigned int.
- *
- * \param[in]  aint  Variable of type MPI_Aint
- */
-#define MPIU_Ensure_Aint_fits_in_uint(aint) \
-  MPIU_Assert((aint) == (MPI_Aint)(unsigned int)(aint));
-
-/*
  * Ensure an MPI_Aint value fits into a pointer.
  * Useful for detecting overflow when MPI_Aint is larger than a pointer.
  *

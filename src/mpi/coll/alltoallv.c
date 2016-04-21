@@ -84,9 +84,6 @@ int MPIR_Alltoallv_intra(const void *sendbuf, const int *sendcounts, const int *
     /* Get extent of recv type, but send type is only valid if (sendbuf!=MPI_IN_PLACE) */
     MPID_Datatype_get_extent_macro(recvtype, recv_extent);
 
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-
     if (sendbuf == MPI_IN_PLACE) {
         /* We use pair-wise sendrecv_replace in order to conserve memory usage,
          * which is keeping with the spirit of the MPI-2.2 Standard.  But
@@ -213,8 +210,6 @@ int MPIR_Alltoallv_intra(const void *sendbuf, const int *sendcounts, const int *
     }
 
 fn_exit:
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
     MPIU_CHKLMEM_FREEALL();
 
     if (mpi_errno_ret)
@@ -268,9 +263,6 @@ int MPIR_Alltoallv_inter(const void *sendbuf, const int *sendcounts, const int *
     MPID_Datatype_get_extent_macro(sendtype, send_extent);
     MPID_Datatype_get_extent_macro(recvtype, recv_extent);
     
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-
     /* Use pairwise exchange algorithm. */
     max_size = MPL_MAX(local_size, remote_size);
     for (i=0; i<max_size; i++) {
@@ -312,8 +304,6 @@ int MPIR_Alltoallv_inter(const void *sendbuf, const int *sendcounts, const int *
     }
 
  fn_exit:
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)

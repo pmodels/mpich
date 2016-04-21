@@ -74,9 +74,6 @@ int MPIR_Alltoallw_intra(const void *sendbuf, const int sendcounts[], const int 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
     
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-
     if (sendbuf == MPI_IN_PLACE) {
         /* We use pair-wise sendrecv_replace in order to conserve memory usage,
          * which is keeping with the spirit of the MPI-2.2 Standard.  But
@@ -215,9 +212,7 @@ int MPIR_Alltoallw_intra(const void *sendbuf, const int sendcounts[], const int 
 #endif
     }
 
-    /* check if multiple threads are calling this collective function */
   fn_exit:
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );  
     MPIU_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
@@ -263,9 +258,6 @@ int MPIR_Alltoallw_inter(const void *sendbuf, const int sendcounts[], const int 
     remote_size = comm_ptr->remote_size;
     rank = comm_ptr->rank;
 
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-
     /* Use pairwise exchange algorithm. */
     max_size = MPL_MAX(local_size, remote_size);
     for (i=0; i<max_size; i++) {
@@ -307,8 +299,6 @@ int MPIR_Alltoallw_inter(const void *sendbuf, const int sendcounts[], const int 
     }
     
  fn_exit:
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)

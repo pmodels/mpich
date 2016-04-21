@@ -92,16 +92,6 @@ if (g_pRLOG) \
     RLOG_LogRecv( g_pRLOG, source, tag, count ); \
 }
 
-#ifdef MPID_LOG_RECV_FROM_BEGINNING
-#define MPIDU_PT2PT_FUNC_ENTER_BOTH(a) \
-if (g_pRLOG) \
-{ \
-    g_pRLOG->nRecursion++; \
-    MPID_Wtime( &time_stamp_in##a ); \
-    RLOG_LogSend( g_pRLOG, dest, sendtag, sendcount ); \
-    RLOG_LogRecv( g_pRLOG, source, recvtag, recvcount ); \
-}
-#else
 #define MPIDU_PT2PT_FUNC_ENTER_BOTH(a) \
 if (g_pRLOG) \
 { \
@@ -109,7 +99,6 @@ if (g_pRLOG) \
     MPID_Wtime( &time_stamp_in##a ); \
     RLOG_LogSend( g_pRLOG, dest, sendtag, sendcount ); \
 }
-#endif
 
 #define MPIDU_PT2PT_FUNC_EXIT_BACK(a) \
 if (g_pRLOG) \

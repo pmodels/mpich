@@ -90,9 +90,6 @@ static int MPIR_Scan_generic (
     
     if (count == 0) return MPI_SUCCESS;
 
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
@@ -213,8 +210,6 @@ static int MPIR_Scan_generic (
     
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
-     /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
     
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
