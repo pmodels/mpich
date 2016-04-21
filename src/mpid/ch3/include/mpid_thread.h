@@ -8,7 +8,6 @@
 #define MPID_THREAD_H_INCLUDED
 
 #include "mpidu_thread_fallback.h"
-#include "mpiutil.h"
 
 /* We simply use the fallback timer functionality and do not define
  * our own */

@@ -5,13 +5,13 @@
  */
 
 /* This file contains functions that support the RMA code but use some "private"
- * headers from the oputil.h in the "coll" directory.  The alternative is to put
+ * headers from the mpir_op_util.h in the "coll" directory.  The alternative is to put
  * this file in src/mpi/rma instead and add -I${top_srcdir}/src/mpi/coll to the
- * AM_CPPFLAGS.  That option is less preferable because the usage of "oputil.h"
+ * AM_CPPFLAGS.  That option is less preferable because the usage of "mpir_op_util.h"
  * can bleed out of this directory and it clutters the CPPFLAGS further. */
 
 #include "mpiimpl.h"
-#include "oputil.h"
+#include "mpir_op_util.h"
 
 /* Returns true iff the given type is valid for use in MPI-3 RMA atomics, such
  * as MPI_Compare_and_swap or MPI_Fetch_and_op.  Does NOT return MPICH error

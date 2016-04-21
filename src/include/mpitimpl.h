@@ -11,9 +11,13 @@
 #define MPITIMPL_H_INCLUDED
 
 #include "mpi.h"
-#include "mpiutil.h"
-#include "mpiu_utarray.h"
-#include "mpiu_uthash.h"
+#include "mpir_strerror.h"
+#include "mpir_type_defs.h"
+#include "mpir_assert.h"
+#include "mpir_pointers.h"
+#include "mpir_utarray.h"
+#include "mpir_uthash.h"
+#include "mpir_objects.h"
 
 #ifdef HAVE_ERROR_CHECKING
 typedef enum {

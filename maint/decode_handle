@@ -57,7 +57,7 @@ while (scalar @ARGV) {
     }
 }
 
-## code from src/include/mpihandlemem.h from which this script was derived
+## code from src/include/mpir_objects.h from which this script was derived
 ## ----8<----
 ##
 ## typedef enum MPIR_Object_kind {

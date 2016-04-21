@@ -7,7 +7,7 @@
 #ifndef HAVE_MPIDPKT_H
 #define HAVE_MPIDPKT_H
 
-#include "oputil.h"
+#include "mpir_op_util.h"
 
 #ifdef HAVE_STDINT_H
 #include <stdint.h>

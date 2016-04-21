@@ -194,7 +194,7 @@ static int MPID_nem_llc_vc_prnt(MPIDI_VC_t * vc)
     int mpi_errno = MPI_SUCCESS;
 
     /* MPIU_OBJECT_HEADER; */
-    /* src/include/mpihandlemem.h */
+    /* src/include/mpir_objects.h */
     /* int handle; */
     /* MPIU_Handle_ref_count ref_count; */
     /* MPIDI_VC_State_t state; */

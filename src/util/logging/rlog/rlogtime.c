@@ -13,7 +13,7 @@
 #include "mpi.h"
 
 #include "mpichconf.h"
-#include "mpimem.h" /* for MPL_snprintf */
+#include "mpir_mem.h" /* for MPL_snprintf */
 #include "rlog.h"
 #include <math.h>
 #include <stdlib.h>

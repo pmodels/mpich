@@ -16,7 +16,7 @@
 #include "mpio.h"
 
 #ifdef ROMIO_INSIDE_MPICH
-#include "glue_romio.h"
+#include "mpir_ext.h"
 
 #define ROMIO_THREAD_CS_ENTER() MPIR_Ext_cs_enter()
 #define ROMIO_THREAD_CS_EXIT() MPIR_Ext_cs_exit()

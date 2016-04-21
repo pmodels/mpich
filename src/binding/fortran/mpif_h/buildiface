@@ -4221,11 +4221,9 @@ sub build_specials {
     $args = "void *, int *";
     &print_header( "mpi_", "MPI_Address", "address", $args );
     # Add the definitions needed for error reporting
-    # (We could use mpiimpl.h, but mpierrs.h should be sufficient)
-    # mpierror.h references FILE *, so needs stdio.h
-    print $OUTFD "#include \"mpierrs.h\"\n"; 
+    # (We could use mpiimpl.h, but mpir_err.h should be sufficient)
+    print $OUTFD "#include \"mpir_err.h\"\n";
     print $OUTFD "#include <stdio.h>\n"; 
-    print $OUTFD "#include \"mpierror.h\"\n"; 
     &print_routine_type_decl( $OUTFD, $out_prefix, "address" );
     &print_args( $OUTFD, $args, 0, "address" );
     #&print_attr;
@@ -4256,11 +4254,9 @@ sub build_specials {
     $args = "void *, MPI_FAintp";
     &print_header( "mpi_", "MPI_Get_address", "get_address", $args );
     # Add the definitions needed for error reporting
-    # (We could use mpiimpl.h, but mpierrs.h should be sufficient)
-    # mpierror.h references FILE *, so needs stdio.h
-    print $OUTFD "#include \"mpierrs.h\"\n"; 
+    # (We could use mpiimpl.h, but mpir_err.h should be sufficient)
+    print $OUTFD "#include \"mpir_err.h\"\n";
     print $OUTFD "#include <stdio.h>\n"; 
-    print $OUTFD "#include \"mpierror.h\"\n"; 
     &print_routine_type_decl( $OUTFD, $out_prefix, "get_address" );
     &print_args( $OUTFD, $args, 0, "get_address" );
     #&print_attr;
@@ -4573,10 +4569,9 @@ MPIR_Comm_delete_attr_f77_proxy(
  * DO NOT EDIT
  */
 #include \"mpi_fortimpl.h\"
-/* mpierrs.h and mpierror.h for the error code creation */
-#include \"mpierrs.h\"
+/* mpir_err.h for the error code creation */
+#include \"mpir_err.h\"
 #include <stdio.h> 
-#include \"mpierror.h\"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Status_f2c */
 #if defined(USE_WEAK_SYMBOLS) && !defined(USE_ONLY_MPI_NAMES) 
@@ -4647,10 +4642,9 @@ print $OUTFD "\
  * DO NOT EDIT
  */
 #include \"mpi_fortimpl.h\"
-/* mpierrs.h and mpierror.h for the error code creation */
-#include \"mpierrs.h\"
+/* mpir_err.h for the error code creation */
+#include \"mpir_err.h\"
 #include <stdio.h> 
-#include \"mpierror.h\"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Status_c2f */
 #if defined(USE_WEAK_SYMBOLS) && !defined(USE_ONLY_MPI_NAMES) 

@@ -5,7 +5,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "mpibsend.h"
+#include "mpir_bsend.h"
 
 /* Function Prototypes for the bsend utility functions */
 int MPIR_Bsend_attach( void *, int );

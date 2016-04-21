@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "mpimem.h"
+#include "mpir_mem.h"
 
 void PrintState(RLOG_STATE *pState)
 {

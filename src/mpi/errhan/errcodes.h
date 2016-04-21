@@ -43,7 +43,7 @@ int MPIR_Err_add_code( int );
    and the value of the attribute MPI_LASTUSEDCODE will fail).
  */
 
-/* the error class bits are defined in mpierror.h, are 0x0000007f */
+/* the error class bits are defined in mpir_err.h, are 0x0000007f */
 #define ERROR_CLASS_MASK          MPIR_ERR_CLASS_MASK  
 #define ERROR_CLASS_SIZE          MPIR_ERR_CLASS_SIZE
 #define ERROR_DYN_MASK            0x40000000

@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "mpiinfo.h"
+#include "mpir_info.h"
 /*#include <stdio.h>*/
 
 /* This is the utility file for info that contains the basic info items

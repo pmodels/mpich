@@ -6,7 +6,7 @@
  */
 
 #include "mpiimpl.h"
-#include "oputil.h"
+#include "mpir_op_util.h"
 
 /*
  * In MPI-2.1, this operation is valid only for C integer, Fortran integer,

@@ -10,7 +10,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdarg.h>
-#include "mpimem.h"
+#include "mpir_mem.h"
 
 static int ReadFileData(char *pBuffer, int length, FILE *fin)
 {

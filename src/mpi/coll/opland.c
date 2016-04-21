@@ -6,9 +6,9 @@
  */
 
 #include "mpiimpl.h"
-#include "oputil.h"
+#include "mpir_op_util.h"
 #ifdef HAVE_FORTRAN_BINDING
-#include "mpi_fortlogical.h"
+#include "mpir_fortlogical.h"
 #endif
 
 /*

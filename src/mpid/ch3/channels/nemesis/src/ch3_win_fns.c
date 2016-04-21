@@ -6,7 +6,7 @@
 
 #include "mpid_nem_impl.h"
 #include "mpidimpl.h"
-#include "mpiinfo.h"
+#include "mpir_info.h"
 #include "mpidrma.h"
 
 /* FIXME: get this from OS */

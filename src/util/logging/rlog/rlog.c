@@ -13,7 +13,7 @@
 #include "mpl.h"   /* MPL_error_printf */
 
 #include "mpichconf.h" /* HAVE_SNPRINTF */
-#include "mpimem.h"    /* MPL_snprintf */
+#include "mpir_mem.h"    /* MPL_snprintf */
 
 #include "mpi.h"
 /*#define RLOG_timestamp PMPI_Wtime*/

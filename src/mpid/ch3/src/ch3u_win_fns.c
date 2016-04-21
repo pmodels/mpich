@@ -5,7 +5,7 @@
  */
 
 #include "mpidimpl.h"
-#include "mpiinfo.h"
+#include "mpir_info.h"
 #include "mpidrma.h"
 
 extern MPIR_T_pvar_timer_t PVAR_TIMER_rma_wincreate_allgather ATTRIBUTE((unused));

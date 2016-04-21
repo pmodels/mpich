@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#if !defined(MPICH_MPIDPOST_H_INCLUDED)
-#define MPICH_MPIDPOST_H_INCLUDED
+#if !defined(MPIDPOST_H_INCLUDED)
+#define MPIDPOST_H_INCLUDED
 
 #include "mpid_coll.h"
 
@@ -194,4 +194,4 @@ int MPID_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
 int MPIDI_CH3I_Comm_create_hook(struct MPIR_Comm *);
 int MPIDI_CH3I_Comm_destroy_hook(struct MPIR_Comm *);
 
-#endif /* !defined(MPICH_MPIDPOST_H_INCLUDED) */
+#endif /* !defined(MPIDPOST_H_INCLUDED) */

@@ -9,7 +9,7 @@
 
 #include "my_papi_defs.h"
 #include "mpidi_ch3_impl.h"
-#include "mpimem.h"
+#include "mpir_mem.h"
 #include "mpid_nem_net_module_defs.h"
 #include "mpid_nem_atomics.h"
 #include "mpid_nem_defs.h"

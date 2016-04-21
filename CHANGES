@@ -1240,11 +1240,11 @@ www.mcs.anl.gov/mpi/mpich2/mpich2_1_0_6changes.htm.
   reorder == true cases in Cart_create and Graph_create).  
 
 - New memory allocation macros, MPIU_CHK[PL]MEM_*(), have been added to help
-  prevent memory leaks.  See mpich2/src/include/mpimem.h.
+  prevent memory leaks.  See mpich2/src/include/mpir_mem.h.
 
 - New error reporting macros, MPIU_ERR_*, have been added to simplify the error
   handling throughout the code, making the code easier to read.  See
-  mpich2/src/include/mpierrs.h.
+  mpich2/src/include/mpir_err.h.
 
 - Interprocess communication using the Sock interface (sock and ssm channels)
   may now be bound to a particular destination interface using the environment

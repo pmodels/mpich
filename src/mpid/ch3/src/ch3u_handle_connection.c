@@ -12,7 +12,7 @@
 #endif
 #undef utarray_oom
 #define utarray_oom() do { goto fn_oom; } while (0)
-#include "mpiu_utarray.h"
+#include "mpir_utarray.h"
 
 /* Count the number of outstanding close requests */
 static volatile int MPIDI_Outstanding_close_ops = 0;

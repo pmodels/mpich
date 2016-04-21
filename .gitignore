@@ -179,7 +179,7 @@ Makefile.am-stamp
 
 # random additions 2
 /mpich-doxygen
-/src/include/glue_romio.h
+/src/include/mpir_ext.h
 /src/include/mpichinfo.h
 /src/packaging/envmods/mpich.module
 /src/packaging/pkgconfig/mpich.pc
@@ -224,8 +224,8 @@ Makefile.am-stamp
 /src/binding/fortran/use_mpi_f08/Makefile.mk
 
 # MPICH2 parameter handling
-/src/include/mpich_cvars.h
-/src/util/cvar/mpich_cvars.c
+/src/include/mpir_cvars.h
+/src/util/cvar/mpir_cvars.c
 
 
 ################################################################################
