@@ -415,13 +415,13 @@ int MPIR_Comm_map_irregular(MPIR_Comm * newcomm, MPIR_Comm * src_comm,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm_map_t *mapper;
     MPIU_CHKPMEM_DECL(3);
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_MAP_IRREGULAR);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_MAP_TYPE__IRREGULAR);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_MAP_IRREGULAR);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_MAP_TYPE__IRREGULAR);
 
     MPIU_CHKPMEM_MALLOC(mapper, MPIR_Comm_map_t *, sizeof(MPIR_Comm_map_t), mpi_errno, "mapper");
 
-    mapper->type = MPIR_COMM_MAP_IRREGULAR;
+    mapper->type = MPIR_COMM_MAP_TYPE__IRREGULAR;
     mapper->src_comm = src_comm;
     mapper->dir = dir;
     mapper->src_mapping_size = src_mapping_size;
@@ -445,7 +445,7 @@ int MPIR_Comm_map_irregular(MPIR_Comm * newcomm, MPIR_Comm * src_comm,
 
   fn_exit:
     MPIU_CHKPMEM_COMMIT();
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_MAP_IRREGULAR);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_MAP_TYPE__IRREGULAR);
     return mpi_errno;
   fn_fail:
     MPIU_CHKPMEM_REAP();
@@ -461,13 +461,13 @@ int MPIR_Comm_map_dup(MPIR_Comm * newcomm, MPIR_Comm * src_comm, MPIR_Comm_map_d
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm_map_t *mapper;
     MPIU_CHKPMEM_DECL(1);
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_MAP_DUP);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_MAP_TYPE__DUP);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_MAP_DUP);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_MAP_TYPE__DUP);
 
     MPIU_CHKPMEM_MALLOC(mapper, MPIR_Comm_map_t *, sizeof(MPIR_Comm_map_t), mpi_errno, "mapper");
 
-    mapper->type = MPIR_COMM_MAP_DUP;
+    mapper->type = MPIR_COMM_MAP_TYPE__DUP;
     mapper->src_comm = src_comm;
     mapper->dir = dir;
 
@@ -477,7 +477,7 @@ int MPIR_Comm_map_dup(MPIR_Comm * newcomm, MPIR_Comm * src_comm, MPIR_Comm_map_d
 
   fn_exit:
     MPIU_CHKPMEM_COMMIT();
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_MAP_DUP);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_MAP_TYPE__DUP);
     return mpi_errno;
   fn_fail:
     MPIU_CHKPMEM_REAP();
@@ -499,7 +499,7 @@ int MPIR_Comm_map_free(MPIR_Comm * comm)
 
     for (mapper = comm->mapper_head; mapper;) {
         tmp = mapper->next;
-        if (mapper->type == MPIR_COMM_MAP_IRREGULAR && mapper->free_mapping)
+        if (mapper->type == MPIR_COMM_MAP_TYPE__IRREGULAR && mapper->free_mapping)
             MPL_free(mapper->src_mapping);
         MPL_free(mapper);
         mapper = tmp;
