@@ -92,7 +92,7 @@ int MPI_Comm_test_inter(MPI_Comm comm, int *flag)
 
     /* ... body of routine ...  */
     
-    *flag = (comm_ptr->comm_kind == MPIR_INTERCOMM);
+    *flag = (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
     
     /* ... end of body of routine ... */
 

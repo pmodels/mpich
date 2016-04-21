@@ -439,7 +439,7 @@ int MPIR_Iallreduce_intra(const void *sendbuf, void *recvbuf, int count, MPI_Dat
     int mpi_errno = MPI_SUCCESS;
     int comm_size, is_homogeneous, pof2, type_size;
 
-    MPIU_Assert(comm_ptr->comm_kind == MPIR_INTRACOMM);
+    MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
     is_homogeneous = TRUE;
 #ifdef MPID_HAS_HETERO
@@ -509,7 +509,7 @@ int MPIR_Iallreduce_inter(const void *sendbuf, void *recvbuf, int count, MPI_Dat
     int rank, root;
     MPIR_Comm *lcomm_ptr = NULL;
 
-    MPIU_Assert(comm_ptr->comm_kind == MPIR_INTERCOMM);
+    MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
 
     rank = comm_ptr->rank;
 
@@ -758,7 +758,7 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
             }
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-            if (comm_ptr->comm_kind == MPIR_INTERCOMM)
+            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
                 MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, count, mpi_errno);
 
             if (sendbuf != MPI_IN_PLACE)
@@ -766,7 +766,7 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
 
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
 
-            if (comm_ptr->comm_kind == MPIR_INTRACOMM && count != 0 && sendbuf != MPI_IN_PLACE)
+            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM && count != 0 && sendbuf != MPI_IN_PLACE)
                 MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno);
 
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */

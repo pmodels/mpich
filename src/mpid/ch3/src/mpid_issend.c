@@ -44,7 +44,7 @@ int MPID_Issend(const void * buf, int count, MPI_Datatype datatype, int rank, in
         MPIR_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
     }
     
-    if (rank == comm->rank && comm->comm_kind != MPIR_INTERCOMM)
+    if (rank == comm->rank && comm->comm_kind != MPIR_COMM_KIND__INTERCOMM)
     {
 	mpi_errno = MPIDI_Isend_self(buf, count, datatype, rank, tag, comm, context_offset, MPIDI_REQUEST_TYPE_SSEND, &sreq);
 	goto fn_exit;

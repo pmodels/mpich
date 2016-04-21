@@ -8,7 +8,7 @@
 #include "mpiimpl.h"
 #include "mpicomm.h"
 
-#define MPIR_INTERCOMM_CREATE_TAG 0
+#define MPIR_COMM_KIND__INTERCOMM_CREATE_TAG 0
 
 /* -- Begin Profiling Symbol Block for routine MPI_Intercomm_create */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -133,13 +133,13 @@ int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
     int cts_tag;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIU_CHKLMEM_DECL(4);
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_INTERCOMM_CREATE_IMPL);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_CREATE_IMPL);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_INTERCOMM_CREATE_IMPL);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_CREATE_IMPL);
 
     /* Shift tag into the tagged coll space (tag provided by the user 
        is ignored as of MPI 3.0) */
-    cts_tag = MPIR_INTERCOMM_CREATE_TAG | MPIR_Process.tagged_coll_mask;
+    cts_tag = MPIR_COMM_KIND__INTERCOMM_CREATE_TAG | MPIR_Process.tagged_coll_mask;
 
     /*
      * Error checking for this routine requires care.  Because this
@@ -330,7 +330,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
     (*new_intercomm_ptr)->remote_size    = remote_size;
     (*new_intercomm_ptr)->local_size     = local_comm_ptr->local_size;
     (*new_intercomm_ptr)->rank           = local_comm_ptr->rank;
-    (*new_intercomm_ptr)->comm_kind      = MPIR_INTERCOMM;
+    (*new_intercomm_ptr)->comm_kind      = MPIR_COMM_KIND__INTERCOMM;
     (*new_intercomm_ptr)->local_comm     = 0;
     (*new_intercomm_ptr)->is_low_group   = is_low_group;
 
@@ -353,7 +353,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
 
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_INTERCOMM_CREATE_IMPL);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_CREATE_IMPL);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -503,7 +503,7 @@ int MPI_Intercomm_create(MPI_Comm local_comm, int local_leader,
 		   process that is the local leader (local_comm_ptr->rank == 
 		   local_leader because we can then use peer_comm_ptr->rank
 		   to get the rank in peer_comm of the local leader. */
-		if (peer_comm_ptr->comm_kind == MPIR_INTRACOMM &&
+		if (peer_comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
 		    local_comm_ptr->rank == local_leader && 
 		    peer_comm_ptr->rank == remote_leader) {
 		    MPIR_ERR_SET(mpi_errno,MPI_ERR_RANK,"**ranksdistinct");

@@ -378,7 +378,7 @@ int MPIR_Group_check_subset( MPIR_Group *group_ptr, MPIR_Comm *comm_ptr )
     int mpi_errno = MPI_SUCCESS;
     int g1_idx, g2_idx, l1_pid, l2_pid, i;
     MPIR_Group_pmap_t *vmap=0;
-    int vsize = comm_ptr->comm_kind == MPIR_INTERCOMM ? comm_ptr->local_size :
+    int vsize = comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM ? comm_ptr->local_size :
         comm_ptr->remote_size;
     MPIU_CHKLMEM_DECL(1);
 

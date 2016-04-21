@@ -201,10 +201,10 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
 
     /* do some sanity checks */
     MPL_LL_FOREACH(comm->mapper_head, mapper) {
-        if (mapper->src_comm->comm_kind == MPIR_INTRACOMM)
+        if (mapper->src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
             MPIU_Assert(mapper->dir == MPIR_COMM_MAP_DIR_L2L ||
                         mapper->dir == MPIR_COMM_MAP_DIR_L2R);
-        if (comm->comm_kind == MPIR_INTRACOMM)
+        if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
             MPIU_Assert(mapper->dir == MPIR_COMM_MAP_DIR_L2L ||
                         mapper->dir == MPIR_COMM_MAP_DIR_R2L);
     }
@@ -228,14 +228,14 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
             continue;
 
         if (mapper->dir == MPIR_COMM_MAP_DIR_L2L) {
-            if (src_comm->comm_kind == MPIR_INTRACOMM && comm->comm_kind == MPIR_INTRACOMM) {
+            if (src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
                 dup_vcrt(src_comm->dev.vcrt, &comm->dev.vcrt, mapper, mapper->src_comm->local_size,
                          vcrt_size, vcrt_offset);
             }
-            else if (src_comm->comm_kind == MPIR_INTRACOMM && comm->comm_kind == MPIR_INTERCOMM)
+            else if (src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM && comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
                 dup_vcrt(src_comm->dev.vcrt, &comm->dev.local_vcrt, mapper, mapper->src_comm->local_size,
                          vcrt_size, vcrt_offset);
-            else if (src_comm->comm_kind == MPIR_INTERCOMM && comm->comm_kind == MPIR_INTRACOMM) {
+            else if (src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM && comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
                 dup_vcrt(src_comm->dev.local_vcrt, &comm->dev.vcrt, mapper, mapper->src_comm->local_size,
                          vcrt_size, vcrt_offset);
             }
@@ -244,8 +244,8 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
                          mapper->src_comm->local_size, vcrt_size, vcrt_offset);
         }
         else {  /* mapper->dir == MPIR_COMM_MAP_DIR_R2L */
-            MPIU_Assert(src_comm->comm_kind == MPIR_INTERCOMM);
-            if (comm->comm_kind == MPIR_INTRACOMM) {
+            MPIU_Assert(src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+            if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
                 dup_vcrt(src_comm->dev.vcrt, &comm->dev.vcrt, mapper, mapper->src_comm->remote_size,
                          vcrt_size, vcrt_offset);
             }
@@ -274,10 +274,10 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
             mapper->dir == MPIR_COMM_MAP_DIR_R2L)
             continue;
 
-        MPIU_Assert(comm->comm_kind == MPIR_INTERCOMM);
+        MPIU_Assert(comm->comm_kind == MPIR_COMM_KIND__INTERCOMM);
 
         if (mapper->dir == MPIR_COMM_MAP_DIR_L2R) {
-            if (src_comm->comm_kind == MPIR_INTRACOMM)
+            if (src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
                 dup_vcrt(src_comm->dev.vcrt, &comm->dev.vcrt, mapper, mapper->src_comm->local_size,
                          vcrt_size, vcrt_offset);
             else
@@ -285,14 +285,14 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
                          mapper->src_comm->local_size, vcrt_size, vcrt_offset);
         }
         else {  /* mapper->dir == MPIR_COMM_MAP_DIR_R2R */
-            MPIU_Assert(src_comm->comm_kind == MPIR_INTERCOMM);
+            MPIU_Assert(src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM);
             dup_vcrt(src_comm->dev.vcrt, &comm->dev.vcrt, mapper, mapper->src_comm->remote_size,
                      vcrt_size, vcrt_offset);
         }
         vcrt_offset += map_size(*mapper);
     }
 
-    if (comm->comm_kind == MPIR_INTERCOMM) {
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         /* setup the vcrt for the local_comm in the intercomm */
         if (comm->local_comm) {
             comm->local_comm->dev.vcrt = comm->dev.local_vcrt;
@@ -332,7 +332,7 @@ int MPIDI_CH3I_Comm_destroy_hook(MPIR_Comm *comm)
     mpi_errno = MPIDI_VCRT_Release(comm->dev.vcrt, comm->dev.is_disconnected);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    if (comm->comm_kind == MPIR_INTERCOMM) {
+    if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         mpi_errno = MPIDI_VCRT_Release(comm->dev.local_vcrt, comm->dev.is_disconnected);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }

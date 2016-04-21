@@ -867,7 +867,7 @@ int MPIR_Ibcast_intra(void *buffer, int count, MPI_Datatype datatype, int root, 
     int comm_size, is_homogeneous ATTRIBUTE((unused));
     MPI_Aint type_size, nbytes;
 
-    MPIU_Assert(comm_ptr->comm_kind == MPIR_INTRACOMM);
+    MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
     is_homogeneous = 1;
 #ifdef MPID_HAS_HETERO
@@ -916,7 +916,7 @@ int MPIR_Ibcast_inter(void *buffer, int count, MPI_Datatype datatype, int root, 
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIU_Assert(comm_ptr->comm_kind == MPIR_INTERCOMM);
+    MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
 
     /* Intercommunicator broadcast.
      * Root sends to rank 0 in remote group. Remote group does local

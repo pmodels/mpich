@@ -75,9 +75,9 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_int
     int  local_high, remote_high, new_size;
     MPIU_Context_id_t new_context_id;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_INTERCOMM_MERGE_IMPL);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_MERGE_IMPL);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_INTERCOMM_MERGE_IMPL);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_MERGE_IMPL);
     /* Make sure that we have a local intercommunicator */
     if (!comm_ptr->local_comm) {
         /* Manufacture the local communicator */
@@ -153,7 +153,7 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_int
     (*new_intracomm_ptr)->recvcontext_id = (*new_intracomm_ptr)->context_id;
     (*new_intracomm_ptr)->remote_size    = (*new_intracomm_ptr)->local_size   = new_size;
     (*new_intracomm_ptr)->rank           = -1;
-    (*new_intracomm_ptr)->comm_kind      = MPIR_INTRACOMM;
+    (*new_intracomm_ptr)->comm_kind      = MPIR_COMM_KIND__INTRACOMM;
 
     /* Now we know which group comes first.  Build the new mapping
        from the existing comm */
@@ -187,7 +187,7 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_int
 
     (*new_intracomm_ptr)->remote_size    = (*new_intracomm_ptr)->local_size   = new_size;
     (*new_intracomm_ptr)->rank           = -1;
-    (*new_intracomm_ptr)->comm_kind      = MPIR_INTRACOMM;
+    (*new_intracomm_ptr)->comm_kind      = MPIR_COMM_KIND__INTRACOMM;
     (*new_intracomm_ptr)->context_id = new_context_id;
     (*new_intracomm_ptr)->recvcontext_id = new_context_id;
 
@@ -198,7 +198,7 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_int
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_INTERCOMM_MERGE_IMPL);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_MERGE_IMPL);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -284,7 +284,7 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
             /* Validate comm_ptr */
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
 	    /* If comm_ptr is not valid, it will be reset to null */
-	    if (comm_ptr && comm_ptr->comm_kind != MPIR_INTERCOMM) {
+	    if (comm_ptr && comm_ptr->comm_kind != MPIR_COMM_KIND__INTERCOMM) {
 		mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
 		    MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_COMM,
 						  "**commnotinter", 0 );

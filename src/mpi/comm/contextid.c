@@ -481,7 +481,7 @@ int MPIR_Get_contextid_sparse_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr
             st.local_mask[ALL_OWN_MASK_FLAG] = 0;
 
         /* Now, try to get a context id */
-        MPIU_Assert(comm_ptr->comm_kind == MPIR_INTRACOMM);
+        MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
         /* In the global and brief-global cases, note that this routine will
          * release that global lock when it needs to wait.  That will allow
          * other processes to enter the global or brief global critical section.
@@ -685,7 +685,7 @@ static int sched_cb_gcn_bcast(MPIR_Comm * comm, int tag, void *state)
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state *st = state;
 
-    if (st->gcn_cid_kind == MPIR_INTERCOMM) {
+    if (st->gcn_cid_kind == MPIR_COMM_KIND__INTERCOMM) {
         if (st->comm_ptr_inter->rank == 0) {
             mpi_errno =
                 MPID_Sched_recv(st->ctx1, 1, MPIU_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr_inter,
@@ -966,7 +966,7 @@ static int sched_get_cid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcomm,
     MPIU_CHKPMEM_MALLOC(st, struct gcn_state *, sizeof(struct gcn_state), mpi_errno, "gcn_state");
     st->ctx0 = ctx0;
     st->ctx1 = ctx1;
-    if (gcn_cid_kind == MPIR_INTRACOMM) {
+    if (gcn_cid_kind == MPIR_COMM_KIND__INTRACOMM) {
         st->comm_ptr = comm_ptr;
         st->comm_ptr_inter = NULL;
     }
@@ -1028,7 +1028,7 @@ int MPIR_Get_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newcommp, MPIR
     /* add some entries to it */
     mpi_errno =
         sched_get_cid_nonblock(comm_ptr, newcommp, &newcommp->context_id, &newcommp->recvcontext_id,
-                               s, MPIR_INTRACOMM);
+                               s, MPIR_COMM_KIND__INTRACOMM);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -1080,7 +1080,7 @@ int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm * comm_ptr, MPIR_Comm * newc
     /* first get a context ID over the local comm */
     mpi_errno =
         sched_get_cid_nonblock(comm_ptr, newcommp, &newcommp->recvcontext_id, &newcommp->context_id,
-                               s, MPIR_INTERCOMM);
+                               s, MPIR_COMM_KIND__INTERCOMM);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

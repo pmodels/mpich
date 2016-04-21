@@ -424,7 +424,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     MPIR_Process.comm_world->handle	    = MPI_COMM_WORLD;
     MPIR_Process.comm_world->context_id	    = 0 << MPIR_CONTEXT_PREFIX_SHIFT;
     MPIR_Process.comm_world->recvcontext_id = 0 << MPIR_CONTEXT_PREFIX_SHIFT;
-    MPIR_Process.comm_world->comm_kind	    = MPIR_INTRACOMM;
+    MPIR_Process.comm_world->comm_kind	    = MPIR_COMM_KIND__INTRACOMM;
     /* This initialization of the comm name could be done only when 
        comm_get_name is called */
     MPL_strncpy(MPIR_Process.comm_world->name, "MPI_COMM_WORLD",
@@ -435,7 +435,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     MPIR_Process.comm_self->handle	    = MPI_COMM_SELF;
     MPIR_Process.comm_self->context_id	    = 1 << MPIR_CONTEXT_PREFIX_SHIFT;
     MPIR_Process.comm_self->recvcontext_id  = 1 << MPIR_CONTEXT_PREFIX_SHIFT;
-    MPIR_Process.comm_self->comm_kind	    = MPIR_INTRACOMM;
+    MPIR_Process.comm_self->comm_kind	    = MPIR_COMM_KIND__INTRACOMM;
     MPL_strncpy(MPIR_Process.comm_self->name, "MPI_COMM_SELF",
 		 MPI_MAX_OBJECT_NAME);
 
@@ -445,7 +445,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     MPIR_Process.icomm_world->handle	    = MPIR_ICOMM_WORLD;
     MPIR_Process.icomm_world->context_id    = 2 << MPIR_CONTEXT_PREFIX_SHIFT;
     MPIR_Process.icomm_world->recvcontext_id= 2 << MPIR_CONTEXT_PREFIX_SHIFT;
-    MPIR_Process.icomm_world->comm_kind	    = MPIR_INTRACOMM;
+    MPIR_Process.icomm_world->comm_kind	    = MPIR_COMM_KIND__INTRACOMM;
     MPL_strncpy(MPIR_Process.icomm_world->name, "MPI_ICOMM_WORLD",
 		 MPI_MAX_OBJECT_NAME);
 

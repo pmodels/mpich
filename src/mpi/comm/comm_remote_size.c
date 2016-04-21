@@ -84,7 +84,7 @@ int MPI_Comm_remote_size(MPI_Comm comm, int *size)
             /* Validate comm_ptr */
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
 	    /* If comm_ptr is not valid, it will be reset to null */
-	    if (comm_ptr && comm_ptr->comm_kind != MPIR_INTERCOMM) {
+	    if (comm_ptr && comm_ptr->comm_kind != MPIR_COMM_KIND__INTERCOMM) {
 		mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, 
                         MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_COMM, 
 						  "**commnotinter", 0 );
