@@ -280,7 +280,7 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
     }
     else {
         MPIR_Op_get_ptr(op, op_ptr);
-        if (op_ptr->kind == MPIR_OP_USER_NONCOMMUTE)
+        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE)
             is_commutative = 0;
         else
             is_commutative = 1;

@@ -2024,23 +2024,23 @@ int MPID_Mem_was_alloced( void *ptr );  /* brad : this isn't used or implemented
   Collective-DS
   E*/
 typedef enum MPIR_Op_kind {
-    MPIR_OP_NULL=0,
-    MPIR_OP_MAX=1,
-    MPIR_OP_MIN=2,
-    MPIR_OP_SUM=3,
-    MPIR_OP_PROD=4,
-    MPIR_OP_LAND=5,
-    MPIR_OP_BAND=6,
-    MPIR_OP_LOR=7,
-    MPIR_OP_BOR=8,
-    MPIR_OP_LXOR=9,
-    MPIR_OP_BXOR=10,
-    MPIR_OP_MAXLOC=11,
-    MPIR_OP_MINLOC=12,
-    MPIR_OP_REPLACE=13,
-    MPIR_OP_NO_OP=14,
-    MPIR_OP_USER_NONCOMMUTE=32,
-    MPIR_OP_USER=33
+    MPIR_OP_KIND__NULL=0,
+    MPIR_OP_KIND__MAX=1,
+    MPIR_OP_KIND__MIN=2,
+    MPIR_OP_KIND__SUM=3,
+    MPIR_OP_KIND__PROD=4,
+    MPIR_OP_KIND__LAND=5,
+    MPIR_OP_KIND__BAND=6,
+    MPIR_OP_KIND__LOR=7,
+    MPIR_OP_KIND__BOR=8,
+    MPIR_OP_KIND__LXOR=9,
+    MPIR_OP_KIND__BXOR=10,
+    MPIR_OP_KIND__MAXLOC=11,
+    MPIR_OP_KIND__MINLOC=12,
+    MPIR_OP_KIND__REPLACE=13,
+    MPIR_OP_KIND__NO_OP=14,
+    MPIR_OP_KIND__USER_NONCOMMUTE=32,
+    MPIR_OP_KIND__USER=33
 } MPIR_Op_kind;
 
 /*S

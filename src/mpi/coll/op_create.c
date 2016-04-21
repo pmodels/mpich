@@ -124,7 +124,7 @@ int MPI_Op_create(MPI_User_function *user_fn, int commute, MPI_Op *op)
     /* --END ERROR HANDLING-- */
 
     op_ptr->language = MPIR_LANG__C;
-    op_ptr->kind     = commute ? MPIR_OP_USER : MPIR_OP_USER_NONCOMMUTE;
+    op_ptr->kind     = commute ? MPIR_OP_KIND__USER : MPIR_OP_KIND__USER_NONCOMMUTE;
     op_ptr->function.c_function = (void (*)(const void *, void *, 
 				   const int *, const MPI_Datatype *))user_fn;
     MPIU_Object_set_ref(op_ptr,1);

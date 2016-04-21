@@ -82,7 +82,7 @@ int MPI_Op_commutative(MPI_Op op, int *commute)
         *commute = 1;
     }
     else {
-        if (op_ptr->kind == MPIR_OP_USER_NONCOMMUTE)
+        if (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE)
             *commute = 0;
         else
             *commute = 1;
