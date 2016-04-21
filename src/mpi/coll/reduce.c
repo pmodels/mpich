@@ -753,7 +753,7 @@ int MPIR_Reduce_intra (
         is_commutative = 1;
     else {
         MPIR_Op_get_ptr(op, op_ptr);
-        is_commutative = (op_ptr->kind == MPIR_OP_USER_NONCOMMUTE) ? 0 : 1;
+        is_commutative = (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE) ? 0 : 1;
     }
 
     MPID_Datatype_get_size_macro(datatype, type_size);
