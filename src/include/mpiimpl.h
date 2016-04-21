@@ -1116,10 +1116,10 @@ typedef enum {
 /* direction of mapping: local to local, local to remote, remote to
  * local, remote to remote */
 typedef enum {
-    MPIR_COMM_MAP_DIR_L2L,
-    MPIR_COMM_MAP_DIR_L2R,
-    MPIR_COMM_MAP_DIR_R2L,
-    MPIR_COMM_MAP_DIR_R2R
+    MPIR_COMM_MAP_DIR__L2L,
+    MPIR_COMM_MAP_DIR__L2R,
+    MPIR_COMM_MAP_DIR__R2L,
+    MPIR_COMM_MAP_DIR__R2R
 } MPIR_Comm_map_dir_t;
 
 typedef struct MPIR_Comm_map {

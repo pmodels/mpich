@@ -190,7 +190,7 @@ int MPIR_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
     localcomm_ptr->local_size = intercomm_ptr->local_size;
     localcomm_ptr->rank = intercomm_ptr->rank;
 
-    MPIR_Comm_map_dup(localcomm_ptr, intercomm_ptr, MPIR_COMM_MAP_DIR_L2L);
+    MPIR_Comm_map_dup(localcomm_ptr, intercomm_ptr, MPIR_COMM_MAP_DIR__L2L);
 
     /* TODO More advanced version: if the group is available, dup it by
      * increasing the reference count instead of recreating it later */
@@ -604,7 +604,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             comm->node_comm->remote_size = num_local;
 
             MPIR_Comm_map_irregular(comm->node_comm, comm, local_procs,
-                                    num_local, MPIR_COMM_MAP_DIR_L2L, NULL);
+                                    num_local, MPIR_COMM_MAP_DIR__L2L, NULL);
 
             mpi_errno = set_collops(comm->node_comm);
             if (mpi_errno)
@@ -637,7 +637,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             comm->node_roots_comm->remote_size = num_external;
 
             MPIR_Comm_map_irregular(comm->node_roots_comm, comm,
-                                    external_procs, num_external, MPIR_COMM_MAP_DIR_L2L, NULL);
+                                    external_procs, num_external, MPIR_COMM_MAP_DIR__L2L, NULL);
 
             mpi_errno = set_collops(comm->node_roots_comm);
             if (mpi_errno)
@@ -770,17 +770,17 @@ int MPIR_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
     if (size == comm_ptr->local_size) {
         /* Duplicate the network address mapping */
         if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-            MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR_L2L);
+            MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__L2L);
         else
-            MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR_R2R);
+            MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__R2R);
     }
     else {
         int i;
 
         if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-            MPIR_Comm_map_irregular(newcomm_ptr, comm_ptr, NULL, size, MPIR_COMM_MAP_DIR_L2L, &map);
+            MPIR_Comm_map_irregular(newcomm_ptr, comm_ptr, NULL, size, MPIR_COMM_MAP_DIR__L2L, &map);
         else
-            MPIR_Comm_map_irregular(newcomm_ptr, comm_ptr, NULL, size, MPIR_COMM_MAP_DIR_R2R, &map);
+            MPIR_Comm_map_irregular(newcomm_ptr, comm_ptr, NULL, size, MPIR_COMM_MAP_DIR__R2R, &map);
         for (i = 0; i < size; i++) {
             /* For rank i in the new communicator, find the corresponding
              * rank in the input communicator */
@@ -790,7 +790,7 @@ int MPIR_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
 
     /* If it is an intercomm, duplicate the local network address references */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR_L2L);
+        MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__L2L);
     }
 
     /* Set the sizes and ranks */
@@ -871,13 +871,13 @@ int MPIR_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr)
     newcomm_ptr->local_comm = 0;
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-        MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR_L2L);
+        MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__L2L);
     else
-        MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR_R2R);
+        MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__R2R);
 
     /* If it is an intercomm, duplicate the network address mapping */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR_L2L);
+        MPIR_Comm_map_dup(newcomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__L2L);
     }
 
     /* Set the sizes and ranks */

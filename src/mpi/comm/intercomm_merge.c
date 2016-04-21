@@ -44,21 +44,21 @@ static int create_and_map(MPIR_Comm *comm_ptr, int local_high, MPIR_Comm *new_in
        from the existing comm */
     if (local_high) {
         /* remote group first */
-        MPIR_Comm_map_dup(new_intracomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR_R2L);
+        MPIR_Comm_map_dup(new_intracomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__R2L);
 
-        MPIR_Comm_map_dup(new_intracomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR_L2L);
+        MPIR_Comm_map_dup(new_intracomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__L2L);
         for (i = 0; i < comm_ptr->local_size; i++)
             if (i == comm_ptr->rank)
                 new_intracomm_ptr->rank = comm_ptr->remote_size + i;
     }
     else {
         /* local group first */
-        MPIR_Comm_map_dup(new_intracomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR_L2L);
+        MPIR_Comm_map_dup(new_intracomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__L2L);
         for (i = 0; i < comm_ptr->local_size; i++)
             if (i == comm_ptr->rank)
                 new_intracomm_ptr->rank = i;
 
-        MPIR_Comm_map_dup(new_intracomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR_R2L);
+        MPIR_Comm_map_dup(new_intracomm_ptr, comm_ptr, MPIR_COMM_MAP_DIR__R2L);
     }
 
 fn_fail:
