@@ -69,7 +69,7 @@ int MPI_Finalized( int *flag )
 
     /* ... body of routine ...  */
     
-    *flag = (OPA_load_int(&MPIR_Process.mpich_state) >= MPICH_POST_FINALIZED);
+    *flag = (OPA_load_int(&MPIR_Process.mpich_state) >= MPICH_MPI_STATE__POST_FINALIZED);
     
     /* ... end of body of routine ... */
 
@@ -82,8 +82,8 @@ int MPI_Finalized( int *flag )
     /* --BEGIN ERROR HANDLING-- */
 #   ifdef HAVE_ERROR_CHECKING
   fn_fail:
-    if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_IN_INIT ||
-        OPA_load_int(&MPIR_Process.mpich_state) == MPICH_POST_INIT)
+    if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__IN_INIT ||
+        OPA_load_int(&MPIR_Process.mpich_state) == MPICH_MPI_STATE__POST_INIT)
     {
 	{
 	    mpi_errno = MPIR_Err_create_code(
