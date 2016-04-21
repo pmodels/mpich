@@ -127,12 +127,12 @@ static void dup_vcrt(struct MPIDI_VCRT *src_vcrt, struct MPIDI_VCRT **dest_vcrt,
     /* try to find the simple case where the new comm is a simple
      * duplicate of the previous comm.  in that case, we simply add a
      * reference to the previous VCRT instead of recreating it. */
-    if (mapper->type == MPIR_COMM_MAP_DUP && src_comm_size == vcrt_size) {
+    if (mapper->type == MPIR_COMM_MAP_TYPE__DUP && src_comm_size == vcrt_size) {
         *dest_vcrt = src_vcrt;
         MPIDI_VCRT_Add_ref(src_vcrt);
         return;
     }
-    else if (mapper->type == MPIR_COMM_MAP_IRREGULAR &&
+    else if (mapper->type == MPIR_COMM_MAP_TYPE__IRREGULAR &&
              mapper->src_mapping_size == vcrt_size) {
         /* if the mapping array is exactly the same as the original
          * comm's VC list, there is no need to create a new VCRT.
@@ -156,7 +156,7 @@ static void dup_vcrt(struct MPIDI_VCRT *src_vcrt, struct MPIDI_VCRT **dest_vcrt,
     if (!vcrt_offset)
         MPIDI_VCRT_Create(vcrt_size, dest_vcrt);
 
-    if (mapper->type == MPIR_COMM_MAP_DUP) {
+    if (mapper->type == MPIR_COMM_MAP_TYPE__DUP) {
         for (i = 0; i < src_comm_size; i++)
             MPIDI_VCR_Dup(src_vcrt->vcr_table[i],
                           &((*dest_vcrt)->vcr_table[i + vcrt_offset]));
@@ -170,7 +170,7 @@ static void dup_vcrt(struct MPIDI_VCRT *src_vcrt, struct MPIDI_VCRT **dest_vcrt,
 
 static inline int map_size(MPIR_Comm_map_t map)
 {
-    if (map.type == MPIR_COMM_MAP_IRREGULAR)
+    if (map.type == MPIR_COMM_MAP_TYPE__IRREGULAR)
         return map.src_mapping_size;
     else if (map.dir == MPIR_COMM_MAP_DIR_L2L || map.dir == MPIR_COMM_MAP_DIR_L2R)
         return map.src_comm->local_size;

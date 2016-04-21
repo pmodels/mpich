@@ -1109,8 +1109,8 @@ typedef enum MPIR_Comm_hierarchy_kind_t {
 /* Communicators */
 
 typedef enum {
-    MPIR_COMM_MAP_DUP,
-    MPIR_COMM_MAP_IRREGULAR
+    MPIR_COMM_MAP_TYPE__DUP,
+    MPIR_COMM_MAP_TYPE__IRREGULAR
 } MPIR_Comm_map_type_t;
 
 /* direction of mapping: local to local, local to remote, remote to
