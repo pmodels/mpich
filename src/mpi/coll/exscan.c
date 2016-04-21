@@ -148,9 +148,6 @@ int MPIR_Exscan (
                                partial_scan, count, datatype);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-
     flag = 0;
     mask = 0x1;
     while (mask < comm_size) {
@@ -216,9 +213,6 @@ int MPIR_Exscan (
         }
         mask <<= 1;
     }
-
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
 
     {
         MPIR_Per_thread_t *per_thread = NULL;

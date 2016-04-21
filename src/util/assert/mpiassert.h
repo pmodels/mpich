@@ -34,12 +34,8 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
  * Similar to assert() except that it performs an MPID_Abort() when the 
  * assertion fails.  Also, for Windows, it doesn't popup a
  * mesage box on a remote machine.
- *
- * MPIU_AssertDecl may be used to include declarations only needed
- * when MPIU_Assert is non-null (e.g., when assertions are enabled)
  */
 #if (!defined(NDEBUG) && defined(HAVE_ERROR_CHECKING))
-#   define MPIU_AssertDecl(a_) a_
 #   define MPIU_AssertDeclValue(_a,_b) _a = _b
 #   define MPIU_Assert(a_)                             \
     do {                                               \
@@ -50,7 +46,6 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
 #else
 #   define MPIU_Assert(a_)
 /* Empty decls not allowed in C */
-#   define MPIU_AssertDecl(a_) a_ 
 #   define MPIU_AssertDeclValue(_a,_b) _a ATTRIBUTE((unused)) = _b
 #endif
 
@@ -130,34 +125,6 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
 /* fallthrough to a run-time assertion */
 #ifndef MPIU_Static_assert
 #  define MPIU_Static_assert(cond_,msg_) MPIU_Assert_fmt_msg((cond_), ("%s", (msg_)))
-#endif
-
-/* evaluates to TRUE if ((a_)*(b_)>(max_)), only detects overflow for positive
- * a_ and _b. */
-#define MPIU_Prod_overflows_max(a_, b_, max_) \
-    ( (a_) > 0 && (b_) > 0 && ((a_) > ((max_) / (b_))) )
-
-/* asserts that ((a_)*(b_)<=(max_)) holds in a way that is robust against
- * undefined integer overflow behavior and is suitable for both signed and
- * unsigned math (only suitable for positive values of (a_) and (b_)) */
-#define MPIU_Assert_prod_pos_overflow_safe(a_, b_, max_)                               \
-    MPIU_Assert_fmt_msg(!MPIU_Prod_overflows_max((a_),(b_),(max_)),                    \
-                        ("overflow detected: (%llx * %llx) > %s", (a_), (b_), #max_)); \
-
-
-
-/* -------------------------------------------------------------------------- */
-/* static type checking macros */
-
-/* implement using C11's "_Generic" functionality (optimal case) */
-#ifdef HAVE_C11__GENERIC
-#  define MPIU_Assert_has_type(expr_,type_) \
-    MPIU_Static_assert(_Generic((expr_), type_: 1, default: 0), \
-                       "expression '" #expr_ "' does not have type '" #type_ "'")
-#endif
-/* fallthrough to do nothing */
-#ifndef MPIU_Assert_has_type
-#  define MPIU_Assert_has_type(expr_,type_) do {} while (0)
 #endif
 
 #endif /* !defined(MPIASSERT_H_INCLUDED) */

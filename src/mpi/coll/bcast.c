@@ -1233,9 +1233,6 @@ int MPIR_Bcast_intra (
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_BCAST);
 
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-
     if (count == 0) goto fn_exit;
 
     MPID_Datatype_get_size_macro(datatype, type_size);
@@ -1316,9 +1313,6 @@ int MPIR_Bcast_intra (
     }
 
 fn_exit:
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
-
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_BCAST);
 
     /* --BEGIN ERROR HANDLING-- */
@@ -1368,7 +1362,6 @@ int MPIR_Bcast_inter (
     else if (root == MPI_ROOT)
     {
         /* root sends to rank 0 on remote group and returns */
-        MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
         mpi_errno =  MPIC_Send(buffer, count, datatype, 0,
                                   MPIR_BCAST_TAG, comm_ptr, errflag);
         if (mpi_errno) {
@@ -1377,7 +1370,6 @@ int MPIR_Bcast_inter (
             MPIR_ERR_SET(mpi_errno, *errflag, "**fail");
             MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
         }
-        MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
     }
     else
     {

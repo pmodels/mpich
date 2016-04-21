@@ -75,17 +75,8 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
 #endif
 
 #if defined(HAVE_LONG_LONG_INT)
-/* tt#1776: some platforms have "long long" but not a LLONG_MAX/ULLONG_MAX,
- * usually because some feature test macro has turned them off in glibc's
- * features.h header b/c we are not in a >=C99 mode.  Use well-defined unsigned
- * integer overflow to determine ULLONG_MAX, and assume two's complement for
- * determining LLONG_MAX (already assumed elsewhere in MPICH). */
-#ifndef ULLONG_MIN
-#define ULLONG_MIN (0) /* trivial */
-#endif
-#ifndef ULLONG_MAX
-#define ULLONG_MAX ((unsigned long long)0 - 1)
-#endif
+/* Assume two's complement for determining LLONG_MAX (already assumed
+ * elsewhere in MPICH). */
 #ifndef LLONG_MAX
 /* slightly tricky (values in binary):
  * - put a 1 in the second-to-msb digit                   (0100...0000)
@@ -93,11 +84,6 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
  * - shift left 1                                         (0111...1110)
  * - add 1, yielding all 1s in positive space             (0111...1111) */
 #define LLONG_MAX (((((long long) 1 << (sizeof(long long) * CHAR_BIT - 2)) - 1 ) << 1) + 1)
-#endif
-#ifndef LLONG_MIN
-/* (1000...0000) is the most negative value in a twos-complement representation,
- * which is the bitwise complement of the most positive value */
-#define LLONG_MIN (~LLONG_MAX)
 #endif
 #endif /* defined(HAVE_LONG_LONG_INT) */
 
@@ -147,36 +133,6 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
 #if defined HAVE_LIBHCOLL
 #include "../mpid/common/hcoll/hcollpre.h"
 #endif
-
-/*
- * Use MPIU_SYSCALL to wrap system calls; this provides a convenient point
- * for timing the calls and keeping track of the use of system calls.
- * This macro simply invokes the system call and does not even handle
- * EINTR.
- * To use, 
- *    MPIU_SYSCALL( return-value, name-of-call, args-in-parenthesis )
- * e.g., change "n = read(fd,buf,maxn);" into
- *    MPIU_SYSCALL( n,read,(fd,buf,maxn) );
- * An example that prints each syscall to stdout is shown below. 
- */
-#ifdef USE_LOG_SYSCALLS
-#define MPIU_SYSCALL(a_,b_,c_) { \
-    printf( "[%d]about to call %s\n", MPIR_Process.comm_world->rank,#b_);\
-          fflush(stdout); errno = 0;\
-    a_ = b_ c_; \
-    if ((a_)>=0 || errno==0) {\
-    printf( "[%d]%s returned %d\n", \
-          MPIR_Process.comm_world->rank, #b_, a_ );\
-    } \
- else { \
-    printf( "[%d]%s returned %d (errno = %d,%s)\n", \
-          MPIR_Process.comm_world->rank, \
-          #b_, a_, errno, MPIU_Strerror(errno));\
-    };           fflush(stdout);}
-#else
-#define MPIU_SYSCALL(a_,b_,c_) a_ = b_ c_
-#endif
-
 
 typedef struct {
     int thread_provided;        /* Provided level of thread support */
@@ -436,9 +392,6 @@ void MPIR_DatatypeAttrFinalize( void );
 /* Valid pointer checks */
 /* This test is lame.  Should eventually include cookie test 
    and in-range addresses */
-#define MPIR_Valid_ptr(kind,ptr,err) \
-  {if (!(ptr)) { err = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, \
-                                             "**nullptrtype", "**nullptrtype %s", #kind ); } }
 #define MPIR_Valid_ptr_class(kind,ptr,errclass,err) \
   {if (!(ptr)) { err = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, errclass, \
                                              "**nullptrtype", "**nullptrtype %s", #kind ); } }
@@ -471,27 +424,6 @@ void MPIR_DatatypeAttrFinalize( void );
      (type == MPI_LONG_INT) || (type == MPI_SHORT_INT) || \
      (type == MPI_LONG_DOUBLE_INT))
 
-/* FIXME: 
-   Generic pointer test.  This is applied to any address, not just one from
-   an MPI object.
-   Currently unimplemented (returns success except for null pointers.
-   With a little work, could check that the pointer is properly aligned,
-   using something like 
-   ((p) == 0 || ((char *)(p) & MPID_Alignbits[alignment] != 0)
-   where MPID_Alignbits is set with a mask whose bits must be zero in a 
-   properly aligned quantity.  For systems with no alignment rules, 
-   all of these masks are zero, and this part of test can be eliminated.
- */
-#define MPIR_Pointer_is_invalid(p,alignment) ((p) == 0)
-/* Fixme: The following MPID_ALIGNED_xxx values are temporary.  They 
-   need to be computed by configure and included in the mpichconf.h file.
-   Note that they cannot be set conservatively (i.e., as sizeof(object)),
-   since the runtime system may generate objects with lesser alignment
-   rules if the processor allows them.
- */
-#define MPIR_ALIGNED_PTR_INT   1
-#define MPIR_ALIGNED_PTR_LONG  1
-#define MPIR_ALIGNED_PTR_VOIDP 1
 /* ------------------------------------------------------------------------- */
 /* end of code that should the following be moved into mpihandlemem.h ?*/
 /* ------------------------------------------------------------------------- */
@@ -1497,9 +1429,6 @@ extern MPL_dbg_class MPIR_DBG_REQUEST;
 extern MPL_dbg_class MPIR_DBG_ASSERT;
 #endif /* MPL_USE_DBG_LOGGING */
 
-/* MPI_Status manipulation macros */
-#define MPIR_BITS_IN_INT (8 * SIZEOF_INT)
-
 /* We use bits from the "count_lo" and "count_hi_and_cancelled" fields
  * to represent the 'count' and 'cancelled' objects.  The LSB of the
  * "count_hi_and_cancelled" field represents the 'cancelled' object.
@@ -1516,11 +1445,11 @@ extern MPL_dbg_class MPIR_DBG_ASSERT;
     {                                                                   \
         (status_).count_lo = ((int) count_);                            \
         (status_).count_hi_and_cancelled &= 1;                          \
-        (status_).count_hi_and_cancelled |= (int) ((MPIR_Ucount) count_ >> MPIR_BITS_IN_INT << 1); \
+        (status_).count_hi_and_cancelled |= (int) ((MPIR_Ucount) count_ >> (8 * SIZEOF_INT) << 1); \
     }
 
 #define MPIR_STATUS_GET_COUNT(status_)                                  \
-    ((MPI_Count) ((((MPIR_Ucount) (((unsigned int) (status_).count_hi_and_cancelled) >> 1)) << MPIR_BITS_IN_INT) + (unsigned int) (status_).count_lo))
+    ((MPI_Count) ((((MPIR_Ucount) (((unsigned int) (status_).count_hi_and_cancelled) >> 1)) << (8 * SIZEOF_INT)) + (unsigned int) (status_).count_lo))
 
 #define MPIR_STATUS_SET_CANCEL_BIT(status_, cancelled_)	\
     {                                                   \
@@ -1981,28 +1910,6 @@ void *MPID_Alloc_mem( size_t size, MPIR_Info *info );
   @*/
 int MPID_Free_mem( void *ptr );
 
-/*@
-  MPID_Mem_was_alloced - Return true if this memory was allocated with 
-  'MPID_Alloc_mem'
-
-  Input Parameters:
-+ ptr  - Address of memory
-- size - Size of reqion in bytes.
-
-  Return value:
-  True if the memory was allocated with 'MPID_Alloc_mem', false otherwise.
-
-  Notes:
-  This routine may be needed by 'MPI_Win_create' to ensure that the memory 
-  for passive target RMA operations was allocated with 'MPI_Mem_alloc'.
-  This may be used, for example, for ensuring that memory used with
-  passive target operations was allocated with 'MPID_Alloc_mem'.
-
-  Module:
-  Win
-  @*/
-int MPID_Mem_was_alloced( void *ptr );  /* brad : this isn't used or implemented anywhere */
-
 /* ------------------------------------------------------------------------- */
 /* end of also in mpirma.h ? */
 /* ------------------------------------------------------------------------- */
@@ -2255,7 +2162,6 @@ typedef struct MPIR_Collops {
                                MPIR_Comm *comm_ptr, MPID_Sched_t s);
 } MPIR_Collops;
 
-#define MPIR_BARRIER_TAG 1
 /* ------------------------------------------------------------------------- */
 /* end of mpicoll.h (in src/mpi/coll? */
 /* ------------------------------------------------------------------------- */
@@ -2401,20 +2307,8 @@ extern MPICH_PerProcess_t MPIR_Process;
 #define MPIDI_FUNC_EXIT(a)			MPIR_FUNC_EXIT(a)
 #define MPIDI_PT2PT_FUNC_ENTER(a)		MPIR_FUNC_ENTER(a)
 #define MPIDI_PT2PT_FUNC_EXIT(a)		MPIR_FUNC_EXIT(a)
-#define MPIDI_PT2PT_FUNC_ENTER_FRONT(a)		MPIR_FUNC_ENTER(a)
-#define MPIDI_PT2PT_FUNC_EXIT_FRONT(a)		MPIR_FUNC_EXIT(a)
-#define MPIDI_PT2PT_FUNC_ENTER_BACK(a)		MPIR_FUNC_ENTER(a)
-#define MPIDI_PT2PT_FUNC_ENTER_BOTH(a)		MPIR_FUNC_ENTER(a)
-#define MPIDI_PT2PT_FUNC_EXIT_BACK(a)		MPIR_FUNC_EXIT(a)
-#define MPIDI_PT2PT_FUNC_EXIT_BOTH(a)		MPIR_FUNC_EXIT(a)
-#define MPIDI_COLL_FUNC_ENTER(a)		MPIR_FUNC_ENTER(a)
-#define MPIDI_COLL_FUNC_EXIT(a)			MPIR_FUNC_EXIT(a)
 #define MPIDI_RMA_FUNC_ENTER(a)			MPIR_FUNC_ENTER(a)
 #define MPIDI_RMA_FUNC_EXIT(a)			MPIR_FUNC_EXIT(a)
-#define MPIDI_INIT_FUNC_ENTER(a)		MPIR_FUNC_ENTER(a)
-#define MPIDI_INIT_FUNC_EXIT(a)			MPIR_FUNC_EXIT(a)
-#define MPIDI_FINALIZE_FUNC_ENTER(a)		MPIR_FUNC_ENTER(a)
-#define MPIDI_FINALIZE_FUNC_EXIT(a)		MPIR_FUNC_EXIT(a)
 
 /* evaporate the timing macros since timing is not selected */
 #define MPIU_Timer_init(rank, size)
@@ -2424,10 +2318,6 @@ extern MPICH_PerProcess_t MPIR_Process;
 /* Definitions for error handling and reporting */
 #include "mpierror.h"
 #include "mpierrs.h"
-
-/* FIXME: This routine is only used within mpi/src/err/errutil.c.  We
- * may not want to export it.  */
-void MPIR_Err_print_stack(FILE *, int);
 
 /* ------------------------------------------------------------------------- */
 
@@ -2490,7 +2380,6 @@ extern void MPIR_Errhandler_set_cxx( MPI_Errhandler, void (*)(void) );
 int MPIR_Group_create( int, MPIR_Group ** );
 int MPIR_Group_release(MPIR_Group *group_ptr);
 
-int MPIR_dup_fn ( MPI_Comm, int, void *, void *, void *, int * );
 /* marks a request as complete, extracting the status */
 int MPIR_Request_complete(MPI_Request *, MPIR_Request *, MPI_Status *, int *);
 
@@ -3646,101 +3535,6 @@ typedef struct MPIR_Grequest_class {
 /* Interfaces exposed by MPI_T */
 #include "mpit.h"
 
-/*TTopoOverview.tex
- *
- * The MPI collective and topology routines can benefit from information 
- * about the topology of the underlying interconnect.  Unfortunately, there
- * is no best form for the representation (the MPI-1 Forum tried to define
- * such a representation, but was unable to).  One useful decomposition
- * that has been used in cluster enviroments is a hierarchical decomposition.
- *
- * The other obviously useful topology information would match the needs of 
- * 'MPI_Cart_create'.  However, it may be simpler to for the device to 
- * implement this routine directly.
- *
- * Other useful information could be the topology information that matches
- * the needs of the collective operation, such as spanning trees and rings.
- * These may be added to ADI3 later.
- *
- * Question: Should we define a cart create function?  Dims create?
- *
- * Usage:
- * This routine has nothing to do with the choice of communication method
- * that a implementation of the ADI may make.  It is intended only to
- * communicate information on the heirarchy of processes, if any, to 
- * the implementation of the collective communication routines.  This routine
- * may also be useful for the MPI Graph topology functions.
- *
- T*/
-
-/*@
-  MPID_Topo_cluster_info - Return information on the hierarchy of 
-  interconnections
-
-  Input Parameter:
-. comm - Communicator to study.  May be 'NULL', in which case 'MPI_COMM_WORLD'
-  is the effective communicator.
-
-  Output Parameters:
-+ levels - The number of levels in the hierarchy.  
-  To simplify the use of this routine, the maximum value is 
-  'MPID_TOPO_CLUSTER_MAX_LEVELS' (typically 8 or less).
-. my_cluster - For each level, the id of the cluster that the calling process
-  belongs to.
-- my_rank - For each level, the rank of the calling process in its cluster
-
-  Notes:
-  This routine returns a description of the system in terms of nested 
-  clusters of processes.  Levels are numbered from zero.  At each level,
-  each process may belong to no more than cluster; if a process is in any
-  cluster at level i, it must be in some cluster at level i-1.
-
-  The communicator argument allows this routine to be used in the dynamic
-  process case (i.e., with communicators that are created after 'MPI_Init' 
-  and that involve processes that are not part of 'MPI_COMM_WORLD').
-
-  For non-hierarchical systems, this routine simply returns a single 
-  level containing all processes.
-
-  Sample Outputs:
-  For a single, switch-connected cluster or a uniform-memory-access (UMA)
-  symmetric multiprocessor (SMP), the return values could be
-.vb
-    level       my_cluster         my_rank
-    0           0                  rank in comm_world
-.ve
-  This is also a valid response for `any` device.
-
-  For a switch-connected cluster of 2 processor SMPs
-.vb
-    level       my_cluster         my_rank
-    0           0                  rank in comm_world
-    1           0 to p/2           0 or 1
-.ve
- where the value each process on the same SMP has the same value for
- 'my_cluster[1]' and a different value for 'my_rank[1]'.
-
-  For two SMPs connected by a network,
-.vb
-    level       my_cluster         my_rank
-    0           0                  rank in comm_world
-    1           0 or 1             0 to # on SMP
-.ve
-
-  An example with more than 2 levels is a collection of clusters, each with
-  SMP nodes.  
-
-  Limitations:
-  This approach does not provide a representations for topologies that
-  are not hierarchical.  For example, a mesh interconnect is a single-level
-  cluster in this view.
-
-  Module: 
-  Topology
-  @*/
-int MPID_Topo_cluster_info( MPIR_Comm *comm,
-			    int *levels, int my_cluster[], int my_rank[] );
-
 /*@
   MPID_Get_processor_name - Return the name of the current processor
 
@@ -4142,8 +3936,6 @@ int MPIR_Comm_is_node_aware( MPIR_Comm * );
 
 int MPIR_Comm_is_node_consecutive( MPIR_Comm *);
 
-void MPIR_Free_err_dyncodes( void );
-
 int MPIR_Comm_idup_impl(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm, MPIR_Request **reqp);
 
 int MPIR_Comm_shrink(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm_ptr);
@@ -4310,15 +4102,6 @@ int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count *size);
 int MPIR_Group_init(void);
 int MPIR_Comm_init(MPIR_Comm *);
 
-
-/* Collective functions cannot be called from multiple threads. These
-   are stubs used in the collective communication calls to check for
-   user error. Currently they are just being macroed out. */
-#define MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER(comm_ptr)
-#define MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT(comm_ptr)
-
-/* Miscellaneous */
-void MPIU_SetTimeout( int );
 
 /* Communicator info hint functions */
 typedef int (*MPIR_Comm_hint_fn_t)(MPIR_Comm *, MPIR_Info *, void *);

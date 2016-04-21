@@ -225,7 +225,6 @@ M*/
 #if MPIU_THREAD_REFCOUNT == MPIU_REFCOUNT_NONE
 
 typedef int MPIU_Handle_ref_count;
-#define MPIU_HANDLE_REF_COUNT_INITIALIZER(val_) (val_)
 
 #define MPIU_Object_set_ref(objptr_,val)                 \
     do {                                                 \
@@ -254,7 +253,6 @@ typedef int MPIU_Handle_ref_count;
 
 #include "opa_primitives.h"
 typedef OPA_int_t MPIU_Handle_ref_count;
-#define MPIU_HANDLE_REF_COUNT_INITIALIZER(val_) OPA_INT_T_INITIALIZER(val_)
 
 #define MPIU_Object_set_ref(objptr_,val)                 \
     do {                                                 \
@@ -366,13 +364,6 @@ typedef struct MPIU_Handle_common {
     void *next;   /* Free handles use this field to point to the next
                      free object */
 } MPIU_Handle_common;
-
-/* Provides a type to which a specific object structure can be casted.  In
- * general this should not be used, since most uses are violations of C's strict
- * aliasing rules. */
-typedef struct MPIU_Handle_head {
-    MPIU_OBJECT_HEADER;
-} MPIU_Handle_head;
 
 /* This type contains all of the data, except for the direct array,
    used by the object allocators. */

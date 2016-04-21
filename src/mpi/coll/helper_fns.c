@@ -535,10 +535,6 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     MPI_Aint tmpbuf_count = 0;
     MPIU_CHKLMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIC_SENDRECV_REPLACE);
-#ifdef MPID_LOG_ARROWS
-    /* The logging macros log sendcount and recvcount */
-    int sendcount = count, recvcount = count;
-#endif
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_SENDRECV_REPLACE);
 

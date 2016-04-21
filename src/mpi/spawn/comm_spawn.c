@@ -118,9 +118,6 @@ int MPI_Comm_spawn(const char *command, char *argv[], int maxprocs, MPI_Info inf
 
     /* ... body of routine ...  */
     
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-
     mpi_errno = MPID_Comm_spawn_multiple(1, (char **) &command, &argv,
                                          &maxprocs, &info_ptr, root,  
                                          comm_ptr, &intercomm_ptr,

@@ -744,8 +744,6 @@ int MPIR_Reduce_intra (
     MPIU_CHKLMEM_DECL(1);
 
     if (count == 0) return MPI_SUCCESS;
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
 
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_REDUCE) {
     /* is the op commutative? We do SMP optimizations only if it is. */
@@ -896,9 +894,6 @@ int MPIR_Reduce_intra (
         
 
   fn_exit:
-    /* check if multiple threads are calling this collective function */
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
-
     MPIU_CHKLMEM_FREEALL();
 
     if (mpi_errno_ret)
@@ -946,9 +941,6 @@ int MPIR_Reduce_inter (
         /* local processes other than root do nothing */
         return MPI_SUCCESS;
     }
-
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-
 
     if (root == MPI_ROOT) {
         /* root receives data from rank 0 on remote group */
@@ -1013,7 +1005,6 @@ int MPIR_Reduce_inter (
     }
 
   fn_exit:
-    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr ); 
     MPIU_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
