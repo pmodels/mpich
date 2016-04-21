@@ -330,13 +330,14 @@ extern MPID_Thread_tls_t MPIR_Per_thread_key;
   Module:
   Attribute-DS
   E*/
-typedef enum MPIR_Lang_t { MPIR_LANG_C
+typedef enum MPIR_Lang_t {
+    MPIR_LANG_C
 #ifdef HAVE_FORTRAN_BINDING
-			   , MPIR_LANG_FORTRAN
-			   , MPIR_LANG_FORTRAN90
+    , MPIR_LANG_FORTRAN
+    , MPIR_LANG_FORTRAN90
 #endif
 #ifdef HAVE_CXX_BINDING
-			   , MPIR_LANG_CXX
+    , MPIR_LANG_CXX
 #endif
 } MPIR_Lang_t;
 
@@ -1093,7 +1094,8 @@ void MPIR_Group_setup_lpid_list( MPIR_Group * );
   E*/
 typedef enum MPIR_Comm_kind_t {
     MPIR_INTRACOMM = 0,
-    MPIR_INTERCOMM = 1 } MPIR_Comm_kind_t;
+    MPIR_INTERCOMM = 1
+} MPIR_Comm_kind_t;
 
 /* ideally we could add these to MPIR_Comm_kind_t, but there's too much existing
  * code that assumes that the only valid values are INTRACOMM or INTERCOMM */
@@ -2021,14 +2023,25 @@ int MPID_Mem_was_alloced( void *ptr );  /* brad : this isn't used or implemented
   Module:
   Collective-DS
   E*/
-typedef enum MPIR_Op_kind { MPIR_OP_NULL=0, MPIR_OP_MAX=1, MPIR_OP_MIN=2,
-			    MPIR_OP_SUM=3, MPIR_OP_PROD=4,
-	       MPIR_OP_LAND=5, MPIR_OP_BAND=6, MPIR_OP_LOR=7, MPIR_OP_BOR=8,
-	       MPIR_OP_LXOR=9, MPIR_OP_BXOR=10, MPIR_OP_MAXLOC=11,
-               MPIR_OP_MINLOC=12, MPIR_OP_REPLACE=13,
-               MPIR_OP_NO_OP=14,
-               MPIR_OP_USER_NONCOMMUTE=32, MPIR_OP_USER=33 }
-  MPIR_Op_kind;
+typedef enum MPIR_Op_kind {
+    MPIR_OP_NULL=0,
+    MPIR_OP_MAX=1,
+    MPIR_OP_MIN=2,
+    MPIR_OP_SUM=3,
+    MPIR_OP_PROD=4,
+    MPIR_OP_LAND=5,
+    MPIR_OP_BAND=6,
+    MPIR_OP_LOR=7,
+    MPIR_OP_BOR=8,
+    MPIR_OP_LXOR=9,
+    MPIR_OP_BXOR=10,
+    MPIR_OP_MAXLOC=11,
+    MPIR_OP_MINLOC=12,
+    MPIR_OP_REPLACE=13,
+    MPIR_OP_NO_OP=14,
+    MPIR_OP_USER_NONCOMMUTE=32,
+    MPIR_OP_USER=33
+} MPIR_Op_kind;
 
 /*S
   MPIR_User_function - Definition of a user function for MPI_Op types.
