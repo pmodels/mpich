@@ -125,20 +125,20 @@ int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
 
     /* Process any user-defined error handling function */
     switch (comm_ptr->errhandler->language) {
-    case MPIR_LANG_C:
+    case MPIR_LANG__C:
 	(*comm_ptr->errhandler->errfn.C_Comm_Handler_function)( 
 	    &comm_ptr->handle, &errorcode );
 	break;
 #ifdef HAVE_CXX_BINDING
-    case MPIR_LANG_CXX:
+    case MPIR_LANG__CXX:
 	MPIR_Process.cxx_call_errfn( 0, &comm_ptr->handle, 
 				     &errorcode, 
      (void (*)(void))comm_ptr->errhandler->errfn.C_Comm_Handler_function );
 	break;
 #endif
 #ifdef HAVE_FORTRAN_BINDING
-    case MPIR_LANG_FORTRAN90:
-    case MPIR_LANG_FORTRAN:
+    case MPIR_LANG__FORTRAN90:
+    case MPIR_LANG__FORTRAN:
 	{
 	    /* If int and MPI_Fint aren't the same size, we need to 
 	       convert.  As this is not performance critical, we

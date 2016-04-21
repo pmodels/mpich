@@ -331,13 +331,13 @@ extern MPID_Thread_tls_t MPIR_Per_thread_key;
   Attribute-DS
   E*/
 typedef enum MPIR_Lang_t {
-    MPIR_LANG_C
+    MPIR_LANG__C
 #ifdef HAVE_FORTRAN_BINDING
-    , MPIR_LANG_FORTRAN
-    , MPIR_LANG_FORTRAN90
+    , MPIR_LANG__FORTRAN
+    , MPIR_LANG__FORTRAN90
 #endif
 #ifdef HAVE_CXX_BINDING
-    , MPIR_LANG_CXX
+    , MPIR_LANG__CXX
 #endif
 } MPIR_Lang_t;
 

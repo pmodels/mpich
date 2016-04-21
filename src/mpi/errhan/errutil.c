@@ -181,7 +181,7 @@ void MPIR_Errhandler_set_cxx( MPI_Errhandler errhand, void (*errcall)(void) )
     MPIR_Errhandler *errhand_ptr;
     
     MPIR_Errhandler_get_ptr( errhand, errhand_ptr );
-    errhand_ptr->language		= MPIR_LANG_CXX;
+    errhand_ptr->language		= MPIR_LANG__CXX;
     MPIR_Process.cxx_call_errfn	= (void (*)( int, int *, int *, 
 					    void (*)(void) ))errcall;
 }
@@ -193,7 +193,7 @@ void MPIR_Errhandler_set_fc( MPI_Errhandler errhand )
     MPIR_Errhandler *errhand_ptr;
     
     MPIR_Errhandler_get_ptr( errhand, errhand_ptr );
-    errhand_ptr->language = MPIR_LANG_FORTRAN;
+    errhand_ptr->language = MPIR_LANG__FORTRAN;
 }
 
 #endif
@@ -306,12 +306,12 @@ int MPIR_Err_return_comm( MPIR_Comm  *comm_ptr, const char fcname[],
 	   because MPICH-1 expected that */
 	switch (comm_ptr->errhandler->language)
 	{
-	case MPIR_LANG_C:
+	case MPIR_LANG__C:
 	    (*comm_ptr->errhandler->errfn.C_Comm_Handler_function)( 
 		&comm_ptr->handle, &errcode, 0 );
 	    break;
 #ifdef HAVE_CXX_BINDING
-	case MPIR_LANG_CXX:
+	case MPIR_LANG__CXX:
 	    (*MPIR_Process.cxx_call_errfn)( 0, &comm_ptr->handle, &errcode, 
 		    (void (*)(void))*comm_ptr->errhandler->errfn.C_Comm_Handler_function );
 	    /* The C++ code throws an exception if the error handler 
@@ -321,8 +321,8 @@ int MPIR_Err_return_comm( MPIR_Comm  *comm_ptr, const char fcname[],
 	    break;
 #endif /* CXX_BINDING */
 #ifdef HAVE_FORTRAN_BINDING
-	case MPIR_LANG_FORTRAN90:
-	case MPIR_LANG_FORTRAN:
+	case MPIR_LANG__FORTRAN90:
+	case MPIR_LANG__FORTRAN:
 	{
 	    /* If int and MPI_Fint aren't the same size, we need to 
 	       convert.  As this is not performance critical, we
@@ -384,12 +384,12 @@ int MPIR_Err_return_win( MPIR_Win  *win_ptr, const char fcname[], int errcode )
 	   because MPICH-1 expected that */
 	switch (win_ptr->errhandler->language)
 	{
-	    case MPIR_LANG_C:
+	    case MPIR_LANG__C:
 		(*win_ptr->errhandler->errfn.C_Win_Handler_function)( 
 		    &win_ptr->handle, &errcode, 0 );
 		break;
 #ifdef HAVE_CXX_BINDING
-	    case MPIR_LANG_CXX:
+	    case MPIR_LANG__CXX:
 	    (*MPIR_Process.cxx_call_errfn)( 2, &win_ptr->handle, &errcode, 
 		    (void (*)(void))*win_ptr->errhandler->errfn.C_Win_Handler_function );
 	    /* The C++ code throws an exception if the error handler 
@@ -399,8 +399,8 @@ int MPIR_Err_return_win( MPIR_Win  *win_ptr, const char fcname[], int errcode )
 	    break;
 #endif /* CXX_BINDING */
 #ifdef HAVE_FORTRAN_BINDING
-	    case MPIR_LANG_FORTRAN90:
-	    case MPIR_LANG_FORTRAN:
+	    case MPIR_LANG__FORTRAN90:
+	    case MPIR_LANG__FORTRAN:
 		{
 		    /* If int and MPI_Fint aren't the same size, we need to 
 		       convert.  As this is not performance critical, we
