@@ -1093,8 +1093,8 @@ void MPIR_Group_setup_lpid_list( MPIR_Group * );
   MPIR_Comm_kind_t - Name the two types of communicators
   E*/
 typedef enum MPIR_Comm_kind_t {
-    MPIR_INTRACOMM = 0,
-    MPIR_INTERCOMM = 1
+    MPIR_COMM_KIND__INTRACOMM = 0,
+    MPIR_COMM_KIND__INTERCOMM = 1
 } MPIR_Comm_kind_t;
 
 /* ideally we could add these to MPIR_Comm_kind_t, but there's too much existing
@@ -1220,7 +1220,7 @@ typedef struct MPIR_Comm {
     MPIR_Group   *local_group,   /* Groups in communicator. */
                  *remote_group;  /* The local and remote groups are the
                                     same for intra communicators */
-    MPIR_Comm_kind_t comm_kind;  /* MPIR_INTRACOMM or MPIR_INTERCOMM */
+    MPIR_Comm_kind_t comm_kind;  /* MPIR_COMM_KIND__INTRACOMM or MPIR_COMM_KIND__INTERCOMM */
     char          name[MPI_MAX_OBJECT_NAME];  /* Required for MPI-2 */
     MPIR_Errhandler *errhandler; /* Pointer to the error handler structure */
     struct MPIR_Comm    *local_comm; /* Defined only for intercomms, holds

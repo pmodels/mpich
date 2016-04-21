@@ -47,7 +47,7 @@ int MPIR_Ialltoallv_intra(const void *sendbuf, const int sendcounts[], const int
     int dst, rank;
     MPIR_SCHED_CHKPMEM_DECL(1);
 
-    MPIU_Assert(comm_ptr->comm_kind == MPIR_INTRACOMM);
+    MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -182,7 +182,7 @@ int MPIR_Ialltoallv_inter(const void *sendbuf, const int sendcounts[], const int
     int src, dst, rank, sendcount, recvcount;
     char *sendaddr, *recvaddr;
 
-    MPIU_Assert(comm_ptr->comm_kind == MPIR_INTERCOMM);
+    MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
 
     local_size = comm_ptr->local_size;
     remote_size = comm_ptr->remote_size;
@@ -373,7 +373,7 @@ int MPI_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispl
 
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
 
-            if (comm_ptr->comm_kind == MPIR_INTRACOMM &&
+            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
                     sendbuf != MPI_IN_PLACE &&
                     sendcounts == recvcounts &&
                     sendtype == recvtype)

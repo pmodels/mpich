@@ -83,7 +83,7 @@ int MPIR_Igather_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendt
     is_homogeneous = !comm_ptr->is_hetero;
 #endif
 
-    MPIU_Assert(comm_ptr->comm_kind == MPIR_INTRACOMM);
+    MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
     /* Use binomial tree algorithm. */
 
@@ -625,7 +625,7 @@ int MPI_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-            if (comm_ptr->comm_kind == MPIR_INTRACOMM) {
+            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
                 MPIR_ERRTEST_INTRA_ROOT(comm_ptr, root, mpi_errno);
 
                 if (sendbuf != MPI_IN_PLACE) {
@@ -666,7 +666,7 @@ int MPI_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                     MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, sendcount, mpi_errno);
             }
 
-            if (comm_ptr->comm_kind == MPIR_INTERCOMM) {
+            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
                 MPIR_ERRTEST_INTER_ROOT(comm_ptr, root, mpi_errno);
 
                 if (root == MPI_ROOT) {

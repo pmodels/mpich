@@ -55,7 +55,7 @@ int MPIR_Comm_idup_impl(MPIR_Comm *comm_ptr, MPIR_Comm **newcommp, MPIR_Request 
 
     /* We now have a mostly-valid new communicator, so begin the process of
      * allocating a context ID to use for actual communication */
-    if (comm_ptr->comm_kind == MPIR_INTERCOMM) {
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         mpi_errno = MPIR_Get_intercomm_contextid_nonblock(comm_ptr, *newcommp, reqp);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }

@@ -370,7 +370,7 @@ int MPIR_Allreduce_group(void *sendbuf, void *recvbuf, int count,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_ERR_CHKANDJUMP(comm_ptr->comm_kind != MPIR_INTRACOMM, mpi_errno, MPI_ERR_OTHER, "**commnotintra");
+    MPIR_ERR_CHKANDJUMP(comm_ptr->comm_kind != MPIR_COMM_KIND__INTRACOMM, mpi_errno, MPI_ERR_OTHER, "**commnotintra");
 
     mpi_errno = MPIR_Allreduce_group_intra(sendbuf, recvbuf, count, datatype,
                                            op, comm_ptr, group_ptr, tag, errflag);

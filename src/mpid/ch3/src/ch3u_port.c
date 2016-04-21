@@ -273,7 +273,7 @@ static int MPIDI_CH3I_Initialize_tmp_comm(MPIR_Comm **comm_pptr,
     /* Fill in new intercomm */
     tmp_comm->local_size   = 1;
     tmp_comm->rank         = 0;
-    tmp_comm->comm_kind    = MPIR_INTERCOMM;
+    tmp_comm->comm_kind    = MPIR_COMM_KIND__INTERCOMM;
     tmp_comm->local_comm   = NULL;
     tmp_comm->is_low_group = is_low_group;
 
@@ -1164,7 +1164,7 @@ static int SetupNewIntercomm( MPIR_Comm *comm_ptr, int remote_comm_size,
     intercomm->rank         = comm_ptr->rank;
     intercomm->local_group  = NULL;
     intercomm->remote_group = NULL;
-    intercomm->comm_kind    = MPIR_INTERCOMM;
+    intercomm->comm_kind    = MPIR_COMM_KIND__INTERCOMM;
     intercomm->local_comm   = NULL;
     intercomm->coll_fns     = NULL;
 

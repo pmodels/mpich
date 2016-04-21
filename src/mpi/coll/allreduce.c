@@ -718,7 +718,7 @@ int MPIR_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
 {
     int mpi_errno = MPI_SUCCESS;
 
-    if (comm_ptr->comm_kind == MPIR_INTRACOMM) {
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
         mpi_errno = MPIR_Allreduce_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -758,7 +758,7 @@ int MPIR_Allreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datat
     }
     else
     {
-        if (comm_ptr->comm_kind == MPIR_INTRACOMM) {
+        if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
             /* intracommunicator */
             mpi_errno = MPIR_Allreduce_intra(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -860,7 +860,7 @@ int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
 
-            if (comm_ptr->comm_kind == MPIR_INTERCOMM) {
+            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
                 MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, count, mpi_errno);
             } else {
                 if (count != 0 && sendbuf != MPI_IN_PLACE)

@@ -206,7 +206,7 @@ cvars:
     }
 
 #define MPIR_ERRTEST_COMM_INTRA(comm_ptr, err )                         \
-    if ((comm_ptr)->comm_kind != MPIR_INTRACOMM) {                      \
+    if ((comm_ptr)->comm_kind != MPIR_COMM_KIND__INTRACOMM) {                      \
         err = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
                                    MPI_ERR_COMM,"**commnotintra",0);    \
         goto fn_fail;                                                   \

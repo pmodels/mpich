@@ -42,7 +42,7 @@ int MPIR_Ireduce_binomial(const void *sendbuf, void *recvbuf, int count, MPI_Dat
     void *tmp_buf;
     MPIR_SCHED_CHKPMEM_DECL(2);
 
-    MPIU_Assert(comm_ptr->comm_kind == MPIR_INTRACOMM);
+    MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
     if (count == 0) return MPI_SUCCESS;
 
@@ -544,7 +544,7 @@ int MPIR_Ireduce_intra(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
     int mpi_errno = MPI_SUCCESS;
     int pof2, type_size, comm_size;
 
-    MPIU_Assert(comm_ptr->comm_kind == MPIR_INTRACOMM);
+    MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
     comm_size = comm_ptr->local_size;
 
@@ -592,7 +592,7 @@ int MPIR_Ireduce_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype
     if (!MPIR_CVAR_ENABLE_SMP_COLLECTIVES || !MPIR_CVAR_ENABLE_SMP_REDUCE)
         MPID_Abort(comm_ptr, MPI_ERR_OTHER, 1, "SMP collectives are disabled!");
     MPIU_Assert(MPIR_Comm_is_node_aware(comm_ptr));
-    MPIU_Assert(comm_ptr->comm_kind == MPIR_INTRACOMM);
+    MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
     nc = comm_ptr->node_comm;
     nrc = comm_ptr->node_roots_comm;
@@ -699,7 +699,7 @@ int MPIR_Ireduce_inter(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
     void *tmp_buf = NULL;
     MPIR_SCHED_CHKPMEM_DECL(1);
 
-    MPIU_Assert(comm_ptr->comm_kind == MPIR_INTERCOMM);
+    MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
 
 /*  Intercommunicator reduce.
     Remote group does a local intracommunicator
@@ -883,7 +883,7 @@ int MPI_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
 
-            if (comm_ptr->comm_kind == MPIR_INTRACOMM) {
+            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
                 if (sendbuf != MPI_IN_PLACE)
                     MPIR_ERRTEST_USERBUFFER(sendbuf,count,datatype,mpi_errno);
 

@@ -1048,7 +1048,7 @@ int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts
 {
     int mpi_errno = MPI_SUCCESS;
         
-    if (comm_ptr->comm_kind == MPIR_INTRACOMM) {
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
         /* intracommunicator */
         mpi_errno = MPIR_Reduce_scatter_intra(sendbuf, recvbuf, recvcounts,
                                               datatype, op, comm_ptr, errflag);
@@ -1193,7 +1193,7 @@ int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[
             }
 
             MPIR_ERRTEST_RECVBUF_INPLACE(recvbuf, recvcounts[comm_ptr->rank], mpi_errno);
-            if (comm_ptr->comm_kind == MPIR_INTERCOMM) {
+            if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
                 MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, sum, mpi_errno);
             } else if (sendbuf != MPI_IN_PLACE && sum != 0)
                 MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno)
