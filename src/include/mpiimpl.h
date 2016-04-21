@@ -1100,11 +1100,11 @@ typedef enum MPIR_Comm_kind_t {
 /* ideally we could add these to MPIR_Comm_kind_t, but there's too much existing
  * code that assumes that the only valid values are INTRACOMM or INTERCOMM */
 typedef enum MPIR_Comm_hierarchy_kind_t {
-    MPIR_HIERARCHY_FLAT = 0,        /* no hierarchy */
-    MPIR_HIERARCHY_PARENT = 1,      /* has subcommunicators */
-    MPIR_HIERARCHY_NODE_ROOTS = 2,  /* is the subcomm for node roots */
-    MPIR_HIERARCHY_NODE = 3,        /* is the subcomm for a node */
-    MPIR_HIERARCHY_SIZE             /* cardinality of this enum */
+    MPIR_COMM_HIERARCHY_KIND__FLAT = 0,        /* no hierarchy */
+    MPIR_COMM_HIERARCHY_KIND__PARENT = 1,      /* has subcommunicators */
+    MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS = 2,  /* is the subcomm for node roots */
+    MPIR_COMM_HIERARCHY_KIND__NODE = 3,        /* is the subcomm for a node */
+    MPIR_COMM_HIERARCHY_KIND__SIZE             /* cardinality of this enum */
 } MPIR_Comm_hierarchy_kind_t;
 /* Communicators */
 

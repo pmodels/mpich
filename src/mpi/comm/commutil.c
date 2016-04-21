@@ -90,7 +90,7 @@ int MPIR_Comm_init(MPIR_Comm * comm_p)
     comm_p->name[0] = '\0';
     comm_p->info = NULL;
 
-    comm_p->hierarchy_kind = MPIR_HIERARCHY_FLAT;
+    comm_p->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__FLAT;
     comm_p->node_comm = NULL;
     comm_p->node_roots_comm = NULL;
     comm_p->intranode_table = NULL;
@@ -213,7 +213,7 @@ int MPIR_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
 /* holds default collop "vtables" for _intracomms_, where
  * default[hierarchy_kind] is the pointer to the collop struct for that
  * hierarchy kind */
-static struct MPIR_Collops *default_collops[MPIR_HIERARCHY_SIZE] = { NULL };
+static struct MPIR_Collops *default_collops[MPIR_COMM_HIERARCHY_KIND__SIZE] = { NULL };
 
 /* default for intercomms */
 static struct MPIR_Collops *ic_default_collops = NULL;
@@ -225,7 +225,7 @@ static struct MPIR_Collops *ic_default_collops = NULL;
 static int cleanup_default_collops(void *unused)
 {
     int i;
-    for (i = 0; i < MPIR_HIERARCHY_SIZE; ++i) {
+    for (i = 0; i < MPIR_COMM_HIERARCHY_KIND__SIZE; ++i) {
         if (default_collops[i]) {
             MPIU_Assert(default_collops[i]->ref_count >= 1);
             if (--default_collops[i]->ref_count == 0)
@@ -250,10 +250,10 @@ static int init_default_collops(void)
     int mpi_errno = MPI_SUCCESS;
     int i;
     struct MPIR_Collops *ops = NULL;
-    MPIU_CHKPMEM_DECL(MPIR_HIERARCHY_SIZE + 1);
+    MPIU_CHKPMEM_DECL(MPIR_COMM_HIERARCHY_KIND__SIZE + 1);
 
     /* first initialize the intracomms */
-    for (i = 0; i < MPIR_HIERARCHY_SIZE; ++i) {
+    for (i = 0; i < MPIR_COMM_HIERARCHY_KIND__SIZE; ++i) {
         MPIU_CHKPMEM_CALLOC(ops, struct MPIR_Collops *, sizeof(struct MPIR_Collops), mpi_errno,
                             "default intracomm collops");
         ops->ref_count = 1;     /* force existence until finalize time */
@@ -289,17 +289,17 @@ static int init_default_collops(void)
 
         /* override defaults, such as for SMP */
         switch (i) {
-        case MPIR_HIERARCHY_FLAT:
+        case MPIR_COMM_HIERARCHY_KIND__FLAT:
             break;
-        case MPIR_HIERARCHY_PARENT:
+        case MPIR_COMM_HIERARCHY_KIND__PARENT:
             ops->Ibcast_sched = &MPIR_Ibcast_SMP;
             ops->Iscan_sched = &MPIR_Iscan_SMP;
             ops->Iallreduce_sched = &MPIR_Iallreduce_SMP;
             ops->Ireduce_sched = &MPIR_Ireduce_SMP;
             break;
-        case MPIR_HIERARCHY_NODE:
+        case MPIR_COMM_HIERARCHY_KIND__NODE:
             break;
-        case MPIR_HIERARCHY_NODE_ROOTS:
+        case MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS:
             break;
 
             /* --BEGIN ERROR HANDLING-- */
@@ -596,7 +596,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             comm->node_comm->recvcontext_id = comm->node_comm->context_id;
             comm->node_comm->rank = local_rank;
             comm->node_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
-            comm->node_comm->hierarchy_kind = MPIR_HIERARCHY_NODE;
+            comm->node_comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__NODE;
             comm->node_comm->local_comm = NULL;
             MPL_DBG_MSG_D(MPIR_DBG_COMM, VERBOSE, "Create node_comm=%p\n", comm->node_comm);
 
@@ -630,7 +630,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             comm->node_roots_comm->recvcontext_id = comm->node_roots_comm->context_id;
             comm->node_roots_comm->rank = external_rank;
             comm->node_roots_comm->comm_kind = MPIR_COMM_KIND__INTRACOMM;
-            comm->node_roots_comm->hierarchy_kind = MPIR_HIERARCHY_NODE_ROOTS;
+            comm->node_roots_comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__NODE_ROOTS;
             comm->node_roots_comm->local_comm = NULL;
 
             comm->node_roots_comm->local_size = num_external;
@@ -652,7 +652,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
             MPIR_Comm_map_free(comm->node_roots_comm);
         }
 
-        comm->hierarchy_kind = MPIR_HIERARCHY_PARENT;
+        comm->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__PARENT;
     }
 
   fn_exit:
@@ -672,7 +672,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
    collective communication, for example. */
 int MPIR_Comm_is_node_aware(MPIR_Comm * comm)
 {
-    return (comm->hierarchy_kind == MPIR_HIERARCHY_PARENT);
+    return (comm->hierarchy_kind == MPIR_COMM_HIERARCHY_KIND__PARENT);
 }
 
 /* Returns true if the communicator is node-aware and processes in all the nodes
