@@ -76,7 +76,7 @@ int MPI_File_create_errhandler(MPI_File_errhandler_function *file_errhandler_fn,
     
     errhan_ptr = (MPIR_Errhandler *)MPIU_Handle_obj_alloc( &MPIR_Errhandler_mem );
     MPIR_ERR_CHKANDJUMP(!errhan_ptr,mpi_errno,MPI_ERR_OTHER,"**nomem");
-    errhan_ptr->language = MPIR_LANG_C;
+    errhan_ptr->language = MPIR_LANG__C;
     errhan_ptr->kind	 = MPIR_FILE;
     MPIU_Object_set_ref(errhan_ptr,1);
     errhan_ptr->errfn.C_File_Handler_function = file_errhandler_fn;

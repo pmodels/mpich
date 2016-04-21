@@ -98,7 +98,7 @@ int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
     (*request_ptr)->u.ureq.greq_fns->poll_fn              = NULL;
     (*request_ptr)->u.ureq.greq_fns->wait_fn              = NULL;
     (*request_ptr)->u.ureq.greq_fns->grequest_extra_state = extra_state;
-    (*request_ptr)->u.ureq.greq_fns->greq_lang            = MPIR_LANG_C;
+    (*request_ptr)->u.ureq.greq_fns->greq_lang            = MPIR_LANG__C;
 
     /* Add an additional reference to the greq.  One of them will be
      * released when we complete the request, and the second one, when

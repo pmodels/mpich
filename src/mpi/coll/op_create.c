@@ -43,7 +43,7 @@ void MPIR_Op_set_cxx( MPI_Op op, void (*opcall)(void) )
     MPIR_Op *op_ptr;
     
     MPIR_Op_get_ptr( op, op_ptr );
-    op_ptr->language		= MPIR_LANG_CXX;
+    op_ptr->language		= MPIR_LANG__CXX;
     MPIR_Process.cxx_call_op_fn	= (void (*)(const void *, void *, int,
 				    MPI_Datatype, MPI_User_function *))opcall;
 }
@@ -58,7 +58,7 @@ void MPIR_Op_set_fc( MPI_Op op )
     MPIR_Op *op_ptr;
     
     MPIR_Op_get_ptr( op, op_ptr );
-    op_ptr->language = MPIR_LANG_FORTRAN;
+    op_ptr->language = MPIR_LANG__FORTRAN;
 }
 #endif
 
@@ -123,7 +123,7 @@ int MPI_Op_create(MPI_User_function *user_fn, int commute, MPI_Op *op)
     }
     /* --END ERROR HANDLING-- */
 
-    op_ptr->language = MPIR_LANG_C;
+    op_ptr->language = MPIR_LANG__C;
     op_ptr->kind     = commute ? MPIR_OP_USER : MPIR_OP_USER_NONCOMMUTE;
     op_ptr->function.c_function = (void (*)(const void *, void *, 
 				   const int *, const MPI_Datatype *))user_fn;
