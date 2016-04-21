@@ -263,32 +263,13 @@ static inline int MPID_nem_ofi_create_req_lw(MPIR_Request ** request, int refcnt
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req;
 
-    req = (MPIR_Request *) MPIU_Handle_obj_alloc(&MPIR_Request_mem);
-    if (req == NULL)
-        MPID_Abort(NULL, MPI_ERR_NO_SPACE, -1, "Cannot allocate Request");
+    MPID_nem_ofi_create_req(&req, refcnt);
 
-    MPIU_Assert(req != NULL);
-    MPIU_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);
-
-    MPIU_Object_set_ref(req, refcnt);
+    /* resetting the kind and cc here should not add additional
+     * instructions since a good compiler will discard the kind and cc
+     * setting in the above request create anyway */
     req->kind = MPIR_REQUEST_KIND__SEND;
     MPIR_cc_set(&req->cc, 0); // request is already completed
-    req->cc_ptr  = &req->cc;
-    req->status.MPI_ERROR  = MPI_SUCCESS;
-    MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);
-    req->comm = NULL;
-    req->greq_fns = NULL;
-    req->errflag = MPIR_ERR_NONE;
-    req->request_completed_cb = NULL;
-    req->dev.state = 0;
-    req->dev.datatype_ptr = NULL;
-    req->dev.segment_ptr = NULL;
-    req->dev.flags = MPIDI_CH3_PKT_FLAG_NONE;
-    req->dev.OnDataAvail = NULL;
-    req->dev.ext_hdr_ptr = NULL;
-    MPIDI_Request_clear_dbg(req);
-
-    MPID_nem_ofi_init_req(req);
 
     *request = req;
     return mpi_errno;
