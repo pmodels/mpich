@@ -23,7 +23,7 @@ static MPIDI_PortFns portFns = { 0, 0, 0, 0 };
 #endif
 
 /*@
-   MPIR_Open_port - Open an MPI Port
+   MPID_Open_port - Open an MPI Port
 
    Input Arguments:
 .  MPI_Info info - info
@@ -38,10 +38,10 @@ static MPIDI_PortFns portFns = { 0, 0, 0, 0 };
 .N MPI_ERR_OTHER
 @*/
 #undef FUNCNAME
-#define FUNCNAME MPIR_Open_port
+#define FUNCNAME MPID_Open_port
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Open_port(MPIR_Info *info_ptr, char *port_name)
+int MPID_Open_port(MPIR_Info *info_ptr, char *port_name)
 {
     int mpi_errno=MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIR_OPEN_PORT);
