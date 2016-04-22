@@ -2781,7 +2781,7 @@ int MPID_Finalize(void);
 
 int MPID_Abort( MPIR_Comm *comm, int mpi_errno, int exit_code, const char *error_msg );
 
-int MPIR_Open_port(MPIR_Info *, char *);
+int MPID_Open_port(MPIR_Info *, char *);
 int MPID_Close_port(const char *);
 
 /*@
