@@ -33,8 +33,7 @@ int MPI_Comm_group(MPI_Comm comm, MPI_Group *group) __attribute__((weak,alias("P
 int MPIR_Comm_group_impl(MPIR_Comm *comm_ptr, MPIR_Group **group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, n;
-    int64_t lpid;
+    int i, lpid, n;
     int comm_world_size = MPIR_Process.comm_world->local_size;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_GROUP_IMPL);
 
@@ -49,7 +48,7 @@ int MPIR_Comm_group_impl(MPIR_Comm *comm_ptr, MPIR_Group **group_ptr)
         (*group_ptr)->is_local_dense_monotonic = TRUE;
 	for (i=0; i<n; i++) {
 	    (void) MPID_Comm_get_lpid( comm_ptr, i, &lpid, FALSE );
-	    (*group_ptr)->lrank_to_lpid[i].lpid = lpid;
+	    (*group_ptr)->lrank_to_lpid[i].lpid  = lpid;
             if (lpid > comm_world_size ||
                 (i > 0 && (*group_ptr)->lrank_to_lpid[i-1].lpid != (lpid-1)))
             {

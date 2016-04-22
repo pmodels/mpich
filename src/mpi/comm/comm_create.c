@@ -122,7 +122,7 @@ int MPIR_Comm_create_calculate_mapping(MPIR_Group  *group_ptr,
             /* FIXME : BUBBLE SORT */
             mapping[i] = -1;
             for (j=0; j<comm_ptr->local_size; j++) {
-                int64_t comm_lpid;
+                int comm_lpid;
                 MPID_Comm_get_lpid( comm_ptr, j, &comm_lpid, FALSE );
                 if (comm_lpid == group_ptr->lrank_to_lpid[i].lpid) {
                     mapping[i] = j;
