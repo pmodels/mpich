@@ -692,7 +692,7 @@ int MPID_Progress_poke(void);
 
 int MPID_Get_processor_name( char *name, int namelen, int *resultlen);
 int MPID_Get_universe_size(int  * universe_size);
-int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int * lpid_ptr, MPIU_BOOL is_remote);
+int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int * lpid_ptr, MPL_bool is_remote);
 
 void MPID_Request_init(MPIR_Request *);
 void MPID_Request_finalize(MPIR_Request *);

@@ -300,7 +300,7 @@ int MPIDI_VCR_Dup(MPIDI_VCR orig_vcr, MPIDI_VCR * new_vcr)
 #define FUNCNAME MPID_Comm_get_lpid
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int * lpid_ptr, MPIU_BOOL is_remote)
+int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int * lpid_ptr, MPL_bool is_remote)
 {
     MPIDI_STATE_DECL(MPID_STATE_MPID_VCR_GET_LPID);
 
