@@ -46,11 +46,11 @@ static inline int request_complete_fastpath(MPI_Request *request, MPIR_Request *
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIU_Assert(request_ptr->kind == MPIR_REQUEST_KIND__SEND || request_ptr->kind == MPIR_REQUEST_KIND__RECV);
+    MPIR_Assert(request_ptr->kind == MPIR_REQUEST_KIND__SEND || request_ptr->kind == MPIR_REQUEST_KIND__RECV);
 
     if (request_ptr->kind == MPIR_REQUEST_KIND__SEND) {
         /* FIXME: are Ibsend requests added to the send queue? */
-        MPIR_SENDQ_FORGET(request_ptr);
+        MPII_SENDQ_FORGET(request_ptr);
     }
 
     /* the completion path for SEND and RECV is the same at this time, modulo
@@ -84,12 +84,12 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
     int disabled_anysource = FALSE;
     const int ignoring_statuses = (array_of_statuses == MPI_STATUSES_IGNORE);
     int optimize = ignoring_statuses; /* see NOTE-O1 */
-    MPIU_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL(1);
 
     /* Convert MPI request handles to a request object pointers */
     if (count > MPIR_REQUEST_PTR_ARRAY_SIZE)
     {
-	MPIU_CHKLMEM_MALLOC(request_ptrs, MPIR_Request **, count * sizeof(MPIR_Request *), mpi_errno, "request pointers");
+	MPIR_CHKLMEM_MALLOC(request_ptrs, MPIR_Request **, count * sizeof(MPIR_Request *), mpi_errno, "request pointers");
     }
 
     n_greqs = 0;
@@ -212,7 +212,7 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
         while (!MPIR_Request_is_complete(request_ptrs[i]))
         {
             /* generalized requests should already be finished */
-            MPIU_Assert(request_ptrs[i]->kind != MPIR_REQUEST_KIND__GREQUEST);
+            MPIR_Assert(request_ptrs[i]->kind != MPIR_REQUEST_KIND__GREQUEST);
             
             mpi_errno = MPID_Progress_wait(&progress_state);
             if (mpi_errno != MPI_SUCCESS) {
@@ -289,7 +289,7 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
  fn_exit:
      if (count > MPIR_REQUEST_PTR_ARRAY_SIZE)
     {
-	MPIU_CHKLMEM_FREEALL();
+	MPIR_CHKLMEM_FREEALL();
     }
 
    return mpi_errno;
@@ -343,12 +343,12 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
 		MPI_Status array_of_statuses[])
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_WAITALL);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WAITALL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_PT2PT_FUNC_ENTER(MPID_STATE_MPI_WAITALL);
+    MPIR_FUNC_TERSE_PT2PT_ENTER(MPID_STATE_MPI_WAITALL);
 
     /* Check the arguments */
 #   ifdef HAVE_ERROR_CHECKING
@@ -381,7 +381,7 @@ int MPI_Waitall(int count, MPI_Request array_of_requests[],
     /* ... end of body of routine ... */
     
  fn_exit:
-    MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_WAITALL);
+    MPIR_FUNC_TERSE_PT2PT_EXIT(MPID_STATE_MPI_WAITALL);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

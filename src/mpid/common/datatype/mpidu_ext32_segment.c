@@ -71,7 +71,7 @@ static int external32_basic_convert(char *dest_buf,
     char *src_ptr = src_buf, *dest_ptr = dest_buf;
     char *src_end = (char *)(src_buf + ((int)count * src_el_size));
 
-    MPIU_Assert(dest_buf && src_buf);
+    MPIR_Assert(dest_buf && src_buf);
 
     if (src_el_size == dest_el_size)
     {
@@ -129,7 +129,7 @@ static int external32_float_convert(char *dest_buf,
     char *src_ptr = src_buf, *dest_ptr = dest_buf;
     char *src_end = (char *)(src_buf + ((int)count * src_el_size));
 
-    MPIU_Assert(dest_buf && src_buf);
+    MPIR_Assert(dest_buf && src_buf);
 
     if (src_el_size == dest_el_size)
     {
@@ -180,13 +180,13 @@ static int MPIDU_Segment_contig_pack_external32_to_buf(DLOOP_Offset *blocks_p,
 {
     int src_el_size, dest_el_size;
     struct MPIDU_Segment_piece_params *paramp = v_paramp;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_SEGMENT_CONTIG_PACK_EXTERNAL32_TO_BUF);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SEGMENT_CONTIG_PACK_EXTERNAL32_TO_BUF);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_SEGMENT_CONTIG_PACK_EXTERNAL32_TO_BUF);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SEGMENT_CONTIG_PACK_EXTERNAL32_TO_BUF);
 
     src_el_size = MPIDU_Datatype_get_basic_size(el_type);
     dest_el_size = MPIDI_Datatype_get_basic_size_external32(el_type);
-    MPIU_Assert(dest_el_size);
+    MPIR_Assert(dest_el_size);
 
     /*
      * h  = handle value
@@ -210,7 +210,7 @@ static int MPIDU_Segment_contig_pack_external32_to_buf(DLOOP_Offset *blocks_p,
     /* TODO: DEAL WITH CASE WHERE ALL DATA DOESN'T FIT! */
     if ((src_el_size == dest_el_size) && (src_el_size == 1))
     {
-        MPIU_Memcpy(paramp->u.pack.pack_buffer,
+        MPIR_Memcpy(paramp->u.pack.pack_buffer,
 	       ((char *) bufp) + rel_off, *blocks_p);
     }
     else if (is_float_type(el_type))
@@ -227,7 +227,7 @@ static int MPIDU_Segment_contig_pack_external32_to_buf(DLOOP_Offset *blocks_p,
     }
     paramp->u.pack.pack_buffer += (dest_el_size * (*blocks_p));
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_SEGMENT_CONTIG_PACK_EXTERNAL32_TO_BUF);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_SEGMENT_CONTIG_PACK_EXTERNAL32_TO_BUF);
     return 0;
 }
 
@@ -243,13 +243,13 @@ static int MPIDU_Segment_contig_unpack_external32_to_buf(DLOOP_Offset *blocks_p,
 {
     int src_el_size, dest_el_size;
     struct MPIDU_Segment_piece_params *paramp = v_paramp;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_SEGMENT_CONTIG_UNPACK_EXTERNAL32_TO_BUF);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SEGMENT_CONTIG_UNPACK_EXTERNAL32_TO_BUF);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_SEGMENT_CONTIG_UNPACK_EXTERNAL32_TO_BUF);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SEGMENT_CONTIG_UNPACK_EXTERNAL32_TO_BUF);
 
     src_el_size = MPIDU_Datatype_get_basic_size(el_type);
     dest_el_size = MPIDI_Datatype_get_basic_size_external32(el_type);
-    MPIU_Assert(dest_el_size);
+    MPIR_Assert(dest_el_size);
 
     /*
      * h  = handle value
@@ -273,7 +273,7 @@ static int MPIDU_Segment_contig_unpack_external32_to_buf(DLOOP_Offset *blocks_p,
     /* TODO: DEAL WITH CASE WHERE ALL DATA DOESN'T FIT! */
     if ((src_el_size == dest_el_size) && (src_el_size == 1))
     {
-        MPIU_Memcpy(((char *)bufp) + rel_off,
+        MPIR_Memcpy(((char *)bufp) + rel_off,
 	       paramp->u.unpack.unpack_buffer, *blocks_p);
     }
     else if (is_float_type(el_type))
@@ -290,7 +290,7 @@ static int MPIDU_Segment_contig_unpack_external32_to_buf(DLOOP_Offset *blocks_p,
     }
     paramp->u.unpack.unpack_buffer += (dest_el_size * (*blocks_p));
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_SEGMENT_CONTIG_UNPACK_EXTERNAL32_TO_BUF);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_SEGMENT_CONTIG_UNPACK_EXTERNAL32_TO_BUF);
     return 0;
 }
 
@@ -304,9 +304,9 @@ void MPIDU_Segment_pack_external32(struct DLOOP_Segment *segp,
 				  void *pack_buffer)
 {
     struct MPIDU_Segment_piece_params pack_params;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_SEGMENT_PACK_EXTERNAL);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SEGMENT_PACK_EXTERNAL);
     
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_SEGMENT_PACK_EXTERNAL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SEGMENT_PACK_EXTERNAL);
 
     pack_params.u.pack.pack_buffer = (DLOOP_Buffer)pack_buffer;
     MPIDU_Segment_manipulate(segp,
@@ -319,7 +319,7 @@ void MPIDU_Segment_pack_external32(struct DLOOP_Segment *segp,
                             MPIDI_Datatype_get_basic_size_external32,
 			    &pack_params);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_SEGMENT_PACK_EXTERNAL);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_SEGMENT_PACK_EXTERNAL);
     return;
 }
 
@@ -333,9 +333,9 @@ void MPIDU_Segment_unpack_external32(struct DLOOP_Segment *segp,
 				    DLOOP_Buffer unpack_buffer)
 {
     struct MPIDU_Segment_piece_params pack_params;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_SEGMENT_UNPACK_EXTERNAL32);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SEGMENT_UNPACK_EXTERNAL32);
     
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_SEGMENT_UNPACK_EXTERNAL32);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SEGMENT_UNPACK_EXTERNAL32);
 
     pack_params.u.unpack.unpack_buffer = unpack_buffer;
     MPIDU_Segment_manipulate(segp,
@@ -348,6 +348,6 @@ void MPIDU_Segment_unpack_external32(struct DLOOP_Segment *segp,
                             MPIDI_Datatype_get_basic_size_external32,
 			    &pack_params);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_SEGMENT_UNPACK_EXTERNAL32);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_SEGMENT_UNPACK_EXTERNAL32);
     return;
 }

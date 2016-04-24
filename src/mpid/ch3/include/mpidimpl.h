@@ -76,7 +76,7 @@ typedef struct MPIDI_PG
        MPIU_Object system, but we do use the associated reference counting 
        routines.  Therefore, handle must be present, but is not used 
        except by debugging routines */
-    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
+    MPIR_OBJECT_HEADER; /* adds handle and ref_count fields */
 
     /* Next pointer used to maintain a list of all process groups known to 
        this process */
@@ -254,7 +254,7 @@ extern MPIDI_Process_t MPIDI_Process;
 
 #  define MPIDI_Request_tls_alloc(req_) \
     do { \
-	(req_) = MPIU_Handle_obj_alloc(&MPIR_Request_mem); \
+	(req_) = MPIR_Handle_obj_alloc(&MPIR_Request_mem); \
         MPL_DBG_MSG_P(MPIDI_CH3_DBG_CHANNEL,VERBOSE,		\
 	       "allocated request, handle=0x%08x", req_);\
     } while (0)
@@ -288,7 +288,7 @@ extern MPIDI_Process_t MPIDI_Process;
 #define MPIDI_Request_create_sreq(sreq_, mpi_errno_, FAIL_)	\
 {								\
     (sreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);           \
-    MPIU_Object_set_ref((sreq_), 2);				\
+    MPIR_Object_set_ref((sreq_), 2);				\
     (sreq_)->kind = MPIR_REQUEST_KIND__SEND;				\
     (sreq_)->comm = comm;					\
     (sreq_)->dev.partner_request   = NULL;                         \
@@ -307,7 +307,7 @@ extern MPIDI_Process_t MPIDI_Process;
 #define MPIDI_Request_create_rreq(rreq_, mpi_errno_, FAIL_)	\
 {								\
     (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);           \
-    MPIU_Object_set_ref((rreq_), 2);				\
+    MPIR_Object_set_ref((rreq_), 2);				\
     (rreq_)->kind = MPIR_REQUEST_KIND__RECV;				\
     (rreq_)->dev.partner_request   = NULL;                         \
 }
@@ -318,7 +318,7 @@ extern MPIDI_Process_t MPIDI_Process;
     do {                                                                   \
         (rreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);               \
         if ((rreq_) != NULL) {                                             \
-            MPIU_Object_set_ref((rreq_), 1);                               \
+            MPIR_Object_set_ref((rreq_), 1);                               \
             /* MT FIXME should these be handled by MPIR_Request_create? */ \
             MPIR_cc_set(&(rreq_)->cc, 0);                                  \
             (rreq_)->kind = MPIR_REQUEST_KIND__RECV;                             \
@@ -562,11 +562,11 @@ int MPIDI_CH3_PG_Init( MPIDI_PG_t * );
 
 #define MPIDI_PG_add_ref(pg_)			\
 do {                                            \
-    MPIU_Object_add_ref(pg_);			\
+    MPIR_Object_add_ref(pg_);			\
 } while (0)
 #define MPIDI_PG_release_ref(pg_, inuse_)	\
 do {                                            \
-    MPIU_Object_release_ref(pg_, inuse_);	\
+    MPIR_Object_release_ref(pg_, inuse_);	\
 } while (0)
 
 #define MPIDI_PG_Get_vc(pg_, rank_, vcp_) *(vcp_) = &(pg_)->vct[rank_]
@@ -682,7 +682,7 @@ typedef struct MPIDI_VC
        when debugging objects (the handle kind is used in reporting
        on changes to the object).
     */
-    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
+    MPIR_OBJECT_HEADER; /* adds handle and ref_count fields */
 
     /* state of the VC */
     MPIDI_VC_State_t state;
@@ -765,7 +765,7 @@ MPIDI_VC_Event_t;
  S*/
 typedef struct MPIDI_VCRT
 {
-    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
+    MPIR_OBJECT_HEADER; /* adds handle and ref_count fields */
     int size;
     MPIDI_VC_t * vcr_table[1];
 }
@@ -789,10 +789,10 @@ int MPIDI_VC_Init( MPIDI_VC_t *, MPIDI_PG_t *, int );
 
 
 #define MPIDI_VC_add_ref( _vc )                                 \
-    do { MPIU_Object_add_ref( _vc ); } while (0)
+    do { MPIR_Object_add_ref( _vc ); } while (0)
 
 #define MPIDI_VC_release_ref( _vc, _inuse ) \
-    do { MPIU_Object_release_ref( _vc, _inuse ); } while (0)
+    do { MPIR_Object_release_ref( _vc, _inuse ); } while (0)
 
 /*------------------------------
   END VIRTUAL CONNECTION SECTION
@@ -838,7 +838,7 @@ extern MPIDI_CH3U_SRBuf_element_t * MPIDI_CH3U_SRBuf_pool;
 #   define MPIDI_CH3U_SRBuf_free(req_)                                  \
     {                                                                   \
         MPIDI_CH3U_SRBuf_element_t * tmp;                               \
-        MPIU_Assert(MPIDI_Request_get_srbuf_flag(req_));                \
+        MPIR_Assert(MPIDI_Request_get_srbuf_flag(req_));                \
         MPIDI_Request_set_srbuf_flag((req_), FALSE);                    \
         tmp = (MPIDI_CH3U_SRBuf_element_t *) (((MPI_Aint) ((req_)->dev.tmpbuf)) - \
                ((MPI_Aint) MPIDI_CH3U_Offsetof(MPIDI_CH3U_SRBuf_element_t, buf))); \
@@ -1440,7 +1440,7 @@ int MPIDI_CH3U_Receive_data_unexpected(MPIR_Request * rreq, char *buf, intptr_t 
 int MPIDI_CH3I_Comm_init(void);
 
 int MPIDI_CH3I_Comm_handle_failed_procs(MPIR_Group *new_failed_procs);
-void MPIDI_CH3I_Comm_find(MPIU_Context_id_t context_id, MPIR_Comm **comm);
+void MPIDI_CH3I_Comm_find(MPIR_Context_id_t context_id, MPIR_Comm **comm);
 
 /* The functions below allow channels to register functions to be
    called immediately after a communicator has been created, and

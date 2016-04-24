@@ -30,7 +30,7 @@
 	FAIL_;								\
     }									\
 									\
-    MPIU_Object_set_ref((sreq_), 1);					\
+    MPIR_Object_set_ref((sreq_), 1);					\
     MPIR_cc_set(&(sreq_)->cc, 0);                                       \
     (sreq_)->kind = MPIR_REQUEST_KIND__PREQUEST_SEND;					\
     (sreq_)->comm = comm;						\
@@ -57,9 +57,9 @@ int MPID_Startall(int count, MPIR_Request * requests[])
     int i;
     int rc;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_STARTALL);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_STARTALL);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_STARTALL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_STARTALL);
 
     for (i = 0; i < count; i++)
     {
@@ -147,7 +147,7 @@ int MPID_Startall(int count, MPIR_Request * requests[])
 	/* --END ERROR HANDLING-- */
     }
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_STARTALL);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_STARTALL);
     return mpi_errno;
 }
 
@@ -167,9 +167,9 @@ int MPID_Send_init(const void * buf, int count, MPI_Datatype datatype, int rank,
 {
     MPIR_Request * sreq;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_SEND_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SEND_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_SEND_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SEND_INIT);
 
     MPIDI_Request_create_psreq(sreq, mpi_errno, goto fn_exit);
     MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SEND);
@@ -181,7 +181,7 @@ int MPID_Send_init(const void * buf, int count, MPI_Datatype datatype, int rank,
     *request = sreq;
 
   fn_exit:    
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_SEND_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_SEND_INIT);
     return mpi_errno;
 }
 
@@ -197,9 +197,9 @@ int MPID_Ssend_init(const void * buf, int count, MPI_Datatype datatype, int rank
 {
     MPIR_Request * sreq;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_SSEND_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SSEND_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_SSEND_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SSEND_INIT);
 
     MPIDI_Request_create_psreq(sreq, mpi_errno, goto fn_exit);
     MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SSEND);
@@ -211,7 +211,7 @@ int MPID_Ssend_init(const void * buf, int count, MPI_Datatype datatype, int rank
     *request = sreq;
 
   fn_exit:    
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_SSEND_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_SSEND_INIT);
     return mpi_errno;
 }
 
@@ -227,9 +227,9 @@ int MPID_Rsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
 {
     MPIR_Request * sreq;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_RSEND_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RSEND_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_RSEND_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RSEND_INIT);
 
     MPIDI_Request_create_psreq(sreq, mpi_errno, goto fn_exit);
     MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_RSEND);
@@ -241,7 +241,7 @@ int MPID_Rsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
     *request = sreq;
 
   fn_exit:    
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_RSEND_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RSEND_INIT);
     return mpi_errno;
 }
 
@@ -257,9 +257,9 @@ int MPID_Bsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
 {
     MPIR_Request * sreq;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_BSEND_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BSEND_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_BSEND_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BSEND_INIT);
 
     MPIDI_Request_create_psreq(sreq, mpi_errno, goto fn_exit);
     MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_BSEND);
@@ -271,7 +271,7 @@ int MPID_Bsend_init(const void * buf, int count, MPI_Datatype datatype, int rank
     *request = sreq;
 
   fn_exit:    
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_BSEND_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_BSEND_INIT);
     return mpi_errno;
 }
 
@@ -295,9 +295,9 @@ int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int t
 {
     MPIR_Request * rreq;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_RECV_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RECV_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_RECV_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RECV_INIT);
     
     rreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     if (rreq == NULL)
@@ -308,7 +308,7 @@ int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int t
 	goto fn_exit;
     }
     
-    MPIU_Object_set_ref(rreq, 1);
+    MPIR_Object_set_ref(rreq, 1);
     rreq->kind = MPIR_REQUEST_KIND__PREQUEST_RECV;
     rreq->comm = comm;
     MPIR_cc_set(&rreq->cc, 0);
@@ -329,6 +329,6 @@ int MPID_Recv_init(void * buf, int count, MPI_Datatype datatype, int rank, int t
     *request = rreq;
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_RECV_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RECV_INIT);
     return mpi_errno;
 }

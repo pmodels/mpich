@@ -4,22 +4,22 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPI_FORTLOGICAL_H_INCLUDED
-#define MPI_FORTLOGICAL_H_INCLUDED
+#ifndef MPII_FORTLOGICAL_H_INCLUDED
+#define MPII_FORTLOGICAL_H_INCLUDED
 
 /* Fortran logical values */
 #ifndef _CRAY
 #ifdef F77_USE_BOOLEAN_LITERALS
-#define MPIR_F_TRUE  F77_TRUE_VALUE
-#define MPIR_F_FALSE F77_FALSE_VALUE
+#define MPII_F_TRUE  F77_TRUE_VALUE
+#define MPII_F_FALSE F77_FALSE_VALUE
 #else
 #if !defined(F77_RUNTIME_VALUES) && defined(F77_TRUE_VALUE_SET)
-extern const MPI_Fint MPIR_F_TRUE, MPIR_F_FALSE;
+extern const MPI_Fint MPII_F_TRUE, MPII_F_FALSE;
 #else
-extern MPI_Fint MPIR_F_TRUE, MPIR_F_FALSE;
+extern MPI_Fint MPII_F_TRUE, MPII_F_FALSE;
 #endif
 #endif
-#define MPIR_TO_FLOG(a) ((a) ? MPIR_F_TRUE : MPIR_F_FALSE)
+#define MPII_TO_FLOG(a) ((a) ? MPII_F_TRUE : MPII_F_FALSE)
 /* 
    Note on true and false.  This code is only an approximation.
    Some systems define either true or false, and allow some or ALL other
@@ -33,13 +33,13 @@ extern MPI_Fint MPIR_F_TRUE, MPIR_F_FALSE;
    interface library for multiple compilers that differ only in the 
    value used for Fortran .TRUE. .
  */
-#define MPIR_FROM_FLOG(a) ( (a) == MPIR_F_FALSE ? 0 : 1 )
+#define MPII_FROM_FLOG(a) ( (a) == MPII_F_FALSE ? 0 : 1 )
 
 #else
 /* CRAY Vector processors only; these are defined in /usr/include/fortran.h 
    Thanks to lmc@cray.com */
-#define MPIR_TO_FLOG(a) (_btol(a))
-#define MPIR_FROM_FLOG(a) ( _ltob(&(a)) )    /* (a) must be a pointer */
+#define MPII_TO_FLOG(a) (_btol(a))
+#define MPII_FROM_FLOG(a) ( _ltob(&(a)) )    /* (a) must be a pointer */
 #endif
 
-#endif /* MPI_FORTLOGICAL_H_INCLUDED */
+#endif /* MPII_FORTLOGICAL_H_INCLUDED */

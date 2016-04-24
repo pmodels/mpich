@@ -21,8 +21,8 @@ int main(int argc, char *argv[])
     group.size = 4;
     group.rank = 0;
     group.idx_of_first_lpid = -1;
-    group.lrank_to_lpid = (MPIR_Group_pmap_t *)
-        MPL_malloc(group.size * sizeof(MPIR_Group_pmap_t));
+    group.lrank_to_lpid = (MPII_Group_pmap_t *)
+        MPL_malloc(group.size * sizeof(MPII_Group_pmap_t));
     for (i = 0; i < group.size; i++) {
         group.lrank_to_lpid[i].lrank = i;
         group.lrank_to_lpid[i].lpid = group.size - i - 1;
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     }
 
     /* Set up the group lpid list */
-    MPIR_Group_setup_lpid_list(group_ptr);
+    MPII_Group_setup_lpid_list(group_ptr);
 
     /* Print the group structure */
     printf("Index of first lpid = %d\n", group.idx_of_first_lpid);

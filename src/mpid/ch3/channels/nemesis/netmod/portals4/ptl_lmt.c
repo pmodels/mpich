@@ -32,7 +32,7 @@ int MPID_nem_ptl_lmt_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *rts_pkt, MPIR
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_lmt_start_send(MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV r_cookie)
 {
-    MPIU_Assertp(0 && "This function shouldn't be called.");
+    MPIR_Assertp(0 && "This function shouldn't be called.");
     return MPI_ERR_INTERN;
 }
 
@@ -43,7 +43,7 @@ int MPID_nem_ptl_lmt_start_send(MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV r_co
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_lmt_handle_cookie(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV s_cookie)
 {
-    MPIU_Assertp(0 && "This function shouldn't be called.");
+    MPIR_Assertp(0 && "This function shouldn't be called.");
     return MPI_ERR_INTERN;
 }
 
@@ -54,7 +54,7 @@ int MPID_nem_ptl_lmt_handle_cookie(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV s_
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_lmt_done_send(MPIDI_VC_t *vc, MPIR_Request *req)
 {
-    MPIU_Assertp(0 && "This function shouldn't be called.");
+    MPIR_Assertp(0 && "This function shouldn't be called.");
     return MPI_ERR_INTERN;
 }
 
@@ -65,6 +65,6 @@ int MPID_nem_ptl_lmt_done_send(MPIDI_VC_t *vc, MPIR_Request *req)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_lmt_done_recv(MPIDI_VC_t *vc, MPIR_Request *req)
 {
-    MPIU_Assertp(0 && "This function shouldn't be called.");
+    MPIR_Assertp(0 && "This function shouldn't be called.");
     return MPI_ERR_INTERN;
 }

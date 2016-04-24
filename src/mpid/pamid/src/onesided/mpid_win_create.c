@@ -45,7 +45,7 @@ MPIDI_Win_init( MPI_Aint length,
   /* ----------------------------------------- */
   /*  Setup the common sections of the window  */
   /* ----------------------------------------- */
-  MPIR_Win *win = (MPIR_Win*)MPIU_Handle_obj_alloc(&MPIR_Win_mem);
+  MPIR_Win *win = (MPIR_Win*)MPIR_Handle_obj_alloc(&MPIR_Win_mem);
 
   MPIU_ERR_CHKANDSTMT(win == NULL, mpi_errno, MPI_ERR_NO_MEM,
                      return mpi_errno, "**nomem");

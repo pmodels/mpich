@@ -69,12 +69,12 @@ int MPI_Win_set_info(MPI_Win win, MPI_Info info)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_Info *info_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_SET_INFO);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_SET_INFO);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_WIN_SET_INFO);
+    MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPI_WIN_SET_INFO);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -116,7 +116,7 @@ int MPI_Win_set_info(MPI_Win win, MPI_Info info)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_WIN_SET_INFO);
+    MPIR_FUNC_TERSE_RMA_EXIT(MPID_STATE_MPI_WIN_SET_INFO);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

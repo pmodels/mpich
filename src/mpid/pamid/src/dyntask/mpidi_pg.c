@@ -204,10 +204,10 @@ int MPIDI_PG_Finalize(void)
         fails to use MPI_Comm_disconnect on communicators that
         were created with the dynamic process routines.*/
 	/* XXX DJG FIXME-MT should we be checking this? */
-     if (MPIU_Object_get_ref(pg) == 0 ) {
+     if (MPIR_Object_get_ref(pg) == 0 ) {
        if (pg == MPIDI_Process.my_pg)
          MPIDI_Process.my_pg = NULL;
-       MPIU_Object_set_ref(pg, 0); /* satisfy assertions in PG_Destroy */
+       MPIR_Object_set_ref(pg, 0); /* satisfy assertions in PG_Destroy */
        MPIDI_PG_Destroy( pg );
      }
      pg     = pgNext;
@@ -247,7 +247,7 @@ int MPIDI_PG_Create(int vct_sz, void * pg_id, MPIDI_PG_t ** pg_ptr)
     /* The reference count indicates the number of vc's that are or
        have been in use and not disconnected. It starts at zero,
        except for MPI_COMM_WORLD. */
-    MPIU_Object_set_ref(pg, 0);
+    MPIR_Object_set_ref(pg, 0);
     pg->size = vct_sz;
     pg->id   = MPL_strdup(pg_id);
     TRACE_ERR("PG_Create - pg=%x pg->id=%s pg->vct=%x\n", pg, pg->id, pg->vct);
@@ -302,7 +302,7 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
     int i;
     int mpi_errno = MPI_SUCCESS;
 
-    MPIU_Assert(MPIU_Object_get_ref(pg) == 0);
+    MPIR_Assert(MPIR_Object_get_ref(pg) == 0);
 
     pg_prev = NULL;
     pg_cur = MPIDI_PG_list;
@@ -683,7 +683,7 @@ int MPIDI_connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
     }
 #endif
 
-    MPIU_Assert(len <= curSlen);
+    MPIR_Assert(len <= curSlen);
 
     *buf_p = string;
     *slen  = len;
@@ -819,7 +819,7 @@ static int MPIDI_connToString( char **buf_p, int *slen, MPIDI_PG_t *pg )
     /* XXX DJG TODO figure out what this little bit is all about. */
     if (strstr( pg_id, "singinit_kvs" ) == pg_id) {
 #ifdef USE_PMI2_API
-        MPIU_Assertp(0); /* don't know what to do here for pmi2 yet.  DARIUS */
+        MPIR_Assertp(0); /* don't know what to do here for pmi2 yet.  DARIUS */
 #else
 	PMI_KVS_Get_my_name( pg->id, 256 );
 #endif
@@ -938,10 +938,10 @@ int MPIDI_PG_Dup_vcr( MPIDI_PG_t *pg, int rank, pami_task_t taskid, MPID_VCR *vc
        process group *and* the reference count of the vc (this
        allows us to distinquish between Comm_free and Comm_disconnect) */
     /* FIXME-MT: This should be a fetch and increment for thread-safety */
-    /*if (MPIU_Object_get_ref(vcr_p) == 0) { */
+    /*if (MPIR_Object_get_ref(vcr_p) == 0) { */
 	TRACE_ERR("MPIDI_PG_add_ref on pg=%s pg=%x\n", pg->id, pg);
 	MPIDI_PG_add_ref(pg);
-        inuse=MPIU_Object_get_ref(pg);
+        inuse=MPIR_Object_get_ref(pg);
 	TRACE_ERR("after MPIDI_PG_add_ref on pg=%s inuse=%d\n", pg->id, inuse);
 /*	MPIDI_VC_add_ref(vcr_p);
     }
@@ -967,10 +967,10 @@ int MPIU_PG_Printall( FILE *fp )
     while (pg) {
         /* XXX DJG FIXME-MT should we be checking this? */
 	fprintf( fp, "size = %d, refcount = %d, id = %s\n",
-		 pg->size, MPIU_Object_get_ref(pg), (char *)pg->id );
+                 pg->size, MPIR_Object_get_ref(pg), (char *)pg->id );
 	for (i=0; i<pg->size; i++) {
 	    fprintf( fp, "\tVCT rank = %d, refcount = %d, taskid = %d\n",
-		     pg->vct[i].pg_rank, MPIU_Object_get_ref(pg),
+                     pg->vct[i].pg_rank, MPIR_Object_get_ref(pg),
 		     pg->vct[i].taskid );
 	}
 	fflush(fp);

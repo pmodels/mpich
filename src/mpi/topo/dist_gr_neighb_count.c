@@ -76,13 +76,13 @@ int MPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS_COUNT);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS_COUNT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     /* FIXME: Why does this routine require a CS? */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS_COUNT);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS_COUNT);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -122,7 +122,7 @@ int MPI_Dist_graph_neighbors_count(MPI_Comm comm, int *indegree, int *outdegree,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS_COUNT);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS_COUNT);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

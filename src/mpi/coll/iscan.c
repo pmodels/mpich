@@ -69,7 +69,7 @@ int MPI_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dataty
 #define FUNCNAME MPIR_Iscan_rec_dbl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscan_rec_dbl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Iscan_rec_dbl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint true_extent, true_lb, extent;
@@ -95,7 +95,7 @@ int MPIR_Iscan_rec_dbl(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
 
     /* This eventually gets malloc()ed as a temp buffer, not added to
      * any user buffers */
-    MPIU_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
+    MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
     /* adjust for potential negative lower bound in datatype */
     partial_scan = (void *)((char*)partial_scan - true_lb);
@@ -109,16 +109,16 @@ int MPIR_Iscan_rec_dbl(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
     /* Since this is an inclusive scan, copy local contribution into
        recvbuf. */
     if (sendbuf != MPI_IN_PLACE) {
-        mpi_errno = MPID_Sched_copy(sendbuf, count, datatype,
+        mpi_errno = MPIR_Sched_copy(sendbuf, count, datatype,
                                     recvbuf, count, datatype, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     if (sendbuf != MPI_IN_PLACE)
-        mpi_errno = MPID_Sched_copy(sendbuf, count, datatype,
+        mpi_errno = MPIR_Sched_copy(sendbuf, count, datatype,
                                     partial_scan, count, datatype, s);
     else
-        mpi_errno = MPID_Sched_copy(recvbuf, count, datatype,
+        mpi_errno = MPIR_Sched_copy(recvbuf, count, datatype,
                                     partial_scan, count, datatype, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
@@ -127,35 +127,35 @@ int MPIR_Iscan_rec_dbl(const void *sendbuf, void *recvbuf, int count, MPI_Dataty
         dst = rank ^ mask;
         if (dst < comm_size) {
             /* Send partial_scan to dst. Recv into tmp_buf */
-            mpi_errno = MPID_Sched_send(partial_scan, count, datatype, dst, comm_ptr, s);
+            mpi_errno = MPIR_Sched_send(partial_scan, count, datatype, dst, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             /* sendrecv, no barrier here */
-            mpi_errno = MPID_Sched_recv(tmp_buf, count, datatype, dst, comm_ptr, s);
+            mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, dst, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPID_SCHED_BARRIER(s);
+            MPIR_SCHED_BARRIER(s);
 
             if (rank > dst) {
-                mpi_errno = MPID_Sched_reduce(tmp_buf, partial_scan, count, datatype, op, s);
+                mpi_errno = MPIR_Sched_reduce(tmp_buf, partial_scan, count, datatype, op, s);
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                mpi_errno = MPID_Sched_reduce(tmp_buf, recvbuf, count, datatype, op, s);
+                mpi_errno = MPIR_Sched_reduce(tmp_buf, recvbuf, count, datatype, op, s);
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                MPID_SCHED_BARRIER(s);
+                MPIR_SCHED_BARRIER(s);
             }
             else {
                 if (is_commutative) {
-                    mpi_errno = MPID_Sched_reduce(tmp_buf, partial_scan, count, datatype, op, s);
+                    mpi_errno = MPIR_Sched_reduce(tmp_buf, partial_scan, count, datatype, op, s);
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                    MPID_SCHED_BARRIER(s);
+                    MPIR_SCHED_BARRIER(s);
                 }
                 else {
-                    mpi_errno = MPID_Sched_reduce(partial_scan, tmp_buf, count, datatype, op, s);
+                    mpi_errno = MPIR_Sched_reduce(partial_scan, tmp_buf, count, datatype, op, s);
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                    MPID_SCHED_BARRIER(s);
+                    MPIR_SCHED_BARRIER(s);
 
-                    mpi_errno = MPID_Sched_copy(tmp_buf, count, datatype,
+                    mpi_errno = MPIR_Sched_copy(tmp_buf, count, datatype,
                                                 partial_scan, count, datatype, s);
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                    MPID_SCHED_BARRIER(s);
+                    MPIR_SCHED_BARRIER(s);
                 }
             }
         }
@@ -174,7 +174,7 @@ fn_fail:
 #define FUNCNAME MPIR_Iscan_rec_dbl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank = comm_ptr->rank;
@@ -191,7 +191,7 @@ int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
        communicator in which all the nodes contain processes with
        consecutive ranks. */
 
-    if (!MPIR_Comm_is_node_consecutive(comm_ptr)) {
+    if (!MPII_Comm_is_node_consecutive(comm_ptr)) {
         /* We can't use the SMP-aware algorithm, use the generic one */
         return MPIR_Iscan_rec_dbl(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     }
@@ -199,16 +199,16 @@ int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
     node_comm = comm_ptr->node_comm;
     roots_comm = comm_ptr->node_roots_comm;
     if (node_comm) {
-        MPIU_Assert(node_comm->coll_fns && node_comm->coll_fns->Iscan_sched && node_comm->coll_fns->Ibcast_sched);
+        MPIR_Assert(node_comm->coll_fns && node_comm->coll_fns->Iscan_sched && node_comm->coll_fns->Ibcast_sched);
     }
     if (roots_comm) {
-        MPIU_Assert(roots_comm->coll_fns && roots_comm->coll_fns->Iscan_sched);
+        MPIR_Assert(roots_comm->coll_fns && roots_comm->coll_fns->Iscan_sched);
     }
 
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPID_Datatype_get_extent_macro(datatype, extent);
 
-    MPIU_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
+    MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
     MPIR_SCHED_CHKPMEM_MALLOC(tempbuf, void *, count*(MPL_MAX(extent, true_extent)),
                         mpi_errno, "temporary buffer");
@@ -232,13 +232,13 @@ int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
     if (node_comm != NULL) {
         mpi_errno = node_comm->coll_fns->Iscan_sched(sendbuf, recvbuf, count, datatype, op, node_comm, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPID_SCHED_BARRIER(s);
+        MPIR_SCHED_BARRIER(s);
     }
     else if (sendbuf != MPI_IN_PLACE) {
-        mpi_errno = MPID_Sched_copy(sendbuf, count, datatype,
+        mpi_errno = MPIR_Sched_copy(sendbuf, count, datatype,
                                     recvbuf, count, datatype, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPID_SCHED_BARRIER(s);
+        MPIR_SCHED_BARRIER(s);
     }
 
     /* get result from local node's last processor which
@@ -246,15 +246,15 @@ int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
        localfulldata. For example, localfulldata from node 1 contains
        reduced data of rank 1,2,3. */
     if (roots_comm != NULL && node_comm != NULL) {
-        mpi_errno = MPID_Sched_recv(localfulldata, count, datatype,
+        mpi_errno = MPIR_Sched_recv(localfulldata, count, datatype,
                                     (node_comm->local_size - 1), node_comm, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPID_SCHED_BARRIER(s);
+        MPIR_SCHED_BARRIER(s);
     }
     else if (roots_comm == NULL && node_comm != NULL && node_comm->rank == node_comm->local_size - 1) {
-        mpi_errno = MPID_Sched_send(recvbuf, count, datatype, 0, node_comm, s);
+        mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, 0, node_comm, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPID_SCHED_BARRIER(s);
+        MPIR_SCHED_BARRIER(s);
     }
     else if (roots_comm != NULL) {
         localfulldata = recvbuf;
@@ -266,22 +266,22 @@ int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
        process of node 3. */
     if (roots_comm != NULL) {
         /* FIXME just use roots_comm->rank instead */
-        int roots_rank = MPIU_Get_internode_rank(comm_ptr, rank);
-        MPIU_Assert(roots_rank == roots_comm->rank);
+        int roots_rank = MPIR_Get_internode_rank(comm_ptr, rank);
+        MPIR_Assert(roots_rank == roots_comm->rank);
 
         mpi_errno = roots_comm->coll_fns->Iscan_sched(localfulldata, prefulldata, count, datatype, op, roots_comm, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPID_SCHED_BARRIER(s);
+        MPIR_SCHED_BARRIER(s);
 
         if (roots_rank != roots_comm->local_size-1) {
-            mpi_errno = MPID_Sched_send(prefulldata, count, datatype, (roots_rank + 1), roots_comm, s);
+            mpi_errno = MPIR_Sched_send(prefulldata, count, datatype, (roots_rank + 1), roots_comm, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPID_SCHED_BARRIER(s);
+            MPIR_SCHED_BARRIER(s);
         }
         if (roots_rank != 0) {
-            mpi_errno = MPID_Sched_recv(tempbuf, count, datatype, (roots_rank - 1), roots_comm, s);
+            mpi_errno = MPIR_Sched_recv(tempbuf, count, datatype, (roots_rank - 1), roots_comm, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPID_SCHED_BARRIER(s);
+            MPIR_SCHED_BARRIER(s);
         }
     }
 
@@ -291,18 +291,18 @@ int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
        then we should broadcast this result in the local node, and
        reduce it with recvbuf to get final result if nessesary. */
 
-    if (MPIU_Get_internode_rank(comm_ptr, rank) != 0) {
+    if (MPIR_Get_internode_rank(comm_ptr, rank) != 0) {
         /* we aren't on "node 0", so our node leader (possibly us) received
          * "prefulldata" from another leader into "tempbuf" */
 
         if (node_comm != NULL) {
             mpi_errno = node_comm->coll_fns->Ibcast_sched(tempbuf, count, datatype, 0, node_comm, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPID_SCHED_BARRIER(s);
+            MPIR_SCHED_BARRIER(s);
         }
 
         /* do reduce on tempbuf and recvbuf, finish scan. */
-        mpi_errno = MPID_Sched_reduce(tempbuf, recvbuf, count, datatype, op, s);
+        mpi_errno = MPIR_Sched_reduce(tempbuf, recvbuf, count, datatype, op, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
@@ -323,20 +323,20 @@ int MPIR_Iscan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype 
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *reqp = NULL;
     int tag = -1;
-    MPID_Sched_t s = MPID_SCHED_NULL;
+    MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = MPI_REQUEST_NULL;
 
-    mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPID_Sched_create(&s);
+    mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPIU_Assert(comm_ptr->coll_fns->Iscan_sched != NULL);
+    MPIR_Assert(comm_ptr->coll_fns->Iscan_sched != NULL);
     mpi_errno = comm_ptr->coll_fns->Iscan_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, &reqp);
+    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);
     if (reqp)
         *request = reqp->handle;
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -379,10 +379,10 @@ int MPI_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dataty
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_ISCAN);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ISCAN);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_ISCAN);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_ISCAN);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -449,7 +449,7 @@ int MPI_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dataty
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_ISCAN);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_ISCAN);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

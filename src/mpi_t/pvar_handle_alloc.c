@@ -51,7 +51,7 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
     const pvar_table_entry_t *info;
     MPIR_T_pvar_handle_t *hnd;
 
-    MPIU_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL(1);
 
     info = (pvar_table_entry_t *) utarray_eltptr(pvar_table, pvar_index);
 
@@ -80,7 +80,7 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
     }
 
     /* Allocate memory and bzero it */
-    MPIU_CHKPMEM_CALLOC(hnd, MPIR_T_pvar_handle_t*, sizeof(*hnd) + extra,
+    MPIR_CHKPMEM_CALLOC(hnd, MPIR_T_pvar_handle_t*, sizeof(*hnd) + extra,
                         mpi_errno, "performance variable handle");
 #ifdef HAVE_ERROR_CHECKING
     hnd->kind = MPIR_T_PVAR_HANDLE;
@@ -120,7 +120,7 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
          * accum is zero since we called CALLOC before.
          */
         if (hnd->get_value == NULL)
-            MPIU_Memcpy(hnd->offset, hnd->addr, bytes*cnt);
+            MPIR_Memcpy(hnd->offset, hnd->addr, bytes*cnt);
         else
             hnd->get_value(hnd->addr, hnd->obj_handle, hnd->count, hnd->offset);
     }
@@ -163,11 +163,11 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
     *handle = hnd;
     *count = cnt;
 
-    MPIU_CHKPMEM_COMMIT();
+    MPIR_CHKPMEM_COMMIT();
 fn_exit:
     return mpi_errno;
 fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -204,10 +204,10 @@ int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index,
     int mpi_errno = MPI_SUCCESS;
     pvar_table_entry_t *entry;
 
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
     MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
 
     /* Validate parameters  */
 #   ifdef HAVE_ERROR_CHECKING
@@ -238,7 +238,7 @@ int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index,
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 

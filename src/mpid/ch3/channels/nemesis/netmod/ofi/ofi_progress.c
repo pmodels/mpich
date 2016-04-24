@@ -74,11 +74,11 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
                     continue;
                 }
                 else {
-                    MPIU_Assert(0);
+                    MPIR_Assert(0);
                 }
             }
             else {
-                MPIU_Assert(0);
+                MPIR_Assert(0);
             }
         }
         else if (ret == -FI_EAGAIN)

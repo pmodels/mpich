@@ -113,9 +113,9 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
     PMI_keyval_t **info_keyval_vectors=0, preput_keyval_vector;
     int *pmi_errcodes = 0, pmi_errno;
     int total_num_processes, should_accept = 1;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_COMM_SPAWN_MULTIPLE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_SPAWN_MULTIPLE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_COMM_SPAWN_MULTIPLE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_SPAWN_MULTIPLE);
 
 
     if (comm_ptr->rank == root) {
@@ -142,13 +142,13 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 
 	/* Spawn the processes */
 #ifdef USE_PMI2_API
-        MPIU_Assert(count > 0);
+        MPIR_Assert(count > 0);
         {
             int *argcs = MPL_malloc(count*sizeof(int));
             struct MPIR_Info preput;
             struct MPIR_Info *preput_p[1] = { &preput };
 
-            MPIU_Assert(argcs);
+            MPIR_Assert(argcs);
             /*
             info_keyval_sizes = MPL_malloc(count * sizeof(int));
             */
@@ -297,7 +297,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
     if (pmi_errcodes) {
 	MPL_free(pmi_errcodes);
     }
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_COMM_SPAWN_MULTIPLE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_SPAWN_MULTIPLE);
     return mpi_errno;
  fn_fail:
     goto fn_exit;

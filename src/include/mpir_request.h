@@ -59,7 +59,7 @@ struct MPIR_Grequest_fns {
 };
 
 typedef struct MPIR_Grequest_class {
-     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
+     MPIR_OBJECT_HEADER; /* adds handle and ref_count fields */
      MPI_Grequest_query_function *query_fn;
      MPI_Grequest_free_function *free_fn;
      MPI_Grequest_cancel_function *cancel_fn;
@@ -103,7 +103,7 @@ typedef struct MPIR_Grequest_class {
 
   S*/
 struct MPIR_Request {
-    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
+    MPIR_OBJECT_HEADER; /* adds handle and ref_count fields */
 
     MPIR_Request_kind_t kind;
 
@@ -170,7 +170,7 @@ struct MPIR_Request {
 
 #define MPIR_REQUEST_PREALLOC 8
 
-extern MPIU_Object_alloc_t MPIR_Request_mem;
+extern MPIR_Object_alloc_t MPIR_Request_mem;
 /* Preallocated request objects */
 extern MPIR_Request MPIR_Request_direct[];
 
@@ -178,12 +178,12 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
 {
     MPIR_Request *req;
 
-    req = MPIU_Handle_obj_alloc(&MPIR_Request_mem);
+    req = MPIR_Handle_obj_alloc(&MPIR_Request_mem);
     if (req != NULL) {
 	MPL_DBG_MSG_P(MPIR_DBG_REQUEST,VERBOSE,
                       "allocated request, handle=0x%08x", req->handle);
 #ifdef MPICH_DBG_OUTPUT
-	/*MPIU_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);*/
+	/*MPIR_Assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);*/
 	if (HANDLE_GET_MPI_KIND(req->handle) != MPIR_REQUEST)
 	{
 	    int mpi_errno;
@@ -199,7 +199,7 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
          * inheritance).  For example, do we really* want to set the
          * kind to UNDEFINED? And should the RMA values be set only
          * for RMA requests? */
-	MPIU_Object_set_ref(req, 1);
+	MPIR_Object_set_ref(req, 1);
 	req->kind = kind;
         MPIR_cc_set(&req->cc, 1);
 	req->cc_ptr		   = &req->cc;
@@ -230,10 +230,10 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
 }
 
 #define MPIR_Request_add_ref( _req ) \
-    do { MPIU_Object_add_ref( _req ); } while (0)
+    do { MPIR_Object_add_ref( _req ); } while (0)
 
 #define MPIR_Request_release_ref( _req, _inuse ) \
-    do { MPIU_Object_release_ref( _req, _inuse ); } while (0)
+    do { MPIR_Object_release_ref( _req, _inuse ); } while (0)
 
 static inline void MPIR_Request_free(MPIR_Request *req)
 {
@@ -277,7 +277,7 @@ static inline void MPIR_Request_free(MPIR_Request *req)
 
         MPID_Request_finalize(req);
 
-        MPIU_Handle_obj_free(&MPIR_Request_mem, req);
+        MPIR_Handle_obj_free(&MPIR_Request_mem, req);
     }
 }
 

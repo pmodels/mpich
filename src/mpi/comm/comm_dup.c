@@ -53,7 +53,7 @@ int MPIR_Comm_dup_impl(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm_ptr)
     /* We must use the local size, because this is compared to the
        rank of the process in the communicator.  For intercomms,
        this must be the local size */
-    mpi_errno = MPIR_Comm_copy( comm_ptr, comm_ptr->local_size, newcomm_ptr );
+    mpi_errno = MPII_Comm_copy( comm_ptr, comm_ptr->local_size, newcomm_ptr );
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     (*newcomm_ptr)->attributes = new_attributes;
@@ -120,12 +120,12 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm *newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_DUP);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_DUP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_DUP);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_DUP);
     
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -165,7 +165,7 @@ int MPI_Comm_dup(MPI_Comm comm, MPI_Comm *newcomm)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_DUP);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_DUP);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
     

@@ -14,9 +14,9 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 void MPID_nem_dbg_dump_cell (volatile struct MPID_nem_cell *cell)
 {
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_DBG_DUMP_CELL);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_DBG_DUMP_CELL);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_DBG_DUMP_CELL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_DBG_DUMP_CELL);
 
     MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  src = %6d", cell->pkt.header.source);
     MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  dst = %6d", cell->pkt.header.dest);
@@ -24,7 +24,7 @@ void MPID_nem_dbg_dump_cell (volatile struct MPID_nem_cell *cell)
     MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  sqn = %6d", cell->pkt.header.seqno);
     MPL_DBG_MSG_D (MPIR_DBG_OTHER, TERSE, "  typ = %6d", cell->pkt.header.type);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_DBG_DUMP_CELL);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_DBG_DUMP_CELL);
 }
 
 #define state_case(suffix)             \
@@ -127,7 +127,7 @@ void MPID_nem_dbg_print_all_sendq(FILE *stream)
     MPIDI_PG_Get_iterator(&iter);
     while (MPIDI_PG_Has_next(&iter)) {
         MPIDI_PG_Get_next(&iter, &pg);
-        fprintf(stream, "PG ptr=%p size=%d id=%s refcount=%d\n", pg, pg->size, (const char*)pg->id, MPIU_Object_get_ref(pg));
+        fprintf(stream, "PG ptr=%p size=%d id=%s refcount=%d\n", pg, pg->size, (const char*)pg->id, MPIR_Object_get_ref(pg));
         for (i = 0; i < MPIDI_PG_Get_size(pg); ++i) {
             MPIDI_PG_Get_vc(pg, i, &vc);
             MPID_nem_dbg_print_vc_sendq(stream, vc);

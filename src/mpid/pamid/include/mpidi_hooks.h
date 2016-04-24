@@ -59,7 +59,6 @@ typedef size_t              intptr_t;
 /** \brief This defines the portion of MPIR_Win that is specific to the Device */
 #define MPID_DEV_WIN_DECL        struct MPIDI_Win     mpid;
 
-#define HAVE_DEV_COMM_HOOK
 #define MPID_Dev_comm_create_hook(a)  ({ int MPIDI_Comm_create (MPIR_Comm *comm); MPIDI_Comm_create (a); })
 #define MPID_Dev_comm_destroy_hook(a) ({ int MPIDI_Comm_destroy(MPIR_Comm *comm); MPIDI_Comm_destroy(a); })
 

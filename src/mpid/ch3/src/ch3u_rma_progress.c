@@ -137,9 +137,9 @@ static inline int check_and_switch_target_state(MPIR_Win * win_ptr, MPIDI_RMA_Ta
                 /* if we reach WIN_UNLOCK and there is still operation existing
                  * in pending list, this operation must be the only operation
                  * and it is prepared to piggyback LOCK and UNLOCK. */
-                MPIU_Assert(MPIR_CVAR_CH3_RMA_DELAY_ISSUING_FOR_PIGGYBACKING);
-                MPIU_Assert(target->pending_net_ops_list_head->next == NULL);
-                MPIU_Assert(target->pending_net_ops_list_head->piggyback_lock_candidate);
+                MPIR_Assert(MPIR_CVAR_CH3_RMA_DELAY_ISSUING_FOR_PIGGYBACKING);
+                MPIR_Assert(target->pending_net_ops_list_head->next == NULL);
+                MPIR_Assert(target->pending_net_ops_list_head->piggyback_lock_candidate);
             }
         }
         break;
@@ -277,11 +277,11 @@ static inline int issue_ops_target(MPIR_Win * win_ptr, MPIDI_RMA_Target_t * targ
         if (first_op) {
             /* piggyback on first OP. */
             if (target->access_state == MPIDI_RMA_LOCK_CALLED) {
-                MPIU_Assert(curr_op->piggyback_lock_candidate);
+                MPIR_Assert(curr_op->piggyback_lock_candidate);
                 if (target->lock_type == MPI_LOCK_SHARED)
                     flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED;
                 else {
-                    MPIU_Assert(target->lock_type == MPI_LOCK_EXCLUSIVE);
+                    MPIR_Assert(target->lock_type == MPI_LOCK_EXCLUSIVE);
                     flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE;
                 }
                 target->access_state = MPIDI_RMA_LOCK_ISSUED;

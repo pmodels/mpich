@@ -135,7 +135,7 @@ int MPIR_Allgather_intra (
     int position, tmp_buf_size, nbytes;
 #endif
 
-    MPIU_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL(1);
 
     if (((sendcount == 0) && (sendbuf != MPI_IN_PLACE)) || (recvcount == 0))
         return MPI_SUCCESS;
@@ -147,7 +147,7 @@ int MPIR_Allgather_intra (
     MPID_Datatype_get_size_macro( recvtype, type_size );
 
     /* This is the largest offset we add to recvbuf */
-    MPIU_Ensure_Aint_fits_in_pointer(MPIU_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
+    MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
 				     (comm_size * recvcount * recvtype_extent));
 
     tot_bytes = (MPI_Aint)recvcount * comm_size * type_size;
@@ -316,7 +316,7 @@ int MPIR_Allgather_intra (
             
             MPIR_Pack_size_impl(recvcount*comm_size, recvtype, &tmp_buf_size);
             
-            MPIU_CHKLMEM_MALLOC(tmp_buf, void*, tmp_buf_size, mpi_errno, "tmp_buf");
+            MPIR_CHKLMEM_MALLOC(tmp_buf, void*, tmp_buf_size, mpi_errno, "tmp_buf");
             
             /* calculate the value of nbytes, the number of bytes in packed
                representation that each process contributes. We can't simply divide
@@ -488,7 +488,7 @@ int MPIR_Allgather_intra (
         recvbuf_extent = recvcount * comm_size *
             (MPL_MAX(recvtype_true_extent, recvtype_extent));
 
-        MPIU_CHKLMEM_MALLOC(tmp_buf, void*, recvbuf_extent, mpi_errno, "tmp_buf");
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void*, recvbuf_extent, mpi_errno, "tmp_buf");
             
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - recvtype_true_lb);
@@ -622,7 +622,7 @@ int MPIR_Allgather_intra (
     }
 
  fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)
@@ -663,7 +663,7 @@ int MPIR_Allgather_inter (
     void *tmp_buf=NULL;
     MPIR_Comm *newcomm_ptr = NULL;
 
-    MPIU_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL(1);
 
     local_size = comm_ptr->local_size; 
     remote_size = comm_ptr->remote_size;
@@ -677,8 +677,8 @@ int MPIR_Allgather_inter (
         MPID_Datatype_get_extent_macro( sendtype, send_extent );
         extent = MPL_MAX(send_extent, true_extent);
 
-	MPIU_Ensure_Aint_fits_in_pointer(extent * sendcount * local_size);
-        MPIU_CHKLMEM_MALLOC(tmp_buf, void*, extent*sendcount*local_size, mpi_errno, "tmp_buf");
+	MPIR_Ensure_Aint_fits_in_pointer(extent * sendcount * local_size);
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void*, extent*sendcount*local_size, mpi_errno, "tmp_buf");
 
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - true_lb);
@@ -686,7 +686,7 @@ int MPIR_Allgather_inter (
 
     /* Get the local intracommunicator */
     if (!comm_ptr->local_comm)
-	MPIR_Setup_intercomm_localcomm( comm_ptr );
+	MPII_Setup_intercomm_localcomm( comm_ptr );
 
     newcomm_ptr = comm_ptr->local_comm;
 
@@ -759,7 +759,7 @@ int MPIR_Allgather_inter (
     }
 
   fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)
@@ -898,12 +898,12 @@ int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_ALLGATHER);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ALLGATHER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_COLL_FUNC_ENTER(MPID_STATE_MPI_ALLGATHER);
+    MPIR_FUNC_TERSE_COLL_ENTER(MPID_STATE_MPI_ALLGATHER);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -983,7 +983,7 @@ int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     /* ... end of body of routine ... */
     
   fn_exit:
-    MPID_MPI_COLL_FUNC_EXIT(MPID_STATE_MPI_ALLGATHER);
+    MPIR_FUNC_TERSE_COLL_EXIT(MPID_STATE_MPI_ALLGATHER);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

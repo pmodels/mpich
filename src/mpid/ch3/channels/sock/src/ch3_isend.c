@@ -13,15 +13,15 @@
 static void update_request(MPIR_Request * sreq, void * hdr,
 			   intptr_t hdr_sz, size_t nb)
 {
-    MPIDI_STATE_DECL(MPID_STATE_UPDATE_REQUEST);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_UPDATE_REQUEST);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_UPDATE_REQUEST);
-    MPIU_Assert(hdr_sz == sizeof(MPIDI_CH3_Pkt_t));
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_UPDATE_REQUEST);
+    MPIR_Assert(hdr_sz == sizeof(MPIDI_CH3_Pkt_t));
     sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;
     sreq->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST)((char *) &sreq->dev.pending_pkt + nb);
     sreq->dev.iov[0].MPL_IOV_LEN = hdr_sz - nb;
     sreq->dev.iov_count = 1;
-    MPIDI_FUNC_EXIT(MPID_STATE_UPDATE_REQUEST);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_UPDATE_REQUEST);
 }
 
 #undef FUNCNAME
@@ -34,11 +34,11 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPIR_Request * sreq, void * hdr,
     int mpi_errno = MPI_SUCCESS;
     int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
     MPIDI_CH3I_VC *vcch = &vc->ch;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_ISEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_ISEND);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ISEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_ISEND);
 
-    MPIU_Assert( hdr_sz <= sizeof(MPIDI_CH3_Pkt_t) );
+    MPIR_Assert( hdr_sz <= sizeof(MPIDI_CH3_Pkt_t) );
 
     /* The sock channel uses a fixed length header, the size of which is the 
        maximum of all possible packet headers */
@@ -73,7 +73,7 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPIR_Request * sreq, void * hdr,
                      "write complete %" PRIdPTR " bytes, calling OnDataAvail fcn", nb);
 		    reqFn = sreq->dev.OnDataAvail;
 		    if (!reqFn) {
-			MPIU_Assert(MPIDI_Request_get_type(sreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
+			MPIR_Assert(MPIDI_Request_get_type(sreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
                         mpi_errno = MPID_Request_complete(sreq);
                         if (mpi_errno != MPI_SUCCESS) {
                             MPIR_ERR_POP(mpi_errno);
@@ -197,7 +197,7 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPIR_Request * sreq, void * hdr,
     /* --END ERROR HANDLING-- */
 
  fn_fail:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_ISEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_ISEND);
     return mpi_errno;
 }
 

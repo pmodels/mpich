@@ -44,10 +44,10 @@ void MPIDI_CH3U_Buffer_copy(
     intptr_t rdata_sz;
     MPIDU_Datatype* sdt_ptr;
     MPIDU_Datatype* rdt_ptr;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_BUFFER_COPY);
-    MPIDI_STATE_DECL(MPID_STATE_MEMCPY);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_BUFFER_COPY);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MEMCPY);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_BUFFER_COPY);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_BUFFER_COPY);
     *smpi_errno = MPI_SUCCESS;
     *rmpi_errno = MPI_SUCCESS;
 
@@ -73,9 +73,9 @@ void MPIDI_CH3U_Buffer_copy(
     
     if (sdt_contig && rdt_contig)
     {
-	MPIDI_FUNC_ENTER(MPID_STATE_MEMCPY);
-	MPIU_Memcpy((char *)rbuf + rdt_true_lb, (const char *)sbuf + sdt_true_lb, sdata_sz);
-	MPIDI_FUNC_EXIT(MPID_STATE_MEMCPY);
+	MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MEMCPY);
+	MPIR_Memcpy((char *)rbuf + rdt_true_lb, (const char *)sbuf + sdt_true_lb, sdata_sz);
+	MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MEMCPY);
 	*rsz = sdata_sz;
     }
     else if (sdt_contig)
@@ -170,7 +170,7 @@ void MPIDI_CH3U_Buffer_copy(
                "post-pack first=%" PRIdPTR ", last=%" PRIdPTR,
                sfirst, last ));
 	    /* --BEGIN ERROR HANDLING-- */
-	    MPIU_Assert(last > sfirst);
+	    MPIR_Assert(last > sfirst);
 	    /* --END ERROR HANDLING-- */
 	    
 	    buf_end = buf + buf_off + (last - sfirst);
@@ -184,7 +184,7 @@ void MPIDI_CH3U_Buffer_copy(
              "post-unpack first=%" PRIdPTR ", last=%" PRIdPTR,
 						rfirst, last ));
 	    /* --BEGIN ERROR HANDLING-- */
-	    MPIU_Assert(last > rfirst);
+	    MPIR_Assert(last > rfirst);
 	    /* --END ERROR HANDLING-- */
 
 	    rfirst = last;
@@ -218,7 +218,7 @@ void MPIDI_CH3U_Buffer_copy(
     }
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_BUFFER_COPY);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_BUFFER_COPY);
 }
 
 

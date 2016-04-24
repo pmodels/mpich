@@ -14,9 +14,9 @@ static int handle_probe(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *const req = e->user_ptr;
-    MPIDI_STATE_DECL(MPID_STATE_HANDLE_PROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_HANDLE_PROBE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_HANDLE_PROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_HANDLE_PROBE);
 
     if (e->ni_fail_type == PTL_NI_NO_MATCH) {
         REQ_PTL(req)->found = FALSE;
@@ -35,7 +35,7 @@ static int handle_probe(const ptl_event_t *e)
     }
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_HANDLE_PROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_HANDLE_PROBE);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -45,10 +45,10 @@ static int handle_mprobe(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *const req = e->user_ptr;
-    MPIU_CHKPMEM_DECL(1);
-    MPIDI_STATE_DECL(MPID_STATE_HANDLE_PROBE);
+    MPIR_CHKPMEM_DECL(1);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_HANDLE_PROBE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_HANDLE_PROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_HANDLE_PROBE);
 
     if (e->ni_fail_type == PTL_NI_NO_MATCH) {
         REQ_PTL(req)->found = FALSE;
@@ -61,15 +61,15 @@ static int handle_mprobe(const ptl_event_t *e)
     MPIR_STATUS_SET_COUNT(req->status, NPTL_HEADER_GET_LENGTH(e->hdr_data));
     MPIDI_Request_set_sync_send_flag(req, e->hdr_data & NPTL_SSEND);
 
-    MPIU_CHKPMEM_MALLOC(req->dev.tmpbuf, void *, e->mlength, mpi_errno, "tmpbuf");
-    MPIU_Memcpy((char *)req->dev.tmpbuf, e->start, e->mlength);
+    MPIR_CHKPMEM_MALLOC(req->dev.tmpbuf, void *, e->mlength, mpi_errno, "tmpbuf");
+    MPIR_Memcpy((char *)req->dev.tmpbuf, e->start, e->mlength);
     req->dev.recv_data_sz = e->mlength;
 
     if (!(e->hdr_data & NPTL_LARGE)) {
         MPIDI_Request_set_msg_type(req, MPIDI_REQUEST_EAGER_MSG);
     }
     else {
-        MPIU_Assert (e->mlength == PTL_LARGE_THRESHOLD);
+        MPIR_Assert (e->mlength == PTL_LARGE_THRESHOLD);
         req->dev.match.parts.tag = req->status.MPI_TAG;
         req->dev.match.parts.context_id = NPTL_MATCH_GET_CTX(e->match_bits);
         req->dev.match.parts.rank = req->status.MPI_SOURCE;
@@ -88,11 +88,11 @@ static int handle_mprobe(const ptl_event_t *e)
     }
 
   fn_exit:
-    MPIU_CHKPMEM_COMMIT();
-    MPIDI_FUNC_EXIT(MPID_STATE_HANDLE_PROBE);
+    MPIR_CHKPMEM_COMMIT();
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_HANDLE_PROBE);
     return mpi_errno;
  fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -103,7 +103,7 @@ static int handle_mprobe(const ptl_event_t *e)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_ptl_probe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, int context_offset, MPI_Status *status)
 {
-    MPIU_Assertp(0 && "This function shouldn't be called.");
+    MPIR_Assertp(0 && "This function shouldn't be called.");
     return MPI_SUCCESS;
 }
 
@@ -119,9 +119,9 @@ int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, in
     ptl_process_t id_any;
     ptl_me_t me;
     MPIR_Request *req;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_IPROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_PTL_IPROBE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_IPROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_PTL_IPROBE);
 
     id_any.phys.nid = PTL_NID_ANY;
     id_any.phys.pid = PTL_PID_ANY;
@@ -129,7 +129,7 @@ int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, in
     /* create a request */
     req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     MPIR_ERR_CHKANDJUMP1(!req, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Request_create");
-    MPIU_Object_set_ref(req, 2); /* 1 ref for progress engine and 1 ref for us */
+    MPIR_Object_set_ref(req, 2); /* 1 ref for progress engine and 1 ref for us */
     REQ_PTL(req)->event_handler = handle_probe;
 
     /* create a dummy ME to use for searching the list */
@@ -174,7 +174,7 @@ int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, in
     MPIR_Request_free(req);
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_IPROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_PTL_IPROBE);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -194,9 +194,9 @@ int MPID_nem_ptl_improbe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, i
     ptl_me_t me;
     MPIR_Request *req;
 
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_IMPROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_PTL_IMPROBE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_IMPROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_PTL_IMPROBE);
 
     id_any.phys.nid = PTL_NID_ANY;
     id_any.phys.pid = PTL_PID_ANY;
@@ -205,7 +205,7 @@ int MPID_nem_ptl_improbe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, i
     req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     MPID_nem_ptl_init_req(req);
     MPIR_ERR_CHKANDJUMP1(!req, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Request_create");
-    MPIU_Object_set_ref(req, 2); /* 1 ref for progress engine and 1 ref for us */
+    MPIR_Object_set_ref(req, 2); /* 1 ref for progress engine and 1 ref for us */
     REQ_PTL(req)->event_handler = handle_mprobe;
     req->kind = MPIR_REQUEST_KIND__MPROBE;
 
@@ -255,7 +255,7 @@ int MPID_nem_ptl_improbe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, i
     }
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_IMPROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_PTL_IMPROBE);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -268,14 +268,14 @@ int MPID_nem_ptl_improbe(MPIDI_VC_t *vc, int source, int tag, MPIR_Comm *comm, i
 int MPID_nem_ptl_anysource_iprobe(int tag, MPIR_Comm * comm, int context_offset, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_IPROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_IPROBE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_IPROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_IPROBE);
 
     return MPID_nem_ptl_iprobe(NULL, MPI_ANY_SOURCE, tag, comm, context_offset, flag, status);
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_IPROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_IPROBE);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -289,14 +289,14 @@ int MPID_nem_ptl_anysource_improbe(int tag, MPIR_Comm * comm, int context_offset
                                    MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_IMPROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_IMPROBE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_IMPROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_IMPROBE);
 
     return MPID_nem_ptl_improbe(NULL, MPI_ANY_SOURCE, tag, comm, context_offset, flag, message, status);
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_IMPROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_IMPROBE);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -326,7 +326,7 @@ int MPID_nem_ptl_pkt_cancel_send_req_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pk
     search_req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     MPID_nem_ptl_init_req(search_req);
     MPIR_ERR_CHKANDJUMP1(!search_req, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Request_create");
-    MPIU_Object_set_ref(search_req, 2); /* 1 ref for progress engine and 1 ref for us */
+    MPIR_Object_set_ref(search_req, 2); /* 1 ref for progress engine and 1 ref for us */
     search_req->kind = MPIR_REQUEST_KIND__MPROBE;
 
     /* create a dummy ME to use for searching the list */

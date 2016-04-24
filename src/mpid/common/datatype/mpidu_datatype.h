@@ -13,7 +13,7 @@
 /* NOTE: 
  * - struct MPIDU_Dataloop and MPIDU_Segment are defined in 
  *   src/mpid/common/datatype/mpidu_dataloop.h (and gen_dataloop.h).
- * - MPIU_Object_alloc_t is defined in src/include/mpihandle.h
+ * - MPIR_Object_alloc_t is defined in src/include/mpihandle.h
  */
 
 #define MPIDU_Datatype_get_ptr(a,ptr)   MPIR_Getb_ptr(Datatype,a,0x000000ff,ptr)
@@ -22,7 +22,7 @@
 #define MPIDU_Datatype_get_basic_id(a) ((a)&0x000000ff)
 #define MPIDU_Datatype_get_basic_size(a) (((a)&0x0000ff00)>>8)
 
-#define MPIDU_Datatype_add_ref(datatype_ptr) MPIU_Object_add_ref((datatype_ptr))
+#define MPIDU_Datatype_add_ref(datatype_ptr) MPIR_Object_add_ref((datatype_ptr))
 
 #define MPIDU_Datatype_get_basic_type(a,basic_type_) do {                    \
     void *ptr;								\
@@ -33,7 +33,7 @@
             break;							\
         case HANDLE_KIND_INDIRECT:					\
             ptr = ((MPIDU_Datatype *)					\
-		   MPIU_Handle_get_ptr_indirect(a,&MPIDU_Datatype_mem));	\
+		   MPIR_Handle_get_ptr_indirect(a,&MPIDU_Datatype_mem));	\
             basic_type_ = ((MPIDU_Datatype *) ptr)->basic_type;			\
             break;							\
         case HANDLE_KIND_BUILTIN:					\
@@ -60,7 +60,7 @@
 #define MPIDU_Datatype_release(datatype_ptr) do {                            \
     int inuse_;								    \
 									    \
-    MPIU_Object_release_ref((datatype_ptr),&inuse_);			    \
+    MPIR_Object_release_ref((datatype_ptr),&inuse_);			    \
     if (!inuse_) {							    \
         int lmpi_errno = MPI_SUCCESS;					    \
 	if (MPIR_Process.attr_free && datatype_ptr->attributes) {	    \
@@ -71,7 +71,7 @@
 	if (datatype_ptr->free_fn) {					    \
 	    mpi_errno = (datatype_ptr->free_fn)( datatype_ptr );	    \
 	     if (mpi_errno) {						    \
-		 MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_FREE);		    \
+		 MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_FREE);		    \
 		 return MPIR_Err_return_comm( 0, FCNAME, mpi_errno );	    \
 	     }								    \
 	} */								    \
@@ -92,7 +92,7 @@
             break;							\
         case HANDLE_KIND_INDIRECT:					\
             ptr = ((MPIDU_Datatype *)					\
-		   MPIU_Handle_get_ptr_indirect(a,&MPIDU_Datatype_mem));	\
+		   MPIR_Handle_get_ptr_indirect(a,&MPIDU_Datatype_mem));	\
             size_ = ((MPIDU_Datatype *) ptr)->size;			\
             break;							\
         case HANDLE_KIND_BUILTIN:					\
@@ -145,7 +145,7 @@
             break;							\
         case HANDLE_KIND_INDIRECT:					\
             ptr = ((MPIDU_Datatype *)					\
-		   MPIU_Handle_get_ptr_indirect(a,&MPIDU_Datatype_mem));	\
+		   MPIR_Handle_get_ptr_indirect(a,&MPIDU_Datatype_mem));	\
             MPIDU_GET_FIELD(hetero_,depth_,_depth);                      \
             break;							\
         case HANDLE_KIND_INVALID:					\
@@ -165,7 +165,7 @@
             break;							\
         case HANDLE_KIND_INDIRECT:					\
             ptr = ((MPIDU_Datatype *)					\
-		   MPIU_Handle_get_ptr_indirect(a,&MPIDU_Datatype_mem));	\
+		   MPIR_Handle_get_ptr_indirect(a,&MPIDU_Datatype_mem));	\
             MPIDU_GET_FIELD(hetero_,depth_,_size);                       \
             break;							\
         case HANDLE_KIND_INVALID:					\
@@ -185,7 +185,7 @@
             break;							\
         case HANDLE_KIND_INDIRECT:					\
             ptr = ((MPIDU_Datatype *)					\
-		   MPIU_Handle_get_ptr_indirect(a,&MPIDU_Datatype_mem));	\
+		   MPIR_Handle_get_ptr_indirect(a,&MPIDU_Datatype_mem));	\
             MPIDU_GET_FIELD(hetero_,lptr_,);                             \
             break;							\
         case HANDLE_KIND_INVALID:					\
@@ -204,7 +204,7 @@
             break;							\
         case HANDLE_KIND_INDIRECT:					\
             ptr = ((MPIDU_Datatype *)					\
-		   MPIU_Handle_get_ptr_indirect(a,&MPIDU_Datatype_mem));	\
+		   MPIR_Handle_get_ptr_indirect(a,&MPIDU_Datatype_mem));	\
             MPIDU_SET_FIELD(hetero_,depth_,_depth);                      \
             break;							\
         case HANDLE_KIND_INVALID:					\
@@ -224,7 +224,7 @@
             break;							\
         case HANDLE_KIND_INDIRECT:					\
             ptr = ((MPIDU_Datatype *)					\
-		   MPIU_Handle_get_ptr_indirect(a,&MPIDU_Datatype_mem));	\
+		   MPIR_Handle_get_ptr_indirect(a,&MPIDU_Datatype_mem));	\
             MPIDU_SET_FIELD(hetero_,depth_,_size);                       \
             break;							\
         case HANDLE_KIND_INVALID:					\
@@ -244,7 +244,7 @@
             break;							\
         case HANDLE_KIND_INDIRECT:					\
             ptr = ((MPIDU_Datatype *)					\
-		   MPIU_Handle_get_ptr_indirect(a,&MPIDU_Datatype_mem));	\
+		   MPIR_Handle_get_ptr_indirect(a,&MPIDU_Datatype_mem));	\
             MPIDU_SET_FIELD(hetero_,lptr_,);                             \
             break;							\
         case HANDLE_KIND_INVALID:					\
@@ -264,7 +264,7 @@
             break;							    \
         case HANDLE_KIND_INDIRECT:					    \
             ptr = ((MPIDU_Datatype *)					    \
-		   MPIU_Handle_get_ptr_indirect(a,&MPIDU_Datatype_mem));	    \
+		   MPIR_Handle_get_ptr_indirect(a,&MPIDU_Datatype_mem));	    \
             extent_ = ((MPIDU_Datatype *) ptr)->extent;			    \
             break;							    \
         case HANDLE_KIND_INVALID:					    \
@@ -355,13 +355,13 @@ typedef struct MPIDU_Datatype_contents {
   with each MPI object type having a separate routine.  Since reference
   count changes are always up or down one, and since all MPI objects 
   are defined to have the 'ref_count' field in the same place, the current
-  ADI3 API uses two routines, 'MPIU_Object_add_ref' and 
-  'MPIU_Object_release_ref', to increment and decrement the reference count.
+  ADI3 API uses two routines, 'MPIR_Object_add_ref' and
+  'MPIR_Object_release_ref', to increment and decrement the reference count.
 
   S*/
 typedef struct MPIDU_Datatype { 
-    /* handle and ref_count are filled in by MPIU_Handle_obj_alloc() */
-    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
+    /* handle and ref_count are filled in by MPIR_Handle_obj_alloc() */
+    MPIR_OBJECT_HEADER; /* adds handle and ref_count fields */
 
     /* basic parameters for datatype, accessible via MPI calls */
     MPI_Aint size;   /* MPI_Count could be 128 bits, so use MPI_Aint */
@@ -431,7 +431,7 @@ typedef struct MPIDU_Datatype {
 #endif
 } MPIDU_Datatype;
 
-extern MPIU_Object_alloc_t MPIDU_Datatype_mem;
+extern MPIR_Object_alloc_t MPIDU_Datatype_mem;
 
 /* Preallocated datatype objects */
 /* This value should be set to greatest value used as the type index suffix in

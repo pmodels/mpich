@@ -19,7 +19,7 @@
 #define GENERIC_Q_HEAD(q) ((q).head)
 
 #define GENERIC_Q_ENQUEUE_EMPTY(qp, ep, next_field) do {        \
-        MPIU_Assert (GENERIC_Q_EMPTY (*(qp)));                  \
+        MPIR_Assert (GENERIC_Q_EMPTY (*(qp)));                  \
         (qp)->head = (qp)->tail = ep;                           \
         (ep)->next_field = NULL;                                \
         PRINT_QUEUE (qp, next_field);                           \
@@ -40,7 +40,7 @@
    tail of a linked list of elements.  The list is inserted on the end
    of the queue. */
 #define GENERIC_Q_ENQUEUE_EMPTY_MULTIPLE(qp, ep0, ep1, next_field) do { \
-        MPIU_Assert (GENERIC_Q_EMPTY (*(qp)));                          \
+        MPIR_Assert (GENERIC_Q_EMPTY (*(qp)));                          \
         (qp)->head = ep0;                                               \
         (qp)->tail = ep1;                                               \
         (ep1)->next_field = NULL;                                       \
@@ -59,7 +59,7 @@
 
 
 #define GENERIC_Q_DEQUEUE(qp, epp, next_field) do {     \
-        MPIU_Assert (!GENERIC_Q_EMPTY (*(qp)));         \
+        MPIR_Assert (!GENERIC_Q_EMPTY (*(qp)));         \
         *(epp) = (qp)->head;                            \
         (qp)->head = (*(epp))->next_field;              \
         if ((qp)->head == NULL)                         \
@@ -68,7 +68,7 @@
 
 /* remove the elements from the top of the queue starting with ep0 through ep1 */
 #define GENERIC_Q_REMOVE_ELEMENTS(qp, ep0, ep1, next_field) do {        \
-        MPIU_Assert (GENERIC_Q_HEAD (*(qp)) == (ep0));                  \
+        MPIR_Assert (GENERIC_Q_HEAD (*(qp)) == (ep0));                  \
         (qp)->head = (ep1)->next_field;                                 \
         if ((qp)->head == NULL)                                         \
             (qp)->tail = NULL;                                          \
@@ -82,7 +82,7 @@
 #define GENERIC_L_HEAD(q) ((q).head)
 
 #define GENERIC_L_ADD_EMPTY(qp, ep, next_field, prev_field) do {        \
-        MPIU_Assert (GENERIC_L_EMPTY (*(qp)));                          \
+        MPIR_Assert (GENERIC_L_EMPTY (*(qp)));                          \
         (qp)->head = ep;                                                \
         (ep)->next_field = (ep)->prev_field = NULL;                     \
     } while (0)
@@ -100,7 +100,7 @@
     } while (0)
 
 #define GENERIC_L_REMOVE(qp, ep, next_field, prev_field) do {   \
-        MPIU_Assert (!GENERIC_L_EMPTY (*(qp)));                 \
+        MPIR_Assert (!GENERIC_L_EMPTY (*(qp)));                 \
         if ((ep)->prev_field)                                   \
             ((ep)->prev_field)->next_field = (ep)->next_field;  \
         else                                                    \

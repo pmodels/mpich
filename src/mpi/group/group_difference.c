@@ -34,9 +34,9 @@ int MPIR_Group_difference_impl(MPIR_Group *group_ptr1, MPIR_Group *group_ptr2, M
 {
     int mpi_errno = MPI_SUCCESS;
     int size1, i, k, g1_idx, g2_idx, l1_pid, l2_pid, nnew;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
     /* Return a group consisting of the members of group1 that are *not*
        in group2 */
     size1 = group_ptr1->size;
@@ -97,7 +97,7 @@ int MPIR_Group_difference_impl(MPIR_Group *group_ptr1, MPIR_Group *group_ptr2, M
 
 
  fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_DIFFERENCE_IMPL);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -142,12 +142,12 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup
     MPIR_Group *group_ptr1 = NULL;
     MPIR_Group *group_ptr2 = NULL;
     MPIR_Group *new_group_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_DIFFERENCE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GROUP_DIFFERENCE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GROUP_DIFFERENCE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GROUP_DIFFERENCE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -190,7 +190,7 @@ int MPI_Group_difference(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GROUP_DIFFERENCE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GROUP_DIFFERENCE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

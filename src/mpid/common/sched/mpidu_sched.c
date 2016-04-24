@@ -130,7 +130,7 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
     MPIR_Request *r = s->req;
     MPIR_Comm *comm;
 
-    MPIU_Assert(e->status == MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED);
+    MPIR_Assert(e->status == MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED);
 
     switch (e->type) {
     case MPIDU_SCHED_ENTRY_SEND:
@@ -332,16 +332,16 @@ static int MPIDU_Sched_continue(struct MPIDU_Sched *s)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* creates a new opaque schedule object and returns a handle to it in (*sp) */
-int MPIDU_Sched_create(MPID_Sched_t * sp)
+int MPIDU_Sched_create(MPIR_Sched_t * sp)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched *s;
-    MPIU_CHKPMEM_DECL(2);
+    MPIR_CHKPMEM_DECL(2);
 
     *sp = NULL;
 
     /* this mem will be freed by the progress engine when the request is completed */
-    MPIU_CHKPMEM_MALLOC(s, struct MPIDU_Sched *, sizeof(struct MPIDU_Sched), mpi_errno,
+    MPIR_CHKPMEM_MALLOC(s, struct MPIDU_Sched *, sizeof(struct MPIDU_Sched), mpi_errno,
                         "schedule object");
 
     s->size = MPIDU_SCHED_INITIAL_ENTRIES;
@@ -354,18 +354,18 @@ int MPIDU_Sched_create(MPID_Sched_t * sp)
     s->prev = NULL;     /* only needed for sanity checks */
 
     /* this mem will be freed by the progress engine when the request is completed */
-    MPIU_CHKPMEM_MALLOC(s->entries, struct MPIDU_Sched_entry *,
+    MPIR_CHKPMEM_MALLOC(s->entries, struct MPIDU_Sched_entry *,
                         MPIDU_SCHED_INITIAL_ENTRIES * sizeof(struct MPIDU_Sched_entry), mpi_errno,
                         "schedule entries vector");
 
     /* TODO in a debug build, defensively mark all entries as status=INVALID */
 
-    MPIU_CHKPMEM_COMMIT();
+    MPIR_CHKPMEM_COMMIT();
     *sp = s;
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -374,12 +374,12 @@ int MPIDU_Sched_create(MPID_Sched_t * sp)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* clones orig and returns a handle to the new schedule in (*cloned) */
-int MPIDU_Sched_clone(MPID_Sched_t orig, MPID_Sched_t * cloned)
+int MPIDU_Sched_clone(MPIR_Sched_t orig, MPIR_Sched_t * cloned)
 {
     int mpi_errno = MPI_SUCCESS;
     /* TODO implement this function for real */
-    MPIU_Assert_fmt_msg(FALSE, ("clone not yet implemented"));
-    MPIU_Assertp(FALSE);
+    MPIR_Assert_fmt_msg(FALSE, ("clone not yet implemented"));
+    MPIR_Assertp(FALSE);
     return mpi_errno;
 }
 
@@ -387,24 +387,24 @@ int MPIDU_Sched_clone(MPID_Sched_t orig, MPID_Sched_t * cloned)
 #define FUNCNAME MPIDU_Sched_start
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-/* sets (*sp) to MPID_SCHED_NULL and gives you back a request pointer in (*req).
+/* sets (*sp) to MPIR_SCHED_NULL and gives you back a request pointer in (*req).
  * The caller is giving up ownership of the opaque schedule object. */
-int MPIDU_Sched_start(MPID_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request ** req)
+int MPIDU_Sched_start(MPIR_Sched_t * sp, MPIR_Comm * comm, int tag, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *r;
     struct MPIDU_Sched *s = *sp;
 
     *req = NULL;
-    *sp = MPID_SCHED_NULL;
+    *sp = MPIR_SCHED_NULL;
 
     /* sanity check the schedule */
-    MPIU_Assert(s->num_entries <= s->size);
-    MPIU_Assert(s->num_entries == 0 || s->idx < s->num_entries);
-    MPIU_Assert(s->req == NULL);
-    MPIU_Assert(s->next == NULL);
-    MPIU_Assert(s->prev == NULL);
-    MPIU_Assert(s->entries != NULL);
+    MPIR_Assert(s->num_entries <= s->size);
+    MPIR_Assert(s->num_entries == 0 || s->idx < s->num_entries);
+    MPIR_Assert(s->req == NULL);
+    MPIR_Assert(s->next == NULL);
+    MPIR_Assert(s->prev == NULL);
+    MPIR_Assert(s->entries != NULL);
 
     /* now create and populate the request */
     r = MPIR_Request_create(MPIR_REQUEST_KIND__COLL);
@@ -468,8 +468,8 @@ static int MPIDU_Sched_add_entry(struct MPIDU_Sched *s, int *idx, struct MPIDU_S
     int i;
     struct MPIDU_Sched_entry *ei;
 
-    MPIU_Assert(s->entries != NULL);
-    MPIU_Assert(s->size > 0);
+    MPIR_Assert(s->entries != NULL);
+    MPIR_Assert(s->size > 0);
 
     if (s->num_entries == s->size) {
         /* need to grow the entries array */
@@ -498,7 +498,7 @@ static int MPIDU_Sched_add_entry(struct MPIDU_Sched *s, int *idx, struct MPIDU_S
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* do these ops need an entry handle returned? */
 int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
-                     MPIR_Comm * comm, MPID_Sched_t s)
+                     MPIR_Comm * comm, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -538,7 +538,7 @@ int MPIDU_Sched_send(const void *buf, MPI_Aint count, MPI_Datatype datatype, int
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, int dest,
-                      MPIR_Comm * comm, MPID_Sched_t s)
+                      MPIR_Comm * comm, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -578,7 +578,7 @@ int MPIDU_Sched_ssend(const void *buf, MPI_Aint count, MPI_Datatype datatype, in
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sched_send_defer(const void *buf, const MPI_Aint * count, MPI_Datatype datatype, int dest,
-                           MPIR_Comm * comm, MPID_Sched_t s)
+                           MPIR_Comm * comm, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -617,7 +617,7 @@ int MPIDU_Sched_send_defer(const void *buf, const MPI_Aint * count, MPI_Datatype
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, int src,
-                            MPIR_Comm * comm, MPI_Status * status, MPID_Sched_t s)
+                            MPIR_Comm * comm, MPI_Status * status, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -652,7 +652,7 @@ int MPIDU_Sched_recv_status(void *buf, MPI_Aint count, MPI_Datatype datatype, in
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, MPIR_Comm * comm,
-                     MPID_Sched_t s)
+                     MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -687,7 +687,7 @@ int MPIDU_Sched_recv(void *buf, MPI_Aint count, MPI_Datatype datatype, int src, 
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Datatype datatype,
-                       MPI_Op op, MPID_Sched_t s)
+                       MPI_Op op, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -733,7 +733,7 @@ int MPIDU_Sched_reduce(const void *inbuf, void *inoutbuf, MPI_Aint count, MPI_Da
  * Packing/unpacking can be accomplished by passing MPI_PACKED as either intype
  * or outtype. */
 int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype,
-                     void *outbuf, MPI_Aint outcount, MPI_Datatype outtype, MPID_Sched_t s)
+                     void *outbuf, MPI_Aint outcount, MPI_Datatype outtype, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -785,7 +785,7 @@ int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* require that all previously added ops are complete before subsequent ops
  * may begin to execute */
-int MPIDU_Sched_barrier(MPID_Sched_t s)
+int MPIDU_Sched_barrier(MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -806,7 +806,7 @@ int MPIDU_Sched_barrier(MPID_Sched_t s)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* buffer management, fancy reductions, etc */
-int MPIDU_Sched_cb(MPID_Sched_cb_t * cb_p, void *cb_state, MPID_Sched_t s)
+int MPIDU_Sched_cb(MPIR_Sched_cb_t * cb_p, void *cb_state, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;
@@ -837,7 +837,7 @@ int MPIDU_Sched_cb(MPID_Sched_cb_t * cb_p, void *cb_state, MPID_Sched_t s)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /* buffer management, fancy reductions, etc */
-int MPIDU_Sched_cb2(MPID_Sched_cb2_t * cb_p, void *cb_state, void *cb_state2, MPID_Sched_t s)
+int MPIDU_Sched_cb2(MPIR_Sched_cb2_t * cb_p, void *cb_state, void *cb_state2, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDU_Sched_entry *e = NULL;

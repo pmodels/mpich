@@ -17,9 +17,9 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
     MPIR_Request * rreq;
     int found;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_IRECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IRECV);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_IRECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IRECV);
 
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
 			"rank=%d, tag=%d, context=%d", 
@@ -83,7 +83,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 
             if (MPIR_Request_is_complete(rreq)) {
                 /* is it ever possible to have (cc==0 && recv_pending>0) ? */
-                MPIU_Assert(!recv_pending);
+                MPIR_Assert(!recv_pending);
 
                 /* All of the data has arrived, we need to copy the data and 
                    then free the buffer. */
@@ -100,7 +100,7 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
 	    {
                 /* there should never be outstanding completion events for an unexpected
                  * recv without also having a "pending recv" */
-                MPIU_Assert(recv_pending);
+                MPIR_Assert(recv_pending);
 		/* The data is still being transfered across the net.  We'll 
 		   leave it to the progress engine to handle once the
 		   entire message has arrived. */
@@ -171,6 +171,6 @@ int MPID_Irecv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int 
  fn_fail:
     MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,"IRECV errno: 0x%08x", mpi_errno);
     MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,"(class: %d)", MPIR_ERR_GET_CLASS(mpi_errno));
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_IRECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IRECV);
     return mpi_errno;
 }

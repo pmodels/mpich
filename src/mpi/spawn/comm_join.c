@@ -139,18 +139,18 @@ int MPI_Comm_join(int fd, MPI_Comm *intercomm)
     int mpi_errno = MPI_SUCCESS, err;
     MPIR_Comm *intercomm_ptr;
     char *local_port, *remote_port;
-    MPIU_CHKLMEM_DECL(2);
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_JOIN);
+    MPIR_CHKLMEM_DECL(2);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_JOIN);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_JOIN);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_JOIN);
 
     /* ... body of routine ...  */
     
-    MPIU_CHKLMEM_MALLOC(local_port, char *, MPI_MAX_PORT_NAME, mpi_errno, "local port name");
-    MPIU_CHKLMEM_MALLOC(remote_port, char *, MPI_MAX_PORT_NAME, mpi_errno, "remote port name");
+    MPIR_CHKLMEM_MALLOC(local_port, char *, MPI_MAX_PORT_NAME, mpi_errno, "local port name");
+    MPIR_CHKLMEM_MALLOC(remote_port, char *, MPI_MAX_PORT_NAME, mpi_errno, "remote port name");
 
     MPL_VG_MEM_INIT(local_port, MPI_MAX_PORT_NAME * sizeof(char));
     
@@ -186,8 +186,8 @@ int MPI_Comm_join(int fd, MPI_Comm *intercomm)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIU_CHKLMEM_FREEALL();
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_JOIN);
+    MPIR_CHKLMEM_FREEALL();
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_JOIN);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

@@ -51,15 +51,15 @@ int MPI_Type_free_keyval(int *type_keyval)
 #ifdef HAVE_ERROR_CHECKING
     static const char FCNAME[] = "MPI_Type_free_keyval";
 #endif
-    MPIR_Keyval *keyval_ptr = NULL;
+    MPII_Keyval *keyval_ptr = NULL;
     int          in_use;
     int          mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_FREE_KEYVAL);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_FREE_KEYVAL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_FREE_KEYVAL);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_FREE_KEYVAL);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -75,14 +75,14 @@ int MPI_Type_free_keyval(int *type_keyval)
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPIR_Keyval_get_ptr( *type_keyval, keyval_ptr );
+    MPII_Keyval_get_ptr( *type_keyval, keyval_ptr );
     
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_Keyval_valid_ptr( keyval_ptr, mpi_errno );
+	    MPII_Keyval_valid_ptr( keyval_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
@@ -93,9 +93,9 @@ int MPI_Type_free_keyval(int *type_keyval)
     
     if (!keyval_ptr->was_freed) {
         keyval_ptr->was_freed = 1;
-        MPIR_Keyval_release_ref( keyval_ptr, &in_use);
+        MPII_Keyval_release_ref( keyval_ptr, &in_use);
         if (!in_use) {
-            MPIU_Handle_obj_free( &MPIR_Keyval_mem, keyval_ptr );
+            MPIR_Handle_obj_free( &MPII_Keyval_mem, keyval_ptr );
         }
     }
     *type_keyval = MPI_KEYVAL_INVALID;
@@ -105,7 +105,7 @@ int MPI_Type_free_keyval(int *type_keyval)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_FREE_KEYVAL);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_FREE_KEYVAL);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

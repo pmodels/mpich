@@ -55,5 +55,5 @@ void MPIDU_Datatype_free(MPIDU_Datatype *ptr)
 	MPIDU_Dataloop_free(&(ptr->hetero_dloop));
     }
 #endif /* MPID_HAS_HETERO */
-    MPIU_Handle_obj_free(&MPIDU_Datatype_mem, ptr);
+    MPIR_Handle_obj_free(&MPIDU_Datatype_mem, ptr);
 }

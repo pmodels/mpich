@@ -376,12 +376,12 @@ extern void MPIR_T_PVAR_REGISTER_impl(
     do { \
         void *addr_; \
         /* Allowable datatypes only */ \
-        MPIU_Assert((dtype_) == MPI_INT); \
+        MPIR_Assert((dtype_) == MPI_INT); \
         /* Double check if dtype_ and name_ match */ \
-        MPIU_Assert(sizeof(PVAR_STATE_##name_) == MPID_Datatype_get_basic_size(dtype_)); \
-        MPIU_Assert((flags_) & MPIR_T_PVAR_FLAG_CONTINUOUS); \
+        MPIR_Assert(sizeof(PVAR_STATE_##name_) == MPID_Datatype_get_basic_size(dtype_)); \
+        MPIR_Assert((flags_) & MPIR_T_PVAR_FLAG_CONTINUOUS); \
         /* State pvars should be describled further by an enum */ \
-        MPIU_Assert((etype_) != MPI_T_ENUM_NULL); \
+        MPIR_Assert((etype_) != MPI_T_ENUM_NULL); \
         PVAR_STATE_##name_ = (initval_); \
         addr_ = &PVAR_STATE_##name_; \
         MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_STATE, dtype_, #name_, \
@@ -393,10 +393,10 @@ extern void MPIR_T_PVAR_REGISTER_impl(
             etype_, verb_, bind_, flags_, get_value_, get_count_, cat_, desc_) \
     do { \
         /* Allowable datatypes */ \
-        MPIU_Assert((dtype_) == MPI_INT); \
-        MPIU_Assert((flags_) & MPIR_T_PVAR_FLAG_CONTINUOUS); \
-        MPIU_Assert((etype_) != MPI_T_ENUM_NULL); \
-        MPIU_Assert((addr_) != NULL || (get_value_) != NULL); \
+        MPIR_Assert((dtype_) == MPI_INT); \
+        MPIR_Assert((flags_) & MPIR_T_PVAR_FLAG_CONTINUOUS); \
+        MPIR_Assert((etype_) != MPI_T_ENUM_NULL); \
+        MPIR_Assert((addr_) != NULL || (get_value_) != NULL); \
         MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_STATE, dtype_, #name_, \
             addr_, count_, etype_, verb_, bind_, flags_, get_value_, cat_, desc_); \
     } while (0)
@@ -430,11 +430,11 @@ extern void MPIR_T_PVAR_REGISTER_impl(
     do { \
         void *addr_; \
         /* Allowable datatypes only */ \
-        MPIU_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
+        MPIR_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
                     (dtype_) == MPI_UNSIGNED_LONG_LONG || (dtype_) == MPI_DOUBLE); \
         /* Double check if dtype_ and name_ match */ \
-        MPIU_Assert(sizeof(PVAR_LEVEL_##name_) == MPID_Datatype_get_basic_size(dtype_)); \
-        MPIU_Assert((flags_) & MPIR_T_PVAR_FLAG_CONTINUOUS); \
+        MPIR_Assert(sizeof(PVAR_LEVEL_##name_) == MPID_Datatype_get_basic_size(dtype_)); \
+        MPIR_Assert((flags_) & MPIR_T_PVAR_FLAG_CONTINUOUS); \
         PVAR_LEVEL_##name_ = (initval_); \
         addr_ = &PVAR_LEVEL_##name_; \
         MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_LEVEL, dtype_, #name_, \
@@ -446,10 +446,10 @@ extern void MPIR_T_PVAR_REGISTER_impl(
             addr_, count_, verb_, bind_, flags_, get_value_, get_count, cat_, desc_) \
     do { \
         /* Allowable datatypes */ \
-        MPIU_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
+        MPIR_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
                     (dtype_) == MPI_UNSIGNED_LONG_LONG || (dtype_) == MPI_DOUBLE); \
-        MPIU_Assert((flags_) & MPIR_T_PVAR_FLAG_CONTINUOUS); \
-        MPIU_Assert((addr_) != NULL || (get_value_) != NULL); \
+        MPIR_Assert((flags_) & MPIR_T_PVAR_FLAG_CONTINUOUS); \
+        MPIR_Assert((addr_) != NULL || (get_value_) != NULL); \
         MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_LEVEL, dtype_, #name_, \
             addr_, count_, MPI_T_ENUM_NULL, verb_, bind_, flags_, get_value_, \
             get_count, cat_, desc_); \
@@ -476,11 +476,11 @@ extern void MPIR_T_PVAR_REGISTER_impl(
     do { \
         void *addr_; \
         /* Allowable datatypes only */ \
-        MPIU_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
+        MPIR_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
                     (dtype_) == MPI_UNSIGNED_LONG_LONG || (dtype_) == MPI_DOUBLE); \
         /* Double check if dtype_ and name_ match */ \
-        MPIU_Assert(sizeof(PVAR_SIZE_##name_) == MPID_Datatype_get_basic_size(dtype_)); \
-        MPIU_Assert((flags_) & MPIR_T_PVAR_FLAG_CONTINUOUS); \
+        MPIR_Assert(sizeof(PVAR_SIZE_##name_) == MPID_Datatype_get_basic_size(dtype_)); \
+        MPIR_Assert((flags_) & MPIR_T_PVAR_FLAG_CONTINUOUS); \
         PVAR_SIZE_##name_ = (initval_); \
         addr_ = &PVAR_SIZE_##name_; \
         MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_SIZE, dtype_, #name_, \
@@ -492,10 +492,10 @@ extern void MPIR_T_PVAR_REGISTER_impl(
             addr_, count_, verb_, bind_, flags_, get_value_, get_count_, cat_, desc_) \
     do { \
         /* Allowable datatypes */ \
-        MPIU_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
+        MPIR_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
                     (dtype_) == MPI_UNSIGNED_LONG_LONG || (dtype_) == MPI_DOUBLE); \
-        MPIU_Assert((flags_) & MPIR_T_PVAR_FLAG_CONTINUOUS); \
-        MPIU_Assert((addr_) != NULL || (get_value_) != NULL); \
+        MPIR_Assert((flags_) & MPIR_T_PVAR_FLAG_CONTINUOUS); \
+        MPIR_Assert((addr_) != NULL || (get_value_) != NULL); \
         MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_SIZE, dtype_, #name_, \
             addr_, count_, MPI_T_ENUM_NULL, verb_, bind_, flags_, get_value_, \
             get_count_, cat_, desc_); \
@@ -508,7 +508,7 @@ extern void MPIR_T_PVAR_REGISTER_impl(
 /* Interfaces through pointer or name */
 #define MPIR_T_PVAR_PERCENTAGE_SET_VAR_impl(ptr_, val_) \
     do { \
-        MPIU_Assert(0.0 <= (val_) && (val_) <= 1.0); \
+        MPIR_Assert(0.0 <= (val_) && (val_) <= 1.0); \
         *(ptr_) = (val_); \
     } while (0)
 #define MPIR_T_PVAR_PERCENTAGE_GET_VAR_impl(ptr_) \
@@ -525,10 +525,10 @@ extern void MPIR_T_PVAR_REGISTER_impl(
     do { \
         void *addr_; \
         /* Allowable datatypes only */ \
-        MPIU_Assert((dtype_) == MPI_DOUBLE); \
+        MPIR_Assert((dtype_) == MPI_DOUBLE); \
         /* Double check if dtype_ and name_ match */ \
-        MPIU_Assert(sizeof(PVAR_PERCENTAGE_##name_) == MPID_Datatype_get_basic_size(dtype_)); \
-        MPIU_Assert((flags_) & MPIR_T_PVAR_FLAG_CONTINUOUS); \
+        MPIR_Assert(sizeof(PVAR_PERCENTAGE_##name_) == MPID_Datatype_get_basic_size(dtype_)); \
+        MPIR_Assert((flags_) & MPIR_T_PVAR_FLAG_CONTINUOUS); \
         addr_ = &PVAR_PERCENTAGE_##name_; \
         PVAR_PERCENTAGE_##name_ = (initval_); \
         MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_PERCENTAGE, dtype_, #name_, \
@@ -540,9 +540,9 @@ extern void MPIR_T_PVAR_REGISTER_impl(
             addr_, count_, verb_, bind_, flags_, get_value_, get_count_, cat_, desc_) \
     do { \
         /* Allowable datatypes */ \
-        MPIU_Assert((dtype_) == MPI_DOUBLE); \
-        MPIU_Assert((flags_) & MPIR_T_PVAR_FLAG_CONTINUOUS); \
-        MPIU_Assert((addr_) != NULL || (get_value_) != NULL); \
+        MPIR_Assert((dtype_) == MPI_DOUBLE); \
+        MPIR_Assert((flags_) & MPIR_T_PVAR_FLAG_CONTINUOUS); \
+        MPIR_Assert((addr_) != NULL || (get_value_) != NULL); \
         MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_PERCENTAGE, dtype_, #name_, \
             addr_, count_, MPI_T_ENUM_NULL, verb_, bind_, flags_, get_value_, \
             get_count_, cat_, desc_); \
@@ -576,10 +576,10 @@ extern void MPIR_T_PVAR_REGISTER_impl(
     do { \
         void *addr_; \
         /* Allowable datatypes only */ \
-        MPIU_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
+        MPIR_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
                     (dtype_) == MPI_UNSIGNED_LONG_LONG); \
         /* Double check if dtype_ and name_ match*/ \
-        MPIU_Assert(sizeof(PVAR_COUNTER_##name_) == MPID_Datatype_get_basic_size(dtype_)); \
+        MPIR_Assert(sizeof(PVAR_COUNTER_##name_) == MPID_Datatype_get_basic_size(dtype_)); \
         PVAR_COUNTER_##name_ = 0; \
         addr_ = &PVAR_COUNTER_##name_; \
         MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_COUNTER, dtype_, #name_, \
@@ -591,9 +591,9 @@ extern void MPIR_T_PVAR_REGISTER_impl(
             addr_, count_, verb_, bind_, flags_, get_value_, get_count_, cat_, desc_) \
     do { \
         /* Allowable datatypes */ \
-        MPIU_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
+        MPIR_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
                     (dtype_) == MPI_UNSIGNED_LONG_LONG); \
-        MPIU_Assert((addr_) != NULL || (get_value_) != NULL); \
+        MPIR_Assert((addr_) != NULL || (get_value_) != NULL); \
         MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_COUNTER, dtype_, #name_, \
             addr_, count_, MPI_T_ENUM_NULL, verb_, bind_, flags_, get_value_, \
             get_count_, cat_, desc_); \
@@ -630,10 +630,10 @@ extern void MPIR_T_PVAR_REGISTER_impl(
         void *addr_; \
         int count_;  \
         /* Allowable datatypes only */ \
-        MPIU_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
+        MPIR_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
                     (dtype_) == MPI_UNSIGNED_LONG_LONG); \
         /* Double check if dtype_ and name_ match */ \
-        MPIU_Assert(sizeof(PVAR_COUNTER_##name_[0]) == MPID_Datatype_get_basic_size(dtype_)); \
+        MPIR_Assert(sizeof(PVAR_COUNTER_##name_[0]) == MPID_Datatype_get_basic_size(dtype_)); \
         addr_ = PVAR_COUNTER_##name_; \
         MPIR_T_PVAR_COUNTER_ARRAY_INIT_impl(name_); \
         count_ = sizeof(PVAR_COUNTER_##name_)/sizeof(mpit_pvar_##name_[0]); \
@@ -668,10 +668,10 @@ extern void MPIR_T_PVAR_REGISTER_impl(
     do { \
         void *addr; \
         /* Allowable datatypes only */ \
-        MPIU_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
+        MPIR_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
                     (dtype_) == MPI_UNSIGNED_LONG_LONG || (dtype_) == MPI_DOUBLE); \
         /* Double check if dtype_ and name_ match*/ \
-        MPIU_Assert(sizeof(PVAR_AGGREGATE_##name_) == MPID_Datatype_get_basic_size(dtype_)); \
+        MPIR_Assert(sizeof(PVAR_AGGREGATE_##name_) == MPID_Datatype_get_basic_size(dtype_)); \
         PVAR_AGGREGATE_##name_ = 0; \
         addr_ = &PVAR_AGGREGATE_##name_; \
         MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_AGGREGATE, dtype_, #name_, \
@@ -683,9 +683,9 @@ extern void MPIR_T_PVAR_REGISTER_impl(
             addr_, count_, verb_, bind_, flags_, get_value_, get_count_, cat_, desc_) \
     do { \
         /* Allowable datatypes */ \
-        MPIU_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
+        MPIR_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
                     (dtype_) == MPI_UNSIGNED_LONG_LONG || (dtype_) == MPI_DOUBLE); \
-        MPIU_Assert((addr_) != NULL || (get_value_) != NULL); \
+        MPIR_Assert((addr_) != NULL || (get_value_) != NULL); \
         MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_AGGREGATE, dtype_, #name_, \
             addr_, count_, MPI_T_ENUM_NULL, verb_, bind_, flags_, get_value_, \
             get_count_, cat_, desc_); \
@@ -745,7 +745,7 @@ void get_timer_time_in_double(MPIR_T_pvar_timer_t *timer, void *obj_handle,
         void *addr_; \
         void *count_addr_; \
         /* Allowable datatypes only */ \
-        MPIU_Assert((dtype_) == MPI_DOUBLE); \
+        MPIR_Assert((dtype_) == MPI_DOUBLE); \
         MPIR_T_PVAR_TIMER_INIT_impl(name_); \
         addr_ = &PVAR_TIMER_##name_; \
         count_addr_ = &(PVAR_TIMER_##name_.count); \
@@ -894,7 +894,7 @@ void get_timer_time_in_double(MPIR_T_pvar_timer_t *timer, void *obj_handle,
     do { \
         void *addr_; \
         /* Allowable datatypes only */ \
-        MPIU_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
+        MPIR_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
                     (dtype_) == MPI_UNSIGNED_LONG_LONG || (dtype_) == MPI_DOUBLE); \
         switch (dtype_) { \
         case MPI_UNSIGNED: \
@@ -918,9 +918,9 @@ void get_timer_time_in_double(MPIR_T_pvar_timer_t *timer, void *obj_handle,
             addr_, count_, verb_, bind_, flags_, get_value_, get_count_, cat_, desc_) \
     do { \
         /* Allowable datatypes */ \
-        MPIU_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
+        MPIR_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
                     (dtype_) == MPI_UNSIGNED_LONG_LONG || (dtype_) == MPI_DOUBLE); \
-        MPIU_Assert((addr_) != NULL || (get_value_) != NULL); \
+        MPIR_Assert((addr_) != NULL || (get_value_) != NULL); \
         MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_HIGHWATERMARK, dtype_, #name_, \
             addr_, count_, MPI_T_ENUM_NULL, verb_, bind_, flags_, get_value_, \
             get_count_, cat_, desc_); \
@@ -1059,7 +1059,7 @@ void get_timer_time_in_double(MPIR_T_pvar_timer_t *timer, void *obj_handle,
     do { \
         void *addr_; \
         /* Allowable datatypes only */ \
-        MPIU_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
+        MPIR_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
                     (dtype_) == MPI_UNSIGNED_LONG_LONG || (dtype_) == MPI_DOUBLE); \
         switch (dtype_) { \
         case MPI_UNSIGNED: \
@@ -1083,9 +1083,9 @@ void get_timer_time_in_double(MPIR_T_pvar_timer_t *timer, void *obj_handle,
             addr_, count_, verb_, bind_, flags_, get_value_, get_count_, cat_, desc_) \
     do { \
         /* Allowable datatypes */ \
-        MPIU_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
+        MPIR_Assert((dtype_) == MPI_UNSIGNED || (dtype_) == MPI_UNSIGNED_LONG || \
                     (dtype_) == MPI_UNSIGNED_LONG_LONG || (dtype_) == MPI_DOUBLE); \
-        MPIU_Assert((addr_) != NULL || (get_value_) != NULL); \
+        MPIR_Assert((addr_) != NULL || (get_value_) != NULL); \
         MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_LOWWATERMARK, dtype_, #name_, \
             addr_, count_, MPI_T_ENUM_NULL, verb_, bind_, flags_, get_value_, \
             get_count_, cat_, desc_); \
@@ -1178,7 +1178,7 @@ extern MPID_Thread_mutex_t mpi_t_mutex;
         int err_; \
         MPIR_T_THREAD_CHECK_BEGIN \
         MPID_Thread_mutex_create(&mpi_t_mutex, &err_); \
-        MPIU_Assert(err_ == 0); \
+        MPIR_Assert(err_ == 0); \
         MPIR_T_THREAD_CHECK_END \
     } while (0)
 
@@ -1187,7 +1187,7 @@ extern MPID_Thread_mutex_t mpi_t_mutex;
         int err_; \
         MPIR_T_THREAD_CHECK_BEGIN \
         MPID_Thread_mutex_destroy(&mpi_t_mutex, &err_); \
-        MPIU_Assert(err_ == 0); \
+        MPIR_Assert(err_ == 0); \
         MPIR_T_THREAD_CHECK_END \
     } while (0)
 

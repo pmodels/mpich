@@ -58,10 +58,10 @@ int MPI_Imrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message *message
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
     MPIR_Request *msgp = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_IMRECV);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IMRECV);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IMRECV);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IMRECV);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -113,14 +113,14 @@ int MPI_Imrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message *message
     mpi_errno = MPID_Imrecv(buf, count, datatype, msgp, &rreq);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPIU_Assert(rreq != NULL);
+    MPIR_Assert(rreq != NULL);
     *request = rreq->handle;
     *message = MPI_MESSAGE_NULL;
 
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IMRECV);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IMRECV);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

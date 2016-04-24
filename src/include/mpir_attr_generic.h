@@ -23,7 +23,7 @@
   Unfortunately, these have a slightly different calling sequence for
   each language, particularly when the size of a pointer is
   different from the size of a Fortran integer.  The unions
-  'MPIR_Copy_function' and 'MPIR_Delete_function' capture the differences
+  'copy_function' and 'delete_function' capture the differences
   in a single union type.
 
   The above comment is out of date but has never been updated as it should
@@ -115,18 +115,18 @@ typedef enum {
     MPIR_ATTR_PTR=0,
     MPIR_ATTR_AINT=1,
     MPIR_ATTR_INT=3
-} MPIR_AttrType;
+} MPIR_Attr_type;
 
-#define MPIR_ATTR_KIND(_a) (_a & 0x1)
+#define MPII_ATTR_KIND(_a) (_a & 0x1)
 
-int MPIR_CommSetAttr( MPI_Comm, int, void *, MPIR_AttrType );
-int MPIR_TypeSetAttr( MPI_Datatype, int, void *, MPIR_AttrType );
-int MPIR_WinSetAttr( MPI_Win, int, void *, MPIR_AttrType );
-int MPIR_CommGetAttr( MPI_Comm, int, void *, int *, MPIR_AttrType );
-int MPIR_TypeGetAttr( MPI_Datatype, int, void *, int *, MPIR_AttrType );
-int MPIR_WinGetAttr( MPI_Win, int, void *, int *, MPIR_AttrType );
+int MPII_Comm_set_attr( MPI_Comm, int, void *, MPIR_Attr_type );
+int MPII_Type_set_attr( MPI_Datatype, int, void *, MPIR_Attr_type );
+int MPII_Win_set_attr( MPI_Win, int, void *, MPIR_Attr_type );
+int MPII_Comm_get_attr( MPI_Comm, int, void *, int *, MPIR_Attr_type );
+int MPII_Type_get_attr( MPI_Datatype, int, void *, int *, MPIR_Attr_type );
+int MPII_Win_get_attr( MPI_Win, int, void *, int *, MPIR_Attr_type );
 
-int MPIR_CommGetAttr_fort( MPI_Comm, int, void *, int *, MPIR_AttrType );
+int MPII_Comm_get_attr_fort( MPI_Comm, int, void *, int *, MPIR_Attr_type );
 
 
 #if defined(__cplusplus)
@@ -152,12 +152,12 @@ extern "C" {
  */
 typedef
 int
-(MPIR_Attr_copy_proxy)(
+(MPII_Attr_copy_proxy)(
     MPI_Comm_copy_attr_function* user_function,
     int handle,
     int keyval,
     void* extra_state,
-    MPIR_AttrType attrib_type,
+    MPIR_Attr_type attrib_type,
     void* attrib,
     void** attrib_copy,
     int* flag
@@ -165,20 +165,20 @@ int
 
 typedef
 int
-(MPIR_Attr_delete_proxy)(
+(MPII_Attr_delete_proxy)(
     MPI_Comm_delete_attr_function* user_function,
     int handle,
     int keyval,
-    MPIR_AttrType attrib_type,
+    MPIR_Attr_type attrib_type,
     void* attrib,
     void* extra_state
     );
 
 void
-MPIR_Keyval_set_proxy(
+MPII_Keyval_set_proxy(
     int keyval,
-    MPIR_Attr_copy_proxy copy_proxy,
-    MPIR_Attr_delete_proxy delete_proxy
+    MPII_Attr_copy_proxy copy_proxy,
+    MPII_Attr_delete_proxy delete_proxy
     );
 
 #if defined(__cplusplus)

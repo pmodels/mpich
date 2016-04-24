@@ -72,11 +72,11 @@ Output Parameters:
 int MPI_Get_address(const void *location, MPI_Aint *address)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_GET_ADDRESS);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET_ADDRESS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GET_ADDRESS);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GET_ADDRESS);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -99,14 +99,14 @@ int MPI_Get_address(const void *location, MPI_Aint *address)
        standard, I can't tell if this is a compiler bug or a language bug.
     */
 #ifdef CHAR_PTR_IS_ADDRESS
-    *address = MPIU_VOID_PTR_CAST_TO_MPI_AINT ((char *) location);
+    *address = MPIR_VOID_PTR_CAST_TO_MPI_AINT ((char *) location);
 #else
     /* Note that this is the "portable" way to generate an address.
        The difference of two pointers is the number of elements
        between them, so this gives the number of chars between location
        and ptr.  As long as sizeof(char) represents one byte,
        of bytes from 0 to location */
-    *address = MPIU_VOID_PTR_CAST_TO_MPI_AINT ((char *) location - (char *) MPI_BOTTOM);
+    *address = MPIR_VOID_PTR_CAST_TO_MPI_AINT ((char *) location - (char *) MPI_BOTTOM);
 #endif
     /* The same code is used in MPI_Address */
 
@@ -115,7 +115,7 @@ int MPI_Get_address(const void *location, MPI_Aint *address)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GET_ADDRESS);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GET_ADDRESS);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

@@ -145,14 +145,14 @@ int MPI_Finalize( void )
 #if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
     int rank=0;
 #endif
-    MPID_MPI_FINALIZE_STATE_DECL(MPID_STATE_MPI_FINALIZE);
+    MPIR_FUNC_TERSE_FINALIZE_STATE_DECL(MPID_STATE_MPI_FINALIZE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     /* Note: Only one thread may ever call MPI_Finalize (MPI_Finalize may
        be called at most once in any program) */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FINALIZE_FUNC_ENTER(MPID_STATE_MPI_FINALIZE);
+    MPIR_FUNC_TERSE_FINALIZE_ENTER(MPID_STATE_MPI_FINALIZE);
     
     /* ... body of routine ... */
 
@@ -200,7 +200,7 @@ int MPI_Finalize( void )
 	MPIR_Errhandler_release_ref( MPIR_Process.comm_world->errhandler,
 				     &in_use);
 	if (!in_use) {
-	    MPIU_Handle_obj_free( &MPIR_Errhandler_mem,
+	    MPIR_Handle_obj_free( &MPIR_Errhandler_mem,
 				  MPIR_Process.comm_world->errhandler );
 	}
         /* always set to NULL to avoid a double-release later in finalize */
@@ -213,7 +213,7 @@ int MPI_Finalize( void )
 	MPIR_Errhandler_release_ref( MPIR_Process.comm_self->errhandler,
 				     &in_use);
 	if (!in_use) {
-	    MPIU_Handle_obj_free( &MPIR_Errhandler_mem,
+	    MPIR_Handle_obj_free( &MPIR_Errhandler_mem,
 				  MPIR_Process.comm_self->errhandler );
 	}
         /* always set to NULL to avoid a double-release later in finalize */
@@ -222,7 +222,7 @@ int MPI_Finalize( void )
 
     /* FIXME: Why is this not one of the finalize callbacks?.  Do we need
        pre and post MPID_Finalize callbacks? */
-    MPIU_Timer_finalize();
+    MPII_Timer_finalize();
 
     /* Call the high-priority callbacks */
     MPIR_Call_finalize_callbacks( MPIR_FINALIZE_CALLBACK_PRIO+1, 
@@ -231,7 +231,7 @@ int MPI_Finalize( void )
     /* Signal the debugger that we are about to exit. */
     /* FIXME: Should this also be a finalize callback? */
 #ifdef HAVE_DEBUGGER_SUPPORT
-    MPIR_DebuggerSetAborting( (char *)0 );
+    MPIR_Debugger_set_aborting( (char *)0 );
 #endif
 
     mpi_errno = MPID_Finalize();
@@ -306,7 +306,7 @@ int MPI_Finalize( void )
 
     /* ... end of body of routine ... */
   fn_exit:
-    MPID_MPI_FINALIZE_FUNC_EXIT(MPID_STATE_MPI_FINALIZE);
+    MPIR_FUNC_TERSE_FINALIZE_EXIT(MPID_STATE_MPI_FINALIZE);
     return mpi_errno;
 
   fn_fail:

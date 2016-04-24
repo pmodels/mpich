@@ -11,7 +11,7 @@ subroutine MPI_Type_create_keyval_f08(type_copy_attr_fn, type_delete_attr_fn, ty
     use :: mpi_f08, only : MPI_Type_copy_attr_function
     use :: mpi_f08, only : MPI_Type_delete_attr_function
     use :: mpi_c_interface, only : MPIR_Type_create_keyval_c
-    use :: mpi_c_interface, only : MPIR_Keyval_set_proxy, MPIR_Type_copy_attr_f08_proxy, MPIR_Type_delete_attr_f08_proxy
+    use :: mpi_c_interface, only : MPII_Keyval_set_proxy, MPIR_Type_copy_attr_f08_proxy, MPIR_Type_delete_attr_f08_proxy
 
     implicit none
 
@@ -31,7 +31,7 @@ subroutine MPI_Type_create_keyval_f08(type_copy_attr_fn, type_delete_attr_fn, ty
 
     ierror_c = MPIR_Type_create_keyval_c(type_copy_attr_fn_c, type_delete_attr_fn_c, type_keyval_c, extra_state)
 
-    call MPIR_Keyval_set_proxy(type_keyval_c, c_funloc(MPIR_Type_copy_attr_f08_proxy), c_funloc(MPIR_Type_delete_attr_f08_proxy))
+    call MPII_Keyval_set_proxy(type_keyval_c, c_funloc(MPIR_Type_copy_attr_f08_proxy), c_funloc(MPIR_Type_delete_attr_f08_proxy))
     type_keyval = type_keyval_c
     if (present(ierror)) ierror = ierror_c
 

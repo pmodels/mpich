@@ -60,12 +60,12 @@ int MPI_Op_free(MPI_Op *op)
     MPIR_Op *op_ptr = NULL;
     int     in_use;
     int     mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_OP_FREE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_OP_FREE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_OP_FREE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_OP_FREE);
     
     MPIR_Op_get_ptr( *op, op_ptr );
 #   ifdef HAVE_ERROR_CHECKING
@@ -90,7 +90,7 @@ int MPI_Op_free(MPI_Op *op)
     
     MPIR_Op_release_ref( op_ptr, &in_use);
     if (!in_use) {
-	MPIU_Handle_obj_free( &MPIR_Op_mem, op_ptr );
+	MPIR_Handle_obj_free( &MPIR_Op_mem, op_ptr );
     }
     *op = MPI_OP_NULL;
     
@@ -99,7 +99,7 @@ int MPI_Op_free(MPI_Op *op)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_OP_FREE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_OP_FREE);
         MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 	return mpi_errno;
 	

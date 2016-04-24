@@ -29,9 +29,9 @@ int MPID_Ssend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank
 #endif    
     int eager_threshold = -1;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_SSEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SSEND);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_SSEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SSEND);
 
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
               "rank=%d, tag=%d, context=%d", 
@@ -124,6 +124,6 @@ int MPID_Ssend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank
             MPL_DBG_MSG_P(MPIDI_CH3_DBG_OTHER,VERBOSE,
 			   "request allocated, handle=0x%08x", sreq->handle);}});
     
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_SSEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_SSEND);
     return mpi_errno;
 }

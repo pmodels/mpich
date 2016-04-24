@@ -27,10 +27,10 @@ int MPI_Type_get_attr(MPI_Datatype datatype, int type_keyval, void *attribute_va
 #define MPI_Type_get_attr PMPI_Type_get_attr
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_TypeGetAttr
+#define FUNCNAME MPII_Type_get_attr
 
-int MPIR_TypeGetAttr( MPI_Datatype datatype, int type_keyval, void *attribute_val,
-		      int *flag, MPIR_AttrType outAttrType )
+int MPII_Type_get_attr( MPI_Datatype datatype, int type_keyval, void *attribute_val,
+		      int *flag, MPIR_Attr_type outAttrType )
 {
 #ifdef HAVE_ERROR_CHECKING
     static const char FCNAME[] = "MPI_Type_get_attr";
@@ -38,12 +38,12 @@ int MPIR_TypeGetAttr( MPI_Datatype datatype, int type_keyval, void *attribute_va
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *type_ptr = NULL;
     MPIR_Attribute *p;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_TYPE_GET_ATTR);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_TYPE_GET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_TYPE_GET_ATTR);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_TYPE_GET_ATTR);
     
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -129,7 +129,7 @@ int MPIR_TypeGetAttr( MPI_Datatype datatype, int type_keyval, void *attribute_va
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_TYPE_GET_ATTR);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_TYPE_GET_ATTR);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
@@ -189,21 +189,21 @@ int MPI_Type_get_attr(MPI_Datatype datatype, int type_keyval, void *attribute_va
 		      int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_GET_ATTR);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_GET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_GET_ATTR);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_GET_ATTR);
     
     /* ... body of routine ...  */
-    mpi_errno = MPIR_TypeGetAttr( datatype, type_keyval, attribute_val, flag,
+    mpi_errno = MPII_Type_get_attr( datatype, type_keyval, attribute_val, flag,
 				  MPIR_ATTR_PTR );
     if (mpi_errno) goto fn_fail;
     
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_GET_ATTR);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_GET_ATTR);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

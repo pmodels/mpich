@@ -107,7 +107,7 @@ static int populate_iov_from_req(MPIR_Request *req)
     }
     else {
         /* use the segment routines to handle the iovec creation */
-        MPIU_Assert(req->dev.segment_ptr == NULL);
+        MPIR_Assert(req->dev.segment_ptr == NULL);
 
         req->dev.iov_count = MPL_IOV_LIMIT;
         req->dev.iov_offset = 0;
@@ -150,7 +150,7 @@ static int do_vmsplice(MPIR_Request *sreq, int pipe_fd, MPL_IOV iov[],
     if (err < 0) {
         if (errno == EAGAIN) goto fn_exit;
         MPIR_ERR_CHKANDJUMP2(errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**vmsplice",
-                             "**vmsplice %d %s", errno, MPIU_Strerror(errno));
+                             "**vmsplice %d %s", errno, MPIR_Strerror(errno));
     }
 
     *complete = adjust_partially_xferred_iov(iov, iov_offset, iov_count, err);
@@ -181,9 +181,9 @@ int MPID_nem_lmt_vmsplice_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPI
     MPID_nem_pkt_lmt_rts_t * const rts_pkt = (MPID_nem_pkt_lmt_rts_t *)pkt;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
     int complete = 0;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_INITIATE_LMT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_INITIATE_LMT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_VMSPLICE_INITIATE_LMT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LMT_VMSPLICE_INITIATE_LMT);
 
     /* re-use the same pipe per-pair,per-sender */
     if (vc_ch->lmt_copy_buf_handle == NULL) {
@@ -193,7 +193,7 @@ int MPID_nem_lmt_vmsplice_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPI
 
         pipe_name = tempnam(NULL, "lmt_");
         MPIR_ERR_CHKANDJUMP2(!pipe_name, mpi_errno, MPI_ERR_OTHER, "**tempnam",
-                             "**tempnam %d %s", errno, MPIU_Strerror(errno));
+                             "**tempnam %d %s", errno, MPIR_Strerror(errno));
 
         vc_ch->lmt_copy_buf_handle = MPL_strdup(pipe_name);
         /* XXX DJG hack */
@@ -202,7 +202,7 @@ int MPID_nem_lmt_vmsplice_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPI
 
         err = mkfifo(vc_ch->lmt_copy_buf_handle, 0660);
         MPIR_ERR_CHKANDJUMP2(err < 0, mpi_errno, MPI_ERR_OTHER, "**mkfifo",
-                             "**mkfifo %d %s", errno, MPIU_Strerror(errno));
+                             "**mkfifo %d %s", errno, MPIR_Strerror(errno));
     }
 
     /* can't start sending data yet, need full RTS/CTS handshake */
@@ -212,7 +212,7 @@ int MPID_nem_lmt_vmsplice_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPI
 
 fn_fail:
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_VMSPLICE_INITIATE_LMT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LMT_VMSPLICE_INITIATE_LMT);
     return mpi_errno;
 }
 
@@ -224,12 +224,12 @@ static int do_readv(MPIR_Request *rreq, int pipe_fd, MPL_IOV iov[],
 
     nread = readv(pipe_fd, &rreq->dev.iov[rreq->dev.iov_offset], rreq->dev.iov_count);
     MPIR_ERR_CHKANDJUMP2(nread < 0 && errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**read",
-                         "**readv %d %s", errno, MPIU_Strerror(errno));
+                         "**readv %d %s", errno, MPIR_Strerror(errno));
 
     if (nread < 0) {
         if (errno == EAGAIN) goto fn_exit;
         MPIR_ERR_CHKANDJUMP2(errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**vmsplice",
-                             "**vmsplice %d %s", errno, MPIU_Strerror(errno));
+                             "**vmsplice %d %s", errno, MPIR_Strerror(errno));
     }
 
     *complete = adjust_partially_xferred_iov(iov, iov_offset, iov_count, nread);
@@ -263,12 +263,12 @@ int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPIR_Request *rreq, MPL_IOV
     struct lmt_vmsplice_node *node = NULL;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
     int pipe_fd;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_RECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_RECV);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_RECV);
 
     if (vc_ch->lmt_recv_copy_buf_handle == NULL) {
-        MPIU_Assert(s_cookie.MPL_IOV_BUF != NULL);
+        MPIR_Assert(s_cookie.MPL_IOV_BUF != NULL);
         vc_ch->lmt_recv_copy_buf_handle = MPL_strdup(s_cookie.MPL_IOV_BUF);
     }
 
@@ -276,7 +276,7 @@ int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPIR_Request *rreq, MPL_IOV
        so that we don't have two open's on the critical path every time. */
     pipe_fd = open(vc_ch->lmt_recv_copy_buf_handle, O_NONBLOCK|O_RDONLY);
     MPIR_ERR_CHKANDJUMP1(pipe_fd < 0, mpi_errno, MPI_ERR_OTHER, "**open",
-                         "**open %s", MPIU_Strerror(errno));
+                         "**open %s", MPIR_Strerror(errno));
 
     MPID_nem_lmt_send_CTS(vc, rreq, NULL, 0);
 
@@ -297,7 +297,7 @@ int MPID_nem_lmt_vmsplice_start_recv(MPIDI_VC_t *vc, MPIR_Request *rreq, MPL_IOV
     }
 
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_RECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_RECV);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -312,9 +312,9 @@ int MPID_nem_lmt_vmsplice_progress(void)
     struct lmt_vmsplice_node *prev = NULL;
     struct lmt_vmsplice_node *free_me = NULL;
     struct lmt_vmsplice_node *cur = outstanding_head;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_PROGRESS);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_PROGRESS);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_VMSPLICE_PROGRESS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LMT_VMSPLICE_PROGRESS);
     
     while (cur) {
         int complete = 0;
@@ -366,7 +366,7 @@ int MPID_nem_lmt_vmsplice_progress(void)
     }
 
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_VMSPLICE_PROGRESS);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LMT_VMSPLICE_PROGRESS);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -380,21 +380,21 @@ fn_fail:
 int MPID_nem_lmt_vmsplice_start_send(MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV r_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_SEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_SEND);
     int pipe_fd;
     int complete;
     struct lmt_vmsplice_node *node = NULL;
     int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_SEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_SEND);
 
     /* Must do this after the other side has opened for reading, otherwise we
        will error out with ENXIO.  This will be indicated by the receipt of a
        CTS message. */
     pipe_fd = open(vc_ch->lmt_copy_buf_handle, O_NONBLOCK|O_WRONLY);
     MPIR_ERR_CHKANDJUMP1(pipe_fd < 0, mpi_errno, MPI_ERR_OTHER, "**open",
-                         "**open %s", MPIU_Strerror(errno));
+                         "**open %s", MPIR_Strerror(errno));
 
     mpi_errno = populate_iov_from_req(sreq);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -418,7 +418,7 @@ int MPID_nem_lmt_vmsplice_start_send(MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV
 
 fn_fail:
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_SEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LMT_VMSPLICE_START_SEND);
     return mpi_errno;
 }
 
@@ -429,16 +429,16 @@ fn_exit:
 int MPIDI_CH3_MPID_nem_lmt_vmsplice_vc_terminated(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_MPID_NEM_LMT_VMSPLICE_VC_TERMINATED);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_MPID_NEM_LMT_VMSPLICE_VC_TERMINATED);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_MPID_NEM_LMT_VMSPLICE_VC_TERMINATED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_MPID_NEM_LMT_VMSPLICE_VC_TERMINATED);
 
     /* FIXME: need to handle the case where a VC is terminated due to
        a process failure.  We need to remove any outstanding LMT ops
        for this VC. */
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_MPID_NEM_LMT_VMSPLICE_VC_TERMINATED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_MPID_NEM_LMT_VMSPLICE_VC_TERMINATED);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -457,13 +457,13 @@ int MPIDI_CH3_MPID_nem_lmt_vmsplice_vc_terminated(MPIDI_VC_t *vc)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_vmsplice_done_recv(MPIDI_VC_t *vc, MPIR_Request *rreq)
 {
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_DONE_RECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_DONE_RECV);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_VMSPLICE_DONE_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LMT_VMSPLICE_DONE_RECV);
 
     /* nop */
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_VMSPLICE_DONE_RECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LMT_VMSPLICE_DONE_RECV);
     return MPI_SUCCESS;
 }
 
@@ -474,13 +474,13 @@ int MPID_nem_lmt_vmsplice_done_recv(MPIDI_VC_t *vc, MPIR_Request *rreq)
 int MPID_nem_lmt_vmsplice_done_send(MPIDI_VC_t *vc, MPIR_Request *sreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_DONE_SEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_DONE_SEND);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_VMSPLICE_DONE_SEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LMT_VMSPLICE_DONE_SEND);
 
     /* nop */
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_VMSPLICE_DONE_SEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LMT_VMSPLICE_DONE_SEND);
     return MPI_SUCCESS;
 }
 
@@ -492,13 +492,13 @@ int MPID_nem_lmt_vmsplice_done_send(MPIDI_VC_t *vc, MPIR_Request *sreq)
 int MPID_nem_lmt_vmsplice_handle_cookie(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV cookie)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_HANDLE_COOKIE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_VMSPLICE_HANDLE_COOKIE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_VMSPLICE_HANDLE_COOKIE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LMT_VMSPLICE_HANDLE_COOKIE);
 
     /* nop */
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_VMSPLICE_HANDLE_COOKIE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LMT_VMSPLICE_HANDLE_COOKIE);
     return MPI_SUCCESS;
 }
 

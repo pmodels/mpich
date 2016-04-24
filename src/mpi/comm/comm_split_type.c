@@ -37,7 +37,7 @@ int MPIR_Comm_split_type_impl(MPIR_Comm * comm_ptr, int split_type, int key,
 
     /* Only MPI_COMM_TYPE_SHARED, MPI_UNDEFINED, and
      * NEIGHBORHOOD are supported */
-    MPIU_Assert(split_type == MPI_COMM_TYPE_SHARED ||
+    MPIR_Assert(split_type == MPI_COMM_TYPE_SHARED ||
                 split_type == MPI_UNDEFINED ||
                 split_type == MPIX_COMM_TYPE_NEIGHBORHOOD);
 
@@ -137,12 +137,12 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
     MPIR_Info *info_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SPLIT_TYPE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_SPLIT_TYPE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_SPLIT_TYPE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_SPLIT_TYPE);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -188,7 +188,7 @@ int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_SPLIT_TYPE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_SPLIT_TYPE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

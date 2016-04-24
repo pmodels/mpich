@@ -350,11 +350,11 @@ Input/Output Parameters:
 int MPI_Dims_create(int nnodes, int ndims, int dims[])
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_DIMS_CREATE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_DIMS_CREATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_DIMS_CREATE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_DIMS_CREATE);
 
     if (ndims == 0) goto fn_exit;
     
@@ -382,7 +382,7 @@ int MPI_Dims_create(int nnodes, int ndims, int dims[])
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_DIMS_CREATE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_DIMS_CREATE);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

@@ -40,7 +40,7 @@ static void print_handle( int handle );
 
 #ifdef MPICH_DEBUG_HANDLEALLOC
 static int check_handles_on_finalize( void * );
-static const char *object_name( MPIU_Object_alloc_t * );
+static const char *object_name( MPIR_Object_alloc_t * );
 #endif
 
 /* This is the utility file for info that contains routines used to 
@@ -56,7 +56,7 @@ static const char *object_name( MPIU_Object_alloc_t * );
    // Static declaration of the information about the block
    // Define the number of preallocated entries # omitted)
    define MPID_<OBJ>_PREALLOC 256
-   MPIU_Object_alloc_t MPID_<obj>_mem = { 0, 0, 0, 0, MPID_<obj>, 
+   MPIR_Object_alloc_t MPID_<obj>_mem = { 0, 0, 0, 0, MPID_<obj>,
 				      sizeof(MPID_<obj>), MPID_<obj>_direct,
                                       MPID_<OBJ>_PREALLOC, };
 
@@ -109,7 +109,7 @@ static int handle_free( void *((*indirect)[]), int indirect_size )
                           "[MPICH handle: objptr=%p handle=0x%x %s/%s]",                        \
                           (objptr_), (objptr_)->handle,                                          \
                           ((is_direct_) ? "DIRECT" : "INDIRECT"),                                \
-                          MPIU_Handle_get_kind_str(handle_type_));                               \
+                          MPIR_Handle_get_kind_str(handle_type_));                               \
             /* we don't keep track of the block descriptor because the handle */                 \
             /* values never change once allocated */                                             \
             MPL_VG_CREATE_BLOCK((objptr_), (objsize_), desc_str);                               \
@@ -125,14 +125,14 @@ static void *handle_direct_init(void *direct,
 			      int handle_type)
 {
     int                i;
-    MPIU_Handle_common *hptr=0;
+    MPIR_Handle_common *hptr=0;
     char               *ptr = (char *)direct;
 
     for (i=0; i<direct_size; i++) {
 	/* printf( "Adding %p in %d\n", ptr, handle_type ); */
         /* First cast to (void*) to avoid false warnings about alignment
            (consider that a requirement of the input parameters) */
-	hptr = (MPIU_Handle_common *)(void *)ptr;
+	hptr = (MPIR_Handle_common *)(void *)ptr;
 	ptr  = ptr + obj_size;
 	hptr->next = ptr;
 	hptr->handle = ((unsigned)HANDLE_KIND_DIRECT << HANDLE_KIND_SHIFT) | 
@@ -155,7 +155,7 @@ static void *handle_indirect_init( void *(**indirect)[],
 					int handle_type )
 {
     void               *block_ptr;
-    MPIU_Handle_common *hptr=0;
+    MPIR_Handle_common *hptr=0;
     char               *ptr;
     int                i;
 
@@ -185,7 +185,7 @@ static void *handle_indirect_init( void *(**indirect)[],
     ptr = (char *)block_ptr;
     for (i=0; i<indirect_num_indices; i++) {
         /* Cast to (void*) to avoid false warning about alignment */
-	hptr       = (MPIU_Handle_common *)(void*)ptr;
+	hptr       = (MPIR_Handle_common *)(void*)ptr;
 	ptr        = ptr + obj_size;
 	hptr->next = ptr;
 	hptr->handle   = ((unsigned)HANDLE_KIND_INDIRECT << HANDLE_KIND_SHIFT) | 
@@ -213,7 +213,7 @@ static void *handle_indirect_init( void *(**indirect)[],
 
 static int handle_finalize( void *objmem_ptr )
 {
-    MPIU_Object_alloc_t *objmem = (MPIU_Object_alloc_t *)objmem_ptr;
+    MPIR_Object_alloc_t *objmem = (MPIR_Object_alloc_t *)objmem_ptr;
 
     (void)handle_free( objmem->indirect, objmem->indirect_size );
     /* This does *not* remove any Info objects that the user created 
@@ -231,7 +231,7 @@ static int handle_finalize( void *objmem_ptr )
    guaranteed to be single threaded).  When used by the obj_alloc, it
    adds unnecessary overhead, particularly when MPI is single threaded */
 
-static void handle_obj_alloc_complete(MPIU_Object_alloc_t *objmem,
+static void handle_obj_alloc_complete(MPIR_Object_alloc_t *objmem,
 				    int initialized)
 {
     if (initialized) {
@@ -249,7 +249,7 @@ static void handle_obj_alloc_complete(MPIU_Object_alloc_t *objmem,
 }
 
 /*+
-  MPIU_Handle_obj_alloc - Create an object using the handle allocator
+  MPIR_Handle_obj_alloc - Create an object using the handle allocator
 
 Input Parameters:
 . objmem - Pointer to object memory block.
@@ -274,25 +274,25 @@ Input Parameters:
 
   +*/
 #undef FUNCNAME
-#define FUNCNAME MPIU_Handle_obj_alloc
+#define FUNCNAME MPIR_Handle_obj_alloc
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void *MPIU_Handle_obj_alloc(MPIU_Object_alloc_t *objmem)
+void *MPIR_Handle_obj_alloc(MPIR_Object_alloc_t *objmem)
 {
     void *ret;
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
-    ret = MPIU_Handle_obj_alloc_unsafe(objmem);
+    ret = MPIR_Handle_obj_alloc_unsafe(objmem);
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
     return ret;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIU_Handle_obj_alloc_unsafe
+#define FUNCNAME MPIR_Handle_obj_alloc_unsafe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void *MPIU_Handle_obj_alloc_unsafe(MPIU_Object_alloc_t *objmem)
+void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t *objmem)
 {
-    MPIU_Handle_common *ptr;
+    MPIR_Handle_common *ptr;
 
     if (objmem->avail) {
 	ptr	      = objmem->avail;
@@ -391,7 +391,7 @@ void *MPIU_Handle_obj_alloc_unsafe(MPIU_Object_alloc_t *objmem)
 }
 
 /*+
-  MPIU_Handle_obj_free - Free an object allocated with MPID_Handle_obj_new
+  MPIR_Handle_obj_free - Free an object allocated with MPID_Handle_obj_new
 
 Input Parameters:
 + objmem - Pointer to object block
@@ -401,9 +401,9 @@ Input Parameters:
   This routine assumes that only a single thread calls it at a time; this
   is true for the SINGLE_CS approach to thread safety
   +*/
-void MPIU_Handle_obj_free( MPIU_Object_alloc_t *objmem, void *object )
+void MPIR_Handle_obj_free( MPIR_Object_alloc_t *objmem, void *object )
 {
-    MPIU_Handle_common *obj = (MPIU_Handle_common *)object;
+    MPIR_Handle_common *obj = (MPIR_Handle_common *)object;
 
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_HANDLE_MUTEX);
 
@@ -411,8 +411,8 @@ void MPIU_Handle_obj_free( MPIU_Object_alloc_t *objmem, void *object )
                                      "Freeing object ptr %p (0x%08x kind=%s) refcount=%d",
                                      (obj),
                                      (obj)->handle,
-                                     MPIU_Handle_get_kind_str(HANDLE_GET_MPI_KIND((obj)->handle)),
-                                     MPIU_Object_get_ref(obj)));
+                                     MPIR_Handle_get_kind_str(HANDLE_GET_MPI_KIND((obj)->handle)),
+                                     MPIR_Object_get_ref(obj)));
 
 #ifdef USE_MEMORY_TRACING
     {
@@ -429,7 +429,7 @@ void MPIU_Handle_obj_free( MPIU_Object_alloc_t *objmem, void *object )
 
         MPL_VG_MEMPOOL_FREE(objmem, obj);
         /* MEMPOOL_FREE marks the object NOACCESS, so we have to make the
-         * MPIU_Handle_common area that is used for internal book keeping
+         * MPIR_Handle_common area that is used for internal book keeping
          * addressable again. */
         MPL_VG_MAKE_MEM_DEFINED(&obj->handle, sizeof(obj->handle));
         MPL_VG_MAKE_MEM_UNDEFINED(&obj->next, sizeof(obj->next));
@@ -454,7 +454,7 @@ void MPIU_Handle_obj_free( MPIU_Object_alloc_t *objmem, void *object )
 /* 
  * Get an pointer to dynamically allocated storage for objects.
  */
-void *MPIU_Handle_get_ptr_indirect( int handle, MPIU_Object_alloc_t *objmem )
+void *MPIR_Handle_get_ptr_indirect( int handle, MPIR_Object_alloc_t *objmem )
 {
     int block_num, index_num;
 
@@ -489,7 +489,7 @@ void *MPIU_Handle_get_ptr_indirect( int handle, MPIU_Object_alloc_t *objmem )
 }
 
 /* returns the name of the handle kind for debugging/logging purposes */
-const char *MPIU_Handle_get_kind_str(int kind)
+const char *MPIR_Handle_get_kind_str(int kind)
 {
 #define mpiu_name_case_(name_) case MPIR_##name_: return (#name_)
     switch (kind) {
@@ -541,9 +541,9 @@ const char *MPIU_Handle_get_kind_str(int kind)
 */
 static int check_handles_on_finalize( void *objmem_ptr )
 {
-    MPIU_Object_alloc_t *objmem = (MPIU_Object_alloc_t *)objmem_ptr;
+    MPIR_Object_alloc_t *objmem = (MPIR_Object_alloc_t *)objmem_ptr;
     int i;
-    MPIU_Handle_common *ptr;
+    MPIR_Handle_common *ptr;
     int leaked_handles = FALSE;
     int   directSize = objmem->direct_size;
     char *direct = (char *)objmem->direct;
@@ -619,15 +619,15 @@ static int check_handles_on_finalize( void *objmem_ptr )
         /* comm_world has been (or should have been) destroyed by this point,
          * pass comm=NULL */
         MPID_Abort(NULL, MPI_ERR_OTHER, 1, "ERROR: leaked handles detected, aborting");
-        MPIU_Assert(0);
+        MPIR_Assert(0);
     }
 
     return 0;
 }
 
-static const char *object_name( MPIU_Object_alloc_t *objmem )
+static const char *object_name( MPIR_Object_alloc_t *objmem )
 {
-    return MPIU_Handle_get_kind_str(objmem->kind);
+    return MPIR_Handle_get_kind_str(objmem->kind);
 }
 #endif    
 

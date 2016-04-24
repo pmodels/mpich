@@ -2328,7 +2328,7 @@ void operator delete[](void *p) {
     extern \"C\" {
 typedef void (*mpircallback)(void);
 }
-extern \"C\" void MPIR_Op_set_cxx( MPI_Op, void (*)(void) );
+extern \"C\" void MPII_Op_set_cxx( MPI_Op, void (*)(void) );
 extern \"C\" 
 void MPIR_Call_op_fn( void *invec, void *outvec, int len, MPI_Datatype dtype,
 		     User_function *uop )
@@ -2342,7 +2342,7 @@ void Op::Init( User_function *f, bool commute )
      print $OUTFD "\
 	MPIX_CALLWORLD( MPI_Op_create( (MPI_User_function *)f, 
 			(int) commute, &the_real_op ) ); 
-	MPIR_Op_set_cxx( the_real_op, (mpircallback) MPIR_Call_op_fn );\n";
+	MPII_Op_set_cxx( the_real_op, (mpircallback) MPIR_Call_op_fn );\n";
 &printCoverageEnd( $OUTFD, "Op_create", 2 );
 print $OUTFD "\
     }\n";
@@ -2356,14 +2356,14 @@ MPIR_Comm_delete_attr_cxx_proxy(
     MPI_Comm_delete_attr_function* user_function,
     MPI_Comm comm,
     int keyval,
-    MPIR_AttrType attrib_type,
+    MPIR_Attr_type attrib_type,
     void* attrib,
     void* extra_state
     )
 {
     void *value = 0;
     /* Make sure that the attribute value is delivered as a pointer */
-    if(MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
+    if(MPII_ATTR_KIND(attrib_type) == MPII_ATTR_KIND(MPIR_ATTR_INT)){
         value = &attrib;
     }
     else{
@@ -2417,12 +2417,12 @@ EOT
 }
 static
 int
-MPIR_Comm_copy_attr_cxx_proxy(
+MPII_Comm_copy_attr_cxx_proxy(
     MPI_Comm_copy_attr_function* user_function,
     MPI_Comm comm,
     int keyval,
     void* extra_state,
-    MPIR_AttrType attrib_type,
+    MPIR_Attr_type attrib_type,
     void* attrib,
     void** new_value,
     int* flag
@@ -2430,7 +2430,7 @@ MPIR_Comm_copy_attr_cxx_proxy(
 {
     void *value = 0;
     /* Make sure that the attribute value is delivered as a pointer */
-    if(MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
+    if(MPII_ATTR_KIND(attrib_type) == MPII_ATTR_KIND(MPIR_ATTR_INT)){
         value = &attrib;
     }
     else{
@@ -2497,7 +2497,7 @@ EOT
     MPIX_CALLWORLD( MPI_Comm_create_keyval( (MPI_Comm_copy_attr_function *)cf, 
 				       (MPI_Comm_delete_attr_function *)df,
 				      &keyval, extra_state ) );
-    MPIR_Keyval_set_proxy( keyval, MPIR_Comm_copy_attr_cxx_proxy, MPIR_Comm_delete_attr_cxx_proxy );
+    MPII_Keyval_set_proxy( keyval, MPII_Comm_copy_attr_cxx_proxy, MPIR_Comm_delete_attr_cxx_proxy );
 EOT
     &printCoverageEnd( $OUTFD, "Comm_create_keyval", 3 );
     print $OUTFD <<EOT;
@@ -2510,7 +2510,7 @@ MPIR_Type_delete_attr_cxx_proxy(
     MPI_Type_delete_attr_function* user_function,
     MPI_Datatype datatype,
     int keyval,
-    MPIR_AttrType attrib_type,
+    MPIR_Attr_type attrib_type,
     void* attrib,
     void* extra_state
     )
@@ -2519,7 +2519,7 @@ MPIR_Type_delete_attr_cxx_proxy(
     MPI::Datatype::Delete_attr_function* f = (MPI::Datatype::Delete_attr_function*)user_function;
     void *value = 0;
     /* Make sure that the attribute value is delivered as a pointer */
-    if(MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
+    if(MPII_ATTR_KIND(attrib_type) == MPII_ATTR_KIND(MPIR_ATTR_INT)){
         value = &attrib;
     }
     else{
@@ -2535,7 +2535,7 @@ MPIR_Type_copy_attr_cxx_proxy(
     MPI_Datatype datatype,
     int keyval,
     void* extra_state,
-    MPIR_AttrType attrib_type,
+    MPIR_Attr_type attrib_type,
     void* attrib,
     void** new_value,
     int* flag
@@ -2546,7 +2546,7 @@ MPIR_Type_copy_attr_cxx_proxy(
     MPI::Datatype::Copy_attr_function* f = (MPI::Datatype::Copy_attr_function*)user_function;
     void *value = 0;
     /* Make sure that the attribute value is delivered as a pointer */
-    if(MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
+    if(MPII_ATTR_KIND(attrib_type) == MPII_ATTR_KIND(MPIR_ATTR_INT)){
         value = &attrib;
     }
     else{
@@ -2567,7 +2567,7 @@ EOT
     MPIX_CALLWORLD( MPI_Type_create_keyval( (MPI_Type_copy_attr_function *)cf, 
 			       (MPI_Type_delete_attr_function *)df,
 		 	       &keyval, extra_state ) );
-    MPIR_Keyval_set_proxy( keyval, MPIR_Type_copy_attr_cxx_proxy, MPIR_Type_delete_attr_cxx_proxy );
+    MPII_Keyval_set_proxy( keyval, MPIR_Type_copy_attr_cxx_proxy, MPIR_Type_delete_attr_cxx_proxy );
 EOT
     &printCoverageEnd( $OUTFD, "Type_create_keyval", 3 );
     print $OUTFD <<EOT;
@@ -2580,7 +2580,7 @@ MPIR_Win_delete_attr_cxx_proxy(
     MPI_Win_delete_attr_function* user_function,
     MPI_Win win,
     int keyval,
-    MPIR_AttrType attrib_type,
+    MPIR_Attr_type attrib_type,
     void* attrib,
     void* extra_state
     )
@@ -2589,7 +2589,7 @@ MPIR_Win_delete_attr_cxx_proxy(
     MPI::Win::Delete_attr_function* f = (MPI::Win::Delete_attr_function*)user_function;
     void *value = 0;
     /* Make sure that the attribute value is delivered as a pointer */
-    if(MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
+    if(MPII_ATTR_KIND(attrib_type) == MPII_ATTR_KIND(MPIR_ATTR_INT)){
         value = &attrib;
     }
     else{
@@ -2605,7 +2605,7 @@ MPIR_Win_copy_attr_cxx_proxy(
     MPI_Win win,
     int keyval,
     void* extra_state,
-    MPIR_AttrType attrib_type,
+    MPIR_Attr_type attrib_type,
     void* attrib,
     void** new_value,
     int* flag
@@ -2616,7 +2616,7 @@ MPIR_Win_copy_attr_cxx_proxy(
     MPI::Win::Copy_attr_function* f = (MPI::Win::Copy_attr_function*)user_function;
     void *value = 0;
     /* Make sure that the attribute value is delivered as a pointer */
-    if(MPIR_ATTR_KIND(attrib_type) == MPIR_ATTR_KIND(MPIR_ATTR_INT)){
+    if(MPII_ATTR_KIND(attrib_type) == MPII_ATTR_KIND(MPIR_ATTR_INT)){
         value = &attrib;
     }
     else{
@@ -2637,7 +2637,7 @@ EOT
     MPIX_CALLWORLD( MPI_Win_create_keyval( (MPI_Win_copy_attr_function *)cf, 
 				       (MPI_Win_delete_attr_function *)df,
 				      &keyval, extra_state ) );
-    MPIR_Keyval_set_proxy( keyval, MPIR_Win_copy_attr_cxx_proxy, MPIR_Win_delete_attr_cxx_proxy );
+    MPII_Keyval_set_proxy( keyval, MPIR_Win_copy_attr_cxx_proxy, MPIR_Win_delete_attr_cxx_proxy );
 EOT
     &printCoverageEnd( $OUTFD, "Win_create_keyval", 3 );
     print $OUTFD <<EOT;
@@ -2649,7 +2649,7 @@ EOT
 print $OUTFD <<EOT;
 // Provide a C routine that can call the C++ error handler, handling
 // any calling-sequence change.  
-extern \"C\" void MPIR_Errhandler_set_cxx( MPI_Errhandler, void (*)(void) );
+extern \"C\" void MPII_Errhandler_set_cxx( MPI_Errhandler, void (*)(void) );
 extern \"C\" 
 void MPIR_Call_errhandler_function( int kind, int *handle, int *errcode, 
 			      void (*cxxfn)(void) )
@@ -2697,7 +2697,7 @@ Errhandler File::Create_errhandler( Errhandler_function *f )
     MPI_Errhandler eh;
     MPI::Errhandler e1;
     MPI_File_create_errhandler( (MPI_File_errhandler_function *)f, &eh );
-    MPIR_Errhandler_set_cxx( eh, 
+    MPII_Errhandler_set_cxx( eh,
 			     (mpircallback)MPIR_Call_errhandler_function );
     e1.the_real_errhandler = eh;
     return e1;
@@ -2708,7 +2708,7 @@ Errhandler Comm::Create_errhandler( Errhandler_function *f )
     MPI_Errhandler eh;
     MPI::Errhandler e1;
     MPI_Comm_create_errhandler( (MPI_Comm_errhandler_function *)f, &eh );
-    MPIR_Errhandler_set_cxx( eh, 
+    MPII_Errhandler_set_cxx( eh,
 			     (mpircallback)MPIR_Call_errhandler_function );
     e1.the_real_errhandler = eh;
     return e1;
@@ -2718,7 +2718,7 @@ Errhandler Win::Create_errhandler( Errhandler_function *f )
     MPI_Errhandler eh;
     MPI::Errhandler e1;
     MPI_Win_create_errhandler( (MPI_Win_errhandler_function *)f, &eh );
-    MPIR_Errhandler_set_cxx( eh, 
+    MPII_Errhandler_set_cxx( eh,
 			     (mpircallback)MPIR_Call_errhandler_function );
     e1.the_real_errhandler = eh;
     return e1;

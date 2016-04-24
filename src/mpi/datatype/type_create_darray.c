@@ -387,13 +387,13 @@ int MPI_Type_create_darray(int size,
 
     int *ints;
     MPIR_Datatype *datatype_ptr = NULL;
-    MPIU_CHKLMEM_DECL(3);
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_DARRAY);
+    MPIR_CHKLMEM_DECL(3);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_DARRAY);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_CREATE_DARRAY);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_CREATE_DARRAY);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -527,7 +527,7 @@ int MPI_Type_create_darray(int size,
 
 /* calculate position in Cartesian grid as MPI would (row-major
    ordering) */
-    MPIU_CHKLMEM_MALLOC_ORJUMP(coords, int *, ndims * sizeof(int), mpi_errno, "position is Cartesian grid");
+    MPIR_CHKLMEM_MALLOC_ORJUMP(coords, int *, ndims * sizeof(int), mpi_errno, "position is Cartesian grid");
 
     procs = size;
     tmp_rank = rank;
@@ -537,7 +537,7 @@ int MPI_Type_create_darray(int size,
 	tmp_rank = tmp_rank % procs;
     }
 
-    MPIU_CHKLMEM_MALLOC_ORJUMP(st_offsets, MPI_Aint *, ndims * sizeof(MPI_Aint), mpi_errno, "st_offsets");
+    MPIR_CHKLMEM_MALLOC_ORJUMP(st_offsets, MPI_Aint *, ndims * sizeof(MPI_Aint), mpi_errno, "st_offsets");
 
     type_old = oldtype;
 
@@ -707,7 +707,7 @@ int MPI_Type_create_darray(int size,
      */
 
     /* Save contents */
-    MPIU_CHKLMEM_MALLOC_ORJUMP(ints, int *, (4 * ndims + 4) * sizeof(int), mpi_errno, "content description");
+    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (4 * ndims + 4) * sizeof(int), mpi_errno, "content description");
 
     ints[0] = size;
     ints[1] = rank;
@@ -743,8 +743,8 @@ int MPI_Type_create_darray(int size,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIU_CHKLMEM_FREEALL();
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_CREATE_DARRAY);
+    MPIR_CHKLMEM_FREEALL();
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_CREATE_DARRAY);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

@@ -32,14 +32,14 @@ MPID_nem_mpich_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPIU_CHKPMEM_DECL (2);
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_INIT);
+    MPIR_CHKPMEM_DECL (2);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_MPICH_INIT);
 
     MPID_nem_prefetched_cell = NULL;
 
-    MPIU_CHKPMEM_MALLOC (MPID_nem_recv_seqno, unsigned short *, sizeof(*MPID_nem_recv_seqno) * MPID_nem_mem_region.num_procs, mpi_errno, "recv seqno");
+    MPIR_CHKPMEM_MALLOC (MPID_nem_recv_seqno, unsigned short *, sizeof(*MPID_nem_recv_seqno) * MPID_nem_mem_region.num_procs, mpi_errno, "recv seqno");
 
     for (i = 0; i < MPID_nem_mem_region.num_procs; ++i)
     {
@@ -47,7 +47,7 @@ MPID_nem_mpich_init(void)
     }
 
     /* set up fbox queue */
-    MPIU_CHKPMEM_MALLOC (MPID_nem_fboxq_elem_list, MPID_nem_fboxq_elem_t *, MPID_nem_mem_region.num_local * sizeof(MPID_nem_fboxq_elem_t), mpi_errno, "fastbox element list");
+    MPIR_CHKPMEM_MALLOC (MPID_nem_fboxq_elem_list, MPID_nem_fboxq_elem_t *, MPID_nem_mem_region.num_local * sizeof(MPID_nem_fboxq_elem_t), mpi_errno, "fastbox element list");
 
     for (i = 0; i < MPID_nem_mem_region.num_local; ++i)
     {
@@ -64,13 +64,13 @@ MPID_nem_mpich_init(void)
     MPID_nem_curr_fbox_all_poll = &MPID_nem_fboxq_elem_list[0];
     MPID_nem_fboxq_elem_list_last = &MPID_nem_fboxq_elem_list[MPID_nem_mem_region.num_local - 1];
 
-    MPIU_CHKPMEM_COMMIT();
+    MPIR_CHKPMEM_COMMIT();
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_MPICH_INIT);
     return mpi_errno;
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -89,16 +89,16 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int
     MPL_IOV *data_iov = &iov[1]; /* iov of just the data, not the header */
     int data_n_iov = n_iov - 1;
 
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_SEND_IOV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_SEND_IOV);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_SEND_IOV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_SEND_IOV);
 
     if (*sreq_ptr == NULL)
     {
 	/* create a request */
 	sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
-	MPIU_Assert(sreq != NULL);
-	MPIU_Object_set_ref(sreq, 2);
+	MPIR_Assert(sreq != NULL);
+	MPIR_Object_set_ref(sreq, 2);
 	sreq->kind = MPIR_REQUEST_KIND__SEND;
         sreq->dev.OnDataAvail = 0;
     }
@@ -123,11 +123,11 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int
         /* --END ERROR HANDLING-- */
     }
 
-    MPIU_Assert(sreq->dev.tmpbuf_sz >= data_sz);
+    MPIR_Assert(sreq->dev.tmpbuf_sz >= data_sz);
 
     iov_data_copied = 0;
     for (i = 0; i < data_n_iov; ++i) {
-        MPIU_Memcpy((char*) sreq->dev.tmpbuf + iov_data_copied, data_iov[i].MPL_IOV_BUF, data_iov[i].MPL_IOV_LEN);
+        MPIR_Memcpy((char*) sreq->dev.tmpbuf + iov_data_copied, data_iov[i].MPL_IOV_BUF, data_iov[i].MPL_IOV_LEN);
         iov_data_copied += data_iov[i].MPL_IOV_LEN;
     }
 
@@ -137,7 +137,7 @@ int MPID_nem_send_iov(MPIDI_VC_t *vc, MPIR_Request **sreq_ptr, MPL_IOV *iov, int
     *sreq_ptr = sreq;
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_SEND_IOV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_SEND_IOV);
     return mpi_errno;
  fn_fail:
     goto fn_exit;

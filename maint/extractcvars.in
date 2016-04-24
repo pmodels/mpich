@@ -170,7 +170,7 @@ foreach my $p (@cvars) {
 print OUTPUT_H <<EOT;
 
 /* TODO: this should be defined elsewhere */
-#define ${ns}_assert MPIU_Assert
+#define ${ns}_assert MPIR_Assert
 
 /* Arbitrary, simplifies interaction with external interfaces like MPI_T_ */
 #define ${uc_ns}_MAX_STRLEN (384)
@@ -350,7 +350,7 @@ print OUTPUT_C <<EOT;
         ${var_name} = MPL_strdup(tmp_str);
         ${ns}_assert(${var_name});
         if (${var_name} == NULL) {
-            MPIU_CHKMEM_SETERR(mpi_errno, strlen(tmp_str), "dup of string for ${var_name}");
+            MPIR_CHKMEM_SETERR(mpi_errno, strlen(tmp_str), "dup of string for ${var_name}");
             goto fn_fail;
         }
     }

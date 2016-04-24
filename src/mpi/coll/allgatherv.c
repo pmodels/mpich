@@ -115,7 +115,7 @@ int MPIR_Allgatherv_intra (
 #ifdef MPID_HAS_HETERO
     int tmp_buf_size, nbytes;
 #endif
-    MPIU_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL(1);
     
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -146,9 +146,9 @@ int MPIR_Allgatherv_intra (
 
             MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &recvtype_true_extent);
 
-            MPIU_Ensure_Aint_fits_in_pointer(total_count *
+            MPIR_Ensure_Aint_fits_in_pointer(total_count *
                            (MPL_MAX(recvtype_true_extent, recvtype_extent)));
-            MPIU_CHKLMEM_MALLOC(tmp_buf, void *, total_count*(MPL_MAX(recvtype_true_extent,recvtype_extent)), mpi_errno, "tmp_buf");
+            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, total_count*(MPL_MAX(recvtype_true_extent,recvtype_extent)), mpi_errno, "tmp_buf");
 
             /* adjust for potential negative lower bound in datatype */
             tmp_buf = (void *)((char*)tmp_buf - recvtype_true_lb);
@@ -344,7 +344,7 @@ int MPIR_Allgatherv_intra (
         else {
             /* heterogeneous. need to use temp. buffer. */
             MPIR_Pack_size_impl(total_count, recvtype, &tmp_buf_size);
-            MPIU_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
+            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
             
             /* calculate the value of nbytes, the number of bytes in packed
                representation corresponding to a single recvtype. Since
@@ -536,12 +536,12 @@ int MPIR_Allgatherv_intra (
         /* get true extent of recvtype */
         MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &recvtype_true_extent);
             
-        MPIU_Ensure_Aint_fits_in_pointer(total_count *
+        MPIR_Ensure_Aint_fits_in_pointer(total_count *
                         MPL_MAX(recvtype_true_extent, recvtype_extent));
         recvbuf_extent = total_count *
             (MPL_MAX(recvtype_true_extent, recvtype_extent));
 
-        MPIU_CHKLMEM_MALLOC(tmp_buf, void *, recvbuf_extent, mpi_errno, "tmp_buf");
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, recvbuf_extent, mpi_errno, "tmp_buf");
             
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - recvtype_true_lb);
@@ -737,7 +737,7 @@ int MPIR_Allgatherv_intra (
     }
 
  fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)
@@ -838,7 +838,7 @@ int MPIR_Allgatherv_inter (
 
     /* Get the local intracommunicator */
     if (!comm_ptr->local_comm) {
-	mpi_errno = MPIR_Setup_intercomm_localcomm( comm_ptr );
+	mpi_errno = MPII_Setup_intercomm_localcomm( comm_ptr );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
@@ -1009,12 +1009,12 @@ int MPI_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_ALLGATHERV);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ALLGATHERV);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_COLL_FUNC_ENTER(MPID_STATE_MPI_ALLGATHERV);
+    MPIR_FUNC_TERSE_COLL_ENTER(MPID_STATE_MPI_ALLGATHERV);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -1105,7 +1105,7 @@ int MPI_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_COLL_FUNC_EXIT(MPID_STATE_MPI_ALLGATHERV);
+    MPIR_FUNC_TERSE_COLL_EXIT(MPID_STATE_MPI_ALLGATHERV);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

@@ -115,8 +115,8 @@ int MPI_T_init_thread(int required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_INIT_THREAD);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_INIT_THREAD);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_INIT_THREAD);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_INIT_THREAD);
 
     /* ... body of routine ...  */
 
@@ -140,7 +140,7 @@ int MPI_T_init_thread(int required, int *provided)
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_INIT_THREAD);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_INIT_THREAD);
     return mpi_errno;
 
 fn_fail:

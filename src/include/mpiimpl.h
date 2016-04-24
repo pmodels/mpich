@@ -191,11 +191,11 @@ typedef struct MPIR_Topology MPIR_Topology;
 #include "mpir_ext.h"
 
 #ifdef HAVE_CXX_BINDING
-#include "mpir_cxxinterface.h"
+#include "mpii_cxxinterface.h"
 #endif
 
 #ifdef HAVE_FORTRAN_BINDING
-#include "mpir_f77interface.h"
+#include "mpii_f77interface.h"
 #endif
 
 

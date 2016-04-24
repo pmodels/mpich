@@ -45,7 +45,7 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
     int cvar_idx;
     name2index_hash_t *hash_entry;
     HASH_FIND_STR(cvar_hash, cvar_name, hash_entry);
-    MPIU_Assert(hash_entry != NULL);
+    MPIR_Assert(hash_entry != NULL);
     cvar_idx = hash_entry->idx;
     return (cvar_table_entry_t *)utarray_eltptr(cvar_table, cvar_idx);
 }
@@ -105,7 +105,7 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
 #define MPIR_T_CVAR_REGISTER_STATIC(dtype_, name_, addr_, count_, verb_, \
             scope_, default_, cat_, desc_) \
     do { \
-        MPIU_Assert(count_ > 0); \
+        MPIR_Assert(count_ > 0); \
         MPIR_T_CVAR_REGISTER_impl(dtype_, #name_, addr_, count_, MPI_T_ENUM_NULL, \
             verb_, MPI_T_BIND_NO_OBJECT, scope_, NULL, NULL, default_, cat_, desc_); \
     } while (0)
@@ -117,8 +117,8 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
 #define MPIR_T_CVAR_REGISTER_DYNAMIC(dtype_, name_, addr_, count_, etype_, \
             verb_, bind_, scope_, get_addr_, get_count_, default_, cat_, desc_) \
     do { \
-        MPIU_Assert(addr_ != NULL || get_addr_ != NULL); \
-        MPIU_Assert(count_ > 0 || get_count_ != NULL); \
+        MPIR_Assert(addr_ != NULL || get_addr_ != NULL); \
+        MPIR_Assert(count_ > 0 || get_count_ != NULL); \
         MPIR_T_CVAR_REGISTER_impl(dtype_, #name_, addr_, count_, etype_, \
             verb_, bind_, scope_, get_addr_, get_count_, default_, cat_, desc_); \
     } while (0)

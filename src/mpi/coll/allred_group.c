@@ -18,7 +18,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
         int gr_tmp_ = (gr_);                                                                                  \
         mpi_errno = MPIR_Group_translate_ranks_impl(group_ptr, 1, &(gr_tmp_), comm_ptr->local_group, &(cr_)); \
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);                                                               \
-        MPIU_Assert((cr_) != MPI_UNDEFINED);                                                                  \
+        MPIR_Assert((cr_) != MPI_UNDEFINED);                                                                  \
     } while (0)
 
 #undef FUNCNAME
@@ -39,11 +39,11 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
     void *tmp_buf;
     int group_rank, group_size;
     int cdst, csrc;
-    MPIU_CHKLMEM_DECL(3);
+    MPIR_CHKLMEM_DECL(3);
 
 #ifdef MPID_HAS_HETERO
     if (comm_ptr->is_hetero)
-        MPIU_Assert_fmt_msg(FALSE,("heterogeneous support for Allreduce_group_intra not yet implemented"));
+        MPIR_Assert_fmt_msg(FALSE,("heterogeneous support for Allreduce_group_intra not yet implemented"));
 #endif
 
     /* homogeneous case */
@@ -58,8 +58,8 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPID_Datatype_get_extent_macro(datatype, extent);
 
-    MPIU_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-    MPIU_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
+    MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
+    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
 
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
@@ -197,8 +197,8 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
                each process receives and the displacement within
                the buffer */
 
-            MPIU_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts");
-            MPIU_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements");
+            MPIR_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts");
+            MPIR_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements");
 
             for (i=0; i<(pof2-1); i++)
                 cnts[i] = count/pof2;
@@ -349,7 +349,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
     }
 
   fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)

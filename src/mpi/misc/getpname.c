@@ -72,11 +72,11 @@ int MPI_Get_processor_name( char *name, int *resultlen )
 {
     static const char FCNAME[] = "MPI_Get_processor_name";
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_GET_PROCESSOR_NAME);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET_PROCESSOR_NAME);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GET_PROCESSOR_NAME);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GET_PROCESSOR_NAME);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -100,7 +100,7 @@ int MPI_Get_processor_name( char *name, int *resultlen )
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GET_PROCESSOR_NAME);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GET_PROCESSOR_NAME);
     return mpi_errno;
 
   fn_fail:

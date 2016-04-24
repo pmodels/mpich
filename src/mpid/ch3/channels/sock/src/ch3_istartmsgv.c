@@ -15,16 +15,16 @@ static MPIR_Request * create_request(MPL_IOV * iov, int iov_count,
 {
     MPIR_Request * sreq;
     int i;
-    MPIDI_STATE_DECL(MPID_STATE_CREATE_REQUEST);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CREATE_REQUEST);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_CREATE_REQUEST);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CREATE_REQUEST);
     
     sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     /* --BEGIN ERROR HANDLING-- */
     if (sreq == NULL)
 	return NULL;
     /* --END ERROR HANDLING-- */
-    MPIU_Object_set_ref(sreq, 2);
+    MPIR_Object_set_ref(sreq, 2);
     sreq->kind = MPIR_REQUEST_KIND__SEND;
     
     for (i = 0; i < iov_count; i++)
@@ -33,7 +33,7 @@ static MPIR_Request * create_request(MPL_IOV * iov, int iov_count,
     }
     if (iov_offset == 0)
     {
-	MPIU_Assert(iov[0].MPL_IOV_LEN == sizeof(MPIDI_CH3_Pkt_t));
+	MPIR_Assert(iov[0].MPL_IOV_LEN == sizeof(MPIDI_CH3_Pkt_t));
 	sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) iov[0].MPL_IOV_BUF;
 	sreq->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) &sreq->dev.pending_pkt;
     }
@@ -42,7 +42,7 @@ static MPIR_Request * create_request(MPL_IOV * iov, int iov_count,
     sreq->dev.iov_count = iov_count;
     sreq->dev.OnDataAvail = 0;
 
-    MPIDI_FUNC_EXIT(MPID_STATE_CREATE_REQUEST);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CREATE_REQUEST);
     return sreq;
 }
 
@@ -79,11 +79,11 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov,
     MPIR_Request * sreq = NULL;
     MPIDI_CH3I_VC *vcch = &vc->ch;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
 
-    MPIU_Assert( n_iov <= MPL_IOV_LIMIT);
+    MPIR_Assert( n_iov <= MPL_IOV_LIMIT);
 
     /* The SOCK channel uses a fixed length header, the size of which is the 
        maximum of all possible packet headers */
@@ -242,6 +242,6 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov,
 
   fn_fail:
     *sreq_ptr = sreq;
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
     return mpi_errno;
 }

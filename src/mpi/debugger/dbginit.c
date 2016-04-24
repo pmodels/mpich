@@ -38,7 +38,7 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        If true, dump the proctable entries at MPIR_WaitForDebugger-time.
+        If true, dump the proctable entries at MPII_Wait_for_debugger-time.
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -101,7 +101,7 @@ void *MPIR_Breakpoint(void);
  * offered to the debugger.  Typical spots are in MPI_Init/MPI_Init_thread
  * after initialization is completed and in MPI_Abort before exiting.
  *
- * MPIR_DebuggerSetAborting( const char *msg )
+ * MPIR_Debugger_set_aborting( const char *msg )
  *
  * This routine should be called when MPI is exiting (either in finalize
  * or abort.  If a message is provided, it will call MPIR_Breakpoint.
@@ -111,7 +111,7 @@ void *MPIR_Breakpoint(void);
  * MPIR_being_debugged, and MPIR_debug_gate where exported globally.  
  * In MPICH, while these are global variables (so that the debugger can
  * find them easily), they are not explicitly exported or referenced outside
- * of a few routines.  In particular, MPID_Abort uses MPIR_DebuggerSetAborting
+ * of a few routines.  In particular, MPID_Abort uses MPIR_Debugger_set_aborting
  * instead of directly accessing these variables.
  */
 
@@ -177,7 +177,7 @@ static int SendqFreePool( void * );
 
 /*
  * If MPICH is built with the --enable-debugger option, MPI_Init and 
- * MPI_Init_thread will call MPIR_WaitForDebugger.  This ensures both that
+ * MPI_Init_thread will call MPII_Wait_for_debugger.  This ensures both that
  * the debugger can gather information on the MPI job before the MPI_Init
  * returns to the user and that the necessary symbols for providing 
  * information such as message queues is available.
@@ -186,7 +186,7 @@ static int SendqFreePool( void * );
  * all MPI processes to wait in this routine until the variable 
  * MPIR_debug_gate is set to 1.
  */
-void MPIR_WaitForDebugger( void )
+void MPII_Wait_for_debugger( void )
 {
 #ifdef MPIU_PROCTABLE_NEEDED
     int rank = MPIR_Process.comm_world->rank;
@@ -303,7 +303,7 @@ void * MPIR_Breakpoint( void )
  * If there is an abort message, call the MPIR_Breakpoint routine (which 
  * allows a tool such as a debugger to gain control.
  */
-void MPIR_DebuggerSetAborting( const char *msg )
+void MPIR_Debugger_set_aborting( const char *msg )
 {
     MPIR_debug_abort_string = (char *)msg;
     MPIR_debug_state        = MPIR_DEBUG_ABORTING;
@@ -348,7 +348,7 @@ static MPIR_Sendq *pool = 0;
 /* This routine is used to establish a queue of send requests to allow the
    debugger easier access to the active requests.  Some devices may be able
    to provide this information without requiring this separate queue. */
-void MPIR_Sendq_remember( MPIR_Request *req,
+void MPII_Sendq_remember( MPIR_Request *req,
 			  int rank, int tag, int context_id )
 {
 #if defined HAVE_DEBUGGER_SUPPORT
@@ -381,7 +381,7 @@ fn_exit:
 #endif  /* HAVE_DEBUGGER_SUPPORT */
 }
 
-void MPIR_Sendq_forget( MPIR_Request *req )
+void MPII_Sendq_forget( MPIR_Request *req )
 {
 #if defined HAVE_DEBUGGER_SUPPORT
     MPIR_Sendq *p, *prev;
@@ -454,7 +454,7 @@ typedef struct MPIR_Comm_list {
 
 MPIR_Comm_list MPIR_All_communicators = { 0, 0 };
 
-void MPIR_CommL_remember( MPIR_Comm *comm_ptr )
+void MPII_CommL_remember( MPIR_Comm *comm_ptr )
 {   
     MPL_DBG_MSG_P(MPIR_DBG_COMM,VERBOSE,
 		   "Adding communicator %p to remember list",comm_ptr);
@@ -474,7 +474,7 @@ void MPIR_CommL_remember( MPIR_Comm *comm_ptr )
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr));
 }
 
-void MPIR_CommL_forget( MPIR_Comm *comm_ptr )
+void MPII_CommL_forget( MPIR_Comm *comm_ptr )
 {
     MPIR_Comm *p, *prev;
 

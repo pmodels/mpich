@@ -10,7 +10,7 @@ typedef struct msgpair {
         const unsigned int sentinal1;
         const char *short_name, *long_name; 
         const unsigned int sentinal2; } msgpair;
-#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG_NONE
+#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__NONE
 /* The names are in sorted order, allowing the use of a simple
   linear search or bisection algorithm to find the message corresponding to
   a particular message */
@@ -1997,7 +1997,7 @@ static const msgpair generic_err_msgs[] = {
 };
 #endif
 
-#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG_GENERIC
+#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__GENERIC
 static const char short_spc0[] = "**CreateFileMapping %d";
 static const char long_spc0[]  = "CreateFileMapping failed, error %d";
 static const char short_spc1[] = "**CreateThread %d";
@@ -3285,7 +3285,7 @@ static const msgpair specific_err_msgs[] = {
 };
 #endif
 
-#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG_NONE
+#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__NONE
 #define MPIR_MAX_ERROR_CLASS_INDEX 54
 static int class_to_index[] = {
 641,42,113,126,642,104,548,564,164,504,

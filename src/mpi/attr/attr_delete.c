@@ -57,13 +57,13 @@ int MPI_Attr_delete(MPI_Comm comm, int keyval)
     static const char FCNAME[] = "MPI_Attr_delete";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPIR_Keyval *keyval_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_ATTR_DELETE);
+    MPII_Keyval *keyval_ptr;
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ATTR_DELETE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_ATTR_DELETE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_ATTR_DELETE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -78,7 +78,7 @@ int MPI_Attr_delete(MPI_Comm comm, int keyval)
     
     /* Convert MPI object handles to object pointers */
     MPIR_Comm_get_ptr( comm, comm_ptr );
-    MPIR_Keyval_get_ptr( keyval, keyval_ptr );
+    MPII_Keyval_get_ptr( keyval, keyval_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -89,7 +89,7 @@ int MPI_Attr_delete(MPI_Comm comm, int keyval)
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
 	    /* If comm_ptr is not valid, it will be reset to null */
             /* Validate keyval_ptr */
-	    MPIR_Keyval_valid_ptr( keyval_ptr, mpi_errno );
+	    MPII_Keyval_valid_ptr( keyval_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
@@ -104,7 +104,7 @@ int MPI_Attr_delete(MPI_Comm comm, int keyval)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_ATTR_DELETE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_ATTR_DELETE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

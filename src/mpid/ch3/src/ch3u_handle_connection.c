@@ -49,9 +49,9 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
 {
     int inuse;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_HANDLE_CONNECTION);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_HANDLE_CONNECTION);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_HANDLE_CONNECTION);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_HANDLE_CONNECTION);
 
     switch (event)
     {
@@ -159,14 +159,14 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
             /* FIXME: Decrement the reference count?  Who increments? */
             /* FIXME: The reference count is often already 0.  But
                not always */
-            /* MPIU_Object_set_ref(vc, 0); ??? */
+            /* MPIR_Object_set_ref(vc, 0); ??? */
 
             /*
              * FIXME: The VC used in connect accept has a NULL 
              * process group
              */
             /* XXX DJG FIXME-MT should we be checking this ref_count? */
-            if (vc->pg != NULL && (MPIU_Object_get_ref(vc) == 0))
+            if (vc->pg != NULL && (MPIR_Object_get_ref(vc) == 0))
             {
                 /* FIXME: Who increments the reference count that
                    this is decrementing? */
@@ -191,7 +191,7 @@ int MPIDI_CH3U_Handle_connection(MPIDI_VC_t * vc, MPIDI_VC_Event_t event)
     }
 
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_HANDLE_CONNECTION);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_HANDLE_CONNECTION);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -218,13 +218,13 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
     MPIDI_CH3_Pkt_close_t * close_pkt = &upkt.close;
     MPIR_Request * sreq;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_VC_SENDCLOSE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_VC_SENDCLOSE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_VC_SENDCLOSE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_VC_SENDCLOSE);
 
     MPID_THREAD_CS_ENTER(POBJ, vc->pobj_mutex);
 
-    MPIU_Assert( vc->state == MPIDI_VC_STATE_ACTIVE ||
+    MPIR_Assert( vc->state == MPIDI_VC_STATE_ACTIVE ||
 		 vc->state == MPIDI_VC_STATE_REMOTE_CLOSE );
 
     MPIDI_Pkt_init(close_pkt, MPIDI_CH3_PKT_CLOSE);
@@ -248,7 +248,7 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
         MPIDI_CHANGE_VC_STATE(vc, LOCAL_CLOSE);
     }
     else {
-	MPIU_Assert( vc->state == MPIDI_VC_STATE_REMOTE_CLOSE );
+	MPIR_Assert( vc->state == MPIDI_VC_STATE_REMOTE_CLOSE );
         MPIDI_CHANGE_VC_STATE(vc, CLOSE_ACKED);
     }
 		
@@ -264,7 +264,7 @@ int MPIDI_CH3U_VC_SendClose( MPIDI_VC_t *vc, int rank )
  fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, vc->pobj_mutex);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_VC_SENDCLOSE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_VC_SENDCLOSE);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -322,7 +322,7 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
                      "received close(FALSE) from %d, moving to REMOTE_CLOSE.",
 				   vc->pg_rank);
             }
-	    MPIU_Assert(vc->state == MPIDI_VC_STATE_ACTIVE);
+	    MPIR_Assert(vc->state == MPIDI_VC_STATE_ACTIVE);
             MPIDI_CHANGE_VC_STATE(vc, REMOTE_CLOSE);
 	}
     }
@@ -331,7 +331,7 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	MPL_DBG_MSG_D(MPIDI_CH3_DBG_DISCONNECT,TYPICAL,
                        "received close(TRUE) from %d, moving to CLOSED.", 
 			       vc->pg_rank);
-	MPIU_Assert (vc->state == MPIDI_VC_STATE_LOCAL_CLOSE || 
+	MPIR_Assert (vc->state == MPIDI_VC_STATE_LOCAL_CLOSE ||
 		     vc->state == MPIDI_VC_STATE_CLOSE_ACKED);
         MPIDI_CHANGE_VC_STATE(vc, CLOSED);
 	/* For example, with sockets, Connection_terminate will close
@@ -371,9 +371,9 @@ int MPIDI_CH3U_VC_WaitForClose( void )
 {
     MPID_Progress_state progress_state;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_VC_WAITFORCLOSE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_VC_WAITFORCLOSE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_VC_WAITFORCLOSE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_VC_WAITFORCLOSE);
 
     MPID_Progress_start(&progress_state);
     while(MPIDI_Outstanding_close_ops > 0) {
@@ -390,7 +390,7 @@ int MPIDI_CH3U_VC_WaitForClose( void )
     }
     MPID_Progress_end(&progress_state);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_VC_WAITFORCLOSE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_VC_WAITFORCLOSE);
     return mpi_errno;
 }
 
@@ -402,9 +402,9 @@ static int terminate_failed_VCs(MPIR_Group *new_failed_group)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPIDI_STATE_DECL(MPID_STATE_TERMINATE_FAILED_VCS);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_TERMINATE_FAILED_VCS);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_TERMINATE_FAILED_VCS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_TERMINATE_FAILED_VCS);
 
     for (i = 0; i < new_failed_group->size; ++i) {
         MPIDI_VC_t *vc;
@@ -416,7 +416,7 @@ static int terminate_failed_VCs(MPIR_Group *new_failed_group)
     }
     
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_TERMINATE_FAILED_VCS);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_TERMINATE_FAILED_VCS);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -449,9 +449,9 @@ int MPIDI_CH3U_Get_failed_group(int last_rank, MPIR_Group **failed_group)
     int i, mpi_errno = MPI_SUCCESS, rank;
     UT_array *failed_procs = NULL;
     MPIR_Group *world_group;
-    MPIDI_STATE_DECL(MPID_STATE_GET_FAILED_GROUP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_GET_FAILED_GROUP);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_GET_FAILED_GROUP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_GET_FAILED_GROUP);
 
     MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER, VERBOSE, "Getting failed group with %d as last acknowledged\n", last_rank);
 
@@ -497,7 +497,7 @@ int MPIDI_CH3U_Get_failed_group(int last_rank, MPIR_Group **failed_group)
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_GET_FAILED_GROUP);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_GET_FAILED_GROUP);
     if (failed_procs)
         utarray_free(failed_procs);
     return mpi_errno;
@@ -518,9 +518,9 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
     int len;
     char *kvsname;
     MPIR_Group *prev_failed_group, *new_failed_group;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
 
     /* FIXME: Currently this only handles failed processes in
        comm_world.  We need to fix hydra to include the pgid along
@@ -577,7 +577,7 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
     }
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
     return mpi_errno;
 
  fn_oom: /* out-of-memory handler for utarray operations */

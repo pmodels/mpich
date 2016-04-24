@@ -50,12 +50,12 @@ int MPI_Start(MPI_Request *request)
     static const char FCNAME[] = "MPI_Start";
     MPIR_Request * request_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_START);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_START);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_PT2PT_FUNC_ENTER(MPID_STATE_MPI_START);
+    MPIR_FUNC_TERSE_PT2PT_ENTER(MPID_STATE_MPI_START);
 
     /* Validate handle parameters needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -94,7 +94,7 @@ int MPI_Start(MPI_Request *request)
     /* ... end of body of routine ... */
     
   fn_exit:
-    MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_START);
+    MPIR_FUNC_TERSE_PT2PT_EXIT(MPID_STATE_MPI_START);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

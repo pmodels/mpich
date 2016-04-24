@@ -73,15 +73,15 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_int
 {
     int mpi_errno = MPI_SUCCESS;
     int  local_high, remote_high, new_size;
-    MPIU_Context_id_t new_context_id;
+    MPIR_Context_id_t new_context_id;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_MERGE_IMPL);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_MERGE_IMPL);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_MERGE_IMPL);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_MERGE_IMPL);
     /* Make sure that we have a local intercommunicator */
     if (!comm_ptr->local_comm) {
         /* Manufacture the local communicator */
-        mpi_errno = MPIR_Setup_intercomm_localcomm( comm_ptr );
+        mpi_errno = MPII_Setup_intercomm_localcomm( comm_ptr );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
@@ -122,7 +122,7 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_int
                 {
                     /* req#3930: The merge algorithm will deadlock if the gpids are inadvertently the
                        same due to implementation bugs in the MPID_GPID_Get() function */
-                    MPIU_Assert(rc != 0);
+                    MPIR_Assert(rc != 0);
                 }
             }
         }
@@ -174,7 +174,7 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_int
     new_context_id = 0;
     mpi_errno = MPIR_Get_contextid_sparse( (*new_intracomm_ptr), &new_context_id, FALSE );
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    MPIU_Assert(new_context_id != 0);
+    MPIR_Assert(new_context_id != 0);
 
     /* We release this communicator that was involved just to
      * get valid context id and create true one
@@ -198,7 +198,7 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_int
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
  fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_MERGE_IMPL);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_MERGE_IMPL);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -255,12 +255,12 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Comm *new_intracomm_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_INTERCOMM_MERGE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_INTERCOMM_MERGE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);  
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_INTERCOMM_MERGE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_INTERCOMM_MERGE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -298,7 +298,7 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
     /* Make sure that we have a local intercommunicator */
     if (!comm_ptr->local_comm) {
 	/* Manufacture the local communicator */
-	MPIR_Setup_intercomm_localcomm( comm_ptr );
+	MPII_Setup_intercomm_localcomm( comm_ptr );
     }
 
 #   ifdef HAVE_ERROR_CHECKING
@@ -339,7 +339,7 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
     /* ... end of body of routine ... */
     
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_INTERCOMM_MERGE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_INTERCOMM_MERGE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

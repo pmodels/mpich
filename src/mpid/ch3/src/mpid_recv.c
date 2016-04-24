@@ -24,9 +24,9 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request * rreq;
     int found;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_RECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RECV);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RECV);
 
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                       "rank=%d, tag=%d, context=%d", rank, tag,
@@ -87,7 +87,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
 
             if (MPIR_Request_is_complete(rreq)) {
                 /* is it ever possible to have (cc==0 && recv_pending>0) ? */
-                MPIU_Assert(!recv_pending);
+                MPIR_Assert(!recv_pending);
 
                 /* All of the data has arrived, we need to unpack the data and 
                    then free the buffer and the request. */
@@ -112,7 +112,7 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
 	    {
                 /* there should never be outstanding completion events for an unexpected
                  * recv without also having a "pending recv" */
-                MPIU_Assert(recv_pending);
+                MPIR_Assert(recv_pending);
 
 		/* The data is still being transfered across the net.  
 		   We'll leave it to the progress engine to handle once the
@@ -198,6 +198,6 @@ int MPID_Recv(void * buf, MPI_Aint count, MPI_Datatype datatype, int rank, int t
     });
 
  fn_fail:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_RECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RECV);
     return mpi_errno;
 }

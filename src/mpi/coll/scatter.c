@@ -85,7 +85,7 @@ int MPIR_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype
     void *tmp_buf=NULL;
     int        mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    MPIU_CHKLMEM_DECL(4);
+    MPIR_CHKLMEM_DECL(4);
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -115,14 +115,14 @@ int MPIR_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype
                in the event of recvbuf=MPI_IN_PLACE on the root,
                recvcount and recvtype are not valid */
             MPID_Datatype_get_size_macro(sendtype, sendtype_size);
-            MPIU_Ensure_Aint_fits_in_pointer(MPIU_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
+            MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
 					     extent*sendcount*comm_size);
 
             nbytes = sendtype_size * sendcount;
         }
         else {
             MPID_Datatype_get_size_macro(recvtype, recvtype_size);
-            MPIU_Ensure_Aint_fits_in_pointer(extent*recvcount*comm_size);
+            MPIR_Ensure_Aint_fits_in_pointer(extent*recvcount*comm_size);
             nbytes = recvtype_size * recvcount;
         }
         
@@ -132,7 +132,7 @@ int MPIR_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype
            receive data of max size (nbytes*comm_size)/2 */
         if (relative_rank && !(relative_rank % 2)) {
 	    tmp_buf_size = (nbytes*comm_size)/2;
-            MPIU_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
+            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
         }
         
         /* if the root is not rank 0, we reorder the sendbuf in order of
@@ -142,7 +142,7 @@ int MPIR_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype
         if (rank == root) {
             if (root != 0) {
 		tmp_buf_size = nbytes*comm_size;
-                MPIU_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
+                MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
 
                 if (recvbuf != MPI_IN_PLACE)
                     mpi_errno = MPIR_Localcopy(((char *) sendbuf + extent*sendcount*rank),
@@ -271,7 +271,7 @@ int MPIR_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype
         if (rank == root) {
             MPIR_Pack_size_impl(sendcount*comm_size, sendtype, &tmp_buf_size);
 
-            MPIU_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
+            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
 
           /* calculate the value of nbytes, the number of bytes in packed
              representation that each process receives. We can't
@@ -326,7 +326,7 @@ int MPIR_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype
         }
         else {
             MPIR_Pack_size_impl(recvcount*(comm_size/2), recvtype, &tmp_buf_size);
-            MPIU_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
+            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, tmp_buf_size, mpi_errno, "tmp_buf");
 
             /* calculate nbytes */
             position = 0;
@@ -398,7 +398,7 @@ int MPIR_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype
 #endif /* MPID_HAS_HETERO */
     
  fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)
@@ -435,7 +435,7 @@ int MPIR_Scatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype
     MPI_Aint extent, true_extent, true_lb = 0;
     void *tmp_buf=NULL;
     MPIR_Comm *newcomm_ptr = NULL;
-    MPIU_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL(1);
 
     if (root == MPI_PROC_NULL) {
         /* local processes other than root do nothing */
@@ -478,11 +478,11 @@ int MPIR_Scatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype
                 MPIR_Type_get_true_extent_impl(recvtype, &true_lb, &true_extent);
 
                 MPID_Datatype_get_extent_macro(recvtype, extent);
-		MPIU_Ensure_Aint_fits_in_pointer(extent*recvcount*local_size);
-		MPIU_Ensure_Aint_fits_in_pointer(MPIU_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
+		MPIR_Ensure_Aint_fits_in_pointer(extent*recvcount*local_size);
+		MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
 						 sendcount*remote_size*extent);
 
-                MPIU_CHKLMEM_MALLOC(tmp_buf, void *, recvcount*local_size*(MPL_MAX(extent,true_extent)), mpi_errno, "tmp_buf");
+                MPIR_CHKLMEM_MALLOC(tmp_buf, void *, recvcount*local_size*(MPL_MAX(extent,true_extent)), mpi_errno, "tmp_buf");
                 
                 /* adjust for potential negative lower bound in datatype */
                 tmp_buf = (void *)((char*)tmp_buf - true_lb);
@@ -500,7 +500,7 @@ int MPIR_Scatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype
             
             /* Get the local intracommunicator */
             if (!comm_ptr->local_comm)
-                MPIR_Setup_intercomm_localcomm( comm_ptr );
+                MPII_Setup_intercomm_localcomm( comm_ptr );
             
             newcomm_ptr = comm_ptr->local_comm;
             
@@ -545,7 +545,7 @@ int MPIR_Scatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype
     }
 
  fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)
@@ -666,12 +666,12 @@ int MPI_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_SCATTER);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_SCATTER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_COLL_FUNC_ENTER(MPID_STATE_MPI_SCATTER);
+    MPIR_FUNC_TERSE_COLL_ENTER(MPID_STATE_MPI_SCATTER);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -784,7 +784,7 @@ int MPI_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     /* ... end of body of routine ... */
     
   fn_exit:
-    MPID_MPI_COLL_FUNC_EXIT(MPID_STATE_MPI_SCATTER);
+    MPIR_FUNC_TERSE_COLL_EXIT(MPID_STATE_MPI_SCATTER);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

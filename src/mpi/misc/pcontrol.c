@@ -53,11 +53,11 @@ int MPI_Pcontrol(const int level, ...)
 {
     int mpi_errno = MPI_SUCCESS;
     va_list list;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_PCONTROL);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_PCONTROL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_PCONTROL);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_PCONTROL);
 
     /* ... body of routine ...  */
     
@@ -70,7 +70,7 @@ int MPI_Pcontrol(const int level, ...)
     va_end( list );
 
     /* ... end of body of routine ... */
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_PCONTROL);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_PCONTROL);
     return mpi_errno;
     /* There should never be any fn_fail case; this suppresses warnings from
        compilers that object to unused labels */

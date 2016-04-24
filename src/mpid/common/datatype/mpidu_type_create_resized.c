@@ -20,13 +20,13 @@ int MPIDU_Type_create_resized(MPI_Datatype oldtype,
 {
     MPIDU_Datatype *new_dtp;
 
-    new_dtp = (MPIDU_Datatype *) MPIU_Handle_obj_alloc(&MPIDU_Datatype_mem);
+    new_dtp = (MPIDU_Datatype *) MPIR_Handle_obj_alloc(&MPIDU_Datatype_mem);
     /* --BEGIN ERROR HANDLING-- */
     if (!new_dtp) return MPIDI_Type_create_resized_memory_error();
     /* --END ERROR HANDLING-- */
 
-    /* handle is filled in by MPIU_Handle_obj_alloc() */
-    MPIU_Object_set_ref(new_dtp, 1);
+    /* handle is filled in by MPIR_Handle_obj_alloc() */
+    MPIR_Object_set_ref(new_dtp, 1);
     new_dtp->is_permanent = 0;
     new_dtp->is_committed = 0;
     new_dtp->attributes   = 0;

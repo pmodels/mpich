@@ -5,4 +5,4 @@
  */
 
 /* Function prototypes for communicator helper functions */
-int MPIR_Get_intercomm_contextid( MPIR_Comm *, MPIU_Context_id_t *, MPIU_Context_id_t * );
+int MPIR_Get_intercomm_contextid( MPIR_Comm *, MPIR_Context_id_t *, MPIR_Context_id_t * );

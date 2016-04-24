@@ -45,7 +45,7 @@ MPIDI_Fetch_data_op(const void   * origin_addr,
         dest_addr = (char *) base + disp_unit * target_disp;
 
         MPIDU_Datatype_get_size_macro(origin_datatype, len);
-        MPIU_Memcpy(result_addr, dest_addr, len);
+        MPIR_Memcpy(result_addr, dest_addr, len);
         if (op != MPI_NO_OP) {
             uop = MPIR_OP_HDL_TO_FN(op);
             one = 1;

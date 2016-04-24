@@ -17,9 +17,9 @@ int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint
 {
     int comm_size;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_WIN_SHARED_QUERY);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_WIN_SHARED_QUERY);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3_WIN_SHARED_QUERY);
+    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_CH3_WIN_SHARED_QUERY);
 
     if (win_ptr->comm_ptr->node_comm == NULL) {
         mpi_errno = MPIDI_CH3U_Win_shared_query(win_ptr, target_rank, size, disp_unit, baseptr);
@@ -44,7 +44,7 @@ int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint
         for (i = 0; i < comm_size; i++) {
             if (win_ptr->basic_info_table[i].size > 0) {
                 int local_i = win_ptr->comm_ptr->intranode_table[i];
-                MPIU_Assert(local_i >= 0 && local_i < win_ptr->comm_ptr->node_comm->local_size);
+                MPIR_Assert(local_i >= 0 && local_i < win_ptr->comm_ptr->node_comm->local_size);
                 *size = win_ptr->basic_info_table[i].size;
                 *disp_unit = win_ptr->basic_info_table[i].disp_unit;
                 *((void **) baseptr) = win_ptr->shm_base_addrs[local_i];
@@ -55,7 +55,7 @@ int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint
     }
     else {
         int local_target_rank = win_ptr->comm_ptr->intranode_table[target_rank];
-        MPIU_Assert(local_target_rank >= 0 &&
+        MPIR_Assert(local_target_rank >= 0 &&
                     local_target_rank < win_ptr->comm_ptr->node_comm->local_size);
         *size = win_ptr->basic_info_table[target_rank].size;
         *disp_unit = win_ptr->basic_info_table[target_rank].disp_unit;
@@ -63,7 +63,7 @@ int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint
     }
 
   fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3_WIN_SHARED_QUERY);
+    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH3_WIN_SHARED_QUERY);
     return mpi_errno;
 
   fn_fail:
@@ -78,9 +78,9 @@ int MPIDI_CH3_SHM_Win_shared_query(MPIR_Win * win_ptr, int target_rank, MPI_Aint
 int MPIDI_CH3_SHM_Win_free(MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_SHM_WIN_FREE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_SHM_WIN_FREE);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3_SHM_WIN_FREE);
+    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_CH3_SHM_WIN_FREE);
 
     if ((*win_ptr)->comm_ptr->node_comm == NULL) {
         goto fn_exit;
@@ -120,7 +120,7 @@ int MPIDI_CH3_SHM_Win_free(MPIR_Win ** win_ptr)
          * If node_comm == NULL, this process is the only one on this node, therefore
          * we use comm_self as node comm. */
         node_comm_ptr = (*win_ptr)->comm_ptr->node_comm;
-        MPIU_Assert(node_comm_ptr != NULL);
+        MPIR_Assert(node_comm_ptr != NULL);
 
         if (node_comm_ptr->rank == 0) {
             MPIDI_CH3I_SHM_MUTEX_DESTROY(*win_ptr);
@@ -156,7 +156,7 @@ int MPIDI_CH3_SHM_Win_free(MPIR_Win ** win_ptr)
     }
 
   fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3_SHM_WIN_FREE);
+    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH3_SHM_WIN_FREE);
     return mpi_errno;
 
   fn_fail:

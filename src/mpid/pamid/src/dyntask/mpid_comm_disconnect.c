@@ -320,8 +320,8 @@ int MPID_Comm_disconnect(MPIR_Comm *comm_ptr)
 
 	  /* sanity: the INVALID context ID value could potentially conflict with the
 	   * dynamic proccess space */
-	  MPIU_Assert(lcomm->context_id     != MPIU_INVALID_CONTEXT_ID);
-	  MPIU_Assert(lcomm->recvcontext_id != MPIU_INVALID_CONTEXT_ID);
+          MPIR_Assert(lcomm->context_id     != MPIR_INVALID_CONTEXT_ID);
+          MPIR_Assert(lcomm->recvcontext_id != MPIR_INVALID_CONTEXT_ID);
 
 	  /* FIXME - we probably need a unique context_id. */
 

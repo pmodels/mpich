@@ -2,7 +2,7 @@ This directory contains wrappers funcs to provide platform independence to MPICH
 
 TODO
 ------
-# The code currently uses MPIU_Assert*() and hence requires device support. Re-define MPIU_Assert*().
+# The code currently uses MPIR_Assert*() and hence requires device support. Re-define MPIR_Assert*().
 
 Notes:
 

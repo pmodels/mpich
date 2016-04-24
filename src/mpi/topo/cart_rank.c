@@ -92,11 +92,11 @@ int MPI_Cart_rank(MPI_Comm comm, const int coords[], int *rank)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Topology *cart_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_CART_RANK);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_CART_RANK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_CART_RANK);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_CART_RANK);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -156,7 +156,7 @@ int MPI_Cart_rank(MPI_Comm comm, const int coords[], int *rank)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_CART_RANK);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_CART_RANK);
     return mpi_errno;
 
   fn_fail:

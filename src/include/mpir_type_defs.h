@@ -46,7 +46,7 @@
 
 #include "mpl.h"
 
-/* Use the MPIU_PtrToXXX macros to convert pointers to and from integer types */
+/* Use the MPIR_PtrToXXX macros to convert pointers to and from integer types */
 
 /* The Microsoft compiler will not allow casting of different sized types
  * without
@@ -57,25 +57,25 @@
 
 /* PtrToAint converts a pointer to an MPI_Aint type, truncating bits if necessary */
 #ifdef HAVE_PTRTOAINT
-#define MPIU_PtrToAint(a) ((MPI_Aint)(INT_PTR) (a))
+#define MPIR_Ptr_to_aint(a) ((MPI_Aint)(INT_PTR) (a))
 #else
 /* An MPI_Aint may be *larger* than a pointer.  By using 2 casts, we can
    keep some compilers from complaining about converting a pointer to an
    integer of a different size */
-#define MPIU_PtrToAint(a) ((MPI_Aint)(uintptr_t)(a))
+#define MPIR_Ptr_to_aint(a) ((MPI_Aint)(uintptr_t)(a))
 #endif
 
 /* AintToPtr converts an MPI_Aint to a pointer type, extending bits if necessary */
 #ifdef HAVE_AINTTOPTR
-#define MPIU_AintToPtr(a) ((VOID *)(INT_PTR)((MPI_Aint)a))
+#define MPIR_Aint_to_ptr(a) ((VOID *)(INT_PTR)((MPI_Aint)a))
 #else
-#define MPIU_AintToPtr(a) (void*)(a)
+#define MPIR_Aint_to_ptr(a) (void*)(a)
 #endif
 
 /* Adding the 32-bit compute/64-bit I/O related type-casts in here as
  * they are not a part of the MPI standard yet. */
-#define MPIU_AINT_CAST_TO_VOID_PTR (void *)(intptr_t)
-#define MPIU_VOID_PTR_CAST_TO_MPI_AINT (MPI_Aint)(uintptr_t)
-#define MPIU_PTR_DISP_CAST_TO_MPI_AINT (MPI_Aint)(intptr_t)
+#define MPIR_AINT_CAST_TO_VOID_PTR (void *)(intptr_t)
+#define MPIR_VOID_PTR_CAST_TO_MPI_AINT (MPI_Aint)(uintptr_t)
+#define MPIR_PTR_DISP_CAST_TO_MPI_AINT (MPI_Aint)(intptr_t)
 
 #endif /* !defined(MPIR_TYPE_DEFS_H_INCLUDED) */

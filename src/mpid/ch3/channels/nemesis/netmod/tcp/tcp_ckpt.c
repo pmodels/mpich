@@ -19,14 +19,14 @@ int MPID_nem_tcp_ckpt_pause_send_vc(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_CKPT_PAUSE_SEND_VC);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_CKPT_PAUSE_SEND_VC);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_CKPT_PAUSE_SEND_VC);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_CKPT_PAUSE_SEND_VC);
 
     vc_tcp->send_paused = TRUE;
     
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_CKPT_PAUSE_SEND_VC);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_CKPT_PAUSE_SEND_VC);
     return mpi_errno;
 fn_fail:
 
@@ -41,9 +41,9 @@ int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intpt
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_tcp_vc_area *vc_tcp = VC_TCP(vc);
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_CKPT_UNPAUSE_HANDLER);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_CKPT_UNPAUSE_HANDLER);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_CKPT_UNPAUSE_HANDLER);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_CKPT_UNPAUSE_HANDLER);
 
     vc_tcp->send_paused = FALSE;
 
@@ -61,7 +61,7 @@ int MPID_nem_tcp_pkt_unpause_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intpt
 fn_exit:
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_CKPT_UNPAUSE_HANDLER);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_CKPT_UNPAUSE_HANDLER);
     return mpi_errno;
 fn_fail:
 
@@ -77,9 +77,9 @@ int MPID_nem_tcp_ckpt_continue_vc(MPIDI_VC_t *vc)
     int mpi_errno = MPI_SUCCESS;
     MPID_PKT_DECL_CAST(upkt, MPIDI_nem_tcp_pkt_unpause_t, unpause_pkt);
     MPIR_Request *unpause_req;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_CKPT_CONTINUE_VC);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_CKPT_CONTINUE_VC);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_CKPT_CONTINUE_VC);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_CKPT_CONTINUE_VC);
 
     unpause_pkt->type = MPIDI_NEM_PKT_NETMOD;
     unpause_pkt->subtype = MPIDI_NEM_TCP_PKT_UNPAUSE;
@@ -93,7 +93,7 @@ int MPID_nem_tcp_ckpt_continue_vc(MPIDI_VC_t *vc)
     }
 
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_CKPT_CONTINUE_VC);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_CKPT_CONTINUE_VC);
     return mpi_errno;
 fn_fail:
 
@@ -112,9 +112,9 @@ int MPID_nem_tcp_ckpt_restart_vc(MPIDI_VC_t *vc)
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_nem_tcp_pkt_unpause_t * const pkt = (MPIDI_nem_tcp_pkt_unpause_t *)&upkt;
     MPIR_Request *sreq;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_CKPT_RESTART_VC);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_TCP_CKPT_RESTART_VC);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_CKPT_RESTART_VC);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_TCP_CKPT_RESTART_VC);
 
     pkt->type = MPIDI_NEM_PKT_NETMOD;
     pkt->subtype = MPIDI_NEM_TCP_PKT_UNPAUSE;
@@ -132,7 +132,7 @@ int MPID_nem_tcp_ckpt_restart_vc(MPIDI_VC_t *vc)
     }
     
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_CKPT_RESTART_VC);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_TCP_CKPT_RESTART_VC);
     return mpi_errno;
 fn_fail:
 

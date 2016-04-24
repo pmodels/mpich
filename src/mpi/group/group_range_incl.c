@@ -34,9 +34,9 @@ int MPIR_Group_range_incl_impl(MPIR_Group *group_ptr, int n, int ranges[][3], MP
 {
     int mpi_errno = MPI_SUCCESS;
     int first, last, stride, nnew, i, j, k;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GROUP_RANGE_INCL_IMPL);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_GROUP_RANGE_INCL_IMPL);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GROUP_RANGE_INCL_IMPL);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_GROUP_RANGE_INCL_IMPL);
 
     /* Compute size, assuming that included ranks are valid (and distinct) */
     nnew = 0;
@@ -86,7 +86,7 @@ int MPIR_Group_range_incl_impl(MPIR_Group *group_ptr, int n, int ranges[][3], MP
     /* TODO calculate is_local_dense_monotonic */
 
  fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_GROUP_RANGE_INCL_IMPL);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_GROUP_RANGE_INCL_IMPL);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -134,12 +134,12 @@ int MPI_Group_range_incl(MPI_Group group, int n, int ranges[][3],
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr = NULL, *new_group_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_RANGE_INCL);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GROUP_RANGE_INCL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GROUP_RANGE_INCL);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GROUP_RANGE_INCL);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -183,7 +183,7 @@ int MPI_Group_range_incl(MPI_Group group, int n, int ranges[][3],
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GROUP_RANGE_INCL);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GROUP_RANGE_INCL);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

@@ -75,13 +75,13 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     int active_flag;
     int last_disabled_anysource = -1;
     int mpi_errno = MPI_SUCCESS;
-    MPIU_CHKLMEM_DECL(1);
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_TESTANY);
+    MPIR_CHKLMEM_DECL(1);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TESTANY);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_PT2PT_FUNC_ENTER(MPID_STATE_MPI_TESTANY);
+    MPIR_FUNC_TERSE_PT2PT_ENTER(MPID_STATE_MPI_TESTANY);
 
     /* Check the arguments */
 #   ifdef HAVE_ERROR_CHECKING
@@ -111,7 +111,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     /* Convert MPI request handles to a request object pointers */
     if (count > MPIR_REQUEST_PTR_ARRAY_SIZE)
     {
-	MPIU_CHKLMEM_MALLOC_ORJUMP(request_ptrs, MPIR_Request **, count * sizeof(MPIR_Request *), mpi_errno, "request pointers");
+	MPIR_CHKLMEM_MALLOC_ORJUMP(request_ptrs, MPIR_Request **, count * sizeof(MPIR_Request *), mpi_errno, "request pointers");
     }
 
     n_inactive = 0;
@@ -217,10 +217,10 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
   fn_exit:
     if (count > MPIR_REQUEST_PTR_ARRAY_SIZE)
     {
-	MPIU_CHKLMEM_FREEALL();
+	MPIR_CHKLMEM_FREEALL();
     }
 
-    MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_TESTANY);
+    MPIR_FUNC_TERSE_PT2PT_EXIT(MPID_STATE_MPI_TESTANY);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

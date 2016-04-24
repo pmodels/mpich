@@ -72,11 +72,11 @@ int MPI_Pack_external(const char datarep[],
     MPI_Aint first, last;
 
     MPID_Segment *segp;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_PACK_EXTERNAL);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_PACK_EXTERNAL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_PACK_EXTERNAL);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_PACK_EXTERNAL);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -137,7 +137,7 @@ int MPI_Pack_external(const char datarep[],
     last  = SEGMENT_IGNORE_LAST;
 
     /* Ensure that pointer increment fits in a pointer */
-    MPIU_Ensure_Aint_fits_in_pointer((MPIU_VOID_PTR_CAST_TO_MPI_AINT outbuf) + *position);
+    MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT outbuf) + *position);
 
     MPID_Segment_pack_external32(segp,
 				 first,
@@ -151,7 +151,7 @@ int MPI_Pack_external(const char datarep[],
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_PACK_EXTERNAL);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_PACK_EXTERNAL);
     return mpi_errno;
 
   fn_fail:

@@ -37,15 +37,15 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPL_IOV *iov, int n_iov, MPIR_Request 
     int in_cs = FALSE;
     int again = 0;
     int j;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
 
     MPIR_ERR_CHKANDJUMP1(vc->state == MPIDI_VC_STATE_MORIBUND, mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
 
     if (vc->ch.iStartContigMsg)
     {
-        MPIU_Assert (n_iov > 0);
+        MPIR_Assert (n_iov > 0);
         switch (n_iov)
         {
         case 1:
@@ -63,8 +63,8 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPL_IOV *iov, int n_iov, MPIR_Request 
         goto fn_exit;
     }
 
-    MPIU_Assert (n_iov <= MPL_IOV_LIMIT);
-    MPIU_Assert (iov[0].MPL_IOV_LEN <= sizeof(MPIDI_CH3_Pkt_t));
+    MPIR_Assert (n_iov <= MPL_IOV_LIMIT);
+    MPIR_Assert (iov[0].MPL_IOV_LEN <= sizeof(MPIDI_CH3_Pkt_t));
 
     /* The channel uses a fixed length header, the size of which is
      * the maximum of all possible packet headers */
@@ -118,8 +118,8 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPL_IOV *iov, int n_iov, MPIR_Request 
             /* Create a new request and save remaining portions of the
 	     * iov in it. */
             sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
-	    MPIU_Assert(sreq != NULL);
-	    MPIU_Object_set_ref(sreq, 2);
+	    MPIR_Assert(sreq != NULL);
+	    MPIR_Object_set_ref(sreq, 2);
 	    sreq->kind = MPIR_REQUEST_KIND__SEND;
 	    for (j = 0; j < remaining_n_iov; ++j)
 	    {
@@ -138,7 +138,7 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPL_IOV *iov, int n_iov, MPIR_Request 
 		sreq->dev.iov[0].MPL_IOV_LEN = iov[0].MPL_IOV_LEN;
 	    }
 	    MPIDI_CH3I_Sendq_enqueue(&MPIDI_CH3I_shm_sendq, sreq);
-	    MPIU_Assert (MPIDI_CH3I_shm_active_send == NULL);
+	    MPIR_Assert (MPIDI_CH3I_shm_active_send == NULL);
 	    MPIDI_CH3I_shm_active_send = sreq;
 	}
     }
@@ -149,8 +149,8 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPL_IOV *iov, int n_iov, MPIR_Request 
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER, TERSE, "request enqueued");
 	/* create a request */
 	sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
-	MPIU_Assert(sreq != NULL);
-	MPIU_Object_set_ref(sreq, 2);
+	MPIR_Assert(sreq != NULL);
+	MPIR_Object_set_ref(sreq, 2);
 	sreq->kind = MPIR_REQUEST_KIND__SEND;
 
 	sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) iov[0].MPL_IOV_BUF;
@@ -186,7 +186,7 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPL_IOV *iov, int n_iov, MPIR_Request 
     if (in_cs) {
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_ISTARTMSGV);
     return mpi_errno;
  fn_fail:
     goto fn_exit;

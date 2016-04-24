@@ -58,11 +58,11 @@ int MPIDI_CH3I_Comm_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 #if defined HAVE_LIBHCOLL && MPID_CH3I_CH_HCOLL_BCOL
-    MPIU_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL(1);
 #endif
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_COMM_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_COMM_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_COMM_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_COMM_INIT);
 
     MPIR_Add_finalize(register_hook_finalize, NULL, MPIR_FINALIZE_CALLBACK_PRIO-1);
 
@@ -89,7 +89,7 @@ int MPIDI_CH3I_Comm_init(void)
             char *envstr;
             int size = strlen("HCOLL_BCOL=") + strlen(MPID_CH3I_CH_HCOLL_BCOL) + 1;
 
-            MPIU_CHKLMEM_MALLOC(envstr, char *, size, mpi_errno, "**malloc");
+            MPIR_CHKLMEM_MALLOC(envstr, char *, size, mpi_errno, "**malloc");
             MPL_snprintf(envstr, size, "HCOLL_BCOL=%s", MPID_CH3I_CH_HCOLL_BCOL);
 
             r = MPL_putenv(envstr);
@@ -108,9 +108,9 @@ int MPIDI_CH3I_Comm_init(void)
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_COMM_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_COMM_INIT);
 #if defined HAVE_LIBHCOLL && MPID_CH3I_CH_HCOLL_BCOL
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
 #endif
     return mpi_errno;
  fn_fail:
@@ -190,9 +190,9 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
     MPIR_Comm *src_comm;
     int vcrt_size, vcrt_offset;
     
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_COMM_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_COMM_CREATE_HOOK);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_COMM_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_COMM_CREATE_HOOK);
 
     /* initialize the is_disconnected variable to FALSE.  this will be
      * set to TRUE if the communicator is freed by an
@@ -202,10 +202,10 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
     /* do some sanity checks */
     MPL_LL_FOREACH(comm->mapper_head, mapper) {
         if (mapper->src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-            MPIU_Assert(mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
+            MPIR_Assert(mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
                         mapper->dir == MPIR_COMM_MAP_DIR__L2R);
         if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
-            MPIU_Assert(mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
+            MPIR_Assert(mapper->dir == MPIR_COMM_MAP_DIR__L2L ||
                         mapper->dir == MPIR_COMM_MAP_DIR__R2L);
     }
 
@@ -244,7 +244,7 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
                          mapper->src_comm->local_size, vcrt_size, vcrt_offset);
         }
         else {  /* mapper->dir == MPIR_COMM_MAP_DIR__R2L */
-            MPIU_Assert(src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+            MPIR_Assert(src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM);
             if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
                 dup_vcrt(src_comm->dev.vcrt, &comm->dev.vcrt, mapper, mapper->src_comm->remote_size,
                          vcrt_size, vcrt_offset);
@@ -274,7 +274,7 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
             mapper->dir == MPIR_COMM_MAP_DIR__R2L)
             continue;
 
-        MPIU_Assert(comm->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+        MPIR_Assert(comm->comm_kind == MPIR_COMM_KIND__INTERCOMM);
 
         if (mapper->dir == MPIR_COMM_MAP_DIR__L2R) {
             if (src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM)
@@ -285,7 +285,7 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
                          mapper->src_comm->local_size, vcrt_size, vcrt_offset);
         }
         else {  /* mapper->dir == MPIR_COMM_MAP_DIR__R2R */
-            MPIU_Assert(src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+            MPIR_Assert(src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM);
             dup_vcrt(src_comm->dev.vcrt, &comm->dev.vcrt, mapper, mapper->src_comm->remote_size,
                      vcrt_size, vcrt_offset);
         }
@@ -306,7 +306,7 @@ int MPIDI_CH3I_Comm_create_hook(MPIR_Comm *comm)
     }
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_COMM_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_COMM_CREATE_HOOK);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -320,9 +320,9 @@ int MPIDI_CH3I_Comm_destroy_hook(MPIR_Comm *comm)
 {
     int mpi_errno = MPI_SUCCESS;
     hook_elt *elt;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_COMM_DESTROY_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_COMM_DESTROY_HOOK);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_COMM_DESTROY_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_COMM_DESTROY_HOOK);
 
     MPL_LL_FOREACH(destroy_hooks_head, elt) {
         mpi_errno = elt->hook_fn(comm, elt->param);
@@ -338,7 +338,7 @@ int MPIDI_CH3I_Comm_destroy_hook(MPIR_Comm *comm)
     }
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_COMM_DESTROY_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_COMM_DESTROY_HOOK);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -353,12 +353,12 @@ int MPIDI_CH3U_Comm_register_create_hook(int (*hook_fn)(struct MPIR_Comm *, void
 {
     int mpi_errno = MPI_SUCCESS;
     hook_elt *elt;
-    MPIU_CHKPMEM_DECL(1);
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_COMM_REGISTER_CREATE_HOOK);
+    MPIR_CHKPMEM_DECL(1);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_COMM_REGISTER_CREATE_HOOK);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_COMM_REGISTER_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_COMM_REGISTER_CREATE_HOOK);
 
-    MPIU_CHKPMEM_MALLOC(elt, hook_elt *, sizeof(hook_elt), mpi_errno, "hook_elt");
+    MPIR_CHKPMEM_MALLOC(elt, hook_elt *, sizeof(hook_elt), mpi_errno, "hook_elt");
 
     elt->hook_fn = hook_fn;
     elt->param = param;
@@ -366,11 +366,11 @@ int MPIDI_CH3U_Comm_register_create_hook(int (*hook_fn)(struct MPIR_Comm *, void
     MPL_LL_PREPEND(create_hooks_head, create_hooks_tail, elt);
 
  fn_exit:
-    MPIU_CHKPMEM_COMMIT();
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_COMM_REGISTER_CREATE_HOOK);
+    MPIR_CHKPMEM_COMMIT();
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_COMM_REGISTER_CREATE_HOOK);
     return mpi_errno;
  fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -382,12 +382,12 @@ int MPIDI_CH3U_Comm_register_destroy_hook(int (*hook_fn)(struct MPIR_Comm *, voi
 {
     int mpi_errno = MPI_SUCCESS;
     hook_elt *elt;
-    MPIU_CHKPMEM_DECL(1);
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_COMM_REGISTER_DESTROY_HOOK);
+    MPIR_CHKPMEM_DECL(1);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_COMM_REGISTER_DESTROY_HOOK);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_COMM_REGISTER_DESTROY_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3U_COMM_REGISTER_DESTROY_HOOK);
 
-    MPIU_CHKPMEM_MALLOC(elt, hook_elt *, sizeof(hook_elt), mpi_errno, "hook_elt");
+    MPIR_CHKPMEM_MALLOC(elt, hook_elt *, sizeof(hook_elt), mpi_errno, "hook_elt");
 
     elt->hook_fn = hook_fn;
     elt->param = param;
@@ -395,10 +395,10 @@ int MPIDI_CH3U_Comm_register_destroy_hook(int (*hook_fn)(struct MPIR_Comm *, voi
     MPL_LL_PREPEND(destroy_hooks_head, destroy_hooks_tail, elt);
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_COMM_REGISTER_DESTROY_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3U_COMM_REGISTER_DESTROY_HOOK);
     return mpi_errno;
  fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -410,9 +410,9 @@ static int register_hook_finalize(void *param)
 {
     int mpi_errno = MPI_SUCCESS;
     hook_elt *elt, *tmp;
-    MPIDI_STATE_DECL(MPID_STATE_REGISTER_HOOK_FINALIZE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_REGISTER_HOOK_FINALIZE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_REGISTER_HOOK_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_REGISTER_HOOK_FINALIZE);
 
     MPL_LL_FOREACH_SAFE(create_hooks_head, elt, tmp) {
         MPL_LL_DELETE(create_hooks_head, create_hooks_tail, elt);
@@ -425,7 +425,7 @@ static int register_hook_finalize(void *param)
     }
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_REGISTER_HOOK_FINALIZE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_REGISTER_HOOK_FINALIZE);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -439,9 +439,9 @@ static int register_hook_finalize(void *param)
 int comm_created(MPIR_Comm *comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_COMM_CREATED);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COMM_CREATED);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_COMM_CREATED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COMM_CREATED);
 
     comm->dev.anysource_enabled = TRUE;
 
@@ -454,7 +454,7 @@ int comm_created(MPIR_Comm *comm, void *param)
     COMM_ADD(comm);
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_COMM_CREATED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COMM_CREATED);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -467,16 +467,16 @@ int comm_created(MPIR_Comm *comm, void *param)
 int comm_destroyed(MPIR_Comm *comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_COMM_DESTROYED);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COMM_DESTROYED);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_COMM_DESTROYED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COMM_DESTROYED);
 
     COMM_DEL(comm);
     comm->dev.next = NULL;
     comm->dev.prev = NULL;
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_COMM_DESTROYED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_COMM_DESTROYED);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -493,9 +493,9 @@ static int nonempty_intersection(MPIR_Comm *comm, MPIR_Group *group, int *flag)
     int mpi_errno = MPI_SUCCESS;
     int i_g, i_c;
     MPIDI_VC_t *vc_g, *vc_c;
-    MPIDI_STATE_DECL(MPID_STATE_NONEMPTY_INTERSECTION);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NONEMPTY_INTERSECTION);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_NONEMPTY_INTERSECTION);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NONEMPTY_INTERSECTION);
 
     /* handle common case fast */
     if (comm == MPIR_Process.comm_world || comm == MPIR_Process.icomm_world) {
@@ -522,7 +522,7 @@ static int nonempty_intersection(MPIR_Comm *comm, MPIR_Group *group, int *flag)
     }
     
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_NONEMPTY_INTERSECTION);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NONEMPTY_INTERSECTION);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -538,9 +538,9 @@ int MPIDI_CH3I_Comm_handle_failed_procs(MPIR_Group *new_failed_procs)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm;
     int flag = FALSE;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_COMM_HANDLE_FAILED_PROCS);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_COMM_HANDLE_FAILED_PROCS);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_COMM_HANDLE_FAILED_PROCS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_COMM_HANDLE_FAILED_PROCS);
 
     /* mark communicators with new failed processes as collectively inactive and
        disable posting anysource receives */
@@ -566,16 +566,16 @@ int MPIDI_CH3I_Comm_handle_failed_procs(MPIR_Group *new_failed_procs)
     MPIDI_CH3_Progress_signal_completion();
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_COMM_HANDLE_FAILED_PROCS);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_COMM_HANDLE_FAILED_PROCS);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
-void MPIDI_CH3I_Comm_find(MPIU_Context_id_t context_id, MPIR_Comm **comm)
+void MPIDI_CH3I_Comm_find(MPIR_Context_id_t context_id, MPIR_Comm **comm)
 {
-    MPIDI_STATE_DECL(MPIDI_STATE_MPIDI_CH3I_COMM_FIND);
-    MPIDI_FUNC_ENTER(MPIDI_STATE_MPIDI_CH3I_COMM_FIND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPIDI_STATE_MPIDI_CH3I_COMM_FIND);
+    MPIR_FUNC_VERBOSE_ENTER(MPIDI_STATE_MPIDI_CH3I_COMM_FIND);
 
     COMM_FOREACH((*comm)) {
         if ((*comm)->context_id == context_id || ((*comm)->context_id + MPIR_CONTEXT_INTRA_COLL) == context_id ||
@@ -586,5 +586,5 @@ void MPIDI_CH3I_Comm_find(MPIU_Context_id_t context_id, MPIR_Comm **comm)
         }
     }
 
-    MPIDI_FUNC_EXIT(MPIDI_STATE_MPIDI_CH3I_COMM_FIND);
+    MPIR_FUNC_VERBOSE_EXIT(MPIDI_STATE_MPIDI_CH3I_COMM_FIND);
 }

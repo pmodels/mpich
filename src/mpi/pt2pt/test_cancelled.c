@@ -51,11 +51,11 @@ Output Parameters:
 int MPI_Test_cancelled(const MPI_Status *status, int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_TEST_CANCELLED);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TEST_CANCELLED);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_MPI_PT2PT_FUNC_ENTER(MPID_STATE_MPI_TEST_CANCELLED);
+    MPIR_FUNC_TERSE_PT2PT_ENTER(MPID_STATE_MPI_TEST_CANCELLED);
     
     /* Validate parameters if error checking is enabled */
 #   ifdef HAVE_ERROR_CHECKING
@@ -70,15 +70,14 @@ int MPI_Test_cancelled(const MPI_Status *status, int *flag)
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    MPIR_Test_cancelled_impl(status, flag);
+    *flag = MPIR_STATUS_GET_CANCEL_BIT(*status);
     
     /* ... end of body of routine ... */
     
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_TEST_CANCELLED);
+    MPIR_FUNC_TERSE_PT2PT_EXIT(MPID_STATE_MPI_TEST_CANCELLED);
     return mpi_errno;
     
     /* --BEGIN ERROR HANDLING-- */

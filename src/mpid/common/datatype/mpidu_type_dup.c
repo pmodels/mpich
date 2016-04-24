@@ -39,7 +39,7 @@ int MPIDU_Type_dup(MPI_Datatype oldtype,
     }
     else {
       	/* allocate new datatype object and handle */
-	new_dtp = (MPIDU_Datatype *) MPIU_Handle_obj_alloc(&MPIDU_Datatype_mem);
+	new_dtp = (MPIDU_Datatype *) MPIR_Handle_obj_alloc(&MPIDU_Datatype_mem);
 	if (!new_dtp) {
 	    /* --BEGIN ERROR HANDLING-- */
 	    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
@@ -52,8 +52,8 @@ int MPIDU_Type_dup(MPI_Datatype oldtype,
 	MPIDU_Datatype_get_ptr(oldtype, old_dtp);
 
 	/* fill in datatype */
-	MPIU_Object_set_ref(new_dtp, 1);
-	/* new_dtp->handle is filled in by MPIU_Handle_obj_alloc() */
+	MPIR_Object_set_ref(new_dtp, 1);
+	/* new_dtp->handle is filled in by MPIR_Handle_obj_alloc() */
 	new_dtp->is_contig     = old_dtp->is_contig;
 	new_dtp->size          = old_dtp->size;
 	new_dtp->extent        = old_dtp->extent;
@@ -85,7 +85,7 @@ int MPIDU_Type_dup(MPI_Datatype oldtype,
 	*newtype = new_dtp->handle;
 
 	if (old_dtp->is_committed) {
-	    MPIU_Assert(old_dtp->dataloop != NULL);
+	    MPIR_Assert(old_dtp->dataloop != NULL);
 	    MPIDU_Dataloop_dup(old_dtp->dataloop,
 			      old_dtp->dataloop_size,
 			      &new_dtp->dataloop);

@@ -107,7 +107,7 @@ typedef MPIDI_Rank_t MPID_Node_id_t;
 typedef struct MPIDI_Message_match_parts {
     int32_t tag;
     MPIDI_Rank_t rank;
-    MPIU_Context_id_t context_id;
+    MPIR_Context_id_t context_id;
 } MPIDI_Message_match_parts_t;
 typedef union {
     MPIDI_Message_match_parts_t parts;
@@ -163,7 +163,6 @@ typedef union {
  * by the channel instance.
  */
 
-#define HAVE_DEV_COMM_HOOK
 #define MPID_Dev_comm_create_hook(comm_) MPIDI_CH3I_Comm_create_hook(comm_)
 #define MPID_Dev_comm_destroy_hook(comm_) MPIDI_CH3I_Comm_destroy_hook(comm_)
 

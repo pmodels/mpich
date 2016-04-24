@@ -134,13 +134,13 @@ int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, 
     }
     else if (MPIR_T_pvar_is_sum(handle) && !MPIR_T_pvar_is_started(handle)) {
         /* A SUM is stopped. Return accum directly */
-        MPIU_Memcpy(buf, handle->accum, handle->bytes * handle->count);
+        MPIR_Memcpy(buf, handle->accum, handle->bytes * handle->count);
     }
     else if (MPIR_T_pvar_is_watermark(handle)) {
         /* Callback and array are not allowed for watermarks, since they
          * can not gurantee correct semantics of watermarks.
          */
-        MPIU_Assert(handle->get_value == NULL && handle->count == 1);
+        MPIR_Assert(handle->get_value == NULL && handle->count == 1);
 
         if (MPIR_T_pvar_is_first(handle)) {
             /* Current value of the first handle of a watermark is stored at
@@ -192,7 +192,7 @@ int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, 
     } else {
         /* For STATE, LEVEL, SIZE, PERCENTAGE, no caching is needed */
         if (handle->get_value == NULL)
-            MPIU_Memcpy(buf, handle->addr, handle->bytes * handle->count);
+            MPIR_Memcpy(buf, handle->addr, handle->bytes * handle->count);
         else
             handle->get_value(handle->addr, handle->obj_handle,
                               handle->count, buf);
@@ -243,10 +243,10 @@ int MPI_T_pvar_read(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_READ);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_PVAR_READ);
     MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_PVAR_READ);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_PVAR_READ);
 
     /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
@@ -275,7 +275,7 @@ int MPI_T_pvar_read(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_PVAR_READ);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_PVAR_READ);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 

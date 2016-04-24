@@ -32,13 +32,13 @@ int MPI_Op_create(MPI_User_function *user_fn, int commute, MPI_Op *op) __attribu
 /* Preallocated op objects */
 MPIR_Op MPIR_Op_builtin[MPIR_OP_N_BUILTIN] = { {0} };
 MPIR_Op MPIR_Op_direct[MPIR_OP_PREALLOC] = { {0} };
-MPIU_Object_alloc_t MPIR_Op_mem = { 0, 0, 0, 0, MPIR_OP,
+MPIR_Object_alloc_t MPIR_Op_mem = { 0, 0, 0, 0, MPIR_OP,
 					    sizeof(MPIR_Op),
 					    MPIR_Op_direct,
 					    MPIR_OP_PREALLOC, };
 
 #ifdef HAVE_CXX_BINDING
-void MPIR_Op_set_cxx( MPI_Op op, void (*opcall)(void) )
+void MPII_Op_set_cxx( MPI_Op op, void (*opcall)(void) )
 {
     MPIR_Op *op_ptr;
     
@@ -53,7 +53,7 @@ void MPIR_Op_set_cxx( MPI_Op op, void (*opcall)(void) )
    MPI Standard.  However, if MPI_Fint and int are not the same size (e.g.,
    MPI_Fint was made 8 bytes but int is 4 bytes), then the C and Fortran
    versions must be distinquished. */
-void MPIR_Op_set_fc( MPI_Op op )
+void MPII_Op_set_fc( MPI_Op op )
 {
     MPIR_Op *op_ptr;
     
@@ -104,16 +104,16 @@ int MPI_Op_create(MPI_User_function *user_fn, int commute, MPI_Op *op)
     static const char FCNAME[] = "MPI_Op_create";
     MPIR_Op *op_ptr;
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_OP_CREATE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_OP_CREATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_OP_CREATE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_OP_CREATE);
 
     /* ... body of routine ...  */
     
-    op_ptr = (MPIR_Op *)MPIU_Handle_obj_alloc( &MPIR_Op_mem );
+    op_ptr = (MPIR_Op *)MPIR_Handle_obj_alloc( &MPIR_Op_mem );
     /* --BEGIN ERROR HANDLING-- */
     if (!op_ptr)
     {
@@ -127,13 +127,13 @@ int MPI_Op_create(MPI_User_function *user_fn, int commute, MPI_Op *op)
     op_ptr->kind     = commute ? MPIR_OP_KIND__USER : MPIR_OP_KIND__USER_NONCOMMUTE;
     op_ptr->function.c_function = (void (*)(const void *, void *, 
 				   const int *, const MPI_Datatype *))user_fn;
-    MPIU_Object_set_ref(op_ptr,1);
+    MPIR_Object_set_ref(op_ptr,1);
 
     MPIR_OBJ_PUBLISH_HANDLE(*op, op_ptr->handle);
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_OP_CREATE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_OP_CREATE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
     

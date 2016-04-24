@@ -266,7 +266,7 @@ int mqs_image_has_queues (mqs_image *image, char **message)
     /* Force in the file containing our wait-for-debugger function, to ensure 
      * that types have been read from there before we try to look them up.
      */
-    dbgr_find_function (image, (char *)"MPIR_WaitForDebugger", mqs_lang_c, NULL);
+    dbgr_find_function (image, (char *)"MPII_Wait_for_debugger", mqs_lang_c, NULL);
 
     /* Find the various global variables and structure definitions 
        that describe the communicator and message queue structures for

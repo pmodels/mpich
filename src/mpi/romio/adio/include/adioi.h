@@ -987,8 +987,8 @@ int  ADIOI_MPE_iwrite_b;
    (no loss of (meaningful) high order bytes in 8 byte MPI_Aint 
       to (possible) 4 byte ptr cast)                              */
 /* Should work even on 64bit or old 32bit configs                 */
-  /* Use MPIU_Ensure_Aint_fits_in_pointer and
-         MPIU_AINT_CAST_TO_VOID_PTR from configure (mpi.h) */
+  /* Use MPIR_Ensure_Aint_fits_in_pointer and
+         MPIR_AINT_CAST_TO_VOID_PTR from configure (mpi.h) */
   #include "mpir_ext.h"
 
   #define ADIOI_AINT_CAST_TO_VOID_PTR (void*)(intptr_t)

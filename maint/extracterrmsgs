@@ -159,7 +159,7 @@ sub CreateErrmsgsHeader {
  * This file automatically created by extracterrmsgs\
  * DO NOT EDIT\
  */\n";
-    print $FD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG_CLASS
+    print $FD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__CLASS
 typedef struct msgpair {
         const unsigned int sentinal1;
         const char *short_name, *long_name; 
@@ -214,7 +214,7 @@ sub CreateErrMsgMapping {
 
     # For the case of classes only, output the strings for the class 
     # messages
-    print $OUTFD "#if MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG_CLASS\n";
+    print $OUTFD "#if MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG__CLASS\n";
     print $OUTFD "#define MPIR_MAX_ERROR_CLASS_INDEX $#class_msgs+1\n";
     print $OUTFD "static const char *classToMsg[] = {\n";
     for (my $i=0; $i<=$#class_msgs; $i++) {
@@ -230,7 +230,7 @@ sub CreateErrMsgMapping {
     # The long messages must be available for the generic message output.
     # An alternative is to separate the short from the long messages;
     # the long messages are needed for > MSG_NONE, the short for > MSG_CLASS.
-    print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG_CLASS\n";
+    print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__CLASS\n";
     print $OUTFD "/* The names are in sorted order, allowing the use of a simple\
   linear search or bisection algorithm to find the message corresponding to\
   a particular message */\n";
@@ -284,7 +284,7 @@ sub CreateErrMsgMapping {
 
     $num = 0;
     # Now output the instance specific messages
-    print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG_GENERIC\n";
+    print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__GENERIC\n";
     foreach $key (sort keys %specific_msgs)
     {
 	$longvalue = "\"\0\"";
@@ -320,7 +320,7 @@ sub CreateErrMsgMapping {
     print $OUTFD "};\n";
     print $OUTFD "#endif\n\n";
 
-    print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG_CLASS\n";
+    print $OUTFD "#if MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__CLASS\n";
     $maxval = $#class_msgs + 1;
     print $OUTFD "#define MPIR_MAX_ERROR_CLASS_INDEX $maxval\n";
     print $OUTFD "static int class_to_index[] = {\n";

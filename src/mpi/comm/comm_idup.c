@@ -48,7 +48,7 @@ int MPIR_Comm_idup_impl(MPIR_Comm *comm_ptr, MPIR_Comm **newcommp, MPIR_Request 
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
-    mpi_errno = MPIR_Comm_copy_data(comm_ptr, newcommp);
+    mpi_errno = MPII_Comm_copy_data(comm_ptr, newcommp);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     (*newcommp)->attributes = new_attributes;
@@ -98,10 +98,10 @@ int MPI_Comm_idup(MPI_Comm comm, MPI_Comm *newcomm, MPI_Request *request)
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_Request *dreq = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_IDUP);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_IDUP);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_IDUP);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_IDUP);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -149,7 +149,7 @@ int MPI_Comm_idup(MPI_Comm comm, MPI_Comm *newcomm, MPI_Request *request)
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_IDUP);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_IDUP);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

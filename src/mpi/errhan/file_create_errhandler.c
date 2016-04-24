@@ -53,12 +53,12 @@ int MPI_File_create_errhandler(MPI_File_errhandler_function *file_errhandler_fn,
     static const char FCNAME[] = "MPI_File_create_errhandler";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Errhandler *errhan_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_FILE_CREATE_ERRHANDLER);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_FILE_CREATE_ERRHANDLER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_FILE_CREATE_ERRHANDLER);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_FILE_CREATE_ERRHANDLER);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -74,18 +74,18 @@ int MPI_File_create_errhandler(MPI_File_errhandler_function *file_errhandler_fn,
     
     /* ... body of routine ...  */
     
-    errhan_ptr = (MPIR_Errhandler *)MPIU_Handle_obj_alloc( &MPIR_Errhandler_mem );
+    errhan_ptr = (MPIR_Errhandler *)MPIR_Handle_obj_alloc( &MPIR_Errhandler_mem );
     MPIR_ERR_CHKANDJUMP(!errhan_ptr,mpi_errno,MPI_ERR_OTHER,"**nomem");
     errhan_ptr->language = MPIR_LANG__C;
     errhan_ptr->kind	 = MPIR_FILE;
-    MPIU_Object_set_ref(errhan_ptr,1);
+    MPIR_Object_set_ref(errhan_ptr,1);
     errhan_ptr->errfn.C_File_Handler_function = file_errhandler_fn;
 
     MPIR_OBJ_PUBLISH_HANDLE(*errhandler, errhan_ptr->handle);
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_FILE_CREATE_ERRHANDLER);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_FILE_CREATE_ERRHANDLER);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

@@ -191,7 +191,7 @@ void MPIDI_Dataloop_dot_printf(MPIDU_Dataloop *loop_p,
 	    }
 	    break;
 	default:
-	    MPIU_Assert(0);
+	    MPIR_Assert(0);
     }
 
     if (!(loop_p->kind & DLOOP_FINAL_MASK)) {
@@ -256,7 +256,7 @@ void MPIDI_Datatype_printf(MPI_Datatype type,
 	sticky_ub = type_ptr->has_sticky_ub;
     }
 
-    MPIR_Type_size_impl(type, &size);
+    MPIDU_Datatype_get_size_macro(type, size);
     MPIR_Type_get_true_extent_impl(type, &true_lb, &extent);
     true_ub = extent + true_lb;
     MPIR_Type_get_extent_impl(type, &lb, &extent);
@@ -463,7 +463,7 @@ void MPIDU_Datatype_debug(MPI_Datatype type,
     if (is_builtin) return;
 
     MPIDU_Datatype_get_ptr(type, dtp);
-    MPIU_Assert(dtp != NULL);
+    MPIR_Assert(dtp != NULL);
 
     MPL_DBG_OUT_FMT(MPIR_DBG_DATATYPE,(MPL_DBG_FDEST,
       "# Size = " MPI_AINT_FMT_DEC_SPEC ", Extent = " MPI_AINT_FMT_DEC_SPEC ", LB = " MPI_AINT_FMT_DEC_SPEC "%s, UB = " MPI_AINT_FMT_DEC_SPEC "%s, Extent = " MPI_AINT_FMT_DEC_SPEC ", Element Size = " MPI_AINT_FMT_DEC_SPEC " (%s), %s",

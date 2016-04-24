@@ -717,20 +717,20 @@ EXPORTS
 ;
 ; mpich extra and renamed symbols
 ;
-    MPIR_CommGetAttr
-    MPIR_CommGetAttr_fort
-    MPIR_CommSetAttr
-    MPIR_TypeGetAttr
-    MPIR_TypeSetAttr
-    MPIR_WinSetAttr
-    MPIR_WinGetAttr
-    MPIR_Keyval_set_proxy
-	MPIR_Keyval_set_fortran
-	MPIR_Keyval_set_fortran90
-	MPIR_Grequest_set_lang_f77
-	MPIR_Keyval_set_cxx
-	MPIR_Errhandler_set_cxx
-	MPIR_Op_set_cxx
+    MPII_Comm_get_attr
+    MPII_Comm_get_attr_fort
+    MPII_Comm_set_attr
+    MPII_Type_get_attr
+    MPII_Type_set_attr
+    MPII_Win_set_attr
+    MPII_Win_get_attr
+    MPII_Keyval_set_proxy
+	MPII_Keyval_set_fortran
+	MPII_Keyval_set_fortran90
+	MPII_Grequest_set_lang_f77
+	MPII_Keyval_set_cxx
+	MPII_Errhandler_set_cxx
+	MPII_Op_set_cxx
 	MPID_Wtick
 	MPID_Wtime_todouble
 	MPIR_Dup_fn

@@ -48,11 +48,11 @@ Output Parameters:
 int MPI_Get_library_version(char *version, int *resultlen)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_GET_LIBRARY_VERSION);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GET_LIBRARY_VERSION);
 
     /* Note that this routine may be called before MPI_Init */
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GET_LIBRARY_VERSION);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GET_LIBRARY_VERSION);
 
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
@@ -77,9 +77,9 @@ int MPI_Get_library_version(char *version, int *resultlen)
                  "MPICH CXX:\t%s\n"
                  "MPICH F77:\t%s\n"
                  "MPICH FC:\t%s\n",
-                 MPIR_Version_string, MPIR_Version_date, MPIR_Version_device,
-                 MPIR_Version_configure, MPIR_Version_CC, MPIR_Version_CXX,
-                 MPIR_Version_F77, MPIR_Version_FC);
+                 MPII_Version_string, MPII_Version_date, MPII_Version_device,
+                 MPII_Version_configure, MPII_Version_CC, MPII_Version_CXX,
+                 MPII_Version_F77, MPII_Version_FC);
 
     *resultlen = (int)strlen(version);
 
@@ -88,7 +88,7 @@ int MPI_Get_library_version(char *version, int *resultlen)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GET_LIBRARY_VERSION);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GET_LIBRARY_VERSION);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

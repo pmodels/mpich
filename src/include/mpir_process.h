@@ -19,7 +19,7 @@ typedef struct PreDefined_attrs {
     int wtime_is_global; /* Wtime is global over processes in COMM_WORLD */
 } PreDefined_attrs;
 
-typedef struct MPICH_PerProcess_t {
+typedef struct MPIR_Process_t {
     OPA_int_t mpich_state; /* State of MPICH. Use OPA_int_t to make MPI_Initialized() etc.
                               thread-safe per MPI-3.1.  See MPI-Forum ticket 357 */
     int               do_error_checks;  /* runtime error check control */
@@ -57,7 +57,7 @@ typedef struct MPICH_PerProcess_t {
        to specify the kind (comm,file,win) */
     void  (*cxx_call_errfn) ( int, int *, int *, void (*)(void) );
 #endif /* HAVE_CXX_BINDING */
-} MPICH_PerProcess_t;
-extern MPICH_PerProcess_t MPIR_Process;
+} MPIR_Process_t;
+extern MPIR_Process_t MPIR_Process;
 
 #endif /* MPIR_PROCESS_H_INCLUDED */

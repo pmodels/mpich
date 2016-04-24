@@ -74,7 +74,7 @@ PMPI_LOCAL int MPIR_Ibsend_cancel( void *extra, int complete )
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     mpi_errno = MPIR_Wait_impl( &req_hdl, &status );
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    MPIR_Test_cancelled_impl( &status, &ibsend_info->cancelled );
+    ibsend_info->cancelled = MPIR_STATUS_GET_CANCEL_BIT(status);
 
     /* If the cancelation is successful, free the memory in the
        attached buffer used by the request */
@@ -105,7 +105,7 @@ int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest
     mpi_errno = MPIR_Bsend_isend( buf, count, datatype, dest, tag, comm_ptr,
 				  IBSEND, &request_ptr );
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-    MPIR_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
 
     /* FIXME: use the memory management macros */
     ibinfo = (ibsend_req_info *)MPL_malloc( sizeof(ibsend_req_info) );
@@ -165,12 +165,12 @@ int MPI_Ibsend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_IBSEND);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IBSEND);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_PT2PT_FUNC_ENTER_FRONT(MPID_STATE_MPI_IBSEND);
+    MPIR_FUNC_TERSE_PT2PT_ENTER_FRONT(MPID_STATE_MPI_IBSEND);
 
     /* Validate handle parameters needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -231,7 +231,7 @@ int MPI_Ibsend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_IBSEND);
+    MPIR_FUNC_TERSE_PT2PT_EXIT(MPID_STATE_MPI_IBSEND);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
     

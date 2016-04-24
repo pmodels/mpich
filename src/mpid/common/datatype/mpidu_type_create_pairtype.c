@@ -20,7 +20,7 @@
 	type_size_   = sizeof(foo.a) + sizeof(foo.b);			\
 	type_extent_ = (MPI_Aint) sizeof(foo);				\
 	el_size_ = (sizeof(foo.a) == sizeof(foo.b)) ? (int) sizeof(foo.a) : -1; \
-	true_ub_ = (MPIU_VOID_PTR_CAST_TO_MPI_AINT ((char *) &foo.b -     \
+	true_ub_ = (MPIR_VOID_PTR_CAST_TO_MPI_AINT ((char *) &foo.b -     \
                                                   (char *) &foo.a)) +   \
                   (MPI_Aint) sizeof(foo.b);                             \
 	alignsize_ = MPL_MAX(MPIDU_Datatype_get_basic_size(mt1_),	\
@@ -70,8 +70,8 @@ int MPIDU_Type_create_pairtype(MPI_Datatype type,
     int type_size, alignsize;
     MPI_Aint type_extent, true_ub, el_size;
 
-    /* handle is filled in by MPIU_Handle_obj_alloc() */
-    MPIU_Object_set_ref(new_dtp, 1);
+    /* handle is filled in by MPIR_Handle_obj_alloc() */
+    MPIR_Object_set_ref(new_dtp, 1);
     new_dtp->is_permanent = 1;
     new_dtp->is_committed = 1; /* predefined types are pre-committed */
     new_dtp->attributes   = NULL;

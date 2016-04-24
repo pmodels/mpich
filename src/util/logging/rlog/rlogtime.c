@@ -136,11 +136,11 @@ static char *get_random_color_str(void)
 }
 
 static int s_RLOG_Initialized = 0;
-int MPIU_Timer_init(int rank, int size)
+int MPII_Timer_init(int rank, int size)
 {
     if (s_RLOG_Initialized)
     {
-	/* MPIU_Timer_init already called. */
+	/* MPII_Timer_init already called. */
 	return -1;
     }
     g_pRLOG = RLOG_InitLog(rank, size);
@@ -156,13 +156,13 @@ int MPIU_Timer_init(int rank, int size)
     /* arrow state */
     RLOG_DescribeState(g_pRLOG, RLOG_ARROW_EVENT_ID, "Arrow", "255 255 255");
 
-    MPIR_Describe_timer_states();
+    MPII_Describe_timer_states();
 
     s_RLOG_Initialized = 1;
     return MPI_SUCCESS;
 }
 
-int MPIU_Timer_finalize()
+int MPII_Timer_finalize()
 {
     if (g_pRLOG == NULL)
 	return -1;
@@ -194,7 +194,7 @@ int MPIU_Timer_finalize()
 
 /* This routine makes the RLOG_DescribeState call for each name */
 #include "state_names.h"
-int MPIR_Describe_timer_states( void )
+int MPII_Describe_timer_states( void )
 {
     MPIU_State_defs *def = mpich_states;
     

@@ -42,7 +42,7 @@ extern MPIR_Thread_info_t MPIR_ThreadInfo;
 typedef struct {
     int op_errno;               /* For errors in predefined MPI_Ops */
 
-    /* error string storage for MPIU_Strerror */
+    /* error string storage for MPIR_Strerror */
     char strerrbuf[MPIR_STRERROR_BUF_SIZE];
 
 #if (MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE)
@@ -66,12 +66,12 @@ extern MPID_Thread_tls_t MPIR_Per_thread_key;
 #define MPIR_THREAD_CHECK_END
 #endif /* MPICH_IS_THREADED */
 
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL || \
-    MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL || \
+    MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
 extern MPID_Thread_mutex_t MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX;
 #endif
 
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
 extern MPID_Thread_mutex_t MPIR_THREAD_POBJ_HANDLE_MUTEX;
 extern MPID_Thread_mutex_t MPIR_THREAD_POBJ_MSGQ_MUTEX;
 extern MPID_Thread_mutex_t MPIR_THREAD_POBJ_COMPLETION_MUTEX;

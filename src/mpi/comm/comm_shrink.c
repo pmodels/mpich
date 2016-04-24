@@ -54,8 +54,8 @@ int MPIR_Comm_shrink(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm_ptr)
     int attempts = 0;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_SHRINK);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_SHRINK);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_SHRINK);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_SHRINK);
 
     /* TODO - Implement this function for intercommunicators */
     MPIR_Comm_group_impl(comm_ptr, &comm_grp);
@@ -84,12 +84,12 @@ int MPIR_Comm_shrink(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm_ptr)
         MPIR_Group_release(new_group_ptr);
 
         if (errflag) {
-            if (*newcomm_ptr != NULL && MPIU_Object_get_ref(*newcomm_ptr) > 0) {
-                MPIU_Object_set_ref(*newcomm_ptr, 1);
+            if (*newcomm_ptr != NULL && MPIR_Object_get_ref(*newcomm_ptr) > 0) {
+                MPIR_Object_set_ref(*newcomm_ptr, 1);
                 MPIR_Comm_release(*newcomm_ptr);
             }
-            if (MPIU_Object_get_ref(new_group_ptr) > 0) {
-                MPIU_Object_set_ref(new_group_ptr, 1);
+            if (MPIR_Object_get_ref(new_group_ptr) > 0) {
+                MPIR_Object_set_ref(new_group_ptr, 1);
                 MPIR_Group_release(new_group_ptr);
             }
         }
@@ -100,12 +100,12 @@ int MPIR_Comm_shrink(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm_ptr)
 
   fn_exit:
     MPIR_Group_release(comm_grp);
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_SHRINK);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_SHRINK);
     return mpi_errno;
   fn_fail:
-    if (*newcomm_ptr) MPIU_Object_set_ref(*newcomm_ptr, 0);
-    MPIU_Object_set_ref(global_failed, 0);
-    MPIU_Object_set_ref(new_group_ptr, 0);
+    if (*newcomm_ptr) MPIR_Object_set_ref(*newcomm_ptr, 0);
+    MPIR_Object_set_ref(global_failed, 0);
+    MPIR_Object_set_ref(new_group_ptr, 0);
     goto fn_exit;
 }
 
@@ -136,12 +136,12 @@ int MPIX_Comm_shrink(MPI_Comm comm, MPI_Comm *newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_COMM_SHRINK);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIX_COMM_SHRINK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_COMM_SHRINK);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIX_COMM_SHRINK);
 
     /* Validate parameters, and convert MPI object handles to object pointers */
 #   ifdef HAVE_ERROR_CHECKING
@@ -179,7 +179,7 @@ int MPIX_Comm_shrink(MPI_Comm comm, MPI_Comm *newcomm)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_COMM_SHRINK);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIX_COMM_SHRINK);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

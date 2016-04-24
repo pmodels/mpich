@@ -42,7 +42,7 @@ int MPIR_T_pvar_stop_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
     if (MPIR_T_pvar_is_sum(handle)) {
         /* Read the current value first */
         if (handle->get_value == NULL) {
-            MPIU_Memcpy(handle->current, handle->addr, handle->bytes * handle->count);
+            MPIR_Memcpy(handle->current, handle->addr, handle->bytes * handle->count);
         } else {
             handle->get_value(handle->addr, handle->obj_handle,
                               handle->count, handle->current);
@@ -88,7 +88,7 @@ int MPIR_T_pvar_stop_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
         /* When handle is first, clear the flag in pvar too */
         if (MPIR_T_pvar_is_first(handle)) {
             mark = (MPIR_T_pvar_watermark_t *)handle->addr;
-            MPIU_Assert(mark->first_used);
+            MPIR_Assert(mark->first_used);
             mark->first_started = FALSE;
         }
     }
@@ -136,10 +136,10 @@ int MPI_T_pvar_stop(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_STOP);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_PVAR_STOP);
     MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_PVAR_STOP);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_PVAR_STOP);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -185,7 +185,7 @@ int MPI_T_pvar_stop(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_PVAR_STOP);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_PVAR_STOP);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 

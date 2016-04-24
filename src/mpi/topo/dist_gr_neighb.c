@@ -42,14 +42,14 @@ int MPIR_Dist_graph_neighbors_impl(MPIR_Comm *comm_ptr,
     topo_ptr = MPIR_Topology_get(comm_ptr);
     MPIR_ERR_CHKANDJUMP(!topo_ptr || topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPI_ERR_TOPOLOGY, "**notdistgraphtopo");
 
-    MPIU_Memcpy(sources, topo_ptr->topo.dist_graph.in, maxindegree*sizeof(int));
-    MPIU_Memcpy(destinations, topo_ptr->topo.dist_graph.out, maxoutdegree*sizeof(int));
+    MPIR_Memcpy(sources, topo_ptr->topo.dist_graph.in, maxindegree*sizeof(int));
+    MPIR_Memcpy(destinations, topo_ptr->topo.dist_graph.out, maxoutdegree*sizeof(int));
 
     if (sourceweights != MPI_UNWEIGHTED && topo_ptr->topo.dist_graph.is_weighted) {
-        MPIU_Memcpy(sourceweights, topo_ptr->topo.dist_graph.in_weights, maxindegree*sizeof(int));
+        MPIR_Memcpy(sourceweights, topo_ptr->topo.dist_graph.in_weights, maxindegree*sizeof(int));
     }
     if (destweights != MPI_UNWEIGHTED && topo_ptr->topo.dist_graph.is_weighted) {
-        MPIU_Memcpy(destweights, topo_ptr->topo.dist_graph.out_weights, maxoutdegree*sizeof(int));
+        MPIR_Memcpy(destweights, topo_ptr->topo.dist_graph.out_weights, maxoutdegree*sizeof(int));
     }
 
 fn_exit:
@@ -91,13 +91,13 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     /* FIXME: Why does this routine need a CS */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -142,7 +142,7 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_DIST_GRAPH_NEIGHBORS);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

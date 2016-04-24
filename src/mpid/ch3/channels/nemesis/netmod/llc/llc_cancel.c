@@ -24,15 +24,15 @@
 int MPID_nem_llc_cancel_recv(struct MPIDI_VC *vc, struct MPIR_Request *req)
 {
     int canceled;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_CANCEL_RECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LLC_CANCEL_RECV);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_CANCEL_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LLC_CANCEL_RECV);
 
     /* returns zero in case request is canceled */
     canceled = LLC_req_approve_recv((LLC_cmd_t *) REQ_FIELD(req, cmds));
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_CANCEL_RECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LLC_CANCEL_RECV);
     return canceled;
   fn_fail:
     goto fn_exit;

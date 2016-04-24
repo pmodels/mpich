@@ -66,12 +66,12 @@ int MPI_Bsend_init(const void *buf, int count, MPI_Datatype datatype,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *request_ptr = NULL;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_BSEND_INIT);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_BSEND_INIT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_PT2PT_FUNC_ENTER(MPID_STATE_MPI_BSEND_INIT);
+    MPIR_FUNC_TERSE_PT2PT_ENTER(MPID_STATE_MPI_BSEND_INIT);
     
     /* Validate handle parameters needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -122,7 +122,7 @@ int MPI_Bsend_init(const void *buf, int count, MPI_Datatype datatype,
     mpi_errno = MPID_Bsend_init(buf, count, datatype, dest, tag, comm_ptr,
 				MPIR_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-    MPIR_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
+    MPII_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
 
     /* return the handle of the request to the user */
     MPIR_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);
@@ -130,7 +130,7 @@ int MPI_Bsend_init(const void *buf, int count, MPI_Datatype datatype,
     /* ... end of body of routine ... */
     
   fn_exit:
-    MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_BSEND_INIT);
+    MPIR_FUNC_TERSE_PT2PT_EXIT(MPID_STATE_MPI_BSEND_INIT);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

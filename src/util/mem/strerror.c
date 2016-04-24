@@ -15,7 +15,7 @@ int strerror_r(int errnum, char *strerrbuf, size_t buflen);
 #endif
 
 /* ideally, provides a thread-safe version of strerror */
-const char *MPIU_Strerror(int errnum)
+const char *MPIR_Strerror(int errnum)
 {
 #if defined(HAVE_STRERROR_R)
     char *buf;
@@ -24,7 +24,7 @@ const char *MPIU_Strerror(int errnum)
 
     MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
                                  MPIR_Per_thread, per_thread, &err);
-    MPIU_Assert(err == 0);
+    MPIR_Assert(err == 0);
     buf = per_thread->strerrbuf;
 #  if defined(STRERROR_R_CHAR_P)
     /* strerror_r returns char ptr (old GNU-flavor).  Static strings for known

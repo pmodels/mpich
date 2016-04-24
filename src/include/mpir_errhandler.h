@@ -9,7 +9,7 @@
 #define MPIR_ERRHANDLER_H_INCLUDED
 
 /*E
-  MPIR_Errhandler_fn - MPID Structure to hold an error handler function
+  errhandler_fn - MPIR Structure to hold an error handler function
 
   Notes:
   The MPI-1 Standard declared only the C version of this, implicitly
@@ -30,12 +30,12 @@
   of the union)?
 
   E*/
-typedef union MPIR_Errhandler_fn {
+typedef union errhandler_fn {
    void (*C_Comm_Handler_function) ( MPI_Comm *, int *, ... );
    void (*F77_Handler_function) ( MPI_Fint *, MPI_Fint * );
    void (*C_Win_Handler_function) ( MPI_Win *, int *, ... );
    void (*C_File_Handler_function) ( MPI_File *, int *, ... );
-} MPIR_Errhandler_fn;
+} errhandler_fn;
 
 /*S
   MPIR_Errhandler - Description of the error handler structure
@@ -56,16 +56,16 @@ typedef union MPIR_Errhandler_fn {
   ErrHand-DS
   S*/
 typedef struct MPIR_Errhandler {
-  MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
+  MPIR_OBJECT_HEADER; /* adds handle and ref_count fields */
   MPIR_Lang_t        language;
-  MPIR_Object_kind   kind;
-  MPIR_Errhandler_fn errfn;
+  MPII_Object_kind   kind;
+  errhandler_fn errfn;
   /* Other, device-specific information */
 #ifdef MPID_DEV_ERRHANDLER_DECL
     MPID_DEV_ERRHANDLER_DECL
 #endif
 } MPIR_Errhandler;
-extern MPIU_Object_alloc_t MPIR_Errhandler_mem;
+extern MPIR_Object_alloc_t MPIR_Errhandler_mem;
 /* Preallocated errhandler objects */
 extern MPIR_Errhandler MPIR_Errhandler_builtin[];
 extern MPIR_Errhandler MPIR_Errhandler_direct[];
@@ -74,17 +74,17 @@ extern MPIR_Errhandler MPIR_Errhandler_direct[];
  * we decide to reference count the other predefined objects.  If we get to the
  * point where we never reference count *any* of the builtin objects then we
  * should probably remove these checks and let them fall through to the checks
- * for BUILTIN down in the MPIU_Object_* routines. */
+ * for BUILTIN down in the MPIR_Object_* routines. */
 #define MPIR_Errhandler_add_ref( _errhand )                               \
     do {                                                                  \
         if (HANDLE_GET_KIND((_errhand)->handle) != HANDLE_KIND_BUILTIN) { \
-            MPIU_Object_add_ref( _errhand );                              \
+            MPIR_Object_add_ref( _errhand );                              \
         }                                                                 \
     } while (0)
 #define MPIR_Errhandler_release_ref( _errhand, _inuse )                   \
     do {                                                                  \
         if (HANDLE_GET_KIND((_errhand)->handle) != HANDLE_KIND_BUILTIN) { \
-            MPIU_Object_release_ref( (_errhand), (_inuse) );              \
+            MPIR_Object_release_ref( (_errhand), (_inuse) );              \
         }                                                                 \
         else {                                                            \
             *(_inuse) = 1;                                                \

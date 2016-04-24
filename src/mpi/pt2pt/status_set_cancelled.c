@@ -52,11 +52,11 @@ int MPI_Status_set_cancelled(MPI_Status *status, int flag)
     static const char FCNAME[] = "MPI_Status_set_cancelled";
 #endif
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_STATUS_SET_CANCELLED);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_STATUS_SET_CANCELLED);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_STATUS_SET_CANCELLED);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_STATUS_SET_CANCELLED);
 
 #   ifdef HAVE_ERROR_CHECKING
     {
@@ -77,7 +77,7 @@ int MPI_Status_set_cancelled(MPI_Status *status, int flag)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_STATUS_SET_CANCELLED);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_STATUS_SET_CANCELLED);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

@@ -46,9 +46,9 @@ int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
                                  int *comm_keyval, void *extra_state)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Keyval *keyval_ptr;
+    MPII_Keyval *keyval_ptr;
         
-    keyval_ptr = (MPIR_Keyval *)MPIU_Handle_obj_alloc( &MPIR_Keyval_mem );
+    keyval_ptr = (MPII_Keyval *)MPIR_Handle_obj_alloc( &MPII_Keyval_mem );
     MPIR_ERR_CHKANDJUMP(!keyval_ptr, mpi_errno, MPI_ERR_OTHER,"**nomem");
 
     /* Initialize the attribute dup function */
@@ -61,14 +61,14 @@ int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
        field */
     keyval_ptr->handle           = (keyval_ptr->handle & ~(0x03c00000)) |
 	                           (MPIR_COMM << 22);
-    MPIU_Object_set_ref(keyval_ptr,1);
+    MPIR_Object_set_ref(keyval_ptr,1);
     keyval_ptr->was_freed        = 0;
     keyval_ptr->kind	         = MPIR_COMM;
     keyval_ptr->extra_state      = extra_state;
     keyval_ptr->copyfn.user_function = comm_copy_attr_fn;
-    keyval_ptr->copyfn.proxy = MPIR_Attr_copy_c_proxy;
+    keyval_ptr->copyfn.proxy = MPII_Attr_copy_c_proxy;
     keyval_ptr->delfn.user_function = comm_delete_attr_fn;
-    keyval_ptr->delfn.proxy = MPIR_Attr_delete_c_proxy;
+    keyval_ptr->delfn.proxy = MPII_Attr_delete_c_proxy;
 
     MPIR_OBJ_PUBLISH_HANDLE(*comm_keyval, keyval_ptr->handle);
 
@@ -126,12 +126,12 @@ int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
 			   int *comm_keyval, void *extra_state)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_CREATE_KEYVAL);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_CREATE_KEYVAL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_CREATE_KEYVAL);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_CREATE_KEYVAL);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -152,7 +152,7 @@ int MPI_Comm_create_keyval(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_CREATE_KEYVAL);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_CREATE_KEYVAL);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

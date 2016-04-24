@@ -1499,8 +1499,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpir_comm_get_attr %C %d %p %p:MPIR_Comm_get_attr(%C, comm_keyval=%d, attribute_val=%p, flag=%p) failed
 **mpir_type_get_attr:MPIR_Type_get_attr failed
 **mpir_type_get_attr %D %d %p %p:MPIR_Type_get_attr(%D, type_keyval=%d, attribute_val=%p, flag=%p) failed
-**mpir_wingetattr:MPIR_WinGetAttr failed
-**mpir_wingetattr %W %d %p %p:MPIR_WinGetAttr(%W, win_keyval=%d, attribute_val=%p, flag=%p) failed
+**mpir_wingetattr:MPII_Win_get_attr failed
+**mpir_wingetattr %W %d %p %p:MPII_Win_get_attr(%W, win_keyval=%d, attribute_val=%p, flag=%p) failed
 
 ## MPI-3 Mprobe routines
 **mpi_improbe: MPI_Improbe failed

@@ -49,7 +49,7 @@ int MPIR_Graph_create( MPIR_Comm *comm_ptr, int nnodes,
     int i, nedges;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_Topology *graph_ptr = NULL;
-    MPIU_CHKPMEM_DECL(3);
+    MPIR_CHKPMEM_DECL(3);
 
     /* Set this to null in case there is an error */
     *comm_graph = MPI_COMM_NULL;
@@ -71,7 +71,7 @@ int MPIR_Graph_create( MPIR_Comm *comm_ptr, int nnodes,
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     } else {
 	/* Just use the first nnodes processes in the communicator */
-	mpi_errno = MPIR_Comm_copy( (MPIR_Comm *)comm_ptr, nnodes,
+	mpi_errno = MPII_Comm_copy( (MPIR_Comm *)comm_ptr, nnodes,
 				    &newcomm_ptr );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
@@ -85,15 +85,15 @@ int MPIR_Graph_create( MPIR_Comm *comm_ptr, int nnodes,
     }
 
     nedges = indx[nnodes-1];
-    MPIU_CHKPMEM_MALLOC(graph_ptr,MPIR_Topology*,sizeof(MPIR_Topology),
+    MPIR_CHKPMEM_MALLOC(graph_ptr,MPIR_Topology*,sizeof(MPIR_Topology),
 			mpi_errno,"graph_ptr");
     
     graph_ptr->kind = MPI_GRAPH;
     graph_ptr->topo.graph.nnodes = nnodes;
     graph_ptr->topo.graph.nedges = nedges;
-    MPIU_CHKPMEM_MALLOC(graph_ptr->topo.graph.index,int*,
+    MPIR_CHKPMEM_MALLOC(graph_ptr->topo.graph.index,int*,
 			nnodes*sizeof(int),mpi_errno,"graph.index");
-    MPIU_CHKPMEM_MALLOC(graph_ptr->topo.graph.edges,int*,
+    MPIR_CHKPMEM_MALLOC(graph_ptr->topo.graph.edges,int*,
 			nedges*sizeof(int),mpi_errno,"graph.edges");
     for (i=0; i<nnodes; i++) 
 	graph_ptr->topo.graph.index[i] = indx[i];
@@ -114,7 +114,7 @@ int MPIR_Graph_create( MPIR_Comm *comm_ptr, int nnodes,
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
 #   ifdef HAVE_ERROR_CHECKING
     {
 	mpi_errno = MPIR_Err_create_code(
@@ -172,12 +172,12 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, const int indx[],
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_GRAPH_CREATE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GRAPH_CREATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GRAPH_CREATE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GRAPH_CREATE);
     
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -308,7 +308,7 @@ int MPI_Graph_create(MPI_Comm comm_old, int nnodes, const int indx[],
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GRAPH_CREATE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GRAPH_CREATE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

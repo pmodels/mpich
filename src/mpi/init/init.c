@@ -71,7 +71,7 @@ int MPI_Init(int *argc, char ***argv) __attribute__((weak,alias("PMPI_Init")));
 #define MPI_Init PMPI_Init
 
 /* Fortran logical values. extern'd in mpiimpl.h */
-/* MPI_Fint MPIR_F_TRUE, MPIR_F_FALSE; */
+/* MPI_Fint MPII_F_TRUE, MPII_F_FALSE; */
 
 /* Any internal routines can go here.  Make them static if possible */
 
@@ -123,14 +123,14 @@ int MPI_Init( int *argc, char ***argv )
     int mpi_errno = MPI_SUCCESS;
     int rc ATTRIBUTE((unused));
     int threadLevel, provided;
-    MPID_MPI_INIT_STATE_DECL(MPID_STATE_MPI_INIT);
+    MPIR_FUNC_TERSE_INIT_STATE_DECL(MPID_STATE_MPI_INIT);
 
     rc = MPID_Wtime_init();
 #ifdef MPL_USE_DBG_LOGGING
     MPL_dbg_pre_init( argc, argv, rc );
 #endif
 
-    MPID_MPI_INIT_FUNC_ENTER(MPID_STATE_MPI_INIT);
+    MPIR_FUNC_TERSE_INIT_ENTER(MPID_STATE_MPI_INIT);
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
@@ -191,7 +191,7 @@ int MPI_Init( int *argc, char ***argv )
     }
 
     /* ... end of body of routine ... */
-    MPID_MPI_INIT_FUNC_EXIT(MPID_STATE_MPI_INIT);
+    MPIR_FUNC_TERSE_INIT_EXIT(MPID_STATE_MPI_INIT);
     return mpi_errno;
 
   fn_fail:

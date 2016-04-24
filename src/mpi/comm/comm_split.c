@@ -136,17 +136,17 @@ int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **ne
     int rank, size, remote_size, i, new_size, new_remote_size,
 	first_entry = 0, first_remote_entry = 0, *last_ptr;
     int in_newcomm; /* TRUE iff *newcomm should be populated */
-    MPIU_Context_id_t   new_context_id, remote_context_id;
+    MPIR_Context_id_t   new_context_id, remote_context_id;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Comm_map_t *mapper;
-    MPIU_CHKLMEM_DECL(4);
+    MPIR_CHKLMEM_DECL(4);
 
     rank        = comm_ptr->rank;
     size        = comm_ptr->local_size;
     remote_size = comm_ptr->remote_size;
 	
     /* Step 1: Find out what color and keys all of the processes have */
-    MPIU_CHKLMEM_MALLOC(table,splittype*,size*sizeof(splittype),mpi_errno,
+    MPIR_CHKLMEM_MALLOC(table,splittype*,size*sizeof(splittype),mpi_errno,
 			"table");
     table[rank].color = color;
     table[rank].key   = key;
@@ -155,7 +155,7 @@ int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **ne
        processes */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
 	if (!comm_ptr->local_comm) {
-	    MPIR_Setup_intercomm_localcomm( comm_ptr );
+	    MPII_Setup_intercomm_localcomm( comm_ptr );
 	}
 	local_comm_ptr = comm_ptr->local_comm;
     }
@@ -200,7 +200,7 @@ int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **ne
 	   local group - perform an (intercommunicator) all gather
 	   of the color and rank information for the remote group.
 	*/
-	MPIU_CHKLMEM_MALLOC(remotetable,splittype*,
+	MPIR_CHKLMEM_MALLOC(remotetable,splittype*,
 			    remote_size*sizeof(splittype),mpi_errno,
 			    "remotetable");
 	/* This is an intercommunicator allgather */
@@ -250,22 +250,22 @@ int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **ne
        calling routine already holds the single criticial section */
     mpi_errno = MPIR_Get_contextid_sparse(local_comm_ptr, &new_context_id, !in_newcomm);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    MPIU_Assert(new_context_id != 0);
+    MPIR_Assert(new_context_id != 0);
 
     /* In the intercomm case, we need to exchange the context ids */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
 	if (comm_ptr->rank == 0) {
-	    mpi_errno = MPIC_Sendrecv( &new_context_id, 1, MPIU_CONTEXT_ID_T_DATATYPE, 0, 0,
-				       &remote_context_id, 1, MPIU_CONTEXT_ID_T_DATATYPE, 
+	    mpi_errno = MPIC_Sendrecv( &new_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, 0,
+				       &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE,
 				       0, 0, comm_ptr, MPI_STATUS_IGNORE, &errflag );
 	    if (mpi_errno) { MPIR_ERR_POP( mpi_errno ); }
-	    mpi_errno = MPID_Bcast( &remote_context_id, 1, MPIU_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr, &errflag );
+	    mpi_errno = MPID_Bcast( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr, &errflag );
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	}
 	else {
 	    /* Broadcast to the other members of the local group */
-	    mpi_errno = MPID_Bcast( &remote_context_id, 1, MPIU_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr, &errflag );
+	    mpi_errno = MPID_Bcast( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr, &errflag );
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 	}
@@ -289,7 +289,7 @@ int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **ne
 	   extract the table into a smaller array and sort that.
 	   Also, store in the "color" entry the rank in the input communicator
 	   of the entry. */
-	MPIU_CHKLMEM_MALLOC(keytable,sorttype*,new_size*sizeof(sorttype),
+	MPIR_CHKLMEM_MALLOC(keytable,sorttype*,new_size*sizeof(sorttype),
 			    mpi_errno,"keytable");
 	for (i=0; i<new_size; i++) {
 	    keytable[i].key   = table[first_entry].key;
@@ -302,7 +302,7 @@ int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **ne
 	MPIU_Sort_inttable( keytable, new_size );
 
 	if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-	    MPIU_CHKLMEM_MALLOC(remotekeytable,sorttype*,
+	    MPIR_CHKLMEM_MALLOC(remotekeytable,sorttype*,
 				new_remote_size*sizeof(sorttype),
 				mpi_errno,"remote keytable");
 	    for (i=0; i<new_remote_size; i++) {
@@ -382,7 +382,7 @@ int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **ne
     }
     
  fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -437,12 +437,12 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SPLIT);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_SPLIT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_SPLIT);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_SPLIT);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -485,7 +485,7 @@ int MPI_Comm_split(MPI_Comm comm, int color, int key, MPI_Comm *newcomm)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_SPLIT);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_SPLIT);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
     

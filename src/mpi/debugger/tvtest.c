@@ -332,19 +332,19 @@ static int dbgrI_find_function( mqs_image *image, char *name,
 }
 
 
-#define MPIU_Memcpy memcpy
+#define MPIR_Memcpy memcpy
 /* Simulate requesting the debugger to fetch data from within this process */
 static int dbgrI_fetch_data( mqs_process *proc, mqs_taddr_t addr, int asize, 
 			     void *data )
 {
-    MPIU_Memcpy( data, (void *)addr, (size_t) asize );
+    MPIR_Memcpy( data, (void *)addr, (size_t) asize );
     return mqs_ok;
 }
 /* Simulate converting data to debuggers byte ordering */
 static void dbgrI_target_to_host (mqs_process *proc, const void *in_data, 
 				  void *out_data, int asize )
 {
-    MPIU_Memcpy( out_data, in_data, asize );
+    MPIR_Memcpy( out_data, in_data, asize );
 }
 
 /* Return the "debuggers" image structure (statically allocated above) */

@@ -22,7 +22,7 @@
 #include <mpidimpl.h>
 
 #ifndef MPIR_REQUEST_PREALLOC
-#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
 #define  MPIR_REQUEST_PREALLOC 16
 #elif (MPIU_HANDLE_ALLOCATION_METHOD == MPIU_HANDLE_ALLOCATION_THREAD_LOCAL)
 #define  MPIR_REQUEST_PREALLOC 512  //Have direct more reqyests for all threads
@@ -40,7 +40,7 @@
 
 /* these are referenced by src/mpi/pt2pt/wait.c in PMPI_Wait! */
 MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC] __attribute__((__aligned__(64)));
-MPIU_Object_alloc_t MPIR_Request_mem =
+MPIR_Object_alloc_t MPIR_Request_mem =
   {
     0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request),
     MPIR_Request_direct,
@@ -55,11 +55,11 @@ void MPIDI_Request_allocate_pool()
   MPIR_Request *prev, *cur;
   /* batch allocate a linked list of requests */
   MPIU_THREAD_CS_ENTER(HANDLEALLOC,);
-  prev = MPIU_Handle_obj_alloc_unsafe(&MPIR_Request_mem);
+  prev = MPIR_Handle_obj_alloc_unsafe(&MPIR_Request_mem);
   MPID_assert(prev != NULL);
   prev->mpid.next = NULL;
   for (i = 1; i < MPIR_REQUEST_TLS_MAX; ++i) {
-    cur = MPIU_Handle_obj_alloc_unsafe(&MPIR_Request_mem);
+    cur = MPIR_Handle_obj_alloc_unsafe(&MPIR_Request_mem);
     MPID_assert(cur != NULL);
     cur->mpid.next = prev;
     prev = cur;
@@ -75,7 +75,7 @@ void
 MPIDI_Request_uncomplete(MPIR_Request *req)
 {
   int count;
-  MPIU_Object_add_ref(req);
+  MPIR_Object_add_ref(req);
   MPIR_cc_incr(req->cc_ptr, &count);
 }
 

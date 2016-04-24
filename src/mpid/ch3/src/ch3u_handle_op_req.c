@@ -18,8 +18,8 @@ int MPIDI_CH3_Req_handler_rma_op_complete(MPIR_Request * sreq)
     MPIR_Request *ureq = NULL;
     MPIR_Win *win_ptr = NULL;
 
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQ_HANDLER_RMA_OP_COMPLETE);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQ_HANDLER_RMA_OP_COMPLETE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_REQ_HANDLER_RMA_OP_COMPLETE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_REQ_HANDLER_RMA_OP_COMPLETE);
 
     if (sreq->dev.rma_target_ptr != NULL) {
         (sreq->dev.rma_target_ptr)->num_pkts_wait_for_local_completion--;
@@ -27,9 +27,9 @@ int MPIDI_CH3_Req_handler_rma_op_complete(MPIR_Request * sreq)
 
     /* get window, decrement active request cnt on window */
     MPIR_Win_get_ptr(sreq->dev.source_win_handle, win_ptr);
-    MPIU_Assert(win_ptr != NULL);
+    MPIR_Assert(win_ptr != NULL);
     MPIDI_CH3I_RMA_Active_req_cnt--;
-    MPIU_Assert(MPIDI_CH3I_RMA_Active_req_cnt >= 0);
+    MPIR_Assert(MPIDI_CH3I_RMA_Active_req_cnt >= 0);
 
     if (sreq->dev.request_handle != MPI_REQUEST_NULL) {
         /* get user request */
@@ -41,7 +41,7 @@ int MPIDI_CH3_Req_handler_rma_op_complete(MPIR_Request * sreq)
     }
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_REQ_HANDLER_RMA_OP_COMPLETE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_REQ_HANDLER_RMA_OP_COMPLETE);
     return mpi_errno;
 
   fn_fail:

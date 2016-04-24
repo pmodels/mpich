@@ -23,7 +23,7 @@ static FTB_event_info_t event_info[] = {
 };
 
 #ifdef DEBUG_MPIDU_FTB
-#define CHECK_FTB_ERROR(x) do { MPIU_Assertp(x); } while(0)
+#define CHECK_FTB_ERROR(x) do { MPIR_Assertp(x); } while(0)
 #else
 #define CHECK_FTB_ERROR(x) (void)x
 #endif
@@ -37,9 +37,9 @@ int MPIDU_Ftb_init(void)
     int mpi_errno = MPI_SUCCESS;
     int ret;
     FTB_client_t ci;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDU_FTB_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_FTB_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_FTB_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_FTB_INIT);
 
     MPL_strncpy(ci.event_space, "ftb.mpi.mpich", sizeof(ci.event_space));
     MPL_strncpy(ci.client_name, "mpich " MPICH_VERSION, sizeof(ci.client_name));
@@ -61,7 +61,7 @@ int MPIDU_Ftb_init(void)
     MPIR_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ftb_declare_publishable_events");
 
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_FTB_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_FTB_INIT);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -80,16 +80,16 @@ void MPIDU_Ftb_publish(const char *event_name, const char *event_payload)
 {
     FTB_event_properties_t event_prop;
     FTB_event_handle_t event_handle;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDU_FTB_PUBLISH);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_FTB_PUBLISH);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_FTB_PUBLISH);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_FTB_PUBLISH);
 
     event_prop.event_type = 1;
     MPL_strncpy(event_prop.event_payload, event_payload, sizeof(event_prop.event_payload));
     
     CHECK_FTB_ERROR(FTB_Publish(client_handle, event_name, &event_prop, &event_handle));
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_FTB_PUBLISH);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_FTB_PUBLISH);
     return;
 }
 
@@ -132,13 +132,13 @@ void MPIDU_Ftb_publish_me(const char *event_name)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIDU_Ftb_finalize(void)
 {
-    MPIDI_STATE_DECL(MPID_STATE_MPIDU_FTB_FINALIZE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_FTB_FINALIZE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_FTB_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_FTB_FINALIZE);
 
     CHECK_FTB_ERROR(FTB_Disconnect(client_handle));
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDU_FTB_FINALIZE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDU_FTB_FINALIZE);
     return;
 }
 

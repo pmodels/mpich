@@ -64,7 +64,7 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_callback)(cq_tagged_entry_t * wc, MPIR_Request 
         vc = REQ_OFI(rreq)->vc;
         if (!vc) {      /* MPI_ANY_SOURCE -- Post message from status, complete the VC */
             vc = rreq->comm->dev.vcrt->vcr_table[src];
-            MPIU_Assert(vc);
+            MPIR_Assert(vc);
         }
 #if API_SET == API_SET_1
         ssend_bits = init_sendtag(rreq->dev.match.parts.context_id,
@@ -237,7 +237,7 @@ ADD_SUFFIX(send_lightweight)(struct MPIDI_VC *vc,
     uint64_t match_bits = init_sendtag_2(comm->context_id + context_offset, tag, MPID_NORMAL_SEND);
 #endif
 
-    MPIU_Assert(data_sz <= gl_data.max_buffered_send);
+    MPIR_Assert(data_sz <= gl_data.max_buffered_send);
 
 #if API_SET == API_SET_1
     FI_RC_RETRY(fi_tinject(gl_data.endpoint,
@@ -383,7 +383,7 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_posted)(struct MPIDI_VC *vc, struct MPIR_Reques
     intptr_t data_sz;
     MPI_Aint dt_true_lb;
     MPIDU_Datatype*dt_ptr;
-    MPIU_Context_id_t context_id;
+    MPIR_Context_id_t context_id;
     char *recv_buffer;
     BEGIN_FUNC(FCNAME);
 
@@ -456,6 +456,6 @@ void ADD_SUFFIX(MPID_nem_ofi_anysource_posted)(MPIR_Request * rreq)
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
     mpi_errno = ADD_SUFFIX(MPID_nem_ofi_recv_posted)(NULL, rreq);
-    MPIU_Assert(mpi_errno == MPI_SUCCESS);
+    MPIR_Assert(mpi_errno == MPI_SUCCESS);
     END_FUNC(FCNAME);
 }

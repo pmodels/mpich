@@ -27,23 +27,23 @@ int MPI_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val) __attribu
 #define MPI_Win_set_attr PMPI_Win_set_attr
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_WinSetAttr
-int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val, 
-		     MPIR_AttrType attrType )
+#define FUNCNAME MPII_Win_set_attr
+int MPII_Win_set_attr( MPI_Win win, int win_keyval, void *attribute_val,
+		     MPIR_Attr_type attrType )
 {
     static const char FCNAME[] = "MPI_Win_set_attr";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
-    MPIR_Keyval *keyval_ptr = NULL;
+    MPII_Keyval *keyval_ptr = NULL;
     MPIR_Attribute *p, **old_p;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_WIN_SET_ATTR);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_WIN_SET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     /* The thread lock prevents a valid attr delete on the same window
        but in a different thread from causing problems */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_WIN_SET_ATTR);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_WIN_SET_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -60,7 +60,7 @@ int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 
     /* Convert MPI object handles to object pointers */
     MPIR_Win_get_ptr( win, win_ptr );
-    MPIR_Keyval_get_ptr( win_keyval, keyval_ptr );
+    MPII_Keyval_get_ptr( win_keyval, keyval_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -71,7 +71,7 @@ int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val,
             MPIR_Win_valid_ptr( win_ptr, mpi_errno );
 	    /* If win_ptr is not valid, it will be reset to null */
 	    /* Validate keyval */
-	    MPIR_Keyval_valid_ptr( keyval_ptr, mpi_errno );
+	    MPII_Keyval_valid_ptr( keyval_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
 	}
         MPID_END_ERROR_CHECKS;
@@ -100,7 +100,7 @@ int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 		goto fn_fail;
 	    }
 	    /* --END ERROR HANDLING-- */
-	    p->value    = (MPIR_AttrVal_t)(intptr_t)attribute_val;
+	    p->value    = (MPII_Attr_val_t)(intptr_t)attribute_val;
 	    p->attrType = attrType;
 	    /* Does not change the reference count on the keyval */
 	    break;
@@ -112,10 +112,10 @@ int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 	    new_p->keyval	 = keyval_ptr;
 	    new_p->attrType      = attrType;
 	    new_p->pre_sentinal	 = 0;
-	    new_p->value	 = (MPIR_AttrVal_t)(intptr_t)attribute_val;
+	    new_p->value	 = (MPII_Attr_val_t)(intptr_t)attribute_val;
 	    new_p->post_sentinal = 0;
 	    new_p->next		 = p->next;
-	    MPIR_Keyval_add_ref( keyval_ptr );
+	    MPII_Keyval_add_ref( keyval_ptr );
 	    p->next		 = new_p;
 	    break;
 	}
@@ -131,10 +131,10 @@ int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 	new_p->attrType      = attrType;
 	new_p->keyval	     = keyval_ptr;
 	new_p->pre_sentinal  = 0;
-	new_p->value	     = (MPIR_AttrVal_t)(intptr_t)attribute_val;
+	new_p->value	     = (MPII_Attr_val_t)(intptr_t)attribute_val;
 	new_p->post_sentinal = 0;
 	new_p->next	     = 0;
-	MPIR_Keyval_add_ref( keyval_ptr );
+	MPII_Keyval_add_ref( keyval_ptr );
 	*old_p		     = new_p;
     }
     
@@ -146,7 +146,7 @@ int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_WIN_SET_ATTR);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_WIN_SET_ATTR);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); 
     return mpi_errno;
 
@@ -199,19 +199,19 @@ corresponding keyval was created) will be called.
 int MPI_Win_set_attr(MPI_Win win, int win_keyval, void *attribute_val)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_SET_ATTR);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_WIN_SET_ATTR);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_SET_ATTR);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_WIN_SET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     /* ... body of routine ...  */
-    mpi_errno = MPIR_WinSetAttr( win, win_keyval, attribute_val, 
+    mpi_errno = MPII_Win_set_attr( win, win_keyval, attribute_val,
 				 MPIR_ATTR_PTR );
     if (mpi_errno) goto fn_fail;
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_WIN_SET_ATTR);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_WIN_SET_ATTR);
     return mpi_errno;
 
   fn_fail:

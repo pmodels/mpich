@@ -48,12 +48,12 @@ int MPI_Info_create( MPI_Info *info )
     MPIR_Info *info_ptr;
     static const char FCNAME[] = "MPI_Info_create";
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_INFO_CREATE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_INFO_CREATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_INFO_CREATE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_INFO_CREATE);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -68,7 +68,7 @@ int MPI_Info_create( MPI_Info *info )
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIU_Info_alloc(&info_ptr);
+    mpi_errno = MPIR_Info_alloc(&info_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     *info	     = info_ptr->handle;
@@ -79,7 +79,7 @@ int MPI_Info_create( MPI_Info *info )
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_INFO_CREATE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_INFO_CREATE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
     

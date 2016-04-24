@@ -34,7 +34,7 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
 #define FUNCNAME MPIR_Iallreduce_naive
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_naive(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Iallreduce_naive(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
@@ -50,7 +50,7 @@ int MPIR_Iallreduce_naive(const void *sendbuf, void *recvbuf, int count, MPI_Dat
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
-    MPID_SCHED_BARRIER(s);
+    MPIR_SCHED_BARRIER(s);
 
     mpi_errno = MPIR_Ibcast_intra(recvbuf, count, datatype, 0, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -66,7 +66,7 @@ fn_fail:
 #define FUNCNAME MPIR_Iallreduce_redscat_allgather
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_redscat_allgather(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Iallreduce_redscat_allgather(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank, newrank, pof2, rem;
@@ -75,11 +75,11 @@ int MPIR_Iallreduce_redscat_allgather(const void *sendbuf, void *recvbuf, int co
     void *tmp_buf = NULL;
     int *cnts, *disps;
     MPIR_SCHED_CHKPMEM_DECL(1);
-    MPIU_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL(2);
 
     /* we only support builtin datatypes for now, breaking up user types to do
      * the reduce-scatter is tricky */
-    MPIU_Assert(HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN);
+    MPIR_Assert(HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN);
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -88,7 +88,7 @@ int MPIR_Iallreduce_redscat_allgather(const void *sendbuf, void *recvbuf, int co
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPID_Datatype_get_extent_macro(datatype, extent);
 
-    MPIU_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
+    MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
     MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
 
     /* adjust for potential negative lower bound in datatype */
@@ -96,10 +96,10 @@ int MPIR_Iallreduce_redscat_allgather(const void *sendbuf, void *recvbuf, int co
 
     /* copy local data into recvbuf */
     if (sendbuf != MPI_IN_PLACE) {
-        mpi_errno = MPID_Sched_copy(sendbuf, count, datatype,
+        mpi_errno = MPIR_Sched_copy(sendbuf, count, datatype,
                                     recvbuf, count, datatype, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPID_SCHED_BARRIER(s);
+        MPIR_SCHED_BARRIER(s);
     }
 
     /* find nearest power-of-two less than or equal to comm_size */
@@ -117,9 +117,9 @@ int MPIR_Iallreduce_redscat_allgather(const void *sendbuf, void *recvbuf, int co
 
     if (rank < 2*rem) {
         if (rank % 2 == 0) { /* even */
-            mpi_errno = MPID_Sched_send(recvbuf, count, datatype, rank+1, comm_ptr, s);
+            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, rank+1, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPID_SCHED_BARRIER(s);
+            MPIR_SCHED_BARRIER(s);
 
             /* temporarily set the rank to -1 so that this
                process does not pariticipate in recursive
@@ -127,16 +127,16 @@ int MPIR_Iallreduce_redscat_allgather(const void *sendbuf, void *recvbuf, int co
             newrank = -1;
         }
         else { /* odd */
-            mpi_errno = MPID_Sched_recv(tmp_buf, count, datatype, rank-1, comm_ptr, s);
+            mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, rank-1, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPID_SCHED_BARRIER(s);
+            MPIR_SCHED_BARRIER(s);
 
             /* do the reduction on received data. since the
                ordering is right, it doesn't matter whether
                the operation is commutative or not. */
-            mpi_errno = MPID_Sched_reduce(tmp_buf, recvbuf, count, datatype, op, s);
+            mpi_errno = MPIR_Sched_reduce(tmp_buf, recvbuf, count, datatype, op, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPID_SCHED_BARRIER(s);
+            MPIR_SCHED_BARRIER(s);
 
             /* change the rank */
             newrank = rank / 2;
@@ -153,10 +153,10 @@ int MPIR_Iallreduce_redscat_allgather(const void *sendbuf, void *recvbuf, int co
          * calculated directly during the loop, rather than requiring a less-scalable
          * "2*pof2"-sized memory allocation */
 
-        MPIU_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts");
-        MPIU_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements");
+        MPIR_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts");
+        MPIR_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements");
 
-        MPIU_Assert(count >= pof2); /* the cnts calculations assume this */
+        MPIR_Assert(count >= pof2); /* the cnts calculations assume this */
         for (i=0; i<(pof2-1); i++)
             cnts[i] = count/pof2;
         cnts[pof2-1] = count - (count/pof2)*(pof2-1);
@@ -190,25 +190,25 @@ int MPIR_Iallreduce_redscat_allgather(const void *sendbuf, void *recvbuf, int co
             }
 
             /* Send data from recvbuf. Recv into tmp_buf */
-            mpi_errno = MPID_Sched_recv(((char *)tmp_buf + disps[recv_idx]*extent),
+            mpi_errno = MPIR_Sched_recv(((char *)tmp_buf + disps[recv_idx]*extent),
                                         recv_cnt, datatype, dst, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             /* sendrecv, no barrier here */
-            mpi_errno = MPID_Sched_send(((char *)recvbuf + disps[send_idx]*extent),
+            mpi_errno = MPIR_Sched_send(((char *)recvbuf + disps[send_idx]*extent),
                                         send_cnt, datatype, dst, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPID_SCHED_BARRIER(s);
+            MPIR_SCHED_BARRIER(s);
 
             /* tmp_buf contains data received in this step.
                recvbuf contains data accumulated so far */
 
             /* This algorithm is used only for predefined ops
                and predefined ops are always commutative. */
-            mpi_errno = MPID_Sched_reduce(((char *)tmp_buf + disps[recv_idx]*extent),
+            mpi_errno = MPIR_Sched_reduce(((char *)tmp_buf + disps[recv_idx]*extent),
                                           ((char *)recvbuf + disps[recv_idx]*extent),
                                           recv_cnt, datatype, op, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPID_SCHED_BARRIER(s);
+            MPIR_SCHED_BARRIER(s);
 
             /* update send_idx for next iteration */
             send_idx = recv_idx;
@@ -249,14 +249,14 @@ int MPIR_Iallreduce_redscat_allgather(const void *sendbuf, void *recvbuf, int co
                     recv_cnt += cnts[i];
             }
 
-            mpi_errno = MPID_Sched_recv(((char *)recvbuf + disps[recv_idx]*extent),
+            mpi_errno = MPIR_Sched_recv(((char *)recvbuf + disps[recv_idx]*extent),
                                         recv_cnt, datatype, dst, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             /* sendrecv, no barrier here */
-            mpi_errno = MPID_Sched_send(((char *)recvbuf + disps[send_idx]*extent),
+            mpi_errno = MPIR_Sched_send(((char *)recvbuf + disps[send_idx]*extent),
                                         send_cnt, datatype, dst, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPID_SCHED_BARRIER(s);
+            MPIR_SCHED_BARRIER(s);
 
             if (newrank > newdst) send_idx = recv_idx;
 
@@ -269,18 +269,18 @@ int MPIR_Iallreduce_redscat_allgather(const void *sendbuf, void *recvbuf, int co
        (rank-1), the ranks who didn't participate above. */
     if (rank < 2*rem) {
         if (rank % 2) { /* odd */
-            mpi_errno = MPID_Sched_send(recvbuf, count, datatype, rank-1, comm_ptr, s);
+            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, rank-1, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
         else { /* even */
-            mpi_errno = MPID_Sched_recv(recvbuf, count, datatype, rank+1, comm_ptr, s);
+            mpi_errno = MPIR_Sched_recv(recvbuf, count, datatype, rank+1, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
     }
 
     MPIR_SCHED_CHKPMEM_COMMIT(s);
 fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
 fn_fail:
     MPIR_SCHED_CHKPMEM_REAP(s);
@@ -291,7 +291,7 @@ fn_fail:
 #define FUNCNAME MPIR_Iallreduce_rec_dbl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_rec_dbl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Iallreduce_rec_dbl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int pof2, rem, comm_size, is_commutative, rank;
@@ -309,7 +309,7 @@ int MPIR_Iallreduce_rec_dbl(const void *sendbuf, void *recvbuf, int count, MPI_D
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
     MPID_Datatype_get_extent_macro(datatype, extent);
 
-    MPIU_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
+    MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
     MPIR_SCHED_CHKPMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
 
     /* adjust for potential negative lower bound in datatype */
@@ -317,10 +317,10 @@ int MPIR_Iallreduce_rec_dbl(const void *sendbuf, void *recvbuf, int count, MPI_D
 
     /* copy local data into recvbuf */
     if (sendbuf != MPI_IN_PLACE) {
-        mpi_errno = MPID_Sched_copy(sendbuf, count, datatype,
+        mpi_errno = MPIR_Sched_copy(sendbuf, count, datatype,
                                     recvbuf, count, datatype, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPID_SCHED_BARRIER(s);
+        MPIR_SCHED_BARRIER(s);
     }
 
     /* find nearest power-of-two less than or equal to comm_size */
@@ -338,9 +338,9 @@ int MPIR_Iallreduce_rec_dbl(const void *sendbuf, void *recvbuf, int count, MPI_D
 
     if (rank < 2*rem) {
         if (rank % 2 == 0) { /* even */
-            mpi_errno = MPID_Sched_send(recvbuf, count, datatype, rank+1, comm_ptr, s);
+            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, rank+1, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPID_SCHED_BARRIER(s);
+            MPIR_SCHED_BARRIER(s);
 
             /* temporarily set the rank to -1 so that this
                process does not pariticipate in recursive
@@ -348,16 +348,16 @@ int MPIR_Iallreduce_rec_dbl(const void *sendbuf, void *recvbuf, int count, MPI_D
             newrank = -1;
         }
         else { /* odd */
-            mpi_errno = MPID_Sched_recv(tmp_buf, count, datatype, rank-1, comm_ptr, s);
+            mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, rank-1, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPID_SCHED_BARRIER(s);
+            MPIR_SCHED_BARRIER(s);
 
             /* do the reduction on received data. since the
                ordering is right, it doesn't matter whether
                the operation is commutative or not. */
-            mpi_errno = MPID_Sched_reduce(tmp_buf, recvbuf, count, datatype, op, s);
+            mpi_errno = MPIR_Sched_reduce(tmp_buf, recvbuf, count, datatype, op, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPID_SCHED_BARRIER(s);
+            MPIR_SCHED_BARRIER(s);
 
             /* change the rank */
             newrank = rank / 2;
@@ -375,34 +375,34 @@ int MPIR_Iallreduce_rec_dbl(const void *sendbuf, void *recvbuf, int count, MPI_D
 
             /* Send the most current data, which is in recvbuf. Recv
                into tmp_buf */
-            mpi_errno = MPID_Sched_recv(tmp_buf, count, datatype, dst, comm_ptr, s);
+            mpi_errno = MPIR_Sched_recv(tmp_buf, count, datatype, dst, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             /* sendrecv, no barrier here */
-            mpi_errno = MPID_Sched_send(recvbuf, count, datatype,
+            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype,
                                         dst, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPID_SCHED_BARRIER(s);
+            MPIR_SCHED_BARRIER(s);
 
             /* tmp_buf contains data received in this step.
                recvbuf contains data accumulated so far */
 
             if (is_commutative  || (dst < rank)) {
                 /* op is commutative OR the order is already right */
-                mpi_errno = MPID_Sched_reduce(tmp_buf, recvbuf, count, datatype, op, s);
+                mpi_errno = MPIR_Sched_reduce(tmp_buf, recvbuf, count, datatype, op, s);
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                MPID_SCHED_BARRIER(s);
+                MPIR_SCHED_BARRIER(s);
             }
             else {
                 /* op is noncommutative and the order is not right */
-                mpi_errno = MPID_Sched_reduce(recvbuf, tmp_buf, count, datatype, op, s);
+                mpi_errno = MPIR_Sched_reduce(recvbuf, tmp_buf, count, datatype, op, s);
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                MPID_SCHED_BARRIER(s);
+                MPIR_SCHED_BARRIER(s);
 
                 /* copy result back into recvbuf */
-                mpi_errno = MPID_Sched_copy(tmp_buf, count, datatype,
+                mpi_errno = MPIR_Sched_copy(tmp_buf, count, datatype,
                                             recvbuf, count, datatype, s);
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                MPID_SCHED_BARRIER(s);
+                MPIR_SCHED_BARRIER(s);
             }
             mask <<= 1;
         }
@@ -413,11 +413,11 @@ int MPIR_Iallreduce_rec_dbl(const void *sendbuf, void *recvbuf, int count, MPI_D
        (rank-1), the ranks who didn't participate above. */
     if (rank < 2*rem) {
         if (rank % 2) { /* odd */
-            mpi_errno = MPID_Sched_send(recvbuf, count, datatype, rank-1, comm_ptr, s);
+            mpi_errno = MPIR_Sched_send(recvbuf, count, datatype, rank-1, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
         else { /* even */
-            mpi_errno = MPID_Sched_recv(recvbuf, count, datatype, rank+1, comm_ptr, s);
+            mpi_errno = MPIR_Sched_recv(recvbuf, count, datatype, rank+1, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
     }
@@ -434,12 +434,12 @@ fn_fail:
 #define FUNCNAME MPIR_Iallreduce_intra
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_intra(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Iallreduce_intra(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, is_homogeneous, pof2, type_size;
 
-    MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
     is_homogeneous = TRUE;
 #ifdef MPID_HAS_HETERO
@@ -495,7 +495,7 @@ fn_fail:
 #define FUNCNAME MPIR_Iallreduce_inter
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_inter(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Iallreduce_inter(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
 /* Intercommunicator Allreduce.
    We first do an intercommunicator reduce to rank 0 on left group,
@@ -509,7 +509,7 @@ int MPIR_Iallreduce_inter(const void *sendbuf, void *recvbuf, int count, MPI_Dat
     int rank, root;
     MPIR_Comm *lcomm_ptr = NULL;
 
-    MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
 
     rank = comm_ptr->rank;
 
@@ -543,17 +543,17 @@ int MPIR_Iallreduce_inter(const void *sendbuf, void *recvbuf, int count, MPI_Dat
     }
 
     /* don't bcast until the reductions have finished */
-    mpi_errno = MPID_Sched_barrier(s);
+    mpi_errno = MPIR_Sched_barrier(s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Get the local intracommunicator */
     if (!comm_ptr->local_comm) {
-        MPIR_Setup_intercomm_localcomm( comm_ptr );
+        MPII_Setup_intercomm_localcomm( comm_ptr );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     lcomm_ptr = comm_ptr->local_comm;
 
-    MPIU_Assert(lcomm_ptr->coll_fns && lcomm_ptr->coll_fns->Ibcast_sched);
+    MPIR_Assert(lcomm_ptr->coll_fns && lcomm_ptr->coll_fns->Ibcast_sched);
     mpi_errno = lcomm_ptr->coll_fns->Ibcast_sched(recvbuf, count, datatype, 0, lcomm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
@@ -568,7 +568,7 @@ fn_fail:
 #define FUNCNAME MPIR_Iallreduce_SMP
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Iallreduce_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Iallreduce_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int is_commutative;
@@ -577,7 +577,7 @@ int MPIR_Iallreduce_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datat
 
     if (!MPIR_CVAR_ENABLE_SMP_COLLECTIVES || !MPIR_CVAR_ENABLE_SMP_ALLREDUCE)
         MPID_Abort(comm_ptr, MPI_ERR_OTHER, 1, "SMP collectives are disabled!");
-    MPIU_Assert(MPIR_Comm_is_node_aware(comm_ptr));
+    MPIR_Assert(MPIR_Comm_is_node_aware(comm_ptr));
 
     nc = comm_ptr->node_comm;
     nrc = comm_ptr->node_roots_comm;
@@ -597,7 +597,7 @@ int MPIR_Iallreduce_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datat
         /* take care of the MPI_IN_PLACE case. For reduce,
            MPI_IN_PLACE is specified only on the root;
            for allreduce it is specified on all processes. */
-        MPIU_Assert(nc->coll_fns && nc->coll_fns->Ireduce_sched);
+        MPIR_Assert(nc->coll_fns && nc->coll_fns->Ireduce_sched);
 
         if ((sendbuf == MPI_IN_PLACE) && (comm_ptr->node_comm->rank != 0)) {
             /* IN_PLACE and not root of reduce. Data supplied to this
@@ -608,31 +608,31 @@ int MPIR_Iallreduce_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datat
             mpi_errno = nc->coll_fns->Ireduce_sched(sendbuf, recvbuf, count, datatype, op, 0, nc, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
-        MPID_SCHED_BARRIER(s);
+        MPIR_SCHED_BARRIER(s);
     } else {
         /* only one process on the node. copy sendbuf to recvbuf */
         if (sendbuf != MPI_IN_PLACE) {
-            mpi_errno = MPID_Sched_copy(sendbuf, count, datatype,
+            mpi_errno = MPIR_Sched_copy(sendbuf, count, datatype,
                                         recvbuf, count, datatype, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
-        MPID_SCHED_BARRIER(s);
+        MPIR_SCHED_BARRIER(s);
     }
 
     /* now do an IN_PLACE allreduce among the local roots of all nodes */
     if (nrc != NULL) {
-        MPIU_Assert(nrc->coll_fns && nrc->coll_fns->Iallreduce_sched);
+        MPIR_Assert(nrc->coll_fns && nrc->coll_fns->Iallreduce_sched);
         mpi_errno = nrc->coll_fns->Iallreduce_sched(MPI_IN_PLACE, recvbuf, count, datatype, op, nrc, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPID_SCHED_BARRIER(s);
+        MPIR_SCHED_BARRIER(s);
     }
 
     /* now broadcast the result among local processes */
     if (comm_ptr->node_comm != NULL) {
-        MPIU_Assert(nc->coll_fns && nc->coll_fns->Ibcast_sched);
+        MPIR_Assert(nc->coll_fns && nc->coll_fns->Ibcast_sched);
         mpi_errno = nc->coll_fns->Ibcast_sched(recvbuf, count, datatype, 0, nc, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPID_SCHED_BARRIER(s);
+        MPIR_SCHED_BARRIER(s);
     }
 
 fn_exit:
@@ -651,21 +651,21 @@ int MPIR_Iallreduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Data
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *reqp = NULL;
     int tag = -1;
-    MPID_Sched_t s = MPID_SCHED_NULL;
+    MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = MPI_REQUEST_NULL;
 
-    mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPID_Sched_create(&s);
+    mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPIU_Assert(comm_ptr->coll_fns != NULL);
-    MPIU_Assert(comm_ptr->coll_fns->Iallreduce_sched != NULL);
+    MPIR_Assert(comm_ptr->coll_fns != NULL);
+    MPIR_Assert(comm_ptr->coll_fns->Iallreduce_sched != NULL);
     mpi_errno = comm_ptr->coll_fns->Iallreduce_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, &reqp);
+    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);
     if (reqp)
         *request = reqp->handle;
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -709,10 +709,10 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_IALLREDUCE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IALLREDUCE);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IALLREDUCE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IALLREDUCE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -783,7 +783,7 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IALLREDUCE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IALLREDUCE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

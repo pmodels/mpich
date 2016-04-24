@@ -130,13 +130,13 @@ typedef struct {
 #undef FUNCNAME
 #define FUNCNAME nothing
 #define BEGIN_FUNC(FUNCNAME)                    \
-  MPIDI_STATE_DECL(FUNCNAME);                   \
-  MPIDI_FUNC_ENTER(FUNCNAME);
+  MPIR_FUNC_VERBOSE_STATE_DECL(FUNCNAME);                   \
+  MPIR_FUNC_VERBOSE_ENTER(FUNCNAME);
 #define END_FUNC(FUNCNAME)                      \
-  MPIDI_FUNC_EXIT(FUNCNAME);
+  MPIR_FUNC_VERBOSE_EXIT(FUNCNAME);
 #define END_FUNC_RC(FUNCNAME) \
   fn_exit:                    \
-  MPIDI_FUNC_EXIT(FUNCNAME);  \
+  MPIR_FUNC_VERBOSE_EXIT(FUNCNAME);  \
   return mpi_errno;           \
 fn_fail:                      \
   goto fn_exit;
@@ -219,11 +219,11 @@ fn_fail:                      \
 #define OFI_ADDR_INIT(src, vc, remote_proc) \
 ({                                          \
   if (MPI_ANY_SOURCE != src) {              \
-    MPIU_Assert(vc != NULL);                \
+    MPIR_Assert(vc != NULL);                \
     VC_READY_CHECK(vc);                     \
     remote_proc = VC_OFI(vc)->direct_addr;  \
   } else {                                  \
-    MPIU_Assert(vc == NULL);                \
+    MPIR_Assert(vc == NULL);                \
     remote_proc = FI_ADDR_UNSPEC;           \
   }                                         \
 })
@@ -250,9 +250,9 @@ static inline int MPID_nem_ofi_create_req(MPIR_Request ** request, int refcnt)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req;
     req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
-    MPIU_Assert(req);
+    MPIR_Assert(req);
     MPIDI_Request_clear_dbg(req);
-    MPIU_Object_set_ref(req, refcnt);
+    MPIR_Object_set_ref(req, refcnt);
     MPID_nem_ofi_init_req(req);
     *request = req;
     return mpi_errno;

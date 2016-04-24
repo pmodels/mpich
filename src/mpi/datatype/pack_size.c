@@ -81,11 +81,11 @@ int MPI_Pack_size(int incount,
 #endif
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint size_x = MPI_UNDEFINED;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_PACK_SIZE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_PACK_SIZE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_PACK_SIZE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_PACK_SIZE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -130,14 +130,14 @@ int MPI_Pack_size(int incount,
     /* ... body of routine ... */
 
     MPIR_Pack_size_impl(incount, datatype, &size_x);
-    MPIU_Assign_trunc(*size, size_x, int);
+    MPIR_Assign_trunc(*size, size_x, int);
 
     /* ... end of body of routine ... */
 
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_PACK_SIZE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_PACK_SIZE);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

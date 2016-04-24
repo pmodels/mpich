@@ -96,7 +96,7 @@ MPID_Win_get_info(MPIR_Win     *win,
     int mpi_errno = MPI_SUCCESS;
 
     /* Allocate an empty info object */
-    mpi_errno = MPIU_Info_alloc(info_p);
+    mpi_errno = MPIR_Info_alloc(info_p);
     MPID_assert(mpi_errno == MPI_SUCCESS);
     mpi_errno = MPIDI_Win_get_info(win, info_p);
     MPID_assert(mpi_errno == MPI_SUCCESS);

@@ -20,11 +20,11 @@ int MPID_Cancel_send(MPIR_Request * sreq)
     int proto;
     int flag;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_CANCEL_SEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CANCEL_SEND);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_CANCEL_SEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CANCEL_SEND);
     
-    MPIU_Assert(sreq->kind == MPIR_REQUEST_KIND__SEND);
+    MPIR_Assert(sreq->kind == MPIR_REQUEST_KIND__SEND);
 
     MPIDI_Request_cancel_pending(sreq, &flag);
     if (flag)
@@ -61,7 +61,7 @@ int MPID_Cancel_send(MPIR_Request * sreq)
 	MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_MSGQ_MUTEX);
 	if (rreq)
 	{
-	    MPIU_Assert(rreq->dev.partner_request == sreq);
+	    MPIR_Assert(rreq->dev.partner_request == sreq);
 	    
 	    MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
              "send-to-self cancellation successful, sreq=0x%08x, rreq=0x%08x",
@@ -144,7 +144,7 @@ int MPID_Cancel_send(MPIR_Request * sreq)
 		       safe to reset ref_count and cc */
                     MPIR_cc_set(&sreq->cc, 0);
                     /* FIXME should be a decr and assert, not a set */
-		    MPIU_Object_set_ref(sreq, 1);
+		    MPIR_Object_set_ref(sreq, 1);
 		    goto fn_exit;
 		}
 	    }
@@ -159,7 +159,7 @@ int MPID_Cancel_send(MPIR_Request * sreq)
 		   reset ref_count and cc */
                 MPIR_cc_set(&sreq->cc, 0);
                 /* FIXME should be a decr and assert, not a set */
-		MPIU_Object_set_ref(sreq, 1);
+		MPIR_Object_set_ref(sreq, 1);
 		goto fn_exit;
 	    }
 	}
@@ -218,7 +218,7 @@ int MPID_Cancel_send(MPIR_Request * sreq)
        should be adequate. */
  fn_fail:
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_CANCEL_SEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_CANCEL_SEND);
     return mpi_errno;
 }
 

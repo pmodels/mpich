@@ -41,7 +41,7 @@ int MPIR_Cart_create( MPIR_Comm *comm_ptr, int ndims, const int dims[],
     int i, newsize, rank, nranks, mpi_errno = MPI_SUCCESS;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_Topology *cart_ptr = NULL;
-    MPIU_CHKPMEM_DECL(4);
+    MPIR_CHKPMEM_DECL(4);
     
     /* Set this as null incase we exit with an error */
     *comm_cart = MPI_COMM_NULL;
@@ -70,7 +70,7 @@ int MPIR_Cart_create( MPIR_Comm *comm_ptr, int ndims, const int dims[],
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	    
 	    /* Create the topology structure */
-	    MPIU_CHKPMEM_MALLOC(cart_ptr,MPIR_Topology*,sizeof(MPIR_Topology),
+	    MPIR_CHKPMEM_MALLOC(cart_ptr,MPIR_Topology*,sizeof(MPIR_Topology),
 				mpi_errno, "cart_ptr" );
 	    
 	    cart_ptr->kind               = MPI_CART;
@@ -80,11 +80,11 @@ int MPIR_Cart_create( MPIR_Comm *comm_ptr, int ndims, const int dims[],
 	    /* make mallocs of size 1 int so that they get freed as part of the 
 	       normal free mechanism */
 	    
-	    MPIU_CHKPMEM_MALLOC(cart_ptr->topo.cart.dims,int*,sizeof(int),
+	    MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.dims,int*,sizeof(int),
 				mpi_errno, "cart.dims");
-	    MPIU_CHKPMEM_MALLOC(cart_ptr->topo.cart.periodic,int*,sizeof(int),
+	    MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.periodic,int*,sizeof(int),
 				mpi_errno, "cart.periodic");
-	    MPIU_CHKPMEM_MALLOC(cart_ptr->topo.cart.position,int*,sizeof(int),
+	    MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.position,int*,sizeof(int),
 				mpi_errno, "cart.position");
 	}
 	else {
@@ -112,7 +112,7 @@ int MPIR_Cart_create( MPIR_Comm *comm_ptr, int ndims, const int dims[],
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         } else {
-	    mpi_errno = MPIR_Comm_copy( (MPIR_Comm *)comm_ptr, newsize,
+	    mpi_errno = MPII_Comm_copy( (MPIR_Comm *)comm_ptr, newsize,
 					&newcomm_ptr );
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	    rank   = comm_ptr->rank;
@@ -126,17 +126,17 @@ int MPIR_Cart_create( MPIR_Comm *comm_ptr, int ndims, const int dims[],
 	}
 	
 	/* Create the topololgy structure */
-	MPIU_CHKPMEM_MALLOC(cart_ptr,MPIR_Topology*,sizeof(MPIR_Topology),
+	MPIR_CHKPMEM_MALLOC(cart_ptr,MPIR_Topology*,sizeof(MPIR_Topology),
 			    mpi_errno, "cart_ptr" );
 	
 	cart_ptr->kind               = MPI_CART;
 	cart_ptr->topo.cart.nnodes   = newsize;
 	cart_ptr->topo.cart.ndims    = ndims;
-	MPIU_CHKPMEM_MALLOC(cart_ptr->topo.cart.dims,int*,ndims*sizeof(int),
+	MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.dims,int*,ndims*sizeof(int),
 			    mpi_errno, "cart.dims");
-	MPIU_CHKPMEM_MALLOC(cart_ptr->topo.cart.periodic,int*,ndims*sizeof(int),
+	MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.periodic,int*,ndims*sizeof(int),
 			    mpi_errno, "cart.periodic");
-	MPIU_CHKPMEM_MALLOC(cart_ptr->topo.cart.position,int*,ndims*sizeof(int),
+	MPIR_CHKPMEM_MALLOC(cart_ptr->topo.cart.position,int*,ndims*sizeof(int),
 			    mpi_errno, "cart.position");
 	nranks = newsize;
 	for (i=0; i<ndims; i++)
@@ -162,7 +162,7 @@ int MPIR_Cart_create( MPIR_Comm *comm_ptr, int ndims, const int dims[],
 
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     /* --END ERROR HANDLING-- */
     goto fn_exit;
 }
@@ -240,12 +240,12 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[],
 {
     int       mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_CART_CREATE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_CART_CREATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_CART_CREATE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_CART_CREATE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -305,7 +305,7 @@ int MPI_Cart_create(MPI_Comm comm_old, int ndims, const int dims[],
     /* ... end of body of routine ... */
 
  fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_CART_CREATE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_CART_CREATE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

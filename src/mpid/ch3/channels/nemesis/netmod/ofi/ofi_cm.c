@@ -48,7 +48,7 @@ static inline MPIDI_VC_t *ofi_wc_to_vc(cq_tagged_entry_t * wc)
             vc = VC_OFI(vc)->next;
         }
         if (NULL == vc) {
-            MPIU_Assertp(0);
+            MPIR_Assertp(0);
         }
     }
     else {
@@ -69,7 +69,7 @@ static inline MPIDI_VC_t *ofi_wc_to_vc(cq_tagged_entry_t * wc)
             MPIDI_PG_Get_vc(pg, get_psource(match_bits), &vc);
         }
         else {
-            MPIU_Assert(0);
+            MPIR_Assert(0);
         }
     }
     END_FUNC(FCNAME);
@@ -105,9 +105,9 @@ static inline int MPID_nem_ofi_conn_req_callback(cq_tagged_entry_t * wc, MPIR_Re
 
     BEGIN_FUNC(FCNAME);
 
-    MPIU_Memcpy(bc, rreq->dev.user_buf, wc->len);
+    MPIR_Memcpy(bc, rreq->dev.user_buf, wc->len);
     bc[wc->len] = '\0';
-    MPIU_Assert(gl_data.conn_req == rreq);
+    MPIR_Assert(gl_data.conn_req == rreq);
     FI_RC_RETRY(fi_trecv(gl_data.endpoint,
                    gl_data.conn_req->dev.user_buf,
                    OFI_KVSAPPSTRLEN,
@@ -118,10 +118,10 @@ static inline int MPID_nem_ofi_conn_req_callback(cq_tagged_entry_t * wc, MPIR_Re
                    (void *) &(REQ_OFI(gl_data.conn_req)->ofi_context)), trecv);
 
     addr = MPL_malloc(gl_data.bound_addrlen);
-    MPIU_Assertp(addr);
+    MPIR_Assertp(addr);
 
     vc = MPL_malloc(sizeof(MPIDI_VC_t));
-    MPIU_Assertp(vc);
+    MPIR_Assertp(vc);
 
     MPIDI_VC_Init(vc, NULL, 0);
     MPIDI_CH3I_NM_OFI_RC(MPIDI_GetTagFromPort(bc, &vc->port_name_tag));
@@ -167,7 +167,7 @@ static inline int MPID_nem_ofi_handle_packet(cq_tagged_entry_t * wc ATTRIBUTE((u
     BEGIN_FUNC(FCNAME);
     if (MPIR_cc_get(rreq->cc) == 1) {
       vc = REQ_OFI(rreq)->vc;
-      MPIU_Assert(vc);
+      MPIR_Assert(vc);
       MPIDI_CH3I_NM_OFI_RC(MPID_nem_handle_pkt(vc, REQ_OFI(rreq)->pack_buffer, REQ_OFI(rreq)->pack_buffer_size));
       MPL_free(REQ_OFI(rreq)->pack_buffer);
     }
@@ -212,7 +212,7 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPIR_R
     BEGIN_FUNC(FCNAME);
 
     vc = ofi_wc_to_vc(wc);
-    MPIU_Assert(vc);
+    MPIR_Assert(vc);
     VC_READY_CHECK(vc);
 
     pkt_len = REQ_OFI(rreq)->msg_bytes;
@@ -249,7 +249,7 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPIR_R
                      gl_data.mr,
                      VC_OFI(vc)->direct_addr,
                      wc->tag | MPID_MSG_CTS, &(REQ_OFI(sreq)->ofi_context)), tsend);
-    MPIU_Assert(gl_data.persistent_req == rreq);
+    MPIR_Assert(gl_data.persistent_req == rreq);
 
     FI_RC_RETRY(fi_trecv(gl_data.endpoint,
                    &REQ_OFI(rreq)->msg_bytes,
@@ -401,8 +401,8 @@ int MPID_nem_ofi_vc_connect(MPIDI_VC_t * vc)
 
     BEGIN_FUNC(FCNAME);
     addr = MPL_malloc(gl_data.bound_addrlen);
-    MPIU_Assert(addr);
-    MPIU_Assert(1 != VC_OFI(vc)->ready);
+    MPIR_Assert(addr);
+    MPIR_Assert(1 != VC_OFI(vc)->ready);
 
     if (!vc->pg || !vc->pg->getConnInfo) {
         goto fn_exit;
@@ -473,7 +473,7 @@ int MPID_nem_ofi_vc_destroy(MPIDI_VC_t * vc)
             prev = VC_OFI(prev)->next;
         }
 
-        MPIU_Assert(prev != NULL);
+        MPIR_Assert(prev != NULL);
 
         if (VC_OFI(prev)->next == vc) {
             VC_OFI(prev)->next = VC_OFI(vc)->next;
@@ -482,7 +482,7 @@ int MPID_nem_ofi_vc_destroy(MPIDI_VC_t * vc)
             gl_data.cm_vcs = VC_OFI(vc)->next;
         }
         else {
-            MPIU_Assert(0);
+            MPIR_Assert(0);
         }
     }
     VC_OFI(vc)->ready = 0;
@@ -530,8 +530,8 @@ int MPID_nem_ofi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     BEGIN_FUNC(FCNAME);
     addr = MPL_malloc(gl_data.bound_addrlen);
     bc = MPL_malloc(OFI_KVSAPPSTRLEN);
-    MPIU_Assertp(addr);
-    MPIU_Assertp(bc);
+    MPIR_Assertp(addr);
+    MPIR_Assertp(bc);
     my_bc = bc;
     if (!business_card || business_card[0] != 't') {
         mpi_errno = MPI_ERR_OTHER;

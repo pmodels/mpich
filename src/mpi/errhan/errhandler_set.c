@@ -57,12 +57,12 @@ int MPI_Errhandler_set(MPI_Comm comm, MPI_Errhandler errhandler)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Errhandler *errhan_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_ERRHANDLER_SET);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ERRHANDLER_SET);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_ERRHANDLER_SET);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_ERRHANDLER_SET);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -107,7 +107,7 @@ int MPI_Errhandler_set(MPI_Comm comm, MPI_Errhandler errhandler)
 #   ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #   endif
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_ERRHANDLER_SET);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_ERRHANDLER_SET);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

@@ -93,9 +93,9 @@ int MPID_Comm_get_all_failed_procs(MPIR_Comm *comm_ptr, MPIR_Group **failed_grou
     int i, j, bitarray_size;
     int *bitarray, *remote_bitarray;
     MPIR_Group *local_fail;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_COMM_GET_ALL_FAILED_PROCS);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_GET_ALL_FAILED_PROCS);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_COMM_GET_ALL_FAILED_PROCS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_GET_ALL_FAILED_PROCS);
 
     /* Kick the progress engine in case it's been a while so we get all the
      * latest updates about failures */
@@ -156,7 +156,7 @@ int MPID_Comm_get_all_failed_procs(MPIR_Comm *comm_ptr, MPIR_Group **failed_grou
     MPL_free(remote_bitarray);
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_COMM_GET_ALL_FAILED_PROCS);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_GET_ALL_FAILED_PROCS);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

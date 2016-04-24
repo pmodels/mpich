@@ -98,13 +98,13 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
     int rc;
     int disabled_anysource = FALSE;
     int mpi_errno = MPI_SUCCESS;
-    MPIU_CHKLMEM_DECL(1);
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_WAITSOME);
+    MPIR_CHKLMEM_DECL(1);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WAITSOME);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_PT2PT_FUNC_ENTER(MPID_STATE_MPI_WAITSOME);
+    MPIR_FUNC_TERSE_PT2PT_ENTER(MPID_STATE_MPI_WAITSOME);
 
     /* Check the arguments */
 #   ifdef HAVE_ERROR_CHECKING
@@ -136,7 +136,7 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
     /* Convert MPI request handles to a request object pointers */
     if (incount > MPIR_REQUEST_PTR_ARRAY_SIZE)
     {
-	MPIU_CHKLMEM_MALLOC_ORJUMP(request_ptrs, MPIR_Request **, incount * sizeof(MPIR_Request *), mpi_errno, "request pointers");
+	MPIR_CHKLMEM_MALLOC_ORJUMP(request_ptrs, MPIR_Request **, incount * sizeof(MPIR_Request *), mpi_errno, "request pointers");
     }
     
     n_inactive = 0;
@@ -293,10 +293,10 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
   fn_exit:
     if (incount > MPIR_REQUEST_PTR_ARRAY_SIZE)
     {
-	MPIU_CHKLMEM_FREEALL();
+	MPIR_CHKLMEM_FREEALL();
     }
 
-    MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_WAITSOME);
+    MPIR_FUNC_TERSE_PT2PT_EXIT(MPID_STATE_MPI_WAITSOME);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

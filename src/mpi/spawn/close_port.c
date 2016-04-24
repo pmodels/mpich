@@ -53,12 +53,12 @@ Input Parameters:
 int MPI_Close_port(const char *port_name)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_CLOSE_PORT);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_CLOSE_PORT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_CLOSE_PORT);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_CLOSE_PORT);
 
     /* ... body of routine ...  */
     
@@ -68,7 +68,7 @@ int MPI_Close_port(const char *port_name)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_CLOSE_PORT);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_CLOSE_PORT);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

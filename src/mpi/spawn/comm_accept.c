@@ -71,12 +71,12 @@ int MPI_Comm_accept(const char *port_name, MPI_Info info, int root, MPI_Comm com
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_Info *info_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_ACCEPT);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_ACCEPT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_ACCEPT);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_ACCEPT);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -117,7 +117,7 @@ int MPI_Comm_accept(const char *port_name, MPI_Info info, int root, MPI_Comm com
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_ACCEPT);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_ACCEPT);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

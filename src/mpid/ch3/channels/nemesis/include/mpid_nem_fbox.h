@@ -39,7 +39,7 @@ static inline int poll_active_fboxes(MPID_nem_cell_ptr_t *cell)
             MPID_nem_fbox_mpich_t *fbox;
 
             fbox = MPID_nem_curr_fboxq_elem->fbox;
-            MPIU_Assert(fbox != NULL);
+            MPIR_Assert(fbox != NULL);
             if (OPA_load_acquire_int(&fbox->flag.value) &&
                 fbox->cell.pkt.header.seqno == MPID_nem_recv_seqno[MPID_nem_curr_fboxq_elem->grank])
             {

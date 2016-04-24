@@ -24,9 +24,9 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV *iov, int n_io
     int j;
     int in_cs = FALSE;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_ISENDV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_ISENDV);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ISENDV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_ISENDV);
 
     if (vc->state == MPIDI_VC_STATE_MORIBUND) {
         sreq->status.MPI_ERROR = MPI_SUCCESS;
@@ -38,7 +38,7 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV *iov, int n_io
 
     if (vc_ch->iSendContig)
     {
-        MPIU_Assert(n_iov > 0);
+        MPIR_Assert(n_iov > 0);
         switch (n_iov)
         {
         case 1:
@@ -54,9 +54,9 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV *iov, int n_io
         goto fn_exit;
     }
 
-    /*MPIU_Assert(vc_ch->is_local); */
-    MPIU_Assert(n_iov <= MPL_IOV_LIMIT);
-    MPIU_Assert(iov[0].MPL_IOV_LEN <= sizeof(MPIDI_CH3_Pkt_t));
+    /*MPIR_Assert(vc_ch->is_local); */
+    MPIR_Assert(n_iov <= MPL_IOV_LIMIT);
+    MPIR_Assert(iov[0].MPL_IOV_LEN <= sizeof(MPIDI_CH3_Pkt_t));
 
     /* The channel uses a fixed length header, the size of which is
      * the maximum of all possible packet headers */
@@ -109,7 +109,7 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV *iov, int n_io
             sreq->ch.noncontig = FALSE;
 	    sreq->ch.vc = vc;
 	    MPIDI_CH3I_Sendq_enqueue(&MPIDI_CH3I_shm_sendq, sreq);
-	    MPIU_Assert (MPIDI_CH3I_shm_active_send == NULL);
+	    MPIR_Assert (MPIDI_CH3I_shm_active_send == NULL);
 
             if (remaining_iov != iov) {
                 /* headers are sent, mark current sreq as active_send req */
@@ -125,7 +125,7 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV *iov, int n_io
             reqFn = sreq->dev.OnDataAvail;
             if (!reqFn)
             {
-                MPIU_Assert (MPIDI_Request_get_type (sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
+                MPIR_Assert (MPIDI_Request_get_type (sreq) != MPIDI_REQUEST_TYPE_GET_RESP);
                 mpi_errno = MPID_Request_complete (sreq);
                 if (mpi_errno != MPI_SUCCESS) {
                     MPIR_ERR_POP(mpi_errno);
@@ -145,7 +145,7 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV *iov, int n_io
                     sreq->ch.noncontig = FALSE;
                     sreq->ch.vc = vc;
                     MPIDI_CH3I_Sendq_enqueue(&MPIDI_CH3I_shm_sendq, sreq);
-                    MPIU_Assert (MPIDI_CH3I_shm_active_send == NULL);
+                    MPIR_Assert (MPIDI_CH3I_shm_active_send == NULL);
                     MPIDI_CH3I_shm_active_send = sreq;
                     MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... reloaded and enqueued");
                 }
@@ -188,7 +188,7 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPIR_Request *sreq, MPL_IOV *iov, int n_io
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_ISENDV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_ISENDV);
     return mpi_errno;
  fn_fail:
     goto fn_exit;

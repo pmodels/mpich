@@ -15,13 +15,13 @@ static int nm_init(MPIDI_PG_t *pg_p, int pg_rank,
 
 static int nm_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_p)
 {
-    MPIU_Assertp(0);
+    MPIR_Assertp(0);
     return MPI_SUCCESS;
 }
 
 static int nm_connect_to_root(const char *business_card, MPIDI_VC_t *new_vc)
 {
-    MPIU_Assertp(0);
+    MPIR_Assertp(0);
     return MPI_SUCCESS;
 }
 

@@ -1943,8 +1943,8 @@ EXPORTS
 	mpifcmb6_
 	mpifcmb7_
 	mpifcmb8_
-;	MPIR_F_TRUE
-;	MPIR_F_FALSE
+;	MPII_F_TRUE
+;	MPII_F_FALSE
 	MPIR_F_NeedInit
 	MPIR_F_MPI_BOTTOM
 	MPIR_F_MPI_IN_PLACE

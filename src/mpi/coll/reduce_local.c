@@ -53,7 +53,7 @@ int MPIR_Reduce_local_impl(const void *inbuf, void *inoutbuf, int count, MPI_Dat
 
         MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
                                      MPIR_Per_thread, per_thread, &err);
-        MPIU_Assert(err == 0);
+        MPIR_Assert(err == 0);
         per_thread->op_errno = MPI_SUCCESS;
     }
 
@@ -96,7 +96,7 @@ int MPIR_Reduce_local_impl(const void *inbuf, void *inoutbuf, int count, MPI_Dat
         if (is_f77_uop) {
             MPI_Fint lcount = (MPI_Fint)count;
             MPI_Fint ldtype = (MPI_Fint)datatype;
-            MPIR_F77_User_function *uop_f77 = (MPIR_F77_User_function *)uop;
+            MPII_F77_User_function *uop_f77 = (MPII_F77_User_function *)uop;
 
             (*uop_f77)((void *) inbuf, inoutbuf, &lcount, &ldtype);
         }
@@ -115,7 +115,7 @@ int MPIR_Reduce_local_impl(const void *inbuf, void *inoutbuf, int count, MPI_Dat
 
         MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
                                      MPIR_Per_thread, per_thread, &err);
-        MPIU_Assert(err == 0);
+        MPIR_Assert(err == 0);
         if (per_thread->op_errno)
             mpi_errno = per_thread->op_errno;
     }
@@ -161,12 +161,12 @@ Output Parameters:
 int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_REDUCE_LOCAL);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_REDUCE_LOCAL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_COLL_FUNC_ENTER(MPID_STATE_MPI_REDUCE_LOCAL);
+    MPIR_FUNC_TERSE_COLL_ENTER(MPID_STATE_MPI_REDUCE_LOCAL);
 
     /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
@@ -203,7 +203,7 @@ int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype 
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_COLL_FUNC_EXIT(MPID_STATE_MPI_REDUCE_LOCAL);
+    MPIR_FUNC_TERSE_COLL_EXIT(MPID_STATE_MPI_REDUCE_LOCAL);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

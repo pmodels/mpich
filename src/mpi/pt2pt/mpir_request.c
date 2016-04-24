@@ -10,7 +10,7 @@
 /* style:PMPIuse:PMPI_Status_f2c:2 sig:0 */
 
 MPIR_Request MPIR_Request_direct[MPIR_REQUEST_PREALLOC] = {{0}};
-MPIU_Object_alloc_t MPIR_Request_mem = {
+MPIR_Object_alloc_t MPIR_Request_mem = {
     0, 0, 0, 0, MPIR_REQUEST, sizeof(MPIR_Request), MPIR_Request_direct,
     MPIR_REQUEST_PREALLOC };
 
@@ -61,8 +61,8 @@ fn_exit:
    was inactive and did not require any extra completion operation.
 
    If debugger information is being provided for pending (user-initiated) 
-   send operations, the macros MPIR_SENDQ_FORGET will be defined to 
-   call the routine MPIR_Sendq_forget; otherwise that macro will be a no-op.
+   send operations, the macros MPII_SENDQ_FORGET will be defined to
+   call the routine MPII_Sendq_forget; otherwise that macro will be a no-op.
    The implementation of the MPIR_Sendq_xxx is in src/mpi/debugger/dbginit.c .
 */
 int MPIR_Request_complete(MPI_Request * request, MPIR_Request * request_ptr,
@@ -80,7 +80,7 @@ int MPIR_Request_complete(MPI_Request * request, MPIR_Request * request_ptr,
 		MPIR_STATUS_SET_CANCEL_BIT(*status, MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
 	    }
 	    mpi_errno = request_ptr->status.MPI_ERROR;
-	    MPIR_SENDQ_FORGET(request_ptr);
+	    MPII_SENDQ_FORGET(request_ptr);
 	    MPIR_Request_free(request_ptr);
             if (NULL != request) *request = MPI_REQUEST_NULL;
 	    break;
@@ -372,7 +372,7 @@ int MPIR_Request_get_error(MPIR_Request * request_ptr)
 
 #ifdef HAVE_FORTRAN_BINDING
 /* Set the language type to Fortran for this (generalized) request */
-void MPIR_Grequest_set_lang_f77( MPI_Request greq )
+void MPII_Grequest_set_lang_f77( MPI_Request greq )
 {
     MPIR_Request *greq_ptr;
 
@@ -549,9 +549,9 @@ int MPIR_Grequest_progress_poke(int count,
     void ** state_ptrs;
     int i, j, n_classes, n_native, n_greq;
     int mpi_errno = MPI_SUCCESS;
-    MPIU_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL(1);
 
-    MPIU_CHKLMEM_MALLOC(state_ptrs, void **, sizeof(void*) * count, mpi_errno, "state_ptrs");
+    MPIR_CHKLMEM_MALLOC(state_ptrs, void **, sizeof(void*) * count, mpi_errno, "state_ptrs");
 
     /* This somewhat messy for-loop computes how many requests are native
      * requests and how many are generalized requests, and how many generalized
@@ -592,7 +592,7 @@ int MPIR_Grequest_progress_poke(int count,
 	}
     }
 fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -611,9 +611,9 @@ int MPIR_Grequest_waitall(int count, MPIR_Request * const * request_ptrs)
     int i;
     int mpi_error = MPI_SUCCESS;
     MPID_Progress_state progress_state;
-    MPIU_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL(1);
 
-    MPIU_CHKLMEM_MALLOC(state_ptrs, void *, sizeof(void*)*count, mpi_error, "state_ptrs");
+    MPIR_CHKLMEM_MALLOC(state_ptrs, void *, sizeof(void*)*count, mpi_error, "state_ptrs");
     
         /* DISABLED CODE: The greq wait_fn function returns when ANY
            of the requests completes, rather than all.  Also, once a
@@ -682,7 +682,7 @@ int MPIR_Grequest_waitall(int count, MPIR_Request * const * request_ptrs)
 
         mpi_error = (request_ptrs[i]->u.ureq.greq_fns->wait_fn)(1, &request_ptrs[i]->u.ureq.greq_fns->grequest_extra_state, 0, NULL);
         if (mpi_error) MPIR_ERR_POP(mpi_error);
-        MPIU_Assert(MPIR_Request_is_complete(request_ptrs[i]));
+        MPIR_Assert(MPIR_Request_is_complete(request_ptrs[i]));
     }
 
     MPID_Progress_start(&progress_state);
@@ -716,7 +716,7 @@ int MPIR_Grequest_waitall(int count, MPIR_Request * const * request_ptrs)
 #endif
 
  fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     return mpi_error;
  fn_fail:
     goto fn_exit;

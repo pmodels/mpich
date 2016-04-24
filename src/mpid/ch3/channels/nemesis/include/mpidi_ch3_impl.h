@@ -213,10 +213,10 @@ static inline int MPIDI_CH3I_SHM_Wins_append(MPIDI_SHM_Wins_list_t * list, MPIR_
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_SHM_Win_t *tmp_ptr;
-    MPIU_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL(1);
 
     /* FIXME: We should use a pool allocator here */
-    MPIU_CHKPMEM_MALLOC(tmp_ptr, MPIDI_SHM_Win_t *, sizeof(MPIDI_SHM_Win_t),
+    MPIR_CHKPMEM_MALLOC(tmp_ptr, MPIDI_SHM_Win_t *, sizeof(MPIDI_SHM_Win_t),
                         mpi_errno, "SHM window entry");
 
     tmp_ptr->next = NULL;
@@ -225,10 +225,10 @@ static inline int MPIDI_CH3I_SHM_Wins_append(MPIDI_SHM_Wins_list_t * list, MPIR_
     MPL_DL_APPEND(*list, tmp_ptr);
 
   fn_exit:
-    MPIU_CHKPMEM_COMMIT();
+    MPIR_CHKPMEM_COMMIT();
     return mpi_errno;
   fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 

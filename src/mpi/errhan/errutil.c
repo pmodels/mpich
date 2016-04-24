@@ -85,20 +85,20 @@ cvars:
  * The third group of code handles the error messages.  There are four
  * options, controlled by the value of MPICH_ERROR_MSG_LEVEL. 
  *
- * MPICH_ERROR_MSG_NONE - No text messages at all
- * MPICH_ERROR_MSG_CLASS - Only messages for the MPI error classes
- * MPICH_ERROR_MSG_GENERIC - Only predefiend messages for the MPI error codes
- * MPICH_ERROR_MSG_ALL - Instance specific error messages (and error message
+ * MPICH_ERROR_MSG__NONE - No text messages at all
+ * MPICH_ERROR_MSG__CLASS - Only messages for the MPI error classes
+ * MPICH_ERROR_MSG__GENERIC - Only predefiend messages for the MPI error codes
+ * MPICH_ERROR_MSG__ALL - Instance specific error messages (and error message
  *                       stack)
  *
- * In only the latter (MPICH_ERROR_MSG_ALL) case are instance-specific
+ * In only the latter (MPICH_ERROR_MSG__ALL) case are instance-specific
  * messages maintained (including the error message "stack" that you may
  * see mentioned in various places.  In the other cases, an error code 
- * identifies a fixed message string (unless MPICH_ERROR_MSG_NONE,
+ * identifies a fixed message string (unless MPICH_ERROR_MSG__NONE,
  * when there are no strings) from the "generic" strings defined in defmsg.h
  *
  * A major subgroup in this section is the code to handle the instance-specific
- * messages (MPICH_ERROR_MSG_ALL only).  
+ * messages (MPICH_ERROR_MSG__ALL only).
  *
  * An MPI error code is made up of a number of fields (see errcodes.h)
  * These ar 
@@ -118,7 +118,7 @@ static int did_err_init = FALSE; /* helps us solve a bootstrapping problem */
 
 static int checkValidErrcode( int, const char [], int * );
 
-#if MPICH_ERROR_MSG_LEVEL >= MPICH_ERROR_MSG_ALL
+#if MPICH_ERROR_MSG_LEVEL >= MPICH_ERROR_MSG__ALL
 static int ErrGetInstanceString( int, char [], int );
 static void MPIR_Err_stack_init( void );
 static int checkForUserErrcode( int );
@@ -146,14 +146,14 @@ static int checkForUserErrcode( int );
 MPIR_Errhandler MPIR_Errhandler_builtin[3] = { {0} };
 MPIR_Errhandler MPIR_Errhandler_direct[MPIR_ERRHANDLER_PREALLOC] =
     { {0} };
-MPIU_Object_alloc_t MPIR_Errhandler_mem = { 0, 0, 0, 0, MPIR_ERRHANDLER,
+MPIR_Object_alloc_t MPIR_Errhandler_mem = { 0, 0, 0, 0, MPIR_ERRHANDLER,
 					    sizeof(MPIR_Errhandler),
 					    MPIR_Errhandler_direct,
 					    MPIR_ERRHANDLER_PREALLOC, };
 
 void MPIR_Errhandler_free(MPIR_Errhandler *errhan_ptr)
 {
-    MPIU_Handle_obj_free(&MPIR_Errhandler_mem, errhan_ptr);
+    MPIR_Handle_obj_free(&MPIR_Errhandler_mem, errhan_ptr);
 }
 
 void MPIR_Err_init( void )
@@ -164,7 +164,7 @@ void MPIR_Err_init( void )
     MPIR_Errhandler_builtin[1].handle = MPI_ERRORS_RETURN;
     MPIR_Errhandler_builtin[2].handle = MPIR_ERRORS_THROW_EXCEPTIONS;
 
-#   if MPICH_ERROR_MSG_LEVEL >= MPICH_ERROR_MSG_ALL
+#   if MPICH_ERROR_MSG_LEVEL >= MPICH_ERROR_MSG__ALL
     MPIR_Err_stack_init();
 #   endif
     did_err_init = TRUE;
@@ -176,7 +176,7 @@ void MPIR_Err_init( void )
 /* This routine is used to install a callback used by the C++ binding
  to invoke the (C++) error handler.  The callback routine is a C routine,
  defined in the C++ binding. */
-void MPIR_Errhandler_set_cxx( MPI_Errhandler errhand, void (*errcall)(void) )
+void MPII_Errhandler_set_cxx( MPI_Errhandler errhand, void (*errcall)(void) )
 {
     MPIR_Errhandler *errhand_ptr;
     
@@ -188,7 +188,7 @@ void MPIR_Errhandler_set_cxx( MPI_Errhandler errhand, void (*errcall)(void) )
 #endif /* HAVE_CXX_BINDING */
 
 #if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
-void MPIR_Errhandler_set_fc( MPI_Errhandler errhand )
+void MPII_Errhandler_set_fc( MPI_Errhandler errhand )
 {
     MPIR_Errhandler *errhand_ptr;
     
@@ -279,7 +279,7 @@ int MPIR_Err_return_comm( MPIR_Comm  *comm_ptr, const char fcname[],
     }
     /* --END ERROR HANDLING-- */
 
-    MPIU_Assert(comm_ptr != NULL);
+    MPIR_Assert(comm_ptr != NULL);
 
     /* comm_ptr may have changed to comm_world.  Keep this locked as long as we
      * are using the errhandler to prevent it from disappearing out from under
@@ -557,7 +557,7 @@ void MPIR_Err_get_string( int errorcode, char * msg, int length,
 
     /* The fn (fourth) argument was added improperly and is no longer 
        used. */
-    MPIU_Assert( fn == NULL );
+    MPIR_Assert( fn == NULL );
     
     /* There was code to set num_remaining to MPI_MAX_ERROR_STRING
        if it was zero.  But based on the usage of this routine, 
@@ -628,10 +628,10 @@ void MPIR_Err_get_string( int errorcode, char * msg, int length,
 
         /* FIXME: Replace with function to add instance string or
            error code string */
-#       if MPICH_ERROR_MSG_LEVEL >= MPICH_ERROR_MSG_ALL
+#       if MPICH_ERROR_MSG_LEVEL >= MPICH_ERROR_MSG__ALL
 	if (ErrGetInstanceString( errorcode, msg, num_remaining )) 
 	    goto fn_exit;
-#elif MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG_CLASS
+#elif MPICH_ERROR_MSG_LEVEL > MPICH_ERROR_MSG__CLASS
 	{
 	    int generic_idx;
 	    
@@ -650,7 +650,7 @@ fn_exit:
     return;
 }
 
-#if MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG_NONE
+#if MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG__NONE
 /* No error message support */
 int MPIR_Err_create_code( int lastcode, int fatal, const char fcname[], 
 			  int line, int error_class, const char generic_msg[],
@@ -678,7 +678,7 @@ static const char *get_class_msg( int error_class )
     return "Error message texts are not available";
 }
 
-#elif MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG_CLASS
+#elif MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG__CLASS
 /* Only class error messages.  Note this is nearly the same as
    MPICH_ERROR_MSG_LEVEL == NONE, since the handling of error codes
    is the same */
@@ -714,7 +714,7 @@ static const char *get_class_msg( int error_class )
     }
 }
 
-#elif MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG_GENERIC
+#elif MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG__GENERIC
 #define NEEDS_FIND_GENERIC_MSG_INDEX
 static int FindGenericMsgIndex( const char [] );
 
@@ -769,7 +769,7 @@ static const char *get_class_msg( int error_class )
     }
 }
 
-#elif MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG_ALL
+#elif MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG__ALL
 /* General error message support, including the error message stack */
 
 static int checkErrcodeIsValid( int );
@@ -1582,7 +1582,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	}
 	if (len)
 	{
-	    MPIU_Memcpy(str, begin, len);
+	    MPIR_Memcpy(str, begin, len);
 	    str += len;
 	    maxlen -= len;
 	}
@@ -1769,7 +1769,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 	    break;
         case (int)'c':
             c = va_arg(list, MPI_Count);
-            MPIU_Assert(sizeof(long long) >= sizeof(MPI_Count));
+            MPIR_Assert(sizeof(long long) >= sizeof(MPI_Count));
             MPL_snprintf(str, maxlen, "%lld", (long long)c);
             break;
 	default:
