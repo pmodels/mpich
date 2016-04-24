@@ -176,7 +176,7 @@ int hcoll_comm_create(MPIR_Comm * comm_ptr, void *param)
     if (mpi_errno) {
         hcoll_destroy_context(comm_ptr->hcoll_priv.hcoll_context,
                               (rte_grp_handle_t) comm_ptr, &context_destroyed);
-        MPIU_Assert(context_destroyed);
+        MPIR_Assert(context_destroyed);
         comm_ptr->hcoll_priv.is_hcoll_init = 0;
         MPIR_ERR_POP(mpi_errno);
     }

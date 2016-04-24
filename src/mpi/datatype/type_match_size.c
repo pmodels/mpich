@@ -83,13 +83,13 @@ int MPI_Type_match_size(int typeclass, int size, MPI_Datatype *datatype)
     MPI_Datatype matched_datatype = MPI_DATATYPE_NULL;
     int i;
     MPI_Aint tsize;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_MATCH_SIZE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_MATCH_SIZE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     /* FIXME: This routine does not require the global critical section */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_MATCH_SIZE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_MATCH_SIZE);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -122,7 +122,7 @@ int MPI_Type_match_size(int typeclass, int size, MPI_Datatype *datatype)
 #endif
 	    for (i=0; i<nRealTypes; i++) {
 		if (real_types[i] == MPI_DATATYPE_NULL) { continue; }
-		MPIR_Type_size_impl( real_types[i], &tsize );
+		MPID_Datatype_get_size_macro( real_types[i], tsize );
 		if (tsize == size) {
 		    matched_datatype = real_types[i];
 		    break;
@@ -138,7 +138,7 @@ int MPI_Type_match_size(int typeclass, int size, MPI_Datatype *datatype)
 #endif
 	    for (i=0; i<nIntTypes; i++) {
 		if (int_types[i] == MPI_DATATYPE_NULL) { continue; }
-		MPIR_Type_size_impl( int_types[i], &tsize );
+		MPID_Datatype_get_size_macro( int_types[i], tsize );
 		if (tsize == size) {
 		    matched_datatype = int_types[i];
 		    break;
@@ -154,7 +154,7 @@ int MPI_Type_match_size(int typeclass, int size, MPI_Datatype *datatype)
 #endif
 	    for (i=0; i<nComplexTypes; i++) {
 		if (complex_types[i] == MPI_DATATYPE_NULL) { continue; }
-		MPIR_Type_size_impl( complex_types[i], &tsize );
+		MPID_Datatype_get_size_macro( complex_types[i], tsize );
 		if (tsize == size) {
 		    matched_datatype = complex_types[i];
 		    break;
@@ -183,7 +183,7 @@ int MPI_Type_match_size(int typeclass, int size, MPI_Datatype *datatype)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_MATCH_SIZE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_MATCH_SIZE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

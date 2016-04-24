@@ -59,12 +59,12 @@ int MPI_Keyval_free(int *keyval)
 {
     static const char FCNAME[] = "MPI_Keyval_free";
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_KEYVAL_FREE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_KEYVAL_FREE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_KEYVAL_FREE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_KEYVAL_FREE);
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
@@ -80,12 +80,12 @@ int MPI_Keyval_free(int *keyval)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPIR_Keyval *keyval_ptr = NULL;
+            MPII_Keyval *keyval_ptr = NULL;
 
             /* Convert MPI object handles to object pointers */
-            MPIR_Keyval_get_ptr( *keyval, keyval_ptr );
+            MPII_Keyval_get_ptr( *keyval, keyval_ptr );
 
-	    MPIR_Keyval_valid_ptr( keyval_ptr, mpi_errno );
+	    MPII_Keyval_valid_ptr( keyval_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
@@ -100,7 +100,7 @@ int MPI_Keyval_free(int *keyval)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_KEYVAL_FREE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_KEYVAL_FREE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

@@ -78,9 +78,9 @@ static int set_eager_threshold(MPIR_Comm *comm_ptr, MPIR_Info *info, void *state
 {
     int mpi_errno = MPI_SUCCESS;
     char *endptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIDI_CH3_SET_EAGER_THRESHOLD);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIDI_CH3_SET_EAGER_THRESHOLD);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_SET_EAGER_THRESHOLD);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIDI_CH3_SET_EAGER_THRESHOLD);
 
     comm_ptr->dev.eager_max_msg_sz = strtol(info->value, &endptr, 0);
 
@@ -89,7 +89,7 @@ static int set_eager_threshold(MPIR_Comm *comm_ptr, MPIR_Info *info, void *state
                          info->key);
 
  fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_SET_EAGER_THRESHOLD);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIDI_CH3_SET_EAGER_THRESHOLD);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -111,9 +111,9 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     MPIR_Comm * comm;
     int p;
     int val;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
 
     /* initialization routine for ch3u_comm.c */
     mpi_errno = MPIDI_CH3I_Comm_init();
@@ -326,7 +326,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 	}
 
 	MPIR_Process.comm_parent = comm;
-	MPIU_Assert(MPIR_Process.comm_parent != NULL);
+	MPIR_Assert(MPIR_Process.comm_parent != NULL);
 	MPL_strncpy(comm->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
         
 	/* FIXME: Check that this intercommunicator gets freed in MPI_Finalize
@@ -354,7 +354,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INIT);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

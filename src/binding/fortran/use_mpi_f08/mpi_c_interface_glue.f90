@@ -13,16 +13,16 @@ implicit none
 public :: MPIR_Fortran_string_f2c
 public :: MPIR_Fortran_string_c2f
 
-public :: MPIR_Comm_copy_attr_f08_proxy
+public :: MPII_Comm_copy_attr_f08_proxy
 public :: MPIR_Comm_delete_attr_f08_proxy
 public :: MPIR_Type_copy_attr_f08_proxy
 public :: MPIR_Type_delete_attr_f08_proxy
 public :: MPIR_Win_copy_attr_f08_proxy
 public :: MPIR_Win_delete_attr_f08_proxy
-public :: MPIR_Keyval_set_proxy
+public :: MPII_Keyval_set_proxy
 public :: MPIR_Grequest_set_lang_fortran
 
-! Bind to C's enum MPIR_AttrType in mpir_attr_generic.h
+! Bind to C's enum MPIR_Attr_type in mpir_attr_generic.h
 enum, bind(C)
     enumerator :: MPIR_ATTR_PTR  = 0
     enumerator :: MPIR_ATTR_AINT = 1
@@ -31,15 +31,15 @@ end enum
 
 interface
 
-subroutine MPIR_Keyval_set_proxy(keyval, attr_copy_proxy, attr_delete_proxy) bind(C, name="MPIR_Keyval_set_proxy")
+subroutine MPII_Keyval_set_proxy(keyval, attr_copy_proxy, attr_delete_proxy) bind(C, name="MPII_Keyval_set_proxy")
     use :: iso_c_binding, only : c_int, c_funptr
     integer(c_int), value, intent(in) :: keyval
     type(c_funptr), value, intent(in) :: attr_copy_proxy, attr_delete_proxy
     ! The subroutine is implemented in attrutil.c on the C side
-end subroutine MPIR_Keyval_set_proxy
+end subroutine MPII_Keyval_set_proxy
 
 ! Just need to tag the lang is Fortran, so it is fine to bind to *_lang_f77
-subroutine MPIR_Grequest_set_lang_fortran(request) bind(C, name="MPIR_Grequest_set_lang_f77")
+subroutine MPIR_Grequest_set_lang_fortran(request) bind(C, name="MPII_Grequest_set_lang_f77")
     use :: mpi_c_interface_types, only : c_Request
     integer(c_Request), value, intent(in) :: request
     ! The subroutine is implemented in mpir_request.c on the C side
@@ -97,7 +97,7 @@ subroutine MPIR_Fortran_string_c2f(cstring, fstring)
     end do
 end subroutine MPIR_Fortran_string_c2f
 
-function MPIR_Comm_copy_attr_f08_proxy (user_function, oldcomm, comm_keyval, extra_state, &
+function MPII_Comm_copy_attr_f08_proxy (user_function, oldcomm, comm_keyval, extra_state, &
         attr_type, attribute_val_in, attribute_val_out, flag) result(ierror)
 
     use :: iso_c_binding, only : c_int, c_intptr_t
@@ -135,7 +135,7 @@ function MPIR_Comm_copy_attr_f08_proxy (user_function, oldcomm, comm_keyval, ext
     flag = merge(1, 0, flag_f)
     ierror = ierror_f
 
-end function MPIR_Comm_copy_attr_f08_proxy
+end function MPII_Comm_copy_attr_f08_proxy
 
 function MPIR_Comm_delete_attr_f08_proxy (user_function, comm, comm_keyval, attr_type, &
         attribute_val, extra_state) result(ierror)

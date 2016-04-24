@@ -82,7 +82,7 @@ int MPI_Init_thread(int *argc, char ***argv, int required, int *provided) __attr
 /* Any internal routines can go here.  Make them static if possible */
 
 /* Global variables can be initialized here */
-MPICH_PerProcess_t MPIR_Process = { OPA_INT_T_INITIALIZER(MPICH_MPI_STATE__PRE_INIT) };
+MPIR_Process_t MPIR_Process = { OPA_INT_T_INITIALIZER(MPICH_MPI_STATE__PRE_INIT) };
      /* all other fields in MPIR_Process are irrelevant */
 MPIR_Thread_info_t MPIR_ThreadInfo = { 0 };
 
@@ -103,7 +103,7 @@ MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE = 0;
 
 /* This will help force the load of initinfo.o, which contains data about
    how MPICH was configured. */
-extern const char MPIR_Version_device[];
+extern const char MPII_Version_device[];
 
 /* Make sure the Fortran symbols are initialized unless it will cause problems
    for C programs linked with the C compilers (i.e., not using the 
@@ -166,12 +166,12 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 
 #if defined(MPICH_IS_THREADED)
 
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL || \
-    MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL || \
+    MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
 MPID_Thread_mutex_t MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX;
 #endif
 
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
 MPID_Thread_mutex_t MPIR_THREAD_POBJ_HANDLE_MUTEX;
 MPID_Thread_mutex_t MPIR_THREAD_POBJ_MSGQ_MUTEX;
 MPID_Thread_mutex_t MPIR_THREAD_POBJ_COMPLETION_MUTEX;
@@ -188,32 +188,32 @@ static int thread_cs_init( void )
 {
     int err;
 
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
     MPID_Thread_mutex_create(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
-    MPIU_Assert(err == 0);
+    MPIR_Assert(err == 0);
 
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
-    /* MPICH_THREAD_GRANULARITY_PER_OBJECT: Multiple locks */
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
+    /* MPICH_THREAD_GRANULARITY__POBJ: Multiple locks */
     MPID_Thread_mutex_create(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
-    MPIU_Assert(err == 0);
+    MPIR_Assert(err == 0);
     MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_HANDLE_MUTEX, &err);
-    MPIU_Assert(err == 0);
+    MPIR_Assert(err == 0);
     MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_MSGQ_MUTEX, &err);
-    MPIU_Assert(err == 0);
+    MPIR_Assert(err == 0);
     MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_COMPLETION_MUTEX, &err);
-    MPIU_Assert(err == 0);
+    MPIR_Assert(err == 0);
     MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_CTX_MUTEX, &err);
-    MPIU_Assert(err == 0);
+    MPIR_Assert(err == 0);
     MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_PMI_MUTEX, &err);
-    MPIU_Assert(err == 0);
+    MPIR_Assert(err == 0);
 
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_LOCK_FREE
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__LOCKFREE
 /* Updates to shared data and access to shared services is handled without 
    locks where ever possible. */
 #error lock-free not yet implemented
 
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_SINGLE
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__SINGLE
 /* No thread support, make all operations a no-op */
 
 #else
@@ -235,34 +235,34 @@ int MPIR_Thread_CS_Finalize( void )
     int err;
 
     MPL_DBG_MSG(MPIR_DBG_INIT,TYPICAL,"Freeing global mutex and private storage");
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
 /* There is a single, global lock, held for the duration of an MPI call */
     MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
-    MPIU_Assert(err == 0);
+    MPIR_Assert(err == 0);
 
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
-    /* MPICH_THREAD_GRANULARITY_PER_OBJECT: There are multiple locks,
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
+    /* MPICH_THREAD_GRANULARITY__POBJ: There are multiple locks,
      * one for each logical class (e.g., each type of object) */
     MPID_Thread_mutex_destroy(&MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX, &err);
-    MPIU_Assert(err == 0);
+    MPIR_Assert(err == 0);
     MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_HANDLE_MUTEX, &err);
-    MPIU_Assert(err == 0);
+    MPIR_Assert(err == 0);
     MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_MSGQ_MUTEX, &err);
-    MPIU_Assert(err == 0);
+    MPIR_Assert(err == 0);
     MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_COMPLETION_MUTEX, &err);
-    MPIU_Assert(err == 0);
+    MPIR_Assert(err == 0);
     MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_CTX_MUTEX, &err);
-    MPIU_Assert(err == 0);
+    MPIR_Assert(err == 0);
     MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_PMI_MUTEX, &err);
-    MPIU_Assert(err == 0);
+    MPIR_Assert(err == 0);
 
 
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_LOCK_FREE
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__LOCKFREE
 /* Updates to shared data and access to shared services is handled without 
    locks where ever possible. */
 #error lock-free not yet implemented
 
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_SINGLE
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__SINGLE
 /* No thread support, make all operations a no-op */
 
 #else
@@ -420,7 +420,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
        intially NULL and will be allocated by the device if the process group
        was started using one of the MPI_Comm_spawn functions. */
     MPIR_Process.comm_world		    = MPIR_Comm_builtin + 0;
-    MPIR_Comm_init(MPIR_Process.comm_world);
+    MPII_Comm_init(MPIR_Process.comm_world);
     MPIR_Process.comm_world->handle	    = MPI_COMM_WORLD;
     MPIR_Process.comm_world->context_id	    = 0 << MPIR_CONTEXT_PREFIX_SHIFT;
     MPIR_Process.comm_world->recvcontext_id = 0 << MPIR_CONTEXT_PREFIX_SHIFT;
@@ -431,7 +431,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 		 MPI_MAX_OBJECT_NAME);
 
     MPIR_Process.comm_self		    = MPIR_Comm_builtin + 1;
-    MPIR_Comm_init(MPIR_Process.comm_self);
+    MPII_Comm_init(MPIR_Process.comm_self);
     MPIR_Process.comm_self->handle	    = MPI_COMM_SELF;
     MPIR_Process.comm_self->context_id	    = 1 << MPIR_CONTEXT_PREFIX_SHIFT;
     MPIR_Process.comm_self->recvcontext_id  = 1 << MPIR_CONTEXT_PREFIX_SHIFT;
@@ -441,7 +441,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 
 #ifdef MPID_NEEDS_ICOMM_WORLD
     MPIR_Process.icomm_world		    = MPIR_Comm_builtin + 2;
-    MPIR_Comm_init(MPIR_Process.icomm_world);
+    MPII_Comm_init(MPIR_Process.icomm_world);
     MPIR_Process.icomm_world->handle	    = MPIR_ICOMM_WORLD;
     MPIR_Process.icomm_world->context_id    = 2 << MPIR_CONTEXT_PREFIX_SHIFT;
     MPIR_Process.icomm_world->recvcontext_id= 2 << MPIR_CONTEXT_PREFIX_SHIFT;
@@ -457,8 +457,8 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 
     /* Setup the initial communicator list in case we have 
        enabled the debugger message-queue interface */
-    MPIR_COMML_REMEMBER( MPIR_Process.comm_world );
-    MPIR_COMML_REMEMBER( MPIR_Process.comm_self );
+    MPII_COMML_REMEMBER( MPIR_Process.comm_world );
+    MPII_COMML_REMEMBER( MPIR_Process.comm_self );
 
     /* Call any and all MPID_Init type functions */
     MPIR_Err_init();
@@ -496,7 +496,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
        as defined by the standard. */
     info_ptr = MPIR_Info_builtin + 1;
     info_ptr->handle = MPI_INFO_ENV;
-    MPIU_Object_set_ref(info_ptr, 1);
+    MPIR_Object_set_ref(info_ptr, 1);
     info_ptr->next  = NULL;
     info_ptr->key   = NULL;
     info_ptr->value = NULL;
@@ -506,7 +506,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Assert: tag_ub should be a power of 2 minus 1 */
-    MPIU_Assert(((unsigned)MPIR_Process.attrs.tag_ub & ((unsigned)MPIR_Process.attrs.tag_ub + 1)) == 0);
+    MPIR_Assert(((unsigned)MPIR_Process.attrs.tag_ub & ((unsigned)MPIR_Process.attrs.tag_ub + 1)) == 0);
 
     /* Set aside tag space for tagged collectives and failure notification */
     MPIR_Process.attrs.tag_ub     >>= 3;
@@ -515,7 +515,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     MPIR_Process.tagged_coll_mask   = MPIR_Process.attrs.tag_ub + 1;
 
     /* Assert: tag_ub is at least the minimum asked for in the MPI spec */
-    MPIU_Assert( MPIR_Process.attrs.tag_ub >= 32767 );
+    MPIR_Assert( MPIR_Process.attrs.tag_ub >= 32767 );
 
     /* Capture the level of thread support provided */
     MPIR_ThreadInfo.thread_provided = thread_provided;
@@ -525,7 +525,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 #endif /* MPICH_IS_THREADED */
 
     /* FIXME: Define these in the interface.  Does Timer init belong here? */
-    MPIU_Timer_init(MPIR_Process.comm_world->rank,
+    MPII_Timer_init(MPIR_Process.comm_world->rank,
 		    MPIR_Process.comm_world->local_size);
 #ifdef USE_MEMORY_TRACING
 #ifdef MPICH_IS_THREADED
@@ -580,10 +580,10 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 #endif
 
     /* FIXME: Does this need to come before the call to MPID_InitComplete?
-       For some debugger support, MPIR_WaitForDebugger may want to use
+       For some debugger support, MPII_Wait_for_debugger may want to use
        MPI communication routines to collect information for the debugger */
 #ifdef HAVE_DEBUGGER_SUPPORT
-    MPIR_WaitForDebugger();
+    MPII_Wait_for_debugger();
 #endif
 
     /* Let the device know that the rest of the init process is completed */
@@ -660,14 +660,14 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
 {
     int mpi_errno = MPI_SUCCESS;
     int rc ATTRIBUTE((unused)), reqd = required;
-    MPID_MPI_INIT_STATE_DECL(MPID_STATE_MPI_INIT_THREAD);
+    MPIR_FUNC_TERSE_INIT_STATE_DECL(MPID_STATE_MPI_INIT_THREAD);
 
     rc = MPID_Wtime_init();
 #ifdef MPL_USE_DBG_LOGGING
     MPL_dbg_pre_init( argc, argv, rc );
 #endif
 
-    MPID_MPI_INIT_FUNC_ENTER(MPID_STATE_MPI_INIT_THREAD);
+    MPIR_FUNC_TERSE_INIT_ENTER(MPID_STATE_MPI_INIT_THREAD);
 
 #   ifdef HAVE_ERROR_CHECKING
     {
@@ -717,7 +717,7 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
 
     /* ... end of body of routine ... */
 
-    MPID_MPI_INIT_FUNC_EXIT(MPID_STATE_MPI_INIT_THREAD);
+    MPIR_FUNC_TERSE_INIT_EXIT(MPID_STATE_MPI_INIT_THREAD);
     return mpi_errno;
 
   fn_fail:
@@ -731,7 +731,7 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
-    MPID_MPI_INIT_FUNC_EXIT(MPID_STATE_MPI_INIT_THREAD);
+    MPIR_FUNC_TERSE_INIT_EXIT(MPID_STATE_MPI_INIT_THREAD);
 
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 

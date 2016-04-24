@@ -52,7 +52,7 @@ int MPI_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[],
                    MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                   int root, MPIR_Comm *comm_ptr, MPID_Sched_t s)
+                   int root, MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;
@@ -77,20 +77,20 @@ int MPIR_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs
          * a minimal sanity check. Maybe add a global var since we do
          * loop over sendcount[] in MPI_Scatterv before calling
          * this? */
-        MPIU_Ensure_Aint_fits_in_pointer(MPIU_VOID_PTR_CAST_TO_MPI_AINT sendbuf + extent);
+        MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT sendbuf + extent);
 
         for (i = 0; i < comm_size; i++) {
             if (sendcounts[i]) {
                 if ((comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) && (i == rank)) {
                     if (recvbuf != MPI_IN_PLACE) {
-                        mpi_errno = MPID_Sched_copy(((char *)sendbuf+displs[rank]*extent),
+                        mpi_errno = MPIR_Sched_copy(((char *)sendbuf+displs[rank]*extent),
                                                     sendcounts[rank], sendtype,
                                                     recvbuf, recvcount, recvtype, s);
                         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                     }
                 }
                 else {
-                    mpi_errno = MPID_Sched_send(((char *)sendbuf+displs[i]*extent),
+                    mpi_errno = MPIR_Sched_send(((char *)sendbuf+displs[i]*extent),
                                                 sendcounts[i], sendtype, i, comm_ptr, s);
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 }
@@ -101,7 +101,7 @@ int MPIR_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs
     else if (root != MPI_PROC_NULL) {
         /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
         if (recvcount) {
-            mpi_errno = MPID_Sched_recv(recvbuf, recvcount, recvtype, root, comm_ptr, s);
+            mpi_errno = MPIR_Sched_recv(recvbuf, recvcount, recvtype, root, comm_ptr, s);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
     }
@@ -123,20 +123,20 @@ int MPIR_Iscatterv_impl(const void *sendbuf, const int sendcounts[], const int d
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *reqp = NULL;
     int tag = -1;
-    MPID_Sched_t s = MPID_SCHED_NULL;
+    MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = MPI_REQUEST_NULL;
 
-    mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPID_Sched_create(&s);
+    mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPIU_Assert(comm_ptr->coll_fns->Iscatterv_sched != NULL);
+    MPIR_Assert(comm_ptr->coll_fns->Iscatterv_sched != NULL);
     mpi_errno = comm_ptr->coll_fns->Iscatterv_sched(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, &reqp);
+    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);
     if (reqp)
         *request = reqp->handle;
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -183,10 +183,10 @@ int MPI_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_ISCATTERV);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ISCATTERV);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_ISCATTERV);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_ISCATTERV);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -324,7 +324,7 @@ int MPI_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_ISCATTERV);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_ISCATTERV);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

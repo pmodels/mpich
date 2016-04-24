@@ -93,7 +93,7 @@ static int MPIR_Reduce_binomial (
     int mask, relrank, source, lroot;
     MPI_Aint true_lb, true_extent, extent; 
     void *tmp_buf;
-    MPIU_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL(2);
 
     if (count == 0) return MPI_SUCCESS;
 
@@ -110,9 +110,9 @@ static int MPIR_Reduce_binomial (
     /* I think this is the worse case, so we can avoid an assert() 
      * inside the for loop */
     /* should be buf+{this}? */
-    MPIU_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
+    MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
-    MPIU_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
+    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
                         mpi_errno, "temporary buffer");
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
@@ -120,7 +120,7 @@ static int MPIR_Reduce_binomial (
     /* If I'm not the root, then my recvbuf may not be valid, therefore
        I have to allocate a temporary one */
     if (rank != root) {
-        MPIU_CHKLMEM_MALLOC(recvbuf, void *, 
+        MPIR_CHKLMEM_MALLOC(recvbuf, void *,
                             count*(MPL_MAX(extent,true_extent)), 
                             mpi_errno, "receive buffer");
         recvbuf = (void *)((char*)recvbuf - true_lb);
@@ -241,7 +241,7 @@ static int MPIR_Reduce_binomial (
     }
 
 fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)
@@ -301,7 +301,7 @@ static int MPIR_Reduce_redscat_gather (
     MPI_Aint true_lb, true_extent, extent; 
     void *tmp_buf;
 
-    MPIU_CHKLMEM_DECL(4);
+    MPIR_CHKLMEM_DECL(4);
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -313,7 +313,7 @@ static int MPIR_Reduce_redscat_gather (
 
         MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
                                      MPIR_Per_thread, per_thread, &err);
-        MPIU_Assert(err == 0);
+        MPIR_Assert(err == 0);
         per_thread->op_errno = 0;
     }
 
@@ -325,9 +325,9 @@ static int MPIR_Reduce_redscat_gather (
     /* I think this is the worse case, so we can avoid an assert() 
      * inside the for loop */
     /* should be buf+{this}? */
-    MPIU_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
+    MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
-    MPIU_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
+    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
                         mpi_errno, "temporary buffer");
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
@@ -335,7 +335,7 @@ static int MPIR_Reduce_redscat_gather (
     /* If I'm not the root, then my recvbuf may not be valid, therefore
        I have to allocate a temporary one */
     if (rank != root) {
-        MPIU_CHKLMEM_MALLOC(recvbuf, void *, 
+        MPIR_CHKLMEM_MALLOC(recvbuf, void *,
                             count*(MPL_MAX(extent,true_extent)), 
                             mpi_errno, "receive buffer");
         recvbuf = (void *)((char*)recvbuf - true_lb);
@@ -420,8 +420,8 @@ static int MPIR_Reduce_redscat_gather (
     /* We allocate these arrays on all processes, even if newrank=-1,
        because if root is one of the excluded processes, we will
        need them on the root later on below. */
-    MPIU_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts");
-    MPIU_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements");
+    MPIR_CHKLMEM_MALLOC(cnts, int *, pof2*sizeof(int), mpi_errno, "counts");
+    MPIR_CHKLMEM_MALLOC(disps, int *, pof2*sizeof(int), mpi_errno, "displacements");
     
     if (newrank != -1) {
         for (i=0; i<(pof2-1); i++) 
@@ -646,7 +646,7 @@ static int MPIR_Reduce_redscat_gather (
 
         MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
                                      MPIR_Per_thread, per_thread, &err);
-        MPIU_Assert(err == 0);
+        MPIR_Assert(err == 0);
         if (per_thread->op_errno) {
             mpi_errno = per_thread->op_errno;
             goto fn_fail;
@@ -655,7 +655,7 @@ static int MPIR_Reduce_redscat_gather (
     /* --END ERROR HANDLING-- */
 
 fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)
@@ -741,7 +741,7 @@ int MPIR_Reduce_intra (
     int comm_size, is_commutative, type_size, pof2;
     int nbytes = 0;
     MPIR_Op *op_ptr;
-    MPIU_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL(1);
 
     if (count == 0) return MPI_SUCCESS;
 
@@ -768,9 +768,9 @@ int MPIR_Reduce_intra (
             MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
             MPID_Datatype_get_extent_macro(datatype, extent);
 
-            MPIU_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
+            MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
-            MPIU_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
+            MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)),
                                 mpi_errno, "temporary buffer");
             /* adjust for potential negative lower bound in datatype */
             tmp_buf = (void *)((char*)tmp_buf - true_lb);
@@ -778,7 +778,7 @@ int MPIR_Reduce_intra (
 
         /* do the intranode reduce on all nodes other than the root's node */
         if (comm_ptr->node_comm != NULL &&
-            MPIU_Get_intranode_rank(comm_ptr, root) == -1) {
+            MPIR_Get_intranode_rank(comm_ptr, root) == -1) {
             mpi_errno = MPID_Reduce(sendbuf, tmp_buf, count, datatype,
                                          op, 0, comm_ptr->node_comm, errflag);
             if (mpi_errno) {
@@ -791,12 +791,12 @@ int MPIR_Reduce_intra (
 
         /* do the internode reduce to the root's node */
         if (comm_ptr->node_roots_comm != NULL) {
-            if (comm_ptr->node_roots_comm->rank != MPIU_Get_internode_rank(comm_ptr, root)) {
+            if (comm_ptr->node_roots_comm->rank != MPIR_Get_internode_rank(comm_ptr, root)) {
                 /* I am not on root's node.  Use tmp_buf if we
                    participated in the first reduce, otherwise use sendbuf */
                 const void *buf = (comm_ptr->node_comm == NULL ? sendbuf : tmp_buf);
                 mpi_errno = MPID_Reduce(buf, NULL, count, datatype,
-                                             op, MPIU_Get_internode_rank(comm_ptr, root),
+                                             op, MPIR_Get_internode_rank(comm_ptr, root),
                                              comm_ptr->node_roots_comm, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
@@ -811,7 +811,7 @@ int MPIR_Reduce_intra (
                        Use tmp_buf as recvbuf. */
 
                     mpi_errno = MPID_Reduce(sendbuf, tmp_buf, count, datatype,
-                                                 op, MPIU_Get_internode_rank(comm_ptr, root),
+                                                 op, MPIR_Get_internode_rank(comm_ptr, root),
                                                  comm_ptr->node_roots_comm, errflag);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
@@ -827,7 +827,7 @@ int MPIR_Reduce_intra (
                     /* I am the root. in_place is automatically handled. */
 
                     mpi_errno = MPID_Reduce(sendbuf, recvbuf, count, datatype,
-                                                 op, MPIU_Get_internode_rank(comm_ptr, root),
+                                                 op, MPIR_Get_internode_rank(comm_ptr, root),
                                                  comm_ptr->node_roots_comm, errflag);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
@@ -845,9 +845,9 @@ int MPIR_Reduce_intra (
 
         /* do the intranode reduce on the root's node */
         if (comm_ptr->node_comm != NULL &&
-            MPIU_Get_intranode_rank(comm_ptr, root) != -1) { 
+            MPIR_Get_intranode_rank(comm_ptr, root) != -1) {
             mpi_errno = MPID_Reduce(sendbuf, recvbuf, count, datatype,
-                                         op, MPIU_Get_intranode_rank(comm_ptr, root),
+                                         op, MPIR_Get_intranode_rank(comm_ptr, root),
                                          comm_ptr->node_comm, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -894,7 +894,7 @@ int MPIR_Reduce_intra (
         
 
   fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
 
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
@@ -935,7 +935,7 @@ int MPIR_Reduce_inter (
     MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf=NULL;
     MPIR_Comm *newcomm_ptr = NULL;
-    MPIU_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL(1);
 
     if (root == MPI_PROC_NULL) {
         /* local processes other than root do nothing */
@@ -966,16 +966,16 @@ int MPIR_Reduce_inter (
             MPID_Datatype_get_extent_macro(datatype, extent);
 	    /* I think this is the worse case, so we can avoid an assert() 
 	     * inside the for loop */
-	    /* Should MPIU_CHKLMEM_MALLOC do this? */
-	    MPIU_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
-	    MPIU_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
+	    /* Should MPIR_CHKLMEM_MALLOC do this? */
+	    MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
+	    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPL_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
             /* adjust for potential negative lower bound in datatype */
             tmp_buf = (void *)((char*)tmp_buf - true_lb);
         }
         
         /* Get the local intracommunicator */
         if (!comm_ptr->local_comm) {
-            mpi_errno = MPIR_Setup_intercomm_localcomm( comm_ptr );
+            mpi_errno = MPII_Setup_intercomm_localcomm( comm_ptr );
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
 
@@ -1005,7 +1005,7 @@ int MPIR_Reduce_inter (
     }
 
   fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)
@@ -1133,12 +1133,12 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_REDUCE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_REDUCE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_COLL_FUNC_ENTER(MPID_STATE_MPI_REDUCE);
+    MPIR_FUNC_TERSE_COLL_ENTER(MPID_STATE_MPI_REDUCE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -1251,7 +1251,7 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
     /* ... end of body of routine ... */
     
   fn_exit:
-    MPID_MPI_COLL_FUNC_EXIT(MPID_STATE_MPI_REDUCE);
+    MPIR_FUNC_TERSE_COLL_EXIT(MPID_STATE_MPI_REDUCE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

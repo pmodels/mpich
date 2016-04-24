@@ -8,7 +8,7 @@
 #include "mpiimpl.h"
 #include "mpir_op_util.h"
 #ifdef HAVE_FORTRAN_BINDING
-#include "mpir_fortlogical.h"
+#include "mpii_fortlogical.h"
 #endif
 
 /*
@@ -45,8 +45,8 @@ void MPIR_LOR (
                 c_type_ * restrict a = (c_type_ *)inoutvec;                \
                 c_type_ * restrict b = (c_type_ *)invec;                   \
                 for (i=0; i<len; i++)                                      \
-                    a[i] = MPIR_TO_FLOG(MPIR_LLOR(MPIR_FROM_FLOG(a[i]),    \
-                                                   MPIR_FROM_FLOG(b[i]))); \
+                    a[i] = MPII_TO_FLOG(MPIR_LLOR(MPII_FROM_FLOG(a[i]),    \
+                                                   MPII_FROM_FLOG(b[i]))); \
                 break;                                                     \
         }
         /* expand logicals (which may include MPI_C_BOOL, a non-Fortran type) */
@@ -79,7 +79,7 @@ void MPIR_LOR (
 
                 MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
                                              MPIR_Per_thread, per_thread, &err);
-                MPIU_Assert(err == 0);
+                MPIR_Assert(err == 0);
                 per_thread->op_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opundefined","**opundefined %s", "MPI_LOR" );
             }
             break;

@@ -77,10 +77,10 @@ int MPI_T_category_get_cvars(int cat_index, int len, int indices[])
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CATEGORY_GET_CVARS);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_CATEGORY_GET_CVARS);
     MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CATEGORY_GET_CVARS);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_CATEGORY_GET_CVARS);
 
     /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
@@ -105,7 +105,7 @@ int MPI_T_category_get_cvars(int cat_index, int len, int indices[])
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_CATEGORY_GET_CVARS);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_CATEGORY_GET_CVARS);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 

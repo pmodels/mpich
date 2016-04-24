@@ -49,7 +49,7 @@ int MPI_Is_thread_main( int *flag )
     static const char FCNAME[] = "MPI_Is_thread_main";
 #endif
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_IS_THREAD_MAIN);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IS_THREAD_MAIN);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 #   ifdef HAVE_ERROR_CHECKING
@@ -62,7 +62,7 @@ int MPI_Is_thread_main( int *flag )
     }
 #   endif /* HAVE_ERROR_CHECKING */
     
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IS_THREAD_MAIN);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IS_THREAD_MAIN);
     
     /* ... body of routine ...  */
 #   if MPICH_THREAD_LEVEL <= MPI_THREAD_FUNNELED || ! defined(MPICH_IS_THREADED)
@@ -82,7 +82,7 @@ int MPI_Is_thread_main( int *flag )
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IS_THREAD_MAIN);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IS_THREAD_MAIN);
     return mpi_errno;
     
     /* --BEGIN ERROR HANDLING-- */

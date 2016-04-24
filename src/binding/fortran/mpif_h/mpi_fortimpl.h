@@ -143,8 +143,8 @@ typedef MPI_Aint MPI_FAint;
 /* Fortran logicals */
 /* The definitions for the Fortran logical values are also needed 
    by the reduction operations in mpi/coll/opland, oplor, and oplxor, 
-   so they are defined in src/include/mpir_fortlogical.h */
-#include "mpir_fortlogical.h"
+   so they are defined in src/include/mpii_fortlogical.h */
+#include "mpii_fortlogical.h"
 
 
 /* MPIR_F_MPI_BOTTOM is the address of the Fortran MPI_BOTTOM value */

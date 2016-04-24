@@ -48,21 +48,14 @@ typedef enum MPIR_Lang_t {
 #endif
 } MPIR_Lang_t;
 
-typedef enum MPIR_MPI_State_t {
-    MPICH_MPI_STATE__PRE_INIT=0,
-    MPICH_MPI_STATE__IN_INIT,
-    MPICH_MPI_STATE__POST_INIT,
-    MPICH_MPI_STATE__POST_FINALIZED
-} MPIR_MPI_State_t;
-
-extern const char MPIR_Version_string[];
-extern const char MPIR_Version_date[];
-extern const char MPIR_Version_configure[];
-extern const char MPIR_Version_device[];
-extern const char MPIR_Version_CC[];
-extern const char MPIR_Version_CXX[];
-extern const char MPIR_Version_F77[];
-extern const char MPIR_Version_FC[];
+extern const char MPII_Version_string[];
+extern const char MPII_Version_date[];
+extern const char MPII_Version_configure[];
+extern const char MPII_Version_device[];
+extern const char MPII_Version_CC[];
+extern const char MPII_Version_CXX[];
+extern const char MPII_Version_F77[];
+extern const char MPII_Version_FC[];
 
 int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype);
@@ -84,11 +77,11 @@ Notes:
 void MPIR_Add_finalize( int (*routine)( void * ), void *extra, int priority );
 
 /* Routines for determining local and remote processes */
-int MPIU_Find_local_and_external(struct MPIR_Comm *comm, int *local_size_p, int *local_rank_p, int **local_ranks_p,
+int MPIR_Find_local_and_external(struct MPIR_Comm *comm, int *local_size_p, int *local_rank_p, int **local_ranks_p,
                                  int *external_size_p, int *external_rank_p, int **external_ranks_p,
                                  int **intranode_table, int **internode_table_p);
-int MPIU_Get_internode_rank(MPIR_Comm *comm_ptr, int r);
-int MPIU_Get_intranode_rank(MPIR_Comm *comm_ptr, int r);
+int MPIR_Get_internode_rank(MPIR_Comm *comm_ptr, int r);
+int MPIR_Get_intranode_rank(MPIR_Comm *comm_ptr, int r);
 
 int MPIR_Close_port_impl(const char *port_name);
 int MPIR_Open_port_impl(MPIR_Info *info_ptr, char *port_name);

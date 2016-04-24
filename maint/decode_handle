@@ -60,7 +60,7 @@ while (scalar @ARGV) {
 ## code from src/include/mpir_objects.h from which this script was derived
 ## ----8<----
 ##
-## typedef enum MPIR_Object_kind {
+## typedef enum MPII_Object_kind {
 ##   MPIR_COMM       = 0x1,
 ##   MPIR_GROUP      = 0x2,
 ##   MPIR_DATATYPE   = 0x3,
@@ -75,14 +75,14 @@ while (scalar @ARGV) {
 ##   MPIR_PROCGROUP  = 0xc,               /* These are internal device objects */
 ##   MPIR_VCONN      = 0xd,
 ##   MPIR_GREQ_CLASS = 0xf
-##   } MPIR_Object_kind;
+##   } MPII_Object_kind;
 ##
 ## #define HANDLE_MPI_KIND_SHIFT 26
 ## #define HANDLE_GET_MPI_KIND(a) ( ((a)&0x3c000000) >> HANDLE_MPI_KIND_SHIFT )
 ## #define HANDLE_SET_MPI_KIND(a,kind) ((a) | ((kind) << HANDLE_MPI_KIND_SHIFT))
 ## 
 ## /* returns the name of the handle kind for debugging/logging purposes */
-## const char *MPIU_Handle_get_kind_str(int kind);
+## const char *MPIR_Handle_get_kind_str(int kind);
 ## 
 ## /* Handle types.  These are really 2 bits */
 ## #define HANDLE_KIND_INVALID  0x0

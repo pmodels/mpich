@@ -28,9 +28,9 @@ static void MPID_nem_llc_recv_handler(void *vp_vc, uint64_t raddr, void *buf, si
 int MPID_nem_llc_poll(int in_blocking_progress)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_POLL);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LLC_POLL);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_POLL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LLC_POLL);
 
     {
         int rc;
@@ -42,7 +42,7 @@ int MPID_nem_llc_poll(int in_blocking_progress)
     }
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_POLL);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LLC_POLL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -57,19 +57,19 @@ static void MPID_nem_llc_send_handler(void *cba, uint64_t * p_reqid)
     /* int mpi_errno = 0; */
     MPIR_Request *sreq = cba;   /* from llc_writev(,,,,cbarg,) */
     MPIR_Request_kind_t kind;
-    /* MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_SEND_HANDLER); */
+    /* MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LLC_SEND_HANDLER); */
 
-    /* MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_SEND_HANDLER); */
+    /* MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LLC_SEND_HANDLER); */
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "llc_send_handler");
 
-    MPIU_Assert(sreq != NULL);
+    MPIR_Assert(sreq != NULL);
 
     if (sreq == (void *) 0xdeadbeefUL) {
         MPIDI_VC_t *vc = (void *) p_reqid[0];
         MPID_nem_llc_vc_area *vc_llc;
 
-        MPIU_Assert(vc != NULL);
+        MPIR_Assert(vc != NULL);
         /* printf("from credit %p (pg_rank %d)\n", vc, vc->pg_rank); */
 
         vc_llc = VC_LLC(vc);
@@ -132,7 +132,7 @@ static void MPID_nem_llc_send_handler(void *cba, uint64_t * p_reqid)
                 vc = sreq->ch.vc;       /* before callback */
                 reqFn = sreq->dev.OnDataAvail;
                 if (reqFn == 0) {
-                    MPIU_Assert(reqtype != MPIDI_REQUEST_TYPE_GET_RESP);
+                    MPIR_Assert(reqtype != MPIDI_REQUEST_TYPE_GET_RESP);
 
                     r_mpi_errno = MPID_Request_complete(sreq);
                     if (r_mpi_errno != MPI_SUCCESS) {
@@ -146,7 +146,7 @@ static void MPID_nem_llc_send_handler(void *cba, uint64_t * p_reqid)
                     if (r_mpi_errno)
                         MPIR_ERR_POP(r_mpi_errno);
                     if (complete == 0) {
-                        MPIU_Assert(complete == TRUE);
+                        MPIR_Assert(complete == TRUE);
                     }
                     MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, ".... complete2");
                 }
@@ -167,7 +167,7 @@ static void MPID_nem_llc_send_handler(void *cba, uint64_t * p_reqid)
     }
 
   fn_exit:
-    /* MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_SEND_HANDLER); */
+    /* MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LLC_SEND_HANDLER); */
     return /* mpi_errno */ ;
   fn_fail:
     goto fn_exit;
@@ -181,9 +181,9 @@ static void MPID_nem_llc_recv_handler(void *vp_vc, uint64_t raddr, void *buf, si
 {
     int mpi_errno = 0;
     MPIDI_VC_t *vc = vp_vc;
-    /* MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_RECV_HANDLER); */
+    /* MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LLC_RECV_HANDLER); */
 
-    /* MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_RECV_HANDLER); */
+    /* MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LLC_RECV_HANDLER); */
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL, VERBOSE, "llc_recv_handler");
 
@@ -221,7 +221,7 @@ static void MPID_nem_llc_recv_handler(void *vp_vc, uint64_t raddr, void *buf, si
     }
 
   fn_exit:
-    /* MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_RECV_HANDLER); */
+    /* MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LLC_RECV_HANDLER); */
     return;
     //fn_fail:
     goto fn_exit;
@@ -240,8 +240,8 @@ int MPID_nem_llc_recv_posted(struct MPIDI_VC *vc, struct MPIR_Request *req)
     MPI_Aint dt_true_lb;
     int i;
 
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_RECV_POSTED);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_RECV_POSTED);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LLC_RECV_POSTED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LLC_RECV_POSTED);
 
     /* req->dev.datatype is set in MPID_irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
     MPIDI_Datatype_get_info(req->dev.user_count, req->dev.datatype, dt_contig, data_sz, dt_ptr,
@@ -300,11 +300,11 @@ int MPID_nem_llc_recv_posted(struct MPIDI_VC *vc, struct MPIR_Request *req)
         *(int32_t *) ((uint8_t *) & cmd[0].tag) = req->dev.match.parts.tag;
     }
 
-    *(MPIU_Context_id_t *) ((uint8_t *) & cmd[0].tag + sizeof(int32_t)) =
+    *(MPIR_Context_id_t *) ((uint8_t *) & cmd[0].tag + sizeof(int32_t)) =
         req->dev.match.parts.context_id;
-    MPIU_Assert(sizeof(LLC_tag_t) >= sizeof(int32_t) + sizeof(MPIU_Context_id_t));
-    memset((uint8_t *) & cmd[0].tag + sizeof(int32_t) + sizeof(MPIU_Context_id_t),
-           0, sizeof(LLC_tag_t) - sizeof(int32_t) - sizeof(MPIU_Context_id_t));
+    MPIR_Assert(sizeof(LLC_tag_t) >= sizeof(int32_t) + sizeof(MPIR_Context_id_t));
+    memset((uint8_t *) & cmd[0].tag + sizeof(int32_t) + sizeof(MPIR_Context_id_t),
+           0, sizeof(LLC_tag_t) - sizeof(int32_t) - sizeof(MPIR_Context_id_t));
 
 
     dprintf("llc_recv_posted,tag=");
@@ -336,7 +336,7 @@ int MPID_nem_llc_recv_posted(struct MPIDI_VC *vc, struct MPIR_Request *req)
     MPIR_ERR_CHKANDJUMP(llc_errno != LLC_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**LLC_post");
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_RECV_POSTED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LLC_RECV_POSTED);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -349,13 +349,13 @@ int MPID_nem_llc_recv_posted(struct MPIDI_VC *vc, struct MPIR_Request *req)
 void MPID_nem_llc_anysource_posted(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_AYSOURCE_POSTED);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_AYSOURCE_POSTED);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LLC_AYSOURCE_POSTED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LLC_AYSOURCE_POSTED);
 
     mpi_errno = MPID_nem_llc_recv_posted(NULL, req);
-    MPIU_Assert(mpi_errno == MPI_SUCCESS);
+    MPIR_Assert(mpi_errno == MPI_SUCCESS);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_AYSOURCE_POSTED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LLC_AYSOURCE_POSTED);
 }
 
 #undef FUNCNAME
@@ -366,15 +366,15 @@ int MPID_nem_llc_anysource_matched(MPIR_Request * req)
 {
     int matched = FALSE;
 
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LLC_ANYSOURCE_MATCHED);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LLC_ANYSOURCE_MATCHED);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LLC_ANYSOURCE_MATCHED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LLC_ANYSOURCE_MATCHED);
 
     /* FIXME : How to call a cancel_recv function */
     /* If LLC_postedq is still having this request, delete it.
      * Ohterwise, return TURE */
     matched = LLC_req_approve_recv((LLC_cmd_t *) REQ_FIELD(req, cmds));
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LLC_ANYSOURCE_MATCHED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LLC_ANYSOURCE_MATCHED);
 
     return matched;
 }

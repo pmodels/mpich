@@ -252,9 +252,9 @@ print F "#ifndef MPICH_MPI_FROM_PMPI\n";
 print F "\n";
 print F "#ifdef HAVE_TIMING\n";
 print F "\n";
-print F "#if (USE_LOGGING == MPID_LOGGING_RLOG)\n";
+print F "#if (USE_LOGGING == MPICH_LOGGING__RLOG)\n";
 print F "\n";
-print F "int MPIR_Describe_timer_states()\n";
+print F "int MPII_Describe_timer_states()\n";
 print F "{\n";
 print F "\n";
 foreach (@states)
@@ -267,6 +267,6 @@ foreach (@states)
 print F "    return 0;\n";
 print F "}\n";
 print F "\n";
-print F "#endif /* USE_LOGGING == MPID_LOGGING_RLOG */\n";
+print F "#endif /* USE_LOGGING == MPICH_LOGGING__RLOG */\n";
 print F "#endif /* HAVE_TIMING */\n";
 print F "#endif /* MPICH_MPI_FROM_PMPI */\n";

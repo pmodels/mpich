@@ -37,7 +37,7 @@
 #define MPID_Request_discard   MPID_Request_discard_inline
 
 
-extern MPIU_Object_alloc_t MPIR_Request_mem;
+extern MPIR_Object_alloc_t MPIR_Request_mem;
 #if TOKEN_FLOW_CONTROL
 extern void MPIDI_mm_free(void *,size_t);
 #endif
@@ -118,7 +118,7 @@ void    MPIDI_Request_allocate_pool();
     }                                                                   \
   else                                                                  \
     {                                                                   \
-      MPIU_Handle_obj_free(&MPIR_Request_mem, req);                     \
+      MPIR_Handle_obj_free(&MPIR_Request_mem, req);                     \
     }                                                                   \
 })
 
@@ -126,12 +126,12 @@ void    MPIDI_Request_allocate_pool();
 
 #  define MPIDI_Request_tls_alloc(req)                                  \
 ({                                                                      \
-  (req) = MPIU_Handle_obj_alloc(&MPIR_Request_mem);                     \
+  (req) = MPIR_Handle_obj_alloc(&MPIR_Request_mem);                     \
   if (req == NULL)                                                      \
     MPID_Abort(NULL, MPI_ERR_NO_SPACE, -1, "Cannot allocate Request");  \
 })
 
-#  define MPIDI_Request_tls_free(req) MPIU_Handle_obj_free(&MPIR_Request_mem, (req))
+#  define MPIDI_Request_tls_free(req) MPIR_Handle_obj_free(&MPIR_Request_mem, (req))
 
 #endif
 
@@ -176,7 +176,7 @@ MPIDI_Request_create2_fast()
 {
   MPIR_Request * req;
   req = MPIDI_Request_create_basic();
-  MPIU_Object_set_ref(req, 2);
+  MPIR_Object_set_ref(req, 2);
 
   return req;
 }
@@ -222,7 +222,7 @@ MPID_Request_create_inline()
 {
   MPIR_Request * req;
   req = MPIDI_Request_create_basic();
-  MPIU_Object_set_ref(req, 1);
+  MPIR_Object_set_ref(req, 1);
 
   MPIDI_Request_initialize(req);
   req->comm=NULL;
@@ -239,7 +239,7 @@ MPIDI_Request_create2()
 {
   MPIR_Request * req;
   req = MPIR_Request_create();
-  MPIU_Object_set_ref(req, 2);
+  MPIR_Object_set_ref(req, 2);
 
   return req;
 }
@@ -249,7 +249,7 @@ MPIDI_Request_create1()
 {
   MPIR_Request * req;
   req = MPIR_Request_create();
-  MPIU_Object_set_ref(req, 1);
+  MPIR_Object_set_ref(req, 1);
 
   return req;
 }
@@ -272,7 +272,7 @@ MPID_Request_free_inline(MPIR_Request *req)
 {
   int count;
   MPID_assert(HANDLE_GET_MPI_KIND(req->handle) == MPIR_REQUEST);
-  MPIU_Object_release_ref(req, &count);
+  MPIR_Object_release_ref(req, &count);
   MPID_assert(count >= 0);
 
 

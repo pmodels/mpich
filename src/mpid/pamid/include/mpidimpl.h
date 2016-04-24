@@ -53,7 +53,7 @@ typedef struct MPIDI_PG
        MPIU_Object system, but we do use the associated reference counting
        routines.  Therefore, handle must be present, but is not used
        except by debugging routines */
-    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
+    MPIR_OBJECT_HEADER; /* adds handle and ref_count fields */
 
     /* Next pointer used to maintain a list of all process groups known to
        this process */
@@ -143,19 +143,19 @@ typedef struct MPIDI_Port_Ops {
 
 
 #define MPIDI_VC_add_ref( _vc )                                 \
-    do { MPIU_Object_add_ref( _vc ); } while (0)
+    do { MPIR_Object_add_ref( _vc ); } while (0)
 
 #define MPIDI_PG_add_ref(pg_)                   \
 do {                                            \
-    MPIU_Object_add_ref(pg_);                   \
+    MPIR_Object_add_ref(pg_);                   \
 } while (0)
 #define MPIDI_PG_release_ref(pg_, inuse_)       \
 do {                                            \
-    MPIU_Object_release_ref(pg_, inuse_);       \
+    MPIR_Object_release_ref(pg_, inuse_);       \
 } while (0)
 
 #define MPIDI_VC_release_ref( _vc, _inuse ) \
-    do { MPIU_Object_release_ref( _vc, _inuse ); } while (0)
+    do { MPIR_Object_release_ref( _vc, _inuse ); } while (0)
 
 
 /* Initialize a new VC */

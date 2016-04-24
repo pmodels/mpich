@@ -73,13 +73,13 @@ int MPI_Comm_spawn_multiple(int count, char *array_of_commands[],
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Comm *intercomm_ptr = NULL;
     MPIR_Info **array_of_info_ptrs = NULL;
-    MPIU_CHKLMEM_DECL(1);
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SPAWN_MULTIPLE);
+    MPIR_CHKLMEM_DECL(1);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_SPAWN_MULTIPLE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_SPAWN_MULTIPLE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_SPAWN_MULTIPLE);
     
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -127,7 +127,7 @@ int MPI_Comm_spawn_multiple(int count, char *array_of_commands[],
     /* ... body of routine ...  */
     
     if (comm_ptr->rank == root) {
-	MPIU_CHKLMEM_MALLOC(array_of_info_ptrs, MPIR_Info **, count * sizeof(MPIR_Info*), mpi_errno, "array of info pointers");
+	MPIR_CHKLMEM_MALLOC(array_of_info_ptrs, MPIR_Info **, count * sizeof(MPIR_Info*), mpi_errno, "array of info pointers");
 	for (i=0; i<count; i++)
 	{
 	    MPIR_Info_get_ptr(array_of_info[i], array_of_info_ptrs[i]);
@@ -149,8 +149,8 @@ int MPI_Comm_spawn_multiple(int count, char *array_of_commands[],
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIU_CHKLMEM_FREEALL();
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_SPAWN_MULTIPLE);
+    MPIR_CHKLMEM_FREEALL();
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_SPAWN_MULTIPLE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

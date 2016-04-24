@@ -47,7 +47,7 @@ int MPIDU_Type_vector(int count,
     if (count == 0) return MPIDU_Type_zerolen(newtype);
 
     /* allocate new datatype object and handle */
-    new_dtp = (MPIDU_Datatype *) MPIU_Handle_obj_alloc(&MPIDU_Datatype_mem);
+    new_dtp = (MPIDU_Datatype *) MPIR_Handle_obj_alloc(&MPIDU_Datatype_mem);
     if (!new_dtp) {
 	/* --BEGIN ERROR HANDLING-- */
 	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
@@ -57,8 +57,8 @@ int MPIDU_Type_vector(int count,
 	/* --END ERROR HANDLING-- */
     }
 
-    /* handle is filled in by MPIU_Handle_obj_alloc() */
-    MPIU_Object_set_ref(new_dtp, 1);
+    /* handle is filled in by MPIR_Handle_obj_alloc() */
+    MPIR_Object_set_ref(new_dtp, 1);
     new_dtp->is_permanent = 0;
     new_dtp->is_committed = 0;
     new_dtp->attributes   = NULL;

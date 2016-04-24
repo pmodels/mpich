@@ -56,13 +56,13 @@ as if the process that originally produced base had called:
 MPI_Aint MPI_Aint_add(MPI_Aint base, MPI_Aint disp)
 {
     MPI_Aint result;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_AINT_ADD);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_AINT_ADD);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_AINT_ADD);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_AINT_ADD);
     result = MPID_Aint_add(base, disp);
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_AINT_ADD);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_AINT_ADD);
 
     return result;
 }

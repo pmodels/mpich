@@ -754,7 +754,7 @@ cvars:
 
 /* some simple memcpy aliasing checks */
 #define MPIR_ERR_CHKMEMCPYANDSTMT(err_,stmt_,src_,dst_,len_) \
-    MPIR_ERR_CHKANDSTMT3(MPIU_MEM_RANGES_OVERLAP((dst_),(len_),(src_),(len_)),err_,MPI_ERR_INTERN,stmt_,"**memcpyalias","**memcpyalias %p %p %L",(src_),(dst_),(long long)(len_))
+    MPIR_ERR_CHKANDSTMT3(MPIR_MEM_RANGES_OVERLAP((dst_),(len_),(src_),(len_)),err_,MPI_ERR_INTERN,stmt_,"**memcpyalias","**memcpyalias %p %p %L",(src_),(dst_),(long long)(len_))
 #define MPIR_ERR_CHKMEMCPYANDJUMP(err_,src_,dst_,len_) \
     MPIR_ERR_CHKMEMCPYANDSTMT((err_),goto fn_fail,(src_),(dst_),(len_))
 

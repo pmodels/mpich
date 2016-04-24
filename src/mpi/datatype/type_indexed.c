@@ -39,7 +39,7 @@ int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
     MPI_Datatype new_handle;
     MPIR_Datatype *new_dtp;
     int i, *ints;
-    MPIU_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL(1);
 
     mpi_errno = MPID_Type_indexed(count,
 				  array_of_blocklengths,
@@ -52,7 +52,7 @@ int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
     /* copy all integer values into a temporary buffer; this
      * includes the count, the blocklengths, and the displacements.
      */
-    MPIU_CHKLMEM_MALLOC(ints, int *, (2 * count + 1) * sizeof(int), mpi_errno, "contents integer array");
+    MPIR_CHKLMEM_MALLOC(ints, int *, (2 * count + 1) * sizeof(int), mpi_errno, "contents integer array");
 
     ints[0] = count;
 
@@ -76,7 +76,7 @@ int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
     MPIR_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 
  fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -141,12 +141,12 @@ int MPI_Type_indexed(int count,
 		     MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_INDEXED);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_INDEXED);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_INDEXED);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_INDEXED);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -186,7 +186,7 @@ int MPI_Type_indexed(int count,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_INDEXED);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_INDEXED);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

@@ -160,12 +160,12 @@ int MPI_Cancel(MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request * request_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_CANCEL);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_CANCEL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_PT2PT_FUNC_ENTER(MPID_STATE_MPI_CANCEL);
+    MPIR_FUNC_TERSE_PT2PT_ENTER(MPID_STATE_MPI_CANCEL);
     
     /* Convert MPI object handles to object pointers */
     MPIR_Request_get_ptr( *request, request_ptr );
@@ -191,7 +191,7 @@ int MPI_Cancel(MPI_Request *request)
     /* ... end of body of routine ... */
     
   fn_exit:
-    MPID_MPI_PT2PT_FUNC_EXIT(MPID_STATE_MPI_CANCEL);
+    MPIR_FUNC_TERSE_PT2PT_EXIT(MPID_STATE_MPI_CANCEL);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

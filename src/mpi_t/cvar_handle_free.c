@@ -47,10 +47,10 @@ int MPI_T_cvar_handle_free(MPI_T_cvar_handle *handle)
     int mpi_errno = MPI_SUCCESS;
     MPIR_T_cvar_handle_t *hnd;
 
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CVAR_HANDLE_FREE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_CVAR_HANDLE_FREE);
     MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CVAR_HANDLE_FREE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_CVAR_HANDLE_FREE);
 
     /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
@@ -72,7 +72,7 @@ int MPI_T_cvar_handle_free(MPI_T_cvar_handle *handle)
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_CVAR_HANDLE_FREE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_CVAR_HANDLE_FREE);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 

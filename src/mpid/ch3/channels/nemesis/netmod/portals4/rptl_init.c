@@ -17,9 +17,9 @@ int rptli_post_control_buffer(ptl_handle_ni_t ni_handle, ptl_pt_index_t pt,
     int ret;
     ptl_me_t me;
     ptl_process_t id;
-    MPIDI_STATE_DECL(MPID_STATE_RPTLI_POST_CONTROL_BUFFER);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_RPTLI_POST_CONTROL_BUFFER);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_RPTLI_POST_CONTROL_BUFFER);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_RPTLI_POST_CONTROL_BUFFER);
 
     id.phys.nid = PTL_NID_ANY;
     id.phys.pid = PTL_PID_ANY;
@@ -43,7 +43,7 @@ int rptli_post_control_buffer(ptl_handle_ni_t ni_handle, ptl_pt_index_t pt,
     RPTLU_ERR_POP(ret, "Error appending empty buffer to priority list\n");
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_RPTLI_POST_CONTROL_BUFFER);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_RPTLI_POST_CONTROL_BUFFER);
     return ret;
 
   fn_fail:
@@ -62,9 +62,9 @@ int MPID_nem_ptl_rptl_init(int world_size, uint64_t max_origin_events,
                                                    ptl_pt_index_t * target_control_pt))
 {
     int ret = PTL_OK;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_RPTL_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_PTL_RPTL_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_RPTL_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_PTL_RPTL_INIT);
 
     rptl_info.rptl_list = NULL;
     rptl_info.target_list = NULL;
@@ -74,7 +74,7 @@ int MPID_nem_ptl_rptl_init(int world_size, uint64_t max_origin_events,
     rptl_info.get_target_info = get_target_info;
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_RPTL_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_PTL_RPTL_INIT);
     return ret;
 
   fn_fail:
@@ -93,9 +93,9 @@ int MPID_nem_ptl_rptl_drain_eq(int eq_count, ptl_handle_eq_t *eq)
     struct rptl_op_pool_segment *op_segment;
     int i;
     struct rptl_target *target, *t;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_RPTL_FINALIZE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_PTL_RPTL_FINALIZE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_RPTL_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_PTL_RPTL_FINALIZE);
 
     for (target = rptl_info.target_list; target; target = target->next) {
         while (target->control_op_list || target->data_op_list) {
@@ -125,7 +125,7 @@ int MPID_nem_ptl_rptl_drain_eq(int eq_count, ptl_handle_eq_t *eq)
     }
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_RPTL_FINALIZE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_PTL_RPTL_FINALIZE);
     return ret;
 
   fn_fail:
@@ -145,15 +145,15 @@ int MPID_nem_ptl_rptl_ptinit(ptl_handle_ni_t ni_handle, ptl_handle_eq_t eq_handl
     int mpi_errno = MPI_SUCCESS;
     int i;
     ptl_md_t md;
-    MPIU_CHKPMEM_DECL(2);
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_RPTL_PTINIT);
+    MPIR_CHKPMEM_DECL(2);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_PTL_RPTL_PTINIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_RPTL_PTINIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_PTL_RPTL_PTINIT);
 
 
     /* setup the parts of rptls that can be done before world size or
      * target information */
-    MPIU_CHKPMEM_MALLOC(rptl, struct rptl *, sizeof(struct rptl), mpi_errno, "rptl");
+    MPIR_CHKPMEM_MALLOC(rptl, struct rptl *, sizeof(struct rptl), mpi_errno, "rptl");
     MPL_DL_APPEND(rptl_info.rptl_list, rptl);
 
     rptl->local_state = RPTL_LOCAL_STATE_ACTIVE;
@@ -178,7 +178,7 @@ int MPID_nem_ptl_rptl_ptinit(ptl_handle_ni_t ni_handle, ptl_handle_eq_t eq_handl
 
     /* post world_size number of empty buffers on the control portal */
     if (rptl->control.pt != PTL_PT_ANY) {
-        MPIU_CHKPMEM_MALLOC(rptl->control.me, ptl_handle_me_t *,
+        MPIR_CHKPMEM_MALLOC(rptl->control.me, ptl_handle_me_t *,
                             2 * rptl_info.world_size * sizeof(ptl_handle_me_t), mpi_errno,
                             "rptl target info");
         for (i = 0; i < 2 * rptl_info.world_size; i++) {
@@ -189,14 +189,14 @@ int MPID_nem_ptl_rptl_ptinit(ptl_handle_ni_t ni_handle, ptl_handle_eq_t eq_handl
     }
 
   fn_exit:
-    MPIU_CHKPMEM_COMMIT();
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_RPTL_PTINIT);
+    MPIR_CHKPMEM_COMMIT();
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_PTL_RPTL_PTINIT);
     return ret;
 
   fn_fail:
     if (mpi_errno)
         ret = PTL_FAIL;
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -210,9 +210,9 @@ int MPID_nem_ptl_rptl_ptfini(ptl_pt_index_t pt_index)
     int i;
     int ret = PTL_OK;
     struct rptl *rptl;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_RPTL_PTFINI);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_PTL_RPTL_PTFINI);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_RPTL_PTFINI);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_PTL_RPTL_PTFINI);
 
     /* find the right rptl */
     for (rptl = rptl_info.rptl_list; rptl && rptl->data.pt != pt_index; rptl = rptl->next);
@@ -231,7 +231,7 @@ int MPID_nem_ptl_rptl_ptfini(ptl_pt_index_t pt_index)
     MPL_free(rptl);
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_RPTL_PTFINI);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_PTL_RPTL_PTFINI);
     return ret;
 
   fn_fail:

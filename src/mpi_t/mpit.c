@@ -34,13 +34,13 @@ void MPIR_T_enum_create(const char *enum_name, MPI_T_enum *handle)
     MPIR_T_enum_t *e;
     static const UT_icd enum_item_icd = {sizeof(enum_item_t), NULL, NULL, NULL};
 
-    MPIU_Assert(enum_name);
-    MPIU_Assert(handle);
+    MPIR_Assert(enum_name);
+    MPIR_Assert(handle);
 
     utarray_extend_back(enum_table);
     e = (MPIR_T_enum_t *)utarray_back(enum_table);
     e->name = MPL_strdup(enum_name);
-    MPIU_Assert(e->name);
+    MPIR_Assert(e->name);
 #ifdef HAVE_ERROR_CHECKING
     e->kind = MPIR_T_ENUM_HANDLE;
 #endif
@@ -57,13 +57,13 @@ void MPIR_T_enum_add_item(MPI_T_enum handle, const char *item_name, int item_val
 {
     enum_item_t *item;
 
-    MPIU_Assert(handle);
-    MPIU_Assert(item_name);
+    MPIR_Assert(handle);
+    MPIR_Assert(item_name);
 
     utarray_extend_back(handle->items);
     item = (enum_item_t *)utarray_back(handle->items);
     item->name = MPL_strdup(item_name);
-    MPIU_Assert(item->name);
+    MPIR_Assert(item->name);
     item->value = item_value;
 }
 
@@ -90,7 +90,7 @@ static cat_table_entry_t *MPIR_T_cat_create(const char *cat_name)
     /* Record <cat_name, cat_idx> in cat_hash */
     cat_idx = utarray_len(cat_table) - 1;
     hash_entry = MPL_malloc(sizeof(name2index_hash_t));
-    MPIU_Assert(hash_entry);
+    MPIR_Assert(hash_entry);
     /* Need not to Strdup cat_name, since cat_table and cat_hash co-exist */
     hash_entry->name = cat_name;
     hash_entry->idx = cat_idx;
@@ -241,8 +241,8 @@ int MPIR_T_cat_add_desc(const char *cat_name, const char *cat_desc)
     cat_table_entry_t *cat;
 
     /* NULL args are not allowed */
-    MPIU_Assert(cat_name);
-    MPIU_Assert(cat_desc);
+    MPIR_Assert(cat_name);
+    MPIR_Assert(cat_desc);
 
     HASH_FIND_STR(cat_hash, cat_name, hash_entry);
 
@@ -250,14 +250,14 @@ int MPIR_T_cat_add_desc(const char *cat_name, const char *cat_desc)
         /* Found it, i.e., category already exists */
         cat_idx = hash_entry->idx;
         cat = (cat_table_entry_t *)utarray_eltptr(cat_table, cat_idx);
-        MPIU_Assert(cat->desc == NULL);
+        MPIR_Assert(cat->desc == NULL);
         cat->desc = MPL_strdup(cat_desc);
-        MPIU_Assert(cat->desc);
+        MPIR_Assert(cat->desc);
     } else {
         /* Not found, so create a new category */
         cat = MPIR_T_cat_create(cat_name);
         cat->desc = MPL_strdup(cat_desc);
-        MPIU_Assert(cat->desc);
+        MPIR_Assert(cat->desc);
         /* Notify categories have been changed */
         cat_stamp++;
     }
@@ -304,7 +304,7 @@ void MPIR_T_CVAR_REGISTER_impl(
         cvar_idx = hash_entry->idx;
         cvar = (cvar_table_entry_t *)utarray_eltptr(cvar_table, cvar_idx);
         /* Should never override an existing & active var */
-        MPIU_Assert(cvar->active != TRUE);
+        MPIR_Assert(cvar->active != TRUE);
         cvar->active = TRUE;
         /* FIXME: Do we need to check consistency between the old and new? */
     } else {
@@ -314,17 +314,17 @@ void MPIR_T_CVAR_REGISTER_impl(
         cvar->active = TRUE;
         cvar->datatype = dtype;
         cvar->name = MPL_strdup(name);
-        MPIU_Assert(cvar->name);
+        MPIR_Assert(cvar->name);
         if (dtype != MPI_CHAR) {
             cvar->addr = (void *)addr;
         } else {
             cvar->addr = MPL_malloc(count);
-            MPIU_Assert(cvar->addr);
+            MPIR_Assert(cvar->addr);
             if (defaultval.str == NULL) {
                 ((char *)(cvar->addr))[0] = '\0';
             } else {
                 /* Use greater (>), since count includes the terminating '\0', but strlen does not */
-                MPIU_Assert(count > strlen(defaultval.str));
+                MPIR_Assert(count > strlen(defaultval.str));
                 strcpy(cvar->addr, defaultval.str);
             }
         }
@@ -336,12 +336,12 @@ void MPIR_T_CVAR_REGISTER_impl(
         cvar->get_count = get_count;
         cvar->defaultval = defaultval;
         cvar->desc = MPL_strdup(desc);
-        MPIU_Assert(cvar->desc);
+        MPIR_Assert(cvar->desc);
 
         /* Record <name, index> in hash table */
         cvar_idx = utarray_len(cvar_table) - 1;
         hash_entry = MPL_malloc(sizeof(name2index_hash_t));
-        MPIU_Assert(hash_entry);
+        MPIR_Assert(hash_entry);
         /* Need not to Strdup name, since cvar_table and cvar_hash co-exist */
         hash_entry->name =name;
         hash_entry->idx = cvar_idx;
@@ -390,7 +390,7 @@ void MPIR_T_PVAR_REGISTER_impl(
         pvar_idx = hash_entry->idx;
         pvar = (pvar_table_entry_t *)utarray_eltptr(pvar_table, pvar_idx);
         /* Should never override an existing & active var */
-        MPIU_Assert(pvar->active != TRUE);
+        MPIR_Assert(pvar->active != TRUE);
         pvar->active = TRUE;
         /* FIXME: Do we need to check consistency between the old and new? */
     } else {
@@ -401,7 +401,7 @@ void MPIR_T_PVAR_REGISTER_impl(
         pvar->varclass = varclass;
         pvar->datatype = dtype;
         pvar->name = MPL_strdup(name);
-        MPIU_Assert(pvar->name);
+        MPIR_Assert(pvar->name);
         pvar->addr = addr;
         pvar->count = count;
         pvar->enumtype = etype;
@@ -411,12 +411,12 @@ void MPIR_T_PVAR_REGISTER_impl(
         pvar->get_value = get_value;
         pvar->get_count = get_count;
         pvar->desc = MPL_strdup(desc);
-        MPIU_Assert(pvar->desc);
+        MPIR_Assert(pvar->desc);
 
         /* Record <name, index> in hash table */
         pvar_idx = utarray_len(pvar_table) - 1;
         hash_entry = MPL_malloc(sizeof(name2index_hash_t));
-        MPIU_Assert(hash_entry);
+        MPIR_Assert(hash_entry);
         /* Need not to Strdup name, since pvar_table and pvar_hashs co-exist */
         hash_entry->name = name;
         hash_entry->idx = pvar_idx;
@@ -464,7 +464,7 @@ void MPIR_T_strncpy(char *dst, const char *src, int *len)
         }
         else {
             /* MPL_strncpy will always terminate the string */
-            MPIU_Assert(*len > 0);
+            MPIR_Assert(*len > 0);
             if (src != NULL) {
                 MPL_strncpy(dst, src, *len);
                 *len = (int)strlen(dst) + 1;

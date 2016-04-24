@@ -7,9 +7,9 @@
 #define MPIR_STRERROR_H_INCLUDED
 
 /*
- * MPIU_Sterror()
+ * MPIR_Sterror()
  *
  * Thread safe implementation of strerror(), whenever possible. */
-const char *MPIU_Strerror(int errnum);
+const char *MPIR_Strerror(int errnum);
 
 #endif /* !defined(MPIR_STRERROR_H_INCLUDED) */

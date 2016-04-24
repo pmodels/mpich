@@ -33,7 +33,7 @@ static inline MPIDI_RMA_Target_lock_entry_t *MPIDI_CH3I_Win_target_lock_entry_al
 
     if (new_ptr != NULL) {
         new_ptr->next = NULL;
-        MPIU_Memcpy(&(new_ptr->pkt), pkt, sizeof(*pkt));
+        MPIR_Memcpy(&(new_ptr->pkt), pkt, sizeof(*pkt));
         new_ptr->vc = NULL;
         new_ptr->data = NULL;
         new_ptr->buf_size = 0;

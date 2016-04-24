@@ -67,7 +67,7 @@
 #define MPIU_THREAD_CS_SCHED_YIELD(name,_context) MPIU_THREAD_CS_##name##_SCHED_YIELD(_context)
 #define MPIU_THREAD_CS_TRY(name,_context)   MPIU_THREAD_CS_##name##_TRY(_context)
 
-#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL
+#if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL
 
 #define MPIDI_CS_ENTER(m) ({ if (MPIR_ThreadInfo.isThreaded) {                                             MPIDI_Mutex_acquire(m); } })
 #define MPIDI_CS_EXIT(m)  ({ if (MPIR_ThreadInfo.isThreaded) { MPIDI_Mutex_sync(); MPIDI_Mutex_release(m);                         } })
@@ -105,7 +105,7 @@
 #define MPIU_THREAD_CS_ASYNC_ENTER(_context)        MPIDI_CS_ENTER(8)
 #define MPIU_THREAD_CS_ASYNC_EXIT(_context)         MPIDI_CS_EXIT (8)
 
-#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT
+#elif MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
 
 #define MPIDI_CS_ENTER(m)                               \
     do {                                                \
@@ -178,7 +178,7 @@
 #define MPIU_THREAD_CS_ASYNC_ENTER(_context)        MPIDI_CS_ENTER(8)
 #define MPIU_THREAD_CS_ASYNC_EXIT(_context)         MPIDI_CS_EXIT (8)
 
-#endif /* MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL */
+#endif /* MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL */
 
 
 #endif /* !MPICH_MPIDTHREAD_H_INCLUDED */

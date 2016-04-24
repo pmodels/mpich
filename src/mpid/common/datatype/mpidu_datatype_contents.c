@@ -84,17 +84,17 @@ int MPIDU_Datatype_set_contents(MPIDU_Datatype *new_dtp,
     ptr = ((char *) cp) + struct_sz;
     /* Fortran90 combiner types do not have a "base" type */
     if (nr_types > 0) {
-	MPIU_Memcpy(ptr, array_of_types, nr_types * sizeof(MPI_Datatype));
+	MPIR_Memcpy(ptr, array_of_types, nr_types * sizeof(MPI_Datatype));
     }
     
     ptr = ((char *) cp) + struct_sz + types_sz;
     if (nr_ints > 0) {
-	MPIU_Memcpy(ptr, array_of_ints, nr_ints * sizeof(int));
+	MPIR_Memcpy(ptr, array_of_ints, nr_ints * sizeof(int));
     }
 
     ptr = ((char *) cp) + struct_sz + types_sz + ints_sz;
     if (nr_aints > 0) {
-	MPIU_Memcpy(ptr, array_of_aints, nr_aints * sizeof(MPI_Aint));
+	MPIR_Memcpy(ptr, array_of_aints, nr_aints * sizeof(MPI_Aint));
     }
     new_dtp->contents = cp;
 
@@ -163,7 +163,7 @@ void MPIDI_Datatype_get_contents_ints(MPIDU_Datatype_contents *cp,
     }
 
     ptr = ((char *) cp) + struct_sz + types_sz;
-    MPIU_Memcpy(user_ints, ptr, cp->nr_ints * sizeof(int));
+    MPIR_Memcpy(user_ints, ptr, cp->nr_ints * sizeof(int));
 
     return;
 }
@@ -201,7 +201,7 @@ void MPIDI_Datatype_get_contents_aints(MPIDU_Datatype_contents *cp,
     }
 
     ptr = ((char *) cp) + struct_sz + types_sz + ints_sz;
-    MPIU_Memcpy(user_aints, ptr, cp->nr_aints * sizeof(MPI_Aint));
+    MPIR_Memcpy(user_aints, ptr, cp->nr_aints * sizeof(MPI_Aint));
 
     return;
 }
@@ -231,7 +231,7 @@ void MPIDI_Datatype_get_contents_types(MPIDU_Datatype_contents *cp,
     }
 
     ptr = ((char *) cp) + struct_sz;
-    MPIU_Memcpy(user_types, ptr, cp->nr_types * sizeof(MPI_Datatype));
+    MPIR_Memcpy(user_types, ptr, cp->nr_types * sizeof(MPI_Datatype));
 
     return;
 }

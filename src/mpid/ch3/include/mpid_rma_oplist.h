@@ -282,8 +282,8 @@ static inline int MPIDI_CH3I_Win_target_free(MPIR_Win * win_ptr, MPIDI_RMA_Targe
     /* We enqueue elements to the right pool, so when they get freed
      * at window free time, they won't conflict with the global pool
      * or other windows */
-    MPIU_Assert(e->pending_net_ops_list_head == NULL);
-    MPIU_Assert(e->pending_user_ops_list_head == NULL);
+    MPIR_Assert(e->pending_net_ops_list_head == NULL);
+    MPIR_Assert(e->pending_user_ops_list_head == NULL);
 
     /* use PREPEND when return objects back to the pool
      * in order to improve cache performance */
@@ -539,7 +539,7 @@ static inline void MPIDI_CH3I_RMA_Ops_free_elem(MPIR_Win * win_ptr, MPIDI_RMA_Op
 {
     MPIDI_RMA_Op_t *tmp_ptr = curr_ptr;
 
-    MPIU_Assert(curr_ptr != NULL);
+    MPIR_Assert(curr_ptr != NULL);
 
     MPL_DL_DELETE(*list, curr_ptr);
 

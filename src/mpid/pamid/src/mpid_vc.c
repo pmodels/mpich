@@ -32,7 +32,7 @@ extern int mpidi_dynamic_tasking;
  */
 struct MPIDI_VCRT
 {
-  MPIU_OBJECT_HEADER;
+  MPIR_OBJECT_HEADER;
   unsigned size;          /**< Number of entries in the table */
   MPID_VCR *vcr_table;  /**< Array of virtual connection references */
 };
@@ -75,7 +75,7 @@ int MPID_VCRT_Create(int size, MPID_VCRT *vcrt_ptr)
     }
     if (vcrt != NULL)
     {
-        MPIU_Object_set_ref(vcrt, 1);
+        MPIR_Object_set_ref(vcrt, 1);
         vcrt->size = size;
         *vcrt_ptr = vcrt;
         result = MPI_SUCCESS;
@@ -89,7 +89,7 @@ int MPID_VCRT_Create(int size, MPID_VCRT *vcrt_ptr)
 
 int MPID_VCRT_Add_ref(MPID_VCRT vcrt)
 {
-    MPIU_Object_add_ref(vcrt);
+    MPIR_Object_add_ref(vcrt);
     return MPI_SUCCESS;
 }
 
@@ -97,7 +97,7 @@ int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect)
 {
     int count, i;
 
-    MPIU_Object_release_ref(vcrt, &count);
+    MPIR_Object_release_ref(vcrt, &count);
 
     if (count == 0) {
 #ifdef DYNAMIC_TASKING
@@ -111,7 +111,7 @@ int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect)
                 vcr->pg_rank == MPIDI_Process.my_pg_rank)
               {
 	        TRACE_ERR("before MPIDI_PG_release_ref on vcr=%x pg=%x pg=%s inuse=%d\n", vcr, vcr->pg, (vcr->pg)->id, inuse);
-                inuse=MPIU_Object_get_ref(vcr->pg);
+                inuse=MPIR_Object_get_ref(vcr->pg);
                 MPIDI_PG_release_ref(vcr->pg, &inuse);
                 if (inuse == 0)
                  {
@@ -120,7 +120,7 @@ int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect)
                  }
                  continue;
               }
-            inuse=MPIU_Object_get_ref(vcr->pg);
+            inuse=MPIR_Object_get_ref(vcr->pg);
 
             MPIDI_PG_release_ref(vcr->pg, &inuse);
             if (inuse == 0)
@@ -315,7 +315,7 @@ int MPID_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
     int lastPGID = -1, pgid;
     MPID_VCR vc;
 
-    MPIU_Assert(comm_ptr->local_size == local_size);
+    MPIR_Assert(comm_ptr->local_size == local_size);
 
     if(mpidi_dynamic_tasking) {
       *singlePG = 1;

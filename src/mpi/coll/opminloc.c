@@ -118,7 +118,7 @@ void MPIR_MINLOC(
 
             MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
                                          MPIR_Per_thread, per_thread, &err);
-            MPIU_Assert(err == 0);
+            MPIR_Assert(err == 0);
             per_thread->op_errno = mpi_errno;
         }
         break;

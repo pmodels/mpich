@@ -213,7 +213,7 @@ static inline int MPIU_SHMW_Ghnd_alloc(MPIU_SHMW_Hnd_t hnd)
 /* Returns 0 on success, -1 on error */
 static inline int MPIU_SHMW_Hnd_alloc(MPIU_SHMW_Hnd_t *hnd_ptr)
 {
-    MPIU_Assert(hnd_ptr);
+    MPIR_Assert(hnd_ptr);
     *hnd_ptr = (MPIU_SHMW_Hnd_t) MPL_malloc(MPIU_SHMW_HND_SZ);
     if(*hnd_ptr){
         (*hnd_ptr)->flag = MPIU_SHMW_FLAG_GHND_STATIC;
@@ -229,13 +229,13 @@ static inline int MPIU_SHMW_Hnd_alloc(MPIU_SHMW_Hnd_t *hnd_ptr)
 
 static inline void MPIU_SHMW_Hnd_reset_val(MPIU_SHMW_Hnd_t hnd)
 {
-    MPIU_Assert(hnd);
+    MPIR_Assert(hnd);
     MPIU_SHMW_Lhnd_set(hnd, MPIU_SHMW_LHND_INIT_VAL);
     if(hnd->flag & MPIU_SHMW_FLAG_GHND_STATIC){
         hnd->ghnd = MPIU_SHMW_GHND_INVALID;
     }
     else{
-        MPIU_Assert(hnd->ghnd);
+        MPIR_Assert(hnd->ghnd);
         (hnd->ghnd)[0] = MPIU_SHMW_GHND_INIT_VAL;
     }
 }
@@ -275,9 +275,9 @@ static inline int MPIU_SHMW_Hnd_serialize(char *str,
     int mpi_errno = MPI_SUCCESS;
     int rc = -1;
 
-    MPIU_Assert(MPIU_SHMW_Hnd_is_init(hnd));
-    MPIU_Assert(str);
-    MPIU_Assert(str_len >= MPIU_SHMW_GHND_SZ);
+    MPIR_Assert(MPIU_SHMW_Hnd_is_init(hnd));
+    MPIR_Assert(str);
+    MPIR_Assert(str_len >= MPIU_SHMW_GHND_SZ);
 
     rc = MPIU_SHMW_Ghnd_get_by_val(hnd, str, str_len);
     MPIR_ERR_CHKANDJUMP(rc != 0, mpi_errno, MPI_ERR_OTHER, "**shmw_gethnd");
@@ -306,7 +306,7 @@ static inline int MPIU_SHMW_Hnd_deserialize(
     int mpi_errno = MPI_SUCCESS;
     int rc = -1;
 
-    MPIU_Assert(MPIU_SHMW_Hnd_is_init(hnd));
+    MPIR_Assert(MPIU_SHMW_Hnd_is_init(hnd));
     MPIR_ERR_CHKINTERNAL(!str_hnd, mpi_errno, "ser hnd is null");
     MPIR_ERR_CHKANDJUMP(str_hnd_len>=MPIU_SHMW_GHND_SZ,
         mpi_errno, MPI_ERR_OTHER, "**shmw_deserbufbig");
@@ -318,7 +318,7 @@ static inline int MPIU_SHMW_Hnd_deserialize(
         "**nomem", "**nomem %s", "shared mem global handle");
 
     rc = MPIU_SHMW_Ghnd_set_by_val(hnd, "%s", str_hnd);
-    MPIU_Assert(rc == 0);
+    MPIR_Assert(rc == 0);
 
     mpi_errno = MPIU_SHMW_Seg_open(hnd, 0);
     if(mpi_errno != MPI_SUCCESS) { MPIR_ERR_POP(mpi_errno); }
@@ -348,11 +348,11 @@ static inline int MPIU_SHMW_Hnd_get_serialized_by_ref(
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIU_Assert(MPIU_SHMW_Hnd_is_init(hnd));
-    MPIU_Assert(str_ptr);
+    MPIR_Assert(MPIU_SHMW_Hnd_is_init(hnd));
+    MPIR_Assert(str_ptr);
 
     *str_ptr = (char *)MPIU_SHMW_Ghnd_get_by_ref(hnd);
-    MPIU_Assert(*str_ptr);
+    MPIR_Assert(*str_ptr);
 
     return mpi_errno;
 }
@@ -375,8 +375,8 @@ static inline int MPIU_SHMW_Hnd_deserialize_by_ref(
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIU_Assert(MPIU_SHMW_Hnd_is_init(hnd));
-    MPIU_Assert(ser_hnd_ptr);
+    MPIR_Assert(MPIU_SHMW_Hnd_is_init(hnd));
+    MPIR_Assert(ser_hnd_ptr);
 
     MPIR_ERR_CHKINTERNAL(!(*ser_hnd_ptr), mpi_errno, "ser hnd is null");
 
@@ -406,7 +406,7 @@ static inline int MPIU_SHMW_Hnd_init(
     int mpi_errno = MPI_SUCCESS;
     int rc = -1;
 
-    MPIU_Assert(hnd_ptr);
+    MPIR_Assert(hnd_ptr);
 
     rc = MPIU_SHMW_Hnd_alloc(hnd_ptr);
     MPIR_ERR_CHKANDJUMP1((rc != 0), mpi_errno, MPI_ERR_OTHER,
@@ -433,8 +433,8 @@ static inline int MPIU_SHMW_Hnd_finalize(
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIU_Assert(hnd_ptr);
-    MPIU_Assert(*hnd_ptr);
+    MPIR_Assert(hnd_ptr);
+    MPIR_Assert(*hnd_ptr);
 
     /* A finalize can/should be called on an invalid handle
      * Don't assert if we fail here ...
@@ -480,11 +480,11 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
             "**nomem", "**nomem %s", "shared mem global handle");
 
         rc = MPIU_SHMW_Ghnd_set_by_val(hnd, "%d", lhnd);
-        MPIU_Assert(rc == 0);
+        MPIR_Assert(rc == 0);
     }
     else{
         /* Open an existing shared memory seg */
-        MPIU_Assert(MPIU_SHMW_Ghnd_is_valid(hnd));
+        MPIR_Assert(MPIU_SHMW_Ghnd_is_valid(hnd));
 
         if(!MPIU_SHMW_Lhnd_is_valid(hnd)){
             lhnd = atoi(MPIU_SHMW_Ghnd_get_by_ref(hnd));
@@ -497,7 +497,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
 
     if(flag & MPIU_SHMW_FLAG_SHM_ATTACH){
         /* Attach to shared mem seg */
-        MPIU_Assert(shm_addr_ptr);
+        MPIR_Assert(shm_addr_ptr);
 
         *shm_addr_ptr = shmat(MPIU_SHMW_Lhnd_get(hnd), NULL, 0x0);
 
@@ -529,7 +529,7 @@ static inline int MPIU_SHMW_Seg_detach(
 
     MPIR_ERR_CHKANDJUMP(!MPIU_SHMW_Hnd_is_valid(hnd),
         mpi_errno, MPI_ERR_OTHER, "**shmw_badhnd");
-    MPIU_Assert(shm_addr_ptr);
+    MPIR_Assert(shm_addr_ptr);
     MPIR_ERR_CHKINTERNAL(!(*shm_addr_ptr), mpi_errno, "shm address is null");
 
     rc = shmdt(*shm_addr_ptr);
@@ -624,11 +624,11 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
             "**nomem", "**nomem %s", "shared memory global handle");
 
         rc = MPIU_SHMW_Ghnd_set_by_val(hnd, "%s", chosen_fname);
-        MPIU_Assert(rc == 0);
+        MPIR_Assert(rc == 0);
     }
     else{
         /* Open an existing shared memory seg */
-        MPIU_Assert(MPIU_SHMW_Ghnd_is_valid(hnd));
+        MPIR_Assert(MPIU_SHMW_Ghnd_is_valid(hnd));
 
         if(!MPIU_SHMW_Lhnd_is_valid(hnd)){
             lhnd = open(MPIU_SHMW_Ghnd_get_by_ref(hnd), O_RDWR);
@@ -643,7 +643,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
     if(flag & MPIU_SHMW_FLAG_SHM_ATTACH){
         void *buf_ptr = NULL;
 
-        MPIU_Assert(shm_addr_ptr);
+        MPIR_Assert(shm_addr_ptr);
 
         buf_ptr = mmap(NULL, seg_sz, PROT_READ | PROT_WRITE,
                         MAP_SHARED, MPIU_SHMW_Lhnd_get(hnd), 0);
@@ -659,7 +659,7 @@ fn_exit:
     /* FIXME: Close local handle only when closing the shm handle */
     if(MPIU_SHMW_Lhnd_is_valid(hnd)){
         rc = MPIU_SHMW_Lhnd_close(hnd);
-        MPIU_Assert(rc == 0);
+        MPIR_Assert(rc == 0);
     } 
     return mpi_errno;
 fn_fail:
@@ -677,7 +677,7 @@ static inline int MPIU_SHMW_Seg_detach(
     int mpi_errno = MPI_SUCCESS;
     int rc = -1;
 
-    MPIU_Assert(shm_addr_ptr);
+    MPIR_Assert(shm_addr_ptr);
     MPIR_ERR_CHKINTERNAL(!(*shm_addr_ptr), mpi_errno, "shm address is null");
 
     rc = munmap(*shm_addr_ptr, seg_sz);
@@ -732,7 +732,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
     seg_sz_large.QuadPart = seg_sz;
 
     if(!MPIU_SHMW_Ghnd_is_valid(hnd)){
-        MPIU_Assert(flag & MPIU_SHMW_FLAG_SHM_CREATE);
+        MPIR_Assert(flag & MPIU_SHMW_FLAG_SHM_CREATE);
 
         rc = MPIU_SHMW_Ghnd_set_uniq(hnd);
         MPIR_ERR_CHKANDJUMP((rc == 0), mpi_errno, MPI_ERR_OTHER,
@@ -753,7 +753,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
         MPIU_SHMW_Lhnd_set(hnd, lhnd);
     }
     else{
-        MPIU_Assert(MPIU_SHMW_Ghnd_is_valid(hnd));
+        MPIR_Assert(MPIU_SHMW_Ghnd_is_valid(hnd));
 
         if(!MPIU_SHMW_Lhnd_is_valid(hnd)){
             /* Strangely OpenFileMapping() returns NULL on error! */
@@ -769,7 +769,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
     }
 
     if(flag & MPIU_SHMW_FLAG_SHM_ATTACH){
-        MPIU_Assert(shm_addr_ptr);
+        MPIR_Assert(shm_addr_ptr);
 
         *shm_addr_ptr = (char *)MapViewOfFile(MPIU_SHMW_Lhnd_get(hnd),
                             FILE_MAP_WRITE, 0, offset, 0);
@@ -798,7 +798,7 @@ static inline int MPIU_SHMW_Seg_detach(
     MPL_UNREFERENCED_ARG(seg_sz);
     MPIR_ERR_CHKANDJUMP(!MPIU_SHMW_Hnd_is_valid(hnd),
         mpi_errno, MPI_ERR_OTHER, "**shmw_badhnd");
-    MPIU_Assert(shm_addr_ptr);
+    MPIR_Assert(shm_addr_ptr);
     MPIR_ERR_CHKINTERNAL(!(*shm_addr_ptr), mpi_errno, "shm address is null");
 
     rc = UnmapViewOfFile(*shm_addr_ptr);
@@ -831,8 +831,8 @@ static inline int MPIU_SHMW_Seg_create(
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIU_Assert(MPIU_SHMW_Hnd_is_init(hnd));
-    MPIU_Assert(seg_sz > 0);
+    MPIR_Assert(MPIU_SHMW_Hnd_is_init(hnd));
+    MPIR_Assert(seg_sz > 0);
 
     mpi_errno = MPIU_SHMW_Seg_create_attach_templ(hnd,
                     seg_sz, NULL, 0, MPIU_SHMW_FLAG_SHM_CREATE);
@@ -858,7 +858,7 @@ static inline int MPIU_SHMW_Seg_open(
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIU_Assert(MPIU_SHMW_Hnd_is_init(hnd));
+    MPIR_Assert(MPIU_SHMW_Hnd_is_init(hnd));
 
     mpi_errno = MPIU_SHMW_Seg_create_attach_templ(hnd, seg_sz,
             NULL, 0, MPIU_SHMW_FLAG_CLR);
@@ -887,9 +887,9 @@ static inline int MPIU_SHMW_Seg_create_and_attach(
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIU_Assert(MPIU_SHMW_Hnd_is_init(hnd));
-    MPIU_Assert(seg_sz > 0);
-    MPIU_Assert(shm_addr_ptr);
+    MPIR_Assert(MPIU_SHMW_Hnd_is_init(hnd));
+    MPIR_Assert(seg_sz > 0);
+    MPIR_Assert(shm_addr_ptr);
 
     mpi_errno = MPIU_SHMW_Seg_create_attach_templ(hnd, seg_sz,
                     shm_addr_ptr, offset, MPIU_SHMW_FLAG_SHM_CREATE |
@@ -919,8 +919,8 @@ static inline int MPIU_SHMW_Seg_attach(
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIU_Assert(MPIU_SHMW_Hnd_is_init(hnd));
-    MPIU_Assert(shm_addr_ptr);
+    MPIR_Assert(MPIU_SHMW_Hnd_is_init(hnd));
+    MPIR_Assert(shm_addr_ptr);
 
     mpi_errno = MPIU_SHMW_Seg_create_attach_templ(hnd, seg_sz,
                 shm_addr_ptr, offset, MPIU_SHMW_FLAG_SHM_ATTACH);

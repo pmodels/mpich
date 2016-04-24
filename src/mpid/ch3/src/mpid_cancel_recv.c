@@ -15,11 +15,11 @@ int MPID_Cancel_recv(MPIR_Request * rreq)
     int netmod_cancelled = TRUE;
     int mpi_errno = MPI_SUCCESS;
 
-    MPIDI_STATE_DECL(MPID_STATE_MPID_CANCEL_RECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CANCEL_RECV);
     
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_CANCEL_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CANCEL_RECV);
     
-    MPIU_Assert(rreq->kind == MPIR_REQUEST_KIND__RECV);
+    MPIR_Assert(rreq->kind == MPIR_REQUEST_KIND__RECV);
     
     /* If the netmod has its own cancel_recv function, we need to call
        it here. ANYSOURCE cancels (netmod and otherwise) are handled by
@@ -52,7 +52,7 @@ int MPID_Cancel_recv(MPIR_Request * rreq)
     }
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_CANCEL_RECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_CANCEL_RECV);
     return mpi_errno;
  fn_fail:
     goto fn_exit;

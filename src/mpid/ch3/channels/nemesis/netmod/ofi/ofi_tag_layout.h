@@ -39,7 +39,7 @@
 /* ******************************** */
 /* Tag Manipulation inlines         */
 /* ******************************** */
-static inline uint64_t init_sendtag(MPIU_Context_id_t contextid, int source, int tag, uint64_t type)
+static inline uint64_t init_sendtag(MPIR_Context_id_t contextid, int source, int tag, uint64_t type)
 {
     uint64_t match_bits = 0;
     match_bits |= ((uint64_t)source) << MPID_SOURCE_SHIFT;
@@ -50,7 +50,7 @@ static inline uint64_t init_sendtag(MPIU_Context_id_t contextid, int source, int
 
 /* receive posting */
 static inline uint64_t init_recvtag(uint64_t * mask_bits,
-                                    MPIU_Context_id_t contextid, int source, int tag)
+                                    MPIR_Context_id_t contextid, int source, int tag)
 {
     uint64_t match_bits = 0;
     *mask_bits = MPID_SYNC_SEND;
@@ -112,7 +112,7 @@ static inline int get_port(uint64_t match_bits)
 /* ******************************** */
 /* Tag Manipulation inlines         */
 /* ******************************** */
-static inline uint64_t init_sendtag_2(MPIU_Context_id_t contextid, int tag, uint64_t type)
+static inline uint64_t init_sendtag_2(MPIR_Context_id_t contextid, int tag, uint64_t type)
 {
     uint64_t match_bits = 0;
     match_bits |= ((uint64_t)contextid) << MPID_CTXID_SHIFT;
@@ -122,7 +122,7 @@ static inline uint64_t init_sendtag_2(MPIU_Context_id_t contextid, int tag, uint
 
 /* receive posting */
 static inline uint64_t init_recvtag_2(uint64_t * mask_bits,
-                                    MPIU_Context_id_t contextid, int tag)
+                                    MPIR_Context_id_t contextid, int tag)
 {
     uint64_t match_bits = 0;
     *mask_bits = MPID_SYNC_SEND;

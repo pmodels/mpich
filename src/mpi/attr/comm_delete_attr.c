@@ -30,7 +30,7 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval) __attribute__((weak,ali
 #define FUNCNAME MPIR_Comm_delete_attr_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_delete_attr_impl(MPIR_Comm *comm_ptr, MPIR_Keyval *keyval_ptr)
+int MPIR_Comm_delete_attr_impl(MPIR_Comm *comm_ptr, MPII_Keyval *keyval_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Attribute *p, **old_p;
@@ -67,9 +67,9 @@ int MPIR_Comm_delete_attr_impl(MPIR_Comm *comm_ptr, MPIR_Keyval *keyval_ptr)
         /* We found the attribute.  Remove it from the list */
         *old_p = p->next;
         /* Decrement the use of the keyval */
-        MPIR_Keyval_release_ref( p->keyval, &in_use);
+        MPII_Keyval_release_ref( p->keyval, &in_use);
         if (!in_use) {
-            MPIU_Handle_obj_free( &MPIR_Keyval_mem, p->keyval );
+            MPIR_Handle_obj_free( &MPII_Keyval_mem, p->keyval );
         }
         MPID_Attr_free(p);
     }
@@ -109,13 +109,13 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPIR_Keyval *keyval_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_DELETE_ATTR);
+    MPII_Keyval *keyval_ptr;
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_DELETE_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_DELETE_ATTR);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_DELETE_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -132,7 +132,7 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
 
     /* Convert MPI object handles to object pointers */
     MPIR_Comm_get_ptr( comm, comm_ptr );
-    MPIR_Keyval_get_ptr( comm_keyval, keyval_ptr );
+    MPII_Keyval_get_ptr( comm_keyval, keyval_ptr );
     
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -143,7 +143,7 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
             MPIR_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
 	    /* If comm_ptr is not valid, it will be reset to null */
             /* Validate keyval_ptr */
-	    MPIR_Keyval_valid_ptr( keyval_ptr, mpi_errno );
+	    MPII_Keyval_valid_ptr( keyval_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
 	}
         MPID_END_ERROR_CHECKS;
@@ -158,7 +158,7 @@ int MPI_Comm_delete_attr(MPI_Comm comm, int comm_keyval)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_DELETE_ATTR);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_DELETE_ATTR);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

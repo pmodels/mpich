@@ -131,10 +131,10 @@ int MPIR_Comm_map_free(struct MPIR_Comm *comm);
   communicator have acked.
   S*/
 struct MPIR_Comm {
-    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
+    MPIR_OBJECT_HEADER; /* adds handle and ref_count fields */
     MPID_Thread_mutex_t mutex;
-    MPIU_Context_id_t context_id; /* Send context id.  See notes */
-    MPIU_Context_id_t recvcontext_id; /* Send context id.  See notes */
+    MPIR_Context_id_t context_id; /* Send context id.  See notes */
+    MPIR_Context_id_t recvcontext_id; /* Send context id.  See notes */
     int           remote_size;   /* Value of MPI_Comm_(remote)_size */
     int           rank;          /* Value of MPI_Comm_rank */
     MPIR_Attribute *attributes;  /* List of attributes */
@@ -172,7 +172,7 @@ struct MPIR_Comm {
     struct MPIR_Collops  *coll_fns; /* Pointer to a table of functions
                                               implementing the collective
                                               routines */
-    struct MPIR_TopoOps  *topo_fns; /* Pointer to a table of functions
+    struct MPII_Topo_ops  *topo_fns; /* Pointer to a table of functions
 				       implementting the topology routines */
     int next_sched_tag;             /* used by the NBC schedule code to allocate tags */
 
@@ -199,7 +199,7 @@ struct MPIR_Comm {
     MPID_DEV_COMM_DECL
 #endif
 };
-extern MPIU_Object_alloc_t MPIR_Comm_mem;
+extern MPIR_Object_alloc_t MPIR_Comm_mem;
 
 typedef struct MPIR_Gpid {
 #ifdef MPID_DEV_GPID_DECL
@@ -213,9 +213,9 @@ typedef struct MPIR_Gpid {
 int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr);
 
 #define MPIR_Comm_add_ref(_comm) \
-    do { MPIU_Object_add_ref((_comm)); } while (0)
+    do { MPIR_Object_add_ref((_comm)); } while (0)
 #define MPIR_Comm_release_ref( _comm, _inuse ) \
-    do { MPIU_Object_release_ref( _comm, _inuse ); } while (0)
+    do { MPIR_Object_release_ref( _comm, _inuse ); } while (0)
 
 
 /* Release a reference to a communicator.  If there are no pending
@@ -253,30 +253,9 @@ static inline int MPIR_Comm_release(MPIR_Comm * comm_ptr)
 */
 int MPIR_Comm_release_always(MPIR_Comm *comm_ptr);
 
-/* applies the specified info chain to the specified communicator */
-int MPIR_Comm_apply_hints(MPIR_Comm *comm_ptr, MPIR_Info *info_ptr);
-
-int MPIR_Comm_copy( MPIR_Comm *, int, MPIR_Comm ** );
-int MPIR_Comm_copy_data(MPIR_Comm *comm_ptr, MPIR_Comm **outcomm_ptr);
-
-int MPIR_Setup_intercomm_localcomm( MPIR_Comm * );
-
 int MPIR_Comm_create( MPIR_Comm ** );
 int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag,
                            MPIR_Comm ** newcomm);
-
-/* comm_create helper functions, used by both comm_create and comm_create_group */
-int MPIR_Comm_create_calculate_mapping(MPIR_Group  *group_ptr,
-                                       MPIR_Comm   *comm_ptr,
-                                       int        **mapping_out,
-                                       MPIR_Comm **mapping_comm);
-
-int MPIR_Comm_create_map(int local_n,
-                         int remote_n,
-                         int *local_mapping,
-                         int *remote_mapping,
-                         MPIR_Comm *mapping_comm,
-                         MPIR_Comm *newcomm);
 
 /* implements the logic for MPI_Comm_create for intracommunicators only */
 int MPIR_Comm_create_intra(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr,
@@ -287,8 +266,6 @@ int MPIR_Comm_commit( MPIR_Comm * );
 
 int MPIR_Comm_is_node_aware( MPIR_Comm * );
 
-int MPIR_Comm_is_node_consecutive( MPIR_Comm *);
-
 int MPIR_Comm_idup_impl(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm, MPIR_Request **reqp);
 
 int MPIR_Comm_shrink(MPIR_Comm *comm_ptr, MPIR_Comm **newcomm_ptr);
@@ -298,8 +275,6 @@ int MPIR_Comm_agree(MPIR_Comm *comm_ptr, int *flag);
 int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm *newcomm);
 #endif
 
-int MPIR_Comm_init(MPIR_Comm *);
-
 #define MPIR_Comm_rank(comm_ptr) ((comm_ptr)->rank)
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)
 
@@ -307,7 +282,7 @@ int MPIR_Comm_init(MPIR_Comm *);
 typedef int (*MPIR_Comm_hint_fn_t)(MPIR_Comm *, MPIR_Info *, void *);
 int MPIR_Comm_register_hint(const char *hint_key, MPIR_Comm_hint_fn_t fn, void *state);
 
-int MPIR_Comm_delete_attr_impl(MPIR_Comm *comm_ptr, MPIR_Keyval *keyval_ptr);
+int MPIR_Comm_delete_attr_impl(MPIR_Comm *comm_ptr, MPII_Keyval *keyval_ptr);
 int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
                                  MPI_Comm_delete_attr_function *comm_delete_attr_fn,
                                  int *comm_keyval, void *extra_state);
@@ -338,7 +313,7 @@ int MPIR_Comm_split_impl(MPIR_Comm *comm_ptr, int color, int key, MPIR_Comm **ne
 int MPIR_Comm_split_type_impl(MPIR_Comm *comm_ptr, int split_type, int key, MPIR_Info *info_ptr,
                               MPIR_Comm **newcomm_ptr);
 int MPIR_Comm_set_attr_impl(MPIR_Comm *comm_ptr, int comm_keyval, void *attribute_val,
-                            MPIR_AttrType attrType);
+                            MPIR_Attr_type attrType);
 
 
 /* Preallocated comm objects.  There are 3: comm_world, comm_self, and
@@ -352,14 +327,37 @@ extern MPIR_Comm MPIR_Comm_direct[];
    of the handle is 3-1 (e.g., the index in the builtin array) */
 #define MPIR_ICOMM_WORLD  ((MPI_Comm)0x44000002)
 
-#ifndef HAVE_DEV_COMM_HOOK
-#define MPID_Dev_comm_create_hook( a ) MPI_SUCCESS
-#define MPID_Dev_comm_destroy_hook( a ) MPI_SUCCESS
-#endif
-
 typedef struct MPIR_Commops {
     int (*split_type)(MPIR_Comm *, int, int, MPIR_Info *, MPIR_Comm **);
 } MPIR_Commops;
 extern struct MPIR_Commops  *MPIR_Comm_fns; /* Communicator creation functions */
+
+
+/* internal functions */
+
+int MPII_Comm_init(MPIR_Comm *);
+
+int MPII_Comm_is_node_consecutive( MPIR_Comm *);
+
+/* applies the specified info chain to the specified communicator */
+int MPII_Comm_apply_hints(MPIR_Comm *comm_ptr, MPIR_Info *info_ptr);
+
+int MPII_Comm_copy( MPIR_Comm *, int, MPIR_Comm ** );
+int MPII_Comm_copy_data(MPIR_Comm *comm_ptr, MPIR_Comm **outcomm_ptr);
+
+int MPII_Setup_intercomm_localcomm( MPIR_Comm * );
+
+/* comm_create helper functions, used by both comm_create and comm_create_group */
+int MPII_Comm_create_calculate_mapping(MPIR_Group  *group_ptr,
+                                       MPIR_Comm   *comm_ptr,
+                                       int        **mapping_out,
+                                       MPIR_Comm **mapping_comm);
+
+int MPII_Comm_create_map(int local_n,
+                         int remote_n,
+                         int *local_mapping,
+                         int *remote_mapping,
+                         MPIR_Comm *mapping_comm,
+                         MPIR_Comm *newcomm);
 
 #endif /* MPIR_COMM_H_INCLUDED */

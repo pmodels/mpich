@@ -11,7 +11,7 @@ subroutine MPI_Win_create_keyval_f08(win_copy_attr_fn, win_delete_attr_fn, win_k
     use :: mpi_f08, only : MPI_Win_copy_attr_function
     use :: mpi_f08, only : MPI_Win_delete_attr_function
     use :: mpi_c_interface, only : MPIR_Win_create_keyval_c
-    use :: mpi_c_interface, only : MPIR_Keyval_set_proxy, MPIR_Win_copy_attr_f08_proxy, MPIR_Win_delete_attr_f08_proxy
+    use :: mpi_c_interface, only : MPII_Keyval_set_proxy, MPIR_Win_copy_attr_f08_proxy, MPIR_Win_delete_attr_f08_proxy
 
     implicit none
 
@@ -31,7 +31,7 @@ subroutine MPI_Win_create_keyval_f08(win_copy_attr_fn, win_delete_attr_fn, win_k
 
     ierror_c = MPIR_Win_create_keyval_c(win_copy_attr_fn_c, win_delete_attr_fn_c, win_keyval_c, extra_state)
 
-    call MPIR_Keyval_set_proxy(win_keyval_c, c_funloc(MPIR_Win_copy_attr_f08_proxy), c_funloc(MPIR_Win_delete_attr_f08_proxy))
+    call MPII_Keyval_set_proxy(win_keyval_c, c_funloc(MPIR_Win_copy_attr_f08_proxy), c_funloc(MPIR_Win_delete_attr_f08_proxy))
     win_keyval = win_keyval_c
     if (present(ierror)) ierror = ierror_c
 

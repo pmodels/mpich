@@ -106,8 +106,8 @@ MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
 
     /*DO_PAPI (PAPI_reset (PAPI_EventSet)); */
 
-    MPIU_Assert (size == sizeof(MPIDI_CH3_Pkt_t));
-    MPIU_Assert (vc_ch->is_local);
+    MPIR_Assert (size == sizeof(MPIDI_CH3_Pkt_t));
+    MPIR_Assert (vc_ch->is_local);
 
     my_rank = MPID_nem_mem_region.rank;
 
@@ -125,7 +125,7 @@ MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
         
         MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, pbox->cell.pkt.header.type = MPID_NEM_PKT_MPICH_HEAD);
         
-        MPIU_Memcpy((void *)pbox->cell.pkt.p.payload, buf, size);
+        MPIR_Memcpy((void *)pbox->cell.pkt.p.payload, buf, size);
 
         OPA_store_release_int(&pbox->flag.value, 1);
 
@@ -171,7 +171,7 @@ MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
     el->pkt.header.seqno   = vc_ch->send_seqno++;
     MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, el->pkt.header.type = MPID_NEM_PKT_MPICH_HEAD);
     
-    MPIU_Memcpy((void *)el->pkt.p.payload, buf, size);
+    MPIR_Memcpy((void *)el->pkt.p.payload, buf, size);
     DO_PAPI (PAPI_accum_var (PAPI_EventSet, PAPI_vvalues11));
 
     MPL_DBG_MSG (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "--> Sent queue");
@@ -229,12 +229,12 @@ MPID_nem_mpich_sendv (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
     intptr_t payload_len;
     int my_rank;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_SENDV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_SENDV);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_SENDV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_MPICH_SENDV);
 
-    MPIU_Assert (*n_iov > 0 && (*iov)->MPL_IOV_LEN > 0);
-    MPIU_Assert(vc_ch->is_local);
+    MPIR_Assert (*n_iov > 0 && (*iov)->MPL_IOV_LEN > 0);
+    MPIR_Assert(vc_ch->is_local);
 
     DO_PAPI (PAPI_reset (PAPI_EventSet));
 
@@ -269,7 +269,7 @@ MPID_nem_mpich_sendv (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
     while (*n_iov && payload_len >= (*iov)->MPL_IOV_LEN)
     {
 	size_t _iov_len = (*iov)->MPL_IOV_LEN;
-	MPIU_Memcpy (cell_buf, (*iov)->MPL_IOV_BUF, _iov_len);
+	MPIR_Memcpy (cell_buf, (*iov)->MPL_IOV_BUF, _iov_len);
 	payload_len -= _iov_len;
 	cell_buf += _iov_len;
 	--(*n_iov);
@@ -278,7 +278,7 @@ MPID_nem_mpich_sendv (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
     
     if (*n_iov && payload_len > 0)
     {
-	MPIU_Memcpy (cell_buf, (*iov)->MPL_IOV_BUF, payload_len);
+	MPIR_Memcpy (cell_buf, (*iov)->MPL_IOV_BUF, payload_len);
 	(*iov)->MPL_IOV_BUF = (char *)(*iov)->MPL_IOV_BUF + payload_len;
 	(*iov)->MPL_IOV_LEN -= payload_len;
  	payload_len = 0;
@@ -310,7 +310,7 @@ MPID_nem_mpich_sendv (MPL_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
     *again = 1;
     goto fn_exit;
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_SENDV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_MPICH_SENDV);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -334,14 +334,14 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov,
     int my_rank;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPI_Aint buf_offset = 0;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_SENDV_HEADER);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_SENDV_HEADER);
     
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_SENDV_HEADER);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_MPICH_SENDV_HEADER);
 
-    MPIU_Assert(vc_ch->is_local);
+    MPIR_Assert(vc_ch->is_local);
 
     DO_PAPI (PAPI_reset (PAPI_EventSet));
-    MPIU_Assert (*n_iov > 0 && (*iov)->MPL_IOV_LEN == sizeof(MPIDI_CH3_Pkt_t));
+    MPIR_Assert (*n_iov > 0 && (*iov)->MPL_IOV_LEN == sizeof(MPIDI_CH3_Pkt_t));
 
     my_rank = MPID_nem_mem_region.rank;
 
@@ -359,8 +359,8 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov,
         pbox->cell.pkt.header.seqno   = vc_ch->send_seqno++;
         MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, pbox->cell.pkt.header.type = MPID_NEM_PKT_MPICH_HEAD);
         
-        MPIU_Memcpy((void *)pbox->cell.pkt.p.payload, (*iov)[0].MPL_IOV_BUF, (*iov)[0].MPL_IOV_LEN);
-        MPIU_Memcpy ((char *)pbox->cell.pkt.p.payload + (*iov)[0].MPL_IOV_LEN, (*iov)[1].MPL_IOV_BUF, (*iov)[1].MPL_IOV_LEN);
+        MPIR_Memcpy((void *)pbox->cell.pkt.p.payload, (*iov)[0].MPL_IOV_BUF, (*iov)[0].MPL_IOV_LEN);
+        MPIR_Memcpy ((char *)pbox->cell.pkt.p.payload + (*iov)[0].MPL_IOV_LEN, (*iov)[1].MPL_IOV_BUF, (*iov)[1].MPL_IOV_LEN);
         
         OPA_store_release_int(&pbox->flag.value, 1);
         *n_iov = 0;
@@ -398,15 +398,15 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov,
     MPID_nem_queue_dequeue (MPID_nem_mem_region.my_freeQ, &el);
 #endif /*PREFETCH_CELL */
 
-    MPIU_Memcpy((void *)el->pkt.p.payload, (*iov)->MPL_IOV_BUF, sizeof(MPIDI_CH3_Pkt_t));
+    MPIR_Memcpy((void *)el->pkt.p.payload, (*iov)->MPL_IOV_BUF, sizeof(MPIDI_CH3_Pkt_t));
     buf_offset += sizeof(MPIDI_CH3_Pkt_t);
 
     if (ext_hdr_sz > 0) {
         /* ensure extended header fits in this cell. */
-        MPIU_Assert(MPID_NEM_MPICH_DATA_LEN - buf_offset >= ext_hdr_sz);
+        MPIR_Assert(MPID_NEM_MPICH_DATA_LEN - buf_offset >= ext_hdr_sz);
 
         /* when extended packet header exists, copy it */
-        MPIU_Memcpy((void *)((char *)(el->pkt.p.payload) + buf_offset), ext_hdr_ptr, ext_hdr_sz);
+        MPIR_Memcpy((void *)((char *)(el->pkt.p.payload) + buf_offset), ext_hdr_ptr, ext_hdr_sz);
         buf_offset += ext_hdr_sz;
     }
 
@@ -418,7 +418,7 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov,
     while (*n_iov && payload_len >= (*iov)->MPL_IOV_LEN)
     {
 	size_t _iov_len = (*iov)->MPL_IOV_LEN;
-	MPIU_Memcpy (cell_buf, (*iov)->MPL_IOV_BUF, _iov_len);
+	MPIR_Memcpy (cell_buf, (*iov)->MPL_IOV_BUF, _iov_len);
 	payload_len -= _iov_len;
 	cell_buf += _iov_len;
 	--(*n_iov);
@@ -427,7 +427,7 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov,
     
     if (*n_iov && payload_len > 0)
     {
-	MPIU_Memcpy (cell_buf, (*iov)->MPL_IOV_BUF, payload_len);
+	MPIR_Memcpy (cell_buf, (*iov)->MPL_IOV_BUF, payload_len);
 	(*iov)->MPL_IOV_BUF = (char *)(*iov)->MPL_IOV_BUF + payload_len;
 	(*iov)->MPL_IOV_LEN -= payload_len;
 	payload_len = 0;
@@ -460,7 +460,7 @@ MPID_nem_mpich_sendv_header (MPL_IOV **iov, int *n_iov,
     *again = 1;
     goto fn_exit;
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_SENDV_HEADER);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_MPICH_SENDV_HEADER);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -495,8 +495,8 @@ MPID_nem_mpich_send_seg_header (MPIDU_Segment *segment, intptr_t *segment_first,
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPI_Aint buf_offset = 0;
 
-    MPIU_Assert(vc_ch->is_local); /* netmods will have their own implementation */
-    MPIU_Assert(header_sz <= sizeof(MPIDI_CH3_Pkt_t));
+    MPIR_Assert(vc_ch->is_local); /* netmods will have their own implementation */
+    MPIR_Assert(header_sz <= sizeof(MPIDI_CH3_Pkt_t));
     
     
     DO_PAPI (PAPI_reset (PAPI_EventSet));
@@ -509,14 +509,14 @@ MPID_nem_mpich_send_seg_header (MPIDU_Segment *segment, intptr_t *segment_first,
 	MPID_nem_fbox_mpich_t *pbox = vc_ch->fbox_out;
 
         /* Add a compiler time check on streaming unit size and FASTBOX size */
-        MPIU_Static_assert((MPIDI_CH3U_Acc_stream_size > MPID_NEM_FBOX_DATALEN),
+        MPIR_Static_assert((MPIDI_CH3U_Acc_stream_size > MPID_NEM_FBOX_DATALEN),
                            "RMA ACC Streaming unit size <= FASTBOX size in Nemesis.");
 
         /* NOTE: when FASTBOX is being used, streaming optimization is never triggered,
          * because streaming unit size is larger than FASTBOX size. In such case,
          * first offset (*segment_first) is zero, and last offset (segment_size)
          * is the data size */
-        MPIU_Assert(*segment_first == 0);
+        MPIR_Assert(*segment_first == 0);
 
         if (MPID_nem_fbox_is_full((MPID_nem_fbox_common_ptr_t)pbox))
             goto usequeue_l;
@@ -528,12 +528,12 @@ MPID_nem_mpich_send_seg_header (MPIDU_Segment *segment, intptr_t *segment_first,
             MPL_DBG_STMT (MPIDI_CH3_DBG_CHANNEL, VERBOSE, pbox->cell.pkt.header.type = MPID_NEM_PKT_MPICH_HEAD);
 
             /* copy header */
-            MPIU_Memcpy((void *)pbox->cell.pkt.p.payload, header, header_sz);
+            MPIR_Memcpy((void *)pbox->cell.pkt.p.payload, header, header_sz);
             
             /* copy data */
             last = segment_size;
             MPIDU_Segment_pack(segment, *segment_first, &last, (char *)pbox->cell.pkt.p.payload + sizeof(MPIDI_CH3_Pkt_t));
-            MPIU_Assert(last == segment_size);
+            MPIR_Assert(last == segment_size);
 
             OPA_store_release_int(&pbox->flag.value, 1);
 
@@ -574,13 +574,13 @@ MPID_nem_mpich_send_seg_header (MPIDU_Segment *segment, intptr_t *segment_first,
 #endif /*PREFETCH_CELL */
 
     /* copy header */
-    MPIU_Memcpy((void *)el->pkt.p.payload, header, header_sz);
+    MPIR_Memcpy((void *)el->pkt.p.payload, header, header_sz);
     
     buf_offset += sizeof(MPIDI_CH3_Pkt_t);
 
     if (ext_header_sz > 0) {
         /* when extended packet header exists, copy it */
-        MPIU_Memcpy((void *)((char *)(el->pkt.p.payload) + buf_offset), ext_header, ext_header_sz);
+        MPIR_Memcpy((void *)((char *)(el->pkt.p.payload) + buf_offset), ext_header, ext_header_sz);
         buf_offset += ext_header_sz;
     }
 
@@ -638,7 +638,7 @@ MPID_nem_mpich_send_seg (MPIDU_Segment *segment, intptr_t *segment_first, intptr
     intptr_t last;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
 
-    MPIU_Assert(vc_ch->is_local); /* netmods will have their own implementation */    
+    MPIR_Assert(vc_ch->is_local); /* netmods will have their own implementation */
     
     DO_PAPI (PAPI_reset (PAPI_EventSet));
 
@@ -720,12 +720,12 @@ static inline void MPID_nem_mpich_dequeue_fastbox(int local_rank)
 {
     MPID_nem_fboxq_elem_t *el;
 
-    MPIU_Assert(local_rank < MPID_nem_mem_region.num_local);
+    MPIR_Assert(local_rank < MPID_nem_mem_region.num_local);
 
     el = &MPID_nem_fboxq_elem_list[local_rank];    
-    MPIU_Assert(el->fbox != NULL);
+    MPIR_Assert(el->fbox != NULL);
 
-    MPIU_Assert(el->usage);
+    MPIR_Assert(el->usage);
 
     --el->usage;
     if (el->usage == 0)
@@ -764,10 +764,10 @@ static inline void MPID_nem_mpich_enqueue_fastbox(int local_rank)
 {
     MPID_nem_fboxq_elem_t *el;
 
-    MPIU_Assert(local_rank < MPID_nem_mem_region.num_local);
+    MPIR_Assert(local_rank < MPID_nem_mem_region.num_local);
 
     el = &MPID_nem_fboxq_elem_list[local_rank];
-    MPIU_Assert(el->fbox != NULL);
+    MPIR_Assert(el->fbox != NULL);
 
     if (el->usage)
     {
@@ -962,7 +962,7 @@ MPID_nem_mpich_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int comple
 
 #ifdef MPICH_IS_THREADED
     /* We should never enter this function in a multithreaded app */
-    MPIU_Assert(!MPIR_ThreadInfo.isThreaded);
+    MPIR_Assert(!MPIR_ThreadInfo.isThreaded);
 #endif
 
 #ifdef USE_FASTBOX

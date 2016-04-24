@@ -39,14 +39,14 @@ int MPID_nem_network_poll(int in_blocking_progress);
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPID_nem_cell_init(MPID_nem_cell_ptr_t cell)
 {
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_CELL_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_CELL_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_CELL_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_CELL_INIT);
 
     MPID_NEM_SET_REL_NULL(cell->next);
     memset((void *)&cell->pkt, 0, sizeof(MPID_nem_pkt_header_t));
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_CELL_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_CELL_INIT);
 }
 
 #if defined(MPID_NEM_USE_LOCK_FREE_QUEUES)
@@ -57,15 +57,15 @@ static inline void MPID_nem_cell_init(MPID_nem_cell_ptr_t cell)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPID_nem_queue_init(MPID_nem_queue_ptr_t qhead)
 {
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_QUEUE_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_QUEUE_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_QUEUE_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_QUEUE_INIT);
 
     MPID_NEM_SET_REL_NULL(qhead->head);
     MPID_NEM_SET_REL_NULL(qhead->my_head);
     MPID_NEM_SET_REL_NULL(qhead->tail);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_QUEUE_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_QUEUE_INIT);
 }
 
 #define MPID_NEM_USE_SHADOW_HEAD
@@ -245,16 +245,16 @@ MPID_nem_queue_dequeue (MPID_nem_queue_ptr_t qhead, MPID_nem_cell_ptr_t *e)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPID_nem_queue_init(MPID_nem_queue_ptr_t qhead)
 {
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_QUEUE_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_QUEUE_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_QUEUE_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_QUEUE_INIT);
 
     MPID_NEM_SET_REL_NULL(qhead->head);
     MPID_NEM_SET_REL_NULL(qhead->my_head);
     MPID_NEM_SET_REL_NULL(qhead->tail);
     MPID_nem_queue_mutex_create(&qhead->lock, NULL);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_QUEUE_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_QUEUE_INIT);
 }
 
 static inline void

@@ -39,7 +39,7 @@ int PREPEND_PREFIX(Type_convert_darray)(int size,
     int procs, tmp_rank, i, tmp_size, blklens[3], *coords;
     MPI_Aint *st_offsets, orig_extent, disps[3];
 
-    MPIR_Type_extent_impl(oldtype, &orig_extent);
+    MPIDU_Datatype_get_extent_macro(oldtype, orig_extent);
 
 /* calculate position in Cartesian grid as MPI would (row-major
    ordering) */

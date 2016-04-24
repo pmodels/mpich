@@ -43,7 +43,7 @@ int MPIR_T_pvar_reset_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
         /* Record current value as offset when pvar is running (i.e., started) */
         if (MPIR_T_pvar_is_started(handle)) {
             if (handle->get_value == NULL) {
-                MPIU_Memcpy(handle->offset, handle->addr, handle->bytes * handle->count);
+                MPIR_Memcpy(handle->offset, handle->addr, handle->bytes * handle->count);
             } else {
                 handle->get_value(handle->addr, handle->obj_handle,
                                   handle->count, handle->offset);
@@ -54,7 +54,7 @@ int MPIR_T_pvar_reset_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
             /* Use the current value as starting value when pvar is running */
             mark = (MPIR_T_pvar_watermark_t *)handle->addr;
             if (MPIR_T_pvar_is_first(handle)) {
-                MPIU_Assert(mark->first_used);
+                MPIR_Assert(mark->first_used);
                 mark->watermark = mark->current;
             } else {
                 handle->watermark = mark->current;
@@ -110,10 +110,10 @@ int MPI_T_pvar_reset(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
     int mpi_errno = MPI_SUCCESS;
     MPIR_T_pvar_handle_t *hnd;
 
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_RESET);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_PVAR_RESET);
     MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_PVAR_RESET);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_PVAR_RESET);
 
      /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -157,7 +157,7 @@ int MPI_T_pvar_reset(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_PVAR_RESET);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_PVAR_RESET);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 

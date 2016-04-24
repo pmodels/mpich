@@ -41,8 +41,8 @@ int MPIDU_Type_get_contents(MPI_Datatype datatype,
     /* these are checked at the MPI layer, so I feel that asserts
      * are appropriate.
      */
-    MPIU_Assert(HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN);
-    MPIU_Assert(datatype != MPI_FLOAT_INT &&
+    MPIR_Assert(HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN);
+    MPIR_Assert(datatype != MPI_FLOAT_INT &&
 		datatype != MPI_DOUBLE_INT &&
 		datatype != MPI_LONG_INT &&
 		datatype != MPI_SHORT_INT &&
@@ -51,7 +51,7 @@ int MPIDU_Type_get_contents(MPI_Datatype datatype,
 
     MPIDU_Datatype_get_ptr(datatype, dtp);
     cp = dtp->contents;
-    MPIU_Assert(cp != NULL);
+    MPIR_Assert(cp != NULL);
 
     /* --BEGIN ERROR HANDLING-- */
     if (max_integers < cp->nr_ints ||

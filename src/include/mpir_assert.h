@@ -29,43 +29,43 @@ int MPIR_Assert_fail(const char *cond, const char *file_name, int line_num);
 int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, const char *fmt, ...);
 
 /*
- * MPIU_Assert()
+ * MPIR_Assert()
  *
  * Similar to assert() except that it performs an MPID_Abort() when the 
  * assertion fails.  Also, for Windows, it doesn't popup a
  * mesage box on a remote machine.
  */
 #if (!defined(NDEBUG) && defined(HAVE_ERROR_CHECKING))
-#   define MPIU_AssertDeclValue(_a,_b) _a = _b
-#   define MPIU_Assert(a_)                             \
+#   define MPIR_AssertDeclValue(_a,_b) _a = _b
+#   define MPIR_Assert(a_)                             \
     do {                                               \
         if (unlikely(!(a_))) {                         \
             MPIR_Assert_fail(#a_, __FILE__, __LINE__); \
         }                                              \
     } while (0)
 #else
-#   define MPIU_Assert(a_)
+#   define MPIR_Assert(a_)
 /* Empty decls not allowed in C */
-#   define MPIU_AssertDeclValue(_a,_b) _a ATTRIBUTE((unused)) = _b
+#   define MPIR_AssertDeclValue(_a,_b) _a ATTRIBUTE((unused)) = _b
 #endif
 
 /*
- * MPIU_Assertp()
+ * MPIR_Assertp()
  *
- * Similar to MPIU_Assert() except that these assertions persist regardless of 
- * NDEBUG or HAVE_ERROR_CHECKING.  MPIU_Assertp() may
+ * Similar to MPIR_Assert() except that these assertions persist regardless of
+ * NDEBUG or HAVE_ERROR_CHECKING.  MPIR_Assertp() may
  * be used for error checking in prototype code, although it should be 
  * converted real error checking and reporting once the
  * prototype becomes part of the official and supported code base.
  */
-#define MPIU_Assertp(a_)                                             \
+#define MPIR_Assertp(a_)                                             \
     do {                                                             \
         if (unlikely(!(a_))) {                                       \
             MPIR_Assert_fail(#a_, __FILE__, __LINE__);               \
         }                                                            \
     } while (0)
 
-/* Define the MPIU_Assert_fmt_msg macro.  This macro takes two arguments.  The
+/* Define the MPIR_Assert_fmt_msg macro.  This macro takes two arguments.  The
  * first is the condition to assert.  The second is a parenthesized list of
  * arguments suitable for passing directly to printf that will yield a relevant
  * error message.  The macro will first evaluate the condition.  If it evaluates
@@ -79,34 +79,34 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
  *    The supplied error message will also be evaluated and printed.
  * 3) It will similarly emit the assertion failure and caller supplied messages
  *    to the debug log, if enabled, via MPL_DBG_MSG_FMT.
- * 4) It will invoke MPID_Abort, just like the other MPIU_Assert* macros.
+ * 4) It will invoke MPID_Abort, just like the other MPIR_Assert* macros.
  *
  * If the compiler doesn't support (...)/__VA_ARGS__ in macros then the user
  * message will not be evaluated or printed.  If NDEBUG is defined or
  * HAVE_ERROR_CHECKING is undefined, this macro will expand to nothing, just
- * like MPIU_Assert.
+ * like MPIR_Assert.
  *
  * Example usage:
  *
- * MPIU_Assert_fmg_msg(foo > bar,("foo is larger than bar: foo=%d bar=%d",foo,bar));
+ * MPIR_Assert_fmg_msg(foo > bar,("foo is larger than bar: foo=%d bar=%d",foo,bar));
  */
 #if (!defined(NDEBUG) && defined(HAVE_ERROR_CHECKING))
 #  if defined(HAVE_MACRO_VA_ARGS)
 
 /* newlines are added internally by the impl function, callers do not need to include them */
-#    define MPIU_Assert_fmt_msg(cond_,fmt_arg_parens_)                         \
+#    define MPIR_Assert_fmt_msg(cond_,fmt_arg_parens_)                         \
     do {                                                                       \
         if (unlikely(!(cond_))) {                                              \
             MPIR_Assert_fail_fmt(#cond_, __FILE__, __LINE__,                   \
-                                 MPIU_Assert_fmt_msg_expand_ fmt_arg_parens_); \
+                                 fmt_msg_expand_ fmt_arg_parens_); \
         }                                                                      \
     } while (0)
 /* helper to just expand the parens arg inline */
-#    define MPIU_Assert_fmt_msg_expand_(...) __VA_ARGS__
+#    define fmt_msg_expand_(...) __VA_ARGS__
 
 #  else /* defined(HAVE_MACRO_VA_ARGS) */
 
-#    define MPIU_Assert_fmt_msg(cond_,fmt_arg_parens_)                                                   \
+#    define MPIR_Assert_fmt_msg(cond_,fmt_arg_parens_)                                                   \
     do {                                                                                                 \
         if (unlikely(!(cond_))) {                                                                        \
             MPIR_Assert_fail_fmt(#cond_, __FILE__, __LINE__,                                             \
@@ -116,15 +116,15 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
 
 #  endif
 #else /* !defined(NDEBUG) && defined(HAVE_ERROR_CHECKING) */
-#    define MPIU_Assert_fmt_msg(cond_,fmt_arg_parens_)
+#    define MPIR_Assert_fmt_msg(cond_,fmt_arg_parens_)
 #endif
 
 #ifdef HAVE_C11__STATIC_ASSERT
-#  define MPIU_Static_assert(cond_,msg_) _Static_assert(cond_,msg_)
+#  define MPIR_Static_assert(cond_,msg_) _Static_assert(cond_,msg_)
 #endif
 /* fallthrough to a run-time assertion */
-#ifndef MPIU_Static_assert
-#  define MPIU_Static_assert(cond_,msg_) MPIU_Assert_fmt_msg((cond_), ("%s", (msg_)))
+#ifndef MPIR_Static_assert
+#  define MPIR_Static_assert(cond_,msg_) MPIR_Assert_fmt_msg((cond_), ("%s", (msg_)))
 #endif
 
 #endif /* !defined(MPIR_ASSERT_H_INCLUDED) */

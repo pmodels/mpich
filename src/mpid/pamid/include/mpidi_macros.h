@@ -157,7 +157,7 @@ MPIDI_Context_post(pami_context_t       context,
                    pami_work_function   fn,
                    void               * cookie)
 {
-#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT)
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ)
   /* It is possible that a work function posted to a context may attempt to
    * initiate a communication operation and, if context post were disabled, that
    * operation would be performed directly on the context BY TAKING A LOCK that
@@ -176,7 +176,7 @@ MPIDI_Context_post(pami_context_t       context,
   pami_result_t rc;
   rc = PAMI_Context_post(context, work, fn, cookie);
   MPID_assert(rc == PAMI_SUCCESS);
-#else /* (MPICH_THREAD_GRANULARITY != MPICH_THREAD_GRANULARITY_PER_OBJECT) */
+#else /* (MPICH_THREAD_GRANULARITY != MPICH_THREAD_GRANULARITY__POBJ) */
   /*
    * It is not necessary to lock the context before access in the "global"
    * mpich lock mode because all threads, application and async progress,
@@ -186,7 +186,7 @@ MPIDI_Context_post(pami_context_t       context,
 #endif
 }
 
-#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT)
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ)
 #define MPIDI_Send_post(__func, __req)                          \
 ({                                                              \
   pami_context_t context = MPIDI_Context_local(__req);          \
@@ -207,11 +207,11 @@ MPIDI_Context_post(pami_context_t       context,
       PAMI_Context_unlock(context);                             \
     }                                                           \
 })
-#else /* (MPICH_THREAD_GRANULARITY != MPICH_THREAD_GRANULARITY_PER_OBJECT) */
+#else /* (MPICH_THREAD_GRANULARITY != MPICH_THREAD_GRANULARITY__POBJ) */
 #define MPIDI_Send_post(__func, __req)                          \
 ({                                                              \
   __func(MPIDI_Context[0], __req);                              \
 })
-#endif /* #if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT) */
+#endif /* #if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ) */
 
 #endif

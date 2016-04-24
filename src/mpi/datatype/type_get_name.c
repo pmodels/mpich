@@ -240,11 +240,11 @@ int MPI_Type_get_name(MPI_Datatype datatype, char *type_name, int *resultlen)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *datatype_ptr = NULL;
     static int setup = 0;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_GET_NAME);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_GET_NAME);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_GET_NAME);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_GET_NAME);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -296,7 +296,7 @@ int MPI_Type_get_name(MPI_Datatype datatype, char *type_name, int *resultlen)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_GET_NAME);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_GET_NAME);
     return mpi_errno;
 
   fn_fail:

@@ -16,9 +16,9 @@ static int barrier_init = 0;
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_barrier_init(MPID_nem_barrier_t *barrier_region, int init_values)
 {
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_BARRIER_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_BARRIER_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_BARRIER_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_BARRIER_INIT);
     
     MPID_nem_mem_region.barrier = barrier_region;
     if (init_values) {
@@ -29,7 +29,7 @@ int MPID_nem_barrier_init(MPID_nem_barrier_t *barrier_region, int init_values)
     sense = 0;
     barrier_init = 1;
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_BARRIER_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_BARRIER_INIT);
 
     return MPI_SUCCESS;
 }
@@ -42,9 +42,9 @@ int MPID_nem_barrier_init(MPID_nem_barrier_t *barrier_region, int init_values)
 int MPID_nem_barrier(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_BARRIER);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_BARRIER);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_BARRIER);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_BARRIER);
 
     if (MPID_nem_mem_region.num_local == 1)
         goto fn_exit;
@@ -67,6 +67,6 @@ int MPID_nem_barrier(void)
 
  fn_fail:
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_BARRIER);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_BARRIER);
     return mpi_errno;
 }

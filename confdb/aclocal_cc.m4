@@ -521,7 +521,7 @@ if test "$enable_strict_done" != "yes" ; then
     # compiler.
     #   -Wno-type-limits -- There are places where we compare an unsigned to 
     #	    a constant that happens to be zero e.g., if x is unsigned and 
-    #	    MIN_VAL is zero, we'd like to do "MPIU_Assert(x >= MIN_VAL);".
+    #	    MIN_VAL is zero, we'd like to do "MPIR_Assert(x >= MIN_VAL);".
     #       Note this option is not supported by gcc 4.2.  This needs to be added 
     #	    after most other warning flags, so that we catch a gcc bug on 32-bit 
     #	    that doesn't give a warning that this is unsupported, unless another

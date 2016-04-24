@@ -36,9 +36,9 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code,
     int rank;
     char msg[MPI_MAX_ERROR_STRING] = "";
     char error_str[MPI_MAX_ERROR_STRING + 100];
-    MPIDI_STATE_DECL(MPID_STATE_MPID_ABORT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ABORT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_ABORT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ABORT);
 
     if (error_msg == NULL) {
 	/* Create a default error message */
@@ -80,7 +80,7 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code,
     MPIDU_Ftb_finalize();
     
 #ifdef HAVE_DEBUGGER_SUPPORT
-    MPIR_DebuggerSetAborting( error_msg );
+    MPIR_Debugger_set_aborting( error_msg );
 #endif
 
     /* Dumping the error message in MPICH and passing the same
@@ -106,7 +106,7 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code,
 
     /* pmi_abort should not return but if it does, exit here.  If it does,
        add the function exit code before calling the final exit.  */
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_ABORT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ABORT);
     MPL_exit(exit_code);
 
     return MPI_ERR_INTERN;

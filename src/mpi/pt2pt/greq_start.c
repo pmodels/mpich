@@ -36,7 +36,7 @@ PMPI_LOCAL int MPIR_Grequest_free_classes_on_finalize(void *extra_data);
 
 MPIR_Grequest_class MPIR_Grequest_class_direct[MPIR_GREQ_CLASS_PREALLOC] =
                                               { {0} };
-MPIU_Object_alloc_t MPIR_Grequest_class_mem = {0, 0, 0, 0, MPIR_GREQ_CLASS,
+MPIR_Object_alloc_t MPIR_Grequest_class_mem = {0, 0, 0, 0, MPIR_GREQ_CLASS,
 	                                       sizeof(MPIR_Grequest_class),
 					       MPIR_Grequest_class_direct,
 					       MPIR_GREQ_CLASS_PREALLOC, };
@@ -64,7 +64,7 @@ PMPI_LOCAL int MPIR_Grequest_free_classes_on_finalize(void *extra_data ATTRIBUTE
     while (cur) {
         last = cur;
         cur = last->next;
-        MPIU_Handle_obj_free(&MPIR_Grequest_class_mem, last);
+        MPIR_Handle_obj_free(&MPIR_Grequest_class_mem, last);
     }
 
     return mpi_errno;
@@ -80,18 +80,18 @@ int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
                              void *extra_state, MPIR_Request **request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIU_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL(1);
 
     /* MT FIXME this routine is not thread-safe in the non-global case */
     
     *request_ptr = MPIR_Request_create(MPIR_REQUEST_KIND__GREQUEST);
     MPIR_ERR_CHKANDJUMP1(request_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "generalized request");
     
-    MPIU_Object_set_ref( *request_ptr, 1 );
+    MPIR_Object_set_ref( *request_ptr, 1 );
     (*request_ptr)->cc_ptr               = &(*request_ptr)->cc;
     MPIR_cc_set((*request_ptr)->cc_ptr, 1);
     (*request_ptr)->comm                 = NULL;
-    MPIU_CHKPMEM_MALLOC((*request_ptr)->u.ureq.greq_fns, struct MPIR_Grequest_fns *, sizeof(struct MPIR_Grequest_fns), mpi_errno, "greq_fns");
+    MPIR_CHKPMEM_MALLOC((*request_ptr)->u.ureq.greq_fns, struct MPIR_Grequest_fns *, sizeof(struct MPIR_Grequest_fns), mpi_errno, "greq_fns");
     (*request_ptr)->u.ureq.greq_fns->cancel_fn            = cancel_fn;
     (*request_ptr)->u.ureq.greq_fns->free_fn              = free_fn;
     (*request_ptr)->u.ureq.greq_fns->query_fn             = query_fn;
@@ -105,18 +105,18 @@ int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
      * we test or wait on it. */
     MPIR_Request_add_ref((*request_ptr));
 
-    MPIU_CHKPMEM_COMMIT();
+    MPIR_CHKPMEM_COMMIT();
  fn_exit:
     return mpi_errno;
  fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
 
 #else
 extern MPIR_Grequest_class MPIR_Grequest_class_direct[];
-extern MPIU_Object_alloc_t MPIR_Grequest_class_mem;
+extern MPIR_Object_alloc_t MPIR_Grequest_class_mem;
 extern int MPIR_Grequest_registered_finalizer;
 extern MPIR_Grequest_class *MPIR_Grequest_class_list;
 #endif
@@ -178,12 +178,12 @@ int MPI_Grequest_start( MPI_Grequest_query_function *query_fn,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *request_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_GREQUEST_START);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GREQUEST_START);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GREQUEST_START);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GREQUEST_START);
 
     /* Validate parameters if error checking is enabled */
 #   ifdef HAVE_ERROR_CHECKING
@@ -206,7 +206,7 @@ int MPI_Grequest_start( MPI_Grequest_query_function *query_fn,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GREQUEST_START);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GREQUEST_START);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
     
@@ -266,7 +266,7 @@ int MPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn,
 	int mpi_errno = MPI_SUCCESS;
 
 	class_ptr = (MPIR_Grequest_class *)
-		MPIU_Handle_obj_alloc(&MPIR_Grequest_class_mem);
+		MPIR_Handle_obj_alloc(&MPIR_Grequest_class_mem);
         /* --BEGIN ERROR HANDLING-- */
 	if (!class_ptr)
 	{
@@ -284,7 +284,7 @@ int MPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn,
 	class_ptr->poll_fn = poll_fn;
 	class_ptr->wait_fn = wait_fn;
 
-	MPIU_Object_set_ref(class_ptr, 1);
+	MPIR_Object_set_ref(class_ptr, 1);
 
         if (MPIR_Grequest_class_list == NULL) {
             class_ptr->next = NULL;

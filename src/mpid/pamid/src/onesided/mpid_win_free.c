@@ -125,7 +125,7 @@ MPID_Win_free(MPIR_Win **win_ptr)
 
   MPIR_Comm_release(win->comm_ptr, 0);
 
-  MPIU_Handle_obj_free(&MPIR_Win_mem, win);
+  MPIR_Handle_obj_free(&MPIR_Win_mem, win);
 
 fn_fail:
   return mpi_errno;

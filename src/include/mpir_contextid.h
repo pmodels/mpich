@@ -8,9 +8,9 @@
 #ifndef MPIR_CONTEXTID_H_INCLUDED
 #define MPIR_CONTEXTID_H_INCLUDED
 
-#define MPIU_CONTEXT_ID_T_DATATYPE MPI_UINT16_T
-typedef uint16_t MPIU_Context_id_t;
-#define MPIU_INVALID_CONTEXT_ID ((MPIU_Context_id_t)0xffff)
+#define MPIR_CONTEXT_ID_T_DATATYPE MPI_UINT16_T
+typedef uint16_t MPIR_Context_id_t;
+#define MPIR_INVALID_CONTEXT_ID ((MPIR_Context_id_t)0xffff)
 
 /* The following preprocessor macros provide bitfield access information for
  * context ID values.  They follow a uniform naming pattern:
@@ -86,7 +86,7 @@ typedef uint16_t MPIU_Context_id_t;
 
 /* should probably be (sizeof(int)*CHAR_BITS) once we make the code CHAR_BITS-clean */
 #define MPIR_CONTEXT_INT_BITS (32)
-#define MPIR_CONTEXT_ID_BITS (sizeof(MPIU_Context_id_t)*8) /* 8 --> CHAR_BITS eventually */
+#define MPIR_CONTEXT_ID_BITS (sizeof(MPIR_Context_id_t)*8) /* 8 --> CHAR_BITS eventually */
 #define MPIR_MAX_CONTEXT_MASK \
     ((1 << (MPIR_CONTEXT_ID_BITS - (MPIR_CONTEXT_PREFIX_SHIFT + MPIR_CONTEXT_DYNAMIC_PROC_WIDTH))) / MPIR_CONTEXT_INT_BITS)
 
@@ -94,12 +94,12 @@ typedef uint16_t MPIU_Context_id_t;
    with the other comm routines (src/mpi/comm, in mpicomm.h).  However,
    to create a new communicator after a spawn or connect-accept operation,
    the device may need to create a new contextid */
-int MPIR_Get_contextid_sparse(MPIR_Comm *comm_ptr, MPIU_Context_id_t *context_id, int ignore_id);
-int MPIR_Get_contextid_sparse_group(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr, int tag, MPIU_Context_id_t *context_id, int ignore_id);
+int MPIR_Get_contextid_sparse(MPIR_Comm *comm_ptr, MPIR_Context_id_t *context_id, int ignore_id);
+int MPIR_Get_contextid_sparse_group(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr, int tag, MPIR_Context_id_t *context_id, int ignore_id);
 
 int MPIR_Get_contextid_nonblock(MPIR_Comm *comm_ptr, MPIR_Comm *newcommp, MPIR_Request **req);
 int MPIR_Get_intercomm_contextid_nonblock(MPIR_Comm *comm_ptr, MPIR_Comm *newcommp, MPIR_Request **req);
 
-void MPIR_Free_contextid( MPIU_Context_id_t );
+void MPIR_Free_contextid( MPIR_Context_id_t );
 
 #endif /* MPIR_CONTEXTID_H_INCLUDED */

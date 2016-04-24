@@ -41,7 +41,7 @@
 
   S*/
 struct MPIR_Win {
-    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
+    MPIR_OBJECT_HEADER; /* adds handle and ref_count fields */
     MPID_Thread_mutex_t mutex;
     MPIR_Errhandler *errhandler;  /* Pointer to the error handler structure */
     void *base;
@@ -83,7 +83,7 @@ struct MPIR_Win {
     MPID_DEV_WIN_DECL
 #endif
 };
-extern MPIU_Object_alloc_t MPIR_Win_mem;
+extern MPIR_Object_alloc_t MPIR_Win_mem;
 /* Preallocated win objects */
 extern MPIR_Win MPIR_Win_direct[];
 

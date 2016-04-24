@@ -116,7 +116,7 @@ int MPIR_Create_unnamed_predefined( MPI_Datatype old, int combiner,
              * MPID_Type_commit */
             MPID_Datatype_get_basic_type(old, old_basic);
             MPID_Datatype_get_basic_type(new_dtp->handle, new_basic);
-            MPIU_Assert(new_basic == old_basic);
+            MPIR_Assert(new_basic == old_basic);
         }
 #endif
 

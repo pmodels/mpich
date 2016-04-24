@@ -141,7 +141,7 @@ static int MPIR_Bcast_binomial(
     MPI_Aint position;
     void *tmp_buf=NULL;
     MPIR_Datatype *dtp;
-    MPIU_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -182,7 +182,7 @@ static int MPIR_Bcast_binomial(
 
     if (!is_contig || !is_homogeneous)
     {
-        MPIU_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf");
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf");
 
         /* TODO: Pipeline the packing and communication */
         position = 0;
@@ -302,7 +302,7 @@ static int MPIR_Bcast_binomial(
     }
 
 fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
@@ -493,7 +493,7 @@ static int MPIR_Bcast_scatter_doubling_allgather(
     int relative_dst, dst_tree_root, my_tree_root, send_offset;
     int recv_offset, tree_root, nprocs_completed, offset;
     MPI_Aint position;
-    MPIU_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL(1);
     MPIR_Datatype *dtp;
     MPI_Aint true_extent, true_lb;
     void *tmp_buf;
@@ -545,7 +545,7 @@ static int MPIR_Bcast_scatter_doubling_allgather(
     }
     else
     {
-        MPIU_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf");
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf");
 
         /* TODO: Pipeline the packing and communication */
         position = 0;
@@ -750,7 +750,7 @@ static int MPIR_Bcast_scatter_doubling_allgather(
     }
 
 fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
@@ -803,7 +803,7 @@ static int MPIR_Bcast_scatter_ring_allgather(
     MPI_Status status;
     MPIR_Datatype *dtp;
     MPI_Aint true_extent, true_lb;
-    MPIU_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -851,7 +851,7 @@ static int MPIR_Bcast_scatter_ring_allgather(
     }
     else
     {
-        MPIU_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf");
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf");
 
         /* TODO: Pipeline the packing and communication */
         position = 0;
@@ -939,7 +939,7 @@ static int MPIR_Bcast_scatter_ring_allgather(
     }
 
 fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
@@ -1004,9 +1004,9 @@ static int MPIR_SMP_Bcast(
     int recvd_size;
 
     if (!MPIR_CVAR_ENABLE_SMP_COLLECTIVES || !MPIR_CVAR_ENABLE_SMP_BCAST) {
-        MPIU_Assert(0);
+        MPIR_Assert(0);
     }
-    MPIU_Assert(MPIR_Comm_is_node_aware(comm_ptr));
+    MPIR_Assert(MPIR_Comm_is_node_aware(comm_ptr));
 
     is_homogeneous = 1;
 #ifdef MPID_HAS_HETERO
@@ -1036,7 +1036,7 @@ static int MPIR_SMP_Bcast(
     {
         /* send to intranode-rank 0 on the root's node */
         if (comm_ptr->node_comm != NULL &&
-            MPIU_Get_intranode_rank(comm_ptr, root) > 0) /* is not the node root (0) */ 
+            MPIR_Get_intranode_rank(comm_ptr, root) > 0) /* is not the node root (0) */
         {                                                /* and is on our node (!-1) */
             if (root == comm_ptr->rank) {
                 mpi_errno = MPIC_Send(buffer,count,datatype,0,
@@ -1049,7 +1049,7 @@ static int MPIR_SMP_Bcast(
                 }
             }
             else if (0 == comm_ptr->node_comm->rank) {
-                mpi_errno = MPIC_Recv(buffer,count,datatype,MPIU_Get_intranode_rank(comm_ptr, root),
+                mpi_errno = MPIC_Recv(buffer,count,datatype,MPIR_Get_intranode_rank(comm_ptr, root),
                                          MPIR_BCAST_TAG,comm_ptr->node_comm, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
@@ -1077,7 +1077,7 @@ static int MPIR_SMP_Bcast(
         {
             MPIR_Bcast_fn_or_override(MPIR_Bcast_binomial, mpi_errno_ret,
                                       buffer, count, datatype,
-                                      MPIU_Get_internode_rank(comm_ptr, root),
+                                      MPIR_Get_internode_rank(comm_ptr, root),
                                       comm_ptr->node_roots_comm, errflag);
         }
 
@@ -1099,14 +1099,14 @@ static int MPIR_SMP_Bcast(
 
             /* perform the intranode broadcast on the root's node */
             if (comm_ptr->node_comm != NULL &&
-                MPIU_Get_intranode_rank(comm_ptr, root) > 0) /* is not the node root (0) */ 
+                MPIR_Get_intranode_rank(comm_ptr, root) > 0) /* is not the node root (0) */
             {                                                /* and is on our node (!-1) */
                 /* FIXME binomial may not be the best algorithm for on-node
                    bcast.  We need a more comprehensive system for selecting the
                    right algorithms here. */
                 MPIR_Bcast_fn_or_override(MPIR_Bcast_binomial, mpi_errno_ret,
                                           buffer, count, datatype,
-                                          MPIU_Get_intranode_rank(comm_ptr, root),
+                                          MPIR_Get_intranode_rank(comm_ptr, root),
                                           comm_ptr->node_comm, errflag);
             }
 
@@ -1117,21 +1117,21 @@ static int MPIR_SMP_Bcast(
                 {
                     MPIR_Bcast_fn_or_override(MPIR_Bcast_scatter_doubling_allgather, mpi_errno_ret,
                                               buffer, count, datatype,
-                                              MPIU_Get_internode_rank(comm_ptr, root),
+                                              MPIR_Get_internode_rank(comm_ptr, root),
                                               comm_ptr->node_roots_comm, errflag);
                 }
                 else
                 {
                     MPIR_Bcast_fn_or_override(MPIR_Bcast_scatter_ring_allgather, mpi_errno_ret,
                                               buffer, count, datatype,
-                                              MPIU_Get_internode_rank(comm_ptr, root),
+                                              MPIR_Get_internode_rank(comm_ptr, root),
                                               comm_ptr->node_roots_comm, errflag);
                 }
             }
 
             /* perform the intranode broadcast on all except for the root's node */
             if (comm_ptr->node_comm != NULL &&
-                MPIU_Get_intranode_rank(comm_ptr, root) <= 0) /* 0 if root was local root too */
+                MPIR_Get_intranode_rank(comm_ptr, root) <= 0) /* 0 if root was local root too */
             {                                                 /* -1 if different node than root */
                 /* FIXME binomial may not be the best algorithm for on-node
                    bcast.  We need a more comprehensive system for selecting the
@@ -1229,9 +1229,9 @@ int MPIR_Bcast_intra (
     int nbytes=0;
     int is_homogeneous;
     MPI_Aint type_size;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_BCAST);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_BCAST);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_BCAST);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_BCAST);
 
     if (count == 0) goto fn_exit;
 
@@ -1313,7 +1313,7 @@ int MPIR_Bcast_intra (
     }
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_BCAST);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_BCAST);
 
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno_ret)
@@ -1349,9 +1349,9 @@ int MPIR_Bcast_inter (
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     MPIR_Comm *newcomm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_BCAST_INTER);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_BCAST_INTER);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_BCAST_INTER);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_BCAST_INTER);
 
 
     if (root == MPI_PROC_NULL)
@@ -1391,7 +1391,7 @@ int MPIR_Bcast_inter (
         
         /* Get the local intracommunicator */
         if (!comm_ptr->local_comm)
-            MPIR_Setup_intercomm_localcomm( comm_ptr );
+            MPII_Setup_intercomm_localcomm( comm_ptr );
 
         newcomm_ptr = comm_ptr->local_comm;
 
@@ -1407,7 +1407,7 @@ int MPIR_Bcast_inter (
     }
 
 fn_fail:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_BCAST_INTER);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_BCAST_INTER);
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
@@ -1518,12 +1518,12 @@ int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_BCAST);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_BCAST);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_COLL_FUNC_ENTER(MPID_STATE_MPI_BCAST);
+    MPIR_FUNC_TERSE_COLL_ENTER(MPID_STATE_MPI_BCAST);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -1580,7 +1580,7 @@ int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
     /* ... end of body of routine ... */
     
   fn_exit:
-    MPID_MPI_COLL_FUNC_EXIT(MPID_STATE_MPI_BCAST);
+    MPIR_FUNC_TERSE_COLL_EXIT(MPID_STATE_MPI_BCAST);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

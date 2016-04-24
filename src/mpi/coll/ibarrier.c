@@ -53,12 +53,12 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request) __attribute__((weak,alias(
 #define FUNCNAME MPIR_Ibarrier_intra
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_intra(MPIR_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Ibarrier_intra(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int size, rank, src, dst, mask;
 
-    MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
     size = comm_ptr->local_size;
     rank = comm_ptr->rank;
@@ -71,13 +71,13 @@ int MPIR_Ibarrier_intra(MPIR_Comm *comm_ptr, MPID_Sched_t s)
         dst = (rank + mask) % size;
         src = (rank - mask + size) % size;
 
-        mpi_errno = MPID_Sched_send(NULL, 0, MPI_BYTE, dst, comm_ptr, s);
+        mpi_errno = MPIR_Sched_send(NULL, 0, MPI_BYTE, dst, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-        mpi_errno = MPID_Sched_recv(NULL, 0, MPI_BYTE, src, comm_ptr, s);
+        mpi_errno = MPIR_Sched_recv(NULL, 0, MPI_BYTE, src, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-        mpi_errno = MPID_Sched_barrier(s);
+        mpi_errno = MPIR_Sched_barrier(s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         mask <<= 1;
@@ -96,29 +96,29 @@ fn_fail:
 #define FUNCNAME MPIR_Ibarrier_inter
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Ibarrier_inter(MPIR_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Ibarrier_inter(MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, root;
     MPIR_SCHED_CHKPMEM_DECL(1);
     char *buf = NULL;
 
-    MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
 
     rank = comm_ptr->rank;
 
     /* Get the local intracommunicator */
     if (!comm_ptr->local_comm) {
-        mpi_errno = MPIR_Setup_intercomm_localcomm(comm_ptr);
+        mpi_errno = MPII_Setup_intercomm_localcomm(comm_ptr);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
     /* do a barrier on the local intracommunicator */
-    MPIU_Assert(comm_ptr->local_comm->coll_fns && comm_ptr->local_comm->coll_fns->Ibarrier_sched);
+    MPIR_Assert(comm_ptr->local_comm->coll_fns && comm_ptr->local_comm->coll_fns->Ibarrier_sched);
     if(comm_ptr->local_size != 1) {
         mpi_errno = comm_ptr->local_comm->coll_fns->Ibarrier_sched(comm_ptr->local_comm, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPID_SCHED_BARRIER(s);
+        MPIR_SCHED_BARRIER(s);
     }
     /* rank 0 on each group does an intercommunicator broadcast to the
        remote group to indicate that all processes in the local group
@@ -130,13 +130,13 @@ int MPIR_Ibarrier_inter(MPIR_Comm *comm_ptr, MPID_Sched_t s)
 
     /* first broadcast from left to right group, then from right to
        left group */
-    MPIU_Assert(comm_ptr->coll_fns && comm_ptr->coll_fns->Ibcast_sched);
+    MPIR_Assert(comm_ptr->coll_fns && comm_ptr->coll_fns->Ibcast_sched);
     if (comm_ptr->is_low_group) {
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
         mpi_errno = comm_ptr->coll_fns->Ibcast_sched(buf, 1, MPI_BYTE, root, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-        MPID_SCHED_BARRIER(s);
+        MPIR_SCHED_BARRIER(s);
 
         /* receive bcast from right */
         root = 0;
@@ -149,7 +149,7 @@ int MPIR_Ibarrier_inter(MPIR_Comm *comm_ptr, MPID_Sched_t s)
         mpi_errno = comm_ptr->coll_fns->Ibcast_sched(buf, 1, MPI_BYTE, root, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-        MPID_SCHED_BARRIER(s);
+        MPIR_SCHED_BARRIER(s);
 
         /* bcast to left */
         root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
@@ -174,21 +174,21 @@ int MPIR_Ibarrier_impl(MPIR_Comm *comm_ptr, MPI_Request *request)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *reqp = NULL;
     int tag = -1;
-    MPID_Sched_t s = MPID_SCHED_NULL;
+    MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = MPI_REQUEST_NULL;
 
     if (comm_ptr->local_size != 1 || comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
-        mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
+        mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        mpi_errno = MPID_Sched_create(&s);
+        mpi_errno = MPIR_Sched_create(&s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-        MPIU_Assert(comm_ptr->coll_fns->Ibarrier_sched != NULL);
+        MPIR_Assert(comm_ptr->coll_fns->Ibarrier_sched != NULL);
         mpi_errno = comm_ptr->coll_fns->Ibarrier_sched(comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-        mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, &reqp);
+        mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);
         if (reqp)
             *request = reqp->handle;
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -236,10 +236,10 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_IBARRIER);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IBARRIER);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IBARRIER);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IBARRIER);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -279,7 +279,7 @@ int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request)
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IBARRIER);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IBARRIER);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

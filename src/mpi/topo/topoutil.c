@@ -35,7 +35,7 @@ MPIR_Topology *MPIR_Topology_get( MPIR_Comm *comm_ptr )
 	return 0;
     }
 
-    mpi_errno = MPIR_CommGetAttr(comm_ptr->handle, MPIR_Topology_keyval,
+    mpi_errno = MPII_Comm_get_attr(comm_ptr->handle, MPIR_Topology_keyval,
                                  &topo_ptr, &flag, MPIR_ATTR_PTR );
     if (mpi_errno) return NULL;
     
@@ -52,7 +52,7 @@ int MPIR_Topology_put( MPIR_Comm *comm_ptr, MPIR_Topology *topo_ptr )
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIU_Assert(comm_ptr != NULL);
+    MPIR_Assert(comm_ptr != NULL);
 
     if (MPIR_Topology_keyval == MPI_KEYVAL_INVALID) {
 	/* Create a new keyval */
@@ -97,7 +97,7 @@ static int *MPIR_Copy_array( int n, const int a[], int *err )
 
     /* the copy of NULL is NULL */
     if (a == NULL) {
-        MPIU_Assert(n == 0);
+        MPIR_Assert(n == 0);
         return NULL;
     }
 
@@ -109,7 +109,7 @@ static int *MPIR_Copy_array( int n, const int a[], int *err )
 	return 0;
     }
     /* --END ERROR HANDLING-- */
-    MPIU_Memcpy(new_p, a, n * sizeof(int));
+    MPIR_Memcpy(new_p, a, n * sizeof(int));
     return new_p;
 }
 
@@ -132,7 +132,7 @@ static int MPIR_Topology_copy_fn ( MPI_Comm comm ATTRIBUTE((unused)),
 {
     MPIR_Topology *old_topology = (MPIR_Topology *)attr_in;
     MPIR_Topology *copy_topology = NULL;
-    MPIU_CHKPMEM_DECL(5);
+    MPIR_CHKPMEM_DECL(5);
     int mpi_errno = 0;
 
     MPL_UNREFERENCED_ARG(comm);
@@ -142,7 +142,7 @@ static int MPIR_Topology_copy_fn ( MPI_Comm comm ATTRIBUTE((unused)),
     *flag = 0;
     *(void **)attr_out = NULL;
 
-    MPIU_CHKPMEM_MALLOC(copy_topology, MPIR_Topology *, sizeof(MPIR_Topology), mpi_errno, "copy_topology");
+    MPIR_CHKPMEM_MALLOC(copy_topology, MPIR_Topology *, sizeof(MPIR_Topology), mpi_errno, "copy_topology");
 
     MPL_VG_MEM_INIT(copy_topology, sizeof(MPIR_Topology));
 
@@ -154,7 +154,7 @@ static int MPIR_Topology_copy_fn ( MPI_Comm comm ATTRIBUTE((unused)),
                                 old_topology->topo.kind_.array_field_, \
                                 &mpi_errno); \
             if (mpi_errno) MPIR_ERR_POP(mpi_errno); \
-            MPIU_CHKPMEM_REGISTER(copy_topology->topo.kind_.array_field_); \
+            MPIR_CHKPMEM_REGISTER(copy_topology->topo.kind_.array_field_); \
         } while (0)
 
     copy_topology->kind = old_topology->kind;
@@ -189,13 +189,13 @@ static int MPIR_Topology_copy_fn ( MPI_Comm comm ATTRIBUTE((unused)),
 
     *(void **)attr_out = (void *)copy_topology;
     *flag = 1;
-    MPIU_CHKPMEM_COMMIT();
+    MPIR_CHKPMEM_COMMIT();
 fn_exit:
     /* Return mpi_errno in case one of the copy array functions failed */
     return mpi_errno;
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -298,7 +298,7 @@ int MPIR_Topo_canon_nhb_count(MPIR_Comm *comm_ptr, int *indegree, int *outdegree
         *weighted  = FALSE;
     }
     else {
-        MPIU_Assert(FALSE);
+        MPIR_Assert(FALSE);
     }
 
 fn_exit:
@@ -317,9 +317,9 @@ int MPIR_Topo_canon_nhb(MPIR_Comm *comm_ptr,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Topology *topo_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_TOPO_CANON_NHB);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_TOPO_CANON_NHB);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_TOPO_CANON_NHB);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_TOPO_CANON_NHB);
 
     topo_ptr = MPIR_Topology_get(comm_ptr);
 
@@ -331,17 +331,17 @@ int MPIR_Topo_canon_nhb(MPIR_Comm *comm_ptr,
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else if (topo_ptr->kind == MPI_GRAPH) {
-        MPIU_Assert(indegree == outdegree);
+        MPIR_Assert(indegree == outdegree);
         mpi_errno = MPIR_Graph_neighbors_impl(comm_ptr, comm_ptr->rank, indegree, sources);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPIU_Memcpy(dests, sources, outdegree*sizeof(*dests));
+        MPIR_Memcpy(dests, sources, outdegree*sizeof(*dests));
         /* ignore inweights/outweights */
     }
     else if (topo_ptr->kind == MPI_CART) {
         int d;
 
-        MPIU_Assert(indegree == outdegree);
-        MPIU_Assert(indegree == 2*topo_ptr->topo.cart.ndims);
+        MPIR_Assert(indegree == outdegree);
+        MPIR_Assert(indegree == 2*topo_ptr->topo.cart.ndims);
 
         for (d = 0; d < topo_ptr->topo.cart.ndims; ++d) {
             mpi_errno = MPIR_Cart_shift_impl(comm_ptr, d, 1, &sources[2*d], &sources[2*d+1]);
@@ -353,7 +353,7 @@ int MPIR_Topo_canon_nhb(MPIR_Comm *comm_ptr,
         /* ignore inweights/outweights */
     }
     else {
-        MPIU_Assert(FALSE);
+        MPIR_Assert(FALSE);
     }
 
 #ifdef MPL_USE_DBG_LOGGING
@@ -370,7 +370,7 @@ int MPIR_Topo_canon_nhb(MPIR_Comm *comm_ptr,
 #endif
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_TOPO_CANON_NHB);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_TOPO_CANON_NHB);
     return mpi_errno;
 fn_fail:
     goto fn_exit;

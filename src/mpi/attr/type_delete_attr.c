@@ -54,15 +54,15 @@ int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *type_ptr = NULL;
     MPIR_Attribute *p, **old_p;
-    MPIR_Keyval *keyval_ptr = 0;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_DELETE_ATTR);
+    MPII_Keyval *keyval_ptr = 0;
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_DELETE_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     /* The thread lock prevents a valid attr delete on the same datatype
        but in a different thread from causing problems */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_DELETE_ATTR);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_DELETE_ATTR);
     
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -79,7 +79,7 @@ int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
 
     /* Validate parameters and objects (post conversion) */
     MPID_Datatype_get_ptr( datatype, type_ptr );
-    MPIR_Keyval_get_ptr( type_keyval, keyval_ptr );
+    MPII_Keyval_get_ptr( type_keyval, keyval_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -129,10 +129,10 @@ int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
 	    /* We found the attribute.  Remove it from the list */
 	    *old_p = p->next;
 	    /* Decrement the use of the keyval */
-	    MPIR_Keyval_release_ref( p->keyval, &in_use);
+	    MPII_Keyval_release_ref( p->keyval, &in_use);
 	    if (!in_use)
 	    {
-		MPIU_Handle_obj_free( &MPIR_Keyval_mem, p->keyval );
+		MPIR_Handle_obj_free( &MPII_Keyval_mem, p->keyval );
 	    }
 	    MPID_Attr_free(p);
 	}
@@ -144,7 +144,7 @@ int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_DELETE_ATTR);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_DELETE_ATTR);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

@@ -47,7 +47,7 @@ int MPIR_T_cvar_write_impl(MPI_T_cvar_handle handle, const void *buf)
 
     count = hnd->count;
     addr = hnd->addr;
-    MPIU_Assert(addr != NULL);
+    MPIR_Assert(addr != NULL);
 
     switch (hnd->datatype) {
     case MPI_INT:
@@ -71,7 +71,7 @@ int MPIR_T_cvar_write_impl(MPI_T_cvar_handle handle, const void *buf)
             ((double *)addr)[i] = ((double *)buf)[i];
         break;
     case MPI_CHAR:
-        MPIU_Assert(count > strlen(buf)); /* Make sure buf will not overflow this cvar */
+        MPIR_Assert(count > strlen(buf)); /* Make sure buf will not overflow this cvar */
         MPL_strncpy(addr, buf, count);
         break;
     default:
@@ -112,10 +112,10 @@ int MPI_T_cvar_write(MPI_T_cvar_handle handle, const void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CVAR_WRITE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_CVAR_WRITE);
     MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CVAR_WRITE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_CVAR_WRITE);
 
    /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
@@ -137,7 +137,7 @@ int MPI_T_cvar_write(MPI_T_cvar_handle handle, const void *buf)
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_CVAR_WRITE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_CVAR_WRITE);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 

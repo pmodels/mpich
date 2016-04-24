@@ -57,7 +57,7 @@ int MPIDU_Type_indexed(int count,
     }
 
     /* allocate new datatype object and handle */
-    new_dtp = (MPIDU_Datatype *) MPIU_Handle_obj_alloc(&MPIDU_Datatype_mem);
+    new_dtp = (MPIDU_Datatype *) MPIR_Handle_obj_alloc(&MPIDU_Datatype_mem);
     /* --BEGIN ERROR HANDLING-- */
     if (!new_dtp)
     {
@@ -72,8 +72,8 @@ int MPIDU_Type_indexed(int count,
     }
     /* --END ERROR HANDLING-- */
 
-    /* handle is filled in by MPIU_Handle_obj_alloc() */
-    MPIU_Object_set_ref(new_dtp, 1);
+    /* handle is filled in by MPIR_Handle_obj_alloc() */
+    MPIR_Object_set_ref(new_dtp, 1);
     new_dtp->is_permanent = 0;
     new_dtp->is_committed = 0;
     new_dtp->attributes   = NULL;
@@ -110,7 +110,7 @@ int MPIDU_Type_indexed(int count,
 	new_dtp->has_sticky_ub = 0;
 	new_dtp->has_sticky_lb = 0;
 
-        MPIU_Assign_trunc(new_dtp->alignsize, el_sz, MPI_Aint);
+        MPIR_Assign_trunc(new_dtp->alignsize, el_sz, MPI_Aint);
 	new_dtp->builtin_element_size = el_sz;
 	new_dtp->basic_type       = el_type;
 
@@ -124,7 +124,7 @@ int MPIDU_Type_indexed(int count,
 	MPIDU_Datatype_get_ptr(oldtype, old_dtp);
 
 	/* Ensure that "builtin_element_size" fits into an int datatype. */
-	MPIU_Ensure_Aint_fits_in_int(old_dtp->builtin_element_size);
+	MPIR_Ensure_Aint_fits_in_int(old_dtp->builtin_element_size);
 
 	el_sz   = old_dtp->builtin_element_size;
 	old_sz  = old_dtp->size;
@@ -155,7 +155,7 @@ int MPIDU_Type_indexed(int count,
     while (i < count && blocklength_array[i] == 0) i++;
 
     if (i == count) {
-	MPIU_Handle_obj_free(&MPIDU_Datatype_mem, new_dtp);
+	MPIR_Handle_obj_free(&MPIDU_Datatype_mem, new_dtp);
 	return MPIDU_Type_zerolen(newtype);
     }
 

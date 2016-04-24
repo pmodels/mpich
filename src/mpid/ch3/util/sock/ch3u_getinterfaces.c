@@ -139,7 +139,7 @@ int MPIDU_CH3U_GetSockInterfaceAddr( int myRank, char *ifname, int maxIfname,
 		ifaddr->type = -1;
 	    }
 	    else {
-		MPIU_Memcpy( ifaddr->ifaddr, info->h_addr_list[0], ifaddr->len );
+		MPIR_Memcpy( ifaddr->ifaddr, info->h_addr_list[0], ifaddr->len );
 	    }
 	}
     }
@@ -295,14 +295,14 @@ static int MPIDI_CH3U_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 		if (nfound == 0) {
 		    myifaddr.type = AF_INET;
 		    myifaddr.len  = 4;
-		    MPIU_Memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
+		    MPIR_Memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
 		}
 	    }
 	    else {
 		nfound++;
 		myifaddr.type = AF_INET;
 		myifaddr.len  = 4;
-		MPIU_Memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
+		MPIR_Memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
 	    }
 	}
 	else {

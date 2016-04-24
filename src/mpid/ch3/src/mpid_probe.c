@@ -16,9 +16,9 @@ int MPID_Probe(int source, int tag, MPIR_Comm * comm, int context_offset,
     MPID_Progress_state progress_state;
     const int context = comm->recvcontext_id + context_offset;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_PROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROBE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_PROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROBE);
 
     if (source == MPI_PROC_NULL)
     {
@@ -97,7 +97,7 @@ int MPID_Probe(int source, int tag, MPIR_Comm * comm, int context_offset,
     MPIDI_CH3_Progress_end(&progress_state);
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_PROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROBE);
     return mpi_errno;
  fn_fail:
     goto fn_exit;

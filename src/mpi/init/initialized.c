@@ -48,9 +48,9 @@ int MPI_Initialized( int *flag )
     static const char FCNAME[] = "MPI_Initialized";
 #endif
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_INITIALIZED);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_INITIALIZED);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_INITIALIZED);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_INITIALIZED);
     
 #   ifdef HAVE_ERROR_CHECKING
     {
@@ -76,7 +76,7 @@ int MPI_Initialized( int *flag )
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_INITIALIZED);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_INITIALIZED);
     return mpi_errno;
     
     /* --BEGIN ERROR HANDLING-- */

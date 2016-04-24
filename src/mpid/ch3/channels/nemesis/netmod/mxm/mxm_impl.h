@@ -279,7 +279,7 @@ static inline void _mxm_progress_cb(void *user_data)
     int mpi_errno = MPI_SUCCESS;
 
     mpi_errno = MPIDI_CH3_Progress_poke();
-    MPIU_Assert(mpi_errno == MPI_SUCCESS);
+    MPIR_Assert(mpi_errno == MPI_SUCCESS);
 }
 
 static inline void _mxm_req_wait(mxm_req_base_t * req)
@@ -302,7 +302,7 @@ static inline int _mxm_eager_threshold(void)
 /*
  * Tag management section
  */
-static inline mxm_tag_t _mxm_tag_mpi2mxm(int mpi_tag, MPIU_Context_id_t context_id)
+static inline mxm_tag_t _mxm_tag_mpi2mxm(int mpi_tag, MPIR_Context_id_t context_id)
 {
     mxm_tag_t mxm_tag;
 

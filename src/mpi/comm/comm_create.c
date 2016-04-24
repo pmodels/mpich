@@ -38,10 +38,10 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr
  * Ownership of the (*mapping_out) array is transferred to the caller who is
  * responsible for freeing it. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Comm_create_calculate_mapping
+#define FUNCNAME MPII_Comm_create_calculate_mapping
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_create_calculate_mapping(MPIR_Group  *group_ptr,
+int MPII_Comm_create_calculate_mapping(MPIR_Group  *group_ptr,
                                        MPIR_Comm   *comm_ptr,
                                        int        **mapping_out,
                                        MPIR_Comm **mapping_comm)
@@ -51,16 +51,16 @@ int MPIR_Comm_create_calculate_mapping(MPIR_Group  *group_ptr,
     int i, j;
     int n;
     int *mapping=0;
-    MPIU_CHKPMEM_DECL(1);
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_CALCULATE_MAPPING);
+    MPIR_CHKPMEM_DECL(1);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_CALCULATE_MAPPING);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_CREATE_CALCULATE_MAPPING);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_CREATE_CALCULATE_MAPPING);
 
     *mapping_out = NULL;
     *mapping_comm = comm_ptr;
 
     n = group_ptr->size;
-    MPIU_CHKPMEM_MALLOC(mapping,int*,n*sizeof(int),mpi_errno,"mapping");
+    MPIR_CHKPMEM_MALLOC(mapping,int*,n*sizeof(int),mpi_errno,"mapping");
 
     /* Make sure that the processes for this group are contained within
        the input communicator.  Also identify the mapping from the ranks of
@@ -76,7 +76,7 @@ int MPIR_Comm_create_calculate_mapping(MPIR_Group  *group_ptr,
     */
 
     /* we examine the group's lpids in both the intracomm and non-comm_world cases */
-    MPIR_Group_setup_lpid_list( group_ptr );
+    MPII_Group_setup_lpid_list( group_ptr );
 
     /* Optimize for groups contained within MPI_COMM_WORLD. */
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
@@ -134,16 +134,16 @@ int MPIR_Comm_create_calculate_mapping(MPIR_Group  *group_ptr,
         }
     }
 
-    MPIU_Assert(mapping != NULL);
+    MPIR_Assert(mapping != NULL);
     *mapping_out     = mapping;
     MPL_VG_CHECK_MEM_IS_DEFINED(*mapping_out, n * sizeof(**mapping_out));
 
-    MPIU_CHKPMEM_COMMIT();
+    MPIR_CHKPMEM_COMMIT();
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_CREATE_CALCULATE_MAPPING);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_CREATE_CALCULATE_MAPPING);
     return mpi_errno;
 fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -155,10 +155,10 @@ fn_fail:
  * function.  The caller is responsible for their storage and will
  * need to retain them till Comm_commit. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Comm_create_map
+#define FUNCNAME MPII_Comm_create_map
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_create_map(int         local_n,
+int MPII_Comm_create_map(int         local_n,
                          int         remote_n,
                          int        *local_mapping,
                          int        *remote_mapping,
@@ -191,14 +191,14 @@ int MPIR_Comm_create_intra(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr,
                            MPIR_Comm **newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIU_Context_id_t new_context_id = 0;
+    MPIR_Context_id_t new_context_id = 0;
     int *mapping = NULL;
     int n;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_INTRA);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_INTRA);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_CREATE_INTRA);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_CREATE_INTRA);
 
-    MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
     n = group_ptr->size;
     *newcomm_ptr = NULL;
@@ -213,12 +213,12 @@ int MPIR_Comm_create_intra(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr,
     mpi_errno = MPIR_Get_contextid_sparse( comm_ptr, &new_context_id,
                                            group_ptr->rank == MPI_UNDEFINED );
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    MPIU_Assert(new_context_id != 0);
+    MPIR_Assert(new_context_id != 0);
 
     if (group_ptr->rank != MPI_UNDEFINED) {
         MPIR_Comm *mapping_comm = NULL;
 
-        mpi_errno = MPIR_Comm_create_calculate_mapping(group_ptr, comm_ptr,
+        mpi_errno = MPII_Comm_create_calculate_mapping(group_ptr, comm_ptr,
                                                        &mapping, &mapping_comm);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
@@ -243,7 +243,7 @@ int MPIR_Comm_create_intra(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr,
 
         /* Setup the communicator's network address mapping.  This is for the remote group,
            which is the same as the local group for intracommunicators */
-        mpi_errno = MPIR_Comm_create_map(n, 0,
+        mpi_errno = MPII_Comm_create_map(n, 0,
                                          mapping,
                                          NULL,
                                          mapping_comm,
@@ -262,7 +262,7 @@ fn_exit:
     if (mapping)
         MPL_free(mapping);
 
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_CREATE_INTRA);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_CREATE_INTRA);
     return mpi_errno;
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -287,19 +287,19 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr
                                       MPIR_Comm **newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIU_Context_id_t new_context_id;
+    MPIR_Context_id_t new_context_id;
     int *mapping = NULL;
     int *remote_mapping = NULL;
     MPIR_Comm *mapping_comm = NULL;
     int remote_size = -1;
     int rinfo[2];
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPIU_CHKLMEM_DECL(1);
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_INTER);
+    MPIR_CHKLMEM_DECL(1);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_INTER);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_CREATE_INTER);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_CREATE_INTER);
 
-    MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
 
     /* Create a new communicator from the specified group members */
 
@@ -311,14 +311,14 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr
     /* In the multi-threaded case, MPIR_Get_contextid_sparse assumes that the
        calling routine already holds the single criticial section */
     if (!comm_ptr->local_comm) {
-        MPIR_Setup_intercomm_localcomm( comm_ptr );
+        MPII_Setup_intercomm_localcomm( comm_ptr );
     }
     mpi_errno = MPIR_Get_contextid_sparse( comm_ptr->local_comm, &new_context_id, FALSE );
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    MPIU_Assert(new_context_id != 0);
-    MPIU_Assert(new_context_id != comm_ptr->recvcontext_id);
+    MPIR_Assert(new_context_id != 0);
+    MPIR_Assert(new_context_id != comm_ptr->recvcontext_id);
 
-    mpi_errno = MPIR_Comm_create_calculate_mapping(group_ptr, comm_ptr, 
+    mpi_errno = MPII_Comm_create_calculate_mapping(group_ptr, comm_ptr,
 						   &mapping, &mapping_comm);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
@@ -366,7 +366,7 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr
         }
         remote_size = rinfo[1];
 
-        MPIU_CHKLMEM_MALLOC(remote_mapping,int*,
+        MPIR_CHKLMEM_MALLOC(remote_mapping,int*,
                             remote_size*sizeof(int),
                             mpi_errno,"remote_mapping");
 
@@ -396,7 +396,7 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr
             (*newcomm_ptr)->context_id = rinfo[0];
         }
         remote_size = rinfo[1];
-        MPIU_CHKLMEM_MALLOC(remote_mapping,int*,
+        MPIR_CHKLMEM_MALLOC(remote_mapping,int*,
                             remote_size*sizeof(int),
                             mpi_errno,"remote_mapping");
         mpi_errno = MPID_Bcast( remote_mapping, remote_size, MPI_INT, 0,
@@ -405,7 +405,7 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     }
 
-    MPIU_Assert(remote_size >= 0);
+    MPIR_Assert(remote_size >= 0);
 
     if (group_ptr->rank != MPI_UNDEFINED) {
         (*newcomm_ptr)->remote_size    = remote_size;
@@ -413,7 +413,7 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr
            the network address mapping. */
 
         /* Setup the communicator's network addresses from the local mapping. */
-        mpi_errno = MPIR_Comm_create_map(group_ptr->size,
+        mpi_errno = MPII_Comm_create_map(group_ptr->size,
                                          remote_size,
                                          mapping,
                                          remote_mapping,
@@ -444,11 +444,11 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPIR_Comm *comm_ptr, MPIR_Group *group_ptr
     }
 
 fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     if (mapping)
         MPL_free(mapping);
 
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_CREATE_INTER);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_CREATE_INTER);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -487,12 +487,12 @@ int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
     MPIR_Group *group_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_CREATE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_CREATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_CREATE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_CREATE);
 
     /* Validate parameters, and convert MPI object handles to object pointers */
 #   ifdef HAVE_ERROR_CHECKING
@@ -541,7 +541,7 @@ int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm)
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else {
-        MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
+        MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM);
         mpi_errno = MPIR_Comm_create_inter(comm_ptr, group_ptr, &newcomm_ptr);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
@@ -552,7 +552,7 @@ int MPI_Comm_create(MPI_Comm comm, MPI_Group group, MPI_Comm *newcomm)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_CREATE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_CREATE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

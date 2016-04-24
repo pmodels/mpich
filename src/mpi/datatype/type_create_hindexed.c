@@ -66,13 +66,13 @@ int MPI_Type_create_hindexed(int count,
     MPI_Datatype new_handle;
     MPIR_Datatype *new_dtp;
     int i, *ints;
-    MPIU_CHKLMEM_DECL(1);
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_HINDEXED);
+    MPIR_CHKLMEM_DECL(1);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_HINDEXED);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_CREATE_HINDEXED);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_CREATE_HINDEXED);
 
 #   ifdef HAVE_ERROR_CHECKING
     {
@@ -113,7 +113,7 @@ int MPI_Type_create_hindexed(int count,
 
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    MPIU_CHKLMEM_MALLOC_ORJUMP(ints, int *, (count + 1) * sizeof(int), mpi_errno, "content description");
+    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (count + 1) * sizeof(int), mpi_errno, "content description");
 
     ints[0] = count;
 
@@ -137,8 +137,8 @@ int MPI_Type_create_hindexed(int count,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIU_CHKLMEM_FREEALL();
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_CREATE_HINDEXED);
+    MPIR_CHKLMEM_FREEALL();
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_CREATE_HINDEXED);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

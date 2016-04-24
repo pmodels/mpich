@@ -8,7 +8,7 @@
 #define PMIU_MAXLINE 1024
 #define PMIU_IDSIZE    32
 
-/* we don't have access to MPIU_Assert and friends here in the PMI code */
+/* we don't have access to MPIR_Assert and friends here in the PMI code */
 #if defined(HAVE_ASSERT_H)
 #  include <assert.h>
 #  define PMIU_Assert(expr) assert(expr)

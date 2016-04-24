@@ -65,9 +65,9 @@ static int MPIDI_CH3i_Progress_test(void)
     int mpi_errno = MPI_SUCCESS;
     int made_progress;
     int i;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
 
 #   ifdef MPICH_IS_THREADED
     {
@@ -98,7 +98,7 @@ static int MPIDI_CH3i_Progress_test(void)
     
     for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
         if (progress_hooks[i].active == TRUE) {
-            MPIU_Assert(progress_hooks[i].func_ptr != NULL);
+            MPIR_Assert(progress_hooks[i].func_ptr != NULL);
             mpi_errno = progress_hooks[i].func_ptr(&made_progress);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         }
@@ -124,7 +124,7 @@ static int MPIDI_CH3i_Progress_test(void)
     }
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -140,9 +140,9 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
 {
     MPIDU_Sock_event_t event;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_WAIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_WAIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_WAIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_WAIT);
 
     /*
      * MT: the following code will be needed if progress can occur between 
@@ -195,7 +195,7 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
 
         for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
             if (progress_hooks[i].active == TRUE) {
-                MPIU_Assert(progress_hooks[i].func_ptr != NULL);
+                MPIR_Assert(progress_hooks[i].func_ptr != NULL);
                 mpi_errno = progress_hooks[i].func_ptr(&made_progress);
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
                 if (made_progress) {
@@ -230,7 +230,7 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
 	/* --BEGIN ERROR HANDLING-- */
 	if (mpi_errno != MPI_SUCCESS)
 	{
-	    MPIU_Assert(MPIR_ERR_GET_CLASS(mpi_errno) != MPIDU_SOCK_ERR_TIMEOUT);
+	    MPIR_Assert(MPIR_ERR_GET_CLASS(mpi_errno) != MPIDU_SOCK_ERR_TIMEOUT);
 	    MPIR_ERR_SET(mpi_errno,MPI_ERR_OTHER,"**progress_sock_wait");
 	    goto fn_fail;
 	}
@@ -268,7 +268,7 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
      */
     progress_state->ch.completion_count = MPIDI_CH3I_progress_completion_count;
     
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_WAIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_WAIT);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -309,17 +309,17 @@ int MPIDI_CH3I_Progress_init(void)
 {
     int i;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
 
     MPIR_THREAD_CHECK_BEGIN;
     /* FIXME should be appropriately abstracted somehow */
-#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
+#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
     {
         int err;
 	MPID_Thread_cond_create(&MPIDI_CH3I_progress_completion_cond, &err);
-        MPIU_Assert(err == 0);
+        MPIR_Assert(err == 0);
     }
 #   endif
     MPIR_THREAD_CHECK_END;
@@ -350,7 +350,7 @@ int MPIDI_CH3I_Progress_init(void)
     }
     
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_INIT);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -367,9 +367,9 @@ int MPIDI_CH3I_Progress_finalize(void)
     int mpi_errno;
     MPIDI_CH3I_Connection_t *conn = NULL;
 
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
 
     /* Shut down the listener */
     mpi_errno = MPIDU_CH3I_ShutdownListener();
@@ -399,17 +399,17 @@ int MPIDI_CH3I_Progress_finalize(void)
 
     MPIR_THREAD_CHECK_BEGIN;
     /* FIXME should be appropriately abstracted somehow */
-#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
+#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
     {
         int err;
 	MPID_Thread_cond_destroy(&MPIDI_CH3I_progress_completion_cond, &err);
-        MPIU_Assert(err == 0);
+        MPIR_Assert(err == 0);
     }
 #   endif
     MPIR_THREAD_CHECK_END;
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_FINALIZE);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -446,9 +446,9 @@ int MPIDI_CH3_Get_business_card(int myRank, char *value, int length)
 static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_HANDLE_SOCK_EVENT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_HANDLE_SOCK_EVENT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_HANDLE_SOCK_EVENT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_HANDLE_SOCK_EVENT);
 
     MPL_DBG_MSG_D(MPIDI_CH3_DBG_OTHER,VERBOSE,"Socket event of type %d", event->op_type );
 
@@ -487,14 +487,14 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 		if (conn->recv_active == NULL)
 		{
                     intptr_t buflen = sizeof (MPIDI_CH3_Pkt_t);
-		    MPIU_Assert(conn->pkt.type < MPIDI_CH3_PKT_END_CH3);
+		    MPIR_Assert(conn->pkt.type < MPIDI_CH3_PKT_END_CH3);
                     
 		    mpi_errno = pktArray[conn->pkt.type]( conn->vc, &conn->pkt,
 							  &buflen, &rreq );
 		    if (mpi_errno != MPI_SUCCESS) {
 			MPIR_ERR_POP(mpi_errno);
 		    }
-                    MPIU_Assert(buflen == sizeof (MPIDI_CH3_Pkt_t));
+                    MPIR_Assert(buflen == sizeof (MPIDI_CH3_Pkt_t));
 
 		    if (rreq == NULL)
 		    {
@@ -521,7 +521,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 
 		    reqFn = rreq->dev.OnDataAvail;
 		    if (!reqFn) {
-			MPIU_Assert(MPIDI_Request_get_type(rreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
+			MPIR_Assert(MPIDI_Request_get_type(rreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
                         mpi_errno = MPID_Request_complete(rreq);
                         if (mpi_errno != MPI_SUCCESS) {
                             MPIR_ERR_POP(mpi_errno);
@@ -583,7 +583,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 
 		reqFn = sreq->dev.OnDataAvail;
 		if (!reqFn) {
-		    MPIU_Assert(MPIDI_Request_get_type(sreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
+		    MPIR_Assert(MPIDI_Request_get_type(sreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
                     mpi_errno = MPID_Request_complete(sreq);
                     if (mpi_errno != MPI_SUCCESS) {
                         MPIR_ERR_POP(mpi_errno);
@@ -631,7 +631,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 			{
 			    reqFn = sreq->dev.OnDataAvail;
 			    if (!reqFn) {
-				MPIU_Assert(MPIDI_Request_get_type(sreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
+				MPIR_Assert(MPIDI_Request_get_type(sreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
                                 mpi_errno = MPID_Request_complete(sreq);
                                 if (mpi_errno != MPI_SUCCESS) {
                                     MPIR_ERR_POP(mpi_errno);
@@ -715,7 +715,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
     }
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_HANDLE_SOCK_EVENT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_HANDLE_SOCK_EVENT);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -737,7 +737,7 @@ static int MPIDI_CH3I_Progress_delay(unsigned int completion_count)
     int mpi_errno = MPI_SUCCESS, err;
     
     /* FIXME should be appropriately abstracted somehow */
-#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
+#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
     {
 	while (completion_count == MPIDI_CH3I_progress_completion_count)
 	{
@@ -762,7 +762,7 @@ static int MPIDI_CH3I_Progress_continue(unsigned int completion_count)
 
     MPIR_THREAD_CHECK_BEGIN;
     /* FIXME should be appropriately abstracted somehow */
-#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_GLOBAL)
+#   if defined(MPICH_IS_THREADED) && (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
     {
         MPID_Thread_cond_broadcast(&MPIDI_CH3I_progress_completion_cond,&err);
     }
@@ -797,10 +797,10 @@ static inline int connection_pop_sendq_req(MPIDI_CH3I_Connection_t * conn)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vcch = &conn->vc->ch;
-    MPIDI_STATE_DECL(MPID_STATE_CONNECTION_POP_SENDQ_REQ);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CONNECTION_POP_SENDQ_REQ);
 
 
-    MPIDI_FUNC_ENTER(MPID_STATE_CONNECTION_POP_SENDQ_REQ);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONNECTION_POP_SENDQ_REQ);
     /* post send of next request on the send queue */
 
     /* FIXME: Is dequeue/get next the operation we really want? */
@@ -816,7 +816,7 @@ static inline int connection_pop_sendq_req(MPIDI_CH3I_Connection_t * conn)
     }
     
  fn_fail:
-    MPIDI_FUNC_EXIT(MPID_STATE_CONNECTION_POP_SENDQ_REQ);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CONNECTION_POP_SENDQ_REQ);
     return mpi_errno;
 }
 
@@ -829,16 +829,16 @@ static inline int connection_pop_sendq_req(MPIDI_CH3I_Connection_t * conn)
 static inline int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_CONNECTION_POST_RECV_PKT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CONNECTION_POST_RECV_PKT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_CONNECTION_POST_RECV_PKT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CONNECTION_POST_RECV_PKT);
 
     mpi_errno = MPIDU_Sock_post_read(conn->sock, &conn->pkt, sizeof(conn->pkt), sizeof(conn->pkt), NULL);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIR_ERR_SET(mpi_errno,MPI_ERR_OTHER, "**fail");
     }
     
-    MPIDI_FUNC_EXIT(MPID_STATE_CONNECTION_POST_RECV_PKT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CONNECTION_POST_RECV_PKT);
     return mpi_errno;
 }
 
@@ -908,7 +908,7 @@ static int ReadMoreData( MPIDI_CH3I_Connection_t * conn, MPIR_Request *rreq )
 	    
 	    reqFn = rreq->dev.OnDataAvail;
 	    if (!reqFn) {
-		MPIU_Assert(MPIDI_Request_get_type(rreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
+		MPIR_Assert(MPIDI_Request_get_type(rreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
                 mpi_errno = MPID_Request_complete(rreq);
                 if (mpi_errno != MPI_SUCCESS) {
                     MPIR_ERR_POP(mpi_errno);
@@ -973,9 +973,9 @@ int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*), int *id)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_REGISTER_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_REGISTER_HOOK);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_REGISTER_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_REGISTER_HOOK);
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
@@ -996,7 +996,7 @@ int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*), int *id)
 
   fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_REGISTER_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_REGISTER_HOOK);
     return mpi_errno;
 
   fn_fail:
@@ -1010,19 +1010,19 @@ int MPIDI_CH3I_Progress_register_hook(int (*progress_fn)(int*), int *id)
 int MPIDI_CH3I_Progress_deregister_hook(int id)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_DEREGISTER_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_DEREGISTER_HOOK);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_DEREGISTER_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_DEREGISTER_HOOK);
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
-    MPIU_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS && progress_hooks[id].func_ptr != NULL);
+    MPIR_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS && progress_hooks[id].func_ptr != NULL);
 
     progress_hooks[id].func_ptr = NULL;
     progress_hooks[id].active = FALSE;
 
   fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_DEREGISTER_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_DEREGISTER_HOOK);
     return mpi_errno;
 
   fn_fail:
@@ -1036,18 +1036,18 @@ int MPIDI_CH3I_Progress_deregister_hook(int id)
 int MPIDI_CH3I_Progress_activate_hook(int id)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_ACTIVATE_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_ACTIVATE_HOOK);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_ACTIVATE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_ACTIVATE_HOOK);
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
-    MPIU_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS &&
+    MPIR_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS &&
                 progress_hooks[id].active == FALSE && progress_hooks[id].func_ptr != NULL);
     progress_hooks[id].active = TRUE;
 
   fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_ACTIVATE_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_ACTIVATE_HOOK);
     return mpi_errno;
 
   fn_fail:
@@ -1062,18 +1062,18 @@ int MPIDI_CH3I_Progress_activate_hook(int id)
 int MPIDI_CH3I_Progress_deactivate_hook(int id)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_DEACTIVATE_HOOK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_DEACTIVATE_HOOK);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_DEACTIVATE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_DEACTIVATE_HOOK);
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
-    MPIU_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS &&
+    MPIR_Assert(id >= 0 && id < MAX_PROGRESS_HOOKS &&
                 progress_hooks[id].active == TRUE && progress_hooks[id].func_ptr != NULL);
     progress_hooks[id].active = FALSE;
 
   fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_DEACTIVATE_HOOK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_PROGRESS_DEACTIVATE_HOOK);
     return mpi_errno;
 
   fn_fail:

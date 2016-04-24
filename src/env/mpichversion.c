@@ -90,22 +90,22 @@ int main( int argc, char *argv[] )
 
     /* Print out the information, one item per line */
     if (flags[Version_number]) {
-	printf( "MPICH Version:    \t%s\n", MPIR_Version_string );
+	printf( "MPICH Version:    \t%s\n", MPII_Version_string );
     }
     if (flags[Date]) {
-	printf( "MPICH Release date:\t%s\n", MPIR_Version_date );
+	printf( "MPICH Release date:\t%s\n", MPII_Version_date );
     }
     if (flags[Device]) {
-	printf( "MPICH Device:    \t%s\n", MPIR_Version_device );
+	printf( "MPICH Device:    \t%s\n", MPII_Version_device );
     }
     if (flags[Configure_args]) {
-	printf( "MPICH configure: \t%s\n", MPIR_Version_configure );
+	printf( "MPICH configure: \t%s\n", MPII_Version_configure );
     }
     if (flags[Compilers]) {
-	printf( "MPICH CC: \t%s\n", MPIR_Version_CC );
-	printf( "MPICH CXX: \t%s\n", MPIR_Version_CXX );
-	printf( "MPICH F77: \t%s\n", MPIR_Version_F77 );
-	printf( "MPICH FC: \t%s\n", MPIR_Version_FC );
+	printf( "MPICH CC: \t%s\n", MPII_Version_CC );
+	printf( "MPICH CXX: \t%s\n", MPII_Version_CXX );
+	printf( "MPICH F77: \t%s\n", MPII_Version_F77 );
+	printf( "MPICH FC: \t%s\n", MPII_Version_FC );
     }
 
     return 0;

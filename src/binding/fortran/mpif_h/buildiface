@@ -382,14 +382,14 @@ foreach $_ (@ARGV) {
 # at the end.  This is used with the attribute routines which must 
 # pass an additional argument to a special attribute routine that handles
 # the differences between C and Fortran attributes.
-%ChangeCall = ( 'Comm_get_attr' => 'MPIR_CommGetAttr_fort:!MPIR_ATTR_AINT' ,
-		'Type_get_attr' => 'MPIR_TypeGetAttr:!MPIR_ATTR_AINT',
-		'Win_get_attr'  => 'MPIR_WinGetAttr:!MPIR_ATTR_AINT',
-		'Attr_get'      => 'MPIR_CommGetAttr_fort:!MPIR_ATTR_INT',
-		'Comm_set_attr' => 'MPIR_CommSetAttr:!MPIR_ATTR_AINT',
-		'Type_set_attr' => 'MPIR_TypeSetAttr:!MPIR_ATTR_AINT',
-		'Win_set_attr'  => 'MPIR_WinSetAttr:!MPIR_ATTR_AINT',
-		'Attr_put'      => 'MPIR_CommSetAttr:!MPIR_ATTR_INT',
+%ChangeCall = ( 'Comm_get_attr' => 'MPII_Comm_get_attr_fort:!MPIR_ATTR_AINT' ,
+		'Type_get_attr' => 'MPII_Type_get_attr:!MPIR_ATTR_AINT',
+		'Win_get_attr'  => 'MPII_Win_get_attr:!MPIR_ATTR_AINT',
+		'Attr_get'      => 'MPII_Comm_get_attr_fort:!MPIR_ATTR_INT',
+		'Comm_set_attr' => 'MPII_Comm_set_attr:!MPIR_ATTR_AINT',
+		'Type_set_attr' => 'MPII_Type_set_attr:!MPIR_ATTR_AINT',
+		'Win_set_attr'  => 'MPII_Win_set_attr:!MPIR_ATTR_AINT',
+		'Attr_put'      => 'MPII_Comm_set_attr:!MPIR_ATTR_INT',
     );
 # 
 # Note that wtime and wtick aren't found because they don't match the 
@@ -1906,7 +1906,7 @@ sub unweighted_out_ctof {
 # Logical variables
 sub logical_ftoc {
     my $count = $_[0];
-    print $OUTFD "    l$count = MPIR_FROM_FLOG(*v$count);\n";
+    print $OUTFD "    l$count = MPII_FROM_FLOG(*v$count);\n";
 }
 sub logical_in_decl {
     my $count = $_[0];
@@ -1928,7 +1928,7 @@ sub logical_out_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
     if ($do_logical) {
-	print $OUTFD "    if ($errparmlval == MPI_SUCCESS) *$outvar = MPIR_TO_FLOG($coutvar);\n";
+	print $OUTFD "    if ($errparmlval == MPI_SUCCESS) *$outvar = MPII_TO_FLOG($coutvar);\n";
     }
 }
 sub logical_out_decl {
@@ -1969,7 +1969,7 @@ sub logical_array_in_ftoc {
     if ($ActSize) {int li;
      l$count = (int *)$malloc($ActSize * sizeof(int));
      for (li=0; li<$ActSize; li++) {
-        l$count\[li\] = MPIR_FROM_FLOG(v$count\[li\]);
+        l$count\[li\] = MPII_FROM_FLOG(v$count\[li\]);
      }
     }
 ";
@@ -2002,7 +2002,7 @@ sub logical_array_out_ctof {
     print $OUTFD "\
     if ($errparmlval == MPI_SUCCESS) {int li;
      for (li=0; li<$ActSize; li++) {
-        $outvar\[li\] = MPIR_TO_FLOG($coutvar\[li\]);
+        $outvar\[li\] = MPII_TO_FLOG($coutvar\[li\]);
      }
     }
 ";
@@ -3611,7 +3611,7 @@ sub setF90Type_keyval {
     if ($within_fint) { $argname = "l$argnum"; }
     print $FD "\
     if (*ierr == MPI_SUCCESS) {
-         MPIR_Keyval_set_proxy( (int)$argname, MPIR_Type_copy_attr_f90_proxy, MPIR_Type_delete_attr_f90_proxy );
+         MPII_Keyval_set_proxy( (int)$argname, MPIR_Type_copy_attr_f90_proxy, MPIR_Type_delete_attr_f90_proxy );
     }\n";
 }
 sub setF90Comm_keyval {
@@ -3622,7 +3622,7 @@ sub setF90Comm_keyval {
     if ($within_fint) { $argname = "l$argnum"; }
     print $FD "\
     if (*ierr == MPI_SUCCESS) {
-         MPIR_Keyval_set_proxy( (int)$argname, MPIR_Comm_copy_attr_f90_proxy, MPIR_Comm_delete_attr_f90_proxy );
+         MPII_Keyval_set_proxy( (int)$argname, MPII_Comm_copy_attr_f90_proxy, MPIR_Comm_delete_attr_f90_proxy );
     }\n";
 }
 sub setF90Win_keyval {
@@ -3633,7 +3633,7 @@ sub setF90Win_keyval {
     if ($within_fint) { $argname = "l$argnum"; }
     print $FD "\
     if (*ierr == MPI_SUCCESS) {
-         MPIR_Keyval_set_proxy( (int)$argname, MPIR_Win_copy_attr_f90_proxy, MPIR_Win_delete_attr_f90_proxy );
+         MPII_Keyval_set_proxy( (int)$argname, MPIR_Win_copy_attr_f90_proxy, MPIR_Win_delete_attr_f90_proxy );
     }\n";
 }
 sub setF77greq {
@@ -3644,7 +3644,7 @@ sub setF77greq {
 
     print $FD "\
     if (*ierr == MPI_SUCCESS) {
-         MPIR_Grequest_set_lang_f77( $argname );
+         MPII_Grequest_set_lang_f77( $argname );
     }\n";
 }
 
@@ -4394,12 +4394,12 @@ typedef void (FORT_CALL F77_CopyFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, M
 /* Helper proxy function to thunk the attr copy function call into F77 calling convention */
 static
 int
-MPIR_Comm_copy_attr_f77_proxy(
+MPII_Comm_copy_attr_f77_proxy(
     MPI_Comm_copy_attr_function* user_function,
     MPI_Comm comm,
     int keyval,
     void* extra_state,
-    MPIR_AttrType value_type,
+    MPIR_Attr_type value_type,
     void* value,
     void** new_value,
     int* flag
@@ -4408,15 +4408,15 @@ MPIR_Comm_copy_attr_f77_proxy(
     MPI_Fint ierr = 0;
     MPI_Fint fhandle = (MPI_Fint)comm;
     MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = MPIU_VOID_PTR_CAST_TO_MPI_AINT (value);
+    MPI_Aint fvalue = MPIR_VOID_PTR_CAST_TO_MPI_AINT (value);
     MPI_Aint *fextra = (MPI_Aint *)extra_state;
     MPI_Aint fnew = 0;
     MPI_Fint fflag = 0;
 
     ((F77_CopyFunction*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
 
-    *flag = MPIR_FROM_FLOG(fflag);
-    *new_value = MPIU_AINT_CAST_TO_VOID_PTR ((MPI_Aint) fnew);
+    *flag = MPII_FROM_FLOG(fflag);
+    *new_value = MPIR_AINT_CAST_TO_VOID_PTR ((MPI_Aint) fnew);
     return (int)ierr;
 }
 
@@ -4431,7 +4431,7 @@ MPIR_Comm_delete_attr_f77_proxy(
     MPI_Comm_delete_attr_function* user_function,
     MPI_Comm comm,
     int keyval,
-    MPIR_AttrType value_type,
+    MPIR_Attr_type value_type,
     void* value,
     void* extra_state
     )
@@ -4439,7 +4439,7 @@ MPIR_Comm_delete_attr_f77_proxy(
     MPI_Fint ierr = 0;
     MPI_Fint fhandle = (MPI_Fint)comm;
     MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = MPIU_VOID_PTR_CAST_TO_MPI_AINT (value);
+    MPI_Aint fvalue = MPIR_VOID_PTR_CAST_TO_MPI_AINT (value);
     MPI_Aint *fextra = (MPI_Aint *)extra_state;
 
     ((F77_DeleteFunction*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
@@ -4456,7 +4456,7 @@ MPIR_Comm_delete_attr_f77_proxy(
         *ierr = MPI_Comm_create_keyval( v1, v2, &l3, v4 );
         if (!*ierr) {
 	    *v3 = l3;
-            MPIR_Keyval_set_proxy((int)*v3, MPIR_Comm_copy_attr_f77_proxy, MPIR_Comm_delete_attr_f77_proxy);
+            MPII_Keyval_set_proxy((int)*v3, MPII_Comm_copy_attr_f77_proxy, MPIR_Comm_delete_attr_f77_proxy);
         }
 }\n";
     close ($OUTFD);
@@ -4479,7 +4479,7 @@ MPIR_Comm_delete_attr_f77_proxy(
     #&print_attr;
     print $OUTFD "{
         *v5 = *v4;
-        *v6 = MPIR_TO_FLOG(1);
+        *v6 = MPII_TO_FLOG(1);
         *ierr = MPI_SUCCESS;
 }\n";
     close ($OUTFD);
@@ -4512,7 +4512,7 @@ MPIR_Comm_delete_attr_f77_proxy(
     &print_args( $OUTFD, $args, 0, "null_copy_fn" );
     print $OUTFD "{
         *ierr = MPI_SUCCESS;
-        *v6 = MPIR_TO_FLOG(0);
+        *v6 = MPII_TO_FLOG(0);
 }\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
@@ -5212,7 +5212,7 @@ sub WriteAttrDefaults {
     #&print_attr;
     print $OUTFD "{
         *v5 = *v4;
-        *v6 = MPIR_TO_FLOG(1);
+        *v6 = MPII_TO_FLOG(1);
         *ierr = MPI_SUCCESS;
 }\n";
     close ($OUTFD);
@@ -5247,7 +5247,7 @@ sub WriteAttrDefaults {
     &print_args( $OUTFD, $args, 0, "${prefix}null_copy_fn" );
     print $OUTFD "{
         *ierr = MPI_SUCCESS;
-        *v6 = MPIR_TO_FLOG(0);
+        *v6 = MPII_TO_FLOG(0);
 }\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
@@ -5410,7 +5410,7 @@ MPIR_Type_copy_attr_f90_proxy(
     MPI_Datatype datatype,
     int keyval,
     void* extra_state,
-    MPIR_AttrType value_type,
+    MPIR_Attr_type value_type,
     void* value,
     void** new_value,
     int* flag
@@ -5419,15 +5419,15 @@ MPIR_Type_copy_attr_f90_proxy(
     MPI_Fint ierr = 0;
     MPI_Fint fhandle = (MPI_Fint)datatype;
     MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = MPIU_VOID_PTR_CAST_TO_MPI_AINT (value);
+    MPI_Aint fvalue = MPIR_VOID_PTR_CAST_TO_MPI_AINT (value);
     MPI_Aint* fextra  = (MPI_Aint*)extra_state;
     MPI_Aint fnew = 0;
     MPI_Fint fflag = 0;
 
     ((F90_CopyFunction*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
 
-    *flag = MPIR_FROM_FLOG(fflag);
-    *new_value = MPIU_AINT_CAST_TO_VOID_PTR (fnew);
+    *flag = MPII_FROM_FLOG(fflag);
+    *new_value = MPIR_AINT_CAST_TO_VOID_PTR (fnew);
     return (int)ierr;
 }
 
@@ -5442,7 +5442,7 @@ MPIR_Type_delete_attr_f90_proxy(
     MPI_Type_delete_attr_function* user_function,
     MPI_Datatype datatype,
     int keyval,
-    MPIR_AttrType value_type,
+    MPIR_Attr_type value_type,
     void* value,
     void* extra_state
     )
@@ -5450,7 +5450,7 @@ MPIR_Type_delete_attr_f90_proxy(
     MPI_Fint ierr = 0;
     MPI_Fint fhandle = (MPI_Fint)datatype;
     MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = MPIU_VOID_PTR_CAST_TO_MPI_AINT (value);
+    MPI_Aint fvalue = MPIR_VOID_PTR_CAST_TO_MPI_AINT (value);
     MPI_Aint* fextra  = (MPI_Aint*)extra_state;
 
     ((F90_DeleteFunction*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
@@ -5469,12 +5469,12 @@ typedef void (FORT_CALL F90_CopyFunction) (MPI_Fint *, MPI_Fint *, MPI_Aint *, M
 /* Helper proxy function to thunk the attr copy function call into F90 calling convention */
 static
 int
-MPIR_Comm_copy_attr_f90_proxy(
+MPII_Comm_copy_attr_f90_proxy(
     MPI_Comm_copy_attr_function* user_function,
     MPI_Comm comm,
     int keyval,
     void* extra_state,
-    MPIR_AttrType value_type,
+    MPIR_Attr_type value_type,
     void* value,
     void** new_value,
     int* flag
@@ -5483,15 +5483,15 @@ MPIR_Comm_copy_attr_f90_proxy(
     MPI_Fint ierr = 0;
     MPI_Fint fhandle = (MPI_Fint)comm;
     MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = MPIU_VOID_PTR_CAST_TO_MPI_AINT (value);
+    MPI_Aint fvalue = MPIR_VOID_PTR_CAST_TO_MPI_AINT (value);
     MPI_Aint* fextra  = (MPI_Aint*)extra_state;
     MPI_Aint fnew = 0;
     MPI_Fint fflag = 0;
 
     ((F90_CopyFunction*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
 
-    *flag = MPIR_FROM_FLOG(fflag);
-    *new_value = MPIU_AINT_CAST_TO_VOID_PTR (fnew);
+    *flag = MPII_FROM_FLOG(fflag);
+    *new_value = MPIR_AINT_CAST_TO_VOID_PTR (fnew);
     return (int)ierr;
 }
 
@@ -5506,7 +5506,7 @@ MPIR_Comm_delete_attr_f90_proxy(
     MPI_Comm_delete_attr_function* user_function,
     MPI_Comm comm,
     int keyval,
-    MPIR_AttrType value_type,
+    MPIR_Attr_type value_type,
     void* value,
     void* extra_state
     )
@@ -5514,7 +5514,7 @@ MPIR_Comm_delete_attr_f90_proxy(
     MPI_Fint ierr = 0;
     MPI_Fint fhandle = (MPI_Fint)comm;
     MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = MPIU_VOID_PTR_CAST_TO_MPI_AINT (value);
+    MPI_Aint fvalue = MPIR_VOID_PTR_CAST_TO_MPI_AINT (value);
     MPI_Aint* fextra  = (MPI_Aint*)extra_state;
 
     ((F90_DeleteFunction*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
@@ -5538,7 +5538,7 @@ MPIR_Win_copy_attr_f90_proxy(
     MPI_Win win,
     int keyval,
     void* extra_state,
-    MPIR_AttrType value_type,
+    MPIR_Attr_type value_type,
     void* value,
     void** new_value,
     int* flag
@@ -5547,15 +5547,15 @@ MPIR_Win_copy_attr_f90_proxy(
     MPI_Fint ierr = 0;
     MPI_Fint fhandle = (MPI_Fint)win;
     MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = MPIU_VOID_PTR_CAST_TO_MPI_AINT (value);
+    MPI_Aint fvalue = MPIR_VOID_PTR_CAST_TO_MPI_AINT (value);
     MPI_Aint* fextra  = (MPI_Aint*)extra_state;
     MPI_Aint fnew = 0;
     MPI_Fint fflag = 0;
 
     ((F90_CopyFunction*)user_function)( &fhandle, &fkeyval, fextra, &fvalue, &fnew, &fflag, &ierr );
 
-    *flag = MPIR_FROM_FLOG(fflag);
-    *new_value = MPIU_AINT_CAST_TO_VOID_PTR (fnew);
+    *flag = MPII_FROM_FLOG(fflag);
+    *new_value = MPIR_AINT_CAST_TO_VOID_PTR (fnew);
     return (int)ierr;
 }
 
@@ -5570,7 +5570,7 @@ MPIR_Win_delete_attr_f90_proxy(
     MPI_Win_delete_attr_function* user_function,
     MPI_Win win,
     int keyval,
-    MPIR_AttrType value_type,
+    MPIR_Attr_type value_type,
     void* value,
     void* extra_state
     )
@@ -5578,7 +5578,7 @@ MPIR_Win_delete_attr_f90_proxy(
     MPI_Fint ierr = 0;
     MPI_Fint fhandle = (MPI_Fint)win;
     MPI_Fint fkeyval = (MPI_Fint)keyval;
-    MPI_Aint fvalue = MPIU_VOID_PTR_CAST_TO_MPI_AINT (value);
+    MPI_Aint fvalue = MPIR_VOID_PTR_CAST_TO_MPI_AINT (value);
     MPI_Aint* fextra  = (MPI_Aint*)extra_state;
 
     ((F90_DeleteFunction*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
@@ -5782,13 +5782,13 @@ sub printCallForFint {
     &print_int_to_fint( $routine_name, $args );
     # Hack
     if ($routine_name eq "Op_create") {
-	print $OUTFD "     MPIR_Op_set_fc( l3 );\n";
+	print $OUTFD "     MPII_Op_set_fc( l3 );\n";
     }
     elsif ($routine_name eq "Comm_create_errhandler" ||
 	   $routine_name eq "Win_create_errhandler" ||
 	   $routine_name eq "File_create_errhandler" ||
 	   $routine_name eq "Errhandler_create") {
-	print $OUTFD "     MPIR_Errhandler_set_fc( l2 );\n";
+	print $OUTFD "     MPII_Errhandler_set_fc( l2 );\n";
     }
 
     $within_fint = 0;

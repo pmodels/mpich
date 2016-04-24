@@ -54,12 +54,12 @@ int MPI_Info_set( MPI_Info info, const char *key, const char *value )
     static const char FCNAME[] = "MPI_Info_set";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *info_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_INFO_SET);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_INFO_SET);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX); 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_INFO_SET);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_INFO_SET);
     
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -105,7 +105,7 @@ int MPI_Info_set( MPI_Info info, const char *key, const char *value )
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_INFO_SET);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_INFO_SET);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
@@ -134,9 +134,9 @@ int MPIR_Info_set_impl(MPIR_Info *info_ptr, const char *key, const char *value)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *curr_ptr, *prev_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_INFO_SET_IMPL);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_INFO_SET_IMPL);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_INFO_SET_IMPL);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_INFO_SET_IMPL);
 
     prev_ptr = info_ptr;
     curr_ptr = info_ptr->next;
@@ -154,7 +154,7 @@ int MPIR_Info_set_impl(MPIR_Info *info_ptr, const char *key, const char *value)
 
     if (!curr_ptr) {
         /* Key not present, insert value */
-        mpi_errno = MPIU_Info_alloc(&curr_ptr);
+        mpi_errno = MPIR_Info_alloc(&curr_ptr);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         /*printf( "Inserting new elm %x at %x\n", curr_ptr->id, prev_ptr->id );*/
@@ -164,7 +164,7 @@ int MPIR_Info_set_impl(MPIR_Info *info_ptr, const char *key, const char *value)
     }
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_INFO_SET_IMPL);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_INFO_SET_IMPL);
     return mpi_errno;
 
 fn_fail:

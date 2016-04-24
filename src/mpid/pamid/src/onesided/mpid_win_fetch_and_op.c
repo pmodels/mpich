@@ -71,21 +71,21 @@ MPIDI_WinAtomicCB(pami_context_t    context,
   if (ahdr->atomic_type == MPIDI_WIN_REQUEST_COMPARE_AND_SWAP) {
 
     //overwrite value with result in ack_hdr
-    MPIU_Memcpy(ack_hdr.buf, dest_addr, len);
+    MPIR_Memcpy(ack_hdr.buf, dest_addr, len);
     
     if (MPIR_Compare_equal (&ahdr->test, dest_addr, ahdr->datatype))
-      MPIU_Memcpy(dest_addr, ahdr->buf, len);      
+      MPIR_Memcpy(dest_addr, ahdr->buf, len);
   }    
   else if (ahdr->atomic_type == MPIDI_WIN_REQUEST_FETCH_AND_OP) {
     //overwrite value with result
-    MPIU_Memcpy(ack_hdr.buf, dest_addr, len);
+    MPIR_Memcpy(ack_hdr.buf, dest_addr, len);
 
     MPI_User_function *uop;
     int one = 1;
     uop = MPIR_OP_HDL_TO_FN(ahdr->op);
 
     if (ahdr->op == MPI_REPLACE) 
-      MPIU_Memcpy(dest_addr, ahdr->buf, len);
+      MPIR_Memcpy(dest_addr, ahdr->buf, len);
     else if (ahdr->op == MPI_NO_OP);
     else
       (*uop) ((void *)ahdr->buf, dest_addr, &one, &ahdr->datatype);
@@ -126,7 +126,7 @@ MPIDI_WinAtomicAckCB(pami_context_t    context,
   //We have a valid result addr
   if (ahdr->result_addr != NULL) {
     len = MPIDU_Datatype_get_basic_size (ahdr->datatype);
-    MPIU_Memcpy(ahdr->result_addr, ahdr->buf, len);
+    MPIR_Memcpy(ahdr->result_addr, ahdr->buf, len);
   }
     
   MPIDI_Win_DoneCB(context, ahdr->request_addr, PAMI_SUCCESS);
@@ -145,9 +145,9 @@ MPIDI_Atomic (pami_context_t   context,
   len = MPIDU_Datatype_get_basic_size (req->origin.datatype);
   assert(len <= MAX_ATOMIC_TYPE_SIZE);
   if (req->buffer)
-    MPIU_Memcpy(atomic_hdr.buf, req->buffer, len);
+    MPIR_Memcpy(atomic_hdr.buf, req->buffer, len);
   if (req->type == MPIDI_WIN_REQUEST_COMPARE_AND_SWAP)
-    MPIU_Memcpy(atomic_hdr.test, req->compare_buffer, len);
+    MPIR_Memcpy(atomic_hdr.test, req->compare_buffer, len);
   
   atomic_hdr.result_addr = req->user_buffer;
   atomic_hdr.remote_addr = req->win->mpid.info[req->target.rank].base_addr + req->offset;

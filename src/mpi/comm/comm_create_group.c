@@ -37,14 +37,14 @@ int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag
                            MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIU_Context_id_t new_context_id = 0;
+    MPIR_Context_id_t new_context_id = 0;
     int *mapping = NULL;
     int n;
 
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_GROUP);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_CREATE_GROUP);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_GROUP);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_CREATE_GROUP);
 
-    MPIU_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+    MPIR_Assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
 
     n = group_ptr->size;
     *newcomm_ptr = NULL;
@@ -59,9 +59,9 @@ int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag
 
         mpi_errno = MPIR_Get_contextid_sparse_group( comm_ptr, group_ptr, tag, &new_context_id, 0 );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPIU_Assert(new_context_id != 0);
+        MPIR_Assert(new_context_id != 0);
 
-        mpi_errno = MPIR_Comm_create_calculate_mapping(group_ptr, comm_ptr, 
+        mpi_errno = MPII_Comm_create_calculate_mapping(group_ptr, comm_ptr,
                                                        &mapping, &mapping_comm);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
@@ -86,7 +86,7 @@ int MPIR_Comm_create_group(MPIR_Comm * comm_ptr, MPIR_Group * group_ptr, int tag
 
         /* Setup the communicator's vc table.  This is for the remote group,
            which is the same as the local group for intracommunicators */
-        mpi_errno = MPIR_Comm_create_map(n, 0,
+        mpi_errno = MPII_Comm_create_map(n, 0,
                                          mapping,
                                          NULL,
                                          mapping_comm,
@@ -105,7 +105,7 @@ fn_exit:
     if (mapping)
         MPL_free(mapping);
 
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_CREATE_GROUP);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_CREATE_GROUP);
     return mpi_errno;
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -154,12 +154,12 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * ne
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL, *newcomm_ptr;
     MPIR_Group *group_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_CREATE_GROUP);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_CREATE_GROUP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_CREATE_GROUP);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_CREATE_GROUP);
 
     /* Validate parameters, and convert MPI object handles to object pointers */
 #   ifdef HAVE_ERROR_CHECKING
@@ -215,7 +215,7 @@ int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * ne
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_CREATE_GROUP);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_CREATE_GROUP);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

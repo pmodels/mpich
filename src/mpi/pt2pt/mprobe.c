@@ -55,10 +55,10 @@ int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message *message, MPI_Sta
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *msgp = NULL;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_MPROBE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_MPROBE);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_MPROBE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_MPROBE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -96,7 +96,7 @@ int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message *message, MPI_Sta
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     if (msgp == NULL) {
-	MPIU_Assert(source == MPI_PROC_NULL);
+	MPIR_Assert(source == MPI_PROC_NULL);
 	*message = MPI_MESSAGE_NO_PROC;
     }
     else {
@@ -106,7 +106,7 @@ int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message *message, MPI_Sta
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_MPROBE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_MPROBE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

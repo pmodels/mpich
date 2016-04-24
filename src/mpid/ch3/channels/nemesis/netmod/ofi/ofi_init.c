@@ -53,7 +53,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     MPIDI_VC_t *vc;
 
     BEGIN_FUNC(FCNAME);
-    MPIU_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL(2);
 
     compile_time_checking();
     /* ------------------------------------------------------------------------ */
@@ -85,7 +85,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     hints->rx_attr->msg_order = FI_ORDER_SAS;
 
     hints->ep_attr->mem_tag_format = MEM_TAG_FORMAT;
-    MPIU_Assert(pg_p->size < ((1 << MPID_RANK_BITS) - 1));
+    MPIR_Assert(pg_p->size < ((1 << MPID_RANK_BITS) - 1));
 
     /* ------------------------------------------------------------------------ */
     /* FI_VERSION provides binary backward and forward compatibility support    */
@@ -246,7 +246,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* from KVS and store them in local  */
     /* table                             */
     /* --------------------------------- */
-    MPIU_CHKLMEM_MALLOC(addrs, char *, pg_p->size * gl_data.bound_addrlen, mpi_errno, "addrs");
+    MPIR_CHKLMEM_MALLOC(addrs, char *, pg_p->size * gl_data.bound_addrlen, mpi_errno, "addrs");
 
     for (i = 0; i < pg_p->size; ++i) {
         sprintf(key, "OFI-%d", i);
@@ -290,7 +290,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
   fn_exit:
     if (fi_addrs)
         MPL_free(fi_addrs);
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     END_FUNC(FCNAME);
     return mpi_errno;
   fn_fail:
@@ -336,11 +336,11 @@ static inline int compile_time_checking()
     OFI_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_vc_t) <= MPIDI_NEM_VC_NETMOD_AREA_LEN);
     OFI_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_req_t) <= MPIDI_NEM_REQ_NETMOD_AREA_LEN);
     OFI_COMPILE_TIME_ASSERT(sizeof(iovec_t) == sizeof(MPL_IOV));
-    MPIU_Assert(((void *) &(((iovec_t *) 0)->iov_base)) ==
+    MPIR_Assert(((void *) &(((iovec_t *) 0)->iov_base)) ==
                 ((void *) &(((MPL_IOV *) 0)->MPL_IOV_BUF)));
-    MPIU_Assert(((void *) &(((iovec_t *) 0)->iov_len)) ==
+    MPIR_Assert(((void *) &(((iovec_t *) 0)->iov_len)) ==
                 ((void *) &(((MPL_IOV *) 0)->MPL_IOV_LEN)));
-    MPIU_Assert(sizeof(((iovec_t *) 0)->iov_len) == sizeof(((MPL_IOV *) 0)->MPL_IOV_LEN));
+    MPIR_Assert(sizeof(((iovec_t *) 0)->iov_len) == sizeof(((MPL_IOV *) 0)->MPL_IOV_LEN));
 
     /* ------------------------------------------------------------------------ */
     /* Generate the MPICH catalog files                                         */

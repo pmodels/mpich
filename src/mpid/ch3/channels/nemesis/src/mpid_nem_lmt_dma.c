@@ -90,7 +90,7 @@ static int open_knem_dev(void)
                          "**shm_open %s %d", KNEM_DEVICE_FILENAME, errno);
     err = ioctl(knem_fd, KNEM_CMD_GET_INFO, &info);
     MPIR_ERR_CHKANDJUMP2(err < 0, mpi_errno, MPI_ERR_OTHER, "**ioctl",
-                         "**ioctl %d %s", errno, MPIU_Strerror(errno));
+                         "**ioctl %d %s", errno, MPIR_Strerror(errno));
     MPIR_ERR_CHKANDJUMP2(info.abi != KNEM_ABI_VERSION, mpi_errno, MPI_ERR_OTHER,
                          "**abi_version_mismatch", "**abi_version_mismatch %D %D",
                          (unsigned long)KNEM_ABI_VERSION, (unsigned long)info.abi);
@@ -147,7 +147,7 @@ static int do_dma_send(MPIDI_VC_t *vc,  MPIR_Request *sreq, int send_iov_n,
     err = ioctl(knem_fd, KNEM_CMD_CREATE_REGION, &cr);
 #endif
     MPIR_ERR_CHKANDJUMP2(err < 0, mpi_errno, MPI_ERR_OTHER, "**ioctl",
-                         "**ioctl %d %s", errno, MPIU_Strerror(errno));
+                         "**ioctl %d %s", errno, MPIR_Strerror(errno));
 #if KNEM_ABI_VERSION < MPICH_NEW_KNEM_ABI_VERSION
     *s_cookiep = sendcmd.send_cookie;
 #else
@@ -203,7 +203,7 @@ static int do_dma_recv(int iov_n, MPL_IOV iov[], knem_cookie_t s_cookie, int nod
     err = ioctl(knem_fd, KNEM_CMD_INLINE_COPY, &icopy);
 #endif
     MPIR_ERR_CHKANDJUMP2(err < 0, mpi_errno, MPI_ERR_OTHER, "**ioctl",
-                         "**ioctl %d %s", errno, MPIU_Strerror(errno));
+                         "**ioctl %d %s", errno, MPIR_Strerror(errno));
 
 #if KNEM_ABI_VERSION < MPICH_NEW_KNEM_ABI_VERSION
     *status_p_p = &knem_status[recvcmd.status_index];
@@ -324,23 +324,23 @@ int MPID_nem_lmt_dma_initiate_lmt(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIR_Req
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_pkt_lmt_rts_t * const rts_pkt = (MPID_nem_pkt_lmt_rts_t *)pkt;
-    MPIU_CHKPMEM_DECL(1);
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_INITIATE_LMT);
+    MPIR_CHKPMEM_DECL(1);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_INITIATE_LMT);
     
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_INITIATE_LMT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_INITIATE_LMT);
 
-    MPIU_CHKPMEM_MALLOC(sreq->ch.s_cookie, knem_cookie_t *, sizeof(knem_cookie_t), mpi_errno, "s_cookie");
+    MPIR_CHKPMEM_MALLOC(sreq->ch.s_cookie, knem_cookie_t *, sizeof(knem_cookie_t), mpi_errno, "s_cookie");
 
     mpi_errno = send_sreq_data(vc, sreq, sreq->ch.s_cookie);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     MPID_nem_lmt_send_RTS(vc, rts_pkt, sreq->ch.s_cookie, sizeof(knem_cookie_t));
 
 fn_exit:
-    MPIU_CHKPMEM_COMMIT();
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_DMA_INITIATE_LMT);
+    MPIR_CHKPMEM_COMMIT();
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LMT_DMA_INITIATE_LMT);
     return mpi_errno;
 fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -362,9 +362,9 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPIR_Request *rreq, MPL_IOV s_co
     volatile knem_status_t *status;
     knem_status_t current_status;
     struct lmt_dma_node *node = NULL;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_START_RECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_START_RECV);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_START_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_START_RECV);
 
     /* MT: this code assumes only one thread can be at this point at a time */
     if (knem_fd < 0) {
@@ -389,7 +389,7 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPIR_Request *rreq, MPL_IOV s_co
             /* segment_ptr may be non-null when this is a continuation of a
                many-part message that we couldn't fit in one single flight of
                iovs. */
-            MPIU_Assert(rreq->dev.segment_ptr == NULL);
+            MPIR_Assert(rreq->dev.segment_ptr == NULL);
             rreq->dev.segment_ptr = MPIDU_Segment_alloc();
             MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno,
                                  MPI_ERR_OTHER, "**nomem",
@@ -405,8 +405,8 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPIR_Request *rreq, MPL_IOV s_co
         }
     }
 
-    MPIU_Assert(s_cookie.MPL_IOV_LEN == sizeof(knem_cookie_t));
-    MPIU_Assert(s_cookie.MPL_IOV_BUF != NULL);
+    MPIR_Assert(s_cookie.MPL_IOV_LEN == sizeof(knem_cookie_t));
+    MPIR_Assert(s_cookie.MPL_IOV_BUF != NULL);
     mpi_errno = do_dma_recv(rreq->dev.iov_count, rreq->dev.iov,
                             *((knem_cookie_t *)s_cookie.MPL_IOV_BUF), nodma,
                             &status, &current_status);
@@ -452,7 +452,7 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPIR_Request *rreq, MPL_IOV s_co
     ++MPID_nem_local_lmt_pending;
 
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_DMA_START_RECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LMT_DMA_START_RECV);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -467,9 +467,9 @@ int MPID_nem_lmt_dma_done_send(MPIDI_VC_t *vc, MPIR_Request *sreq)
     int mpi_errno = MPI_SUCCESS;
     int complete = 0;
     int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_DONE_SEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_DONE_SEND);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_DONE_SEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_DONE_SEND);
 
     /* free cookie from RTS packet */
     MPL_free(sreq->ch.s_cookie);
@@ -500,10 +500,10 @@ int MPID_nem_lmt_dma_done_send(MPIDI_VC_t *vc, MPIR_Request *sreq)
     }
     else {
         /* There is more data to send. */
-        MPIU_Assert(("should never be incomplete!", 0));
+        MPIR_Assert(("should never be incomplete!", 0));
     }
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_DMA_DONE_SEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LMT_DMA_DONE_SEND);
 fn_exit:
     return MPI_SUCCESS;
 fn_fail:
@@ -518,9 +518,9 @@ fn_fail:
 int MPID_nem_lmt_dma_handle_cookie(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV cookie)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_HANDLE_COOKIE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_HANDLE_COOKIE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_HANDLE_COOKIE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_HANDLE_COOKIE);
 
     if (cookie.MPL_IOV_LEN == 0 && cookie.MPL_IOV_BUF == NULL) {
         /* req is a send request, we need to initiate another knem request and
@@ -535,7 +535,7 @@ int MPID_nem_lmt_dma_handle_cookie(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV co
 
         /* If we were complete we should have received a DONE message instead
            of a COOKIE message. */
-        MPIU_Assert(!complete);
+        MPIR_Assert(!complete);
 
         mpi_errno = do_dma_send(vc, req, req->dev.iov_count, &req->dev.iov[0], &s_cookie);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -549,7 +549,7 @@ int MPID_nem_lmt_dma_handle_cookie(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV co
     }
 
 fn_fail:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_DMA_HANDLE_COOKIE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LMT_DMA_HANDLE_COOKIE);
     return MPI_SUCCESS;
 }
 
@@ -563,9 +563,9 @@ int MPID_nem_lmt_dma_progress(void)
     struct lmt_dma_node *prev = NULL;
     struct lmt_dma_node *free_me = NULL;
     struct lmt_dma_node *cur = outstanding_head;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_PROGRESS);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_PROGRESS);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_PROGRESS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_PROGRESS);
     
     /* Iterate over a linked-list of (req,status_idx)-tuples looking for
        completed/failed requests.  Currently knem only provides status to the
@@ -653,7 +653,7 @@ int MPID_nem_lmt_dma_progress(void)
     }
 
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_DMA_PROGRESS);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LMT_DMA_PROGRESS);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -666,14 +666,14 @@ fn_fail:
 int MPID_nem_lmt_dma_vc_terminated(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_VC_TERMINATED);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_VC_TERMINATED);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_VC_TERMINATED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_VC_TERMINATED);
 
     /* Do nothing.  KNEM should abort any ops with dead processes. */
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_DMA_VC_TERMINATED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LMT_DMA_VC_TERMINATED);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -692,11 +692,11 @@ int MPID_nem_lmt_dma_vc_terminated(MPIDI_VC_t *vc)
 int MPID_nem_lmt_dma_start_send(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV r_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_START_SEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_START_SEND);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_START_SEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_START_SEND);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_DMA_START_SEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LMT_DMA_START_SEND);
     return mpi_errno;
 }
 
@@ -707,11 +707,11 @@ int MPID_nem_lmt_dma_start_send(MPIDI_VC_t *vc, MPIR_Request *req, MPL_IOV r_coo
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPID_nem_lmt_dma_done_recv(MPIDI_VC_t *vc, MPIR_Request *rreq)
 {
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_DONE_RECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_LMT_DMA_DONE_RECV);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_DONE_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_LMT_DMA_DONE_RECV);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_LMT_DMA_DONE_RECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_LMT_DMA_DONE_RECV);
     return MPI_SUCCESS;
 }
 

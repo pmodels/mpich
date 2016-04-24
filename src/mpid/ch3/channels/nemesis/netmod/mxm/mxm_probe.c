@@ -26,8 +26,8 @@ int MPID_nem_mxm_probe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, i
     mxm_mq_h *mq_h_v = (mxm_mq_h *) comm->dev.ch.netmod_priv;
     MPID_nem_mxm_vc_area *vc_area = (vc ? VC_BASE(vc) : NULL);
 
-    MPIDI_STATE_DECL(MPID_STATE_MXM_PROBE);
-    MPIDI_FUNC_ENTER(MPID_STATE_MXM_PROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MXM_PROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MXM_PROBE);
 
     mxm_req.base.state = MXM_REQ_NEW;
     mxm_req.base.mq = mq_h_v[0];
@@ -52,7 +52,7 @@ int MPID_nem_mxm_probe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, i
     }
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MXM_PROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MXM_PROBE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -72,8 +72,8 @@ int MPID_nem_mxm_iprobe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, 
     mxm_mq_h *mq_h_v = (mxm_mq_h *) comm->dev.ch.netmod_priv;
     MPID_nem_mxm_vc_area *vc_area = (vc ? VC_BASE(vc) : NULL);
 
-    MPIDI_STATE_DECL(MPID_STATE_MXM_IPROBE);
-    MPIDI_FUNC_ENTER(MPID_STATE_MXM_IPROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MXM_IPROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MXM_IPROBE);
 
     mxm_req.base.state = MXM_REQ_NEW;
     mxm_req.base.mq = mq_h_v[0];
@@ -98,7 +98,7 @@ int MPID_nem_mxm_iprobe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm, 
     }
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MXM_IPROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MXM_IPROBE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -119,8 +119,8 @@ int MPID_nem_mxm_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm,
     mxm_mq_h *mq_h_v = (mxm_mq_h *) comm->dev.ch.netmod_priv;
     MPID_nem_mxm_vc_area *vc_area = (vc ? VC_BASE(vc) : NULL);
 
-    MPIDI_STATE_DECL(MPID_STATE_MXM_IMPROBE);
-    MPIDI_FUNC_ENTER(MPID_STATE_MXM_IMPROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MXM_IMPROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MXM_IMPROBE);
 
     mxm_req.base.state = MXM_REQ_NEW;
     mxm_req.base.mq = mq_h_v[0];
@@ -136,7 +136,7 @@ int MPID_nem_mxm_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm,
         *flag = 1;
 
         req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
-        MPIU_Object_set_ref(req, 2);
+        MPIR_Object_set_ref(req, 2);
         req->kind = MPIR_REQUEST_KIND__MPROBE;
         req->comm = comm;
         MPIR_Comm_add_ref(comm);
@@ -151,7 +151,7 @@ int MPID_nem_mxm_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm,
         req->dev.recv_data_sz = mxm_req.completion.sender_len;
         MPIR_STATUS_SET_COUNT(req->status, req->dev.recv_data_sz);
         req->dev.tmpbuf = MPL_malloc(req->dev.recv_data_sz);
-        MPIU_Assert(req->dev.tmpbuf);
+        MPIR_Assert(req->dev.tmpbuf);
 
         mxm_req.base.completed_cb = NULL;
         mxm_req.base.context = req;
@@ -190,7 +190,7 @@ int MPID_nem_mxm_improbe(MPIDI_VC_t * vc, int source, int tag, MPIR_Comm * comm,
     }
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MXM_IMPROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MXM_IMPROBE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

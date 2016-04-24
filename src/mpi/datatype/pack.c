@@ -62,7 +62,7 @@ int MPIR_Pack_impl(const void *inbuf,
     }
 
     if (contig) {
-        MPIU_Memcpy((char *) outbuf + *position, (char *)inbuf + dt_true_lb, data_sz);
+        MPIR_Memcpy((char *) outbuf + *position, (char *)inbuf + dt_true_lb, data_sz);
         *position = (int)((MPI_Aint)*position + data_sz);
         goto fn_exit;
     }
@@ -85,7 +85,7 @@ int MPIR_Pack_impl(const void *inbuf,
     last  = SEGMENT_IGNORE_LAST;
 
     /* Ensure that pointer increment fits in a pointer */
-    MPIU_Ensure_Aint_fits_in_pointer((MPIU_VOID_PTR_CAST_TO_MPI_AINT outbuf) +
+    MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT outbuf) +
 				     (MPI_Aint) *position);
 
     MPID_Segment_pack(segp,
@@ -94,7 +94,7 @@ int MPIR_Pack_impl(const void *inbuf,
 		      (void *) ((char *) outbuf + *position));
 
     /* Ensure that calculation fits into an int datatype. */
-    MPIU_Ensure_Aint_fits_in_int((MPI_Aint)*position + last);
+    MPIR_Ensure_Aint_fits_in_int((MPI_Aint)*position + last);
 
     *position = (int)((MPI_Aint)*position + last);
 
@@ -157,11 +157,11 @@ int MPI_Pack(const void *inbuf,
     MPI_Aint position_x;
     MPIR_Comm *comm_ptr = NULL;
     
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_PACK);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_PACK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_PACK);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_PACK);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -246,13 +246,13 @@ int MPI_Pack(const void *inbuf,
 
     position_x = *position;
     mpi_errno = MPIR_Pack_impl(inbuf, incount, datatype, outbuf, outsize, &position_x);
-    MPIU_Assign_trunc(*position, position_x, int);
+    MPIR_Assign_trunc(*position, position_x, int);
     if (mpi_errno) goto fn_fail;
     
    /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_PACK);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_PACK);
     return mpi_errno;
 
   fn_fail:

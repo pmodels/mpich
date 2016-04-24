@@ -173,7 +173,7 @@ int MPIDU_Type_struct(int count,
 #endif
 
     /* allocate new datatype object and handle */
-    new_dtp = (MPIDU_Datatype *) MPIU_Handle_obj_alloc(&MPIDU_Datatype_mem);
+    new_dtp = (MPIDU_Datatype *) MPIR_Handle_obj_alloc(&MPIDU_Datatype_mem);
     /* --BEGIN ERROR HANDLING-- */
     if (!new_dtp)
     {
@@ -185,8 +185,8 @@ int MPIDU_Type_struct(int count,
     }
     /* --END ERROR HANDLING-- */
 
-    /* handle is filled in by MPIU_Handle_obj_alloc() */
-    MPIU_Object_set_ref(new_dtp, 1);
+    /* handle is filled in by MPIR_Handle_obj_alloc() */
+    MPIR_Object_set_ref(new_dtp, 1);
     new_dtp->is_permanent = 0;
     new_dtp->is_committed = 0;
     new_dtp->attributes   = NULL;
@@ -206,7 +206,7 @@ int MPIDU_Type_struct(int count,
 
     if (i == count)
     {
-	MPIU_Handle_obj_free(&MPIDU_Datatype_mem, new_dtp);
+	MPIR_Handle_obj_free(&MPIDU_Datatype_mem, new_dtp);
 	return MPIDU_Type_zerolen(newtype);
     }
 
@@ -249,7 +249,7 @@ int MPIDU_Type_struct(int count,
 	    MPIDU_Datatype_get_ptr(oldtype_array[i], old_dtp);
 
 	    /* Ensure that "builtin_element_size" fits into an int datatype. */
-	    MPIU_Ensure_Aint_fits_in_int(old_dtp->builtin_element_size);
+	    MPIR_Ensure_Aint_fits_in_int(old_dtp->builtin_element_size);
 
 	    tmp_el_sz   = old_dtp->builtin_element_size;
 	    tmp_el_type = old_dtp->basic_type;

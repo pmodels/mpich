@@ -102,7 +102,7 @@ typedef union MPIR_User_function {
   Collective-DS
   S*/
 typedef struct MPIR_Op {
-     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
+     MPIR_OBJECT_HEADER; /* adds handle and ref_count fields */
      MPIR_Op_kind       kind;
      MPIR_Lang_t        language;
      MPIR_User_function function;
@@ -110,12 +110,12 @@ typedef struct MPIR_Op {
 #define MPIR_OP_N_BUILTIN 15
 extern MPIR_Op MPIR_Op_builtin[MPIR_OP_N_BUILTIN];
 extern MPIR_Op MPIR_Op_direct[];
-extern MPIU_Object_alloc_t MPIR_Op_mem;
+extern MPIR_Object_alloc_t MPIR_Op_mem;
 
 #define MPIR_Op_add_ref(_op) \
-    do { MPIU_Object_add_ref(_op); } while (0)
+    do { MPIR_Object_add_ref(_op); } while (0)
 #define MPIR_Op_release_ref( _op, _inuse ) \
-    do { MPIU_Object_release_ref( _op, _inuse ); } while (0)
+    do { MPIR_Object_release_ref( _op, _inuse ); } while (0)
 
 /* release and free-if-not-in-use helper */
 #define MPIR_Op_release(op_p_)                           \
@@ -123,7 +123,7 @@ extern MPIU_Object_alloc_t MPIR_Op_mem;
         int in_use_;                                     \
         MPIR_Op_release_ref((op_p_), &in_use_);          \
         if (!in_use_) {                                  \
-            MPIU_Handle_obj_free(&MPIR_Op_mem, (op_p_)); \
+            MPIR_Handle_obj_free(&MPIR_Op_mem, (op_p_)); \
         }                                                \
     } while (0)
 

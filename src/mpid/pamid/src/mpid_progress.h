@@ -239,7 +239,7 @@ MPID_Progress_wait_inline(unsigned loop_count)
 {
   pami_result_t rc = 0;
 
-#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY_PER_OBJECT)
+#if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ)
   /*
    * In the "per object" thread mode the "global" lock is defined as a noop and
    * therefore no locks are held at this point.

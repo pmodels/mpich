@@ -14,9 +14,9 @@ static void update_request(MPIR_Request * sreq, MPL_IOV * iov, int iov_count,
 			   int iov_offset, size_t nb)
 {
     int i;
-    MPIDI_STATE_DECL(MPID_STATE_UPDATE_REQUEST);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_UPDATE_REQUEST);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_UPDATE_REQUEST);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_UPDATE_REQUEST);
     
     for (i = 0; i < iov_count; i++)
     {
@@ -24,7 +24,7 @@ static void update_request(MPIR_Request * sreq, MPL_IOV * iov, int iov_count,
     }
     if (iov_offset == 0)
     {
-	MPIU_Assert(iov[0].MPL_IOV_LEN == sizeof(MPIDI_CH3_Pkt_t));
+	MPIR_Assert(iov[0].MPL_IOV_LEN == sizeof(MPIDI_CH3_Pkt_t));
 	sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) iov[0].MPL_IOV_BUF;
 	sreq->dev.iov[0].MPL_IOV_BUF = (MPL_IOV_BUF_CAST) &sreq->dev.pending_pkt;
     }
@@ -33,7 +33,7 @@ static void update_request(MPIR_Request * sreq, MPL_IOV * iov, int iov_count,
     sreq->dev.iov[iov_offset].MPL_IOV_LEN -= nb;
     sreq->dev.iov_count = iov_count;
 
-    MPIDI_FUNC_EXIT(MPID_STATE_UPDATE_REQUEST);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_UPDATE_REQUEST);
 }
 
 #undef FUNCNAME
@@ -46,9 +46,9 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vcch = &vc->ch;
     int (*reqFn)(MPIDI_VC_t *, MPIR_Request *, int *);
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_ISENDV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_ISENDV);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ISENDV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_ISENDV);
 
     if (sreq->dev.ext_hdr_sz > 0) {
         int i;
@@ -61,8 +61,8 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq,
         n_iov++;
     }
 
-    MPIU_Assert(n_iov <= MPL_IOV_LIMIT);
-    MPIU_Assert(iov[0].MPL_IOV_LEN <= sizeof(MPIDI_CH3_Pkt_t));
+    MPIR_Assert(n_iov <= MPL_IOV_LIMIT);
+    MPIR_Assert(iov[0].MPL_IOV_LEN <= sizeof(MPIDI_CH3_Pkt_t));
 
     /* The sock channel uses a fixed length header, the size of which is the 
        maximum of all possible packet headers */
@@ -138,7 +138,7 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq,
 				 "write complete, calling OnDataAvail fcn");
 		    reqFn = sreq->dev.OnDataAvail;
 		    if (!reqFn) {
-			MPIU_Assert(MPIDI_Request_get_type(sreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
+			MPIR_Assert(MPIDI_Request_get_type(sreq)!=MPIDI_REQUEST_TYPE_GET_RESP);
                         mpi_errno = MPID_Request_complete(sreq);
                         if (mpi_errno != MPI_SUCCESS) {
                             MPIR_ERR_POP(mpi_errno);
@@ -241,7 +241,7 @@ int MPIDI_CH3_iSendv(MPIDI_VC_t * vc, MPIR_Request * sreq,
     /* --END ERROR HANDLING-- */
 
  fn_fail:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_ISENDV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_ISENDV);
     return mpi_errno;
 }
 

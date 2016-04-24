@@ -77,14 +77,14 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Comm *comm_dist_graph_ptr = NULL;
     MPIR_Topology *topo_ptr = NULL;
-    MPIR_Dist_graph_topology *dist_graph_ptr = NULL;
-    MPIU_CHKPMEM_DECL(5);
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_DIST_GRAPH_CREATE_ADJACENT);
+    MPII_Dist_graph_topology *dist_graph_ptr = NULL;
+    MPIR_CHKPMEM_DECL(5);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_DIST_GRAPH_CREATE_ADJACENT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_DIST_GRAPH_CREATE_ADJACENT);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_DIST_GRAPH_CREATE_ADJACENT);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -146,11 +146,11 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
 
     /* following the spirit of the old topo interface, attributes do not
      * propagate to the new communicator (see MPI-2.1 pp. 243 line 11) */
-    mpi_errno = MPIR_Comm_copy(comm_ptr, comm_ptr->local_size, &comm_dist_graph_ptr);
+    mpi_errno = MPII_Comm_copy(comm_ptr, comm_ptr->local_size, &comm_dist_graph_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     /* Create the topology structure */
-    MPIU_CHKPMEM_MALLOC(topo_ptr, MPIR_Topology *, sizeof(MPIR_Topology), mpi_errno, "topo_ptr");
+    MPIR_CHKPMEM_MALLOC(topo_ptr, MPIR_Topology *, sizeof(MPIR_Topology), mpi_errno, "topo_ptr");
     topo_ptr->kind = MPI_DIST_GRAPH;
     dist_graph_ptr = &topo_ptr->topo.dist_graph;
     dist_graph_ptr->indegree = indegree;
@@ -161,32 +161,32 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
     dist_graph_ptr->out_weights = NULL;
     dist_graph_ptr->is_weighted = (sourceweights != MPI_UNWEIGHTED);
 
-    MPIU_CHKPMEM_MALLOC(dist_graph_ptr->in, int *, indegree*sizeof(int), mpi_errno, "dist_graph_ptr->in");
-    MPIU_CHKPMEM_MALLOC(dist_graph_ptr->out, int *, outdegree*sizeof(int), mpi_errno, "dist_graph_ptr->out");
-    MPIU_Memcpy(dist_graph_ptr->in, sources, indegree*sizeof(int));
-    MPIU_Memcpy(dist_graph_ptr->out, destinations, outdegree*sizeof(int));
+    MPIR_CHKPMEM_MALLOC(dist_graph_ptr->in, int *, indegree*sizeof(int), mpi_errno, "dist_graph_ptr->in");
+    MPIR_CHKPMEM_MALLOC(dist_graph_ptr->out, int *, outdegree*sizeof(int), mpi_errno, "dist_graph_ptr->out");
+    MPIR_Memcpy(dist_graph_ptr->in, sources, indegree*sizeof(int));
+    MPIR_Memcpy(dist_graph_ptr->out, destinations, outdegree*sizeof(int));
 
     if (dist_graph_ptr->is_weighted) {
-        MPIU_CHKPMEM_MALLOC(dist_graph_ptr->in_weights, int *, indegree*sizeof(int), mpi_errno, "dist_graph_ptr->in_weights");
-        MPIU_CHKPMEM_MALLOC(dist_graph_ptr->out_weights, int *, outdegree*sizeof(int), mpi_errno, "dist_graph_ptr->out_weights");
-        MPIU_Memcpy(dist_graph_ptr->in_weights, sourceweights, indegree*sizeof(int));
-        MPIU_Memcpy(dist_graph_ptr->out_weights, destweights, outdegree*sizeof(int));
+        MPIR_CHKPMEM_MALLOC(dist_graph_ptr->in_weights, int *, indegree*sizeof(int), mpi_errno, "dist_graph_ptr->in_weights");
+        MPIR_CHKPMEM_MALLOC(dist_graph_ptr->out_weights, int *, outdegree*sizeof(int), mpi_errno, "dist_graph_ptr->out_weights");
+        MPIR_Memcpy(dist_graph_ptr->in_weights, sourceweights, indegree*sizeof(int));
+        MPIR_Memcpy(dist_graph_ptr->out_weights, destweights, outdegree*sizeof(int));
     }
 
     mpi_errno = MPIR_Topology_put(comm_dist_graph_ptr, topo_ptr);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     MPIR_OBJ_PUBLISH_HANDLE(*comm_dist_graph, comm_dist_graph_ptr->handle);
-    MPIU_CHKPMEM_COMMIT();
+    MPIR_CHKPMEM_COMMIT();
     /* ... end of body of routine ... */
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_DIST_GRAPH_CREATE_ADJACENT);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_DIST_GRAPH_CREATE_ADJACENT);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
 #ifdef HAVE_ERROR_CHECKING
     mpi_errno = MPIR_Err_create_code(
         mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,

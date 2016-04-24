@@ -26,7 +26,7 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, int *
 #define MPI_Comm_get_attr PMPI_Comm_get_attr
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_CommGetAttr
+#define FUNCNAME MPII_Comm_get_attr
 
 /* Find the requested attribute.  If it exists, return either the attribute
    entry or the address of the entry, based on whether the request is for 
@@ -36,19 +36,19 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val, int *
    If the attribute has the same type as the request, it is returned as-is.
    Otherwise, the address of the attribute is returned.
 */
-int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val, 
-		      int *flag, MPIR_AttrType outAttrType )
+int MPII_Comm_get_attr( MPI_Comm comm, int comm_keyval, void *attribute_val,
+		      int *flag, MPIR_Attr_type outAttrType )
 {
-    static const char FCNAME[] = "MPIR_CommGetAttr";
+    static const char FCNAME[] = "MPII_Comm_get_attr";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     static PreDefined_attrs attr_copy;    /* Used to provide a copy of the
 					     predefined attributes */
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_GET_ATTR);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_GET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_GET_ATTR);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_GET_ATTR);
     
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -275,7 +275,7 @@ int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_GET_ATTR);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_GET_ATTR);
     return mpi_errno;
 
   fn_fail:
@@ -294,14 +294,14 @@ int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 
 /* This function is called by the fortran bindings. */
 /* FIXME: There is no reason to have this routine since it unnecessarily 
-   duplicates the MPIR_CommGetAttr interface. */
-int MPIR_CommGetAttr_fort(MPI_Comm comm, int comm_keyval, void *attribute_val,
-                          int *flag, MPIR_AttrType outAttrType )
+   duplicates the MPII_Comm_get_attr interface. */
+int MPII_Comm_get_attr_fort(MPI_Comm comm, int comm_keyval, void *attribute_val,
+                          int *flag, MPIR_Attr_type outAttrType )
 {
     int mpi_errno;
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    mpi_errno = MPIR_CommGetAttr(comm, comm_keyval, attribute_val, flag, outAttrType);
+    mpi_errno = MPII_Comm_get_attr(comm, comm_keyval, attribute_val, flag, outAttrType);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
 
     return mpi_errno;
@@ -351,21 +351,21 @@ int MPI_Comm_get_attr(MPI_Comm comm, int comm_keyval, void *attribute_val,
 		      int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_GET_ATTR);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_GET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_GET_ATTR);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_GET_ATTR);
 
     /* Instead, ask for a desired type. */
-    mpi_errno = MPIR_CommGetAttr( comm, comm_keyval, attribute_val, flag, 
+    mpi_errno = MPII_Comm_get_attr( comm, comm_keyval, attribute_val, flag,
 				  MPIR_ATTR_PTR );
     if (mpi_errno) goto fn_fail;
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_GET_ATTR);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_GET_ATTR);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

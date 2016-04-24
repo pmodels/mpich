@@ -27,8 +27,8 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
         goto fn_exit;
     }
 
-    MPIU_Assert(message != NULL);
-    MPIU_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
+    MPIR_Assert(message != NULL);
+    MPIR_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
 
     /* promote the request object to be a "real" recv request */
     message->kind = MPIR_REQUEST_KIND__RECV;
@@ -76,7 +76,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
 
         if (MPIR_Request_is_complete(rreq)) {
             /* is it ever possible to have (cc==0 && recv_pending>0) ? */
-            MPIU_Assert(!recv_pending);
+            MPIR_Assert(!recv_pending);
 
             /* All of the data has arrived, we need to copy the data and
                then free the buffer. */
@@ -93,7 +93,7 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
         {
             /* there should never be outstanding completion events for an unexpected
              * recv without also having a "pending recv" */
-            MPIU_Assert(recv_pending);
+            MPIR_Assert(recv_pending);
             /* The data is still being transfered across the net.  We'll
                leave it to the progress engine to handle once the
                entire message has arrived. */

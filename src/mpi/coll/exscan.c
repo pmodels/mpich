@@ -101,7 +101,7 @@ int MPIR_Exscan (
     MPI_Aint true_extent, true_lb, extent;
     void *partial_scan, *tmp_buf;
     MPIR_Op *op_ptr;
-    MPIU_CHKLMEM_DECL(2);
+    MPIR_CHKLMEM_DECL(2);
     
     if (count == 0) return MPI_SUCCESS;
 
@@ -115,7 +115,7 @@ int MPIR_Exscan (
 
         MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
                                      MPIR_Per_thread, per_thread, &err);
-        MPIU_Assert(err == 0);
+        MPIR_Assert(err == 0);
         per_thread->op_errno = 0;
     }
 
@@ -135,12 +135,12 @@ int MPIR_Exscan (
 
     MPID_Datatype_get_extent_macro( datatype, extent );
 
-    MPIU_CHKLMEM_MALLOC(partial_scan, void *, (count*(MPL_MAX(true_extent,extent))), mpi_errno, "partial_scan");
+    MPIR_CHKLMEM_MALLOC(partial_scan, void *, (count*(MPL_MAX(true_extent,extent))), mpi_errno, "partial_scan");
     /* adjust for potential negative lower bound in datatype */
     partial_scan = (void *)((char*)partial_scan - true_lb);
 
     /* need to allocate temporary buffer to store incoming data*/
-    MPIU_CHKLMEM_MALLOC(tmp_buf, void *, (count*(MPL_MAX(true_extent,extent))), mpi_errno, "tmp_buf");
+    MPIR_CHKLMEM_MALLOC(tmp_buf, void *, (count*(MPL_MAX(true_extent,extent))), mpi_errno, "tmp_buf");
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
 
@@ -220,14 +220,14 @@ int MPIR_Exscan (
 
         MPID_THREADPRIV_KEY_GET_ADDR(MPIR_ThreadInfo.isThreaded, MPIR_Per_thread_key,
                                      MPIR_Per_thread, per_thread, &err);
-        MPIU_Assert(err == 0);
+        MPIR_Assert(err == 0);
 
         if (per_thread->op_errno)
             mpi_errno = per_thread->op_errno;
     }
 
 fn_exit:
-    MPIU_CHKLMEM_FREEALL();
+    MPIR_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag != MPIR_ERR_NONE)
@@ -314,12 +314,12 @@ int MPI_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_EXSCAN);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_EXSCAN);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_COLL_FUNC_ENTER(MPID_STATE_MPI_EXSCAN);
+    MPIR_FUNC_TERSE_COLL_ENTER(MPID_STATE_MPI_EXSCAN);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -396,7 +396,7 @@ int MPI_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
     /* ... end of body of routine ... */
     
   fn_exit:    
-    MPID_MPI_COLL_FUNC_EXIT(MPID_STATE_MPI_EXSCAN);
+    MPIR_FUNC_TERSE_COLL_EXIT(MPID_STATE_MPI_EXSCAN);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

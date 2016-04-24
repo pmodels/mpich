@@ -35,17 +35,17 @@ int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *curr_info = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
 
-    mpi_errno = MPIR_Comm_apply_hints(comm_ptr, info_ptr);
+    mpi_errno = MPII_Comm_apply_hints(comm_ptr, info_ptr);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_fail;
 
     if (comm_ptr->info == NULL) {
         /* Always have at least a blank info hint. */
-        mpi_errno = MPIU_Info_alloc(&(comm_ptr->info));
+        mpi_errno = MPIR_Info_alloc(&(comm_ptr->info));
         if (mpi_errno != MPI_SUCCESS)
             goto fn_fail;
     }
@@ -62,7 +62,7 @@ int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
     }
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -100,12 +100,12 @@ int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info)
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Info *info_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_SET_INFO);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_COMM_SET_INFO);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_SET_INFO);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_COMM_SET_INFO);
 
     /* Validate parameters, especially handles needing to be converted */
 #ifdef HAVE_ERROR_CHECKING
@@ -142,7 +142,7 @@ int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_SET_INFO);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_COMM_SET_INFO);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

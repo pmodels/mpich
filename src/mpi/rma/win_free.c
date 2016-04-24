@@ -53,12 +53,12 @@ int MPI_Win_free(MPI_Win *win)
     static const char FCNAME[] = "MPI_Win_free";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_FREE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_FREE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_WIN_FREE);
+    MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPI_WIN_FREE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -112,7 +112,7 @@ int MPI_Win_free(MPI_Win *win)
 	int in_use;
 	MPIR_Errhandler_release_ref( win_ptr->errhandler,&in_use);
 	if (!in_use) {
-	    MPIU_Handle_obj_free( &MPIR_Errhandler_mem, win_ptr->errhandler );
+	    MPIR_Handle_obj_free( &MPIR_Errhandler_mem, win_ptr->errhandler );
 	}
     }
     
@@ -123,7 +123,7 @@ int MPI_Win_free(MPI_Win *win)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_WIN_FREE);
+    MPIR_FUNC_TERSE_RMA_EXIT(MPID_STATE_MPI_WIN_FREE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

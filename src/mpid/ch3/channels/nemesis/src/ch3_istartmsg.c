@@ -29,9 +29,9 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
     int mpi_errno = MPI_SUCCESS;
     int again = 0;
     int in_cs = 0;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_ISTARTMSG);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_ISTARTMSG);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_ISTARTMSG);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_ISTARTMSG);
 
     MPIR_ERR_CHKANDJUMP1(vc->state == MPIDI_VC_STATE_MORIBUND, mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
 
@@ -41,8 +41,8 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
         goto fn_exit;
     }
 
-    /*MPIU_Assert(vc->ch.is_local);*/
-    MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
+    /*MPIR_Assert(vc->ch.is_local);*/
+    MPIR_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 
     /* This channel uses a fixed length header, the size of which is
      * the maximum of all possible packet headers */
@@ -55,7 +55,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
     if (MPIDI_CH3I_Sendq_empty(MPIDI_CH3I_shm_sendq))
        /* MT */
     {
-        MPIU_Assert(hdr_sz <= INT_MAX);
+        MPIR_Assert(hdr_sz <= INT_MAX);
 	MPL_DBG_MSG_D (MPIDI_CH3_DBG_CHANNEL, VERBOSE, "iStartMsg %d", (int) hdr_sz);
 	mpi_errno = MPID_nem_mpich_send_header (hdr, (int)hdr_sz, vc, &again);
         if (mpi_errno) MPIR_ERR_POP (mpi_errno);
@@ -77,7 +77,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
     if (in_cs) {
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     }
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_ISTARTMSG);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_ISTARTMSG);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -90,8 +90,8 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, intptr_t hdr_sz, MPIR_Reques
 
 	/* create a request */
 	sreq = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
-	MPIU_Assert (sreq != NULL);
-	MPIU_Object_set_ref (sreq, 2);
+	MPIR_Assert (sreq != NULL);
+	MPIR_Object_set_ref (sreq, 2);
 	sreq->kind = MPIR_REQUEST_KIND__SEND;
 
 	sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;

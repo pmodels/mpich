@@ -58,12 +58,12 @@ int MPIX_Comm_failure_get_acked( MPI_Comm comm, MPI_Group *failedgrp )
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Group *group_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_COMM_FAILURE_GET_ACKED);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIX_COMM_FAILURE_GET_ACKED);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_COMM_FAILURE_GET_ACKED);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIX_COMM_FAILURE_GET_ACKED);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -101,7 +101,7 @@ int MPIX_Comm_failure_get_acked( MPI_Comm comm, MPI_Group *failedgrp )
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_COMM_FAILURE_GET_ACKED);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIX_COMM_FAILURE_GET_ACKED);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

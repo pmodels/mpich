@@ -71,9 +71,9 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 #ifdef WORDS_BIGENDIAN
     unsigned int MSBlocalhost = 0x7f000001;
 #endif
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_GETIPINTERFACE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GETIPINTERFACE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_GETIPINTERFACE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GETIPINTERFACE);
     *found = 0;
 
     fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -113,7 +113,7 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 	rc = ioctl(fd, SIOCGIFCONF, &ifconf);
 	if (rc < 0) {
 	    if (errno != EINVAL || buf_len_prev != 0) {
-		MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**ioctl", "**ioctl %d %s", errno, MPIU_Strerror(errno));
+		MPIR_ERR_SETANDJUMP2(mpi_errno, MPI_ERR_OTHER, "**ioctl", "**ioctl %d %s", errno, MPIR_Strerror(errno));
 	    }
 	}
         else {
@@ -167,14 +167,14 @@ int MPIDI_GetIPInterface( MPIDU_Sock_ifaddr_t *ifaddr, int *found )
 		if (nfound == 0) {
 		    myifaddr.type = AF_INET;
 		    myifaddr.len  = 4;
-		    MPIU_Memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
+		    MPIR_Memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
 		}
 	    }
 	    else {
 		nfound++;
 		myifaddr.type = AF_INET;
 		myifaddr.len  = 4;
-		MPIU_Memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
+		MPIR_Memcpy( myifaddr.ifaddr, &addr.s_addr, 4 );
 	    }
 	}
 	else {
@@ -216,7 +216,7 @@ fn_exit:
     if (fd >= 0)
         close(fd);
     
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_GETIPINTERFACE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GETIPINTERFACE);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -254,14 +254,14 @@ int MPIDI_Get_IP_for_iface(const char *ifname, MPIDU_Sock_ifaddr_t *ifaddr, int 
         *found = FALSE;
 
     fd = socket(AF_INET, SOCK_DGRAM, 0);
-    MPIR_ERR_CHKANDJUMP2(fd < 0, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", MPIU_Strerror(errno), errno);
+    MPIR_ERR_CHKANDJUMP2(fd < 0, mpi_errno, MPI_ERR_OTHER, "**sock_create", "**sock_create %s %d", MPIR_Strerror(errno), errno);
     ifr.ifr_addr.sa_family = AF_INET; /* just IPv4 for now */
     MPL_strncpy(ifr.ifr_name, ifname, IFNAMSIZ-1);
     ret = ioctl(fd, SIOCGIFADDR, &ifr);
-    MPIR_ERR_CHKANDJUMP2(ret < 0, mpi_errno, MPI_ERR_OTHER, "**ioctl", "**ioctl %d %s", errno, MPIU_Strerror(errno));
+    MPIR_ERR_CHKANDJUMP2(ret < 0, mpi_errno, MPI_ERR_OTHER, "**ioctl", "**ioctl %d %s", errno, MPIR_Strerror(errno));
 
     *found = TRUE;
-    MPIU_Memcpy(ifaddr->ifaddr, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr, 4);
+    MPIR_Memcpy(ifaddr->ifaddr, &((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr, 4);
     ifaddr->len = 4;
     ifaddr->type = AF_INET;
 
@@ -269,7 +269,7 @@ fn_exit:
     if (fd != -1) {
         ret = close(fd);
         if (ret < 0) {
-            MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER, "**sock_close", "**sock_close %s %d", MPIU_Strerror(errno), errno);
+            MPIR_ERR_SET2(mpi_errno, MPI_ERR_OTHER, "**sock_close", "**sock_close %s %d", MPIR_Strerror(errno), errno);
         }
     }
     return mpi_errno;

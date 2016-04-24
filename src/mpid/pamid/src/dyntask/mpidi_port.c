@@ -91,7 +91,7 @@ void MPIDI_Recvfrom_remote_world(pami_context_t    context,
   q_item = MPL_malloc(sizeof(MPIDI_Acceptq_t));
   q_item->vcr = MPL_malloc(sizeof(struct MPID_VCR_t));
   q_item->vcr->pg = MPL_malloc(sizeof(MPIDI_PG_t));
-  MPIU_Object_set_ref(q_item->vcr->pg, 0);
+  MPIR_Object_set_ref(q_item->vcr->pg, 0);
   TRACE_ERR("ENTER MPIDI_Acceptq_enqueue-1 q_item=%llx _msginfo=%llx (AM_struct *)_msginfo=%llx ((AM_struct *)_msginfo)->vcr=%llx\n", q_item, _msginfo, (AM_struct *)_msginfo, ((AM_struct *)_msginfo)->vcr);
   q_item->port_name_tag = ((AM_struct *)_msginfo)->port_name_tag;
   q_item->vcr->taskid = PAMIX_Endpoint_query(sender);
@@ -226,7 +226,7 @@ int MPIDI_Connect_to_root(const char * port_name,
        connection routine) */
     vc = MPL_malloc(sizeof(struct MPID_VCR_t));
     vc->pg = MPL_malloc(sizeof(MPIDI_PG_t));
-    MPIU_Object_set_ref(vc->pg, 0);
+    MPIR_Object_set_ref(vc->pg, 0);
     TRACE_ERR("vc from MPIDI_Connect_to_root=%llx vc->pg=%llx\n", vc, vc->pg);
     /* FIXME - where does this vc get freed? */
 
@@ -400,8 +400,8 @@ static int MPIDI_Initialize_tmp_comm(struct MPIR_Comm **comm_pptr,
 
     /* sanity: the INVALID context ID value could potentially conflict with the
      * dynamic proccess space */
-    MPIU_Assert(tmp_comm->context_id     != MPIU_INVALID_CONTEXT_ID);
-    MPIU_Assert(tmp_comm->recvcontext_id != MPIU_INVALID_CONTEXT_ID);
+    MPIR_Assert(tmp_comm->context_id     != MPIR_INVALID_CONTEXT_ID);
+    MPIR_Assert(tmp_comm->recvcontext_id != MPIR_INVALID_CONTEXT_ID);
 
     /* FIXME - we probably need a unique context_id. */
     tmp_comm->remote_size = 1;
@@ -509,7 +509,7 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
     pg_translation *local_translation = NULL, *remote_translation = NULL;
     pg_node *pg_list = NULL;
     MPIDI_PG_t **remote_pg = NULL;
-    MPIU_Context_id_t recvcontext_id = MPIU_INVALID_CONTEXT_ID;
+    MPIR_Context_id_t recvcontext_id = MPIR_INVALID_CONTEXT_ID;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     long long comm_cntr, lcomm_cntr;
 
@@ -540,7 +540,7 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
 	/* Make an array to translate local ranks to process group index
 	   and rank */
         local_translation = MPL_malloc(local_comm_size*sizeof(pg_translation));
-/*	MPIU_CHKLMEM_MALLOC(local_translation,pg_translation*,
+/*	MPIR_CHKLMEM_MALLOC(local_translation,pg_translation*,
 			    local_comm_size*sizeof(pg_translation),
 			    mpi_errno,"local_translation"); */
 
@@ -737,8 +737,8 @@ static int MPIDI_ExtractLocalPGInfo( struct MPIR_Comm *comm_p,
     pg_list->index = cur_index++;
     pg_list->next = NULL;
     /* XXX DJG FIXME-MT should we be checking this?  the add/release macros already check this */
-    TRACE_ERR("MPIU_Object_get_ref(comm_p->vcr[0]->pg) comm_p=%x vsr=%x pg=%x %d\n", comm_p, comm_p->vcr[0], comm_p->vcr[0]->pg, MPIU_Object_get_ref(comm_p->vcr[0]->pg));
-    MPIU_Assert( MPIU_Object_get_ref(comm_p->vcr[0]->pg));
+    TRACE_ERR("MPIR_Object_get_ref(comm_p->vcr[0]->pg) comm_p=%x vsr=%x pg=%x %d\n", comm_p, comm_p->vcr[0], comm_p->vcr[0]->pg, MPIR_Object_get_ref(comm_p->vcr[0]->pg));
+    MPIR_Assert( MPIR_Object_get_ref(comm_p->vcr[0]->pg));
     mpi_errno = MPIDI_PG_To_string(comm_p->vcr[0]->pg, &pg_list->str,
 				   &pg_list->lenStr );
     TRACE_ERR("pg_list->str=%s pg_list->lenStr=%d\n", pg_list->str, pg_list->lenStr);
@@ -757,7 +757,7 @@ static int MPIDI_ExtractLocalPGInfo( struct MPIR_Comm *comm_p,
 	while (pg_iter != NULL) {
 	    /* Check to ensure pg is (probably) valid */
             /* XXX DJG FIXME-MT should we be checking this?  the add/release macros already check this */
-	    MPIU_Assert(MPIU_Object_get_ref(comm_p->vcr[i]->pg) != 0);
+            MPIR_Assert(MPIR_Object_get_ref(comm_p->vcr[i]->pg) != 0);
 	    if (MPIDI_PG_Id_compare(comm_p->vcr[i]->pg->id, pg_iter->pg_id)) {
 		local_translation[i].pg_index = pg_iter->index;
 		local_translation[i].pg_rank  = comm_p->vcr[i]->pg_rank;
@@ -1187,7 +1187,7 @@ int MPIDI_Comm_accept(const char *port_name, MPIR_Info *info, int root,
 	/* Make an array to translate local ranks to process group index and
 	   rank */
         local_translation = MPL_malloc(local_comm_size*sizeof(pg_translation));
-/*	MPIU_CHKLMEM_MALLOC(local_translation,pg_translation*,
+/*	MPIR_CHKLMEM_MALLOC(local_translation,pg_translation*,
 			    local_comm_size*sizeof(pg_translation),
 			    mpi_errno,"local_translation"); */
 
@@ -1684,7 +1684,7 @@ int MPID_PG_BCast( MPIR_Comm *peercomm_p, MPIR_Comm *comm_p, int root )
     pg_node *pg_list, *pg_next, *pg_head = 0;
     int rank, i, peer_comm_size;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPIU_CHKLMEM_DECL(1);
+    MPIR_CHKLMEM_DECL(1);
 
     peer_comm_size = comm_p->local_size;
     rank            = comm_p->rank;

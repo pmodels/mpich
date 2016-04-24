@@ -29,9 +29,9 @@ int MPID_Issend(const void * buf, int count, MPI_Datatype datatype, int rank, in
 #endif    
     int eager_threshold = -1;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_ISSEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ISSEND);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_ISSEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ISSEND);
 
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST,
                  "rank=%d, tag=%d, context=%d", 
@@ -69,7 +69,7 @@ int MPID_Issend(const void * buf, int count, MPI_Datatype datatype, int rank, in
     
     if (rank == MPI_PROC_NULL)
     {
-	MPIU_Object_set_ref(sreq, 1);
+	MPIR_Object_set_ref(sreq, 1);
         MPIR_cc_set(&sreq->cc, 0);
 	goto fn_exit;
     }
@@ -132,6 +132,6 @@ int MPID_Issend(const void * buf, int count, MPI_Datatype datatype, int rank, in
 		  )
     
   fn_fail:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_ISSEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ISSEND);
     return mpi_errno;
 }

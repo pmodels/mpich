@@ -168,8 +168,8 @@ void PREPEND_PREFIX(Type_calc_footprint)(MPI_Datatype type,
 	int mpisize;
 	MPI_Aint mpiextent;
 
-	MPIR_Type_size_impl(type, &mpisize);
-	MPIR_Type_extent_impl(type, &mpiextent);
+	MPIDU_Datatype_get_size_macro(type, mpisize);
+	MPIDU_Datatype_get_extent_macro(type, mpiextent);
 	tfp->size    = (DLOOP_Offset) mpisize;
 	tfp->lb      = 0;
 	tfp->ub      = (DLOOP_Offset) mpiextent;
@@ -592,7 +592,7 @@ static int DLOOP_Named_type_alignsize(MPI_Datatype type, MPI_Aint disp)
     if (type == MPI_LB || type == MPI_UB)
 	return 0;
 
-    MPIR_Type_size_impl(type, &alignsize);
+    MPIDU_Datatype_get_size_macro(type, alignsize);
 
     switch(type)
     {

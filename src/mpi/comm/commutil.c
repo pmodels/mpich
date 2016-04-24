@@ -6,7 +6,7 @@
 
 #include "mpiimpl.h"
 #include "mpicomm.h"
-#include "mpir_info.h"    /* MPIU_Info_free */
+#include "mpir_info.h"    /* MPIR_Info_free */
 
 #include "mpl_utlist.h"
 #include "mpir_uthash.h"
@@ -22,7 +22,7 @@
 MPIR_Comm MPIR_Comm_builtin[MPIR_COMM_N_BUILTIN] = { {0} };
 MPIR_Comm MPIR_Comm_direct[MPID_COMM_PREALLOC] = { {0} };
 
-MPIU_Object_alloc_t MPIR_Comm_mem = {
+MPIR_Object_alloc_t MPIR_Comm_mem = {
     0,
     0,
     0,
@@ -68,11 +68,11 @@ static struct MPIR_Comm_hint_fn_elt *MPID_hint_fns = NULL;
  * to it.
  *
  * !!! The resulting struct is _not_ ready for communication !!! */
-int MPIR_Comm_init(MPIR_Comm * comm_p)
+int MPII_Comm_init(MPIR_Comm * comm_p)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIU_Object_set_ref(comm_p, 1);
+    MPIR_Object_set_ref(comm_p, 1);
 
     /* initialize local and remote sizes to -1 to allow other parts of
      * the stack to detect errors more easily */
@@ -124,26 +124,26 @@ int MPIR_Comm_create(MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *newptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_CREATE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_CREATE);
 
-    newptr = (MPIR_Comm *) MPIU_Handle_obj_alloc(&MPIR_Comm_mem);
+    newptr = (MPIR_Comm *) MPIR_Handle_obj_alloc(&MPIR_Comm_mem);
     MPIR_ERR_CHKANDJUMP(!newptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     *newcomm_ptr = newptr;
 
-    mpi_errno = MPIR_Comm_init(newptr);
+    mpi_errno = MPII_Comm_init(newptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
     /* Insert this new communicator into the list of known communicators.
      * Make this conditional on debugger support to match the test in
      * MPIR_Comm_release . */
-    MPIR_COMML_REMEMBER(newptr);
+    MPII_COMML_REMEMBER(newptr);
 
   fn_fail:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_CREATE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_CREATE);
 
     return mpi_errno;
 }
@@ -152,22 +152,22 @@ int MPIR_Comm_create(MPIR_Comm ** newcomm_ptr)
    specified intercomm. */
 /* FIXME this is an alternative constructor that doesn't use MPIR_Comm_create! */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Setup_intercomm_localcomm
+#define FUNCNAME MPII_Setup_intercomm_localcomm
 #undef FCNAME
-#define FCNAME "MPIR_Setup_intercomm_localcomm"
-int MPIR_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
+#define FCNAME "MPII_Setup_intercomm_localcomm"
+int MPII_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
 {
     MPIR_Comm *localcomm_ptr;
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_SETUP_INTERCOMM_LOCALCOMM);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_SETUP_INTERCOMM_LOCALCOMM);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_SETUP_INTERCOMM_LOCALCOMM);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_SETUP_INTERCOMM_LOCALCOMM);
 
-    localcomm_ptr = (MPIR_Comm *) MPIU_Handle_obj_alloc(&MPIR_Comm_mem);
+    localcomm_ptr = (MPIR_Comm *) MPIR_Handle_obj_alloc(&MPIR_Comm_mem);
     MPIR_ERR_CHKANDJUMP(!localcomm_ptr, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
     /* get sensible default values for most fields (usually zeros) */
-    mpi_errno = MPIR_Comm_init(localcomm_ptr);
+    mpi_errno = MPII_Comm_init(localcomm_ptr);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -205,7 +205,7 @@ int MPIR_Setup_intercomm_localcomm(MPIR_Comm * intercomm_ptr)
         MPIR_ERR_POP(mpi_errno);
 
   fn_fail:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_SETUP_INTERCOMM_LOCALCOMM);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_SETUP_INTERCOMM_LOCALCOMM);
 
     return mpi_errno;
 }
@@ -227,14 +227,14 @@ static int cleanup_default_collops(void *unused)
     int i;
     for (i = 0; i < MPIR_COMM_HIERARCHY_KIND__SIZE; ++i) {
         if (default_collops[i]) {
-            MPIU_Assert(default_collops[i]->ref_count >= 1);
+            MPIR_Assert(default_collops[i]->ref_count >= 1);
             if (--default_collops[i]->ref_count == 0)
                 MPL_free(default_collops[i]);
             default_collops[i] = NULL;
         }
     }
     if (ic_default_collops) {
-        MPIU_Assert(ic_default_collops->ref_count >= 1);
+        MPIR_Assert(ic_default_collops->ref_count >= 1);
         if (--ic_default_collops->ref_count == 0)
             MPL_free(ic_default_collops);
     }
@@ -250,11 +250,11 @@ static int init_default_collops(void)
     int mpi_errno = MPI_SUCCESS;
     int i;
     struct MPIR_Collops *ops = NULL;
-    MPIU_CHKPMEM_DECL(MPIR_COMM_HIERARCHY_KIND__SIZE + 1);
+    MPIR_CHKPMEM_DECL(MPIR_COMM_HIERARCHY_KIND__SIZE + 1);
 
     /* first initialize the intracomms */
     for (i = 0; i < MPIR_COMM_HIERARCHY_KIND__SIZE; ++i) {
-        MPIU_CHKPMEM_CALLOC(ops, struct MPIR_Collops *, sizeof(struct MPIR_Collops), mpi_errno,
+        MPIR_CHKPMEM_CALLOC(ops, struct MPIR_Collops *, sizeof(struct MPIR_Collops), mpi_errno,
                             "default intracomm collops");
         ops->ref_count = 1;     /* force existence until finalize time */
 
@@ -304,7 +304,7 @@ static int init_default_collops(void)
 
             /* --BEGIN ERROR HANDLING-- */
         default:
-            MPIU_Assertp(FALSE);
+            MPIR_Assertp(FALSE);
             break;
             /* --END ERROR HANDLING-- */
         }
@@ -317,7 +317,7 @@ static int init_default_collops(void)
 
     /* now the intercomm table */
     {
-        MPIU_CHKPMEM_CALLOC(ops, struct MPIR_Collops *, sizeof(struct MPIR_Collops), mpi_errno,
+        MPIR_CHKPMEM_CALLOC(ops, struct MPIR_Collops *, sizeof(struct MPIR_Collops), mpi_errno,
                             "default intercomm collops");
         ops->ref_count = 1;     /* force existence until finalize time */
 
@@ -351,12 +351,12 @@ static int init_default_collops(void)
     /* run after MPID_Finalize to permit collective usage during finalize */
     MPIR_Add_finalize(cleanup_default_collops, NULL, MPIR_FINALIZE_CALLBACK_PRIO - 1);
 
-    MPIU_CHKPMEM_COMMIT();
+    MPIR_CHKPMEM_COMMIT();
   fn_exit:
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -414,12 +414,12 @@ int MPIR_Comm_map_irregular(MPIR_Comm * newcomm, MPIR_Comm * src_comm,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm_map_t *mapper;
-    MPIU_CHKPMEM_DECL(3);
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_MAP_TYPE__IRREGULAR);
+    MPIR_CHKPMEM_DECL(3);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_MAP_TYPE__IRREGULAR);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_MAP_TYPE__IRREGULAR);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_MAP_TYPE__IRREGULAR);
 
-    MPIU_CHKPMEM_MALLOC(mapper, MPIR_Comm_map_t *, sizeof(MPIR_Comm_map_t), mpi_errno, "mapper");
+    MPIR_CHKPMEM_MALLOC(mapper, MPIR_Comm_map_t *, sizeof(MPIR_Comm_map_t), mpi_errno, "mapper");
 
     mapper->type = MPIR_COMM_MAP_TYPE__IRREGULAR;
     mapper->src_comm = src_comm;
@@ -431,7 +431,7 @@ int MPIR_Comm_map_irregular(MPIR_Comm * newcomm, MPIR_Comm * src_comm,
         mapper->free_mapping = 0;
     }
     else {
-        MPIU_CHKPMEM_MALLOC(mapper->src_mapping, int *,
+        MPIR_CHKPMEM_MALLOC(mapper->src_mapping, int *,
                             src_mapping_size * sizeof(int), mpi_errno, "mapper mapping");
         mapper->free_mapping = 1;
     }
@@ -444,11 +444,11 @@ int MPIR_Comm_map_irregular(MPIR_Comm * newcomm, MPIR_Comm * src_comm,
         *map = mapper;
 
   fn_exit:
-    MPIU_CHKPMEM_COMMIT();
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_MAP_TYPE__IRREGULAR);
+    MPIR_CHKPMEM_COMMIT();
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_MAP_TYPE__IRREGULAR);
     return mpi_errno;
   fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -460,12 +460,12 @@ int MPIR_Comm_map_dup(MPIR_Comm * newcomm, MPIR_Comm * src_comm, MPIR_Comm_map_d
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm_map_t *mapper;
-    MPIU_CHKPMEM_DECL(1);
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_MAP_TYPE__DUP);
+    MPIR_CHKPMEM_DECL(1);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_MAP_TYPE__DUP);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_MAP_TYPE__DUP);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_MAP_TYPE__DUP);
 
-    MPIU_CHKPMEM_MALLOC(mapper, MPIR_Comm_map_t *, sizeof(MPIR_Comm_map_t), mpi_errno, "mapper");
+    MPIR_CHKPMEM_MALLOC(mapper, MPIR_Comm_map_t *, sizeof(MPIR_Comm_map_t), mpi_errno, "mapper");
 
     mapper->type = MPIR_COMM_MAP_TYPE__DUP;
     mapper->src_comm = src_comm;
@@ -476,11 +476,11 @@ int MPIR_Comm_map_dup(MPIR_Comm * newcomm, MPIR_Comm * src_comm, MPIR_Comm_map_d
     MPL_LL_APPEND(newcomm->mapper_head, newcomm->mapper_tail, mapper);
 
   fn_exit:
-    MPIU_CHKPMEM_COMMIT();
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_MAP_TYPE__DUP);
+    MPIR_CHKPMEM_COMMIT();
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_MAP_TYPE__DUP);
     return mpi_errno;
   fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -493,9 +493,9 @@ int MPIR_Comm_map_free(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm_map_t *mapper, *tmp;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_MAP_FREE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_MAP_FREE);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_MAP_FREE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_MAP_FREE);
 
     for (mapper = comm->mapper_head; mapper;) {
         tmp = mapper->next;
@@ -507,7 +507,7 @@ int MPIR_Comm_map_free(MPIR_Comm * comm)
     comm->mapper_head = NULL;
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_MAP_FREE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_MAP_FREE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -528,15 +528,15 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     int num_local = -1, num_external = -1;
     int local_rank = -1, external_rank = -1;
     int *local_procs = NULL, *external_procs = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_COMMIT);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_COMMIT);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_COMMIT);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_COMMIT);
 
     /* It's OK to relax these assertions, but we should do so very
      * intentionally.  For now this function is the only place that we create
      * our hierarchy of communicators */
-    MPIU_Assert(comm->node_comm == NULL);
-    MPIU_Assert(comm->node_roots_comm == NULL);
+    MPIR_Assert(comm->node_comm == NULL);
+    MPIR_Assert(comm->node_roots_comm == NULL);
 
     mpi_errno = set_collops(comm);
     if (mpi_errno)
@@ -551,7 +551,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 
     if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
 
-        mpi_errno = MPIU_Find_local_and_external(comm,
+        mpi_errno = MPIR_Find_local_and_external(comm,
                                                  &num_local, &local_rank, &local_procs,
                                                  &num_external, &external_rank, &external_procs,
                                                  &comm->intranode_table, &comm->internode_table);
@@ -562,7 +562,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 
             /* Non-fatal errors simply mean that this communicator will not have
              * any node awareness.  Node-aware collectives are an optimization. */
-            MPL_DBG_MSG_P(MPIR_DBG_COMM, VERBOSE, "MPIU_Find_local_and_external failed for comm_ptr=%p",
+            MPL_DBG_MSG_P(MPIR_DBG_COMM, VERBOSE, "MPIR_Find_local_and_external failed for comm_ptr=%p",
                            comm);
             if (comm->intranode_table)
                 MPL_free(comm->intranode_table);
@@ -575,14 +575,14 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
         /* --END ERROR HANDLING-- */
 
         /* defensive checks */
-        MPIU_Assert(num_local > 0);
-        MPIU_Assert(num_local > 1 || external_rank >= 0);
-        MPIU_Assert(external_rank < 0 || external_procs != NULL);
+        MPIR_Assert(num_local > 0);
+        MPIR_Assert(num_local > 1 || external_rank >= 0);
+        MPIR_Assert(external_rank < 0 || external_procs != NULL);
 
         /* if the node_roots_comm and comm would be the same size, then creating
          * the second communicator is useless and wasteful. */
         if (num_external == comm->remote_size) {
-            MPIU_Assert(num_local == 1);
+            MPIR_Assert(num_local == 1);
             goto fn_exit;
         }
 
@@ -661,7 +661,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
     if (local_procs != NULL)
         MPL_free(local_procs);
 
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_COMMIT);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_COMMIT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -678,7 +678,7 @@ int MPIR_Comm_is_node_aware(MPIR_Comm * comm)
 /* Returns true if the communicator is node-aware and processes in all the nodes
    are consecutive. For example, if node 0 contains "0, 1, 2, 3", node 1
    contains "4, 5, 6", and node 2 contains "7", we shall return true. */
-int MPIR_Comm_is_node_consecutive(MPIR_Comm * comm)
+int MPII_Comm_is_node_consecutive(MPIR_Comm * comm)
 {
     int i = 0, curr_nodeidx = 0;
     int *internode_table = comm->internode_table;
@@ -709,18 +709,18 @@ int MPIR_Comm_is_node_consecutive(MPIR_Comm * comm)
  * Used by cart_create, graph_create, and dup_create
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Comm_copy
+#define FUNCNAME MPII_Comm_copy
 #undef FCNAME
-#define FCNAME "MPIR_Comm_copy"
-int MPIR_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
+#define FCNAME "MPII_Comm_copy"
+int MPII_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIU_Context_id_t new_context_id, new_recvcontext_id;
+    MPIR_Context_id_t new_context_id, new_recvcontext_id;
     MPIR_Comm *newcomm_ptr = NULL;
     MPIR_Comm_map_t *map;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_COPY);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_COPY);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_COPY);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_COPY);
 
     /* Get a new context first.  We need this to be collective over the
      * input communicator */
@@ -737,7 +737,7 @@ int MPIR_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
         new_recvcontext_id = new_context_id;
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-        MPIU_Assert(new_context_id != 0);
+        MPIR_Assert(new_context_id != 0);
     }
 
     /* This is the local size, not the remote size, in the case of
@@ -826,7 +826,7 @@ int MPIR_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
     mpi_errno = MPIR_Info_dup_impl(comm_ptr->info, &(newcomm_ptr->info));
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPIR_Comm_apply_hints(newcomm_ptr, newcomm_ptr->info);
+    mpi_errno = MPII_Comm_apply_hints(newcomm_ptr, newcomm_ptr->info);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -835,7 +835,7 @@ int MPIR_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
   fn_fail:
   fn_exit:
 
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_COPY);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_COPY);
 
     return mpi_errno;
 }
@@ -847,16 +847,16 @@ int MPIR_Comm_copy(MPIR_Comm * comm_ptr, int size, MPIR_Comm ** outcomm_ptr)
  * Used by comm_idup.
  */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Comm_copy_data
+#define FUNCNAME MPII_Comm_copy_data
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr)
+int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *newcomm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_COPY_DATA);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_COPY_DATA);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_COPY_DATA);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_COPY_DATA);
 
     mpi_errno = MPIR_Comm_create(&newcomm_ptr);
     if (mpi_errno)
@@ -902,7 +902,7 @@ int MPIR_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr)
 
   fn_fail:
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_COPY_DATA);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_COPY_DATA);
     return mpi_errno;
 }
 
@@ -922,11 +922,11 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
 {
     int in_use;
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_COMM_DELETE_INTERNAL);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_COMM_DELETE_INTERNAL);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_COMM_DELETE_INTERNAL);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_COMM_DELETE_INTERNAL);
 
-    MPIU_Assert(MPIU_Object_get_ref(comm_ptr) == 0);    /* sanity check */
+    MPIR_Assert(MPIR_Object_get_ref(comm_ptr) == 0);    /* sanity check */
 
     /* Remove the attributes, executing the attribute delete routine.
      * Do this only if the attribute functions are defined.
@@ -935,11 +935,11 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
     if (MPIR_Process.attr_free && comm_ptr->attributes) {
         /* Temporarily add a reference to this communicator because
          * the attr_free code requires a valid communicator */
-        MPIU_Object_add_ref(comm_ptr);
+        MPIR_Object_add_ref(comm_ptr);
         mpi_errno = MPIR_Process.attr_free(comm_ptr->handle, &comm_ptr->attributes);
         /* Release the temporary reference added before the call to
          * attr_free */
-        MPIU_Object_release_ref(comm_ptr, &in_use);
+        MPIR_Object_release_ref(comm_ptr, &in_use);
     }
 
     /* If the attribute delete functions return failure, the
@@ -959,7 +959,7 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
 
         /* Free info hints */
         if (comm_ptr->info != NULL) {
-            MPIU_Info_free(comm_ptr->info);
+            MPIR_Info_free(comm_ptr->info);
         }
 
         /* release our reference to the collops structure, comes after the
@@ -1004,7 +1004,7 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
             int errhInuse;
             MPIR_Errhandler_release_ref(comm_ptr->errhandler, &errhInuse);
             if (!errhInuse) {
-                MPIU_Handle_obj_free(&MPIR_Errhandler_mem, comm_ptr->errhandler);
+                MPIR_Handle_obj_free(&MPIR_Errhandler_mem, comm_ptr->errhandler);
             }
         }
 
@@ -1012,12 +1012,12 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
          * we are supporting message-queue debugging.  We make this
          * conditional on having debugger support since the
          * operation is not constant-time */
-        MPIR_COMML_FORGET(comm_ptr);
+        MPII_COMML_FORGET(comm_ptr);
 
         /* Check for predefined communicators - these should not
          * be freed */
         if (!(HANDLE_GET_KIND(comm_ptr->handle) == HANDLE_KIND_BUILTIN))
-            MPIU_Handle_obj_free(&MPIR_Comm_mem, comm_ptr);
+            MPIR_Handle_obj_free(&MPIR_Comm_mem, comm_ptr);
     }
     else {
         /* If the user attribute free function returns an error,
@@ -1026,7 +1026,7 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
     }
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_COMM_DELETE_INTERNAL);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_COMM_DELETE_INTERNAL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1044,13 +1044,13 @@ int MPIR_Comm_release_always(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int in_use;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_RELEASE_ALWAYS);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_RELEASE_ALWAYS);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_RELEASE_ALWAYS);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_RELEASE_ALWAYS);
 
     /* we want to short-circuit any optimization that avoids reference counting
      * predefined communicators, such as MPI_COMM_WORLD or MPI_COMM_SELF. */
-    MPIU_Object_release_ref_always(comm_ptr, &in_use);
+    MPIR_Object_release_ref_always(comm_ptr, &in_use);
     if (!in_use) {
         mpi_errno = MPIR_Comm_delete_internal(comm_ptr);
         if (mpi_errno)
@@ -1058,7 +1058,7 @@ int MPIR_Comm_release_always(MPIR_Comm * comm_ptr)
     }
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_RELEASE_ALWAYS);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_RELEASE_ALWAYS);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1067,18 +1067,18 @@ int MPIR_Comm_release_always(MPIR_Comm * comm_ptr)
 /* Apply all known info hints in the specified info chain to the given
  * communicator. */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Comm_apply_hints
+#define FUNCNAME MPII_Comm_apply_hints
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Comm_apply_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
+int MPII_Comm_apply_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Info *hint = NULL;
     char hint_name[MPI_MAX_INFO_KEY] = { 0 };
     struct MPIR_Comm_hint_fn_elt *hint_fn = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_APPLY_HINTS);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_APPLY_HINTS);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_APPLY_HINTS);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_APPLY_HINTS);
 
     MPL_LL_FOREACH(info_ptr, hint) {
         /* Have we hit the default, empty info hint? */
@@ -1098,7 +1098,7 @@ int MPIR_Comm_apply_hints(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
     }
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_APPLY_HINTS);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_APPLY_HINTS);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1112,9 +1112,9 @@ static int free_hint_handles(void *ignore)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIR_Comm_hint_fn_elt *curr_hint = NULL, *tmp = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_FREE_HINT_HANDLES);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_FREE_HINT_HANDLES);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_FREE_HINT_HANDLES);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_FREE_HINT_HANDLES);
 
     if (MPID_hint_fns) {
         HASH_ITER(hh, MPID_hint_fns, curr_hint, tmp) {
@@ -1124,7 +1124,7 @@ static int free_hint_handles(void *ignore)
     }
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_FREE_HINT_HANDLES);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_FREE_HINT_HANDLES);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1140,9 +1140,9 @@ int MPIR_Comm_register_hint(const char *hint_key, MPIR_Comm_hint_fn_t fn, void *
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIR_Comm_hint_fn_elt *hint_elt = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_REGISTER_HINT);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_COMM_REGISTER_HINT);
 
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_REGISTER_HINT);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_COMM_REGISTER_HINT);
 
     if (MPID_hint_fns == NULL) {
         MPIR_Add_finalize(free_hint_handles, NULL, MPIR_FINALIZE_CALLBACK_PRIO - 1);
@@ -1156,7 +1156,7 @@ int MPIR_Comm_register_hint(const char *hint_key, MPIR_Comm_hint_fn_t fn, void *
     HASH_ADD_STR(MPID_hint_fns, name, hint_elt);
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_REGISTER_HINT);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_REGISTER_HINT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

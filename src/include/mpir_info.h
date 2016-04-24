@@ -22,8 +22,8 @@
 
   For simplicity, we have not abstracted the info data structures;
   routines that want to work with the linked list may do so directly.
-  Because the 'MPI_Info' type is a handle and not a pointer, an MPIU
-  (utility) routine is provided to handle the
+  Because the 'MPI_Info' type is a handle and not a pointer, an MPIR
+  routine is provided to handle the
   deallocation of 'MPIR_Info' elements.  See the implementation of
   'MPI_Info_create' for how an Info type is allocated.
 
@@ -50,7 +50,7 @@
 
   T*/
 /*S
-  MPIR_Info - Structure of an MPID info
+  MPIR_Info - Structure of an MPIR info
 
   Notes:
   There is no reference count because 'MPI_Info' values, unlike other MPI
@@ -82,12 +82,12 @@
   Info-DS
   S*/
 struct MPIR_Info {
-    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
+    MPIR_OBJECT_HEADER; /* adds handle and ref_count fields */
     struct MPIR_Info   *next;
     char               *key;
     char               *value;
 };
-extern MPIU_Object_alloc_t MPIR_Info_mem;
+extern MPIR_Object_alloc_t MPIR_Info_mem;
 /* Preallocated info objects */
 #define MPIR_INFO_N_BUILTIN 2
 extern MPIR_Info MPIR_Info_builtin[MPIR_INFO_N_BUILTIN];
@@ -99,7 +99,7 @@ int MPIR_Info_get_nthkey_impl(MPIR_Info *info, int n, char *key);
 void MPIR_Info_get_valuelen_impl(MPIR_Info *info_ptr, const char *key, int *valuelen, int *flag);
 int MPIR_Info_set_impl(MPIR_Info *info_ptr, const char *key, const char *value);
 int MPIR_Info_dup_impl(MPIR_Info *info_ptr, MPIR_Info **new_info_ptr);
-void MPIU_Info_free( MPIR_Info *info_ptr );
-int MPIU_Info_alloc(MPIR_Info **info_p_p);
+void MPIR_Info_free( MPIR_Info *info_ptr );
+int MPIR_Info_alloc(MPIR_Info **info_p_p);
 
 #endif /* MPIR_INFO_H_INCLUDED */

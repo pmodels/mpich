@@ -16,7 +16,7 @@
  * collective operations, provided in the MPIR_Collops structure).
  */
 
-typedef struct MPIR_TopoOps {
+typedef struct MPII_Topo_ops {
     int (*cartCreate)( const MPIR_Comm *, int, const int[], const int [],
 		       int, MPI_Comm * );
     int (*cartMap)   ( const MPIR_Comm *, int, const int[], const int [],
@@ -25,25 +25,25 @@ typedef struct MPIR_TopoOps {
 			int, MPI_Comm * );
     int (*graphMap)   ( const MPIR_Comm *, int, const int[], const int[],
 			int * );
-} MPIR_TopoOps;
+} MPII_Topo_ops;
 
 
-typedef struct MPIR_Graph_topology {
+typedef struct MPII_Graph_topology {
   int nnodes;
   int nedges;
   int *index;
   int *edges;
-} MPIR_Graph_topology;
+} MPII_Graph_topology;
 
-typedef struct MPIR_Cart_topology {
+typedef struct MPII_Cart_topology {
   int nnodes;     /* Product of dims[*], gives the size of the topology */
   int ndims;
   int *dims;
   int *periodic;
   int *position;
-} MPIR_Cart_topology;
+} MPII_Cart_topology;
 
-typedef struct MPIR_Dist_graph_topology {
+typedef struct MPII_Dist_graph_topology {
     int indegree;
     int *in;
     int *in_weights;
@@ -51,14 +51,14 @@ typedef struct MPIR_Dist_graph_topology {
     int *out;
     int *out_weights;
     int is_weighted;
-} MPIR_Dist_graph_topology;
+} MPII_Dist_graph_topology;
 
 struct MPIR_Topology {
   MPIR_Topo_type kind;
   union topo { 
-    MPIR_Graph_topology graph;
-    MPIR_Cart_topology  cart;
-    MPIR_Dist_graph_topology dist_graph;
+    MPII_Graph_topology graph;
+    MPII_Cart_topology  cart;
+    MPII_Dist_graph_topology dist_graph;
   } topo;
 };
 

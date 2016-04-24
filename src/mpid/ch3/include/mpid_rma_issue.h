@@ -23,9 +23,9 @@
 static inline int immed_copy(void *src, void *dest, size_t len)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_IMMED_COPY);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_IMMED_COPY);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_IMMED_COPY);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_IMMED_COPY);
 
     if (src == NULL || dest == NULL || len == 0)
         goto fn_exit;
@@ -44,11 +44,11 @@ static inline int immed_copy(void *src, void *dest, size_t len)
         *(uint64_t *) dest = *(uint64_t *) src;
         break;
     default:
-        MPIU_Memcpy(dest, (void *) src, len);
+        MPIR_Memcpy(dest, (void *) src, len);
     }
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_IMMED_COPY);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_IMMED_COPY);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -66,8 +66,8 @@ static inline int immed_copy(void *src, void *dest, size_t len)
 static inline void fill_in_derived_dtp_info(MPIDI_RMA_dtype_info * dtype_info, void *dataloop,
                                             MPIDU_Datatype* dtp)
 {
-    MPIDI_STATE_DECL(MPID_STATE_FILL_IN_DERIVED_DTP_INFO);
-    MPIDI_FUNC_ENTER(MPID_STATE_FILL_IN_DERIVED_DTP_INFO);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_FILL_IN_DERIVED_DTP_INFO);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_FILL_IN_DERIVED_DTP_INFO);
 
     /* Derived datatype on target, fill derived datatype info. */
     dtype_info->is_contig = dtp->is_contig;
@@ -85,13 +85,13 @@ static inline void fill_in_derived_dtp_info(MPIDI_RMA_dtype_info * dtype_info, v
     dtype_info->has_sticky_ub = dtp->has_sticky_ub;
     dtype_info->has_sticky_lb = dtp->has_sticky_lb;
 
-    MPIU_Assert(dataloop != NULL);
-    MPIU_Memcpy(dataloop, dtp->dataloop, dtp->dataloop_size);
+    MPIR_Assert(dataloop != NULL);
+    MPIR_Memcpy(dataloop, dtp->dataloop, dtp->dataloop_size);
     /* The dataloop can have undefined padding sections, so we need to let
      * valgrind know that it is OK to pass this data to writev later on. */
     MPL_VG_MAKE_MEM_DEFINED(dataloop, dtp->dataloop_size);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_FILL_IN_DERIVED_DTP_INFO);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_FILL_IN_DERIVED_DTP_INFO);
 }
 
 /* Set extended header for ACC operation and return its real size. */
@@ -107,8 +107,8 @@ static int init_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
     void *dataloop_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
 
-    MPIDI_STATE_DECL(MPID_STATE_INIT_ACCUM_EXT_PKT);
-    MPIDI_FUNC_ENTER(MPID_STATE_INIT_ACCUM_EXT_PKT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_INIT_ACCUM_EXT_PKT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_INIT_ACCUM_EXT_PKT);
 
     if ((flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) && target_dtp != NULL) {
         MPIDI_CH3_Ext_pkt_accum_stream_derived_t *_ext_hdr_ptr = NULL;
@@ -171,7 +171,7 @@ static int init_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
     (*ext_hdr_sz) = _total_sz;
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_INIT_ACCUM_EXT_PKT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_INIT_ACCUM_EXT_PKT);
     return mpi_errno;
   fn_fail:
     if ((*ext_hdr_ptr))
@@ -191,20 +191,20 @@ static int init_get_accum_ext_pkt(MPIDI_CH3_Pkt_flags_t flags,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIDI_STATE_DECL(MPID_STATE_INIT_GET_ACCUM_EXT_PKT);
-    MPIDI_FUNC_ENTER(MPID_STATE_INIT_GET_ACCUM_EXT_PKT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_INIT_GET_ACCUM_EXT_PKT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_INIT_GET_ACCUM_EXT_PKT);
 
     /* Check if get_accum still reuses accum' extended packet header. */
-    MPIU_Assert(sizeof(MPIDI_CH3_Ext_pkt_accum_stream_derived_t) ==
+    MPIR_Assert(sizeof(MPIDI_CH3_Ext_pkt_accum_stream_derived_t) ==
                 sizeof(MPIDI_CH3_Ext_pkt_get_accum_stream_derived_t));
-    MPIU_Assert(sizeof(MPIDI_CH3_Ext_pkt_accum_derived_t) ==
+    MPIR_Assert(sizeof(MPIDI_CH3_Ext_pkt_accum_derived_t) ==
                 sizeof(MPIDI_CH3_Ext_pkt_get_accum_derived_t));
-    MPIU_Assert(sizeof(MPIDI_CH3_Ext_pkt_accum_stream_t) ==
+    MPIR_Assert(sizeof(MPIDI_CH3_Ext_pkt_accum_stream_t) ==
                 sizeof(MPIDI_CH3_Ext_pkt_get_accum_stream_t));
 
     mpi_errno = init_accum_ext_pkt(flags, target_dtp, stream_offset, ext_hdr_ptr, ext_hdr_sz);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_INIT_GET_ACCUM_EXT_PKT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_INIT_GET_ACCUM_EXT_PKT);
     return mpi_errno;
 }
 
@@ -233,9 +233,9 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     MPIDI_CH3_Pkt_flags_t flags;
     int is_empty_origin = FALSE;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER);
 
     /* Judge if origin buffer is empty (this can only happens for
      * GACC and FOP when op is MPI_NO_OP). */
@@ -317,7 +317,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     MPIR_ERR_CHKANDJUMP(req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
-    MPIU_Object_set_ref(req, 2);
+    MPIR_Object_set_ref(req, 2);
     req->kind = MPIR_REQUEST_KIND__SEND;
 
     /* set extended packet header, it is freed when the request is freed.  */
@@ -373,7 +373,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
         MPIDU_Datatype_release(target_dtp);
     (*req_ptr) = req;
 
-    MPIDI_FUNC_EXIT(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER);
     return mpi_errno;
   fn_fail:
     if (req) {
@@ -406,9 +406,9 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     MPIDI_CH3_Ext_pkt_put_derived_t *ext_hdr_ptr = NULL;
     MPI_Aint ext_hdr_sz = 0;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_ISSUE_PUT_OP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_PUT_OP);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_ISSUE_PUT_OP);
+    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_ISSUE_PUT_OP);
 
     put_pkt->flags |= flags;
 
@@ -460,7 +460,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     }
 
   fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_PUT_OP);
+    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_ISSUE_PUT_OP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -493,9 +493,9 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     void *ext_hdr_ptr = NULL;
     MPI_Aint ext_hdr_sz = 0;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_ISSUE_ACC_OP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_ACC_OP);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_ISSUE_ACC_OP);
+    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_ISSUE_ACC_OP);
 
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
@@ -511,7 +511,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
         if (curr_req != NULL) {
-            MPIU_Assert(rma_op->reqs_size == 0 && rma_op->single_req == NULL);
+            MPIR_Assert(rma_op->reqs_size == 0 && rma_op->single_req == NULL);
 
             rma_op->reqs_size = 1;
             rma_op->single_req = curr_req;
@@ -531,18 +531,18 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     }
     else {
         MPIDU_Datatype_get_ptr(rma_op->origin_datatype, origin_dtp_ptr);
-        MPIU_Assert(origin_dtp_ptr != NULL && origin_dtp_ptr->basic_type != MPI_DATATYPE_NULL);
+        MPIR_Assert(origin_dtp_ptr != NULL && origin_dtp_ptr->basic_type != MPI_DATATYPE_NULL);
         MPIDU_Datatype_get_size_macro(origin_dtp_ptr->basic_type, predefined_dtp_size);
         predefined_dtp_count = total_len / predefined_dtp_size;
         MPIDU_Datatype_get_extent_macro(origin_dtp_ptr->basic_type, predefined_dtp_extent);
     }
-    MPIU_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 && predefined_dtp_extent > 0);
+    MPIR_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 && predefined_dtp_extent > 0);
 
     /* Calculate number of predefined elements in each stream unit, and
      * total number of stream units. */
     stream_elem_count = MPIDI_CH3U_Acc_stream_size / predefined_dtp_extent;
     stream_unit_count = (predefined_dtp_count - 1) / stream_elem_count + 1;
-    MPIU_Assert(stream_elem_count > 0 && stream_unit_count > 0);
+    MPIR_Assert(stream_elem_count > 0 && stream_unit_count > 0);
 
     /* If there are more than one stream unit, mark the current packet
      * as stream packet */
@@ -554,7 +554,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         MPIDU_Datatype_get_ptr(accum_pkt->datatype, target_dtp_ptr);
 
     rest_len = total_len;
-    MPIU_Assert(rma_op->issued_stream_count >= 0);
+    MPIR_Assert(rma_op->issued_stream_count >= 0);
     for (j = 0; j < stream_unit_count; j++) {
         intptr_t stream_offset, stream_size;
         MPIR_Request *curr_req = NULL;
@@ -588,7 +588,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
 
         if (curr_req != NULL) {
             if (rma_op->reqs_size == 0) {
-                MPIU_Assert(rma_op->single_req == NULL && rma_op->multi_reqs == NULL);
+                MPIR_Assert(rma_op->single_req == NULL && rma_op->multi_reqs == NULL);
                 rma_op->reqs_size = stream_unit_count;
 
                 if (stream_unit_count > 1) {
@@ -611,7 +611,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
             accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE) {
             /* if piggybacked with LOCK flag, we
              * only issue the first streaming unit */
-            MPIU_Assert(j == 0);
+            MPIR_Assert(j == 0);
             break;
         }
     }   /* end of for loop */
@@ -622,7 +622,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     }
 
   fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_ACC_OP);
+    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_ISSUE_ACC_OP);
     return mpi_errno;
   fn_fail:
     if (rma_op->reqs_size == 1) {
@@ -659,9 +659,9 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     void *ext_hdr_ptr = NULL;
     MPI_Aint ext_hdr_sz = 0;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_ISSUE_GET_ACC_OP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_GET_ACC_OP);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_ISSUE_GET_ACC_OP);
+    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_ISSUE_GET_ACC_OP);
 
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
@@ -679,7 +679,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         resp_req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
         MPIR_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
-        MPIU_Object_set_ref(resp_req, 2);
+        MPIR_Object_set_ref(resp_req, 2);
 
         resp_req->dev.user_buf = rma_op->result_addr;
         resp_req->dev.user_count = rma_op->result_count;
@@ -717,18 +717,18 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     }
     else {
         MPIDU_Datatype_get_ptr(get_accum_pkt->datatype, target_dtp_ptr);
-        MPIU_Assert(target_dtp_ptr != NULL && target_dtp_ptr->basic_type != MPI_DATATYPE_NULL);
+        MPIR_Assert(target_dtp_ptr != NULL && target_dtp_ptr->basic_type != MPI_DATATYPE_NULL);
         MPIDU_Datatype_get_size_macro(target_dtp_ptr->basic_type, predefined_dtp_size);
         predefined_dtp_count = total_len / predefined_dtp_size;
         MPIDU_Datatype_get_extent_macro(target_dtp_ptr->basic_type, predefined_dtp_extent);
     }
-    MPIU_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 && predefined_dtp_extent > 0);
+    MPIR_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 && predefined_dtp_extent > 0);
 
     /* Calculate number of predefined elements in each stream unit, and
      * total number of stream units. */
     stream_elem_count = MPIDI_CH3U_Acc_stream_size / predefined_dtp_extent;
     stream_unit_count = (predefined_dtp_count - 1) / stream_elem_count + 1;
-    MPIU_Assert(stream_elem_count > 0 && stream_unit_count > 0);
+    MPIR_Assert(stream_elem_count > 0 && stream_unit_count > 0);
 
     /* If there are more than one stream unit, mark the current packet
      * as stream packet */
@@ -746,7 +746,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
             rma_op->multi_reqs[i] = NULL;
     }
 
-    MPIU_Assert(rma_op->issued_stream_count >= 0);
+    MPIR_Assert(rma_op->issued_stream_count >= 0);
 
     for (j = 0; j < stream_unit_count; j++) {
         intptr_t stream_offset, stream_size;
@@ -774,7 +774,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         resp_req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
         MPIR_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
-        MPIU_Object_set_ref(resp_req, 2);
+        MPIR_Object_set_ref(resp_req, 2);
 
         resp_req->dev.user_buf = rma_op->result_addr;
         resp_req->dev.user_count = rma_op->result_count;
@@ -828,7 +828,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
             get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE) {
             /* if piggybacked with LOCK flag, we
              * only issue the first streaming unit */
-            MPIU_Assert(j == 0);
+            MPIR_Assert(j == 0);
             break;
         }
     }   /* end of for loop */
@@ -839,7 +839,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     }
 
   fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_GET_ACC_OP);
+    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_ISSUE_GET_ACC_OP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -889,9 +889,9 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     MPIDI_CH3_Ext_pkt_get_derived_t *ext_hdr_ptr = NULL;
     MPI_Aint ext_hdr_sz = 0;
     MPL_IOV iov[MPL_IOV_LIMIT];
-    MPIDI_STATE_DECL(MPID_STATE_ISSUE_GET_OP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_GET_OP);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_ISSUE_GET_OP);
+    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_ISSUE_GET_OP);
 
     rma_op->reqs_size = 1;
 
@@ -904,7 +904,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     }
 
-    MPIU_Object_set_ref(curr_req, 2);
+    MPIR_Object_set_ref(curr_req, 2);
 
     curr_req->dev.user_buf = rma_op->origin_addr;
     curr_req->dev.user_count = rma_op->origin_count;
@@ -988,7 +988,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPIR_Win * win_ptr,
     rma_op->single_req = curr_req;
 
   fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_GET_OP);
+    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_ISSUE_GET_OP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -1013,9 +1013,9 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     MPIR_Request *rmw_req = NULL;
     MPIR_Request *curr_req = NULL;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_ISSUE_CAS_OP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_CAS_OP);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_ISSUE_CAS_OP);
+    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_ISSUE_CAS_OP);
 
     rma_op->reqs_size = 1;
 
@@ -1027,7 +1027,7 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
 
     /* Set refs on the request to 2: one for the response message, and one for
      * the partial completion handler */
-    MPIU_Object_set_ref(curr_req, 2);
+    MPIR_Object_set_ref(curr_req, 2);
 
     curr_req->dev.user_buf = rma_op->result_addr;
     curr_req->dev.datatype = rma_op->result_datatype;
@@ -1051,7 +1051,7 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     rma_op->single_req = curr_req;
 
   fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_CAS_OP);
+    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_ISSUE_CAS_OP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -1076,9 +1076,9 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     MPIR_Request *resp_req = NULL;
     MPIR_Request *curr_req = NULL;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_ISSUE_FOP_OP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_FOP_OP);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_ISSUE_FOP_OP);
+    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_ISSUE_FOP_OP);
 
     rma_op->reqs_size = 1;
 
@@ -1088,7 +1088,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     resp_req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     MPIR_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
 
-    MPIU_Object_set_ref(resp_req, 2);
+    MPIR_Object_set_ref(resp_req, 2);
 
     resp_req->dev.user_buf = rma_op->result_addr;
     resp_req->dev.datatype = rma_op->result_datatype;
@@ -1124,7 +1124,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     rma_op->single_req = resp_req;
 
   fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_FOP_OP);
+    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_ISSUE_FOP_OP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -1145,9 +1145,9 @@ static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPIR_Win * win_ptr,
                                MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_ISSUE_RMA_OP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_ISSUE_RMA_OP);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_ISSUE_RMA_OP);
+    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_ISSUE_RMA_OP);
 
     switch (op_ptr->pkt.type) {
     case (MPIDI_CH3_PKT_PUT):
@@ -1180,7 +1180,7 @@ static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPIR_Win * win_ptr,
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_RMA_OP);
+    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_ISSUE_RMA_OP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:

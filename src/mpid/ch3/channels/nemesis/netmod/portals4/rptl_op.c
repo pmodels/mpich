@@ -17,15 +17,15 @@ int rptli_op_alloc(struct rptl_op **op, struct rptl_target *target)
     struct rptl_op_pool_segment *op_segment;
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPIU_CHKPMEM_DECL(1);
-    MPIDI_STATE_DECL(MPID_STATE_RPTLI_OP_ALLOC);
+    MPIR_CHKPMEM_DECL(1);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_RPTLI_OP_ALLOC);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_RPTLI_OP_ALLOC);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_RPTLI_OP_ALLOC);
 
     assert(target);
 
     if (target->op_pool == NULL) {
-        MPIU_CHKPMEM_MALLOC(op_segment, struct rptl_op_pool_segment *, sizeof(struct rptl_op_pool_segment),
+        MPIR_CHKPMEM_MALLOC(op_segment, struct rptl_op_pool_segment *, sizeof(struct rptl_op_pool_segment),
                             mpi_errno, "op pool segment");
         MPL_DL_APPEND(target->op_segment_list, op_segment);
 
@@ -37,14 +37,14 @@ int rptli_op_alloc(struct rptl_op **op, struct rptl_target *target)
     MPL_DL_DELETE(target->op_pool, *op);
 
   fn_exit:
-    MPIU_CHKPMEM_COMMIT();
-    MPIDI_FUNC_EXIT(MPID_STATE_RPTLI_OP_ALLOC);
+    MPIR_CHKPMEM_COMMIT();
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_RPTLI_OP_ALLOC);
     return ret;
 
   fn_fail:
     if (mpi_errno)
         ret = PTL_FAIL;
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -55,11 +55,11 @@ int rptli_op_alloc(struct rptl_op **op, struct rptl_target *target)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 void rptli_op_free(struct rptl_op *op)
 {
-    MPIDI_STATE_DECL(MPID_STATE_RPTLI_OP_FREE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_RPTLI_OP_FREE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_RPTLI_OP_FREE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_RPTLI_OP_FREE);
 
     MPL_DL_APPEND(op->target->op_pool, op);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_RPTLI_OP_FREE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_RPTLI_OP_FREE);
 }

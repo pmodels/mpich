@@ -74,19 +74,19 @@ int MPIDI_CH3I_Seg_alloc(size_t len, void **ptr_p)
 {
     int mpi_errno = MPI_SUCCESS;
     alloc_elem_t *ep;
-    MPIU_CHKPMEM_DECL(1);
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SEG_ALLOC);
+    MPIR_CHKPMEM_DECL(1);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SEG_ALLOC);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SEG_ALLOC);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_SEG_ALLOC);
 
     /* round up to multiple of 8 to ensure the start of the next
        region is 64-bit aligned. */
     len = ROUND_UP_8(len);
 
-    MPIU_Assert(len);
-    MPIU_Assert(ptr_p);
+    MPIR_Assert(len);
+    MPIR_Assert(ptr_p);
 
-    MPIU_CHKPMEM_MALLOC(ep, alloc_elem_t *, sizeof(alloc_elem_t), mpi_errno, "el");
+    MPIR_CHKPMEM_MALLOC(ep, alloc_elem_t *, sizeof(alloc_elem_t), mpi_errno, "el");
     
     ep->ptr_p = ptr_p;
     ep->len = len;
@@ -96,11 +96,11 @@ int MPIDI_CH3I_Seg_alloc(size_t len, void **ptr_p)
     segment_len += len;
     
  fn_exit:
-    MPIU_CHKPMEM_COMMIT();
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_SEG_ALLOC);
+    MPIR_CHKPMEM_COMMIT();
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_SEG_ALLOC);
     return mpi_errno;
  fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -141,15 +141,15 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
     void *current_addr;
     void *start_addr ATTRIBUTE((unused));
     size_t size_left;
-    MPIU_CHKPMEM_DECL (1);
-    MPIU_CHKLMEM_DECL (2);
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SEG_COMMIT);
+    MPIR_CHKPMEM_DECL (1);
+    MPIR_CHKLMEM_DECL (2);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SEG_COMMIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SEG_COMMIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_SEG_COMMIT);
 
     /* MPIDI_CH3I_Seg_alloc() needs to have been called before this function */
-    MPIU_Assert(!ALLOCQ_EMPTY());
-    MPIU_Assert(segment_len > 0);
+    MPIR_Assert(!ALLOCQ_EMPTY());
+    MPIR_Assert(segment_len > 0);
 
     /* allocate an area to check if the segment was allocated symmetrically */
     mpi_errno = MPIDI_CH3I_Seg_alloc(sizeof(asym_check_region), (void **)&asym_check_region_p);
@@ -169,7 +169,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
        region containing the barrier vars. */
     
     /* add space for local barrier region.  Use a whole cacheline. */
-    MPIU_Assert(MPID_NEM_CACHE_LINE_LEN >= sizeof(MPID_nem_barrier_t));
+    MPIR_Assert(MPID_NEM_CACHE_LINE_LEN >= sizeof(MPID_nem_barrier_t));
     segment_len += MPID_NEM_CACHE_LINE_LEN;
 
 #ifdef OPA_USE_LOCK_BASED_PRIMITIVES
@@ -182,7 +182,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
     /* offset from memory->base_addr to the start of ipc_lock */
     ipc_lock_offset = MPID_NEM_CACHE_LINE_LEN;
 
-    MPIU_Assert(ipc_lock_offset >= sizeof(OPA_emulation_ipl_t));
+    MPIR_Assert(ipc_lock_offset >= sizeof(OPA_emulation_ipl_t));
     segment_len += MPID_NEM_CACHE_LINE_LEN;
 #endif
 
@@ -194,7 +194,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
     {
         char *addr;
 
-        MPIU_CHKPMEM_MALLOC (addr, char *, segment_len + MPID_NEM_CACHE_LINE_LEN, mpi_errno, "segment");
+        MPIR_CHKPMEM_MALLOC (addr, char *, segment_len + MPID_NEM_CACHE_LINE_LEN, mpi_errno, "segment");
 
         memory->base_addr = addr;
         current_addr = (char *)(((uintptr_t)addr + (uintptr_t)MPID_NEM_CACHE_LINE_LEN-1) & (~((uintptr_t)MPID_NEM_CACHE_LINE_LEN-1)));
@@ -217,7 +217,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
             /* post name of shared file */
-            MPIU_Assert (MPID_nem_mem_region.local_procs[0] == MPID_nem_mem_region.rank);
+            MPIR_Assert (MPID_nem_mem_region.local_procs[0] == MPID_nem_mem_region.rank);
 
             mpi_errno = MPIU_SHMW_Hnd_get_serialized_by_ref(memory->hnd, &serialized_hnd);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -243,7 +243,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
             int found = FALSE;
 
             /* Allocate space for pmi key and val */
-            MPIU_CHKLMEM_MALLOC(val, char *, PMI2_MAX_VALLEN, mpi_errno, "val");
+            MPIR_CHKLMEM_MALLOC(val, char *, PMI2_MAX_VALLEN, mpi_errno, "val");
 
             /* get name of shared file */
             mpi_errno = PMI2_Info_GetNodeAttr("sharedFilename", val, PMI2_MAX_VALLEN, &found, TRUE);
@@ -290,7 +290,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
     {
         char *addr;
 
-        MPIU_CHKPMEM_MALLOC (addr, char *, segment_len + MPID_NEM_CACHE_LINE_LEN, mpi_errno, "segment");
+        MPIR_CHKPMEM_MALLOC (addr, char *, segment_len + MPID_NEM_CACHE_LINE_LEN, mpi_errno, "segment");
 
         memory->base_addr = addr;
         current_addr = (char *)(((uintptr_t)addr + (uintptr_t)MPID_NEM_CACHE_LINE_LEN-1) & (~((uintptr_t)MPID_NEM_CACHE_LINE_LEN-1)));
@@ -313,11 +313,11 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
         /* Allocate space for pmi key and val */
         pmi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
         MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
-        MPIU_CHKLMEM_MALLOC(key, char *, key_max_sz, mpi_errno, "key");
+        MPIR_CHKLMEM_MALLOC(key, char *, key_max_sz, mpi_errno, "key");
 
         pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
         MPIR_ERR_CHKANDJUMP1(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", pmi_errno);
-        MPIU_CHKLMEM_MALLOC(val, char *, val_max_sz, mpi_errno, "val");
+        MPIR_CHKLMEM_MALLOC(val, char *, val_max_sz, mpi_errno, "val");
 
         mpi_errno = MPIDI_PG_GetConnKVSname (&kvs_name);
         if (mpi_errno) MPIR_ERR_POP (mpi_errno);
@@ -327,7 +327,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
             if (mpi_errno != MPI_SUCCESS) MPIR_ERR_POP (mpi_errno);
 
             /* post name of shared file */
-            MPIU_Assert (MPID_nem_mem_region.local_procs[0] == MPID_nem_mem_region.rank);
+            MPIR_Assert (MPID_nem_mem_region.local_procs[0] == MPID_nem_mem_region.rank);
             MPL_snprintf (key, key_max_sz, "sharedFilename[%i]", MPID_nem_mem_region.rank);
 
             mpi_errno = MPIU_SHMW_Hnd_get_serialized_by_ref(memory->hnd, &serialized_hnd);
@@ -398,13 +398,13 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
 
     /* reserve room for shared mem barrier (We used a whole cacheline) */
     current_addr = (char *)current_addr + MPID_NEM_CACHE_LINE_LEN;
-    MPIU_Assert(size_left >= MPID_NEM_CACHE_LINE_LEN);
+    MPIR_Assert(size_left >= MPID_NEM_CACHE_LINE_LEN);
     size_left -= MPID_NEM_CACHE_LINE_LEN;
 
 #ifdef OPA_USE_LOCK_BASED_PRIMITIVES
     /* reserve room for the opa emulation lock */
     current_addr = (char *)current_addr + MPID_NEM_CACHE_LINE_LEN;
-    MPIU_Assert(size_left >= MPID_NEM_CACHE_LINE_LEN);
+    MPIR_Assert(size_left >= MPID_NEM_CACHE_LINE_LEN);
     size_left -= MPID_NEM_CACHE_LINE_LEN;
 #endif
 
@@ -415,29 +415,29 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
         ALLOCQ_DEQUEUE(&ep);
 
         *(ep->ptr_p) = current_addr;
-        MPIU_Assert(size_left >= ep->len);
+        MPIR_Assert(size_left >= ep->len);
         size_left -= ep->len;
         current_addr = (char *)current_addr + ep->len;
 
         MPL_free(ep);
 
-        MPIU_Assert((char *)current_addr <= (char *)start_addr + segment_len);
+        MPIR_Assert((char *)current_addr <= (char *)start_addr + segment_len);
     }
     while (!ALLOCQ_EMPTY());
 
     mpi_errno = check_alloc(num_local, local_rank);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     
-    MPIU_CHKPMEM_COMMIT();
+    MPIR_CHKPMEM_COMMIT();
  fn_exit:
-    MPIU_CHKLMEM_FREEALL();
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_SEG_COMMIT);
+    MPIR_CHKLMEM_FREEALL();
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_SEG_COMMIT);
     return mpi_errno;
  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
     MPIU_SHMW_Seg_remove(memory->hnd);
     MPIU_SHMW_Hnd_finalize(&(memory->hnd));
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -450,9 +450,9 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
 int MPIDI_CH3I_Seg_destroy(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SEG_DESTROY);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_SEG_DESTROY);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SEG_DESTROY);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3I_SEG_DESTROY);
 
     if (MPID_nem_mem_region.num_local == 1)
         MPL_free(MPID_nem_mem_region.memory.base_addr);
@@ -465,7 +465,7 @@ int MPIDI_CH3I_Seg_destroy(void)
 
  fn_exit:
     MPIU_SHMW_Hnd_finalize(&(MPID_nem_mem_region.memory.hnd));
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_SEG_DESTROY);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3I_SEG_DESTROY);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -481,9 +481,9 @@ int MPIDI_CH3I_Seg_destroy(void)
 static int check_alloc(int num_local, int local_rank)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_CHECK_ALLOC);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CHECK_ALLOC);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_CHECK_ALLOC);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CHECK_ALLOC);
 
     if (local_rank == 0) {
         asym_check_region_p->base_ptr = MPID_nem_mem_region.memory.base_addr;
@@ -516,7 +516,7 @@ static int check_alloc(int num_local, int local_rank)
     }
       
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_CHECK_ALLOC);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CHECK_ALLOC);
     return mpi_errno;
  fn_fail:
     goto fn_exit;

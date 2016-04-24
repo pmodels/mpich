@@ -78,9 +78,9 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_INIT);
 
     /* Override split_type */
     MPIR_Comm_fns = &comm_fns;
@@ -106,7 +106,7 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
     }
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_INIT);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -116,13 +116,13 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
    MPI Port functions */
 int MPIDI_CH3_PortFnsInit( MPIDI_PortFns *portFns )
 {
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PORTFNSINIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PORTFNSINIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PORTFNSINIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PORTFNSINIT);
 
     MPL_UNREFERENCED_ARG(portFns);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PORTFNSINIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PORTFNSINIT);
     return 0;
 }
 
@@ -133,15 +133,15 @@ int MPIDI_CH3_PortFnsInit( MPIDI_PortFns *portFns )
 int MPIDI_CH3_Get_business_card(int myRank, char *value, int length)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPIDI_STATE_MPIDI_CH3_GET_BUSINESS_CARD);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPIDI_STATE_MPIDI_CH3_GET_BUSINESS_CARD);
 
-    MPIDI_FUNC_ENTER(MPIDI_STATE_MPIDI_CH3_GET_BUSINESS_CARD);
+    MPIR_FUNC_VERBOSE_ENTER(MPIDI_STATE_MPIDI_CH3_GET_BUSINESS_CARD);
 
     mpi_errno = MPID_nem_get_business_card(myRank, value, length);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 fn_exit:
-    MPIDI_FUNC_EXIT(MPIDI_STATE_MPIDI_CH3_GET_BUSINESS_CARD);
+    MPIR_FUNC_VERBOSE_EXIT(MPIDI_STATE_MPIDI_CH3_GET_BUSINESS_CARD);
     return mpi_errno;
 fn_fail:
     goto fn_exit;
@@ -155,9 +155,9 @@ fn_fail:
 int MPIDI_CH3_VC_Init( MPIDI_VC_t *vc )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_VC_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_VC_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_VC_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_VC_INIT);
 
     /* FIXME: Circular dependency.  Before calling MPIDI_CH3_Init,
        MPID_Init calls InitPG which calls MPIDI_PG_Create which calls
@@ -190,7 +190,7 @@ int MPIDI_CH3_VC_Init( MPIDI_VC_t *vc )
 
  fn_exit:
  fn_fail:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_VC_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_VC_INIT);
     return mpi_errno;
 }
 
@@ -201,9 +201,9 @@ int MPIDI_CH3_VC_Init( MPIDI_VC_t *vc )
 int MPIDI_CH3_VC_Destroy(MPIDI_VC_t *vc )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_VC_DESTROY);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_VC_DESTROY);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_VC_DESTROY);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_VC_DESTROY);
 
     /* no need to destroy vc to self, this corresponds to the optimization above
      * in MPIDI_CH3_VC_Init */
@@ -215,7 +215,7 @@ int MPIDI_CH3_VC_Destroy(MPIDI_VC_t *vc )
     mpi_errno = MPID_nem_vc_destroy(vc);
 
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_VC_DESTROY);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_VC_DESTROY);
     return mpi_errno;
 }
 
@@ -228,14 +228,14 @@ int MPIDI_CH3_Connect_to_root (const char *port_name, MPIDI_VC_t **new_vc)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_VC_t * vc;
-    MPIU_CHKPMEM_DECL(1);
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_CONNECT_TO_ROOT);
+    MPIR_CHKPMEM_DECL(1);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_CONNECT_TO_ROOT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_CONNECT_TO_ROOT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_CONNECT_TO_ROOT);
 
     *new_vc = NULL; /* so that the err handling knows to cleanup */
 
-    MPIU_CHKPMEM_MALLOC (vc, MPIDI_VC_t *, sizeof(MPIDI_VC_t), mpi_errno, "vc");
+    MPIR_CHKPMEM_MALLOC (vc, MPIDI_VC_t *, sizeof(MPIDI_VC_t), mpi_errno, "vc");
     /* FIXME - where does this vc get freed?
        ANSWER (goodell@) - ch3u_port.c FreeNewVC
                            (but the VC_Destroy is in this file) */
@@ -253,16 +253,16 @@ int MPIDI_CH3_Connect_to_root (const char *port_name, MPIDI_VC_t **new_vc)
     mpi_errno = MPID_nem_connect_to_root (port_name, vc);
     if (mpi_errno) MPIR_ERR_POP (mpi_errno);
 
-    MPIU_CHKPMEM_COMMIT();
+    MPIR_CHKPMEM_COMMIT();
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_CONNECT_TO_ROOT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_CONNECT_TO_ROOT);
     return mpi_errno;
  fn_fail:
     /* freeing without giving the lower layer a chance to cleanup can lead to
        leaks on error */
     if (*new_vc)
         MPIDI_CH3_VC_Destroy(*new_vc);
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -279,23 +279,23 @@ const char * MPIDI_CH3_VC_GetStateString( struct MPIDI_VC *vc )
 /* We don't initialize before calling MPIDI_CH3_VC_Init */
 int MPIDI_CH3_PG_Init(MPIDI_PG_t *pg_p)
 {
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PG_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PG_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PG_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PG_INIT);
     MPL_UNREFERENCED_ARG(pg_p);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PG_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PG_INIT);
     return MPI_SUCCESS;
 }
 
 int MPIDI_CH3_PG_Destroy(MPIDI_PG_t *pg_p)
 {
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PG_DESTROY);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_PG_DESTROY);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PG_DESTROY);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_PG_DESTROY);
     MPL_UNREFERENCED_ARG(pg_p);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PG_DESTROY);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_PG_DESTROY);
     return MPI_SUCCESS;
 }
 
@@ -320,21 +320,21 @@ int MPID_nem_register_initcomp_cb(int (* callback)(void))
 {
     int mpi_errno = MPI_SUCCESS;
     initcomp_cb_t *ep;
-    MPIU_CHKPMEM_DECL(1);
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_REGISTER_INITCOMP_CB);
+    MPIR_CHKPMEM_DECL(1);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_NEM_REGISTER_INITCOMP_CB);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_REGISTER_INITCOMP_CB);
-    MPIU_CHKPMEM_MALLOC(ep, initcomp_cb_t *, sizeof(*ep), mpi_errno, "initcomp callback element");
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_NEM_REGISTER_INITCOMP_CB);
+    MPIR_CHKPMEM_MALLOC(ep, initcomp_cb_t *, sizeof(*ep), mpi_errno, "initcomp callback element");
 
     ep->callback = callback;
     INITCOMP_S_PUSH(ep);
 
-    MPIU_CHKPMEM_COMMIT();
+    MPIR_CHKPMEM_COMMIT();
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_REGISTER_INITCOMP_CB);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_NEM_REGISTER_INITCOMP_CB);
     return mpi_errno;
  fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -347,9 +347,9 @@ int MPIDI_CH3_InitCompleted(void)
     int mpi_errno = MPI_SUCCESS;
     initcomp_cb_t *ep;
     initcomp_cb_t *ep_tmp;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_INITCOMPLETED);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3_INITCOMPLETED);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_INITCOMPLETED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH3_INITCOMPLETED);
     ep = INITCOMP_S_TOP();
     while (ep)
     {
@@ -361,7 +361,7 @@ int MPIDI_CH3_InitCompleted(void)
     }
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_INITCOMPLETED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH3_INITCOMPLETED);
     return mpi_errno;
  fn_fail:
     goto fn_exit;

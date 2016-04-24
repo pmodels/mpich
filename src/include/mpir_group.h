@@ -15,11 +15,11 @@
  *---------------------------------------------------------------------------*/
 /* This structure is used to implement the group operations such as
    MPI_Group_translate_ranks */
-typedef struct MPIR_Group_pmap_t {
+typedef struct MPII_Group_pmap_t {
     int          lpid;      /* local process id, from VCONN */
     int          next_lpid; /* Index of next lpid (in lpid order) */
     int          flag;      /* marker, used to implement group operations */
-} MPIR_Group_pmap_t;
+} MPII_Group_pmap_t;
 
 /* Any changes in the MPIR_Group structure must be made to the
    predefined value in MPIR_Group_builtin for MPI_GROUP_EMPTY in
@@ -55,12 +55,12 @@ typedef struct MPIR_Group_pmap_t {
 
  S*/
 struct MPIR_Group {
-    MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
+    MPIR_OBJECT_HEADER; /* adds handle and ref_count fields */
     int          size;           /* Size of a group */
     int          rank;           /* rank of this process relative to this
 				    group */
     int          idx_of_first_lpid;
-    MPIR_Group_pmap_t *lrank_to_lpid; /* Array mapping a local rank to local
+    MPII_Group_pmap_t *lrank_to_lpid; /* Array mapping a local rank to local
 					 process number */
     int          is_local_dense_monotonic; /* see NOTE-G1 */
 
@@ -83,7 +83,7 @@ struct MPIR_Group {
  * case for many MPI tool libraries, such as Scalasca.
  */
 
-extern MPIU_Object_alloc_t MPIR_Group_mem;
+extern MPIR_Object_alloc_t MPIR_Group_mem;
 /* Preallocated group objects */
 #define MPIR_GROUP_N_BUILTIN 1
 extern MPIR_Group MPIR_Group_builtin[MPIR_GROUP_N_BUILTIN];
@@ -93,12 +93,11 @@ extern MPIR_Group MPIR_Group_direct[];
 extern MPIR_Group * const MPIR_Group_empty;
 
 #define MPIR_Group_add_ref( _group ) \
-    do { MPIU_Object_add_ref( _group ); } while (0)
+    do { MPIR_Object_add_ref( _group ); } while (0)
 
 #define MPIR_Group_release_ref( _group, _inuse ) \
-     do { MPIU_Object_release_ref( _group, _inuse ); } while (0)
+     do { MPIR_Object_release_ref( _group, _inuse ); } while (0)
 
-void MPIR_Group_setup_lpid_list( MPIR_Group * );
 int MPIR_Group_create( int, MPIR_Group ** );
 int MPIR_Group_release(MPIR_Group *group_ptr);
 
@@ -115,5 +114,8 @@ int MPIR_Group_translate_ranks_impl(MPIR_Group *group_ptr1, int n, const int *ra
 int MPIR_Group_union_impl(MPIR_Group *group_ptr1, MPIR_Group *group_ptr2, MPIR_Group **new_group_ptr);
 int MPIR_Group_check_subset(MPIR_Group * group_ptr, MPIR_Comm * comm_ptr);
 int MPIR_Group_init(void);
+
+/* internal functions */
+void MPII_Group_setup_lpid_list( MPIR_Group * );
 
 #endif /* MPIR_GROUP_H_INCLUDED */

@@ -74,22 +74,22 @@
     ((HANDLE_GET_KIND(handle_) == HANDLE_KIND_BUILTIN) ? 0 : 1)
 
 #define DLOOP_Ensure_Offset_fits_in_pointer(value_) \
-    MPIU_Ensure_Aint_fits_in_pointer(value_)
+    MPIR_Ensure_Aint_fits_in_pointer(value_)
 
 /* allocate and free functions must also be defined. */
 #define DLOOP_Malloc MPL_malloc
 #define DLOOP_Free   MPL_free
 
 /* assert function */
-#define DLOOP_Assert MPIU_Assert
+#define DLOOP_Assert MPIR_Assert
 
 /* memory copy function */
-#define DLOOP_Memcpy MPIU_Memcpy
+#define DLOOP_Memcpy MPIR_Memcpy
 
 /* casting macros */
-#define DLOOP_OFFSET_CAST_TO_VOID_PTR MPIU_AINT_CAST_TO_VOID_PTR
-#define DLOOP_VOID_PTR_CAST_TO_OFFSET MPIU_VOID_PTR_CAST_TO_MPI_AINT
-#define DLOOP_PTR_DISP_CAST_TO_OFFSET MPIU_PTR_DISP_CAST_TO_MPI_AINT
+#define DLOOP_OFFSET_CAST_TO_VOID_PTR MPIR_AINT_CAST_TO_VOID_PTR
+#define DLOOP_VOID_PTR_CAST_TO_OFFSET MPIR_VOID_PTR_CAST_TO_MPI_AINT
+#define DLOOP_PTR_DISP_CAST_TO_OFFSET MPIR_PTR_DISP_CAST_TO_MPI_AINT
 
 /* printing macros */
 #define DLOOP_OFFSET_FMT_DEC_SPEC MPI_AINT_FMT_DEC_SPEC

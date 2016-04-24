@@ -44,7 +44,7 @@ void MPIDI_PAMI_datatype_commit_hook (MPI_Datatype *ptr)
       pami_result_t pami_dtop_result;
       datatype_ptr->device_datatype = (pami_type_t *) MPL_malloc(sizeof(pami_type_t));
       pami_dtop_result = PAMI_Type_create ((pami_type_t *)datatype_ptr->device_datatype);
-      MPIU_Assert(pami_dtop_result == PAMI_SUCCESS);
+      MPIR_Assert(pami_dtop_result == PAMI_SUCCESS);
 
       /* Flatten the non-contiguous data type into arrays describing the contiguous chunks.
        */
@@ -66,13 +66,13 @@ void MPIDI_PAMI_datatype_commit_hook (MPI_Datatype *ptr)
         else
           cursor_offset = (size_t) dt_offset_array[i] - (size_t)dt_offset_array[i-1];
         pami_dtop_result = PAMI_Type_add_simple (*(pami_type_t*)(datatype_ptr->device_datatype), num_bytes_this_entry, cursor_offset,  1, 0);
-        MPIU_Assert(pami_dtop_result == PAMI_SUCCESS);
+        MPIR_Assert(pami_dtop_result == PAMI_SUCCESS);
       }
 
       /* Complete the PAMI datatype and free arrays.
        */
       pami_dtop_result = PAMI_Type_complete (*(pami_type_t*)(datatype_ptr->device_datatype),1);
-      MPIU_Assert(pami_dtop_result == PAMI_SUCCESS);
+      MPIR_Assert(pami_dtop_result == PAMI_SUCCESS);
       MPL_free(dt_offset_array);
       MPL_free(dt_size_array);
     }
@@ -92,7 +92,7 @@ void MPIDI_PAMI_datatype_destroy_hook (MPIDU_Datatype*ptr)
       if (ptr->device_datatype) {
         pami_result_t pami_dtop_result;
         pami_dtop_result = PAMI_Type_destroy ((pami_type_t *)ptr->device_datatype);
-        MPIU_Assert(pami_dtop_result == PAMI_SUCCESS);
+        MPIR_Assert(pami_dtop_result == PAMI_SUCCESS);
         MPL_free(ptr->device_datatype);
       }
     }
@@ -119,7 +119,7 @@ void MPIDI_PAMI_datatype_dup_hook (MPI_Datatype *ptr)
       pami_result_t pami_dtop_result;
       datatype_ptr->device_datatype = (pami_type_t *) MPL_malloc(sizeof(pami_type_t));
       pami_dtop_result = PAMI_Type_create ((pami_type_t *)datatype_ptr->device_datatype);
-      MPIU_Assert(pami_dtop_result == PAMI_SUCCESS);
+      MPIR_Assert(pami_dtop_result == PAMI_SUCCESS);
 
       /* Flatten the non-contiguous data type into arrays describing the contiguous chunks.
        */
@@ -141,13 +141,13 @@ void MPIDI_PAMI_datatype_dup_hook (MPI_Datatype *ptr)
         else
           cursor_offset = (size_t) dt_offset_array[i] - (size_t)dt_offset_array[i-1];
         pami_dtop_result = PAMI_Type_add_simple (*(pami_type_t*)(datatype_ptr->device_datatype), num_bytes_this_entry, cursor_offset,  1, 0);
-        MPIU_Assert(pami_dtop_result == PAMI_SUCCESS);
+        MPIR_Assert(pami_dtop_result == PAMI_SUCCESS);
       }
 
       /* Complete the PAMI datatype and free arrays.
        */
       pami_dtop_result = PAMI_Type_complete (*(pami_type_t*)(datatype_ptr->device_datatype),1);
-      MPIU_Assert(pami_dtop_result == PAMI_SUCCESS);
+      MPIR_Assert(pami_dtop_result == PAMI_SUCCESS);
       MPL_free(dt_offset_array);
       MPL_free(dt_size_array);
     }

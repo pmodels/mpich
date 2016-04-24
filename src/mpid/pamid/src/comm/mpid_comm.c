@@ -375,7 +375,7 @@ void MPIDI_Coll_comm_destroy(MPIR_Comm *comm)
   if(comm->comm_kind != MPIR_COMM_KIND__INTRACOMM)
     return;
 
-  /* It's possible (MPIR_Setup_intercomm_localcomm) to have an intracomm
+  /* It's possible (MPII_Setup_intercomm_localcomm) to have an intracomm
      without a geometry even when using optimized collectives */
   if(comm->mpid.geometry == PAMI_GEOMETRY_NULL)
     return;

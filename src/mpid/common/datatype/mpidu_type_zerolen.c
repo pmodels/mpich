@@ -30,7 +30,7 @@ int MPIDU_Type_zerolen(MPI_Datatype *newtype)
     MPIDU_Datatype *new_dtp;
 
     /* allocate new datatype object and handle */
-    new_dtp = (MPIDU_Datatype *) MPIU_Handle_obj_alloc(&MPIDU_Datatype_mem);
+    new_dtp = (MPIDU_Datatype *) MPIR_Handle_obj_alloc(&MPIDU_Datatype_mem);
     /* --BEGIN ERROR HANDLING-- */
     if (!new_dtp)
     {
@@ -42,8 +42,8 @@ int MPIDU_Type_zerolen(MPI_Datatype *newtype)
     }
     /* --END ERROR HANDLING-- */
 
-    /* handle is filled in by MPIU_Handle_obj_alloc() */
-    MPIU_Object_set_ref(new_dtp, 1);
+    /* handle is filled in by MPIR_Handle_obj_alloc() */
+    MPIR_Object_set_ref(new_dtp, 1);
     new_dtp->is_permanent = 0;
     new_dtp->is_committed = 0;
     new_dtp->attributes   = NULL;

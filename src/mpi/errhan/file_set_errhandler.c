@@ -56,11 +56,11 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
     MPIR_Errhandler *errhan_ptr = NULL, *old_errhandler_ptr;
     MPI_Errhandler old_errhandler;
 #endif
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_FILE_SET_ERRHANDLER);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_FILE_SET_ERRHANDLER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_FILE_SET_ERRHANDLER);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_FILE_SET_ERRHANDLER);
 
 #ifdef MPI_MODE_RDONLY
 
@@ -134,7 +134,7 @@ int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler)
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
 #endif
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_FILE_SET_ERRHANDLER);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_FILE_SET_ERRHANDLER);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */

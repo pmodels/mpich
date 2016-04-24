@@ -58,7 +58,7 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
 int MPIR_Ialltoallw_intra(const void *sendbuf, const int sendcounts[], const int sdispls[],
                           const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                           const int rdispls[], const MPI_Datatype recvtypes[],
-                          MPIR_Comm *comm_ptr, MPID_Sched_t s)
+                          MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, i, j;
@@ -112,18 +112,18 @@ int MPIR_Ialltoallw_intra(const void *sendbuf, const int sendcounts[], const int
                     MPIR_Type_get_true_extent_impl(recvtypes[i], &true_lb, &true_extent);
                     adj_tmp_buf = (void *)((char*)tmp_buf - true_lb);
 
-                    mpi_errno = MPID_Sched_send(((char *)recvbuf + rdispls[dst]),
+                    mpi_errno = MPIR_Sched_send(((char *)recvbuf + rdispls[dst]),
                                                 recvcounts[dst], recvtypes[dst], dst, comm_ptr, s);
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                    mpi_errno = MPID_Sched_recv(adj_tmp_buf, recvcounts[dst], recvtypes[dst], dst, comm_ptr, s);
+                    mpi_errno = MPIR_Sched_recv(adj_tmp_buf, recvcounts[dst], recvtypes[dst], dst, comm_ptr, s);
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                    MPID_SCHED_BARRIER(s);
+                    MPIR_SCHED_BARRIER(s);
 
-                    mpi_errno = MPID_Sched_copy(adj_tmp_buf, recvcounts[dst], recvtypes[dst],
+                    mpi_errno = MPIR_Sched_copy(adj_tmp_buf, recvcounts[dst], recvtypes[dst],
                                                 ((char *)recvbuf + rdispls[dst]),
                                                 recvcounts[dst], recvtypes[dst], s);
                     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-                    MPID_SCHED_BARRIER(s);
+                    MPIR_SCHED_BARRIER(s);
                 }
             }
         }
@@ -142,7 +142,7 @@ int MPIR_Ialltoallw_intra(const void *sendbuf, const int sendcounts[], const int
                 if (recvcounts[dst]) {
                     MPID_Datatype_get_size_macro(recvtypes[dst], type_size);
                     if (type_size) {
-                        mpi_errno = MPID_Sched_recv((char *)recvbuf+rdispls[dst],
+                        mpi_errno = MPIR_Sched_recv((char *)recvbuf+rdispls[dst],
                                                     recvcounts[dst], recvtypes[dst],
                                                     dst, comm_ptr, s);
                         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -155,7 +155,7 @@ int MPIR_Ialltoallw_intra(const void *sendbuf, const int sendcounts[], const int
                 if (sendcounts[dst]) {
                     MPID_Datatype_get_size_macro(sendtypes[dst], type_size);
                     if (type_size) {
-                        mpi_errno = MPID_Sched_send((char *)sendbuf+sdispls[dst],
+                        mpi_errno = MPIR_Sched_send((char *)sendbuf+sdispls[dst],
                                                     sendcounts[dst], sendtypes[dst],
                                                     dst, comm_ptr, s);
                         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -164,7 +164,7 @@ int MPIR_Ialltoallw_intra(const void *sendbuf, const int sendcounts[], const int
             }
 
             /* force our block of sends/recvs to complete before starting the next block */
-            MPID_SCHED_BARRIER(s);
+            MPIR_SCHED_BARRIER(s);
         }
     }
 
@@ -183,7 +183,7 @@ fn_fail:
 int MPIR_Ialltoallw_inter(const void *sendbuf, const int sendcounts[], const int sdispls[],
                           const MPI_Datatype sendtypes[], void *recvbuf, const int recvcounts[],
                           const int rdispls[], const MPI_Datatype recvtypes[],
-                          MPIR_Comm *comm_ptr, MPID_Sched_t s)
+                          MPIR_Comm *comm_ptr, MPIR_Sched_t s)
 {
 /* Intercommunicator alltoallw. We use a pairwise exchange algorithm
    similar to the one used in intracommunicator alltoallw. Since the local and
@@ -232,12 +232,12 @@ int MPIR_Ialltoallw_inter(const void *sendbuf, const int sendcounts[], const int
             sendtype = sendtypes[dst];
         }
 
-        mpi_errno = MPID_Sched_send(sendaddr, sendcount, sendtype, dst, comm_ptr, s);
+        mpi_errno = MPIR_Sched_send(sendaddr, sendcount, sendtype, dst, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         /* sendrecv, no barrier here */
-        mpi_errno = MPID_Sched_recv(recvaddr, recvcount, recvtype, src, comm_ptr, s);
+        mpi_errno = MPIR_Sched_recv(recvaddr, recvcount, recvtype, src, comm_ptr, s);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPID_SCHED_BARRIER(s);
+        MPIR_SCHED_BARRIER(s);
     }
 
 fn_exit:
@@ -258,21 +258,21 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int 
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *reqp = NULL;
     int tag = -1;
-    MPID_Sched_t s = MPID_SCHED_NULL;
+    MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = MPI_REQUEST_NULL;
 
-    mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
+    mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    mpi_errno = MPID_Sched_create(&s);
+    mpi_errno = MPIR_Sched_create(&s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    MPIU_Assert(comm_ptr->coll_fns != NULL);
-    MPIU_Assert(comm_ptr->coll_fns->Ialltoallw_sched != NULL);
+    MPIR_Assert(comm_ptr->coll_fns != NULL);
+    MPIR_Assert(comm_ptr->coll_fns->Ialltoallw_sched != NULL);
     mpi_errno = comm_ptr->coll_fns->Ialltoallw_sched(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, s);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, &reqp);
+    mpi_errno = MPIR_Sched_start(&s, comm_ptr, tag, &reqp);
     if (reqp)
         *request = reqp->handle;
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
@@ -320,10 +320,10 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_IALLTOALLW);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_IALLTOALLW);
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IALLTOALLW);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_IALLTOALLW);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -380,7 +380,7 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IALLTOALLW);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_IALLTOALLW);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

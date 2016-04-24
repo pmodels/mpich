@@ -5,7 +5,7 @@
  */
 
 #include "mpiimpl.h"
-#include "mpir_bsend.h"
+#include "mpii_bsend.h"
 #include "bsendutil.h"
 
 /*
@@ -13,7 +13,7 @@
  * By storing total_size along with "size available for messages", we
  * avoid any complexities associated with alignment, since we must
  * ensure that each KPIR_Bsend_data_t structure is properly aligned
- * (i.e., we can't simply do (sizeof(MPIR_Bsend_data_t) + size) to get
+ * (i.e., we can't simply do (sizeof(MPII_Bsend_data_t) + size) to get
  * total_size).
  *
  * Function Summary
@@ -21,7 +21,7 @@
  *   MPIR_Bsend_detach - Performs the work of MPI_Buffer_detach
  *   MPIR_Bsend_isend  - Essentially performs an MPI_Ibsend.  Returns
  *                an MPIR_Request that is also stored internally in the
- *                corresponding MPIR_Bsend_data_t entry
+ *                corresponding MPII_Bsend_data_t entry
  *   MPIR_Bsend_free_segment - Free a buffer that is no longer needed,
  *                merging with adjacent segments
  *   MPIR_Bsend_check_active - Check for completion of any pending sends
@@ -36,14 +36,14 @@
  *   MPIR_Bsend_take_buffer - Find and acquire a buffer for a message
  *   MPIR_Bsend_finalize - Finalize handler when Bsend routines are used 
  *   MPIR_Bsend_dump - Debugging routine to print the contents of the control
- *                information in the bsend buffer (the MPIR_Bsend_data_t entries)
+ *                information in the bsend buffer (the MPII_Bsend_data_t entries)
  */
 
 #ifdef MPL_USE_DBG_LOGGING
 static void MPIR_Bsend_dump( void );
 #endif
 
-#define BSENDDATA_HEADER_TRUE_SIZE (sizeof(MPIR_Bsend_data_t) - sizeof(double))
+#define BSENDDATA_HEADER_TRUE_SIZE (sizeof(MPII_Bsend_data_t) - sizeof(double))
 
 /* BsendBuffer is the structure that describes the overall Bsend buffer */
 /* 
@@ -62,13 +62,13 @@ static struct BsendBuffer {
 					  the user */
     size_t             origbuffer_size;/* Size of the buffer as provided 
 					    by the user */
-    MPIR_Bsend_data_t  *avail;         /* Pointer to the first available block
+    MPII_Bsend_data_t  *avail;         /* Pointer to the first available block
 					  of space */
-    MPIR_Bsend_data_t  *pending;       /* Pointer to the first message that
+    MPII_Bsend_data_t  *pending;       /* Pointer to the first message that
 					  could not be sent because of a 
 					  resource limit (e.g., no requests
 					  available) */
-    MPIR_Bsend_data_t  *active;        /* Pointer to the first active (sending)
+    MPII_Bsend_data_t  *active;        /* Pointer to the first active (sending)
 					  message */
 } BsendBuffer = { 0, 0, 0, 0, 0, 0, 0 };
 
@@ -78,10 +78,10 @@ static int initialized = 0;   /* keep track of the first call to any
 /* Forward references */
 static void MPIR_Bsend_retry_pending( void );
 static int MPIR_Bsend_check_active ( void );
-static MPIR_Bsend_data_t *MPIR_Bsend_find_buffer( int );
-static void MPIR_Bsend_take_buffer( MPIR_Bsend_data_t *, int );
+static MPII_Bsend_data_t *MPIR_Bsend_find_buffer( int );
+static void MPIR_Bsend_take_buffer( MPII_Bsend_data_t *, int );
 static int MPIR_Bsend_finalize( void * );
-static void MPIR_Bsend_free_segment( MPIR_Bsend_data_t * );
+static void MPIR_Bsend_free_segment( MPII_Bsend_data_t * );
 
 /*
  * Attach a buffer.  This checks for the error conditions and then
@@ -93,7 +93,7 @@ static void MPIR_Bsend_free_segment( MPIR_Bsend_data_t * );
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Bsend_attach( void *buffer, int buffer_size )
 {
-    MPIR_Bsend_data_t *p;
+    MPII_Bsend_data_t *p;
     size_t offset, align_sz;
 
 #   ifdef HAVE_ERROR_CHECKING
@@ -147,7 +147,7 @@ int MPIR_Bsend_attach( void *buffer, int buffer_size )
     BsendBuffer.active		= 0;
 
     /* Set the first block */
-    p		  = (MPIR_Bsend_data_t *)buffer;
+    p		  = (MPII_Bsend_data_t *)buffer;
     p->size	  = buffer_size - BSENDDATA_HEADER_TRUE_SIZE;
     p->total_size = buffer_size;
     p->next	  = p->prev = NULL;
@@ -175,7 +175,7 @@ int MPIR_Bsend_detach( void *bufferp, int *size )
     }
     if (BsendBuffer.active) {
 	/* Loop through each active element and wait on it */
-	MPIR_Bsend_data_t *p = BsendBuffer.active;
+	MPII_Bsend_data_t *p = BsendBuffer.active;
 
 	while (p) {
 	    MPI_Request r = p->request->handle;
@@ -209,11 +209,11 @@ int MPIR_Bsend_detach( void *bufferp, int *size )
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
                      int dest, int tag, MPIR_Comm *comm_ptr,
-                     MPIR_Bsend_kind_t kind, MPIR_Request **request )
+                     MPII_Bsend_kind_t kind, MPIR_Request **request )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Bsend_data_t *p;
-    MPIR_Bsend_msg_t *msg;
+    MPII_Bsend_data_t *p;
+    MPII_Bsend_msg_t *msg;
     MPI_Aint packsize;
     int pass;
 
@@ -222,7 +222,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
        no copying.
 
        We may want to decide here whether we need to pack at all 
-       or if we can just use (a MPIU_Memcpy) of the buffer.
+       or if we can just use (a MPIR_Memcpy) of the buffer.
     */
 
 
@@ -256,7 +256,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
 	    /* Pack the data into the buffer */
 	    /* We may want to optimize for the special case of
 	       either primative or contiguous types, and just
-	       use MPIU_Memcpy and the provided datatype */
+	       use MPIR_Memcpy and the provided datatype */
 	    msg->count = 0;
             if (dtype != MPI_PACKED)
             {
@@ -265,7 +265,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
             }
             else
             {
-                MPIU_Memcpy(p->msg.msgbuf, buf, count);
+                MPIR_Memcpy(p->msg.msgbuf, buf, count);
                 p->msg.count = count;
             }
 	    /* Try to send the message.  We must use MPID_Isend
@@ -329,7 +329,7 @@ int MPIR_Bsend_isend(const void *buf, int count, MPI_Datatype dtype,
 int MPIR_Bsend_free_req_seg( MPIR_Request* req )
 {
     int mpi_errno = MPI_ERR_INTERN;
-    MPIR_Bsend_data_t *active = BsendBuffer.active;
+    MPII_Bsend_data_t *active = BsendBuffer.active;
 
     MPL_DBG_MSG_P(MPIR_DBG_BSEND,TYPICAL,"Checking active starting at %p", active);
     while (active) {
@@ -364,9 +364,9 @@ int MPIR_Bsend_free_req_seg( MPIR_Request* req )
 #define FUNCNAME MPIR_Bsend_free_segment
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static void MPIR_Bsend_free_segment( MPIR_Bsend_data_t *p )
+static void MPIR_Bsend_free_segment( MPII_Bsend_data_t *p )
 {
-    MPIR_Bsend_data_t *prev = p->prev, *avail = BsendBuffer.avail, *avail_prev;
+    MPII_Bsend_data_t *prev = p->prev, *avail = BsendBuffer.avail, *avail_prev;
 
     MPL_DBG_MSG_FMT(MPIR_DBG_BSEND,TYPICAL,(MPL_DBG_FDEST,
                  "Freeing bsend segment at %p of size %llu, next at %p",
@@ -461,7 +461,7 @@ static void MPIR_Bsend_free_segment( MPIR_Bsend_data_t *p )
 static int MPIR_Bsend_check_active( void )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Bsend_data_t *active = BsendBuffer.active, *next_active;
+    MPII_Bsend_data_t *active = BsendBuffer.active, *next_active;
 
     MPL_DBG_MSG_P(MPIR_DBG_BSEND,TYPICAL,"Checking active starting at %p", active);
     while (active) {
@@ -479,7 +479,7 @@ static int MPIR_Bsend_check_active( void )
 	       the request (it is a grequest, the free call will do it) */
 	    flag = 0;
             /* XXX DJG FIXME-MT should we be checking this? */
-	    if (MPIU_Object_get_ref(active->request) == 1) {
+	    if (MPIR_Object_get_ref(active->request) == 1) {
 		mpi_errno = MPIR_Test_impl(&r, &flag, MPI_STATUS_IGNORE );
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 	    } else {
@@ -516,7 +516,7 @@ static int MPIR_Bsend_check_active( void )
  */
 static void MPIR_Bsend_retry_pending( void )
 {
-    MPIR_Bsend_data_t *pending = BsendBuffer.pending, *next_pending;
+    MPII_Bsend_data_t *pending = BsendBuffer.pending, *next_pending;
 
     while (pending) {
 	next_pending = pending->next;
@@ -530,9 +530,9 @@ static void MPIR_Bsend_retry_pending( void )
  * Find a slot in the avail buffer that can hold size bytes.  Does *not*
  * remove the slot from the avail buffer (see MPIR_Bsend_take_buffer) 
  */
-static MPIR_Bsend_data_t *MPIR_Bsend_find_buffer( int size )
+static MPII_Bsend_data_t *MPIR_Bsend_find_buffer( int size )
 {
-    MPIR_Bsend_data_t *p = BsendBuffer.avail;
+    MPII_Bsend_data_t *p = BsendBuffer.avail;
 
     while (p) {
 	if (p->size >= size) { 
@@ -552,9 +552,9 @@ static MPIR_Bsend_data_t *MPIR_Bsend_find_buffer( int size )
  * If there isn't enough left of p, remove the entire segment from
  * the avail list.
  */
-static void MPIR_Bsend_take_buffer( MPIR_Bsend_data_t *p, int size  )
+static void MPIR_Bsend_take_buffer( MPII_Bsend_data_t *p, int size  )
 {
-    MPIR_Bsend_data_t *prev;
+    MPII_Bsend_data_t *prev;
     int         alloc_size;
 
     /* Compute the remaining size.  This must include any padding 
@@ -573,10 +573,10 @@ static void MPIR_Bsend_take_buffer( MPIR_Bsend_data_t *p, int size  )
     if (alloc_size + (int)BSENDDATA_HEADER_TRUE_SIZE + MIN_BUFFER_BLOCK <= p->size) {
 	/* Yes, the available space (p->size) is large enough to 
 	   carve out a new block */
-	MPIR_Bsend_data_t *newp;
+	MPII_Bsend_data_t *newp;
 	
 	MPL_DBG_MSG_P(MPIR_DBG_BSEND,TYPICAL,"Breaking block into used and allocated at %p", p );
-	newp = (MPIR_Bsend_data_t *)( (char *)p + BSENDDATA_HEADER_TRUE_SIZE + 
+	newp = (MPII_Bsend_data_t *)( (char *)p + BSENDDATA_HEADER_TRUE_SIZE +
 				alloc_size );
 	newp->total_size = p->total_size - alloc_size - 
 	    BSENDDATA_HEADER_TRUE_SIZE;
@@ -645,7 +645,7 @@ static int MPIR_Bsend_finalize( void *p ATTRIBUTE((unused)) )
 #ifdef MPL_USE_DBG_LOGGING
 static void MPIR_Bsend_dump( void )
 {
-    MPIR_Bsend_data_t *a = BsendBuffer.avail;
+    MPII_Bsend_data_t *a = BsendBuffer.avail;
 
     MPL_DBG_MSG_D(MPIR_DBG_BSEND, TYPICAL, "Total size is %llu",
                    (unsigned long long) BsendBuffer.buffer_size);

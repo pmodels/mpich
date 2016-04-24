@@ -4,21 +4,21 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#ifndef MPIR_F77INTERFACE_H_INCLUDED
-#define MPIR_F77INTERFACE_H_INCLUDED
+#ifndef MPII_F77INTERFACE_H_INCLUDED
+#define MPII_F77INTERFACE_H_INCLUDED
 
 /* These functions are provided by the MPICH code for the Fortran interface,
    and provide the interfaces needed to keep track of which MPI internal
    objects need to have Fortran or Fortran 90 characteristics */
-void MPIR_Keyval_set_fortran( int );
-void MPIR_Keyval_set_fortran90( int );
-void MPIR_Grequest_set_lang_f77( MPI_Request greq );
+void MPII_Keyval_set_fortran( int );
+void MPII_Keyval_set_fortran90( int );
+void MPII_Grequest_set_lang_f77( MPI_Request greq );
 #if defined(HAVE_FORTRAN_BINDING) && !defined(HAVE_FINT_IS_INT)
-void MPIR_Op_set_fc( MPI_Op );
-typedef void (MPIR_F77_User_function) ( void *, void *, MPI_Fint *, MPI_Fint * );
-void MPIR_Errhandler_set_fc( MPI_Errhandler );
+void MPII_Op_set_fc( MPI_Op );
+typedef void (MPII_F77_User_function) ( void *, void *, MPI_Fint *, MPI_Fint * );
+void MPII_Errhandler_set_fc( MPI_Errhandler );
 #endif
 
-#define MPIR_ATTR_C_TO_FORTRAN(ATTR) ((ATTR)+1)
+#define MPII_ATTR_C_TO_FORTRAN(ATTR) ((ATTR)+1)
 
-#endif /* MPIR_F77INTERFACE_H_INCLUDED */
+#endif /* MPII_F77INTERFACE_H_INCLUDED */

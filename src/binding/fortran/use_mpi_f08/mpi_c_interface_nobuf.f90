@@ -629,7 +629,7 @@ end function MPIR_Comm_free_keyval_c
 
 ! Not bind to MPI_Comm_get_attr directly due to the attr_type tag
 function MPIR_Comm_get_attr_c(comm, comm_keyval, attribute_val, flag, attr_type) &
-    bind(C, name="MPIR_CommGetAttr") result(ierror)
+    bind(C, name="MPII_Comm_get_attr") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     use :: mpi_c_interface_types, only : c_Comm
@@ -696,7 +696,7 @@ function MPIR_Comm_remote_size_c(comm, size) &
 end function MPIR_Comm_remote_size_c
 
 function MPIR_Comm_set_attr_c(comm, comm_keyval, attribute_val, attr_type) &
-    bind(C, name="MPIR_CommSetAttr") result(ierror)
+    bind(C, name="MPII_Comm_set_attr") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     use :: mpi_c_interface_types, only : c_Comm
@@ -952,7 +952,7 @@ function MPIR_Type_free_keyval_c(type_keyval) &
 end function MPIR_Type_free_keyval_c
 
 function MPIR_Type_get_attr_c(datatype, type_keyval, attribute_val, flag, attr_type) &
-    bind(C, name="MPIR_TypeGetAttr") result(ierror)
+    bind(C, name="MPII_Type_get_attr") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     use :: mpi_c_interface_types, only : c_Datatype
@@ -979,7 +979,7 @@ function MPIR_Type_get_name_c(datatype, type_name, resultlen) &
 end function MPIR_Type_get_name_c
 
 function MPIR_Type_set_attr_c(datatype, type_keyval, attribute_val, attr_type) &
-    bind(C, name="MPIR_TypeSetAttr") result(ierror)
+    bind(C, name="MPII_Type_set_attr") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     use :: mpi_c_interface_types, only : c_Datatype
@@ -1033,7 +1033,7 @@ function MPIR_Win_free_keyval_c(win_keyval) &
 end function MPIR_Win_free_keyval_c
 
 function MPIR_Win_get_attr_c(win, win_keyval, attribute_val, flag, attr_type) &
-    bind(C, name="MPIR_WinGetAttr") result(ierror)
+    bind(C, name="MPII_Win_get_attr") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     use :: mpi_c_interface_types, only : c_Win
@@ -1060,7 +1060,7 @@ function MPIR_Win_get_name_c(win, win_name, resultlen) &
 end function MPIR_Win_get_name_c
 
 function MPIR_Win_set_attr_c(win, win_keyval, attribute_val, attr_type) &
-    bind(C, name="MPIR_WinSetAttr") result(ierror)
+    bind(C, name="MPII_Win_set_attr") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     use :: mpi_c_interface_types, only : c_Win

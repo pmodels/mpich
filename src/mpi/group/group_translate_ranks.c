@@ -47,7 +47,7 @@ int MPIR_Group_translate_ranks_impl(MPIR_Group *gp1, int n, const int ranks1[],
         /* g2 probably == group_of(MPI_COMM_WORLD); use fast, constant-time lookup */
         int lpid_offset = gp2->lrank_to_lpid[0].lpid;
 
-        MPIU_Assert(lpid_offset >= 0);
+        MPIR_Assert(lpid_offset >= 0);
         for (i = 0; i < n; ++i) {
             int g1_lpid;
 
@@ -67,7 +67,7 @@ int MPIR_Group_translate_ranks_impl(MPIR_Group *gp1, int n, const int ranks1[],
         /* general, slow path; lookup time is dependent on the user-provided rank values! */
         g2_idx = gp2->idx_of_first_lpid;
         if (g2_idx < 0) {
-            MPIR_Group_setup_lpid_list( gp2 );
+            MPII_Group_setup_lpid_list( gp2 );
             g2_idx = gp2->idx_of_first_lpid;
         }
         if (g2_idx >= 0) {
@@ -143,7 +143,7 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
     int mpi_errno = MPI_SUCCESS;
     MPIR_Group *group_ptr1 = NULL;
     MPIR_Group *group_ptr2 = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_GROUP_TRANSLATE_RANKS);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_GROUP_TRANSLATE_RANKS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
@@ -151,7 +151,7 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
        within a mutex.  As most of the group routines are not performance
        critical, we simple run these routines within the SINGLE_CS */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_GROUP_TRANSLATE_RANKS);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_GROUP_TRANSLATE_RANKS);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -209,7 +209,7 @@ int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GROUP_TRANSLATE_RANKS);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_GROUP_TRANSLATE_RANKS);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

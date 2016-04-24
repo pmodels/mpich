@@ -25,9 +25,9 @@
 int MPID_Comm_disconnect(MPIR_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_COMM_DISCONNECT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_DISCONNECT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_COMM_DISCONNECT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_DISCONNECT);
 
     /* Check to make sure the communicator hasn't already been revoked */
     if (comm_ptr->revoked) {
@@ -48,7 +48,7 @@ int MPID_Comm_disconnect(MPIR_Comm *comm_ptr)
 
 
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_COMM_DISCONNECT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_COMM_DISCONNECT);
     return mpi_errno;
 fn_fail:
     goto fn_exit;

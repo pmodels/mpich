@@ -85,7 +85,7 @@ int MPID_Startall(int count, MPIR_Request * requests[])
              * us.
              */
             if (preq->partner_request != NULL)
-              MPIU_Object_add_ref(preq->partner_request);
+              MPIR_Object_add_ref(preq->partner_request);
             break;
           }
 

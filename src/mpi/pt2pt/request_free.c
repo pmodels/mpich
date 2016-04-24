@@ -68,12 +68,12 @@ int MPI_Request_free(MPI_Request *request)
     static const char FCNAME[] = "MPI_Request_free";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *request_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_REQUEST_FREE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_REQUEST_FREE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_REQUEST_FREE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_REQUEST_FREE);
     
     /* Validate handle parameters needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -111,7 +111,7 @@ int MPI_Request_free(MPI_Request *request)
     {
 	case MPIR_REQUEST_KIND__SEND:
 	{
-	    MPIR_SENDQ_FORGET(request_ptr);
+	    MPII_SENDQ_FORGET(request_ptr);
 	    break;
 	}
 	case MPIR_REQUEST_KIND__RECV:
@@ -173,7 +173,7 @@ int MPI_Request_free(MPI_Request *request)
     /* ... end of body of routine ... */
     
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_REQUEST_FREE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_REQUEST_FREE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

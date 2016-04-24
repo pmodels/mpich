@@ -75,12 +75,12 @@ int MPI_Type_create_f90_complex( int precision, int range, MPI_Datatype *newtype
     static realModel f90_real_model[2] = { 
 	{ MPIR_F90_REAL_MODEL, MPI_COMPLEX},
 	{ MPIR_F90_DOUBLE_MODEL, MPI_DOUBLE_COMPLEX } };
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_F90_COMPLEX);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_F90_COMPLEX);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_CREATE_F90_COMPLEX);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_CREATE_F90_COMPLEX);
 
     /* ... body of routine ...  */
     /* MPI 2.1, Section 16.2, page 473 lines 12-27 make it clear that
@@ -124,7 +124,7 @@ int MPI_Type_create_f90_complex( int precision, int range, MPI_Datatype *newtype
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_CREATE_F90_COMPLEX);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_CREATE_F90_COMPLEX);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 fn_fail:

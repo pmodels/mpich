@@ -172,13 +172,13 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 
 	/* Spawn the processes */
 #ifdef USE_PMI2_API
-        MPIU_Assert(count > 0);
+        MPIR_Assert(count > 0);
         {
             int *argcs = MPL_malloc(count*sizeof(int));
             struct MPIR_Info preput;
             struct MPIR_Info *preput_p[2] = { &preput, &tmp_info_ptr };
 
-            MPIU_Assert(argcs);
+            MPIR_Assert(argcs);
 
             info_keyval_sizes = MPL_malloc(count * sizeof(int));
 

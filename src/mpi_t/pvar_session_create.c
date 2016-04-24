@@ -33,11 +33,11 @@ int MPI_T_pvar_session_create(MPI_T_pvar_session *session) __attribute__((weak,a
 int MPIR_T_pvar_session_create_impl(MPI_T_pvar_session *session)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIU_CHKPMEM_DECL(1);
+    MPIR_CHKPMEM_DECL(1);
 
     *session = MPI_T_PVAR_SESSION_NULL;
 
-    MPIU_CHKPMEM_MALLOC(*session, MPI_T_pvar_session, sizeof(**session), mpi_errno, "performance var session");
+    MPIR_CHKPMEM_MALLOC(*session, MPI_T_pvar_session, sizeof(**session), mpi_errno, "performance var session");
 
     /* essential for utlist to work */
     (*session)->hlist = NULL;
@@ -46,11 +46,11 @@ int MPIR_T_pvar_session_create_impl(MPI_T_pvar_session *session)
     (*session)->kind = MPIR_T_PVAR_SESSION;
 #endif
 
-    MPIU_CHKPMEM_COMMIT();
+    MPIR_CHKPMEM_COMMIT();
 fn_exit:
     return mpi_errno;
 fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -77,10 +77,10 @@ int MPI_T_pvar_session_create(MPI_T_pvar_session *session)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_SESSION_CREATE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_T_PVAR_SESSION_CREATE);
     MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_PVAR_SESSION_CREATE);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_T_PVAR_SESSION_CREATE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -101,7 +101,7 @@ int MPI_T_pvar_session_create(MPI_T_pvar_session *session)
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_PVAR_SESSION_CREATE);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_T_PVAR_SESSION_CREATE);
     MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 

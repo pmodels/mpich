@@ -97,12 +97,12 @@ int MPI_Rget_accumulate(const void *origin_addr, int origin_count,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win_ptr = NULL;
     MPIR_Request *request_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_RGET_ACCUMULATE);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_RGET_ACCUMULATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_RGET_ACCUMULATE);
+    MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPI_RGET_ACCUMULATE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -200,7 +200,7 @@ int MPI_Rget_accumulate(const void *origin_addr, int origin_count,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_RGET_ACCUMULATE);
+    MPIR_FUNC_TERSE_RMA_EXIT(MPID_STATE_MPI_RGET_ACCUMULATE);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

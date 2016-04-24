@@ -83,13 +83,13 @@ int MPI_Type_create_subarray(int ndims,
     int *ints;
     MPIR_Datatype *new_dtp;
 
-    MPIU_CHKLMEM_DECL(1);
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_SUBARRAY);
+    MPIR_CHKLMEM_DECL(1);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_CREATE_SUBARRAY);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_CREATE_SUBARRAY);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_CREATE_SUBARRAY);
 
 #   ifdef HAVE_ERROR_CHECKING
     {
@@ -147,7 +147,7 @@ int MPI_Type_create_subarray(int ndims,
                 goto fn_fail;
 	    }
 
-	    MPIR_Type_extent_impl(oldtype, &extent);
+	    MPID_Datatype_get_extent_macro(oldtype, extent);
 
 	    /* check if MPI_Aint is large enough for size of global array.
 	       if not, complain. */
@@ -185,7 +185,7 @@ int MPI_Type_create_subarray(int ndims,
     /* TODO: CHECK THE ERROR RETURNS FROM ALL THESE!!! */
 
     /* TODO: GRAB EXTENT WITH A MACRO OR SOMETHING FASTER */
-    MPIR_Type_extent_impl(oldtype, &extent);
+    MPID_Datatype_get_extent_macro(oldtype, extent);
 
     if (order == MPI_ORDER_FORTRAN) {
 	if (ndims == 1)
@@ -301,7 +301,7 @@ int MPI_Type_create_subarray(int ndims,
      */
 
     /* Save contents */
-    MPIU_CHKLMEM_MALLOC_ORJUMP(ints, int *, (3 * ndims + 2) * sizeof(int), mpi_errno, "content description");
+    MPIR_CHKLMEM_MALLOC_ORJUMP(ints, int *, (3 * ndims + 2) * sizeof(int), mpi_errno, "content description");
 
     ints[0] = ndims;
     for (i=0; i < ndims; i++) {
@@ -331,8 +331,8 @@ int MPI_Type_create_subarray(int ndims,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPIU_CHKLMEM_FREEALL();
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_CREATE_SUBARRAY);
+    MPIR_CHKLMEM_FREEALL();
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_CREATE_SUBARRAY);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

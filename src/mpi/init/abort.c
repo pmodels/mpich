@@ -78,7 +78,7 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
     /* FIXME: 100 is arbitrary and may not be long enough */
     char abort_str[100] = "", comm_name[MPI_MAX_OBJECT_NAME];
     int len = MPI_MAX_OBJECT_NAME;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_ABORT);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_ABORT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
@@ -87,7 +87,7 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
        hung holding the critical section.  Also note the "not thread-safe"
        comment in the description of MPI_Abort above. */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_ABORT);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_ABORT);
     
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -138,12 +138,12 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
     /* MPID_Abort() should never return MPI_SUCCESS */
-    MPIU_Assert(0);
+    MPIR_Assert(0);
     /* --END ERROR HANDLING-- */
     /* ... end of body of routine ... */
     
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_ABORT);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_ABORT);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
     

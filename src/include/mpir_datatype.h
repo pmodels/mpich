@@ -10,7 +10,7 @@
 
 /* This routine is used to install an attribute free routine for datatypes
    at finalize-time */
-void MPIR_DatatypeAttrFinalize( void );
+void MPII_Datatype_attr_finalize( void );
 
 #define MPIR_DATATYPE_IS_PREDEFINED(type) \
     ((HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) || \
@@ -23,10 +23,6 @@ int MPIR_Status_set_elements_x_impl(MPI_Status *status, MPI_Datatype datatype, M
 void MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count *lb, MPI_Count *extent);
 void MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count *true_lb, MPI_Count *true_extent);
 int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count *size);
-
-#define MPIR_Type_extent_impl(datatype, extent_ptr) MPID_Datatype_get_extent_macro(datatype, *(extent_ptr))
-#define MPIR_Type_size_impl(datatype, size) MPID_Datatype_get_size_macro(datatype, *(size))
-#define MPIR_Test_cancelled_impl(status, flag) *(flag) = MPIR_STATUS_GET_CANCEL_BIT(*(status))
 
 void MPIR_Get_count_impl(const MPI_Status *status, MPI_Datatype datatype, int *count);
 int MPIR_Type_commit_impl(MPI_Datatype *datatype);

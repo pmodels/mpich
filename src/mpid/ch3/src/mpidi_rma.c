@@ -90,13 +90,13 @@ int MPIDI_RMA_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPIU_CHKPMEM_DECL(3);
+    MPIR_CHKPMEM_DECL(3);
 
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_RMA_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RMA_INIT);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_RMA_INIT);
+    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_RMA_INIT);
 
-    MPIU_CHKPMEM_MALLOC(global_rma_op_pool_start, MPIDI_RMA_Op_t *,
+    MPIR_CHKPMEM_MALLOC(global_rma_op_pool_start, MPIDI_RMA_Op_t *,
                         sizeof(MPIDI_RMA_Op_t) * MPIR_CVAR_CH3_RMA_OP_GLOBAL_POOL_SIZE,
                         mpi_errno, "RMA op pool");
     for (i = 0; i < MPIR_CVAR_CH3_RMA_OP_GLOBAL_POOL_SIZE; i++) {
@@ -104,7 +104,7 @@ int MPIDI_RMA_init(void)
         MPL_DL_APPEND(global_rma_op_pool_head, &(global_rma_op_pool_start[i]));
     }
 
-    MPIU_CHKPMEM_MALLOC(global_rma_target_pool_start, MPIDI_RMA_Target_t *,
+    MPIR_CHKPMEM_MALLOC(global_rma_target_pool_start, MPIDI_RMA_Target_t *,
                         sizeof(MPIDI_RMA_Target_t) * MPIR_CVAR_CH3_RMA_TARGET_GLOBAL_POOL_SIZE,
                         mpi_errno, "RMA target pool");
     for (i = 0; i < MPIR_CVAR_CH3_RMA_TARGET_GLOBAL_POOL_SIZE; i++) {
@@ -113,11 +113,11 @@ int MPIDI_RMA_init(void)
     }
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RMA_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RMA_INIT);
     return mpi_errno;
 
   fn_fail:
-    MPIU_CHKPMEM_REAP();
+    MPIR_CHKPMEM_REAP();
     goto fn_fail;
 }
 
@@ -128,14 +128,14 @@ int MPIDI_RMA_init(void)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 void MPIDI_RMA_finalize(void)
 {
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_RMA_FINALIZE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RMA_FINALIZE);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_RMA_FINALIZE);
+    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_RMA_FINALIZE);
 
     MPL_free(global_rma_op_pool_start);
     MPL_free(global_rma_target_pool_start);
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RMA_FINALIZE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RMA_FINALIZE);
 }
 
 
@@ -149,9 +149,9 @@ int MPID_Win_free(MPIR_Win ** win_ptr)
     int in_use;
     MPIR_Comm *comm_ptr;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_WIN_FREE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_WIN_FREE);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_FREE);
+    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPID_WIN_FREE);
 
     MPIR_ERR_CHKANDJUMP(((*win_ptr)->states.access_state != MPIDI_RMA_NONE &&
                          (*win_ptr)->states.access_state != MPIDI_RMA_FENCE_ISSUED &&
@@ -190,7 +190,7 @@ int MPID_Win_free(MPIR_Win ** win_ptr)
     }
 
     /* dequeue window from the global list */
-    MPIU_Assert((*win_ptr)->active == FALSE);
+    MPIR_Assert((*win_ptr)->active == FALSE);
     MPL_DL_DELETE(MPIDI_RMA_Win_inactive_list_head, (*win_ptr));
 
     if (MPIDI_RMA_Win_inactive_list_head == NULL && MPIDI_RMA_Win_active_list_head == NULL) {
@@ -213,7 +213,7 @@ int MPID_Win_free(MPIR_Win ** win_ptr)
     MPL_free((*win_ptr)->slots);
     MPL_free((*win_ptr)->target_lock_entry_pool_start);
 
-    MPIU_Assert((*win_ptr)->current_target_lock_data_bytes == 0);
+    MPIR_Assert((*win_ptr)->current_target_lock_data_bytes == 0);
 
     /* Free the attached buffer for windows created with MPI_Win_allocate() */
     if ((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE ||
@@ -223,13 +223,13 @@ int MPID_Win_free(MPIR_Win ** win_ptr)
         }
     }
 
-    MPIU_Object_release_ref(*win_ptr, &in_use);
+    MPIR_Object_release_ref(*win_ptr, &in_use);
     /* MPI windows don't have reference count semantics, so this should always be true */
-    MPIU_Assert(!in_use);
-    MPIU_Handle_obj_free(&MPIR_Win_mem, *win_ptr);
+    MPIR_Assert(!in_use);
+    MPIR_Handle_obj_free(&MPIR_Win_mem, *win_ptr);
 
   fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPID_WIN_FREE);
+    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPID_WIN_FREE);
     return mpi_errno;
 
   fn_fail:

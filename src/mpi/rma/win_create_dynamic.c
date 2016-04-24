@@ -92,12 +92,12 @@ int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win)
     MPIR_Win *win_ptr = NULL;
     MPIR_Comm *comm_ptr = NULL;
     MPIR_Info *info_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_CREATE_DYNAMIC);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_WIN_CREATE_DYNAMIC);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_WIN_CREATE_DYNAMIC);
+    MPIR_FUNC_TERSE_RMA_ENTER(MPID_STATE_MPI_WIN_CREATE_DYNAMIC);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -144,7 +144,7 @@ int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_WIN_CREATE_DYNAMIC);
+    MPIR_FUNC_TERSE_RMA_EXIT(MPID_STATE_MPI_WIN_CREATE_DYNAMIC);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 

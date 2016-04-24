@@ -27,23 +27,23 @@ int MPI_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_va
 #define MPI_Type_set_attr PMPI_Type_set_attr
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_TypeSetAttr
-int MPIR_TypeSetAttr(MPI_Datatype datatype, int type_keyval, void *attribute_val,
-		     MPIR_AttrType attrType )
+#define FUNCNAME MPII_Type_set_attr
+int MPII_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_val,
+		     MPIR_Attr_type attrType )
 {
-    static const char FCNAME[] = "MPIR_TypeSetAttr";
+    static const char FCNAME[] = "MPII_Type_set_attr";
     int mpi_errno = MPI_SUCCESS;
     MPIR_Datatype *type_ptr = NULL;
-    MPIR_Keyval *keyval_ptr = NULL;
+    MPII_Keyval *keyval_ptr = NULL;
     MPIR_Attribute *p, **old_p;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_TYPE_SET_ATTR);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPIR_TYPE_SET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     /* The thread lock prevents a valid attr delete on the same datatype
        but in a different thread from causing problems */
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_TYPE_SET_ATTR);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPIR_TYPE_SET_ATTR);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -60,7 +60,7 @@ int MPIR_TypeSetAttr(MPI_Datatype datatype, int type_keyval, void *attribute_val
 
     /* Convert MPI object handles to object pointers */
     MPID_Datatype_get_ptr( datatype, type_ptr );
-    MPIR_Keyval_get_ptr( type_keyval, keyval_ptr );
+    MPII_Keyval_get_ptr( type_keyval, keyval_ptr );
     
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -71,7 +71,7 @@ int MPIR_TypeSetAttr(MPI_Datatype datatype, int type_keyval, void *attribute_val
             MPIR_Datatype_valid_ptr( type_ptr, mpi_errno );
 	    /* If type_ptr is not valid, it will be reset to null */
 	    /* Validate keyval_ptr */
-		MPIR_Keyval_valid_ptr( keyval_ptr, mpi_errno );
+		MPII_Keyval_valid_ptr( keyval_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
@@ -95,7 +95,7 @@ int MPIR_TypeSetAttr(MPI_Datatype datatype, int type_keyval, void *attribute_val
 		goto fn_fail;
 	    }
 	    /* --END ERROR HANDLING-- */
-	    p->value    = (MPIR_AttrVal_t)(intptr_t)attribute_val;
+	    p->value    = (MPII_Attr_val_t)(intptr_t)attribute_val;
 	    p->attrType = attrType;
 	    break;
 	}
@@ -106,10 +106,10 @@ int MPIR_TypeSetAttr(MPI_Datatype datatype, int type_keyval, void *attribute_val
 	    new_p->keyval	 = keyval_ptr;
 	    new_p->attrType      = attrType;
 	    new_p->pre_sentinal	 = 0;
-	    new_p->value	 = (MPIR_AttrVal_t)(intptr_t)attribute_val;
+	    new_p->value	 = (MPII_Attr_val_t)(intptr_t)attribute_val;
 	    new_p->post_sentinal = 0;
 	    new_p->next		 = p->next;
-	    MPIR_Keyval_add_ref( keyval_ptr );
+	    MPII_Keyval_add_ref( keyval_ptr );
 	    p->next		 = new_p;
 	    break;
 	}
@@ -125,10 +125,10 @@ int MPIR_TypeSetAttr(MPI_Datatype datatype, int type_keyval, void *attribute_val
 	new_p->keyval	     = keyval_ptr;
 	new_p->attrType      = attrType;
 	new_p->pre_sentinal  = 0;
-	new_p->value	     = (MPIR_AttrVal_t)(intptr_t)attribute_val;
+	new_p->value	     = (MPII_Attr_val_t)(intptr_t)attribute_val;
 	new_p->post_sentinal = 0;
 	new_p->next	     = 0;
-	MPIR_Keyval_add_ref( keyval_ptr );
+	MPII_Keyval_add_ref( keyval_ptr );
 	*old_p		     = new_p;
     }
     
@@ -140,7 +140,7 @@ int MPIR_TypeSetAttr(MPI_Datatype datatype, int type_keyval, void *attribute_val
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_TYPE_SET_ATTR);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_TYPE_SET_ATTR);
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     return mpi_errno;
 
@@ -190,18 +190,18 @@ int MPI_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_va
 {
     static const char FCNAME[] = "MPI_Type_set_attr";
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_SET_ATTR);
+    MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_TYPE_SET_ATTR);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_SET_ATTR);
+    MPIR_FUNC_TERSE_ENTER(MPID_STATE_MPI_TYPE_SET_ATTR);
 
-    mpi_errno = MPIR_TypeSetAttr( datatype, type_keyval, attribute_val,
+    mpi_errno = MPII_Type_set_attr( datatype, type_keyval, attribute_val,
 				  MPIR_ATTR_PTR );
     if (mpi_errno) goto fn_fail;
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_TYPE_SET_ATTR);
+    MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPI_TYPE_SET_ATTR);
     return mpi_errno;
 
   fn_fail:
