@@ -111,12 +111,12 @@ struct pollinfo
 	struct
 	{
 	    char * ptr;
-	    MPIU_Size_t min;
-	    MPIU_Size_t max;
+	    size_t min;
+	    size_t max;
 	} buf;
     } read;
     int read_iov_flag;
-    MPIU_Size_t read_nb;
+    size_t read_nb;
     MPIDU_Sock_progress_update_func_t read_progress_update_fn;
     union
     {
@@ -129,12 +129,12 @@ struct pollinfo
 	struct
 	{
 	    char * ptr;
-	    MPIU_Size_t min;
-	    MPIU_Size_t max;
+	    size_t min;
+	    size_t max;
 	} buf;
     } write;
     int write_iov_flag;
-    MPIU_Size_t write_nb;
+    size_t write_nb;
     MPIDU_Sock_progress_update_func_t write_progress_update_fn;
 };
 

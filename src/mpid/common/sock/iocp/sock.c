@@ -34,7 +34,7 @@ typedef struct sock_buffer
 #endif
     int iovlen;
     int index;
-    MPIU_Size_t total;
+    size_t total;
     MPIDU_Sock_progress_update_func_t progress_update;
 } sock_buffer;
 
@@ -1525,7 +1525,7 @@ int MPIDU_Sock_post_close(MPIDU_Sock_t sock)
 #define FUNCNAME MPIDU_Sock_post_read
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_Sock_post_read(MPIDU_Sock_t sock, void * buf, MPIU_Size_t minbr, MPIU_Size_t maxbr,
+int MPIDU_Sock_post_read(MPIDU_Sock_t sock, void * buf, size_t minbr, size_t maxbr,
                          MPIDU_Sock_progress_update_func_t fn)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1651,7 +1651,7 @@ int MPIDU_Sock_post_readv(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, MPIDU_Soc
 #define FUNCNAME MPIDU_Sock_post_write
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_Sock_post_write(MPIDU_Sock_t sock, void * buf, MPIU_Size_t min, MPIU_Size_t max, MPIDU_Sock_progress_update_func_t fn)
+int MPIDU_Sock_post_write(MPIDU_Sock_t sock, void * buf, size_t min, size_t max, MPIDU_Sock_progress_update_func_t fn)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDU_SOCK_POST_WRITE);
@@ -2652,7 +2652,7 @@ int MPIDU_Sock_wakeup(MPIDU_Sock_set_t set)
 #define FUNCNAME MPIDU_Sock_read
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_Sock_read(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len, MPIU_Size_t * num_read)
+int MPIDU_Sock_read(MPIDU_Sock_t sock, void * buf, size_t len, size_t * num_read)
 {
     int mpi_errno = MPI_SUCCESS;
     MPL_IOV iov;
@@ -2670,7 +2670,7 @@ int MPIDU_Sock_read(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len, MPIU_Size_t 
 #define FUNCNAME MPIDU_Sock_readv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_Sock_readv(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, MPIU_Size_t * num_read)
+int MPIDU_Sock_readv(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, size_t * num_read)
 {
     int mpi_errno = MPI_SUCCESS;
     DWORD nFlags = 0;
@@ -2739,7 +2739,7 @@ int MPIDU_Sock_readv(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, MPIU_Size_t * 
 #define FUNCNAME MPIDU_Sock_write
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_Sock_write(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len, MPIU_Size_t * num_written)
+int MPIDU_Sock_write(MPIDU_Sock_t sock, void * buf, size_t len, size_t * num_written)
 {
     int mpi_errno;
     MPL_IOV iov;
@@ -2757,7 +2757,7 @@ int MPIDU_Sock_write(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len, MPIU_Size_t
 #define FUNCNAME MPIDU_Sock_writev
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_Sock_writev(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, MPIU_Size_t * num_written)
+int MPIDU_Sock_writev(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, size_t * num_written)
 {
     int mpi_errno;
     DWORD num_written_local;

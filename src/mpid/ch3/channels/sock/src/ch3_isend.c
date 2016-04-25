@@ -11,7 +11,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static void update_request(MPIR_Request * sreq, void * hdr,
-			   intptr_t hdr_sz, MPIU_Size_t nb)
+			   intptr_t hdr_sz, size_t nb)
 {
     MPIDI_STATE_DECL(MPID_STATE_UPDATE_REQUEST);
 
@@ -52,7 +52,7 @@ int MPIDI_CH3_iSend(MPIDI_VC_t * vc, MPIR_Request * sreq, void * hdr,
 	   data, queuing any unsent data. */
 	if (MPIDI_CH3I_SendQ_empty(vcch)) /* MT */
 	{
-	    MPIU_Size_t nb;
+	    size_t nb;
 	    int rc;
 
 	    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,

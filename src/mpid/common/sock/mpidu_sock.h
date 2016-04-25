@@ -106,7 +106,7 @@ S*/
 typedef struct MPIDU_Sock_event
 {
     MPIDU_Sock_op_t op_type;
-    MPIU_Size_t num_bytes;
+    size_t num_bytes;
     void * user_ptr;
     int error;
 } MPIDU_Sock_event_t;
@@ -563,7 +563,7 @@ internal progress engine could block on an application routine.
 Module:
 Utility-Sock
 E*/
-typedef int (* MPIDU_Sock_progress_update_func_t)(MPIU_Size_t num_bytes, void * user_ptr);
+typedef int (* MPIDU_Sock_progress_update_func_t)(size_t num_bytes, void * user_ptr);
 
 
 /*@
@@ -622,7 +622,7 @@ one thread is not attempting to post a new operation while another thread is att
 Module:
 Utility-Sock
 @*/
-int MPIDU_Sock_post_read(MPIDU_Sock_t sock, void * buf, MPIU_Size_t minbr, MPIU_Size_t maxbr,
+int MPIDU_Sock_post_read(MPIDU_Sock_t sock, void * buf, size_t minbr, size_t maxbr,
                          MPIDU_Sock_progress_update_func_t fn);
 
 
@@ -741,7 +741,7 @@ need this flexibility?
 Module:
 Utility-Sock
 @*/
-int MPIDU_Sock_post_write(MPIDU_Sock_t sock, void * buf, MPIU_Size_t min, MPIU_Size_t max,
+int MPIDU_Sock_post_write(MPIDU_Sock_t sock, void * buf, size_t min, size_t max,
 			  MPIDU_Sock_progress_update_func_t fn);
 
 
@@ -910,7 +910,7 @@ not attempting to perform an immediate read while another thread is attempting t
 Module:
 Utility-Sock
 @*/
-int MPIDU_Sock_read(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len, MPIU_Size_t * num_read);
+int MPIDU_Sock_read(MPIDU_Sock_t sock, void * buf, size_t len, size_t * num_read);
 
 
 /*@
@@ -960,7 +960,7 @@ not attempting to perform an immediate read while another thread is attempting t
 Module:
 Utility-Sock
 @*/
-int MPIDU_Sock_readv(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, MPIU_Size_t * num_read);
+int MPIDU_Sock_readv(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, size_t * num_read);
 
 
 /*@
@@ -1009,7 +1009,7 @@ not attempting to perform an immediate write while another thread is attempting 
 Module:
 Utility-Sock
 @*/
-int MPIDU_Sock_write(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len, MPIU_Size_t * num_written);
+int MPIDU_Sock_write(MPIDU_Sock_t sock, void * buf, size_t len, size_t * num_written);
 
 
 /*@
@@ -1058,7 +1058,7 @@ not attempting to perform an immediate write while another thread is attempting 
 Module:
 Utility-Sock
 @*/
-int MPIDU_Sock_writev(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, MPIU_Size_t * num_written);
+int MPIDU_Sock_writev(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, size_t * num_written);
 
 
 /*@

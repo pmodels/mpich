@@ -250,7 +250,7 @@ static inline void MPIU_SHMW_Hnd_free(MPIU_SHMW_Hnd_t hnd)
     }
 }
 
-static inline int MPIU_SHMW_Seg_open(MPIU_SHMW_Hnd_t hnd, MPIU_Size_t seg_sz);
+static inline int MPIU_SHMW_Seg_open(MPIU_SHMW_Hnd_t hnd, size_t seg_sz);
 static inline int MPIU_SHMW_Hnd_deserialize_by_ref(MPIU_SHMW_Hnd_t hnd, char **ser_hnd_ptr);
 
 /* FIXME : Don't print ENGLISH strings on error. Define the error
@@ -457,7 +457,7 @@ static inline int MPIU_SHMW_Hnd_finalize(
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_create_attach_templ(
-    MPIU_SHMW_Hnd_t hnd, MPIU_Size_t seg_sz, char **shm_addr_ptr,
+    MPIU_SHMW_Hnd_t hnd, size_t seg_sz, char **shm_addr_ptr,
     int offset, int flag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -522,7 +522,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_detach(
-    MPIU_SHMW_Hnd_t hnd, char **shm_addr_ptr, MPIU_Size_t seg_sz)
+    MPIU_SHMW_Hnd_t hnd, char **shm_addr_ptr, size_t seg_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     int rc = -1;
@@ -588,7 +588,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_create_attach_templ(
-    MPIU_SHMW_Hnd_t hnd, MPIU_Size_t seg_sz, char **shm_addr_ptr,
+    MPIU_SHMW_Hnd_t hnd, size_t seg_sz, char **shm_addr_ptr,
     int offset, int flag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -672,7 +672,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_detach(
-    MPIU_SHMW_Hnd_t hnd, char **shm_addr_ptr, MPIU_Size_t seg_sz)
+    MPIU_SHMW_Hnd_t hnd, char **shm_addr_ptr, size_t seg_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     int rc = -1;
@@ -722,7 +722,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_create_attach_templ(
-    MPIU_SHMW_Hnd_t hnd, MPIU_Size_t seg_sz, char **shm_addr_ptr,
+    MPIU_SHMW_Hnd_t hnd, size_t seg_sz, char **shm_addr_ptr,
     int offset, int flag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -790,7 +790,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_detach(
-    MPIU_SHMW_Hnd_t hnd, char **shm_addr_ptr, MPIU_Size_t seg_sz)
+    MPIU_SHMW_Hnd_t hnd, char **shm_addr_ptr, size_t seg_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     int rc = -1;
@@ -827,7 +827,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_create(
-    MPIU_SHMW_Hnd_t hnd, MPIU_Size_t seg_sz)
+    MPIU_SHMW_Hnd_t hnd, size_t seg_sz)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -854,7 +854,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_open(
-    MPIU_SHMW_Hnd_t hnd, MPIU_Size_t seg_sz)
+    MPIU_SHMW_Hnd_t hnd, size_t seg_sz)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -882,7 +882,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_create_and_attach(
-    MPIU_SHMW_Hnd_t hnd, MPIU_Size_t seg_sz, char **shm_addr_ptr, 
+    MPIU_SHMW_Hnd_t hnd, size_t seg_sz, char **shm_addr_ptr,
     int offset)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -914,7 +914,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Seg_attach(
-    MPIU_SHMW_Hnd_t hnd, MPIU_Size_t seg_sz, char **shm_addr_ptr,
+    MPIU_SHMW_Hnd_t hnd, size_t seg_sz, char **shm_addr_ptr,
     int offset)
 {
     int mpi_errno = MPI_SUCCESS;

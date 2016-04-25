@@ -4725,20 +4725,6 @@ AC_SUBST(MPI_F77_AINT)
 export MPI_F77_AINT
 # ----------------------------------------------------------------------------
 
-# define MPIU_Size_t - used to express the size of objects
-# This is used in mpir_type_defs.h to define MPIU_SIZE_T,
-# and is used in various parts of ch3 and mpid/common/sock.  
-# This is used to handle the potential problem that a message is 
-# too long to fit with an int.  However, we may still need to make
-# some more adjustments in the code (this may not be used everywhere
-# that it is needed).
-#
-# FIXME: this should really be in a util configure file, but we don't
-# have one at the moment
-#
-MPIU_SIZE_T="unsigned $MPI_AINT"
-AC_DEFINE_UNQUOTED(MPIU_SIZE_T,$MPIU_SIZE_T,[Set to a type that can express the size of the entire address space]) 
-
 if test "$ac_cv_sizeof_void_p" -lt "$aint_size" ; then
     AC_DEFINE(USE_AINT_FOR_ATTRVAL,1,[Define if MPI_Aint should be used instead of void * for storing attribute values])
 fi
