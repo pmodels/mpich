@@ -141,14 +141,20 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_int
     
     new_size = comm_ptr->local_size + comm_ptr->remote_size;
 
-    /* FIXME: For the intracomm, we need a consistent context id.
+    /* For the intracomm, we need a consistent context id.
        That means that one of the two groups needs to use
-       the recvcontext_id and the other must use the context_id */
+       the recvcontext_id and the other must use the context_id
+       The recvcontext_id is unique on each process, but another
+       communicator may use the context_id. Therefore, we do a small hack.
+       We set both flags indicating a sub-communicator (intra-node and
+       inter-node) to one. This is normally not possible (a communicator
+       is either intra- or inter-node) - which makes this context_id unique.  */
+
     if (local_high) {
-        (*new_intracomm_ptr)->context_id = comm_ptr->recvcontext_id + 2; /* See below */
+        (*new_intracomm_ptr)->context_id = MPIR_CONTEXT_SET_FIELD(SUBCOMM,comm_ptr->recvcontext_id, 3);
     }
     else {
-        (*new_intracomm_ptr)->context_id = comm_ptr->context_id + 2; /* See below */
+        (*new_intracomm_ptr)->context_id = MPIR_CONTEXT_SET_FIELD(SUBCOMM, comm_ptr->context_id, 3);
     }
     (*new_intracomm_ptr)->recvcontext_id = (*new_intracomm_ptr)->context_id;
     (*new_intracomm_ptr)->remote_size    = (*new_intracomm_ptr)->local_size   = new_size;

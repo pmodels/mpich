@@ -549,7 +549,8 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
 
     MPIR_Comm_map_free(comm);
 
-    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+    if (comm->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
+            !MPIR_CONTEXT_READ_FIELD(SUBCOMM,comm->context_id)) {  /*make sure this is not a subcomm*/
 
         mpi_errno = MPIR_Find_local_and_external(comm,
                                                  &num_local, &local_rank, &local_procs,
