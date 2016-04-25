@@ -11,7 +11,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static MPIR_Request * create_request(MPL_IOV * iov, int iov_count,
-				     int iov_offset, MPIU_Size_t nb)
+				     int iov_offset, size_t nb)
 {
     MPIR_Request * sreq;
     int i;
@@ -98,7 +98,7 @@ int MPIDI_CH3_iStartMsgv(MPIDI_VC_t * vc, MPL_IOV * iov, int n_iov,
 	if (MPIDI_CH3I_SendQ_empty(vcch)) /* MT */
 	{
 	    int rc;
-	    MPIU_Size_t nb;
+	    size_t nb;
 
 	    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,
 			 "send queue empty, attempting to write");

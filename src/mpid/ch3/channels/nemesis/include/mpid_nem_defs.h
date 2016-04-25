@@ -69,7 +69,7 @@ MPID_nem_barrier_t;
 
 typedef struct MPID_nem_seg
 {
-    MPIU_Size_t segment_len;
+    size_t segment_len;
     /* Handle to shm seg */
     MPIU_SHMW_Hnd_t hnd;
     /* Pointers */

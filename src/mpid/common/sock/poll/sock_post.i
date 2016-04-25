@@ -453,7 +453,7 @@ int MPIDU_Sock_listen(struct MPIDU_Sock_set * sock_set, void * user_ptr,
 #define FUNCNAME MPIDU_Sock_post_read
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_Sock_post_read(struct MPIDU_Sock * sock, void * buf, MPIU_Size_t minlen, MPIU_Size_t maxlen,
+int MPIDU_Sock_post_read(struct MPIDU_Sock * sock, void * buf, size_t minlen, size_t maxlen,
 			 MPIDU_Sock_progress_update_func_t fn)
 {
     struct pollfd * pollfd;
@@ -552,7 +552,7 @@ int MPIDU_Sock_post_readv(struct MPIDU_Sock * sock, MPL_IOV * iov, int iov_n, MP
 #define FUNCNAME MPIDU_Sock_post_write
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_Sock_post_write(struct MPIDU_Sock * sock, void * buf, MPIU_Size_t minlen, MPIU_Size_t maxlen,
+int MPIDU_Sock_post_write(struct MPIDU_Sock * sock, void * buf, size_t minlen, size_t maxlen,
 			  MPIDU_Sock_progress_update_func_t fn)
 {
     struct pollfd * pollfd;

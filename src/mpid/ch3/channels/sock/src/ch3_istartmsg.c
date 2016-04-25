@@ -11,7 +11,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static MPIR_Request * create_request(void * hdr, intptr_t hdr_sz,
-				     MPIU_Size_t nb)
+				     size_t nb)
 {
     MPIR_Request * sreq;
     MPIDI_STATE_DECL(MPID_STATE_CREATE_REQUEST);
@@ -73,7 +73,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, intptr_t hdr_sz,
 	   data, queuing any unsent data. */
 	if (MPIDI_CH3I_SendQ_empty(vcch)) /* MT */
 	{
-	    MPIU_Size_t nb;
+	    size_t nb;
 	    int rc;
 
 	    MPL_DBG_MSG(MPIDI_CH3_DBG_CHANNEL,VERBOSE,

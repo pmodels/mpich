@@ -46,8 +46,6 @@
 
 #include "mpl.h"
 
-typedef MPIU_SIZE_T MPIU_Size_t;
-
 /* Use the MPIU_PtrToXXX macros to convert pointers to and from integer types */
 
 /* The Microsoft compiler will not allow casting of different sized types

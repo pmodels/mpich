@@ -43,7 +43,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event);
 static inline int connection_pop_sendq_req(MPIDI_CH3I_Connection_t * conn);
 static inline int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn);
 
-static int adjust_iov(MPL_IOV ** iovp, int * countp, MPIU_Size_t nb);
+static int adjust_iov(MPL_IOV ** iovp, int * countp, size_t nb);
 
 #define MAX_PROGRESS_HOOKS 4
 typedef int (*progress_func_ptr_t) (int* made_progress);
@@ -608,7 +608,7 @@ static int MPIDI_CH3I_Progress_handle_sock_event(MPIDU_Sock_event_t * event)
 		    for(;;)
 		    {
 			MPL_IOV * iovp;
-			MPIU_Size_t nb;
+			size_t nb;
 				
 			iovp = sreq->dev.iov;
 			    
@@ -847,7 +847,7 @@ static inline int connection_post_recv_pkt(MPIDI_CH3I_Connection_t * conn)
 #define FUNCNAME adjust_iov
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int adjust_iov(MPL_IOV ** iovp, int * countp, MPIU_Size_t nb)
+static int adjust_iov(MPL_IOV ** iovp, int * countp, size_t nb)
 {
     MPL_IOV * const iov = *iovp;
     const int count = *countp;
@@ -883,7 +883,7 @@ static int ReadMoreData( MPIDI_CH3I_Connection_t * conn, MPIR_Request *rreq )
     
     while (1) {
 	MPL_IOV * iovp;
-	MPIU_Size_t nb;
+	size_t nb;
 	
 	iovp = rreq->dev.iov;
 			    

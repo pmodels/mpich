@@ -23,7 +23,7 @@ static void MPIDU_Socki_sock_free(struct MPIDU_Sock * sock);
 
 static int MPIDU_Socki_event_enqueue(struct pollinfo * pollinfo, 
 				     enum MPIDU_Sock_op op, 
-				     MPIU_Size_t num_bytes,
+				     size_t num_bytes,
 				     void * user_ptr, int error);
 static inline int MPIDU_Socki_event_dequeue(struct MPIDU_Sock_set * sock_set, 
 					    int * set_elem, 
@@ -832,7 +832,7 @@ static void MPIDU_Socki_sock_free(struct MPIDU_Sock * sock)
 #define FUNCNAME MPIDU_Socki_event_enqueue
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int MPIDU_Socki_event_enqueue(struct pollinfo * pollinfo, MPIDU_Sock_op_t op, MPIU_Size_t num_bytes,
+static int MPIDU_Socki_event_enqueue(struct pollinfo * pollinfo, MPIDU_Sock_op_t op, size_t num_bytes,
 				     void * user_ptr, int error)
 {
     struct MPIDU_Sock_set * sock_set = pollinfo->sock_set;

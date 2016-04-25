@@ -258,8 +258,8 @@ int MPIDU_Sock_accept(struct MPIDU_Sock * listener,
 #define FUNCNAME MPIDU_Sock_read
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_Sock_read(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len, 
-		    MPIU_Size_t * num_read)
+int MPIDU_Sock_read(MPIDU_Sock_t sock, void * buf, size_t len,
+		    size_t * num_read)
 {
     struct pollfd * pollfd;
     struct pollinfo * pollinfo;
@@ -302,7 +302,7 @@ int MPIDU_Sock_read(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len,
 
     if (nb > 0)
     {
-	*num_read = (MPIU_Size_t) nb;
+	*num_read = (size_t) nb;
     }
     /* --BEGIN ERROR HANDLING-- */
     else if (nb == 0)
@@ -378,7 +378,7 @@ int MPIDU_Sock_read(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_Sock_readv(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, 
-		     MPIU_Size_t * num_read)
+		     size_t * num_read)
 {
     struct pollfd * pollfd;
     struct pollinfo * pollinfo;
@@ -415,7 +415,7 @@ int MPIDU_Sock_readv(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n,
 
     if (nb > 0)
     {
-	*num_read = (MPIU_Size_t) nb;
+	*num_read = (size_t) nb;
     }
     /* --BEGIN ERROR HANDLING-- */
     else if (nb == 0)
@@ -491,8 +491,8 @@ int MPIDU_Sock_readv(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n,
 #define FUNCNAME MPIDU_Sock_write
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_Sock_write(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len, 
-		     MPIU_Size_t * num_written)
+int MPIDU_Sock_write(MPIDU_Sock_t sock, void * buf, size_t len,
+		     size_t * num_written)
 {
     struct pollfd * pollfd;
     struct pollinfo * pollinfo;
@@ -577,7 +577,7 @@ int MPIDU_Sock_write(MPIDU_Sock_t sock, void * buf, MPIU_Size_t len,
 #define FUNCNAME MPIDU_Sock_writev
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_Sock_writev(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, MPIU_Size_t * num_written)
+int MPIDU_Sock_writev(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, size_t * num_written)
 {
     struct pollfd * pollfd;
     struct pollinfo * pollinfo;
@@ -614,7 +614,7 @@ int MPIDU_Sock_writev(MPIDU_Sock_t sock, MPL_IOV * iov, int iov_n, MPIU_Size_t *
 
     if (nb >= 0)
     {
-	*num_written = (MPIU_Size_t) nb;
+	*num_written = (size_t) nb;
     }
     /* --BEGIN ERROR HANDLING-- */
     else if (errno == EAGAIN || errno == EWOULDBLOCK)
