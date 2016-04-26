@@ -72,7 +72,6 @@ Makefile
 *.vfproj
 *conf.h
 *conf.h.in
-*fs.c
 *old*.pdf
 .*-cache
 .deps
