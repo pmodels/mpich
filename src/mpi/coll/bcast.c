@@ -140,7 +140,6 @@ static int MPIR_Bcast_binomial(
     MPI_Aint type_size;
     MPI_Aint position;
     void *tmp_buf=NULL;
-    MPIR_Datatype *dtp;
     MPIR_CHKLMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;
@@ -152,8 +151,7 @@ static int MPIR_Bcast_binomial(
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
         is_contig = 1;
     else {
-        MPIR_Datatype_get_ptr(datatype, dtp);
-        is_contig = dtp->is_contig;
+        MPIR_Datatype_is_contig(datatype, &is_contig);
     }
 
     is_homogeneous = 1;
@@ -491,7 +489,6 @@ static int MPIR_Bcast_scatter_doubling_allgather(
     int recv_offset, tree_root, nprocs_completed, offset;
     MPI_Aint position;
     MPIR_CHKLMEM_DECL(1);
-    MPIR_Datatype *dtp;
     MPI_Aint true_extent, true_lb;
     void *tmp_buf;
 
@@ -505,8 +502,7 @@ static int MPIR_Bcast_scatter_doubling_allgather(
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
         is_contig = 1;
     else {
-        MPIR_Datatype_get_ptr(datatype, dtp);
-        is_contig = dtp->is_contig;
+        MPIR_Datatype_is_contig(datatype, &is_contig);
     }
 
     is_homogeneous = 1;
@@ -798,7 +794,6 @@ static int MPIR_Bcast_scatter_ring_allgather(
     void *tmp_buf;
     int recvd_size;
     MPI_Status status;
-    MPIR_Datatype *dtp;
     MPI_Aint true_extent, true_lb;
     MPIR_CHKLMEM_DECL(1);
 
@@ -811,8 +806,7 @@ static int MPIR_Bcast_scatter_ring_allgather(
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
         is_contig = 1;
     else {
-        MPIR_Datatype_get_ptr(datatype, dtp);
-        is_contig = dtp->is_contig;
+        MPIR_Datatype_is_contig(datatype, &is_contig);
     }
 
     is_homogeneous = 1;

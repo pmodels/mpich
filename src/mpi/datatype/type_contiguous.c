@@ -136,8 +136,8 @@ int MPIR_Type_contiguous(int count,
         new_dtp->builtin_element_size = old_dtp->builtin_element_size;
         new_dtp->basic_type       = el_type;
 
-        new_dtp->is_contig    = MPIR_Datatype_is_contig(old_dtp);
-        if(MPIR_Datatype_is_contig(old_dtp))
+        MPIR_Datatype_is_contig(oldtype, &new_dtp->is_contig);
+        if(new_dtp->is_contig)
             new_dtp->max_contig_blocks = 1;
         else
             new_dtp->max_contig_blocks = count * old_dtp->max_contig_blocks;
