@@ -395,7 +395,6 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather(void *buffer, int count, MPI_Datatype 
     int type_size, j, k, i, tmp_mask, is_contig, is_homogeneous ATTRIBUTE((unused));
     int relative_dst, dst_tree_root, my_tree_root, send_offset;
     int recv_offset, tree_root, nprocs_completed, offset;
-    MPIR_Datatype *dtp;
     MPI_Aint true_extent, true_lb;
     void *tmp_buf;
     struct MPIR_Ibcast_status *status;
@@ -413,8 +412,7 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather(void *buffer, int count, MPI_Datatype 
         is_contig = 1;
     }
     else {
-        MPIR_Datatype_get_ptr(datatype, dtp);
-        is_contig = dtp->is_contig;
+        MPIR_Datatype_is_contig(datatype, &is_contig);
     }
 
     MPIR_SCHED_CHKPMEM_MALLOC(status, struct MPIR_Ibcast_status*,
@@ -652,7 +650,6 @@ int MPIR_Ibcast_scatter_ring_allgather(void *buffer, int count, MPI_Datatype dat
     int i, j, jnext, left, right;
     MPI_Aint true_extent, true_lb;
     void *tmp_buf = NULL;
-    MPIR_Datatype *dtp = NULL;
 
     struct MPIR_Ibcast_status *status;
     MPIR_SCHED_CHKPMEM_DECL(4);
@@ -667,8 +664,7 @@ int MPIR_Ibcast_scatter_ring_allgather(void *buffer, int count, MPI_Datatype dat
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
         is_contig = 1;
     else {
-        MPIR_Datatype_get_ptr(datatype, dtp);
-        is_contig = dtp->is_contig;
+        MPIR_Datatype_is_contig(datatype, &is_contig);
     }
 
     is_homogeneous = 1;

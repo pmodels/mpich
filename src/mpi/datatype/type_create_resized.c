@@ -117,8 +117,10 @@ int MPIR_Type_create_resized(MPI_Datatype oldtype,
         new_dtp->builtin_element_size   = old_dtp->builtin_element_size;
         new_dtp->basic_type         = old_dtp->basic_type;
 
-        new_dtp->is_contig      =
-            (extent == old_dtp->size) ? MPIR_Datatype_is_contig(old_dtp) : 0;
+        if (extent == old_dtp->size)
+            MPIR_Datatype_is_contig(oldtype, &new_dtp->is_contig);
+        else
+            new_dtp->is_contig = 0;
         new_dtp->max_contig_blocks = old_dtp->max_contig_blocks;
     }
 

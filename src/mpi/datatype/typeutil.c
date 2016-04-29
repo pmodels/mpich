@@ -284,12 +284,10 @@ int MPIR_Datatype_builtin_fillin(void)
 /* This will eventually be removed once ROMIO knows more about MPICH */
 void MPIR_Datatype_iscontig(MPI_Datatype datatype, int *flag)
 {
-    MPIR_Datatype *datatype_ptr;
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
         *flag = 1;
     else  {
-        MPIR_Datatype_get_ptr(datatype, datatype_ptr);
-        *flag = datatype_ptr->is_contig;
+        MPIR_Datatype_is_contig(datatype, flag);
     }
 }
 
