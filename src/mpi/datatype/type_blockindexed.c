@@ -116,7 +116,7 @@ int MPIR_Type_blockindexed(int count,
         old_ub        = old_dtp->ub;
         old_true_ub   = old_dtp->true_ub;
         old_extent    = old_dtp->extent;
-        old_is_contig = MPIR_Datatype_is_contig(old_dtp);
+        MPIR_Datatype_is_contig(oldtype, &old_is_contig);
 
         new_dtp->size           = (MPI_Aint) count *
                                   (MPI_Aint) blocklength *

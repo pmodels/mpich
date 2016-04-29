@@ -238,6 +238,7 @@ int MPIR_Type_struct(int count,
 	MPI_Aint tmp_el_sz;
 	MPI_Datatype tmp_el_type;
 	MPIR_Datatype *old_dtp = NULL;
+        int old_is_contig;
 
 	/* Interpreting typemap to not include 0 blklen things, including
 	 * MPI_LB and MPI_UB. -- Rob Ross, 10/31/2005
@@ -399,10 +400,9 @@ int MPIR_Type_struct(int count,
 	    }
 	}
 
-	if (!is_builtin && !MPIR_Datatype_is_contig(old_dtp))
-	{
-	    old_are_contig = 0;
-	}
+        MPIR_Datatype_is_contig(oldtype_array[i], &old_is_contig);
+        if (!old_is_contig)
+            old_are_contig = 0;
     }
 
     new_dtp->n_builtin_elements = -1; /* TODO */
