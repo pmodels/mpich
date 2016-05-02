@@ -128,8 +128,8 @@ typedef struct MPIDI_CH3I_VC
 
     /* LMT shared memory copy-buffer ptr */
     struct MPID_nem_copy_buf *lmt_copy_buf;
-    MPIU_SHMW_Hnd_t lmt_copy_buf_handle;
-    MPIU_SHMW_Hnd_t lmt_recv_copy_buf_handle;
+    MPL_shm_hnd_t lmt_copy_buf_handle;
+    MPL_shm_hnd_t lmt_recv_copy_buf_handle;
     int lmt_buf_num;
     intptr_t lmt_surfeit;
     struct {struct MPID_nem_lmt_shm_wait_element *head, *tail;} lmt_queue;

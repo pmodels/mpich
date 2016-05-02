@@ -8,7 +8,6 @@
 #define MPICH_MPIDI_CH3_IMPL_H_INCLUDED
 
 #include "mpidimpl.h"
-#include "mpiu_os_wrappers.h"
 #include "mpidu_generic_queue.h"
 #include "mpl_utlist.h"
 
