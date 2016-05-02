@@ -1045,9 +1045,9 @@ static int shm_connection_terminated(MPIDI_VC_t * vc)
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     
-    mpi_errno = MPIU_SHMW_Hnd_finalize(&(vc->ch.lmt_copy_buf_handle));
+    mpi_errno = MPL_shm_hnd_finalize(&(vc->ch.lmt_copy_buf_handle));
     if(mpi_errno != MPI_SUCCESS) { MPIR_ERR_POP(mpi_errno); }
-    mpi_errno = MPIU_SHMW_Hnd_finalize(&(vc->ch.lmt_recv_copy_buf_handle));
+    mpi_errno = MPL_shm_hnd_finalize(&(vc->ch.lmt_recv_copy_buf_handle));
     if(mpi_errno != MPI_SUCCESS) { MPIR_ERR_POP(mpi_errno); }
     
     mpi_errno = MPIDI_CH3U_Handle_connection(vc, MPIDI_VC_EVENT_TERMINATED);

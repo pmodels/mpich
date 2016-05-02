@@ -738,6 +738,31 @@ AC_CHECK_FUNCS(getpid)
 ## END OF DBG CODE
 #######################################################################
 
+#######################################################################
+## START OF SHM CODE
+#######################################################################
+
+dnl Check for shm
+PAC_ARG_SHARED_MEMORY
+
+case $with_shared_memory in
+    sysv)
+        AC_DEFINE(MPL_USE_SYSV_SHM,1,[Define if use SYSV shared memory])
+        ;;
+    mmap)
+        AC_DEFINE(MPL_USE_MMAP_SHM,1,[Define if use MMAP shared memory])
+        ;;
+    nt)
+        AC_DEFINE(MPL_USE_NT_SHM,1,[Define if use Windows shared memory])
+        ;;
+    *)
+        AC_MSG_ERROR([cannot support shared memory:  need either sysv shared memory functions or mmap in order to support shared memory])
+esac
+
+
+#######################################################################
+## END OF SHM CODE
+#######################################################################
 
 ## Enable creation of libtool-style versioning or no versioning
 AC_ARG_ENABLE(versioning,

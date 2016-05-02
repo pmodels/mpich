@@ -10,7 +10,6 @@
 #include "mpid_nem_datatypes.h"
 #include "mpi.h"
 #include "mpiimpl.h"
-#include "mpiu_os_wrappers_pre.h"
 #include "mpidu_shm.h"
 
 /* FIXME: This definition should be gotten from mpidi_ch3_impl.h */

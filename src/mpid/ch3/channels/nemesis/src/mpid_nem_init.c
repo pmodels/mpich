@@ -206,33 +206,33 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
            communication is allocated it will probably be mapped at a
            different location for each process
         */
-        MPIU_SHMW_Hnd_t handle;
+        MPL_shm_hnd_t handle;
 	int size = (local_rank * 65536) + 65536;
 	char *base_addr;
 
-        mpi_errno = MPIU_SHMW_Hnd_init(&handle);
+        mpi_errno = MPL_shm_hnd_init(&handle);
         if(mpi_errno != MPI_SUCCESS) { MPIR_ERR_POP(mpi_errno); }
 
-        mpi_errno = MPIU_SHMW_Seg_create_and_attach(handle, size, &base_addr, 0);
+        mpi_errno = MPL_shm_seg_create_and_attach(handle, size, &base_addr, 0);
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno)
         {
-            MPIU_SHMW_Seg_remove(handle);
-            MPIU_SHMW_Hnd_finalize(&handle);
+            MPL_shm_seg_remove(handle);
+            MPL_shm_hnd_finalize(&handle);
             MPIR_ERR_POP (mpi_errno);
         }
         /* --END ERROR HANDLING-- */
 
-        mpi_errno = MPIU_SHMW_Seg_remove(handle);
+        mpi_errno = MPL_shm_seg_remove(handle);
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno)
         {
-            MPIU_SHMW_Hnd_finalize(&handle);
+            MPL_shm_hnd_finalize(&handle);
             MPIR_ERR_POP (mpi_errno);
         }
         /* --END ERROR HANDLING-- */
 
-        MPIU_SHMW_Hnd_finalize(&handle);
+        MPL_shm_hnd_finalize(&handle);
     }
     /*fprintf(stderr,"[%i] -- address shift ok \n",pg_rank); */
 #endif  /*FORCE_ASYM */
@@ -540,9 +540,9 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
 #endif
 
         vc_ch->lmt_copy_buf        = NULL;
-        mpi_errno = MPIU_SHMW_Hnd_init(&(vc_ch->lmt_copy_buf_handle));
+        mpi_errno = MPL_shm_hnd_init(&(vc_ch->lmt_copy_buf_handle));
         if(mpi_errno != MPI_SUCCESS) { MPIR_ERR_POP(mpi_errno); }
-        mpi_errno = MPIU_SHMW_Hnd_init(&(vc_ch->lmt_recv_copy_buf_handle));
+        mpi_errno = MPL_shm_hnd_init(&(vc_ch->lmt_recv_copy_buf_handle));
         if(mpi_errno != MPI_SUCCESS) { MPIR_ERR_POP(mpi_errno); }
         vc_ch->lmt_queue.head      = NULL;
         vc_ch->lmt_queue.tail      = NULL;
