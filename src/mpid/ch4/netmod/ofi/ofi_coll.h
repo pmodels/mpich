@@ -12,18 +12,115 @@
 #define OFI_COLL_H_INCLUDED
 
 #include "ofi_impl.h"
+#include "ofi_coll_impl.h"
+
+#define MPIDI_OFI_MPI_OP_TO_COLLOP(NS0,NS1,NS2,NS3)                     \
+    static inline MPIDI_OFI_COLL_ ##NS0## _ ##NS2## _op_t *             \
+    MPIDI_OFI_MPI_OP_TO_COLLOP_ ##NS0## _ ##NS2## _fn (MPI_Op op) {     \
+        MPIR_Op       *op_ptr;                                          \
+        if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {               \
+            unsigned idx = ((op)&0xf)-1;                                \
+            extern     MPIDI_OFI_COLL_ ##NS0## _ ##NS2## _op_t          \
+                MPIDI_OFI_COLL_ ##NS0## _ ##NS2## _op_table[];          \
+            return &MPIDI_OFI_COLL_ ##NS0## _ ##NS2## _op_table[idx];   \
+        }                                                               \
+        else {                                                          \
+            MPIR_Op_get_ptr(op, op_ptr);                                \
+            return &MPIDI_OFI_OP(op_ptr).op_ ##NS1## _ ##NS3;           \
+        }                                                               \
+    }
+MPIDI_OFI_MPI_OP_TO_COLLOP(MPICH,mpich,2NOMIAL,2nomial);
+MPIDI_OFI_MPI_OP_TO_COLLOP(MPICH,mpich,2ARY,2ary);
+MPIDI_OFI_MPI_OP_TO_COLLOP(MPICH,mpich,DISSEM,dissem);
+MPIDI_OFI_MPI_OP_TO_COLLOP(MPICH,mpich,RECEXCH,recexch);
+MPIDI_OFI_MPI_OP_TO_COLLOP(TRIGGERED,triggered,2NOMIAL,2nomial);
+MPIDI_OFI_MPI_OP_TO_COLLOP(TRIGGERED,triggered,2ARY,2ary);
+MPIDI_OFI_MPI_OP_TO_COLLOP(TRIGGERED,triggered,DISSEM,dissem);
+MPIDI_OFI_MPI_OP_TO_COLLOP(TRIGGERED,triggered,RECEXCH,recexch);
+MPIDI_OFI_MPI_OP_TO_COLLOP(STUB,stub,2NOMIAL,2nomial);
+MPIDI_OFI_MPI_OP_TO_COLLOP(STUB,stub,2ARY,2ary);
+MPIDI_OFI_MPI_OP_TO_COLLOP(STUB,stub,DISSEM,dissem);
+MPIDI_OFI_MPI_OP_TO_COLLOP(STUB,stub,RECEXCH,recexch);
+MPIDI_OFI_MPI_OP_TO_COLLOP(STUB,stub,STUB,stub);
+MPIDI_OFI_MPI_OP_TO_COLLOP(MPICH,mpich,STUB,stub);
+MPIDI_OFI_MPI_OP_TO_COLLOP(SHM,shm,GR,gr);
+
+static inline int MPIDI_OFI_cycle_algorithm(MPIR_Comm *comm_ptr, int pick[], int num)
+{
+    if(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
+        return 0;
+
+#if 0
+    int idx;
+    MPIDI_OFI_COMM(comm_ptr).issued_collectives++;
+    idx = MPIDI_OFI_COMM(comm_ptr).issued_collectives%num;
+    return pick[idx];
+#else
+    return 0;
+#endif
+}
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_barrier
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+static inline int MPIDI_NM_mpi_barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
-    int mpi_errno;
+    int mpi_errno, coll_error;
+    int valid_colls[] = {1, 2, 3};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,3);
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_BARRIER);
+    *errflag = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Barrier(comm_ptr, errflag);
+    if(use_coll == 0)
+        mpi_errno = MPIR_Barrier(comm_ptr, errflag);
+    else if(use_coll == 1)
+        mpi_errno = MPIDI_OFI_COLL_MPICH_2NOMIAL_barrier(
+                        &MPIDI_OFI_COMM(comm_ptr).comm_mpich_2nomial,
+                        &coll_error);
+    else if(use_coll == 2)
+        mpi_errno = MPIDI_OFI_COLL_MPICH_2ARY_barrier(
+                        &MPIDI_OFI_COMM(comm_ptr).comm_mpich_2ary,
+                        &coll_error);
+    else if(use_coll == 3)
+        mpi_errno = MPIDI_OFI_COLL_MPICH_DISSEM_barrier(
+                        &MPIDI_OFI_COMM(comm_ptr).comm_mpich_dissem,
+                        &coll_error);
+    else if(use_coll == 4)
+        mpi_errno = MPIDI_OFI_COLL_TRIGGERED_2NOMIAL_barrier(
+                        &MPIDI_OFI_COMM(comm_ptr).comm_triggered_2nomial,
+                        &coll_error);
+    else if(use_coll == 5)
+        mpi_errno = MPIDI_OFI_COLL_TRIGGERED_2ARY_barrier(
+                        &MPIDI_OFI_COMM(comm_ptr).comm_triggered_2ary,
+                        &coll_error);
+    else if(use_coll == 6)
+        mpi_errno = MPIDI_OFI_COLL_TRIGGERED_DISSEM_barrier(
+                        &MPIDI_OFI_COMM(comm_ptr).comm_triggered_dissem,
+                        &coll_error);
+    else {
+        MPIR_Assert(0);
+        mpi_errno = MPIDI_OFI_COLL_STUB_2NOMIAL_barrier(
+                        &MPIDI_OFI_COMM(comm_ptr).comm_stub_2nomial,
+                        &coll_error);
+        mpi_errno = MPIDI_OFI_COLL_STUB_2ARY_barrier(
+                        &MPIDI_OFI_COMM(comm_ptr).comm_stub_2ary,
+                        &coll_error);
+        mpi_errno = MPIDI_OFI_COLL_STUB_DISSEM_barrier(
+                        &MPIDI_OFI_COMM(comm_ptr).comm_stub_dissem,
+                        &coll_error);
+        mpi_errno = MPIDI_OFI_COLL_STUB_STUB_barrier(
+                        &MPIDI_OFI_COMM(comm_ptr).comm_stub_stub,
+                        &coll_error);
+        mpi_errno = MPIDI_OFI_COLL_MPICH_STUB_barrier(
+                        &MPIDI_OFI_COMM(comm_ptr).comm_mpich_stub,
+                        &coll_error);
+        mpi_errno = MPIDI_OFI_COLL_SHM_GR_barrier(
+                        &MPIDI_OFI_COMM(comm_ptr).comm_shm_gr,
+                        &coll_error);
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_BARRIER);
     return mpi_errno;
@@ -34,13 +131,84 @@ static inline int MPIDI_NM_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * er
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Datatype datatype,
-                                     int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                     int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
-    int mpi_errno;
+    int mpi_errno, coll_error;
+    int valid_colls[] = {1, 2};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,2);
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_BCAST);
+    *errflag = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
+    if(use_coll == 0)
+        mpi_errno = MPIR_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
+    else {
+        MPIR_Datatype *dt_ptr;
+        MPID_Datatype_get_ptr(datatype,dt_ptr);
+
+        if(use_coll == 1)
+            mpi_errno = MPIDI_OFI_COLL_MPICH_2NOMIAL_bcast(
+                            buffer,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_2nomial,
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_2nomial,
+                            &coll_error);
+        else if(use_coll == 2)
+            mpi_errno = MPIDI_OFI_COLL_MPICH_2ARY_bcast(
+                            buffer,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_2ary,
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_2ary,
+                            &coll_error);
+        else if(use_coll == 3)
+            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_2NOMIAL_bcast(
+                            buffer,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_2nomial,
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_2nomial,
+                            &coll_error);
+        else if(use_coll == 4)
+            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_2ARY_bcast(
+                            buffer,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_2ary,
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_2ary,
+                            &coll_error);
+        else {
+            MPIR_Assert(0);
+            mpi_errno = MPIDI_OFI_COLL_STUB_2NOMIAL_bcast(
+                            buffer,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_2nomial,
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_2nomial,
+                            &coll_error);
+            mpi_errno = MPIDI_OFI_COLL_STUB_2ARY_bcast(
+                            buffer,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_2ary,
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_2ary,
+                            &coll_error);
+            mpi_errno = MPIDI_OFI_COLL_STUB_STUB_bcast(
+                            buffer,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_stub,
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_stub,
+                            &coll_error);
+            mpi_errno = MPIDI_OFI_COLL_MPICH_STUB_bcast(
+                            buffer,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_stub,
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_stub,
+                            &coll_error);
+            mpi_errno = MPIDI_OFI_COLL_SHM_GR_bcast(
+                            buffer,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_shm_gr,
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_shm_gr,
+                            &coll_error);
+        }
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_BCAST);
     return mpi_errno;
@@ -51,14 +219,112 @@ static inline int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Datatype datat
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *recvbuf, int count,
-                                         MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                         MPIR_Errflag_t * errflag)
+                                         MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
+                                         MPIR_Errflag_t *errflag)
 {
-    int mpi_errno;
+    int mpi_errno, coll_error;
+    int valid_colls[] = {1, 2, 3};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,3);
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
+    *errflag = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    if(use_coll == 0)
+        mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    else {
+        MPIR_Datatype *dt_ptr;
+        MPID_Datatype_get_ptr(datatype,dt_ptr);
+
+        if(use_coll == 1)
+            mpi_errno = MPIDI_OFI_COLL_MPICH_2NOMIAL_allreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_2nomial,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_MPICH_2NOMIAL_fn(op),
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_2nomial,
+                            &coll_error);
+        else if(use_coll == 2)
+            mpi_errno = MPIDI_OFI_COLL_MPICH_2ARY_allreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_2ary,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_MPICH_2ARY_fn(op),
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_2ary,
+                            &coll_error);
+        else if(use_coll == 3)
+            mpi_errno = MPIDI_OFI_COLL_MPICH_DISSEM_allreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_dissem,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_MPICH_DISSEM_fn(op),
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_dissem,
+                            &coll_error);
+        else if(use_coll == 4)
+            mpi_errno = MPIDI_OFI_COLL_MPICH_RECEXCH_allreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_recexch,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_MPICH_RECEXCH_fn(op),
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_recexch,
+                            &coll_error);
+        else if(use_coll == 5)
+            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_2NOMIAL_allreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_2nomial,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_2NOMIAL_fn(op),
+                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_2nomial,
+                            &coll_error);
+        else if(use_coll == 6)
+            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_2ARY_allreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_2ary,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_2ARY_fn(op),
+                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_2ary,
+                            &coll_error);
+        else if(use_coll == 7)
+            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_DISSEM_allreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_dissem,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_DISSEM_fn(op),
+                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_dissem,
+                            &coll_error);
+        else {
+            MPIR_Assert(0);
+            mpi_errno = MPIDI_OFI_COLL_STUB_2NOMIAL_allreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_2nomial,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_STUB_2NOMIAL_fn(op),
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_2nomial,
+                            &coll_error);
+            mpi_errno = MPIDI_OFI_COLL_STUB_2ARY_allreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_2ary,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_STUB_2ARY_fn(op),
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_2ary,
+                            &coll_error);
+            mpi_errno = MPIDI_OFI_COLL_STUB_DISSEM_allreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_dissem,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_STUB_DISSEM_fn(op),
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_dissem,
+                            &coll_error);
+            mpi_errno = MPIDI_OFI_COLL_STUB_STUB_allreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_stub,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_STUB_STUB_fn(op),
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_stub,
+                            &coll_error);
+            mpi_errno = MPIDI_OFI_COLL_MPICH_STUB_allreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_stub,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_MPICH_STUB_fn(op),
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_stub,
+                            &coll_error);
+            mpi_errno = MPIDI_OFI_COLL_SHM_GR_allreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_shm_gr,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_SHM_GR_fn(op),
+                            &MPIDI_OFI_COMM(comm_ptr).comm_shm_gr,
+                            &coll_error);
+        }
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
     return mpi_errno;
@@ -70,14 +336,36 @@ static inline int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *recvbuf, int
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                          void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                         MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                         MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
-    int mpi_errno;
+    int mpi_errno, coll_error;
+    int valid_colls[]= {1,2,3};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,3);
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLGATHER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ALLGATHER);
 
-    mpi_errno = MPIR_Allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype,
-                               comm_ptr, errflag);
+    *errflag = MPI_SUCCESS;
+
+    if(use_coll==0)
+        mpi_errno = MPIR_Allgather(sendbuf, sendcount, sendtype, recvbuf, recvcount,
+                                   recvtype, comm_ptr, errflag);
+    else {
+        MPIR_Datatype *st_ptr, *rt_ptr;
+        MPID_Datatype_get_ptr(sendtype, st_ptr);
+        MPID_Datatype_get_ptr(recvtype, rt_ptr);
+
+        if(use_coll==1)
+            mpi_errno =
+                MPIDI_OFI_COLL_MPICH_2ARY_allgather(
+                    sendbuf, sendcount,
+                    &MPIDI_OFI_DT(st_ptr).dt_mpich_2ary,
+                    recvbuf, recvcount,&MPIDI_OFI_DT(rt_ptr).dt_mpich_2ary,
+                    &MPIDI_OFI_COMM(comm_ptr).comm_mpich_2ary,
+                    &coll_error);
+        else
+            MPIR_Assert(0);
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ALLGATHER);
     return mpi_errno;
@@ -89,8 +377,8 @@ static inline int MPIDI_NM_mpi_allgather(const void *sendbuf, int sendcount, MPI
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                           void *recvbuf, const int *recvcounts, const int *displs,
-                                          MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                          MPIR_Errflag_t * errflag)
+                                          MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
+                                          MPIR_Errflag_t *errflag)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLGATHERV);
@@ -109,7 +397,7 @@ static inline int MPIDI_NM_mpi_allgatherv(const void *sendbuf, int sendcount, MP
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                      int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                      int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_GATHER);
@@ -128,8 +416,8 @@ static inline int MPIDI_NM_mpi_gather(const void *sendbuf, int sendcount, MPI_Da
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                        void *recvbuf, const int *recvcounts, const int *displs,
-                                       MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
-                                       MPIR_Errflag_t * errflag)
+                                       MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr,
+                                       MPIR_Errflag_t *errflag)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_GATHERV);
@@ -148,7 +436,7 @@ static inline int MPIDI_NM_mpi_gatherv(const void *sendbuf, int sendcount, MPI_D
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                       int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                       int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SCATTER);
@@ -168,7 +456,7 @@ static inline int MPIDI_NM_mpi_scatter(const void *sendbuf, int sendcount, MPI_D
 static inline int MPIDI_NM_mpi_scatterv(const void *sendbuf, const int *sendcounts,
                                         const int *displs, MPI_Datatype sendtype,
                                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                        int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                        int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SCATTERV);
@@ -187,14 +475,28 @@ static inline int MPIDI_NM_mpi_scatterv(const void *sendbuf, const int *sendcoun
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                        MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                        MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
-    int mpi_errno;
+    int mpi_errno, coll_error;
+    int valid_colls[] = {1, 2, 3};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,3);
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLTOALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ALLTOALL);
+    *errflag = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount,
-                              recvtype, comm_ptr, errflag);
+    if(use_coll == 0)
+        mpi_errno = MPIR_Alltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, \
+                                  recvtype, comm_ptr, errflag);
+    else {
+        MPIR_Datatype *send_dt_ptr, *recv_dt_ptr;
+        MPID_Datatype_get_ptr(sendtype,send_dt_ptr);
+        MPID_Datatype_get_ptr(recvtype,recv_dt_ptr);
+
+        mpi_errno = MPIDI_OFI_COLL_MPICH_DISSEM_alltoall(sendbuf, sendcount, &MPIDI_OFI_DT(send_dt_ptr).dt_mpich_dissem,\
+                                                         recvbuf, recvcount, &MPIDI_OFI_DT(recv_dt_ptr).dt_mpich_dissem,\
+                                                         &MPIDI_OFI_COMM(comm_ptr).comm_mpich_dissem, &coll_error);
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ALLTOALL);
     return mpi_errno;
@@ -208,14 +510,38 @@ static inline int MPIDI_NM_mpi_alltoallv(const void *sendbuf, const int *sendcou
                                          const int *sdispls, MPI_Datatype sendtype,
                                          void *recvbuf, const int *recvcounts,
                                          const int *rdispls, MPI_Datatype recvtype,
-                                         MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                         MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
-    int mpi_errno;
+    int mpi_errno, coll_error;
+    int valid_colls[] = {1,2,3};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,3);
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLTOALLV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ALLTOALLV);
+    *errflag = MPI_SUCCESS;
 
-    mpi_errno = MPIR_Alltoallv(sendbuf, sendcounts, sdispls,
-                               sendtype, recvbuf, recvcounts, rdispls, recvtype, comm_ptr, errflag);
+    if(use_coll==0)
+        mpi_errno = MPIR_Alltoallv(sendbuf, sendcounts, sdispls,
+                                   sendtype, recvbuf, recvcounts,
+                                   rdispls, recvtype, comm_ptr, errflag);
+    else {
+        MPIR_Datatype *st_ptr, *rt_ptr;
+        MPID_Datatype_get_ptr(sendtype, st_ptr);
+        MPID_Datatype_get_ptr(recvtype, rt_ptr);
+
+        if(use_coll==1)
+            mpi_errno =
+                MPIDI_OFI_COLL_MPICH_2ARY_alltoallv(
+                    sendbuf, sendcounts, sdispls,
+                    &MPIDI_OFI_DT(st_ptr).dt_mpich_2ary,
+                    recvbuf, recvcounts, rdispls,
+                    &MPIDI_OFI_DT(rt_ptr).dt_mpich_2ary,
+                    &MPIDI_OFI_COMM(comm_ptr).comm_mpich_2ary,
+                    &coll_error);
+        else
+            MPIR_Assert(0);
+    }
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ALLTOALLV);
     return mpi_errno;
 }
@@ -228,7 +554,7 @@ static inline int MPIDI_NM_mpi_alltoallw(const void *sendbuf, const int sendcoun
                                          const int sdispls[], const MPI_Datatype sendtypes[],
                                          void *recvbuf, const int recvcounts[],
                                          const int rdispls[], const MPI_Datatype recvtypes[],
-                                         MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                         MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLTOALLW);
@@ -247,13 +573,95 @@ static inline int MPIDI_NM_mpi_alltoallw(const void *sendbuf, const int sendcoun
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recvbuf, int count,
                                       MPI_Datatype datatype, MPI_Op op, int root,
-                                      MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                      MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
-    int mpi_errno;
+    int mpi_errno, coll_error;
+    int valid_colls[] = {1, 2};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,2);
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_REDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_REDUCE);
 
-    mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+    *errflag = MPI_SUCCESS;
+
+    if(use_coll == 0)
+        mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype,
+                                op, root, comm_ptr, errflag);
+    else {
+        MPIR_Datatype *dt_ptr;
+        MPID_Datatype_get_ptr(datatype,dt_ptr);
+
+        if(use_coll == 1)
+            mpi_errno = MPIDI_OFI_COLL_MPICH_2NOMIAL_reduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_2nomial,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_MPICH_2NOMIAL_fn(op),
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_2nomial,
+                            &coll_error);
+        else if(use_coll == 2)
+            mpi_errno = MPIDI_OFI_COLL_MPICH_2ARY_reduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_2ary,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_MPICH_2ARY_fn(op),
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_2ary,
+                            &coll_error);
+        else if(use_coll == 3)
+            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_2NOMIAL_reduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_2nomial,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_2NOMIAL_fn(op),
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_2nomial,
+                            &coll_error);
+        else if(use_coll == 4)
+            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_2ARY_reduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_2ary,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_2ARY_fn(op),
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_2ary,
+                            &coll_error);
+        else {
+            MPIR_Assert(0);
+            mpi_errno = MPIDI_OFI_COLL_STUB_2NOMIAL_reduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_2nomial,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_STUB_2NOMIAL_fn(op),
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_2nomial,
+                            &coll_error);
+            mpi_errno = MPIDI_OFI_COLL_STUB_2ARY_reduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_2ary,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_STUB_2ARY_fn(op),
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_2ary,
+                            &coll_error);
+            mpi_errno = MPIDI_OFI_COLL_STUB_STUB_reduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_stub,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_STUB_STUB_fn(op),
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_stub,
+                            &coll_error);
+            mpi_errno = MPIDI_OFI_COLL_MPICH_STUB_reduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_stub,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_MPICH_STUB_fn(op),
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_stub,
+                            &coll_error);
+            mpi_errno = MPIDI_OFI_COLL_SHM_GR_reduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_shm_gr,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_SHM_GR_fn(op),
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_shm_gr,
+                            &coll_error);
+        }
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_REDUCE);
     return mpi_errno;
@@ -265,8 +673,8 @@ static inline int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recvbuf, int co
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_reduce_scatter(const void *sendbuf, void *recvbuf,
                                               const int recvcounts[], MPI_Datatype datatype,
-                                              MPI_Op op, MPIR_Comm * comm_ptr,
-                                              MPIR_Errflag_t * errflag)
+                                              MPI_Op op, MPIR_Comm *comm_ptr,
+                                              MPIR_Errflag_t *errflag)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_REDUCE_SCATTER);
@@ -284,8 +692,8 @@ static inline int MPIDI_NM_mpi_reduce_scatter(const void *sendbuf, void *recvbuf
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_reduce_scatter_block(const void *sendbuf, void *recvbuf,
                                                     int recvcount, MPI_Datatype datatype,
-                                                    MPI_Op op, MPIR_Comm * comm_ptr,
-                                                    MPIR_Errflag_t * errflag)
+                                                    MPI_Op op, MPIR_Comm *comm_ptr,
+                                                    MPIR_Errflag_t *errflag)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_REDUCE_SCATTER_BLOCK);
@@ -303,8 +711,8 @@ static inline int MPIDI_NM_mpi_reduce_scatter_block(const void *sendbuf, void *r
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_scan(const void *sendbuf, void *recvbuf, int count,
-                                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                    MPIR_Errflag_t * errflag)
+                                    MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
+                                    MPIR_Errflag_t *errflag)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SCAN);
@@ -321,8 +729,8 @@ static inline int MPIDI_NM_mpi_scan(const void *sendbuf, void *recvbuf, int coun
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_exscan(const void *sendbuf, void *recvbuf, int count,
-                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                      MPIR_Errflag_t * errflag)
+                                      MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
+                                      MPIR_Errflag_t *errflag)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_EXSCAN);
@@ -341,7 +749,7 @@ static inline int MPIDI_NM_mpi_exscan(const void *sendbuf, void *recvbuf, int co
 static inline int MPIDI_NM_mpi_neighbor_allgather(const void *sendbuf, int sendcount,
                                                   MPI_Datatype sendtype, void *recvbuf,
                                                   int recvcount, MPI_Datatype recvtype,
-                                                  MPIR_Comm * comm_ptr)
+                                                  MPIR_Comm *comm_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_NEIGHBOR_ALLGATHER);
@@ -362,7 +770,7 @@ static inline int MPIDI_NM_mpi_neighbor_allgather(const void *sendbuf, int sendc
 static inline int MPIDI_NM_mpi_neighbor_allgatherv(const void *sendbuf, int sendcount,
                                                    MPI_Datatype sendtype, void *recvbuf,
                                                    const int recvcounts[], const int displs[],
-                                                   MPI_Datatype recvtype, MPIR_Comm * comm_ptr)
+                                                   MPI_Datatype recvtype, MPIR_Comm *comm_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_NEIGHBOR_ALLGATHERV);
@@ -382,7 +790,7 @@ static inline int MPIDI_NM_mpi_neighbor_allgatherv(const void *sendbuf, int send
 static inline int MPIDI_NM_mpi_neighbor_alltoall(const void *sendbuf, int sendcount,
                                                  MPI_Datatype sendtype, void *recvbuf,
                                                  int recvcount, MPI_Datatype recvtype,
-                                                 MPIR_Comm * comm_ptr)
+                                                 MPIR_Comm *comm_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_NEIGHBOR_ALLTOALL);
@@ -403,7 +811,7 @@ static inline int MPIDI_NM_mpi_neighbor_alltoallv(const void *sendbuf, const int
                                                   const int sdispls[], MPI_Datatype sendtype,
                                                   void *recvbuf, const int recvcounts[],
                                                   const int rdispls[], MPI_Datatype recvtype,
-                                                  MPIR_Comm * comm_ptr)
+                                                  MPIR_Comm *comm_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_NEIGHBOR_ALLTOALLV);
@@ -425,7 +833,7 @@ static inline int MPIDI_NM_mpi_neighbor_alltoallw(const void *sendbuf, const int
                                                   const MPI_Datatype sendtypes[], void *recvbuf,
                                                   const int recvcounts[], const MPI_Aint rdispls[],
                                                   const MPI_Datatype recvtypes[],
-                                                  MPIR_Comm * comm_ptr)
+                                                  MPIR_Comm *comm_ptr)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_NEIGHBOR_ALLTOALLW);
@@ -445,7 +853,7 @@ static inline int MPIDI_NM_mpi_neighbor_alltoallw(const void *sendbuf, const int
 static inline int MPIDI_NM_mpi_ineighbor_allgather(const void *sendbuf, int sendcount,
                                                    MPI_Datatype sendtype, void *recvbuf,
                                                    int recvcount, MPI_Datatype recvtype,
-                                                   MPIR_Comm * comm_ptr, MPI_Request * req)
+                                                   MPIR_Comm *comm_ptr, MPI_Request *req)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_INEIGHBOR_ALLGATHER);
@@ -465,8 +873,8 @@ static inline int MPIDI_NM_mpi_ineighbor_allgather(const void *sendbuf, int send
 static inline int MPIDI_NM_mpi_ineighbor_allgatherv(const void *sendbuf, int sendcount,
                                                     MPI_Datatype sendtype, void *recvbuf,
                                                     const int recvcounts[], const int displs[],
-                                                    MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                                    MPI_Request * req)
+                                                    MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
+                                                    MPI_Request *req)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_INEIGHBOR_ALLGATHERV);
@@ -487,7 +895,7 @@ static inline int MPIDI_NM_mpi_ineighbor_allgatherv(const void *sendbuf, int sen
 static inline int MPIDI_NM_mpi_ineighbor_alltoall(const void *sendbuf, int sendcount,
                                                   MPI_Datatype sendtype, void *recvbuf,
                                                   int recvcount, MPI_Datatype recvtype,
-                                                  MPIR_Comm * comm_ptr, MPI_Request * req)
+                                                  MPIR_Comm *comm_ptr, MPI_Request *req)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_INEIGHBOR_ALLTOALL);
@@ -508,7 +916,7 @@ static inline int MPIDI_NM_mpi_ineighbor_alltoallv(const void *sendbuf, const in
                                                    const int sdispls[], MPI_Datatype sendtype,
                                                    void *recvbuf, const int recvcounts[],
                                                    const int rdispls[], MPI_Datatype recvtype,
-                                                   MPIR_Comm * comm_ptr, MPI_Request * req)
+                                                   MPIR_Comm *comm_ptr, MPI_Request *req)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_INEIGHBOR_ALLTOALLV);
@@ -531,7 +939,7 @@ static inline int MPIDI_NM_mpi_ineighbor_alltoallw(const void *sendbuf, const in
                                                    const MPI_Datatype sendtypes[], void *recvbuf,
                                                    const int recvcounts[], const MPI_Aint rdispls[],
                                                    const MPI_Datatype recvtypes[],
-                                                   MPIR_Comm * comm_ptr, MPI_Request * req)
+                                                   MPIR_Comm *comm_ptr, MPI_Request *req)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_INEIGHBOR_ALLTOALLW);
@@ -549,13 +957,68 @@ static inline int MPIDI_NM_mpi_ineighbor_alltoallw(const void *sendbuf, const in
 #define FUNCNAME MPIDI_NM_mpi_ibarrier
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_ibarrier(MPIR_Comm * comm_ptr, MPI_Request * req)
+static inline int MPIDI_NM_mpi_ibarrier(MPIR_Comm *comm_ptr, MPI_Request *req)
 {
     int mpi_errno;
+    int valid_colls[] = {1, 2, 3};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,3);
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IBARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IBARRIER);
 
-    mpi_errno = MPIR_Ibarrier_impl(comm_ptr, req);
+    if(use_coll == 0)
+        mpi_errno = MPIR_Ibarrier_impl(comm_ptr, req);
+    else {
+        MPIR_Request *mpid_req;
+        MPIDI_OFI_REQUEST_CREATE(mpid_req,MPIR_REQUEST_KIND__COLL);
+        *req = mpid_req->handle;
+
+        if(use_coll == 1)
+            mpi_errno = MPIDI_OFI_COLL_MPICH_2NOMIAL_ibarrier(
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_2nomial,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_2nomial);
+        else if(use_coll == 2)
+            mpi_errno = MPIDI_OFI_COLL_MPICH_2ARY_ibarrier(
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_2ary,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_2ary);
+        else if(use_coll == 3)
+            mpi_errno = MPIDI_OFI_COLL_MPICH_DISSEM_ibarrier(
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_dissem,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_dissem);
+        else if(use_coll == 4)
+            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_2NOMIAL_ibarrier(
+                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_2nomial,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_2nomial);
+        else if(use_coll == 5)
+            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_2ARY_ibarrier(
+                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_2ary,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_2ary);
+        else if(use_coll == 6)
+            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_DISSEM_ibarrier(
+                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_dissem,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_dissem);
+        else {
+            MPIR_Assert(0);
+            mpi_errno = MPIDI_OFI_COLL_STUB_2NOMIAL_ibarrier(
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_2nomial,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.stub_2nomial);
+            mpi_errno = MPIDI_OFI_COLL_STUB_2ARY_ibarrier(
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_2ary,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.stub_2ary);
+            mpi_errno = MPIDI_OFI_COLL_STUB_DISSEM_ibarrier(
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_dissem,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.stub_dissem);
+            mpi_errno = MPIDI_OFI_COLL_STUB_STUB_ibarrier(
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_stub,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.stub_stub);
+            mpi_errno = MPIDI_OFI_COLL_MPICH_STUB_ibarrier(
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_stub,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_stub);
+            mpi_errno = MPIDI_OFI_COLL_SHM_GR_ibarrier(
+                            &MPIDI_OFI_COMM(comm_ptr).comm_shm_gr,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.shm_gr);
+        }
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IBARRIER);
     return mpi_errno;
@@ -566,13 +1029,86 @@ static inline int MPIDI_NM_mpi_ibarrier(MPIR_Comm * comm_ptr, MPI_Request * req)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_ibcast(void *buffer, int count, MPI_Datatype datatype,
-                                      int root, MPIR_Comm * comm_ptr, MPI_Request * req)
+                                      int root, MPIR_Comm *comm_ptr, MPI_Request *req)
 {
     int mpi_errno;
+    int valid_colls[] = {1, 2};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,2);
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IBCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IBCAST);
 
-    mpi_errno = MPIR_Ibcast_impl(buffer, count, datatype, root, comm_ptr, req);
+    if(use_coll == 0)
+        mpi_errno = MPIR_Ibcast_impl(buffer, count, datatype, root, comm_ptr, req);
+    else {
+        MPIR_Datatype *dt_ptr;
+        MPIR_Request *mpid_req;
+        MPIDI_OFI_REQUEST_CREATE(mpid_req,MPIR_REQUEST_KIND__COLL);
+        *req = mpid_req->handle;
+        MPID_Datatype_get_ptr(datatype,dt_ptr);
+
+        if(use_coll == 1)
+            mpi_errno = MPIDI_OFI_COLL_MPICH_2NOMIAL_ibcast(
+                            buffer,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_2nomial,
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_2nomial,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_2nomial);
+        else if(use_coll == 2)
+            mpi_errno = MPIDI_OFI_COLL_MPICH_2ARY_ibcast(
+                            buffer,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_2ary,
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_2ary,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_2ary);
+        else if(use_coll == 3)
+            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_2NOMIAL_ibcast(
+                            buffer,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_2nomial,
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_2nomial,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_2nomial);
+        else if(use_coll == 4)
+            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_2ARY_ibcast(
+                            buffer,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_2ary,
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_2ary,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_2ary);
+        else {
+            MPIR_Assert(0);
+            mpi_errno = MPIDI_OFI_COLL_STUB_2NOMIAL_ibcast(
+                            buffer,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_2nomial,
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_2nomial,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.stub_2nomial);
+            mpi_errno = MPIDI_OFI_COLL_STUB_2ARY_ibcast(
+                            buffer,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_2ary,
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_2ary,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.stub_2ary);
+            mpi_errno = MPIDI_OFI_COLL_STUB_STUB_ibcast(
+                            buffer,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_stub,
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_stub,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.stub_stub);
+            mpi_errno = MPIDI_OFI_COLL_MPICH_STUB_ibcast(
+                            buffer,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_stub,
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_stub,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_stub);
+            mpi_errno = MPIDI_OFI_COLL_SHM_GR_ibcast(
+                            buffer,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_shm_gr,
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_shm_gr,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.shm_gr);
+        }
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IBCAST);
     return mpi_errno;
@@ -584,7 +1120,7 @@ static inline int MPIDI_NM_mpi_ibcast(void *buffer, int count, MPI_Datatype data
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                           void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                          MPIR_Comm * comm_ptr, MPI_Request * req)
+                                          MPIR_Comm *comm_ptr, MPI_Request *req)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IALLGATHER);
@@ -604,8 +1140,8 @@ static inline int MPIDI_NM_mpi_iallgather(const void *sendbuf, int sendcount, MP
 static inline int MPIDI_NM_mpi_iallgatherv(const void *sendbuf, int sendcount,
                                            MPI_Datatype sendtype, void *recvbuf,
                                            const int *recvcounts, const int *displs,
-                                           MPI_Datatype recvtype, MPIR_Comm * comm_ptr,
-                                           MPI_Request * req)
+                                           MPI_Datatype recvtype, MPIR_Comm *comm_ptr,
+                                           MPI_Request *req)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IALLGATHERV);
@@ -623,14 +1159,114 @@ static inline int MPIDI_NM_mpi_iallgatherv(const void *sendbuf, int sendcount,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_iallreduce(const void *sendbuf, void *recvbuf, int count,
-                                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                          MPI_Request * request)
+                                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm,
+                                          MPI_Request *request)
 {
     int mpi_errno;
+    int valid_colls[] = {1, 2, 3};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm,valid_colls,3);
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IALLREDUCE);
 
-    mpi_errno = MPIR_Iallreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, request);
+    if(use_coll == 0)
+        mpi_errno = MPIR_Iallreduce_impl(sendbuf, recvbuf, count, datatype, op, comm, request);
+    else {
+        MPIR_Datatype *dt_ptr;
+        MPIR_Request *mpid_req;
+        MPIDI_OFI_REQUEST_CREATE(mpid_req,MPIR_REQUEST_KIND__COLL);
+        *request = mpid_req->handle;
+        MPID_Datatype_get_ptr(datatype,dt_ptr);
+
+        if(use_coll == 1)
+            mpi_errno = MPIDI_OFI_COLL_MPICH_2NOMIAL_iallreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_2nomial,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_MPICH_2NOMIAL_fn(op),
+                            &MPIDI_OFI_COMM(comm).comm_mpich_2nomial,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_2nomial);
+        else if(use_coll == 2)
+            mpi_errno = MPIDI_OFI_COLL_MPICH_2ARY_iallreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_2ary,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_MPICH_2ARY_fn(op),
+                            &MPIDI_OFI_COMM(comm).comm_mpich_2ary,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_2ary);
+        else if(use_coll == 3)
+            mpi_errno = MPIDI_OFI_COLL_MPICH_DISSEM_iallreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_dissem,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_MPICH_DISSEM_fn(op),
+                            &MPIDI_OFI_COMM(comm).comm_mpich_dissem,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_dissem);
+        else if(use_coll == 4)
+            mpi_errno = MPIDI_OFI_COLL_MPICH_RECEXCH_iallreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_recexch,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_MPICH_RECEXCH_fn(op),
+                            &MPIDI_OFI_COMM(comm).comm_mpich_recexch,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_recexch);
+        else if(use_coll == 5)
+            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_2NOMIAL_iallreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_2nomial,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_2NOMIAL_fn(op),
+                            &MPIDI_OFI_COMM(comm).comm_triggered_2nomial,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_2nomial);
+        else if(use_coll == 6)
+            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_2ARY_iallreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_2ary,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_2ARY_fn(op),
+                            &MPIDI_OFI_COMM(comm).comm_triggered_2ary,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_2ary);
+        else if(use_coll == 7)
+            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_DISSEM_iallreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_dissem,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_DISSEM_fn(op),
+                            &MPIDI_OFI_COMM(comm).comm_triggered_dissem,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_dissem);
+        else {
+            MPIR_Assert(0);
+            mpi_errno = MPIDI_OFI_COLL_STUB_2NOMIAL_iallreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_2nomial,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_STUB_2NOMIAL_fn(op),
+                            &MPIDI_OFI_COMM(comm).comm_stub_2nomial,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.stub_2nomial);
+            mpi_errno = MPIDI_OFI_COLL_STUB_2ARY_iallreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_2ary,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_STUB_2ARY_fn(op),
+                            &MPIDI_OFI_COMM(comm).comm_stub_2ary,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.stub_2ary);
+            mpi_errno = MPIDI_OFI_COLL_STUB_DISSEM_iallreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_dissem,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_STUB_DISSEM_fn(op),
+                            &MPIDI_OFI_COMM(comm).comm_stub_dissem,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.stub_dissem);
+            mpi_errno = MPIDI_OFI_COLL_STUB_STUB_iallreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_stub,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_STUB_STUB_fn(op),
+                            &MPIDI_OFI_COMM(comm).comm_stub_stub,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.stub_stub);
+            mpi_errno = MPIDI_OFI_COLL_MPICH_STUB_iallreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_stub,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_MPICH_STUB_fn(op),
+                            &MPIDI_OFI_COMM(comm).comm_mpich_stub,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_stub);
+            mpi_errno = MPIDI_OFI_COLL_SHM_GR_iallreduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_shm_gr,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_SHM_GR_fn(op),
+                            &MPIDI_OFI_COMM(comm).comm_shm_gr,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.shm_gr);
+        }
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IALLREDUCE);
     return mpi_errno;
@@ -642,14 +1278,34 @@ static inline int MPIDI_NM_mpi_iallreduce(const void *sendbuf, void *recvbuf, in
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                          void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                         MPIR_Comm * comm_ptr, MPI_Request * req)
+                                         MPIR_Comm *comm_ptr, MPI_Request *req)
 {
     int mpi_errno;
+    int valid_colls[] = {1, 2, 3};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,3);
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IALLTOALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IALLTOALL);
 
-    mpi_errno = MPIR_Ialltoall_impl(sendbuf, sendcount, sendtype, recvbuf,
-                                    recvcount, recvtype, comm_ptr, req);
+    if(use_coll == 0)
+        mpi_errno = MPIR_Ialltoall_impl(sendbuf, sendcount, sendtype, recvbuf,
+                                        recvcount, recvtype, comm_ptr, req);
+    else {
+        MPIR_Datatype *send_dt_ptr, *recv_dt_ptr;
+        MPIR_Request  *mpid_req;
+        MPID_Datatype_get_ptr(sendtype,send_dt_ptr);
+        MPID_Datatype_get_ptr(recvtype,recv_dt_ptr);
+        MPIDI_OFI_REQUEST_CREATE(mpid_req,MPIR_REQUEST_KIND__COLL);
+        *req = mpid_req->handle;
+        mpi_errno =
+            MPIDI_OFI_COLL_MPICH_DISSEM_ialltoall(
+                sendbuf, sendcount,
+                &MPIDI_OFI_DT(send_dt_ptr).dt_mpich_dissem,
+                recvbuf, recvcount,
+                &MPIDI_OFI_DT(recv_dt_ptr).dt_mpich_dissem,
+                &MPIDI_OFI_COMM(comm_ptr).comm_mpich_dissem,
+                &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_dissem);
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IALLTOALL);
     return mpi_errno;
@@ -663,7 +1319,7 @@ static inline int MPIDI_NM_mpi_ialltoallv(const void *sendbuf, const int *sendco
                                           const int *sdispls, MPI_Datatype sendtype,
                                           void *recvbuf, const int *recvcounts,
                                           const int *rdispls, MPI_Datatype recvtype,
-                                          MPIR_Comm * comm_ptr, MPI_Request * req)
+                                          MPIR_Comm *comm_ptr, MPI_Request *req)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IALLTOALLV);
@@ -685,7 +1341,7 @@ static inline int MPIDI_NM_mpi_ialltoallw(const void *sendbuf, const int *sendco
                                           const int *sdispls, const MPI_Datatype sendtypes[],
                                           void *recvbuf, const int *recvcounts,
                                           const int *rdispls, const MPI_Datatype recvtypes[],
-                                          MPIR_Comm * comm_ptr, MPI_Request * req)
+                                          MPIR_Comm *comm_ptr, MPI_Request *req)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IALLTOALLW);
@@ -704,8 +1360,8 @@ static inline int MPIDI_NM_mpi_ialltoallw(const void *sendbuf, const int *sendco
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_iexscan(const void *sendbuf, void *recvbuf, int count,
-                                       MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                       MPI_Request * req)
+                                       MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
+                                       MPI_Request *req)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IEXSCAN);
@@ -723,7 +1379,7 @@ static inline int MPIDI_NM_mpi_iexscan(const void *sendbuf, void *recvbuf, int c
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                                       int root, MPIR_Comm * comm_ptr, MPI_Request * req)
+                                       int root, MPIR_Comm *comm_ptr, MPI_Request *req)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IGATHER);
@@ -742,8 +1398,8 @@ static inline int MPIDI_NM_mpi_igather(const void *sendbuf, int sendcount, MPI_D
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                                         void *recvbuf, const int *recvcounts, const int *displs,
-                                        MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
-                                        MPI_Request * req)
+                                        MPI_Datatype recvtype, int root, MPIR_Comm *comm_ptr,
+                                        MPI_Request *req)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IGATHERV);
@@ -762,8 +1418,8 @@ static inline int MPIDI_NM_mpi_igatherv(const void *sendbuf, int sendcount, MPI_
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_ireduce_scatter_block(const void *sendbuf, void *recvbuf,
                                                      int recvcount, MPI_Datatype datatype,
-                                                     MPI_Op op, MPIR_Comm * comm_ptr,
-                                                     MPI_Request * req)
+                                                     MPI_Op op, MPIR_Comm *comm_ptr,
+                                                     MPI_Request *req)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IREDUCE_SCATTER_BLOCK);
@@ -782,7 +1438,7 @@ static inline int MPIDI_NM_mpi_ireduce_scatter_block(const void *sendbuf, void *
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_ireduce_scatter(const void *sendbuf, void *recvbuf,
                                                const int recvcounts[], MPI_Datatype datatype,
-                                               MPI_Op op, MPIR_Comm * comm_ptr, MPI_Request * req)
+                                               MPI_Op op, MPIR_Comm *comm_ptr, MPI_Request *req)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IREDUCE_SCATTER);
@@ -801,13 +1457,96 @@ static inline int MPIDI_NM_mpi_ireduce_scatter(const void *sendbuf, void *recvbu
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_ireduce(const void *sendbuf, void *recvbuf, int count,
                                        MPI_Datatype datatype, MPI_Op op, int root,
-                                       MPIR_Comm * comm_ptr, MPI_Request * req)
+                                       MPIR_Comm *comm_ptr, MPI_Request *req)
 {
     int mpi_errno;
+    int valid_colls[] = {1, 2};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,2);
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IREDUCE);
 
-    mpi_errno = MPIR_Ireduce_impl(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, req);
+    if(use_coll == 0)
+        mpi_errno = MPIR_Ireduce_impl(sendbuf, recvbuf, count, datatype,
+                                      op, root, comm_ptr, req);
+    else {
+        MPIR_Datatype *dt_ptr;
+        MPIR_Request *mpid_req;
+        MPIDI_OFI_REQUEST_CREATE(mpid_req,MPIR_REQUEST_KIND__COLL);
+        *req = mpid_req->handle;
+        MPID_Datatype_get_ptr(datatype,dt_ptr);
+
+        if(use_coll == 1)
+            mpi_errno = MPIDI_OFI_COLL_MPICH_2NOMIAL_ireduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_2nomial,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_MPICH_2NOMIAL_fn(op),
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_2nomial,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_2nomial);
+        else if(use_coll == 2)
+            mpi_errno = MPIDI_OFI_COLL_MPICH_2ARY_ireduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_2ary,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_MPICH_2ARY_fn(op),
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_2ary,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_2ary);
+        else if(use_coll == 3)
+            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_2NOMIAL_ireduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_2nomial,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_2NOMIAL_fn(op),
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_2nomial,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_2nomial);
+        else if(use_coll == 4)
+            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_2ARY_ireduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_2ary,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_2ARY_fn(op),
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_2ary,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_2ary);
+        else {
+            MPIR_Assert(0);
+            mpi_errno = MPIDI_OFI_COLL_STUB_2NOMIAL_ireduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_2nomial,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_STUB_2NOMIAL_fn(op),
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_2nomial,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.stub_2nomial);
+            mpi_errno = MPIDI_OFI_COLL_STUB_2ARY_ireduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_2ary,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_STUB_2ARY_fn(op),
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_2ary,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.stub_2ary);
+            mpi_errno = MPIDI_OFI_COLL_STUB_STUB_ireduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_stub_stub,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_STUB_STUB_fn(op),
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_stub_stub,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.stub_stub);
+            mpi_errno = MPIDI_OFI_COLL_MPICH_STUB_ireduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_mpich_stub,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_MPICH_STUB_fn(op),
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_mpich_stub,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_stub);
+            mpi_errno = MPIDI_OFI_COLL_SHM_GR_ireduce(
+                            sendbuf,recvbuf,count,
+                            &MPIDI_OFI_DT(dt_ptr).dt_shm_gr,
+                            MPIDI_OFI_MPI_OP_TO_COLLOP_SHM_GR_fn(op),
+                            root,
+                            &MPIDI_OFI_COMM(comm_ptr).comm_shm_gr,
+                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.shm_gr);
+        }
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IREDUCE);
     return mpi_errno;
@@ -818,8 +1557,8 @@ static inline int MPIDI_NM_mpi_ireduce(const void *sendbuf, void *recvbuf, int c
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_iscan(const void *sendbuf, void *recvbuf, int count,
-                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                     MPI_Request * req)
+                                     MPI_Datatype datatype, MPI_Op op, MPIR_Comm *comm_ptr,
+                                     MPI_Request *req)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ISCAN);
@@ -838,7 +1577,7 @@ static inline int MPIDI_NM_mpi_iscan(const void *sendbuf, void *recvbuf, int cou
 static inline int MPIDI_NM_mpi_iscatter(const void *sendbuf, int sendcount,
                                         MPI_Datatype sendtype, void *recvbuf,
                                         int recvcount, MPI_Datatype recvtype,
-                                        int root, MPIR_Comm * comm, MPI_Request * request)
+                                        int root, MPIR_Comm *comm, MPI_Request *request)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ISCATTER);
@@ -859,7 +1598,7 @@ static inline int MPIDI_NM_mpi_iscatterv(const void *sendbuf, const int *sendcou
                                          const int *displs, MPI_Datatype sendtype,
                                          void *recvbuf, int recvcount,
                                          MPI_Datatype recvtype, int root,
-                                         MPIR_Comm * comm, MPI_Request * request)
+                                         MPIR_Comm *comm, MPI_Request *request)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ISCATTERV);

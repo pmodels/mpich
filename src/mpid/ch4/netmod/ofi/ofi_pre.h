@@ -22,8 +22,10 @@
 #include <rdma/fi_cm.h>
 #include <rdma/fi_errno.h>
 #include "ofi_capability_sets.h"
+#include <rdma/fi_trigger.h>
 
-/* Defines */
+#include "coll/include/coll_pre.h"
+#include "coll/include/ml_pre.h"
 
 #define MPIDI_OFI_MAX_AM_HDR_SIZE    128
 #define MPIDI_OFI_AM_HANDLER_ID_BITS   8
@@ -47,6 +49,7 @@ typedef struct {
     /* support for connection */
     int conn_id;
 } MPIDI_OFI_comm_t;
+
 enum {
     MPIDI_AMTYPE_SHORT_HDR = 0,
     MPIDI_AMTYPE_SHORT,
@@ -116,6 +119,24 @@ typedef struct MPIDI_OFI_noncontig_t {
     char pack_buffer[0];
 } MPIDI_OFI_noncontig_t;
 
+typedef union {
+    MPIDI_OFI_COLL_MPICH_2ARY_req_t         mpich_2ary;
+    MPIDI_OFI_COLL_MPICH_2NOMIAL_req_t      mpich_2nomial;
+    MPIDI_OFI_COLL_MPICH_DISSEM_req_t       mpich_dissem;
+    MPIDI_OFI_COLL_MPICH_RECEXCH_req_t      mpich_recexch;
+    MPIDI_OFI_COLL_TRIGGERED_2ARY_req_t     triggered_2ary;
+    MPIDI_OFI_COLL_TRIGGERED_2NOMIAL_req_t  triggered_2nomial;
+    MPIDI_OFI_COLL_TRIGGERED_DISSEM_req_t   triggered_dissem;
+    MPIDI_OFI_COLL_TRIGGERED_RECEXCH_req_t  triggered_recexch;
+    MPIDI_OFI_COLL_STUB_2ARY_req_t          stub_2ary;
+    MPIDI_OFI_COLL_STUB_2NOMIAL_req_t       stub_2nomial;
+    MPIDI_OFI_COLL_STUB_DISSEM_req_t        stub_dissem;
+    MPIDI_OFI_COLL_STUB_RECEXCH_req_t       stub_recexch;
+    MPIDI_OFI_COLL_MPICH_STUB_req_t         mpich_stub;
+    MPIDI_OFI_COLL_STUB_STUB_req_t          stub_stub;
+    MPIDI_OFI_COLL_SHM_GR_req_t             shm_gr;
+} MPIDI_OFI_collreq_t;
+
 typedef struct {
     struct fi_context context;  /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
@@ -134,15 +155,45 @@ typedef struct {
         } persist;
         struct iovec iov;
         void *inject_buf;       /* Internal buffer for inject emulation */
+        MPIDI_OFI_collreq_t collreq;
     } util;
 } MPIDI_OFI_request_t;
 
 typedef struct {
     int index;
+    MPIDI_OFI_COLL_MPICH_2ARY_dt_t         dt_mpich_2ary;
+    MPIDI_OFI_COLL_MPICH_2NOMIAL_dt_t      dt_mpich_2nomial;
+    MPIDI_OFI_COLL_MPICH_DISSEM_dt_t       dt_mpich_dissem;
+    MPIDI_OFI_COLL_MPICH_RECEXCH_dt_t      dt_mpich_recexch;
+    MPIDI_OFI_COLL_TRIGGERED_2ARY_dt_t     dt_triggered_2ary;
+    MPIDI_OFI_COLL_TRIGGERED_2NOMIAL_dt_t  dt_triggered_2nomial;
+    MPIDI_OFI_COLL_TRIGGERED_DISSEM_dt_t   dt_triggered_dissem;
+    MPIDI_OFI_COLL_TRIGGERED_RECEXCH_dt_t  dt_triggered_recexch;
+    MPIDI_OFI_COLL_STUB_2ARY_dt_t          dt_stub_2ary;
+    MPIDI_OFI_COLL_STUB_2NOMIAL_dt_t       dt_stub_2nomial;
+    MPIDI_OFI_COLL_STUB_DISSEM_dt_t        dt_stub_dissem;
+    MPIDI_OFI_COLL_STUB_RECEXCH_dt_t       dt_stub_recexch;
+    MPIDI_OFI_COLL_MPICH_STUB_dt_t         dt_mpich_stub;
+    MPIDI_OFI_COLL_STUB_STUB_dt_t          dt_stub_stub;
+    MPIDI_OFI_COLL_SHM_GR_dt_t             dt_shm_gr;
 } MPIDI_OFI_dt_t;
 
 typedef struct {
-    int dummy;
+    MPIDI_OFI_COLL_MPICH_2ARY_op_t         op_mpich_2ary;
+    MPIDI_OFI_COLL_MPICH_2NOMIAL_op_t      op_mpich_2nomial;
+    MPIDI_OFI_COLL_MPICH_DISSEM_op_t       op_mpich_dissem;
+    MPIDI_OFI_COLL_MPICH_RECEXCH_op_t      op_mpich_recexch;
+    MPIDI_OFI_COLL_TRIGGERED_2ARY_op_t     op_triggered_2ary;
+    MPIDI_OFI_COLL_TRIGGERED_2NOMIAL_op_t  op_triggered_2nomial;
+    MPIDI_OFI_COLL_TRIGGERED_DISSEM_op_t   op_triggered_dissem;
+    MPIDI_OFI_COLL_TRIGGERED_RECEXCH_op_t  op_triggered_recexch;
+    MPIDI_OFI_COLL_STUB_2ARY_op_t          op_stub_2ary;
+    MPIDI_OFI_COLL_STUB_2NOMIAL_op_t       op_stub_2nomial;
+    MPIDI_OFI_COLL_STUB_DISSEM_op_t        op_stub_dissem;
+    MPIDI_OFI_COLL_STUB_RECEXCH_op_t       op_stub_recexch;
+    MPIDI_OFI_COLL_MPICH_STUB_op_t         op_mpich_stub;
+    MPIDI_OFI_COLL_STUB_STUB_op_t          op_stub_stub;
+    MPIDI_OFI_COLL_SHM_GR_op_t             op_shm_gr;
 } MPIDI_OFI_op_t;
 
 struct MPIDI_OFI_win_request;

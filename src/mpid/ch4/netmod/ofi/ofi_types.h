@@ -175,9 +175,12 @@ static inline int MPIDI_OFI_comm_to_ep(MPIR_Comm *comm_ptr, int rank)
 #define MPIDI_OFI_EP_TX_RMA(x) MPIDI_Global.ctx[x].tx_rma
 #define MPIDI_OFI_EP_TX_MSG(x) MPIDI_Global.ctx[x].tx_msg
 #define MPIDI_OFI_EP_TX_CTR(x) MPIDI_Global.ctx[x].tx_ctr
+#define MPIDI_OFI_EP_TX_TRG(x) MPIDI_Global.ctx[x].tx_trg
 #define MPIDI_OFI_EP_RX_TAG(x) MPIDI_Global.ctx[x].rx_tag
 #define MPIDI_OFI_EP_RX_RMA(x) MPIDI_Global.ctx[x].rx_rma
 #define MPIDI_OFI_EP_RX_MSG(x) MPIDI_Global.ctx[x].rx_msg
+#define MPIDI_OFI_EP_RX_CTR(x) MPIDI_Global.ctx[x].rx_ctr
+#define MPIDI_OFI_EP_RX_TRG(x) MPIDI_Global.ctx[x].rx_trg
 
 #define MPIDI_OFI_DO_SEND        0
 #define MPIDI_OFI_DO_INJECT      1
@@ -288,6 +291,10 @@ typedef struct {
     struct fid_ep *rx_msg;
 
     struct fid_ep *tx_ctr;
+    struct fid_ep *rx_ctr;
+
+    struct fid_ep *tx_trg;
+    struct fid_ep *rx_trg;
 
     int ctx_offset;
 } MPIDI_OFI_context_t;
@@ -358,6 +365,7 @@ typedef struct {
     struct fid_fabric *fabric;
     struct fid_av *av;
     struct fid_ep *ep;
+    struct fid_ep *trg_ep;
     struct fid_cq *p2p_cq;
     struct fid_cntr *rma_cmpl_cntr;
     struct fid_stx *stx_ctx;    /* shared TX context for RMA */

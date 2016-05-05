@@ -226,6 +226,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             AC_MSG_ERROR([Provided libfabric installation (--with-libfabric=${with_libfabric}) could not be configured.])
         fi
     fi
+    PAC_APPEND_FLAG([-lm],[LDFLAGS])
 
 ])dnl end AM_COND_IF(BUILD_CH4_NETMOD_OFI,...)
 ])dnl end _BODY

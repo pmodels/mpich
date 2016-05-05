@@ -1,0 +1,125 @@
+/* defines */
+#ifndef __COLL_CAT_GUARD
+#define __COLL_CAT_GUARD
+#define COLL_NSCAT0(a,b) a##b
+#define COLL_NSCAT1(a,b) COLL_NSCAT0(a,b)
+#endif
+
+#ifndef COLL_NAMESPACE
+#define COLL_NAMESPACE(fn)  COLL_NSCAT1(         \
+                            COLL_NSCAT1(         \
+                                COLL_NSCAT1(     \
+                                GLOBAL_NAME,     \
+                                TRANSPORT_NAME), \
+                                COLL_NAME),      \
+                                fn)
+#endif
+
+/* Common Collective Types */
+#define COLL_dt_t         COLL_NAMESPACE(dt_t)
+#define COLL_op_t         COLL_NAMESPACE(op_t)
+#define COLL_comm_t       COLL_NAMESPACE(comm_t)
+#define COLL_req_t        COLL_NAMESPACE(req_t)
+#define COLL_sched_t      COLL_NAMESPACE(sched_t)
+#define COLL_aint_t       COLL_NAMESPACE(aint_t)
+#define COLL_global_t     COLL_NAMESPACE(global_t)
+
+/* Common Hybrid Collective Types */
+#define COLL_hybrid_dt_t         COLL_NAMESPACE(hybrid_dt_t)
+#define COLL_hybrid_op_t         COLL_NAMESPACE(hybrid_op_t)
+#define COLL_hybrid_comm_t       COLL_NAMESPACE(hybrid_comm_t)
+#define COLL_hybrid_req_t        COLL_NAMESPACE(hybrid_req_t)
+#define COLL_hybrid_sched_t      COLL_NAMESPACE(hybrid_sched_t)
+#define COLL_hybrid_aint_t       COLL_NAMESPACE(hybrid_aint_t)
+#define COLL_hybrid_global_t     COLL_NAMESPACE(hybrid_global_t)
+
+/* Tree collective types */
+#define COLL_fence_t        COLL_NAMESPACE(fence_t)
+#define COLL_tree_t         COLL_NAMESPACE(tree_t)
+#define COLL_tree_comm_t    COLL_NAMESPACE(tree_comm_t)
+#define COLL_child_range_t  COLL_NAMESPACE(child_range_t)
+
+/* Collective global variables */
+#define COLL_global       COLL_NAMESPACE(global)
+
+/* Schedule APIs */
+#define COLL_sched_execute      COLL_NAMESPACE(sched_execute)
+#define COLL_sched_init         COLL_NAMESPACE(sched_init)
+#define COLL_sched_init_nb      COLL_NAMESPACE(sched_init_nb)
+#define COLL_sched_kick         COLL_NAMESPACE(sched_kick)
+#define COLL_sched_kick_nb      COLL_NAMESPACE(sched_kick_nb)
+#define COLL_sched_barrier_dissem   COLL_NAMESPACE(sched_barrier_dissem)
+#define COLL_sched_allreduce_dissem COLL_NAMESPACE(sched_allreduce_dissem)
+#define COLL_sched_allreduce          COLL_NAMESPACE(sched_allreduce)
+#define COLL_sched_bcast              COLL_NAMESPACE(sched_bcast)
+#define COLL_sched_reduce_full        COLL_NAMESPACE(sched_reduce_full)
+#define COLL_sched_barrier            COLL_NAMESPACE(sched_barrier)
+#define COLL_sched_allreduce          COLL_NAMESPACE(sched_allreduce)
+#define COLL_sched_reduce_full        COLL_NAMESPACE(sched_reduce_full)
+#define COLL_sched_reduce             COLL_NAMESPACE(sched_reduce)
+#define COLL_sched_barrier            COLL_NAMESPACE(sched_barrier)
+#define COLL_get_neighbors_recexch   COLL_NAMESPACE(get_neighbors_recexch)
+#define COLL_sched_alltoall_scattered COLL_NAMESPACE(sched_alltoall_scattered)
+#define COLL_sched_alltoall_pairwise  COLL_NAMESPACE(sched_alltoall_pairwise)
+#define COLL_sched_alltoall_ring      COLL_NAMESPACE(sched_alltoall_ring)
+#define COLL_sched_alltoallv_scattered COLL_NAMESPACE(sched_alltoallv_scattered)
+#define COLL_sched_allgather_ring      COLL_NAMESPACE(sched_allgather_ring)
+#define COLL_sched_alltoall           COLL_NAMESPACE(sched_alltoall)
+#define COLL_brucks_pup               COLL_NAMESPACE(brucks_pup)
+
+/* Tree APIs */
+#define COLL_tree_init         COLL_NAMESPACE(tree_init)
+#define COLL_tree_dump         COLL_NAMESPACE(tree_dump)
+#define COLL_tree_kary         COLL_NAMESPACE(tree_kary)
+#define COLL_tree_knomial      COLL_NAMESPACE(tree_knomial)
+#define COLL_tree_kary_init    COLL_NAMESPACE(tree_kary_init)
+#define COLL_tree_knomial_init COLL_NAMESPACE(tree_knomial_init)
+
+/* Collective APIS */
+#define COLL_init                  COLL_NAMESPACE(init)
+#define COLL_comm_init             COLL_NAMESPACE(comm_init)
+#define COLL_kick                  COLL_NAMESPACE(kick)
+#define COLL_allgather             COLL_NAMESPACE(allgather)
+#define COLL_allgatherv            COLL_NAMESPACE(allgatherv)
+#define COLL_allreduce             COLL_NAMESPACE(allreduce)
+#define COLL_alltoall              COLL_NAMESPACE(alltoall)
+#define COLL_alltoallv             COLL_NAMESPACE(alltoallv)
+#define COLL_alltoallw             COLL_NAMESPACE(alltoallw)
+#define COLL_bcast                 COLL_NAMESPACE(bcast)
+#define COLL_exscan                COLL_NAMESPACE(exscan)
+#define COLL_gather                COLL_NAMESPACE(gather)
+#define COLL_gatherv               COLL_NAMESPACE(gatherv)
+#define COLL_reduce_scatter        COLL_NAMESPACE(reduce_scatter)
+#define COLL_reduce_scatter_block  COLL_NAMESPACE(reduce_scatter_block)
+#define COLL_reduce                COLL_NAMESPACE(reduce)
+#define COLL_scan                  COLL_NAMESPACE(scan)
+#define COLL_scatter               COLL_NAMESPACE(scatter)
+#define COLL_scatterv              COLL_NAMESPACE(scatterv)
+#define COLL_barrier               COLL_NAMESPACE(barrier)
+#define COLL_iallgather            COLL_NAMESPACE(iallgather)
+#define COLL_iallgatherv           COLL_NAMESPACE(iallgatherv)
+#define COLL_iallreduce            COLL_NAMESPACE(iallreduce)
+#define COLL_ialltoall             COLL_NAMESPACE(ialltoall)
+#define COLL_ialltoallv            COLL_NAMESPACE(ialltoallv)
+#define COLL_ialltoallw            COLL_NAMESPACE(ialltoallw)
+#define COLL_ibcast                COLL_NAMESPACE(ibcast)
+#define COLL_iexscan               COLL_NAMESPACE(iexscan)
+#define COLL_igather               COLL_NAMESPACE(igather)
+#define COLL_igatherv              COLL_NAMESPACE(igatherv)
+#define COLL_ireduce_scatter       COLL_NAMESPACE(ireduce_scatter)
+#define COLL_ireduce_scatter_block COLL_NAMESPACE(ireduce_scatter_block)
+#define COLL_ireduce               COLL_NAMESPACE(ireduce)
+#define COLL_iscan                 COLL_NAMESPACE(iscan)
+#define COLL_iscatter              COLL_NAMESPACE(iscatter)
+#define COLL_iscatterv             COLL_NAMESPACE(iscatterv)
+#define COLL_ibarrier              COLL_NAMESPACE(ibarrier)
+#define COLL_neighbor_allgather    COLL_NAMESPACE(neighbor_allgather)
+#define COLL_neighbor_allgatherv   COLL_NAMESPACE(neighbor_allgatherv)
+#define COLL_neighbor_alltoall     COLL_NAMESPACE(neighbor_alltoall)
+#define COLL_neighbor_alltoallv    COLL_NAMESPACE(neighbor_alltoallv)
+#define COLL_neighbor_alltoallw    COLL_NAMESPACE(neighbor_alltoallw)
+#define COLL_ineighbor_allgather   COLL_NAMESPACE(ineighbor_allgather)
+#define COLL_ineighbor_allgatherv  COLL_NAMESPACE(ineighbor_allgatherv)
+#define COLL_ineighbor_alltoall    COLL_NAMESPACE(ineighbor_alltoall)
+#define COLL_ineighbor_alltoallv   COLL_NAMESPACE(ineighbor_alltoallv)
+#define COLL_ineighbor_alltoallw   COLL_NAMESPACE(ineighbor_alltoallw)
