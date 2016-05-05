@@ -136,3 +136,75 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .tag_bits                  = MPIDI_OFI_TAG_BITS_VERBS
     }
 };
+
+/* Transport Globals */
+MPIDI_OFI_COLL_TRANSPORT_TRIGGERED_global_t MPIDI_OFI_COLL_TRANSPORT_TRIGGERED_global;
+/* Collective Globals */
+MPIDI_OFI_COLL_global_t                     MPIDI_OFI_COLL_global;
+
+MPIDI_OFI_COLL_MPICH_2ARY_global_t          MPIDI_OFI_COLL_MPICH_2ARY_global;
+MPIDI_OFI_COLL_MPICH_2NOMIAL_global_t       MPIDI_OFI_COLL_MPICH_2NOMIAL_global;
+MPIDI_OFI_COLL_MPICH_DISSEM_global_t      MPIDI_OFI_COLL_MPICH_DISSEM_global;
+
+MPIDI_OFI_COLL_TRIGGERED_2ARY_global_t     MPIDI_OFI_COLL_TRIGGERED_2ARY_global;
+MPIDI_OFI_COLL_TRIGGERED_2NOMIAL_global_t  MPIDI_OFI_COLL_TRIGGERED_2NOMIAL_global;
+MPIDI_OFI_COLL_TRIGGERED_DISSEM_global_t MPIDI_OFI_COLL_TRIGGERED_DISSEM_global;
+
+MPIDI_OFI_COLL_STUB_2ARY_global_t      MPIDI_OFI_COLL_STUB_2ARY_global;
+MPIDI_OFI_COLL_STUB_2NOMIAL_global_t   MPIDI_OFI_COLL_STUB_2NOMIAL_global;
+MPIDI_OFI_COLL_STUB_DISSEM_global_t  MPIDI_OFI_COLL_STUB_DISSEM_global;
+
+MPIDI_OFI_COLL_STUB_STUB_global_t      MPIDI_OFI_COLL_STUB_STUB_global;
+MPIDI_OFI_COLL_MPICH_STUB_global_t     MPIDI_OFI_COLL_MPICH_STUB_global;
+
+#define MPIDI_OFI_COLL_MPICH_OP_TABLE(NS)                           \
+    MPIDI_OFI_COLL_MPICH_ ##NS## _op_t                              \
+    MPIDI_OFI_COLL_MPICH_ ##NS## _op_table[] =                      \
+    {{{MPI_MAX}},  {{MPI_MIN}},  {{MPI_SUM}},    {{MPI_PROD}},      \
+     {{MPI_LAND}}, {{MPI_BAND}}, {{MPI_LOR}},    {{MPI_BOR}},       \
+     {{MPI_LXOR}}, {{MPI_BXOR}}, {{MPI_MINLOC}}, {{MPI_MAXLOC}},    \
+     {{MPI_REPLACE}}, {{MPI_NO_OP}}}
+
+#define MPIDI_OFI_COLL_TRIGGERED_OP_TABLE(NS)                       \
+    MPIDI_OFI_COLL_TRIGGERED_ ##NS## _op_t                          \
+    MPIDI_OFI_COLL_TRIGGERED_ ##NS## _op_table[] =                  \
+    {{{MPI_MAX}},  {{MPI_MIN}},  {{MPI_SUM}},    {{MPI_PROD}},      \
+     {{MPI_LAND}}, {{MPI_BAND}}, {{MPI_LOR}},    {{MPI_BOR}},       \
+     {{MPI_LXOR}}, {{MPI_BXOR}}, {{MPI_MINLOC}}, {{MPI_MAXLOC}},    \
+     {{MPI_REPLACE}}, {{MPI_NO_OP}}}
+
+#define MPIDI_OFI_COLL_SHM_GR_OP_TABLE(NS)               \
+    MPIDI_OFI_COLL_SHM_ ##NS## _op_t                     \
+    MPIDI_OFI_COLL_SHM_ ##NS## _op_table[] =             \
+    {{MPI_MAX},  {MPI_MIN},  {MPI_SUM},    {MPI_PROD},   \
+     {MPI_LAND}, {MPI_BAND}, {MPI_LOR},    {MPI_BOR},    \
+     {MPI_LXOR}, {MPI_BXOR}, {MPI_MINLOC}, {MPI_MAXLOC}, \
+     {MPI_REPLACE}, {MPI_NO_OP}}
+
+#define MPIDI_OFI_COLL_STUB_OP_TABLE(NS)        \
+    MPIDI_OFI_COLL_STUB_ ##NS## _op_t           \
+    MPIDI_OFI_COLL_STUB_ ##NS## _op_table[] =   \
+    {{{-1}}, {{-1}}, {{-1}}, {{-1}},            \
+     {{-1}}, {{-1}}, {{-1}}, {{-1}},            \
+     {{-1}}, {{-1}}, {{-1}}, {{-1}},            \
+     {{-1}}, {{-1}}}
+
+MPIDI_OFI_COLL_MPICH_OP_TABLE(2ARY);
+MPIDI_OFI_COLL_MPICH_OP_TABLE(2NOMIAL);
+MPIDI_OFI_COLL_MPICH_OP_TABLE(DISSEM);
+MPIDI_OFI_COLL_MPICH_OP_TABLE(RECEXCH);
+
+MPIDI_OFI_COLL_TRIGGERED_OP_TABLE(2ARY);
+MPIDI_OFI_COLL_TRIGGERED_OP_TABLE(2NOMIAL);
+MPIDI_OFI_COLL_TRIGGERED_OP_TABLE(DISSEM);
+MPIDI_OFI_COLL_TRIGGERED_OP_TABLE(RECEXCH);
+
+MPIDI_OFI_COLL_MPICH_OP_TABLE(STUB);
+
+MPIDI_OFI_COLL_STUB_OP_TABLE(2ARY);
+MPIDI_OFI_COLL_STUB_OP_TABLE(2NOMIAL);
+MPIDI_OFI_COLL_STUB_OP_TABLE(DISSEM);
+MPIDI_OFI_COLL_STUB_OP_TABLE(RECEXCH);
+MPIDI_OFI_COLL_STUB_OP_TABLE(STUB);
+
+MPIDI_OFI_COLL_SHM_GR_OP_TABLE(GR);

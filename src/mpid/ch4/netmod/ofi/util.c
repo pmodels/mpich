@@ -741,6 +741,19 @@ static inline void add_index(MPI_Datatype datatype, int *index)
     MPIR_Datatype *dt_ptr;
     MPID_Datatype_get_ptr(datatype, dt_ptr);
     MPIDI_OFI_DATATYPE(dt_ptr).index = *index;
+    MPIDI_OFI_DATATYPE(dt_ptr).index = *index;
+
+    MPIDI_OFI_DATATYPE(dt_ptr).dt_mpich_2ary.tsp_dt.mpi_dt         = datatype;
+    MPIDI_OFI_DATATYPE(dt_ptr).dt_mpich_2nomial.tsp_dt.mpi_dt      = datatype;
+    MPIDI_OFI_DATATYPE(dt_ptr).dt_mpich_dissem.tsp_dt.mpi_dt     = datatype;
+    MPIDI_OFI_DATATYPE(dt_ptr).dt_mpich_recexch.tsp_dt.mpi_dt     = datatype;
+    MPIDI_OFI_DATATYPE(dt_ptr).dt_triggered_2ary.tsp_dt.mpi_dt     = datatype;
+    MPIDI_OFI_DATATYPE(dt_ptr).dt_triggered_2nomial.tsp_dt.mpi_dt  = datatype;
+    MPIDI_OFI_DATATYPE(dt_ptr).dt_triggered_dissem.tsp_dt.mpi_dt = datatype;
+    MPIDI_OFI_DATATYPE(dt_ptr).dt_stub_2ary.tsp_dt.dummy           = -1;
+    MPIDI_OFI_DATATYPE(dt_ptr).dt_stub_2nomial.tsp_dt.dummy        = -1;
+    MPIDI_OFI_DATATYPE(dt_ptr).dt_stub_dissem.tsp_dt.dummy       = -1;
+
     (*index)++;
 }
 

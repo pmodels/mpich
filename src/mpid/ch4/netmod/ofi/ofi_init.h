@@ -13,6 +13,7 @@
 
 #include "ofi_impl.h"
 #include "mpir_cvars.h"
+#include "ofi_coll_impl.h"
 #include "pmi.h"
 #include "mpidu_shm.h"
 
@@ -358,6 +359,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
     MPIDI_OFI_init_global_settings(MPIR_CVAR_OFI_USE_PROVIDER);
 
+    /* We want 3 64-bit cache lines for performance */
+    CH4_COMPILE_TIME_ASSERT(sizeof(struct MPIR_Request) <= 192);
     CH4_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_chunk_request, context));
     CH4_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
@@ -908,6 +911,32 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);
     }
 
+
+    /* Initialize Collective Transports */
+    MPIDI_OFI_COLL_TRANSPORT_MPICH_init();
+    MPIDI_OFI_COLL_TRANSPORT_TRIGGERED_init(MPIDI_OFI_EP_TX_TRG(0),
+                                            MPIDI_OFI_EP_RX_TRG(0));
+    MPIDI_OFI_COLL_TRANSPORT_STUB_init();
+
+    /* Initialize Collective Globals */
+    MPIDI_OFI_COLL_MPICH_2ARY_init();
+    MPIDI_OFI_COLL_MPICH_2NOMIAL_init();
+    MPIDI_OFI_COLL_MPICH_DISSEM_init();
+
+    MPIDI_OFI_COLL_TRIGGERED_2ARY_init();
+    MPIDI_OFI_COLL_TRIGGERED_2NOMIAL_init();
+    MPIDI_OFI_COLL_TRIGGERED_DISSEM_init();
+
+    MPIDI_OFI_COLL_STUB_2ARY_init();
+    MPIDI_OFI_COLL_STUB_2NOMIAL_init();
+    MPIDI_OFI_COLL_STUB_DISSEM_init();
+
+    MPIDI_OFI_COLL_STUB_STUB_init();
+    MPIDI_OFI_COLL_MPICH_STUB_init();
+
+    /* Initialize the nb collectives queue */
+    TAILQ_INIT(&MPIDI_OFI_COLL_global.head);
+    MPIDI_OFI_COLL_global.progress_fn = MPID_Progress_test;
   fn_exit:
 
     /* -------------------------------- */

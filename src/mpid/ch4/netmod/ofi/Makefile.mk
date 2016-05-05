@@ -19,4 +19,6 @@ errnames_txt_files += src/mpid/ch4/netmod/ofi/errnames.txt
 external_subdirs   += @ofisrcdir@
 pmpi_convenience_libs += @ofilib@
 
+include $(top_srcdir)/src/mpid/ch4/netmod/ofi/coll/Makefile.mk
+
 endif

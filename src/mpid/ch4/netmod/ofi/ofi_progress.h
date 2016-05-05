@@ -21,8 +21,9 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vni, int blocking)
 {
-    int mpi_errno;
+    int mpi_errno,coll_count,i;
     struct fi_cq_tagged_entry wc[MPIDI_OFI_NUM_CQ_ENTRIES];
+    void *coll_entries[MPIDI_OFI_NUM_CQ_ENTRIES];
     ssize_t ret;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_PROGRESS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_PROGRESS);
@@ -42,7 +43,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(int vni, int blocking)
             mpi_errno = MPIDI_OFI_handle_cq_error(ret);
     }
 
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
+    coll_count = MPIDI_OFI_COLL_Progress(MPIDI_OFI_NUM_CQ_ENTRIES,
+                                                 coll_entries);
+    for(i=0; i<coll_count; i++) {
+        char         *base = (char *) coll_entries[i];
+        MPIR_Request *req  = container_of(base, MPIR_Request, dev.ch4.netmod.ofi.util.collreq);
+        MPIDI_CH4U_request_complete(req);
+    }
+
+    MPID_THREAD_CS_EXIT(POBJ,MPIDI_OFI_THREAD_FI_MUTEX);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_PROGRESS);
 

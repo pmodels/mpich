@@ -22,7 +22,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
                                                         size_t data_sz,
                                                         int rank,
                                                         int tag, MPIR_Comm * comm,
-                                                        int context_offset)
+                                                         int context_offset)
 {
     int mpi_errno = MPI_SUCCESS;
     uint64_t match_bits;
@@ -106,7 +106,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
     MPIDI_OFI_REQUEST(sreq, datatype) = datatype;
     dtype_add_ref_if_not_builtin(datatype);
 
-    if (type == MPIDI_OFI_SYNC_SEND) {  /* Branch should compile out */
+    if(trigger_thresh) {
+        struct fi_triggered_context *ctx = (struct fi_triggered_context*)&MPIDI_OFI_REQUEST(sreq, context);
+        ctx->event_type         = FI_TRIGGER_THRESHOLD_COMPLETION;
+        ctx->trigger.threshold  = *trigger_thresh;
+    }
+
+    if(type == MPIDI_OFI_SYNC_SEND) { /* Branch should compile out */
         int c = 1;
         uint64_t ssend_match, ssend_mask;
         MPIDI_OFI_ssendack_request_t *ackreq;
@@ -154,6 +160,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPIDI_OFI_send_event(NULL, sreq);
+    } else if(data_sz <= MPIDI_Global.max_send) {
+        mpi_errno = MPIDI_OFI_send_handler(MPIDI_OFI_EP_TX_TAG(0), send_buf,data_sz, NULL, comm->rank,
+                                           MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG),
+                                           match_bits, (void *) &(MPIDI_OFI_REQUEST(sreq, context)), MPIDI_OFI_DO_SEND,
+                                           MPIDI_OFI_CALL_LOCK);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
     else if (data_sz <= MPIDI_Global.max_send) {
         mpi_errno =
@@ -218,7 +230,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
                                            MPIDI_Global.max_send,
                                            NULL,
                                            comm->rank,
-                                           MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG),
+                                           MPIDI_OFI_comm_to_phys(comm, rank,MPIDI_OFI_API_TAG),
                                            match_bits,
                                            (void *) &(MPIDI_OFI_REQUEST(sreq, context)),
                                            MPIDI_OFI_DO_SEND,
@@ -364,7 +376,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, int count, MPI_
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SSEND);
     return mpi_errno;
 }
-
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_isend
