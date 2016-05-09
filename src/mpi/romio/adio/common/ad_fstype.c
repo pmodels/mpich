@@ -338,13 +338,15 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
     /* --END ERROR HANDLING-- */
 
 # ifdef ROMIO_HAVE_STRUCT_STATFS_WITH_F_FSTYPENAME
-    /* uncommon: maybe only on Darwin ? */
+    /* less common: Darwin and OpenBSD */
     if ( !strncmp("nfs",fsbuf.f_fstypename,3) ) {
 	*fstype = ADIO_NFS;
 	return;
     }
 # endif
 
+
+# ifdef ROMIO_HAVE_STRUCT_STATFS_WITH_F_TYPE
 
 #ifdef ROMIO_GPFS
     if (fsbuf.f_type == GPFS_SUPER_MAGIC) {
@@ -412,6 +414,8 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
 	    return;
     }
 # endif
+
+# endif /*ROMIO_HAVE_STRUCT_STATFS_WITH_F_TYPE */
 
 # ifdef ROMIO_UFS
     /* if UFS support is enabled, default to that */
