@@ -130,6 +130,10 @@ int MPI_Op_create(MPI_User_function *user_fn, int commute, MPI_Op *op)
     MPIR_Object_set_ref(op_ptr,1);
 
     MPIR_OBJ_PUBLISH_HANDLE(*op, op_ptr->handle);
+
+#ifdef MPID_Dev_op_commit_hook
+    MPID_Dev_op_commit_hook(op_ptr);
+#endif
     /* ... end of body of routine ... */
 
   fn_exit:
