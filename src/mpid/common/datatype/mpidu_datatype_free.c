@@ -37,9 +37,9 @@ void MPIDU_Datatype_free(MPIDU_Datatype *ptr)
 {
     MPL_DBG_MSG_P(MPIR_DBG_DATATYPE,VERBOSE,"type %x freed.", ptr->handle);
 
-#ifdef MPIDU_Dev_datatype_destroy_hook
-       MPIDU_Dev_datatype_destroy_hook(ptr);
-#endif /* MPIDU_Dev_datatype_destroy_hook */
+#ifdef MPID_Dev_datatype_destroy_hook
+       MPID_Dev_datatype_destroy_hook(ptr);
+#endif /* MPID_Dev_datatype_destroy_hook */
 
     /* before freeing the contents, check whether the pointer is not
        null because it is null in the case of a datatype shipped to the target
