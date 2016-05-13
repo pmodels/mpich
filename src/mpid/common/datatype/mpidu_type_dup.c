@@ -98,9 +98,9 @@ int MPIDU_Type_dup(MPI_Datatype oldtype,
 				  &new_dtp->hetero_dloop);
 	    }
 
-#ifdef MPIDU_Dev_datatype_commit_hook
-            MPIDU_Dev_datatype_dup_hook(new_dtp);
-#endif /* MPIDU_Dev_datatype_commit_hook */
+#ifdef MPID_Dev_datatype_commit_hook
+            MPID_Dev_datatype_commit_hook(new_dtp);
+#endif /* MPID_Dev_datatype_commit_hook */
       }
     }
 
