@@ -26,11 +26,13 @@ void MPII_CommL_forget( MPIR_Comm * );
 #define MPII_SENDQ_FORGET(_a) MPII_Sendq_forget(_a)
 #define MPII_COMML_REMEMBER(_a) MPII_CommL_remember( _a )
 #define MPII_COMML_FORGET(_a) MPII_CommL_forget( _a )
+#define MPII_REQUEST_CLEAR_DBG(_r) ((_r)->u.send.dbg_next = NULL)
 #else
 #define MPII_SENDQ_REMEMBER(a,b,c,d)
 #define MPII_SENDQ_FORGET(a)
 #define MPII_COMML_REMEMBER(_a)
 #define MPII_COMML_FORGET(_a)
+#define MPII_REQUEST_CLEAR_DBG(_r)
 #endif
 
 #endif /* MPIR_DEBUGGER_H_INCLUDED */

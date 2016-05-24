@@ -214,6 +214,9 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
         req->request_completed_cb  = NULL;
 
         switch(kind) {
+        case MPIR_REQUEST_KIND__SEND:
+            MPII_REQUEST_CLEAR_DBG(req);
+            break;
         case MPIR_REQUEST_KIND__COLL:
             req->u.nbc.errflag = MPIR_ERR_NONE;
             break;
