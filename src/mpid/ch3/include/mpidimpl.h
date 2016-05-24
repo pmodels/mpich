@@ -266,12 +266,6 @@ extern MPIDI_Process_t MPIDI_Process;
 #define MPIDI_CH3_REQUEST_INIT(a_)
 #endif
 
-#ifdef HAVE_DEBUGGER_SUPPORT
-#define MPIDI_Request_clear_dbg(sreq_) ((sreq_)->u.send.dbg_next = NULL)
-#else
-#define MPIDI_Request_clear_dbg(sreq_)
-#endif
-
 /* FIXME: Why does a send request need the match information?
    Is that for debugging information?  In case the initial envelope
    cannot be sent? Ditto for the dev.user_buf, count, and datatype 
@@ -299,7 +293,6 @@ extern MPIDI_Process_t MPIDI_Process;
     (sreq_)->dev.user_count = count;				\
     (sreq_)->dev.datatype = datatype;				\
     (sreq_)->dev.iov_count	   = 0;                         \
-    MPIDI_Request_clear_dbg(sreq_);                             \
 }
 
 /* This is the receive request version of MPIDI_Request_create_sreq */

@@ -251,7 +251,6 @@ static inline int MPID_nem_ofi_create_req(MPIR_Request ** request, int refcnt)
     MPIR_Request *req;
     req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     MPIR_Assert(req);
-    MPIDI_Request_clear_dbg(req);
     MPIR_Object_set_ref(req, refcnt);
     MPID_nem_ofi_init_req(req);
     *request = req;
