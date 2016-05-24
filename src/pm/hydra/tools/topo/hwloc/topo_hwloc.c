@@ -454,8 +454,8 @@ HYD_status HYDT_topo_hwloc_bind(int idx)
     if (!HYDT_topo_hwloc_info.user_binding || (idx < HYDT_topo_hwloc_info.num_bitmaps)) {
         id = idx % HYDT_topo_hwloc_info.num_bitmaps;
 
-        /* For debugging, print the binding bitmaps but don't actually bind. */
         if (HYDT_topo_info.debug) {
+            /* Print the binding bitmaps for debugging. */
             int i;
             char *binding;
 
@@ -472,11 +472,9 @@ HYD_status HYDT_topo_hwloc_bind(int idx)
             HYDU_dump_noprefix(stdout, "process %d binding: %s\n", idx, binding);
             HYDU_FREE(binding);
         }
-        else {
-            hwloc_set_cpubind(topology, HYDT_topo_hwloc_info.bitmap[id], 0);
-            hwloc_set_membind(topology, HYDT_topo_hwloc_info.bitmap[id],
-                              HYDT_topo_hwloc_info.membind, 0);
-        }
+        hwloc_set_cpubind(topology, HYDT_topo_hwloc_info.bitmap[id], 0);
+        hwloc_set_membind(topology, HYDT_topo_hwloc_info.bitmap[id],
+                          HYDT_topo_hwloc_info.membind, 0);
     }
 
  fn_exit:
