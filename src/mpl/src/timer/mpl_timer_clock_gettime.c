@@ -34,7 +34,7 @@ int MPL_wtime_todouble(MPL_time_t * t, double *val)
 
 int MPL_wtime_acc(MPL_time_t * t1, MPL_time_t * t2, MPL_time_t * t3)
 {
-    int nsec, sec;
+    long nsec, sec;
 
     nsec = t2->tv_nsec - t1->tv_nsec;
     sec = t2->tv_sec - t1->tv_sec;
