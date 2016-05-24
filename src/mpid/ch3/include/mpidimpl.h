@@ -287,9 +287,8 @@ extern MPIDI_Process_t MPIDI_Process;
 */
 #define MPIDI_Request_create_sreq(sreq_, mpi_errno_, FAIL_)	\
 {								\
-    (sreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);           \
+    (sreq_) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);     \
     MPIR_Object_set_ref((sreq_), 2);				\
-    (sreq_)->kind = MPIR_REQUEST_KIND__SEND;				\
     (sreq_)->comm = comm;					\
     (sreq_)->dev.partner_request   = NULL;                         \
     MPIR_Comm_add_ref(comm);					\
