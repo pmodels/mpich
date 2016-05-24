@@ -108,7 +108,7 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
         int r, pid;
 
         /* same algorithim as shared file pointer name */
-        srand(time(NULL));
+        srand(time(NULL) & 0xffffffff);
         r = rand();
         pid = (int) getpid();
 

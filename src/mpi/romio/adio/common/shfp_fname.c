@@ -39,7 +39,9 @@ void ADIOI_Shfp_fname(ADIO_File fd, int rank, int *error_code)
     fd->shared_fp_fname = (char *) ADIOI_Malloc(PATH_MAX);
 
     if (!rank) {
-        srand(time(NULL));
+	/* srand takes int but time returns long; keep the lower and most
+	 * significant  32 bits */
+        srand(time(NULL)& 0xffffffff);
         i = rand();
 	pid = (int)getpid();
 	
