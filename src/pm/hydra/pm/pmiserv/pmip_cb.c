@@ -803,9 +803,6 @@ static HYD_status parse_exec_params(char **t_argv)
                             "no executable given and doesn't look like a restart either\n");
 
     /* Set default values */
-    if (HYD_pmcd_pmip.user_global.binding == NULL)
-        HYD_pmcd_pmip.user_global.binding = MPL_strdup("none");
-
     if (HYD_pmcd_pmip.user_global.topolib == NULL && HYDRA_DEFAULT_TOPOLIB)
         HYD_pmcd_pmip.user_global.topolib = MPL_strdup(HYDRA_DEFAULT_TOPOLIB);
 
