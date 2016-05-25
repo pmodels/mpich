@@ -35,7 +35,7 @@ int MPIR_Status_set_elements_x_impl(MPI_Status *status, MPI_Datatype datatype, M
     int mpi_errno = MPI_SUCCESS;
     MPI_Count size_x;
 
-    MPID_Datatype_get_size_macro(datatype, size_x);
+    MPIR_Datatype_get_size_macro(datatype, size_x);
 
     /* overflow check, should probably be a real error check? */
     if (count != 0) {
@@ -101,9 +101,9 @@ int MPI_Status_set_elements_x(MPI_Status *status, MPI_Datatype datatype, MPI_Cou
         {
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
                 MPIR_Datatype *datatype_ptr = NULL;
-                MPID_Datatype_get_ptr(datatype, datatype_ptr);
+                MPIR_Datatype_get_ptr(datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+                MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
             }
 
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */

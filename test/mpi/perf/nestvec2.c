@@ -76,11 +76,11 @@ int main(int argc, char **argv)
     MPI_Type_commit(&vtype);
 
 #if defined(MPICH) && defined(PRINT_DATATYPE_INTERNALS)
-    /* To use MPIDU_Datatype_debug to print the datatype internals,
+    /* To use MPIR_Datatype_debug to print the datatype internals,
      * you must configure MPICH with --enable-g=log */
     if (verbose) {
         printf("Original struct datatype:\n");
-        MPIDU_Datatype_debug(stype, 10);
+        MPIR_Datatype_debug(stype, 10);
     }
 #endif
 

@@ -17,8 +17,6 @@ struct MPIR_Request;
 #include <sys/types.h>
 #endif
 
-#include "mpid_datatype_fallback.h"
-
 /* FIXME: Include here? */
 #include "opa_primitives.h"
 
@@ -381,13 +379,13 @@ typedef struct MPIDI_Request {
 
     /* segment, segment_first, and segment_size are used when processing 
        non-contiguous datatypes */
-    /*    MPIDU_Segment   segment; */
-    struct MPIDU_Segment *segment_ptr;
+    /*    MPIR_Segment   segment; */
+    struct MPIR_Segment *segment_ptr;
     intptr_t segment_first;
     intptr_t segment_size;
 
     /* Pointer to datatype for reference counting purposes */
-    struct MPIDU_Datatype* datatype_ptr;
+    struct MPIR_Datatype* datatype_ptr;
 
     /* iov and iov_count define the data to be transferred/received.  
        iov_offset points to the current head element in the IOV */

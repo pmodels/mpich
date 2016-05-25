@@ -32,7 +32,7 @@ int MPI_Pack_size(int incount, MPI_Datatype datatype, MPI_Comm comm, int *size) 
 void MPIR_Pack_size_impl(int incount, MPI_Datatype datatype, MPI_Aint *size)
 {
     MPI_Aint typesize;
-    MPID_Datatype_get_size_macro(datatype, typesize);
+    MPIR_Datatype_get_size_macro(datatype, typesize);
     *size = incount * typesize;
 }
 
@@ -117,9 +117,9 @@ int MPI_Pack_size(int incount,
 	    
 	    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN)
 	    {
-		MPID_Datatype_get_ptr(datatype, datatype_ptr);
+		MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 		MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-		MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+		MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno) goto fn_fail;
 	    }
         }

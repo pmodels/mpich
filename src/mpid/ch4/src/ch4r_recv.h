@@ -55,7 +55,7 @@ static inline int MPIDI_handle_unexp_mrecv(MPIR_Request * rreq)
     MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
     size_t data_sz, dt_sz;
-    MPID_Segment *segment_ptr;
+    MPIR_Segment *segment_ptr;
     void *buf;
     int count;
     MPI_Datatype datatype;
@@ -72,7 +72,7 @@ static inline int MPIDI_handle_unexp_mrecv(MPIR_Request * rreq)
     datatype = MPIDI_CH4U_REQUEST(rreq, req->rreq.mrcv_datatype);
 
     message_sz = MPIDI_CH4U_REQUEST(rreq, count);
-    MPID_Datatype_get_size_macro(datatype, dt_sz);
+    MPIR_Datatype_get_size_macro(datatype, dt_sz);
 
     if (message_sz > count * dt_sz) {
         rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
@@ -86,14 +86,14 @@ static inline int MPIDI_handle_unexp_mrecv(MPIR_Request * rreq)
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
 
     if (!dt_contig) {
-        segment_ptr = MPIDU_Segment_alloc();
+        segment_ptr = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv MPIDU_Segment_alloc");
-        MPIDU_Segment_init(buf, count, datatype, segment_ptr, 0);
+                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv MPIR_Segment_alloc");
+        MPIR_Segment_init(buf, count, datatype, segment_ptr, 0);
 
         last = count * dt_sz;
-        MPIDU_Segment_unpack(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, buffer));
-        MPIDU_Segment_free(segment_ptr);
+        MPIR_Segment_unpack(segment_ptr, 0, &last, MPIDI_CH4U_REQUEST(rreq, buffer));
+        MPIR_Segment_free(segment_ptr);
         if (last != (MPI_Aint) (count * dt_sz)) {
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                              __FUNCTION__, __LINE__,

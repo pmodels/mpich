@@ -67,11 +67,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_do_irecv(void *buf,
 
     if (!dt_contig) {
         MPIDI_OFI_REQUEST(rreq, noncontig) =
-            (MPIDI_OFI_noncontig_t *) MPL_malloc(data_sz + sizeof(MPID_Segment));
+            (MPIDI_OFI_noncontig_t *) MPL_malloc(data_sz + sizeof(MPIR_Segment));
         MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(rreq, noncontig->pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Recv Pack Buffer alloc");
         recv_buf = MPIDI_OFI_REQUEST(rreq, noncontig->pack_buffer);
-        MPID_Segment_init(buf, count, datatype, &MPIDI_OFI_REQUEST(rreq, noncontig->segment), 0);
+        MPIR_Segment_init(buf, count, datatype, &MPIDI_OFI_REQUEST(rreq, noncontig->segment), 0);
     }
     else
         MPIDI_OFI_REQUEST(rreq, noncontig) = NULL;
@@ -194,8 +194,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
 
     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
         MPIR_Datatype *dt_ptr;
-        MPID_Datatype_get_ptr(datatype, dt_ptr);
-        MPID_Datatype_add_ref(dt_ptr);
+        MPIR_Datatype_get_ptr(datatype, dt_ptr);
+        MPIR_Datatype_add_ref(dt_ptr);
     }
 
   fn_exit:

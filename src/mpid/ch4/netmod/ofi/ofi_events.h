@@ -120,7 +120,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
 
     if (MPIDI_OFI_REQUEST(rreq, noncontig)) {
         last = count;
-        MPID_Segment_unpack(&MPIDI_OFI_REQUEST(rreq, noncontig->segment), 0, &last,
+        MPIR_Segment_unpack(&MPIDI_OFI_REQUEST(rreq, noncontig->segment), 0, &last,
                             MPIDI_OFI_REQUEST(rreq, noncontig->pack_buffer));
         MPL_free(MPIDI_OFI_REQUEST(rreq, noncontig));
         if (last != (MPI_Aint) count) {

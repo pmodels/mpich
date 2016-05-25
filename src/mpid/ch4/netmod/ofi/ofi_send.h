@@ -134,11 +134,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
         segment_first = 0;
         last = data_sz;
         MPIDI_OFI_REQUEST(sreq, noncontig) =
-            (MPIDI_OFI_noncontig_t *) MPL_malloc(data_sz + sizeof(MPID_Segment));
+            (MPIDI_OFI_noncontig_t *) MPL_malloc(data_sz + sizeof(MPIR_Segment));
         MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_REQUEST(sreq, noncontig) == NULL, mpi_errno, MPI_ERR_OTHER,
                              "**nomem", "**nomem %s", "Send Pack buffer alloc");
-        MPID_Segment_init(buf, count, datatype, &MPIDI_OFI_REQUEST(sreq, noncontig->segment), 0);
-        MPID_Segment_pack(&MPIDI_OFI_REQUEST(sreq, noncontig->segment), segment_first, &last,
+        MPIR_Segment_init(buf, count, datatype, &MPIDI_OFI_REQUEST(sreq, noncontig->segment), 0);
+        MPIR_Segment_pack(&MPIDI_OFI_REQUEST(sreq, noncontig->segment), segment_first, &last,
                           MPIDI_OFI_REQUEST(sreq, noncontig->pack_buffer));
         send_buf = MPIDI_OFI_REQUEST(sreq, noncontig->pack_buffer);
     }
@@ -297,8 +297,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_persistent_send(const void *buf, int coun
 
     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
         MPIR_Datatype *dt_ptr;
-        MPID_Datatype_get_ptr(datatype, dt_ptr);
-        MPID_Datatype_add_ref(dt_ptr);
+        MPIR_Datatype_get_ptr(datatype, dt_ptr);
+        MPIR_Datatype_add_ref(dt_ptr);
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_PERSISTENT_SEND);

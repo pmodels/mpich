@@ -71,7 +71,7 @@ int MPI_Pack_external(const char datarep[],
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint first, last;
 
-    MPID_Segment *segp;
+    MPIR_Segment *segp;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_MPI_PACK_EXTERNAL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -96,9 +96,9 @@ int MPI_Pack_external(const char datarep[],
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
                 MPIR_Datatype *datatype_ptr = NULL;
 
-                MPID_Datatype_get_ptr(datatype, datatype_ptr);
+                MPIR_Datatype_get_ptr(datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+                MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
         }
@@ -111,7 +111,7 @@ int MPI_Pack_external(const char datarep[],
 	goto fn_exit;
     }
 
-    segp = MPID_Segment_alloc();
+    segp = MPIR_Segment_alloc();
     /* --BEGIN ERROR HANDLING-- */
     if (segp == NULL)
     {
@@ -122,15 +122,15 @@ int MPI_Pack_external(const char datarep[],
 					 MPI_ERR_OTHER,
 					 "**nomem",
 					 "**nomem %s",
-					 "MPID_Segment");
+					 "MPIR_Segment");
 	goto fn_fail;
     }
     /* --END ERROR HANDLING-- */
-    mpi_errno = MPID_Segment_init(inbuf, incount, datatype, segp, 1);
+    mpi_errno = MPIR_Segment_init(inbuf, incount, datatype, segp, 1);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* NOTE: the use of buffer values and positions in MPI_Pack_external and
-     * in MPID_Segment_pack_external are quite different.  See code or docs
+     * in MPIR_Segment_pack_external are quite different.  See code or docs
      * or something.
      */
     first = 0;
@@ -139,14 +139,14 @@ int MPI_Pack_external(const char datarep[],
     /* Ensure that pointer increment fits in a pointer */
     MPIR_Ensure_Aint_fits_in_pointer((MPIR_VOID_PTR_CAST_TO_MPI_AINT outbuf) + *position);
 
-    MPID_Segment_pack_external32(segp,
+    MPIR_Segment_pack_external32(segp,
 				 first,
 				 &last,
 				 (void *)((char *) outbuf + *position));
 
     *position += last;
 
-    MPID_Segment_free(segp);
+    MPIR_Segment_free(segp);
 
     /* ... end of body of routine ... */
 

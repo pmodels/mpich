@@ -165,7 +165,7 @@ int MPIR_Datatype_init_names(void)
 	       disabled at configure time. */
 	    if (mpi_names[i].dtype == MPI_DATATYPE_NULL) continue;
 
-	    MPID_Datatype_get_ptr(mpi_names[i].dtype, datatype_ptr);
+	    MPIR_Datatype_get_ptr(mpi_names[i].dtype, datatype_ptr);
 
 	    if (datatype_ptr < MPIR_Datatype_builtin ||
 		datatype_ptr > MPIR_Datatype_builtin + MPIR_DATATYPE_N_BUILTIN)
@@ -191,7 +191,7 @@ int MPIR_Datatype_init_names(void)
 	       those types. */
 	    if (mpi_maxloc_names[i].dtype == MPI_DATATYPE_NULL) continue;
 
-	    MPID_Datatype_get_ptr(mpi_maxloc_names[i].dtype,
+	    MPIR_Datatype_get_ptr(mpi_maxloc_names[i].dtype,
 				  datatype_ptr);
 	    if (!datatype_ptr) {
 		MPIR_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_INTERN, "**typeinitminmaxloc");
@@ -262,7 +262,7 @@ int MPI_Type_get_name(MPI_Datatype datatype, char *type_name, int *resultlen)
        it must return an error indicating an invalid datatype argument */
 
     /* Convert MPI object handles to object pointers */
-    MPID_Datatype_get_ptr(datatype, datatype_ptr);
+    MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING

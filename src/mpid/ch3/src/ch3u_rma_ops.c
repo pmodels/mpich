@@ -45,7 +45,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig ATTRIBUTE((unused)), rank;
-    MPIDU_Datatype*dtp;
+    MPIR_Datatype*dtp;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     intptr_t data_sz;
     MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
@@ -127,16 +127,16 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         /* if source or target datatypes are derived, increment their
          * reference counts */
         if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
-            MPIDU_Datatype_get_ptr(origin_datatype, dtp);
-            MPIDU_Datatype_add_ref(dtp);
+            MPIR_Datatype_get_ptr(origin_datatype, dtp);
+            MPIR_Datatype_add_ref(dtp);
         }
         if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
-            MPIDU_Datatype_get_ptr(target_datatype, dtp);
-            MPIDU_Datatype_add_ref(dtp);
+            MPIR_Datatype_get_ptr(target_datatype, dtp);
+            MPIR_Datatype_add_ref(dtp);
         }
 
-        MPIDU_Datatype_is_contig(origin_datatype, &is_origin_contig);
-        MPIDU_Datatype_is_contig(target_datatype, &is_target_contig);
+        MPIR_Datatype_is_contig(origin_datatype, &is_origin_contig);
+        MPIR_Datatype_is_contig(target_datatype, &is_target_contig);
 
         /* Judge if we can use IMMED data packet */
         if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) &&
@@ -224,7 +224,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
     intptr_t orig_data_sz, target_data_sz;
     int dt_contig ATTRIBUTE((unused)), rank;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
-    MPIDU_Datatype*dtp;
+    MPIR_Datatype*dtp;
     MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
     int made_progress = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_GET);
@@ -306,18 +306,18 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         /* if source or target datatypes are derived, increment their
          * reference counts */
         if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
-            MPIDU_Datatype_get_ptr(origin_datatype, dtp);
-            MPIDU_Datatype_add_ref(dtp);
+            MPIR_Datatype_get_ptr(origin_datatype, dtp);
+            MPIR_Datatype_add_ref(dtp);
         }
         if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
-            MPIDU_Datatype_get_ptr(target_datatype, dtp);
-            MPIDU_Datatype_add_ref(dtp);
+            MPIR_Datatype_get_ptr(target_datatype, dtp);
+            MPIR_Datatype_add_ref(dtp);
         }
 
-        MPIDU_Datatype_is_contig(origin_datatype, &is_origin_contig);
-        MPIDU_Datatype_is_contig(target_datatype, &is_target_contig);
+        MPIR_Datatype_is_contig(origin_datatype, &is_origin_contig);
+        MPIR_Datatype_is_contig(target_datatype, &is_target_contig);
 
-        MPIDU_Datatype_get_size_macro(target_datatype, target_type_size);
+        MPIR_Datatype_get_size_macro(target_datatype, target_type_size);
         MPIR_Assign_trunc(target_data_sz, target_count * target_type_size, intptr_t);
 
         /* Judge if we can use IMMED data response packet */
@@ -394,7 +394,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
     intptr_t data_sz;
     int dt_contig ATTRIBUTE((unused)), rank;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
-    MPIDU_Datatype*dtp;
+    MPIR_Datatype*dtp;
     MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
     int made_progress = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_ACCUMULATE);
@@ -455,7 +455,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         int is_origin_contig, is_target_contig;
         MPI_Aint stream_elem_count, stream_unit_count;
         MPI_Aint predefined_dtp_size, predefined_dtp_count, predefined_dtp_extent;
-        MPIDU_Datatype*origin_dtp = NULL, *target_dtp = NULL;
+        MPIR_Datatype*origin_dtp = NULL, *target_dtp = NULL;
         int i;
 
         /* queue it up */
@@ -478,23 +478,23 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         /* if source or target datatypes are derived, increment their
          * reference counts */
         if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
-            MPIDU_Datatype_get_ptr(origin_datatype, origin_dtp);
+            MPIR_Datatype_get_ptr(origin_datatype, origin_dtp);
         }
         if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
-            MPIDU_Datatype_get_ptr(target_datatype, target_dtp);
+            MPIR_Datatype_get_ptr(target_datatype, target_dtp);
         }
 
         /* Get size and count for predefined datatype elements */
         if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
-            MPIDU_Datatype_get_size_macro(origin_datatype, predefined_dtp_size);
+            MPIR_Datatype_get_size_macro(origin_datatype, predefined_dtp_size);
             predefined_dtp_count = origin_count;
-            MPIDU_Datatype_get_extent_macro(origin_datatype, predefined_dtp_extent);
+            MPIR_Datatype_get_extent_macro(origin_datatype, predefined_dtp_extent);
         }
         else {
             MPIR_Assert(origin_dtp->basic_type != MPI_DATATYPE_NULL);
-            MPIDU_Datatype_get_size_macro(origin_dtp->basic_type, predefined_dtp_size);
+            MPIR_Datatype_get_size_macro(origin_dtp->basic_type, predefined_dtp_size);
             predefined_dtp_count = data_sz / predefined_dtp_size;
-            MPIDU_Datatype_get_extent_macro(origin_dtp->basic_type, predefined_dtp_extent);
+            MPIR_Datatype_get_extent_macro(origin_dtp->basic_type, predefined_dtp_extent);
         }
         MPIR_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 &&
                     predefined_dtp_extent > 0);
@@ -507,15 +507,15 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
 
         for (i = 0; i < stream_unit_count; i++) {
             if (origin_dtp != NULL) {
-                MPIDU_Datatype_add_ref(origin_dtp);
+                MPIR_Datatype_add_ref(origin_dtp);
             }
             if (target_dtp != NULL) {
-                MPIDU_Datatype_add_ref(target_dtp);
+                MPIR_Datatype_add_ref(target_dtp);
             }
         }
 
-        MPIDU_Datatype_is_contig(origin_datatype, &is_origin_contig);
-        MPIDU_Datatype_is_contig(target_datatype, &is_target_contig);
+        MPIR_Datatype_is_contig(origin_datatype, &is_origin_contig);
+        MPIR_Datatype_is_contig(target_datatype, &is_target_contig);
 
         /* Judge if we can use IMMED data packet */
         if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) &&
@@ -607,7 +607,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
     int rank;
     int dt_contig ATTRIBUTE((unused));
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
-    MPIDU_Datatype*dtp;
+    MPIR_Datatype*dtp;
     MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
     int made_progress = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3I_GET_ACCUMULATE);
@@ -672,7 +672,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
         int is_origin_contig, is_target_contig, is_result_contig;
         MPI_Aint stream_elem_count, stream_unit_count;
         MPI_Aint predefined_dtp_size, predefined_dtp_count, predefined_dtp_extent;
-        MPIDU_Datatype*origin_dtp = NULL, *target_dtp = NULL, *result_dtp = NULL;
+        MPIR_Datatype*origin_dtp = NULL, *target_dtp = NULL, *result_dtp = NULL;
         int is_empty_origin = FALSE;
 
         /* Judge if origin buffer is empty */
@@ -704,17 +704,17 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
         /* if source or target datatypes are derived, increment their
          * reference counts */
         if (is_empty_origin == FALSE && !MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
-            MPIDU_Datatype_get_ptr(origin_datatype, origin_dtp);
+            MPIR_Datatype_get_ptr(origin_datatype, origin_dtp);
         }
         if (!MPIR_DATATYPE_IS_PREDEFINED(result_datatype)) {
-            MPIDU_Datatype_get_ptr(result_datatype, result_dtp);
+            MPIR_Datatype_get_ptr(result_datatype, result_dtp);
         }
         if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
-            MPIDU_Datatype_get_ptr(target_datatype, target_dtp);
+            MPIR_Datatype_get_ptr(target_datatype, target_dtp);
         }
 
         if (is_empty_origin == FALSE) {
-            MPIDU_Datatype_get_size_macro(origin_datatype, origin_type_size);
+            MPIR_Datatype_get_size_macro(origin_datatype, origin_type_size);
             MPIR_Assign_trunc(orig_data_sz, origin_count * origin_type_size, intptr_t);
         }
         else {
@@ -722,19 +722,19 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             orig_data_sz = 0;
         }
 
-        MPIDU_Datatype_get_size_macro(target_datatype, target_type_size);
+        MPIR_Datatype_get_size_macro(target_datatype, target_type_size);
 
         /* Get size and count for predefined datatype elements */
         if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             predefined_dtp_size = target_type_size;
             predefined_dtp_count = target_count;
-            MPIDU_Datatype_get_extent_macro(target_datatype, predefined_dtp_extent);
+            MPIR_Datatype_get_extent_macro(target_datatype, predefined_dtp_extent);
         }
         else {
             MPIR_Assert(target_dtp->basic_type != MPI_DATATYPE_NULL);
-            MPIDU_Datatype_get_size_macro(target_dtp->basic_type, predefined_dtp_size);
+            MPIR_Datatype_get_size_macro(target_dtp->basic_type, predefined_dtp_size);
             predefined_dtp_count = target_data_sz / predefined_dtp_size;
-            MPIDU_Datatype_get_extent_macro(target_dtp->basic_type, predefined_dtp_extent);
+            MPIR_Datatype_get_extent_macro(target_dtp->basic_type, predefined_dtp_extent);
         }
         MPIR_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 &&
                     predefined_dtp_extent > 0);
@@ -747,25 +747,25 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 
         for (i = 0; i < stream_unit_count; i++) {
             if (origin_dtp != NULL) {
-                MPIDU_Datatype_add_ref(origin_dtp);
+                MPIR_Datatype_add_ref(origin_dtp);
             }
             if (target_dtp != NULL) {
-                MPIDU_Datatype_add_ref(target_dtp);
+                MPIR_Datatype_add_ref(target_dtp);
             }
             if (result_dtp != NULL) {
-                MPIDU_Datatype_add_ref(result_dtp);
+                MPIR_Datatype_add_ref(result_dtp);
             }
         }
 
         if (is_empty_origin == FALSE) {
-            MPIDU_Datatype_is_contig(origin_datatype, &is_origin_contig);
+            MPIR_Datatype_is_contig(origin_datatype, &is_origin_contig);
         }
         else {
             /* If origin buffer is empty, mark origin data as contig data */
             is_origin_contig = 1;
         }
-        MPIDU_Datatype_is_contig(target_datatype, &is_target_contig);
-        MPIDU_Datatype_is_contig(result_datatype, &is_result_contig);
+        MPIR_Datatype_is_contig(target_datatype, &is_target_contig);
+        MPIR_Datatype_is_contig(result_datatype, &is_result_contig);
 
         /* Judge if we can use IMMED data packet */
         if ((is_empty_origin == TRUE || MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) &&
@@ -1047,7 +1047,7 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 
         /* REQUIRE: All datatype arguments must be of the same, builtin
          * type and counts must be 1. */
-        MPIDU_Datatype_get_size_macro(datatype, type_size);
+        MPIR_Datatype_get_size_macro(datatype, type_size);
         MPIR_Assert(type_size <= sizeof(MPIDI_CH3_CAS_Immed_u));
 
         src = (void *) origin_addr, dest = (void *) (&(cas_pkt->origin_data));
@@ -1169,10 +1169,10 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
 
         /************** Setting packet struct areas in operation ****************/
 
-        MPIDU_Datatype_get_size_macro(datatype, type_size);
+        MPIR_Datatype_get_size_macro(datatype, type_size);
         MPIR_Assert(type_size <= sizeof(MPIDI_CH3_FOP_Immed_u));
 
-        MPIDU_Datatype_is_contig(datatype, &is_contig);
+        MPIR_Datatype_is_contig(datatype, &is_contig);
 
         if (is_contig) {
             /* Judge if we can use IMMED data packet */

@@ -165,8 +165,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_request_complete(MPIR_Request * req)
 	    HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)	\
 	{								\
 	    MPIR_Datatype *dtp_ = NULL;					\
-	    MPID_Datatype_get_ptr((datatype_), dtp_);			\
-	    MPID_Datatype_add_ref(dtp_);				\
+	    MPIR_Datatype_get_ptr((datatype_), dtp_);			\
+	    MPIR_Datatype_add_ref(dtp_);				\
 	}								\
     } while (0)
 #endif
@@ -178,8 +178,8 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_request_complete(MPIR_Request * req)
 	    HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)	\
 	{								\
 	    MPIR_Datatype *dtp_ = NULL;					\
-	    MPID_Datatype_get_ptr((datatype_), dtp_);			\
-	    MPID_Datatype_release(dtp_);				\
+	    MPIR_Datatype_get_ptr((datatype_), dtp_);			\
+	    MPIR_Datatype_release(dtp_);				\
 	}								\
     } while (0)
 #endif
@@ -194,11 +194,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_request_complete(MPIR_Request * req)
 	    (_dt_contig_out) = TRUE;					\
 	    (_dt_true_lb)    = 0;					\
 	    (_data_sz_out)   = (size_t)(_count) *		\
-		MPID_Datatype_get_basic_size(_datatype);		\
+		MPIR_Datatype_get_basic_size(_datatype);		\
 	}								\
 	else								\
 	{								\
-	    MPID_Datatype_get_ptr((_datatype), (_dt_ptr));		\
+	    MPIR_Datatype_get_ptr((_datatype), (_dt_ptr));		\
             if (_dt_ptr)                                                \
             {                                                           \
                 (_dt_contig_out) = (_dt_ptr)->is_contig;                \
@@ -222,11 +222,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_request_complete(MPIR_Request * req)
 	{								\
 	    (_dt_ptr)        = NULL;					\
 	    (_data_sz_out)   = (size_t)(_count) *		\
-		MPID_Datatype_get_basic_size(_datatype);		\
+		MPIR_Datatype_get_basic_size(_datatype);		\
 	}								\
 	else								\
 	{								\
-	    MPID_Datatype_get_ptr((_datatype), (_dt_ptr));		\
+	    MPIR_Datatype_get_ptr((_datatype), (_dt_ptr));		\
 	    (_data_sz_out)   = (_dt_ptr) ? (size_t)(_count) *   \
                 (_dt_ptr)->size : 0;                                    \
 	}								\
@@ -241,7 +241,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_request_complete(MPIR_Request * req)
       else							\
       {								\
        MPIR_Datatype *_dt_ptr;					\
-       MPID_Datatype_get_ptr((_datatype), (_dt_ptr));		\
+       MPIR_Datatype_get_ptr((_datatype), (_dt_ptr));		\
        (_dt_contig_out) = (_dt_ptr) ? (_dt_ptr)->is_contig : 1; \
       }                                                         \
     } while (0)
@@ -254,12 +254,12 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_request_complete(MPIR_Request * req)
       {                                                                 \
 	  (_dt_contig_out) = TRUE;					\
 	  (_data_sz_out)   = (size_t)(_count) *			\
-	      MPID_Datatype_get_basic_size(_datatype);			\
+	      MPIR_Datatype_get_basic_size(_datatype);			\
       }                                                                 \
       else								\
       {                                                                 \
 	  MPIR_Datatype *_dt_ptr;					\
-	  MPID_Datatype_get_ptr((_datatype), (_dt_ptr));		\
+	  MPIR_Datatype_get_ptr((_datatype), (_dt_ptr));		\
           if (_dt_ptr)                                                  \
           {                                                             \
               (_dt_contig_out) = (_dt_ptr)->is_contig;                  \
@@ -279,12 +279,12 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_request_complete(MPIR_Request * req)
         if (IS_BUILTIN(_datatype))                                      \
         {                                                               \
             (_data_sz_out)   = (size_t)(_count) *               \
-                MPID_Datatype_get_basic_size(_datatype);                \
+                MPIR_Datatype_get_basic_size(_datatype);                \
         }                                                               \
         else                                                            \
         {                                                               \
             MPIR_Datatype *_dt_ptr;                                     \
-            MPID_Datatype_get_ptr((_datatype), (_dt_ptr));              \
+            MPIR_Datatype_get_ptr((_datatype), (_dt_ptr));              \
             (_data_sz_out)   = (_dt_ptr) ? (size_t)(_count) *   \
                 (_dt_ptr)->size : 0;                                    \
         }                                                               \
@@ -299,13 +299,13 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_request_complete(MPIR_Request * req)
 	{								\
 	    (_dt_contig_out) = TRUE;					\
 	    (_data_sz_out)   = (size_t)(_count) *		\
-		MPID_Datatype_get_basic_size(_datatype);		\
+		MPIR_Datatype_get_basic_size(_datatype);		\
 	    (_dt_true_lb)    = 0;					\
 	}								\
 	else								\
 	{								\
 	    MPIR_Datatype *_dt_ptr;					\
-	    MPID_Datatype_get_ptr((_datatype), (_dt_ptr));		\
+	    MPIR_Datatype_get_ptr((_datatype), (_dt_ptr));		\
             if (_dt_ptr)                                                \
             {                                                           \
                 (_dt_contig_out) = (_dt_ptr)->is_contig;                \

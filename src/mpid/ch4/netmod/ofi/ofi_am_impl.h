@@ -446,19 +446,19 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
 
     if (!dt_contig) {
         size_t segment_first;
-        struct MPIDU_Segment *segment_ptr;
-        segment_ptr = MPIDU_Segment_alloc();
+        struct MPIR_Segment *segment_ptr;
+        segment_ptr = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send MPIDU_Segment_alloc");
-        MPIDU_Segment_init(buf, count, datatype, segment_ptr, 0);
+                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send MPIR_Segment_alloc");
+        MPIR_Segment_init(buf, count, datatype, segment_ptr, 0);
         segment_first = 0;
         last = data_sz;
         MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = (char *) MPL_malloc(data_sz);
         MPIR_ERR_CHKANDJUMP1(MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) == NULL, mpi_errno,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send Pack buffer alloc");
-        MPIDU_Segment_pack(segment_ptr, segment_first, &last,
+        MPIR_Segment_pack(segment_ptr, segment_first, &last,
                            MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer));
-        MPIDU_Segment_free(segment_ptr);
+        MPIR_Segment_free(segment_ptr);
         send_buf = (char *) MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer);
     }
     else {

@@ -68,7 +68,7 @@ int MPII_Type_get_attr( MPI_Datatype datatype, int type_keyval, void *attribute_
 #   endif
 
     /* Convert MPI object handles to object pointers */
-    MPID_Datatype_get_ptr( datatype, type_ptr );
+    MPIR_Datatype_get_ptr( datatype, type_ptr );
     
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING

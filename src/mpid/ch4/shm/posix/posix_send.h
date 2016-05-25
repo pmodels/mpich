@@ -61,10 +61,10 @@ static inline int MPIDI_POSIX_do_isend(const void *buf,
     MPIDI_POSIX_REQUEST(sreq)->segment_ptr = NULL;
 
     if (!dt_contig) {
-        MPIDI_POSIX_REQUEST(sreq)->segment_ptr = MPID_Segment_alloc();
+        MPIDI_POSIX_REQUEST(sreq)->segment_ptr = MPIR_Segment_alloc();
         MPIR_ERR_CHKANDJUMP1((MPIDI_POSIX_REQUEST(sreq)->segment_ptr == NULL), mpi_errno,
-                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
-        MPID_Segment_init((char *) buf, MPIDI_POSIX_REQUEST(sreq)->user_count,
+                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
+        MPIR_Segment_init((char *) buf, MPIDI_POSIX_REQUEST(sreq)->user_count,
                           MPIDI_POSIX_REQUEST(sreq)->datatype,
                           MPIDI_POSIX_REQUEST(sreq)->segment_ptr, 0);
         MPIDI_POSIX_REQUEST(sreq)->segment_first = 0;

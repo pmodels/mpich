@@ -33,8 +33,8 @@ void MPIR_Type_free_impl(MPI_Datatype *datatype)
 {
     MPIR_Datatype *datatype_ptr = NULL;
 
-    MPID_Datatype_get_ptr( *datatype, datatype_ptr );
-    MPID_Datatype_release(datatype_ptr);
+    MPIR_Datatype_get_ptr( *datatype, datatype_ptr );
+    MPIR_Datatype_release(datatype_ptr);
     *datatype = MPI_DATATYPE_NULL;
 }
 
@@ -126,7 +126,7 @@ int MPI_Type_free(MPI_Datatype *datatype)
 		goto fn_fail;
 	    }
             /* Validate parameters, especially handles needing to be converted */
-            MPID_Datatype_get_ptr( *datatype, datatype_ptr );
+            MPIR_Datatype_get_ptr( *datatype, datatype_ptr );
 
             /* Validate datatype_ptr */
             MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
