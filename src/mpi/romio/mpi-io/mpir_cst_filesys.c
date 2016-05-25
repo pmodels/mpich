@@ -144,11 +144,15 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
          * open/close the file instead */
 
         mpi_errno = MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
-        if (mpi_errno != MPI_SUCCESS)
-            goto fn_exit;
-        if (mpi_errno == MPI_SUCCESS)
+        if (mpi_errno == MPI_SUCCESS) {
             globally_visible = 1;
-        MPI_File_close(&fh);
+	    MPI_File_close(&fh);
+	} else {
+	    /* do not report error up to caller.  we are merely testing the
+	     * presence of the file */
+	    mpi_errno = MPI_SUCCESS;
+	    globally_visible = 0;
+	}
     }
     MPI_Bcast(&globally_visible, 1, MPI_INT, challenge_rank, comm);
 
