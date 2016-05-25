@@ -52,7 +52,7 @@
             b = a;                              \
         else {                                  \
             MPIR_Datatype *dt_ptr;              \
-            MPID_Datatype_get_ptr(a,dt_ptr);    \
+            MPIR_Datatype_get_ptr(a,dt_ptr);    \
             b = dt_ptr->basic_type;             \
         }                                       \
     } while (0)
@@ -136,7 +136,7 @@ MPL_STATIC_INLINE_PREFIX
     size_t MPIDI_OFI_count_iov(int dt_count, MPI_Datatype dt_datatype, size_t max_pipe)
 {
     struct MPIDI_OFI_contig_blocks_params params;
-    MPID_Segment dt_seg;
+    MPIR_Segment dt_seg;
     ssize_t dt_size, num, rem;
     size_t dtc, count, count1, count2;;
 
@@ -152,8 +152,8 @@ MPL_STATIC_INLINE_PREFIX
         params.last_loc = 0;
         params.start_loc = 0;
         params.last_chunk = 0;
-        MPIDU_Segment_init(NULL, 1, dt_datatype, &dt_seg, 0);
-        MPIDU_Segment_manipulate(&dt_seg, 0, &dt_size,
+        MPIR_Segment_init(NULL, 1, dt_datatype, &dt_seg, 0);
+        MPIR_Segment_manipulate(&dt_seg, 0, &dt_size,
                                  MPIDI_OFI_contig_count_block,
                                  NULL, NULL, NULL, NULL, (void *) &params);
         count1 = params.count;
@@ -161,8 +161,8 @@ MPL_STATIC_INLINE_PREFIX
         params.last_loc = 0;
         params.start_loc = 0;
         params.last_chunk = 0;
-        MPIDU_Segment_init(NULL, dtc, dt_datatype, &dt_seg, 0);
-        MPIDU_Segment_manipulate(&dt_seg, 0, &dt_size,
+        MPIR_Segment_init(NULL, dtc, dt_datatype, &dt_seg, 0);
+        MPIR_Segment_manipulate(&dt_seg, 0, &dt_size,
                                  MPIDI_OFI_contig_count_block,
                                  NULL, NULL, NULL, NULL, (void *) &params);
         count2 = params.count;
@@ -229,7 +229,7 @@ static inline int MPIDI_OFI_query_datatype(MPI_Datatype dt,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_QUERY_DATATYPE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_QUERY_DATATYPE);
 
-    MPID_Datatype_get_ptr(dt, dt_ptr);
+    MPIR_Datatype_get_ptr(dt, dt_ptr);
 
     /* OP_NULL is the oddball                          */
     /* todo...change configure to table this correctly */
@@ -301,10 +301,10 @@ static inline void MPIDI_OFI_win_datatype_map(MPIDI_OFI_win_datatype_t * dt)
         dt->map = (DLOOP_VECTOR *) MPL_malloc(map_size * sizeof(DLOOP_VECTOR));
         MPIR_Assert(dt->map != NULL);
 
-        MPID_Segment seg;
+        MPIR_Segment seg;
         DLOOP_Offset last = dt->pointer->size * dt->count;
-        MPIDU_Segment_init(NULL, dt->count, dt->type, &seg, 0);
-        MPIDU_Segment_pack_vector(&seg, 0, &last, dt->map, &dt->num_contig);
+        MPIR_Segment_init(NULL, dt->count, dt->type, &seg, 0);
+        MPIR_Segment_pack_vector(&seg, 0, &last, dt->map, &dt->num_contig);
         MPIR_Assert((unsigned) dt->num_contig <= map_size);
     }
 

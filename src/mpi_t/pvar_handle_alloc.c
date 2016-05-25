@@ -61,7 +61,7 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
         info->get_count(info->addr, obj_handle, &cnt);
     }
 
-    bytes = MPID_Datatype_get_basic_size(info->datatype);
+    bytes = MPIR_Datatype_get_basic_size(info->datatype);
     is_sum = FALSE;
     is_watermark = FALSE;
     extra = 0;

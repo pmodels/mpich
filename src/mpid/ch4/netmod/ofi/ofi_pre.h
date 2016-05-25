@@ -112,7 +112,7 @@ typedef struct {
 
 
 typedef struct MPIDI_OFI_noncontig_t {
-    struct MPIDU_Segment segment;
+    struct MPIR_Segment segment;
     char pack_buffer[0];
 } MPIDI_OFI_noncontig_t;
 

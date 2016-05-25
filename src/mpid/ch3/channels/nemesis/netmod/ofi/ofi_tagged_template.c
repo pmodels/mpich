@@ -382,7 +382,7 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_posted)(struct MPIDI_VC *vc, struct MPIR_Reques
     fi_addr_t remote_proc = 0;
     intptr_t data_sz;
     MPI_Aint dt_true_lb;
-    MPIDU_Datatype*dt_ptr;
+    MPIR_Datatype*dt_ptr;
     MPIR_Context_id_t context_id;
     char *recv_buffer;
     BEGIN_FUNC(FCNAME);

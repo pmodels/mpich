@@ -83,17 +83,17 @@ static inline int MPIDI_NM_am_isend(int rank,
     }
     else {
         /* copy everything into pack_buffer */
-        MPID_Segment *segment;
+        MPIR_Segment *segment;
         MPI_Aint last;
 
         send_buf = MPL_malloc(am_hdr_sz + data_sz);
         MPIR_Memcpy(send_buf, am_hdr, am_hdr_sz);
-        segment = MPID_Segment_alloc();
-        MPID_Segment_init(data, count, datatype, segment, 0);
+        segment = MPIR_Segment_alloc();
+        MPIR_Segment_init(data, count, datatype, segment, 0);
         last = data_sz;
-        MPID_Segment_pack(segment, 0, &last, send_buf + am_hdr_sz);
+        MPIR_Segment_pack(segment, 0, &last, send_buf + am_hdr_sz);
         MPIR_Assert(last == data_sz);
-        MPID_Segment_free(segment);
+        MPIR_Segment_free(segment);
         sreq->dev.ch4.am.netmod_am.portals4.pack_buffer = send_buf;
 
         ret = PtlPut(MPIDI_PTL_global.md, (ptl_size_t) send_buf, am_hdr_sz + data_sz,
@@ -179,17 +179,17 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
     }
     else {
         /* copy everything into pack_buffer */
-        MPID_Segment *segment;
+        MPIR_Segment *segment;
         MPI_Aint last;
 
         send_buf = MPL_malloc(am_hdr_sz + data_sz);
         MPIR_Memcpy(send_buf, am_hdr, am_hdr_sz);
-        segment = MPID_Segment_alloc();
-        MPID_Segment_init(data, count, datatype, segment, 0);
+        segment = MPIR_Segment_alloc();
+        MPIR_Segment_init(data, count, datatype, segment, 0);
         last = data_sz;
-        MPID_Segment_pack(segment, 0, &last, send_buf + am_hdr_sz);
+        MPIR_Segment_pack(segment, 0, &last, send_buf + am_hdr_sz);
         MPIR_Assert(last == data_sz);
-        MPID_Segment_free(segment);
+        MPIR_Segment_free(segment);
         sreq->dev.ch4.am.netmod_am.portals4.pack_buffer = send_buf;
 
         ret = PtlPut(MPIDI_PTL_global.md, (ptl_size_t) send_buf, am_hdr_sz + data_sz,

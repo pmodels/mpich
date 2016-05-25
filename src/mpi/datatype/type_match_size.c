@@ -122,7 +122,7 @@ int MPI_Type_match_size(int typeclass, int size, MPI_Datatype *datatype)
 #endif
 	    for (i=0; i<nRealTypes; i++) {
 		if (real_types[i] == MPI_DATATYPE_NULL) { continue; }
-		MPID_Datatype_get_size_macro( real_types[i], tsize );
+		MPIR_Datatype_get_size_macro( real_types[i], tsize );
 		if (tsize == size) {
 		    matched_datatype = real_types[i];
 		    break;
@@ -138,7 +138,7 @@ int MPI_Type_match_size(int typeclass, int size, MPI_Datatype *datatype)
 #endif
 	    for (i=0; i<nIntTypes; i++) {
 		if (int_types[i] == MPI_DATATYPE_NULL) { continue; }
-		MPID_Datatype_get_size_macro( int_types[i], tsize );
+		MPIR_Datatype_get_size_macro( int_types[i], tsize );
 		if (tsize == size) {
 		    matched_datatype = int_types[i];
 		    break;
@@ -154,7 +154,7 @@ int MPI_Type_match_size(int typeclass, int size, MPI_Datatype *datatype)
 #endif
 	    for (i=0; i<nComplexTypes; i++) {
 		if (complex_types[i] == MPI_DATATYPE_NULL) { continue; }
-		MPID_Datatype_get_size_macro( complex_types[i], tsize );
+		MPIR_Datatype_get_size_macro( complex_types[i], tsize );
 		if (tsize == size) {
 		    matched_datatype = complex_types[i];
 		    break;

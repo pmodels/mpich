@@ -71,7 +71,7 @@ int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Datatype_get_ptr( datatype, datatype_ptr );
+    MPIR_Datatype_get_ptr( datatype, datatype_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING

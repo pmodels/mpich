@@ -103,7 +103,7 @@ static int MPIR_Reduce_binomial (
     /* Create a temporary buffer */
 
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-    MPID_Datatype_get_extent_macro(datatype, extent);
+    MPIR_Datatype_get_extent_macro(datatype, extent);
 
     is_commutative = MPIR_Op_is_commutative(op);
 
@@ -132,7 +132,7 @@ static int MPIR_Reduce_binomial (
         if (mpi_errno) { MPIR_ERR_POP(mpi_errno); }
     }
 
-    MPID_Datatype_get_size_macro(datatype, type_size);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* This code is from MPICH-1. */
 
@@ -320,7 +320,7 @@ static int MPIR_Reduce_redscat_gather (
     /* Create a temporary buffer */
 
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-    MPID_Datatype_get_extent_macro(datatype, extent);
+    MPIR_Datatype_get_extent_macro(datatype, extent);
 
     /* I think this is the worse case, so we can avoid an assert() 
      * inside the for loop */
@@ -347,7 +347,7 @@ static int MPIR_Reduce_redscat_gather (
         if (mpi_errno) { MPIR_ERR_POP(mpi_errno); }
     }
 
-    MPID_Datatype_get_size_macro(datatype, type_size);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* find nearest power-of-two less than or equal to comm_size */
     pof2 = 1;
@@ -754,7 +754,7 @@ int MPIR_Reduce_intra (
         is_commutative = (op_ptr->kind == MPIR_OP_KIND__USER_NONCOMMUTE) ? 0 : 1;
     }
 
-    MPID_Datatype_get_size_macro(datatype, type_size);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE ? type_size*count : 0;
     if (MPIR_Comm_is_node_aware(comm_ptr) && is_commutative &&
         nbytes <= MPIR_CVAR_MAX_SMP_REDUCE_MSG_SIZE) {
@@ -766,7 +766,7 @@ int MPIR_Reduce_intra (
         if (comm_ptr->node_roots_comm != NULL) {
 
             MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
-            MPID_Datatype_get_extent_macro(datatype, extent);
+            MPIR_Datatype_get_extent_macro(datatype, extent);
 
             MPIR_Ensure_Aint_fits_in_pointer(count * MPL_MAX(extent, true_extent));
 
@@ -863,7 +863,7 @@ int MPIR_Reduce_intra (
 
     comm_size = comm_ptr->local_size;
 
-    MPID_Datatype_get_size_macro(datatype, type_size);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
 
     /* find nearest power-of-two less than or equal to comm_size */
     pof2 = 1;
@@ -963,7 +963,7 @@ int MPIR_Reduce_inter (
         if (rank == 0) {
             MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
 
-            MPID_Datatype_get_extent_macro(datatype, extent);
+            MPIR_Datatype_get_extent_macro(datatype, extent);
 	    /* I think this is the worse case, so we can avoid an assert() 
 	     * inside the for loop */
 	    /* Should MPIR_CHKLMEM_MALLOC do this? */
@@ -1172,10 +1172,10 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
                 MPIR_ERRTEST_COUNT(count, mpi_errno);
                 MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
                 if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-                    MPID_Datatype_get_ptr(datatype, datatype_ptr);
+                    MPIR_Datatype_get_ptr(datatype, datatype_ptr);
                     MPIR_Datatype_valid_ptr( datatype_ptr, mpi_errno );
                     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-                    MPID_Datatype_committed_ptr( datatype_ptr, mpi_errno );
+                    MPIR_Datatype_committed_ptr( datatype_ptr, mpi_errno );
                     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 }
 
@@ -1201,10 +1201,10 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
                     MPIR_ERRTEST_COUNT(count, mpi_errno);
                     MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
                     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-                        MPID_Datatype_get_ptr(datatype, datatype_ptr);
+                        MPIR_Datatype_get_ptr(datatype, datatype_ptr);
                         MPIR_Datatype_valid_ptr( datatype_ptr, mpi_errno );
                         if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-                        MPID_Datatype_committed_ptr( datatype_ptr, mpi_errno );
+                        MPIR_Datatype_committed_ptr( datatype_ptr, mpi_errno );
                         if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                     }
                     MPIR_ERRTEST_RECVBUF_INPLACE(recvbuf, count, mpi_errno);
@@ -1215,10 +1215,10 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
                     MPIR_ERRTEST_COUNT(count, mpi_errno);
                     MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
                     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-                        MPID_Datatype_get_ptr(datatype, datatype_ptr);
+                        MPIR_Datatype_get_ptr(datatype, datatype_ptr);
                         MPIR_Datatype_valid_ptr( datatype_ptr, mpi_errno );
                         if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-                        MPID_Datatype_committed_ptr( datatype_ptr, mpi_errno );
+                        MPIR_Datatype_committed_ptr( datatype_ptr, mpi_errno );
                         if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                     }
                     MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, count, mpi_errno);

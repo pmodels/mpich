@@ -77,52 +77,52 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_basic_type_elements(MPI_Count *bytes_p,
     }
     else {
         usable_bytes = MPL_MIN(*bytes_p,
-                           count * MPID_Datatype_get_basic_size(datatype));
+                           count * MPIR_Datatype_get_basic_size(datatype));
     }
 
     switch (datatype) {
         /* we don't get valid fortran datatype handles in all cases... */
 #ifdef HAVE_FORTRAN_BINDING
         case MPI_2REAL:
-            type1_sz = type2_sz = MPID_Datatype_get_basic_size(MPI_REAL);
+            type1_sz = type2_sz = MPIR_Datatype_get_basic_size(MPI_REAL);
             break;
         case MPI_2DOUBLE_PRECISION:
             type1_sz = type2_sz =
-                MPID_Datatype_get_basic_size(MPI_DOUBLE_PRECISION);
+                MPIR_Datatype_get_basic_size(MPI_DOUBLE_PRECISION);
             break;
         case MPI_2INTEGER:
-            type1_sz = type2_sz = MPID_Datatype_get_basic_size(MPI_INTEGER);
+            type1_sz = type2_sz = MPIR_Datatype_get_basic_size(MPI_INTEGER);
             break;
 #endif
         case MPI_2INT:
-            type1_sz = type2_sz = MPID_Datatype_get_basic_size(MPI_INT);
+            type1_sz = type2_sz = MPIR_Datatype_get_basic_size(MPI_INT);
             break;
         case MPI_FLOAT_INT:
-            type1_sz = MPID_Datatype_get_basic_size(MPI_FLOAT);
-            type2_sz = MPID_Datatype_get_basic_size(MPI_INT);
+            type1_sz = MPIR_Datatype_get_basic_size(MPI_FLOAT);
+            type2_sz = MPIR_Datatype_get_basic_size(MPI_INT);
             break;
         case MPI_DOUBLE_INT:
-            type1_sz = MPID_Datatype_get_basic_size(MPI_DOUBLE);
-            type2_sz = MPID_Datatype_get_basic_size(MPI_INT);
+            type1_sz = MPIR_Datatype_get_basic_size(MPI_DOUBLE);
+            type2_sz = MPIR_Datatype_get_basic_size(MPI_INT);
             break;
         case MPI_LONG_INT:
-            type1_sz = MPID_Datatype_get_basic_size(MPI_LONG);
-            type2_sz = MPID_Datatype_get_basic_size(MPI_INT);
+            type1_sz = MPIR_Datatype_get_basic_size(MPI_LONG);
+            type2_sz = MPIR_Datatype_get_basic_size(MPI_INT);
             break;
         case MPI_SHORT_INT:
-            type1_sz = MPID_Datatype_get_basic_size(MPI_SHORT);
-            type2_sz = MPID_Datatype_get_basic_size(MPI_INT);
+            type1_sz = MPIR_Datatype_get_basic_size(MPI_SHORT);
+            type2_sz = MPIR_Datatype_get_basic_size(MPI_INT);
             break;
         case MPI_LONG_DOUBLE_INT:
-            type1_sz = MPID_Datatype_get_basic_size(MPI_LONG_DOUBLE);
-            type2_sz = MPID_Datatype_get_basic_size(MPI_INT);
+            type1_sz = MPIR_Datatype_get_basic_size(MPI_LONG_DOUBLE);
+            type2_sz = MPIR_Datatype_get_basic_size(MPI_INT);
             break;
         default:
             /* all other types.  this is more complicated than
              * necessary for handling these types, but it puts us in the
              * same code path for all the basics, so we stick with it.
              */
-            type1_sz = type2_sz = MPID_Datatype_get_basic_size(datatype);
+            type1_sz = type2_sz = MPIR_Datatype_get_basic_size(datatype);
             break;
     }
 
@@ -161,7 +161,7 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_elements(MPI_Count *bytes_p,
 {
     MPIR_Datatype *datatype_ptr = NULL;
 
-    MPID_Datatype_get_ptr(datatype, datatype_ptr); /* invalid if builtin */
+    MPIR_Datatype_get_ptr(datatype, datatype_ptr); /* invalid if builtin */
 
     /* if we have gotten down to a type with only one element type,
      * call MPIR_Type_get_basic_type_elements() and return.
@@ -177,7 +177,7 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_elements(MPI_Count *bytes_p,
     }
     else if (datatype_ptr->builtin_element_size >= 0) {
         MPI_Datatype basic_type = MPI_DATATYPE_NULL;
-        MPID_Datatype_get_basic_type(datatype_ptr->basic_type, basic_type);
+        MPIR_Datatype_get_basic_type(datatype_ptr->basic_type, basic_type);
         return MPIR_Type_get_basic_type_elements(bytes_p,
                                                  count * datatype_ptr->n_builtin_elements,
                                                  basic_type);
@@ -192,7 +192,7 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_elements(MPI_Count *bytes_p,
         MPI_Datatype *types;
 
         /* Establish locations of arrays */
-        MPID_Type_access_contents(datatype_ptr->handle, &ints, &aints, &types);
+        MPIR_Type_access_contents(datatype_ptr->handle, &ints, &aints, &types);
         if (!ints || !aints || !types)
             return MPI_ERR_TYPE;
 
@@ -286,7 +286,7 @@ int MPIR_Get_elements_x_impl(const MPI_Status *status, MPI_Datatype datatype, MP
     MPI_Count byte_count;
 
     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-        MPID_Datatype_get_ptr(datatype, datatype_ptr);
+        MPIR_Datatype_get_ptr(datatype, datatype_ptr);
     }
 
     /* three cases:
@@ -307,7 +307,7 @@ int MPIR_Get_elements_x_impl(const MPI_Status *status, MPI_Datatype datatype, MP
          */
         if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
             MPI_Datatype basic_type = MPI_DATATYPE_NULL;
-            MPID_Datatype_get_basic_type(datatype_ptr->basic_type, basic_type);
+            MPIR_Datatype_get_basic_type(datatype_ptr->basic_type, basic_type);
             *elements = MPIR_Type_get_basic_type_elements(&byte_count,
                                                           -1,
                                                           basic_type);
@@ -315,7 +315,7 @@ int MPIR_Get_elements_x_impl(const MPI_Status *status, MPI_Datatype datatype, MP
         else {
             /* Behaves just like MPI_Get_Count in the predefined case */
             MPI_Count size;
-            MPID_Datatype_get_size_macro(datatype, size);
+            MPIR_Datatype_get_size_macro(datatype, size);
             if ((byte_count % size) != 0)
                 *elements = MPI_UNDEFINED;
             else
@@ -409,9 +409,9 @@ int MPI_Get_elements_x(const MPI_Status *status, MPI_Datatype datatype, MPI_Coun
         {
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
                 MPIR_Datatype *datatype_ptr = NULL;
-                MPID_Datatype_get_ptr(datatype, datatype_ptr);
+                MPIR_Datatype_get_ptr(datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
-                MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+                MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
             }
 
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */

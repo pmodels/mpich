@@ -152,7 +152,7 @@ static int MPIR_Bcast_binomial(
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
         is_contig = 1;
     else {
-        MPID_Datatype_get_ptr(datatype, dtp); 
+        MPIR_Datatype_get_ptr(datatype, dtp);
         is_contig = dtp->is_contig;
     }
 
@@ -170,7 +170,7 @@ static int MPIR_Bcast_binomial(
      * possible, and MPI_Pack_size() in other places.
      */
     if (is_homogeneous)
-        MPID_Datatype_get_size_macro(datatype, type_size);
+        MPIR_Datatype_get_size_macro(datatype, type_size);
     else
 	/* --BEGIN HETEROGENEOUS-- */
         MPIR_Pack_size_impl(1, datatype, &type_size);
@@ -505,7 +505,7 @@ static int MPIR_Bcast_scatter_doubling_allgather(
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
         is_contig = 1;
     else {
-        MPID_Datatype_get_ptr(datatype, dtp); 
+        MPIR_Datatype_get_ptr(datatype, dtp);
         is_contig = dtp->is_contig;
     }
 
@@ -523,7 +523,7 @@ static int MPIR_Bcast_scatter_doubling_allgather(
      * possible, and MPI_Pack_size() in other places.
      */
     if (is_homogeneous)
-        MPID_Datatype_get_size_macro(datatype, type_size);
+        MPIR_Datatype_get_size_macro(datatype, type_size);
     else
         /* --BEGIN HETEROGENEOUS-- */
         MPIR_Pack_size_impl(1, datatype, &type_size);
@@ -811,7 +811,7 @@ static int MPIR_Bcast_scatter_ring_allgather(
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
         is_contig = 1;
     else {
-        MPID_Datatype_get_ptr(datatype, dtp); 
+        MPIR_Datatype_get_ptr(datatype, dtp);
         is_contig = dtp->is_contig;
     }
 
@@ -829,7 +829,7 @@ static int MPIR_Bcast_scatter_ring_allgather(
      * possible, and MPI_Pack_size() in other places.
      */
     if (is_homogeneous)
-        MPID_Datatype_get_size_macro(datatype, type_size);
+        MPIR_Datatype_get_size_macro(datatype, type_size);
     else
 	/* --BEGIN HETEROGENEOUS-- */
         MPIR_Pack_size_impl(1, datatype, &type_size);
@@ -1019,7 +1019,7 @@ static int MPIR_SMP_Bcast(
      * possible, and MPI_Pack_size() in other places.
      */
     if (is_homogeneous)
-        MPID_Datatype_get_size_macro(datatype, type_size);
+        MPIR_Datatype_get_size_macro(datatype, type_size);
     else
         /* --BEGIN HETEROGENEOUS-- */
         MPIR_Pack_size_impl(1, datatype, &type_size);
@@ -1230,7 +1230,7 @@ int MPIR_Bcast_intra (
 
     if (count == 0) goto fn_exit;
 
-    MPID_Datatype_get_size_macro(datatype, type_size);
+    MPIR_Datatype_get_size_macro(datatype, type_size);
     nbytes = MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE ? type_size*count : 0;
     if (MPIR_CVAR_ENABLE_SMP_COLLECTIVES && MPIR_CVAR_ENABLE_SMP_BCAST &&
         nbytes <= MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE && MPIR_Comm_is_node_aware(comm_ptr)) {
@@ -1260,7 +1260,7 @@ int MPIR_Bcast_intra (
      * possible, and MPI_Pack_size() in other places.
      */
     if (is_homogeneous)
-        MPID_Datatype_get_size_macro(datatype, type_size);
+        MPIR_Datatype_get_size_macro(datatype, type_size);
     else
 	/* --BEGIN HETEROGENEOUS-- */
         MPIR_Pack_size_impl(1, datatype, &type_size);
@@ -1550,10 +1550,10 @@ int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
 	    }
 	    
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-                MPID_Datatype_get_ptr(datatype, datatype_ptr);
+                MPIR_Datatype_get_ptr(datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr( datatype_ptr, mpi_errno );
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-                MPID_Datatype_committed_ptr( datatype_ptr, mpi_errno );
+                MPIR_Datatype_committed_ptr( datatype_ptr, mpi_errno );
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
 

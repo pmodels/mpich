@@ -54,11 +54,11 @@ int main(int argc, char **argv)
     MPI_Type_commit(&itype1);
 
 #if defined(MPICH) && defined(PRINT_DATATYPE_INTERNALS)
-    /* To use MPIDU_Datatype_debug to print the datatype internals,
+    /* To use MPIR_Datatype_debug to print the datatype internals,
      * you must configure MPICH with --enable-g=log */
     if (verbose) {
         printf("Block index datatype:\n");
-        MPIDU_Datatype_debug(itype1, 10);
+        MPIR_Datatype_debug(itype1, 10);
     }
 #endif
     MPI_Type_get_extent(itype1, &lb, &extent);

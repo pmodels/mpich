@@ -1203,7 +1203,7 @@ tcp_make_progress()
 
                 if (car->type & UNPACK == UNPACK)
                 {
-		    MPID_Segment_init(car->segment, car->buf, car->count,
+		    MPIR_Segment_init(car->segment, car->buf, car->count,
                                       car->datatype);
                 }
                 

@@ -143,8 +143,8 @@ int MPIR_Allgather_intra (
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
-    MPID_Datatype_get_extent_macro( recvtype, recvtype_extent );
-    MPID_Datatype_get_size_macro( recvtype, type_size );
+    MPIR_Datatype_get_extent_macro( recvtype, recvtype_extent );
+    MPIR_Datatype_get_size_macro( recvtype, type_size );
 
     /* This is the largest offset we add to recvbuf */
     MPIR_Ensure_Aint_fits_in_pointer(MPIR_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
@@ -674,7 +674,7 @@ int MPIR_Allgather_inter (
            gather */
         MPIR_Type_get_true_extent_impl(sendtype, &true_lb, &true_extent);
 
-        MPID_Datatype_get_extent_macro( sendtype, send_extent );
+        MPIR_Datatype_get_extent_macro( sendtype, send_extent );
         extent = MPL_MAX(send_extent, true_extent);
 
 	MPIR_Ensure_Aint_fits_in_pointer(extent * sendcount * local_size);
@@ -936,7 +936,7 @@ int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                 if (sendbuf != MPI_IN_PLACE && sendtype == recvtype &&
                         recvcount != 0 && sendcount != 0) {
                     int recvtype_size;
-                    MPID_Datatype_get_size_macro(recvtype, recvtype_size);
+                    MPIR_Datatype_get_size_macro(recvtype, recvtype_size);
                     MPIR_ERRTEST_ALIAS_COLL(sendbuf, (char*)recvbuf + comm_ptr->rank*recvcount*recvtype_size, mpi_errno);
                 }
             }
@@ -947,10 +947,10 @@ int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                 MPIR_ERRTEST_DATATYPE(sendtype, "sendtype", mpi_errno);
                 if (HANDLE_GET_KIND(sendtype) != HANDLE_KIND_BUILTIN)
 		{
-                    MPID_Datatype_get_ptr(sendtype, sendtype_ptr);
+                    MPIR_Datatype_get_ptr(sendtype, sendtype_ptr);
                     MPIR_Datatype_valid_ptr( sendtype_ptr, mpi_errno );
                     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-                    MPID_Datatype_committed_ptr( sendtype_ptr, mpi_errno );
+                    MPIR_Datatype_committed_ptr( sendtype_ptr, mpi_errno );
                     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 }
                 MPIR_ERRTEST_USERBUFFER(sendbuf,sendcount,sendtype,mpi_errno);
@@ -961,10 +961,10 @@ int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 	    MPIR_ERRTEST_DATATYPE(recvtype, "recvtype", mpi_errno);
             if (HANDLE_GET_KIND(recvtype) != HANDLE_KIND_BUILTIN)
 	    {
-                MPID_Datatype_get_ptr(recvtype, recvtype_ptr);
+                MPIR_Datatype_get_ptr(recvtype, recvtype_ptr);
                 MPIR_Datatype_valid_ptr( recvtype_ptr, mpi_errno );
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-                MPID_Datatype_committed_ptr( recvtype_ptr, mpi_errno );
+                MPIR_Datatype_committed_ptr( recvtype_ptr, mpi_errno );
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
 	    MPIR_ERRTEST_USERBUFFER(recvbuf,recvcount,recvtype,mpi_errno);

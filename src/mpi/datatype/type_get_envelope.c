@@ -27,10 +27,10 @@ int MPI_Type_get_envelope(MPI_Datatype datatype, int *num_integers, int *num_add
 #define MPI_Type_get_envelope PMPI_Type_get_envelope
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Type_get_envelope_impl
+#define FUNCNAME MPIR_Type_get_envelope
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPIR_Type_get_envelope_impl(MPI_Datatype datatype,
+void MPIR_Type_get_envelope(MPI_Datatype datatype,
                                  int *num_integers,
                                  int *num_addresses,
                                  int *num_datatypes,
@@ -51,7 +51,7 @@ void MPIR_Type_get_envelope_impl(MPI_Datatype datatype,
     else {
 	MPIR_Datatype *dtp;
 
-	MPID_Datatype_get_ptr(datatype, dtp);
+	MPIR_Datatype_get_ptr(datatype, dtp);
 
 	*combiner      = dtp->contents->combiner;
 	*num_integers  = dtp->contents->nr_ints;
@@ -118,7 +118,7 @@ int MPI_Type_get_envelope(MPI_Datatype datatype,
             MPIR_Datatype *datatype_ptr = NULL;
 
             /* Convert MPI object handles to object pointers */
-            MPID_Datatype_get_ptr( datatype, datatype_ptr );
+            MPIR_Datatype_get_ptr( datatype, datatype_ptr );
 
 	    /* Validate datatype_ptr */
             MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
@@ -131,7 +131,7 @@ int MPI_Type_get_envelope(MPI_Datatype datatype,
 
     /* ... body of routine ...  */
     
-    MPIR_Type_get_envelope_impl(datatype,
+    MPIR_Type_get_envelope(datatype,
                                 num_integers,
                                 num_addresses,
                                 num_datatypes,
