@@ -53,22 +53,22 @@ static inline int MPIDI_UCX_noncontig_put(const void *origin_addr,
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t status;
     size_t segment_first;
-    struct MPIDU_Segment *segment_ptr;
+    struct MPIR_Segment *segment_ptr;
     char *buffer = NULL;
     MPIR_Comm *comm = win->comm_ptr;
     ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(comm, target_rank);
 
-    segment_ptr = MPIDU_Segment_alloc();
+    segment_ptr = MPIR_Segment_alloc();
     MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
-                         MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send MPIDU_Segment_alloc");
-    MPIDU_Segment_init(origin_addr, origin_count, origin_datatype, segment_ptr, 0);
+                         MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send MPIR_Segment_alloc");
+    MPIR_Segment_init(origin_addr, origin_count, origin_datatype, segment_ptr, 0);
     segment_first = 0;
     last = size;
 
     buffer = MPL_malloc(size);
     MPIR_Assert(buffer);
-    MPIDU_Segment_pack(segment_ptr, segment_first, &last, buffer);
-    MPIDU_Segment_free(segment_ptr);
+    MPIR_Segment_pack(segment_ptr, segment_first, &last, buffer);
+    MPIR_Segment_free(segment_ptr);
 
     base = win_info->addr;
     offset = target_disp * win_info->disp + true_lb;

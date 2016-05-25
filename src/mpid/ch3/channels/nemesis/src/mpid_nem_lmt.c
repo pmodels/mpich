@@ -533,7 +533,7 @@ static int do_cts(MPIDI_VC_t *vc, MPIR_Request *rreq, int *complete)
     intptr_t data_sz;
     int dt_contig ATTRIBUTE((unused));
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
-    MPIDU_Datatype* dt_ptr;
+    MPIR_Datatype* dt_ptr;
     MPL_IOV s_cookie;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DO_CTS);
 

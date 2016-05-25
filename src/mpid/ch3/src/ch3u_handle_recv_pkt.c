@@ -107,7 +107,7 @@ int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, void *buf, intptr_t *bufle
     int dt_contig;
     MPI_Aint dt_true_lb;
     intptr_t userbuf_sz;
-    MPIDU_Datatype * dt_ptr = NULL;
+    MPIR_Datatype * dt_ptr = NULL;
     intptr_t data_sz;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_RECEIVE_DATA_FOUND);
@@ -173,10 +173,10 @@ int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, void *buf, intptr_t *bufle
 	/* user buffer is not contiguous or is too small to hold
 	   the entire message */
         
-	rreq->dev.segment_ptr = MPIDU_Segment_alloc( );
-        MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIDU_Segment_alloc");
+	rreq->dev.segment_ptr = MPIR_Segment_alloc( );
+        MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
 
- 	MPIDU_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, 
+ 	MPIR_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, 
 			  rreq->dev.datatype, rreq->dev.segment_ptr, 0);
 	rreq->dev.segment_first = 0;
 	rreq->dev.segment_size  = data_sz;
@@ -189,7 +189,7 @@ int MPIDI_CH3U_Receive_data_found(MPIR_Request *rreq, void *buf, intptr_t *bufle
             intptr_t last;
             MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"Copying noncontiguous data to user buffer");
             last = data_sz;
-            MPIDU_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, 
+            MPIR_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, 
 				&last, buf);
             /* --BEGIN ERROR HANDLING-- */
             if (last != data_sz)
@@ -299,7 +299,7 @@ int MPIDI_CH3U_Post_data_receive_found(MPIR_Request * rreq)
     int dt_contig;
     MPI_Aint dt_true_lb;
     intptr_t userbuf_sz;
-    MPIDU_Datatype * dt_ptr = NULL;
+    MPIR_Datatype * dt_ptr = NULL;
     intptr_t data_sz;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH3U_POST_DATA_RECEIVE_FOUND);
 
@@ -346,9 +346,9 @@ int MPIDI_CH3U_Post_data_receive_found(MPIR_Request * rreq)
 	/* user buffer is not contiguous or is too small to hold
 	   the entire message */
 	MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"IOV loaded for non-contiguous read");
-	rreq->dev.segment_ptr = MPIDU_Segment_alloc( );
-        MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIDU_Segment_alloc");
-	MPIDU_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, 
+	rreq->dev.segment_ptr = MPIR_Segment_alloc( );
+        MPIR_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPIR_Segment_alloc");
+	MPIR_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, 
 			  rreq->dev.datatype, rreq->dev.segment_ptr, 0);
 	rreq->dev.segment_first = 0;
 	rreq->dev.segment_size = data_sz;

@@ -130,7 +130,7 @@ static inline int MPIDI_UCX_recv(void *buf,
                                                        ucp_tag, tag_mask,
                                                        &MPIDI_UCX_recv_cmpl_cb);
     } else {
-        MPIDU_Datatype_add_ref(dt_ptr);
+        MPIR_Datatype_add_ref(dt_ptr);
         ucp_request =
             (MPIDI_UCX_ucp_request_t *)ucp_tag_recv_nb(MPIDI_UCX_global.worker,
                                                        buf, count,
@@ -181,7 +181,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                            MPIDI_UCX_REQ(message).a.message_handler,
                                                            &MPIDI_UCX_mrecv_cmpl_cb);
     } else {
-        MPIDU_Datatype_add_ref(dt_ptr);
+        MPIR_Datatype_add_ref(dt_ptr);
         ucp_request =
             (MPIDI_UCX_ucp_request_t *)ucp_tag_msg_recv_nb(MPIDI_UCX_global.worker,
                                                            buf, count,

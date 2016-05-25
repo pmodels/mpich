@@ -6,7 +6,6 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-include $(top_srcdir)/src/mpid/common/datatype/Makefile.mk
 include $(top_srcdir)/src/mpid/common/sched/Makefile.mk
 include $(top_srcdir)/src/mpid/common/thread/Makefile.mk
 include $(top_srcdir)/src/mpid/common/hcoll/Makefile.mk

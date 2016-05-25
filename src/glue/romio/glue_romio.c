@@ -84,12 +84,12 @@ int MPIR_Ext_datatype_iscommitted(MPI_Datatype datatype)
 
     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
         MPIR_Datatype *datatype_ptr = NULL;
-        MPID_Datatype_get_ptr(datatype, datatype_ptr);
+        MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 
         MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-        MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+        MPIR_Datatype_committed_ptr(datatype_ptr, mpi_errno);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 

@@ -86,7 +86,7 @@ int MPI_Pack_external_size(const char datarep[],
             MPIR_Datatype *datatype_ptr = NULL;
 
             /* Convert MPI object handles to object pointers */
-            MPID_Datatype_get_ptr(datatype, datatype_ptr);
+            MPIR_Datatype_get_ptr(datatype, datatype_ptr);
 
             /* Validate datatype_ptr */
             MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
@@ -99,7 +99,7 @@ int MPI_Pack_external_size(const char datarep[],
 
     /* ... body of routine ... */
 
-    *size = (MPI_Aint) incount * (MPI_Aint) MPID_Datatype_size_external32(datatype);
+    *size = (MPI_Aint) incount * (MPI_Aint) MPIR_Datatype_size_external32(datatype);
 
     /* ... end of body of routine ... */
 

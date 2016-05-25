@@ -82,7 +82,7 @@ int MPI_Type_create_hvector(int count,
 	    MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
 
             if (HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
-                MPID_Datatype_get_ptr(oldtype, datatype_ptr);
+                MPIR_Datatype_get_ptr(oldtype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
@@ -94,7 +94,7 @@ int MPI_Type_create_hvector(int count,
 
     /* ... body of routine ... */
 
-    mpi_errno = MPID_Type_vector(count,
+    mpi_errno = MPIR_Type_vector(count,
 				 blocklength,
 				 stride,
 				 1, /* stride in bytes */
@@ -104,8 +104,8 @@ int MPI_Type_create_hvector(int count,
 
     ints[0] = count;
     ints[1] = blocklength;
-    MPID_Datatype_get_ptr(new_handle, new_dtp);
-    mpi_errno = MPID_Datatype_set_contents(new_dtp,
+    MPIR_Datatype_get_ptr(new_handle, new_dtp);
+    mpi_errno = MPIR_Datatype_set_contents(new_dtp,
 				           MPI_COMBINER_HVECTOR,
 				           2, /* ints (count, blocklength) */
 				           1, /* aints */

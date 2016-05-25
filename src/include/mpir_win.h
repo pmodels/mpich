@@ -34,9 +34,9 @@
   used.
 
   Question:
-  Should a 'MPID_Win' be defined after 'MPID_Segment' in case the device
+  Should a 'MPID_Win' be defined after 'MPIR_Segment' in case the device
   wants to
-  store a queue of pending put/get operations, described with 'MPID_Segment'
+  store a queue of pending put/get operations, described with 'MPIR_Segment'
   (or 'MPIR_Request')s?
 
   S*/

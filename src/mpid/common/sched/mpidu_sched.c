@@ -28,8 +28,8 @@
             HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)   \
         {                                                          \
             MPIR_Datatype *dtp_ = NULL;                            \
-            MPID_Datatype_get_ptr((datatype_), dtp_);              \
-            MPID_Datatype_add_ref(dtp_);                           \
+            MPIR_Datatype_get_ptr((datatype_), dtp_);              \
+            MPIR_Datatype_add_ref(dtp_);                           \
         }                                                          \
     } while (0)
 #endif
@@ -40,8 +40,8 @@
             HANDLE_GET_KIND((datatype_)) != HANDLE_KIND_BUILTIN)   \
         {                                                          \
             MPIR_Datatype *dtp_ = NULL;                            \
-            MPID_Datatype_get_ptr((datatype_), dtp_);              \
-            MPID_Datatype_release(dtp_);                           \
+            MPIR_Datatype_get_ptr((datatype_), dtp_);              \
+            MPIR_Datatype_release(dtp_);                           \
         }                                                          \
     } while (0)
 #endif
@@ -766,8 +766,8 @@ int MPIDU_Sched_copy(const void *inbuf, MPI_Aint incount, MPI_Datatype intype,
 #if defined(HAVE_ERROR_CHECKING) && !defined(NDEBUG)
     {
         MPI_Aint intype_size, outtype_size;
-        MPID_Datatype_get_size_macro(intype, intype_size);
-        MPID_Datatype_get_size_macro(outtype, outtype_size);
+        MPIR_Datatype_get_size_macro(intype, intype_size);
+        MPIR_Datatype_get_size_macro(outtype, outtype_size);
         if (incount * intype_size > outcount * outtype_size) {
             MPL_error_printf("truncation: intype=%#x, intype_size=" MPI_AINT_FMT_DEC_SPEC ", incount=" MPI_AINT_FMT_DEC_SPEC ", outtype=%#x, outtype_size=" MPI_AINT_FMT_DEC_SPEC " outcount=" MPI_AINT_FMT_DEC_SPEC "\n",
                               intype, intype_size,

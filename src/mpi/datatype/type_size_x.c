@@ -34,7 +34,7 @@ int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count *size)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPID_Datatype_get_size_macro(datatype, *size);
+    MPIR_Datatype_get_size_macro(datatype, *size);
 
     return mpi_errno;
 }
@@ -92,7 +92,7 @@ int MPI_Type_size_x(MPI_Datatype datatype, MPI_Count *size)
         {
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
                 MPIR_Datatype *datatype_ptr = NULL;
-                MPID_Datatype_get_ptr(datatype, datatype_ptr);
+                MPIR_Datatype_get_ptr(datatype, datatype_ptr);
                 MPIR_Datatype_valid_ptr(datatype_ptr, mpi_errno);
             }
 

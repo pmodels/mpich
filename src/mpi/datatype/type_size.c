@@ -75,7 +75,7 @@ int MPI_Type_size(MPI_Datatype datatype, int *size)
     /* If this is a built-in datatype, then get the size out of the handle */
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
     {
-	MPID_Datatype_get_size_macro(datatype, *size);
+	MPIR_Datatype_get_size_macro(datatype, *size);
 	goto fn_exit;
     }
 
@@ -87,7 +87,7 @@ int MPI_Type_size(MPI_Datatype datatype, int *size)
             MPIR_Datatype *datatype_ptr = NULL;
 
             /* Convert MPI object handles to object pointers */
-            MPID_Datatype_get_ptr( datatype, datatype_ptr );
+            MPIR_Datatype_get_ptr( datatype, datatype_ptr );
 
             /* Validate datatype_ptr */
             MPIR_Datatype_valid_ptr( datatype_ptr, mpi_errno );

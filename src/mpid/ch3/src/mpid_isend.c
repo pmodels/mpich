@@ -34,7 +34,7 @@ int MPID_Isend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank
     intptr_t data_sz;
     int dt_contig;
     MPI_Aint dt_true_lb;
-    MPIDU_Datatype* dt_ptr;
+    MPIR_Datatype* dt_ptr;
     MPIR_Request * sreq;
     MPIDI_VC_t * vc=0;
 #if defined(MPID_USE_SEQUENCE_NUMBERS)
@@ -151,7 +151,7 @@ int MPID_Isend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank
 	    /* If we're not complete, then add a reference to the datatype */
 	    if (sreq) {
 		sreq->dev.datatype_ptr = dt_ptr;
-		MPIDU_Datatype_add_ref(dt_ptr);
+		MPIR_Datatype_add_ref(dt_ptr);
 	    }
 	}
     }
@@ -171,7 +171,7 @@ int MPID_Isend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank
 	if (sreq && dt_ptr != NULL)
 	{
 	    sreq->dev.datatype_ptr = dt_ptr;
-	    MPIDU_Datatype_add_ref(dt_ptr);
+	    MPIR_Datatype_add_ref(dt_ptr);
 	}
     }
 

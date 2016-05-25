@@ -71,7 +71,7 @@ int MPI_Status_set_elements(MPI_Status *status, MPI_Datatype datatype,
 	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
 
             /* Validate datatype_ptr */
-	    MPID_Datatype_get_ptr( datatype, datatype_ptr );
+	    MPIR_Datatype_get_ptr( datatype, datatype_ptr );
             MPIR_Datatype_valid_ptr( datatype_ptr, mpi_errno );
 	    /* If datatype_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;

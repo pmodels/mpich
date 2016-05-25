@@ -22,7 +22,7 @@ int MPID_Send(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank,
     intptr_t data_sz;
     int dt_contig;
     MPI_Aint dt_true_lb;
-    MPIDU_Datatype* dt_ptr;
+    MPIR_Datatype* dt_ptr;
     MPIR_Request * sreq = NULL;
     MPIDI_VC_t * vc;
 #if defined(MPID_USE_SEQUENCE_NUMBERS)

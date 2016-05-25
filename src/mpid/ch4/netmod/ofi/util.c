@@ -749,7 +749,7 @@ static inline void create_dt_map()
 static inline void add_index(MPI_Datatype datatype, int *index)
 {
     MPIR_Datatype *dt_ptr;
-    MPID_Datatype_get_ptr(datatype, dt_ptr);
+    MPIR_Datatype_get_ptr(datatype, dt_ptr);
     MPIDI_OFI_DATATYPE(dt_ptr).index = *index;
     (*index)++;
 }

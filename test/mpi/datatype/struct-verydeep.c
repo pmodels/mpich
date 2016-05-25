@@ -13,7 +13,7 @@
 #include "mpi.h"
 
 /* uncomment to use debugging routine in MPICH
-extern int MPIDU_Datatype_debug(MPI_Datatype type, int depth);
+extern int MPIR_Datatype_debug(MPI_Datatype type, int depth);
 */
 
 int makeHDF5type0(MPI_Datatype * type);
@@ -213,7 +213,7 @@ int main(int argc, char **argv)
     MPI_Init(&argc, &argv);
     makeHDF5type(&hdf5type);
 
-    /*MPIDU_Datatype_debug(hdf5type, 32); */
+    /*MPIR_Datatype_debug(hdf5type, 32); */
 
     MPI_Type_free(&hdf5type);
     MPI_Finalize();
