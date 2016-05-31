@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
     for (i = 0; i < vcount; i++) {
         if (winbuf[j] != sbuf[j]) {
             errs++;
-            fprintf(stderr, "VecPut: winbuf[%d] = %d, should = %d\n", winbuf[j], j, sbuf[j]);
+            fprintf(stderr, "VecPut: winbuf[%d] = %d, should = %d\n", j, winbuf[j], sbuf[j]);
         }
         j += 2;
     }
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
     for (i = 0; i < vcount; i++) {
         if (winbuf[j] != sbuf[j]) {
             errs++;
-            fprintf(stderr, "VecAcc: winbuf[%d] = %d, should = %d\n", winbuf[j], j, sbuf[j]);
+            fprintf(stderr, "VecAcc: winbuf[%d] = %d, should = %d\n", j, winbuf[j], sbuf[j]);
         }
         j += 2;
     }
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
     for (i = 0; i < vcount; i++) {
         if (winbuf[j] != sbuf[j]) {
             errs++;
-            fprintf(stderr, "VecAcc: winbuf[%d] = %d, should = %d\n", winbuf[j], j, sbuf[j]);
+            fprintf(stderr, "VecAcc: winbuf[%d] = %d, should = %d\n", j, winbuf[j], sbuf[j]);
         }
         j += 2;
     }
