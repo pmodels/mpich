@@ -16,11 +16,6 @@
 /* style: allow:printf:5 sig:0 */
 #ifdef MPICH_DEBUG_HANDLEALLOC
 
-static inline const char *MPIR_object_name(MPIR_Object_alloc_t * objmem)
-{
-    return MPIR_Handle_get_kind_str(objmem->kind);
-}
-
 /* The following is a handler that may be added to finalize to test whether
    handles remain allocated, including those from the direct blocks.
 
@@ -88,7 +83,7 @@ static inline int MPIR_check_handles_on_finalize(void *objmem_ptr)
                 /* Error - could not find the owning memory */
                 /* Temp */
                 printf("Could not place object at %p in handle memory for type %s\n", ptr,
-                       MPIR_object_name(objmem));
+                       MPIR_Handle_get_kind_str(objmem->kind));
                 printf("direct block is [%p,%p]\n", direct, directEnd);
                 if (objmem->indirect_size) {
                     printf("indirect block is [%p,%p]\n", indirect[0],
@@ -102,19 +97,19 @@ static inline int MPIR_check_handles_on_finalize(void *objmem_ptr)
     if (0) {
         /* Produce a report */
         printf("Object handles:\n\ttype  \t%s\n\tsize  \t%d\n\tdirect size\t%d\n\
-\tindirect size\t%d\n", MPIR_object_name(objmem), objmem->size, objmem->direct_size, objmem->indirect_size);
+\tindirect size\t%d\n", MPIR_Handle_get_kind_str(objmem->kind), objmem->size, objmem->direct_size, objmem->indirect_size);
     }
     if (nDirect != directSize) {
         leaked_handles = TRUE;
         printf("In direct memory block for handle type %s, %d handles are still allocated\n",
-               MPIR_object_name(objmem), directSize - nDirect);
+               MPIR_Handle_get_kind_str(objmem->kind), directSize - nDirect);
     }
     for (i = 0; i < objmem->indirect_size; i++) {
         if (nIndirect[i] != HANDLE_NUM_INDICES) {
             leaked_handles = TRUE;
             printf
                 ("In indirect memory block %d for handle type %s, %d handles are still allocated\n",
-                 i, MPIR_object_name(objmem), HANDLE_NUM_INDICES - nIndirect[i]);
+                 i, MPIR_Handle_get_kind_str(objmem->kind), HANDLE_NUM_INDICES - nIndirect[i]);
         }
     }
 
@@ -312,28 +307,6 @@ static inline int MPIR_Handle_finalize(void *objmem_ptr)
     return 0;
 }
 
-/* FIXME: The alloc_complete routine should be removed.
-   It is used only in typeutil.c (in MPIR_Datatype_init, which is only
-   executed from within the MPI_Init/MPI_Init_thread startup and hence is
-   guaranteed to be single threaded).  When used by the obj_alloc, it
-   adds unnecessary overhead, particularly when MPI is single threaded */
-
-static inline void MPIR_Handle_obj_alloc_complete(MPIR_Object_alloc_t * objmem, int initialized)
-{
-    if (initialized) {
-        /* obj_alloc initialized region during this allocation;
-         * perform any ancillary operations associated with
-         * initialization prior to releasing control over region.
-         */
-
-        /* Tell finalize to free up any memory that we allocate.
-         * The 0 makes this the lowest priority callback, so
-         * that other callbacks will finish before this one is invoked.
-         */
-        MPIR_Add_finalize(MPIR_Handle_finalize, objmem, 0);
-    }
-}
-
 /*+
   MPIR_Handle_obj_alloc - Create an object using the handle allocator
 
@@ -390,14 +363,11 @@ static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t * objmem)
     }
     else {
         int objsize, objkind;
-        int performed_initialize = 0;
 
         objsize = objmem->size;
         objkind = objmem->kind;
 
         if (!objmem->initialized) {
-            performed_initialize = 1;
-
             MPL_VG_CREATE_MEMPOOL(objmem, 0 /*rzB */ , 0 /*is_zeroed */);
 
             /* Setup the first block.  This is done here so that short MPI
@@ -416,6 +386,7 @@ static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t * objmem)
             MPIR_Add_finalize(MPIR_check_handles_on_finalize, objmem,
                               MPIR_FINALIZE_CALLBACK_HANDLE_CHECK_PRIO);
 #endif
+            MPIR_Add_finalize(MPIR_Handle_finalize, objmem, 0);
             /* ptr points to object to allocate */
         }
         else {
@@ -431,7 +402,6 @@ static inline void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t * objmem)
 
             /* ptr points to object to allocate */
         }
-        MPIR_Handle_obj_alloc_complete(objmem, performed_initialize);
     }
 
     if (ptr) {
