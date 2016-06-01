@@ -286,13 +286,6 @@ static inline void *MPIR_Handle_indirect_init(void *(**indirect)[],
     return block_ptr;
 }
 
-/*
-  Create and return a pointer to an info object.  Returns null if there is
-  an error such as out-of-memory.  Does not allocate space for the
-  key or value.
-
- */
-
 static inline int MPIR_Handle_finalize(void *objmem_ptr)
 {
     MPIR_Object_alloc_t *objmem = (MPIR_Object_alloc_t *) objmem_ptr;
