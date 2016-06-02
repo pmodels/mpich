@@ -54,5 +54,5 @@ noinst_PROGRAMS =  \
     large_message  \
     mprobe         \
     big_count_status	\
-    many_isend
-
+    many_isend     \
+    manylmt

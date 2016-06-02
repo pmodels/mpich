@@ -1057,6 +1057,7 @@
 /pt2pt/icsend
 /pt2pt/isendselfprobe
 /pt2pt/large_message
+/pt2pt/manylmt
 /pt2pt/mprobe
 /pt2pt/pingping
 /pt2pt/probe-unexp
