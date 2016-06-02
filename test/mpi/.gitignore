@@ -1128,6 +1128,7 @@
 /rma/putfidx
 /rma/req_example
 /rma/reqops
+/rma/rget-unlock
 /rma/rmanull
 /rma/rmazero
 /rma/selfrma
