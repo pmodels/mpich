@@ -168,7 +168,8 @@ noinst_PROGRAMS =          \
     win_shared_acc_flush_load  \
     win_shared_gacc_flush_load \
     win_shared_fop_flush_load  \
-    win_shared_cas_flush_load
+    win_shared_cas_flush_load  \
+    rget-unlock
 
 if BUILD_MPIX_TESTS
 noinst_PROGRAMS += aint
