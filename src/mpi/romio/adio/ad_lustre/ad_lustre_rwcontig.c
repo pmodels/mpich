@@ -154,12 +154,12 @@ static void ADIOI_LUSTRE_IOContig(ADIO_File fd, const void *buf, int count,
 	offset = fd->fp_ind;
     }
 
-    if (!(fd->direct_read || fd->direct_write)) {
+    if ((!io_mode && !fd->direct_read) || (io_mode && !fd->direct_write)) {
 	if (fd->fp_sys_posn != offset) {
 	    err = lseek(fd->fd_sys, offset, SEEK_SET);
 	    if (err == -1) goto ioerr;
 	}
-	
+
         p = (char *)buf;
 	if (io_mode) {
             while (bytes_xfered < len) {
