@@ -15,6 +15,7 @@
 void ADIOI_FAILSAFE_OpenColl(ADIO_File fd, int rank, 
 	int access_mode, int *error_code)
 {
+    MPI_Comm tmp_comm;
     int orig_amode_excl, orig_amode_wronly;
 
     orig_amode_excl = access_mode;
@@ -25,12 +26,20 @@ void ADIOI_FAILSAFE_OpenColl(ADIO_File fd, int rank,
 	 * and others who reach later will return error. */ 
 	if(rank == fd->hints->ranklist[0]) {
 	    fd->access_mode = access_mode;
+
+	    /* if the lower-level file system tries to communicate, COMM_SELF
+	     * will ensure it doesn't get stuck waiting for non-existant
+	     * participants */
+	    tmp_comm = fd->comm;
+	    fd->comm = MPI_COMM_SELF;
 	    (*(fd->fns->ADIOI_xxx_Open))(fd, error_code);
 	    MPI_Bcast(error_code, 1, MPI_INT, \
-		    fd->hints->ranklist[0], fd->comm);
+		    fd->hints->ranklist[0], tmp_comm);
 	    /* if no error, close the file and reopen normally below */
 	    if (*error_code == MPI_SUCCESS)
 		(*(fd->fns->ADIOI_xxx_Close))(fd, error_code);
+	    /* and put it all back the way we found it for subsequent code */
+	    fd->comm = tmp_comm;
 	}
 	else MPI_Bcast(error_code, 1, MPI_INT,
 		fd->hints->ranklist[0], fd->comm);
