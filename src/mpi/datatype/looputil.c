@@ -29,7 +29,7 @@ struct MPIR_Segment_piece_params {
         } pack_vector;
         struct {
             int64_t *offp;
-            int *sizep; /* see notes in Segment_flatten header */
+            DLOOP_Size *sizep; /* see notes in Segment_flatten header */
             int index;
             int length;
         } flatten;
