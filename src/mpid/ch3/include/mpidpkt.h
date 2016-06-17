@@ -103,6 +103,11 @@ typedef enum {
     MPIDI_CH3_PKT_FLOW_CNTL_UPDATE,     /* FIXME: Unused */
     MPIDI_CH3_PKT_CLOSE,
     MPIDI_CH3_PKT_REVOKE,
+#ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
+    /* Dynamic Connection Management */
+    MPIDI_CH3_PKT_CONN_ACK,
+    MPIDI_CH3_PKT_ACCEPT_ACK,
+#endif
     MPIDI_CH3_PKT_END_CH3,
     /* The channel can define additional types by defining the value
      * MPIDI_CH3_PKT_ENUM */
@@ -840,6 +845,16 @@ typedef struct MPIDI_CH3_Pkt_close {
     int ack;
 } MPIDI_CH3_Pkt_close_t;
 
+#ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
+/* packet types used in dynamic process connection. */
+typedef struct MPIDI_CH3_Pkt_conn_ack {
+    MPIDI_CH3_Pkt_type_t type;
+    int ack;
+} MPIDI_CH3_Pkt_conn_ack_t;
+
+typedef MPIDI_CH3_Pkt_conn_ack_t MPIDI_CH3_Pkt_accept_ack_t;
+#endif /* end of MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS */
+
 typedef struct MPIDI_CH3_Pkt_revoke {
     MPIDI_CH3_Pkt_type_t type;
     MPIR_Context_id_t revoked_comm;
@@ -872,6 +887,10 @@ typedef union MPIDI_CH3_Pkt {
     MPIDI_CH3_Pkt_ack_t ack;
     MPIDI_CH3_Pkt_decr_at_counter_t decr_at_cnt;
     MPIDI_CH3_Pkt_close_t close;
+#ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
+    MPIDI_CH3_Pkt_conn_ack_t conn_ack;
+    MPIDI_CH3_Pkt_accept_ack_t accept_ack;
+#endif
     MPIDI_CH3_Pkt_cas_t cas;
     MPIDI_CH3_Pkt_cas_resp_t cas_resp;
     MPIDI_CH3_Pkt_fop_t fop;

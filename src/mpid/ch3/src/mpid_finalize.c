@@ -95,6 +95,10 @@ int MPID_Finalize(void)
     
     /* Re-enabling the close step because many tests are failing
      * without it, particularly under gforker */
+
+    mpi_errno = MPIDI_Port_finalize();
+    if (mpi_errno) { MPIR_ERR_POP(mpi_errno); }
+
 #if 1
     /* FIXME: The close actions should use the same code as the other
        connection close code */

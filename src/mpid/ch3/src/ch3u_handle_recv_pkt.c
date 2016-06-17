@@ -563,6 +563,13 @@ int MPIDI_CH3_PktHandler_Init( MPIDI_CH3_PktHandler_Fcn *pktArray[],
     pktArray[MPIDI_CH3_PKT_CLOSE] =
 	MPIDI_CH3_PktHandler_Close;
 
+#ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
+    /* Dynamic Connection Management */
+    pktArray[MPIDI_CH3_PKT_CONN_ACK] =
+            MPIDI_CH3_PktHandler_ConnAck;
+    pktArray[MPIDI_CH3_PKT_ACCEPT_ACK] =
+            MPIDI_CH3_PktHandler_AcceptAck;
+#endif
     /* Provision for flow control */
     pktArray[MPIDI_CH3_PKT_FLOW_CNTL_UPDATE] = 0;
 

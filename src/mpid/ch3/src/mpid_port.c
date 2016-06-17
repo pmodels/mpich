@@ -312,6 +312,8 @@ static int MPIDI_Open_port(MPIR_Info *info_ptr, char *port_name)
     mpi_errno = MPIDI_CH3_Get_business_card(myRank, port_name, len);
     MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER, VERBOSE, (MPL_DBG_FDEST, "port_name = %s", port_name));
 
+    mpi_errno = MPIDI_CH3I_Port_init(port_name_tag);
+
 fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OPEN_PORT);
     return mpi_errno;
@@ -338,6 +340,8 @@ static int MPIDI_Close_port(const char *port_name)
     MPIR_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,"**argstr_port_name_tag");
 
     free_port_name_tag(port_name_tag);
+
+    mpi_errno = MPIDI_CH3I_Port_destroy(port_name_tag);
 
 fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CLOSE_PORT);
