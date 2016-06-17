@@ -252,7 +252,7 @@ static MPIDI_CH3I_Port_connreq_q_t revoked_connreq_q = {NULL, NULL, 0};
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static int MPIDI_Create_inter_root_communicator_connect(const char *port_name, 
-							MPIR_Comm **comm_pptr,
+							int timeout, MPIR_Comm **comm_pptr,
 							MPIDI_VC_t **vc_pptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -290,6 +290,9 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
         MPID_Time_t time_sta, time_now;
         double time_gap = 0;
 
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_CONNECT, VERBOSE,
+                       (MPL_DBG_FDEST, "connect: waiting accept in %d(s)", timeout));
+
         MPID_Wtime(&time_sta);
         do {
             mpi_errno = MPID_Progress_poke();
@@ -300,7 +303,7 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
             MPID_Wtime_diff(&time_sta, &time_now, &time_gap);
             /* FIXME: not thread-safe */
         } while (connreq->stat == MPIDI_CH3I_PORT_CONNREQ_INITED
-                 && (int) time_gap < MPIR_CVAR_CH3_COMM_CONNECT_TIMEOUT);
+                 && (int) time_gap < timeout);
     }
 
     switch (connreq->stat) {
@@ -317,7 +320,8 @@ static int MPIDI_Create_inter_root_communicator_connect(const char *port_name,
 
         MPIDI_CH3I_Port_connreq_q_enqueue(&revoked_connreq_q, connreq);
         MPIDI_CH3I_PORT_CONNREQ_SET_STAT(connreq, REVOKE);
-        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_PORT, "**ch3|conntimeout");
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_PORT, "**ch3|conntimeout",
+                             "**ch3|conntimeout %d", timeout);
         break;
 
     case MPIDI_CH3I_PORT_CONNREQ_ERR_CLOSE:
@@ -627,10 +631,22 @@ int MPIDI_Comm_connect(const char *port_name, MPIR_Info *info, int root,
 
     if (rank == root)
     {
+        int timeout = MPIR_CVAR_CH3_COMM_CONNECT_TIMEOUT;
+
+        /* Check if user specifies timeout threshold. */
+        if (info != NULL) {
+            int info_flag = 0;
+            char info_value[MPI_MAX_INFO_VAL + 1];
+            MPIR_Info_get_impl(info, "timeout", MPI_MAX_INFO_VAL, info_value, &info_flag);
+            if (info_flag) {
+                timeout = atoi(info_value);
+            }
+        }
+
 	/* Establish a communicator to communicate with the root on the 
 	   other side. */
 	mpi_errno = MPIDI_Create_inter_root_communicator_connect(
-	    port_name, &tmp_comm, &new_vc);
+	    port_name, timeout, &tmp_comm, &new_vc);
 	if (mpi_errno != MPI_SUCCESS) {
 	    MPIR_ERR_POP_LABEL(mpi_errno, no_port);
 	}
