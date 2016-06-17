@@ -33,6 +33,7 @@
 **ch3|pmi_finalize:PMI_Finalize failed
 **ch3|pmi_finalize %d:PMI_Finalize failed, error %d
 **ch3|conntimeout:Connection timed out
+**ch3|conntimeout %d:Connection timed out in %d seconds
 **ch3|portclose:Port is unexpectedly closed
 
 #
