@@ -32,6 +32,8 @@
 **ch3|close_progress:an error occurred while the device was waiting for all open connections to close
 **ch3|pmi_finalize:PMI_Finalize failed
 **ch3|pmi_finalize %d:PMI_Finalize failed, error %d
+**ch3|conntimeout:Connection timed out
+**ch3|portclose:Port is unexpectedly closed
 
 #
 # RMA errors

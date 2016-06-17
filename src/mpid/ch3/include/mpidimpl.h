@@ -694,6 +694,10 @@ typedef struct MPIDI_VC
     /* port name tag */ 
     int port_name_tag; /* added to handle dynamic process mgmt */
     
+#ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
+    void *connreq_obj;  /* pointer to dynamic connection mgmt object */
+#endif
+
 #if defined(MPID_USE_SEQUENCE_NUMBERS)
     /* Sequence number of the next packet to be sent */
     MPID_Seqnum_t seqnum_send;
@@ -1015,12 +1019,15 @@ int MPIDI_CH3_PortFnsInit( MPIDI_PortFns * );
 /* Utility routines provided in src/ch3u_port.c for working with connection
    queues */
 int MPIDI_CH3I_Acceptq_enqueue(MPIDI_VC_t * vc, int port_name_tag);
-int MPIDI_CH3I_Acceptq_dequeue(MPIDI_VC_t ** vc, int port_name_tag);
 #ifdef MPIDI_CH3_CHANNEL_AVOIDS_SELECT
 int MPIDI_CH3_Complete_Acceptq_dequeue(MPIDI_VC_t * vc);
 #else
 #define MPIDI_CH3_Complete_Acceptq_dequeue(vc)  MPI_SUCCESS
 #endif
+int MPIDI_Port_finalize(void);
+
+int MPIDI_CH3I_Port_init(int port_name_tag);
+int MPIDI_CH3I_Port_destroy(int port_name_tag);
 /*--------------------------
   END MPI PORT SECTION 
   --------------------------*/
@@ -1723,6 +1730,15 @@ int MPIDI_CH3_PktHandler_FlowCntlUpdate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 					 intptr_t *, MPIR_Request ** );
 int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
 				intptr_t *, MPIR_Request ** );
+
+#ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
+/* packet handlers used in dynamic process connection. */
+int MPIDI_CH3_PktHandler_ConnAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
+                                 intptr_t * buflen, MPIR_Request ** rreqp);
+int MPIDI_CH3_PktHandler_AcceptAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
+                                   intptr_t * buflen, MPIR_Request ** rreqp);
+#endif /* end of MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS */
+
 int MPIDI_CH3_PktHandler_EndCH3( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
 				 intptr_t *, MPIR_Request ** );
 int MPIDI_CH3_PktHandler_Revoke(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
