@@ -253,7 +253,7 @@ int dbgrI_find_symbol( mqs_image *image, char *name, mqs_taddr_t * loc )
 	/* The following printfs can help is diagnosing problems when the
 	   extern variable MPIR_All_communicators appears not to be 
 	   correctly resolved. */
-	printf( "all communicators head at %p\n", *loc );
+	printf( "all communicators head at %p\n", (void *)*loc );
 	printf( "all communicators head as pointer %p\n", &MPIR_All_communicators );
 	printf( "head is %p\n", MPIR_All_communicators.head );
 	return mqs_ok;
