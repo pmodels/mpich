@@ -213,7 +213,11 @@ int MPID_nem_tcp_conn_est (MPIDI_VC_t *vc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_CONN_EST);
 
-    MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
+    /* only update VC state when it is not being closed.
+     * Note that we still need change state here if the VC is passively
+     * connected (i.e., server in dynamic process connection) */
+    if (vc->state == MPIDI_VC_STATE_INACTIVE)
+        MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
 
     if (!MPIDI_CH3I_Sendq_empty(vc_tcp->send_queue))
     {

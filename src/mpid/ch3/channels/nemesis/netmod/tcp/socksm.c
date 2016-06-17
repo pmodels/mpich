@@ -820,7 +820,11 @@ int MPID_nem_tcp_connect(struct MPIDI_VC *const vc)
     /* We have an active connection, start polling more often */
     MPID_nem_tcp_skip_polls = MAX_SKIP_POLLS_ACTIVE;
 
-    MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
+    /* only update VC state when it is not being closed.
+     * Note that we still need change state here if the VC is passively
+     * connected (i.e., server in dynamic process connection) */
+    if (vc->state == MPIDI_VC_STATE_INACTIVE)
+        MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
 
     if (vc_tcp->state == MPID_NEM_TCP_VC_STATE_DISCONNECTED) {
         struct sockaddr_in *sock_addr;
