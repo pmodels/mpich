@@ -1283,6 +1283,55 @@ else
     PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib],[WRAPPER_LDFLAGS])
 fi
 
+# Izem
+AC_ARG_VAR([ZMLIBNAME],[can be used to override the name of the Izem library (default: "zm")])
+ZMLIBNAME=${ZMLIBNAME:-"zm"}
+export ZMLIBNAME
+AC_SUBST(ZMLIBNAME)
+AC_ARG_WITH([zm-prefix],
+            [AS_HELP_STRING([[--with-zm-prefix[=DIR]]],
+                            [use the Izem library installed in DIR,
+                             rather than the one included in src/izem.  Pass
+                             "embedded" to force usage of the Izem source
+                             distributed with MPICH.])],
+            [],
+            [# see if Izem is already installed on the system
+             PAC_PUSH_FLAG([LIBS])
+             PAC_PREPEND_FLAG([-l${ZMLIBNAME}],[LIBS])
+             AC_LINK_IFELSE([AC_LANG_PROGRAM([dnl
+#include "lock/zm_ticket.h"
+],[
+zm_ticket_t lock;
+zm_ticket_init(&lock);
+zm_ticket_acquire(&lock);
+zm_ticket_release(&lock);
+])dnl
+                             ],
+                            [with_zm_prefix=system],[with_zm_prefix=embedded])
+             PAC_POP_FLAG([LIBS])
+             ])
+
+zmsrcdir=""
+AC_SUBST([zmsrcdir])
+zmlibdir=""
+AC_SUBST([zmlibdir])
+zmlib=""
+AC_SUBST([zmlib])
+
+if test "$with_zm_prefix" = "embedded" ; then
+    if test -e "${use_top_srcdir}/src/izem" ; then
+        zmsrcdir="${master_top_builddir}/src/izem"
+        zmlib="${master_top_builddir}/src/izem/src/lib${ZMLIBNAME}.la"
+        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/izem/src],[CPPFLAGS])
+        PAC_APPEND_FLAG([-I${master_top_builddir}/src/izem/src],[CPPFLAGS])
+
+        PAC_CONFIG_SUBDIR_ARGS([src/izem],[$zm_subdir_args],[],[AC_MSG_ERROR([Izem configure failed])])
+    else
+        AC_MSG_WARN([Attempted to use the embedded Izem source tree in "src/izem", but it is missing.  Configuration or compilation may fail later.])
+    fi
+fi
+
+
 # ----------------------------------------------------------------------------
 # Threads
 # ----------------------------------------------------------------------------
