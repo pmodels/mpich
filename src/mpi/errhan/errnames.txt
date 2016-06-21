@@ -1202,7 +1202,7 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_comm_spawn_multiple:MPI_Comm_spawn_multiple failed
 **mpi_comm_spawn_multiple %d %p %p %p %p %d %C %p %p:MPI_Comm_spawn_multiple(count=%d, cmds=%p, argvs=%p, maxprocs=%p, infos=%p, root=%d, %C, intercomm=%p, errors=%p) failed
 **mpi_lookup_name:MPI_Lookup_name failed
-**mpi_lookup_name %s %I %p:MPI_Lookup_name(service=\"%s\", %I, port=%p) failed
+**mpi_lookup_name %s %I %s:MPI_Lookup_name(service=\"%s\", %I, port=%s) failed
 **mpi_open_port:MPI_Open_port failed
 **mpi_open_port %I %p:MPI_Open_port(%I, port=%p) failed
 **mpi_publish_name:MPI_Publish_name failed
