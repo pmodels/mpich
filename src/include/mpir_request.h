@@ -133,6 +133,9 @@ struct MPIR_Request {
         } send; /* kind : MPID_REQUEST_SEND */
 #endif  /* HAVE_DEBUGGER_SUPPORT */
         struct {
+#if defined HAVE_DEBUGGER_SUPPORT
+            struct MPIR_Sendq *dbg_next;
+#endif  /* HAVE_DEBUGGER_SUPPORT */
             /* Persistent requests have their own "real" requests */
             struct MPIR_Request *real_request;
         } persist;  /* kind : MPID_PREQUEST_SEND or MPID_PREQUEST_RECV */
