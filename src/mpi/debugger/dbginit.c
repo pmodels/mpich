@@ -363,7 +363,10 @@ void MPII_Sendq_remember( MPIR_Request *req,
 	p = (MPIR_Sendq *)MPL_malloc( sizeof(MPIR_Sendq) );
 	if (!p) {
 	    /* Just ignore it */
-            req->u.send.dbg_next = NULL;
+            if (MPIR_REQUEST_KIND__SEND == req->kind)
+                req->u.send.dbg_next = NULL;
+            else if (MPIR_REQUEST_KIND__PREQUEST_SEND == req->kind)
+                req->u.persist.dbg_next = NULL;
             goto fn_exit;
 	}
     }
@@ -375,7 +378,10 @@ void MPII_Sendq_remember( MPIR_Request *req,
     p->prev       = NULL;
     MPIR_Sendq_head = p;
     if (p->next) p->next->prev = p;
-    req->u.send.dbg_next = p;
+    if (MPIR_REQUEST_KIND__SEND == req->kind)
+        req->u.send.dbg_next = p;
+    else if (MPIR_REQUEST_KIND__PREQUEST_SEND == req->kind)
+        req->u.persist.dbg_next = p;
 fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, req->pobj_mutex);
 #endif  /* HAVE_DEBUGGER_SUPPORT */
@@ -387,7 +393,10 @@ void MPII_Sendq_forget( MPIR_Request *req )
     MPIR_Sendq *p, *prev;
 
     MPID_THREAD_CS_ENTER(POBJ, req->pobj_mutex);
-    p    = req->u.send.dbg_next;
+    if (MPIR_REQUEST_KIND__SEND == req->kind)
+        p = req->u.send.dbg_next;
+    else if (MPIR_REQUEST_KIND__PREQUEST_SEND == req->kind)
+        p = req->u.persist.dbg_next;
     if (!p) {
         /* Just ignore it */
         MPID_THREAD_CS_EXIT(POBJ, req->pobj_mutex);
