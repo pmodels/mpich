@@ -1016,6 +1016,7 @@ typedef struct MPIDI_Port_Ops {
 #define MPIDI_PORTFNS_VERSION 1
 int MPIDI_CH3_PortFnsInit( MPIDI_PortFns * );
 
+#ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
 /* Utility routines provided in src/ch3u_port.c for working with connection
    queues */
 int MPIDI_CH3I_Acceptq_enqueue(MPIDI_VC_t * vc, int port_name_tag);
@@ -1023,6 +1024,15 @@ int MPIDI_Port_finalize(void);
 
 int MPIDI_CH3I_Port_init(int port_name_tag);
 int MPIDI_CH3I_Port_destroy(int port_name_tag);
+#else
+/* Need empty symbols to avoid failure at compile time if defined
+ * MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS. */
+#define MPIDI_CH3I_Acceptq_enqueue(vc, port_name_tag) (MPI_SUCCESS)
+#define MPIDI_Port_finalize() (MPI_SUCCESS)
+
+#define MPIDI_CH3I_Port_init(port_name_tag) (MPI_SUCCESS)
+#define MPIDI_CH3I_Port_destroy(port_name_tag) (MPI_SUCCESS)
+#endif
 /*--------------------------
   END MPI PORT SECTION 
   --------------------------*/
@@ -1661,8 +1671,14 @@ int MPIDI_CH3_InitCompleted( void );
 #endif
 /* Routines in support of ch3 */
 
+#ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
 /* Routine to return the tag associated with a port */
 int MPIDI_GetTagFromPort( const char *, int * );
+#else
+/* Need empty symbol to avoid failure at compile time if defined
+ * MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS. */
+#define MPIDI_GetTagFromPort(port_name, port_name_tag) (MPI_SUCCESS)
+#endif
 
 /* Here are the packet handlers */
 int MPIDI_CH3_PktHandler_EagerSend( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
