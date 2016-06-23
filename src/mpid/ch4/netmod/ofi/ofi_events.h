@@ -113,9 +113,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
             MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq)) = NULL;
             MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
         }
-
-        if (!continue_matching)
-            goto fn_exit;
+        MPIR_Request_free(rreq);
     }
 
 #endif
