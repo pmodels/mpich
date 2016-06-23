@@ -48,18 +48,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Probe(int source,
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
         }
-#ifndef MPIDI_CH4_EXCLUSIVE_SHM
-        MPIDI_NM_progress(MPIDI_CH4_Global.netmod_context[0], 0);
-#else
-        if (unlikely(source == MPI_ANY_SOURCE)) {
-            MPIDI_SHM_progress(0);
-            MPIDI_NM_progress(MPIDI_CH4_Global.netmod_context[0], 0);
-        }
-        if (MPIDI_CH4_rank_is_local(source, comm))
-            MPIDI_SHM_progress(0);
-        else
-            MPIDI_NM_progress(MPIDI_CH4_Global.netmod_context[0], 0);
-#endif
+        MPIDI_Progress_test();
     }
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_PROBE);
@@ -111,18 +100,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Mprobe(int source,
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
         }
-#ifndef MPIDI_CH4_EXCLUSIVE_SHM
-        MPIDI_NM_progress(MPIDI_CH4_Global.netmod_context[0], 0);
-#else
-        if (unlikely(source == MPI_ANY_SOURCE)) {
-            MPIDI_SHM_progress(0);
-            MPIDI_NM_progress(MPIDI_CH4_Global.netmod_context[0], 0);
-        }
-        else if (MPIDI_CH4_rank_is_local(source, comm))
-            MPIDI_SHM_progress(0);
-        else
-            MPIDI_NM_progress(MPIDI_CH4_Global.netmod_context[0], 0);
-#endif
+        MPIDI_Progress_test();
     }
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_MPROBE);

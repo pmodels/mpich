@@ -241,10 +241,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Mrecv(void *buf,
         MPIR_ERR_POP(mpi_errno);
     }
     while (!MPIR_Request_is_complete(rreq)) {
-        MPIDI_NM_progress(MPIDI_CH4_Global.netmod_context[0], 0);
-#ifdef MPIDI_CH4_EXCLUSIVE_SHM
-        MPIDI_SHM_progress(0);
-#endif
+        MPIDI_Progress_test();
     }
 
     /* This should probably be moved to MPICH (above device) level */
