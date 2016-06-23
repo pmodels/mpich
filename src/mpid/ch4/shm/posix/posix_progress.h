@@ -386,9 +386,6 @@ static inline int MPIDI_SHM_progress(int blocking)
         MPIDI_POSIX_progress_send(blocking, &complete);
         MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
 
-        MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-        MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-
         if (complete > 0)
             break;
     } while (blocking);
