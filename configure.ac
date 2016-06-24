@@ -1322,8 +1322,8 @@ if test "$with_zm_prefix" = "embedded" ; then
     if test -e "${use_top_srcdir}/src/izem" ; then
         zmsrcdir="${master_top_builddir}/src/izem"
         zmlib="${master_top_builddir}/src/izem/src/lib${ZMLIBNAME}.la"
-        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/izem/src],[CPPFLAGS])
-        PAC_APPEND_FLAG([-I${master_top_builddir}/src/izem/src],[CPPFLAGS])
+        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/izem/src/include],[CPPFLAGS])
+        PAC_APPEND_FLAG([-I${master_top_builddir}/src/izem/src/include],[CPPFLAGS])
 
         PAC_CONFIG_SUBDIR_ARGS([src/izem],[$zm_subdir_args],[],[AC_MSG_ERROR([Izem configure failed])])
     else
