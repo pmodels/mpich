@@ -1320,6 +1320,9 @@ AC_SUBST([zmlib])
 
 if test "$with_zm_prefix" = "embedded" ; then
     if test -e "${use_top_srcdir}/src/izem" ; then
+        # no need for libtool versioning when embedding Izem
+        zm_subdir_args="--enable-embedded"
+        PAC_CONFIG_SUBDIR_ARGS([src/izem],[$zm_subdir_args],[],[AC_MSG_ERROR(Izem configure failed)])
         zmsrcdir="${master_top_builddir}/src/izem"
         zmlib="${master_top_builddir}/src/izem/src/lib${ZMLIBNAME}.la"
         PAC_APPEND_FLAG([-I${use_top_srcdir}/src/izem/src/include],[CPPFLAGS])
