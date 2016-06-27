@@ -27,10 +27,11 @@ int MPI_Test(MPI_Request * request, int *flag, MPI_Status * status)
 #define MPI_Test PMPI_Test
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Test_impl
+#define FUNCNAME MPIR_Test_impl_base
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIR_Test_impl(MPI_Request * request, int *flag, MPI_Status * status)
+static inline int MPIR_Test_impl_base(MPI_Request * request, int *flag, MPI_Status * status,
+                                      int do_progress)
 {
     int mpi_errno = MPI_SUCCESS;
     int active_flag;
@@ -50,10 +51,11 @@ int MPIR_Test_impl(MPI_Request * request, int *flag, MPI_Status * status)
     /* If the request is already completed AND we want to avoid calling
      * the progress engine, we could make the call to MPID_Progress_test
      * conditional on the request not being completed. */
-    mpi_errno = MPID_Progress_test();
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
+    if (do_progress) {
+        mpi_errno = MPID_Progress_test();
+        if (mpi_errno != MPI_SUCCESS)
+            goto fn_fail;
+    }
     if (request_ptr->kind == MPIR_REQUEST_KIND__GREQUEST &&
         request_ptr->u.ureq.greq_fns != NULL && request_ptr->u.ureq.greq_fns->poll_fn != NULL) {
         mpi_errno =
@@ -81,6 +83,24 @@ int MPIR_Test_impl(MPI_Request * request, int *flag, MPI_Status * status)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Test_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Test_impl(MPI_Request * request, int *flag, MPI_Status * status)
+{
+    return MPIR_Test_impl_base(request, flag, status, TRUE);
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Test_no_progress_impl
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Test_no_progress_impl(MPI_Request * request, int *flag, MPI_Status * status)
+{
+    return MPIR_Test_impl_base(request, flag, status, FALSE);
 }
 
 #endif
