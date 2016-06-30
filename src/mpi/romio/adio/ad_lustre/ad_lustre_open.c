@@ -15,6 +15,8 @@
 
 #define MAX_LOV_UUID_COUNT      1000
 
+int ADIOI_LUSTRE_clear_locks(ADIO_File fd);     /* in ad_lustre_lock.c */
+
 void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
 {
     int perm, old_mask, amode, amode_direct;
@@ -155,6 +157,10 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
             perror("cannot open file with O_Direct");
             fd->direct_write = fd->direct_read = 0;
         }
+    }
+
+    if (fd->hints->fs_hints.lustre.lock_ahead_read || fd->hints->fs_hints.lustre.lock_ahead_write) {
+        ADIOI_LUSTRE_clear_locks(fd);
     }
 
   fn_exit:

@@ -69,6 +69,12 @@ struct ADIOI_Hints_struct {
             int co_ratio;
             int coll_threshold;
             int ds_in_coll;
+            int lock_ahead_read;
+            int lock_ahead_write;
+            int lock_ahead_num_extents;
+            int lock_ahead_flags;
+            ADIO_Offset lock_ahead_start_extent;
+            ADIO_Offset lock_ahead_end_extent;
         } lustre;
         struct {
             unsigned read_chunk_sz;     /* chunk size for direct reads */
