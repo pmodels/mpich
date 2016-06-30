@@ -49,6 +49,25 @@ void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                             ADIO_Offset fd_size, ADIO_Offset * fd_start,
                             ADIO_Offset * fd_end, MPI_Aint buftype_extent);
 
+#define LUSTRE_RD_LOCK_AHEAD 1
+#ifdef LUSTRE_RD_LOCK_AHEAD
+/* There is no ad_lustre_rdcoll.c, so stub in some basic common code here
+   If it's called for over non-lustre file systems, it will turn itself off
+   when the ioctl fails. */
+void ADIOI_LUSTRE_lock_ahead_ioctl(ADIO_File fd, int avail_cb_nodes, ADIO_Offset next_offset, int *error_code); /* ad_lustre_lock.c */
+/* Handle lock ahead.  If this read is outside our locked region, lock it now */
+#define ADIOI_LUSTRE_RD_LOCK_AHEAD(fd,cb_nodes,offset,error_code)                             \
+if ((fd->file_system == ADIO_LUSTRE) && (fd->hints->fs_hints.lustre.lock_ahead_read)) {        \
+    if (offset > fd->hints->fs_hints.lustre.lock_ahead_end_extent) {                          \
+        ADIOI_LUSTRE_lock_ahead_ioctl(fd,cb_nodes,offset,error_code);                         \
+    }                                                                                         \
+    else if (offset < fd->hints->fs_hints.lustre.lock_ahead_start_extent) {                   \
+        ADIOI_LUSTRE_lock_ahead_ioctl(fd,cb_nodes,offset,error_code);                         \
+    }                                                                                         \
+}
+#else
+#define ADIOI_LUSTRE_RD_LOCK_AHEAD(fd,cb_nodes,offset,error_code)
+#endif
 
 void ADIOI_GEN_ReadStridedColl(ADIO_File fd, void *buf, int count,
                                MPI_Datatype datatype, int file_ptr_type,
@@ -699,6 +718,7 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
 
         if (flag) {
             ADIOI_Assert(size == (int) size);
+            ADIOI_LUSTRE_RD_LOCK_AHEAD(fd, fd->hints->cb_nodes, off, error_code);
             ADIO_ReadContig(fd, read_buf + for_curr_iter, (int) size, MPI_BYTE,
                             ADIO_EXPLICIT_OFFSET, off, &status, error_code);
             if (*error_code != MPI_SUCCESS)
