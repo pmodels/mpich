@@ -23,6 +23,12 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     int myrank;
     static char myname[] = "ADIOI_LUSTRE_SETINFO";
 
+    /* Set lock ahead default hints */
+    fd->hints->fs_hints.lustre.lock_ahead_read = 0;
+    fd->hints->fs_hints.lustre.lock_ahead_write = 0;
+    fd->hints->fs_hints.lustre.lock_ahead_num_extents = 500;
+    fd->hints->fs_hints.lustre.lock_ahead_flags = 0;
+
     value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL + 1) * sizeof(char));
     if ((fd->info) == MPI_INFO_NULL) {
         /* This must be part of the open call. can set striping parameters
@@ -74,6 +80,43 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
             if (flag && (!strcmp(value, "true") || !strcmp(value, "TRUE"))) {
                 ADIOI_Info_set(fd->info, "direct_write", "true");
                 fd->direct_write = 1;
+            }
+
+            /* Get lock ahead hints */
+
+            ADIOI_Info_check_and_install_int(fd, users_info,
+                                             "romio_lustre_cb_lock_ahead_write",
+                                             &(fd->hints->fs_hints.lustre.lock_ahead_write),
+                                             myname, error_code);
+            ADIOI_Info_check_and_install_int(fd, users_info,
+                                             "romio_lustre_cb_lock_ahead_read",
+                                             &(fd->hints->fs_hints.lustre.lock_ahead_read),
+                                             myname, error_code);
+
+            /* If, and only if, we're using lock ahead,
+             * process/set the number of extents to pre-lock and the flags */
+            if (fd->hints->fs_hints.lustre.lock_ahead_read ||
+                fd->hints->fs_hints.lustre.lock_ahead_write) {
+                /* Get user's number of extents */
+                ADIOI_Info_check_and_install_int(fd, users_info,
+                                                 "romio_lustre_cb_lock_ahead_num_extents",
+                                                 &(fd->hints->fs_hints.
+                                                   lustre.lock_ahead_num_extents), myname,
+                                                 error_code);
+
+                /* ADIOI_Info_check_and_install_int doesn't set the
+                 * value in fd unless it was in user_info, but knowing
+                 * the value - default or explicit - is useful.
+                 * Set the final number of extents in the fd->info */
+                MPL_snprintf(value, MPI_MAX_INFO_VAL + 1, "%d",
+                             fd->hints->fs_hints.lustre.lock_ahead_num_extents);
+                ADIOI_Info_set(fd->info, "romio_lustre_cb_lock_ahead_num_extents", value);
+
+                /* Get user's flags */
+                ADIOI_Info_check_and_install_int(fd, users_info,
+                                                 "romio_lustre_cb_lock_ahead_flags",
+                                                 &(fd->hints->fs_hints.lustre.lock_ahead_flags),
+                                                 myname, error_code);
             }
         }
 

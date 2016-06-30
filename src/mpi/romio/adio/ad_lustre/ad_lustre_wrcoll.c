@@ -11,6 +11,21 @@
 #include "ad_lustre.h"
 #include "adio_extern.h"
 
+/* in ad_lustre_lock.c */
+void ADIOI_LUSTRE_lock_ahead_ioctl(ADIO_File fd,
+                                   int avail_cb_nodes, ADIO_Offset next_offset, int *error_code);
+
+/* Handle lock ahead.  If this write is outside our locked region, lock it now */
+#define ADIOI_LUSTRE_WR_LOCK_AHEAD(fd,cb_nodes,offset,error_code)           \
+if (fd->hints->fs_hints.lustre.lock_ahead_write) {                           \
+    if (offset > fd->hints->fs_hints.lustre.lock_ahead_end_extent) {        \
+        ADIOI_LUSTRE_lock_ahead_ioctl(fd, cb_nodes, offset, error_code);    \
+    }                                                                       \
+    else if (offset < fd->hints->fs_hints.lustre.lock_ahead_start_extent) { \
+        ADIOI_LUSTRE_lock_ahead_ioctl(fd, cb_nodes, offset, error_code);    \
+    }                                                                       \
+}
+
 /* prototypes of functions used for collective writes only. */
 static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                                         MPI_Datatype datatype, int nprocs,
@@ -621,12 +636,14 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
         if (flag) {
             /* check whether to do data sieving */
             if (data_sieving == ADIOI_HINT_ENABLE) {
+                ADIOI_LUSTRE_WR_LOCK_AHEAD(fd, striping_info[2], off, error_code);
                 ADIO_WriteContig(fd, write_buf, real_size, MPI_BYTE,
                                  ADIO_EXPLICIT_OFFSET, off, &status, error_code);
             } else {
                 /* if there is no hole, write data in one time;
                  * otherwise, write data in several times */
                 if (!hole) {
+                    ADIOI_LUSTRE_WR_LOCK_AHEAD(fd, striping_info[2], off, error_code);
                     ADIO_WriteContig(fd, write_buf, real_size, MPI_BYTE,
                                      ADIO_EXPLICIT_OFFSET, off, &status, error_code);
                 } else {
@@ -641,11 +658,11 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                                 if (srt_off[i] == block_offset + block_len) {
                                     block_len += srt_len[i];
                                 } else {
-                                    ADIO_WriteContig(fd,
-                                                     write_buf + block_offset - off,
-                                                     block_len,
-                                                     MPI_BYTE, ADIO_EXPLICIT_OFFSET,
-                                                     block_offset, &status, error_code);
+                                    ADIOI_LUSTRE_WR_LOCK_AHEAD(fd, striping_info[2], block_offset,
+                                                               error_code);
+                                    ADIO_WriteContig(fd, write_buf + block_offset - off, block_len,
+                                                     MPI_BYTE, ADIO_EXPLICIT_OFFSET, block_offset,
+                                                     &status, error_code);
                                     if (*error_code != MPI_SUCCESS)
                                         goto over;
                                     block_offset = srt_off[i];
@@ -655,6 +672,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
                         }
                     }
                     if (block_offset != -1) {
+                        ADIOI_LUSTRE_WR_LOCK_AHEAD(fd, striping_info[2], block_offset, error_code);
                         ADIO_WriteContig(fd,
                                          write_buf + block_offset - off,
                                          block_len,
