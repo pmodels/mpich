@@ -18,7 +18,6 @@ void handle_error(int errcode, const char *str)
 	int resultlen;
 	MPI_Error_string(errcode, msg, &resultlen);
 	fprintf(stderr, "%s: %s\n", str, msg);
-	MPI_Abort(MPI_COMM_WORLD, 1);
 }
 
 /* tests shared file pointer functions */
@@ -70,11 +69,13 @@ int main(int argc, char **argv)
 		    MPI_MODE_CREATE | MPI_MODE_RDWR, MPI_INFO_NULL, &fh);
     if (errcode != MPI_SUCCESS) {
 	    handle_error(errcode, "MPI_File_open");
+	    errs++;
     }
 
     errcode = MPI_File_write_shared(fh, buf, COUNT, MPI_INT, &status);
     if (errcode != MPI_SUCCESS) {
 	    handle_error(errcode, "MPI_File_write_shared");
+	    errs++;
     }
 
     for (i=0; i<COUNT; i++) buf[i] = 0;
@@ -84,11 +85,13 @@ int main(int argc, char **argv)
     errcode = MPI_File_seek_shared(fh, 0, MPI_SEEK_SET);
     if (errcode != MPI_SUCCESS) {
 	    handle_error(errcode, "MPI_File_seek_shared");
+	    errs++;
     }
 
     errcode = MPI_File_read_shared(fh, buf, COUNT, MPI_INT, &status);
     if (errcode != MPI_SUCCESS) {
 	    handle_error(errcode, "MPI_File_read_shared");
+	    errs++;
     }
 
     MPI_File_close(&fh);

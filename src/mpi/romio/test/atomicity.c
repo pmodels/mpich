@@ -84,7 +84,8 @@ int main(int argc, char **argv)
     err = MPI_File_set_atomicity(fh, 1);
     if (err != MPI_SUCCESS) {
 	fprintf(stderr, "Atomic mode not supported on this file system.\n");fflush(stderr);
-	MPI_Abort(MPI_COMM_WORLD, 1);
+	errs++;
+	goto fn_exit;
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -102,7 +103,7 @@ int main(int argc, char **argv)
 		    if (readbuf[i] != 0) {
 			errs++;
 			fprintf(stderr, "Process %d: readbuf[%d] is %d, should be 0\n", mynod, i, readbuf[i]);
-			MPI_Abort(MPI_COMM_WORLD, 1);
+			goto fn_exit;
 		    }
 	    }
 	    else if (readbuf[0] == 10) { /* the rest must also be 10 */
@@ -110,7 +111,7 @@ int main(int argc, char **argv)
 		    if (readbuf[i] != 10) {
 			errs++;
 			fprintf(stderr, "Process %d: readbuf[%d] is %d, should be 10\n", mynod, i, readbuf[i]);
-			MPI_Abort(MPI_COMM_WORLD, 1);
+			goto fn_exit;
 		    }
 	    }
 	    else {
@@ -168,7 +169,7 @@ int main(int argc, char **argv)
 		    if (readbuf[i] != 0) {
 			errs++;
 			fprintf(stderr, "Process %d: readbuf[%d] is %d, should be 0\n", mynod, i, readbuf[i]);
-			MPI_Abort(MPI_COMM_WORLD, 1);
+			goto fn_exit;
 		    }
 	    }
 	    else if (readbuf[0] == 10) {
@@ -176,7 +177,7 @@ int main(int argc, char **argv)
 		    if (readbuf[i] != 10) {
 			errs++;
 			fprintf(stderr, "Process %d: readbuf[%d] is %d, should be 10\n", mynod, i, readbuf[i]);
-			MPI_Abort(MPI_COMM_WORLD, 1);
+			goto fn_exit;
 		    }
 	    }
 	    else {
@@ -186,6 +187,9 @@ int main(int argc, char **argv)
 	}
     }
 
+    MPI_Type_free(&newtype);
+    MPI_Info_free(&info);
+fn_exit:
     MPI_File_close(&fh);
 	
     MPI_Barrier(MPI_COMM_WORLD);
@@ -199,8 +203,6 @@ int main(int argc, char **argv)
 	    fprintf( stdout, " No Errors\n" );
 	}
     }
-    MPI_Type_free(&newtype);
-    MPI_Info_free(&info);
     free(writebuf);
     free(readbuf);
     free(filename);

@@ -10,6 +10,13 @@
 
 /* tests MPI_MODE_EXCL */
 
+static void handle_error(int errcode, const char *str)
+{
+	char msg[MPI_MAX_ERROR_STRING];
+	int resultlen;
+	MPI_Error_string(errcode, msg, &resultlen);
+	fprintf(stderr, "%s: %s\n", str, msg);
+}
 int main(int argc, char **argv)
 {
     MPI_File fh;
@@ -53,6 +60,7 @@ int main(int argc, char **argv)
     err = MPI_File_open(MPI_COMM_WORLD, filename, 
          MPI_MODE_CREATE | MPI_MODE_EXCL | MPI_MODE_RDWR, MPI_INFO_NULL , &fh);
     if (err != MPI_SUCCESS) {
+	handle_error(err, "MPI_File_open");
 	errs++;
 	fprintf(stderr, "Process %d: open failed when it should have succeeded\n", rank);
     }
@@ -66,6 +74,7 @@ int main(int argc, char **argv)
     if (err == MPI_SUCCESS) {
 	errs++;
 	fprintf(stderr, "Process %d: open succeeded when it should have failed\n", rank);
+	MPI_File_close(&fh);
     }
 
     MPI_Allreduce( &errs, &toterrs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD );
