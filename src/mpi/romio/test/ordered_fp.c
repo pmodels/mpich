@@ -19,7 +19,6 @@ void handle_error(int errcode, const char *str)
 	int resultlen;
 	MPI_Error_string(errcode, msg, &resultlen);
 	fprintf(stderr, "%s: %s\n", str, msg);
-	MPI_Abort(MPI_COMM_WORLD, 1);
 }
 
 /* tests shared file pointer functions */
