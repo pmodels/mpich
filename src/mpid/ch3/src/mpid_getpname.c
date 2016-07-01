@@ -89,7 +89,7 @@ static inline void setupProcessorName( void )
 }
 
 #elif defined(HAVE_SYSINFO)
-static inline void setupProcessorName( void );
+static inline void setupProcessorName( void )
 {
     if (sysinfo(SI_HOSTNAME, processorName, MPI_MAX_PROCESSOR_NAME) == 0) {
 	processorNameLen = (int)strlen( processorName );
@@ -97,7 +97,7 @@ static inline void setupProcessorName( void );
 }
 
 #else
-static inline void setupProcessorName( void );
+static inline void setupProcessorName( void )
 {
     /* Set the name as the rank of the process */
     MPL_snprintf( processorName, MPI_MAX_PROCESSOR_NAME, "%d", 
