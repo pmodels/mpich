@@ -49,7 +49,6 @@ void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                             ADIO_Offset fd_size, ADIO_Offset * fd_start,
                             ADIO_Offset * fd_end, MPI_Aint buftype_extent);
 
-#define LUSTRE_RD_LOCK_AHEAD 1
 #ifdef LUSTRE_RD_LOCK_AHEAD
 /* There is no ad_lustre_rdcoll.c, so stub in some basic common code here
    If it's called for over non-lustre file systems, it will turn itself off
