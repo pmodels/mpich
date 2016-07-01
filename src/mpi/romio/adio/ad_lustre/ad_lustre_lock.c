@@ -85,7 +85,11 @@ void ADIOI_LUSTRE_lock_ahead_ioctl(ADIO_File fd, int avail_cb_nodes, ADIO_Offset
         rank_index = (int) ((next_offset / stripe_size) % avail_cb_nodes);
         /* Not sure why, but this happens in the generic read coll?
          * It doesn't do the aggregation striped quite as expected.
-         * We'll probably lock the wrong stripes ...
+         * We'll probably lock the wrong stripes for this read ...
+         * but we're more interested in write locks than read locks
+         * so stick with the lustre specific calculations for now.
+         * Consider dropping read support if performance isn't improved
+         * or ad_lustre doesn't add read coll code.
          */
         if (agg_idx != rank_index) {
             fprintf(stderr, "%s(%d) rank[%d] file system %d "
