@@ -1141,7 +1141,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
         node_names[i][0] = '\0';
     }
 
-    g_max_node_id = 0; /* defensive */
+    g_max_node_id = -1; /* defensive */
 
     for (i = 0; i < pg->size; ++i)
     {
@@ -1149,14 +1149,14 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
         if (i == our_pg_rank)
         {
             /* This is us, no need to perform a get */
-            MPL_snprintf(node_names[g_max_node_id], key_max_sz, "%s", MPIU_hostname);
+            MPL_snprintf(node_names[g_max_node_id+1], key_max_sz, "%s", MPIU_hostname);
         }
         else
         {
             memset(key, 0, key_max_sz);
             MPL_snprintf(key, key_max_sz, "hostname[%d]", i);
 
-            pmi_errno = PMI_KVS_Get(kvs_name, key, node_names[g_max_node_id], key_max_sz);
+            pmi_errno = PMI_KVS_Get(kvs_name, key, node_names[g_max_node_id+1], key_max_sz);
             MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);
         }
 
@@ -1165,12 +1165,12 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
         /* The right fix is to get all this information from the process
            manager, rather than bother with this hostname hack at all. */
         for (j = 0; j < g_max_node_id + 1; ++j)
-            if (!strncmp(node_names[j], node_names[g_max_node_id], key_max_sz))
+            if (!strncmp(node_names[j], node_names[g_max_node_id+1], key_max_sz))
                 break;
         if (j == g_max_node_id + 1)
             ++g_max_node_id;
         else
-            node_names[g_max_node_id][0] = '\0';
+            node_names[g_max_node_id+1][0] = '\0';
         pg->vct[i].node_id = j;
     }
 
