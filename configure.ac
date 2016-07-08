@@ -1775,10 +1775,13 @@ for var in $enable_mpit_pvars ; do
             [nem],[enable_pvar_nem=yes],
             [recvq],[enable_pvar_recvq=yes],
             [rma],[enable_pvar_rma=yes],
+	    [dims],[enable_pvar_dims=yes],
             [all|yes],
             [enable_pvar_nem=yes
              enable_pvar_recvq=yes
-             enable_pvar_rma=yes],
+             enable_pvar_rma=yes
+	     enable_pvar_dims=yes
+	     ],
             [no|none],[],
             [IFS=$save_IFS
              AC_MSG_WARN([Unknown value ($option) for enable-mpit-pvars])
@@ -1809,6 +1812,14 @@ else
 fi
 AC_DEFINE_UNQUOTED(ENABLE_PVAR_RMA,$status_rma_pvars,
           [Define to 1 to enable rma-related MPI_T performance variables])
+
+if test -n "$enable_pvar_dims" ; then
+    status_dims_pvars=1
+else
+    status_dims_pvars=0
+fi
+AC_DEFINE_UNQUOTED(ENABLE_PVAR_DIMS,$status_dims_pvars,
+          [Define to 1 to enable getdims-related MPI_T performance variables])
 # ---------------------------------------------------------------------------
 # Support for the language bindings: Fortran 77, Fortran 90, and C++
 #
