@@ -171,6 +171,11 @@ AC_ARG_ENABLE(perftest,
 		[Include tests for basic performance consistency (default)])],,
 	[enable_perftest=yes])
 
+AC_ARG_ENABLE(large-tests,
+	[AC_HELP_STRING([--enable-large-tests],
+		[Enable tests which require large (>2GB per proc) amount of memory])],,
+	[enable_large_tests=no])
+
 AC_ARG_ENABLE(ft-tests,
 	[AC_HELP_STRING([--enable-ft-tests],
 		[Include tests for fault tolerance (default)])],,
@@ -686,7 +691,7 @@ AC_CHECK_TYPES([_Bool, float _Complex, double _Complex, long double _Complex])
 AC_CHECK_SIZEOF(void *,8)
 # for tests that require large mem
 largetest="#"
-if test $ac_cv_sizeof_void_p -ge 8; then
+if test "$enable_large_tests" = "yes" -a $ac_cv_sizeof_void_p -ge 8; then
     largetest=""
 fi
 AC_SUBST(largetest)
