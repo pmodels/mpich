@@ -1546,6 +1546,7 @@ AC_OUTPUT(maint/testmerge \
           info/Makefile \
           init/Makefile \
           pt2pt/Makefile \
+          pt2pt/testlist \
           mpi_t/Makefile \
           rma/Makefile \
           rma/testlist \
