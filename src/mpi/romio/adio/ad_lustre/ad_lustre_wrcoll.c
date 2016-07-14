@@ -42,7 +42,7 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
 					 ADIO_Offset *len_list, int *send_size,
 					 int *recv_size, ADIO_Offset off,
 					 int size, int *count,
-					 int *start_pos, 
+					 int *start_pos,
 					 int *sent_to_proc, int nprocs,
 					 int myrank, int buftype_is_contig,
 					 int contig_access_count,
@@ -58,6 +58,14 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
 void ADIOI_Heap_merge(ADIOI_Access *others_req, int *count,
                       ADIO_Offset *srt_off, int *srt_len, int *start_pos,
                       int nprocs, int nprocs_recv, int total_elements);
+
+static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *striping_info,
+                                         ADIO_Offset *offset_list, ADIO_Offset *len_list,
+                                         int contig_access_count, int currentValidDataIndex,
+                                         int count, int file_ptr_type, ADIO_Offset offset,
+                                         ADIO_Offset start_offset, ADIO_Offset end_offset,
+                                         ADIO_Offset firstFileOffset, ADIO_Offset lastFileOffset,
+                                         MPI_Datatype datatype, int myrank, int *error_code);
 
 void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 				   MPI_Datatype datatype,
@@ -88,6 +96,7 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     int *striping_info = NULL;
     ADIO_Offset **buf_idx = NULL;
     int old_error, tmp_error;
+    ADIO_Offset *count_sizes;
 
     MPI_Comm_size(fd->comm, &nprocs);
     MPI_Comm_rank(fd->comm, &myrank);
@@ -113,10 +122,25 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
          */
 	st_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
 	end_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
+    ADIO_Offset my_count_size=0;
+    /* One-sided aggregation needs the amount of data per rank as well because
+     * the difference in starting and ending offsets for 1 byte is 0 the same
+     * as 0 bytes so it cannot be distiguished.
+     */
+    if ((romio_write_aggmethod == 1) || (romio_write_aggmethod == 2)) {
+      count_sizes = (ADIO_Offset *) ADIOI_Malloc(nprocs*sizeof(ADIO_Offset));
+      MPI_Count buftype_size;
+      MPI_Type_size_x(datatype, &buftype_size);
+      my_count_size = (ADIO_Offset) count  * (ADIO_Offset)buftype_size;
+    }
 	MPI_Allgather(&start_offset, 1, ADIO_OFFSET, st_offsets, 1,
 		      ADIO_OFFSET, fd->comm);
 	MPI_Allgather(&end_offset, 1, ADIO_OFFSET, end_offsets, 1,
 		      ADIO_OFFSET, fd->comm);
+    if ((romio_write_aggmethod == 1) || (romio_write_aggmethod == 2)) {
+	  MPI_Allgather(&my_count_size, 1, ADIO_OFFSET, count_sizes, 1,
+                ADIO_OFFSET, fd->comm);
+    }
 	/* are the accesses of different processes interleaved? */
 	for (i = 1; i < nprocs; i++)
 	    if ((st_offsets[i] < end_offsets[i-1]) &&
@@ -148,6 +172,8 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 	    ADIOI_Free(len_list);
             ADIOI_Free(st_offsets);
             ADIOI_Free(end_offsets);
+        if ((romio_write_aggmethod == 1) || (romio_write_aggmethod == 2))
+          ADIOI_Free(count_sizes);
 	}
 
 	fd->fp_ind = orig_fp;
@@ -168,8 +194,47 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 	return;
     }
 
+    ADIO_Offset lastFileOffset = 0, firstFileOffset = -1;
+    int currentValidDataIndex = 0;
+    if ((romio_write_aggmethod == 1) || (romio_write_aggmethod == 2)) {
+      /* Take out the 0-data offsets by shifting the indexes with data to the front
+       * and keeping track of the valid data index for use as the length.
+       */
+      for (i=0; i<nprocs; i++) {
+        if (count_sizes[i] > 0) {
+          st_offsets[currentValidDataIndex] = st_offsets[i];
+          end_offsets[currentValidDataIndex] = end_offsets[i];
+
+          lastFileOffset = MPL_MAX(lastFileOffset,end_offsets[currentValidDataIndex]);
+          if (firstFileOffset == -1)
+            firstFileOffset = st_offsets[currentValidDataIndex];
+          else
+            firstFileOffset = MPL_MIN(firstFileOffset,st_offsets[currentValidDataIndex]);
+
+          currentValidDataIndex++;
+        }
+      }
+    }
+
     /* Get Lustre hints information */
     ADIOI_LUSTRE_Get_striping_info(fd, &striping_info, 1);
+    /* If the user has specified to use a one-sided aggregation method then do that at
+     * this point instead of the two-phase I/O.
+     */
+    if ((romio_write_aggmethod == 1) || (romio_write_aggmethod == 2)) {
+
+      ADIOI_LUSTRE_IterateOneSided(fd, buf, striping_info, offset_list, len_list, contig_access_count, currentValidDataIndex, count, file_ptr_type, offset, start_offset, end_offset, firstFileOffset, lastFileOffset, datatype, myrank, error_code);
+
+      ADIOI_Free(offset_list);
+      ADIOI_Free(len_list);
+      ADIOI_Free(st_offsets);
+      ADIOI_Free(end_offsets);
+      ADIOI_Free(count_sizes);
+      ADIOI_Free(striping_info);
+
+      goto fn_exit;
+
+    } // onesided aggregation
 
     /* calculate what portions of the access requests of this process are
      * located in which process
@@ -262,6 +327,7 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     ADIOI_Free(end_offsets);
     ADIOI_Free(striping_info);
 
+fn_exit:
 #ifdef HAVE_STATUS_SET_BYTES
     if (status) {
 	MPI_Count bufsize, size;
@@ -981,4 +1047,338 @@ static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
     for (i = 0; i < nprocs; i++)
 	if (send_size[i])
 	    sent_to_proc[i] = curr_to_proc[i];
+}
+
+/* This function calls ADIOI_OneSidedWriteAggregation iteratively to 
+ * essentially pack stripes of data into the collective buffer and then
+ * flush the collective buffer to the file when fully packed, repeating this
+ * process until all the data is written to the file.
+ */
+static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *striping_info,
+                                         ADIO_Offset *offset_list, ADIO_Offset *len_list,
+                                         int contig_access_count, int currentValidDataIndex,
+                                         int count, int file_ptr_type, ADIO_Offset offset,
+                                         ADIO_Offset start_offset, ADIO_Offset end_offset,
+                                         ADIO_Offset firstFileOffset, ADIO_Offset lastFileOffset,
+                                         MPI_Datatype datatype, int myrank, int *error_code)
+{
+    int i;
+    int stripesPerAgg = fd->hints->cb_buffer_size/striping_info[0];
+    if (stripesPerAgg == 0) {
+      /* The striping unit is larger than the collective buffer size
+       * therefore we must abort since the buffer has already been
+       * allocated during the open.
+       */
+      FPRINTF(stderr,"Error: The collective buffer size %d is less "
+                     "than the striping unit size %d - the ROMIO "
+                     "Lustre one-sided write aggregation algorithm "
+                     "cannot continue.\n",fd->hints->cb_buffer_size,striping_info[0]);
+      MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
+    /* The maximum number of aggregators we can use is the number of
+     * stripes used in the file - each agg writes exactly 1 stripe.
+     */
+    int numStripedAggs = striping_info[2];
+
+    int orig_cb_nodes = fd->hints->cb_nodes;
+    if (fd->hints->cb_nodes > numStripedAggs)
+      fd->hints->cb_nodes = numStripedAggs;
+    else if (fd->hints->cb_nodes < numStripedAggs)
+      numStripedAggs = fd->hints->cb_nodes;
+
+    /* Declare ADIOI_OneSidedStripeParms here as some fields will not change.
+     */
+    ADIOI_OneSidedStripeParms stripeParms;
+    stripeParms.stripeSize = striping_info[0];
+    stripeParms.stripedLastFileOffset = lastFileOffset;
+
+    /* The general algorithm here is to divide the file up into segements, a segment
+     * being defined as a contiguous region of the file which has up to one occurrence
+     * of each stripe - the data for each stripe being written out by a particular
+     * aggregator.  The segmentLen is the maximum size in bytes of each segment
+     * (stripeSize*number of aggs).  Iteratively call ADIOI_OneSidedWriteAggregation
+     * for each segment to aggregate the data to the collective buffers, but only do
+     * the actual write (via flushCB stripe parm) once stripesPerAgg stripes
+     * have been packed or the aggregation for all the data is complete, minimizing
+     * synchronization.
+     */
+    stripeParms.segmentLen = ((ADIO_Offset)numStripedAggs)*((ADIO_Offset)(striping_info[0]));
+    ADIO_Offset totalFileSize = (lastFileOffset-firstFileOffset)+(ADIO_Offset)1;
+
+    /* These arrays define the file offsets for the stripes for a given segment - similar
+     * to the concept of file domains in GPFS, essentially file domeains for the segment.
+     */
+    ADIO_Offset *segment_stripe_start = (ADIO_Offset *) ADIOI_Malloc(numStripedAggs*sizeof(ADIO_Offset));
+    ADIO_Offset *segment_stripe_end = (ADIO_Offset *) ADIOI_Malloc(numStripedAggs*sizeof(ADIO_Offset));
+
+    /* Find the actual range of stripes in the file that have data in the offset
+     * ranges being written -- skip holes at the front and back of the file.
+     */
+    int currentOffsetListIndex = 0;
+    int fileSegmentIter = 0;
+    int startingStripeWithData = 0;
+    int foundStartingStripeWithData = 0;
+    while (!foundStartingStripeWithData) {
+      if ( ((startingStripeWithData+1) * (ADIO_Offset)(striping_info[0])) > firstFileOffset)
+        foundStartingStripeWithData = 1;
+      else
+        startingStripeWithData++;
+    }
+
+    ADIO_Offset currentSegementOffset = (ADIO_Offset)startingStripeWithData * (ADIO_Offset)(striping_info[0]);
+
+    int numSegments = (int) ((lastFileOffset+(ADIO_Offset)1 - currentSegementOffset)/stripeParms.segmentLen);
+    if ((lastFileOffset+(ADIO_Offset)1 - currentSegementOffset)%stripeParms.segmentLen > 0)
+      numSegments++;
+
+    /* To support read-modify-write use a while-loop to redo the aggregation if necessary
+     * to fill in the holes.
+     */
+    int doAggregation = 1;
+    int holeFound = 0;
+    
+    /* Remember romio_onesided_no_rmw setting if we have to re-do
+     * the aggregation if holes are found.
+     */
+    int prev_romio_onesided_no_rmw = romio_onesided_no_rmw;
+
+    while (doAggregation) {
+
+      int totalDataWrittenLastRound = 0;
+
+      /* This variable tracks how many segment stripes we have packed into the agg
+       * buffers so we know when to flush to the file system.
+       */
+      stripeParms.segmentIter = 0;
+
+      /* stripeParms.stripesPerAgg is the number of stripes to aggregate before doing a flush.
+       */
+      stripeParms.stripesPerAgg = stripesPerAgg;
+      if (stripeParms.stripesPerAgg > numSegments)
+        stripeParms.stripesPerAgg = numSegments;
+
+      for (fileSegmentIter=0;fileSegmentIter < numSegments;fileSegmentIter++) {
+
+        int dataWrittenThisRound = 0;
+
+        /* Define the segment range in terms of file offsets.
+         */
+        ADIO_Offset segmentFirstFileOffset = currentSegementOffset;
+        if ((currentSegementOffset+stripeParms.segmentLen-(ADIO_Offset)1) > lastFileOffset)
+          currentSegementOffset = lastFileOffset;
+        else
+          currentSegementOffset += (stripeParms.segmentLen-(ADIO_Offset)1);
+        ADIO_Offset segmentLastFileOffset = currentSegementOffset;
+        currentSegementOffset++;
+
+        ADIO_Offset segment_stripe_offset = segmentFirstFileOffset;
+        for (i=0;i<numStripedAggs;i++) {
+          if (firstFileOffset > segmentFirstFileOffset)
+            segment_stripe_start[i] = firstFileOffset;
+          else
+            segment_stripe_start[i] = segment_stripe_offset;
+          if ((segment_stripe_offset + (ADIO_Offset)(striping_info[0])) > lastFileOffset)
+            segment_stripe_end[i] = lastFileOffset;
+          else
+            segment_stripe_end[i] = segment_stripe_offset + (ADIO_Offset)(striping_info[0]) - (ADIO_Offset)1;
+          segment_stripe_offset += (ADIO_Offset)(striping_info[0]);
+        }
+
+        /* In the interest of performance for non-contiguous data with large offset lists
+         * essentially modify the given offset and length list appropriately for this segment
+         * and then pass pointers to the sections of the lists being used for this segment
+         * to ADIOI_OneSidedWriteAggregation.  Remember how we have modified the list for this
+         * segment, and then restore it appropriately after processing for this segment has
+         * concluded, so it is ready for the next segment.
+         */
+        int segmentContigAccessCount = 0;
+        int startingOffsetListIndex = -1;
+        int endingOffsetListIndex = -1;
+        ADIO_Offset startingOffsetAdvancement = 0;
+        ADIO_Offset startingLenTrim = 0;
+        ADIO_Offset endingLenTrim = 0;
+
+        while ( ((offset_list[currentOffsetListIndex] + ((ADIO_Offset)(len_list[currentOffsetListIndex]))-(ADIO_Offset)1) < segmentFirstFileOffset) && (currentOffsetListIndex < (contig_access_count-1)))
+          currentOffsetListIndex++;
+        startingOffsetListIndex = currentOffsetListIndex;
+        endingOffsetListIndex = currentOffsetListIndex;
+        int offsetInSegment = 0;
+        ADIO_Offset offsetStart = offset_list[currentOffsetListIndex];
+        ADIO_Offset offsetEnd = (offset_list[currentOffsetListIndex] + ((ADIO_Offset)(len_list[currentOffsetListIndex]))-(ADIO_Offset)1);
+
+        if (len_list[currentOffsetListIndex] == 0)
+          offsetInSegment = 0;
+        else if ((offsetStart >= segmentFirstFileOffset) && (offsetStart <= segmentLastFileOffset)) {
+          offsetInSegment = 1;
+        }
+        else if ((offsetEnd >= segmentFirstFileOffset) && (offsetEnd <= segmentLastFileOffset)) {
+          offsetInSegment = 1;
+        }
+        else if ((offsetStart <= segmentFirstFileOffset) && (offsetEnd >= segmentLastFileOffset)) {
+          offsetInSegment = 1;
+        }
+
+        if (!offsetInSegment) {
+          segmentContigAccessCount = 0;
+        }
+        else { 
+          /* We are in the segment, advance currentOffsetListIndex until we are out of segment.
+           */
+          segmentContigAccessCount = 1;
+
+          while ((offset_list[currentOffsetListIndex] <= segmentLastFileOffset) && (currentOffsetListIndex < contig_access_count)) {
+            dataWrittenThisRound += (int) len_list[currentOffsetListIndex];
+            currentOffsetListIndex++;
+          }
+
+          if (currentOffsetListIndex > startingOffsetListIndex) {
+            /* If we did advance, if we are at the end need to check if we are still in segment.
+            */
+            if (currentOffsetListIndex == contig_access_count) {
+              currentOffsetListIndex--;
+            }
+            else if (offset_list[currentOffsetListIndex] > segmentLastFileOffset) {
+              /* We advanced into the last one and it still in the segment.
+               */
+              currentOffsetListIndex--;
+            }
+            else {
+              dataWrittenThisRound += (int) len_list[currentOffsetListIndex];
+            }
+            segmentContigAccessCount += (currentOffsetListIndex-startingOffsetListIndex);
+            endingOffsetListIndex = currentOffsetListIndex;
+          }
+        }
+
+        if (segmentContigAccessCount > 0) {
+          /* Trim edges here so all data in the offset list range fits exactly in the segment.
+           */
+          if (offset_list[startingOffsetListIndex] < segmentFirstFileOffset) {
+            startingOffsetAdvancement = segmentFirstFileOffset-offset_list[startingOffsetListIndex];
+            offset_list[startingOffsetListIndex] += startingOffsetAdvancement;
+            dataWrittenThisRound -= (int) startingOffsetAdvancement;
+            startingLenTrim = startingOffsetAdvancement;
+            len_list[startingOffsetListIndex] -= startingLenTrim;
+          }
+
+          if ((offset_list[endingOffsetListIndex] + ((ADIO_Offset)(len_list[endingOffsetListIndex]))-(ADIO_Offset)1) > segmentLastFileOffset) {
+            endingLenTrim = offset_list[endingOffsetListIndex]+ ((ADIO_Offset)(len_list[endingOffsetListIndex]))-(ADIO_Offset)1 - segmentLastFileOffset;
+            len_list[endingOffsetListIndex] -= endingLenTrim;
+            dataWrittenThisRound -= (int) endingLenTrim;
+          }
+        }
+
+        int holeFoundThisRound = 0;          
+
+        /* Once we have packed the collective buffers do the actual write.
+         */
+        if ((stripeParms.segmentIter == (stripeParms.stripesPerAgg-1)) || (fileSegmentIter == (numSegments-1))) {
+          stripeParms.flushCB = 1;
+        }
+        else
+          stripeParms.flushCB = 0;
+
+        stripeParms.firstStripedWriteCall = 0;
+        stripeParms.lastStripedWriteCall = 0;
+        if (fileSegmentIter == 0) {
+          stripeParms.firstStripedWriteCall = 1;
+        }
+        else if (fileSegmentIter == (numSegments-1))
+          stripeParms.lastStripedWriteCall = 1;
+
+        /* The difference in calls to ADIOI_OneSidedWriteAggregation is based on the whether the buftype is
+         * contiguous.  The algorithm tracks the position in the source buffer when called
+         * multiple times --  in the case of contiguous data this is simple and can be externalized with
+         * a buffer offset, in the case of non-contiguous data this is complex and the state must be tracked
+         * internally, therefore no external buffer offset.  Care was taken to minimize
+         * ADIOI_OneSidedWriteAggregation changes at the expense of some added complexity to the caller.
+         */
+        int bufTypeIsContig;
+        ADIOI_Datatype_iscontig(datatype, &bufTypeIsContig);
+        if (bufTypeIsContig) {
+          ADIOI_OneSidedWriteAggregation(fd,(ADIO_Offset*)&(offset_list[startingOffsetListIndex]), (ADIO_Offset*)&(len_list[startingOffsetListIndex]), segmentContigAccessCount, buf+totalDataWrittenLastRound, datatype, error_code, segmentFirstFileOffset, segmentLastFileOffset, currentValidDataIndex, segment_stripe_start, segment_stripe_end, &holeFoundThisRound,stripeParms);
+        }
+        else {
+          ADIOI_OneSidedWriteAggregation(fd,(ADIO_Offset*)&(offset_list[startingOffsetListIndex]), (ADIO_Offset*)&(len_list[startingOffsetListIndex]), segmentContigAccessCount, buf, datatype, error_code, segmentFirstFileOffset, segmentLastFileOffset, currentValidDataIndex, segment_stripe_start, segment_stripe_end, &holeFoundThisRound,stripeParms);
+        }
+
+        if (stripeParms.flushCB) {
+          stripeParms.segmentIter = 0;
+          if (stripesPerAgg > (numSegments-fileSegmentIter-1))
+            stripeParms.stripesPerAgg = numSegments-fileSegmentIter-1;
+          else
+            stripeParms.stripesPerAgg = stripesPerAgg;
+        }
+        else
+          stripeParms.segmentIter++;
+
+        if (holeFoundThisRound)
+          holeFound = 1;
+
+        /* If we know we won't be doing a pre-read in a subsequent call to 
+         * ADIOI_OneSidedWriteAggregation which will have a barrier to keep
+         * feeder ranks from doing rma to the collective buffer before the
+         * write completes that we told it do with the stripeParms.flushCB
+         * flag then we need to do a barrier here.
+         */
+        if (!romio_onesided_always_rmw && stripeParms.flushCB) {
+          if (fileSegmentIter < (numSegments-1)) {
+            MPI_Barrier(fd->comm);
+          }
+        }
+
+        /* Restore the offset_list and len_list to values that are ready for the
+         * next iteration.
+         */
+        if (segmentContigAccessCount > 0) {
+          offset_list[endingOffsetListIndex] += len_list[endingOffsetListIndex];
+          len_list[endingOffsetListIndex] = endingLenTrim;
+        }
+        totalDataWrittenLastRound += dataWrittenThisRound;
+      } // fileSegmentIter for-loop
+
+      /* Check for holes in the data unless romio_onesided_no_rmw is set.
+       * If a hole is found redo the entire aggregation and write.
+       */
+      if (!romio_onesided_no_rmw) {
+        int anyHolesFound = 0;
+        MPI_Allreduce(&holeFound, &anyHolesFound, 1, MPI_INT, MPI_MAX, fd->comm);
+
+        if (anyHolesFound) {
+          ADIOI_Free(offset_list);
+          ADIOI_Free(len_list);
+          ADIOI_Calc_my_off_len(fd, count, datatype, file_ptr_type, offset,
+	                        &offset_list, &len_list, &start_offset,
+	                        &end_offset, &contig_access_count);
+
+          currentSegementOffset = (ADIO_Offset)startingStripeWithData * (ADIO_Offset)(striping_info[0]);
+          romio_onesided_always_rmw = 1;
+          romio_onesided_no_rmw = 1;
+
+          /* Holes are found in the data and the user has not set
+           * romio_onesided_no_rmw --- set romio_onesided_always_rmw to 1
+           * and redo the entire aggregation and write and if the user has
+           * romio_onesided_inform_rmw set then inform him of this condition
+           * and behavior.
+           */
+          if (romio_onesided_inform_rmw && (myrank ==0)) {
+            FPRINTF(stderr,"Information: Holes found during one-sided "
+            "write aggregation algorithm --- re-running one-sided "
+            "write aggregation with ROMIO_ONESIDED_ALWAYS_RMW set to 1.\n");
+          }
+        }
+        else
+          doAggregation = 0;
+      }
+      else
+        doAggregation = 0;
+    } // while doAggregation
+    romio_onesided_no_rmw = prev_romio_onesided_no_rmw;
+
+    ADIOI_Free(segment_stripe_start);
+    ADIOI_Free(segment_stripe_end);
+
+    fd->hints->cb_nodes = orig_cb_nodes;
+
 }

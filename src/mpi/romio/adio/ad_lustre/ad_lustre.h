@@ -29,6 +29,7 @@
 #include <sys/ioctl.h>
 #include <lustre/lustre_user.h>
 #include "adio.h"
+#include "ad_tuning.h"
 /*#include "adioi.h"*/
 
 #ifdef HAVE_SIGNAL_H
