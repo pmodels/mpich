@@ -47,8 +47,10 @@ to MPI_GET_ADDRESS and disp represents a signed integer displacement. The result
 address is valid only at the process that generated base, and it must correspond
 to a location in the same object referenced by base. The addition is performed in
 a manner that results in the correct MPI_Aint representation of the output address,
-as if the process that originally produced base had called:
+as if the process that originally produced base had called\:
+.vb
     MPI_Get_address((char *) base + disp, &result)
+.ve
 
 .seealso: MPI_Aint_diff
 @*/
