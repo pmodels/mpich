@@ -58,7 +58,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
-MPI_Status_set_elements_x - XXX description here
+MPI_Status_set_elements_x - Set the number of elements in a status
 
 Input/Output Parameters:
 . status - status with which to associate count (Status)

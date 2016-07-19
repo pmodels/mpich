@@ -53,7 +53,8 @@ void MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count *lb, MPI_Count
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 /*@
-MPI_Type_get_extent_x - XXX description here
+MPI_Type_get_extent_x - Get the lower bound and extent as MPI_Count values
+ for a Datatype
 
 Input Parameters:
 . datatype - datatype (handle)

@@ -115,12 +115,12 @@ int MPIR_Comm_agree(MPID_Comm *comm_ptr, int *flag)
 MPIX_Comm_agree - Performs agreement operation on comm
 
 Input Parameters:
-+ comm - communicator (handle)
+. comm - communicator (handle)
 
 Output Parameters:
 . newcomm - new communicator (handle)
 
-.N Threadsafe
+.N ThreadSafe
 
 .N Fortran
 

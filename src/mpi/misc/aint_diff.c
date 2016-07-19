@@ -48,7 +48,9 @@ process that generated addr1 and addr2, and addr1 and addr2 must correspond to
 locations in the same object in the same process. The difference is calculated
 in a manner that results the signed difference from addr1 to addr2, as if the
 process that originally produced the addresses had called
+.vb
     (char *) addr1 - (char *) addr2
+.ve
 on the addresses initially passed to MPI_GET_ADDRESS.
 
 .seealso: MPI_Aint_add
