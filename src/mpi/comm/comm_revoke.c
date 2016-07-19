@@ -38,7 +38,7 @@ int MPIX_Comm_revoke(MPI_Comm comm) __attribute__((weak,alias("PMPIX_Comm_revoke
     MPIX_Comm_revoke - Prevent a communicator from being used in the future
 
 Input Parameters:
-+ comm - communicator to revoke
+. comm - communicator to revoke
 
 Notes:
 Asynchronously notifies all MPI processes associated with the communicator 'comm'.
@@ -48,7 +48,7 @@ call.
 .N Fortran
 
 .N Errors
-.N MPIX_SUCCESS
+.N MPI_SUCCESS
 @*/
 int MPIX_Comm_revoke(MPI_Comm comm)
 {

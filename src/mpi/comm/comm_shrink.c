@@ -119,12 +119,12 @@ MPIX_Comm_shrink - Creates a new communitor from an existing communicator while
                   excluding failed processes
 
 Input Parameters:
-+ comm - communicator (handle)
+. comm - communicator (handle)
 
 Output Parameters:
 . newcomm - new communicator (handle)
 
-.N Threadsafe
+.N ThreadSafe
 
 .N Fortran
 
