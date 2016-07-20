@@ -8,8 +8,6 @@
 #ifndef MPIDU_SHM_H
 #define MPIDU_SHM_H
 
-#include "mpiimpl.h"
-
 #define MPIDU_SHM_MAX_FNAME_LEN 256
 #define MPIDU_SHM_CACHE_LINE_LEN 64
 
