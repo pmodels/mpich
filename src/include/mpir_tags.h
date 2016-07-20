@@ -50,30 +50,62 @@
 
 /* This bitmask can be used to manually mask the tag space wherever it might
  * be necessary to do so (for instance in the receive queue */
+#ifdef HAVE_TAG_ERROR_BITS
 #define MPIR_TAG_ERROR_BIT (1 << 30)
+#else
+#define MPIR_TAG_ERROR_BIT
+#endif
 
 /* This bitmask is used to differentiate between a process failure
  * (MPIX_ERR_PROC_FAILED) and any other kind of failure (MPI_ERR_OTHER). */
+#ifdef HAVE_TAG_ERROR_BITS
 #define MPIR_TAG_PROC_FAILURE_BIT (1 << 29)
+#else
+#define MPIR_TAG_PROC_FAILURE_BIT
+#endif
 
 /* This macro checks the value of the error bit in the MPI tag and returns 1
  * if the tag is set and 0 if it is not. */
+#ifdef HAVE_TAG_ERROR_BITS
 #define MPIR_TAG_CHECK_ERROR_BIT(tag) ((MPIR_TAG_ERROR_BIT & (tag)) == MPIR_TAG_ERROR_BIT ? 1 : 0)
+#else
+#define MPIR_TAG_CHECK_ERROR_BIT(tag) 0
+#endif
 
 /* This macro checks the value of the process failure bit in the MPI tag and
  * returns 1 if the tag is set and 0 if it is not. */
+#ifdef HAVE_TAG_ERROR_BITS
 #define MPIR_TAG_CHECK_PROC_FAILURE_BIT(tag) ((MPIR_TAG_PROC_FAILURE_BIT & (tag)) == MPIR_TAG_PROC_FAILURE_BIT ? 1 : 0)
+#else
+#define MPIR_TAG_CHECK_PROC_FAILURE_BIT(tag) 0
+#endif
 
 /* This macro sets the value of the error bit in the MPI tag to 1 */
+#ifdef HAVE_TAG_ERROR_BITS
 #define MPIR_TAG_SET_ERROR_BIT(tag) ((tag) |= MPIR_TAG_ERROR_BIT)
+#else
+#define MPIR_TAG_SET_ERROR_BIT(tag) (tag)
+#endif
 
 /* This macro sets the value of the process failure bit in the MPI tag to 1 */
+#ifdef HAVE_TAG_ERROR_BITS
 #define MPIR_TAG_SET_PROC_FAILURE_BIT(tag) ((tag) |= (MPIR_TAG_ERROR_BIT | MPIR_TAG_PROC_FAILURE_BIT))
+#else
+#define MPIR_TAG_SET_PROC_FAILURE_BIT(tag) (tag)
+#endif
 
 /* This macro clears the value of the error bits in the MPI tag */
+#ifdef HAVE_TAG_ERROR_BITS
 #define MPIR_TAG_CLEAR_ERROR_BITS(tag) ((tag) &= ~(MPIR_TAG_ERROR_BIT ^ MPIR_TAG_PROC_FAILURE_BIT))
+#else
+#define MPIR_TAG_CLEAR_ERROR_BITS(tag) (tag)
+#endif
 
 /* This macro masks the value of the error bits in the MPI tag */
+#ifdef HAVE_TAG_ERROR_BITS
 #define MPIR_TAG_MASK_ERROR_BITS(tag) ((tag) & ~(MPIR_TAG_ERROR_BIT ^ MPIR_TAG_PROC_FAILURE_BIT))
+#else
+#define MPIR_TAG_MASK_ERROR_BITS(tag) (tag)
+#endif
 
 #endif /* MPIR_TAGS_H_INCLUDED */
