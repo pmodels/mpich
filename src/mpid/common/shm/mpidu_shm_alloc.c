@@ -152,7 +152,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *ba
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDU_SHM_SEG_COMMIT);
 
-    /* MPIDU_SHM_Seg_alloc() needs to have been called before this function */
+    /* MPIDU_shm_seg_alloc() needs to have been called before this function */
     MPIR_Assert(!ALLOCQ_EMPTY());
     MPIR_Assert(segment_len > 0);
 
