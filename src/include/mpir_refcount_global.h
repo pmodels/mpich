@@ -23,6 +23,7 @@ typedef volatile int MPIR_cc_t;
 #define MPIR_cc_decr(cc_ptr_, incomplete_)      \
     do {                                        \
         *(incomplete_) = --(*(cc_ptr_));        \
+        MPIR_Assert(*(incomplete_) >= 0);       \
     } while (0)
 
 
