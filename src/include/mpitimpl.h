@@ -53,7 +53,7 @@ typedef struct {
 /* Hash names to indices in a table */
 typedef struct {
     const char *name;
-    int idx;
+    unsigned idx;
     UT_hash_handle hh;  /* Makes this structure hashable */
 } name2index_hash_t;
 
