@@ -58,9 +58,12 @@ static inline int MPIR_cc_is_complete(MPIR_cc_t * cc_ptr)
 /* incomplete_==TRUE iff the cc > 0 after the decr */
 #define MPIR_cc_decr(cc_ptr_, incomplete_)                      \
     do {                                                        \
+        int ctr_;                                               \
         OPA_write_barrier();                                    \
         MPL_VG_ANNOTATE_HAPPENS_BEFORE(cc_ptr_);                \
-        *(incomplete_) = !OPA_decr_and_test_int(cc_ptr_);       \
+        ctr_ = OPA_fetch_and_decr_int(cc_ptr_);                 \
+        MPIR_Assert(ctr_ >= 1);                                 \
+        *(incomplete_) = (ctr_ != 1);                           \
         /* TODO check if this HA is actually necessary */       \
         if (!*(incomplete_)) {                                  \
             MPL_VG_ANNOTATE_HAPPENS_AFTER(cc_ptr_);             \
