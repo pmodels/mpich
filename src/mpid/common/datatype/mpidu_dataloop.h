@@ -9,6 +9,7 @@
 #define MPIDU_DATALOOP_H
 
 #include <mpi.h>
+#include <mpl.h>
 
 /* Note: this is where you define the prefix that will be prepended on
  * all externally visible generic dataloop and segment functions.
@@ -109,7 +110,5 @@
 #define MPIDU_DATALOOP_HETEROGENEOUS DLOOP_DATALOOP_HETEROGENEOUS
 #define MPIDU_DATALOOP_HOMOGENEOUS   DLOOP_DATALOOP_HOMOGENEOUS
 #define MPIDU_DATALOOP_ALL_BYTES     DLOOP_DATALOOP_ALL_BYTES
-
-#include <mpiimpl.h>
 
 #endif

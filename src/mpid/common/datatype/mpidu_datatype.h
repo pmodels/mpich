@@ -6,7 +6,6 @@
 #ifndef MPIDU_DATATYPE_H
 #define MPIDU_DATATYPE_H
 
-#include "mpiimpl.h"
 #include "mpidu_dataloop.h"
 #include "mpir_objects.h"
 
