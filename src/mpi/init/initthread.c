@@ -509,7 +509,11 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     MPIR_Assert(((unsigned)MPIR_Process.attrs.tag_ub & ((unsigned)MPIR_Process.attrs.tag_ub + 1)) == 0);
 
     /* Set aside tag space for tagged collectives and failure notification */
+#ifdef HAVE_TAG_ERROR_BITS
     MPIR_Process.attrs.tag_ub     >>= 3;
+#else
+    MPIR_Process.attrs.tag_ub     >>= 1;
+#endif
     /* The bit for error checking is set in a macro in mpiimpl.h for
      * performance reasons. */
     MPIR_Process.tagged_coll_mask   = MPIR_Process.attrs.tag_ub + 1;

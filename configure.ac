@@ -342,6 +342,12 @@ AC_ARG_ENABLE(error-messages,
         none      - No messages
 ],,enable_error_messages=all)
 
+AC_ARG_ENABLE(tag-error-bits,
+[  --enable-tag-error-bits=yes|no - Control whether bits are taken from the user tag for error handling.
+        yes       - Two bits are taken from the user tag to support error propagation.
+        no        - No bits are taken from the user tag (this could cause deadlock if an error is detected during a collective).
+],,enable_tag_error_bits=yes)
+
 AC_ARG_ENABLE(timing,
 [  --enable-timing=level - Control the amount of timing information
                            collected by the MPICH implementation.
@@ -954,6 +960,11 @@ case "$enable_error_messages" in
     ;;
 esac
 AC_DEFINE_UNQUOTED(MPICH_ERROR_MSG_LEVEL,$error_message_kind,[define to enable error messages])
+
+#error-tags
+if test "$enable_tag_error_bits" = "yes" ; then
+    AC_DEFINE([HAVE_TAG_ERROR_BITS],[1],[Define to enable tag error bits])
+fi
 
 # ----------------------------------------------------------------------------
 #
