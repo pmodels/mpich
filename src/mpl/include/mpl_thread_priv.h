@@ -56,7 +56,7 @@ void MPLI_cleanup_tls(void *a);
                 if (unlikely(*((int *) err_ptr_)))                      \
                     break;                                              \
             }                                                           \
-            addr = thread_ptr;                                          \
+            (*(void**)&addr) = thread_ptr;                              \
         }                                                               \
         else {                                                          \
             addr = &(var);                                              \
