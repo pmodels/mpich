@@ -81,7 +81,7 @@ int 	romio_tunegather;
  */
 
 void ad_get_env_vars() {
-    char *x, *dummy;
+    char *x;
 
     romio_write_aggmethod = 0;
     x = getenv( "ROMIO_WRITE_AGGMETHOD" );
