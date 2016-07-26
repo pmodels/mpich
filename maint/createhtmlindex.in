@@ -47,12 +47,18 @@ be run in a VPATH directory after configuring.\n";
 open( OUTFD, ">$WWWRoot/www/index.html" ) ||
     die "Cannot open $WWWRoot/www/index.html\n";
 
-&AddHeader( "Web pages for MPI and MPE" );
+&AddHeader( "Web pages for MPI" );
 
 print OUTFD "<H2>MPI Commands</H2>$eol";
 &AddDirectoryContents( "www", "www1" );
 
-print OUTFD "<H2>MPI Routines</H2>$eol";
+print OUTFD "<H2>MPI Routines and Constants</H2>$eol";
+if (-f "www/www3/mpi.cit") {
+    &createRedirects("www/www3", "mpi.cit");
+}
+else {
+    print STDERR "Could not find mapping file\n";
+}
 &AddDirectoryContents( "www", "www3" );
 
 #print OUTFD "<H2>MPE Routines</H2>$eol";
@@ -74,7 +80,7 @@ close( OUTFD );
 open( OUTFD, ">$WWWRoot/www/www3/index.htm" ) ||
     die "Cannot open $WWWRoot/www/www3/index.htm\n";
 
-&AddHeader( "Web pages for MPI Routines" );
+&AddHeader( "Web pages for MPI Routines and Constants" );
 &AddDirectoryContents( "www/www3", "." );
 &AddTrailer( );
 close( OUTFD );
@@ -103,6 +109,37 @@ sub AddHeader {
 
 sub AddTrailer {
     print OUTFD "</BODY>$eol</HTML>$eol";
+}
+
+# For the items (mostly MPI constants) that are within a single web page,
+# create a redirect page for them.  This allows us to point to a location
+# on the page, rather than just a page which is what a file link would
+# accomplish
+sub createRedirects {
+    $rootdir = $_[0];
+    $mapfile = $_[1];
+    open( MAPFD, "<$rootdir/$mapfile" ) || die "Cannot open map file $mapfile\n";
+    while (<MAPFD>) {
+	@fields = split(/\+/);
+	$name = $fields[1];
+	$url  = $fields[8];
+	if ($url =~ /(.*)\/([^\/]*)\.([HTMLhtml]*)#(.*)/) {
+	    $rooturl  = $1;
+	    $basefile = $2;
+	    $ext      = $3;
+	    $anchor   = $4;
+	    if ($basefile ne $anchor) {
+		open(RFD, ">$rootdir/$anchor.htm") || die "Cannot open redirect file $anchor.htm\n";
+		print RFD "<html><head><meta http-equiv=\"refresh\" content=\"0; url=$basefile.$ext#$anchor\" /></head></html>\n";
+		close RFD;
+	    }
+	}
+	else {
+	    print STDERR "Could not decode $url\n";
+	}
+
+    }
+    close MAPFD;
 }
 
 # Take all .htm and .html files and add them to the OUTFD file.

@@ -1,0 +1,547 @@
+This file contains the raw material for a file of the MPI defined
+constants
+
+The data could be organized to look like an enum - or add something to
+doctext that say "make each value in a list into an index entry to the
+same page.
+
+Doctext could also use a way to include an index to the corresponding
+page in the standard, perhaps by using an *input* index file (generated,
+perhaps, from the index entries in the LaTeX for the definition index entry).
+
+Needs to be updated for MPI-2 and MPI-3
+
+/*N Datatypes
+   Data types:
+   Note that the Fortran types should only be used in Fortran programs,
+   and the C types should only be used in C programs.  For example,
+   it is in error to use 'MPI_INT' for a Fortran INTEGER.
+   Datatypes are of type 'MPI_Datatype' in C, type 'INTEGER' in Fortran,
+   and 'Type(MPI_Datatype)' in Fortran08
+N*/
+
+We may want to enlarge on some of these.  For example, the description of
+communicators could include information from the standard, and/or links to the
+standard.
+
+/*D
+   Constants - Meaning of MPI''s defined constants
+
+.N Datatypes
+
+   C datatypes:
++I  MPI_CHAR - char
+.  MPI_SIGNED_CHAR - signed char
+.  MPI_UNSIGNED_CHAR - unsigned char
+.  MPI_BYTE - See standard; like unsigned char
+.  MPI_WCHAR - wide character (wchar_t)
+.  MPI_SHORT - short
+.  MPI_UNSIGNED_SHORT - unsigned short
+.  MPI_INT   - int
+.  MPI_UNSIGNED - unsigned int
+.  MPI_LONG - long
+.  MPI_UNSIGNED_LONG - unsigned long
+.  MPI_LONG_LONG_INT - long long
+.  MPI_LONG_LONG - synonyn for 'MPI_LONG_LONG_INT'
+.  MPI_UNSIGNED_LONG_LONG - unsigned long long
+.  MPI_FLOAT - float
+.  MPI_DOUBLE - double
+.  MPI_LONG_DOUBLE  - long double (some systems may not implement this)
+.  MPI_INT8_T  - int8_t
+.  MPI_INT16_T - int16_t
+.  MPI_INT32_T - int32_t
+.  MPI_INT64_T - int64_t
+.  MPI_UINT8_T  - uint8_t
+.  MPI_UINT16_T - uint16_t
+.  MPI_UINT32_T - uint32_t
+.  MPI_UINT64_T - uint64_t
+.  MPI_C_BOOL -  _Bool
+.  MPI_C_FLOAT_COMPLEX - float _Complex
+.  MPI_C_COMPLEX - float _Complex
+.  MPI_C_DOUBLE_COMPLEX - double _Complex
+-  MPI_C_LONG_DOUBLE_COMPLEX - long double _Complex
+
+
+   The following are datatypes for the MPI functions 'MPI_MAXLOC' and
+   'MPI_MINLOC'.
++I  MPI_FLOAT_INT - 'struct { float, int }'
+.  MPI_LONG_INT  - 'struct { long, int }'
+.  MPI_DOUBLE_INT - 'struct { double, int }'
+.  MPI_SHORT_INT  - 'struct { short, int }'
+.  MPI_2INT       - 'struct { int, int }'
+-  MPI_LONG_DOUBLE_INT - 'struct { long double, int }'; this
+  is an `optional` type, and may be set to 'MPI_DATATYPE_NULL'
+
+
+   Special datatypes for C and Fortran
++I MPI_PACKED - For 'MPI_Pack' and 'MPI_Unpack'
+. MPI_UB - For 'MPI_Type_struct'; an upper-bound indicator.  Removed in MPI 3
+- MPI_LB - For 'MPI_Type_struct'; a lower-bound indicator. Removed in MPI 3
+
+  Fortran datatypes:
++I MPI_REAL - 'REAL'
+. MPI_INTEGER - 'INTEGER'
+. MPI_LOGICAL - 'LOGICAL'
+. MPI_DOUBLE_PRECISION - 'DOUBLE PRECISION'
+. MPI_COMPLEX - 'COMPLEX'
+- MPI_DOUBLE_COMPLEX - 'complex*16' (or 'complex*32') where supported.
+
+  The following datatypes are optional
++I MPI_INTEGER1  - 'integer*1' if supported
+. MPI_INTEGER2  - 'integer*2' if supported
+. MPI_INTEGER4  - 'integer*4' if supported
+. MPI_INTEGER8  - 'integer*8' if supported
+. MPI_INTEGER16 - 'integer*16' if supported
+. MPI_REAL4     - 'real*4' if supported
+- MPI_REAL8     - 'real*8' if supported
+. MPI_REAL16    - 'real*16' if supported
+. MPI_COMPLEX8  - 'complex*8' if supported
+. MPI_COMPLEX16 - 'complex*16' if supported
+- MPI_COMPLEX32 - 'complex*32' if supported
+
+   The following are datatypes for the MPI functions 'MPI_MAXLOC' and
+   'MPI_MINLOC'.  In Fortran, these datatype always consist of
+   two elements of the same Fortran type.
++I MPI_2INTEGER - 'INTEGER,INTEGER'
+. MPI_2REAL    - 'REAL, REAL'
+- MPI_2DOUBLE_PRECISION - 'DOUBLE PRECISION, DOUBLE PRECISION'
+
+ MPI Datatypes for MPI Types
++I MPI_AINT - Datatype for an 'MPI_Aint'
+. MPI_OFFSET - Datatype for an 'MPI_Offset'
+- MPI_COUNT - Datatype for an 'MPI_Count'
+
+ MPI Datatype Combiner Names:
++I MPI_COMBINER_NAMED            - a named predefined datatype
+. MPI_COMBINER_DUP              - MPI_TYPE_DUP
+. MPI_COMBINER_CONTIGUOUS       - MPI_TYPE_CONTIGUOUS
+. MPI_COMBINER_VECTOR           - MPI_TYPE_VECTOR
+. MPI_COMBINER_HVECTOR_INTEGER  - Removed in MPI-3
+. MPI_COMBINER_HVECTOR          - MPI_TYPE_CREATE_HVECTOR
+. MPI_COMBINER_INDEXED          - MPI_TYPE_INDEXED
+. MPI_COMBINER_HINDEXED_INTEGER - Removed in MPI-3
+. MPI_COMBINER_HINDEXED         - MPI_TYPE_CREATE_HINDEXED
+. MPI_COMBINER_INDEXED_BLOCK    - MPI_TYPE_CREATE_INDEXED_BLOCK
+. MPI_COMBINER_STRUCT_INTEGER   - Removed in MPI-3
+. MPI_COMBINER_STRUCT           - MPI_TYPE_CREATE_STRUCT
+. MPI_COMBINER_SUBARRAY         - MPI_TYPE_CREATE_SUBARRAY
+. MPI_COMBINER_DARRAY           - MPI_TYPE_CREATE_DARRAY
+. MPI_COMBINER_F90_REAL         - MPI_TYPE_CREATE_F90_REAL
+. MPI_COMBINER_F90_COMPLEX      - MPI_TYPE_CREATE_F90_COMPLEX
+. MPI_COMBINER_F90_INTEGER      - MPI_TYPE_CREATE_F90_INTEGER
+. MPI_COMBINER_RESIZED          - MPI_TYPE_CREATE_RESIZED
+- MPI_COMBINER_HINDEXED_BLOCK   - MPI_TYPE_CREATE_HINDEXED_BLOCK
+
+ MPI Datatype Type Classes:
+ MPI Type classes used with routines to return Fortran types with defined
+ precision and range
++I MPI_TYPECLASS_REAL    - 'REAL'
+. MPI_TYPECLASS_INTEGER - 'INTEGER'
+- MPI_TYPECLASS_COMPLEX - 'COMPLEX'
+
+ MPI Darray and Subarray Values:
+ These values are used to create a datatype with the 'DARRAY' and 'SUBARRAY'
+ constructors.
++I MPI_ORDER_C              - Row-major order (as used by C)
+. MPI_ORDER_FORTRAN        - Column-major order (as used by Fortran)
+. MPI_DISTRIBUTE_BLOCK     - Block distribution
+. MPI_DISTRIBUTE_CYCLIC    - Cyclic distribution
+. MPI_DISTRIBUTE_NONE      - This dimension is not distributed
+- MPI_DISTRIBUTE_DFLT_DARG - Use the default distribution
+
+ Communicators:
+ Communicators are of type 'MPI_Comm' in C, 'INTEGER' in Fortran, and
+ 'Type(MPI_Comm)' in Fortran08
++I MPI_COMM_WORLD - Contains all of the processes
+- MPI_COMM_SELF - Contains only the calling process
+
+ Kind of communicator for 'MPI_COMM_SPLIT_TYPE':
+.I MPI_COMM_TYPE_SHARED - All processes that can share memory are grouped into
+ the same communicator.
+
+ Groups:
+ Groups are of type 'MPI_Group' in C, 'INTEGER' in Fortran,
+ and 'Type(MPI_Group)' in Fortran08
+
+.I MPI_GROUP_EMPTY - A group containing no members.
+
+   Results of the compare operations on groups and communicators:
++I  MPI_IDENT - Identical
+.  MPI_CONGRUENT  - (only for 'MPI_COMM_COMPARE') The groups are identical
+.  MPI_SIMILAR - Same members, but in a different order
+-  MPI_UNEQUAL - Different
+
+
+ Collective operations:
+ The collective combination operations (e.g., 'MPI_REDUCE', 'MPI_ALLREDUCE',
+ 'MPI_REDUCE_SCATTER', and 'MPI_SCAN') take a combination operation.
+ This operation is of type 'MPI_Op' in C and of type 'INTEGER' in Fortran.
+ The predefined operations are
+
++I  MPI_MAX - return the maximum
+.  MPI_MIN - return the minumum
+.  MPI_SUM - return the sum
+.  MPI_PROD - return the product
+.  MPI_LAND - return the logical and
+.  MPI_BAND - return the bitwise and
+.  MPI_LOR - return the logical or
+.  MPI_BOR - return the bitwise of
+.  MPI_LXOR - return the logical exclusive or
+.  MPI_BXOR - return the bitwise exclusive or
+.  MPI_MINLOC - return the minimum and the location (actually, the value of
+                the second element of the structure where the minimum of
+                the first is found)
+.  MPI_MAXLOC - return the maximum and the location
+.  MPI_REPLACE - replace b with a
+-  MPI_NO_OP - perform no operation
+
+Notes on collective operations:
+
+The reduction functions ('MPI_Op') do not return an error value.  As a result,
+if the functions detect an error, all they can do is either call 'MPI_Abort'
+or silently skip the problem.  Thus, if you change the error handler from
+'MPI_ERRORS_ARE_FATAL' to something else, for example, 'MPI_ERRORS_RETURN',
+then no error may be indicated.
+
+The reason for this is the performance problems in ensuring that
+all collective routines return the same error value.
+
+Note that not all datatypes are valid for these functions.  For example,
+'MPI_COMPLEX' is not valid for 'MPI_MAX' and 'MPI_MIN'.  In addition, the MPI
+1.1 standard did not include the C types 'MPI_CHAR' and 'MPI_UNSIGNED_CHAR'
+among the lists of arithmetic types for operations like 'MPI_SUM'.  However,
+since the C type 'char' is an integer type (like 'short'), it should have been
+included.  The MPI Forum will probably include 'char' and 'unsigned char'
+as a clarification to MPI 1.1; until then, users are advised that MPI
+implementations may not accept 'MPI_CHAR' and 'MPI_UNSIGNED_CHAR' as valid
+datatypes for 'MPI_SUM', 'MPI_PROD', etc.  MPICH does allow these datatypes.
+
+ Permanent key values:
+ These are the same in C and Fortran
+
++I MPI_TAG_UB - Largest tag value
+. MPI_HOST - Rank of process that is host, if any
+. MPI_IO - Rank of process that can do I/O
+. MPI_WTIME_IS_GLOBAL - Has value 1 if 'MPI_WTIME' is globally synchronized.
+. MPI_UNIVERSE_SIZE - Number of available processes.  See the standard for
+   a description of limitations on this value
+. MPI_LASTUSEDCODE - Last used MPI error code (check - code or class?)
+- MPI_APPNUM - Application number, starting from 0.  See the standard for
+ 'MPI_COMM_SPAWN_MULTIPLE' and 'mpiexec' for details
+
+  Null objects:
++I  MPI_COMM_NULL          - Null communicator
+.  MPI_OP_NULL            - Null operation
+.  MPI_GROUP_NULL         - Null group
+.  MPI_DATATYPE_NULL      - Null datatype
+.  MPI_REQUEST_NULL       - Null request
+.  MPI_ERRHANDLER_NULL    - Null error handler
+.  MPI_WIN_NULL           - Null window handle
+.  MPI_FILE_NULL          - Null file handle
+.  MPI_INFO_NULL          - Null info handle
+.  MPI_MESSAGE_NULL       - Null message handle
+.  MPI_ARGV_NULL          - Empty ARGV value for spawn commands
+.  MPI_ARGVS_NULL         - Empty ARGV array for spawn-multiple command
+.  MPI_T_ENUM_NULL        - Null MPI_T enum
+.  MPI_T_CVAR_HANDLE_NULL - Null MPI_T control variable handle
+.  MPI_T_PVAR_HANDLE_NULL - Null MPI_T performance variable handle
+-  MPI_T_PVAR_SESSION_NULL- Null MPI_T performance variable session handle
+
+ Predefined Constants:
++I MPI_MAX_PROCESSOR_NAME         - Maximum length of name returned by
+ 'MPI_GET_PROCESSOR_NAME'
+. MPI_MAX_ERROR_STRING           - Maximum length of string return by
+ 'MPI_ERROR_STRING'
+. MPI_MAX_LIBRARY_VERSION_STRING - Maximum length of string returned by
+ 'MPI_GET_LIBRARY_VERSION_STRING'???
+. MPI_MAX_PORT_NAME              - Maximum length of a port
+. MPI_MAX_OBJECT_NAME            - Maximum length of an object (?)
+. MPI_MAX_INFO_KEY               - Maximum length of an info key
+. MPI_MAX_INFO_VAL               - Maximum length of an info value
+. MPI_UNDEFINED                  - Used by many routines to indicated
+  undefined or unknown integer value
+. MPI_UNDEFINED_RANK             - Unknown rank
+. MPI_KEYVAL_INVALID             - Special keyval that may be used to detect
+   uninitialized keyvals.
+. MPI_BSEND_OVERHEAD             - Add this to the size of a 'MPI_BSEND'
+   buffer for each outstanding message
+. MPI_PROC_NULL                  - This rank may be used to send or receive from no-one.
+. MPI_ANY_SOURCE                 - In a receive, accept a message from anyone.
+. MPI_ANY_TAG                    - In a receive, accept a message with any tag value.
+. MPI_BOTTOM                     - May be used to indicate the bottom of the address space
+. MPI_IN_PLACE                   - Special location for buffer in some
+  collective communication routines
+. MPI_VERSION                    - Numeric value of MPI version (e.g., 3)
+- MPI_SUBVERSION                 - Numeric value of MPI subversion (e.g., 1)
+
+  Topology types:
++I MPI_CART       - Cartesian grid
+. MPI_GRAPH      - General graph
+- MPI_DIST_GRAPH - General distributed graph
+
+  Special values for distributed graph:
++I MPI_UNWEIGHTED    - Indicates that the edges are unweighted
+- MPI_WEIGHTS_EMPTY - Special address that indicates no array of weights
+ information
+
+ File Modes:
++I MPI_MODE_RDONLY          - Read only
+. MPI_MODE_RDWR            - Read and write
+. MPI_MODE_WRONLY          - Write only
+. MPI_MODE_CREATE          - Create the file if it does not exist
+. MPI_MODE_EXCL            - It is an error if creating a file that already
+ exists
+. MPI_MODE_DELETE_ON_CLOSE - Delete the file on close
+. MPI_MODE_UNIQUE_OPEN     - The file will not be concurrently opened elsewhere
+. MPI_MODE_APPEND          - The initial position of all file pointers is at
+ the end of the file
+- MPI_MODE_SEQUENTIAL      - File will only be accessed sequentially
+
+ File Displacement:
+.I MPI_DISPLACEMENT_CURRENT - Use with files opened with mode
+ 'MPI_MODE_SEQUENTIAL' in calls to 'MPI_FILE_SET_VIEW'
+
+File Positioning:
++I MPI_SEEK_SET             - Set the pointer to 'offset'
+. MPI_SEEK_CUR             - Set the pointer to the current position plus 'offset'
+- MPI_SEEK_END             - Set the pointer to the end of the file plus 'offset'
+
+Window attributes:
++I MPI_WIN_BASE - window base address.
+. MPI_WIN_SIZE - window size, in bytes
+. MPI_WIN_DISP_UNIT - displacement unit associated with the window
+. MPI_WIN_CREATE_FLAVOR - how the window was created
+- MPI_WIN_MODEL - memory model for window
+
+Window flavors:
++I MPI_WIN_FLAVOR_CREATE   - Window was created with MPI_WIN_CREATE.
+. MPI_WIN_FLAVOR_ALLOCATE - Window was created with MPI_WIN_ALLOCATE.
+. MPI_WIN_FLAVOR_DYNAMIC  - Window was created with MPI_WIN_CREATE_DYNAMIC.
+- MPI_WIN_FLAVOR_SHARED   - Window was created with MPI_WIN_ALLOCATE_SHARED.
+
+Window Memory Model:
++I MPI_WIN_SEPARATE - Separate public and private copies of window memory
+- MPI_WIN_UNIFIED - The publich and private copies are identical (by which
+ we mean that updates are eventually observed without additional RMA operations)
+
+Window Lock Types:
++I MPI_LOCK_EXCLUSIVE - Only one process at a time will execute accesses
+ within the lock
+- MPI_LOCK_SHARED - Not exclusive; multiple processes may execute accesses
+ within the lock
+
+Window Assertions:
+ See section 11.5 in MPI 3.1 for a detailed description of each of these
+ assertion values.
++I MPI_MODE_NOCHECK      - The matching calls to MPI_WIN_POST or MPI_WIN_START
+ have already completed, or no process holds or will attempt to acquire, a
+ conflicting lock.
+. MPI_MODE_NOSTORE      - The local window has not been updated by stores
+ since the last synchronization
+. MPI_MODE_NOPUT        - The local window will not be updated by put or
+ accumulate until the next synchronization
+. MPI_MODE_NOPRECEDE    - The fence does not complete any locally issued RMA
+ calls
+- MPI_MODE_NOSUCCEED    - The fence does not start any locally issued RMA calls
+
+Predefined Info Object:
+.I MPI_INFO_ENV - Contains the execution environment
+
+ MPI Status:
+ The 'MPI_Status' datatype is a structure in C.  The three elements for use
+ by programmers are
++I  MPI_SOURCE - Who sent the message
+.  MPI_TAG - What tag the message was sent with
+-  MPI_ERROR - Any error return (only when the error returned by the routine
+  has error class 'MPI_ERR_IN_STATUS')
+
++I MPI_STATUS_IGNORE   - Ignore a single 'MPI_Status' argument
+- MPI_STATUSES_IGNORE - Ignore an array of 'MPI_Status'
+
+Special value for error codes array:
+.I MPI_ERRCODES_IGNORE - Ignore an array of error codes
+
+ MPI_T Constants:
++I    MPI_T_VERBOSITY_USER_BASIC     - Basic information of interest to users
+.    MPI_T_VERBOSITY_USER_DETAIL    - Detailed information of interest to users
+.    MPI_T_VERBOSITY_USER_ALL       - All remaining information of interest to users
+.    MPI_T_VERBOSITY_TUNER_BASIC    - Basic information required for tuning
+.    MPI_T_VERBOSITY_TUNER_DETAIL   - Detailed information required for tuning
+.    MPI_T_VERBOSITY_TUNER_ALL      - All remaining information required for tuning
+.    MPI_T_VERBOSITY_MPIDEV_BASIC   - Basic information for MPI implementors
+
+
+.    MPI_T_VERBOSITY_MPIDEV_DETAIL  - Detailed information for MPI implementors
+.    MPI_T_VERBOSITY_MPIDEV_ALL     - All remaining information for MPI implementors
+.    MPI_T_BIND_NO_OBJECT           - Applies globally to entire MPI process
+.    MPI_T_BIND_MPI_COMM            - MPI communicators
+.    MPI_T_BIND_MPI_DATATYPE        - MPI datatypes
+.    MPI_T_BIND_MPI_ERRHANDLER      - MPI error handlers
+.    MPI_T_BIND_MPI_FILE            - MPI file handles
+.    MPI_T_BIND_MPI_GROUP           - MPI groups
+.    MPI_T_BIND_MPI_OP              - MPI reduction operators
+.    MPI_T_BIND_MPI_REQUEST         - MPI requests
+.    MPI_T_BIND_MPI_WIN             - MPI windows for one-sided communication
+.    MPI_T_BIND_MPI_MESSAGE         - MPI message object
+.    MPI_T_BIND_MPI_INFO            - MPI info object
+.    MPI_T_SCOPE_CONSTANT           -read-only, value is constant
+.    MPI_T_SCOPE_READONLY           - read-only, cannot be written, but can
+ change
+.    MPI_T_SCOPE_LOCAL              - may be writeable, writing is a local
+ operation
+.    MPI_T_SCOPE_GROUP              - may be writeable, must be done to a
+ group of processes, all processes in a group must be set to consistent values
+.    MPI_T_SCOPE_GROUP_EQ           - may be writeable, must be done to a
+ group of processes, all processes in a group must be set to the same value
+.    MPI_T_SCOPE_ALL                - may be writeable, must be done to all
+ processes, all connected processes must be set to consistent values
+.    MPI_T_SCOPE_ALL_EQ             - may be writeable, must be done to all
+ processes, all connected processes must be set to the same value
+.    MPI_T_PVAR_CLASS_STATE         - set of discrete states (MPI_INT)
+.    MPI_T_PVAR_CLASS_LEVEL         - utilization level of a resource
+.    MPI_T_PVAR_CLASS_SIZE          - size of a resource
+.    MPI_T_PVAR_CLASS_PERCENTAGE    - percentage utilization of a resource
+.    MPI_T_PVAR_CLASS_HIGHWATERMARK - high watermark of a resource
+.    MPI_T_PVAR_CLASS_LOWWATERMARK  - low watermark of a resource
+.    MPI_T_PVAR_CLASS_COUNTER       - number of occurances of an event
+.    MPI_T_PVAR_CLASS_AGGREGATE     - aggregate value over an event (e.g.,
+ sum of all memory allocations)
+.    MPI_T_PVAR_CLASS_TIMER         - aggretate time spent executing event
+-    MPI_T_PVAR_CLASS_GENERIC       - used for any other time of performance
+ variable
+
+ Thread levels:
++I MPI_THREAD_SINGLE     - Only one thread executes
+. MPI_THREAD_FUNNELED   - Only the main thread makes MPI calls
+. MPI_THREAD_SERIALIZED - Only one thread at a time makes MPI calls
+- MPI_THREAD_MULTIPLE   - Multiple threads may make MPI calls
+
+ Special MPI types and functions:
+
++I MPI_Aint   - C type that holds any valid address.
+. MPI_Count  - C type that holds any valid count.
+. MPI_Offset - C type that holds any valid file offset.
+. MPI_Handler_function - C function for handling errors (see
+ 'MPI_Errhandler_create') .
+. MPI_User_function - C function to combine values (see collective operations
+ and 'MPI_Op_create')
+. MPI_Copy_function - Function to copy attributes (see 'MPI_Keyval_create')
+. MPI_Delete_function - Function to delete attributes (see 'MPI_Keyval_create')
+. MPI_ERRORS_ARE_FATAL - Error handler that forces exit on error
+- MPI_ERRORS_RETURN - Error handler that returns error codes (as value of
+ MPI routine in C and through last argument in Fortran)
+
+ MPI Attribute Default Functions:
++I MPI_COMM_NULL_COPY_FN - Predefined attribute copy function for communicators
+. MPI_COMM_NULL_DELETE_FN - Predefined attribute delete function for communicators
+. MPI_COMM_DUP_FN  - Predefined attribute duplicate function for communicators
+. MPI_WIN_NULL_COPY_FN - Predefined attribute copy function for windows
+. MPI_WIN_NULL_DELETE_FN - Predefined attribute delete function for windows
+. MPI_WIN_DUP_FN   - Predefined attribute duplicate function for windows
+. MPI_TYPE_NULL_COPY_FN - Predefined attribute copy function for datatypes
+. MPI_TYPE_NULL_DELETE_FN - Predefined attribute delete function for datatypes
+- MPI_TYPE_DUP_FN - Predefined attribute duplicate function for datatypes
+
+ MPI-1 Attribute Default Functions:
++I MPI_NULL_COPY_FN - Predefined copy function
+. MPI_NULL_DELETE_FN - Predefined delete function
+- MPI_DUP_FN - Predefined duplication function
+
+ MPI Error classes:
++I   MPI_SUCCESS               - Successful return code
+.   MPI_ERR_BUFFER            - Invalid buffer pointer
+.   MPI_ERR_COUNT             - Invalid count argument
+.   MPI_ERR_TYPE              - Invalid datatype argument
+.   MPI_ERR_TAG               - Invalid tag argument
+.   MPI_ERR_COMM              - Invalid communicator
+.   MPI_ERR_RANK              - Invalid rank
+.   MPI_ERR_ROOT              - Invalid root
+.   MPI_ERR_GROUP             - Null group passed to function
+.   MPI_ERR_OP                - Invalid operation
+.   MPI_ERR_TOPOLOGY          - Invalid topology
+.   MPI_ERR_DIMS              - Illegal dimension argument
+.   MPI_ERR_ARG               - Invalid argument
+.   MPI_ERR_UNKNOWN           - Unknown error
+.   MPI_ERR_TRUNCATE          - Message truncated on receive
+.   MPI_ERR_OTHER             - Other error; use Error_string
+.   MPI_ERR_INTERN            - Internal error code
+.   MPI_ERR_IN_STATUS         - Look in status for error value
+.   MPI_ERR_PENDING           - Pending request
+.   MPI_ERR_REQUEST           - Invalid mpi_request handle
+.   MPI_ERR_ACCESS            - Permission denied
+.   MPI_ERR_AMODE             - Error related to the amode passed to
+ 'MPI_FILE_OPEN'
+.   MPI_ERR_BAD_FILE          - Invalid file name (e.g., path name too long)
+.   MPI_ERR_CONVERSION        - An error occurred in a user supplied data
+ conversion function
+.   MPI_ERR_DUP_DATAREP       - Conversion functions could not be registered
+ because a data representation identifier that was already defined was passed
+ to 'MPI_REGISTER_DATAREP'
+.   MPI_ERR_FILE_EXISTS       - File exists
+.   MPI_ERR_FILE_IN_USE       - File operation could not be completed, as
+ the file is currently open by some process
+.   MPI_ERR_FILE              - Invalid file handle
+.   MPI_ERR_IO                - Other I/O error
+.   MPI_ERR_NO_SPACE          - Not enough space
+.   MPI_ERR_NO_SUCH_FILE      - File does not exist
+.   MPI_ERR_READ_ONLY         - Read-only file or file system
+.   MPI_ERR_UNSUPPORTED_DATAREP - Unsupported datarep passed to
+ 'MPI_FILE_SET_VIEW'
+.   MPI_ERR_INFO              - Invalid info argument
+.   MPI_ERR_INFO_KEY          - Key longer than MPI_MAX_INFO_KEY
+.   MPI_ERR_INFO_VALUE        - Value longer than MPI_MAX_INFO_VAL
+.   MPI_ERR_INFO_NOKEY        - Invalid key passed to MPI_INFO_DELETE
+.   MPI_ERR_NAME              - Invalid service name passed to MPI_LOOKUP_NAME
+.   MPI_ERR_NO_MEM            - Alloc_mem could not allocate memory
+.   MPI_ERR_NOT_SAME          - Collective argument not identical on all
+ processes, or collective routines called in a different order by different
+ processes
+.   MPI_ERR_PORT              - Invalid port name passed to MPI_COMM_CONNECT
+.   MPI_ERR_QUOTA             - Quota exceeded
+.   MPI_ERR_SERVICE           - Invalid service name passed to MPI_UNPUBLISH_NAME
+.   MPI_ERR_SPAWN             - Error in spawning processes
+.   MPI_ERR_UNSUPPORTED_OPERATION - Unsupported operation, such as seeking on
+ a file which supports sequential access only
+.   MPI_ERR_WIN               - Invalid win argument
+.   MPI_ERR_BASE              - Invalid base passed to MPI_FREE_MEM
+.   MPI_ERR_LOCKTYPE          - Invalid locktype argument
+.   MPI_ERR_KEYVAL            - Erroneous attribute key
+.   MPI_ERR_RMA_CONFLICT      - Conflicting accesses to window
+.   MPI_ERR_RMA_SYNC          - Wrong synchronization of RMA calls
+.   MPI_ERR_SIZE              - Invalid size argument
+.   MPI_ERR_DISP              - Invalid disp argument
+.   MPI_ERR_ASSERT            - Invalid assert argument
+.   MPI_ERR_RMA_RANGE         - Target memory is not part of the window (in
+ the case of a window created with MPI_WIN_CREATE_DYNAMIC, target memory is
+ not attached)
+.   MPI_ERR_RMA_ATTACH        - Memory cannot be attached (e.g., because of
+ resource exhaustion)
+.   MPI_ERR_RMA_SHARED        - Memory cannot be shared (e.g., some process in
+ the group of the specified communicator cannot expose shared memory)
+.   MPI_ERR_RMA_FLAVOR        - Passed window has the wrong flavor for the
+ called function
+-   MPI_ERR_LASTCODE          - Last error code -- always at end
+
+Error codes for MPI_T:
+
++I MPI_T_ERR_MEMORY            - Out of memory
+. MPI_T_ERR_NOT_INITIALIZED   - Interface not initialized
+. MPI_T_ERR_CANNOT_INIT       - Interface not in the state to be initialized
+. MPI_T_ERR_INVALID_INDEX     - The index is invalid or has been deleted
+. MPI_T_ERR_INVALID_ITEM      - Item index queried is out of range
+. MPI_T_ERR_INVALID_HANDLE    - The handle is invalid
+. MPI_T_ERR_OUT_OF_HANDLES    - No more handles available
+. MPI_T_ERR_OUT_OF_SESSIONS   - No more sessions available
+. MPI_T_ERR_INVALID_SESSION   - Session argument is not valid
+. MPI_T_ERR_CVAR_SET_NOT_NOW  - Cvar can''t be set at this moment
+. MPI_T_ERR_CVAR_SET_NEVER    - Cvar can''t be set until end of execution
+. MPI_T_ERR_PVAR_NO_STARTSTOP - Pvar can''t be started or stopped
+. MPI_T_ERR_PVAR_NO_WRITE     - Pvar can''t be written or reset
+. MPI_T_ERR_PVAR_NO_ATOMIC    - Pvar can''t be R/W atomically
+. MPI_T_ERR_INVALID_NAME      - Name doesn''t match
+- MPI_T_ERR_INVALID           - Invalid use of the interface or bad parameter
+ values(s)
+
+D*/
+
+
