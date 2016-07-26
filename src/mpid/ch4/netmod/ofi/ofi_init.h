@@ -285,12 +285,11 @@ static inline int MPIDI_OFI_init_generic(int rank,
 
     if (do_av_table) {
         av_attr.type = FI_AV_TABLE;
-        mapped_table = NULL;
     }
     else {
         av_attr.type = FI_AV_MAP;
-        mapped_table = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t));
     }
+    mapped_table           = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t));
 
     av_attr.rx_ctx_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS;
 
@@ -373,12 +372,10 @@ static inline int MPIDI_OFI_init_generic(int rank,
     /* Table is constructed.  Map it    */
     /* -------------------------------- */
     MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, table, size, mapped_table, 0ULL, NULL), avmap);
-    if (!do_av_table) { /* AV_MAP */
-        for (i = 0; i < size; i++) {
-            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
-        }
-        MPL_free(mapped_table);
+    for (i = 0; i < size; i++) {
+        MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
     }
+    MPL_free(mapped_table);
 
     /* -------------------------------- */
     /* Create the id to object maps     */
