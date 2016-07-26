@@ -488,6 +488,10 @@ N*/
 . MPI_T_ERR_INVALID_ITEM - Item index queried is out of range.
 N*/
 
+/*N MPI_T_ERR_INVALID_NAME
+. MPI_T_ERR_INVALID_NAME - The variable or category name is invalid
+N*/
+
 /*N MPI_T_ERR_INVALID_HANDLE
 . MPI_T_ERR_INVALID_HANDLE - The handle is invalid.
 N*/
