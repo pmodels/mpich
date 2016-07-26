@@ -35,6 +35,7 @@ MANDOC_SUBDIRS =
 HTMLDOC_SUBDIRS =
 INSTALL_DATA_LOCAL_TARGETS =
 doc1_src_txt =
+doc3_src_txt =
 
 # add (+=) target names to this variable to add them to the dependencies of the
 # 'clean-local' target
@@ -438,7 +439,7 @@ endif !BUILD_COVERAGE
 # should be considered when dissecting suffix-based implicit rules.  These phony
 # suffix files should NOT be added to a .PHONY target, otherwise make will not
 # use the implicit rules to attempt to build them.
-SUFFIXES += .man-phony .html-phony .man1-phony .html1-phony .txt
+SUFFIXES += .man-phony .html-phony .man1-phony .html1-phony .man3-phony .html3-phony .txt
 
 # "make V=1" support for our documentation recipes
 doctextman_verbose = $(doctextman_verbose_$(V))
@@ -479,13 +480,22 @@ htmldoc_root3="--your-url-here--"
 .txt.html1-phony:
 	$(doctexthtml_verbose)$(DOCTEXT) -html -mpath $(htmldoc_path1) \
 	    -heading MPI -quotefmt -nolocation $(doctext_docnotes) $<
+.txt.man3-phony:
+	$(doctextman_verbose)$(DOCTEXT) -man -mpath $(mandoc_path3) -ext 3 \
+	    -heading MPI -quotefmt -nolocation $(doctext_docnotes) $<
+.txt.html3-phony:
+	$(doctexthtml_verbose)$(DOCTEXT) -html -mpath $(htmldoc_path3) \
+	    -heading MPI -quotefmt -nolocation \
+	    -index $(htmldoc_path3)/mpi.cit -indexdir $(htmldoc_root3) \
+		$(doctext_docnotes) $<
 
 # use mandoc-local target to force directory creation before running DOCTEXT
 mandoc:
 	test -d $(mandoc_path1) || $(MKDIR_P) $(mandoc_path1)
 	test -d $(mandoc_path3) || $(MKDIR_P) $(mandoc_path3)
 	$(MAKE) $(AM_MAKEFLAGS) mandoc-local
-mandoc-local: $(mpi_sources:.c=.man-phony) $(doc1_src_txt:.txt=.man1-phony)
+mandoc-local: $(mpi_sources:.c=.man-phony) $(doc1_src_txt:.txt=.man1-phony) \
+	$(doc3_src_txt:.txt=.man3-phony)
 	for subdir in $(MANDOC_SUBDIRS) - ; do \
 	    if test "x$$subdir" = "x-" ; then break ; fi ; \
 ## MANDOC_SUBDIRS might accidentally contain "."
@@ -502,14 +512,19 @@ mandoc-local: $(mpi_sources:.c=.man-phony) $(doc1_src_txt:.txt=.man1-phony)
 		fi \
 	    fi \
 	done
-
+	(cd $($abs_top_builddir) && $(abs_top_srcdir)/doc/mansrc/mancnst)
 
 # use htmldoc-local target to force directory creation before running DOCTEXT
+# Note that the mpi.cit is appended to by each update, so it must be removed
+# and recreated when the documentation files are updated
 htmldoc:
 	test -d $(top_builddir)/www/www1 || $(MKDIR_P) $(top_builddir)/www/www1
 	test -d $(top_builddir)/www/www3 || $(MKDIR_P) $(top_builddir)/www/www3
+	rm -f $(htmldoc_path3)/mpi.cit
 	$(MAKE) $(AM_MAKEFLAGS) htmldoc-local
-htmldoc-local: $(mpi_sources:.c=.html-phony) $(doc1_src_txt:.txt=.html1-phony)
+
+htmldoc-local: $(mpi_sources:.c=.html-phony) $(doc1_src_txt:.txt=.html1-phony) \
+	$(doc3_src_txt:.txt=.html3-phony)
 	for subdir in $(HTMLDOC_SUBDIRS) - ; do \
 	    if test "x$$subdir" = "x-" ; then break ; fi ; \
 ## HTMLDOC_SUBDIRS might accidentally contain "."
