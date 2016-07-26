@@ -263,7 +263,7 @@ typedef int Handle_ref_count;
 #define MPIR_Object_get_ref(objptr_) \
     ((objptr_)->ref_count)
 
-#define Object_add_ref_always(objptr_)               \
+#define MPIR_Object_add_ref_always(objptr_)               \
     do {                                                  \
         (objptr_)->ref_count++;                           \
         HANDLE_LOG_REFCOUNT_CHANGE(objptr_, "incr"); \
@@ -291,7 +291,7 @@ typedef OPA_int_t Handle_ref_count;
 #define MPIR_Object_get_ref(objptr_) \
     (OPA_load_int(&(objptr_)->ref_count))
 
-#define Object_add_ref_always(objptr_)               \
+#define MPIR_Object_add_ref_always(objptr_)               \
     do {                                                  \
         OPA_incr_int(&((objptr_)->ref_count));            \
         HANDLE_LOG_REFCOUNT_CHANGE(objptr_, "incr"); \
@@ -327,7 +327,7 @@ typedef OPA_int_t Handle_ref_count;
     do {                                                       \
         int handle_kind_ = HANDLE_GET_KIND((objptr_)->handle); \
         if (unlikely(handle_kind_ != HANDLE_KIND_BUILTIN)) {   \
-            Object_add_ref_always((objptr_));             \
+            MPIR_Object_add_ref_always((objptr_));             \
         }                                                      \
         else {                                                                                                 \
             MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE,TYPICAL,(MPL_DBG_FDEST,                                                   \
@@ -359,7 +359,7 @@ typedef OPA_int_t Handle_ref_count;
 
 /* the base case, where we just always manipulate the reference counts */
 #define MPIR_Object_add_ref(objptr_) \
-    Object_add_ref_always((objptr_))
+    MPIR_Object_add_ref_always((objptr_))
 #define MPIR_Object_release_ref(objptr_,inuse_ptr_) \
     MPIR_Object_release_ref_always((objptr_),(inuse_ptr_))
 
