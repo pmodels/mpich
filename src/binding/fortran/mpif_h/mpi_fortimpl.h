@@ -104,7 +104,7 @@
 #  define FORT_DLL_SPEC __declspec(dllimport)
 # endif
 #else
-# define FORT_DLL_SPEC
+# define FORT_DLL_SPEC MPICH_API_PUBLIC
 #endif
 
 
