@@ -154,13 +154,13 @@ struct mpif_cmblk5_t_ {
     MPI_Fint MPIF_UNWEIGHTED;
 };
 typedef struct mpif_cmblk5_t_ mpif_cmblk5_t;
-mpif_cmblk5_t mpifcmb5r @CMB_1INT_ALIGNMENT@ = {0};
-extern mpif_cmblk5_t _CMPIFCMB5  __attribute__ ((alias("mpifcmb5r")));
-extern mpif_cmblk5_t   MPIFCMB5  __attribute__ ((alias("mpifcmb5r")));
-extern mpif_cmblk5_t   MPIFCMB5_ __attribute__ ((alias("mpifcmb5r")));
-extern mpif_cmblk5_t _Cmpifcmb5  __attribute__ ((alias("mpifcmb5r")));
-extern mpif_cmblk5_t   mpifcmb5  __attribute__ ((alias("mpifcmb5r")));
-extern mpif_cmblk5_t   mpifcmb5_ __attribute__ ((alias("mpifcmb5r")));
+FORT_DLL_SPEC mpif_cmblk5_t mpifcmb5r @CMB_1INT_ALIGNMENT@ = {0};
+extern FORT_DLL_SPEC mpif_cmblk5_t _CMPIFCMB5  __attribute__ ((alias("mpifcmb5r")));
+extern FORT_DLL_SPEC mpif_cmblk5_t   MPIFCMB5  __attribute__ ((alias("mpifcmb5r")));
+extern FORT_DLL_SPEC mpif_cmblk5_t   MPIFCMB5_ __attribute__ ((alias("mpifcmb5r")));
+extern FORT_DLL_SPEC mpif_cmblk5_t _Cmpifcmb5  __attribute__ ((alias("mpifcmb5r")));
+extern FORT_DLL_SPEC mpif_cmblk5_t   mpifcmb5  __attribute__ ((alias("mpifcmb5r")));
+extern FORT_DLL_SPEC mpif_cmblk5_t   mpifcmb5_ __attribute__ ((alias("mpifcmb5r")));
 
 struct mpif_cmblk6_t_ {
     MPI_Fint MPIF_ERRCODES_IGNORE[1];
@@ -204,13 +204,13 @@ struct mpif_cmblk9_t_ {
     MPI_Fint MPIF_WEIGHTS_EMPTY;
 };
 typedef struct mpif_cmblk9_t_ mpif_cmblk9_t;
-mpif_cmblk9_t mpifcmb9r @CMB_1INT_ALIGNMENT@ = {0};
-extern mpif_cmblk9_t _CMPIFCMB9  __attribute__ ((alias("mpifcmb9r")));
-extern mpif_cmblk9_t   MPIFCMB9  __attribute__ ((alias("mpifcmb9r")));
-extern mpif_cmblk9_t   MPIFCMB9_ __attribute__ ((alias("mpifcmb9r")));
-extern mpif_cmblk9_t _Cmpifcmb9  __attribute__ ((alias("mpifcmb9r")));
-extern mpif_cmblk9_t   mpifcmb9  __attribute__ ((alias("mpifcmb9r")));
-extern mpif_cmblk9_t   mpifcmb9_ __attribute__ ((alias("mpifcmb9r")));
+FORT_DLL_SPEC mpif_cmblk9_t mpifcmb9r @CMB_1INT_ALIGNMENT@ = {0};
+extern FORT_DLL_SPEC mpif_cmblk9_t _CMPIFCMB9  __attribute__ ((alias("mpifcmb9r")));
+extern FORT_DLL_SPEC mpif_cmblk9_t   MPIFCMB9  __attribute__ ((alias("mpifcmb9r")));
+extern FORT_DLL_SPEC mpif_cmblk9_t   MPIFCMB9_ __attribute__ ((alias("mpifcmb9r")));
+extern FORT_DLL_SPEC mpif_cmblk9_t _Cmpifcmb9  __attribute__ ((alias("mpifcmb9r")));
+extern FORT_DLL_SPEC mpif_cmblk9_t   mpifcmb9  __attribute__ ((alias("mpifcmb9r")));
+extern FORT_DLL_SPEC mpif_cmblk9_t   mpifcmb9_ __attribute__ ((alias("mpifcmb9r")));
 
 #endif
 
