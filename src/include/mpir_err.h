@@ -15,11 +15,11 @@ struct MPIR_Comm;
 struct MPIR_Win;
 
 /* Bindings for internal routines */
-int MPIR_Err_return_comm( struct MPIR_Comm *, const char [], int );
-int MPIR_Err_return_win( struct MPIR_Win *, const char [], int );
+MPICH_API_PUBLIC int MPIR_Err_return_comm( struct MPIR_Comm *, const char [], int );
+MPICH_API_PUBLIC int MPIR_Err_return_win( struct MPIR_Win *, const char [], int );
 #ifdef MPI__FILE_DEFINED
 /* Only define if we have MPI_File */
-int MPIR_Err_return_file( MPI_File, const char [], int ); /* Romio version */
+MPICH_API_PUBLIC int MPIR_Err_return_file( MPI_File, const char [], int ); /* Romio version */
 #endif
 /* FIXME:
  * Update this description to match the current version of the routine,
@@ -100,7 +100,7 @@ int MPIR_Err_return_file( MPI_File, const char [], int ); /* Romio version */
   Error
 
   @*/
-int MPIR_Err_create_code( int, int, const char [], int, int, const char [], const char [], ... );
+MPICH_API_PUBLIC int MPIR_Err_create_code( int, int, const char [], int, int, const char [], const char [], ... );
 
 #ifdef USE_ERR_CODE_VALIST
 int MPIR_Err_create_code_valist( int, int, const char [], int, int, const char [], const char [], va_list );

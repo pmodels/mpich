@@ -432,7 +432,7 @@ while (<FD>) {
 
     # parse out attributes
     $fullline =~ s/MPICH_ATTR_POINTER_WITH_TYPE_TAG\(.*\)//g;
-
+    $fullline =~ s/MPICH_API_PUBLIC//g;
     # parse out unnecessary spaces
     $fullline =~ s/^ *//g;
     $fullline =~ s/ *$//g;

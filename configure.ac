@@ -2765,6 +2765,8 @@ AC_C_INLINE
 
 PAC_C_GNU_ATTRIBUTE
 PAC_C_BUILTIN_EXPECT
+PAC_CHECK_VISIBILITY
+AC_SUBST(MPICH_VISIBILITY_CFLAGS)
 # We need to check for the endianess in order to implement the
 # "external32" representations.  This defines "WORDS_BIGENDIAN when
 # the system is bigendian.

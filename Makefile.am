@@ -8,6 +8,7 @@ ACLOCAL_AMFLAGS = -I confdb
 
 # automake requires that we initialize variables to something, even just empty,
 # before appending to them with "+="
+AM_CFLAGS = @MPICH_VISIBILITY_CFLAGS@
 AM_CPPFLAGS =
 AM_FFLAGS =
 AM_FCFLAGS =

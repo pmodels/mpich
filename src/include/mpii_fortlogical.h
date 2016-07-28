@@ -14,9 +14,9 @@
 #define MPII_F_FALSE F77_FALSE_VALUE
 #else
 #if !defined(F77_RUNTIME_VALUES) && defined(F77_TRUE_VALUE_SET)
-extern const MPI_Fint MPII_F_TRUE, MPII_F_FALSE;
+MPICH_API_PUBLIC extern const MPI_Fint MPII_F_TRUE, MPII_F_FALSE;
 #else
-extern MPI_Fint MPII_F_TRUE, MPII_F_FALSE;
+MPICH_API_PUBLIC extern MPI_Fint MPII_F_TRUE, MPII_F_FALSE;
 #endif
 #endif
 #define MPII_TO_FLOG(a) ((a) ? MPII_F_TRUE : MPII_F_FALSE)

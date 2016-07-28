@@ -119,14 +119,14 @@ typedef enum {
 
 #define MPII_ATTR_KIND(_a) (_a & 0x1)
 
-int MPII_Comm_set_attr( MPI_Comm, int, void *, MPIR_Attr_type );
-int MPII_Type_set_attr( MPI_Datatype, int, void *, MPIR_Attr_type );
-int MPII_Win_set_attr( MPI_Win, int, void *, MPIR_Attr_type );
-int MPII_Comm_get_attr( MPI_Comm, int, void *, int *, MPIR_Attr_type );
-int MPII_Type_get_attr( MPI_Datatype, int, void *, int *, MPIR_Attr_type );
-int MPII_Win_get_attr( MPI_Win, int, void *, int *, MPIR_Attr_type );
+MPICH_API_PUBLIC int MPII_Comm_set_attr( MPI_Comm, int, void *, MPIR_Attr_type );
+MPICH_API_PUBLIC int MPII_Type_set_attr( MPI_Datatype, int, void *, MPIR_Attr_type );
+MPICH_API_PUBLIC int MPII_Win_set_attr( MPI_Win, int, void *, MPIR_Attr_type );
+MPICH_API_PUBLIC int MPII_Comm_get_attr( MPI_Comm, int, void *, int *, MPIR_Attr_type );
+MPICH_API_PUBLIC int MPII_Type_get_attr( MPI_Datatype, int, void *, int *, MPIR_Attr_type );
+MPICH_API_PUBLIC int MPII_Win_get_attr( MPI_Win, int, void *, int *, MPIR_Attr_type );
 
-int MPII_Comm_get_attr_fort( MPI_Comm, int, void *, int *, MPIR_Attr_type );
+MPICH_API_PUBLIC int MPII_Comm_get_attr_fort( MPI_Comm, int, void *, int *, MPIR_Attr_type );
 
 
 #if defined(__cplusplus)
@@ -174,7 +174,7 @@ int
     void* extra_state
     );
 
-void
+MPICH_API_PUBLIC void
 MPII_Keyval_set_proxy(
     int keyval,
     MPII_Attr_copy_proxy copy_proxy,
