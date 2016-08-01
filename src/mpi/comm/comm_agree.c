@@ -25,7 +25,6 @@ int MPIX_Comm_agree(MPI_Comm comm, int *flag) __attribute__((weak,alias("PMPIX_C
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPIX_Comm_agree
 #define MPIX_Comm_agree PMPIX_Comm_agree
-#endif
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_agree
@@ -105,6 +104,8 @@ int MPIR_Comm_agree(MPID_Comm *comm_ptr, int *flag)
   fn_fail:
     goto fn_exit;
 }
+
+#endif /* !defined(MPICH_MPI_FROM_PMPI) */
 
 #undef FUNCNAME
 #define FUNCNAME MPIX_Comm_agree
