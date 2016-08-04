@@ -119,23 +119,53 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     AC_SUBST([ofilib])
 
     PAC_SET_HEADER_LIB_PATH(libfabric)
-    PAC_PUSH_FLAG(LIBS)
-    PAC_CHECK_HEADER_LIB([rdma/fabric.h], [fabric], [fi_getinfo], [have_libfabric=yes], [have_libfabric=no])
-    PAC_POP_FLAG(LIBS)
-    if test "${have_libfabric}" = "yes" ; then
-        AC_MSG_NOTICE([CH4 OFI Netmod:  Using an external libfabric])
-        PAC_APPEND_FLAG([-lfabric],[WRAPPER_LIBS])
-    elif test ! -z "${with_libfabric}" ; then
-        AC_MSG_ERROR([Provided libfabric installation (--with-libfabric=${with_libfabric}) could not be configured.])
+
+    ofi_embedded=""
+    dnl Use embedded libfabric if we specify to do so or we didn't specify and the source is present
+    if test "${with_libfabric}" = "embedded" ; then
+        ofi_embedded="yes"
+    elif test -z ${with_libfabric} ; then
+        if test -f ${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/configure ; then
+            ofi_embedded="yes"
+        else
+            ofi_embedded="no"
+        fi
     else
-        # fallback to embedded libfabric
+        ofi_embedded="no"
+    fi
+
+    if test "${ofi_embedded}" = "yes" ; then
         AC_MSG_NOTICE([CH4 OFI Netmod:  Using an embedded libfabric])
-        PAC_CONFIG_SUBDIR_ARGS([src/mpid/ch4/netmod/ofi/libfabric],[],[],[AC_MSG_ERROR(libfabric configure failed)])
+        ofi_subdir_args="--enable-embedded"
+
+        dnl Unset all of these env vars so they don't pollute the libfabric configuration
+        PAC_PUSH_FLAG(CPPFLAGS)
+        PAC_CONFIG_SUBDIR_ARGS([src/mpid/ch4/netmod/ofi/libfabric],[$ofi_subdir_args],[],[AC_MSG_ERROR(libfabric configure failed)])
+        PAC_POP_FLAG(CPPFLAGS)
         PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric/include], [CPPFLAGS])
         PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/include], [CPPFLAGS])
 
+        if test "$do_direct_provider" = "true" ; then
+            if test "x${enable_direct}" != "x" && test "${enable_direct}" != "no" ; then
+                PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric/prov/${enable_direct}/include], [CPPFLAGS])
+                PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/prov/${enable_direct}/include], [CPPFLAGS])
+            else
+                AC_MSG_ERROR([Enabled direct OFI provider but didn't specify which one])
+            fi
+        fi
+
         ofisrcdir="${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric"
         ofilib="src/mpid/ch4/netmod/ofi/libfabric/src/libfabric.la"
+    else
+        PAC_PUSH_FLAG(LIBS)
+        PAC_CHECK_HEADER_LIB([rdma/fabric.h], [fabric], [fi_getinfo], [have_libfabric=yes], [have_libfabric=no])
+        PAC_POP_FLAG(LIBS)
+        if test "${have_libfabric}" = "yes" ; then
+            AC_MSG_NOTICE([CH4 OFI Netmod:  Using an external libfabric])
+            PAC_APPEND_FLAG([-lfabric],[WRAPPER_LIBS])
+        else
+            AC_MSG_ERROR([Provided libfabric installation (--with-libfabric=${with_libfabric}) could not be configured.])
+        fi
     fi
 
 ])dnl end AM_COND_IF(BUILD_CH4_NETMOD_OFI,...)

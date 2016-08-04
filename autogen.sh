@@ -164,6 +164,10 @@ MAKE=${MAKE-make}
 
 # external packages that require autogen.sh to be run for each of them
 externals="src/pm/hydra src/mpi/romio src/openpa"
+if [ -e src/mpid/ch4/netmod/ofi/libfabric ]; then
+    externals="${externals} src/mpid/ch4/netmod/ofi/libfabric"
+fi
+
 # amdirs are the directories that make use of autoreconf
 amdirs=". src/mpl src/util/logging/rlog"
 
