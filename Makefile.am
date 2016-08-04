@@ -512,7 +512,7 @@ mandoc-local: $(mpi_sources:.c=.man-phony) $(doc1_src_txt:.txt=.man1-phony) \
 		fi \
 	    fi \
 	done
-	(cd $($abs_top_builddir) && $(abs_top_srcdir)/doc/mansrc/mancnst)
+	(cd $(abs_top_builddir) && $(abs_top_srcdir)/doc/mansrc/mancnst)
 
 # use htmldoc-local target to force directory creation before running DOCTEXT
 # Note that the mpi.cit is appended to by each update, so it must be removed
