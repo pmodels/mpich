@@ -1516,7 +1516,6 @@ elif test $FROM_MPICH = yes ; then
    AC_DEFINE(HAVE_STATUS_SET_BYTES,1,[Define if status_set_bytes available])
    DEFINE_HAVE_MPI_GREQUEST="#define HAVE_MPI_GREQUEST 1"
    DEFINE_HAVE_MPI_GREQUEST_EXTENSIONS="#define HAVE_MPI_GREQUEST_EXTENSIONS 1"
-   AC_DEFINE(HAVE_MPIU_FUNCS,1,[Define if MPICH memory tracing macros defined])
    AC_DEFINE(HAVE_MPIX_H, 1, [])
    AC_DEFINE(HAVE_MPIIO_CONST, const, Set if MPI-IO prototypes use const qualifier)
    AC_DEFINE(HAVE_MPI_TYPE_SIZE_X, 1, [Define if MPI library provides MPI_TYPE_SIZE_X])
@@ -1531,7 +1530,6 @@ fi
 if test $WITHIN_KNOWN_MPI_IMPL = no ; then
    PAC_TEST_MPIR_STATUS_SET_BYTES
    PAC_TEST_MPI_GREQUEST
-   PAC_TEST_MPIU_FUNCS
    AC_DEFINE(PRINT_ERR_MSG,1,[Define for printing error messages])
    AC_CHECK_TYPE([MPI_Count],[],[AC_DEFINE_UNQUOTED([MPI_Count],[MPI_Aint],[Define to "MPI_Aint" if MPI does not provide MPI_Count]) ], [[#include <mpi.h>]])
    PAC_TEST_NEEDS_CONST
