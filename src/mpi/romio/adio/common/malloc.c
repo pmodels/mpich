@@ -37,12 +37,6 @@ void *ADIOI_Calloc_fn(size_t nelem, size_t elsize, int lineno, const char *fname
 void *ADIOI_Realloc_fn(void *ptr, size_t size, int lineno, const char *fname);
 void ADIOI_Free_fn(void *ptr, int lineno, const char *fname);
 
-/* we used to call MPIU_Malloc, MPIU_Calloc, etc.  these macros either call
- * malloc/calloc directly or they add instrumentation/tracing.  When we re-did
- * the build system in 2011 we hacked ROMIO to call MPIU_trmalloc directly --
- * once again ROMIO's sort-of standalone status bites us.  We dont' test for
- * MPIU_FUNCS: these are set in configure with an AC_DEFINE when we figure out
- * we are built as part of MPICH */
 void *ADIOI_Malloc_fn(size_t size, int lineno, const char *fname)
 {
     void *new;
@@ -50,11 +44,7 @@ void *ADIOI_Malloc_fn(size_t size, int lineno, const char *fname)
 #ifdef ROMIO_XFS
     new = (void *) memalign(XFS_MEMALIGN, size);
 #else
-#ifdef HAVE_MPIU_FUNCS
     new = (void *) MPL_malloc(size);
-#else
-    new = (void *) malloc(size);
-#endif
 #endif
     if (!new && size) {
 	FPRINTF(stderr, "Out of memory in file %s, line %d\n", fname, lineno);
@@ -70,11 +60,7 @@ void *ADIOI_Calloc_fn(size_t nelem, size_t elsize, int lineno, const char *fname
 {
     void *new;
 
-#ifdef HAVE_MPIU_FUNCS
     new = (void *) MPL_calloc(nelem, elsize);
-#else
-    new = (void *) calloc(nelem, elsize);
-#endif
     if (!new && nelem) {
 	FPRINTF(stderr, "Out of memory in file %s, line %d\n", fname, lineno);
 	MPI_Abort(MPI_COMM_WORLD, 1);
@@ -88,11 +74,7 @@ void *ADIOI_Realloc_fn(void *ptr, size_t size, int lineno, const char *fname)
 {
     void *new;
 
-#ifdef HAVE_MPIU_FUNCS
     new = (void *) MPL_realloc(ptr, size);
-#else
-    new = (void *) realloc(ptr, size);
-#endif
     if (!new && size) {
 	FPRINTF(stderr, "realloc failed in file %s, line %d\n", fname, lineno);
 	MPI_Abort(MPI_COMM_WORLD, 1);
@@ -110,11 +92,7 @@ void ADIOI_Free_fn(void *ptr, int lineno, const char *fname)
 	MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-#ifdef HAVE_MPIU_FUNCS
     MPL_free(ptr);
-#else
-    free(ptr);
-#endif
 }
 
 
