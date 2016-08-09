@@ -180,6 +180,11 @@ if test "$V5" -le 9 ; then V5=0$V5 ; fi
 MPICH_NUMVERSION=`expr $V1$V2$V3$V4$V5 + 0`
 AC_SUBST(MPICH_NUMVERSION)
 
+AC_ARG_WITH(custom-version-string,
+            AC_HELP_STRING([--with-custom-version-string], [Adds a user-specified value to the output of the mpichversion executable]),,with_custom_version_string="")
+MPICH_CUSTOM_STRING=$with_custom_version_string
+AC_SUBST(MPICH_CUSTOM_STRING)
+
 # ABIVERSION is the name used by simplemake, so we reassign the
 # libmpi_so_version number to it
 ABIVERSION=${libmpi_so_version}

@@ -56,6 +56,7 @@ extern const char MPII_Version_CC[];
 extern const char MPII_Version_CXX[];
 extern const char MPII_Version_F77[];
 extern const char MPII_Version_FC[];
+extern const char MPII_Version_custom[];
 
 int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype);
