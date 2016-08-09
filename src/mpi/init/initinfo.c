@@ -20,3 +20,4 @@ const char MPII_Version_CC[]           = MPICH_COMPILER_CC;
 const char MPII_Version_CXX[]          = MPICH_COMPILER_CXX;
 const char MPII_Version_F77[]          = MPICH_COMPILER_F77;
 const char MPII_Version_FC[]           = MPICH_COMPILER_FC;
+const char MPII_Version_custom[]       = MPICH_CUSTOM_STRING;

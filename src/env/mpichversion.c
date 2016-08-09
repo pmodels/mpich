@@ -29,7 +29,7 @@
 
 typedef enum { Version_number=0, Date=1, 
 	       Patches=2, Configure_args=3, Device=4,
-	       Compilers=5, LastField
+	       Compilers=5, Custom=6, LastField
              } fields;
 
 /*D
@@ -81,6 +81,10 @@ int main( int argc, char *argv[] )
 		     strcmp( argv[i], "--compiler" ) == 0 ||
 		     strcmp( argv[i], "-b" ) == 0)
 		flags[Compilers] = 1;
+	    else if (strcmp( argv[i], "-custom" ) == 0 ||
+		     strcmp( argv[i], "--custom" ) == 0 ||
+		     strcmp( argv[i], "-u" ) == 0)
+		flags[Custom] = 1;
 	    else {
 		fprintf( stderr, "Unrecognized argument %s\n", argv[i] );
 		exit(1);
@@ -106,6 +110,9 @@ int main( int argc, char *argv[] )
 	printf( "MPICH CXX: \t%s\n", MPII_Version_CXX );
 	printf( "MPICH F77: \t%s\n", MPII_Version_F77 );
 	printf( "MPICH FC: \t%s\n", MPII_Version_FC );
+    }
+    if (flags[Custom]) {
+        printf( "MPICH Custom Information: \t%s\n", MPII_Version_custom);
     }
 
     return 0;
