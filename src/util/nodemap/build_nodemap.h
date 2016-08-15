@@ -246,6 +246,7 @@ static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
     int block, block_node, node_proc;
     int i;
     int found_wrap;
+    int local_max_node_id = -1;
 
     *did_map = 1; /* reset upon failure */
 
@@ -287,10 +288,11 @@ static inline int MPIR_NODEMAP_populate_ids_from_mapping(char *mapping,
 
  break_out:
     /* identify maximum node id */
-    *max_node_id = -1;
     for (i = 0; i < sz; i++)
-        if (out_nodemap[i] + 1 > *max_node_id)
-            *max_node_id = out_nodemap[i];
+        if (out_nodemap[i] + 1 > local_max_node_id)
+            local_max_node_id = out_nodemap[i];
+
+    *max_node_id = local_max_node_id;
 
 fn_exit:
     MPL_free(mb);
