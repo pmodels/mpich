@@ -241,8 +241,7 @@ int hcoll_comm_destroy(MPIR_Comm * comm_ptr, void *param)
 
 int hcoll_do_progress(int *made_progress)
 {
-    if (made_progress)
-        *made_progress = 0;
+    *made_progress = 1;
     hcoll_progress_fn();
 
     return MPI_SUCCESS;
