@@ -50,6 +50,7 @@ static int world_rank(rte_grp_handle_t grp_h, rte_ec_handle_t ec);
 static void progress(void)
 {
     int ret;
+    int made_progress;
 
     if (0 == world_comm_destroying) {
         MPID_Progress_test();
@@ -58,7 +59,7 @@ static void progress(void)
         /* FIXME: The hcoll library needs to be updated to return
          * error codes.  The progress function pointer right now
          * expects that the function returns void. */
-        ret = hcoll_do_progress();
+        ret = hcoll_do_progress(&made_progress);
         assert(ret == MPI_SUCCESS);
     }
 }
