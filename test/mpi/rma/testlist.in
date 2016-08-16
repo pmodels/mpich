@@ -163,6 +163,7 @@ overlap_wins_acc 3
 overlap_wins_gacc 3
 overlap_wins_fop 3
 overlap_wins_cas 3
+lock_nested 3
 
 ## This test is not strictly correct.  This was meant to test out the
 ## case when MPI_Test is not nonblocking.  However, we ended up
