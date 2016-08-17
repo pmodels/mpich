@@ -47,7 +47,7 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
         base = *base_ptr;
 
     status = ucp_mem_map(MPIDI_UCX_global.context, &base, size, 0, &mem_h);
-    MPIDI_UCX_CHK_STATUS(status, ucp_mem_map);
+    MPIDI_UCX_CHK_STATUS(status);
     if (length > 0)
         *base_ptr = base;
 
@@ -56,7 +56,7 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
     /* pack the key */
     status = ucp_rkey_pack(ucp_context, mem_h, (void **) &rkey_buffer, &rkey_size);
 
-    MPIDI_UCX_CHK_STATUS(status, ucp_mem_map);
+    MPIDI_UCX_CHK_STATUS(status);
 
     rkey_sizes = (int *) MPL_malloc(sizeof(int) * comm_ptr->local_size);
     rkey_sizes[comm_ptr->rank] = (int) rkey_size;
@@ -96,7 +96,7 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
             MPIDI_UCX_WIN_INFO(win, i).rkey = NULL;
         }
         else
-            MPIDI_UCX_CHK_STATUS(status, ucp_mem_map);
+            MPIDI_UCX_CHK_STATUS(status);
     }
     share_data = MPL_malloc(comm_ptr->local_size * sizeof(struct _UCX_share));
 
@@ -211,8 +211,10 @@ static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win)
     ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
     /* make sure all operations are completed  */
     ucp_status = ucp_ep_flush(ep);
-    MPIDI_UCX_CHK_STATUS(ucp_status, ucp_worker_fence);
+
+    MPIDI_UCX_CHK_STATUS(ucp_status);
     mpi_errno = MPIDI_CH4R_mpi_win_unlock(rank, win);
+
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -263,7 +265,7 @@ static inline int MPIDI_NM_mpi_win_fence(int assert, MPIR_Win * win)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    MPIDI_UCX_CHK_STATUS(ucp_status, ucp_worker_fence);
+    MPIDI_UCX_CHK_STATUS(ucp_status);
   fn_exit:
     return mpi_errno;
   fn_fail:
@@ -394,7 +396,7 @@ static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win)
 /* only flush the endpoint */
     ucp_status = ucp_ep_flush(ep);
 
-    MPIDI_UCX_CHK_STATUS(ucp_status, ucp_worker_fence);
+    MPIDI_UCX_CHK_STATUS(ucp_status);
 
   fn_exit:
     return mpi_errno;
@@ -415,7 +417,7 @@ static inline int MPIDI_NM_mpi_win_flush_local_all(MPIR_Win * win)
      * a global flush. This is not good for performance - but OK for now */
     if (MPIDI_UCX_WIN(win).need_local_flush == 1) {
         ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
-        MPIDI_UCX_CHK_STATUS(ucp_status, ucp_worker_fence);
+        MPIDI_UCX_CHK_STATUS(ucp_status);
         MPIDI_UCX_WIN(win).need_local_flush = 0;
     }
 
@@ -433,7 +435,7 @@ static inline int MPIDI_NM_mpi_win_unlock_all(MPIR_Win * win)
 
     /*first we have to make sure that all operations are completed */
     ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
-    MPIDI_UCX_CHK_STATUS(ucp_status, ucp_worker_fence);
+    MPIDI_UCX_CHK_STATUS(ucp_status);
     mpi_errno = MPIDI_CH4R_mpi_win_unlock_all(win);
   fn_exit:
     return mpi_errno;
@@ -461,7 +463,7 @@ static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win)
 
     if (MPIDI_UCX_WIN(win).need_local_flush == 1) {
         ucp_status = ucp_ep_flush(ep);
-        MPIDI_UCX_CHK_STATUS(ucp_status, ucp_worker_fence);
+        MPIDI_UCX_CHK_STATUS(ucp_status);
         MPIDI_UCX_WIN(win).need_local_flush = 0;
     }
 
@@ -489,7 +491,7 @@ static inline int MPIDI_NM_mpi_win_flush_all(MPIR_Win * win)
 
     ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
 
-    MPIDI_UCX_CHK_STATUS(ucp_status, ucp_worker_fence);
+    MPIDI_UCX_CHK_STATUS(ucp_status);
 
   fn_exit:
     return mpi_errno;
