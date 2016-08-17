@@ -33,7 +33,7 @@ MPL_STATIC_INLINE_PREFIX int ucx_irecv_continous(void *buf,
                                                               &MPIDI_UCX_Handle_recv_callback);
 
 
-    MPIDI_CH4_UCX_REQUEST(ucp_request, tag_send_nb);
+    MPIDI_CH4_UCX_REQUEST(ucp_request);
 
 
     if (ucp_request->req == NULL) {
@@ -80,7 +80,7 @@ MPL_STATIC_INLINE_PREFIX int ucx_irecv_non_continous(void *buf,
                                                               &MPIDI_UCX_Handle_recv_callback);
 
 
-    MPIDI_CH4_UCX_REQUEST(ucp_request, tag_send_nb);
+    MPIDI_CH4_UCX_REQUEST(ucp_request);
 
 
     if (ucp_request->req == NULL) {
@@ -195,7 +195,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
                                                                       &MPIDI_UCX_Handle_recv_callback);
 
 
-    MPIDI_CH4_UCX_REQUEST(ucp_request, tag_send_nb);
+    MPIDI_CH4_UCX_REQUEST(ucp_request);
 
     if (ucp_request->req == NULL) {
         req = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);

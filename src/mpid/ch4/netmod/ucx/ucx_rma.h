@@ -33,7 +33,7 @@ static inline int MPIDI_UCX_contig_put(const void *origin_addr,
     if (status == UCS_INPROGRESS)
         MPIDI_UCX_WIN(win).need_local_flush = 1;
     else
-        MPIDI_UCX_CHK_STATUS(status, ucp_mem_map);
+        MPIDI_UCX_CHK_STATUS(status);
 
   fn_exit:
     return mpi_errno;
@@ -67,7 +67,7 @@ static inline int MPIDI_UCX_contig_get(void *origin_addr,
     if (status == UCS_INPROGRESS)
         MPIDI_UCX_WIN(win).need_local_flush = 1;
     else
-        MPIDI_UCX_CHK_STATUS(status, ucp_mem_map);
+        MPIDI_UCX_CHK_STATUS(status);
 
   fn_exit:
     return mpi_errno;

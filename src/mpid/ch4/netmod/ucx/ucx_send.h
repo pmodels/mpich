@@ -39,7 +39,7 @@ MPL_STATIC_INLINE_PREFIX int ucx_send_continous(const void *buf,
         (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, buf, data_sz, ucp_dt_make_contig(1),
                                                     ucx_tag, &MPIDI_UCX_Handle_send_callback);
 
-    MPIDI_CH4_UCX_REQUEST(ucp_request, tag_send_nb);
+    MPIDI_CH4_UCX_REQUEST(ucp_request);
 
     if (ucp_request == NULL) {
         req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
@@ -96,7 +96,7 @@ MPL_STATIC_INLINE_PREFIX int ucx_sync_send_continous(const void *buf,
         (MPIDI_UCX_ucp_request_t *) ucp_tag_send_sync_nb(ep, buf, data_sz, ucp_dt_make_contig(1),
                                                          ucx_tag, &MPIDI_UCX_Handle_send_callback);
 
-    MPIDI_CH4_UCX_REQUEST(ucp_request, tag_send_nb);
+    MPIDI_CH4_UCX_REQUEST(ucp_request);
     if (ucp_request->req) {
         req = ucp_request->req;
         ucp_request->req = NULL;
@@ -147,7 +147,7 @@ MPL_STATIC_INLINE_PREFIX int ucx_sync_send_non_continous(const void *buf,
                                                          datatype->dev.netmod.ucx.ucp_datatype,
                                                          ucx_tag, &MPIDI_UCX_Handle_send_callback);
 
-    MPIDI_CH4_UCX_REQUEST(ucp_request, tag_send_nb);
+    MPIDI_CH4_UCX_REQUEST(ucp_request);
 
     if (ucp_request->req) {
         req = ucp_request->req;
@@ -206,7 +206,7 @@ MPL_STATIC_INLINE_PREFIX int ucx_send_non_continous(const void *buf,
                                                     datatype->dev.netmod.ucx.ucp_datatype, ucx_tag,
                                                     &MPIDI_UCX_Handle_send_callback);
 
-    MPIDI_CH4_UCX_REQUEST(ucp_request, tag_send_nb);
+    MPIDI_CH4_UCX_REQUEST(ucp_request);
 
     if (ucp_request == NULL) {
         req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);

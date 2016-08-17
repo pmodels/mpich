@@ -43,7 +43,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_INIT);
 
     ucx_status = ucp_config_read(NULL, NULL, &config);
-    MPIDI_UCX_CHK_STATUS(ucx_status, read_config);
+    MPIDI_UCX_CHK_STATUS(ucx_status);
 
     /* For now use only the tag feature */
     features = UCP_FEATURE_TAG | UCP_FEATURE_RMA;
@@ -52,16 +52,16 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     ucp_params.request_init = MPIDI_UCX_Request_init_callback;
     ucp_params.request_cleanup = NULL;
     ucx_status = ucp_init(&ucp_params, config, &MPIDI_UCX_global.context);
-    MPIDI_UCX_CHK_STATUS(ucx_status, init);
+    MPIDI_UCX_CHK_STATUS(ucx_status);
     ucp_config_release(config);
 
     ucx_status = ucp_worker_create(MPIDI_UCX_global.context, UCS_THREAD_MODE_SERIALIZED,
                                    &MPIDI_UCX_global.worker);
-    MPIDI_UCX_CHK_STATUS(ucx_status, worker_create);
+    MPIDI_UCX_CHK_STATUS(ucx_status);
     ucx_status =
         ucp_worker_get_address(MPIDI_UCX_global.worker, &MPIDI_UCX_global.if_address,
                                &MPIDI_UCX_global.addrname_len);
-    MPIDI_UCX_CHK_STATUS(ucx_status, get_worker_address);
+    MPIDI_UCX_CHK_STATUS(ucx_status);
 
 
     val = valS;
@@ -75,11 +75,11 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     val = valS;
     sprintf(keyS, "UCX-%d", rank);
     pmi_errno = PMI_KVS_Put(MPIDI_UCX_global.kvsname, keyS, val);
-    MPIDI_UCX_PMI_ERROR(pmi_errno, pmi_put_name);
+    MPIDI_UCX_PMI_ERROR(pmi_errno);
     pmi_errno = PMI_KVS_Commit(MPIDI_UCX_global.kvsname);
-    MPIDI_UCX_PMI_ERROR(pmi_errno, pmi_commit);
+    MPIDI_UCX_PMI_ERROR(pmi_errno);
     pmi_errno = PMI_Barrier();
-    MPIDI_UCX_PMI_ERROR(pmi_errno, pmi_barrier);
+    MPIDI_UCX_PMI_ERROR(pmi_errno);
 
     ///table = MPL_malloc(size * MPIDI_UCX_NAME_LEN);
     MPIDI_UCX_global.pmi_addr_table = NULL;
@@ -90,17 +90,17 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     for (i = 0; i < size; i++) {
         sprintf(keyS, "UCX-%d", i);
         pmi_errno = PMI_KVS_Get(MPIDI_UCX_global.kvsname, keyS, valS, MPIDI_UCX_KVSAPPSTRLEN);
-        MPIDI_UCX_PMI_ERROR(pmi_errno, pmi_commit);
+        MPIDI_UCX_PMI_ERROR(pmi_errno);
         str_errno = MPL_str_get_binary_arg(valS, "UCX", remote_addr,
                                            (int) MPIDI_UCX_KVSAPPSTRLEN, (int *) &maxlen);
         if (maxlen > MPIDI_UCX_global.max_addr_len)
             MPIDI_UCX_global.max_addr_len = maxlen;
-        /* MPIDI_UCX_STR_ERRCHK(str_errno, buscard_len); */
+
         ucx_status = ucp_ep_create(MPIDI_UCX_global.worker,
                                    (ucp_address_t *) remote_addr,
                                    &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
 
-        MPIDI_UCX_CHK_STATUS(ucx_status, ep_create);
+        MPIDI_UCX_CHK_STATUS(ucx_status);
         memset(remote_addr, 0x0, maxlen);
     }
 
@@ -135,7 +135,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
             ucp_ep_destroy(MPIDI_UCX_AV(&MPIDIU_get_av(i, j)).dest);
     }
     pmi_errno = PMI_Barrier();
-    MPIDI_UCX_PMI_ERROR(pmi_errno, pmi_barrier);
+    MPIDI_UCX_PMI_ERROR(pmi_errno);
 
 
     if (MPIDI_UCX_global.worker != NULL)
@@ -196,8 +196,8 @@ static inline int allocate_address_table()
 
     for (i = 0; i < size; i++) {
         sprintf(keyS, "UCX-%d", i);
-        PMI_KVS_Get(MPIDI_UCX_global.kvsname, keyS, valS, MPIDI_UCX_KVSAPPSTRLEN);
-        // MPIDI_UCX_PMI_ERROR(pmi_errno, pmi_commit);
+        pmi_errno = PMI_KVS_Get(MPIDI_UCX_global.kvsname, keyS, valS, MPIDI_UCX_KVSAPPSTRLEN);
+        MPIDI_UCX_PMI_ERROR(pmi_errno);
         MPL_str_get_binary_arg(valS, "UCX", &MPIDI_UCX_global.pmi_addr_table[len * i],
                                (int) len, (int *) &maxlen);
     }
