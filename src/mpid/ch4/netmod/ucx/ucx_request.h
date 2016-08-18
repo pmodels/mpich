@@ -15,7 +15,7 @@
 #include "mpidch4r.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_request_release
+#define FUNCNAME MPIDI_NM_am_request_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_NM_am_request_init(MPIR_Request * req)
