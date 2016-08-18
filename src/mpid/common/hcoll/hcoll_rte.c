@@ -29,8 +29,6 @@ static int ec_handle_compare(rte_ec_handle_t handle_1,
 static int get_ec_handles(int num_ec,
                           int *ec_indexes, rte_grp_handle_t, rte_ec_handle_t * ec_handles);
 
-static int get_my_ec(rte_grp_handle_t, rte_ec_handle_t * ec_handle);
-
 static int group_size(rte_grp_handle_t group);
 static int my_rank(rte_grp_handle_t grp_h);
 static int ec_on_local_node(rte_ec_handle_t ec, rte_grp_handle_t group);
@@ -298,21 +296,6 @@ static int get_ec_handles(int num_ec,
     }
     return HCOLL_SUCCESS;
 }
-
-#undef FUNCNAME
-#define FUNCNAME get_my_ec
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static int get_my_ec(rte_grp_handle_t grp_h, rte_ec_handle_t * ec_handle)
-{
-    MPIR_Comm *comm;
-    comm = (MPIR_Comm *) grp_h;
-    int my_rank = MPIR_Comm_rank(comm);
-    ec_handle->handle = (void *) (comm->vcrt->vcr_table[my_rank]);
-    ec_handle->rank = my_rank;
-    return HCOLL_SUCCESS;
-}
-
 
 #undef FUNCNAME
 #define FUNCNAME group_size
