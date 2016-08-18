@@ -748,4 +748,124 @@ __CH4_INLINE__ MPI_Aint MPIDI_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
     return result;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Type_create_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+__CH4_INLINE__ int MPIDI_Type_create_hook(MPIR_Datatype * type)
+{
+    int mpi_errno;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_TYPE_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_TYPE_CREATE_HOOK);
+
+    mpi_errno = MPIDI_NM_type_create_hook(type);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+#if defined(MPIDI_BUILD_CH4_SHM)
+    mpi_errno = MPIDI_SHM_type_create_hook(type);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+#endif
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_TYPE_CREATE_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Type_free_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+__CH4_INLINE__ int MPIDI_Type_free_hook(MPIR_Datatype * type)
+{
+    int mpi_errno;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_TYPE_FREE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_TYPE_FREE_HOOK);
+
+    mpi_errno = MPIDI_NM_type_free_hook(type);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+#if defined(MPIDI_BUILD_CH4_SHM)
+    mpi_errno = MPIDI_SHM_type_free_hook(type);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+#endif
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_TYPE_FREE_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Op_create_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+__CH4_INLINE__ int MPIDI_Op_create_hook(MPIR_Op * op)
+{
+    int mpi_errno;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OP_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OP_CREATE_HOOK);
+
+    mpi_errno = MPIDI_NM_op_create_hook(op);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+#if defined(MPIDI_BUILD_CH4_SHM)
+    mpi_errno = MPIDI_SHM_op_create_hook(op);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+#endif
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OP_CREATE_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Op_free_hook
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+__CH4_INLINE__ int MPIDI_Op_free_hook(MPIR_Op * op)
+{
+    int mpi_errno;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OP_FREE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OP_FREE_HOOK);
+
+    mpi_errno = MPIDI_NM_op_free_hook(op);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+
+#if defined(MPIDI_BUILD_CH4_SHM)
+    mpi_errno = MPIDI_SHM_op_free_hook(op);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+#endif
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OP_FREE_HOOK);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 #endif /* CH4_INIT_H_INCLUDED */

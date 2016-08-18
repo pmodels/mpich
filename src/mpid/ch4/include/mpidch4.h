@@ -374,8 +374,6 @@ __CH4_INLINE__ int MPIDI_CH4_rank_is_local(int rank, MPIR_Comm * comm);
 #define MPID_GPID_ToLpidArray            MPIDI_GPID_ToLpidArray
 #define MPID_Create_intercomm_from_lpids MPIDI_Create_intercomm_from_lpids
 /* Variables */
-#define MPID_Comm_create                 MPIDI_Comm_create
-#define MPID_Comm_destroy                MPIDI_Comm_destroy
 #define MPID_Barrier                     MPIDI_Barrier
 #define MPID_Bcast                       MPIDI_Bcast
 #define MPID_Allreduce                   MPIDI_Allreduce

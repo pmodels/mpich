@@ -11,14 +11,14 @@
 
 #include "ucx_impl.h"
 
-static inline void MPIDI_NM_op_destroy(MPIR_Op * op_p)
+static inline int MPIDI_NM_op_free_hook(MPIR_Op * op_p)
 {
-    return;
+    return 0;
 }
 
-static inline void MPIDI_NM_op_commit(MPIR_Op * op_p)
+static inline int MPIDI_NM_op_create_hook(MPIR_Op * op_p)
 {
-    return;
+    return 0;
 }
 
 #endif /* NETMOD_UCX_OP_H_INCLUDED */

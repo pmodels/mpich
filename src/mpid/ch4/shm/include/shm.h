@@ -93,8 +93,12 @@ typedef int (*MPIDI_SHM_getallincomm_t) (MPIR_Comm * comm_ptr, int local_size,
 typedef int (*MPIDI_SHM_gpid_tolpidarray_t) (int size, MPIR_Gpid gpid[], int lpid[]);
 typedef int (*MPIDI_SHM_create_intercomm_from_lpids_t) (MPIR_Comm * newcomm_ptr, int size,
                                                         const int lpids[]);
-typedef int (*MPIDI_SHM_comm_create_t) (MPIR_Comm * comm);
-typedef int (*MPIDI_SHM_comm_destroy_t) (MPIR_Comm * comm);
+typedef int (*MPIDI_SHM_comm_create_hook_t) (MPIR_Comm * comm);
+typedef int (*MPIDI_SHM_comm_free_hook_t) (MPIR_Comm * comm);
+typedef int (*MPIDI_SHM_type_create_hook_t) (MPIR_Datatype * type);
+typedef int (*MPIDI_SHM_type_free_hook_t) (MPIR_Datatype * type);
+typedef int (*MPIDI_SHM_op_create_hook_t) (MPIR_Op * op);
+typedef int (*MPIDI_SHM_op_free_hook_t) (MPIR_Op * op);
 typedef void (*MPIDI_SHM_am_request_init_t) (MPIR_Request * req);
 typedef void (*MPIDI_SHM_am_request_finalize_t) (MPIR_Request * req);
 typedef int (*MPIDI_SHM_send_t) (const void *buf, int count, MPI_Datatype datatype, int rank,
@@ -401,8 +405,12 @@ typedef struct MPIDI_SHM_funcs {
     MPIDI_SHM_getallincomm_t getallincomm;
     MPIDI_SHM_gpid_tolpidarray_t gpid_tolpidarray;
     MPIDI_SHM_create_intercomm_from_lpids_t create_intercomm_from_lpids;
-    MPIDI_SHM_comm_create_t comm_create;
-    MPIDI_SHM_comm_destroy_t comm_destroy;
+    MPIDI_SHM_comm_create_hook_t comm_create_hook;
+    MPIDI_SHM_comm_free_hook_t comm_free_hook;
+    MPIDI_SHM_type_create_hook_t type_create_hook;
+    MPIDI_SHM_type_free_hook_t type_free_hook;
+    MPIDI_SHM_op_create_hook_t op_create_hook;
+    MPIDI_SHM_op_free_hook_t op_free_hook;
     /* Request allocation routines */
     MPIDI_SHM_am_request_init_t am_request_init;
     MPIDI_SHM_am_request_finalize_t am_request_finalize;
@@ -622,8 +630,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_create_intercomm_from_lpids(MPIR_Comm * n
                                                                    int size,
                                                                    const int lpids[])
     MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_comm_create(MPIR_Comm * comm) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_comm_destroy(MPIR_Comm * comm) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_comm_create_hook(MPIR_Comm * comm) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_comm_free_hook(MPIR_Comm * comm) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_type_create_hook(MPIR_Datatype *
+                                                        type) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_type_free_hook(MPIR_Datatype *
+                                                      type) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_op_create_hook(MPIR_Op * op) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_op_free_hook(MPIR_Op * op) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_init(MPIR_Request *
                                                         req) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_finalize(MPIR_Request *

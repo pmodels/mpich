@@ -140,7 +140,7 @@ int MPII_Win_set_attr( MPI_Win win, int win_keyval, void *attribute_val,
     
     /* Here is where we could add a hook for the device to detect attribute
        value changes, using something like
-       MPID_Dev_win_attr_hook( win_ptr, keyval, attribute_val );
+       MPID_Win_attr_hook( win_ptr, keyval, attribute_val );
     */
     
     /* ... end of body of routine ... */

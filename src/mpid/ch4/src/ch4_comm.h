@@ -92,22 +92,22 @@ __CH4_INLINE__ int MPIDI_Comm_split_type(MPIR_Comm * comm_ptr,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Comm_create
+#define FUNCNAME MPIDI_Comm_create_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ int MPIDI_Comm_create(MPIR_Comm * comm)
+__CH4_INLINE__ int MPIDI_Comm_create_hook(MPIR_Comm * comm)
 {
     int mpi_errno;
     int i, *uniq_avtids;
     int max_n_avts;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_COMM_CREATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_COMM_CREATE);
-    mpi_errno = MPIDI_NM_comm_create(comm);
+    mpi_errno = MPIDI_NM_comm_create_hook(comm);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
 #if defined(MPIDI_BUILD_CH4_SHM)
-    mpi_errno = MPIDI_SHM_comm_create(comm);
+    mpi_errno = MPIDI_SHM_comm_create_hook(comm);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
@@ -164,10 +164,10 @@ __CH4_INLINE__ int MPIDI_Comm_create(MPIR_Comm * comm)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Comm_destroy
+#define FUNCNAME MPIDI_Comm_free_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ int MPIDI_Comm_destroy(MPIR_Comm * comm)
+__CH4_INLINE__ int MPIDI_Comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno;
     int i, *uniq_avtids;
@@ -213,12 +213,12 @@ __CH4_INLINE__ int MPIDI_Comm_destroy(MPIR_Comm * comm)
         MPIDIU_avt_release_ref(MPIDII_COMM(comm, local_map).avtid);
     }
 
-    mpi_errno = MPIDI_NM_comm_destroy(comm);
+    mpi_errno = MPIDI_NM_comm_free_hook(comm);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
 #if defined(MPIDI_BUILD_CH4_SHM)
-    mpi_errno = MPIDI_SHM_comm_destroy(comm);
+    mpi_errno = MPIDI_SHM_comm_free_hook(comm);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }

@@ -543,7 +543,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
         MPIR_ERR_POP(mpi_errno);
 
     /* Notify device of communicator creation */
-    mpi_errno = MPID_Dev_comm_create_hook(comm);
+    mpi_errno = MPID_Comm_create_hook(comm);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -612,7 +612,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
                 MPIR_ERR_POP(mpi_errno);
 
             /* Notify device of communicator creation */
-            mpi_errno = MPID_Dev_comm_create_hook(comm->node_comm);
+            mpi_errno = MPID_Comm_create_hook(comm->node_comm);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             /* don't call MPIR_Comm_commit here */
@@ -645,7 +645,7 @@ int MPIR_Comm_commit(MPIR_Comm * comm)
                 MPIR_ERR_POP(mpi_errno);
 
             /* Notify device of communicator creation */
-            mpi_errno = MPID_Dev_comm_create_hook(comm->node_roots_comm);
+            mpi_errno = MPID_Comm_create_hook(comm->node_roots_comm);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             /* don't call MPIR_Comm_commit here */
@@ -953,7 +953,7 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
 
         /* Notify the device that the communicator is about to be
          * destroyed */
-        mpi_errno = MPID_Dev_comm_destroy_hook(comm_ptr);
+        mpi_errno = MPID_Comm_free_hook(comm_ptr);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 

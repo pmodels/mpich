@@ -231,14 +231,34 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_create_intercomm_from_lpids(MPIR_Comm * n
     return MPIDI_SHM_func->create_intercomm_from_lpids(newcomm_ptr, size, lpids);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_comm_create(MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_comm_create_hook(MPIR_Comm * comm)
 {
-    return MPIDI_SHM_func->comm_create(comm);
+    return MPIDI_SHM_func->comm_create_hook(comm);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_comm_destroy(MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_comm_free_hook(MPIR_Comm * comm)
 {
-    return MPIDI_SHM_func->comm_destroy(comm);
+    return MPIDI_SHM_func->comm_free_hook(comm);
+};
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_type_create_hook(MPIR_Datatype * type)
+{
+    return MPIDI_SHM_func->type_create_hook(type);
+};
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_type_free_hook(MPIR_Datatype * type)
+{
+    return MPIDI_SHM_func->type_free_hook(type);
+};
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_op_create_hook(MPIR_Op * op)
+{
+    return MPIDI_SHM_func->op_create_hook(op);
+};
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_op_free_hook(MPIR_Op * op)
+{
+    return MPIDI_SHM_func->op_free_hook(op);
 };
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_init(MPIR_Request * req)

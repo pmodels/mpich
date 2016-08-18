@@ -91,8 +91,8 @@ int MPI_Op_free(MPI_Op *op)
     MPIR_Op_release_ref( op_ptr, &in_use);
     if (!in_use) {
 	MPIR_Handle_obj_free( &MPIR_Op_mem, op_ptr );
-#ifdef MPID_Dev_op_destroy_hook
-        MPID_Dev_op_destroy_hook(op_ptr);
+#ifdef MPID_Op_free_hook
+        MPID_Op_free_hook(op_ptr);
 #endif
     }
     *op = MPI_OP_NULL;

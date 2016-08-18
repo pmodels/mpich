@@ -44,8 +44,12 @@ MPIDI_SHM_funcs_t MPIDI_SHM_stubshm_funcs = {
     MPIDI_SHM_getallincomm,
     MPIDI_SHM_gpid_tolpidarray,
     MPIDI_SHM_create_intercomm_from_lpids,
-    MPIDI_SHM_comm_create,
-    MPIDI_SHM_comm_destroy,
+    MPIDI_SHM_comm_create_hook,
+    MPIDI_SHM_comm_free_hook,
+    MPIDI_SHM_type_create_hook,
+    MPIDI_SHM_type_free_hook,
+    MPIDI_SHM_op_create_hook,
+    MPIDI_SHM_op_free_hook,
     MPIDI_SHM_am_request_init,
 };
 

@@ -189,14 +189,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * ne
     return MPIDI_NM_func->create_intercomm_from_lpids(newcomm_ptr, size, lpids);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_create(MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_create_hook(MPIR_Comm * comm)
 {
-    return MPIDI_NM_func->comm_create(comm);
+    return MPIDI_NM_func->comm_create_hook(comm);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_destroy(MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_free_hook(MPIR_Comm * comm)
 {
-    return MPIDI_NM_func->comm_destroy(comm);
+    return MPIDI_NM_func->comm_free_hook(comm);
 };
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_init(MPIR_Request * req)
@@ -998,30 +998,30 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_iscatterv(const void *sendbuf, const int *
                                            recvcount, recvtype, root, comm_ptr, req);
 };
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_NM_datatype_commit(MPIR_Datatype * datatype_p)
+MPL_STATIC_INLINE_PREFIX void MPIDI_NM_type_dup_hook(MPIR_Datatype * old_datatype_p,
+                                                     MPIR_Datatype * new_datatype_p)
 {
-    return MPIDI_NM_native_func->datatype_commit(datatype_p);
+    return MPIDI_NM_native_func->type_dup_hook(old_datatype_p, new_datatype_p);
 };
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_NM_datatype_dup(MPIR_Datatype * old_datatype_p,
-                                                    MPIR_Datatype * new_datatype_p)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_type_create_hook(MPIR_Datatype * datatype_p)
 {
-    return MPIDI_NM_native_func->datatype_dup(old_datatype_p, new_datatype_p);
+    return MPIDI_NM_native_func->type_create_hook(datatype_p);
 };
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_NM_datatype_destroy(MPIR_Datatype * datatype_p)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_type_free_hook(MPIR_Datatype * datatype_p)
 {
-    return MPIDI_NM_native_func->datatype_destroy(datatype_p);
+    return MPIDI_NM_native_func->type_free_hook(datatype_p);
 };
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_NM_op_commit(MPIR_Op * op_p)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_op_create_hook(MPIR_Op * op_p)
 {
-    return MPIDI_NM_native_func->op_commit(op_p);
+    return MPIDI_NM_native_func->op_create_hook(op_p);
 };
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_NM_op_destroy(MPIR_Op * op_p)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_op_free_hook(MPIR_Op * op_p)
 {
-    return MPIDI_NM_native_func->op_destroy(op_p);
+    return MPIDI_NM_native_func->op_free_hook(op_p);
 };
 
 #endif /* NETMOD_DISABLE_INLINES  */
