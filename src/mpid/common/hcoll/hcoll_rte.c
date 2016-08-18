@@ -364,6 +364,7 @@ static void *get_coll_handle(void)
 {
     MPID_Request *req;
     req = MPID_Request_create();
+    MPIR_Request_add_ref(req);
     req->kind = MPID_COLL_REQUEST;
     return (void *) req;
 }
