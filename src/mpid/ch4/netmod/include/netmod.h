@@ -82,8 +82,8 @@ typedef int (*MPIDI_NM_getallincomm_t) (MPIR_Comm * comm_ptr, int local_size,
 typedef int (*MPIDI_NM_gpid_tolpidarray_t) (int size, MPIR_Gpid gpid[], int lpid[]);
 typedef int (*MPIDI_NM_create_intercomm_from_lpids_t) (MPIR_Comm * newcomm_ptr, int size,
                                                        const int lpids[]);
-typedef int (*MPIDI_NM_comm_create_t) (MPIR_Comm * comm);
-typedef int (*MPIDI_NM_comm_destroy_t) (MPIR_Comm * comm);
+typedef int (*MPIDI_NM_comm_create_hook_t) (MPIR_Comm * comm);
+typedef int (*MPIDI_NM_comm_free_hook_t) (MPIR_Comm * comm);
 typedef void (*MPIDI_NM_am_request_init_t) (MPIR_Request * req);
 typedef void (*MPIDI_NM_am_request_finalize_t) (MPIR_Request * req);
 typedef int (*MPIDI_NM_send_t) (const void *buf, int count, MPI_Datatype datatype, int rank,
@@ -350,12 +350,12 @@ typedef int (*MPIDI_NM_iscatterv_t) (const void *sendbuf, const int *sendcounts,
                                      MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                      MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                                      MPI_Request * req);
-typedef void (*MPIDI_NM_datatype_commit_t) (MPIR_Datatype * datatype_p);
-typedef void (*MPIDI_NM_datatype_dup_t) (MPIR_Datatype * old_datatype_p,
-                                         MPIR_Datatype * new_datatype_p);
-typedef void (*MPIDI_NM_datatype_destroy_t) (MPIR_Datatype * datatype_p);
-typedef void (*MPIDI_NM_op_commit_t) (MPIR_Op * op_p);
-typedef void (*MPIDI_NM_op_destroy_t) (MPIR_Op * op_p);
+typedef void (*MPIDI_NM_type_dup_hook_t) (MPIR_Datatype * old_datatype_p,
+                                          MPIR_Datatype * new_datatype_p);
+typedef int (*MPIDI_NM_type_create_hook_t) (MPIR_Datatype * datatype_p);
+typedef int (*MPIDI_NM_type_free_hook_t) (MPIR_Datatype * datatype_p);
+typedef int (*MPIDI_NM_op_create_hook_t) (MPIR_Op * op_p);
+typedef int (*MPIDI_NM_op_free_hook_t) (MPIR_Op * op_p);
 
 typedef struct MPIDI_NM_funcs {
     MPIDI_NM_init_t init;
@@ -372,8 +372,8 @@ typedef struct MPIDI_NM_funcs {
     MPIDI_NM_getallincomm_t getallincomm;
     MPIDI_NM_gpid_tolpidarray_t gpid_tolpidarray;
     MPIDI_NM_create_intercomm_from_lpids_t create_intercomm_from_lpids;
-    MPIDI_NM_comm_create_t comm_create;
-    MPIDI_NM_comm_destroy_t comm_destroy;
+    MPIDI_NM_comm_create_hook_t comm_create_hook;
+    MPIDI_NM_comm_free_hook_t comm_free_hook;
     /* Request allocation routines */
     MPIDI_NM_am_request_init_t am_request_init;
     MPIDI_NM_am_request_finalize_t am_request_finalize;
@@ -494,12 +494,12 @@ typedef struct MPIDI_NM_native_funcs {
     MPIDI_NM_iscatter_t iscatter;
     MPIDI_NM_iscatterv_t iscatterv;
     /* Datatype hooks */
-    MPIDI_NM_datatype_commit_t datatype_commit;
-    MPIDI_NM_datatype_dup_t datatype_dup;
-    MPIDI_NM_datatype_destroy_t datatype_destroy;
+    MPIDI_NM_type_create_hook_t type_create_hook;
+    MPIDI_NM_type_dup_hook_t type_dup_hook;
+    MPIDI_NM_type_free_hook_t type_free_hook;
     /* Op hooks */
-    MPIDI_NM_op_commit_t op_commit;
-    MPIDI_NM_op_destroy_t op_destroy;
+    MPIDI_NM_op_create_hook_t op_create_hook;
+    MPIDI_NM_op_free_hook_t op_free_hook;
 } MPIDI_NM_native_funcs_t;
 
 extern MPIDI_NM_funcs_t *MPIDI_NM_funcs[];
@@ -592,8 +592,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * ne
                                                                   int size,
                                                                   const int lpids[])
     MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_create(MPIR_Comm * comm) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_destroy(MPIR_Comm * comm) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_create_hook(MPIR_Comm * comm) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_free_hook(MPIR_Comm * comm) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_init(MPIR_Request * req) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_finalize(MPIR_Request *
                                                            req) MPL_STATIC_INLINE_SUFFIX;
@@ -1004,14 +1004,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_iscatterv(const void *sendbuf, const int *
                                                 MPI_Datatype recvtype, int root,
                                                 MPIR_Comm * comm_ptr,
                                                 MPI_Request * req) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX void MPIDI_NM_datatype_commit(MPIR_Datatype *
+MPL_STATIC_INLINE_PREFIX void MPIDI_NM_type_dup_hook(MPIR_Datatype * old_datatype_p,
+                                                     MPIR_Datatype *
+                                                     new_datatype_p) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_type_create_hook(MPIR_Datatype *
                                                        datatype_p) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX void MPIDI_NM_datatype_dup(MPIR_Datatype * old_datatype_p,
-                                                    MPIR_Datatype *
-                                                    new_datatype_p) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX void MPIDI_NM_datatype_destroy(MPIR_Datatype *
-                                                        datatype_p) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX void MPIDI_NM_op_commit(MPIR_Op * op_p) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX void MPIDI_NM_op_destroy(MPIR_Op * op_p) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_type_free_hook(MPIR_Datatype *
+                                                     datatype_p) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_op_create_hook(MPIR_Op * op_p) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_op_free_hook(MPIR_Op * op_p) MPL_STATIC_INLINE_SUFFIX;
 
 #endif

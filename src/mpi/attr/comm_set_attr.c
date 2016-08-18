@@ -91,7 +91,7 @@ int MPIR_Comm_set_attr_impl(MPIR_Comm *comm_ptr, int comm_keyval, void *attribut
     
     /* Here is where we could add a hook for the device to detect attribute
        value changes, using something like
-       MPID_Dev_comm_attr_hook( comm_ptr, keyval, attribute_val );
+       MPID_Comm_attr_hook( comm_ptr, keyval, attribute_val );
     */
     
 

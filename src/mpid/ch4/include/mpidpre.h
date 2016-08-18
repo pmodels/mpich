@@ -435,14 +435,14 @@ extern MPIDII_av_table_t *MPIDII_av_table0;
 #define MPID_Progress_deactivate_hook(id_) MPID_Progress_deactivate(id_)
 
 #define HAVE_DEV_COMM_HOOK
-#define MPID_Dev_comm_create_hook(a)  (MPID_Comm_create(a))
-#define MPID_Dev_comm_destroy_hook(a) (MPID_Comm_destroy(a))
+#define MPID_Comm_create_hook   MPIDI_Comm_create_hook
+#define MPID_Comm_free_hook     MPIDI_Comm_free_hook
 
-#define MPID_Dev_datatype_commit_hook   MPIDI_NM_datatype_commit
-#define MPID_Dev_datatype_destroy_hook  MPIDI_NM_datatype_destroy
+#define MPID_Type_create_hook   MPIDI_Type_create_hook
+#define MPID_Type_free_hook     MPIDI_Type_free_hook
 
-#define MPID_Dev_op_commit_hook          MPIDI_NM_op_commit
-#define MPID_Dev_op_destroy_hook         MPIDI_NM_op_destroy
+#define MPID_Op_create_hook     MPIDI_Op_create_hook
+#define MPID_Op_free_hook       MPIDI_Op_free_hook
 
 /* operation for (avtid, lpid) to/from "lpid64" */
 /* hard code limit on number of live comm worlds. This should be fixed by future

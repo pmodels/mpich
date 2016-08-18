@@ -14,10 +14,10 @@
 #include "mpl_utlist.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_SHM_comm_create
+#define FUNCNAME MPIDI_SHM_comm_create_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_SHM_comm_create(MPIR_Comm * comm)
+static inline int MPIDI_SHM_comm_create_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SHM_COMM_CREATE);
@@ -28,10 +28,10 @@ static inline int MPIDI_SHM_comm_create(MPIR_Comm * comm)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_SHM_comm_destroy
+#define FUNCNAME MPIDI_SHM_comm_free_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_SHM_comm_destroy(MPIR_Comm * comm)
+static inline int MPIDI_SHM_comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SHM_COMM_DESTROY);

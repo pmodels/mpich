@@ -81,7 +81,7 @@
  * ADI defines a collection of routines that are used by the implementation
  * of the MPI attribute routines (such as 'MPI_Comm_get_attr').
  * In addition, the MPI routines involving attributes will invoke the
- * corresponding 'hook' functions (e.g., 'MPID_Dev_comm_attr_set_hook')
+ * corresponding 'hook' functions (e.g., 'MPID_Comm_attr_hook')
  * should the device define them.
  *
  * Attributes on windows and datatypes are defined by MPI but not of

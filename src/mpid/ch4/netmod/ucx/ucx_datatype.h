@@ -107,7 +107,7 @@ static ucp_generic_dt_ops_t MPIDI_UCX_datatype_ops = {
 };
 
 
-static inline void MPIDI_NM_datatype_destroy(MPIR_Datatype * datatype_p)
+static inline int MPIDI_NM_type_free_hook(MPIR_Datatype * datatype_p)
 {
 
 
@@ -116,10 +116,10 @@ static inline void MPIDI_NM_datatype_destroy(MPIR_Datatype * datatype_p)
         datatype_p->dev.netmod.ucx.ucp_datatype = -1;
     }
 
-    return;
+    return 0;
 }
 
-static inline void MPIDI_NM_datatype_commit(MPIR_Datatype * datatype_p)
+static inline int MPIDI_NM_type_create_hook(MPIR_Datatype * datatype_p)
 {
     ucp_datatype_t ucp_datatype;
     ucs_status_t status;
@@ -138,11 +138,11 @@ static inline void MPIDI_NM_datatype_commit(MPIR_Datatype * datatype_p)
 
     }
 
-    return;
+    return 0;
 }
 
-static inline void MPIDI_NM_datatype_dup(MPIR_Datatype * old_datatype_p,
-                                         MPIR_Datatype * new_datatype_p)
+static inline void MPIDI_NM_type_dup_hook(MPIR_Datatype * old_datatype_p,
+                                          MPIR_Datatype * new_datatype_p)
 {
     return;
 }
