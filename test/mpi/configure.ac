@@ -111,10 +111,12 @@ for option in $enable_fortran ; do
         yes|all)
                 enable_f77=yes
                 enable_fc=yes
+                enable_f08=yes
                 ;;
         no|none)
                 enable_f77=no
                 enable_fc=no
+                enable_f08=no
                 ;;
         f77)
                 enable_f77=yes
