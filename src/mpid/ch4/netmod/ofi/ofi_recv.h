@@ -275,6 +275,11 @@ __ALWAYS_INLINE__ int MPIDI_NM_cancel_recv(MPIR_Request * rreq)
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_CANCEL_RECV);
     return mpi_errno;
+
+#ifndef MPIDI_BUILD_CH4_SHM
+fn_fail:
+    goto fn_exit;
+#endif
 }
 
 #endif /* NETMOD_OFI_RECV_H_INCLUDED */
