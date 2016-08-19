@@ -1885,18 +1885,19 @@ static inline int MPIDI_CH4U_win_lock_advance(MPIR_Win * win)
         slock->local.type = lock->type;
 
         MPIDI_CH4U_win_cntrl_msg_t msg;
+        int handler_id;
         msg.win_id = MPIDI_CH4U_WIN(win, win_id);
         msg.origin_rank = win->comm_ptr->rank;
 
         if (lock->mtype == MPIDI_CH4U_WIN_LOCK)
-            msg.type = MPIDI_CH4U_WIN_LOCK_ACK;
+            handler_id = MPIDI_CH4U_WIN_LOCK_ACK;
         else if (lock->mtype == MPIDI_CH4U_WIN_LOCKALL)
-            msg.type = MPIDI_CH4U_WIN_LOCKALL_ACK;
+            handler_id = MPIDI_CH4U_WIN_LOCKALL_ACK;
         else
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**rmasync");
 
         mpi_errno = MPIDI_NM_am_send_hdr_reply(MPIDI_CH4U_win_to_context(win),
-                                               lock->rank, MPIDI_CH4U_WIN_CTRL, &msg, sizeof(msg));
+                                               lock->rank, handler_id, &msg, sizeof(msg));
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         MPL_free(lock);
@@ -1917,7 +1918,8 @@ static inline int MPIDI_CH4U_win_lock_advance(MPIR_Win * win)
 #define FUNCNAME MPIDI_CH4U_win_lock_req_proc
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline void MPIDI_CH4U_win_lock_req_proc(const MPIDI_CH4U_win_cntrl_msg_t * info,
+static inline void MPIDI_CH4U_win_lock_req_proc(int handler_id,
+                                                const MPIDI_CH4U_win_cntrl_msg_t * info,
                                                 MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_WIN_LOCK_REQ_PROC);
@@ -1926,11 +1928,7 @@ static inline void MPIDI_CH4U_win_lock_req_proc(const MPIDI_CH4U_win_cntrl_msg_t
     struct MPIDI_CH4U_win_lock *lock = (struct MPIDI_CH4U_win_lock *)
         MPL_calloc(1, sizeof(struct MPIDI_CH4U_win_lock));
 
-    if (info->type == MPIDI_CH4U_WIN_LOCK)
-        lock->mtype = MPIDI_CH4U_WIN_LOCK;
-    else if (info->type == MPIDI_CH4U_WIN_LOCKALL)
-        lock->mtype = MPIDI_CH4U_WIN_LOCKALL;
-
+    lock->mtype = handler_id;
     lock->rank = info->origin_rank;
     lock->type = info->lock_type;
     struct MPIDI_CH4U_win_queue *q = &MPIDI_CH4U_WIN(win, sync).lock.local.requested;
@@ -1952,15 +1950,16 @@ static inline void MPIDI_CH4U_win_lock_req_proc(const MPIDI_CH4U_win_cntrl_msg_t
 #define FUNCNAME MPIDI_CH4U_win_lock_ack_proc
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline void MPIDI_CH4U_win_lock_ack_proc(const MPIDI_CH4U_win_cntrl_msg_t * info,
+static inline void MPIDI_CH4U_win_lock_ack_proc(int handler_id,
+                                                const MPIDI_CH4U_win_cntrl_msg_t * info,
                                                 MPIR_Win * win)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_WIN_LOCK_ACK_PROC);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_WIN_LOCK_ACK_PROC);
 
-    if (info->type == MPIDI_CH4U_WIN_LOCK_ACK)
+    if (handler_id == MPIDI_CH4U_WIN_LOCK_ACK)
         MPIDI_CH4U_WIN(win, sync).lock.remote.locked += 1;
-    else if (info->type == MPIDI_CH4U_WIN_LOCKALL_ACK)
+    else if (handler_id == MPIDI_CH4U_WIN_LOCKALL_ACK)
         MPIDI_CH4U_WIN(win, sync).lock.remote.allLocked += 1;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_WIN_LOCK_ACK_PROC);
@@ -1985,11 +1984,10 @@ static inline void MPIDI_CH4U_win_unlock_proc(const MPIDI_CH4U_win_cntrl_msg_t *
     MPIDI_CH4U_win_cntrl_msg_t msg;
     msg.win_id = MPIDI_CH4U_WIN(win, win_id);
     msg.origin_rank = win->comm_ptr->rank;
-    msg.type = MPIDI_CH4U_WIN_UNLOCK_ACK;
 
     mpi_errno = MPIDI_NM_am_send_hdr_reply(MPIDI_CH4U_win_to_context(win),
                                            info->origin_rank,
-                                           MPIDI_CH4U_WIN_CTRL, &msg, sizeof(msg));
+                                           MPIDI_CH4U_WIN_UNLOCK_ACK, &msg, sizeof(msg));
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
   fn_exit:
@@ -2074,17 +2072,17 @@ static inline int MPIDI_CH4U_win_ctrl_target_handler(int handler_id, void *am_hd
                   &msg_hdr->win_id, sizeof(uint64_t), win);
     /* TODO: check output win ptr */
 
-    switch (msg_hdr->type) {
+    switch (handler_id) {
         char buff[32];
 
     case MPIDI_CH4U_WIN_LOCK:
     case MPIDI_CH4U_WIN_LOCKALL:
-        MPIDI_CH4U_win_lock_req_proc(msg_hdr, win);
+        MPIDI_CH4U_win_lock_req_proc(handler_id, msg_hdr, win);
         break;
 
     case MPIDI_CH4U_WIN_LOCK_ACK:
     case MPIDI_CH4U_WIN_LOCKALL_ACK:
-        MPIDI_CH4U_win_lock_ack_proc(msg_hdr, win);
+        MPIDI_CH4U_win_lock_ack_proc(handler_id, msg_hdr, win);
         break;
 
     case MPIDI_CH4U_WIN_UNLOCK:
@@ -2106,7 +2104,7 @@ static inline int MPIDI_CH4U_win_ctrl_target_handler(int handler_id, void *am_hd
         break;
 
     default:
-        MPL_snprintf(buff, sizeof(buff), "Invalid message type: %d\n", msg_hdr->type);
+        MPL_snprintf(buff, sizeof(buff), "Invalid message type: %d\n", handler_id);
         MPID_Abort(NULL, MPI_ERR_INTERN, 1, buff);
     }
 
