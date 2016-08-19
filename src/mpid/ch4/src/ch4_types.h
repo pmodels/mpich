@@ -49,7 +49,7 @@ typedef struct progress_hook_slot {
     int active;
 } progress_hook_slot_t;
 
-typedef enum {
+enum {
     MPIDI_CH4U_SEND = 0,        /* Eager send */
 
     MPIDI_CH4U_SEND_LONG_REQ,   /* Rendezvous send RTS (request to send) */
@@ -58,8 +58,6 @@ typedef enum {
 
     MPIDI_CH4U_SSEND_REQ,
     MPIDI_CH4U_SSEND_ACK,
-
-    MPIDI_CH4U_WIN_CTRL,
 
     MPIDI_CH4U_PUT_REQ,
     MPIDI_CH4U_PUT_ACK,
@@ -79,10 +77,8 @@ typedef enum {
 
     MPIDI_CH4U_CSWAP_REQ,
     MPIDI_CH4U_CSWAP_ACK,
-    MPIDI_CH4U_FETCH_OP
-} MPIDI_CH4U_TYPE;
+    MPIDI_CH4U_FETCH_OP,
 
-typedef enum {
     MPIDI_CH4U_WIN_COMPLETE,
     MPIDI_CH4U_WIN_POST,
     MPIDI_CH4U_WIN_LOCK,
@@ -93,7 +89,7 @@ typedef enum {
     MPIDI_CH4U_WIN_LOCKALL_ACK,
     MPIDI_CH4U_WIN_UNLOCKALL,
     MPIDI_CH4U_WIN_UNLOCKALL_ACK
-} MPIDI_CH4U_WIN_CTRL_MSG_TYPE;
+};
 
 enum {
     MPIDI_CH4U_EPOTYPE_NONE = 0,          /**< No epoch in affect */
@@ -144,7 +140,6 @@ typedef struct MPIDI_CH4U_win_cntrl_msg_t {
     uint64_t win_id;
     uint32_t origin_rank;
     int16_t lock_type;
-    int16_t type;
 } MPIDI_CH4U_win_cntrl_msg_t;
 
 typedef struct MPIDI_CH4U_put_msg_t {

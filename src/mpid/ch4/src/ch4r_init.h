@@ -215,11 +215,55 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_init(MPIR_Comm * comm_world, MPIR_Comm *
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_WIN_CTRL,
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_WIN_COMPLETE,
                                         NULL, &MPIDI_CH4U_win_ctrl_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_WIN_POST,
+                                        NULL, &MPIDI_CH4U_win_ctrl_target_handler);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_WIN_LOCK,
+                                        NULL, &MPIDI_CH4U_win_ctrl_target_handler);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_WIN_LOCK_ACK,
+                                        NULL, &MPIDI_CH4U_win_ctrl_target_handler);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_WIN_UNLOCK,
+                                        NULL, &MPIDI_CH4U_win_ctrl_target_handler);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_WIN_UNLOCK_ACK,
+                                        NULL, &MPIDI_CH4U_win_ctrl_target_handler);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_WIN_LOCKALL,
+                                        NULL, &MPIDI_CH4U_win_ctrl_target_handler);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_WIN_LOCKALL_ACK,
+                                        NULL, &MPIDI_CH4U_win_ctrl_target_handler);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_WIN_UNLOCKALL,
+                                        NULL, &MPIDI_CH4U_win_ctrl_target_handler);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_WIN_UNLOCKALL_ACK,
+                                        NULL, &MPIDI_CH4U_win_ctrl_target_handler);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_PUT_IOV_REQ,
                                         &MPIDI_CH4U_put_iov_origin_cmpl_handler,
