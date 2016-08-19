@@ -99,7 +99,7 @@ AC_ARG_ENABLE(fortran,
         f90       - Enable Fortran 90 support
         f08       - Enable Fortran 2008 support
         no|none   - No Fortran support
-],,[enable_fortran=f77,f90])
+],,[enable_fortran=all])
 
 save_IFS="$IFS"
 IFS=","
