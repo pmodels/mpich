@@ -1,0 +1,16 @@
+**ucx_nm_read_config:ucx_read_config faild
+**ucx_nm_read_config %s %d %s %s: ucx_read_config faild(%s %d %s %s)
+**ucx_nm_init:ucx_init failed
+**ucx_nm_init %s %d %s %s: ucx_init failed (%s %d %s %s)
+**ucx_nm_worker_create:ucx_worker_create failed
+**ucx_nm_worker_create %s %d %s %s: ucx_worker_create failed (%s %d %s %s)
+**ucx_nm_ep_create:failed to create ucp_endpoint
+**ucx_nm_ep_create %s %d %s %s: failed to create ucp_endpoint (%s %d %s %s)
+**ucx_nm_get_worker_address:ucx failed to get worker address
+**ucx_nm_get_worker_address %s %d %s %s: ucx failed to get worker address (%s %s %s %s)
+**ucx_nm_tag_nb_send:Failed to start tag send in ucx
+**ucx_nm_tag_nb_send %s %d %s %s: Failed to start tag send in ucx (%s %d %s %s)
+**ucx_nm_tag_nb_recv:Failed to start tag recv in ucx
+**ucx_nm_tag_nb_recv %s %d %s %s: Failed to start tag recv in ucx (%s %d %s %s)
+**ucx_nm_other:Other error
+**ucx_nm_other %s %d %s %s: Other error (%s %d %s %s)
