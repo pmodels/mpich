@@ -1,0 +1,10 @@
+**PtlInit:PtlInit failed
+**PtlInit %s %d %s %s:PtlInit failed (%s %d %s %s)
+**PtlNIInit:PtlNIInit failed
+**PtlNIInit %s %d %s %s:PtlNIInit failed (%s %d %s %s)
+**PtlEQAlloc:PtlEQAlloc failed
+**PtlEQAlloc %s %d %s %s:PtlEQAlloc failed (%s %d %s %s)
+**PtlPTAlloc:PtlPTAlloc failed
+**PtlPTAlloc %s %d %s %s:PtlPTAlloc failed (%s %d %s %s)
+**PtlMDBind:PtlMDBind failed
+**PtlMDBind %s %d %s %s:PtlMDBind failed (%s %d %s %s)
