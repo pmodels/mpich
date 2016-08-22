@@ -24,9 +24,13 @@ AC_MSG_NOTICE([RUNNING PREREQ FOR CH4 DEVICE])
 if test -z "${device_args}" ; then
     ch4_netmods="ofi"
 else
-    ch4_netmods=`echo ${device_args} | sed -e 's/,/ /g'`
+    changequote(<<,>>)
+    netmod_args=`echo ${device_args} | sed -e 's/^[^:]*//' -e 's/^://' -e 's/,/ /g'`
+    changequote([,])
+    ch4_netmods=`echo ${device_args} | sed -e 's/:.*$//' -e 's/,/ /g'`
 fi
 export ch4_netmods
+export netmod_args
 
 #
 # reset DEVICE so that it (a) always includes the channel name, and (b) does not include channel options
