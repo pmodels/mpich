@@ -67,13 +67,15 @@ static inline int MPIDI_CH4R_check_maprange_ok(void *start, size_t size)
         rc = msync(ptr, page_sz, 0);
 
         if (rc == -1) {
-            MPIR_Assert(errno == ENOMEM);
+            if (errno != ENOMEM)
+                goto fn_fail;
             ptr += page_sz;
         }
         else
             goto fn_exit;
     }
 
+  fn_fail:
     ret = 1;
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4R_CHECK_MAPRANGE_OK);
