@@ -292,14 +292,45 @@ static inline int MPIDI_OFI_init_generic(int rank,
     else {
         av_attr.type = FI_AV_MAP;
     }
-    mapped_table = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t));
 
     av_attr.rx_ctx_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS;
 
-    MPIDI_OFI_CALL(fi_av_open(MPIDI_Global.domain,      /* In:  Domain Object         */
-                              &av_attr, /* In:  Configuration object  */
-                              &MPIDI_Global.av, /* Out: AV Object             */
-                              NULL), avopen);   /* Context: AV events         */
+    /* ------------------------------------------------------------------------ */
+    /* Attempt to open a shared address vector read-only. The open will fail if */
+    /* the address vector does not exist, otherwise the location of the mapped  */
+    /* fi_addr_t array will be returned in the 'map_addr' field of the address  */
+    /* vector attribute structure.                                              */
+    /* ------------------------------------------------------------------------ */
+    char av_name[128];
+    snprintf(av_name, 127, "FI_NAMED_AV_%d\n", appnum);
+    av_attr.name = av_name;
+    av_attr.flags = FI_READ;
+    av_attr.map_addr = 0;
+
+    unsigned do_av_insert = 1;
+    if (0 == fi_av_open(MPIDI_Global.domain,      /* In:  Domain Object         */
+                        &av_attr,                 /* In:  Configuration object  */
+                        &MPIDI_Global.av,         /* Out: AV Object             */
+                        NULL)) {                  /* Context: AV events         */
+        do_av_insert = 0;
+
+        /* TODO - the copy from the pre-existing av map into the 'MPIDI_OFI_AV' */
+        /* is wasteful and should be changed so that the 'MPIDI_OFI_AV' object  */
+        /* directly references the mapped fi_addr_t array instead               */
+        mapped_table = (fi_addr_t *)av_attr.map_addr;
+        for (i = 0; i < size; i++) {
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
+        }
+        mapped_table = NULL;
+    }
+    else {
+        av_attr.name = NULL;
+        av_attr.flags = 0;
+        MPIDI_OFI_CALL(fi_av_open(MPIDI_Global.domain, /* In:  Domain Object    */
+                                  &av_attr,        /* In:  Configuration object */
+                                  &MPIDI_Global.av,/* Out: AV Object            */
+                                  NULL), avopen);  /* Context: AV events        */
+    }
 
     /* ------------------------------------------------------------------------ */
     /* Construct:  Shared TX Context for RMA                                    */
@@ -336,53 +367,58 @@ static inline int MPIDI_OFI_init_generic(int rank,
                                                      do_scalable_ep,
                                                      do_data));
 
-    /* ---------------------------------- */
-    /* Get our endpoint name and publish  */
-    /* the socket to the KVS              */
-    /* ---------------------------------- */
-    MPIDI_Global.addrnamelen = FI_NAME_MAX;
-    MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_Global.ep, MPIDI_Global.addrname,
-                              &MPIDI_Global.addrnamelen), getname);
-    MPIR_Assert(MPIDI_Global.addrnamelen <= FI_NAME_MAX);
+    if (do_av_insert) {
 
-    val = valS;
-    str_errno = MPL_STR_SUCCESS;
-    maxlen = MPIDI_KVSAPPSTRLEN;
-    memset(val, 0, maxlen);
-    MPIDI_OFI_STR_CALL(MPL_str_add_binary_arg(&val, &maxlen, "OFI", (char *) &MPIDI_Global.addrname,
-                                              MPIDI_Global.addrnamelen), buscard_len);
-    MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get_my_name(MPIDI_Global.kvsname, MPIDI_KVSAPPSTRLEN), pmi);
+        /* ---------------------------------- */
+        /* Get our endpoint name and publish  */
+        /* the socket to the KVS              */
+        /* ---------------------------------- */
+        MPIDI_Global.addrnamelen = FI_NAME_MAX;
+        MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_Global.ep, MPIDI_Global.addrname,
+                                  &MPIDI_Global.addrnamelen), getname);
+        MPIR_Assert(MPIDI_Global.addrnamelen <= FI_NAME_MAX);
 
-    val = valS;
-    sprintf(keyS, "OFI-%d", rank);
-    MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Put(MPIDI_Global.kvsname, keyS, val), pmi);
-    MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Commit(MPIDI_Global.kvsname), pmi);
-    MPIDI_OFI_PMI_CALL_POP(PMI_Barrier(), pmi);
+        val = valS;
+        str_errno = MPL_STR_SUCCESS;
+        maxlen = MPIDI_KVSAPPSTRLEN;
+        memset(val, 0, maxlen);
+        MPIDI_OFI_STR_CALL(MPL_str_add_binary_arg(&val, &maxlen, "OFI", (char *) &MPIDI_Global.addrname,
+                                                  MPIDI_Global.addrnamelen), buscard_len);
+        MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get_my_name(MPIDI_Global.kvsname, MPIDI_KVSAPPSTRLEN), pmi);
 
-    /* -------------------------------- */
-    /* Create our address table from    */
-    /* encoded KVS values               */
-    /* -------------------------------- */
-    table = (char *) MPL_malloc(size * MPIDI_Global.addrnamelen);
-    maxlen = MPIDI_KVSAPPSTRLEN;
+        val = valS;
+        sprintf(keyS, "OFI-%d", rank);
+        MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Put(MPIDI_Global.kvsname, keyS, val), pmi);
+        MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Commit(MPIDI_Global.kvsname), pmi);
+        MPIDI_OFI_PMI_CALL_POP(PMI_Barrier(), pmi);
 
-    for (i = 0; i < size; i++) {
-        sprintf(keyS, "OFI-%d", i);
-        MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get(MPIDI_Global.kvsname, keyS, valS, MPIDI_KVSAPPSTRLEN),
-                               pmi);
-        MPIDI_OFI_STR_CALL(MPL_str_get_binary_arg
-                           (valS, "OFI", (char *) &table[i * MPIDI_Global.addrnamelen],
-                            MPIDI_Global.addrnamelen, &maxlen), buscard_len);
+        /* -------------------------------- */
+        /* Create our address table from    */
+        /* encoded KVS values               */
+        /* -------------------------------- */
+        table = (char *) MPL_malloc(size * MPIDI_Global.addrnamelen);
+        maxlen = MPIDI_KVSAPPSTRLEN;
+
+        for (i = 0; i < size; i++) {
+            sprintf(keyS, "OFI-%d", i);
+            MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get(MPIDI_Global.kvsname, keyS, valS, MPIDI_KVSAPPSTRLEN),
+                                   pmi);
+            MPIDI_OFI_STR_CALL(MPL_str_get_binary_arg
+                               (valS, "OFI", (char *) &table[i * MPIDI_Global.addrnamelen],
+                                MPIDI_Global.addrnamelen, &maxlen), buscard_len);
+        }
+
+        /* -------------------------------- */
+        /* Table is constructed.  Map it    */
+        /* -------------------------------- */
+        mapped_table = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t));
+        MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, table, size, mapped_table, 0ULL, NULL), avmap);
+
+        for (i = 0; i < size; i++) {
+            MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
+        }
+        MPL_free(mapped_table);
     }
-
-    /* -------------------------------- */
-    /* Table is constructed.  Map it    */
-    /* -------------------------------- */
-    MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, table, size, mapped_table, 0ULL, NULL), avmap);
-    for (i = 0; i < size; i++) {
-        MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
-    }
-    MPL_free(mapped_table);
 
     /* -------------------------------- */
     /* Create the id to object maps     */
