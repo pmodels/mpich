@@ -289,7 +289,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_OFI_win_request_t *MPIDI_OFI_win_request_alloc_an
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_datatype_unmap(MPIDI_OFI_win_datatype_t * dt)
 {
-    if (dt->map != &dt->__map)
+    if (dt && dt->map && (dt->map != &dt->__map))
         MPL_free(dt->map);
 }
 
