@@ -27,7 +27,7 @@ probe-unexp 4
 probenull 1
 # For testing, scancel will run with 1 process as well
 scancel 2 xfail=ticket2266 xfail=ticket2270
-scancel2 2
+scancel2 2 xfail=ticket2266 xfail=ticket2270
 pscancel 2 xfail=ticket2266 xfail=ticket2270
 rcancel 2
 cancelrecv 2 xfail=ticket2266 xfail=ticket2270
