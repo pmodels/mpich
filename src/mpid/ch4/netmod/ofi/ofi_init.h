@@ -831,6 +831,8 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
             MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_CTR(index), &p2p_cq->fid,
                                       FI_SEND | FI_RECV | FI_SELECTIVE_COMPLETION), bind);
 
+        MPIDI_OFI_CALL(fi_enable(*ep), ep_enable);
+
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_TX_TAG(index)), ep_enable);
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_TX_RMA(index)), ep_enable);
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_TX_MSG(index)), ep_enable);
