@@ -586,10 +586,6 @@ AC_ARG_WITH(cross,
 		[Specify the values of variables that configure cannot
                  determine in a cross-compilation environment]),,
 		 with_cross=$MPID_DEFAULT_CROSS_FILE)
-if test -z "$with_cross" ; then with_cross=no ; fi
-if test "$with_cross" != "no"; then
-  AC_MSG_NOTICE([Using cross file: $with_cross])
-fi
 
 AC_ARG_WITH(namepublisher,
 [  --with-namepublisher=name   Choose the system that will support 
@@ -765,6 +761,17 @@ AC_SUBST(master_top_builddir)
 AC_SUBST(master_top_srcdir)
 export master_top_builddir
 export master_top_srcdir
+
+if test -z "$with_cross"; then
+  if test -f "$master_top_srcdir/src/cross/$host_alias"; then
+    with_cross="$master_top_srcdir/src/cross/$host_alias"
+  else
+    with_cross=no
+  fi
+fi
+if test "$with_cross" != "no"; then
+  AC_MSG_NOTICE([Using cross file: $with_cross])
+fi
 
 # ----------------------------------------------------------------------------
 dnl Export important "precious" variables so that any directories configured via
