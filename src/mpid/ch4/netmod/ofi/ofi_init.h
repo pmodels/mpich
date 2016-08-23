@@ -759,7 +759,6 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
 
         tx_attr = *prov_use->tx_attr;
         tx_attr.caps = FI_TAGGED;
-        tx_attr.caps |= FI_DELIVERY_COMPLETE;
         tx_attr.op_flags = FI_DELIVERY_COMPLETE;
         MPIDI_OFI_CALL(fi_tx_context(*ep, index, &tx_attr, &MPIDI_OFI_EP_TX_TAG(index), NULL), ep);
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_TAG(index), &p2p_cq->fid, FI_SEND), bind);
@@ -767,7 +766,6 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         tx_attr = *prov_use->tx_attr;
         tx_attr.caps = FI_RMA;
         tx_attr.caps |= FI_ATOMICS;
-        tx_attr.caps |= FI_DELIVERY_COMPLETE;
         tx_attr.op_flags = FI_DELIVERY_COMPLETE;
         MPIDI_OFI_CALL(fi_tx_context(*ep, index + 1, &tx_attr, &MPIDI_OFI_EP_TX_RMA(index), NULL),
                        ep);
@@ -783,7 +781,6 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         tx_attr = *prov_use->tx_attr;
         tx_attr.caps = FI_RMA;
         tx_attr.caps |= FI_ATOMICS;
-        tx_attr.caps |= FI_DELIVERY_COMPLETE;
         tx_attr.op_flags = FI_DELIVERY_COMPLETE;
         MPIDI_OFI_CALL(fi_tx_context(*ep, index + 3, &tx_attr, &MPIDI_OFI_EP_TX_CTR(index), NULL),
                        ep);
@@ -792,7 +789,6 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
 
         rx_attr = *prov_use->rx_attr;
         rx_attr.caps = FI_TAGGED;
-        rx_attr.caps |= FI_DELIVERY_COMPLETE;
         rx_attr.op_flags = 0;
         MPIDI_OFI_CALL(fi_rx_context(*ep, index, &rx_attr, &MPIDI_OFI_EP_RX_TAG(index), NULL), ep);
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_TAG(index), &p2p_cq->fid, FI_RECV), bind);
