@@ -169,6 +169,11 @@ noinst_PROGRAMS =          \
     win_shared_gacc_flush_load \
     win_shared_fop_flush_load  \
     win_shared_cas_flush_load  \
+    overlap_wins_put  \
+    overlap_wins_acc  \
+    overlap_wins_gacc  \
+    overlap_wins_fop  \
+    overlap_wins_cas  \
     rget-unlock
 
 if BUILD_MPIX_TESTS
@@ -277,3 +282,15 @@ win_shared_acc_flush_load_CPPFLAGS  = -DTEST_ACC $(AM_CPPFLAGS)
 win_shared_gacc_flush_load_CPPFLAGS = -DTEST_GACC $(AM_CPPFLAGS)
 win_shared_fop_flush_load_CPPFLAGS  = -DTEST_FOP $(AM_CPPFLAGS)
 win_shared_cas_flush_load_CPPFLAGS  = -DTEST_CAS $(AM_CPPFLAGS)
+
+overlap_wins_put_SOURCES        = overlap_wins_rma.c
+overlap_wins_acc_SOURCES        = overlap_wins_rma.c
+overlap_wins_gacc_SOURCES        = overlap_wins_rma.c
+overlap_wins_fop_SOURCES        = overlap_wins_rma.c
+overlap_wins_cas_SOURCES        = overlap_wins_rma.c
+
+overlap_wins_put_CPPFLAGS  = -DTEST_PUT $(AM_CPPFLAGS)
+overlap_wins_acc_CPPFLAGS  = -DTEST_ACC $(AM_CPPFLAGS)
+overlap_wins_gacc_CPPFLAGS = -DTEST_GACC $(AM_CPPFLAGS)
+overlap_wins_fop_CPPFLAGS  = -DTEST_FOP $(AM_CPPFLAGS)
+overlap_wins_cas_CPPFLAGS  = -DTEST_CAS $(AM_CPPFLAGS)
