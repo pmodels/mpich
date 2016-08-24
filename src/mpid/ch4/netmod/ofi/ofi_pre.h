@@ -21,6 +21,7 @@
 #include <rdma/fi_atomic.h>
 #include <rdma/fi_cm.h>
 #include <rdma/fi_errno.h>
+#include "ofi_capability_sets.h"
 
 /* Defines */
 
@@ -32,15 +33,6 @@
 #define MPIDI_OFI_AM_CONTEXT_ID_BITS  16
 #define MPIDI_OFI_AM_RANK_BITS        32
 #define MPIDI_OFI_AM_MSG_HEADER_SIZE (sizeof(MPIDI_OFI_am_header_t))
-
-#define MPIDI_OFI_ENABLE_TAGGED          1
-#define MPIDI_OFI_ENABLE_AM              1
-#define MPIDI_OFI_ENABLE_RMA             1
-#define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS 1
-#define MPIDI_OFI_ENABLE_AV_TABLE 1
-#define MPIDI_OFI_ENABLE_DATA 1
-#define MPIDI_OFI_ENABLE_STX_RMA 1
-#define MPIDI_OFI_ENABLE_MR_SCALABLE 1
 
 #ifdef MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
 #define MPIDI_OFI_MAX_ENDPOINTS      256
