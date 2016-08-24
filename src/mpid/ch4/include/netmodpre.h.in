@@ -11,7 +11,9 @@
 #ifndef NETMODPRE_H_INCLUDED
 #define NETMODPRE_H_INCLUDED
 
+/* *INDENT-OFF* */
 @ch4_netmod_pre_include@
+/* *INDENT-ON* */
 
 #define MPIDI_NM_REQUEST_AM_DECL @ch4_netmod_amrequest_decl@
 #define MPIDI_NM_REQUEST_DECL    @ch4_netmod_request_decl@
