@@ -210,8 +210,9 @@ static inline int MPIDI_CH4I_do_get(void *origin_addr,
         am_hdr.n_iov = 0;
         MPIDI_CH4U_REQUEST(sreq, req->greq.dt_iov) = NULL;
 
-        mpi_errno = MPIDI_NM_am_send_hdr(target_rank, win->comm_ptr,
-                                         MPIDI_CH4U_GET_REQ, &am_hdr, sizeof(am_hdr), sreq, NULL);
+        mpi_errno = MPIDI_NM_am_send(target_rank, win->comm_ptr,
+                                     MPIDI_CH4U_GET_REQ, &am_hdr, sizeof(am_hdr),
+                                     NULL, 0, MPI_DATATYPE_NULL, sreq, NULL);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         goto fn_exit;

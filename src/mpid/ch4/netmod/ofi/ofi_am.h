@@ -53,26 +53,6 @@ static inline int MPIDI_NM_am_reg_handler(int handler_id,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_send_hdr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_am_send_hdr(int rank,
-                                       MPIR_Comm * comm,
-                                       int handler_id,
-                                       const void *am_hdr,
-                                       size_t am_hdr_sz, MPIR_Request * sreq, void *netmod_context)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_SEND_AM_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_SEND_AM_HDR);
-
-    mpi_errno = MPIDI_OFI_do_am_send_header(rank, comm, handler_id, am_hdr, am_hdr_sz, sreq, FALSE);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_SEND_AM_HDR);
-    return mpi_errno;
-}
-
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_NM_am_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -88,8 +68,12 @@ static inline int MPIDI_NM_am_send(int rank,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_SEND_AM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_SEND_AM);
-    mpi_errno = MPIDI_OFI_do_am_send(rank, comm, handler_id,
-                                     am_hdr, am_hdr_sz, data, count, datatype, sreq, FALSE);
+    if (count)
+        mpi_errno = MPIDI_OFI_do_am_send(rank, comm, handler_id,
+                                         am_hdr, am_hdr_sz, data, count, datatype, sreq, FALSE);
+    else
+        mpi_errno = MPIDI_OFI_do_am_send_header(rank, comm, handler_id,
+                                                am_hdr, am_hdr_sz, sreq, FALSE);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_SEND_AM);
     return mpi_errno;
@@ -150,77 +134,6 @@ static inline int MPIDI_NM_am_sendv(int rank,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_sendv_hdr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_am_sendv_hdr(int rank,
-                                        MPIR_Comm * comm,
-                                        int handler_id,
-                                        struct iovec *am_hdr,
-                                        size_t iov_len, MPIR_Request * sreq, void *netmod_context)
-{
-    int mpi_errno = MPI_SUCCESS, is_allocated;
-    size_t am_hdr_sz = 0, i;
-    char *am_hdr_buf;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_SEND_AMV_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_SEND_AMV_HDR);
-
-    for (i = 0; i < iov_len; i++) {
-        am_hdr_sz += am_hdr[i].iov_len;
-    }
-
-    /* TODO: avoid the malloc here, use the am_hdr directly */
-    if (am_hdr_sz > MPIDI_OFI_BUF_POOL_SIZE) {
-        am_hdr_buf = (char *) MPL_malloc(am_hdr_sz);
-        is_allocated = 1;
-    }
-    else {
-        am_hdr_buf = (char *) MPIDI_CH4R_get_buf(MPIDI_Global.am_buf_pool);
-        is_allocated = 0;
-    }
-
-    MPIR_Assert(am_hdr_buf);
-    am_hdr_sz = 0;
-
-    for (i = 0; i < iov_len; i++) {
-        MPIR_Memcpy(am_hdr_buf + am_hdr_sz, am_hdr[i].iov_base, am_hdr[i].iov_len);
-        am_hdr_sz += am_hdr[i].iov_len;
-    }
-
-    mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, handler_id, am_hdr_buf, am_hdr_sz,
-                                     sreq, netmod_context);
-
-    if (is_allocated)
-        MPL_free(am_hdr_buf);
-    else
-        MPIDI_CH4R_release_buf(am_hdr_buf);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_SEND_AMV_HDR);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_send_hdr_reply
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
-                                             int src_rank,
-                                             int handler_id,
-                                             const void *am_hdr,
-                                             size_t am_hdr_sz, MPIR_Request * sreq)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_SEND_AM_HDR_REPLY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_SEND_AM_HDR_REPLY);
-    mpi_errno = MPIDI_OFI_do_am_send_header(src_rank,
-                                            MPIDI_CH4U_context_id_to_comm(context_id),
-                                            handler_id, am_hdr, am_hdr_sz, sreq, TRUE);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_SEND_AM_HDR_REPLY);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_NM_am_send_reply
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -236,61 +149,16 @@ static inline int MPIDI_NM_am_send_reply(MPIR_Context_id_t context_id,
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_SEND_AM_REPLY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_SEND_AM_REPLY);
-    mpi_errno = MPIDI_OFI_do_am_send(src_rank,
-                                     MPIDI_CH4U_context_id_to_comm(context_id),
-                                     handler_id,
-                                     am_hdr, am_hdr_sz, data, count, datatype, sreq, TRUE);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_SEND_AM_REPLY);
-    return mpi_errno;
-}
-
-static inline int MPIDI_NM_am_sendv_reply(MPIR_Context_id_t context_id,
-                                          int src_rank,
-                                          int handler_id,
-                                          struct iovec *am_hdr,
-                                          size_t iov_len,
-                                          const void *data,
-                                          MPI_Count count,
-                                          MPI_Datatype datatype, MPIR_Request * sreq)
-{
-    int mpi_errno = MPI_SUCCESS, is_allocated;
-    size_t am_hdr_sz = 0, i;
-    char *am_hdr_buf;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_SEND_AMV_REPLY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_SEND_AMV_REPLY);
-
-    for (i = 0; i < iov_len; i++) {
-        am_hdr_sz += am_hdr[i].iov_len;
-    }
-
-    /* TODO: avoid the malloc here, use the am_hdr directly */
-    if (am_hdr_sz > MPIDI_OFI_BUF_POOL_SIZE) {
-        am_hdr_buf = (char *) MPL_malloc(am_hdr_sz);
-        is_allocated = 1;
-    }
-    else {
-        am_hdr_buf = (char *) MPIDI_CH4R_get_buf(MPIDI_Global.am_buf_pool);
-        is_allocated = 0;
-    }
-
-    MPIR_Assert(am_hdr_buf);
-    am_hdr_sz = 0;
-
-    for (i = 0; i < iov_len; i++) {
-        MPIR_Memcpy(am_hdr_buf + am_hdr_sz, am_hdr[i].iov_base, am_hdr[i].iov_len);
-        am_hdr_sz += am_hdr[i].iov_len;
-    }
-
-    mpi_errno = MPIDI_NM_am_send_reply(context_id, src_rank, handler_id, am_hdr_buf, am_hdr_sz,
-                                       data, count, datatype, sreq);
-
-    if (is_allocated)
-        MPL_free(am_hdr_buf);
+    if (count)
+        mpi_errno = MPIDI_OFI_do_am_send(src_rank,
+                                         MPIDI_CH4U_context_id_to_comm(context_id),
+                                         handler_id,
+                                         am_hdr, am_hdr_sz, data, count, datatype, sreq, TRUE);
     else
-        MPIDI_CH4R_release_buf(am_hdr_buf);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_SEND_AMV_REPLY);
+        mpi_errno = MPIDI_OFI_do_am_send_header(src_rank,
+                                                MPIDI_CH4U_context_id_to_comm(context_id),
+                                                handler_id, am_hdr, am_hdr_sz, sreq, TRUE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_SEND_AM_REPLY);
     return mpi_errno;
 }
 

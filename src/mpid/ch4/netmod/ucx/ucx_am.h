@@ -76,74 +76,6 @@ static inline void MPIDI_UCX_inject_am_callback(void *request, ucs_status_t stat
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_send_hdr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_am_send_hdr(int rank,
-                                       MPIR_Comm * comm,
-                                       int handler_id,
-                                       const void *am_hdr,
-                                       size_t am_hdr_sz, MPIR_Request * sreq, void *netmod_context)
-{
-    int mpi_errno = MPI_SUCCESS, c;
-    MPIDI_UCX_ucp_request_t *ucp_request;
-    ucp_ep_h ep;
-    uint64_t ucx_tag;
-    char *send_buf;
-    MPIDI_UCX_am_header_t ucx_hdr;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_SEND_AM_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_SEND_AM_HDR);
-
-    ep = MPIDI_UCX_COMM_TO_EP(comm, rank);
-    ucx_tag = MPIDI_UCX_init_tag(0, 0, MPIDI_UCX_AM_TAG);
-
-    /* initialize our portion of the hdr */
-    ucx_hdr.handler_id = handler_id;
-    ucx_hdr.data_sz = 0;
-
-    /* just pack and send for now */
-    send_buf = MPL_malloc(am_hdr_sz + sizeof(ucx_hdr));
-    MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
-    MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
-
-    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
-                                                              am_hdr_sz + sizeof(ucx_hdr),
-                                                              ucp_dt_make_contig(1), ucx_tag,
-                                                              &MPIDI_UCX_am_send_callback);
-    MPIDI_CH4_UCX_REQUEST(ucp_request, tag_send_nb);
-
-    /* send is done. free all resources and complete the request */
-    if (ucp_request == NULL) {
-        MPL_free(send_buf);
-        MPIDI_UCX_global.send_cmpl_handlers[handler_id] (sreq);
-        goto fn_exit;
-    }
-
-    /* request completed between the UCP call and now. free resources
-     * and complete the send request */
-    if (ucp_request->req) {
-        MPL_free(send_buf);
-        MPIDI_UCX_global.send_cmpl_handlers[handler_id] (sreq);
-        ucp_request->req = NULL;
-        ucp_request_release(ucp_request);
-    }
-    else {
-        /* set the ch4r request inside the UCP request */
-        sreq->dev.ch4.ch4u.netmod_am.ucx.pack_buffer = send_buf;
-        sreq->dev.ch4.ch4u.netmod_am.ucx.handler_id = handler_id;
-        ucp_request->req = sreq;
-        ucp_request_release(ucp_request);
-    }
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_SEND_AM_HDR);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_NM_am_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -259,43 +191,6 @@ static inline int MPIDI_NM_am_send(int rank,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_sendv_hdr
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_am_sendv_hdr(int rank,
-                                        MPIR_Comm * comm,
-                                        int handler_id,
-                                        struct iovec *am_hdr,
-                                        size_t iov_len, MPIR_Request * sreq, void *netmod_context)
-{
-    int mpi_errno = MPI_SUCCESS;
-    size_t am_hdr_sz = 0, i;
-    char *am_hdr_buf;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_SEND_AMV_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_SEND_AMV_HDR);
-
-    for (i = 0; i < iov_len; i++) {
-        am_hdr_sz += am_hdr[i].iov_len;
-    }
-
-    am_hdr_buf = (char *) MPL_malloc(am_hdr_sz);
-    MPIR_Assert(am_hdr_buf);
-    am_hdr_sz = 0;
-
-    for (i = 0; i < iov_len; i++) {
-        MPIR_Memcpy(am_hdr_buf + am_hdr_sz, am_hdr[i].iov_base, am_hdr[i].iov_len);
-        am_hdr_sz += am_hdr[i].iov_len;
-    }
-
-    mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, handler_id, am_hdr_buf, am_hdr_sz,
-                                     sreq, netmod_context);
-    MPL_free(am_hdr_buf);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_SEND_AMV_HDR);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_NM_am_sendv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -337,21 +232,6 @@ static inline int MPIDI_NM_am_sendv(int rank,
     return mpi_errno;
 }
 
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_send_hdr_reply
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
-                                             int src_rank,
-                                             int handler_id,
-                                             const void *am_hdr,
-                                             size_t am_hdr_sz, MPIR_Request * sreq)
-{
-
-    return MPIDI_NM_am_send_hdr(src_rank, MPIDI_CH4U_context_id_to_comm(context_id), handler_id,
-                                am_hdr, am_hdr_sz, sreq, NULL);
-}
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_am_send_reply
@@ -434,42 +314,6 @@ static inline int MPIDI_NM_am_send_reply(MPIR_Context_id_t context_id,
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-static inline int MPIDI_NM_am_sendv_reply(MPIR_Context_id_t context_id,
-                                          int src_rank,
-                                          int handler_id,
-                                          struct iovec *am_hdr,
-                                          size_t iov_len,
-                                          const void *data, MPI_Count count,
-                                          MPI_Datatype datatype, MPIR_Request * sreq)
-{
-    int mpi_errno = MPI_SUCCESS;
-    size_t am_hdr_sz = 0, i;
-    char *am_hdr_buf;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_UCX_SEND_AMV_REPLY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_UCX_SEND_AMV_REPLY);
-
-    for (i = 0; i < iov_len; i++) {
-        am_hdr_sz += am_hdr[i].iov_len;
-    }
-
-    am_hdr_buf = (char *) MPL_malloc(am_hdr_sz);
-
-    MPIR_Assert(am_hdr_buf);
-    am_hdr_sz = 0;
-
-    for (i = 0; i < iov_len; i++) {
-        MPIR_Memcpy(am_hdr_buf + am_hdr_sz, am_hdr[i].iov_base, am_hdr[i].iov_len);
-        am_hdr_sz += am_hdr[i].iov_len;
-    }
-
-    mpi_errno = MPIDI_NM_am_send_reply(context_id, src_rank, handler_id, am_hdr_buf, am_hdr_sz,
-                                       data, count, datatype, sreq);
-    MPL_free(am_hdr_buf);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_UCX_SEND_AMV_REPLY);
-    return mpi_errno;
 }
 
 static inline size_t MPIDI_NM_am_hdr_max_sz(void)

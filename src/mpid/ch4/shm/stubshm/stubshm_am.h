@@ -20,16 +20,6 @@ static inline int MPIDI_SHM_am_reg_handler(int handler_id,
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_am_send_hdr(int rank,
-                                        MPIR_Comm * comm,
-                                        int handler_id,
-                                        const void *am_hdr,
-                                        size_t am_hdr_sz, MPIR_Request * sreq, void *shm_context)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
 static inline int MPIDI_SHM_am_send(int rank,
                                     MPIR_Comm * comm,
                                     int handler_id,
@@ -56,15 +46,6 @@ static inline int MPIDI_SHM_am_sendv(int rank,
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_am_send_hdr_reply(MPIR_Context_id_t context_id, int src_rank,
-                                              int handler_id,
-                                              const void *am_hdr,
-                                              size_t am_hdr_sz, MPIR_Request * sreq)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
 static inline int MPIDI_SHM_am_send_reply(MPIR_Context_id_t context_id, int src_rank,
                                           int handler_id,
                                           const void *am_hdr,
@@ -72,18 +53,6 @@ static inline int MPIDI_SHM_am_send_reply(MPIR_Context_id_t context_id, int src_
                                           const void *data,
                                           MPI_Count count,
                                           MPI_Datatype datatype, MPIR_Request * sreq)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
-static inline int MPIDI_SHM_am_sendv_reply(MPIR_Context_id_t context_id, int src_rank,
-                                           int handler_id,
-                                           struct iovec *am_hdr,
-                                           size_t iov_len,
-                                           const void *data,
-                                           MPI_Count count,
-                                           MPI_Datatype datatype, MPIR_Request * sreq)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
