@@ -444,10 +444,10 @@ __ALWAYS_INLINE__ int MPIDI_OFI_dynproc_done_event(struct fi_cq_tagged_entry *wc
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_am_send_event
+#define FUNCNAME MPIDI_OFI_am_isend_event
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__ALWAYS_INLINE__ int MPIDI_OFI_am_send_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
+__ALWAYS_INLINE__ int MPIDI_OFI_am_isend_event(struct fi_cq_tagged_entry *wc, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_header_t *msg_hdr;
@@ -472,7 +472,7 @@ __ALWAYS_INLINE__ int MPIDI_OFI_am_send_event(struct fi_cq_tagged_entry *wc, MPI
         MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
     }
 
-    mpi_errno = MPIDI_Global.am_send_cmpl_handlers[msg_hdr->handler_id] (sreq);
+    mpi_errno = MPIDI_Global.am_isend_cmpl_handlers[msg_hdr->handler_id] (sreq);
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -615,7 +615,7 @@ __ALWAYS_INLINE__ int MPIDI_OFI_dispatch_function(struct fi_cq_tagged_entry *wc,
         goto fn_exit;
     }
     else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_SEND)) {
-        mpi_errno = MPIDI_OFI_am_send_event(wc, req);
+        mpi_errno = MPIDI_OFI_am_isend_event(wc, req);
         goto fn_exit;
     }
     else if (likely(MPIDI_OFI_REQUEST(req, event_id) == MPIDI_OFI_EVENT_AM_RECV)) {

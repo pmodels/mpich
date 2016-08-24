@@ -34,14 +34,15 @@ static inline int MPIDI_NM_am_reg_handler(int handler_id,
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_am_send(int rank,
-                                   MPIR_Comm * comm,
-                                   int handler_id,
-                                   const void *am_hdr,
-                                   size_t am_hdr_sz,
-                                   const void *data,
-                                   MPI_Count count,
-                                   MPI_Datatype datatype, MPIR_Request * sreq, void *netmod_context)
+static inline int MPIDI_NM_am_isend(int rank,
+                                    MPIR_Comm * comm,
+                                    int handler_id,
+                                    const void *am_hdr,
+                                    size_t am_hdr_sz,
+                                    const void *data,
+                                    MPI_Count count,
+                                    MPI_Datatype datatype, MPIR_Request * sreq,
+                                    void *netmod_context)
 {
     int mpi_errno = MPI_SUCCESS, ret, c;
     size_t data_sz;
@@ -129,28 +130,28 @@ static inline int MPIDI_NM_am_send(int rank,
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_am_sendv(int rank,
-                                    MPIR_Comm * comm,
-                                    int handler_id,
-                                    struct iovec *am_hdr,
-                                    size_t iov_len,
-                                    const void *data,
-                                    MPI_Count count,
-                                    MPI_Datatype datatype,
-                                    MPIR_Request * sreq, void *netmod_context)
+static inline int MPIDI_NM_am_isendv(int rank,
+                                     MPIR_Comm * comm,
+                                     int handler_id,
+                                     struct iovec *am_hdr,
+                                     size_t iov_len,
+                                     const void *data,
+                                     MPI_Count count,
+                                     MPI_Datatype datatype,
+                                     MPIR_Request * sreq, void *netmod_context)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_am_send_reply(MPIR_Context_id_t context_id,
-                                         int src_rank,
-                                         int handler_id,
-                                         const void *am_hdr,
-                                         size_t am_hdr_sz,
-                                         const void *data,
-                                         MPI_Count count,
-                                         MPI_Datatype datatype, MPIR_Request * sreq)
+static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
+                                          int src_rank,
+                                          int handler_id,
+                                          const void *am_hdr,
+                                          size_t am_hdr_sz,
+                                          const void *data,
+                                          MPI_Count count,
+                                          MPI_Datatype datatype, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS, ret, c;
     size_t data_sz;
@@ -231,10 +232,10 @@ static inline size_t MPIDI_NM_am_hdr_max_sz(void)
     return 0;
 }
 
-static inline int MPIDI_NM_am_inject_hdr(int rank,
-                                         MPIR_Comm * comm,
-                                         int handler_id,
-                                         const void *am_hdr, size_t am_hdr_sz, void *netmod_context)
+static inline int MPIDI_NM_am_send_hdr(int rank,
+                                       MPIR_Comm * comm,
+                                       int handler_id,
+                                       const void *am_hdr, size_t am_hdr_sz, void *netmod_context)
 {
     int mpi_errno = MPI_SUCCESS, ret, c;
     ptl_hdr_data_t ptl_hdr;
@@ -266,9 +267,9 @@ static inline int MPIDI_NM_am_inject_hdr(int rank,
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_am_inject_hdr_reply(MPIR_Context_id_t context_id,
-                                               int src_rank,
-                                               int handler_id, const void *am_hdr, size_t am_hdr_sz)
+static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
+                                             int src_rank,
+                                             int handler_id, const void *am_hdr, size_t am_hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS, ret, c;
     ptl_hdr_data_t ptl_hdr;

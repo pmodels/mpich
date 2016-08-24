@@ -277,7 +277,7 @@ __ALWAYS_INLINE__ int MPIDI_NM_cancel_recv(MPIR_Request * rreq)
     return mpi_errno;
 
 #ifndef MPIDI_BUILD_CH4_SHM
-fn_fail:
+  fn_fail:
     goto fn_exit;
 #endif
 }

@@ -390,7 +390,7 @@ static inline int MPIDI_OFI_init_generic(int rank,
     /* ---------------------------------- */
     if (do_am) {
         /* Maximum possible message size for short message send (=eager send)
-         * See MPIDI_OFI_do_am_send for short/long switching logic */
+         * See MPIDI_OFI_do_am_isend for short/long switching logic */
         MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_Global.max_send);
         MPIDI_Global.am_buf_pool =
             MPIDI_CH4U_create_buf_pool(MPIDI_OFI_BUF_POOL_NUM, MPIDI_OFI_BUF_POOL_SIZE);
@@ -427,7 +427,7 @@ static inline int MPIDI_OFI_init_generic(int rank,
 
         /* Grow the header handlers down */
         MPIDI_Global.am_handlers[MPIDI_OFI_INTERNAL_HANDLER_CONTROL] = MPIDI_OFI_control_handler;
-        MPIDI_Global.am_send_cmpl_handlers[MPIDI_OFI_INTERNAL_HANDLER_CONTROL] = NULL;
+        MPIDI_Global.am_isend_cmpl_handlers[MPIDI_OFI_INTERNAL_HANDLER_CONTROL] = NULL;
     }
     OPA_store_int(&MPIDI_Global.am_inflight_inject_emus, 0);
     OPA_store_int(&MPIDI_Global.am_inflight_rma_send_mrs, 0);

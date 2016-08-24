@@ -30,11 +30,11 @@ MPIDI_NM_funcs_t MPIDI_NM_ucx_funcs = {
     MPIDI_NM_am_request_init,
     MPIDI_NM_am_request_finalize,
     MPIDI_NM_am_reg_handler,
-    MPIDI_NM_am_inject_hdr,
-    MPIDI_NM_am_send,
-    MPIDI_NM_am_sendv,
-    MPIDI_NM_am_inject_hdr_reply,
-    MPIDI_NM_am_send_reply,
+    MPIDI_NM_am_send_hdr,
+    MPIDI_NM_am_isend,
+    MPIDI_NM_am_isendv,
+    MPIDI_NM_am_send_hdr_reply,
+    MPIDI_NM_am_isend_reply,
     MPIDI_NM_am_hdr_max_sz,
     MPIDI_NM_am_recv
 };
