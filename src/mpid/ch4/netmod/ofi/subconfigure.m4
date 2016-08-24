@@ -88,6 +88,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_usnic="no"
         enable_mxm="no"
         enable_gni="no"
+        enable_bgq="no"
         enable_udp="no"
         enable_rxm="no"
         enable_rxd="no"
@@ -99,6 +100,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         enable_usnic="yes"
         enable_mxm="yes"
         enable_gni="yes"
+        enable_bgq="yes"
         enable_udp="yes"
         enable_rxm="yes"
         enable_rxd="yes"
@@ -118,6 +120,9 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         fi
         if test "$provider" = "gni" ; then
             enable_gni="yes"
+        fi
+        if test "$provider" = "bgq" ; then
+            enable_bgq="yes"
         fi
 
         dnl For these providers, we don't know exactly which capabilities we
@@ -149,17 +154,41 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         fi
     done
 
-
     if test "$runtime_capabilities" = "yes" ; then
-        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set (disables other capability sets)])
-    elif test "$enable_psm" = "yes" ; then
+        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+    elif test "$netmod_args" = "psm" ; then
         AC_DEFINE([MPIDI_CH4_OFI_USE_SET_PSM], [1], [Define to use PSM capability set])
-    elif test "$enable_psm2" = "yes" ; then
+        enable_psm="yes"
+    elif test "$netmod_args" = "psm2" || test "$netmod_args" = "opa" ; then
         AC_DEFINE([MPIDI_CH4_OFI_USE_SET_PSM2], [1], [Define to use PSM2 capability set])
-    elif test "$enable_sockets" = "yes" ; then
+        enable_psm2="yes"
+    elif test "$netmod_args" = "sockets" ; then
         AC_DEFINE([MPIDI_CH4_OFI_USE_SET_SOCKETS], [1], [Define to use sockets capability set])
-    elif test "$enable_gni" = "yes" ; then
+        enable_sockets="yes"
+    elif test "$netmod_args" = "verbs" ; then
+        enable_verbs="yes"
+        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+    elif test "$netmod_args" = "usnic" ; then
+        enable_usnic="yes"
+        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+    elif test "$netmod_args" = "mxm" ; then
+        enable_mxm="yes"
+        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+    elif test "$netmod_args" = "gni" ; then
         AC_DEFINE([MPIDI_CH4_OFI_USE_SET_GNI], [1], [Define to use gni capability set])
+        enable_gni="yes"
+    elif test "$netmod_args" = "bgq" ; then
+        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_BGQ], [1], [Define to use bgq capability set])
+        enable_bgq="yes"
+    elif test "$netmod_args" = "udp" ; then
+        enable_udp="yes"
+        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+    elif test "$netmod_args" = "rxm" ; then
+        enable_rxm="yes"
+        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
+    elif test "$netmod_args" = "rxd" ; then
+        enable_rxd="yes"
+        AC_DEFINE([MPIDI_CH4_OFI_USE_SET_RUNTIME], [1], [Define to use runtime capability set])
     fi
 
     if test "${ofi_embedded}" = "yes" ; then
@@ -167,16 +196,24 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         ofi_subdir_args="--enable-embedded"
 
         prov_config=""
-        prov_config+=" --enable-psm=${enable_psm}"
-        prov_config+=" --enable-psm2=${enable_psm2}"
-        prov_config+=" --enable-sockets=${enable_sockets}"
-        prov_config+=" --enable-verbs=${enable_verbs}"
-        prov_config+=" --enable-usnic=${enable_usnic}"
-        prov_config+=" --enable-mxm=${enable_mxm}"
-        prov_config+=" --enable-gni=${enable_gni}"
-        prov_config+=" --enable-udp=${enable_udp}"
-        prov_config+=" --enable-rxm=${enable_rxm}"
-        prov_config+=" --enable-rxd=${enable_rxd}"
+        if test "x${netmod_args}" != "x" ; then
+            prov_config+=" --enable-psm=${enable_psm}"
+            prov_config+=" --enable-psm2=${enable_psm2}"
+            prov_config+=" --enable-sockets=${enable_sockets}"
+            prov_config+=" --enable-verbs=${enable_verbs}"
+            prov_config+=" --enable-usnic=${enable_usnic}"
+            prov_config+=" --enable-mxm=${enable_mxm}"
+            prov_config+=" --enable-gni=${enable_gni}"
+            prov_config+=" --enable-bgq=${enable_bgq}"
+            prov_config+=" --enable-udp=${enable_udp}"
+            prov_config+=" --enable-rxm=${enable_rxm}"
+            prov_config+=" --enable-rxd=${enable_rxd}"
+        fi
+
+        if test "x${netmod_args}" != "x" && test "${do_direct_provider}" = "true" ; then
+            prov_config+=" --enable-direct=${netmod_args}"
+            AC_MSG_NOTICE([Enabling direct embedded provider: ${netmod_args}])
+        fi
 
         ofi_subdir_args+=" $prov_config"
 
