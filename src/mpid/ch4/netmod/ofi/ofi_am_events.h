@@ -36,7 +36,7 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
     p_data = in_data = (char *) msg_hdr->payload + msg_hdr->am_hdr_sz;
     in_data_sz = data_sz = msg_hdr->data_sz;
 
-    MPIDI_Global.am_handlers[msg_hdr->handler_id] (msg_hdr->payload,
+    MPIDI_Global.am_handlers[msg_hdr->handler_id] (msg_hdr->handler_id, msg_hdr->payload,
                                                    &p_data, &data_sz,
                                                    &is_contig, &cmpl_handler_fn, &rreq);
 
@@ -106,7 +106,7 @@ static inline int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t * msg_hdr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_HANDLE_SHORT_AM_HDR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_HANDLE_SHORT_AM_HDR);
 
-    MPIDI_Global.am_handlers[msg_hdr->handler_id] (am_hdr,
+    MPIDI_Global.am_handlers[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
                                                    NULL, NULL, NULL, &cmpl_handler_fn, &rreq);
 
     if (!rreq)
@@ -225,7 +225,7 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_DO_HANDLE_LONG_AM);
 
     in_data_sz = data_sz = msg_hdr->data_sz;
-    MPIDI_Global.am_handlers[msg_hdr->handler_id] (am_hdr,
+    MPIDI_Global.am_handlers[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
                                                    &p_data, &data_sz, &is_contig,
                                                    &cmpl_handler_fn, &rreq);
 

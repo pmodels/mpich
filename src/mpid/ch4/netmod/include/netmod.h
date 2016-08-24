@@ -22,7 +22,7 @@ typedef int (*MPIDI_NM_am_origin_handler_fn) (MPIR_Request * req);
 /* Callback function setup by handler register function */
 /* for short cases, output arguments are NULL */
 typedef int (*MPIDI_NM_am_target_handler_fn)
- (void *am_hdr, void **data,    /* data should be iovs if *is_contig is false */
+ (int handler_id, void *am_hdr, void **data,    /* data should be iovs if *is_contig is false */
   size_t * data_sz, int *is_contig, MPIDI_NM_am_completion_handler_fn * cmpl_handler_fn,        /* completion handler */
   MPIR_Request ** req);         /* if allocated, need pointer to completion function */
 

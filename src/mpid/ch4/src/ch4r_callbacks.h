@@ -1413,7 +1413,7 @@ static inline int MPIDI_CH4I_do_send_target_handler(void **data,
 #define FUNCNAME MPIDI_CH4U_send_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_send_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_send_target_handler(int handler_id, void *am_hdr,
                                                  void **data,
                                                  size_t * p_data_sz,
                                                  int *is_contig,
@@ -1476,7 +1476,7 @@ static inline int MPIDI_CH4U_send_target_handler(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_send_long_req_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_send_long_req_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_send_long_req_target_handler(int handler_id, void *am_hdr,
                                                           void **data,
                                                           size_t * p_data_sz,
                                                           int *is_contig,
@@ -1545,7 +1545,7 @@ static inline int MPIDI_CH4U_send_long_req_target_handler(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_send_long_lmt_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_send_long_lmt_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_send_long_lmt_target_handler(int handler_id, void *am_hdr,
                                                           void **data,
                                                           size_t * p_data_sz,
                                                           int *is_contig,
@@ -1574,7 +1574,7 @@ static inline int MPIDI_CH4U_send_long_lmt_target_handler(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_ssend_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_ssend_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_ssend_target_handler(int handler_id, void *am_hdr,
                                                   void **data,
                                                   size_t * p_data_sz,
                                                   int *is_contig,
@@ -1587,7 +1587,7 @@ static inline int MPIDI_CH4U_ssend_target_handler(void *am_hdr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_SSEND_HANDLER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_SSEND_HANDLER);
 
-    mpi_errno = MPIDI_CH4U_send_target_handler(am_hdr,
+    mpi_errno = MPIDI_CH4U_send_target_handler(handler_id, am_hdr,
                                                data, p_data_sz, is_contig, cmpl_handler_fn, req);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -1606,7 +1606,7 @@ static inline int MPIDI_CH4U_ssend_target_handler(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_ssend_ack_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_ssend_ack_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_ssend_ack_target_handler(int handler_id, void *am_hdr,
                                                       void **data,
                                                       size_t * p_data_sz, int *is_contig,
                                                       MPIDI_NM_am_completion_handler_fn *
@@ -1634,7 +1634,7 @@ static inline int MPIDI_CH4U_ssend_ack_target_handler(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_send_long_ack_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_send_long_ack_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_send_long_ack_target_handler(int handler_id, void *am_hdr,
                                                           void **data,
                                                           size_t * p_data_sz, int *is_contig,
                                                           MPIDI_NM_am_completion_handler_fn *
@@ -1679,7 +1679,7 @@ static inline int MPIDI_CH4U_send_long_ack_target_handler(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_put_ack_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_put_ack_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_put_ack_target_handler(int handler_id, void *am_hdr,
                                                     void **data,
                                                     size_t * p_data_sz, int *is_contig,
                                                     MPIDI_NM_am_completion_handler_fn *
@@ -1719,7 +1719,7 @@ static inline int MPIDI_CH4U_put_ack_target_handler(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_acc_ack_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_acc_ack_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_acc_ack_target_handler(int handler_id, void *am_hdr,
                                                     void **data,
                                                     size_t * p_data_sz, int *is_contig,
                                                     MPIDI_NM_am_completion_handler_fn *
@@ -1759,7 +1759,7 @@ static inline int MPIDI_CH4U_acc_ack_target_handler(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_get_acc_ack_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_get_acc_ack_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_get_acc_ack_target_handler(int handler_id, void *am_hdr,
                                                         void **data,
                                                         size_t * p_data_sz, int *is_contig,
                                                         MPIDI_NM_am_completion_handler_fn *
@@ -1831,7 +1831,7 @@ static inline int MPIDI_CH4U_get_acc_ack_target_handler(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_cswap_ack_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_cswap_ack_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_cswap_ack_target_handler(int handler_id, void *am_hdr,
                                                       void **data,
                                                       size_t * p_data_sz, int *is_contig,
                                                       MPIDI_NM_am_completion_handler_fn *
@@ -2057,7 +2057,7 @@ static inline void MPIDI_CH4U_win_unlock_done_cb(const MPIDI_CH4U_win_cntrl_msg_
 #define FUNCNAME MPIDI_CH4U_win_ctrl_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_win_ctrl_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_win_ctrl_target_handler(int handler_id, void *am_hdr,
                                                      void **data,
                                                      size_t * p_data_sz, int *is_contig,
                                                      MPIDI_NM_am_completion_handler_fn *
@@ -2123,7 +2123,7 @@ static inline int MPIDI_CH4U_win_ctrl_target_handler(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_put_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_put_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_put_target_handler(int handler_id, void *am_hdr,
                                                 void **data,
                                                 size_t * p_data_sz,
                                                 int *is_contig,
@@ -2228,7 +2228,7 @@ static inline int MPIDI_CH4U_put_target_handler(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_put_iov_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_put_iov_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_put_iov_target_handler(int handler_id, void *am_hdr,
                                                     void **data,
                                                     size_t * p_data_sz,
                                                     int *is_contig,
@@ -2284,7 +2284,7 @@ static inline int MPIDI_CH4U_put_iov_target_handler(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_put_iov_ack_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_put_iov_ack_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_put_iov_ack_target_handler(int handler_id, void *am_hdr,
                                                         void **data,
                                                         size_t * p_data_sz,
                                                         int *is_contig,
@@ -2333,7 +2333,7 @@ static inline int MPIDI_CH4U_put_iov_ack_target_handler(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_acc_iov_ack_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_acc_iov_ack_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_acc_iov_ack_target_handler(int handler_id, void *am_hdr,
                                                         void **data,
                                                         size_t * p_data_sz,
                                                         int *is_contig,
@@ -2383,7 +2383,7 @@ static inline int MPIDI_CH4U_acc_iov_ack_target_handler(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_put_data_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_put_data_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_put_data_target_handler(int handler_id, void *am_hdr,
                                                      void **data,
                                                      size_t * p_data_sz,
                                                      int *is_contig,
@@ -2424,7 +2424,7 @@ static inline int MPIDI_CH4U_put_data_target_handler(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_acc_data_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_acc_data_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_acc_data_target_handler(int handler_id, void *am_hdr,
                                                      void **data,
                                                      size_t * p_data_sz,
                                                      int *is_contig,
@@ -2475,7 +2475,7 @@ static inline int MPIDI_CH4U_acc_data_target_handler(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_cswap_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_cswap_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_cswap_target_handler(int handler_id, void *am_hdr,
                                                   void **data,
                                                   size_t * p_data_sz,
                                                   int *is_contig,
@@ -2540,7 +2540,7 @@ static inline int MPIDI_CH4U_cswap_target_handler(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_handle_acc_request
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_handle_acc_request(void *am_hdr,
+static inline int MPIDI_CH4U_handle_acc_request(int handler_id, void *am_hdr,
                                                 void **data,
                                                 size_t * p_data_sz,
                                                 int *is_contig,
@@ -2627,7 +2627,7 @@ static inline int MPIDI_CH4U_handle_acc_request(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_acc_iov_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_acc_iov_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_acc_iov_target_handler(int handler_id, void *am_hdr,
                                                     void **data,
                                                     size_t * p_data_sz,
                                                     int *is_contig,
@@ -2695,7 +2695,7 @@ static inline int MPIDI_CH4U_acc_iov_target_handler(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_get_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_get_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_get_target_handler(int handler_id, void *am_hdr,
                                                 void **data,
                                                 size_t * p_data_sz,
                                                 int *is_contig,
@@ -2759,7 +2759,7 @@ static inline int MPIDI_CH4U_get_target_handler(void *am_hdr,
 #define FUNCNAME MPIDI_CH4U_get_ack_target_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4U_get_ack_target_handler(void *am_hdr,
+static inline int MPIDI_CH4U_get_ack_target_handler(int handler_id, void *am_hdr,
                                                     void **data,
                                                     size_t * p_data_sz,
                                                     int *is_contig,

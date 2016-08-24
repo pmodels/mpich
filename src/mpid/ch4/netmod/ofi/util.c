@@ -376,7 +376,7 @@ static inline void MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
     MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv);
 }
 
-int MPIDI_OFI_control_handler(void *am_hdr,
+int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               void **data,
                               size_t * data_sz,
                               int *is_contig,
