@@ -73,12 +73,15 @@ if [ "$recursive" = "1" ]; then
     for i in `find . \! -type d | egrep '(\.c$|\.h$|\.c\.in$|\.h\.in$|\.cpp$|\.cpp.in$)' | \
 	egrep -v "($ignore_list)"` ; do
 	${debug} indent_code $i
+	${debug} indent_code $i
     done
 elif [ "$all" = "1" ]; then
     for i in `find . -maxdepth 1 \! -type d | egrep '(\.c$|\.h$|\.c\.in$|\.h\.in$|\.cpp$|\.cpp.in$)' | \
 	egrep -v "($ignore_list)"` ; do
 	${debug} indent_code $i
+	${debug} indent_code $i
     done
 else
+    ${debug} indent_code $@
     ${debug} indent_code $@
 fi
