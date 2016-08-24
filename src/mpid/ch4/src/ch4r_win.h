@@ -53,20 +53,20 @@ static inline int MPIDI_CH4R_win_set_info(MPIR_Win * win, MPIR_Info * info)
             while (token) {
                 if (!memcmp(token, "rar", 3))
                     MPIDI_CH4U_WIN(win, info_args).accumulate_ordering =
-                        (MPIDI_CH4U_WIN(win, info_args).
-                         accumulate_ordering | MPIDI_CH4I_ACCU_ORDER_RAR);
+                        (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering |
+                         MPIDI_CH4I_ACCU_ORDER_RAR);
                 else if (!memcmp(token, "raw", 3))
                     MPIDI_CH4U_WIN(win, info_args).accumulate_ordering =
-                        (MPIDI_CH4U_WIN(win, info_args).
-                         accumulate_ordering | MPIDI_CH4I_ACCU_ORDER_RAW);
+                        (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering |
+                         MPIDI_CH4I_ACCU_ORDER_RAW);
                 else if (!memcmp(token, "war", 3))
                     MPIDI_CH4U_WIN(win, info_args).accumulate_ordering =
-                        (MPIDI_CH4U_WIN(win, info_args).
-                         accumulate_ordering | MPIDI_CH4I_ACCU_ORDER_WAR);
+                        (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering |
+                         MPIDI_CH4I_ACCU_ORDER_WAR);
                 else if (!memcmp(token, "waw", 3))
                     MPIDI_CH4U_WIN(win, info_args).accumulate_ordering =
-                        (MPIDI_CH4U_WIN(win, info_args).
-                         accumulate_ordering | MPIDI_CH4I_ACCU_ORDER_WAW);
+                        (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering |
+                         MPIDI_CH4I_ACCU_ORDER_WAW);
                 else
                     MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_ARG, goto fn_fail, "**info");
 
