@@ -81,7 +81,7 @@ static inline int MPIDI_CH4I_do_put(const void *origin_addr,
         am_hdr.n_iov = 0;
         MPIDI_CH4U_REQUEST(sreq, req->preq.dt_iov) = NULL;
 
-        mpi_errno = MPIDI_NM_send_am(target_rank, win->comm_ptr, MPIDI_CH4U_PUT_REQ,
+        mpi_errno = MPIDI_NM_am_send(target_rank, win->comm_ptr, MPIDI_CH4U_PUT_REQ,
                                      &am_hdr, sizeof(am_hdr), origin_addr,
                                      origin_count, origin_datatype, sreq, NULL);
         if (mpi_errno)
@@ -114,7 +114,7 @@ static inline int MPIDI_CH4I_do_put(const void *origin_addr,
     MPIDI_CH4U_REQUEST(sreq, req->preq.dt_iov) = dt_iov;
 
     if ((am_iov[0].iov_len + am_iov[1].iov_len) <= MPIDI_NM_am_hdr_max_sz()) {
-        mpi_errno = MPIDI_NM_send_amv(target_rank, win->comm_ptr, MPIDI_CH4U_PUT_REQ,
+        mpi_errno = MPIDI_NM_am_sendv(target_rank, win->comm_ptr, MPIDI_CH4U_PUT_REQ,
                                       &am_iov[0], 2, origin_addr, origin_count, origin_datatype,
                                       sreq, NULL);
     }
@@ -125,7 +125,7 @@ static inline int MPIDI_CH4I_do_put(const void *origin_addr,
         MPIDI_CH4U_REQUEST(sreq, src_rank) = target_rank;
         dtype_add_ref_if_not_builtin(origin_datatype);
 
-        mpi_errno = MPIDI_NM_send_am(target_rank, win->comm_ptr, MPIDI_CH4U_PUT_IOV_REQ,
+        mpi_errno = MPIDI_NM_am_send(target_rank, win->comm_ptr, MPIDI_CH4U_PUT_IOV_REQ,
                                      &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
                                      am_iov[1].iov_len, MPI_BYTE, sreq, NULL);
     }
@@ -210,7 +210,7 @@ static inline int MPIDI_CH4I_do_get(void *origin_addr,
         am_hdr.n_iov = 0;
         MPIDI_CH4U_REQUEST(sreq, req->greq.dt_iov) = NULL;
 
-        mpi_errno = MPIDI_NM_send_am_hdr(target_rank, win->comm_ptr,
+        mpi_errno = MPIDI_NM_am_send_hdr(target_rank, win->comm_ptr,
                                          MPIDI_CH4U_GET_REQ, &am_hdr, sizeof(am_hdr), sreq, NULL);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -235,7 +235,7 @@ static inline int MPIDI_CH4I_do_get(void *origin_addr,
     MPL_free(segment_ptr);
 
     MPIDI_CH4U_REQUEST(sreq, req->greq.dt_iov) = dt_iov;
-    mpi_errno = MPIDI_NM_send_am(target_rank, win->comm_ptr, MPIDI_CH4U_GET_REQ,
+    mpi_errno = MPIDI_NM_am_send(target_rank, win->comm_ptr, MPIDI_CH4U_GET_REQ,
                                  &am_hdr, sizeof(am_hdr), dt_iov,
                                  sizeof(struct iovec) * am_hdr.n_iov, MPI_BYTE, sreq, NULL);
     if (mpi_errno)
@@ -441,7 +441,7 @@ __CH4_INLINE__ int MPIDI_CH4I_do_accumulate(const void *origin_addr,
         am_hdr.n_iov = 0;
         MPIDI_CH4U_REQUEST(sreq, req->areq.dt_iov) = NULL;
 
-        mpi_errno = MPIDI_NM_send_am(target_rank, win->comm_ptr, MPIDI_CH4U_ACC_REQ,
+        mpi_errno = MPIDI_NM_am_send(target_rank, win->comm_ptr, MPIDI_CH4U_ACC_REQ,
                                      &am_hdr, sizeof(am_hdr), origin_addr,
                                      (op == MPI_NO_OP) ? 0 : origin_count,
                                      origin_datatype, sreq, NULL);
@@ -479,7 +479,7 @@ __CH4_INLINE__ int MPIDI_CH4I_do_accumulate(const void *origin_addr,
     MPIDI_CH4U_REQUEST(sreq, req->areq.dt_iov) = dt_iov;
 
     if ((am_iov[0].iov_len + am_iov[1].iov_len) <= MPIDI_NM_am_hdr_max_sz()) {
-        mpi_errno = MPIDI_NM_send_amv(target_rank, win->comm_ptr, MPIDI_CH4U_ACC_REQ,
+        mpi_errno = MPIDI_NM_am_sendv(target_rank, win->comm_ptr, MPIDI_CH4U_ACC_REQ,
                                       &am_iov[0], 2, origin_addr,
                                       (op == MPI_NO_OP) ? 0 : origin_count,
                                       origin_datatype, sreq, NULL);
@@ -491,7 +491,7 @@ __CH4_INLINE__ int MPIDI_CH4I_do_accumulate(const void *origin_addr,
         MPIDI_CH4U_REQUEST(sreq, src_rank) = target_rank;
         dtype_add_ref_if_not_builtin(origin_datatype);
 
-        mpi_errno = MPIDI_NM_send_am(target_rank, win->comm_ptr, MPIDI_CH4U_ACC_IOV_REQ,
+        mpi_errno = MPIDI_NM_am_send(target_rank, win->comm_ptr, MPIDI_CH4U_ACC_IOV_REQ,
                                      &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
                                      am_iov[1].iov_len, MPI_BYTE, sreq, NULL);
     }
@@ -721,7 +721,7 @@ __CH4_INLINE__ int MPIDI_CH4U_compare_and_swap(const void *origin_addr,
     OPA_incr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
     /* MPIDI_CS_EXIT(); */
 
-    mpi_errno = MPIDI_NM_send_am(target_rank, win->comm_ptr, MPIDI_CH4U_CSWAP_REQ,
+    mpi_errno = MPIDI_NM_am_send(target_rank, win->comm_ptr, MPIDI_CH4U_CSWAP_REQ,
                                  &am_hdr, sizeof(am_hdr), (char *) p_data, 2, datatype, sreq, NULL);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);

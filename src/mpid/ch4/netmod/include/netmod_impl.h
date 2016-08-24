@@ -34,13 +34,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(void *netmod_context, int blockin
     return MPIDI_NM_func->progress(netmod_context, blocking);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_reg_hdr_handler(int handler_id,
-                                                      MPIDI_NM_am_origin_handler_fn
-                                                      origin_handler_fn,
-                                                      MPIDI_NM_am_target_handler_fn
-                                                      target_handler_fn)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_reg_handler(int handler_id,
+                                                     MPIDI_NM_am_origin_handler_fn
+                                                     origin_handler_fn,
+                                                     MPIDI_NM_am_target_handler_fn
+                                                     target_handler_fn)
 {
-    return MPIDI_NM_func->reg_hdr_handler(handler_id, origin_handler_fn, target_handler_fn);
+    return MPIDI_NM_func->am_reg_handler(handler_id, origin_handler_fn, target_handler_fn);
 };
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_connect(const char *port_name, MPIR_Info * info,
@@ -72,82 +72,82 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_accept(const char *port_name, MPIR_In
     return MPIDI_NM_func->comm_accept(port_name, info, root, comm, newcomm_ptr);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_am_hdr(int rank, MPIR_Comm * comm, int handler_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank, MPIR_Comm * comm, int handler_id,
                                                   const void *am_hdr, size_t am_hdr_sz,
                                                   MPIR_Request * sreq, void *netmod_context)
 {
-    return MPIDI_NM_func->send_am_hdr(rank, comm, handler_id, am_hdr, am_hdr_sz, sreq,
+    return MPIDI_NM_func->am_send_hdr(rank, comm, handler_id, am_hdr, am_hdr_sz, sreq,
                                       netmod_context);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_inject_am_hdr(int rank, MPIR_Comm * comm, int handler_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_inject_hdr(int rank, MPIR_Comm * comm, int handler_id,
                                                     const void *am_hdr, size_t am_hdr_sz,
                                                     void *netmod_context)
 {
-    return MPIDI_NM_func->inject_am_hdr(rank, comm, handler_id, am_hdr, am_hdr_sz, netmod_context);
+    return MPIDI_NM_func->am_inject_hdr(rank, comm, handler_id, am_hdr, am_hdr_sz, netmod_context);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_am(int rank, MPIR_Comm * comm, int handler_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send(int rank, MPIR_Comm * comm, int handler_id,
                                               const void *am_hdr, size_t am_hdr_sz,
                                               const void *data, MPI_Count count,
                                               MPI_Datatype datatype, MPIR_Request * sreq,
                                               void *netmod_context)
 {
-    return MPIDI_NM_func->send_am(rank, comm, handler_id, am_hdr, am_hdr_sz, data, count, datatype,
+    return MPIDI_NM_func->am_send(rank, comm, handler_id, am_hdr, am_hdr_sz, data, count, datatype,
                                   sreq, netmod_context);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_amv(int rank, MPIR_Comm * comm, int handler_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_sendv(int rank, MPIR_Comm * comm, int handler_id,
                                                struct iovec *am_hdrs, size_t iov_len,
                                                const void *data, MPI_Count count,
                                                MPI_Datatype datatype, MPIR_Request * sreq,
                                                void *netmod_context)
 {
-    return MPIDI_NM_func->send_amv(rank, comm, handler_id, am_hdrs, iov_len, data, count, datatype,
+    return MPIDI_NM_func->am_sendv(rank, comm, handler_id, am_hdrs, iov_len, data, count, datatype,
                                    sreq, netmod_context);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_amv_hdr(int rank, MPIR_Comm * comm, int handler_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_sendv_hdr(int rank, MPIR_Comm * comm, int handler_id,
                                                    struct iovec *am_hdrs, size_t iov_len,
                                                    MPIR_Request * sreq, void *netmod_context)
 {
-    return MPIDI_NM_func->send_amv_hdr(rank, comm, handler_id, am_hdrs, iov_len, sreq,
+    return MPIDI_NM_func->am_sendv_hdr(rank, comm, handler_id, am_hdrs, iov_len, sreq,
                                        netmod_context);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_am_hdr_reply(MPIR_Context_id_t context_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
                                                         int src_rank, int handler_id,
                                                         const void *am_hdr, size_t am_hdr_sz,
                                                         MPIR_Request * sreq)
 {
-    return MPIDI_NM_func->send_am_hdr_reply(context_id, src_rank, handler_id, am_hdr, am_hdr_sz,
+    return MPIDI_NM_func->am_send_hdr_reply(context_id, src_rank, handler_id, am_hdr, am_hdr_sz,
                                             sreq);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_inject_am_hdr_reply(MPIR_Context_id_t context_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_inject_hdr_reply(MPIR_Context_id_t context_id,
                                                           int src_rank, int handler_id,
                                                           const void *am_hdr, size_t am_hdr_sz)
 {
-    return MPIDI_NM_func->inject_am_hdr_reply(context_id, src_rank, handler_id, am_hdr, am_hdr_sz);
+    return MPIDI_NM_func->am_inject_hdr_reply(context_id, src_rank, handler_id, am_hdr, am_hdr_sz);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_am_reply(MPIR_Context_id_t context_id, int src_rank,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_reply(MPIR_Context_id_t context_id, int src_rank,
                                                     int handler_id, const void *am_hdr,
                                                     size_t am_hdr_sz, const void *data,
                                                     MPI_Count count, MPI_Datatype datatype,
                                                     MPIR_Request * sreq)
 {
-    return MPIDI_NM_func->send_am_reply(context_id, src_rank, handler_id, am_hdr, am_hdr_sz, data,
+    return MPIDI_NM_func->am_send_reply(context_id, src_rank, handler_id, am_hdr, am_hdr_sz, data,
                                         count, datatype, sreq);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_amv_reply(MPIR_Context_id_t context_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_sendv_reply(MPIR_Context_id_t context_id,
                                                      int src_rank, int handler_id,
                                                      struct iovec *am_hdr, size_t iov_len,
                                                      const void *data, MPI_Count count,
                                                      MPI_Datatype datatype, MPIR_Request * sreq)
 {
-    return MPIDI_NM_func->send_amv_reply(context_id, src_rank, handler_id, am_hdr, iov_len, data,
+    return MPIDI_NM_func->am_sendv_reply(context_id, src_rank, handler_id, am_hdr, iov_len, data,
                                          count, datatype, sreq);
 };
 

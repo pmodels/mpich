@@ -31,9 +31,9 @@ typedef int (*MPIDI_NM_init_t) (int rank, int size, int appnum, int *tag_ub, MPI
                                 void **netmod_contexts);
 typedef int (*MPIDI_NM_finalize_t) (void);
 typedef int (*MPIDI_NM_progress_t) (void *netmod_context, int blocking);
-typedef int (*MPIDI_NM_reg_hdr_handler_t) (int handler_id,
-                                           MPIDI_NM_am_origin_handler_fn origin_handler_fn,
-                                           MPIDI_NM_am_target_handler_fn target_handler_fn);
+typedef int (*MPIDI_NM_am_reg_handler_t) (int handler_id,
+                                          MPIDI_NM_am_origin_handler_fn origin_handler_fn,
+                                          MPIDI_NM_am_target_handler_fn target_handler_fn);
 typedef int (*MPIDI_NM_comm_connect_t) (const char *port_name, MPIR_Info * info, int root,
                                         MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr);
 typedef int (*MPIDI_NM_comm_disconnect_t) (MPIR_Comm * comm_ptr);
@@ -41,34 +41,34 @@ typedef int (*MPIDI_NM_open_port_t) (MPIR_Info * info_ptr, char *port_name);
 typedef int (*MPIDI_NM_close_port_t) (const char *port_name);
 typedef int (*MPIDI_NM_comm_accept_t) (const char *port_name, MPIR_Info * info, int root,
                                        MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr);
-typedef int (*MPIDI_NM_send_am_hdr_t) (int rank, MPIR_Comm * comm, int handler_id,
+typedef int (*MPIDI_NM_am_send_hdr_t) (int rank, MPIR_Comm * comm, int handler_id,
                                        const void *am_hdr, size_t am_hdr_sz, MPIR_Request * sreq,
                                        void *netmod_context);
-typedef int (*MPIDI_NM_inject_am_hdr_t) (int rank, MPIR_Comm * comm, int handler_id,
+typedef int (*MPIDI_NM_am_inject_hdr_t) (int rank, MPIR_Comm * comm, int handler_id,
                                          const void *am_hdr, size_t am_hdr_sz,
                                          void *netmod_context);
-typedef int (*MPIDI_NM_send_am_t) (int rank, MPIR_Comm * comm, int handler_id, const void *am_hdr,
+typedef int (*MPIDI_NM_am_send_t) (int rank, MPIR_Comm * comm, int handler_id, const void *am_hdr,
                                    size_t am_hdr_sz, const void *data, MPI_Count count,
                                    MPI_Datatype datatype, MPIR_Request * sreq,
                                    void *netmod_context);
-typedef int (*MPIDI_NM_send_amv_t) (int rank, MPIR_Comm * comm, int handler_id,
+typedef int (*MPIDI_NM_am_sendv_t) (int rank, MPIR_Comm * comm, int handler_id,
                                     struct iovec * am_hdrs, size_t iov_len, const void *data,
                                     MPI_Count count, MPI_Datatype datatype, MPIR_Request * sreq,
                                     void *netmod_context);
-typedef int (*MPIDI_NM_send_amv_hdr_t) (int rank, MPIR_Comm * comm, int handler_id,
+typedef int (*MPIDI_NM_am_sendv_hdr_t) (int rank, MPIR_Comm * comm, int handler_id,
                                         struct iovec * am_hdrs, size_t iov_len, MPIR_Request * sreq,
                                         void *netmod_context);
-typedef int (*MPIDI_NM_send_am_hdr_reply_t) (MPIR_Context_id_t context_id, int src_rank,
+typedef int (*MPIDI_NM_am_send_hdr_reply_t) (MPIR_Context_id_t context_id, int src_rank,
                                              int handler_id, const void *am_hdr, size_t am_hdr_sz,
                                              MPIR_Request * sreq);
-typedef int (*MPIDI_NM_inject_am_hdr_reply_t) (MPIR_Context_id_t context_id, int src_rank,
+typedef int (*MPIDI_NM_am_inject_hdr_reply_t) (MPIR_Context_id_t context_id, int src_rank,
                                                int handler_id, const void *am_hdr,
                                                size_t am_hdr_sz);
-typedef int (*MPIDI_NM_send_am_reply_t) (MPIR_Context_id_t context_id, int src_rank, int handler_id,
+typedef int (*MPIDI_NM_am_send_reply_t) (MPIR_Context_id_t context_id, int src_rank, int handler_id,
                                          const void *am_hdr, size_t am_hdr_sz, const void *data,
                                          MPI_Count count, MPI_Datatype datatype,
                                          MPIR_Request * sreq);
-typedef int (*MPIDI_NM_send_amv_reply_t) (MPIR_Context_id_t context_id, int src_rank,
+typedef int (*MPIDI_NM_am_sendv_reply_t) (MPIR_Context_id_t context_id, int src_rank,
                                           int handler_id, struct iovec * am_hdr, size_t iov_len,
                                           const void *data, MPI_Count count, MPI_Datatype datatype,
                                           MPIR_Request * sreq);
@@ -378,16 +378,16 @@ typedef struct MPIDI_NM_funcs {
     MPIDI_NM_am_request_init_t am_request_init;
     MPIDI_NM_am_request_finalize_t am_request_finalize;
     /* Active Message Routines */
-    MPIDI_NM_reg_hdr_handler_t reg_hdr_handler;
-    MPIDI_NM_send_am_hdr_t send_am_hdr;
-    MPIDI_NM_inject_am_hdr_t inject_am_hdr;
-    MPIDI_NM_send_am_t send_am;
-    MPIDI_NM_send_amv_t send_amv;
-    MPIDI_NM_send_amv_hdr_t send_amv_hdr;
-    MPIDI_NM_send_am_hdr_reply_t send_am_hdr_reply;
-    MPIDI_NM_inject_am_hdr_reply_t inject_am_hdr_reply;
-    MPIDI_NM_send_am_reply_t send_am_reply;
-    MPIDI_NM_send_amv_reply_t send_amv_reply;
+    MPIDI_NM_am_reg_handler_t am_reg_handler;
+    MPIDI_NM_am_send_hdr_t am_send_hdr;
+    MPIDI_NM_am_inject_hdr_t am_inject_hdr;
+    MPIDI_NM_am_send_t am_send;
+    MPIDI_NM_am_sendv_t am_sendv;
+    MPIDI_NM_am_sendv_hdr_t am_sendv_hdr;
+    MPIDI_NM_am_send_hdr_reply_t am_send_hdr_reply;
+    MPIDI_NM_am_inject_hdr_reply_t am_inject_hdr_reply;
+    MPIDI_NM_am_send_reply_t am_send_reply;
+    MPIDI_NM_am_sendv_reply_t am_sendv_reply;
     MPIDI_NM_am_hdr_max_sz_t am_hdr_max_sz;
     MPIDI_NM_am_recv_t am_recv;
 } MPIDI_NM_funcs_t;
@@ -516,11 +516,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_init(int rank, int size, int appnum, int *
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_finalize(void) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(void *netmod_context,
                                                int blocking) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_reg_hdr_handler(int handler_id,
-                                                      MPIDI_NM_am_origin_handler_fn
-                                                      origin_handler_fn,
-                                                      MPIDI_NM_am_target_handler_fn
-                                                      target_handler_fn) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_reg_handler(int handler_id,
+                                                     MPIDI_NM_am_origin_handler_fn
+                                                     origin_handler_fn,
+                                                     MPIDI_NM_am_target_handler_fn
+                                                     target_handler_fn) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_connect(const char *port_name, MPIR_Info * info,
                                                    int root, MPIR_Comm * comm,
                                                    MPIR_Comm **
@@ -534,43 +534,43 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_accept(const char *port_name, MPIR_In
                                                   int root, MPIR_Comm * comm,
                                                   MPIR_Comm **
                                                   newcomm_ptr) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_am_hdr(int rank, MPIR_Comm * comm, int handler_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr(int rank, MPIR_Comm * comm, int handler_id,
                                                   const void *am_hdr, size_t am_hdr_sz,
                                                   MPIR_Request * sreq,
                                                   void *netmod_context) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_inject_am_hdr(int rank, MPIR_Comm * comm, int handler_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_inject_hdr(int rank, MPIR_Comm * comm, int handler_id,
                                                     const void *am_hdr, size_t am_hdr_sz,
                                                     void *netmod_context) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_am(int rank, MPIR_Comm * comm, int handler_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send(int rank, MPIR_Comm * comm, int handler_id,
                                               const void *am_hdr, size_t am_hdr_sz,
                                               const void *data, MPI_Count count,
                                               MPI_Datatype datatype, MPIR_Request * sreq,
                                               void *netmod_context) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_amv(int rank, MPIR_Comm * comm, int handler_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_sendv(int rank, MPIR_Comm * comm, int handler_id,
                                                struct iovec *am_hdrs, size_t iov_len,
                                                const void *data, MPI_Count count,
                                                MPI_Datatype datatype, MPIR_Request * sreq,
                                                void *netmod_context) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_amv_hdr(int rank, MPIR_Comm * comm, int handler_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_sendv_hdr(int rank, MPIR_Comm * comm, int handler_id,
                                                    struct iovec *am_hdrs, size_t iov_len,
                                                    MPIR_Request * sreq,
                                                    void *netmod_context) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_am_hdr_reply(MPIR_Context_id_t context_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
                                                         int src_rank, int handler_id,
                                                         const void *am_hdr, size_t am_hdr_sz,
                                                         MPIR_Request *
                                                         sreq) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_inject_am_hdr_reply(MPIR_Context_id_t context_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_inject_hdr_reply(MPIR_Context_id_t context_id,
                                                           int src_rank, int handler_id,
                                                           const void *am_hdr,
                                                           size_t am_hdr_sz)
     MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_am_reply(MPIR_Context_id_t context_id, int src_rank,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_send_reply(MPIR_Context_id_t context_id, int src_rank,
                                                     int handler_id, const void *am_hdr,
                                                     size_t am_hdr_sz, const void *data,
                                                     MPI_Count count, MPI_Datatype datatype,
                                                     MPIR_Request * sreq) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_send_amv_reply(MPIR_Context_id_t context_id,
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_sendv_reply(MPIR_Context_id_t context_id,
                                                      int src_rank, int handler_id,
                                                      struct iovec *am_hdr, size_t iov_len,
                                                      const void *data, MPI_Count count,

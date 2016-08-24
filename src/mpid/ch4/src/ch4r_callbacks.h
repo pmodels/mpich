@@ -152,7 +152,7 @@ static inline int MPIDI_CH4U_get_cmpl_handler(MPIR_Request * req)
     win = MPIDI_CH4U_REQUEST(req, req->greq.win_ptr);
     context_id = MPIDI_CH4U_win_to_context(win);
     if (MPIDI_CH4U_REQUEST(req, req->greq.n_iov) == 0) {
-        mpi_errno = MPIDI_NM_send_am_reply(context_id,
+        mpi_errno = MPIDI_NM_am_send_reply(context_id,
                                            MPIDI_CH4U_REQUEST(req, src_rank),
                                            MPIDI_CH4U_GET_ACK,
                                            &get_ack, sizeof(get_ack),
@@ -186,7 +186,7 @@ static inline int MPIDI_CH4U_get_cmpl_handler(MPIR_Request * req)
     MPL_free(MPIDI_CH4U_REQUEST(req, req->greq.dt_iov));
     MPIDI_CH4U_REQUEST(req, req->greq.dt_iov) = (void *) p_data;
 
-    mpi_errno = MPIDI_NM_send_am_reply(context_id,
+    mpi_errno = MPIDI_NM_am_send_reply(context_id,
                                        MPIDI_CH4U_REQUEST(req, src_rank),
                                        MPIDI_CH4U_GET_ACK,
                                        &get_ack, sizeof(get_ack), p_data, data_sz, MPI_BYTE, req);
@@ -414,7 +414,7 @@ static inline int MPIDI_CH4U_reply_ssend(MPIR_Request * rreq)
     MPIR_cc_incr(rreq->cc_ptr, &c);
     ack_msg.sreq_ptr = MPIDI_CH4U_REQUEST(rreq, req->rreq.peer_req_ptr);
 
-    mpi_errno = MPIDI_NM_send_am_hdr_reply(MPIDI_CH4U_get_context(MPIDI_CH4U_REQUEST(rreq, tag)),
+    mpi_errno = MPIDI_NM_am_send_hdr_reply(MPIDI_CH4U_get_context(MPIDI_CH4U_REQUEST(rreq, tag)),
                                            MPIDI_CH4U_REQUEST(rreq, src_rank),
                                            MPIDI_CH4U_SSEND_ACK, &ack_msg, sizeof(ack_msg), rreq);
     if (mpi_errno)
@@ -439,7 +439,7 @@ static inline int MPIDI_CH4U_ack_put(MPIR_Request * rreq)
 
     ack_msg.preq_ptr = MPIDI_CH4U_REQUEST(rreq, req->preq.preq_ptr);
     mpi_errno =
-        MPIDI_NM_inject_am_hdr_reply(MPIDI_CH4U_win_to_context
+        MPIDI_NM_am_inject_hdr_reply(MPIDI_CH4U_win_to_context
                                      (MPIDI_CH4U_REQUEST(rreq, req->preq.win_ptr)),
                                      MPIDI_CH4U_REQUEST(rreq, src_rank), MPIDI_CH4U_PUT_ACK,
                                      &ack_msg, sizeof(ack_msg));
@@ -473,7 +473,7 @@ static inline int MPIDI_CH4U_ack_cswap(MPIR_Request * rreq)
     ack_msg.req_ptr = MPIDI_CH4U_REQUEST(rreq, req->creq.creq_ptr);
 
     mpi_errno =
-        MPIDI_NM_send_am_reply(MPIDI_CH4U_win_to_context
+        MPIDI_NM_am_send_reply(MPIDI_CH4U_win_to_context
                                (MPIDI_CH4U_REQUEST(rreq, req->creq.win_ptr)),
                                MPIDI_CH4U_REQUEST(rreq, src_rank), MPIDI_CH4U_CSWAP_ACK, &ack_msg,
                                sizeof(ack_msg), result_addr, 1, MPIDI_CH4U_REQUEST(rreq,
@@ -503,7 +503,7 @@ static inline int MPIDI_CH4U_ack_acc(MPIR_Request * rreq)
 
     ack_msg.req_ptr = MPIDI_CH4U_REQUEST(rreq, req->areq.req_ptr);
     mpi_errno =
-        MPIDI_NM_inject_am_hdr_reply(MPIDI_CH4U_win_to_context
+        MPIDI_NM_am_inject_hdr_reply(MPIDI_CH4U_win_to_context
                                      (MPIDI_CH4U_REQUEST(rreq, req->areq.win_ptr)),
                                      MPIDI_CH4U_REQUEST(rreq, src_rank), MPIDI_CH4U_ACC_ACK,
                                      &ack_msg, sizeof(ack_msg));
@@ -538,7 +538,7 @@ static inline int MPIDI_CH4U_ack_get_acc(MPIR_Request * rreq)
     ack_msg.req_ptr = MPIDI_CH4U_REQUEST(rreq, req->areq.req_ptr);
 
     mpi_errno =
-        MPIDI_NM_send_am_reply(MPIDI_CH4U_win_to_context
+        MPIDI_NM_am_send_reply(MPIDI_CH4U_win_to_context
                                (MPIDI_CH4U_REQUEST(rreq, req->areq.win_ptr)),
                                MPIDI_CH4U_REQUEST(rreq, src_rank), MPIDI_CH4U_GET_ACC_ACK, &ack_msg,
                                sizeof(ack_msg), MPIDI_CH4U_REQUEST(rreq, req->areq.data),
@@ -899,7 +899,7 @@ static inline int MPIDI_CH4U_put_iov_cmpl_handler(MPIR_Request * rreq)
     ack_msg.target_preq_ptr = (uint64_t) rreq;
 
     mpi_errno =
-        MPIDI_NM_inject_am_hdr_reply(MPIDI_CH4U_win_to_context
+        MPIDI_NM_am_inject_hdr_reply(MPIDI_CH4U_win_to_context
                                      (MPIDI_CH4U_REQUEST(rreq, req->preq.win_ptr)),
                                      MPIDI_CH4U_REQUEST(rreq, src_rank), MPIDI_CH4U_PUT_IOV_ACK,
                                      &ack_msg, sizeof(ack_msg));
@@ -929,7 +929,7 @@ static inline int MPIDI_CH4U_acc_iov_cmpl_handler(MPIR_Request * rreq)
     ack_msg.target_preq_ptr = (uint64_t) rreq;
 
     mpi_errno =
-        MPIDI_NM_inject_am_hdr_reply(MPIDI_CH4U_win_to_context
+        MPIDI_NM_am_inject_hdr_reply(MPIDI_CH4U_win_to_context
                                      (MPIDI_CH4U_REQUEST(rreq, req->areq.win_ptr)),
                                      MPIDI_CH4U_REQUEST(rreq, src_rank), MPIDI_CH4U_ACC_IOV_ACK,
                                      &ack_msg, sizeof(ack_msg));
@@ -1651,7 +1651,7 @@ static inline int MPIDI_CH4U_send_long_ack_target_handler(void *am_hdr,
     /* Start the main data transfer */
     send_hdr.rreq_ptr = msg_hdr->rreq_ptr;
     mpi_errno =
-        MPIDI_NM_send_am_reply(MPIDI_CH4U_get_context(MPIDI_CH4U_REQUEST(sreq, req->lreq).msg_tag),
+        MPIDI_NM_am_send_reply(MPIDI_CH4U_get_context(MPIDI_CH4U_REQUEST(sreq, req->lreq).msg_tag),
                                MPIDI_CH4U_REQUEST(sreq, src_rank), MPIDI_CH4U_SEND_LONG_LMT,
                                &send_hdr, sizeof(send_hdr), MPIDI_CH4U_REQUEST(sreq,
                                                                                req->lreq).src_buf,
@@ -1893,7 +1893,7 @@ static inline int MPIDI_CH4U_win_lock_advance(MPIR_Win * win)
         else
             MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**rmasync");
 
-        mpi_errno = MPIDI_NM_inject_am_hdr_reply(MPIDI_CH4U_win_to_context(win),
+        mpi_errno = MPIDI_NM_am_inject_hdr_reply(MPIDI_CH4U_win_to_context(win),
                                                  lock->rank,
                                                  MPIDI_CH4U_WIN_CTRL, &msg, sizeof(msg));
         if (mpi_errno)
@@ -1986,7 +1986,7 @@ static inline void MPIDI_CH4U_win_unlock_proc(const MPIDI_CH4U_win_cntrl_msg_t *
     msg.origin_rank = win->comm_ptr->rank;
     msg.type = MPIDI_CH4U_WIN_UNLOCK_ACK;
 
-    mpi_errno = MPIDI_NM_inject_am_hdr_reply(MPIDI_CH4U_win_to_context(win),
+    mpi_errno = MPIDI_NM_am_inject_hdr_reply(MPIDI_CH4U_win_to_context(win),
                                              info->origin_rank,
                                              MPIDI_CH4U_WIN_CTRL, &msg, sizeof(msg));
     if (mpi_errno)
@@ -2306,7 +2306,7 @@ static inline int MPIDI_CH4U_put_iov_ack_target_handler(void *am_hdr,
     origin_req = (MPIR_Request *) msg_hdr->origin_preq_ptr;
     dat_msg.preq_ptr = msg_hdr->target_preq_ptr;
     win = MPIDI_CH4U_REQUEST(origin_req, req->preq.win_ptr);
-    mpi_errno = MPIDI_NM_send_am_reply(MPIDI_CH4U_win_to_context(win),
+    mpi_errno = MPIDI_NM_am_send_reply(MPIDI_CH4U_win_to_context(win),
                                        MPIDI_CH4U_REQUEST(origin_req, src_rank),
                                        MPIDI_CH4U_PUT_DAT_REQ,
                                        &dat_msg, sizeof(dat_msg),
@@ -2355,7 +2355,7 @@ static inline int MPIDI_CH4U_acc_iov_ack_target_handler(void *am_hdr,
     origin_req = (MPIR_Request *) msg_hdr->origin_preq_ptr;
     dat_msg.preq_ptr = msg_hdr->target_preq_ptr;
     win = MPIDI_CH4U_REQUEST(origin_req, req->areq.win_ptr);
-    mpi_errno = MPIDI_NM_send_am_reply(MPIDI_CH4U_win_to_context(win),
+    mpi_errno = MPIDI_NM_am_send_reply(MPIDI_CH4U_win_to_context(win),
                                        MPIDI_CH4U_REQUEST(origin_req, src_rank),
                                        MPIDI_CH4U_ACC_DAT_REQ,
                                        &dat_msg, sizeof(dat_msg),

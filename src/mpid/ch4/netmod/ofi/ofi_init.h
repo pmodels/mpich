@@ -390,7 +390,7 @@ static inline int MPIDI_OFI_init_generic(int rank,
     /* ---------------------------------- */
     if (do_am) {
         /* Maximum possible message size for short message send (=eager send)
-         * See MPIDI_OFI_do_send_am for short/long switching logic */
+         * See MPIDI_OFI_do_am_send for short/long switching logic */
         MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_Global.max_send);
         MPIDI_Global.am_buf_pool =
             MPIDI_CH4U_create_buf_pool(MPIDI_OFI_BUF_POOL_NUM, MPIDI_OFI_BUF_POOL_SIZE);
