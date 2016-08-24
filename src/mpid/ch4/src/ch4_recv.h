@@ -190,7 +190,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Mrecv(void *buf,
     }
 
     if (unlikely(message->status.MPI_SOURCE == MPI_PROC_NULL)) {
-        MPIR_Request *rreq = message;
+        rreq = message;
         rreq->status.MPI_SOURCE = message->status.MPI_SOURCE;
         rreq->status.MPI_TAG = message->status.MPI_TAG;
         MPIDI_CH4U_request_complete(rreq);

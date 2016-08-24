@@ -143,8 +143,8 @@ MPIDI_CH4I_API(MPI_Aint, Aint_diff, MPI_Aint, MPI_Aint);
 MPIDI_CH4I_API(int, GPID_GetAllInComm, MPIR_Comm *, int, MPIR_Gpid[], int *);
 MPIDI_CH4I_API(int, GPID_ToLpidArray, int, MPIR_Gpid[], int[]);
 MPIDI_CH4I_API(int, Create_intercomm_from_lpids, MPIR_Comm *, int, const int[]);
-MPIDI_CH4I_API(int, Comm_create, MPIR_Comm *);
-MPIDI_CH4I_API(int, Comm_destroy, MPIR_Comm *);
+MPIDI_CH4I_API(int, Comm_create_hook, MPIR_Comm *);
+MPIDI_CH4I_API(int, Comm_free_hook, MPIR_Comm *);
 MPIDI_CH4I_API(int, Barrier, MPIR_Comm *, MPIR_Errflag_t *);
 MPIDI_CH4I_API(int, Bcast, void *, int, MPI_Datatype, int, MPIR_Comm *, MPIR_Errflag_t *);
 MPIDI_CH4I_API(int, Allreduce, const void *, void *, int, MPI_Datatype, MPI_Op, MPIR_Comm *,
