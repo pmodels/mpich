@@ -310,7 +310,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
 
 MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank, int ep_family)
 {
-#ifdef MPIDI_OFI_CONFIG_USE_SCALABLE_ENDPOINTS
+#ifdef MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
     int ep_num = MPIDI_OFI_COMM_TO_EP(comm, rank);
     int offset = MPIDI_Global.ctx[ep_num].ctx_offset;
     int rx_idx = offset + ep_family;
@@ -322,7 +322,7 @@ MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int 
 
 MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_to_phys(int rank, int ep_family)
 {
-#ifdef MPIDI_OFI_CONFIG_USE_SCALABLE_ENDPOINTS
+#ifdef MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
     int ep_num = 0;
     int offset = MPIDI_Global.ctx[ep_num].ctx_offset;
     int rx_idx = offset + ep_family;

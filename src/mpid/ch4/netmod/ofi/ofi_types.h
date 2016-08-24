@@ -41,47 +41,7 @@
 #define MPIDI_OFI_INTERNAL_HANDLER_CONTROL (MPIDI_AM_HANDLERS_MAX-1)
 #define MPIDI_OFI_INTERNAL_HANDLER_NEXT    (MPIDI_AM_HANDLERS_MAX-2)
 
-#ifdef USE_OFI_TAGGED
-#define MPIDI_OFI_ENABLE_TAGGED          1
-#define MPIDI_OFI_ENABLE_AM              1
-#define MPIDI_OFI_ENABLE_RMA             1
-#else
-#define MPIDI_OFI_ENABLE_TAGGED          0
-#define MPIDI_OFI_ENABLE_AM              1
-#define MPIDI_OFI_ENABLE_RMA             1
-#endif
-
-#ifdef MPIDI_OFI_CONFIG_USE_SCALABLE_ENDPOINTS
-#define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS 1
-#else
-#define MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS 0
-#endif
-
-#ifdef MPIDI_OFI_CONFIG_USE_AV_TABLE
-#define MPIDI_OFI_ENABLE_AV_TABLE 1
-#else
-#define MPIDI_OFI_ENABLE_AV_TABLE 0
-#endif
-
-#ifdef USE_OFI_IMMEDIATE_DATA
-#define MPIDI_OFI_ENABLE_DATA 1
-#else
-#define MPIDI_OFI_ENABLE_DATA 0
-#endif
-
-#ifdef USE_OFI_STX_RMA
-#define MPIDI_OFI_ENABLE_STX_RMA 1
-#else
-#define MPIDI_OFI_ENABLE_STX_RMA 0
-#endif
-
-#ifdef USE_OFI_MR_SCALABLE
-#define MPIDI_OFI_ENABLE_MR_SCALABLE 1
-#else
-#define MPIDI_OFI_ENABLE_MR_SCALABLE 0
-#endif
-
-#ifdef USE_OFI_IMMEDIATE_DATA
+#ifdef MPIDI_OFI_ENABLE_DATA
 /* match/ignore bit manipulation
  *
  * 0123 4567 01234567 01234567 01234567 01234567 01234567 01234567 01234567
@@ -189,7 +149,7 @@
 #define MPIDI_OFI_DATATYPE(dt)   ((dt)->dev.netmod.ofi)
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
 
-#ifdef MPIDI_OFI_CONFIG_USE_SCALABLE_ENDPOINTS
+#ifdef MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
 #define MPIDI_OFI_COMM_TO_EP(comm,rank)  MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, rank)).ep_idx
 #define MPIDI_OFI_EP_TX_TAG(x) MPIDI_Global.ctx[x].tx_tag
 #define MPIDI_OFI_EP_TX_RMA(x) MPIDI_Global.ctx[x].tx_rma
