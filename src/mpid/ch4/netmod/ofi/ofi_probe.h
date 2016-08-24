@@ -62,7 +62,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
 
     MPIDI_OFI_CALL(fi_trecvmsg
                    (MPIDI_OFI_EP_RX_TAG(0), &msg,
-                    peek_flags | FI_PEEK | FI_COMPLETION | MPIDI_OFI_ENABLE_DATA), trecvmsg);
+                    peek_flags | FI_PEEK | FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0) ), trecvmsg);
     MPIDI_OFI_PROGRESS_WHILE(MPIDI_OFI_REQUEST(rreq, util_id) == MPIDI_OFI_PEEK_START);
 
     switch (MPIDI_OFI_REQUEST(rreq, util_id)) {

@@ -302,7 +302,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
             req[0].done = MPIDI_OFI_PEEK_START;
             MPIDI_OFI_CALL(fi_trecvmsg
                            (MPIDI_OFI_EP_RX_TAG(0), &msg,
-                            FI_PEEK | FI_COMPLETION | MPIDI_OFI_ENABLE_DATA), trecv);
+                            FI_PEEK | FI_COMPLETION | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0)), trecv);
             MPIDI_OFI_PROGRESS_WHILE(req[0].done == MPIDI_OFI_PEEK_START);
         }
 
