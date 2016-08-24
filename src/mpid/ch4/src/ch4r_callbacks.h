@@ -414,9 +414,10 @@ static inline int MPIDI_CH4U_reply_ssend(MPIR_Request * rreq)
     MPIR_cc_incr(rreq->cc_ptr, &c);
     ack_msg.sreq_ptr = MPIDI_CH4U_REQUEST(rreq, req->rreq.peer_req_ptr);
 
-    mpi_errno = MPIDI_NM_am_send_hdr_reply(MPIDI_CH4U_get_context(MPIDI_CH4U_REQUEST(rreq, tag)),
-                                           MPIDI_CH4U_REQUEST(rreq, src_rank),
-                                           MPIDI_CH4U_SSEND_ACK, &ack_msg, sizeof(ack_msg), rreq);
+    mpi_errno = MPIDI_NM_am_send_reply(MPIDI_CH4U_get_context(MPIDI_CH4U_REQUEST(rreq, tag)),
+                                       MPIDI_CH4U_REQUEST(rreq, src_rank),
+                                       MPIDI_CH4U_SSEND_ACK, &ack_msg, sizeof(ack_msg),
+                                       NULL, 0, MPI_DATATYPE_NULL, rreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
   fn_exit:
