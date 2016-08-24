@@ -352,6 +352,18 @@ typedef struct {
     char kvsname[MPIDI_KVSAPPSTRLEN];
     char pname[MPI_MAX_PROCESSOR_NAME];
     int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK];
+
+    /* Capability settings */
+    struct {
+        unsigned enable_data:1;
+        unsigned enable_av_table:1;
+        unsigned enable_scalable_endpoints:1;
+        unsigned enable_stx_rma:1;
+        unsigned enable_mr_scalable:1;
+        unsigned enable_tagged:1;
+        unsigned enable_am:1;
+        unsigned enable_rma:1;
+    } settings;
 } MPIDI_OFI_global_t;
 
 typedef struct {
