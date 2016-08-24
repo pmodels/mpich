@@ -14,51 +14,54 @@
 #include "ch4_impl.h"
 #include "ch4i_comm.h"
 
-__CH4_INLINE__ int MPIDI_Comm_AS_enabled(MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_AS_enabled(MPIR_Comm * comm)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-__CH4_INLINE__ int MPIDI_Comm_reenable_anysource(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_reenable_anysource(MPIR_Comm * comm,
+                                                           MPIR_Group ** failed_group_ptr)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-__CH4_INLINE__ int MPIDI_Comm_remote_group_failed(MPIR_Comm * comm, MPIR_Group ** failed_group_ptr)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_remote_group_failed(MPIR_Comm * comm,
+                                                            MPIR_Group ** failed_group_ptr)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-__CH4_INLINE__ int MPIDI_Comm_group_failed(MPIR_Comm * comm_ptr, MPIR_Group ** failed_group_ptr)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_group_failed(MPIR_Comm * comm_ptr,
+                                                     MPIR_Group ** failed_group_ptr)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-__CH4_INLINE__ int MPIDI_Comm_failure_ack(MPIR_Comm * comm_ptr)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_failure_ack(MPIR_Comm * comm_ptr)
 {
     MPIR_Assert(0);
     return 0;
 }
 
-__CH4_INLINE__ int MPIDI_Comm_failure_get_acked(MPIR_Comm * comm_ptr,
-                                                MPIR_Group ** failed_group_ptr)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_failure_get_acked(MPIR_Comm * comm_ptr,
+                                                          MPIR_Group ** failed_group_ptr)
 {
     MPIR_Assert(0);
     return 0;
 }
 
-__CH4_INLINE__ int MPIDI_Comm_revoke(MPIR_Comm * comm_ptr, int is_remote)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_revoke(MPIR_Comm * comm_ptr, int is_remote)
 {
     MPIR_Assert(0);
     return 0;
 }
 
-__CH4_INLINE__ int MPIDI_Comm_get_all_failed_procs(MPIR_Comm * comm_ptr, MPIR_Group ** failed_group,
-                                                   int tag)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_get_all_failed_procs(MPIR_Comm * comm_ptr,
+                                                             MPIR_Group ** failed_group, int tag)
 {
     MPIR_Assert(0);
     return 0;
@@ -68,9 +71,10 @@ __CH4_INLINE__ int MPIDI_Comm_get_all_failed_procs(MPIR_Comm * comm_ptr, MPIR_Gr
 #define FUNCNAME MPIDI_Comm_split_type
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ int MPIDI_Comm_split_type(MPIR_Comm * comm_ptr,
-                                         int split_type,
-                                         int key, MPIR_Info * info_ptr, MPIR_Comm ** newcomm_ptr)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_split_type(MPIR_Comm * comm_ptr,
+                                                   int split_type,
+                                                   int key, MPIR_Info * info_ptr,
+                                                   MPIR_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int idx;
@@ -95,7 +99,7 @@ __CH4_INLINE__ int MPIDI_Comm_split_type(MPIR_Comm * comm_ptr,
 #define FUNCNAME MPIDI_Comm_create_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ int MPIDI_Comm_create_hook(MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
 {
     int mpi_errno;
     int i, *uniq_avtids;
@@ -167,7 +171,7 @@ __CH4_INLINE__ int MPIDI_Comm_create_hook(MPIR_Comm * comm)
 #define FUNCNAME MPIDI_Comm_free_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ int MPIDI_Comm_free_hook(MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno;
     int i, *uniq_avtids;

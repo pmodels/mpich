@@ -253,12 +253,13 @@ static inline int MPIDI_CH4I_do_get(void *origin_addr,
 #define FUNCNAME MPIDI_CH4U_put
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ int MPIDI_CH4U_put(const void *origin_addr,
-                                  int origin_count,
-                                  MPI_Datatype origin_datatype,
-                                  int target_rank,
-                                  MPI_Aint target_disp,
-                                  int target_count, MPI_Datatype target_datatype, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_put(const void *origin_addr,
+                                            int origin_count,
+                                            MPI_Datatype origin_datatype,
+                                            int target_rank,
+                                            MPI_Aint target_disp,
+                                            int target_count, MPI_Datatype target_datatype,
+                                            MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_PUT);
@@ -280,14 +281,14 @@ __CH4_INLINE__ int MPIDI_CH4U_put(const void *origin_addr,
 #define FUNCNAME MPIDI_CH4U_rput
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ int MPIDI_CH4U_rput(const void *origin_addr,
-                                   int origin_count,
-                                   MPI_Datatype origin_datatype,
-                                   int target_rank,
-                                   MPI_Aint target_disp,
-                                   int target_count,
-                                   MPI_Datatype target_datatype,
-                                   MPIR_Win * win, MPIR_Request ** request)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_rput(const void *origin_addr,
+                                             int origin_count,
+                                             MPI_Datatype origin_datatype,
+                                             int target_rank,
+                                             MPI_Aint target_disp,
+                                             int target_count,
+                                             MPI_Datatype target_datatype,
+                                             MPIR_Win * win, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_RPUT);
@@ -310,12 +311,13 @@ __CH4_INLINE__ int MPIDI_CH4U_rput(const void *origin_addr,
 #define FUNCNAME MPIDI_CH4U_get
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ int MPIDI_CH4U_get(void *origin_addr,
-                                  int origin_count,
-                                  MPI_Datatype origin_datatype,
-                                  int target_rank,
-                                  MPI_Aint target_disp,
-                                  int target_count, MPI_Datatype target_datatype, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_get(void *origin_addr,
+                                            int origin_count,
+                                            MPI_Datatype origin_datatype,
+                                            int target_rank,
+                                            MPI_Aint target_disp,
+                                            int target_count, MPI_Datatype target_datatype,
+                                            MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_GET);
@@ -337,14 +339,14 @@ __CH4_INLINE__ int MPIDI_CH4U_get(void *origin_addr,
 #define FUNCNAME MPIDI_CH4U_rget
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ int MPIDI_CH4U_rget(void *origin_addr,
-                                   int origin_count,
-                                   MPI_Datatype origin_datatype,
-                                   int target_rank,
-                                   MPI_Aint target_disp,
-                                   int target_count,
-                                   MPI_Datatype target_datatype,
-                                   MPIR_Win * win, MPIR_Request ** request)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_rget(void *origin_addr,
+                                             int origin_count,
+                                             MPI_Datatype origin_datatype,
+                                             int target_rank,
+                                             MPI_Aint target_disp,
+                                             int target_count,
+                                             MPI_Datatype target_datatype,
+                                             MPIR_Win * win, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_RGET);
@@ -366,15 +368,15 @@ __CH4_INLINE__ int MPIDI_CH4U_rget(void *origin_addr,
 #define FUNCNAME MPIDI_CH4I_do_accumulate
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ int MPIDI_CH4I_do_accumulate(const void *origin_addr,
-                                            int origin_count,
-                                            MPI_Datatype origin_datatype,
-                                            int target_rank,
-                                            MPI_Aint target_disp,
-                                            int target_count,
-                                            MPI_Datatype target_datatype,
-                                            MPI_Op op, MPIR_Win * win,
-                                            int do_get, MPIR_Request * sreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4I_do_accumulate(const void *origin_addr,
+                                                      int origin_count,
+                                                      MPI_Datatype origin_datatype,
+                                                      int target_rank,
+                                                      MPI_Aint target_disp,
+                                                      int target_count,
+                                                      MPI_Datatype target_datatype,
+                                                      MPI_Op op, MPIR_Win * win,
+                                                      int do_get, MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS, c, n_iov;
     size_t basic_type_size;
@@ -510,14 +512,15 @@ __CH4_INLINE__ int MPIDI_CH4I_do_accumulate(const void *origin_addr,
 #define FUNCNAME MPIDI_CH4U_raccumulate
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ int MPIDI_CH4U_raccumulate(const void *origin_addr,
-                                          int origin_count,
-                                          MPI_Datatype origin_datatype,
-                                          int target_rank,
-                                          MPI_Aint target_disp,
-                                          int target_count,
-                                          MPI_Datatype target_datatype,
-                                          MPI_Op op, MPIR_Win * win, MPIR_Request ** request)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_raccumulate(const void *origin_addr,
+                                                    int origin_count,
+                                                    MPI_Datatype origin_datatype,
+                                                    int target_rank,
+                                                    MPI_Aint target_disp,
+                                                    int target_count,
+                                                    MPI_Datatype target_datatype,
+                                                    MPI_Op op, MPIR_Win * win,
+                                                    MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;
@@ -551,13 +554,14 @@ __CH4_INLINE__ int MPIDI_CH4U_raccumulate(const void *origin_addr,
 #define FUNCNAME MPIDI_CH4U_accumulate
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ int MPIDI_CH4U_accumulate(const void *origin_addr,
-                                         int origin_count,
-                                         MPI_Datatype origin_datatype,
-                                         int target_rank,
-                                         MPI_Aint target_disp,
-                                         int target_count,
-                                         MPI_Datatype target_datatype, MPI_Op op, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_accumulate(const void *origin_addr,
+                                                   int origin_count,
+                                                   MPI_Datatype origin_datatype,
+                                                   int target_rank,
+                                                   MPI_Aint target_disp,
+                                                   int target_count,
+                                                   MPI_Datatype target_datatype, MPI_Op op,
+                                                   MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_ACCUMULATE);
@@ -582,17 +586,18 @@ __CH4_INLINE__ int MPIDI_CH4U_accumulate(const void *origin_addr,
 #define FUNCNAME MPIDI_CH4U_rget_accumulate
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ int MPIDI_CH4U_rget_accumulate(const void *origin_addr,
-                                              int origin_count,
-                                              MPI_Datatype origin_datatype,
-                                              void *result_addr,
-                                              int result_count,
-                                              MPI_Datatype result_datatype,
-                                              int target_rank,
-                                              MPI_Aint target_disp,
-                                              int target_count,
-                                              MPI_Datatype target_datatype,
-                                              MPI_Op op, MPIR_Win * win, MPIR_Request ** request)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_rget_accumulate(const void *origin_addr,
+                                                        int origin_count,
+                                                        MPI_Datatype origin_datatype,
+                                                        void *result_addr,
+                                                        int result_count,
+                                                        MPI_Datatype result_datatype,
+                                                        int target_rank,
+                                                        MPI_Aint target_disp,
+                                                        int target_count,
+                                                        MPI_Datatype target_datatype,
+                                                        MPI_Op op, MPIR_Win * win,
+                                                        MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *sreq;
@@ -632,17 +637,17 @@ __CH4_INLINE__ int MPIDI_CH4U_rget_accumulate(const void *origin_addr,
 #define FUNCNAME MPIDI_CH4U_get_accumulate
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ int MPIDI_CH4U_get_accumulate(const void *origin_addr,
-                                             int origin_count,
-                                             MPI_Datatype origin_datatype,
-                                             void *result_addr,
-                                             int result_count,
-                                             MPI_Datatype result_datatype,
-                                             int target_rank,
-                                             MPI_Aint target_disp,
-                                             int target_count,
-                                             MPI_Datatype target_datatype,
-                                             MPI_Op op, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_get_accumulate(const void *origin_addr,
+                                                       int origin_count,
+                                                       MPI_Datatype origin_datatype,
+                                                       void *result_addr,
+                                                       int result_count,
+                                                       MPI_Datatype result_datatype,
+                                                       int target_rank,
+                                                       MPI_Aint target_disp,
+                                                       int target_count,
+                                                       MPI_Datatype target_datatype,
+                                                       MPI_Op op, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_GET_ACCUMULATE);
@@ -670,12 +675,12 @@ __CH4_INLINE__ int MPIDI_CH4U_get_accumulate(const void *origin_addr,
 #define FUNCNAME MPIDI_CH4U_compare_and_swap
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ int MPIDI_CH4U_compare_and_swap(const void *origin_addr,
-                                               const void *compare_addr,
-                                               void *result_addr,
-                                               MPI_Datatype datatype,
-                                               int target_rank,
-                                               MPI_Aint target_disp, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_compare_and_swap(const void *origin_addr,
+                                                         const void *compare_addr,
+                                                         void *result_addr,
+                                                         MPI_Datatype datatype,
+                                                         int target_rank,
+                                                         MPI_Aint target_disp, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIR_Request *sreq = NULL;
@@ -738,11 +743,12 @@ __CH4_INLINE__ int MPIDI_CH4U_compare_and_swap(const void *origin_addr,
 #define FUNCNAME MPIDI_CH4U_fetch_and_op
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ int MPIDI_CH4U_fetch_and_op(const void *origin_addr,
-                                           void *result_addr,
-                                           MPI_Datatype datatype,
-                                           int target_rank,
-                                           MPI_Aint target_disp, MPI_Op op, MPIR_Win * win)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_fetch_and_op(const void *origin_addr,
+                                                     void *result_addr,
+                                                     MPI_Datatype datatype,
+                                                     int target_rank,
+                                                     MPI_Aint target_disp, MPI_Op op,
+                                                     MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_FETCH_AND_OP);

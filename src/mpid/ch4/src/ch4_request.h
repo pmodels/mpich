@@ -14,31 +14,31 @@
 #include "ch4_impl.h"
 #include "ch4r_buf.h"
 
-__CH4_INLINE__ int MPIDI_Request_is_anysource(MPIR_Request * req)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Request_is_anysource(MPIR_Request * req)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-__CH4_INLINE__ int MPIDI_Request_is_pending_failure(MPIR_Request * req)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Request_is_pending_failure(MPIR_Request * req)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-__CH4_INLINE__ void MPIDI_Request_set_completed(MPIR_Request * req)
+MPL_STATIC_INLINE_PREFIX void MPIDI_Request_set_completed(MPIR_Request * req)
 {
     MPIR_cc_set(&req->cc, 0);
     return;
 }
 
-__CH4_INLINE__ void MPIDI_Request_add_ref(MPIR_Request * req)
+MPL_STATIC_INLINE_PREFIX void MPIDI_Request_add_ref(MPIR_Request * req)
 {
     MPIR_Request_add_ref(req);
     return;
 }
 
-__CH4_INLINE__ void MPIDI_Request_release_ref(MPIR_Request * req)
+MPL_STATIC_INLINE_PREFIX void MPIDI_Request_release_ref(MPIR_Request * req)
 {
     int inuse;
     MPIR_Request_release_ref(req, &inuse);
@@ -80,7 +80,7 @@ __CH4_INLINE__ void MPIDI_Request_release_ref(MPIR_Request * req)
 #define FUNCNAME MPIDI_request_complete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ int MPIDI_Request_complete(MPIR_Request * req)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Request_complete(MPIR_Request * req)
 {
     int incomplete;
     MPIR_cc_decr(req->cc_ptr, &incomplete);

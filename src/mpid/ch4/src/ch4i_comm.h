@@ -977,7 +977,7 @@ static inline int MPIDII_set_map(MPIDII_rank_map_t * src_rmap,
 #define FUNCNAME MPIDII_comm_create_rank_map
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ int MPIDII_comm_create_rank_map(MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX int MPIDII_comm_create_rank_map(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm_map_t *mapper;
