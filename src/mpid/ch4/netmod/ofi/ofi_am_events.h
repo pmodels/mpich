@@ -367,7 +367,7 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
 
     handler_id = MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr).handler_id;
     MPIDI_OFI_am_request_complete(sreq);
-    mpi_errno = MPIDI_Global.am_send_cmpl_handlers[handler_id] (sreq);
+    mpi_errno = MPIDI_Global.am_isend_cmpl_handlers[handler_id] (sreq);
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);

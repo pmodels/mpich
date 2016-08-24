@@ -284,8 +284,8 @@ static inline int MPIDI_CH4R_win_complete(MPIR_Win * win)
 
     for (index = 0; index < group->size; ++index) {
         peer = ranks_in_win_grp[index];
-        mpi_errno = MPIDI_NM_am_inject_hdr(peer, win->comm_ptr,
-                                           MPIDI_CH4U_WIN_CTRL, &msg, sizeof(msg), NULL);
+        mpi_errno = MPIDI_NM_am_send_hdr(peer, win->comm_ptr,
+                                         MPIDI_CH4U_WIN_CTRL, &msg, sizeof(msg), NULL);
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
     }
@@ -338,8 +338,8 @@ static inline int MPIDI_CH4R_win_post(MPIR_Group * group, int assert, MPIR_Win *
 
     for (index = 0; index < group->size; ++index) {
         peer = ranks_in_win_grp[index];
-        mpi_errno = MPIDI_NM_am_inject_hdr(peer, win->comm_ptr,
-                                           MPIDI_CH4U_WIN_CTRL, &msg, sizeof(msg), NULL);
+        mpi_errno = MPIDI_NM_am_send_hdr(peer, win->comm_ptr,
+                                         MPIDI_CH4U_WIN_CTRL, &msg, sizeof(msg), NULL);
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
     }
@@ -440,8 +440,8 @@ static inline int MPIDI_CH4R_win_lock(int lock_type, int rank, int assert, MPIR_
     msg.lock_type = lock_type;
 
     locked = slock->remote.locked + 1;
-    mpi_errno = MPIDI_NM_am_inject_hdr(rank, win->comm_ptr,
-                                       MPIDI_CH4U_WIN_CTRL, &msg, sizeof(msg), NULL);
+    mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr,
+                                     MPIDI_CH4U_WIN_CTRL, &msg, sizeof(msg), NULL);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
     MPIDI_CH4R_PROGRESS_WHILE(slock->remote.locked != locked);
@@ -482,8 +482,8 @@ static inline int MPIDI_CH4R_win_unlock(int rank, MPIR_Win * win)
     msg.type = MPIDI_CH4U_WIN_UNLOCK;
     unlocked = MPIDI_CH4U_WIN(win, sync).lock.remote.locked - 1;
 
-    mpi_errno = MPIDI_NM_am_inject_hdr(rank, win->comm_ptr,
-                                       MPIDI_CH4U_WIN_CTRL, &msg, sizeof(msg), NULL);
+    mpi_errno = MPIDI_NM_am_send_hdr(rank, win->comm_ptr,
+                                     MPIDI_CH4U_WIN_CTRL, &msg, sizeof(msg), NULL);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
 
@@ -1066,8 +1066,8 @@ static inline int MPIDI_CH4R_win_unlock_all(MPIR_Win * win)
         lockQ[i].peer = i;
         lockQ[i].win = win;
 
-        mpi_errno = MPIDI_NM_am_inject_hdr(i, win->comm_ptr,
-                                           MPIDI_CH4U_WIN_CTRL, &msg, sizeof(msg), NULL);
+        mpi_errno = MPIDI_NM_am_send_hdr(i, win->comm_ptr,
+                                         MPIDI_CH4U_WIN_CTRL, &msg, sizeof(msg), NULL);
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
 
@@ -1228,8 +1228,8 @@ static inline int MPIDI_CH4R_win_lock_all(int assert, MPIR_Win * win)
         lockQ[i].win = win;
         lockQ[i].lock_type = MPI_LOCK_SHARED;
 
-        mpi_errno = MPIDI_NM_am_inject_hdr(i, win->comm_ptr,
-                                           MPIDI_CH4U_WIN_CTRL, &msg, sizeof(msg), NULL);
+        mpi_errno = MPIDI_NM_am_send_hdr(i, win->comm_ptr,
+                                         MPIDI_CH4U_WIN_CTRL, &msg, sizeof(msg), NULL);
         if (mpi_errno != MPI_SUCCESS)
             MPIR_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, goto fn_fail, "**rmasync");
 
