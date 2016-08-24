@@ -38,12 +38,12 @@
         {                                                               \
             MPIDI_OFI_REQUEST_CREATE((*(sigreq)), MPIR_REQUEST_KIND__RMA); \
             MPIR_cc_set((*(sigreq))->cc_ptr, 0);                        \
-            *(flags)                    = FI_COMPLETION;                \
+            *(flags)                    = FI_COMPLETION | FI_DELIVERY_COMPLETE; \
             *(ep)                       = MPIDI_OFI_WIN(win).ep;        \
         }                                                               \
         else {                                                          \
             *(ep) = MPIDI_OFI_WIN(win).ep_nocmpl;                       \
-            *(flags)                    = 0ULL;                         \
+            *(flags)                    = FI_DELIVERY_COMPLETE;         \
         }                                                               \
     } while (0)
 
