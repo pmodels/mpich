@@ -34,13 +34,10 @@
 #define MPIDI_OFI_AM_RANK_BITS        32
 #define MPIDI_OFI_AM_MSG_HEADER_SIZE (sizeof(MPIDI_OFI_am_header_t))
 
-#ifdef MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
-#define MPIDI_OFI_MAX_ENDPOINTS      256
-#define MPIDI_OFI_MAX_ENDPOINTS_BITS   8
-#else
-#define MPIDI_OFI_MAX_ENDPOINTS        1
-#define MPIDI_OFI_MAX_ENDPOINTS_BITS   0
-#endif
+#define MPIDI_OFI_MAX_ENDPOINTS_SCALABLE        256
+#define MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE   8
+#define MPIDI_OFI_MAX_ENDPOINTS_REGULAR         1
+#define MPIDI_OFI_MAX_ENDPOINTS_BITS_REGULAR    0
 
 /* Typedefs */
 
@@ -179,8 +176,8 @@ typedef struct {
 
 typedef struct {
     fi_addr_t dest;
-#ifdef MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
-    unsigned ep_idx:MPIDI_OFI_MAX_ENDPOINTS_BITS;
+#if defined MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS || defined MPIDI_OFI_ENABLE_RUNTIME_CHECKS
+    unsigned ep_idx:MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE;
 #endif
 } MPIDI_OFI_addr_t;
 

@@ -206,6 +206,7 @@ static inline int MPIDI_OFI_win_init_generic(MPI_Aint length,
     }
     else {
       fallback_global:
+
         /* Fallback for the traditional global EP/counter model */
         MPIDI_OFI_WIN(win).ep = MPIDI_OFI_EP_TX_RMA(0);
         MPIDI_OFI_WIN(win).ep_nocmpl = MPIDI_OFI_EP_TX_CTR(0);

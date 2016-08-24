@@ -149,8 +149,7 @@
 #define MPIDI_OFI_DATATYPE(dt)   ((dt)->dev.netmod.ofi)
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
 
-#ifdef MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
-#define MPIDI_OFI_COMM_TO_EP(comm,rank)  MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, rank)).ep_idx
+#define MPIDI_OFI_COMM_TO_EP(comm, rank) (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS ? MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, rank)).ep_idx : 0)
 #define MPIDI_OFI_EP_TX_TAG(x) MPIDI_Global.ctx[x].tx_tag
 #define MPIDI_OFI_EP_TX_RMA(x) MPIDI_Global.ctx[x].tx_rma
 #define MPIDI_OFI_EP_TX_MSG(x) MPIDI_Global.ctx[x].tx_msg
@@ -158,16 +157,6 @@
 #define MPIDI_OFI_EP_RX_TAG(x) MPIDI_Global.ctx[x].rx_tag
 #define MPIDI_OFI_EP_RX_RMA(x) MPIDI_Global.ctx[x].rx_rma
 #define MPIDI_OFI_EP_RX_MSG(x) MPIDI_Global.ctx[x].rx_msg
-#else
-#define MPIDI_OFI_COMM_TO_EP(comm,rank) 0
-#define MPIDI_OFI_EP_TX_TAG(x) MPIDI_Global.ep
-#define MPIDI_OFI_EP_TX_RMA(x) MPIDI_Global.ep
-#define MPIDI_OFI_EP_TX_MSG(x) MPIDI_Global.ep
-#define MPIDI_OFI_EP_TX_CTR(x) MPIDI_Global.ep
-#define MPIDI_OFI_EP_RX_TAG(x) MPIDI_Global.ep
-#define MPIDI_OFI_EP_RX_RMA(x) MPIDI_Global.ep
-#define MPIDI_OFI_EP_RX_MSG(x) MPIDI_Global.ep
-#endif
 
 #define MPIDI_OFI_DO_SEND        0
 #define MPIDI_OFI_DO_INJECT      1
@@ -321,7 +310,11 @@ typedef struct {
 
     /* Mutexex and endpoints */
     MPIDI_OFI_cacheline_mutex_t mutexes[4];
+#ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
+    MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_ENDPOINTS_SCALABLE];
+#else
     MPIDI_OFI_context_t ctx[MPIDI_OFI_MAX_ENDPOINTS];
+#endif
 
     /* Window/RMA Globals */
     void *win_map;
@@ -354,6 +347,7 @@ typedef struct {
     int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK];
 
     /* Capability settings */
+#ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
     struct {
         unsigned enable_data:1;
         unsigned enable_av_table:1;
@@ -363,7 +357,11 @@ typedef struct {
         unsigned enable_tagged:1;
         unsigned enable_am:1;
         unsigned enable_rma:1;
+
+        int max_endpoints;
+        int max_endpoints_bits;
     } settings;
+#endif
 } MPIDI_OFI_global_t;
 
 typedef struct {
