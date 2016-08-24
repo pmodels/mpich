@@ -73,13 +73,10 @@ typedef int (*MPIDI_NM_send_amv_reply_t) (MPIR_Context_id_t context_id, int src_
                                           const void *data, MPI_Count count, MPI_Datatype datatype,
                                           MPIR_Request * sreq);
 typedef size_t(*MPIDI_NM_am_hdr_max_sz_t) (void);
-typedef size_t(*MPIDI_NM_am_inject_max_sz_t) (void);
 typedef int (*MPIDI_NM_am_recv_t) (MPIR_Request * req);
 typedef int (*MPIDI_NM_comm_get_lpid_t) (MPIR_Comm * comm_ptr, int idx, int *lpid_ptr,
                                          MPL_bool is_remote);
 typedef int (*MPIDI_NM_gpid_get_t) (MPIR_Comm * comm_ptr, int rank, MPIR_Gpid * gpid);
-typedef int (*MPIDI_NM_get_node_id_t) (MPIR_Comm * comm, int rank, MPID_Node_id_t * id_p);
-typedef int (*MPIDI_NM_get_max_node_id_t) (MPIR_Comm * comm, MPID_Node_id_t * max_id_p);
 typedef int (*MPIDI_NM_getallincomm_t) (MPIR_Comm * comm_ptr, int local_size,
                                         MPIR_Gpid local_gpids[], int *singleAVT);
 typedef int (*MPIDI_NM_gpid_tolpidarray_t) (int size, MPIR_Gpid gpid[], int lpid[]);
@@ -372,8 +369,6 @@ typedef struct MPIDI_NM_funcs {
     /* Routines that handle addressing */
     MPIDI_NM_comm_get_lpid_t comm_get_lpid;
     MPIDI_NM_gpid_get_t gpid_get;
-    MPIDI_NM_get_node_id_t get_node_id;
-    MPIDI_NM_get_max_node_id_t get_max_node_id;
     MPIDI_NM_getallincomm_t getallincomm;
     MPIDI_NM_gpid_tolpidarray_t gpid_tolpidarray;
     MPIDI_NM_create_intercomm_from_lpids_t create_intercomm_from_lpids;
@@ -394,7 +389,6 @@ typedef struct MPIDI_NM_funcs {
     MPIDI_NM_send_am_reply_t send_am_reply;
     MPIDI_NM_send_amv_reply_t send_amv_reply;
     MPIDI_NM_am_hdr_max_sz_t am_hdr_max_sz;
-    MPIDI_NM_am_inject_max_sz_t am_inject_max_sz;
     MPIDI_NM_am_recv_t am_recv;
 } MPIDI_NM_funcs_t;
 
@@ -601,7 +595,6 @@ MPIDI_NM_STATIC_INLINE_PREFIX int MPIDI_NM_send_amv_reply(MPIR_Context_id_t cont
                                                           MPIR_Request *
                                                           sreq) MPIDI_NM_STATIC_INLINE_SUFFIX;
 MPIDI_NM_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void) MPIDI_NM_STATIC_INLINE_SUFFIX;
-MPIDI_NM_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_inject_max_sz(void) MPIDI_NM_STATIC_INLINE_SUFFIX;
 MPIDI_NM_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request *
                                                    req) MPIDI_NM_STATIC_INLINE_SUFFIX;
 MPIDI_NM_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx,
@@ -610,12 +603,6 @@ MPIDI_NM_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr, i
     MPIDI_NM_STATIC_INLINE_SUFFIX;
 MPIDI_NM_STATIC_INLINE_PREFIX int MPIDI_NM_gpid_get(MPIR_Comm * comm_ptr, int rank,
                                                     MPIR_Gpid * gpid) MPIDI_NM_STATIC_INLINE_SUFFIX;
-MPIDI_NM_STATIC_INLINE_PREFIX int MPIDI_NM_get_node_id(MPIR_Comm * comm, int rank,
-                                                       MPID_Node_id_t *
-                                                       id_p) MPIDI_NM_STATIC_INLINE_SUFFIX;
-MPIDI_NM_STATIC_INLINE_PREFIX int MPIDI_NM_get_max_node_id(MPIR_Comm * comm,
-                                                           MPID_Node_id_t *
-                                                           max_id_p) MPIDI_NM_STATIC_INLINE_SUFFIX;
 MPIDI_NM_STATIC_INLINE_PREFIX int MPIDI_NM_getallincomm(MPIR_Comm * comm_ptr, int local_size,
                                                         MPIR_Gpid local_gpids[],
                                                         int *singleAVT)

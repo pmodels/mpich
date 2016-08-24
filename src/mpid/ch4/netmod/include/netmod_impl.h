@@ -162,11 +162,6 @@ MPIDI_NM_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_hdr_max_sz(void)
     return MPIDI_NM_func->am_hdr_max_sz();
 };
 
-MPIDI_NM_STATIC_INLINE_PREFIX size_t MPIDI_NM_am_inject_max_sz(void)
-{
-    return MPIDI_NM_func->am_inject_max_sz();
-};
-
 MPIDI_NM_STATIC_INLINE_PREFIX int MPIDI_NM_am_recv(MPIR_Request * req)
 {
     return MPIDI_NM_func->am_recv(req);
@@ -182,18 +177,6 @@ MPIDI_NM_STATIC_INLINE_PREFIX int MPIDI_NM_gpid_get(MPIR_Comm * comm_ptr, int ra
                                                     MPIR_Gpid * gpid)
 {
     return MPIDI_NM_func->gpid_get(comm_ptr, rank, gpid);
-};
-
-MPIDI_NM_STATIC_INLINE_PREFIX int MPIDI_NM_get_node_id(MPIR_Comm * comm, int rank,
-                                                       MPID_Node_id_t * id_p)
-{
-    return MPIDI_NM_func->get_node_id(comm, rank, id_p);
-};
-
-MPIDI_NM_STATIC_INLINE_PREFIX int MPIDI_NM_get_max_node_id(MPIR_Comm * comm,
-                                                           MPID_Node_id_t * max_id_p)
-{
-    return MPIDI_NM_func->get_max_node_id(comm, max_id_p);
 };
 
 MPIDI_NM_STATIC_INLINE_PREFIX int MPIDI_NM_getallincomm(MPIR_Comm * comm_ptr, int local_size,

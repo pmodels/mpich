@@ -24,8 +24,6 @@ MPIDI_NM_funcs_t MPIDI_NM_stubnm_funcs = {
     MPIDI_NM_comm_accept,
     MPIDI_NM_comm_get_lpid,
     MPIDI_NM_gpid_get,
-    MPIDI_NM_get_node_id,
-    MPIDI_NM_get_max_node_id,
     MPIDI_NM_getallincomm,
     MPIDI_NM_gpid_tolpidarray,
     MPIDI_NM_create_intercomm_from_lpids,
@@ -44,7 +42,6 @@ MPIDI_NM_funcs_t MPIDI_NM_stubnm_funcs = {
     MPIDI_NM_send_am_reply,
     MPIDI_NM_send_amv_reply,
     MPIDI_NM_am_hdr_max_sz,
-    MPIDI_NM_am_inject_max_sz,
     MPIDI_NM_am_recv,
 };
 

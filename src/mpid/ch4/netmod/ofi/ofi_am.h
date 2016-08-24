@@ -349,13 +349,6 @@ static inline int MPIDI_NM_inject_am_hdr_reply(MPIR_Context_id_t context_id,
     goto fn_exit;
 }
 
-static inline size_t MPIDI_NM_am_inject_max_sz(void)
-{
-    if (unlikely(MPIDI_Global.max_buffered_send < sizeof(MPIDI_OFI_am_header_t)))
-        return 0;
-    return MPIDI_Global.max_buffered_send - sizeof(MPIDI_OFI_am_header_t);
-}
-
 static inline int MPIDI_NM_am_recv(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;

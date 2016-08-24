@@ -123,12 +123,6 @@ static inline int MPIDI_NM_inject_am_hdr_reply(MPIR_Context_id_t context_id, int
     return MPI_SUCCESS;
 }
 
-static inline size_t MPIDI_NM_am_inject_max_sz(void)
-{
-    MPIR_Assert(0);
-    return 0;
-}
-
 static inline int MPIDI_NM_am_recv(MPIR_Request * req)
 {
     MPIR_Assert(0);
