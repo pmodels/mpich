@@ -305,6 +305,7 @@ static inline int MPIDI_OFI_init_generic(int rank,
         int ret;
         struct fi_tx_attr tx_attr;
         memset(&tx_attr, 0, sizeof(tx_attr));
+        tx_attr.op_flags = FI_DELIVERY_COMPLETE | FI_COMPLETION;
         MPIDI_OFI_CALL_RETURN(fi_stx_context(MPIDI_Global.domain,
                                              &tx_attr,
                                              &MPIDI_Global.stx_ctx, NULL /* context */), ret);
