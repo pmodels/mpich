@@ -17,7 +17,7 @@
 #define MPIDI_OFI_CONNENTRY_TAG_KEY "connentry"
 
 // FIXME:
-#ifdef MPIDI_OFI_CONFIG_USE_AV_TABLE
+#ifdef MPIDI_OFI_ENABLE_AV_TABLE
 #define MPIDI_OFI_TABLE_INDEX_INCR()
 #else
 #define MPIDI_OFI_TABLE_INDEX_INCR()
@@ -179,7 +179,7 @@ static inline int MPIDI_OFI_dynproc_create_intercomm(const char *port_name,
     avtid = 0;
     MPIDIU_new_avt(entries, &avtid);
 
-#ifdef MPIDI_OFI_CONFIG_USE_AV_TABLE
+#ifdef MPIDI_OFI_ENABLE_AV_TABLE
     MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, addr_table, entries, NULL, 0ULL, NULL), avmap);
 #else
     fi_addr_t *mapped_table;

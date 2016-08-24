@@ -14,13 +14,7 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
         AC_ARG_WITH(ch4-netmod-ofi-args,
         [  --with-ch4-netmod-ofi-args=arg1:arg2:arg3
         CH4 OFI netmod arguments:
-                scalable-endpoints - Use OFI scalable endpoint mode
-                av-table           - Use OFI AV table (logical addressing mode).  Default is av-map mode
-                mr-basic           - USE OFI MR_BASIC mode. Default is MR_SCALABLE mode.
                 direct-provider    - USE OFI FI_DIRECT to compile in a single OFI direct provider
-                no-tagged          - Do not use OFI fi_tagged interfaces.
-                no-data            - Disable immediate data field
-                no-stx-rma         - Disable per-window EP & counter for RMA
                 ],
                 [ofi_netmod_args=$withval],
                 [ofi_netmod_args=])
@@ -29,63 +23,23 @@ dnl Parse the device arguments
     SAVE_IFS=$IFS
     IFS=':'
     args_array=$ofi_netmod_args
-    do_scalable_endpoints=false
     do_direct_provider=false
-    do_av_table=false
-    do_tagged=true
-    do_data=true
-    do_stx_rma=true
-    do_mr_scalable=true
     echo "Parsing Arguments for OFI Netmod"
     for arg in $args_array; do
     case ${arg} in
-      scalable-endpoints)
-              do_scalable_endpoints=true
-              echo " ---> CH4::OFI Provider : $arg"
-              ;;
-      av_table)
-              do_av_table=true
-              echo " ---> CH4::OFI Provider AV table : $arg"
-              ;;
       direct-provider)
               do_direct_provider=true
               echo " ---> CH4::OFI Direct OFI Provider requested : $arg"
               ;;
-      no-tagged)
-              do_tagged=false
-              echo " ---> CH4::OFI Disable fi_tagged interfaces : $arg"
-              ;;
-      no-data)
-              do_data=false
-              echo " ---> CH4::OFI Disable immediate data field : $arg"
-	      ;;
-      no-stx-rma)
-              do_stx_rma=false
-              echo " ---> CH4::OFI Disable per-window EP & counter for RMA : $arg"
-	      ;;
-      mr-basic)
-              do_mr_scalable=false
-              echo " ---> CH4::OFI Switching to MR_BASIC mode : $arg"
-	      ;;
     esac
     done
     IFS=$SAVE_IFS
-
-    if [test "$do_scalable_endpoints" = "true"]; then
-       AC_MSG_NOTICE([Enabling OFI netmod scalable endpoints])
-       PAC_APPEND_FLAG([-DMPIDI_OFI_CONFIG_USE_SCALABLE_ENDPOINTS], [CPPFLAGS])
-    fi
-
-    if [test "$do_av_table" = "true"]; then
-       AC_MSG_NOTICE([Enabling OFI netmod AV table])
-       PAC_APPEND_FLAG([-DMPIDI_OFI_CONFIG_USE_AV_TABLE], [CPPFLAGS])
-    fi
 
     if [test "$do_direct_provider" = "true"]; then
        AC_MSG_NOTICE([Enabling OFI netmod direct provider])
        PAC_APPEND_FLAG([-DFABRIC_DIRECT],[CPPFLAGS])
     fi
-])
+    ])
     AM_CONDITIONAL([BUILD_CH4_NETMOD_OFI],[test "X$build_ch4_netmod_ofi" = "Xyes"])
 ])dnl
 
