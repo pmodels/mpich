@@ -80,7 +80,7 @@ static inline MPIR_Context_id_t MPIDI_CH4U_win_to_context(const MPIR_Win * win)
 #define FUNCNAME MPIDI_CH4U_request_release
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ void MPIDI_CH4U_request_release(MPIR_Request * req)
+MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_request_release(MPIR_Request * req)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4R_REQUEST_RELEASE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4R_REQEUST_RELEASE);
@@ -97,7 +97,7 @@ __CH4_INLINE__ void MPIDI_CH4U_request_release(MPIR_Request * req)
 #define FUNCNAME MPIDI_CH4U_request_complete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-__CH4_INLINE__ void MPIDI_CH4U_request_complete(MPIR_Request * req)
+MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_request_complete(MPIR_Request * req)
 {
     int incomplete;
     MPIR_cc_decr(req->cc_ptr, &incomplete);

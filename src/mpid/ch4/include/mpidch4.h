@@ -11,16 +11,13 @@
 #ifndef MPIDCH4_H_INCLUDED
 #define MPIDCH4_H_INCLUDED
 
-#define __CH4_INLINE__ __attribute__((always_inline)) static inline
-
 /* We need to define the static inlines right away to avoid
  * any implicit prototype generation and subsequent warnings
  * This allows us to make ADI up calls from within a direct
  * netmod.
  */
 #define MPIDI_CH4I_API(rc,fcnname,...)            \
-  __CH4_INLINE__ rc MPIDI_##fcnname(__VA_ARGS__) \
-  __attribute__((always_inline))
+  MPL_STATIC_INLINE_PREFIX rc MPIDI_##fcnname(__VA_ARGS__) MPL_STATIC_INLINE_SUFFIX
 
 MPIDI_CH4I_API(int, Init, int *, char ***, int, int *, int *, int *);
 MPIDI_CH4I_API(int, InitCompleted, void);
@@ -239,7 +236,7 @@ MPIDI_CH4I_API(int, Iscatterv, const void *, const int *, const int *, MPI_Datat
  * similar to the functions above. Other CH4-level functions should call this
  * function to query locality. This function will determine whether to call the
  * netmod or CH4U locality functions. */
-__CH4_INLINE__ int MPIDI_CH4_rank_is_local(int rank, MPIR_Comm * comm);
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_rank_is_local(int rank, MPIR_Comm * comm);
 
 /* Include netmod prototypes */
 #include <netmod.h>
