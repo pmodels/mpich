@@ -20,10 +20,10 @@ static inline int MPIDI_OFI_progress_do_queue(void *netmod_context);
 
   * When calling OFI function MPIDI_OFI_THREAD_FI_MUTEX must be held.
   * When being called from the MPI layer (app), we must grab the lock.
-    This is the case for regular (non-reply) functions such as send_am.
+    This is the case for regular (non-reply) functions such as am_send.
   * When being called from callback function or progress engine, we must
     not grab the lock because the progress engine is already holding the lock.
-    This is the case for reply functions such as send_am_reply.
+    This is the case for reply functions such as am_send_reply.
 */
 #define MPIDI_OFI_CALL_RETRY_AM(FUNC,LOCK,STR)                  \
     do {                                                                \
@@ -192,10 +192,10 @@ static inline int MPIDI_OFI_progress_do_queue(void *netmod_context)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_do_send_am_header
+#define FUNCNAME MPIDI_OFI_do_am_send_header
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_OFI_do_send_am_header(int rank,
+static inline int MPIDI_OFI_do_am_send_header(int rank,
                                               MPIR_Comm * comm,
                                               int handler_id,
                                               const void *am_hdr,
@@ -246,10 +246,10 @@ static inline int MPIDI_OFI_do_send_am_header(int rank,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_send_am_long
+#define FUNCNAME MPIDI_OFI_am_send_long
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_OFI_send_am_long(int rank,
+static inline int MPIDI_OFI_am_send_long(int rank,
                                          MPIR_Comm * comm,
                                          int handler_id,
                                          const void *am_hdr,
@@ -337,10 +337,10 @@ static inline int MPIDI_OFI_send_am_long(int rank,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_send_am_short
+#define FUNCNAME MPIDI_OFI_am_send_short
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_OFI_send_am_short(int rank,
+static inline int MPIDI_OFI_am_send_short(int rank,
                                           MPIR_Comm * comm,
                                           int handler_id,
                                           const void *am_hdr,
@@ -388,10 +388,10 @@ static inline int MPIDI_OFI_send_am_short(int rank,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_do_send_am
+#define FUNCNAME MPIDI_OFI_do_am_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_OFI_do_send_am(int rank,
+static inline int MPIDI_OFI_do_am_send(int rank,
                                        MPIR_Comm * comm,
                                        int handler_id,
                                        const void *am_hdr,
@@ -426,7 +426,7 @@ static inline int MPIDI_OFI_do_send_am(int rank,
         MPIDI_CH4U_REQUEST(sreq, req->lreq).datatype = datatype;
         MPIDI_CH4U_REQUEST(sreq, req->lreq).msg_tag = lreq_hdr.hdr.msg_tag;
         MPIDI_CH4U_REQUEST(sreq, src_rank) = rank;
-        mpi_errno = MPIDI_NM_inject_am_hdr(rank, comm, MPIDI_CH4U_SEND_LONG_REQ,
+        mpi_errno = MPIDI_NM_am_inject_hdr(rank, comm, MPIDI_CH4U_SEND_LONG_REQ,
                                            &lreq_hdr, sizeof(lreq_hdr), NULL);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -461,12 +461,12 @@ static inline int MPIDI_OFI_do_send_am(int rank,
 
     if (am_hdr_sz + data_sz + sizeof(MPIDI_OFI_am_header_t) <= MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE) {
         mpi_errno =
-            MPIDI_OFI_send_am_short(rank, comm, handler_id, MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr),
+            MPIDI_OFI_am_send_short(rank, comm, handler_id, MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr),
                                     am_hdr_sz, send_buf, data_sz, sreq, need_lock);
     }
     else {
         mpi_errno =
-            MPIDI_OFI_send_am_long(rank, comm, handler_id, MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr),
+            MPIDI_OFI_am_send_long(rank, comm, handler_id, MPIDI_OFI_AMREQUEST_HDR(sreq, am_hdr),
                                    am_hdr_sz, send_buf, data_sz, sreq, need_lock);
     }
     if (mpi_errno)

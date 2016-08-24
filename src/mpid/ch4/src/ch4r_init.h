@@ -129,129 +129,129 @@ __CH4_INLINE__ int MPIDI_CH4U_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self
                                                            MPIDI_CH4I_BUF_POOL_SZ);
     MPIR_Assert(MPIDI_CH4_Global.buf_pool);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_SEND,
-                                         &MPIDI_CH4U_send_origin_cmpl_handler,
-                                         &MPIDI_CH4U_send_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_SEND,
+                                        &MPIDI_CH4U_send_origin_cmpl_handler,
+                                        &MPIDI_CH4U_send_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_SEND_LONG_REQ, NULL /* Injection only */ ,
-                                         &MPIDI_CH4U_send_long_req_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_SEND_LONG_REQ, NULL /* Injection only */ ,
+                                        &MPIDI_CH4U_send_long_req_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_SEND_LONG_ACK, NULL /* Injection only */ ,
-                                         &MPIDI_CH4U_send_long_ack_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_SEND_LONG_ACK, NULL /* Injection only */ ,
+                                        &MPIDI_CH4U_send_long_ack_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_SEND_LONG_LMT,
-                                         &MPIDI_CH4U_send_long_lmt_origin_cmpl_handler,
-                                         &MPIDI_CH4U_send_long_lmt_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_SEND_LONG_LMT,
+                                        &MPIDI_CH4U_send_long_lmt_origin_cmpl_handler,
+                                        &MPIDI_CH4U_send_long_lmt_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_SSEND_REQ,
-                                         &MPIDI_CH4U_send_origin_cmpl_handler,
-                                         &MPIDI_CH4U_ssend_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_SSEND_REQ,
+                                        &MPIDI_CH4U_send_origin_cmpl_handler,
+                                        &MPIDI_CH4U_ssend_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_SSEND_ACK,
-                                         &MPIDI_CH4U_ssend_ack_origin_cmpl_handler,
-                                         &MPIDI_CH4U_ssend_ack_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_SSEND_ACK,
+                                        &MPIDI_CH4U_ssend_ack_origin_cmpl_handler,
+                                        &MPIDI_CH4U_ssend_ack_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_PUT_REQ,
-                                         &MPIDI_CH4U_put_origin_cmpl_handler,
-                                         &MPIDI_CH4U_put_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_PUT_REQ,
+                                        &MPIDI_CH4U_put_origin_cmpl_handler,
+                                        &MPIDI_CH4U_put_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_PUT_ACK,
-                                         NULL, &MPIDI_CH4U_put_ack_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_PUT_ACK,
+                                        NULL, &MPIDI_CH4U_put_ack_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_GET_REQ,
-                                         &MPIDI_CH4U_get_origin_cmpl_handler,
-                                         &MPIDI_CH4U_get_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_GET_REQ,
+                                        &MPIDI_CH4U_get_origin_cmpl_handler,
+                                        &MPIDI_CH4U_get_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_GET_ACK,
-                                         &MPIDI_CH4U_get_ack_origin_cmpl_handler,
-                                         &MPIDI_CH4U_get_ack_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_GET_ACK,
+                                        &MPIDI_CH4U_get_ack_origin_cmpl_handler,
+                                        &MPIDI_CH4U_get_ack_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_CSWAP_REQ,
-                                         &MPIDI_CH4U_cswap_origin_cmpl_handler,
-                                         &MPIDI_CH4U_cswap_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_CSWAP_REQ,
+                                        &MPIDI_CH4U_cswap_origin_cmpl_handler,
+                                        &MPIDI_CH4U_cswap_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_CSWAP_ACK,
-                                         &MPIDI_CH4U_cswap_ack_origin_cmpl_handler,
-                                         &MPIDI_CH4U_cswap_ack_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_CSWAP_ACK,
+                                        &MPIDI_CH4U_cswap_ack_origin_cmpl_handler,
+                                        &MPIDI_CH4U_cswap_ack_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_ACC_REQ,
-                                         &MPIDI_CH4U_acc_origin_cmpl_handler,
-                                         &MPIDI_CH4U_handle_acc_request);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_ACC_REQ,
+                                        &MPIDI_CH4U_acc_origin_cmpl_handler,
+                                        &MPIDI_CH4U_handle_acc_request);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_ACC_ACK,
-                                         NULL, &MPIDI_CH4U_acc_ack_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_ACC_ACK,
+                                        NULL, &MPIDI_CH4U_acc_ack_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_GET_ACC_ACK,
-                                         &MPIDI_CH4U_get_acc_ack_origin_cmpl_handler,
-                                         &MPIDI_CH4U_get_acc_ack_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_GET_ACC_ACK,
+                                        &MPIDI_CH4U_get_acc_ack_origin_cmpl_handler,
+                                        &MPIDI_CH4U_get_acc_ack_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_WIN_CTRL,
-                                         NULL, &MPIDI_CH4U_win_ctrl_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_WIN_CTRL,
+                                        NULL, &MPIDI_CH4U_win_ctrl_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_PUT_IOV_REQ,
-                                         &MPIDI_CH4U_put_iov_origin_cmpl_handler,
-                                         &MPIDI_CH4U_put_iov_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_PUT_IOV_REQ,
+                                        &MPIDI_CH4U_put_iov_origin_cmpl_handler,
+                                        &MPIDI_CH4U_put_iov_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_PUT_IOV_ACK,
-                                         NULL, &MPIDI_CH4U_put_iov_ack_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_PUT_IOV_ACK,
+                                        NULL, &MPIDI_CH4U_put_iov_ack_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_PUT_DAT_REQ,
-                                         &MPIDI_CH4U_put_data_origin_cmpl_handler,
-                                         &MPIDI_CH4U_put_data_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_PUT_DAT_REQ,
+                                        &MPIDI_CH4U_put_data_origin_cmpl_handler,
+                                        &MPIDI_CH4U_put_data_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_ACC_IOV_REQ,
-                                         &MPIDI_CH4U_acc_iov_origin_cmpl_handler,
-                                         &MPIDI_CH4U_acc_iov_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_ACC_IOV_REQ,
+                                        &MPIDI_CH4U_acc_iov_origin_cmpl_handler,
+                                        &MPIDI_CH4U_acc_iov_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_ACC_IOV_ACK,
-                                         NULL, &MPIDI_CH4U_acc_iov_ack_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_ACC_IOV_ACK,
+                                        NULL, &MPIDI_CH4U_acc_iov_ack_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_NM_reg_hdr_handler(MPIDI_CH4U_ACC_DAT_REQ,
-                                         &MPIDI_CH4U_acc_data_origin_cmpl_handler,
-                                         &MPIDI_CH4U_acc_data_target_handler);
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_ACC_DAT_REQ,
+                                        &MPIDI_CH4U_acc_data_origin_cmpl_handler,
+                                        &MPIDI_CH4U_acc_data_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

@@ -14,12 +14,12 @@
 #include "ptl_impl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_reg_hdr_handler
+#define FUNCNAME MPIDI_NM_am_reg_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_reg_hdr_handler(int handler_id,
-                                           MPIDI_NM_am_origin_handler_fn origin_handler_fn,
-                                           MPIDI_NM_am_target_handler_fn target_handler_fn)
+static inline int MPIDI_NM_am_reg_handler(int handler_id,
+                                          MPIDI_NM_am_origin_handler_fn origin_handler_fn,
+                                          MPIDI_NM_am_target_handler_fn target_handler_fn)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_REG_HDR_HANDLER);
@@ -34,7 +34,7 @@ static inline int MPIDI_NM_reg_hdr_handler(int handler_id,
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_send_am_hdr(int rank,
+static inline int MPIDI_NM_am_send_hdr(int rank,
                                        MPIR_Comm * comm,
                                        int handler_id,
                                        const void *am_hdr,
@@ -69,7 +69,7 @@ static inline int MPIDI_NM_send_am_hdr(int rank,
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_send_am(int rank,
+static inline int MPIDI_NM_am_send(int rank,
                                    MPIR_Comm * comm,
                                    int handler_id,
                                    const void *am_hdr,
@@ -148,7 +148,7 @@ static inline int MPIDI_NM_send_am(int rank,
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_send_amv(int rank,
+static inline int MPIDI_NM_am_sendv(int rank,
                                     MPIR_Comm * comm,
                                     int handler_id,
                                     struct iovec *am_hdr,
@@ -162,7 +162,7 @@ static inline int MPIDI_NM_send_amv(int rank,
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_send_amv_hdr(int rank,
+static inline int MPIDI_NM_am_sendv_hdr(int rank,
                                         MPIR_Comm * comm,
                                         int handler_id,
                                         struct iovec *am_hdr,
@@ -172,7 +172,7 @@ static inline int MPIDI_NM_send_amv_hdr(int rank,
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_send_am_hdr_reply(MPIR_Context_id_t context_id,
+static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
                                              int src_rank,
                                              int handler_id,
                                              const void *am_hdr,
@@ -182,7 +182,7 @@ static inline int MPIDI_NM_send_am_hdr_reply(MPIR_Context_id_t context_id,
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_send_am_reply(MPIR_Context_id_t context_id,
+static inline int MPIDI_NM_am_send_reply(MPIR_Context_id_t context_id,
                                          int src_rank,
                                          int handler_id,
                                          const void *am_hdr,
@@ -264,7 +264,7 @@ static inline int MPIDI_NM_send_am_reply(MPIR_Context_id_t context_id,
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_send_amv_reply(MPIR_Context_id_t context_id,
+static inline int MPIDI_NM_am_sendv_reply(MPIR_Context_id_t context_id,
                                           int src_rank,
                                           int handler_id,
                                           struct iovec *am_hdr,
@@ -283,7 +283,7 @@ static inline size_t MPIDI_NM_am_hdr_max_sz(void)
     return 0;
 }
 
-static inline int MPIDI_NM_inject_am_hdr(int rank,
+static inline int MPIDI_NM_am_inject_hdr(int rank,
                                          MPIR_Comm * comm,
                                          int handler_id,
                                          const void *am_hdr, size_t am_hdr_sz, void *netmod_context)
@@ -318,7 +318,7 @@ static inline int MPIDI_NM_inject_am_hdr(int rank,
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_inject_am_hdr_reply(MPIR_Context_id_t context_id,
+static inline int MPIDI_NM_am_inject_hdr_reply(MPIR_Context_id_t context_id,
                                                int src_rank,
                                                int handler_id, const void *am_hdr, size_t am_hdr_sz)
 {
