@@ -11,6 +11,7 @@
 
 #include <mpidimpl.h>
 
+/* *INDENT-OFF* */
 /* forward declaration of funcs structs defined in network modules */
 extern MPIDI_NM_funcs_t @ch4_nets_func_decl@;
 extern MPIDI_NM_native_funcs_t @ch4_nets_native_func_decl@;
@@ -26,3 +27,4 @@ MPIDI_NM_native_funcs_t *MPIDI_NM_native_funcs[@ch4_nets_array_sz@] = { 0 };
 int MPIDI_num_netmods = @ch4_nets_array_sz@;
 char MPIDI_NM_strings[@ch4_nets_array_sz@][MPIDI_MAX_NETMOD_STRING_LEN] =
     { @ch4_nets_strings@ };
+/* *INDENT-ON* */
