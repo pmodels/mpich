@@ -225,18 +225,6 @@ static inline int MPIDI_NM_gpid_get(MPIR_Comm * comm_ptr, int rank, MPIR_Gpid * 
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_get_node_id(MPIR_Comm * comm, int rank, MPID_Node_id_t * id_p)
-{
-    *id_p = MPIDI_PTL_global.node_map[rank];
-    return MPI_SUCCESS;
-}
-
-static inline int MPIDI_NM_get_max_node_id(MPIR_Comm * comm, MPID_Node_id_t * max_id_p)
-{
-    *max_id_p = MPIDI_PTL_global.max_node_id;
-    return MPI_SUCCESS;
-}
-
 static inline int MPIDI_NM_getallincomm(MPIR_Comm * comm_ptr,
                                         int local_size, MPIR_Gpid local_gpids[], int *singleAVT)
 {
