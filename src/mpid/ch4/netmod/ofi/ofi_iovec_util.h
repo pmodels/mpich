@@ -203,9 +203,8 @@ static inline
                                    uintptr_t * target_addr_next, size_t * buf_len)
 {
     if ((iov_state->origin_size != 0) && (iov_state->target_size != 0)) {
-        uintptr_t buf_size =
-            MPL_MIN(MPL_MIN(iov_state->target_size, iov_state->origin_size),
-                    iov_state->buf_limit_left);
+        uintptr_t buf_size = MPL_MIN(MPL_MIN(iov_state->target_size, iov_state->origin_size),
+                                     iov_state->buf_limit_left);
         *buf_len = buf_size;
         MPIDI_OFI_NEXT_IOV_STATE(target);
         MPIDI_OFI_NEXT_IOV_STATE(origin);
