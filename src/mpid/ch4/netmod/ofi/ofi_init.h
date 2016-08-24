@@ -67,6 +67,16 @@ static inline int MPIDI_OFI_init_generic(int rank,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_INIT);
 
+    /* Seed the global settings values */
+    MPIDI_Global.settings.enable_data               = MPIDI_OFI_ENABLE_DATA;
+    MPIDI_Global.settings.enable_av_table           = MPIDI_OFI_ENABLE_AV_TABLE;
+    MPIDI_Global.settings.enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS;
+    MPIDI_Global.settings.enable_stx_rma            = MPIDI_OFI_ENABLE_STX_RMA;
+    MPIDI_Global.settings.enable_mr_scalable        = MPIDI_OFI_ENABLE_MR_SCALABLE;
+    MPIDI_Global.settings.enable_tagged             = MPIDI_OFI_ENABLE_TAGGED;
+    MPIDI_Global.settings.enable_am                 = MPIDI_OFI_ENABLE_AM;
+    MPIDI_Global.settings.enable_rma                = MPIDI_OFI_ENABLE_RMA;
+
     CH4_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_chunk_request, context));
     CH4_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
@@ -536,12 +546,13 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     mpi_errno = MPIDI_OFI_init_generic(rank, size, appnum, tag_ub, comm_world,
                                        comm_self, spawned, num_contexts,
                                        netmod_contexts,
-                                       MPIDI_OFI_ENABLE_AV_TABLE,
+                                       MPIDI_OFI_ENABLE_AV_TABLE
                                        MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS,
                                        MPIDI_OFI_ENABLE_AM,
                                        MPIDI_OFI_ENABLE_TAGGED,
                                        MPIDI_OFI_ENABLE_DATA,
-                                       MPIDI_OFI_ENABLE_STX_RMA, MPIDI_OFI_ENABLE_MR_SCALABLE);
+                                       MPIDI_OFI_ENABLE_STX_RMA,
+                                       MPIDI_OFI_ENABLE_MR_SCALABLE);
     return mpi_errno;
 }
 
@@ -632,9 +643,8 @@ static inline int MPIDI_OFI_finalize_generic(int do_tagged, int do_scalable_ep, 
 
 static inline int MPIDI_NM_mpi_finalize_hook(void)
 {
-    return MPIDI_OFI_finalize_generic(MPIDI_OFI_ENABLE_TAGGED,
-                                      MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS,
-                                      MPIDI_OFI_ENABLE_AM, MPIDI_OFI_ENABLE_STX_RMA);
+    return MPIDI_OFI_finalize_generic(MPIDI_Global.settings.enable_tagged, MPIDI_Global.settings.enable_scalable_endpoints,
+                                      MPIDI_Global.settings.enable_am, MPIDI_Global.settings.enable_stx_rma);
 }
 
 static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
@@ -796,7 +806,7 @@ static inline int MPIDI_NM_upids_to_lupids(int size,
                                            char *remote_upids, int **remote_lupids)
 {
     return MPIDI_OFI_upids_to_lupids_general(size, remote_upid_size, remote_upids,
-                                             remote_lupids, MPIDI_OFI_ENABLE_AV_TABLE);
+                                             remote_lupids, MPIDI_Global.settings.enable_av_table);
 }
 
 static inline int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
