@@ -21,7 +21,8 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                                             struct fid_cq *p2p_cq,
                                             struct fid_cntr *rma_ctr,
                                             struct fid_av *av,
-                                            struct fid_ep **ep, int index, int do_scalable_ep);
+                                            struct fid_ep **ep, int index, int do_scalable_ep,
+                                            int do_data);
 
 #define MPIDI_OFI_CHOOSE_PROVIDER(prov, prov_use,errstr)                          \
     do {                                                                \
@@ -328,7 +329,8 @@ static inline int MPIDI_OFI_init_generic(int rank,
                                                      MPIDI_Global.p2p_cq,
                                                      MPIDI_Global.rma_cmpl_cntr,
                                                      MPIDI_Global.av,
-                                                     &MPIDI_Global.ep, 0, do_scalable_ep));
+                                                     &MPIDI_Global.ep, 0, do_scalable_ep,
+                                                     do_data));
 
     /* ---------------------------------- */
     /* Get our endpoint name and publish  */
@@ -744,7 +746,8 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                                             struct fid_cq *p2p_cq,
                                             struct fid_cntr *rma_ctr,
                                             struct fid_av *av,
-                                            struct fid_ep **ep, int index, int do_scalable_ep)
+                                            struct fid_ep **ep, int index, int do_scalable_ep,
+                                            int do_data)
 {
     int mpi_errno = MPI_SUCCESS;
     struct fi_tx_attr tx_attr;
@@ -789,6 +792,8 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
 
         rx_attr = *prov_use->rx_attr;
         rx_attr.caps = FI_TAGGED;
+        if (do_data)
+            rx_attr.caps |= FI_DIRECTED_RECV;
         rx_attr.op_flags = 0;
         MPIDI_OFI_CALL(fi_rx_context(*ep, index, &rx_attr, &MPIDI_OFI_EP_RX_TAG(index), NULL), ep);
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_TAG(index), &p2p_cq->fid, FI_RECV), bind);
@@ -810,6 +815,8 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         rx_attr = *prov_use->rx_attr;
         rx_attr.caps = FI_MSG;
         rx_attr.caps |= FI_MULTI_RECV;
+        if (do_data)
+            rx_attr.caps |= FI_DIRECTED_RECV;
         rx_attr.op_flags = FI_MULTI_RECV;
         MPIDI_OFI_CALL(fi_rx_context(*ep, index + 2, &rx_attr, &MPIDI_OFI_EP_RX_MSG(index), NULL),
                        ep);
