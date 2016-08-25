@@ -60,11 +60,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Recv(void *buf,
         }
         /* cancel the shm request if netmod/am handles the request from unexpected queue. */
         else if (*request) {
-            if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request)->status.MPI_SOURCE != MPI_UNDEFINED) {
+            if (MPIR_Request_is_complete(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request))) {
                 mpi_errno = MPIDI_SHM_cancel_recv(*request);
                 if (MPIR_STATUS_GET_CANCEL_BIT((*request)->status)) {
                     (*request)->status = MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request)->status;
                 }
+                MPIR_Request_free(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request));
                 goto fn_exit;
             }
             MPIDI_CH4I_REQUEST(*request, is_local) = 1;
