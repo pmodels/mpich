@@ -177,7 +177,7 @@ static inline int MPIDII_detect_regular_model(int *lpid, int size,
     if (st < 0 || st <= bs) {
         return MPIDII_SRC_MAPPER_IRREGULAR;
     }
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE, (MPL_DBG_FDEST, "\tdetect model: stride %d", bs));
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE, (MPL_DBG_FDEST, "\tdetect model: stride %d", st));
     for (i = bs; i < size; i++) {
         if (lpid[i] != MPIDII_CALC_STRIDE(i, st, bs, off)) {
             return MPIDII_SRC_MAPPER_IRREGULAR;
@@ -873,9 +873,9 @@ static inline int MPIDII_check_convert_lut_to_regular(MPIDII_rank_map_t * src)
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                         (MPL_DBG_FDEST, "\toffset: %d", src->reg.stride.offset));
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
-                        (MPL_DBG_FDEST, "\toffset: %d", src->reg.stride.blocksize));
+                        (MPL_DBG_FDEST, "\tblocksize: %d", src->reg.stride.blocksize));
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
-                        (MPL_DBG_FDEST, "\toffset: %d", src->reg.stride.stride));
+                        (MPL_DBG_FDEST, "\tstride: %d", src->reg.stride.stride));
         break;
     }
   fn_exit:
