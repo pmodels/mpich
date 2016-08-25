@@ -1365,6 +1365,9 @@ static inline int MPIDI_CH4I_do_send_target_handler(void **data,
     *cmpl_handler_fn = MPIDI_CH4U_recv_cmpl_handler;
     MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
 
+    if (p_data_sz == NULL)
+        return MPI_SUCCESS;
+
     MPIDI_Datatype_get_info(MPIDI_CH4U_REQUEST(rreq, count),
                             MPIDI_CH4U_REQUEST(rreq, datatype),
                             dt_contig, data_sz, dt_ptr, dt_true_lb);
@@ -1437,9 +1440,15 @@ static inline int MPIDI_CH4U_send_target_handler(int handler_id, void *am_hdr,
 
     if (rreq == NULL) {
         rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RECV);
-        MPIDI_CH4U_REQUEST(rreq, buffer) = (char *) MPL_malloc(*p_data_sz);
         MPIDI_CH4U_REQUEST(rreq, datatype) = MPI_BYTE;
-        MPIDI_CH4U_REQUEST(rreq, count) = *p_data_sz;
+        if (p_data_sz) {
+            MPIDI_CH4U_REQUEST(rreq, buffer) = (char *) MPL_malloc(*p_data_sz);
+            MPIDI_CH4U_REQUEST(rreq, count) = *p_data_sz;
+        }
+        else {
+            MPIDI_CH4U_REQUEST(rreq, buffer) = NULL;
+            MPIDI_CH4U_REQUEST(rreq, count) = 0;
+        }
         MPIDI_CH4U_REQUEST(rreq, tag) = hdr->msg_tag;
         MPIDI_CH4U_REQUEST(rreq, src_rank) = hdr->src_rank;
         MPIDI_CH4U_REQUEST(rreq, req->status) |= MPIDI_CH4U_REQ_BUSY;
@@ -2574,9 +2583,11 @@ static inline int MPIDI_CH4U_handle_acc_request(int handler_id, void *am_hdr,
         MPIDI_CH4U_acc_cmpl_handler;
     MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
 
-    *is_contig = 1;
-    *p_data_sz = data_sz;
-    *data = p_data;
+    if (is_contig) {
+        *is_contig = 1;
+        *p_data_sz = data_sz;
+        *data = p_data;
+    }
 
     MPL_HASH_FIND(dev.ch4u.hash_handle, MPIDI_CH4_Global.win_hash,
                   &msg_hdr->win_id, sizeof(uint64_t), win);
