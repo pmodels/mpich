@@ -149,8 +149,8 @@ static inline int MPIDIU_comm_rank_to_pid_local(MPIR_Comm * comm, int rank, int 
         break;
     case MPIDII_RANK_MAP_STRIDE:
     case MPIDII_RANK_MAP_STRIDE_INTRA:
-        *index = MPIDII_CALC_STRIDE_SIMPLE(rank, MPIDII_COMM(comm, map).reg.stride.stride,
-                                           MPIDII_COMM(comm, map).reg.stride.offset);
+        *index = MPIDII_CALC_STRIDE_SIMPLE(rank, MPIDII_COMM(comm, local_map).reg.stride.stride,
+                                           MPIDII_COMM(comm, local_map).reg.stride.offset);
         break;
     case MPIDII_RANK_MAP_STRIDE_BLOCK:
     case MPIDII_RANK_MAP_STRIDE_BLOCK_INTRA:
