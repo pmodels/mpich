@@ -201,7 +201,6 @@
 #define MPIDI_OFI_EP_RX_TAG(x) MPIDI_Global.ctx[x].rx_tag
 #define MPIDI_OFI_EP_RX_RMA(x) MPIDI_Global.ctx[x].rx_rma
 #define MPIDI_OFI_EP_RX_MSG(x) MPIDI_Global.ctx[x].rx_msg
-#define MPIDI_OFI_EP_RX_CTR(x) MPIDI_Global.ctx[x].rx_ctr
 #else
 #define MPIDI_OFI_COMM_TO_EP(comm,rank) 0
 #define MPIDI_OFI_EP_TX_TAG(x) MPIDI_Global.ep
@@ -211,7 +210,6 @@
 #define MPIDI_OFI_EP_RX_TAG(x) MPIDI_Global.ep
 #define MPIDI_OFI_EP_RX_RMA(x) MPIDI_Global.ep
 #define MPIDI_OFI_EP_RX_MSG(x) MPIDI_Global.ep
-#define MPIDI_OFI_EP_RX_CTR(x) MPIDI_Global.ep
 #endif
 
 #define MPIDI_OFI_DO_SEND        0
@@ -316,7 +314,6 @@ typedef struct {
     struct fid_ep *rx_msg;
 
     struct fid_ep *tx_ctr;
-    struct fid_ep *rx_ctr;
 
     int ctx_offset;
 } MPIDI_OFI_context_t;

@@ -27,9 +27,8 @@
         creq->event_id = MPIDI_OFI_EVENT_CHUNK_DONE;                    \
         creq->parent   = *sigreq;                                       \
         msg.context    = &creq->context;                                \
-        MPIDI_OFI_win_conditional_cntr_incr(win);                       \
     }                                                                   \
-    else MPIDI_OFI_win_cntr_incr(win);                                  \
+    MPIDI_OFI_win_cntr_incr(win);                                       \
     } while (0)
 
 #define MPIDI_OFI_INIT_SIGNAL_REQUEST(win,sigreq,flags,ep)              \
@@ -336,7 +335,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
 
     req->event_id = MPIDI_OFI_EVENT_ABORT;
     msg.desc = NULL;
-    msg.addr = MPIDI_OFI_comm_to_phys(win->comm_ptr, req->target_rank, MPIDI_OFI_API_CTR);
+    msg.addr = MPIDI_OFI_comm_to_phys(win->comm_ptr, req->target_rank, MPIDI_OFI_API_RMA);
     msg.context = NULL;
     msg.data = 0;
     req->next = MPIDI_OFI_WIN(win).syncQ;
@@ -425,7 +424,7 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
                               fi_inject_write(MPIDI_OFI_WIN(win).ep_nocmpl,
                                               (char *) origin_addr + origin_true_lb, target_bytes,
                                               MPIDI_OFI_comm_to_phys(win->comm_ptr, target_rank,
-                                                                     MPIDI_OFI_API_CTR),
+                                                                     MPIDI_OFI_API_RMA),
                                               (uint64_t) MPIDI_OFI_winfo_base(win, target_rank)
                                               + target_disp * MPIDI_OFI_winfo_disp_unit(win,
                                                                                         target_rank)
@@ -482,7 +481,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     offset = target_disp * MPIDI_OFI_winfo_disp_unit(win, target_rank);
     req->event_id = MPIDI_OFI_EVENT_ABORT;
     msg.desc = NULL;
-    msg.addr = MPIDI_OFI_comm_to_phys(win->comm_ptr, req->target_rank, MPIDI_OFI_API_CTR);
+    msg.addr = MPIDI_OFI_comm_to_phys(win->comm_ptr, req->target_rank, MPIDI_OFI_API_RMA);
     msg.context = NULL;
     msg.data = 0;
     req->next = MPIDI_OFI_WIN(win).syncQ;
@@ -577,7 +576,7 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
         msg.desc = NULL;
         msg.msg_iov = &iov;
         msg.iov_count = 1;
-        msg.addr = MPIDI_OFI_comm_to_phys(win->comm_ptr, target_rank, MPIDI_OFI_API_CTR);
+        msg.addr = MPIDI_OFI_comm_to_phys(win->comm_ptr, target_rank, MPIDI_OFI_API_RMA);
         msg.rma_iov = &riov;
         msg.rma_iov_count = 1;
         msg.context = NULL;
@@ -719,7 +718,7 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     msg.msg_iov = &originv;
     msg.desc = NULL;
     msg.iov_count = 1;
-    msg.addr = MPIDI_OFI_comm_to_phys(win->comm_ptr, target_rank, MPIDI_OFI_API_CTR);
+    msg.addr = MPIDI_OFI_comm_to_phys(win->comm_ptr, target_rank, MPIDI_OFI_API_RMA);
     msg.rma_iov = &targetv;
     msg.rma_iov_count = 1;
     msg.datatype = fi_dt;
@@ -853,7 +852,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
                                req->noncontig->origin_dt.map, req->noncontig->target_dt.map);
 
     msg.desc = NULL;
-    msg.addr = MPIDI_OFI_comm_to_phys(win->comm_ptr, req->target_rank, MPIDI_OFI_API_CTR);
+    msg.addr = MPIDI_OFI_comm_to_phys(win->comm_ptr, req->target_rank, MPIDI_OFI_API_RMA);
     msg.context = NULL;
     msg.data = 0;
     msg.datatype = fi_dt;
@@ -1042,7 +1041,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
                                    req->noncontig->result_dt.map, req->noncontig->target_dt.map);
 
     msg.desc = NULL;
-    msg.addr = MPIDI_OFI_comm_to_phys(win->comm_ptr, req->target_rank, MPIDI_OFI_API_CTR);
+    msg.addr = MPIDI_OFI_comm_to_phys(win->comm_ptr, req->target_rank, MPIDI_OFI_API_RMA);
     msg.context = NULL;
     msg.data = 0;
     msg.datatype = fi_dt;

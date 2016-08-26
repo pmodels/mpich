@@ -542,7 +542,6 @@ static inline int MPIDI_OFI_finalize_generic(int do_scalable_ep, int do_am, int 
         MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_RX_TAG(0)), epclose);
         MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_RX_RMA(0)), epclose);
         MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_RX_MSG(0)), epclose);
-        MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_RX_CTR(0)), epclose);
     }
 
     if (do_stx_rma && MPIDI_Global.stx_ctx != NULL)
@@ -772,6 +771,8 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         tx_attr.op_flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
         MPIDI_OFI_CALL(fi_tx_context(*ep, index + 1, &tx_attr, &MPIDI_OFI_EP_TX_RMA(index), NULL),
                        ep);
+        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_RMA(index), &rma_ctr->fid, FI_WRITE | FI_READ),
+                       bind);
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_RMA(index), &p2p_cq->fid, FI_SEND | FI_SELECTIVE_COMPLETION), bind);
 
         tx_attr = *prov_use->tx_attr;
@@ -789,6 +790,10 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                        ep);
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_CTR(index), &rma_ctr->fid, FI_WRITE | FI_READ),
                        bind);
+        /* We need to bind to the CQ if the progress mode is manual.
+           Otherwise fi_cq_read would not make progress on this context and potentially leads to a deadlock. */
+        if (prov_use->domain_attr->data_progress == FI_PROGRESS_MANUAL)
+            MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_CTR(index), &p2p_cq->fid, FI_SEND | FI_SELECTIVE_COMPLETION), bind);
 
         rx_attr = *prov_use->rx_attr;
         rx_attr.caps = FI_TAGGED;
@@ -822,18 +827,6 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                        ep);
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_MSG(index), &p2p_cq->fid, FI_RECV), bind);
 
-        rx_attr = *prov_use->rx_attr;
-        rx_attr.caps = FI_RMA;
-        rx_attr.caps |= FI_ATOMICS;
-        rx_attr.op_flags = 0;
-        MPIDI_OFI_CALL(fi_rx_context(*ep, index + 3, &rx_attr, &MPIDI_OFI_EP_RX_CTR(index), NULL),
-                       ep);
-
-        /* See note above */
-        if (prov_use->domain_attr->data_progress == FI_PROGRESS_MANUAL)
-            MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_CTR(index), &p2p_cq->fid,
-                                      FI_SEND | FI_RECV | FI_SELECTIVE_COMPLETION), bind);
-
         MPIDI_OFI_CALL(fi_enable(*ep), ep_enable);
 
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_TX_TAG(index)), ep_enable);
@@ -844,7 +837,6 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_RX_TAG(index)), ep_enable);
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_RX_RMA(index)), ep_enable);
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_RX_MSG(index)), ep_enable);
-        MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_RX_CTR(index)), ep_enable);
     }
     else {
         /* ---------------------------------------------------------- */
