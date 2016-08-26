@@ -234,7 +234,6 @@ dnl    Unix    gettimeofday (one of two versions)
 dnl
 dnl Also available are various hardware time stamps
 dnl    Linux-x86 cycle counter
-dnl    BG/Q PAMI-based timer
 dnl
 dnl We also allow --enable-timer-type=name to select a timer type
 AC_ARG_ENABLE(timer-type,

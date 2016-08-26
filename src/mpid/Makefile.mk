@@ -13,5 +13,4 @@ noinst_HEADERS +=                          \
 
 include $(top_srcdir)/src/mpid/ch3/Makefile.mk
 include $(top_srcdir)/src/mpid/ch4/Makefile.mk
-include $(top_srcdir)/src/mpid/pamid/Makefile.mk
 include $(top_srcdir)/src/mpid/common/Makefile.mk
