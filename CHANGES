@@ -1,4 +1,26 @@
 ===============================================================================
+                               Changes in 3.3
+===============================================================================
+
+ # CH4 Device: A new device layer implementation designed for low software
+   overheads. CH4 has experimental support for OFI and UCX network libraries,
+   and POSIX shared memory. Thanks to Intel, Mellanox, and RIKEN AICS for
+   participating in the CH4 coding effort.
+
+ # Removed the PAMI device and poe PMI client.
+
+ # Several other minor bug fixes, memory leak fixes, and code cleanup.
+
+   A full list of changes is available at the following link:
+
+     http://git.mpich.org/mpich.git/shortlog/v3.2..v3.3a1
+
+   A full list of bugs that have been fixed is available at the
+   following link:
+
+     https://trac.mpich.org/projects/mpich/query?status=closed&group=resolution&milestone=mpich-3.3
+
+===============================================================================
                                Changes in 3.2
 ===============================================================================
 
