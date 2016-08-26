@@ -244,45 +244,15 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_winfo_mr_key(MPIR_Win * w, int rank)
 #endif
 }
 
-#ifdef MPIDI_OFI_CONFIG_USE_SCALABLE_ENDPOINTS
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_conditional_cntr_incr(MPIR_Win * win)
-{
-}
-
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_cntr_incr(MPIR_Win * win)
 {
     (*MPIDI_OFI_WIN(win).issued_cntr)++;
-}
-
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_conditional_cntr_incr()
-{
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr()
 {
     MPIDI_Global.rma_issued_cntr++;
 }
-#else
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_conditional_cntr_incr(MPIR_Win * win)
-{
-    (*MPIDI_OFI_WIN(win).issued_cntr)++;
-}
-
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_cntr_incr(MPIR_Win * win)
-{
-    (*MPIDI_OFI_WIN(win).issued_cntr)++;
-}
-
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_conditional_cntr_incr()
-{
-    MPIDI_Global.rma_issued_cntr++;
-}
-
-MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr()
-{
-    MPIDI_Global.rma_issued_cntr++;
-}
-#endif
 
 /* Externs:  see util.c for definition */
 extern int MPIDI_OFI_handle_cq_error_util(ssize_t ret);
