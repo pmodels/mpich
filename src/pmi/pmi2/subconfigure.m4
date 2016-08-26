@@ -16,7 +16,6 @@ fi
 dnl causes USE_PMI2_API to be AC_DEFINE'ed by the top-level configure.ac
 USE_PMI2_API=yes
 
-# common ARG_ENABLE, shared by "simple" and "poe"
 AC_ARG_ENABLE(pmiport,
 [--enable-pmiport - Allow PMI interface to use a host-port pair to contact
                    for PMI services],,enable_pmiport=default)

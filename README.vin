@@ -577,33 +577,6 @@ channel can be configured using the following option:
 
   --with-device=ch3:sock
 
-
-pamid device
-************
-This is the device used on the IBM Blue Gene/Q system.  The following
-configure options can be used:
-
-  ./configure --host=powerpc64-bgq-linux                                \
-              --with-device=pamid:BGQ                                   \
-              --with-file-system=bg+bglockless
-
-The Blue Gene/Q cross compilers must either be in the $PATH, or
-explicitly specified using environment variables, before configure.
-For example:
-
-  PATH=$PATH:/bgsys/drivers/ppcfloor/gnu-linux/bin
-
-or
-
-  CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gcc
-  CXX=...
-  ...
-
-There are several other configure options that are specific to building
-on a Blue Gene/Q system.  See the wiki page for more information:
-
-  https://wiki.mpich.org/mpich/index.php/BGQ
-
 -------------------------------------------------------------------------
 
 5. Alternate Process Managers
