@@ -236,7 +236,7 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
     iov[1].iov_len = am_hdr_sz;
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
     MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_EP_TX_MSG(0), iov, NULL, 2,
-                                     MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG),
+                                     MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_MSG),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), need_lock, sendv);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_DO_SEND_AM_HDR);
@@ -327,7 +327,7 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     iov[2].iov_len = sizeof(*lmt_info);
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
     MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_EP_TX_MSG(0), iov, NULL, 3,
-                                     MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG),
+                                     MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_MSG),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), need_lock, sendv);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_SEND_AM_LONG);
@@ -378,7 +378,7 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
     MPIR_cc_incr(sreq->cc_ptr, &c);
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
     MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_EP_TX_MSG(0), iov, NULL, 3,
-                                     MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG),
+                                     MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_MSG),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), need_lock, sendv);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_SEND_AM_SHORT);
