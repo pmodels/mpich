@@ -335,8 +335,6 @@ typedef int (*MPIDI_NM_iscatterv_t) (const void *sendbuf, const int *sendcounts,
                                      MPI_Datatype sendtype, void *recvbuf, int recvcount,
                                      MPI_Datatype recvtype, int root, MPIR_Comm * comm_ptr,
                                      MPI_Request * req);
-typedef void (*MPIDI_NM_type_dup_hook_t) (MPIR_Datatype * old_datatype_p,
-                                          MPIR_Datatype * new_datatype_p);
 typedef int (*MPIDI_NM_type_create_hook_t) (MPIR_Datatype * datatype_p);
 typedef int (*MPIDI_NM_type_free_hook_t) (MPIR_Datatype * datatype_p);
 typedef int (*MPIDI_NM_op_create_hook_t) (MPIR_Op * op_p);
@@ -476,7 +474,6 @@ typedef struct MPIDI_NM_native_funcs {
     MPIDI_NM_iscatterv_t iscatterv;
     /* Datatype hooks */
     MPIDI_NM_type_create_hook_t type_create_hook;
-    MPIDI_NM_type_dup_hook_t type_dup_hook;
     MPIDI_NM_type_free_hook_t type_free_hook;
     /* Op hooks */
     MPIDI_NM_op_create_hook_t op_create_hook;
@@ -965,9 +962,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_iscatterv(const void *sendbuf, const int *
                                                 MPI_Datatype recvtype, int root,
                                                 MPIR_Comm * comm_ptr,
                                                 MPI_Request * req) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX void MPIDI_NM_type_dup_hook(MPIR_Datatype * old_datatype_p,
-                                                     MPIR_Datatype *
-                                                     new_datatype_p) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_type_create_hook(MPIR_Datatype *
                                                        datatype_p) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_type_free_hook(MPIR_Datatype *
