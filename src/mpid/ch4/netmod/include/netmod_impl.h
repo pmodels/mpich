@@ -963,12 +963,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_iscatterv(const void *sendbuf, const int *
                                            recvcount, recvtype, root, comm_ptr, req);
 };
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_NM_type_dup_hook(MPIR_Datatype * old_datatype_p,
-                                                     MPIR_Datatype * new_datatype_p)
-{
-    return MPIDI_NM_native_func->type_dup_hook(old_datatype_p, new_datatype_p);
-};
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_type_create_hook(MPIR_Datatype * datatype_p)
 {
     return MPIDI_NM_native_func->type_create_hook(datatype_p);

@@ -25,11 +25,4 @@ static inline int MPIDI_NM_type_create_hook(MPIR_Datatype * datatype_p)
     return 0;
 }
 
-static inline void MPIDI_NM_type_dup_hook(MPIR_Datatype * old_datatype_p,
-                                          MPIR_Datatype * new_datatype_p)
-{
-    MPIR_Assert(0);
-    return;
-}
-
 #endif
