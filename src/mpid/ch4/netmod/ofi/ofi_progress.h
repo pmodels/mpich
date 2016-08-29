@@ -15,12 +15,17 @@
 #include "ofi_events.h"
 #include "ofi_am_events.h"
 
-MPL_STATIC_INLINE_PREFIX
-    int MPIDI_OFI_progress_generic(void *netmod_context, int blocking, int do_am, int do_tagged)
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_progress
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(void *netmod_context, int blocking)
 {
     int mpi_errno;
     struct fi_cq_tagged_entry wc[MPIDI_OFI_NUM_CQ_ENTRIES];
     ssize_t ret;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_PROGRESS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_PROGRESS);
 
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
 
@@ -39,21 +44,8 @@ MPL_STATIC_INLINE_PREFIX
 
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
 
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_progress
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_progress(void *netmod_context, int blocking)
-{
-    int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_PROGRESS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_PROGRESS);
-    mpi_errno = MPIDI_OFI_progress_generic(netmod_context,
-                                           blocking, MPIDI_OFI_ENABLE_AM, MPIDI_OFI_ENABLE_TAGGED);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_PROGRESS);
+
     return mpi_errno;
 }
 

@@ -336,13 +336,12 @@ MPL_STATIC_INLINE_PREFIX bool MPIDI_OFI_is_tag_sync(uint64_t match_bits)
 }
 
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t contextid,
-                                                         int source, int tag, uint64_t type,
-                                                         int do_data)
+                                                  int source, int tag, uint64_t type)
 {
     uint64_t match_bits;
     match_bits = contextid;
 
-    if (!do_data) {
+    if (!MPIDI_OFI_ENABLE_DATA) {
         match_bits = (match_bits << MPIDI_OFI_SOURCE_SHIFT);
         match_bits |= source;
     }
@@ -354,14 +353,14 @@ MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_sendtag(MPIR_Context_id_t conte
 
 /* receive posting */
 MPL_STATIC_INLINE_PREFIX uint64_t MPIDI_OFI_init_recvtag(uint64_t * mask_bits,
-                                                         MPIR_Context_id_t contextid,
-                                                         int source, int tag, int do_data)
+                                                  MPIR_Context_id_t contextid,
+                                                  int source, int tag)
 {
     uint64_t match_bits = 0;
     *mask_bits = MPIDI_OFI_PROTOCOL_MASK;
     match_bits = contextid;
 
-    if (!do_data) {
+    if (!MPIDI_OFI_ENABLE_DATA) {
         match_bits = (match_bits << MPIDI_OFI_SOURCE_SHIFT);
 
         if (MPI_ANY_SOURCE == source) {
@@ -406,21 +405,21 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_OFI_context_to_request(void *contex
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const void *buf, size_t len,
-                                                    void *desc, uint64_t dest, fi_addr_t dest_addr,
-                                                    uint64_t tag, void *context, int is_inject,
-                                                    int do_data, int do_lock)
+                                             void *desc, uint64_t dest, fi_addr_t dest_addr,
+                                             uint64_t tag, void *context, int is_inject,
+                                             int do_lock)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if (is_inject) {
-        if (do_data)
+        if (MPIDI_OFI_ENABLE_DATA)
             MPIDI_OFI_CALL_RETRY(fi_tinjectdata(ep, buf, len, dest, dest_addr, tag), tinjectdata,
                                  do_lock);
         else
             MPIDI_OFI_CALL_RETRY(fi_tinject(ep, buf, len, dest_addr, tag), tinject, do_lock);
     }
     else {
-        if (do_data)
+        if (MPIDI_OFI_ENABLE_DATA)
             MPIDI_OFI_CALL_RETRY(fi_tsenddata(ep, buf, len, desc, dest, dest_addr, tag, context),
                                  tsenddata, do_lock);
         else
