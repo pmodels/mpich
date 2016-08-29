@@ -17,16 +17,6 @@
 #include "ch4_impl.h"
 #include "ofi_iovec_util.h"
 
-/* Tag the prototypes with always_inline to force object allocation */
-/* routines to inline  This allows the library, compiled without    */
-/* ipo/pgo enabled to inline MPI layer functions                    */
-__ALWAYS_INLINE__ MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind);
-__ALWAYS_INLINE__ void *MPIR_Handle_obj_alloc(MPIR_Object_alloc_t *);
-__ALWAYS_INLINE__ void *MPIR_Handle_obj_alloc_unsafe(MPIR_Object_alloc_t *);
-__ALWAYS_INLINE__ void MPIR_Handle_obj_free(MPIR_Object_alloc_t *, void *);
-__ALWAYS_INLINE__ void *MPIR_Handle_get_ptr_indirect(int, MPIR_Object_alloc_t *);
-__ALWAYS_INLINE__ MPIDII_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * comm, int rank);
-
 #define MPIDI_OFI_DT(dt)         ((dt)->dev.netmod.ofi)
 #define MPIDI_OFI_OP(op)         ((op)->dev.netmod.ofi)
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
