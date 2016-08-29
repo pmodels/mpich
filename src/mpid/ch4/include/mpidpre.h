@@ -38,10 +38,6 @@ typedef int MPID_Progress_state;
 #define CH4_COMPILE_TIME_ASSERT(expr_)                                  \
   do { switch(0) { case 0: case (expr_): default: break; } } while (0)
 
-/* Forward declaration of MPIR_Win so that we can refer to it in this file */
-struct MPIR_Win;
-typedef struct MPIR_Win MPIR_Win;
-
 typedef enum {
     MPIDI_PTYPE_RECV,
     MPIDI_PTYPE_SEND,
