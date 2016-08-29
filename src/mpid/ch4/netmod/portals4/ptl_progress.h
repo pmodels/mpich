@@ -29,7 +29,7 @@ static inline int MPIDI_PTL_am_handler(ptl_event_t * e)
     in_data = p_data = (e->start + (e->mlength - data_sz));
     int handler_id = e->hdr_data >> 56;
 
-    MPIDI_PTL_global.am_handlers[handler_id] (e->start,
+    MPIDI_PTL_global.am_handlers[handler_id] (handler_id, e->start,
                                               &p_data, &data_sz,
                                               &is_contig, &cmpl_handler_fn, &rreq);
 
