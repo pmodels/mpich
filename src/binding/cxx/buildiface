@@ -3574,14 +3574,14 @@ sub Clone_method {
         MPI_Comm_dup( (MPI_Comm)the_real_comm, &ncomm); 
         Comm *clone = new $classname(ncomm); 
         return *clone; 
-    };
+    }
 #else
     virtual $classname & Clone(void) const { 
         MPI_Comm ncomm;
         MPI_Comm_dup( (MPI_Comm)the_real_comm, &ncomm); 
         $classname *clone = new $classname(ncomm); 
         return *clone; 
-    };
+    }
 #endif\n";
 }
 sub Comm_methods {
@@ -3674,12 +3674,12 @@ sub Nullcomm_methods {
     virtual Comm & Clone(void) const { 
         Comm *clone = new Nullcomm(MPI_COMM_NULL); 
         return *clone; 
-    };
+    }
 #else
     virtual Nullcomm & Clone(void) const { 
         Nullcomm *clone = new Nullcomm();
         return *clone; 
-    };
+    }
 #endif\n";
 }
 
