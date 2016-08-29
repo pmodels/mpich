@@ -121,7 +121,7 @@ static inline int MPIDI_OFI_win_init_generic(MPI_Aint length,
                                              MPIR_Win ** win_ptr,
                                              MPIR_Info * info,
                                              MPIR_Comm * comm_ptr,
-                                             int create_flavor, int model, int do_stx_rma)
+                                             int create_flavor, int model)
 {
     int mpi_errno = MPI_SUCCESS;
     uint64_t window_instance;
@@ -149,7 +149,7 @@ static inline int MPIDI_OFI_win_init_generic(MPI_Aint length,
     MPIDI_OFI_WIN(win).win_id = ((uint64_t) comm_ptr->context_id) | (window_instance << 32);
     MPIDI_OFI_map_set(MPIDI_Global.win_map, MPIDI_OFI_WIN(win).win_id, win);
 
-    if (do_stx_rma && MPIDI_Global.stx_ctx != NULL) {
+    if (MPIDI_OFI_ENABLE_STX_RMA && MPIDI_Global.stx_ctx != NULL) {
         /* Activate per-window EP/counter */
         int ret;
 
