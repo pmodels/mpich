@@ -397,8 +397,9 @@ relevant Makefiles.
 =================================
 
 The communication mechanisms in MPICH are called "devices". MPICH
-supports ch3 (default), as well as many third-party devices that are
-released and maintained by other institutes.
+supports ch3 (default) and ch4 (experimental), as well as many
+third-party devices that are released and maintained by other
+institutes.
 
                    *************************************
 
@@ -576,6 +577,57 @@ than that of nemesis, it should work on almost every platform. This
 channel can be configured using the following option:
 
   --with-device=ch3:sock
+
+
+ch4 device
+**********
+The ch4 device contains different network and shared memory modules
+for communication. We currently support the ofi and ucx network
+modules, and posix shared memory module.
+
+ofi network module
+```````````````````
+The ofi netmod provides support for the OFI network programming interface.
+To enable, configure with the following option:
+
+  --with-device=ch4:ofi
+
+If the OFI include files and libraries are not in the normal search paths,
+you can specify them with the following options:
+
+  --with-libfabric-include= and --with-libfabric-lib=
+
+... or the if lib/ and include/ are in the same directory, you can use
+the following option:
+
+  --with-libfabric=
+
+ucx network module
+``````````````````
+The ucx netmod provides support for the Unified Communication X
+library. It can be built with the following configure option:
+
+  --with-device=ch4:ucx
+
+If the UCX include files and libraries are not in the normal search paths,
+you can specify them with the following options:
+
+  --with-ucx-include= and --with-ucx-lib=
+
+... or the if lib/ and include/ are in the same directory, you can use
+the following option:
+
+  --with-ucx=
+
+By default, the UCX library throws warnings when the system does not
+enable certain features that might hurt performance.  These are
+important warnings that might cause performance degradation on your
+system.  But you might need root privileges to fix some of them.  If
+you would like to disable such warnings, you can set the UCX log level
+to "error" instead of the default "warn" by using:
+
+  UCX_LOG_LEVEL=error
+  export UCX_LOG_LEVEL
 
 -------------------------------------------------------------------------
 
