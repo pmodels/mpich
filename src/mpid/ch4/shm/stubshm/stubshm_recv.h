@@ -14,20 +14,45 @@
 #include "stubshm_impl.h"
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_SHM_recv)
-static inline int MPIDI_SHM_recv(void *buf,
-                                 int count,
-                                 MPI_Datatype datatype,
-                                 int rank,
-                                 int tag,
-                                 MPIR_Comm * comm,
-                                 int context_offset, MPI_Status * status, MPIR_Request ** request)
+#define FCNAME DECL_FUNC(MPIDI_SHM_mpi_recv)
+static inline int MPIDI_SHM_mpi_recv(void *buf,
+                                     int count,
+                                     MPI_Datatype datatype,
+                                     int rank,
+                                     int tag,
+                                     MPIR_Comm * comm,
+                                     int context_offset, MPI_Status * status,
+                                     MPIR_Request ** request)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_recv_init(void *buf,
+static inline int MPIDI_SHM_mpi_recv_init(void *buf,
+                                          int count,
+                                          MPI_Datatype datatype,
+                                          int rank,
+                                          int tag,
+                                          MPIR_Comm * comm, int context_offset,
+                                          MPIR_Request ** request)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
+
+static inline int MPIDI_SHM_mpi_imrecv(void *buf,
+                                       int count,
+                                       MPI_Datatype datatype,
+                                       MPIR_Request * message, MPIR_Request ** rreqp)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
+#undef FCNAME
+#define FCNAME DECL_FUNC(MPIDI_SHM_mpi_irecv)
+static inline int MPIDI_SHM_mpi_irecv(void *buf,
                                       int count,
                                       MPI_Datatype datatype,
                                       int rank,
@@ -38,30 +63,7 @@ static inline int MPIDI_SHM_recv_init(void *buf,
     return MPI_SUCCESS;
 }
 
-
-static inline int MPIDI_SHM_imrecv(void *buf,
-                                   int count,
-                                   MPI_Datatype datatype,
-                                   MPIR_Request * message, MPIR_Request ** rreqp)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
-#undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_SHM_irecv)
-static inline int MPIDI_SHM_irecv(void *buf,
-                                  int count,
-                                  MPI_Datatype datatype,
-                                  int rank,
-                                  int tag,
-                                  MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
-static inline int MPIDI_SHM_cancel_recv(MPIR_Request * rreq)
+static inline int MPIDI_SHM_mpi_cancel_recv(MPIR_Request * rreq)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

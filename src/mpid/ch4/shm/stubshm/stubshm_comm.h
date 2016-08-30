@@ -11,14 +11,14 @@
 #define SHM_STUBSHM_COMM_H_INCLUDED
 
 #include "stubshm_impl.h"
-static inline int MPIDI_SHM_comm_create_hook(MPIR_Comm * comm)
+static inline int MPIDI_SHM_mpi_comm_create_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Assert(0);
     return mpi_errno;
 }
 
-static inline int MPIDI_SHM_comm_free_hook(MPIR_Comm * comm)
+static inline int MPIDI_SHM_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Assert(0);

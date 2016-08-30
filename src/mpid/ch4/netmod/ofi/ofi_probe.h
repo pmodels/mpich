@@ -124,14 +124,14 @@ static inline int MPIDI_NM_probe(int source,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_improbe
+#define FUNCNAME MPIDI_NM_mpi_improbe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_improbe(int source,
-                                   int tag,
-                                   MPIR_Comm * comm,
-                                   int context_offset,
-                                   int *flag, MPIR_Request ** message, MPI_Status * status)
+static inline int MPIDI_NM_mpi_improbe(int source,
+                                       int tag,
+                                       MPIR_Comm * comm,
+                                       int context_offset,
+                                       int *flag, MPIR_Request ** message, MPI_Status * status)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_NETMOD_IMPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_NETMOD_IMPROBE);
@@ -149,13 +149,13 @@ static inline int MPIDI_NM_improbe(int source,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_iprobe
+#define FUNCNAME MPIDI_NM_mpi_iprobe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_iprobe(int source,
-                                  int tag,
-                                  MPIR_Comm * comm,
-                                  int context_offset, int *flag, MPI_Status * status)
+static inline int MPIDI_NM_mpi_iprobe(int source,
+                                      int tag,
+                                      MPIR_Comm * comm,
+                                      int context_offset, int *flag, MPI_Status * status)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_NETMOD_IPROBE);

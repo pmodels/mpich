@@ -13,35 +13,35 @@
 
 #include "ptl_impl.h"
 
-static inline int MPIDI_NM_comm_connect(const char *port_name,
-                                        MPIR_Info * info,
-                                        int root, MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
+static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
+                                            MPIR_Info * info,
+                                            int root, MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_comm_disconnect(MPIR_Comm * comm_ptr)
+static inline int MPIDI_NM_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_open_port(MPIR_Info * info_ptr, char *port_name)
+static inline int MPIDI_NM_mpi_open_port(MPIR_Info * info_ptr, char *port_name)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_close_port(const char *port_name)
+static inline int MPIDI_NM_mpi_close_port(const char *port_name)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_comm_accept(const char *port_name,
-                                       MPIR_Info * info,
-                                       int root, MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
+static inline int MPIDI_NM_mpi_comm_accept(const char *port_name,
+                                           MPIR_Info * info,
+                                           int root, MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

@@ -9,13 +9,13 @@
 
 #include "ptl_impl.h"
 
-static inline int MPIDI_NM_op_free_hook(MPIR_Op * op_p)
+static inline int MPIDI_NM_mpi_op_free_hook(MPIR_Op * op_p)
 {
     MPIR_Assert(0);
     return 0;
 }
 
-static inline int MPIDI_NM_op_create_hook(MPIR_Op * op_p)
+static inline int MPIDI_NM_mpi_op_create_hook(MPIR_Op * op_p)
 {
     MPIR_Assert(0);
     return 0;

@@ -134,34 +134,34 @@ static inline int do_irecv(void *buf,
 
 }
 
-__ALWAYS_INLINE__ int MPIDI_NM_recv(void *buf,
-                                    int count,
-                                    MPI_Datatype datatype,
-                                    int rank,
-                                    int tag,
-                                    MPIR_Comm * comm,
-                                    int context_offset,
-                                    MPI_Status * status, MPIR_Request ** request)
+__ALWAYS_INLINE__ int MPIDI_NM_mpi_recv(void *buf,
+                                        int count,
+                                        MPI_Datatype datatype,
+                                        int rank,
+                                        int tag,
+                                        MPIR_Comm * comm,
+                                        int context_offset,
+                                        MPI_Status * status, MPIR_Request ** request)
 {
 
     return do_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
 }
 
-__ALWAYS_INLINE__ int MPIDI_NM_recv_init(void *buf,
-                                         int count,
-                                         MPI_Datatype datatype,
-                                         int rank,
-                                         int tag,
-                                         MPIR_Comm * comm,
-                                         int context_offset, MPIR_Request ** request)
+__ALWAYS_INLINE__ int MPIDI_NM_mpi_recv_init(void *buf,
+                                             int count,
+                                             MPI_Datatype datatype,
+                                             int rank,
+                                             int tag,
+                                             MPIR_Comm * comm,
+                                             int context_offset, MPIR_Request ** request)
 {
-    return MPIDI_CH4U_recv_init(buf, count, datatype, rank, tag, comm, context_offset, request);
+    return MPIDI_CH4U_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, request);
 }
 
-__ALWAYS_INLINE__ int MPIDI_NM_imrecv(void *buf,
-                                      int count,
-                                      MPI_Datatype datatype,
-                                      MPIR_Request * message, MPIR_Request ** rreqp)
+__ALWAYS_INLINE__ int MPIDI_NM_mpi_imrecv(void *buf,
+                                          int count,
+                                          MPI_Datatype datatype,
+                                          MPIR_Request * message, MPIR_Request ** rreqp)
 {
     ucp_tag_message_h message_handler;
     int mpi_errno = MPI_SUCCESS;
@@ -218,12 +218,13 @@ __ALWAYS_INLINE__ int MPIDI_NM_imrecv(void *buf,
     goto fn_exit;
 }
 
-__ALWAYS_INLINE__ int MPIDI_NM_irecv(void *buf,
-                                     int count,
-                                     MPI_Datatype datatype,
-                                     int rank,
-                                     int tag,
-                                     MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
+__ALWAYS_INLINE__ int MPIDI_NM_mpi_irecv(void *buf,
+                                         int count,
+                                         MPI_Datatype datatype,
+                                         int rank,
+                                         int tag,
+                                         MPIR_Comm * comm, int context_offset,
+                                         MPIR_Request ** request)
 {
 
 
@@ -232,7 +233,7 @@ __ALWAYS_INLINE__ int MPIDI_NM_irecv(void *buf,
 
 }
 
-static inline int MPIDI_NM_cancel_recv(MPIR_Request * rreq)
+static inline int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
 {
 
     if (MPIDI_UCX_REQ(rreq).a.ucp_request) {

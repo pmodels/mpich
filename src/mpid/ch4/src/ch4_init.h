@@ -248,9 +248,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Init(int *argc,
     MPIR_Process.attrs.tag_ub = (1ULL << MPIDI_CH4U_TAG_SHIFT) - 1;
     /* discuss */
 
-    mpi_errno = MPIDI_NM_init(rank, size, appnum, &MPIR_Process.attrs.tag_ub,
-                              MPIR_Process.comm_world,
-                              MPIR_Process.comm_self, has_parent, 1, &netmod_contexts);
+    mpi_errno = MPIDI_NM_mpi_init(rank, size, appnum, &MPIR_Process.attrs.tag_ub,
+                                  MPIR_Process.comm_world,
+                                  MPIR_Process.comm_self, has_parent, 1, &netmod_contexts);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POPFATAL(mpi_errno);
     }
@@ -279,7 +279,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Init(int *argc,
 #endif
 
 #ifdef MPIDI_BUILD_CH4_SHM
-    mpi_errno = MPIDI_SHM_init(rank, size);
+    mpi_errno = MPIDI_SHM_mpi_init(rank, size);
 
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POPFATAL(mpi_errno);
@@ -346,11 +346,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Finalize(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_FINALIZE);
 
-    mpi_errno = MPIDI_NM_finalize();
+    mpi_errno = MPIDI_NM_mpi_finalize();
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 #ifdef MPIDI_BUILD_CH4_SHM
-    mpi_errno = MPIDI_SHM_finalize();
+    mpi_errno = MPIDI_SHM_mpi_finalize();
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 #endif
@@ -502,7 +502,7 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_Alloc_mem(size_t size, MPIR_Info * info_ptr
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_ALLOC_MEM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_ALLOC_MEM);
 
-    p = MPIDI_NM_alloc_mem(size, info_ptr);
+    p = MPIDI_NM_mpi_alloc_mem(size, info_ptr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_ALLOC_MEM);
     return p;
@@ -517,7 +517,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Free_mem(void *ptr)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_FREE_MEM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_FREE_MEM);
-    mpi_errno = MPIDI_NM_free_mem(ptr);
+    mpi_errno = MPIDI_NM_mpi_free_mem(ptr);
 
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -761,13 +761,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Type_create_hook(MPIR_Datatype * type)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_TYPE_CREATE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_TYPE_CREATE_HOOK);
 
-    mpi_errno = MPIDI_NM_type_create_hook(type);
+    mpi_errno = MPIDI_NM_mpi_type_create_hook(type);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
 
 #if defined(MPIDI_BUILD_CH4_SHM)
-    mpi_errno = MPIDI_SHM_type_create_hook(type);
+    mpi_errno = MPIDI_SHM_mpi_type_create_hook(type);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
@@ -791,13 +791,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Type_free_hook(MPIR_Datatype * type)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_TYPE_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_TYPE_FREE_HOOK);
 
-    mpi_errno = MPIDI_NM_type_free_hook(type);
+    mpi_errno = MPIDI_NM_mpi_type_free_hook(type);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
 
 #if defined(MPIDI_BUILD_CH4_SHM)
-    mpi_errno = MPIDI_SHM_type_free_hook(type);
+    mpi_errno = MPIDI_SHM_mpi_type_free_hook(type);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
@@ -821,13 +821,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Op_create_hook(MPIR_Op * op)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OP_CREATE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OP_CREATE_HOOK);
 
-    mpi_errno = MPIDI_NM_op_create_hook(op);
+    mpi_errno = MPIDI_NM_mpi_op_create_hook(op);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
 
 #if defined(MPIDI_BUILD_CH4_SHM)
-    mpi_errno = MPIDI_SHM_op_create_hook(op);
+    mpi_errno = MPIDI_SHM_mpi_op_create_hook(op);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
@@ -851,13 +851,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Op_free_hook(MPIR_Op * op)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OP_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OP_FREE_HOOK);
 
-    mpi_errno = MPIDI_NM_op_free_hook(op);
+    mpi_errno = MPIDI_NM_mpi_op_free_hook(op);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
 
 #if defined(MPIDI_BUILD_CH4_SHM)
-    mpi_errno = MPIDI_SHM_op_free_hook(op);
+    mpi_errno = MPIDI_SHM_mpi_op_free_hook(op);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }

@@ -159,51 +159,51 @@ static inline int MPIDI_UCX_Win_init(MPI_Aint length,
 
 }
 
-static inline int MPIDI_NM_win_set_info(MPIR_Win * win, MPIR_Info * info)
+static inline int MPIDI_NM_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
 {
-    return MPIDI_CH4R_win_set_info(win, info);
+    return MPIDI_CH4R_mpi_win_set_info(win, info);
 }
 
 
-static inline int MPIDI_NM_win_start(MPIR_Group * group, int assert, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_start(MPIR_Group * group, int assert, MPIR_Win * win)
 {
-    return MPIDI_CH4R_win_start(group, assert, win);
+    return MPIDI_CH4R_mpi_win_start(group, assert, win);
 }
 
 
-static inline int MPIDI_NM_win_complete(MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_complete(MPIR_Win * win)
 {
 
     ucs_status_t ucp_status;
     ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
-    return MPIDI_CH4R_win_complete(win);
+    return MPIDI_CH4R_mpi_win_complete(win);
 }
 
-static inline int MPIDI_NM_win_post(MPIR_Group * group, int assert, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win * win)
 {
 
-    return MPIDI_CH4R_win_post(group, assert, win);
+    return MPIDI_CH4R_mpi_win_post(group, assert, win);
 }
 
 
-static inline int MPIDI_NM_win_wait(MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_wait(MPIR_Win * win)
 {
-    return MPIDI_CH4R_win_wait(win);
+    return MPIDI_CH4R_mpi_win_wait(win);
 }
 
 
-static inline int MPIDI_NM_win_test(MPIR_Win * win, int *flag)
+static inline int MPIDI_NM_mpi_win_test(MPIR_Win * win, int *flag)
 {
-    return MPIDI_CH4R_win_test(win, flag);
+    return MPIDI_CH4R_mpi_win_test(win, flag);
 }
 
-static inline int MPIDI_NM_win_lock(int lock_type, int rank, int assert, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert, MPIR_Win * win)
 {
-    return MPIDI_CH4R_win_lock(lock_type, rank, assert, win);
+    return MPIDI_CH4R_mpi_win_lock(lock_type, rank, assert, win);
 }
 
 
-static inline int MPIDI_NM_win_unlock(int rank, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win)
 {
 
     int mpi_errno = MPI_SUCCESS;
@@ -212,20 +212,20 @@ static inline int MPIDI_NM_win_unlock(int rank, MPIR_Win * win)
     /* make sure all operations are completed  */
     ucp_status = ucp_ep_flush(ep);
     MPIDI_UCX_CHK_STATUS(ucp_status, ucp_worker_fence);
-    mpi_errno = MPIDI_CH4R_win_unlock(rank, win);
+    mpi_errno = MPIDI_CH4R_mpi_win_unlock(rank, win);
   fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
+static inline int MPIDI_NM_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_p)
 {
-    return MPIDI_CH4R_win_get_info(win, info_p_p);
+    return MPIDI_CH4R_mpi_win_get_info(win, info_p_p);
 }
 
 
-static inline int MPIDI_NM_win_free(MPIR_Win ** win_ptr)
+static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
 {
 
     int mpi_errno = MPI_SUCCESS;
@@ -250,7 +250,7 @@ static inline int MPIDI_NM_win_free(MPIR_Win ** win_ptr)
 
 }
 
-static inline int MPIDI_NM_win_fence(int assert, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_fence(int assert, MPIR_Win * win)
 {
     int mpi_errno;
     ucs_status_t ucp_status;
@@ -259,7 +259,7 @@ static inline int MPIDI_NM_win_fence(int assert, MPIR_Win * win)
     ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
 
 
-    mpi_errno = MPIDI_CH4R_win_fence(assert, win);
+    mpi_errno = MPIDI_CH4R_mpi_win_fence(assert, win);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -270,10 +270,11 @@ static inline int MPIDI_NM_win_fence(int assert, MPIR_Win * win)
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_win_create(void *base,
-                                      MPI_Aint length,
-                                      int disp_unit,
-                                      MPIR_Info * info, MPIR_Comm * comm_ptr, MPIR_Win ** win_ptr)
+static inline int MPIDI_NM_mpi_win_create(void *base,
+                                          MPI_Aint length,
+                                          int disp_unit,
+                                          MPIR_Info * info, MPIR_Comm * comm_ptr,
+                                          MPIR_Win ** win_ptr)
 {
 
     int mpi_errno = MPI_SUCCESS;
@@ -310,36 +311,38 @@ static inline int MPIDI_NM_win_create(void *base,
 
 }
 
-static inline int MPIDI_NM_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
+static inline int MPIDI_NM_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint size)
 {
-    return MPIDI_CH4R_win_attach(win, base, size);
+    return MPIDI_CH4R_mpi_win_attach(win, base, size);
 }
 
-static inline int MPIDI_NM_win_allocate_shared(MPI_Aint size,
-                                               int disp_unit,
-                                               MPIR_Info * info_ptr,
-                                               MPIR_Comm * comm_ptr,
-                                               void **base_ptr, MPIR_Win ** win_ptr)
+static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
+                                                   int disp_unit,
+                                                   MPIR_Info * info_ptr,
+                                                   MPIR_Comm * comm_ptr,
+                                                   void **base_ptr, MPIR_Win ** win_ptr)
 {
-    return MPIDI_CH4R_win_allocate_shared(size, disp_unit, info_ptr, comm_ptr, base_ptr, win_ptr);
+    return MPIDI_CH4R_mpi_win_allocate_shared(size, disp_unit, info_ptr, comm_ptr, base_ptr,
+                                              win_ptr);
 }
 
-static inline int MPIDI_NM_win_detach(MPIR_Win * win, const void *base)
+static inline int MPIDI_NM_mpi_win_detach(MPIR_Win * win, const void *base)
 {
-    return MPIDI_CH4R_win_detach(win, base);
+    return MPIDI_CH4R_mpi_win_detach(win, base);
 }
 
-static inline int MPIDI_NM_win_shared_query(MPIR_Win * win,
-                                            int rank,
-                                            MPI_Aint * size, int *disp_unit, void *baseptr)
+static inline int MPIDI_NM_mpi_win_shared_query(MPIR_Win * win,
+                                                int rank,
+                                                MPI_Aint * size, int *disp_unit, void *baseptr)
 {
-    return MPIDI_CH4R_win_shared_query(win, rank, size, disp_unit, baseptr);
+    return MPIDI_CH4R_mpi_win_shared_query(win, rank, size, disp_unit, baseptr);
 }
 
-static inline int MPIDI_NM_win_allocate(MPI_Aint length,
-                                        int disp_unit,
-                                        MPIR_Info * info,
-                                        MPIR_Comm * comm_ptr, void *baseptr, MPIR_Win ** win_ptr)
+static inline int MPIDI_NM_mpi_win_allocate(MPI_Aint length,
+                                            int disp_unit,
+                                            MPIR_Info * info,
+                                            MPIR_Comm * comm_ptr, void *baseptr,
+                                            MPIR_Win ** win_ptr)
 {
 
     int mpi_errno = MPI_SUCCESS;
@@ -377,7 +380,7 @@ static inline int MPIDI_NM_win_allocate(MPI_Aint length,
 
 }
 
-static inline int MPIDI_NM_win_flush(int rank, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win)
 {
 
     int mpi_errno;
@@ -385,7 +388,7 @@ static inline int MPIDI_NM_win_flush(int rank, MPIR_Win * win)
 
     ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
 
-    mpi_errno = MPIDI_CH4R_win_flush(rank, win);
+    mpi_errno = MPIDI_CH4R_mpi_win_flush(rank, win);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 /* only flush the endpoint */
@@ -400,11 +403,11 @@ static inline int MPIDI_NM_win_flush(int rank, MPIR_Win * win)
 
 }
 
-static inline int MPIDI_NM_win_flush_local_all(MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_flush_local_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t ucp_status;
-    mpi_errno = MPIDI_CH4R_win_flush_local_all(win);
+    mpi_errno = MPIDI_CH4R_mpi_win_flush_local_all(win);
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -423,7 +426,7 @@ static inline int MPIDI_NM_win_flush_local_all(MPIR_Win * win)
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_win_unlock_all(MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_unlock_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t ucp_status;
@@ -431,23 +434,24 @@ static inline int MPIDI_NM_win_unlock_all(MPIR_Win * win)
     /*first we have to make sure that all operations are completed */
     ucp_status = ucp_worker_flush(MPIDI_UCX_global.worker);
     MPIDI_UCX_CHK_STATUS(ucp_status, ucp_worker_fence);
-    mpi_errno = MPIDI_CH4R_win_unlock_all(win);
+    mpi_errno = MPIDI_CH4R_mpi_win_unlock_all(win);
   fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm, MPIR_Win ** win)
+static inline int MPIDI_NM_mpi_win_create_dynamic(MPIR_Info * info, MPIR_Comm * comm,
+                                                  MPIR_Win ** win)
 {
-    return MPIDI_CH4R_win_create_dynamic(info, comm, win);
+    return MPIDI_CH4R_mpi_win_create_dynamic(info, comm, win);
 }
 
-static inline int MPIDI_NM_win_flush_local(int rank, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t ucp_status;
-    mpi_errno = MPIDI_CH4R_win_flush_local(rank, win);
+    mpi_errno = MPIDI_CH4R_mpi_win_flush_local(rank, win);
 
     ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(win->comm_ptr, rank);
     if (mpi_errno)
@@ -468,18 +472,18 @@ static inline int MPIDI_NM_win_flush_local(int rank, MPIR_Win * win)
 
 }
 
-static inline int MPIDI_NM_win_sync(MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_sync(MPIR_Win * win)
 {
-    return MPIDI_CH4R_win_sync(win);
+    return MPIDI_CH4R_mpi_win_sync(win);
 }
 
-static inline int MPIDI_NM_win_flush_all(MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_flush_all(MPIR_Win * win)
 {
 
 /*maybe we just flush all eps here? More efficient for smaller communicators...*/
     int mpi_errno = MPI_SUCCESS;
     ucs_status_t ucp_status;
-    mpi_errno = MPIDI_CH4R_win_flush_all(win);
+    mpi_errno = MPIDI_CH4R_mpi_win_flush_all(win);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -494,9 +498,9 @@ static inline int MPIDI_NM_win_flush_all(MPIR_Win * win)
 
 }
 
-static inline int MPIDI_NM_win_lock_all(int assert, MPIR_Win * win)
+static inline int MPIDI_NM_mpi_win_lock_all(int assert, MPIR_Win * win)
 {
-    return MPIDI_CH4R_win_lock_all(assert, win);
+    return MPIDI_CH4R_mpi_win_lock_all(assert, win);
 }
 
 

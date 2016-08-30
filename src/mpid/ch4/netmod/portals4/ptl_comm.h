@@ -14,10 +14,10 @@
 #include "ptl_impl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_comm_create_hook
+#define FUNCNAME MPIDI_NM_mpi_comm_create_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_comm_create_hook(MPIR_Comm * comm)
+static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     mpi_errno = MPIDI_CH4U_init_comm(comm);
@@ -25,10 +25,10 @@ static inline int MPIDI_NM_comm_create_hook(MPIR_Comm * comm)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_comm_free_hook
+#define FUNCNAME MPIDI_NM_mpi_comm_free_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_comm_free_hook(MPIR_Comm * comm)
+static inline int MPIDI_NM_mpi_comm_free_hook(MPIR_Comm * comm)
 {
     int mpi_errno = MPI_SUCCESS;
     mpi_errno = MPIDI_CH4U_destroy_comm(comm);

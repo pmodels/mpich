@@ -15,16 +15,16 @@
 #include "pmi.h"
 #include <ucp/api/ucp.h>
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_init
+#define FUNCNAME MPIDI_NM_mpi_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_init(int rank,
-                                int size,
-                                int appnum,
-                                int *tag_ub,
-                                MPIR_Comm * comm_world,
-                                MPIR_Comm * comm_self,
-                                int spawned, int num_contexts, void **netmod_contexts)
+static inline int MPIDI_NM_mpi_init(int rank,
+                                    int size,
+                                    int appnum,
+                                    int *tag_ub,
+                                    MPIR_Comm * comm_world,
+                                    MPIR_Comm * comm_self,
+                                    int spawned, int num_contexts, void **netmod_contexts)
 {
     int mpi_errno = MPI_SUCCESS, thr_err, pmi_errno;
     int str_errno = MPL_STR_SUCCESS;
@@ -108,7 +108,7 @@ static inline int MPIDI_NM_init(int rank,
         memset(remote_addr, 0x0, maxlen);
     }
 
-    MPIDI_CH4U_init(comm_world, comm_self, num_contexts, netmod_contexts);
+    MPIDI_CH4U_mpi_init(comm_world, comm_self, num_contexts, netmod_contexts);
 
     mpi_errno = MPIR_Datatype_init_names();
     MPIDI_CH4_UCX_MPI_ERROR(mpi_errno);
@@ -127,7 +127,7 @@ static inline int MPIDI_NM_init(int rank,
 
 }
 
-static inline int MPIDI_NM_finalize(void)
+static inline int MPIDI_NM_mpi_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS, thr_err, pmi_errno;
     int i, j, max_n_avts;
@@ -157,7 +157,7 @@ static inline int MPIDI_NM_finalize(void)
     if (MPIDI_UCX_global.pmi_addr_table)
         MPL_free(MPIDI_UCX_global.pmi_addr_table);
 
-    MPIDI_CH4U_finalize();
+    MPIDI_CH4U_mpi_finalize();
     PMI_Finalize();
 
   fn_exit:
@@ -305,14 +305,14 @@ static inline int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_free_mem(void *ptr)
+static inline int MPIDI_NM_mpi_free_mem(void *ptr)
 {
-    return MPIDI_CH4U_free_mem(ptr);
+    return MPIDI_CH4U_mpi_free_mem(ptr);
 }
 
-static inline void *MPIDI_NM_alloc_mem(size_t size, MPIR_Info * info_ptr)
+static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
-    return MPIDI_CH4U_alloc_mem(size, info_ptr);
+    return MPIDI_CH4U_mpi_alloc_mem(size, info_ptr);
 }
 
 #endif /* NETMOD_UCX_INIT_H_INCLUDED */

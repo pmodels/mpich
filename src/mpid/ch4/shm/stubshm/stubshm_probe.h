@@ -14,20 +14,20 @@
 #include "stubshm_impl.h"
 
 
-static inline int MPIDI_SHM_improbe(int source,
-                                    int tag,
-                                    MPIR_Comm * comm,
-                                    int context_offset,
-                                    int *flag, MPIR_Request ** message, MPI_Status * status)
+static inline int MPIDI_SHM_mpi_improbe(int source,
+                                        int tag,
+                                        MPIR_Comm * comm,
+                                        int context_offset,
+                                        int *flag, MPIR_Request ** message, MPI_Status * status)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_iprobe(int source,
-                                   int tag,
-                                   MPIR_Comm * comm,
-                                   int context_offset, int *flag, MPI_Status * status)
+static inline int MPIDI_SHM_mpi_iprobe(int source,
+                                       int tag,
+                                       MPIR_Comm * comm,
+                                       int context_offset, int *flag, MPI_Status * status)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

@@ -40,16 +40,16 @@ static inline int MPIDI_PTL_append_overflow(size_t i)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_init
+#define FUNCNAME MPIDI_NM_mpi_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_init(int rank,
-                                int size,
-                                int appnum,
-                                int *tag_ub,
-                                MPIR_Comm * comm_world,
-                                MPIR_Comm * comm_self,
-                                int spawned, int num_contexts, void **netmod_contexts)
+static inline int MPIDI_NM_mpi_init(int rank,
+                                    int size,
+                                    int appnum,
+                                    int *tag_ub,
+                                    MPIR_Comm * comm_world,
+                                    MPIR_Comm * comm_self,
+                                    int spawned, int num_contexts, void **netmod_contexts)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
@@ -163,7 +163,7 @@ static inline int MPIDI_NM_init(int rank,
     }
 
     /* Setup CH4R Active Messages */
-    MPIDI_CH4U_init(comm_world, comm_self, num_contexts, netmod_contexts);
+    MPIDI_CH4U_mpi_init(comm_world, comm_self, num_contexts, netmod_contexts);
     for (i = 0; i < MPIDI_PTL_NUM_OVERFLOW_BUFFERS; i++) {
         MPIDI_PTL_global.overflow_bufs[i] = MPL_malloc(MPIDI_PTL_OVERFLOW_BUFFER_SZ);
         MPIDI_PTL_append_overflow(i);
@@ -183,7 +183,7 @@ static inline int MPIDI_NM_init(int rank,
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_finalize(void)
+static inline int MPIDI_NM_mpi_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret, i;
@@ -191,7 +191,7 @@ static inline int MPIDI_NM_finalize(void)
     MPIR_Comm_release(MPIR_Process.comm_world);
     MPIR_Comm_release(MPIR_Process.comm_self);
 
-    MPIDI_CH4U_finalize();
+    MPIDI_CH4U_mpi_finalize();
 
     for (i = 0; i < MPIDI_PTL_NUM_OVERFLOW_BUFFERS; i++) {
         ret = PtlMEUnlink(MPIDI_PTL_global.overflow_me_handles[i]);
@@ -245,14 +245,14 @@ static inline int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_free_mem(void *ptr)
+static inline int MPIDI_NM_mpi_free_mem(void *ptr)
 {
-    return MPIDI_CH4U_free_mem(ptr);
+    return MPIDI_CH4U_mpi_free_mem(ptr);
 }
 
-static inline void *MPIDI_NM_alloc_mem(size_t size, MPIR_Info * info_ptr)
+static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
-    return MPIDI_CH4U_alloc_mem(size, info_ptr);
+    return MPIDI_CH4U_mpi_alloc_mem(size, info_ptr);
 }
 
 
