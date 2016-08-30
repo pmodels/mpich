@@ -138,15 +138,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         ofilib="src/mpid/ch4/netmod/ofi/libfabric/src/libfabric.la"
     fi
 
-    case $host_os in
-      darwin* )
-        PAC_APPEND_FLAG([-lstdc++ -ldl],[WRAPPER_LIBS])
-        ;;
-      *)
-        PAC_APPEND_FLAG([-lstdc++ -ldl -lrt],[WRAPPER_LIBS])
-        ;;
-    esac
-
 ])dnl end AM_COND_IF(BUILD_CH4_NETMOD_OFI,...)
 ])dnl end _BODY
 
