@@ -248,9 +248,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Init(int *argc,
     MPIR_Process.attrs.tag_ub = (1ULL << MPIDI_CH4U_TAG_SHIFT) - 1;
     /* discuss */
 
-    mpi_errno = MPIDI_NM_mpi_init(rank, size, appnum, &MPIR_Process.attrs.tag_ub,
-                                  MPIR_Process.comm_world,
-                                  MPIR_Process.comm_self, has_parent, 1, &netmod_contexts);
+    mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &MPIR_Process.attrs.tag_ub,
+                                       MPIR_Process.comm_world,
+                                       MPIR_Process.comm_self, has_parent, 1, &netmod_contexts);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POPFATAL(mpi_errno);
     }
@@ -279,7 +279,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Init(int *argc,
 #endif
 
 #ifdef MPIDI_BUILD_CH4_SHM
-    mpi_errno = MPIDI_SHM_mpi_init(rank, size);
+    mpi_errno = MPIDI_SHM_mpi_init_hook(rank, size);
 
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POPFATAL(mpi_errno);
@@ -346,11 +346,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Finalize(void)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_FINALIZE);
 
-    mpi_errno = MPIDI_NM_mpi_finalize();
+    mpi_errno = MPIDI_NM_mpi_finalize_hook();
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 #ifdef MPIDI_BUILD_CH4_SHM
-    mpi_errno = MPIDI_SHM_mpi_finalize();
+    mpi_errno = MPIDI_SHM_mpi_finalize_hook();
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 #endif

@@ -16,16 +16,16 @@
 #ifndef NETMOD_DIRECT
 #ifndef NETMOD_DISABLE_INLINES
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init(int rank, int size, int appnum, int *tag_ub,
-                                               MPIR_Comm * comm_world, MPIR_Comm * comm_self,
-                                               int spawned, int num_contexts,
-                                               void **netmod_contexts)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank, int size, int appnum, int *tag_ub,
+                                                    MPIR_Comm * comm_world, MPIR_Comm * comm_self,
+                                                    int spawned, int num_contexts,
+                                                    void **netmod_contexts)
 {
     return MPIDI_NM_func->mpi_init(rank, size, appnum, tag_ub, comm_world, comm_self, spawned,
                                    num_contexts, netmod_contexts);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize(void)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void)
 {
     return MPIDI_NM_func->mpi_finalize();
 };

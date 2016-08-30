@@ -14,8 +14,8 @@
 #include <mpidimpl.h>
 #include "netmod_direct.h"
 MPIDI_NM_funcs_t MPIDI_NM_ofi_funcs = {
-    MPIDI_NM_mpi_init,
-    MPIDI_NM_mpi_finalize,
+    MPIDI_NM_mpi_init_hook,
+    MPIDI_NM_mpi_finalize_hook,
     MPIDI_NM_progress,
     MPIDI_NM_mpi_comm_connect,
     MPIDI_NM_mpi_comm_disconnect,

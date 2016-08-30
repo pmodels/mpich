@@ -13,13 +13,13 @@
 
 #include "stubnm_impl.h"
 
-static inline int MPIDI_NM_mpi_init(int rank,
-                                    int size,
-                                    int appnum,
-                                    int *tag_ub,
-                                    MPIR_Comm * comm_world,
-                                    MPIR_Comm * comm_self,
-                                    int spawned, int num_contexts, void **netmod_contexts)
+static inline int MPIDI_NM_mpi_init_hook(int rank,
+                                         int size,
+                                         int appnum,
+                                         int *tag_ub,
+                                         MPIR_Comm * comm_world,
+                                         MPIR_Comm * comm_self,
+                                         int spawned, int num_contexts, void **netmod_contexts)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -28,7 +28,7 @@ static inline int MPIDI_NM_mpi_init(int rank,
     return mpi_errno;
 }
 
-static inline int MPIDI_NM_mpi_finalize(void)
+static inline int MPIDI_NM_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Assert(0);

@@ -15,12 +15,12 @@
 #ifndef SHM_DIRECT
 #ifndef SHM_DISABLE_INLINES
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init(int rank, int size)
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init_hook(int rank, int size)
 {
     return MPIDI_SHM_func->mpi_init(rank, size);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_finalize(void)
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_finalize_hook(void)
 {
     return MPIDI_SHM_func->mpi_finalize();
 };

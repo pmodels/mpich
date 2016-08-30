@@ -504,11 +504,12 @@ extern MPIDI_NM_native_funcs_t *MPIDI_NM_native_func;
 extern int MPIDI_num_netmods;
 extern char MPIDI_NM_strings[][MPIDI_MAX_NETMOD_STRING_LEN];
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init(int rank, int size, int appnum, int *tag_ub,
-                                               MPIR_Comm * comm_world, MPIR_Comm * comm_self,
-                                               int spawned, int num_contexts,
-                                               void **netmod_contexts) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize(void) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank, int size, int appnum, int *tag_ub,
+                                                    MPIR_Comm * comm_world, MPIR_Comm * comm_self,
+                                                    int spawned, int num_contexts,
+                                                    void **netmod_contexts)
+    MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(void *netmod_context,
                                                int blocking) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_reg_handler(int handler_id,

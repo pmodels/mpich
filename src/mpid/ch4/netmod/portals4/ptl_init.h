@@ -40,16 +40,16 @@ static inline int MPIDI_PTL_append_overflow(size_t i)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_init
+#define FUNCNAME MPIDI_NM_mpi_init_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_init(int rank,
-                                    int size,
-                                    int appnum,
-                                    int *tag_ub,
-                                    MPIR_Comm * comm_world,
-                                    MPIR_Comm * comm_self,
-                                    int spawned, int num_contexts, void **netmod_contexts)
+static inline int MPIDI_NM_mpi_init_hook(int rank,
+                                         int size,
+                                         int appnum,
+                                         int *tag_ub,
+                                         MPIR_Comm * comm_world,
+                                         MPIR_Comm * comm_self,
+                                         int spawned, int num_contexts, void **netmod_contexts)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
@@ -183,7 +183,7 @@ static inline int MPIDI_NM_mpi_init(int rank,
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_mpi_finalize(void)
+static inline int MPIDI_NM_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret, i;
