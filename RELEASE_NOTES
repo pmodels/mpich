@@ -2,6 +2,17 @@
                         KNOWN ISSUES
 ----------------------------------------------------------------------
 
+### CH4 preview
+
+ * Build Issues
+   - CH4 will not build with "--enable-strict".
+   - CH4 will not build with Solaris compilers.
+
+ * Test failures
+   - CH4 will not currently pass 100% of the testsuite.
+   - Test failures differ based on experimental setup and network
+     support built in.
+
 ### Solaris compilers
 
  * Compilation on solaris will freeze when MPICH is configured with 
