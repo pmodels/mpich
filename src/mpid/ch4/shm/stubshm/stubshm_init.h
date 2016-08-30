@@ -13,13 +13,13 @@
 
 #include "stubshm_impl.h"
 
-static inline int MPIDI_SHM_mpi_init(int rank, int size)
+static inline int MPIDI_SHM_mpi_init_hook(int rank, int size)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_mpi_finalize(void)
+static inline int MPIDI_SHM_mpi_finalize_hook(void)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

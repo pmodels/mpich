@@ -482,16 +482,16 @@ static inline int MPIDI_OFI_init_generic(int rank,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_init
+#define FUNCNAME MPIDI_NM_mpi_init_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_init(int rank,
-                                    int size,
-                                    int appnum,
-                                    int *tag_ub,
-                                    MPIR_Comm * comm_world,
-                                    MPIR_Comm * comm_self,
-                                    int spawned, int num_contexts, void **netmod_contexts)
+static inline int MPIDI_NM_mpi_init_hook(int rank,
+                                         int size,
+                                         int appnum,
+                                         int *tag_ub,
+                                         MPIR_Comm * comm_world,
+                                         MPIR_Comm * comm_self,
+                                         int spawned, int num_contexts, void **netmod_contexts)
 {
     int mpi_errno;
     mpi_errno = MPIDI_OFI_init_generic(rank, size, appnum, tag_ub, comm_world,
@@ -589,7 +589,7 @@ static inline int MPIDI_OFI_finalize_generic(int do_scalable_ep, int do_am, int 
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_mpi_finalize(void)
+static inline int MPIDI_NM_mpi_finalize_hook(void)
 {
     return MPIDI_OFI_finalize_generic(MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS,
                                       MPIDI_OFI_ENABLE_AM, MPIDI_OFI_ENABLE_STX_RMA);

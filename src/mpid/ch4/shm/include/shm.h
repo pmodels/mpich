@@ -527,8 +527,8 @@ extern MPIDI_SHM_native_funcs_t *MPIDI_SHM_native_func;
 extern int MPIDI_num_shms;
 extern char MPIDI_SHM_strings[][MPIDI_MAX_SHM_STRING_LEN];
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init(int rank, int size) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_finalize(void) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init_hook(int rank, int size) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_finalize_hook(void) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int blocking) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_reg_handler(int handler_id,
                                                       MPIDI_SHM_am_origin_handler_fn

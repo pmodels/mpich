@@ -224,7 +224,7 @@ static inline MPIR_Request *MPIR_Request_create(MPIR_Request_kind_t kind)
             break;
         }
 
-        MPID_Request_init(req);
+        MPID_Request_create_hook(req);
     }
     else
     {
@@ -281,7 +281,7 @@ static inline void MPIR_Request_free(MPIR_Request *req)
             MPL_free(req->u.ureq.greq_fns);
         }
 
-        MPID_Request_finalize(req);
+        MPID_Request_free_hook(req);
 
         MPIR_Handle_obj_free(&MPIR_Request_mem, req);
     }

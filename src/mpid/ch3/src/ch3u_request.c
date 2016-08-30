@@ -24,10 +24,10 @@
 /* See the comments above about request creation.  Some routines will
    use macros in mpidimpl.h *instead* of this routine */
 #undef FUNCNAME
-#define FUNCNAME MPID_Request_init
+#define FUNCNAME MPID_Request_create_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-void MPID_Request_init(MPIR_Request *req)
+void MPID_Request_create_hook(MPIR_Request *req)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REQUEST_INIT);
 
@@ -588,7 +588,7 @@ int MPID_Request_complete(MPIR_Request *req)
     goto fn_exit;
 }
 
-void MPID_Request_finalize(MPIR_Request *req)
+void MPID_Request_free_hook(MPIR_Request *req)
 {
     if (req->dev.datatype_ptr != NULL) {
         MPIDU_Datatype_release(req->dev.datatype_ptr);

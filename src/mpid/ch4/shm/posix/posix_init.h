@@ -22,8 +22,8 @@ extern MPIDI_POSIX_mem_region_t MPIDI_POSIX_mem_region;
 extern char *MPIDI_POSIX_asym_base_addr;
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_SHM_mpi_init)
-static inline int MPIDI_SHM_mpi_init(int rank, int size)
+#define FCNAME DECL_FUNC(MPIDI_SHM_mpi_init_hook)
+static inline int MPIDI_SHM_mpi_init_hook(int rank, int size)
 {
     int mpi_errno = MPI_SUCCESS;
     int num_local = 0;
@@ -229,8 +229,8 @@ static inline int MPIDI_SHM_mpi_init(int rank, int size)
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_SHM_mpi_finalize)
-static inline int MPIDI_SHM_mpi_finalize(void)
+#define FCNAME DECL_FUNC(MPIDI_SHM_mpi_finalize_hook)
+static inline int MPIDI_SHM_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_FINALIZE);
