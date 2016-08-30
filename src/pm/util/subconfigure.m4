@@ -255,6 +255,7 @@ if test "$ac_cv_func_thread_policy_set" = yes ; then
 fi
 
 AC_CHECK_HEADERS([string.h sys/time.h time.h stdlib.h sys/socket.h wait.h errno.h])
+AC_CHECK_FUNCS(time)
 # Check for socklen_t .  
 # (note the conditional inclusion of sys/socket.h)
 AC_CACHE_CHECK([whether socklen_t is defined (in sys/socket.h if present)],
