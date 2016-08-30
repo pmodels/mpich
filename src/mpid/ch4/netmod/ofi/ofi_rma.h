@@ -162,16 +162,16 @@ static inline void MPIDI_OFI_win_datatype_map(MPIDI_OFI_win_datatype_t * dt)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_WIN_DATATYPE_MAP);
 }
 
-__ALWAYS_INLINE__ int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * win,
-                                                             int origin_count,
-                                                             int target_count,
-                                                             int target_rank,
-                                                             MPI_Datatype origin_datatype,
-                                                             MPI_Datatype target_datatype,
-                                                             MPIDI_OFI_win_request_t ** winreq,
-                                                             uint64_t * flags,
-                                                             struct fid_ep **ep,
-                                                             MPIR_Request ** sigreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * win,
+                                                                    int origin_count,
+                                                                    int target_count,
+                                                                    int target_rank,
+                                                                    MPI_Datatype origin_datatype,
+                                                                    MPI_Datatype target_datatype,
+                                                                    MPIDI_OFI_win_request_t **
+                                                                    winreq, uint64_t * flags,
+                                                                    struct fid_ep **ep,
+                                                                    MPIR_Request ** sigreq)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t o_size, t_size;
@@ -200,16 +200,16 @@ __ALWAYS_INLINE__ int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * win,
     goto fn_exit;
 }
 
-__ALWAYS_INLINE__ int MPIDI_OFI_allocate_win_request_accumulate(MPIR_Win * win,
-                                                                int origin_count,
-                                                                int target_count,
-                                                                int target_rank,
-                                                                MPI_Datatype origin_datatype,
-                                                                MPI_Datatype target_datatype,
-                                                                MPIDI_OFI_win_request_t ** winreq,
-                                                                uint64_t * flags,
-                                                                struct fid_ep **ep,
-                                                                MPIR_Request ** sigreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_accumulate(MPIR_Win * win,
+                                                                       int origin_count,
+                                                                       int target_count,
+                                                                       int target_rank,
+                                                                       MPI_Datatype origin_datatype,
+                                                                       MPI_Datatype target_datatype,
+                                                                       MPIDI_OFI_win_request_t **
+                                                                       winreq, uint64_t * flags,
+                                                                       struct fid_ep **ep,
+                                                                       MPIR_Request ** sigreq)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t o_size, t_size;
@@ -239,19 +239,23 @@ __ALWAYS_INLINE__ int MPIDI_OFI_allocate_win_request_accumulate(MPIR_Win * win,
     goto fn_exit;
 }
 
-__ALWAYS_INLINE__ int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_Win * win,
-                                                                    int origin_count,
-                                                                    int target_count,
-                                                                    int result_count,
-                                                                    int target_rank,
-                                                                    MPI_Op op,
-                                                                    MPI_Datatype origin_datatype,
-                                                                    MPI_Datatype target_datatype,
-                                                                    MPI_Datatype result_datatype,
-                                                                    MPIDI_OFI_win_request_t **
-                                                                    winreq, uint64_t * flags,
-                                                                    struct fid_ep **ep,
-                                                                    MPIR_Request ** sigreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_Win * win,
+                                                                           int origin_count,
+                                                                           int target_count,
+                                                                           int result_count,
+                                                                           int target_rank,
+                                                                           MPI_Op op,
+                                                                           MPI_Datatype
+                                                                           origin_datatype,
+                                                                           MPI_Datatype
+                                                                           target_datatype,
+                                                                           MPI_Datatype
+                                                                           result_datatype,
+                                                                           MPIDI_OFI_win_request_t
+                                                                           ** winreq,
+                                                                           uint64_t * flags,
+                                                                           struct fid_ep **ep,
+                                                                           MPIR_Request ** sigreq)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t o_size, t_size, r_size;
