@@ -13,25 +13,25 @@
 
 #include "stubshm_impl.h"
 
-static inline int MPIDI_SHM_init(int rank, int size)
+static inline int MPIDI_SHM_mpi_init(int rank, int size)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_finalize(void)
+static inline int MPIDI_SHM_mpi_finalize(void)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline void *MPIDI_SHM_alloc_mem(size_t size, MPIR_Info * info_ptr)
+static inline void *MPIDI_SHM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
     MPIR_Assert(0);
     return NULL;
 }
 
-static inline int MPIDI_SHM_free_mem(void *ptr)
+static inline int MPIDI_SHM_mpi_free_mem(void *ptr)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
@@ -83,10 +83,10 @@ static inline int MPIDI_SHM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_SHM_type_create_hook
+#define FUNCNAME MPIDI_SHM_mpi_type_create_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_SHM_type_create_hook(MPIR_Datatype * type)
+static inline int MPIDI_SHM_mpi_type_create_hook(MPIR_Datatype * type)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SHM_TYPE_CREATE_HOOK);
@@ -97,10 +97,10 @@ static inline int MPIDI_SHM_type_create_hook(MPIR_Datatype * type)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_SHM_type_free_hook
+#define FUNCNAME MPIDI_SHM_mpi_type_free_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_SHM_type_free_hook(MPIR_Datatype * type)
+static inline int MPIDI_SHM_mpi_type_free_hook(MPIR_Datatype * type)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SHM_TYPE_FREE_HOOK);
@@ -111,10 +111,10 @@ static inline int MPIDI_SHM_type_free_hook(MPIR_Datatype * type)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_SHM_op_create_hook
+#define FUNCNAME MPIDI_SHM_mpi_op_create_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_SHM_op_create_hook(MPIR_Op * op)
+static inline int MPIDI_SHM_mpi_op_create_hook(MPIR_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SHM_OP_CREATE_HOOK);
@@ -125,10 +125,10 @@ static inline int MPIDI_SHM_op_create_hook(MPIR_Op * op)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_SHM_op_free_hook
+#define FUNCNAME MPIDI_SHM_mpi_op_free_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_SHM_op_free_hook(MPIR_Op * op)
+static inline int MPIDI_SHM_mpi_op_free_hook(MPIR_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SHM_OP_FREE_HOOK);

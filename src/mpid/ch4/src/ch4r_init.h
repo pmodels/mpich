@@ -32,7 +32,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_init_comm(MPIR_Comm * comm)
     /*
      * Prevents double initialization of some special communicators.
      *
-     * comm_world and comm_self may exhibit this function twice, first during MPIDI_CH4U_init
+     * comm_world and comm_self may exhibit this function twice, first during MPIDI_CH4U_mpi_init
      * and the second during MPIR_Comm_commit in MPIDI_Init.
      * If there is an early arrival of an unexpected message before the second visit,
      * the following code will wipe out the unexpected queue andthe message is lost forever.
@@ -101,11 +101,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_destroy_comm(MPIR_Comm * comm)
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_init
+#define FUNCNAME MPIDI_CH4U_mpi_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self,
-                                             int num_contexts, void **netmod_contexts)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self,
+                                                 int num_contexts, void **netmod_contexts)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_INIT);
@@ -319,10 +319,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_init(MPIR_Comm * comm_world, MPIR_Comm *
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_init
+#define FUNCNAME MPIDI_CH4U_mpi_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_finalize()
+MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_mpi_finalize()
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_FINALIZE);
@@ -334,10 +334,10 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_finalize()
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_alloc_mem
+#define FUNCNAME MPIDI_CH4U_mpi_alloc_mem
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void *MPIDI_CH4U_alloc_mem(size_t size, MPIR_Info * info_ptr)
+MPL_STATIC_INLINE_PREFIX void *MPIDI_CH4U_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_ALLOC_MEM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_ALLOC_MEM);
@@ -348,10 +348,10 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_CH4U_alloc_mem(size_t size, MPIR_Info * inf
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_free_mem
+#define FUNCNAME MPIDI_CH4U_mpi_free_mem
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_free_mem(void *ptr)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_free_mem(void *ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_FREE_MEM);

@@ -137,16 +137,16 @@ static inline int MPIDI_CH4I_psend(const void *buf,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_send
+#define FUNCNAME MPIDI_CH4U_mpi_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_send(const void *buf,
-                                             int count,
-                                             MPI_Datatype datatype,
-                                             int rank,
-                                             int tag,
-                                             MPIR_Comm * comm, int context_offset,
-                                             MPIR_Request ** request)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_send(const void *buf,
+                                                 int count,
+                                                 MPI_Datatype datatype,
+                                                 int rank,
+                                                 int tag,
+                                                 MPIR_Comm * comm, int context_offset,
+                                                 MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_SEND);
@@ -158,16 +158,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_send(const void *buf,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_isend
+#define FUNCNAME MPIDI_CH4U_mpi_isend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_isend(const void *buf,
-                                              int count,
-                                              MPI_Datatype datatype,
-                                              int rank,
-                                              int tag,
-                                              MPIR_Comm * comm, int context_offset,
-                                              MPIR_Request ** request)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_isend(const void *buf,
+                                                  int count,
+                                                  MPI_Datatype datatype,
+                                                  int rank,
+                                                  int tag,
+                                                  MPIR_Comm * comm, int context_offset,
+                                                  MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_ISEND);
@@ -224,16 +224,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_irsend(const void *buf,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_ssend
+#define FUNCNAME MPIDI_CH4U_mpi_ssend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_ssend(const void *buf,
-                                              int count,
-                                              MPI_Datatype datatype,
-                                              int rank,
-                                              int tag,
-                                              MPIR_Comm * comm, int context_offset,
-                                              MPIR_Request ** request)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_ssend(const void *buf,
+                                                  int count,
+                                                  MPI_Datatype datatype,
+                                                  int rank,
+                                                  int tag,
+                                                  MPIR_Comm * comm, int context_offset,
+                                                  MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_SSEND);
@@ -245,16 +245,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_ssend(const void *buf,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_issend
+#define FUNCNAME MPIDI_CH4U_mpi_issend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_issend(const void *buf,
-                                               int count,
-                                               MPI_Datatype datatype,
-                                               int rank,
-                                               int tag,
-                                               MPIR_Comm * comm, int context_offset,
-                                               MPIR_Request ** request)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_issend(const void *buf,
+                                                   int count,
+                                                   MPI_Datatype datatype,
+                                                   int rank,
+                                                   int tag,
+                                                   MPIR_Comm * comm, int context_offset,
+                                                   MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_ISSEND);
@@ -266,10 +266,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_issend(const void *buf,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_startall
+#define FUNCNAME MPIDI_CH4U_mpi_startall
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_startall(int count, MPIR_Request * requests[])
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_startall(int count, MPIR_Request * requests[])
 {
     int mpi_errno = MPI_SUCCESS, i;
     int rank, tag, context_offset;
@@ -294,10 +294,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_startall(int count, MPIR_Request * reque
 
         case MPIDI_PTYPE_RECV:
 #ifdef MPIDI_BUILD_CH4_SHM
-            mpi_errno = MPIDI_NM_irecv(MPIDI_CH4U_REQUEST(preq, buffer),
-                                       MPIDI_CH4U_REQUEST(preq, count),
-                                       datatype, rank, tag,
-                                       preq->comm, context_offset, &preq->u.persist.real_request);
+            mpi_errno = MPIDI_NM_mpi_irecv(MPIDI_CH4U_REQUEST(preq, buffer),
+                                           MPIDI_CH4U_REQUEST(preq, count),
+                                           datatype, rank, tag,
+                                           preq->comm, context_offset,
+                                           &preq->u.persist.real_request);
 #else
             mpi_errno = MPIDI_Irecv(MPIDI_CH4U_REQUEST(preq, buffer),
                                     MPIDI_CH4U_REQUEST(preq, count),
@@ -308,10 +309,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_startall(int count, MPIR_Request * reque
 
         case MPIDI_PTYPE_SEND:
 #ifdef MPIDI_BUILD_CH4_SHM
-            mpi_errno = MPIDI_NM_isend(MPIDI_CH4U_REQUEST(preq, buffer),
-                                       MPIDI_CH4U_REQUEST(preq, count),
-                                       datatype, rank, tag,
-                                       preq->comm, context_offset, &preq->u.persist.real_request);
+            mpi_errno = MPIDI_NM_mpi_isend(MPIDI_CH4U_REQUEST(preq, buffer),
+                                           MPIDI_CH4U_REQUEST(preq, count),
+                                           datatype, rank, tag,
+                                           preq->comm, context_offset,
+                                           &preq->u.persist.real_request);
 #else
             mpi_errno = MPIDI_Isend(MPIDI_CH4U_REQUEST(preq, buffer),
                                     MPIDI_CH4U_REQUEST(preq, count),
@@ -322,10 +324,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_startall(int count, MPIR_Request * reque
 
         case MPIDI_PTYPE_SSEND:
 #ifdef MPIDI_BUILD_CH4_SHM
-            mpi_errno = MPIDI_NM_issend(MPIDI_CH4U_REQUEST(preq, buffer),
-                                        MPIDI_CH4U_REQUEST(preq, count),
-                                        datatype, rank, tag,
-                                        preq->comm, context_offset, &preq->u.persist.real_request);
+            mpi_errno = MPIDI_NM_mpi_issend(MPIDI_CH4U_REQUEST(preq, buffer),
+                                            MPIDI_CH4U_REQUEST(preq, count),
+                                            datatype, rank, tag,
+                                            preq->comm, context_offset,
+                                            &preq->u.persist.real_request);
 #else
             mpi_errno = MPIDI_Issend(MPIDI_CH4U_REQUEST(preq, buffer),
                                      MPIDI_CH4U_REQUEST(preq, count),
@@ -374,16 +377,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_startall(int count, MPIR_Request * reque
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_send_init
+#define FUNCNAME MPIDI_CH4U_mpi_send_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_send_init(const void *buf,
-                                                  int count,
-                                                  MPI_Datatype datatype,
-                                                  int rank,
-                                                  int tag,
-                                                  MPIR_Comm * comm,
-                                                  int context_offset, MPIR_Request ** request)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_send_init(const void *buf,
+                                                      int count,
+                                                      MPI_Datatype datatype,
+                                                      int rank,
+                                                      int tag,
+                                                      MPIR_Comm * comm,
+                                                      int context_offset, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_SEND_INIT);
@@ -395,16 +398,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_send_init(const void *buf,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_ssend_init
+#define FUNCNAME MPIDI_CH4U_mpi_ssend_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_ssend_init(const void *buf,
-                                                   int count,
-                                                   MPI_Datatype datatype,
-                                                   int rank,
-                                                   int tag,
-                                                   MPIR_Comm * comm,
-                                                   int context_offset, MPIR_Request ** request)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_ssend_init(const void *buf,
+                                                       int count,
+                                                       MPI_Datatype datatype,
+                                                       int rank,
+                                                       int tag,
+                                                       MPIR_Comm * comm,
+                                                       int context_offset, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_SSEND_INIT);
@@ -416,16 +419,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_ssend_init(const void *buf,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_bsend_init
+#define FUNCNAME MPIDI_CH4U_mpi_bsend_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_bsend_init(const void *buf,
-                                                   int count,
-                                                   MPI_Datatype datatype,
-                                                   int rank,
-                                                   int tag,
-                                                   MPIR_Comm * comm,
-                                                   int context_offset, MPIR_Request ** request)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_bsend_init(const void *buf,
+                                                       int count,
+                                                       MPI_Datatype datatype,
+                                                       int rank,
+                                                       int tag,
+                                                       MPIR_Comm * comm,
+                                                       int context_offset, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_BSEND_INIT);
@@ -437,16 +440,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_bsend_init(const void *buf,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_rsend_init
+#define FUNCNAME MPIDI_CH4U_mpi_rsend_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_rsend_init(const void *buf,
-                                                   int count,
-                                                   MPI_Datatype datatype,
-                                                   int rank,
-                                                   int tag,
-                                                   MPIR_Comm * comm,
-                                                   int context_offset, MPIR_Request ** request)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_rsend_init(const void *buf,
+                                                       int count,
+                                                       MPI_Datatype datatype,
+                                                       int rank,
+                                                       int tag,
+                                                       MPIR_Comm * comm,
+                                                       int context_offset, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_RSEND_INIT);
@@ -458,10 +461,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_rsend_init(const void *buf,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_cancel_send
+#define FUNCNAME MPIDI_CH4U_mpi_cancel_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_cancel_send(MPIR_Request * sreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_cancel_send(MPIR_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_CANCEL_SEND);

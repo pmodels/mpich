@@ -392,7 +392,7 @@ static inline int MPIDI_OFI_init_generic(int rank,
         MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_Global.max_send);
         MPIDI_Global.am_buf_pool =
             MPIDI_CH4U_create_buf_pool(MPIDI_OFI_BUF_POOL_NUM, MPIDI_OFI_BUF_POOL_SIZE);
-        mpi_errno = MPIDI_CH4U_init(comm_world, comm_self, num_contexts, netmod_contexts);
+        mpi_errno = MPIDI_CH4U_mpi_init(comm_world, comm_self, num_contexts, netmod_contexts);
 
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -482,16 +482,16 @@ static inline int MPIDI_OFI_init_generic(int rank,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_init
+#define FUNCNAME MPIDI_NM_mpi_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_init(int rank,
-                                int size,
-                                int appnum,
-                                int *tag_ub,
-                                MPIR_Comm * comm_world,
-                                MPIR_Comm * comm_self,
-                                int spawned, int num_contexts, void **netmod_contexts)
+static inline int MPIDI_NM_mpi_init(int rank,
+                                    int size,
+                                    int appnum,
+                                    int *tag_ub,
+                                    MPIR_Comm * comm_world,
+                                    MPIR_Comm * comm_self,
+                                    int spawned, int num_contexts, void **netmod_contexts)
 {
     int mpi_errno;
     mpi_errno = MPIDI_OFI_init_generic(rank, size, appnum, tag_ub, comm_world,
@@ -562,7 +562,7 @@ static inline int MPIDI_OFI_finalize_generic(int do_scalable_ep, int do_am, int 
     comm = MPIR_Process.comm_self;
     MPIR_Comm_release_always(comm);
 
-    MPIDI_CH4U_finalize();
+    MPIDI_CH4U_mpi_finalize();
 
     MPIDI_OFI_map_destroy(MPIDI_Global.win_map);
 
@@ -589,13 +589,13 @@ static inline int MPIDI_OFI_finalize_generic(int do_scalable_ep, int do_am, int 
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_finalize(void)
+static inline int MPIDI_NM_mpi_finalize(void)
 {
     return MPIDI_OFI_finalize_generic(MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS,
                                       MPIDI_OFI_ENABLE_AM, MPIDI_OFI_ENABLE_STX_RMA);
 }
 
-static inline void *MPIDI_NM_alloc_mem(size_t size, MPIR_Info * info_ptr)
+static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
 
     void *ap;
@@ -603,7 +603,7 @@ static inline void *MPIDI_NM_alloc_mem(size_t size, MPIR_Info * info_ptr)
     return ap;
 }
 
-static inline int MPIDI_NM_free_mem(void *ptr)
+static inline int MPIDI_NM_mpi_free_mem(void *ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPL_free(ptr);

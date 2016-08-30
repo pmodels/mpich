@@ -93,14 +93,15 @@ static inline int MPIDI_POSIX_do_irecv(void *buf,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_SHM_recv)
-static inline int MPIDI_SHM_recv(void *buf,
-                                 int count,
-                                 MPI_Datatype datatype,
-                                 int rank,
-                                 int tag,
-                                 MPIR_Comm * comm,
-                                 int context_offset, MPI_Status * status, MPIR_Request ** request)
+#define FCNAME DECL_FUNC(MPIDI_SHM_mpi_recv)
+static inline int MPIDI_SHM_mpi_recv(void *buf,
+                                     int count,
+                                     MPI_Datatype datatype,
+                                     int rank,
+                                     int tag,
+                                     MPIR_Comm * comm,
+                                     int context_offset, MPI_Status * status,
+                                     MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS, dt_contig __attribute__ ((__unused__));
     size_t data_sz __attribute__ ((__unused__));
@@ -118,13 +119,14 @@ static inline int MPIDI_SHM_recv(void *buf,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_SHM_recv)
-static inline int MPIDI_SHM_recv_init(void *buf,
-                                      int count,
-                                      MPI_Datatype datatype,
-                                      int rank,
-                                      int tag,
-                                      MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
+#define FCNAME DECL_FUNC(MPIDI_SHM_mpi_recv)
+static inline int MPIDI_SHM_mpi_recv_init(void *buf,
+                                          int count,
+                                          MPI_Datatype datatype,
+                                          int rank,
+                                          int tag,
+                                          MPIR_Comm * comm, int context_offset,
+                                          MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
@@ -150,10 +152,10 @@ static inline int MPIDI_SHM_recv_init(void *buf,
 }
 
 
-static inline int MPIDI_SHM_imrecv(void *buf,
-                                   int count,
-                                   MPI_Datatype datatype,
-                                   MPIR_Request * message, MPIR_Request ** rreqp)
+static inline int MPIDI_SHM_mpi_imrecv(void *buf,
+                                       int count,
+                                       MPI_Datatype datatype,
+                                       MPIR_Request * message, MPIR_Request ** rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
@@ -293,13 +295,13 @@ static inline int MPIDI_SHM_imrecv(void *buf,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_SHM_irecv)
-static inline int MPIDI_SHM_irecv(void *buf,
-                                  int count,
-                                  MPI_Datatype datatype,
-                                  int rank,
-                                  int tag,
-                                  MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
+#define FCNAME DECL_FUNC(MPIDI_SHM_mpi_irecv)
+static inline int MPIDI_SHM_mpi_irecv(void *buf,
+                                      int count,
+                                      MPI_Datatype datatype,
+                                      int rank,
+                                      int tag,
+                                      MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPIDI_SHM_IRECV);
@@ -314,8 +316,8 @@ static inline int MPIDI_SHM_irecv(void *buf,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_SHM_cancel_recv)
-static inline int MPIDI_SHM_cancel_recv(MPIR_Request * rreq)
+#define FCNAME DECL_FUNC(MPIDI_SHM_mpi_cancel_recv)
+static inline int MPIDI_SHM_mpi_cancel_recv(MPIR_Request * rreq)
 {
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_POSIX_SHM_MUTEX);
     MPIR_Request *req = MPIDI_POSIX_recvq_posted.head;

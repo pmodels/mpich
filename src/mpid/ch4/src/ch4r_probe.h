@@ -14,13 +14,14 @@
 #include "ch4_impl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_iprobe
+#define FUNCNAME MPIDI_CH4U_mpi_iprobe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_iprobe(int source,
-                                               int tag,
-                                               MPIR_Comm * comm,
-                                               int context_offset, int *flag, MPI_Status * status)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_iprobe(int source,
+                                                   int tag,
+                                                   MPIR_Comm * comm,
+                                                   int context_offset, int *flag,
+                                                   MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *root_comm;
@@ -79,7 +80,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_probe(int source,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_PROBE);
 
     while (!flag) {
-        mpi_errno = MPIDI_CH4U_iprobe(source, tag, comm, context_offset, &flag, status);
+        mpi_errno = MPIDI_CH4U_mpi_iprobe(source, tag, comm, context_offset, &flag, status);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
@@ -92,15 +93,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_probe(int source,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_improbe
+#define FUNCNAME MPIDI_CH4U_mpi_improbe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_improbe(int source,
-                                                int tag,
-                                                MPIR_Comm * comm,
-                                                int context_offset,
-                                                int *flag, MPIR_Request ** message,
-                                                MPI_Status * status)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_improbe(int source,
+                                                    int tag,
+                                                    MPIR_Comm * comm,
+                                                    int context_offset,
+                                                    int *flag, MPIR_Request ** message,
+                                                    MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Comm *root_comm;
@@ -169,7 +170,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mprobe(int source,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_MPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_MPROBE);
     while (!flag) {
-        mpi_errno = MPIDI_CH4U_improbe(source, tag, comm, context_offset, &flag, message, status);
+        mpi_errno =
+            MPIDI_CH4U_mpi_improbe(source, tag, comm, context_offset, &flag, message, status);
     }
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_MPROBE);
     return mpi_errno;

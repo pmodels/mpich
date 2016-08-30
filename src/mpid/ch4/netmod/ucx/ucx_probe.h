@@ -43,11 +43,11 @@ static inline int ucx_do_iprobe(int source,
 
 }
 
-static inline int MPIDI_NM_improbe(int source,
-                                   int tag,
-                                   MPIR_Comm * comm,
-                                   int context_offset,
-                                   int *flag, MPIR_Request ** message, MPI_Status * status)
+static inline int MPIDI_NM_mpi_improbe(int source,
+                                       int tag,
+                                       MPIR_Comm * comm,
+                                       int context_offset,
+                                       int *flag, MPIR_Request ** message, MPI_Status * status)
 {
 
 
@@ -85,10 +85,10 @@ static inline int MPIDI_NM_improbe(int source,
 }
 
 
-static inline int MPIDI_NM_iprobe(int source,
-                                  int tag,
-                                  MPIR_Comm * comm,
-                                  int context_offset, int *flag, MPI_Status * status)
+static inline int MPIDI_NM_mpi_iprobe(int source,
+                                      int tag,
+                                      MPIR_Comm * comm,
+                                      int context_offset, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
 

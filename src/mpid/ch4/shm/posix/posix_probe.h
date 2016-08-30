@@ -14,11 +14,11 @@
 #include "posix_impl.h"
 
 
-static inline int MPIDI_SHM_improbe(int source,
-                                    int tag,
-                                    MPIR_Comm * comm,
-                                    int context_offset,
-                                    int *flag, MPIR_Request ** message, MPI_Status * status)
+static inline int MPIDI_SHM_mpi_improbe(int source,
+                                        int tag,
+                                        MPIR_Comm * comm,
+                                        int context_offset,
+                                        int *flag, MPIR_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req, *matched_req = NULL;
@@ -94,10 +94,10 @@ static inline int MPIDI_SHM_improbe(int source,
     return mpi_errno;
 }
 
-static inline int MPIDI_SHM_iprobe(int source,
-                                   int tag,
-                                   MPIR_Comm * comm,
-                                   int context_offset, int *flag, MPI_Status * status)
+static inline int MPIDI_SHM_mpi_iprobe(int source,
+                                       int tag,
+                                       MPIR_Comm * comm,
+                                       int context_offset, int *flag, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req, *matched_req = NULL;
