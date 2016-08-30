@@ -33,8 +33,6 @@ typedef struct {
 typedef int MPID_Progress_state;
 #define HAVE_GPID_ROUTINES
 
-#define __ALWAYS_INLINE__ __attribute__((always_inline)) static inline
-
 #define CH4_COMPILE_TIME_ASSERT(expr_)                                  \
   do { switch(0) { case 0: case (expr_): default: break; } } while (0)
 
@@ -198,9 +196,9 @@ typedef struct {
 #define MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)  NULL
 #endif
 
-__ALWAYS_INLINE__ void MPID_Request_create_hook(struct MPIR_Request *req);
+MPL_STATIC_INLINE_PREFIX void MPID_Request_create_hook(struct MPIR_Request *req);
 
-__ALWAYS_INLINE__ void MPID_Request_free_hook(struct MPIR_Request *req);
+MPL_STATIC_INLINE_PREFIX void MPID_Request_free_hook(struct MPIR_Request *req);
 
 typedef struct MPIDI_CH4U_win_shared_info {
     uint32_t disp_unit;

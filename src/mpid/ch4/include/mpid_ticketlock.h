@@ -10,8 +10,6 @@
 #ifndef MPID_TICKETLOCK_H_INCLUDED
 #define MPID_TICKETLOCK_H_INCLUDED
 
-#define __MUTEX_INLINE__ __attribute__((always_inline))static inline
-
 #define MPIDI_CH4_CACHELINE_SIZE 64
 
 typedef union MPIDI_CH4_Ticket_lock {
@@ -23,20 +21,20 @@ typedef union MPIDI_CH4_Ticket_lock {
     } s;
 } MPIDI_CH4_Ticket_lock __attribute__ ((aligned(MPIDI_CH4_CACHELINE_SIZE)));
 
-__MUTEX_INLINE__ void MPIDI_CH4I_Thread_mutex_acquire(MPIDI_CH4_Ticket_lock * m)
+MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_acquire(MPIDI_CH4_Ticket_lock * m)
 {
     uint16_t u = __sync_fetch_and_add(&m->s.clients, 1);
     while (m->s.ticket != u)
         asm volatile ("pause\n":::"memory");
 }
 
-__MUTEX_INLINE__ void MPIDI_CH4I_Thread_mutex_release(MPIDI_CH4_Ticket_lock * m)
+MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_release(MPIDI_CH4_Ticket_lock * m)
 {
     asm volatile ("":::"memory");
     m->s.ticket++;
 }
 
-__MUTEX_INLINE__ int MPIDI_CH4I_Thread_mutex_try_acquire(MPIDI_CH4_Ticket_lock * m)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4I_Thread_mutex_try_acquire(MPIDI_CH4_Ticket_lock * m)
 {
     uint16_t u = m->s.clients;
     uint16_t u2 = u + 1;
@@ -49,25 +47,29 @@ __MUTEX_INLINE__ int MPIDI_CH4I_Thread_mutex_try_acquire(MPIDI_CH4_Ticket_lock *
     return EBUSY;
 }
 
-__MUTEX_INLINE__ void MPIDI_CH4I_Thread_mutex_lock(MPIDI_CH4_Ticket_lock * m, int *mpi_error)
+MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_lock(MPIDI_CH4_Ticket_lock * m,
+                                                           int *mpi_error)
 {
     MPIDI_CH4I_Thread_mutex_acquire(m);
     *mpi_error = 0;
 }
 
-__MUTEX_INLINE__ void MPIDI_CH4I_Thread_mutex_unlock(MPIDI_CH4_Ticket_lock * m, int *mpi_error)
+MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_unlock(MPIDI_CH4_Ticket_lock * m,
+                                                             int *mpi_error)
 {
     MPIDI_CH4I_Thread_mutex_release(m);
     *mpi_error = 0;
 }
 
-__MUTEX_INLINE__ void MPIDI_CH4I_Thread_mutex_create(MPIDI_CH4_Ticket_lock * m, int *mpi_error)
+MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_create(MPIDI_CH4_Ticket_lock * m,
+                                                             int *mpi_error)
 {
     m->u = 0;
     *mpi_error = 0;
 }
 
-__MUTEX_INLINE__ void MPIDI_CH4I_Thread_mutex_destroy(MPIDI_CH4_Ticket_lock * m, int *mpi_error)
+MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_destroy(MPIDI_CH4_Ticket_lock * m,
+                                                              int *mpi_error)
 {
     m->u = 0;
     *mpi_error = 0;
@@ -78,7 +80,7 @@ __MUTEX_INLINE__ void MPIDI_CH4I_Thread_mutex_destroy(MPIDI_CH4_Ticket_lock * m,
 /* 2)  Implement it from scratch                                                      */
 /* Currently only async.c is using condition variables, so we should figure out what  */
 /* we really want from the cv implementations                                         */
-__MUTEX_INLINE__ void
+MPL_STATIC_INLINE_PREFIX void
 MPIDI_CH4I_Thread_cond_wait(MPIDU_Thread_cond_t * cond, MPIDI_CH4_Ticket_lock * m, int *mpi_error)
 {
     MPIR_Assert(0);
