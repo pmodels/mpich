@@ -950,22 +950,11 @@ static inline int MPIDII_set_map(MPIDII_rank_map_t * src_rmap,
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                         (MPL_DBG_FDEST, " check map_size %d, src_comm_size %d",
                          MPIDII_map_size(*mapper), src_comm_size));
-        if (src_mode == MPIDII_RANK_MAP_MLUT) {
-            MPIDII_src_comm_to_mlut(src_rmap, dest_rmap, src_comm_size,
-                                    total_mapper_size, mapper_offset);
-        }
-        else {  /* src_mode != MPIDII_RANK_MAP_MLUT */
-            MPIDII_src_comm_to_lut(src_rmap, dest_rmap, src_comm_size,
-                                   total_mapper_size, mapper_offset);
-        }
+        MPIDII_src_comm_to_mlut(src_rmap, dest_rmap, src_comm_size,
+                                total_mapper_size, mapper_offset);
     }
     else {      /* mapper->type == MPIR_COMM_MAP_TYPE__IRREGULAR */
-        if (src_mode == MPIDII_RANK_MAP_MLUT) {
-            MPIDII_src_mlut_to_mlut(src_rmap, dest_rmap, mapper, total_mapper_size, mapper_offset);
-        }
-        else {  /* src_mode != MPIDII_RANK_MAP_MLUT */
-            MPIDII_src_map_to_lut(src_rmap, dest_rmap, mapper, total_mapper_size, mapper_offset);
-        }
+        MPIDII_src_mlut_to_mlut(src_rmap, dest_rmap, mapper, total_mapper_size, mapper_offset);
     }
 
   fn_exit:
