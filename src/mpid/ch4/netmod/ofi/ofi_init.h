@@ -667,7 +667,7 @@ static inline int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,
         MPIDIU_comm_rank_to_pid_local(comm_ptr, idx, &lpid, &avtid);
     }
 
-    *lpid_ptr = MPIDIU_LPID_CREATE(avtid, lpid);
+    *lpid_ptr = MPIDIU_LUPID_CREATE(avtid, lpid);
     return MPI_SUCCESS;
 }
 
@@ -685,6 +685,49 @@ static inline int MPIDI_NM_gpid_get(MPIR_Comm * comm_ptr, int rank, MPIR_Gpid * 
     goto fn_exit;
 }
 
+static inline int MPIDI_NM_get_local_upids(MPIR_Comm *comm, size_t **local_upid_size,
+                                           char **local_upids)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i, total_size = 0;
+    char *temp_buf = NULL, *curr_ptr = NULL;
+
+    MPIR_CHKPMEM_DECL(2);
+    MPIR_CHKLMEM_DECL(1);
+
+    /* *local_upid_size = (size_t*) MPL_malloc(comm->local_size * sizeof(size_t)); */
+    MPIR_CHKPMEM_MALLOC((*local_upid_size), size_t*, comm->local_size*sizeof(size_t),
+                        mpi_errno, "local_upid_size");
+    /* temp_buf = (char*) MPL_malloc(comm->local_size * MPIDI_Global.addrnamelen); */
+    MPIR_CHKLMEM_MALLOC(temp_buf, char*, comm->local_size*MPIDI_Global.addrnamelen,
+                        mpi_errno, "temp_buf");
+
+    for (i = 0; i < comm->local_size; i++) {
+        (*local_upid_size)[i] = MPIDI_Global.addrnamelen;
+        MPIDI_OFI_CALL(fi_av_lookup(MPIDI_Global.av, MPIDI_OFI_COMM_TO_PHYS(comm, i),
+                                            &temp_buf[i * MPIDI_Global.addrnamelen],
+                                            &(*local_upid_size)[i]), avlookup);
+        total_size += (*local_upid_size)[i];
+    }
+
+    /* *local_upids = (char*) MPL_malloc(total_size * sizeof(char)); */
+    MPIR_CHKPMEM_MALLOC((*local_upids), char*, total_size*sizeof(char),
+                        mpi_errno, "local_upids");
+    curr_ptr = (*local_upids);
+    for (i = 0; i < comm->local_size; i++) {
+        memcpy(curr_ptr, &temp_buf[i * MPIDI_Global.addrnamelen], (*local_upid_size)[i]);
+        curr_ptr += (*local_upid_size)[i];
+    }
+
+    MPIR_CHKPMEM_COMMIT();
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
+    return mpi_errno;
+  fn_fail:
+    MPIR_CHKPMEM_REAP();
+    goto fn_exit;
+}
+
 static inline int MPIDI_NM_getallincomm(MPIR_Comm * comm_ptr,
                                         int local_size, MPIR_Gpid local_gpids[], int *singleAVT)
 {
@@ -696,33 +739,40 @@ static inline int MPIDI_NM_getallincomm(MPIR_Comm * comm_ptr,
     return 0;
 }
 
-static inline int MPIDI_NM_gpid_tolpidarray_generic(int size,
-                                                    MPIR_Gpid gpid[], int lpid[], int use_av_table)
+static inline int MPIDI_OFI_upids_to_lupids_general(int size,
+                                                    size_t *remote_upid_size,
+                                                    char *remote_upids,
+                                                    int **remote_lupids,
+                                                    int use_av_table)
 {
     int i, mpi_errno = MPI_SUCCESS;
     int *new_avt_procs;
+    char **new_upids;
     int n_new_procs = 0;
     int max_n_avts;
+    char *curr_upid;
     new_avt_procs = (int *) MPL_malloc(size * sizeof(int));
+    new_upids = (char **) MPL_malloc(size * sizeof(char *));
     max_n_avts = MPIDIU_get_max_n_avts();
 
-    for (i = 0; i < size; i++) {
+    curr_upid = remote_upids;
+    for(i = 0; i < size; i++) {
         int j, k;
         char tbladdr[FI_NAME_MAX];
         int found = 0;
+        size_t sz = 0;
 
         for (k = 0; k < max_n_avts; k++) {
             if (MPIDIU_get_av_table(k) == NULL) {
                 continue;
             }
             for (j = 0; j < MPIDIU_get_av_table(k)->size; j++) {
-                size_t sz = sizeof(MPIDI_OFI_GPID(&gpid[i]).addr);
-                MPIDI_OFI_CALL(fi_av_lookup
-                               (MPIDI_Global.av, MPIDI_OFI_TO_PHYS(k, j), &tbladdr, &sz), avlookup);
-                MPIR_Assert(sz <= sizeof(MPIDI_OFI_GPID(&gpid[i]).addr));
-
-                if (!memcmp(tbladdr, MPIDI_OFI_GPID(&gpid[i]).addr, sz)) {
-                    lpid[i] = MPIDIU_LPID_CREATE(k, j);
+                sz = MPIDI_Global.addrnamelen;
+                MPIDI_OFI_CALL(fi_av_lookup(MPIDI_Global.av, MPIDI_OFI_TO_PHYS(k, j),
+                                            &tbladdr, &sz), avlookup);
+                if (sz == remote_upid_size[i]
+                   && !memcmp(tbladdr, curr_upid, remote_upid_size[i])) {
+                    (*remote_lupids)[i] = MPIDIU_LUPID_CREATE(k, j);
                     found = 1;
                     break;
                 }
@@ -731,8 +781,10 @@ static inline int MPIDI_NM_gpid_tolpidarray_generic(int size,
 
         if (!found) {
             new_avt_procs[n_new_procs] = i;
+            new_upids[n_new_procs] = curr_upid;
             n_new_procs++;
         }
+        curr_upid += remote_upid_size[i];
     }
 
     /* create new av_table, insert processes */
@@ -742,34 +794,35 @@ static inline int MPIDI_NM_gpid_tolpidarray_generic(int size,
 
         for (i = 0; i < n_new_procs; i++) {
             if (use_av_table) { /* logical addressing */
-                MPIDI_OFI_CALL(fi_av_insert
-                               (MPIDI_Global.av, &MPIDI_OFI_GPID(&gpid[new_avt_procs[i]]).addr, 1,
-                                NULL, 0ULL, NULL), avmap);
+                MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, new_upids[new_avt_procs[i]],
+                                            1, NULL, 0ULL, NULL), avmap);
                 /* FIXME: get logical address */
-            }
-            else {
-                MPIDI_OFI_CALL(fi_av_insert
-                               (MPIDI_Global.av, &MPIDI_OFI_GPID(&gpid[new_avt_procs[i]]).addr, 1,
-                                (fi_addr_t *) & MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest, 0ULL,
-                                NULL), avmap);
+            } else {
+                MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, new_upids[new_avt_procs[i]],
+                                            1, (fi_addr_t *)&MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest,
+                                            0ULL, NULL), avmap);
             }
             /* highest bit is marked as 1 to indicate this is a new process */
-            lpid[i] = MPIDIU_LPID_CREATE(avtid, i);
-            MPIDIU_LPID_SET_NEW_AVT_MARK(lpid[i]);
+            (*remote_lupids)[i] = MPIDIU_LUPID_CREATE(avtid, i);
+            MPIDIU_LUPID_SET_NEW_AVT_MARK((*remote_lupids)[i]);
         }
     }
 
-
   fn_exit:
     MPL_free(new_avt_procs);
+    MPL_free(new_upids);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_gpid_tolpidarray(int size, MPIR_Gpid gpid[], int lpid[])
+static inline int MPIDI_NM_upids_to_lupids(int size,
+                                           size_t *remote_upid_size,
+                                           char *remote_upids,
+                                           int **remote_lupids)
 {
-    return MPIDI_NM_gpid_tolpidarray_generic(size, gpid, lpid, MPIDI_OFI_ENABLE_AV_TABLE);
+    return MPIDI_OFI_upids_to_lupids_general(size, remote_upid_size, remote_upids,
+                                             remote_lupids, MPIDI_OFI_ENABLE_AV_TABLE);
 }
 
 static inline int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
