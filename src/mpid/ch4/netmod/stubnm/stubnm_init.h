@@ -49,6 +49,13 @@ static inline int MPIDI_NM_gpid_get(MPIR_Comm * comm_ptr, int rank, MPIR_Gpid * 
     return MPI_SUCCESS;
 }
 
+static inline int MPIDI_NM_get_local_upids(MPIR_Comm *comm, size_t **local_upid_size,
+                                           char **local_upids)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
+
 static inline int MPIDI_NM_getallincomm(MPIR_Comm * comm_ptr,
                                         int local_size, MPIR_Gpid local_gpids[], int *singleAVT)
 {
@@ -56,7 +63,10 @@ static inline int MPIDI_NM_getallincomm(MPIR_Comm * comm_ptr,
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_gpid_tolpidarray(int size, MPIR_Gpid gpid[], int lpid[])
+static inline int MPIDI_NM_upids_to_lupids(int size,
+                                            size_t *remote_upid_size,
+                                            char *remote_upids,
+                                            int **remote_lupids)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
