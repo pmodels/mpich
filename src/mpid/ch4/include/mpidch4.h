@@ -141,7 +141,7 @@ MPIDI_CH4I_API(int, Request_is_pending_failure, MPIR_Request *);
 MPIDI_CH4I_API(MPI_Aint, Aint_add, MPI_Aint, MPI_Aint);
 MPIDI_CH4I_API(MPI_Aint, Aint_diff, MPI_Aint, MPI_Aint);
 MPIDI_CH4I_API(int, GPID_GetAllInComm, MPIR_Comm *, int, MPIR_Gpid[], int *);
-MPIDI_CH4I_API(int, GPID_ToLpidArray, int, MPIR_Gpid[], int[]);
+MPIDI_CH4I_API(int, intercomm_exchange_map, MPIR_Comm *, int, MPIR_Comm *, int, int *, int **, int *);
 MPIDI_CH4I_API(int, Create_intercomm_from_lpids, MPIR_Comm *, int, const int[]);
 MPIDI_CH4I_API(int, Comm_create_hook, MPIR_Comm *);
 MPIDI_CH4I_API(int, Comm_free_hook, MPIR_Comm *);
@@ -368,7 +368,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_rank_is_local(int rank, MPIR_Comm * comm)
 #define MPID_Aint_add                    MPIDI_Aint_add
 #define MPID_Aint_diff                   MPIDI_Aint_diff
 #define MPID_GPID_GetAllInComm           MPIDI_GPID_GetAllInComm
-#define MPID_GPID_ToLpidArray            MPIDI_GPID_ToLpidArray
+#define MPID_intercomm_exchange_map      MPIDI_intercomm_exchange_map
 #define MPID_Create_intercomm_from_lpids MPIDI_Create_intercomm_from_lpids
 /* Variables */
 #define MPID_Barrier                     MPIDI_Barrier
@@ -421,6 +421,7 @@ extern int MPIDI_num_netmods;
 #if defined(MPL_USE_DBG_LOGGING)
 extern MPL_dbg_class MPIDI_CH4_DBG_GENERAL;
 extern MPL_dbg_class MPIDI_CH4_DBG_MAP;
+extern MPL_dbg_class MPIDI_CH4_DBG_COMM;
 extern MPL_dbg_class MPIDI_CH4_DBG_MEMORY;
 #endif /* MPL_USE_DBG_LOGGING */
 

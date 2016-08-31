@@ -187,15 +187,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_get_max_node_id(MPIR_Comm * comm, MPID_No
     return MPIDI_SHM_func->get_max_node_id(comm, max_id_p);
 };
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size,
+                                                       char **local_upids) {
+    return MPIDI_SHM_func->get_local_upids(comm, local_upid_size, local_upids);
+};
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_getallincomm(MPIR_Comm * comm_ptr, int local_size,
                                                     MPIR_Gpid local_gpid[], int *singleAVT)
 {
     return MPIDI_SHM_func->getallincomm(comm_ptr, local_size, local_gpid, singleAVT);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_gpid_tolpidarray(int size, MPIR_Gpid gpid[], int lpid[])
-{
-    return MPIDI_SHM_func->gpid_tolpidarray(size, gpid, lpid);
+MPI_STATIC_INLINE_PREFIX int MPIDI_SHM_upids_to_lupids(int size, size_t * remote_upid_size,
+                                                       char * remote_upids, int ** remote_lupids) {
+    return MPIDI_SHM_func->upids_to_lupids(size, remote_upid_size, remote_upids, remote_lupids);
 };
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
