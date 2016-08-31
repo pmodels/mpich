@@ -179,6 +179,10 @@ int MPID_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
 			    MPIR_Gpid local_gpids[], int *singlePG );
 int MPID_GPID_Get( MPIR_Comm *comm_ptr, int rank, MPIR_Gpid *gpid );
 int MPID_GPID_ToLpidArray( int size, MPIR_Gpid gpid[], int lpid[] );
+int MPID_intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
+                                MPIR_Comm *peer_comm_ptr, int remote_leader,
+                                int *remote_size, int **remote_lpids,
+                                int *is_low_group);
 int MPID_Create_intercomm_from_lpids( MPIR_Comm *newcomm_ptr,
 			    int size, const int lpids[] );
 int MPID_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
