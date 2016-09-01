@@ -527,7 +527,7 @@ int MPID_intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_CHKLMEM_DECL(3);
 
-    cts_tag = MPIR_COMM_KIND__INTERCOMM_CREATE_TAG | MPIR_Process.tagged_coll_mask;
+    cts_tag = 0 | MPIR_Process.tagged_coll_mask;
 
     if (local_comm_ptr->rank == local_leader) {
 
@@ -549,7 +549,7 @@ int MPID_intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
                                       peer_comm_ptr, MPI_STATUS_IGNORE, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-        MPL_DBG_MSG_FMT(MPIID_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST, "local size = %d, remote size = %d", local_size,
+        MPL_DBG_MSG_FMT(MPIDI_CH3_DBG_OTHER,VERBOSE,(MPL_DBG_FDEST, "local size = %d, remote size = %d", local_size,
                                        *remote_size ));
         /* With this information, we can now send and receive the
            global process ids from the peer. */
@@ -611,7 +611,7 @@ int MPID_intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         mpi_errno = MPID_Bcast( comm_info, 2, MPI_INT, local_leader, local_comm_ptr, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-        mpi_errno = MPID_Bcast( *remote_gpids, (*remote_size)*sizeof(MPIR_Gpid), MPI_BYTE, local_leader,
+        mpi_errno = MPID_Bcast( remote_gpids, (*remote_size)*sizeof(MPIR_Gpid), MPI_BYTE, local_leader,
                                      local_comm_ptr, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -626,9 +626,9 @@ int MPID_intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
         *remote_size = comm_info[0];
-        MPIR_CHKLMEM_MALLOC(*remote_gpids,MPIR_Gpid*,(*remote_size)*sizeof(MPIR_Gpid), mpi_errno,"remote_gpids");
+        MPIR_CHKLMEM_MALLOC(remote_gpids,MPIR_Gpid*,(*remote_size)*sizeof(MPIR_Gpid), mpi_errno,"remote_gpids");
         *remote_lpids = (int*) MPL_malloc((*remote_size)*sizeof(int));
-        mpi_errno = MPID_Bcast( *remote_gpids, (*remote_size)*sizeof(MPIR_Gpid), MPI_BYTE, local_leader,
+        mpi_errno = MPID_Bcast( remote_gpids, (*remote_size)*sizeof(MPIR_Gpid), MPI_BYTE, local_leader,
                                      local_comm_ptr, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -636,6 +636,32 @@ int MPID_intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         /* Extract the context and group sign informatin */
         *is_low_group     = comm_info[1];
     }
+
+    /* Finish up by giving the device the opportunity to update
+       any other infomration among these processes.  Note that the
+       new intercomm has not been set up; in fact, we haven't yet
+       attempted to set up the connection tables.
+
+       In the case of the ch3 device, this calls MPID_PG_ForwardPGInfo
+       to ensure that all processes have the information about all
+       process groups.  This must be done before the call
+       to MPID_GPID_ToLpidArray, as that call needs to know about
+       all of the process groups.
+    */
+    MPID_PG_ForwardPGInfo( peer_comm_ptr, local_comm_ptr,
+                           *remote_size, (const MPIR_Gpid*)remote_gpids, local_leader );
+
+
+    /* Finally, if we are not the local leader, we need to
+       convert the remote gpids to local pids.  This must be done
+       after we allow the device to handle any steps that it needs to
+       take to ensure that all processes contain the necessary process
+       group information */
+    if (local_comm_ptr->rank != local_leader) {
+        mpi_errno = MPID_GPID_ToLpidArray( *remote_size, remote_gpids, *remote_lpids );
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    }
+
 fn_exit:
     MPIR_CHKLMEM_FREEALL();
     return mpi_errno;
