@@ -40,7 +40,6 @@ int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Context_id_t final_context_id, recvcontext_id;
     int remote_size, *remote_lpids=NULL;
-    MPID_Node_id_t *remote_node_ids=NULL;
     int local_size,*local_lpids=NULL;
     MPIR_Gpid *local_gpids=NULL, *remote_gpids=NULL;
     int comm_info[3];
@@ -111,23 +110,6 @@ int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
         final_context_id = comm_info[0];
     }
 
-    /* Finish up by giving the device the opportunity to update
-       any other infomration among these processes.  Note that the
-       new intercomm has not been set up; in fact, we haven't yet
-       attempted to set up the connection tables.
-
-       In the case of the ch3 device, this calls MPID_PG_ForwardPGInfo
-       to ensure that all processes have the information about all
-       process groups.  This must be done before the call
-       to MPID_GPID_ToLpidArray, as that call needs to know about
-       all of the process groups.
-    */
-#ifdef MPID_ICCREATE_REMOTECOMM_HOOK
-    MPID_ICCREATE_REMOTECOMM_HOOK( peer_comm_ptr, local_comm_ptr,
-                                   remote_size, (const MPIR_Gpid*)remote_gpids, local_leader );
-
-#endif
-
     /* At last, we now have the information that we need to build the
        intercommunicator */
 
@@ -166,10 +148,6 @@ int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
     if (remote_lpids) {
         MPL_free(remote_lpids);
         remote_lpids = NULL;
-    }
-    if (remote_node_ids) {
-        MPL_free(remote_node_ids);
-        remote_node_ids = NULL;
     }
     MPIR_FUNC_TERSE_EXIT(MPID_STATE_MPIR_COMM_KIND__INTERCOMM_CREATE_IMPL);
     return mpi_errno;

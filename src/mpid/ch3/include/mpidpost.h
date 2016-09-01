@@ -188,11 +188,8 @@ int MPID_Create_intercomm_from_lpids( MPIR_Comm *newcomm_ptr,
 int MPID_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
 			   int nPGids, const MPIR_Gpid gpids[],
 			   int root );
-/* PG_ForwardPGInfo is used as the implementation of the intercomm-create
-   hook that is needed with dynamic processes because of limitations
-   in the current definition of PMI */
-#define MPID_ICCREATE_REMOTECOMM_HOOK(_p,_c,_np,_gp,_r) \
-     MPID_PG_ForwardPGInfo(_p,_c,_np,_gp,_r)
+
+#define MPID_INTERCOMM_NO_DYNPROC(comm) (0)
 
 /* communicator hooks */
 int MPIDI_CH3I_Comm_create_hook(struct MPIR_Comm *);
