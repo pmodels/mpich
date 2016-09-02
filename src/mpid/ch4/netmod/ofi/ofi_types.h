@@ -181,7 +181,6 @@
 #define MPIDI_OFI_THREAD_SPAWN_MUTEX    MPIDI_Global.mutexes[3].m
 
 /* Field accessor macros */
-#define MPIDI_OFI_GPID(gpid)               ((gpid)->dev.netmod.ofi)
 #define MPIDI_OFI_OBJECT_HEADER_SIZE       offsetof(MPIDI_OFI_offset_checker_t,  pad)
 #define MPIDI_OFI_AMREQUEST(req,field)     ((req)->dev.ch4.ch4u.netmod_am.ofi.field)
 #define MPIDI_OFI_AMREQUEST_HDR(req,field) ((req)->dev.ch4.ch4u.netmod_am.ofi.req_hdr->field)

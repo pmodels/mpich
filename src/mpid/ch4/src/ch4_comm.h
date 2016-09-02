@@ -250,10 +250,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_intercomm_upid_lupid_bcast_intra
+#define FUNCNAME MPIDI_Intercomm_upid_lupid_bcast_intra
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_intercomm_map_bcast_intra(MPIR_Comm *local_comm,
+MPL_STATIC_INLINE_PREFIX int MPIDI_Intercomm_map_bcast_intra(MPIR_Comm *local_comm,
                                                              int local_leader,
                                                              int *remote_size,
                                                              int *is_low_group,
@@ -343,10 +343,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_intercomm_map_bcast_intra(MPIR_Comm *local_co
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_intercomm_exchange_map
+#define FUNCNAME MPIDI_Intercomm_exchange_map
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_intercomm_exchange_map(MPIR_Comm *local_comm,
+MPL_STATIC_INLINE_PREFIX int MPIDI_Intercomm_exchange_map(MPIR_Comm *local_comm,
                                                           int local_leader,
                                                           MPIR_Comm *peer_comm,
                                                           int remote_leader,
@@ -536,7 +536,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_intercomm_exchange_map(MPIR_Comm *local_comm,
      */
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM,VERBOSE,
                     (MPL_DBG_FDEST, "Intercomm map exchange stage 2: intra-group"));
-    mpi_errno = MPIDI_intercomm_map_bcast_intra(local_comm, local_leader,
+    mpi_errno = MPIDI_Intercomm_map_bcast_intra(local_comm, local_leader,
                                                 remote_size, is_low_group, pure_intracomm,
                                                 remote_upid_size, remote_upids,
                                                 remote_lupids, remote_node_ids);

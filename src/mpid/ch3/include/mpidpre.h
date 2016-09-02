@@ -501,7 +501,9 @@ typedef struct {
 #endif
 } MPID_Progress_state;
 
-#define MPID_DEV_GPID_DECL int gpid[2];
+typedef struct {
+    int gpid[2];
+} MPIDI_Gpid;
 
 /* Tell initthread to prepare a private comm_world */
 #define MPID_NEEDS_ICOMM_WORLD

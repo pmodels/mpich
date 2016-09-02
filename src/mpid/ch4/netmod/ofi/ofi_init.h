@@ -85,7 +85,6 @@ static inline int MPIDI_OFI_init_generic(int rank,
                             offsetof(struct MPIR_Request, dev.ch4.netmod.ofi.context));
     CH4_COMPILE_TIME_ASSERT(sizeof(MPIDI_Devreq_t) >= sizeof(MPIDI_OFI_request_t));
     CH4_COMPILE_TIME_ASSERT(sizeof(MPIR_Request) >= sizeof(MPIDI_OFI_win_request_t));
-    CH4_COMPILE_TIME_ASSERT(sizeof(MPIDI_Devgpid_t) >= sizeof(MPIDI_OFI_gpid_t));
     CH4_COMPILE_TIME_ASSERT(sizeof(MPIR_Context_id_t) * 8 >= MPIDI_OFI_AM_CONTEXT_ID_BITS);
 
     *tag_ub = (1ULL << MPIDI_OFI_TAG_SHIFT) - 1;
@@ -671,20 +670,6 @@ static inline int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_gpid_get(MPIR_Comm * comm_ptr, int rank, MPIR_Gpid * gpid)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_Assert(rank < comm_ptr->local_size);
-    size_t sz = sizeof(MPIDI_OFI_GPID(gpid).addr);
-    MPIDI_OFI_CALL(fi_av_lookup(MPIDI_Global.av, MPIDI_OFI_COMM_TO_PHYS(comm_ptr, rank),
-                                &MPIDI_OFI_GPID(gpid).addr, &sz), avlookup);
-    MPIR_Assert(sz <= sizeof(MPIDI_OFI_GPID(gpid).addr));
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 static inline int MPIDI_NM_get_local_upids(MPIR_Comm *comm, size_t **local_upid_size,
                                            char **local_upids)
 {
@@ -726,17 +711,6 @@ static inline int MPIDI_NM_get_local_upids(MPIR_Comm *comm, size_t **local_upid_
   fn_fail:
     MPIR_CHKPMEM_REAP();
     goto fn_exit;
-}
-
-static inline int MPIDI_NM_getallincomm(MPIR_Comm * comm_ptr,
-                                        int local_size, MPIR_Gpid local_gpids[], int *singleAVT)
-{
-    int i;
-
-    for (i = 0; i < comm_ptr->local_size; i++)
-        MPIDI_GPID_Get(comm_ptr, i, &local_gpids[i]);
-
-    return 0;
 }
 
 static inline int MPIDI_OFI_upids_to_lupids_general(int size,

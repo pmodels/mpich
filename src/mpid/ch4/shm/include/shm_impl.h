@@ -171,11 +171,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_comm_get_lpid(MPIR_Comm * comm_ptr, int i
     return MPIDI_SHM_func->comm_get_lpid(comm_ptr, idx, lpid_ptr, is_remote);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_gpid_get(MPIR_Comm * comm_ptr, int rank, MPIR_Gpid * gpid)
-{
-    return MPIDI_SHM_func->gpid_get(comm_ptr, rank, gpid);
-};
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_get_node_id(MPIR_Comm * comm, int rank,
                                                    MPID_Node_id_t * id_p)
 {
