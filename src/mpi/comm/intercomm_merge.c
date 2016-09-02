@@ -92,39 +92,16 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_int
         /* This routine allows use to use the collective communication
            context rather than the point-to-point context. */
         mpi_errno = MPIC_Sendrecv( &local_high, 1, MPI_INT, 0, 0,
-                                      &remote_high, 1, MPI_INT, 0, 0, comm_ptr,
-                                      MPI_STATUS_IGNORE, &errflag );
+                                   &remote_high, 1, MPI_INT, 0, 0, comm_ptr,
+                                   MPI_STATUS_IGNORE, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        
-        /* If local_high and remote_high are the same, then order is arbitrary.
-           we use the gpids of the rank 0 member of the local and remote
-           groups to choose an order in this case. */
-        if (local_high == remote_high) {
-            MPIR_Gpid ingpid, outgpid;
-            
-            mpi_errno = MPID_GPID_Get( comm_ptr, 0, &ingpid );
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            
-            mpi_errno = MPIC_Sendrecv( &ingpid, sizeof(MPIR_Gpid), MPI_BYTE, 0, 1,
-                                          &outgpid, sizeof(MPIR_Gpid), MPI_BYTE, 0, 1, comm_ptr,
-                                          MPI_STATUS_IGNORE, &errflag );
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-            /* Note that the gpids cannot be the same because we are
-               starting from a valid intercomm */
-            int rc = memcmp(&ingpid,&outgpid,sizeof(MPIR_Gpid));
-            if(rc < 0)
-                local_high = 1;
-            else if(rc > 0)
-                local_high = 0;
-            else
-                {
-                    /* req#3930: The merge algorithm will deadlock if the gpids are inadvertently the
-                       same due to implementation bugs in the MPID_GPID_Get() function */
-                    MPIR_Assert(rc != 0);
-                }
-            }
+        /* If local_high and remote_high are the same, then order is arbitrary.
+           we use the is_low_group in the intercomm in this case. */
+        if (local_high == remote_high) {
+            local_high = !(comm_ptr->is_low_group);
         }
+    }
 
     /*
        All processes in the local group now need to get the
@@ -135,57 +112,110 @@ int MPIR_Intercomm_merge_impl(MPIR_Comm *comm_ptr, int high, MPIR_Comm **new_int
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
-    mpi_errno = MPIR_Comm_create( new_intracomm_ptr );
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    
+    /*
+     * For the intracomm, we need a consistent context id.
+     * That means that one of the two groups needs to use
+     * the recvcontext_id and the other must use the context_id
+     * The recvcontext_id is unique on each process, but another
+     * communicator may use the context_id. Therefore, we do a small hack.
+     * We set both flags indicating a sub-communicator (intra-node and
+     * inter-node) to one. This is normally not possible (a communicator
+     * is either intra- or inter-node) - which makes this context_id unique.
+     *
+     * There are two path to get it.
+     * 1. If the remote and local groups of the intercomm belongs to the same
+     *    comm_world. We can merge them into on group and do a
+     *    MPIR_Get_contextid_sparse_group on MPI_COMM_WORLD.
+     *
+     * 2. If not, we fallback to the old "temorary intracomm contextid hack"
+     */
+
     new_size = comm_ptr->local_size + comm_ptr->remote_size;
 
-    /* For the intracomm, we need a consistent context id.
-       That means that one of the two groups needs to use
-       the recvcontext_id and the other must use the context_id
-       The recvcontext_id is unique on each process, but another
-       communicator may use the context_id. Therefore, we do a small hack.
-       We set both flags indicating a sub-communicator (intra-node and
-       inter-node) to one. This is normally not possible (a communicator
-       is either intra- or inter-node) - which makes this context_id unique.  */
+    if (MPID_INTERCOMM_NO_DYNPROC(comm_ptr)) {
+        MPIR_Group *merge_group_ptr = NULL;
+        MPIR_Group *comm_world_group = NULL;
+        int *lupids;
+        int lupid, i;
 
-    if (local_high) {
-        (*new_intracomm_ptr)->context_id = MPIR_CONTEXT_SET_FIELD(SUBCOMM,comm_ptr->recvcontext_id, 3);
+        MPL_DBG_MSG(MPIR_DBG_COMM,VERBOSE,"Intercomm_merge contextid fastpath");
+        lupids = (int*) MPL_malloc(new_size * sizeof(int));
+
+        if (!local_high) {
+            for (i = 0; i < comm_ptr->local_size; i++) {
+                MPID_Comm_get_lpid(comm_ptr, i, &lupid, FALSE);
+                lupids[i] = lupid;
+            }
+            for (i = 0; i < comm_ptr->remote_size; i++) {
+                MPID_Comm_get_lpid(comm_ptr, i, &lupid, TRUE);
+                lupids[i+comm_ptr->local_size] = lupid;
+            }
+        } else {
+            for (i = 0; i < comm_ptr->remote_size; i++) {
+                MPID_Comm_get_lpid(comm_ptr, i, &lupid, TRUE);
+                lupids[i] = lupid;
+            }
+            for (i = 0; i < comm_ptr->local_size; i++) {
+                MPID_Comm_get_lpid(comm_ptr, i, &lupid, FALSE);
+                lupids[i+comm_ptr->remote_size] = lupid;
+            }
+        }
+        MPIR_Comm_group_impl(MPIR_Process.comm_world, &comm_world_group);
+        MPIR_Group_incl_impl(comm_world_group, new_size, lupids, &merge_group_ptr);
+
+        MPL_free(lupids);
+
+        new_context_id = 0;
+        mpi_errno = MPIR_Get_contextid_sparse_group(MPIR_Process.comm_world, merge_group_ptr,
+                                                    MPIR_Process.attrs.tag_ub, &new_context_id, FALSE);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_Assert(new_context_id != 0);
+
+        mpi_errno = MPIR_Group_release(comm_world_group);
+        mpi_errno = MPIR_Group_release(merge_group_ptr);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+    } else {
+        mpi_errno = MPIR_Comm_create( new_intracomm_ptr );
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+        if (local_high) {
+            (*new_intracomm_ptr)->context_id = MPIR_CONTEXT_SET_FIELD(SUBCOMM,comm_ptr->recvcontext_id, 3);
+        }
+        else {
+            (*new_intracomm_ptr)->context_id = MPIR_CONTEXT_SET_FIELD(SUBCOMM, comm_ptr->context_id, 3);
+        }
+        (*new_intracomm_ptr)->recvcontext_id = (*new_intracomm_ptr)->context_id;
+        (*new_intracomm_ptr)->remote_size    = (*new_intracomm_ptr)->local_size   = new_size;
+        (*new_intracomm_ptr)->rank           = -1;
+        (*new_intracomm_ptr)->comm_kind      = MPIR_COMM_KIND__INTRACOMM;
+
+        /* Now we know which group comes first.  Build the new mapping
+           from the existing comm */
+        mpi_errno = create_and_map(comm_ptr, local_high, (*new_intracomm_ptr));
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+        /* We've setup a temporary context id, based on the context id
+           used by the intercomm.  This allows us to perform the allreduce
+           operations within the context id algorithm, since we already
+           have a valid (almost - see comm_create_hook) communicator.
+           */
+        mpi_errno = MPIR_Comm_commit((*new_intracomm_ptr));
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+        /* printf( "About to get context id \n" ); fflush( stdout ); */
+        /* In the multi-threaded case, MPIR_Get_contextid_sparse assumes that the
+           calling routine already holds the single criticial section */
+        new_context_id = 0;
+        mpi_errno = MPIR_Get_contextid_sparse( (*new_intracomm_ptr), &new_context_id, FALSE );
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        MPIR_Assert(new_context_id != 0);
+
+        /* We release this communicator that was involved just to
+         * get valid context id and create true one
+         */
+        mpi_errno = MPIR_Comm_release(*new_intracomm_ptr);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
-    else {
-        (*new_intracomm_ptr)->context_id = MPIR_CONTEXT_SET_FIELD(SUBCOMM, comm_ptr->context_id, 3);
-    }
-    (*new_intracomm_ptr)->recvcontext_id = (*new_intracomm_ptr)->context_id;
-    (*new_intracomm_ptr)->remote_size    = (*new_intracomm_ptr)->local_size   = new_size;
-    (*new_intracomm_ptr)->rank           = -1;
-    (*new_intracomm_ptr)->comm_kind      = MPIR_COMM_KIND__INTRACOMM;
-
-    /* Now we know which group comes first.  Build the new mapping
-       from the existing comm */
-    mpi_errno = create_and_map(comm_ptr, local_high, (*new_intracomm_ptr));
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-    /* We've setup a temporary context id, based on the context id
-       used by the intercomm.  This allows us to perform the allreduce
-       operations within the context id algorithm, since we already
-       have a valid (almost - see comm_create_hook) communicator.
-    */
-    mpi_errno = MPIR_Comm_commit((*new_intracomm_ptr));
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-    /* printf( "About to get context id \n" ); fflush( stdout ); */
-    /* In the multi-threaded case, MPIR_Get_contextid_sparse assumes that the
-       calling routine already holds the single criticial section */
-    new_context_id = 0;
-    mpi_errno = MPIR_Get_contextid_sparse( (*new_intracomm_ptr), &new_context_id, FALSE );
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    MPIR_Assert(new_context_id != 0);
-
-    /* We release this communicator that was involved just to
-     * get valid context id and create true one
-     */
-    mpi_errno = MPIR_Comm_release(*new_intracomm_ptr);
-    if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Comm_create( new_intracomm_ptr );
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
