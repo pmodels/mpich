@@ -455,6 +455,10 @@ extern MPIDII_av_table_t *MPIDII_av_table0;
 
 #define MPIDII_DYNPROC_MASK                 (0x80000000U)
 
+#define MPID_INTERCOMM_NO_DYNPROC(comm) \
+    (MPIDII_COMM((comm),map).avtid == 0 && MPIDII_COMM((comm),local_map).avtid == 0)
+
+
 #include "mpidu_pre.h"
 
 #endif /* MPIDPRE_H_INCLUDED */
