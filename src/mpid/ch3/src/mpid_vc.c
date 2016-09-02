@@ -299,11 +299,11 @@ int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int * lpid_ptr, MPL_bool is
 
 /* FIXME: These routines belong in a different place */
 #undef FUNCNAME
-#define FUNCNAME MPID_GPID_GetAllInComm
+#define FUNCNAME MPIDI_GPID_GetAllInComm
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
-			    MPIR_Gpid local_gpids[], int *singlePG )
+int MPIDI_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
+                             MPIDI_Gpid local_gpids[], int *singlePG )
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -341,10 +341,10 @@ int MPID_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_GPID_Get
+#define FUNCNAME MPIDI_GPID_Get
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_GPID_Get( MPIR_Comm *comm_ptr, int rank, MPIR_Gpid *in_gpid )
+int MPIDI_GPID_Get( MPIR_Comm *comm_ptr, int rank, MPIDI_Gpid *in_gpid )
 {
     int      pgid;
     MPIDI_VCR vc;
@@ -366,10 +366,10 @@ int MPID_GPID_Get( MPIR_Comm *comm_ptr, int rank, MPIR_Gpid *in_gpid )
  * have information on the process groups.
  */
 #undef FUNCNAME
-#define FUNCNAME MPID_GPID_ToLpidArray
+#define FUNCNAME MPIDI_GPID_ToLpidArray
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_GPID_ToLpidArray( int size, MPIR_Gpid in_gpid[], int lpid[] )
+int MPIDI_GPID_ToLpidArray( int size, MPIDI_Gpid in_gpid[], int lpid[] )
 {
     int i, mpi_errno = MPI_SUCCESS;
     int pgid;
@@ -521,7 +521,7 @@ int MPID_intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
     int mpi_errno = MPI_SUCCESS;
     int singlePG;
     int local_size,*local_lpids=0;
-    MPIR_Gpid *local_gpids=NULL, *remote_gpids=NULL;
+    MPIDI_Gpid *local_gpids=NULL, *remote_gpids=NULL;
     int comm_info[2];
     int cts_tag;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
@@ -553,25 +553,25 @@ int MPID_intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
                                        *remote_size ));
         /* With this information, we can now send and receive the
            global process ids from the peer. */
-        MPIR_CHKLMEM_MALLOC(remote_gpids,MPIR_Gpid*,(*remote_size)*sizeof(MPIR_Gpid), mpi_errno,"remote_gpids");
+        MPIR_CHKLMEM_MALLOC(remote_gpids,MPIDI_Gpid*,(*remote_size)*sizeof(MPIDI_Gpid), mpi_errno,"remote_gpids");
         *remote_lpids = (int*) MPL_malloc((*remote_size)*sizeof(int));
-        MPIR_CHKLMEM_MALLOC(local_gpids,MPIR_Gpid*,local_size*sizeof(MPIR_Gpid), mpi_errno,"local_gpids");
+        MPIR_CHKLMEM_MALLOC(local_gpids,MPIDI_Gpid*,local_size*sizeof(MPIDI_Gpid), mpi_errno,"local_gpids");
         MPIR_CHKLMEM_MALLOC(local_lpids,int*,local_size*sizeof(int), mpi_errno,"local_lpids");
 
-        mpi_errno = MPID_GPID_GetAllInComm( local_comm_ptr, local_size, local_gpids, &singlePG );
+        mpi_errno = MPIDI_GPID_GetAllInComm( local_comm_ptr, local_size, local_gpids, &singlePG );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         /* Exchange the lpid arrays */
-        mpi_errno = MPIC_Sendrecv( local_gpids, local_size*sizeof(MPIR_Gpid), MPI_BYTE,
+        mpi_errno = MPIC_Sendrecv( local_gpids, local_size*sizeof(MPIDI_Gpid), MPI_BYTE,
                                       remote_leader, cts_tag,
-                                      remote_gpids, (*remote_size)*sizeof(MPIR_Gpid), MPI_BYTE,
+                                      remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPI_BYTE,
                                       remote_leader, cts_tag, peer_comm_ptr,
                                       MPI_STATUS_IGNORE, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
 
         /* Convert the remote gpids to the lpids */
-        mpi_errno = MPID_GPID_ToLpidArray( *remote_size, remote_gpids, *remote_lpids );
+        mpi_errno = MPIDI_GPID_ToLpidArray( *remote_size, remote_gpids, *remote_lpids );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         /* Get our own lpids */
@@ -611,7 +611,7 @@ int MPID_intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         mpi_errno = MPID_Bcast( comm_info, 2, MPI_INT, local_leader, local_comm_ptr, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-        mpi_errno = MPID_Bcast( remote_gpids, (*remote_size)*sizeof(MPIR_Gpid), MPI_BYTE, local_leader,
+        mpi_errno = MPID_Bcast( remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPI_BYTE, local_leader,
                                      local_comm_ptr, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -626,9 +626,9 @@ int MPID_intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
         *remote_size = comm_info[0];
-        MPIR_CHKLMEM_MALLOC(remote_gpids,MPIR_Gpid*,(*remote_size)*sizeof(MPIR_Gpid), mpi_errno,"remote_gpids");
+        MPIR_CHKLMEM_MALLOC(remote_gpids,MPIDI_Gpid*,(*remote_size)*sizeof(MPIDI_Gpid), mpi_errno,"remote_gpids");
         *remote_lpids = (int*) MPL_malloc((*remote_size)*sizeof(int));
-        mpi_errno = MPID_Bcast( remote_gpids, (*remote_size)*sizeof(MPIR_Gpid), MPI_BYTE, local_leader,
+        mpi_errno = MPID_Bcast( remote_gpids, (*remote_size)*sizeof(MPIDI_Gpid), MPI_BYTE, local_leader,
                                      local_comm_ptr, &errflag );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
         MPIR_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -648,8 +648,8 @@ int MPID_intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
        to MPID_GPID_ToLpidArray, as that call needs to know about
        all of the process groups.
     */
-    MPID_PG_ForwardPGInfo( peer_comm_ptr, local_comm_ptr,
-                           *remote_size, (const MPIR_Gpid*)remote_gpids, local_leader );
+    MPIDI_PG_ForwardPGInfo( peer_comm_ptr, local_comm_ptr,
+                            *remote_size, (const MPIDI_Gpid*)remote_gpids, local_leader );
 
 
     /* Finally, if we are not the local leader, we need to
@@ -658,7 +658,7 @@ int MPID_intercomm_exchange_map(MPIR_Comm *local_comm_ptr, int local_leader,
        take to ensure that all processes contain the necessary process
        group information */
     if (local_comm_ptr->rank != local_leader) {
-        mpi_errno = MPID_GPID_ToLpidArray( *remote_size, remote_gpids, *remote_lpids );
+        mpi_errno = MPIDI_GPID_ToLpidArray( *remote_size, remote_gpids, *remote_lpids );
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
     }
 
@@ -762,11 +762,11 @@ fn_fail:
    contacting any process in the process groups).
 */
 #undef FUNCNAME
-#define FUNCNAME MPID_PG_ForwardPGInfo
+#define FUNCNAME MPIDI_PG_ForwardPGInfo
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPID_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
-			   int nPGids, const MPIR_Gpid in_gpids[],
+int MPIDI_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
+			   int nPGids, const MPIDI_Gpid in_gpids[],
 			   int root )
 {
     int mpi_errno = MPI_SUCCESS;

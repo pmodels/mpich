@@ -57,10 +57,6 @@ typedef struct {
 } MPIDI_UCX_win_t;
 
 typedef struct {
-    char addr[MPIDI_UCX_KVSAPPSTRLEN];
-} MPIDI_UCX_gpid_t;
-
-typedef struct {
     ucp_ep_h dest;
 } MPIDI_UCX_addr_t;
 

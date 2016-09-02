@@ -84,7 +84,6 @@ MPIDI_CH4I_API(int, Bsend_init, const void *, int, MPI_Datatype, int, int, MPIR_
 MPIDI_CH4I_API(int, Rsend_init, const void *, int, MPI_Datatype, int, int, MPIR_Comm *, int,
                MPIR_Request **);
 MPIDI_CH4I_API(int, Startall, int, MPIR_Request *[]);
-MPIDI_CH4I_API(int, GPID_Get, MPIR_Comm *, int, MPIR_Gpid *);
 MPIDI_CH4I_API(int, Accumulate, const void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype,
                MPI_Op, MPIR_Win *);
 MPIDI_CH4I_API(int, Win_create, void *, MPI_Aint, int, MPIR_Info *, MPIR_Comm *, MPIR_Win **);
@@ -140,7 +139,6 @@ MPIDI_CH4I_API(int, Get_max_node_id, MPIR_Comm *, MPID_Node_id_t *);
 MPIDI_CH4I_API(int, Request_is_pending_failure, MPIR_Request *);
 MPIDI_CH4I_API(MPI_Aint, Aint_add, MPI_Aint, MPI_Aint);
 MPIDI_CH4I_API(MPI_Aint, Aint_diff, MPI_Aint, MPI_Aint);
-MPIDI_CH4I_API(int, GPID_GetAllInComm, MPIR_Comm *, int, MPIR_Gpid[], int *);
 MPIDI_CH4I_API(int, intercomm_exchange_map, MPIR_Comm *, int, MPIR_Comm *, int, int *, int **, int *);
 MPIDI_CH4I_API(int, Create_intercomm_from_lpids, MPIR_Comm *, int, const int[]);
 MPIDI_CH4I_API(int, Comm_create_hook, MPIR_Comm *);
@@ -292,7 +290,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_rank_is_local(int rank, MPIR_Comm * comm)
 #define MPID_Fetch_and_op                MPIDI_Fetch_and_op
 #define MPID_Finalize                    MPIDI_Finalize
 #define MPID_Free_mem                    MPIDI_Free_mem
-#define MPID_GPID_Get                    MPIDI_GPID_Get
 #define MPID_Get                         MPIDI_Get
 #define MPID_Get_accumulate              MPIDI_Get_accumulate
 #define MPID_Get_processor_name          MPIDI_Get_processor_name
@@ -367,7 +364,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_rank_is_local(int rank, MPIR_Comm * comm)
 #define MPID_Request_is_pending_failure  MPIDI_Request_is_pending_failure
 #define MPID_Aint_add                    MPIDI_Aint_add
 #define MPID_Aint_diff                   MPIDI_Aint_diff
-#define MPID_GPID_GetAllInComm           MPIDI_GPID_GetAllInComm
 #define MPID_intercomm_exchange_map      MPIDI_intercomm_exchange_map
 #define MPID_Create_intercomm_from_lpids MPIDI_Create_intercomm_from_lpids
 /* Variables */

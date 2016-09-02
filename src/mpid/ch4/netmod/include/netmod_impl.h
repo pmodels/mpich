@@ -133,20 +133,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr, int id
     return MPIDI_NM_func->comm_get_lpid(comm_ptr, idx, lpid_ptr, is_remote);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_gpid_get(MPIR_Comm * comm_ptr, int rank, MPIR_Gpid * gpid)
-{
-    return MPIDI_NM_func->gpid_get(comm_ptr, rank, gpid);
-};
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size,
                                                       char **local_upids) {
     return MPIDI_NM_func->get_local_upids(comm, local_upid_size, local_upids);
-};
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_getallincomm(MPIR_Comm * comm_ptr, int local_size,
-                                                   MPIR_Gpid local_gpid[], int *singleAVT)
-{
-    return MPIDI_NM_func->getallincomm(comm_ptr, local_size, local_gpid, singleAVT);
 };
 
 MPI_STATIC_INLINE_PREFIX int MPIDI_NM_upids_to_lupids(int size, size_t * remote_upid_size,

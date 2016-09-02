@@ -558,30 +558,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_get_lpid(MPIR_Comm * comm_ptr,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_GPID_Get
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_GPID_Get(MPIR_Comm * comm_ptr, int rank, MPIR_Gpid * gpid)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_GPID_GET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_GPID_GET);
-
-    mpi_errno = MPIDI_NM_gpid_get(comm_ptr, rank, gpid);
-    MPIDI_CH4U_get_node_id(comm_ptr, rank, &MPIDII_GPID(gpid).node);
-
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_GPID_GET);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_Get_node_id
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -610,31 +586,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Get_max_node_id(MPIR_Comm * comm, MPID_Node_i
     MPIDI_CH4U_get_max_node_id(comm, max_id_p);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_GET_MAX_NODE_ID);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_GetAllInComm
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_GPID_GetAllInComm(MPIR_Comm * comm_ptr,
-                                                     int local_size, MPIR_Gpid local_gpids[],
-                                                     int *singleAVT)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_GETALLINCOMM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_GETALLINCOMM);
-
-    mpi_errno = MPIDI_NM_getallincomm(comm_ptr, local_size, local_gpids, singleAVT);
-
-    if (MPIDII_COMM(comm_ptr, map).mode == MPIDII_RANK_MAP_MLUT) {
-        *singleAVT = FALSE;
-    }
-    else {
-        *singleAVT = TRUE;
-    }
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_GETALLINCOMM);
     return mpi_errno;
 }
 
