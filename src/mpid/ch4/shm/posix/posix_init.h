@@ -283,12 +283,6 @@ static inline int MPIDI_SHM_comm_get_lpid(MPIR_Comm * comm_ptr,
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_gpid_get(MPIR_Comm * comm_ptr, int rank, MPIR_Gpid * gpid)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
 static inline int MPIDI_SHM_get_node_id(MPIR_Comm * comm, int rank, MPID_Node_id_t * id_p)
 {
     *id_p = (MPID_Node_id_t) 0;
@@ -303,13 +297,6 @@ static inline int MPIDI_SHM_get_max_node_id(MPIR_Comm * comm, MPID_Node_id_t * m
 
 static inline int MPIDI_SHM_get_local_upids(MPIR_Comm *comm, size_t **local_upid_size,
                                            char **local_upids)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
-static inline int MPIDI_SHM_getallincomm(MPIR_Comm * comm_ptr,
-                                         int local_size, MPIR_Gpid local_gpids[], int *singleAVT)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

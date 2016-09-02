@@ -38,10 +38,6 @@ typedef struct {
 
 typedef struct {
     int dummy;
-} MPIDI_PORTALS4_gpid_t;
-
-typedef struct {
-    int dummy;
 } MPIDI_PORTALS4_addr_t;
 
 typedef struct {

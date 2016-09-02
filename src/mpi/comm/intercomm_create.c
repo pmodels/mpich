@@ -41,7 +41,6 @@ int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
     MPIR_Context_id_t final_context_id, recvcontext_id;
     int remote_size, *remote_lpids=NULL;
     int local_size,*local_lpids=NULL;
-    MPIR_Gpid *local_gpids=NULL, *remote_gpids=NULL;
     int comm_info[3];
     int is_low_group = 0;
     int cts_tag;
@@ -54,7 +53,7 @@ int MPIR_Intercomm_create_impl(MPIR_Comm *local_comm_ptr, int local_leader,
        is ignored as of MPI 3.0) */
     cts_tag = MPIR_COMM_KIND__INTERCOMM_CREATE_TAG | MPIR_Process.tagged_coll_mask;
 
-    mpi_errno = MPID_intercomm_exchange_map(local_comm_ptr, local_leader,
+    mpi_errno = MPID_Intercomm_exchange_map(local_comm_ptr, local_leader,
                                             peer_comm_ptr, remote_leader,
                                             &remote_size, &remote_lpids,
                                             &is_low_group);

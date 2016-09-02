@@ -38,10 +38,6 @@ typedef struct {
 
 typedef struct {
     int dummy;
-} MPIDI_STUBNM_gpid_t;
-
-typedef struct {
-    int dummy;
 } MPIDI_STUBNM_addr_t;
 
 #endif /* NETMOD_STUBNM_PRE_H_INCLUDED */

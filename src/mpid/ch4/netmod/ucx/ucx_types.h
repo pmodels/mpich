@@ -43,7 +43,6 @@ typedef struct {
     MPIDI_NM_am_origin_handler_fn send_cmpl_handlers[MPIDI_UCX_MAX_AM_HANDLERS];
 } MPIDI_UCX_global_t;
 
-#define MPIDI_UCX_GPID(gpid) ((gpid)->dev.netmod.ucx)
 #define MPIDI_UCX_AV(av)     ((av)->netmod.ucx)
 
 extern MPIDI_UCX_global_t MPIDI_UCX_global;

@@ -353,29 +353,6 @@ fn_fail:
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_gpid_get(MPIR_Comm * comm_ptr, int rank, MPIR_Gpid * gpid)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int avtid = 0, lpid = 0;
-
-
-    int len = MPIDI_UCX_global.max_addr_len;
-
-    MPIDIU_comm_rank_to_pid(comm_ptr, rank, &lpid, &avtid);
-    MPIR_Assert(rank < comm_ptr->local_size);
-
-    if (MPIDI_UCX_global.pmi_addr_table == NULL) {
-        MPIDI_NMI_allocate_address_table();
-    }
-    memset(MPIDI_UCX_GPID(gpid).addr, 0, len);
-    memcpy(MPIDI_UCX_GPID(gpid).addr, &MPIDI_UCX_global.pmi_addr_table[lpid * len], len);
-    MPIR_Assert(len <= sizeof(MPIDI_UCX_GPID(gpid).addr));
-  fn_exit:
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 static inline int MPIDI_NM_get_local_upids(MPIR_Comm *comm, size_t **local_upid_size,
                                            char **local_upids)
 {
@@ -410,18 +387,6 @@ static inline int MPIDI_NM_get_local_upids(MPIR_Comm *comm, size_t **local_upid_
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-static inline int MPIDI_NM_getallincomm(MPIR_Comm * comm_ptr,
-                                        int local_size, MPIR_Gpid local_gpids[], int *singleAVT)
-{
-    int i;
-
-    for (i = 0; i < comm_ptr->local_size; i++)
-        MPIDI_GPID_Get(comm_ptr, i, &local_gpids[i]);
-
-    *singleAVT = 0;
-    return 0;
 }
 
 static inline int MPIDI_NM_upids_to_lupids(int size,
