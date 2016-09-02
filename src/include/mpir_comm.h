@@ -201,14 +201,6 @@ struct MPIR_Comm {
 };
 extern MPIR_Object_alloc_t MPIR_Comm_mem;
 
-typedef struct MPIR_Gpid {
-#ifdef MPID_DEV_GPID_DECL
-    MPID_DEV_GPID_DECL
-#else
-    int dummy;   /* don't create an empty structure */
-#endif
-}MPIR_Gpid;
-
 /* this function should not be called by normal code! */
 int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr);
 
