@@ -893,12 +893,9 @@ static inline int MPIDII_set_map(MPIDII_rank_map_t * src_rmap,
                                  int src_comm_size, int total_mapper_size, int mapper_offset)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDII_rank_map_mode src_mode;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDII_SET_MAP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDII_SET_MAP);
-
-    src_mode = src_rmap->mode;
 
     /* Simplest case: MAP_DUP, exact duplication of src_comm */
     if (mapper->type == MPIR_COMM_MAP_TYPE__DUP && src_comm_size == total_mapper_size) {
@@ -931,7 +928,7 @@ static inline int MPIDII_set_map(MPIDII_rank_map_t * src_rmap,
                 MPIDII_src_mlut_to_mlut(src_rmap, dest_rmap, mapper, total_mapper_size,
                                         mapper_offset);
             }
-            else {      /* src_mode != MPIDII_RANK_MAP_MLUT */
+            else {
                 MPIDII_src_map_to_lut(src_rmap, dest_rmap, mapper, mapper->src_mapping_size,
                                       mapper_offset);
             }
