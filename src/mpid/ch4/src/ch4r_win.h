@@ -33,7 +33,7 @@ static inline int MPIDI_CH4R_win_set_info(MPIR_Win * win, MPIR_Info * info)
 
     MPIR_Info *curr_ptr;
     char *value, *token, *savePtr;
-    uint save_ordering;
+    int save_ordering;
 
     curr_ptr = info->next;
 
@@ -45,7 +45,7 @@ static inline int MPIDI_CH4R_win_set_info(MPIR_Win * win, MPIR_Info * info)
                 MPIDI_CH4U_WIN(win, info_args).no_locks = 0;
         }
         else if (!strcmp(curr_ptr->key, "accumulate_ordering")) {
-            save_ordering = (uint) MPIDI_CH4U_WIN(win, info_args).accumulate_ordering;
+            save_ordering = MPIDI_CH4U_WIN(win, info_args).accumulate_ordering;
             MPIDI_CH4U_WIN(win, info_args).accumulate_ordering = 0;
             value = curr_ptr->value;
             token = (char *) strtok_r(value, ",", &savePtr);
