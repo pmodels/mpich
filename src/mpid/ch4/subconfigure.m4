@@ -376,9 +376,8 @@ AM_CONDITIONAL([BUILD_CH4_SHM],[test "$ch4_shm_level" = "yes" -o "$ch4_shm_level
 
 AC_CHECK_HEADERS(sys/mman.h sys/stat.h fcntl.h)
 
-found_rand_funcs=no
-AC_CHECK_FUNCS(random_r initstate_r, found_rand_funcs=yes)
-if test "$found_rand_funcs" = yes ; then
+gl_FUNC_RANDOM_R
+if test "$HAVE_RANDOM_R" = "1" -a "$HAVE_STRUCT_RANDOM_DATA" = "1" ; then
     AC_DEFINE(USE_SYM_HEAP,1,[Define if we can use a symmetric heap])
     AC_MSG_NOTICE([Using a symmetric heap])
 else
