@@ -68,7 +68,6 @@ $hasDemon   = 0;
                   'thread-cs;global;per-object;lock-free',
                   'refcount;lock;lock-free;none',
                   'mutex-timing',
-                  'handle-allocation;tls;mutex',
                   'multi-aliases',
                   'wrapper-rpath',
                   'predefined-refcount',
