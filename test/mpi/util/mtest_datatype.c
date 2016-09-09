@@ -648,8 +648,8 @@ static int MTestTypeSubarrayCheckbuf(MTestDatatype * mtype)
  * lb:       Lower bound of the new datatype (ignored).
  * oldtype:  Datatype of element.
  */
-static int MTestTypeContiguousCreate(int nblock, int blocklen, int stride, int lb,
-                                     MPI_Datatype oldtype, const char *typename_prefix,
+static int MTestTypeContiguousCreate(MPI_Aint nblock, MPI_Aint blocklen, MPI_Aint stride,
+                                     MPI_Aint lb, MPI_Datatype oldtype, const char *typename_prefix,
                                      MTestDatatype * mtype)
 {
     int merr = 0;
@@ -672,7 +672,7 @@ static int MTestTypeContiguousCreate(int nblock, int blocklen, int stride, int l
         MTestPrintError(merr);
 
     memset(type_name, 0, sizeof(type_name));
-    sprintf(type_name, "%s %s (%d count)", typename_prefix, "contiguous", nblock * blocklen);
+    sprintf(type_name, "%s %s (%ld count)", typename_prefix, "contiguous", nblock * blocklen);
     merr = MPI_Type_set_name(mtype->datatype, (char *) type_name);
     if (merr)
         MTestPrintError(merr);
@@ -693,7 +693,7 @@ static int MTestTypeContiguousCreate(int nblock, int blocklen, int stride, int l
  * lb:       Lower bound of the new datatype (ignored).
  * oldtype:  Datatype of element.
  */
-static int MTestTypeVectorCreate(int nblock, int blocklen, int stride, int lb,
+static int MTestTypeVectorCreate(MPI_Aint nblock, MPI_Aint blocklen, MPI_Aint stride, MPI_Aint lb,
                                  MPI_Datatype oldtype, const char *typename_prefix,
                                  MTestDatatype * mtype)
 {
@@ -720,8 +720,8 @@ static int MTestTypeVectorCreate(int nblock, int blocklen, int stride, int lb,
         MTestPrintError(merr);
 
     memset(type_name, 0, sizeof(type_name));
-    sprintf(type_name, "%s %s (%d nblock %d blocklen %d stride)", typename_prefix, "vector", nblock,
-            blocklen, stride);
+    sprintf(type_name, "%s %s (%ld nblock %ld blocklen %ld stride)", typename_prefix, "vector",
+            nblock, blocklen, stride);
     merr = MPI_Type_set_name(mtype->datatype, (char *) type_name);
     if (merr)
         MTestPrintError(merr);
@@ -742,7 +742,7 @@ static int MTestTypeVectorCreate(int nblock, int blocklen, int stride, int lb,
  * lb:       Lower bound of the new datatype (ignored).
  * oldtype:  Datatype of element.
  */
-static int MTestTypeHvectorCreate(int nblock, int blocklen, int stride, int lb,
+static int MTestTypeHvectorCreate(MPI_Aint nblock, MPI_Aint blocklen, MPI_Aint stride, MPI_Aint lb,
                                   MPI_Datatype oldtype, const char *typename_prefix,
                                   MTestDatatype * mtype)
 {
@@ -769,7 +769,7 @@ static int MTestTypeHvectorCreate(int nblock, int blocklen, int stride, int lb,
         MTestPrintError(merr);
 
     memset(type_name, 0, sizeof(type_name));
-    sprintf(type_name, "%s %s (%d nblock %d blocklen %d stride)", typename_prefix, "hvector",
+    sprintf(type_name, "%s %s (%ld nblock %ld blocklen %ld stride)", typename_prefix, "hvector",
             nblock, blocklen, stride);
     merr = MPI_Type_set_name(mtype->datatype, (char *) type_name);
     if (merr)
@@ -794,7 +794,7 @@ static int MTestTypeHvectorCreate(int nblock, int blocklen, int stride, int lb,
  * lb:       Lower bound of the new datatype.
  * oldtype:  Datatype of element.
  */
-static int MTestTypeIndexedCreate(int nblock, int blocklen, int stride, int lb,
+static int MTestTypeIndexedCreate(MPI_Aint nblock, MPI_Aint blocklen, MPI_Aint stride, MPI_Aint lb,
                                   MPI_Datatype oldtype, const char *typename_prefix,
                                   MTestDatatype * mtype)
 {
@@ -833,7 +833,7 @@ static int MTestTypeIndexedCreate(int nblock, int blocklen, int stride, int lb,
         MTestPrintError(merr);
 
     memset(type_name, 0, sizeof(type_name));
-    sprintf(type_name, "%s %s (%d nblock %d blocklen %d stride %d lb)", typename_prefix,
+    sprintf(type_name, "%s %s (%ld nblock %ld blocklen %ld stride %ld lb)", typename_prefix,
             "index", nblock, blocklen, stride, lb);
     merr = MPI_Type_set_name(mtype->datatype, (char *) type_name);
     if (merr)
@@ -857,9 +857,9 @@ static int MTestTypeIndexedCreate(int nblock, int blocklen, int stride, int lb,
  * lb:       Lower bound of the new datatype.
  * oldtype:  Datatype of element.
  */
-static inline int MTestTypeHindexedCreate(int nblock, int blocklen, int stride, int lb,
-                                          MPI_Datatype oldtype, const char *typename_prefix,
-                                          MTestDatatype * mtype)
+static inline int MTestTypeHindexedCreate(MPI_Aint nblock, MPI_Aint blocklen, MPI_Aint stride,
+                                          MPI_Aint lb, MPI_Datatype oldtype,
+                                          const char *typename_prefix, MTestDatatype * mtype)
 {
     int merr;
     char type_name[128];
@@ -895,7 +895,7 @@ static inline int MTestTypeHindexedCreate(int nblock, int blocklen, int stride, 
         MTestPrintError(merr);
 
     memset(type_name, 0, sizeof(type_name));
-    sprintf(type_name, "%s %s (%d nblock %d blocklen %d stride %d lb)", typename_prefix,
+    sprintf(type_name, "%s %s (%ld nblock %ld blocklen %ld stride %ld lb)", typename_prefix,
             "hindex", nblock, blocklen, stride, lb);
     merr = MPI_Type_set_name(mtype->datatype, (char *) type_name);
     if (merr)
@@ -921,9 +921,9 @@ static inline int MTestTypeHindexedCreate(int nblock, int blocklen, int stride, 
  * lb:       Lower bound of the new datatype.
  * oldtype:  Datatype of element.
  */
-static int MTestTypeIndexedBlockCreate(int nblock, int blocklen, int stride, int lb,
-                                       MPI_Datatype oldtype, const char *typename_prefix,
-                                       MTestDatatype * mtype)
+static int MTestTypeIndexedBlockCreate(MPI_Aint nblock, MPI_Aint blocklen, MPI_Aint stride,
+                                       MPI_Aint lb, MPI_Datatype oldtype,
+                                       const char *typename_prefix, MTestDatatype * mtype)
 {
     int merr;
     char type_name[128];
@@ -960,7 +960,7 @@ static int MTestTypeIndexedBlockCreate(int nblock, int blocklen, int stride, int
         MTestPrintError(merr);
 
     memset(type_name, 0, sizeof(type_name));
-    sprintf(type_name, "%s %s (%d nblock %d blocklen %d stride %d lb)", typename_prefix,
+    sprintf(type_name, "%s %s (%ld nblock %ld blocklen %ld stride %ld lb)", typename_prefix,
             "index_block", nblock, blocklen, stride, lb);
     merr = MPI_Type_set_name(mtype->datatype, (char *) type_name);
     if (merr)
@@ -984,9 +984,9 @@ static int MTestTypeIndexedBlockCreate(int nblock, int blocklen, int stride, int
  * lb:       Lower bound of the new datatype.
  * oldtype:  Datatype of element.
  */
-static int MTestTypeHindexedBlockCreate(int nblock, int blocklen, int stride, int lb,
-                                        MPI_Datatype oldtype, const char *typename_prefix,
-                                        MTestDatatype * mtype)
+static int MTestTypeHindexedBlockCreate(MPI_Aint nblock, MPI_Aint blocklen, MPI_Aint stride,
+                                        MPI_Aint lb, MPI_Datatype oldtype,
+                                        const char *typename_prefix, MTestDatatype * mtype)
 {
     int merr;
     char type_name[128];
@@ -1021,7 +1021,7 @@ static int MTestTypeHindexedBlockCreate(int nblock, int blocklen, int stride, in
         MTestPrintError(merr);
 
     memset(type_name, 0, sizeof(type_name));
-    sprintf(type_name, "%s %s (%d nblock %d blocklen %d stride %d lb)", typename_prefix,
+    sprintf(type_name, "%s %s (%ld nblock %ld blocklen %ld stride %ld lb)", typename_prefix,
             "hindex_block", nblock, blocklen, stride, lb);
     merr = MPI_Type_set_name(mtype->datatype, (char *) type_name);
     if (merr)
@@ -1046,7 +1046,7 @@ static int MTestTypeHindexedBlockCreate(int nblock, int blocklen, int stride, in
  * lb:       Lower bound of the new datatype.
  * oldtype:  Datatype of element. Each block has the same oldtype.
  */
-static int MTestTypeStructCreate(int nblock, int blocklen, int stride, int lb,
+static int MTestTypeStructCreate(MPI_Aint nblock, MPI_Aint blocklen, MPI_Aint stride, MPI_Aint lb,
                                  MPI_Datatype oldtype, const char *typename_prefix,
                                  MTestDatatype * mtype)
 {
@@ -1087,7 +1087,7 @@ static int MTestTypeStructCreate(int nblock, int blocklen, int stride, int lb,
         MTestPrintError(merr);
 
     memset(type_name, 0, sizeof(type_name));
-    sprintf(type_name, "%s %s (%d nblock %d blocklen %d stride %d lb)", typename_prefix,
+    sprintf(type_name, "%s %s (%ld nblock %ld blocklen %ld stride %ld lb)", typename_prefix,
             "struct", nblock, blocklen, stride, lb);
     merr = MPI_Type_set_name(mtype->datatype, (char *) type_name);
     if (merr)
@@ -1112,9 +1112,9 @@ static int MTestTypeStructCreate(int nblock, int blocklen, int stride, int lb,
  * order: MPI_ORDER_C
  * oldtype: oldtype
  */
-static int MTestTypeSubArrayOrderCCreate(int nblock, int blocklen, int stride, int lb,
-                                         MPI_Datatype oldtype, const char *typename_prefix,
-                                         MTestDatatype * mtype)
+static int MTestTypeSubArrayOrderCCreate(MPI_Aint nblock, MPI_Aint blocklen, MPI_Aint stride,
+                                         MPI_Aint lb, MPI_Datatype oldtype,
+                                         const char *typename_prefix, MTestDatatype * mtype)
 {
     int merr;
     char type_name[128];
@@ -1169,9 +1169,9 @@ static int MTestTypeSubArrayOrderCCreate(int nblock, int blocklen, int stride, i
  * order: MPI_ORDER_FORTRAN
  * oldtype: oldtype
  */
-static int MTestTypeSubArrayOrderFortranCreate(int nblock, int blocklen, int stride, int lb,
-                                               MPI_Datatype oldtype, const char *typename_prefix,
-                                               MTestDatatype * mtype)
+static int MTestTypeSubArrayOrderFortranCreate(MPI_Aint nblock, MPI_Aint blocklen, MPI_Aint stride,
+                                               MPI_Aint lb, MPI_Datatype oldtype,
+                                               const char *typename_prefix, MTestDatatype * mtype)
 {
     int merr;
     char type_name[128];
