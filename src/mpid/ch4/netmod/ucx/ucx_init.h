@@ -26,12 +26,11 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          MPIR_Comm * comm_self,
                                          int spawned, int num_contexts, void **netmod_contexts)
 {
-    int mpi_errno = MPI_SUCCESS, thr_err, pmi_errno;
+    int mpi_errno = MPI_SUCCESS, pmi_errno;
     int str_errno = MPL_STR_SUCCESS;
     ucp_config_t *config;
     ucs_status_t ucx_status;
     uint64_t features = 0;
-    int status;
     char valS[MPIDI_UCX_KVSAPPSTRLEN], *val;
     char keyS[MPIDI_UCX_KVSAPPSTRLEN];
     char remote_addr[MPIDI_UCX_KVSAPPSTRLEN];
@@ -39,9 +38,6 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     //   char *table = NULL;
     int i;
     ucp_params_t ucp_params;
-    int avtid = 0, max_n_avts;
-
-    size_t address_length = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_INIT);
@@ -129,9 +125,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
 static inline int MPIDI_NM_mpi_finalize_hook(void)
 {
-    int mpi_errno = MPI_SUCCESS, thr_err, pmi_errno;
+    int mpi_errno = MPI_SUCCESS, pmi_errno;
     int i, j, max_n_avts;
-    MPIR_Errflag_t errflag;
     MPIR_Comm *comm;
     max_n_avts = MPIDIU_get_max_n_avts();
 
@@ -261,7 +256,6 @@ static inline int MPIDI_NM_gpid_tolpidarray(int size, MPIR_Gpid gpid[], int lpid
 
     for (i = 0; i < size; i++) {
         int j, k;
-        char tbladdr[128];
         int found = 0;
 
         for (k = 0; k < max_n_avts; k++) {

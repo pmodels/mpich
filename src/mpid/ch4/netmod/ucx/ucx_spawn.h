@@ -65,7 +65,6 @@ static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
 static inline int MPIDI_NM_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Errflag_t errflag = MPIR_ERR_NONE;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_COMM_DISCONNECT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_COMM_DISCONNECT);
