@@ -121,7 +121,7 @@ static inline int do_irecv(void *buf,
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     if (dt_contig)
         mpi_errno =
-            ucx_irecv_continous(buf + dt_true_lb, data_sz, rank, tag, comm, context_offset,
+            ucx_irecv_continous((char *) buf + dt_true_lb, data_sz, rank, tag, comm, context_offset,
                                 request);
     else
         mpi_errno =
@@ -183,7 +183,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     message_handler = MPIDI_UCX_REQ(message).a.message_handler;
     if (dt_contig)
         ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.worker,
-                                                                      buf + dt_true_lb, data_sz,
+                                                                      (char *) buf + dt_true_lb, data_sz,
                                                                       ucp_dt_make_contig(1),
                                                                       message_handler,
                                                                       &MPIDI_UCX_Handle_recv_callback);

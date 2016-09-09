@@ -123,7 +123,7 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
     }
 
 
-    mpi_errno = MPIDI_UCX_contig_put(origin_addr + origin_true_lb, origin_bytes,
+    mpi_errno = MPIDI_UCX_contig_put((char *) origin_addr + origin_true_lb, origin_bytes,
                                      target_rank, target_disp, target_true_lb, win);
   fn_exit:
     return mpi_errno;
@@ -177,7 +177,7 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
     }
 
 
-    return MPIDI_UCX_contig_get(origin_addr + origin_true_lb, origin_bytes,
+    return MPIDI_UCX_contig_get((char *) origin_addr + origin_true_lb, origin_bytes,
                                 target_rank, target_disp, target_true_lb, win);
   fn_exit:
     return mpi_errno;

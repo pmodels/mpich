@@ -136,7 +136,7 @@ static inline int MPIDI_NM_am_isend(int rank,
         send_buf = MPL_malloc(data_sz + am_hdr_sz + sizeof(ucx_hdr));
         MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
         MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
-        MPIR_Memcpy(send_buf + am_hdr_sz + sizeof(ucx_hdr), data + dt_true_lb, data_sz);
+        MPIR_Memcpy(send_buf + am_hdr_sz + sizeof(ucx_hdr), (char *) data + dt_true_lb, data_sz);
     }
     else {
         size_t segment_first;
@@ -276,7 +276,7 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
         send_buf = MPL_malloc(data_sz + am_hdr_sz + sizeof(ucx_hdr));
         MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
         MPIR_Memcpy(send_buf + sizeof(ucx_hdr), am_hdr, am_hdr_sz);
-        MPIR_Memcpy(send_buf + am_hdr_sz + sizeof(ucx_hdr), data + dt_true_lb, data_sz);
+        MPIR_Memcpy(send_buf + am_hdr_sz + sizeof(ucx_hdr), (char *) data + dt_true_lb, data_sz);
 
         ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
                                                                   data_sz + am_hdr_sz +

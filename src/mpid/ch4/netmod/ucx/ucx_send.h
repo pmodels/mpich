@@ -265,7 +265,7 @@ static inline int ucx_send(const void *buf,
 
     if (dt_contig)
         mpi_errno =
-            ucx_send_continous(buf + dt_true_lb, data_sz, rank, tag, comm, context_offset, request,
+            ucx_send_continous((char *) buf + dt_true_lb, data_sz, rank, tag, comm, context_offset, request,
                                have_request);
     else
         mpi_errno =
@@ -301,7 +301,7 @@ static inline int ucx_sync_send(const void *buf,
 
     if (dt_contig)
         mpi_errno =
-            ucx_sync_send_continous(buf + dt_true_lb, data_sz, rank, tag, comm, context_offset,
+            ucx_sync_send_continous((char *) buf + dt_true_lb, data_sz, rank, tag, comm, context_offset,
                                     request, have_request);
     else
         mpi_errno =
