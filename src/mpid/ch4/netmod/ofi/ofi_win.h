@@ -154,9 +154,7 @@ static inline int MPIDI_OFI_win_init_generic(MPI_Aint length,
         MPIR_Assert(finfo);
         finfo->ep_attr->tx_ctx_cnt = FI_SHARED_CONTEXT; /* Request a shared context */
         MPIDI_OFI_CALL_RETURN(fi_endpoint(MPIDI_Global.domain,
-                                          finfo,
-                                          &MPIDI_OFI_WIN(win).ep,
-                                          NULL), ret);
+                                          finfo, &MPIDI_OFI_WIN(win).ep, NULL), ret);
         if (ret < 0) {
             MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         "Failed to create per-window EP (with completion), "
@@ -183,9 +181,7 @@ static inline int MPIDI_OFI_win_init_generic(MPI_Aint length,
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_WIN(win).ep, &MPIDI_Global.av->fid, 0), bind);
 
         MPIDI_OFI_CALL_RETURN(fi_endpoint(MPIDI_Global.domain,
-                                          finfo,
-                                          &MPIDI_OFI_WIN(win).ep_nocmpl,
-                                          NULL), ret);
+                                          finfo, &MPIDI_OFI_WIN(win).ep_nocmpl, NULL), ret);
         fi_freeinfo(finfo);
         if (ret < 0) {
             MPL_DBG_MSG(MPIDI_CH4_DBG_GENERAL, VERBOSE,
@@ -199,10 +195,8 @@ static inline int MPIDI_OFI_win_init_generic(MPI_Aint length,
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_WIN(win).ep_nocmpl,
                                   &MPIDI_Global.stx_ctx->fid, 0), bind);
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_WIN(win).ep_nocmpl,
-                                  &MPIDI_OFI_WIN(win).cmpl_cntr->fid,
-                                  FI_READ | FI_WRITE), bind);
-        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_WIN(win).ep_nocmpl,
-                                  &MPIDI_Global.av->fid, 0), bind);
+                                  &MPIDI_OFI_WIN(win).cmpl_cntr->fid, FI_READ | FI_WRITE), bind);
+        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_WIN(win).ep_nocmpl, &MPIDI_Global.av->fid, 0), bind);
 
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_WIN(win).ep), ep_enable);
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_WIN(win).ep_nocmpl), ep_enable);

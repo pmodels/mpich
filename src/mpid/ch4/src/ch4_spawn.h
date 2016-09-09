@@ -129,7 +129,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_spawn_multiple(int count,
         preput_keyval_vector.val = port_name;
         pmi_errno = PMI_Spawn_multiple(count, (const char **)
                                        commands,
-                                       (const char ** *) argvs,
+                                       (const char ***) argvs,
                                        maxprocs, info_keyval_sizes, (const PMI_keyval_t **)
                                        info_keyval_vectors, 1, &preput_keyval_vector, pmi_errcodes);
 
