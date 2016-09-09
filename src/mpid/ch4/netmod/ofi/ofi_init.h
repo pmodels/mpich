@@ -289,7 +289,7 @@ static inline int MPIDI_OFI_init_generic(int rank,
     else {
         av_attr.type = FI_AV_MAP;
     }
-    mapped_table           = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t));
+    mapped_table = (fi_addr_t *) MPL_malloc(size * sizeof(fi_addr_t));
 
     av_attr.rx_ctx_bits = MPIDI_OFI_MAX_ENDPOINTS_BITS;
 
