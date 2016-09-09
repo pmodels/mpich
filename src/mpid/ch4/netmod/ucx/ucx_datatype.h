@@ -123,7 +123,6 @@ static inline int MPIDI_NM_mpi_type_create_hook(MPIR_Datatype * datatype_p)
 {
     ucp_datatype_t ucp_datatype;
     ucs_status_t status;
-    size_t size;
     int is_contig;
 
 

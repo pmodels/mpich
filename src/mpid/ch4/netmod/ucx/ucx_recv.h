@@ -114,7 +114,6 @@ static inline int do_irecv(void *buf,
     int mpi_errno = MPI_SUCCESS;
     size_t data_sz;
     int dt_contig;
-    MPIR_Request *req;
     MPI_Aint dt_true_lb;
 
     MPIR_Datatype *dt_ptr;

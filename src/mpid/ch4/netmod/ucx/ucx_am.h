@@ -89,7 +89,7 @@ static inline int MPIDI_NM_am_isend(int rank,
                                     MPI_Datatype datatype, MPIR_Request * sreq,
                                     void *netmod_context)
 {
-    int mpi_errno = MPI_SUCCESS, c;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
     ucp_ep_h ep;
     uint64_t ucx_tag;
@@ -246,13 +246,13 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
                                           const void *data, MPI_Count count,
                                           MPI_Datatype datatype, MPIR_Request * sreq)
 {
-    int mpi_errno = MPI_SUCCESS, c;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
     ucp_ep_h ep;
     uint64_t ucx_tag;
     char *send_buf;
     size_t data_sz;
-    MPI_Aint dt_true_lb, last;
+    MPI_Aint dt_true_lb;
     MPIR_Datatype *dt_ptr;
     int dt_contig;
     MPIDI_UCX_am_header_t ucx_hdr;
@@ -327,7 +327,7 @@ static inline int MPIDI_NM_am_send_hdr(int rank,
                                        int handler_id,
                                        const void *am_hdr, size_t am_hdr_sz, void *netmod_context)
 {
-    int mpi_errno = MPI_SUCCESS, c;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
     ucp_ep_h ep;
     uint64_t ucx_tag;
@@ -379,7 +379,7 @@ static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
                                              int src_rank,
                                              int handler_id, const void *am_hdr, size_t am_hdr_sz)
 {
-    int mpi_errno = MPI_SUCCESS, c;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;
     ucp_ep_h ep;
     uint64_t ucx_tag;
