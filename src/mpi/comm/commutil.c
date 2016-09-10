@@ -89,6 +89,8 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->topo_fns = NULL;
     comm_p->name[0] = '\0';
     comm_p->info = NULL;
+    comm_p->nsched_list_head = NULL;
+    comm_p->nsched_list_tail = NULL;
 
     comm_p->hierarchy_kind = MPIR_COMM_HIERARCHY_KIND__FLAT;
     comm_p->node_comm = NULL;

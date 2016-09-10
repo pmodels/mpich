@@ -5,6 +5,7 @@
  */
 
 #include "mpiimpl.h"
+#include <assert.h>
 
 /* -- Begin Profiling Symbol Block for routine MPI_Ibarrier */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -166,6 +167,55 @@ fn_fail:
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIR_Ibarrier_intra_req
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPIR_Ibarrier_intra_req(MPIR_Comm *comm_ptr, MPIR_Request **req_p_p)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int size, rank, src, dst, mask;
+    MPIR_Nsched *s;
+
+    assert(comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM);
+
+    size = comm_ptr->local_size;
+    rank = comm_ptr->rank;
+
+    if (size == 1) {
+        *req_p_p = NULL;
+        goto fn_exit;
+    }
+
+    MPIR_Nsched_create(&s, req_p_p);
+
+    mask = 0x1;
+    while (mask < size) {
+        dst = (rank + mask) % size;
+        src = (rank - mask + size) % size;
+
+        mpi_errno = MPIR_Nsched_enqueue_isend(NULL, 0, MPI_BYTE, dst,
+                                              MPIR_IBARRIER_TAG, comm_ptr, s);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+        mpi_errno = MPIR_Nsched_enqueue_irecv(NULL, 0, MPI_BYTE, src,
+                                              MPIR_IBARRIER_TAG, comm_ptr, s);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+        mpi_errno = MPIR_Nsched_enqueue_sync(s);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+
+        mask <<= 1;
+    }
+
+    MPIR_Nsched_kickoff(s, comm_ptr);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIR_Ibarrier_impl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -177,6 +227,15 @@ int MPIR_Ibarrier_impl(MPIR_Comm *comm_ptr, MPI_Request *request)
     MPIR_Sched_t s = MPIR_SCHED_NULL;
 
     *request = MPI_REQUEST_NULL;
+
+    if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
+        MPIR_Ibarrier_intra_req(comm_ptr, &reqp);
+        if (reqp) {
+            *request = reqp->handle;
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        }
+        goto fn_exit;
+    }
 
     if (comm_ptr->local_size != 1 || comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
         mpi_errno = MPIR_Sched_next_tag(comm_ptr, &tag);

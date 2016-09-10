@@ -239,6 +239,8 @@ int MPI_Finalize( void )
 	MPIR_ERR_POP(mpi_errno);
     }
 
+    MPIR_Nsched_finalize();
+
     /* Call the low-priority (post Finalize) callbacks */
     MPIR_Call_finalize_callbacks( 0, MPIR_FINALIZE_CALLBACK_PRIO-1 );
 

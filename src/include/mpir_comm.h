@@ -180,6 +180,9 @@ struct MPIR_Comm {
                                      * has been revoked */
     MPIR_Info *info;                /* Hints to the communicator */
 
+    MPIR_Nsched *nsched_list_head;
+    MPIR_Nsched *nsched_list_tail;
+
 #ifdef MPID_HAS_HETERO
     int is_hetero;
 #endif
