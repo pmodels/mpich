@@ -26,7 +26,7 @@ typedef MPIDU_Thread_func_t  MPID_Thread_func_t;
 #define MPID_Thread_exit         MPIDU_Thread_exit
 #define MPID_Thread_self         MPIDU_Thread_self
 #define MPID_Thread_same       MPIDU_Thread_same
-#define MPID_Thread_same       MPIDU_Thread_same
+#define MPID_Thread_yield        MPIDU_Thread_yield
 
 #define MPID_Thread_mutex_create  MPIDU_Thread_mutex_create
 #define MPID_Thread_mutex_destroy  MPIDU_Thread_mutex_destroy
