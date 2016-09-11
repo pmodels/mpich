@@ -123,7 +123,7 @@
 #endif
 
 /*
-    This routine is needed because the MPIU_THREAD_XXX_CS_{ENTER,EXIT} macros do
+    This routine is needed because the MPID_THREAD_XXX_CS_{ENTER,EXIT} macros do
     not provide synchronization across multiple processes, only across multiple
     threads within a process.  In order to safely emulate atomic operations on a
     shared memory region, we need a shared memory backed lock mechanism.
