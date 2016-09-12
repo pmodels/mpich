@@ -39,7 +39,8 @@
 #  define TYPE_MPI TYPE_MPI_BASE
 #endif
 
-void reset_bufs(TYPE_C * win_ptr, TYPE_C * res_ptr, TYPE_C * val_ptr, TYPE_C value, MPI_Win win)
+static void reset_bufs(TYPE_C * win_ptr, TYPE_C * res_ptr, TYPE_C * val_ptr, TYPE_C value,
+                       MPI_Win win)
 {
     int rank, nproc, i;
 
