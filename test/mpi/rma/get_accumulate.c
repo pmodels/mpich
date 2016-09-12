@@ -305,6 +305,8 @@ int main(int argc, char **argv)
         int j, target = (rank + 1) % nproc;
 
         /* Test: origin_buf = NULL */
+        memset(res_ptr, -1, sizeof(TYPE_C) * nproc * COUNT); /* reset result buffer. */
+
         MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
         MPI_Get_accumulate(NULL, COUNT, TYPE_MPI, res_ptr, COUNT, TYPE_MPI,
                            target, 0, COUNT, TYPE_MPI, MPI_NO_OP, win);
@@ -319,6 +321,8 @@ int main(int argc, char **argv)
         }
 
         /* Test: origin_buf = NULL, origin_count = 0 */
+        memset(res_ptr, -1, sizeof(TYPE_C) * nproc * COUNT);
+
         MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
         MPI_Get_accumulate(NULL, 0, TYPE_MPI, res_ptr, COUNT, TYPE_MPI,
                            target, 0, COUNT, TYPE_MPI, MPI_NO_OP, win);
@@ -333,6 +337,8 @@ int main(int argc, char **argv)
         }
 
         /* Test: origin_buf = NULL, origin_count = 0, origin_dtype = NULL */
+        memset(res_ptr, -1, sizeof(TYPE_C) * nproc * COUNT);
+
         MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
         MPI_Get_accumulate(NULL, 0, MPI_DATATYPE_NULL, res_ptr, COUNT, TYPE_MPI,
                            target, 0, COUNT, TYPE_MPI, MPI_NO_OP, win);
@@ -361,6 +367,8 @@ int main(int argc, char **argv)
         int j, target = rank;
 
         /* Test: origin_buf = NULL */
+        memset(res_ptr, -1, sizeof(TYPE_C) * nproc * COUNT);
+
         MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
         MPI_Get_accumulate(NULL, COUNT, TYPE_MPI, res_ptr, COUNT, TYPE_MPI,
                            target, 0, COUNT, TYPE_MPI, MPI_NO_OP, win);
@@ -376,6 +384,8 @@ int main(int argc, char **argv)
         }
 
         /* Test: origin_buf = NULL, origin_count = 0 */
+        memset(res_ptr, -1, sizeof(TYPE_C) * nproc * COUNT);
+
         MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
         MPI_Get_accumulate(NULL, 0, TYPE_MPI, res_ptr, COUNT, TYPE_MPI,
                            target, 0, COUNT, TYPE_MPI, MPI_NO_OP, win);
@@ -391,6 +401,8 @@ int main(int argc, char **argv)
         }
 
         /* Test: origin_buf = NULL, origin_count = 0, origin_dtype = NULL */
+        memset(res_ptr, -1, sizeof(TYPE_C) * nproc * COUNT);
+
         MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
         MPI_Get_accumulate(NULL, 0, MPI_DATATYPE_NULL, res_ptr, COUNT, TYPE_MPI,
                            target, 0, COUNT, TYPE_MPI, MPI_NO_OP, win);
