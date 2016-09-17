@@ -756,20 +756,24 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_CREATE_ENDPOINT);
 
     if (do_scalable_ep) {
+        int idx_off;
         MPIDI_OFI_CALL(fi_scalable_ep(domain, prov_use, ep, NULL), ep);
         MPIDI_OFI_CALL(fi_scalable_ep_bind(*ep, &av->fid, 0), bind);
+
+        idx_off = index * 4;
+        MPIDI_Global.ctx[index].ctx_offset = idx_off;
 
         tx_attr = *prov_use->tx_attr;
         tx_attr.caps = FI_TAGGED;
         tx_attr.op_flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
-        MPIDI_OFI_CALL(fi_tx_context(*ep, index, &tx_attr, &MPIDI_OFI_EP_TX_TAG(index), NULL), ep);
+        MPIDI_OFI_CALL(fi_tx_context(*ep, idx_off, &tx_attr, &MPIDI_OFI_EP_TX_TAG(index), NULL), ep);
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_TAG(index), &p2p_cq->fid, FI_SEND | FI_SELECTIVE_COMPLETION), bind);
 
         tx_attr = *prov_use->tx_attr;
         tx_attr.caps = FI_RMA;
         tx_attr.caps |= FI_ATOMICS;
         tx_attr.op_flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
-        MPIDI_OFI_CALL(fi_tx_context(*ep, index + 1, &tx_attr, &MPIDI_OFI_EP_TX_RMA(index), NULL),
+        MPIDI_OFI_CALL(fi_tx_context(*ep, idx_off + 1, &tx_attr, &MPIDI_OFI_EP_TX_RMA(index), NULL),
                        ep);
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_RMA(index), &rma_ctr->fid, FI_WRITE | FI_READ),
                        bind);
@@ -778,7 +782,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         tx_attr = *prov_use->tx_attr;
         tx_attr.caps = FI_MSG;
         tx_attr.op_flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
-        MPIDI_OFI_CALL(fi_tx_context(*ep, index + 2, &tx_attr, &MPIDI_OFI_EP_TX_MSG(index), NULL),
+        MPIDI_OFI_CALL(fi_tx_context(*ep, idx_off + 2, &tx_attr, &MPIDI_OFI_EP_TX_MSG(index), NULL),
                        ep);
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_MSG(index), &p2p_cq->fid, FI_SEND | FI_SELECTIVE_COMPLETION), bind);
 
@@ -786,7 +790,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         tx_attr.caps = FI_RMA;
         tx_attr.caps |= FI_ATOMICS;
         tx_attr.op_flags = FI_DELIVERY_COMPLETE;
-        MPIDI_OFI_CALL(fi_tx_context(*ep, index + 3, &tx_attr, &MPIDI_OFI_EP_TX_CTR(index), NULL),
+        MPIDI_OFI_CALL(fi_tx_context(*ep, idx_off + 3, &tx_attr, &MPIDI_OFI_EP_TX_CTR(index), NULL),
                        ep);
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_CTR(index), &rma_ctr->fid, FI_WRITE | FI_READ),
                        bind);
@@ -800,14 +804,14 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         if (do_data)
             rx_attr.caps |= FI_DIRECTED_RECV;
         rx_attr.op_flags = 0;
-        MPIDI_OFI_CALL(fi_rx_context(*ep, index, &rx_attr, &MPIDI_OFI_EP_RX_TAG(index), NULL), ep);
+        MPIDI_OFI_CALL(fi_rx_context(*ep, idx_off, &rx_attr, &MPIDI_OFI_EP_RX_TAG(index), NULL), ep);
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_TAG(index), &p2p_cq->fid, FI_RECV), bind);
 
         rx_attr = *prov_use->rx_attr;
         rx_attr.caps = FI_RMA;
         rx_attr.caps |= FI_ATOMICS;
         rx_attr.op_flags = 0;
-        MPIDI_OFI_CALL(fi_rx_context(*ep, index + 1, &rx_attr, &MPIDI_OFI_EP_RX_RMA(index), NULL),
+        MPIDI_OFI_CALL(fi_rx_context(*ep, idx_off + 1, &rx_attr, &MPIDI_OFI_EP_RX_RMA(index), NULL),
                        ep);
 
         /* Note:  This bind should cause the "passive target" rx context to never generate an event
@@ -823,7 +827,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         if (do_data)
             rx_attr.caps |= FI_DIRECTED_RECV;
         rx_attr.op_flags = FI_MULTI_RECV;
-        MPIDI_OFI_CALL(fi_rx_context(*ep, index + 2, &rx_attr, &MPIDI_OFI_EP_RX_MSG(index), NULL),
+        MPIDI_OFI_CALL(fi_rx_context(*ep, idx_off + 2, &rx_attr, &MPIDI_OFI_EP_RX_MSG(index), NULL),
                        ep);
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_MSG(index), &p2p_cq->fid, FI_RECV), bind);
 
