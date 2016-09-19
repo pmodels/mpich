@@ -243,8 +243,6 @@ if (pointer_) { \
 #define CHECK_MEMCPY(dst_,src_,len_)                                                                   \
     do {                                                                                                        \
         if (len_) {                                                                                             \
-            MPIR_Assert((dst_) != NULL);                                                                        \
-            MPIR_Assert((src_) != NULL);                                                                        \
             MPL_VG_CHECK_MEM_IS_ADDRESSABLE((dst_),(len_));                                                     \
             MPL_VG_CHECK_MEM_IS_ADDRESSABLE((src_),(len_));                                                     \
             if (MPIR_MEM_RANGES_OVERLAP((dst_),(len_),(src_),(len_))) {                                          \
