@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     int wsize, wrank, i, count;
     MPI_Datatype tripleType;
     double *inVal, *outVal;
-    double maxval, sumval;
+    double maxval, sumval, minval;
     MPI_Op op;
 
     MTest_Init(&argc, &argv);
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
         inVal = (double *) malloc(3 * count * sizeof(double));
         outVal = (double *) malloc(3 * count * sizeof(double));
         if (!inVal || !outVal) {
-            fprintf(stderr, "Unable to allocated %d words for data\n", 3 * count);
+            fprintf(stderr, "Unable to allocate %d words for data\n", 3 * count);
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
         for (i = 0; i < count * 3; i++) {
@@ -75,6 +75,7 @@ int main(int argc, char *argv[])
             for (i = 0; i < 3 * count; i += 3) {
                 sumval = wsize * (1 + (i & 0x3));
                 maxval = 1 + ((i + 1) & 0x3);
+                minval = 1 + ((i + 2) & 0x3);
                 if (outVal[i] != sumval) {
                     if (errs < MAX_ERRS)
                         fprintf(stderr, "%d: outval[%d] = %f, expected %f (sum)\n",
@@ -87,10 +88,10 @@ int main(int argc, char *argv[])
                                 count, i + 1, outVal[i + 1], maxval);
                     errs++;
                 }
-                if (outVal[i + 2] != 1 + ((i + 2) & 0x3)) {
+                if (outVal[i + 2] != minval) {
                     if (errs < MAX_ERRS)
                         fprintf(stderr, "%d: outval[%d] = %f, expected %f (min)\n",
-                                count, i + 2, outVal[i + 2], (double) (1 + ((i + 2) ^ 0x3)));
+                                count, i + 2, outVal[i + 2], minval);
                     errs++;
                 }
             }
