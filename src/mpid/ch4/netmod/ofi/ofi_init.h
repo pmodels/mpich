@@ -21,7 +21,9 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                                             struct fid_cq *p2p_cq,
                                             struct fid_cntr *rma_ctr,
                                             struct fid_av *av,
-                                            struct fid_ep **ep, int index, int do_scalable_ep,
+                                            struct fid_ep **ep, int index,
+                                            int do_tagged,
+                                            int do_scalable_ep,
                                             int do_data);
 
 #define MPIDI_OFI_CHOOSE_PROVIDER(prov, prov_use,errstr)                          \
@@ -329,7 +331,9 @@ static inline int MPIDI_OFI_init_generic(int rank,
                                                      MPIDI_Global.p2p_cq,
                                                      MPIDI_Global.rma_cmpl_cntr,
                                                      MPIDI_Global.av,
-                                                     &MPIDI_Global.ep, 0, do_scalable_ep,
+                                                     &MPIDI_Global.ep, 0,
+                                                     do_tagged,
+                                                     do_scalable_ep,
                                                      do_data));
 
     /* ---------------------------------- */
@@ -511,7 +515,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
 
 
-static inline int MPIDI_OFI_finalize_generic(int do_scalable_ep, int do_am, int do_stx_rma)
+static inline int MPIDI_OFI_finalize_generic(int do_tagged, int do_scalable_ep, int do_am, int do_stx_rma)
 {
     int thr_err = 0, mpi_errno = MPI_SUCCESS;
     int i = 0;
@@ -534,12 +538,14 @@ static inline int MPIDI_OFI_finalize_generic(int do_scalable_ep, int do_am, int 
     MPIR_Assert(OPA_load_int(&MPIDI_Global.am_inflight_inject_emus) == 0);
 
     if (do_scalable_ep) {
-        MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_TX_TAG(0)), epclose);
+        if (do_tagged)
+            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_TX_TAG(0)), epclose);
         MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_TX_RMA(0)), epclose);
         MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_TX_MSG(0)), epclose);
         MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_TX_CTR(0)), epclose);
 
-        MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_RX_TAG(0)), epclose);
+        if (do_tagged)
+            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_RX_TAG(0)), epclose);
         MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_RX_RMA(0)), epclose);
         MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_RX_MSG(0)), epclose);
     }
@@ -592,7 +598,8 @@ static inline int MPIDI_OFI_finalize_generic(int do_scalable_ep, int do_am, int 
 
 static inline int MPIDI_NM_mpi_finalize_hook(void)
 {
-    return MPIDI_OFI_finalize_generic(MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS,
+    return MPIDI_OFI_finalize_generic(MPIDI_OFI_ENABLE_TAGGED,
+                                      MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS,
                                       MPIDI_OFI_ENABLE_AM, MPIDI_OFI_ENABLE_STX_RMA);
 }
 
@@ -745,7 +752,9 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                                             struct fid_cq *p2p_cq,
                                             struct fid_cntr *rma_ctr,
                                             struct fid_av *av,
-                                            struct fid_ep **ep, int index, int do_scalable_ep,
+                                            struct fid_ep **ep, int index,
+                                            int do_tagged,
+                                            int do_scalable_ep,
                                             int do_data)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -763,11 +772,13 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         idx_off = index * 4;
         MPIDI_Global.ctx[index].ctx_offset = idx_off;
 
-        tx_attr = *prov_use->tx_attr;
-        tx_attr.caps = FI_TAGGED;
-        tx_attr.op_flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
-        MPIDI_OFI_CALL(fi_tx_context(*ep, idx_off, &tx_attr, &MPIDI_OFI_EP_TX_TAG(index), NULL), ep);
-        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_TAG(index), &p2p_cq->fid, FI_SEND | FI_SELECTIVE_COMPLETION), bind);
+        if (do_tagged) {
+            tx_attr = *prov_use->tx_attr;
+            tx_attr.caps = FI_TAGGED;
+            tx_attr.op_flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
+            MPIDI_OFI_CALL(fi_tx_context(*ep, idx_off, &tx_attr, &MPIDI_OFI_EP_TX_TAG(index), NULL), ep);
+            MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_TAG(index), &p2p_cq->fid, FI_SEND | FI_SELECTIVE_COMPLETION), bind);
+        }
 
         tx_attr = *prov_use->tx_attr;
         tx_attr.caps = FI_RMA;
@@ -799,13 +810,15 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         if (prov_use->domain_attr->data_progress == FI_PROGRESS_MANUAL)
             MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_CTR(index), &p2p_cq->fid, FI_SEND | FI_SELECTIVE_COMPLETION), bind);
 
-        rx_attr = *prov_use->rx_attr;
-        rx_attr.caps = FI_TAGGED;
-        if (do_data)
-            rx_attr.caps |= FI_DIRECTED_RECV;
-        rx_attr.op_flags = 0;
-        MPIDI_OFI_CALL(fi_rx_context(*ep, idx_off, &rx_attr, &MPIDI_OFI_EP_RX_TAG(index), NULL), ep);
-        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_TAG(index), &p2p_cq->fid, FI_RECV), bind);
+        if (do_tagged) {
+            rx_attr = *prov_use->rx_attr;
+            rx_attr.caps = FI_TAGGED;
+            if (do_data)
+                rx_attr.caps |= FI_DIRECTED_RECV;
+            rx_attr.op_flags = 0;
+            MPIDI_OFI_CALL(fi_rx_context(*ep, idx_off, &rx_attr, &MPIDI_OFI_EP_RX_TAG(index), NULL), ep);
+            MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_TAG(index), &p2p_cq->fid, FI_RECV), bind);
+        }
 
         rx_attr = *prov_use->rx_attr;
         rx_attr.caps = FI_RMA;
@@ -833,12 +846,14 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
 
         MPIDI_OFI_CALL(fi_enable(*ep), ep_enable);
 
-        MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_TX_TAG(index)), ep_enable);
+        if (do_tagged)
+            MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_TX_TAG(index)), ep_enable);
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_TX_RMA(index)), ep_enable);
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_TX_MSG(index)), ep_enable);
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_TX_CTR(index)), ep_enable);
 
-        MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_RX_TAG(index)), ep_enable);
+        if (do_tagged)
+            MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_RX_TAG(index)), ep_enable);
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_RX_RMA(index)), ep_enable);
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_RX_MSG(index)), ep_enable);
     }
