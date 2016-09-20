@@ -426,8 +426,7 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
                                               (char *) origin_addr + origin_true_lb, target_bytes,
                                               MPIDI_OFI_comm_to_phys(win->comm_ptr, target_rank,
                                                                      MPIDI_OFI_API_CTR),
-                                              (uint64_t) (char *) MPIDI_OFI_winfo_base(win,
-                                                                                       target_rank)
+                                              (uint64_t) MPIDI_OFI_winfo_base(win, target_rank)
                                               + target_disp * MPIDI_OFI_winfo_disp_unit(win,
                                                                                         target_rank)
                                               + target_true_lb, MPIDI_OFI_winfo_mr_key(win,
@@ -586,7 +585,7 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
         iov.iov_base = (char *) origin_addr + origin_dt.true_lb;
         iov.iov_len = target_dt.size;
         riov.addr =
-            (uint64_t) ((char *) MPIDI_OFI_winfo_base(win, target_rank) + offset +
+            (uint64_t) (MPIDI_OFI_winfo_base(win, target_rank) + offset +
                         target_dt.true_lb);
         riov.len = target_dt.size;
         riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
@@ -700,7 +699,7 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
 
     buffer = (char *) origin_addr + origin_dt.true_lb;
     rbuffer = (char *) result_addr + result_dt.true_lb;
-    tbuffer = (char *) MPIDI_OFI_winfo_base(win, target_rank) + offset;
+    tbuffer = (void *) (MPIDI_OFI_winfo_base(win, target_rank) + offset);
 
     MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
 
