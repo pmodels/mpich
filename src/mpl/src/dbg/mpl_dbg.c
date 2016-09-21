@@ -296,7 +296,8 @@ MPL_dbg_class MPL_dbg_class_alloc(const char *ucname, const char *lcname)
 /*
  * Initialize the DBG_MSG system.  This is called during the job
  * initialization to process command-line arguments as well as
- * checking the MPICH_DBG environment variables.  The initialization
+ * checking either the MPICH_DBG or MPL_DBG environment variables.
+ * The initialization
  * is split into two steps: a preinit and an init. This makes it
  * possible to enable most of the features before the full
  * initialization, where a significant amount of the initialization
@@ -383,12 +384,26 @@ static int dbg_process_args(int *argc_p, char ***argv_p)
     return MPL_DBG_SUCCESS;
 }
 
+/* could two different environment variables control the same thing?  sure they
+ * could! consider MPICH: we moved all our logging code into MPL, so it should
+ * have an MPL_ prefix, but all the documentation assumes an "MPICH_" prefix.
+ * So we'll look for both. */
+static char *getenv_either(char *env_a, char *env_b)
+{
+    char *s;
+    if ( (s = getenv(env_a)) == NULL)
+        s = getenv(env_b);
+
+    return s;
+}
+
+
 static int dbg_process_env(void)
 {
     char *s;
     int rc;
 
-    s = getenv("MPICH_DBG");
+    s = getenv_either("MPICH_DBG", "MPL_DBG");
     if (s) {
         /* Set the defaults */
         MPL_dbg_max_level = MPL_DBG_TYPICAL;
@@ -397,32 +412,32 @@ static int dbg_process_env(void)
             file_pattern = default_file_pattern;
         }
     }
-    s = getenv("MPICH_DBG_LEVEL");
+    s = getenv_either("MPICH_DBG_LEVEL", "MPL_DBG_LEVEL");
     if (s) {
         rc = dbg_set_level(s, level_name);
         if (rc)
-            dbg_usage("MPICH_DBG_LEVEL", "TERSE, TYPICAL, VERBOSE");
+            dbg_usage("MPL_DBG_LEVEL", "TERSE, TYPICAL, VERBOSE");
     }
 
-    s = getenv("MPICH_DBG_CLASS");
+    s = getenv_either("MPICH_DBG_CLASS", "MPL_DBG_CLASS");
     if (s) {
         rc = dbg_set_class(s);
         if (rc)
-            dbg_usage("MPICH_DBG_CLASS", 0);
+            dbg_usage("MPL_DBG_CLASS", 0);
     }
 
-    s = getenv("MPICH_DBG_FILENAME");
+    s = getenv_either("MPICH_DBG_FILENAME", "MPL_DBG_FILENAME");
     if (s) {
         strncpy(file_pattern_buf, s, sizeof(file_pattern_buf));
         file_pattern = file_pattern_buf;
     }
 
-    s = getenv("MPICH_DBG_RANK");
+    s = getenv_either("MPICH_DBG_RANK", "MPL_DBG_RANK");
     if (s) {
         char *sOut;
         which_rank = (int) strtol(s, &sOut, 10);
         if (s == sOut) {
-            dbg_usage("MPICH_DBG_RANK", 0);
+            dbg_usage("MPL_DBG_RANK", 0);
             which_rank = -1;
         }
     }
