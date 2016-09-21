@@ -982,6 +982,7 @@
 /pt2pt/bsendfrag
 /pt2pt/bsendpending
 /pt2pt/cancelrecv
+/pt2pt/dtype_send
 /pt2pt/dup
 /pt2pt/eagerdt
 /pt2pt/errinstatta
