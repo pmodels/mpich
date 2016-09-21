@@ -149,7 +149,7 @@ int MPID_Isend(const void * buf, MPI_Aint count, MPI_Datatype datatype, int rank
                                                       data_sz, rank, tag, 
                                                       comm, context_offset );
 	    /* If we're not complete, then add a reference to the datatype */
-	    if (sreq && sreq->dev.OnDataAvail) {
+	    if (sreq) {
 		sreq->dev.datatype_ptr = dt_ptr;
 		MPIDU_Datatype_add_ref(dt_ptr);
 	    }
