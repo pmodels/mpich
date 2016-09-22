@@ -12,6 +12,10 @@
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
+categories:
+    - name        : NODEMAP
+      description : cvars that control behavior of nodemap
+
 cvars:
     - name        : MPIR_CVAR_NOLOCAL
       category    : NODEMAP
