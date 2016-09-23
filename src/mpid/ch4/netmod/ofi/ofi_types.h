@@ -35,6 +35,17 @@ cvars:
       description : >-
         The maximum number of completion queue entries to grab from OFI at one time.
 
+    - name        : MPIR_CVAR_CH4_OFI_LOOP_PROGRESS
+      category    : CH4_OFI
+      type        : int
+      default     : 100
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        The number of times to loop in the progress engine to grab entries from
+        the OFI completion queue.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -186,6 +197,7 @@ static inline int MPIDI_OFI_comm_to_ep(MPIR_Comm * comm_ptr, int rank)
 #define MPIDI_OFI_DO_SEND        0
 #define MPIDI_OFI_DO_INJECT      1
 #define MPIDI_OFI_NUM_CQ_ENTRIES MPIR_CVAR_CH4_OFI_NUM_CQ_ENTRIES
+#define MPIDI_OFI_LOOP_PROGRESS  MPIR_CVAR_CH4_OFI_LOOP_PROGRESS
 
 /* Typedefs */
 enum {
