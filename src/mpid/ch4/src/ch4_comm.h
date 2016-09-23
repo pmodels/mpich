@@ -349,7 +349,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_intercomm_exchange_map(MPIR_Comm *local_comm,
     int mpi_errno = MPI_SUCCESS;
     int i;
     int avtid = 0, lpid;
-    int local_avtid = 0, remote_avtid = 0, remote_single_group;
+    int local_avtid = 0, remote_avtid = 0;
     int local_size_send, remote_size_recv;
     int cts_tag;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
@@ -360,7 +360,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_intercomm_exchange_map(MPIR_Comm *local_comm,
     size_t *local_upid_size = NULL, *remote_upid_size = NULL;
     int upid_send_size = 0, upid_recv_size = 0;
     char *local_upids = NULL, *remote_upids = NULL;
-    int map_info[4];
 
     /*
      * CH4 only cares about LUPID. GUPID extraction and exchange should be done
