@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2015 Inria.  All rights reserved.
+ * Copyright © 2009-2016 Inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -28,6 +28,7 @@
 #include <hwloc.h>
 #include <private/private.h>
 #include <private/debug.h>
+#include <private/misc.h>
 
 #ifdef HAVE_MACH_MACH_INIT_H
 #include <mach/mach_init.h>
@@ -284,8 +285,13 @@ void hwloc__add_info(struct hwloc_obj_info_s **infosp, unsigned *countp, const c
 #define OBJECT_INFO_ALLOC 8
   /* nothing allocated initially, (re-)allocate by multiple of 8 */
   unsigned alloccount = (count + 1 + (OBJECT_INFO_ALLOC-1)) & ~(OBJECT_INFO_ALLOC-1);
-  if (count != alloccount)
-    infos = realloc(infos, alloccount*sizeof(*infos));
+  if (count != alloccount) {
+    struct hwloc_obj_info_s *tmpinfos = realloc(infos, alloccount*sizeof(*infos));
+    if (!tmpinfos)
+      /* failed to allocate, ignore this info */
+      return;
+    infos = tmpinfos;
+  }
   infos[count].name = strdup(name);
   infos[count].value = value ? strdup(value) : NULL;
   *infosp = infos;
@@ -314,8 +320,13 @@ void hwloc__move_infos(struct hwloc_obj_info_s **dst_infosp, unsigned *dst_count
 #define OBJECT_INFO_ALLOC 8
   /* nothing allocated initially, (re-)allocate by multiple of 8 */
   unsigned alloccount = (dst_count + src_count + (OBJECT_INFO_ALLOC-1)) & ~(OBJECT_INFO_ALLOC-1);
-  if (dst_count != alloccount)
-    dst_infos = realloc(dst_infos, alloccount*sizeof(*dst_infos));
+  if (dst_count != alloccount) {
+    struct hwloc_obj_info_s *tmp_infos = realloc(dst_infos, alloccount*sizeof(*dst_infos));
+    if (!tmp_infos)
+      /* Failed to realloc, ignore the appended infos */
+      goto drop;
+    dst_infos = tmp_infos;
+  }
   for(i=0; i<src_count; i++, dst_count++) {
     dst_infos[dst_count].name = src_infos[i].name;
     dst_infos[dst_count].value = src_infos[i].value;
@@ -325,6 +336,17 @@ void hwloc__move_infos(struct hwloc_obj_info_s **dst_infosp, unsigned *dst_count
   free(src_infos);
   *src_infosp = NULL;
   *src_countp = 0;
+  return;
+
+ drop:
+  for(i=0; i<src_count; i++, dst_count++) {
+    free(src_infos[i].name);
+    free(src_infos[i].value);
+  }
+  free(src_infos);
+  *src_infosp = NULL;
+  *src_countp = 0;
+  /* dst_infos not modified */
 }
 
 void hwloc_obj_add_info(hwloc_obj_t obj, const char *name, const char *value)
@@ -519,7 +541,7 @@ hwloc_topology_dup(hwloc_topology_t *newp,
   unsigned i;
 
   if (!old->is_loaded) {
-    errno = -EINVAL;
+    errno = EINVAL;
     return -1;
   }
 
@@ -539,6 +561,7 @@ hwloc_topology_dup(hwloc_topology_t *newp,
 
   new->userdata_export_cb = old->userdata_export_cb;
   new->userdata_import_cb = old->userdata_import_cb;
+  new->userdata_not_decoded = old->userdata_not_decoded;
 
   newroot = hwloc_get_root_obj(new);
   hwloc__duplicate_object(newroot, oldroot);
@@ -592,9 +615,7 @@ hwloc_topology_dup(hwloc_topology_t *newp,
   return 0;
 
  out:
-  hwloc_topology_clear(new);
-  hwloc_distances_destroy(new);
-  hwloc_topology_setup_defaults(new);
+  hwloc_topology_destroy(new);
   return -1;
 }
 
@@ -889,10 +910,17 @@ merge_insert_equal(hwloc_obj_t new, hwloc_obj_t old)
 
   if (new->distances_count) {
     if (old->distances_count) {
-      old->distances_count += new->distances_count;
-      old->distances = realloc(old->distances, old->distances_count * sizeof(*old->distances));
-      memcpy(old->distances + new->distances_count, new->distances, new->distances_count * sizeof(*old->distances));
-      free(new->distances);
+      struct hwloc_distances_s **tmpdists;
+      tmpdists = realloc(old->distances, (old->distances_count+new->distances_count) * sizeof(*old->distances));
+      if (!tmpdists) {
+	/* failed to realloc, ignore new distances */
+	hwloc_clear_object_distances(new);
+      } else {
+	old->distances = tmpdists;
+	old->distances_count += new->distances_count;
+	memcpy(old->distances + new->distances_count, new->distances, new->distances_count * sizeof(*old->distances));
+	free(new->distances);
+      }
     } else {
       old->distances_count = new->distances_count;
       old->distances = new->distances;
@@ -1941,6 +1969,7 @@ hwloc_drop_useless_io(hwloc_topology_t topology, hwloc_obj_t root)
 	    && baseclass != 0x02 /* PCI_BASE_CLASS_NETWORK */
 	    && baseclass != 0x01 /* PCI_BASE_CLASS_STORAGE */
 	    && baseclass != 0x0b /* PCI_BASE_CLASS_PROCESSOR */
+	    && classid != 0x0c04 /* PCI_CLASS_SERIAL_FIBER */
 	    && classid != 0x0c06 /* PCI_CLASS_SERIAL_INFINIBAND */
 	    && baseclass != 0x12 /* Processing Accelerators */)
 	  unlink_and_free_object_and_children(pchild);
@@ -2232,15 +2261,17 @@ hwloc_build_level_from_list(struct hwloc_obj *first, struct hwloc_obj ***levelp)
   }
   nb = i;
 
-  /* allocate and fill level */
-  *levelp = malloc(nb * sizeof(struct hwloc_obj *));
-  obj = first;
-  i = 0;
-  while (obj) {
-    obj->logical_index = i;
-    (*levelp)[i] = obj;
-    i++;
-    obj = obj->next_cousin;
+  if (nb) {
+    /* allocate and fill level */
+    *levelp = malloc(nb * sizeof(struct hwloc_obj *));
+    obj = first;
+    i = 0;
+    while (obj) {
+      obj->logical_index = i;
+      (*levelp)[i] = obj;
+      i++;
+      obj = obj->next_cousin;
+    }
   }
 
   return nb;
@@ -2741,6 +2772,7 @@ hwloc_topology_init (struct hwloc_topology **topologyp)
 
   topology->userdata_export_cb = NULL;
   topology->userdata_import_cb = NULL;
+  topology->userdata_not_decoded = 0;
 
   /* Make the topology look like something coherent but empty */
   hwloc_topology_setup_defaults(topology);
@@ -2939,6 +2971,9 @@ hwloc_topology_load (struct hwloc_topology *topology)
     return -1;
   }
 
+  if (getenv("HWLOC_XML_USERDATA_NOT_DECODED"))
+    topology->userdata_not_decoded = 1;
+
   /* enforce backend anyway if a FORCE variable was given */
   {
     const char *fsroot_path_env = getenv("HWLOC_FORCE_FSROOT");
@@ -3010,6 +3045,11 @@ int
 hwloc_topology_restrict(struct hwloc_topology *topology, hwloc_const_cpuset_t cpuset, unsigned long flags)
 {
   hwloc_bitmap_t droppedcpuset, droppednodeset;
+
+  if (!topology->is_loaded) {
+    errno = EINVAL;
+    return -1;
+  }
 
   /* make sure we'll keep something in the topology */
   if (!hwloc_bitmap_intersects(cpuset, topology->levels[0][0]->cpuset)) {
