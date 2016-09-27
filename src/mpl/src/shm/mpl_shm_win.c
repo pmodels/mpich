@@ -7,6 +7,8 @@
 
 #include "mpl.h"
 
+MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
+
 #ifdef MPL_USE_NT_SHM
 
 #include<winsock2.h>
