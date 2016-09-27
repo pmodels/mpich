@@ -1306,35 +1306,11 @@ AC_CHECK_TYPE([blksize_t],[],[AC_DEFINE_UNQUOTED([blksize_t],[__blksize_t],[Prov
 	       #endif]] )
 
 #
-# Check for large file support.  Make sure that we can use the off64_t 
-# type (in some cases, it is an array, and the ROMIO code isn't prepared for
-# that).
+# in 2004, solairs defined off_t as a union.  Today (2016) that is not the case
+# and we can simplify this check
 #
-AC_CHECK_HEADERS(unistd.h)
-if test "$ac_cv_header_unistd_h" = "yes" ; then
-    AC_CACHE_CHECK([for large file defines],ac_cv_has_large_file_defines,[
-    AC_TRY_COMPILE([
-#include <unistd.h>
-        ], [
-#ifndef _LFS64_LARGEFILE
-#error no largefile defines
-#endif
-        ],ac_cv_has_large_file_defines=yes,ac_cv_has_large_file_defines=no)])
-    if test "$ac_cv_has_large_file_defines" = "yes" ; then
-        # See if we can use them
-    AC_CACHE_CHECK([whether off64_t is an scalar type],ac_cv_off64_t_scalar,[
-    AC_TRY_COMPILE([
-#define _LARGEFILE64_SOURCE
-#define _FILE_OFFSET_BITS 64
-#include <sys/types.h>
-#include <unistd.h>
-],[off64_t a = 3;],ac_cv_off64_t_scalar=yes,ac_cv_off64_t_scalar=no)])
 
-        if test "$ac_cv_off64_t_scalar" = "yes" ; then
-            CFLAGS="${CFLAGS} -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64"
-        fi
-    fi
-fi
+AC_SYS_LARGEFILE()
 
 # pread and pwrite are useful to ROMIO: if implemented well, they help us avoid
 # an extra system call.  But --enable-strict or CFLAGS="--std=c99" does not
@@ -1630,20 +1606,6 @@ if test -n "$MPIOF_H_INCLUDED"; then
 else 
    F77MPIOINC="include 'mpiof.h'"
 fi
-
-AC_CHECK_HEADERS(unistd.h,
-        AC_MSG_CHECKING([for large file defines])
-        AC_TRY_COMPILE([
-                #include <unistd.h>
-                ], [
-                #ifndef _LFS64_LARGEFILE
-                #error no largefile defines
-                #endif
-                ],
-                CFLAGS="${CFLAGS} -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64"
-                AC_MSG_RESULT(yes),
-                AC_MSG_RESULT(none) )
-        )
 
 echo "setting SYSDEP_INC to $SYSDEP_INC"
 AC_SUBST(SYSDEP_INC)
