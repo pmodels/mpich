@@ -66,7 +66,7 @@ mqs_type * dbgrI_find_type(mqs_image *image, char *name,
 {
     int curType = TYPE_UNKNOWN;
 
-    if (strcmp(name,"MPID_Comm") == 0) {
+    if (strcmp(name,"MPIR_Comm") == 0) {
 	curType = TYPE_MPIR_COMM;
     }
     else if (strcmp( name, "MPIR_Comm_list" ) == 0) {

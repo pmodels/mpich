@@ -275,7 +275,7 @@ int mqs_image_has_queues (mqs_image *image, char **message)
     /* First, the communicator information.  This is in two parts:
        MPIR_All_Communicators - a structure containing the head of the
        list of all active communicators.  The type is MPIR_Comm_list.
-       The communicators themselves are of type MPID_Comm.
+       The communicators themselves are of type MPIR_Comm.
     */
     {
 	mqs_type *cl_type = dbgr_find_type( image, (char *)"MPIR_Comm_list", 
@@ -287,7 +287,7 @@ int mqs_image_has_queues (mqs_image *image, char **message)
 	}
     }
     {
-	mqs_type *co_type = dbgr_find_type( image, (char *)"MPID_Comm", mqs_lang_c );
+	mqs_type *co_type = dbgr_find_type( image, (char *)"MPIR_Comm", mqs_lang_c );
 	if (co_type) {
 	    i_info->comm_name_offs = dbgr_field_offset( co_type, (char *)"name" );
 	    i_info->comm_next_offs = dbgr_field_offset( co_type, (char *)"comm_next" );

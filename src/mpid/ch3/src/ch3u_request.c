@@ -35,7 +35,7 @@ void MPID_Request_create_hook(MPIR_Request *req)
     
     req->dev.datatype_ptr	   = NULL;
     req->dev.segment_ptr	   = NULL;
-    /* Masks and flags for channel device state in an MPID_Request */
+    /* Masks and flags for channel device state in an MPIR_Request */
     req->dev.state		   = 0;
     req->dev.cancel_pending	   = FALSE;
     /* FIXME: RMA ops shouldn't need to be set except when creating a
