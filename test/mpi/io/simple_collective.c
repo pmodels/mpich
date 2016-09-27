@@ -19,8 +19,6 @@
  * I am surprised src/mpi/romio/test/create_excl.c did not uncover the bug
  */
 
-#define _LARGEFILE64_SOURCE
-
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
