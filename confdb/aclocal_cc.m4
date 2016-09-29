@@ -626,13 +626,6 @@ if test "$enable_strict_done" != "yes" ; then
        	  pac_cc_strict_flags="-O2"
        fi
        pac_cc_strict_flags="$pac_cc_strict_flags $pac_common_strict_flags"
-       case "$enable_posix" in
-            no)   : ;;
-            1995) PAC_APPEND_FLAG([-D_POSIX_C_SOURCE=199506L],[pac_cc_strict_flags]) ;;
-            2001) PAC_APPEND_FLAG([-D_POSIX_C_SOURCE=200112L],[pac_cc_strict_flags]) ;;
-            2008) PAC_APPEND_FLAG([-D_POSIX_C_SOURCE=200809L],[pac_cc_strict_flags]) ;;
-            *)    AC_MSG_ERROR([internal error, unexpected POSIX version: '$enable_posix']) ;;
-       esac
        # We only allow one of strict-C99 or strict-C89 to be
        # enabled. If C99 is enabled, we automatically disable C89.
        if test "${enable_c99}" = "yes" ; then
@@ -645,6 +638,16 @@ if test "$enable_strict_done" != "yes" ; then
        	  PAC_APPEND_FLAG([-std=c89],[pac_cc_strict_flags])
        	  PAC_APPEND_FLAG([-Wdeclaration-after-statement],[pac_cc_strict_flags])
        fi
+       # POSIX 2001 should be used with C99. But the default standard for some
+       # compilers are not C99. We must test the support of POSIX 2001 after
+       # testing C99.
+       case "$enable_posix" in
+            no)   : ;;
+            1995) PAC_APPEND_FLAG([-D_POSIX_C_SOURCE=199506L],[pac_cc_strict_flags]) ;;
+            2001) PAC_APPEND_FLAG([-D_POSIX_C_SOURCE=200112L],[pac_cc_strict_flags]) ;;
+            2008) PAC_APPEND_FLAG([-D_POSIX_C_SOURCE=200809L],[pac_cc_strict_flags]) ;;
+            *)    AC_MSG_ERROR([internal error, unexpected POSIX version: '$enable_posix']) ;;
+       esac
     fi
 
     # See if the above options work with the compiler
