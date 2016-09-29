@@ -273,8 +273,14 @@ pac_cv_hrtime_works=yes,pac_cv_hrtime_works=no)])
 	# hrtime_t to int64_t works, and even more ambitious
 	# would check whether long or long long was 64 bits (or even
 	# better, the sizeof hrtime_t).  
+
+        # AC_CHECK_FUNCS has false positive when checking whether gethrtime is
+        # available on Solaris with strict configuration. We must use
+        # AC_CHECK_DECL to confirm it.
+        AC_CHECK_DECL(gethrtime)
     fi
     if test "$ac_cv_func_gethrtime" = "yes" -a \
+            "$ac_cv_has_decl_gethrtime" = "yes" -a \
             "$pac_cv_hrtime_works" = "yes" ; then
         timer_type=gethrtime
     elif test "$ac_cv_func_clock_gettime" = "yes" -a \
