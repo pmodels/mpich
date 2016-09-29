@@ -14,7 +14,8 @@ program main
     character*8 :: name='test10'
     character*80 :: title='test 10: Isend/Irecv - send integer'
 
-    integer :: sint, i
+    integer :: i
+    integer, ASYNCHRONOUS :: sint
     integer, dimension(10) :: iar
     type(MPI_Request) request
     type(MPI_Status) status
@@ -34,7 +35,6 @@ program main
         endif
 
         block
-            ASYNCHRONOUS :: sint
 
             call mpi_isend(sint, 1, MPI_INTEGER, 1, 567, MPI_COMM_WORLD, request, ierr);
             if (ierr .ne. MPI_SUCCESS) then
@@ -50,7 +50,6 @@ program main
         end block
     else
         block
-            ASYNCHRONOUS :: sint
 
             call mpi_irecv(sint, 1, MPI_INTEGER, 0, 567, MPI_COMM_WORLD, request, ierr);
             if (ierr .ne. MPI_SUCCESS) then
