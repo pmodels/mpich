@@ -35,7 +35,7 @@ int main(int argc, char **argv)
     int *rcounts = NULL;
     int *sdispls = NULL;
     int *rdispls = NULL;
-    int *types = NULL;
+    MPI_Datatype *types = NULL;
     MPI_Comm comm;
     MPI_Request req;
 
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
     my_assert(sdispls);
     rdispls = malloc(size * sizeof(int));
     my_assert(rdispls);
-    types = malloc(size * sizeof(int));
+    types = malloc(size * sizeof(MPI_Datatype));
     my_assert(types);
 
     for (i = 0; i < size; ++i) {
