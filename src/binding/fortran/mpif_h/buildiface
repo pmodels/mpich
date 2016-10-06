@@ -4845,6 +4845,7 @@ sub ReadAndProcessInterface {
                 }
                 $args =~ s/MPICH_ATTR[A-Z_]*\([^)]*\)//g;
                 $args =~ s/MPICH_API_PUBLIC//g;
+                $args =~ s/ROMIO_API_PUBLIC//g;
                 $args =~ s/\)\s*;//g;
                 $args =~ s/[\r\n]*//g;
 		$args =~ s/const\s//g;
