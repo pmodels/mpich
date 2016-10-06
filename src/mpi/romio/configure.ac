@@ -28,6 +28,8 @@ AM_MAINTAINER_MODE([enable])
 dnl must come before LT_INIT, which AC_REQUIREs AC_PROG_CC
 PAC_PROG_CC
 AM_PROG_CC_C_O
+PAC_CHECK_VISIBILITY
+AC_SUBST(VISIBILITY_CFLAGS)
 
 AM_PROG_AR
 
@@ -694,6 +696,11 @@ AM_CONDITIONAL([BUILD_MPIO_ERRHAN],[false])
 # if we don't have weak symbol support, we must build a separate convenience
 # library in order to provide the "PMPI_" symbols
 AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "x$HAVE_WEAK_SYMBOLS" = "x0"])
+# disable visibility if building profiling library
+if test "x$HAVE_WEAK_SYMBOLS" = "x0" ; then
+    VISIBILITY_CFLAGS=""
+fi
+
 
 # weird: we have conflated "buid ROMIO's versions of the fortran bindings" and
 # "build ROMIO"s fortran I/O tests". Of course the common situaiton is that we
