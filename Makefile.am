@@ -187,14 +187,14 @@ modinc_HEADERS = $(mpi_fc_modules)
 lib_lib@MPIFCLIBNAME@_la_SOURCES += $(mpi_fc_sources)
 endif BUILD_FC_BINDING
 lib_lib@MPIFCLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
-lib_lib@MPIFCLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la
+lib_lib@MPIFCLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la @mpllib@
 endif BUILD_F77_BINDING
 
 if BUILD_CXX_BINDING
 lib_LTLIBRARIES += lib/lib@MPICXXLIBNAME@.la
 lib_lib@MPICXXLIBNAME@_la_SOURCES = $(mpi_cxx_sources)
 lib_lib@MPICXXLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
-lib_lib@MPICXXLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la
+lib_lib@MPICXXLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la @mpllib@
 endif BUILD_CXX_BINDING
 
 # build the current directory and then the examples directory after everything else
