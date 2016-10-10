@@ -15,7 +15,8 @@ program main
     character (len=80) :: title='test 15: Isend/Irecv 2d array column slice - iar_2d(1:7:3,2:6:2)'
 
     integer :: i, j
-    integer, dimension(9,9) :: iar_2d, iar_2dch
+    integer, dimension(9,9) :: iar_2dch
+    integer, ASYNCHRONOUS, dimension(9,9) :: iar_2d
     type(MPI_Status) status
     type(MPI_Request) request
 
@@ -56,7 +57,6 @@ program main
 
     if (rank .eq. 0) then
         block
-            ASYNCHRONOUS :: iar_2d
             call mpi_isend(iar_2d(1:7:3,2:6:2), 9, MPI_INTEGER, 1, 123, MPI_COMM_WORLD, request, ierr);
             if (ierr .ne. MPI_SUCCESS) then
                 if (verbose) print *,"PE ",rank,": ",name,": mpi_isend exited in error (",ierr,")"
@@ -72,7 +72,6 @@ program main
         end block
     else if (rank .eq. 1) then
         block
-            ASYNCHRONOUS :: iar_2d
 
             call mpi_irecv(iar_2d(1:7:3,2:6:2), 9, MPI_INTEGER, 0, 123, MPI_COMM_WORLD, request, ierr);
             if (ierr .ne. MPI_SUCCESS) then
