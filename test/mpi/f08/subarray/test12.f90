@@ -15,7 +15,8 @@ program main
     character (len=80) :: title='test 12: Isend/Irecv array slice - iar(2:7)'
 
     integer :: sint, i
-    integer, dimension(10) ::  iar, iar_check
+    integer, dimension(10) ::  iar_check
+    integer, ASYNCHRONOUS, dimension(10) ::  iar
     type(MPI_Request) request
     type(MPI_Status) status
 
@@ -33,7 +34,6 @@ program main
         end do
 
         block
-            ASYNCHRONOUS :: iar
 
             call mpi_isend(iar(2:7), 6, MPI_INTEGER, 1, 678, MPI_COMM_WORLD, request, ierr);
             if (ierr .ne. MPI_SUCCESS) then
@@ -59,7 +59,6 @@ program main
         end do
 
         block
-            ASYNCHRONOUS :: iar
 
             call mpi_irecv(iar(2:7), 6, MPI_INTEGER, 0, 678, MPI_COMM_WORLD, request, ierr);
             if (ierr .ne. MPI_SUCCESS) then
