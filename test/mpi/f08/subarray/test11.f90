@@ -15,7 +15,7 @@ program main
     character (len=80) :: title='test 11: Isend/Irecv - 1d array - iar(10)'
 
     integer :: sint, i
-    integer, dimension(10) :: iar
+    integer, ASYNCHRONOUS, dimension(10) :: iar
     type(MPI_Request) request
     type(MPI_Status) status
 
@@ -33,7 +33,6 @@ program main
         end do
 
         block
-            ASYNCHRONOUS :: iar
 
             call mpi_isend(iar, 10, MPI_INTEGER, 1, 567, MPI_COMM_WORLD, request, ierr);
             if (ierr .ne. MPI_SUCCESS) then
@@ -52,7 +51,6 @@ program main
     else if (rank .eq. 1) then
 
         block
-            ASYNCHRONOUS :: iar
 
             call mpi_irecv(iar, 10, MPI_INTEGER, 0, 567, MPI_COMM_WORLD, request, ierr);
             if (ierr .ne. MPI_SUCCESS) then
