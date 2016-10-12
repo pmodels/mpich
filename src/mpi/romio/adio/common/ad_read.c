@@ -6,9 +6,9 @@
  */
 
 
+#include "adio.h"
 #include <unistd.h>
 
-#include "adio.h"
 #ifdef AGGREGATION_PROFILE
 #include "mpe.h"
 #endif
