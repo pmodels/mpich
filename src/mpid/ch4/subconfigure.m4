@@ -215,6 +215,10 @@ changequote(<<,>>)
 ch4_shm=`echo $enable_ch4_shm | sed -e 's/^[^:]*//' -e 's/^://'`
 changequote([,])
 
+if test "$ch4_shm_level" != "no" -a "$ch4_shm_level" != "yes" -a "$ch4_shm_level" != "exclusive"; then
+    AC_MSG_ERROR([Shared memory level ${ch4_shm_level} is unknown])
+fi
+
 if test "$ch4_shm_level" != "no" ; then
     AC_DEFINE([MPIDI_BUILD_CH4_SHM], [1],
         [Define if CH4 will build the default shared memory implementation as opposed to only using a netmod implementation])
