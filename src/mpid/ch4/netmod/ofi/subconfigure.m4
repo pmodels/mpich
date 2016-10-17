@@ -118,8 +118,6 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
     ofilib=""
     AC_SUBST([ofilib])
 
-    PAC_SET_HEADER_LIB_PATH(libfabric)
-
     ofi_embedded=""
     dnl Use embedded libfabric if we specify to do so or we didn't specify and the source is present
     if test "${with_libfabric}" = "embedded" ; then
@@ -129,9 +127,11 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
             ofi_embedded="yes"
         else
             ofi_embedded="no"
+            PAC_SET_HEADER_LIB_PATH(libfabric)
         fi
     else
         ofi_embedded="no"
+        PAC_SET_HEADER_LIB_PATH(libfabric)
     fi
 
     if test "${ofi_embedded}" = "yes" ; then
@@ -139,9 +139,10 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         ofi_subdir_args="--enable-embedded"
 
         dnl Unset all of these env vars so they don't pollute the libfabric configuration
-        PAC_PUSH_FLAG(CPPFLAGS)
+        PAC_PUSH_ALL_FLAGS()
+        PAC_RESET_ALL_FLAGS()
         PAC_CONFIG_SUBDIR_ARGS([src/mpid/ch4/netmod/ofi/libfabric],[$ofi_subdir_args],[],[AC_MSG_ERROR(libfabric configure failed)])
-        PAC_POP_FLAG(CPPFLAGS)
+        PAC_POP_ALL_FLAGS()
         PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric/include], [CPPFLAGS])
         PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/include], [CPPFLAGS])
 
