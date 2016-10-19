@@ -52,7 +52,11 @@ errnames_txt_files =
 external_subdirs = @mplsrcdir@ @opasrcdir@
 external_ldflags = @mpllibdir@ @opalibdir@
 external_libs = @WRAPPER_LIBS@
+if BUILD_PROFILING_LIB
+mpi_convenience_libs = @mpllib@
+else !BUILD_PROFILING_LIB
 mpi_convenience_libs =
+endif
 pmpi_convenience_libs = @opalib@ @mpllib@
 
 # NOTE on our semi-unconventional usage of DIST_SUBDIRS:

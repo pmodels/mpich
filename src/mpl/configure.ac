@@ -52,6 +52,8 @@ AC_C_INLINE
 
 PAC_C_MACRO_VA_ARGS
 PAC_C_BUILTIN_EXPECT
+PAC_CHECK_VISIBILITY
+AC_SUBST(VISIBILITY_CFLAGS)
 
 AC_ARG_ENABLE(embedded,
     AC_HELP_STRING([--enable-embedded], [Build MPL in embedded mode (default is no)]),

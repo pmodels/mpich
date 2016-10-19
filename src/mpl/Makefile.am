@@ -36,6 +36,7 @@ mpl_headers =               \
 if MPL_EMBEDDED_MODE
 noinst_HEADERS = $(mpl_headers)
 noinst_LTLIBRARIES = lib@MPLLIBNAME@.la
+AM_CFLAGS = @VISIBILITY_CFLAGS@
 else !MPL_EMBEDDED_MODE
 include_HEADERS = $(mpl_headers)
 lib_LTLIBRARIES = lib@MPLLIBNAME@.la
