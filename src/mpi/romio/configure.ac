@@ -84,6 +84,17 @@ DEBUG=no
 MIPS=0
 BITS=0
 
+AC_ARG_VAR([FROM_MPICH],[set to "yes" if building ROMIO inside of MPICH])
+FROM_MPICH=${FROM_MPICH:-no}
+
+AC_ARG_VAR([FROM_LAM],[set to "yes" if building ROMIO inside of LAM])
+FROM_LAM=${FROM_LAM:-no}
+if test "$FROM_LAM" = 1 ; then FROM_LAM=yes ; fi
+
+AC_ARG_VAR([FROM_OMPI],[set to "yes" if building ROMIO inside of Open MPI])
+FROM_OMPI=${FROM_OMPI:-no}
+if test "$FROM_OMPI" = 1 ; then FROM_OMPI=yes ; fi
+
 # MPL
 AC_ARG_VAR([MPLLIBNAME],[can be used to override the name of the MPL library (default: "mpl")])
 MPLLIBNAME=${MPLLIBNAME:-"mpl"}
@@ -107,12 +118,16 @@ mpl_includedir=""
 AC_SUBST([mpl_includedir])
 mpl_libdir=""
 AC_SUBST([mpl_libdir])
+mpl_lib=""
+AC_SUBST([mpl_lib])
+if test "$FROM_MPICH" = "no" ; then
 if test "$with_mpl_prefix" = "embedded" ; then
     mpl_srcdir="mpl"
     mpl_dist_srcdir="mpl"
     mpl_subdir_args="--disable-versioning --enable-embedded"
     PAC_CONFIG_SUBDIR_ARGS([mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
     mpl_includedir='-I$(top_builddir)/mpl/include -I$(top_srcdir)/mpl/include'
+    mpl_lib="mpl/lib${MPLLIBNAME}.la"
 else
     # The user specified an already-installed MPL; just sanity check, don't
     # subconfigure it
@@ -120,18 +135,9 @@ else
           [:],[AC_MSG_ERROR([the MPL installation in "${with_mpl_prefix}" appears broken])])
     mpl_includedir="-I${with_mpl_prefix}/include"
     mpl_libdir="-L${with_mpl_prefix}/lib"
+    mpl_lib="-l${MPLLIBNAME}"
 fi
-
-AC_ARG_VAR([FROM_MPICH],[set to "yes" if building ROMIO inside of MPICH])
-FROM_MPICH=${FROM_MPICH:-no}
-
-AC_ARG_VAR([FROM_LAM],[set to "yes" if building ROMIO inside of LAM])
-FROM_LAM=${FROM_LAM:-no}
-if test "$FROM_LAM" = 1 ; then FROM_LAM=yes ; fi
-
-AC_ARG_VAR([FROM_OMPI],[set to "yes" if building ROMIO inside of Open MPI])
-FROM_OMPI=${FROM_OMPI:-no}
-if test "$FROM_OMPI" = 1 ; then FROM_OMPI=yes ; fi
+fi
 
 CFLAGS=${CFLAGS:-""}
 LL="lld"
