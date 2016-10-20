@@ -98,8 +98,8 @@ MPID_Thread_tls_t MPIR_Per_thread_key;
    If the Fortran binding is supported, these can be initialized to 
    their Fortran values (MPI only requires that they be valid between
    MPI_Init and MPI_Finalize) */
-MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE = 0;
-MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE = 0;
+MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE ATTRIBUTE((used)) = 0;
+MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE ATTRIBUTE((used)) = 0;
 
 /* This will help force the load of initinfo.o, which contains data about
    how MPICH was configured. */
