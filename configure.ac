@@ -1190,8 +1190,7 @@ if test "$with_mpl_prefix" = "embedded" ; then
     PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpl/include], [CPPFLAGS])
     PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
 
-    mplsrcdir="${master_top_builddir}/src/mpl"
-    mpllibdir="-L${master_top_builddir}/src/mpl"
+    mplsrcdir="src/mpl"
     mpllib="src/mpl/lib${MPLLIBNAME}.la"
 else
     # The user specified an already-installed MPL; just sanity check, don't
