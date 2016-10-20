@@ -28,7 +28,7 @@ src_pm_util_libmpiexec_la_CFLAGS = -g $(AM_CFLAGS)
 src_pm_util_libmpiexec_la_CPPFLAGS = $(common_pm_includes) $(AM_CPPFLAGS)
 
 # MPL
-src_pm_util_libmpiexec_la_LIBADD = -l$(MPLLIBNAME)
+src_pm_util_libmpiexec_la_LIBADD = $(mpllib)
 src_pm_util_libmpiexec_la_LDFLAGS = $(mpllibdir)
 EXTRA_src_pm_util_libmpiexec_la_DEPENDENCIES = $(mpllib)
 
