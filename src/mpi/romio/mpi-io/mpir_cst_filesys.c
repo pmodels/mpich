@@ -13,18 +13,93 @@
 #include <stdlib.h>
 #endif
 
-/* not to be called directly (note the MPIR_ prefix), but instead from
- * MPI-level MPI_Comm_split_type implementation (e.g.
- * MPIR_Comm_split_type_impl). */
-#undef FUNCNAME
-#define FUNCNAME MPIR_Comm_split_filesystem
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#ifdef HAVE_DIRENT_H
+#include <dirent.h>
+#endif
 
-/* split communicator based on access to directory 'dirname'. */
-int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm * newcomm)
+static int comm_split_filesystem_exhaustive(MPI_Comm comm, int key,
+	const char *dirname, MPI_Comm *newcomm)
 {
+    /* If you run this at scale against GPFS, be prepared to spend 30 mintues
+     * creating 10,000 files -- and the numbers only get worse from there.
+     *
+     * - create random directory
+     * - create files in that directory
+     * - based on the visible files, construct a new group, then a new
+     *   communicator
+     * - there are no directory operation routines in MPI so we'll do it via
+     *   POSIX.  */
+    int pid, rank, nprocs, ret;
+    int *ranks;
+    MPI_Group comm_group, newgroup;
+    int j=0, mpi_errno = MPI_SUCCESS;
+    char *filename= NULL, *testdirname = NULL;
+    DIR *dir;
+    struct dirent *entry;
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size (comm, &nprocs);
 
+    /* rank zero constructs the candidate directory name (just the
+     * name).  Everyone will create the directory though -- this will be
+     * a headache for the file system at scale..  don't do this on a
+     * large parallel file system! */
+
+    testdirname = MPL_malloc(PATH_MAX);
+    filename = MPL_malloc(PATH_MAX);
+    ranks = MPL_malloc(nprocs*sizeof(int));
+
+    if (rank == 0) {
+        /* same algorithim as shared file pointer name */
+        srand(time(NULL) & 0xffffffff);
+        pid = (int) getpid();
+
+        MPL_snprintf(testdirname, PATH_MAX, "%s/.commonfstest.%d.%d.%d/",
+                     dirname == NULL ? "." : dirname, rank, rand(), pid);
+    }
+    MPI_Bcast(testdirname, PATH_MAX, MPI_BYTE, 0, comm);
+    /* ignore EEXIST: quite likely another process will have made this
+     * directory, but since the whole point is to figure out who we share this
+     * directory with, brute force it is! */
+    ret = mkdir(testdirname, S_IRWXU);
+    if (ret == -1 && errno != EEXIST) goto fn_fail;
+    MPL_snprintf(filename, PATH_MAX, "%s/%d", testdirname, rank);
+    open(filename,O_CREAT,S_IRUSR|S_IWUSR);
+
+    MPI_Barrier(comm);
+    /* each process has created a file in a M-way shared directory (where M in
+     * the range [1-nprocs] ).  Let's see who else can see this directory */
+    if ((dir = opendir(testdirname)) == NULL)
+	goto fn_fail;
+    while ( (entry = readdir(dir)) != NULL) {
+	if (strcmp(entry->d_name, ".") == 0) continue;
+	if (strcmp(entry->d_name, "..") == 0) continue;
+	ranks[j++] = atoi(entry->d_name);
+    }
+
+    MPI_Comm_group(comm, &comm_group);
+    MPI_Group_incl(comm_group, j, ranks, &newgroup);
+    MPI_Comm_create(comm, newgroup, newcomm);
+    MPI_Group_free(&newgroup);
+    MPI_Group_free(&comm_group);
+
+    unlink(filename);
+    /* ok to ignore errors */
+    rmdir(testdirname);
+
+fn_exit:
+    MPL_free(ranks);
+    MPL_free(filename);
+    MPL_free(testdirname);
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+static int comm_split_filesystem_heuristic(MPI_Comm comm, int key,
+	const char *dirname, MPI_Comm *newcomm)
+{
     int i, mpi_errno = MPI_SUCCESS;
     int rank, nprocs;
     int id;
@@ -41,9 +116,10 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
      * output, but that's fidgety, fragile, and error prone.  Instead,
      * determine who shares a file system through testing.
      *
-     * We shouldn't create a lot of files, though -- we want something
-     * that could work at hundreds of thousands of nodes, and creating a
-     * hundred thousand files in a directory is a recipe for sadness
+     * As an optimization, we should try to avoid creating a lot of
+     * files: we want something that could work at hundreds of thousands
+     * of nodes, and creating a hundred thousand files in a directory is
+     * a recipe for sadness
      *
      * In CH3 and in wider practice "shared memory" is the same as "on
      * the same node, so let's start there.
@@ -175,6 +251,32 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
   fn_exit:
     MPL_free(all_ids);
     MPL_free(filename);
+    return mpi_errno;
+
+    /* --BEGIN ERROR HANDLING-- */
+  fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+
+}
+/* not to be called directly (note the MPIR_ prefix), but instead from
+ * MPI-level MPI_Comm_split_type implementation (e.g.
+ * MPIR_Comm_split_type_impl). */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_split_filesystem
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+
+/* split communicator based on access to directory 'dirname'. */
+int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm * newcomm)
+{
+    int mpi_errno = MPI_SUCCESS;
+    char *s;
+    if ( (s= getenv("MPIX_SPLIT_DISABLE_HEURISTIC")) != NULL) {
+	mpi_errno = comm_split_filesystem_exhaustive(comm, key, dirname, newcomm);
+    } else {
+	mpi_errno = comm_split_filesystem_heuristic(comm, key, dirname, newcomm);
+    }
     return mpi_errno;
 }
 
