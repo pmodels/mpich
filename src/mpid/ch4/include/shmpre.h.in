@@ -17,4 +17,11 @@
 
 #define MPIDI_SHM_REQUEST_DECL       @ch4_shm_request_decl@
 #define MPIDI_SHM_COMM_DECL          @ch4_shm_comm_decl@
+#define MPIDI_SHM_BCAST_PARAMS_DECL  @ch4_shm_bcast_params_decl@
+#define MPIDI_SHM_REDUCE_PARAMS_DECL  @ch4_shm_reduce_params_decl@
+#define MPIDI_SHM_ALLREDUCE_PARAMS_DECL  @ch4_shm_allreduce_params_decl@
+
+extern const MPIDI_coll_tuning_table_entry_t BCAST_TUNING_SHM[];
+extern const MPIDI_coll_tuning_table_entry_t ALLREDUCE_TUNING_SHM[];
+extern const MPIDI_coll_tuning_table_entry_t REDUCE_TUNING_SHM[];
 #endif /* SHMPRE_H_INCLUDED */

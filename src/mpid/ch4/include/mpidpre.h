@@ -15,6 +15,7 @@
 #include <sys/types.h>
 #endif
 
+#include "coll_tuning_types.h"
 #include "mpidu_dataloop.h"
 #include "mpid_thread.h"
 #include "mpid_sched.h"
@@ -22,6 +23,9 @@
 #include "netmodpre.h"
 #include "shmpre.h"
 #include "mpl_uthash.h"
+#include "ch4_coll_params.h"
+
+extern MPIDI_coll_algo_container_t mpir_fallback_container;
 
 typedef struct {
     union {
@@ -53,6 +57,8 @@ typedef enum {
 
 #define MPIDI_PARENT_PORT_KVSKEY "PARENT_ROOT_PORT_NAME"
 #define MPIDI_MAX_KVS_VALUE_LEN  4096
+
+void * MPIDI_coll_get_next_container(void *);
 
 typedef struct MPIDI_CH4U_sreq_t {
     /* persistent send fields */
@@ -384,10 +390,12 @@ typedef struct MPIDI_Devcomm_t {
 
         MPIDI_rank_map_t map;
         MPIDI_rank_map_t local_map;
+        struct MPIDI_coll_tuner_table *colltuner_table; /* pointer to the table with tuning results */
     } ch4;
 } MPIDI_Devcomm_t;
 #define MPIDI_CH4U_COMM(comm,field) ((comm)->dev.ch4.ch4u).field
 #define MPIDI_COMM(comm,field) ((comm)->dev.ch4).field
+#define MPIDI_CH4_COMM(comm)      ((comm)->dev.ch4)
 
 
 #define MPID_USE_NODE_IDS

@@ -12,6 +12,7 @@
 
 #include "posix_impl.h"
 #include "mpl_utlist.h"
+#include "posix_coll_select.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_POSIX_mpi_comm_create_hook
@@ -22,6 +23,8 @@ static inline int MPIDI_POSIX_mpi_comm_create_hook(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_COMM_CREATE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_COMM_CREATE_HOOK);
+
+    MPIDI_SHM_collective_selection_init(comm);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_COMM_CREATE_HOOK);
     return mpi_errno;
@@ -36,6 +39,8 @@ static inline int MPIDI_POSIX_mpi_comm_free_hook(MPIR_Comm * comm)
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_COMM_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_COMM_FREE_HOOK);
+
+    MPIDI_SHM_collective_selection_free(comm);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_COMM_FREE_HOOK);
     return mpi_errno;

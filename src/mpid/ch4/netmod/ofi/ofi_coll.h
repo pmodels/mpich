@@ -12,6 +12,8 @@
 #define OFI_COLL_H_INCLUDED
 
 #include "ofi_impl.h"
+#include "ch4_coll_select.h"
+#include "ch4_coll_params.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_barrier
@@ -34,15 +36,42 @@ static inline int MPIDI_NM_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * er
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Datatype datatype,
-                                     int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                     int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                     void * ch4_algo_parameters_container_in)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_BCAST);
 
-    mpi_errno = MPIR_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
+    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+
+    nm_algo_parameters_container_out =
+        MPIDI_OFI_Bcast_select(buffer, count, datatype, root, comm_ptr, errflag,
+                               (MPIDI_OFI_coll_algo_container_t *)ch4_algo_parameters_container_in);
+
+    mpi_errno =
+        MPIDI_OFI_Bcast_call(buffer, count, datatype, root, comm_ptr, errflag,
+                             nm_algo_parameters_container_out);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_BCAST);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_Bcast_knomial
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Bcast_knomial(void *buffer,
+                                                     int count,
+                                                     MPI_Datatype datatype,
+                                                     int root,
+                                                     MPIR_Comm * comm_ptr,
+                                                     MPIR_Errflag_t * errflag,
+                                                     MPIDI_OFI_coll_algo_container_t * params_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    (void)params_container;
+    mpi_errno = MPIR_Bcast(buffer,count, datatype, root, comm_ptr, errflag);
     return mpi_errno;
 }
 
@@ -52,15 +81,43 @@ static inline int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Datatype datat
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *recvbuf, int count,
                                          MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                         MPIR_Errflag_t * errflag)
+                                         MPIR_Errflag_t * errflag,
+                                         void * ch4_algo_parameters_ptr_in)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
 
-    mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
+    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_ptr_out = NULL;
+
+    nm_algo_parameters_ptr_out =
+        MPIDI_OFI_Allreduce_select(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag,
+                                   (MPIDI_OFI_coll_algo_container_t *)ch4_algo_parameters_ptr_in);
+
+    mpi_errno =
+        MPIDI_OFI_Allreduce_call(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag,
+                                 nm_algo_parameters_ptr_out);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
+    return mpi_errno;
+}
+
+/* 
+  This wrapper over MPIR function is only for demonstration purposes.
+  It will be removed as soon as algorithms will be added. 
+*/
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_Allreduce_1
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Allreduce_1(const void *sendbuf, void *recvbuf, int count,
+                                                   MPI_Datatype datatype, MPI_Op op,
+                                                   MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                                   MPIDI_OFI_coll_algo_container_t * params_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Allreduce(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag);
     return mpi_errno;
 }
 
@@ -247,15 +304,39 @@ static inline int MPIDI_NM_mpi_alltoallw(const void *sendbuf, const int sendcoun
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recvbuf, int count,
                                       MPI_Datatype datatype, MPI_Op op, int root,
-                                      MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                      MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                      void * ch4_algo_parameters_container_in)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_REDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_REDUCE);
 
-    mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+    MPIDI_OFI_coll_algo_container_t *nm_algo_parameters_container_out = NULL;
+
+    nm_algo_parameters_container_out =
+        MPIDI_OFI_Reduce_select(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag,
+                                (MPIDI_OFI_coll_algo_container_t *)ch4_algo_parameters_container_in);
+
+    mpi_errno =
+        MPIDI_OFI_Reduce_call(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag,
+                              nm_algo_parameters_container_out);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_REDUCE);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_NM_Reduce_1
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_Reduce_1(const void *sendbuf, void *recvbuf, int count,
+                                                MPI_Datatype datatype, MPI_Op op, int root,
+                                                MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                                MPIDI_OFI_coll_algo_container_t * params_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
     return mpi_errno;
 }
 
