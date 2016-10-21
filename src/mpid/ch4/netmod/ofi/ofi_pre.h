@@ -51,6 +51,7 @@ typedef struct {
     void *huge_recv_counters;
     void *win_id_allocator;
     void *rma_id_allocator;
+    void *coll_params;
 } MPIDI_OFI_comm_t;
 enum {
     MPIDI_AMTYPE_SHORT_HDR = 0,
