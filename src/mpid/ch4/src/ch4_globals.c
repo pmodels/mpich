@@ -15,6 +15,10 @@
 #include <mpidimpl.h>
 #include "ch4_impl.h"
 
+
+table_entry_t ***tuning_table;
+int **table_size;
+
 MPIDI_CH4_Global_t MPIDI_CH4_Global;
 MPIDI_av_table_t **MPIDI_av_table;
 MPIDI_av_table_t *MPIDI_av_table0;

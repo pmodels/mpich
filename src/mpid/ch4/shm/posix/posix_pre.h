@@ -36,6 +36,7 @@ typedef struct {
 
 typedef struct {
     int dummy;
+    void *coll_params;
 } MPIDI_POSIX_comm_t;
 
 #endif /* POSIX_PRE_H_INCLUDED */

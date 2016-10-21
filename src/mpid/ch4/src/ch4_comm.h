@@ -13,6 +13,8 @@
 
 #include "ch4_impl.h"
 #include "ch4i_comm.h"
+#include "ch4_coll_select.h"
+#include "ch4_coll_params.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_AS_enabled(MPIR_Comm * comm)
 {
@@ -144,8 +146,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
     int mpi_errno;
     int i, *uniq_avtids;
     int max_n_avts;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_CREATE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_CREATE_HOOK);
+
+    MPIDI_collective_selection_init(comm);
+
     mpi_errno = MPIDI_NM_mpi_comm_create_hook(comm);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -257,6 +263,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
         MPIDIU_avt_release_ref(MPIDI_COMM(comm, local_map).avtid);
     }
 
+    MPIDI_collective_selection_free(comm);
+
     mpi_errno = MPIDI_NM_mpi_comm_free_hook(comm);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -267,7 +275,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
         MPIR_ERR_POP(mpi_errno);
     }
 #endif
-
     if (MPIDI_COMM(comm, map).mode == MPIDI_RANK_MAP_LUT
         || MPIDI_COMM(comm, map).mode == MPIDI_RANK_MAP_LUT_INTRA) {
         MPIDIU_release_lut(MPIDI_COMM(comm, map).irreg.lut.t);
@@ -282,6 +289,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
     if (MPIDI_COMM(comm, local_map).mode == MPIDI_RANK_MAP_MLUT) {
         MPIDIU_release_mlut(MPIDI_COMM(comm, local_map).irreg.mlut.t);
     }
+  
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_FREE_HOOK);
     return mpi_errno;
