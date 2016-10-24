@@ -18,7 +18,7 @@
 #define FUNCNAME MPIDIU_comm_rank_to_pid
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank, int *index, int *avtid)
+MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank, int *index, int *avtid)
 {
     switch (MPIDII_COMM(comm, map).mode) {
     case MPIDII_RANK_MAP_DIRECT:
@@ -79,7 +79,7 @@ static inline int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank, int *index
 #define FUNCNAME MPIDIU_comm_rank_to_av
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline MPIDII_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * comm, int rank)
+MPL_STATIC_INLINE_PREFIX MPIDII_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * comm, int rank)
 {
     switch (MPIDII_COMM(comm, map).mode) {
     case MPIDII_RANK_MAP_DIRECT:
@@ -135,7 +135,7 @@ static inline MPIDII_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * comm, int ra
 #define FUNCNAME MPIDIU_comm_rank_to_pid_local
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDIU_comm_rank_to_pid_local(MPIR_Comm * comm, int rank, int *index, int *avtid)
+MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid_local(MPIR_Comm * comm, int rank, int *index, int *avtid)
 {
     *avtid = MPIDII_COMM(comm, local_map).avtid;
     switch (MPIDII_COMM(comm, local_map).mode) {
@@ -175,7 +175,7 @@ static inline int MPIDIU_comm_rank_to_pid_local(MPIR_Comm * comm, int rank, int 
     return *index;
 }
 
-static inline int MPIDI_CH4U_rank_is_local(int rank, MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_rank_is_local(int rank, MPIR_Comm * comm)
 {
     int ret;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_RANK_IS_LOCAL);
@@ -197,7 +197,7 @@ static inline int MPIDI_CH4U_rank_is_local(int rank, MPIR_Comm * comm)
 }
 
 
-static inline int MPIDI_CH4U_rank_to_lpid(int rank, MPIR_Comm * comm)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_rank_to_lpid(int rank, MPIR_Comm * comm)
 {
     int ret;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_RANK_TO_LPID);
