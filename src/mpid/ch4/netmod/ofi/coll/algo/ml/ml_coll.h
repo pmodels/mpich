@@ -252,8 +252,9 @@ static inline int COLL_scatterv(const void  *sendbuf,
 static inline int COLL_barrier(COLL_comm_t *comm,
                                int         *errflag)
 {
-    COLL_NAMESPACE_LOCAL(barrier)(comm->comm.local, errflag);
-    COLL_NAMESPACE_REMOTE(barrier)(comm->comm.remote, errflag);
+    // set tree radix to -1 for default value
+    COLL_NAMESPACE_LOCAL(barrier)(comm->comm.local, errflag, -1);
+    COLL_NAMESPACE_REMOTE(barrier)(comm->comm.remote, errflag, -1);
     return 0;
 }
 

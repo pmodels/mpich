@@ -16,8 +16,8 @@
 #include "coll_pre.h"
 
 #define NAMESPACE_ MPIDI_OFI_COLL_
-#define LOCAL_     MPICH_2ARY
-#define REMOTE_    MPICH_2ARY
+#define LOCAL_     MPICH_KARY
+#define REMOTE_    MPICH_KARY
 #define CONC(A, B)  CONC_(A, B)
 #define CONC_(A, B) A##B
 #define C0 CONC(NAMESPACE_,LOCAL_)

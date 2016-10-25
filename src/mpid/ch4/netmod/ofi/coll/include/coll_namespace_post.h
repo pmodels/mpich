@@ -1,6 +1,6 @@
 /* defines */
 #undef COLL_USE_KNOMIAL
-#undef COLL_TREE_RADIX
+#undef COLL_TREE_RADIX_DEFAULT
 #undef COLL_MAX_TREE_BREADTH
 
 /* Common Collective Types */
@@ -59,7 +59,7 @@
 #undef COLL_tree_knomial
 #undef COLL_tree_kary_init
 #undef COLL_tree_knomial_init
-
+#undef COLL_tree_add_child
 /* Collective global variables */
 #undef COLL_global
 

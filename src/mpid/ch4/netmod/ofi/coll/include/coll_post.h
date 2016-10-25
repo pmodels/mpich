@@ -24,11 +24,11 @@
 #include "templates/stub_post.h"
 
 /* Template:  binary trees */
-#define COLL_NAME              2ARY_
+#define COLL_NAME              KARY_
 #include "templates/binary_tree_post.h"
 
 /* Template:  binomial tree */
-#define COLL_NAME              2NOMIAL_
+#define COLL_NAME              KNOMIAL_
 #include "templates/binomial_tree_post.h"
 
 /* Template:  Dissemination */
@@ -53,11 +53,11 @@
 #include "templates/stub_post.h"
 
 /* Template:  binary trees */
-#define COLL_NAME              2ARY_
+#define COLL_NAME              KARY_
 #include "templates/binary_tree_post.h"
 
 /* Template:  binomial tree */
-#define COLL_NAME              2NOMIAL_
+#define COLL_NAME              KNOMIAL_
 #include "templates/binomial_tree_post.h"
 
 /* Template:  Dissemination */
@@ -82,11 +82,11 @@
 #include "templates/stub_post.h"
 
 /* Template:  binary trees */
-#define COLL_NAME              2ARY_
+#define COLL_NAME              KARY_
 #include "templates/binary_tree_post.h"
 
 /* Template:  binomial tree */
-#define COLL_NAME              2NOMIAL_
+#define COLL_NAME              KNOMIAL_
 #include "templates/binomial_tree_post.h"
 
 /* Template:  Dissemination */

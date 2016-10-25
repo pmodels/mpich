@@ -20,142 +20,128 @@
 #endif
 
 static inline
-int COLL_tree_kary(int                 rank,
-                   int                 k,
-                   int                 numranks,
-                   int                *parent,
-                   COLL_child_range_t  children[])
+void COLL_tree_add_child(COLL_tree_t *t,
+                         int rank)
 {
-    int child;
-    int numRanges=0;
-    assert(k >=1);
-
-    *parent = (rank<=0)?-1:(rank-1)/k;
-
-    for(child=1; child<=k; child++) {
-        int val = rank*k+child;
-
-        if(val >= numranks)
-            break;
-
-        if(child==1) {
-            children[0].startRank=val;
-            children[0].endRank=val;
-        } else
-            children[0].endRank=val;
-
-        numRanges=1;
-    }
-
-    return numRanges;
-}
-
-static inline
-int COLL_tree_knomial(int                 rank,
-                      int                 k,
-                      int                 numranks,
-                      int                *parent,
-                      COLL_child_range_t  children[])
-{
-    int num_children = 0;
-    int basek, i, j;
-    assert(k>=2);
-
-    /* Parent Calculation */
-    if(rank<=0) *parent=-1;
+    if(t->numRanges > 0 &&
+       t->children[t->numRanges-1].endRank == rank-1)
+        t->children[t->numRanges-1].endRank = rank;
     else {
-        basek = COLL_ilog(k, numranks-1);
-
-        for(i=0; i<basek; i++) {
-            if(COLL_getdigit(k,rank,i)) {
-                *parent = COLL_setdigit(k, rank, i, 0);
-                break;
-            }
-        }
+        t->numRanges++;
+        assert(t->numRanges < COLL_MAX_TREE_BREADTH);
+        t->children[t->numRanges-1].startRank = rank;
+        t->children[t->numRanges-1].endRank = rank;
     }
-
-    if(rank>=numranks)
-        return -1;
-
-    /* Children Calculation */
-    num_children = 0;
-    basek        = COLL_ilog(k, numranks-1);
-
-    for(j=0; j<basek; j++) {
-        if(COLL_getdigit(k, rank, j))
-            break;
-
-        for(i=1; i<k; i++) {
-            int child = COLL_setdigit(k, rank, j, i);
-
-            if(child < numranks) {
-                assert(num_children < COLL_MAX_TREE_BREADTH);
-                children[num_children].startRank = child;
-                children[num_children].endRank   = child;
-                num_children++;
-            }
-        }
-    }
-
-    return num_children;
 }
 
 static inline
 void COLL_tree_kary_init(int          rank,
                          int          nranks,
                          int          k,
+                         int          root,
                          COLL_tree_t *ct)
 {
     ct->rank      = rank;
     ct->nranks    = nranks;
-    ct->numRanges = COLL_tree_kary(ct->rank,
-                                   k,
-                                   ct->nranks,
-                                   &ct->parent,
-                                   ct->children);
+    ct->numRanges = 0;
+    ct->parent    = -1;
+
+    if(nranks <= 0)
+        return;
+
+    int lrank = (rank+(nranks-root))%nranks;
+    int child;
+    assert(k >=1);
+
+    ct->parent = (lrank<=0)?-1:(((lrank-1)/k)+root)%nranks;
+    
+    for(child=1; child<=k; child++) {
+        int val = lrank*k+child;
+        if(val >= nranks)
+            break;
+        val = (val+root)%nranks;
+        COLL_tree_add_child(ct, val);
+    }
 }
 
 static inline
 void COLL_tree_knomial_init(int          rank,
                             int          nranks,
                             int          k,
+                            int          root,
                             COLL_tree_t *ct)
 {
     ct->rank        = rank;
     ct->nranks      = nranks;
-    ct->numRanges   = COLL_tree_knomial(ct->rank,
-                                        k,
-                                        ct->nranks,
-                                        &ct->parent,
-                                        ct->children);
+    ct->numRanges   = 0;
+    ct->parent    = -1;
+
+    if(nranks <= 0)
+        return;
+    
+    int lrank = (rank+(nranks-root))%nranks;
+    int basek, i, j;
+    assert(k>=2);
+
+    /* Parent Calculation */
+    if(lrank<=0) ct->parent=-1;
+    else {
+        basek = COLL_ilog(k, nranks-1);
+
+        for(i=0; i<basek; i++) {
+            if(COLL_getdigit(k,lrank,i)) {
+                ct->parent = (COLL_setdigit(k, lrank, i, 0)+root)%nranks;
+                break;
+            }
+        }
+    }
+
+    if(lrank>=nranks)
+        return;
+
+    /* Children Calculation */
+    basek        = COLL_ilog(k, nranks-1);
+
+    for(j=0; j<basek; j++) {
+        if(COLL_getdigit(k, lrank, j))
+            break;
+
+        for(i=1; i<k; i++) {
+            int child = COLL_setdigit(k, lrank, j, i);
+            if(child < nranks)
+                COLL_tree_add_child(ct, (child+root)%nranks);
+        }
+    }
 }
 
 static inline
 void COLL_tree_init(int          rank,
                     int          nranks,
                     int          k,
+                    int          root,
                     COLL_tree_t *ct)
 {
 #if COLL_USE_KNOMIAL == 1
-    COLL_tree_knomial_init(rank,nranks,k,ct);
+    COLL_tree_knomial_init(rank,nranks,k,root,ct);
 #else
-    COLL_tree_kary_init(rank,nranks,k,ct);
+    COLL_tree_kary_init(rank,nranks,k,root,ct);
 #endif
 }
 
 static inline
-int COLL_tree_dump(int tree_size)
+int COLL_tree_dump(int tree_size,
+                   int root,
+                   int k)
 {
     int   i;
     const char *name       = "collective tree";
-    int   tree_radix = COLL_TREE_RADIX;
 
     fprintf(stderr, "digraph \"%s%d\" {\n",
-            name, tree_radix);
+            name, k);
 
     for(i=0; i<tree_size; i++) {
         COLL_tree_t ct;
-        COLL_tree_init(i,tree_size,tree_radix,&ct);
+        COLL_tree_init(i,tree_size,k,root,&ct);
         fprintf(stderr, "%d -> %d\n",ct.rank, ct.parent);
         int j;
 
@@ -178,16 +164,25 @@ int COLL_tree_dump(int tree_size)
 static inline int
 COLL_sched_barrier(int                 tag,
                    COLL_comm_t        *comm,
+                   int                 k,
                    COLL_sched_t *s)
 {
     int i, j;
     COLL_tree_comm_t *mycomm    = &comm->tree_comm;
     COLL_tree_t      *tree      = &mycomm->tree;
-    int               numRanges = tree->numRanges;
+    COLL_tree_t       myTree;
     TSP_dt_t         *dt        = &COLL_global.control_dt;
-    int               children  = 0;
 
-    SCHED_FOREACHCHILDDO(children++);
+    if(k > 1 && 
+       k != COLL_TREE_RADIX_DEFAULT) {
+        tree = &myTree;
+        COLL_tree_init(TSP_rank(&comm->tsp_comm),
+                       TSP_size(&comm->tsp_comm),
+                       k,
+                       0,
+                       tree);
+    }
+    
 
     if(tree->parent == -1) {
         SCHED_FOREACHCHILDDO(TSP_recv(NULL,0,dt,j,tag,&comm->tsp_comm,
@@ -227,38 +222,34 @@ COLL_sched_bcast(void               *buffer,
                  int                 root,
                  int                 tag,
                  COLL_comm_t        *comm,
+                 int                 k,
                  COLL_sched_t *s,
                  int                 finalize)
 {
-    COLL_tree_t       logicalTree;
-    int               i,j,numRanges;
-    int               k        = COLL_TREE_RADIX;
+    COLL_tree_t       myTree;
+    int               i,j;
     COLL_tree_comm_t *mycomm   = &comm->tree_comm;
     int               size     = mycomm->tree.nranks;
     int               rank     = mycomm->tree.rank;
-    int               lrank    = (rank+(size-root))%size;
-    COLL_tree_t      *tree     = &logicalTree;
-    int               children = 0;
+    COLL_tree_t      *tree     = &myTree;
 
-    COLL_tree_init(lrank,size,k,tree);
-    numRanges = tree->numRanges;
-    SCHED_FOREACHCHILDDO(children++);
+    COLL_tree_init(rank,size,k,root,tree);
 
     if(tree->parent == -1) {
         SCHED_FOREACHCHILDDO(TSP_send(buffer,count,&datatype->tsp_dt,
-                                      (j+root)%size,tag,&comm->tsp_comm,
+                                      j,tag,&comm->tsp_comm,
                                       &s->tsp_sched));
         TSP_fence(&s->tsp_sched);
     } else {
         /* Receive from Parent */
         TSP_recv(buffer,count,&datatype->tsp_dt,
-                 (tree->parent+root)%size,tag,&comm->tsp_comm,
+                 tree->parent,tag,&comm->tsp_comm,
                  &s->tsp_sched);
         TSP_fence(&s->tsp_sched);
 
         /* Send to all children */
         SCHED_FOREACHCHILDDO(TSP_send(buffer,count,&datatype->tsp_dt,
-                                      (j+root)%size,tag,&comm->tsp_comm,
+                                      j,tag,&comm->tsp_comm,
                                       &s->tsp_sched));
         TSP_fence(&s->tsp_sched);
     }
@@ -280,33 +271,28 @@ COLL_sched_reduce(const void         *sendbuf,
                   int                 root,
                   int                 tag,
                   COLL_comm_t        *comm,
+                  int                 k,
                   int                 is_commutative,
                   COLL_sched_t *s,
                   int                 finalize)
 {
-    COLL_tree_t       logicalTree;
-    int               i,j,numRanges,is_contig;
+    COLL_tree_t       myTree;
+    int               i,j,is_contig;
     size_t            lb, extent, type_size;
-    int               k          = COLL_TREE_RADIX;
     COLL_tree_comm_t *mycomm     = &comm->tree_comm;
     int               size       = mycomm->tree.nranks;
     int               rank       = mycomm->tree.rank;
-    int               lrank      = (rank+(size-root))%size;
-    COLL_tree_t      *tree       = &logicalTree;
+    COLL_tree_t      *tree       = &myTree;
     void             *free_ptr0  = NULL;
-    int               children   = 0;
     int               is_inplace = TSP_isinplace((void *)sendbuf);
 
     TSP_dtinfo(&datatype->tsp_dt,&is_contig,&type_size,&extent,&lb);
 
     if(is_commutative)
-        COLL_tree_init(lrank,size,k,tree);
+        COLL_tree_init(rank,size,k,root,tree);
     else
         /* We have to use knomial trees to get rank order */
-        COLL_tree_knomial_init(lrank,size,k,tree);
-
-    numRanges = tree->numRanges;
-    SCHED_FOREACHCHILDDO(children++);
+        COLL_tree_knomial_init(rank,size,k,root,tree);
 
     if(tree->parent == -1) {
         k=0;
@@ -317,13 +303,13 @@ COLL_sched_reduce(const void         *sendbuf,
         if(is_commutative) {
             SCHED_FOREACHCHILD()
             TSP_recv_reduce(recvbuf,count,&datatype->tsp_dt,
-                            &op->tsp_op,(j+root)%size,tag,&comm->tsp_comm,
+                            &op->tsp_op,j,tag,&comm->tsp_comm,
                             &s->tsp_sched,TSP_FLAG_REDUCE_L);
             TSP_fence(&s->tsp_sched);
         } else {
             SCHED_FOREACHCHILD() {
                 TSP_recv_reduce(recvbuf,count,&datatype->tsp_dt,
-                                &op->tsp_op,(j+root)%size,tag,&comm->tsp_comm,
+                                &op->tsp_op,j,tag,&comm->tsp_comm,
                                 &s->tsp_sched,TSP_FLAG_REDUCE_R);
                 TSP_fence(&s->tsp_sched);
             }
@@ -338,13 +324,13 @@ COLL_sched_reduce(const void         *sendbuf,
             if(is_commutative) {
                 SCHED_FOREACHCHILD()
                 TSP_recv_reduce(result_buf,count,&datatype->tsp_dt,
-                                &op->tsp_op,(j+root)%size,tag,&comm->tsp_comm,
+                                &op->tsp_op,j,tag,&comm->tsp_comm,
                                 &s->tsp_sched,TSP_FLAG_REDUCE_L);
                 TSP_fence(&s->tsp_sched);
             } else {
                 SCHED_FOREACHCHILD() {
                     TSP_recv_reduce(result_buf,count,&datatype->tsp_dt,
-                                    &op->tsp_op,(j+root)%size,tag,&comm->tsp_comm,
+                                    &op->tsp_op,j,tag,&comm->tsp_comm,
                                     &s->tsp_sched,TSP_FLAG_REDUCE_R);
                     TSP_fence(&s->tsp_sched);
                 }
@@ -352,7 +338,7 @@ COLL_sched_reduce(const void         *sendbuf,
         }
         TSP_fence(&s->tsp_sched);
         TSP_send_accumulate(result_buf,count,&datatype->tsp_dt,
-                            &op->tsp_op,(tree->parent+root)%size,
+                            &op->tsp_op,tree->parent,
                             tag,&comm->tsp_comm,&s->tsp_sched);
     }
 
@@ -377,6 +363,7 @@ COLL_sched_reduce_full(const void         *sendbuf,
                        int                 root,
                        int                 tag,
                        COLL_comm_t        *comm,
+                       int                 k,
                        COLL_sched_t *s,
                        int                 finalize)
 {
@@ -385,7 +372,7 @@ COLL_sched_reduce_full(const void         *sendbuf,
 
     if(root == 0 || is_commutative) {
         rc = COLL_sched_reduce(sendbuf,recvbuf,count,datatype,
-                               op,root,tag,comm,
+                               op,root,tag,comm,k,
                                is_commutative,s,finalize);
     } else {
         COLL_tree_comm_t *mycomm    = &comm->tree_comm;
@@ -407,7 +394,7 @@ COLL_sched_reduce_full(const void         *sendbuf,
             sb = (void *)sendbuf;
 
         rc = COLL_sched_reduce(sb,tmp_buf,count,datatype,
-                               op,0,tag,comm,is_commutative,s,0);
+                               op,0,tag,comm,k,is_commutative,s,0);
 
         if(rank == 0) {
             TSP_send(tmp_buf,count,&datatype->tsp_dt,
@@ -441,6 +428,7 @@ COLL_sched_allreduce(const void         *sendbuf,
                      COLL_op_t          *op,
                      int                 tag,
                      COLL_comm_t        *comm,
+                     int                 k,
                      COLL_sched_t *s,
                      int                 finalize)
 {
@@ -461,8 +449,8 @@ COLL_sched_allreduce(const void         *sendbuf,
     }
 
     COLL_sched_reduce(sbuf,rbuf,count,datatype,
-                      op,0,tag,comm,is_commutative,s,0);
-    COLL_sched_bcast(rbuf,count,datatype,0,tag,comm,s,0);
+                      op,0,tag,comm,k,is_commutative,s,0);
+    COLL_sched_bcast(rbuf,count,datatype,0,tag,comm,k,s,0);
 
     if(is_inplace) {
         TSP_dtcopy_nb(recvbuf,count,&datatype->tsp_dt,

@@ -26,11 +26,11 @@
 #include "templates/stub_pre.h"
 
 /* Template:  binary trees */
-#define COLL_NAME              2ARY_
+#define COLL_NAME              KARY_
 #include "templates/binary_tree_pre.h"
 
 /* Template:  binomial tree */
-#define COLL_NAME              2NOMIAL_
+#define COLL_NAME              KNOMIAL_
 #include "templates/binomial_tree_pre.h"
 
 /* Template:  Dissemination */
@@ -54,11 +54,11 @@
 #include "templates/stub_pre.h"
 
 /* Template:  binary trees */
-#define COLL_NAME              2ARY_
+#define COLL_NAME              KARY_
 #include "templates/binary_tree_pre.h"
 
 /* Template:  binomial tree */
-#define COLL_NAME              2NOMIAL_
+#define COLL_NAME              KNOMIAL_
 #include "templates/binomial_tree_pre.h"
 
 /* Template:  Dissemination */
@@ -82,11 +82,11 @@
 #include "templates/stub_pre.h"
 
 /* Template:  binary trees */
-#define COLL_NAME              2ARY_
+#define COLL_NAME              KARY_
 #include "templates/binary_tree_pre.h"
 
 /* Template:  binomial tree */
-#define COLL_NAME              2NOMIAL_
+#define COLL_NAME              KNOMIAL_
 #include "templates/binomial_tree_pre.h"
 
 /* Template:  Dissemination */
