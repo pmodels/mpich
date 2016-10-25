@@ -74,6 +74,7 @@
 #define COLL_tree_knomial      COLL_NAMESPACE(tree_knomial)
 #define COLL_tree_kary_init    COLL_NAMESPACE(tree_kary_init)
 #define COLL_tree_knomial_init COLL_NAMESPACE(tree_knomial_init)
+#define COLL_tree_add_child    COLL_NAMESPACE(tree_add_child)
 
 /* Collective APIS */
 #define COLL_init                  COLL_NAMESPACE(init)

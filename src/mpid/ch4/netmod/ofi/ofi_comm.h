@@ -41,18 +41,18 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
         goto fn_exit;
 
     MPIR_Assert(comm->coll_fns != NULL);
-    MPIDI_OFI_COMM(comm).comm_mpich_2ary.tsp_comm.mpid_comm         = comm;
-    MPIDI_OFI_COMM(comm).comm_mpich_2nomial.tsp_comm.mpid_comm      = comm;
+    MPIDI_OFI_COMM(comm).comm_mpich_kary.tsp_comm.mpid_comm         = comm;
+    MPIDI_OFI_COMM(comm).comm_mpich_knomial.tsp_comm.mpid_comm      = comm;
     MPIDI_OFI_COMM(comm).comm_mpich_dissem.tsp_comm.mpid_comm       = comm;
     MPIDI_OFI_COMM(comm).comm_mpich_recexch.tsp_comm.mpid_comm      = comm;
 
-    MPIDI_OFI_COMM(comm).comm_triggered_2ary.tsp_comm.mpid_comm     = comm;
-    MPIDI_OFI_COMM(comm).comm_triggered_2nomial.tsp_comm.mpid_comm  = comm;
+    MPIDI_OFI_COMM(comm).comm_triggered_kary.tsp_comm.mpid_comm     = comm;
+    MPIDI_OFI_COMM(comm).comm_triggered_knomial.tsp_comm.mpid_comm  = comm;
     MPIDI_OFI_COMM(comm).comm_triggered_dissem.tsp_comm.mpid_comm   = comm;
     MPIDI_OFI_COMM(comm).comm_triggered_recexch.tsp_comm.mpid_comm  = comm;
 
-    MPIDI_OFI_COMM(comm).comm_stub_2ary.tsp_comm.dummy              = -1;
-    MPIDI_OFI_COMM(comm).comm_stub_2nomial.tsp_comm.dummy           = -1;
+    MPIDI_OFI_COMM(comm).comm_stub_kary.tsp_comm.dummy              = -1;
+    MPIDI_OFI_COMM(comm).comm_stub_knomial.tsp_comm.dummy           = -1;
     MPIDI_OFI_COMM(comm).comm_stub_dissem.tsp_comm.dummy            = -1;
     MPIDI_OFI_COMM(comm).comm_mpich_stub.tsp_comm.mpid_comm         = comm;
     MPIDI_OFI_COMM(comm).comm_stub_stub.tsp_comm.dummy              = -1;
@@ -60,27 +60,27 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
 
     MPIDI_OFI_COMM(comm).comm_shm_gr.dummy                          = -1;
 
-    MPIDI_OFI_COLL_MPICH_2ARY_comm_init(&MPIDI_OFI_COMM(comm).comm_mpich_2ary,
+    MPIDI_OFI_COLL_MPICH_KARY_comm_init(&MPIDI_OFI_COMM(comm).comm_mpich_kary,
                                         &MPIDI_OFI_COMM(comm).use_tag);
-    MPIDI_OFI_COLL_MPICH_2NOMIAL_comm_init(&MPIDI_OFI_COMM(comm).comm_mpich_2nomial,
+    MPIDI_OFI_COLL_MPICH_KNOMIAL_comm_init(&MPIDI_OFI_COMM(comm).comm_mpich_knomial,
                                            &MPIDI_OFI_COMM(comm).use_tag);
     MPIDI_OFI_COLL_MPICH_DISSEM_comm_init(&MPIDI_OFI_COMM(comm).comm_mpich_dissem,
                                           &MPIDI_OFI_COMM(comm).use_tag);
     MPIDI_OFI_COLL_MPICH_RECEXCH_comm_init(&MPIDI_OFI_COMM(comm).comm_mpich_recexch,
                                            &MPIDI_OFI_COMM(comm).use_tag);
 
-    MPIDI_OFI_COLL_TRIGGERED_2ARY_comm_init(&MPIDI_OFI_COMM(comm).comm_triggered_2ary,
+    MPIDI_OFI_COLL_TRIGGERED_KARY_comm_init(&MPIDI_OFI_COMM(comm).comm_triggered_kary,
                                             &MPIDI_OFI_COMM(comm).use_tag);
-    MPIDI_OFI_COLL_TRIGGERED_2NOMIAL_comm_init(&MPIDI_OFI_COMM(comm).comm_triggered_2nomial,
+    MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_comm_init(&MPIDI_OFI_COMM(comm).comm_triggered_knomial,
                                                &MPIDI_OFI_COMM(comm).use_tag);
     MPIDI_OFI_COLL_TRIGGERED_DISSEM_comm_init(&MPIDI_OFI_COMM(comm).comm_triggered_dissem,
                                               &MPIDI_OFI_COMM(comm).use_tag);
     MPIDI_OFI_COLL_TRIGGERED_RECEXCH_comm_init(&MPIDI_OFI_COMM(comm).comm_triggered_recexch,
                                                &MPIDI_OFI_COMM(comm).use_tag);
 
-    MPIDI_OFI_COLL_STUB_2ARY_comm_init(&MPIDI_OFI_COMM(comm).comm_stub_2ary,
+    MPIDI_OFI_COLL_STUB_KARY_comm_init(&MPIDI_OFI_COMM(comm).comm_stub_kary,
                                        &MPIDI_OFI_COMM(comm).use_tag);
-    MPIDI_OFI_COLL_STUB_2NOMIAL_comm_init(&MPIDI_OFI_COMM(comm).comm_stub_2nomial,
+    MPIDI_OFI_COLL_STUB_KNOMIAL_comm_init(&MPIDI_OFI_COMM(comm).comm_stub_knomial,
                                           &MPIDI_OFI_COMM(comm).use_tag);
     MPIDI_OFI_COLL_STUB_DISSEM_comm_init(&MPIDI_OFI_COMM(comm).comm_stub_dissem,
                                          &MPIDI_OFI_COMM(comm).use_tag);

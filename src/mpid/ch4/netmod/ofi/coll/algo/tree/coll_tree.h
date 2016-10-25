@@ -26,17 +26,18 @@ static inline int COLL_init()
 static inline int COLL_comm_init(COLL_comm_t *comm, int *tag_ptr)
 {
     COLL_tree_comm_t *mycomm = &comm->tree_comm;
-    int               k      = COLL_TREE_RADIX;
+    int               k      = COLL_TREE_RADIX_DEFAULT;
     mycomm->curTag           = 0;
 
     COLL_tree_init(TSP_rank(&comm->tsp_comm),
                    TSP_size(&comm->tsp_comm),
                    k,
+                   0,
                    &mycomm->tree);
     char *e = getenv("COLL_DUMPTREE");
 
     if(e && atoi(e))
-        COLL_tree_dump(mycomm->tree.nranks);
+      COLL_tree_dump(mycomm->tree.nranks, 0, k);
 
     comm->tree_comm.curTag      = tag_ptr;
     return 0;
@@ -49,7 +50,8 @@ static inline int COLL_allgather(const void  *sendbuf,
                                  int          recvcount,
                                  COLL_dt_t   *recvtype,
                                  COLL_comm_t *comm,
-                                 int         *errflag)
+                                 int         *errflag,
+                                 int          k)
 {
     int                rc;
     COLL_sched_t       s;
@@ -83,7 +85,8 @@ static inline int COLL_allreduce(const void  *sendbuf,
                                  COLL_dt_t   *datatype,
                                  COLL_op_t   *op,
                                  COLL_comm_t *comm,
-                                 int         *errflag)
+                                 int         *errflag,
+                                 int          k)
 {
     int                rc;
     COLL_sched_t s;
@@ -91,7 +94,7 @@ static inline int COLL_allreduce(const void  *sendbuf,
 
     COLL_sched_init(&s);
     rc = COLL_sched_allreduce(sendbuf,recvbuf,count,
-                              datatype,op,tag,comm,&s,1);
+                              datatype,op,tag,comm,k,&s,1);
     COLL_sched_kick(&s);
     return rc;
 }
@@ -164,13 +167,14 @@ static inline int COLL_bcast(void        *buffer,
                              COLL_dt_t   *datatype,
                              int          root,
                              COLL_comm_t *comm,
-                             int         *errflag)
+                             int         *errflag,
+                             int          k)
 {
     int                rc;
     COLL_sched_t s;
     int                tag = (*comm->tree_comm.curTag)++;
     COLL_sched_init(&s);
-    rc = COLL_sched_bcast(buffer,count,datatype,root,tag,comm,&s,1);
+    rc = COLL_sched_bcast(buffer,count,datatype,root,tag,comm,k,&s,1);
     COLL_sched_kick(&s);
     return rc;
 }
@@ -248,14 +252,15 @@ static inline int COLL_reduce(const void  *sendbuf,
                               COLL_op_t   *op,
                               int          root,
                               COLL_comm_t *comm,
-                              int         *errflag)
+                              int         *errflag,
+                              int          k)
 {
     int                rc;
     COLL_sched_t s;
     int                tag = (*comm->tree_comm.curTag)++;
     COLL_sched_init(&s);
     rc = COLL_sched_reduce_full(sendbuf,recvbuf,count,datatype,
-                                op,root,tag,comm,&s,1);
+                                op,root,tag,comm,k,&s,1);
     COLL_sched_kick(&s);
     return rc;
 }
@@ -302,13 +307,14 @@ static inline int COLL_scatterv(const void  *sendbuf,
 }
 
 static inline int COLL_barrier(COLL_comm_t *comm,
-                               int         *errflag)
+                               int         *errflag,
+                               int          k)
 {
     int                rc;
     COLL_sched_t s;
     int                tag = (*comm->tree_comm.curTag)++;
     COLL_sched_init(&s);
-    rc = COLL_sched_barrier(tag, comm,&s);
+    rc = COLL_sched_barrier(tag, comm, k, &s);
     COLL_sched_kick(&s);
     return rc;
 }
@@ -362,7 +368,8 @@ static inline int COLL_iallreduce(const void  *sendbuf,
                                   COLL_dt_t   *datatype,
                                   COLL_op_t   *op,
                                   COLL_comm_t *comm,
-                                  COLL_req_t  *request)
+                                  COLL_req_t  *request,
+                                  int          k)
 {
     COLL_sched_t  *s;
     int                  done = 0;
@@ -371,7 +378,7 @@ static inline int COLL_iallreduce(const void  *sendbuf,
     TSP_addref_op(&op->tsp_op,1);
     TSP_addref_dt(&datatype->tsp_dt,1);
     COLL_sched_allreduce(sendbuf,recvbuf,count,datatype,
-                         op,tag,comm,s,0);
+                         op,tag,comm,k,s,0);
     TSP_fence(&s->tsp_sched);
     TSP_addref_op_nb(&op->tsp_op,0,&s->tsp_sched);
     TSP_addref_dt_nb(&datatype->tsp_dt,0,&s->tsp_sched);
@@ -437,7 +444,8 @@ static inline int COLL_ibcast(void        *buffer,
                               COLL_dt_t   *datatype,
                               int          root,
                               COLL_comm_t *comm,
-                              COLL_req_t  *request)
+                              COLL_req_t  *request,
+                              int          k)
 {
     COLL_sched_t  *s;
     int                  done = 0;
@@ -445,7 +453,7 @@ static inline int COLL_ibcast(void        *buffer,
     COLL_sched_init_nb(&s,request);
     TSP_addref_dt(&datatype->tsp_dt,1);
     COLL_sched_bcast(buffer,count,datatype,
-                     root,tag,comm,s,0);
+                     root,tag,comm,k,s,0);
 
     TSP_addref_dt_nb(&datatype->tsp_dt,0,&s->tsp_sched);
     TSP_fence(&s->tsp_sched);
@@ -533,7 +541,8 @@ static inline int COLL_ireduce(const void  *sendbuf,
                                COLL_op_t   *op,
                                int          root,
                                COLL_comm_t *comm,
-                               COLL_req_t  *request)
+                               COLL_req_t  *request,
+                               int          k)
 {
     COLL_sched_t  *s;
     int                  done = 0;
@@ -542,7 +551,7 @@ static inline int COLL_ireduce(const void  *sendbuf,
     TSP_addref_op(&op->tsp_op,1);
     TSP_addref_dt(&datatype->tsp_dt,1);
     COLL_sched_reduce_full(sendbuf,recvbuf,count,datatype,
-                           op,root,tag,comm,s,0);
+                           op,root,tag,comm,k,s,0);
     TSP_addref_op_nb(&op->tsp_op,0,&s->tsp_sched);
     TSP_addref_dt_nb(&datatype->tsp_dt,0,&s->tsp_sched);
     TSP_fence(&s->tsp_sched);
@@ -600,13 +609,14 @@ static inline int COLL_iscatterv(const void  *sendbuf,
 }
 
 static inline int COLL_ibarrier(COLL_comm_t *comm,
-                                COLL_req_t  *request)
+                                COLL_req_t  *request,
+                                int          k)
 {
     COLL_sched_t  *s;
     int                  done = 0;
     int                  tag  = (*comm->tree_comm.curTag)++;
     COLL_sched_init_nb(&s,request);
-    COLL_sched_barrier(tag,comm,s);
+    COLL_sched_barrier(tag,comm,k,s);
     done = COLL_sched_kick_nb(s);
 
     if(1 || !done) { /* always enqueue until we can fix the request interface */

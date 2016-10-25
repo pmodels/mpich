@@ -17,7 +17,7 @@
 #define COLL_SCHED_MACROS
 
 #define SCHED_FOREACHCHILD()                    \
-    for(i=0; i<numRanges; i++)                  \
+    for(i=0; i<tree->numRanges; i++)            \
         for(j=tree->children[i].startRank;      \
             j<=tree->children[i].endRank;       \
             j++)                                \

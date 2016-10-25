@@ -120,16 +120,16 @@ typedef struct MPIDI_OFI_noncontig_t {
 } MPIDI_OFI_noncontig_t;
 
 typedef union {
-    MPIDI_OFI_COLL_MPICH_2ARY_req_t         mpich_2ary;
-    MPIDI_OFI_COLL_MPICH_2NOMIAL_req_t      mpich_2nomial;
+    MPIDI_OFI_COLL_MPICH_KARY_req_t         mpich_kary;
+    MPIDI_OFI_COLL_MPICH_KNOMIAL_req_t      mpich_knomial;
     MPIDI_OFI_COLL_MPICH_DISSEM_req_t       mpich_dissem;
     MPIDI_OFI_COLL_MPICH_RECEXCH_req_t      mpich_recexch;
-    MPIDI_OFI_COLL_TRIGGERED_2ARY_req_t     triggered_2ary;
-    MPIDI_OFI_COLL_TRIGGERED_2NOMIAL_req_t  triggered_2nomial;
+    MPIDI_OFI_COLL_TRIGGERED_KARY_req_t     triggered_kary;
+    MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_req_t  triggered_knomial;
     MPIDI_OFI_COLL_TRIGGERED_DISSEM_req_t   triggered_dissem;
     MPIDI_OFI_COLL_TRIGGERED_RECEXCH_req_t  triggered_recexch;
-    MPIDI_OFI_COLL_STUB_2ARY_req_t          stub_2ary;
-    MPIDI_OFI_COLL_STUB_2NOMIAL_req_t       stub_2nomial;
+    MPIDI_OFI_COLL_STUB_KARY_req_t          stub_kary;
+    MPIDI_OFI_COLL_STUB_KNOMIAL_req_t       stub_knomial;
     MPIDI_OFI_COLL_STUB_DISSEM_req_t        stub_dissem;
     MPIDI_OFI_COLL_STUB_RECEXCH_req_t       stub_recexch;
     MPIDI_OFI_COLL_MPICH_STUB_req_t         mpich_stub;
@@ -161,16 +161,16 @@ typedef struct {
 
 typedef struct {
     int index;
-    MPIDI_OFI_COLL_MPICH_2ARY_dt_t         dt_mpich_2ary;
-    MPIDI_OFI_COLL_MPICH_2NOMIAL_dt_t      dt_mpich_2nomial;
+    MPIDI_OFI_COLL_MPICH_KARY_dt_t         dt_mpich_kary;
+    MPIDI_OFI_COLL_MPICH_KNOMIAL_dt_t      dt_mpich_knomial;
     MPIDI_OFI_COLL_MPICH_DISSEM_dt_t       dt_mpich_dissem;
     MPIDI_OFI_COLL_MPICH_RECEXCH_dt_t      dt_mpich_recexch;
-    MPIDI_OFI_COLL_TRIGGERED_2ARY_dt_t     dt_triggered_2ary;
-    MPIDI_OFI_COLL_TRIGGERED_2NOMIAL_dt_t  dt_triggered_2nomial;
+    MPIDI_OFI_COLL_TRIGGERED_KARY_dt_t     dt_triggered_kary;
+    MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_dt_t  dt_triggered_knomial;
     MPIDI_OFI_COLL_TRIGGERED_DISSEM_dt_t   dt_triggered_dissem;
     MPIDI_OFI_COLL_TRIGGERED_RECEXCH_dt_t  dt_triggered_recexch;
-    MPIDI_OFI_COLL_STUB_2ARY_dt_t          dt_stub_2ary;
-    MPIDI_OFI_COLL_STUB_2NOMIAL_dt_t       dt_stub_2nomial;
+    MPIDI_OFI_COLL_STUB_KARY_dt_t          dt_stub_kary;
+    MPIDI_OFI_COLL_STUB_KNOMIAL_dt_t       dt_stub_knomial;
     MPIDI_OFI_COLL_STUB_DISSEM_dt_t        dt_stub_dissem;
     MPIDI_OFI_COLL_STUB_RECEXCH_dt_t       dt_stub_recexch;
     MPIDI_OFI_COLL_MPICH_STUB_dt_t         dt_mpich_stub;
@@ -179,16 +179,16 @@ typedef struct {
 } MPIDI_OFI_dt_t;
 
 typedef struct {
-    MPIDI_OFI_COLL_MPICH_2ARY_op_t         op_mpich_2ary;
-    MPIDI_OFI_COLL_MPICH_2NOMIAL_op_t      op_mpich_2nomial;
+    MPIDI_OFI_COLL_MPICH_KARY_op_t         op_mpich_kary;
+    MPIDI_OFI_COLL_MPICH_KNOMIAL_op_t      op_mpich_knomial;
     MPIDI_OFI_COLL_MPICH_DISSEM_op_t       op_mpich_dissem;
     MPIDI_OFI_COLL_MPICH_RECEXCH_op_t      op_mpich_recexch;
-    MPIDI_OFI_COLL_TRIGGERED_2ARY_op_t     op_triggered_2ary;
-    MPIDI_OFI_COLL_TRIGGERED_2NOMIAL_op_t  op_triggered_2nomial;
+    MPIDI_OFI_COLL_TRIGGERED_KARY_op_t     op_triggered_kary;
+    MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_op_t  op_triggered_knomial;
     MPIDI_OFI_COLL_TRIGGERED_DISSEM_op_t   op_triggered_dissem;
     MPIDI_OFI_COLL_TRIGGERED_RECEXCH_op_t  op_triggered_recexch;
-    MPIDI_OFI_COLL_STUB_2ARY_op_t          op_stub_2ary;
-    MPIDI_OFI_COLL_STUB_2NOMIAL_op_t       op_stub_2nomial;
+    MPIDI_OFI_COLL_STUB_KARY_op_t          op_stub_kary;
+    MPIDI_OFI_COLL_STUB_KNOMIAL_op_t       op_stub_knomial;
     MPIDI_OFI_COLL_STUB_DISSEM_op_t        op_stub_dissem;
     MPIDI_OFI_COLL_STUB_RECEXCH_op_t       op_stub_recexch;
     MPIDI_OFI_COLL_MPICH_STUB_op_t         op_mpich_stub;
