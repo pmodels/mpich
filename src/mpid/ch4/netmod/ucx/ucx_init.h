@@ -272,7 +272,7 @@ static inline int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,
         MPIDIU_comm_rank_to_pid_local(comm_ptr, idx, &lpid, &avtid);
     }
 
-    *lpid_ptr = MPIDIU_LPID_CREATE(avtid, lpid);
+    *lpid_ptr = MPIDIU_LUPID_CREATE(avtid, lpid);
     return MPI_SUCCESS;
 
 }
@@ -353,56 +353,63 @@ fn_fail:
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_gpid_get(MPIR_Comm * comm_ptr, int rank, MPIR_Gpid * gpid)
+static inline int MPIDI_NM_get_local_upids(MPIR_Comm *comm, size_t **local_upid_size,
+                                           char **local_upids)
 {
     int mpi_errno = MPI_SUCCESS;
-    int avtid = 0, lpid = 0;
-
-
+    int i, total_size = 0;
+    char *temp_buf = NULL, *curr_ptr = NULL;
+    char keyS[MPIDI_UCX_KVSAPPSTRLEN];
+    char valS[MPIDI_UCX_KVSAPPSTRLEN];
     int len = MPIDI_UCX_global.max_addr_len;
 
-    MPIDIU_comm_rank_to_pid(comm_ptr, rank, &lpid, &avtid);
-    MPIR_Assert(rank < comm_ptr->local_size);
+    *local_upid_size = (size_t*) MPL_malloc(comm->local_size * sizeof(size_t));
+    temp_buf = (char*) MPL_malloc(comm->local_size * len);
 
-    if (MPIDI_UCX_global.pmi_addr_table == NULL) {
-        MPIDI_NMI_allocate_address_table();
+    for (i = 0; i < comm->local_size; i++) {
+        sprintf(keyS, "UCX-%d", i);
+        PMI_KVS_Get(MPIDI_UCX_global.kvsname, keyS, valS, MPIDI_UCX_KVSAPPSTRLEN);
+        // MPIDI_UCX_PMI_ERROR(pmi_errno, pmi_commit);
+        MPL_str_get_binary_arg(valS, "UCX", &temp_buf[len * i],
+                               (int) len, (int *) &(*local_upid_size)[i]);
+        total_size += (*local_upid_size)[i];
     }
-    memset(MPIDI_UCX_GPID(gpid).addr, 0, len);
-    memcpy(MPIDI_UCX_GPID(gpid).addr, &MPIDI_UCX_global.pmi_addr_table[lpid * len], len);
-    MPIR_Assert(len <= sizeof(MPIDI_UCX_GPID(gpid).addr));
+
+    *local_upids = (char*) MPL_malloc(total_size * sizeof(char));
+    curr_ptr = (*local_upids);
+    for (i = 0; i < comm->local_size; i++) {
+        memcpy(curr_ptr, &temp_buf[i * len], (*local_upid_size)[i]);
+        curr_ptr += (*local_upid_size)[i];
+    }
+
   fn_exit:
+    if (temp_buf) MPL_free(temp_buf);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-static inline int MPIDI_NM_getallincomm(MPIR_Comm * comm_ptr,
-                                        int local_size, MPIR_Gpid local_gpids[], int *singleAVT)
+static inline int MPIDI_NM_upids_to_lupids(int size,
+                                            size_t *remote_upid_size,
+                                            char *remote_upids,
+                                            int **remote_lupids)
 {
-    int i;
-
-    for (i = 0; i < comm_ptr->local_size; i++)
-        MPIDI_GPID_Get(comm_ptr, i, &local_gpids[i]);
-
-    *singleAVT = 0;
-    return 0;
-}
-
-static inline int MPIDI_NM_gpid_tolpidarray(int size, MPIR_Gpid gpid[], int lpid[])
-{
-
     int i, mpi_errno = MPI_SUCCESS;
+    size_t sz = MPIDI_UCX_global.max_addr_len;
     int *new_avt_procs;
+    char **new_upids;
     int n_new_procs = 0;
-    size_t sz;
     int max_n_avts;
+    char *curr_upid;
     new_avt_procs = (int *) MPL_malloc(size * sizeof(int));
+    new_upids = (char **) MPL_malloc(size * sizeof(char *));
     max_n_avts = MPIDIU_get_max_n_avts();
     if (MPIDI_UCX_global.pmi_addr_table == NULL) {
         MPIDI_NMI_allocate_address_table();
     }
 
-    for (i = 0; i < size; i++) {
+    curr_upid = remote_upids;
+    for(i = 0; i < size; i++) {
         int j, k;
         int found = 0;
 
@@ -411,24 +418,25 @@ static inline int MPIDI_NM_gpid_tolpidarray(int size, MPIR_Gpid gpid[], int lpid
                 continue;
             }
             for (j = 0; j < MPIDIU_get_av_table(k)->size; j++) {
-                sz = MPIDI_UCX_global.max_addr_len;     //  sizeof(MPIDI_UCX_GPID(&gpid[i]).addr);
-                MPIR_Assert(sz <= sizeof(MPIDI_UCX_GPID(&gpid[i]).addr));
-
                 if (!memcmp(&MPIDI_UCX_global.pmi_addr_table[j * sz],
-                            MPIDI_UCX_GPID(&gpid[i]).addr, sz)) {
-                    lpid[i] = MPIDIU_LPID_CREATE(k, j);
+                            curr_upid, remote_upid_size[i])) {
+                    (*remote_lupids)[i] = MPIDIU_LUPID_CREATE(k, j);
                     found = 1;
                     break;
                 }
             }
         }
+
         if (!found) {
             new_avt_procs[n_new_procs] = i;
+            new_upids[n_new_procs] = curr_upid;
             n_new_procs++;
         }
+        curr_upid += remote_upid_size[i];
     }
 
     /* FIXME: add support for dynamic processes */
+    /* create new av_table, insert processes */
     if (n_new_procs > 0) {
         mpi_errno = -1;
         MPIR_ERR_POP(mpi_errno);
@@ -436,6 +444,7 @@ static inline int MPIDI_NM_gpid_tolpidarray(int size, MPIR_Gpid gpid[], int lpid
 
   fn_exit:
     MPL_free(new_avt_procs);
+    MPL_free(new_upids);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

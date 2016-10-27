@@ -31,7 +31,6 @@ typedef struct {
 #include "mpid_datatype_fallback.h"
 
 typedef int MPID_Progress_state;
-#define HAVE_GPID_ROUTINES
 
 #define CH4_COMPILE_TIME_ASSERT(expr_)                                  \
   do { switch(0) { case 0: case (expr_): default: break; } } while (0)
@@ -387,19 +386,10 @@ typedef struct {
     MPIDI_NM_OP_DECL} netmod;
 } MPIDI_Devop_t;
 
-typedef struct {
-    union {
-    MPIDI_NM_GPID_DECL} netmod;
-    MPID_Node_id_t node;
-} MPIDI_Devgpid_t;
-
 #define MPID_DEV_REQUEST_DECL    MPIDI_Devreq_t  dev;
 #define MPID_DEV_WIN_DECL        MPIDI_Devwin_t  dev;
 #define MPID_DEV_COMM_DECL       MPIDI_Devcomm_t dev;
 #define MPID_DEV_OP_DECL         MPIDI_Devop_t   dev;
-#define MPID_DEV_GPID_DECL       MPIDI_Devgpid_t dev;
-
-#define MPIDII_GPID(gpid) (gpid)->dev
 
 typedef struct {
     union {
@@ -446,12 +436,17 @@ extern MPIDII_av_table_t *MPIDII_av_table0;
 #define MPIDIU_LPID_MASK                     (0x00FFFFFFU)
 #define MPIDIU_AVTID_MASK                    (0xFF000000U)
 #define MPIDIU_NEW_AVT_MARK                  (0x80000000U)
-#define MPIDIU_LPID_CREATE(avtid, lpid)      (((avtid) << MPIDIU_LPID_BITS) | (lpid))
-#define MPIDIU_LPID_GET_AVTID(lpid)          ((((lpid) & MPIDIU_AVTID_MASK) >> MPIDIU_LPID_BITS))
-#define MPIDIU_LPID_GET_LPID(lpid)           (((lpid) & MPIDIU_LPID_MASK))
-#define MPIDIU_LPID_SET_NEW_AVT_MARK(lpid)   ((lpid) |= MPIDIU_NEW_AVT_MARK)
-#define MPIDIU_LPID_CLEAR_NEW_AVT_MARK(lpid) ((lpid) &= (~MPIDIU_NEW_AVT_MARK))
-#define MPIDIU_LPID_IS_NEW_AVT(lpid)         ((lpid) & MPIDIU_NEW_AVT_MARK)
+#define MPIDIU_LUPID_CREATE(avtid, lpid)      (((avtid) << MPIDIU_LPID_BITS) | (lpid))
+#define MPIDIU_LUPID_GET_AVTID(lupid)          ((((lupid) & MPIDIU_AVTID_MASK) >> MPIDIU_LPID_BITS))
+#define MPIDIU_LUPID_GET_LPID(lupid)           (((lupid) & MPIDIU_LPID_MASK))
+#define MPIDIU_LUPID_SET_NEW_AVT_MARK(lupid)   ((lupid) |= MPIDIU_NEW_AVT_MARK)
+#define MPIDIU_LUPID_CLEAR_NEW_AVT_MARK(lupid) ((lupid) &= (~MPIDIU_NEW_AVT_MARK))
+#define MPIDIU_LUPID_IS_NEW_AVT(lupid)         ((lupid) & MPIDIU_NEW_AVT_MARK)
+
+#define MPIDII_DYNPROC_MASK                 (0x80000000U)
+
+#define MPID_INTERCOMM_NO_DYNPROC(comm) \
+    (MPIDII_COMM((comm),map).avtid == 0 && MPIDII_COMM((comm),local_map).avtid == 0)
 
 
 #include "mpidu_pre.h"

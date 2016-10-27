@@ -175,10 +175,6 @@ typedef struct {
 } MPIDI_OFI_win_t;
 
 typedef struct {
-    char addr[62];
-} MPIDI_OFI_gpid_t;
-
-typedef struct {
     fi_addr_t dest;
 #ifdef MPIDI_OFI_CONFIG_USE_SCALABLE_ENDPOINTS
     unsigned ep_idx:MPIDI_OFI_MAX_ENDPOINTS_BITS;

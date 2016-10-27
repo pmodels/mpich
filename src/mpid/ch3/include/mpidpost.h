@@ -175,20 +175,21 @@ int MPIDI_CH3_Comm_connect(char * port_name, int root, MPIR_Comm * comm_ptr,
 #define MPID_Progress_poke()		     MPIDI_CH3_Progress_poke()
 
 /* Dynamic process support */
-int MPID_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
-			    MPIR_Gpid local_gpids[], int *singlePG );
-int MPID_GPID_Get( MPIR_Comm *comm_ptr, int rank, MPIR_Gpid *gpid );
-int MPID_GPID_ToLpidArray( int size, MPIR_Gpid gpid[], int lpid[] );
+int MPIDI_GPID_GetAllInComm( MPIR_Comm *comm_ptr, int local_size,
+                             MPIDI_Gpid local_gpids[], int *singlePG );
+int MPIDI_GPID_Get( MPIR_Comm *comm_ptr, int rank, MPIDI_Gpid *gpid );
+int MPIDI_GPID_ToLpidArray( int size, MPIDI_Gpid gpid[], int lpid[] );
+int MPIDI_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
+                            int nPGids, const MPIDI_Gpid gpids[],
+                            int root );
+int MPID_intercomm_exchange_map( MPIR_Comm *local_comm_ptr, int local_leader,
+                                 MPIR_Comm *peer_comm_ptr, int remote_leader,
+                                 int *remote_size, int **remote_lpids,
+                                 int *is_low_group);
 int MPID_Create_intercomm_from_lpids( MPIR_Comm *newcomm_ptr,
-			    int size, const int lpids[] );
-int MPID_PG_ForwardPGInfo( MPIR_Comm *peer_ptr, MPIR_Comm *comm_ptr,
-			   int nPGids, const MPIR_Gpid gpids[],
-			   int root );
-/* PG_ForwardPGInfo is used as the implementation of the intercomm-create
-   hook that is needed with dynamic processes because of limitations
-   in the current definition of PMI */
-#define MPID_ICCREATE_REMOTECOMM_HOOK(_p,_c,_np,_gp,_r) \
-     MPID_PG_ForwardPGInfo(_p,_c,_np,_gp,_r)
+                                      int size, const int lpids[] );
+
+#define MPID_INTERCOMM_NO_DYNPROC(comm) (0)
 
 /* communicator hooks */
 int MPIDI_CH3I_Comm_create_hook(struct MPIR_Comm *);
