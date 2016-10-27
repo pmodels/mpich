@@ -218,32 +218,32 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Init(int *argc,
     MPIR_Assert(avtid == 0);
     max_n_avts = MPIDIU_get_max_n_avts();
 
-    MPIDII_av_table = (MPIDII_av_table_t **)
-        MPL_malloc(max_n_avts * sizeof(MPIDII_av_table_t *));
+    MPIDI_av_table = (MPIDI_av_table_t **)
+        MPL_malloc(max_n_avts * sizeof(MPIDI_av_table_t *));
 
-    MPIDII_av_table[0] = (MPIDII_av_table_t *)
-        MPL_malloc(size * sizeof(MPIDII_av_entry_t)
-                   + sizeof(MPIDII_av_table_t));
+    MPIDI_av_table[0] = (MPIDI_av_table_t *)
+        MPL_malloc(size * sizeof(MPIDI_av_entry_t)
+                   + sizeof(MPIDI_av_table_t));
 
-    MPIDII_av_table[0]->size = size;
-    MPIR_Object_set_ref(MPIDII_av_table[0], 1);
+    MPIDI_av_table[0]->size = size;
+    MPIR_Object_set_ref(MPIDI_av_table[0], 1);
 
     MPIDIU_alloc_globals_for_avtid(avtid);
 
-    MPIDII_av_table0 = MPIDII_av_table[0];
+    MPIDI_av_table0 = MPIDI_av_table[0];
 
     /* initialize rank_map */
-    MPIDII_COMM(MPIR_Process.comm_world, map).mode = MPIDII_RANK_MAP_DIRECT_INTRA;
-    MPIDII_COMM(MPIR_Process.comm_world, map).avtid = 0;
-    MPIDII_COMM(MPIR_Process.comm_world, map).size = size;
-    MPIDII_COMM(MPIR_Process.comm_world, local_map).mode = MPIDII_RANK_MAP_NONE;
+    MPIDI_COMM(MPIR_Process.comm_world, map).mode = MPIDI_RANK_MAP_DIRECT_INTRA;
+    MPIDI_COMM(MPIR_Process.comm_world, map).avtid = 0;
+    MPIDI_COMM(MPIR_Process.comm_world, map).size = size;
+    MPIDI_COMM(MPIR_Process.comm_world, local_map).mode = MPIDI_RANK_MAP_NONE;
     MPIDIU_avt_add_ref(0);
 
-    MPIDII_COMM(MPIR_Process.comm_self, map).mode = MPIDII_RANK_MAP_OFFSET_INTRA;
-    MPIDII_COMM(MPIR_Process.comm_self, map).avtid = 0;
-    MPIDII_COMM(MPIR_Process.comm_self, map).size = 1;
-    MPIDII_COMM(MPIR_Process.comm_self, map).reg.offset = rank;
-    MPIDII_COMM(MPIR_Process.comm_self, local_map).mode = MPIDII_RANK_MAP_NONE;
+    MPIDI_COMM(MPIR_Process.comm_self, map).mode = MPIDI_RANK_MAP_OFFSET_INTRA;
+    MPIDI_COMM(MPIR_Process.comm_self, map).avtid = 0;
+    MPIDI_COMM(MPIR_Process.comm_self, map).size = 1;
+    MPIDI_COMM(MPIR_Process.comm_self, map).reg.offset = rank;
+    MPIDI_COMM(MPIR_Process.comm_self, local_map).mode = MPIDI_RANK_MAP_NONE;
     MPIDIU_avt_add_ref(0);
 
     MPIR_Process.attrs.tag_ub = (1ULL << MPIDI_CH4U_TAG_SHIFT) - 1;
@@ -259,7 +259,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Init(int *argc,
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     int i;
     for (i = 0; i < MPIR_Process.comm_world->local_size; i++) {
-        MPIDII_av_table0->table[i].is_local = 0;
+        MPIDI_av_table0->table[i].is_local = 0;
     }
     MPIDI_CH4U_build_nodemap(MPIR_Process.comm_world->rank,
                              MPIR_Process.comm_world,
@@ -267,12 +267,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Init(int *argc,
                              MPIDI_CH4_Global.node_map[0], &MPIDI_CH4_Global.max_node_id);
 
     for (i = 0; i < MPIR_Process.comm_world->local_size; i++) {
-        MPIDII_av_table0->table[i].is_local =
+        MPIDI_av_table0->table[i].is_local =
             (MPIDI_CH4_Global.node_map[0][i] ==
              MPIDI_CH4_Global.node_map[0][MPIR_Process.comm_world->rank]) ? 1 : 0;
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         (MPL_DBG_FDEST, "WORLD RANK %d %s local", i,
-                         MPIDII_av_table0->table[i].is_local ? "is" : "is not"));
+                         MPIDI_av_table0->table[i].is_local ? "is" : "is not"));
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
                         (MPL_DBG_FDEST, "Node id (i) (me) %d %d", MPIDI_CH4_Global.node_map[0][i],
                          MPIDI_CH4_Global.node_map[0][MPIR_Process.comm_world->rank]));
@@ -360,11 +360,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Finalize(void)
     int max_n_avts;
     max_n_avts = MPIDIU_get_max_n_avts();
     for (i = 0; i < max_n_avts; i++) {
-        if (MPIDII_av_table[i] != NULL) {
+        if (MPIDI_av_table[i] != NULL) {
             MPIDIU_avt_release_ref(i);
         }
     }
-    MPL_free(MPIDII_av_table);
+    MPL_free(MPIDI_av_table);
     MPL_free(MPIDI_CH4_Global.node_map);
 
     MPIDIU_avt_destroy();
@@ -623,7 +623,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_upids_to_lupids(int size,
                  */
                 MPIDI_CH4_Global.node_map[_avtid][_lpid] = remote_node_ids[i];
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
-                MPIDII_av_table[_avtid]->table[_lpid].is_local = 0;
+                MPIDI_av_table[_avtid]->table[_lpid].is_local = 0;
 #endif
             }
         }
@@ -651,24 +651,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Create_intercomm_from_lpids(MPIR_Comm * newco
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_CREATE_INTERCOMM_FROM_LPIDS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_CREATE_INTERCOMM_FROM_LPIDS);
 
-    MPIDII_rank_map_mlut_t *mlut = NULL;
-    MPIDII_COMM(newcomm_ptr, map).mode = MPIDII_RANK_MAP_MLUT;
-    MPIDII_COMM(newcomm_ptr, map).avtid = -1;
-    mpi_errno = MPIDII_alloc_mlut(&mlut, size);
+    MPIDI_rank_map_mlut_t *mlut = NULL;
+    MPIDI_COMM(newcomm_ptr, map).mode = MPIDI_RANK_MAP_MLUT;
+    MPIDI_COMM(newcomm_ptr, map).avtid = -1;
+    mpi_errno = MPIDI_alloc_mlut(&mlut, size);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
-    MPIDII_COMM(newcomm_ptr, map).size = size;
-    MPIDII_COMM(newcomm_ptr, map).irreg.mlut.t = mlut;
-    MPIDII_COMM(newcomm_ptr, map).irreg.mlut.gpid = mlut->gpid;
+    MPIDI_COMM(newcomm_ptr, map).size = size;
+    MPIDI_COMM(newcomm_ptr, map).irreg.mlut.t = mlut;
+    MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid = mlut->gpid;
 
     for (i = 0; i < size; i++) {
-        MPIDII_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].avtid = MPIDIU_LUPID_GET_AVTID(lpids[i]);
-        MPIDII_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].lpid = MPIDIU_LUPID_GET_LPID(lpids[i]);
+        MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].avtid = MPIDIU_LUPID_GET_AVTID(lpids[i]);
+        MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].lpid = MPIDIU_LUPID_GET_LPID(lpids[i]);
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                         (MPL_DBG_FDEST, " remote rank=%d, avtid=%d, lpid=%d", i,
-                         MPIDII_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].avtid,
-                         MPIDII_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].lpid));
+                         MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].avtid,
+                         MPIDI_COMM(newcomm_ptr, map).irreg.mlut.gpid[i].lpid));
     }
 
   fn_exit:
