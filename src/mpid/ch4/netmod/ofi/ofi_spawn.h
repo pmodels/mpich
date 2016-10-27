@@ -113,42 +113,42 @@ static inline int MPIDI_OFI_dynproc_create_intercomm(const char *port_name,
     tmp_comm_ptr->comm_kind = MPIR_COMM_KIND__INTERCOMM;
     tmp_comm_ptr->local_comm = comm_ptr;
     tmp_comm_ptr->is_low_group = is_low_group;
-    MPIDII_COMM(tmp_comm_ptr, local_map).mode = MPIDII_COMM(comm_ptr, map).mode;
-    MPIDII_COMM(tmp_comm_ptr, local_map).size = MPIDII_COMM(comm_ptr, map).size;
-    MPIDII_COMM(tmp_comm_ptr, local_map).avtid = MPIDII_COMM(comm_ptr, map).avtid;
-    switch (MPIDII_COMM(comm_ptr, map).mode) {
-    case MPIDII_RANK_MAP_DIRECT:
-    case MPIDII_RANK_MAP_DIRECT_INTRA:
+    MPIDI_COMM(tmp_comm_ptr, local_map).mode = MPIDI_COMM(comm_ptr, map).mode;
+    MPIDI_COMM(tmp_comm_ptr, local_map).size = MPIDI_COMM(comm_ptr, map).size;
+    MPIDI_COMM(tmp_comm_ptr, local_map).avtid = MPIDI_COMM(comm_ptr, map).avtid;
+    switch (MPIDI_COMM(comm_ptr, map).mode) {
+    case MPIDI_RANK_MAP_DIRECT:
+    case MPIDI_RANK_MAP_DIRECT_INTRA:
         break;
-    case MPIDII_RANK_MAP_OFFSET:
-    case MPIDII_RANK_MAP_OFFSET_INTRA:
-        MPIDII_COMM(tmp_comm_ptr, local_map).reg.offset = MPIDII_COMM(comm_ptr, map).reg.offset;
+    case MPIDI_RANK_MAP_OFFSET:
+    case MPIDI_RANK_MAP_OFFSET_INTRA:
+        MPIDI_COMM(tmp_comm_ptr, local_map).reg.offset = MPIDI_COMM(comm_ptr, map).reg.offset;
         break;
-    case MPIDII_RANK_MAP_STRIDE:
-    case MPIDII_RANK_MAP_STRIDE_INTRA:
-    case MPIDII_RANK_MAP_STRIDE_BLOCK:
-    case MPIDII_RANK_MAP_STRIDE_BLOCK_INTRA:
-        MPIDII_COMM(tmp_comm_ptr, local_map).reg.stride.stride =
-            MPIDII_COMM(comm_ptr, map).reg.stride.stride;
-        MPIDII_COMM(tmp_comm_ptr, local_map).reg.stride.blocksize =
-            MPIDII_COMM(comm_ptr, map).reg.stride.blocksize;
-        MPIDII_COMM(tmp_comm_ptr, local_map).reg.stride.offset =
-            MPIDII_COMM(comm_ptr, map).reg.stride.offset;
+    case MPIDI_RANK_MAP_STRIDE:
+    case MPIDI_RANK_MAP_STRIDE_INTRA:
+    case MPIDI_RANK_MAP_STRIDE_BLOCK:
+    case MPIDI_RANK_MAP_STRIDE_BLOCK_INTRA:
+        MPIDI_COMM(tmp_comm_ptr, local_map).reg.stride.stride =
+            MPIDI_COMM(comm_ptr, map).reg.stride.stride;
+        MPIDI_COMM(tmp_comm_ptr, local_map).reg.stride.blocksize =
+            MPIDI_COMM(comm_ptr, map).reg.stride.blocksize;
+        MPIDI_COMM(tmp_comm_ptr, local_map).reg.stride.offset =
+            MPIDI_COMM(comm_ptr, map).reg.stride.offset;
         break;
-    case MPIDII_RANK_MAP_LUT:
-    case MPIDII_RANK_MAP_LUT_INTRA:
-        MPIDII_COMM(tmp_comm_ptr, local_map).irreg.lut.t = MPIDII_COMM(comm_ptr, map).irreg.lut.t;
-        MPIDII_COMM(tmp_comm_ptr, local_map).irreg.lut.lpid =
-            MPIDII_COMM(comm_ptr, map).irreg.lut.lpid;
-        MPIR_Object_add_ref(MPIDII_COMM(comm_ptr, map).irreg.lut.t);
+    case MPIDI_RANK_MAP_LUT:
+    case MPIDI_RANK_MAP_LUT_INTRA:
+        MPIDI_COMM(tmp_comm_ptr, local_map).irreg.lut.t = MPIDI_COMM(comm_ptr, map).irreg.lut.t;
+        MPIDI_COMM(tmp_comm_ptr, local_map).irreg.lut.lpid =
+            MPIDI_COMM(comm_ptr, map).irreg.lut.lpid;
+        MPIR_Object_add_ref(MPIDI_COMM(comm_ptr, map).irreg.lut.t);
         break;
-    case MPIDII_RANK_MAP_MLUT:
-        MPIDII_COMM(tmp_comm_ptr, local_map).irreg.mlut.t = MPIDII_COMM(comm_ptr, map).irreg.mlut.t;
-        MPIDII_COMM(tmp_comm_ptr, local_map).irreg.mlut.gpid =
-            MPIDII_COMM(comm_ptr, map).irreg.mlut.gpid;
-        MPIR_Object_add_ref(MPIDII_COMM(comm_ptr, map).irreg.mlut.t);
+    case MPIDI_RANK_MAP_MLUT:
+        MPIDI_COMM(tmp_comm_ptr, local_map).irreg.mlut.t = MPIDI_COMM(comm_ptr, map).irreg.mlut.t;
+        MPIDI_COMM(tmp_comm_ptr, local_map).irreg.mlut.gpid =
+            MPIDI_COMM(comm_ptr, map).irreg.mlut.gpid;
+        MPIR_Object_add_ref(MPIDI_COMM(comm_ptr, map).irreg.mlut.t);
         break;
-    case MPIDII_RANK_MAP_NONE:
+    case MPIDI_RANK_MAP_NONE:
         MPIR_Assert(0);
         break;
     }
@@ -174,9 +174,9 @@ static inline int MPIDI_OFI_dynproc_create_intercomm(const char *port_name,
     MPIDIU_update_node_map(avtid, entries, node_table);
 
     /* set mapping for remote group */
-    MPIDII_COMM(tmp_comm_ptr, map).mode = MPIDII_RANK_MAP_DIRECT;
-    MPIDII_COMM(tmp_comm_ptr, map).size = entries;
-    MPIDII_COMM(tmp_comm_ptr, map).avtid = avtid;
+    MPIDI_COMM(tmp_comm_ptr, map).mode = MPIDI_RANK_MAP_DIRECT;
+    MPIDI_COMM(tmp_comm_ptr, map).size = entries;
+    MPIDI_COMM(tmp_comm_ptr, map).avtid = avtid;
 
     MPIR_Comm_commit(tmp_comm_ptr);
 
