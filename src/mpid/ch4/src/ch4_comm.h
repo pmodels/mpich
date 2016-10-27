@@ -119,44 +119,44 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
 
     /* comm_world and comm_self are already initialized */
     if (comm != MPIR_Process.comm_world && comm != MPIR_Process.comm_self) {
-        MPIDII_comm_create_rank_map(comm);
+        MPIDI_comm_create_rank_map(comm);
         /* add ref to avts */
-        switch (MPIDII_COMM(comm, map).mode) {
-        case MPIDII_RANK_MAP_NONE:
+        switch (MPIDI_COMM(comm, map).mode) {
+        case MPIDI_RANK_MAP_NONE:
             break;
-        case MPIDII_RANK_MAP_MLUT:
+        case MPIDI_RANK_MAP_MLUT:
             max_n_avts = MPIDIU_get_max_n_avts();
             uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int));
             memset(uniq_avtids, 0, max_n_avts);
-            for (i = 0; i < MPIDII_COMM(comm, map).size; i++) {
-                if (uniq_avtids[MPIDII_COMM(comm, map).irreg.mlut.gpid[i].avtid] == 0) {
-                    uniq_avtids[MPIDII_COMM(comm, map).irreg.mlut.gpid[i].avtid] = 1;
-                    MPIDIU_avt_add_ref(MPIDII_COMM(comm, map).irreg.mlut.gpid[i].avtid);
+            for (i = 0; i < MPIDI_COMM(comm, map).size; i++) {
+                if (uniq_avtids[MPIDI_COMM(comm, map).irreg.mlut.gpid[i].avtid] == 0) {
+                    uniq_avtids[MPIDI_COMM(comm, map).irreg.mlut.gpid[i].avtid] = 1;
+                    MPIDIU_avt_add_ref(MPIDI_COMM(comm, map).irreg.mlut.gpid[i].avtid);
                 }
             }
             MPL_free(uniq_avtids);
             break;
         default:
-            MPIDIU_avt_add_ref(MPIDII_COMM(comm, map).avtid);
+            MPIDIU_avt_add_ref(MPIDI_COMM(comm, map).avtid);
         }
 
-        switch (MPIDII_COMM(comm, local_map).mode) {
-        case MPIDII_RANK_MAP_NONE:
+        switch (MPIDI_COMM(comm, local_map).mode) {
+        case MPIDI_RANK_MAP_NONE:
             break;
-        case MPIDII_RANK_MAP_MLUT:
+        case MPIDI_RANK_MAP_MLUT:
             max_n_avts = MPIDIU_get_max_n_avts();
             uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int));
             memset(uniq_avtids, 0, max_n_avts);
-            for (i = 0; i < MPIDII_COMM(comm, local_map).size; i++) {
-                if (uniq_avtids[MPIDII_COMM(comm, local_map).irreg.mlut.gpid[i].avtid] == 0) {
-                    uniq_avtids[MPIDII_COMM(comm, local_map).irreg.mlut.gpid[i].avtid] = 1;
-                    MPIDIU_avt_add_ref(MPIDII_COMM(comm, local_map).irreg.mlut.gpid[i].avtid);
+            for (i = 0; i < MPIDI_COMM(comm, local_map).size; i++) {
+                if (uniq_avtids[MPIDI_COMM(comm, local_map).irreg.mlut.gpid[i].avtid] == 0) {
+                    uniq_avtids[MPIDI_COMM(comm, local_map).irreg.mlut.gpid[i].avtid] = 1;
+                    MPIDIU_avt_add_ref(MPIDI_COMM(comm, local_map).irreg.mlut.gpid[i].avtid);
                 }
             }
             MPL_free(uniq_avtids);
             break;
         default:
-            MPIDIU_avt_add_ref(MPIDII_COMM(comm, local_map).avtid);
+            MPIDIU_avt_add_ref(MPIDI_COMM(comm, local_map).avtid);
         }
     }
 
@@ -179,42 +179,42 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_COMM_DESTROY);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_COMM_DESTROY);
     /* release ref to avts */
-    switch (MPIDII_COMM(comm, map).mode) {
-    case MPIDII_RANK_MAP_NONE:
+    switch (MPIDI_COMM(comm, map).mode) {
+    case MPIDI_RANK_MAP_NONE:
         break;
-    case MPIDII_RANK_MAP_MLUT:
+    case MPIDI_RANK_MAP_MLUT:
         max_n_avts = MPIDIU_get_max_n_avts();
         uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int));
         memset(uniq_avtids, 0, max_n_avts);
-        for (i = 0; i < MPIDII_COMM(comm, map).size; i++) {
-            if (uniq_avtids[MPIDII_COMM(comm, map).irreg.mlut.gpid[i].avtid] == 0) {
-                uniq_avtids[MPIDII_COMM(comm, map).irreg.mlut.gpid[i].avtid] = 1;
-                MPIDIU_avt_release_ref(MPIDII_COMM(comm, map).irreg.mlut.gpid[i].avtid);
+        for (i = 0; i < MPIDI_COMM(comm, map).size; i++) {
+            if (uniq_avtids[MPIDI_COMM(comm, map).irreg.mlut.gpid[i].avtid] == 0) {
+                uniq_avtids[MPIDI_COMM(comm, map).irreg.mlut.gpid[i].avtid] = 1;
+                MPIDIU_avt_release_ref(MPIDI_COMM(comm, map).irreg.mlut.gpid[i].avtid);
             }
         }
         MPL_free(uniq_avtids);
         break;
     default:
-        MPIDIU_avt_release_ref(MPIDII_COMM(comm, map).avtid);
+        MPIDIU_avt_release_ref(MPIDI_COMM(comm, map).avtid);
     }
 
-    switch (MPIDII_COMM(comm, local_map).mode) {
-    case MPIDII_RANK_MAP_NONE:
+    switch (MPIDI_COMM(comm, local_map).mode) {
+    case MPIDI_RANK_MAP_NONE:
         break;
-    case MPIDII_RANK_MAP_MLUT:
+    case MPIDI_RANK_MAP_MLUT:
         max_n_avts = MPIDIU_get_max_n_avts();
         uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int));
         memset(uniq_avtids, 0, max_n_avts);
-        for (i = 0; i < MPIDII_COMM(comm, local_map).size; i++) {
-            if (uniq_avtids[MPIDII_COMM(comm, local_map).irreg.mlut.gpid[i].avtid] == 0) {
-                uniq_avtids[MPIDII_COMM(comm, local_map).irreg.mlut.gpid[i].avtid] = 1;
-                MPIDIU_avt_release_ref(MPIDII_COMM(comm, local_map).irreg.mlut.gpid[i].avtid);
+        for (i = 0; i < MPIDI_COMM(comm, local_map).size; i++) {
+            if (uniq_avtids[MPIDI_COMM(comm, local_map).irreg.mlut.gpid[i].avtid] == 0) {
+                uniq_avtids[MPIDI_COMM(comm, local_map).irreg.mlut.gpid[i].avtid] = 1;
+                MPIDIU_avt_release_ref(MPIDI_COMM(comm, local_map).irreg.mlut.gpid[i].avtid);
             }
         }
         MPL_free(uniq_avtids);
         break;
     default:
-        MPIDIU_avt_release_ref(MPIDII_COMM(comm, local_map).avtid);
+        MPIDIU_avt_release_ref(MPIDI_COMM(comm, local_map).avtid);
     }
 
     mpi_errno = MPIDI_NM_mpi_comm_free_hook(comm);
@@ -228,19 +228,19 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
     }
 #endif
 
-    if (MPIDII_COMM(comm, map).mode == MPIDII_RANK_MAP_LUT
-        || MPIDII_COMM(comm, map).mode == MPIDII_RANK_MAP_LUT_INTRA) {
-        MPIDIU_release_lut(MPIDII_COMM(comm, map).irreg.lut.t);
+    if (MPIDI_COMM(comm, map).mode == MPIDI_RANK_MAP_LUT
+        || MPIDI_COMM(comm, map).mode == MPIDI_RANK_MAP_LUT_INTRA) {
+        MPIDIU_release_lut(MPIDI_COMM(comm, map).irreg.lut.t);
     }
-    if (MPIDII_COMM(comm, local_map).mode == MPIDII_RANK_MAP_LUT
-        || MPIDII_COMM(comm, local_map).mode == MPIDII_RANK_MAP_LUT_INTRA) {
-        MPIDIU_release_lut(MPIDII_COMM(comm, local_map).irreg.lut.t);
+    if (MPIDI_COMM(comm, local_map).mode == MPIDI_RANK_MAP_LUT
+        || MPIDI_COMM(comm, local_map).mode == MPIDI_RANK_MAP_LUT_INTRA) {
+        MPIDIU_release_lut(MPIDI_COMM(comm, local_map).irreg.lut.t);
     }
-    if (MPIDII_COMM(comm, map).mode == MPIDII_RANK_MAP_MLUT) {
-        MPIDIU_release_mlut(MPIDII_COMM(comm, map).irreg.mlut.t);
+    if (MPIDI_COMM(comm, map).mode == MPIDI_RANK_MAP_MLUT) {
+        MPIDIU_release_mlut(MPIDI_COMM(comm, map).irreg.mlut.t);
     }
-    if (MPIDII_COMM(comm, local_map).mode == MPIDII_RANK_MAP_MLUT) {
-        MPIDIU_release_mlut(MPIDII_COMM(comm, local_map).irreg.mlut.t);
+    if (MPIDI_COMM(comm, local_map).mode == MPIDI_RANK_MAP_MLUT) {
+        MPIDIU_release_mlut(MPIDI_COMM(comm, local_map).irreg.mlut.t);
     }
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_COMM_DESTROY);
@@ -393,7 +393,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Intercomm_exchange_map(MPIR_Comm *local_comm,
             pure_intracomm = 1;
             local_size_send = local_size;
         } else {
-            local_size_send = local_size | MPIDII_DYNPROC_MASK;
+            local_size_send = local_size | MPIDI_DYNPROC_MASK;
         }
 
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM,VERBOSE,
@@ -406,8 +406,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Intercomm_exchange_map(MPIR_Comm *local_comm,
                                   peer_comm, MPI_STATUS_IGNORE, &errflag);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
-        if (remote_size_recv & MPIDII_DYNPROC_MASK) pure_intracomm = 0;
-        (*remote_size) = remote_size_recv & (~MPIDII_DYNPROC_MASK);
+        if (remote_size_recv & MPIDI_DYNPROC_MASK) pure_intracomm = 0;
+        (*remote_size) = remote_size_recv & (~MPIDI_DYNPROC_MASK);
 
 
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_COMM,VERBOSE,
@@ -499,7 +499,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Intercomm_exchange_map(MPIR_Comm *local_comm,
             {
                 /* Now that we have both the local and remote processes,
                    check for any overlap */
-                mpi_errno = MPIDII_check_disjoint_lupids(local_lupids, local_size,
+                mpi_errno = MPIDI_check_disjoint_lupids(local_lupids, local_size,
                                                          *remote_lupids, *remote_size);
                 if (mpi_errno) MPIR_ERR_POP(mpi_errno);
             }
@@ -523,7 +523,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Intercomm_exchange_map(MPIR_Comm *local_comm,
             else {
                 *is_low_group = local_upid_size[0] < remote_upid_size[0];
             }
-            (*is_low_group) |= MPIDII_DYNPROC_MASK;
+            (*is_low_group) |= MPIDI_DYNPROC_MASK;
         }
 
         /* At this point, we're done with the local lpids; they'll
