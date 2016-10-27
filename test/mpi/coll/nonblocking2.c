@@ -48,8 +48,8 @@ int main(int argc, char **argv)
     int *recvcounts = NULL;
     int *sdispls = NULL;
     int *rdispls = NULL;
-    int *sendtypes = NULL;
-    int *recvtypes = NULL;
+    MPI_Datatype *sendtypes = NULL;
+    MPI_Datatype *recvtypes = NULL;
     signed char *buf_alias = NULL;
     MPI_Request req;
 
