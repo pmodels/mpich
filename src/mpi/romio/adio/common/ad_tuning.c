@@ -21,12 +21,12 @@
 
 #include "ad_tuning.h"
 
-int     romio_write_aggmethod;
-int     romio_read_aggmethod;
-int     romio_onesided_no_rmw;
-int     romio_onesided_always_rmw;
-int     romio_onesided_inform_rmw;
-int 	romio_tunegather;
+int     romio_write_aggmethod = 0;
+int     romio_read_aggmethod = 0;
+int     romio_onesided_no_rmw = 0;
+int     romio_onesided_always_rmw = 0;
+int     romio_onesided_inform_rmw = 0;
+int     romio_tunegather = 1;
 
 /* set internal variables for tuning environment variables */
 /** \page mpiio_vars MPIIO Configuration
