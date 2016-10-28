@@ -18,7 +18,7 @@
 #define NUM_IDUPS   5
 
 MPI_Comm comms[NUM_THREADS];
-MPI_Comm errs[NUM_THREADS] = { 0 };
+int errs[NUM_THREADS] = { 0 };
 
 int verbose = 0;
 
