@@ -52,21 +52,16 @@ static inline void MPIDI_UCX_Handle_send_callback(void *request, ucs_status_t st
         ucp_request->req = NULL;
         goto fn_exit;
     }
-    if (ucp_request->req) {
-        req = ucp_request->req;
-        MPIR_cc_decr(req->cc_ptr, &c);
-        MPIR_Assert(c >= 0);
 
-        if (c == 0) {
-            MPIR_Request_free(req);
-        }
-        ucp_request->req = NULL;
+    req = ucp_request->req;
+    MPIR_cc_decr(req->cc_ptr, &c);
+    MPIR_Assert(c >= 0);
+
+    if (c == 0) {
+        MPIR_Request_free(req);
     }
-    else {
-        req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
-        MPIR_cc_set(&req->cc, 0);
-        ucp_request->req = req;
-    }
+    ucp_request->req = NULL;
+
   fn_exit:
     return;
   fn_fail:
