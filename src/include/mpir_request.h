@@ -169,7 +169,7 @@ struct MPIR_Request {
 #ifdef MPID_DEV_REQUEST_DECL
     MPID_DEV_REQUEST_DECL
 #endif
-} ATTRIBUTE((__aligned__(32)));
+};
 
 #define MPIR_REQUEST_PREALLOC 8
 
