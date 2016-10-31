@@ -37,7 +37,7 @@ MPL_STATIC_INLINE_PREFIX int ucx_send_continous(const void *buf,
 
     ucp_request =
         (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, buf, data_sz, ucp_dt_make_contig(1),
-                                                    ucx_tag, &MPIDI_UCX_Handle_send_callback);
+                ucx_tag, &MPIDI_UCX_Handle_send_callback);
 
     MPIDI_CH4_UCX_REQUEST(ucp_request);
 
@@ -48,20 +48,11 @@ MPL_STATIC_INLINE_PREFIX int ucx_send_continous(const void *buf,
         goto fn_exit;
     }
 
-    if (ucp_request->req) {
-        req = ucp_request->req;
-        ucp_request->req = NULL;
-        MPIDI_UCX_REQ(req).a.ucp_request = NULL;
-        ucp_request_release(ucp_request);
-    }
-    else {
-        req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
-        MPIR_Request_add_ref(req);
-        ucp_request->req = req;
-        MPIDI_UCX_REQ(req).a.ucp_request = ucp_request;
-        ucp_request_release(ucp_request);
-    }
-
+    req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
+    MPIR_Request_add_ref(req);
+    ucp_request->req = req;
+    MPIDI_UCX_REQ(req).a.ucp_request = ucp_request;
+    ucp_request_release(ucp_request);
 
   fn_exit:
     *request = req;
