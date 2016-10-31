@@ -43,6 +43,12 @@ typedef enum {
     MPIDI_PTYPE_SSEND
 } MPIDI_ptype;
 
+/* Enum for calling context type: netmod or shm */
+typedef enum {
+    MPIDI_NM = 0,
+    MPIDI_SHM = 1
+} MPIDI_call_context;
+
 #define MPIDI_CH4U_REQ_BUSY 		  (0x1)
 #define MPIDI_CH4U_REQ_PEER_SSEND 	  (0x1 << 1)
 #define MPIDI_CH4U_REQ_UNEXPECTED 	  (0x1 << 2)
@@ -155,6 +161,9 @@ typedef struct MPIDI_CH4U_req_t {
     MPIDI_NM_REQUEST_AM_DECL} netmod_am;
     MPIDI_CH4U_req_ext_t *req;
     MPIDI_ptype p_type;
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+    MPIDI_call_context caller;
+#endif                          /* MPIDI_CH4_EXCLUSIVE_SHM */
     void *buffer;
     uint64_t count;
     uint64_t tag;

@@ -85,7 +85,7 @@ static inline int MPIDI_POSIX_progress_recv(int blocking, int *completion_count)
 
                 if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)) {
                     MPIDI_CH4R_anysource_matched(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req),
-                                                 MPIDI_CH4R_SHM, &continue_matching);
+                                                 MPIDI_SHM, &continue_matching);
                     MPIDI_CH4U_request_release(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req));
 
                     /* Decouple requests */

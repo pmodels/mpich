@@ -67,8 +67,8 @@ static inline int MPIDI_NM_am_isend(int rank,
                                     void *netmod_context)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_SEND_AM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_SEND_AM);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_AM_ISEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_AM_ISEND);
     if (count)
         mpi_errno = MPIDI_OFI_do_am_isend(rank, comm, handler_id,
                                           am_hdr, am_hdr_sz, data, count, datatype, sreq, FALSE);
@@ -76,7 +76,7 @@ static inline int MPIDI_NM_am_isend(int rank,
         mpi_errno = MPIDI_OFI_do_am_isend_header(rank, comm, handler_id,
                                                  am_hdr, am_hdr_sz, sreq, FALSE);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_SEND_AM);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_AM_ISEND);
     return mpi_errno;
 }
 
@@ -98,8 +98,8 @@ static inline int MPIDI_NM_am_isendv(int rank,
     size_t am_hdr_sz = 0, i;
     char *am_hdr_buf;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_SEND_AMV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_SEND_AMV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_AM_ISENDV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_AM_ISENDV);
 
     for (i = 0; i < iov_len; i++) {
         am_hdr_sz += am_hdr[i].iov_len;
@@ -130,7 +130,7 @@ static inline int MPIDI_NM_am_isendv(int rank,
     else
         MPIDI_CH4R_release_buf(am_hdr_buf);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_SEND_AMV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_AM_ISENDV);
     return mpi_errno;
 }
 

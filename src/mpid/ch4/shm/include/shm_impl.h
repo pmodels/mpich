@@ -162,7 +162,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_inject_max_sz(void)
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_recv(MPIR_Request * req)
 {
-    return MPIDI_SHM_func->am_recv();
+    return MPIDI_SHM_func->am_recv(req);
 };
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx,

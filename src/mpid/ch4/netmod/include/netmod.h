@@ -24,7 +24,8 @@ typedef int (*MPIDI_NM_am_origin_handler_fn) (MPIR_Request * req);
 typedef int (*MPIDI_NM_am_target_handler_fn)
  (int handler_id, void *am_hdr, void **data,    /* data should be iovs if *is_contig is false */
   size_t * data_sz, int *is_contig, MPIDI_NM_am_completion_handler_fn * cmpl_handler_fn,        /* completion handler */
-  MPIR_Request ** req);         /* if allocated, need pointer to completion function */
+  MPIR_Request ** req,          /* if allocated, need pointer to completion function */
+  MPIDI_call_context caller);
 
 typedef int (*MPIDI_NM_mpi_init_t) (int rank, int size, int appnum, int *tag_ub,
                                     MPIR_Comm * comm_world, MPIR_Comm * comm_self, int spawned,

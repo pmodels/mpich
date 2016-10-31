@@ -102,7 +102,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
     if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq)) {
         int continue_matching = 1;
 
-        MPIDI_CH4R_anysource_matched(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq), MPIDI_CH4R_NETMOD,
+        MPIDI_CH4R_anysource_matched(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq), MPIDI_NM,
                                      &continue_matching);
 
         /* It is always possible to cancel a request on shm side w/o an aux thread */

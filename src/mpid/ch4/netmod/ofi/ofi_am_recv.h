@@ -23,7 +23,7 @@ static inline int MPIDI_NM_mpi_recv(void *buf,
                                     MPIR_Request ** request)
 {
     return MPIDI_CH4U_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, status,
-                               request);
+                               request, MPIDI_NM);
 }
 
 static inline int MPIDI_NM_mpi_recv_init(void *buf,
@@ -34,7 +34,8 @@ static inline int MPIDI_NM_mpi_recv_init(void *buf,
                                          MPIR_Comm * comm, int context_offset,
                                          MPIR_Request ** request)
 {
-    return MPIDI_CH4U_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, request);
+    return MPIDI_CH4U_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset,
+                                    request, MPIDI_NM);
 }
 
 static inline int MPIDI_NM_mpi_imrecv(void *buf,
@@ -42,7 +43,7 @@ static inline int MPIDI_NM_mpi_imrecv(void *buf,
                                       MPI_Datatype datatype,
                                       MPIR_Request * message, MPIR_Request ** rreqp)
 {
-    return MPIDI_CH4U_mpi_imrecv(buf, count, datatype, message, rreqp);
+    return MPIDI_CH4U_mpi_imrecv(buf, count, datatype, message, rreqp, MPIDI_NM);
 }
 
 static inline int MPIDI_NM_mpi_irecv(void *buf,
@@ -52,13 +53,14 @@ static inline int MPIDI_NM_mpi_irecv(void *buf,
                                      int tag,
                                      MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
 {
-    return MPIDI_CH4U_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
+    return MPIDI_CH4U_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset,
+                                request, MPIDI_NM);
 
 }
 
 static inline int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
 {
-    return MPIDI_CH4U_mpi_cancel_recv(rreq);
+    return MPIDI_CH4U_mpi_cancel_recv(rreq, MPIDI_NM);
 }
 
 #endif /* NETMOD_AM_OFI_RECV_H_INCLUDED */

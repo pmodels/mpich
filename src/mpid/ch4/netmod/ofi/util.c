@@ -381,7 +381,7 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               size_t * data_sz,
                               int *is_contig,
                               MPIDI_NM_am_completion_handler_fn * cmpl_handler_fn,
-                              MPIR_Request ** req)
+                              MPIR_Request ** req, MPIDI_call_context caller)
 {
     int senderrank;
     int mpi_errno = MPI_SUCCESS;

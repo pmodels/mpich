@@ -121,7 +121,8 @@ static inline int MPIDI_CH4I_do_irecv(void *buf,
                                       int tag,
                                       MPIR_Comm * comm,
                                       int context_offset,
-                                      MPIR_Request ** request, int alloc_req, uint64_t flags)
+                                      MPIR_Request ** request,
+                                      int alloc_req, uint64_t flags, MPIDI_call_context caller)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL, *unexp_req = NULL;
@@ -148,7 +149,16 @@ static inline int MPIDI_CH4I_do_irecv(void *buf,
             MPIDI_CH4U_REQUEST(unexp_req, buffer) = (char *) buf;
             MPIDI_CH4U_REQUEST(unexp_req, count) = count;
             *request = unexp_req;
-            mpi_errno = MPIDI_NM_am_recv(unexp_req);
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+            if (MPIDI_SHM == caller) {
+                mpi_errno = MPIDI_SHM_am_recv(unexp_req);
+            }
+            else {
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
+                mpi_errno = MPIDI_NM_am_recv(unexp_req);
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+            }
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             goto fn_exit;
@@ -164,7 +174,7 @@ static inline int MPIDI_CH4I_do_irecv(void *buf,
     }
 
     if (alloc_req) {
-        rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RECV);
+        rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RECV, caller);
     }
     else {
         rreq = *request;
@@ -220,14 +230,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_recv(void *buf,
                                                  int tag,
                                                  MPIR_Comm * comm,
                                                  int context_offset, MPI_Status * status,
-                                                 MPIR_Request ** request)
+                                                 MPIR_Request ** request, MPIDI_call_context caller)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_RECV);
 
     mpi_errno = MPIDI_CH4I_do_irecv(buf, count, datatype, rank, tag,
-                                    comm, context_offset, request, 1, 0ULL);
+                                    comm, context_offset, request, 1, 0ULL, caller);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -248,14 +258,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_recv_init(void *buf,
                                                       int rank,
                                                       int tag,
                                                       MPIR_Comm * comm,
-                                                      int context_offset, MPIR_Request ** request)
+                                                      int context_offset,
+                                                      MPIR_Request ** request,
+                                                      MPIDI_call_context caller)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_RECV_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_RECV_INIT);
 
-    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__PREQUEST_RECV);
+    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__PREQUEST_RECV, caller);
 
     *request = rreq;
     rreq->comm = comm;
@@ -270,6 +282,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_recv_init(void *buf,
     rreq->u.persist.real_request = NULL;
     MPIDI_CH4I_am_request_complete(rreq);
     MPIDI_CH4U_REQUEST(rreq, p_type) = MPIDI_PTYPE_RECV;
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+    MPIDI_CH4U_REQUEST(rreq, caller) = caller;
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
     dtype_add_ref_if_not_builtin(datatype);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_RECV_INIT);
@@ -284,7 +299,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_recv_init(void *buf,
 MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_imrecv(void *buf,
                                                    int count,
                                                    MPI_Datatype datatype,
-                                                   MPIR_Request * message, MPIR_Request ** rreqp)
+                                                   MPIR_Request * message,
+                                                   MPIR_Request ** rreqp, MPIDI_call_context caller)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
@@ -314,7 +330,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_imrecv(void *buf,
         MPIDI_CH4U_REQUEST(message, datatype) = datatype;
         MPIDI_CH4U_REQUEST(message, buffer) = (char *) buf;
         MPIDI_CH4U_REQUEST(message, count) = count;
-        mpi_errno = MPIDI_NM_am_recv(message);
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+        if (MPIDI_SHM == caller) {
+            mpi_errno = MPIDI_SHM_am_recv(message);
+        }
+        else {
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
+            mpi_errno = MPIDI_NM_am_recv(message);
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+        }
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
     }
     else {
         mpi_errno = MPIDI_CH4U_unexp_mrecv_cmpl_handler(message);
@@ -377,14 +402,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_irecv(void *buf,
                                                   int rank,
                                                   int tag,
                                                   MPIR_Comm * comm, int context_offset,
-                                                  MPIR_Request ** request)
+                                                  MPIR_Request ** request,
+                                                  MPIDI_call_context caller)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_IRECV);
 
     mpi_errno = MPIDI_CH4I_do_irecv(buf, count, datatype, rank, tag,
-                                    comm, context_offset, request, 1, 0ULL);
+                                    comm, context_offset, request, 1, 0ULL, caller);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
   fn_exit:
@@ -398,7 +424,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_irecv(void *buf,
 #define FUNCNAME MPIDI_CH4U_mpi_cancel_recv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_cancel_recv(MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_cancel_recv(MPIR_Request * rreq,
+                                                        MPIDI_call_context caller
+                                                        __attribute__ ((__unused__)))
 {
     int mpi_errno = MPI_SUCCESS, found;
     MPIR_Comm *root_comm;

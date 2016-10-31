@@ -93,7 +93,8 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
     size_t offset;
     if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC || win->create_flavor == MPI_WIN_FLAVOR_SHARED)
         return MPIDI_CH4U_mpi_put(origin_addr, origin_count, origin_datatype,
-                                  target_rank, target_disp, target_count, target_datatype, win);
+                                  target_rank, target_disp, target_count, target_datatype,
+                                  win, MPIDI_NM);
 
 
 
@@ -110,7 +111,8 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
         goto fn_exit;
     if (!target_contig || !origin_contig || MPIDI_UCX_WIN_INFO(win, target_rank).rkey == NULL)
         return MPIDI_CH4U_mpi_put(origin_addr, origin_count, origin_datatype,
-                                  target_rank, target_disp, target_count, target_datatype, win);
+                                  target_rank, target_disp, target_count, target_datatype,
+                                  win, MPIDI_NM);
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
@@ -151,7 +153,8 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
 
     if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC || win->create_flavor == MPI_WIN_FLAVOR_SHARED)
         return MPIDI_CH4U_mpi_get(origin_addr, origin_count, origin_datatype,
-                                  target_rank, target_disp, target_count, target_datatype, win);
+                                  target_rank, target_disp, target_count, target_datatype, win,
+                                  MPIDI_NM);
 
     MPIDI_Datatype_check_contig_size_lb(target_datatype, target_count,
                                         target_contig, target_bytes, target_true_lb);
@@ -165,7 +168,8 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
 
     if (!origin_contig || !target_contig || MPIDI_UCX_WIN_INFO(win, target_rank).rkey == NULL)
         return MPIDI_CH4U_mpi_get(origin_addr, origin_count, origin_datatype,
-                                  target_rank, target_disp, target_count, target_datatype, win);
+                                  target_rank, target_disp, target_count, target_datatype, win,
+                                  MPIDI_NM);
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
@@ -197,7 +201,7 @@ static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
 {
     return MPIDI_CH4U_mpi_rput(origin_addr, origin_count, origin_datatype,
                                target_rank, target_disp, target_count, target_datatype, win,
-                               request);
+                               request, MPIDI_NM);
 }
 
 
@@ -209,7 +213,7 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
                                                 MPIR_Win * win)
 {
     return MPIDI_CH4U_mpi_compare_and_swap(origin_addr, compare_addr, result_addr,
-                                           datatype, target_rank, target_disp, win);
+                                           datatype, target_rank, target_disp, win, MPIDI_NM);
 }
 
 static inline int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
@@ -223,7 +227,7 @@ static inline int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
 {
     return MPIDI_CH4U_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
                                       target_rank, target_disp, target_count,
-                                      target_datatype, op, win, request);
+                                      target_datatype, op, win, request, MPIDI_NM);
 }
 
 static inline int MPIDI_NM_mpi_rget_accumulate(const void *origin_addr,
@@ -241,7 +245,7 @@ static inline int MPIDI_NM_mpi_rget_accumulate(const void *origin_addr,
     return MPIDI_CH4U_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                           result_addr, result_count, result_datatype,
                                           target_rank, target_disp, target_count,
-                                          target_datatype, op, win, request);
+                                          target_datatype, op, win, request, MPIDI_NM);
 }
 
 static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
@@ -251,7 +255,7 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
                                             MPI_Aint target_disp, MPI_Op op, MPIR_Win * win)
 {
     return MPIDI_CH4U_mpi_fetch_and_op(origin_addr, result_addr, datatype,
-                                       target_rank, target_disp, op, win);
+                                       target_rank, target_disp, op, win, MPIDI_NM);
 }
 
 
@@ -266,7 +270,7 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
 {
     return MPIDI_CH4U_mpi_rget(origin_addr, origin_count, origin_datatype,
                                target_rank, target_disp, target_count, target_datatype, win,
-                               request);
+                               request, MPIDI_NM);
 }
 
 
@@ -285,7 +289,7 @@ static inline int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
     return MPIDI_CH4U_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                          result_addr, result_count, result_datatype,
                                          target_rank, target_disp, target_count,
-                                         target_datatype, op, win);
+                                         target_datatype, op, win, MPIDI_NM);
 }
 
 static inline int MPIDI_NM_mpi_accumulate(const void *origin_addr,
@@ -298,7 +302,7 @@ static inline int MPIDI_NM_mpi_accumulate(const void *origin_addr,
 {
     return MPIDI_CH4U_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                      target_rank, target_disp, target_count, target_datatype, op,
-                                     win);
+                                     win, MPIDI_NM);
 }
 
 #endif /* NETMOD_UCX_RMA_H_INCLUDED */

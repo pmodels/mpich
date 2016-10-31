@@ -899,7 +899,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     MPIDI_OFI_win_request_complete(req);
     return MPIDI_CH4U_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                      target_rank, target_disp, target_count, target_datatype, op,
-                                     win);
+                                     win, MPIDI_NM);
 }
 
 #undef FUNCNAME
@@ -1101,7 +1101,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     return MPIDI_CH4U_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                          result_addr, result_count, result_datatype,
                                          target_rank, target_disp, target_count,
-                                         target_datatype, op, win);
+                                         target_datatype, op, win, MPIDI_NM);
 }
 
 
