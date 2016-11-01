@@ -18,7 +18,7 @@
 
 typedef int (*MPIDI_NM_mpi_init_t) (int rank, int size, int appnum, int *tag_ub,
                                     MPIR_Comm * comm_world, MPIR_Comm * comm_self, int spawned,
-                                    int num_contexts, void **netmod_contexts);
+                                    int num_eps_req, int *num_eps_prov);
 typedef int (*MPIDI_NM_mpi_finalize_t) (void);
 typedef int (*MPIDI_NM_progress_t) (void *netmod_context, int blocking);
 typedef int (*MPIDI_NM_mpi_comm_connect_t) (const char *port_name, MPIR_Info * info, int root,
@@ -491,8 +491,8 @@ extern char MPIDI_NM_strings[][MPIDI_MAX_NETMOD_STRING_LEN];
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank, int size, int appnum, int *tag_ub,
                                                     MPIR_Comm * comm_world, MPIR_Comm * comm_self,
-                                                    int spawned, int num_contexts,
-                                                    void **netmod_contexts)
+                                                    int spawned,
+                                                    int num_eps_req, int *num_eps_prov)
     MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(void *netmod_context,

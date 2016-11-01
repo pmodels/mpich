@@ -460,7 +460,6 @@ extern MPIDI_av_table_t *MPIDI_av_table0;
 #define MPID_INTERCOMM_NO_DYNPROC(comm) \
     (MPIDI_COMM((comm),map).avtid == 0 && MPIDI_COMM((comm),local_map).avtid == 0)
 
-
 #include "mpidu_pre.h"
 
 #endif /* MPIDPRE_H_INCLUDED */
