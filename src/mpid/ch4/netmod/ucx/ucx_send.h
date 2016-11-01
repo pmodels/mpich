@@ -37,7 +37,7 @@ MPL_STATIC_INLINE_PREFIX int ucx_send_continous(const void *buf,
 
     ucp_request =
         (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, buf, data_sz, ucp_dt_make_contig(1),
-                                                    ucx_tag, &MPIDI_UCX_Handle_send_callback);
+                ucx_tag, &MPIDI_UCX_Handle_send_callback);
 
     MPIDI_CH4_UCX_REQUEST(ucp_request);
 
