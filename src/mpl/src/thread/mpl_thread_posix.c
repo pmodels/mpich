@@ -6,6 +6,10 @@
 
 #include "mpl.h"
 
+#if MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_UTI
+#include "uti.h"
+#endif
+
 MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 /* This file currently implements these as a preprocessor if/elif/else sequence.
@@ -16,7 +20,7 @@ MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
  * header files and included as needed. [goodell@ 2009-06-24] */
 
 /* Implementation specific function definitions (usually in the form of macros) */
-#if MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_POSIX
+#if MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_POSIX || MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_UTI
 
 /*
  * struct MPLI_thread_info
@@ -53,9 +57,43 @@ void MPL_thread_create(MPL_thread_func_t func, void *data, MPL_thread_id_t * idp
         pthread_attr_init(&attr);
         pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
+#if MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_UTI
+        uti_attr_t *uti_attr = NULL;
+        err = uti_attr_init(uti_attr);
+        if (err) {
+            goto uti_exit;
+        }
+
+        /* Give a hint that it's beneficial to put the thread
+         * on the same NUMA-node as the creator */
+        err = UTI_ATTR_SAME_NUMA_DOMAIN(uti_attr);
+        if (err) {
+            goto uti_destroy_and_exit;
+        }
+
+        /* Give a hint that the thread repeatedly monitors a device
+         * using CPU. */
+        err = UTI_ATTR_CPU_INTENSIVE(uti_attr);
+        if (err) {
+            goto uti_destroy_and_exit;
+        }
+
+        err = uti_pthread_create(idp, &attr, MPLI_thread_start, thread_info, uti_attr);
+        if (err) {
+            goto uti_destroy_and_exit;
+        }
+
+      uti_destroy_and_exit:
+        err = uti_attr_destroy(uti_attr);
+        if (err) {
+            goto uti_exit;
+        }
+
+      uti_exit:;
+#else
         err = pthread_create(idp, &attr, MPLI_thread_start, thread_info);
         /* FIXME: convert error to an MPL_THREAD_ERR value */
-
+#endif
         pthread_attr_destroy(&attr);
     }
     else {
