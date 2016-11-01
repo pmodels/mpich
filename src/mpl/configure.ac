@@ -593,11 +593,14 @@ AS_CASE([$enable_yield],
 #######################################################################
 ## START OF THREADS CODE
 #######################################################################
+PAC_SET_HEADER_LIB_PATH(uti)
+
 AC_ARG_WITH([thread-package],
 [  --with-thread-package=package     Thread package to use. Supported thread packages include:
         posix or pthreads - POSIX threads (default, if required)
         solaris - Solaris threads (Solaris OS only)
         win - windows threads
+        uti - POSIX threads plus Utility Thread Offloading library
         none - no threads
 ],,with_thread_package=posix)
 
@@ -615,8 +618,10 @@ fi
 
 THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_INVALID
 case $with_thread_package in
-    posix|pthreads)
-	with_thread_package=posix
+    posix|pthreads|uti)
+	if test "${with_thread_package}" = "pthreads" ; then
+	    with_thread_package=posix
+	fi
 	AC_CHECK_HEADERS(pthread.h)
 
         # If pthreads library is found, just include it on the link line. We don't try
@@ -684,7 +689,18 @@ void f1(void *a) { return; }],
 
 	PAC_FUNC_NEEDS_DECL([#include <pthread.h>],pthread_mutexattr_settype)
 
-        THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_POSIX
+	if test "${with_thread_package}" = "uti" ; then
+	    PAC_CHECK_HEADER_LIB(uti.h,uti,uti_attr_init,have_uti=yes,have_uti=no)
+	    if test "${have_uti}" = "yes" ; then
+		AC_MSG_NOTICE([Using POSIX and Utility Thread Offloading library for thread package])
+	    else
+		AC_MSG_ERROR([Unable to find Utility Thread Offloading library])
+	    fi
+	    THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_UTI
+	else
+	    AC_MSG_NOTICE([POSIX will be used for thread package.])
+	    THREAD_PACKAGE_NAME=MPL_THREAD_PACKAGE_POSIX
+	fi
 	;;
     solaris)
 	AC_CHECK_HEADERS(thread.h)

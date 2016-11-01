@@ -15,8 +15,9 @@
 #define MPL_THREAD_PACKAGE_POSIX   2
 #define MPL_THREAD_PACKAGE_SOLARIS 3
 #define MPL_THREAD_PACKAGE_WIN     4
+#define MPL_THREAD_PACKAGE_UTI     5
 
-#if defined(MPL_THREAD_PACKAGE_NAME) && (MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_POSIX)
+#if defined(MPL_THREAD_PACKAGE_NAME) && (MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_POSIX || MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_UTI)
 #  include "mpl_thread_posix.h"
 #elif defined(MPL_THREAD_PACKAGE_NAME) && (MPL_THREAD_PACKAGE_NAME == MPL_THREAD_PACKAGE_SOLARIS)
 #  include "mpl_thread_solaris.h"
@@ -31,7 +32,7 @@ typedef void (*MPL_thread_func_t) (void *data);
 #define MPL_thread_mutex_create(mutex_ptr_, err_ptr_)  { *((int*)err_ptr_) = 0;}
 #define MPL_thread_mutex_destroy(mutex_ptr_, err_ptr_) { *((int*)err_ptr_) = 0;}
 #else
-#  error "thread package not defined or unknown"
+#  error "thread package (MPL_THREAD_PACKAGE_NAME) not defined or unknown"
 #endif
 
 /* Error values */
