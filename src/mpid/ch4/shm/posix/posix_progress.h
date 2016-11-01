@@ -370,7 +370,7 @@ static inline int MPIDI_POSIX_progress_send(int blocking, int *completion_count)
 
 #undef FCNAME
 #define FCNAME DECL_FUNC(MPIDI_SHM_progress)
-static inline int MPIDI_SHM_progress(int blocking)
+static inline int MPIDI_SHM_progress(void *shm_context, int blocking)
 {
     int complete = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_PROGRESS);

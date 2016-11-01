@@ -23,5 +23,7 @@
 #include "posix_comm.h"
 #include "posix_coll.h"
 #include "posix_unimpl.h"
+#include "posix_proc.h"
+#include "posix_datatype.h"
 
 #endif /* SHM_DIRECT_H_INCLUDED */

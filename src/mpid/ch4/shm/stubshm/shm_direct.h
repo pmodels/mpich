@@ -23,5 +23,8 @@
 #include "stubshm_comm.h"
 #include "stubshm_coll.h"
 #include "stubshm_unimpl.h"
+#include "stubshm_proc.h"
+#include "stubshm_datatype.h"
+#include "stubshm_op.h"
 
 #endif /* SHM_DIRECT_H_INCLUDED */
