@@ -159,7 +159,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int *tag_ub,
                                          MPIR_Comm * comm_world,
                                          MPIR_Comm * comm_self,
-                                         int spawned, int num_contexts, void **netmod_contexts)
+                                         int spawned, int num_eps_req, int *num_eps_prov)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno, i, fi_version;
     int thr_err = 0, str_errno, maxlen;
@@ -602,6 +602,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                                      MPIDI_Global.av,
                                                      &MPIDI_Global.ep, 0));
 
+    *num_eps_prov = 1;
+
     if (do_av_insert) {
 
         /* ---------------------------------- */
@@ -670,7 +672,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_Global.max_send);
         MPIDI_Global.am_buf_pool =
             MPIDI_CH4U_create_buf_pool(MPIDI_OFI_BUF_POOL_NUM, MPIDI_OFI_BUF_POOL_SIZE);
-        mpi_errno = MPIDIG_init(comm_world, comm_self, num_contexts, netmod_contexts);
+        mpi_errno = MPIDIG_init(comm_world, comm_self,  *num_eps_prov);
 
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);

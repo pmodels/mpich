@@ -36,7 +36,7 @@ int MPIDIG_am_reg_cb(int handler_id,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self,
-                int num_contexts, void **netmod_contexts)
+                int num_eps)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_INIT);
