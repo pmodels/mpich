@@ -316,21 +316,11 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
         goto fn_exit;
     }
 
-    /* request completed between the UCP call and now. free resources
-     * and complete the send request */
-    if (ucp_request->req) {
-        MPL_free(send_buf);
-        MPIDIG_global.origin_cbs[handler_id] (sreq);
-        ucp_request->req = NULL;
-        ucp_request_release(ucp_request);
-    }
-    else {
         /* set the ch4r request inside the UCP request */
-        sreq->dev.ch4.am.netmod_am.ucx.pack_buffer = send_buf;
-        sreq->dev.ch4.am.netmod_am.ucx.handler_id = handler_id;
-        ucp_request->req = sreq;
-        ucp_request_release(ucp_request);
-    }
+    sreq->dev.ch4.am.netmod_am.ucx.pack_buffer = send_buf;
+    sreq->dev.ch4.am.netmod_am.ucx.handler_id = handler_id;
+    ucp_request->req = sreq;
+    ucp_request_release(ucp_request);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISEND_REPLY);
@@ -389,11 +379,6 @@ static inline int MPIDI_NM_am_send_hdr(int rank,
         /* inject is done */
         MPL_free(send_buf);
     }
-    else if (ucp_request->req) {
-        MPL_free(send_buf);
-        ucp_request->req = NULL;
-        ucp_request_release(ucp_request);
-    }
     else {
         ucp_request->req = send_buf;
     }
@@ -440,11 +425,6 @@ static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
     if (ucp_request == NULL) {
         /* inject is done */
         MPL_free(send_buf);
-    }
-    else if (ucp_request->req) {
-        MPL_free(send_buf);
-        ucp_request->req = NULL;
-        ucp_request_release(ucp_request);
     }
     else {
         ucp_request->req = send_buf;
