@@ -200,6 +200,7 @@ AC_ARG_ENABLE(ch4-shm,
          exclusive - Build and exclusively use CH4 shared memory. (Default)
        module-list(optional).  comma separated list of shared memory modules:
          posix     - POSIX shared memory implementation
+         shmam     - SHM AM shared memory implementation
     ],,enable_ch4_shm=exclusive:posix)
 
 AC_ARG_ENABLE(ch4-shm-direct,
@@ -307,6 +308,13 @@ for shm in $ch4_shm ; do
 MPIDI_${shm_upper}_request_t ${shm};"
     fi
 
+    if test -z "$ch4_shm_amrequest_decl" ; then
+        ch4_shm_amrequest_decl="MPIDI_${shm_upper}_am_request_t ${shm};"
+    else
+        ch4_shm_amrequest_decl="${ch4_shm_amrequest_decl} \\
+MPIDI_${shm_upper}_am_request_t ${shm};"
+    fi
+
     if test -z "$ch4_shm_comm_decl" ; then
         ch4_shm_comm_decl="MPIDI_${shm_upper}_comm_t ${shm};"
     else
@@ -329,9 +337,11 @@ AC_SUBST(ch4_shm_native_func_array)
 AC_SUBST(ch4_shm_strings)
 AC_SUBST(ch4_shm_pre_include)
 AC_SUBST(ch4_shm_request_decl)
+AC_SUBST(ch4_shm_amrequest_decl)
 AC_SUBST(ch4_shm_comm_decl)
 AM_SUBST_NOTMAKE(ch4_shm_pre_include)
 AM_SUBST_NOTMAKE(ch4_shm_request_decl)
+AM_SUBST_NOTMAKE(ch4_shm_amrequest_decl)
 AM_SUBST_NOTMAKE(ch4_shm_comm_decl)
 
 if test "$ch4_shm_array_sz" = "1"  && test "$enable_ch4_shm_direct" = "yes" ;  then

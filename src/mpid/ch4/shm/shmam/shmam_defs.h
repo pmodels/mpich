@@ -1,6 +1,6 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (C) 2006 by Argonne National Laboratory.
+ *  (C) 2016 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  *
  *  Portions of this code were written by Intel Corporation.
@@ -8,20 +8,7 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
+#ifndef SHM_SHMAM_DEFS_H
+#define SHM_SHMAM_DEFS_H
 
-#ifndef SHM_STUBSHM_PRE_H_INCLUDED
-#define SHM_STUBSHM_PRE_H_INCLUDED
-
-typedef struct {
-    int dummy;
-} MPIDI_STUBSHM_request_t;
-
-typedef struct {
-    int dummy;
-} MPIDI_STUBSHM_am_request_t;
-
-typedef struct MPIDI_STUBSHM_comm_t {
-    int dummy;
-} MPIDI_STUBSHM_comm_t;
-
-#endif /* SHM_STUBSHM_PRE_H_INCLUDED */
+#endif /* SHM_SHMAM_DEFS_H */

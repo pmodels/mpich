@@ -120,7 +120,7 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_hdr_max_sz(void)
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_recv(MPIR_Request * req)
 {
     return MPIDI_SHM_func->am_recv(req);
-};
+}
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx,
                                                      int *lpid_ptr, MPL_bool is_remote)
@@ -1000,11 +1000,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_op_free_hook(MPIR_Op * op_p)
 
 #define __shm_direct_stubshm__  0
 #define __shm_direct_posix__    1
+#define __shm_direct_shmam__    2
 
 #if SHM_DIRECT==__shm_direct_stubshm__
 #include "../stubshm/shm_direct.h"
 #elif SHM_DIRECT==__shm_direct_posix__
 #include "../posix/shm_direct.h"
+#elif SHM_DIRECT==__shm_direct_shmam__
+#include "../shmam/shm_direct.h"
 #else
 #error "No direct shm included"
 #endif

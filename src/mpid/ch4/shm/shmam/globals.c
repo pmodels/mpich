@@ -9,19 +9,11 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#ifndef SHM_STUBSHM_PRE_H_INCLUDED
-#define SHM_STUBSHM_PRE_H_INCLUDED
+#include <mpidimpl.h>
+#include "shmam_impl.h"
+#include "shmam_types.h"
+#include "shmam_eager.h"
+#include "shmam_eager_impl.h"
 
-typedef struct {
-    int dummy;
-} MPIDI_STUBSHM_request_t;
-
-typedef struct {
-    int dummy;
-} MPIDI_STUBSHM_am_request_t;
-
-typedef struct MPIDI_STUBSHM_comm_t {
-    int dummy;
-} MPIDI_STUBSHM_comm_t;
-
-#endif /* SHM_STUBSHM_PRE_H_INCLUDED */
+MPIDI_SHM_Shmam_global_t MPIDI_SHM_Shmam_global = { 0 };
+MPIDI_SHMAM_eager_funcs_t *MPIDI_SHMAM_eager_func = NULL;

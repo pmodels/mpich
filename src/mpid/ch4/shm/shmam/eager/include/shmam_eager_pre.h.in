@@ -8,20 +8,13 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
+#ifndef SHMAM_EAGER_PRE_H_INCLUDED
+#define SHMAM_EAGER_PRE_H_INCLUDED
 
-#ifndef SHM_STUBSHM_PRE_H_INCLUDED
-#define SHM_STUBSHM_PRE_H_INCLUDED
+/* *INDENT-OFF* */
+@ch4_shmam_eager_pre_include@
+/* *INDENT-ON* */
 
-typedef struct {
-    int dummy;
-} MPIDI_STUBSHM_request_t;
+#define MPIDI_SHMAM_EAGER_RECV_TRANSACTION_DECL    @ch4_shmam_eager_recv_transaction_decl@
 
-typedef struct {
-    int dummy;
-} MPIDI_STUBSHM_am_request_t;
-
-typedef struct MPIDI_STUBSHM_comm_t {
-    int dummy;
-} MPIDI_STUBSHM_comm_t;
-
-#endif /* SHM_STUBSHM_PRE_H_INCLUDED */
+#endif /* SHMAM_EAGER_PRE_H_INCLUDED */
