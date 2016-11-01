@@ -234,11 +234,13 @@ dnl    Unix    gettimeofday (one of two versions)
 dnl
 dnl Also available are various hardware time stamps
 dnl    Linux-x86 cycle counter
+dnl    Powerpc-64bit timebase cycle counter
 dnl
 dnl We also allow --enable-timer-type=name to select a timer type
 AC_ARG_ENABLE(timer-type,
 [  --enable-timer-type=name - Select the timer to use for MPI_Wtime and
                              internal timestamps.
+        ppc64_cycle        - Powerpc-64bit; returns cycle counts using timebase register
         gethrtime          - Solaris timer (Solaris systems only)
         clock_gettime      - Posix timer (where available)
         gettimeofday       - Most Unix systems
@@ -256,7 +258,27 @@ AC_ARG_ENABLE(timer-type,
 
 ## The user did not specify a timer type.  Try to find a sane option
 ## that is supported by the platform.
-if test -z "$timer_type" ; then 
+dnl Check first for the ppc64 timebase cycle counter, so we would use this
+dnl instead of a timer function.  In a cross-compile environment the timer
+dnl functions may compile but there is no way to check if they are actually
+dnl implemented.
+if test -z "$timer_type" ; then
+dnl First see if the ppc64 timebase asm works
+    AC_CACHE_CHECK([that ppc64 timebase cycle counter is available],
+                pac_cv_ppc64_cycle,[
+    AC_TRY_COMPILE([
+    ],[
+        unsigned temp;
+        asm volatile ("mfspr %0,%1" : "=r" (temp)        : "i" (0x10D));
+    ],pac_cv_ppc64_cycle=yes,
+    pac_cv_ppc64_cycle=no)
+    ])
+    if test "$pac_cv_ppc64_cycle" = "yes" ; then
+        timer_type=ppc64_cycle
+    fi
+fi
+dnl If the ppc64 timebase cycle counter is not found then check the timer funcs
+if test -z "$timer_type" ; then
     # Try to pick a timer based on what is available
     AC_CHECK_FUNCS(clock_gettime clock_getres gethrtime mach_absolute_time gettimeofday)
     if test "$ac_cv_func_gethrtime" = "yes" ; then
@@ -504,6 +526,9 @@ pac_cv_ia64_cycle,[
     MPL_TIMER_TYPE="void *"
     ;;
 
+    ppc64_cycle)
+    MPL_TIMER_TYPE="uint64_t"
+    ;;
     *)
     AC_MSG_ERROR([Invalid timer type $timer_type])
     ;;
@@ -514,6 +539,7 @@ timer_type=`echo $timer_type | \
 MPL_TIMER_KIND=MPL_TIMER_KIND__$timer_type
 AC_SUBST(MPL_TIMER_KIND)
 AC_SUBST(MPL_TIMER_TYPE)
+AC_MSG_NOTICE([Timer type selected is $timer_type])
 
 #######################################################################
 ## END OF TIMER CODE
