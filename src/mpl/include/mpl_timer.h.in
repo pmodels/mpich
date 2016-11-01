@@ -36,6 +36,7 @@ int usleep(useconds_t usec);
 #define MPL_TIMER_KIND__DEVICE                  9
 #define MPL_TIMER_KIND__WIN64_CYCLE             10
 #define MPL_TIMER_KIND__MACH_ABSOLUTE_TIME      11
+#define MPL_TIMER_KIND__PPC64_CYCLE             12
 #define MPL_TIMER_KIND @MPL_TIMER_KIND@
 
 /* Define a time stamp */
@@ -66,6 +67,8 @@ typedef @MPL_TIMER_TYPE@ MPL_time_t;
 #include "mpl_timer_device.h"
 #elif MPL_TIMER_KIND == MPL_TIMER_KIND__MACH_ABSOLUTE_TIME
 #include "mpl_timer_mach_absolute_time.h"
+#elif MPL_TIMER_KIND == MPL_TIMER_KIND__PPC64_CYCLE
+#include "mpl_timer_ppc64_cycle.h"
 #endif
 
 /*
