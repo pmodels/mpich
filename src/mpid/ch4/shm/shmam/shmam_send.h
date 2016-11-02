@@ -31,7 +31,7 @@ static inline int MPIDI_SHM_mpi_rsend(const void *buf,
                                       int tag,
                                       MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
 {
-    return MPIDI_CH4U_rsend(buf, count, datatype, rank, tag, comm, context_offset,
+    return MPIDI_CH4U_mpi_rsend(buf, count, datatype, rank, tag, comm, context_offset,
                                 request, MPIDI_SHM);
 }
 
@@ -45,7 +45,7 @@ static inline int MPIDI_SHM_mpi_irsend(const void *buf,
                                        MPIR_Comm * comm, int context_offset,
                                        MPIR_Request ** request)
 {
-    return MPIDI_CH4U_irsend(buf, count, datatype, rank, tag, comm, context_offset,
+    return MPIDI_CH4U_mpi_irsend(buf, count, datatype, rank, tag, comm, context_offset,
                                  request, MPIDI_SHM);
 }
 
