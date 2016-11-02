@@ -21,7 +21,7 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int am_isend(const void *buf, int count, MPI_Datatype datatype,
                            int rank, int tag, MPIR_Comm * comm, int context_offset,
-                           MPIR_Request ** request, int noreq, int type)
+                           MPIR_Request ** request, int is_blocking, int type)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIR_Request *sreq = NULL;
@@ -34,7 +34,8 @@ static inline int am_isend(const void *buf, int count, MPI_Datatype datatype,
 
     if (unlikely(rank == MPI_PROC_NULL)) {
         mpi_errno = MPI_SUCCESS;
-        if (!noreq) {
+        /* for blocking calls, we directly complete the request */
+        if (!is_blocking) {
             *request = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND);
             MPIDI_Request_complete((*request));
         }
