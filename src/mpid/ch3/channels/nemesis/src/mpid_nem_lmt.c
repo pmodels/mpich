@@ -44,10 +44,10 @@ static int do_send(MPIDI_VC_t *vc, MPIR_Request *rreq, int *complete);
 static int do_cookie(MPIDI_VC_t *vc, MPIR_Request *rreq, int *complete);
 
 /* packet handlers */
-static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPIR_Request **rreqp);
-static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPIR_Request **rreqp);
-static int pkt_DONE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPIR_Request **rreqp);
-static int pkt_COOKIE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPIR_Request **rreqp);
+static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, intptr_t *buflen, MPIR_Request **rreqp);
+static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, intptr_t *buflen, MPIR_Request **rreqp);
+static int pkt_DONE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, intptr_t *buflen, MPIR_Request **rreqp);
+static int pkt_COOKIE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, intptr_t *buflen, MPIR_Request **rreqp);
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_pkthandler_init
@@ -180,13 +180,12 @@ int MPID_nem_lmt_RndvRecv(MPIDI_VC_t *vc, MPIR_Request *rreq)
 #define FUNCNAME pkt_RTS_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPIR_Request **rreqp)
+static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, intptr_t *buflen, MPIR_Request **rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request * rreq;
     int found;
     MPID_nem_pkt_lmt_rts_t * const rts_pkt = (MPID_nem_pkt_lmt_rts_t *)pkt;
-    char *data_buf;
     intptr_t data_len;
     MPIR_CHKPMEM_DECL(1);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_PKT_RTS_HANDLER);
@@ -215,8 +214,7 @@ static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *bufle
     rreq->ch.lmt_req_id = rts_pkt->sender_req_id;
     rreq->ch.lmt_data_sz = rts_pkt->data_sz;
 
-    data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
-    data_buf = (char *)pkt + sizeof(MPIDI_CH3_Pkt_t);
+    data_len = *buflen;
 
 
 
@@ -230,7 +228,7 @@ static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *bufle
         rreq->dev.iov[0] = rreq->ch.lmt_tmp_cookie;
         rreq->dev.iov_count = 1;
         *rreqp = rreq;
-        *buflen = sizeof(MPIDI_CH3_Pkt_t);
+        *buflen = 0;
 
         if (found)
         {
@@ -253,7 +251,7 @@ static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *bufle
             /* there's no cookie to receive */
             rreq->ch.lmt_tmp_cookie.MPL_IOV_LEN = 0;
             rreq->dev.iov_count = 0;
-            *buflen = sizeof(MPIDI_CH3_Pkt_t);
+            *buflen = 0;
             *rreqp = NULL;
         }
         else
@@ -263,8 +261,8 @@ static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *bufle
             MPIR_CHKPMEM_MALLOC(rreq->ch.lmt_tmp_cookie.MPL_IOV_BUF, char *, rts_pkt->cookie_len, mpi_errno, "tmp cookie buf");
             rreq->ch.lmt_tmp_cookie.MPL_IOV_LEN = rts_pkt->cookie_len;
         
-            MPIR_Memcpy(rreq->ch.lmt_tmp_cookie.MPL_IOV_BUF, data_buf, rts_pkt->cookie_len);
-            *buflen = sizeof(MPIDI_CH3_Pkt_t) + rts_pkt->cookie_len;
+            MPIR_Memcpy(rreq->ch.lmt_tmp_cookie.MPL_IOV_BUF, data, rts_pkt->cookie_len);
+            *buflen = rts_pkt->cookie_len;
             *rreqp = NULL;
         }
         
@@ -301,12 +299,11 @@ static int pkt_RTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *bufle
 #define FUNCNAME pkt_CTS_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPIR_Request **rreqp)
+static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, intptr_t *buflen, MPIR_Request **rreqp)
 {
     MPID_nem_pkt_lmt_cts_t * const cts_pkt = (MPID_nem_pkt_lmt_cts_t *)pkt;
     MPIR_Request *sreq;
     MPIR_Request *rts_sreq;
-    char *data_buf;
     intptr_t data_len;
     int mpi_errno = MPI_SUCCESS;
     MPIR_CHKPMEM_DECL(1);
@@ -316,8 +313,7 @@ static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *bufle
 
     MPL_DBG_MSG(MPIDI_CH3_DBG_OTHER,VERBOSE,"received rndv CTS pkt");
 
-    data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
-    data_buf = (char *)pkt + sizeof(MPIDI_CH3_Pkt_t);
+    data_len = *buflen;
 
     MPIR_Request_get_ptr(cts_pkt->sender_req_id, sreq);
 
@@ -346,14 +342,14 @@ static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *bufle
         if (data_len >= cts_pkt->cookie_len)
         {
             /* if whole cookie has been received, start the send */
-            sreq->ch.lmt_tmp_cookie.MPL_IOV_BUF = data_buf;
+            sreq->ch.lmt_tmp_cookie.MPL_IOV_BUF = data;
             sreq->ch.lmt_tmp_cookie.MPL_IOV_LEN = cts_pkt->cookie_len;
             MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
             mpi_errno = vc->ch.lmt_start_send(vc, sreq, sreq->ch.lmt_tmp_cookie);
             MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
             if (mpi_errno) MPIR_ERR_POP (mpi_errno);
             sreq->ch.lmt_tmp_cookie.MPL_IOV_LEN = 0;
-            *buflen = sizeof(MPIDI_CH3_Pkt_t) + cts_pkt->cookie_len;
+            *buflen = cts_pkt->cookie_len;
             *rreqp = NULL;
         }
         else
@@ -371,7 +367,7 @@ static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *bufle
             rreq->dev.iov_count = 1;
             rreq->ch.lmt_req = sreq;
             rreq->dev.OnDataAvail = do_send;
-            *buflen = sizeof(MPIDI_CH3_Pkt_t);
+            *buflen = 0;
             *rreqp = rreq;
         }
     }
@@ -382,7 +378,7 @@ static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *bufle
         mpi_errno = vc->ch.lmt_start_send(vc, sreq, cookie);
         MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
         if (mpi_errno) MPIR_ERR_POP (mpi_errno);
-        *buflen = sizeof(MPIDI_CH3_Pkt_t);
+        *buflen = 0;
         *rreqp = NULL;
     }
 
@@ -399,7 +395,8 @@ static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *bufle
 #define FUNCNAME pkt_DONE_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int pkt_DONE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPIR_Request **rreqp)
+static int pkt_DONE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data ATTRIBUTE((unused)),
+                            intptr_t *buflen, MPIR_Request **rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_pkt_lmt_done_t * const done_pkt = (MPID_nem_pkt_lmt_done_t *)pkt;
@@ -408,7 +405,7 @@ static int pkt_DONE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *bufl
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_PKT_DONE_HANDLER);
 
-    *buflen = sizeof(MPIDI_CH3_Pkt_t);
+    *buflen = 0;
     MPIR_Request_get_ptr(done_pkt->req_id, req);
 
     MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
@@ -445,20 +442,18 @@ static int pkt_DONE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *bufl
 #define FUNCNAME pkt_COOKIE_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int pkt_COOKIE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *buflen, MPIR_Request **rreqp)
+static int pkt_COOKIE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, void *data, intptr_t *buflen, MPIR_Request **rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_pkt_lmt_cookie_t * const cookie_pkt = (MPID_nem_pkt_lmt_cookie_t *)pkt;
     MPIR_Request *req;
-    char *data_buf;
     intptr_t data_len;
     MPIR_CHKPMEM_DECL(1);
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_PKT_COOKIE_HANDLER);
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_PKT_COOKIE_HANDLER);
 
-    data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
-    data_buf = (char *)pkt + sizeof(MPIDI_CH3_Pkt_t);
+    data_len = *buflen;
 
     if (cookie_pkt->from_sender) {
         MPIR_Request_get_ptr(cookie_pkt->receiver_req_id, req);
@@ -478,7 +473,7 @@ static int pkt_COOKIE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *bu
             /* call handle cookie with cookie data in receive buffer */
             MPL_IOV cookie;
 
-            cookie.MPL_IOV_BUF = data_buf;
+            cookie.MPL_IOV_BUF = data;
             cookie.MPL_IOV_LEN = cookie_pkt->cookie_len;
             MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
             mpi_errno = vc->ch.lmt_handle_cookie(vc, req, cookie);
@@ -486,7 +481,7 @@ static int pkt_COOKIE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *bu
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
             *rreqp = NULL;
-            *buflen = sizeof(MPIDI_CH3_Pkt_t) + cookie_pkt->cookie_len;
+            *buflen = cookie_pkt->cookie_len;
         }
         else
         {
@@ -503,7 +498,7 @@ static int pkt_COOKIE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, intptr_t *bu
             rreq->ch.lmt_req = req;
             rreq->dev.OnDataAvail = do_cookie;
             *rreqp = rreq;
-            *buflen = sizeof(MPIDI_CH3_Pkt_t);
+            *buflen = 0;
         }
     }
     else

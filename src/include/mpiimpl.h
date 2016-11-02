@@ -56,6 +56,8 @@ int usleep(useconds_t usec);
 #endif
 #endif
 
+#define NEEDS_STRICT_ALIGNMENT
+
 #if defined(HAVE_LONG_LONG_INT)
 /* Assume two's complement for determining LLONG_MAX (already assumed
  * elsewhere in MPICH). */
