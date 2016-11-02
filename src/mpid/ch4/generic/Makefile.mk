@@ -10,12 +10,6 @@
 ##  Contributor License Agreement dated February 8, 2012.
 ##
 
-if BUILD_CH4
+AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/ch4/generic
 
-include $(top_srcdir)/src/mpid/ch4/include/Makefile.mk
-include $(top_srcdir)/src/mpid/ch4/src/Makefile.mk
-include $(top_srcdir)/src/mpid/ch4/generic/Makefile.mk
-include $(top_srcdir)/src/mpid/ch4/netmod/Makefile.mk
-include $(top_srcdir)/src/mpid/ch4/shm/Makefile.mk
-
-endif BUILD_CH4
+noinst_HEADERS += src/mpid/ch4/generic/mpidig_send.h
