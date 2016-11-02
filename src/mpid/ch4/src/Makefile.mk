@@ -35,7 +35,6 @@ noinst_HEADERS += src/mpid/ch4/src/ch4_comm.h     \
                   src/mpid/ch4/src/ch4r_recvq.h   \
                   src/mpid/ch4/src/ch4i_util.h 	  \
                   src/mpid/ch4/src/ch4r_symheap.h \
-                  src/mpid/ch4/src/ch4r_send.h	  \
                   src/mpid/ch4/src/ch4r_buf.h     \
                   src/mpid/ch4/src/ch4r_request.h
 
