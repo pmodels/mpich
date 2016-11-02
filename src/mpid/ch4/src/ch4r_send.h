@@ -16,16 +16,12 @@
 #include <../mpi/pt2pt/bsendutil.h>
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4I_do_send
+#define FUNCNAME MPIDI_CH4I_send
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4I_do_send(const void *buf,
-                                     int count,
-                                     MPI_Datatype datatype,
-                                     int rank,
-                                     int tag,
-                                     MPIR_Comm * comm,
-                                     int context_offset, MPIR_Request ** request, int type)
+static inline int MPIDI_CH4I_send(const void *buf, int count, MPI_Datatype datatype,
+                                  int rank, int tag, MPIR_Comm * comm, int context_offset,
+                                  MPIR_Request ** request, int noreq, int type)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIR_Request *sreq = NULL;
@@ -33,8 +29,17 @@ static inline int MPIDI_CH4I_do_send(const void *buf,
     MPIDI_CH4U_hdr_t am_hdr;
     MPIDI_CH4U_ssend_req_msg_t ssend_req;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_DO_SEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_DO_SEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_NM_SEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_NM_SEND);
+
+    if (unlikely(rank == MPI_PROC_NULL)) {
+        mpi_errno = MPI_SUCCESS;
+        if (!noreq) {
+            *request = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND);
+            MPIDI_Request_complete((*request));
+        }
+        goto fn_exit;
+    }
 
     sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND);
     MPIR_Assert(sreq);
@@ -63,39 +68,11 @@ static inline int MPIDI_CH4I_do_send(const void *buf,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_DO_SEND);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4I_send
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4I_send(const void *buf, int count, MPI_Datatype datatype,
-                                  int rank, int tag, MPIR_Comm * comm, int context_offset,
-                                  MPIR_Request ** request, int noreq, int type)
-{
-    int mpi_errno;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_NM_SEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_NM_SEND);
-
-    if (unlikely(rank == MPI_PROC_NULL)) {
-        mpi_errno = MPI_SUCCESS;
-        if (!noreq) {
-            *request = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND);
-            MPIDI_Request_complete((*request));
-        }
-        goto fn_exit;
-    }
-
-    mpi_errno =
-        MPIDI_CH4I_do_send(buf, count, datatype, rank, tag, comm, context_offset, request, type);
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_NM_SEND);
     return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
