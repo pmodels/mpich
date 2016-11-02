@@ -77,21 +77,20 @@ static inline int am_isend(const void *buf, int count, MPI_Datatype datatype,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4I_psend
+#define FUNCNAME psend_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4I_psend(const void *buf,
-                                   int count,
-                                   MPI_Datatype datatype,
-                                   int rank,
-                                   int tag,
-                                   MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
+static inline int psend_init(const void *buf,
+                             int count,
+                             MPI_Datatype datatype,
+                             int rank,
+                             int tag, MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
 {
     MPIR_Request *sreq;
     uint64_t match_bits;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_NM_PSEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_NM_PSEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_PSEND_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_PSEND_INIT);
 
     sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__PREQUEST_SEND);
     *request = sreq;
@@ -111,7 +110,7 @@ static inline int MPIDI_CH4I_psend(const void *buf,
 
     dtype_add_ref_if_not_builtin(datatype);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_NM_PSEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PSEND_INIT);
     return MPI_SUCCESS;
 }
 
@@ -380,7 +379,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_send_init(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_SEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_SEND_INIT);
 
-    mpi_errno = MPIDI_CH4I_psend(buf, count, datatype, rank, tag, comm, context_offset, request);
+    mpi_errno = psend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
     MPIDI_CH4U_REQUEST((*request), p_type) = MPIDI_PTYPE_SEND;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_SEND_INIT);
@@ -404,7 +403,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_ssend_init(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_SSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_SSEND_INIT);
 
-    mpi_errno = MPIDI_CH4I_psend(buf, count, datatype, rank, tag, comm, context_offset, request);
+    mpi_errno = psend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
     MPIDI_CH4U_REQUEST((*request), p_type) = MPIDI_PTYPE_SSEND;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_SSEND_INIT);
@@ -428,7 +427,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_bsend_init(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_BSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_BSEND_INIT);
 
-    mpi_errno = MPIDI_CH4I_psend(buf, count, datatype, rank, tag, comm, context_offset, request);
+    mpi_errno = psend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
     MPIDI_CH4U_REQUEST((*request), p_type) = MPIDI_PTYPE_BSEND;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_BSEND_INIT);
@@ -452,7 +451,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_rsend_init(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_RSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_RSEND_INIT);
 
-    mpi_errno = MPIDI_CH4I_psend(buf, count, datatype, rank, tag, comm, context_offset, request);
+    mpi_errno = psend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
     MPIDI_CH4U_REQUEST((*request), p_type) = MPIDI_PTYPE_SEND;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_RSEND_INIT);
