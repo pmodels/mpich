@@ -131,7 +131,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_send(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_SEND);
 
-    mpi_errno = am_isend(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0ULL);
+    mpi_errno = am_isend(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_SEND);
     return mpi_errno;
@@ -153,7 +153,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_isend(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_ISEND);
 
-    mpi_errno = am_isend(buf, count, datatype, rank, tag, comm, context_offset, request, 0, 0ULL);
+    mpi_errno = am_isend(buf, count, datatype, rank, tag, comm, context_offset, request, 0, 0);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_ISEND);
     return mpi_errno;
@@ -176,7 +176,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_rsend(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_RSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_RSEND);
 
-    mpi_errno = am_isend(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0ULL);
+    mpi_errno = am_isend(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_RSEND);
     return mpi_errno;
@@ -199,7 +199,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_irsend(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_IRSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_IRSEND);
 
-    mpi_errno = am_isend(buf, count, datatype, rank, tag, comm, context_offset, request, 0, 0ULL);
+    mpi_errno = am_isend(buf, count, datatype, rank, tag, comm, context_offset, request, 0, 0);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_SEND);
     return mpi_errno;
