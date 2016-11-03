@@ -16,7 +16,7 @@
 #include "ch4r_proc.h"
 #include "ch4r_init.h"
 #include "ch4r_probe.h"
-#include "ch4r_recv.h"
+#include "mpidig_recv.h"
 #include "ch4r_rma.h"
 #include "mpidig_send.h"
 #include "ch4r_win.h"
