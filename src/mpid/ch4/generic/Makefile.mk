@@ -12,4 +12,5 @@
 
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/ch4/generic
 
-noinst_HEADERS += src/mpid/ch4/generic/mpidig_send.h
+noinst_HEADERS += src/mpid/ch4/generic/mpidig_send.h \
+	src/mpid/ch4/generic/mpidig_recv.h
