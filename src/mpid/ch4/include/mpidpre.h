@@ -157,7 +157,7 @@ typedef struct MPIDI_CH4U_req_t {
     void *buffer;
     uint64_t count;
     uint64_t tag;
-    int src_rank;
+    int rank;
     MPI_Datatype datatype;
 } MPIDI_CH4U_req_t;
 

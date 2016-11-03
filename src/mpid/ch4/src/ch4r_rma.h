@@ -122,7 +122,7 @@ static inline int MPIDI_CH4I_do_put(const void *origin_addr,
         MPIDI_CH4U_REQUEST(sreq, req->preq.origin_addr) = (void *) origin_addr;
         MPIDI_CH4U_REQUEST(sreq, req->preq.origin_count) = origin_count;
         MPIDI_CH4U_REQUEST(sreq, req->preq.origin_datatype) = origin_datatype;
-        MPIDI_CH4U_REQUEST(sreq, src_rank) = target_rank;
+        MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
         dtype_add_ref_if_not_builtin(origin_datatype);
 
         mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_PUT_IOV_REQ,
@@ -491,7 +491,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4I_do_accumulate(const void *origin_addr,
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_addr) = (void *) origin_addr;
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_count) = origin_count;
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_datatype) = origin_datatype;
-        MPIDI_CH4U_REQUEST(sreq, src_rank) = target_rank;
+        MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
         dtype_add_ref_if_not_builtin(origin_datatype);
 
         mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_ACC_IOV_REQ,

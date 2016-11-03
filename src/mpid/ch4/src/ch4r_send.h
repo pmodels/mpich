@@ -125,7 +125,7 @@ static inline int MPIDI_CH4I_psend(const void *buf,
     MPIDI_CH4U_REQUEST(sreq, count) = count;
     MPIDI_CH4U_REQUEST(sreq, datatype) = datatype;
     MPIDI_CH4U_REQUEST(sreq, tag) = match_bits;
-    MPIDI_CH4U_REQUEST(sreq, src_rank) = rank;
+    MPIDI_CH4U_REQUEST(sreq, rank) = rank;
 
     sreq->u.persist.real_request = NULL;
     MPIDI_Request_complete(sreq);
@@ -287,7 +287,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_startall(int count, MPIR_Request * r
         datatype = MPIDI_CH4U_REQUEST(preq, datatype);
 
         tag = MPIDI_CH4U_get_tag(msg_tag);
-        rank = MPIDI_CH4U_REQUEST(preq, src_rank);
+        rank = MPIDI_CH4U_REQUEST(preq, rank);
         context_offset = MPIDI_CH4U_get_context(msg_tag) - preq->comm->context_id;
 
         switch (MPIDI_CH4U_REQUEST(preq, p_type)) {
