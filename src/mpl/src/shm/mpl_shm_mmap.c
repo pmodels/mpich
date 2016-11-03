@@ -87,14 +87,11 @@ static inline int MPL_shm_seg_create_attach_templ(
         *shm_addr_ptr = (char*)buf_ptr;
     }
 
-fn_exit:
     /* FIXME: Close local handle only when closing the shm handle */
     if(MPLI_shm_lhnd_is_valid(hnd)){
         rc = MPLI_shm_lhnd_close(hnd);
     }
     return rc;
-fn_fail:
-    goto fn_exit;
 }
 
 /* Create new SHM segment
@@ -164,10 +161,7 @@ int MPL_shm_seg_detach(MPL_shm_hnd_t hnd, char **shm_addr_ptr, intptr_t seg_sz)
     rc = munmap(*shm_addr_ptr, seg_sz);
     *shm_addr_ptr = NULL;
 
-fn_exit:
     return rc;
-fn_fail:
-    goto fn_exit;
 }
 
 /* Remove an existing SHM segment */
@@ -181,10 +175,7 @@ int  MPL_shm_seg_remove(MPL_shm_hnd_t hnd)
 
     rc = unlink(MPLI_shm_ghnd_get_by_ref(hnd));
 
-fn_exit:
     return rc;
-fn_fail:
-    goto fn_exit;
 }
 
 #endif /* MPL_USE_MMAP_SHM */

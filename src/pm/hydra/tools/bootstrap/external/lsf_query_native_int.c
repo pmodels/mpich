@@ -21,10 +21,6 @@ HYD_status HYDT_bscd_lsf_query_native_int(int *ret)
     if (!HYDTI_bscd_env_is_avail("LSB_MCPU_HOSTS"))
         *ret = 0;
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }

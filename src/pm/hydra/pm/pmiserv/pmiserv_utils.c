@@ -572,10 +572,6 @@ HYD_status HYD_pmcd_pmi_free_pg_scratch(struct HYD_pg *pg)
         pg->pg_scratch = NULL;
     }
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }

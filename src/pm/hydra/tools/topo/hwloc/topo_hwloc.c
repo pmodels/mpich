@@ -135,12 +135,8 @@ static HYD_status split_count_field(const char *str, char **split_str, int *coun
     else
         *count = 1;
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 static int parse_cache_string(const char *str)

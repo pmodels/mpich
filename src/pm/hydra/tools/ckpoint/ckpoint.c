@@ -76,13 +76,16 @@ static void *ckpoint_thread(void *arg)
 #endif /* HAVE_BLCR */
 
     ++HYDT_ckpoint_info.ckpoint_num;
-
+#if defined HAVE_BLCR
   fn_exit:
+#endif /* HAVE_BLCR */
     in_ckpt = HYDT_CKPOINT_FINISHED;
     return (void *) (long) status;
 
+#if defined HAVE_BLCR
   fn_fail:
     goto fn_exit;
+#endif /* HAVE_BLCR */
 
 }
 #endif
