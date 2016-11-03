@@ -273,8 +273,8 @@ struct HYD_arg_match_table {
 
 /* Environment information */
 struct HYD_env {
-    const char *env_name;
-    const char *env_value;
+    char *env_name;
+    char *env_value;
     struct HYD_env *next;
 };
 

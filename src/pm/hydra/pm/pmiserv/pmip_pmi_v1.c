@@ -144,7 +144,7 @@ static HYD_status cache_put_flush(int fd)
 static HYD_status fn_init(int fd, char *args[])
 {
     int pmi_version, pmi_subversion, i;
-    const char *tmp = NULL;
+    char *tmp = NULL;
     static int global_init = 1;
     HYD_status status = HYD_SUCCESS;
 
@@ -549,7 +549,7 @@ static HYD_status fn_barrier_in(int fd, char *args[])
 
 static HYD_status fn_barrier_out(int fd, char *args[])
 {
-    const char *cmd;
+    char *cmd;
     int i;
     HYD_status status = HYD_SUCCESS;
 
@@ -574,7 +574,7 @@ static HYD_status fn_barrier_out(int fd, char *args[])
 
 static HYD_status fn_finalize(int fd, char *args[])
 {
-    const char *cmd;
+    char *cmd;
     int i;
     static int finalize_count = 0;
     HYD_status status = HYD_SUCCESS;
