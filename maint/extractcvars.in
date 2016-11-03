@@ -394,10 +394,7 @@ EOT
 }
 
 print OUTPUT_C <<EOT;
-fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
 EOT

@@ -350,12 +350,8 @@ static HYD_status global_env_fn(char *arg, char ***argv)
     }
     (*argv)++;
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 static HYD_status genv_prop_fn(char *arg, char ***argv)

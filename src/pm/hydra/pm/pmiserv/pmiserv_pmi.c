@@ -52,12 +52,8 @@ HYD_status HYD_pmcd_pmi_free_publish(struct HYD_pmcd_pmi_publish * publish)
     if (publish->info_keys)
         MPL_free(publish->info_keys);
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 HYD_status HYD_pmcd_pmi_publish(char *name, char *port, int *success)
