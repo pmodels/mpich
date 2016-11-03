@@ -176,11 +176,6 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
     MPL_free(all_ids);
     MPL_free(filename);
     return mpi_errno;
-
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
 
 /*

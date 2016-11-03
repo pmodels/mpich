@@ -23,10 +23,6 @@ HYD_status HYDT_bscd_slurm_query_native_int(int *ret)
     if (!HYDTI_bscd_env_is_avail("SLURM_TASKS_PER_NODE"))
         *ret = 0;
 
-  fn_exit:
     HYDU_FUNC_EXIT();
     return status;
-
-  fn_fail:
-    goto fn_exit;
 }
