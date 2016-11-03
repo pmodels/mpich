@@ -94,7 +94,7 @@ static inline int MPIDI_CH4I_handle_unexpected(void *buf,
     MPIDI_CH4U_REQUEST(rreq, req->status) &= ~MPIDI_CH4U_REQ_UNEXPECTED;
     MPL_free(MPIDI_CH4U_REQUEST(rreq, buffer));
 
-    rreq->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(rreq, src_rank);
+    rreq->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(rreq, rank);
     rreq->status.MPI_TAG = MPIDI_CH4U_get_tag(MPIDI_CH4U_REQUEST(rreq, tag));
 
     if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_PEER_SSEND) {
@@ -264,7 +264,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_recv_init(void *buf,
     MPIDI_CH4U_REQUEST(rreq, buffer) = (void *) buf;
     MPIDI_CH4U_REQUEST(rreq, count) = count;
     MPIDI_CH4U_REQUEST(rreq, datatype) = datatype;
-    MPIDI_CH4U_REQUEST(rreq, src_rank) = rank;
+    MPIDI_CH4U_REQUEST(rreq, rank) = rank;
     MPIDI_CH4U_REQUEST(rreq, tag) =
         MPIDI_CH4U_init_send_tag(comm->context_id + context_offset, rank, tag);
     rreq->u.persist.real_request = NULL;

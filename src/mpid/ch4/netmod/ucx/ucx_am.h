@@ -114,7 +114,7 @@ static inline int MPIDI_NM_am_isend(int rank,
         dtype_add_ref_if_not_builtin(datatype);
         MPIDI_CH4U_REQUEST(sreq, req->lreq).datatype = datatype;
         MPIDI_CH4U_REQUEST(sreq, req->lreq).msg_tag = lreq_hdr.hdr.msg_tag;
-        MPIDI_CH4U_REQUEST(sreq, src_rank) = rank;
+        MPIDI_CH4U_REQUEST(sreq, rank) = rank;
         mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDI_CH4U_SEND_LONG_REQ,
                                          &lreq_hdr, sizeof(lreq_hdr), NULL);
         if (mpi_errno)
@@ -432,7 +432,7 @@ static inline int MPIDI_NM_am_recv(MPIR_Request * req)
     msg.rreq_ptr = (uint64_t) req;
     MPIR_Assert((void *) msg.sreq_ptr != NULL);
     mpi_errno = MPIDI_NM_am_send_hdr_reply(MPIDI_CH4U_get_context(MPIDI_CH4U_REQUEST(req, tag)),
-                                           MPIDI_CH4U_REQUEST(req, src_rank),
+                                           MPIDI_CH4U_REQUEST(req, rank),
                                            MPIDI_CH4U_SEND_LONG_ACK, &msg, sizeof(msg));
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
