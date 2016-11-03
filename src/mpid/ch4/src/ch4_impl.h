@@ -741,4 +741,14 @@ static inline void MPIDI_win_check_group_local_completed(MPIR_Win * win,
     }
 }
 
+static inline void MPIDI_find_tag_ep(MPIR_Comm* comm, int target_rank, int tag, int* ep_idx)
+{
+    *ep_idx = 0;
+}
+
+static inline void MPIDI_find_rma_ep(MPIR_Win* win, int target_rank, int* ep_idx)
+{
+    *ep_idx = 0;
+}
+
 #endif /* CH4_IMPL_H_INCLUDED */
