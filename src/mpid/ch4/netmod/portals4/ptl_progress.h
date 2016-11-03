@@ -31,7 +31,7 @@ static inline int MPIDI_PTL_am_handler(ptl_event_t * e)
 
     MPIDI_PTL_global.am_handlers[handler_id] (handler_id, e->start,
                                               &p_data, &data_sz,
-                                              &is_contig, &cmpl_handler_fn, &rreq);
+                                              &is_contig, &cmpl_handler_fn, &rreq, MPIDI_NM);
 
     if (!rreq)
         goto fn_exit;

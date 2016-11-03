@@ -16,23 +16,12 @@
 
 #define MPIDI_MAX_SHM_STRING_LEN 64
 
-typedef int (*MPIDI_SHM_am_completion_handler_fn) (MPIR_Request * req);
-typedef int (*MPIDI_SHM_am_origin_handler_fn) (MPIR_Request * req);
-
-/* Callback function setup by handler register function */
-/* for short cases, output arguments are NULL */
-typedef int (*MPIDI_SHM_am_target_handler_fn)
- (void *am_hdr, size_t am_hdr_sz, void **data,  /* CH4 manages this buffer - shm only fills with data */
-  MPI_Datatype * datatype, MPI_Count * count, int *noncontig,   /* if TRUE: data/data_sz are actually iovec/count */
-  MPIDI_SHM_am_completion_handler_fn * cmpl_handler_fn, /* completion handler */
-  MPIR_Request ** req);         /* if allocated, need pointer to completion function */
-
 typedef int (*MPIDI_SHM_mpi_init_t) (int rank, int size);
 typedef int (*MPIDI_SHM_mpi_finalize_t) (void);
-typedef int (*MPIDI_SHM_progress_t) (int blocking);
+typedef int (*MPIDI_SHM_progress_t) (void *shmmod_context, int blocking);
 typedef int (*MPIDI_SHM_am_reg_handler_t) (int handler_id,
-                                           MPIDI_SHM_am_origin_handler_fn origin_handler_fn,
-                                           MPIDI_SHM_am_target_handler_fn target_handler_fn);
+                                           MPIDI_NM_am_origin_handler_fn origin_handler_fn,
+                                           MPIDI_NM_am_target_handler_fn target_handler_fn);
 typedef int (*MPIDI_SHM_mpi_comm_connect_t) (const char *port_name, MPIR_Info * info, int root,
                                              MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr);
 typedef int (*MPIDI_SHM_mpi_comm_disconnect_t) (MPIR_Comm * comm_ptr);
@@ -41,53 +30,33 @@ typedef int (*MPIDI_SHM_mpi_close_port_t) (const char *port_name);
 typedef int (*MPIDI_SHM_mpi_comm_accept_t) (const char *port_name, MPIR_Info * info, int root,
                                             MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr);
 typedef int (*MPIDI_SHM_am_send_hdr_t) (int rank, MPIR_Comm * comm, int handler_id,
-                                        const void *am_hdr, size_t am_hdr_sz, void *shm_context);
+                                        const void *am_hdr, size_t am_hdr_sz, void *shmmod_context);
 typedef int (*MPIDI_SHM_am_isend_t) (int rank, MPIR_Comm * comm, int handler_id, const void *am_hdr,
                                      size_t am_hdr_sz, const void *data, MPI_Count count,
-                                     MPI_Datatype datatype, MPIR_Request * sreq, void *shm_context);
-typedef int (*MPIDI_SHM_inject_am_t) (int rank, MPIR_Comm * comm, int handler_id,
-                                      const void *am_hdr, size_t am_hdr_sz, const void *data,
-                                      MPI_Count count, MPI_Datatype datatype, void *shm_context);
+                                     MPI_Datatype datatype, MPIR_Request * sreq,
+                                     void *shmmod_context);
 typedef int (*MPIDI_SHM_am_isendv_t) (int rank, MPIR_Comm * comm, int handler_id,
                                       struct iovec * am_hdrs, size_t iov_len, const void *data,
                                       MPI_Count count, MPI_Datatype datatype, MPIR_Request * sreq,
-                                      void *shm_context);
-typedef int (*MPIDI_SHM_inject_amv_t) (int rank, MPIR_Comm * comm, int handler_id,
-                                       struct iovec * am_hdrs, size_t iov_len, const void *data,
-                                       MPI_Count count, MPI_Datatype datatype, void *shm_context);
+                                      void *shmmod_context);
 typedef int (*MPIDI_SHM_am_send_hdr_reply_t) (MPIR_Context_id_t context_id, int src_rank,
                                               int handler_id, const void *am_hdr, size_t am_hdr_sz);
 typedef int (*MPIDI_SHM_am_isend_reply_t) (MPIR_Context_id_t context_id, int src_rank,
                                            int handler_id, const void *am_hdr, size_t am_hdr_sz,
                                            const void *data, MPI_Count count, MPI_Datatype datatype,
                                            MPIR_Request * sreq);
-typedef int (*MPIDI_SHM_inject_am_reply_t) (MPIR_Context_id_t context_id, int src_rank,
-                                            int handler_id, const void *am_hdr, size_t am_hdr_sz,
-                                            const void *data, MPI_Count count,
-                                            MPI_Datatype datatype);
-typedef int (*MPIDI_SHM_inject_amv_reply_t) (MPIR_Context_id_t context_id, int src_rank,
-                                             int handler_id, struct iovec * am_hdrs, size_t iov_len,
-                                             const void *data, MPI_Count count,
-                                             MPI_Datatype datatype);
 typedef size_t(*MPIDI_SHM_am_hdr_max_sz_t) (void);
-typedef size_t(*MPIDI_SHM_am_inject_max_sz_t) (void);
 typedef int (*MPIDI_SHM_am_recv_t) (MPIR_Request * req);
 typedef int (*MPIDI_SHM_comm_get_lpid_t) (MPIR_Comm * comm_ptr, int idx, int *lpid_ptr,
                                           MPL_bool is_remote);
 typedef int (*MPIDI_SHM_gpid_get_t) (MPIR_Comm * comm_ptr, int rank, MPIR_Gpid * gpid);
-typedef int (*MPIDI_SHM_get_node_id_t) (MPIR_Comm * comm, int rank, MPID_Node_id_t * id_p);
-typedef int (*MPIDI_SHM_get_max_node_id_t) (MPIR_Comm * comm, MPID_Node_id_t * max_id_p);
 typedef int (*MPIDI_SHM_getallincomm_t) (MPIR_Comm * comm_ptr, int local_size,
-                                         MPIR_Gpid local_gpid[], int *singleAVT);
+                                         MPIR_Gpid local_gpids[], int *singleAVT);
 typedef int (*MPIDI_SHM_gpid_tolpidarray_t) (int size, MPIR_Gpid gpid[], int lpid[]);
 typedef int (*MPIDI_SHM_create_intercomm_from_lpids_t) (MPIR_Comm * newcomm_ptr, int size,
                                                         const int lpids[]);
 typedef int (*MPIDI_SHM_mpi_comm_create_hook_t) (MPIR_Comm * comm);
 typedef int (*MPIDI_SHM_mpi_comm_free_hook_t) (MPIR_Comm * comm);
-typedef int (*MPIDI_SHM_mpi_type_create_hook_t) (MPIR_Datatype * type);
-typedef int (*MPIDI_SHM_mpi_type_free_hook_t) (MPIR_Datatype * type);
-typedef int (*MPIDI_SHM_mpi_op_create_hook_t) (MPIR_Op * op);
-typedef int (*MPIDI_SHM_mpi_op_free_hook_t) (MPIR_Op * op);
 typedef void (*MPIDI_SHM_am_request_init_t) (MPIR_Request * req);
 typedef void (*MPIDI_SHM_am_request_finalize_t) (MPIR_Request * req);
 typedef int (*MPIDI_SHM_mpi_send_t) (const void *buf, int count, MPI_Datatype datatype, int rank,
@@ -212,6 +181,7 @@ typedef int (*MPIDI_SHM_mpi_get_accumulate_t) (const void *origin_addr, int orig
                                                int target_count, MPI_Datatype target_datatype,
                                                MPI_Op op, MPIR_Win * win);
 typedef int (*MPIDI_SHM_mpi_win_lock_all_t) (int assert, MPIR_Win * win);
+typedef int (*MPIDI_SHM_rank_is_local_t) (int target, MPIR_Comm * comm);
 typedef int (*MPIDI_SHM_mpi_barrier_t) (MPIR_Comm * comm, MPIR_Errflag_t * errflag);
 typedef int (*MPIDI_SHM_mpi_bcast_t) (void *buffer, int count, MPI_Datatype datatype, int root,
                                       MPIR_Comm * comm, MPIR_Errflag_t * errflag);
@@ -273,27 +243,26 @@ typedef int (*MPIDI_SHM_mpi_exscan_t) (const void *sendbuf, void *recvbuf, int c
 typedef int (*MPIDI_SHM_mpi_neighbor_allgather_t) (const void *sendbuf, int sendcount,
                                                    MPI_Datatype sendtype, void *recvbuf,
                                                    int recvcount, MPI_Datatype recvtype,
-                                                   MPIR_Comm * comm, MPIR_Errflag_t * errflag);
+                                                   MPIR_Comm * comm);
 typedef int (*MPIDI_SHM_mpi_neighbor_allgatherv_t) (const void *sendbuf, int sendcount,
                                                     MPI_Datatype sendtype, void *recvbuf,
                                                     const int *recvcounts, const int *displs,
-                                                    MPI_Datatype recvtype, MPIR_Comm * comm,
-                                                    MPIR_Errflag_t * errflag);
+                                                    MPI_Datatype recvtype, MPIR_Comm * comm);
 typedef int (*MPIDI_SHM_mpi_neighbor_alltoallv_t) (const void *sendbuf, const int *sendcounts,
                                                    const int *sdispls, MPI_Datatype sendtype,
                                                    void *recvbuf, const int *recvcounts,
                                                    const int *rdispls, MPI_Datatype recvtype,
-                                                   MPIR_Comm * comm, MPIR_Errflag_t * errflag);
+                                                   MPIR_Comm * comm);
 typedef int (*MPIDI_SHM_mpi_neighbor_alltoallw_t) (const void *sendbuf, const int *sendcounts,
                                                    const MPI_Aint * sdispls,
                                                    const MPI_Datatype * sendtypes, void *recvbuf,
                                                    const int *recvcounts, const MPI_Aint * rdispls,
-                                                   const MPI_Datatype * recvtypes, MPIR_Comm * comm,
-                                                   MPIR_Errflag_t * errflag);
+                                                   const MPI_Datatype * recvtypes,
+                                                   MPIR_Comm * comm);
 typedef int (*MPIDI_SHM_mpi_neighbor_alltoall_t) (const void *sendbuf, int sendcount,
                                                   MPI_Datatype sendtype, void *recvbuf,
                                                   int recvcount, MPI_Datatype recvtype,
-                                                  MPIR_Comm * comm, MPIR_Errflag_t * errflag);
+                                                  MPIR_Comm * comm);
 typedef int (*MPIDI_SHM_mpi_ineighbor_allgather_t) (const void *sendbuf, int sendcount,
                                                     MPI_Datatype sendtype, void *recvbuf,
                                                     int recvcount, MPI_Datatype recvtype,
@@ -376,46 +345,40 @@ typedef int (*MPIDI_SHM_mpi_iscatterv_t) (const void *sendbuf, const int *sendco
                                           const int *displs, MPI_Datatype sendtype, void *recvbuf,
                                           int recvcount, MPI_Datatype recvtype, int root,
                                           MPIR_Comm * comm_ptr, MPI_Request * req);
+typedef int (*MPIDI_SHM_mpi_type_create_hook_t) (MPIR_Datatype * datatype_p);
+typedef int (*MPIDI_SHM_mpi_type_free_hook_t) (MPIR_Datatype * datatype_p);
+typedef int (*MPIDI_SHM_mpi_op_create_hook_t) (MPIR_Op * op_p);
+typedef int (*MPIDI_SHM_mpi_op_free_hook_t) (MPIR_Op * op_p);
 
 typedef struct MPIDI_SHM_funcs {
     MPIDI_SHM_mpi_init_t mpi_init;
     MPIDI_SHM_mpi_finalize_t mpi_finalize;
     MPIDI_SHM_progress_t progress;
-    MPIDI_SHM_am_reg_handler_t am_reg_handler;
     MPIDI_SHM_mpi_comm_connect_t mpi_comm_connect;
     MPIDI_SHM_mpi_comm_disconnect_t mpi_comm_disconnect;
     MPIDI_SHM_mpi_open_port_t mpi_open_port;
     MPIDI_SHM_mpi_close_port_t mpi_close_port;
     MPIDI_SHM_mpi_comm_accept_t mpi_comm_accept;
-    MPIDI_SHM_am_send_hdr_t am_send_hdr;
-    MPIDI_SHM_am_isend_t am_isend;
-    MPIDI_SHM_inject_am_t inject_am;
-    MPIDI_SHM_am_isendv_t am_isendv;
-    MPIDI_SHM_inject_amv_t inject_amv;
-    MPIDI_SHM_am_send_hdr_reply_t am_send_hdr_reply;
-    MPIDI_SHM_am_isend_reply_t am_isend_reply;
-    MPIDI_SHM_inject_am_reply_t inject_am_reply;
-    MPIDI_SHM_inject_amv_reply_t inject_amv_reply;
-    MPIDI_SHM_am_hdr_max_sz_t am_hdr_max_sz;
-    MPIDI_SHM_am_inject_max_sz_t am_inject_max_sz;
-    MPIDI_SHM_am_recv_t am_recv;
     /* Routines that handle addressing */
     MPIDI_SHM_comm_get_lpid_t comm_get_lpid;
     MPIDI_SHM_gpid_get_t gpid_get;
-    MPIDI_SHM_get_node_id_t get_node_id;
-    MPIDI_SHM_get_max_node_id_t get_max_node_id;
     MPIDI_SHM_getallincomm_t getallincomm;
     MPIDI_SHM_gpid_tolpidarray_t gpid_tolpidarray;
     MPIDI_SHM_create_intercomm_from_lpids_t create_intercomm_from_lpids;
     MPIDI_SHM_mpi_comm_create_hook_t mpi_comm_create_hook;
     MPIDI_SHM_mpi_comm_free_hook_t mpi_comm_free_hook;
-    MPIDI_SHM_mpi_type_create_hook_t mpi_type_create_hook;
-    MPIDI_SHM_mpi_type_free_hook_t mpi_type_free_hook;
-    MPIDI_SHM_mpi_op_create_hook_t mpi_op_create_hook;
-    MPIDI_SHM_mpi_op_free_hook_t mpi_op_free_hook;
     /* Request allocation routines */
     MPIDI_SHM_am_request_init_t am_request_init;
     MPIDI_SHM_am_request_finalize_t am_request_finalize;
+    /* Active Message Routines */
+    MPIDI_SHM_am_reg_handler_t am_reg_handler;
+    MPIDI_SHM_am_send_hdr_t am_send_hdr;
+    MPIDI_SHM_am_isend_t am_isend;
+    MPIDI_SHM_am_isendv_t am_isendv;
+    MPIDI_SHM_am_send_hdr_reply_t am_send_hdr_reply;
+    MPIDI_SHM_am_isend_reply_t am_isend_reply;
+    MPIDI_SHM_am_hdr_max_sz_t am_hdr_max_sz;
+    MPIDI_SHM_am_recv_t am_recv;
 } MPIDI_SHM_funcs_t;
 
 typedef struct MPIDI_SHM_native_funcs {
@@ -473,6 +436,7 @@ typedef struct MPIDI_SHM_native_funcs {
     MPIDI_SHM_mpi_win_flush_all_t mpi_win_flush_all;
     MPIDI_SHM_mpi_get_accumulate_t mpi_get_accumulate;
     MPIDI_SHM_mpi_win_lock_all_t mpi_win_lock_all;
+    MPIDI_SHM_rank_is_local_t rank_is_local;
     /* Collectives */
     MPIDI_SHM_mpi_barrier_t mpi_barrier;
     MPIDI_SHM_mpi_bcast_t mpi_bcast;
@@ -518,6 +482,12 @@ typedef struct MPIDI_SHM_native_funcs {
     MPIDI_SHM_mpi_iscan_t mpi_iscan;
     MPIDI_SHM_mpi_iscatter_t mpi_iscatter;
     MPIDI_SHM_mpi_iscatterv_t mpi_iscatterv;
+    /* Datatype hooks */
+    MPIDI_SHM_mpi_type_create_hook_t mpi_type_create_hook;
+    MPIDI_SHM_mpi_type_free_hook_t mpi_type_free_hook;
+    /* Op hooks */
+    MPIDI_SHM_mpi_op_create_hook_t mpi_op_create_hook;
+    MPIDI_SHM_mpi_op_free_hook_t mpi_op_free_hook;
 } MPIDI_SHM_native_funcs_t;
 
 extern MPIDI_SHM_funcs_t *MPIDI_SHM_funcs[];
@@ -529,11 +499,12 @@ extern char MPIDI_SHM_strings[][MPIDI_MAX_SHM_STRING_LEN];
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init_hook(int rank, int size) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_finalize_hook(void) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int blocking) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(void *shmmod_context,
+                                                int blocking) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_reg_handler(int handler_id,
-                                                      MPIDI_SHM_am_origin_handler_fn
+                                                      MPIDI_NM_am_origin_handler_fn
                                                       origin_handler_fn,
-                                                      MPIDI_SHM_am_target_handler_fn
+                                                      MPIDI_NM_am_target_handler_fn
                                                       target_handler_fn) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_comm_connect(const char *port_name, MPIR_Info * info,
                                                         int root, MPIR_Comm * comm,
@@ -551,27 +522,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_comm_accept(const char *port_name, MP
                                                        newcomm_ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr(int rank, MPIR_Comm * comm, int handler_id,
                                                    const void *am_hdr, size_t am_hdr_sz,
-                                                   void *shm_context) MPL_STATIC_INLINE_SUFFIX;
+                                                   void *shmmod_context) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend(int rank, MPIR_Comm * comm, int handler_id,
                                                 const void *am_hdr, size_t am_hdr_sz,
                                                 const void *data, MPI_Count count,
                                                 MPI_Datatype datatype, MPIR_Request * sreq,
-                                                void *shm_context) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_inject_am(int rank, MPIR_Comm * comm, int handler_id,
-                                                 const void *am_hdr, size_t am_hdr_sz,
-                                                 const void *data, MPI_Count count,
-                                                 MPI_Datatype datatype,
-                                                 void *shm_context) MPL_STATIC_INLINE_SUFFIX;
+                                                void *shmmod_context) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isendv(int rank, MPIR_Comm * comm, int handler_id,
                                                  struct iovec *am_hdrs, size_t iov_len,
                                                  const void *data, MPI_Count count,
                                                  MPI_Datatype datatype, MPIR_Request * sreq,
-                                                 void *shm_context) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_inject_amv(int rank, MPIR_Comm * comm, int handler_id,
-                                                  struct iovec *am_hdrs, size_t iov_len,
-                                                  const void *data, MPI_Count count,
-                                                  MPI_Datatype datatype,
-                                                  void *shm_context) MPL_STATIC_INLINE_SUFFIX;
+                                                 void *shmmod_context) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr_reply(MPIR_Context_id_t context_id, int src_rank,
                                                          int handler_id, const void *am_hdr,
                                                          size_t am_hdr_sz) MPL_STATIC_INLINE_SUFFIX;
@@ -580,33 +541,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend_reply(MPIR_Context_id_t context_
                                                       size_t am_hdr_sz, const void *data,
                                                       MPI_Count count, MPI_Datatype datatype,
                                                       MPIR_Request * sreq) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_inject_am_reply(MPIR_Context_id_t context_id, int src_rank,
-                                                       int handler_id, const void *am_hdr,
-                                                       size_t am_hdr_sz, const void *data,
-                                                       MPI_Count count,
-                                                       MPI_Datatype datatype)
-    MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_inject_amv_reply(MPIR_Context_id_t context_id, int src_rank,
-                                                        int handler_id, struct iovec *am_hdrs,
-                                                        size_t iov_len, const void *data,
-                                                        MPI_Count count,
-                                                        MPI_Datatype datatype)
-    MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_hdr_max_sz(void) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_inject_max_sz(void) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_recv(MPIR_Request * req) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_comm_get_lpid(MPIR_Comm * comm_ptr, int idx,
                                                      int *lpid_ptr,
                                                      MPL_bool is_remote) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_gpid_get(MPIR_Comm * comm_ptr, int rank,
                                                 MPIR_Gpid * gpid) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_get_node_id(MPIR_Comm * comm, int rank,
-                                                   MPID_Node_id_t * id_p) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_get_max_node_id(MPIR_Comm * comm,
-                                                       MPID_Node_id_t *
-                                                       max_id_p) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_getallincomm(MPIR_Comm * comm_ptr, int local_size,
-                                                    MPIR_Gpid local_gpid[],
+                                                    MPIR_Gpid local_gpids[],
                                                     int *singleAVT) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_gpid_tolpidarray(int size, MPIR_Gpid gpid[],
                                                         int lpid[]) MPL_STATIC_INLINE_SUFFIX;
@@ -618,12 +561,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_comm_create_hook(MPIR_Comm *
                                                             comm) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_comm_free_hook(MPIR_Comm *
                                                           comm) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_type_create_hook(MPIR_Datatype *
-                                                            type) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_type_free_hook(MPIR_Datatype *
-                                                          type) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_op_create_hook(MPIR_Op * op) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_op_free_hook(MPIR_Op * op) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_init(MPIR_Request *
                                                         req) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_finalize(MPIR_Request *
@@ -632,9 +569,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_send(const void *buf, int count, MPI_
                                                 int rank, int tag, MPIR_Comm * comm,
                                                 int context_offset,
                                                 MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ssend(const void *buf, int count,
-                                                 MPI_Datatype datatype, int rank, int tag,
-                                                 MPIR_Comm * comm, int context_offset,
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ssend(const void *buf, int count, MPI_Datatype datatype,
+                                                 int rank, int tag, MPIR_Comm * comm,
+                                                 int context_offset,
                                                  MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_startall(int count,
                                                     MPIR_Request *
@@ -735,9 +672,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_create(void *base, MPI_Aint lengt
                                                       MPIR_Info * info, MPIR_Comm * comm_ptr,
                                                       MPIR_Win ** win_ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_accumulate(const void *origin_addr, int origin_count,
-                                                      MPI_Datatype origin_datatype,
-                                                      int target_rank, MPI_Aint target_disp,
-                                                      int target_count,
+                                                      MPI_Datatype origin_datatype, int target_rank,
+                                                      MPI_Aint target_disp, int target_count,
                                                       MPI_Datatype target_datatype, MPI_Op op,
                                                       MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_attach(MPIR_Win * win, void *base,
@@ -760,8 +696,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_detach(MPIR_Win * win,
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_compare_and_swap(const void *origin_addr,
                                                             const void *compare_addr,
                                                             void *result_addr,
-                                                            MPI_Datatype datatype,
-                                                            int target_rank, MPI_Aint target_disp,
+                                                            MPI_Datatype datatype, int target_rank,
+                                                            MPI_Aint target_disp,
                                                             MPIR_Win *
                                                             win) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_raccumulate(const void *origin_addr, int origin_count,
@@ -806,8 +742,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_rget(void *origin_addr, int origin_co
                                                 MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_sync(MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_flush_all(MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_get_accumulate(const void *origin_addr,
-                                                          int origin_count,
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_get_accumulate(const void *origin_addr, int origin_count,
                                                           MPI_Datatype origin_datatype,
                                                           void *result_addr, int result_count,
                                                           MPI_Datatype result_datatype,
@@ -817,6 +752,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_get_accumulate(const void *origin_add
                                                           MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_lock_all(int assert,
                                                         MPIR_Win * win) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_rank_is_local(int target,
+                                                     MPIR_Comm * comm) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_barrier(MPIR_Comm * comm,
                                                    MPIR_Errflag_t *
                                                    errflag) MPL_STATIC_INLINE_SUFFIX;
@@ -915,17 +852,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_exscan(const void *sendbuf, void *rec
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_neighbor_allgather(const void *sendbuf, int sendcount,
                                                               MPI_Datatype sendtype, void *recvbuf,
                                                               int recvcount, MPI_Datatype recvtype,
-                                                              MPIR_Comm * comm,
-                                                              MPIR_Errflag_t *
-                                                              errflag) MPL_STATIC_INLINE_SUFFIX;
+                                                              MPIR_Comm *
+                                                              comm) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_neighbor_allgatherv(const void *sendbuf, int sendcount,
                                                                MPI_Datatype sendtype, void *recvbuf,
                                                                const int *recvcounts,
                                                                const int *displs,
                                                                MPI_Datatype recvtype,
-                                                               MPIR_Comm * comm,
-                                                               MPIR_Errflag_t *
-                                                               errflag) MPL_STATIC_INLINE_SUFFIX;
+                                                               MPIR_Comm *
+                                                               comm) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_neighbor_alltoallv(const void *sendbuf,
                                                               const int *sendcounts,
                                                               const int *sdispls,
@@ -933,9 +868,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_neighbor_alltoallv(const void *sendbu
                                                               const int *recvcounts,
                                                               const int *rdispls,
                                                               MPI_Datatype recvtype,
-                                                              MPIR_Comm * comm,
-                                                              MPIR_Errflag_t *
-                                                              errflag) MPL_STATIC_INLINE_SUFFIX;
+                                                              MPIR_Comm *
+                                                              comm) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_neighbor_alltoallw(const void *sendbuf,
                                                               const int *sendcounts,
                                                               const MPI_Aint * sdispls,
@@ -943,15 +877,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_neighbor_alltoallw(const void *sendbu
                                                               void *recvbuf, const int *recvcounts,
                                                               const MPI_Aint * rdispls,
                                                               const MPI_Datatype * recvtypes,
-                                                              MPIR_Comm * comm,
-                                                              MPIR_Errflag_t *
-                                                              errflag) MPL_STATIC_INLINE_SUFFIX;
+                                                              MPIR_Comm *
+                                                              comm) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_neighbor_alltoall(const void *sendbuf, int sendcount,
                                                              MPI_Datatype sendtype, void *recvbuf,
                                                              int recvcount, MPI_Datatype recvtype,
-                                                             MPIR_Comm * comm,
-                                                             MPIR_Errflag_t *
-                                                             errflag) MPL_STATIC_INLINE_SUFFIX;
+                                                             MPIR_Comm *
+                                                             comm) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_ineighbor_allgather(const void *sendbuf, int sendcount,
                                                                MPI_Datatype sendtype, void *recvbuf,
                                                                int recvcount, MPI_Datatype recvtype,
@@ -1075,5 +1007,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_iscatterv(const void *sendbuf, const 
                                                      MPI_Datatype recvtype, int root,
                                                      MPIR_Comm * comm_ptr,
                                                      MPI_Request * req) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_type_create_hook(MPIR_Datatype *
+                                                            datatype_p) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_type_free_hook(MPIR_Datatype *
+                                                          datatype_p) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_op_create_hook(MPIR_Op * op_p) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_op_free_hook(MPIR_Op * op_p) MPL_STATIC_INLINE_SUFFIX;
 
 #endif /* SHM_PROTOTYPES_H_INCLUDED */

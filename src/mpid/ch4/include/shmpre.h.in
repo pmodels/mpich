@@ -15,6 +15,7 @@
 @ch4_shm_pre_include@
 /* *INDENT-ON* */
 
+#define MPIDI_SHM_REQUEST_AM_DECL    @ch4_shm_amrequest_decl@
 #define MPIDI_SHM_REQUEST_DECL       @ch4_shm_request_decl@
 #define MPIDI_SHM_COMM_DECL          @ch4_shm_comm_decl@
 #endif /* SHMPRE_H_INCLUDED */

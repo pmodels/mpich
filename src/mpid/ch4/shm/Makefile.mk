@@ -20,5 +20,6 @@ noinst_HEADERS += src/mpid/ch4/shm/include/shm_impl.h
 
 include $(top_srcdir)/src/mpid/ch4/shm/stubshm/Makefile.mk
 include $(top_srcdir)/src/mpid/ch4/shm/posix/Makefile.mk
+include $(top_srcdir)/src/mpid/ch4/shm/shmam/Makefile.mk
 
 endif

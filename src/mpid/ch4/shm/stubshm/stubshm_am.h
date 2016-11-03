@@ -13,8 +13,8 @@
 #include "stubshm_impl.h"
 
 static inline int MPIDI_SHM_am_reg_handler(int handler_id,
-                                           MPIDI_SHM_am_origin_handler_fn origin_handler_fn,
-                                           MPIDI_SHM_am_target_handler_fn target_handler_fn)
+                                           MPIDI_NM_am_origin_handler_fn origin_handler_fn,
+                                           MPIDI_NM_am_target_handler_fn target_handler_fn)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

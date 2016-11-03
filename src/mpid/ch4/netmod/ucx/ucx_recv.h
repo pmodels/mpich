@@ -154,7 +154,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf,
                                                     MPIR_Comm * comm,
                                                     int context_offset, MPIR_Request ** request)
 {
-    return MPIDI_CH4U_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, request);
+    return MPIDI_CH4U_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, request, MPIDI_NM);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,

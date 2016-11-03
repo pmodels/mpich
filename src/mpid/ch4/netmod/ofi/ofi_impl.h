@@ -260,7 +260,7 @@ extern int MPIDI_OFI_progress_test_no_inline();
 extern int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                                      void **data, size_t * data_sz, int *is_contig,
                                      MPIDI_NM_am_completion_handler_fn * cmpl_handler_fn,
-                                     MPIR_Request ** req);
+                                     MPIR_Request ** req, MPIDI_call_context caller);
 extern void MPIDI_OFI_map_create(void **map);
 extern void MPIDI_OFI_map_destroy(void *map);
 extern void MPIDI_OFI_map_set(void *_map, uint64_t id, void *val);

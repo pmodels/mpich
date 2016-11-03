@@ -36,6 +36,10 @@ typedef struct {
 
 typedef struct {
     int dummy;
+} MPIDI_POSIX_am_request_t;
+
+typedef struct {
+    int dummy;
 } MPIDI_POSIX_comm_t;
 
 #endif /* SHM_POSIX_PRE_H_INCLUDED */

@@ -18,7 +18,8 @@
 #define FUNCNAME MPIDI_CH4I_am_request_create
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kind)
+static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kind,
+                                                         MPIDI_call_context caller)
 {
     MPIR_Request *req;
 
@@ -26,7 +27,18 @@ static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kin
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4I_REQUEST_CREATE);
 
     req = MPIR_Request_create(kind);
-    MPIDI_NM_am_request_init(req);
+
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+    if (MPIDI_SHM == caller) {
+        MPIDI_SHM_am_request_init(req);
+    }
+    else {
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
+        MPIDI_NM_am_request_init(req);
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+    }
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
+
     MPIR_Request_add_ref(req);
 
     CH4_COMPILE_TIME_ASSERT(sizeof(MPIDI_CH4U_req_ext_t) <= MPIDI_CH4I_BUF_POOL_SZ);
@@ -34,6 +46,9 @@ static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kin
         (MPIDI_CH4U_req_ext_t *) MPIDI_CH4R_get_buf(MPIDI_CH4_Global.buf_pool);
     MPIR_Assert(MPIDI_CH4U_REQUEST(req, req));
     MPIDI_CH4U_REQUEST(req, req->status) = 0;
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+    MPIDI_CH4U_REQUEST(req, caller) = caller;
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4I_REQUEST_CREATE);
 
@@ -77,7 +92,18 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_am_request_complete(MPIR_Request * req)
             MPIDI_CH4R_release_buf(MPIDI_CH4U_REQUEST(req, req));
             MPIDI_CH4U_REQUEST(req, req) = NULL;
         }
-        MPIDI_NM_am_request_finalize(req);
+
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+        if (MPIDI_SHM == MPIDI_CH4U_REQUEST(req, caller)) {
+            MPIDI_SHM_am_request_finalize(req);
+        }
+        else {
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
+            MPIDI_NM_am_request_finalize(req);
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+        }
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
+
         MPIDI_CH4U_request_release(req);
     }
 }
@@ -86,17 +112,17 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_am_request_complete(MPIR_Request * req)
  * the upper layer will have a chance to arbitrate who wins the race between
  * the netmod and the shmod. This will cancel the request of the other side and
  * take care of copying any relevant data. */
-static inline int MPIDI_CH4R_anysource_matched(MPIR_Request * rreq, int caller,
-                                               int *continue_matching)
+static inline int MPIDI_CH4R_anysource_matched(MPIR_Request * rreq,
+                                               MPIDI_call_context caller, int *continue_matching)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPIDI_CH4R_ANYSOURCE_MATCHED);
     MPIR_FUNC_VERBOSE_ENTER(MPIDI_CH4R_ANYSOURCE_MATCHED);
 
-    MPIR_Assert(MPIDI_CH4R_NETMOD == caller || MPIDI_CH4R_SHM == caller);
+    MPIR_Assert(MPIDI_NM == caller || MPIDI_SHM == caller);
 
-    if (MPIDI_CH4R_NETMOD == caller) {
+    if (MPIDI_NM == caller) {
 #ifdef MPIDI_BUILD_CH4_SHM
         mpi_errno = MPIDI_SHM_mpi_cancel_recv(rreq);
 
@@ -111,7 +137,7 @@ static inline int MPIDI_CH4R_anysource_matched(MPIR_Request * rreq, int caller,
 #endif
         *continue_matching = 0;
     }
-    else if (MPIDI_CH4R_SHM == caller) {
+    else if (MPIDI_SHM == caller) {
         mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq);
 
         /* If the netmod has already matched this request, shared memory will

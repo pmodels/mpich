@@ -88,7 +88,9 @@ enum {
     MPIDI_CH4U_WIN_LOCKALL,
     MPIDI_CH4U_WIN_LOCKALL_ACK,
     MPIDI_CH4U_WIN_UNLOCKALL,
-    MPIDI_CH4U_WIN_UNLOCKALL_ACK
+    MPIDI_CH4U_WIN_UNLOCKALL_ACK,
+
+    MPIDI_CH4U_PKT_MAX
 };
 
 enum {
@@ -99,12 +101,6 @@ enum {
     MPIDI_CH4U_EPOTYPE_FENCE = 4,         /**< MPI_Win_fence access/exposure epoch */
     MPIDI_CH4U_EPOTYPE_REFENCE = 5,       /**< MPI_Win_fence possible access/exposure epoch */
     MPIDI_CH4U_EPOTYPE_LOCK_ALL = 6       /**< MPI_Win_lock_all access epoch */
-};
-
-/* Enum for calling types between netmod and shm */
-enum {
-    MPIDI_CH4R_NETMOD = 0,
-    MPIDI_CH4R_SHM = 1
 };
 
 typedef struct MPIDI_CH4U_hdr_t {

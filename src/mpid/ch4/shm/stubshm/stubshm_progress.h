@@ -25,7 +25,7 @@ static inline int MPIDI_SHM_do_progress_send(int blocking, int *completion_count
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_progress(int blocking)
+static inline int MPIDI_SHM_progress(void *shm_context, int blocking)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

@@ -30,7 +30,7 @@ static inline int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
 
     MPIDI_UCX_global.am_handlers[msg_hdr->handler_id] (msg_hdr->handler_id, msg_hdr->payload,
                                                        &p_data, &data_sz,
-                                                       &is_contig, &cmpl_handler_fn, &rreq);
+                                                       &is_contig, &cmpl_handler_fn, &rreq, MPIDI_NM);
 
     if (!rreq)
         goto fn_exit;
