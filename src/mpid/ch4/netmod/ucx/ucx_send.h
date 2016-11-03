@@ -43,15 +43,13 @@ MPL_STATIC_INLINE_PREFIX int ucx_send_continous(const void *buf,
 
     if (ucp_request == NULL) {
         req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
-        MPIR_cc_set(&req->cc, 0);
-        MPIDI_UCX_REQ(req).a.ucp_request = NULL;
+         MPIR_cc_set(&req->cc, 0);
         goto fn_exit;
     }
 
     req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
     MPIR_Request_add_ref(req);
     ucp_request->req = req;
-    MPIDI_UCX_REQ(req).a.ucp_request = ucp_request;
     ucp_request_release(ucp_request);
 
   fn_exit:
