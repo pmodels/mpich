@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include "mpir_cvars.h"
 #include "pmi.h"
+#include "ch4_coll_params.h"
 
 /* Macros and inlines */
 /* match/ignore bit manipulation
@@ -268,6 +269,70 @@ typedef struct MPIDI_CH4_Global_t {
     void *netmod_context[8];
     MPIU_buf_pool_t *buf_pool;
 } MPIDI_CH4_Global_t;
+
+/* collectives enumeration for algorithms selection */
+enum {
+    ALLGATHER,
+    ALLGATHERV,
+    ALLREDUCE,
+    ALLTOALL,
+    ALLTOALLV,
+    ALLTOALLW,
+    BARRIER,
+    BCAST,
+    EXSCAN,
+    GATHER,
+    GATHERV,
+    REDUCE_SCATTER,
+    REDUCE,
+    SCAN,
+    SCATTER,
+    SCATERV,
+    IALLGATHER,
+    IALLGATHERV,
+    IALLREDUCE,
+    IALLTOALL,
+    IALLTOALLV,
+    IALLTOALLW,
+    IBARRIER,
+    IBCAST,
+    IEXSCAN,
+    IGATHER,
+    IGATHERV,
+    IREDUCE_SCATTER,
+    IREDUCE,
+    ISCAN,
+    ISCATTER,
+    ISCATERV,
+    COLLECTIVE_NUMBER
+};
+
+enum upper_layer_select_id{
+    MPIDI_NM,
+    MPIDI_SHM,
+    MPIDI_TOPO,
+};
+
+enum tuning_layers{
+    UPPER,
+    OFI,
+    POSIX,
+    LAYERS_NUMBER
+};
+
+typedef struct table_entry {
+    int algo_id;
+    int threshold;
+    algo_parameters_t params;
+} table_entry_t;
+
+typedef struct coll_params {
+    table_entry_t **table;
+    int table_size;
+} coll_params_t;
+
+extern table_entry_t ***tuning_table;
+extern int **table_size;
 extern MPIDI_CH4_Global_t MPIDI_CH4_Global;
 #ifdef MPL_USE_DBG_LOGGING
 extern MPL_dbg_class MPIDI_CH4_DBG_GENERAL;

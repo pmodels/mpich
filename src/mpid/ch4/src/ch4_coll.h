@@ -13,6 +13,9 @@
 
 #include "ch4_impl.h"
 #include "ch4r_proc.h"
+#include "ch4_coll_select.h"
+#include "ch4_coll_params.h"
+
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
@@ -22,7 +25,215 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * er
 MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast(void *buffer, int count, MPI_Datatype datatype,
                                          int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-    return MPIDI_NM_mpi_bcast(buffer, count, datatype, root, comm, errflag);
+    int algo_number;
+    algo_parameters_t *algo_parameters_ptr;
+    coll_params_t *coll_params;
+
+    coll_params = (coll_params_t *)comm->coll_params;
+
+    algo_number = MPIDI_Bcast_select(buffer, count, datatype, root, &(coll_params[BCAST]),
+                                     errflag, &algo_parameters_ptr);
+
+    switch(algo_number)
+    {
+        case MPIDI_NM:
+            MPIDI_NM_mpi_bcast(buffer, count, datatype, root, comm, errflag);
+            break;
+        case MPIDI_SHM:
+            MPIDI_SHM_mpi_bcast(buffer, count, datatype, root, comm, errflag);
+            break;
+        case MPIDI_TOPO:
+            if(comm->node_roots_comm != NULL)
+            {
+                MPIDI_NM_mpi_bcast(buffer, count, datatype, root, comm->node_roots_comm, errflag);
+            }
+            if(comm->node_comm != NULL)
+            {
+                MPIDI_SHM_mpi_bcast(buffer, count, datatype, root, comm->node_comm, errflag);
+            }
+            break;
+    }
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_Bcast_knomial(
+    void *buffer,
+    int count,
+    MPI_Datatype datatype,
+    int root,
+    MPIR_Comm *comm_ptr,
+    MPIR_Errflag_t *errflag,
+    algo_parameters_t *params)
+{
+    int rank, comm_size;
+    int relative_rank, mask, max_mask;
+    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno_ret = MPI_SUCCESS;
+    MPI_Aint nbytes=0, recvd_size = 0;
+    MPI_Aint type_size = 0, position = 0;
+    MPI_Aint true_extent, true_lb;
+    int is_contig, k;
+    void *tmp_buf = NULL, *sbuf = NULL;
+    MPIR_Datatype *dtp;
+    MPI_Datatype stype;
+    MPI_Status status;
+    MPIR_CHKLMEM_DECL(1);
+    int parent_rank = -1, child = -1;
+    int is_split = 0;
+    MPI_Aint tot_size, seg_size;
+
+    /****************************from algo params***********************/
+    int knomial_radix = params->bcast_knomial_parameters.radix;
+    int64_t block_size = params->bcast_knomial_parameters.block_size;
+    /*******************************************************************/
+
+    MPID_Datatype_get_size_macro(datatype, type_size);
+    nbytes = type_size * count;
+    if (nbytes == 0)
+        goto fn_exit; /* nothing to do */
+
+    comm_size = comm_ptr->local_size;
+    rank = comm_ptr->rank;
+
+
+    /* If there is only one process, return */
+    if (comm_size == 1) goto fn_exit;
+
+    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN)
+    {
+        is_contig = 1;
+    }
+    else
+    {
+        MPID_Datatype_get_ptr(datatype, dtp);
+        is_contig = dtp->is_contig;
+    }
+
+    MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
+
+    if (true_lb) is_contig = 0;
+
+    /* Default values sutiable for contig messages which less than block_size */
+    sbuf = buffer;
+    stype = datatype;
+    seg_size = (int64_t)count;
+    if (!is_contig)
+    {
+        MPIR_CHKLMEM_MALLOC(tmp_buf, void *, nbytes, mpi_errno, "tmp_buf");
+
+        /* TODO: Pipeline the packing and communication */
+        position = 0;
+        if (rank == root)
+        {
+            mpi_errno = MPIR_Pack_impl(buffer, count, datatype, tmp_buf, nbytes,
+                                       &position);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        }
+        /* Redefine buffer vars to transfer noncontig message as bytes array */
+        sbuf = tmp_buf;
+        stype = MPI_BYTE;
+        seg_size = nbytes;
+    }
+    mask = 1;
+
+    relative_rank = (rank >= root) ? rank - root : rank - root + comm_size;
+
+    /* Find my parent rank */
+    while (mask < comm_size)
+    {
+        if (relative_rank % (knomial_radix*mask))
+        {
+             parent_rank = relative_rank/(knomial_radix*mask)*(knomial_radix*mask) + root;
+             if (parent_rank >= comm_size ) parent_rank -= comm_size;
+             break;
+        }
+        mask *= knomial_radix;
+    }
+
+    mask /= knomial_radix;
+    max_mask= mask;
+
+    if (comm_size > 2 && nbytes > block_size)
+    {
+        /* Message is big and we have several processes, lets split the message
+         * sbuf is alredy initialized to either buffer (contig case) or tmp_buf (non-contig) */
+        is_split = 1;
+        seg_size = block_size;
+        stype = MPI_BYTE;
+    }
+    else
+    {
+        is_split = 0;
+        /* message will not be split, so set block_size to the total number of bytes
+         * to have just one iteration of "while" cycle below */
+        block_size = nbytes;
+    }
+
+    tot_size = nbytes;
+    while (tot_size > 0)
+    {
+        /* Receive from the parent */
+        if (rank != root)
+        {
+            mpi_errno = MPIC_Recv(sbuf, seg_size, stype, parent_rank,
+                                  MPIR_BCAST_TAG,comm_ptr, &status, errflag);
+            if (mpi_errno)
+            {
+                /* for communication errors, just record the error but continue */
+                *errflag = TRUE;
+                MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+            }
+        }
+
+        /* Send to the children */
+        while (mask > 0)
+        {
+            for(k = 1; k < knomial_radix; k++)
+            {
+
+                if (relative_rank + mask*k < comm_size)
+                {
+                    child = rank + mask*k;
+                    if (child >= comm_size) child -= comm_size;
+                    mpi_errno = MPIC_Send(sbuf, seg_size, stype, child, MPIR_BCAST_TAG, comm_ptr, errflag);
+                    if (mpi_errno)
+                    {
+                        /* for communication errors, just record the error but continue */
+                        *errflag = TRUE;
+                        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+                        MPIR_ERR_ADD(mpi_errno_ret, mpi_errno);
+                    }
+                }
+            }
+            mask /= knomial_radix;
+        }
+        mask = max_mask;
+        tot_size -= block_size;
+        sbuf = (char *)sbuf + seg_size;
+        seg_size = MPL_MIN(block_size, tot_size);
+    }
+    if (!is_contig)
+    {
+        if (rank != root)
+        {
+            position = 0;
+            mpi_errno = MPIR_Unpack_impl(tmp_buf, nbytes, &position, buffer,
+                                         count, datatype);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        }
+    }
+
+fn_exit:
+    MPIR_CHKLMEM_FREEALL();
+    /* --BEGIN ERROR HANDLING-- */
+    if (mpi_errno_ret)
+        mpi_errno = mpi_errno_ret;
+    else if (*errflag)
+        MPIR_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+    /* --END ERROR HANDLING-- */
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce(const void *sendbuf, void *recvbuf, int count,

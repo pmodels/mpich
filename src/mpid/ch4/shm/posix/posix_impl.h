@@ -37,6 +37,7 @@
 #define MPIDI_POSIX_TYPEREADY       5
 #define MPIDI_POSIX_TYPEACK         6
 #define MPIDI_POSIX_REQUEST(req)    (&(req)->dev.ch4.shm.posix)
+#define MPIDI_POSIX_COMM(comm)      ((comm)->dev.ch4.shm.posix)
 
 /* ---------------------------------------------------- */
 /* shm specific object data                             */

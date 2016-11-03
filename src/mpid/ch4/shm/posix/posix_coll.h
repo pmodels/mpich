@@ -13,6 +13,8 @@
 
 #include "posix_impl.h"
 #include "ch4_impl.h"
+#include "ch4_coll_select.h"
+#include "ch4_coll_params.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_SHM_mpi_barrier
@@ -37,15 +39,56 @@ static inline int MPIDI_SHM_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * e
 static inline int MPIDI_SHM_mpi_bcast(void *buffer, int count, MPI_Datatype datatype,
                                       int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SHM_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_SHM_BCAST);
 
-    mpi_errno = MPIR_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
+    int algo_number;
+    algo_parameters_t *algo_parameters_ptr;
+    coll_params_t *coll_params;
+
+    coll_params = (coll_params_t *)MPIDI_POSIX_COMM(comm_ptr).coll_params;
+
+    algo_number = MPIDI_SHM_Bcast_select(buffer, count, datatype, root, &coll_params[BCAST], errflag, &algo_parameters_ptr);
+
+    switch(algo_number)
+    {
+        case 3:
+            mpi_errno = MPIDI_SHM_Bcast_knomial(buffer, count, datatype, root, comm_ptr, errflag, algo_parameters_ptr);
+            break;
+        default:
+            mpi_errno = MPIR_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
+            break;
+    }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_SHM_BCAST);
     return mpi_errno;
 }
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_SHM_Bcast_knomial
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_SHM_Bcast_knomial(
+    void *buffer,
+    int count,
+    MPI_Datatype datatype,
+    int root,
+    MPIR_Comm *comm_ptr,
+    MPIR_Errflag_t *errflag,
+    algo_parameters_t *params)
+{
+    int mpi_errno = MPI_SUCCESS;
+    mpi_errno = MPIDI_CH4_Bcast_knomial(buffer,
+                                        count,
+                                        datatype,
+                                        root,
+                                        comm_ptr,
+                                        errflag,
+                                        params);
+    return mpi_errno;
+}
+
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_SHM_mpi_allreduce
