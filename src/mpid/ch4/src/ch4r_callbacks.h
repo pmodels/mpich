@@ -60,7 +60,7 @@ static inline int MPIDI_CH4U_check_cmpl_order(MPIR_Request * req,
     MPIDI_CH4U_REQUEST(req, req->cmpl_handler_fn) = (void *) cmpl_handler_fn;
     MPIDI_CH4U_REQUEST(req, req->request) = (uint64_t) req;
     /* MPIDI_CS_ENTER(); */
-    MPL_DL_APPEND(MPIDI_CH4_Global.cmpl_list, req->dev.ch4.ch4u.req);
+    MPL_DL_APPEND(MPIDI_CH4_Global.cmpl_list, req->dev.ch4.am.req);
     /* MPIDI_CS_EXIT(); */
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_CHECK_CMPL_ORDER);

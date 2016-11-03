@@ -81,7 +81,7 @@ static inline int MPIDI_OFI_init_generic(int rank,
                             offsetof(MPIDI_OFI_dynamic_process_request_t, context));
     CH4_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_win_request_t, context));
-    CH4_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.ch4u.netmod_am.ofi.context) ==
+    CH4_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.am.netmod_am.ofi.context) ==
                             offsetof(struct MPIR_Request, dev.ch4.netmod.ofi.context));
     CH4_COMPILE_TIME_ASSERT(sizeof(MPIDI_Devreq_t) >= sizeof(MPIDI_OFI_request_t));
     CH4_COMPILE_TIME_ASSERT(sizeof(MPIR_Request) >= sizeof(MPIDI_OFI_win_request_t));

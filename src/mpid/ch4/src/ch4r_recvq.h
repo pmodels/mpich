@@ -27,7 +27,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_enqueue_posted(MPIR_Request * req,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_ENQUEUE_POSTED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_ENQUEUE_POSTED);
     MPIDI_CH4U_REQUEST(req, req->rreq.request) = (uint64_t) req;
-    MPL_DL_APPEND(*list, &req->dev.ch4.ch4u.req->rreq);
+    MPL_DL_APPEND(*list, &req->dev.ch4.am.req->rreq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_ENQUEUE_POSTED);
 }
 
@@ -41,7 +41,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_enqueue_unexp(MPIR_Request * req,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_ENQUEUE_UNEXP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_ENQUEUE_UNEXP);
     MPIDI_CH4U_REQUEST(req, req->rreq.request) = (uint64_t) req;
-    MPL_DL_APPEND(*list, &req->dev.ch4.ch4u.req->rreq);
+    MPL_DL_APPEND(*list, &req->dev.ch4.am.req->rreq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_ENQUEUE_UNEXP);
 }
 
@@ -53,7 +53,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_delete_unexp(MPIR_Request * req, MPIDI_
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_DELETE_UNEXP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_DELETE_UNEXP);
-    MPL_DL_DELETE(*list, &req->dev.ch4.ch4u.req->rreq);
+    MPL_DL_DELETE(*list, &req->dev.ch4.am.req->rreq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_DELETE_UNEXP);
 }
 
@@ -191,7 +191,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_enqueue_posted(MPIR_Request * req,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_ENQUEUE_POSTED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_ENQUEUE_POSTED);
     MPIDI_CH4U_REQUEST(req, req->rreq.request) = (uint64_t) req;
-    MPL_DL_APPEND(MPIDI_CH4_Global.posted_list, &req->dev.ch4.ch4u.req->rreq);
+    MPL_DL_APPEND(MPIDI_CH4_Global.posted_list, &req->dev.ch4.am.req->rreq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_ENQUEUE_POSTED);
 }
 
@@ -205,7 +205,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_enqueue_unexp(MPIR_Request * req,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_ENQUEUE_UNEXP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_ENQUEUE_UNEXP);
     MPIDI_CH4U_REQUEST(req, req->rreq.request) = (uint64_t) req;
-    MPL_DL_APPEND(MPIDI_CH4_Global.unexp_list, &req->dev.ch4.ch4u.req->rreq);
+    MPL_DL_APPEND(MPIDI_CH4_Global.unexp_list, &req->dev.ch4.am.req->rreq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_ENQUEUE_UNEXP);
 }
 
@@ -217,7 +217,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_delete_unexp(MPIR_Request * req, MPIDI_
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_DELETE_UNEXP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_DELETE_UNEXP);
-    MPL_DL_DELETE(MPIDI_CH4_Global.unexp_list, &req->dev.ch4.ch4u.req->rreq);
+    MPL_DL_DELETE(MPIDI_CH4_Global.unexp_list, &req->dev.ch4.am.req->rreq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_DELETE_UNEXP);
 }
 

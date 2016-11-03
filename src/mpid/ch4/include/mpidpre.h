@@ -174,7 +174,7 @@ typedef struct {
 
     union {
         /* The first fields are used by the CH4U apis */
-        MPIDI_CH4U_req_t ch4u;
+        MPIDI_CH4U_req_t am;
 
         /* Used by the netmod direct apis */
         union {
@@ -186,7 +186,7 @@ typedef struct {
 } MPIDI_Devreq_t;
 #define MPIDI_REQUEST_HDR_SIZE              offsetof(struct MPIR_Request, dev.ch4.netmod)
 #define MPIDI_CH4I_REQUEST(req,field)       (((req)->dev).field)
-#define MPIDI_CH4U_REQUEST(req,field)       (((req)->dev.ch4.ch4u).field)
+#define MPIDI_CH4U_REQUEST(req,field)       (((req)->dev.ch4.am).field)
 
 #ifdef MPIDI_BUILD_CH4_SHM
 #define MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)  (((req)->dev).anysource_partner_request)
