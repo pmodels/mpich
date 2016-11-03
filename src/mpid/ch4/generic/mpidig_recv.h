@@ -408,7 +408,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
 
     /* MPIDI_CS_ENTER(); */
     found =
-        MPIDI_CH4U_delete_posted(&rreq->dev.ch4.ch4u.req->rreq,
+        MPIDI_CH4U_delete_posted(&rreq->dev.ch4.am.req->rreq,
                                  &MPIDI_CH4U_COMM(root_comm, posted_list));
     /* MPIDI_CS_EXIT(); */
 

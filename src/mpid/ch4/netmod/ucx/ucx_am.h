@@ -39,10 +39,10 @@ static inline void MPIDI_UCX_am_isend_callback(void *request, ucs_status_t statu
 
 
     MPIR_Request *req = ucp_request->req;
-    int handler_id = req->dev.ch4.ch4u.netmod_am.ucx.handler_id;
+    int handler_id = req->dev.ch4.am.netmod_am.ucx.handler_id;
 
-    MPL_free(req->dev.ch4.ch4u.netmod_am.ucx.pack_buffer);
-    req->dev.ch4.ch4u.netmod_am.ucx.pack_buffer = NULL;
+    MPL_free(req->dev.ch4.am.netmod_am.ucx.pack_buffer);
+    req->dev.ch4.am.netmod_am.ucx.pack_buffer = NULL;
     MPIDI_UCX_global.send_cmpl_handlers[handler_id] (req);
     ucp_request->req = NULL;
 
@@ -170,8 +170,8 @@ static inline int MPIDI_NM_am_isend(int rank,
     /* request completed between the UCP call and now. free resources
      * and complete the send request */
     /* set the ch4r request inside the UCP request */
-    sreq->dev.ch4.ch4u.netmod_am.ucx.pack_buffer = send_buf;
-    sreq->dev.ch4.ch4u.netmod_am.ucx.handler_id = handler_id;
+    sreq->dev.ch4.am.netmod_am.ucx.pack_buffer = send_buf;
+    sreq->dev.ch4.am.netmod_am.ucx.handler_id = handler_id;
     ucp_request->req = sreq;
     ucp_request_release(ucp_request);
 
@@ -296,8 +296,8 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
     }
     else {
         /* set the ch4r request inside the UCP request */
-        sreq->dev.ch4.ch4u.netmod_am.ucx.pack_buffer = send_buf;
-        sreq->dev.ch4.ch4u.netmod_am.ucx.handler_id = handler_id;
+        sreq->dev.ch4.am.netmod_am.ucx.pack_buffer = send_buf;
+        sreq->dev.ch4.am.netmod_am.ucx.handler_id = handler_id;
         ucp_request->req = sreq;
         ucp_request_release(ucp_request);
 
