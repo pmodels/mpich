@@ -562,7 +562,7 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPIR_Request * rreq)
 
 int MPID_Request_complete(MPIR_Request *req)
 {
-    int incomplete;
+    int incomplete, notify_counter;
     int mpi_errno = MPI_SUCCESS;
     static int called_cnt = 0;
 
@@ -578,6 +578,10 @@ int MPID_Request_complete(MPIR_Request *req)
                 MPIR_ERR_POP(mpi_errno);
             }
         }
+
+        /* decrement completion_notification counter */
+        if (req->completion_notification)
+            MPIR_cc_decr(req->completion_notification, &notify_counter);
 
 	MPIR_Request_free(req);
 	MPIDI_CH3_Progress_signal_completion();
