@@ -26,7 +26,6 @@ noinst_HEADERS += src/mpid/ch4/src/ch4_comm.h     \
                   src/mpid/ch4/src/ch4_spawn.h    \
                   src/mpid/ch4/src/ch4_win.h      \
                   src/mpid/ch4/src/ch4r_probe.h   \
-                  src/mpid/ch4/src/ch4r_recv.h    \
                   src/mpid/ch4/src/ch4r_rma.h     \
                   src/mpid/ch4/src/ch4r_win.h     \
                   src/mpid/ch4/src/ch4r_init.h    \
@@ -35,7 +34,6 @@ noinst_HEADERS += src/mpid/ch4/src/ch4_comm.h     \
                   src/mpid/ch4/src/ch4r_recvq.h   \
                   src/mpid/ch4/src/ch4i_util.h 	  \
                   src/mpid/ch4/src/ch4r_symheap.h \
-                  src/mpid/ch4/src/ch4r_send.h	  \
                   src/mpid/ch4/src/ch4r_buf.h     \
                   src/mpid/ch4/src/ch4r_request.h
 
