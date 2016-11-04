@@ -281,7 +281,7 @@ static inline void MPIR_Request_free(MPIR_Request *req)
             MPL_free(req->u.ureq.greq_fns);
         }
 
-        MPID_Request_free_hook(req);
+        MPID_Request_destroy_hook(req);
 
         MPIR_Handle_obj_free(&MPIR_Request_mem, req);
     }

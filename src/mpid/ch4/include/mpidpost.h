@@ -22,7 +22,7 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_create_hook(MPIR_Request * req)
 #endif
 }
 
-MPL_STATIC_INLINE_PREFIX void MPID_Request_free_hook(MPIR_Request * req)
+MPL_STATIC_INLINE_PREFIX void MPID_Request_destroy_hook(MPIR_Request * req)
 {
     return;
 }

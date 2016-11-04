@@ -696,7 +696,7 @@ int MPID_Get_universe_size(int  * universe_size);
 int MPID_Comm_get_lpid(MPIR_Comm *comm_ptr, int idx, int * lpid_ptr, MPL_bool is_remote);
 
 void MPID_Request_create_hook(MPIR_Request *);
-void MPID_Request_free_hook(MPIR_Request *);
+void MPID_Request_destroy_hook(MPIR_Request *);
 int MPID_Request_complete(MPIR_Request *);
 
 void *MPID_Alloc_mem( size_t size, MPIR_Info *info );
