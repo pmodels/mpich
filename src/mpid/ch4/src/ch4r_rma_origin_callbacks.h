@@ -13,6 +13,9 @@
 
 #include "ch4r_request.h"
 
+/* This file includes all RMA callback routines on the packet issuing side.
+ * All handler functions are named with suffix "_origin_cmpl_handler". */
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH4U_put_ack_origin_cmpl_handler
 #undef FCNAME

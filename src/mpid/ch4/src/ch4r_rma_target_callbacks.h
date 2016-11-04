@@ -14,6 +14,10 @@
 #include "ch4r_request.h"
 #include "ch4r_callbacks.h"
 
+/* This file includes all RMA callback routines and the completion function of
+ * each callback (e.g., received all data) on the packet receiving side. All handler
+ * functions are named with suffix "_target_handler", and all handler completion
+ * function are named with suffix "_cmpl_handler_fn". */
 
 #undef FUNCNAME
 #define FUNCNAME ack_put
@@ -1349,9 +1353,8 @@ static inline int MPIDI_CH4U_put_target_handler(int handler_id, void *am_hdr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_PUT_HANDLER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_PUT_HANDLER);
 
-    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__UNDEFINED, 1);
+    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(rreq);
-    rreq->kind = MPIR_REQUEST_KIND__RMA;
     *req = rreq;
 
     MPIDI_CH4U_REQUEST(*req, req->preq.preq_ptr) = msg_hdr->preq_ptr;
@@ -1447,9 +1450,8 @@ static inline int MPIDI_CH4U_put_iov_target_handler(int handler_id, void *am_hdr
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_PUT_IOV_HANDLER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_PUT_IOV_HANDLER);
 
-    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__UNDEFINED, 1);
+    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(rreq);
-    rreq->kind = MPIR_REQUEST_KIND__RMA;
     *req = rreq;
 
     MPIDI_CH4U_REQUEST(*req, req->preq.preq_ptr) = msg_hdr->preq_ptr;
@@ -1503,9 +1505,8 @@ static inline int MPIDI_CH4U_put_iov_ack_target_handler(int handler_id, void *am
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_PUT_IOV_ACK_HANDLER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_PUT_IOV_ACK_HANDLER);
 
-    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__UNDEFINED, 1);
+    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(rreq);
-    rreq->kind = MPIR_REQUEST_KIND__RMA;
 
     origin_req = (MPIR_Request *) msg_hdr->origin_preq_ptr;
     dat_msg.preq_ptr = msg_hdr->target_preq_ptr;
@@ -1552,9 +1553,8 @@ static inline int MPIDI_CH4U_acc_iov_ack_target_handler(int handler_id, void *am
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_ACC_IOV_ACK_HANDLER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_ACC_IOV_ACK_HANDLER);
 
-    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__UNDEFINED, 1);
+    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(rreq);
-    rreq->kind = MPIR_REQUEST_KIND__RMA;
 
     origin_req = (MPIR_Request *) msg_hdr->origin_preq_ptr;
     dat_msg.preq_ptr = msg_hdr->target_preq_ptr;
@@ -1601,9 +1601,8 @@ static inline int MPIDI_CH4U_get_acc_iov_ack_target_handler(int handler_id, void
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_GET_ACC_IOV_ACK_HANDLER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_GET_ACC_IOV_ACK_HANDLER);
 
-    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__UNDEFINED, 1);
+    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(rreq);
-    rreq->kind = MPIR_REQUEST_KIND__RMA;
 
     origin_req = (MPIR_Request *) msg_hdr->origin_preq_ptr;
     dat_msg.preq_ptr = msg_hdr->target_preq_ptr;
@@ -1752,9 +1751,8 @@ static inline int MPIDI_CH4U_cswap_target_handler(int handler_id, void *am_hdr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_CSWAP_HANDLER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_CSWAP_HANDLER);
 
-    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__UNDEFINED, 1);
+    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(rreq);
-    rreq->kind = MPIR_REQUEST_KIND__RMA;
     *req = rreq;
 
     *cmpl_handler_fn = cswap_cmpl_handler_fn;
@@ -1817,9 +1815,8 @@ static inline int MPIDI_CH4U_acc_target_handler(int handler_id, void *am_hdr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_HANDLE_ACC_REQ);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_HANDLE_ACC_REQ);
 
-    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__UNDEFINED, 1);
+    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(rreq);
-    rreq->kind = MPIR_REQUEST_KIND__RMA;
     *req = rreq;
 
     MPIDI_Datatype_check_size(msg_hdr->origin_datatype, msg_hdr->origin_count, data_sz);
@@ -1929,9 +1926,8 @@ static inline int MPIDI_CH4U_acc_iov_target_handler(int handler_id, void *am_hdr
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_HANDLE_ACC_IOV_REQ);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_HANDLE_ACC_IOV_REQ);
 
-    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__UNDEFINED, 1);
+    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(rreq);
-    rreq->kind = MPIR_REQUEST_KIND__RMA;
     *req = rreq;
 
     MPL_HASH_FIND(dev.ch4u.hash_handle, MPIDI_CH4_Global.win_hash,
@@ -2022,9 +2018,8 @@ static inline int MPIDI_CH4U_get_target_handler(int handler_id, void *am_hdr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_GET_HANDLER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_GET_HANDLER);
 
-    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__UNDEFINED, 1);
+    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(rreq);
-    rreq->kind = MPIR_REQUEST_KIND__RMA;
 
     *req = rreq;
     *cmpl_handler_fn = get_cmpl_handler_fn;
@@ -2088,9 +2083,8 @@ static inline int MPIDI_CH4U_get_ack_target_handler(int handler_id, void *am_hdr
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_GET_ACK_HANDLER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_GET_ACK_HANDLER);
 
-    greq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__UNDEFINED, 1);
+    greq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(greq);
-    greq->kind = MPIR_REQUEST_KIND__RMA;
     *req = greq;
 
     rreq = (MPIR_Request *) msg_hdr->greq_ptr;
