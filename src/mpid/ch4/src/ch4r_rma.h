@@ -40,9 +40,8 @@ static inline int do_put(const void *origin_addr,
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
     /* two ref counts for progress engine and caller. */
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__UNDEFINED, 2);
+    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
     MPIR_Assert(sreq);
-    sreq->kind = MPIR_REQUEST_KIND__RMA;
 
     MPIDI_CH4U_REQUEST(sreq, req->preq.win_ptr) = win;
     MPIDI_Datatype_check_size(origin_datatype, origin_count, data_sz);
@@ -167,9 +166,8 @@ static inline int do_get(void *origin_addr,
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
     /* two ref counts for progress engine and caller. */
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__UNDEFINED, 2);
+    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
     MPIR_Assert(sreq);
-    sreq->kind = MPIR_REQUEST_KIND__RMA;
 
     MPIDI_Datatype_check_size(origin_datatype, origin_count, data_sz);
     if (data_sz == 0 || target_rank == MPI_PROC_NULL) {
@@ -281,9 +279,8 @@ MPL_STATIC_INLINE_PREFIX int do_accumulate(const void *origin_addr,
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
     /* two ref counts for progress engine and caller. */
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__UNDEFINED, 2);
+    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
     MPIR_Assert(sreq);
-    sreq->kind = MPIR_REQUEST_KIND__RMA;
 
     MPIDI_Datatype_get_size_dt_ptr(origin_count, origin_datatype, data_sz, dt_ptr);
     MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
@@ -423,9 +420,8 @@ MPL_STATIC_INLINE_PREFIX int do_get_accumulate(const void *origin_addr,
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
     /* two ref counts for progress engine and caller. */
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__UNDEFINED, 2);
+    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
     MPIR_Assert(sreq);
-    sreq->kind = MPIR_REQUEST_KIND__RMA;
 
     MPIDI_Datatype_get_size_dt_ptr(origin_count, origin_datatype, data_sz, dt_ptr);
     MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
@@ -829,9 +825,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_compare_and_swap(const void *origin_
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__UNDEFINED, 1);
+    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
     MPIR_Assert(sreq);
-    sreq->kind = MPIR_REQUEST_KIND__RMA;
 
     MPIDI_Datatype_check_size(datatype, 1, data_sz);
     if (data_sz == 0 || target_rank == MPI_PROC_NULL) {
