@@ -7,6 +7,10 @@
  *  Copyright (C) Mellanox Technologies Ltd. 2016. ALL RIGHTS RESERVED
  */
 
+#include "mpl.h"
+
+MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
+
 #ifndef NETMOD_DIRECT
 #define NETMOD_DISABLE_INLINES
 #include <mpidimpl.h>

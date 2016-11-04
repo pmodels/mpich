@@ -388,7 +388,7 @@ static int dbg_process_args(int *argc_p, char ***argv_p)
  * could! consider MPICH: we moved all our logging code into MPL, so it should
  * have an MPL_ prefix, but all the documentation assumes an "MPICH_" prefix.
  * So we'll look for both. */
-static char *getenv_either(char *env_a, char *env_b)
+static char *getenv_either(const char *env_a, const char *env_b)
 {
     char *s;
     if ( (s = getenv(env_a)) == NULL)
