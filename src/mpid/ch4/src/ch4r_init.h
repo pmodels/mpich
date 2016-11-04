@@ -206,6 +206,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_init(MPIR_Comm * comm_world, MPIR_Co
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_GET_ACC_REQ,
+                                        &MPIDI_CH4U_get_acc_origin_cmpl_handler,
+                                        &MPIDI_CH4U_get_acc_target_handler);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
     mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_ACC_ACK,
                                         NULL, &MPIDI_CH4U_acc_ack_target_handler);
     if (mpi_errno)
@@ -290,14 +296,31 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_init(MPIR_Comm * comm_world, MPIR_Co
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_GET_ACC_IOV_REQ,
+                                        &MPIDI_CH4U_get_acc_iov_origin_cmpl_handler,
+                                        &MPIDI_CH4U_get_acc_iov_target_handler);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
     mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_ACC_IOV_ACK,
                                         NULL, &MPIDI_CH4U_acc_iov_ack_target_handler);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_GET_ACC_IOV_ACK,
+                                        NULL, &MPIDI_CH4U_get_acc_iov_ack_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
     mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_ACC_DAT_REQ,
                                         &MPIDI_CH4U_acc_data_origin_cmpl_handler,
                                         &MPIDI_CH4U_acc_data_target_handler);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_GET_ACC_DAT_REQ,
+                                        &MPIDI_CH4U_get_acc_data_origin_cmpl_handler,
+                                        &MPIDI_CH4U_get_acc_data_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 

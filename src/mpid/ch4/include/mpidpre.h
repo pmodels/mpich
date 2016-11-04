@@ -124,7 +124,6 @@ typedef struct MPIDI_CH4U_acc_req_t {
     MPI_Op op;
     void *result_addr;
     int result_count;
-    int do_get;
     void *origin_addr;
     MPI_Datatype result_datatype;
 } MPIDI_CH4U_acc_req_t;
