@@ -215,7 +215,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_event(struct fi_cq_tagged_entry *wc,
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig));
 
         dtype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
-        MPIDI_CH4U_request_release(sreq);
+        MPIR_Request_free(sreq);
     }   /* c != 0, ssend */
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_SEND_EVENT);
@@ -268,7 +268,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge_event(struct fi_cq_tagged_entry
             MPL_free(MPIDI_OFI_REQUEST(sreq, noncontig));
 
         dtype_release_if_not_builtin(MPIDI_OFI_REQUEST(sreq, datatype));
-        MPIDI_CH4U_request_release(sreq);
+        MPIR_Request_free(sreq);
     }   /* c != 0, ssend */
 
   fn_exit:
@@ -375,7 +375,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_chunk_done_event(struct fi_cq_tagged_entr
     MPIR_cc_decr(creq->parent->cc_ptr, &c);
 
     if (c == 0)
-        MPIDI_CH4U_request_release(creq->parent);
+        MPIR_Request_free(creq->parent);
 
     MPL_free(creq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_CHUNK_DONE_EVENT);
@@ -397,7 +397,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_inject_emu_event(struct fi_cq_tagged_entr
 
     if (!incomplete) {
         MPL_free(MPIDI_OFI_REQUEST(req, util.inject_buf));
-        MPIDI_CH4U_request_release(req);
+        MPIR_Request_free(req);
         OPA_decr_int(&MPIDI_Global.am_inflight_inject_emus);
     }
 
