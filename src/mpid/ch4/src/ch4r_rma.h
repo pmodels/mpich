@@ -305,7 +305,6 @@ MPL_STATIC_INLINE_PREFIX int do_accumulate(const void *origin_addr,
 
     am_hdr.req_ptr = (uint64_t) sreq;
     am_hdr.origin_count = origin_count;
-    am_hdr.do_get = 0;  /* FIXME: separate packet type for get_acc. */
 
     if (HANDLE_GET_KIND(origin_datatype) == HANDLE_KIND_BUILTIN) {
         am_hdr.origin_datatype = origin_datatype;
@@ -475,7 +474,6 @@ MPL_STATIC_INLINE_PREFIX int do_get_accumulate(const void *origin_addr,
     am_hdr.win_id = MPIDI_CH4U_WIN(win, win_id);
     am_hdr.src_rank = win->comm_ptr->rank;
 
-    am_hdr.do_get = 1;
     am_hdr.result_data_sz = result_data_sz;
 
     /* MPIDI_CS_ENTER(); */
@@ -487,7 +485,7 @@ MPL_STATIC_INLINE_PREFIX int do_get_accumulate(const void *origin_addr,
         am_hdr.n_iov = 0;
         MPIDI_CH4U_REQUEST(sreq, req->areq.dt_iov) = NULL;
 
-        mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_ACC_REQ,
+        mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_GET_ACC_REQ,
                                       &am_hdr, sizeof(am_hdr), origin_addr,
                                       (op == MPI_NO_OP) ? 0 : origin_count,
                                       origin_datatype, sreq, NULL);
@@ -525,7 +523,7 @@ MPL_STATIC_INLINE_PREFIX int do_get_accumulate(const void *origin_addr,
     MPIDI_CH4U_REQUEST(sreq, req->areq.dt_iov) = dt_iov;
 
     if ((am_iov[0].iov_len + am_iov[1].iov_len) <= MPIDI_NM_am_hdr_max_sz()) {
-        mpi_errno = MPIDI_NM_am_isendv(target_rank, win->comm_ptr, MPIDI_CH4U_ACC_REQ,
+        mpi_errno = MPIDI_NM_am_isendv(target_rank, win->comm_ptr, MPIDI_CH4U_GET_ACC_REQ,
                                        &am_iov[0], 2, origin_addr,
                                        (op == MPI_NO_OP) ? 0 : origin_count,
                                        origin_datatype, sreq, NULL);
@@ -537,7 +535,7 @@ MPL_STATIC_INLINE_PREFIX int do_get_accumulate(const void *origin_addr,
         MPIDI_CH4U_REQUEST(sreq, src_rank) = target_rank;
         dtype_add_ref_if_not_builtin(origin_datatype);
 
-        mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_ACC_IOV_REQ,
+        mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_GET_ACC_IOV_REQ,
                                       &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
                                       am_iov[1].iov_len, MPI_BYTE, sreq, NULL);
     }

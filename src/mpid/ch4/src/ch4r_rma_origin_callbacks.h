@@ -157,6 +157,20 @@ static inline int MPIDI_CH4U_acc_origin_cmpl_handler(MPIR_Request * sreq)
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_CH4U_get_acc_origin_cmpl_handler
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_CH4U_get_acc_origin_cmpl_handler(MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_GET_ACC_TX_HANDLER);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_GET_ACC_TX_HANDLER);
+    MPIDI_CH4I_am_request_complete(sreq);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_GET_ACC_TX_HANDLER);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_CH4U_put_data_origin_cmpl_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -185,6 +199,20 @@ static inline int MPIDI_CH4U_acc_data_origin_cmpl_handler(MPIR_Request * sreq)
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_CH4U_get_acc_data_origin_cmpl_handler
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_CH4U_get_acc_data_origin_cmpl_handler(MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_GET_ACC_DATA_TX_HANDLER);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_GET_ACC_DATA_TX_HANDLER);
+    MPIDI_CH4I_am_request_complete(sreq);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_GET_ACC_DATA_TX_HANDLER);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_CH4U_put_iov_origin_cmpl_handler
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -209,6 +237,20 @@ static inline int MPIDI_CH4U_acc_iov_origin_cmpl_handler(MPIR_Request * sreq)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_ACC_IOV_TX_HANDLER);
     MPIDI_CH4I_am_request_complete(sreq);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_ACC_IOV_TX_HANDLER);
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH4U_get_acc_iov_origin_cmpl_handler
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_CH4U_get_acc_iov_origin_cmpl_handler(MPIR_Request * sreq)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_GET_ACC_IOV_TX_HANDLER);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_GET_ACC_IOV_TX_HANDLER);
+    MPIDI_CH4I_am_request_complete(sreq);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_GET_ACC_IOV_TX_HANDLER);
     return mpi_errno;
 }
 
