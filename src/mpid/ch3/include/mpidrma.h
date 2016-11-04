@@ -663,7 +663,7 @@ static inline int check_and_set_req_completion(MPIR_Win * win_ptr, MPIDI_RMA_Tar
             (*req) = NULL;
         }
         else {
-            (*req)->request_completed_cb = MPIDI_CH3_Req_handler_rma_op_complete;
+            (*req)->dev.request_completed_cb = MPIDI_CH3_Req_handler_rma_op_complete;
             (*req)->dev.source_win_handle = win_ptr->handle;
             (*req)->dev.rma_target_ptr = target;
 

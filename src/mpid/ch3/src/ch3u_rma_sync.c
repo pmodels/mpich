@@ -540,7 +540,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
                 MPIR_Request_get_ptr(fence_sync_req, req_ptr);
                 if (!MPIR_Request_is_complete(req_ptr)) {
                     req_ptr->dev.source_win_handle = win_ptr->handle;
-                    req_ptr->request_completed_cb = fence_barrier_complete;
+                    req_ptr->dev.request_completed_cb = fence_barrier_complete;
                     win_ptr->sync_request_cnt++;
                 }
                 else {
@@ -664,7 +664,7 @@ int MPID_Win_fence(int assert, MPIR_Win * win_ptr)
                 MPIR_Request_get_ptr(fence_sync_req, req_ptr);
                 if (!MPIR_Request_is_complete(req_ptr)) {
                     req_ptr->dev.source_win_handle = win_ptr->handle;
-                    req_ptr->request_completed_cb = fence_barrier_complete;
+                    req_ptr->dev.request_completed_cb = fence_barrier_complete;
                     win_ptr->sync_request_cnt++;
                 }
                 else {
@@ -905,7 +905,7 @@ int MPID_Win_start(MPIR_Group * group_ptr, int assert, MPIR_Win * win_ptr)
                 else {
                     if (!MPIR_Request_is_complete(req_ptr)) {
                         req_ptr->dev.source_win_handle = win_ptr->handle;
-                        req_ptr->request_completed_cb = start_req_complete;
+                        req_ptr->dev.request_completed_cb = start_req_complete;
                         win_ptr->sync_request_cnt++;
                     }
 
