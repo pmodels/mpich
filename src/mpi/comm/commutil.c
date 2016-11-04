@@ -70,7 +70,7 @@ static struct MPIR_Comm_hint_fn_elt *MPID_hint_fns = NULL;
  * !!! The resulting struct is _not_ ready for communication !!! */
 int MPII_Comm_init(MPIR_Comm * comm_p)
 {
-    int thr_err, mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS;
 
     MPIR_Object_set_ref(comm_p, 1);
 
@@ -105,8 +105,11 @@ int MPII_Comm_init(MPIR_Comm * comm_p)
     comm_p->mapper_tail = NULL;
 
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
-    MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_COMM_MUTEX(comm_p), &thr_err);
-    MPIR_Assert(thr_err == 0);
+    {
+        int thr_err;
+        MPID_Thread_mutex_create(&MPIR_THREAD_POBJ_COMM_MUTEX(comm_p), &thr_err);
+        MPIR_Assert(thr_err == 0);
+    }
 #endif
     /* Fields not set include context_id, remote and local size, and
      * kind, since different communicator construction routines need
@@ -920,7 +923,7 @@ int MPII_Comm_copy_data(MPIR_Comm * comm_ptr, MPIR_Comm ** outcomm_ptr)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
 {
-    int in_use,thr_err;
+    int in_use;
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_STATE_DECL(MPID_STATE_COMM_DELETE_INTERNAL);
 
@@ -999,8 +1002,11 @@ int MPIR_Comm_delete_internal(MPIR_Comm * comm_ptr)
         MPIR_Free_contextid(comm_ptr->recvcontext_id);
 
 #if MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ
-        MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr), &thr_err);
-        MPIR_Assert(thr_err == 0);
+        {
+            int thr_err;
+            MPID_Thread_mutex_destroy(&MPIR_THREAD_POBJ_COMM_MUTEX(comm_ptr), &thr_err);
+            MPIR_Assert(thr_err == 0);
+        }
 #endif
         /* We need to release the error handler */
         if (comm_ptr->errhandler &&

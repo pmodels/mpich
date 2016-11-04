@@ -9,6 +9,10 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
+#include "mpl.h"
+
+MPL_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
+
 #ifndef NETMOD_DIRECT
 #define NETMOD_DISABLE_INLINES
 #include <mpidimpl.h>
