@@ -558,7 +558,7 @@ static inline void MPIDI_OFI_am_request_complete(MPIR_Request * req)
     MPIR_cc_decr(req->cc_ptr, &incomplete);
 
     if (!incomplete) {
-        MPIDI_CH4U_request_release(req);
+        MPIR_Request_free(req);
     }
 }
 

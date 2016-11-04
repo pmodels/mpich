@@ -102,7 +102,7 @@ static inline int MPIDI_CH4I_handle_unexpected(void *buf,
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
-    MPIDI_CH4I_am_request_complete(rreq);
+    MPIDI_Request_complete(rreq);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_HANDLE_UNEXPECTED);
     return mpi_errno;
@@ -164,7 +164,7 @@ static inline int MPIDI_CH4I_do_irecv(void *buf,
     }
 
     if (alloc_req) {
-        rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RECV);
+        rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RECV, 2);
     }
     else {
         rreq = *request;
@@ -177,7 +177,7 @@ static inline int MPIDI_CH4I_do_irecv(void *buf,
         rreq->status.MPI_ERROR = MPI_SUCCESS;
         rreq->status.MPI_SOURCE = rank;
         rreq->status.MPI_TAG = tag;
-        MPIDI_CH4I_am_request_complete(rreq);
+        MPIDI_Request_complete(rreq);
         goto fn_exit;
     }
 
@@ -255,7 +255,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_recv_init(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_RECV_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_RECV_INIT);
 
-    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__PREQUEST_RECV);
+    rreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__PREQUEST_RECV, 2);
 
     *request = rreq;
     rreq->comm = comm;
@@ -268,7 +268,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_recv_init(void *buf,
     MPIDI_CH4U_REQUEST(rreq, tag) =
         MPIDI_CH4U_init_send_tag(comm->context_id + context_offset, rank, tag);
     rreq->u.persist.real_request = NULL;
-    MPIDI_CH4I_am_request_complete(rreq);
+    MPIDI_Request_complete(rreq);
     MPIDI_CH4U_REQUEST(rreq, p_type) = MPIDI_PTYPE_RECV;
     dtype_add_ref_if_not_builtin(datatype);
 
@@ -420,7 +420,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_cancel_recv(MPIR_Request * rreq)
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
         MPIR_STATUS_SET_COUNT(rreq->status, 0);
         MPIR_Comm_release(root_comm);   /* -1 for posted_list */
-        MPIDI_CH4I_am_request_complete(rreq);
+        MPIDI_Request_complete(rreq);
     }
     else {
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, FALSE);

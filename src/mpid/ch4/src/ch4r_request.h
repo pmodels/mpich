@@ -18,40 +18,29 @@
 #define FUNCNAME MPIDI_CH4I_am_request_create
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kind)
+static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kind,
+                                                         Handle_ref_count ref_count)
 {
     MPIR_Request *req;
+    int i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4I_REQUEST_CREATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4I_REQUEST_CREATE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4I_AM_REQUEST_CREATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4I_AM_REQUEST_CREATE);
 
     req = MPIR_Request_create(kind);
-    MPIDI_NM_am_request_init(req);
-    MPIR_Request_add_ref(req);
 
-    CH4_COMPILE_TIME_ASSERT(sizeof(MPIDI_CH4U_req_ext_t) <= MPIDI_CH4I_BUF_POOL_SZ);
-    MPIDI_CH4U_REQUEST(req, req) =
-        (MPIDI_CH4U_req_ext_t *) MPIDI_CH4R_get_buf(MPIDI_CH4_Global.buf_pool);
-    MPIR_Assert(MPIDI_CH4U_REQUEST(req, req));
-    MPIDI_CH4U_REQUEST(req, req->status) = 0;
+    /* as long as ref_count is a constant, any compiler should be able
+     * to unroll the below loop.  when threading is not enabled, the
+     * compiler should be able to combine the below individual
+     * increments to a single increment of "ref_count - 1".
+     *
+     * FIXME: when threading is enabled, the ref_count increase is an
+     * atomic operation, so it might be more inefficient.  we should
+     * use a new API to increase the ref_count value instead of the
+     * for loop. */
+    for (i = 0; i < ref_count - 1; i++)
+        MPIR_Request_add_ref(req);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4I_REQUEST_CREATE);
-
-    return req;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4I_am_win_request_create
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline MPIR_Request *MPIDI_CH4I_am_win_request_create()
-{
-    MPIR_Request *req;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4I_WIN_REQUEST_CREATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4I_WIN_REQUEST_CREATE);
-
-    req = MPIR_Request_create(MPIR_REQUEST_KIND__UNDEFINED);
     MPIDI_NM_am_request_init(req);
 
     CH4_COMPILE_TIME_ASSERT(sizeof(MPIDI_CH4U_req_ext_t) <= MPIDI_CH4I_BUF_POOL_SZ);
@@ -60,26 +49,8 @@ static inline MPIR_Request *MPIDI_CH4I_am_win_request_create()
     MPIR_Assert(MPIDI_CH4U_REQUEST(req, req));
     MPIDI_CH4U_REQUEST(req, req->status) = 0;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4I_WIN_REQUEST_CREATE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4I_AM_REQUEST_CREATE);
     return req;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH4I_am_request_complete
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_am_request_complete(MPIR_Request * req)
-{
-    int incomplete;
-    MPIR_cc_decr(req->cc_ptr, &incomplete);
-    if (!incomplete) {
-        if (MPIDI_CH4U_REQUEST(req, req) && MPIR_cc_is_complete(&req->cc)) {
-            MPIDI_CH4R_release_buf(MPIDI_CH4U_REQUEST(req, req));
-            MPIDI_CH4U_REQUEST(req, req) = NULL;
-        }
-        MPIDI_NM_am_request_finalize(req);
-        MPIDI_CH4U_request_release(req);
-    }
 }
 
 /* This function should be called any time an anysource request is matched so

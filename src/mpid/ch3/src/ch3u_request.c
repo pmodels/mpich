@@ -588,6 +588,11 @@ int MPID_Request_complete(MPIR_Request *req)
     goto fn_exit;
 }
 
+void MPID_Request_free_hook(MPIR_Request *req)
+{
+    return;
+}
+
 void MPID_Request_destroy_hook(MPIR_Request *req)
 {
     if (req->dev.datatype_ptr != NULL) {

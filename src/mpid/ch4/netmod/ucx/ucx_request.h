@@ -28,7 +28,7 @@ static inline void MPIDI_NM_am_request_finalize(MPIR_Request * req)
     if ((req)->dev.ch4.ch4u.netmod_am.ucx.pack_buffer) {
         MPL_free((req)->dev.ch4.ch4u.netmod_am.ucx.pack_buffer);
     }
-    /* MPIDI_CH4U_request_release(req); */
+    /* MPIR_Request_free(req); */
 }
 
 static inline void MPIDI_UCX_Request_init_callback(void *request)

@@ -65,7 +65,7 @@ typedef struct {
     MPIR_cc_decr((req_)->cc_ptr, &incomplete__); \
     dtype_release_if_not_builtin(MPIDI_POSIX_REQUEST(req_)->datatype); \
     if (!incomplete__) \
-        MPIDI_CH4U_request_release(req_);    \
+        MPIR_Request_free(req_);    \
 }
 
 #define MPIDI_POSIX_REQUEST_ENQUEUE(req,queue) \
