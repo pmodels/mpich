@@ -196,7 +196,7 @@ typedef struct {
 
 MPL_STATIC_INLINE_PREFIX void MPID_Request_create_hook(struct MPIR_Request *req);
 
-MPL_STATIC_INLINE_PREFIX void MPID_Request_free_hook(struct MPIR_Request *req);
+MPL_STATIC_INLINE_PREFIX void MPID_Request_destroy_hook(struct MPIR_Request *req);
 
 typedef struct MPIDI_CH4U_win_shared_info {
     uint32_t disp_unit;
