@@ -57,6 +57,8 @@ void MPID_Request_create_hook(MPIR_Request *req)
     req->dev.ext_hdr_sz        = 0;
     req->dev.rma_target_ptr    = NULL;
     req->dev.request_handle    = MPI_REQUEST_NULL;
+
+    req->dev.request_completed_cb  = NULL;
 #ifdef MPIDI_CH3_REQUEST_INIT
     MPIDI_CH3_REQUEST_INIT(req);
 #endif
@@ -570,8 +572,8 @@ int MPID_Request_complete(MPIR_Request *req)
     MPIDI_CH3U_Request_decrement_cc(req, &incomplete);
     if (!incomplete) {
         /* trigger request_completed callback function */
-        if (req->request_completed_cb != NULL) {
-            mpi_errno = req->request_completed_cb(req);
+        if (req->dev.request_completed_cb != NULL) {
+            mpi_errno = req->dev.request_completed_cb(req);
             if (mpi_errno != MPI_SUCCESS) {
                 MPIR_ERR_POP(mpi_errno);
             }
