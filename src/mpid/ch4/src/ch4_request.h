@@ -82,13 +82,17 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_Request_release_ref(MPIR_Request * req)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Request_complete(MPIR_Request * req)
 {
-    int incomplete;
+    int incomplete, notify_counter;
 
     MPIR_cc_decr(req->cc_ptr, &incomplete);
 
     /* if we hit a zero completion count, free up AM-related
      * objects */
     if (!incomplete) {
+        /* decrement completion_notification counter */
+        if (req->completion_notification)
+            MPIR_cc_decr(req->completion_notification, &notify_counter);
+
         if (MPIDI_CH4U_REQUEST(req, req)) {
             MPIDI_CH4R_release_buf(MPIDI_CH4U_REQUEST(req, req));
             MPIDI_CH4U_REQUEST(req, req) = NULL;
