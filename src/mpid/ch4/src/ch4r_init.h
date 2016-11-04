@@ -15,6 +15,8 @@
 #include "ch4i_util.h"
 #include "ch4r_buf.h"
 #include "ch4r_callbacks.h"
+#include "ch4r_rma_target_callbacks.h"
+#include "ch4r_rma_origin_callbacks.h"
 #include "mpl_uthash.h"
 
 #undef FUNCNAME
@@ -200,7 +202,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_init(MPIR_Comm * comm_world, MPIR_Co
 
     mpi_errno = MPIDI_NM_am_reg_handler(MPIDI_CH4U_ACC_REQ,
                                         &MPIDI_CH4U_acc_origin_cmpl_handler,
-                                        &MPIDI_CH4U_handle_acc_request);
+                                        &MPIDI_CH4U_acc_target_handler);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
