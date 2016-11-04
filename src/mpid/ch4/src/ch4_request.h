@@ -84,7 +84,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Request_complete(MPIR_Request * req)
 {
     int incomplete;
     MPIR_cc_decr(req->cc_ptr, &incomplete);
-    MPIR_Request_free(req);
+    if (!incomplete)
+        MPIR_Request_free(req);
     return MPI_SUCCESS;
 }
 
