@@ -154,8 +154,8 @@ static inline int MPIDI_CH4R_get_symmetric_heap(MPI_Aint size,
 {
     int mpi_errno = MPI_SUCCESS;
     int iter = 100;
-    void *baseP;
-    size_t mapsize;
+    void *baseP = NULL;
+    size_t mapsize = 0;
 #ifdef USE_SYM_HEAP
     unsigned test, result;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
