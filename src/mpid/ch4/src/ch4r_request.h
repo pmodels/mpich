@@ -19,7 +19,7 @@
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kind,
-                                                         Handle_ref_count ref_count)
+                                                         int ref_count)
 {
     MPIR_Request *req;
     int i;
