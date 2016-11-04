@@ -36,7 +36,7 @@ static inline int am_isend(const void *buf, int count, MPI_Datatype datatype,
         mpi_errno = MPI_SUCCESS;
         /* for blocking calls, we directly complete the request */
         if (!is_blocking) {
-            *request = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND);
+            *request = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
             MPIDI_Request_complete((*request));
         }
         goto fn_exit;
