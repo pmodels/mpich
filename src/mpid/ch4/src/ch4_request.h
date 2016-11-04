@@ -83,9 +83,20 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_Request_release_ref(MPIR_Request * req)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Request_complete(MPIR_Request * req)
 {
     int incomplete;
+
     MPIR_cc_decr(req->cc_ptr, &incomplete);
-    if (!incomplete)
+
+    /* if we hit a zero completion count, free up AM-related
+     * objects */
+    if (!incomplete) {
+        if (MPIDI_CH4U_REQUEST(req, req)) {
+            MPIDI_CH4R_release_buf(MPIDI_CH4U_REQUEST(req, req));
+            MPIDI_CH4U_REQUEST(req, req) = NULL;
+            MPIDI_NM_am_request_finalize(req);
+        }
         MPIR_Request_free(req);
+    }
+
     return MPI_SUCCESS;
 }
 

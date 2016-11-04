@@ -105,7 +105,7 @@ static inline int MPIDI_NM_progress(void *netmod_context, int blocking)
                 MPIR_Assert(count >= 0);
 
                 if (count == 0) {
-                    MPIDI_CH4U_request_release(sreq);
+                    MPIR_Request_free(sreq);
                     break;
                 }
                 MPIDI_PTL_global.send_cmpl_handlers[handler_id] (sreq);

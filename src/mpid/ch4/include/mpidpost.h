@@ -22,6 +22,15 @@ MPL_STATIC_INLINE_PREFIX void MPID_Request_create_hook(MPIR_Request * req)
 #endif
 }
 
+MPL_STATIC_INLINE_PREFIX void MPID_Request_free_hook(MPIR_Request * req)
+{
+    if (req->kind == MPIR_REQUEST_KIND__PREQUEST_RECV &&
+        NULL != MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req))
+        MPIR_Request_free(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req));
+
+    return;
+}
+
 MPL_STATIC_INLINE_PREFIX void MPID_Request_destroy_hook(MPIR_Request * req)
 {
     return;

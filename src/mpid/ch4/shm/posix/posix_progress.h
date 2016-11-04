@@ -61,7 +61,7 @@ static inline int MPIDI_POSIX_progress_recv(int blocking, int *completion_count)
             MPIR_Assert(in_cell);
             MPIR_Assert(pending);
             MPIR_cc_decr(pending->cc_ptr, &c);
-            MPIDI_CH4U_request_release(pending);
+            MPIR_Request_free(pending);
             goto release_cell_l;
         }
 
@@ -86,7 +86,7 @@ static inline int MPIDI_POSIX_progress_recv(int blocking, int *completion_count)
                 if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)) {
                     MPIDI_CH4R_anysource_matched(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req),
                                                  MPIDI_CH4R_SHM, &continue_matching);
-                    MPIDI_CH4U_request_release(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req));
+                    MPIR_Request_free(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req));
 
                     /* Decouple requests */
                     MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req))

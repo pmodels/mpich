@@ -246,6 +246,11 @@ static inline void MPIR_Request_free(MPIR_Request *req)
     int inuse;
 
     MPIR_Request_release_ref(req, &inuse);
+
+    /* inform the device that we are decrementing the ref-count on
+     * this request */
+    MPID_Request_free_hook(req);
+
     if (inuse == 0) {
         MPL_DBG_MSG_P(MPIR_DBG_REQUEST,VERBOSE,
                        "freeing request, handle=0x%08x", req->handle);

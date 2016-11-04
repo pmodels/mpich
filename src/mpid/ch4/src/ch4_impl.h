@@ -77,23 +77,6 @@ static inline MPIR_Context_id_t MPIDI_CH4U_win_to_context(const MPIR_Win * win)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4U_request_release
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_request_release(MPIR_Request * req)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4R_REQUEST_RELEASE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4R_REQEUST_RELEASE);
-
-    if (req->kind == MPIR_REQUEST_KIND__PREQUEST_RECV &&
-        NULL != MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)) {
-        MPIR_Request_free(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req));
-    }
-    MPIR_Request_free(req);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4R_REQUEST_RELEASE);
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_CH4U_request_complete
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -102,7 +85,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_request_complete(MPIR_Request * req)
     int incomplete;
     MPIR_cc_decr(req->cc_ptr, &incomplete);
     if (!incomplete)
-        MPIDI_CH4U_request_release(req);
+        MPIR_Request_free(req);
 }
 
 #ifndef dtype_add_ref_if_not_builtin
