@@ -588,7 +588,7 @@ int MPID_Request_complete(MPIR_Request *req)
     goto fn_exit;
 }
 
-void MPID_Request_free_hook(MPIR_Request *req)
+void MPID_Request_destroy_hook(MPIR_Request *req)
 {
     if (req->dev.datatype_ptr != NULL) {
         MPIDU_Datatype_release(req->dev.datatype_ptr);
