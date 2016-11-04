@@ -11,6 +11,11 @@
 #ifndef CH4R_CALLBACKS_H_INCLUDED
 #define CH4R_CALLBACKS_H_INCLUDED
 
+/* This file includes all callback routines and the completion function of
+ * receive callback for send-receive AM. All handlers on the packet issuing
+ * side are named with suffix "_origin_cmpl_handler", and all handlers on the
+ * packet receiving side are named with "_target_handler". */
+
 #include "ch4r_request.h"
 #include "mpidigi_recv.h"
 
