@@ -14,6 +14,7 @@
 
 #include "ch4_impl.h"
 #include "ch4r_proc.h"
+#include "ch4r_recv.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_prepare_recv_req
@@ -98,7 +99,7 @@ static inline int MPIDI_handle_unexpected(void *buf,
     rreq->status.MPI_TAG = MPIDI_CH4U_get_tag(MPIDI_CH4U_REQUEST(rreq, tag));
 
     if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_PEER_SSEND) {
-        mpi_errno = MPIDIGI_reply_ssend(rreq);
+        mpi_errno = MPIDI_reply_ssend(rreq);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
@@ -317,7 +318,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
         mpi_errno = MPIDI_NM_am_recv(message);
     }
     else {
-        mpi_errno = MPIDIGI_handle_unexp_mrecv(message);
+        mpi_errno = MPIDI_handle_unexp_mrecv(message);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }

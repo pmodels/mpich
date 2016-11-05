@@ -9,16 +9,16 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#ifndef MPIDIGI_RECV_H_INCLUDED
-#define MPIDIGI_RECV_H_INCLUDED
+#ifndef CH4R_RECV_H_INCLUDED
+#define CH4R_RECV_H_INCLUDED
 
 #include "ch4_impl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDIGI_reply_ssend
+#define FUNCNAME MPIDI_reply_ssend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDIGI_reply_ssend(MPIR_Request * rreq)
+static inline int MPIDI_reply_ssend(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIDI_CH4U_ssend_ack_msg_t ack_msg;
@@ -42,10 +42,10 @@ static inline int MPIDIGI_reply_ssend(MPIR_Request * rreq)
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDIGI_handle_unexp_mrecv
+#define FUNCNAME MPIDI_handle_unexp_mrecv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDIGI_handle_unexp_mrecv(MPIR_Request * rreq)
+static inline int MPIDI_handle_unexp_mrecv(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     uint64_t msg_tag;
@@ -109,7 +109,7 @@ static inline int MPIDIGI_handle_unexp_mrecv(MPIR_Request * rreq)
     rreq->kind = MPIR_REQUEST_KIND__RECV;
 
     if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_PEER_SSEND) {
-        mpi_errno = MPIDIGI_reply_ssend(rreq);
+        mpi_errno = MPIDI_reply_ssend(rreq);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
@@ -121,4 +121,4 @@ static inline int MPIDIGI_handle_unexp_mrecv(MPIR_Request * rreq)
   fn_fail:
     goto fn_exit;
 }
-#endif /* MPIDIGI_RECV_H_INCLUDED */
+#endif /* CH4R_RECV_H_INCLUDED */
