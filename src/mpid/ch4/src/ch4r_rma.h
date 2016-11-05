@@ -39,6 +39,8 @@ static inline int do_put(const void *origin_addr,
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
+    /* FIXME: should only create when issuing is not completed.
+     * Then rput will need to create a request if it is immediately completed.*/
     /* two ref counts for progress engine and caller. */
     sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
     MPIR_Assert(sreq);
@@ -79,6 +81,7 @@ static inline int do_put(const void *origin_addr,
         am_hdr.n_iov = 0;
         MPIDI_CH4U_REQUEST(sreq, req->preq.dt_iov) = NULL;
 
+        /* FIXIME: we need to choose between NM and SHM */
         mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_PUT_REQ,
                                       &am_hdr, sizeof(am_hdr), origin_addr,
                                       origin_count, origin_datatype, sreq, NULL);
@@ -111,7 +114,9 @@ static inline int do_put(const void *origin_addr,
 
     MPIDI_CH4U_REQUEST(sreq, req->preq.dt_iov) = dt_iov;
 
+    /* FIXIME: MPIDI_NM_am_hdr_max_sz should be removed */
     if ((am_iov[0].iov_len + am_iov[1].iov_len) <= MPIDI_NM_am_hdr_max_sz()) {
+        /* FIXIME: we need to choose between NM and SHM */
         mpi_errno = MPIDI_NM_am_isendv(target_rank, win->comm_ptr, MPIDI_CH4U_PUT_REQ,
                                        &am_iov[0], 2, origin_addr, origin_count, origin_datatype,
                                        sreq, NULL);
@@ -123,6 +128,7 @@ static inline int do_put(const void *origin_addr,
         MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
         dtype_add_ref_if_not_builtin(origin_datatype);
 
+        /* FIXIME: we need to choose between NM and SHM */
         mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_PUT_IOV_REQ,
                                       &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
                                       am_iov[1].iov_len, MPI_BYTE, sreq, NULL);
@@ -165,6 +171,8 @@ static inline int do_get(void *origin_addr,
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
+    /* FIXME: should only create when issuing is not completed.
+     * Then rget will need to create a request if it is immediately completed.*/
     /* two ref counts for progress engine and caller. */
     sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
     MPIR_Assert(sreq);
@@ -208,6 +216,7 @@ static inline int do_get(void *origin_addr,
         am_hdr.n_iov = 0;
         MPIDI_CH4U_REQUEST(sreq, req->greq.dt_iov) = NULL;
 
+        /* FIXIME: we need to choose between NM and SHM */
         mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr,
                                       MPIDI_CH4U_GET_REQ, &am_hdr, sizeof(am_hdr),
                                       NULL, 0, MPI_DATATYPE_NULL, sreq, NULL);
@@ -234,6 +243,7 @@ static inline int do_get(void *origin_addr,
     MPL_free(segment_ptr);
 
     MPIDI_CH4U_REQUEST(sreq, req->greq.dt_iov) = dt_iov;
+    /* FIXIME: we need to choose between NM and SHM */
     mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_GET_REQ,
                                   &am_hdr, sizeof(am_hdr), dt_iov,
                                   sizeof(struct iovec) * am_hdr.n_iov, MPI_BYTE, sreq, NULL);
@@ -278,6 +288,8 @@ MPL_STATIC_INLINE_PREFIX int do_accumulate(const void *origin_addr,
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
+    /* FIXME: should only create when issuing is not completed.
+     * Then racc will need to create a request if it is immediately completed.*/
     /* two ref counts for progress engine and caller. */
     sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
     MPIR_Assert(sreq);
@@ -322,6 +334,7 @@ MPL_STATIC_INLINE_PREFIX int do_accumulate(const void *origin_addr,
         am_hdr.n_iov = 0;
         MPIDI_CH4U_REQUEST(sreq, req->areq.dt_iov) = NULL;
 
+        /* FIXIME: we need to choose between NM and SHM */
         mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_ACC_REQ,
                                       &am_hdr, sizeof(am_hdr), origin_addr,
                                       (op == MPI_NO_OP) ? 0 : origin_count,
@@ -359,7 +372,9 @@ MPL_STATIC_INLINE_PREFIX int do_accumulate(const void *origin_addr,
     am_iov[1].iov_len = sizeof(struct iovec) * am_hdr.n_iov;
     MPIDI_CH4U_REQUEST(sreq, req->areq.dt_iov) = dt_iov;
 
+    /* FIXIME: MPIDI_NM_am_hdr_max_sz should be removed */
     if ((am_iov[0].iov_len + am_iov[1].iov_len) <= MPIDI_NM_am_hdr_max_sz()) {
+        /* FIXIME: we need to choose between NM and SHM */
         mpi_errno = MPIDI_NM_am_isendv(target_rank, win->comm_ptr, MPIDI_CH4U_ACC_REQ,
                                        &am_iov[0], 2, origin_addr,
                                        (op == MPI_NO_OP) ? 0 : origin_count,
@@ -372,6 +387,7 @@ MPL_STATIC_INLINE_PREFIX int do_accumulate(const void *origin_addr,
         MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
         dtype_add_ref_if_not_builtin(origin_datatype);
 
+        /* FIXIME: we need to choose between NM and SHM */
         mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_ACC_IOV_REQ,
                                       &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
                                       am_iov[1].iov_len, MPI_BYTE, sreq, NULL);
@@ -419,6 +435,8 @@ MPL_STATIC_INLINE_PREFIX int do_get_accumulate(const void *origin_addr,
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
+    /* FIXME: should only create when issuing is not completed.
+     * Then rget_acc will need to create a request if it is immediately completed.*/
     /* two ref counts for progress engine and caller. */
     sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
     MPIR_Assert(sreq);
@@ -473,6 +491,7 @@ MPL_STATIC_INLINE_PREFIX int do_get_accumulate(const void *origin_addr,
         am_hdr.n_iov = 0;
         MPIDI_CH4U_REQUEST(sreq, req->areq.dt_iov) = NULL;
 
+        /* FIXIME: we need to choose between NM and SHM */
         mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_GET_ACC_REQ,
                                       &am_hdr, sizeof(am_hdr), origin_addr,
                                       (op == MPI_NO_OP) ? 0 : origin_count,
@@ -510,7 +529,9 @@ MPL_STATIC_INLINE_PREFIX int do_get_accumulate(const void *origin_addr,
     am_iov[1].iov_len = sizeof(struct iovec) * am_hdr.n_iov;
     MPIDI_CH4U_REQUEST(sreq, req->areq.dt_iov) = dt_iov;
 
+    /* FIXIME: MPIDI_NM_am_hdr_max_sz should be removed */
     if ((am_iov[0].iov_len + am_iov[1].iov_len) <= MPIDI_NM_am_hdr_max_sz()) {
+        /* FIXIME: we need to choose between NM and SHM */
         mpi_errno = MPIDI_NM_am_isendv(target_rank, win->comm_ptr, MPIDI_CH4U_GET_ACC_REQ,
                                        &am_iov[0], 2, origin_addr,
                                        (op == MPI_NO_OP) ? 0 : origin_count,
@@ -523,6 +544,7 @@ MPL_STATIC_INLINE_PREFIX int do_get_accumulate(const void *origin_addr,
         MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
         dtype_add_ref_if_not_builtin(origin_datatype);
 
+        /* FIXIME: we need to choose between NM and SHM */
         mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_GET_ACC_IOV_REQ,
                                       &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
                                       am_iov[1].iov_len, MPI_BYTE, sreq, NULL);
@@ -858,6 +880,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_compare_and_swap(const void *origin_
     OPA_incr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
     /* MPIDI_CS_EXIT(); */
 
+    /* FIXIME: we need to choose between NM and SHM */
     mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_CSWAP_REQ,
                                   &am_hdr, sizeof(am_hdr), (char *) p_data, 2, datatype, sreq,
                                   NULL);
