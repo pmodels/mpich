@@ -100,7 +100,7 @@ typedef struct {
     void *pack_buffer;
     void *rreq_ptr;
     void *am_hdr;
-    int (*cmpl_handler_fn) (struct MPIR_Request * req);
+    int (*cmpl_cb) (struct MPIR_Request * req);
     uint16_t am_hdr_sz;
     uint8_t pad[6];
     MPIDI_OFI_am_header_t msg_hdr;

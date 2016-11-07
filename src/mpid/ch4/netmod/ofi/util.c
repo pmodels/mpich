@@ -380,15 +380,14 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               void **data,
                               size_t * data_sz,
                               int *is_contig,
-                              MPIDI_NM_am_completion_handler_fn * cmpl_handler_fn,
-                              MPIR_Request ** req)
+                              MPIDI_NM_am_target_cmpl_cb * cmpl_cb, MPIR_Request ** req)
 {
     int senderrank;
     int mpi_errno = MPI_SUCCESS;
     void *buf = am_hdr;
     MPIDI_OFI_win_control_t *control = (MPIDI_OFI_win_control_t *) buf;
     *req = NULL;
-    *cmpl_handler_fn = NULL;
+    *cmpl_cb = NULL;
 
     switch (control->type) {
     case MPIDI_OFI_CTRL_HUGEACK:{

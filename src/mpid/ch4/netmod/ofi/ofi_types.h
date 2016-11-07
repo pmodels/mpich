@@ -375,8 +375,8 @@ typedef struct {
     struct fi_msg am_msg[MPIDI_OFI_NUM_AM_BUFFERS];
     void *am_bufs[MPIDI_OFI_NUM_AM_BUFFERS];
     MPIDI_OFI_am_repost_request_t am_reqs[MPIDI_OFI_NUM_AM_BUFFERS];
-    MPIDI_NM_am_target_handler_fn am_handlers[MPIDI_OFI_MAX_AM_HANDLERS_TOTAL];
-    MPIDI_NM_am_origin_handler_fn am_isend_cmpl_handlers[MPIDI_OFI_MAX_AM_HANDLERS_TOTAL];
+    MPIDI_NM_am_target_msg_cb am_cbs[MPIDI_OFI_MAX_AM_HANDLERS_TOTAL];
+    MPIDI_NM_am_origin_cb origin_cbs[MPIDI_OFI_MAX_AM_HANDLERS_TOTAL];
     MPIU_buf_pool_t *am_buf_pool;
     OPA_int_t am_inflight_inject_emus;
     OPA_int_t am_inflight_rma_send_mrs;

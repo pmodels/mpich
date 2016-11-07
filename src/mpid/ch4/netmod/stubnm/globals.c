@@ -30,7 +30,7 @@ MPIDI_NM_funcs_t MPIDI_NM_stubnm_funcs = {
     MPIDI_NM_mpi_comm_free_hook,
     MPIDI_NM_am_request_init,
     MPIDI_NM_am_request_finalize,
-    MPIDI_NM_am_reg_handler,
+    MPIDI_NM_am_reg_cb,
     MPIDI_NM_am_send_hdr,
     MPIDI_NM_am_isend,
     MPIDI_NM_am_isendv,

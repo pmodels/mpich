@@ -485,7 +485,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_event(struct fi_cq_tagged_entry 
         MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
     }
 
-    mpi_errno = MPIDI_Global.am_isend_cmpl_handlers[msg_hdr->handler_id] (sreq);
+    mpi_errno = MPIDI_Global.origin_cbs[msg_hdr->handler_id] (sreq);
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -586,7 +586,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_read_event(struct fi_cq_tagged_entry *
         MPIR_ERR_POP(mpi_errno);
 
     MPIDI_OFI_am_request_complete(rreq);
-    ofi_req->req_hdr->cmpl_handler_fn(rreq);
+    ofi_req->req_hdr->cmpl_cb(rreq);
   fn_exit:
     MPIDI_CH4R_release_buf((void *) ofi_req);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_HANDLE_READ_COMPLETION);

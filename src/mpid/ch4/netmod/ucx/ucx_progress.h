@@ -19,7 +19,7 @@ static inline int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
     void *p_data;
     void *in_data;
     size_t data_sz, in_data_sz;
-    MPIDI_NM_am_completion_handler_fn cmpl_handler_fn;
+    MPIDI_NM_am_target_cmpl_cb cmpl_cb;
     struct iovec *iov;
     int i, is_contig, iov_len;
     size_t done, curr_len, rem;
@@ -28,16 +28,15 @@ static inline int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
     p_data = in_data = (char *) msg_hdr->payload + (msg_sz - msg_hdr->data_sz - sizeof(*msg_hdr));
     in_data_sz = data_sz = msg_hdr->data_sz;
 
-    MPIDI_UCX_global.am_handlers[msg_hdr->handler_id] (msg_hdr->handler_id, msg_hdr->payload,
-                                                       &p_data, &data_sz,
-                                                       &is_contig, &cmpl_handler_fn, &rreq);
+    MPIDI_UCX_global.am_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, msg_hdr->payload,
+                                                  &p_data, &data_sz, &is_contig, &cmpl_cb, &rreq);
 
     if (!rreq)
         goto fn_exit;
 
-    if ((!p_data || !data_sz) && cmpl_handler_fn) {
+    if ((!p_data || !data_sz) && cmpl_cb) {
         MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
-        cmpl_handler_fn(rreq);
+        cmpl_cb(rreq);
         goto fn_exit;
     }
 
@@ -76,8 +75,8 @@ static inline int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
         MPIR_STATUS_SET_COUNT(rreq->status, done);
     }
 
-    if (cmpl_handler_fn) {
-        cmpl_handler_fn(rreq);
+    if (cmpl_cb) {
+        cmpl_cb(rreq);
     }
 
   fn_exit:

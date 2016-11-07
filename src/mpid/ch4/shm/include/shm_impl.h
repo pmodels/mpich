@@ -30,13 +30,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int blocking)
     return MPIDI_SHM_func->progress(blocking);
 };
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_reg_handler(int handler_id,
-                                                      MPIDI_SHM_am_origin_handler_fn
-                                                      origin_handler_fn,
-                                                      MPIDI_SHM_am_target_handler_fn
-                                                      target_handler_fn)
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_reg_cb(int handler_id,
+                                                 MPIDI_SHM_am_origin_cb
+                                                 origin_cb,
+                                                 MPIDI_SHM_am_target_msg_cb target_msg_cb)
 {
-    return MPIDI_SHM_func->am_reg_handler(handler_id, origin_handler_fn, target_handler_fn);
+    return MPIDI_SHM_func->am_reg_cb(handler_id, origin_cb, target_msg_cb);
 };
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_comm_connect(const char *port_name, MPIR_Info * info,
