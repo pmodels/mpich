@@ -14,16 +14,17 @@
 #include "ch4_impl.h"
 
 #undef FUNCNAME
-#define FUNCNAME do_put
+#define FUNCNAME MPIDI_do_put
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int do_put(const void *origin_addr,
-                         int origin_count,
-                         MPI_Datatype origin_datatype,
-                         int target_rank,
-                         MPI_Aint target_disp,
-                         int target_count,
-                         MPI_Datatype target_datatype, MPIR_Win * win, MPIR_Request ** sreq_ptr)
+static inline int MPIDI_do_put(const void *origin_addr,
+                               int origin_count,
+                               MPI_Datatype origin_datatype,
+                               int target_rank,
+                               MPI_Aint target_disp,
+                               int target_count,
+                               MPI_Datatype target_datatype, MPIR_Win * win,
+                               MPIR_Request ** sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS, n_iov, c;
     MPIR_Request *sreq = NULL;
@@ -146,16 +147,17 @@ static inline int do_put(const void *origin_addr,
 }
 
 #undef FUNCNAME
-#define FUNCNAME do_get
+#define FUNCNAME MPIDI_do_get
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int do_get(void *origin_addr,
-                         int origin_count,
-                         MPI_Datatype origin_datatype,
-                         int target_rank,
-                         MPI_Aint target_disp,
-                         int target_count,
-                         MPI_Datatype target_datatype, MPIR_Win * win, MPIR_Request ** sreq_ptr)
+static inline int MPIDI_do_get(void *origin_addr,
+                               int origin_count,
+                               MPI_Datatype origin_datatype,
+                               int target_rank,
+                               MPI_Aint target_disp,
+                               int target_count,
+                               MPI_Datatype target_datatype, MPIR_Win * win,
+                               MPIR_Request ** sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS, n_iov, c;
     size_t offset;
@@ -578,8 +580,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_put(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_PUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_PUT);
 
-    mpi_errno = do_put(origin_addr, origin_count, origin_datatype,
-                       target_rank, target_disp, target_count, target_datatype, win, &sreq);
+    mpi_errno = MPIDI_do_put(origin_addr, origin_count, origin_datatype,
+                             target_rank, target_disp, target_count, target_datatype, win, &sreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -611,8 +613,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_rput(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_RPUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_RPUT);
 
-    mpi_errno = do_put(origin_addr, origin_count, origin_datatype,
-                       target_rank, target_disp, target_count, target_datatype, win, request);
+    mpi_errno = MPIDI_do_put(origin_addr, origin_count, origin_datatype,
+                             target_rank, target_disp, target_count, target_datatype, win, request);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -641,8 +643,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_get(void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_GET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_GET);
 
-    mpi_errno = do_get(origin_addr, origin_count, origin_datatype,
-                       target_rank, target_disp, target_count, target_datatype, win, &sreq);
+    mpi_errno = MPIDI_do_get(origin_addr, origin_count, origin_datatype,
+                             target_rank, target_disp, target_count, target_datatype, win, &sreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -674,8 +676,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_rget(void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_RGET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_RGET);
 
-    mpi_errno = do_get(origin_addr, origin_count, origin_datatype,
-                       target_rank, target_disp, target_count, target_datatype, win, request);
+    mpi_errno = MPIDI_do_get(origin_addr, origin_count, origin_datatype,
+                             target_rank, target_disp, target_count, target_datatype, win, request);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
   fn_exit:

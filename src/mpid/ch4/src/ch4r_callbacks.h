@@ -19,7 +19,7 @@
 #include "ch4r_request.h"
 #include "ch4r_recv.h"
 
-static inline int recv_cmpl_handler_fn(MPIR_Request * rreq);
+static inline int MPIDI_recv_cmpl_handler_fn(MPIR_Request * rreq);
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_check_cmpl_order
@@ -76,10 +76,10 @@ static inline void MPIDI_progress_cmpl_list(void)
 }
 
 #undef FUNCNAME
-#define FUNCNAME handle_unexp_cmpl
+#define FUNCNAME MPIDI_handle_unexp_cmpl
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int handle_unexp_cmpl(MPIR_Request * rreq)
+static inline int MPIDI_handle_unexp_cmpl(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIR_Comm *root_comm;
@@ -195,14 +195,14 @@ static inline int handle_unexp_cmpl(MPIR_Request * rreq)
 
 
 #undef FUNCNAME
-#define FUNCNAME do_send_target
+#define FUNCNAME MPIDI_do_send_target
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int do_send_target(void **data,
-                                 size_t * p_data_sz,
-                                 int *is_contig,
-                                 MPIDI_NM_am_completion_handler_fn *
-                                 cmpl_handler_fn, MPIR_Request * rreq)
+static inline int MPIDI_do_send_target(void **data,
+                                       size_t * p_data_sz,
+                                       int *is_contig,
+                                       MPIDI_NM_am_completion_handler_fn *
+                                       cmpl_handler_fn, MPIR_Request * rreq)
 {
     int dt_contig, n_iov;
     MPI_Aint dt_true_lb, last, num_iov;
@@ -213,7 +213,7 @@ static inline int do_send_target(void **data,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_DO_SEND_TARGET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_DO_SEND_TARGET);
 
-    *cmpl_handler_fn = recv_cmpl_handler_fn;
+    *cmpl_handler_fn = MPIDI_recv_cmpl_handler_fn;
     MPIDI_CH4U_REQUEST(rreq, req->seq_no) = OPA_fetch_and_add_int(&MPIDI_CH4_Global.nxt_seq_no, 1);
 
     if (p_data_sz == NULL)
@@ -265,17 +265,17 @@ static inline int do_send_target(void **data,
 }
 
 #undef FUNCNAME
-#define FUNCNAME recv_cmpl_handler_fn
+#define FUNCNAME MPIDI_recv_cmpl_handler_fn
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int recv_cmpl_handler_fn(MPIR_Request * rreq)
+static inline int MPIDI_recv_cmpl_handler_fn(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_RECV_CMPL_HANDLER_FN);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_RECV_CMPL_HANDLER_FN);
 
-    if (!MPIDI_check_cmpl_order(rreq, recv_cmpl_handler_fn))
+    if (!MPIDI_check_cmpl_order(rreq, MPIDI_recv_cmpl_handler_fn))
         return mpi_errno;
 
     if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_RCV_NON_CONTIG) {
@@ -283,7 +283,7 @@ static inline int recv_cmpl_handler_fn(MPIR_Request * rreq)
     }
 
     if (MPIDI_CH4U_REQUEST(rreq, req->status) & MPIDI_CH4U_REQ_UNEXPECTED) {
-        mpi_errno = handle_unexp_cmpl(rreq);
+        mpi_errno = MPIDI_handle_unexp_cmpl(rreq);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         goto fn_exit;
@@ -426,7 +426,7 @@ static inline int MPIDI_send_target_handler(int handler_id, void *am_hdr,
 
     *req = rreq;
 
-    mpi_errno = do_send_target(data, p_data_sz, is_contig, cmpl_handler_fn, rreq);
+    mpi_errno = MPIDI_do_send_target(data, p_data_sz, is_contig, cmpl_handler_fn, rreq);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SEND_HANDLER);
     return mpi_errno;
@@ -521,7 +521,7 @@ static inline int MPIDI_send_long_lmt_target_handler(int handler_id, void *am_hd
 
     rreq = (MPIR_Request *) lmt_hdr->rreq_ptr;
     MPIR_Assert(rreq);
-    mpi_errno = do_send_target(data, p_data_sz, is_contig, cmpl_handler_fn, rreq);
+    mpi_errno = MPIDI_do_send_target(data, p_data_sz, is_contig, cmpl_handler_fn, rreq);
     *req = rreq;
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SEND_LONG_LMT_HANDLER);
