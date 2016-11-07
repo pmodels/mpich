@@ -13,9 +13,9 @@
 
 #include "stubnm_impl.h"
 
-static inline int MPIDI_NM_am_reg_handler(int handler_id,
-                                          MPIDI_NM_am_origin_handler_fn origin_handler_fn,
-                                          MPIDI_NM_am_target_handler_fn target_handler_fn)
+static inline int MPIDI_NM_am_reg_cb(int handler_id,
+                                     MPIDI_NM_am_origin_cb origin_cb,
+                                     MPIDI_NM_am_target_msg_cb target_msg_cb)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

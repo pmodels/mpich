@@ -14,19 +14,19 @@
 #include "ptl_impl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_reg_handler
+#define FUNCNAME MPIDI_NM_am_reg_cb
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_am_reg_handler(int handler_id,
-                                          MPIDI_NM_am_origin_handler_fn origin_handler_fn,
-                                          MPIDI_NM_am_target_handler_fn target_handler_fn)
+static inline int MPIDI_NM_am_reg_cb(int handler_id,
+                                     MPIDI_NM_am_origin_cb origin_cb,
+                                     MPIDI_NM_am_target_msg_cb target_msg_cb)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_REG_HDR_HANDLER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_REG_HDR_HANDLER);
 
-    MPIDI_PTL_global.am_handlers[handler_id] = target_handler_fn;
-    MPIDI_PTL_global.send_cmpl_handlers[handler_id] = origin_handler_fn;
+    MPIDI_PTL_global.target_msg_cbs[handler_id] = target_msg_cb;
+    MPIDI_PTL_global.origin_cbs[handler_id] = origin_cb;
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_REG_HDR_HANDLER);
     return mpi_errno;

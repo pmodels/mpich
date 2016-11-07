@@ -259,8 +259,7 @@ int MPIDI_OFI_handle_cq_error_util(ssize_t ret);
 int MPIDI_OFI_progress_test_no_inline(void);
 int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               void **data, size_t * data_sz, int *is_contig,
-                              MPIDI_NM_am_completion_handler_fn * cmpl_handler_fn,
-                              MPIR_Request ** req);
+                              MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req);
 void MPIDI_OFI_map_create(void **map);
 void MPIDI_OFI_map_destroy(void *map);
 void MPIDI_OFI_map_set(void *_map, uint64_t id, void *val);
