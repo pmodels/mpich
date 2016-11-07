@@ -24,7 +24,8 @@
    - use huge pages
 */
 
-static inline MPIU_buf_pool_t *create_buf_pool(int num, int size, MPIU_buf_pool_t * parent_pool)
+static inline MPIU_buf_pool_t *MPIDI_create_buf_pool(int num, int size,
+                                                     MPIU_buf_pool_t * parent_pool)
 {
     int i;
     MPIU_buf_pool_t *buf_pool;
@@ -63,7 +64,7 @@ static inline MPIU_buf_pool_t *MPIDI_CH4U_create_buf_pool(int num, int size)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_CREATE_BUF_POOL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_CREATE_BUF_POOL);
 
-    buf_pool = create_buf_pool(num, size, NULL);
+    buf_pool = MPIDI_create_buf_pool(num, size, NULL);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_CREATE_BUF_POOL);
     return buf_pool;
@@ -101,7 +102,7 @@ static inline void *MPIDI_CH4R_get_buf_safe(MPIU_buf_pool_t * pool)
     while (curr_pool->next)
         curr_pool = curr_pool->next;
 
-    curr_pool->next = create_buf_pool(pool->num, pool->size, pool);
+    curr_pool->next = MPIDI_create_buf_pool(pool->num, pool->size, pool);
     MPIR_Assert(curr_pool->next);
     pool->head = curr_pool->next->head;
     buf = MPIDI_CH4U_get_head_buf(pool);
