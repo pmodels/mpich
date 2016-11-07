@@ -16,10 +16,11 @@
 #include "ch4r_proc.h"
 
 #undef FUNCNAME
-#define FUNCNAME prepare_recv_req
+#define FUNCNAME MPIDI_prepare_recv_req
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int prepare_recv_req(void *buf, int count, MPI_Datatype datatype, MPIR_Request * rreq)
+static inline int MPIDI_prepare_recv_req(void *buf, int count, MPI_Datatype datatype,
+                                         MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_PREPARE_RECV_BUFFER);
@@ -34,13 +35,13 @@ static inline int prepare_recv_req(void *buf, int count, MPI_Datatype datatype, 
 }
 
 #undef FUNCNAME
-#define FUNCNAME handle_unexpected
+#define FUNCNAME MPIDI_handle_unexpected
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int handle_unexpected(void *buf,
-                                    int count,
-                                    MPI_Datatype datatype,
-                                    MPIR_Comm * comm, int context_offset, MPIR_Request * rreq)
+static inline int MPIDI_handle_unexpected(void *buf,
+                                          int count,
+                                          MPI_Datatype datatype,
+                                          MPIR_Comm * comm, int context_offset, MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
@@ -110,17 +111,17 @@ static inline int handle_unexpected(void *buf,
 }
 
 #undef FUNCNAME
-#define FUNCNAME do_irecv
+#define FUNCNAME MPIDI_do_irecv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int do_irecv(void *buf,
-                           int count,
-                           MPI_Datatype datatype,
-                           int rank,
-                           int tag,
-                           MPIR_Comm * comm,
-                           int context_offset,
-                           MPIR_Request ** request, int alloc_req, uint64_t flags)
+static inline int MPIDI_do_irecv(void *buf,
+                                 int count,
+                                 MPI_Datatype datatype,
+                                 int rank,
+                                 int tag,
+                                 MPIR_Comm * comm,
+                                 int context_offset,
+                                 MPIR_Request ** request, int alloc_req, uint64_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL, *unexp_req = NULL;
@@ -154,7 +155,8 @@ static inline int do_irecv(void *buf,
         }
         else {
             *request = unexp_req;
-            mpi_errno = handle_unexpected(buf, count, datatype, root_comm, context_id, unexp_req);
+            mpi_errno =
+                MPIDI_handle_unexpected(buf, count, datatype, root_comm, context_id, unexp_req);
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             goto fn_exit;
@@ -184,7 +186,7 @@ static inline int do_irecv(void *buf,
     MPIDI_CH4U_REQUEST(rreq, req->rreq.ignore) = mask_bits;
     MPIDI_CH4U_REQUEST(rreq, datatype) = datatype;
 
-    mpi_errno = prepare_recv_req(buf, count, datatype, rreq);
+    mpi_errno = MPIDI_prepare_recv_req(buf, count, datatype, rreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -224,7 +226,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_RECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_RECV);
 
-    mpi_errno = do_irecv(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0ULL);
+    mpi_errno =
+        MPIDI_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0ULL);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -380,7 +383,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_irecv(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_IRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_IRECV);
 
-    mpi_errno = do_irecv(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0ULL);
+    mpi_errno =
+        MPIDI_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0ULL);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
   fn_exit:
