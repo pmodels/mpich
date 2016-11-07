@@ -39,14 +39,12 @@ MPL_STATIC_INLINE_PREFIX int ucx_irecv_continous(void *buf,
     if (ucp_request->req == NULL) {
         req = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
         MPIR_Request_add_ref(req);
-        MPIDI_UCX_REQ(req).a.ucp_request = ucp_request;
         ucp_request->req = req;
         ucp_request_release(ucp_request);
     }
     else {
         req = ucp_request->req;
         ucp_request->req = NULL;
-        MPIDI_UCX_REQ(req).a.ucp_request = NULL;
         ucp_request_release(ucp_request);
     }
   fn_exit:

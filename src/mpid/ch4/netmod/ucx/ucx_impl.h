@@ -28,8 +28,7 @@
 static inline uint64_t MPIDI_UCX_init_tag(MPIR_Context_id_t contextid, int source, uint64_t tag)
 {
     uint64_t ucp_tag = 0;
-    ucp_tag = contextid;
-    ucp_tag = (ucp_tag << MPIDI_UCX_SOURCE_SHIFT);
+    ucp_tag = (contextid << MPIDI_UCX_SOURCE_SHIFT);
     ucp_tag |= source;
     ucp_tag = (ucp_tag << MPIDI_UCX_TAG_SHIFT);
     ucp_tag |= (MPIDI_UCX_TAG_MASK & tag);
@@ -47,10 +46,10 @@ static inline uint64_t MPIDI_UCX_tag_mask(int mpi_tag, int src)
 {
     uint64_t tag_mask;
     tag_mask = ~(MPIR_TAG_PROC_FAILURE_BIT | MPIR_TAG_ERROR_BIT);
-    if (mpi_tag == MPI_ANY_TAG)
+    if(unlikely (mpi_tag == MPI_ANY_TAG))
         tag_mask &= ~MPIDI_UCX_TAG_MASK;
 
-    if (src == MPI_ANY_SOURCE)
+    if (unlikely(src == MPI_ANY_SOURCE))
         tag_mask &= ~(MPIDI_UCX_SOURCE_MASK);
 
     return tag_mask;
@@ -61,10 +60,10 @@ static inline uint64_t MPIDI_UCX_recv_tag(int mpi_tag, int src, MPIR_Context_id_
     uint64_t ucp_tag = contextid;
 
     ucp_tag = (ucp_tag << MPIDI_UCX_SOURCE_SHIFT);
-    if (src != MPI_ANY_SOURCE)
+    if (likely(src != MPI_ANY_SOURCE))
         ucp_tag |= (src & UCS_MASK(MPIDI_UCX_CONTEXT_RANK_BITS));
     ucp_tag = ucp_tag << MPIDI_UCX_TAG_SHIFT;
-    if (mpi_tag != MPI_ANY_TAG)
+    if (likely(mpi_tag != MPI_ANY_TAG))
         ucp_tag |= (MPIDI_UCX_TAG_MASK & mpi_tag);
     return ucp_tag;
 }
