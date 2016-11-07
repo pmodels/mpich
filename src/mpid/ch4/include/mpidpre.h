@@ -140,7 +140,7 @@ typedef struct MPIDI_CH4U_req_ext_t {
     };
 
     struct iovec *iov;
-    void *cmpl_handler_fn;
+    void *target_cmpl_cb;
     uint64_t seq_no;
     uint64_t request;
     uint64_t status;

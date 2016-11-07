@@ -20,7 +20,7 @@ MPIDI_SHM_funcs_t MPIDI_SHM_stubshm_funcs = {
     MPIDI_SHM_mpi_init_hook,
     MPIDI_SHM_mpi_finalize_hook,
     MPIDI_SHM_progress,
-    MPIDI_SHM_am_reg_handler,
+    MPIDI_SHM_am_reg_cb,
     MPIDI_SHM_mpi_comm_connect,
     MPIDI_SHM_mpi_comm_disconnect,
     MPIDI_SHM_mpi_open_port,
