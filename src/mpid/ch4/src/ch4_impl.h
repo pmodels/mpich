@@ -13,6 +13,7 @@
 
 #include "ch4_types.h"
 #include <mpidch4.h>
+#include "mpidig.h"
 
 /* Static inlines */
 static inline int MPIDI_CH4U_get_tag(uint64_t match_bits)

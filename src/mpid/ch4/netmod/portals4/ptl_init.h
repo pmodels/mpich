@@ -163,7 +163,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     }
 
     /* Setup CH4R Active Messages */
-    MPIDI_CH4U_mpi_init(comm_world, comm_self, num_contexts, netmod_contexts);
+    MPIDIG_init(comm_world, comm_self, num_contexts, netmod_contexts);
     for (i = 0; i < MPIDI_PTL_NUM_OVERFLOW_BUFFERS; i++) {
         MPIDI_PTL_global.overflow_bufs[i] = MPL_malloc(MPIDI_PTL_OVERFLOW_BUFFER_SZ);
         MPIDI_PTL_append_overflow(i);
@@ -191,7 +191,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     MPIR_Comm_release(MPIR_Process.comm_world);
     MPIR_Comm_release(MPIR_Process.comm_self);
 
-    MPIDI_CH4U_mpi_finalize();
+    MPIDIG_finalize();
 
     for (i = 0; i < MPIDI_PTL_NUM_OVERFLOW_BUFFERS; i++) {
         ret = PtlMEUnlink(MPIDI_PTL_global.overflow_me_handles[i]);

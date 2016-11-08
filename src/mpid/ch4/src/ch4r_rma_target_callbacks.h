@@ -1084,7 +1084,7 @@ static inline int MPIDI_cswap_ack_target_cmpl_cb(MPIR_Request * rreq)
 static inline int MPIDI_put_ack_target_msg_cb(int handler_id, void *am_hdr,
                                               void **data,
                                               size_t * p_data_sz, int *is_contig,
-                                              MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,
+                                              MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                               MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1124,7 +1124,7 @@ static inline int MPIDI_put_ack_target_msg_cb(int handler_id, void *am_hdr,
 static inline int MPIDI_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
                                               void **data,
                                               size_t * p_data_sz, int *is_contig,
-                                              MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,
+                                              MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                               MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1164,7 +1164,7 @@ static inline int MPIDI_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
 static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
                                                   void **data,
                                                   size_t * p_data_sz, int *is_contig,
-                                                  MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,
+                                                  MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                   MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1236,7 +1236,7 @@ static inline int MPIDI_get_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
 static inline int MPIDI_cswap_ack_target_msg_cb(int handler_id, void *am_hdr,
                                                 void **data,
                                                 size_t * p_data_sz, int *is_contig,
-                                                MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,
+                                                MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                 MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1269,7 +1269,7 @@ static inline int MPIDI_cswap_ack_target_msg_cb(int handler_id, void *am_hdr,
 static inline int MPIDI_win_ctrl_target_msg_cb(int handler_id, void *am_hdr,
                                                void **data,
                                                size_t * p_data_sz, int *is_contig,
-                                               MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,
+                                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1336,7 +1336,7 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
                                           void **data,
                                           size_t * p_data_sz,
                                           int *is_contig,
-                                          MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,
+                                          MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                           MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1440,7 +1440,7 @@ static inline int MPIDI_put_iov_target_msg_cb(int handler_id, void *am_hdr,
                                               void **data,
                                               size_t * p_data_sz,
                                               int *is_contig,
-                                              MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,
+                                              MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                               MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1495,7 +1495,7 @@ static inline int MPIDI_put_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
                                                   void **data,
                                                   size_t * p_data_sz,
                                                   int *is_contig,
-                                                  MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,
+                                                  MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                   MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1543,7 +1543,7 @@ static inline int MPIDI_acc_iov_ack_target_msg_cb(int handler_id, void *am_hdr,
                                                   void **data,
                                                   size_t * p_data_sz,
                                                   int *is_contig,
-                                                  MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,
+                                                  MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                   MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1591,7 +1591,7 @@ static inline int MPIDI_get_acc_iov_ack_target_msg_cb(int handler_id, void *am_h
                                                       void **data,
                                                       size_t * p_data_sz,
                                                       int *is_contig,
-                                                      MPIDI_NM_am_target_cmpl_cb *
+                                                      MPIDIG_am_target_cmpl_cb *
                                                       target_cmpl_cb, MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1639,7 +1639,7 @@ static inline int MPIDI_put_data_target_msg_cb(int handler_id, void *am_hdr,
                                                void **data,
                                                size_t * p_data_sz,
                                                int *is_contig,
-                                               MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,
+                                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1680,7 +1680,7 @@ static inline int MPIDI_acc_data_target_msg_cb(int handler_id, void *am_hdr,
                                                void **data,
                                                size_t * p_data_sz,
                                                int *is_contig,
-                                               MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,
+                                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1708,7 +1708,7 @@ static inline int MPIDI_get_acc_data_target_msg_cb(int handler_id, void *am_hdr,
                                                    void **data,
                                                    size_t * p_data_sz,
                                                    int *is_contig,
-                                                   MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,
+                                                   MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                    MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1736,7 +1736,7 @@ static inline int MPIDI_cswap_target_msg_cb(int handler_id, void *am_hdr,
                                             void **data,
                                             size_t * p_data_sz,
                                             int *is_contig,
-                                            MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,
+                                            MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                             MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1800,7 +1800,7 @@ static inline int MPIDI_acc_target_msg_cb(int handler_id, void *am_hdr,
                                           void **data,
                                           size_t * p_data_sz,
                                           int *is_contig,
-                                          MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,
+                                          MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                           MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1888,7 +1888,7 @@ static inline int MPIDI_get_acc_target_msg_cb(int handler_id, void *am_hdr,
                                               void **data,
                                               size_t * p_data_sz,
                                               int *is_contig,
-                                              MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,
+                                              MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                               MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1915,7 +1915,7 @@ static inline int MPIDI_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
                                               void **data,
                                               size_t * p_data_sz,
                                               int *is_contig,
-                                              MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,
+                                              MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                               MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1981,7 +1981,7 @@ static inline int MPIDI_get_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
                                                   void **data,
                                                   size_t * p_data_sz,
                                                   int *is_contig,
-                                                  MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,
+                                                  MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                                   MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -2007,7 +2007,7 @@ static inline int MPIDI_get_target_msg_cb(int handler_id, void *am_hdr,
                                           void **data,
                                           size_t * p_data_sz,
                                           int *is_contig,
-                                          MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,
+                                          MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                           MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -2070,7 +2070,7 @@ static inline int MPIDI_get_ack_target_msg_cb(int handler_id, void *am_hdr,
                                               void **data,
                                               size_t * p_data_sz,
                                               int *is_contig,
-                                              MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,
+                                              MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                               MPIR_Request ** req)
 {
     int mpi_errno = MPI_SUCCESS;

@@ -21,7 +21,6 @@
 #define MPIDI_PTL_OVERFLOW_BUFFER_SZ   (1024*1024)
 #define MPIDI_PTL_MAX_AM_EAGER_SZ      (64*1024)
 #define MPIDI_PTL_AM_TAG               (1 << 28)
-#define MPIDI_PTL_MAX_AM_HANDLERS      (64)
 
 typedef struct {
     ptl_process_t process;
@@ -36,8 +35,6 @@ typedef struct {
     char pname[MPI_MAX_PROCESSOR_NAME];
     void *overflow_bufs[MPIDI_PTL_NUM_OVERFLOW_BUFFERS];
     ptl_handle_me_t overflow_me_handles[MPIDI_PTL_NUM_OVERFLOW_BUFFERS];
-    MPIDI_NM_am_target_msg_cb target_msg_cbs[MPIDI_PTL_MAX_AM_HANDLERS];
-    MPIDI_NM_am_origin_cb origin_cbs[MPIDI_PTL_MAX_AM_HANDLERS];
     ptl_handle_ni_t ni;
     ptl_ni_limits_t ni_limits;
     ptl_handle_eq_t eqs[2];

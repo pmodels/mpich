@@ -485,7 +485,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_event(struct fi_cq_tagged_entry 
         MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
     }
 
-    mpi_errno = MPIDI_Global.origin_cbs[msg_hdr->handler_id] (sreq);
+    mpi_errno = MPIDIG_global.origin_cbs[msg_hdr->handler_id] (sreq);
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);

@@ -16,24 +16,11 @@
 
 #define MPIDI_MAX_NETMOD_STRING_LEN 64
 
-typedef int (*MPIDI_NM_am_target_cmpl_cb) (MPIR_Request * req);
-typedef int (*MPIDI_NM_am_origin_cb) (MPIR_Request * req);
-
-/* Callback function setup by handler register function */
-/* for short cases, output arguments are NULL */
-typedef int (*MPIDI_NM_am_target_msg_cb)
- (int handler_id, void *am_hdr, void **data,    /* data should be iovs if *is_contig is false */
-  size_t * data_sz, int *is_contig, MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,        /* completion handler */
-  MPIR_Request ** req);         /* if allocated, need pointer to completion function */
-
 typedef int (*MPIDI_NM_mpi_init_t) (int rank, int size, int appnum, int *tag_ub,
                                     MPIR_Comm * comm_world, MPIR_Comm * comm_self, int spawned,
                                     int num_contexts, void **netmod_contexts);
 typedef int (*MPIDI_NM_mpi_finalize_t) (void);
 typedef int (*MPIDI_NM_progress_t) (void *netmod_context, int blocking);
-typedef int (*MPIDI_NM_am_reg_cb_t) (int handler_id,
-                                     MPIDI_NM_am_origin_cb origin_cb,
-                                     MPIDI_NM_am_target_msg_cb target_msg_cb);
 typedef int (*MPIDI_NM_mpi_comm_connect_t) (const char *port_name, MPIR_Info * info, int root,
                                             MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr);
 typedef int (*MPIDI_NM_mpi_comm_disconnect_t) (MPIR_Comm * comm_ptr);
@@ -377,7 +364,6 @@ typedef struct MPIDI_NM_funcs {
     MPIDI_NM_am_request_init_t am_request_init;
     MPIDI_NM_am_request_finalize_t am_request_finalize;
     /* Active Message Routines */
-    MPIDI_NM_am_reg_cb_t am_reg_cb;
     MPIDI_NM_am_send_hdr_t am_send_hdr;
     MPIDI_NM_am_isend_t am_isend;
     MPIDI_NM_am_isendv_t am_isendv;
@@ -511,11 +497,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_init_hook(int rank, int size, int appn
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(void *netmod_context,
                                                int blocking) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_am_reg_cb(int handler_id,
-                                                MPIDI_NM_am_origin_cb
-                                                origin_cb,
-                                                MPIDI_NM_am_target_msg_cb
-                                                target_msg_cb) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_connect(const char *port_name, MPIR_Info * info,
                                                        int root, MPIR_Comm * comm,
                                                        MPIR_Comm **
