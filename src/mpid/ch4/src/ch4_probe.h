@@ -69,8 +69,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Mprobe(int source,
                                           MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS, flag = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_MPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_MPROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_MPROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_MPROBE);
 
     if (source == MPI_PROC_NULL) {
         MPIR_Status_set_procnull(status);
@@ -103,7 +103,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Mprobe(int source,
         MPIDI_Progress_test();
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_MPROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_MPROBE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

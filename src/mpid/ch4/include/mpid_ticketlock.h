@@ -24,14 +24,25 @@ typedef union MPIDI_CH4_Ticket_lock {
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_acquire(MPIDI_CH4_Ticket_lock * m)
 {
     uint16_t u = __sync_fetch_and_add(&m->s.clients, 1);
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_ACQUIRE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_ACQUIRE);
+
     while (m->s.ticket != u)
         asm volatile ("pause\n":::"memory");
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_ACQUIRE);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_release(MPIDI_CH4_Ticket_lock * m)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_RELEASE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_RELEASE);
+
     asm volatile ("":::"memory");
     m->s.ticket++;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_RELEASE);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_CH4I_Thread_mutex_try_acquire(MPIDI_CH4_Ticket_lock * m)
@@ -40,39 +51,64 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4I_Thread_mutex_try_acquire(MPIDI_CH4_Ticke
     uint16_t u2 = u + 1;
     uint32_t val = ((uint32_t) u << 16) + u;
     uint32_t val2 = ((uint32_t) u2 << 16) + u;
+    int ret = EBUSY;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_TRY_ACQUIRE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_TRY_ACQUIRE);
 
     if (__sync_val_compare_and_swap(&m->u, val, val2) == val)
-        return 0;
+        ret = 0;
 
-    return EBUSY;
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_TRY_ACQUIRE);
+    return ret;
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_lock(MPIDI_CH4_Ticket_lock * m,
                                                            int *mpi_error)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_LOCK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_LOCK);
+
     MPIDI_CH4I_Thread_mutex_acquire(m);
     *mpi_error = 0;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_LOCK);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_unlock(MPIDI_CH4_Ticket_lock * m,
                                                              int *mpi_error)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_UNLOCK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_UNLOCK);
+
     MPIDI_CH4I_Thread_mutex_release(m);
     *mpi_error = 0;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_UNLOCK);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_create(MPIDI_CH4_Ticket_lock * m,
                                                              int *mpi_error)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_CREATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_CREATE);
+
     m->u = 0;
     *mpi_error = 0;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_CREATE);
 }
 
 MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_destroy(MPIDI_CH4_Ticket_lock * m,
                                                               int *mpi_error)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_DESTROY);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_DESTROY);
+
     m->u = 0;
     *mpi_error = 0;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_THREAD_MUTEX_DESTROY);
 }
 
 /* For this implementation we have two options                                        */
@@ -83,7 +119,12 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4I_Thread_mutex_destroy(MPIDI_CH4_Ticket_l
 MPL_STATIC_INLINE_PREFIX void
 MPIDI_CH4I_Thread_cond_wait(MPIDU_Thread_cond_t * cond, MPIDI_CH4_Ticket_lock * m, int *mpi_error)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_THREAD_COND_WAIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_THREAD_COND_WAIT);
+
     MPIR_Assert(0);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_THREAD_COND_WAIT);
 }
 
 
