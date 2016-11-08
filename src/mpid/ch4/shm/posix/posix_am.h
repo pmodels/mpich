@@ -12,7 +12,7 @@
 
 #include "posix_impl.h"
 
-static inline int MPIDI_SHM_am_isend(int rank,
+static inline int MPIDI_POSIX_am_isend(int rank,
                                      MPIR_Comm * comm,
                                      int handler_id,
                                      const void *am_hdr,
@@ -21,16 +21,16 @@ static inline int MPIDI_SHM_am_isend(int rank,
                                      MPI_Count count,
                                      MPI_Datatype datatype, MPIR_Request * sreq, void *shm_context)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_AM_ISEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_AM_ISEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_ISEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ISEND);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_AM_ISEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ISEND);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_am_isendv(int rank,
+static inline int MPIDI_POSIX_am_isendv(int rank,
                                       MPIR_Comm * comm,
                                       int handler_id,
                                       struct iovec *am_hdr,
@@ -39,16 +39,16 @@ static inline int MPIDI_SHM_am_isendv(int rank,
                                       MPI_Count count,
                                       MPI_Datatype datatype, MPIR_Request * sreq, void *shm_context)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_AM_ISENDV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_AM_ISENDV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_ISENDV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ISENDV);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_AM_ISENDV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ISENDV);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_am_isend_reply(MPIR_Context_id_t context_id, int src_rank,
+static inline int MPIDI_POSIX_am_isend_reply(MPIR_Context_id_t context_id, int src_rank,
                                            int handler_id,
                                            const void *am_hdr,
                                            size_t am_hdr_sz,
@@ -56,60 +56,60 @@ static inline int MPIDI_SHM_am_isend_reply(MPIR_Context_id_t context_id, int src
                                            MPI_Count count,
                                            MPI_Datatype datatype, MPIR_Request * sreq)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_AM_ISEND_REPLY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_AM_ISEND_REPLY);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_ISEND_REPLY);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_ISEND_REPLY);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_AM_ISEND_REPLY);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_ISEND_REPLY);
     return MPI_SUCCESS;
 }
 
-static inline size_t MPIDI_SHM_am_hdr_max_sz(void)
+static inline size_t MPIDI_POSIX_am_hdr_max_sz(void)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_AM_HDR_MAX_SZ);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_AM_HDR_MAX_SZ);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_HDR_MAX_SZ);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_HDR_MAX_SZ);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_AM_HDR_MAX_SZ);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_HDR_MAX_SZ);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_am_send_hdr(int rank,
+static inline int MPIDI_POSIX_am_send_hdr(int rank,
                                         MPIR_Comm * comm,
                                         int handler_id,
                                         const void *am_hdr, size_t am_hdr_sz, void *shm_context)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_AM_SEND_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_AM_SEND_HDR);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_AM_SEND_HDR);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_am_send_hdr_reply(MPIR_Context_id_t context_id, int src_rank,
+static inline int MPIDI_POSIX_am_send_hdr_reply(MPIR_Context_id_t context_id, int src_rank,
                                               int handler_id, const void *am_hdr, size_t am_hdr_sz)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_AM_SEND_HDR_REPLY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_AM_SEND_HDR_REPLY);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR_REPLY);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR_REPLY);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_AM_SEND_HDR_REPLY);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_SEND_HDR_REPLY);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_am_recv(MPIR_Request * req)
+static inline int MPIDI_POSIX_am_recv(MPIR_Request * req)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_AM_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_AM_RECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_AM_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_AM_RECV);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_AM_RECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_AM_RECV);
     return MPI_SUCCESS;
 }
 

@@ -24,8 +24,8 @@ static inline int MPIDI_POSIX_progress_recv(int blocking, int *completion_count)
     size_t data_sz;
     int in_cell = 0;
     MPIDI_POSIX_cell_ptr_t cell = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_DO_PROGRESS_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_DO_PROGRESS_RECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_DO_PROGRESS_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_DO_PROGRESS_RECV);
     /* try to match with unexpected */
     MPIR_Request *sreq = MPIDI_POSIX_recvq_unexpected.head;
     MPIR_Request *prev_sreq = NULL;
@@ -250,7 +250,7 @@ static inline int MPIDI_POSIX_progress_recv(int blocking, int *completion_count)
 
     (*completion_count)++;
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_DO_PROGRESS_RECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_DO_PROGRESS_RECV);
     return mpi_errno;
 }
 
@@ -266,8 +266,8 @@ static inline int MPIDI_POSIX_progress_send(int blocking, int *completion_count)
     MPIDI_POSIX_cell_ptr_t cell = NULL;
     MPIR_Request *sreq = MPIDI_POSIX_sendq.head;
     MPIR_Request *prev_sreq = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_DO_PROGRESS_SEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_DO_PROGRESS_SEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_DO_PROGRESS_SEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_DO_PROGRESS_SEND);
 
     if (sreq == NULL)
         goto fn_exit;
@@ -364,17 +364,17 @@ static inline int MPIDI_POSIX_progress_send(int blocking, int *completion_count)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_DO_PROGRESS_SEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_DO_PROGRESS_SEND);
     return mpi_errno;
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_SHM_progress)
-static inline int MPIDI_SHM_progress(int blocking)
+#define FCNAME DECL_FUNC(MPIDI_POSIX_progress)
+static inline int MPIDI_POSIX_progress(int blocking)
 {
     int complete = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_PROGRESS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_PROGRESS);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_PROGRESS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_PROGRESS);
 
     do {
         /* Receieve progress */
@@ -390,59 +390,59 @@ static inline int MPIDI_SHM_progress(int blocking)
             break;
     } while (blocking);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_PROGRESS);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_PROGRESS);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_progress_test(void)
+static inline int MPIDI_POSIX_progress_test(void)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_progress_poke(void)
+static inline int MPIDI_POSIX_progress_poke(void)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline void MPIDI_SHM_progress_start(MPID_Progress_state * state)
+static inline void MPIDI_POSIX_progress_start(MPID_Progress_state * state)
 {
     MPIR_Assert(0);
     return;
 }
 
-static inline void MPIDI_SHM_progress_end(MPID_Progress_state * state)
+static inline void MPIDI_POSIX_progress_end(MPID_Progress_state * state)
 {
     MPIR_Assert(0);
     return;
 }
 
-static inline int MPIDI_SHM_progress_wait(MPID_Progress_state * state)
+static inline int MPIDI_POSIX_progress_wait(MPID_Progress_state * state)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_progress_register(int (*progress_fn) (int *))
+static inline int MPIDI_POSIX_progress_register(int (*progress_fn) (int *))
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_progress_deregister(int id)
+static inline int MPIDI_POSIX_progress_deregister(int id)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_progress_activate(int id)
+static inline int MPIDI_POSIX_progress_activate(int id)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_progress_deactivate(int id)
+static inline int MPIDI_POSIX_progress_deactivate(int id)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

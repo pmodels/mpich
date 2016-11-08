@@ -32,7 +32,6 @@ noinst_HEADERS += src/mpid/ch4/shm/posix/posix_am.h        \
                   src/mpid/ch4/shm/posix/posix_unimpl.h
 
 mpi_core_sources += src/mpid/ch4/shm/posix/globals.c    \
-                    src/mpid/ch4/shm/posix/func_table.c \
                     src/mpid/ch4/shm/posix/barrier.c
 
 endif

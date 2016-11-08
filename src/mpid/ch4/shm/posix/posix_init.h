@@ -22,8 +22,8 @@ extern MPIDI_POSIX_mem_region_t MPIDI_POSIX_mem_region;
 extern char *MPIDI_POSIX_asym_base_addr;
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_SHM_mpi_init_hook)
-static inline int MPIDI_SHM_mpi_init_hook(int rank, int size)
+#define FCNAME DECL_FUNC(MPIDI_POSIX_mpi_init_hook)
+static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size)
 {
     int mpi_errno = MPI_SUCCESS;
     int num_local = 0;
@@ -37,9 +37,9 @@ static inline int MPIDI_SHM_mpi_init_hook(int rank, int size)
     MPIDI_POSIX_queue_t *recv_queues_p = NULL;
     MPIDI_POSIX_queue_t *free_queues_p = NULL;
     MPIR_CHKPMEM_DECL(9);
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_INIT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_INIT);
 
     MPIDI_POSIX_mem_region.num_seg = 1;
     MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_mem_region.seg, MPIDU_shm_seg_info_ptr_t,
@@ -219,7 +219,7 @@ static inline int MPIDI_SHM_mpi_init_hook(int rank, int size)
 
     MPIR_CHKPMEM_COMMIT();
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_INIT);
     return mpi_errno;
   fn_fail:
     /* --BEGIN ERROR HANDLING-- */
@@ -229,12 +229,12 @@ static inline int MPIDI_SHM_mpi_init_hook(int rank, int size)
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_SHM_mpi_finalize_hook)
-static inline int MPIDI_SHM_mpi_finalize_hook(void)
+#define FCNAME DECL_FUNC(MPIDI_POSIX_mpi_finalize_hook)
+static inline int MPIDI_POSIX_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_FINALIZE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_FINALIZE);
 
     /* local barrier */
     mpi_errno = MPIDU_shm_barrier(MPIDI_POSIX_mem_region.barrier, MPIDI_POSIX_mem_region.num_local);
@@ -258,51 +258,51 @@ static inline int MPIDI_SHM_mpi_finalize_hook(void)
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_FINALIZE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_FINALIZE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
-static inline void *MPIDI_SHM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
+static inline void *MPIDI_POSIX_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
     MPIR_Assert(0);
     return NULL;
 }
 
-static inline int MPIDI_SHM_mpi_free_mem(void *ptr)
+static inline int MPIDI_POSIX_mpi_free_mem(void *ptr)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_comm_get_lpid(MPIR_Comm * comm_ptr,
+static inline int MPIDI_POSIX_comm_get_lpid(MPIR_Comm * comm_ptr,
                                           int idx, int *lpid_ptr, MPL_bool is_remote)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_get_node_id(MPIR_Comm * comm, int rank, MPID_Node_id_t * id_p)
+static inline int MPIDI_POSIX_get_node_id(MPIR_Comm * comm, int rank, MPID_Node_id_t * id_p)
 {
     *id_p = (MPID_Node_id_t) 0;
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_get_max_node_id(MPIR_Comm * comm, MPID_Node_id_t * max_id_p)
+static inline int MPIDI_POSIX_get_max_node_id(MPIR_Comm * comm, MPID_Node_id_t * max_id_p)
 {
     *max_id_p = (MPID_Node_id_t) 1;
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size,
+static inline int MPIDI_POSIX_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size,
                                             char **local_upids)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_upids_to_lupids(int size,
+static inline int MPIDI_POSIX_upids_to_lupids(int size,
                                             size_t * remote_upid_size,
                                             char *remote_upids, int **remote_lupids)
 {
@@ -310,7 +310,7 @@ static inline int MPIDI_SHM_upids_to_lupids(int size,
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
+static inline int MPIDI_POSIX_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
                                                         int size, const int lpids[])
 {
     MPIR_Assert(0);
@@ -318,10 +318,10 @@ static inline int MPIDI_SHM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_SHM_mpi_type_commit_hook
+#define FUNCNAME MPIDI_POSIX_mpi_type_commit_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_SHM_mpi_type_commit_hook(MPIR_Datatype * type)
+static inline int MPIDI_POSIX_mpi_type_commit_hook(MPIR_Datatype * type)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SHM_TYPE_CREATE_HOOK);
@@ -332,10 +332,10 @@ static inline int MPIDI_SHM_mpi_type_commit_hook(MPIR_Datatype * type)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_SHM_mpi_type_free_hook
+#define FUNCNAME MPIDI_POSIX_mpi_type_free_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_SHM_mpi_type_free_hook(MPIR_Datatype * type)
+static inline int MPIDI_POSIX_mpi_type_free_hook(MPIR_Datatype * type)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SHM_TYPE_FREE_HOOK);
@@ -346,10 +346,10 @@ static inline int MPIDI_SHM_mpi_type_free_hook(MPIR_Datatype * type)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_SHM_mpi_op_commit_hook
+#define FUNCNAME MPIDI_POSIX_mpi_op_commit_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_SHM_mpi_op_commit_hook(MPIR_Op * op)
+static inline int MPIDI_POSIX_mpi_op_commit_hook(MPIR_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SHM_OP_CREATE_HOOK);
@@ -360,10 +360,10 @@ static inline int MPIDI_SHM_mpi_op_commit_hook(MPIR_Op * op)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_SHM_mpi_op_free_hook
+#define FUNCNAME MPIDI_POSIX_mpi_op_free_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_SHM_mpi_op_free_hook(MPIR_Op * op)
+static inline int MPIDI_POSIX_mpi_op_free_hook(MPIR_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_SHM_OP_FREE_HOOK);
