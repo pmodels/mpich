@@ -146,6 +146,9 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
     MPIDI_CH4U_WIN(win, mmap_sz) = 0;
     MPIDI_CH4U_WIN(win, mmap_addr) = NULL;
 
+    MPIR_cc_set(&MPIDI_CH4U_WIN(win, local_cmpl_cnts), 0);
+    MPIR_cc_set(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), 0);
+
     MPIDI_CH4U_WIN(win, win_id) = MPIDI_CH4U_generate_win_id(comm_ptr);
     MPL_HASH_ADD(dev.ch4u.hash_handle, MPIDI_CH4_Global.win_hash,
                  dev.ch4u.win_id, sizeof(uint64_t), win);
@@ -199,29 +202,6 @@ static inline int MPIDI_CH4I_fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Grou
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH4I_progress_win_fence
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_CH4I_progress_win_fence(MPIR_Win * win)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_PROGRESS_WIN_FENCE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_PROGRESS_WIN_FENCE);
-
-    do {
-        MPIDI_CH4R_PROGRESS();
-    } while (OPA_load_int(&MPIDI_CH4U_WIN(win, outstanding_ops)) != 0);
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_PROGRESS_WIN_FENCE);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_CH4R_mpi_win_start
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -268,9 +248,10 @@ static inline int MPIDI_CH4R_mpi_win_complete(MPIR_Win * win)
 
     MPIDI_CH4U_EPOCH_START_CHECK2(win, mpi_errno, goto fn_fail);
 
-    mpi_errno = MPIDI_CH4I_progress_win_fence(win);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    /* FIXME: per-target completion. */
+    do {
+        MPIDI_CH4R_PROGRESS();
+    } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) != 0);
 
     group = MPIDI_CH4U_WIN(win, sync).sc.group;
     MPIR_Assert(group != NULL);
@@ -474,9 +455,11 @@ static inline int MPIDI_CH4R_mpi_win_unlock(int rank, MPIR_Win * win)
 
     MPIDI_CH4U_EPOCH_ORIGIN_CHECK(win, MPIDI_CH4U_EPOTYPE_LOCK, mpi_errno, return mpi_errno);
 
-    mpi_errno = MPIDI_CH4I_progress_win_fence(win);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    /* FIXME: per-target completion. */
+    do {
+        MPIDI_CH4R_PROGRESS();
+    } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, remote_cmpl_cnts)) != 0);
+    MPIR_Assert(MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) == 0);
 
     msg.win_id = MPIDI_CH4U_WIN(win, win_id);
     msg.origin_rank = win->comm_ptr->rank;
@@ -612,6 +595,10 @@ static inline int MPIDI_CH4R_win_finalize(MPIR_Win ** win_ptr)
         MPL_free(MPIDI_CH4U_WIN(win, shared_table));
     }
 
+    /* All local outstanding OPs should have been completed remotely. */
+    MPIR_Assert(MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) == 0);
+    MPIR_Assert(MPIR_cc_get(MPIDI_CH4U_WIN(win, remote_cmpl_cnts)) == 0);
+
     MPIR_Comm_release(win->comm_ptr);
     MPIR_Handle_obj_free(&MPIR_Win_mem, win);
 
@@ -656,9 +643,9 @@ static inline int MPIDI_CH4R_mpi_win_fence(int massert, MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_FENCE);
 
     MPIDI_CH4U_EPOCH_FENCE_CHECK(win, mpi_errno, goto fn_fail);
-    mpi_errno = MPIDI_CH4I_progress_win_fence(win);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    do {
+        MPIDI_CH4R_PROGRESS();
+    } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) != 0);
     MPIDI_CH4U_EPOCH_FENCE_EVENT(win, massert);
 
     /*
@@ -1001,9 +988,12 @@ static inline int MPIDI_CH4R_mpi_win_flush(int rank, MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_FLUSH);
 
     MPIDI_CH4U_EPOCH_LOCK_CHECK(win, mpi_errno, goto fn_fail);
-    mpi_errno = MPIDI_CH4I_progress_win_fence(win);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+
+    /* FIXME: per-target completion. */
+    do {
+        MPIDI_CH4R_PROGRESS();
+    } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, remote_cmpl_cnts)) != 0);
+    MPIR_Assert(MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) == 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_FLUSH);
@@ -1024,9 +1014,9 @@ static inline int MPIDI_CH4R_mpi_win_flush_local_all(MPIR_Win * win)
 
     MPIDI_CH4U_EPOCH_LOCK_CHECK(win, mpi_errno, goto fn_fail);
 
-    mpi_errno = MPIDI_CH4I_progress_win_fence(win);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    do {
+        MPIDI_CH4R_PROGRESS();
+    } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) != 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_FLUSH_LOCAL_ALL);
@@ -1049,9 +1039,10 @@ static inline int MPIDI_CH4R_mpi_win_unlock_all(MPIR_Win * win)
 
     MPIDI_CH4U_EPOCH_ORIGIN_CHECK(win, MPIDI_CH4U_EPOTYPE_LOCK_ALL, mpi_errno, goto fn_exit);
 
-    mpi_errno = MPIDI_CH4I_progress_win_fence(win);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    do {
+        MPIDI_CH4R_PROGRESS();
+    } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, remote_cmpl_cnts)) != 0);
+    MPIR_Assert(MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) == 0);
 
     MPIR_Assert(MPIDI_CH4U_WIN(win, lockQ) != NULL);
     lockQ = (MPIDI_CH4U_win_lock_info *) MPIDI_CH4U_WIN(win, lockQ);
@@ -1136,9 +1127,10 @@ static inline int MPIDI_CH4R_mpi_win_flush_local(int rank, MPIR_Win * win)
 
     MPIDI_CH4U_EPOCH_LOCK_CHECK(win, mpi_errno, goto fn_fail);
 
-    mpi_errno = MPIDI_CH4I_progress_win_fence(win);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    /* FIXME: per-target completion. */
+    do {
+        MPIDI_CH4R_PROGRESS();
+    } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) != 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_FLUSH_LOCAL);
@@ -1179,9 +1171,10 @@ static inline int MPIDI_CH4R_mpi_win_flush_all(MPIR_Win * win)
 
     MPIDI_CH4U_EPOCH_LOCK_CHECK(win, mpi_errno, goto fn_fail);
 
-    mpi_errno = MPIDI_CH4I_progress_win_fence(win);
-    if (mpi_errno)
-        MPIR_ERR_POP(mpi_errno);
+    do {
+        MPIDI_CH4R_PROGRESS();
+    } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, remote_cmpl_cnts)) != 0);
+    MPIR_Assert(MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) == 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_FLUSH_ALL);
