@@ -22,7 +22,15 @@ static inline int MPIDI_NM_mpi_recv(void *buf,
                                     int context_offset, MPI_Status * status,
                                     MPIR_Request ** request)
 {
-    return MPIDIG_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, status, request);
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RECV);
+
+    ret = MPIDIG_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, status, request);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RECV);
+    return ret;
 }
 
 static inline int MPIDI_NM_mpi_recv_init(void *buf,
@@ -33,7 +41,15 @@ static inline int MPIDI_NM_mpi_recv_init(void *buf,
                                          MPIR_Comm * comm, int context_offset,
                                          MPIR_Request ** request)
 {
-    return MPIDIG_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, request);
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RECV_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RECV_INIT);
+
+    ret = MPIDIG_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, request);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RECV_INIT);
+    return ret;
 }
 
 static inline int MPIDI_NM_mpi_imrecv(void *buf,
@@ -41,7 +57,15 @@ static inline int MPIDI_NM_mpi_imrecv(void *buf,
                                       MPI_Datatype datatype,
                                       MPIR_Request * message, MPIR_Request ** rreqp)
 {
-    return MPIDIG_mpi_imrecv(buf, count, datatype, message, rreqp);
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IMRECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IMRECV);
+
+    ret = MPIDIG_mpi_imrecv(buf, count, datatype, message, rreqp);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IMRECV);
+    return ret;
 }
 
 static inline int MPIDI_NM_mpi_irecv(void *buf,
@@ -51,12 +75,28 @@ static inline int MPIDI_NM_mpi_irecv(void *buf,
                                      int tag,
                                      MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
 {
-    return MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IRECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IRECV);
+
+    ret = MPIDIG_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IRECV);
+    return ret;
 }
 
 static inline int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
 {
-    return MPIDIG_mpi_cancel_recv(rreq);
+    int ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_CANCEL_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_CANCEL_RECV);
+
+    ret = MPIDIG_mpi_cancel_recv(rreq);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_CANCEL_RECV);
+    return ret;
 }
 
 #endif /* NETMOD_UCX_RECV_H_INCLUDED */

@@ -20,7 +20,12 @@ static inline int MPIDI_SHM_mpi_improbe(int source,
                                         int context_offset,
                                         int *flag, MPIR_Request ** message, MPI_Status * status)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_IMPROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_IMPROBE);
+
     MPIR_Assert(0);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_IMPROBE);
     return MPI_SUCCESS;
 }
 
@@ -29,7 +34,12 @@ static inline int MPIDI_SHM_mpi_iprobe(int source,
                                        MPIR_Comm * comm,
                                        int context_offset, int *flag, MPI_Status * status)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_IPROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_IPROBE);
+
     MPIR_Assert(0);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_IPROBE);
     return MPI_SUCCESS;
 }
 

@@ -57,8 +57,8 @@ static inline int MPIDI_OFI_progress_do_queue(void *netmod_context);
 static inline void MPIDI_OFI_am_clear_request(MPIR_Request * sreq)
 {
     MPIDI_OFI_am_request_header_t *req_hdr;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_AM_OFI_CLEAR_REQ);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_AM_OFI_CLEAR_REQ);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_CLEAR_REQUEST);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_CLEAR_REQUEST);
 
     req_hdr = MPIDI_OFI_AMREQUEST(sreq, req_hdr);
 
@@ -71,7 +71,7 @@ static inline void MPIDI_OFI_am_clear_request(MPIR_Request * sreq)
 
     MPIDI_CH4R_release_buf(req_hdr);
     MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_AM_OFI_CLEAR_REQ);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_CLEAR_REQUEST);
     return;
 }
 
@@ -84,8 +84,8 @@ static inline int MPIDI_OFI_am_init_request(const void *am_hdr,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_request_header_t *req_hdr;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_AM_OFI_INIT_REQ);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_AM_OFI_INIT_REQ);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_INIT_REQUEST);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_INIT_REQUEST);
 
     if (MPIDI_OFI_AMREQUEST(sreq, req_hdr) == NULL) {
         req_hdr = (MPIDI_OFI_am_request_header_t *)
@@ -113,7 +113,7 @@ static inline int MPIDI_OFI_am_init_request(const void *am_hdr,
         MPIR_Memcpy(req_hdr->am_hdr, am_hdr, am_hdr_sz);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_AM_OFI_INIT_REQ);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_INIT_REQUEST);
     return mpi_errno;
 }
 
@@ -126,13 +126,13 @@ static inline int MPIDI_OFI_repost_buffer(void *buf, MPIR_Request * req)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_OFI_am_repost_request_t *am = (MPIDI_OFI_am_repost_request_t *) req;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_REPOST_BUFFER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_REPOST_BUFFER);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
     MPIDI_OFI_CALL_RETRY_AM(fi_recvmsg(MPIDI_OFI_EP_RX_MSG(0),
                                        &MPIDI_Global.am_msg[am->index],
                                        FI_MULTI_RECV | FI_COMPLETION), FALSE /* lock */ , repost);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_REPOST_BUFFER);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_REPOST_BUFFER);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -149,8 +149,8 @@ static inline int MPIDI_OFI_progress_do_queue(void *netmod_context)
 
     /* Caller must hold MPIDI_OFI_THREAD_FI_MUTEX */
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_PROGRESS_DO_QUEUE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_PROGRESS_DO_QUEUE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
 
     ret = fi_cq_read(MPIDI_Global.p2p_cq, &cq_entry, 1);
 
@@ -185,7 +185,7 @@ static inline int MPIDI_OFI_progress_do_queue(void *netmod_context)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_PROGRESS_DO_QUEUE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -206,8 +206,8 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
     int mpi_errno = MPI_SUCCESS, c;
     int need_lock = !is_reply;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_DO_SEND_AM_HDR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_DO_SEND_AM_HDR);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
 
     MPIDI_OFI_AMREQUEST(sreq, req_hdr) = NULL;
     mpi_errno = MPIDI_OFI_am_init_request(am_hdr, am_hdr_sz, sreq);
@@ -239,7 +239,7 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
                                      MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_MSG),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), need_lock, sendv);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_DO_SEND_AM_HDR);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -263,8 +263,8 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     struct iovec iov[3];
     uint64_t index;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_SEND_AM_LONG);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_SEND_AM_LONG);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_ISEND_LONG);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_ISEND_LONG);
 
     MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
     MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
@@ -330,7 +330,7 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
                                      MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_MSG),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), need_lock, sendv);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_SEND_AM_LONG);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_ISEND_LONG);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -352,8 +352,8 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
     MPIDI_OFI_am_header_t *msg_hdr;
     struct iovec iov[3];
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_SEND_AM_SHORT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_SEND_AM_SHORT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_ISEND_SHORT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_ISEND_SHORT);
 
     MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
     MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
@@ -381,7 +381,7 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
                                      MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_MSG),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), need_lock, sendv);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_SEND_AM_SHORT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_ISEND_SHORT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -407,8 +407,8 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
     MPIR_Datatype *dt_ptr;
     int need_lock = !is_reply;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_DO_SEND_AM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_DO_SEND_AM);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_AM_ISEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_AM_ISEND);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     send_buf = (char *) buf + dt_true_lb;
@@ -473,7 +473,7 @@ static inline int MPIDI_OFI_do_am_isend(int rank,
         MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_DO_SEND_AM);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_AM_ISEND);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -493,8 +493,8 @@ static inline int MPIDI_OFI_do_inject(int rank,
     struct iovec msg_iov[2];
     uint64_t send_flag = FI_INJECT;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_DO_INJECT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_DO_INJECT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_INJECT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_INJECT);
 
     MPIR_Assert(handler_id < (1 << MPIDI_OFI_AM_HANDLER_ID_BITS));
     MPIR_Assert(am_hdr_sz < (1ULL << MPIDI_OFI_AM_HDR_SZ_BITS));
@@ -545,7 +545,7 @@ static inline int MPIDI_OFI_do_inject(int rank,
     MPIDI_OFI_CALL_RETRY_AM(fi_sendmsg(MPIDI_OFI_EP_TX_MSG(0), &msg, send_flag), need_lock, send);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_DO_INJECT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_INJECT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

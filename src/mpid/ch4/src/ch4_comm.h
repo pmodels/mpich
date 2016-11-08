@@ -16,54 +16,94 @@
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_AS_enabled(MPIR_Comm * comm)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_AS_ENABLED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_AS_ENABLED);
+
     MPIR_Assert(0);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_AS_ENABLED);
     return MPI_SUCCESS;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_reenable_anysource(MPIR_Comm * comm,
                                                            MPIR_Group ** failed_group_ptr)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_REENABLE_ANYSOURCE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_REENABLE_ANYSOURCE);
+
     MPIR_Assert(0);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_REENABLE_ANYSOURCE);
     return MPI_SUCCESS;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_remote_group_failed(MPIR_Comm * comm,
                                                             MPIR_Group ** failed_group_ptr)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_REMOTE_GROUP_FAILED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_REMOTE_GROUP_FAILED);
+
     MPIR_Assert(0);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_REMOTE_GROUP_FAILED);
     return MPI_SUCCESS;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_group_failed(MPIR_Comm * comm_ptr,
                                                      MPIR_Group ** failed_group_ptr)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_GROUP_FAILED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_GROUP_FAILED);
+
     MPIR_Assert(0);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_GROUP_FAILED);
     return MPI_SUCCESS;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_failure_ack(MPIR_Comm * comm_ptr)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_FAILURE_ACK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_FAILURE_ACK);
+
     MPIR_Assert(0);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_FAILURE_ACK);
     return 0;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_failure_get_acked(MPIR_Comm * comm_ptr,
                                                           MPIR_Group ** failed_group_ptr)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_FAILURE_GET_ACKED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_FAILURE_GET_ACKED);
+
     MPIR_Assert(0);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_FAILURE_GET_ACKED);
     return 0;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_revoke(MPIR_Comm * comm_ptr, int is_remote)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_REVOKE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_REVOKE);
+
     MPIR_Assert(0);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_REVOKE);
     return 0;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_get_all_failed_procs(MPIR_Comm * comm_ptr,
                                                              MPIR_Group ** failed_group, int tag)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_GET_ALL_FAILED_PROCS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_GET_ALL_FAILED_PROCS);
+
     MPIR_Assert(0);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_GET_ALL_FAILED_PROCS);
     return 0;
 }
 
@@ -80,8 +120,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_split_type(MPIR_Comm * comm_ptr,
     int idx;
     MPID_Node_id_t node_id;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_COMM_SPLIT_TYPE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_COMM_SPLIT_TYPE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_SPLIT_TYPE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_SPLIT_TYPE);
 
     if (split_type == MPI_COMM_TYPE_SHARED) {
         MPIDI_Comm_get_lpid(comm_ptr, comm_ptr->rank, &idx, FALSE);
@@ -91,7 +131,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_split_type(MPIR_Comm * comm_ptr,
     else
         mpi_errno = MPIR_Comm_split_impl(comm_ptr, MPI_UNDEFINED, key, newcomm_ptr);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_COMM_SPLIT_TYPE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_SPLIT_TYPE);
     return mpi_errno;
 }
 
@@ -104,8 +144,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
     int mpi_errno;
     int i, *uniq_avtids;
     int max_n_avts;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_COMM_CREATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_COMM_CREATE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_CREATE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_CREATE_HOOK);
     mpi_errno = MPIDI_NM_mpi_comm_create_hook(comm);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -161,7 +201,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_COMM_CREATE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_CREATE_HOOK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -176,8 +216,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
     int mpi_errno;
     int i, *uniq_avtids;
     int max_n_avts;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_COMM_DESTROY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_COMM_DESTROY);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_FREE_HOOK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_FREE_HOOK);
     /* release ref to avts */
     switch (MPIDI_COMM(comm, map).mode) {
     case MPIDI_RANK_MAP_NONE:
@@ -243,7 +283,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
         MPIDIU_release_mlut(MPIDI_COMM(comm, local_map).irreg.mlut.t);
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_COMM_DESTROY);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_FREE_HOOK);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -272,6 +312,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Intercomm_map_bcast_intra(MPIR_Comm * local_c
 
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(2);
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_INTERCOMM_MAP_BCAST_INTRA);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_INTERCOMM_MAP_BCAST_INTRA);
 
     if (local_comm->rank == local_leader) {
         if (!pure_intracomm) {
@@ -349,6 +392,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Intercomm_map_bcast_intra(MPIR_Comm * local_c
     MPIR_CHKPMEM_COMMIT();
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_INTERCOMM_MAP_BCAST_INTRA);
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();
@@ -385,8 +429,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Intercomm_exchange_map(MPIR_Comm * local_comm
      * CH4 only cares about LUPID. GUPID extraction and exchange should be done
      * by netmod
      */
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_INTERCOMM_XCHG_MAP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_INTERCOMM_XCHG_MAP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_INTERCOMM_EXCHANGE_MAP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_INTERCOMM_EXCHANGE_MAP);
 
     MPIR_CHKPMEM_DECL(1);
     MPIR_CHKLMEM_DECL(5);
@@ -569,7 +613,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Intercomm_exchange_map(MPIR_Comm * local_comm
     MPIR_CHKPMEM_COMMIT();
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_INTERCOMM_XCHG_MAP);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_INTERCOMM_EXCHANGE_MAP);
     return mpi_errno;
   fn_fail:
     MPIR_CHKPMEM_REAP();

@@ -338,7 +338,6 @@ static inline int MPIDI_NM_rsend(const void *buf,
                                  int tag,
                                  MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
 {
-
     return ucx_send(buf, count, datatype, rank, tag, comm, context_offset, request, 0);
 }
 

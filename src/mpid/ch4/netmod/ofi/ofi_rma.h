@@ -59,10 +59,18 @@
 
 static inline uint32_t MPIDI_OFI_winfo_disp_unit(MPIR_Win * win, int rank)
 {
+    uint32_t ret;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WINFO_DISP_UNIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WINFO_DISP_UNIT);
+
     if (MPIDI_OFI_WIN(win).winfo)
-        return MPIDI_OFI_WIN(win).winfo[rank].disp_unit;
+        ret = MPIDI_OFI_WIN(win).winfo[rank].disp_unit;
     else
-        return win->disp_unit;
+        ret = win->disp_unit;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WINFO_DISP_UNIT);
+    return ret;
 }
 
 #undef FUNCNAME
@@ -74,10 +82,11 @@ static inline int MPIDI_OFI_query_datatype(MPI_Datatype dt,
                                            MPI_Op op,
                                            enum fi_op *fi_op, size_t * count, size_t * dtsize)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_QUERY_DT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_QUERY_DT);
     MPIR_Datatype *dt_ptr;
     int op_index, dt_index, rc;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_QUERY_DATATYPE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_QUERY_DATATYPE);
 
     MPID_Datatype_get_ptr(dt, dt_ptr);
 
@@ -108,7 +117,7 @@ static inline int MPIDI_OFI_query_datatype(MPI_Datatype dt,
     else
         rc = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_QUERY_DT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_QUERY_DATATYPE);
     return rc;
 }
 
@@ -117,8 +126,8 @@ static inline void MPIDI_OFI_win_datatype_basic(int count,
                                                 MPI_Datatype datatype,
                                                 MPIDI_OFI_win_datatype_t * dt)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_WIN_DATATYPE_BASIC);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_WIN_DATATYPE_BASIC);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_DATATYPE_BASIC);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_DATATYPE_BASIC);
 
     if (datatype != MPI_DATATYPE_NULL)
         MPIDI_Datatype_get_info(dt->count = count,
@@ -127,7 +136,7 @@ static inline void MPIDI_OFI_win_datatype_basic(int count,
     else
         memset(dt, 0, sizeof(*dt));
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_WIN_DATATYPE_BASIC);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_DATATYPE_BASIC);
 }
 
 #undef FUNCNAME
@@ -136,8 +145,8 @@ static inline void MPIDI_OFI_win_datatype_basic(int count,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline void MPIDI_OFI_win_datatype_map(MPIDI_OFI_win_datatype_t * dt)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_WIN_DATATYPE_MAP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_WIN_DATATYPE_MAP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_DATATYPE_MAP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_DATATYPE_MAP);
 
     if (dt->contig) {
         dt->num_contig = 1;
@@ -158,7 +167,7 @@ static inline void MPIDI_OFI_win_datatype_map(MPIDI_OFI_win_datatype_t * dt)
         MPIR_Assert((unsigned) dt->num_contig <= map_size);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_WIN_DATATYPE_MAP);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_DATATYPE_MAP);
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * win,
@@ -175,6 +184,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * w
     int mpi_errno = MPI_SUCCESS;
     size_t o_size, t_size;
     MPIDI_OFI_win_request_t *req;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_PUT_GET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_PUT_GET);
 
     o_size = sizeof(struct iovec);
     t_size = sizeof(struct fi_rma_iov);
@@ -194,6 +206,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_put_get(MPIR_Win * w
     MPIDI_OFI_win_datatype_map(&req->noncontig->target_dt);
     req->target_rank = target_rank;
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_PUT_GET);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -214,6 +227,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_accumulate(MPIR_Win 
     size_t o_size, t_size;
     MPIDI_OFI_win_request_t *req;
 
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_ACCUMULATE);
+
     o_size = sizeof(struct fi_ioc);
     t_size = sizeof(struct fi_rma_ioc);
     req = MPIDI_OFI_win_request_alloc_and_init(MPIDI_Global.iov_limit * (o_size + t_size));
@@ -233,6 +249,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_accumulate(MPIR_Win 
     MPIDI_OFI_win_datatype_map(&req->noncontig->target_dt);
     req->target_rank = target_rank;
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_ACCUMULATE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -259,6 +276,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_
     int mpi_errno = MPI_SUCCESS;
     size_t o_size, t_size, r_size;
     MPIDI_OFI_win_request_t *req;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_GET_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_GET_ACCUMULATE);
 
     o_size = sizeof(struct fi_ioc);
     t_size = sizeof(struct fi_rma_ioc);
@@ -291,6 +311,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_allocate_win_request_get_accumulate(MPIR_
 
     req->target_rank = target_rank;
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_ALLOCATE_WIN_REQUEST_GET_ACCUMULATE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -320,8 +341,8 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
     struct iovec *originv;
     struct fi_rma_iov *targetv;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_DO_PUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_DO_PUT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_PUT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_PUT);
 
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_put_get(win,
                                                                   origin_count,
@@ -372,7 +393,7 @@ static inline int MPIDI_OFI_do_put(const void *origin_addr,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_DO_PUT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_PUT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -390,8 +411,8 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
                                    MPI_Aint target_disp,
                                    int target_count, MPI_Datatype target_datatype, MPIR_Win * win)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_PUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_PUT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_PUT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_PUT);
     int target_contig, origin_contig, mpi_errno = MPI_SUCCESS;
     size_t target_bytes, origin_bytes;
     MPI_Aint origin_true_lb, target_true_lb;
@@ -441,7 +462,7 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_PUT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_PUT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -470,8 +491,8 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     struct fi_rma_iov *targetv;
     unsigned i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_DO_GET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_DO_GET);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_GET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_GET);
 
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_put_get(win, origin_count, target_count,
                                                                   target_rank,
@@ -520,7 +541,7 @@ static inline int MPIDI_OFI_do_get(void *origin_addr,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_DO_GET);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_GET);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -545,8 +566,8 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
     struct iovec iov;
     struct fi_msg_rma msg;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_GET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_GET);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_GET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_GET);
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
     MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
@@ -599,7 +620,7 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_GET);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_GET);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -618,8 +639,8 @@ static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
                                     MPI_Datatype target_datatype,
                                     MPIR_Win * win, MPIR_Request ** request)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_RPUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_RPUT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RPUT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RPUT);
     int mpi_errno;
     size_t origin_bytes;
     size_t offset;
@@ -655,7 +676,7 @@ static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
 
   fn_exit:
     *request = rreq;
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_RPUT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RPUT);
     return mpi_errno;
 }
 
@@ -681,8 +702,8 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     struct fi_rma_ioc targetv;
     struct fi_msg_atomic msg;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_COMPARE_AND_SWAP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_COMPARE_AND_SWAP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_COMPARE_AND_SWAP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_COMPARE_AND_SWAP);
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
@@ -728,7 +749,7 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
                           fi_compare_atomicmsg(MPIDI_OFI_WIN(win).ep_nocmpl, &msg,
                                                &comparev, NULL, 1, &resultv, NULL, 1, 0), atomicto);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_COMPARE_AND_SWAP);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_COMPARE_AND_SWAP);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -760,8 +781,8 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     struct fi_rma_ioc *targetv;
     unsigned i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_DO_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_DO_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_ACCUMULATE);
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
@@ -889,7 +910,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_DO_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_ACCUMULATE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -930,8 +951,8 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     struct fi_rma_ioc *targetv;
     unsigned i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_GET_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_GET_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
@@ -1091,7 +1112,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_GET_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1117,8 +1138,8 @@ static inline int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
                                            MPI_Datatype target_datatype,
                                            MPI_Op op, MPIR_Win * win, MPIR_Request ** request)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_RACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_RACCUMULATE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RACCUMULATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RACCUMULATE);
     MPIR_Request *rreq;
     int mpi_errno = MPIDI_OFI_do_accumulate((void *) origin_addr,
                                             origin_count,
@@ -1131,7 +1152,7 @@ static inline int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
                                             win,
                                             &rreq);
     *request = rreq;
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_RACCUMULATE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RACCUMULATE);
     return mpi_errno;
 }
 
@@ -1153,15 +1174,15 @@ static inline int MPIDI_NM_mpi_rget_accumulate(const void *origin_addr,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_RGET_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_RGET_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RGET_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RGET_ACCUMULATE);
 
     mpi_errno = MPIDI_OFI_do_get_accumulate(origin_addr, origin_count, origin_datatype,
                                             result_addr, result_count, result_datatype,
                                             target_rank, target_disp, target_count,
                                             target_datatype, op, win, &rreq);
     *request = rreq;
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_RGET_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RGET_ACCUMULATE);
     return mpi_errno;
 }
 
@@ -1176,8 +1197,8 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
                                             MPI_Aint target_disp, MPI_Op op, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_FETCH_AND_OP);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_FETCH_AND_OP);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_FETCH_AND_OP);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_FETCH_AND_OP);
 
     /*  This can be optimized by directly calling the fi directly
      *  and avoiding all the datatype processing of the full
@@ -1186,7 +1207,7 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     mpi_errno = MPIDI_OFI_do_get_accumulate(origin_addr, 1, datatype,
                                             result_addr, 1, datatype,
                                             target_rank, target_disp, 1, datatype, op, win, NULL);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_FETCH_AND_OP);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_FETCH_AND_OP);
     return mpi_errno;
 }
 
@@ -1203,8 +1224,8 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
                                     MPI_Datatype target_datatype,
                                     MPIR_Win * win, MPIR_Request ** request)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_RGET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_RGET);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RGET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RGET);
     int mpi_errno;
     size_t origin_bytes;
     size_t offset;
@@ -1238,7 +1259,7 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
                                  target_disp, target_count, target_datatype, win, &rreq);
   fn_exit:
     *request = rreq;
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_RGET);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RGET);
     return mpi_errno;
 }
 
@@ -1260,13 +1281,13 @@ static inline int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
                                               MPIR_Win * win)
 {
     int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_GET_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_GET_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
     mpi_errno = MPIDI_OFI_do_get_accumulate(origin_addr, origin_count, origin_datatype,
                                             result_addr, result_count, result_datatype,
                                             target_rank, target_disp, target_count,
                                             target_datatype, op, win, NULL);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_GET_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
     return mpi_errno;
 }
 
@@ -1282,8 +1303,8 @@ static inline int MPIDI_NM_mpi_accumulate(const void *origin_addr,
                                           int target_count,
                                           MPI_Datatype target_datatype, MPI_Op op, MPIR_Win * win)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_ACCUMULATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ACCUMULATE);
     int mpi_errno = MPIDI_OFI_do_accumulate(origin_addr,
                                             origin_count,
                                             origin_datatype,
@@ -1294,7 +1315,7 @@ static inline int MPIDI_NM_mpi_accumulate(const void *origin_addr,
                                             op,
                                             win,
                                             NULL);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_ACCUMULATE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ACCUMULATE);
     return mpi_errno;
 }
 
