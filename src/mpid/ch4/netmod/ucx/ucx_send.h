@@ -256,8 +256,8 @@ static inline int ucx_send(const void *buf,
 
     if (dt_contig)
         mpi_errno =
-            ucx_send_continous((char *) buf + dt_true_lb, data_sz, rank, tag, comm, context_offset, request,
-                               have_request);
+            ucx_send_continous((char *) buf + dt_true_lb, data_sz, rank, tag, comm, context_offset,
+                               request, have_request);
     else
         mpi_errno =
             ucx_send_non_continous(buf, count, rank, tag, comm, context_offset, request,
@@ -292,8 +292,8 @@ static inline int ucx_sync_send(const void *buf,
 
     if (dt_contig)
         mpi_errno =
-            ucx_sync_send_continous((char *) buf + dt_true_lb, data_sz, rank, tag, comm, context_offset,
-                                    request, have_request);
+            ucx_sync_send_continous((char *) buf + dt_true_lb, data_sz, rank, tag, comm,
+                                    context_offset, request, have_request);
     else
         mpi_errno =
             ucx_sync_send_non_continous(buf, count, rank, tag, comm, context_offset, request,
@@ -403,8 +403,7 @@ static inline int MPIDI_NM_mpi_ssend_init(const void *buf,
                                           MPIR_Comm * comm, int context_offset,
                                           MPIR_Request ** request)
 {
-    return MPIDIG_mpi_ssend_init(buf, count, datatype, rank, tag, comm, context_offset,
-                                     request);
+    return MPIDIG_mpi_ssend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
 }
 
 #undef FUNCNAME
@@ -419,8 +418,7 @@ static inline int MPIDI_NM_mpi_bsend_init(const void *buf,
                                           MPIR_Comm * comm, int context_offset,
                                           MPIR_Request ** request)
 {
-    return MPIDIG_mpi_bsend_init(buf, count, datatype, rank, tag, comm, context_offset,
-                                     request);
+    return MPIDIG_mpi_bsend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
 }
 
 #undef FUNCNAME
@@ -435,8 +433,7 @@ static inline int MPIDI_NM_mpi_rsend_init(const void *buf,
                                           MPIR_Comm * comm, int context_offset,
                                           MPIR_Request ** request)
 {
-    return MPIDIG_mpi_rsend_init(buf, count, datatype, rank, tag, comm, context_offset,
-                                     request);
+    return MPIDIG_mpi_rsend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
 }
 
 #undef FUNCNAME

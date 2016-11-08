@@ -584,8 +584,7 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
         iov.iov_base = (char *) origin_addr + origin_dt.true_lb;
         iov.iov_len = target_dt.size;
         riov.addr =
-            (uint64_t) (MPIDI_OFI_winfo_base(win, target_rank) + offset +
-                        target_dt.true_lb);
+            (uint64_t) (MPIDI_OFI_winfo_base(win, target_rank) + offset + target_dt.true_lb);
         riov.len = target_dt.size;
         riov.key = MPIDI_OFI_winfo_mr_key(win, target_rank);
         MPIDI_OFI_CALL_RETRY2(MPIDI_OFI_win_cntr_incr(win),

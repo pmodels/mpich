@@ -22,9 +22,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                                             struct fid_cntr *rma_ctr,
                                             struct fid_av *av,
                                             struct fid_ep **ep, int index,
-                                            int do_tagged,
-                                            int do_scalable_ep,
-                                            int do_data);
+                                            int do_tagged, int do_scalable_ep, int do_data);
 
 #define MPIDI_OFI_CHOOSE_PROVIDER(prov, prov_use,errstr)                          \
     do {                                                                \
@@ -307,16 +305,16 @@ static inline int MPIDI_OFI_init_generic(int rank,
     av_attr.map_addr = 0;
 
     unsigned do_av_insert = 1;
-    if (0 == fi_av_open(MPIDI_Global.domain,      /* In:  Domain Object         */
-                        &av_attr,                 /* In:  Configuration object  */
-                        &MPIDI_Global.av,         /* Out: AV Object             */
-                        NULL)) {                  /* Context: AV events         */
+    if (0 == fi_av_open(MPIDI_Global.domain,    /* In:  Domain Object         */
+                        &av_attr,       /* In:  Configuration object  */
+                        &MPIDI_Global.av,       /* Out: AV Object             */
+                        NULL)) {        /* Context: AV events         */
         do_av_insert = 0;
 
         /* TODO - the copy from the pre-existing av map into the 'MPIDI_OFI_AV' */
         /* is wasteful and should be changed so that the 'MPIDI_OFI_AV' object  */
         /* directly references the mapped fi_addr_t array instead               */
-        mapped_table = (fi_addr_t *)av_attr.map_addr;
+        mapped_table = (fi_addr_t *) av_attr.map_addr;
         for (i = 0; i < size; i++) {
             MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
         }
@@ -325,10 +323,10 @@ static inline int MPIDI_OFI_init_generic(int rank,
     else {
         av_attr.name = NULL;
         av_attr.flags = 0;
-        MPIDI_OFI_CALL(fi_av_open(MPIDI_Global.domain, /* In:  Domain Object    */
-                                  &av_attr,        /* In:  Configuration object */
-                                  &MPIDI_Global.av,/* Out: AV Object            */
-                                  NULL), avopen);  /* Context: AV events        */
+        MPIDI_OFI_CALL(fi_av_open(MPIDI_Global.domain,  /* In:  Domain Object    */
+                                  &av_attr,     /* In:  Configuration object */
+                                  &MPIDI_Global.av,     /* Out: AV Object            */
+                                  NULL), avopen);       /* Context: AV events        */
     }
 
     /* ------------------------------------------------------------------------ */
@@ -362,9 +360,7 @@ static inline int MPIDI_OFI_init_generic(int rank,
                                                      MPIDI_Global.rma_cmpl_cntr,
                                                      MPIDI_Global.av,
                                                      &MPIDI_Global.ep, 0,
-                                                     do_tagged,
-                                                     do_scalable_ep,
-                                                     do_data));
+                                                     do_tagged, do_scalable_ep, do_data));
 
     if (do_av_insert) {
 
@@ -381,8 +377,9 @@ static inline int MPIDI_OFI_init_generic(int rank,
         str_errno = MPL_STR_SUCCESS;
         maxlen = MPIDI_KVSAPPSTRLEN;
         memset(val, 0, maxlen);
-        MPIDI_OFI_STR_CALL(MPL_str_add_binary_arg(&val, &maxlen, "OFI", (char *) &MPIDI_Global.addrname,
-                                                  MPIDI_Global.addrnamelen), buscard_len);
+        MPIDI_OFI_STR_CALL(MPL_str_add_binary_arg
+                           (&val, &maxlen, "OFI", (char *) &MPIDI_Global.addrname,
+                            MPIDI_Global.addrnamelen), buscard_len);
         MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get_my_name(MPIDI_Global.kvsname, MPIDI_KVSAPPSTRLEN), pmi);
 
         val = valS;
@@ -400,8 +397,8 @@ static inline int MPIDI_OFI_init_generic(int rank,
 
         for (i = 0; i < size; i++) {
             sprintf(keyS, "OFI-%d", i);
-            MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get(MPIDI_Global.kvsname, keyS, valS, MPIDI_KVSAPPSTRLEN),
-                                   pmi);
+            MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get
+                                   (MPIDI_Global.kvsname, keyS, valS, MPIDI_KVSAPPSTRLEN), pmi);
             MPIDI_OFI_STR_CALL(MPL_str_get_binary_arg
                                (valS, "OFI", (char *) &table[i * MPIDI_Global.addrnamelen],
                                 MPIDI_Global.addrnamelen, &maxlen), buscard_len);
@@ -550,7 +547,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
 
 
-static inline int MPIDI_OFI_finalize_generic(int do_tagged, int do_scalable_ep, int do_am, int do_stx_rma)
+static inline int MPIDI_OFI_finalize_generic(int do_tagged, int do_scalable_ep, int do_am,
+                                             int do_stx_rma)
 {
     int thr_err = 0, mpi_errno = MPI_SUCCESS;
     int i = 0;
@@ -670,7 +668,7 @@ static inline int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr,
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_NM_get_local_upids(MPIR_Comm *comm, size_t **local_upid_size,
+static inline int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size,
                                            char **local_upids)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -681,22 +679,22 @@ static inline int MPIDI_NM_get_local_upids(MPIR_Comm *comm, size_t **local_upid_
     MPIR_CHKLMEM_DECL(1);
 
     /* *local_upid_size = (size_t*) MPL_malloc(comm->local_size * sizeof(size_t)); */
-    MPIR_CHKPMEM_MALLOC((*local_upid_size), size_t*, comm->local_size*sizeof(size_t),
+    MPIR_CHKPMEM_MALLOC((*local_upid_size), size_t *, comm->local_size * sizeof(size_t),
                         mpi_errno, "local_upid_size");
     /* temp_buf = (char*) MPL_malloc(comm->local_size * MPIDI_Global.addrnamelen); */
-    MPIR_CHKLMEM_MALLOC(temp_buf, char*, comm->local_size*MPIDI_Global.addrnamelen,
+    MPIR_CHKLMEM_MALLOC(temp_buf, char *, comm->local_size * MPIDI_Global.addrnamelen,
                         mpi_errno, "temp_buf");
 
     for (i = 0; i < comm->local_size; i++) {
         (*local_upid_size)[i] = MPIDI_Global.addrnamelen;
         MPIDI_OFI_CALL(fi_av_lookup(MPIDI_Global.av, MPIDI_OFI_COMM_TO_PHYS(comm, i),
-                                            &temp_buf[i * MPIDI_Global.addrnamelen],
-                                            &(*local_upid_size)[i]), avlookup);
+                                    &temp_buf[i * MPIDI_Global.addrnamelen],
+                                    &(*local_upid_size)[i]), avlookup);
         total_size += (*local_upid_size)[i];
     }
 
     /* *local_upids = (char*) MPL_malloc(total_size * sizeof(char)); */
-    MPIR_CHKPMEM_MALLOC((*local_upids), char*, total_size*sizeof(char),
+    MPIR_CHKPMEM_MALLOC((*local_upids), char *, total_size * sizeof(char),
                         mpi_errno, "local_upids");
     curr_ptr = (*local_upids);
     for (i = 0; i < comm->local_size; i++) {
@@ -714,10 +712,9 @@ static inline int MPIDI_NM_get_local_upids(MPIR_Comm *comm, size_t **local_upid_
 }
 
 static inline int MPIDI_OFI_upids_to_lupids_general(int size,
-                                                    size_t *remote_upid_size,
+                                                    size_t * remote_upid_size,
                                                     char *remote_upids,
-                                                    int **remote_lupids,
-                                                    int use_av_table)
+                                                    int **remote_lupids, int use_av_table)
 {
     int i, mpi_errno = MPI_SUCCESS;
     int *new_avt_procs;
@@ -730,7 +727,7 @@ static inline int MPIDI_OFI_upids_to_lupids_general(int size,
     max_n_avts = MPIDIU_get_max_n_avts();
 
     curr_upid = remote_upids;
-    for(i = 0; i < size; i++) {
+    for (i = 0; i < size; i++) {
         int j, k;
         char tbladdr[FI_NAME_MAX];
         int found = 0;
@@ -745,7 +742,7 @@ static inline int MPIDI_OFI_upids_to_lupids_general(int size,
                 MPIDI_OFI_CALL(fi_av_lookup(MPIDI_Global.av, MPIDI_OFI_TO_PHYS(k, j),
                                             &tbladdr, &sz), avlookup);
                 if (sz == remote_upid_size[i]
-                   && !memcmp(tbladdr, curr_upid, remote_upid_size[i])) {
+                    && !memcmp(tbladdr, curr_upid, remote_upid_size[i])) {
                     (*remote_lupids)[i] = MPIDIU_LUPID_CREATE(k, j);
                     found = 1;
                     break;
@@ -771,10 +768,13 @@ static inline int MPIDI_OFI_upids_to_lupids_general(int size,
                 MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, new_upids[new_avt_procs[i]],
                                             1, NULL, 0ULL, NULL), avmap);
                 /* FIXME: get logical address */
-            } else {
+            }
+            else {
                 MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, new_upids[new_avt_procs[i]],
-                                            1, (fi_addr_t *)&MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest,
-                                            0ULL, NULL), avmap);
+                                            1,
+                                            (fi_addr_t *) &
+                                            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest, 0ULL,
+                                            NULL), avmap);
             }
             /* highest bit is marked as 1 to indicate this is a new process */
             (*remote_lupids)[i] = MPIDIU_LUPID_CREATE(avtid, i);
@@ -791,9 +791,8 @@ static inline int MPIDI_OFI_upids_to_lupids_general(int size,
 }
 
 static inline int MPIDI_NM_upids_to_lupids(int size,
-                                           size_t *remote_upid_size,
-                                           char *remote_upids,
-                                           int **remote_lupids)
+                                           size_t * remote_upid_size,
+                                           char *remote_upids, int **remote_lupids)
 {
     return MPIDI_OFI_upids_to_lupids_general(size, remote_upid_size, remote_upids,
                                              remote_lupids, MPIDI_OFI_ENABLE_AV_TABLE);
@@ -816,9 +815,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                                             struct fid_cntr *rma_ctr,
                                             struct fid_av *av,
                                             struct fid_ep **ep, int index,
-                                            int do_tagged,
-                                            int do_scalable_ep,
-                                            int do_data)
+                                            int do_tagged, int do_scalable_ep, int do_data)
 {
     int mpi_errno = MPI_SUCCESS;
     struct fi_tx_attr tx_attr;
@@ -839,8 +836,11 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
             tx_attr = *prov_use->tx_attr;
             tx_attr.caps = FI_TAGGED;
             tx_attr.op_flags = FI_COMPLETION | FI_INJECT_COMPLETE;
-            MPIDI_OFI_CALL(fi_tx_context(*ep, idx_off, &tx_attr, &MPIDI_OFI_EP_TX_TAG(index), NULL), ep);
-            MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_TAG(index), &p2p_cq->fid, FI_SEND | FI_SELECTIVE_COMPLETION), bind);
+            MPIDI_OFI_CALL(fi_tx_context(*ep, idx_off, &tx_attr, &MPIDI_OFI_EP_TX_TAG(index), NULL),
+                           ep);
+            MPIDI_OFI_CALL(fi_ep_bind
+                           (MPIDI_OFI_EP_TX_TAG(index), &p2p_cq->fid,
+                            FI_SEND | FI_SELECTIVE_COMPLETION), bind);
         }
 
         tx_attr = *prov_use->tx_attr;
@@ -851,14 +851,18 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                        ep);
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_RMA(index), &rma_ctr->fid, FI_WRITE | FI_READ),
                        bind);
-        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_RMA(index), &p2p_cq->fid, FI_SEND | FI_SELECTIVE_COMPLETION), bind);
+        MPIDI_OFI_CALL(fi_ep_bind
+                       (MPIDI_OFI_EP_TX_RMA(index), &p2p_cq->fid,
+                        FI_SEND | FI_SELECTIVE_COMPLETION), bind);
 
         tx_attr = *prov_use->tx_attr;
         tx_attr.caps = FI_MSG;
         tx_attr.op_flags = FI_COMPLETION | FI_INJECT_COMPLETE;
         MPIDI_OFI_CALL(fi_tx_context(*ep, idx_off + 2, &tx_attr, &MPIDI_OFI_EP_TX_MSG(index), NULL),
                        ep);
-        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_MSG(index), &p2p_cq->fid, FI_SEND | FI_SELECTIVE_COMPLETION), bind);
+        MPIDI_OFI_CALL(fi_ep_bind
+                       (MPIDI_OFI_EP_TX_MSG(index), &p2p_cq->fid,
+                        FI_SEND | FI_SELECTIVE_COMPLETION), bind);
 
         tx_attr = *prov_use->tx_attr;
         tx_attr.caps = FI_RMA;
@@ -869,9 +873,11 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_CTR(index), &rma_ctr->fid, FI_WRITE | FI_READ),
                        bind);
         /* We need to bind to the CQ if the progress mode is manual.
-           Otherwise fi_cq_read would not make progress on this context and potentially leads to a deadlock. */
+         * Otherwise fi_cq_read would not make progress on this context and potentially leads to a deadlock. */
         if (prov_use->domain_attr->data_progress == FI_PROGRESS_MANUAL)
-            MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_CTR(index), &p2p_cq->fid, FI_SEND | FI_SELECTIVE_COMPLETION), bind);
+            MPIDI_OFI_CALL(fi_ep_bind
+                           (MPIDI_OFI_EP_TX_CTR(index), &p2p_cq->fid,
+                            FI_SEND | FI_SELECTIVE_COMPLETION), bind);
 
         if (do_tagged) {
             rx_attr = *prov_use->rx_attr;
@@ -879,7 +885,8 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
             if (do_data)
                 rx_attr.caps |= FI_DIRECTED_RECV;
             rx_attr.op_flags = 0;
-            MPIDI_OFI_CALL(fi_rx_context(*ep, idx_off, &rx_attr, &MPIDI_OFI_EP_RX_TAG(index), NULL), ep);
+            MPIDI_OFI_CALL(fi_rx_context(*ep, idx_off, &rx_attr, &MPIDI_OFI_EP_RX_TAG(index), NULL),
+                           ep);
             MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_TAG(index), &p2p_cq->fid, FI_RECV), bind);
         }
 
