@@ -27,32 +27,6 @@ static inline void MPIDI_NM_am_request_finalize(MPIR_Request * req)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_reg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_am_reg_cb(int handler_id,
-                                     MPIDI_NM_am_origin_cb origin_cb,
-                                     MPIDI_NM_am_target_msg_cb target_msg_cb)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_REG_HDR_HANDLER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_REG_HDR_HANDLER);
-
-    if (handler_id > MPIDI_OFI_MAX_AM_HANDLERS) {
-        mpi_errno = MPI_ERR_OTHER;
-        goto fn_fail;
-    }
-
-    MPIDI_Global.target_msg_cbs[handler_id] = target_msg_cb;
-    MPIDI_Global.origin_cbs[handler_id] = origin_cb;
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_REG_HDR_HANDLER);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_NM_am_isend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)

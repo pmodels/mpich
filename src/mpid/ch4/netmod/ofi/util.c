@@ -380,7 +380,7 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               void **data,
                               size_t * data_sz,
                               int *is_contig,
-                              MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
+                              MPIDIG_am_target_cmpl_cb * target_cmpl_cb, MPIR_Request ** req)
 {
     int senderrank;
     int mpi_errno = MPI_SUCCESS;

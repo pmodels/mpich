@@ -11,28 +11,6 @@
 
 #include "ucx_impl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_am_reg_cb
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_am_reg_cb(int handler_id,
-                                     MPIDI_NM_am_origin_cb origin_cb,
-                                     MPIDI_NM_am_target_msg_cb target_msg_cb)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_REG_HDR_HANDLER);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_REG_HDR_HANDLER);
-
-    MPIDI_UCX_global.target_msg_cbs[handler_id] = target_msg_cb;
-    MPIDI_UCX_global.origin_cbs[handler_id] = origin_cb;
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_REG_HDR_HANDLER);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-
 static inline void MPIDI_UCX_am_isend_callback(void *request, ucs_status_t status)
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
@@ -43,7 +21,7 @@ static inline void MPIDI_UCX_am_isend_callback(void *request, ucs_status_t statu
 
     MPL_free(req->dev.ch4.am.netmod_am.ucx.pack_buffer);
     req->dev.ch4.am.netmod_am.ucx.pack_buffer = NULL;
-    MPIDI_UCX_global.origin_cbs[handler_id] (req);
+    MPIDIG_global.origin_cbs[handler_id] (req);
     ucp_request->req = NULL;
 
   fn_exit:
@@ -162,7 +140,7 @@ static inline int MPIDI_NM_am_isend(int rank,
     /* send is done. free all resources and complete the request */
     if (ucp_request == NULL) {
         MPL_free(send_buf);
-        MPIDI_UCX_global.origin_cbs[handler_id] (sreq);
+        MPIDIG_global.origin_cbs[handler_id] (sreq);
         goto fn_exit;
     }
 
@@ -281,7 +259,7 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
     /* send is done. free all resources and complete the request */
     if (ucp_request == NULL) {
         MPL_free(send_buf);
-        MPIDI_UCX_global.origin_cbs[handler_id] (sreq);
+        MPIDIG_global.origin_cbs[handler_id] (sreq);
         goto fn_exit;
     }
 
@@ -289,7 +267,7 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
      * and complete the send request */
     if (ucp_request->req) {
         MPL_free(send_buf);
-        MPIDI_UCX_global.origin_cbs[handler_id] (sreq);
+        MPIDIG_global.origin_cbs[handler_id] (sreq);
         ucp_request->req = NULL;
         ucp_request_release(ucp_request);
     }

@@ -12,6 +12,7 @@
 #define CH4R_RECVQ_H_INCLUDED
 
 #include <mpidimpl.h>
+#include "mpidig.h"
 #include "mpl_utlist.h"
 #include "ch4_impl.h"
 

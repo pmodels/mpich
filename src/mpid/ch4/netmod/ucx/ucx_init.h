@@ -200,7 +200,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDI_UCX_CHK_STATUS(ucx_status);
     }
 
-    MPIDI_CH4U_mpi_init(comm_world, comm_self, num_contexts, netmod_contexts);
+    MPIDIG_init(comm_world, comm_self, num_contexts, netmod_contexts);
 
     mpi_errno = MPIR_Datatype_init_names();
     MPIDI_UCX_MPI_ERROR(mpi_errno);
@@ -249,7 +249,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     if (MPIDI_UCX_global.pmi_addr_table)
         MPL_free(MPIDI_UCX_global.pmi_addr_table);
 
-    MPIDI_CH4U_mpi_finalize();
+    MPIDIG_finalize();
     PMI_Finalize();
 
   fn_exit:

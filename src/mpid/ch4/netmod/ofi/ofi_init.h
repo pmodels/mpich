@@ -430,7 +430,7 @@ static inline int MPIDI_OFI_init_generic(int rank,
         MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_Global.max_send);
         MPIDI_Global.am_buf_pool =
             MPIDI_CH4U_create_buf_pool(MPIDI_OFI_BUF_POOL_NUM, MPIDI_OFI_BUF_POOL_SIZE);
-        mpi_errno = MPIDI_CH4U_mpi_init(comm_world, comm_self, num_contexts, netmod_contexts);
+        mpi_errno = MPIDIG_init(comm_world, comm_self, num_contexts, netmod_contexts);
 
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -462,8 +462,8 @@ static inline int MPIDI_OFI_init_generic(int rank,
         }
 
         /* Grow the header handlers down */
-        MPIDI_Global.target_msg_cbs[MPIDI_OFI_INTERNAL_HANDLER_CONTROL] = MPIDI_OFI_control_handler;
-        MPIDI_Global.origin_cbs[MPIDI_OFI_INTERNAL_HANDLER_CONTROL] = NULL;
+        MPIDIG_global.target_msg_cbs[MPIDI_OFI_INTERNAL_HANDLER_CONTROL] = MPIDI_OFI_control_handler;
+        MPIDIG_global.origin_cbs[MPIDI_OFI_INTERNAL_HANDLER_CONTROL] = NULL;
     }
     OPA_store_int(&MPIDI_Global.am_inflight_inject_emus, 0);
     OPA_store_int(&MPIDI_Global.am_inflight_rma_send_mrs, 0);
@@ -602,7 +602,7 @@ static inline int MPIDI_OFI_finalize_generic(int do_tagged, int do_scalable_ep, 
     comm = MPIR_Process.comm_self;
     MPIR_Comm_release_always(comm);
 
-    MPIDI_CH4U_mpi_finalize();
+    MPIDIG_finalize();
 
     MPIDI_OFI_map_destroy(MPIDI_Global.win_map);
 

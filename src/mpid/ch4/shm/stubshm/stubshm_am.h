@@ -12,14 +12,6 @@
 
 #include "stubshm_impl.h"
 
-static inline int MPIDI_SHM_am_reg_cb(int handler_id,
-                                      MPIDI_SHM_am_origin_cb origin_cb,
-                                      MPIDI_SHM_am_target_msg_cb target_msg_cb)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
 static inline int MPIDI_SHM_am_isend(int rank,
                                      MPIR_Comm * comm,
                                      int handler_id,

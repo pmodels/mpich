@@ -13,14 +13,6 @@
 
 #include "stubnm_impl.h"
 
-static inline int MPIDI_NM_am_reg_cb(int handler_id,
-                                     MPIDI_NM_am_origin_cb origin_cb,
-                                     MPIDI_NM_am_target_msg_cb target_msg_cb)
-{
-    MPIR_Assert(0);
-    return MPI_SUCCESS;
-}
-
 static inline int MPIDI_NM_am_isend(int rank,
                                     MPIR_Comm * comm,
                                     int handler_id,
