@@ -586,7 +586,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_read_event(struct fi_cq_tagged_entry *
         MPIR_ERR_POP(mpi_errno);
 
     MPIDI_OFI_am_request_complete(rreq);
-    ofi_req->req_hdr->cmpl_cb(rreq);
+    ofi_req->req_hdr->target_cmpl_cb(rreq);
   fn_exit:
     MPIDI_CH4R_release_buf((void *) ofi_req);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_HANDLE_READ_COMPLETION);

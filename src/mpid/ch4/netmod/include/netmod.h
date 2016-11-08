@@ -23,7 +23,7 @@ typedef int (*MPIDI_NM_am_origin_cb) (MPIR_Request * req);
 /* for short cases, output arguments are NULL */
 typedef int (*MPIDI_NM_am_target_msg_cb)
  (int handler_id, void *am_hdr, void **data,    /* data should be iovs if *is_contig is false */
-  size_t * data_sz, int *is_contig, MPIDI_NM_am_target_cmpl_cb * cmpl_cb,       /* completion handler */
+  size_t * data_sz, int *is_contig, MPIDI_NM_am_target_cmpl_cb * target_cmpl_cb,        /* completion handler */
   MPIR_Request ** req);         /* if allocated, need pointer to completion function */
 
 typedef int (*MPIDI_NM_mpi_init_t) (int rank, int size, int appnum, int *tag_ub,

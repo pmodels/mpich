@@ -20,7 +20,7 @@ static inline int MPIDI_PTL_am_handler(ptl_event_t * e)
     void *p_data;
     void *in_data;
     size_t data_sz, in_data_sz;
-    MPIDI_NM_am_target_cmpl_cb cmpl_cb = NULL;
+    MPIDI_NM_am_target_cmpl_cb target_cmpl_cb = NULL;
     struct iovec *iov;
     int i, is_contig, iov_len;
     size_t done, curr_len, rem;
@@ -29,14 +29,15 @@ static inline int MPIDI_PTL_am_handler(ptl_event_t * e)
     in_data = p_data = (e->start + (e->mlength - data_sz));
     int handler_id = e->hdr_data >> 56;
 
-    MPIDI_PTL_global.am_cbs[handler_id] (handler_id, e->start,
-                                         &p_data, &data_sz, &is_contig, &cmpl_cb, &rreq);
+    MPIDI_PTL_global.target_msg_cbs[handler_id] (handler_id, e->start,
+                                                 &p_data, &data_sz, &is_contig, &target_cmpl_cb,
+                                                 &rreq);
 
     if (!rreq)
         goto fn_exit;
 
-    if ((!p_data || !data_sz) && cmpl_cb) {
-        cmpl_cb(rreq);
+    if ((!p_data || !data_sz) && target_cmpl_cb) {
+        target_cmpl_cb(rreq);
         goto fn_exit;
     }
 
@@ -75,8 +76,8 @@ static inline int MPIDI_PTL_am_handler(ptl_event_t * e)
         MPIR_STATUS_SET_COUNT(rreq->status, done);
     }
 
-    if (cmpl_cb) {
-        cmpl_cb(rreq);
+    if (target_cmpl_cb) {
+        target_cmpl_cb(rreq);
     }
 
   fn_exit:

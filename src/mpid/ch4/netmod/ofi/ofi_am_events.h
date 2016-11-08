@@ -25,7 +25,7 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
     void *in_data;
 
     size_t data_sz, in_data_sz;
-    MPIDI_NM_am_target_cmpl_cb cmpl_cb;
+    MPIDI_NM_am_target_cmpl_cb target_cmpl_cb;
     struct iovec *iov;
     int i, is_contig, iov_len;
     size_t done, curr_len, rem;
@@ -36,15 +36,16 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
     p_data = in_data = (char *) msg_hdr->payload + msg_hdr->am_hdr_sz;
     in_data_sz = data_sz = msg_hdr->data_sz;
 
-    MPIDI_Global.am_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, msg_hdr->payload,
-                                              &p_data, &data_sz, &is_contig, &cmpl_cb, &rreq);
+    MPIDI_Global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, msg_hdr->payload,
+                                                      &p_data, &data_sz, &is_contig,
+                                                      &target_cmpl_cb, &rreq);
 
     if (!rreq)
         goto fn_exit;
 
-    if ((!p_data || !data_sz) && cmpl_cb) {
+    if ((!p_data || !data_sz) && target_cmpl_cb) {
         MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
-        cmpl_cb(rreq);
+        target_cmpl_cb(rreq);
         goto fn_exit;
     }
 
@@ -83,8 +84,8 @@ static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
         MPIR_STATUS_SET_COUNT(rreq->status, done);
     }
 
-    if (cmpl_cb) {
-        cmpl_cb(rreq);
+    if (target_cmpl_cb) {
+        target_cmpl_cb(rreq);
     }
 
   fn_exit:
@@ -100,19 +101,19 @@ static inline int MPIDI_OFI_handle_short_am_hdr(MPIDI_OFI_am_header_t * msg_hdr,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
-    MPIDI_NM_am_target_cmpl_cb cmpl_cb = NULL;
+    MPIDI_NM_am_target_cmpl_cb target_cmpl_cb = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_HANDLE_SHORT_AM_HDR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_HANDLE_SHORT_AM_HDR);
 
-    MPIDI_Global.am_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
-                                              NULL, NULL, NULL, &cmpl_cb, &rreq);
+    MPIDI_Global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
+                                                      NULL, NULL, NULL, &target_cmpl_cb, &rreq);
 
     if (!rreq)
         goto fn_exit;
 
-    if (cmpl_cb) {
-        cmpl_cb(rreq);
+    if (target_cmpl_cb) {
+        target_cmpl_cb(rreq);
     }
 
   fn_exit:
@@ -217,15 +218,16 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
     MPIR_Request *rreq;
     void *p_data;
     size_t data_sz, rem, done, curr_len, in_data_sz;
-    MPIDI_NM_am_target_cmpl_cb cmpl_cb;
+    MPIDI_NM_am_target_cmpl_cb target_cmpl_cb;
     struct iovec *iov;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_DO_HANDLE_LONG_AM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_DO_HANDLE_LONG_AM);
 
     in_data_sz = data_sz = msg_hdr->data_sz;
-    MPIDI_Global.am_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
-                                              &p_data, &data_sz, &is_contig, &cmpl_cb, &rreq);
+    MPIDI_Global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, am_hdr,
+                                                      &p_data, &data_sz, &is_contig,
+                                                      &target_cmpl_cb, &rreq);
 
     if (!rreq)
         goto fn_exit;
@@ -238,10 +240,10 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
 
     MPIR_cc_incr(rreq->cc_ptr, &c);
 
-    MPIDI_OFI_AMREQUEST_HDR(rreq, cmpl_cb) = cmpl_cb;
+    MPIDI_OFI_AMREQUEST_HDR(rreq, target_cmpl_cb) = target_cmpl_cb;
 
-    if ((!p_data || !data_sz) && cmpl_cb) {
-        cmpl_cb(rreq);
+    if ((!p_data || !data_sz) && target_cmpl_cb) {
+        target_cmpl_cb(rreq);
         MPIDI_OFI_am_request_complete(rreq);
         goto fn_exit;
     }

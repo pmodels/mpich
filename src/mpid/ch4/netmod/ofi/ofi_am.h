@@ -43,7 +43,7 @@ static inline int MPIDI_NM_am_reg_cb(int handler_id,
         goto fn_fail;
     }
 
-    MPIDI_Global.am_cbs[handler_id] = target_msg_cb;
+    MPIDI_Global.target_msg_cbs[handler_id] = target_msg_cb;
     MPIDI_Global.origin_cbs[handler_id] = origin_cb;
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_REG_HDR_HANDLER);
