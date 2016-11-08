@@ -40,22 +40,13 @@ static inline int MPIDI_do_put(const void *origin_addr,
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
-    /* FIXME: should only create when issuing is not completed.
-     * Then rput will need to create a request if it is immediately completed.*/
-    /* two ref counts for progress engine and caller. */
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
-    MPIR_Assert(sreq);
-
-    MPIDI_CH4U_REQUEST(sreq, req->preq.win_ptr) = win;
     MPIDI_Datatype_check_size(origin_datatype, origin_count, data_sz);
     if (data_sz == 0 || target_rank == MPI_PROC_NULL) {
-        MPIDI_Request_complete(sreq);
         goto fn_exit;
     }
 
     if (target_rank == win->comm_ptr->rank) {
         offset = win->disp_unit * target_disp;
-        MPIDI_Request_complete(sreq);
         mpi_errno = MPIR_Localcopy(origin_addr,
                                    origin_count,
                                    origin_datatype,
@@ -64,6 +55,13 @@ static inline int MPIDI_do_put(const void *origin_addr,
             MPIR_ERR_POP(mpi_errno);
         goto fn_exit;
     }
+
+    /* Only create request when issuing is not completed.
+     * We initialize two ref_count for progress engine and request-based OP,
+     * then put needs to free the second ref_count.*/
+    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
+    MPIR_Assert(sreq);
+    MPIDI_CH4U_REQUEST(sreq, req->preq.win_ptr) = win;
 
     MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
     MPIR_cc_incr(sreq->cc_ptr, &c);
@@ -173,25 +171,12 @@ static inline int MPIDI_do_get(void *origin_addr,
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
-    /* FIXME: should only create when issuing is not completed.
-     * Then rget will need to create a request if it is immediately completed.*/
-    /* two ref counts for progress engine and caller. */
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
-    MPIR_Assert(sreq);
-
     MPIDI_Datatype_check_size(origin_datatype, origin_count, data_sz);
     if (data_sz == 0 || target_rank == MPI_PROC_NULL) {
-        MPIDI_Request_complete(sreq);
         goto fn_exit;
     }
 
-    MPIDI_CH4U_REQUEST(sreq, req->greq.win_ptr) = win;
-    MPIDI_CH4U_REQUEST(sreq, req->greq.addr) = (uint64_t) ((char *) origin_addr);
-    MPIDI_CH4U_REQUEST(sreq, req->greq.count) = origin_count;
-    MPIDI_CH4U_REQUEST(sreq, req->greq.datatype) = origin_datatype;
-
     if (target_rank == win->comm_ptr->rank) {
-        MPIDI_Request_complete(sreq);
         offset = win->disp_unit * target_disp;
         mpi_errno = MPIR_Localcopy((char *) win->base + offset,
                                    target_count,
@@ -200,6 +185,17 @@ static inline int MPIDI_do_get(void *origin_addr,
             MPIR_ERR_POP(mpi_errno);
         goto fn_exit;
     }
+
+    /* Only create request when issuing is not completed.
+     * We initialize two ref_count for progress engine and request-based OP,
+     * then get needs to free the second ref_count.*/
+    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
+    MPIR_Assert(sreq);
+
+    MPIDI_CH4U_REQUEST(sreq, req->greq.win_ptr) = win;
+    MPIDI_CH4U_REQUEST(sreq, req->greq.addr) = (uint64_t) ((char *) origin_addr);
+    MPIDI_CH4U_REQUEST(sreq, req->greq.count) = origin_count;
+    MPIDI_CH4U_REQUEST(sreq, req->greq.datatype) = origin_datatype;
 
     MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
     MPIR_cc_incr(sreq->cc_ptr, &c);
@@ -291,21 +287,20 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
-    /* FIXME: should only create when issuing is not completed.
-     * Then racc will need to create a request if it is immediately completed.*/
-    /* two ref counts for progress engine and caller. */
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
-    MPIR_Assert(sreq);
-
     MPIDI_Datatype_get_size_dt_ptr(origin_count, origin_datatype, data_sz, dt_ptr);
     MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
 
     if (data_sz == 0 || target_rank == MPI_PROC_NULL || target_data_sz == 0) {
-        MPIDI_Request_complete(sreq);
         goto fn_exit;
     }
 
+    /* Only create request when issuing is not completed.
+     * We initialize two ref_count for progress engine and request-based OP,
+     * then acc needs to free the second ref_count.*/
+    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
+    MPIR_Assert(sreq);
     MPIDI_CH4U_REQUEST(sreq, req->areq.win_ptr) = win;
+
     MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
     MPIR_cc_incr(sreq->cc_ptr, &c);
 
@@ -439,28 +434,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
-    /* FIXME: should only create when issuing is not completed.
-     * Then rget_acc will need to create a request if it is immediately completed.*/
-    /* two ref counts for progress engine and caller. */
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
-    MPIR_Assert(sreq);
-
     MPIDI_Datatype_get_size_dt_ptr(origin_count, origin_datatype, data_sz, dt_ptr);
     MPIDI_Datatype_check_size(target_datatype, target_count, target_data_sz);
     MPIDI_Datatype_check_size(result_datatype, result_count, result_data_sz);
 
     if (target_rank == MPI_PROC_NULL || target_data_sz == 0 ||
         (data_sz == 0 && result_data_sz == 0)) {
-        MPIDI_Request_complete(sreq);
         goto fn_exit;
     }
 
+    /* Only create request when issuing is not completed.
+     * We initialize two ref_count for progress engine and request-based OP,
+     * then get_acc needs to free the second ref_count.*/
+    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
+    MPIR_Assert(sreq);
+
+    MPIDI_CH4U_REQUEST(sreq, req->areq.win_ptr) = win;
     MPIDI_CH4U_REQUEST(sreq, req->areq.result_addr) = result_addr;
     MPIDI_CH4U_REQUEST(sreq, req->areq.result_count) = result_count;
     MPIDI_CH4U_REQUEST(sreq, req->areq.result_datatype) = result_datatype;
     dtype_add_ref_if_not_builtin(result_datatype);
 
-    MPIDI_CH4U_REQUEST(sreq, req->areq.win_ptr) = win;
     MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
     MPIR_cc_incr(sreq->cc_ptr, &c);
 
@@ -612,15 +606,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_rput(const void *origin_addr,
                                                  MPIR_Win * win, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_Request *sreq = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_MPI_RPUT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_MPI_RPUT);
 
     mpi_errno = MPIDI_do_put(origin_addr, origin_count, origin_datatype,
-                             target_rank, target_disp, target_count, target_datatype, win, request);
+                             target_rank, target_disp, target_count, target_datatype, win, &sreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
+    if (sreq == NULL) {
+        /* create a completed request for user if issuing is completed immediately. */
+        sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        MPIR_Assert(sreq);
+        MPIDI_Request_set_completed(sreq);
+    }
+
   fn_exit:
+    *request = sreq;
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_MPI_RPUT);
     return mpi_errno;
   fn_fail:
@@ -675,14 +678,24 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_rget(void *origin_addr,
                                                  MPIR_Win * win, MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_Request *sreq = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_MPI_RGET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_MPI_RGET);
 
     mpi_errno = MPIDI_do_get(origin_addr, origin_count, origin_datatype,
-                             target_rank, target_disp, target_count, target_datatype, win, request);
+                             target_rank, target_disp, target_count, target_datatype, win, &sreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
+
+    if (sreq == NULL) {
+        /* create a completed request for user if issuing is completed immediately. */
+        sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        MPIR_Assert(sreq);
+        MPIDI_Request_set_completed(sreq);
+    }
+
   fn_exit:
+    *request = sreq;
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_MPI_RGET);
     return mpi_errno;
   fn_fail:
@@ -705,15 +718,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_raccumulate(const void *origin_addr,
                                                         MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_Request *sreq = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_MPI_RACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_MPI_RACCUMULATE);
 
     mpi_errno = MPIDI_do_accumulate(origin_addr, origin_count, origin_datatype,
                                     target_rank, target_disp, target_count, target_datatype, op,
-                                    win, request);
+                                    win, &sreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
+
+    if (sreq == NULL) {
+        /* create a completed request for user if issuing is completed immediately. */
+        sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        MPIR_Assert(sreq);
+        MPIDI_Request_set_completed(sreq);
+    }
+
   fn_exit:
+    *request = sreq;
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_MPI_RACCUMULATE);
     return mpi_errno;
   fn_fail:
@@ -774,16 +797,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_rget_accumulate(const void *origin_a
                                                             MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_Request *sreq = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_MPI_RGET_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_MPI_RGET_ACCUMULATE);
 
     mpi_errno = MPIDI_do_get_accumulate(origin_addr, origin_count, origin_datatype,
                                         result_addr, result_count, result_datatype,
                                         target_rank, target_disp, target_count, target_datatype, op,
-                                        win, request);
+                                        win, &sreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
+
+    if (sreq == NULL) {
+        /* create a completed request for user if issuing is completed immediately. */
+        sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
+        MPIR_Assert(sreq);
+        MPIDI_Request_set_completed(sreq);
+    }
+
   fn_exit:
+    *request = sreq;
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_MPI_RGET_ACCUMULATE);
     return mpi_errno;
   fn_fail:
@@ -851,12 +884,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_compare_and_swap(const void *origin_
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
-    MPIR_Assert(sreq);
-
     MPIDI_Datatype_check_size(datatype, 1, data_sz);
     if (data_sz == 0 || target_rank == MPI_PROC_NULL) {
-        MPIDI_Request_complete(sreq);
         goto fn_exit;
     }
 
@@ -864,6 +893,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_compare_and_swap(const void *origin_
     MPIR_Assert(p_data);
     MPIR_Memcpy(p_data, (char *) origin_addr, data_sz);
     MPIR_Memcpy((char *) p_data + data_sz, (char *) compare_addr, data_sz);
+
+    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
+    MPIR_Assert(sreq);
 
     MPIDI_CH4U_REQUEST(sreq, req->creq.win_ptr) = win;
     MPIDI_CH4U_REQUEST(sreq, req->creq.addr) = (uint64_t) ((char *) result_addr);
