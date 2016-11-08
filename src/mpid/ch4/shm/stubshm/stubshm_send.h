@@ -13,69 +13,69 @@
 
 #include "stubshm_impl.h"
 
-static inline int MPIDI_SHM_mpi_send(const void *buf,
+static inline int MPIDI_STUBSHM_mpi_send(const void *buf,
                                      int count,
                                      MPI_Datatype datatype,
                                      int rank,
                                      int tag,
                                      MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_SEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_SEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_SEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_SEND);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_SEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_SEND);
     return MPI_SUCCESS;
 }
 
 
 
 
-static inline int MPIDI_SHM_irsend(const void *buf,
+static inline int MPIDI_STUBSHM_irsend(const void *buf,
                                    int count,
                                    MPI_Datatype datatype,
                                    int rank,
                                    int tag,
                                    MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_IRSEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_IRSEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_IRSEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_IRSEND);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_IRSEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_IRSEND);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_mpi_ssend(const void *buf,
+static inline int MPIDI_STUBSHM_mpi_ssend(const void *buf,
                                       int count,
                                       MPI_Datatype datatype,
                                       int rank,
                                       int tag,
                                       MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_SSEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_SSEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_SSEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_SSEND);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_SSEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_SSEND);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_mpi_startall(int count, MPIR_Request * requests[])
+static inline int MPIDI_STUBSHM_mpi_startall(int count, MPIR_Request * requests[])
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_STARTALL);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_STARTALL);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_STARTALL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_STARTALL);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_STARTALL);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_STARTALL);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_mpi_send_init(const void *buf,
+static inline int MPIDI_STUBSHM_mpi_send_init(const void *buf,
                                           int count,
                                           MPI_Datatype datatype,
                                           int rank,
@@ -83,16 +83,16 @@ static inline int MPIDI_SHM_mpi_send_init(const void *buf,
                                           MPIR_Comm * comm, int context_offset,
                                           MPIR_Request ** request)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_SEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_SEND_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_SEND_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_SEND_INIT);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_SEND_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_SEND_INIT);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_mpi_ssend_init(const void *buf,
+static inline int MPIDI_STUBSHM_mpi_ssend_init(const void *buf,
                                            int count,
                                            MPI_Datatype datatype,
                                            int rank,
@@ -100,16 +100,16 @@ static inline int MPIDI_SHM_mpi_ssend_init(const void *buf,
                                            MPIR_Comm * comm,
                                            int context_offset, MPIR_Request ** request)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_SSEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_SSEND_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_SSEND_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_SSEND_INIT);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_SSEND_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_SSEND_INIT);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_mpi_bsend_init(const void *buf,
+static inline int MPIDI_STUBSHM_mpi_bsend_init(const void *buf,
                                            int count,
                                            MPI_Datatype datatype,
                                            int rank,
@@ -117,16 +117,16 @@ static inline int MPIDI_SHM_mpi_bsend_init(const void *buf,
                                            MPIR_Comm * comm,
                                            int context_offset, MPIR_Request ** request)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_BSEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_BSEND_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_BSEND_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_BSEND_INIT);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_BSEND_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_BSEND_INIT);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_mpi_rsend_init(const void *buf,
+static inline int MPIDI_STUBSHM_mpi_rsend_init(const void *buf,
                                            int count,
                                            MPI_Datatype datatype,
                                            int rank,
@@ -134,34 +134,34 @@ static inline int MPIDI_SHM_mpi_rsend_init(const void *buf,
                                            MPIR_Comm * comm,
                                            int context_offset, MPIR_Request ** request)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_RSEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_RSEND_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_RSEND_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_RSEND_INIT);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_RSEND_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_RSEND_INIT);
     return MPI_SUCCESS;
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_SHM_mpi_isend)
-static inline int MPIDI_SHM_mpi_isend(const void *buf,
+#define FCNAME DECL_FUNC(MPIDI_STUBSHM_mpi_isend)
+static inline int MPIDI_STUBSHM_mpi_isend(const void *buf,
                                       int count,
                                       MPI_Datatype datatype,
                                       int rank,
                                       int tag,
                                       MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_ISEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_ISEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_ISEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_ISEND);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_ISEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_ISEND);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_mpi_issend(const void *buf,
+static inline int MPIDI_STUBSHM_mpi_issend(const void *buf,
                                        int count,
                                        MPI_Datatype datatype,
                                        int rank,
@@ -169,23 +169,23 @@ static inline int MPIDI_SHM_mpi_issend(const void *buf,
                                        MPIR_Comm * comm, int context_offset,
                                        MPIR_Request ** request)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_ISSEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_ISSEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_ISSEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_ISSEND);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_ISSEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_ISSEND);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_mpi_cancel_send(MPIR_Request * sreq)
+static inline int MPIDI_STUBSHM_mpi_cancel_send(MPIR_Request * sreq)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_CANCEL_SEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_CANCEL_SEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_CANCEL_SEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_CANCEL_SEND);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_CANCEL_SEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_CANCEL_SEND);
     return MPI_SUCCESS;
 }
 

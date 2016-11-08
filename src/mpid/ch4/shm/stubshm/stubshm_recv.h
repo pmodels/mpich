@@ -14,8 +14,8 @@
 #include "stubshm_impl.h"
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_SHM_mpi_recv)
-static inline int MPIDI_SHM_mpi_recv(void *buf,
+#define FCNAME DECL_FUNC(MPIDI_STUBSHM_mpi_recv)
+static inline int MPIDI_STUBSHM_mpi_recv(void *buf,
                                      int count,
                                      MPI_Datatype datatype,
                                      int rank,
@@ -24,16 +24,16 @@ static inline int MPIDI_SHM_mpi_recv(void *buf,
                                      int context_offset, MPI_Status * status,
                                      MPIR_Request ** request)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_RECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_RECV);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_RECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_RECV);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_mpi_recv_init(void *buf,
+static inline int MPIDI_STUBSHM_mpi_recv_init(void *buf,
                                           int count,
                                           MPI_Datatype datatype,
                                           int rank,
@@ -41,56 +41,56 @@ static inline int MPIDI_SHM_mpi_recv_init(void *buf,
                                           MPIR_Comm * comm, int context_offset,
                                           MPIR_Request ** request)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_RECV_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_RECV_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_RECV_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_RECV_INIT);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_RECV_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_RECV_INIT);
     return MPI_SUCCESS;
 }
 
 
-static inline int MPIDI_SHM_mpi_imrecv(void *buf,
+static inline int MPIDI_STUBSHM_mpi_imrecv(void *buf,
                                        int count,
                                        MPI_Datatype datatype,
                                        MPIR_Request * message, MPIR_Request ** rreqp)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_IMRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_IMRECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_IMRECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_IMRECV);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_IMRECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_IMRECV);
     return MPI_SUCCESS;
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_SHM_mpi_irecv)
-static inline int MPIDI_SHM_mpi_irecv(void *buf,
+#define FCNAME DECL_FUNC(MPIDI_STUBSHM_mpi_irecv)
+static inline int MPIDI_STUBSHM_mpi_irecv(void *buf,
                                       int count,
                                       MPI_Datatype datatype,
                                       int rank,
                                       int tag,
                                       MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_IRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_IRECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_IRECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_IRECV);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_IRECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_IRECV);
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_mpi_cancel_recv(MPIR_Request * rreq)
+static inline int MPIDI_STUBSHM_mpi_cancel_recv(MPIR_Request * rreq)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_CANCEL_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_CANCEL_RECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_STUBSHM_MPI_CANCEL_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_STUBSHM_MPI_CANCEL_RECV);
 
     MPIR_Assert(0);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_CANCEL_RECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_STUBSHM_MPI_CANCEL_RECV);
     return MPI_SUCCESS;
 }
 
