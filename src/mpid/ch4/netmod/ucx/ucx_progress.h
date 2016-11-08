@@ -19,7 +19,7 @@ static inline int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
     void *p_data;
     void *in_data;
     size_t data_sz, in_data_sz;
-    MPIDI_NM_am_target_cmpl_cb target_cmpl_cb;
+    MPIDIG_am_target_cmpl_cb target_cmpl_cb;
     struct iovec *iov;
     int i, is_contig, iov_len;
     size_t done, curr_len, rem;
@@ -28,9 +28,9 @@ static inline int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
     p_data = in_data = (char *) msg_hdr->payload + (msg_sz - msg_hdr->data_sz - sizeof(*msg_hdr));
     in_data_sz = data_sz = msg_hdr->data_sz;
 
-    MPIDI_UCX_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, msg_hdr->payload,
-                                                          &p_data, &data_sz, &is_contig,
-                                                          &target_cmpl_cb, &rreq);
+    MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id, msg_hdr->payload,
+                                                       &p_data, &data_sz, &is_contig,
+                                                       &target_cmpl_cb, &rreq);
 
     if (!rreq)
         goto fn_exit;

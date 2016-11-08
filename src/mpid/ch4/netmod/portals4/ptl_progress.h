@@ -20,7 +20,7 @@ static inline int MPIDI_PTL_am_handler(ptl_event_t * e)
     void *p_data;
     void *in_data;
     size_t data_sz, in_data_sz;
-    MPIDI_NM_am_target_cmpl_cb target_cmpl_cb = NULL;
+    MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
     struct iovec *iov;
     int i, is_contig, iov_len;
     size_t done, curr_len, rem;
@@ -29,9 +29,9 @@ static inline int MPIDI_PTL_am_handler(ptl_event_t * e)
     in_data = p_data = (e->start + (e->mlength - data_sz));
     int handler_id = e->hdr_data >> 56;
 
-    MPIDI_PTL_global.target_msg_cbs[handler_id] (handler_id, e->start,
-                                                 &p_data, &data_sz, &is_contig, &target_cmpl_cb,
-                                                 &rreq);
+    MPIDIG_global.target_msg_cbs[handler_id] (handler_id, e->start,
+                                              &p_data, &data_sz, &is_contig, &target_cmpl_cb,
+                                              &rreq);
 
     if (!rreq)
         goto fn_exit;
@@ -108,7 +108,7 @@ static inline int MPIDI_NM_progress(void *netmod_context, int blocking)
                     MPIR_Request_free(sreq);
                     break;
                 }
-                MPIDI_PTL_global.origin_cbs[handler_id] (sreq);
+                MPIDIG_global.origin_cbs[handler_id] (sreq);
             }
             break;
         case PTL_EVENT_AUTO_UNLINK:

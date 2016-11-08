@@ -16,23 +16,9 @@
 
 #define MPIDI_MAX_SHM_STRING_LEN 64
 
-typedef int (*MPIDI_SHM_am_target_cmpl_cb) (MPIR_Request * req);
-typedef int (*MPIDI_SHM_am_origin_cb) (MPIR_Request * req);
-
-/* Callback function setup by handler register function */
-/* for short cases, output arguments are NULL */
-typedef int (*MPIDI_SHM_am_target_msg_cb)
- (void *am_hdr, size_t am_hdr_sz, void **data,  /* CH4 manages this buffer - shm only fills with data */
-  MPI_Datatype * datatype, MPI_Count * count, int *noncontig,   /* if TRUE: data/data_sz are actually iovec/count */
-  MPIDI_SHM_am_target_cmpl_cb * target_cmpl_cb, /* completion handler */
-  MPIR_Request ** req);         /* if allocated, need pointer to completion function */
-
 typedef int (*MPIDI_SHM_mpi_init_t) (int rank, int size);
 typedef int (*MPIDI_SHM_mpi_finalize_t) (void);
 typedef int (*MPIDI_SHM_progress_t) (int blocking);
-typedef int (*MPIDI_SHM_am_reg_cb_t) (int handler_id,
-                                      MPIDI_SHM_am_origin_cb origin_cb,
-                                      MPIDI_SHM_am_target_msg_cb target_msg_cb);
 typedef int (*MPIDI_SHM_mpi_comm_connect_t) (const char *port_name, MPIR_Info * info, int root,
                                              MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr);
 typedef int (*MPIDI_SHM_mpi_comm_disconnect_t) (MPIR_Comm * comm_ptr);
@@ -381,7 +367,6 @@ typedef struct MPIDI_SHM_funcs {
     MPIDI_SHM_mpi_init_t mpi_init;
     MPIDI_SHM_mpi_finalize_t mpi_finalize;
     MPIDI_SHM_progress_t progress;
-    MPIDI_SHM_am_reg_cb_t am_reg_cb;
     MPIDI_SHM_mpi_comm_connect_t mpi_comm_connect;
     MPIDI_SHM_mpi_comm_disconnect_t mpi_comm_disconnect;
     MPIDI_SHM_mpi_open_port_t mpi_open_port;
@@ -529,11 +514,6 @@ extern char MPIDI_SHM_strings[][MPIDI_MAX_SHM_STRING_LEN];
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init_hook(int rank, int size) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_finalize_hook(void) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_progress(int blocking) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_reg_cb(int handler_id,
-                                                 MPIDI_SHM_am_origin_cb
-                                                 origin_cb,
-                                                 MPIDI_SHM_am_target_msg_cb
-                                                 target_msg_cb) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_comm_connect(const char *port_name, MPIR_Info * info,
                                                         int root, MPIR_Comm * comm,
                                                         MPIR_Comm **

@@ -26,7 +26,6 @@
 #define MPIDI_UCX_NUM_AM_BUFFERS       (64)
 #define MPIDI_UCX_MAX_AM_EAGER_SZ      (16*1024)
 #define MPIDI_UCX_AM_TAG               (1 << 28)
-#define MPIDI_UCX_MAX_AM_HANDLERS      (64)
 
 typedef struct {
     int avtid;
@@ -39,8 +38,6 @@ typedef struct {
     char kvsname[MPIDI_UCX_KVSAPPSTRLEN];
     char pname[MPI_MAX_PROCESSOR_NAME];
     int max_addr_len;
-    MPIDI_NM_am_target_msg_cb target_msg_cbs[MPIDI_UCX_MAX_AM_HANDLERS];
-    MPIDI_NM_am_origin_cb origin_cbs[MPIDI_UCX_MAX_AM_HANDLERS];
 } MPIDI_UCX_global_t;
 
 #define MPIDI_UCX_AV(av)     ((av)->netmod.ucx)
