@@ -243,10 +243,10 @@ static inline int MPIDI_OFI_win_init(MPI_Aint length,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Win_progress_fence
+#define FUNCNAME MPIDI_OFI_win_progress_fence
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_Win_progress_fence(MPIR_Win * win)
+static inline int MPIDI_OFI_win_progress_fence(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
     int itercount = 0;
@@ -254,8 +254,8 @@ static inline int MPIDI_Win_progress_fence(MPIR_Win * win)
     uint64_t tcount, donecount;
     MPIDI_OFI_win_request_t *r;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_OFI_PROGRESS_WIN_COUNTER_FENCE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_OFI_PROGRESS_WIN_COUNTER_FENCE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
 
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
     tcount = *MPIDI_OFI_WIN(win).issued_cntr;
@@ -294,7 +294,7 @@ static inline int MPIDI_Win_progress_fence(MPIR_Win * win)
     MPIDI_OFI_WIN(win).syncQ = NULL;
   fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_OFI_PROGRESS_WIN_COUNTER_FENCE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_PROGRESS_FENCE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -373,7 +373,7 @@ static inline int MPIDI_NM_mpi_win_complete(MPIR_Win * win)
     } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) != 0);
 
     /* network completion */
-    MPIDI_OFI_MPI_CALL_POP(MPIDI_Win_progress_fence(win));
+    MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
 
     MPIR_Group *group;
     group = MPIDI_CH4U_WIN(win, sync).sc.group;
@@ -567,7 +567,7 @@ static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win)
     /* AM completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_CH4R_mpi_win_flush(rank, win));
     /* network completion */
-    MPIDI_OFI_MPI_CALL_POP(MPIDI_Win_progress_fence(win));
+    MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
 
     MPIDI_OFI_win_control_t msg;
     msg.type = MPIDI_OFI_CTRL_UNLOCK;
@@ -674,7 +674,7 @@ static inline int MPIDI_NM_mpi_win_fence(int massert, MPIR_Win * win)
         MPIDI_CH4R_PROGRESS();
     } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) != 0);
     /* network completion */
-    MPIDI_OFI_MPI_CALL_POP(MPIDI_Win_progress_fence(win));
+    MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
 
     MPIDI_CH4U_EPOCH_FENCE_EVENT(win, massert);
 
@@ -1041,7 +1041,7 @@ static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win)
     /* AM completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_CH4R_mpi_win_flush(rank, win));
     /* network completion */
-    MPIDI_OFI_MPI_CALL_POP(MPIDI_Win_progress_fence(win));
+    MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_WIN_FLUSH);
@@ -1065,7 +1065,7 @@ static inline int MPIDI_NM_mpi_win_flush_local_all(MPIR_Win * win)
     /* AM completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_CH4R_mpi_win_flush_local_all(win));
     /* network completion */
-    MPIDI_OFI_MPI_CALL_POP(MPIDI_Win_progress_fence(win));
+    MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_WIN_FLUSH_LOCAL_ALL);
@@ -1091,7 +1091,7 @@ static inline int MPIDI_NM_mpi_win_unlock_all(MPIR_Win * win)
     /* AM completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_CH4R_mpi_win_flush_all(win));
     /* network completion */
-    MPIDI_OFI_MPI_CALL_POP(MPIDI_Win_progress_fence(win));
+    MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
 
     MPIR_Assert(MPIDI_CH4U_WIN(win, lockQ) != NULL);
 
@@ -1176,7 +1176,7 @@ static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win)
     /* AM completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_CH4R_mpi_win_flush_local(rank, win));
     /* network completion */
-    MPIDI_OFI_MPI_CALL_POP(MPIDI_Win_progress_fence(win));
+    MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_WIN_FLUSH_LOCAL);
@@ -1222,7 +1222,7 @@ static inline int MPIDI_NM_mpi_win_flush_all(MPIR_Win * win)
     /* AM completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_CH4R_mpi_win_flush_all(win));
     /* network completion */
-    MPIDI_OFI_MPI_CALL_POP(MPIDI_Win_progress_fence(win));
+    MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_WIN_FLUSH_ALL);
