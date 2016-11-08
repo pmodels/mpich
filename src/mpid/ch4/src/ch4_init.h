@@ -594,10 +594,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Get_max_node_id(MPIR_Comm * comm, MPID_Node_i
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_upids_to_lupids(int size,
-                                                   size_t *remote_upid_size,
+                                                   size_t * remote_upid_size,
                                                    char *remote_upids,
                                                    int **remote_lupids,
-                                                   MPID_Node_id_t *remote_node_ids)
+                                                   MPID_Node_id_t * remote_node_ids)
 {
     int mpi_errno = MPI_SUCCESS, i;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_UPIDS_TO_LUPIDS);

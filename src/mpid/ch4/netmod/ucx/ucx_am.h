@@ -85,7 +85,6 @@ static inline int MPIDI_NM_am_isend(int rank,
                                     MPI_Count count,
                                     MPI_Datatype datatype, MPIR_Request * sreq,
                                     void *netmod_context)
-
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_UCX_ucp_request_t *ucp_request;

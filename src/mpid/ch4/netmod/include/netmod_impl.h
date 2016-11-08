@@ -134,12 +134,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_comm_get_lpid(MPIR_Comm * comm_ptr, int id
 };
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size,
-                                                      char **local_upids) {
+                                                      char **local_upids)
+{
     return MPIDI_NM_func->get_local_upids(comm, local_upid_size, local_upids);
 };
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_upids_to_lupids(int size, size_t * remote_upid_size,
-                                                      char * remote_upids, int ** remote_lupids) {
+                                                      char *remote_upids, int **remote_lupids)
+{
     return MPIDI_NM_func->upids_to_lupids(size, remote_upid_size, remote_upids, remote_lupids);
 };
 

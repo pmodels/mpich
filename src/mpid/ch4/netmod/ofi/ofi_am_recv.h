@@ -22,8 +22,7 @@ static inline int MPIDI_NM_mpi_recv(void *buf,
                                     int context_offset, MPI_Status * status,
                                     MPIR_Request ** request)
 {
-    return MPIDIG_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, status,
-                               request);
+    return MPIDIG_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, status, request);
 }
 
 static inline int MPIDI_NM_mpi_recv_init(void *buf,

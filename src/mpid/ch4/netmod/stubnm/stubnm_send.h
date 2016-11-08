@@ -79,8 +79,7 @@ static inline int MPIDI_NM_mpi_ssend_init(const void *buf,
                                           MPIR_Comm * comm, int context_offset,
                                           MPIR_Request ** request)
 {
-    return MPIDIG_mpi_ssend_init(buf, count, datatype, rank, tag, comm, context_offset,
-                                     request);
+    return MPIDIG_mpi_ssend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
 }
 
 static inline int MPIDI_NM_mpi_bsend_init(const void *buf,
@@ -91,8 +90,7 @@ static inline int MPIDI_NM_mpi_bsend_init(const void *buf,
                                           MPIR_Comm * comm, int context_offset,
                                           MPIR_Request ** request)
 {
-    return MPIDIG_mpi_bsend_init(buf, count, datatype, rank, tag, comm, context_offset,
-                                     request);
+    return MPIDIG_mpi_bsend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
 }
 
 static inline int MPIDI_NM_mpi_rsend_init(const void *buf,
@@ -103,8 +101,7 @@ static inline int MPIDI_NM_mpi_rsend_init(const void *buf,
                                           MPIR_Comm * comm, int context_offset,
                                           MPIR_Request ** request)
 {
-    return MPIDIG_mpi_rsend_init(buf, count, datatype, rank, tag, comm, context_offset,
-                                     request);
+    return MPIDIG_mpi_rsend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
 }
 
 static inline int MPIDI_NM_mpi_isend(const void *buf,

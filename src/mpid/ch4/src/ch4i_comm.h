@@ -329,8 +329,7 @@ static inline int MPIDI_src_comm_to_mlut(MPIDI_rank_map_t * src,
                                                                                      src->reg.
                                                                                      stride.stride,
                                                                                      src->reg.
-                                                                                     stride.
-                                                                                     offset);
+                                                                                     stride.offset);
             dest->irreg.mlut.gpid[i + mapper_offset].avtid = src->avtid;
         }
         MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
@@ -818,7 +817,7 @@ static inline int MPIDI_check_convert_lut_to_regular(MPIDI_rank_map_t * src)
 
     lut = src->irreg.lut.t;
     mode_detected = MPIDI_detect_regular_model(src->irreg.lut.lpid, src->size,
-                                                &offset, &blocksize, &stride);
+                                               &offset, &blocksize, &stride);
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                     (MPL_DBG_FDEST, " detected mode: %d", mode_detected));
 
@@ -1009,7 +1008,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
                                  " intra->intra, L2L, size=%d, total_mapper_size=%d, mapper_offset=%d",
                                  src_comm->local_size, total_mapper_size, mapper_offset));
                 MPIDI_set_map(&MPIDI_COMM(src_comm, map), &MPIDI_COMM(comm, map), mapper,
-                               src_comm->local_size, total_mapper_size, mapper_offset);
+                              src_comm->local_size, total_mapper_size, mapper_offset);
             }
             else if (src_comm->comm_kind == MPIR_COMM_KIND__INTRACOMM &&
                      comm->comm_kind == MPIR_COMM_KIND__INTERCOMM) {
@@ -1018,7 +1017,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
                                  " intra->inter, L2L, size=%d, total_mapper_size=%d, mapper_offset=%d",
                                  src_comm->local_size, total_mapper_size, mapper_offset));
                 MPIDI_set_map(&MPIDI_COMM(src_comm, map), &MPIDI_COMM(comm, local_map), mapper,
-                               src_comm->local_size, total_mapper_size, mapper_offset);
+                              src_comm->local_size, total_mapper_size, mapper_offset);
             }
             else if (src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM &&
                      comm->comm_kind == MPIR_COMM_KIND__INTRACOMM) {
@@ -1027,7 +1026,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
                                  " inter->intra, L2L, size=%d, total_mapper_size=%d, mapper_offset=%d",
                                  src_comm->local_size, total_mapper_size, mapper_offset));
                 MPIDI_set_map(&MPIDI_COMM(src_comm, local_map), &MPIDI_COMM(comm, map), mapper,
-                               src_comm->local_size, total_mapper_size, mapper_offset);
+                              src_comm->local_size, total_mapper_size, mapper_offset);
             }
             else {      /* src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM && comm->comm_kind == MPIR_COMM_KIND__INTERCOMM */
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
@@ -1035,7 +1034,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
                                  " inter->inter, L2L, size=%d, total_mapper_size=%d, mapper_offset=%d",
                                  src_comm->local_size, total_mapper_size, mapper_offset));
                 MPIDI_set_map(&MPIDI_COMM(src_comm, local_map), &MPIDI_COMM(comm, local_map),
-                               mapper, src_comm->local_size, total_mapper_size, mapper_offset);
+                              mapper, src_comm->local_size, total_mapper_size, mapper_offset);
             }
         }
         else {  /* mapper->dir == MPIR_COMM_MAP_DIR__R2L */
@@ -1047,7 +1046,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
                                  " ->intra, R2L, size=%d, total_mapper_size=%d, mapper_offset=%d",
                                  src_comm->remote_size, total_mapper_size, mapper_offset));
                 MPIDI_set_map(&MPIDI_COMM(src_comm, map), &MPIDI_COMM(comm, map), mapper,
-                               src_comm->remote_size, total_mapper_size, mapper_offset);
+                              src_comm->remote_size, total_mapper_size, mapper_offset);
             }
             else {
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
@@ -1055,7 +1054,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
                                  " ->inter, R2L, size=%d, total_mapper_size=%d, mapper_offset=%d",
                                  src_comm->remote_size, total_mapper_size, mapper_offset));
                 MPIDI_set_map(&MPIDI_COMM(src_comm, map), &MPIDI_COMM(comm, local_map), mapper,
-                               src_comm->remote_size, total_mapper_size, mapper_offset);
+                              src_comm->remote_size, total_mapper_size, mapper_offset);
             }
         }
 
@@ -1088,7 +1087,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
                                  " intra->, L2R, size=%d, total_mapper_size=%d, mapper_offset=%d",
                                  src_comm->local_size, total_mapper_size, mapper_offset));
                 MPIDI_set_map(&MPIDI_COMM(src_comm, map), &MPIDI_COMM(comm, map), mapper,
-                               src_comm->local_size, total_mapper_size, mapper_offset);
+                              src_comm->local_size, total_mapper_size, mapper_offset);
             }
             else {      /* src_comm->comm_kind == MPIR_COMM_KIND__INTERCOMM */
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
@@ -1096,7 +1095,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
                                  " inter->, L2R, size=%d, total_mapper_size=%d, mapper_offset=%d",
                                  src_comm->local_size, total_mapper_size, mapper_offset));
                 MPIDI_set_map(&MPIDI_COMM(src_comm, local_map), &MPIDI_COMM(comm, map), mapper,
-                               src_comm->local_size, total_mapper_size, mapper_offset);
+                              src_comm->local_size, total_mapper_size, mapper_offset);
             }
         }
         else {  /* mapper->dir == MPIR_COMM_MAP_DIR__R2R */
@@ -1106,7 +1105,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
                              " inter->, R2R, size=%d, total_mapper_size=%d, mapper_offset=%d",
                              src_comm->remote_size, total_mapper_size, mapper_offset));
             MPIDI_set_map(&MPIDI_COMM(src_comm, map), &MPIDI_COMM(comm, map), mapper,
-                           src_comm->remote_size, total_mapper_size, mapper_offset);
+                          src_comm->remote_size, total_mapper_size, mapper_offset);
         }
 
         mapper_offset += MPIDI_map_size(*mapper);
@@ -1158,28 +1157,30 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_check_disjoint_lupids(int lupids1[], int n1,
     MPIR_CHKLMEM_DECL(1);
 
     /* Find the max lupid */
-    for (i=0; i<n1; i++) {
-        if (lupids1[i] > maxlupid) maxlupid = lupids1[i];
+    for (i = 0; i < n1; i++) {
+        if (lupids1[i] > maxlupid)
+            maxlupid = lupids1[i];
     }
-    for (i=0; i<n2; i++) {
-        if (lupids2[i] > maxlupid) maxlupid = lupids2[i];
+    for (i = 0; i < n2; i++) {
+        if (lupids2[i] > maxlupid)
+            maxlupid = lupids2[i];
     }
 
     mask_size = (maxlupid / 32) + 1;
 
     if (mask_size > 128) {
-        MPIR_CHKLMEM_MALLOC(lupidmask,uint32_t*,mask_size*sizeof(uint32_t),
-                            mpi_errno,"lupidmask");
+        MPIR_CHKLMEM_MALLOC(lupidmask, uint32_t *, mask_size * sizeof(uint32_t),
+                            mpi_errno, "lupidmask");
     }
     else {
         lupidmask = lupidmaskPrealloc;
     }
 
     /* zero the bitvector array */
-    memset(lupidmask, 0x00, mask_size*sizeof(*lupidmask));
+    memset(lupidmask, 0x00, mask_size * sizeof(*lupidmask));
 
     /* Set the bits for the first array */
-    for (i=0; i<n1; i++) {
+    for (i = 0; i < n1; i++) {
         idx = lupids1[i] / 32;
         bit = lupids1[i] % 32;
         lupidmask[idx] = lupidmask[idx] | (1 << bit);
@@ -1187,12 +1188,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_check_disjoint_lupids(int lupids1[], int n1,
     }
 
     /* Look for any duplicates in the second array */
-    for (i=0; i<n2; i++) {
+    for (i = 0; i < n2; i++) {
         idx = lupids2[i] / 32;
         bit = lupids2[i] % 32;
         if (lupidmask[idx] & (1 << bit)) {
-            MPIR_ERR_SET1(mpi_errno,MPI_ERR_COMM,
-                          "**dupprocesses", "**dupprocesses %d", lupids2[i] );
+            MPIR_ERR_SET1(mpi_errno, MPI_ERR_COMM,
+                          "**dupprocesses", "**dupprocesses %d", lupids2[i]);
             goto fn_fail;
         }
         /* Add a check on duplicates *within* group 2 */
