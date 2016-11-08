@@ -1,6 +1,5 @@
 # ch4 ignore files
 src/mpid_ch4_net_array.c
-src/mpid_ch4_shm_array.c
 
 # for embedded libfabric
 netmod/ofi/libfabric/

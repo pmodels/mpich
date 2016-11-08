@@ -85,51 +85,6 @@ static inline int MPIDI_choose_netmod(void)
     goto fn_exit;
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIDI_choose_shm
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_choose_shm(void)
-{
-
-    int mpi_errno = MPI_SUCCESS;
-#ifdef MPIDI_BUILD_CH4_SHM
-    int i;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHOOSE_SHM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHOOSE_SHM);
-
-
-    MPIR_Assert(MPIR_CVAR_CH4_SHM != NULL);
-
-    if (strcmp(MPIR_CVAR_CH4_SHM, "") == 0) {
-        /* shm not specified, using the default */
-        MPIDI_SHM_func = MPIDI_SHM_funcs[0];
-        MPIDI_SHM_native_func = MPIDI_SHM_native_funcs[0];
-        goto fn_exit;
-    }
-
-    for (i = 0; i < MPIDI_num_shms; ++i) {
-        /* use MPL variant of strncasecmp if we get one */
-        if (!strncasecmp(MPIR_CVAR_CH4_SHM, MPIDI_SHM_strings[i], MPIDI_MAX_SHM_STRING_LEN)) {
-            MPIDI_SHM_func = MPIDI_SHM_funcs[i];
-            MPIDI_SHM_native_func = MPIDI_SHM_native_funcs[i];
-            goto fn_exit;
-        }
-    }
-
-    MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**ch4|invalid_shm", "**ch4|invalid_shm %s",
-                         MPIR_CVAR_CH4_SHM);
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CHOOSE_SHM);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-#else
-    return mpi_errno;
-#endif
-}
-
-
 #if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ)
 #define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
 #elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
@@ -206,11 +161,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPIR_Process.comm_world->rank = rank;
     MPIR_Process.comm_world->remote_size = size;
     MPIR_Process.comm_world->local_size = size;
-
-    mpi_errno = MPIDI_choose_shm();
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POPFATAL(mpi_errno);
-    }
 
     MPIDI_CH4_Global.allocated_max_n_avts = 0;
     MPIDIU_avt_init();

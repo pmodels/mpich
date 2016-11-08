@@ -93,8 +93,8 @@ static inline int MPIDI_POSIX_do_irecv(void *buf,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_SHM_mpi_recv)
-static inline int MPIDI_SHM_mpi_recv(void *buf,
+#define FCNAME DECL_FUNC(MPIDI_POSIX_mpi_recv)
+static inline int MPIDI_POSIX_mpi_recv(void *buf,
                                      int count,
                                      MPI_Datatype datatype,
                                      int rank,
@@ -105,22 +105,22 @@ static inline int MPIDI_SHM_mpi_recv(void *buf,
 {
     int mpi_errno = MPI_SUCCESS, dt_contig __attribute__ ((__unused__));
     size_t data_sz __attribute__ ((__unused__));
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_RECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_RECV);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_RECV);
 
     /* create a request */
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_POSIX_SHM_MUTEX);
     mpi_errno =
         MPIDI_POSIX_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_RECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_RECV);
     return mpi_errno;
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_SHM_mpi_recv)
-static inline int MPIDI_SHM_mpi_recv_init(void *buf,
+#define FCNAME DECL_FUNC(MPIDI_POSIX_mpi_recv)
+static inline int MPIDI_POSIX_mpi_recv_init(void *buf,
                                           int count,
                                           MPI_Datatype datatype,
                                           int rank,
@@ -130,9 +130,9 @@ static inline int MPIDI_SHM_mpi_recv_init(void *buf,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *rreq = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_RECV_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_RECV_INIT);
 
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_RECV_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_RECV_INIT);
 
     MPIDI_POSIX_REQUEST_CREATE_RREQ(rreq);
     MPIR_Object_set_ref(rreq, 1);
@@ -147,12 +147,12 @@ static inline int MPIDI_SHM_mpi_recv_init(void *buf,
     MPIDI_POSIX_REQUEST(rreq)->datatype = datatype;
     *request = rreq;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_RECV_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_RECV_INIT);
     return mpi_errno;
 }
 
 
-static inline int MPIDI_SHM_mpi_imrecv(void *buf,
+static inline int MPIDI_POSIX_mpi_imrecv(void *buf,
                                        int count,
                                        MPI_Datatype datatype,
                                        MPIR_Request * message, MPIR_Request ** rreqp)
@@ -165,8 +165,8 @@ static inline int MPIDI_SHM_mpi_imrecv(void *buf,
     MPIR_Request *rreq = NULL, *sreq = NULL;
     int rank, tag, context_id;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_IMRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_IMRECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_IMRECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_IMRECV);
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_POSIX_SHM_MUTEX);
 
     if (message == NULL) {
@@ -288,15 +288,15 @@ static inline int MPIDI_SHM_mpi_imrecv(void *buf,
 
   fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_IMRECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_IMRECV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_SHM_mpi_irecv)
-static inline int MPIDI_SHM_mpi_irecv(void *buf,
+#define FCNAME DECL_FUNC(MPIDI_POSIX_mpi_irecv)
+static inline int MPIDI_POSIX_mpi_irecv(void *buf,
                                       int count,
                                       MPI_Datatype datatype,
                                       int rank,
@@ -305,27 +305,27 @@ static inline int MPIDI_SHM_mpi_irecv(void *buf,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_IRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_IRECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_IRECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_IRECV);
 
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_POSIX_SHM_MUTEX);
 
     mpi_errno =
         MPIDI_POSIX_do_irecv(buf, count, datatype, rank, tag, comm, context_offset, request);
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_IRECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_IRECV);
     return mpi_errno;
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPIDI_SHM_mpi_cancel_recv)
-static inline int MPIDI_SHM_mpi_cancel_recv(MPIR_Request * rreq)
+#define FCNAME DECL_FUNC(MPIDI_POSIX_mpi_cancel_recv)
+static inline int MPIDI_POSIX_mpi_cancel_recv(MPIR_Request * rreq)
 {
     MPIR_Request *req = MPIDI_POSIX_recvq_posted.head;
     MPIR_Request *prev_req = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_CANCEL_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_CANCEL_RECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_CANCEL_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_CANCEL_RECV);
 
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_POSIX_SHM_MUTEX);
 
@@ -356,7 +356,7 @@ static inline int MPIDI_SHM_mpi_cancel_recv(MPIR_Request * rreq)
     }
 
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_CANCEL_RECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_CANCEL_RECV);
     return MPI_SUCCESS;
 }
 
