@@ -267,7 +267,8 @@ typedef struct MPIDI_CH4U_win_t {
     uint64_t win_id;
     void *mmap_addr;
     int64_t mmap_sz;
-    OPA_int_t outstanding_ops;
+    MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */
+    MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
     MPI_Aint *sizes;
     MPIDI_CH4U_win_lock_info *lockQ;
     MPIDI_CH4U_win_sync_t sync;
