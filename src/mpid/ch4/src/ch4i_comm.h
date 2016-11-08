@@ -18,8 +18,8 @@ static inline int MPIDI_alloc_lut(MPIDI_rank_map_lut_t ** lut, int size)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_rank_map_lut_t *new_lut = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_ALLOC_LUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_ALLOC_LUT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ALLOC_LUT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ALLOC_LUT);
 
     new_lut = (MPIDI_rank_map_lut_t *) MPL_malloc(sizeof(MPIDI_rank_map_lut_t)
                                                   + size * sizeof(MPIDI_lpid_t));
@@ -35,7 +35,7 @@ static inline int MPIDI_alloc_lut(MPIDI_rank_map_lut_t ** lut, int size)
                     (MPL_DBG_FDEST, "alloc lut %p, size %ld, refcount=%d",
                      new_lut, size * sizeof(MPIDI_lpid_t), MPIR_Object_get_ref(new_lut)));
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_ALLOC_LUT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ALLOC_LUT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -71,8 +71,8 @@ static inline int MPIDI_alloc_mlut(MPIDI_rank_map_mlut_t ** mlut, int size)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_rank_map_mlut_t *new_mlut = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_ALLOC_MLUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_ALLOC_MLUT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ALLOC_MLUT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ALLOC_MLUT);
 
     new_mlut = (MPIDI_rank_map_mlut_t *) MPL_malloc(sizeof(MPIDI_rank_map_mlut_t)
                                                     + size * sizeof(MPIDI_gpid_t));
@@ -88,7 +88,7 @@ static inline int MPIDI_alloc_mlut(MPIDI_rank_map_mlut_t ** mlut, int size)
                     (MPL_DBG_FDEST, "alloc mlut %p, size %ld, refcount=%d",
                      new_mlut, size * sizeof(MPIDI_gpid_t), MPIR_Object_get_ref(new_mlut)));
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_ALLOC_MLUT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ALLOC_MLUT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -122,12 +122,17 @@ static inline int MPIDIU_release_mlut(MPIDI_rank_map_mlut_t * mlut)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_map_size(MPIR_Comm_map_t map)
 {
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_MAP_SIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_MAP_SIZE);
+
     if (map.type == MPIR_COMM_MAP_TYPE__IRREGULAR)
         return map.src_mapping_size;
     else if (map.dir == MPIR_COMM_MAP_DIR__L2L || map.dir == MPIR_COMM_MAP_DIR__L2R)
         return map.src_comm->local_size;
     else
         return map.src_comm->remote_size;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_MAP_SIZE);
 }
 
 /*
@@ -149,6 +154,9 @@ static inline int MPIDI_detect_regular_model(int *lpid, int size,
 {
     int off = 0, bs = 0, st = 0;
     int i;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_DETECT_REGULAR_MODEL);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_DETECT_REGULAR_MODEL);
 
     off = lpid[0];
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE, (MPL_DBG_FDEST, "\tdetect model: offset %d", off));
@@ -186,6 +194,8 @@ static inline int MPIDI_detect_regular_model(int *lpid, int size,
     *offset = off;
     *blocksize = bs;
     *stride = st;
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_DETECT_REGULAR_MODEL);
     return MPIDI_SRC_MAPPER_STRIDE;
 }
 
@@ -392,8 +402,8 @@ static inline int MPIDI_src_mlut_to_mlut(MPIDI_rank_map_t * src,
     int size = MPIDI_map_size(*mapper);
     MPIDI_rank_map_mlut_t *mlut = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_MLUT_TO_MLUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_MLUT_TO_MLUT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SRC_MLUT_TO_MLUT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SRC_MLUT_TO_MLUT);
 
     if (!mapper_offset) {
         mpi_errno = MPIDI_alloc_mlut(&mlut, total_mapper_size);
@@ -416,7 +426,7 @@ static inline int MPIDI_src_mlut_to_mlut(MPIDI_rank_map_t * src,
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                     (MPL_DBG_FDEST, " src mode %d, dest mode %d",
                      (int) src->mode, (int) dest->mode));
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_MLUT_TO_MLUT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SRC_MLUT_TO_MLUT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -435,8 +445,8 @@ static inline int MPIDI_src_map_to_lut(MPIDI_rank_map_t * src,
     int size = MPIDI_map_size(*mapper);
     MPIDI_rank_map_lut_t *lut = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_MAP_TO_LUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_MAP_TO_LUT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SRC_MAP_TO_LUT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SRC_MAP_TO_LUT);
 
     if (!mapper_offset) {
         mpi_errno = MPIDI_alloc_lut(&lut, total_mapper_size);
@@ -507,7 +517,7 @@ static inline int MPIDI_src_map_to_lut(MPIDI_rank_map_t * src,
         goto fn_fail;
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_MAP_TO_LUT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SRC_MAP_TO_LUT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -754,8 +764,8 @@ static inline int MPIDI_check_convert_mlut_to_lut(MPIDI_rank_map_t * src)
     int avtid;
     MPIDI_rank_map_mlut_t *mlut = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CONVERT_MLUT_TO_LUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CONVERT_MLUT_TO_LUT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHECK_CONVERT_MLUT_TO_LUT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHECK_CONVERT_MLUT_TO_LUT);
 
     if (src->mode != MPIDI_RANK_MAP_MLUT) {
         goto fn_exit;
@@ -792,7 +802,7 @@ static inline int MPIDI_check_convert_mlut_to_lut(MPIDI_rank_map_t * src)
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE, (MPL_DBG_FDEST, " avtid %d", src->avtid));
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CONVERT_MLUT_TO_LUT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CHECK_CONVERT_MLUT_TO_LUT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -808,8 +818,8 @@ static inline int MPIDI_check_convert_lut_to_regular(MPIDI_rank_map_t * src)
     int mode_detected, offset, blocksize, stride;
     MPIDI_rank_map_lut_t *lut = NULL;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CONVERT_LUT_TO_REGULAR);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CONVERT_LUT_TO_REGULAR);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHECK_CONVERT_LUT_TO_REGULAR);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHECK_CONVERT_LUT_TO_REGULAR);
 
     if (src->mode != MPIDI_RANK_MAP_LUT && src->mode != MPIDI_RANK_MAP_LUT_INTRA) {
         goto fn_exit;
@@ -878,7 +888,7 @@ static inline int MPIDI_check_convert_lut_to_regular(MPIDI_rank_map_t * src)
         break;
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CONVERT_LUT_TO_REGULAR);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CHECK_CONVERT_LUT_TO_REGULAR);
     return mpi_errno;
 }
 
@@ -1156,6 +1166,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_check_disjoint_lupids(int lupids1[], int n1,
     uint32_t *lupidmask;
     MPIR_CHKLMEM_DECL(1);
 
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHECK_DISJOINT_LUPIDS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHECK_DISJOINT_LUPIDS);
+
     /* Find the max lupid */
     for (i = 0; i < n1; i++) {
         if (lupids1[i] > maxlupid)
@@ -1204,6 +1217,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_check_disjoint_lupids(int lupids1[], int n1,
     /* Also fall through for normal return */
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CHECK_DISJOINT_LUPIDS);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

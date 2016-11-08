@@ -22,8 +22,8 @@ static inline int MPIDI_reply_ssend(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIDI_CH4U_ssend_ack_msg_t ack_msg;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4I_REPLY_SSEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4I_REPLY_SSEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_REPLY_SSEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_REPLY_SSEND);
     MPIR_cc_incr(rreq->cc_ptr, &c);
     ack_msg.sreq_ptr = MPIDI_CH4U_REQUEST(rreq, req->rreq.peer_req_ptr);
 
@@ -34,7 +34,7 @@ static inline int MPIDI_reply_ssend(MPIR_Request * rreq)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4I_REPLY_SSEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_REPLY_SSEND);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -60,8 +60,8 @@ static inline int MPIDI_handle_unexp_mrecv(MPIR_Request * rreq)
     int count;
     MPI_Datatype datatype;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4I_HANDLE_UNEXP_MRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4I_HANDLE_UNEXP_MRECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_HANDLE_UNEXP_MRECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_HANDLE_UNEXP_MRECV);
 
     msg_tag = MPIDI_CH4U_REQUEST(rreq, tag);
     rreq->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(rreq, rank);
@@ -116,7 +116,7 @@ static inline int MPIDI_handle_unexp_mrecv(MPIR_Request * rreq)
     MPIDI_Request_complete(rreq);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4I_HANDLE_UNEXP_MRECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_HANDLE_UNEXP_MRECV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
