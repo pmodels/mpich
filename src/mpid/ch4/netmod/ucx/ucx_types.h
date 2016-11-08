@@ -39,6 +39,7 @@ typedef struct {
     char kvsname[MPIDI_UCX_KVSAPPSTRLEN];
     char pname[MPI_MAX_PROCESSOR_NAME];
     int max_addr_len;
+    MPIR_Request *complet_send; 
     MPIDI_NM_am_target_handler_fn am_handlers[MPIDI_UCX_MAX_AM_HANDLERS];
     MPIDI_NM_am_origin_handler_fn send_cmpl_handlers[MPIDI_UCX_MAX_AM_HANDLERS];
 } MPIDI_UCX_global_t;
