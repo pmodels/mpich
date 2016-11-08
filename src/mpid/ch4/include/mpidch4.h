@@ -139,7 +139,8 @@ MPIDI_CH4I_API(int, Get_max_node_id, MPIR_Comm *, MPID_Node_id_t *);
 MPIDI_CH4I_API(int, Request_is_pending_failure, MPIR_Request *);
 MPIDI_CH4I_API(MPI_Aint, Aint_add, MPI_Aint, MPI_Aint);
 MPIDI_CH4I_API(MPI_Aint, Aint_diff, MPI_Aint, MPI_Aint);
-MPIDI_CH4I_API(int, Intercomm_exchange_map, MPIR_Comm *, int, MPIR_Comm *, int, int *, int **, int *);
+MPIDI_CH4I_API(int, Intercomm_exchange_map, MPIR_Comm *, int, MPIR_Comm *, int, int *, int **,
+               int *);
 MPIDI_CH4I_API(int, Create_intercomm_from_lpids, MPIR_Comm *, int, const int[]);
 MPIDI_CH4I_API(int, Comm_create_hook, MPIR_Comm *);
 MPIDI_CH4I_API(int, Comm_free_hook, MPIR_Comm *);

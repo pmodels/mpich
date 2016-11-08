@@ -56,17 +56,16 @@ static inline int MPIDI_SHM_get_max_node_id(MPIR_Comm * comm, MPID_Node_id_t * m
     return MPI_SUCCESS;
 }
 
-static inline int MPIDI_SHM_get_local_upids(MPIR_Comm *comm, size_t **local_upid_size,
-                                           char **local_upids)
+static inline int MPIDI_SHM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size,
+                                            char **local_upids)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;
 }
 
 static inline int MPIDI_SHM_upids_to_lupids(int size,
-                                            size_t *remote_upid_size,
-                                            char *remote_upids,
-                                            int **remote_lupids)
+                                            size_t * remote_upid_size,
+                                            char *remote_upids, int **remote_lupids)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

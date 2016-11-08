@@ -183,7 +183,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     message_handler = MPIDI_UCX_REQ(message).a.message_handler;
     if (dt_contig)
         ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.worker,
-                                                                      (char *) buf + dt_true_lb, data_sz,
+                                                                      (char *) buf + dt_true_lb,
+                                                                      data_sz,
                                                                       ucp_dt_make_contig(1),
                                                                       message_handler,
                                                                       &MPIDI_UCX_Handle_recv_callback);

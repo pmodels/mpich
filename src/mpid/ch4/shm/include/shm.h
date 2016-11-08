@@ -78,8 +78,8 @@ typedef int (*MPIDI_SHM_get_node_id_t) (MPIR_Comm * comm, int rank, MPID_Node_id
 typedef int (*MPIDI_SHM_get_max_node_id_t) (MPIR_Comm * comm, MPID_Node_id_t * max_id_p);
 typedef int (*MPIDI_SHM_get_local_upids_t) (MPIR_Comm * comm, size_t ** local_upid_size,
                                             char **local_upids);
-typedef int (*MPIDI_SHM_upids_to_lupids_t) (int size, size_t * remote_upid_size, char * remote_upids,
-                                            int ** remote_lupids);
+typedef int (*MPIDI_SHM_upids_to_lupids_t) (int size, size_t * remote_upid_size, char *remote_upids,
+                                            int **remote_lupids);
 typedef int (*MPIDI_SHM_create_intercomm_from_lpids_t) (MPIR_Comm * newcomm_ptr, int size,
                                                         const int lpids[]);
 typedef int (*MPIDI_SHM_mpi_comm_create_hook_t) (MPIR_Comm * comm);
@@ -603,10 +603,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_get_max_node_id(MPIR_Comm * comm,
                                                        MPID_Node_id_t *
                                                        max_id_p) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_get_local_upids(MPIR_Comm * comm, size_t ** local_upid_size,
-                                                       char ** local_upids) MPL_STATIC_INLINE_SUFFIX;
+                                                       char **local_upids) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_upids_to_lupids(int size, size_t * remote_upid_size,
-                                                       char * remote_upids,
-                                                       int ** remote_lupids) MPL_STATIC_INLINE_SUFFIX;
+                                                       char *remote_upids,
+                                                       int **remote_lupids)
+    MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
                                                                    int size,
                                                                    const int lpids[])
