@@ -168,8 +168,8 @@ static inline int MPIDI_do_get(void *origin_addr,
     MPID_Segment *segment_ptr;
     struct iovec *dt_iov;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_MPIDI_DO_GET);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_MPIDI_DO_GET);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_DO_GET);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_DO_GET);
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
 
@@ -255,7 +255,7 @@ static inline int MPIDI_do_get(void *origin_addr,
   fn_exit:
     *sreq_ptr = sreq;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_MPIDI_DO_GET);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_DO_GET);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
