@@ -72,9 +72,11 @@ static inline int MPIDI_do_put(const void *origin_addr,
     am_hdr.preq_ptr = (uint64_t) sreq;
     am_hdr.win_id = MPIDI_CH4U_WIN(win, win_id);
 
-    /* MPIDI_CS_ENTER(); */
-    OPA_incr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
+    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, local_cmpl_cnts), &c);
+    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
+
+    /* to decrement the local completion counter at request completion. */
+    sreq->completion_notification = &MPIDI_CH4U_WIN(win, local_cmpl_cnts);
 
     if (HANDLE_GET_KIND(target_datatype) == HANDLE_KIND_BUILTIN) {
         am_hdr.n_iov = 0;
@@ -206,9 +208,11 @@ static inline int MPIDI_do_get(void *origin_addr,
     am_hdr.win_id = MPIDI_CH4U_WIN(win, win_id);
     am_hdr.src_rank = win->comm_ptr->rank;
 
-    /* MPIDI_CS_ENTER(); */
-    OPA_incr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
+    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, local_cmpl_cnts), &c);
+    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
+
+    /* to decrement the local completion counter at request completion. */
+    sreq->completion_notification = &MPIDI_CH4U_WIN(win, local_cmpl_cnts);
 
     if (HANDLE_GET_KIND(target_datatype) == HANDLE_KIND_BUILTIN) {
         am_hdr.n_iov = 0;
@@ -323,9 +327,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     am_hdr.win_id = MPIDI_CH4U_WIN(win, win_id);
     am_hdr.src_rank = win->comm_ptr->rank;
 
-    /* MPIDI_CS_ENTER(); */
-    OPA_incr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
+    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, local_cmpl_cnts), &c);
+    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
+
+    /* to decrement the local completion counter at request completion. */
+    sreq->completion_notification = &MPIDI_CH4U_WIN(win, local_cmpl_cnts);
 
     MPIDI_CH4U_REQUEST(sreq, req->areq.data_sz) = data_sz;
     if (HANDLE_GET_KIND(target_datatype) == HANDLE_KIND_BUILTIN) {
@@ -480,9 +486,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
 
     am_hdr.result_data_sz = result_data_sz;
 
-    /* MPIDI_CS_ENTER(); */
-    OPA_incr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
+    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, local_cmpl_cnts), &c);
+    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
+
+    /* to decrement the local completion counter at request completion. */
+    sreq->completion_notification = &MPIDI_CH4U_WIN(win, local_cmpl_cnts);
 
     MPIDI_CH4U_REQUEST(sreq, req->areq.data_sz) = data_sz;
     if (HANDLE_GET_KIND(target_datatype) == HANDLE_KIND_BUILTIN) {
@@ -912,9 +920,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_compare_and_swap(const void *origin_
     am_hdr.win_id = MPIDI_CH4U_WIN(win, win_id);
     am_hdr.src_rank = win->comm_ptr->rank;
 
-    /* MPIDI_CS_ENTER(); */
-    OPA_incr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
+    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, local_cmpl_cnts), &c);
+    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
+
+    /* to decrement the local completion counter at request completion. */
+    sreq->completion_notification = &MPIDI_CH4U_WIN(win, local_cmpl_cnts);
 
     /* FIXIME: we need to choose between NM and SHM */
     mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_CSWAP_REQ,

@@ -88,7 +88,6 @@ static inline int MPIDI_ack_acc(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH4U_acc_ack_msg_t ack_msg;
-    MPIR_Win *win;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ACK_ACC);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ACK_ACC);
@@ -99,11 +98,6 @@ static inline int MPIDI_ack_acc(MPIR_Request * rreq)
                                    (MPIDI_CH4U_REQUEST(rreq, req->areq.win_ptr)),
                                    MPIDI_CH4U_REQUEST(rreq, rank), MPIDI_CH4U_ACC_ACK,
                                    &ack_msg, sizeof(ack_msg));
-
-    win = MPIDI_CH4U_REQUEST(rreq, req->areq.win_ptr);
-    /* MPIDI_CS_ENTER(); */
-    OPA_decr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -759,7 +753,6 @@ static inline int MPIDI_get_target_cmpl_cb(MPIR_Request * req)
 static inline int MPIDI_put_target_cmpl_cb(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Win *win;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PUT_TARGET_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PUT_TARGET_CMPL_CB);
@@ -778,12 +771,6 @@ static inline int MPIDI_put_target_cmpl_cb(MPIR_Request * rreq)
     mpi_errno = MPIDI_ack_put(rreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-
-    win = (MPIR_Win *) MPIDI_CH4U_REQUEST(rreq, req->preq.win_ptr);
-
-    /* MPIDI_CS_ENTER(); */
-    OPA_decr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
 
     MPIDI_Request_complete(rreq);
     MPIDI_progress_cmpl_list();
@@ -989,7 +976,7 @@ static inline int MPIDI_get_acc_target_cmpl_cb(MPIR_Request * rreq)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_get_ack_target_cmpl_cb(MPIR_Request * rreq)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, c = 0;
     MPIR_Request *greq;
     MPIR_Win *win;
 
@@ -1005,9 +992,7 @@ static inline int MPIDI_get_ack_target_cmpl_cb(MPIR_Request * rreq)
     }
 
     win = MPIDI_CH4U_REQUEST(greq, req->greq.win_ptr);
-    /* MPIDI_CS_ENTER(); */
-    OPA_decr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
+    MPIR_cc_decr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
 
     MPIDI_Request_complete(greq);
     MPIDI_Request_complete(rreq);
@@ -1023,7 +1008,7 @@ static inline int MPIDI_get_ack_target_cmpl_cb(MPIR_Request * rreq)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_get_acc_ack_target_cmpl_cb(MPIR_Request * areq)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, c = 0;
     MPIR_Win *win;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACC_ACK_TARGET_CMPL_CB);
@@ -1037,9 +1022,7 @@ static inline int MPIDI_get_acc_ack_target_cmpl_cb(MPIR_Request * areq)
     }
 
     win = MPIDI_CH4U_REQUEST(areq, req->areq.win_ptr);
-    /* MPIDI_CS_ENTER(); */
-    OPA_decr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
+    MPIR_cc_decr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
 
     dtype_release_if_not_builtin(MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype));
     MPIDI_Request_complete(areq);
@@ -1055,7 +1038,7 @@ static inline int MPIDI_get_acc_ack_target_cmpl_cb(MPIR_Request * areq)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_cswap_ack_target_cmpl_cb(MPIR_Request * rreq)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, c = 0;
     MPIR_Win *win;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CSWAP_ACK_TARGET_CMPL_CB);
@@ -1065,9 +1048,7 @@ static inline int MPIDI_cswap_ack_target_cmpl_cb(MPIR_Request * rreq)
         return mpi_errno;
 
     win = MPIDI_CH4U_REQUEST(rreq, req->creq.win_ptr);
-    /* MPIDI_CS_ENTER(); */
-    OPA_decr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
+    MPIR_cc_decr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
 
     MPL_free(MPIDI_CH4U_REQUEST(rreq, req->creq.data));
     MPIDI_Request_complete(rreq);
@@ -1087,7 +1068,7 @@ static inline int MPIDI_put_ack_target_msg_cb(int handler_id, void *am_hdr,
                                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                               MPIR_Request ** req)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, c = 0;
     MPIDI_CH4U_put_ack_msg_t *msg_hdr = (MPIDI_CH4U_put_ack_msg_t *) am_hdr;
     MPIR_Win *win;
     MPIR_Request *preq;
@@ -1103,10 +1084,7 @@ static inline int MPIDI_put_ack_target_msg_cb(int handler_id, void *am_hdr,
     }
 
     MPIDI_Request_complete(preq);
-
-    /* MPIDI_CS_ENTER(); */
-    OPA_decr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
+    MPIR_cc_decr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
 
     if (req)
         *req = NULL;
@@ -1127,7 +1105,7 @@ static inline int MPIDI_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
                                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                               MPIR_Request ** req)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, c = 0;
     MPIDI_CH4U_acc_ack_msg_t *msg_hdr = (MPIDI_CH4U_acc_ack_msg_t *) am_hdr;
     MPIR_Win *win;
     MPIR_Request *areq;
@@ -1143,10 +1121,7 @@ static inline int MPIDI_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
     }
 
     MPIDI_Request_complete(areq);
-
-    /* MPIDI_CS_ENTER(); */
-    OPA_decr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
+    MPIR_cc_decr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
 
     if (req)
         *req = NULL;
@@ -1368,9 +1343,6 @@ static inline int MPIDI_put_target_msg_cb(int handler_id, void *am_hdr,
 
     base = MPIDI_CH4I_win_base_at_target(win);
 
-    /* MPIDI_CS_ENTER(); */
-    OPA_incr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
     MPIDI_CH4U_REQUEST(rreq, req->preq.win_ptr) = win;
 
     *target_cmpl_cb = MPIDI_put_target_cmpl_cb;
@@ -1463,9 +1435,6 @@ static inline int MPIDI_put_iov_target_msg_cb(int handler_id, void *am_hdr,
                   &msg_hdr->win_id, sizeof(uint64_t), win);
     MPIR_Assert(win);
 
-    /* MPIDI_CS_ENTER(); */
-    OPA_incr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
     MPIDI_CH4U_REQUEST(rreq, req->preq.win_ptr) = win;
 
     *target_cmpl_cb = MPIDI_put_iov_target_cmpl_cb;
@@ -1768,10 +1737,6 @@ static inline int MPIDI_cswap_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_Assert(win);
 
     base = MPIDI_CH4I_win_base_at_target(win);
-
-    /* MPIDI_CS_ENTER(); */
-    OPA_incr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
     offset = win->disp_unit * msg_hdr->target_disp;
 
     MPIDI_CH4U_REQUEST(*req, req->creq.win_ptr) = win;
@@ -1842,9 +1807,6 @@ static inline int MPIDI_acc_target_msg_cb(int handler_id, void *am_hdr,
 
     base = MPIDI_CH4I_win_base_at_target(win);
     offset = win->disp_unit * msg_hdr->target_disp;
-    /* MPIDI_CS_ENTER(); */
-    OPA_incr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
 
     MPIDI_CH4U_REQUEST(*req, req->areq.win_ptr) = win;
     MPIDI_CH4U_REQUEST(*req, req->areq.req_ptr) = msg_hdr->req_ptr;
@@ -1938,11 +1900,7 @@ static inline int MPIDI_acc_iov_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_Assert(win);
 
     base = MPIDI_CH4I_win_base_at_target(win);
-
     offset = win->disp_unit * msg_hdr->target_disp;
-    /* MPIDI_CS_ENTER(); */
-    OPA_incr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
 
     MPIDI_CH4U_REQUEST(*req, req->areq.win_ptr) = win;
     MPIDI_CH4U_REQUEST(*req, req->areq.req_ptr) = msg_hdr->req_ptr;
@@ -2033,10 +1991,6 @@ static inline int MPIDI_get_target_msg_cb(int handler_id, void *am_hdr,
     MPIR_Assert(win);
 
     base = MPIDI_CH4I_win_base_at_target(win);
-
-    /* MPIDI_CS_ENTER(); */
-    OPA_incr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
 
     offset = win->disp_unit * msg_hdr->target_disp;
     MPIDI_CH4U_REQUEST(rreq, req->greq.win_ptr) = win;

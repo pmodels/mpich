@@ -283,9 +283,6 @@ static inline int MPIDI_Win_progress_fence(MPIR_Win * win)
         }
     }
 
-    while (OPA_load_int(&MPIDI_CH4U_WIN(win, outstanding_ops)) != 0)
-        MPIDI_OFI_PROGRESS();
-
     r = MPIDI_OFI_WIN(win).syncQ;
 
     while (r) {
@@ -369,6 +366,13 @@ static inline int MPIDI_NM_mpi_win_complete(MPIR_Win * win)
 
     MPIDI_CH4U_EPOCH_START_CHECK2(win, mpi_errno, goto fn_fail);
 
+    /* AM completion */
+    /* FIXME: per-target completion. */
+    do {
+        MPIDI_CH4R_PROGRESS();
+    } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) != 0);
+
+    /* network completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_Win_progress_fence(win));
 
     MPIR_Group *group;
@@ -560,6 +564,9 @@ static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win)
     if (rank == MPI_PROC_NULL)
         goto fn_exit0;
 
+    /* AM completion */
+    MPIDI_OFI_MPI_CALL_POP(MPIDI_CH4R_mpi_win_flush(rank, win));
+    /* network completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_Win_progress_fence(win));
 
     MPIDI_OFI_win_control_t msg;
@@ -662,6 +669,11 @@ static inline int MPIDI_NM_mpi_win_fence(int massert, MPIR_Win * win)
 
     MPIDI_CH4U_EPOCH_FENCE_CHECK(win, mpi_errno, goto fn_fail);
 
+    /* AM completion */
+    do {
+        MPIDI_CH4R_PROGRESS();
+    } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) != 0);
+    /* network completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_Win_progress_fence(win));
 
     MPIDI_CH4U_EPOCH_FENCE_EVENT(win, massert);
@@ -1026,6 +1038,9 @@ static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win)
 
     MPIDI_CH4U_EPOCH_LOCK_CHECK(win, mpi_errno, goto fn_fail);
 
+    /* AM completion */
+    MPIDI_OFI_MPI_CALL_POP(MPIDI_CH4R_mpi_win_flush(rank, win));
+    /* network completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_Win_progress_fence(win));
 
   fn_exit:
@@ -1046,6 +1061,10 @@ static inline int MPIDI_NM_mpi_win_flush_local_all(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_WIN_FLUSH_LOCAL_ALL);
 
     MPIDI_CH4U_EPOCH_LOCK_CHECK(win, mpi_errno, goto fn_fail);
+
+    /* AM completion */
+    MPIDI_OFI_MPI_CALL_POP(MPIDI_CH4R_mpi_win_flush_local_all(win));
+    /* network completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_Win_progress_fence(win));
 
   fn_exit:
@@ -1069,6 +1088,9 @@ static inline int MPIDI_NM_mpi_win_unlock_all(MPIR_Win * win)
 
     MPIDI_CH4U_EPOCH_ORIGIN_CHECK(win, MPIDI_CH4U_EPOTYPE_LOCK_ALL, mpi_errno, return mpi_errno);
 
+    /* AM completion */
+    MPIDI_OFI_MPI_CALL_POP(MPIDI_CH4R_mpi_win_flush_all(win));
+    /* network completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_Win_progress_fence(win));
 
     MPIR_Assert(MPIDI_CH4U_WIN(win, lockQ) != NULL);
@@ -1151,6 +1173,9 @@ static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win)
 
     MPIDI_CH4U_EPOCH_LOCK_CHECK(win, mpi_errno, goto fn_fail);
 
+    /* AM completion */
+    MPIDI_OFI_MPI_CALL_POP(MPIDI_CH4R_mpi_win_flush_local(rank, win));
+    /* network completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_Win_progress_fence(win));
 
   fn_exit:
@@ -1193,6 +1218,10 @@ static inline int MPIDI_NM_mpi_win_flush_all(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_WIN_FLUSH_ALL);
 
     MPIDI_CH4U_EPOCH_LOCK_CHECK(win, mpi_errno, goto fn_fail);
+
+    /* AM completion */
+    MPIDI_OFI_MPI_CALL_POP(MPIDI_CH4R_mpi_win_flush_all(win));
+    /* network completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_Win_progress_fence(win));
 
   fn_exit:

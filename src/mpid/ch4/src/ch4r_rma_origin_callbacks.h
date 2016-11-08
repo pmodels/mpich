@@ -51,16 +51,10 @@ static inline int MPIDI_acc_ack_origin_cb(MPIR_Request * req)
 static inline int MPIDI_get_acc_ack_origin_cb(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Win *win;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACC_ACK_ORIGIN_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_ACC_ACK_ORIGIN_CB);
     MPL_free(MPIDI_CH4U_REQUEST(req, req->areq.data));
-
-    win = MPIDI_CH4U_REQUEST(req, req->areq.win_ptr);
-    /* MPIDI_CS_ENTER(); */
-    OPA_decr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
 
     MPIDI_Request_complete(req);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACC_ACK_ORIGIN_CB);
@@ -74,17 +68,11 @@ static inline int MPIDI_get_acc_ack_origin_cb(MPIR_Request * req)
 static inline int MPIDI_cswap_ack_origin_cb(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Win *win;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CSWAP_ACK_ORIGIN_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CSWAP_ACK_ORIGIN_CB);
 
     MPL_free(MPIDI_CH4U_REQUEST(req, req->creq.data));
-    win = MPIDI_CH4U_REQUEST(req, req->creq.win_ptr);
-    /* MPIDI_CS_ENTER(); */
-    OPA_decr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
-
     MPIDI_Request_complete(req);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CSWAP_ACK_ORIGIN_CB);
@@ -98,7 +86,6 @@ static inline int MPIDI_cswap_ack_origin_cb(MPIR_Request * req)
 static inline int MPIDI_get_ack_origin_cb(MPIR_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Win *win;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACK_ORIGIN_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_ACK_ORIGIN_CB);
@@ -106,11 +93,6 @@ static inline int MPIDI_get_ack_origin_cb(MPIR_Request * req)
     if (MPIDI_CH4U_REQUEST(req, req->greq.dt_iov)) {
         MPL_free(MPIDI_CH4U_REQUEST(req, req->greq.dt_iov));
     }
-
-    win = MPIDI_CH4U_REQUEST(req, req->greq.win_ptr);
-    /* MPIDI_CS_ENTER(); */
-    OPA_decr_int(&MPIDI_CH4U_WIN(win, outstanding_ops));
-    /* MPIDI_CS_EXIT(); */
 
     MPIDI_Request_complete(req);
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACK_ORIGIN_CB);
