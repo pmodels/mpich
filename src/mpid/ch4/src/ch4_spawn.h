@@ -40,11 +40,13 @@ static inline int MPIDI_mpi_to_pmi_keyvals(MPIR_Info * info_ptr,
         MPIR_Info_get_impl(info_ptr, key, vallen + 1, kv[i].val, &flag);
     }
 
-  fn_fail:
   fn_exit:
     *kv_ptr = kv;
     *nkeys_ptr = nkeys;
     return mpi_errno;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 static inline void MPIDI_free_pmi_keyvals(PMI_keyval_t ** kv, int size, int *counts)
