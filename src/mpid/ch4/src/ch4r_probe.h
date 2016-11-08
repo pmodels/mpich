@@ -27,8 +27,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_iprobe(int source,
     MPIR_Comm *root_comm;
     MPIR_Request *unexp_req;
     uint64_t match_bits, mask_bits;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_IPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_IPROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_MPI_IPROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_MPI_IPROBE);
 
     if (unlikely(source == MPI_PROC_NULL)) {
         MPIR_Status_set_procnull(status);
@@ -62,7 +62,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_iprobe(int source,
     /* MPIDI_CS_EXIT(); */
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_IPROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_MPI_IPROBE);
     return mpi_errno;
 }
 
@@ -76,8 +76,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_probe(int source,
                                               MPI_Status * status)
 {
     int mpi_errno, flag = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_PROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_PROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_PROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_PROBE);
 
     while (!flag) {
         mpi_errno = MPIDI_CH4U_mpi_iprobe(source, tag, comm, context_offset, &flag, status);
@@ -86,7 +86,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_probe(int source,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_PROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_PROBE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -108,8 +108,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_improbe(int source,
     MPIR_Request *unexp_req;
     uint64_t match_bits, mask_bits;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4U_IMPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4U_IMPROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_MPI_IMPROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_MPI_IMPROBE);
 
     if (unlikely(source == MPI_PROC_NULL)) {
         MPIR_Status_set_procnull(status);
@@ -152,7 +152,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_improbe(int source,
     /* MPIDI_CS_EXIT(); */
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4U_IMPROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_MPI_IMPROBE);
     return mpi_errno;
 }
 
@@ -167,13 +167,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mprobe(int source,
                                                MPIR_Request ** message, MPI_Status * status)
 {
     int mpi_errno, flag = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_MPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_MPROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_MPROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_MPROBE);
     while (!flag) {
         mpi_errno =
             MPIDI_CH4U_mpi_improbe(source, tag, comm, context_offset, &flag, message, status);
     }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_MPROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_MPROBE);
     return mpi_errno;
 }
 
