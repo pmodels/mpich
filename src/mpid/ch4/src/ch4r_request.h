@@ -18,14 +18,13 @@
 #define FUNCNAME MPIDI_CH4I_am_request_create
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kind,
-                                                         int ref_count)
+static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kind, int ref_count)
 {
     MPIR_Request *req;
     int i;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4I_AM_REQUEST_CREATE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4I_AM_REQUEST_CREATE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4I_AM_REQUEST_CREATE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4I_AM_REQUEST_CREATE);
 
     req = MPIR_Request_create(kind);
 
@@ -49,7 +48,7 @@ static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kin
     MPIR_Assert(MPIDI_CH4U_REQUEST(req, req));
     MPIDI_CH4U_REQUEST(req, req->status) = 0;
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4I_AM_REQUEST_CREATE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4I_AM_REQUEST_CREATE);
     return req;
 }
 
@@ -62,8 +61,8 @@ static inline int MPIDI_CH4R_anysource_matched(MPIR_Request * rreq, int caller,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPIDI_CH4R_ANYSOURCE_MATCHED);
-    MPIR_FUNC_VERBOSE_ENTER(MPIDI_CH4R_ANYSOURCE_MATCHED);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_ANYSOURCE_MATCHED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_ANYSOURCE_MATCHED);
 
     MPIR_Assert(MPIDI_CH4R_NETMOD == caller || MPIDI_CH4R_SHM == caller);
 
@@ -90,7 +89,7 @@ static inline int MPIDI_CH4R_anysource_matched(MPIR_Request * rreq, int caller,
         *continue_matching = !MPIR_STATUS_GET_CANCEL_BIT(rreq->status);
     }
 
-    MPIR_FUNC_VERBOSE_EXIT(MPIDI_CH4R_ANYSOURCE_MATCHED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_ANYSOURCE_MATCHED);
     return mpi_errno;
 }
 

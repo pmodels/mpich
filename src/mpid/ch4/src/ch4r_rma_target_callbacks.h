@@ -409,8 +409,7 @@ static inline int MPIDI_do_accumulate_op(void *source_buf, int source_count,
             mpi_errno =
                 MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
                                      MPI_ERR_OTHER, "**nomem", 0);
-            MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_DO_ACCUMULATE_OP);
-            return mpi_errno;
+            goto fn_exit;
         }
         /* --END ERROR HANDLING-- */
         MPIDU_Segment_init(NULL, target_count, target_dtp, segp, 0);
@@ -427,8 +426,7 @@ static inline int MPIDI_do_accumulate_op(void *source_buf, int source_count,
             mpi_errno =
                 MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
                                      MPI_ERR_OTHER, "**nomem", 0);
-            MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_DO_ACCUMULATE_OP);
-            return mpi_errno;
+            goto fn_exit;
         }
         /* --END ERROR HANDLING-- */
 
@@ -477,6 +475,7 @@ static inline int MPIDI_do_accumulate_op(void *source_buf, int source_count,
         MPL_free(dloop_vec);
     }
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_DO_ACCUMULATE_OP);
     return mpi_errno;
 }

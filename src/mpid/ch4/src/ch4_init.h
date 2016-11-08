@@ -54,8 +54,8 @@ cvars:
 static inline int MPIDI_choose_netmod(void)
 {
     int i, mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_CHOOSE_NETMOD);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_CHOOSE_NETMOD);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHOOSE_NETMOD);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHOOSE_NETMOD);
 
     MPIR_Assert(MPIR_CVAR_CH4_NETMOD != NULL);
 
@@ -78,7 +78,7 @@ static inline int MPIDI_choose_netmod(void)
     MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**invalid_netmod", "**invalid_netmod %s",
                          MPIR_CVAR_CH4_NETMOD);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_CHOOSE_NETMOD);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CHOOSE_NETMOD);
     return mpi_errno;
   fn_fail:
 
@@ -95,8 +95,8 @@ static inline int MPIDI_choose_shm(void)
     int mpi_errno = MPI_SUCCESS;
 #if defined(MPIDI_BUILD_CH4_SHM)
     int i;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_CHOOSE_SHM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_CHOOSE_SHM);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHOOSE_SHM);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHOOSE_SHM);
 
 
     MPIR_Assert(MPIR_CVAR_CH4_SHM != NULL);
@@ -120,7 +120,7 @@ static inline int MPIDI_choose_shm(void)
     MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**ch4|invalid_shm", "**ch4|invalid_shm %s",
                          MPIR_CVAR_CH4_SHM);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_CHOOSE_SHM);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CHOOSE_SHM);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -153,8 +153,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Init(int *argc,
     int pmi_errno, mpi_errno = MPI_SUCCESS, rank, has_parent, size, appnum, thr_err;
     void *netmod_contexts;
     int avtid, max_n_avts;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_INIT);
 
 #ifdef MPL_USE_DBG_LOGGING
     MPIDI_CH4_DBG_GENERAL = MPL_dbg_class_alloc("CH4", "ch4");
@@ -318,7 +318,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Init(int *argc,
     MPIDI_CH4_Global.is_initialized = 0;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_INIT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -330,10 +330,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Init(int *argc,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_InitCompleted(void)
 {
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_INITCOMPLETED);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_INITCOMPLETED);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_INITCOMPLETED);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_INITCOMPLETED);
     MPIDI_CH4_Global.is_initialized = 1;
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_INITCOMPLETED);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_INITCOMPLETED);
     return MPI_SUCCESS;
 }
 
@@ -344,8 +344,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_InitCompleted(void)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Finalize(void)
 {
     int mpi_errno, thr_err;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_FINALIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_FINALIZE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_FINALIZE);
 
     mpi_errno = MPIDI_NM_mpi_finalize_hook();
     if (mpi_errno)
@@ -372,7 +372,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Finalize(void)
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_FINALIZE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_FINALIZE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -386,8 +386,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Get_universe_size(int *universe_size)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno = PMI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_GET_UNIVERSE_SIZE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_GET_UNIVERSE_SIZE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_UNIVERSE_SIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_UNIVERSE_SIZE);
 
 
     pmi_errno = PMI_Get_universe_size(universe_size);
@@ -400,7 +400,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Get_universe_size(int *universe_size)
         *universe_size = MPIR_UNIVERSE_SIZE_NOT_AVAILABLE;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_GET_UNIVERSE_SIZE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_UNIVERSE_SIZE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -413,8 +413,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Get_universe_size(int *universe_size)
 MPL_STATIC_INLINE_PREFIX int MPIDI_Get_processor_name(char *name, int namelen, int *resultlen)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_GET_PROCESSOR_NAME);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_GET_PROCESSOR_NAME);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_PROCESSOR_NAME);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_PROCESSOR_NAME);
 
     if (!MPIDI_CH4_Global.pname_set) {
 #if defined(HAVE_GETHOSTNAME)
@@ -443,7 +443,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Get_processor_name(char *name, int namelen, i
         *resultlen = MPIDI_CH4_Global.pname_len;
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_GET_PROCESSOR_NAME);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_PROCESSOR_NAME);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -460,8 +460,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Abort(MPIR_Comm * comm,
     char comm_str[MPI_MAX_ERROR_STRING] = "";
     char world_str[MPI_MAX_ERROR_STRING] = "";
     char error_str[2 * MPI_MAX_ERROR_STRING + 128];
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_ABORT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_ABORT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ABORT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ABORT);
 
     if (MPIR_Process.comm_world) {
         int rank = MPIR_Process.comm_world->rank;
@@ -486,7 +486,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Abort(MPIR_Comm * comm,
                  exit_code, world_str, comm_str, error_msg, sys_str);
     MPL_error_printf("%s", error_str);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_ABORT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ABORT);
     fflush(stderr);
     fflush(stdout);
     PMI_Abort(exit_code, error_msg);
@@ -500,12 +500,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Abort(MPIR_Comm * comm,
 MPL_STATIC_INLINE_PREFIX void *MPIDI_Alloc_mem(size_t size, MPIR_Info * info_ptr)
 {
     void *p;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_ALLOC_MEM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_ALLOC_MEM);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ALLOC_MEM);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ALLOC_MEM);
 
     p = MPIDI_NM_mpi_alloc_mem(size, info_ptr);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_ALLOC_MEM);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ALLOC_MEM);
     return p;
 }
 
@@ -516,8 +516,8 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_Alloc_mem(size_t size, MPIR_Info * info_ptr
 MPL_STATIC_INLINE_PREFIX int MPIDI_Free_mem(void *ptr)
 {
     int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_FREE_MEM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_FREE_MEM);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_FREE_MEM);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_FREE_MEM);
     mpi_errno = MPIDI_NM_mpi_free_mem(ptr);
 
     if (mpi_errno != MPI_SUCCESS) {
@@ -525,7 +525,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Free_mem(void *ptr)
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_FREE_MEM);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_FREE_MEM);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -540,8 +540,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_get_lpid(MPIR_Comm * comm_ptr,
 {
     int mpi_errno = MPI_SUCCESS;
     int avtid = 0, lpid = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_COMM_GET_LPID);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_COMM_GET_LPID);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_GET_LPID);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_GET_LPID);
 
     if (comm_ptr->comm_kind == MPIR_COMM_KIND__INTRACOMM)
         MPIDIU_comm_rank_to_pid(comm_ptr, idx, &lpid, &avtid);
@@ -553,7 +553,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_get_lpid(MPIR_Comm * comm_ptr,
 
     *lpid_ptr = MPIDIU_LUPID_CREATE(avtid, lpid);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_COMM_GET_LPID);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_GET_LPID);
     return mpi_errno;
 }
 
@@ -564,12 +564,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_get_lpid(MPIR_Comm * comm_ptr,
 MPL_STATIC_INLINE_PREFIX int MPIDI_Get_node_id(MPIR_Comm * comm, int rank, MPID_Node_id_t * id_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_GET_NODE_ID);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_GET_NODE_ID);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_NODE_ID);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_NODE_ID);
 
     MPIDI_CH4U_get_node_id(comm, rank, id_p);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_GET_NODE_ID);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_NODE_ID);
     return mpi_errno;
 }
 
@@ -580,12 +580,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Get_node_id(MPIR_Comm * comm, int rank, MPID_
 MPL_STATIC_INLINE_PREFIX int MPIDI_Get_max_node_id(MPIR_Comm * comm, MPID_Node_id_t * max_id_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_GET_MAX_NODE_ID);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_GET_MAX_NODE_ID);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_MAX_NODE_ID);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_MAX_NODE_ID);
 
     MPIDI_CH4U_get_max_node_id(comm, max_id_p);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_GET_MAX_NODE_ID);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_MAX_NODE_ID);
     return mpi_errno;
 }
 
@@ -600,8 +600,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_upids_to_lupids(int size,
                                                    MPID_Node_id_t * remote_node_ids)
 {
     int mpi_errno = MPI_SUCCESS, i;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_UPIDS_TO_LUPIDS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_UPIDS_TO_LUPIDS);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UPIDS_TO_LUPIDS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UPIDS_TO_LUPIDS);
 
     mpi_errno = MPIDI_NM_upids_to_lupids(size, remote_upid_size, remote_upids, remote_lupids);
     if (mpi_errno != MPI_SUCCESS) {
@@ -634,7 +634,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_upids_to_lupids(int size,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_UPIDS_TO_LUPIDS);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UPIDS_TO_LUPIDS);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -648,8 +648,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Create_intercomm_from_lpids(MPIR_Comm * newco
                                                                int size, const int lpids[])
 {
     int mpi_errno = MPI_SUCCESS, i;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_CREATE_INTERCOMM_FROM_LPIDS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_CREATE_INTERCOMM_FROM_LPIDS);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CREATE_INTERCOMM_FROM_LPIDS);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CREATE_INTERCOMM_FROM_LPIDS);
 
     MPIDI_rank_map_mlut_t *mlut = NULL;
     MPIDI_COMM(newcomm_ptr, map).mode = MPIDI_RANK_MAP_MLUT;
@@ -672,7 +672,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Create_intercomm_from_lpids(MPIR_Comm * newco
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_CREATE_INTERCOMM_FROM_LPIDS);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CREATE_INTERCOMM_FROM_LPIDS);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -686,10 +686,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Create_intercomm_from_lpids(MPIR_Comm * newco
 MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_Aint_add(MPI_Aint base, MPI_Aint disp)
 {
     MPI_Aint result;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_AINT_ADD);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_AINT_ADD);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_AINT_ADD);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_AINT_ADD);
     result = MPIR_VOID_PTR_CAST_TO_MPI_AINT((char *) MPIR_AINT_CAST_TO_VOID_PTR(base) + disp);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_AINT_ADD);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_AINT_ADD);
     return result;
 }
 
@@ -700,12 +700,12 @@ MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_Aint_add(MPI_Aint base, MPI_Aint disp)
 MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
 {
     MPI_Aint result;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_CH4_AINT_DIFF);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_CH4_AINT_DIFF);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_AINT_DIFF);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_AINT_DIFF);
 
     result = MPIR_PTR_DISP_CAST_TO_MPI_AINT((char *) MPIR_AINT_CAST_TO_VOID_PTR(addr1)
                                             - (char *) MPIR_AINT_CAST_TO_VOID_PTR(addr2));
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_CH4_AINT_DIFF);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_AINT_DIFF);
     return result;
 }
 

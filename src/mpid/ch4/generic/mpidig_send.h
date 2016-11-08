@@ -29,8 +29,8 @@ static inline int MPIDI_am_isend(const void *buf, int count, MPI_Datatype dataty
     MPIDI_CH4U_hdr_t am_hdr;
     MPIDI_CH4U_ssend_req_msg_t ssend_req;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_AM_ISEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_AM_ISEND);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_AM_ISEND);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_AM_ISEND);
 
     if (unlikely(rank == MPI_PROC_NULL)) {
         mpi_errno = MPI_SUCCESS;
@@ -69,7 +69,7 @@ static inline int MPIDI_am_isend(const void *buf, int count, MPI_Datatype dataty
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_AM_ISEND);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_AM_ISEND);
     return mpi_errno;
 
   fn_fail:
@@ -90,8 +90,8 @@ static inline int MPIDI_psend_init(const void *buf,
     MPIR_Request *sreq;
     uint64_t match_bits;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_PSEND_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_PSEND_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PSEND_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PSEND_INIT);
 
     sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__PREQUEST_SEND, 2);
     *request = sreq;
@@ -111,7 +111,7 @@ static inline int MPIDI_psend_init(const void *buf,
 
     dtype_add_ref_if_not_builtin(datatype);
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_PSEND_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PSEND_INIT);
     return MPI_SUCCESS;
 }
 
