@@ -620,7 +620,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_rput(const void *origin_addr,
         /* create a completed request for user if issuing is completed immediately. */
         sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
         MPIR_Assert(sreq);
-        MPIDI_Request_set_completed(sreq);
+
+        MPIR_Request_add_ref(sreq);
+        MPIDI_Request_complete(sreq);
     }
 
   fn_exit:
@@ -692,7 +694,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_rget(void *origin_addr,
         /* create a completed request for user if issuing is completed immediately. */
         sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
         MPIR_Assert(sreq);
-        MPIDI_Request_set_completed(sreq);
+
+        MPIR_Request_add_ref(sreq);
+        MPIDI_Request_complete(sreq);
     }
 
   fn_exit:
@@ -733,7 +737,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_raccumulate(const void *origin_addr,
         /* create a completed request for user if issuing is completed immediately. */
         sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
         MPIR_Assert(sreq);
-        MPIDI_Request_set_completed(sreq);
+
+        MPIR_Request_add_ref(sreq);
+        MPIDI_Request_complete(sreq);
     }
 
   fn_exit:
@@ -813,7 +819,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_rget_accumulate(const void *origin_a
         /* create a completed request for user if issuing is completed immediately. */
         sreq = MPIR_Request_create(MPIR_REQUEST_KIND__RMA);
         MPIR_Assert(sreq);
-        MPIDI_Request_set_completed(sreq);
+
+        MPIR_Request_add_ref(sreq);
+        MPIDI_Request_complete(sreq);
     }
 
   fn_exit:
