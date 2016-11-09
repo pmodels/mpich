@@ -263,17 +263,29 @@ typedef struct MPIDI_CH4U_win_sync_t {
     MPIDI_CH4U_win_sync_lock lock;
 } MPIDI_CH4U_win_sync_t;
 
+typedef struct MPIDI_CH4U_win_target {
+    MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */
+    MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
+} MPIDI_CH4U_win_target_t;
+
 typedef struct MPIDI_CH4U_win_t {
     uint64_t win_id;
     void *mmap_addr;
     int64_t mmap_sz;
+
+    /* per-window OP completion for fence */
     MPIR_cc_t local_cmpl_cnts;  /* increase at OP issuing, decrease at local completion */
     MPIR_cc_t remote_cmpl_cnts; /* increase at OP issuing, decrease at remote completion */
+
     MPI_Aint *sizes;
     MPIDI_CH4U_win_lock_info *lockQ;
     MPIDI_CH4U_win_sync_t sync;
     MPIDI_CH4U_win_info_args_t info_args;
     MPIDI_CH4U_win_shared_info_t *shared_table;
+
+    /* per-target structure for sync and OP completion. */
+    MPIDI_CH4U_win_target_t *targets;
+
     MPL_UT_hash_handle hash_handle;
 } MPIDI_CH4U_win_t;
 
@@ -285,6 +297,7 @@ typedef struct {
 
 #define MPIDI_CH4U_WIN(win,field)        (((win)->dev.ch4u).field)
 #define MPIDI_CH4U_WINFO(win,rank) (MPIDI_CH4U_win_info_t*) &(MPIDI_CH4U_WIN(win, info_table)[rank])
+#define MPIDI_CH4U_WIN_TARGET(win,rank,field) ((((win)->dev.ch4u).targets)[rank].field)
 
 typedef unsigned MPIDI_locality_t;
 

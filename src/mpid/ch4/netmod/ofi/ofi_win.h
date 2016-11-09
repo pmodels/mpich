@@ -353,6 +353,52 @@ static inline int MPIDI_NM_mpi_win_start(MPIR_Group * group, int assert, MPIR_Wi
 }
 
 
+/* FIXME: This internal routine is only for manually checking AM completion
+ * in win_complete, it should be removed once we improved the OFI sync routines
+ * similar as UCX where the netmod sync only does
+ * (1) check netmod completion
+ * (2) call CH4R_sync for remaining work).  */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_OFI_fill_ranks_in_win_grp
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline int MPIDI_OFI_fill_ranks_in_win_grp(MPIR_Win * win_ptr, MPIR_Group * group_ptr,
+                                                  int *ranks_in_win_grp)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i, *ranks_in_grp;
+    MPIR_Group *win_grp_ptr;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_FILL_RANKS_IN_WIN_GRP);
+    MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_OFI_FILL_RANKS_IN_WIN_GRP);
+
+    ranks_in_grp = (int *) MPL_malloc(group_ptr->size * sizeof(int));
+    MPIR_Assert(ranks_in_grp);
+    for (i = 0; i < group_ptr->size; i++)
+        ranks_in_grp[i] = i;
+
+    mpi_errno = MPIR_Comm_group_impl(win_ptr->comm_ptr, &win_grp_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIR_Group_translate_ranks_impl(group_ptr, group_ptr->size,
+                                                ranks_in_grp, win_grp_ptr, ranks_in_win_grp);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIR_Group_free_impl(win_grp_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+
+    MPL_free(ranks_in_grp);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_OFI_FILL_RANKS_IN_WIN_GRP);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_win_complete
 #undef FCNAME
@@ -360,24 +406,38 @@ static inline int MPIDI_NM_mpi_win_start(MPIR_Group * group, int assert, MPIR_Wi
 static inline int MPIDI_NM_mpi_win_complete(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
+    int *ranks_in_win_grp = NULL;
+    MPIR_Group *group;
+    int am_all_local_completed = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_WIN_COMPLETE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_WIN_COMPLETE);
 
+    MPIR_CHKLMEM_DECL(1);
+
     MPIDI_CH4U_EPOCH_START_CHECK2(win, mpi_errno, goto fn_fail);
 
+    group = MPIDI_CH4U_WIN(win, sync).sc.group;
+    MPIR_Assert(group != NULL);
+
+    MPIR_CHKLMEM_MALLOC(ranks_in_win_grp, int *, group->size * sizeof(int),
+                        mpi_errno, "ranks_in_win_grp");
+
+    mpi_errno = MPIDI_OFI_fill_ranks_in_win_grp(win, group, ranks_in_win_grp);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIR_ERR_POP(mpi_errno);
+
     /* AM completion */
-    /* FIXME: per-target completion. */
+    /* FIXME: now we simply set per-target counters for PSCW, can it be optimized ? */
     do {
         MPIDI_CH4R_PROGRESS();
-    } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) != 0);
+        MPIDI_win_check_group_local_completed(win, ranks_in_win_grp, group->size,
+                                              &am_all_local_completed);
+    } while (am_all_local_completed != 1);
 
     /* network completion */
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_win_progress_fence(win));
 
-    MPIR_Group *group;
-    group = MPIDI_CH4U_WIN(win, sync).sc.group;
-    MPIR_Assert(group != NULL);
     MPIDI_OFI_win_control_t msg;
     msg.type = MPIDI_OFI_CTRL_COMPLETE;
 
@@ -397,6 +457,7 @@ static inline int MPIDI_NM_mpi_win_complete(MPIR_Win * win)
     MPIDI_CH4U_WIN(win, sync).sc.group = NULL;
 
   fn_exit:
+    MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_WIN_COMPLETE);
     return mpi_errno;
   fn_fail:

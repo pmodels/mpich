@@ -72,11 +72,10 @@ static inline int MPIDI_do_put(const void *origin_addr,
     am_hdr.preq_ptr = (uint64_t) sreq;
     am_hdr.win_id = MPIDI_CH4U_WIN(win, win_id);
 
-    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, local_cmpl_cnts), &c);
-    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
-
-    /* to decrement the local completion counter at request completion. */
-    sreq->completion_notification = &MPIDI_CH4U_WIN(win, local_cmpl_cnts);
+    /* Increase local and remote completion counters and set the local completion
+     * counter in request, thus it can be decreased at request completion. */
+    MPIDI_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
+    MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
 
     if (HANDLE_GET_KIND(target_datatype) == HANDLE_KIND_BUILTIN) {
         am_hdr.n_iov = 0;
@@ -126,7 +125,6 @@ static inline int MPIDI_do_put(const void *origin_addr,
         MPIDI_CH4U_REQUEST(sreq, req->preq.origin_addr) = (void *) origin_addr;
         MPIDI_CH4U_REQUEST(sreq, req->preq.origin_count) = origin_count;
         MPIDI_CH4U_REQUEST(sreq, req->preq.origin_datatype) = origin_datatype;
-        MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
         dtype_add_ref_if_not_builtin(origin_datatype);
 
         /* FIXIME: we need to choose between NM and SHM */
@@ -198,6 +196,7 @@ static inline int MPIDI_do_get(void *origin_addr,
     MPIDI_CH4U_REQUEST(sreq, req->greq.addr) = (uint64_t) ((char *) origin_addr);
     MPIDI_CH4U_REQUEST(sreq, req->greq.count) = origin_count;
     MPIDI_CH4U_REQUEST(sreq, req->greq.datatype) = origin_datatype;
+    MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
 
     MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
     MPIR_cc_incr(sreq->cc_ptr, &c);
@@ -208,11 +207,9 @@ static inline int MPIDI_do_get(void *origin_addr,
     am_hdr.win_id = MPIDI_CH4U_WIN(win, win_id);
     am_hdr.src_rank = win->comm_ptr->rank;
 
-    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, local_cmpl_cnts), &c);
-    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
-
-    /* to decrement the local completion counter at request completion. */
-    sreq->completion_notification = &MPIDI_CH4U_WIN(win, local_cmpl_cnts);
+    /* Increase local and remote completion counters and set the local completion
+     * counter in request, thus it can be decreased at request completion. */
+    MPIDI_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
 
     if (HANDLE_GET_KIND(target_datatype) == HANDLE_KIND_BUILTIN) {
         am_hdr.n_iov = 0;
@@ -327,12 +324,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     am_hdr.win_id = MPIDI_CH4U_WIN(win, win_id);
     am_hdr.src_rank = win->comm_ptr->rank;
 
-    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, local_cmpl_cnts), &c);
-    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
+    /* Increase local and remote completion counters and set the local completion
+     * counter in request, thus it can be decreased at request completion. */
+    MPIDI_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
 
-    /* to decrement the local completion counter at request completion. */
-    sreq->completion_notification = &MPIDI_CH4U_WIN(win, local_cmpl_cnts);
-
+    MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
     MPIDI_CH4U_REQUEST(sreq, req->areq.data_sz) = data_sz;
     if (HANDLE_GET_KIND(target_datatype) == HANDLE_KIND_BUILTIN) {
         am_hdr.n_iov = 0;
@@ -388,7 +384,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_addr) = (void *) origin_addr;
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_count) = origin_count;
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_datatype) = origin_datatype;
-        MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
         dtype_add_ref_if_not_builtin(origin_datatype);
 
         /* FIXIME: we need to choose between NM and SHM */
@@ -486,12 +481,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
 
     am_hdr.result_data_sz = result_data_sz;
 
-    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, local_cmpl_cnts), &c);
-    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
+    /* Increase local and remote completion counters and set the local completion
+     * counter in request, thus it can be decreased at request completion. */
+    MPIDI_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
 
-    /* to decrement the local completion counter at request completion. */
-    sreq->completion_notification = &MPIDI_CH4U_WIN(win, local_cmpl_cnts);
-
+    MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
     MPIDI_CH4U_REQUEST(sreq, req->areq.data_sz) = data_sz;
     if (HANDLE_GET_KIND(target_datatype) == HANDLE_KIND_BUILTIN) {
         am_hdr.n_iov = 0;
@@ -547,7 +541,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_addr) = (void *) origin_addr;
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_count) = origin_count;
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_datatype) = origin_datatype;
-        MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
         dtype_add_ref_if_not_builtin(origin_datatype);
 
         /* FIXIME: we need to choose between NM and SHM */
@@ -910,6 +903,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_compare_and_swap(const void *origin_
     MPIDI_CH4U_REQUEST(sreq, req->creq.datatype) = datatype;
     MPIDI_CH4U_REQUEST(sreq, req->creq.result_addr) = result_addr;
     MPIDI_CH4U_REQUEST(sreq, req->creq.data) = p_data;
+    MPIDI_CH4U_REQUEST(sreq, rank) = target_rank;
 
     MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
     MPIR_cc_incr(sreq->cc_ptr, &c);
@@ -920,11 +914,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_compare_and_swap(const void *origin_
     am_hdr.win_id = MPIDI_CH4U_WIN(win, win_id);
     am_hdr.src_rank = win->comm_ptr->rank;
 
-    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, local_cmpl_cnts), &c);
-    MPIR_cc_incr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
-
-    /* to decrement the local completion counter at request completion. */
-    sreq->completion_notification = &MPIDI_CH4U_WIN(win, local_cmpl_cnts);
+    MPIDI_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
 
     /* FIXIME: we need to choose between NM and SHM */
     mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_CSWAP_REQ,
