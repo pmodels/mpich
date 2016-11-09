@@ -976,7 +976,7 @@ static inline int MPIDI_get_acc_target_cmpl_cb(MPIR_Request * rreq)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_get_ack_target_cmpl_cb(MPIR_Request * rreq)
 {
-    int mpi_errno = MPI_SUCCESS, c = 0;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Request *greq;
     MPIR_Win *win;
 
@@ -992,7 +992,7 @@ static inline int MPIDI_get_ack_target_cmpl_cb(MPIR_Request * rreq)
     }
 
     win = MPIDI_CH4U_REQUEST(greq, req->greq.win_ptr);
-    MPIR_cc_decr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
+    MPIDI_win_remote_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(greq, rank));
 
     MPIDI_Request_complete(greq);
     MPIDI_Request_complete(rreq);
@@ -1008,7 +1008,7 @@ static inline int MPIDI_get_ack_target_cmpl_cb(MPIR_Request * rreq)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_get_acc_ack_target_cmpl_cb(MPIR_Request * areq)
 {
-    int mpi_errno = MPI_SUCCESS, c = 0;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_GET_ACC_ACK_TARGET_CMPL_CB);
@@ -1022,7 +1022,7 @@ static inline int MPIDI_get_acc_ack_target_cmpl_cb(MPIR_Request * areq)
     }
 
     win = MPIDI_CH4U_REQUEST(areq, req->areq.win_ptr);
-    MPIR_cc_decr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
+    MPIDI_win_remote_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(areq, rank));
 
     dtype_release_if_not_builtin(MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype));
     MPIDI_Request_complete(areq);
@@ -1038,7 +1038,7 @@ static inline int MPIDI_get_acc_ack_target_cmpl_cb(MPIR_Request * areq)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_cswap_ack_target_cmpl_cb(MPIR_Request * rreq)
 {
-    int mpi_errno = MPI_SUCCESS, c = 0;
+    int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CSWAP_ACK_TARGET_CMPL_CB);
@@ -1048,7 +1048,7 @@ static inline int MPIDI_cswap_ack_target_cmpl_cb(MPIR_Request * rreq)
         return mpi_errno;
 
     win = MPIDI_CH4U_REQUEST(rreq, req->creq.win_ptr);
-    MPIR_cc_decr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
+    MPIDI_win_remote_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(rreq, rank));
 
     MPL_free(MPIDI_CH4U_REQUEST(rreq, req->creq.data));
     MPIDI_Request_complete(rreq);
@@ -1068,7 +1068,7 @@ static inline int MPIDI_put_ack_target_msg_cb(int handler_id, void *am_hdr,
                                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                               MPIR_Request ** req)
 {
-    int mpi_errno = MPI_SUCCESS, c = 0;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_CH4U_put_ack_msg_t *msg_hdr = (MPIDI_CH4U_put_ack_msg_t *) am_hdr;
     MPIR_Win *win;
     MPIR_Request *preq;
@@ -1083,8 +1083,9 @@ static inline int MPIDI_put_ack_target_msg_cb(int handler_id, void *am_hdr,
         MPL_free(MPIDI_CH4U_REQUEST(preq, req->preq.dt_iov));
     }
 
+    MPIDI_win_remote_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(preq, rank));
+
     MPIDI_Request_complete(preq);
-    MPIR_cc_decr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
 
     if (req)
         *req = NULL;
@@ -1105,7 +1106,7 @@ static inline int MPIDI_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
                                               MPIDIG_am_target_cmpl_cb * target_cmpl_cb,
                                               MPIR_Request ** req)
 {
-    int mpi_errno = MPI_SUCCESS, c = 0;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_CH4U_acc_ack_msg_t *msg_hdr = (MPIDI_CH4U_acc_ack_msg_t *) am_hdr;
     MPIR_Win *win;
     MPIR_Request *areq;
@@ -1120,8 +1121,9 @@ static inline int MPIDI_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
         MPL_free(MPIDI_CH4U_REQUEST(areq, req->areq.dt_iov));
     }
 
+    MPIDI_win_remote_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(areq, rank));
+
     MPIDI_Request_complete(areq);
-    MPIR_cc_decr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
 
     if (req)
         *req = NULL;

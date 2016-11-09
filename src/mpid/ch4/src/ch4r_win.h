@@ -105,9 +105,13 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Win *win = (MPIR_Win *) MPIR_Handle_obj_alloc(&MPIR_Win_mem);
+    MPIDI_CH4U_win_target_t *targets = NULL;
+    int i;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_WIN_INIT);
     MPIR_FUNC_VERBOSE_RMA_ENTER(MPID_STATE_MPIDI_CH4R_WIN_INIT);
+
+    MPIR_CHKPMEM_DECL(1);
 
     MPIR_ERR_CHKANDSTMT(win == NULL, mpi_errno, MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
     *win_ptr = win;
@@ -115,6 +119,13 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
     memset(&win->dev.ch4u, 0, sizeof(MPIDI_CH4U_win_t));
     win->comm_ptr = comm_ptr;
     MPIR_Comm_add_ref(comm_ptr);
+
+    /* FIXME: per-target structure should be initialized only when user starts
+     * per-target synchronization. */
+    MPIR_CHKPMEM_MALLOC(targets, MPIDI_CH4U_win_target_t *,
+                        comm_ptr->local_size * sizeof(MPIDI_CH4U_win_target_t),
+                        mpi_errno, "window targets");
+    MPIDI_CH4U_WIN(win, targets) = targets;
 
     win->errhandler = NULL;
     win->base = NULL;
@@ -148,15 +159,21 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
 
     MPIR_cc_set(&MPIDI_CH4U_WIN(win, local_cmpl_cnts), 0);
     MPIR_cc_set(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), 0);
+    for (i = 0; i < win->comm_ptr->local_size; i++) {
+        MPIR_cc_set(&targets[i].local_cmpl_cnts, 0);
+        MPIR_cc_set(&targets[i].remote_cmpl_cnts, 0);
+    }
 
     MPIDI_CH4U_WIN(win, win_id) = MPIDI_CH4U_generate_win_id(comm_ptr);
     MPL_HASH_ADD(dev.ch4u.hash_handle, MPIDI_CH4_Global.win_hash,
                  dev.ch4u.win_id, sizeof(uint64_t), win);
 
+    MPIR_CHKPMEM_COMMIT();
   fn_exit:
     MPIR_FUNC_VERBOSE_RMA_EXIT(MPID_STATE_MPIDI_CH4R_WIN_INIT);
     return mpi_errno;
   fn_fail:
+    MPIR_CHKPMEM_REAP();
     goto fn_exit;
 }
 
@@ -242,16 +259,12 @@ static inline int MPIDI_CH4R_mpi_win_complete(MPIR_Win * win)
     int index, peer;
     MPIR_Group *group;
     int *ranks_in_win_grp;
+    int all_local_completed = 0;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_WIN_COMPLETE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_COMPLETE);
 
     MPIDI_CH4U_EPOCH_START_CHECK2(win, mpi_errno, goto fn_fail);
-
-    /* FIXME: per-target completion. */
-    do {
-        MPIDI_CH4R_PROGRESS();
-    } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) != 0);
 
     group = MPIDI_CH4U_WIN(win, sync).sc.group;
     MPIR_Assert(group != NULL);
@@ -265,6 +278,13 @@ static inline int MPIDI_CH4R_mpi_win_complete(MPIR_Win * win)
     mpi_errno = MPIDI_CH4I_fill_ranks_in_win_grp(win, group, ranks_in_win_grp);
     if (mpi_errno != MPI_SUCCESS)
         MPIR_ERR_POP(mpi_errno);
+
+    /* FIXME: now we simply set per-target counters for PSCW, can it be optimized ? */
+    do {
+        MPIDI_CH4R_PROGRESS();
+        MPIDI_win_check_group_local_completed(win, ranks_in_win_grp, group->size,
+                                              &all_local_completed);
+    } while (all_local_completed != 1);
 
     for (index = 0; index < group->size; ++index) {
         peer = ranks_in_win_grp[index];
@@ -455,11 +475,9 @@ static inline int MPIDI_CH4R_mpi_win_unlock(int rank, MPIR_Win * win)
 
     MPIDI_CH4U_EPOCH_ORIGIN_CHECK(win, MPIDI_CH4U_EPOTYPE_LOCK, mpi_errno, return mpi_errno);
 
-    /* FIXME: per-target completion. */
     do {
         MPIDI_CH4R_PROGRESS();
-    } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, remote_cmpl_cnts)) != 0);
-    MPIR_Assert(MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) == 0);
+    } while (MPIR_cc_get(MPIDI_CH4U_WIN_TARGET(win, rank, remote_cmpl_cnts)) != 0);
 
     msg.win_id = MPIDI_CH4U_WIN(win, win_id);
     msg.origin_rank = win->comm_ptr->rank;
@@ -567,9 +585,33 @@ static inline int MPIDI_CH4R_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_
 static inline int MPIDI_CH4R_win_finalize(MPIR_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
+    int all_completed = 0;
     MPIR_Win *win = *win_ptr;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_WIN_FINALIZE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_WIN_FINALIZE);
+
+    /* All local outstanding OPs should have been completed. */
+    MPIR_Assert(MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) == 0);
+    MPIR_Assert(MPIR_cc_get(MPIDI_CH4U_WIN(win, remote_cmpl_cnts)) == 0);
+
+    /* Make progress till all OPs have been completed */
+    do {
+        int all_local_completed = 0, all_remote_completed = 0;
+
+        MPIDI_CH4R_PROGRESS();
+
+        MPIDI_win_check_all_targets_local_completed(win, &all_local_completed);
+        MPIDI_win_check_all_targets_remote_completed(win, &all_remote_completed);
+
+        /* Local completion counter might be updated later than remote completion
+         * (at request completion), so we need to check it before release entire
+         * window. */
+        all_completed = (MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) == 0) &&
+            (MPIR_cc_get(MPIDI_CH4U_WIN(win, remote_cmpl_cnts)) == 0) &&
+            all_local_completed && all_remote_completed;
+    } while (all_completed != 1);
+
+    MPL_free(MPIDI_CH4U_WIN(win, targets));
 
     if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE && win->base) {
         if (MPIDI_CH4U_WIN(win, mmap_sz) > 0)
@@ -595,15 +637,14 @@ static inline int MPIDI_CH4R_win_finalize(MPIR_Win ** win_ptr)
         MPL_free(MPIDI_CH4U_WIN(win, shared_table));
     }
 
-    /* All local outstanding OPs should have been completed remotely. */
-    MPIR_Assert(MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) == 0);
-    MPIR_Assert(MPIR_cc_get(MPIDI_CH4U_WIN(win, remote_cmpl_cnts)) == 0);
-
     MPIR_Comm_release(win->comm_ptr);
     MPIR_Handle_obj_free(&MPIR_Win_mem, win);
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_WIN_FINALIZE);
     return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 #undef FUNCNAME
@@ -989,11 +1030,9 @@ static inline int MPIDI_CH4R_mpi_win_flush(int rank, MPIR_Win * win)
 
     MPIDI_CH4U_EPOCH_LOCK_CHECK(win, mpi_errno, goto fn_fail);
 
-    /* FIXME: per-target completion. */
     do {
         MPIDI_CH4R_PROGRESS();
-    } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, remote_cmpl_cnts)) != 0);
-    MPIR_Assert(MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) == 0);
+    } while (MPIR_cc_get(MPIDI_CH4U_WIN_TARGET(win, rank, remote_cmpl_cnts)) != 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_FLUSH);
@@ -1009,14 +1048,18 @@ static inline int MPIDI_CH4R_mpi_win_flush(int rank, MPIR_Win * win)
 static inline int MPIDI_CH4R_mpi_win_flush_local_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
+    int all_local_completed = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_WIN_FLUSH_LOCAL_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_FLUSH_LOCAL_ALL);
 
     MPIDI_CH4U_EPOCH_LOCK_CHECK(win, mpi_errno, goto fn_fail);
 
+    /* FIXME: now we simply set per-target counters for lockall in case
+     * user flushes per target, but this should be optimized. */
     do {
         MPIDI_CH4R_PROGRESS();
-    } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) != 0);
+        MPIDI_win_check_all_targets_local_completed(win, &all_local_completed);
+    } while (all_local_completed != 1);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_FLUSH_LOCAL_ALL);
@@ -1036,13 +1079,15 @@ static inline int MPIDI_CH4R_mpi_win_unlock_all(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_UNLOCK_ALL);
     int i;
     MPIDI_CH4U_win_lock_info *lockQ;
-
+    int all_remote_completed = 0;
     MPIDI_CH4U_EPOCH_ORIGIN_CHECK(win, MPIDI_CH4U_EPOTYPE_LOCK_ALL, mpi_errno, goto fn_exit);
 
+    /* FIXME: now we simply set per-target counters for lockall in case
+     * user flushes per target, but this should be optimized. */
     do {
         MPIDI_CH4R_PROGRESS();
-    } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, remote_cmpl_cnts)) != 0);
-    MPIR_Assert(MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) == 0);
+        MPIDI_win_check_all_targets_remote_completed(win, &all_remote_completed);
+    } while (all_remote_completed != 1);
 
     MPIR_Assert(MPIDI_CH4U_WIN(win, lockQ) != NULL);
     lockQ = (MPIDI_CH4U_win_lock_info *) MPIDI_CH4U_WIN(win, lockQ);
@@ -1127,10 +1172,9 @@ static inline int MPIDI_CH4R_mpi_win_flush_local(int rank, MPIR_Win * win)
 
     MPIDI_CH4U_EPOCH_LOCK_CHECK(win, mpi_errno, goto fn_fail);
 
-    /* FIXME: per-target completion. */
     do {
         MPIDI_CH4R_PROGRESS();
-    } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) != 0);
+    } while (MPIR_cc_get(MPIDI_CH4U_WIN_TARGET(win, rank, local_cmpl_cnts)) != 0);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_FLUSH_LOCAL);
@@ -1166,6 +1210,7 @@ static inline int MPIDI_CH4R_mpi_win_sync(MPIR_Win * win)
 static inline int MPIDI_CH4R_mpi_win_flush_all(MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
+    int all_remote_completed = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_MPI_WIN_FLUSH_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_MPI_WIN_FLUSH_ALL);
 
@@ -1173,8 +1218,11 @@ static inline int MPIDI_CH4R_mpi_win_flush_all(MPIR_Win * win)
 
     do {
         MPIDI_CH4R_PROGRESS();
-    } while (MPIR_cc_get(MPIDI_CH4U_WIN(win, remote_cmpl_cnts)) != 0);
-    MPIR_Assert(MPIR_cc_get(MPIDI_CH4U_WIN(win, local_cmpl_cnts)) == 0);
+
+        /* FIXME: now we simply set per-target counters for lockall in case
+         * user flushes per target, but this should be optimized. */
+        MPIDI_win_check_all_targets_remote_completed(win, &all_remote_completed);
+    } while (all_remote_completed != 1);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4R_MPI_WIN_FLUSH_ALL);
