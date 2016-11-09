@@ -534,4 +534,123 @@ static inline uintptr_t MPIDI_CH4I_win_base_at_target(const MPIR_Win * win)
     return (uintptr_t) win->base;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_win_cmpl_cnts_incr
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline void MPIDI_win_cmpl_cnts_incr(MPIR_Win * win, int target_rank,
+                                            MPIR_cc_t ** local_cmpl_cnts_ptr)
+{
+    int c = 0;
+
+    /* Increase per-window counters for fence, and per-target counters for
+     * all other synchronization. */
+    switch (MPIDI_CH4U_WIN(win, sync).origin_epoch_type) {
+    case MPIDI_CH4U_EPOTYPE_LOCK:
+        /* FIXME: now we simply set per-target counters for lockall in case
+         * user flushes per target, but this should be optimized. */
+    case MPIDI_CH4U_EPOTYPE_LOCK_ALL:
+        /* FIXME: now we simply set per-target counters for PSCW, can it be optimized ? */
+    case MPIDI_CH4U_EPOTYPE_START:
+        {
+            MPIDI_CH4U_win_target_t *target_ptr = NULL;
+            target_ptr = &MPIDI_CH4U_WIN(win, targets)[target_rank];
+            MPIR_Assert(target_ptr != NULL);
+
+            MPIR_cc_incr(&target_ptr->local_cmpl_cnts, &c);
+            MPIR_cc_incr(&target_ptr->remote_cmpl_cnts, &c);
+
+            *local_cmpl_cnts_ptr = &target_ptr->local_cmpl_cnts;
+            break;
+        }
+    default:
+        MPIR_cc_incr(&MPIDI_CH4U_WIN(win, local_cmpl_cnts), &c);
+        MPIR_cc_incr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
+
+        *local_cmpl_cnts_ptr = &MPIDI_CH4U_WIN(win, local_cmpl_cnts);
+        break;
+    }
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_win_remote_cmpl_cnt_decr
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline void MPIDI_win_remote_cmpl_cnt_decr(MPIR_Win * win, int target_rank)
+{
+    int c = 0;
+
+    /* Decrease per-window counter for fence, and per-target counters for
+     * all other synchronization. */
+    switch (MPIDI_CH4U_WIN(win, sync).origin_epoch_type) {
+    case MPIDI_CH4U_EPOTYPE_LOCK:
+    case MPIDI_CH4U_EPOTYPE_LOCK_ALL:
+    case MPIDI_CH4U_EPOTYPE_START:
+        {
+            MPIDI_CH4U_win_target_t *target_ptr = NULL;
+            target_ptr = &MPIDI_CH4U_WIN(win, targets)[target_rank];
+            MPIR_Assert(target_ptr != NULL);
+            MPIR_cc_decr(&target_ptr->remote_cmpl_cnts, &c);
+            break;
+        }
+    default:
+        MPIR_cc_decr(&MPIDI_CH4U_WIN(win, remote_cmpl_cnts), &c);
+        break;
+    }
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_win_check_all_targets_remote_completed
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline void MPIDI_win_check_all_targets_remote_completed(MPIR_Win * win, int *allcompleted)
+{
+    int rank = 0;
+
+    *allcompleted = 1;
+    for (rank = 0; rank < win->comm_ptr->local_size; rank++) {
+        if (MPIR_cc_get(MPIDI_CH4U_WIN_TARGET(win, rank, remote_cmpl_cnts)) != 0) {
+            *allcompleted = 0;
+            break;
+        }
+    }
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_win_check_all_targets_local_completed
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline void MPIDI_win_check_all_targets_local_completed(MPIR_Win * win, int *allcompleted)
+{
+    int rank = 0;
+
+    *allcompleted = 1;
+    for (rank = 0; rank < win->comm_ptr->local_size; rank++) {
+        if (MPIR_cc_get(MPIDI_CH4U_WIN_TARGET(win, rank, local_cmpl_cnts)) != 0) {
+            *allcompleted = 0;
+            break;
+        }
+    }
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_win_check_all_targets_local_completed
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static inline void MPIDI_win_check_group_local_completed(MPIR_Win * win,
+                                                         int *ranks_in_win_grp,
+                                                         int grp_siz, int *allcompleted)
+{
+    int i = 0;
+
+    *allcompleted = 1;
+    for (i = 0; i < grp_siz; i++) {
+        int rank = ranks_in_win_grp[i];
+        if (MPIR_cc_get(MPIDI_CH4U_WIN_TARGET(win, rank, local_cmpl_cnts)) != 0) {
+            *allcompleted = 0;
+            break;
+        }
+    }
+}
+
 #endif /* CH4_IMPL_H_INCLUDED */
