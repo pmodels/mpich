@@ -244,6 +244,7 @@ typedef struct MPIU_buf_t {
 } MPIU_buf_t;
 
 typedef struct {
+    int mmapped_size;
     int max_n_avts;
     int n_avts;
     int next_avtid;
@@ -257,7 +258,6 @@ typedef struct MPIDI_CH4_Global_t {
     int pname_len;
     char pname[MPI_MAX_PROCESSOR_NAME];
     int is_initialized;
-    int allocated_max_n_avts;
     MPIDI_CH4_avt_manager avt_mgr;
     int is_ch4u_initialized;
     MPID_Node_id_t **node_map, max_node_id;
