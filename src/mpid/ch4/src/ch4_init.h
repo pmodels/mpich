@@ -512,57 +512,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Get_max_node_id(MPIR_Comm * comm, MPID_Node_id
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_upids_to_lupids
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_upids_to_lupids(int size,
-                                                   size_t * remote_upid_size,
-                                                   char *remote_upids,
-                                                   int **remote_lupids,
-                                                   MPID_Node_id_t * remote_node_ids)
-{
-    int mpi_errno = MPI_SUCCESS, i;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UPIDS_TO_LUPIDS);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UPIDS_TO_LUPIDS);
-
-    mpi_errno = MPIDI_NM_upids_to_lupids(size, remote_upid_size, remote_upids, remote_lupids);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
-
-    /* update node_map */
-    for (i = 0; i < size; i++) {
-        int _avtid = 0, _lpid = 0;
-        /* if this is a new process, update node_map and locality */
-        if (MPIDIU_LUPID_IS_NEW_AVT((*remote_lupids)[i])) {
-            MPIDIU_LUPID_CLEAR_NEW_AVT_MARK((*remote_lupids)[i]);
-            _avtid = MPIDIU_LUPID_GET_AVTID((*remote_lupids)[i]);
-            _lpid = MPIDIU_LUPID_GET_LPID((*remote_lupids)[i]);
-            if (_avtid != 0) {
-                /*
-                 * new process groups are always assumed to be remote,
-                 * so CH4 don't care what node they are on
-                 */
-                MPIDI_CH4_Global.node_map[_avtid][_lpid] = remote_node_ids[i];
-#ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
-                MPIDI_av_table[_avtid]->table[_lpid].is_local = 0;
-#endif
-            }
-        }
-    }
-
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
-    }
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UPIDS_TO_LUPIDS);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPID_Create_intercomm_from_lpids
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
