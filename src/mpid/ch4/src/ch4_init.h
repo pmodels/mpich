@@ -108,7 +108,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 {
     int pmi_errno, mpi_errno = MPI_SUCCESS, rank, has_parent, size, appnum, thr_err;
     void *netmod_contexts;
-    int avtid, max_n_avts;
+    int avtid;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
 
@@ -171,14 +171,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPIR_Process.comm_world->remote_size = size;
     MPIR_Process.comm_world->local_size = size;
 
-    MPIDI_CH4_Global.allocated_max_n_avts = 0;
     MPIDIU_avt_init();
     MPIDIU_get_next_avtid(&avtid);
     MPIR_Assert(avtid == 0);
-    max_n_avts = MPIDIU_get_max_n_avts();
-
-    MPIDI_av_table = (MPIDI_av_table_t **)
-        MPL_malloc(max_n_avts * sizeof(MPIDI_av_table_t *));
 
     MPIDI_av_table[0] = (MPIDI_av_table_t *)
         MPL_malloc(size * sizeof(MPIDI_av_entry_t)
@@ -330,8 +325,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
             MPIDIU_avt_release_ref(i);
         }
     }
-    MPL_free(MPIDI_av_table);
-    MPL_free(MPIDI_CH4_Global.node_map);
 
     MPIDIU_avt_destroy();
 
