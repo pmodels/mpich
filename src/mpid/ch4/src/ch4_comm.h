@@ -168,7 +168,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
         case MPIDI_RANK_MAP_MLUT:
             max_n_avts = MPIDIU_get_max_n_avts();
             uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int));
-            memset(uniq_avtids, 0, max_n_avts);
+            memset(uniq_avtids, 0, max_n_avts * sizeof(int));
             for (i = 0; i < MPIDI_COMM(comm, map).size; i++) {
                 if (uniq_avtids[MPIDI_COMM(comm, map).irreg.mlut.gpid[i].avtid] == 0) {
                     uniq_avtids[MPIDI_COMM(comm, map).irreg.mlut.gpid[i].avtid] = 1;
@@ -187,7 +187,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
         case MPIDI_RANK_MAP_MLUT:
             max_n_avts = MPIDIU_get_max_n_avts();
             uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int));
-            memset(uniq_avtids, 0, max_n_avts);
+            memset(uniq_avtids, 0, max_n_avts * sizeof(int));
             for (i = 0; i < MPIDI_COMM(comm, local_map).size; i++) {
                 if (uniq_avtids[MPIDI_COMM(comm, local_map).irreg.mlut.gpid[i].avtid] == 0) {
                     uniq_avtids[MPIDI_COMM(comm, local_map).irreg.mlut.gpid[i].avtid] = 1;
@@ -226,7 +226,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
     case MPIDI_RANK_MAP_MLUT:
         max_n_avts = MPIDIU_get_max_n_avts();
         uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int));
-        memset(uniq_avtids, 0, max_n_avts);
+        memset(uniq_avtids, 0, max_n_avts * sizeof(int));
         for (i = 0; i < MPIDI_COMM(comm, map).size; i++) {
             if (uniq_avtids[MPIDI_COMM(comm, map).irreg.mlut.gpid[i].avtid] == 0) {
                 uniq_avtids[MPIDI_COMM(comm, map).irreg.mlut.gpid[i].avtid] = 1;
@@ -245,7 +245,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
     case MPIDI_RANK_MAP_MLUT:
         max_n_avts = MPIDIU_get_max_n_avts();
         uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int));
-        memset(uniq_avtids, 0, max_n_avts);
+        memset(uniq_avtids, 0, max_n_avts * sizeof(int));
         for (i = 0; i < MPIDI_COMM(comm, local_map).size; i++) {
             if (uniq_avtids[MPIDI_COMM(comm, local_map).irreg.mlut.gpid[i].avtid] == 0) {
                 uniq_avtids[MPIDI_COMM(comm, local_map).irreg.mlut.gpid[i].avtid] = 1;
