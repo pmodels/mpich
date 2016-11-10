@@ -551,15 +551,4 @@ static inline int MPIDI_OFI_do_inject(int rank,
     goto fn_exit;
 }
 
-
-static inline void MPIDI_OFI_am_request_complete(MPIR_Request * req)
-{
-    int incomplete;
-    MPIR_cc_decr(req->cc_ptr, &incomplete);
-
-    if (!incomplete) {
-        MPIR_Request_free(req);
-    }
-}
-
 #endif /*NETMOD_OFI_AM_IMPL_H_INCLUDED */
