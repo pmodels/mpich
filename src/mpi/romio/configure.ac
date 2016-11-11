@@ -46,7 +46,7 @@ fi
 
 AC_CONFIG_HEADER(adio/include/romioconf.h)
 AH_TOP([/*
- *  (C) 2011 by Argonne National Laboratory.
+ *  (C) 2008 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 #ifndef ROMIOCONF_H_INCLUDED
