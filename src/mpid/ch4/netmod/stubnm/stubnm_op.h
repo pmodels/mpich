@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_STUBNM_OP_H_INCLUDED
-#define NETMOD_STUBNM_OP_H_INCLUDED
+#ifndef STUBNM_OP_H_INCLUDED
+#define STUBNM_OP_H_INCLUDED
 
 #include "stubnm_impl.h"
 
@@ -26,4 +26,4 @@ static inline int MPIDI_NM_mpi_op_create_hook(MPIR_Op * op_p)
 }
 
 
-#endif
+#endif /* STUBNM_OP_H_INCLUDED */

@@ -55,7 +55,7 @@ static void init_comm()
 
 MPL_dbg_class MPIDI_CH4_DBG_GENERAL;
 
-#if defined(MPL_USE_DBG_LOGGING)
+#ifdef MPL_USE_DBG_LOGGING
 MPL_dbg_class MPIDI_CH4_DBG_GENERAL;
 MPL_dbg_class MPIDI_CH4_DBG_MAP;
 MPL_dbg_class MPIDI_CH4_DBG_COMM;

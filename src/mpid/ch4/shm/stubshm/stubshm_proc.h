@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef SHM_STUBSHM_PROC_H_INCLUDED
-#define SHM_STUBSHM_PROC_H_INCLUDED
+#ifndef STUBSHM_PROC_H_INCLUDED
+#define STUBSHM_PROC_H_INCLUDED
 
 #include "stubshm_impl.h"
 
@@ -23,4 +23,4 @@ static inline int MPIDI_SHM_rank_is_local(int rank, MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_RANK_IS_LOCAL);
     return MPI_SUCCESS;
 }
-#endif /* SHM_STUBSHM_PROC_H_INCLUDED */
+#endif /* STUBSHM_PROC_H_INCLUDED */

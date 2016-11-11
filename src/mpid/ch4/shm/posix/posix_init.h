@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef SHM_POSIX_INIT_H_INCLUDED
-#define SHM_POSIX_INIT_H_INCLUDED
+#ifndef POSIX_INIT_H_INCLUDED
+#define POSIX_INIT_H_INCLUDED
 
 #include "posix_impl.h"
 #include "ch4_types.h"
@@ -373,4 +373,4 @@ static inline int MPIDI_SHM_mpi_op_free_hook(MPIR_Op * op)
     return mpi_errno;
 }
 
-#endif /* SHM_POSIX_INIT_H_INCLUDED */
+#endif /* POSIX_INIT_H_INCLUDED */

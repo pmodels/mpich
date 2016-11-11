@@ -9,8 +9,8 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#ifndef SHM_POSIX_PRE_H_INCLUDED
-#define SHM_POSIX_PRE_H_INCLUDED
+#ifndef POSIX_PRE_H_INCLUDED
+#define POSIX_PRE_H_INCLUDED
 
 #include <mpi.h>
 
@@ -38,4 +38,4 @@ typedef struct {
     int dummy;
 } MPIDI_POSIX_comm_t;
 
-#endif /* SHM_POSIX_PRE_H_INCLUDED */
+#endif /* POSIX_PRE_H_INCLUDED */

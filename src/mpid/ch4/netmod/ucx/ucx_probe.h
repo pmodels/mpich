@@ -6,8 +6,8 @@
  *  Portions of this code were written by Mellanox Technologies Ltd.
  *  Copyright (C) Mellanox Technologies Ltd. 2016. ALL RIGHTS RESERVED
  */
-#ifndef NETMOD_UCX_PROBE_H_INCLUDED
-#define NETMOD_UCX_PROBE_H_INCLUDED
+#ifndef UCX_PROBE_H_INCLUDED
+#define UCX_PROBE_H_INCLUDED
 
 #include "ucx_impl.h"
 #include "mpidch4.h"
@@ -96,4 +96,4 @@ static inline int MPIDI_NM_mpi_iprobe(int source,
     return mpi_errno;
 }
 
-#endif /* NETMOD_UCX_PROBE_H_INCLUDED */
+#endif /* UCX_PROBE_H_INCLUDED */

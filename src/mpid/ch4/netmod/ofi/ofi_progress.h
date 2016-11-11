@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_OFI_PROGRESS_H_INCLUDED
-#define NETMOD_OFI_PROGRESS_H_INCLUDED
+#ifndef OFI_PROGRESS_H_INCLUDED
+#define OFI_PROGRESS_H_INCLUDED
 
 #include "ofi_impl.h"
 #include "ofi_events.h"
@@ -60,4 +60,4 @@ static inline int MPIDI_NM_progress(void *netmod_context, int blocking)
     return mpi_errno;
 }
 
-#endif /* NETMOD_OFI_PROGRESS_H_INCLUDED */
+#endif /* OFI_PROGRESS_H_INCLUDED */

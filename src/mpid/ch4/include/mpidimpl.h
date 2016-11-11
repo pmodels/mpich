@@ -14,14 +14,14 @@
 #include "mpichconf.h"
 #include <stdio.h>
 
-#if defined(HAVE_ASSERT_H)
+#ifdef HAVE_ASSERT_H
 #include <assert.h>
 #endif
 
 #define MPICH_SKIP_MPICXX
 #include "mpiimpl.h"
 
-#if !defined(MPICH_MPIDPRE_H_INCLUDED)
+#ifndef MPICH_MPIDPRE_H_INCLUDED
 #include "mpidpre.h"
 #endif
 

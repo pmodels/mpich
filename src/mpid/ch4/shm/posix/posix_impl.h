@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef SHM_POSIX_IMPL_H_INCLUDED
-#define SHM_POSIX_IMPL_H_INCLUDED
+#ifndef POSIX_IMPL_H_INCLUDED
+#define POSIX_IMPL_H_INCLUDED
 
 #include <mpidimpl.h>
 #include "mpidch4r.h"
@@ -171,4 +171,4 @@ extern MPIDI_POSIX_request_queue_t MPIDI_POSIX_recvq_posted;
 
 
 
-#endif /* SHM_POSIX_IMPL_H_INCLUDED */
+#endif /* POSIX_IMPL_H_INCLUDED */

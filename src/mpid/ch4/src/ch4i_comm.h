@@ -1223,4 +1223,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_check_disjoint_lupids(int lupids1[], int n1,
     goto fn_exit;
 }
 
-#endif /* ifndef CH4I_COMM_H_INCLUDED */
+#endif /* CH4I_COMM_H_INCLUDED */

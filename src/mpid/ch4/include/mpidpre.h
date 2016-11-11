@@ -11,7 +11,7 @@
 #ifndef MPIDPRE_H_INCLUDED
 #define MPIDPRE_H_INCLUDED
 
-#if defined(HAVE_SYS_TYPES_H)
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
 

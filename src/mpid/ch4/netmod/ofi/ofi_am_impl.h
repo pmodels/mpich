@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_OFI_AM_IMPL_H_INCLUDED
-#define NETMOD_OFI_AM_IMPL_H_INCLUDED
+#ifndef OFI_AM_IMPL_H_INCLUDED
+#define OFI_AM_IMPL_H_INCLUDED
 
 #include "ofi_impl.h"
 
@@ -551,4 +551,4 @@ static inline int MPIDI_OFI_do_inject(int rank,
     goto fn_exit;
 }
 
-#endif /*NETMOD_OFI_AM_IMPL_H_INCLUDED */
+#endif /* OFI_AM_IMPL_H_INCLUDED */

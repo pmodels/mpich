@@ -5,8 +5,8 @@
  *    *
  *    */
 
-#ifndef NETMOD_PTL_TYPES_H_INCLUDED
-#define NETMOD_PTL_TYPES_H_INCLUDED
+#ifndef PTL_TYPES_H_INCLUDED
+#define PTL_TYPES_H_INCLUDED
 
 #include "mpidimpl.h"
 #include "portals4.h"
@@ -70,4 +70,4 @@ static inline ptl_hdr_data_t MPIDI_PTL_init_am_hdr(int handler_id, size_t msg_sz
     return hdr;
 }
 
-#endif /* NETMOD_PTL_TYPES_H_INCLUDED */
+#endif /* PTL_TYPES_H_INCLUDED */

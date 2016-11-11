@@ -9,8 +9,8 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 /* ch4 shm functions */
-#ifndef SHM_IMPL_PROTOTYPES_H_INCLUDED
-#define SHM_IMPL_PROTOTYPES_H_INCLUDED
+#ifndef SHM_IMPL_H_INCLUDED
+#define SHM_IMPL_H_INCLUDED
 
 #ifndef SHM_DIRECT
 #ifndef SHM_DISABLE_INLINES
@@ -2126,4 +2126,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_iscatterv(const void *sendbuf, const 
 
 #endif /* SHM_DIRECT           */
 
-#endif
+#endif /* SHM_IMPL_H_INCLUDED */

@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_OFI_EVENTS_H_INCLUDED
-#define NETMOD_OFI_EVENTS_H_INCLUDED
+#ifndef OFI_EVENTS_H_INCLUDED
+#define OFI_EVENTS_H_INCLUDED
 
 #include "ofi_impl.h"
 #include "ofi_am_impl.h"
@@ -816,4 +816,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_error(ssize_t ret)
     goto fn_exit;
 }
 
-#endif /* NETMOD_OFI_EVENTS_H_INCLUDED */
+#endif /* OFI_EVENTS_H_INCLUDED */

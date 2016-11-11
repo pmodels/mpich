@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_OFI_INIT_H_INCLUDED
-#define NETMOD_OFI_INIT_H_INCLUDED
+#ifndef OFI_INIT_H_INCLUDED
+#define OFI_INIT_H_INCLUDED
 
 #include "ofi_impl.h"
 #include "mpir_cvars.h"
@@ -965,4 +965,4 @@ static inline int MPIDI_OFI_choose_provider(struct fi_info *prov, struct fi_info
     return i;
 }
 
-#endif /* NETMOD_OFI_INIT_H_INCLUDED */
+#endif /* OFI_INIT_H_INCLUDED */
