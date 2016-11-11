@@ -6,8 +6,8 @@
  *  Portions of this code were written by Mellanox Technologies Ltd.
  *  Copyright (C) Mellanox Technologies Ltd. 2016. ALL RIGHTS RESERVED
  */
-#ifndef NETMOD_UCX_COMM_H_INCLUDED
-#define NETMOD_UCX_COMM_H_INCLUDED
+#ifndef UCX_COMM_H_INCLUDED
+#define UCX_COMM_H_INCLUDED
 
 #include "ucx_impl.h"
 
@@ -45,4 +45,4 @@ static inline int MPIDI_NM_mpi_comm_free_hook(MPIR_Comm * comm)
     return mpi_errno;
 }
 
-#endif /* NETMOD_UCX_COMM_H_INCLUDED */
+#endif /* UCX_COMM_H_INCLUDED */

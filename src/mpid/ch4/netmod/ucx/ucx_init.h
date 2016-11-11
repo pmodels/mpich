@@ -6,8 +6,8 @@
  *  Portions of this code were written by Mellanox Technologies Ltd.
  *  Copyright (C) Mellanox Technologies Ltd. 2016. ALL RIGHTS RESERVED
  */
-#ifndef NETMOD_UCX_INIT_H_INCLUDED
-#define NETMOD_UCX_INIT_H_INCLUDED
+#ifndef UCX_INIT_H_INCLUDED
+#define UCX_INIT_H_INCLUDED
 
 #include "ucx_impl.h"
 #include "mpir_cvars.h"
@@ -469,4 +469,4 @@ static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
     return MPIDI_CH4U_mpi_alloc_mem(size, info_ptr);
 }
 
-#endif /* NETMOD_UCX_INIT_H_INCLUDED */
+#endif /* UCX_INIT_H_INCLUDED */

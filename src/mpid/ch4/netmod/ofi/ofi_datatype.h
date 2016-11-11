@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_OFI_DATATYPE_H_INCLUDED
-#define NETMOD_OFI_DATATYPE_H_INCLUDED
+#ifndef OFI_DATATYPE_H_INCLUDED
+#define OFI_DATATYPE_H_INCLUDED
 
 #include "ofi_impl.h"
 
@@ -23,4 +23,4 @@ static inline int MPIDI_NM_mpi_type_create_hook(MPIR_Datatype * datatype_p)
     return 0;
 }
 
-#endif
+#endif /* OFI_DATATYPE_H_INCLUDED */

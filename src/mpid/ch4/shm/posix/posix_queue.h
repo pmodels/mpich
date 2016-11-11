@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef SHM_QUEUE_H
-#define SHM_QUEUE_H
+#ifndef POSIX_QUEUE_H_INCLUDED
+#define POSIX_QUEUE_H_INCLUDED
 
 /* ------------------------------------------------------- */
 /* from mpid/ch3/channels/nemesis/include/mpid_nem_debug.h */
@@ -52,7 +52,7 @@ static inline void MPIDI_POSIX_cell_init(MPIDI_POSIX_cell_ptr_t cell, int rank)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_CELL_INIT);
 }
 
-#if defined(MPIDI_POSIX_USE_LOCK_FREE_QUEUES)
+#ifdef MPIDI_POSIX_USE_LOCK_FREE_QUEUES
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_POSIX_queue_init
@@ -340,4 +340,4 @@ static inline void MPIDI_POSIX_queue_dequeue(MPIDI_POSIX_queue_ptr_t qhead,
 
 #endif /* !defined(MPIDI_POSIX_USE_LOCK_FREE_QUEUES) */
 
-#endif /* ifndef SHM_QUEUE_H */
+#endif /* POSIX_QUEUE_H_INCLUDED */

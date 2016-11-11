@@ -177,4 +177,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mprobe(int source,
     return mpi_errno;
 }
 
-#endif /* CH4R_WIN_H_INCLUDED */
+#endif /* CH4R_PROBE_H_INCLUDED */

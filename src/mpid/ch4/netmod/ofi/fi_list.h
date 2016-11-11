@@ -31,8 +31,8 @@
  *
  */
 
-#if !defined(LIST_H)
-#define LIST_H
+#ifndef FI_LIST_H_INCLUDED
+#define FI_LIST_H_INCLUDED
 
 #include <unistd.h>
 #include <errno.h>
@@ -193,4 +193,4 @@ static inline struct slist_entry *slist_remove_first_match(struct slist *list, s
     return NULL;
 }
 
-#endif /* LIST_H */
+#endif /* FI_LIST_H_INCLUDED */

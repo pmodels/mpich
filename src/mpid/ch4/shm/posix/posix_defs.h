@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef SHM_DEFS_H
-#define SHM_DEFS_H
+#ifndef POSIX_DEFS_H_INCLUDED
+#define POSIX_DEFS_H_INCLUDED
 
 /* ************************************************************************** */
 /* from mpid/ch3/channels/nemesis/include/mpid_nem_defs.h                     */
@@ -112,4 +112,4 @@ typedef struct MPIDI_POSIX_mem_region {
 extern MPIDI_POSIX_mem_region_t MPIDI_POSIX_mem_region;
 extern MPID_Thread_mutex_t MPID_shm_mutex;
 
-#endif /* ifndef SHM_DEFS_H */
+#endif /* POSIX_DEFS_H_INCLUDED */

@@ -9,8 +9,8 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 /* ch4 netmod functions */
-#ifndef NETMOD_IMPL_PROTOTYPES_H_INCLUDED
-#define NETMOD_IMPL_PROTOTYPES_H_INCLUDED
+#ifndef NETMOD_IMPL_H_INCLUDED
+#define NETMOD_IMPL_H_INCLUDED
 
 
 #ifndef NETMOD_DIRECT
@@ -2013,4 +2013,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_op_free_hook(MPIR_Op * op_p)
 #endif
 #endif /* NETMOD_DIRECT           */
 
-#endif
+#endif /* NETMOD_IMPL_H_INCLUDED */

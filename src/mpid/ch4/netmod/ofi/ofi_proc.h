@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_OFI_PROC_H_INCLUDED
-#define NETMOD_OFI_PROC_H_INCLUDED
+#ifndef OFI_PROC_H_INCLUDED
+#define OFI_PROC_H_INCLUDED
 
 #include "ofi_impl.h"
 
@@ -26,4 +26,4 @@ static inline int MPIDI_NM_rank_is_local(int rank, MPIR_Comm * comm)
     return ret;
 }
 
-#endif /*NETMOD_OFI_PROC_H_INCLUDED */
+#endif /* OFI_PROC_H_INCLUDED */

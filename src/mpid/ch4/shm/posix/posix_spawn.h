@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef SHM_POSIX_DYNPROC_H_INCLUDED
-#define SHM_POSIX_DYNPROC_H_INCLUDED
+#ifndef POSIX_SPAWN_H_INCLUDED
+#define POSIX_SPAWN_H_INCLUDED
 
 #include "posix_impl.h"
 
@@ -72,4 +72,4 @@ static inline int MPIDI_SHM_mpi_comm_accept(const char *port_name,
     return MPI_SUCCESS;
 }
 
-#endif /* SHM_POSIX_WIN_H_INCLUDED */
+#endif /* POSIX_SPAWN_H_INCLUDED */

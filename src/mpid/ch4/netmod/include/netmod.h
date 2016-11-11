@@ -9,8 +9,8 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 /* ch4 netmod functions */
-#ifndef NETMOD_PROTOTYPES_H_INCLUDED
-#define NETMOD_PROTOTYPES_H_INCLUDED
+#ifndef NETMOD_H_INCLUDED
+#define NETMOD_H_INCLUDED
 
 #include <mpidimpl.h>
 
@@ -990,4 +990,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_type_free_hook(MPIR_Datatype *
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_op_create_hook(MPIR_Op * op_p) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_op_free_hook(MPIR_Op * op_p) MPL_STATIC_INLINE_SUFFIX;
 
-#endif
+#endif /* NETMOD_H_INCLUDED */

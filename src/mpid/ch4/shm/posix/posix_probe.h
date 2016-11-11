@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef SHM_POSIX_PROBE_H_INCLUDED
-#define SHM_POSIX_PROBE_H_INCLUDED
+#ifndef POSIX_PROBE_H_INCLUDED
+#define POSIX_PROBE_H_INCLUDED
 
 #include "posix_impl.h"
 
@@ -143,4 +143,4 @@ static inline int MPIDI_SHM_mpi_iprobe(int source,
     return mpi_errno;
 }
 
-#endif /* SHM_POSIX_PROBE_H_INCLUDED */
+#endif /* POSIX_PROBE_H_INCLUDED */

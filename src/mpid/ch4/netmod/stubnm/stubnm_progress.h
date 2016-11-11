@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_STUBNM_PROGRESS_H_INCLUDED
-#define NETMOD_STUBNM_PROGRESS_H_INCLUDED
+#ifndef STUBNM_PROGRESS_H_INCLUDED
+#define STUBNM_PROGRESS_H_INCLUDED
 
 #include "stubnm_impl.h"
 
@@ -73,4 +73,4 @@ static inline int MPIDI_NM_progress_deactivate(int id)
     return MPI_SUCCESS;
 }
 
-#endif /* NETMOD_STUBNM_PROGRESS_H_INCLUDED */
+#endif /* STUBNM_PROGRESS_H_INCLUDED */

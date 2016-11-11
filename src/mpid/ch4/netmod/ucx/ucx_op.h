@@ -6,8 +6,8 @@
  *  Portions of this code were written by Mellanox Technologies Ltd.
  *  Copyright (C) Mellanox Technologies Ltd. 2016. ALL RIGHTS RESERVED
  */
-#ifndef NETMOD_UCX_OP_H_INCLUDED
-#define NETMOD_UCX_OP_H_INCLUDED
+#ifndef UCX_OP_H_INCLUDED
+#define UCX_OP_H_INCLUDED
 
 #include "ucx_impl.h"
 
@@ -21,4 +21,4 @@ static inline int MPIDI_NM_mpi_op_create_hook(MPIR_Op * op_p)
     return 0;
 }
 
-#endif /* NETMOD_UCX_OP_H_INCLUDED */
+#endif /* UCX_OP_H_INCLUDED */

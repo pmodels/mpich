@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef MPIDIG_TYPES_H_INCLUDED
-#define MPIDIG_TYPES_H_INCLUDED
+#ifndef MPIDIG_H_INCLUDED
+#define MPIDIG_H_INCLUDED
 
 #include <mpidimpl.h>
 
@@ -38,4 +38,4 @@ int MPIDIG_init(MPIR_Comm * comm_world, MPIR_Comm * comm_self,
                 int num_contexts, void **netmod_contexts);
 void MPIDIG_finalize(void);
 
-#endif /* MPIDIG_TYPES_H_INCLUDED */
+#endif /* MPIDIG_H_INCLUDED */

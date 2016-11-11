@@ -6,8 +6,8 @@
  *  Portions of this code were written by Mellanox Technologies Ltd.
  *  Copyright (C) Mellanox Technologies Ltd. 2016. ALL RIGHTS RESERVED
  */
-#ifndef NETMOD_UCX_RMA_H_INCLUDED
-#define NETMOD_UCX_RMA_H_INCLUDED
+#ifndef UCX_RMA_H_INCLUDED
+#define UCX_RMA_H_INCLUDED
 
 #include "ucx_impl.h"
 
@@ -301,4 +301,4 @@ static inline int MPIDI_NM_mpi_accumulate(const void *origin_addr,
                                      win);
 }
 
-#endif /* NETMOD_UCX_RMA_H_INCLUDED */
+#endif /* UCX_RMA_H_INCLUDED */

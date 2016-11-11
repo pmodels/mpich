@@ -7,8 +7,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef SHM_POSIX_COMM_H_INCLUDED
-#define SHM_POSIX_COMM_H_INCLUDED
+#ifndef POSIX_COMM_H_INCLUDED
+#define POSIX_COMM_H_INCLUDED
 
 #include "posix_impl.h"
 #include "mpl_utlist.h"
@@ -42,4 +42,4 @@ static inline int MPIDI_SHM_mpi_comm_free_hook(MPIR_Comm * comm)
 }
 
 
-#endif /* SHM_POSIX_COMM_H_INCLUDED */
+#endif /* POSIX_COMM_H_INCLUDED */

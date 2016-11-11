@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_AM_OFI_SEND_H_INCLUDED
-#define NETMOD_AM_OFI_SEND_H_INCLUDED
+#ifndef OFI_AM_SEND_H_INCLUDED
+#define OFI_AM_SEND_H_INCLUDED
 
 #include "ofi_impl.h"
 
@@ -129,4 +129,4 @@ static inline int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq)
     return MPIDIG_mpi_cancel_send(sreq);
 }
 
-#endif /* NETMOD_AM_OFI_SEND_H_INCLUDED */
+#endif /* OFI_AM_SEND_H_INCLUDED */

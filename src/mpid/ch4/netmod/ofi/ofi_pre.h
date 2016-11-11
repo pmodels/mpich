@@ -9,8 +9,8 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#ifndef NETMOD_OFI_PRE_H_INCLUDED
-#define NETMOD_OFI_PRE_H_INCLUDED
+#ifndef OFI_PRE_H_INCLUDED
+#define OFI_PRE_H_INCLUDED
 
 #include <mpi.h>
 #include <rdma/fabric.h>
@@ -181,4 +181,4 @@ typedef struct {
 #endif
 } MPIDI_OFI_addr_t;
 
-#endif
+#endif /* OFI_PRE_H_INCLUDED */

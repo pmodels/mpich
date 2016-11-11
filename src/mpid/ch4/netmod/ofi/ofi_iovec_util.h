@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_OFI_IOVEC_UTIL_H_INCLUDED
-#define NETMOD_OFI_IOVEC_UTIL_H_INCLUDED
+#ifndef OFI_IOVEC_UTIL_H_INCLUDED
+#define OFI_IOVEC_UTIL_H_INCLUDED
 
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
@@ -387,4 +387,4 @@ static inline
         return MPIDI_OFI_IOV_EAGAIN;
     }
 }
-#endif /* __mpid_iovec_util__h__ */
+#endif /* OFI_IOVEC_UTIL_H_INCLUDED */

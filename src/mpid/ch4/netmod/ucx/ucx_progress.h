@@ -6,8 +6,8 @@
  *  Portions of this code were written by Mellanox Technologies Ltd.
  *  Copyright (C) Mellanox Technologies Ltd. 2016. ALL RIGHTS RESERVED
  */
-#ifndef NETMOD_UCX_PROGRESS_H_INCLUDED
-#define NETMOD_UCX_PROGRESS_H_INCLUDED
+#ifndef UCX_PROGRESS_H_INCLUDED
+#define UCX_PROGRESS_H_INCLUDED
 
 #include "ucx_impl.h"
 //#include "events.h"
@@ -144,4 +144,4 @@ static inline int MPIDI_NM_progress(void *netmod_context, int blocking)
     goto fn_exit;
 }
 
-#endif /* NETMOD_UCX_PROGRESS_H_INCLUDED */
+#endif /* UCX_PROGRESS_H_INCLUDED */

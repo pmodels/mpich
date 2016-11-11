@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_OFI_RECV_H_INCLUDED
-#define NETMOD_OFI_RECV_H_INCLUDED
+#ifndef OFI_RECV_H_INCLUDED
+#define OFI_RECV_H_INCLUDED
 
 #include "ofi_impl.h"
 
@@ -283,4 +283,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_recv(MPIR_Request * rreq)
 #endif
 }
 
-#endif /* NETMOD_OFI_RECV_H_INCLUDED */
+#endif /* OFI_RECV_H_INCLUDED */

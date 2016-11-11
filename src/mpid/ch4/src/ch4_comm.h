@@ -150,7 +150,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
-#if defined(MPIDI_BUILD_CH4_SHM)
+#ifdef MPIDI_BUILD_CH4_SHM
     mpi_errno = MPIDI_SHM_mpi_comm_create_hook(comm);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -261,7 +261,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
-#if defined(MPIDI_BUILD_CH4_SHM)
+#ifdef MPIDI_BUILD_CH4_SHM
     mpi_errno = MPIDI_SHM_mpi_comm_free_hook(comm);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);

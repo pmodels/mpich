@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef SHM_DATATYPES_H
-#define SHM_DATATYPES_H
+#ifndef POSIX_DATATYPES_H_INCLUDED
+#define POSIX_DATATYPES_H_INCLUDED
 
 /* ************************************************************************** */
 /* from mpid/ch3/channels/nemesis/include/mpid_nem_datatypes.h                */
@@ -144,7 +144,7 @@ typedef struct MPIDI_POSIX_queue {
 #if (MPIDI_POSIX_CACHE_LINE_LEN > SIZEOF_OPA_PTR_T)
     char padding2[MPIDI_POSIX_CACHE_LINE_LEN - sizeof(MPIDI_POSIX_cell_rel_ptr_t)];
 #endif
-#if !defined(MPIDI_POSIX_USE_LOCK_FREE_QUEUES)
+#ifndef MPIDI_POSIX_USE_LOCK_FREE_QUEUES
     /* see FIXME in mpid_nem_queue.h */
 #define MPIDI_POSIX_queue_mutex_t MPID_Thread_mutex_t
     MPIDI_POSIX_queue_mutex_t lock;
@@ -182,4 +182,4 @@ typedef struct MPIDI_POSIX_fbox_arrays {
     MPIDI_POSIX_fastbox_t **out;
 } MPIDI_POSIX_fbox_arrays_t;
 
-#endif /* ifndef SHM_DATATYPES_H */
+#endif /* POSIX_DATATYPES_H_INCLUDED */

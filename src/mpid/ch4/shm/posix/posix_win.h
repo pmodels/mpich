@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef SHM_POSIX_WIN_H_INCLUDED
-#define SHM_POSIX_WIN_H_INCLUDED
+#ifndef POSIX_WIN_H_INCLUDED
+#define POSIX_WIN_H_INCLUDED
 
 #include "posix_impl.h"
 
@@ -309,4 +309,4 @@ static inline int MPIDI_SHM_mpi_win_lock_all(int assert, MPIR_Win * win)
 }
 
 
-#endif /* SHM_POSIX_WIN_H_INCLUDED */
+#endif /* POSIX_WIN_H_INCLUDED */
