@@ -462,7 +462,8 @@ static inline int MPIDI_OFI_init_generic(int rank,
         }
 
         /* Grow the header handlers down */
-        MPIDIG_global.target_msg_cbs[MPIDI_OFI_INTERNAL_HANDLER_CONTROL] = MPIDI_OFI_control_handler;
+        MPIDIG_global.target_msg_cbs[MPIDI_OFI_INTERNAL_HANDLER_CONTROL] =
+            MPIDI_OFI_control_handler;
         MPIDIG_global.origin_cbs[MPIDI_OFI_INTERNAL_HANDLER_CONTROL] = NULL;
     }
     OPA_store_int(&MPIDI_Global.am_inflight_inject_emus, 0);

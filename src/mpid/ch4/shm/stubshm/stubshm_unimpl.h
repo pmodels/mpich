@@ -16,4 +16,4 @@ extern "C" {
 
 #ifdef __cplusplus
 }
-#endif /* STUBSHM_UNIMPL_H_INCLUDED */
+#endif                          /* STUBSHM_UNIMPL_H_INCLUDED */
