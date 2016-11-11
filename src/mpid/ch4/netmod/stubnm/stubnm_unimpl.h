@@ -16,4 +16,4 @@ extern "C" {
 
 #ifdef __cplusplus
 }
-#endif /* STUBNM_UNIMPL_H_INCLUDED */
+#endif                          /* STUBNM_UNIMPL_H_INCLUDED */
