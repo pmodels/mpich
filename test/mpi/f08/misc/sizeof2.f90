@@ -1,5 +1,5 @@
 !
-!  (C) 2014 by Argonne National Laboratory.
+!  (C) 2009 by Argonne National Laboratory.
 !      See COPYRIGHT in top-level directory.
 !
         program main
