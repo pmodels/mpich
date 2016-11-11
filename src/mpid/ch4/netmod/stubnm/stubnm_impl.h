@@ -8,10 +8,10 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_STUBNM_IMPL_H_INCLUDED
-#define NETMOD_STUBNM_IMPL_H_INCLUDED
+#ifndef STUBNM_IMPL_H_INCLUDED
+#define STUBNM_IMPL_H_INCLUDED
 
 #include <mpidimpl.h>
 #include "mpidch4r.h"
 
-#endif /* NETMOD_STUBNM_IMPL_H_INCLUDED */
+#endif /* STUBNM_IMPL_H_INCLUDED */

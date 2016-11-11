@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_PTL_INIT_H_INCLUDED
-#define NETMOD_PTL_INIT_H_INCLUDED
+#ifndef PTL_INIT_H_INCLUDED
+#define PTL_INIT_H_INCLUDED
 
 #include "mpidch4r.h"
 #include "ptl_types.h"
@@ -252,4 +252,4 @@ static inline void *MPIDI_NM_mpi_alloc_mem(size_t size, MPIR_Info * info_ptr)
 }
 
 
-#endif /* NETMOD_PTL_INIT_H_INCLUDED */
+#endif /* PTL_INIT_H_INCLUDED */

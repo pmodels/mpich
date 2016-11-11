@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_STUBNM_PROBE_H_INCLUDED
-#define NETMOD_STUBNM_PROBE_H_INCLUDED
+#ifndef STUBNM_PROBE_H_INCLUDED
+#define STUBNM_PROBE_H_INCLUDED
 
 #include "stubnm_impl.h"
 
@@ -36,4 +36,4 @@ static inline int MPIDI_NM_mpi_iprobe(int source,
     return MPIDI_CH4U_mpi_iprobe(source, tag, comm, context_offset, flag, status);
 }
 
-#endif /* NETMOD_STUBNM_PROBE_H_INCLUDED */
+#endif /* STUBNM_PROBE_H_INCLUDED */

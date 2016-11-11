@@ -9,8 +9,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_PTL_COLL_H_INCLUDED
-#define NETMOD_PTL_COLL_H_INCLUDED
+#ifndef PTL_COLL_H_INCLUDED
+#define PTL_COLL_H_INCLUDED
 
 #include "ptl_impl.h"
 
@@ -874,4 +874,4 @@ static inline int MPIDI_NM_mpi_iscatterv(const void *sendbuf, const int *sendcou
     return mpi_errno;
 }
 
-#endif /* NETMOD_PTL_COLL_H_INCLUDED */
+#endif /* PTL_COLL_H_INCLUDED */

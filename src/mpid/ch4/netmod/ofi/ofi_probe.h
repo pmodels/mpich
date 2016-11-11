@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_OFI_PROBE_H_INCLUDED
-#define NETMOD_OFI_PROBE_H_INCLUDED
+#ifndef OFI_PROBE_H_INCLUDED
+#define OFI_PROBE_H_INCLUDED
 
 #include "ofi_impl.h"
 
@@ -165,4 +165,4 @@ static inline int MPIDI_NM_mpi_iprobe(int source,
     return mpi_errno;
 }
 
-#endif /* NETMOD_OFI_PROBE_H_INCLUDED */
+#endif /* OFI_PROBE_H_INCLUDED */

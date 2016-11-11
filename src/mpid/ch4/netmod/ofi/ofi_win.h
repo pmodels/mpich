@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_OFI_WIN_H_INCLUDED
-#define NETMOD_OFI_WIN_H_INCLUDED
+#ifndef OFI_WIN_H_INCLUDED
+#define OFI_WIN_H_INCLUDED
 
 #include "ofi_impl.h"
 #include <opa_primitives.h>
@@ -1353,4 +1353,4 @@ static inline int MPIDI_NM_mpi_win_lock_all(int assert, MPIR_Win * win)
 }
 
 
-#endif /* NETMOD_OFI_WIN_H_INCLUDED */
+#endif /* OFI_WIN_H_INCLUDED */

@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef SHM_STUBSHM_REQUEST_H_INCLUDED
-#define SHM_STUBSHM_REQUEST_H_INCLUDED
+#ifndef STUBSHM_REQUEST_H_INCLUDED
+#define STUBSHM_REQUEST_H_INCLUDED
 
 #include "stubshm_impl.h"
 
@@ -33,4 +33,4 @@ static inline void MPIDI_SHM_am_request_finalize(MPIR_Request * req)
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_AM_REQUEST_FINALIZE);
 }
 
-#endif /* SHM_STUBSHM_REQUEST_H_INCLUDED */
+#endif /* STUBSHM_REQUEST_H_INCLUDED */

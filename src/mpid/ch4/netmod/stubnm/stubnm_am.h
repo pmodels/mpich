@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_STUBNM_AM_H_INCLUDED
-#define NETMOD_STUBNM_AM_H_INCLUDED
+#ifndef STUBNM_AM_H_INCLUDED
+#define STUBNM_AM_H_INCLUDED
 
 #include "stubnm_impl.h"
 
@@ -81,4 +81,4 @@ static inline int MPIDI_NM_am_recv(MPIR_Request * req)
     return 0;
 }
 
-#endif /* NETMOD_STUBNM_AM_H_INCLUDED */
+#endif /* STUBNM_AM_H_INCLUDED */

@@ -4,8 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  *
  */
-#ifndef NETMOD_PTL_OP_H_INCLUDED
-#define NETMOD_PTL_OP_H_INCLUDED
+#ifndef PTL_OP_H_INCLUDED
+#define PTL_OP_H_INCLUDED
 
 #include "ptl_impl.h"
 
@@ -21,4 +21,4 @@ static inline int MPIDI_NM_mpi_op_create_hook(MPIR_Op * op_p)
     return 0;
 }
 
-#endif /* NETMOD_PTL_OP_H_INCLUDED */
+#endif /* PTL_OP_H_INCLUDED */

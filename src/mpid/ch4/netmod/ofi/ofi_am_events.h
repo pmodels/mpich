@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_AM_OFI_EVENTS_H_INCLUDED
-#define NETMOD_AM_OFI_EVENTS_H_INCLUDED
+#ifndef OFI_AM_EVENTS_H_INCLUDED
+#define OFI_AM_EVENTS_H_INCLUDED
 
 #include "ofi_am_impl.h"
 
@@ -411,4 +411,4 @@ static inline int MPIDI_OFI_dispatch_ack(int rank,
 }
 
 
-#endif /* NETMOD_AM_OFI_EVENTS_H_INCLUDED */
+#endif /* OFI_AM_EVENTS_H_INCLUDED */

@@ -93,7 +93,7 @@ static inline int MPIDI_choose_shm(void)
 {
 
     int mpi_errno = MPI_SUCCESS;
-#if defined(MPIDI_BUILD_CH4_SHM)
+#ifdef MPIDI_BUILD_CH4_SHM
     int i;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CHOOSE_SHM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CHOOSE_SHM);
@@ -417,7 +417,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Get_processor_name(char *name, int namelen, i
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_GET_PROCESSOR_NAME);
 
     if (!MPIDI_CH4_Global.pname_set) {
-#if defined(HAVE_GETHOSTNAME)
+#ifdef HAVE_GETHOSTNAME
 
         if (gethostname(MPIDI_CH4_Global.pname, MPI_MAX_PROCESSOR_NAME) == 0)
             MPIDI_CH4_Global.pname_len = (int) strlen(MPIDI_CH4_Global.pname);
@@ -725,7 +725,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Type_create_hook(MPIR_Datatype * type)
         MPIR_ERR_POP(mpi_errno);
     }
 
-#if defined(MPIDI_BUILD_CH4_SHM)
+#ifdef MPIDI_BUILD_CH4_SHM
     mpi_errno = MPIDI_SHM_mpi_type_create_hook(type);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -755,7 +755,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Type_free_hook(MPIR_Datatype * type)
         MPIR_ERR_POP(mpi_errno);
     }
 
-#if defined(MPIDI_BUILD_CH4_SHM)
+#ifdef MPIDI_BUILD_CH4_SHM
     mpi_errno = MPIDI_SHM_mpi_type_free_hook(type);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -785,7 +785,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Op_create_hook(MPIR_Op * op)
         MPIR_ERR_POP(mpi_errno);
     }
 
-#if defined(MPIDI_BUILD_CH4_SHM)
+#ifdef MPIDI_BUILD_CH4_SHM
     mpi_errno = MPIDI_SHM_mpi_op_create_hook(op);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -815,7 +815,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Op_free_hook(MPIR_Op * op)
         MPIR_ERR_POP(mpi_errno);
     }
 
-#if defined(MPIDI_BUILD_CH4_SHM)
+#ifdef MPIDI_BUILD_CH4_SHM
     mpi_errno = MPIDI_SHM_mpi_op_free_hook(op);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);

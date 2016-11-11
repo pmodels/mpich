@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_OFI_COMM_H_INCLUDED
-#define NETMOD_OFI_COMM_H_INCLUDED
+#ifndef OFI_COMM_H_INCLUDED
+#define OFI_COMM_H_INCLUDED
 
 #include "ofi_impl.h"
 #include "mpl_utlist.h"
@@ -62,4 +62,4 @@ static inline int MPIDI_NM_mpi_comm_free_hook(MPIR_Comm * comm)
 }
 
 
-#endif /* NETMOD_OFI_COMM_H_INCLUDED */
+#endif /* OFI_COMM_H_INCLUDED */

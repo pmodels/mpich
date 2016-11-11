@@ -16,4 +16,4 @@ extern "C" {
 
 #ifdef __cplusplus
 }
-#endif
+#endif /* OFI_UNIMPL_H_INCLUDED */

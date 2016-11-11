@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_OFI_TYPES_H_INCLUDED
-#define NETMOD_OFI_TYPES_H_INCLUDED
+#ifndef OFI_TYPES_H_INCLUDED
+#define OFI_TYPES_H_INCLUDED
 
 #include <netdb.h>
 #include <stddef.h>
@@ -534,4 +534,4 @@ typedef struct MPIDI_OFI_huge_counter_t {
 extern MPIDI_OFI_global_t MPIDI_Global;
 extern int MPIR_Datatype_init_names(void);
 
-#endif /* NETMOD_OFI_IMPL_H_INCLUDED */
+#endif /* OFI_TYPES_H_INCLUDED */

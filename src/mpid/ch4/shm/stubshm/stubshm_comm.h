@@ -7,8 +7,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef SHM_STUBSHM_COMM_H_INCLUDED
-#define SHM_STUBSHM_COMM_H_INCLUDED
+#ifndef STUBSHM_COMM_H_INCLUDED
+#define STUBSHM_COMM_H_INCLUDED
 
 #include "stubshm_impl.h"
 
@@ -35,4 +35,4 @@ static inline int MPIDI_SHM_mpi_comm_free_hook(MPIR_Comm * comm)
 }
 
 
-#endif /* SHM_STUBSHM_COMM_H_INCLUDED */
+#endif /* STUBSHM_COMM_H_INCLUDED */

@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_UCX_AM_WIN_H_INCLUDED
-#define NETMOD_UCX_AM_WIN_H_INCLUDED
+#ifndef UCX_AM_WIN_H_INCLUDED
+#define UCX_AM_WIN_H_INCLUDED
 
 #include "ucx_impl.h"
 
@@ -360,4 +360,4 @@ static inline int MPIDI_NM_mpi_win_lock_all(int assert, MPIR_Win * win)
 }
 
 
-#endif /* NETMOD_UCX_AM_WIN_H_INCLUDED */
+#endif /* UCX_AM_WIN_H_INCLUDED */

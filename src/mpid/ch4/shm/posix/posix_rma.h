@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef SHM_POSIX_RMA_H_INCLUDED
-#define SHM_POSIX_RMA_H_INCLUDED
+#ifndef POSIX_RMA_H_INCLUDED
+#define POSIX_RMA_H_INCLUDED
 
 #include "posix_impl.h"
 
@@ -192,4 +192,4 @@ static inline int MPIDI_SHM_mpi_accumulate(const void *origin_addr,
     return MPI_SUCCESS;
 }
 
-#endif /* SHM_POSIX_RMA_H_INCLUDED */
+#endif /* POSIX_RMA_H_INCLUDED */

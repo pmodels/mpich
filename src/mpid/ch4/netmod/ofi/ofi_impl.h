@@ -8,8 +8,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef NETMOD_OFI_IMPL_H_INCLUDED
-#define NETMOD_OFI_IMPL_H_INCLUDED
+#ifndef OFI_IMPL_H_INCLUDED
+#define OFI_IMPL_H_INCLUDED
 
 #include <mpidimpl.h>
 #include "ofi_types.h"
@@ -436,4 +436,4 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const voi
     goto fn_exit;
 }
 
-#endif
+#endif /* OFI_IMPL_H_INCLUDED */

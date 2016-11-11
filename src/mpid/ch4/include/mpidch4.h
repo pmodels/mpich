@@ -415,7 +415,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_rank_is_local(int rank, MPIR_Comm * comm)
 
 #define MPIDI_MAX_NETMOD_STRING_LEN 64
 extern int MPIDI_num_netmods;
-#if defined(MPL_USE_DBG_LOGGING)
+#ifdef MPL_USE_DBG_LOGGING
 extern MPL_dbg_class MPIDI_CH4_DBG_GENERAL;
 extern MPL_dbg_class MPIDI_CH4_DBG_MAP;
 extern MPL_dbg_class MPIDI_CH4_DBG_COMM;
