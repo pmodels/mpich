@@ -5,11 +5,12 @@
 ### CH4 preview
 
  * Build Issues
-   - CH4 will not build with "--enable-strict".
    - CH4 will not build with Solaris compilers.
 
  * Test failures
    - CH4 will not currently pass 100% of the testsuite.
+   - All Fortran tests will fail to link if CH4:UCX is built using the
+     Intel compiler suite.
    - Test failures differ based on experimental setup and network
      support built in.
 
