@@ -201,7 +201,7 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
                                                const void *am_hdr,
                                                size_t am_hdr_sz, MPIR_Request * sreq, int is_reply)
 {
-    struct iovec iov[2];
+    struct iovec *iov;
     MPIDI_OFI_am_header_t *msg_hdr;
     int mpi_errno = MPI_SUCCESS, c;
     int need_lock = !is_reply;
@@ -227,6 +227,8 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
 
     MPIDI_OFI_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
     MPIR_cc_incr(sreq->cc_ptr, &c);
+
+    iov = MPIDI_OFI_AMREQUEST_HDR(sreq, iov);
 
     iov[0].iov_base = msg_hdr;
     iov[0].iov_len = sizeof(*msg_hdr);
@@ -260,7 +262,7 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     int mpi_errno = MPI_SUCCESS, c;
     MPIDI_OFI_am_header_t *msg_hdr;
     MPIDI_OFI_lmt_msg_payload_t *lmt_info;
-    struct iovec iov[3];
+    struct iovec *iov;
     uint64_t index;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_ISEND_LONG);
@@ -317,6 +319,8 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
         lmt_info->rma_key = fi_mr_key(MPIDI_OFI_AMREQUEST_HDR(sreq, lmt_mr));
     }
 
+    iov = MPIDI_OFI_AMREQUEST_HDR(sreq, iov);
+
     iov[0].iov_base = msg_hdr;
     iov[0].iov_len = sizeof(*msg_hdr);
 
@@ -350,7 +354,7 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
 {
     int mpi_errno = MPI_SUCCESS, c;
     MPIDI_OFI_am_header_t *msg_hdr;
-    struct iovec iov[3];
+    struct iovec *iov;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_AM_ISEND_SHORT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_AM_ISEND_SHORT);
@@ -365,6 +369,8 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
     msg_hdr->am_hdr_sz = am_hdr_sz;
     msg_hdr->data_sz = count;
     msg_hdr->am_type = MPIDI_AMTYPE_SHORT;
+
+    iov = MPIDI_OFI_AMREQUEST_HDR(sreq, iov);
 
     iov[0].iov_base = msg_hdr;
     iov[0].iov_len = sizeof(*msg_hdr);
@@ -523,6 +529,7 @@ static inline int MPIDI_OFI_do_inject(int rank,
     if (unlikely(am_hdr_sz + sizeof(msg_hdr) > MPIDI_Global.max_buffered_send)) {
         MPIR_Request *sreq;
         char *ibuf;
+        struct iovec *iov;
 
         sreq = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
         MPIR_Assert(sreq);
@@ -530,8 +537,10 @@ static inline int MPIDI_OFI_do_inject(int rank,
         MPIR_Assert(ibuf);
         memcpy(ibuf, &msg_hdr, sizeof(msg_hdr));
         memcpy(ibuf + sizeof(msg_hdr), am_hdr, am_hdr_sz);
-        msg_iov[0].iov_base = ibuf;
-        msg_iov[0].iov_len = am_hdr_sz + sizeof(msg_hdr);
+        iov = MPIDI_OFI_AMREQUEST_HDR(sreq, iov);
+        iov[0].iov_base = ibuf;
+        iov[0].iov_len = am_hdr_sz + sizeof(msg_hdr);
+        msg.msg_iov = iov;
         msg.iov_count = 1;
 
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_INJECT_EMU;
