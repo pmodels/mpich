@@ -155,15 +155,23 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_INIT);
 
     /* Seed the global settings values for cases where we are using runtime sets */
-    MPIDI_Global.settings.enable_data               = MPIR_CVAR_CH4_OFI_ENABLE_DATA > 0 ? 1 : 0;
-    MPIDI_Global.settings.enable_av_table           = MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE > 0 ? 1 : 0;
-    MPIDI_Global.settings.enable_scalable_endpoints = MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS > 0 ? 1 : 0;
+    MPIDI_Global.settings.enable_data               = MPIR_CVAR_CH4_OFI_ENABLE_DATA > 0 ? 1 :
+                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_data : MPIR_CVAR_CH4_OFI_ENABLE_DATA;
+    MPIDI_Global.settings.enable_av_table           = MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE > 0 ? 1 :
+                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_av_table : MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE;
+    MPIDI_Global.settings.enable_scalable_endpoints = MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS > 0 ? 1 :
+                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_scalable_endpoints : MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS;
     /* If the user doesn't care, then try to use them and fall back if necessary in the RMA init code */
-    MPIDI_Global.settings.enable_stx_rma            = MPIR_CVAR_CH4_OFI_ENABLE_STX_RMA != 0 ? 1 : 0;
-    MPIDI_Global.settings.enable_mr_scalable        = MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE > 0 ? 1 : 0;
-    MPIDI_Global.settings.enable_tagged             = MPIR_CVAR_CH4_OFI_ENABLE_TAGGED > 0 ? 1 : 0;
-    MPIDI_Global.settings.enable_am                 = MPIR_CVAR_CH4_OFI_ENABLE_AM > 0 ? 1 : 0;
-    MPIDI_Global.settings.enable_rma                = MPIR_CVAR_CH4_OFI_ENABLE_RMA > 0 ? 1 : 0;
+    MPIDI_Global.settings.enable_stx_rma            = MPIR_CVAR_CH4_OFI_ENABLE_STX_RMA != 0 ? 1 :
+                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_stx_rma : MPIR_CVAR_CH4_OFI_ENABLE_STX_RMA;
+    MPIDI_Global.settings.enable_mr_scalable        = MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE > 0 ? 1 :
+                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_mr_scalable : MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE;
+    MPIDI_Global.settings.enable_tagged             = MPIR_CVAR_CH4_OFI_ENABLE_TAGGED > 0 ? 1 :
+                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_tagged : MPIR_CVAR_CH4_OFI_ENABLE_TAGGED;
+    MPIDI_Global.settings.enable_am                 = MPIR_CVAR_CH4_OFI_ENABLE_AM > 0 ? 1 :
+                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_am : MPIR_CVAR_CH4_OFI_ENABLE_AM;
+    MPIDI_Global.settings.enable_rma                = MPIR_CVAR_CH4_OFI_ENABLE_RMA > 0 ? 1 :
+                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_rma : MPIR_CVAR_CH4_OFI_ENABLE_RMA;
 
     CH4_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_chunk_request, context));
@@ -317,7 +325,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                 prov = prov_use->next;
                 continue;
             } else if (MPIDI_OFI_ENABLE_RMA && 0ULL == (prov_use->caps & (FI_RMA | FI_ATOMICS))) {
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "Provider doesn't support RMA"));
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "Providerdoesn't support RMA"));
                 prov = prov_use->next;
                 continue;
 
@@ -349,19 +357,19 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         /* ------------------------------------------------------------------------ */
         /* Set global attributes attributes based on the provider choice            */
         /* ------------------------------------------------------------------------ */
-        MPIDI_Global.settings.enable_data               = MPIR_CVAR_CH4_OFI_ENABLE_DATA == 0 ? 0 :
+        MPIDI_Global.settings.enable_data               = MPIDI_Global.settings.enable_data == 0 ? 0 :
                                                             (prov_use->caps & FI_DIRECTED_RECV) > 0ULL ? 1 : 0;
-        MPIDI_Global.settings.enable_av_table           = MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE == 0 ? 0 :
+        MPIDI_Global.settings.enable_av_table           = MPIDI_Global.settings.enable_av_table == 0 ? 0 :
                                                             prov_use->domain_attr->av_type == FI_AV_TABLE ? 1 : 0;
-        MPIDI_Global.settings.enable_scalable_endpoints = MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS == 0 ? 0 :
+        MPIDI_Global.settings.enable_scalable_endpoints = MPIDI_Global.settings.enable_scalable_endpoints == 0 ? 0 :
                                                             prov_use->domain_attr->max_ep_tx_ctx > 1 ? 1 : 0;
-        MPIDI_Global.settings.enable_mr_scalable        = MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE == 0 ? 0 :
+        MPIDI_Global.settings.enable_mr_scalable        = MPIDI_Global.settings.enable_mr_scalable == 0 ? 0 :
                                                             prov_use->domain_attr->mr_mode == FI_MR_SCALABLE ? 1 : 0;
-        MPIDI_Global.settings.enable_tagged             = MPIR_CVAR_CH4_OFI_ENABLE_TAGGED == 0 ? 0 :
+        MPIDI_Global.settings.enable_tagged             = MPIDI_Global.settings.enable_tagged == 0 ? 0 :
                                                             (prov_use->caps & FI_TAGGED) > 0ULL ? 1 : 0;
-        MPIDI_Global.settings.enable_am                 = MPIR_CVAR_CH4_OFI_ENABLE_AM == 0 ? 0 :
+        MPIDI_Global.settings.enable_am                 = MPIDI_Global.settings.enable_am == 0 ? 0 :
                                                             (prov_use->caps & (FI_MSG | FI_MULTI_RECV)) > 0ULL ? 1 : 0;
-        MPIDI_Global.settings.enable_rma                = MPIR_CVAR_CH4_OFI_ENABLE_RMA == 0 ? 0 :
+        MPIDI_Global.settings.enable_rma                = MPIDI_Global.settings.enable_rma == 0 ? 0 :
                                                             (prov_use->caps & (FI_RMA | FI_ATOMICS)) > 0ULL ? 1 : 0;
 
         if (MPIDI_Global.settings.enable_scalable_endpoints) {
