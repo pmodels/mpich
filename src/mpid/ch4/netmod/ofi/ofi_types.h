@@ -279,6 +279,20 @@ typedef struct {
     struct fi_cq_tagged_entry cq_entry;
 } MPIDI_OFI_cq_buff_entry_t;
 
+typedef struct {
+    unsigned enable_data:1;
+    unsigned enable_av_table:1;
+    unsigned enable_scalable_endpoints:1;
+    unsigned enable_stx_rma:1;
+    unsigned enable_mr_scalable:1;
+    unsigned enable_tagged:1;
+    unsigned enable_am:1;
+    unsigned enable_rma:1;
+
+    int max_endpoints;
+    int max_endpoints_bits;
+} MPIDI_OFI_capabilities_t;
+
 /* Global state data */
 #define MPIDI_KVSAPPSTRLEN 1024
 typedef struct {
@@ -348,19 +362,7 @@ typedef struct {
 
     /* Capability settings */
 #ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS
-    struct {
-        unsigned enable_data:1;
-        unsigned enable_av_table:1;
-        unsigned enable_scalable_endpoints:1;
-        unsigned enable_stx_rma:1;
-        unsigned enable_mr_scalable:1;
-        unsigned enable_tagged:1;
-        unsigned enable_am:1;
-        unsigned enable_rma:1;
-
-        int max_endpoints;
-        int max_endpoints_bits;
-    } settings;
+    MPIDI_OFI_capabilities_t settings;
 #endif
 } MPIDI_OFI_global_t;
 
@@ -503,5 +505,6 @@ typedef struct MPIDI_OFI_huge_counter_t {
 /* Externs */
 extern MPIDI_OFI_global_t MPIDI_Global;
 extern int MPIR_Datatype_init_names(void);
+extern MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS];
 
 #endif /* OFI_TYPES_H_INCLUDED */
