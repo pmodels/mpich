@@ -34,11 +34,6 @@
 #define MPIDI_OFI_AM_RANK_BITS        32
 #define MPIDI_OFI_AM_MSG_HEADER_SIZE (sizeof(MPIDI_OFI_am_header_t))
 
-#define MPIDI_OFI_MAX_ENDPOINTS_SCALABLE        256
-#define MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE   8
-#define MPIDI_OFI_MAX_ENDPOINTS_REGULAR         1
-#define MPIDI_OFI_MAX_ENDPOINTS_BITS_REGULAR    0
-
 /* Typedefs */
 
 struct MPIR_Comm;
