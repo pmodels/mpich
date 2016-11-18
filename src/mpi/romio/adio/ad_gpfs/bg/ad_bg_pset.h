@@ -17,9 +17,6 @@
 #ifndef AD_BG_PSET_H_
 #define AD_BG_PSET_H_
 
-#ifdef HAVE_MPIX_H
-#include <mpix.h>
-#endif
 
 /* Keeps specific information to each process, will be exchanged among processes */
 typedef struct {
@@ -28,7 +25,6 @@ typedef struct {
    int ionID;  /* ion id this cn is using */
 /*   int myCoords[5]; */
    int bridgeRank; /* my bridge node (or proxy) rank */
-   unsigned char coreID;
    unsigned char threadID; /* unlikely to be useful but better than just padding */
    unsigned char __cpad[2];
    int myIOSize;  /* number of ranks sharing my bridge/IO
@@ -73,6 +69,7 @@ typedef struct {
 
 
 /* public funcs for a pair of ADIOI_BG_ConfInfo_t and ADIOI_BG_ProcInfo_t objects */
+    int BGQ_IO_node_id ();
     void ADIOI_BG_persInfo_init( ADIOI_BG_ConfInfo_t *conf,
 				  ADIOI_BG_ProcInfo_t *proc,
 				  int s, int r, int n_aggrs, MPI_Comm comm);
