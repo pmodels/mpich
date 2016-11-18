@@ -61,7 +61,7 @@ void ADIO_Close(ADIO_File fd, int *error_code)
     }
 
     if (fd->hints) ADIOI_Free(fd->hints->ranklist);
-    if (fd->hints) ADIOI_Free(fd->hints->cb_config_list);
+    if (fd->hints && fd->hints->cb_config_list) ADIOI_Free(fd->hints->cb_config_list);
 
     /* This BlueGene platform-specific free must be done in the common code
      * because the malloc's for these hint data structures are done at the
@@ -71,10 +71,8 @@ void ADIO_Close(ADIO_File fd, int *error_code)
      * ADIOI_GPFS_Close and re-open via ADIOI_GPFS_Open are done which results
      * in a double-free - ADIOI_GPFS_Open does not redo the SetInfo...  */
 #ifdef BGQPLATFORM
-    if (fd->hints)
-      ADIOI_Free(fd->hints->fs_hints.bg.bridgelist);
-    if (fd->hints)
-      ADIOI_Free(fd->hints->fs_hints.bg.bridgelistnum);
+    if (fd->hints && fd->hints->fs_hints.bg.bridgelist) ADIOI_Free(fd->hints->fs_hints.bg.bridgelist);
+    if (fd->hints && fd->hints->fs_hints.bg.bridgelistnum) ADIOI_Free(fd->hints->fs_hints.bg.bridgelistnum);
 #endif
 
     /* Persistent File Realms */
