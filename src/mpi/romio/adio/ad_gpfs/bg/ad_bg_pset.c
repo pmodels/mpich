@@ -16,14 +16,14 @@
 // #define bridgeringaggtrace 1
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include "../ad_gpfs.h"
 #include "ad_bg_pset.h"
 #include <spi/include/kernel/process.h>
 #include <firmware/include/personality.h>
 
-#ifdef HAVE_MPIX_H
-#include <mpix.h>
-#endif
+#define BGQ_TORUS_MAX_DIMS 5
+#define BGQ_FULL_TORUS_SIZE 512
 
 #ifndef TRACE_ERR
 #  define TRACE_ERR(fmt...)
@@ -81,8 +81,8 @@ static int intsort(const void *p1, const void *p2)
    return(i1->bridgeCoord - i2->bridgeCoord);
 }
 
-unsigned torusSize[MPIX_TORUS_MAX_DIMS];
-unsigned dimTorus[MPIX_TORUS_MAX_DIMS];
+unsigned torusSize[BGQ_TORUS_MAX_DIMS];
+bool dimTorus[BGQ_TORUS_MAX_DIMS];
 
 /* This function computes the number of hops between the torus coordinates of the
  * aggCoords and bridgeCoords parameters.
@@ -91,7 +91,7 @@ static unsigned procManhattanDistance(unsigned *aggCoords, unsigned *bridgeCoord
 
   unsigned totalDistance = 0;
   int i;
-  for (i=0;i<MPIX_TORUS_MAX_DIMS;i++) {
+  for (i=0;i<BGQ_TORUS_MAX_DIMS;i++) {
     unsigned dimDistance = abs((int)aggCoords[i] - (int)bridgeCoords[i]);
     if (dimDistance > 0) { // could torus make it closer?
       if (dimTorus[i]) {
@@ -111,6 +111,31 @@ static unsigned procManhattanDistance(unsigned *aggCoords, unsigned *bridgeCoord
   return totalDistance;
 }
 
+int BGQ_IO_node_id ()
+{
+  static unsigned long IO_node_id = ULONG_MAX;
+
+  if (IO_node_id != ULONG_MAX)
+    return (int)(IO_node_id>>32);
+
+  int rc;
+  int fd;
+  char* uci_str;
+  char buffer[4096];
+
+  fd = open("/dev/bgpers", O_RDONLY, 0);
+  assert(fd>=0);
+  rc = read(fd, buffer, sizeof(buffer));
+  assert(rc>0);
+  close(fd);
+
+  uci_str = strstr(buffer, "BG_UCI=");
+  assert(uci_str);
+  uci_str += sizeof("BG_UCI=")-1;
+
+  IO_node_id = strtoul(uci_str, NULL, 16);
+  return (int)(IO_node_id>>32);
+}
 
 void 
 ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf, 
@@ -125,15 +150,13 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
    TRACE_ERR("Entering BG_persInfo_init, size: %d, rank: %d, n_aggrs: %d, comm: %d\n", size, rank, n_aggrs, (int)comm);
 
    Personality_t pers;
-   MPIX_Hardware_t hw;
-   MPIX_Hardware(&hw);
-   TRACE_ERR("BG_persInfo_init, my coords{%u,%u,%u,%u,%u} rankInPset %u,sizeOfPset %u,idOfPset %u\n",hw.Coords[0],hw.Coords[1],hw.Coords[2],hw.Coords[3],hw.Coords[4],hw.rankInPset,hw.sizeOfPset,hw.idOfPset);
 
 
    Kernel_GetPersonality(&pers, sizeof(pers));
+   Personality_Networks_t *net = &pers.Network_Config;
 
+   TRACE_ERR("BG_persInfo_init, my coords{%u,%u,%u,%u,%u}\n",net->Acoord,net->Bcoord,net->Ccoord,net->Dcoord,net->Ecoord);
    proc->rank = rank;
-   proc->coreID = hw.coreID;
 
    if (gpfsmpio_bridgeringagg > 0) {
 #ifdef bridgeringaggtrace
@@ -143,26 +166,44 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
 
      /* Set the numNodesInPartition and nodeRank for this proc
      */
-     proc->numNodesInPartition = 1;
+     unsigned dimMaxArray[BGQ_TORUS_MAX_DIMS];
+     dimMaxArray[0] = net->Anodes;
+     dimMaxArray[1] = net->Bnodes;
+     dimMaxArray[2] = net->Cnodes;
+     dimMaxArray[3] = net->Dnodes;
+     dimMaxArray[4] = net->Enodes;
+
+     unsigned hwCoordsArray[BGQ_TORUS_MAX_DIMS];
+     hwCoordsArray[0] = net->Acoord;
+     hwCoordsArray[1] = net->Bcoord;
+     hwCoordsArray[2] = net->Ccoord;
+     hwCoordsArray[3] = net->Dcoord;
+     hwCoordsArray[4] = net->Ecoord;
+     proc->numNodesInPartition = net->Anodes * net->Bnodes * net->Cnodes * net->Dnodes * net->Enodes;
      proc->nodeRank = 0;
-     for (i=0;i<MPIX_TORUS_MAX_DIMS;i++) {
-       torusSize[i] = hw.Size[i];
-       dimTorus[i] = hw.isTorus[i];
-       proc->numNodesInPartition *= hw.Size[i];
+     /* Set the indicator for if a dimension in the partitions is a torus or not.
+      */
+     dimTorus[0] = (bool) (ND_ENABLE_TORUS_DIM_A & net->NetFlags);
+     dimTorus[1] = (bool) (ND_ENABLE_TORUS_DIM_B & net->NetFlags);
+     dimTorus[2] = (bool) (ND_ENABLE_TORUS_DIM_C & net->NetFlags);
+     dimTorus[3] = (bool) (ND_ENABLE_TORUS_DIM_D & net->NetFlags);
+     dimTorus[4] = (bool) (ND_ENABLE_TORUS_DIM_E & net->NetFlags);
+     for (i=0;i<BGQ_TORUS_MAX_DIMS;i++) {
+       torusSize[i] = dimMaxArray[i];
          int baseNum = 1, j;
          for (j=0;j<i;j++)
-           baseNum *= hw.Size[j];
-         proc->nodeRank += (hw.Coords[i] * baseNum);
+           baseNum *= dimMaxArray[j];
+         proc->nodeRank += (hwCoordsArray[i] * baseNum);
 #ifdef bridgeringaggtrace
        if (rank == 0)
-         fprintf(stderr,"Dimension %d has %d elements wrap-around value is %d\n",i,torusSize[i],dimTorus[i]);
+         fprintf(stderr,"numNodesInPartition is %d Dimension %d has %d elements wrap-around value is %d\n",proc->numNodesInPartition,i,torusSize[i],dimTorus[i]);
 #endif
      }
    }
 
    MPI_Comm_size(comm, &commsize);
 
-   proc->ionID = MPIX_IO_node_id ();
+   proc->ionID = BGQ_IO_node_id ();
 
    if(size == 1)
    {
@@ -179,8 +220,6 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
       conf->ioMaxSize = size;
       conf->numBridgeRanks = 1;
       conf->nProcs = size;
-      conf->cpuIDsize = hw.ppn;
-      /*conf->virtualPsetSize = conf->ioMaxSize * conf->cpuIDsize;*/
       conf->nAggrs = 1;
       conf->aggRatio = 1. * conf->nAggrs / conf->ioMinSize /*virtualPsetSize*/;
       if(conf->aggRatio > 1) conf->aggRatio = 1.;
@@ -200,11 +239,11 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
                   pers.Network_Config.cnBridge_E << 2;
    ADIOI_Assert((bridgeCoords >= 0)); /* A dim is < 6 bits or sorting won't work */
 
-   if((hw.Coords[0] == pers.Network_Config.cnBridge_A) && 
-      (hw.Coords[1] == pers.Network_Config.cnBridge_B) && 
-      (hw.Coords[2] == pers.Network_Config.cnBridge_C) && 
-      (hw.Coords[3] == pers.Network_Config.cnBridge_D) && 
-      (hw.Coords[4] == pers.Network_Config.cnBridge_E)) {
+   if((net->Acoord == pers.Network_Config.cnBridge_A) &&
+      (net->Bcoord == pers.Network_Config.cnBridge_B) &&
+      (net->Ccoord == pers.Network_Config.cnBridge_C) &&
+      (net->Dcoord == pers.Network_Config.cnBridge_D) &&
+      (net->Ecoord == pers.Network_Config.cnBridge_E)) {
       iambridge = 1;      /* I am bridge */
       if (gpfsmpio_bridgeringagg > 0) {
         proc->manhattanDistanceToBridge = 0;
@@ -212,16 +251,16 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
     }
     else {  // calculate manhattan distance to bridge if gpfsmpio_bridgeringagg is set
       if (gpfsmpio_bridgeringagg > 0) {
-        unsigned aggCoords[MPIX_TORUS_MAX_DIMS],manhattanBridgeCoords[MPIX_TORUS_MAX_DIMS];
-        aggCoords[0] = hw.Coords[0];
+        unsigned aggCoords[BGQ_TORUS_MAX_DIMS],manhattanBridgeCoords[BGQ_TORUS_MAX_DIMS];
+        aggCoords[0] = net->Acoord;
         manhattanBridgeCoords[0] = pers.Network_Config.cnBridge_A;
-        aggCoords[1] = hw.Coords[1];
+        aggCoords[1] = net->Bcoord;
         manhattanBridgeCoords[1] = pers.Network_Config.cnBridge_B;
-        aggCoords[2] = hw.Coords[2];
+        aggCoords[2] = net->Ccoord;
         manhattanBridgeCoords[2] = pers.Network_Config.cnBridge_C;
-        aggCoords[3] = hw.Coords[3];
+        aggCoords[3] = net->Dcoord;
         manhattanBridgeCoords[3] = pers.Network_Config.cnBridge_D;
-        aggCoords[4] = hw.Coords[4];
+        aggCoords[4] = net->Ecoord;
         manhattanBridgeCoords[4] = pers.Network_Config.cnBridge_E;
 
         proc->manhattanDistanceToBridge= procManhattanDistance(aggCoords, manhattanBridgeCoords);
@@ -342,8 +381,6 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
       conf->ioMaxSize = maxcompute; /* equivalent to pset size */
       conf->numBridgeRanks = bridgeIndex+1;
       conf->nProcs = size;
-      conf->cpuIDsize = hw.ppn;
-      /*conf->virtualPsetSize = maxcompute * conf->cpuIDsize;*/
             
       conf->nAggrs = n_aggrs;
       /*    First pass gets nAggrs = -1 */

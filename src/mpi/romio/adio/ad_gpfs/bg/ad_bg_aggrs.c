@@ -428,7 +428,7 @@ ADIOI_BG_compute_agg_ranklist_serial ( ADIO_File fd,
 
 #   if AGG_DEBUG
     for (i=0; i<confInfo->nProcs; i++) {
-      DBG_FPRINTF(stderr, "\tcpuid %1d, rank = %6d\n", all_procInfo[i].coreID, all_procInfo[i].rank );
+      DBG_FPRINTF(stderr, "\trank = %6d\n", all_procInfo[i].rank );
     }
 #   endif
 
@@ -437,14 +437,13 @@ ADIOI_BG_compute_agg_ranklist_serial ( ADIO_File fd,
 
 #   define VERIFY 1
 #   if VERIFY
-    DBG_FPRINTF(stderr, "\tconfInfo = min: %3d, max: %3d, naggrs: %3d, bridge: %3d, nprocs: %3d, vpset: %3d, tsize: %3d, ratio: %.4f; naggs = %d\n", 
+    DBG_FPRINTF(stderr, "\tconfInfo = min: %3d, max: %3d, naggrs: %3d, bridge: %3d, nprocs: %3d, vpset: %3d, ratio: %.4f; naggs = %d\n",
 	    confInfo->ioMinSize        ,
 	    confInfo->ioMaxSize        ,
 	    confInfo->nAggrs           ,
 	    confInfo->numBridgeRanks ,
 	    confInfo->nProcs          ,
 	    confInfo->ioMaxSize /*virtualPsetSize*/          ,
-      confInfo->cpuIDsize,
 	    confInfo->aggRatio        ,
 	    naggs );
 #   endif
