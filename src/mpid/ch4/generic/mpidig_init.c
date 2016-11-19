@@ -11,6 +11,7 @@
 
 #include "mpidimpl.h"
 #include "mpidig.h"
+#include "mpidch4r.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDIG_am_reg_cb
