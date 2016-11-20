@@ -19,6 +19,7 @@
 #include "mpidig.h"
 #include "ch4r_request.h"
 #include "ch4r_recv.h"
+#include "ch4r_recvq.h"
 
 static inline int MPIDI_recv_target_cmpl_cb(MPIR_Request * rreq);
 
