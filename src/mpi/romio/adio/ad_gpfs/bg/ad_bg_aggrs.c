@@ -281,6 +281,14 @@ ADIOI_BG_compute_agg_ranklist_serial_do (const ADIOI_BG_ConfInfo_t *confInfo,
           }
         }
         currentNumHops++;
+        /* Handle the case where the numAggs is more than exists starting
+         * at gpfsmpio_bridgeringagg hops, wrap back and restart at 0 to
+         * assign the overrun - it is up to the user to realize this
+         * situation and adjust numAggs and gpfsmpio_bridgeringagg
+         * accordingly.
+         */
+        if (currentNumHops > 16)
+          currentNumHops = 0;
         /* If 3 rounds go by without selecting an agg abort to avoid
            infinite loop.
         */
