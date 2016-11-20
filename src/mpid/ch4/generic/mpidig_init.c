@@ -11,6 +11,10 @@
 
 #include "mpidimpl.h"
 #include "mpidig.h"
+#include "ch4r_init.h"
+#include "ch4r_callbacks.h"
+#include "ch4r_rma_origin_callbacks.h"
+#include "ch4r_rma_target_callbacks.h"
 
 #undef FUNCNAME
 #define FUNCNAME MPIDIG_am_reg_cb
