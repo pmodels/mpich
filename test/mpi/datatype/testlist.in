@@ -60,4 +60,5 @@ cxx-types 1 mpiversion=3.0
 @largetest@large_type 1 mpiversion=3.0
 @largetest@large_type_sendrec 2 arg=31 mpiversion=3.0
 @largetest@large_type_sendrec 2 arg=32 mpiversion=3.0 timeLimit=360
+@largetest@large_type_sendrec 2 arg=33 mpiversion=3.0 timeLimit=360
 @largetest@large_vec 3 mpiversion=3.0
