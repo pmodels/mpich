@@ -451,14 +451,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_type_free_hook(MPIR_Datatype * type)
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_op_create_hook(MPIR_Op * op)
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_op_commit_hook(MPIR_Op * op)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_OP_CREATE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_OP_CREATE_HOOK);
 
-    ret = MPIDI_SHM_func->mpi_op_create_hook(op);
+    ret = MPIDI_SHM_func->mpi_op_commit_hook(op);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_OP_CREATE_HOOK);
     return ret;

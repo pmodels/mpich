@@ -146,7 +146,7 @@ MPIDI_NM_native_funcs_t MPIDI_NM_native_portals4_funcs = {
     MPIDI_NM_mpi_iscatterv,
     MPIDI_NM_mpi_type_create_hook,
     MPIDI_NM_mpi_type_free_hook,
-    MPIDI_NM_mpi_op_create_hook,
+    MPIDI_NM_mpi_op_commit_hook,
     MPIDI_NM_mpi_op_free_hook
 };
 #endif
