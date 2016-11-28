@@ -32,19 +32,19 @@ static inline void MPIDI_UCX_am_isend_callback(void *request, ucs_status_t statu
     goto fn_exit;
 }
 
-static inline void MPIDI_UCX_inject_am_callback(void *request, ucs_status_t status)
+static inline void MPIDI_UCX_am_send_callback(void *request, ucs_status_t status)
 {
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_INJECT_AM_CALLBACK);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_INJECT_AM_CALLBACK);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_AM_SEND_CALLBACK);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_AM_SEND_CALLBACK);
 
     MPL_free(ucp_request->req);
     ucp_request->req = NULL;
     ucp_request_release(ucp_request);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_INJECT_AM_CALLBACK);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_AM_SEND_CALLBACK);
     return;
   fn_fail:
     goto fn_exit;
@@ -320,7 +320,7 @@ static inline int MPIDI_NM_am_send_hdr(int rank,
     ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
                                                               am_hdr_sz + sizeof(ucx_hdr),
                                                               ucp_dt_make_contig(1), ucx_tag,
-                                                              &MPIDI_UCX_inject_am_callback);
+                                                              &MPIDI_UCX_am_send_callback);
     MPIDI_CH4_UCX_REQUEST(ucp_request);
 
     if (ucp_request == NULL) {
@@ -367,7 +367,7 @@ static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
     ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
                                                               am_hdr_sz + sizeof(ucx_hdr),
                                                               ucp_dt_make_contig(1), ucx_tag,
-                                                              &MPIDI_UCX_inject_am_callback);
+                                                              &MPIDI_UCX_am_send_callback);
     MPIDI_CH4_UCX_REQUEST(ucp_request);
 
     if (ucp_request == NULL) {
