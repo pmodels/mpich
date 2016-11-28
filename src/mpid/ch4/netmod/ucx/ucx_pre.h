@@ -11,7 +11,7 @@
 
 #include <ucp/api/ucp.h>
 
-#define HAVE_MPIDI_NM_type_create_hook
+#define HAVE_MPIDI_NM_type_commit_hook
 #define HAVE_MPIDI_NM_type_free_hook
 
 #define MPIDI_UCX_KVSAPPSTRLEN 4096

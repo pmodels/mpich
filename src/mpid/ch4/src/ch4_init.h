@@ -710,23 +710,23 @@ MPL_STATIC_INLINE_PREFIX MPI_Aint MPIDI_Aint_diff(MPI_Aint addr1, MPI_Aint addr2
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Type_create_hook
+#define FUNCNAME MPIDI_Type_commit_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Type_create_hook(MPIR_Datatype * type)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Type_commit_hook(MPIR_Datatype * type)
 {
     int mpi_errno;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_TYPE_CREATE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_TYPE_CREATE_HOOK);
 
-    mpi_errno = MPIDI_NM_mpi_type_create_hook(type);
+    mpi_errno = MPIDI_NM_mpi_type_commit_hook(type);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
 
 #ifdef MPIDI_BUILD_CH4_SHM
-    mpi_errno = MPIDI_SHM_mpi_type_create_hook(type);
+    mpi_errno = MPIDI_SHM_mpi_type_commit_hook(type);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }

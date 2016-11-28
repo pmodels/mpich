@@ -1931,14 +1931,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iscatterv(const void *sendbuf, const i
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_type_create_hook(MPIR_Datatype * datatype_p)
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_type_commit_hook(MPIR_Datatype * datatype_p)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_TYPE_CREATE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_TYPE_CREATE_HOOK);
 
-    ret = MPIDI_NM_native_func->mpi_type_create_hook(datatype_p);
+    ret = MPIDI_NM_native_func->mpi_type_commit_hook(datatype_p);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_TYPE_CREATE_HOOK);
     return ret;

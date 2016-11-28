@@ -18,7 +18,7 @@ static inline int MPIDI_NM_mpi_type_free_hook(MPIR_Datatype * datatype_p)
     return 0;
 }
 
-static inline int MPIDI_NM_mpi_type_create_hook(MPIR_Datatype * datatype_p)
+static inline int MPIDI_NM_mpi_type_commit_hook(MPIR_Datatype * datatype_p)
 {
     return 0;
 }

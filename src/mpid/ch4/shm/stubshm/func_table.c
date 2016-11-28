@@ -45,7 +45,7 @@ MPIDI_SHM_funcs_t MPIDI_SHM_stubshm_funcs = {
     MPIDI_SHM_create_intercomm_from_lpids,
     MPIDI_SHM_mpi_comm_create_hook,
     MPIDI_SHM_mpi_comm_free_hook,
-    MPIDI_SHM_mpi_type_create_hook,
+    MPIDI_SHM_mpi_type_commit_hook,
     MPIDI_SHM_mpi_type_free_hook,
     MPIDI_SHM_mpi_op_commit_hook,
     MPIDI_SHM_mpi_op_free_hook,
