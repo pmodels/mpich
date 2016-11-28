@@ -437,7 +437,7 @@ extern MPIDI_av_table_t *MPIDI_av_table0;
 #define MPID_Type_create_hook   MPIDI_Type_create_hook
 #define MPID_Type_free_hook     MPIDI_Type_free_hook
 
-#define MPID_Op_create_hook     MPIDI_Op_create_hook
+#define MPID_Op_commit_hook     MPIDI_Op_commit_hook
 #define MPID_Op_free_hook       MPIDI_Op_free_hook
 
 /* operation for (avtid, lpid) to/from "lpid64" */

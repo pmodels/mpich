@@ -47,7 +47,7 @@ MPIDI_SHM_funcs_t MPIDI_SHM_posix_funcs = {
     MPIDI_SHM_mpi_comm_free_hook,
     MPIDI_SHM_mpi_type_create_hook,
     MPIDI_SHM_mpi_type_free_hook,
-    MPIDI_SHM_mpi_op_create_hook,
+    MPIDI_SHM_mpi_op_commit_hook,
     MPIDI_SHM_mpi_op_free_hook,
     MPIDI_SHM_am_request_init,
 };

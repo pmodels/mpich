@@ -72,7 +72,7 @@ typedef int (*MPIDI_SHM_mpi_comm_create_hook_t) (MPIR_Comm * comm);
 typedef int (*MPIDI_SHM_mpi_comm_free_hook_t) (MPIR_Comm * comm);
 typedef int (*MPIDI_SHM_mpi_type_create_hook_t) (MPIR_Datatype * type);
 typedef int (*MPIDI_SHM_mpi_type_free_hook_t) (MPIR_Datatype * type);
-typedef int (*MPIDI_SHM_mpi_op_create_hook_t) (MPIR_Op * op);
+typedef int (*MPIDI_SHM_mpi_op_commit_hook_t) (MPIR_Op * op);
 typedef int (*MPIDI_SHM_mpi_op_free_hook_t) (MPIR_Op * op);
 typedef void (*MPIDI_SHM_am_request_init_t) (MPIR_Request * req);
 typedef void (*MPIDI_SHM_am_request_finalize_t) (MPIR_Request * req);
@@ -395,7 +395,7 @@ typedef struct MPIDI_SHM_funcs {
     MPIDI_SHM_mpi_comm_free_hook_t mpi_comm_free_hook;
     MPIDI_SHM_mpi_type_create_hook_t mpi_type_create_hook;
     MPIDI_SHM_mpi_type_free_hook_t mpi_type_free_hook;
-    MPIDI_SHM_mpi_op_create_hook_t mpi_op_create_hook;
+    MPIDI_SHM_mpi_op_commit_hook_t mpi_op_commit_hook;
     MPIDI_SHM_mpi_op_free_hook_t mpi_op_free_hook;
     /* Request allocation routines */
     MPIDI_SHM_am_request_init_t am_request_init;
@@ -600,7 +600,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_type_create_hook(MPIR_Datatype *
                                                             type) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_type_free_hook(MPIR_Datatype *
                                                           type) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_op_create_hook(MPIR_Op * op) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_op_commit_hook(MPIR_Op * op) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_op_free_hook(MPIR_Op * op) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX void MPIDI_SHM_am_request_init(MPIR_Request *
                                                         req) MPL_STATIC_INLINE_SUFFIX;

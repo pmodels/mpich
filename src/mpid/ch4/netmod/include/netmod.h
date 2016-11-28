@@ -341,7 +341,7 @@ typedef int (*MPIDI_NM_mpi_iscatterv_t) (const void *sendbuf, const int *sendcou
                                          MPIR_Comm * comm_ptr, MPI_Request * req);
 typedef int (*MPIDI_NM_mpi_type_create_hook_t) (MPIR_Datatype * datatype_p);
 typedef int (*MPIDI_NM_mpi_type_free_hook_t) (MPIR_Datatype * datatype_p);
-typedef int (*MPIDI_NM_mpi_op_create_hook_t) (MPIR_Op * op_p);
+typedef int (*MPIDI_NM_mpi_op_commit_hook_t) (MPIR_Op * op_p);
 typedef int (*MPIDI_NM_mpi_op_free_hook_t) (MPIR_Op * op_p);
 
 typedef struct MPIDI_NM_funcs {
@@ -478,7 +478,7 @@ typedef struct MPIDI_NM_native_funcs {
     MPIDI_NM_mpi_type_create_hook_t mpi_type_create_hook;
     MPIDI_NM_mpi_type_free_hook_t mpi_type_free_hook;
     /* Op hooks */
-    MPIDI_NM_mpi_op_create_hook_t mpi_op_create_hook;
+    MPIDI_NM_mpi_op_commit_hook_t mpi_op_commit_hook;
     MPIDI_NM_mpi_op_free_hook_t mpi_op_free_hook;
 } MPIDI_NM_native_funcs_t;
 
@@ -987,7 +987,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_type_create_hook(MPIR_Datatype *
                                                            datatype_p) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_type_free_hook(MPIR_Datatype *
                                                          datatype_p) MPL_STATIC_INLINE_SUFFIX;
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_op_create_hook(MPIR_Op * op_p) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_op_commit_hook(MPIR_Op * op_p) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_op_free_hook(MPIR_Op * op_p) MPL_STATIC_INLINE_SUFFIX;
 
 #endif /* NETMOD_H_INCLUDED */
