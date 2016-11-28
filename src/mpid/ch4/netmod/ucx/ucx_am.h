@@ -85,25 +85,6 @@ static inline int MPIDI_NM_am_isend(int rank,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISEND);
 
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
-    if (handler_id == MPIDI_CH4U_SEND &&
-        am_hdr_sz + sizeof(MPIDI_UCX_am_header_t) + data_sz > MPIDI_UCX_MAX_AM_EAGER_SZ) {
-        MPIDI_CH4U_send_long_req_msg_t lreq_hdr;
-
-        MPIR_Memcpy(&lreq_hdr.hdr, am_hdr, am_hdr_sz);
-        lreq_hdr.data_sz = data_sz;
-        lreq_hdr.sreq_ptr = (uint64_t) sreq;
-        MPIDI_CH4U_REQUEST(sreq, req->lreq).src_buf = data;
-        MPIDI_CH4U_REQUEST(sreq, req->lreq).count = count;
-        dtype_add_ref_if_not_builtin(datatype);
-        MPIDI_CH4U_REQUEST(sreq, req->lreq).datatype = datatype;
-        MPIDI_CH4U_REQUEST(sreq, req->lreq).msg_tag = lreq_hdr.hdr.msg_tag;
-        MPIDI_CH4U_REQUEST(sreq, rank) = rank;
-        mpi_errno = MPIDI_NM_am_send_hdr(rank, comm, MPIDI_CH4U_SEND_LONG_REQ,
-                                         &lreq_hdr, sizeof(lreq_hdr), NULL);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-        goto fn_exit;
-    }
 
     ep = MPIDI_UCX_COMM_TO_EP(comm, rank);
     ucx_tag = MPIDI_UCX_init_tag(0, 0, MPIDI_UCX_AM_TAG);
@@ -182,7 +163,16 @@ static inline int MPIDI_NM_am_isendv(int rank,
 {
     int mpi_errno = MPI_SUCCESS;
     size_t am_hdr_sz = 0, i;
-    char *am_hdr_buf;
+    MPIDI_UCX_ucp_request_t *ucp_request;
+    ucp_ep_h ep;
+    uint64_t ucx_tag;
+    char *send_buf;
+    size_t data_sz;
+    MPI_Aint dt_true_lb, last;
+    MPIR_Datatype *dt_ptr;
+    int dt_contig;
+    MPIDI_UCX_am_header_t ucx_hdr;
+
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_AM_ISENDV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_AM_ISENDV);
@@ -190,22 +180,79 @@ static inline int MPIDI_NM_am_isendv(int rank,
     for (i = 0; i < iov_len; i++) {
         am_hdr_sz += am_hdr[i].iov_len;
     }
+    ep = MPIDI_UCX_COMM_TO_EP(comm, rank);
+    ucx_tag = MPIDI_UCX_init_tag(0, 0, MPIDI_UCX_AM_TAG);
 
-    am_hdr_buf = (char *) MPL_malloc(am_hdr_sz);
-    MPIR_Assert(am_hdr_buf);
-    am_hdr_sz = 0;
+    MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
+    /* initialize our portion of the hdr */
+    ucx_hdr.handler_id = handler_id;
+    ucx_hdr.data_sz = data_sz;
 
-    for (i = 0; i < iov_len; i++) {
-        MPIR_Memcpy(am_hdr_buf + am_hdr_sz, am_hdr[i].iov_base, am_hdr[i].iov_len);
-        am_hdr_sz += am_hdr[i].iov_len;
+
+    if (dt_contig) {
+        /* just pack and send for now */
+        send_buf = MPL_malloc(data_sz + am_hdr_sz + sizeof(ucx_hdr));
+        MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
+        am_hdr_sz = 0;
+        for (i = 0; i < iov_len; i++) {
+            MPIR_Memcpy(send_buf + am_hdr_sz + sizeof(ucx_hdr), am_hdr[i].iov_base, am_hdr[i].iov_len);
+            am_hdr_sz += am_hdr[i].iov_len;
+        }
+        MPIR_Memcpy(send_buf + am_hdr_sz + sizeof(ucx_hdr), (char *) data + dt_true_lb, data_sz);
+    }
+    else {
+        size_t segment_first;
+        struct MPIDU_Segment *segment_ptr;
+        segment_ptr = MPIDU_Segment_alloc();
+        MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
+                MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send MPIDU_Segment_alloc");
+        MPIDU_Segment_init(data, count, datatype, segment_ptr, 0);
+        segment_first = 0;
+        last = data_sz;
+        send_buf = MPL_malloc(data_sz + am_hdr_sz + sizeof(ucx_hdr));
+        MPIR_Memcpy(send_buf, &ucx_hdr, sizeof(ucx_hdr));
+        am_hdr_sz = 0;
+        for (i = 0; i < iov_len; i++) {
+            MPIR_Memcpy(send_buf + sizeof(ucx_hdr) + am_hdr_sz, am_hdr[i].iov_base, am_hdr[i].iov_len);
+            am_hdr_sz += am_hdr[i].iov_len;
+        }
+        MPIDU_Segment_pack(segment_ptr, segment_first, &last,
+                send_buf + sizeof(ucx_hdr) + am_hdr_sz);
+        MPIDU_Segment_free(segment_ptr);
+    }
+    ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_send_nb(ep, send_buf,
+            data_sz + am_hdr_sz + sizeof(ucx_hdr),
+            ucp_dt_make_contig(1), ucx_tag,
+            &MPIDI_UCX_am_isend_callback);
+    MPIDI_CH4_UCX_REQUEST(ucp_request);
+
+    /* send is done. free all resources and complete the request */
+    if (ucp_request == NULL) {
+        MPL_free(send_buf);
+        MPIDIG_global.origin_cbs[handler_id] (sreq);
+        goto fn_exit;
     }
 
-    mpi_errno = MPIDI_NM_am_isend(rank, comm, handler_id, am_hdr_buf, am_hdr_sz,
-                                  data, count, datatype, sreq, netmod_context);
+    /* request completed between the UCP call and now. free resources
+     * and complete the send request */
+    /* set the ch4r request inside the UCP request */
 
-    MPL_free(am_hdr_buf);
+    sreq->dev.ch4.am.netmod_am.ucx.pack_buffer = send_buf;
+    sreq->dev.ch4.am.netmod_am.ucx.handler_id = handler_id;
+
+    ucp_request->req = sreq;
+    ucp_request_release(ucp_request);
+
+
+
+
+fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISENDV);
     return mpi_errno;
+
+fn_fail:
+    goto fn_exit;
+
 }
 
 
@@ -269,22 +316,11 @@ static inline int MPIDI_NM_am_isend_reply(MPIR_Context_id_t context_id,
         goto fn_exit;
     }
 
-    /* request completed between the UCP call and now. free resources
-     * and complete the send request */
-    if (ucp_request->req) {
-        MPL_free(send_buf);
-        MPIDIG_global.origin_cbs[handler_id] (sreq);
-        ucp_request->req = NULL;
-        ucp_request_release(ucp_request);
-    }
-    else {
         /* set the ch4r request inside the UCP request */
-        sreq->dev.ch4.am.netmod_am.ucx.pack_buffer = send_buf;
-        sreq->dev.ch4.am.netmod_am.ucx.handler_id = handler_id;
-        ucp_request->req = sreq;
-        ucp_request_release(ucp_request);
-
-    }
+    sreq->dev.ch4.am.netmod_am.ucx.pack_buffer = send_buf;
+    sreq->dev.ch4.am.netmod_am.ucx.handler_id = handler_id;
+    ucp_request->req = sreq;
+    ucp_request_release(ucp_request);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_AM_ISEND_REPLY);
@@ -343,11 +379,6 @@ static inline int MPIDI_NM_am_send_hdr(int rank,
         /* inject is done */
         MPL_free(send_buf);
     }
-    else if (ucp_request->req) {
-        MPL_free(send_buf);
-        ucp_request->req = NULL;
-        ucp_request_release(ucp_request);
-    }
     else {
         ucp_request->req = send_buf;
     }
@@ -394,11 +425,6 @@ static inline int MPIDI_NM_am_send_hdr_reply(MPIR_Context_id_t context_id,
     if (ucp_request == NULL) {
         /* inject is done */
         MPL_free(send_buf);
-    }
-    else if (ucp_request->req) {
-        MPL_free(send_buf);
-        ucp_request->req = NULL;
-        ucp_request_release(ucp_request);
     }
     else {
         ucp_request->req = send_buf;

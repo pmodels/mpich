@@ -41,6 +41,50 @@ static inline int MPIDI_UCX_contig_put(const void *origin_addr,
     goto fn_exit;
 
 
+}
+static inline int MPIDI_UCX_noncontig_put(const void *origin_addr,
+                                          int origin_count, MPI_Datatype origin_datatype,
+                                          int target_rank, size_t size,
+                                          MPI_Aint target_disp, MPI_Aint true_lb, MPIR_Win * win)
+{
+
+    MPIDI_UCX_win_info_t *win_info = &(MPIDI_UCX_WIN_INFO(win, target_rank));
+    size_t offset, last;
+    uint64_t base;
+    int mpi_errno = MPI_SUCCESS;
+    ucs_status_t status;
+    size_t segment_first;
+    struct MPIDU_Segment *segment_ptr;
+    char *buffer;
+    segment_ptr = MPIDU_Segment_alloc();
+    MPIR_ERR_CHKANDJUMP1(segment_ptr == NULL, mpi_errno,
+            MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send MPIDU_Segment_alloc");
+
+    MPIDU_Segment_init(origin_addr, origin_count, origin_datatype, segment_ptr, 0);
+    segment_first = 0;
+    last = size;
+
+    buffer = MPL_malloc(size);
+    MPIDU_Segment_pack(segment_ptr, segment_first, &last, buffer);
+    MPIDU_Segment_free(segment_ptr);
+
+    MPIR_Comm *comm = win->comm_ptr;
+    ucp_ep_h ep = MPIDI_UCX_COMM_TO_EP(comm, target_rank);
+
+    MPIDI_CH4U_EPOCH_START_CHECK(win, mpi_errno, goto fn_fail);
+    base = win_info->addr;
+    offset = target_disp * win_info->disp + true_lb;
+/* We use the non-blocking put here - should be faster than send/recv - ucp_put return when it is
+ * locally completed. In reallity this means, when the data are copied to the internal UCP-buffer */
+    status = ucp_put(ep, buffer, size, base + offset, win_info->rkey);
+    MPL_free(buffer);
+    MPIDI_UCX_CHK_STATUS(status);
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+
 
 }
 
@@ -91,13 +135,10 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
     size_t target_bytes, origin_bytes;
     MPI_Aint origin_true_lb, target_true_lb;
     size_t offset;
-    if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC || win->create_flavor == MPI_WIN_FLAVOR_SHARED)
+    if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC || win->create_flavor == MPI_WIN_FLAVOR_SHARED \
+        || MPIDI_UCX_WIN_INFO(win, target_rank).rkey == NULL)
         return MPIDI_CH4U_mpi_put(origin_addr, origin_count, origin_datatype,
                                   target_rank, target_disp, target_count, target_datatype, win);
-
-
-
-
 
     MPIDI_Datatype_check_contig_size_lb(target_datatype, target_count,
                                         target_contig, target_bytes, target_true_lb);
@@ -108,11 +149,16 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
 
     if (unlikely((origin_bytes == 0) || (target_rank == MPI_PROC_NULL)))
         goto fn_exit;
-    if (!target_contig || !origin_contig || MPIDI_UCX_WIN_INFO(win, target_rank).rkey == NULL)
+    if (!target_contig)
         return MPIDI_CH4U_mpi_put(origin_addr, origin_count, origin_datatype,
                                   target_rank, target_disp, target_count, target_datatype, win);
 
+
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
+    if(!origin_contig)
+        return  MPIDI_UCX_noncontig_put(origin_addr, origin_count,  origin_datatype, target_rank,
+                                         target_bytes, target_disp, target_true_lb,  win);
+
 
     if (target_rank == win->comm_ptr->rank) {
         offset = win->disp_unit * target_disp;
