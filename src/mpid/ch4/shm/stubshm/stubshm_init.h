@@ -157,10 +157,10 @@ static inline int MPIDI_SHM_mpi_type_free_hook(MPIR_Datatype * type)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_SHM_mpi_op_create_hook
+#define FUNCNAME MPIDI_SHM_mpi_op_commit_hook
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_SHM_mpi_op_create_hook(MPIR_Op * op)
+static inline int MPIDI_SHM_mpi_op_commit_hook(MPIR_Op * op)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_OP_CREATE_HOOK);
