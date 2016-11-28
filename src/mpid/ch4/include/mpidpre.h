@@ -434,7 +434,7 @@ extern MPIDI_av_table_t *MPIDI_av_table0;
 #define MPID_Comm_create_hook   MPIDI_Comm_create_hook
 #define MPID_Comm_free_hook     MPIDI_Comm_free_hook
 
-#define MPID_Type_create_hook   MPIDI_Type_create_hook
+#define MPID_Type_commit_hook   MPIDI_Type_commit_hook
 #define MPID_Type_free_hook     MPIDI_Type_free_hook
 
 #define MPID_Op_commit_hook     MPIDI_Op_commit_hook
