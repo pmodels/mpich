@@ -13,8 +13,8 @@
 
 #include "stubnm_impl.h"
 
-static inline int MPIDI_NM_probe(int source,
-                                 int tag, MPIR_Comm * comm, int context_offset, MPI_Status * status)
+static inline int MPIDI_NM_mpi_probe(int source,
+                                     int tag, MPIR_Comm * comm, int context_offset, MPI_Status * status)
 {
     return MPIDI_CH4U_probe(source, tag, comm, context_offset, status);
 }
