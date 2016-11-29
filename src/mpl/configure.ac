@@ -516,7 +516,7 @@ pac_cv_ia64_cycle,[
     ],pac_cv_ppc64_cycle=yes,
     pac_cv_ppc64_cycle=no)
     ])
-    if test "pac_cv_ppc64_cycle" != "yes" ; then
+    if test "$pac_cv_ppc64_cycle" != "yes" ; then
         AC_MSG_ERROR([The PPC64 cycle counter is not available on this system and or with the $CC compiler])
     fi
     MPL_TIMER_TYPE="uint64_t"
