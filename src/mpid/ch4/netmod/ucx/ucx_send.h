@@ -128,35 +128,6 @@ static inline int MPIDI_NM_mpi_send(const void *buf,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_rsend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_rsend(const void *buf,
-                                     int count,
-                                     MPI_Datatype datatype,
-                                     int rank,
-                                     int tag,
-                                     MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
-{
-    return MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset, request, 0, 0);
-}
-
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_mpi_irsend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_mpi_irsend(const void *buf,
-                                      int count,
-                                      MPI_Datatype datatype,
-                                      int rank,
-                                      int tag,
-                                      MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
-{
-    return MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0);
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_ssend
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
