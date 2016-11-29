@@ -23,28 +23,6 @@ static inline int MPIDI_NM_mpi_send(const void *buf,
     return MPIDIG_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, request);
 }
 
-static inline int MPIDI_NM_rsend(const void *buf,
-                                 int count,
-                                 MPI_Datatype datatype,
-                                 int rank,
-                                 int tag,
-                                 MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
-{
-    return MPIDIG_mpi_rsend(buf, count, datatype, rank, tag, comm, context_offset, request);
-}
-
-
-
-static inline int MPIDI_NM_irsend(const void *buf,
-                                  int count,
-                                  MPI_Datatype datatype,
-                                  int rank,
-                                  int tag,
-                                  MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
-{
-    return MPIDIG_mpi_irsend(buf, count, datatype, rank, tag, comm, context_offset, request);
-}
-
 static inline int MPIDI_NM_mpi_ssend(const void *buf,
                                      int count,
                                      MPI_Datatype datatype,

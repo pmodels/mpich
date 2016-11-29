@@ -67,32 +67,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_iprobe(int source,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Probe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_probe(int source,
-                                              int tag,
-                                              MPIR_Comm * comm, int context_offset,
-                                              MPI_Status * status)
-{
-    int mpi_errno, flag = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_PROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_PROBE);
-
-    while (!flag) {
-        mpi_errno = MPIDI_CH4U_mpi_iprobe(source, tag, comm, context_offset, &flag, status);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-    }
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_PROBE);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_CH4U_mpi_improbe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
