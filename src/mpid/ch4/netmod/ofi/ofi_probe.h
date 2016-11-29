@@ -94,39 +94,6 @@ static inline int MPIDI_OFI_do_iprobe(int source,
     goto fn_exit;
 }
 
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_probe
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_probe(int source,
-                                 int tag, MPIR_Comm * comm, int context_offset, MPI_Status * status)
-{
-    int mpi_errno = MPI_SUCCESS, flag = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_PROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_PROBE);
-
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
-        mpi_errno = MPIDI_CH4U_probe(source, tag, comm, context_offset, status);
-        goto fn_exit;
-    }
-
-    while (!flag) {
-        mpi_errno = MPIDI_Iprobe(source, tag, comm, context_offset, &flag, status);
-
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-
-        MPIDI_OFI_PROGRESS();
-    }
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_PROBE);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_improbe
 #undef FCNAME
