@@ -216,6 +216,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPIDI_av_table[0]->size = size;
     MPIR_Object_set_ref(MPIDI_av_table[0], 1);
 
+    MPIDIU_md_stride_globals_init();
     MPIDIU_alloc_globals_for_avtid(avtid);
 
     MPIDI_av_table0 = MPIDI_av_table[0];
@@ -372,6 +373,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
 
     MPIDIU_avt_destroy();
     MPL_free(MPIDI_CH4_Global.jobid);
+    MPIDIU_md_stride_globals_destroy();
 
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);

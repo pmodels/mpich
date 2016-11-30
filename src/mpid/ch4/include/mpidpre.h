@@ -332,8 +332,10 @@ typedef struct MPIDI_CH4U_comm_t {
 #define MPIDI_CALC_STRIDE_SIMPLE(rank, stride, offset) \
     ((rank) * (stride) + (offset))
 
+static int MPIDI_calc_md_stride(int rank, int dim, int *params);
+
 typedef enum {
-    MPIDI_RANK_MAP_DIRECT,
+    MPIDI_RANK_MAP_DIRECT = 0,
     MPIDI_RANK_MAP_DIRECT_INTRA,
     MPIDI_RANK_MAP_OFFSET,
     MPIDI_RANK_MAP_OFFSET_INTRA,
@@ -341,11 +343,33 @@ typedef enum {
     MPIDI_RANK_MAP_STRIDE_INTRA,
     MPIDI_RANK_MAP_STRIDE_BLOCK,
     MPIDI_RANK_MAP_STRIDE_BLOCK_INTRA,
+    MPIDI_RANK_MAP_MD_STRIDE_BLOCK,
+    MPIDI_RANK_MAP_MD_STRIDE_BLOCK_INTRA,
     MPIDI_RANK_MAP_LUT,
     MPIDI_RANK_MAP_LUT_INTRA,
+    MPIDI_RANK_MAP_LUT_STRIDE,
+    MPIDI_RANK_MAP_LUT_STRIDE_INTRA,
+    MPIDI_RANK_MAP_LUT_STRIDE_BLOCK,
+    MPIDI_RANK_MAP_LUT_STRIDE_BLOCK_INTRA,
+    MPIDI_RANK_MAP_LUT_MD_STRIDE_BLOCK,
+    MPIDI_RANK_MAP_LUT_MD_STRIDE_BLOCK_INTRA,
     MPIDI_RANK_MAP_MLUT,
+    MPIDI_RANK_MAP_MLUT_STRIDE,
+    MPIDI_RANK_MAP_MLUT_STRIDE_BLOCK,
+    MPIDI_RANK_MAP_MLUT_MD_STRIDE_BLOCK,
     MPIDI_RANK_MAP_NONE
 } MPIDI_rank_map_mode;
+
+#define MPIDI_MD_STRIDE_DIM_MAX 3
+
+typedef struct {
+    MPIR_OBJECT_HEADER;
+    int size;
+    int params[0];
+} MPIDI_md_stride_params_t;
+
+extern int *MPIDI_md_stride_params;
+extern int MPIDI_md_stride_dim;
 
 typedef int MPIDI_lpid_t;
 typedef struct {
@@ -375,6 +399,18 @@ typedef struct {
             int stride;
             int blocksize;
         } stride;
+        /*
+         * The metadata of md_stride is an array of (stride, blocksize, offset)
+         * tuples. They are stored as a plain integer array in params_p where
+         * params_p->params is pointer to the array. In order to avoid
+         * mutiplication in the lookup, we point params to the metadata of the
+         * highest dimension, which is the last tuple of the array.
+         */
+        struct {
+            int dims;
+            int *params;
+            MPIDI_md_stride_params_t *params_p;
+        } md_stride;
     } reg;
 
     union {

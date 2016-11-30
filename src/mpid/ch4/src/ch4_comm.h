@@ -156,6 +156,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
         case MPIDI_RANK_MAP_NONE:
             break;
         case MPIDI_RANK_MAP_MLUT:
+        case MPIDI_RANK_MAP_MLUT_STRIDE:
+        case MPIDI_RANK_MAP_MLUT_STRIDE_BLOCK:
+        case MPIDI_RANK_MAP_MLUT_MD_STRIDE_BLOCK:
             max_n_avts = MPIDIU_get_max_n_avts();
             uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int));
             memset(uniq_avtids, 0, max_n_avts * sizeof(int));
@@ -175,6 +178,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
         case MPIDI_RANK_MAP_NONE:
             break;
         case MPIDI_RANK_MAP_MLUT:
+        case MPIDI_RANK_MAP_MLUT_STRIDE:
+        case MPIDI_RANK_MAP_MLUT_STRIDE_BLOCK:
+        case MPIDI_RANK_MAP_MLUT_MD_STRIDE_BLOCK:
             max_n_avts = MPIDIU_get_max_n_avts();
             uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int));
             memset(uniq_avtids, 0, max_n_avts * sizeof(int));
@@ -225,6 +231,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
     case MPIDI_RANK_MAP_NONE:
         break;
     case MPIDI_RANK_MAP_MLUT:
+    case MPIDI_RANK_MAP_MLUT_STRIDE:
+    case MPIDI_RANK_MAP_MLUT_STRIDE_BLOCK:
+    case MPIDI_RANK_MAP_MLUT_MD_STRIDE_BLOCK:
         max_n_avts = MPIDIU_get_max_n_avts();
         uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int));
         memset(uniq_avtids, 0, max_n_avts * sizeof(int));
@@ -244,6 +253,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
     case MPIDI_RANK_MAP_NONE:
         break;
     case MPIDI_RANK_MAP_MLUT:
+    case MPIDI_RANK_MAP_MLUT_STRIDE:
+    case MPIDI_RANK_MAP_MLUT_STRIDE_BLOCK:
+    case MPIDI_RANK_MAP_MLUT_MD_STRIDE_BLOCK:
         max_n_avts = MPIDIU_get_max_n_avts();
         uniq_avtids = (int *) MPL_malloc(max_n_avts * sizeof(int));
         memset(uniq_avtids, 0, max_n_avts * sizeof(int));
@@ -259,18 +271,34 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
         MPIDIU_avt_release_ref(MPIDI_COMM(comm, local_map).avtid);
     }
 
-    if (MPIDI_COMM(comm, map).mode == MPIDI_RANK_MAP_LUT
-        || MPIDI_COMM(comm, map).mode == MPIDI_RANK_MAP_LUT_INTRA) {
+    if (MPIDI_COMM(comm, map).mode == MPIDI_RANK_MAP_MD_STRIDE_BLOCK
+        || MPIDI_COMM(comm, map).mode == MPIDI_RANK_MAP_MD_STRIDE_BLOCK_INTRA
+        || MPIDI_COMM(comm, map).mode == MPIDI_RANK_MAP_LUT_MD_STRIDE_BLOCK
+        || MPIDI_COMM(comm, map).mode == MPIDI_RANK_MAP_LUT_MD_STRIDE_BLOCK_INTRA
+        || MPIDI_COMM(comm, map).mode == MPIDI_RANK_MAP_MLUT_MD_STRIDE_BLOCK) {
+        MPIDIU_release_md_stride_params(MPIDI_COMM(comm, map).reg.md_stride.params_p);
+    }
+    if (MPIDI_COMM(comm, local_map).mode == MPIDI_RANK_MAP_MD_STRIDE_BLOCK
+        || MPIDI_COMM(comm, local_map).mode == MPIDI_RANK_MAP_MD_STRIDE_BLOCK_INTRA
+        || MPIDI_COMM(comm, local_map).mode == MPIDI_RANK_MAP_LUT_MD_STRIDE_BLOCK
+        || MPIDI_COMM(comm, local_map).mode == MPIDI_RANK_MAP_LUT_MD_STRIDE_BLOCK_INTRA
+        || MPIDI_COMM(comm, local_map).mode == MPIDI_RANK_MAP_MLUT_MD_STRIDE_BLOCK) {
+        MPIDIU_release_md_stride_params(MPIDI_COMM(comm, local_map).reg.md_stride.params_p);
+    }
+    if (MPIDI_COMM(comm, map).mode >= MPIDI_RANK_MAP_LUT
+        && MPIDI_COMM(comm, map).mode <= MPIDI_RANK_MAP_LUT_MD_STRIDE_BLOCK_INTRA) {
         MPIDIU_release_lut(MPIDI_COMM(comm, map).irreg.lut.t);
     }
-    if (MPIDI_COMM(comm, local_map).mode == MPIDI_RANK_MAP_LUT
-        || MPIDI_COMM(comm, local_map).mode == MPIDI_RANK_MAP_LUT_INTRA) {
+    if (MPIDI_COMM(comm, local_map).mode >= MPIDI_RANK_MAP_LUT
+        && MPIDI_COMM(comm, local_map).mode <= MPIDI_RANK_MAP_LUT_MD_STRIDE_BLOCK_INTRA) {
         MPIDIU_release_lut(MPIDI_COMM(comm, local_map).irreg.lut.t);
     }
-    if (MPIDI_COMM(comm, map).mode == MPIDI_RANK_MAP_MLUT) {
+    if (MPIDI_COMM(comm, map).mode >= MPIDI_RANK_MAP_MLUT
+        && MPIDI_COMM(comm, map).mode <= MPIDI_RANK_MAP_MLUT_MD_STRIDE_BLOCK) {
         MPIDIU_release_mlut(MPIDI_COMM(comm, map).irreg.mlut.t);
     }
-    if (MPIDI_COMM(comm, local_map).mode == MPIDI_RANK_MAP_MLUT) {
+    if (MPIDI_COMM(comm, local_map).mode >= MPIDI_RANK_MAP_MLUT
+        && MPIDI_COMM(comm, local_map).mode <= MPIDI_RANK_MAP_MLUT_MD_STRIDE_BLOCK) {
         MPIDIU_release_mlut(MPIDI_COMM(comm, local_map).irreg.mlut.t);
     }
 

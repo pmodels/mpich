@@ -23,6 +23,7 @@
 MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank, int *index,
                                                      int *avtid)
 {
+    int rank_i = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_COMM_RANK_TO_PID);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_COMM_RANK_TO_PID);
 
@@ -63,6 +64,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank,
                                    MPIDI_COMM(comm, map).reg.stride.blocksize,
                                    MPIDI_COMM(comm, map).reg.stride.offset);
         break;
+    case MPIDI_RANK_MAP_MD_STRIDE_BLOCK:
+        *avtid = MPIDI_COMM(comm, map).avtid;
+        *index = MPIDI_calc_md_stride(rank, MPIDI_COMM(comm, map).reg.md_stride.dims,
+                                      MPIDI_COMM(comm, map).reg.md_stride.params);
+        break;
+    case MPIDI_RANK_MAP_MD_STRIDE_BLOCK_INTRA:
+        *index = MPIDI_calc_md_stride(rank, MPIDI_COMM(comm, map).reg.md_stride.dims,
+                                      MPIDI_COMM(comm, map).reg.md_stride.params);
+        break;
     case MPIDI_RANK_MAP_LUT:
         *avtid = MPIDI_COMM(comm, map).avtid;
         *index = MPIDI_COMM(comm, map).irreg.lut.lpid[rank];
@@ -70,9 +80,63 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank,
     case MPIDI_RANK_MAP_LUT_INTRA:
         *index = MPIDI_COMM(comm, map).irreg.lut.lpid[rank];
         break;
+    case MPIDI_RANK_MAP_LUT_STRIDE:
+        *avtid = MPIDI_COMM(comm, map).avtid;
+        *index = MPIDI_COMM(comm, map).irreg.lut.lpid[
+            MPIDI_CALC_STRIDE_SIMPLE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
+                                     MPIDI_COMM(comm, map).reg.stride.offset)];
+        break;
+    case MPIDI_RANK_MAP_LUT_STRIDE_INTRA:
+        *index = MPIDI_COMM(comm, map).irreg.lut.lpid[
+            MPIDI_CALC_STRIDE_SIMPLE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
+                                     MPIDI_COMM(comm, map).reg.stride.offset)];
+        break;
+    case MPIDI_RANK_MAP_LUT_STRIDE_BLOCK:
+        *avtid = MPIDI_COMM(comm, map).avtid;
+        *index = MPIDI_COMM(comm, map).irreg.lut.lpid[
+            MPIDI_CALC_STRIDE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
+                              MPIDI_COMM(comm, map).reg.stride.blocksize,
+                              MPIDI_COMM(comm, map).reg.stride.offset)];
+        break;
+    case MPIDI_RANK_MAP_LUT_STRIDE_BLOCK_INTRA:
+        *index = MPIDI_COMM(comm, map).irreg.lut.lpid[
+            MPIDI_CALC_STRIDE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
+                              MPIDI_COMM(comm, map).reg.stride.blocksize,
+                              MPIDI_COMM(comm, map).reg.stride.offset)];
+        break;
+    case MPIDI_RANK_MAP_LUT_MD_STRIDE_BLOCK:
+        *avtid = MPIDI_COMM(comm, map).avtid;
+        *index = MPIDI_COMM(comm, map).irreg.lut.lpid[
+            MPIDI_calc_md_stride(rank, MPIDI_COMM(comm, map).reg.md_stride.dims,
+                                 MPIDI_COMM(comm, map).reg.md_stride.params)];
+        break;
+    case MPIDI_RANK_MAP_LUT_MD_STRIDE_BLOCK_INTRA:
+        *index = MPIDI_COMM(comm, map).irreg.lut.lpid[
+            MPIDI_calc_md_stride(rank, MPIDI_COMM(comm, map).reg.md_stride.dims,
+                                 MPIDI_COMM(comm, map).reg.md_stride.params)];
+        break;
     case MPIDI_RANK_MAP_MLUT:
         *index = MPIDI_COMM(comm, map).irreg.mlut.gpid[rank].lpid;
         *avtid = MPIDI_COMM(comm, map).irreg.mlut.gpid[rank].avtid;
+        break;
+    case MPIDI_RANK_MAP_MLUT_STRIDE:
+        rank_i = MPIDI_CALC_STRIDE_SIMPLE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
+                                          MPIDI_COMM(comm, map).reg.stride.offset);
+        *index = MPIDI_COMM(comm, map).irreg.mlut.gpid[rank_i].lpid;
+        *avtid = MPIDI_COMM(comm, map).irreg.mlut.gpid[rank_i].avtid;
+        break;
+    case MPIDI_RANK_MAP_MLUT_STRIDE_BLOCK:
+        rank_i = MPIDI_CALC_STRIDE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
+                                   MPIDI_COMM(comm, map).reg.stride.blocksize,
+                                   MPIDI_COMM(comm, map).reg.stride.offset);
+        *index = MPIDI_COMM(comm, map).irreg.mlut.gpid[rank_i].lpid;
+        *avtid = MPIDI_COMM(comm, map).irreg.mlut.gpid[rank_i].avtid;
+        break;
+    case MPIDI_RANK_MAP_MLUT_MD_STRIDE_BLOCK:
+        rank_i = MPIDI_calc_md_stride(rank, MPIDI_COMM(comm, map).reg.md_stride.dims,
+                                      MPIDI_COMM(comm, map).reg.md_stride.params);
+        *index = MPIDI_COMM(comm, map).irreg.mlut.gpid[rank_i].lpid;
+        *avtid = MPIDI_COMM(comm, map).irreg.mlut.gpid[rank_i].avtid;
         break;
     case MPIDI_RANK_MAP_NONE:
         MPIR_Assert(0);
@@ -92,6 +156,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank,
 MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * comm, int rank)
 {
     MPIDI_av_entry_t *ret = NULL;
+    int rank_i = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_COMM_RANK_TO_AV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_COMM_RANK_TO_AV);
 
@@ -130,22 +195,88 @@ MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * co
                                       MPIDI_COMM(comm, map).reg.stride.offset)];
         break;
     case MPIDI_RANK_MAP_STRIDE_BLOCK_INTRA:
-        ret = &MPIDI_av_table0->table[MPIDI_CALC_STRIDE(rank,
-                                                        MPIDI_COMM(comm, map).reg.stride.stride,
-                                                        MPIDI_COMM(comm,
-                                                                   map).reg.stride.blocksize,
-                                                        MPIDI_COMM(comm, map).reg.stride.offset)];
+        ret =  &MPIDI_av_table0->table[MPIDI_CALC_STRIDE(rank,
+                                                         MPIDI_COMM(comm, map).reg.stride.stride,
+                                                         MPIDI_COMM(comm,
+                                                                    map).reg.stride.blocksize,
+                                                         MPIDI_COMM(comm, map).reg.stride.offset)];
+        break;
+    case MPIDI_RANK_MAP_MD_STRIDE_BLOCK:
+        ret =  &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
+            ->table[MPIDI_calc_md_stride(rank,
+                                         MPIDI_COMM(comm, map).reg.md_stride.dims,
+                                         MPIDI_COMM(comm, map).reg.md_stride.params)];
+        break;
+    case MPIDI_RANK_MAP_MD_STRIDE_BLOCK_INTRA:
+        ret =  &MPIDI_av_table0
+            ->table[MPIDI_calc_md_stride(rank,
+                                         MPIDI_COMM(comm, map).reg.md_stride.dims,
+                                         MPIDI_COMM(comm, map).reg.md_stride.params)];
         break;
     case MPIDI_RANK_MAP_LUT:
         ret = &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
             ->table[MPIDI_COMM(comm, map).irreg.lut.lpid[rank]];
         break;
     case MPIDI_RANK_MAP_LUT_INTRA:
-        ret = &MPIDI_av_table0->table[MPIDI_COMM(comm, map).irreg.lut.lpid[rank]];
+        ret =  &MPIDI_av_table0->table[MPIDI_COMM(comm, map).irreg.lut.lpid[rank]];
+        break;
+    case MPIDI_RANK_MAP_LUT_STRIDE:
+        rank_i = MPIDI_CALC_STRIDE_SIMPLE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
+                                          MPIDI_COMM(comm, map).reg.stride.offset);
+        ret =  &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
+            ->table[MPIDI_COMM(comm, map).irreg.lut.lpid[rank_i]];
+        break;
+    case MPIDI_RANK_MAP_LUT_STRIDE_INTRA:
+        rank_i = MPIDI_CALC_STRIDE_SIMPLE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
+                                          MPIDI_COMM(comm, map).reg.stride.offset);
+        ret = &MPIDI_av_table0->table[MPIDI_COMM(comm, map).irreg.lut.lpid[rank_i]];
+        break;
+    case MPIDI_RANK_MAP_LUT_STRIDE_BLOCK:
+        rank_i = MPIDI_CALC_STRIDE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
+                                   MPIDI_COMM(comm, map).reg.stride.blocksize,
+                                   MPIDI_COMM(comm, map).reg.stride.offset);
+        ret = &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
+            ->table[MPIDI_COMM(comm, map).irreg.lut.lpid[rank_i]];
+        break;
+    case MPIDI_RANK_MAP_LUT_STRIDE_BLOCK_INTRA:
+        rank_i = MPIDI_CALC_STRIDE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
+                                   MPIDI_COMM(comm, map).reg.stride.blocksize,
+                                   MPIDI_COMM(comm, map).reg.stride.offset);
+        ret = &MPIDI_av_table0->table[MPIDI_COMM(comm, map).irreg.lut.lpid[rank_i]];
+        break;
+    case MPIDI_RANK_MAP_LUT_MD_STRIDE_BLOCK:
+        rank_i = MPIDI_calc_md_stride(rank, MPIDI_COMM(comm, map).reg.md_stride.dims,
+                                      MPIDI_COMM(comm, map).reg.md_stride.params);
+        ret = &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
+            ->table[MPIDI_COMM(comm, map).irreg.lut.lpid[rank_i]];
+        break;
+    case MPIDI_RANK_MAP_LUT_MD_STRIDE_BLOCK_INTRA:
+        rank_i = MPIDI_calc_md_stride(rank, MPIDI_COMM(comm, map).reg.md_stride.dims,
+                                      MPIDI_COMM(comm, map).reg.md_stride.params);
+        ret = &MPIDI_av_table0->table[MPIDI_COMM(comm, map).irreg.lut.lpid[rank_i]];
         break;
     case MPIDI_RANK_MAP_MLUT:
         ret = &MPIDI_av_table[MPIDI_COMM(comm, map).irreg.mlut.gpid[rank].avtid]
             ->table[MPIDI_COMM(comm, map).irreg.mlut.gpid[rank].lpid];
+        break;
+    case MPIDI_RANK_MAP_MLUT_STRIDE:
+        rank_i = MPIDI_CALC_STRIDE_SIMPLE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
+                                          MPIDI_COMM(comm, map).reg.stride.offset);
+        ret = &MPIDI_av_table[MPIDI_COMM(comm, map).irreg.mlut.gpid[rank_i].avtid]
+            ->table[MPIDI_COMM(comm, map).irreg.mlut.gpid[rank_i].lpid];
+        break;
+    case MPIDI_RANK_MAP_MLUT_STRIDE_BLOCK:
+        rank_i = MPIDI_CALC_STRIDE(rank, MPIDI_COMM(comm, map).reg.stride.stride,
+                                   MPIDI_COMM(comm, map).reg.stride.blocksize,
+                                   MPIDI_COMM(comm, map).reg.stride.offset);
+        ret = &MPIDI_av_table[MPIDI_COMM(comm, map).irreg.mlut.gpid[rank_i].avtid]
+            ->table[MPIDI_COMM(comm, map).irreg.mlut.gpid[rank_i].lpid];
+        break;
+    case MPIDI_RANK_MAP_MLUT_MD_STRIDE_BLOCK:
+        rank_i = MPIDI_calc_md_stride(rank, MPIDI_COMM(comm, map).reg.md_stride.dims,
+                                      MPIDI_COMM(comm, map).reg.md_stride.params);
+        ret = &MPIDI_av_table[MPIDI_COMM(comm, map).irreg.mlut.gpid[rank_i].avtid]
+            ->table[MPIDI_COMM(comm, map).irreg.mlut.gpid[rank_i].lpid];
         break;
     case MPIDI_RANK_MAP_NONE:
         MPIR_Assert(0);
@@ -166,6 +297,7 @@ MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * co
 MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid_local(MPIR_Comm * comm, int rank, int *index,
                                                            int *avtid)
 {
+    int rank_i = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_COMM_RANK_TO_PID_LOCAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_COMM_RANK_TO_PID_LOCAL);
 
@@ -190,13 +322,56 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid_local(MPIR_Comm * comm, int
                                    MPIDI_COMM(comm, local_map).reg.stride.blocksize,
                                    MPIDI_COMM(comm, local_map).reg.stride.offset);
         break;
+    case MPIDI_RANK_MAP_MD_STRIDE_BLOCK:
+    case MPIDI_RANK_MAP_MD_STRIDE_BLOCK_INTRA:
+        *index = MPIDI_calc_md_stride(rank, MPIDI_COMM(comm, local_map).reg.md_stride.dims,
+                                      MPIDI_COMM(comm, local_map).reg.md_stride.params);
+        break;
     case MPIDI_RANK_MAP_LUT:
     case MPIDI_RANK_MAP_LUT_INTRA:
         *index = MPIDI_COMM(comm, local_map).irreg.lut.lpid[rank];
         break;
+    case MPIDI_RANK_MAP_LUT_STRIDE:
+    case MPIDI_RANK_MAP_LUT_STRIDE_INTRA:
+        rank_i = MPIDI_CALC_STRIDE_SIMPLE(rank, MPIDI_COMM(comm, local_map).reg.stride.stride,
+                                          MPIDI_COMM(comm, local_map).reg.stride.offset);
+        *index = MPIDI_COMM(comm, local_map).irreg.lut.lpid[rank_i];
+        break;
+    case MPIDI_RANK_MAP_LUT_STRIDE_BLOCK:
+    case MPIDI_RANK_MAP_LUT_STRIDE_BLOCK_INTRA:
+        rank_i = MPIDI_CALC_STRIDE(rank, MPIDI_COMM(comm, local_map).reg.stride.stride,
+                                   MPIDI_COMM(comm, local_map).reg.stride.blocksize,
+                                   MPIDI_COMM(comm, local_map).reg.stride.offset);
+        *index = MPIDI_COMM(comm, local_map).irreg.lut.lpid[rank_i];
+        break;
+    case MPIDI_RANK_MAP_LUT_MD_STRIDE_BLOCK:
+    case MPIDI_RANK_MAP_LUT_MD_STRIDE_BLOCK_INTRA:
+        rank_i = MPIDI_calc_md_stride(rank, MPIDI_COMM(comm, local_map).reg.md_stride.dims,
+                                      MPIDI_COMM(comm, local_map).reg.md_stride.params);
+        *index = MPIDI_COMM(comm, local_map).irreg.lut.lpid[rank_i];
+        break;
     case MPIDI_RANK_MAP_MLUT:
         *index = MPIDI_COMM(comm, local_map).irreg.mlut.gpid[rank].lpid;
         *avtid = MPIDI_COMM(comm, local_map).irreg.mlut.gpid[rank].avtid;
+        break;
+    case MPIDI_RANK_MAP_MLUT_STRIDE:
+        rank_i = MPIDI_CALC_STRIDE_SIMPLE(rank, MPIDI_COMM(comm, local_map).reg.stride.stride,
+                                          MPIDI_COMM(comm, local_map).reg.stride.offset);
+        *index = MPIDI_COMM(comm, local_map).irreg.mlut.gpid[rank_i].lpid;
+        *avtid = MPIDI_COMM(comm, local_map).irreg.mlut.gpid[rank_i].avtid;
+        break;
+    case MPIDI_RANK_MAP_MLUT_STRIDE_BLOCK:
+        rank_i = MPIDI_CALC_STRIDE(rank, MPIDI_COMM(comm, local_map).reg.stride.stride,
+                                   MPIDI_COMM(comm, local_map).reg.stride.blocksize,
+                                   MPIDI_COMM(comm, local_map).reg.stride.offset);
+        *index = MPIDI_COMM(comm, local_map).irreg.mlut.gpid[rank_i].lpid;
+        *avtid = MPIDI_COMM(comm, local_map).irreg.mlut.gpid[rank_i].avtid;
+        break;
+    case MPIDI_RANK_MAP_MLUT_MD_STRIDE_BLOCK:
+        rank_i = MPIDI_calc_md_stride(rank, MPIDI_COMM(comm, local_map).reg.md_stride.dims,
+                                      MPIDI_COMM(comm, local_map).reg.md_stride.params);
+        *index = MPIDI_COMM(comm, local_map).irreg.mlut.gpid[rank_i].lpid;
+        *avtid = MPIDI_COMM(comm, local_map).irreg.mlut.gpid[rank_i].avtid;
         break;
     case MPIDI_RANK_MAP_NONE:
         MPIR_Assert(0);

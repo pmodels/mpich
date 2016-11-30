@@ -78,6 +78,9 @@ static void init_comm()
     MPIR_Comm_fns->split_type = MPIDI_Comm_split_type;
 }
 
+int *MPIDI_md_stride_params = NULL;
+int MPIDI_md_stride_dim = 0;
+
 MPL_dbg_class MPIDI_CH4_DBG_GENERAL;
 
 #ifdef MPL_USE_DBG_LOGGING

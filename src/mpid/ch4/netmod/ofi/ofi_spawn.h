@@ -159,16 +159,77 @@ static inline int MPIDI_OFI_dynproc_create_intercomm(const char *port_name,
         MPIDI_COMM(tmp_comm_ptr, local_map).reg.stride.offset =
             MPIDI_COMM(comm_ptr, map).reg.stride.offset;
         break;
+    case MPIDI_RANK_MAP_MD_STRIDE_BLOCK:
+    case MPIDI_RANK_MAP_MD_STRIDE_BLOCK_INTRA:
+        MPIDI_COMM(tmp_comm_ptr, local_map).reg.md_stride.dims = MPIDI_COMM(comm_ptr, map).reg.md_stride.dims;
+        MPIDI_COMM(tmp_comm_ptr, local_map).reg.md_stride.params =
+            MPIDI_COMM(comm_ptr, map).reg.md_stride.params;
+        MPIDI_COMM(tmp_comm_ptr, local_map).reg.md_stride.params_p = 
+            MPIDI_COMM(comm_ptr, map).reg.md_stride.params_p;
+        MPIR_Object_add_ref(MPIDI_COMM(comm_ptr, map).reg.md_stride.params_p);
     case MPIDI_RANK_MAP_LUT:
     case MPIDI_RANK_MAP_LUT_INTRA:
         MPIDI_COMM(tmp_comm_ptr, local_map).irreg.lut.t = MPIDI_COMM(comm_ptr, map).irreg.lut.t;
         MPIDI_COMM(tmp_comm_ptr, local_map).irreg.lut.lpid =
             MPIDI_COMM(comm_ptr, map).irreg.lut.lpid;
         break;
+    case MPIDI_RANK_MAP_LUT_STRIDE:
+    case MPIDI_RANK_MAP_LUT_STRIDE_INTRA:
+    case MPIDI_RANK_MAP_LUT_STRIDE_BLOCK:
+    case MPIDI_RANK_MAP_LUT_STRIDE_BLOCK_INTRA:
+        MPIDI_COMM(tmp_comm_ptr, local_map).reg.stride.stride =
+            MPIDI_COMM(comm_ptr, map).reg.stride.stride;
+        MPIDI_COMM(tmp_comm_ptr, local_map).reg.stride.blocksize =
+            MPIDI_COMM(comm_ptr, map).reg.stride.blocksize;
+        MPIDI_COMM(tmp_comm_ptr, local_map).reg.stride.offset =
+            MPIDI_COMM(comm_ptr, map).reg.stride.offset;
+        MPIDI_COMM(tmp_comm_ptr, local_map).irreg.lut.t = MPIDI_COMM(comm_ptr, map).irreg.lut.t;
+        MPIDI_COMM(tmp_comm_ptr, local_map).irreg.lut.lpid =
+            MPIDI_COMM(comm_ptr, map).irreg.lut.lpid;
+        MPIR_Object_add_ref(MPIDI_COMM(comm_ptr, map).irreg.lut.t);
+        break;
+    case MPIDI_RANK_MAP_LUT_MD_STRIDE_BLOCK:
+    case MPIDI_RANK_MAP_LUT_MD_STRIDE_BLOCK_INTRA:
+        MPIDI_COMM(tmp_comm_ptr, local_map).reg.md_stride.dims = MPIDI_COMM(comm_ptr, map).reg.md_stride.dims;
+        MPIDI_COMM(tmp_comm_ptr, local_map).reg.md_stride.params =
+            MPIDI_COMM(comm_ptr, map).reg.md_stride.params;
+        MPIDI_COMM(tmp_comm_ptr, local_map).reg.md_stride.params_p = 
+            MPIDI_COMM(comm_ptr, map).reg.md_stride.params_p;
+        MPIR_Object_add_ref(MPIDI_COMM(comm_ptr, map).reg.md_stride.params_p);
+        MPIDI_COMM(tmp_comm_ptr, local_map).irreg.lut.t = MPIDI_COMM(comm_ptr, map).irreg.lut.t;
+        MPIDI_COMM(tmp_comm_ptr, local_map).irreg.lut.lpid =
+            MPIDI_COMM(comm_ptr, map).irreg.lut.lpid;
+        MPIR_Object_add_ref(MPIDI_COMM(comm_ptr, map).irreg.lut.t);
+        break;
     case MPIDI_RANK_MAP_MLUT:
         MPIDI_COMM(tmp_comm_ptr, local_map).irreg.mlut.t = MPIDI_COMM(comm_ptr, map).irreg.mlut.t;
         MPIDI_COMM(tmp_comm_ptr, local_map).irreg.mlut.gpid =
             MPIDI_COMM(comm_ptr, map).irreg.mlut.gpid;
+        break;
+    case MPIDI_RANK_MAP_MLUT_STRIDE:
+    case MPIDI_RANK_MAP_MLUT_STRIDE_BLOCK:
+        MPIDI_COMM(tmp_comm_ptr, local_map).reg.stride.stride =
+            MPIDI_COMM(comm_ptr, map).reg.stride.stride;
+        MPIDI_COMM(tmp_comm_ptr, local_map).reg.stride.blocksize =
+            MPIDI_COMM(comm_ptr, map).reg.stride.blocksize;
+        MPIDI_COMM(tmp_comm_ptr, local_map).reg.stride.offset =
+            MPIDI_COMM(comm_ptr, map).reg.stride.offset;
+        MPIDI_COMM(tmp_comm_ptr, local_map).irreg.mlut.t = MPIDI_COMM(comm_ptr, map).irreg.mlut.t;
+        MPIDI_COMM(tmp_comm_ptr, local_map).irreg.mlut.gpid =
+            MPIDI_COMM(comm_ptr, map).irreg.mlut.gpid;
+        MPIR_Object_add_ref(MPIDI_COMM(comm_ptr, map).irreg.mlut.t);
+        break;
+    case MPIDI_RANK_MAP_MLUT_MD_STRIDE_BLOCK:
+        MPIDI_COMM(tmp_comm_ptr, local_map).reg.md_stride.dims = MPIDI_COMM(comm_ptr, map).reg.md_stride.dims;
+        MPIDI_COMM(tmp_comm_ptr, local_map).reg.md_stride.params =
+            MPIDI_COMM(comm_ptr, map).reg.md_stride.params;
+        MPIDI_COMM(tmp_comm_ptr, local_map).reg.md_stride.params_p = 
+            MPIDI_COMM(comm_ptr, map).reg.md_stride.params_p;
+        MPIR_Object_add_ref(MPIDI_COMM(comm_ptr, map).reg.md_stride.params_p);
+        MPIDI_COMM(tmp_comm_ptr, local_map).irreg.mlut.t = MPIDI_COMM(comm_ptr, map).irreg.mlut.t;
+        MPIDI_COMM(tmp_comm_ptr, local_map).irreg.mlut.gpid =
+            MPIDI_COMM(comm_ptr, map).irreg.mlut.gpid;
+        MPIR_Object_add_ref(MPIDI_COMM(comm_ptr, map).irreg.mlut.t);
         break;
     case MPIDI_RANK_MAP_NONE:
         MPIR_Assert(0);
