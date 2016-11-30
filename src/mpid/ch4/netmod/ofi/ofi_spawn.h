@@ -281,7 +281,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
     req[1].done = MPIDI_OFI_PEEK_START;
     req[1].event_id = MPIDI_OFI_EVENT_ACCEPT_PROBE;
     match_bits = MPIDI_OFI_init_recvtag(&mask_bits, port_id,
-                                        MPI_ANY_SOURCE, MPI_ANY_TAG, MPIDI_OFI_ENABLE_DATA);
+                                        MPI_ANY_SOURCE, MPI_ANY_TAG);
     match_bits |= MPIDI_OFI_DYNPROC_SEND;
 
     if (phase == 0) {
@@ -352,7 +352,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
 
         match_bits = MPIDI_OFI_init_sendtag(port_id,
                                             comm_ptr->rank,
-                                            tag, MPIDI_OFI_DYNPROC_SEND, MPIDI_OFI_ENABLE_DATA);
+                                            tag, MPIDI_OFI_DYNPROC_SEND);
 
         for (i = 0; i < comm_ptr->local_size; i++) {
             size_t sz = MPIDI_Global.addrnamelen;
@@ -380,7 +380,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
                                            *conn,
                                            match_bits,
                                            (void *) &req[0].context,
-                                           MPIDI_OFI_DO_SEND, MPIDI_OFI_ENABLE_DATA,
+                                           MPIDI_OFI_DO_SEND,
                                            MPIDI_OFI_CALL_LOCK);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -392,7 +392,7 @@ static inline int MPIDI_OFI_dynproc_exchange_map(int root,
                                *conn,
                                match_bits,
                                (void *) &req[1].context,
-                               MPIDI_OFI_DO_SEND, MPIDI_OFI_ENABLE_DATA, MPIDI_OFI_CALL_LOCK);
+                               MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -429,6 +429,11 @@ static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_COMM_CONNECT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_COMM_CONNECT);
+
+    if (!MPIDI_OFI_ENABLE_TAGGED) {
+        MPIR_Assert(0);
+        goto fn_exit;
+    }
 
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_SPAWN_MUTEX);
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_get_tag_from_port(port_name, &port_id));
@@ -480,6 +485,11 @@ static inline int MPIDI_NM_mpi_comm_disconnect(MPIR_Comm * comm_ptr)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_COMM_DISCONNECT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_COMM_DISCONNECT);
 
+    if (!MPIDI_OFI_ENABLE_TAGGED) {
+        MPIR_Assert(0);
+        goto fn_exit;
+    }
+
     MPIDI_OFI_MPI_CALL_POP(MPIR_Barrier_impl(comm_ptr, &errflag));
     MPIDI_OFI_MPI_CALL_POP(MPIR_Comm_free_impl(comm_ptr));
 
@@ -502,6 +512,11 @@ static inline int MPIDI_NM_mpi_open_port(MPIR_Info * info_ptr, char *port_name)
     int len = MPI_MAX_PORT_NAME;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_OPEN_PORT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_OPEN_PORT);
+
+    if (!MPIDI_OFI_ENABLE_TAGGED) {
+        MPIR_Assert(0);
+        goto fn_exit;
+    }
 
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_get_port_name_tag(&port_name_tag));
     MPIDI_OFI_STR_CALL(MPL_str_add_int_arg(&port_name, &len, MPIDI_OFI_PORT_NAME_TAG_KEY,
@@ -528,9 +543,15 @@ static inline int MPIDI_NM_mpi_close_port(const char *port_name)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_CLOSE_PORT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_CLOSE_PORT);
 
+    if (!MPIDI_OFI_ENABLE_TAGGED) {
+        MPIR_Assert(0);
+        goto fn_exit;
+    }
+
     mpi_errno = MPIDI_OFI_get_tag_from_port(port_name, &port_name_tag);
     MPIDI_OFI_free_port_name_tag(port_name_tag);
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_CLOSE_PORT);
     return mpi_errno;
 }
@@ -550,6 +571,11 @@ static inline int MPIDI_NM_mpi_comm_accept(const char *port_name,
     int child_root = -1;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_COMM_ACCEPT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_COMM_ACCEPT);
+
+    if (!MPIDI_OFI_ENABLE_TAGGED) {
+        MPIR_Assert(0);
+        goto fn_exit;
+    }
 
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_SPAWN_MUTEX);
     int rank = comm_ptr->rank;

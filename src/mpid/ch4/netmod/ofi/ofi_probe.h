@@ -45,8 +45,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
         rreq = &r;
 
     match_bits =
-        MPIDI_OFI_init_recvtag(&mask_bits, comm->context_id + context_offset, source, tag,
-                               MPIDI_OFI_ENABLE_DATA);
+        MPIDI_OFI_init_recvtag(&mask_bits, comm->context_id + context_offset, source, tag);
 
     MPIDI_OFI_REQUEST(rreq, event_id) = MPIDI_OFI_EVENT_PEEK;
     MPIDI_OFI_REQUEST(rreq, util_id) = MPIDI_OFI_PEEK_START;
@@ -107,6 +106,11 @@ static inline int MPIDI_NM_probe(int source,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_PROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_PROBE);
 
+    if (!MPIDI_OFI_ENABLE_TAGGED) {
+        mpi_errno = MPIDI_CH4U_probe(source, tag, comm, context_offset, status);
+        goto fn_exit;
+    }
+
     while (!flag) {
         mpi_errno = MPIDI_Iprobe(source, tag, comm, context_offset, &flag, status);
 
@@ -133,17 +137,26 @@ static inline int MPIDI_NM_mpi_improbe(int source,
                                        int context_offset,
                                        int *flag, MPIR_Request ** message, MPI_Status * status)
 {
+    int mpi_errno = MPI_SUCCESS;
+
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IMPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IMPROBE);
+
+    if (!MPIDI_OFI_ENABLE_TAGGED) {
+        mpi_errno = MPIDI_CH4U_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
+        goto fn_exit;
+    }
+
     /* Set flags for mprobe peek, when ready */
-    int mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset,
-                                        flag, status, message, FI_CLAIM | FI_COMPLETION);
+    mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset,
+                                    flag, status, message, FI_CLAIM | FI_COMPLETION);
 
     if (*flag && *message) {
         (*message)->comm = comm;
         MPIR_Object_add_ref(comm);
     }
 
+fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IMPROBE);
     return mpi_errno;
 }
@@ -160,7 +173,15 @@ static inline int MPIDI_NM_mpi_iprobe(int source,
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IPROBE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IPROBE);
+
+    if (!MPIDI_OFI_ENABLE_TAGGED) {
+        mpi_errno = MPIDI_CH4U_mpi_iprobe(source, tag, comm, context_offset, flag, status);
+        goto fn_exit;
+    }
+
     mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, flag, status, NULL, 0ULL);
+
+fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IPROBE);
     return mpi_errno;
 }

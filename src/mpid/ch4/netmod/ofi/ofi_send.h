@@ -36,13 +36,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT);
     match_bits =
-        MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0,
-                               MPIDI_OFI_ENABLE_DATA);
+        MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0);
     mpi_errno =
         MPIDI_OFI_send_handler(MPIDI_OFI_EP_TX_TAG(0), buf, data_sz, NULL, comm->rank,
                                MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG), match_bits,
-                               NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_ENABLE_DATA,
-                               MPIDI_OFI_CALL_LOCK);
+                               NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_CALL_LOCK);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
   fn_exit:
@@ -72,13 +70,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
     MPIDI_OFI_SEND_REQUEST_CREATE_LW(r);
     *request = r;
     match_bits =
-        MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0,
-                               MPIDI_OFI_ENABLE_DATA);
+        MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0);
     mpi_errno =
         MPIDI_OFI_send_handler(MPIDI_OFI_EP_TX_TAG(0), buf, data_sz, NULL, comm->rank,
                                MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG), match_bits,
-                               NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_ENABLE_DATA,
-                               MPIDI_OFI_CALL_LOCK);
+                               NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_CALL_LOCK);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
   fn_exit:
@@ -110,8 +106,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(MPIDI_OFI_SENDPARAMS,
     MPIDI_OFI_REQUEST_CREATE(sreq, MPIR_REQUEST_KIND__SEND);
     *request = sreq;
     match_bits =
-        MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, type,
-                               MPIDI_OFI_ENABLE_DATA);
+        MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, type);
     MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND;
     MPIDI_OFI_REQUEST(sreq, datatype) = datatype;
     dtype_add_ref_if_not_builtin(datatype);
@@ -125,8 +120,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(MPIDI_OFI_SENDPARAMS,
         ackreq->signal_req = sreq;
         MPIR_cc_incr(sreq->cc_ptr, &c);
         ssend_match =
-            MPIDI_OFI_init_recvtag(&ssend_mask, comm->context_id + context_offset, rank, tag,
-                                   MPIDI_OFI_ENABLE_DATA);
+            MPIDI_OFI_init_recvtag(&ssend_mask, comm->context_id + context_offset, rank, tag);
         ssend_match |= MPIDI_OFI_SYNC_SEND_ACK;
         MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_EP_RX_TAG(0),   /* endpoint    */
                                       NULL,     /* recvbuf     */
@@ -160,7 +154,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(MPIDI_OFI_SENDPARAMS,
         mpi_errno =
             MPIDI_OFI_send_handler(MPIDI_OFI_EP_TX_TAG(0), send_buf, data_sz, NULL, comm->rank,
                                    MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG),
-                                   match_bits, NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_ENABLE_DATA,
+                                   match_bits, NULL, MPIDI_OFI_DO_INJECT,
                                    MPIDI_OFI_CALL_LOCK);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -171,7 +165,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(MPIDI_OFI_SENDPARAMS,
             MPIDI_OFI_send_handler(MPIDI_OFI_EP_TX_TAG(0), send_buf, data_sz, NULL, comm->rank,
                                    MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG),
                                    match_bits, (void *) &(MPIDI_OFI_REQUEST(sreq, context)),
-                                   MPIDI_OFI_DO_SEND, MPIDI_OFI_ENABLE_DATA, MPIDI_OFI_CALL_LOCK);
+                                   MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
@@ -230,7 +224,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(MPIDI_OFI_SENDPARAMS,
                                            MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG),
                                            match_bits,
                                            (void *) &(MPIDI_OFI_REQUEST(sreq, context)),
-                                           MPIDI_OFI_DO_SEND, MPIDI_OFI_ENABLE_DATA,
+                                           MPIDI_OFI_DO_SEND,
                                            MPIDI_OFI_CALL_NO_LOCK);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -319,15 +313,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_persistent_send(MPIDI_OFI_SENDPARAMS)
 #define STARTALL_CASE(CASELABEL,FUNC,CONTEXTID) \
   case CASELABEL:                               \
   {                                             \
-    rc = FUNC(MPIDI_OFI_REQUEST(preq,util.persist.buf),              \
-              MPIDI_OFI_REQUEST(preq,util.persist.count),            \
-              MPIDI_OFI_REQUEST(preq,datatype),           \
-              MPIDI_OFI_REQUEST(preq,util.persist.rank),             \
-              MPIDI_OFI_REQUEST(preq,util.persist.tag),              \
-              preq->comm,                       \
-              MPIDI_OFI_REQUEST(preq,util_id) -           \
-              CONTEXTID,                        \
-              &preq->u.persist.real_request);          \
+    mpi_errno = FUNC(MPIDI_OFI_REQUEST(preq,util.persist.buf),              \
+                     MPIDI_OFI_REQUEST(preq,util.persist.count),            \
+                     MPIDI_OFI_REQUEST(preq,datatype),           \
+                     MPIDI_OFI_REQUEST(preq,util.persist.rank),             \
+                     MPIDI_OFI_REQUEST(preq,util.persist.tag),              \
+                     preq->comm,                       \
+                     MPIDI_OFI_REQUEST(preq,util_id) -           \
+                     CONTEXTID,                        \
+                     &preq->u.persist.real_request);          \
     break;                                      \
   }
 
@@ -340,37 +334,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(MPIDI_OFI_SENDPARAMS)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SEND);
+
+    if (!MPIDI_OFI_ENABLE_TAGGED) {
+        mpi_errno = MPIDIG_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, request);
+        goto fn_exit;
+    }
+
     mpi_errno = MPIDI_OFI_send(MPIDI_OFI_SENDARGS, 1, 0ULL);
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SEND);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_rsend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_rsend(MPIDI_OFI_SENDPARAMS)
-{
-    int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_RSEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_RSEND);
-    mpi_errno = MPIDI_OFI_send(MPIDI_OFI_SENDARGS, 1, 0ULL);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_RSEND);
-    return mpi_errno;
-}
-
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_NM_irsend
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_NM_irsend(MPIDI_OFI_SENDPARAMS)
-{
-    int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_IRSEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_IRSEND);
-    mpi_errno = MPIDI_OFI_send(MPIDI_OFI_SENDARGS, 0, 0ULL);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_IRSEND);
     return mpi_errno;
 }
 
@@ -383,7 +356,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(MPIDI_OFI_SENDPARAMS)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SSEND);
+
+    if (!MPIDI_OFI_ENABLE_TAGGED) {
+        mpi_errno = MPIDIG_mpi_ssend(buf, count, datatype, rank, tag, comm, context_offset, request);
+        goto fn_exit;
+    }
+
     mpi_errno = MPIDI_OFI_send(MPIDI_OFI_SENDARGS, 0, MPIDI_OFI_SYNC_SEND);
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SSEND);
     return mpi_errno;
 }
@@ -398,7 +379,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(MPIDI_OFI_SENDPARAMS)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ISEND);
+
+    if (!MPIDI_OFI_ENABLE_TAGGED) {
+        mpi_errno = MPIDIG_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, request);
+        goto fn_exit;
+    }
+
     mpi_errno = MPIDI_OFI_send(MPIDI_OFI_SENDARGS, 0, 0ULL);
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ISEND);
     return mpi_errno;
 }
@@ -412,7 +401,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(MPIDI_OFI_SENDPARAMS)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ISSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ISSEND);
+
+    if (!MPIDI_OFI_ENABLE_TAGGED) {
+        mpi_errno = MPIDIG_mpi_issend(buf, count, datatype, rank, tag, comm, context_offset, request);
+        goto fn_exit;
+    }
+
     mpi_errno = MPIDI_OFI_send(MPIDI_OFI_SENDARGS, 0, MPIDI_OFI_SYNC_SEND);
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ISSEND);
     return mpi_errno;
 }
@@ -424,9 +421,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(MPIDI_OFI_SENDPARAMS)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count, MPIR_Request * requests[])
 {
-    int rc = MPI_SUCCESS, i;
+    int mpi_errno = MPI_SUCCESS, i;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_STARTALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_STARTALL);
+
+    if (!MPIDI_OFI_ENABLE_TAGGED) {
+        mpi_errno = MPIDIG_mpi_startall(count, requests);
+        goto fn_exit;
+    }
 
     for (i = 0; i < count; i++) {
         MPIR_Request *const preq = requests[i];
@@ -447,27 +449,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count, MPIR_Request * req
 
         case MPIDI_PTYPE_BSEND:{
                 MPI_Request sreq_handle;
-                rc = MPIR_Ibsend_impl(MPIDI_OFI_REQUEST(preq, util.persist.buf),
+                mpi_errno = MPIR_Ibsend_impl(MPIDI_OFI_REQUEST(preq, util.persist.buf),
                                       MPIDI_OFI_REQUEST(preq, util.persist.count),
                                       MPIDI_OFI_REQUEST(preq, datatype),
                                       MPIDI_OFI_REQUEST(preq, util.persist.rank),
                                       MPIDI_OFI_REQUEST(preq, util.persist.tag),
                                       preq->comm, &sreq_handle);
 
-                if (rc == MPI_SUCCESS)
+                if (mpi_errno == MPI_SUCCESS)
                     MPIR_Request_get_ptr(sreq_handle, preq->u.persist.real_request);
 
                 break;
             }
 
         default:
-            rc = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __FUNCTION__,
+            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __FUNCTION__,
                                       __LINE__, MPI_ERR_INTERN, "**ch3|badreqtype",
                                       "**ch3|badreqtype %d", MPIDI_OFI_REQUEST(preq,
                                                                                util.persist.type));
         }
 
-        if (rc == MPI_SUCCESS) {
+        if (mpi_errno == MPI_SUCCESS) {
             preq->status.MPI_ERROR = MPI_SUCCESS;
 
             if (MPIDI_OFI_REQUEST(preq, util.persist.type) == MPIDI_PTYPE_BSEND) {
@@ -479,14 +481,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count, MPIR_Request * req
         }
         else {
             preq->u.persist.real_request = NULL;
-            preq->status.MPI_ERROR = rc;
+            preq->status.MPI_ERROR = mpi_errno;
             preq->cc_ptr = &preq->cc;
             MPIR_cc_set(&preq->cc, 0);
         }
     }
 
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_STARTALL);
-    return rc;
+    return mpi_errno;
 }
 
 #undef FUNCNAME
@@ -498,8 +501,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send_init(MPIDI_OFI_SENDPARAMS)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SEND_INIT);
+
+    if (!MPIDI_OFI_ENABLE_TAGGED) {
+        mpi_errno = MPIDIG_mpi_send_init(buf, count, datatype, rank, tag, comm, context_offset, request);
+        goto fn_exit;
+    }
+
     mpi_errno = MPIDI_OFI_persistent_send(MPIDI_OFI_SENDARGS);
     MPIDI_OFI_REQUEST((*request), util.persist.type) = MPIDI_PTYPE_SEND;
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SEND_INIT);
     return mpi_errno;
 }
@@ -513,8 +524,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend_init(MPIDI_OFI_SENDPARAMS)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_SSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_SSEND_INIT);
+
+    if (!MPIDI_OFI_ENABLE_TAGGED) {
+        mpi_errno = MPIDIG_mpi_ssend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
+        goto fn_exit;
+    }
+
     mpi_errno = MPIDI_OFI_persistent_send(MPIDI_OFI_SENDARGS);
     MPIDI_OFI_REQUEST((*request), util.persist.type) = MPIDI_PTYPE_SSEND;
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_SSEND_INIT);
     return mpi_errno;
 }
@@ -528,8 +547,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bsend_init(MPIDI_OFI_SENDPARAMS)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_BSEND_INIT);
+
+    if (!MPIDI_OFI_ENABLE_TAGGED) {
+        mpi_errno = MPIDIG_mpi_bsend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
+        goto fn_exit;
+    }
+
     mpi_errno = MPIDI_OFI_persistent_send(MPIDI_OFI_SENDARGS);
     MPIDI_OFI_REQUEST((*request), util.persist.type) = MPIDI_PTYPE_BSEND;
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_BSEND_INIT);
     return mpi_errno;
 }
@@ -543,8 +570,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rsend_init(MPIDI_OFI_SENDPARAMS)
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RSEND_INIT);
+
+    if (!MPIDI_OFI_ENABLE_TAGGED) {
+        mpi_errno = MPIDIG_mpi_rsend_init(buf, count, datatype, rank, tag, comm, context_offset, request);
+        goto fn_exit;
+    }
+
     mpi_errno = MPIDI_OFI_persistent_send(MPIDI_OFI_SENDARGS);
     MPIDI_OFI_REQUEST((*request), util.persist.type) = MPIDI_PTYPE_SEND;
+
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RSEND_INIT);
     return mpi_errno;
 }
