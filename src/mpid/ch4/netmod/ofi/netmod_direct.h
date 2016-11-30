@@ -21,21 +21,11 @@
 #include "ofi_coll.h"
 #include "ofi_datatype.h"
 #include "ofi_op.h"
-
-#ifdef USE_OFI_TAGGED
 #include "ofi_probe.h"
 #include "ofi_recv.h"
 #include "ofi_send.h"
 #include "ofi_win.h"
 #include "ofi_rma.h"
 #include "ofi_spawn.h"
-#else
-#include "ofi_am_probe.h"
-#include "ofi_am_recv.h"
-#include "ofi_am_send.h"
-#include "ofi_am_win.h"
-#include "ofi_am_rma.h"
-#include "ofi_am_spawn.h"
-#endif /* USE_OFI_TAGGED */
 
 #endif /* NETMOD_DIRECT_H_INCLUDED */
