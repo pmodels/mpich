@@ -13,11 +13,17 @@
 
 #include "../../include/tsp_namespace_pre.h"
 
+#undef MAX_EDGES
+#define MAX_EDGES 32
+
+#undef MAX_REQUESTS
+#define MAX_REQUESTS 32
 
 typedef struct TSP_dt_t {
     MPI_Datatype mpi_dt;
 }
 TSP_dt_t;
+
 
 typedef struct TSP_op_t {
     MPI_Op mpi_op;
@@ -99,6 +105,7 @@ enum {
     TSP_KIND_FREE_MEM,
     TSP_KIND_RECV_REDUCE,
     TSP_KIND_REDUCE_LOCAL,
+    TSP_KIND_NOOP
 };
 
 enum {
@@ -107,14 +114,21 @@ enum {
     TSP_STATE_COMPLETE,
 };
 
+typedef struct{
+    int array[MAX_EDGES];
+    int used;
+    int size;
+} TSP_IntArray;
 
 typedef struct TSP_req_t {
     struct MPIR_Request *mpid_req[2];
     int        kind;
     int        state;
-    uint64_t  *completion_cntr;
-    uint64_t  *trigger_cntr;
-    int        threshold;
+
+    TSP_IntArray invtcs;
+    TSP_IntArray outvtcs;
+
+    int       num_unfinished_dependencies;
     union {
         TSP_sendrecv_arg_t     sendrecv;
         TSP_addref_dt_arg_t    addref_dt;
@@ -129,12 +143,10 @@ TSP_req_t;
 
 
 typedef struct TSP_sched_t {
-    uint64_t   cntr;
-    uint64_t   cur_thresh;
-    uint64_t   posted;
     uint64_t   total;
     uint64_t   completed;
-    TSP_req_t  requests[32];
+    uint64_t   last_wait; /*used by TSP_wait, to keep track of the last TSP_wait vtx id*/
+    TSP_req_t  requests[MAX_REQUESTS];
 }
 TSP_sched_t;
 

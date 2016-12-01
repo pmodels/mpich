@@ -43,6 +43,7 @@
 #undef TSP_sched_finalize
 #undef TSP_init_control_dt
 #undef TSP_fence
+#undef TSP_wait
 #undef TSP_opinfo
 #undef TSP_isinplace
 #undef TSP_dtinfo

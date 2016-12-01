@@ -113,7 +113,11 @@ static inline void TSP_dtinfo(TSP_dt_t *dt,
     *lower_bound = true_lb;
 }
 
-static inline void TSP_fence(TSP_sched_t *sched)
+static inline int TSP_wait(TSP_sched_t *sched)
+{
+}
+
+static inline int TSP_fence(TSP_sched_t *sched)
 {
     int i;
     sched->cur_thresh+=sched->posted;
@@ -130,6 +134,7 @@ static inline void TSP_fence(TSP_sched_t *sched)
     }
 
     sched->posted = 0;
+    return 0;
 }
 
 static inline void TSP_addref_dt(TSP_dt_t *dt,
@@ -162,9 +167,11 @@ static inline void TSP_addref_op(TSP_op_t *op,
     }
 }
 
-static inline void TSP_addref_dt_nb(TSP_dt_t    *dt,
+static inline int TSP_addref_dt_nb(TSP_dt_t    *dt,
                                     int          up,
-                                    TSP_sched_t *sched)
+                                    TSP_sched_t *sched,
+                                    int          n_invtcs,
+                                    int         *invtcs)
 {
     TSP_req_t *req;
     MPIR_Assert(sched->total < 32);
@@ -185,9 +192,11 @@ static inline void TSP_addref_dt_nb(TSP_dt_t    *dt,
                       sched,sched->total,req);
 }
 
-static inline void TSP_addref_op_nb(TSP_op_t    *op,
+static inline int TSP_addref_op_nb(TSP_op_t    *op,
                                     int          up,
-                                    TSP_sched_t *sched)
+                                    TSP_sched_t *sched,
+                                    int          n_invtcs,
+                                    int         *invtcs)
 {
     TSP_req_t *req;
     MPIR_Assert(sched->total < 32);
@@ -250,13 +259,15 @@ static inline void TSP_handle_recv(TSP_sched_t  *sched,
                       sched,sched->total,req);
 }
 
-static inline void TSP_send(const void  *buf,
+static inline int TSP_send(const void  *buf,
                             int          count,
                             TSP_dt_t    *dt,
                             int          dest,
                             int          tag,
                             TSP_comm_t  *comm,
-                            TSP_sched_t *sched)
+                            TSP_sched_t *sched,
+                            int         n_invtcs,
+                            int         *invtcs)
 {
     int            mpi_errno;
     size_t         data_sz;
@@ -301,14 +312,16 @@ static inline void TSP_send(const void  *buf,
     MPIR_Assert(mpi_errno == MPI_SUCCESS);
 }
 
-static inline void TSP_send_accumulate(const void  *buf,
+static inline int TSP_send_accumulate(const void  *buf,
                                        int          count,
                                        TSP_dt_t    *dt,
                                        TSP_op_t    *op,
                                        int          dest,
                                        int          tag,
                                        TSP_comm_t  *comm,
-                                       TSP_sched_t *sched)
+                                       TSP_sched_t *sched,
+                                       int          n_invtcs,
+                                       int          *invtcs)
 {
     int            mpi_errno;
     size_t         data_sz;
@@ -353,13 +366,15 @@ static inline void TSP_send_accumulate(const void  *buf,
     MPIR_Assert(mpi_errno == MPI_SUCCESS);
 }
 
-static inline void TSP_recv(void        *buf,
+static inline int TSP_recv(void        *buf,
                             int          count,
                             TSP_dt_t    *dt,
                             int          source,
                             int          tag,
                             TSP_comm_t  *comm,
-                            TSP_sched_t *sched)
+                            TSP_sched_t *sched,
+                            int         n_invtcs,
+                            int         *invtcs)
 {
     int mpi_errno;
     TSP_req_t *req;
@@ -400,15 +415,17 @@ static inline void TSP_recv(void        *buf,
     MPIR_Assert(mpi_errno == MPI_SUCCESS);
 }
 
-static inline void TSP_recv_reduce(void        *buf,
+static inline int TSP_recv_reduce(void        *buf,
                                    int          count,
                                    TSP_dt_t    *datatype,
                                    TSP_op_t    *op,
                                    int          source,
                                    int          tag,
                                    TSP_comm_t  *comm,
+                                   uint64_t     flags,
                                    TSP_sched_t *sched,
-                                   uint64_t     flags)
+                                   int          n_invtcs,
+                                   int          *invtcs)
 {
     int                     iscontig, mpi_errno;
     size_t                  type_size, out_extent, lower_bound;
@@ -471,7 +488,9 @@ static inline void TSP_reduce_local(const void  *inbuf,
                                     int          count,
                                     TSP_dt_t    *datatype,
                                     TSP_op_t    *operation,
-                                    TSP_sched_t *sched)
+                                    TSP_sched_t *sched,
+                                    int         n_invtcs,
+                                    int         *invtcs)
 {
     TSP_req_t *req;
     MPIR_Assert(sched->total < 32);
@@ -510,13 +529,15 @@ static inline int TSP_dtcopy(void       *tobuf,
                           totype->mpi_dt);
 }
 
-static inline void TSP_dtcopy_nb(void        *tobuf,
+static inline int TSP_dtcopy_nb(void        *tobuf,
                                  int          tocount,
                                  TSP_dt_t    *totype,
                                  const void  *frombuf,
                                  int          fromcount,
                                  TSP_dt_t    *fromtype,
-                                 TSP_sched_t *sched)
+                                 TSP_sched_t *sched,
+                                 int         n_invtcs,
+                                 int          *invtcs)
 {
     TSP_req_t *req;
     MPIR_Assert(sched->total < 32);
@@ -552,8 +573,10 @@ static inline void TSP_free_mem(void *ptr)
     MPL_free(ptr);
 }
 
-static inline void TSP_free_mem_nb(void        *ptr,
-                                   TSP_sched_t *sched)
+static inline int TSP_free_mem_nb(void        *ptr,
+                                   TSP_sched_t *sched,
+                                   int          n_invtcs,
+                                   int          *invtcs)
 {
     TSP_req_t *req;
     MPIR_Assert(sched->total < 32);

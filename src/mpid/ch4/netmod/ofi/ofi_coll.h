@@ -45,8 +45,7 @@ MPIDI_OFI_MPI_OP_TO_COLLOP(STUB,stub,STUB,stub);
 MPIDI_OFI_MPI_OP_TO_COLLOP(MPICH,mpich,STUB,stub);
 MPIDI_OFI_MPI_OP_TO_COLLOP(SHM,shm,GR,gr);
 
-static inline int MPIDI_OFI_cycle_algorithm(MPIR_Comm *comm_ptr, int pick[], int num)
-{
+static inline int MPIDI_OFI_cycle_algorithm(MPIR_Comm *comm_ptr, int pick[], int num) {
     if(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
         return 0;
 
@@ -67,8 +66,8 @@ static inline int MPIDI_OFI_cycle_algorithm(MPIR_Comm *comm_ptr, int pick[], int
 static inline int MPIDI_NM_mpi_barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno, coll_error;
-    int valid_colls[] = {1, 2, 3, 4, 5, 6};
-    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,6);
+    int valid_colls[] = {1, 2};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,2);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_BARRIER);
@@ -140,8 +139,8 @@ static inline int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Datatype datat
                                      int root, MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno, coll_error;
-    int valid_colls[] = {1, 2, 3, 4};
-    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,4);
+    int valid_colls[] = {1, 2};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,2);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_BCAST);
@@ -235,8 +234,8 @@ static inline int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *recvbuf, int
                                          MPIR_Errflag_t *errflag)
 {
     int mpi_errno, coll_error;
-    int valid_colls[] = {1,2,3,4,5,6,7};
-    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,7);
+    int valid_colls[] = {0,2,4};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,1);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ALLREDUCE);
@@ -358,7 +357,7 @@ static inline int MPIDI_NM_mpi_allgather(const void *sendbuf, int sendcount, MPI
                                          MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno, coll_error;
-    int valid_colls[]= {1};
+    int valid_colls[]={0,1,2,3};
     int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,1);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLGATHER);
@@ -496,7 +495,7 @@ static inline int MPIDI_NM_mpi_alltoall(const void *sendbuf, int sendcount, MPI_
                                         MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno, coll_error;
-    int valid_colls[] = {0};
+    int valid_colls[] = {0, 1, 2, 3};
     int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,1);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLTOALL);
@@ -531,7 +530,7 @@ static inline int MPIDI_NM_mpi_alltoallv(const void *sendbuf, const int *sendcou
                                          MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno, coll_error;
-    int valid_colls[] = {1};
+    int valid_colls[] = {0,1,2,3};
     int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,1);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ALLTOALLV);
@@ -595,8 +594,8 @@ static inline int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recvbuf, int co
                                       MPIR_Comm *comm_ptr, MPIR_Errflag_t *errflag)
 {
     int mpi_errno, coll_error;
-    int valid_colls[] = {1, 2, 3, 4};
-    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,4);
+    int valid_colls[] = {1, 2};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,2);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_REDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_REDUCE);
@@ -985,8 +984,8 @@ static inline int MPIDI_NM_mpi_ineighbor_alltoallw(const void *sendbuf, const in
 static inline int MPIDI_NM_mpi_ibarrier(MPIR_Comm *comm_ptr, MPI_Request *req)
 {
     int mpi_errno;
-    int valid_colls[] = {1, 2, 3, 4, 5, 6};
-    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,6);
+    int valid_colls[] = {0};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,1);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IBARRIER);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IBARRIER);
@@ -1063,8 +1062,8 @@ static inline int MPIDI_NM_mpi_ibcast(void *buffer, int count, MPI_Datatype data
                                       int root, MPIR_Comm *comm_ptr, MPI_Request *req)
 {
     int mpi_errno;
-    int valid_colls[] = {1, 2, 3, 4};
-    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,4);
+    int valid_colls[] = {1, 2};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,2);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IBCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IBCAST);
@@ -1200,8 +1199,8 @@ static inline int MPIDI_NM_mpi_iallreduce(const void *sendbuf, void *recvbuf, in
                                           MPI_Request *request)
 {
     int mpi_errno;
-    int valid_colls[] = {1, 2, 3, 4, 5, 6, 7};
-    int use_coll = MPIDI_OFI_cycle_algorithm(comm,valid_colls,7);
+    int valid_colls[] = {1, 2, 4};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm,valid_colls,3);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IALLREDUCE);
@@ -1323,8 +1322,8 @@ static inline int MPIDI_NM_mpi_ialltoall(const void *sendbuf, int sendcount, MPI
                                          void *recvbuf, int recvcount, MPI_Datatype recvtype,
                                          MPIR_Comm *comm_ptr, MPI_Request *req)
 {
-    int mpi_errno;
-    int valid_colls[] = {1};
+    int mpi_errno, coll_error;
+    int valid_colls[] = {1, 2, 3};
     int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,1);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IALLTOALL);
@@ -1503,8 +1502,8 @@ static inline int MPIDI_NM_mpi_ireduce(const void *sendbuf, void *recvbuf, int c
                                        MPIR_Comm *comm_ptr, MPI_Request *req)
 {
     int mpi_errno;
-    int valid_colls[] = {1, 2, 3, 4};
-    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,4);
+    int valid_colls[] = {1, 2};
+    int use_coll = MPIDI_OFI_cycle_algorithm(comm_ptr,valid_colls,2);
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_IREDUCE);

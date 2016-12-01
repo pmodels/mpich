@@ -306,6 +306,7 @@ static inline int COLL_iallreduce(const void  *sendbuf,
                                   COLL_comm_t *comm,
                                   COLL_req_t  *request)
 {
+#if 0
     COLL_sched_t  *s;
     int                  done = 0;
     int                  tag = (comm->curTag)++;
@@ -327,7 +328,7 @@ static inline int COLL_iallreduce(const void  *sendbuf,
         TAILQ_INSERT_TAIL(&COLL_progress_global.head,&request->elem,list_data);
     } else
         TSP_free_mem(s);
-
+#endif
     return 0;
 }
 

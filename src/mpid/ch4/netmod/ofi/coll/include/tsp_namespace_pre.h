@@ -50,6 +50,7 @@
 #define TSP_sched_finalize   TSP_NAMESPACE(sched_finalize)
 #define TSP_init_control_dt  TSP_NAMESPACE(init_control_dt)
 #define TSP_fence            TSP_NAMESPACE(fence)
+#define TSP_wait             TSP_NAMESPACE(wait)
 #define TSP_opinfo           TSP_NAMESPACE(opinfo)
 #define TSP_isinplace        TSP_NAMESPACE(isinplace)
 #define TSP_dtinfo           TSP_NAMESPACE(dtinfo)

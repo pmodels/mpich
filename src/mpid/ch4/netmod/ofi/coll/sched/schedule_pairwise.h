@@ -26,6 +26,7 @@ COLL_sched_alltoall_pairwise(const void *sendbuf,
                              COLL_sched_t *s,
                              int                 finalize)
 {
+#if 0
     void    *tmp_buf = NULL;
     int     pof2, i, dst, src, is_contig;
     COLL_tree_comm_t *mycomm   = &comm->tree_comm;
@@ -47,15 +48,15 @@ COLL_sched_alltoall_pairwise(const void *sendbuf,
         pof2 = 0;
 
     assert(!TSP_isinplace(sendbuf) || pof2==1);
-
-    if(TSP_isinplace(sendbuf)) {
+    int dtcopy_id, recv_id, send_id;
+    int isinplace = TSP_isinplace(sendbuf);
+    if(isinplace){
         tmp_buf = TSP_allocate_mem(recvcount*recvtype_extent);
     } else {
         TSP_dtinfo(&sendtype->tsp_dt,&is_contig,&type_size, &sendtype_extent,&st_lb);
-        TSP_dtcopy_nb(recvbuf+rank*recvcount*recvtype_extent, recvcount, &recvtype->tsp_dt,
-                      (char *)sendbuf+rank*sendcount*sendtype_extent,
-                      sendcount, &sendtype->tsp_dt, &s->tsp_sched);
-        TSP_fence(&s->tsp_sched);
+        dtcopy_id = TSP_dtcopy_nb(recvbuf+rank*recvcount*recvtype_extent, recvcount, &recvtype->tsp_dt,
+                                    (char*)sendbuf+rank*sendcount*sendtype_extent,
+                                    sendcount, &sendtype->tsp_dt, 0, NULL, &s->tsp_sched);
     }
 
     /* Do the pairwise exchanges */
@@ -70,21 +71,20 @@ COLL_sched_alltoall_pairwise(const void *sendbuf,
             if(0) fprintf(stderr, "src:%d, dst:%d\n", src,dst);
         }
 
-        //copy tmp_buf here
-        if(TSP_isinplace(sendbuf)) {
+        /*copy tmp_buf here*/
+        if(isinplace){
             /* copy recv buffer to a temp buffer*/
-            TSP_dtcopy_nb(tmp_buf, recvcount, &recvtype->tsp_dt,
-                          (char *)recvbuf+dst*recvcount*recvtype_extent,
-                          recvcount, &recvtype->tsp_dt, &s->tsp_sched);
-            TSP_fence(&s->tsp_sched);
-        } else {
-            tmp_buf=(char *)sendbuf+dst*sendcount*sendtype_extent;
+            dtcopy_id = TSP_dtcopy_nb(tmp_buf, recvcount, &recvtype->tsp_dt,
+                         (char*)recvbuf+dst*recvcount*recvtype_extent,
+                         recvcount, &recvtype->tsp_dt, (i==1)?0:1, &send_id,&s->tsp_sched);
         }
-
-        TSP_recv((char *)recvbuf+src*recvcount*recvtype_extent, recvcount,
-                 &recvtype->tsp_dt, src, tag, &comm->tsp_comm, &s->tsp_sched);
-        TSP_send((char *)tmp_buf, recvcount,
-                 &recvtype->tsp_dt, dst, tag, &comm->tsp_comm, &s->tsp_sched);
+        else{
+            tmp_buf=(char*)sendbuf+dst*sendcount*sendtype_extent;
+        }
+        recv_id = TSP_recv((char*)recvbuf+src*recvcount*recvtype_extent, recvcount,
+                        &recvtype->tsp_dt, src, tag, &comm->tsp_comm, &s->tsp_sched);
+        send_id = TSP_send((char*)tmp_buf, recvcount,
+                        &recvtype->tsp_dt, dst, tag, &comm->tsp_comm, (isinplace==1)?1:0,&dtcopy_id,&s->tsp_sched);
         TSP_fence(&s->tsp_sched);
     }
 
@@ -95,6 +95,6 @@ COLL_sched_alltoall_pairwise(const void *sendbuf,
         TSP_fence(&s->tsp_sched);
         TSP_sched_commit(&s->tsp_sched);
     }
-
+#endif
     return 0;
 }

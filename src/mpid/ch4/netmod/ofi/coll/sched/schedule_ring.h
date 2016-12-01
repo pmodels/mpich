@@ -25,6 +25,7 @@ COLL_sched_alltoall_ring(const void     *sendbuf,
                          COLL_sched_t       *s,
                          int                 finalize)
 {
+#if 0
     void    *tmp_buf = NULL;
     void    *tmp_sendbuf = NULL;
     void    *swp_buf = NULL;
@@ -114,7 +115,7 @@ COLL_sched_alltoall_ring(const void     *sendbuf,
         TSP_fence(&s->tsp_sched);
         TSP_sched_commit(&s->tsp_sched);
     }
-
+#endif
     return 0;
 }
 
@@ -130,6 +131,7 @@ COLL_sched_allgather_ring(const void    *sendbuf,
                           COLL_sched_t       *s,
                           int                 finalize)
 {
+#if 0
     void    *tmp_buf = NULL;
     void    *tmp_sendbuf = NULL;
     void    *swp_buf = NULL;
@@ -211,6 +213,6 @@ COLL_sched_allgather_ring(const void    *sendbuf,
         TSP_fence(&s->tsp_sched);
         TSP_sched_commit(&s->tsp_sched);
     }
-
+#endif
     return 0;
 }
