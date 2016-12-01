@@ -44,8 +44,6 @@ dnl                            This name server will be used if the
 dnl                            default name server is selected.
 dnl    MPID_NO_PM            - If yes, the device does not require any
 dnl                            PM implementation.  
-dnl    MPID_NO_PMI           - If yes, the device does not require any 
-dnl                            PMI implementation.
 dnl    MPID_MAX_PROCESSOR_NAME - The maximum number of character in a processor
 dnl                            name.  If not set, 128 will be used.
 dnl    MPID_MAX_ERROR_STRING - The maximum number of character in an error
@@ -1679,14 +1677,7 @@ AC_SUBST(pm_name)
 # Once we've selected the process manager (or managers), we can
 # check that we have a compatible PMI implemenatation.
 # with-pmi
-if test "$MPID_NO_PMI" = yes ; then
-    if test "$with_pmi" != "default" -a "$with_pmi" != no ; then
-        AC_MSG_ERROR([The PMI chosen ($with_pmi) is is not valid for the selected device ($with_device)])
-    fi
-    # This is used to change with_pmi=default to with_pmi=no in the case
-    # where the device does not want a PMI
-    with_pmi=no
-elif test "$with_pmi" != "no" ; then
+if test "$with_pmi" != "no" ; then
     if test "$with_pmi" = "default" -o "$with_pmi" = "yes" ; then
         if test -n "$PM_REQUIRES_PMI" ; then
 	    with_pmi=$PM_REQUIRES_PMI
@@ -1712,8 +1703,6 @@ elif test "$with_pmi" != "no" ; then
         # only add to subsystems if a full configure is present
         subsystems="$subsystems src/pmi/$pmi_name"
     fi
-else
-    AC_MSG_ERROR([A PMI implementation must be selected or the default used.])
 fi
 
 # Step 3: complete pm setup.
