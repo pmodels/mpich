@@ -167,7 +167,6 @@ COLL_sched_barrier(int                 tag,
                    int                 k,
                    COLL_sched_t *s)
 {
-#if 0
     int i, j;
     COLL_tree_comm_t *mycomm    = &comm->tree_comm;
     COLL_tree_t      *tree      = &mycomm->tree;
@@ -183,36 +182,24 @@ COLL_sched_barrier(int                 tag,
                        0,
                        tree);
     }
+    /* Receive from all children */
+    SCHED_FOREACHCHILDDO(TSP_recv(NULL,0,dt,j,tag,&comm->tsp_comm,
+			      &s->tsp_sched,0,NULL));
+
+    int fid = TSP_fence(&s->tsp_sched);
     
-
     if(tree->parent == -1) {
-        SCHED_FOREACHCHILDDO(TSP_recv(NULL,0,dt,j,tag,&comm->tsp_comm,
-                                      &s->tsp_sched));
-
-        TSP_fence(&s->tsp_sched);
         SCHED_FOREACHCHILDDO(TSP_send(NULL,0,dt,j,tag,&comm->tsp_comm,
-                                      &s->tsp_sched));
-        TSP_fence(&s->tsp_sched);
+                                      &s->tsp_sched,1,&fid));
     } else {
-        /* Receive from all children */
-        SCHED_FOREACHCHILDDO(TSP_recv(NULL,0,dt,j,tag,&comm->tsp_comm,
-                                      &s->tsp_sched));
-        TSP_fence(&s->tsp_sched);
         /* Send to Parent      */
-        TSP_send(NULL,0,dt,tree->parent,tag,&comm->tsp_comm,&s->tsp_sched);
-        TSP_fence(&s->tsp_sched);
+        TSP_send(NULL,0,dt,tree->parent,tag,&comm->tsp_comm,&s->tsp_sched,1,&fid);
         /* Receive from Parent */
-        TSP_recv(NULL,0,dt,tree->parent,tag,&comm->tsp_comm,&s->tsp_sched);
-        TSP_fence(&s->tsp_sched);
+        int recv_id = TSP_recv(NULL,0,dt,tree->parent,tag,&comm->tsp_comm,&s->tsp_sched,0,NULL);
         /* Send to all children */
         SCHED_FOREACHCHILDDO(TSP_send(NULL,0,dt,j,tag,&comm->tsp_comm,
-                                      &s->tsp_sched));
-        TSP_fence(&s->tsp_sched);
+                                      &s->tsp_sched,1,&recv_id));
     }
-
-    TSP_fence(&s->tsp_sched);
-    TSP_sched_commit(&s->tsp_sched);
-#endif
     return 0;
 }
 
