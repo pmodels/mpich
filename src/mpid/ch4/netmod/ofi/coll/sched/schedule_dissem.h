@@ -19,9 +19,9 @@ base k representation of the offset. The argument phase refers
 to the phase of the brucks algorithm.
 */
 static inline int
-COLL_brucks_pup(bool pack, void *rbuf, void *pupbuf, COLL_dt_t *rtype, int count,
-                int phase, int k, int digitval, int comm_size, int *pupsize, COLL_sched_t *s)
-{
+COLL_brucks_pup(bool pack, void *rbuf, void *pupbuf, COLL_dt_t* rtype, int count, \
+        int phase, int k, int digitval, int comm_size, int *pupsize, COLL_sched_t *s, int ninvtcs, int *invtcs){
+#if 0
     size_t type_size, extent, lb;
     int is_contig;
     TSP_dtinfo(&rtype->tsp_dt,&is_contig,&type_size,&extent,&lb);
@@ -32,18 +32,14 @@ COLL_brucks_pup(bool pack, void *rbuf, void *pupbuf, COLL_dt_t *rtype, int count
     int delta = (k-1)*pow_k_phase;/*distance between non-consecutive occurences of digitval*/
 
     *pupsize = 0;/*points to the first empty location in pupbuf*/
-
-    while(offset < comm_size) {
-        if(pack) {
-            TSP_dtcopy_nb(pupbuf+*pupsize, count, &rtype->tsp_dt, rbuf+offset*count*extent,
-                          count, &rtype->tsp_dt, &s->tsp_sched);
-
-            if(0) fprintf(stderr,"packing rbuf+%ld to pupbuf+%d\n",offset*count*extent,*pupsize);
-        } else {
-            TSP_dtcopy_nb(rbuf+offset*count*extent, count, &rtype->tsp_dt,
-                          pupbuf+*pupsize, count, &rtype->tsp_dt, &s->tsp_sched);
-
-            if(0) fprintf(stderr,"unpacking from pupbuf+%d to rbuf+%ld\n",*pupsize,offset*count*extent);
+    while(offset < comm_size){
+        if(pack){
+            TSP_dtcopy_nb(pupbuf+*pupsize, count, rtype, rbuf+offset*count*extent, count, rtype, &s->tsp_sched, ninvtcs, invtcs);
+            if(0) fprintf(stderr,"packing rbuf+%d to pupbuf+%d\n",offset*count*extent,*pupsize);
+        }
+        else{
+            TSP_dtcopy_nb(rbuf+offset*count*extent, count, rtype, pupbuf+*pupsize, count, rtype, &s->tsp_sched, ninvtcs, invtcs);
+            if(0) fprintf(stderr,"unpacking from pupbuf+%d to rbuf+%d\n",*pupsize,offset*count*extent);
         }
 
         offset += 1;
@@ -56,8 +52,7 @@ COLL_brucks_pup(bool pack, void *rbuf, void *pupbuf, COLL_dt_t *rtype, int count
 
         *pupsize += count*extent;
     }
-
-    return 0;
+#endif
 }
 
 static inline int
@@ -65,6 +60,10 @@ COLL_sched_alltoall(const void *sendbuf, int sendcount, COLL_dt_t *sendtype,
                     void *recvbuf, int recvcount, COLL_dt_t *recvtype,
                     COLL_comm_t *comm, int tag, COLL_sched_t *s)
 {
+#if 0
+    int invtcs[MAX_REQUESTS];
+    int n_invtcs;
+
     int k=2;
     int rank = TSP_rank(&comm->tsp_comm);
     int size = TSP_size(&comm->tsp_comm);
@@ -96,23 +95,23 @@ COLL_sched_alltoall(const void *sendbuf, int sendcount, COLL_dt_t *sendtype,
     const void *senddata;/*pointer to send data*/
 
     if(TSP_isinplace(sendbuf)) {
-        //copy from recvbuf to tmp_buf
-        TSP_dtcopy_nb(tmp_buf, size*recvcount, &recvtype->tsp_dt,
-                      recvbuf, size*recvcount, &recvtype->tsp_dt,
-                      &s->tsp_sched);
+        /*copy from recvbuf to tmp_buf*/
+        invtcs[0] = TSP_dtcopy_nb(tmp_buf, size*recvcount, recvtype, \
+                        recvbuf, size*recvcount, recvtype, &s->tsp_sched, 0, NULL);
         senddata = tmp_buf;
-    } else {
+
+        n_invtcs=1;
+    }
+    else{
         senddata = sendbuf;
+        n_invtcs=0;
     }
 
     /*Brucks algo Step 1: rotate the data locally*/
-    TSP_dtcopy_nb(recvbuf, (size-rank)*recvcount, &recvtype->tsp_dt,
-                  (void *)((char *)senddata+rank*sendcount*s_extent),
-                  (size-rank)*sendcount, &sendtype->tsp_dt, &s->tsp_sched);
-    TSP_dtcopy_nb((void *)((char *)recvbuf+(size-rank)*recvcount*r_extent),
-                  rank*recvcount, &recvtype->tsp_dt, senddata, rank*sendcount,
-                  &sendtype->tsp_dt, &s->tsp_sched);
-
+    TSP_dtcopy_nb(recvbuf, (size-rank)*recvcount, recvtype, \
+        (void*)((char*)senddata+rank*sendcount*s_extent), (size-rank)*sendcount, sendtype, &s->tsp_sched, n_invtcs, invtcs);
+    TSP_dtcopy_nb((void*)((char*)recvbuf+(size-rank)*recvcount*r_extent), \
+        rank*recvcount, recvtype, senddata, rank*sendcount, sendtype, &s->tsp_sched, n_invtcs, invtcs);
     if(0) fprintf(stderr,"Step 1 data rotation scheduled\n");
 
     /*Step 2: Allocate buffer space for packing of data*/
@@ -130,7 +129,18 @@ COLL_sched_alltoall(const void *sendbuf, int sendcount, COLL_dt_t *sendtype,
     /*This is TSP_dt for packed buffer (for referring to one byte sized elements,
     currently just using control_dt which is MPI_CHAR in mpich transport*/
     TSP_dt_t *pack_dt = &COLL_global.control_dt;
+    /*use invtcs in the following manner
+    0..k-2 for pack ids
+    k-1..2k-3 for send ids
+    2k-2..3k-4 for recv ids
+    3k-3..4k-5 for unpack ids
+    */
+    int *packids = invtcs;
+    int *sendids = invtcs+k-1;
+    int *recvids = invtcs+2k-2;
+    int *unpackids = invtcs+3k-3;
 
+    int fenceid = TSP_fence(&s->tsp_sched);
     int packsize=0;
 
     for(i=0; i<nphases; i++) {
@@ -141,34 +151,21 @@ COLL_sched_alltoall(const void *sendbuf, int sendcount, COLL_dt_t *sendtype,
             src = (rank - delta*j + size)%size;
             dst = (rank + delta*j)%size;
 
-            COLL_brucks_pup(1,recvbuf,tmp_sbuf[j-1],recvtype,recvcount,i,k,j,size,&packsize,s);
-
+            packids[j-1] = COLL_brucks_pup(1,recvbuf,tmp_sbuf[j-1],recvtype,recvcount,i,k,j,size,&packsize,s,(i==0)?1:k-1,(i==0)?&fenceid:unpackids);
+            TSP_add_vtx_dependencies(s,packids[j-1],1,sendids[j-1]);
             if(0) fprintf(stderr,"phase %d, digit %d packing scheduled\n", i,j);
-
-            TSP_send(tmp_sbuf[j-1],packsize,pack_dt,dst,tag,&comm->tsp_comm,&s->tsp_sched);
-
+            sendids[j-1] = TSP_send(tmp_sbuf[j-1],packsize,pack_dt,dst,tag,&comm->tsp_comm,&s->tsp_sched,1,packids[j-1]);
             if(0) fprintf(stderr,"phase %d, digit %d  send scheduled\n", i,j);
-
-            TSP_recv(tmp_rbuf[j-1],packsize,pack_dt,src,tag,&comm->tsp_comm,&s->tsp_sched);
-
+            recvids[j-1] = TSP_recv(tmp_rbuf[j-1],packsize,pack_dt,src,tag,&comm->tsp_comm,&s->tsp_sched,1,(i==0)?&fenceid:unpackids[j-1]);
             if(0) fprintf(stderr,"phase %d, digit %d recv scheduled\n", i,j);
-        }
-
-        TSP_fence(&s->tsp_sched);
-
-        for(j=1; j<k; j++) {
-            if(pow(k,i)*j >= size)/*if the first location exceeds comm size, nothing was received*/
-                break;
-
-            COLL_brucks_pup(0,recvbuf,tmp_rbuf[j-1],recvtype,recvcount,i,k,j,size,&packsize,s);
-
+            unpackids[j-1] = COLL_brucks_pup(0,recvbuf,tmp_rbuf[j-1],recvtype,recvcount,i,k,j,size,&packsize,s,1,packids[j-1]);
+            TSP_add_vtx_dependencies(s,unpackids[j-1],1,recvids[j-1]);
             if(0) fprintf(stderr,"phase %d, digit %d unpacking scheduled\n", i,j);
         }
 
         if(0) fprintf(stderr,"phase %d scheduled\n", i);
 
         delta *=k;
-        TSP_fence(&s->tsp_sched);
     }
 
     if(0) fprintf(stderr,"Step 2 %d scheduled\n", i);
@@ -177,34 +174,28 @@ COLL_sched_alltoall(const void *sendbuf, int sendcount, COLL_dt_t *sendtype,
     /*TODO: MPICH implementation does some lower_bound adjustment here for derived datatypes,
     I am skipping that for now, will come back to it later on - will require adding API
     for getting true_lb*/
-    TSP_dtcopy_nb(tmp_buf, (size-rank-1)*recvcount, &recvtype->tsp_dt,
-                  (void *)((char *)recvbuf+(rank+1)*recvcount*r_extent),
-                  (size-rank-1)*recvcount, &recvtype->tsp_dt, &s->tsp_sched);
-    TSP_dtcopy_nb((void *)((char *)tmp_buf+(size-rank-1)*recvcount*r_extent),
-                  (rank+1)*recvcount, &recvtype->tsp_dt, recvbuf, (rank+1)*recvcount,
-                  &recvtype->tsp_dt, &s->tsp_sched);
-    TSP_fence(&s->tsp_sched);
+    invtcs[0] = TSP_dtcopy_nb(tmp_buf, (size-rank-1)*recvcount, recvtype, \
+        (void*)((char*)recvbuf+(rank+1)*recvcount*r_extent), (size-rank-1)*recvcount, recvtype, &s->tsp_sched, k-1, unpackids);
+    invtcs[1] = TSP_dtcopy_nb((void*)((char*)tmp_buf+(size-rank-1)*recvcount*r_extent), \
+        (rank+1)*recvcount, recvtype, recvbuf, (rank+1)*recvcount, recvtype, &s->tsp_sched, k-1, unpackids);
 
     /*invert the buffer now to get the result in desired order*/
     for(i=0; i<size; i++)
-        TSP_dtcopy_nb((void *)((char *)recvbuf+(size-i-1)*recvcount*r_extent),
-                      recvcount, &recvtype->tsp_dt, tmp_buf+i*recvcount*r_extent,
-                      recvcount, &recvtype->tsp_dt, &s->tsp_sched);
-
-    TSP_fence(&s->tsp_sched);
+        TSP_dtcopy_nb((void*)((char*)recvbuf+(size-i-1)*recvcount*r_extent), \
+            recvcount, recvtype, tmp_buf+i*recvcount*r_extent, recvcount, recvtype, &s->tsp_sched,2,invtcs);
+    fenceid = TSP_fence(&s->tsp_sched);
 
     if(0) fprintf(stderr,"Step 3: data rearrangement scheduled\n");
 
     /*free all allocated memory*/
-    for(i=0; i<k-1; i++) {
-        TSP_free_mem_nb(tmp_sbuf[i], &s->tsp_sched);
-        TSP_free_mem_nb(tmp_rbuf[i], &s->tsp_sched);
+    for(i=0; i<k-1; i++){
+        TSP_free_mem_nb(tmp_sbuf[i], &s->tsp_sched,1,sendids[i]);
+        TSP_free_mem_nb(tmp_rbuf[i], &s->tsp_sched,1,recvids[i]);
     }
-
-    TSP_free_mem_nb(tmp_sbuf, &s->tsp_sched);
-    TSP_free_mem_nb(tmp_rbuf, &s->tsp_sched);
-    TSP_free_mem_nb(tmp_buf, &s->tsp_sched);
-    return 0;
+    TSP_free_mem(tmp_sbuf, &s->tsp_sched);
+    TSP_free_mem(tmp_rbuf, &s->tsp_sched);
+    TSP_free_mem_nb(tmp_buf, &s->tsp_sched,1,&fenceid);
+#endif
 }
 
 static inline int
@@ -219,6 +210,7 @@ COLL_sched_barrier_dissem(int                 tag,
 
     for(n=mycomm->tree.nranks-1; n>0; n>>=1)nphases++;
 
+    int *recvids = TSP_allocate_mem(sizeof(int)*nphases);
     for(i=0; i<nphases; i++) {
         int shift   = (1<<i);
         int to      = (mycomm->tree.rank+shift)%mycomm->tree.nranks;
@@ -226,13 +218,12 @@ COLL_sched_barrier_dissem(int                 tag,
 
         if(from<0) from = mycomm->tree.nranks+from;
 
-        TSP_recv(NULL,0,dt,from,tag,&comm->tsp_comm,&s->tsp_sched);
-        TSP_send(NULL,0,dt,to,tag,&comm->tsp_comm,&s->tsp_sched);
-        TSP_fence(&s->tsp_sched);
+        recvids[i] = TSP_recv(NULL,0,dt,from,tag,&comm->tsp_comm,&s->tsp_sched,0,NULL);
+        TSP_send(NULL,0,dt,to,tag,&comm->tsp_comm,&s->tsp_sched,i,recvids);
     }
 
-    TSP_fence(&s->tsp_sched);
     TSP_sched_commit(&s->tsp_sched);
+    TSP_free_mem(recvids);
     return 0;
 }
 
@@ -260,37 +251,37 @@ COLL_sched_allreduce_dissem(const void         *sendbuf,
     lowerPow = (1<<(nphases-1));
     notPow2  = (upperPow!=mycomm->tree.nranks);
 
-    TSP_dtcopy_nb(recvbuf,count,&datatype->tsp_dt,
+    int dtcopy_id = TSP_dtcopy_nb(recvbuf,count,&datatype->tsp_dt,
                   sendbuf,count,&datatype->tsp_dt,
-                  &s->tsp_sched);
+                  &s->tsp_sched,0,NULL);
 
-    TSP_fence(&s->tsp_sched);
     inLower        = mycomm->tree.rank<lowerPow;
     dissemPhases = nphases-1;
     dissemRanks  = lowerPow;
 
+    int rrid=-1, sid;/*recv_reduce id and send id for supporting DAG*/
     if(notPow2 && inLower) {
         int from = mycomm->tree.rank+lowerPow;
 
         if(from < mycomm->tree.nranks) {
-            TSP_recv_reduce(recvbuf,count,&datatype->tsp_dt,
-                            &op->tsp_op,from,tag,&comm->tsp_comm,
-                            &s->tsp_sched,TSP_FLAG_REDUCE_L);
-            TSP_fence(&s->tsp_sched);
+            rrid = TSP_recv_reduce(recvbuf,count,&datatype->tsp_dt,
+                            &op->tsp_op,from,tag,&comm->tsp_comm, TSP_FLAG_REDUCE_L,
+                            &s->tsp_sched,1, &dtcopy_id);
         }
-    } else if(notPow2) {
+    }
+    else if(notPow2) {
         int to = mycomm->tree.rank%lowerPow;
-        TSP_send_accumulate(recvbuf,count,&datatype->tsp_dt,
+        TSP_send_accumulate(sendbuf,count,&datatype->tsp_dt,
                             &op->tsp_op,to,tag,&comm->tsp_comm,
-                            &s->tsp_sched);
-        TSP_fence(&s->tsp_sched);
+                            &s->tsp_sched,0, NULL);
     } else {
         inLower        = 1;
         dissemPhases = nphases;
         dissemRanks  = mycomm->tree.nranks;
     }
-
+    int id[2]; id[0]=(rrid==-1)?dtcopy_id:rrid;
     if(inLower) {
+        void *tmpbuf = TSP_allocate_mem(extent*count);
         for(i=0; i<dissemPhases; i++) {
             int shift      = (1<<i);
             int to         = (mycomm->tree.rank+shift)%dissemRanks;
@@ -298,15 +289,18 @@ COLL_sched_allreduce_dissem(const void         *sendbuf,
 
             if(from<0)from = dissemRanks+from;
 
-            TSP_send_accumulate(recvbuf,count,&datatype->tsp_dt,
+            dtcopy_id = TSP_dtcopy_nb(tmpbuf,count,&datatype->tsp_dt,
+                          recvbuf,count,&datatype->tsp_dt,
+                          &s->tsp_sched,(i==0)?1:2,id);
+            id[0] = TSP_send_accumulate(tmpbuf,count,&datatype->tsp_dt,
                                 &op->tsp_op,to,tag,&comm->tsp_comm,
-                                &s->tsp_sched);
-            TSP_fence(&s->tsp_sched);
-            TSP_recv_reduce(recvbuf,count,&datatype->tsp_dt,
+                                &s->tsp_sched,1, &dtcopy_id);
+            id[1] = TSP_recv_reduce(recvbuf,count,&datatype->tsp_dt,
                             &op->tsp_op,from,tag,&comm->tsp_comm,
-                            &s->tsp_sched,TSP_FLAG_REDUCE_L);
-            TSP_fence(&s->tsp_sched);
+                            TSP_FLAG_REDUCE_L,&s->tsp_sched,1, &dtcopy_id);
         }
+        /***FREE tmpbuf***/
+        TSP_free_mem_nb(tmpbuf,&s->tsp_sched,1,id);
     }
 
     if(notPow2 && inLower) {
@@ -314,15 +308,12 @@ COLL_sched_allreduce_dissem(const void         *sendbuf,
 
         if(to < mycomm->tree.nranks) {
             TSP_send(recvbuf,count,&datatype->tsp_dt,to,tag,
-                     &comm->tsp_comm,&s->tsp_sched);
-            TSP_fence(&s->tsp_sched);
+                     &comm->tsp_comm,&s->tsp_sched,1,id+1);
         }
     } else if(notPow2) {
         int from = mycomm->tree.rank%lowerPow;
         TSP_recv(recvbuf,count,&datatype->tsp_dt,
-                 from,tag,&comm->tsp_comm,&s->tsp_sched);
-        TSP_fence(&s->tsp_sched);
+                 from,tag,&comm->tsp_comm,&s->tsp_sched,0,NULL);
     }
-
     return 0;
 }

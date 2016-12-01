@@ -167,6 +167,7 @@ COLL_sched_barrier(int                 tag,
                    int                 k,
                    COLL_sched_t *s)
 {
+#if 0
     int i, j;
     COLL_tree_comm_t *mycomm    = &comm->tree_comm;
     COLL_tree_t      *tree      = &mycomm->tree;
@@ -211,6 +212,7 @@ COLL_sched_barrier(int                 tag,
 
     TSP_fence(&s->tsp_sched);
     TSP_sched_commit(&s->tsp_sched);
+#endif
     return 0;
 }
 
@@ -238,27 +240,22 @@ COLL_sched_bcast(void               *buffer,
     if(tree->parent == -1) {
         SCHED_FOREACHCHILDDO(TSP_send(buffer,count,&datatype->tsp_dt,
                                       j,tag,&comm->tsp_comm,
-                                      &s->tsp_sched));
-        TSP_fence(&s->tsp_sched);
+                                      &s->tsp_sched,0,NULL));
     } else {
         /* Receive from Parent */
-        TSP_recv(buffer,count,&datatype->tsp_dt,
-                 tree->parent,tag,&comm->tsp_comm,
-                 &s->tsp_sched);
-        TSP_fence(&s->tsp_sched);
+        int recv_id = TSP_recv(buffer,count,&datatype->tsp_dt,
+                 (tree->parent+root)%size,tag,&comm->tsp_comm,
+                 &s->tsp_sched,0,NULL);
 
         /* Send to all children */
         SCHED_FOREACHCHILDDO(TSP_send(buffer,count,&datatype->tsp_dt,
-                                      j,tag,&comm->tsp_comm,
-                                      &s->tsp_sched));
-        TSP_fence(&s->tsp_sched);
+                                      (j+root)%size,tag,&comm->tsp_comm,
+                                      &s->tsp_sched,1,&recv_id));
     }
-
     if(finalize) {
         TSP_fence(&s->tsp_sched);
         TSP_sched_commit(&s->tsp_sched);
     }
-
     return 0;
 }
 
@@ -287,7 +284,6 @@ COLL_sched_reduce(const void         *sendbuf,
     int               is_inplace = TSP_isinplace((void *)sendbuf);
 
     TSP_dtinfo(&datatype->tsp_dt,&is_contig,&type_size,&extent,&lb);
-
     if(is_commutative)
         COLL_tree_init(rank,size,k,root,tree);
     else
@@ -299,19 +295,18 @@ COLL_sched_reduce(const void         *sendbuf,
 
         if(!is_inplace)TSP_dtcopy(recvbuf,count,&datatype->tsp_dt,
                                       sendbuf,count,&datatype->tsp_dt);
-
+        int rr_id;
         if(is_commutative) {
-            SCHED_FOREACHCHILD()
-            TSP_recv_reduce(recvbuf,count,&datatype->tsp_dt,
+            SCHED_FOREACHCHILD(){
+            rr_id = TSP_recv_reduce(recvbuf,count,&datatype->tsp_dt,
                             &op->tsp_op,j,tag,&comm->tsp_comm,
-                            &s->tsp_sched,TSP_FLAG_REDUCE_L);
-            TSP_fence(&s->tsp_sched);
+                            TSP_FLAG_REDUCE_L,&s->tsp_sched,j==tree->children[0].startRank?0:1,&rr_id);
+            }
         } else {
             SCHED_FOREACHCHILD() {
-                TSP_recv_reduce(recvbuf,count,&datatype->tsp_dt,
+                rr_id = TSP_recv_reduce(recvbuf,count,&datatype->tsp_dt,
                                 &op->tsp_op,j,tag,&comm->tsp_comm,
-                                &s->tsp_sched,TSP_FLAG_REDUCE_R);
-                TSP_fence(&s->tsp_sched);
+                                TSP_FLAG_REDUCE_R,&s->tsp_sched,j==tree->children[0].startRank?0:1,&rr_id);
             }
         }
     } else {
@@ -320,37 +315,29 @@ COLL_sched_reduce(const void         *sendbuf,
         result_buf = (void *)((char *)result_buf-lb);
         k          = 0;
         TSP_dtcopy(result_buf,count,&datatype->tsp_dt,sendbuf,count,&datatype->tsp_dt);
-        {
-            if(is_commutative) {
-                SCHED_FOREACHCHILD()
-                TSP_recv_reduce(result_buf,count,&datatype->tsp_dt,
+        int rr_id, send_id;
+        if(is_commutative) {
+            SCHED_FOREACHCHILD() /*NOTE: We are assuming that each rank range has
+                                  only one rank for the i==0 condition to be used correctly*/
+            rr_id = TSP_recv_reduce(result_buf,count,&datatype->tsp_dt,
+                            &op->tsp_op,j,tag,&comm->tsp_comm,
+                            TSP_FLAG_REDUCE_L,&s->tsp_sched,j==tree->children[0].startRank?0:1,&rr_id);
+        } else {
+            SCHED_FOREACHCHILD() {
+                rr_id = TSP_recv_reduce(result_buf,count,&datatype->tsp_dt,
                                 &op->tsp_op,j,tag,&comm->tsp_comm,
-                                &s->tsp_sched,TSP_FLAG_REDUCE_L);
-                TSP_fence(&s->tsp_sched);
-            } else {
-                SCHED_FOREACHCHILD() {
-                    TSP_recv_reduce(result_buf,count,&datatype->tsp_dt,
-                                    &op->tsp_op,j,tag,&comm->tsp_comm,
-                                    &s->tsp_sched,TSP_FLAG_REDUCE_R);
-                    TSP_fence(&s->tsp_sched);
-                }
+                                TSP_FLAG_REDUCE_R,&s->tsp_sched,j==tree->children[0].startRank?0:1,&rr_id);
             }
         }
-        TSP_fence(&s->tsp_sched);
-        TSP_send_accumulate(result_buf,count,&datatype->tsp_dt,
+        send_id = TSP_send_accumulate(result_buf,count,&datatype->tsp_dt,
                             &op->tsp_op,tree->parent,
-                            tag,&comm->tsp_comm,&s->tsp_sched);
+                            tag,&comm->tsp_comm,&s->tsp_sched,(tree->numRanges==0)?0:1,&rr_id);
+        TSP_free_mem_nb(free_ptr0,&s->tsp_sched,1,&send_id);
     }
-
-    TSP_fence(&s->tsp_sched);
-
-    if(free_ptr0) TSP_free_mem_nb(free_ptr0,&s->tsp_sched);
 
     if(finalize) {
-        TSP_fence(&s->tsp_sched);
         TSP_sched_commit(&s->tsp_sched);
     }
-
     return 0;
 }
 
@@ -392,23 +379,17 @@ COLL_sched_reduce_full(const void         *sendbuf,
             sb = recvbuf;
         else
             sb = (void *)sendbuf;
-
         rc = COLL_sched_reduce(sb,tmp_buf,count,datatype,
                                op,0,tag,comm,k,is_commutative,s,0);
-
+        int fence_id = TSP_fence(&s->tsp_sched);
+        int send_id;
         if(rank == 0) {
-            TSP_send(tmp_buf,count,&datatype->tsp_dt,
-                     root,tag,&comm->tsp_comm,&s->tsp_sched);
-            TSP_fence(&s->tsp_sched);
+            send_id = TSP_send(tmp_buf,count,&datatype->tsp_dt,
+                     root,tag,&comm->tsp_comm,&s->tsp_sched,1,&fence_id);
+            TSP_free_mem_nb(tmp_buf,&s->tsp_sched,1,&send_id);
         } else if(rank == root) {
             TSP_recv(recvbuf,count,&datatype->tsp_dt,
-                     0,tag,&comm->tsp_comm,&s->tsp_sched);
-            TSP_fence(&s->tsp_sched);
-        }
-
-        if(tmp_buf) {
-            TSP_free_mem_nb(tmp_buf,&s->tsp_sched);
-            TSP_fence(&s->tsp_sched);
+                     0,tag,&comm->tsp_comm,&s->tsp_sched,1,&fence_id);
         }
 
         if(finalize) {
@@ -416,7 +397,6 @@ COLL_sched_reduce_full(const void         *sendbuf,
             TSP_sched_commit(&s->tsp_sched);
         }
     }
-
     return rc;
 }
 
@@ -448,22 +428,21 @@ COLL_sched_allreduce(const void         *sendbuf,
         rbuf    = tmp_buf;
     }
 
-    COLL_sched_reduce(sbuf,rbuf,count,datatype,
-                      op,0,tag,comm,k,is_commutative,s,0);
+    COLL_sched_reduce_full(sbuf,rbuf,count,datatype,
+                      op,0,tag,comm,k,s,0);
+    TSP_wait(&s->tsp_sched);
     COLL_sched_bcast(rbuf,count,datatype,0,tag,comm,k,s,0);
 
     if(is_inplace) {
-        TSP_dtcopy_nb(recvbuf,count,&datatype->tsp_dt,
+        int fence_id = TSP_fence(&s->tsp_sched);
+        int dtcopy_id = TSP_dtcopy_nb(recvbuf,count,&datatype->tsp_dt,
                       tmp_buf,count,&datatype->tsp_dt,
-                      &s->tsp_sched);
-        TSP_fence(&s->tsp_sched);
-        TSP_free_mem_nb(tmp_buf,&s->tsp_sched);
+                      &s->tsp_sched,1,&fence_id);
+        TSP_free_mem_nb(tmp_buf,&s->tsp_sched,1,&dtcopy_id);
     }
 
     if(finalize) {
-        TSP_fence(&s->tsp_sched);
         TSP_sched_commit(&s->tsp_sched);
     }
-
     return 0;
 }

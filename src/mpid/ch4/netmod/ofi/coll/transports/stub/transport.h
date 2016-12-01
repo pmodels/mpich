@@ -65,9 +65,13 @@ static inline void TSP_dtinfo(TSP_dt_t *dt,
 {
 }
 
-static inline void TSP_fence(TSP_sched_t *sched)
+static inline int TSP_fence(TSP_sched_t *sched)
 {
 
+}
+
+static inline int TSP_wait(TSP_sched_t *sched)
+{
 }
 
 static inline void TSP_addref_dt(TSP_dt_t *dt,
@@ -82,14 +86,18 @@ static inline void TSP_addref_op(TSP_op_t   *op,
 }
 static inline int TSP_addref_dt_nb(TSP_dt_t    *dt,
                                    int          up,
-                                   TSP_sched_t *sched)
+                                   TSP_sched_t *sched,
+                                   int          n_invtcs,
+                                   int          *invtcs)
 {
     return 0;
 }
 
 static inline int TSP_addref_op_nb(TSP_op_t    *op,
                                    int          up,
-                                   TSP_sched_t *sched)
+                                   TSP_sched_t *sched,
+                                   int          n_invtcs,
+                                   int          *invtcs)
 {
     return 0;
 }
@@ -100,7 +108,9 @@ static inline int TSP_send(const void  *buf,
                            int          dest,
                            int          tag,
                            TSP_comm_t  *comm_ptr,
-                           TSP_sched_t *sched)
+                           TSP_sched_t *sched,
+                           int          n_invtcs,
+                           int          *invtcs)
 {
     return 0;
 }
@@ -112,7 +122,9 @@ static inline int TSP_send_accumulate(const void  *buf,
                                       int          dest,
                                       int          tag,
                                       TSP_comm_t  *comm_ptr,
-                                      TSP_sched_t *sched)
+                                      TSP_sched_t *sched,
+                                      int          n_invtcs,
+                                      int          *invtcs)
 {
     return 0;
 }
@@ -123,7 +135,9 @@ static inline int TSP_recv(void        *buf,
                            int          source,
                            int          tag,
                            TSP_comm_t  *comm_ptr,
-                           TSP_sched_t *sched)
+                           TSP_sched_t *sched,
+                           int          n_invtcs,
+                           int          *invtcs)
 {
     return 0;
 }
@@ -135,8 +149,10 @@ static inline int TSP_recv_reduce(void        *buf,
                                   int          source,
                                   int          tag,
                                   TSP_comm_t  *comm_ptr,
+                                  uint64_t     flags,
                                   TSP_sched_t *sched,
-                                  uint64_t     flags)
+                                  int          n_invtcs,
+                                  int          *invtcs)
 {
     return 0;
 }
@@ -161,7 +177,9 @@ static inline int TSP_reduce_local(const void  *inbuf,
                                    int          count,
                                    TSP_dt_t    *datatype,
                                    TSP_op_t    *operation,
-                                   TSP_sched_t *sched)
+                                   TSP_sched_t *sched,
+                                   int         n_invtcs,
+                                   int         *invtcs)
 {
     return 0;
 }
@@ -171,7 +189,9 @@ static inline int TSP_dtcopy_nb(void        *tobuf,
                                 const void  *frombuf,
                                 int          fromcount,
                                 TSP_dt_t    *fromtype,
-                                TSP_sched_t *sched)
+                                TSP_sched_t *sched,
+                                int         n_invtcs,
+                                int         *invtcs)
 {
     return 0;
 }
@@ -196,7 +216,9 @@ static inline void TSP_free_mem(void *ptr)
 }
 
 static inline int TSP_free_mem_nb(void        *ptr,
-                                  TSP_sched_t *sched)
+                                  TSP_sched_t *sched,
+                                  int          n_invtcs,
+                                  int          *invtcs)
 {
     return 0;
 }

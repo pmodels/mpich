@@ -67,7 +67,7 @@ static inline int COLL_ibarrier(COLL_comm_t *comm,
     COLL_sched_barrier_dissem(tag,comm,s);
     done = COLL_sched_kick_nb(s);
 
-    if(1 || !done) { /* always enqueue until we can fix the request interface */
+    if(0 || !done) { /* always enqueue until we can fix the request interface */
         TAILQ_INSERT_TAIL(&COLL_progress_global.head,&request->elem,list_data);
     } else
         TSP_free_mem(s);
@@ -107,25 +107,23 @@ static inline int COLL_ialltoall(const void  *sendbuf,
                                  COLL_comm_t *comm,
                                  COLL_req_t *request)
 {
-    int           rc;
-    COLL_sched_t  *s;
-    int            tag     = (*comm->tree_comm.curTag)++;
+    int                 rc, is_inplace, is_commutative, is_contig;
+    size_t              type_size,extent,lb;
+    COLL_sched_t        *s;
+    int                 tag     = (*comm->tree_comm.curTag)++;
 
     COLL_sched_init_nb(&s,request);
 
-    rc = COLL_sched_alltoall(sendbuf,sendcount,sendtype,recvbuf,
-                             recvcount,recvtype,comm,tag,s);
+    rc = COLL_sched_alltoall(sendbuf,sendcount,sendtype,recvbuf,recvcount,recvtype,comm,tag,s);
 
     TSP_fence(&s->tsp_sched);
     TSP_sched_commit(&s->tsp_sched);
 
     int done = COLL_sched_kick_nb(s);
-
     if(1 || !done) { /* always enqueue until we can fix the request interface */
         TAILQ_INSERT_TAIL(&COLL_progress_global.head,&request->elem,list_data);
     } else
-        TSP_free_mem(&s);
-
+        TSP_free_mem(s);
     return rc;
 }
 
@@ -162,16 +160,15 @@ static inline int COLL_allreduce(const void  *sendbuf,
     rc = COLL_sched_allreduce_dissem(sbuf,rbuf,count,
                                      datatype,op,tag,comm,&s);
 
+    int fenceid = TSP_fence(&s.tsp_sched);
     if(is_inplace) {
-        TSP_dtcopy_nb(recvbuf,count,&datatype->tsp_dt,
+        int dtcopy_id = TSP_dtcopy_nb(recvbuf,count,&datatype->tsp_dt,
                       tmp_buf,count,&datatype->tsp_dt,
-                      &s.tsp_sched);
+                      &s.tsp_sched, 1, &fenceid);
 
-        TSP_fence(&s.tsp_sched);
-        TSP_free_mem_nb(tmp_buf,&s.tsp_sched);
+        TSP_free_mem_nb(tmp_buf,&s.tsp_sched,1,&dtcopy_id);
     }
 
-    TSP_fence(&s.tsp_sched);
     TSP_sched_commit(&s.tsp_sched);
 
     COLL_sched_kick(&s);
@@ -186,6 +183,7 @@ static inline int COLL_iallreduce(const void  *sendbuf,
                                   COLL_comm_t *comm,
                                   COLL_req_t  *request)
 {
+#if 0
     COLL_sched_t *s;
     int                 is_inplace,is_commutative,is_contig,rc,done = 0;
     size_t              type_size,extent,lb;
@@ -231,4 +229,5 @@ static inline int COLL_iallreduce(const void  *sendbuf,
         TSP_free_mem(s);
 
     return rc;
+#endif
 }

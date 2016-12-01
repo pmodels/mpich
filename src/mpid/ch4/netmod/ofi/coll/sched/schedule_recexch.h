@@ -31,15 +31,14 @@ Ideally, this function belongs to recexch_util.h file but because this
 function uses TSP_allocate_mem, it had to be put here
 */
 static inline
-int COLL_get_neighbors_recexch(int rank, int nranks, int k, int *step1_sendto,
-                               int **step1_recvfrom_, int *step1_nrecvs,
-                               int ***step2_nbrs_, int *step2_nphases)
-{
-    int i;
-
+int COLL_get_neighbors_recexch(int rank, int nranks, int *k_, int *step1_sendto, \
+                                            int **step1_recvfrom_, int *step1_nrecvs,
+                                            int ***step2_nbrs_, int *step2_nphases){
+    int i,j,k;
+    k=*k_;
     if(nranks < k)/*If size of the communicator is less than k, reduce the value of k*/
-        k = (nranks > 2) ? nranks : 2;
-
+        k= (nranks > 2) ? nranks : 2;
+    *k_=k;
     /*p_of_k is the largest power of k that is less than nranks*/
     int p_of_k = 1,log_p_of_k=0,rem,T,newrank;
 
@@ -63,7 +62,6 @@ int COLL_get_neighbors_recexch(int rank, int nranks, int k, int *step1_sendto,
     int *step1_recvfrom = *step1_recvfrom_ = (int *)TSP_allocate_mem(sizeof(int)*(k-1));
     *step2_nphases = log_p_of_k;
 
-    int *digit = (int *)TSP_allocate_mem(sizeof(int)*log_p_of_k);
     rem = nranks - p_of_k;/*rem is the number of ranks that do not particpate in Step 2*/
     /*We need to identify the non-participating ranks. The first T ranks are divided
     into sets of k consecutive ranks each. From each of these sets, the first k-1 ranks
@@ -72,10 +70,8 @@ int COLL_get_neighbors_recexch(int rank, int nranks, int k, int *step1_sendto,
     */
     T = (rem*k)/(k-1);
 
-    int j;
 
-    if(0) fprintf(stderr,"step 1 nbr calculation started\n");
-
+    if(0) fprintf(stderr,"step 1 nbr calculation started. T is %d \n", T);
     *step1_nrecvs=0;
     *step1_sendto=-1;
 
@@ -114,54 +110,50 @@ int COLL_get_neighbors_recexch(int rank, int nranks, int k, int *step1_sendto,
     if(0) fprintf(stderr,"step 1 nbr computation completed\n");
 
     /*Step 2*/
-
-    /*calculate the digits in base k representation of newrank*/
-    for(i=0; i<log_p_of_k; i++)
-        digit[i]=0;
-
-    int temprank = newrank, index=0, remainder;
-
-    while(temprank!=0) {
-        remainder = temprank % k;
-        temprank = temprank / k;
-        digit[index] = remainder;
-        index++;
-    }
-
-    int mask=0x1;
-    int phase=0, cbit, cnt, nbr, power;
-
-    while(mask<p_of_k) {
-        cbit = digit[phase];/*phase_th digit changes in this phase, obtain its original value*/
-        cnt = 0;
-
-        for(i=0; i<k; i++) { /*there are k-1 neighbors*/
-            if(i!=cbit) {/*do not generate yourself as your nieighbor*/
-                digit[phase]=i; /*this gets us the base k representation of the neighbor*/
-
-                /*calculate the base 10 value of the neighbor rank*/
-                nbr=0;
-                power=1;
-
-                for(j=0; j<log_p_of_k; j++) {
-                    nbr += digit[j]*power;
-                    power *= k;
-                }
-
-                /*calculate its real rank and store it*/
-                step2_nbrs[phase][cnt] = (nbr < rem/(k-1)) ? (nbr*k)+(k-1) : nbr+rem;
-                cnt++;
-            }
+    if(*step1_sendto==-1){ /* calulate step2_nbrs only for participating ranks */
+        int *digit = (int*)TSP_allocate_mem(sizeof(int)*log_p_of_k);
+        /*calculate the digits in base k representation of newrank*/
+        for(i=0; i<log_p_of_k; i++)
+            digit[i]=0;
+        int temprank = newrank, index=0, remainder;
+        while(temprank!=0) {
+            remainder = temprank % k;
+            temprank = temprank / k;
+            digit[index] = remainder;
+            index++;
         }
 
-        if(0) fprintf(stderr,"step 2, phase %d nbr calculation completed\n", phase);
+        int mask=0x1;
+        int phase=0, cbit, cnt, nbr, power;
+        while(mask<p_of_k){
+            cbit = digit[phase];/*phase_th digit changes in this phase, obtain its original value*/
+            cnt = 0;
+            for(i=0;i<k;i++) {/*there are k-1 neighbors*/
+                if(i!=cbit) {/*do not generate yourself as your nieighbor*/
+                    digit[phase]=i; /*this gets us the base k representation of the neighbor*/
 
-        digit[phase]=cbit;
-        phase++;
-        mask*=k;
+                    /*calculate the base 10 value of the neighbor rank*/
+                    nbr=0;
+                    power=1;
+                    for(j=0;j<log_p_of_k;j++) {
+                        nbr += digit[j]*power;
+                        power *= k;
+                    }
+
+                    /*calculate its real rank and store it*/
+                    step2_nbrs[phase][cnt] = (nbr < rem/(k-1)) ? (nbr*k)+(k-1) : nbr+rem;
+                    if(0) printf("step2_nbrs[%d][%d] is %d \n", phase,cnt, step2_nbrs[phase][cnt]);
+	            cnt++;
+                }
+            }
+            if(0) fprintf(stderr,"step 2, phase %d nbr calculation completed\n", phase);
+            digit[phase]=cbit;
+            phase++;
+            mask*=k;
+        }
+
+        TSP_free_mem(digit);
     }
-
-    TSP_free_mem(digit);
 
     return 0;
 }
@@ -180,7 +172,7 @@ COLL_sched_allreduce(const void         *sendbuf,
 
     int k = 2;
     int is_inplace,is_contig,i;
-
+    int dtcopy_id=-1;
     int nranks = TSP_size(&comm->tsp_comm);
     int rank = TSP_rank(&comm->tsp_comm);
 
@@ -190,8 +182,15 @@ COLL_sched_allreduce(const void         *sendbuf,
     TSP_dtinfo(&datatype->tsp_dt, &is_contig, &type_size, &extent, &lb);
 
     is_inplace = TSP_isinplace((void *)sendbuf);
+    /*if there is only 1 rank, copy data from sendbuf
+      to recvbuf and exit */
+    if(nranks == 1){
+         if(!is_inplace)
+             TSP_dtcopy(recvbuf,count,&datatype->tsp_dt, \
+                             sendbuf,count,&datatype->tsp_dt);
+         return 0;
+    }
 
-    /* set k to max of nranks and 2 if nranks is less than k specified*/
     int step1_sendto=-1;
     int step2_nphases;
     int step1_nrecvs;
@@ -202,110 +201,103 @@ COLL_sched_allreduce(const void         *sendbuf,
     int **step2_nbrs;
 
     /*get the neighbors*/
-    COLL_get_neighbors_recexch(rank, nranks, k, &step1_sendto, &step1_recvfrom, &step1_nrecvs, &step2_nbrs, &step2_nphases);
+    COLL_get_neighbors_recexch(rank, nranks, &k, &step1_sendto, &step1_recvfrom, &step1_nrecvs, &step2_nbrs, &step2_nphases);
 
     void *tmp_buf = TSP_allocate_mem(count*extent);
 
-    if(!is_inplace) {
-        TSP_dtcopy_nb(recvbuf,count,&datatype->tsp_dt,
-                      sendbuf,count,&datatype->tsp_dt,&s->tsp_sched);
-        TSP_fence(&s->tsp_sched);
+    int rrid=-1;
+    if(!is_inplace && step1_sendto==-1){/*copy the data to recvbuf but only if you are a rank participating in Step 2*/
+         TSP_dtcopy(recvbuf,count,&datatype->tsp_dt, \
+                        sendbuf,count,&datatype->tsp_dt);
     }
 
+    if(0) fprintf(stderr,"After initial dt copy\n");
+    int* id = (int*)TSP_allocate_mem(sizeof(int)*k);
     /*Step 1*/
-    if(step1_sendto !=-1) { /*non-participating rank sends the data to a partcipating rank*/
-        TSP_send(recvbuf,count,&datatype->tsp_dt,step1_sendto,
-                 tag,&comm->tsp_comm,&s->tsp_sched);
-
-        TSP_fence(&s->tsp_sched);
+    if(step1_sendto !=-1){/*non-participating rank sends the data to a partcipating rank*/
+        if(!is_inplace)
+            TSP_send(sendbuf,count,&datatype->tsp_dt,step1_sendto,
+                                tag,&comm->tsp_comm,&s->tsp_sched,0,NULL);
+        else
+            TSP_send(recvbuf,count,&datatype->tsp_dt,step1_sendto,
+                                 tag,&comm->tsp_comm,&s->tsp_sched,0,NULL);
     }
-
-    for(i=0; i<step1_nrecvs; i++) { /*partcipating rank gets data from non-partcipating ranks*/
-        TSP_recv_reduce(recvbuf,count,&datatype->tsp_dt,
-                        &op->tsp_op,step1_recvfrom[i],tag,&comm->tsp_comm,&s->tsp_sched,TSP_FLAG_REDUCE_L);
-        TSP_fence(&s->tsp_sched);
+    for(i=0; i<step1_nrecvs; i++){/*partcipating rank gets data from non-partcipating ranks*/
+        rrid= TSP_recv_reduce(recvbuf,count,&datatype->tsp_dt,
+                              &op->tsp_op,step1_recvfrom[i],tag,&comm->tsp_comm,
+                              TSP_FLAG_REDUCE_L,&s->tsp_sched,i==0?0:1,&rrid);
     }
-
+    id[0] = TSP_fence(&s->tsp_sched);
     /*Step 2*/
     int myidx, nbr, phase;
-
-    for(phase=0; phase<step2_nphases && step1_sendto==-1; phase++) {
-        if(!is_commutative) { /*sort the neighbor list so that receives can be posted in order*/
+    if(0) fprintf(stderr,"After step1\n");
+    for(phase=0; phase<step2_nphases && step1_sendto==-1; phase++){
+        if(!is_commutative){/*sort the neighbor list so that receives can be posted in order*/
             qsort(step2_nbrs[phase], k-1, sizeof(int), intcmpfn);
         }
 
         /*copy the data to a temporary buffer so that sends ands recvs
         can be posted simultaneosly*/
-        TSP_dtcopy_nb(tmp_buf,count,&datatype->tsp_dt,
-                      recvbuf,count,&datatype->tsp_dt,&s->tsp_sched);
-        TSP_fence(&s->tsp_sched);
+        id[0] = TSP_dtcopy_nb(tmp_buf,count,&datatype->tsp_dt,
+                                  recvbuf,count,&datatype->tsp_dt,&s->tsp_sched,(phase==0)?1:k,id);
         /*myidx is the index in the neighbors list such that
         all neighbors before myidx have ranks less than my rank
         and neighbors at and after myidx have rank greater than me.
         This is useful only in the non-commutative case.*/
-        myidx = k-1;
-
+        myidx = 0;
         /*send data to all the neighbors*/
         for(i=0; i<k-1; i++) {
             nbr = step2_nbrs[phase][i];
-            TSP_send(tmp_buf,count,&datatype->tsp_dt,
-                     nbr,tag,&comm->tsp_comm,&s->tsp_sched);
-
-            if(rank < nbr) {
-                myidx = i;
+            id[i+1] = TSP_send(tmp_buf,count,&datatype->tsp_dt,
+                                     nbr,tag,&comm->tsp_comm,&s->tsp_sched,1,id);
+            if(rank > nbr){
+                 myidx = i+1;
             }
         }
 
         /*receive from the neighbors to the left*/
         for(i=myidx-1; i>=0; i--) {
             nbr = step2_nbrs[phase][i];
-            TSP_recv_reduce(recvbuf,count,&datatype->tsp_dt,&op->tsp_op,nbr,
-                            tag,&comm->tsp_comm,&s->tsp_sched,TSP_FLAG_REDUCE_L);
-
-            if(is_commutative==false)/*ordering required only if non-commutative operation*/
-                TSP_fence(&s->tsp_sched);
+            id[0] = TSP_recv_reduce(recvbuf,count,&datatype->tsp_dt,&op->tsp_op,nbr,
+                                        tag,&comm->tsp_comm,TSP_FLAG_REDUCE_L,&s->tsp_sched,1,id);
         }
 
         /*receive from the neighbors to the right*/
         for(i=myidx; i<k-1; i++) {
             nbr = step2_nbrs[phase][i];
-            TSP_recv_reduce(recvbuf,count,&datatype->tsp_dt,&op->tsp_op,nbr,
-                            tag,&comm->tsp_comm,&s->tsp_sched,TSP_FLAG_REDUCE_R);
-
-            if(is_commutative==false)
-                TSP_fence(&s->tsp_sched);
+            id[0] = TSP_recv_reduce(recvbuf,count,&datatype->tsp_dt,&op->tsp_op,nbr,
+                                        tag,&comm->tsp_comm,TSP_FLAG_REDUCE_R,&s->tsp_sched,1,id);
         }
-
-        if(is_commutative==true)/*post the fence for commutative recv_reduce to complete*/
-            TSP_fence(&s->tsp_sched);
+        if(0) fprintf(stderr,"After step2\n");
     }
 
     /*Step 3: This is reverse of Step 1. Ranks that participated in Step 2
     send the data to non-partcipating ranks*/
-    if(step1_sendto != -1) {
-        TSP_recv(recvbuf,count,&datatype->tsp_dt,step1_sendto,tag,&comm->tsp_comm,&s->tsp_sched);
+    if(step1_sendto != -1){
+        TSP_recv(recvbuf,count,&datatype->tsp_dt,step1_sendto,tag,&comm->tsp_comm,&s->tsp_sched,0,NULL);
+        TSP_free_mem(tmp_buf);
+    }
+    else{ /* free temporary buffer after it is used in last send */
+        TSP_free_mem_nb(tmp_buf,&s->tsp_sched,k-1,id+1);
     }
 
     for(i=0; i<step1_nrecvs; i++) {
         TSP_send(recvbuf,count,&datatype->tsp_dt,step1_recvfrom[i],
-                 tag,&comm->tsp_comm,&s->tsp_sched);
+                    tag,&comm->tsp_comm,&s->tsp_sched,1,id);
     }
 
-    TSP_fence(&s->tsp_sched);
+    if(0) fprintf(stderr,"After step3\n");
+    /*free all allocated memory for storing nbrs*/
+    for(i=0;i<step2_nphases;i++)
+        TSP_free_mem_nb(step2_nbrs[i],&s->tsp_sched,0,NULL);
+    TSP_free_mem_nb(step2_nbrs,&s->tsp_sched,0,NULL);
+    if(0) fprintf(stderr,"freed step2_nbrs\n");
+    TSP_free_mem_nb(step1_recvfrom,&s->tsp_sched,0,NULL);
 
-    //free all allocated memory for storing nbrs
-    for(i=0; i<step2_nphases; i++)
-        TSP_free_mem_nb(step2_nbrs[i],&s->tsp_sched);
+    if(0) fprintf(stderr,"freed step1_recvfrom\n");
 
-    TSP_free_mem_nb(step2_nbrs, &s->tsp_sched);
-
-    TSP_free_mem_nb(step1_recvfrom,&s->tsp_sched);
-
-    //free temporary buffer
-    TSP_free_mem_nb(tmp_buf,&s->tsp_sched);
-
+    TSP_free_mem(id);
     if(finalize) {
-        TSP_fence(&s->tsp_sched);
         TSP_sched_commit(&s->tsp_sched);
     }
 

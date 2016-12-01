@@ -27,6 +27,7 @@ COLL_sched_alltoall_scattered(const void *sendbuf,
                               COLL_sched_t *s,
                               int                 finalize)
 {
+#if 0
     int         ii, ss, bblock, dst, i, is_contig;
     size_t      rt_lb, recvtype_extent, type_size;
     COLL_tree_comm_t *mycomm   = &comm->tree_comm;
@@ -109,7 +110,7 @@ COLL_sched_alltoall_scattered(const void *sendbuf,
         TSP_fence(&s->tsp_sched);
         TSP_sched_commit(&s->tsp_sched);
     }
-
+#endif
     return 0;
 }
 
@@ -127,6 +128,7 @@ COLL_sched_alltoallv_scattered(const void   *sendbuf,
                                COLL_sched_t *s,
                                int           finalize)
 {
+#if 0
     int         ii, ss, bblock, dst, i, is_contig;
     size_t      rt_lb, recvtype_extent, type_size;
     COLL_tree_comm_t *mycomm   = &comm->tree_comm;
@@ -255,7 +257,6 @@ COLL_sched_alltoallv_scattered(const void   *sendbuf,
         TSP_fence(&s->tsp_sched);
         TSP_sched_commit(&s->tsp_sched);
     }
-
+#endif
     return 0;
 }
-
