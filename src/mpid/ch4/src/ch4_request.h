@@ -47,30 +47,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_Request_set_completed(MPIR_Request * req)
     return;
 }
 
-MPL_STATIC_INLINE_PREFIX void MPIDI_Request_add_ref(MPIR_Request * req)
-{
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_REQUEST_ADD_REF);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_REQUEST_ADD_REF);
-
-    MPIR_Request_add_ref(req);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_REQUEST_ADD_REF);
-    return;
-}
-
-MPL_STATIC_INLINE_PREFIX void MPIDI_Request_release_ref(MPIR_Request * req)
-{
-    int inuse;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_REQUEST_RELEASE_REF);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_REQUEST_RELEASE_REF);
-
-    MPIR_Request_release_ref(req, &inuse);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_REQUEST_RELEASE_REF);
-    return;
-}
-
 /* These request functions should be called by the MPI layer only
    since they only do base initialization of the request object.
    A few notes:
