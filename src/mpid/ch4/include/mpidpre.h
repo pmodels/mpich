@@ -22,6 +22,7 @@
 #include "netmodpre.h"
 #include "shmpre.h"
 #include "mpl_uthash.h"
+#include "ch4_coll_params.h"
 
 typedef struct {
     union {
@@ -370,6 +371,17 @@ typedef struct {
     } irreg;
 } MPIDI_rank_map_t;
 
+struct MPIDI_table_entry {
+    int algo_id;
+    int threshold;
+    MPIDI_algo_parameters_t params;
+};
+
+struct MPIDI_coll_params {
+    struct MPIDI_table_entry **table;
+    int table_size;
+};
+
 typedef struct MPIDI_Devcomm_t {
     struct {
         /* The first fields are used by the CH4U apis */
@@ -384,10 +396,12 @@ typedef struct MPIDI_Devcomm_t {
 
         MPIDI_rank_map_t map;
         MPIDI_rank_map_t local_map;
+        struct MPIDI_coll_params *coll_params; /* pointer to the table with tuning results */
     } ch4;
 } MPIDI_Devcomm_t;
 #define MPIDI_CH4U_COMM(comm,field) ((comm)->dev.ch4.ch4u).field
 #define MPIDI_COMM(comm,field) ((comm)->dev.ch4).field
+#define MPIDI_CH4_COMM(comm)      ((comm)->dev.ch4)
 
 
 #define MPID_USE_NODE_IDS

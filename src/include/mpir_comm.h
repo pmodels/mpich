@@ -148,8 +148,6 @@ struct MPIR_Comm {
     struct MPIR_Comm    *local_comm; /* Defined only for intercomms, holds
 				        an intracomm for the local group */
 
-    void *coll_params;  /* pointer to the table with tuning results */
-
     MPIR_Comm_hierarchy_kind_t hierarchy_kind; /* flat, parent, node, or node_roots */
     struct MPIR_Comm *node_comm; /* Comm of processes in this comm that are on
                                     the same node as this process. */

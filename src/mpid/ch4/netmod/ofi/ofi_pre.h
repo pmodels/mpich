@@ -45,13 +45,14 @@
 
 struct MPIR_Comm;
 struct MPIR_Request;
+struct MPIDI_coll_params;
 
 typedef struct {
     void *huge_send_counters;
     void *huge_recv_counters;
     void *win_id_allocator;
     void *rma_id_allocator;
-    void *coll_params;
+    struct MPIDI_coll_params *coll_params;
 } MPIDI_OFI_comm_t;
 enum {
     MPIDI_AMTYPE_SHORT_HDR = 0,

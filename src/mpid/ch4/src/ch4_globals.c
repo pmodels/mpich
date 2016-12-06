@@ -16,7 +16,7 @@
 #include "ch4_impl.h"
 
 
-table_entry_t ***tuning_table;
+MPIDI_table_entry_t ***tuning_table;
 int **table_size;
 
 MPIDI_CH4_Global_t MPIDI_CH4_Global;

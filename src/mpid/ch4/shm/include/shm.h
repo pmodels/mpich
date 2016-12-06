@@ -800,12 +800,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_barrier(MPIR_Comm * comm,
                                                    errflag) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_bcast(void *buffer, int count, MPI_Datatype datatype,
                                                  int root, MPIR_Comm * comm,
-                                                 MPIR_Errflag_t * errflag) MPL_STATIC_INLINE_SUFFIX;
+                                                 MPIR_Errflag_t * errflag, 
+                                                 MPIDI_algo_parameters_t *algo_parameters_ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_allreduce(const void *sendbuf, void *recvbuf, int count,
                                                      MPI_Datatype datatype, MPI_Op op,
                                                      MPIR_Comm * comm,
-                                                     MPIR_Errflag_t *
-                                                     errflag) MPL_STATIC_INLINE_SUFFIX;
+                                                     MPIR_Errflag_t *errflag,
+                                                     MPIDI_algo_parameters_t *algo_parameters_ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_allgather(const void *sendbuf, int sendcount,
                                                      MPI_Datatype sendtype, void *recvbuf,
                                                      int recvcount, MPI_Datatype recvtype,
@@ -868,8 +869,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_alltoallw(const void *sendbuf, const 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_reduce(const void *sendbuf, void *recvbuf, int count,
                                                   MPI_Datatype datatype, MPI_Op op, int root,
                                                   MPIR_Comm * comm_ptr,
-                                                  MPIR_Errflag_t *
-                                                  errflag) MPL_STATIC_INLINE_SUFFIX;
+                                                  MPIR_Errflag_t *errflag,
+                                                  MPIDI_algo_parameters_t *algo_parameters_ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_reduce_scatter(const void *sendbuf, void *recvbuf,
                                                           const int *recvcounts,
                                                           MPI_Datatype datatype, MPI_Op op,

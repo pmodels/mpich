@@ -282,60 +282,55 @@ typedef struct MPIDI_CH4_Global_t {
 
 /* collectives enumeration for algorithms selection */
 enum {
-    ALLGATHER,
-    ALLGATHERV,
-    ALLREDUCE,
-    ALLTOALL,
-    ALLTOALLV,
-    ALLTOALLW,
-    BARRIER,
-    BCAST,
-    EXSCAN,
-    GATHER,
-    GATHERV,
-    REDUCE_SCATTER,
-    REDUCE,
-    SCAN,
-    SCATTER,
-    SCATERV,
-    IALLGATHER,
-    IALLGATHERV,
-    IALLREDUCE,
-    IALLTOALL,
-    IALLTOALLV,
-    IALLTOALLW,
-    IBARRIER,
-    IBCAST,
-    IEXSCAN,
-    IGATHER,
-    IGATHERV,
-    IREDUCE_SCATTER,
-    IREDUCE,
-    ISCAN,
-    ISCATTER,
-    ISCATERV,
-    COLLECTIVE_NUMBER
+    MPIDI_ALLGATHER,
+    MPIDI_ALLGATHERV,
+    MPIDI_ALLREDUCE,
+    MPIDI_ALLTOALL,
+    MPIDI_ALLTOALLV,
+    MPIDI_ALLTOALLW,
+    MPIDI_BARRIER,
+    MPIDI_BCAST,
+    MPIDI_EXSCAN,
+    MPIDI_GATHER,
+    MPIDI_GATHERV,
+    MPIDI_REDUCE_SCATTER,
+    MPIDI_REDUCE,
+    MPIDI_SCAN,
+    MPIDI_SCATTER,
+    MPIDI_SCATERV,
+    MPIDI_IALLGATHER,
+    MPIDI_IALLGATHERV,
+    MPIDI_IALLREDUCE,
+    MPIDI_IALLTOALL,
+    MPIDI_IALLTOALLV,
+    MPIDI_IALLTOALLW,
+    MPIDI_IBARRIER,
+    MPIDI_IBCAST,
+    MPIDI_IEXSCAN,
+    MPIDI_IGATHER,
+    MPIDI_IGATHERV,
+    MPIDI_IREDUCE_SCATTER,
+    MPIDI_IREDUCE,
+    MPIDI_ISCAN,
+    MPIDI_ISCATTER,
+    MPIDI_ISCATERV,
+    MPIDI_COLLECTIVE_NUMBER
 };
 
 enum tuning_layers{
-    UPPER,
-    OFI,
-    POSIX,
+    CH4,
+    NETMOD,
+    SHM,
     LAYERS_NUMBER
 };
 
-typedef struct table_entry {
-    int algo_id;
-    int threshold;
-    algo_parameters_t params;
-} table_entry_t;
+struct MPIDI_coll_params;
+typedef struct MPIDI_coll_params MPIDI_coll_params_t;
 
-typedef struct coll_params {
-    table_entry_t **table;
-    int table_size;
-} coll_params_t;
+struct MPIDI_table_entry;
+typedef struct MPIDI_table_entry MPIDI_table_entry_t;
 
-extern table_entry_t ***tuning_table;
+extern MPIDI_table_entry_t ***tuning_table;
 extern int **table_size;
 extern MPIDI_CH4_Global_t MPIDI_CH4_Global;
 #ifdef MPL_USE_DBG_LOGGING

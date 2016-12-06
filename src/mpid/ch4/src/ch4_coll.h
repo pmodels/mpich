@@ -34,49 +34,40 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast(void *buffer, int count, MPI_Datatype d
                                          int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
     int algo_number;
+    MPIDI_algo_parameters_t *ch4_algo_parameters_ptr;
+    MPIDI_coll_params_t *coll_params;
     int mpi_errno = MPI_SUCCESS;
-    algo_parameters_t *algo_parameters_ptr;
-    coll_params_t *coll_params;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_BCAST);
 
-    coll_params = (coll_params_t *)comm->coll_params;
+    coll_params = MPIDI_CH4_COMM(comm).coll_params;
 
-    algo_number = MPIDI_Bcast_select(buffer, count, datatype, root, &(coll_params[BCAST]),
-                                     errflag, &algo_parameters_ptr);
 
-    switch(algo_number)
-    {
-        case 0:
-            mpi_errno = MPIDI_NM_mpi_bcast(buffer, count, datatype, root, comm, errflag);
-            break;
-        case 1:
-            mpi_errno = MPIDI_SHM_mpi_bcast(buffer, count, datatype, root, comm, errflag);
-            break;
-        case 2:
-            mpi_errno = MPIDI_Bcast_topo(buffer, count, datatype, root, comm, errflag);
-            break;
-        default:
-            mpi_errno = MPIDI_NM_mpi_bcast(buffer, count, datatype, root, comm, errflag);
-            break;
-    }
+    algo_number = MPIDI_CH4_Bcast_select(buffer, count, datatype, root, &(coll_params[MPIDI_BCAST]),
+                                         errflag, &ch4_algo_parameters_ptr);
+
+    mpi_errno = MPIDI_CH4_Bcast_call(buffer, count, datatype, root, comm, errflag, algo_number, ch4_algo_parameters_ptr);
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_BCAST);
+
     return mpi_errno;
+
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_topo(void *buffer, int count, MPI_Datatype datatype,
-                                              int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
+                                              int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag, 
+                                              MPIDI_algo_parameters_t *ch4_algo_parameters_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
     if(comm->node_roots_comm != NULL)
     {
-        MPIDI_NM_mpi_bcast(buffer, count, datatype, root, comm->node_roots_comm, errflag);
+        MPIDI_NM_mpi_bcast(buffer, count, datatype, root, comm->node_roots_comm, errflag, ch4_algo_parameters_ptr);
     }
     if(comm->node_comm != NULL)
     {
-        MPIDI_SHM_mpi_bcast(buffer, count, datatype, root, comm->node_comm, errflag);
+        MPIDI_SHM_mpi_bcast(buffer, count, datatype, root, comm->node_comm, errflag, ch4_algo_parameters_ptr);
     }
 
     return mpi_errno;
@@ -89,7 +80,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_Bcast_knomial(
     int root,
     MPIR_Comm *comm_ptr,
     MPIR_Errflag_t *errflag,
-    algo_parameters_t *params)
+    MPIDI_algo_parameters_t *params)
 {
     int rank, comm_size;
     int relative_rank, mask, max_mask;
@@ -269,58 +260,52 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce(const void *sendbuf, void *recvbuf,
                                              MPIR_Errflag_t * errflag)
 {
     int algo_number;
-    int mpi_errno = MPI_SUCCESS;
-    algo_parameters_t *algo_parameters_ptr;
-    coll_params_t *coll_params;
+    MPIDI_algo_parameters_t *ch4_algo_parameters_ptr;
+    MPIDI_coll_params_t *coll_params;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ALLREDUCE);    
 
-    coll_params = (coll_params_t *)comm->coll_params;
+    coll_params = MPIDI_CH4_COMM(comm).coll_params;
 
-    algo_number = MPIDI_Allreduce_select(sendbuf, recvbuf, count, datatype, op, &(coll_params[ALLREDUCE]),
-                                         errflag, &algo_parameters_ptr);
+    algo_number = MPIDI_CH4_Allreduce_select(sendbuf, recvbuf, count, datatype, op, &(coll_params[MPIDI_ALLREDUCE]),
+                                             errflag, &ch4_algo_parameters_ptr);
 
-    switch(algo_number)
-    {
-        case 0:
-            mpi_errno = MPIDI_Allreduce_0(sendbuf, recvbuf, count, datatype, op, comm, errflag);
-            break;
-        case 1:
-            mpi_errno = MPIDI_Allreduce_1(sendbuf, recvbuf, count, datatype, op, comm, errflag);
-            break;
-        case 2:
-            mpi_errno = MPIDI_Allreduce_2(sendbuf, recvbuf, count, datatype, op, comm, errflag);
-            break;
-        case 3:
-            mpi_errno = MPIDI_NM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm->node_roots_comm, errflag);
-            break;
-        default:
-            mpi_errno = MPIDI_NM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm->node_roots_comm, errflag);
-            break;
-    }
+    MPIDI_CH4_Allreduce_call(sendbuf, recvbuf, count, datatype, op, comm, errflag, algo_number, ch4_algo_parameters_ptr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ALLREDUCE);
-    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_0(const void *sendbuf, void *recvbuf, int count,
                                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                             MPIR_Errflag_t * errflag)
+                                             MPIR_Errflag_t * errflag, MPIDI_algo_parameters_t *ch4_algo_parameters_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    MPIDI_algo_parameters_t ch4_reduce_algo_parameters_ptr;
+    MPIDI_algo_parameters_t ch4_allreduce_algo_parameters_ptr;
+    MPIDI_algo_parameters_t ch4_bcast_algo_parameters_ptr;
+
+    ch4_reduce_algo_parameters_ptr.ch4_reduce.nm_reduce = -1;
+    ch4_reduce_algo_parameters_ptr.ch4_reduce.shm_reduce = ch4_algo_parameters_ptr->ch4_allreduce_0.shm_reduce;
+
+    ch4_allreduce_algo_parameters_ptr.ch4_allreduce.nm_allreduce = ch4_algo_parameters_ptr->ch4_allreduce_0.nm_allreduce;
+    ch4_allreduce_algo_parameters_ptr.ch4_allreduce.shm_allreduce = -1;
+
+    ch4_bcast_algo_parameters_ptr.ch4_bcast.nm_bcast = -1;
+    ch4_bcast_algo_parameters_ptr.ch4_bcast.shm_bcast = ch4_algo_parameters_ptr->ch4_allreduce_0.shm_bcast;
+
     if(comm->node_comm != NULL)
     {
-        MPIDI_SHM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, 0, comm->node_comm, errflag);
+        MPIDI_SHM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, 0, comm->node_comm, errflag, &ch4_reduce_algo_parameters_ptr);
     }
     if(comm->node_roots_comm != NULL)
     {
-        MPIDI_NM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm->node_roots_comm, errflag);
+        MPIDI_NM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm->node_roots_comm, errflag, &ch4_allreduce_algo_parameters_ptr);
     }
     if(comm->node_comm != NULL)
     {
-        MPIDI_SHM_mpi_bcast(recvbuf, count, datatype, 0, comm->node_comm, errflag);
+        MPIDI_SHM_mpi_bcast(recvbuf, count, datatype, 0, comm->node_comm, errflag, &ch4_bcast_algo_parameters_ptr);
     }
 
     return mpi_errno;
@@ -328,22 +313,31 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_0(const void *sendbuf, void *recvbu
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_1(const void *sendbuf, void *recvbuf, int count,
                                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                             MPIR_Errflag_t * errflag)
+                                             MPIR_Errflag_t * errflag, MPIDI_algo_parameters_t *ch4_algo_parameters_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    MPIDI_algo_parameters_t ch4_reduce_algo_parameters_ptr;
+    MPIDI_algo_parameters_t ch4_bcast_algo_parameters_ptr;
+
+    ch4_reduce_algo_parameters_ptr.ch4_reduce.nm_reduce = ch4_algo_parameters_ptr->ch4_allreduce_1.nm_reduce;
+    ch4_reduce_algo_parameters_ptr.ch4_reduce.shm_reduce = ch4_algo_parameters_ptr->ch4_allreduce_1.shm_reduce;
+
+    ch4_bcast_algo_parameters_ptr.ch4_bcast.nm_bcast = ch4_algo_parameters_ptr->ch4_allreduce_1.nm_bcast;
+    ch4_bcast_algo_parameters_ptr.ch4_bcast.shm_bcast = ch4_algo_parameters_ptr->ch4_allreduce_1.shm_bcast;
+
     if(comm->node_comm != NULL)
     {
-        MPIDI_SHM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, 0, comm->node_comm, errflag);
+        MPIDI_SHM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, 0, comm->node_comm, errflag, &ch4_reduce_algo_parameters_ptr);
     }
     if(comm->node_roots_comm != NULL)
     {
-        MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, 0, comm->node_roots_comm, errflag);
-        MPIDI_NM_mpi_bcast(recvbuf, count, datatype, 0, comm->node_roots_comm, errflag);
+        MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, 0, comm->node_roots_comm, errflag, &ch4_reduce_algo_parameters_ptr);
+        MPIDI_NM_mpi_bcast(recvbuf, count, datatype, 0, comm->node_roots_comm, errflag, &ch4_bcast_algo_parameters_ptr);
     }
     if(comm->node_comm != NULL)
     {
-        MPIDI_SHM_mpi_bcast(recvbuf, count, datatype, 0, comm->node_comm, errflag);
+        MPIDI_SHM_mpi_bcast(recvbuf, count, datatype, 0, comm->node_comm, errflag, &ch4_bcast_algo_parameters_ptr);
     }
 
     return mpi_errno;
@@ -351,14 +345,23 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_1(const void *sendbuf, void *recvbu
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_2(const void *sendbuf, void *recvbuf, int count,
                                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
-                                             MPIR_Errflag_t * errflag)
+                                             MPIR_Errflag_t * errflag, MPIDI_algo_parameters_t *ch4_algo_parameters_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    MPIDI_algo_parameters_t ch4_reduce_algo_parameters_ptr;
+    MPIDI_algo_parameters_t ch4_bcast_algo_parameters_ptr;
+
+    ch4_reduce_algo_parameters_ptr.ch4_reduce.nm_reduce = ch4_algo_parameters_ptr->ch4_allreduce_2.nm_reduce;
+    ch4_reduce_algo_parameters_ptr.ch4_reduce.shm_reduce = -1;
+
+    ch4_bcast_algo_parameters_ptr.ch4_bcast.nm_bcast = ch4_algo_parameters_ptr->ch4_allreduce_2.nm_bcast;
+    ch4_bcast_algo_parameters_ptr.ch4_bcast.shm_bcast = -1;
+  
     if(comm->node_roots_comm != NULL)
     {
-        MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, 0, comm->node_roots_comm, errflag);
-        MPIDI_NM_mpi_bcast(recvbuf, count, datatype, 0, comm->node_roots_comm, errflag);
+        MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, 0, comm->node_roots_comm, errflag, &ch4_reduce_algo_parameters_ptr);
+        MPIDI_NM_mpi_bcast(recvbuf, count, datatype, 0, comm->node_roots_comm, errflag, &ch4_bcast_algo_parameters_ptr);
     }
 
     return mpi_errno;
@@ -525,15 +528,34 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce(const void *sendbuf, void *recvbuf,
                                           int count, MPI_Datatype datatype, MPI_Op op,
                                           int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
-    int ret;
+    int algo_number;
+    MPIDI_algo_parameters_t *ch4_algo_parameters_ptr;
+    MPIDI_coll_params_t *coll_params;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_REDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_REDUCE);
 
-    ret = MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+
+    coll_params = MPIDI_CH4_COMM(comm_ptr).coll_params;
+
+    algo_number = MPIDI_CH4_Reduce_select(sendbuf, recvbuf, count, datatype, op, root, &(coll_params[MPIDI_REDUCE]),
+                                          errflag, &ch4_algo_parameters_ptr);
+
+    MPIDI_CH4_Reduce_call(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag, algo_number, ch4_algo_parameters_ptr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_REDUCE);
-    return ret;
+
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_0(const void *sendbuf, void *recvbuf, int count,
+                                            MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm,
+                                            MPIR_Errflag_t * errflag, MPIDI_algo_parameters_t *ch4_algo_parameters_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, root, comm, errflag, ch4_algo_parameters_ptr); 
+
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_scatter(const void *sendbuf, void *recvbuf,
