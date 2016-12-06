@@ -39,35 +39,6 @@ static inline void MPIDI_UCX_Request_init_callback(void *request)
 
 }
 
-static inline void MPIDI_UCX_Handle_send_callback(void *request, ucs_status_t status)
-{
-    int c;
-    int mpi_errno;
-    MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
-    MPIR_Request *req = NULL;
-    if (unlikely(status == UCS_ERR_CANCELED)) {
-        req = ucp_request->req;
-        MPIDI_CH4U_request_complete(req);
-        MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
-        ucp_request->req = NULL;
-        goto fn_exit;
-    }
-
-    req = ucp_request->req;
-    MPIR_cc_decr(req->cc_ptr, &c);
-    MPIR_Assert(c >= 0);
-
-    if (c == 0) {
-        MPIR_Request_free(req);
-    }
-    ucp_request->req = NULL;
-
-  fn_exit:
-    return;
-  fn_fail:
-    req->status.MPI_ERROR = mpi_errno;
-}
-
 static inline void MPIDI_UCX_Handle_recv_callback(void *request, ucs_status_t status,
                                                   ucp_tag_recv_info_t * info)
 {
