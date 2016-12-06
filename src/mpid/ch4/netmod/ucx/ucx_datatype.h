@@ -90,8 +90,11 @@ static inline ucs_status_t MPIDI_UCX_Unpack(void *state, size_t offset, const vo
 static inline void MPIDI_UCX_Finish_pack(void *state)
 {
 
+    MPIDU_Datatype *dt_ptr;
     struct MPIDI_UCX_pack_state *pack_state = (struct MPIDI_UCX_pack_state *) state;
+    MPIDU_Datatype_get_ptr(pack_state->segment_ptr->handle, dt_ptr);
     MPID_Segment_free(pack_state->segment_ptr);
+    MPIDU_Datatype_release(dt_ptr);
     MPL_free(pack_state);
 
 }
