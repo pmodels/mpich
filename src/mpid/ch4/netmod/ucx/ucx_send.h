@@ -250,9 +250,7 @@ static inline int MPIDI_NM_mpi_isend(const void *buf,
                                      int tag,
                                      MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
 {
-
     return MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 0);
-
 }
 
 #undef FUNCNAME
@@ -266,9 +264,7 @@ static inline int MPIDI_NM_mpi_issend(const void *buf,
                                       int tag,
                                       MPIR_Comm * comm, int context_offset, MPIR_Request ** request)
 {
-
     return MPIDI_UCX_send(buf, count, datatype, rank, tag, comm, context_offset, request, 1, 1);
-
 }
 
 #undef FUNCNAME
