@@ -26,10 +26,7 @@ typedef struct {
 } MPIDI_UCX_dt_t;
 
 typedef struct {
-    union {
-        ucp_tag_message_h message_handler;
-        MPIDI_UCX_ucp_request_t *ucp_request;
-    } a;
+    ucp_tag_message_h message_handler;
 } MPIDI_UCX_request_t;
 
 typedef struct {
