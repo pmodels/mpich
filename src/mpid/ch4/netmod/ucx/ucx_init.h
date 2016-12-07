@@ -223,13 +223,40 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 static inline int MPIDI_NM_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno;
-    int i;
+    int i, p=0, completed;
     MPIR_Comm *comm;
+    ucs_status_ptr_t  ucp_request;
+    ucs_status_ptr_t* pending;
 
     comm = MPIR_Process.comm_world;
+    pending = MPL_malloc(sizeof(ucs_status_ptr_t) * comm->local_size);
+
     for (i = 0;  i< comm->local_size; i++) {
-        ucp_ep_destroy(MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
+        ucp_request = ucp_disconnect_nb(MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
+        MPIDI_CH4_UCX_REQUEST(ucp_request);
+        if(ucp_request != UCS_OK) {
+            pending[p] = ucp_request;
+            p++;
+        }
     }
+
+    /* now complete the outstaning requests! Important: call progress inbetween, otherwise we
+     * deadlock! */
+    completed = p;
+    while (completed != 0) {
+        ucp_worker_progress(MPIDI_UCX_global.worker);
+        completed = p;
+        for(i = 0; i < p ; i++) {
+            if(ucp_request_is_completed(pending[i])!=0)
+                completed -= 1;
+        }
+    }
+
+    for(i = 0; i < p ; i++) {
+        ucp_request_release(pending[i]);
+    }
+
+    MPL_free(pending);
 
     pmi_errno = PMI_Barrier();
     MPIDI_UCX_PMI_ERROR(pmi_errno);
