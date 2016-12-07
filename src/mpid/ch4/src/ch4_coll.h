@@ -35,16 +35,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast(void *buffer, int count, MPI_Datatype d
 {
     int algo_number;
     MPIDI_algo_parameters_t *ch4_algo_parameters_ptr;
-    MPIDI_coll_params_t *coll_params;
     int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_BCAST);
 
-    coll_params = MPIDI_CH4_COMM(comm).coll_params;
-
-
-    algo_number = MPIDI_CH4_Bcast_select(buffer, count, datatype, root, &(coll_params[MPIDI_BCAST]),
+    algo_number = MPIDI_CH4_Bcast_select(buffer, count, datatype, root, comm,
                                          errflag, &ch4_algo_parameters_ptr);
 
     mpi_errno = MPIDI_CH4_Bcast_call(buffer, count, datatype, root, comm, errflag, algo_number, ch4_algo_parameters_ptr);
@@ -261,14 +257,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce(const void *sendbuf, void *recvbuf,
 {
     int algo_number;
     MPIDI_algo_parameters_t *ch4_algo_parameters_ptr;
-    MPIDI_coll_params_t *coll_params;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ALLREDUCE);    
 
-    coll_params = MPIDI_CH4_COMM(comm).coll_params;
-
-    algo_number = MPIDI_CH4_Allreduce_select(sendbuf, recvbuf, count, datatype, op, &(coll_params[MPIDI_ALLREDUCE]),
+    algo_number = MPIDI_CH4_Allreduce_select(sendbuf, recvbuf, count, datatype, op, comm,
                                              errflag, &ch4_algo_parameters_ptr);
 
     MPIDI_CH4_Allreduce_call(sendbuf, recvbuf, count, datatype, op, comm, errflag, algo_number, ch4_algo_parameters_ptr);
@@ -530,15 +523,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce(const void *sendbuf, void *recvbuf,
 {
     int algo_number;
     MPIDI_algo_parameters_t *ch4_algo_parameters_ptr;
-    MPIDI_coll_params_t *coll_params;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_REDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_REDUCE);
 
-
-    coll_params = MPIDI_CH4_COMM(comm_ptr).coll_params;
-
-    algo_number = MPIDI_CH4_Reduce_select(sendbuf, recvbuf, count, datatype, op, root, &(coll_params[MPIDI_REDUCE]),
+    algo_number = MPIDI_CH4_Reduce_select(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
                                           errflag, &ch4_algo_parameters_ptr);
 
     MPIDI_CH4_Reduce_call(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag, algo_number, ch4_algo_parameters_ptr);

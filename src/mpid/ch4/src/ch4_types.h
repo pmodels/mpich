@@ -314,7 +314,7 @@ enum {
     MPIDI_ISCAN,
     MPIDI_ISCATTER,
     MPIDI_ISCATERV,
-    MPIDI_COLLECTIVE_NUMBER
+    MPIDI_NUM_COLLECTIVES
 };
 
 enum tuning_layers{
@@ -324,13 +324,13 @@ enum tuning_layers{
     LAYERS_NUMBER
 };
 
-struct MPIDI_coll_params;
-typedef struct MPIDI_coll_params MPIDI_coll_params_t;
+struct MPIDI_coll_tuner_table;
+typedef struct MPIDI_coll_tuner_table MPIDI_coll_tuner_table_t;
 
-struct MPIDI_table_entry;
-typedef struct MPIDI_table_entry MPIDI_table_entry_t;
+struct MPIDI_coll_table_entry;
+typedef struct MPIDI_coll_table_entry MPIDI_coll_table_entry_t;
 
-extern MPIDI_table_entry_t ***tuning_table;
+extern MPIDI_coll_table_entry_t ***tuning_table;
 extern int **table_size;
 extern MPIDI_CH4_Global_t MPIDI_CH4_Global;
 #ifdef MPL_USE_DBG_LOGGING

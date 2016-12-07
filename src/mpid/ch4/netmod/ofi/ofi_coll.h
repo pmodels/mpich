@@ -45,11 +45,8 @@ static inline int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Datatype datat
 
     int algo_number;
     MPIDI_algo_parameters_t *nm_algo_parameters_ptr_out;
-    MPIDI_coll_params_t *coll_params;
 
-    coll_params = MPIDI_OFI_COMM(comm_ptr).coll_params;
-
-    algo_number = MPIDI_NM_Bcast_select(buffer, count, datatype, root, &coll_params[MPIDI_BCAST], errflag, ch4_algo_parameters_ptr_in, &nm_algo_parameters_ptr_out);
+    algo_number = MPIDI_NM_Bcast_select(buffer, count, datatype, root, comm_ptr, errflag, ch4_algo_parameters_ptr_in, &nm_algo_parameters_ptr_out);
 
     mpi_errno = MPIDI_NM_Bcast_call(buffer, count, datatype, root, comm_ptr, errflag, algo_number, nm_algo_parameters_ptr_out);
 
@@ -96,11 +93,8 @@ static inline int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *recvbuf, int
 
     int algo_number;
     MPIDI_algo_parameters_t *nm_algo_parameters_ptr_out;
-    MPIDI_coll_params_t *coll_params;
 
-    coll_params = (MPIDI_coll_params_t *)MPIDI_OFI_COMM(comm_ptr).coll_params;
-
-    algo_number = MPIDI_NM_Allreduce_select(sendbuf, recvbuf, count, datatype, op, &(coll_params[MPIDI_ALLREDUCE]),
+    algo_number = MPIDI_NM_Allreduce_select(sendbuf, recvbuf, count, datatype, op, comm_ptr,
                                             errflag, ch4_algo_parameters_ptr_in, &nm_algo_parameters_ptr_out);
 
     mpi_errno = MPIDI_NM_Allreduce_call(sendbuf, recvbuf, count, datatype, op, comm_ptr, errflag, algo_number, nm_algo_parameters_ptr_out);
@@ -315,11 +309,8 @@ static inline int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recvbuf, int co
 
     int algo_number;
     MPIDI_algo_parameters_t *nm_algo_parameters_ptr_out;
-    MPIDI_coll_params_t *coll_params;
 
-    coll_params = MPIDI_OFI_COMM(comm_ptr).coll_params;
-
-    algo_number = MPIDI_NM_Reduce_select(sendbuf, recvbuf, count, datatype, op, root, &(coll_params[MPIDI_REDUCE]),
+    algo_number = MPIDI_NM_Reduce_select(sendbuf, recvbuf, count, datatype, op, root, comm_ptr,
                                          errflag, ch4_algo_parameters_ptr_in, &nm_algo_parameters_ptr_out);
 
     mpi_errno = MPIDI_NM_Reduce_call(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag, algo_number, nm_algo_parameters_ptr_out);

@@ -8,22 +8,22 @@
 static inline int MPIDI_NM_collective_selection_init(MPIR_Comm * comm)
 {
     int i, coll_id;
-    MPIDI_coll_params_t *coll_params;
+    MPIDI_coll_tuner_table_t *tuner_table_ptr;
 
-    coll_params = (MPIDI_coll_params_t *)MPL_malloc(MPIDI_COLLECTIVE_NUMBER*sizeof(MPIDI_coll_params_t));
+    tuner_table_ptr = (MPIDI_coll_tuner_table_t *)MPL_malloc(MPIDI_NUM_COLLECTIVES*sizeof(MPIDI_coll_tuner_table_t));
 
-    for( coll_id = 0; coll_id < MPIDI_COLLECTIVE_NUMBER; coll_id++ )
+    for( coll_id = 0; coll_id < MPIDI_NUM_COLLECTIVES; coll_id++ )
     {
-        coll_params[coll_id].table_size = table_size[NETMOD][coll_id];
-        coll_params[coll_id].table      = (MPIDI_table_entry_t **)MPL_malloc(coll_params[coll_id].table_size*sizeof(MPIDI_table_entry_t*));
-        if(coll_params[coll_id].table)
+        tuner_table_ptr[coll_id].table_size = table_size[NETMOD][coll_id];
+        tuner_table_ptr[coll_id].table      = (MPIDI_coll_table_entry_t **)MPL_malloc(tuner_table_ptr[coll_id].table_size*sizeof(MPIDI_coll_table_entry_t*));
+        if(tuner_table_ptr[coll_id].table)
         {
-            for( i = 0; i < coll_params[coll_id].table_size; i++)
+            for( i = 0; i < tuner_table_ptr[coll_id].table_size; i++)
             {
-                coll_params[coll_id].table[i] = &tuning_table[NETMOD][coll_id][i];
+                tuner_table_ptr[coll_id].table[i] = &tuning_table[NETMOD][coll_id][i];
             }
         }
-        MPIDI_OFI_COMM(comm).coll_params = coll_params;
+        MPIDI_OFI_COMM(comm).colltuner_table = tuner_table_ptr;
     }
 }
 
@@ -31,42 +31,43 @@ static inline int MPIDI_NM_collective_selection_init(MPIR_Comm * comm)
 static inline int MPIDI_OFI_collective_selection_free(MPIR_Comm * comm)
 {
     int i, coll_id;
-    MPIDI_coll_params_t* coll_params;
+    MPIDI_coll_tuner_table_t* tuner_table_ptr;
 
-    coll_params = MPIDI_OFI_COMM(comm).coll_params;
+    tuner_table_ptr = MPIDI_OFI_COMM(comm).colltuner_table;
 
-    for( i = 0; i < MPIDI_COLLECTIVE_NUMBER; i++ )
+    for( i = 0; i < MPIDI_NUM_COLLECTIVES; i++ )
     {
-        if(coll_params[i].table)
+        if(tuner_table_ptr[i].table)
         {
-            MPL_free(coll_params[i].table);
+            MPL_free(tuner_table_ptr[i].table);
         }
     }
-    if(coll_params)
-        MPL_free(coll_params);
+    if(tuner_table_ptr)
+        MPL_free(tuner_table_ptr);
 }
 
 
 static inline int MPIDI_NM_Bcast_select(void *buffer, int count, MPI_Datatype datatype,
-                                        int root, MPIDI_coll_params_t * coll_params, MPIR_Errflag_t * errflag,
+                                        int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
                                         MPIDI_algo_parameters_t *ch4_algo_parameters_ptr_in,
                                         MPIDI_algo_parameters_t **nm_algo_parameters_ptr_out)
 {
     int i;
     MPI_Aint type_size;
     int nbytes;
+    MPIDI_coll_tuner_table_t *tuner_table_ptr = &MPIDI_OFI_COMM(comm_ptr).colltuner_table[MPIDI_BCAST];
 
     if(ch4_algo_parameters_ptr_in->ch4_bcast.nm_bcast == -1 )
     {
         MPID_Datatype_get_size_macro(datatype, type_size);
         nbytes = type_size*count;
 
-        for(i = 0; i < coll_params->table_size; i++) 
+        for(i = 0; i < tuner_table_ptr->table_size; i++) 
         {
-            if(coll_params->table[i]->threshold < nbytes)
+            if(tuner_table_ptr->table[i]->msg_size < nbytes)
             {
-                *nm_algo_parameters_ptr_out = &(coll_params->table[i]->params);
-                return coll_params->table[i]->algo_id;
+                *nm_algo_parameters_ptr_out = &(tuner_table_ptr->table[i]->params);
+                return tuner_table_ptr->table[i]->algo_id;
             }
         }
     }
@@ -99,7 +100,7 @@ static inline int MPIDI_NM_Bcast_call(void *buffer, int count, MPI_Datatype data
 }
 
 static inline int MPIDI_NM_Allreduce_select(const void *sendbuf, void *recvbuf, int count,
-                                        MPI_Datatype datatype, MPI_Op op, MPIDI_coll_params_t * coll_params,
+                                        MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
                                         MPIR_Errflag_t * errflag, 
                                         MPIDI_algo_parameters_t *ch4_algo_parameters_ptr_in,
                                         MPIDI_algo_parameters_t **nm_algo_parameters_ptr_out)
@@ -107,18 +108,19 @@ static inline int MPIDI_NM_Allreduce_select(const void *sendbuf, void *recvbuf, 
     int i;
     MPI_Aint type_size;
     int nbytes;
+    MPIDI_coll_tuner_table_t *tuner_table_ptr = &MPIDI_OFI_COMM(comm_ptr).colltuner_table[MPIDI_ALLREDUCE];
 
     if(ch4_algo_parameters_ptr_in->ch4_allreduce.nm_allreduce == -1 )
     {
         MPID_Datatype_get_size_macro(datatype, type_size);
         nbytes = type_size*count;
 
-        for(i = 0; i < coll_params->table_size; i++) 
+        for(i = 0; i < tuner_table_ptr->table_size; i++) 
         {
-            if(coll_params->table[i]->threshold < nbytes)
+            if(tuner_table_ptr->table[i]->msg_size < nbytes)
             {
-                *nm_algo_parameters_ptr_out = &(coll_params->table[i]->params);
-                return coll_params->table[i]->algo_id;
+                *nm_algo_parameters_ptr_out = &(tuner_table_ptr->table[i]->params);
+                return tuner_table_ptr->table[i]->algo_id;
             }
         }
     }
@@ -153,7 +155,7 @@ static inline int MPIDI_NM_Allreduce_call(const void *sendbuf, void *recvbuf, in
 }
 
 static inline int MPIDI_NM_Reduce_select(const void *sendbuf, void *recvbuf, int count,
-                                        MPI_Datatype datatype, MPI_Op op, int root, MPIDI_coll_params_t * coll_params,
+                                        MPI_Datatype datatype, MPI_Op op, int root, MPIR_Comm * comm_ptr,
                                         MPIR_Errflag_t * errflag, 
                                         MPIDI_algo_parameters_t *ch4_algo_parameters_ptr_in,
                                         MPIDI_algo_parameters_t **nm_algo_parameters_ptr_out)
@@ -161,18 +163,19 @@ static inline int MPIDI_NM_Reduce_select(const void *sendbuf, void *recvbuf, int
     int i;
     MPI_Aint type_size;
     int nbytes;
+    MPIDI_coll_tuner_table_t *tuner_table_ptr = &MPIDI_OFI_COMM(comm_ptr).colltuner_table[MPIDI_REDUCE];
 
     if(ch4_algo_parameters_ptr_in->ch4_reduce.nm_reduce == -1 )
     {
         MPID_Datatype_get_size_macro(datatype, type_size);
         nbytes = type_size*count;
 
-        for(i = 0; i < coll_params->table_size; i++) 
+        for(i = 0; i < tuner_table_ptr->table_size; i++) 
         {
-            if(coll_params->table[i]->threshold < nbytes)
+            if(tuner_table_ptr->table[i]->msg_size < nbytes)
             {
-                *nm_algo_parameters_ptr_out = &(coll_params->table[i]->params);
-                return coll_params->table[i]->algo_id;
+                *nm_algo_parameters_ptr_out = &(tuner_table_ptr->table[i]->params);
+                return tuner_table_ptr->table[i]->algo_id;
             }
         }
     }

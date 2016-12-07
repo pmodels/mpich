@@ -371,14 +371,14 @@ typedef struct {
     } irreg;
 } MPIDI_rank_map_t;
 
-struct MPIDI_table_entry {
+struct MPIDI_coll_table_entry {
     int algo_id;
-    int threshold;
+    int msg_size;
     MPIDI_algo_parameters_t params;
 };
 
-struct MPIDI_coll_params {
-    struct MPIDI_table_entry **table;
+struct MPIDI_coll_tuner_table {
+    struct MPIDI_coll_table_entry **table;
     int table_size;
 };
 
@@ -396,7 +396,7 @@ typedef struct MPIDI_Devcomm_t {
 
         MPIDI_rank_map_t map;
         MPIDI_rank_map_t local_map;
-        struct MPIDI_coll_params *coll_params; /* pointer to the table with tuning results */
+        struct MPIDI_coll_tuner_table *colltuner_table; /* pointer to the table with tuning results */
     } ch4;
 } MPIDI_Devcomm_t;
 #define MPIDI_CH4U_COMM(comm,field) ((comm)->dev.ch4.ch4u).field

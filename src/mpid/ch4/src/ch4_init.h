@@ -154,8 +154,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Coll_Selection_Init(void)
     table_size = (int **)MPL_malloc(LAYERS_NUMBER*sizeof(int*));
     for( layer_id = 0; layer_id < LAYERS_NUMBER; layer_id++ )
     {
-        table_size[layer_id] = (int *)MPL_malloc(MPIDI_COLLECTIVE_NUMBER*sizeof(int));
-        for( coll_id = 0; coll_id < MPIDI_COLLECTIVE_NUMBER; coll_id++ )
+        table_size[layer_id] = (int *)MPL_malloc(MPIDI_NUM_COLLECTIVES*sizeof(int));
+        for( coll_id = 0; coll_id < MPIDI_NUM_COLLECTIVES; coll_id++ )
         {
             table_size[layer_id][coll_id] = 0;
         }
@@ -169,13 +169,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Coll_Selection_Init(void)
     }
 
 
-    tuning_table = (MPIDI_table_entry_t ***)MPL_malloc(MPIDI_COLLECTIVE_NUMBER*sizeof(MPIDI_table_entry_t**));
+    tuning_table = (MPIDI_coll_table_entry_t ***)MPL_malloc(MPIDI_NUM_COLLECTIVES*sizeof(MPIDI_coll_table_entry_t**));
     for( layer_id = 0; layer_id < LAYERS_NUMBER; layer_id++ )
     {
-        tuning_table[layer_id] = (MPIDI_table_entry_t **)MPL_malloc(MPIDI_COLLECTIVE_NUMBER*sizeof(MPIDI_table_entry_t*));
-        for( coll_id = 0; coll_id < MPIDI_COLLECTIVE_NUMBER; coll_id++ )
+        tuning_table[layer_id] = (MPIDI_coll_table_entry_t **)MPL_malloc(MPIDI_NUM_COLLECTIVES*sizeof(MPIDI_coll_table_entry_t*));
+        for( coll_id = 0; coll_id < MPIDI_NUM_COLLECTIVES; coll_id++ )
         {
-            tuning_table[layer_id][coll_id] = (MPIDI_table_entry_t *)MPL_malloc(table_size[layer_id][coll_id]*sizeof(MPIDI_table_entry_t));
+            tuning_table[layer_id][coll_id] = (MPIDI_coll_table_entry_t *)MPL_malloc(table_size[layer_id][coll_id]*sizeof(MPIDI_coll_table_entry_t));
             if(tuning_table[layer_id][coll_id])
             {
                 for( ii = 0; ii < table_size[layer_id][coll_id]; ii++ )
@@ -186,46 +186,47 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Coll_Selection_Init(void)
         } 
     }
 
+
     tuning_table[CH4][MPIDI_BCAST][0].algo_id = 2;
-    tuning_table[CH4][MPIDI_BCAST][0].threshold = 0;
+    tuning_table[CH4][MPIDI_BCAST][0].msg_size = 0;
     tuning_table[CH4][MPIDI_BCAST][0].params.ch4_bcast.shm_bcast = -1;
     tuning_table[CH4][MPIDI_BCAST][0].params.ch4_bcast.nm_bcast = -1;
 
     tuning_table[NETMOD][MPIDI_BCAST][0].algo_id = 1;
-    tuning_table[NETMOD][MPIDI_BCAST][0].threshold = 0;
+    tuning_table[NETMOD][MPIDI_BCAST][0].msg_size = 0;
     tuning_table[NETMOD][MPIDI_BCAST][0].params.bcast_knomial_parameters.radix = 2;
     tuning_table[NETMOD][MPIDI_BCAST][0].params.bcast_knomial_parameters.block_size = 4096;
 
     tuning_table[SHM][MPIDI_BCAST][0].algo_id = 3;
-    tuning_table[SHM][MPIDI_BCAST][0].threshold = 0;
+    tuning_table[SHM][MPIDI_BCAST][0].msg_size = 0;
     tuning_table[SHM][MPIDI_BCAST][0].params.bcast_knomial_parameters.radix = 2;
     tuning_table[SHM][MPIDI_BCAST][0].params.bcast_knomial_parameters.block_size = 4096;
 
     tuning_table[CH4][MPIDI_ALLREDUCE][0].algo_id = 0;
-    tuning_table[CH4][MPIDI_ALLREDUCE][0].threshold = 0;
+    tuning_table[CH4][MPIDI_ALLREDUCE][0].msg_size = 0;
     tuning_table[CH4][MPIDI_ALLREDUCE][0].params.ch4_allreduce_0.shm_reduce = -1;
     tuning_table[CH4][MPIDI_ALLREDUCE][0].params.ch4_allreduce_0.nm_allreduce = -1;
     tuning_table[CH4][MPIDI_ALLREDUCE][0].params.ch4_allreduce_0.shm_bcast = 3;
 
     tuning_table[NETMOD][MPIDI_ALLREDUCE][0].algo_id = 5;
-    tuning_table[NETMOD][MPIDI_ALLREDUCE][0].threshold = 0;
+    tuning_table[NETMOD][MPIDI_ALLREDUCE][0].msg_size = 0;
     tuning_table[NETMOD][MPIDI_ALLREDUCE][0].params.allreduce_empty_parameters.empty = 1;
 
     tuning_table[SHM][MPIDI_ALLREDUCE][0].algo_id = 9;
-    tuning_table[SHM][MPIDI_ALLREDUCE][0].threshold = 0;
+    tuning_table[SHM][MPIDI_ALLREDUCE][0].msg_size = 0;
     tuning_table[SHM][MPIDI_ALLREDUCE][0].params.allreduce_empty_parameters.empty = 1;
 
     tuning_table[CH4][MPIDI_REDUCE][0].algo_id = 0;
-    tuning_table[CH4][MPIDI_REDUCE][0].threshold = 0;
+    tuning_table[CH4][MPIDI_REDUCE][0].msg_size = 0;
     tuning_table[CH4][MPIDI_REDUCE][0].params.ch4_reduce.shm_reduce = -1;
     tuning_table[CH4][MPIDI_REDUCE][0].params.ch4_reduce.nm_reduce = -1;
 
     tuning_table[NETMOD][MPIDI_REDUCE][0].algo_id = 15;
-    tuning_table[NETMOD][MPIDI_REDUCE][0].threshold = 0;
+    tuning_table[NETMOD][MPIDI_REDUCE][0].msg_size = 0;
     tuning_table[NETMOD][MPIDI_REDUCE][0].params.reduce_empty_parameters.empty = 1;
 
     tuning_table[SHM][MPIDI_REDUCE][0].algo_id = 23;
-    tuning_table[SHM][MPIDI_REDUCE][0].threshold = 0;
+    tuning_table[SHM][MPIDI_REDUCE][0].msg_size = 0;
     tuning_table[SHM][MPIDI_REDUCE][0].params.reduce_empty_parameters.empty = 1;
 
     return MPI_SUCCESS;
@@ -442,7 +443,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Coll_Selection_Finalize(void)
     {
         if(tuning_table[layer_id])
         {
-            for( coll_id = 0; coll_id < MPIDI_COLLECTIVE_NUMBER; coll_id++ )
+            for( coll_id = 0; coll_id < MPIDI_NUM_COLLECTIVES; coll_id++ )
             {
                 if(tuning_table[layer_id][coll_id])
                 {
