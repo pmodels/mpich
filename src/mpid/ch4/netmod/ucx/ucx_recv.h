@@ -18,46 +18,35 @@
 static inline void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
                                           ucp_tag_recv_info_t * info)
 {
-    MPI_Aint count;
-    int mpi_errno;
     MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
     MPIR_Request *rreq = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
 
-    if (unlikely(status == UCS_ERR_CANCELED)) {
+    if (ucp_request->req) {
         rreq = ucp_request->req;
         MPIDI_CH4U_request_complete(rreq);
-        MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
         ucp_request->req = NULL;
-        goto fn_exit;
-    }
-    if (!ucp_request->req) {
+        MPIDI_UCX_REQ(rreq).a.ucp_request = NULL;
+        ucp_request_release(ucp_request);
+    } else {
         rreq = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
         MPIR_cc_set(&rreq->cc, 0);
-        rreq->status.MPI_SOURCE = MPIDI_UCX_get_source(info->sender_tag);
-        rreq->status.MPI_TAG = MPIDI_UCX_get_tag(info->sender_tag);
-        count = info->length;
-        MPIR_STATUS_SET_COUNT(rreq->status, count);
         ucp_request->req = rreq;
     }
-    else {
-        rreq = ucp_request->req;
+
+    if (unlikely(status == UCS_ERR_CANCELED)) {
+        MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
+    } else {
+        MPI_Aint count = info->length;
         rreq->status.MPI_ERROR = MPI_SUCCESS;
         rreq->status.MPI_SOURCE = MPIDI_UCX_get_source(info->sender_tag);
         rreq->status.MPI_TAG = MPIDI_UCX_get_tag(info->sender_tag);
-        count = info->length;
         MPIR_STATUS_SET_COUNT(rreq->status, count);
-        MPIDI_CH4U_request_complete(rreq);
-        ucp_request->req = NULL;
     }
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_UCX_RECV_CMPL_CB);
-    return;
-  fn_fail:
-    rreq->status.MPI_ERROR = mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int ucx_irecv_continous(void *buf,
