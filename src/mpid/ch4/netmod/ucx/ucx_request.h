@@ -39,44 +39,4 @@ static inline void MPIDI_UCX_Request_init_callback(void *request)
 
 }
 
-static inline void MPIDI_UCX_Handle_recv_callback(void *request, ucs_status_t status,
-                                                  ucp_tag_recv_info_t * info)
-{
-    MPI_Aint count;
-    int mpi_errno;
-    MPIDI_UCX_ucp_request_t *ucp_request = (MPIDI_UCX_ucp_request_t *) request;
-    MPIR_Request *rreq = NULL;
-    if (unlikely(status == UCS_ERR_CANCELED)) {
-        rreq = ucp_request->req;
-        MPIDI_CH4U_request_complete(rreq);
-        MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
-        ucp_request->req = NULL;
-        goto fn_exit;
-    }
-    if (!ucp_request->req) {
-        rreq = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
-        MPIR_cc_set(&rreq->cc, 0);
-        rreq->status.MPI_SOURCE = MPIDI_UCX_get_source(info->sender_tag);
-        rreq->status.MPI_TAG = MPIDI_UCX_get_tag(info->sender_tag);
-        count = info->length;
-        MPIR_STATUS_SET_COUNT(rreq->status, count);
-        ucp_request->req = rreq;
-    }
-    else {
-        rreq = ucp_request->req;
-        rreq->status.MPI_ERROR = MPI_SUCCESS;
-        rreq->status.MPI_SOURCE = MPIDI_UCX_get_source(info->sender_tag);
-        rreq->status.MPI_TAG = MPIDI_UCX_get_tag(info->sender_tag);
-        count = info->length;
-        MPIR_STATUS_SET_COUNT(rreq->status, count);
-        MPIDI_CH4U_request_complete(rreq);
-        ucp_request->req = NULL;
-    }
-
-  fn_exit:
-    return;
-  fn_fail:
-    rreq->status.MPI_ERROR = mpi_errno;
-}
-
 #endif /* UCX_REQUEST_H_INCLUDED */
