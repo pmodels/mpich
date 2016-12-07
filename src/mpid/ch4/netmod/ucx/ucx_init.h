@@ -223,14 +223,14 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 static inline int MPIDI_NM_mpi_finalize_hook(void)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno;
-    int i, j, max_n_avts;
+    int i;
     MPIR_Comm *comm;
-    max_n_avts = MPIDIU_get_max_n_avts();
 
-    for (i = 0; i < max_n_avts; i++) {
-        for (j = 0; j < MPIDIU_get_av_table(i)->size; j++)
-            ucp_ep_destroy(MPIDI_UCX_AV(&MPIDIU_get_av(i, j)).dest);
+    comm = MPIR_Process.comm_world;
+    for (i = 0;  i< comm->local_size; i++) {
+        ucp_ep_destroy(MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
     }
+
     pmi_errno = PMI_Barrier();
     MPIDI_UCX_PMI_ERROR(pmi_errno);
 
@@ -241,7 +241,6 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     if (MPIDI_UCX_global.context != NULL)
         ucp_cleanup(MPIDI_UCX_global.context);
 
-    comm = MPIR_Process.comm_world;
     MPIR_Comm_release_always(comm);
 
     comm = MPIR_Process.comm_self;
