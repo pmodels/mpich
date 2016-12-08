@@ -67,6 +67,10 @@ static inline int MPIDI_SHM_Bcast_select(void *buffer, int count, MPI_Datatype d
         {
             if(tuner_table_ptr->table[i]->msg_size < nbytes)
             {
+                continue;
+            }
+            else
+            {
                 *shm_algo_parameters_ptr_out = &(tuner_table_ptr->table[i]->params);
                 return tuner_table_ptr->table[i]->algo_id;
             }
@@ -74,10 +78,13 @@ static inline int MPIDI_SHM_Bcast_select(void *buffer, int count, MPI_Datatype d
     }
     else
     {
-        *shm_algo_parameters_ptr_out = (MPIDI_algo_parameters_t *)&MPIDI_SHM_bcast_param_defaults[ch4_algo_parameters_ptr_in->ch4_bcast.shm_bcast];
+        *shm_algo_parameters_ptr_out = (MPIDI_algo_parameters_t *)&MPIDI_CH4_bcast_generic_param_defaults[ch4_algo_parameters_ptr_in->ch4_bcast.shm_bcast];
         return ch4_algo_parameters_ptr_in->ch4_bcast.shm_bcast;
     }
-    return 0;
+
+    //default parameters and algo_id    
+    *shm_algo_parameters_ptr_out = (MPIDI_algo_parameters_t *)&MPIDI_CH4_bcast_generic_param_defaults[tuner_table_ptr->table[0]->algo_id];
+    return tuner_table_ptr->table[0]->algo_id;
 }
 
 static inline int MPIDI_SHM_Bcast_call(void *buffer, int count, MPI_Datatype datatype,
@@ -120,6 +127,10 @@ static inline int MPIDI_SHM_Allreduce_select(const void *sendbuf, void *recvbuf,
         {
             if(tuner_table_ptr->table[i]->msg_size < nbytes)
             {
+                continue;
+            }
+            else
+            {
                 *shm_algo_parameters_ptr_out = &(tuner_table_ptr->table[i]->params);
                 return tuner_table_ptr->table[i]->algo_id;
             }
@@ -127,10 +138,13 @@ static inline int MPIDI_SHM_Allreduce_select(const void *sendbuf, void *recvbuf,
     }
     else
     {
-        *shm_algo_parameters_ptr_out = (MPIDI_algo_parameters_t *)&MPIDI_SHM_reduce_param_defaults[ch4_algo_parameters_ptr_in->ch4_allreduce.shm_allreduce];
+        *shm_algo_parameters_ptr_out = (MPIDI_algo_parameters_t *)&MPIDI_CH4_allreduce_generic_param_defaults[ch4_algo_parameters_ptr_in->ch4_allreduce.shm_allreduce];
         return ch4_algo_parameters_ptr_in->ch4_allreduce.shm_allreduce;     
     }
-    return 0;
+
+    //default parameters and algo_id
+    *shm_algo_parameters_ptr_out = (MPIDI_algo_parameters_t *)&MPIDI_CH4_allreduce_generic_param_defaults[tuner_table_ptr->table[0]->algo_id];
+    return tuner_table_ptr->table[0]->algo_id;
 }
 
 
@@ -178,6 +192,10 @@ static inline int MPIDI_SHM_Reduce_select(const void *sendbuf, void *recvbuf, in
         {
             if(tuner_table_ptr->table[i]->msg_size < nbytes)
             {
+                continue;
+            }
+            else
+            {
                 *shm_algo_parameters_ptr_out = &(tuner_table_ptr->table[i]->params);
                 return tuner_table_ptr->table[i]->algo_id;
             }
@@ -185,10 +203,13 @@ static inline int MPIDI_SHM_Reduce_select(const void *sendbuf, void *recvbuf, in
     }
     else
     {
-        *shm_algo_parameters_ptr_out = (MPIDI_algo_parameters_t *)&MPIDI_SHM_reduce_param_defaults[ch4_algo_parameters_ptr_in->ch4_reduce.shm_reduce];
+        *shm_algo_parameters_ptr_out = (MPIDI_algo_parameters_t *)&MPIDI_CH4_reduce_generic_param_defaults[ch4_algo_parameters_ptr_in->ch4_reduce.shm_reduce];
         return ch4_algo_parameters_ptr_in->ch4_reduce.shm_reduce;  
     }
-    return 0;
+
+    // default parameters and algo_id
+    *shm_algo_parameters_ptr_out = (MPIDI_algo_parameters_t *)&MPIDI_CH4_reduce_generic_param_defaults[tuner_table_ptr->table[0]->algo_id];
+    return tuner_table_ptr->table[0]->algo_id;
 }
 
 static inline int MPIDI_SHM_Reduce_call(const void *sendbuf, void *recvbuf, int count,

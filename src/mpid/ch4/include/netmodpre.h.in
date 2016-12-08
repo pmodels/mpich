@@ -23,5 +23,6 @@
 #define MPIDI_NM_WIN_DECL        @ch4_netmod_win_decl@
 #define MPIDI_NM_ADDR_DECL    @ch4_netmod_addr_decl@
 #define MPIDI_NM_OP_DECL         @ch4_netmod_op_decl@
+#define MPIDI_NM_COLL_PARAMS_DECL  @ch4_netmod_coll_params_decl@
 
 #endif /* NETMODPRE_H_INCLUDED */

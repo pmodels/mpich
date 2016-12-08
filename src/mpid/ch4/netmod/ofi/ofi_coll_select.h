@@ -28,7 +28,7 @@ static inline int MPIDI_NM_collective_selection_init(MPIR_Comm * comm)
 }
 
 
-static inline int MPIDI_OFI_collective_selection_free(MPIR_Comm * comm)
+static inline int MPIDI_NM_collective_selection_free(MPIR_Comm * comm)
 {
     int i, coll_id;
     MPIDI_coll_tuner_table_t* tuner_table_ptr;
@@ -66,6 +66,10 @@ static inline int MPIDI_NM_Bcast_select(void *buffer, int count, MPI_Datatype da
         {
             if(tuner_table_ptr->table[i]->msg_size < nbytes)
             {
+                continue;
+            }
+            else
+            {
                 *nm_algo_parameters_ptr_out = &(tuner_table_ptr->table[i]->params);
                 return tuner_table_ptr->table[i]->algo_id;
             }
@@ -73,11 +77,14 @@ static inline int MPIDI_NM_Bcast_select(void *buffer, int count, MPI_Datatype da
     }
     else
     {
-        *nm_algo_parameters_ptr_out = (MPIDI_algo_parameters_t *)&MPIDI_NM_bcast_param_defaults[ch4_algo_parameters_ptr_in->ch4_bcast.nm_bcast];
+        *nm_algo_parameters_ptr_out = (MPIDI_algo_parameters_t *)&MPIDI_CH4_bcast_generic_param_defaults[ch4_algo_parameters_ptr_in->ch4_bcast.nm_bcast];
         return ch4_algo_parameters_ptr_in->ch4_bcast.nm_bcast;
 
     }
-    return 0;
+
+    //default parameters and algo_id    
+    *nm_algo_parameters_ptr_out = (MPIDI_algo_parameters_t *)&MPIDI_CH4_bcast_generic_param_defaults[tuner_table_ptr->table[0]->algo_id];
+    return tuner_table_ptr->table[0]->algo_id;
 }
 
 static inline int MPIDI_NM_Bcast_call(void *buffer, int count, MPI_Datatype datatype,
@@ -119,6 +126,10 @@ static inline int MPIDI_NM_Allreduce_select(const void *sendbuf, void *recvbuf, 
         {
             if(tuner_table_ptr->table[i]->msg_size < nbytes)
             {
+                continue;
+            }
+            else
+            {
                 *nm_algo_parameters_ptr_out = &(tuner_table_ptr->table[i]->params);
                 return tuner_table_ptr->table[i]->algo_id;
             }
@@ -126,10 +137,13 @@ static inline int MPIDI_NM_Allreduce_select(const void *sendbuf, void *recvbuf, 
     }
     else
     {
-        *nm_algo_parameters_ptr_out = (MPIDI_algo_parameters_t *)&MPIDI_NM_allreduce_param_defaults[ch4_algo_parameters_ptr_in->ch4_allreduce.nm_allreduce];
+        *nm_algo_parameters_ptr_out = (MPIDI_algo_parameters_t *)&MPIDI_CH4_allreduce_generic_param_defaults[ch4_algo_parameters_ptr_in->ch4_allreduce.nm_allreduce];
         return ch4_algo_parameters_ptr_in->ch4_allreduce.nm_allreduce;
     }
-    return 0;
+
+    //default parameters and algo_id
+    *nm_algo_parameters_ptr_out = (MPIDI_algo_parameters_t *)&MPIDI_CH4_allreduce_generic_param_defaults[tuner_table_ptr->table[0]->algo_id];
+    return tuner_table_ptr->table[0]->algo_id;
 }
 
 static inline int MPIDI_NM_Allreduce_call(const void *sendbuf, void *recvbuf, int count,
@@ -174,6 +188,10 @@ static inline int MPIDI_NM_Reduce_select(const void *sendbuf, void *recvbuf, int
         {
             if(tuner_table_ptr->table[i]->msg_size < nbytes)
             {
+                continue;
+            }
+            else
+            {
                 *nm_algo_parameters_ptr_out = &(tuner_table_ptr->table[i]->params);
                 return tuner_table_ptr->table[i]->algo_id;
             }
@@ -181,10 +199,13 @@ static inline int MPIDI_NM_Reduce_select(const void *sendbuf, void *recvbuf, int
     }
     else
     {
-        *nm_algo_parameters_ptr_out = (MPIDI_algo_parameters_t *)&MPIDI_NM_reduce_param_defaults[ch4_algo_parameters_ptr_in->ch4_reduce.nm_reduce];
+        *nm_algo_parameters_ptr_out = (MPIDI_algo_parameters_t *)&MPIDI_CH4_reduce_generic_param_defaults[ch4_algo_parameters_ptr_in->ch4_reduce.nm_reduce];
         return ch4_algo_parameters_ptr_in->ch4_reduce.nm_reduce;        
     }
-    return 0;
+
+    //default parameters and algo_id
+    *nm_algo_parameters_ptr_out = (MPIDI_algo_parameters_t *)&MPIDI_CH4_reduce_generic_param_defaults[tuner_table_ptr->table[0]->algo_id];
+    return tuner_table_ptr->table[0]->algo_id;
 }
 
 static inline int MPIDI_NM_Reduce_call(const void *sendbuf, void *recvbuf, int count,

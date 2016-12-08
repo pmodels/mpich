@@ -82,11 +82,18 @@ static inline int MPIDI_CH4_Bcast_select(void *buffer, int count, MPI_Datatype d
     {
         if(tuner_table_ptr->table[i]->msg_size < nbytes)
         {
+            continue;
+        }
+        else
+        {
             *algo_parameters_ptr = &(tuner_table_ptr->table[i]->params);
             return tuner_table_ptr->table[i]->algo_id;
         }
     }
-    return 2;
+
+    //default parameters and algo_id
+    *algo_parameters_ptr = &(tuner_table_ptr->table[0]->params);
+    return tuner_table_ptr->table[0]->algo_id;
 #endif
 }
 
@@ -134,11 +141,18 @@ static inline int MPIDI_CH4_Allreduce_select(const void *sendbuf, void *recvbuf,
     {
         if(tuner_table_ptr->table[i]->msg_size < nbytes)
         {
+            continue;
+        }
+        else
+        {
             *algo_parameters_ptr = &(tuner_table_ptr->table[i]->params);
             return tuner_table_ptr->table[i]->algo_id;
         }
     }
-    return 0;
+
+    //default parameters and algo_id
+    *algo_parameters_ptr = &(tuner_table_ptr->table[0]->params);
+    return tuner_table_ptr->table[0]->algo_id;
 #endif
 }
 
@@ -186,11 +200,18 @@ static inline int MPIDI_CH4_Reduce_select(const void *sendbuf, void *recvbuf, in
     {
         if(tuner_table_ptr->table[i]->msg_size < nbytes)
         {
+            continue;
+        }
+        else
+        {
             *algo_parameters_ptr = &(tuner_table_ptr->table[i]->params);
             return tuner_table_ptr->table[i]->algo_id;
         }
     }
-    return 0;
+
+    //default parameters and algo_id
+    *algo_parameters_ptr = &(tuner_table_ptr->table[0]->params);
+    return tuner_table_ptr->table[0]->algo_id;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_Reduce_call(const void *sendbuf, void *recvbuf, int count,

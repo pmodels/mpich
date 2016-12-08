@@ -47,6 +47,12 @@ struct MPIR_Comm;
 struct MPIR_Request;
 struct MPIDI_coll_tuner_table;
 
+typedef union {
+    // reserved for parameters related to NETMOD specific collectives
+} MPIDI_OFI_coll_params_t;
+
+#define MPIDI_OFI_COLL_PARAMS_DECL MPIDI_OFI_coll_params_t nm_parameters;
+
 typedef struct {
     void *huge_send_counters;
     void *huge_recv_counters;

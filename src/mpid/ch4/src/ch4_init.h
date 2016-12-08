@@ -151,8 +151,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Coll_Selection_Init(void)
     /* tuning table init */
     int ii, coll_id, layer_id;
 
-    table_size = (int **)MPL_malloc(LAYERS_NUMBER*sizeof(int*));
-    for( layer_id = 0; layer_id < LAYERS_NUMBER; layer_id++ )
+    table_size = (int **)MPL_malloc(NUM_LAYERS*sizeof(int*));
+    for( layer_id = 0; layer_id < NUM_LAYERS; layer_id++ )
     {
         table_size[layer_id] = (int *)MPL_malloc(MPIDI_NUM_COLLECTIVES*sizeof(int));
         for( coll_id = 0; coll_id < MPIDI_NUM_COLLECTIVES; coll_id++ )
@@ -161,7 +161,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Coll_Selection_Init(void)
         }
     }
 
-    for( layer_id = 0; layer_id < LAYERS_NUMBER; layer_id++ )
+    for( layer_id = 0; layer_id < NUM_LAYERS; layer_id++ )
     {
         table_size[layer_id][MPIDI_BCAST] = 1;
         table_size[layer_id][MPIDI_ALLREDUCE] = 1;
@@ -170,7 +170,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Coll_Selection_Init(void)
 
 
     tuning_table = (MPIDI_coll_table_entry_t ***)MPL_malloc(MPIDI_NUM_COLLECTIVES*sizeof(MPIDI_coll_table_entry_t**));
-    for( layer_id = 0; layer_id < LAYERS_NUMBER; layer_id++ )
+    for( layer_id = 0; layer_id < NUM_LAYERS; layer_id++ )
     {
         tuning_table[layer_id] = (MPIDI_coll_table_entry_t **)MPL_malloc(MPIDI_NUM_COLLECTIVES*sizeof(MPIDI_coll_table_entry_t*));
         for( coll_id = 0; coll_id < MPIDI_NUM_COLLECTIVES; coll_id++ )
@@ -194,13 +194,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Coll_Selection_Init(void)
 
     tuning_table[NETMOD][MPIDI_BCAST][0].algo_id = 1;
     tuning_table[NETMOD][MPIDI_BCAST][0].msg_size = 0;
-    tuning_table[NETMOD][MPIDI_BCAST][0].params.bcast_knomial_parameters.radix = 2;
-    tuning_table[NETMOD][MPIDI_BCAST][0].params.bcast_knomial_parameters.block_size = 4096;
+    tuning_table[NETMOD][MPIDI_BCAST][0].params.generic_bcast_knomial_parameters.radix = 2;
+    tuning_table[NETMOD][MPIDI_BCAST][0].params.generic_bcast_knomial_parameters.block_size = 4096;
 
     tuning_table[SHM][MPIDI_BCAST][0].algo_id = 3;
     tuning_table[SHM][MPIDI_BCAST][0].msg_size = 0;
-    tuning_table[SHM][MPIDI_BCAST][0].params.bcast_knomial_parameters.radix = 2;
-    tuning_table[SHM][MPIDI_BCAST][0].params.bcast_knomial_parameters.block_size = 4096;
+    tuning_table[SHM][MPIDI_BCAST][0].params.generic_bcast_knomial_parameters.radix = 2;
+    tuning_table[SHM][MPIDI_BCAST][0].params.generic_bcast_knomial_parameters.block_size = 4096;
 
     tuning_table[CH4][MPIDI_ALLREDUCE][0].algo_id = 0;
     tuning_table[CH4][MPIDI_ALLREDUCE][0].msg_size = 0;
@@ -210,11 +210,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Coll_Selection_Init(void)
 
     tuning_table[NETMOD][MPIDI_ALLREDUCE][0].algo_id = 5;
     tuning_table[NETMOD][MPIDI_ALLREDUCE][0].msg_size = 0;
-    tuning_table[NETMOD][MPIDI_ALLREDUCE][0].params.allreduce_empty_parameters.empty = 1;
+    tuning_table[NETMOD][MPIDI_ALLREDUCE][0].params.generic_allreduce_empty_parameters.empty = 1;
 
     tuning_table[SHM][MPIDI_ALLREDUCE][0].algo_id = 9;
     tuning_table[SHM][MPIDI_ALLREDUCE][0].msg_size = 0;
-    tuning_table[SHM][MPIDI_ALLREDUCE][0].params.allreduce_empty_parameters.empty = 1;
+    tuning_table[SHM][MPIDI_ALLREDUCE][0].params.generic_allreduce_empty_parameters.empty = 1;
 
     tuning_table[CH4][MPIDI_REDUCE][0].algo_id = 0;
     tuning_table[CH4][MPIDI_REDUCE][0].msg_size = 0;
@@ -223,11 +223,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Coll_Selection_Init(void)
 
     tuning_table[NETMOD][MPIDI_REDUCE][0].algo_id = 15;
     tuning_table[NETMOD][MPIDI_REDUCE][0].msg_size = 0;
-    tuning_table[NETMOD][MPIDI_REDUCE][0].params.reduce_empty_parameters.empty = 1;
+    tuning_table[NETMOD][MPIDI_REDUCE][0].params.generic_reduce_empty_parameters.empty = 1;
 
     tuning_table[SHM][MPIDI_REDUCE][0].algo_id = 23;
     tuning_table[SHM][MPIDI_REDUCE][0].msg_size = 0;
-    tuning_table[SHM][MPIDI_REDUCE][0].params.reduce_empty_parameters.empty = 1;
+    tuning_table[SHM][MPIDI_REDUCE][0].params.generic_reduce_empty_parameters.empty = 1;
 
     return MPI_SUCCESS;
 }
@@ -439,7 +439,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Coll_Selection_Finalize(void)
 {
     /* release tuning_table and table_size */
     int layer_id, coll_id;
-    for( layer_id = 0; layer_id < LAYERS_NUMBER; layer_id++ )
+    for( layer_id = 0; layer_id < NUM_LAYERS; layer_id++ )
     {
         if(tuning_table[layer_id])
         {
@@ -461,7 +461,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Coll_Selection_Finalize(void)
         tuning_table = NULL;
     }
 
-    for( layer_id = 0; layer_id < LAYERS_NUMBER; layer_id++ )
+    for( layer_id = 0; layer_id < NUM_LAYERS; layer_id++ )
     {
         if(table_size[layer_id])
         {

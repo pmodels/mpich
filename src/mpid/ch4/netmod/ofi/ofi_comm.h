@@ -58,7 +58,7 @@ static inline int MPIDI_NM_mpi_comm_free_hook(MPIR_Comm * comm)
     MPIDI_OFI_map_destroy(MPIDI_OFI_COMM(comm).huge_send_counters);
     MPIDI_OFI_map_destroy(MPIDI_OFI_COMM(comm).huge_recv_counters);
 
-    MPIDI_OFI_collective_selection_free(comm);
+    MPIDI_NM_collective_selection_free(comm);
 
     MPIDI_OFI_index_allocator_destroy(MPIDI_OFI_COMM(comm).win_id_allocator);
     MPIDI_OFI_index_allocator_destroy(MPIDI_OFI_COMM(comm).rma_id_allocator);

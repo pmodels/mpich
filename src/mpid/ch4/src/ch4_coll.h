@@ -95,10 +95,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_Bcast_knomial(
     int is_split = 0;
     MPI_Aint tot_size, seg_size;
 
-    /****************************from algo params***********************/
-    int knomial_radix = params->bcast_knomial_parameters.radix;
-    int64_t block_size = params->bcast_knomial_parameters.block_size;
-    /*******************************************************************/
+    /****************************from algo params****************************/
+    int knomial_radix = params->generic_bcast_knomial_parameters.radix;
+    int64_t block_size = params->generic_bcast_knomial_parameters.block_size;
+    /************************************************************************/
 
     MPID_Datatype_get_size_macro(datatype, type_size);
     nbytes = type_size * count;
@@ -259,7 +259,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce(const void *sendbuf, void *recvbuf,
     MPIDI_algo_parameters_t *ch4_algo_parameters_ptr;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ALLREDUCE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ALLREDUCE);    
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ALLREDUCE);
 
     algo_number = MPIDI_CH4_Allreduce_select(sendbuf, recvbuf, count, datatype, op, comm,
                                              errflag, &ch4_algo_parameters_ptr);
