@@ -73,6 +73,7 @@ MPL_STATIC_INLINE_PREFIX int ucx_irecv_non_continous(void *buf,
     tag_mask = MPIDI_UCX_tag_mask(tag, rank);
     ucp_tag = MPIDI_UCX_recv_tag(tag, rank, comm->recvcontext_id + context_offset);
 
+    MPIDU_Datatype_add_ref(datatype);
     ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_recv_nb(MPIDI_UCX_global.worker,
                                                               buf, count,
                                                               datatype->dev.netmod.ucx.ucp_datatype,
@@ -181,19 +182,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
     }
 
     message_handler = MPIDI_UCX_REQ(message).a.message_handler;
-    if (dt_contig)
+    if (dt_contig) {
         ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.worker,
                                                                       (char *) buf + dt_true_lb,
                                                                       data_sz,
                                                                       ucp_dt_make_contig(1),
                                                                       message_handler,
                                                                       &MPIDI_UCX_Handle_recv_callback);
-    else
+    } else {
+        MPIDU_Datatype_add_ref(dt_ptr);
         ucp_request = (MPIDI_UCX_ucp_request_t *) ucp_tag_msg_recv_nb(MPIDI_UCX_global.worker,
                                                                       buf, count,
                                                                       dt_ptr->dev.netmod.ucx.
                                                                       ucp_datatype, message_handler,
                                                                       &MPIDI_UCX_Handle_recv_callback);
+    }
 
 
     MPIDI_CH4_UCX_REQUEST(ucp_request);
