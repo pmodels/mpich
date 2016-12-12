@@ -102,7 +102,6 @@ static inline int MPIDI_UCX_send(const void *buf,
     } else if (have_request) {
         req = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
         MPIR_cc_set(&req->cc, 0);
-        MPIDI_UCX_REQ(req).a.ucp_request = NULL;
     }
     *request = req;
 
@@ -244,7 +243,7 @@ static inline int MPIDI_NM_mpi_issend(const void *buf,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq)
 {
-    if (MPIDI_UCX_REQ(sreq).a.ucp_request) {
+    if (!MPIR_Request_is_complete(sreq)) {
         ucp_request_cancel(MPIDI_UCX_global.worker, MPIDI_UCX_REQ(sreq).a.ucp_request);
         ucp_request_release(MPIDI_UCX_REQ(sreq).a.ucp_request);
     }
