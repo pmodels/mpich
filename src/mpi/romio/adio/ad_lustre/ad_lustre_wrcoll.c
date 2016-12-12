@@ -1145,7 +1145,6 @@ static void ADIOI_LUSTRE_IterateOneSided(ADIO_File fd, const void *buf, int *str
      * synchronization.
      */
     stripeParms.segmentLen = ((ADIO_Offset)numStripedAggs)*((ADIO_Offset)(striping_info[0]));
-    ADIO_Offset totalFileSize = (lastFileOffset-firstFileOffset)+(ADIO_Offset)1;
 
     /* These arrays define the file offsets for the stripes for a given segment - similar
      * to the concept of file domains in GPFS, essentially file domeains for the segment.
