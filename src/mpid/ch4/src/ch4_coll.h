@@ -95,10 +95,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_Bcast_knomial(
     int is_split = 0;
     MPI_Aint tot_size, seg_size;
 
-    /****************************from algo params****************************/
-    int knomial_radix = params->generic_bcast_knomial_parameters.radix;
-    int64_t block_size = params->generic_bcast_knomial_parameters.block_size;
-    /************************************************************************/
+    /****************************from algo params***************************************/
+    int knomial_radix = ((struct generic_bcast_knomial_parameters *)params)->radix;
+    int64_t block_size = ((struct generic_bcast_knomial_parameters *)params)->block_size;
+    /***********************************************************************************/
 
     MPID_Datatype_get_size_macro(datatype, type_size);
     nbytes = type_size * count;

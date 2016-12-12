@@ -18,12 +18,6 @@ struct MPIR_Request;
 struct MPIDU_Segment;
 struct MPIDI_coll_tuner_table;
 
-typedef union {
-    //reserved for parameters related to SHM specific collectives
-} MPIDI_POSIX_coll_params_t;
-
-#define MPIDI_POSIX_COLL_PARAMS_DECL MPIDI_POSIX_coll_params_t shm_parameters;
-
 typedef struct {
     struct MPIR_Request *next;
     struct MPIR_Request *pending;
@@ -46,4 +40,5 @@ typedef struct {
     struct MPIDI_coll_tuner_table *colltuner_table;
 } MPIDI_POSIX_comm_t;
 
+#include "posix_coll_params.h"
 #endif /* POSIX_PRE_H_INCLUDED */

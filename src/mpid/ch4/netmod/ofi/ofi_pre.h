@@ -22,6 +22,7 @@
 #include <rdma/fi_cm.h>
 #include <rdma/fi_errno.h>
 
+
 /* Defines */
 
 #define MPIDI_OFI_MAX_AM_HDR_SIZE    128
@@ -46,12 +47,6 @@
 struct MPIR_Comm;
 struct MPIR_Request;
 struct MPIDI_coll_tuner_table;
-
-typedef union {
-    // reserved for parameters related to NETMOD specific collectives
-} MPIDI_OFI_coll_params_t;
-
-#define MPIDI_OFI_COLL_PARAMS_DECL MPIDI_OFI_coll_params_t nm_parameters;
 
 typedef struct {
     void *huge_send_counters;
@@ -191,4 +186,5 @@ typedef struct {
 #endif
 } MPIDI_OFI_addr_t;
 
+#include "ofi_coll_params.h"
 #endif /* OFI_PRE_H_INCLUDED */
