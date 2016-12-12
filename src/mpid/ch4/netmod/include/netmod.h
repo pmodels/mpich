@@ -59,28 +59,28 @@ typedef int (*MPIDI_NM_mpi_comm_free_hook_t) (MPIR_Comm * comm);
 typedef void (*MPIDI_NM_am_request_init_t) (MPIR_Request * req);
 typedef void (*MPIDI_NM_am_request_finalize_t) (MPIR_Request * req);
 typedef int (*MPIDI_NM_mpi_send_t) (const void *buf, int count, MPI_Datatype datatype, int rank,
-                                    int tag, MPIR_Comm * comm, int context_offset,
+                                    int tag, MPIR_Comm * comm, int context_offset, int ep_idx,
                                     MPIR_Request ** request);
 typedef int (*MPIDI_NM_mpi_ssend_t) (const void *buf, int count, MPI_Datatype datatype, int rank,
-                                     int tag, MPIR_Comm * comm, int context_offset,
+                                     int tag, MPIR_Comm * comm, int context_offset, int ep_idx,
                                      MPIR_Request ** request);
 typedef int (*MPIDI_NM_mpi_startall_t) (int count, MPIR_Request * requests[]);
 typedef int (*MPIDI_NM_mpi_send_init_t) (const void *buf, int count, MPI_Datatype datatype,
-                                         int rank, int tag, MPIR_Comm * comm, int context_offset,
+                                         int rank, int tag, MPIR_Comm * comm, int context_offset, int ep_idx,
                                          MPIR_Request ** request);
 typedef int (*MPIDI_NM_mpi_ssend_init_t) (const void *buf, int count, MPI_Datatype datatype,
-                                          int rank, int tag, MPIR_Comm * comm, int context_offset,
+                                          int rank, int tag, MPIR_Comm * comm, int context_offset, int ep_idx,
                                           MPIR_Request ** request);
 typedef int (*MPIDI_NM_mpi_rsend_init_t) (const void *buf, int count, MPI_Datatype datatype,
-                                          int rank, int tag, MPIR_Comm * comm, int context_offset,
+                                          int rank, int tag, MPIR_Comm * comm, int context_offset, int ep_idx,
                                           MPIR_Request ** request);
 typedef int (*MPIDI_NM_mpi_bsend_init_t) (const void *buf, int count, MPI_Datatype datatype,
-                                          int rank, int tag, MPIR_Comm * comm, int context_offset,
+                                          int rank, int tag, MPIR_Comm * comm, int context_offset, int ep_idx,
                                           MPIR_Request ** request);
-typedef int (*MPIDI_NM_mpi_isend_t) (const void *buf, int count, MPI_Datatype datatype, int rank,
+typedef int (*MPIDI_NM_mpi_isend_t) (const void *buf, int count, MPI_Datatype datatype, int rank, int ep_idx,
                                      int tag, MPIR_Comm * comm, int context_offset,
                                      MPIR_Request ** request);
-typedef int (*MPIDI_NM_mpi_issend_t) (const void *buf, int count, MPI_Datatype datatype, int rank,
+typedef int (*MPIDI_NM_mpi_issend_t) (const void *buf, int count, MPI_Datatype datatype, int rank, int ep_idx,
                                       int tag, MPIR_Comm * comm, int context_offset,
                                       MPIR_Request ** request);
 typedef int (*MPIDI_NM_mpi_cancel_send_t) (MPIR_Request * sreq);
@@ -554,56 +554,56 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_NM_am_request_finalize(MPIR_Request *
                                                            req) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send(const void *buf, int count, MPI_Datatype datatype,
                                                int rank, int tag, MPIR_Comm * comm,
-                                               int context_offset,
+                                               int context_offset, int ep_idx,
                                                MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend(const void *buf, int count, MPI_Datatype datatype,
                                                 int rank, int tag, MPIR_Comm * comm,
-                                                int context_offset,
+                                                int context_offset, int ep_idx,
                                                 MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count,
                                                    MPIR_Request *
                                                    requests[]) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_send_init(const void *buf, int count,
                                                     MPI_Datatype datatype, int rank, int tag,
-                                                    MPIR_Comm * comm, int context_offset,
+                                                    MPIR_Comm * comm, int context_offset, int ep_idx,
                                                     MPIR_Request **
                                                     request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_ssend_init(const void *buf, int count,
                                                      MPI_Datatype datatype, int rank, int tag,
-                                                     MPIR_Comm * comm, int context_offset,
+                                                     MPIR_Comm * comm, int context_offset, int ep_idx,
                                                      MPIR_Request **
                                                      request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_rsend_init(const void *buf, int count,
                                                      MPI_Datatype datatype, int rank, int tag,
-                                                     MPIR_Comm * comm, int context_offset,
+                                                     MPIR_Comm * comm, int context_offset, int ep_idx,
                                                      MPIR_Request **
                                                      request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_bsend_init(const void *buf, int count,
                                                      MPI_Datatype datatype, int rank, int tag,
-                                                     MPIR_Comm * comm, int context_offset,
+                                                     MPIR_Comm * comm, int context_offset, int ep_idx,
                                                      MPIR_Request **
                                                      request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, int count, MPI_Datatype datatype,
                                                 int rank, int tag, MPIR_Comm * comm,
-                                                int context_offset,
+                                                int context_offset, int ep_idx,
                                                 MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_issend(const void *buf, int count, MPI_Datatype datatype,
                                                  int rank, int tag, MPIR_Comm * comm,
-                                                 int context_offset,
+                                                 int context_offset, int ep_idx,
                                                  MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv_init(void *buf, int count, MPI_Datatype datatype,
                                                     int rank, int tag, MPIR_Comm * comm,
-                                                    int context_offset,
+                                                    int context_offset, int ep_idx,
                                                     MPIR_Request **
                                                     request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_recv(void *buf, int count, MPI_Datatype datatype,
                                                int rank, int tag, MPIR_Comm * comm,
-                                               int context_offset, MPI_Status * status,
+                                               int context_offset, int ep_idx, MPI_Status * status,
                                                MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_irecv(void *buf, int count, MPI_Datatype datatype,
                                                 int rank, int tag, MPIR_Comm * comm,
-                                                int context_offset,
+                                                int context_offset, int ep_idx,
                                                 MPIR_Request ** request) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf, int count, MPI_Datatype datatype,
                                                  MPIR_Request * message,
@@ -614,11 +614,11 @@ MPL_STATIC_INLINE_PREFIX void *MPIDI_NM_mpi_alloc_mem(size_t size,
                                                       info_ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_free_mem(void *ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_improbe(int source, int tag, MPIR_Comm * comm,
-                                                  int context_offset, int *flag,
+                                                  int context_offset, int ep_idx, int *flag,
                                                   MPIR_Request ** message,
                                                   MPI_Status * status) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_iprobe(int source, int tag, MPIR_Comm * comm,
-                                                 int context_offset, int *flag,
+                                                 int context_offset, int ep_idx, int *flag,
                                                  MPI_Status * status) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_win_set_info(MPIR_Win * win,
                                                        MPIR_Info * info) MPL_STATIC_INLINE_SUFFIX;
