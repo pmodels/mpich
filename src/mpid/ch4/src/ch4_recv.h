@@ -157,9 +157,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Recv_init(void *buf,
             MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*request) = NULL;
         }
     }
+  fn_exit:
 #endif
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RECV_INIT);
     return mpi_errno;
 
