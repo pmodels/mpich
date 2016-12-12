@@ -189,14 +189,15 @@ fi
 
 AC_ARG_ENABLE(ch4-shm,
     [--enable-ch4-shm=level:module
-       Control whether CH4 shared memory is built and/or used.
+       Control whether CH4 shared memory is built and/or used. Default
+       shm level depends on selected netmod(s). (OFI=exclusive, UCX=no).
        level:
          no        - Do not build or use CH4 shared memory.
          yes       - Build CH4 shared memory, but do not use it by default (Your chosen netmod must provide it).
-         exclusive - Build and exclusively use CH4 shared memory. (Default)
+         exclusive - Build and exclusively use CH4 shared memory.
        module-list(optional).  comma separated list of shared memory modules:
          posix     - POSIX shared memory implementation
-    ],,enable_ch4_shm=exclusive:posix)
+    ],,enable_ch4_shm=default)
 
 AC_ARG_ENABLE(ch4-shm-direct,
     [--enable-ch4-shm-direct
@@ -205,6 +206,15 @@ AC_ARG_ENABLE(ch4-shm-direct,
          yes       - Enabled (default)
          no        - Disabled (may improve build times and code size)
     ],,enable_ch4_shm_direct=yes)
+
+# setup shared memory defaults
+if test "${enable_ch4_shm}" = "default" ; then
+    if test "${ch4_netmods}" = "ucx" ; then
+        enable_ch4_shm=no
+    else
+	enable_ch4_shm=exclusive:posix
+    fi
+fi
 
 ch4_shm_level=`echo $enable_ch4_shm | sed -e 's/:.*$//'`
 changequote(<<,>>)
