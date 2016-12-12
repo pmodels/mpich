@@ -87,58 +87,69 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * comm, int rank)
 {
+    MPIDI_av_entry_t * ret = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_COMM_RANK_TO_AV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_COMM_RANK_TO_AV);
 
     switch (MPIDI_COMM(comm, map).mode) {
     case MPIDI_RANK_MAP_DIRECT:
-        return &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]->table[rank];
+        ret = &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]->table[rank];
+	break;
     case MPIDI_RANK_MAP_DIRECT_INTRA:
-        return &MPIDI_av_table0->table[rank];
+        ret = &MPIDI_av_table0->table[rank];
+	break;
     case MPIDI_RANK_MAP_OFFSET:
-        return &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
+        ret = &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
             ->table[rank + MPIDI_COMM(comm, map).reg.offset];
+        break;
     case MPIDI_RANK_MAP_OFFSET_INTRA:
-        return &MPIDI_av_table0->table[rank + MPIDI_COMM(comm, map).reg.offset];
+        ret = &MPIDI_av_table0->table[rank + MPIDI_COMM(comm, map).reg.offset];
+        break;
     case MPIDI_RANK_MAP_STRIDE:
-        return &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
+        ret = &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
             ->table[MPIDI_CALC_STRIDE_SIMPLE(rank,
                                              MPIDI_COMM(comm, map).reg.stride.stride,
                                              MPIDI_COMM(comm, map).reg.stride.offset)];
+        break;
     case MPIDI_RANK_MAP_STRIDE_INTRA:
-        return &MPIDI_av_table0->table[MPIDI_CALC_STRIDE_SIMPLE(rank,
+        ret = &MPIDI_av_table0->table[MPIDI_CALC_STRIDE_SIMPLE(rank,
                                                                 MPIDI_COMM(comm,
                                                                            map).reg.stride.stride,
                                                                 MPIDI_COMM(comm,
                                                                            map).reg.stride.offset)];
+        break;
     case MPIDI_RANK_MAP_STRIDE_BLOCK:
-        return &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
+        ret = &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
             ->table[MPIDI_CALC_STRIDE(rank,
                                       MPIDI_COMM(comm, map).reg.stride.stride,
                                       MPIDI_COMM(comm, map).reg.stride.blocksize,
                                       MPIDI_COMM(comm, map).reg.stride.offset)];
+        break;
     case MPIDI_RANK_MAP_STRIDE_BLOCK_INTRA:
-        return &MPIDI_av_table0->table[MPIDI_CALC_STRIDE(rank,
+        ret = &MPIDI_av_table0->table[MPIDI_CALC_STRIDE(rank,
                                                          MPIDI_COMM(comm, map).reg.stride.stride,
                                                          MPIDI_COMM(comm,
                                                                     map).reg.stride.blocksize,
                                                          MPIDI_COMM(comm, map).reg.stride.offset)];
+        break;
     case MPIDI_RANK_MAP_LUT:
-        return &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
+        ret = &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
             ->table[MPIDI_COMM(comm, map).irreg.lut.lpid[rank]];
+        break;
     case MPIDI_RANK_MAP_LUT_INTRA:
-        return &MPIDI_av_table0->table[MPIDI_COMM(comm, map).irreg.lut.lpid[rank]];
+        ret = &MPIDI_av_table0->table[MPIDI_COMM(comm, map).irreg.lut.lpid[rank]];
+        break;
     case MPIDI_RANK_MAP_MLUT:
-        return &MPIDI_av_table[MPIDI_COMM(comm, map).irreg.mlut.gpid[rank].avtid]
+        ret = &MPIDI_av_table[MPIDI_COMM(comm, map).irreg.mlut.gpid[rank].avtid]
             ->table[MPIDI_COMM(comm, map).irreg.mlut.gpid[rank].lpid];
+        break;
     case MPIDI_RANK_MAP_NONE:
         MPIR_Assert(0);
+        break;
     }
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_COMM_RANK_TO_AV);
-
-  fn_exit:
-    return NULL;
+    return ret;
 }
 
 #undef FUNCNAME
