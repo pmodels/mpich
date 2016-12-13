@@ -207,6 +207,12 @@ int MPIDU_Type_create_pairtype(MPI_Datatype type,
 					    MPIDU_DATALOOP_HETEROGENEOUS);
     }
 
+#ifdef MPID_Type_commit_hook
+    if (!err) {
+        err =  MPID_Type_commit_hook(new_dtp);
+    }
+#endif /* MPID_Type_commit_hook */
+
     /* --BEGIN ERROR HANDLING-- */
     if (err) {
 	mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
