@@ -149,10 +149,10 @@ for net in $nemesis_networks ; do
 done
 nemesis_nets_array_sz=$net_index
 
-AC_ARG_ENABLE(nemesis-dbg-nolocal, [--enable-nemesis-dbg-nolocal - enables debugging mode where shared-memory communication is disabled],
+AC_ARG_ENABLE(nemesis-dbg-nolocal, AC_HELP_STRING([--enable-nemesis-dbg-nolocal], [alias for --enable-dbg-nolocal]),
     AC_DEFINE(ENABLED_NO_LOCAL, 1, [Define to disable shared-memory communication for debugging]))
 
-AC_ARG_ENABLE(nemesis-dbg-localoddeven, [--enable-nemesis-dbg-localoddeven - enables debugging mode where shared-memory communication is enabled only between even processes or odd processes on a node],
+AC_ARG_ENABLE(nemesis-dbg-localoddeven, AC_HELP_STRING([--enable-nemesis-dbg-localoddeven], [alias for --enable-dbg-localoddeven]),
     AC_DEFINE(ENABLED_ODD_EVEN_CLIQUES, 1, [Define to enable debugging mode where shared-memory communication is done only between even procs or odd procs]))
 
 AC_ARG_WITH(papi, [--with-papi[=path] - specify path where papi include and lib directories can be found],, with_papi=no)
