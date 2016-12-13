@@ -596,6 +596,12 @@ AC_ARG_WITH(name-publisher,
     [],
     with_namepublisher=$with_name_publisher,)
 
+AC_ARG_ENABLE(dbg-nolocal, AC_HELP_STRING([--enable-dbg-nolocal], [enables debugging mode where shared-memory communication is disabled]),
+    AC_DEFINE(ENABLED_NO_LOCAL, 1, [Define to disable shared-memory communication for debugging]))
+
+AC_ARG_ENABLE(dbg-localoddeven, AC_HELP_STRING([--enable-dbg-localoddeven], [enables debugging mode where shared-memory communication is enabled only between even processes or odd processes on a node]),
+    AC_DEFINE(ENABLED_ODD_EVEN_CLIQUES, 1, [Define to enable debugging mode where shared-memory communication is done only between even procs or odd procs]))
+
 # Find a C compiler.
 # We also need to do this before the F77 and FC test to ensure that we
 # find the C preprocessor reliably.
