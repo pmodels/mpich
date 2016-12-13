@@ -97,15 +97,15 @@ static inline int MPIDI_OFI_do_iprobe(int source,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_NM_probe
+#define FUNCNAME MPIDI_NM_mpi_probe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_NM_probe(int source,
-                                 int tag, MPIR_Comm * comm, int context_offset, MPI_Status * status)
+static inline int MPIDI_NM_mpi_probe(int source,
+                                     int tag, MPIR_Comm * comm, int context_offset, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS, flag = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_PROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_PROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_PROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_PROBE);
 
     while (!flag) {
         mpi_errno = MPIDI_Iprobe(source, tag, comm, context_offset, &flag, status);
@@ -117,7 +117,7 @@ static inline int MPIDI_NM_probe(int source,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_PROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_PROBE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
