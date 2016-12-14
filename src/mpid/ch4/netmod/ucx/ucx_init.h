@@ -256,8 +256,6 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
         ucp_request_release(pending[i]);
     }
 
-    MPL_free(pending);
-
     pmi_errno = PMI_Barrier();
     MPIDI_UCX_PMI_ERROR(pmi_errno);
 
@@ -279,6 +277,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     PMI_Finalize();
 
   fn_exit:
+    MPL_free(pending);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
