@@ -206,38 +206,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Mrecv(void *buf,
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message, &rreq);
 #else
-
-    if (unlikely(message->status.MPI_SOURCE == MPI_ANY_SOURCE)) {
+    if (MPIDI_CH4I_REQUEST(message, is_local))
         mpi_errno = MPIDI_SHM_mpi_imrecv(buf, count, datatype, message, &rreq);
-
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
-
-        mpi_errno =
-            MPIDI_NM_mpi_imrecv(buf, count, datatype, message,
-                                &(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq)));
-
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIR_ERR_POP(mpi_errno);
-        }
-
-        MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq)) = rreq;
-        MPIDI_CH4I_REQUEST(rreq, is_local) = 1;
-        MPIDI_CH4I_REQUEST(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq), is_local) = 0;
-    }
-    else {
-        int local = MPIDI_CH4_rank_is_local(message->status.MPI_SOURCE, message->comm);
-        if (local)
-            mpi_errno = MPIDI_SHM_mpi_imrecv(buf, count, datatype, message, &rreq);
-        else
-            mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message, &rreq);
-
-        if (mpi_errno == MPI_SUCCESS) {
-            MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
-            MPIDI_CH4I_REQUEST(rreq, is_local) = local;
-        }
-    }
+    else
+        mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message, &rreq);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
@@ -290,17 +262,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Imrecv(void *buf,
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message, rreqp);
 #else
-    {
-        int local = MPIDI_CH4_rank_is_local(message->status.MPI_SOURCE, message->comm);
-        if (local)
-            mpi_errno = MPIDI_SHM_mpi_imrecv(buf, count, datatype, message, rreqp);
-        else
-            mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message, rreqp);
-        if (mpi_errno == MPI_SUCCESS) {
-            MPIDI_CH4I_REQUEST(*rreqp, is_local) = local;
-            MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(*rreqp) = NULL;
-        }
-    }
+    if (MPIDI_CH4I_REQUEST(message, is_local))
+        mpi_errno = MPIDI_SHM_mpi_imrecv(buf, count, datatype, message, rreqp);
+    else
+        mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message, rreqp);
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
