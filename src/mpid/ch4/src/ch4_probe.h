@@ -86,16 +86,27 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Mprobe(int source,
         if (unlikely(source == MPI_ANY_SOURCE)) {
             mpi_errno =
                 MPIDI_SHM_mpi_improbe(source, tag, comm, context_offset, &flag, message, status);
-            if (!flag)
+            if (flag) {
+                MPIDI_CH4I_REQUEST(*message, is_local) = 1;
+            } else {
                 mpi_errno =
                     MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, &flag, message, status);
+                if (flag)
+                    MPIDI_CH4I_REQUEST(*message, is_local) = 0;
+            }
         }
-        else if (MPIDI_CH4_rank_is_local(source, comm))
+        else if (MPIDI_CH4_rank_is_local(source, comm)) {
             mpi_errno =
                 MPIDI_SHM_mpi_improbe(source, tag, comm, context_offset, &flag, message, status);
-        else
+            if (flag)
+                MPIDI_CH4I_REQUEST(*message, is_local) = 1;
+        }
+        else {
             mpi_errno =
                 MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, &flag, message, status);
+            if (flag)
+                MPIDI_CH4I_REQUEST(*message, is_local) = 0;
+        }
 #endif
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
@@ -136,14 +147,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Improbe(int source,
 #else
     if (unlikely(source == MPI_ANY_SOURCE)) {
         mpi_errno = MPIDI_SHM_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
-        if (!*flag)
+        if (*flag) {
+            MPIDI_CH4I_REQUEST(*message, is_local) = 1;
+        } else {
             mpi_errno =
                 MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
+            if (*flag) {
+                MPIDI_CH4I_REQUEST(*message, is_local) = 0;
+            }
+        }
     }
-    else if (MPIDI_CH4_rank_is_local(source, comm))
+    else if (MPIDI_CH4_rank_is_local(source, comm)) {
         mpi_errno = MPIDI_SHM_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
-    else
+        if (*flag)
+            MPIDI_CH4I_REQUEST(*message, is_local) = 1;
+    }
+    else {
         mpi_errno = MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, flag, message, status);
+        if (*flag)
+            MPIDI_CH4I_REQUEST(*message, is_local) = 0;
+    }
 #endif
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
