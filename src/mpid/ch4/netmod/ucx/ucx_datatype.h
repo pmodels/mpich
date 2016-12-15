@@ -81,8 +81,12 @@ static inline ucs_status_t MPIDI_UCX_Unpack(void *state, size_t offset, const vo
 
     struct MPIDI_UCX_pack_state *pack_state = (struct MPIDI_UCX_pack_state *) state;
     size_t last = MPL_MIN(pack_state->packsize, offset + count);
+    size_t last_pack = last;
 
     MPID_Segment_unpack(pack_state->segment_ptr, offset, &last, (void *) src);
+    if (unlikely(last != last_pack)) {
+        return UCS_ERR_MESSAGE_TRUNCATED;
+    }
 
     return UCS_OK;
 }
