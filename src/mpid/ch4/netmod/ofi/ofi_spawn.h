@@ -118,7 +118,7 @@ static inline int MPIDI_OFI_dynproc_create_intercomm(const char *port_name,
                                                      MPIR_Comm ** newcomm,
                                                      int is_low_group, char *api)
 {
-    int i, context_id_offset, mpi_errno = MPI_SUCCESS;
+    int context_id_offset, mpi_errno = MPI_SUCCESS;
     MPIR_Comm *tmp_comm_ptr = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DYNPROC_CREATE_INTERCOMM);
