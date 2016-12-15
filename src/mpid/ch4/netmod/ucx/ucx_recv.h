@@ -37,6 +37,8 @@ static inline void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
 
     if (unlikely(status == UCS_ERR_CANCELED)) {
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
+    } else if (unlikely(status == UCS_ERR_MESSAGE_TRUNCATED)) {
+        rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
     } else {
         MPI_Aint count = info->length;
         rreq->status.MPI_ERROR = MPI_SUCCESS;
