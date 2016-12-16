@@ -34,6 +34,7 @@ static inline int MPIDI_NM_mpi_improbe(int source,
         *flag = 1;
         req = (MPIR_Request *) MPIR_Request_create(MPIR_REQUEST_KIND__MPROBE);
         MPIR_Assert(req);
+        MPIR_Request_add_ref(req);
         MPIDI_UCX_REQ(req).a.message_handler = message_h;
 
         if (status != MPI_STATUS_IGNORE) {
