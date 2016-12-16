@@ -246,6 +246,8 @@ static inline int MPIDI_NM_mpi_cancel_send(MPIR_Request * sreq)
     if (!MPIR_Request_is_complete(sreq)) {
         ucp_request_cancel(MPIDI_UCX_global.worker, MPIDI_UCX_REQ(sreq).a.ucp_request);
     }
+
+    return MPI_SUCCESS;
 }
 
 #endif /* UCX_SEND_H_INCLUDED */
