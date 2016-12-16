@@ -140,10 +140,6 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
     win->copyDispUnit = 0;
     win->copySize = 0;
     MPIDI_CH4U_WIN(win, shared_table) = NULL;
-    if ((info != NULL) && ((int *) info != (int *) MPI_INFO_NULL)) {
-        mpi_errno = MPIDI_CH4R_mpi_win_set_info(win, info);
-        MPIR_Assert(mpi_errno == 0);
-    }
 
     /* Initialize the info (hint) flags per window */
     MPIDI_CH4U_WIN(win, info_args).no_locks = 0;
@@ -154,6 +150,13 @@ static inline int MPIDI_CH4R_win_init(MPI_Aint length,
     MPIDI_CH4U_WIN(win, info_args).accumulate_ops = MPIDI_CH4I_ACCU_SAME_OP_NO_OP;
     MPIDI_CH4U_WIN(win, info_args).same_size = 0;
     MPIDI_CH4U_WIN(win, info_args).alloc_shared_noncontig = 0;
+
+    if ((info != NULL) && ((int *) info != (int *) MPI_INFO_NULL)) {
+        mpi_errno = MPIDI_CH4R_mpi_win_set_info(win, info);
+        MPIR_Assert(mpi_errno == 0);
+    }
+
+
     MPIDI_CH4U_WIN(win, mmap_sz) = 0;
     MPIDI_CH4U_WIN(win, mmap_addr) = NULL;
 
