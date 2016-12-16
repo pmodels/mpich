@@ -171,6 +171,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Improbe(int source,
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
+    if (!*flag)
+        MPIDI_Progress_test();
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IMPROBE);
     return mpi_errno;
@@ -215,6 +218,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Iprobe(int source,
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);
     }
+    if (!*flag)
+        MPIDI_Progress_test();
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPROBE);
     return mpi_errno;
