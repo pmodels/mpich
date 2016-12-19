@@ -217,13 +217,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_imrecv(void *buf,
         goto fn_exit;
     }
 
-    if (message == NULL) {
-        MPIDI_OFI_request_create_null_rreq(rreq, mpi_errno, fn_fail);
-        *rreqp = rreq;
-        goto fn_exit;
-    }
-
-    MPIR_Assert(message != NULL);
     MPIR_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
 
     *rreqp = rreq = message;
