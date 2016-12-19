@@ -28,9 +28,34 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
+    /* Test#1: setting a valid key at window-create time */
+
+    MPI_Info_create(&info_in);
+    MPI_Info_set(info_in, "no_locks", "true");
+
+    MPI_Win_allocate(sizeof(int), sizeof(int), info_in, MPI_COMM_WORLD, &base, &win);
+
+    MPI_Win_get_info(win, &info_out);
+
+    MPI_Info_get(info_out, "no_locks", MPI_MAX_INFO_VAL, buf, &flag);
+    if (!flag || strncmp(buf, "true", strlen("true")) != 0) {
+        if (!flag)
+            printf("%d: no_locks is not defined\n", rank);
+        else
+            printf("%d: no_locks = %s, expected true\n", rank, buf);
+        errors++;
+    }
+
+    MPI_Info_free(&info_in);
+    MPI_Info_free(&info_out);
+
+    /* We create a new window with no info argument for the next text to ensure that we have the
+     * default settings */
+
+    MPI_Win_free(&win);
     MPI_Win_allocate(sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &base, &win);
 
-    /* Test#1: setting and getting invalid key */
+    /* Test#2: setting and getting invalid key */
 
     MPI_Info_create(&info_in);
     MPI_Info_set(info_in, invalid_key, "true");
@@ -52,7 +77,7 @@ int main(int argc, char **argv)
     MPI_Info_free(&info_in);
     MPI_Info_free(&info_out);
 
-    /* Test#2: setting info key "no_lock" to false and getting the key */
+    /* Test#3: setting info key "no_lock" to false and getting the key */
 
     MPI_Info_create(&info_in);
     MPI_Info_set(info_in, "no_locks", "false");
@@ -74,7 +99,7 @@ int main(int argc, char **argv)
     MPI_Info_free(&info_in);
     MPI_Info_free(&info_out);
 
-    /* Test#3: setting info key "no_lock" to true and getting the key */
+    /* Test#4: setting info key "no_lock" to true and getting the key */
 
     MPI_Info_create(&info_in);
     MPI_Info_set(info_in, "no_locks", "true");
