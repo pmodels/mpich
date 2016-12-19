@@ -194,15 +194,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Mrecv(void *buf,
         goto fn_exit;
     }
 
-    if (unlikely(message->status.MPI_SOURCE == MPI_PROC_NULL)) {
-        rreq = message;
-        rreq->status.MPI_SOURCE = message->status.MPI_SOURCE;
-        rreq->status.MPI_TAG = message->status.MPI_TAG;
-        MPIDI_CH4U_request_complete(rreq);
-        mpi_errno = MPI_SUCCESS;
-        goto fn_exit;
-    }
-
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message, &rreq);
 #else
@@ -246,16 +237,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Imrecv(void *buf,
         MPIR_Request *rreq;
         MPIDI_Request_create_null_rreq(rreq, mpi_errno, goto fn_fail);
         *rreqp = rreq;
-        goto fn_exit;
-    }
-
-    if (unlikely(message->status.MPI_SOURCE == MPI_PROC_NULL)) {
-        MPIR_Request *rreq = message;
-        rreq->status.MPI_SOURCE = message->status.MPI_SOURCE;
-        rreq->status.MPI_TAG = message->status.MPI_TAG;
-        MPIDI_CH4U_request_complete(rreq);
-        *rreqp = rreq;
-        mpi_errno = MPI_SUCCESS;
         goto fn_exit;
     }
 
