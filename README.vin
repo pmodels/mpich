@@ -27,6 +27,7 @@ information on bug fixes and new releases.
 9.  Developer Builds
 10. Multiple Fortran compiler support
 11. ABI Compatibility
+12. Capability Sets
 
 
 -------------------------------------------------------------------------
@@ -887,3 +888,40 @@ or using Intel MPI using:
 This works irrespective of which MPI implementation your application
 was compiled with, as long as you use one of the MPI implementations
 in the ABI compatibility initiative.
+
+-------------------------------------------------------------------------
+
+12. Capability Sets
+=====================
+
+The CH4 device contains a feature called "capability sets" to simplify
+configuration of MPICH on systems using the OFI netmod. This feature
+configures MPICH to use a predetermined set of OFI features based on the
+provider being used. Capability sets can be configured at compile time or
+runtime. Compile time configuration provides better performance by
+reducing unnecessary code branches, but at the cost of flexibility.
+
+To configure at compile time, the device string should be amended to include
+the OFI provider with the following option:
+
+    --with-device=ch4:ofi:sockets
+
+This will setup the OFI netmod to use the optimal configuration for the
+sockets provider, and will set various compile time constants. These settings
+cannot be changed at runtime.
+
+If runtime configuration is needed, continue to use the device string as before
+(without the OFI provider extension) and set various environment variables to
+achieve a similar configuration. To select the desired provider:
+
+    % export MPIR_CVAR_OFI_USE_PROVIDER=sockets
+
+This will select the OFI provider and the associated MPICH capability set. To
+change the preset configuration, there exists an extended set of environment
+variables. As an example, the immediate data fields can be disabled by using
+the environment variable:
+
+    % export MPIR_CVAR_OFI_ENABLE_DATA=0
+
+A full list of capability set configuration variables can be found in the
+environment variables README.envvar.
