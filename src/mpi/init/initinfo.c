@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "mpi.h"
+#include "mpiimpl.h"
 #include "mpichinfo.h"
 /* 
    Global definitions of variables that hold information about the

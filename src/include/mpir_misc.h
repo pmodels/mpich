@@ -48,15 +48,15 @@ typedef enum MPIR_Lang_t {
 #endif
 } MPIR_Lang_t;
 
-extern const char MPII_Version_string[];
-extern const char MPII_Version_date[];
-extern const char MPII_Version_configure[];
-extern const char MPII_Version_device[];
-extern const char MPII_Version_CC[];
-extern const char MPII_Version_CXX[];
-extern const char MPII_Version_F77[];
-extern const char MPII_Version_FC[];
-extern const char MPII_Version_custom[];
+extern const char MPII_Version_string[] MPICH_API_PUBLIC;
+extern const char MPII_Version_date[] MPICH_API_PUBLIC;
+extern const char MPII_Version_configure[] MPICH_API_PUBLIC;
+extern const char MPII_Version_device[] MPICH_API_PUBLIC;
+extern const char MPII_Version_CC[] MPICH_API_PUBLIC;
+extern const char MPII_Version_CXX[] MPICH_API_PUBLIC;
+extern const char MPII_Version_F77[] MPICH_API_PUBLIC;
+extern const char MPII_Version_FC[] MPICH_API_PUBLIC;
+extern const char MPII_Version_custom[] MPICH_API_PUBLIC;
 
 int MPIR_Localcopy(const void *sendbuf, MPI_Aint sendcount, MPI_Datatype sendtype,
                    void *recvbuf, MPI_Aint recvcount, MPI_Datatype recvtype);
