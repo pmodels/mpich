@@ -323,6 +323,7 @@ typedef struct {
     int context_shift;
     size_t iov_limit;
     size_t rma_iov_limit;
+    int max_ch4_eps;
 
     /* Mutexex and endpoints */
     MPIDI_OFI_cacheline_mutex_t mutexes[4];
