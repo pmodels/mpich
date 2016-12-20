@@ -18,6 +18,8 @@ AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/ch4/shm/include
 noinst_HEADERS += src/mpid/ch4/shm/include/shm.h
 noinst_HEADERS += src/mpid/ch4/shm/include/shm_impl.h
 
+# glue layer is commented out till we get the shmmods namespacing fixed
+# include $(top_srcdir)/src/mpid/ch4/shm/src/Makefile.mk
 include $(top_srcdir)/src/mpid/ch4/shm/stubshm/Makefile.mk
 include $(top_srcdir)/src/mpid/ch4/shm/posix/Makefile.mk
 
