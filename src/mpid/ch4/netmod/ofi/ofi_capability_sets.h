@@ -54,6 +54,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
  * MPIDI_OFI_ENABLE_TAGGED             Use FI_TAGGED interface instead of FI_MSG
  * MPIDI_OFI_ENABLE_AM                 Use FI_MSG and FI_MULTI_RECV for active messages
  * MPIDI_OFI_ENABLE_RMA                Use FI_ATOMICS and FI_RMA interfaces
+ * MPIDI_OFI_FETCH_ATOMIC_IOVECS       The maximum number of iovecs that can be used for fetch_atomic operations
  */
 
 #define MPIDI_OFI_ENABLE_DATA_PSM               MPIDI_OFI_OFF
@@ -66,6 +67,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_TAGGED_PSM             MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_AM_PSM                 MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_RMA_PSM                MPIDI_OFI_ON
+#define MPIDI_OFI_FETCH_ATOMIC_IOVECS_PSM       1
 
 #ifdef MPIDI_CH4_OFI_USE_SET_PSM
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
@@ -79,6 +81,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_TAGGED             MPIDI_OFI_ENABLE_TAGGED_PSM
 #define MPIDI_OFI_ENABLE_AM                 MPIDI_OFI_ENABLE_AM_PSM
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_PSM
+#define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_PSM
 #endif
 
 #define MPIDI_OFI_ENABLE_DATA_PSM2               MPIDI_OFI_OFF
@@ -91,6 +94,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_TAGGED_PSM2             MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_AM_PSM2                 MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_RMA_PSM2                MPIDI_OFI_ON
+#define MPIDI_OFI_FETCH_ATOMIC_IOVECS_PSM2      1
 
 #ifdef MPIDI_CH4_OFI_USE_SET_PSM2
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
@@ -104,6 +108,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_TAGGED             MPIDI_OFI_ENABLE_TAGGED_PSM2
 #define MPIDI_OFI_ENABLE_AM                 MPIDI_OFI_ENABLE_AM_PSM2
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_PSM2
+#define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_PSM2
 #endif
 
 #define MPIDI_OFI_ENABLE_DATA_GNI               MPIDI_OFI_OFF
@@ -116,6 +121,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_TAGGED_GNI             MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_AM_GNI                 MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_RMA_GNI                MPIDI_OFI_ON
+#define MPIDI_OFI_FETCH_ATOMIC_IOVECS_GNI       1
 
 #ifdef MPIDI_CH4_OFI_USE_SET_GNI
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
@@ -129,6 +135,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_TAGGED             MPIDI_OFI_ENABLE_TAGGED_GNI
 #define MPIDI_OFI_ENABLE_AM                 MPIDI_OFI_ENABLE_AM_GNI
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_GNI
+#define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_GNI
 #endif
 
 #define MPIDI_OFI_ENABLE_DATA_SOCKETS               MPIDI_OFI_ON
@@ -141,6 +148,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_TAGGED_SOCKETS             MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_AM_SOCKETS                 MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_RMA_SOCKETS                MPIDI_OFI_ON
+#define MPIDI_OFI_FETCH_ATOMIC_IOVECS_SOCKETS       1
 
 #ifdef MPIDI_CH4_OFI_USE_SET_SOCKETS
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
@@ -154,6 +162,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_TAGGED             MPIDI_OFI_ENABLE_TAGGED_SOCKETS
 #define MPIDI_OFI_ENABLE_AM                 MPIDI_OFI_ENABLE_AM_SOCKETS
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_SOCKETS
+#define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_SOCKETS
 #endif
 
 #define MPIDI_OFI_ENABLE_DATA_BGQ               MPIDI_OFI_OFF
@@ -166,6 +175,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_TAGGED_BGQ             MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_AM_BGQ                 MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_RMA_BGQ                MPIDI_OFI_ON
+#define MPIDI_OFI_FETCH_ATOMIC_IOVECS_BGQ       1
 
 #ifdef MPIDI_CH4_OFI_USE_SET_BGQ
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
@@ -179,6 +189,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_TAGGED             MPIDI_OFI_ENABLE_TAGGED_BGQ
 #define MPIDI_OFI_ENABLE_AM                 MPIDI_OFI_ENABLE_AM_BGQ
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_BGQ
+#define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_BGQ
 #endif
 
 #ifdef MPIDI_CH4_OFI_USE_SET_RUNTIME
@@ -193,6 +204,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_TAGGED             MPIDI_Global.settings.enable_tagged
 #define MPIDI_OFI_ENABLE_AM                 MPIDI_Global.settings.enable_am
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_Global.settings.enable_rma
+#define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_Global.settings.fetch_atomic_iovecs
 #endif
 
 #endif
