@@ -87,17 +87,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_comm_rank_to_pid(MPIR_Comm * comm, int rank,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * comm, int rank)
 {
-    MPIDI_av_entry_t * ret = NULL;
+    MPIDI_av_entry_t *ret = NULL;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_COMM_RANK_TO_AV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_COMM_RANK_TO_AV);
 
     switch (MPIDI_COMM(comm, map).mode) {
     case MPIDI_RANK_MAP_DIRECT:
         ret = &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]->table[rank];
-	break;
+        break;
     case MPIDI_RANK_MAP_DIRECT_INTRA:
         ret = &MPIDI_av_table0->table[rank];
-	break;
+        break;
     case MPIDI_RANK_MAP_OFFSET:
         ret = &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
             ->table[rank + MPIDI_COMM(comm, map).reg.offset];
@@ -113,10 +113,10 @@ MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * co
         break;
     case MPIDI_RANK_MAP_STRIDE_INTRA:
         ret = &MPIDI_av_table0->table[MPIDI_CALC_STRIDE_SIMPLE(rank,
-                                                                MPIDI_COMM(comm,
-                                                                           map).reg.stride.stride,
-                                                                MPIDI_COMM(comm,
-                                                                           map).reg.stride.offset)];
+                                                               MPIDI_COMM(comm,
+                                                                          map).reg.stride.stride,
+                                                               MPIDI_COMM(comm,
+                                                                          map).reg.stride.offset)];
         break;
     case MPIDI_RANK_MAP_STRIDE_BLOCK:
         ret = &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
@@ -127,10 +127,10 @@ MPL_STATIC_INLINE_PREFIX MPIDI_av_entry_t *MPIDIU_comm_rank_to_av(MPIR_Comm * co
         break;
     case MPIDI_RANK_MAP_STRIDE_BLOCK_INTRA:
         ret = &MPIDI_av_table0->table[MPIDI_CALC_STRIDE(rank,
-                                                         MPIDI_COMM(comm, map).reg.stride.stride,
-                                                         MPIDI_COMM(comm,
-                                                                    map).reg.stride.blocksize,
-                                                         MPIDI_COMM(comm, map).reg.stride.offset)];
+                                                        MPIDI_COMM(comm, map).reg.stride.stride,
+                                                        MPIDI_COMM(comm,
+                                                                   map).reg.stride.blocksize,
+                                                        MPIDI_COMM(comm, map).reg.stride.offset)];
         break;
     case MPIDI_RANK_MAP_LUT:
         ret = &MPIDI_av_table[MPIDI_COMM(comm, map).avtid]
