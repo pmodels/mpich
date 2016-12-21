@@ -277,6 +277,7 @@ typedef struct MPIDI_CH4_Global_t {
     OPA_int_t nxt_seq_no;
     void *netmod_context[8];
     MPIU_buf_pool_t *buf_pool;
+    int n_netmod_eps;
 } MPIDI_CH4_Global_t;
 extern MPIDI_CH4_Global_t MPIDI_CH4_Global;
 #ifdef MPL_USE_DBG_LOGGING
