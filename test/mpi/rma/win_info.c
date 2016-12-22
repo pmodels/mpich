@@ -121,13 +121,48 @@ int main(int argc, char **argv)
     MPI_Info_free(&info_in);
     MPI_Info_free(&info_out);
 
-    /* Test#4: getting other info keys */
+    /* Test#5: getting/setting "accumulate_ordering" */
+    MPI_Win_get_info(win, &info_out);
 
+    /*   #5.1: is the default "rar,raw,war,waw" as stated in the standard? */
+    MPI_Info_get(info_out, "accumulate_ordering", MPI_MAX_INFO_VAL, buf, &flag);
+    if (!flag || strcmp(buf, "rar,raw,war,waw") != 0) {
+        if (flag)
+            printf("%d: accumulate_ordering: expected \"rar,raw,war,waw\" but got %s\n", rank, buf);
+        else
+            printf("%d: accumulate_ordering not defined\n", rank);
+        errors++;
+    }
+    else if (flag && VERBOSE)
+        printf("%d: accumulate_ordering = %s\n", rank, buf);
+
+    MPI_Info_free(&info_out);
+
+    /*   #5.2: setting "accumulate_ordering" to "none" */
+
+    MPI_Info_create(&info_in);
+    MPI_Info_set(info_in, "accumulate_ordering", "none");
+
+    MPI_Win_set_info(win, info_in);
     MPI_Win_get_info(win, &info_out);
 
     MPI_Info_get(info_out, "accumulate_ordering", MPI_MAX_INFO_VAL, buf, &flag);
-    if (flag && VERBOSE)
+    if (!flag || strcmp(buf, "none") != 0) {
+        if (flag)
+            printf("%d: accumulate_ordering: expected \"none\" but got %s\n", rank, buf);
+        else
+            printf("%d: accumulate_ordering not defined\n", rank);
+        errors++;
+    }
+    else if (flag && VERBOSE)
         printf("%d: accumulate_ordering = %s\n", rank, buf);
+
+    MPI_Info_free(&info_in);
+    MPI_Info_free(&info_out);
+
+    /* Test#6: getting other info keys */
+
+    MPI_Win_get_info(win, &info_out);
 
     MPI_Info_get(info_out, "accumulate_ops", MPI_MAX_INFO_VAL, buf, &flag);
     if (flag && VERBOSE)
