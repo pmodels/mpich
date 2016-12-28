@@ -1,6 +1,7 @@
 proberank 1
 truncmsg1 2
 truncmsg2 2
+truncmsg_mrecv 2 mpiversion=3.0
 # multiple completion ests
 errinstatts 2
 errinstatta 2
