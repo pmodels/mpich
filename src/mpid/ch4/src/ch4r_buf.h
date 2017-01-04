@@ -134,7 +134,7 @@ static inline void MPIDI_CH4R_release_buf_safe(void *buf)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_RELEASE_BUF_SAFE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_RELEASE_BUF_SAFE);
 
-    curr_buf = container_of(buf, MPIU_buf_t, data);
+    curr_buf = MPL_container_of(buf, MPIU_buf_t, data);
     curr_buf->next = curr_buf->pool->head;
     curr_buf->pool->head = curr_buf;
 
@@ -147,7 +147,7 @@ static inline void MPIDI_CH4R_release_buf(void *buf)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4R_RELEASE_BUF);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4R_RELEASE_BUF);
 
-    curr_buf = container_of(buf, MPIU_buf_t, data);
+    curr_buf = MPL_container_of(buf, MPIU_buf_t, data);
     pthread_mutex_lock(&curr_buf->pool->lock);
     curr_buf->next = curr_buf->pool->head;
     curr_buf->pool->head = curr_buf;
