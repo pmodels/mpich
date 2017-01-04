@@ -233,9 +233,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Imrecv(void *buf,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IMRECV);
 
     if (message == NULL) {
-        MPIR_Request *rreq;
-        MPIDI_Request_create_null_rreq(rreq, mpi_errno, goto fn_fail);
-        *rreqp = rreq;
+        MPIDI_Request_create_null_rreq(*rreqp, mpi_errno, goto fn_fail);
         goto fn_exit;
     }
 
