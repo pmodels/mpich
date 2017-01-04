@@ -539,7 +539,7 @@ static inline int MPIDI_handle_acc_cmpl(MPIR_Request * rreq)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    MPIDI_Request_complete(rreq);
+    MPID_Request_complete(rreq);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_HANDLE_ACC_CMPL);
     return mpi_errno;
@@ -622,7 +622,7 @@ static inline int MPIDI_handle_get_acc_cmpl(MPIR_Request * rreq)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    MPIDI_Request_complete(rreq);
+    MPID_Request_complete(rreq);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_HANDLE_GET_ACC_CMPL);
@@ -704,7 +704,7 @@ static inline int MPIDI_get_target_cmpl_cb(MPIR_Request * req)
                                             (void *) MPIDI_CH4U_REQUEST(req, req->greq.addr),
                                             MPIDI_CH4U_REQUEST(req, req->greq.count),
                                             MPIDI_CH4U_REQUEST(req, req->greq.datatype), req);
-        MPIDI_Request_complete(req);
+        MPID_Request_complete(req);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         goto fn_exit;
@@ -735,7 +735,7 @@ static inline int MPIDI_get_target_cmpl_cb(MPIR_Request * req)
                                         MPIDI_CH4U_REQUEST(req, rank),
                                         MPIDI_CH4U_GET_ACK,
                                         &get_ack, sizeof(get_ack), p_data, data_sz, MPI_BYTE, req);
-    MPIDI_Request_complete(req);
+    MPID_Request_complete(req);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     MPIDI_progress_cmpl_list();
@@ -772,7 +772,7 @@ static inline int MPIDI_put_target_cmpl_cb(MPIR_Request * rreq)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    MPIDI_Request_complete(rreq);
+    MPID_Request_complete(rreq);
     MPIDI_progress_cmpl_list();
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PUT_TARGET_CMPL_CB);
@@ -909,7 +909,7 @@ static inline int MPIDI_cswap_target_cmpl_cb(MPIR_Request * rreq)
     mpi_errno = MPIDI_ack_cswap(rreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
-    MPIDI_Request_complete(rreq);
+    MPID_Request_complete(rreq);
     MPIDI_progress_cmpl_list();
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CSWAP_TARGET_CMPL_CB);
@@ -994,8 +994,8 @@ static inline int MPIDI_get_ack_target_cmpl_cb(MPIR_Request * rreq)
     win = MPIDI_CH4U_REQUEST(greq, req->greq.win_ptr);
     MPIDI_win_remote_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(greq, rank));
 
-    MPIDI_Request_complete(greq);
-    MPIDI_Request_complete(rreq);
+    MPID_Request_complete(greq);
+    MPID_Request_complete(rreq);
     MPIDI_progress_cmpl_list();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACK_TARGET_CMPL_CB);
     return mpi_errno;
@@ -1025,7 +1025,7 @@ static inline int MPIDI_get_acc_ack_target_cmpl_cb(MPIR_Request * areq)
     MPIDI_win_remote_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(areq, rank));
 
     dtype_release_if_not_builtin(MPIDI_CH4U_REQUEST(areq, req->areq.result_datatype));
-    MPIDI_Request_complete(areq);
+    MPID_Request_complete(areq);
 
     MPIDI_progress_cmpl_list();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_GET_ACC_ACK_TARGET_CMPL_CB);
@@ -1051,7 +1051,7 @@ static inline int MPIDI_cswap_ack_target_cmpl_cb(MPIR_Request * rreq)
     MPIDI_win_remote_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(rreq, rank));
 
     MPL_free(MPIDI_CH4U_REQUEST(rreq, req->creq.data));
-    MPIDI_Request_complete(rreq);
+    MPID_Request_complete(rreq);
 
     MPIDI_progress_cmpl_list();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CSWAP_ACK_TARGET_CMPL_CB);
@@ -1085,7 +1085,7 @@ static inline int MPIDI_put_ack_target_msg_cb(int handler_id, void *am_hdr,
 
     MPIDI_win_remote_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(preq, rank));
 
-    MPIDI_Request_complete(preq);
+    MPID_Request_complete(preq);
 
     if (req)
         *req = NULL;
@@ -1123,7 +1123,7 @@ static inline int MPIDI_acc_ack_target_msg_cb(int handler_id, void *am_hdr,
 
     MPIDI_win_remote_cmpl_cnt_decr(win, MPIDI_CH4U_REQUEST(areq, rank));
 
-    MPIDI_Request_complete(areq);
+    MPID_Request_complete(areq);
 
     if (req)
         *req = NULL;

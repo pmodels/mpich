@@ -622,7 +622,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_rput(const void *origin_addr,
         MPIR_Assert(sreq);
 
         MPIR_Request_add_ref(sreq);
-        MPIDI_Request_complete(sreq);
+        MPID_Request_complete(sreq);
     }
 
   fn_exit:
@@ -696,7 +696,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_rget(void *origin_addr,
         MPIR_Assert(sreq);
 
         MPIR_Request_add_ref(sreq);
-        MPIDI_Request_complete(sreq);
+        MPID_Request_complete(sreq);
     }
 
   fn_exit:
@@ -739,7 +739,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_raccumulate(const void *origin_addr,
         MPIR_Assert(sreq);
 
         MPIR_Request_add_ref(sreq);
-        MPIDI_Request_complete(sreq);
+        MPID_Request_complete(sreq);
     }
 
   fn_exit:
@@ -821,7 +821,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_rget_accumulate(const void *origin_a
         MPIR_Assert(sreq);
 
         MPIR_Request_add_ref(sreq);
-        MPIDI_Request_complete(sreq);
+        MPID_Request_complete(sreq);
     }
 
   fn_exit:

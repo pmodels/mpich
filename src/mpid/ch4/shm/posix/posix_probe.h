@@ -85,7 +85,7 @@ static inline int MPIDI_SHM_mpi_improbe(int source,
     }
     else {
         *flag = 0;
-        MPIDI_Progress_test();
+        MPID_Progress_test();
     }
 
   fn_exit:
@@ -133,7 +133,7 @@ static inline int MPIDI_SHM_mpi_iprobe(int source,
     else {
         *flag = 0;
         MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
-        MPIDI_Progress_test();
+        MPID_Progress_test();
         MPID_THREAD_CS_ENTER(POBJ, MPIDI_POSIX_SHM_MUTEX);
     }
 

@@ -14,16 +14,16 @@
 #include "ch4_impl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Probe
+#define FUNCNAME MPID_Probe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Probe(int source,
+MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
                                          int tag, MPIR_Comm * comm, int context_offset,
                                          MPI_Status * status)
 {
     int mpi_errno, flag = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_PROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_PROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_PROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROBE);
 
     if (unlikely(source == MPI_PROC_NULL)) {
         MPIR_Status_set_procnull(status);
@@ -48,10 +48,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Probe(int source,
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
         }
-        MPIDI_Progress_test();
+        MPID_Progress_test();
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_PROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROBE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -59,18 +59,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Probe(int source,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Mprobe
+#define FUNCNAME MPID_Mprobe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Mprobe(int source,
+MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
                                           int tag,
                                           MPIR_Comm * comm,
                                           int context_offset, MPIR_Request ** message,
                                           MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS, flag = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_MPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_MPROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_MPROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_MPROBE);
 
     if (source == MPI_PROC_NULL) {
         MPIR_Status_set_procnull(status);
@@ -111,28 +111,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Mprobe(int source,
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POP(mpi_errno);
         }
-        MPIDI_Progress_test();
+        MPID_Progress_test();
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_MPROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_MPROBE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Improbe
+#define FUNCNAME MPID_Improbe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Improbe(int source,
+MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
                                            int tag,
                                            MPIR_Comm * comm,
                                            int context_offset,
                                            int *flag, MPIR_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IMPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IMPROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IMPROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IMPROBE);
 
     if (source == MPI_PROC_NULL) {
         MPIR_Status_set_procnull(status);
@@ -172,28 +172,28 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Improbe(int source,
         MPIR_ERR_POP(mpi_errno);
     }
     if (!*flag)
-        MPIDI_Progress_test();
+        MPID_Progress_test();
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IMPROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IMPROBE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Iprobe
+#define FUNCNAME MPID_Iprobe
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Iprobe(int source,
+MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
                                           int tag,
                                           MPIR_Comm * comm,
                                           int context_offset, int *flag, MPI_Status * status)
 {
 
     int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IPROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IPROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IPROBE);
 
     if (unlikely(source == MPI_PROC_NULL)) {
         MPIR_Status_set_procnull(status);
@@ -219,10 +219,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Iprobe(int source,
         MPIR_ERR_POP(mpi_errno);
     }
     if (!*flag)
-        MPIDI_Progress_test();
+        MPID_Progress_test();
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IPROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IPROBE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

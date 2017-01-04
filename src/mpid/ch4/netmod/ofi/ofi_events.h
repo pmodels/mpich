@@ -468,7 +468,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_isend_event(struct fi_cq_tagged_entry 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_HANDLE_SEND_COMPLETION);
 
     msg_hdr = &MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr);
-    MPIDI_Request_complete(sreq);       /* FIXME: Should not call MPIDI in NM ? */
+    MPID_Request_complete(sreq);       /* FIXME: Should not call MPIDI in NM ? */
 
     switch (msg_hdr->am_type) {
     case MPIDI_AMTYPE_LMT_ACK:
@@ -584,7 +584,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_read_event(struct fi_cq_tagged_entry *
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
-    MPIDI_Request_complete(rreq);       /* FIXME: Should not call MPIDI in NM ? */
+    MPID_Request_complete(rreq);       /* FIXME: Should not call MPIDI in NM ? */
     ofi_req->req_hdr->target_cmpl_cb(rreq);
   fn_exit:
     MPIDI_CH4R_release_buf((void *) ofi_req);
