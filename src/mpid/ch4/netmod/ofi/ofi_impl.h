@@ -405,7 +405,7 @@ MPL_STATIC_INLINE_PREFIX MPIR_Request *MPIDI_OFI_context_to_request(void *contex
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const void *buf, size_t len,
-                                             void *desc, uint64_t dest, fi_addr_t dest_addr,
+                                             void *desc, uint32_t dest, fi_addr_t dest_addr,
                                              uint64_t tag, void *context, int is_inject,
                                              int do_lock)
 {
