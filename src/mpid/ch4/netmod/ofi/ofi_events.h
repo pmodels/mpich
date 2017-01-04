@@ -569,7 +569,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_am_read_event(struct fi_cq_tagged_entry *
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_HANDLE_READ_COMPLETION);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_HANDLE_READ_COMPLETION);
 
-    ofi_req = container_of(wc->op_context, MPIDI_OFI_am_request_t, context);
+    ofi_req = MPL_container_of(wc->op_context, MPIDI_OFI_am_request_t, context);
     ofi_req->req_hdr->lmt_cntr--;
 
     if (ofi_req->req_hdr->lmt_cntr)
@@ -715,7 +715,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_buffered(struct fi_cq_tagged_entry *w
         else {
             MPIDI_OFI_cq_list_t *MPIDI_OFI_cq_list_entry;
             struct slist_entry *entry = slist_remove_head(&MPIDI_Global.cq_buff_list);
-            MPIDI_OFI_cq_list_entry = container_of(entry, MPIDI_OFI_cq_list_t, entry);
+            MPIDI_OFI_cq_list_entry = MPL_container_of(entry, MPIDI_OFI_cq_list_t, entry);
             wc[0] = MPIDI_OFI_cq_list_entry->cq_entry;
             MPL_free((void *) MPIDI_OFI_cq_list_entry);
         }
