@@ -337,11 +337,6 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_CH4U_request_complete(MPIR_Request * req)
 #define IS_BUILTIN(_datatype)				\
     (HANDLE_GET_KIND(_datatype) == HANDLE_KIND_BUILTIN)
 
-#ifndef container_of
-#define container_of(ptr, type, field)			\
-    ((type *) ((char *)ptr - offsetof(type, field)))
-#endif
-
 static inline uint64_t MPIDI_CH4U_init_send_tag(MPIR_Context_id_t contextid, int source, int tag)
 {
     uint64_t match_bits;
