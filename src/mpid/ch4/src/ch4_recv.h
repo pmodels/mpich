@@ -14,10 +14,10 @@
 #include "ch4_impl.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Recv
+#define FUNCNAME MPID_Recv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Recv(void *buf,
+MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
                                         int count,
                                         MPI_Datatype datatype,
                                         int rank,
@@ -27,8 +27,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Recv(void *buf,
                                         MPIR_Request ** request)
 {
     int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RECV);
 
     if (unlikely(rank == MPI_PROC_NULL)) {
         MPIR_Request *rreq = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
@@ -97,17 +97,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Recv(void *buf,
         MPIR_ERR_POP(mpi_errno);
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RECV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Recv_init
+#define FUNCNAME MPID_Recv_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Recv_init(void *buf,
+MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
                                              int count,
                                              MPI_Datatype datatype,
                                              int rank,
@@ -116,8 +116,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Recv_init(void *buf,
                                              MPIR_Request ** request)
 {
     int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_RECV_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_RECV_INIT);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RECV_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RECV_INIT);
 
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno =
@@ -160,7 +160,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Recv_init(void *buf,
   fn_exit:
 #endif
 
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_RECV_INIT);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_RECV_INIT);
     return mpi_errno;
 
 #ifdef MPIDI_CH4_EXCLUSIVE_SHM
@@ -171,17 +171,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Recv_init(void *buf,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Mrecv
+#define FUNCNAME MPID_Mrecv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Mrecv(void *buf,
+MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
                                          int count,
                                          MPI_Datatype datatype, MPIR_Request * message,
                                          MPI_Status * status)
 {
     int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_MRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_MRECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_MRECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_MRECV);
 
     MPI_Request req_handle;
     int active_flag;
@@ -206,31 +206,31 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Mrecv(void *buf,
         MPIR_ERR_POP(mpi_errno);
     }
     while (!MPIR_Request_is_complete(rreq)) {
-        MPIDI_Progress_test();
+        MPID_Progress_test();
     }
 
     /* This should probably be moved to MPICH (above device) level */
     /* Someone neglected to put the blocking at the MPICH level    */
     mpi_errno = MPIR_Request_complete(&req_handle, rreq, status, &active_flag);
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_MRECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_MRECV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Imrecv
+#define FUNCNAME MPID_Imrecv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Imrecv(void *buf,
+MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf,
                                           int count,
                                           MPI_Datatype datatype,
                                           MPIR_Request * message, MPIR_Request ** rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IMRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IMRECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IMRECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IMRECV);
 
     if (message == NULL) {
         MPIDI_Request_create_null_rreq(*rreqp, mpi_errno, goto fn_fail);
@@ -249,17 +249,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Imrecv(void *buf,
         MPIR_ERR_POP(mpi_errno);
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IMRECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IMRECV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Irecv
+#define FUNCNAME MPID_Irecv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Irecv(void *buf,
+MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
                                          int count,
                                          MPI_Datatype datatype,
                                          int rank,
@@ -268,8 +268,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Irecv(void *buf,
                                          MPIR_Request ** request)
 {
     int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_IRECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_IRECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_IRECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_IRECV);
 
     if (unlikely(rank == MPI_PROC_NULL)) {
         MPIR_Request *rreq = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
@@ -325,7 +325,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Irecv(void *buf,
         MPIR_ERR_POP(mpi_errno);
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_IRECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_IRECV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -335,11 +335,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Irecv(void *buf,
 #define FUNCNAME MPIDI_Cancel_Recv
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_Cancel_recv(MPIR_Request * rreq)
+MPL_STATIC_INLINE_PREFIX int MPID_Cancel_recv(MPIR_Request * rreq)
 {
     int mpi_errno;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CANCEL_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CANCEL_RECV);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CANCEL_RECV);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_CANCEL_RECV);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_cancel_recv(rreq);
 #else
@@ -352,7 +352,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Cancel_recv(MPIR_Request * rreq)
         MPIR_ERR_POP(mpi_errno);
     }
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CANCEL_RECV);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_CANCEL_RECV);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

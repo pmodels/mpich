@@ -36,7 +36,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_init_comm(MPIR_Comm * comm)
      * Prevents double initialization of some special communicators.
      *
      * comm_world and comm_self may exhibit this function twice, first during MPIDI_CH4U_mpi_init
-     * and the second during MPIR_Comm_commit in MPIDI_Init.
+     * and the second during MPIR_Comm_commit in MPID_Init.
      * If there is an early arrival of an unexpected message before the second visit,
      * the following code will wipe out the unexpected queue andthe message is lost forever.
      */

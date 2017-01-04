@@ -113,7 +113,7 @@ static inline int MPIDI_handle_unexp_mrecv(MPIR_Request * rreq)
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
-    MPIDI_Request_complete(rreq);
+    MPID_Request_complete(rreq);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_HANDLE_UNEXP_MRECV);

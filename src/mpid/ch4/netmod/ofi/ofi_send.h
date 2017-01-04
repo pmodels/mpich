@@ -437,15 +437,15 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count, MPIR_Request * req
 #ifdef MPIDI_BUILD_CH4_SHM
             STARTALL_CASE(MPIDI_PTYPE_RECV, MPIDI_NM_mpi_irecv, preq->comm->recvcontext_id);
 #else
-            STARTALL_CASE(MPIDI_PTYPE_RECV, MPIDI_Irecv, preq->comm->recvcontext_id);
+            STARTALL_CASE(MPIDI_PTYPE_RECV, MPID_Irecv, preq->comm->recvcontext_id);
 #endif
 
 #ifdef MPIDI_BUILD_CH4_SHM
             STARTALL_CASE(MPIDI_PTYPE_SEND, MPIDI_NM_mpi_isend, preq->comm->context_id);
 #else
-            STARTALL_CASE(MPIDI_PTYPE_SEND, MPIDI_Isend, preq->comm->context_id);
+            STARTALL_CASE(MPIDI_PTYPE_SEND, MPID_Isend, preq->comm->context_id);
 #endif
-            STARTALL_CASE(MPIDI_PTYPE_SSEND, MPIDI_Issend, preq->comm->context_id);
+            STARTALL_CASE(MPIDI_PTYPE_SSEND, MPID_Issend, preq->comm->context_id);
 
         case MPIDI_PTYPE_BSEND:{
                 MPI_Request sreq_handle;

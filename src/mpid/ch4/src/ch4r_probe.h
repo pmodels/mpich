@@ -57,7 +57,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_iprobe(int source,
     }
     else {
         *flag = 0;
-        MPIDI_Progress_test();
+        MPID_Progress_test();
     }
     /* MPIDI_CS_EXIT(); */
 
@@ -121,7 +121,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_improbe(int source,
     }
     else {
         *flag = 0;
-        MPIDI_Progress_test();
+        MPID_Progress_test();
     }
     /* MPIDI_CS_EXIT(); */
 
