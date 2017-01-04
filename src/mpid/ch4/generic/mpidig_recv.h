@@ -103,7 +103,7 @@ static inline int MPIDI_handle_unexpected(void *buf,
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
     }
-    MPIDI_Request_complete(rreq);
+    MPID_Request_complete(rreq);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_HANDLE_UNEXPECTED);
     return mpi_errno;
@@ -178,7 +178,7 @@ static inline int MPIDI_do_irecv(void *buf,
         rreq->status.MPI_ERROR = MPI_SUCCESS;
         rreq->status.MPI_SOURCE = rank;
         rreq->status.MPI_TAG = tag;
-        MPIDI_Request_complete(rreq);
+        MPID_Request_complete(rreq);
         goto fn_exit;
     }
 
@@ -269,7 +269,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_recv_init(void *buf,
     MPIDI_CH4U_REQUEST(rreq, tag) =
         MPIDI_CH4U_init_send_tag(comm->context_id + context_offset, rank, tag);
     rreq->u.persist.real_request = NULL;
-    MPIDI_Request_complete(rreq);
+    MPID_Request_complete(rreq);
     MPIDI_CH4U_REQUEST(rreq, p_type) = MPIDI_PTYPE_RECV;
     dtype_add_ref_if_not_builtin(datatype);
 
@@ -347,12 +347,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mrecv(void *buf,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIG_MRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIG_MRECV);
 
-    mpi_errno = MPIDI_Imrecv(buf, count, datatype, message, &rreq);
+    mpi_errno = MPID_Imrecv(buf, count, datatype, message, &rreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
     while (!MPIR_Request_is_complete(rreq)) {
-        MPIDI_Progress_test();
+        MPID_Progress_test();
     }
 
     MPIR_Request_extract_status(rreq, status);
@@ -421,7 +421,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_cancel_recv(MPIR_Request * rreq)
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
         MPIR_STATUS_SET_COUNT(rreq->status, 0);
         MPIR_Comm_release(root_comm);   /* -1 for posted_list */
-        MPIDI_Request_complete(rreq);
+        MPID_Request_complete(rreq);
     }
     else {
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, FALSE);

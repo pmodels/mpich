@@ -39,7 +39,7 @@ pthread_mutex_t MPIDI_Mutex_lock[MPIDI_NUM_LOCKS];
 #undef MPID_Abort
 int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error_msg)
 {
-    return MPIDI_Abort(comm, mpi_errno, exit_code, error_msg);
+    return MPID_Abort(comm, mpi_errno, exit_code, error_msg);
 }
 
 #define MPID_Abort MPID_TMP

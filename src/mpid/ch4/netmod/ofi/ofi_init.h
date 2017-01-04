@@ -688,7 +688,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get(MPIDI_Global.kvsname,
                                            MPIDI_PARENT_PORT_KVSKEY,
                                            parent_port, MPIDI_MAX_KVS_VALUE_LEN), pmi);
-        MPIDI_OFI_MPI_CALL_POP(MPIDI_Comm_connect
+        MPIDI_OFI_MPI_CALL_POP(MPID_Comm_connect
                                (parent_port, NULL, 0, comm_world, &MPIR_Process.comm_parent));
         MPIR_Assert(MPIR_Process.comm_parent != NULL);
         MPL_strncpy(MPIR_Process.comm_parent->name, "MPI_COMM_PARENT", MPI_MAX_OBJECT_NAME);

@@ -244,7 +244,7 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
 
     if ((!p_data || !data_sz) && target_cmpl_cb) {
         target_cmpl_cb(rreq);
-        MPIDI_Request_complete(rreq);   /* FIXME: Should not call MPIDI in NM ? */
+        MPID_Request_complete(rreq);   /* FIXME: Should not call MPIDI in NM ? */
         goto fn_exit;
     }
 
@@ -366,7 +366,7 @@ static inline int MPIDI_OFI_handle_lmt_ack(MPIDI_OFI_am_header_t * msg_hdr)
     }
 
     handler_id = MPIDI_OFI_AMREQUEST_HDR(sreq, msg_hdr).handler_id;
-    MPIDI_Request_complete(sreq);       /* FIXME: Should not call MPIDI in NM ? */
+    MPID_Request_complete(sreq);       /* FIXME: Should not call MPIDI in NM ? */
     mpi_errno = MPIDIG_global.origin_cbs[handler_id] (sreq);
 
     if (mpi_errno)

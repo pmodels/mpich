@@ -31,7 +31,7 @@ int MPIDI_OFI_handle_cq_error_util(ssize_t ret)
 
 int MPIDI_OFI_progress_test_no_inline()
 {
-    return MPIDI_Progress_test();
+    return MPID_Progress_test();
 }
 
 typedef struct {

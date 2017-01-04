@@ -37,7 +37,7 @@ static inline int MPIDI_am_isend(const void *buf, int count, MPI_Datatype dataty
         /* for blocking calls, we directly complete the request */
         if (!is_blocking) {
             *request = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__SEND, 2);
-            MPIDI_Request_complete((*request));
+            MPID_Request_complete((*request));
         }
         goto fn_exit;
     }
@@ -107,7 +107,7 @@ static inline int MPIDI_psend_init(const void *buf,
     MPIDI_CH4U_REQUEST(sreq, rank) = rank;
 
     sreq->u.persist.real_request = NULL;
-    MPIDI_Request_complete(sreq);
+    MPID_Request_complete(sreq);
 
     dtype_add_ref_if_not_builtin(datatype);
 
@@ -285,7 +285,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
                                            preq->comm, context_offset,
                                            &preq->u.persist.real_request);
 #else
-            mpi_errno = MPIDI_Irecv(MPIDI_CH4U_REQUEST(preq, buffer),
+            mpi_errno = MPID_Irecv(MPIDI_CH4U_REQUEST(preq, buffer),
                                     MPIDI_CH4U_REQUEST(preq, count),
                                     datatype, rank, tag,
                                     preq->comm, context_offset, &preq->u.persist.real_request);
@@ -300,7 +300,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
                                            preq->comm, context_offset,
                                            &preq->u.persist.real_request);
 #else
-            mpi_errno = MPIDI_Isend(MPIDI_CH4U_REQUEST(preq, buffer),
+            mpi_errno = MPID_Isend(MPIDI_CH4U_REQUEST(preq, buffer),
                                     MPIDI_CH4U_REQUEST(preq, count),
                                     datatype, rank, tag,
                                     preq->comm, context_offset, &preq->u.persist.real_request);
@@ -315,7 +315,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
                                             preq->comm, context_offset,
                                             &preq->u.persist.real_request);
 #else
-            mpi_errno = MPIDI_Issend(MPIDI_CH4U_REQUEST(preq, buffer),
+            mpi_errno = MPID_Issend(MPIDI_CH4U_REQUEST(preq, buffer),
                                      MPIDI_CH4U_REQUEST(preq, count),
                                      datatype, rank, tag,
                                      preq->comm, context_offset, &preq->u.persist.real_request);
@@ -343,7 +343,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
 
             if (MPIDI_CH4U_REQUEST(preq, p_type) == MPIDI_PTYPE_BSEND) {
                 preq->cc_ptr = &preq->cc;
-                MPIDI_Request_set_completed(preq);
+                MPID_Request_set_completed(preq);
             }
             else
                 preq->cc_ptr = &preq->u.persist.real_request->cc;
@@ -352,7 +352,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_startall(int count, MPIR_Request * reque
             preq->u.persist.real_request = NULL;
             preq->status.MPI_ERROR = mpi_errno;
             preq->cc_ptr = &preq->cc;
-            MPIDI_Request_set_completed(preq);
+            MPID_Request_set_completed(preq);
         }
         dtype_release_if_not_builtin(datatype);
     }

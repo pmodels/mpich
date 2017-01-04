@@ -1398,7 +1398,7 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
 
     /*  This can be optimized by directly calling the fi directly
      *  and avoiding all the datatype processing of the full
-     *  MPIDI_Get_accumulate
+     *  MPID_Get_accumulate
      */
     mpi_errno = MPIDI_OFI_do_get_accumulate(origin_addr, 1, datatype,
                                             result_addr, 1, datatype,
