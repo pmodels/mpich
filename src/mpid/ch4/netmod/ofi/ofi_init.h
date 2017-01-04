@@ -274,6 +274,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
     if (MPIDI_OFI_ENABLE_DATA) {
         hints->caps |= FI_DIRECTED_RECV;        /* Match source address    */
+        hints->domain_attr->cq_data_size = 4;   /* Minimum size for completion data entry */
     }
 
     /* ------------------------------------------------------------------------ */
@@ -331,9 +332,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
             if ((NULL != provname) && (0 != strcmp(provname, hints->fabric_attr->prov_name)))
                 continue;
 
-            /* Check that this provider meets the mimum requirements for the user */
-            if (MPIDI_OFI_ENABLE_DATA && 0ULL == (prov_use->caps & FI_DIRECTED_RECV)) {
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "Provider doesn't support directed receive (for immediate data)"));
+            /* Check that this provider meets the minimum requirements for the user */
+            if (MPIDI_OFI_ENABLE_DATA && ((0ULL == (prov_use->caps & FI_DIRECTED_RECV)) || (prov_use->domain_attr->cq_data_size < 4))) {
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "Provider doesn't support immediate data"));
                 prov = prov_use->next;
                 continue;
             } else if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS && (prov_use->domain_attr->max_ep_tx_ctx <= 1)) {
@@ -381,7 +382,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         /* Set global attributes attributes based on the provider choice            */
         /* ------------------------------------------------------------------------ */
         MPIDI_Global.settings.enable_data               = MPIDI_Global.settings.enable_data == 0 ? 0 :
-                                                            (prov_use->caps & FI_DIRECTED_RECV) > 0ULL ? 1 : 0;
+                                                            ((prov_use->caps & FI_DIRECTED_RECV) > 0ULL &&
+                                                             (prov_use->domain_attr->cq_data_size >= 4)) ? 1 : 0;
         MPIDI_Global.settings.enable_av_table           = MPIDI_Global.settings.enable_av_table == 0 ? 0 :
                                                             prov_use->domain_attr->av_type == FI_AV_TABLE ? 1 : 0;
         MPIDI_Global.settings.enable_scalable_endpoints = MPIDI_Global.settings.enable_scalable_endpoints == 0 ? 0 :
