@@ -39,6 +39,8 @@ static inline void MPIDI_UCX_recv_cmpl_cb(void *request, ucs_status_t status,
         MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
     } else if (unlikely(status == UCS_ERR_MESSAGE_TRUNCATED)) {
         rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
+        rreq->status.MPI_SOURCE = MPIDI_UCX_get_source(info->sender_tag);
+        rreq->status.MPI_TAG = MPIDI_UCX_get_tag(info->sender_tag);
     } else {
         MPI_Aint count = info->length;
         rreq->status.MPI_ERROR = MPI_SUCCESS;
@@ -70,6 +72,8 @@ static inline void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_t status,
 
         if (unlikely(status == UCS_ERR_MESSAGE_TRUNCATED)) {
             rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
+            rreq->status.MPI_SOURCE = MPIDI_UCX_get_source(info->sender_tag);
+            rreq->status.MPI_TAG = MPIDI_UCX_get_tag(info->sender_tag);
         } else {
             rreq->status.MPI_ERROR = MPI_SUCCESS;
             rreq->status.MPI_SOURCE = MPIDI_UCX_get_source(info->sender_tag);
@@ -78,6 +82,7 @@ static inline void MPIDI_UCX_mrecv_cmpl_cb(void *request, ucs_status_t status,
         }
     } else {
         if (unlikely(status == UCS_ERR_MESSAGE_TRUNCATED)) {
+            /* FIXME: we have no way of passing the tag bits back in this case */
             ucp_request->req = (void *)UCS_ERR_MESSAGE_TRUNCATED;
         } else {
             ucp_request->req = MPL_malloc(sizeof(ucp_tag_recv_info_t));
