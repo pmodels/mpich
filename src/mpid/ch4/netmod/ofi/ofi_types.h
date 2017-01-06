@@ -291,8 +291,6 @@ typedef struct {
 
     int max_endpoints;
     int max_endpoints_bits;
-
-    int fetch_atomic_iovecs;
 } MPIDI_OFI_capabilities_t;
 
 /* Global state data */
