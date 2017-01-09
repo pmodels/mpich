@@ -747,9 +747,9 @@ static inline void add_index(MPI_Datatype datatype, int *index)
     MPIDI_OFI_DATATYPE(dt_ptr).dt_mpich_knomial.tsp_dt.mpi_dt      = datatype;
     MPIDI_OFI_DATATYPE(dt_ptr).dt_mpich_dissem.tsp_dt.mpi_dt     = datatype;
     MPIDI_OFI_DATATYPE(dt_ptr).dt_mpich_recexch.tsp_dt.mpi_dt     = datatype;
-    MPIDI_OFI_DATATYPE(dt_ptr).dt_triggered_kary.tsp_dt.mpi_dt     = datatype;
-    MPIDI_OFI_DATATYPE(dt_ptr).dt_triggered_knomial.tsp_dt.mpi_dt  = datatype;
-    MPIDI_OFI_DATATYPE(dt_ptr).dt_triggered_dissem.tsp_dt.mpi_dt = datatype;
+//    MPIDI_OFI_DATATYPE(dt_ptr).dt_triggered_kary.tsp_dt.mpi_dt     = datatype;
+//    MPIDI_OFI_DATATYPE(dt_ptr).dt_triggered_knomial.tsp_dt.mpi_dt  = datatype;
+//    MPIDI_OFI_DATATYPE(dt_ptr).dt_triggered_dissem.tsp_dt.mpi_dt = datatype;
     MPIDI_OFI_DATATYPE(dt_ptr).dt_stub_kary.tsp_dt.dummy           = -1;
     MPIDI_OFI_DATATYPE(dt_ptr).dt_stub_knomial.tsp_dt.dummy        = -1;
     MPIDI_OFI_DATATYPE(dt_ptr).dt_stub_dissem.tsp_dt.dummy       = -1;

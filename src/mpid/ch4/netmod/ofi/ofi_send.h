@@ -106,11 +106,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(const void *buf, int count, M
     MPIDI_OFI_REQUEST(sreq, datatype) = datatype;
     dtype_add_ref_if_not_builtin(datatype);
 
-    if(trigger_thresh) {
-        struct fi_triggered_context *ctx = (struct fi_triggered_context*)&MPIDI_OFI_REQUEST(sreq, context);
-        ctx->event_type         = FI_TRIGGER_THRESHOLD_COMPLETION;
-        ctx->trigger.threshold  = *trigger_thresh;
-    }
+//    if(trigger_thresh) {
+//        struct fi_triggered_context *ctx = (struct fi_triggered_context*)&MPIDI_OFI_REQUEST(sreq, context);
+//        ctx->event_type         = FI_TRIGGER_THRESHOLD_COMPLETION;
+//        ctx->trigger.threshold  = *trigger_thresh;
+//    }
 
     if(type == MPIDI_OFI_SYNC_SEND) { /* Branch should compile out */
         int c = 1;

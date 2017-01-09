@@ -10,7 +10,7 @@
 #ifndef TRIGGEREDTRANSPORT_H_INCLUDED
 #define TRIGGEREDTRANSPORT_H_INCLUDED
 
-#include "../../include/tsp_namespace_pre.h"
+//#include "../../include/tsp_namespace_pre.h"
 #include "../../../ofi_impl.h"
 #include "../../../ofi_send.h"
 #include "../../../ofi_recv.h"
