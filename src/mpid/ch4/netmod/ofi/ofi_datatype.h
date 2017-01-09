@@ -26,10 +26,10 @@ static inline int MPIDI_NM_mpi_type_commit_hook(MPIR_Datatype * datatype_p)
     ofi_dt->dt_mpich_dissem.tsp_dt.mpi_dt = datatype_p->handle;
     ofi_dt->dt_mpich_recexch.tsp_dt.mpi_dt = datatype_p->handle;
 
-    ofi_dt->dt_triggered_kary.tsp_dt.mpi_dt     = datatype_p->handle;
-    ofi_dt->dt_triggered_knomial.tsp_dt.mpi_dt  = datatype_p->handle;
-    ofi_dt->dt_triggered_dissem.tsp_dt.mpi_dt = datatype_p->handle;
-    ofi_dt->dt_triggered_recexch.tsp_dt.mpi_dt = datatype_p->handle;
+//    ofi_dt->dt_triggered_kary.tsp_dt.mpi_dt     = datatype_p->handle;
+//    ofi_dt->dt_triggered_knomial.tsp_dt.mpi_dt  = datatype_p->handle;
+//    ofi_dt->dt_triggered_dissem.tsp_dt.mpi_dt = datatype_p->handle;
+//    ofi_dt->dt_triggered_recexch.tsp_dt.mpi_dt = datatype_p->handle;
 
     ofi_dt->dt_stub_kary.tsp_dt.dummy     = -1;
     ofi_dt->dt_stub_knomial.tsp_dt.dummy  = -1;

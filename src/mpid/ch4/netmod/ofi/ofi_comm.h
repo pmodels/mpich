@@ -46,10 +46,10 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
     MPIDI_OFI_COMM(comm).comm_mpich_dissem.tsp_comm.mpid_comm       = comm;
     MPIDI_OFI_COMM(comm).comm_mpich_recexch.tsp_comm.mpid_comm      = comm;
 
-    MPIDI_OFI_COMM(comm).comm_triggered_kary.tsp_comm.mpid_comm     = comm;
-    MPIDI_OFI_COMM(comm).comm_triggered_knomial.tsp_comm.mpid_comm  = comm;
-    MPIDI_OFI_COMM(comm).comm_triggered_dissem.tsp_comm.mpid_comm   = comm;
-    MPIDI_OFI_COMM(comm).comm_triggered_recexch.tsp_comm.mpid_comm  = comm;
+//    MPIDI_OFI_COMM(comm).comm_triggered_kary.tsp_comm.mpid_comm     = comm;
+//    MPIDI_OFI_COMM(comm).comm_triggered_knomial.tsp_comm.mpid_comm  = comm;
+//    MPIDI_OFI_COMM(comm).comm_triggered_dissem.tsp_comm.mpid_comm   = comm;
+//    MPIDI_OFI_COMM(comm).comm_triggered_recexch.tsp_comm.mpid_comm  = comm;
 
     MPIDI_OFI_COMM(comm).comm_stub_kary.tsp_comm.dummy              = -1;
     MPIDI_OFI_COMM(comm).comm_stub_knomial.tsp_comm.dummy           = -1;
@@ -69,14 +69,14 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
     MPIDI_OFI_COLL_MPICH_RECEXCH_comm_init(&MPIDI_OFI_COMM(comm).comm_mpich_recexch,
                                            &MPIDI_OFI_COMM(comm).use_tag);
 
-    MPIDI_OFI_COLL_TRIGGERED_KARY_comm_init(&MPIDI_OFI_COMM(comm).comm_triggered_kary,
-                                            &MPIDI_OFI_COMM(comm).use_tag);
-    MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_comm_init(&MPIDI_OFI_COMM(comm).comm_triggered_knomial,
-                                               &MPIDI_OFI_COMM(comm).use_tag);
-    MPIDI_OFI_COLL_TRIGGERED_DISSEM_comm_init(&MPIDI_OFI_COMM(comm).comm_triggered_dissem,
-                                              &MPIDI_OFI_COMM(comm).use_tag);
-    MPIDI_OFI_COLL_TRIGGERED_RECEXCH_comm_init(&MPIDI_OFI_COMM(comm).comm_triggered_recexch,
-                                               &MPIDI_OFI_COMM(comm).use_tag);
+//    MPIDI_OFI_COLL_TRIGGERED_KARY_comm_init(&MPIDI_OFI_COMM(comm).comm_triggered_kary,
+//                                            &MPIDI_OFI_COMM(comm).use_tag);
+//    MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_comm_init(&MPIDI_OFI_COMM(comm).comm_triggered_knomial,
+//                                               &MPIDI_OFI_COMM(comm).use_tag);
+//    MPIDI_OFI_COLL_TRIGGERED_DISSEM_comm_init(&MPIDI_OFI_COMM(comm).comm_triggered_dissem,
+//                                              &MPIDI_OFI_COMM(comm).use_tag);
+//    MPIDI_OFI_COLL_TRIGGERED_RECEXCH_comm_init(&MPIDI_OFI_COMM(comm).comm_triggered_recexch,
+//                                               &MPIDI_OFI_COMM(comm).use_tag);
 
     MPIDI_OFI_COLL_STUB_KARY_comm_init(&MPIDI_OFI_COMM(comm).comm_stub_kary,
                                        &MPIDI_OFI_COMM(comm).use_tag);

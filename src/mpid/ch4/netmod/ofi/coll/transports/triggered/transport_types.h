@@ -11,7 +11,7 @@
 #ifndef TRIGGERED_TRANSPORT_TYPES_H_INCLUDED
 #define TRIGGERED_TRANSPORT_TYPES_H_INCLUDED
 
-#include "../../include/tsp_namespace_pre.h"
+//#include "../../include/tsp_namespace_pre.h"
 
 
 typedef struct TSP_dt_t {

@@ -46,30 +46,30 @@
 /* -------------------------------------------------------------------------- */
 /* Collectives for the triggered transport                                    */
 /* -------------------------------------------------------------------------- */
-#define GLOBAL_NAME    MPIDI_OFI_COLL_
-#define TRANSPORT_NAME TRIGGERED_
-#include "../transports/triggered/transport_types.h"
-
-#define COLL_NAME      STUB_
-#include "templates/stub_pre.h"
-
-/* Template:  binary trees */
-#define COLL_NAME              KARY_
-#include "templates/binary_tree_pre.h"
-
-/* Template:  binomial tree */
-#define COLL_NAME              KNOMIAL_
-#include "templates/binomial_tree_pre.h"
-
-/* Template:  Dissemination */
-#define COLL_NAME              DISSEM_
-#include "templates/dissemination_pre.h"
-
-/* Template:  Recursive Exchange */
-#define COLL_NAME              RECEXCH_
-#include "templates/recexch_pre.h"
-
-#include "tsp_namespace_post.h"
+//#define GLOBAL_NAME    MPIDI_OFI_COLL_
+//#define TRANSPORT_NAME TRIGGERED_
+//#include "../transports/triggered/transport_types.h"
+//
+//#define COLL_NAME      STUB_
+//#include "templates/stub_pre.h"
+//
+///* Template:  binary trees */
+//#define COLL_NAME              KARY_
+//#include "templates/binary_tree_pre.h"
+//
+///* Template:  binomial tree */
+//#define COLL_NAME              KNOMIAL_
+//#include "templates/binomial_tree_pre.h"
+//
+///* Template:  Dissemination */
+//#define COLL_NAME              DISSEM_
+//#include "templates/dissemination_pre.h"
+//
+///* Template:  Recursive Exchange */
+//#define COLL_NAME              RECEXCH_
+//#include "templates/recexch_pre.h"
+//
+//#include "tsp_namespace_post.h"
 
 /* -------------------------------------------------------------------------- */
 /* Collectives for the triggered transport                                    */

@@ -33,10 +33,10 @@ static inline int MPIDI_NM_mpi_op_commit_hook(MPIR_Op * op_p)
     ofi_op->op_mpich_dissem.tsp_op.mpi_op = op_p->handle;
     ofi_op->op_mpich_recexch.tsp_op.mpi_op = op_p->handle;
 
-    ofi_op->op_triggered_kary.tsp_op.mpi_op     = op_p->handle;
-    ofi_op->op_triggered_knomial.tsp_op.mpi_op  = op_p->handle;
-    ofi_op->op_triggered_dissem.tsp_op.mpi_op = op_p->handle;
-    ofi_op->op_triggered_recexch.tsp_op.mpi_op = op_p->handle;
+//    ofi_op->op_triggered_kary.tsp_op.mpi_op     = op_p->handle;
+//    ofi_op->op_triggered_knomial.tsp_op.mpi_op  = op_p->handle;
+//    ofi_op->op_triggered_dissem.tsp_op.mpi_op = op_p->handle;
+//    ofi_op->op_triggered_recexch.tsp_op.mpi_op = op_p->handle;
 
     ofi_op->op_stub_kary.tsp_op.dummy     = -1;
     ofi_op->op_stub_knomial.tsp_op.dummy  = -1;

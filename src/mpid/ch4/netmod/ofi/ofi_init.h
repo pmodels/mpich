@@ -914,8 +914,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
     /* Initialize Collective Transports */
     MPIDI_OFI_COLL_TRANSPORT_MPICH_init();
-    MPIDI_OFI_COLL_TRANSPORT_TRIGGERED_init(MPIDI_OFI_EP_TX_TRG(0),
-                                            MPIDI_OFI_EP_RX_TRG(0));
+//    MPIDI_OFI_COLL_TRANSPORT_TRIGGERED_init(MPIDI_OFI_EP_TX_TRG(0),
+//                                            MPIDI_OFI_EP_RX_TRG(0));
     MPIDI_OFI_COLL_TRANSPORT_STUB_init();
 
     /* Initialize Collective Globals */
@@ -923,9 +923,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIDI_OFI_COLL_MPICH_KNOMIAL_init();
     MPIDI_OFI_COLL_MPICH_DISSEM_init();
 
-    MPIDI_OFI_COLL_TRIGGERED_KARY_init();
-    MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_init();
-    MPIDI_OFI_COLL_TRIGGERED_DISSEM_init();
+//    MPIDI_OFI_COLL_TRIGGERED_KARY_init();
+//    MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_init();
+//    MPIDI_OFI_COLL_TRIGGERED_DISSEM_init();
 
     MPIDI_OFI_COLL_STUB_KARY_init();
     MPIDI_OFI_COLL_STUB_KNOMIAL_init();

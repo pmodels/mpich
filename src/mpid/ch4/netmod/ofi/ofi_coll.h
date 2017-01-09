@@ -33,10 +33,10 @@ MPIDI_OFI_MPI_OP_TO_COLLOP(MPICH,mpich,KNOMIAL,knomial);
 MPIDI_OFI_MPI_OP_TO_COLLOP(MPICH,mpich,KARY,kary);
 MPIDI_OFI_MPI_OP_TO_COLLOP(MPICH,mpich,DISSEM,dissem);
 MPIDI_OFI_MPI_OP_TO_COLLOP(MPICH,mpich,RECEXCH,recexch);
-MPIDI_OFI_MPI_OP_TO_COLLOP(TRIGGERED,triggered,KNOMIAL,knomial);
-MPIDI_OFI_MPI_OP_TO_COLLOP(TRIGGERED,triggered,KARY,kary);
-MPIDI_OFI_MPI_OP_TO_COLLOP(TRIGGERED,triggered,DISSEM,dissem);
-MPIDI_OFI_MPI_OP_TO_COLLOP(TRIGGERED,triggered,RECEXCH,recexch);
+//MPIDI_OFI_MPI_OP_TO_COLLOP(TRIGGERED,triggered,KNOMIAL,knomial);
+//MPIDI_OFI_MPI_OP_TO_COLLOP(TRIGGERED,triggered,KARY,kary);
+//MPIDI_OFI_MPI_OP_TO_COLLOP(TRIGGERED,triggered,DISSEM,dissem);
+//MPIDI_OFI_MPI_OP_TO_COLLOP(TRIGGERED,triggered,RECEXCH,recexch);
 MPIDI_OFI_MPI_OP_TO_COLLOP(STUB,stub,KNOMIAL,knomial);
 MPIDI_OFI_MPI_OP_TO_COLLOP(STUB,stub,KARY,kary);
 MPIDI_OFI_MPI_OP_TO_COLLOP(STUB,stub,DISSEM,dissem);
@@ -90,19 +90,22 @@ static inline int MPIDI_NM_mpi_barrier(MPIR_Comm *comm_ptr, MPIR_Errflag_t *errf
                         &MPIDI_OFI_COMM(comm_ptr).comm_mpich_dissem,
                         &coll_error);
     else if(use_coll == 4)
-        mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_barrier(
-                        &MPIDI_OFI_COMM(comm_ptr).comm_triggered_knomial,
-                        &coll_error,
-                        2);
+        mpi_errno = -1; 
+        //mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_barrier(
+        //                &MPIDI_OFI_COMM(comm_ptr).comm_triggered_knomial,
+        //                &coll_error,
+        //                2);
     else if(use_coll == 5)
-        mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KARY_barrier(
-                        &MPIDI_OFI_COMM(comm_ptr).comm_triggered_kary,
-                        &coll_error,
-                        2);
+        mpi_errno = -1; 
+//        mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KARY_barrier(
+//                        &MPIDI_OFI_COMM(comm_ptr).comm_triggered_kary,
+//                        &coll_error,
+//                        2);
     else if(use_coll == 6)
-        mpi_errno = MPIDI_OFI_COLL_TRIGGERED_DISSEM_barrier(
-                        &MPIDI_OFI_COMM(comm_ptr).comm_triggered_dissem,
-                        &coll_error);
+        mpi_errno = -1; 
+//        mpi_errno = MPIDI_OFI_COLL_TRIGGERED_DISSEM_barrier(
+//                        &MPIDI_OFI_COMM(comm_ptr).comm_triggered_dissem,
+//                        &coll_error);
     else {
         MPIR_Assert(0);
         mpi_errno = MPIDI_OFI_COLL_STUB_KNOMIAL_barrier(
@@ -169,21 +172,23 @@ static inline int MPIDI_NM_mpi_bcast(void *buffer, int count, MPI_Datatype datat
                             &coll_error,
                             2);
         else if(use_coll == 3)
-            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_bcast(
-                            buffer,count,
-                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_knomial,
-                            root,
-                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_knomial,
-                            &coll_error,
-                            2);
+            mpi_errno = -1;
+//            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_bcast(
+//                            buffer,count,
+//                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_knomial,
+//                            root,
+//                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_knomial,
+//                            &coll_error,
+//                            2);
         else if(use_coll == 4)
-            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KARY_bcast(
-                            buffer,count,
-                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_kary,
-                            root,
-                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_kary,
-                            &coll_error,
-                            2);
+            mpi_errno = -1; 
+//            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KARY_bcast(
+//                            buffer,count,
+//                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_kary,
+//                            root,
+//                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_kary,
+//                            &coll_error,
+//                            2);
         else {
             MPIR_Assert(0);
             mpi_errno = MPIDI_OFI_COLL_STUB_KNOMIAL_bcast(
@@ -278,29 +283,29 @@ static inline int MPIDI_NM_mpi_allreduce(const void *sendbuf, void *recvbuf, int
                             MPIDI_OFI_MPI_OP_TO_COLLOP_MPICH_RECEXCH_fn(op),
                             &MPIDI_OFI_COMM(comm_ptr).comm_mpich_recexch,
                             &coll_error);
-        else if(use_coll == 5)
-            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_allreduce(
-                            sendbuf,recvbuf,count,
-                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_knomial,
-                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_KNOMIAL_fn(op),
-                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_knomial,
-                            &coll_error,
-                            2);
-        else if(use_coll == 6)
-            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KARY_allreduce(
-                            sendbuf,recvbuf,count,
-                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_kary,
-                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_KARY_fn(op),
-                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_kary,
-                            &coll_error,
-                            2);
-        else if(use_coll == 7)
-            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_DISSEM_allreduce(
-                            sendbuf,recvbuf,count,
-                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_dissem,
-                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_DISSEM_fn(op),
-                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_dissem,
-                            &coll_error);
+//        else if(use_coll == 5)
+//            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_allreduce(
+//                            sendbuf,recvbuf,count,
+//                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_knomial,
+//                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_KNOMIAL_fn(op),
+//                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_knomial,
+//                            &coll_error,
+//                            2);
+//        else if(use_coll == 6)
+//            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KARY_allreduce(
+//                            sendbuf,recvbuf,count,
+//                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_kary,
+//                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_KARY_fn(op),
+//                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_kary,
+//                            &coll_error,
+//                            2);
+//        else if(use_coll == 7)
+//            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_DISSEM_allreduce(
+//                            sendbuf,recvbuf,count,
+//                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_dissem,
+//                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_DISSEM_fn(op),
+//                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_dissem,
+//                            &coll_error);
         else {
             MPIR_Assert(0);
             mpi_errno = MPIDI_OFI_COLL_STUB_KNOMIAL_allreduce(
@@ -627,24 +632,24 @@ static inline int MPIDI_NM_mpi_reduce(const void *sendbuf, void *recvbuf, int co
                             &MPIDI_OFI_COMM(comm_ptr).comm_mpich_kary,
                             &coll_error,
                             2);
-        else if(use_coll == 3)
-            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_reduce(
-                            sendbuf,recvbuf,count,
-                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_knomial,
-                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_KNOMIAL_fn(op),
-                            root,
-                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_knomial,
-                            &coll_error,
-                            2);
-        else if(use_coll == 4)
-            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KARY_reduce(
-                            sendbuf,recvbuf,count,
-                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_kary,
-                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_KARY_fn(op),
-                            root,
-                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_kary,
-                            &coll_error,
-                            2);
+//        else if(use_coll == 3)
+//            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_reduce(
+//                            sendbuf,recvbuf,count,
+//                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_knomial,
+//                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_KNOMIAL_fn(op),
+//                            root,
+//                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_knomial,
+//                            &coll_error,
+//                            2);
+//        else if(use_coll == 4)
+//            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KARY_reduce(
+//                            sendbuf,recvbuf,count,
+//                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_kary,
+//                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_KARY_fn(op),
+//                            root,
+//                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_kary,
+//                            &coll_error,
+//                            2);
         else {
             MPIR_Assert(0);
             mpi_errno = MPIDI_OFI_COLL_STUB_KNOMIAL_reduce(
@@ -1011,20 +1016,20 @@ static inline int MPIDI_NM_mpi_ibarrier(MPIR_Comm *comm_ptr, MPI_Request *req)
             mpi_errno = MPIDI_OFI_COLL_MPICH_DISSEM_ibarrier(
                             &MPIDI_OFI_COMM(comm_ptr).comm_mpich_dissem,
                             &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_dissem);
-        else if(use_coll == 4)
-            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_ibarrier(
-                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_knomial,
-                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_knomial,
-                            2);
-        else if(use_coll == 5)
-            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KARY_ibarrier(
-                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_kary,
-                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_kary,
-                            2);
-        else if(use_coll == 6)
-            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_DISSEM_ibarrier(
-                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_dissem,
-                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_dissem);
+//        else if(use_coll == 4)
+//            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_ibarrier(
+//                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_knomial,
+//                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_knomial,
+//                            2);
+//        else if(use_coll == 5)
+//            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KARY_ibarrier(
+//                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_kary,
+//                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_kary,
+//                            2);
+//        else if(use_coll == 6)
+//            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_DISSEM_ibarrier(
+//                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_dissem,
+//                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_dissem);
         else {
             MPIR_Assert(0);
             mpi_errno = MPIDI_OFI_COLL_STUB_KNOMIAL_ibarrier(
@@ -1093,22 +1098,22 @@ static inline int MPIDI_NM_mpi_ibcast(void *buffer, int count, MPI_Datatype data
                             &MPIDI_OFI_COMM(comm_ptr).comm_mpich_kary,
                             &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_kary,
                             2);
-        else if(use_coll == 3)
-            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_ibcast(
-                            buffer,count,
-                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_knomial,
-                            root,
-                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_knomial,
-                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_knomial,
-                            2);
-        else if(use_coll == 4)
-            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KARY_ibcast(
-                            buffer,count,
-                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_kary,
-                            root,
-                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_kary,
-                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_kary,
-                            2);
+//        else if(use_coll == 3)
+//            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_ibcast(
+//                            buffer,count,
+//                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_knomial,
+//                            root,
+//                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_knomial,
+//                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_knomial,
+//                            2);
+//        else if(use_coll == 4)
+//            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KARY_ibcast(
+//                            buffer,count,
+//                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_kary,
+//                            root,
+//                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_kary,
+//                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_kary,
+//                            2);
         else {
             MPIR_Assert(0);
             mpi_errno = MPIDI_OFI_COLL_STUB_KNOMIAL_ibcast(
@@ -1244,29 +1249,29 @@ static inline int MPIDI_NM_mpi_iallreduce(const void *sendbuf, void *recvbuf, in
                             MPIDI_OFI_MPI_OP_TO_COLLOP_MPICH_RECEXCH_fn(op),
                             &MPIDI_OFI_COMM(comm).comm_mpich_recexch,
                             &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_recexch);
-        else if(use_coll == 5)
-            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_iallreduce(
-                            sendbuf,recvbuf,count,
-                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_knomial,
-                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_KNOMIAL_fn(op),
-                            &MPIDI_OFI_COMM(comm).comm_triggered_knomial,
-                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_knomial,
-                            2);
-        else if(use_coll == 6)
-            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KARY_iallreduce(
-                            sendbuf,recvbuf,count,
-                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_kary,
-                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_KARY_fn(op),
-                            &MPIDI_OFI_COMM(comm).comm_triggered_kary,
-                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_kary,
-                            2);
-        else if(use_coll == 7)
-            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_DISSEM_iallreduce(
-                            sendbuf,recvbuf,count,
-                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_dissem,
-                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_DISSEM_fn(op),
-                            &MPIDI_OFI_COMM(comm).comm_triggered_dissem,
-                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_dissem);
+//        else if(use_coll == 5)
+//            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_iallreduce(
+//                            sendbuf,recvbuf,count,
+//                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_knomial,
+//                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_KNOMIAL_fn(op),
+//                            &MPIDI_OFI_COMM(comm).comm_triggered_knomial,
+//                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_knomial,
+//                            2);
+//        else if(use_coll == 6)
+//            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KARY_iallreduce(
+//                            sendbuf,recvbuf,count,
+//                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_kary,
+//                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_KARY_fn(op),
+//                            &MPIDI_OFI_COMM(comm).comm_triggered_kary,
+//                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_kary,
+//                            2);
+//        else if(use_coll == 7)
+//            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_DISSEM_iallreduce(
+//                            sendbuf,recvbuf,count,
+//                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_dissem,
+//                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_DISSEM_fn(op),
+//                            &MPIDI_OFI_COMM(comm).comm_triggered_dissem,
+//                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_dissem);
         else {
             MPIR_Assert(0);
             mpi_errno = MPIDI_OFI_COLL_STUB_KNOMIAL_iallreduce(
@@ -1536,24 +1541,24 @@ static inline int MPIDI_NM_mpi_ireduce(const void *sendbuf, void *recvbuf, int c
                             &MPIDI_OFI_COMM(comm_ptr).comm_mpich_kary,
                             &MPIDI_OFI_REQUEST(mpid_req,util).collreq.mpich_kary,
                             2);
-        else if(use_coll == 3)
-            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_ireduce(
-                            sendbuf,recvbuf,count,
-                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_knomial,
-                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_KNOMIAL_fn(op),
-                            root,
-                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_knomial,
-                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_knomial,
-                            2);
-        else if(use_coll == 4)
-            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KARY_ireduce(
-                            sendbuf,recvbuf,count,
-                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_kary,
-                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_KARY_fn(op),
-                            root,
-                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_kary,
-                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_kary,
-                            2);
+//        else if(use_coll == 3)
+//            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_ireduce(
+//                            sendbuf,recvbuf,count,
+//                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_knomial,
+//                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_KNOMIAL_fn(op),
+//                            root,
+//                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_knomial,
+//                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_knomial,
+//                            2);
+//        else if(use_coll == 4)
+//            mpi_errno = MPIDI_OFI_COLL_TRIGGERED_KARY_ireduce(
+//                            sendbuf,recvbuf,count,
+//                            &MPIDI_OFI_DT(dt_ptr).dt_triggered_kary,
+//                            MPIDI_OFI_MPI_OP_TO_COLLOP_TRIGGERED_KARY_fn(op),
+//                            root,
+//                            &MPIDI_OFI_COMM(comm_ptr).comm_triggered_kary,
+//                            &MPIDI_OFI_REQUEST(mpid_req,util).collreq.triggered_kary,
+//                            2);
         else {
             MPIR_Assert(0);
             mpi_errno = MPIDI_OFI_COLL_STUB_KNOMIAL_ireduce(
