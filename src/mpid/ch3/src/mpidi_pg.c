@@ -506,7 +506,8 @@ int MPIDI_PG_Create_from_string(const char * str, MPIDI_PG_t ** pg_pptr,
 
     /* Get the size from the string */
     p = str;
-    while (*p) p++; p++;
+    while (*p) p++;
+    p++;
     vct_sz = atoi(p);
 
     mpi_errno = MPIDI_PG_Create(vct_sz, (void *)str, pg_pptr);
@@ -983,11 +984,13 @@ static int connFromString( const char *buf, MPIDI_PG_t *pg )
     /* printf( "Starting with buf = %s\n", buf );fflush(stdout); */
 
     /* Skip the pg id */
-    while (*buf) buf++; buf++;
+    while (*buf) buf++;
+    buf++;
 
     /* Determine the size of the pg */
     pg->size = atoi( buf );
-    while (*buf) buf++; buf++;
+    while (*buf) buf++;
+    buf++;
 
     conninfo = (MPIDI_ConnInfo *)MPL_malloc( sizeof(MPIDI_ConnInfo) );
     conninfo->connStrings = (char **)MPL_malloc( pg->size * sizeof(char *));
@@ -1034,11 +1037,13 @@ int MPIDI_PrintConnStr( const char *file, int line,
     MPL_dbg_outevent( file, line, MPIDI_CH3_DBG_CONNECT, 0, "%s", str );
     
     /* Skip the pg id */
-    while (*str) str++; str++;
+    while (*str) str++;
+    str++;
 
     /* Determine the size of the pg */
     pg_size = atoi( str );
-    while (*str) str++; str++;
+    while (*str) str++;
+    str++;
 
     for (i=0; i<pg_size; i++) {
 	MPL_dbg_outevent( file, line, MPIDI_CH3_DBG_CONNECT, 0, "%s", str );
@@ -1055,12 +1060,14 @@ int MPIDI_PrintConnStrToFile( FILE *fd, const char *file, int line,
     fprintf( fd, "ConnStr from %s(%d); %s\n\t%s\n", file, line, label, str );
     
     /* Skip the pg id */
-    while (*str) str++; str++;
+    while (*str) str++;
+    str++;
 
     fprintf( fd, "\t%s\n", str );
     /* Determine the size of the pg */
     pg_size = atoi( str );
-    while (*str) str++; str++;
+    while (*str) str++;
+    str++;
 
     for (i=0; i<pg_size; i++) {
 	fprintf( fd, "\t%s\n", str ); 
