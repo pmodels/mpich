@@ -34,7 +34,8 @@ static inline int MPIDI_SHM_mpi_barrier(MPIR_Comm * comm_ptr, MPIR_Errflag_t * e
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_SHM_mpi_bcast(void *buffer, int count, MPI_Datatype datatype,
-                                      int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                      int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                      MPIDI_algo_parameters_t *algo_parameters_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_BCAST);
@@ -51,7 +52,8 @@ static inline int MPIDI_SHM_mpi_bcast(void *buffer, int count, MPI_Datatype data
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_SHM_mpi_allreduce(const void *sendbuf, void *recvbuf, int count,
                                           MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm_ptr,
-                                          MPIR_Errflag_t * errflag)
+                                          MPIR_Errflag_t * errflag,
+                                          MPIDI_algo_parameters_t *algo_parameters_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_ALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_ALLREDUCE);
@@ -229,7 +231,8 @@ static inline int MPIDI_SHM_mpi_alltoallw(const void *sendbuf, const int sendcou
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_SHM_mpi_reduce(const void *sendbuf, void *recvbuf, int count,
                                        MPI_Datatype datatype, MPI_Op op, int root,
-                                       MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                       MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag,
+                                       MPIDI_algo_parameters_t *algo_parameters_ptr)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_REDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_REDUCE);

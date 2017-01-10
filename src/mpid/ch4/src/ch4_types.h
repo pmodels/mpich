@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include "mpir_cvars.h"
 #include "pmi.h"
+#include "ch4_coll_params.h"
 
 /* Macros and inlines */
 /* match/ignore bit manipulation
@@ -278,6 +279,59 @@ typedef struct MPIDI_CH4_Global_t {
     void *netmod_context[8];
     MPIU_buf_pool_t *buf_pool;
 } MPIDI_CH4_Global_t;
+
+/* collectives enumeration for algorithms selection */
+enum {
+    MPIDI_ALLGATHER=0,
+    MPIDI_ALLGATHERV=1,
+    MPIDI_ALLREDUCE=2,
+    MPIDI_ALLTOALL=3,
+    MPIDI_ALLTOALLV=4,
+    MPIDI_ALLTOALLW=5,
+    MPIDI_BARRIER=6,
+    MPIDI_BCAST=7,
+    MPIDI_EXSCAN=8,
+    MPIDI_GATHER=9,
+    MPIDI_GATHERV=10,
+    MPIDI_REDUCE_SCATTER=11,
+    MPIDI_REDUCE=12,
+    MPIDI_SCAN=13,
+    MPIDI_SCATTER=14,
+    MPIDI_SCATERV=15,
+    MPIDI_IALLGATHER=16,
+    MPIDI_IALLGATHERV=17,
+    MPIDI_IALLREDUCE=18,
+    MPIDI_IALLTOALL=19,
+    MPIDI_IALLTOALLV=20,
+    MPIDI_IALLTOALLW=21,
+    MPIDI_IBARRIER=22,
+    MPIDI_IBCAST=23,
+    MPIDI_IEXSCAN=24,
+    MPIDI_IGATHER=25,
+    MPIDI_IGATHERV=26,
+    MPIDI_IREDUCE_SCATTER=27,
+    MPIDI_IREDUCE=28,
+    MPIDI_ISCAN=29,
+    MPIDI_ISCATTER=30,
+    MPIDI_ISCATERV=31,
+    MPIDI_NUM_COLLECTIVES=32
+};
+
+enum tuning_layers{
+    CH4=0,
+    NETMOD=1,
+    SHM=2,
+    NUM_LAYERS=3
+};
+
+struct MPIDI_coll_tuner_table;
+typedef struct MPIDI_coll_tuner_table MPIDI_coll_tuner_table_t;
+
+struct MPIDI_coll_table_entry;
+typedef struct MPIDI_coll_table_entry MPIDI_coll_table_entry_t;
+
+extern MPIDI_coll_table_entry_t ***tuning_table;
+extern int **table_size;
 extern MPIDI_CH4_Global_t MPIDI_CH4_Global;
 #ifdef MPL_USE_DBG_LOGGING
 extern MPL_dbg_class MPIDI_CH4_DBG_GENERAL;

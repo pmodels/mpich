@@ -143,6 +143,96 @@ static inline int MPIDI_choose_shm(void)
 #endif
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_Coll_Selection_Init
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Coll_Selection_Init(void)
+{
+    /* tuning table init */
+    int ii, coll_id, layer_id;
+
+    table_size = (int **)MPL_malloc(NUM_LAYERS*sizeof(int*));
+    for( layer_id = 0; layer_id < NUM_LAYERS; layer_id++ )
+    {
+        table_size[layer_id] = (int *)MPL_malloc(MPIDI_NUM_COLLECTIVES*sizeof(int));
+        for( coll_id = 0; coll_id < MPIDI_NUM_COLLECTIVES; coll_id++ )
+        {
+            table_size[layer_id][coll_id] = 0;
+        }
+    }
+
+    for( layer_id = 0; layer_id < NUM_LAYERS; layer_id++ )
+    {
+        table_size[layer_id][MPIDI_BCAST] = 1;
+        table_size[layer_id][MPIDI_ALLREDUCE] = 1;
+        table_size[layer_id][MPIDI_REDUCE] = 1;
+    }
+
+
+    tuning_table = (MPIDI_coll_table_entry_t ***)MPL_malloc(MPIDI_NUM_COLLECTIVES*sizeof(MPIDI_coll_table_entry_t**));
+    for( layer_id = 0; layer_id < NUM_LAYERS; layer_id++ )
+    {
+        tuning_table[layer_id] = (MPIDI_coll_table_entry_t **)MPL_malloc(MPIDI_NUM_COLLECTIVES*sizeof(MPIDI_coll_table_entry_t*));
+        for( coll_id = 0; coll_id < MPIDI_NUM_COLLECTIVES; coll_id++ )
+        {
+            tuning_table[layer_id][coll_id] = (MPIDI_coll_table_entry_t *)MPL_malloc(table_size[layer_id][coll_id]*sizeof(MPIDI_coll_table_entry_t));
+            if(tuning_table[layer_id][coll_id])
+            {
+                for( ii = 0; ii < table_size[layer_id][coll_id]; ii++ )
+                {
+                    //fill tuning table
+                }
+            }
+        } 
+    }
+
+
+    tuning_table[CH4][MPIDI_BCAST][0].algo_id = 2;
+    tuning_table[CH4][MPIDI_BCAST][0].msg_size = 0;
+    tuning_table[CH4][MPIDI_BCAST][0].params.ch4_bcast.shm_bcast = -1;
+    tuning_table[CH4][MPIDI_BCAST][0].params.ch4_bcast.nm_bcast = -1;
+
+    tuning_table[NETMOD][MPIDI_BCAST][0].algo_id = 1;
+    tuning_table[NETMOD][MPIDI_BCAST][0].msg_size = 0;
+    tuning_table[NETMOD][MPIDI_BCAST][0].params.generic_bcast_knomial_parameters.radix = 2;
+    tuning_table[NETMOD][MPIDI_BCAST][0].params.generic_bcast_knomial_parameters.block_size = 4096;
+
+    tuning_table[SHM][MPIDI_BCAST][0].algo_id = 3;
+    tuning_table[SHM][MPIDI_BCAST][0].msg_size = 0;
+    tuning_table[SHM][MPIDI_BCAST][0].params.generic_bcast_knomial_parameters.radix = 2;
+    tuning_table[SHM][MPIDI_BCAST][0].params.generic_bcast_knomial_parameters.block_size = 4096;
+
+    tuning_table[CH4][MPIDI_ALLREDUCE][0].algo_id = 0;
+    tuning_table[CH4][MPIDI_ALLREDUCE][0].msg_size = 0;
+    tuning_table[CH4][MPIDI_ALLREDUCE][0].params.ch4_allreduce_0.shm_reduce = -1;
+    tuning_table[CH4][MPIDI_ALLREDUCE][0].params.ch4_allreduce_0.nm_allreduce = -1;
+    tuning_table[CH4][MPIDI_ALLREDUCE][0].params.ch4_allreduce_0.shm_bcast = 3;
+
+    tuning_table[NETMOD][MPIDI_ALLREDUCE][0].algo_id = 5;
+    tuning_table[NETMOD][MPIDI_ALLREDUCE][0].msg_size = 0;
+    tuning_table[NETMOD][MPIDI_ALLREDUCE][0].params.generic_allreduce_empty_parameters.empty = 1;
+
+    tuning_table[SHM][MPIDI_ALLREDUCE][0].algo_id = 9;
+    tuning_table[SHM][MPIDI_ALLREDUCE][0].msg_size = 0;
+    tuning_table[SHM][MPIDI_ALLREDUCE][0].params.generic_allreduce_empty_parameters.empty = 1;
+
+    tuning_table[CH4][MPIDI_REDUCE][0].algo_id = 0;
+    tuning_table[CH4][MPIDI_REDUCE][0].msg_size = 0;
+    tuning_table[CH4][MPIDI_REDUCE][0].params.ch4_reduce.shm_reduce = -1;
+    tuning_table[CH4][MPIDI_REDUCE][0].params.ch4_reduce.nm_reduce = -1;
+
+    tuning_table[NETMOD][MPIDI_REDUCE][0].algo_id = 15;
+    tuning_table[NETMOD][MPIDI_REDUCE][0].msg_size = 0;
+    tuning_table[NETMOD][MPIDI_REDUCE][0].params.generic_reduce_empty_parameters.empty = 1;
+
+    tuning_table[SHM][MPIDI_REDUCE][0].algo_id = 23;
+    tuning_table[SHM][MPIDI_REDUCE][0].msg_size = 0;
+    tuning_table[SHM][MPIDI_REDUCE][0].params.generic_reduce_empty_parameters.empty = 1;
+
+    return MPI_SUCCESS;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_Init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -192,6 +282,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Init(int *argc,
 
     MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
+
+    //tuning table init
+    MPIDI_Coll_Selection_Init();
 
     /* ---------------------------------- */
     /* Initialize MPI_COMM_SELF           */
@@ -324,6 +417,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Init(int *argc,
     goto fn_exit;
 }
 
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_InitCompleted
 #undef FCNAME
@@ -334,6 +428,53 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_InitCompleted(void)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_INITCOMPLETED);
     MPIDI_CH4_Global.is_initialized = 1;
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_INITCOMPLETED);
+    return MPI_SUCCESS;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Coll_Selection_Finalize
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_Coll_Selection_Finalize(void)
+{
+    /* release tuning_table and table_size */
+    int layer_id, coll_id;
+    for( layer_id = 0; layer_id < NUM_LAYERS; layer_id++ )
+    {
+        if(tuning_table[layer_id])
+        {
+            for( coll_id = 0; coll_id < MPIDI_NUM_COLLECTIVES; coll_id++ )
+            {
+                if(tuning_table[layer_id][coll_id])
+                {
+                    MPL_free(tuning_table[layer_id][coll_id]);
+                    tuning_table[layer_id][coll_id] = NULL;
+                }
+            }
+            MPL_free(tuning_table[layer_id]);
+            tuning_table[layer_id] = NULL;
+        }
+    }
+    if(tuning_table)
+    {
+        MPL_free(tuning_table);
+        tuning_table = NULL;
+    }
+
+    for( layer_id = 0; layer_id < NUM_LAYERS; layer_id++ )
+    {
+        if(table_size[layer_id])
+        {
+            MPL_free(table_size[layer_id]);
+            table_size[layer_id] = NULL;
+        }
+    }
+    if(table_size)
+    {
+        MPL_free(table_size);
+        table_size = NULL;
+    }
+
     return MPI_SUCCESS;
 }
 
@@ -355,6 +496,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Finalize(void)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 #endif
+    MPIDI_Coll_Selection_Finalize();
 
     int i;
     int max_n_avts;
@@ -377,6 +519,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Finalize(void)
   fn_fail:
     goto fn_exit;
 }
+
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Get_universe_size

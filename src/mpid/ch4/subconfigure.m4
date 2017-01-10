@@ -126,7 +126,12 @@ MPIDI_${net_upper}_dt_t ${net};"
         ch4_netmod_op_decl="${ch4_netmod_op_decl} \\
 MPIDI_${net_upper}_op_t ${net};"
     fi
-
+    if test -z "$ch4_netmod_coll_params_decl" ; then
+        ch4_netmod_coll_params_decl="MPIDI_${net_upper}_COLL_PARAMS_DECL;"
+    else
+        ch4_netmod_coll_params_decl="${ch4_netmod_coll_params_decl} \\
+MPIDI_${net_upper}_coll_params_t ${net};"
+    fi
     if test -z "$ch4_netmod_win_decl" ; then
         ch4_netmod_win_decl="MPIDI_${net_upper}_win_t ${net};"
     else
@@ -164,6 +169,7 @@ AC_SUBST(ch4_netmod_dt_decl)
 AC_SUBST(ch4_netmod_win_decl)
 AC_SUBST(ch4_netmod_addr_decl)
 AC_SUBST(ch4_netmod_op_decl)
+AC_SUBST(ch4_netmod_coll_params_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_pre_include)
 AM_SUBST_NOTMAKE(ch4_netmod_amrequest_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_request_decl)
@@ -172,6 +178,7 @@ AM_SUBST_NOTMAKE(ch4_netmod_dt_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_win_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_addr_decl)
 AM_SUBST_NOTMAKE(ch4_netmod_op_decl)
+AM_SUBST_NOTMAKE(ch4_netmod_coll_params_decl)
 
 AC_ARG_ENABLE(ch4-netmod-direct,
     [--enable-ch4-netmod-direct
@@ -319,7 +326,13 @@ MPIDI_${shm_upper}_request_t ${shm};"
         ch4_shm_comm_decl="${ch4_shm_comm_decl} \\
 MPIDI_${shm_upper}_comm_t ${shm};"
     fi
-
+    
+    if test -z "$ch4_shm_coll_params_decl" ; then
+        ch4_shm_coll_params_decl="MPIDI_${shm_upper}_COLL_PARAMS_DECL;"
+    else
+        ch4_shm_coll_params_decl="${ch4_shm_coll_params_decl} \\
+MPIDI_${shm_upper}_coll_params_t ${shm};"
+    fi
 
     shm_index=`expr $shm_index + 1`
 done
@@ -336,9 +349,11 @@ AC_SUBST(ch4_shm_strings)
 AC_SUBST(ch4_shm_pre_include)
 AC_SUBST(ch4_shm_request_decl)
 AC_SUBST(ch4_shm_comm_decl)
+AC_SUBST(ch4_shm_coll_params_decl)
 AM_SUBST_NOTMAKE(ch4_shm_pre_include)
 AM_SUBST_NOTMAKE(ch4_shm_request_decl)
 AM_SUBST_NOTMAKE(ch4_shm_comm_decl)
+AM_SUBST_NOTMAKE(ch4_shm_coll_params_decl)
 
 if test "$ch4_shm_array_sz" = "1"  && test "$enable_ch4_shm_direct" = "yes" ;  then
    PAC_APPEND_FLAG([-DSHM_DIRECT=__shm_direct_${ch4_shm}__], [CPPFLAGS])
