@@ -265,17 +265,17 @@ void ADIOI_PANFS_Open(ADIO_File fd, int *error_code)
     if (fd->access_mode & ADIO_EXCL)
 	amode = amode | O_EXCL;
 
-	value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL+1)*sizeof(char));
-	ADIOI_Info_get(fd->info, "panfs_concurrent_write", MPI_MAX_INFO_VAL, 
+    value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL+1)*sizeof(char));
+    ADIOI_Info_get(fd->info, "panfs_concurrent_write", MPI_MAX_INFO_VAL,
 		     value, &flag);
-	if (flag) {
+    if (flag) {
         unsigned long int concurrent_write = strtoul(value,NULL,10);
         if(concurrent_write == 1)
         {
             amode = amode | O_CONCURRENT_WRITE;
         }
-	}
-	ADIOI_Free(value);
+    }
+    ADIOI_Free(value);
 
     fd->fd_sys = open(fd->filename, amode, perm);
     fd->fd_direct = -1;
