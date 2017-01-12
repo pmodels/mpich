@@ -41,6 +41,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     int max_string;
     int i;
     ucp_params_t ucp_params;
+    ucp_worker_params_t worker_params;
+    ucp_ep_params_t ep_params;
+
     int avtid = 0, max_n_avts;
 
     int p;
@@ -65,7 +68,10 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIDI_UCX_CHK_STATUS(ucx_status);
     ucp_config_release(config);
 
-    ucx_status = ucp_worker_create(MPIDI_UCX_global.context, UCS_THREAD_MODE_SERIALIZED,
+    worker_params.field_mask  = UCP_WORKER_PARAM_FIELD_THREAD_MODE;
+    worker_params.thread_mode =  UCS_THREAD_MODE_SERIALIZED;
+
+    ucx_status = ucp_worker_create(MPIDI_UCX_global.context, &worker_params,
                                    &MPIDI_UCX_global.worker);
     MPIDI_UCX_CHK_STATUS(ucx_status);
     ucx_status =
@@ -193,8 +199,10 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         if (addr_size > MPIDI_UCX_global.max_addr_len)
             MPIDI_UCX_global.max_addr_len = addr_size;
 
+        ep_params.field_mask = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS;
+        ep_params.address    = (ucp_address_t*) remote_addr;
         ucx_status = ucp_ep_create(MPIDI_UCX_global.worker,
-                                   (ucp_address_t *) remote_addr,
+                                   &ep_params,
                                    &MPIDI_UCX_AV(&MPIDIU_get_av(0, i)).dest);
 
         MPIDI_UCX_CHK_STATUS(ucx_status);
