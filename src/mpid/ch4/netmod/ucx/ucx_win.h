@@ -31,7 +31,9 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
     char *rkey_buffer, *rkey_recv_buff = NULL;
     struct _UCX_share *share_data;
     size_t size;
-    void *base;
+
+    ucp_mem_map_params_t mem_map_params;
+
     if (length == 0)
         size = 1024;
     else
@@ -41,15 +43,21 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
     ucp_context_h ucp_context = MPIDI_UCX_global.context;
 
     MPIDI_UCX_WIN(win).info_table = MPL_malloc(sizeof(MPIDI_UCX_win_info_t) * comm_ptr->local_size);
+    mem_map_params.field_mask = UCP_MEM_MAP_PARAM_FIELD_ADDRESS |
+                                UCP_MEM_MAP_PARAM_FIELD_LENGTH|
+                                UCP_MEM_MAP_PARAM_FIELD_FLAGS;
     if (length == 0)
-        base = &ucx_dummy_buffer;
+        mem_map_params.address = &ucx_dummy_buffer;
     else
-        base = *base_ptr;
+        mem_map_params.address = *base_ptr;
+     mem_map_params.length = size;
+     mem_map_params.flags = 0 ;
 
-    status = ucp_mem_map(MPIDI_UCX_global.context, &base, size, 0, &mem_h);
+    status = ucp_mem_map(MPIDI_UCX_global.context, &mem_map_params , &mem_h);
     MPIDI_UCX_CHK_STATUS(status);
-    if (length > 0)
-        *base_ptr = base;
+
+   if (length > 0)
+        *base_ptr = mem_map_params.address;
 
     MPIDI_UCX_WIN(win).mem_h = mem_h;
 
@@ -101,7 +109,7 @@ static inline int MPIDI_UCX_Win_allgather(MPIR_Win * win, size_t length,
     share_data = MPL_malloc(comm_ptr->local_size * sizeof(struct _UCX_share));
 
     share_data[comm_ptr->rank].disp = disp_unit;
-    share_data[comm_ptr->rank].addr = (MPI_Aint) base;
+    share_data[comm_ptr->rank].addr = (MPI_Aint) *base_ptr;
 
     mpi_errno =
         MPIR_Allgather(MPI_IN_PLACE, sizeof(struct _UCX_share), MPI_BYTE, share_data,
