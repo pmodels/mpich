@@ -354,7 +354,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                 continue;
 
             /* Check that the provider has all of the requirements of MPICH */
-            } else if (prov_use->ep_attr->type == FI_EP_RDM) {
+            } else if (prov_use->ep_attr->type != FI_EP_RDM) {
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "Provider doesn't support RDM"));
                 fprintf(stderr, "Doesn't support RDM\n");
                 prov = prov_use->next;
