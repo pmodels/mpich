@@ -11,9 +11,17 @@
 
 #include <stdint.h>
 
+/* If necessary (older luster client headers) define the new
+   locking structures. */
+
+#ifndef LL_IOC_LOCK_AHEAD
+/* Declaration for lustre request-only locking */
+#define LL_IOC_REQUEST_ONLY            _IO('f', 252)
+#endif
+
 #ifndef LL_IOC_LOCK_AHEAD
 /* Declarations for lustre lock ahead */
-#define LL_IOC_LOCK_AHEAD _IOWR('f', 251, struct llapi_lock_ahead)
+#define LL_IOC_LOCK_AHEAD _IOWR('f', 251, struct llapi_lock_ahead_arg)
 
 typedef enum {
     READ_USER = 1,
@@ -21,26 +29,39 @@ typedef enum {
     MAX_USER,
 } lock_mode_user;
 
-/* Extent for lock ahead requests */
-struct lu_extent {
+struct llapi_lock_ahead_extent {
     __u64 start;
     __u64 end;
-    /* 0 on success, -ERRNO on error, except -EWOULDBLOCK, which
-     * indicates the lock was not granted because a
-     * conflicting lock was found */
-    __u32 result;
+    /* 0 on success, -ERRNO on error, 1 when a
+     * matching but non-identical lock is found, 2
+     * when a matching and identical lock is found */
+    __s32 result;
 };
 
 /* lock ahead ioctl arguments */
-struct llapi_lock_ahead {
+struct llapi_lock_ahead_arg {
     __u32 lla_version;
     __u32 lla_lock_mode;
     __u32 lla_flags;
     __u32 lla_extent_count;
-    struct lu_extent lla_extents[0];
+    struct llapi_lock_ahead_extent lla_extents[0];
 };
 #endif
 
+/* Set lustre locks to only lock the requested byte range, do not
+   extend any locks to 'infinity' which is the normal behavior.
+   This will enhance 'lock ahead' extent locking, which we do not
+   want to auto-extend. */
+int ADIOI_LUSTRE_request_only_lock_ioctl(ADIO_File fd)
+{
+    int err;
+
+    err = ioctl(fd->fd_sys, LL_IOC_REQUEST_ONLY);
+    return err;
+}
+
+/* Use group locks to 'clear' existing locks on the file
+   before attempting 'lock ahead' extent locking. */
 int ADIOI_LUSTRE_clear_locks(ADIO_File fd)
 {
     int err;
@@ -55,10 +76,12 @@ int ADIOI_LUSTRE_clear_locks(ADIO_File fd)
     return err;
 }
 
+/* Lock a predefined series of 'extents' in the file.
+   The intent is to match the aggregator locking pattern. */
 void ADIOI_LUSTRE_lock_ahead_ioctl(ADIO_File fd, int avail_cb_nodes, ADIO_Offset next_offset,
                                    int *error_code)
 {
-    struct llapi_lock_ahead *arg;
+    struct llapi_lock_ahead_arg *arg;
     int err = 0, i;
     int num_extents = fd->hints->fs_hints.lustre.lock_ahead_num_extents;
     int flags = fd->hints->fs_hints.lustre.lock_ahead_flags;
@@ -154,7 +177,9 @@ void ADIOI_LUSTRE_lock_ahead_ioctl(ADIO_File fd, int avail_cb_nodes, ADIO_Offset
     } else      /* Have to assume we're writing to one of our stripes */
         offset = next_offset / stripe_size * stripe_size;       /* start of stripe */
 
-    arg = ADIOI_Malloc(sizeof(struct llapi_lock_ahead) + sizeof(struct lu_extent) * num_extents);
+    arg =
+        ADIOI_Malloc(sizeof(struct llapi_lock_ahead_arg) +
+                     sizeof(struct llapi_lock_ahead_extent) * num_extents);
     for (i = 0; i < num_extents; ++i) {
         arg->lla_extents[i].start = offset;
         arg->lla_extents[i].end = offset + stripe_size - 1;
@@ -224,7 +249,10 @@ void ADIOI_LUSTRE_lock_ahead_ioctl(ADIO_File fd, int avail_cb_nodes, ADIO_Offset
         if (agg_idx == 0) {
             fprintf(stderr, "%s: ioctl(LL_IOC_LOCK_AHEAD) \'%s\'\n", __func__, strerror(errno));
         }
-
+        /* Note: it's too late to turn off 'request only' locking, which
+         * could affect performance without also having 'lock ahead'.
+         *
+         * We expect lustre to support this (turning it off) later */
     }
 
     ADIOI_Free(arg);
