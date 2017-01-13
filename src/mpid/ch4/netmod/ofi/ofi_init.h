@@ -349,7 +349,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                 prov = prov_use->next;
                 continue;
             } else if (MPIDI_OFI_ENABLE_RMA && 0ULL == (prov_use->caps & (FI_RMA | FI_ATOMICS))) {
-                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "Providerdoesn't support RMA"));
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "Provider doesn't support RMA"));
                 prov = prov_use->next;
                 continue;
 
