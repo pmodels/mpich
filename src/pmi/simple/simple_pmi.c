@@ -104,6 +104,7 @@ static int PMI_totalview = 0;
 #endif
 static int PMIi_InitIfSingleton(void);
 static int accept_one_connection(int);
+static int cached_singinit_inuse = 0;
 static char cached_singinit_key[PMIU_MAXLINE];
 static char cached_singinit_val[PMIU_MAXLINE];
 static char singinit_kvsname[256];
@@ -390,11 +391,14 @@ int PMI_KVS_Put( const char kvsname[], const char key[], const char value[] )
 
     /* This is a special hack to support singleton initialization */
     if (PMI_initialized == SINGLETON_INIT_BUT_NO_PM) {
+        if (cached_singinit_inuse)
+            return PMI_FAIL;
 	rc = MPIU_Strncpy(cached_singinit_key,key,PMI_keylen_max);
 	if (rc != 0) return PMI_FAIL;
 	rc = MPIU_Strncpy(cached_singinit_val,value,PMI_vallen_max);
 	if (rc != 0) return PMI_FAIL;
-	return 0;
+        cached_singinit_inuse = 1;
+	return PMI_SUCCESS;
     }
     
     rc = MPL_snprintf( buf, PMIU_MAXLINE, 
