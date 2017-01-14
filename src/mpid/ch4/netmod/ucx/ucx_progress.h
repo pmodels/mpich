@@ -15,11 +15,11 @@
 static inline int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
 {
     int mpi_errno;
-    MPIR_Request *rreq;
+    MPIR_Request *rreq = NULL;
     void *p_data;
     void *in_data;
     size_t data_sz, in_data_sz;
-    MPIDIG_am_target_cmpl_cb target_cmpl_cb;
+    MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
     struct iovec *iov;
     int i, is_contig, iov_len;
     size_t done, curr_len, rem;
