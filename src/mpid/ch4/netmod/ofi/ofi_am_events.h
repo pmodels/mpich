@@ -20,12 +20,12 @@
 static inline int MPIDI_OFI_handle_short_am(MPIDI_OFI_am_header_t * msg_hdr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *rreq;
+    MPIR_Request *rreq = NULL;
     void *p_data;
     void *in_data;
 
     size_t data_sz, in_data_sz;
-    MPIDIG_am_target_cmpl_cb target_cmpl_cb;
+    MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
     struct iovec *iov;
     int i, is_contig, iov_len;
     size_t done, curr_len, rem;
@@ -215,10 +215,10 @@ static inline int MPIDI_OFI_do_handle_long_am(MPIDI_OFI_am_header_t * msg_hdr,
                                               MPIDI_OFI_lmt_msg_payload_t * lmt_msg, void *am_hdr)
 {
     int num_reads, i, iov_len, c, mpi_errno = MPI_SUCCESS, is_contig = 0;
-    MPIR_Request *rreq;
+    MPIR_Request *rreq = NULL;
     void *p_data;
     size_t data_sz, rem, done, curr_len, in_data_sz;
-    MPIDIG_am_target_cmpl_cb target_cmpl_cb;
+    MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
     struct iovec *iov;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_HANDLE_LONG_AM);
