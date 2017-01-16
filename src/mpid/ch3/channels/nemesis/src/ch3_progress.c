@@ -15,6 +15,14 @@
 #include <signal.h>
 #endif
 
+
+//#define AH
+#ifdef AH
+#include <sched.h>
+unsigned long long ah_yield_count = 0;
+#endif
+
+
 typedef struct vc_term_element
 {
     struct vc_term_element *next;
@@ -476,6 +484,11 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
                 break;
             }
         }
+
+#ifdef AH
+    sched_yield();
+        ah_yield_count++;
+#endif
 
 #ifdef MPICH_IS_THREADED
         MPIR_THREAD_CHECK_BEGIN;

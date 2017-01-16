@@ -493,6 +493,15 @@ static HYD_status launch_procs(void)
 
     HYDU_FUNC_ENTER();
 
+#ifdef AHAH
+#ifdef HAVE_PIP
+    printf("HAVING PIP\n");
+#else
+    printf("NOT having pip\n");
+#endif
+#endif
+
+
 #ifdef HAVE_PIP
     {
         static int pip_initialized = 0;

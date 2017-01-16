@@ -18,6 +18,15 @@ int MPID_Finalize(void)
 
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_FINALIZE);
 
+    //#define AH
+#ifdef AH
+    {
+        extern unsigned long long ah_yield_count;
+        fprintf(stderr, "AHAHA ah_yield_count=%Lu\n", ah_yield_count);
+    }
+#endif
+
+
     /*
      * Wait for all posted receives to complete.  For now we are not doing 
      * this since it will cause invalid programs to hang.

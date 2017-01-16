@@ -8,6 +8,9 @@
 #include "mpi_init.h"
 
 #include <strings.h>
+#ifdef HAVE_PIP
+#include <pip.h>
+#endif
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -95,6 +98,21 @@ int MPI_Init(int *argc, char ***argv)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_TERSE_INIT_STATE_DECL(MPID_STATE_MPI_INIT);
+
+    rc = MPID_Wtime_init();
+#ifdef MPL_USE_DBG_LOGGING
+    MPL_dbg_pre_init(argc, argv, rc);
+#endif
+
+#ifdef HAVE_PIP
+    {
+        int pipid = -10;
+        pip_get_pipid(&pipid);
+        fprintf(stdout, "%s: my pipid=%d\n", __FUNCTION__, pipid);
+        fflush(stdout);
+    }
+#endif
+
     MPIR_FUNC_TERSE_INIT_ENTER(MPID_STATE_MPI_INIT);
 #ifdef HAVE_ERROR_CHECKING
     {
