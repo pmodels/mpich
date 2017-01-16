@@ -652,6 +652,37 @@ for option in $enable_g ; do
     esac
 done
 
+#########################################################################
+# PIP begins (by ahori@riken.jp)
+#########################################################################
+AC_ARG_WITH([pip-prefix],
+  AC_HELP_STRING([--with-pip-prefix=<PIP-DIR>],[To enable PIP, specify PIP install directory.]),,)
+
+if test "x$with_pip_prefix" != "x" && test -d ${with_pip_prefix} ; then
+   if test -d ${with_pip_prefix}/include ; then
+      if test -d ${with_pip_prefix}/lib ; then
+   AC_DEFINE([HAVE_PIP],1,[PIP is enabled])
+   PAC_APPEND_FLAG([-I${with_pip_prefix}/include],[CPPFLAGS])
+   PAC_APPEND_FLAG([-L${with_pip_prefix}/lib -Wl,-rpath=${with_pip_prefix}/lib],[LDFLAGS])
+   PAC_APPEND_FLAG([-lpip -lpthread],[LIBS])
+      else
+   AC_MSG_ERROR([PIP lib dir cannot be found.])
+      fi
+   else
+      AC_MSG_ERROR([PIP inlcude dir cannot be found.])
+   fi
+fi
+
+AC_ARG_WITH([ldlinux],
+  AC_HELP_STRING([--with-ldlinux=<LD-LNUX>],[Specify patched ld-linux, if any]),,)
+
+if test "x$with_ldlinux" != "x" && test -x ${with_ldlinux} ; then
+   PAC_APPEND_FLAG([-Wl,--dynamic-linker=${with_ldlinux}],[LDFLAGS])
+fi
+#########################################################################
+# PIP ends (by ahori@riken.jp)
+#########################################################################
+
 
 #########################################################################
 # Error checking

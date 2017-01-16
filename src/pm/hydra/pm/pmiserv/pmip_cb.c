@@ -11,6 +11,10 @@
 #include "demux.h"
 #include "topo.h"
 
+#ifdef HAVE_PIP
+#include <pip.h>
+#endif
+
 struct HYD_pmcd_pmip_pmi_handle *HYD_pmcd_pmip_pmi_handle = { 0 };
 
 static int pmi_storage_len = 0;
@@ -489,6 +493,20 @@ static HYD_status launch_procs(void)
 
     HYDU_FUNC_ENTER();
 
+#ifdef HAVE_PIP
+    {
+        static int pip_initialized = 0;
+        int pipid, ntasks;
+        int pip_err;
+        if (!pip_initialized) {
+            pip_initialized = 1;
+            if ((pip_err = pip_init(NULL, NULL, NULL, 0)) != 0) {
+                HYDU_ERR_SETANDJUMP(status, HYD_FAILURE, "pip_init(): %s\n", MPL_strerror(pip_err));
+            }
+        }
+    }
+#endif
+
     HYD_pmcd_pmip.local.proxy_process_count = 0;
     for (exec = HYD_pmcd_pmip.exec_list; exec; exec = exec->next)
         HYD_pmcd_pmip.local.proxy_process_count += exec->proc_count;
@@ -711,6 +729,23 @@ static HYD_status launch_procs(void)
              * closed.  This is technically a user application bug,
              * but this is a safe-guard to workaround that.  See
              * ticket #1622 for more details. */
+
+#ifdef HAVE_PIP
+
+            extern HYD_status
+                HYDU_spawn_pip_tasks(char **client_arg, struct HYD_env *env_list,
+                                     int *in, int *out, int *err, int *pid, int idx);
+
+            status = HYDU_spawn_pip_tasks(stash.strlist, force_env,
+                                          HYD_pmcd_pmip.downstream.pmi_rank[process_id] ? &dummy :
+                                          &HYD_pmcd_pmip.downstream.in,
+                                          &HYD_pmcd_pmip.downstream.out[process_id],
+                                          &HYD_pmcd_pmip.downstream.err[process_id],
+                                          &HYD_pmcd_pmip.downstream.pid[process_id], process_id);
+            HYDU_ERR_POP(status, "spawn PIP tasks returned error\n");
+
+#else /* !HAVE_PIP */
+
             status = HYDU_create_process(stash.strlist, force_env,
                                          HYD_pmcd_pmip.downstream.pmi_rank[process_id] ? &dummy :
                                          &HYD_pmcd_pmip.downstream.in,
@@ -718,6 +753,7 @@ static HYD_status launch_procs(void)
                                          &HYD_pmcd_pmip.downstream.err[process_id],
                                          &HYD_pmcd_pmip.downstream.pid[process_id], process_id);
             HYDU_ERR_POP(status, "create process returned error\n");
+#endif /* HAVE_PIP */
 
             if (HYD_pmcd_pmip.downstream.in != HYD_FD_UNSET) {
                 status = HYDU_sock_set_nonblock(HYD_pmcd_pmip.downstream.in);
