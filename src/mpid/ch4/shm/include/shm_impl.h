@@ -156,23 +156,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend(int rank, MPIR_Comm * comm, int 
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_inject_am(int rank, MPIR_Comm * comm, int handler_id,
-                                                 const void *am_hdr, size_t am_hdr_sz,
-                                                 const void *data, MPI_Count count,
-                                                 MPI_Datatype datatype, void *shm_context)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_INJECT_AM);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_INJECT_AM);
-
-    ret = MPIDI_SHM_func->inject_am(rank, comm, handler_id, am_hdr, am_hdr_sz, data, count,
-                                    datatype, shm_context);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_INJECT_AM);
-    return ret;
-}
-
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isendv(int rank, MPIR_Comm * comm, int handler_id,
                                                  struct iovec *am_hdrs, size_t iov_len,
                                                  const void *data, MPI_Count count,
@@ -188,23 +171,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isendv(int rank, MPIR_Comm * comm, int
                                     datatype, sreq, shm_context);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_AM_ISENDV);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_inject_amv(int rank, MPIR_Comm * comm, int handler_id,
-                                                  struct iovec *am_hdrs, size_t iov_len,
-                                                  const void *data, MPI_Count count,
-                                                  MPI_Datatype datatype, void *shm_context)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_INJECT_AMV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_INJECT_AMV);
-
-    ret = MPIDI_SHM_func->inject_amv(rank, comm, handler_id, am_hdrs, iov_len, data, count,
-                                     datatype, shm_context);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_INJECT_AMV);
     return ret;
 }
 
@@ -241,42 +207,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_isend_reply(MPIR_Context_id_t context_
     return ret;
 }
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_inject_am_reply(MPIR_Context_id_t context_id,
-                                                       int src_rank, int handler_id,
-                                                       const void *am_hdr, size_t am_hdr_sz,
-                                                       const void *data, MPI_Count count,
-                                                       MPI_Datatype datatype)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_INJECT_AM_REPLY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_INJECT_AM_REPLY);
-
-    ret = MPIDI_SHM_func->inject_am_reply(context_id, src_rank, handler_id, am_hdr, am_hdr_sz,
-                                          data, count, datatype);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_INJECT_AM_REPLY);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_inject_amv_reply(MPIR_Context_id_t context_id,
-                                                        int src_rank, int handler_id,
-                                                        struct iovec *am_hdrs, size_t iov_len,
-                                                        const void *data, MPI_Count count,
-                                                        MPI_Datatype datatype)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_INJECT_AMV_REPLY);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_INJECT_AMV_REPLY);
-
-    ret = MPIDI_SHM_func->inject_amv_reply(context_id, src_rank, handler_id, am_hdrs, iov_len,
-                                           data, count, datatype);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_INJECT_AMV_REPLY);
-    return ret;
-}
-
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_hdr_max_sz(void)
 {
     int ret;
@@ -287,19 +217,6 @@ MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_hdr_max_sz(void)
     ret = MPIDI_SHM_func->am_hdr_max_sz();
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_AM_HDR_MAX_SZ);
-    return ret;
-}
-
-MPL_STATIC_INLINE_PREFIX size_t MPIDI_SHM_am_inject_max_sz(void)
-{
-    int ret;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_AM_INJECT_MAX_SZ);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_AM_INJECT_MAX_SZ);
-
-    ret = MPIDI_SHM_func->am_inject_max_sz();
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_AM_INJECT_MAX_SZ);
     return ret;
 }
 
