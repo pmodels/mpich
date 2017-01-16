@@ -110,3 +110,12 @@ int MPIR_Get_node_id(MPI_Comm comm, int rank, int *id)
 
     return MPI_SUCCESS;
 }
+
+int MPIR_Abort(MPI_Comm comm, int mpi_errno, int exit_code, const char *error_msg)
+{
+    MPIR_Comm *comm_ptr;
+
+    MPIR_Comm_get_ptr(comm, comm_ptr);
+
+    return MPID_Abort(comm_ptr, mpi_errno, exit_code, error_msg);
+}
