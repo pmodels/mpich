@@ -31,20 +31,6 @@ MPIDI_SHM_native_funcs_t *MPIDI_SHM_native_func;
 pthread_mutex_t MPIDI_Mutex_lock[MPIDI_NUM_LOCKS];
 #endif
 
-/* The MPID_Abort ADI is strangely defined by the upper layers */
-/* We should fix the upper layer to define MPID_Abort like any */
-/* Other ADI */
-#ifdef MPID_Abort
-#define MPID_TMP MPID_Abort
-#undef MPID_Abort
-int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error_msg)
-{
-    return MPID_Abort(comm, mpi_errno, exit_code, error_msg);
-}
-
-#define MPID_Abort MPID_TMP
-#endif
-
 /* Another weird ADI that doesn't follow convention */
 static void init_comm() __attribute__ ((constructor));
 static void init_comm()
