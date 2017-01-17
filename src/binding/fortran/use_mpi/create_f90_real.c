@@ -15,6 +15,14 @@
 #define MPIR_F90_DOUBLE_MODEL 15, 307
 #endif
 
+/* FIXME : Why mpif90model does not work ? */
+/* AH */
+#undef MPIR_F90_REAL_MODEL
+#define MPIR_F90_REAL_MODEL 6, 37
+#undef MPIR_F90_DOUBLE_MODEL
+#define MPIR_F90_DOUBLE_MODEL 15, 307
+/* AH */
+
 /* -- Begin Profiling Symbol Block for routine MPI_Type_create_f90_real */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Type_create_f90_real = PMPI_Type_create_f90_real
