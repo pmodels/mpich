@@ -21,7 +21,6 @@
 
 MPIDI_CH4I_API(int, Init, int *, char ***, int, int *, int *, int *);
 MPIDI_CH4I_API(int, InitCompleted, void);
-MPIDI_CH4I_API(int, Abort, MPIR_Comm *, int, int, const char *);
 MPIDI_CH4I_API(int, Cancel_recv, MPIR_Request *);
 MPIDI_CH4I_API(int, Cancel_send, MPIR_Request *);
 MPIDI_CH4I_API(int, Comm_disconnect, MPIR_Comm *);
@@ -230,6 +229,8 @@ MPIDI_CH4I_API(int, Iscatter, const void *, int, MPI_Datatype, void *, int, MPI_
                MPIR_Comm *, MPI_Request *);
 MPIDI_CH4I_API(int, Iscatterv, const void *, const int *, const int *, MPI_Datatype, void *, int,
                MPI_Datatype, int, MPIR_Comm *, MPI_Request *);
+
+int MPID_Abort(struct MPIR_Comm *comm, int mpi_errno, int exit_code, const char *error_msg);
 
 /* This function is not exposed to the upper layers but functions in a way
  * similar to the functions above. Other CH4-level functions should call this
