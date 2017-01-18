@@ -12,4 +12,4 @@
 #include "mpidimpl.h"
 #include "mpidig.h"
 
-MPIDIG_global_t MPIDIG_global = { 0 };
+MPIDIG_global_t MPIDIG_global = { { 0 } };
