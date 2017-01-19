@@ -9,7 +9,7 @@
 #define SHM_AM_H_INCLUDED
 
 #include <shm.h>
-#include <shm_impl.h>
+#include "../posix/shm_direct.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_am_send_hdr(int rank, MPIR_Comm * comm,
                                                    int handler_id, const void *am_hdr,
