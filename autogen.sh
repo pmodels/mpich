@@ -93,7 +93,7 @@ confdb_dirs="${confdb_dirs} src/mpl/confdb"
 confdb_dirs="${confdb_dirs} src/pm/hydra/confdb"
 confdb_dirs="${confdb_dirs} src/pm/hydra/mpl/confdb"
 confdb_dirs="${confdb_dirs} test/mpi/confdb"
-
+confdb_dirs="${confdb_dirs} src/pmi/pmix/confdb"
 # hydra's copy of mpl
 sync_external src/mpl src/pm/hydra/mpl
 
@@ -110,6 +110,7 @@ if [ -f maint/version.m4 ] ; then
     cp -pPR maint/version.m4 src/pm/hydra/version.m4
     cp -pPR maint/version.m4 src/mpi/romio/version.m4
     cp -pPR maint/version.m4 test/mpi/version.m4
+    cp -pPP maint/version.m4 src/pmi/pmix/version.m4 
 fi
 
 # Now sanity check that some of the above sync was successful
@@ -163,7 +164,7 @@ export do_build_configure
 MAKE=${MAKE-make}
 
 # external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/mpi/romio src/openpa"
+externals="src/pm/hydra src/mpi/romio src/openpa src/pmi/pmix"
 if [ -e src/mpid/ch4/netmod/ofi/libfabric ]; then
     externals="${externals} src/mpid/ch4/netmod/ofi/libfabric"
 fi
