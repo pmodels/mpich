@@ -9,6 +9,10 @@
 #define SHM_IMPL_H_INCLUDED
 
 #include <shm.h>
+
+#include "shm_posix.h"
+#include "shm_xpmem.h"
+
 #include "shm_am.h"
 #include "shm_coll.h"
 #include "shm_dpm.h"

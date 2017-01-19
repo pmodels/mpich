@@ -12,10 +12,12 @@
 
 if BUILD_SHM_POSIX
 
-noinst_HEADERS += src/mpid/ch4/shm/posix/posix_am.h        \
+AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/ch4/shm/posix
+
+noinst_HEADERS += src/mpid/ch4/shm/posix/shm_posix.h       \
+                  src/mpid/ch4/shm/posix/posix_am.h        \
                   src/mpid/ch4/shm/posix/posix_coll.h      \
                   src/mpid/ch4/shm/posix/posix_datatypes.h \
-                  src/mpid/ch4/shm/posix/shm_direct.h      \
                   src/mpid/ch4/shm/posix/posix_init.h      \
                   src/mpid/ch4/shm/posix/posix_progress.h  \
                   src/mpid/ch4/shm/posix/posix_recv.h      \

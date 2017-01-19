@@ -9,7 +9,7 @@
 #define SHM_RMA_H_INCLUDED
 
 #include <shm.h>
-#include "../posix/shm_direct.h"
+#include <shm_impl.h>
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
 {
@@ -180,15 +180,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_get(void *origin_addr, int origin_cou
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_free(MPIR_Win ** win_ptr)
 {
-    int ret;
+    int ret = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_WIN_FREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_WIN_FREE);
 
     ret = MPIDI_POSIX_mpi_win_free(win_ptr);
+    if (ret)
+        MPIR_ERR_POP(ret);
+
+    ret = MPIDI_XPMEM_mpi_win_free(win_ptr);
+    if (ret)
+        MPIR_ERR_POP(ret);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_WIN_FREE);
+
+  fn_exit:
     return ret;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_fence(int assert, MPIR_Win * win)
@@ -396,15 +407,26 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_allocate(MPI_Aint size, int disp_
                                                         MPIR_Info * info, MPIR_Comm * comm,
                                                         void *baseptr, MPIR_Win ** win)
 {
-    int ret;
+    int ret = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_WIN_ALLOCATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_WIN_ALLOCATE);
 
     ret = MPIDI_POSIX_mpi_win_allocate(size, disp_unit, info, comm, baseptr, win);
+    if (ret)
+        MPIR_ERR_POP(ret);
+
+    ret = MPIDI_XPMEM_mpi_win_allocate(size, disp_unit, info, comm, baseptr, win);
+    if (ret)
+        MPIR_ERR_POP(ret);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_WIN_ALLOCATE);
+
+  fn_exit:
     return ret;
+
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_win_flush(int rank, MPIR_Win * win)
