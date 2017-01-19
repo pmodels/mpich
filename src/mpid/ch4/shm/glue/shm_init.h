@@ -9,7 +9,7 @@
 #define SHM_INIT_H_INCLUDED
 
 #include <shm.h>
-#include <shm_impl.h>
+#include "../posix/shm_direct.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_init_hook(int rank, int size)
 {

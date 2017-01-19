@@ -9,7 +9,7 @@
 #define SHM_P2P_H_INCLUDED
 
 #include <shm.h>
-#include <shm_impl.h>
+#include "../posix/shm_direct.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_send(const void *buf, int count, MPI_Datatype datatype,
                                                 int rank, int tag, MPIR_Comm * comm,
