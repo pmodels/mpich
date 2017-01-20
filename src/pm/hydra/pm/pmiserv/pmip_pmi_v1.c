@@ -22,22 +22,21 @@
  * the PMI keyvals upstream, the server will treat it as a single PMI
  * command.  We leave room for one extra argument, cmd=put, that needs
  * to be appended when flushing. */
-#define CACHE_PUT_KEYVAL_MAXLEN  (MAX_PMI_ARGS - 1)
+#define PUT_CACHE_KEYVAL_MAXLEN  (MAX_PMI_ARGS - 1)
 
 static struct {
-    char *keyval[CACHE_PUT_KEYVAL_MAXLEN + 1];
+    char *keyval[PUT_CACHE_KEYVAL_MAXLEN + 1];
     int keyval_len;
-} cache_put;
+} put_cache;
 
-struct cache_elem {
+struct get_cache_elem {
     char *key;
     char *val;
     MPL_UT_hash_handle hh;
 };
 
-static struct cache_elem *cache_get = NULL, *hash_get = NULL;
-
-static int num_elems = 0;
+static struct get_cache_elem *get_cache = NULL, *get_cache_hash = NULL;
+static int get_cache_num_elems = 0;
 
 static HYD_status send_cmd_upstream(const char *start, int fd, int num_args, char *args[])
 {
@@ -119,24 +118,24 @@ static HYD_status send_cmd_downstream(int fd, const char *cmd)
     goto fn_exit;
 }
 
-static HYD_status cache_put_flush(int fd)
+static HYD_status put_cache_flush(int fd)
 {
     int i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    if (cache_put.keyval_len == 0)
+    if (put_cache.keyval_len == 0)
         goto fn_exit;
 
-    debug("flushing %d put command(s) out\n", cache_put.keyval_len);
+    debug("flushing %d put command(s) out\n", put_cache.keyval_len);
 
-    status = send_cmd_upstream("cmd=put ", fd, cache_put.keyval_len, cache_put.keyval);
+    status = send_cmd_upstream("cmd=put ", fd, put_cache.keyval_len, put_cache.keyval);
     HYDU_ERR_POP(status, "error sending command upstream\n");
 
-    for (i = 0; i < cache_put.keyval_len; i++)
-        MPL_free(cache_put.keyval[i]);
-    cache_put.keyval_len = 0;
+    for (i = 0; i < put_cache.keyval_len; i++)
+        MPL_free(put_cache.keyval[i]);
+    put_cache.keyval_len = 0;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -175,9 +174,9 @@ static HYD_status fn_init(int fd, char *args[])
     /* initialize some structures; these are initialized exactly once,
      * even if the init command is sent once from each process. */
     if (global_init) {
-        for (i = 0; i < CACHE_PUT_KEYVAL_MAXLEN + 1; i++)
-            cache_put.keyval[i] = NULL;
-        cache_put.keyval_len = 0;
+        for (i = 0; i < PUT_CACHE_KEYVAL_MAXLEN + 1; i++)
+            put_cache.keyval[i] = NULL;
+        put_cache.keyval_len = 0;
         global_init = 0;
     }
 
@@ -385,7 +384,7 @@ static HYD_status fn_get(int fd, char *args[])
     char *cmd, *key, *val;
     struct HYD_pmcd_token *tokens;
     int token_count, i;
-    struct cache_elem *found = NULL;
+    struct get_cache_elem *found = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -410,7 +409,7 @@ static HYD_status fn_get(int fd, char *args[])
         MPL_free(cmd);
     }
     else {
-        MPL_HASH_FIND_STR(hash_get, key, found);
+        MPL_HASH_FIND_STR(get_cache_hash, key, found);
         if (found) {
             HYD_STRING_STASH_INIT(stash);
             HYD_STRING_STASH(stash, MPL_strdup("cmd=get_result rc="), status);
@@ -469,11 +468,11 @@ static HYD_status fn_put(int fd, char *args[])
 
     HYD_STRING_SPIT(stash, cmd, status);
 
-    cache_put.keyval[cache_put.keyval_len++] = cmd;
+    put_cache.keyval[put_cache.keyval_len++] = cmd;
     debug("cached command: %s\n", cmd);
 
-    if (cache_put.keyval_len >= CACHE_PUT_KEYVAL_MAXLEN)
-        cache_put_flush(fd);
+    if (put_cache.keyval_len >= PUT_CACHE_KEYVAL_MAXLEN)
+        put_cache_flush(fd);
 
     status = send_cmd_downstream(fd, "cmd=put_result rc=0 msg=success\n");
     HYDU_ERR_POP(status, "error sending PMI response\n");
@@ -500,20 +499,20 @@ static HYD_status fn_keyval_cache(int fd, char *args[])
 
     /* allocate a larger space for the cached keyvals, copy over the
      * older keyvals and add the new ones in */
-    MPL_HASH_CLEAR(hh, hash_get);
-    HYDU_REALLOC_OR_JUMP(cache_get, struct cache_elem *,
-                         (sizeof(struct cache_elem) * (num_elems + token_count)), status);
-    for (i = 0; i < num_elems; i++) {
-        struct cache_elem *elem = cache_get + i;
-        MPL_HASH_ADD_STR(hash_get, key, elem);
+    MPL_HASH_CLEAR(hh, get_cache_hash);
+    HYDU_REALLOC_OR_JUMP(get_cache, struct get_cache_elem *,
+                         (sizeof(struct get_cache_elem) * (get_cache_num_elems + token_count)), status);
+    for (i = 0; i < get_cache_num_elems; i++) {
+        struct get_cache_elem *elem = get_cache + i;
+        MPL_HASH_ADD_STR(get_cache_hash, key, elem);
     }
-    for (; i < num_elems + token_count; i++) {
-        struct cache_elem *elem = cache_get + i;
-        elem->key = MPL_strdup(tokens[i - num_elems].key);
-        elem->val = MPL_strdup(tokens[i - num_elems].val);
-        MPL_HASH_ADD_STR(hash_get, key, elem);
+    for (; i < get_cache_num_elems + token_count; i++) {
+        struct get_cache_elem *elem = get_cache + i;
+        elem->key = MPL_strdup(tokens[i - get_cache_num_elems].key);
+        elem->val = MPL_strdup(tokens[i - get_cache_num_elems].val);
+        MPL_HASH_ADD_STR(get_cache_hash, key, elem);
     }
-    num_elems += token_count;
+    get_cache_num_elems += token_count;
 
   fn_exit:
     HYD_pmcd_pmi_free_tokens(tokens, token_count);
@@ -535,7 +534,7 @@ static HYD_status fn_barrier_in(int fd, char *args[])
     if (barrier_count == HYD_pmcd_pmip.local.proxy_process_count) {
         barrier_count = 0;
 
-        cache_put_flush(fd);
+        put_cache_flush(fd);
 
         status = send_cmd_upstream("cmd=barrier_in", fd, 0, args);
         HYDU_ERR_POP(status, "error sending command upstream\n");
@@ -597,11 +596,11 @@ static HYD_status fn_finalize(int fd, char *args[])
 
     if (finalize_count == HYD_pmcd_pmip.local.proxy_process_count) {
         /* All processes have finalized */
-        for (i = 0; i < num_elems; i++) {
-            MPL_free((cache_get + i)->key);
-            MPL_free((cache_get + i)->val);
+        for (i = 0; i < get_cache_num_elems; i++) {
+            MPL_free((get_cache + i)->key);
+            MPL_free((get_cache + i)->val);
         }
-        MPL_free(cache_get);
+        MPL_free(get_cache);
     }
 
   fn_exit:
