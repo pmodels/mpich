@@ -1326,7 +1326,6 @@ static inline int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
                                             request);
     }
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RACCUMULATE);
     return mpi_errno;
 }
@@ -1364,7 +1363,6 @@ static inline int MPIDI_NM_mpi_rget_accumulate(const void *origin_addr,
                                                 target_datatype, op, win, request);
     }
 
-  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_RGET_ACCUMULATE);
     return mpi_errno;
 }
