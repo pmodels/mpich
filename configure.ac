@@ -4715,6 +4715,7 @@ if test "x$with_pip_prefix" != "x" && test -d ${with_pip_prefix} ; then
      PAC_APPEND_FLAG([-I${with_pip_prefix}/include],[CPPFLAGS])
      PAC_APPEND_FLAG([-L${with_pip_prefix}/lib -Wl,-rpath=${with_pip_prefix}/lib],[LDFLAGS])
      PAC_APPEND_FLAG([-lpip -lpthread],[LIBS])
+     PAC_APPEND_FLAG([-fpie -pie -rdynamic],[WRAPPER_LDFLAGS])
       else
      AC_MSG_ERROR([PIP lib dir cannot be found.])
       fi
