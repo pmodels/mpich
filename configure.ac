@@ -5320,10 +5320,6 @@ AC_OUTPUT_COMMANDS([chmod a+x test/commands/cmdtests])
 
 AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h file has been included])
 
-if test "$USE_PMI2_API" = "yes" ; then
-   AC_DEFINE(USE_PMI2_API, 1, [Define if PMI2 API must be used])
-fi
-
 ########################################################################
 
 # cause libtool script to be built now so that we can use it to test one last

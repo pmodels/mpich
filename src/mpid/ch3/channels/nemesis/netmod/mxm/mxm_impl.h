@@ -243,11 +243,7 @@ static inline void _mxm_barrier(void)
 {
     int pmi_errno ATTRIBUTE((unused));
 
-#ifdef USE_PMI2_API
-    pmi_errno = PMI2_KVS_Fence();
-#else
     pmi_errno = PMI_Barrier();
-#endif
 }
 
 static inline void _mxm_to_mpi_status(mxm_error_t mxm_error, MPI_Status * mpi_status)

@@ -4,11 +4,7 @@
 #ifndef	LLC_MODULE_IMPL_H
 #define LLC_MODULE_IMPL_H
 
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
 #include "pmi.h"
-#endif
 #include "mpid_nem_impl.h"
 #include "llc.h"
 

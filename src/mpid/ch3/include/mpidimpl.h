@@ -45,8 +45,6 @@ extern MPIR_Group *MPIDI_Failed_procs_group;
 extern int MPIDI_last_known_failed;
 extern char *MPIDI_failed_procs_string;
 
-extern int MPIDI_Use_pmi2_api;
-
 #if defined(MPL_USE_DBG_LOGGING)
 extern MPL_dbg_class MPIDI_CH3_DBG_CONNECT;
 extern MPL_dbg_class MPIDI_CH3_DBG_DISCONNECT;

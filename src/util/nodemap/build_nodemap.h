@@ -46,8 +46,6 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
-#if !defined(USE_PMI2_API)
-/* this function is not used in pmi2 */
 #undef FUNCNAME
 #define FUNCNAME MPIR_NODEMAP_publish_node_id
 #undef FCNAME
@@ -100,7 +98,6 @@ fn_exit:
 fn_fail:
     goto fn_exit;
 }
-#endif
 
 
 #define MPIR_NODEMAP_PARSE_ERROR() MPIR_ERR_INTERNALANDJUMP(mpi_errno, "parse error")
@@ -386,27 +383,6 @@ static inline int MPIR_NODEMAP_build_nodemap(int sz,
         goto fn_exit;
     }
 
-#ifdef USE_PMI2_API
-    {
-        char process_mapping[PMI2_MAX_VALLEN];
-        int outlen;
-        int found = FALSE;
-        int i;
-        MPIR_NODEMAP_map_block_t *mb;
-        int nblocks;
-        int rank;
-        int block, block_node, node_proc;
-        int did_map = 0;
-
-        mpi_errno = PMI2_Info_GetJobAttr("PMI_process_mapping", process_mapping, sizeof(process_mapping), &found);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPIR_ERR_CHKINTERNAL(!found, mpi_errno, "PMI_process_mapping attribute not found");
-        /* this code currently assumes pg is comm_world */
-        mpi_errno = MPIR_NODEMAP_populate_ids_from_mapping(process_mapping, sz, out_nodemap, out_sz, &did_map);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        MPIR_ERR_CHKINTERNAL(!did_map, mpi_errno, "unable to populate node ids from PMI_process_mapping");
-    }
-#else /* USE_PMI2_API */
     if (myrank == -1) {
         /* fixme this routine can't handle the dynamic process case at this
            time.  this will require more support from the process manager. */
@@ -509,7 +485,6 @@ odd_even_cliques:
         g_max_node_id = (g_max_node_id + 1) * 2;
     }
     *out_sz = g_max_node_id;
-#endif
 
 fn_exit:
     MPIR_CHKLMEM_FREEALL();

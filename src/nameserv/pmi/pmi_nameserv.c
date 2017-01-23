@@ -10,11 +10,7 @@
 
 #include "mpiimpl.h"
 #include "namepub.h"
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
 #include "pmi.h"
-#endif
 
 /* style: allow:fprintf:1 sig:0 */   /* For writing the name/service pair */
 
@@ -48,14 +44,7 @@ int MPID_NS_Publish( MPID_NS_Handle handle, const MPIR_Info *info_ptr,
     MPL_UNREFERENCED_ARG(info_ptr);
     MPL_UNREFERENCED_ARG(handle);
 
-#ifdef USE_PMI2_API
-    /* release the global CS for PMI calls */
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    rc = PMI2_Nameserv_publish(service_name, info_ptr, port);
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-#else
     rc = PMI_Publish_name( service_name, port );
-#endif
     MPIR_ERR_CHKANDJUMP1(rc, mpi_errno, MPI_ERR_NAME, "**namepubnotpub", "**namepubnotpub %s", service_name);
 
 fn_fail:
@@ -74,14 +63,8 @@ int MPID_NS_Lookup( MPID_NS_Handle handle, const MPIR_Info *info_ptr,
     MPL_UNREFERENCED_ARG(info_ptr);
     MPL_UNREFERENCED_ARG(handle);
 
-#ifdef USE_PMI2_API
-    /* release the global CS for PMI calls */
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    rc = PMI2_Nameserv_lookup(service_name, info_ptr, port, MPI_MAX_PORT_NAME);
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-#else
     rc = PMI_Lookup_name( service_name, port );
-#endif
+
     MPIR_ERR_CHKANDJUMP1(rc, mpi_errno, MPI_ERR_NAME, "**namepubnotfound", "**namepubnotfound %s", service_name);
 
 fn_fail:
@@ -100,14 +83,7 @@ int MPID_NS_Unpublish( MPID_NS_Handle handle, const MPIR_Info *info_ptr,
     MPL_UNREFERENCED_ARG(info_ptr);
     MPL_UNREFERENCED_ARG(handle);
 
-#ifdef USE_PMI2_API
-    /* release the global CS for PMI calls */
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    rc = PMI2_Nameserv_unpublish(service_name, info_ptr);
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-#else
     rc = PMI_Unpublish_name( service_name );
-#endif
     MPIR_ERR_CHKANDJUMP1(rc, mpi_errno, MPI_ERR_SERVICE, "**namepubnotunpub", "**namepubnotunpub %s", service_name);
 
 fn_fail:

@@ -6,11 +6,7 @@
 
 #include "mpidimpl.h"
 
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
 #include "pmi.h"
-#endif
 
 /* FIXME: We should move this into a header file so that we don't
    need the ifdef.  Also, don't use exit (add to coding check) since
@@ -98,11 +94,7 @@ int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code,
        process groups of the communicator or only the current process?
        Should PMI_Abort have a parameter for which of these two cases to
        perform? */
-#ifdef USE_PMI2_API
-    PMI2_Abort(TRUE, error_msg);
-#else
     PMI_Abort(exit_code, error_msg);
-#endif
 
     /* pmi_abort should not return but if it does, exit here.  If it does,
        add the function exit code before calling the final exit.  */

@@ -6,9 +6,7 @@
 
 #include "mpid_nem_impl.h"
 #include "mpid_nem_nets.h"
-#ifndef USE_PMI2_API
 #include "pmi.h"
-#endif
 
 #include "mpidi_nem_statistics.h"
 
