@@ -27,6 +27,7 @@ static inline int MPIDI_do_put(const void *origin_addr,
                                MPIR_Request ** sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS, n_iov, c;
+    int is_local = 0;
     MPIR_Request *sreq = NULL;
     MPIDI_CH4U_put_msg_t am_hdr;
     uint64_t offset;
@@ -56,10 +57,14 @@ static inline int MPIDI_do_put(const void *origin_addr,
         goto fn_exit;
     }
 
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+    is_local = MPIDI_CH4_rank_is_local(target_rank, win->comm_ptr);
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
+
     /* Only create request when issuing is not completed.
      * We initialize two ref_count for progress engine and request-based OP,
      * then put needs to free the second ref_count.*/
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
+    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2, is_local);
     MPIR_Assert(sreq);
     MPIDI_CH4U_REQUEST(sreq, req->preq.win_ptr) = win;
 
@@ -81,10 +86,10 @@ static inline int MPIDI_do_put(const void *origin_addr,
         am_hdr.n_iov = 0;
         MPIDI_CH4U_REQUEST(sreq, req->preq.dt_iov) = NULL;
 
-        /* FIXIME: we need to choose between NM and SHM */
-        mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_PUT_REQ,
-                                      &am_hdr, sizeof(am_hdr), origin_addr,
-                                      origin_count, origin_datatype, sreq, NULL);
+        mpi_errno =
+            MPIDI_Generic_am(isend, is_local, target_rank, win->comm_ptr, MPIDI_CH4U_PUT_REQ,
+                             &am_hdr, sizeof(am_hdr), origin_addr, origin_count, origin_datatype,
+                             sreq, NULL);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         goto fn_exit;
@@ -114,23 +119,21 @@ static inline int MPIDI_do_put(const void *origin_addr,
 
     MPIDI_CH4U_REQUEST(sreq, req->preq.dt_iov) = dt_iov;
 
-    /* FIXIME: MPIDI_NM_am_hdr_max_sz should be removed */
-    if ((am_iov[0].iov_len + am_iov[1].iov_len) <= MPIDI_NM_am_hdr_max_sz()) {
-        /* FIXIME: we need to choose between NM and SHM */
-        mpi_errno = MPIDI_NM_am_isendv(target_rank, win->comm_ptr, MPIDI_CH4U_PUT_REQ,
-                                       &am_iov[0], 2, origin_addr, origin_count, origin_datatype,
-                                       sreq, NULL);
+    if ((am_iov[0].iov_len + am_iov[1].iov_len) <= MPIDI_Generic_am(hdr_max_sz, is_local)) {
+
+        mpi_errno =
+            MPIDI_Generic_am(isendv, is_local, target_rank, win->comm_ptr, MPIDI_CH4U_PUT_REQ,
+                             &am_iov[0], 2, origin_addr, origin_count, origin_datatype, sreq, NULL);
     }
     else {
         MPIDI_CH4U_REQUEST(sreq, req->preq.origin_addr) = (void *) origin_addr;
         MPIDI_CH4U_REQUEST(sreq, req->preq.origin_count) = origin_count;
         MPIDI_CH4U_REQUEST(sreq, req->preq.origin_datatype) = origin_datatype;
         dtype_add_ref_if_not_builtin(origin_datatype);
-
-        /* FIXIME: we need to choose between NM and SHM */
-        mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_PUT_IOV_REQ,
-                                      &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
-                                      am_iov[1].iov_len, MPI_BYTE, sreq, NULL);
+        mpi_errno =
+            MPIDI_Generic_am(isend, is_local, target_rank, win->comm_ptr, MPIDI_CH4U_PUT_IOV_REQ,
+                             &am_hdr, sizeof(am_hdr), am_iov[1].iov_base, am_iov[1].iov_len,
+                             MPI_BYTE, sreq, NULL);
     }
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -158,6 +161,7 @@ static inline int MPIDI_do_get(void *origin_addr,
                                MPIR_Request ** sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS, n_iov, c;
+    int is_local = 0;
     size_t offset;
     MPIR_Request *sreq = NULL;
     MPIDI_CH4U_get_req_msg_t am_hdr;
@@ -186,10 +190,13 @@ static inline int MPIDI_do_get(void *origin_addr,
         goto fn_exit;
     }
 
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+    is_local = MPIDI_CH4_rank_is_local(target_rank, win->comm_ptr);
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
     /* Only create request when issuing is not completed.
      * We initialize two ref_count for progress engine and request-based OP,
      * then get needs to free the second ref_count.*/
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
+    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2, is_local);
     MPIR_Assert(sreq);
 
     MPIDI_CH4U_REQUEST(sreq, req->greq.win_ptr) = win;
@@ -214,11 +221,9 @@ static inline int MPIDI_do_get(void *origin_addr,
     if (HANDLE_GET_KIND(target_datatype) == HANDLE_KIND_BUILTIN) {
         am_hdr.n_iov = 0;
         MPIDI_CH4U_REQUEST(sreq, req->greq.dt_iov) = NULL;
-
-        /* FIXIME: we need to choose between NM and SHM */
-        mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr,
-                                      MPIDI_CH4U_GET_REQ, &am_hdr, sizeof(am_hdr),
-                                      NULL, 0, MPI_DATATYPE_NULL, sreq, NULL);
+        mpi_errno = MPIDI_Generic_am(isend, is_local, target_rank, win->comm_ptr,
+                                     MPIDI_CH4U_GET_REQ, &am_hdr, sizeof(am_hdr),
+                                     NULL, 0, MPI_DATATYPE_NULL, sreq, NULL);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         goto fn_exit;
@@ -242,10 +247,10 @@ static inline int MPIDI_do_get(void *origin_addr,
     MPL_free(segment_ptr);
 
     MPIDI_CH4U_REQUEST(sreq, req->greq.dt_iov) = dt_iov;
-    /* FIXIME: we need to choose between NM and SHM */
-    mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_GET_REQ,
-                                  &am_hdr, sizeof(am_hdr), dt_iov,
-                                  sizeof(struct iovec) * am_hdr.n_iov, MPI_BYTE, sreq, NULL);
+    mpi_errno =
+        MPIDI_Generic_am(isend, is_local, target_rank, win->comm_ptr, MPIDI_CH4U_GET_REQ, &am_hdr,
+                         sizeof(am_hdr), dt_iov, sizeof(struct iovec) * am_hdr.n_iov, MPI_BYTE,
+                         sreq, NULL);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -274,6 +279,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
                                                  MPIR_Request ** sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS, c, n_iov;
+    int is_local = 0;
     MPIR_Request *sreq = NULL;
     size_t basic_type_size;
     MPIDI_CH4U_acc_req_msg_t am_hdr;
@@ -295,10 +301,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
         goto fn_exit;
     }
 
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+    is_local = MPIDI_CH4_rank_is_local(target_rank, win->comm_ptr);
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
     /* Only create request when issuing is not completed.
      * We initialize two ref_count for progress engine and request-based OP,
      * then acc needs to free the second ref_count.*/
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
+    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2, is_local);
     MPIR_Assert(sreq);
     MPIDI_CH4U_REQUEST(sreq, req->areq.win_ptr) = win;
 
@@ -333,12 +342,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     if (HANDLE_GET_KIND(target_datatype) == HANDLE_KIND_BUILTIN) {
         am_hdr.n_iov = 0;
         MPIDI_CH4U_REQUEST(sreq, req->areq.dt_iov) = NULL;
-
-        /* FIXIME: we need to choose between NM and SHM */
-        mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_ACC_REQ,
-                                      &am_hdr, sizeof(am_hdr), origin_addr,
-                                      (op == MPI_NO_OP) ? 0 : origin_count,
-                                      origin_datatype, sreq, NULL);
+        mpi_errno =
+            MPIDI_Generic_am(isend, is_local, target_rank, win->comm_ptr, MPIDI_CH4U_ACC_REQ,
+                             &am_hdr, sizeof(am_hdr), origin_addr,
+                             (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype, sreq, NULL);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         goto fn_exit;
@@ -371,25 +378,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_accumulate(const void *origin_addr,
     am_iov[1].iov_base = dt_iov;
     am_iov[1].iov_len = sizeof(struct iovec) * am_hdr.n_iov;
     MPIDI_CH4U_REQUEST(sreq, req->areq.dt_iov) = dt_iov;
-
-    /* FIXIME: MPIDI_NM_am_hdr_max_sz should be removed */
-    if ((am_iov[0].iov_len + am_iov[1].iov_len) <= MPIDI_NM_am_hdr_max_sz()) {
-        /* FIXIME: we need to choose between NM and SHM */
-        mpi_errno = MPIDI_NM_am_isendv(target_rank, win->comm_ptr, MPIDI_CH4U_ACC_REQ,
-                                       &am_iov[0], 2, origin_addr,
-                                       (op == MPI_NO_OP) ? 0 : origin_count,
-                                       origin_datatype, sreq, NULL);
+    if ((am_iov[0].iov_len + am_iov[1].iov_len) <= MPIDI_Generic_am(hdr_max_sz, is_local)) {
+        mpi_errno =
+            MPIDI_Generic_am(isendv, is_local, target_rank, win->comm_ptr, MPIDI_CH4U_ACC_REQ,
+                             &am_iov[0], 2, origin_addr, (op == MPI_NO_OP) ? 0 : origin_count,
+                             origin_datatype, sreq, NULL);
     }
     else {
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_addr) = (void *) origin_addr;
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_count) = origin_count;
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_datatype) = origin_datatype;
         dtype_add_ref_if_not_builtin(origin_datatype);
-
-        /* FIXIME: we need to choose between NM and SHM */
-        mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_ACC_IOV_REQ,
-                                      &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
-                                      am_iov[1].iov_len, MPI_BYTE, sreq, NULL);
+        mpi_errno =
+            MPIDI_Generic_am(isend, is_local, target_rank, win->comm_ptr, MPIDI_CH4U_ACC_IOV_REQ,
+                             &am_hdr, sizeof(am_hdr), am_iov[1].iov_base, am_iov[1].iov_len,
+                             MPI_BYTE, sreq, NULL);
     }
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -421,6 +424,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
                                                      MPIR_Request ** sreq_ptr)
 {
     int mpi_errno = MPI_SUCCESS, c, n_iov;
+    int is_local = 0;
     MPIR_Request *sreq = NULL;
     size_t basic_type_size;
     MPIDI_CH4U_get_acc_req_msg_t am_hdr;
@@ -444,10 +448,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
         goto fn_exit;
     }
 
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+    is_local = MPIDI_CH4_rank_is_local(target_rank, win->comm_ptr);
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
     /* Only create request when issuing is not completed.
      * We initialize two ref_count for progress engine and request-based OP,
      * then get_acc needs to free the second ref_count.*/
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2);
+    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 2, is_local);
     MPIR_Assert(sreq);
 
     MPIDI_CH4U_REQUEST(sreq, req->areq.win_ptr) = win;
@@ -490,12 +497,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
     if (HANDLE_GET_KIND(target_datatype) == HANDLE_KIND_BUILTIN) {
         am_hdr.n_iov = 0;
         MPIDI_CH4U_REQUEST(sreq, req->areq.dt_iov) = NULL;
-
-        /* FIXIME: we need to choose between NM and SHM */
-        mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_GET_ACC_REQ,
-                                      &am_hdr, sizeof(am_hdr), origin_addr,
-                                      (op == MPI_NO_OP) ? 0 : origin_count,
-                                      origin_datatype, sreq, NULL);
+        mpi_errno =
+            MPIDI_Generic_am(isend, is_local, target_rank, win->comm_ptr, MPIDI_CH4U_GET_ACC_REQ,
+                             &am_hdr, sizeof(am_hdr), origin_addr,
+                             (op == MPI_NO_OP) ? 0 : origin_count, origin_datatype, sreq, NULL);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         goto fn_exit;
@@ -528,25 +533,21 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_do_get_accumulate(const void *origin_addr,
     am_iov[1].iov_base = dt_iov;
     am_iov[1].iov_len = sizeof(struct iovec) * am_hdr.n_iov;
     MPIDI_CH4U_REQUEST(sreq, req->areq.dt_iov) = dt_iov;
-
-    /* FIXIME: MPIDI_NM_am_hdr_max_sz should be removed */
-    if ((am_iov[0].iov_len + am_iov[1].iov_len) <= MPIDI_NM_am_hdr_max_sz()) {
-        /* FIXIME: we need to choose between NM and SHM */
-        mpi_errno = MPIDI_NM_am_isendv(target_rank, win->comm_ptr, MPIDI_CH4U_GET_ACC_REQ,
-                                       &am_iov[0], 2, origin_addr,
-                                       (op == MPI_NO_OP) ? 0 : origin_count,
-                                       origin_datatype, sreq, NULL);
+    if ((am_iov[0].iov_len + am_iov[1].iov_len) <= MPIDI_Generic_am(hdr_max_sz, is_local)) {
+        mpi_errno =
+            MPIDI_Generic_am(isendv, is_local, target_rank, win->comm_ptr, MPIDI_CH4U_GET_ACC_REQ,
+                             &am_iov[0], 2, origin_addr, (op == MPI_NO_OP) ? 0 : origin_count,
+                             origin_datatype, sreq, NULL);
     }
     else {
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_addr) = (void *) origin_addr;
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_count) = origin_count;
         MPIDI_CH4U_REQUEST(sreq, req->areq.origin_datatype) = origin_datatype;
         dtype_add_ref_if_not_builtin(origin_datatype);
-
-        /* FIXIME: we need to choose between NM and SHM */
-        mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_GET_ACC_IOV_REQ,
-                                      &am_hdr, sizeof(am_hdr), am_iov[1].iov_base,
-                                      am_iov[1].iov_len, MPI_BYTE, sreq, NULL);
+        mpi_errno =
+            MPIDI_Generic_am(isend, is_local, target_rank, win->comm_ptr,
+                             MPIDI_CH4U_GET_ACC_IOV_REQ, &am_hdr, sizeof(am_hdr),
+                             am_iov[1].iov_base, am_iov[1].iov_len, MPI_BYTE, sreq, NULL);
     }
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -855,8 +856,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_get_accumulate(const void *origin_ad
 
     mpi_errno = MPIDI_do_get_accumulate(origin_addr, origin_count, origin_datatype,
                                         result_addr, result_count, result_datatype,
-                                        target_rank, target_disp, target_count, target_datatype, op,
-                                        win, &sreq);
+                                        target_rank, target_disp, target_count, target_datatype,
+                                        op, win, &sreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
@@ -883,6 +884,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_compare_and_swap(const void *origin_
                                                              MPI_Aint target_disp, MPIR_Win * win)
 {
     int mpi_errno = MPI_SUCCESS, c;
+    int is_local = 0;
     MPIR_Request *sreq = NULL;
     MPIDI_CH4U_cswap_req_msg_t am_hdr;
     size_t data_sz;
@@ -903,7 +905,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_compare_and_swap(const void *origin_
     MPIR_Memcpy(p_data, (char *) origin_addr, data_sz);
     MPIR_Memcpy((char *) p_data + data_sz, (char *) compare_addr, data_sz);
 
-    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1);
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+    is_local = MPIDI_CH4_rank_is_local(target_rank, win->comm_ptr);
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
+    sreq = MPIDI_CH4I_am_request_create(MPIR_REQUEST_KIND__RMA, 1, is_local);
     MPIR_Assert(sreq);
 
     MPIDI_CH4U_REQUEST(sreq, req->creq.win_ptr) = win;
@@ -923,11 +928,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_mpi_compare_and_swap(const void *origin_
     am_hdr.src_rank = win->comm_ptr->rank;
 
     MPIDI_win_cmpl_cnts_incr(win, target_rank, &sreq->completion_notification);
-
-    /* FIXIME: we need to choose between NM and SHM */
-    mpi_errno = MPIDI_NM_am_isend(target_rank, win->comm_ptr, MPIDI_CH4U_CSWAP_REQ,
-                                  &am_hdr, sizeof(am_hdr), (char *) p_data, 2, datatype, sreq,
-                                  NULL);
+    mpi_errno =
+        MPIDI_Generic_am(isend, is_local, target_rank, win->comm_ptr, MPIDI_CH4U_CSWAP_REQ, &am_hdr,
+                         sizeof(am_hdr), (char *) p_data, 2, datatype, sreq, NULL);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
   fn_exit:

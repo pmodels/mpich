@@ -18,7 +18,8 @@
 #define FUNCNAME MPIDI_CH4I_am_request_create
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kind, int ref_count)
+static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kind, int ref_count,
+                                                         int is_local)
 {
     MPIR_Request *req;
     int i;
@@ -40,7 +41,7 @@ static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kin
     for (i = 0; i < ref_count - 1; i++)
         MPIR_Request_add_ref(req);
 
-    MPIDI_NM_am_request_init(req);
+    MPIDI_Generic_am(request_init, is_local, req);
 
     CH4_COMPILE_TIME_ASSERT(sizeof(MPIDI_CH4U_req_ext_t) <= MPIDI_CH4I_BUF_POOL_SZ);
     MPIDI_CH4U_REQUEST(req, req) =

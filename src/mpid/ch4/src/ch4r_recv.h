@@ -21,16 +21,22 @@
 static inline int MPIDI_reply_ssend(MPIR_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS, c;
+    int is_local = 0;
     MPIDI_CH4U_ssend_ack_msg_t ack_msg;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_REPLY_SSEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_REPLY_SSEND);
     MPIR_cc_incr(rreq->cc_ptr, &c);
     ack_msg.sreq_ptr = MPIDI_CH4U_REQUEST(rreq, req->rreq.peer_req_ptr);
 
-    mpi_errno = MPIDI_NM_am_isend_reply(MPIDI_CH4U_get_context(MPIDI_CH4U_REQUEST(rreq, tag)),
-                                        MPIDI_CH4U_REQUEST(rreq, rank),
-                                        MPIDI_CH4U_SSEND_ACK, &ack_msg, sizeof(ack_msg),
-                                        NULL, 0, MPI_DATATYPE_NULL, rreq);
+#ifdef MPIDI_CH4_EXCLUSIVE_SHM
+    is_local = MPIDI_CH4I_REQUEST(rreq, is_local);
+#endif /* MPIDI_CH4_EXCLUSIVE_SHM */
+
+    mpi_errno =
+        MPIDI_Generic_am(isend_reply, is_local,
+                         MPIDI_CH4U_get_context(MPIDI_CH4U_REQUEST(rreq, tag)),
+                         MPIDI_CH4U_REQUEST(rreq, rank), MPIDI_CH4U_SSEND_ACK, &ack_msg,
+                         sizeof(ack_msg), NULL, 0, MPI_DATATYPE_NULL, rreq);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
   fn_exit:
