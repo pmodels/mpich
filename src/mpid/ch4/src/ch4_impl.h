@@ -743,7 +743,10 @@ static inline void MPIDI_win_check_group_local_completed(MPIR_Win * win,
 
 static inline void MPIDI_find_tag_ep(MPIR_Comm* comm, int target_rank, int tag, int* ep_idx)
 {
-    *ep_idx = ((comm->context_id + target_rank + tag) % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
+    if( MPIDI_COMM(comm, ep_idx) != -1 )
+        *ep_idx = (MPIDI_COMM(comm, ep_idx) % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
+    else
+        *ep_idx = 0;
     MPIR_Assert(*ep_idx >= 0);
 }
 
