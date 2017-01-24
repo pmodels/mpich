@@ -1,2 +1,3 @@
 multirma 2 mpiversion=3.0
 multiget 2 mpiversion=3.0
+multifence 3
