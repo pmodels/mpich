@@ -59,6 +59,7 @@ int MPIR_Comm_set_info_impl(MPIR_Comm * comm_ptr, MPIR_Info * info_ptr)
 
         mpi_errno = MPIR_Info_set_impl(comm_ptr->info, curr_info->key, curr_info->value);
         if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        if (!strcmp(curr_info->key, "ep_idx")) MPIDI_COMM(comm_ptr, ep_idx) = atoi(curr_info->value);
     }
 
   fn_exit:

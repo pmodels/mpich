@@ -374,6 +374,7 @@ typedef struct MPIDI_Devcomm_t {
     struct {
         /* The first fields are used by the CH4U apis */
         MPIDI_CH4U_comm_t ch4u;
+        int ep_idx;
 
         /* Used by the netmod direct apis */
         union {
