@@ -1191,6 +1191,7 @@
 /threads/spawn/sendselfth
 /threads/spawn/th_taskmaster
 /threads/spawn/threaded_sr
+/threads/rma/multifence
 /threads/testlist
 /topo/cartcreates
 /topo/cartmap1

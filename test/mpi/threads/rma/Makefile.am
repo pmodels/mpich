@@ -9,4 +9,4 @@ include $(top_srcdir)/threads/Makefile_threads.mtest
 
 EXTRA_DIST = testlist
 
-noinst_PROGRAMS = multirma multiget
+noinst_PROGRAMS = multirma multiget multifence
