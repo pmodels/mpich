@@ -17,64 +17,64 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
  * ofi_capability_sets.h so we can refer to it if we want to preload a
  * capability set at runtime */
 {
-    {
-        MPIDI_OFI_ENABLE_DATA_PSM,
-        MPIDI_OFI_ENABLE_AV_TABLE_PSM,
-        MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_PSM,
-        MPIDI_OFI_ENABLE_STX_RMA_PSM,
-        MPIDI_OFI_ENABLE_MR_SCALABLE_PSM,
-        MPIDI_OFI_ENABLE_TAGGED_PSM,
-        MPIDI_OFI_ENABLE_AM_PSM,
-        MPIDI_OFI_ENABLE_RMA_PSM,
-        MPIDI_OFI_MAX_ENDPOINTS_PSM,
-        MPIDI_OFI_MAX_ENDPOINTS_BITS_PSM
+    { /* psm */
+        .enable_data               = MPIDI_OFI_ENABLE_DATA_PSM,
+        .enable_av_table           = MPIDI_OFI_ENABLE_AV_TABLE_PSM,
+        .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_PSM,
+        .enable_stx_rma            = MPIDI_OFI_ENABLE_STX_RMA_PSM,
+        .enable_mr_scalable        = MPIDI_OFI_ENABLE_MR_SCALABLE_PSM,
+        .enable_tagged             = MPIDI_OFI_ENABLE_TAGGED_PSM,
+        .enable_am                 = MPIDI_OFI_ENABLE_AM_PSM,
+        .enable_rma                = MPIDI_OFI_ENABLE_RMA_PSM,
+        .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_PSM,
+        .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_PSM
     },
-    {
-        MPIDI_OFI_ENABLE_DATA_PSM2,
-        MPIDI_OFI_ENABLE_AV_TABLE_PSM2,
-        MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_PSM2,
-        MPIDI_OFI_ENABLE_STX_RMA_PSM2,
-        MPIDI_OFI_ENABLE_MR_SCALABLE_PSM2,
-        MPIDI_OFI_ENABLE_TAGGED_PSM2,
-        MPIDI_OFI_ENABLE_AM_PSM2,
-        MPIDI_OFI_ENABLE_RMA_PSM2,
-        MPIDI_OFI_MAX_ENDPOINTS_PSM2,
-        MPIDI_OFI_MAX_ENDPOINTS_BITS_PSM2
+    { /* psm2 */
+        .enable_data               = MPIDI_OFI_ENABLE_DATA_PSM2,
+        .enable_av_table           = MPIDI_OFI_ENABLE_AV_TABLE_PSM2,
+        .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_PSM2,
+        .enable_stx_rma            = MPIDI_OFI_ENABLE_STX_RMA_PSM2,
+        .enable_mr_scalable        = MPIDI_OFI_ENABLE_MR_SCALABLE_PSM2,
+        .enable_tagged             = MPIDI_OFI_ENABLE_TAGGED_PSM2,
+        .enable_am                 = MPIDI_OFI_ENABLE_AM_PSM2,
+        .enable_rma                = MPIDI_OFI_ENABLE_RMA_PSM2,
+        .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_PSM2,
+        .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_PSM2
     },
-    {
-        MPIDI_OFI_ENABLE_DATA_GNI,
-        MPIDI_OFI_ENABLE_AV_TABLE_GNI,
-        MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_GNI,
-        MPIDI_OFI_ENABLE_STX_RMA_GNI,
-        MPIDI_OFI_ENABLE_MR_SCALABLE_GNI,
-        MPIDI_OFI_ENABLE_TAGGED_GNI,
-        MPIDI_OFI_ENABLE_AM_GNI,
-        MPIDI_OFI_ENABLE_RMA_GNI,
-        MPIDI_OFI_MAX_ENDPOINTS_GNI,
-        MPIDI_OFI_MAX_ENDPOINTS_BITS_GNI
+    { /* gni */
+        .enable_data               = MPIDI_OFI_ENABLE_DATA_GNI,
+        .enable_av_table           = MPIDI_OFI_ENABLE_AV_TABLE_GNI,
+        .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_GNI,
+        .enable_stx_rma            = MPIDI_OFI_ENABLE_STX_RMA_GNI,
+        .enable_mr_scalable        = MPIDI_OFI_ENABLE_MR_SCALABLE_GNI,
+        .enable_tagged             = MPIDI_OFI_ENABLE_TAGGED_GNI,
+        .enable_am                 = MPIDI_OFI_ENABLE_AM_GNI,
+        .enable_rma                = MPIDI_OFI_ENABLE_RMA_GNI,
+        .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_GNI,
+        .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_GNI
     },
-    {
-        MPIDI_OFI_ENABLE_DATA_SOCKETS,
-        MPIDI_OFI_ENABLE_AV_TABLE_SOCKETS,
-        MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_SOCKETS,
-        MPIDI_OFI_ENABLE_STX_RMA_SOCKETS,
-        MPIDI_OFI_ENABLE_MR_SCALABLE_SOCKETS,
-        MPIDI_OFI_ENABLE_TAGGED_SOCKETS,
-        MPIDI_OFI_ENABLE_AM_SOCKETS,
-        MPIDI_OFI_ENABLE_RMA_SOCKETS,
-        MPIDI_OFI_MAX_ENDPOINTS_SOCKETS,
-        MPIDI_OFI_MAX_ENDPOINTS_BITS_SOCKETS
+    { /* sockets */
+        .enable_data               = MPIDI_OFI_ENABLE_DATA_SOCKETS,
+        .enable_av_table           = MPIDI_OFI_ENABLE_AV_TABLE_SOCKETS,
+        .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_SOCKETS,
+        .enable_stx_rma            = MPIDI_OFI_ENABLE_STX_RMA_SOCKETS,
+        .enable_mr_scalable        = MPIDI_OFI_ENABLE_MR_SCALABLE_SOCKETS,
+        .enable_tagged             = MPIDI_OFI_ENABLE_TAGGED_SOCKETS,
+        .enable_am                 = MPIDI_OFI_ENABLE_AM_SOCKETS,
+        .enable_rma                = MPIDI_OFI_ENABLE_RMA_SOCKETS,
+        .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_SOCKETS,
+        .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_SOCKETS
     },
-    {
-        MPIDI_OFI_ENABLE_DATA_BGQ,
-        MPIDI_OFI_ENABLE_AV_TABLE_BGQ,
-        MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_BGQ,
-        MPIDI_OFI_ENABLE_STX_RMA_BGQ,
-        MPIDI_OFI_ENABLE_MR_SCALABLE_BGQ,
-        MPIDI_OFI_ENABLE_TAGGED_BGQ,
-        MPIDI_OFI_ENABLE_AM_BGQ,
-        MPIDI_OFI_ENABLE_RMA_BGQ,
-        MPIDI_OFI_MAX_ENDPOINTS_BGQ,
-        MPIDI_OFI_MAX_ENDPOINTS_BITS_BGQ
+    { /* bgq */
+        .enable_data               = MPIDI_OFI_ENABLE_DATA_BGQ,
+        .enable_av_table           = MPIDI_OFI_ENABLE_AV_TABLE_BGQ,
+        .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_BGQ,
+        .enable_stx_rma            = MPIDI_OFI_ENABLE_STX_RMA_BGQ,
+        .enable_mr_scalable        = MPIDI_OFI_ENABLE_MR_SCALABLE_BGQ,
+        .enable_tagged             = MPIDI_OFI_ENABLE_TAGGED_BGQ,
+        .enable_am                 = MPIDI_OFI_ENABLE_AM_BGQ,
+        .enable_rma                = MPIDI_OFI_ENABLE_RMA_BGQ,
+        .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_BGQ,
+        .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_BGQ
     }
 };
