@@ -11,18 +11,19 @@
 
 #include "ucx_progress.h"
 #include "ucx_request.h"
-#include "ucx_probe.h"
 #include "ucx_init.h"
 #ifdef MPICH_UCX_AM_ONLY
 #include "ucx_am_send.h"
 #include "ucx_am_recv.h"
 #include "ucx_am_win.h"
 #include "ucx_am_rma.h"
+#include "ucx_am_probe.h"
 #else
 #include "ucx_send.h"
 #include "ucx_recv.h"
 #include "ucx_win.h"
 #include "ucx_rma.h"
+#include "ucx_probe.h"
 #endif
 #include "ucx_am.h"
 #include "ucx_spawn.h"
