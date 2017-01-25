@@ -177,24 +177,24 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_INIT);
 
     /* Seed the global settings values for cases where we are using runtime sets */
-    MPIDI_Global.settings.enable_data               = MPIR_CVAR_CH4_OFI_ENABLE_DATA > 0 ? 1 :
+    MPIDI_Global.settings.enable_data               = MPIR_CVAR_CH4_OFI_ENABLE_DATA != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_DATA :
                                                         MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_data : MPIR_CVAR_CH4_OFI_ENABLE_DATA;
-    MPIDI_Global.settings.enable_av_table           = MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE > 0 ? 1 :
+    MPIDI_Global.settings.enable_av_table           = MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE  :
                                                         MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_av_table : MPIR_CVAR_CH4_OFI_ENABLE_AV_TABLE;
-    MPIDI_Global.settings.enable_scalable_endpoints = MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS > 0 ? 1 :
+    MPIDI_Global.settings.enable_scalable_endpoints = MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS :
                                                         MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_scalable_endpoints : MPIR_CVAR_CH4_OFI_ENABLE_SCALABLE_ENDPOINTS;
     /* If the user doesn't care, then try to use them and fall back if necessary in the RMA init code */
-    MPIDI_Global.settings.enable_stx_rma            = MPIR_CVAR_CH4_OFI_ENABLE_STX_RMA != 0 ? 1 :
+    MPIDI_Global.settings.enable_stx_rma            = MPIR_CVAR_CH4_OFI_ENABLE_STX_RMA != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_STX_RMA :
                                                         MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_stx_rma : MPIR_CVAR_CH4_OFI_ENABLE_STX_RMA;
-    MPIDI_Global.settings.enable_mr_scalable        = MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE > 0 ? 1 :
+    MPIDI_Global.settings.enable_mr_scalable        = MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE :
                                                         MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_mr_scalable : MPIR_CVAR_CH4_OFI_ENABLE_MR_SCALABLE;
-    MPIDI_Global.settings.enable_tagged             = MPIR_CVAR_CH4_OFI_ENABLE_TAGGED > 0 ? 1 :
+    MPIDI_Global.settings.enable_tagged             = MPIR_CVAR_CH4_OFI_ENABLE_TAGGED != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_TAGGED :
                                                         MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_tagged : MPIR_CVAR_CH4_OFI_ENABLE_TAGGED;
-    MPIDI_Global.settings.enable_am                 = MPIR_CVAR_CH4_OFI_ENABLE_AM > 0 ? 1 :
+    MPIDI_Global.settings.enable_am                 = MPIR_CVAR_CH4_OFI_ENABLE_AM != 1 ? MPIR_CVAR_CH4_OFI_ENABLE_AM :
                                                         MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_am : MPIR_CVAR_CH4_OFI_ENABLE_AM;
-    MPIDI_Global.settings.enable_rma                = MPIR_CVAR_CH4_OFI_ENABLE_RMA > 0 ? 1 :
+    MPIDI_Global.settings.enable_rma                = MPIR_CVAR_CH4_OFI_ENABLE_RMA != 1 ? MPIR_CVAR_CH4_OFI_ENABLE_RMA :
                                                         MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_rma : MPIR_CVAR_CH4_OFI_ENABLE_RMA;
-    MPIDI_Global.settings.fetch_atomic_iovecs       = MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS > 0 ? MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS :
+    MPIDI_Global.settings.fetch_atomic_iovecs       = MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS != -1 ? MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS :
                                                         MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].fetch_atomic_iovecs : MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS;
 
     CH4_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
