@@ -14,7 +14,14 @@
 #define MPIDI_OFI_OFF     0
 #define MPIDI_OFI_ON      1
 
-#define MPIDI_OFI_NUM_SETS 5
+enum {
+    MPIDI_OFI_SET_NUMBER_PSM = 0,
+    MPIDI_OFI_SET_NUMBER_PSM2,
+    MPIDI_OFI_SET_NUMBER_GNI,
+    MPIDI_OFI_SET_NUMBER_SOCKETS,
+    MPIDI_OFI_SET_NUMBER_BGQ,
+    MPIDI_OFI_NUM_SETS
+};
 
 #define MPIDI_OFI_MAX_ENDPOINTS_SCALABLE        256
 #define MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE   8
@@ -25,15 +32,15 @@
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 {
     if (!strcmp("psm", set_name)) {
-        return 0;
+        return MPIDI_OFI_SET_NUMBER_PSM;
     } else if (!strcmp("psm2", set_name)) {
-        return 1;
+        return MPIDI_OFI_SET_NUMBER_PSM2;
     } else if (!strcmp("gni", set_name)) {
-        return 2;
+        return MPIDI_OFI_SET_NUMBER_GNI;
     } else if (!strcmp("sockets", set_name)) {
-        return 3;
+        return MPIDI_OFI_SET_NUMBER_SOCKETS;
     } else if (!strcmp("bgq", set_name)) {
-        return 4;
+        return MPIDI_OFI_SET_NUMBER_BGQ;
     } else {
         return -1;
     }
