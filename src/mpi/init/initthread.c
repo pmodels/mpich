@@ -460,11 +460,6 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     MPII_COMML_REMEMBER( MPIR_Process.comm_world );
     MPII_COMML_REMEMBER( MPIR_Process.comm_self );
 
-    /* Call any and all MPID_Init type functions */
-    MPIR_Err_init();
-    MPIR_Datatype_init();
-    MPIR_Group_init();
-
     /* MPIU_Timer_pre_init(); */
 
     /* Wait for debugger to attach if requested. */
