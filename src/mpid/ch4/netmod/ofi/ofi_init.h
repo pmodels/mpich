@@ -1059,10 +1059,9 @@ static inline int MPIDI_NM_get_local_upids(MPIR_Comm * comm, size_t ** local_upi
     goto fn_exit;
 }
 
-static inline int MPIDI_OFI_upids_to_lupids_general(int size,
-                                                    size_t * remote_upid_size,
-                                                    char *remote_upids,
-                                                    int **remote_lupids, int use_av_table)
+static inline int MPIDI_NM_upids_to_lupids(int size,
+                                           size_t * remote_upid_size,
+                                           char *remote_upids, int **remote_lupids)
 {
     int i, mpi_errno = MPI_SUCCESS;
     int *new_avt_procs;
@@ -1112,20 +1111,16 @@ static inline int MPIDI_OFI_upids_to_lupids_general(int size,
         MPIDI_OFI_MPI_CALL_POP(MPIDIU_new_avt(n_new_procs, &avtid));
 
         for (i = 0; i < n_new_procs; i++) {
-            if (use_av_table) { /* logical addressing */
-                MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, new_upids[new_avt_procs[i]],
-                                            1, NULL, 0ULL, NULL), avmap);
-                /* FIXME: get logical address */
-            }
-            else {
-                MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, new_upids[new_avt_procs[i]],
-                                            1,
-                                            (fi_addr_t *) &
-                                            MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest, 0ULL,
-                                            NULL), avmap);
-            }
+            MPIDI_OFI_CALL(fi_av_insert(MPIDI_Global.av, new_upids[i],
+                                        1,
+                                        (fi_addr_t *) &
+                                        MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest, 0ULL,
+                                        NULL), avmap);
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP,VERBOSE,
+                            (MPL_DBG_FDEST, "\tupids to lupids avtid %d lpid %d mapped to %lu",
+                             avtid, i, MPIDI_OFI_AV(&MPIDIU_get_av(avtid, i)).dest));
             /* highest bit is marked as 1 to indicate this is a new process */
-            (*remote_lupids)[i] = MPIDIU_LUPID_CREATE(avtid, i);
+            (*remote_lupids)[new_avt_procs[i]] = MPIDIU_LUPID_CREATE(avtid, i);
             MPIDIU_LUPID_SET_NEW_AVT_MARK((*remote_lupids)[i]);
         }
     }
@@ -1136,14 +1131,6 @@ static inline int MPIDI_OFI_upids_to_lupids_general(int size,
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-static inline int MPIDI_NM_upids_to_lupids(int size,
-                                           size_t * remote_upid_size,
-                                           char *remote_upids, int **remote_lupids)
-{
-    return MPIDI_OFI_upids_to_lupids_general(size, remote_upid_size, remote_upids,
-                                             remote_lupids, MPIDI_Global.settings.enable_av_table);
 }
 
 static inline int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
