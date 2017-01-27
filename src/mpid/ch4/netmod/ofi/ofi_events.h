@@ -144,7 +144,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
         int r = rreq->status.MPI_SOURCE;
         mpi_errno = MPIDI_OFI_send_handler(MPIDI_OFI_EP_TX_TAG(0), NULL, 0, NULL,
                                            MPIDI_OFI_REQUEST(rreq, util_comm->rank),
-                                           MPIDI_OFI_comm_to_phys(c, r, MPIDI_OFI_API_TAG),
+                                           MPIDI_OFI_comm_to_phys(c, r, 0, MPIDI_OFI_API_TAG),
                                            ss_bits, NULL, MPIDI_OFI_DO_INJECT,
                                            MPIDI_OFI_CALL_NO_LOCK);
         if (mpi_errno)
@@ -344,7 +344,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry 
                                      (void *) ((uintptr_t) recv->wc.buf + recv->cur_offset),    /* local buffer */
                                      bytesToGet,        /* bytes        */
                                      NULL,      /* descriptor   */
-                                     MPIDI_OFI_comm_to_phys(recv->comm_ptr, recv->remote_info.origin_rank, MPIDI_OFI_API_MSG),  /* Destination  */
+                                     MPIDI_OFI_comm_to_phys(recv->comm_ptr, recv->remote_info.origin_rank, 0, MPIDI_OFI_API_MSG),  /* Destination  */
                                      MPIDI_OFI_recv_rbase(recv) + recv->cur_offset,     /* remote maddr */
                                      remote_key,        /* Key          */
                                      (void *) &recv->context), rdma_readfrom,   /* Context */
@@ -754,7 +754,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_entries(struct fi_cq_tagged_ent
 #define FUNCNAME MPIDI_OFI_handle_cq_error
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_error(ssize_t ret)
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_error(ssize_t ret, int ep_idx)
 {
     int mpi_errno = MPI_SUCCESS;
     struct fi_cq_err_entry e;
@@ -764,7 +764,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_handle_cq_error(ssize_t ret)
 
     switch (ret) {
     case -FI_EAVAIL:
-        fi_cq_readerr(MPIDI_Global.p2p_cq, &e, 0);
+        fi_cq_readerr(MPIDI_Global.ctx[ep_idx].p2p_cq, &e, 0);
 
         switch (e.err) {
         case FI_ETRUNC:

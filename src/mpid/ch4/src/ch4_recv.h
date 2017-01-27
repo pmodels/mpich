@@ -42,7 +42,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv(void *buf,
         goto fn_exit;
     }
 
-    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
+    ep_idx = MPIDI_CH4_ep_rx_tag(comm, rank, comm->rank, tag);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno =
         MPIDI_NM_mpi_recv(buf, count, datatype, rank, tag, comm, context_offset, ep_idx, status, request);
@@ -121,7 +121,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Recv_init(void *buf,
     int ep_idx;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RECV_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RECV_INIT);
-    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
+    ep_idx = MPIDI_CH4_ep_rx_tag(comm, rank, comm->rank, tag);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno =
         MPIDI_NM_mpi_recv_init(buf, count, datatype, rank, tag, comm, context_offset, ep_idx, request);
@@ -286,7 +286,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irecv(void *buf,
         goto fn_exit;
     }
 
-    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
+    ep_idx = MPIDI_CH4_ep_rx_tag(comm, rank, comm->rank, tag);
 
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_irecv(buf, count, datatype, rank, tag, comm, context_offset, ep_idx, request);

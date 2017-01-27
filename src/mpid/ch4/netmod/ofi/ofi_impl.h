@@ -254,7 +254,7 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_cntr_incr()
 }
 
 /* Externs:  see util.c for definition */
-int MPIDI_OFI_handle_cq_error_util(ssize_t ret);
+int MPIDI_OFI_handle_cq_error_util(ssize_t ret, int ep_idx);
 int MPIDI_OFI_progress_test_no_inline(void);
 int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
                               void **data, size_t * data_sz, int *is_contig,
@@ -306,13 +306,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
     }
 }
 
-MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank, int ep_family)
+MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank, int ep_num, int ep_family)
 {
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        int ep_num = MPIDI_OFI_COMM_TO_EP(comm, rank);
         int offset = MPIDI_Global.ctx[ep_num].ctx_offset;
         int rx_idx = offset + ep_family;
-        if( MPIDI_COMM(comm, ep_idx) != -1 ) rx_idx += 4*MPIDI_COMM(comm, ep_idx);
         return fi_rx_addr(MPIDI_OFI_COMM_TO_PHYS(comm, rank), rx_idx, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
         return MPIDI_OFI_COMM_TO_PHYS(comm, rank);

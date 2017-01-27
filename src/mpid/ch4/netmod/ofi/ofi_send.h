@@ -39,7 +39,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
         MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0);
     mpi_errno =
         MPIDI_OFI_send_handler(MPIDI_OFI_EP_TX_TAG(ep_idx), buf, data_sz, NULL, comm->rank,
-                               MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG), match_bits,
+                               MPIDI_OFI_comm_to_phys(comm, rank,
+                                   MPIDI_CH4_ep_rx_tag(comm, comm->rank, rank, tag),
+                                   MPIDI_OFI_API_TAG), match_bits,
                                NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_CALL_LOCK);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -73,7 +75,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
         MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0);
     mpi_errno =
         MPIDI_OFI_send_handler(MPIDI_OFI_EP_TX_TAG(ep_idx), buf, data_sz, NULL, comm->rank,
-                               MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG), match_bits,
+                               MPIDI_OFI_comm_to_phys(comm, rank,
+                                   MPIDI_CH4_ep_rx_tag(comm, comm->rank, rank, tag),
+                                   MPIDI_OFI_API_TAG), match_bits,
                                NULL, MPIDI_OFI_DO_INJECT, MPIDI_OFI_CALL_LOCK);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -126,7 +130,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(MPIDI_OFI_SENDPARAMS,
                                       NULL,     /* recvbuf     */
                                       0,        /* data sz     */
                                       NULL,     /* memregion descr  */
-                                      MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG),    /* remote proc */
+                                      MPIDI_OFI_comm_to_phys(comm, rank,
+                                           MPIDI_CH4_ep_rx_tag(comm, comm->rank, rank, tag),
+                                           MPIDI_OFI_API_TAG),     /* remote proc */
                                       ssend_match,      /* match bits  */
                                       0ULL,     /* mask bits   */
                                       (void *) &(ackreq->context)), trecvsync, MPIDI_OFI_CALL_LOCK);
@@ -153,7 +159,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(MPIDI_OFI_SENDPARAMS,
     if (data_sz <= MPIDI_Global.max_buffered_send) {
         mpi_errno =
             MPIDI_OFI_send_handler(MPIDI_OFI_EP_TX_TAG(ep_idx), send_buf, data_sz, NULL, comm->rank,
-                                   MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG),
+                                   MPIDI_OFI_comm_to_phys(comm, rank,
+                                       MPIDI_CH4_ep_rx_tag(comm, comm->rank, rank, tag),
+                                       MPIDI_OFI_API_TAG),
                                    match_bits, NULL, MPIDI_OFI_DO_INJECT,
                                    MPIDI_OFI_CALL_LOCK);
         if (mpi_errno)
@@ -163,7 +171,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(MPIDI_OFI_SENDPARAMS,
     else if (data_sz <= MPIDI_Global.max_send) {
         mpi_errno =
             MPIDI_OFI_send_handler(MPIDI_OFI_EP_TX_TAG(ep_idx), send_buf, data_sz, NULL, comm->rank,
-                                   MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG),
+                                   MPIDI_OFI_comm_to_phys(comm, rank,
+                                       MPIDI_CH4_ep_rx_tag(comm, comm->rank, rank, tag),
+                                       MPIDI_OFI_API_TAG),
                                    match_bits, (void *) &(MPIDI_OFI_REQUEST(sreq, context)),
                                    MPIDI_OFI_DO_SEND, MPIDI_OFI_CALL_LOCK);
         if (mpi_errno)
@@ -221,7 +231,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(MPIDI_OFI_SENDPARAMS,
                                            MPIDI_Global.max_send,
                                            NULL,
                                            comm->rank,
-                                           MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG),
+                                           MPIDI_OFI_comm_to_phys(comm, rank,
+                                               MPIDI_CH4_ep_rx_tag(comm, comm->rank, rank, tag),
+                                               MPIDI_OFI_API_TAG),
                                            match_bits,
                                            (void *) &(MPIDI_OFI_REQUEST(sreq, context)),
                                            MPIDI_OFI_DO_SEND,

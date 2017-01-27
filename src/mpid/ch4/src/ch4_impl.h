@@ -741,13 +741,32 @@ static inline void MPIDI_win_check_group_local_completed(MPIR_Win * win,
     }
 }
 
-static inline void MPIDI_find_tag_ep(MPIR_Comm* comm, int target_rank, int tag, int* ep_idx)
+static inline int MPIDI_CH4_ep_rx_tag(MPIR_Comm* comm, int src_rank, int dst_rank, int tag)
 {
-    if( MPIDI_COMM(comm, ep_idx) != -1 )
-        *ep_idx = (MPIDI_COMM(comm, ep_idx) % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
+    /* Returns rx_ep_idx, must be synced with dest_addr's ep_idx on the sender side,
+     * If wildcards are allowed, rx_ep_idx may depend only on comm and dst_rank */
+    int rx_ep_idx = -1;
+    if( MPIDI_COMM(comm, rx_ep_idx) != -1 )
+        rx_ep_idx = (MPIDI_COMM(comm, rx_ep_idx) % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
     else
-        *ep_idx = 0;
-    MPIR_Assert(*ep_idx >= 0);
+        rx_ep_idx = ((comm->context_id + dst_rank) % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
+        /*rx_ep_idx = 0;*/
+    MPIR_Assert(rx_ep_idx >= 0);
+    return rx_ep_idx;
+}
+
+static inline int MPIDI_CH4_ep_tx_tag(MPIR_Comm* comm, int src_rank, int dst_rank, int tag)
+{
+    /* Returns tx_ep_idx, might be synced with src_addr's ep_idx on the receiver side,
+     * but practically doesn't have to */
+    int tx_ep_idx = -1;
+    if( MPIDI_COMM(comm, tx_ep_idx) != -1 )
+        tx_ep_idx = (MPIDI_COMM(comm, tx_ep_idx) % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
+    else
+        tx_ep_idx = ((comm->context_id + src_rank + tag) % MPIDI_CH4_Global.n_netmod_eps) & INT_MAX;
+        /*tx_ep_idx = 0;*/
+    MPIR_Assert(tx_ep_idx >= 0);
+    return tx_ep_idx;
 }
 
 static inline void MPIDI_find_rma_ep(MPIR_Win* win, int target_rank, int* ep_idx)

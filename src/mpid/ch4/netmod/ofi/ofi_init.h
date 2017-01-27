@@ -135,7 +135,6 @@ cvars:
 static inline int MPIDI_OFI_choose_provider(struct fi_info *prov, struct fi_info **prov_use);
 static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                                             struct fid_domain *domain,
-                                            struct fid_cq *p2p_cq,
                                             struct fid_cntr *rma_ctr,
                                             struct fid_av *av,
                                             struct fid_ep **ep, int index);
@@ -495,15 +494,6 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /*     * address vector of other endpoint addresses                         */
     /* ------------------------------------------------------------------------ */
 
-    /* ------------------------------------------------------------------------ */
-    /* Construct:  Completion Queues                                            */
-    /* ------------------------------------------------------------------------ */
-    memset(&cq_attr, 0, sizeof(cq_attr));
-    cq_attr.format = FI_CQ_FORMAT_TAGGED;
-    MPIDI_OFI_CALL(fi_cq_open(MPIDI_Global.domain,      /* In:  Domain Object                */
-                              &cq_attr, /* In:  Configuration object         */
-                              &MPIDI_Global.p2p_cq,     /* Out: CQ Object                    */
-                              NULL), opencq);   /* In:  Context for cq events        */
 
     /* ------------------------------------------------------------------------ */
     /* Construct:  Counters                                                     */
@@ -613,7 +603,6 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     for (i = 0; i < MPIDI_Global.max_ch4_eps; i++) {
         MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_create_endpoint(prov_use,
                                                          MPIDI_Global.domain,
-                                                         MPIDI_Global.p2p_cq,
                                                          MPIDI_Global.rma_cmpl_cntr,
                                                          MPIDI_Global.av,
                                                          &MPIDI_Global.ep, i));
@@ -821,7 +810,11 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
         MPIDI_OFI_CALL(fi_close(&MPIDI_Global.stx_ctx->fid), stx_ctx_close);
     MPIDI_OFI_CALL(fi_close(&MPIDI_Global.ep->fid), epclose);
     MPIDI_OFI_CALL(fi_close(&MPIDI_Global.av->fid), avclose);
-    MPIDI_OFI_CALL(fi_close(&MPIDI_Global.p2p_cq->fid), cqclose);
+    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS)
+        for (i = 0; i < MPIDI_Global.max_ch4_eps; i++) 
+            MPIDI_OFI_CALL(fi_close(&MPIDI_Global.ctx[i].p2p_cq->fid), cqclose);
+    else
+        MPIDI_OFI_CALL(fi_close(&MPIDI_Global.ctx[0].p2p_cq->fid), cqclose);
     MPIDI_OFI_CALL(fi_close(&MPIDI_Global.rma_cmpl_cntr->fid), cqclose);
     MPIDI_OFI_CALL(fi_close(&MPIDI_Global.domain->fid), domainclose);
 
@@ -1038,12 +1031,12 @@ static inline int MPIDI_NM_create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                                             struct fid_domain *domain,
-                                            struct fid_cq *p2p_cq,
                                             struct fid_cntr *rma_ctr,
                                             struct fid_av *av,
                                             struct fid_ep **ep, int index)
 {
     int mpi_errno = MPI_SUCCESS;
+    struct fi_cq_attr cq_attr;
     struct fi_tx_attr tx_attr;
     struct fi_rx_attr rx_attr;
 
@@ -1057,6 +1050,15 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
             MPIDI_OFI_CALL(fi_scalable_ep(domain, prov_use, ep, NULL), ep);
             MPIDI_OFI_CALL(fi_scalable_ep_bind(*ep, &av->fid, 0), bind);
         }
+        /* ------------------------------------------------------------------------ */
+        /* Construct:  Completion Queues                                            */
+        /* ------------------------------------------------------------------------ */
+        memset(&cq_attr, 0, sizeof(cq_attr));
+        cq_attr.format = FI_CQ_FORMAT_TAGGED;
+        MPIDI_OFI_CALL(fi_cq_open(MPIDI_Global.domain,      /* In:  Domain Object                */
+                                  &cq_attr, /* In:  Configuration object         */
+                                  &MPIDI_Global.ctx[index].p2p_cq,     /* Out: CQ Object                    */
+                                  NULL), opencq);   /* In:  Context for cq events        */
 
         idx_off = index * 4;
         MPIDI_Global.ctx[index].ctx_offset = idx_off;
@@ -1068,7 +1070,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
             MPIDI_OFI_CALL(fi_tx_context(*ep, idx_off, &tx_attr, &MPIDI_OFI_EP_TX_TAG(index), NULL),
                            ep);
             MPIDI_OFI_CALL(fi_ep_bind
-                           (MPIDI_OFI_EP_TX_TAG(index), &p2p_cq->fid,
+                           (MPIDI_OFI_EP_TX_TAG(index), &MPIDI_Global.ctx[index].p2p_cq->fid,
                             FI_SEND | FI_SELECTIVE_COMPLETION), bind);
         }
 
@@ -1081,7 +1083,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_TX_RMA(index), &rma_ctr->fid, FI_WRITE | FI_READ),
                        bind);
         MPIDI_OFI_CALL(fi_ep_bind
-                       (MPIDI_OFI_EP_TX_RMA(index), &p2p_cq->fid,
+                       (MPIDI_OFI_EP_TX_RMA(index), &MPIDI_Global.ctx[index].p2p_cq->fid,
                         FI_SEND | FI_SELECTIVE_COMPLETION), bind);
 
         tx_attr = *prov_use->tx_attr;
@@ -1090,7 +1092,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         MPIDI_OFI_CALL(fi_tx_context(*ep, idx_off + 2, &tx_attr, &MPIDI_OFI_EP_TX_MSG(index), NULL),
                        ep);
         MPIDI_OFI_CALL(fi_ep_bind
-                       (MPIDI_OFI_EP_TX_MSG(index), &p2p_cq->fid,
+                       (MPIDI_OFI_EP_TX_MSG(index), &MPIDI_Global.ctx[index].p2p_cq->fid,
                         FI_SEND | FI_SELECTIVE_COMPLETION), bind);
 
         tx_attr = *prov_use->tx_attr;
@@ -1105,7 +1107,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
          * Otherwise fi_cq_read would not make progress on this context and potentially leads to a deadlock. */
         if (prov_use->domain_attr->data_progress == FI_PROGRESS_MANUAL)
             MPIDI_OFI_CALL(fi_ep_bind
-                           (MPIDI_OFI_EP_TX_CTR(index), &p2p_cq->fid,
+                           (MPIDI_OFI_EP_TX_CTR(index), &MPIDI_Global.ctx[index].p2p_cq->fid,
                             FI_SEND | FI_SELECTIVE_COMPLETION), bind);
 
         if (MPIDI_OFI_ENABLE_TAGGED) {
@@ -1118,7 +1120,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
             rx_attr.op_flags = 0;
             MPIDI_OFI_CALL(fi_rx_context(*ep, idx_off, &rx_attr, &MPIDI_OFI_EP_RX_TAG(index), NULL),
                            ep);
-            MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_TAG(index), &p2p_cq->fid, FI_RECV), bind);
+            MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_TAG(index), &MPIDI_Global.ctx[index].p2p_cq->fid, FI_RECV), bind);
         }
 
         rx_attr = *prov_use->rx_attr;
@@ -1132,7 +1134,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
          * We need this bind for manual progress to ensure that progress is made on the
          * rx_ctr or rma operations during completion queue reads */
         if (prov_use->domain_attr->data_progress == FI_PROGRESS_MANUAL)
-            MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_RMA(index), &p2p_cq->fid,
+            MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_RMA(index), &MPIDI_Global.ctx[index].p2p_cq->fid,
                                       FI_SEND | FI_RECV | FI_SELECTIVE_COMPLETION), bind);
 
         rx_attr = *prov_use->rx_attr;
@@ -1145,7 +1147,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         rx_attr.op_flags = FI_MULTI_RECV;
         MPIDI_OFI_CALL(fi_rx_context(*ep, idx_off + 2, &rx_attr, &MPIDI_OFI_EP_RX_MSG(index), NULL),
                        ep);
-        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_MSG(index), &p2p_cq->fid, FI_RECV), bind);
+        MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_MSG(index), &MPIDI_Global.ctx[index].p2p_cq->fid, FI_RECV), bind);
 
         MPIDI_OFI_CALL(fi_enable(*ep), ep_enable);
 
@@ -1163,12 +1165,21 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         MPIDI_OFI_CALL(fi_enable(MPIDI_OFI_EP_RX_MSG(index)), ep_enable);
     }
     else {
+        /* ------------------------------------------------------------------------ */
+        /* Construct:  Completion Queues                                            */
+        /* ------------------------------------------------------------------------ */
+        memset(&cq_attr, 0, sizeof(cq_attr));
+        cq_attr.format = FI_CQ_FORMAT_TAGGED;
+        MPIDI_OFI_CALL(fi_cq_open(MPIDI_Global.domain,      /* In:  Domain Object                */
+                                  &cq_attr, /* In:  Configuration object         */
+                                  &MPIDI_Global.ctx[0].p2p_cq,     /* Out: CQ Object                    */
+                                  NULL), opencq);   /* In:  Context for cq events        */
         /* ---------------------------------------------------------- */
         /* Bind the CQs, counters,  and AV to the endpoint object     */
         /* ---------------------------------------------------------- */
         /* "Normal Endpoint */
         MPIDI_OFI_CALL(fi_endpoint(domain, prov_use, ep, NULL), ep);
-        MPIDI_OFI_CALL(fi_ep_bind(*ep, &p2p_cq->fid, FI_SEND | FI_RECV | FI_SELECTIVE_COMPLETION),
+        MPIDI_OFI_CALL(fi_ep_bind(*ep, &MPIDI_Global.ctx[0].p2p_cq->fid, FI_SEND | FI_RECV | FI_SELECTIVE_COMPLETION),
                        bind);
         MPIDI_OFI_CALL(fi_ep_bind(*ep, &rma_ctr->fid, FI_READ | FI_WRITE), bind);
         MPIDI_OFI_CALL(fi_ep_bind(*ep, &av->fid, 0), bind);

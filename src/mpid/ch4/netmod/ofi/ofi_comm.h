@@ -30,6 +30,7 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
     MPIDI_OFI_index_allocator_create(&MPIDI_OFI_COMM(comm).rma_id_allocator, 1);
 
     mpi_errno = MPIDI_CH4U_init_comm(comm);
+    MPIDI_COMM(comm, rx_ep_idx) = MPIDI_COMM(comm, tx_ep_idx) = -1;
 
     /* Do not handle intercomms */
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)

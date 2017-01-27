@@ -176,7 +176,7 @@ static inline int MPIDI_OFI_win_init_generic(MPI_Aint length,
 
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_WIN(win).ep, &MPIDI_Global.stx_ctx->fid, 0), bind);
         MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_WIN(win).ep,
-                                  &MPIDI_Global.p2p_cq->fid, FI_TRANSMIT | FI_SELECTIVE_COMPLETION),
+                                  &MPIDI_Global.ctx[0].p2p_cq->fid, FI_TRANSMIT | FI_SELECTIVE_COMPLETION),
                        bind);
         MPIDI_OFI_CALL(fi_ep_bind
                        (MPIDI_OFI_WIN(win).ep, &MPIDI_OFI_WIN(win).cmpl_cntr->fid,
