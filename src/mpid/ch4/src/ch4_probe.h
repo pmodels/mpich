@@ -32,7 +32,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Probe(int source,
         goto fn_exit;
     }
 
-    MPIDI_find_tag_ep(comm, source, tag, &ep_idx);
+    ep_idx = MPIDI_CH4_ep_rx_tag(comm, source, comm->rank, tag);
 
     while (!flag) {
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
@@ -83,7 +83,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mprobe(int source,
         goto fn_exit;
     }
 
-    MPIDI_find_tag_ep(comm, source, tag, &ep_idx);
+    ep_idx = MPIDI_CH4_ep_rx_tag(comm, source, comm->rank, tag);
 
     while (!flag) {
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
@@ -149,7 +149,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Improbe(int source,
         goto fn_exit;
     }
 
-    MPIDI_find_tag_ep(comm, source, tag, &ep_idx);
+    ep_idx = MPIDI_CH4_ep_rx_tag(comm, source, comm->rank, tag);
 
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_improbe(source, tag, comm, context_offset, ep_idx, flag, message, status);
@@ -212,7 +212,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Iprobe(int source,
         goto fn_exit;
     }
 
-    MPIDI_find_tag_ep(comm, source, tag, &ep_idx);
+    ep_idx = MPIDI_CH4_ep_rx_tag(comm, source, comm->rank, tag);
 
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_iprobe(source, tag, comm, context_offset, ep_idx, flag, status);

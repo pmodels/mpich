@@ -32,14 +32,22 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(void *netmod_context, int blockin
     if (unlikely(MPIDI_OFI_get_buffered(wc, 1)))
         mpi_errno = MPIDI_OFI_handle_cq_entries(wc, 1, 1);
     else if (likely(1)) {
-        ret = fi_cq_read(MPIDI_Global.p2p_cq, (void *) wc, MPIDI_OFI_NUM_CQ_ENTRIES);
+        int i = 0;
+        if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS)
+            for (i = 0; i < MPIDI_Global.max_ch4_eps; i++) {
+                ret = fi_cq_read(MPIDI_Global.ctx[i].p2p_cq, (void *) wc, MPIDI_OFI_NUM_CQ_ENTRIES);
+                if (ret != -FI_EAGAIN)
+                    break;
+            }
+        else
+            ret = fi_cq_read(MPIDI_Global.ctx[0].p2p_cq, (void *) wc, MPIDI_OFI_NUM_CQ_ENTRIES);
 
         if (likely(ret > 0))
             mpi_errno = MPIDI_OFI_handle_cq_entries(wc, ret, 0);
         else if (ret == -FI_EAGAIN)
             mpi_errno = MPI_SUCCESS;
         else
-            mpi_errno = MPIDI_OFI_handle_cq_error(ret);
+            mpi_errno = MPIDI_OFI_handle_cq_error(ret, i);
     }
 
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);

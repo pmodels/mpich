@@ -39,7 +39,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send(const void *buf,
         goto fn_exit;
     }
 
-    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
+    ep_idx = MPIDI_CH4_ep_tx_tag(comm, comm->rank, rank, tag);
 
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, ep_idx, request);
@@ -90,7 +90,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
         goto fn_exit;
     }
 
-    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
+    ep_idx = MPIDI_CH4_ep_tx_tag(comm, comm->rank, rank, tag);
 
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, ep_idx, request);
@@ -142,7 +142,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend(const void *buf,
         goto fn_exit;
     }
 
-    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
+    ep_idx = MPIDI_CH4_ep_tx_tag(comm, comm->rank, rank, tag);
 
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_send(buf, count, datatype, rank, tag, comm, context_offset, ep_idx, request);
@@ -194,7 +194,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Irsend(const void *buf,
         goto fn_exit;
     }
 
-    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
+    ep_idx = MPIDI_CH4_ep_tx_tag(comm, comm->rank, rank, tag);
 
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, ep_idx, request);
@@ -245,7 +245,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ssend(const void *buf,
         goto fn_exit;
     }
 
-    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
+    ep_idx = MPIDI_CH4_ep_tx_tag(comm, comm->rank, rank, tag);
 
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_ssend(buf, count, datatype, rank, tag, comm, context_offset, ep_idx, request);
@@ -296,7 +296,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Issend(const void *buf,
         goto fn_exit;
     }
 
-    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
+    ep_idx = MPIDI_CH4_ep_tx_tag(comm, comm->rank, rank, tag);
 
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_NM_mpi_issend(buf, count, datatype, rank, tag, comm, context_offset, ep_idx, request);
@@ -380,7 +380,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Send_init(const void *buf,
     int ep_idx;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SEND_INIT);
-    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
+    ep_idx = MPIDI_CH4_ep_tx_tag(comm, comm->rank, rank, tag);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno =
         MPIDI_NM_mpi_send_init(buf, count, datatype, rank, tag, comm, context_offset, ep_idx, request);
@@ -422,7 +422,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Ssend_init(const void *buf,
     int ep_idx;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_SSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_SSEND_INIT);
-    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
+    ep_idx = MPIDI_CH4_ep_tx_tag(comm, comm->rank, rank, tag);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno =
         MPIDI_NM_mpi_ssend_init(buf, count, datatype, rank, tag, comm, context_offset, ep_idx, request);
@@ -465,7 +465,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Bsend_init(const void *buf,
     int ep_idx;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BSEND_INIT);
-    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
+    ep_idx = MPIDI_CH4_ep_tx_tag(comm, comm->rank, rank, tag);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno =
         MPIDI_NM_mpi_bsend_init(buf, count, datatype, rank, tag, comm, context_offset, ep_idx, request);
@@ -508,7 +508,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Rsend_init(const void *buf,
     int ep_idx;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_RSEND_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_RSEND_INIT);
-    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
+    ep_idx = MPIDI_CH4_ep_tx_tag(comm, comm->rank, rank, tag);
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno =
         MPIDI_NM_mpi_rsend_init(buf, count, datatype, rank, tag, comm, context_offset, ep_idx, request);

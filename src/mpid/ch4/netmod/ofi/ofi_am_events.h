@@ -155,7 +155,7 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
         MPIDI_OFI_CALL_RETRY_AM(fi_read(MPIDI_OFI_EP_TX_RMA(0),
                                         (char *) dst + done,
                                         curr_len, NULL,
-                                        MPIDI_OFI_comm_to_phys(comm, src_rank, MPIDI_OFI_API_TAG),
+                                        MPIDI_OFI_comm_to_phys(comm, src_rank, 0, MPIDI_OFI_API_TAG),
                                         src + done,
                                         MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).rma_key,
                                         &am_req->context), FALSE /* no lock */ , read);
@@ -401,7 +401,7 @@ static inline int MPIDI_OFI_dispatch_ack(int rank,
     msg.hdr.am_type = am_type;
     msg.pyld.sreq_ptr = sreq_ptr;
     MPIDI_OFI_CALL_RETRY_AM(fi_inject(MPIDI_OFI_EP_TX_MSG(0), &msg, sizeof(msg),
-                                      MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG)),
+                                      MPIDI_OFI_comm_to_phys(comm, rank, 0, MPIDI_OFI_API_TAG)),
                             FALSE /* no lock */ , inject);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DISPATCH_ACK);

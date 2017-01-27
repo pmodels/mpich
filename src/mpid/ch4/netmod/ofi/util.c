@@ -17,13 +17,13 @@
 #define FUNCNAME MPIDI_OFI_handle_cq_error_util
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDI_OFI_handle_cq_error_util(ssize_t ret)
+int MPIDI_OFI_handle_cq_error_util(ssize_t ret, int ep_idx)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_HANDLE_CQ_ERROR);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_HANDLE_CQ_ERROR);
 
-    mpi_errno = MPIDI_OFI_handle_cq_error(ret);
+    mpi_errno = MPIDI_OFI_handle_cq_error(ret, ep_idx);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_HANDLE_CQ_ERROR);
     return mpi_errno;
