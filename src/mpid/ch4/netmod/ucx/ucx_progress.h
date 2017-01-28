@@ -130,7 +130,7 @@ static inline int MPIDI_NM_progress(void *netmod_context, int blocking)
         MPL_free(am_buf);
         message_handle =
             ucp_tag_probe_nb(MPIDI_UCX_global.worker, MPIDI_UCX_AM_TAG,
-                             ~MPIDI_UCX_AM_TAG, 1, &info);
+                             MPIDI_UCX_AM_TAG, 1, &info);
 
     }
 
