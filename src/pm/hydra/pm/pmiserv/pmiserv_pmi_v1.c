@@ -136,7 +136,6 @@ static HYD_status bcast_keyvals(int fd, int pid)
 static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
 {
     struct HYD_proxy *proxy, *tproxy;
-    int proxy_count;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -144,12 +143,8 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
     proxy = HYD_pmcd_pmi_find_proxy(fd);
     HYDU_ASSERT(proxy, status);
 
-    proxy_count = 0;
-    for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next)
-        proxy_count++;
-
     proxy->pg->barrier_count++;
-    if (proxy->pg->barrier_count == proxy_count) {
+    if (proxy->pg->barrier_count == proxy->pg->proxy_count) {
         proxy->pg->barrier_count = 0;
 
         bcast_keyvals(fd, pid);

@@ -136,6 +136,7 @@ void HYDU_init_pg(struct HYD_pg *pg, int pgid)
 {
     pg->pgid = pgid;
     pg->proxy_list = NULL;
+    pg->proxy_count = 0;
     pg->pg_process_count = 0;
     pg->barrier_count = 0;
     pg->spawner_pg = NULL;
@@ -480,6 +481,7 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
 
     for (proxy = pg->proxy_list, i = 0; proxy; proxy = proxy->next, i++)
         proxy->proxy_id = i;
+    pg->proxy_count = i;
 
   fn_exit:
     HYDU_FUNC_EXIT();
