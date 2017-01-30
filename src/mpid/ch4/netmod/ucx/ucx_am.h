@@ -145,8 +145,6 @@ static inline int MPIDI_NM_am_isend(int rank,
         goto fn_exit;
     }
 
-    /* request completed between the UCP call and now. free resources
-     * and complete the send request */
     /* set the ch4r request inside the UCP request */
     sreq->dev.ch4.am.netmod_am.ucx.pack_buffer = send_buf;
     sreq->dev.ch4.am.netmod_am.ucx.handler_id = handler_id;
