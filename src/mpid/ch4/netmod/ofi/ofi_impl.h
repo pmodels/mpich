@@ -23,6 +23,7 @@
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
 #define MPIDI_OFI_COMM_TO_INDEX(comm,rank) \
     MPIDIU_comm_rank_to_pid(comm, rank, NULL, NULL)
+#define MPIDI_OFI_AV_TO_PHYS(av) ((av)->dest)
 #define MPIDI_OFI_COMM_TO_PHYS(comm,rank)                       \
     MPIDI_OFI_AV(MPIDIU_comm_rank_to_av((comm), (rank))).dest
 #define MPIDI_OFI_TO_PHYS(avtid, lpid)                                 \
@@ -309,10 +310,11 @@ MPL_STATIC_INLINE_PREFIX void MPIDI_OFI_win_request_complete(MPIDI_OFI_win_reque
 MPL_STATIC_INLINE_PREFIX fi_addr_t MPIDI_OFI_comm_to_phys(MPIR_Comm * comm, int rank, int ep_family)
 {
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        int ep_num = MPIDI_OFI_COMM_TO_EP(comm, rank);
+        MPIDI_OFI_addr_t *av = &MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, rank));
+        int ep_num = MPIDI_OFI_AV_TO_EP(av);
         int offset = MPIDI_Global.ctx[ep_num].ctx_offset;
         int rx_idx = offset + ep_family;
-        return fi_rx_addr(MPIDI_OFI_COMM_TO_PHYS(comm, rank), rx_idx, MPIDI_OFI_MAX_ENDPOINTS_BITS);
+        return fi_rx_addr(MPIDI_OFI_AV_TO_PHYS(av), rx_idx, MPIDI_OFI_MAX_ENDPOINTS_BITS);
     } else {
         return MPIDI_OFI_COMM_TO_PHYS(comm, rank);
     }

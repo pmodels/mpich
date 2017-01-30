@@ -183,6 +183,7 @@
 #define MPIDI_OFI_DATATYPE(dt)   ((dt)->dev.netmod.ofi)
 #define MPIDI_OFI_COMM(comm)     ((comm)->dev.ch4.netmod.ofi)
 
+#define MPIDI_OFI_AV_TO_EP(av) (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS ? (av)->ep_idx : 0)
 #define MPIDI_OFI_COMM_TO_EP(comm, rank) (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS ? MPIDI_OFI_AV(MPIDIU_comm_rank_to_av(comm, rank)).ep_idx : 0)
 #define MPIDI_OFI_EP_TX_TAG(x) MPIDI_Global.ctx[x].tx_tag
 #define MPIDI_OFI_EP_TX_RMA(x) MPIDI_Global.ctx[x].tx_rma
