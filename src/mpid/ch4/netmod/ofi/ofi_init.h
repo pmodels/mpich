@@ -784,7 +784,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                (valS, "OFI", (char *) &table[i * MPIDI_Global.addrnamelen],
                                 MPIDI_Global.addrnamelen, &maxlen), buscard_len);
         }
-        PMI_Barrier();
+        mpi_errno = MPIDU_shm_barrier(barrier, num_local);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 
         /* -------------------------------- */
         /* Table is constructed.  Map it    */
@@ -797,7 +799,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         }
         MPL_free(mapped_table);
 
-        PMI_Barrier();
+        mpi_errno = MPIDU_shm_barrier(barrier, num_local);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
         MPIDU_shm_seg_destroy(&memory, num_local);
     }
 
