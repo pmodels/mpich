@@ -284,6 +284,7 @@ typedef struct {
 } MPIDI_OFI_atomic_valid_t;
 
 typedef struct {
+    struct fid_cq *p2p_cq;
     struct fid_ep *tx_tag;
     struct fid_ep *rx_tag;
 
@@ -339,7 +340,6 @@ typedef struct {
     struct fid_fabric *fabric;
     struct fid_av *av;
     struct fid_ep *ep;
-    struct fid_cq *p2p_cq;
     struct fid_cntr *rma_cmpl_cntr;
     struct fid_stx *stx_ctx;    /* shared TX context for RMA */
 
@@ -357,6 +357,7 @@ typedef struct {
     int context_shift;
     size_t iov_limit;
     size_t rma_iov_limit;
+    int max_ch4_eps;
 
     /* Mutexex and endpoints */
     MPIDI_OFI_cacheline_mutex_t mutexes[4];

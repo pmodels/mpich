@@ -374,6 +374,8 @@ typedef struct MPIDI_Devcomm_t {
     struct {
         /* The first fields are used by the CH4U apis */
         MPIDI_CH4U_comm_t ch4u;
+        int tx_ep_idx;
+        int rx_ep_idx;
 
         /* Used by the netmod direct apis */
         union {
@@ -459,7 +461,6 @@ extern MPIDI_av_table_t *MPIDI_av_table0;
 
 #define MPID_INTERCOMM_NO_DYNPROC(comm) \
     (MPIDI_COMM((comm),map).avtid == 0 && MPIDI_COMM((comm),local_map).avtid == 0)
-
 
 #include "mpidu_pre.h"
 

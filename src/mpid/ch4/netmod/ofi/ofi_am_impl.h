@@ -146,19 +146,27 @@ static inline int MPIDI_OFI_progress_do_queue(void *netmod_context)
 {
     int mpi_errno = MPI_SUCCESS, ret;
     struct fi_cq_tagged_entry cq_entry;
+    int i = 0;
 
     /* Caller must hold MPIDI_OFI_THREAD_FI_MUTEX */
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_PROGRESS_DO_QUEUE);
 
-    ret = fi_cq_read(MPIDI_Global.p2p_cq, &cq_entry, 1);
+    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS)
+        for (i = 0; i < MPIDI_Global.max_ch4_eps; i++) {
+            ret = fi_cq_read(MPIDI_Global.ctx[i].p2p_cq, &cq_entry, 1);
+            if (ret != -FI_EAGAIN)
+                break;
+        }
+    else
+        ret = fi_cq_read(MPIDI_Global.ctx[0].p2p_cq, &cq_entry, 1);
 
     if (unlikely(ret == -FI_EAGAIN))
         goto fn_exit;
 
     if (ret < 0) {
-        mpi_errno = MPIDI_OFI_handle_cq_error_util(ret);
+        mpi_errno = MPIDI_OFI_handle_cq_error_util(ret, i);
         goto fn_fail;
     }
 
@@ -238,7 +246,7 @@ static inline int MPIDI_OFI_do_am_isend_header(int rank,
     iov[1].iov_len = am_hdr_sz;
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
     MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_EP_TX_MSG(0), iov, NULL, 2,
-                                     MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_MSG),
+                                     MPIDI_OFI_comm_to_phys(comm, rank, 0, MPIDI_OFI_API_MSG),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), need_lock, sendv);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DO_AM_ISEND_HEADER);
@@ -331,7 +339,7 @@ static inline int MPIDI_OFI_am_isend_long(int rank,
     iov[2].iov_len = sizeof(*lmt_info);
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
     MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_EP_TX_MSG(0), iov, NULL, 3,
-                                     MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_MSG),
+                                     MPIDI_OFI_comm_to_phys(comm, rank, 0, MPIDI_OFI_API_MSG),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), need_lock, sendv);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_ISEND_LONG);
@@ -384,7 +392,7 @@ static inline int MPIDI_OFI_am_isend_short(int rank,
     MPIR_cc_incr(sreq->cc_ptr, &c);
     MPIDI_OFI_AMREQUEST(sreq, event_id) = MPIDI_OFI_EVENT_AM_SEND;
     MPIDI_OFI_CALL_RETRY_AM(fi_sendv(MPIDI_OFI_EP_TX_MSG(0), iov, NULL, 3,
-                                     MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_MSG),
+                                     MPIDI_OFI_comm_to_phys(comm, rank, 0, MPIDI_OFI_API_MSG),
                                      &MPIDI_OFI_AMREQUEST(sreq, context)), need_lock, sendv);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_AM_ISEND_SHORT);
@@ -523,7 +531,7 @@ static inline int MPIDI_OFI_do_inject(int rank,
     msg.iov_count = 2;
     msg.context = NULL;
     msg.addr = use_comm_table ?
-        MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_MSG) :
+        MPIDI_OFI_comm_to_phys(comm, rank, 0, MPIDI_OFI_API_MSG) :
         MPIDI_OFI_to_phys(rank, MPIDI_OFI_API_MSG);
 
     if (unlikely(am_hdr_sz + sizeof(msg_hdr) > MPIDI_Global.max_buffered_send)) {
