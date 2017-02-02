@@ -475,6 +475,8 @@ static inline int MPIDI_send_target_msg_cb(int handler_id, void *am_hdr,
                 }
                 MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(rreq) = NULL;
                 MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(anysource_partner) = NULL;
+
+                MPIR_Request_free(anysource_partner);
             }
 
             break;

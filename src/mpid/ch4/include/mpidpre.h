@@ -156,6 +156,8 @@ typedef struct MPIDI_CH4U_req_ext_t {
 typedef struct MPIDI_CH4U_req_t {
     union {
     MPIDI_NM_REQUEST_AM_DECL} netmod_am;
+    union {
+    MPIDI_SHM_REQUEST_AM_DECL} shm_am;
     MPIDI_CH4U_req_ext_t *req;
     MPIDI_ptype p_type;         /* persistent request type */
     void *buffer;

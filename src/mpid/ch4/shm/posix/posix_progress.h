@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  *
  *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2016 Intel Corporation.  Intel provides this material
+ *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
@@ -12,388 +12,281 @@
 #define POSIX_PROGRESS_H_INCLUDED
 
 #include "posix_impl.h"
+#include "posix_am_impl.h"
+#include <posix_eager.h>
 
-/* ----------------------------------------------------- */
-/* MPIDI_POSIX_progress_recv                     */
-/* ----------------------------------------------------- */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_POSIX_progress
 #undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_progress_recv)
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_recv(int blocking, int *completion_count)
-{
-    int mpi_errno = MPI_SUCCESS;
-    size_t data_sz;
-    int in_cell = 0;
-    MPIDI_POSIX_cell_ptr_t cell = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_DO_PROGRESS_RECV);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_DO_PROGRESS_RECV);
-    /* try to match with unexpected */
-    MPIR_Request *sreq = MPIDI_POSIX_recvq_unexpected.head;
-    MPIR_Request *prev_sreq = NULL;
-  unexpected_l:
-
-    if (sreq != NULL) {
-        goto match_l;
-    }
-
-    /* try to receive from recvq */
-    if (MPIDI_POSIX_mem_region.my_recvQ &&
-        !MPIDI_POSIX_queue_empty(MPIDI_POSIX_mem_region.my_recvQ)) {
-        MPIDI_POSIX_queue_dequeue(MPIDI_POSIX_mem_region.my_recvQ, &cell);
-        in_cell = 1;
-        goto match_l;
-    }
-
-    goto fn_exit;
-  match_l:{
-        /* traverse posted receive queue */
-        MPIR_Request *req = MPIDI_POSIX_recvq_posted.head;
-        MPIR_Request *prev_req = NULL;
-        int continue_matching = 1;
-        char *send_buffer =
-            in_cell ? (char *) cell->pkt.mpich.p.payload : (char *) MPIDI_POSIX_REQUEST(sreq)->
-            user_buf;
-        int type = in_cell ? cell->pkt.mpich.type : MPIDI_POSIX_REQUEST(sreq)->type;
-        MPIR_Request *pending = in_cell ? cell->pending : MPIDI_POSIX_REQUEST(sreq)->pending;
-
-        if (type == MPIDI_POSIX_TYPEACK) {
-            /* ACK message doesn't have a matching receive! */
-            int c;
-            MPIR_Assert(in_cell);
-            MPIR_Assert(pending);
-            MPIR_cc_decr(pending->cc_ptr, &c);
-            MPIR_Request_free(pending);
-            goto release_cell_l;
-        }
-
-        while (req) {
-            int sender_rank, tag, context_id;
-            MPI_Count count;
-            MPIDI_POSIX_ENVELOPE_GET(MPIDI_POSIX_REQUEST(req), sender_rank, tag, context_id);
-            MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE, TYPICAL,
-                            (MPL_DBG_FDEST, "Posted from grank %d to %d in progress %d,%d,%d\n",
-                             MPIDI_CH4U_rank_to_lpid(sender_rank, req->comm),
-                             MPIDI_POSIX_mem_region.rank, sender_rank, tag, context_id));
-
-            if ((in_cell && MPIDI_POSIX_ENVELOPE_MATCH(cell, sender_rank, tag, context_id)) ||
-                (sreq &&
-                 MPIDI_POSIX_ENVELOPE_MATCH(MPIDI_POSIX_REQUEST(sreq), sender_rank, tag,
-                                            context_id))) {
-
-                /* Request matched */
-
-                continue_matching = 1;
-
-                if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)) {
-                    MPIDI_CH4R_anysource_matched(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req),
-                                                 MPIDI_CH4R_SHM, &continue_matching);
-
-                    /* The request might have been freed during
-                     * MPIDI_CH4R_anysource_matched. Double check that it still
-                     * exists. */
-                    if (MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req)) {
-                        MPIR_Request_free(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req));
-
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-                        /* Decouple requests */
-                        MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER
-                                                             (req))
-                            = NULL;
-                        MPIDI_CH4I_REQUEST_ANYSOURCE_PARTNER(req) = NULL;
-#endif
-                    }
-
-                    if (continue_matching)
-                        break;
-                }
-
-                char *recv_buffer = (char *) MPIDI_POSIX_REQUEST(req)->user_buf;
-
-                if (pending) {
-                    /* we must send ACK */
-                    int srank = in_cell ? cell->rank : sreq->status.MPI_SOURCE;
-                    MPIR_Request *req_ack = NULL;
-                    MPIDI_POSIX_REQUEST_CREATE_SREQ(req_ack);
-                    MPIR_Object_set_ref(req_ack, 1);
-                    req_ack->comm = req->comm;
-                    MPIR_Comm_add_ref(req->comm);
-
-                    MPIDI_POSIX_ENVELOPE_SET(MPIDI_POSIX_REQUEST(req_ack), req->comm->rank, tag,
-                                             context_id);
-                    MPIDI_POSIX_REQUEST(req_ack)->user_buf = NULL;
-                    MPIDI_POSIX_REQUEST(req_ack)->user_count = 0;
-                    MPIDI_POSIX_REQUEST(req_ack)->datatype = MPI_BYTE;
-                    MPIDI_POSIX_REQUEST(req_ack)->data_sz = 0;
-                    MPIDI_POSIX_REQUEST(req_ack)->type = MPIDI_POSIX_TYPEACK;
-                    MPIDI_POSIX_REQUEST(req_ack)->dest = srank;
-                    MPIDI_POSIX_REQUEST(req_ack)->next = NULL;
-                    MPIDI_POSIX_REQUEST(req_ack)->segment_ptr = NULL;
-                    MPIDI_POSIX_REQUEST(req_ack)->pending = pending;
-                    /* enqueue req_ack */
-                    MPIDI_POSIX_REQUEST_ENQUEUE(req_ack, MPIDI_POSIX_sendq);
-                }
-
-                if (type == MPIDI_POSIX_TYPEEAGER)
-                    /* eager message */
-                    data_sz =
-                        in_cell ? cell->pkt.mpich.datalen : MPIDI_POSIX_REQUEST(sreq)->data_sz;
-                else if (type == MPIDI_POSIX_TYPELMT)
-                    data_sz = MPIDI_POSIX_EAGER_THRESHOLD;
-                else {
-                    data_sz = 0;        /*  unused warning */
-                    MPIR_Assert(0);
-                }
-                /* check for user buffer overflow */
-                size_t user_data_sz = MPIDI_POSIX_REQUEST(req)->data_sz;
-                if (user_data_sz < data_sz) {
-                    req->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-                    data_sz = user_data_sz;
-                }
-
-                /* copy to user buffer */
-                if (MPIDI_POSIX_REQUEST(req)->segment_ptr) {
-                    /* non-contig */
-                    size_t last = MPIDI_POSIX_REQUEST(req)->segment_first + data_sz;
-                    MPIR_Segment_unpack(MPIDI_POSIX_REQUEST(req)->segment_ptr,
-                                        MPIDI_POSIX_REQUEST(req)->segment_first,
-                                        (MPI_Aint *) & last, send_buffer);
-                    if (last != MPIDI_POSIX_REQUEST(req)->segment_first + data_sz)
-                        req->status.MPI_ERROR = MPI_ERR_TYPE;
-                    if (type == MPIDI_POSIX_TYPEEAGER)
-                        MPIR_Segment_free(MPIDI_POSIX_REQUEST(req)->segment_ptr);
-                    else
-                        MPIDI_POSIX_REQUEST(req)->segment_first = last;
-                } else
-                    /* contig */
-                if (send_buffer)
-                    MPIR_Memcpy(recv_buffer, (void *) send_buffer, data_sz);
-                MPIDI_POSIX_REQUEST(req)->data_sz -= data_sz;
-                MPIDI_POSIX_REQUEST(req)->user_buf += data_sz;
-
-                /* set status and dequeue receive request if done */
-                count = MPIR_STATUS_GET_COUNT(req->status) + (MPI_Count) data_sz;
-                MPIR_STATUS_SET_COUNT(req->status, count);
-                if (type == MPIDI_POSIX_TYPEEAGER) {
-                    if (in_cell) {
-                        req->status.MPI_SOURCE = cell->rank;
-                        req->status.MPI_TAG = cell->tag;
-                    } else {
-                        req->status.MPI_SOURCE = sreq->status.MPI_SOURCE;
-                        req->status.MPI_TAG = sreq->status.MPI_TAG;
-                    }
-                    MPIDI_POSIX_REQUEST_DEQUEUE_AND_SET_ERROR(&req, prev_req,
-                                                              MPIDI_POSIX_recvq_posted,
-                                                              req->status.MPI_ERROR);
-                }
-
-                goto release_cell_l;
-            }
-            /* if matched  */
-            prev_req = req;
-            req = MPIDI_POSIX_REQUEST(req)->next;
-        }
-
-        /* unexpected message, no posted matching req */
-        if (in_cell) {
-            /* free the cell, move to unexpected queue */
-            MPIR_Request *rreq;
-            MPIDI_POSIX_REQUEST_CREATE_RREQ(rreq);
-            MPIR_Object_set_ref(rreq, 1);
-            /* set status */
-            rreq->status.MPI_SOURCE = cell->rank;
-            rreq->status.MPI_TAG = cell->tag;
-            MPIR_STATUS_SET_COUNT(rreq->status, cell->pkt.mpich.datalen);
-            MPIDI_POSIX_ENVELOPE_SET(MPIDI_POSIX_REQUEST(rreq), cell->rank, cell->tag,
-                                     cell->context_id);
-            data_sz = cell->pkt.mpich.datalen;
-            MPIDI_POSIX_REQUEST(rreq)->data_sz = data_sz;
-            MPIDI_POSIX_REQUEST(rreq)->type = cell->pkt.mpich.type;
-
-            if (data_sz > 0) {
-                MPIDI_POSIX_REQUEST(rreq)->user_buf = (char *) MPL_malloc(data_sz, MPL_MEM_SHM);
-                MPIR_Memcpy(MPIDI_POSIX_REQUEST(rreq)->user_buf, (void *) cell->pkt.mpich.p.payload,
-                            data_sz);
-            } else {
-                MPIDI_POSIX_REQUEST(rreq)->user_buf = NULL;
-            }
-
-            MPIDI_POSIX_REQUEST(rreq)->datatype = MPI_BYTE;
-            MPIDI_POSIX_REQUEST(rreq)->next = NULL;
-            MPIDI_POSIX_REQUEST(rreq)->pending = cell->pending;
-            /* enqueue rreq */
-            MPIDI_POSIX_REQUEST_ENQUEUE(rreq, MPIDI_POSIX_recvq_unexpected);
-            MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE, TYPICAL,
-                            (MPL_DBG_FDEST, "Unexpected from grank %d to %d in progress %d,%d,%d\n",
-                             cell->my_rank, MPIDI_POSIX_mem_region.rank,
-                             cell->rank, cell->tag, cell->context_id));
-        } else {
-            /* examine another message in unexpected queue */
-            prev_sreq = sreq;
-            sreq = MPIDI_POSIX_REQUEST(sreq)->next;
-            goto unexpected_l;
-        }
-    }
-  release_cell_l:
-
-    if (in_cell) {
-        /* release cell */
-        MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE, TYPICAL,
-                        (MPL_DBG_FDEST, "Received from grank %d to %d in progress %d,%d,%d\n",
-                         cell->my_rank, MPIDI_POSIX_mem_region.rank, cell->rank, cell->tag,
-                         cell->context_id));
-        cell->pending = NULL;
-        {
-            MPIDI_POSIX_queue_enqueue(MPIDI_POSIX_mem_region.FreeQ[cell->my_rank], cell);
-        }
-    } else {
-        /* destroy unexpected req */
-        MPIDI_POSIX_REQUEST(sreq)->pending = NULL;
-        MPL_free(MPIDI_POSIX_REQUEST(sreq)->user_buf);
-        MPIDI_POSIX_REQUEST_DEQUEUE_AND_SET_ERROR(&sreq, prev_sreq, MPIDI_POSIX_recvq_unexpected,
-                                                  mpi_errno);
-    }
-
-    (*completion_count)++;
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_DO_PROGRESS_RECV);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-/* ----------------------------------------------------- */
-/* MPIDI_POSIX_progress_send                     */
-/* ----------------------------------------------------- */
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_progress_send)
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_send(int blocking, int *completion_count)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int dest;
-    MPIDI_POSIX_cell_ptr_t cell = NULL;
-    MPIR_Request *sreq = MPIDI_POSIX_sendq.head;
-    MPIR_Request *prev_sreq = NULL;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_DO_PROGRESS_SEND);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_DO_PROGRESS_SEND);
-
-    if (sreq == NULL)
-        goto fn_exit;
-
-    /* try to send via freeq */
-    if (!MPIDI_POSIX_queue_empty(MPIDI_POSIX_mem_region.my_freeQ)) {
-        MPIDI_POSIX_queue_dequeue(MPIDI_POSIX_mem_region.my_freeQ, &cell);
-        MPIDI_POSIX_ENVELOPE_GET(MPIDI_POSIX_REQUEST(sreq), cell->rank, cell->tag,
-                                 cell->context_id);
-        dest = MPIDI_POSIX_REQUEST(sreq)->dest;
-        char *recv_buffer = (char *) cell->pkt.mpich.p.payload;
-        size_t data_sz = MPIDI_POSIX_REQUEST(sreq)->data_sz;
-        /*
-         * TODO: make request field dest_lpid (or even recvQ[dest_lpid]) instead of dest - no need to do rank_to_lpid each time
-         */
-        int grank = MPIDI_CH4U_rank_to_lpid(dest, sreq->comm);
-        cell->pending = NULL;
-
-        if (MPIDI_POSIX_REQUEST(sreq)->type == MPIDI_POSIX_TYPESYNC) {
-            /* increase req cc in order to release req only after ACK, do it once per SYNC request */
-            /* non-NULL pending req signal receiver about sending ACK back */
-            /* the pending req should be sent back for sender to decrease cc, for it is dequeued already */
-            int c;
-            cell->pending = sreq;
-            MPIR_cc_incr(sreq->cc_ptr, &c);
-            MPIDI_POSIX_REQUEST(sreq)->type = MPIDI_POSIX_TYPESTANDARD;
-        }
-
-        if (data_sz <= MPIDI_POSIX_EAGER_THRESHOLD) {
-            cell->pkt.mpich.datalen = data_sz;
-
-            if (MPIDI_POSIX_REQUEST(sreq)->type == MPIDI_POSIX_TYPEACK) {
-                cell->pkt.mpich.type = MPIDI_POSIX_TYPEACK;
-                cell->pending = MPIDI_POSIX_REQUEST(sreq)->pending;
-            } else {
-                /* eager message */
-                if (MPIDI_POSIX_REQUEST(sreq)->segment_ptr) {
-                    /* non-contig */
-                    MPIR_Segment_pack(MPIDI_POSIX_REQUEST(sreq)->segment_ptr,
-                                      MPIDI_POSIX_REQUEST(sreq)->segment_first,
-                                      (MPI_Aint *) & MPIDI_POSIX_REQUEST(sreq)->segment_size,
-                                      recv_buffer);
-                    MPIR_Segment_free(MPIDI_POSIX_REQUEST(sreq)->segment_ptr);
-                } else {
-                    /* contig */
-                    MPIR_Memcpy((void *) recv_buffer, MPIDI_POSIX_REQUEST(sreq)->user_buf, data_sz);
-                }
-
-                cell->pkt.mpich.type = MPIDI_POSIX_TYPEEAGER;
-                /* set status */
-                /*
-                 * TODO: incorrect count for LMT - set to a last chunk of data
-                 * is send status required?
-                 */
-                sreq->status.MPI_SOURCE = cell->rank;
-                sreq->status.MPI_TAG = cell->tag;
-                MPIR_STATUS_SET_COUNT(sreq->status, data_sz);
-            }
-
-            /* dequeue sreq */
-            MPIDI_POSIX_REQUEST_DEQUEUE_AND_SET_ERROR(&sreq, prev_sreq, MPIDI_POSIX_sendq,
-                                                      mpi_errno);
-        } else {
-            /* long message */
-            if (MPIDI_POSIX_REQUEST(sreq)->segment_ptr) {
-                /* non-contig */
-                size_t last =
-                    MPIDI_POSIX_REQUEST(sreq)->segment_first + MPIDI_POSIX_EAGER_THRESHOLD;
-                MPIR_Segment_pack(MPIDI_POSIX_REQUEST(sreq)->segment_ptr,
-                                  MPIDI_POSIX_REQUEST(sreq)->segment_first, (MPI_Aint *) & last,
-                                  recv_buffer);
-                MPIDI_POSIX_REQUEST(sreq)->segment_first = last;
-            } else {
-                /* contig */
-                MPIR_Memcpy((void *) recv_buffer, MPIDI_POSIX_REQUEST(sreq)->user_buf,
-                            MPIDI_POSIX_EAGER_THRESHOLD);
-                MPIDI_POSIX_REQUEST(sreq)->user_buf += MPIDI_POSIX_EAGER_THRESHOLD;
-            }
-
-            cell->pkt.mpich.datalen = MPIDI_POSIX_EAGER_THRESHOLD;
-            MPIDI_POSIX_REQUEST(sreq)->data_sz -= MPIDI_POSIX_EAGER_THRESHOLD;
-            cell->pkt.mpich.type = MPIDI_POSIX_TYPELMT;
-        }
-
-        MPL_DBG_MSG_FMT(MPIR_DBG_HANDLE, TYPICAL,
-                        (MPL_DBG_FDEST, "Sent to grank %d from %d in progress %d,%d,%d\n", grank,
-                         cell->my_rank, cell->rank, cell->tag, cell->context_id));
-        MPIDI_POSIX_queue_enqueue(MPIDI_POSIX_mem_region.RecvQ[grank], cell);
-        (*completion_count)++;
-    }
-
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_DO_PROGRESS_SEND);
-    return mpi_errno;
-}
-
-#undef FCNAME
-#define FCNAME MPL_QUOTE(MPIDI_POSIX_progress)
+#define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress(int blocking)
 {
-    int complete = 0;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_PROGRESS);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_PROGRESS);
 
-    do {
-        /* Receieve progress */
-        MPID_THREAD_CS_ENTER(POBJ, MPIDI_POSIX_SHM_MUTEX);
-        MPIDI_POSIX_progress_recv(blocking, &complete);
-        MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
-        /* Send progress */
-        MPID_THREAD_CS_ENTER(POBJ, MPIDI_POSIX_SHM_MUTEX);
-        MPIDI_POSIX_progress_send(blocking, &complete);
-        MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
+    MPIDI_POSIX_eager_recv_transaction_t transaction;
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+    int result = MPIDI_POSIX_OK;
+    MPIR_Request *rreq = NULL;
+    MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
+    MPIDI_POSIX_am_request_header_t *curr_rreq_hdr = NULL;
+    void *p_data = NULL;
+    size_t p_data_sz = 0;
+    size_t recv_data_sz = 0;
+    size_t in_total_data_sz = 0;
+    int iov_done = 0;
+    int is_contig;
+    void *am_hdr = NULL;
+    MPIDI_POSIX_am_header_t *msg_hdr;
+    uint8_t *payload;
+    size_t payload_left;
 
-        if (complete > 0)
+    result = MPIDI_POSIX_eager_recv_begin(&transaction);
+
+    if (MPIDI_POSIX_OK != result) {
+        goto send_progress;
+    }
+
+    msg_hdr = transaction.msg_hdr;
+
+    payload = transaction.payload;
+    payload_left = transaction.payload_sz;
+
+    if (msg_hdr) {
+        am_hdr = payload;
+        p_data = payload + msg_hdr->am_hdr_sz;
+
+        in_total_data_sz = msg_hdr->data_sz;
+        p_data_sz = msg_hdr->data_sz;
+
+        MPIDIG_global.target_msg_cbs[msg_hdr->handler_id] (msg_hdr->handler_id,
+                                                           am_hdr,
+                                                           &p_data,
+                                                           &p_data_sz,
+                                                           &is_contig, &target_cmpl_cb, &rreq);
+        POSIX_TRACE("POSIX AM target callback: handler_id = %d, am_hdr = %p, p_data = %p "
+                    "p_data_sz = %lu, is_contig = %d, target_cmpl_cb = %p rreq = %p\n",
+                    msg_hdr->handler_id, am_hdr, p_data, p_data_sz, is_contig, target_cmpl_cb,
+                    rreq);
+        payload += msg_hdr->am_hdr_sz;
+        payload_left -= msg_hdr->am_hdr_sz;
+
+        if (rreq) {
+            if ((p_data_sz == 0) && (in_total_data_sz == 0)) {
+                /* zero message size optimization */
+
+                MPIR_STATUS_SET_COUNT(rreq->status, 0);
+                rreq->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(rreq, rank);
+                rreq->status.MPI_TAG = MPIDI_CH4U_REQUEST(rreq, tag);
+                rreq->status.MPI_ERROR = MPI_SUCCESS;
+
+                if (target_cmpl_cb) {
+                    target_cmpl_cb(rreq);
+                }
+
+                MPIDI_POSIX_eager_recv_commit(&transaction);
+
+                goto fn_exit;
+            }
+
+            if (is_contig && (in_total_data_sz == payload_left)) {
+                /* Received immediately */
+
+                if (in_total_data_sz > p_data_sz) {
+                    rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
+                } else {
+                    rreq->status.MPI_ERROR = MPI_SUCCESS;
+                }
+
+                recv_data_sz = MPL_MIN(p_data_sz, in_total_data_sz);
+
+                MPIR_STATUS_SET_COUNT(rreq->status, recv_data_sz);
+                rreq->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(rreq, rank);
+                rreq->status.MPI_TAG = MPIDI_CH4U_REQUEST(rreq, tag);
+
+                MPIDI_POSIX_eager_recv_memcpy(&transaction, p_data, payload, recv_data_sz);
+
+                if (target_cmpl_cb) {
+                    target_cmpl_cb(rreq);
+                }
+
+                MPIDI_POSIX_eager_recv_commit(&transaction);
+
+                MPIDI_POSIX_EAGER_RECV_COMPLETED_HOOK(rreq);
+
+                goto fn_exit;
+            }
+
+            /* Allocate aux data */
+
+            MPIDI_POSIX_am_init_request(NULL, 0, rreq);
+
+            /* Set active recv request */
+
+            curr_rreq_hdr = MPIDI_POSIX_AMREQUEST(rreq, req_hdr);
+
+            curr_rreq_hdr->cmpl_handler_fn = target_cmpl_cb;
+            curr_rreq_hdr->dst_grank = transaction.src_grank;
+
+            if (is_contig) {
+                curr_rreq_hdr->iov_ptr = curr_rreq_hdr->iov;
+
+                curr_rreq_hdr->iov_ptr[0].iov_base = p_data;
+                curr_rreq_hdr->iov_ptr[0].iov_len = p_data_sz;
+
+                curr_rreq_hdr->iov_num = 1;
+
+                recv_data_sz = p_data_sz;
+            } else {
+                curr_rreq_hdr->iov_ptr = ((struct iovec *) p_data);
+
+                for (i = 0; i < p_data_sz; i++) {
+                    recv_data_sz += curr_rreq_hdr->iov_ptr[i].iov_len;
+                }
+
+                curr_rreq_hdr->iov_num = p_data_sz;
+            }
+
+            /* Set final request status */
+
+            if (in_total_data_sz > recv_data_sz) {
+                rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
+            } else {
+                rreq->status.MPI_ERROR = MPI_SUCCESS;
+            }
+
+            recv_data_sz = MPL_MIN(recv_data_sz, in_total_data_sz);
+
+            MPIR_STATUS_SET_COUNT(rreq->status, recv_data_sz);
+            rreq->status.MPI_SOURCE = MPIDI_CH4U_REQUEST(rreq, rank);
+            rreq->status.MPI_TAG = MPIDI_CH4U_REQUEST(rreq, tag);
+
+            curr_rreq_hdr->is_contig = is_contig;
+            curr_rreq_hdr->in_total_data_sz = in_total_data_sz;
+
+            /* Make it active */
+
+            MPIR_Assert(MPIDI_POSIX_global.active_rreq[transaction.src_grank] == NULL);
+
+            MPIDI_POSIX_global.active_rreq[transaction.src_grank] = rreq;
+        } else {
+            MPIDI_POSIX_eager_recv_commit(&transaction);
+
+            goto fn_exit;
+        }
+    } else {
+        /* Fragment handling. Set currently active recv request */
+
+        rreq = MPIDI_POSIX_global.active_rreq[transaction.src_grank];
+
+        curr_rreq_hdr = MPIDI_POSIX_AMREQUEST(rreq, req_hdr);
+    }
+
+    curr_rreq_hdr->in_total_data_sz -= payload_left;
+
+    /* Generic handling for contig and non contig data */
+    for (i = 0; i < curr_rreq_hdr->iov_num; i++) {
+        if (payload_left < curr_rreq_hdr->iov_ptr[i].iov_len) {
+            MPIDI_POSIX_eager_recv_memcpy(&transaction,
+                                          curr_rreq_hdr->iov_ptr[i].iov_base, payload,
+                                          payload_left);
+
+            curr_rreq_hdr->iov_ptr[i].iov_base =
+                (char *) curr_rreq_hdr->iov_ptr[i].iov_base + payload_left;
+            curr_rreq_hdr->iov_ptr[i].iov_len -= payload_left;
+
             break;
-    } while (blocking);
+        }
+
+        MPIDI_POSIX_eager_recv_memcpy(&transaction,
+                                      curr_rreq_hdr->iov_ptr[i].iov_base,
+                                      payload, curr_rreq_hdr->iov_ptr[i].iov_len);
+
+        payload += curr_rreq_hdr->iov_ptr[i].iov_len;
+        payload_left -= curr_rreq_hdr->iov_ptr[i].iov_len;
+
+        iov_done++;
+    }
+
+    if (curr_rreq_hdr->iov_num) {
+        curr_rreq_hdr->iov_num -= iov_done;
+        curr_rreq_hdr->iov_ptr += iov_done;
+    }
+
+    if (curr_rreq_hdr->in_total_data_sz == 0) {
+        /* All fragments have been received */
+
+        MPIDI_POSIX_global.active_rreq[transaction.src_grank] = NULL;
+
+        MPIDI_POSIX_am_clear_request(rreq);
+
+        if (curr_rreq_hdr->cmpl_handler_fn) {
+            curr_rreq_hdr->cmpl_handler_fn(rreq);
+        }
+    }
+
+    MPIDI_POSIX_eager_recv_commit(&transaction);
+
+    goto fn_exit;
+
+  send_progress:
+
+    /* Send progress */
+
+    if (MPIDI_POSIX_global.postponed_queue) {
+        /* Drain postponed queue */
+
+        /* Get data from request */
+
+        MPIR_Request *sreq = (MPIR_Request *) (MPIDI_POSIX_global.postponed_queue->request);
+
+        MPIDI_POSIX_am_request_header_t *curr_sreq_hdr = MPIDI_POSIX_AMREQUEST(sreq, req_hdr);
+
+        POSIX_TRACE("Queue OUT HDR [ POSIX AM [handler_id %" PRIu64 ", am_hdr_sz %" PRIu64
+                    ", data_sz %" PRIu64 ", seq_num = %d], " "tag = %d, src_rank = %d ] to %d\n",
+                    curr_sreq_hdr->msg_hdr ? curr_sreq_hdr->msg_hdr->handler_id : (uint64_t) - 1,
+                    curr_sreq_hdr->msg_hdr ? curr_sreq_hdr->msg_hdr->am_hdr_sz : (uint64_t) - 1,
+                    curr_sreq_hdr->msg_hdr ? curr_sreq_hdr->msg_hdr->data_sz : (uint64_t) - 1,
+#ifdef POSIX_AM_DEBUG
+                    curr_sreq_hdr->msg_hdr ? curr_sreq_hdr->msg_hdr->seq_num : -1,
+#else /* POSIX_AM_DEBUG */
+                    -1,
+#endif /* POSIX_AM_DEBUG */
+                    ((MPIDI_CH4U_hdr_t *) curr_sreq_hdr->am_hdr)->tag,
+                    ((MPIDI_CH4U_hdr_t *) curr_sreq_hdr->am_hdr)->src_rank,
+                    curr_sreq_hdr->dst_grank);
+
+        result = MPIDI_POSIX_eager_send(curr_sreq_hdr->dst_grank,
+                                        &curr_sreq_hdr->msg_hdr,
+                                        &curr_sreq_hdr->iov_ptr, &curr_sreq_hdr->iov_num, 0);
+
+        if ((MPIDI_POSIX_NOK == result) || curr_sreq_hdr->iov_num) {
+            goto fn_exit;
+        }
+
+        /* Remove element from postponed queue */
+
+        DL_DELETE(MPIDI_POSIX_global.postponed_queue, &sreq->dev.ch4.am.req->rreq);
+
+        /* Request has been completed */
+
+        if (MPIDI_POSIX_AMREQUEST_HDR(sreq, pack_buffer)) {
+            MPL_free(MPIDI_POSIX_AMREQUEST_HDR(sreq, pack_buffer));
+            MPIDI_POSIX_AMREQUEST_HDR(sreq, pack_buffer) = NULL;
+        }
+
+        MPIDIG_global.origin_cbs[curr_sreq_hdr->handler_id] (sreq);
+
+        MPIDI_POSIX_am_clear_request(sreq);
+
+        goto fn_exit;
+    }
+
+  fn_exit:
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_PROGRESS);
-    return MPI_SUCCESS;
+    return mpi_errno;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_progress_test(void)

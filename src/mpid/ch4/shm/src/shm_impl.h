@@ -2224,4 +2224,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_op_free_hook(MPIR_Op * op_p)
 
 #endif /* SHM_INLINE           */
 
+#include "posix_impl.h"
+
 #endif /* SHM_IMPL_H_INCLUDED */
