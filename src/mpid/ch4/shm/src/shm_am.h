@@ -5,6 +5,12 @@
  *
  */
 
+/*
+ * In this file, we directly call the POSIX shared memory module all the time. In the future, this
+ * code could have some logic to call other modules in certain circumstances (e.g. XPMEM for large
+ * messages and POSIX for small messages).
+ */
+
 #ifndef SHM_AM_H_INCLUDED
 #define SHM_AM_H_INCLUDED
 

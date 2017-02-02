@@ -173,7 +173,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_unsafe(void *buf,
     mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message);
 #else
     if (MPIDI_CH4I_REQUEST(message, is_local))
-        mpi_errno = MPIDI_SHM_mpi_imrecv(buf, count, datatype, message, rreqp);
+        mpi_errno = MPIDI_SHM_mpi_imrecv(buf, count, datatype, message);
     else
         mpi_errno = MPIDI_NM_mpi_imrecv(buf, count, datatype, message);
 #endif
@@ -317,9 +317,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_safe(void *buf,
 
     if (!cs_acq) {
         MPIR_Request *request = MPIR_Request_create(MPIR_REQUEST_KIND__RECV);
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        *rreqp = request;
-#endif
         MPIR_ERR_CHKANDSTMT(request == NULL, mpi_errno, MPIX_ERR_NOREQ, goto fn_fail, "**nomemreq");
         MPIR_Datatype_add_ref_if_not_builtin(datatype);
         MPIDI_workq_pt2pt_enqueue(IMRECV, NULL /*send_buf */ , buf, count, datatype,
@@ -329,10 +326,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_imrecv_safe(void *buf,
                                   &message, NULL /*processed */);
     } else {
         MPIDI_workq_vni_progress_unsafe();
-#ifndef MPIDI_CH4_DIRECT_NETMOD
-        if (MPIDI_CH4I_REQUEST(message, is_local))
-            *rreqp = NULL;
-#endif
         mpi_errno = MPIDI_imrecv_unsafe(buf, count, datatype, message, rreqp);
     }
 
@@ -510,7 +503,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Mrecv(void *buf,
 
     MPIR_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
     message->kind = MPIR_REQUEST_KIND__RECV;
-    *rreq = message;    /* SHM will override this pointer */
+    *rreq = message;
 
     mpi_errno = MPIDI_imrecv_safe(buf, count, datatype, message, rreq);
     if (mpi_errno != MPI_SUCCESS) {
@@ -543,7 +536,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Imrecv(void *buf, MPI_Aint count, MPI_Datatype
 
     MPIR_Assert(message->kind == MPIR_REQUEST_KIND__MPROBE);
     message->kind = MPIR_REQUEST_KIND__RECV;
-    *rreqp = message;   /* SHM will override this pointer */
+    *rreqp = message;
 
     mpi_errno = MPIDI_imrecv_safe(buf, count, datatype, message, rreqp);
     if (mpi_errno != MPI_SUCCESS) {

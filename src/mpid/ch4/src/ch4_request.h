@@ -102,6 +102,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Request_complete(MPIR_Request * req)
             MPIDI_CH4R_release_buf(MPIDI_CH4U_REQUEST(req, req));
             MPIDI_CH4U_REQUEST(req, req) = NULL;
             MPIDI_NM_am_request_finalize(req);
+#ifndef MPIDI_CH4_DIRECT_NETMOD
+            MPIDI_SHM_am_request_finalize(req);
+#endif
         }
         MPIR_Request_free(req);
     }

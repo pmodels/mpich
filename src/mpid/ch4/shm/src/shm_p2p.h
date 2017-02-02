@@ -213,14 +213,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_irecv(void *buf, MPI_Aint count, MPI_
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_SHM_mpi_imrecv(void *buf, MPI_Aint count, MPI_Datatype datatype,
-                                                  MPIR_Request * message, MPIR_Request ** rreqp)
+                                                  MPIR_Request * message)
 {
     int ret;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_IMRECV);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_IMRECV);
 
-    ret = MPIDI_POSIX_mpi_imrecv(buf, count, datatype, message, rreqp);
+    ret = MPIDI_POSIX_mpi_imrecv(buf, count, datatype, message);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_IMRECV);
     return ret;
