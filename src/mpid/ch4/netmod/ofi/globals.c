@@ -26,6 +26,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .enable_tagged             = MPIDI_OFI_ENABLE_TAGGED_PSM,
         .enable_am                 = MPIDI_OFI_ENABLE_AM_PSM,
         .enable_rma                = MPIDI_OFI_ENABLE_RMA_PSM,
+        .enable_atomics            = MPIDI_OFI_ENABLE_ATOMICS_PSM,
         .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_PSM,
         .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_PSM
     },
@@ -38,6 +39,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .enable_tagged             = MPIDI_OFI_ENABLE_TAGGED_PSM2,
         .enable_am                 = MPIDI_OFI_ENABLE_AM_PSM2,
         .enable_rma                = MPIDI_OFI_ENABLE_RMA_PSM2,
+        .enable_atomics            = MPIDI_OFI_ENABLE_ATOMICS_PSM2,
         .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_PSM2,
         .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_PSM2
     },
@@ -50,6 +52,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .enable_tagged             = MPIDI_OFI_ENABLE_TAGGED_GNI,
         .enable_am                 = MPIDI_OFI_ENABLE_AM_GNI,
         .enable_rma                = MPIDI_OFI_ENABLE_RMA_GNI,
+        .enable_atomics            = MPIDI_OFI_ENABLE_ATOMICS_GNI,
         .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_GNI,
         .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_GNI
     },
@@ -62,6 +65,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .enable_tagged             = MPIDI_OFI_ENABLE_TAGGED_SOCKETS,
         .enable_am                 = MPIDI_OFI_ENABLE_AM_SOCKETS,
         .enable_rma                = MPIDI_OFI_ENABLE_RMA_SOCKETS,
+        .enable_atomics            = MPIDI_OFI_ENABLE_ATOMICS_SOCKETS,
         .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_SOCKETS,
         .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_SOCKETS
     },
@@ -74,6 +78,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .enable_tagged             = MPIDI_OFI_ENABLE_TAGGED_BGQ,
         .enable_am                 = MPIDI_OFI_ENABLE_AM_BGQ,
         .enable_rma                = MPIDI_OFI_ENABLE_RMA_BGQ,
+        .enable_atomics            = MPIDI_OFI_ENABLE_ATOMICS_BGQ,
         .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_BGQ,
         .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_BGQ
     },
@@ -86,6 +91,7 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .enable_tagged             = MPIDI_OFI_ENABLE_TAGGED_VERBS,
         .enable_am                 = MPIDI_OFI_ENABLE_AM_VERBS,
         .enable_rma                = MPIDI_OFI_ENABLE_RMA_VERBS,
+        .enable_atomics            = MPIDI_OFI_ENABLE_ATOMICS_VERBS,
         .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_VERBS,
         .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_VERBS
     }
