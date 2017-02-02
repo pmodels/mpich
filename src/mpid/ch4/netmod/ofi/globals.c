@@ -76,5 +76,17 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .enable_rma                = MPIDI_OFI_ENABLE_RMA_BGQ,
         .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_BGQ,
         .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_BGQ
+    },
+    { /* verbs */
+        .enable_data               = MPIDI_OFI_ENABLE_DATA_VERBS,
+        .enable_av_table           = MPIDI_OFI_ENABLE_AV_TABLE_VERBS,
+        .enable_scalable_endpoints = MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS_VERBS,
+        .enable_stx_rma            = MPIDI_OFI_ENABLE_STX_RMA_VERBS,
+        .enable_mr_scalable        = MPIDI_OFI_ENABLE_MR_SCALABLE_VERBS,
+        .enable_tagged             = MPIDI_OFI_ENABLE_TAGGED_VERBS,
+        .enable_am                 = MPIDI_OFI_ENABLE_AM_VERBS,
+        .enable_rma                = MPIDI_OFI_ENABLE_RMA_VERBS,
+        .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_VERBS,
+        .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_VERBS
     }
 };
