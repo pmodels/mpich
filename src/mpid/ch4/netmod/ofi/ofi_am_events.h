@@ -152,13 +152,31 @@ static inline int MPIDI_OFI_do_rdma_read(void *dst,
         comm = MPIDI_CH4U_context_id_to_comm(context_id);
         MPIR_Assert(comm);
         MPIDI_OFI_cntr_incr();
-        MPIDI_OFI_CALL_RETRY_AM(fi_read(MPIDI_OFI_EP_TX_RMA(0),
-                                        (char *) dst + done,
-                                        curr_len, NULL,
-                                        MPIDI_OFI_comm_to_phys(comm, src_rank, MPIDI_OFI_API_TAG),
-                                        src + done,
-                                        MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).rma_key,
-                                        &am_req->context), FALSE /* no lock */ , read);
+
+        struct iovec iov = {
+            .iov_base = (char *)dst + done,
+            .iov_len = curr_len
+        };
+        struct fi_rma_iov rma_iov = {
+            .addr = src + done,
+            .len = curr_len,
+            .key = MPIDI_OFI_AMREQUEST_HDR(rreq, lmt_info).rma_key
+        };
+        struct fi_msg_rma msg = {
+            .msg_iov = &iov,
+            .desc = NULL,
+            .iov_count = 1,
+            .addr = MPIDI_OFI_comm_to_phys(comm, src_rank, MPIDI_OFI_API_TAG),
+            .rma_iov = &rma_iov,
+            .rma_iov_count = 1,
+            .context = &am_req->context,
+            .data = 0
+        };
+
+        MPIDI_OFI_CALL_RETRY_AM(fi_readmsg(MPIDI_OFI_EP_TX_RMA(0),
+                                           &msg,
+                                           FI_COMPLETION), FALSE /* no lock */ , read);
+
         done += curr_len;
         rem -= curr_len;
     }
