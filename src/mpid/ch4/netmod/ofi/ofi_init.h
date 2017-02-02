@@ -117,6 +117,16 @@ cvars:
       description : >-
         If true, enable OFI RMA support.
 
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS
+      category    : CH4_OFI
+      type        : int
+      default     : 1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, enable OFI Atomics support.
+
     - name        : MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS
       category    : CH4_OFI
       type        : int
@@ -194,6 +204,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                                         MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_am : MPIR_CVAR_CH4_OFI_ENABLE_AM;
     MPIDI_Global.settings.enable_rma                = MPIR_CVAR_CH4_OFI_ENABLE_RMA != 1 ? MPIR_CVAR_CH4_OFI_ENABLE_RMA :
                                                         MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_rma : MPIR_CVAR_CH4_OFI_ENABLE_RMA;
+    MPIDI_Global.settings.enable_atomics            = MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS != 1 ? MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS :
+                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_atomics : MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS;
     MPIDI_Global.settings.fetch_atomic_iovecs       = MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS != -1 ? MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS :
                                                         MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].fetch_atomic_iovecs : MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS;
 
@@ -260,6 +272,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
     if (MPIDI_OFI_ENABLE_RMA) {
         hints->caps |= FI_RMA;      /* RMA(read/write)         */
+    }
+
+    if (MPIDI_OFI_ENABLE_ATOMICS) {
         hints->caps |= FI_ATOMICS;  /* Atomics capabilities    */
     }
 
@@ -349,8 +364,12 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "Provider doesn't support active messages"));
                 prov = prov_use->next;
                 continue;
-            } else if (MPIDI_OFI_ENABLE_RMA && 0ULL == (prov_use->caps & (FI_RMA | FI_ATOMICS))) {
+            } else if (MPIDI_OFI_ENABLE_RMA && 0ULL == (prov_use->caps & (FI_RMA))) {
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "Provider doesn't support RMA"));
+                prov = prov_use->next;
+                continue;
+            } else if (MPIDI_OFI_ENABLE_ATOMICS && 0ULL == (prov_use->caps & (FI_ATOMICS))) {
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "Provider doesn't support atomics"));
                 prov = prov_use->next;
                 continue;
 
@@ -395,7 +414,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDI_Global.settings.enable_am                 = MPIDI_Global.settings.enable_am == 0 ? 0 :
                                                             (prov_use->caps & (FI_MSG | FI_MULTI_RECV)) > 0ULL ? 1 : 0;
         MPIDI_Global.settings.enable_rma                = MPIDI_Global.settings.enable_rma == 0 ? 0 :
-                                                            (prov_use->caps & (FI_RMA | FI_ATOMICS)) > 0ULL ? 1 : 0;
+                                                            (prov_use->caps & (FI_RMA)) > 0ULL ? 1 : 0;
+        MPIDI_Global.settings.enable_atomics            = MPIDI_Global.settings.enable_atomics == 0 ? 0 :
+                                                            (prov_use->caps & (FI_ATOMICS)) > 0ULL ? 1 : 0;
 
         if (MPIDI_Global.settings.enable_scalable_endpoints) {
             MPIDI_Global.settings.max_endpoints      = MPIDI_OFI_MAX_ENDPOINTS_SCALABLE;
@@ -414,6 +435,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_TAGGED: %d", MPIDI_OFI_ENABLE_TAGGED));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_AM: %d", MPIDI_OFI_ENABLE_AM));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_RMA: %d", MPIDI_OFI_ENABLE_RMA));
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_ATOMICS: %d", MPIDI_OFI_ENABLE_ATOMICS));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_FETCH_ATOMIC_IOVECS: %d", MPIDI_OFI_FETCH_ATOMIC_IOVECS));
 
     if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && rank == 0) {
@@ -426,6 +448,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         fprintf(stdout, "MPIDI_OFI_ENABLE_TAGGED: %d\n", MPIDI_OFI_ENABLE_TAGGED);
         fprintf(stdout, "MPIDI_OFI_ENABLE_AM: %d\n", MPIDI_OFI_ENABLE_AM);
         fprintf(stdout, "MPIDI_OFI_ENABLE_RMA: %d\n", MPIDI_OFI_ENABLE_RMA);
+        fprintf(stdout, "MPIDI_OFI_ENABLE_ATOMICS: %d\n", MPIDI_OFI_ENABLE_ATOMICS);
         fprintf(stdout, "MPIDI_OFI_FETCH_ATOMIC_IOVECS: %d\n", MPIDI_OFI_FETCH_ATOMIC_IOVECS);
         fprintf(stdout, "======================================\n");
     }
