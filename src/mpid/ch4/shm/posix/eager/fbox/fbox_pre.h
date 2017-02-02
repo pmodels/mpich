@@ -1,4 +1,3 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
  *  (C) 2006 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
@@ -8,13 +7,12 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef SHMPRE_H_INCLUDED
-#define SHMPRE_H_INCLUDED
 
-/* *INDENT-OFF* */
-@ch4_shm_pre_include@
-/* *INDENT-ON* */
+#ifndef POSIX_EAGER_FBOX_PRE_H_INCLUDED
+#define POSIX_EAGER_FBOX_PRE_H_INCLUDED
 
-#define MPIDI_SHM_REQUEST_DECL       @ch4_shm_request_decl@
-#define MPIDI_SHM_COMM_DECL          @ch4_shm_comm_decl@
-#endif /* SHMPRE_H_INCLUDED */
+typedef struct MPIDI_POSIX_eager_fbox_recv_transaction {
+    void *fbox_ptr;
+} MPIDI_POSIX_eager_fbox_recv_transaction_t;
+
+#endif /* POSIX_EAGER_FBOX_PRE_H_INCLUDED */
