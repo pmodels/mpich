@@ -479,6 +479,13 @@ for shm in $ch4_shm ; do
 MPIDI_${shm_upper}_request_t ${shm};"
     fi
 
+    if test -z "$ch4_shm_amrequest_decl" ; then
+        ch4_shm_amrequest_decl="MPIDI_${shm_upper}_am_request_t ${shm};"
+    else
+        ch4_shm_amrequest_decl="${ch4_shm_amrequest_decl} \\
+MPIDI_${shm_upper}_am_request_t ${shm};"
+    fi
+
     if test -z "$ch4_shm_comm_decl" ; then
         ch4_shm_comm_decl="MPIDI_${shm_upper}_comm_t ${shm};"
     else
@@ -603,6 +610,7 @@ AC_SUBST(ch4_shm_pre_include)
 AC_SUBST(ch4_shm_coll_globals_default)
 AC_SUBST(ch4_shm_coll_params_include)
 AC_SUBST(ch4_shm_request_decl)
+AC_SUBST(ch4_shm_amrequest_decl)
 AC_SUBST(ch4_shm_comm_decl)
 AC_SUBST(ch4_shm_barrier_params_decl)
 AC_SUBST(ch4_shm_bcast_params_decl)
@@ -625,6 +633,7 @@ AM_SUBST_NOTMAKE(ch4_shm_pre_include)
 AM_SUBST_NOTMAKE(ch4_shm_coll_globals_default)
 AM_SUBST_NOTMAKE(ch4_shm_coll_params_include)
 AM_SUBST_NOTMAKE(ch4_shm_request_decl)
+AM_SUBST_NOTMAKE(ch4_shm_amrequest_decl)
 AM_SUBST_NOTMAKE(ch4_shm_comm_decl)
 AM_SUBST_NOTMAKE(ch4_shm_barrier_params_decl)
 AM_SUBST_NOTMAKE(ch4_shm_bcast_params_decl)

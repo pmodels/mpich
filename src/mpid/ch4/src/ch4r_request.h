@@ -41,6 +41,9 @@ static inline MPIR_Request *MPIDI_CH4I_am_request_create(MPIR_Request_kind_t kin
         MPIR_Request_add_ref(req);
 
     MPIDI_NM_am_request_init(req);
+#ifdef MPIDI_BUILD_CH4_SHM
+    MPIDI_SHM_am_request_init(req);
+#endif
 
     CH4_COMPILE_TIME_ASSERT(sizeof(MPIDI_CH4U_req_ext_t) <= MPIDI_CH4I_BUF_POOL_SZ);
     MPIDI_CH4U_REQUEST(req, req) =

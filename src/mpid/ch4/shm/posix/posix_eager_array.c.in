@@ -1,0 +1,32 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *  (C) 2006 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ *
+ *  Portions of this code were written by Intel Corporation.
+ *  Copyright (C) 2011-2017 Intel Corporation.  Intel provides this material
+ *  to Argonne National Laboratory subject to Software Grant and Corporate
+ *  Contributor License Agreement dated February 8, 2012.
+ */
+
+#include <mpidimpl.h>
+
+#include "posix_eager.h"
+
+#ifdef MPIDI_BUILD_CH4_SHM
+
+/* *INDENT-OFF* */
+/* forward declaration of funcs structs defined in network modules */
+extern MPIDI_POSIX_eager_funcs_t @ch4_posix_eager_func_decl@;
+
+#ifndef POSIX_EAGER_DIRECT
+MPIDI_POSIX_eager_funcs_t *MPIDI_POSIX_eager_funcs[@ch4_posix_eager_array_sz@] = { @ch4_posix_eager_func_array@ };
+#else
+MPIDI_POSIX_eager_funcs_t *MPIDI_POSIX_eager_funcs[@ch4_posix_eager_array_sz@] = { 0 };
+#endif
+int MPIDI_num_posix_eager_fabrics = @ch4_posix_eager_array_sz@;
+char MPIDI_POSIX_eager_strings[@ch4_posix_eager_array_sz@][MPIDI_MAX_POSIX_EAGER_STRING_LEN] =
+    { @ch4_posix_eager_strings@ };
+/* *INDENT-ON* */
+
+#endif
