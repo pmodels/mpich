@@ -322,6 +322,7 @@ typedef struct {
     unsigned enable_tagged:1;
     unsigned enable_am:1;
     unsigned enable_rma:1;
+    unsigned enable_atomics:1;
 
     int max_endpoints;
     int max_endpoints_bits;
