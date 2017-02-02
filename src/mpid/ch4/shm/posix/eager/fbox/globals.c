@@ -9,11 +9,11 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#include "posix_impl.h"
-#include "posix_types.h"
+#include "fbox_impl.h"
+#include "fbox_types.h"
 
-MPIDI_POSIX_global_t MPIDI_POSIX_global = { 0 };
+MPIDI_POSIX_eager_fbox_control_t MPIDI_POSIX_eager_fbox_control_global = { 0 };
 
-MPIDI_POSIX_eager_funcs_t *MPIDI_POSIX_eager_func = NULL;
-
-MPL_dbg_class MPIDI_CH4_SHM_POSIX_GENERAL;
+#ifdef MPL_USE_DBG_LOGGING
+MPL_dbg_class MPIDI_CH4_SHM_POSIX_FBOX_GENERAL;
+#endif

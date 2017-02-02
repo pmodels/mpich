@@ -8,12 +8,11 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
+#ifndef POSIX_EAGER_FBOX_DIRECT_H_INCLUDED
+#define POSIX_EAGER_FBOX_DIRECT_H_INCLUDED
 
-#include "posix_impl.h"
-#include "posix_types.h"
+#include "fbox_init.h"
+#include "fbox_send.h"
+#include "fbox_recv.h"
 
-MPIDI_POSIX_global_t MPIDI_POSIX_global = { 0 };
-
-MPIDI_POSIX_eager_funcs_t *MPIDI_POSIX_eager_func = NULL;
-
-MPL_dbg_class MPIDI_CH4_SHM_POSIX_GENERAL;
+#endif /* POSIX_EAGER_FBOX_DIRECT_H_INCLUDED */

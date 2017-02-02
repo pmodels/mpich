@@ -11,7 +11,8 @@
 ##  Contributor License Agreement dated February 8, 2012.
 ##
 
-AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/ch4/shm/include
+AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/ch4/shm/include \
+               -I$(top_srcdir)/src/mpid/ch4/shm/posix
 
 noinst_HEADERS += src/mpid/ch4/shm/include/shm.h
 
