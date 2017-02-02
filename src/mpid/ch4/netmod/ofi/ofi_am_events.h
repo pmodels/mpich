@@ -201,7 +201,7 @@ static inline int MPIDI_OFI_handle_long_am_hdr(MPIDI_OFI_am_header_t * msg_hdr)
                            msg_hdr->am_hdr_sz, lmt_msg->context_id, lmt_msg->src_rank, rreq);
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_HANDLE_LONG_AM_HDR);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_HANDLE_LONG_AM_HDR);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
