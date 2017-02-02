@@ -1,4 +1,3 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
  *  (C) 2006 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
@@ -8,13 +7,11 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef SHMPRE_H_INCLUDED
-#define SHMPRE_H_INCLUDED
+#ifndef POSIX_EAGER_FBOX_DIRECT_H_INCLUDED
+#define POSIX_EAGER_FBOX_DIRECT_H_INCLUDED
 
-/* *INDENT-OFF* */
-@ch4_shm_pre_include@
-/* *INDENT-ON* */
+#include "fbox_init.h"
+#include "fbox_send.h"
+#include "fbox_recv.h"
 
-#define MPIDI_SHM_REQUEST_DECL       @ch4_shm_request_decl@
-#define MPIDI_SHM_COMM_DECL          @ch4_shm_comm_decl@
-#endif /* SHMPRE_H_INCLUDED */
+#endif /* POSIX_EAGER_FBOX_DIRECT_H_INCLUDED */

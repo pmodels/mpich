@@ -8,13 +8,10 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef SHMPRE_H_INCLUDED
-#define SHMPRE_H_INCLUDED
 
-/* *INDENT-OFF* */
-@ch4_shm_pre_include@
-/* *INDENT-ON* */
+#include "fbox_impl.h"
+#include "fbox_types.h"
 
-#define MPIDI_SHM_REQUEST_DECL       @ch4_shm_request_decl@
-#define MPIDI_SHM_COMM_DECL          @ch4_shm_comm_decl@
-#endif /* SHMPRE_H_INCLUDED */
+MPIDI_POSIX_eager_fbox_control_t MPIDI_POSIX_eager_fbox_control_global = { 0 };
+
+MPL_dbg_class MPIDI_CH4_SHM_POSIX_FBOX_GENERAL;
