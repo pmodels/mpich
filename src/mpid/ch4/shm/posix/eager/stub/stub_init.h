@@ -8,12 +8,21 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
+#ifndef POSIX_EAGER_STUB_INIT_H_INCLUDED
+#define POSIX_EAGER_STUB_INIT_H_INCLUDED
 
-#include "posix_impl.h"
-#include "posix_types.h"
+#include "stub_impl.h"
 
-MPIDI_POSIX_global_t MPIDI_POSIX_global = { 0 };
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
 
-MPIDI_POSIX_eager_funcs_t *MPIDI_POSIX_eager_func = NULL;
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
+{
+    MPIR_Assert(0);
+    return MPI_SUCCESS;
+}
 
-MPL_dbg_class MPIDI_CH4_SHM_POSIX_GENERAL;
+#endif /* POSIX_EAGER_STUB_INIT_H_INCLUDED */

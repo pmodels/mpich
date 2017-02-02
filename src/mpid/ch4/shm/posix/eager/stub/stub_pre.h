@@ -1,4 +1,3 @@
-/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
  *  (C) 2006 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
@@ -9,11 +8,11 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 
-#include "posix_impl.h"
-#include "posix_types.h"
+#ifndef POSIX_EAGER_STUB_PRE_H_INCLUDED
+#define POSIX_EAGER_STUB_PRE_H_INCLUDED
 
-MPIDI_POSIX_global_t MPIDI_POSIX_global = { 0 };
+typedef struct MPIDI_POSIX_eager_stub_recv_transaction {
+    int dummy;
+} MPIDI_POSIX_eager_stub_recv_transaction_t;
 
-MPIDI_POSIX_eager_funcs_t *MPIDI_POSIX_eager_func = NULL;
-
-MPL_dbg_class MPIDI_CH4_SHM_POSIX_GENERAL;
+#endif /* POSIX_EAGER_STUB_PRE_H_INCLUDED */

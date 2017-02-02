@@ -8,12 +8,13 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
+#ifndef POSIX_EAGER_PRE_H_INCLUDED
+#define POSIX_EAGER_PRE_H_INCLUDED
 
-#include "posix_impl.h"
-#include "posix_types.h"
+/* *INDENT-OFF* */
+@ch4_posix_eager_pre_include@
+/* *INDENT-ON* */
 
-MPIDI_POSIX_global_t MPIDI_POSIX_global = { 0 };
+#define MPIDI_POSIX_EAGER_RECV_TRANSACTION_DECL    @ch4_posix_eager_recv_transaction_decl@
 
-MPIDI_POSIX_eager_funcs_t *MPIDI_POSIX_eager_func = NULL;
-
-MPL_dbg_class MPIDI_CH4_SHM_POSIX_GENERAL;
+#endif /* POSIX_EAGER_PRE_H_INCLUDED */
