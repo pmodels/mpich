@@ -24,8 +24,6 @@
 #include "ofi_capability_sets.h"
 #include <rdma/fi_trigger.h>
 
-#include "coll/include/coll_pre.h"
-#include "coll/include/ml_pre.h"
 
 #define MPIDI_OFI_MAX_AM_HDR_SIZE    128
 #define MPIDI_OFI_AM_HANDLER_ID_BITS   8
@@ -119,24 +117,6 @@ typedef struct MPIDI_OFI_noncontig_t {
     char pack_buffer[0];
 } MPIDI_OFI_noncontig_t;
 
-typedef union {
-    MPIDI_OFI_COLL_MPICH_KARY_req_t         mpich_kary;
-    MPIDI_OFI_COLL_MPICH_KNOMIAL_req_t      mpich_knomial;
-    MPIDI_OFI_COLL_MPICH_DISSEM_req_t       mpich_dissem;
-    MPIDI_OFI_COLL_MPICH_RECEXCH_req_t      mpich_recexch;
-//    MPIDI_OFI_COLL_TRIGGERED_KARY_req_t     triggered_kary;
-//    MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_req_t  triggered_knomial;
-//    MPIDI_OFI_COLL_TRIGGERED_DISSEM_req_t   triggered_dissem;
-//    MPIDI_OFI_COLL_TRIGGERED_RECEXCH_req_t  triggered_recexch;
-    MPIDI_OFI_COLL_STUB_KARY_req_t          stub_kary;
-    MPIDI_OFI_COLL_STUB_KNOMIAL_req_t       stub_knomial;
-    MPIDI_OFI_COLL_STUB_DISSEM_req_t        stub_dissem;
-    MPIDI_OFI_COLL_STUB_RECEXCH_req_t       stub_recexch;
-    MPIDI_OFI_COLL_MPICH_STUB_req_t         mpich_stub;
-    MPIDI_OFI_COLL_STUB_STUB_req_t          stub_stub;
-    MPIDI_OFI_COLL_SHM_GR_req_t             shm_gr;
-} MPIDI_OFI_collreq_t;
-
 typedef struct {
     struct fi_context context;  /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
@@ -155,45 +135,14 @@ typedef struct {
         } persist;
         struct iovec iov;
         void *inject_buf;       /* Internal buffer for inject emulation */
-        MPIDI_OFI_collreq_t collreq;
     } util;
 } MPIDI_OFI_request_t;
 
 typedef struct {
     int index;
-    MPIDI_OFI_COLL_MPICH_KARY_dt_t         dt_mpich_kary;
-    MPIDI_OFI_COLL_MPICH_KNOMIAL_dt_t      dt_mpich_knomial;
-    MPIDI_OFI_COLL_MPICH_DISSEM_dt_t       dt_mpich_dissem;
-    MPIDI_OFI_COLL_MPICH_RECEXCH_dt_t      dt_mpich_recexch;
-//    MPIDI_OFI_COLL_TRIGGERED_KARY_dt_t     dt_triggered_kary;
-//    MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_dt_t  dt_triggered_knomial;
-//    MPIDI_OFI_COLL_TRIGGERED_DISSEM_dt_t   dt_triggered_dissem;
-//    MPIDI_OFI_COLL_TRIGGERED_RECEXCH_dt_t  dt_triggered_recexch;
-    MPIDI_OFI_COLL_STUB_KARY_dt_t          dt_stub_kary;
-    MPIDI_OFI_COLL_STUB_KNOMIAL_dt_t       dt_stub_knomial;
-    MPIDI_OFI_COLL_STUB_DISSEM_dt_t        dt_stub_dissem;
-    MPIDI_OFI_COLL_STUB_RECEXCH_dt_t       dt_stub_recexch;
-    MPIDI_OFI_COLL_MPICH_STUB_dt_t         dt_mpich_stub;
-    MPIDI_OFI_COLL_STUB_STUB_dt_t          dt_stub_stub;
-    MPIDI_OFI_COLL_SHM_GR_dt_t             dt_shm_gr;
 } MPIDI_OFI_dt_t;
 
 typedef struct {
-    MPIDI_OFI_COLL_MPICH_KARY_op_t         op_mpich_kary;
-    MPIDI_OFI_COLL_MPICH_KNOMIAL_op_t      op_mpich_knomial;
-    MPIDI_OFI_COLL_MPICH_DISSEM_op_t       op_mpich_dissem;
-    MPIDI_OFI_COLL_MPICH_RECEXCH_op_t      op_mpich_recexch;
-//    MPIDI_OFI_COLL_TRIGGERED_KARY_op_t     op_triggered_kary;
-//    MPIDI_OFI_COLL_TRIGGERED_KNOMIAL_op_t  op_triggered_knomial;
-//    MPIDI_OFI_COLL_TRIGGERED_DISSEM_op_t   op_triggered_dissem;
-//    MPIDI_OFI_COLL_TRIGGERED_RECEXCH_op_t  op_triggered_recexch;
-    MPIDI_OFI_COLL_STUB_KARY_op_t          op_stub_kary;
-    MPIDI_OFI_COLL_STUB_KNOMIAL_op_t       op_stub_knomial;
-    MPIDI_OFI_COLL_STUB_DISSEM_op_t        op_stub_dissem;
-    MPIDI_OFI_COLL_STUB_RECEXCH_op_t       op_stub_recexch;
-    MPIDI_OFI_COLL_MPICH_STUB_op_t         op_mpich_stub;
-    MPIDI_OFI_COLL_STUB_STUB_op_t          op_stub_stub;
-    MPIDI_OFI_COLL_SHM_GR_op_t             op_shm_gr;
 } MPIDI_OFI_op_t;
 
 struct MPIDI_OFI_win_request;

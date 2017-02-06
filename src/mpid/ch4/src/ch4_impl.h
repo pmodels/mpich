@@ -14,6 +14,9 @@
 #include "ch4_types.h"
 #include <mpidch4.h>
 #include "mpidig.h"
+#ifdef MPIDI_BUILD_CH4_COLL
+#include "../generic/coll/include/ch4_coll_pre.h"
+#endif
 
 /* Static inlines */
 static inline int MPIDI_CH4U_get_tag(uint64_t match_bits)
