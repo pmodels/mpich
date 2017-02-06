@@ -21,7 +21,6 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 
     if [test "x$ofi_direct_provider" != "x"]; then
        AC_MSG_NOTICE([Enabling OFI netmod direct provider])
-       PAC_APPEND_FLAG([-DFABRIC_DIRECT],[CPPFLAGS])
     fi
     ])
     AM_CONDITIONAL([BUILD_CH4_NETMOD_OFI],[test "X$build_ch4_netmod_ofi" = "Xyes"])
@@ -211,6 +210,7 @@ AM_COND_IF([BUILD_CH4_NETMOD_OFI],[
         if test "x$ofi_direct_provider" != "x" ; then
             PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric/prov/${ofi_direct_provider}/include], [CPPFLAGS])
             PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpid/ch4/netmod/ofi/libfabric/prov/${ofi_direct_provider}/include], [CPPFLAGS])
+            PAC_APPEND_FLAG([-DFABRIC_DIRECT],[CPPFLAGS])
         fi
 
         ofisrcdir="${master_top_builddir}/src/mpid/ch4/netmod/ofi/libfabric"
