@@ -64,6 +64,13 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     ucp_params.request_size = sizeof(MPIDI_UCX_ucp_request_t);
     ucp_params.request_init = MPIDI_UCX_Request_init_callback;
     ucp_params.request_cleanup = NULL;
+    ucp_params.estimated_num_eps = size;
+
+    ucp_params.field_mask = UCP_PARAM_FIELD_FEATURES|
+		            UCP_PARAM_FIELD_REQUEST_SIZE|
+			    UCP_PARAM_FIELD_ESTIMATED_NUM_EPS|
+			    UCP_PARAM_FIELD_REQUEST_INIT; 
+
     ucx_status = ucp_init(&ucp_params, config, &MPIDI_UCX_global.context);
     MPIDI_UCX_CHK_STATUS(ucx_status);
     ucp_config_release(config);
