@@ -1191,6 +1191,8 @@ static inline int MPIDI_OFI_choose_provider(struct fi_info *prov, struct fi_info
 
 static inline int MPIDI_OFI_application_hints(int rank)
 {
+    int rank_bits, world_size, mpi_errno;
+
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_DATA: %d", MPIDI_OFI_ENABLE_DATA));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_AV_TABLE: %d", MPIDI_OFI_ENABLE_AV_TABLE));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS: %d", MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS));
@@ -1200,6 +1202,8 @@ static inline int MPIDI_OFI_application_hints(int rank)
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_AM: %d", MPIDI_OFI_ENABLE_AM));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_RMA: %d", MPIDI_OFI_ENABLE_RMA));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_FETCH_ATOMIC_IOVECS: %d", MPIDI_OFI_FETCH_ATOMIC_IOVECS));
+
+    rank_bits = MPIDI_OFI_SOURCE_SHIFT ? MPIDI_OFI_SOURCE_SHIFT : 32;
 
     if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && rank == 0) {
         fprintf(stdout, "==== Capability set configuration ====\n");
@@ -1213,7 +1217,29 @@ static inline int MPIDI_OFI_application_hints(int rank)
         fprintf(stdout, "MPIDI_OFI_ENABLE_RMA: %d\n", MPIDI_OFI_ENABLE_RMA);
         fprintf(stdout, "MPIDI_OFI_FETCH_ATOMIC_IOVECS: %d\n", MPIDI_OFI_FETCH_ATOMIC_IOVECS);
         fprintf(stdout, "======================================\n");
+
+        /* Discover the maximum number of ranks. If the source shift is not
+         * defined, there are 32 bits in use due to the uint32_t used in
+         * ofi_send.h */
+        fprintf(stdout, "MAXIMUM SUPPORTED RANKS: %ld\n", (long int) 1 << rank_bits);
+
+        /* Discover the tag_ub */
+        fprintf(stdout, "MAXIMUM TAG: %" PRIu64 "\n", 1UL << MPIDI_OFI_TAG_SHIFT);
+        fprintf(stdout, "======================================\n");
     }
+
+    /* Check that the desired number of ranks is possible and abort if not */
+    mpi_errno = PMI_Get_size(&world_size);
+    if (mpi_errno != 0) {
+        MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_get_size",
+                             "**pmi_get_size %d", mpi_errno);
+    }
+    if (world_size > (1UL << rank_bits)) {
+        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch4|too_many_ranks");
+    }
+
+  fn_fail:
+    return mpi_errno;
 }
 
 #endif /* OFI_INIT_H_INCLUDED */
