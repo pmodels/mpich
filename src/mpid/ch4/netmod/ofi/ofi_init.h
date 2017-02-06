@@ -149,6 +149,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                                             struct fid_cntr *rma_ctr,
                                             struct fid_av *av,
                                             struct fid_ep **ep, int index);
+static inline int MPIDI_OFI_application_hints(int rank);
 
 #define MPIDI_OFI_CHOOSE_PROVIDER(prov, prov_use,errstr)                          \
     do {                                                                \
@@ -427,31 +428,10 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         }
     }
 
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_DATA: %d", MPIDI_OFI_ENABLE_DATA));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_AV_TABLE: %d", MPIDI_OFI_ENABLE_AV_TABLE));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS: %d", MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_STX_RMA: %d", MPIDI_OFI_ENABLE_STX_RMA));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_MR_SCALABLE: %d", MPIDI_OFI_ENABLE_MR_SCALABLE));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_TAGGED: %d", MPIDI_OFI_ENABLE_TAGGED));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_AM: %d", MPIDI_OFI_ENABLE_AM));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_RMA: %d", MPIDI_OFI_ENABLE_RMA));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_ATOMICS: %d", MPIDI_OFI_ENABLE_ATOMICS));
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_FETCH_ATOMIC_IOVECS: %d", MPIDI_OFI_FETCH_ATOMIC_IOVECS));
-
-    if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && rank == 0) {
-        fprintf(stdout, "==== Capability set configuration ====\n");
-        fprintf(stdout, "MPIDI_OFI_ENABLE_DATA: %d\n", MPIDI_OFI_ENABLE_DATA);
-        fprintf(stdout, "MPIDI_OFI_ENABLE_AV_TABLE: %d\n", MPIDI_OFI_ENABLE_AV_TABLE);
-        fprintf(stdout, "MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS: %d\n", MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
-        fprintf(stdout, "MPIDI_OFI_ENABLE_STX_RMA: %d\n", MPIDI_OFI_ENABLE_STX_RMA);
-        fprintf(stdout, "MPIDI_OFI_ENABLE_MR_SCALABLE: %d\n", MPIDI_OFI_ENABLE_MR_SCALABLE);
-        fprintf(stdout, "MPIDI_OFI_ENABLE_TAGGED: %d\n", MPIDI_OFI_ENABLE_TAGGED);
-        fprintf(stdout, "MPIDI_OFI_ENABLE_AM: %d\n", MPIDI_OFI_ENABLE_AM);
-        fprintf(stdout, "MPIDI_OFI_ENABLE_RMA: %d\n", MPIDI_OFI_ENABLE_RMA);
-        fprintf(stdout, "MPIDI_OFI_ENABLE_ATOMICS: %d\n", MPIDI_OFI_ENABLE_ATOMICS);
-        fprintf(stdout, "MPIDI_OFI_FETCH_ATOMIC_IOVECS: %d\n", MPIDI_OFI_FETCH_ATOMIC_IOVECS);
-        fprintf(stdout, "======================================\n");
-    }
+    /* Print some debugging output to give the user some hints */
+    mpi_errno = MPIDI_OFI_application_hints(rank);
+    if (mpi_errno)
+        MPIR_ERR_POP(mpi_errno);
 
     MPIDI_Global.prov_use = fi_dupinfo(prov_use);
     MPIR_Assert(MPIDI_Global.prov_use);
@@ -1207,6 +1187,33 @@ static inline int MPIDI_OFI_choose_provider(struct fi_info *prov, struct fi_info
     }
 
     return i;
+}
+
+static inline int MPIDI_OFI_application_hints(int rank)
+{
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_DATA: %d", MPIDI_OFI_ENABLE_DATA));
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_AV_TABLE: %d", MPIDI_OFI_ENABLE_AV_TABLE));
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS: %d", MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS));
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_STX_RMA: %d", MPIDI_OFI_ENABLE_STX_RMA));
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_MR_SCALABLE: %d", MPIDI_OFI_ENABLE_MR_SCALABLE));
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_TAGGED: %d", MPIDI_OFI_ENABLE_TAGGED));
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_AM: %d", MPIDI_OFI_ENABLE_AM));
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_RMA: %d", MPIDI_OFI_ENABLE_RMA));
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_FETCH_ATOMIC_IOVECS: %d", MPIDI_OFI_FETCH_ATOMIC_IOVECS));
+
+    if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && rank == 0) {
+        fprintf(stdout, "==== Capability set configuration ====\n");
+        fprintf(stdout, "MPIDI_OFI_ENABLE_DATA: %d\n", MPIDI_OFI_ENABLE_DATA);
+        fprintf(stdout, "MPIDI_OFI_ENABLE_AV_TABLE: %d\n", MPIDI_OFI_ENABLE_AV_TABLE);
+        fprintf(stdout, "MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS: %d\n", MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS);
+        fprintf(stdout, "MPIDI_OFI_ENABLE_STX_RMA: %d\n", MPIDI_OFI_ENABLE_STX_RMA);
+        fprintf(stdout, "MPIDI_OFI_ENABLE_MR_SCALABLE: %d\n", MPIDI_OFI_ENABLE_MR_SCALABLE);
+        fprintf(stdout, "MPIDI_OFI_ENABLE_TAGGED: %d\n", MPIDI_OFI_ENABLE_TAGGED);
+        fprintf(stdout, "MPIDI_OFI_ENABLE_AM: %d\n", MPIDI_OFI_ENABLE_AM);
+        fprintf(stdout, "MPIDI_OFI_ENABLE_RMA: %d\n", MPIDI_OFI_ENABLE_RMA);
+        fprintf(stdout, "MPIDI_OFI_FETCH_ATOMIC_IOVECS: %d\n", MPIDI_OFI_FETCH_ATOMIC_IOVECS);
+        fprintf(stdout, "======================================\n");
+    }
 }
 
 #endif /* OFI_INIT_H_INCLUDED */
