@@ -503,6 +503,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Intercomm_exchange_map(MPIR_Comm * local_comm,
 
     MPIR_CHKPMEM_COMMIT();
   fn_exit:
+    MPL_free(local_upid_size);
+    MPL_free(local_upids);
     MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_INTERCOMM_EXCHANGE_MAP);
     return mpi_errno;
