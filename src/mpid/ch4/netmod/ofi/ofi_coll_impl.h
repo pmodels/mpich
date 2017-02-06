@@ -11,7 +11,5 @@
 #ifndef NETMOD_OFI_COLL_IMPL_H_INCLUDED
 #define NETMOD_OFI_COLL_IMPL_H_INCLUDED
 
-#include "coll/include/coll_post.h"
-#include "coll/include/ml_post.h"
 
 #endif /* NETMOD_OFI_COLL_IMPL_H_INCLUDED */

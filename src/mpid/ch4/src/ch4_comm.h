@@ -15,6 +15,10 @@
 #include "ch4r_comm.h"
 #include "ch4i_comm.h"
 
+#ifdef MPIDI_BUILD_CH4_COLL
+#include "../generic/coll/include/ch4_coll_pre.h"
+#include "../generic/coll/include/ch4_coll_post.h"
+#endif
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_AS_enabled(MPIR_Comm * comm)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_AS_ENABLED);
@@ -200,6 +204,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_create_hook(MPIR_Comm * comm)
             MPIDIU_avt_add_ref(MPIDI_COMM(comm, local_map).avtid);
         }
     }
+#ifdef MPIDI_BUILD_CH4_COLL
+    mpi_errno = MPIDI_COLL_Comm_init(comm);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+#endif
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_COMM_CREATE_HOOK);
@@ -219,6 +229,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Comm_free_hook(MPIR_Comm * comm)
     int max_n_avts;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_COMM_FREE_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_COMM_FREE_HOOK);
+
+#ifdef MPIDI_BUILD_CH4_COLL
+    mpi_errno = MPIDI_COLL_Comm_cleanup(comm);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+#endif
+
     /* release ref to avts */
     switch (MPIDI_COMM(comm, map).mode) {
     case MPIDI_RANK_MAP_NONE:

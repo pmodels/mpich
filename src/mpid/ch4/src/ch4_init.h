@@ -17,6 +17,11 @@
 #include "strings.h"
 #include "datatype.h"
 
+#ifdef MPIDI_BUILD_CH4_COLL
+#include "../generic/coll/include/ch4_coll_pre.h"
+#include "../generic/coll/include/ch4_coll_post.h"
+#endif
+
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
@@ -601,6 +606,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Type_commit_hook(MPIR_Datatype * type)
     }
 #endif
 
+#ifdef MPIDI_BUILD_CH4_COLL
+    mpi_errno = MPIDI_COLL_dt_init(type);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+#endif
+
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_TYPE_CREATE_HOOK);
     return mpi_errno;
@@ -661,7 +673,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_Op_commit_hook(MPIR_Op * op)
     }
 #endif
 
-  fn_exit:
+#ifdef MPIDI_BUILD_CH4_COLL
+    mpi_errno = MPIDI_COLL_op_init(op);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+#endif
+
+fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OP_CREATE_HOOK);
     return mpi_errno;
   fn_fail:

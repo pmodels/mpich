@@ -27,22 +27,6 @@ static inline int MPIDI_NM_mpi_op_commit_hook(MPIR_Op * op_p)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_OP_COMMIT_HOOK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_OP_COMMIT_HOOK);
 
-    MPIDI_OFI_op_t *ofi_op = &MPIDI_OFI_OP(op_p);
-    ofi_op->op_mpich_kary.tsp_op.mpi_op     = op_p->handle;
-    ofi_op->op_mpich_knomial.tsp_op.mpi_op  = op_p->handle;
-    ofi_op->op_mpich_dissem.tsp_op.mpi_op = op_p->handle;
-    ofi_op->op_mpich_recexch.tsp_op.mpi_op = op_p->handle;
-
-//    ofi_op->op_triggered_kary.tsp_op.mpi_op     = op_p->handle;
-//    ofi_op->op_triggered_knomial.tsp_op.mpi_op  = op_p->handle;
-//    ofi_op->op_triggered_dissem.tsp_op.mpi_op = op_p->handle;
-//    ofi_op->op_triggered_recexch.tsp_op.mpi_op = op_p->handle;
-
-    ofi_op->op_stub_kary.tsp_op.dummy     = -1;
-    ofi_op->op_stub_knomial.tsp_op.dummy  = -1;
-    ofi_op->op_stub_dissem.tsp_op.dummy = -1;
-    ofi_op->op_stub_recexch.tsp_op.dummy = -1;
-
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_OP_COMMIT_HOOK);
     return 0;
 }

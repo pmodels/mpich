@@ -23,9 +23,16 @@
 #include "shmpre.h"
 #include "mpl_uthash.h"
 
+#ifdef MPIDI_BUILD_CH4_COLL
+#include "../generic/coll/include/ch4_coll_pre.h"
+#endif
+
 typedef struct {
     union {
     MPIDI_NM_DT_DECL} netmod;
+#ifdef MPIDI_BUILD_CH4_COLL
+    MPIDI_COLL_DT_DECL;
+#endif
 } MPIDI_Devdt_t;
 #define MPID_DEV_DATATYPE_DECL   MPIDI_Devdt_t   dev;
 #include "mpid_datatype_fallback.h"
@@ -181,7 +188,11 @@ typedef struct {
 
         union {
         MPIDI_SHM_REQUEST_DECL} shm;
+
     } ch4;
+#ifdef MPIDI_BUILD_CH4_COLL
+    MPIDI_COLL_REQ_DECL;
+#endif
 } MPIDI_Devreq_t;
 #define MPIDI_REQUEST_HDR_SIZE              offsetof(struct MPIR_Request, dev.ch4.netmod)
 #define MPIDI_CH4I_REQUEST(req,field)       (((req)->dev).field)
@@ -404,6 +415,9 @@ typedef struct MPIDI_Devcomm_t {
 
         MPIDI_rank_map_t map;
         MPIDI_rank_map_t local_map;
+#ifdef MPIDI_BUILD_CH4_COLL
+        MPIDI_COLL_COMM_DECL;
+#endif
     } ch4;
 } MPIDI_Devcomm_t;
 #define MPIDI_CH4U_COMM(comm,field) ((comm)->dev.ch4.ch4u).field
@@ -416,6 +430,9 @@ typedef int16_t MPID_Node_id_t;
 typedef struct {
     union {
     MPIDI_NM_OP_DECL} netmod;
+#ifdef MPIDI_BUILD_CH4_COLL
+    MPIDI_COLL_OP_DECL;
+#endif
 } MPIDI_Devop_t;
 
 #define MPID_DEV_REQUEST_DECL    MPIDI_Devreq_t  dev;

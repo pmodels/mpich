@@ -13,6 +13,11 @@
 
 #include "ch4_impl.h"
 
+#ifdef MPIDI_BUILD_CH4_COLL
+#include "../generic/coll/include/ch4_coll_pre.h"
+#include "../generic/coll/include/ch4_coll_progress.h"
+#endif
+
 #undef FUNCNAME
 #define FUNCNAME MPID_Progress_test
 #undef FCNAME
@@ -49,6 +54,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_test(void)
         MPIR_ERR_POP(mpi_errno);
     }
 #endif
+
+#ifdef MPIDI_BUILD_CH4_COLL
+    mpi_errno = MPIDI_COLL_progress_hook();
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIR_ERR_POP(mpi_errno);
+    }
+#endif
+
     MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
     MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
   fn_exit:
