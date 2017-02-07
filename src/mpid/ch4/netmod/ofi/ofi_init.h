@@ -315,6 +315,15 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
     if (MPIDI_OFI_ENABLE_RMA) {
         hints->caps |= FI_RMA;      /* RMA(read/write)         */
+        hints->caps |= FI_WRITE;    /* We need to specify all of the extra
+                                       capabilities because we need to be
+                                       specific later when we create tx/rx
+                                       contexts. If we leave this off, the
+                                       context creation fails because it's not
+                                       a subset of this. */
+        hints->caps |= FI_READ;
+        hints->caps |= FI_REMOTE_WRITE;
+        hints->caps |= FI_REMOTE_READ;
     }
 
     if (MPIDI_OFI_ENABLE_ATOMICS) {
@@ -323,11 +332,15 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
     if (MPIDI_OFI_ENABLE_TAGGED) {
         hints->caps |= FI_TAGGED;       /* Tag matching interface  */
+        hints->caps |= FI_SEND;
+        hints->caps |= FI_RECV;
     }
 
     if (MPIDI_OFI_ENABLE_AM) {
         hints->caps |= FI_MSG;  /* Message Queue apis      */
         hints->caps |= FI_MULTI_RECV;   /* Shared receive buffer   */
+        hints->caps |= FI_SEND;
+        hints->caps |= FI_RECV;
     }
 
     if (MPIDI_OFI_ENABLE_DATA) {
@@ -403,19 +416,19 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "Provider doesn't support scalable endpoints"));
                 prov = prov_use->next;
                 continue;
-            } else if (MPIDI_OFI_ENABLE_TAGGED && 0ULL == (prov_use->caps & FI_TAGGED)) {
+            } else if (MPIDI_OFI_ENABLE_TAGGED && ((prov_use->caps & (FI_TAGGED | FI_SEND | FI_RECV)) != (FI_TAGGED | FI_SEND | FI_RECV))) {
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "Provider doesn't support tagged interfaces"));
                 prov = prov_use->next;
                 continue;
-            } else if (MPIDI_OFI_ENABLE_AM && 0ULL == (prov_use->caps & (FI_MSG | FI_MULTI_RECV))) {
+            } else if (MPIDI_OFI_ENABLE_AM && ((prov_use->caps & (FI_MSG | FI_MULTI_RECV | FI_SEND | FI_RECV)) != (FI_MSG | FI_MULTI_RECV | FI_SEND | FI_RECV))) {
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "Provider doesn't support active messages"));
                 prov = prov_use->next;
                 continue;
-            } else if (MPIDI_OFI_ENABLE_RMA && 0ULL == (prov_use->caps & (FI_RMA))) {
+            } else if (MPIDI_OFI_ENABLE_RMA && ((prov_use->caps & (FI_RMA | FI_WRITE | FI_READ | FI_REMOTE_WRITE | FI_REMOTE_READ)) != (FI_RMA | FI_WRITE | FI_READ | FI_REMOTE_WRITE | FI_REMOTE_READ))) {
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "Provider doesn't support RMA"));
                 prov = prov_use->next;
                 continue;
-            } else if (MPIDI_OFI_ENABLE_ATOMICS && 0ULL == (prov_use->caps & (FI_ATOMICS))) {
+            } else if (MPIDI_OFI_ENABLE_ATOMICS && 0ULL == (prov_use->caps & FI_ATOMICS)) {
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "Provider doesn't support atomics"));
                 prov = prov_use->next;
                 continue;
@@ -457,11 +470,11 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDI_Global.settings.enable_mr_scalable        = MPIDI_Global.settings.enable_mr_scalable == 0 ? 0 :
                                                             prov_use->domain_attr->mr_mode == FI_MR_SCALABLE ? 1 : 0;
         MPIDI_Global.settings.enable_tagged             = MPIDI_Global.settings.enable_tagged == 0 ? 0 :
-                                                            (prov_use->caps & FI_TAGGED) > 0ULL ? 1 : 0;
+                                                            (prov_use->caps & (FI_TAGGED | FI_SEND | FI_RECV)) == (FI_TAGGED | FI_SEND | FI_RECV) ? 1 : 0;
         MPIDI_Global.settings.enable_am                 = MPIDI_Global.settings.enable_am == 0 ? 0 :
-                                                            (prov_use->caps & (FI_MSG | FI_MULTI_RECV)) > 0ULL ? 1 : 0;
+                                                            (prov_use->caps & (FI_MSG | FI_MULTI_RECV | FI_SEND | FI_RECV)) == (FI_MSG | FI_MULTI_RECV | FI_SEND | FI_RECV) ? 1 : 0;
         MPIDI_Global.settings.enable_rma                = MPIDI_Global.settings.enable_rma == 0 ? 0 :
-                                                            (prov_use->caps & (FI_RMA)) > 0ULL ? 1 : 0;
+                                                            (prov_use->caps & (FI_RMA | FI_WRITE | FI_READ | FI_REMOTE_WRITE | FI_REMOTE_READ)) == (FI_RMA | FI_WRITE | FI_READ | FI_REMOTE_WRITE | FI_REMOTE_READ) ? 1 : 0;
         MPIDI_Global.settings.enable_atomics            = MPIDI_Global.settings.enable_atomics == 0 ? 0 :
                                                             (prov_use->caps & (FI_ATOMICS)) > 0ULL ? 1 : 0;
 
@@ -1102,7 +1115,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
 
         if (MPIDI_OFI_ENABLE_TAGGED) {
             tx_attr = *prov_use->tx_attr;
-            tx_attr.caps = FI_TAGGED;
+            tx_attr.caps = FI_TAGGED | FI_SEND;
             tx_attr.op_flags = FI_COMPLETION | FI_INJECT_COMPLETE;
             MPIDI_OFI_CALL(fi_tx_context(*ep, idx_off, &tx_attr, &MPIDI_OFI_EP_TX_TAG(index), NULL),
                            ep);
@@ -1112,7 +1125,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         }
 
         tx_attr = *prov_use->tx_attr;
-        tx_attr.caps = FI_RMA;
+        tx_attr.caps = FI_RMA | FI_WRITE | FI_READ;
         tx_attr.caps |= FI_ATOMICS;
         tx_attr.op_flags = FI_COMPLETION | FI_DELIVERY_COMPLETE;
         MPIDI_OFI_CALL(fi_tx_context(*ep, idx_off + 1, &tx_attr, &MPIDI_OFI_EP_TX_RMA(index), NULL),
@@ -1124,7 +1137,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                         FI_SEND | FI_SELECTIVE_COMPLETION), bind);
 
         tx_attr = *prov_use->tx_attr;
-        tx_attr.caps = FI_MSG;
+        tx_attr.caps = FI_MSG|FI_SEND;
         tx_attr.op_flags = FI_COMPLETION | FI_INJECT_COMPLETE;
         MPIDI_OFI_CALL(fi_tx_context(*ep, idx_off + 2, &tx_attr, &MPIDI_OFI_EP_TX_MSG(index), NULL),
                        ep);
@@ -1133,7 +1146,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                         FI_SEND | FI_SELECTIVE_COMPLETION), bind);
 
         tx_attr = *prov_use->tx_attr;
-        tx_attr.caps = FI_RMA;
+        tx_attr.caps = FI_RMA | FI_WRITE | FI_READ;
         tx_attr.caps |= FI_ATOMICS;
         tx_attr.op_flags = FI_DELIVERY_COMPLETE;
         MPIDI_OFI_CALL(fi_tx_context(*ep, idx_off + 3, &tx_attr, &MPIDI_OFI_EP_TX_CTR(index), NULL),
@@ -1149,7 +1162,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
 
         if (MPIDI_OFI_ENABLE_TAGGED) {
             rx_attr = *prov_use->rx_attr;
-            rx_attr.caps = FI_TAGGED;
+            rx_attr.caps = FI_TAGGED | FI_RECV;
 
             if (MPIDI_OFI_ENABLE_DATA)
                 rx_attr.caps |= FI_DIRECTED_RECV;
@@ -1161,7 +1174,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         }
 
         rx_attr = *prov_use->rx_attr;
-        rx_attr.caps = FI_RMA;
+        rx_attr.caps = FI_RMA | FI_REMOTE_READ | FI_REMOTE_WRITE;
         rx_attr.caps |= FI_ATOMICS;
         rx_attr.op_flags = 0;
         MPIDI_OFI_CALL(fi_rx_context(*ep, idx_off + 1, &rx_attr, &MPIDI_OFI_EP_RX_RMA(index), NULL),
@@ -1175,7 +1188,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                                       FI_SEND | FI_RECV | FI_SELECTIVE_COMPLETION), bind);
 
         rx_attr = *prov_use->rx_attr;
-        rx_attr.caps = FI_MSG;
+        rx_attr.caps = FI_MSG | FI_RECV;
         rx_attr.caps |= FI_MULTI_RECV;
 
         if (MPIDI_OFI_ENABLE_DATA)
