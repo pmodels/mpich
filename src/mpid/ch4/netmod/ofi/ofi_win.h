@@ -77,12 +77,12 @@ static inline int MPIDI_OFI_win_allgather(MPIR_Win * win, void *base, int disp_u
     winfo = MPIDI_OFI_WIN(win).winfo;
     winfo[comm_ptr->rank].disp_unit = disp_unit;
 
-#ifndef USE_OFI_MR_SCALABLE
-    /* MR_BASIC */
-    MPIDI_OFI_WIN(win).mr_key = fi_mr_key(MPIDI_OFI_WIN(win).mr);
-    winfo[comm_ptr->rank].mr_key = MPIDI_OFI_WIN(win).mr_key;
-    winfo[comm_ptr->rank].base = (uintptr_t) base;
-#endif
+    if (!MPIDI_OFI_ENABLE_MR_SCALABLE) {
+        /* MR_BASIC */
+        MPIDI_OFI_WIN(win).mr_key = fi_mr_key(MPIDI_OFI_WIN(win).mr);
+        winfo[comm_ptr->rank].mr_key = MPIDI_OFI_WIN(win).mr_key;
+        winfo[comm_ptr->rank].base = (uintptr_t) base;
+    }
 
     mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0,
                                     MPI_DATATYPE_NULL,
