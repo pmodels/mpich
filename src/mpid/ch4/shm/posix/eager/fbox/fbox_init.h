@@ -21,11 +21,12 @@ extern MPIDI_POSIX_eager_fbox_control_t MPIDI_POSIX_eager_fbox_control_global;
 #define FUNCNAME MPIDI_POSIX_eager_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int grank, int num_local)
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    int i;
+    int i, num_local = 0, local_rank_0 = -1, local_rank = -1;
+    int *local_ranks, *local_procs;
 
     MPIDI_POSIX_fastbox_t *fastboxes_p = NULL;
 
@@ -33,14 +34,34 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int grank, int num
     MPIDI_CH4_SHM_POSIX_FBOX_GENERAL = MPL_dbg_class_alloc("SHM_POSIX_FBOX", "shm_posix_fbox");
 #endif /* MPL_USE_DBG_LOGGING */
 
-    MPIR_CHKPMEM_DECL(3);
+    MPIR_CHKPMEM_DECL(5);
 
     MPIDI_POSIX_eager_fbox_control_global.num_seg = 1;
-    MPIDI_POSIX_eager_fbox_control_global.my_rank = rank;
-    MPIDI_POSIX_eager_fbox_control_global.my_grank = grank;
-    MPIDI_POSIX_eager_fbox_control_global.num_local = num_local;
+    //MPIDI_POSIX_eager_fbox_control_global.my_grank = rank;
+    MPIDI_POSIX_eager_fbox_control_global.last_polled_rank = 0;
 
-    MPIDI_POSIX_eager_fbox_control_global.last_polled_grank = 0;
+    MPIR_CHKPMEM_MALLOC(local_procs, int *, size * sizeof(int), mpi_errno,
+                        "local process index array");
+    MPIR_CHKPMEM_MALLOC(local_ranks, int *, size * sizeof(int), mpi_errno,
+                        "mem_region local ranks");
+    for (i = 0; i < size; i++) {
+        if (MPIDI_CH4_rank_is_local(i, MPIR_Process.comm_world)) {
+            if (i == rank) {
+                local_rank = num_local;
+            }
+
+            if (local_rank_0 == -1)
+                local_rank_0 = i;
+
+            local_procs[num_local] = i;
+            local_ranks[i] = num_local;
+            num_local++;
+        }
+    }
+    MPIDI_POSIX_eager_fbox_control_global.num_local = num_local;
+    MPIDI_POSIX_eager_fbox_control_global.local_rank = local_rank;
+    MPIDI_POSIX_eager_fbox_control_global.local_ranks = local_ranks;
+    MPIDI_POSIX_eager_fbox_control_global.local_procs = local_procs;
 
     MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_eager_fbox_control_global.seg,
                         MPIDU_shm_seg_info_ptr_t,
@@ -69,7 +90,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int grank, int num
 
     mpi_errno = MPIDU_shm_seg_commit(&MPIDI_POSIX_eager_fbox_control_global.memory,
                                      &MPIDI_POSIX_eager_fbox_control_global.barrier,
-                                     num_local, grank, 0, rank);
+                                     num_local, local_rank, local_rank_0, rank);
 
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
@@ -87,9 +108,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int grank, int num
 
     for (i = 0; i < num_local; i++) {
         MPIDI_POSIX_eager_fbox_control_global.mailboxes.in[i] =
-            &fastboxes_p[MPIDI_POSIX_MAILBOX_INDEX(i, grank)];
+            &fastboxes_p[MPIDI_POSIX_MAILBOX_INDEX(i, local_rank)];
         MPIDI_POSIX_eager_fbox_control_global.mailboxes.out[i] =
-            &fastboxes_p[MPIDI_POSIX_MAILBOX_INDEX(grank, i)];
+            &fastboxes_p[MPIDI_POSIX_MAILBOX_INDEX(local_rank, i)];
 
         memset(MPIDI_POSIX_eager_fbox_control_global.mailboxes.in[i], 0,
                sizeof(MPIDI_POSIX_fastbox_t));
@@ -133,6 +154,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize()
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.seg);
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.mailboxes.in);
     MPL_free(MPIDI_POSIX_eager_fbox_control_global.mailboxes.out);
+    MPL_free(MPIDI_POSIX_eager_fbox_control_global.local_ranks);
+    MPL_free(MPIDI_POSIX_eager_fbox_control_global.local_procs);
 
     mpi_errno = MPIDU_shm_seg_destroy(&MPIDI_POSIX_eager_fbox_control_global.memory,
                                       MPIDI_POSIX_eager_fbox_control_global.num_local);

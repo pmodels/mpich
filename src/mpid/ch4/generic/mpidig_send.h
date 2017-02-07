@@ -50,6 +50,7 @@ static inline int MPIDI_am_isend(const void *buf, int count, MPI_Datatype dataty
 
     am_hdr.msg_tag = match_bits;
     am_hdr.src_rank = comm->rank;
+#ifndef MPIDI_CH4_EXCLUSIVE_SHM
     if (type == MPIDI_CH4U_SSEND_REQ) {
         ssend_req.hdr = am_hdr;
         ssend_req.sreq_ptr = (uint64_t) sreq;
@@ -58,15 +59,38 @@ static inline int MPIDI_am_isend(const void *buf, int count, MPI_Datatype dataty
         mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDI_CH4U_SSEND_REQ,
                                       &ssend_req, sizeof(ssend_req),
                                       buf, count, datatype, sreq, NULL);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
     }
     else {
         mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDI_CH4U_SEND,
                                       &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq, NULL);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
     }
+#else
+    int r;
+    if (type == MPIDI_CH4U_SSEND_REQ) {
+        ssend_req.hdr = am_hdr;
+        ssend_req.sreq_ptr = (uint64_t) sreq;
+        MPIR_cc_incr(sreq->cc_ptr, &c);
+
+    if ((r = MPIDI_CH4_rank_is_local(rank, comm)))
+        mpi_errno = MPIDI_SHM_am_isend(rank, comm, MPIDI_CH4U_SSEND_REQ,
+                                       &ssend_req, sizeof(ssend_req),
+                                       buf, count, datatype, sreq, NULL);
+    else
+        mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDI_CH4U_SSEND_REQ,
+                                      &ssend_req, sizeof(ssend_req),
+                                      buf, count, datatype, sreq, NULL);
+    }
+    else {
+        if ((r = MPIDI_CH4_rank_is_local(rank, comm)))
+            mpi_errno = MPIDI_SHM_am_isend(rank, comm, MPIDI_CH4U_SEND,
+                                           &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq, NULL);
+        else
+            mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDI_CH4U_SEND,
+                                          &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq, NULL);
+    }
+#endif
+    if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_AM_ISEND);

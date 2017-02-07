@@ -14,7 +14,7 @@
 
 #define MPIDI_MAX_POSIX_EAGER_STRING_LEN 64
 
-typedef int (*MPIDI_POSIX_eager_init_t) (int rank, int grank, int num_local);
+typedef int (*MPIDI_POSIX_eager_init_t) (int rank, int size);
 typedef int (*MPIDI_POSIX_eager_finalize_t) (void);
 
 typedef size_t(*MPIDI_POSIX_eager_threshold_t) (void);
@@ -68,8 +68,7 @@ extern MPIDI_POSIX_eager_funcs_t *MPIDI_POSIX_eager_func;
 extern int MPIDI_num_posix_eager_fabrics;
 extern char MPIDI_POSIX_eager_strings[][MPIDI_MAX_POSIX_EAGER_STRING_LEN];
 
-MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int grank,
-                                                    int num_local) MPL_STATIC_INLINE_SUFFIX;
+MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_init(int rank, int size) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_eager_finalize() MPL_STATIC_INLINE_SUFFIX;
 
 MPL_STATIC_INLINE_PREFIX size_t MPIDI_POSIX_eager_threshold(void) MPL_STATIC_INLINE_SUFFIX;

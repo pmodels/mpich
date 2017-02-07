@@ -149,7 +149,14 @@ static inline int MPIDI_do_irecv(void *buf,
             MPIDI_CH4U_REQUEST(unexp_req, buffer) = (char *) buf;
             MPIDI_CH4U_REQUEST(unexp_req, count) = count;
             *request = unexp_req;
+#ifndef MPIDI_CH4_EXCLUSIVE_SHM
             mpi_errno = MPIDI_NM_am_recv(unexp_req);
+#else
+            if (MPIDI_CH4_rank_is_local(rank, comm))
+                mpi_errno = MPIDI_SHM_am_recv(unexp_req);
+            else
+                mpi_errno = MPIDI_NM_am_recv(unexp_req);
+#endif
             if (mpi_errno)
                 MPIR_ERR_POP(mpi_errno);
             goto fn_exit;
@@ -315,7 +322,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDIG_mpi_imrecv(void *buf,
         MPIDI_CH4U_REQUEST(message, datatype) = datatype;
         MPIDI_CH4U_REQUEST(message, buffer) = (char *) buf;
         MPIDI_CH4U_REQUEST(message, count) = count;
+#ifndef MPIDI_CH4_EXCLUSIVE_SHM
         mpi_errno = MPIDI_NM_am_recv(message);
+#else
+        if (MPIDI_CH4_rank_is_local(MPIDI_CH4U_REQUEST(message, rank), message->comm))
+            mpi_errno = MPIDI_SHM_am_recv(message);
+        else
+            mpi_errno = MPIDI_NM_am_recv(message);
+#endif
     }
     else {
         mpi_errno = MPIDI_handle_unexp_mrecv(message);

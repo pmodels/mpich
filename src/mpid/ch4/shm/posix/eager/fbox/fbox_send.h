@@ -22,7 +22,8 @@ MPIDI_POSIX_eager_send(int grank,
                        MPIDI_POSIX_am_header_t ** msg_hdr,
                        struct iovec **iov, size_t * iov_num, int is_blocking)
 {
-    MPIDI_POSIX_fastbox_t *fbox_out = MPIDI_POSIX_eager_fbox_control_global.mailboxes.out[grank];
+    int local_rank = MPIDI_POSIX_eager_fbox_control_global.local_ranks[grank];
+    MPIDI_POSIX_fastbox_t *fbox_out = MPIDI_POSIX_eager_fbox_control_global.mailboxes.out[local_rank];
 
     int i;
 
