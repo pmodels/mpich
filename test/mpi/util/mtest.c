@@ -1093,7 +1093,7 @@ void MTestPrintfMsg(int level, const char format[], ...)
     va_list list;
     int n;
 
-    if (verbose && level >= verbose) {
+    if (verbose && level <= verbose) {
         va_start(list, format);
         n = vprintf(format, list);
         va_end(list);
