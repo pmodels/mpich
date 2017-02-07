@@ -63,9 +63,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    int num_local = 0;
-    MPIDI_av_entry_t *av = NULL;
-    int grank;
 
 #ifdef MPL_USE_DBG_LOGGING
     MPIDI_CH4_SHM_POSIX_GENERAL = MPL_dbg_class_alloc("SHM_POSIX", "shm_posix");
@@ -83,26 +80,17 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_POSIX_mpi_init_hook(int rank, int size, int *
 
     MPIDI_POSIX_global.postponed_queue = NULL;
 
-    for (i = 0; i < size; i++) {
-        av = MPIDIU_comm_rank_to_av(MPIR_Process.comm_world, i);
-        if (MPIDI_av_is_local(av)) {
-            num_local++;
-        }
-    }
-
     MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_global.active_rreq,
                         MPIR_Request **,
-                        num_local * sizeof(MPIR_Request *), mpi_errno, "active recv req");
+                        size * sizeof(MPIR_Request *), mpi_errno, "active recv req");
 
-    for (i = 0; i < num_local; i++) {
+    for (i = 0; i < size; i++) {
         MPIDI_POSIX_global.active_rreq[i] = NULL;
     }
 
     MPIDI_choose_posix_eager();
 
-    grank = MPIDI_CH4U_rank_to_lpid(rank, MPIR_Process.comm_world);
-
-    mpi_errno = MPIDI_POSIX_eager_init(rank, grank, num_local);
+    mpi_errno = MPIDI_POSIX_eager_init(rank, size);
 
     MPIR_CHKPMEM_COMMIT();
 

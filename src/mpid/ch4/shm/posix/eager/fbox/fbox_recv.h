@@ -20,14 +20,15 @@
 MPL_STATIC_INLINE_PREFIX int
 MPIDI_POSIX_eager_recv_begin(MPIDI_POSIX_eager_recv_transaction_t * transaction)
 {
-    int grank;
+    int grank, local_rank;
 
     MPIDI_POSIX_fastbox_t *fbox_in = NULL;
 
-    grank = MPIDI_POSIX_eager_fbox_control_global.last_polled_grank++ %
+    local_rank = MPIDI_POSIX_eager_fbox_control_global.last_polled_rank++ %
         MPIDI_POSIX_eager_fbox_control_global.num_local;
+    grank = MPIDI_POSIX_eager_fbox_control_global.local_procs[local_rank];
 
-    fbox_in = MPIDI_POSIX_eager_fbox_control_global.mailboxes.in[grank];
+    fbox_in = MPIDI_POSIX_eager_fbox_control_global.mailboxes.in[local_rank];
 
     if (fbox_in->flag) {
         /* Initialize public transaction part */

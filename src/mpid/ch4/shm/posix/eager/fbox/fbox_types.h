@@ -45,11 +45,12 @@ typedef struct MPIDI_POSIX_eager_fbox_control {
     MPIDU_shm_barrier_t *barrier;
     void *barrier_region;
 
-    int my_rank;
-    int my_grank;
     int num_local;
+    int local_rank;
+    int *local_ranks;
+    int *local_procs;
 
-    uint64_t last_polled_grank;
+    int last_polled_rank;
 
 } MPIDI_POSIX_eager_fbox_control_t;
 

@@ -50,29 +50,43 @@ static inline int MPIDI_am_isend(const void *buf, int count, MPI_Datatype dataty
 
     am_hdr.msg_tag = match_bits;
     am_hdr.src_rank = comm->rank;
+#ifndef MPIDI_CH4_EXCLUSIVE_SHM
     if (type == MPIDI_CH4U_SSEND_REQ) {
         ssend_req.hdr = am_hdr;
-        ssend_req.sreq_ptr = (uint64_t) sreq;
+        ssend_req.sreq_ptr = (uint64_t)sreq;
         MPIR_cc_incr(sreq->cc_ptr, &c);
-        if (MPIDI_av_is_local(addr)) {
-            mpi_errno = MPIDI_SHM_am_isend(rank, comm, MPIDI_CH4U_SSEND_REQ,
-                &ssend_req, sizeof(ssend_req), buf, count, datatype, sreq);
-        }
-        else {
-            mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDI_CH4U_SSEND_REQ,
-                &ssend_req, sizeof(ssend_req), buf, count, datatype, sreq);
-        }
+
+        mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDI_CH4U_SSEND_REQ,
+                                      &ssend_req, sizeof(ssend_req),
+                                      buf, count, datatype, sreq);
     }
     else {
-        if (MPIDI_av_is_local(addr)) {
-            mpi_errno = MPIDI_SHM_am_isend(rank, comm, MPIDI_CH4U_SEND,
-                &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq);
-        }
-        else {
-            mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDI_CH4U_SEND,
-                &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq);
-        }
+        mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDI_CH4U_SEND,
+                                      &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq);
     }
+#else
+    if (type == MPIDI_CH4U_SSEND_REQ) {
+        ssend_req.hdr = am_hdr;
+        ssend_req.sreq_ptr = (uint64_t)sreq;
+        MPIR_cc_incr(sreq->cc_ptr, &c);
+        if (MPIDI_av_is_local(addr))
+            mpi_errno = MPIDI_SHM_am_isend(rank, comm, MPIDI_CH4U_SSEND_REQ,
+                                           &ssend_req, sizeof(ssend_req),
+                                           buf, count, datatype, sreq);
+        else
+            mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDI_CH4U_SSEND_REQ,
+                                          &ssend_req, sizeof(ssend_req),
+                                          buf, count, datatype, sreq);
+    }
+    else {
+        if (MPIDI_av_is_local(addr))
+            mpi_errno = MPIDI_SHM_am_isend(rank, comm, MPIDI_CH4U_SEND,
+                                           &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq);
+        else
+            mpi_errno = MPIDI_NM_am_isend(rank, comm, MPIDI_CH4U_SEND,
+                                          &am_hdr, sizeof(am_hdr), buf, count, datatype, sreq);
+    }
+#endif
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
