@@ -296,11 +296,11 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_ssend_ack_event(struct fi_cq_tagged_entry
 
 MPL_STATIC_INLINE_PREFIX uintptr_t MPIDI_OFI_recv_rbase(MPIDI_OFI_huge_recv_t * recv)
 {
-#ifdef USE_OFI_MR_SCALABLE
-    return 0;
-#else
-    return recv->remote_info.send_buf;
-#endif
+    if (MPIDI_OFI_ENABLE_MR_SCALABLE) {
+        return 0;
+    } else {
+        return recv->remote_info.send_buf;
+    }
 }
 
 #undef FUNCNAME
