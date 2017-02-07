@@ -511,7 +511,7 @@ AC_ARG_ENABLE(thread-cs,
 			[Choose the method used for critical sections
                          and other atomic updates when multiple
                          threads are present.  Values may be global
-                         (default), per-object, lock-free]),,enable_thread_cs=global)
+                         (default), per-object, per-endpoint, lock-free]),,enable_thread_cs=global)
 
 AC_ARG_ENABLE(refcount,
 	AC_HELP_STRING([--enable-refcount=type],
@@ -520,7 +520,7 @@ AC_ARG_ENABLE(refcount,
                          Values may be lock-free or none.  The
                          default depends on the thread-cs choice; for
                          global it is none (because none is required),
-                         for per-object and lock-free, lock-free]),,
+                         for per-object, per-endpoint, and lock-free, lock-free]),,
                          enable_refcount=default)
 
 AC_ARG_ENABLE(mutex-timing,
@@ -1386,6 +1386,10 @@ if test "$enable_threads" = "multiple" ; then
     ;;
     per-object|per_object)
     thread_granularity=MPICH_THREAD_GRANULARITY__POBJ
+    if test "$enable_refcount" = "default" ; then enable_refcount=lock-free ; fi
+    ;;
+    per-endpoint|per_endpoint)
+    thread_granularity=MPICH_THREAD_GRANULARITY__EP
     if test "$enable_refcount" = "default" ; then enable_refcount=lock-free ; fi
     ;;
     lock-free|lock_free|lockfree)

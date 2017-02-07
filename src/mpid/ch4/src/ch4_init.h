@@ -87,6 +87,8 @@ static inline int MPIDI_choose_netmod(void)
 
 #if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ)
 #define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
+#elif (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__EP)
+#define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
 #elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
 #define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
 #elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__SINGLE)
@@ -151,6 +153,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     /* Initialize MPI_COMM_SELF           */
     /* ---------------------------------- */
     MPIR_Process.comm_self->rank = 0;
+
     MPIR_Process.comm_self->remote_size = 1;
     MPIR_Process.comm_self->local_size = 1;
 
@@ -206,8 +209,17 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
         MPIR_ERR_POPFATAL(mpi_errno);
     }
 
-#ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
+    MPIDI_CH4_Global.ep_locks = (MPID_Thread_mutex_t*) MPL_malloc(MPIDI_CH4_Global.n_netmod_eps * sizeof(MPID_Thread_mutex_t));
+
     int i;
+    for (i = 0; i < MPIDI_CH4_Global.n_netmod_eps; i++) {
+        MPID_Thread_mutex_create(&MPIDI_CH4_Global.ep_locks[i], &mpi_errno);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POPFATAL(mpi_errno);
+        }
+    }
+
+#ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     for (i = 0; i < MPIR_Process.comm_world->local_size; i++) {
         MPIDI_av_table0->table[i].is_local = 0;
     }

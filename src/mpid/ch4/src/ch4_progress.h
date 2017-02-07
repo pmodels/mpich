@@ -25,23 +25,27 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_test(void)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_PROGRESS_TEST);
 
     if (OPA_load_int(&MPIDI_CH4_Global.active_progress_hooks)) {
-        MPID_THREAD_CS_ENTER(POBJ, MPIDI_CH4I_THREAD_PROGRESS_MUTEX);
+        MPID_THREAD_CS_ENTER(EP_POBJ, MPIDI_CH4I_THREAD_PROGRESS_MUTEX);
         for (i = 0; i < MAX_PROGRESS_HOOKS; i++) {
             if (MPIDI_CH4_Global.progress_hooks[i].active == TRUE) {
                 MPIR_Assert(MPIDI_CH4_Global.progress_hooks[i].func_ptr != NULL);
                 mpi_errno = MPIDI_CH4_Global.progress_hooks[i].func_ptr(&made_progress);
                 if (mpi_errno) {
-                    MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_PROGRESS_MUTEX);
+                    MPID_THREAD_CS_EXIT(EP_POBJ, MPIDI_CH4I_THREAD_PROGRESS_MUTEX);
                     MPIR_ERR_POP(mpi_errno);
                 }
             }
         }
-        MPID_THREAD_CS_EXIT(POBJ, MPIDI_CH4I_THREAD_PROGRESS_MUTEX);
+        MPID_THREAD_CS_EXIT(EP_POBJ, MPIDI_CH4I_THREAD_PROGRESS_MUTEX);
     }
     /* todo: progress unexp_list */
-    mpi_errno = MPIDI_NM_progress(MPIDI_CH4_Global.netmod_context[0], 0);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIR_ERR_POP(mpi_errno);
+    for (i = 0; i < MPIDI_CH4_Global.n_netmod_eps; i++) {
+        MPID_THREAD_CS_ENTER(EP, MPIDI_CH4_Global.ep_locks[i]);
+        mpi_errno = MPIDI_NM_progress(MPIDI_CH4_Global.netmod_context[i], 0);
+        MPID_THREAD_CS_EXIT(EP, MPIDI_CH4_Global.ep_locks[i]);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POP(mpi_errno);
+        }
     }
 #ifdef MPIDI_CH4_EXCLUSIVE_SHM
     mpi_errno = MPIDI_SHM_progress(0);
@@ -49,8 +53,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Progress_test(void)
         MPIR_ERR_POP(mpi_errno);
     }
 #endif
-    MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-    MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
   fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_PROGRESS_TEST);
     return mpi_errno;
