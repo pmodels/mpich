@@ -171,8 +171,13 @@ typedef struct {
 
 typedef struct {
     fi_addr_t dest;
-#if defined MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS || defined MPIDI_OFI_ENABLE_RUNTIME_CHECKS
+#if MPIDI_OFI_ENABLE_RUNTIME_CHECKS
     unsigned ep_idx:MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE;
+#else /* This is necessary for older GCC compilers that don't properly detect
+       * elif statements */
+#if MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS
+    unsigned ep_idx:MPIDI_OFI_MAX_ENDPOINTS_BITS_SCALABLE;
+#endif
 #endif
 } MPIDI_OFI_addr_t;
 
