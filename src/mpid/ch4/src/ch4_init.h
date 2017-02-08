@@ -331,6 +331,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
 
     MPIDIU_avt_destroy();
 
+    for (i = 0; i < MPIDI_CH4_Global.n_netmod_eps; i++)
+        MPID_Thread_mutex_destroy(&MPIDI_CH4_Global.ep_locks[i], &thr_err);
+    MPL_free(MPIDI_CH4_Global.ep_locks);
+
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
   fn_exit:
