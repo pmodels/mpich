@@ -371,6 +371,32 @@ if test "$enable_ch4r_per_comm_msg_queue" = "yes" ; then
         [Define if CH4U will use per-communicator message queues])
 fi
 
+AC_ARG_ENABLE(ch4-mt,
+    [--enable-ch4-mt=model
+       Select model for multi-threading
+         direct    - Each thread directly accesses lower-level fabric (default)
+         handoff   - Use the hand-off model (spawns progress thread)
+         trylock   - Use the trylock-enqueue model
+    ],,enable_ch4_mt=direct)
+
+case $enable_ch4_mt in
+     direct)
+         AC_DEFINE([MPIDI_CH4_MT_DIRECT], [1],
+	     [Define to enable direct multi-threading model])
+	 ;;
+     handoff)
+         AC_DEFINE([MPIDI_CH4_MT_HANDOFF], [1],
+	     [Define to enable hand-off multi-threading model])
+	 ;;
+     trylock)
+         AC_DEFINE([MPIDI_CH4_MT_TRYLOCK], [1],
+	     [Define to enable trylock-enqueue multi-threading model])
+	 ;;
+     *)
+        AC_MSG_ERROR([Multi-threading model ${enable_ch4_mt} is unknown])
+        ;;
+esac
+
 PAC_ARG_SHARED_MEMORY
 
 AC_CONFIG_FILES([
