@@ -49,7 +49,7 @@ static inline int MPIDI_OFI_cycle_algorithm(MPIR_Comm *comm_ptr, int pick[], int
     if(comm_ptr->comm_kind == MPIR_COMM_KIND__INTERCOMM)
         return 0;
 
-#if 0
+#if 1
     int idx;
     MPIDI_OFI_COMM(comm_ptr).issued_collectives++;
     idx = MPIDI_OFI_COMM(comm_ptr).issued_collectives%num;
