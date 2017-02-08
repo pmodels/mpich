@@ -179,13 +179,16 @@ int ADIOI_Set_lock(FDTYPE fd, int cmd, int type, ADIO_Offset offset, int whence,
 }
 #endif
 
-#if defined(ROMIO_XFS)
 int ADIOI_Set_lock64(FDTYPE fd, int cmd, int type, ADIO_Offset offset,
                      int whence,
 	             ADIO_Offset len) 
 {
     int err, error_code;
+#ifdef _LARGEFILE64_SOURCE
     struct flock64 lock;
+#else
+    struct flock lock;
+#endif
 
     if (len == 0) return MPI_SUCCESS;
 
@@ -222,4 +225,3 @@ int ADIOI_Set_lock64(FDTYPE fd, int cmd, int type, ADIO_Offset offset,
     error_code = (err == 0) ? MPI_SUCCESS : MPI_ERR_UNKNOWN;
     return error_code;
 }
-#endif
