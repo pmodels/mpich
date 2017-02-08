@@ -336,7 +336,7 @@ static inline int MPIDI_NM_mpi_win_start(MPIR_Group * group, int assert, MPIR_Wi
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_START);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_START);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_start(group, assert, win);
         goto fn_exit;
     }
@@ -424,7 +424,7 @@ static inline int MPIDI_NM_mpi_win_complete(MPIR_Win * win)
 
     MPIR_CHKLMEM_DECL(1);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_complete(win);
         goto fn_exit;
     }
@@ -490,7 +490,7 @@ static inline int MPIDI_NM_mpi_win_post(MPIR_Group * group, int assert, MPIR_Win
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_POST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_POST);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_post(group, assert, win);
         goto fn_exit;
     }
@@ -534,7 +534,7 @@ static inline int MPIDI_NM_mpi_win_wait(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_WAIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_WAIT);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_wait(win);
         goto fn_exit;
     }
@@ -571,7 +571,7 @@ static inline int MPIDI_NM_mpi_win_test(MPIR_Win * win, int *flag)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_TEST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_TEST);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_test(win, flag);
         goto fn_exit;
     }
@@ -611,7 +611,7 @@ static inline int MPIDI_NM_mpi_win_lock(int lock_type, int rank, int assert, MPI
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_LOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_LOCK);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_lock(lock_type, rank, assert, win);
         goto fn_exit;
     }
@@ -654,7 +654,7 @@ static inline int MPIDI_NM_mpi_win_unlock(int rank, MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_UNLOCK);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_UNLOCK);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_unlock(rank, win);
         goto fn_exit;
     }
@@ -699,7 +699,7 @@ static inline int MPIDI_NM_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_p_
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_GET_INFO);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_GET_INFO);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_get_info(win, info_p_p);
         goto fn_exit;
     }
@@ -729,7 +729,7 @@ static inline int MPIDI_NM_mpi_win_free(MPIR_Win ** win_ptr)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_FREE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_FREE);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_free(win_ptr);
         goto fn_fail;
     }
@@ -777,7 +777,7 @@ static inline int MPIDI_NM_mpi_win_fence(int massert, MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_FENCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_FENCE);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_fence(massert, win);
         goto fn_exit;
     }
@@ -831,7 +831,7 @@ static inline int MPIDI_NM_mpi_win_create(void *base,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_CREATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_CREATE);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_create(base, length, disp_unit, info, comm_ptr, win_ptr);
         goto fn_exit;
     }
@@ -873,7 +873,7 @@ static inline int MPIDI_NM_mpi_win_attach(MPIR_Win * win, void *base, MPI_Aint s
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_ATTACH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_ATTACH);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_attach(win, base, size);
         goto fn_exit;
     }
@@ -910,7 +910,7 @@ static inline int MPIDI_NM_mpi_win_allocate_shared(MPI_Aint size,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_ALLOCATE_SHARED);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_ALLOCATE_SHARED);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_allocate_shared(size, disp_unit, info_ptr, comm_ptr, base_ptr, win_ptr);
         goto fn_exit;
     }
@@ -1064,7 +1064,7 @@ static inline int MPIDI_NM_mpi_win_detach(MPIR_Win * win, const void *base)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_DETACH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_DETACH);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_detach(win, base);
         goto fn_exit;
     }
@@ -1094,7 +1094,7 @@ static inline int MPIDI_NM_mpi_win_shared_query(MPIR_Win * win,
     int i;
     uintptr_t base = (uintptr_t) MPIDI_CH4U_WIN(win, mmap_addr);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_shared_query(win, rank, size, disp_unit, baseptr);
         goto fn_exit;
     }
@@ -1137,7 +1137,7 @@ static inline int MPIDI_NM_mpi_win_allocate(MPI_Aint size,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_ALLOCATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_ALLOCATE);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_allocate(size, disp_unit, info, comm, baseptr, win_ptr);
         goto fn_exit;
     }
@@ -1183,7 +1183,7 @@ static inline int MPIDI_NM_mpi_win_flush(int rank, MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_flush(rank, win);
         goto fn_exit;
     }
@@ -1212,7 +1212,7 @@ static inline int MPIDI_NM_mpi_win_flush_local_all(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_LOCAL_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_LOCAL_ALL);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_flush_local_all(win);
         goto fn_exit;
     }
@@ -1243,7 +1243,7 @@ static inline int MPIDI_NM_mpi_win_unlock_all(MPIR_Win * win)
     int i;
     MPIDI_CH4U_win_lock_info *lockQ;
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_unlock_all(win);
         goto fn_exit;
     }
@@ -1300,7 +1300,7 @@ static inline int MPIDI_NM_mpi_win_create_dynamic(MPIR_Info * info,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_CREATE_DYNAMIC);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_CREATE_DYNAMIC);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_create_dynamic(info, comm, win_ptr);
         goto fn_exit;
     }
@@ -1338,7 +1338,7 @@ static inline int MPIDI_NM_mpi_win_flush_local(int rank, MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_LOCAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_LOCAL);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_flush_local(rank, win);
         goto fn_exit;
     }
@@ -1368,7 +1368,7 @@ static inline int MPIDI_NM_mpi_win_sync(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_SYNC);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_SYNC);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_sync(win);
         goto fn_exit;
     }
@@ -1394,7 +1394,7 @@ static inline int MPIDI_NM_mpi_win_flush_all(MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_FLUSH_ALL);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_flush_all(win);
         goto fn_exit;
     }
@@ -1425,7 +1425,7 @@ static inline int MPIDI_NM_mpi_win_lock_all(int assert, MPIR_Win * win)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_WIN_LOCK_ALL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_WIN_LOCK_ALL);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4R_mpi_win_lock_all(assert, win);
         goto fn_exit;
     }

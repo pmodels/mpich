@@ -577,7 +577,7 @@ static inline int MPIDI_NM_mpi_put(const void *origin_addr,
     MPI_Aint origin_true_lb, target_true_lb;
     size_t offset;
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4U_mpi_put(origin_addr, origin_count, origin_datatype,
                                        target_rank, target_disp, target_count,
                                        target_datatype, win);
@@ -738,7 +738,7 @@ static inline int MPIDI_NM_mpi_get(void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_GET);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_GET);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4U_mpi_get(origin_addr, origin_count, origin_datatype,
                                        target_rank, target_disp, target_count,
                                        target_datatype, win);
@@ -821,7 +821,7 @@ static inline int MPIDI_NM_mpi_rput(const void *origin_addr,
     size_t origin_bytes;
     size_t offset;
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4U_mpi_rput(origin_addr, origin_count, origin_datatype,
                                         target_rank, target_disp, target_count,
                                         target_datatype, win, request);
@@ -881,7 +881,7 @@ static inline int MPIDI_NM_mpi_compare_and_swap(const void *origin_addr,
     struct fi_rma_ioc targetv;
     struct fi_msg_atomic msg;
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_ATOMICS) {
         mpi_errno = MPIDI_CH4U_mpi_compare_and_swap(origin_addr, compare_addr,
                                                     result_addr, datatype,
                                                     target_rank, target_disp,
@@ -1031,7 +1031,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_ACCUMULATE);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) goto am_fallback;
+    if (!MPIDI_OFI_ENABLE_ATOMICS) goto am_fallback;
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
     MPIDI_Datatype_check_size(origin_datatype, origin_count, origin_bytes);
@@ -1160,7 +1160,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) goto am_fallback;
+    if (!MPIDI_OFI_ENABLE_ATOMICS) goto am_fallback;
 
     MPIDI_CH4U_EPOCH_CHECK_SYNC(win, mpi_errno, goto fn_fail);
     MPIDI_Datatype_check_size(target_datatype, target_count, target_bytes);
@@ -1308,7 +1308,7 @@ static inline int MPIDI_NM_mpi_raccumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RACCUMULATE);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_ATOMICS) {
         mpi_errno = MPIDI_CH4U_mpi_raccumulate(origin_addr, origin_count, origin_datatype,
                                                target_rank, target_disp, target_count,
                                                target_datatype, op, win, request);
@@ -1350,7 +1350,7 @@ static inline int MPIDI_NM_mpi_rget_accumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_RGET_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_RGET_ACCUMULATE);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_ATOMICS) {
         mpi_errno = MPIDI_CH4U_mpi_rget_accumulate(origin_addr, origin_count, origin_datatype,
                                                    result_addr, result_count, result_datatype,
                                                    target_rank, target_disp, target_count,
@@ -1381,7 +1381,7 @@ static inline int MPIDI_NM_mpi_fetch_and_op(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_FETCH_AND_OP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_FETCH_AND_OP);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_ATOMICS) {
         mpi_errno = MPIDI_CH4U_mpi_fetch_and_op(origin_addr, result_addr, datatype,
                                                 target_rank, target_disp, op, win);
         goto fn_exit;
@@ -1419,7 +1419,7 @@ static inline int MPIDI_NM_mpi_rget(void *origin_addr,
     size_t origin_bytes;
     size_t offset;
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_RMA) {
         mpi_errno = MPIDI_CH4U_mpi_rget(origin_addr, origin_count, origin_datatype,
                                         target_rank, target_disp, target_count, target_datatype, win,
                                         request);
@@ -1479,7 +1479,7 @@ static inline int MPIDI_NM_mpi_get_accumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DO_GET_ACCUMULATE);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_ATOMICS) {
         mpi_errno = MPIDI_CH4U_mpi_get_accumulate(origin_addr, origin_count, origin_datatype,
                                                   result_addr, result_count, result_datatype,
                                                   target_rank, target_disp, target_count,
@@ -1513,7 +1513,7 @@ static inline int MPIDI_NM_mpi_accumulate(const void *origin_addr,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ACCUMULATE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ACCUMULATE);
 
-    if (!MPIDI_OFI_ENABLE_TAGGED) {
+    if (!MPIDI_OFI_ENABLE_ATOMICS) {
         mpi_errno = MPIDI_CH4U_mpi_accumulate(origin_addr, origin_count, origin_datatype,
                                               target_rank, target_disp, target_count, target_datatype, op,
                                               win);
