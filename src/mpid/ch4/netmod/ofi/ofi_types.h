@@ -50,10 +50,22 @@
 #define MPIDI_OFI_CONTEXT_MASK       (((1ULL << MPIDI_OFI_CONTEXT_BITS) - 1) << (MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS))
 #define MPIDI_OFI_SOURCE_MASK        (((1ULL << MPIDI_OFI_SOURCE_BITS) - 1) << MPIDI_OFI_TAG_BITS)
 #define MPIDI_OFI_TAG_MASK           ((1ULL << MPIDI_OFI_TAG_BITS) - 1)
+/* This value comes from the fact that we use a uint32_t in
+ * MPIDI_OFI_send_handler to define the dest and that is the size we expect
+ * from the OFI provider for its immediate data field. */
+#define MPIDI_OFI_MAX_RANK_BITS      (MPIDI_OFI_SOURCE_BITS > 0 ? MPIDI_OFI_SOURCE_BITS : 32)
 #else
 #define MPIDI_OFI_CONTEXT_MASK       MPIDI_OFI_CONTEXT_MASK_CAPSET
 #define MPIDI_OFI_SOURCE_MASK        MPIDI_OFI_SOURCE_MASK_CAPSET
 #define MPIDI_OFI_TAG_MASK           MPIDI_OFI_TAG_MASK_CAPSET
+#if MPIDI_OFI_SOURCE_BITS == 0
+/* This value comes from the fact that we use a uint32_t in
+ * MPIDI_OFI_send_handler to define the dest and that is the size we expect
+ * from the OFI provider for its immediate data field. */
+#define MPIDI_OFI_MAX_RANK_BITS      32
+#else
+#define MPIDI_OFI_MAX_RANK_BITS      MPIDI_OFI_SOURCE_BITS
+#endif
 #endif
 
 /* RMA Key Space division
