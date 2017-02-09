@@ -119,7 +119,6 @@ static inline void MPIDI_workq_pt2pt_enqueue_body(MPIDI_pt2pt_op_t op,
                                                   int ep_idx,
                                                   MPIR_Request *request)
 {
-    *request = MPIDI_REQUEST_IDLE;
     MPIDI_pt2pt_elemt_t* pt2pt_elemt = NULL;
     pt2pt_elemt = MPL_malloc(sizeof (*pt2pt_elemt));
     pt2pt_elemt->op       = op;
