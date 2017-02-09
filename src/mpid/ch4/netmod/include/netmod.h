@@ -77,11 +77,11 @@ typedef int (*MPIDI_NM_mpi_rsend_init_t) (const void *buf, int count, MPI_Dataty
 typedef int (*MPIDI_NM_mpi_bsend_init_t) (const void *buf, int count, MPI_Datatype datatype,
                                           int rank, int tag, MPIR_Comm * comm, int context_offset, int ep_idx,
                                           MPIR_Request ** request);
-typedef int (*MPIDI_NM_mpi_isend_t) (const void *buf, int count, MPI_Datatype datatype, int rank, int ep_idx,
-                                     int tag, MPIR_Comm * comm, int context_offset,
+typedef int (*MPIDI_NM_mpi_isend_t) (const void *buf, int count, MPI_Datatype datatype, int rank,
+                                     int tag, MPIR_Comm * comm, int context_offset, int ep_idx,
                                      MPIR_Request ** request);
-typedef int (*MPIDI_NM_mpi_issend_t) (const void *buf, int count, MPI_Datatype datatype, int rank, int ep_idx,
-                                      int tag, MPIR_Comm * comm, int context_offset,
+typedef int (*MPIDI_NM_mpi_issend_t) (const void *buf, int count, MPI_Datatype datatype, int rank,
+                                      int tag, MPIR_Comm * comm, int context_offset, int ep_idx,
                                       MPIR_Request ** request);
 typedef int (*MPIDI_NM_mpi_cancel_send_t) (MPIR_Request * sreq);
 typedef int (*MPIDI_NM_mpi_recv_init_t) (void *buf, int count, MPI_Datatype datatype, int rank,
