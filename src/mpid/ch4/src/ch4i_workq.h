@@ -170,29 +170,19 @@ static inline int MPIDI_workq_pt2pt_progress(int ep_idx)
         MPIDI_WORKQ_PT2PT_ISSUE_START;
         switch(pt2pt_elemt->op) {
         case MPIDI_ISEND:
-            mpi_errno = MPID_Isend(pt2pt_elemt->send_buf,
-                                   pt2pt_elemt->count,
-                                   pt2pt_elemt->datatype,
-                                   pt2pt_elemt->rank,
-                                   pt2pt_elemt->tag,
-                                   pt2pt_elemt->comm_ptr,
-                                   MPIR_CONTEXT_INTRA_PT2PT,
-                                   &request_ptr);
+            mpi_errno = MPIDI_NM_mpi_isend(pt2pt_elemt->send_buf,
+                                           pt2pt_elemt->count,
+                                           pt2pt_elemt->datatype,
+                                           pt2pt_elemt->rank,
+                                           pt2pt_elemt->tag,
+                                           pt2pt_elemt->comm_ptr,
+                                           pt2pt_elemt->context_offset,
+                                           ep_idx,
+                                           &request_ptr);
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-            MPII_SENDQ_REMEMBER(request_ptr,pt2pt_elemt->rank,pt2pt_elemt->tag,comm_ptr->context_id);
-            *pt2pt_elemt->request = request_ptr->handle;
             break;
         case MPIDI_IRECV:
-            mpi_errno = MPID_Irecv(pt2pt_elemt->recv_buf,
-                                   pt2pt_elemt->count,
-                                   pt2pt_elemt->datatype,
-                                   pt2pt_elemt->rank,
-                                   pt2pt_elemt->tag,
-                                   pt2pt_elemt->comm_ptr,
-                                   MPIR_CONTEXT_INTRA_PT2PT,
-                                   &request_ptr);
-            *pt2pt_elemt->request = request_ptr->handle;
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            /* FIXME: fill in */
             break;
         }
         MPIDI_WORKQ_PT2PT_ISSUE_STOP;
@@ -214,14 +204,15 @@ static inline int MPIDI_workq_rma_progress(int ep_idx)
         MPIDI_WORKQ_RMA_ISSUE_START;
         switch(rma_elemt->op) {
         case MPIDI_PUT:
-            mpi_errno = MPID_Put(rma_elemt->origin_addr,
-                                 rma_elemt->origin_count,
-                                 rma_elemt->origin_datatype,
-                                 rma_elemt->target_rank,
-                                 rma_elemt->target_disp,
-                                 rma_elemt->target_count,
-                                 rma_elemt->target_datatype,
-                                 rma_elemt->win_ptr);
+            mpi_errno = MPIDI_NM_mpi_put(rma_elemt->origin_addr,
+                                         rma_elemt->origin_count,
+                                         rma_elemt->origin_datatype,
+                                         rma_elemt->target_rank,
+                                         rma_elemt->target_disp,
+                                         rma_elemt->target_count,
+                                         rma_elemt->target_datatype,
+                                         rma_elemt->win_ptr,
+                                         ep_idx);
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             break;
         }
