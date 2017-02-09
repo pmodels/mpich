@@ -98,15 +98,18 @@ MPL_STATIC_INLINE_PREFIX int MPID_Isend(const void *buf,
     MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
 
 #ifndef MPIDI_CH4_EXCLUSIVE_SHM
-    mpi_errno = MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, ep_idx, request);
+    mpi_errno = MPIDI_dispatch_send(MPIDI_NM_mpi_isend, MPIDI_ISEND,
+                                    buf, count, datatype, rank, tag, comm, context_offset,
+                                    ep_idx, request);
 #else
     int r;
     if ((r = MPIDI_CH4_rank_is_local(rank, comm)))
         mpi_errno =
             MPIDI_SHM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, request);
     else
-        mpi_errno =
-            MPIDI_NM_mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, ep_idx, request);
+        mpi_errno = MPIDI_dispatch_send(MPIDI_NM_mpi_isend, MPIDI_ISEND,
+                                        buf, count, datatype, rank, tag, comm, context_offset,
+                                        ep_idx, request);
     if (mpi_errno == MPI_SUCCESS)
         MPIDI_CH4I_REQUEST(*request, is_local) = r;
 #endif
