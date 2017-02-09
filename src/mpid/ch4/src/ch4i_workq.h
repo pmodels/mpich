@@ -24,7 +24,7 @@ struct MPIDI_pt2pt_elemt {
     int tag;
     MPIR_Comm *comm_ptr;
     int context_offset;
-    MPI_Request *request;
+    MPIR_Request *request;
 };
 
 /* RMA */
@@ -116,7 +116,7 @@ static inline void MPIDI_workq_pt2pt_enqueue_body(int ep_idx,
                                                   int rank,
                                                   int tag,
                                                   MPIR_Comm *comm_ptr,
-                                                  MPI_Request *request)
+                                                  MPIR_Request *request)
 {
     *request = MPIDI_REQUEST_IDLE;
     MPIDI_pt2pt_elemt_t* pt2pt_elemt = NULL;
@@ -252,7 +252,7 @@ static inline void MPIDI_workq_pt2pt_enqueue(int ep_idx,
                                              int rank,
                                              int tag,
                                              MPIR_Comm *comm_ptr,
-                                             MPI_Request *request)
+                                             MPIR_Request *request)
 {
     MPIDI_WORKQ_PT2PT_ENQUEUE_START;
     MPIDI_workq_pt2pt_enqueue_body(ep_idx, op, send_buf, recv_buf, count, datatype,
