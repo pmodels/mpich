@@ -210,6 +210,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     }
 
     MPIDI_CH4_Global.ep_locks = (MPID_Thread_mutex_t*) MPL_malloc(MPIDI_CH4_Global.n_netmod_eps * sizeof(MPID_Thread_mutex_t));
+    MPIDI_CH4_Global.ep_pt2pt_pend_ops = MPL_malloc(sizeof(MPIDI_workq_t) * MPIDI_CH4_Global.n_netmod_eps);
+    MPIDI_CH4_Global.ep_rma_pend_ops   = MPL_malloc(sizeof(MPIDI_workq_t) * MPIDI_CH4_Global.n_netmod_eps);
 
     int i;
     for (i = 0; i < MPIDI_CH4_Global.n_netmod_eps; i++) {
@@ -217,6 +219,8 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
         if (mpi_errno != MPI_SUCCESS) {
             MPIR_ERR_POPFATAL(mpi_errno);
         }
+        MPIDI_workq_init(&MPIDI_CH4_Global.ep_pt2pt_pend_ops[i]);
+        MPIDI_workq_init(&MPIDI_CH4_Global.ep_rma_pend_ops[i]);
     }
 
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
@@ -330,6 +334,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
     MPL_free(MPIDI_CH4_Global.node_map);
 
     MPIDIU_avt_destroy();
+
+    MPL_free(MPIDI_CH4_Global.ep_pt2pt_pend_ops);
+    MPL_free(MPIDI_CH4_Global.ep_rma_pend_ops);
 
     for (i = 0; i < MPIDI_CH4_Global.n_netmod_eps; i++)
         MPID_Thread_mutex_destroy(&MPIDI_CH4_Global.ep_locks[i], &thr_err);
