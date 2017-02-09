@@ -1,0 +1,65 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ * See COPYRIGHT in top-level directory.
+ */
+
+#ifndef _ZM_LOCK_TYPES_H
+#define _ZM_LOCK_TYPES_H
+
+#include "common/zm_common.h"
+
+#define ZM_LOCKED 1
+#define ZM_UNLOCKED 0
+
+typedef struct zm_ticket zm_ticket_t;
+
+struct zm_ticket {
+    zm_atomic_uint_t next_ticket;
+    zm_atomic_uint_t now_serving;
+};
+
+/* MCS */
+typedef zm_atomic_ptr_t zm_mcs_t;
+typedef struct zm_mcs_qnode zm_mcs_qnode_t;
+
+struct zm_mcs_qnode {
+    zm_atomic_uint_t status;
+    zm_atomic_ptr_t next;
+};
+
+/* Context Saving MCS */
+typedef struct zm_csvmcs zm_csvmcs_t;
+
+struct zm_csvmcs {
+    zm_atomic_ptr_t lock;
+    zm_mcs_qnode_t* cur_ctx __attribute__((aligned(64)));
+};
+
+/* Two-Level Priority */
+#define ZM_TICKET   1
+#define ZM_MCS      2
+
+#define ZM_TLP_HIGH_P @ZM_TLP_HIGH_P@
+#define ZM_TLP_LOW_P @ZM_TLP_LOW_P@
+
+#define ZM_STATUS_FREE    0
+#define ZM_STATUS_REQUEST 1
+#define ZM_STATUS_GRANTED 2
+
+typedef struct zm_tlp zm_tlp_t;
+
+struct zm_tlp {
+#if (ZM_TLP_HIGH_P == ZM_TICKET)
+   zm_ticket_t high_p __attribute__((aligned(64)));
+#elif (ZM_TLP_HIGH_P == ZM_MCS)
+   zm_mcs_t high_p __attribute__((aligned(64)));
+#endif
+   zm_atomic_uint_t common __attribute__((aligned(64)));
+#if (ZM_TLP_LOW_P == ZM_TICKET)
+   zm_ticket_t low_p __attribute__((aligned(64)));
+#elif (ZM_TLP_LOW_P == ZM_MCS)
+   zm_mcs_t low_p __attribute__((aligned(64)));
+#endif
+};
+
+#endif /* _IZEM_LOCK_TYPES_H */

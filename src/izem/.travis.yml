@@ -1,0 +1,44 @@
+language: c
+
+matrix:
+  include:
+    - os: linux
+      compiler: gcc-6
+    - os: linux
+      compiler: clang-3.8
+    - os: osx
+      compiler: clang
+    - os: osx
+      compiler: gcc-6
+  allow_failures:
+     - os: linux
+       compiler: clang-3.8
+
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    - llvm-toolchain-precise-3.8
+    packages:
+    - gcc-6
+    - clang-3.8
+
+before_install:
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+        brew update;
+        brew reinstall libtool;
+        brew install llvm --with-clang --with-compiler-rt --with-libcxx --with-lld;
+        brew test llvm;
+        brew link --force llvm;
+      fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" && "$CC" == "gcc-6" ]]; then brew install gcc6; fi
+
+script:
+    - ./autogen.sh
+    - mkdir build && cd build
+    - ../configure CFLAGS="-std=c11 -Wall"
+    - make V=1
+    - cd test && make check V=1
+
+after_failure:
+    - cd $TRAVIS_BUILD_DIR/build && cat ./config.log
