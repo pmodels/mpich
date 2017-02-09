@@ -1338,7 +1338,7 @@ static inline int MPIDI_OFI_choose_provider(struct fi_info *prov, struct fi_info
 
 static inline int MPIDI_OFI_application_hints(int rank)
 {
-    int rank_bits, world_size, mpi_errno;
+    int world_size, mpi_errno;
 
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_DATA: %d", MPIDI_OFI_ENABLE_DATA));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_AV_TABLE: %d", MPIDI_OFI_ENABLE_AV_TABLE));
@@ -1354,8 +1354,6 @@ static inline int MPIDI_OFI_application_hints(int rank)
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_CONTEXT_BITS: %d", MPIDI_OFI_CONTEXT_BITS));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_SOURCE_BITS: %d", MPIDI_OFI_SOURCE_BITS));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_TAG_BITS: %d", MPIDI_OFI_TAG_BITS));
-
-    rank_bits = MPIDI_OFI_SOURCE_BITS ? MPIDI_OFI_SOURCE_BITS : 32;
 
     if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && rank == 0) {
         fprintf(stdout, "==== Capability set configuration ====\n");
@@ -1378,7 +1376,7 @@ static inline int MPIDI_OFI_application_hints(int rank)
         /* Discover the maximum number of ranks. If the source shift is not
          * defined, there are 32 bits in use due to the uint32_t used in
          * ofi_send.h */
-        fprintf(stdout, "MAXIMUM SUPPORTED RANKS: %ld\n", (long int) 1 << rank_bits);
+        fprintf(stdout, "MAXIMUM SUPPORTED RANKS: %ld\n", (long int) 1 << MPIDI_OFI_MAX_RANK_BITS);
 
         /* Discover the tag_ub */
         fprintf(stdout, "MAXIMUM TAG: %" PRIu64 "\n", 1UL << MPIDI_OFI_TAG_BITS);
@@ -1391,7 +1389,7 @@ static inline int MPIDI_OFI_application_hints(int rank)
         MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_get_size",
                              "**pmi_get_size %d", mpi_errno);
     }
-    if (world_size > (1UL << rank_bits)) {
+    if (world_size > (1UL << MPIDI_OFI_MAX_RANK_BITS)) {
         MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch4|too_many_ranks");
     }
 
