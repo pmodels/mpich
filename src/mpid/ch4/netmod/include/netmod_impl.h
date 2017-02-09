@@ -462,7 +462,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_isend(const void *buf, int count, MPI_
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_ISEND);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_ISEND);
 
-    ret = MPIDI_NM_native_func->mpi_isend(buf, count, datatype, rank, tag, comm, context_offset,
+    ret = MPIDI_NM_native_func->mpi_isend(buf, count, datatype, rank, tag, comm, context_offset, ep_idx,
                                           request);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_ISEND);
