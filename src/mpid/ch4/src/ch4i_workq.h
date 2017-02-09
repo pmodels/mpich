@@ -107,8 +107,7 @@ extern double MPIDI_rma_issue_pend_time;
 #define MPIDI_WORKQ_RMA_ISSUE_STOP
 #endif
 
-static inline void MPIDI_workq_pt2pt_enqueue_body(int ep_idx,
-                                                  MPIDI_pt2pt_op_t op,
+static inline void MPIDI_workq_pt2pt_enqueue_body(MPIDI_pt2pt_op_t op,
                                                   const void *send_buf,
                                                   void *recv_buf,
                                                   MPI_Aint count,
@@ -116,6 +115,8 @@ static inline void MPIDI_workq_pt2pt_enqueue_body(int ep_idx,
                                                   int rank,
                                                   int tag,
                                                   MPIR_Comm *comm_ptr,
+                                                  int context_offset,
+                                                  int ep_idx,
                                                   MPIR_Request *request)
 {
     *request = MPIDI_REQUEST_IDLE;
@@ -129,12 +130,12 @@ static inline void MPIDI_workq_pt2pt_enqueue_body(int ep_idx,
     pt2pt_elemt->rank     = rank;
     pt2pt_elemt->tag      = tag;
     pt2pt_elemt->comm_ptr = comm_ptr;
+    pt2pt_elemt->context_offset = context_offset;
     pt2pt_elemt->request  = request;
     MPIDI_workq_enqueue(&MPIDI_CH4_Global.ep_pt2pt_pend_ops[ep_idx], pt2pt_elemt);
 }
 
-static inline void MPIDI_workq_rma_enqueue_body(int ep_idx,
-                                                MPIDI_rma_op_t op,
+static inline void MPIDI_workq_rma_enqueue_body(MPIDI_rma_op_t op,
                                                 const void *origin_addr,
                                                 int origin_count,
                                                 MPI_Datatype origin_datatype,
@@ -142,7 +143,8 @@ static inline void MPIDI_workq_rma_enqueue_body(int ep_idx,
                                                 MPI_Aint target_disp,
                                                 int target_count,
                                                 MPI_Datatype target_datatype,
-                                                MPIR_Win *win_ptr)
+                                                MPIR_Win *win_ptr,
+                                                int ep_idx)
 {
     MPIDI_rma_elemt_t* rma_elemt = NULL;
     rma_elemt = MPL_malloc(sizeof (*rma_elemt));
@@ -243,8 +245,7 @@ fn_fail:
     return mpi_errno;
 }
 
-static inline void MPIDI_workq_pt2pt_enqueue(int ep_idx,
-                                             MPIDI_pt2pt_op_t op,
+static inline void MPIDI_workq_pt2pt_enqueue(MPIDI_pt2pt_op_t op,
                                              const void *send_buf,
                                              void *recv_buf,
                                              MPI_Aint count,
@@ -252,16 +253,17 @@ static inline void MPIDI_workq_pt2pt_enqueue(int ep_idx,
                                              int rank,
                                              int tag,
                                              MPIR_Comm *comm_ptr,
+                                             int context_offset,
+                                             int ep_idx,
                                              MPIR_Request *request)
 {
     MPIDI_WORKQ_PT2PT_ENQUEUE_START;
-    MPIDI_workq_pt2pt_enqueue_body(ep_idx, op, send_buf, recv_buf, count, datatype,
-                                   rank, tag, comm_ptr, request);
+    MPIDI_workq_pt2pt_enqueue_body(op, send_buf, recv_buf, count, datatype,
+                                   rank, tag, comm_ptr, context_offset, ep_idx, request);
     MPIDI_WORKQ_PT2PT_ENQUEUE_STOP;
 }
 
-static inline void MPIDI_workq_rma_enqueue(int ep_idx,
-                                           MPIDI_rma_op_t op,
+static inline void MPIDI_workq_rma_enqueue(MPIDI_rma_op_t op,
                                            const void *origin_addr,
                                            int origin_count,
                                            MPI_Datatype origin_datatype,
@@ -269,12 +271,13 @@ static inline void MPIDI_workq_rma_enqueue(int ep_idx,
                                            MPI_Aint target_disp,
                                            int target_count,
                                            MPI_Datatype target_datatype,
-                                           MPIR_Win *win_ptr)
+                                           MPIR_Win *win_ptr,
+                                           int ep_idx)
 {
     MPIDI_WORKQ_RMA_ENQUEUE_START;
-    MPIDI_workq_rma_enqueue_body(ep_idx, op, origin_addr, origin_count, origin_datatype,
+    MPIDI_workq_rma_enqueue_body(op, origin_addr, origin_count, origin_datatype,
                                  target_rank, target_disp, target_count, target_datatype,
-                                 win_ptr);
+                                 win_ptr, ep_idx);
     MPIDI_WORKQ_RMA_ENQUEUE_STOP;
 }
 
