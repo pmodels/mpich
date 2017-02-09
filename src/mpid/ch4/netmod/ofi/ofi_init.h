@@ -673,8 +673,13 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
         val = valS;
         sprintf(keyS, "OFI-%d", rank);
+#ifdef USE_CRAYPMI_API
+        MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Put(keyS, val), pmi);
+        MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Fence(), pmi);
+#else
         MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Put(MPIDI_Global.kvsname, keyS, val), pmi);
         MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Commit(MPIDI_Global.kvsname), pmi);
+#endif
         MPIDI_OFI_PMI_CALL_POP(PMI_Barrier(), pmi);
 
         /* -------------------------------- */
@@ -686,8 +691,13 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
         for (i = 0; i < size; i++) {
             sprintf(keyS, "OFI-%d", i);
+#ifdef USE_CRAYPMI_API
+            MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Get
+                                   (NULL, -1, keyS, valS, MPIDI_KVSAPPSTRLEN, &len), pmi);
+#else
             MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get
                                    (MPIDI_Global.kvsname, keyS, valS, MPIDI_KVSAPPSTRLEN), pmi);
+#endif
             MPIDI_OFI_STR_CALL(MPL_str_get_binary_arg
                                (valS, "OFI", (char *) &table[i * MPIDI_Global.addrnamelen],
                                 MPIDI_Global.addrnamelen, &maxlen), buscard_len);
@@ -878,7 +888,11 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
         MPIR_Assert(slist_empty(&MPIDI_Global.cq_buff_list));
     }
 
+#ifdef USE_CRAYPMI_API
+    PMI2_Finalize();
+#else
     PMI_Finalize();
+#endif
 
     MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_UTIL_MUTEX, &thr_err);
     MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_PROGRESS_MUTEX, &thr_err);
