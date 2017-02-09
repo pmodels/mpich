@@ -84,22 +84,22 @@ int main(int argc, char **argv)
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    err = MTest_thread_barrier_init();
-    if (err) {
-        fprintf(stderr, "Could not create thread barrier\n");
-        MPI_Abort(MPI_COMM_WORLD, 1);
-    }
     MPI_Barrier(MPI_COMM_WORLD);
     if (rank == 0) {
         nthreads = nprocs - 1;
+        err = MTest_thread_barrier_init();
+        if (err) {
+            fprintf(stderr, "Could not create thread barrier\n");
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
         for (i = 1; i < nprocs; i++)
             MTest_Start_thread(run_test_send, (void *) (long) i);
         MTest_Join_threads();
+        MTest_thread_barrier_free();
     }
     else {
         run_test_recv();
     }
-    MTest_thread_barrier_free();
 
     MTest_Finalize(errs);
 
