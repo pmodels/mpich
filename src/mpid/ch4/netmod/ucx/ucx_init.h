@@ -217,9 +217,6 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
     MPIDIG_init(comm_world, comm_self, num_contexts, netmod_contexts);
 
-    mpi_errno = MPIR_Datatype_init_names();
-    MPIDI_UCX_MPI_ERROR(mpi_errno);
-
   fn_exit:
     MPIR_CHKLMEM_FREEALL();
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_EXIT);
