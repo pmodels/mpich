@@ -119,6 +119,13 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPIDI_CH4_DBG_MEMORY = MPL_dbg_class_alloc("CH4_MEMORY", "ch4_memory");
 #endif
     MPIDI_choose_netmod();
+#ifdef USE_CRAYPMI_API
+    pmi_errno = PMI2_Init(&has_parent, &size, &rank, &appnum);
+
+    if (pmi_errno != PMI_SUCCESS) {
+        MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_init", "**pmi_init %d", pmi_errno);
+    }
+#else
     pmi_errno = PMI_Init(&has_parent);
 
     if (pmi_errno != PMI_SUCCESS) {
@@ -145,6 +152,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
         MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmi_get_appnum",
                              "**pmi_get_appnum %d", pmi_errno);
     }
+#endif
 
     MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
