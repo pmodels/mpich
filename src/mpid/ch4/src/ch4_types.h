@@ -280,8 +280,8 @@ typedef struct MPIDI_CH4_Global_t {
     int n_netmod_eps;
     MPID_Thread_mutex_t *ep_locks;
     /* Per-endpoint queues for saving pending operations to issue */
-    MPIDI_workq_t *pt2pt_pend_ops;
-    MPIDI_workq_t *rma_pend_ops;
+    MPIDI_workq_t *ep_pt2pt_pend_ops;
+    MPIDI_workq_t *ep_rma_pend_ops;
 } MPIDI_CH4_Global_t;
 extern MPIDI_CH4_Global_t MPIDI_CH4_Global;
 #ifdef MPL_USE_DBG_LOGGING
