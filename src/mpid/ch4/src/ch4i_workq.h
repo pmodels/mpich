@@ -23,6 +23,7 @@ struct MPIDI_pt2pt_elemt {
     int rank;
     int tag;
     MPIR_Comm *comm_ptr;
+    int context_offset;
     MPI_Request *request;
 };
 
