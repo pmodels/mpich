@@ -8,29 +8,6 @@
 #ifndef CH4I_WORKQ_H_INCLUDED
 #define CH4I_WORKQ_H_INCLUDED
 
-/* Define the queue implementation type */
-#if defined(MPIDI_USE_NMQUEUE)
-#include <queue/zm_nmqueue.h>
-#define MPIDI_workq_t       zm_nmqueue_t
-#define MPIDI_workq_init    zm_nmqueue_init
-#define MPIDI_workq_enqueue zm_nmqueue_enqueue
-#define MPIDI_workq_dequeue zm_nmqueue_dequeue
-#elif defined(MPIDI_USE_MSQUEUE)
-#include <queue/zm_msqueue.h>
-#define MPIDI_workq_t       zm_msqueue_t
-#define MPIDI_workq_init    zm_msqueue_init
-#define MPIDI_workq_enqueue zm_msqueue_enqueue
-#define MPIDI_workq_dequeue zm_msqueue_dequeue
-#elif defined(MPIDI_USE_GLQUEUE)
-#include <queue/zm_glqueue.h>
-#define MPIDI_workq_t       zm_glqueue_t
-#define MPIDI_workq_init    zm_glqueue_init
-#define MPIDI_workq_enqueue zm_glqueue_enqueue
-#define MPIDI_workq_dequeue zm_glqueue_dequeue
-#else
-
-#endif
-
 /* Point-to-Point */
 typedef enum MPIDI_pt2pt_op MPIDI_pt2pt_op_t;
 typedef struct MPIDI_pt2pt_elemt MPIDI_pt2pt_elemt_t;
