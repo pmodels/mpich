@@ -93,7 +93,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(MPIDI_OFI_SENDPARAMS,
                                                    MPI_Aint dt_true_lb, uint64_t type)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *sreq = NULL;
+    MPIR_Request *sreq = *request;
     MPI_Aint last;
     char *send_buf;
     uint64_t match_bits;

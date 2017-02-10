@@ -162,7 +162,6 @@ static inline void MPIDI_workq_rma_enqueue_body(MPIDI_rma_op_t op,
 static inline int MPIDI_workq_pt2pt_progress(int ep_idx)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIR_Request *request_ptr = NULL;
     MPIDI_pt2pt_elemt_t* pt2pt_elemt = NULL;
     MPIDI_WORKQ_PT2PT_PROGRESS_START;
     MPIDI_workq_dequeue(&MPIDI_CH4_Global.ep_pt2pt_pend_ops[ep_idx], (void**)&pt2pt_elemt);
@@ -178,7 +177,7 @@ static inline int MPIDI_workq_pt2pt_progress(int ep_idx)
                                            pt2pt_elemt->comm_ptr,
                                            pt2pt_elemt->context_offset,
                                            ep_idx,
-                                           &request_ptr);
+                                           &pt2pt_elemt->request);
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             break;
         case MPIDI_IRECV:
