@@ -151,6 +151,16 @@ cvars:
         ID. The default value is -1, indicating that no value is set and that
         the default will be defined in the ofi_types.h file.
 
+    - name        : MPIR_CVAR_CH4_OFI_ENABLE_AUTO_PROGRESS
+      category    : CH4_OFI
+      type        : int
+      default     : -1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, enable MPI auto progress.
+
     - name        : MPIR_CVAR_CH4_OFI_RANK_BITS
       category    : CH4_OFI
       type        : int
@@ -251,6 +261,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                                         MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].source_bits : MPIR_CVAR_CH4_OFI_RANK_BITS;
     MPIDI_Global.settings.tag_bits                  = MPIR_CVAR_CH4_OFI_TAG_BITS != 20 ? MPIR_CVAR_CH4_OFI_TAG_BITS :
                                                         MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].tag_bits : MPIR_CVAR_CH4_OFI_TAG_BITS;
+    MPIDI_Global.settings.enable_auto_progress      = MPIR_CVAR_CH4_OFI_ENABLE_AUTO_PROGRESS != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_AUTO_PROGRESS :
+                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_auto_progress : MPIR_CVAR_CH4_OFI_ENABLE_AUTO_PROGRESS;
 
     CH4_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_chunk_request, context));
@@ -357,8 +369,13 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* ------------------------------------------------------------------------ */
     hints->addr_format = FI_FORMAT_UNSPEC;
     hints->domain_attr->threading = FI_THREAD_DOMAIN;
-    hints->domain_attr->control_progress = FI_PROGRESS_MANUAL;
-    hints->domain_attr->data_progress = FI_PROGRESS_MANUAL;
+    if(MPIDI_OFI_ENABLE_AUTO_PROGRESS){
+        hints->domain_attr->control_progress = FI_PROGRESS_AUTO;
+        hints->domain_attr->data_progress = FI_PROGRESS_AUTO;
+    } else{
+        hints->domain_attr->control_progress = FI_PROGRESS_MANUAL;
+        hints->domain_attr->data_progress = FI_PROGRESS_MANUAL;
+    }
     hints->domain_attr->resource_mgmt = FI_RM_ENABLED;
     hints->domain_attr->av_type = MPIDI_OFI_ENABLE_AV_TABLE ? FI_AV_TABLE : FI_AV_MAP;
     if (MPIDI_OFI_ENABLE_MR_SCALABLE)
@@ -419,6 +436,10 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                 MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "Provider doesn't support atomics"));
                 prov = prov_use->next;
                 continue;
+            } else if (MPIDI_OFI_ENABLE_AUTO_PROGRESS && 0ULL == ((hints->domain_attr->data_progress & hints->domain_attr->control_progress) & FI_PROGRESS_AUTO)) {
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "Provider doesn't support auto progress"));
+                prov = prov_use->next;
+                continue;
 
             /* Check that the provider has all of the requirements of MPICH */
             } else if (prov_use->ep_attr->type != FI_EP_RDM) {
@@ -464,6 +485,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                                             (prov_use->caps & (FI_RMA)) > 0ULL ? 1 : 0;
         MPIDI_Global.settings.enable_atomics            = MPIDI_Global.settings.enable_atomics == 0 ? 0 :
                                                             (prov_use->caps & (FI_ATOMICS)) > 0ULL ? 1 : 0;
+        MPIDI_Global.settings.enable_auto_progress      = MPIDI_Global.settings.enable_auto_progress == 0 ? 0 :
+                                                            ((hints->domain_attr->data_progress & hints->domain_attr->control_progress) & (FI_PROGRESS_AUTO)) > 0ULL ? 1 : 0;
 
         if (MPIDI_Global.settings.enable_scalable_endpoints) {
             MPIDI_Global.settings.max_endpoints      = MPIDI_OFI_MAX_ENDPOINTS_SCALABLE;
@@ -1128,7 +1151,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
                        bind);
         /* We need to bind to the CQ if the progress mode is manual.
          * Otherwise fi_cq_read would not make progress on this context and potentially leads to a deadlock. */
-        if (prov_use->domain_attr->data_progress == FI_PROGRESS_MANUAL)
+        if (!MPIDI_OFI_ENABLE_AUTO_PROGRESS)
             MPIDI_OFI_CALL(fi_ep_bind
                            (MPIDI_OFI_EP_TX_CTR(index), &p2p_cq->fid,
                             FI_SEND | FI_SELECTIVE_COMPLETION), bind);
@@ -1156,7 +1179,7 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
         /* Note:  This bind should cause the "passive target" rx context to never generate an event
          * We need this bind for manual progress to ensure that progress is made on the
          * rx_ctr or rma operations during completion queue reads */
-        if (prov_use->domain_attr->data_progress == FI_PROGRESS_MANUAL)
+        if (!MPIDI_OFI_ENABLE_AUTO_PROGRESS)
             MPIDI_OFI_CALL(fi_ep_bind(MPIDI_OFI_EP_RX_RMA(index), &p2p_cq->fid,
                                       FI_SEND | FI_RECV | FI_SELECTIVE_COMPLETION), bind);
 
@@ -1251,6 +1274,7 @@ static inline int MPIDI_OFI_application_hints(int rank)
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_CONTEXT_BITS: %d", MPIDI_OFI_CONTEXT_BITS));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_SOURCE_BITS: %d", MPIDI_OFI_SOURCE_BITS));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_TAG_BITS: %d", MPIDI_OFI_TAG_BITS));
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_AUTO_PROGRESS: %d", MPIDI_OFI_ENABLE_AUTO_PROGRESS));
 
     rank_bits = MPIDI_OFI_SOURCE_BITS ? MPIDI_OFI_SOURCE_BITS : 32;
 
@@ -1268,6 +1292,7 @@ static inline int MPIDI_OFI_application_hints(int rank)
         fprintf(stdout, "MPIDI_OFI_CONTEXT_BITS: %d\n", MPIDI_OFI_CONTEXT_BITS);
         fprintf(stdout, "MPIDI_OFI_SOURCE_BITS: %d\n", MPIDI_OFI_SOURCE_BITS);
         fprintf(stdout, "MPIDI_OFI_TAG_BITS: %d\n", MPIDI_OFI_TAG_BITS);
+        fprintf(stdout, "MPIDI_OFI_ENABLE_AUTO_PROGRESS: %d\n", MPIDI_OFI_ENABLE_AUTO_PROGRESS);
         fprintf(stdout, "======================================\n");
 
         /* Discover the maximum number of ranks. If the source shift is not
