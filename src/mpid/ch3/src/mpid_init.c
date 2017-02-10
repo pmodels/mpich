@@ -22,13 +22,7 @@ char *MPIDI_DBG_parent_str = "?";
 
 /* FIXME: the PMI init function should ONLY do the PMI operations, not the 
    process group or bc operations.  These should be in a separate routine */
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
 #include "pmi.h"
-#endif
-
-int MPIDI_Use_pmi2_api = 0;
 
 static int init_pg( int *argc_p, char ***argv_p,
 		   int *has_args, int *has_env, int *has_parent, 
@@ -128,28 +122,10 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     MPIDI_Failed_procs_group = MPIR_Group_empty;
     MPIR_Add_finalize(finalize_failed_procs_group, NULL, MPIR_FINALIZE_CALLBACK_PRIO-1);
 
-    /* FIXME: This is a good place to check for environment variables
-       and command line options that may control the device */
-    MPIDI_Use_pmi2_api = FALSE;
-#ifdef USE_PMI2_API
-    MPIDI_Use_pmi2_api = TRUE;
-#else
-    {
-        int ret;
-        ret = MPL_env2bool("MPICH_USE_PMI2_API", &val);
-        if (ret == 1 && val)
-            MPIDI_Use_pmi2_api = TRUE;
-    }
-#endif
-
     /* Create the string that will cache the last group of failed processes
      * we received from PMI */
-#ifdef USE_PMI2_API
-    MPIDI_failed_procs_string = MPL_malloc(sizeof(char) * PMI2_MAX_VALLEN);
-#else
     PMI_KVS_Get_value_length_max(&val);
     MPIDI_failed_procs_string = MPL_malloc(sizeof(char) * (val+1));
-#endif
 
     /*
      * Set global process attributes.  These can be overridden by the channel 
@@ -424,10 +400,6 @@ static int init_pg( int *argc, char ***argv,
 	 * and get rank and size information about our process group
 	 */
 
-#ifdef USE_PMI2_API
-        mpi_errno = PMI2_Init(has_parent, &pg_size, &pg_rank, &appnum);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-#else
 	pmi_errno = PMI_Init(has_parent);
 	if (pmi_errno != PMI_SUCCESS) {
 	    MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_init",
@@ -451,27 +423,12 @@ static int init_pg( int *argc, char ***argv,
 	    MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_get_appnum",
 				 "**pmi_get_appnum %d", pmi_errno);
 	}
-#endif
 	/* Note that if pmi is not availble, the value of MPI_APPNUM is 
 	   not set */
 	if (appnum != -1) {
 	    MPIR_Process.attrs.appnum = appnum;
 	}
 
-#ifdef USE_PMI2_API
-        
-        /* This memory will be freed by the PG_Destroy if there is an error */
-	pg_id = MPL_malloc(MAX_JOBID_LEN);
-	if (pg_id == NULL) {
-	    MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER,"**nomem","**nomem %d",
-				 MAX_JOBID_LEN);
-	}
-
-        mpi_errno = PMI2_Job_GetId(pg_id, MAX_JOBID_LEN);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        
-
-#else
 	/* Now, initialize the process group information with PMI calls */
 	/*
 	 * Get the process group id
@@ -498,7 +455,6 @@ static int init_pg( int *argc, char ***argv,
 	    MPIR_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OTHER, "**pmi_get_id",
 				 "**pmi_get_id %d", pmi_errno);
 	}
-#endif
     }
     else {
 	/* Create a default pg id */
@@ -571,9 +527,6 @@ int MPIDI_CH3I_BCInit( char **bc_val_p, int *val_max_sz_p )
 {
     int pmi_errno;
     int mpi_errno = MPI_SUCCESS;
-#ifdef USE_PMI2_API
-    *val_max_sz_p = PMI2_MAX_VALLEN;
-#else
     pmi_errno = PMI_KVS_Get_value_length_max(val_max_sz_p);
     if (pmi_errno != PMI_SUCCESS)
     {
@@ -581,7 +534,6 @@ int MPIDI_CH3I_BCInit( char **bc_val_p, int *val_max_sz_p )
                              "**pmi_kvs_get_value_length_max",
                              "**pmi_kvs_get_value_length_max %d", pmi_errno);
     }
-#endif
     /* This memroy is returned by this routine */
     *bc_val_p = MPL_malloc(*val_max_sz_p);
     if (*bc_val_p == NULL) {

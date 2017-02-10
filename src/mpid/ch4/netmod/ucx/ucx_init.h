@@ -85,17 +85,11 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         ucp_worker_get_address(MPIDI_UCX_global.worker, &MPIDI_UCX_global.if_address,
                                &MPIDI_UCX_global.addrname_len);
     MPIDI_UCX_CHK_STATUS(ucx_status);
-#ifdef USE_PMI2_API
-    val_max_sz = PMI2_MAX_VALLEN;
-    key_max_sz = PMI2_MAX_KEYLEN;
-#else
     pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
     MPIDI_UCX_PMI_ERROR(pmi_errno);
 
     pmi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
     MPIDI_UCX_PMI_ERROR(pmi_errno);
-
-#endif
 
     /*we have to reduce the value - the total size of an PMI string is 1024, so command+value+key
      * assume 100 characters for the command to be save */
@@ -331,15 +325,10 @@ static inline int MPIDI_NMI_allocate_address_table()
     int addr_size;
     int p;
     MPIR_CHKLMEM_DECL(3);
-#ifdef USE_PMI2_API
-    val_max_sz = PMI2_MAX_VALLEN;
-    key_max_sz = PMI2_MAX_KEYLEN;
-#else
     pmi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
     MPIDI_UCX_PMI_ERROR(pmi_errno);
     pmi_errno = PMI_KVS_Get_key_length_max(&key_max_sz);
     MPIDI_UCX_PMI_ERROR(pmi_errno);
-#endif
 
     val_max_sz = val_max_sz - 100 - key_max_sz; /*see comment at init */
 

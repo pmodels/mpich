@@ -1450,48 +1450,12 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_win_set_info:MPI_Win_set_info failed
 **mpi_win_set_info %W %I:MPI_Win_set_info(win=%W, info=%I) failed
 
-# pmi2 errors
-**bad_keyval:PMI2 received malformed key-value pair
-**bad_cmd:PMI2 received malformed command
-**cmd_too_long: PMI2 command is too long
-**key_too_long: PMI2 key is too long
-**val_too_long: PMI2 value is too long
-**pmi_init_send: PMI2 failed to send init command
-**pmi_initack: PMI2 failed to receive init ack
-**pmi_initack %s: PMI2 failed to receive init ack: %s
-**pmi_fullinit: PMI2 init with process manager failed
-**pmi_fullinit %s: PMI2 init with process manager failed: %s
-**pmi_version: PMI2 version mismatch
-**pmi_version %s %s %s %s: PMI2 version mismatch (server version %s.%s, client verison %s.%s)
-**pmi_finalize: PMI2 Finalize failed
-**pmi_finalize %s: PMI2 Finalize failed: %s
-**pmi_jobgetid: PMI2 Job_GetID failed
-**pmi_jobgetid %s: PMI2 Job_GetID failed: %s
-**pmi_jobconnect: PMI2 Job_Connect failed
-**pmi_jobconnect %s: PMI2 Job_Connect failed: %s
-**pmi_jobdisconnect: PMI2 Job_Disconnect failed
-**pmi_jobdisconnect %s: PMI2 Job_Disconnect failed: %s
-**pmi_kvsput: PMI2 KVS_Put failed
-**pmi_kvsput %s: PMI2 KVS_Put failed: %s
-**pmi_kvsfence: PMI2 KVS_Fence failed
-**pmi_kvsfence %s: PMI2 KVS_Fence failed: %s
-**pmi_kvsget: PMI2 KVS_Get failed
-**pmi_kvsget %s: PMI2 KVS_Get failed: %s
-**pmi_kvsget %d: PMI2 KVS_Get failed: %d
-**pmi_kvsget_notfound: PMI2 Key not found in KVS_Get
-**pmi_kvsget_notfound %s: PMI2 Key not found in KVS_Get: %s
-**pmi_getnodeattr: PMI2 GetNodeAttr failed
-**pmi_getnodeattr %s: PMI2 GetNodeAttr failed: %s
-**pmi_putnodeattr: PMI2 PutNodeAttr failed
-**pmi_putnodeattr %s: PMI2 PutNodeAttr failed: %s
-**pmi_getjobattr: PMI2 GetJobAttr failed
-**pmi_getjobattr %s: PMI2 GetJobAttr failed: %s
-**pmi_nameservpublish: PMI2 Nameserv_publish failed
-**pmi_nameservpublish %s: PMI2 Nameserv_publish failed: %s
-**connect_to_pm: Unable to connect process manager
-**connect_to_pm %s %d: Unable to connect process manager at host %s port %d
-**pmi_port: Unable to decide hostport from PMI_PORT
-**pmi_port %s: Unable to decide hostport from \"%s\"
+# pmi errors
+**pmi_kvsput: PMI KVS_Put failed
+**pmi_kvsput %s: PMI KVS_Put failed: %s
+**pmi_kvsget: PMI KVS_Get failed
+**pmi_kvsget %s: PMI KVS_Get failed: %s
+**pmi_kvsget %d: PMI KVS_Get failed: %d
 
 # MPIR functions
 

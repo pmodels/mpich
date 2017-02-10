@@ -5,11 +5,7 @@
  */
 
 #include "mpidimpl.h"
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
 #include "pmi.h"
-#endif
 #undef utarray_oom
 #define utarray_oom() do { goto fn_oom; } while (0)
 #include "mpir_utarray.h"
@@ -528,18 +524,10 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
        something bigger than comm_world. */
     mpi_errno = MPIDI_PG_GetConnKVSname(&kvsname);
     if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-#ifdef USE_PMI2_API
-    {
-        int vallen = 0;
-        pmi_errno = PMI2_KVS_Get(kvsname, PMI2_ID_NULL, "PMI_dead_processes", MPIDI_failed_procs_string, PMI2_MAX_VALLEN, &vallen);
-        MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
-    }
-#else
     pmi_errno = PMI_KVS_Get_value_length_max(&len);
     MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_value_length_max");
     pmi_errno = PMI_KVS_Get(kvsname, "PMI_dead_processes", MPIDI_failed_procs_string, len);
     MPIR_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
-#endif
 
     if (*MPIDI_failed_procs_string == '\0') {
         /* there are no failed processes */

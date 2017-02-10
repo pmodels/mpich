@@ -6,11 +6,7 @@
 #include <mpidimpl.h>
 #include "mpl_shm.h"
 
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
 #include "pmi.h"
-#endif
 
 #include <stdlib.h>
 #ifdef HAVE_UNISTD_H
@@ -193,105 +189,6 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *ba
 
     memory->segment_len = segment_len;
 
-#ifdef USE_PMI2_API
-    /* if there is only one process on this processor, don't use shared memory */
-    if (num_local == 1)
-    {
-        char *addr;
-
-        MPIR_CHKPMEM_MALLOC(addr, char *, segment_len + MPIDU_SHM_CACHE_LINE_LEN, mpi_errno, "segment");
-
-        memory->base_addr = addr;
-        current_addr =
-            (char *) (((uintptr_t) addr + (uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1) &
-                      (~((uintptr_t) MPIDU_SHM_CACHE_LINE_LEN - 1)));
-        memory->symmetrical = 0;
-
-        /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-        ipc_lock = (OPA_emulation_ipl_t *)((char *)memory->base_addr + ipc_lock_offset);
-        ret = OPA_Interprocess_lock_init(ipc_lock, TRUE/*isLeader*/);
-        MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
-#endif
-
-        mpi_errno = MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-    }
-    else {
-
-        if (local_rank == 0) {
-            mpi_errno = MPL_shm_seg_create_and_attach(memory->hnd, memory->segment_len, &(memory->base_addr), 0);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-            /* post name of shared file */
-            MPIR_Assert(local_procs_0 == rank);
-
-            mpi_errno = MPL_shm_hnd_get_serialized_by_ref(memory->hnd, &serialized_hnd);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-            /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (OPA_emulation_ipl_t *)((char *)memory->base_addr + ipc_lock_offset);
-            ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
-            MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
-#endif
-
-            mpi_errno = MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, TRUE);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-            /* The opa and barrier initializations must come before we (the
-             * leader) put the sharedFilename attribute.  Since this is a
-             * serializing operation with our peers on the local node this
-             * ensures that these initializations have occurred before any peer
-             * attempts to use the resources. */
-            mpi_errno = PMI2_Info_PutNodeAttr("sharedFilename", serialized_hnd);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        } else {
-            int found = FALSE;
-
-            /* Allocate space for pmi key and val */
-            MPIR_CHKLMEM_MALLOC(val, char *, PMI2_MAX_VALLEN, mpi_errno, "val");
-
-            /* get name of shared file */
-            mpi_errno = PMI2_Info_GetNodeAttr("sharedFilename", val, PMI2_MAX_VALLEN, &found, TRUE);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-            MPIR_ERR_CHKINTERNAL(!found, mpi_errno, "nodeattr not found");
-
-            mpi_errno = MPL_shm_hnd_deserialize(memory->hnd, val, strlen(val));
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-            mpi_errno = MPL_shm_seg_attach(memory->hnd, memory->segment_len, (char **)&memory->base_addr, 0);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-            /* must come before barrier_init since we use OPA in that function */
-#ifdef OPA_USE_LOCK_BASED_PRIMITIVES
-            ipc_lock = (OPA_emulation_ipl_t *)((char *)memory->base_addr + ipc_lock_offset);
-            ret = OPA_Interprocess_lock_init(ipc_lock, local_rank == 0);
-            MPIR_ERR_CHKANDJUMP1(ret != 0, mpi_errno, MPI_ERR_OTHER, "**fail", "**fail %d", ret);
-
-            /* Right now we rely on the assumption that OPA_Interprocess_lock_init only
-             * needs to be called by the leader and the current process before use by the
-             * current process.  That is, we don't assume that this collective call is
-             * synchronizing and we don't assume that it requires total external
-             * synchronization.  In PMIv2 we don't have a PMI_Barrier operation so we need
-             * this behavior. */
-#endif
-
-            mpi_errno = MPIDU_shm_barrier_init((MPIDU_shm_barrier_t *) memory->base_addr, barrier, FALSE);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        }
-
-        mpi_errno = MPIDU_shm_barrier(*barrier, num_local);
-        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-
-        if (local_rank == 0) {
-            mpi_errno = MPL_shm_seg_remove(memory->hnd);
-            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-        }
-        current_addr = memory->base_addr;
-        memory->symmetrical = 0 ;
-    }
-#else /* we are using PMIv1 */
     /* if there is only one process on this processor, don't use shared memory */
     if (num_local == 1)
     {
@@ -400,7 +297,6 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *ba
         current_addr = memory->base_addr;
         memory->symmetrical = 0 ;
     }
-#endif
     /* assign sections of the shared memory segment to their pointers */
 
     start_addr = current_addr;

@@ -6,11 +6,7 @@
 
 #include "mpidimpl.h"
 #include <libftb.h>
-#ifndef USE_PMI2_API
 #include "pmi.h"
-#else
-#include "pmi2.h"
-#endif
 
 static FTB_client_handle_t client_handle;
 
@@ -45,15 +41,9 @@ int MPIDU_Ftb_init(void)
     MPL_strncpy(ci.client_name, "mpich " MPICH_VERSION, sizeof(ci.client_name));
     MPL_strncpy(ci.client_subscription_style, "FTB_SUBSCRIPTION_NONE", sizeof(ci.client_subscription_style));
     ci.client_polling_queue_len = -1;
-    
-#ifdef USE_PMI2_API
-    ret = PMI2_Job_GetId(ci.client_jobid, sizeof(ci.client_jobid));
-    MPIR_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**pmi_jobgetid");
-#else
     ret = PMI_KVS_Get_my_name(ci.client_jobid, sizeof(ci.client_jobid));
     MPIR_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**pmi_get_id");
-#endif
-    
+
     ret = FTB_Connect(&ci, &client_handle);
     MPIR_ERR_CHKANDJUMP(ret, mpi_errno, MPI_ERR_OTHER, "**ftb_connect");
 

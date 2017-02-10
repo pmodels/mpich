@@ -15,12 +15,7 @@
  * a PMI call, it should provide a stub and return an error code.
  */
    
-
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
 #include "pmi.h"
-#endif
 
 /* Define the name of the kvs key used to provide the port name to the
    children */
@@ -141,58 +136,6 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 	/* --END ERROR HANDLING-- */
 
 	/* Spawn the processes */
-#ifdef USE_PMI2_API
-        MPIR_Assert(count > 0);
-        {
-            int *argcs = MPL_malloc(count*sizeof(int));
-            struct MPIR_Info preput;
-            struct MPIR_Info *preput_p[1] = { &preput };
-
-            MPIR_Assert(argcs);
-            /*
-            info_keyval_sizes = MPL_malloc(count * sizeof(int));
-            */
-
-            /* FIXME cheating on constness */
-            preput.key = (char *)PARENT_PORT_KVSKEY;
-            preput.value = port_name;
-            preput.next = NULL;
-
-            /* compute argcs array */
-            for (i = 0; i < count; ++i) {
-                argcs[i] = 0;
-                if (argvs != NULL && argvs[i] != NULL) {
-                    while (argvs[i][argcs[i]]) {
-                        ++argcs[i];
-                    }
-                }
-
-                /* a fib for now */
-                /*
-                info_keyval_sizes[i] = 0;
-                */
-            }
-            /* XXX DJG don't need this, PMI API is thread-safe? */
-            /*MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);*/
-            /* release the global CS for spawn PMI calls */
-            MPID_THREAD_CS_EXIT(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-            pmi_errno = PMI2_Job_Spawn(count, (const char **)commands,
-                                       argcs, (const char ***)argvs,
-                                       maxprocs,
-                                       info_keyval_sizes, (const MPIR_Info **)info_ptrs,
-                                       1, (const struct MPIR_Info **)preput_p,
-                                       NULL, 0,
-                                       /*jobId, jobIdSize,*/ /* XXX DJG job stuff? */
-                                       pmi_errcodes);
-            MPID_THREAD_CS_ENTER(GLOBAL, MPIR_THREAD_GLOBAL_ALLFUNC_MUTEX);
-            /*MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);*/
-            MPL_free(argcs);
-            if (pmi_errno != PMI2_SUCCESS) {
-                MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
-                     "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
-            }
-        }
-#else
         /* FIXME: This is *really* awkward.  We should either
            Fix on MPI-style info data structures for PMI (avoid unnecessary
            duplication) or add an MPIU_Info_getall(...) that creates
@@ -239,7 +182,6 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 	    MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER,
 		 "**pmi_spawn_multiple", "**pmi_spawn_multiple %d", pmi_errno);
         }
-#endif
 
 	if (errcodes != MPI_ERRCODES_IGNORE) {
 	    for (i=0; i<total_num_processes; i++) {
@@ -336,16 +278,6 @@ int MPIDI_CH3_GetParentPort(char ** parent_port)
 	char *kvsname = NULL;
 	/* We can always use PMI_KVS_Get on our own process group */
 	MPIDI_PG_GetConnKVSname( &kvsname );
-#ifdef USE_PMI2_API
-        {
-            int vallen = 0;
-            MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);
-            pmi_errno = PMI2_KVS_Get(kvsname, PMI2_ID_NULL, PARENT_PORT_KVSKEY, val, sizeof(val), &vallen);
-            MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);
-            if (pmi_errno)
-                MPIR_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**pmi_kvsget", "**pmi_kvsget %s", PARENT_PORT_KVSKEY);
-        }
-#else
 	MPID_THREAD_CS_ENTER(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);
 	pmi_errno = PMI_KVS_Get( kvsname, PARENT_PORT_KVSKEY, val, sizeof(val));
 	MPID_THREAD_CS_EXIT(POBJ, MPIR_THREAD_POBJ_PMI_MUTEX);
@@ -353,7 +285,7 @@ int MPIDI_CH3_GetParentPort(char ** parent_port)
             mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, FCNAME, __LINE__, MPI_ERR_OTHER, "**pmi_kvsget", "**pmi_kvsget %d", pmi_errno);
             goto fn_exit;
 	}
-#endif
+
 	parent_port_name = MPL_strdup(val);
 	if (parent_port_name == NULL) {
 	    MPIR_ERR_POP(mpi_errno); /* FIXME DARIUS */

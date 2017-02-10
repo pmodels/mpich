@@ -9,11 +9,7 @@
  */
 
 
-#ifdef USE_PMI2_API
-#include "pmi2.h"
-#else
 #include "pmi.h"
-#endif
 
 #include "mpid_nem_impl.h"
 #include "mxm_impl.h"
@@ -284,13 +280,9 @@ int MPID_nem_mxm_vc_init(MPIDI_VC_t * vc)
     {
         char *business_card;
         int val_max_sz;
-#ifdef USE_PMI2_API
-        val_max_sz = PMI2_MAX_VALLEN;
-#else
         mpi_errno = PMI_KVS_Get_value_length_max(&val_max_sz);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
-#endif
 
         business_card = (char *) MPL_malloc(val_max_sz);
         mpi_errno = vc->pg->getConnInfo(vc->pg_rank, business_card, val_max_sz, vc->pg);
