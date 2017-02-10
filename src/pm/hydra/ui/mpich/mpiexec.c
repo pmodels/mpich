@@ -280,15 +280,9 @@ int main(int argc, char **argv)
      * the list of nodes passed to us */
     if (HYD_server_info.localhost == NULL) {
         /* See if the node list contains a localhost */
-        for (node = HYD_server_info.node_list; node; node = node->next) {
-            int is_local;
-
-            status = HYDU_sock_is_local(node->hostname, &is_local);
-            HYDU_ERR_POP(status, "unable to check if %s is local\n", node->hostname);
-
-            if (is_local)
+        for (node = HYD_server_info.node_list; node; node = node->next)
+            if (MPL_host_is_local(node->hostname))
                 break;
-        }
 
         if (node)
             HYD_server_info.localhost = MPL_strdup(node->hostname);

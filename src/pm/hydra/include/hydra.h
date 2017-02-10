@@ -608,7 +608,6 @@ HYD_status HYDU_sock_set_nonblock(int fd);
 HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed);
 void HYDU_sock_finalize(void);
 HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip);
-HYD_status HYDU_sock_is_local(char *host, int *is_local);
 HYD_status
 HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_range,
                                     char **port_str,

@@ -855,6 +855,16 @@ AC_CHECK_LIB(unwind, unw_backtrace)
 
 AC_CHECK_DECLS([backtrace_create_state, backtrace_print])
 
+AC_CHECK_HEADERS(ifaddrs.h arpa/inet.h)
+AC_CHECK_FUNCS(inet_ntop)
+AC_TRY_LINK([
+	#include <stdio.h>
+	#include <sys/types.h>
+	#include <ifaddrs.h>
+	],
+	[return getifaddrs(NULL);],
+	[AC_DEFINE([HAVE_GETIFADDRS],1,[Define to '1' if getifaddrs is present and usable])])
+
 dnl Check for ATTRIBUTE
 PAC_C_GNU_ATTRIBUTE
 
