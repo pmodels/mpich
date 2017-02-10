@@ -231,8 +231,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
         targs[idx] = HYDU_int_to_str(proxy->proxy_id);
         targs[idx + 1] = NULL;
 
-        status = HYDU_sock_is_local(proxy->node->hostname, &lh);
-        HYDU_ERR_POP(status, "error checking if node is localhost\n");
+        lh = MPL_host_is_local(proxy->node->hostname);
 
         /* If launcher is 'fork', or this is the localhost, use fork
          * to launch the process */
