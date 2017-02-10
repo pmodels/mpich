@@ -150,7 +150,7 @@ HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd, int retri
     retry_count = 0;
     do {
         ret = connect(*fd, (struct sockaddr *) &sa, sizeof(struct sockaddr_in));
-        if (ret < 0 && errno == ECONNREFUSED) {
+        if (ret < 0 && (errno == ECONNREFUSED || errno == ETIMEDOUT)) {
             /* connection error; increase retry count and delay */
             retry_count++;
             if (retry_count > retries)
