@@ -278,6 +278,18 @@ static inline int MPIDI_workq_ep_progress(int ep_idx)
     return mpi_errno;
 }
 
+static inline int MPIDI_workq_global_progress(int* made_progress)
+{
+    int mpi_errno, ep_idx;
+    *made_progress = 1;
+    for( ep_idx = 0; ep_idx < MPIDI_CH4_Global.n_netmod_eps; ep_idx++) {
+        mpi_errno = MPIDI_workq_ep_progress(ep_idx);
+        if(unlikely(mpi_errno != MPI_SUCCESS))
+            break;
+    }
+    return mpi_errno;
+}
+
 MPL_STATIC_INLINE_PREFIX int MPIDI_dispatch_send(int (*func)(const void *buf, int count,
                                                              MPI_Datatype datatype, int rank,
                                                              int tag, MPIR_Comm * comm,

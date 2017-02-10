@@ -223,6 +223,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
         MPIDI_workq_init(&MPIDI_CH4_Global.ep_rma_pend_ops[i]);
     }
 
+    MPID_Progress_register(MPIDI_workq_global_progress, &MPIDI_CH4_Global.progress_hook_id);
+    MPID_Progress_activate(MPIDI_CH4_Global.progress_hook_id);
+
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     for (i = 0; i < MPIR_Process.comm_world->local_size; i++) {
         MPIDI_av_table0->table[i].is_local = 0;
@@ -338,9 +341,14 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
     MPL_free(MPIDI_CH4_Global.ep_pt2pt_pend_ops);
     MPL_free(MPIDI_CH4_Global.ep_rma_pend_ops);
 
-    for (i = 0; i < MPIDI_CH4_Global.n_netmod_eps; i++)
+    for (i = 0; i < MPIDI_CH4_Global.n_netmod_eps; i++) {
         MPID_Thread_mutex_destroy(&MPIDI_CH4_Global.ep_locks[i], &thr_err);
+    }
+
     MPL_free(MPIDI_CH4_Global.ep_locks);
+
+    MPID_Progress_deactivate(MPIDI_CH4_Global.progress_hook_id);
+    MPID_Progress_deregister(MPIDI_CH4_Global.progress_hook_id);
 
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
