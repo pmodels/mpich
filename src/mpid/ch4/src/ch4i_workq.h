@@ -12,7 +12,7 @@
 typedef enum MPIDI_pt2pt_op MPIDI_pt2pt_op_t;
 typedef struct MPIDI_pt2pt_elemt MPIDI_pt2pt_elemt_t;
 
-enum MPIDI_pt2pt_op {MPIDI_ISEND, MPIDI_IRECV};
+enum MPIDI_pt2pt_op {MPIDI_SEND, MPIDI_ISEND, MPIDI_IRECV};
 
 struct MPIDI_pt2pt_elemt {
     MPIDI_pt2pt_op_t op;
@@ -168,6 +168,18 @@ static inline int MPIDI_workq_pt2pt_progress(int ep_idx)
     while(pt2pt_elemt != NULL) {
         MPIDI_WORKQ_PT2PT_ISSUE_START;
         switch(pt2pt_elemt->op) {
+        case MPIDI_SEND:
+            mpi_errno = MPIDI_NM_mpi_send(pt2pt_elemt->send_buf,
+                                          pt2pt_elemt->count,
+                                          pt2pt_elemt->datatype,
+                                          pt2pt_elemt->rank,
+                                          pt2pt_elemt->tag,
+                                          pt2pt_elemt->comm_ptr,
+                                          pt2pt_elemt->context_offset,
+                                          ep_idx,
+                                          &pt2pt_elemt->request);
+            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            break;
         case MPIDI_ISEND:
             mpi_errno = MPIDI_NM_mpi_isend(pt2pt_elemt->send_buf,
                                            pt2pt_elemt->count,
