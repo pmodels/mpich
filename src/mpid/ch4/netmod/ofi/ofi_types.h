@@ -304,6 +304,9 @@ typedef struct {
 
     int fetch_atomic_iovecs;
 
+    int enable_data_auto_progress;
+    int enable_control_auto_progress;
+
     int context_bits;
     int source_bits;
     int tag_bits;
