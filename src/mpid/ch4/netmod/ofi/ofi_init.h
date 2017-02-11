@@ -335,20 +335,20 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     MPIR_Assert(hints != NULL);
 
     hints->mode = FI_CONTEXT | FI_ASYNC_IOV;    /* We can handle contexts  */
-    hints->caps = 0ULL; /* Tag matching interface  */
+    hints->caps = 0ULL;
 
-    if (MPIDI_OFI_ENABLE_RMA) {
-        hints->caps |= FI_RMA;      /* RMA(read/write)         */
-        hints->caps |= FI_WRITE;    /* We need to specify all of the extra
-                                       capabilities because we need to be
-                                       specific later when we create tx/rx
-                                       contexts. If we leave this off, the
-                                       context creation fails because it's not
-                                       a subset of this. */
-        hints->caps |= FI_READ;
-        hints->caps |= FI_REMOTE_WRITE;
-        hints->caps |= FI_REMOTE_READ;
-    }
+    /* RMA interface is used in AM and in native modes,
+     * it should be supported by OFI provider in any case */
+    hints->caps |= FI_RMA;      /* RMA(read/write)         */
+    hints->caps |= FI_WRITE;    /* We need to specify all of the extra
+                                   capabilities because we need to be
+                                   specific later when we create tx/rx
+                                   contexts. If we leave this off, the
+                                   context creation fails because it's not
+                                   a subset of this. */
+    hints->caps |= FI_READ;
+    hints->caps |= FI_REMOTE_WRITE;
+    hints->caps |= FI_REMOTE_READ;
 
     if (MPIDI_OFI_ENABLE_ATOMICS) {
         hints->caps |= FI_ATOMICS;  /* Atomics capabilities    */
@@ -410,7 +410,11 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         hints->domain_attr->mr_mode = FI_MR_SCALABLE;
     else
         hints->domain_attr->mr_mode = FI_MR_BASIC;
-    hints->tx_attr->op_flags = FI_DELIVERY_COMPLETE | FI_COMPLETION;
+    hints->tx_attr->op_flags = FI_COMPLETION;
+    /* direct RMA operations supported only with delivery complete mode,
+     * else (AM mode) delivery complete is not required */
+    if(MPIDI_OFI_ENABLE_RMA)
+        hints->tx_attr->op_flags |= FI_DELIVERY_COMPLETE;
     hints->tx_attr->msg_order = FI_ORDER_SAS;
     hints->tx_attr->comp_order = FI_ORDER_NONE;
     hints->rx_attr->op_flags = FI_COMPLETION;
