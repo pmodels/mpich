@@ -261,8 +261,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                                         MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_am : MPIR_CVAR_CH4_OFI_ENABLE_AM;
     MPIDI_Global.settings.enable_rma                = MPIR_CVAR_CH4_OFI_ENABLE_RMA != 1 ? MPIR_CVAR_CH4_OFI_ENABLE_RMA :
                                                         MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_rma : MPIR_CVAR_CH4_OFI_ENABLE_RMA;
-    MPIDI_Global.settings.enable_atomics            = MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS != 1 ? MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS :
-                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_atomics : MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS;
+    /* try to enable atomics only when RMA is enabled */
+    MPIDI_Global.settings.enable_atomics            = MPIDI_OFI_ENABLE_RMA ? (MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS != 1 ? MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS :
+                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_atomics : MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS) : 0;
     MPIDI_Global.settings.fetch_atomic_iovecs       = MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS != -1 ? MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS :
                                                         MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].fetch_atomic_iovecs : MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS;
     MPIDI_Global.settings.enable_data_auto_progress = MPIR_CVAR_CH4_OFI_ENABLE_DATA_AUTO_PROGRESS != -1 ? MPIR_CVAR_CH4_OFI_ENABLE_DATA_AUTO_PROGRESS :
