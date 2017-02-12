@@ -37,11 +37,6 @@ static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_v
     status = HYD_pmcd_pmi_parse_pmi_cmd(buf, pmi_version, &cmd, args);
     HYDU_ERR_POP(status, "unable to parse PMI command\n");
 
-#if defined ENABLE_PROFILING
-    if (HYD_server_info.enable_profiling)
-        HYD_server_info.num_pmi_calls++;
-#endif /* ENABLE_PROFILING */
-
     h = HYD_pmcd_pmi_handle;
     while (h->handler) {
         if (!strcmp(cmd, h->cmd)) {
