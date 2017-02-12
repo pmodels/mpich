@@ -24,7 +24,6 @@ struct HYD_server_info_s {
 
     char *base_path;
     char *port_range;
-    char *iface_ip_env_name;
     char *nameserver;
     char *localhost;
 

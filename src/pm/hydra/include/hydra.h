@@ -397,9 +397,6 @@ struct HYD_user_global {
     /* Demux engine */
     char *demux;
 
-    /* Network interface */
-    char *iface;
-
     /* Other random parameters */
     int enablex;
     int debug;
@@ -602,9 +599,8 @@ HYD_status HYDU_sock_write(int fd, const void *buf, int maxlen, int *sent, int *
 HYD_status HYDU_sock_set_nonblock(int fd);
 HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed);
 void HYDU_sock_finalize(void);
-HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip);
 HYD_status
-HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_range,
+HYDU_sock_create_and_listen_portstr(char *hostname, char *port_range,
                                     char **port_str,
                                     HYD_status(*callback) (int fd, HYD_event_t events,
                                                            void *userp), void *userp);

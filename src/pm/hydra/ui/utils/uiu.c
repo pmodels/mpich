@@ -22,7 +22,6 @@ void HYD_uiu_init_params(void)
     HYD_server_info.base_path = NULL;
 
     HYD_server_info.port_range = NULL;
-    HYD_server_info.iface_ip_env_name = NULL;
 
     HYD_server_info.nameserver = NULL;
     HYD_server_info.localhost = NULL;
@@ -60,9 +59,6 @@ void HYD_uiu_free_params(void)
 
     if (HYD_server_info.port_range)
         MPL_free(HYD_server_info.port_range);
-
-    if (HYD_server_info.iface_ip_env_name)
-        MPL_free(HYD_server_info.iface_ip_env_name);
 
     if (HYD_server_info.nameserver)
         MPL_free(HYD_server_info.nameserver);

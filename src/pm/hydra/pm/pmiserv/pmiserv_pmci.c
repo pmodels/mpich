@@ -72,8 +72,7 @@ HYD_status HYD_pmci_launch_procs(void)
     status = HYD_pmcd_pmi_alloc_pg_scratch(&HYD_server_info.pg_list);
     HYDU_ERR_POP(status, "error allocating pg scratch space\n");
 
-    status = HYDU_sock_create_and_listen_portstr(HYD_server_info.user_global.iface,
-                                                 HYD_server_info.localhost,
+    status = HYDU_sock_create_and_listen_portstr(HYD_server_info.localhost,
                                                  HYD_server_info.port_range, &control_port,
                                                  HYD_pmcd_pmiserv_control_listen_cb,
                                                  (void *) (size_t) 0);

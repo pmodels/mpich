@@ -562,28 +562,6 @@ static HYD_status launch_procs(void)
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
 
-        /* Set the interface hostname based on what the user provided */
-        if (HYD_pmcd_pmip.local.iface_ip_env_name) {
-            if (HYD_pmcd_pmip.user_global.iface) {
-                char *ip;
-
-                status = HYDU_sock_get_iface_ip(HYD_pmcd_pmip.user_global.iface, &ip);
-                HYDU_ERR_POP(status, "unable to get IP address for %s\n",
-                             HYD_pmcd_pmip.user_global.iface);
-
-                /* The user asked us to use a specific interface; let's find it */
-                status = HYDU_append_env_to_list(HYD_pmcd_pmip.local.iface_ip_env_name,
-                                                 ip, &force_env);
-                HYDU_ERR_POP(status, "unable to add env to list\n");
-            }
-            else if (HYD_pmcd_pmip.local.hostname) {
-                /* The second choice is the hostname the user gave */
-                status = HYDU_append_env_to_list(HYD_pmcd_pmip.local.iface_ip_env_name,
-                                                 HYD_pmcd_pmip.local.hostname, &force_env);
-                HYDU_ERR_POP(status, "unable to add env to list\n");
-            }
-        }
-
         if (exec->wdir && chdir(exec->wdir) < 0)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                                 "unable to change wdir to %s (%s)\n", exec->wdir,

@@ -118,7 +118,6 @@ static void help_help_fn(void)
     printf("    -verbose                         verbose mode\n");
     printf("    -info                            build information\n");
     printf("    -print-all-exitcodes             print exit codes of all processes\n");
-    printf("    -iface                           network interface to use\n");
     printf("    -ppn                             processes per node\n");
     printf("    -profile                         turn on internal profiling\n");
     printf("    -prepend-rank                    prepend rank to output\n");
@@ -1143,32 +1142,6 @@ static HYD_status print_all_exitcodes_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static void iface_help_fn(void)
-{
-    printf("\n");
-    printf("-iface: Network interface to use (e.g., eth0, eth1, myri0, ib0)\n\n");
-}
-
-static HYD_status iface_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    if (reading_config_file && HYD_server_info.user_global.iface) {
-        /* global variable already set; ignore */
-        goto fn_exit;
-    }
-
-    status = HYDU_set_str(arg, &HYD_server_info.user_global.iface, **argv);
-    HYDU_ERR_POP(status, "error setting iface\n");
-
-  fn_exit:
-    (*argv)++;
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static void nameserver_help_fn(void)
 {
     printf("\n");
@@ -1371,13 +1344,6 @@ static HYD_status set_default_values(void)
         MPL_env2bool("HYDRA_DEBUG", &HYD_server_info.user_global.debug) == 0)
         HYD_server_info.user_global.debug = 0;
 
-    /* don't clobber existing iface values from the command line */
-    if (HYD_server_info.user_global.iface == NULL) {
-        if (MPL_env2str("HYDRA_IFACE", (const char **) &tmp) != 0)
-            HYD_server_info.user_global.iface = MPL_strdup(tmp);
-        tmp = NULL;
-    }
-
     if (HYD_server_info.node_list == NULL && MPL_env2str("HYDRA_HOST_FILE", (const char **) &tmp)) {
         status = HYDU_parse_hostfile(tmp, &HYD_server_info.node_list, HYDU_process_mfile_token);
         HYDU_ERR_POP(status, "error parsing hostfile\n");
@@ -1396,26 +1362,6 @@ static HYD_status set_default_values(void)
      * for the environment variable */
     if (hostname_propagation == -1)
         MPL_env2bool("HYDRA_HOSTNAME_PROPAGATION", &hostname_propagation);
-
-    /* If an interface is provided, set that */
-    if (HYD_server_info.user_global.iface) {
-        if (hostname_propagation == 1) {
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "cannot set iface and force hostname propagation");
-        }
-
-        HYDU_append_env_to_list("MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE",
-                                HYD_server_info.user_global.iface,
-                                &HYD_server_info.user_global.global_env.system);
-
-        /* Disable hostname propagation */
-        hostname_propagation = 0;
-    }
-
-    /* If hostname propagation is requested (or not set), set the
-     * environment variable for doing that */
-    if (hostname_propagation || hostname_propagation == -1)
-        HYD_server_info.iface_ip_env_name = MPL_strdup("MPIR_CVAR_CH3_INTERFACE_HOSTNAME");
 
     /* Default universe size if the user did not specify anything is
      * INFINITE */
@@ -1689,7 +1635,6 @@ static struct HYD_arg_match_table match_table[] = {
     {"info", info_fn, info_help_fn},
     {"version", info_fn, info_help_fn},
     {"print-all-exitcodes", print_all_exitcodes_fn, print_all_exitcodes_help_fn},
-    {"iface", iface_fn, iface_help_fn},
     {"nameserver", nameserver_fn, nameserver_help_fn},
     {"disable-auto-cleanup", auto_cleanup_fn, auto_cleanup_help_fn},
     {"dac", auto_cleanup_fn, auto_cleanup_help_fn},
