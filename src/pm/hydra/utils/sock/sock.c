@@ -453,57 +453,8 @@ void HYDU_sock_finalize(void)
     }
 }
 
-HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip)
-{
-    HYD_status status = HYD_SUCCESS;
-
-#if defined(HAVE_GETIFADDRS)
-    struct ifaddrs *ifaddr, *ifa;
-    char buf[MAX_HOSTNAME_LEN];
-    struct sockaddr_in *sa;
-
-    /* Got the interface name; let's query for the IP address */
-    if (getifaddrs(&ifaddr) == -1)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "getifaddrs failed\n");
-
-    for (ifa = ifaddr; ifa; ifa = ifa->ifa_next)
-        if (!strcmp(ifa->ifa_name, iface) && (ifa->ifa_addr) &&
-            (ifa->ifa_addr->sa_family == AF_INET))
-            break;
-
-    if (!ifa)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unable to find interface %s\n", iface);
-
-    sa = (struct sockaddr_in *) ifa->ifa_addr;
-#if defined HAVE_INET_NTOP
-    (*ip) = MPL_strdup((char *)
-                       inet_ntop(AF_INET, (const void *) &(sa->sin_addr), buf, MAX_HOSTNAME_LEN));
-#else
-    (*ip) = NULL;
-#endif /* HAVE_INET_NTOP */
-    if (!*ip)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "unable to find IP for interface %s\n", iface);
-
-    freeifaddrs(ifaddr);
-#else
-    /* For now just disable interface selection when getifaddrs isn't
-     * available, such as on AIX.  In the future we can implement in MPL
-     * something along the lines of MPIDI_GetIPInterface from tcp_getip.c in
-     * nemesis. */
-    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                        "interface selection not supported on this platform\n");
-#endif
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 HYD_status
-HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_range,
+HYDU_sock_create_and_listen_portstr(char *hostname, char *port_range,
                                     char **port_str,
                                     HYD_status(*callback) (int fd, HYD_event_t events,
                                                            void *userp), void *userp)
@@ -524,11 +475,7 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_rang
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     /* Create a port string for MPI processes to use to connect to */
-    if (iface) {
-        status = HYDU_sock_get_iface_ip(iface, &ip);
-        HYDU_ERR_POP(status, "unable to get network interface IP\n");
-    }
-    else if (hostname) {
+    if (hostname) {
         ip = MPL_strdup(hostname);
     }
     else {

@@ -137,17 +137,6 @@ static HYD_status demux_fn(char *arg, char ***argv)
     return status;
 }
 
-static HYD_status iface_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.user_global.iface, **argv);
-
-    (*argv)++;
-
-    return status;
-}
-
 static HYD_status auto_cleanup_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
@@ -381,17 +370,6 @@ static HYD_status version_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static HYD_status iface_ip_env_name_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.local.iface_ip_env_name, **argv);
-
-    (*argv)++;
-
-    return status;
-}
-
 static HYD_status hostname_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
@@ -563,7 +541,6 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"launcher", launcher_fn, NULL},
     {"launcher-exec", launcher_exec_fn, NULL},
     {"demux", demux_fn, NULL},
-    {"iface", iface_fn, NULL},
     {"auto-cleanup", auto_cleanup_fn, NULL},
     {"retries", retries_fn, NULL},
 
@@ -583,7 +560,6 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"pmi-id-map", pmi_id_map_fn, NULL},
     {"global-process-count", global_process_count_fn, NULL},
     {"version", version_fn, NULL},
-    {"iface-ip-env-name", iface_ip_env_name_fn, NULL},
     {"hostname", hostname_fn, NULL},
     {"proxy-core-count", proxy_core_count_fn, NULL},
     {"exec", exec_fn, NULL},
