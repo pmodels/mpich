@@ -20,7 +20,6 @@ static void init_ui_mpich_info(void)
 {
     HYD_ui_mpich_info.ppn = -1;
     HYD_ui_mpich_info.print_all_exitcodes = -1;
-    HYD_ui_mpich_info.sort_order = NONE;
 }
 
 static HYD_status get_current_exec(struct HYD_exec **exec)
@@ -126,7 +125,6 @@ static void help_help_fn(void)
     printf("    -nameserver                      name server information (host:port format)\n");
     printf("    -disable-auto-cleanup            don't cleanup processes on error\n");
     printf("    -disable-hostname-propagation    let MPICH auto-detect the hostname\n");
-    printf("    -order-nodes                     order nodes as ascending/descending cores\n");
     printf("    -localhost                       local hostname for the launching node\n");
     printf("    -usize                           universe size (SYSTEM, INFINITE, <value>)\n");
 
@@ -1191,39 +1189,6 @@ static HYD_status hostname_propagation_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static void order_nodes_help_fn(void)
-{
-    printf("\n");
-    printf("-order-nodes ASCENDING: Sort the node list in ascending order\n");
-    printf("-order-nodes DESCENDING: Sort the node list in descending order\n");
-}
-
-static HYD_status order_nodes_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    if (reading_config_file && HYD_ui_mpich_info.sort_order != NONE) {
-        /* global variable already set; ignore */
-        goto fn_exit;
-    }
-
-    if (!strcmp(**argv, "ASCENDING") || !strcmp(**argv, "ascending") ||
-        !strcmp(**argv, "UP") || !strcmp(**argv, "up"))
-        HYD_ui_mpich_info.sort_order = ASCENDING;
-    else if (!strcmp(**argv, "DESCENDING") || !strcmp(**argv, "descending") ||
-             !strcmp(**argv, "DOWN") || !strcmp(**argv, "down"))
-        HYD_ui_mpich_info.sort_order = DESCENDING;
-    else
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized sort order\n");
-
-  fn_exit:
-    (*argv)++;
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static void localhost_help_fn(void)
 {
     printf("\n");
@@ -1607,7 +1572,6 @@ static struct HYD_arg_match_table match_table[] = {
     {"enable-auto-cleanup", auto_cleanup_fn, auto_cleanup_help_fn},
     {"disable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
     {"enable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
-    {"order-nodes", order_nodes_fn, order_nodes_help_fn},
     {"localhost", localhost_fn, localhost_help_fn},
     {"usize", usize_fn, usize_help_fn},
 
