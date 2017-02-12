@@ -119,7 +119,6 @@ static void help_help_fn(void)
     printf("    -info                            build information\n");
     printf("    -print-all-exitcodes             print exit codes of all processes\n");
     printf("    -ppn                             processes per node\n");
-    printf("    -profile                         turn on internal profiling\n");
     printf("    -prepend-rank                    prepend rank to output\n");
     printf("    -prepend-pattern                 prepend pattern to output\n");
     printf("    -outfile-pattern                 direct stdout to file\n");
@@ -409,35 +408,6 @@ static HYD_status ppn_fn(char *arg, char ***argv)
 
   fn_exit:
     (*argv)++;
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static void profile_help_fn(void)
-{
-    printf("\n");
-    printf("-profile: Turn on internal profiling\n\n");
-}
-
-static HYD_status profile_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    if (reading_config_file && HYD_server_info.enable_profiling != -1) {
-        /* global variable already set; ignore */
-        goto fn_exit;
-    }
-
-#if !defined ENABLE_PROFILING
-    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "profiling support not compiled in\n");
-#endif /* ENABLE_PROFILING */
-
-    status = HYDU_set_int(arg, &HYD_server_info.enable_profiling, 1);
-    HYDU_ERR_POP(status, "error enabling profiling\n");
-
-  fn_exit:
     return status;
 
   fn_fail:
@@ -1337,9 +1307,6 @@ static HYD_status set_default_values(void)
     if (HYD_ui_mpich_info.print_all_exitcodes == -1)
         HYD_ui_mpich_info.print_all_exitcodes = 0;
 
-    if (HYD_server_info.enable_profiling == -1)
-        HYD_server_info.enable_profiling = 0;
-
     if (HYD_server_info.user_global.debug == -1 &&
         MPL_env2bool("HYDRA_DEBUG", &HYD_server_info.user_global.debug) == 0)
         HYD_server_info.user_global.debug = 0;
@@ -1584,7 +1551,6 @@ static struct HYD_arg_match_table match_table[] = {
     {"hosts", hostlist_fn, hostlist_help_fn},
     {"hostlist", hostlist_fn, hostlist_help_fn},
     {"ppn", ppn_fn, ppn_help_fn},
-    {"profile", profile_fn, profile_help_fn},
     {"prepend-rank", prepend_rank_fn, prepend_rank_help_fn},
     {"l", prepend_rank_fn, prepend_rank_help_fn},
     {"prepend-pattern", prepend_pattern_fn, prepend_pattern_help_fn},

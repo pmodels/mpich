@@ -322,17 +322,6 @@ int main(int argc, char **argv)
     status = HYD_pmci_finalize();
     HYDU_ERR_POP(status, "process manager error on finalize\n");
 
-#if defined ENABLE_PROFILING
-    if (HYD_server_info.enable_profiling) {
-        HYDU_dump_noprefix(stdout, "\n");
-        HYD_DRAW_LINE(80);
-        HYDU_dump(stdout, "Number of PMI calls seen by the server: %d\n",
-                  HYD_server_info.num_pmi_calls);
-        HYD_DRAW_LINE(80);
-        HYDU_dump_noprefix(stdout, "\n");
-    }
-#endif /* ENABLE_PROFILING */
-
     /* Free the mpiexec params */
     HYD_uiu_free_params();
     HYDU_free_exec_list(HYD_uii_mpx_exec_list);

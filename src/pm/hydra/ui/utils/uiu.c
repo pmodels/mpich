@@ -36,11 +36,6 @@ void HYD_uiu_init_params(void)
     HYD_server_info.pg_list.pgid = 0;
     HYD_server_info.pg_list.next = NULL;
 
-#if defined ENABLE_PROFILING
-    HYD_server_info.enable_profiling = -1;
-    HYD_server_info.num_pmi_calls = 0;
-#endif /* ENABLE_PROFILING */
-
     HYD_ui_info.prepend_pattern = NULL;
     HYD_ui_info.outfile_pattern = NULL;
     HYD_ui_info.errfile_pattern = NULL;
