@@ -153,7 +153,8 @@ HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd, int retri
         if (ret < 0 && (errno == ECONNREFUSED || errno == ETIMEDOUT)) {
             /* connection error; increase retry count and delay */
             retry_count++;
-            HYDU_error_printf("Retrying connection, retry_count=%d, retries=%d\n", retry_count, retries);
+            HYDU_error_printf("Retrying connection, retry_count=%d, retries=%d\n", retry_count,
+                              retries);
             if (retry_count > retries)
                 break;
             HYDU_delay(delay);
