@@ -161,7 +161,6 @@ HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd, int retri
         else
             break;
     } while (1);
-    HYDU_error_printf("Connection result=%d\n", ret);
 
     if (ret < 0) {
         char localhost[MAX_HOSTNAME_LEN] = { 0 };
