@@ -14,7 +14,3 @@ include tools/bootstrap/utils/Makefile.mk
 if hydra_bss_external
 include tools/bootstrap/external/Makefile.mk
 endif
-
-if hydra_bss_persist
-include tools/bootstrap/persist/Makefile.mk
-endif

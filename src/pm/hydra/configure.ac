@@ -252,15 +252,14 @@ fi
 #########################################################################
 AC_ARG_WITH(hydra-bss,
 	[AC_HELP_STRING([--with-hydra-bss=name],
-		[Bootstrap Server (user,ssh,rsh,fork,slurm,ll,lsf,sge,pbs,cobalt,manual,persist)])],
+		[Bootstrap Server (user,ssh,rsh,fork,slurm,ll,lsf,sge,pbs,cobalt,manual)])],
 	[ hydra_bss=$withval ],
-	[ hydra_bss="user,ssh,rsh,fork,slurm,ll,lsf,sge,pbs,cobalt,manual,persist" ])
+	[ hydra_bss="user,ssh,rsh,fork,slurm,ll,lsf,sge,pbs,cobalt,manual" ])
 AC_MSG_CHECKING(bootstrap server)
 AC_MSG_RESULT($hydra_bss)
 hydra_bss_names="`echo $hydra_bss | sed -e 's/:/ /g' -e 's/,/ /g'`"
 
 hydra_bss_external=false
-hydra_bss_persist=false
 
 for hydra_bss_name in ${hydra_bss_names}; do
     case "$hydra_bss_name" in
@@ -295,10 +294,6 @@ for hydra_bss_name in ${hydra_bss_names}; do
 		hydra_bss_external=true
 		available_launchers="$available_launchers sge"
 		available_rmks="$available_rmks sge"
-		;;
-	persist)
-		hydra_bss_persist=true
-		available_launchers="$available_launchers persist"
 		;;
 	pbs)
 		hydra_bss_external=true
@@ -335,10 +330,6 @@ done
 if test "$hydra_bss_external" ; then
    AM_CONDITIONAL([hydra_bss_external], [true])
    AC_DEFINE(HAVE_BSS_EXTERNAL,1,[Define if external bss is enabled])
-fi
-if test "$hydra_bss_persist" ; then
-   AM_CONDITIONAL([hydra_bss_persist], [true])
-   AC_DEFINE(HAVE_BSS_PERSIST,1,[Define if persist bss is enabled])
 fi
 
 ## Launchers

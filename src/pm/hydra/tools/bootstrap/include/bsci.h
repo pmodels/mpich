@@ -226,8 +226,4 @@ HYD_status HYDT_bsci_rmk_cobalt_init(void);
 HYD_status HYDT_bsci_rmk_user_init(void);
 #endif /* HAVE_BSS_EXTERNAL */
 
-#if defined HAVE_BSS_PERSIST
-HYD_status HYDT_bsci_launcher_persist_init(void);
-#endif /* HAVE_BSS_PERSIST */
-
 #endif /* BSCI_H_INCLUDED */
