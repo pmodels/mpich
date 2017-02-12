@@ -27,26 +27,6 @@ static void signal_cb(int signum)
 
     HYDU_FUNC_ENTER();
 
-    /* SIGALRM is a special signal that indicates that a checkpoint
-     * needs to be initiated */
-    if (signum == SIGALRM) {
-        if (HYD_server_info.user_global.ckpoint_prefix == NULL) {
-            HYDU_dump(stderr, "No checkpoint prefix provided\n");
-            return;
-        }
-
-#if HAVE_ALARM
-        if (HYD_ui_mpich_info.ckpoint_int != -1)
-            alarm(HYD_ui_mpich_info.ckpoint_int);
-#endif /* HAVE_ALARM */
-
-        cmd.type = HYD_CKPOINT;
-        HYDU_sock_write(HYD_server_info.cmd_pipe[1], &cmd, sizeof(cmd), &sent, &closed,
-                        HYDU_SOCK_COMM_MSGWAIT);
-
-        goto fn_exit;
-    }
-
     cmd.type = HYD_SIGNAL;
     cmd.signum = signum;
 
@@ -148,13 +128,6 @@ int main(int argc, char **argv)
     status = HYD_uii_mpx_get_parameters(argv);
     HYDU_ERR_POP(status, "error parsing parameters\n");
 
-    /* Now we initialize engines that require us to know user
-     * preferences */
-#if HAVE_ALARM
-    if (HYD_ui_mpich_info.ckpoint_int != -1)
-        alarm(HYD_ui_mpich_info.ckpoint_int);
-#endif /* HAVE_ALARM */
-
     /* The demux engine should be initialized before any sockets are
      * created, since it checks for STDIN's validity.  If STDIN was
      * closed and we opened a socket that got the same fd as STDIN,
@@ -193,21 +166,6 @@ int main(int argc, char **argv)
 
             user_provided_host_list = 1;
         }
-    }
-
-    /*
-     * If this is a checkpoint-restart, if the user specified the
-     * number of processes, we already have a dummy executable. If the
-     * number of processes came from the RMK, our executable list is
-     * still NULL; a dummy executable needs to be created.
-     */
-    if (HYD_uii_mpx_exec_list == NULL) {
-        HYDU_ASSERT(HYD_server_info.user_global.ckpoint_prefix, status);
-
-        /* create a dummy executable */
-        status = HYDU_alloc_exec(&HYD_uii_mpx_exec_list);
-        HYDU_ERR_POP(status, "unable to allocate exec\n");
-        HYD_uii_mpx_exec_list->appnum = 0;
     }
 
     if (HYD_server_info.user_global.debug)

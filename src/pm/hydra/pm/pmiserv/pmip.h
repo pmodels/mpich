@@ -77,8 +77,6 @@ struct HYD_pmcd_pmip_s {
         char *spawner_kvsname;
         struct HYD_pmcd_pmi_kvs *kvs;   /* Node-level KVS space for node attributes */
 
-        char **ckpoint_prefix_list;
-
         int retries;
     } local;
 

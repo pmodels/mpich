@@ -381,9 +381,9 @@ static HYD_status fn_get_usize(int fd, char *args[])
 static HYD_status fn_get(int fd, char *args[])
 {
     struct HYD_string_stash stash;
-    char *cmd, *key, *val;
+    char *cmd, *key;
     struct HYD_pmcd_token *tokens;
-    int token_count, i;
+    int token_count;
     struct get_cache_elem *found = NULL;
     HYD_status status = HYD_SUCCESS;
 
