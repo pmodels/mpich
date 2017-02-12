@@ -15,10 +15,6 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
     user_global->binding = NULL;
     user_global->topolib = NULL;
 
-    user_global->ckpointlib = NULL;
-    user_global->ckpoint_prefix = NULL;
-    user_global->ckpoint_num = -1;
-
     user_global->demux = NULL;
     user_global->iface = NULL;
 
@@ -47,12 +43,6 @@ void HYDU_finalize_user_global(struct HYD_user_global *user_global)
 
     if (user_global->topolib)
         MPL_free(user_global->topolib);
-
-    if (user_global->ckpointlib)
-        MPL_free(user_global->ckpointlib);
-
-    if (user_global->ckpoint_prefix)
-        MPL_free(user_global->ckpoint_prefix);
 
     if (user_global->demux)
         MPL_free(user_global->demux);

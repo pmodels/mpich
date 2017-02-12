@@ -12,39 +12,10 @@
 #include "pmiserv.h"
 #include "pmiserv_utils.h"
 
-static HYD_status send_cmd_to_proxies(struct HYD_pmcd_hdr hdr)
-{
-    struct HYD_pg *pg = &HYD_server_info.pg_list;
-    struct HYD_proxy *proxy;
-    int sent, closed;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    if (pg->next && hdr.cmd == CKPOINT)
-        HYDU_ERR_POP(status, "checkpointing is not supported for dynamic processes\n");
-
-    /* Send the command to all proxies */
-    for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-        status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &sent, &closed,
-                                 HYDU_SOCK_COMM_MSGWAIT);
-        HYDU_ERR_POP(status, "unable to send checkpoint message\n");
-        HYDU_ASSERT(!closed, status);
-    }
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
 {
     struct HYD_cmd cmd;
     int count, closed;
-    struct HYD_pmcd_hdr hdr;
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
     HYD_status status = HYD_SUCCESS;
@@ -55,13 +26,7 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
     HYDU_ERR_POP(status, "read error\n");
     HYDU_ASSERT(!closed, status);
 
-    if (cmd.type == HYD_CKPOINT) {
-        HYD_pmcd_init_header(&hdr);
-        hdr.cmd = CKPOINT;
-        status = send_cmd_to_proxies(hdr);
-        HYDU_ERR_POP(status, "error checkpointing processes\n");
-    }
-    else if (cmd.type == HYD_CLEANUP) {
+    if (cmd.type == HYD_CLEANUP) {
         HYDU_dump_noprefix(stdout, "Ctrl-C caught... cleaning up processes\n");
         status = HYD_pmcd_pmiserv_cleanup_all_pgs();
         HYDU_ERR_POP(status, "cleanup of processes failed\n");

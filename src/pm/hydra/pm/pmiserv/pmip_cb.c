@@ -7,7 +7,6 @@
 #include "hydra.h"
 #include "pmip.h"
 #include "pmip_pmi.h"
-#include "ckpoint.h"
 #include "demux.h"
 #include "topo.h"
 
@@ -430,27 +429,6 @@ static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
     goto fn_exit;
 }
 
-static HYD_status pmi_listen_cb(int fd, HYD_event_t events, void *userp)
-{
-    int accept_fd;
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    status = HYDU_sock_accept(fd, &accept_fd);
-    HYDU_ERR_POP(status, "accept error\n");
-
-    status = HYDT_dmx_register_fd(1, &accept_fd, HYD_POLLIN, userp, pmi_cb);
-    HYDU_ERR_POP(status, "unable to register fd\n");
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static int local_to_global_id(int local_id)
 {
     int rem1, rem2, layer, ret;
@@ -522,36 +500,6 @@ static HYD_status launch_procs(void)
                             HYD_pmcd_pmip.user_global.binding,
                             HYD_pmcd_pmip.user_global.mapping, HYD_pmcd_pmip.user_global.membind);
     HYDU_ERR_POP(status, "unable to initialize process topology\n");
-
-    status = HYDT_ckpoint_init(HYD_pmcd_pmip.user_global.ckpointlib,
-                               HYD_pmcd_pmip.user_global.ckpoint_num);
-    HYDU_ERR_POP(status, "unable to initialize checkpointing\n");
-
-    if (HYD_pmcd_pmip.user_global.ckpoint_prefix) {
-        using_pmi_port = 1;
-        status = HYDU_sock_create_and_listen_portstr(HYD_pmcd_pmip.user_global.iface,
-                                                     NULL, NULL, &pmi_port, pmi_listen_cb, NULL);
-        HYDU_ERR_POP(status, "unable to create PMI port\n");
-    }
-
-    if (HYD_pmcd_pmip.exec_list->exec[0] == NULL) {     /* Checkpoint restart case */
-        status = HYDU_env_create(&env, "PMI_PORT", pmi_port);
-        HYDU_ERR_POP(status, "unable to create env\n");
-
-        /* Restart the proxy -- we use the first prefix in the list */
-        status = HYDT_ckpoint_restart(HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.local.id,
-                                      env, HYD_pmcd_pmip.local.proxy_process_count,
-                                      HYD_pmcd_pmip.downstream.pmi_rank,
-                                      HYD_pmcd_pmip.downstream.pmi_rank[0] ? NULL :
-                                      &HYD_pmcd_pmip.downstream.in,
-                                      HYD_pmcd_pmip.downstream.out,
-                                      HYD_pmcd_pmip.downstream.err,
-                                      HYD_pmcd_pmip.downstream.pid,
-                                      HYD_pmcd_pmip.local.ckpoint_prefix_list[0]);
-        HYDU_ERR_POP(status, "unable to restart from checkpoint\n");
-
-        goto fn_spawn_complete;
-    }
 
     /* Spawn the processes */
     process_id = 0;
@@ -807,18 +755,9 @@ static HYD_status parse_exec_params(char **t_argv)
     if (HYD_pmcd_pmip.local.proxy_core_count == -1)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "proxy core count not available\n");
 
-    if (HYD_pmcd_pmip.exec_list == NULL && HYD_pmcd_pmip.user_global.ckpoint_prefix == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "no executable given and doesn't look like a restart either\n");
-
     /* Set default values */
     if (HYD_pmcd_pmip.user_global.topolib == NULL && HYDRA_DEFAULT_TOPOLIB)
         HYD_pmcd_pmip.user_global.topolib = MPL_strdup(HYDRA_DEFAULT_TOPOLIB);
-
-#ifdef HYDRA_DEFAULT_CKPOINTLIB
-    if (HYD_pmcd_pmip.user_global.ckpointlib == NULL)
-        HYD_pmcd_pmip.user_global.ckpointlib = MPL_strdup(HYDRA_DEFAULT_CKPOINTLIB);
-#endif
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -897,15 +836,6 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
 
         status = launch_procs();
         HYDU_ERR_POP(status, "launch_procs returned error\n");
-    }
-    else if (hdr.cmd == CKPOINT) {
-        HYDU_dump(stdout, "requesting checkpoint\n");
-
-        status = HYDT_ckpoint_checkpoint(HYD_pmcd_pmip.local.pgid, HYD_pmcd_pmip.local.id,
-                                         HYD_pmcd_pmip.local.ckpoint_prefix_list[0]);
-
-        HYDU_ERR_POP(status, "checkpoint suspend failed\n");
-        HYDU_dump(stdout, "checkpoint completed\n");
     }
     else if (hdr.cmd == PMI_RESPONSE) {
         status = handle_pmi_response(fd, hdr);
