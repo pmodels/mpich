@@ -28,6 +28,8 @@ char *MPIDI_DBG_parent_str = "?";
 #include "pmi.h"
 #endif
 
+#include "datatype.h"
+
 int MPIDI_Use_pmi2_api = 0;
 
 static int init_pg( int *argc_p, char ***argv_p,
