@@ -17,9 +17,6 @@
  * \brief BSCI internal structure to maintain persistent information.
  */
 struct HYDT_bsci_info {
-    /** \brief RMK to use */
-    const char *rmk;
-
     /** \brief Launcher to use */
     const char *launcher;
 
@@ -38,20 +35,9 @@ struct HYDT_bsci_info {
  * different BSCI functions.
  */
 struct HYDT_bsci_fns {
-    /* RMK functions */
-    /** \brief Query if the RMK integrates natively with the RM */
-    HYD_status(*query_native_int) (int *ret);
-
-    /** \brief Query for node list information */
-    HYD_status(*query_node_list) (struct HYD_node ** node_list);
-
-    /** \brief Finalize the RMK */
-    HYD_status(*rmk_finalize) (void);
-
-
     /* Launcher functions */
     /** \brief Launch processes */
-    HYD_status(*launch_procs) (char **args, struct HYD_proxy * proxy_list, int use_rmk,
+    HYD_status(*launch_procs) (const char *rmk, struct HYD_node * node_list, char **args,
                                int *control_fd);
 
     /** \brief Finalize the bootstrap control device */
@@ -75,7 +61,6 @@ extern struct HYDT_bsci_info HYDT_bsci_info;
 /**
  * \brief HYDT_bsci_init - Initialize the bootstrap control device
  *
- * \param[in]   rmk             Resource management kernel to use
  * \param[in]   launcher        Launcher to use
  * \param[in]   launcher_exec   Launcher executable to use (optional)
  * \param[in]   enablex         Enable/disable X-forwarding (hint only)
@@ -86,16 +71,15 @@ extern struct HYDT_bsci_info HYDT_bsci_info;
  * expected to set any bootstrap implementation specific function
  * pointers in this function to be used by later BSCI calls.
  */
-HYD_status HYDT_bsci_init(const char *rmk, const char *launcher,
-                          const char *launcher_exec, int enablex, int debug);
+HYD_status HYDT_bsci_init(const char *launcher, const char *launcher_exec, int enablex, int debug);
 
 
 /**
  * \brief HYDT_bsci_launch_procs - Launch processes
  *
+ * \param[in]   rmk             Provenance of where the list of nodes came from
+ * \param[in]   node_list       List of nodes to launch on
  * \param[in]   args            Arguments to be used for the launched processes
- * \param[in]   proxy_list      List of proxies to launch
- * \param[in]   use_rmk         Force not to use RMK if HYD_FALSE
  * \param[out]  control_fd      Control socket to communicate with the launched process
  *
  * This function appends a proxy ID to the end of the args list and
@@ -108,27 +92,8 @@ HYD_status HYDT_bsci_init(const char *rmk, const char *launcher,
  * perform parallel launches should set the proxy ID string to "-1",
  * but allow proxies to query their ID information on each node using
  * the HYDT_bsci_query_proxy_id function.
- *
- * Background of use_rmk: RMK is used to allocate nodes on a system
- * before launching a job.  If it is not specified in the user
- * arguments for the UI process (e.g., mpiexec), it is set to the same
- * as a job launcher (e.g., SLURM or PBS).  This works fine for
- * launching processes on nodes for the first time, but it has
- * a problem when a process dynamically creates other processes at run
- * time, e.g., by calling MPI_Comm_spawn(), because the job launcher
- * does not know which node(s) will be used for new processes and it
- * just allocates nodes based on its allocation policy.  This may
- * conflict with the process management policy of the Hydra framework,
- * since the Hydra independently decides target nodes to create a
- * proxy process and to spawn new processes.  When the conflict
- * happens the spawned processes cannot communicate correctly.
- * To resolve this problem, a parameter 'use_rmk' is added to this
- * launch function.  If it is HYD_TRUE, RMK is used to allocate nodes.
- * HYD_TRUE is passed when this function is called from the UI
- * process.  On the other hand, if it is HYD_FALSE, we force not to
- * use RMK.  HYD_FALSE is passed in PMI spawn functions.
  */
-HYD_status HYDT_bsci_launch_procs(char **args, struct HYD_proxy *proxy_list, int use_rmk,
+HYD_status HYDT_bsci_launch_procs(const char *rmk, struct HYD_node *node_list, char **args,
                                   int *control_fd);
 
 
@@ -156,17 +121,6 @@ HYD_status HYDT_bsci_wait_for_completion(int timeout);
 
 
 /**
- * \brief HYDT_bsci_query_node_list - Query for node list information
- *
- * \param[out] node_list       Lists of nodes available
- *
- * This function allows the upper layers to query the available
- * nodes.
- */
-HYD_status HYDT_bsci_query_node_list(struct HYD_node **node_list);
-
-
-/**
  * \brief HYDT_bsci_query_proxy_id - Query the ID of a proxy
  *
  * \param[out]  proxy_id    My proxy ID
@@ -189,18 +143,6 @@ HYD_status HYDT_bsci_query_proxy_id(int *proxy_id);
  */
 HYD_status HYDT_bsci_query_env_inherit(const char *env_name, int *ret);
 
-/**
- * \brief HYDT_bsci_query_native_int - Query if the RMK integrates
- * natively with the RM
- *
- * \param[out] ret                    Boolean for true (1) or false (0)
- *
- * This function is used to check if an environment variable inherited
- * from the user's environment is safe to be propagated to the remote
- * processes.
- */
-HYD_status HYDT_bsci_query_native_int(int *ret);
-
 /*! @} */
 
 /* Each launcher has to expose an initialization function */
@@ -216,14 +158,6 @@ HYD_status HYDT_bsci_launcher_sge_init(void);
 HYD_status HYDT_bsci_launcher_pbs_init(void);
 #endif /* HAVE_TM_H */
 HYD_status HYDT_bsci_launcher_manual_init(void);
-
-HYD_status HYDT_bsci_rmk_slurm_init(void);
-HYD_status HYDT_bsci_rmk_ll_init(void);
-HYD_status HYDT_bsci_rmk_lsf_init(void);
-HYD_status HYDT_bsci_rmk_sge_init(void);
-HYD_status HYDT_bsci_rmk_pbs_init(void);
-HYD_status HYDT_bsci_rmk_cobalt_init(void);
-HYD_status HYDT_bsci_rmk_user_init(void);
 #endif /* HAVE_BSS_EXTERNAL */
 
 #endif /* BSCI_H_INCLUDED */

@@ -122,7 +122,7 @@ int main(int argc, char **argv)
 
     /* we are ready to initialize the bootstrap server now */
     status =
-        HYDT_bsci_init(HYD_server_info.user_global.rmk, HYD_server_info.user_global.launcher,
+        HYDT_bsci_init(HYD_server_info.user_global.launcher,
                        HYD_server_info.user_global.launcher_exec,
                        HYD_server_info.user_global.enablex, HYD_server_info.user_global.debug);
     HYDU_ERR_POP(status, "unable to initialize the bootstrap server\n");

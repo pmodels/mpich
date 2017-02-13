@@ -7,14 +7,14 @@
 #include "hydra.h"
 #include "bsci.h"
 
-HYD_status HYDT_bsci_launch_procs(char **args, struct HYD_proxy *proxy_list, int use_rmk,
+HYD_status HYDT_bsci_launch_procs(const char *rmk, struct HYD_node *node_list, char **args,
                                   int *control_fd)
 {
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    status = HYDT_bsci_fns.launch_procs(args, proxy_list, use_rmk, control_fd);
+    status = HYDT_bsci_fns.launch_procs(rmk, node_list, args, control_fd);
     HYDU_ERR_POP(status, "launcher returned error while launching processes\n");
 
   fn_exit:
