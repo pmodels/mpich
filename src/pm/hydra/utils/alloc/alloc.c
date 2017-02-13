@@ -83,7 +83,7 @@ HYD_status HYDU_alloc_node(struct HYD_node **node)
     (*node)->core_count = 0;
     (*node)->active_processes = 0;
     (*node)->node_id = -1;
-    (*node)->user = NULL;
+    (*node)->username = NULL;
     (*node)->local_binding = NULL;
     (*node)->next = NULL;
 
@@ -106,8 +106,8 @@ void HYDU_free_node_list(struct HYD_node *node_list)
         if (node->hostname)
             MPL_free(node->hostname);
 
-        if (node->user)
-            MPL_free(node->user);
+        if (node->username)
+            MPL_free(node->username);
 
         if (node->local_binding)
             MPL_free(node->local_binding);

@@ -286,10 +286,10 @@ HYD_status HYDU_process_mfile_token(char *token, int newline, struct HYD_node **
             user = strtok_r(NULL, "=", &saveptr);
 
             for (node = *node_list; node->next; node = node->next);
-            if (node->user)
+            if (node->username)
                 HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "duplicate username setting\n");
 
-            node->user = MPL_strdup(user);
+            node->username = MPL_strdup(user);
         }
         else {
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,

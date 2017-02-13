@@ -344,8 +344,7 @@ struct HYD_node {
 
     int node_id;
 
-    /* Username */
-    char *user;
+    char *username;
 
     /* Node-specific binding information */
     char *local_binding;
