@@ -338,16 +338,16 @@ struct HYD_pg {
 
 /* Information about the node itself */
 struct HYD_node {
+    /* information filled out by the RMK */
+    char *username;
     char *hostname;
     int core_count;
+    char *local_binding;
+
+    /* information filled out once the proxies are setup */
     int active_processes;
 
     int node_id;
-
-    char *username;
-
-    /* Node-specific binding information */
-    char *local_binding;
 
     struct HYD_node *next;
 };
