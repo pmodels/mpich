@@ -12,6 +12,7 @@
 #include "demux.h"
 #include "ui.h"
 #include "uiu.h"
+#include "rmk.h"
 
 struct HYD_server_info_s HYD_server_info = { {0} };
 
@@ -54,7 +55,7 @@ int main(int argc, char **argv)
     struct HYD_proxy *proxy;
     struct HYD_exec *exec;
     struct HYD_node *node;
-    int exit_status = 0, i, timeout, user_provided_host_list, global_core_count;
+    int exit_status = 0, i, timeout, global_core_count;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -78,25 +79,33 @@ int main(int argc, char **argv)
     status = HYDT_dmx_init(&HYD_server_info.user_global.demux);
     HYDU_ERR_POP(status, "unable to initialize the demux engine\n");
 
-    status =
-        HYDT_bsci_init(HYD_server_info.user_global.rmk, HYD_server_info.user_global.launcher,
-                       HYD_server_info.user_global.launcher_exec,
-                       HYD_server_info.user_global.enablex, HYD_server_info.user_global.debug);
-    HYDU_ERR_POP(status, "unable to initialize the bootstrap server\n");
-
-    user_provided_host_list = 0;
-
     if (HYD_server_info.node_list) {
-        /* If we already have a host list at this point, it must have
-         * come from the user */
-        user_provided_host_list = 1;
+        /* if we already have the node list filled out, it had to come
+         * from the user */
+        HYD_server_info.user_global.rmk = MPL_strdup("user");
     }
     else {
-        /* Node list is not created yet. The user might not have
-         * provided the host file. Query the RMK. */
-        status = HYDT_bsci_query_node_list(&HYD_server_info.node_list);
-        HYDU_ERR_POP(status, "unable to query the RMK for a node list\n");
+        const char *rmk;
 
+        /* Node list is not created yet. The user might not have
+         * provided the host file. Find an RMK to query. */
+
+        /* check for environment settings */
+        if (HYD_server_info.user_global.rmk == NULL)
+            MPL_env2str("HYDRA_RMK", (const char **) &HYDT_bsci_info.rmk);
+
+        /* try to autodetect */
+        if (HYD_server_info.user_global.rmk == NULL) {
+            rmk = HYDT_rmk_detect();
+            if (rmk)
+                HYD_server_info.user_global.rmk = MPL_strdup(rmk);
+        }
+
+        /* if we found an RMK, ask it for a list of nodes */
+        if (HYD_server_info.user_global.rmk)
+            HYDT_rmk_query_node_list(HYD_server_info.user_global.rmk, &HYD_server_info.node_list);
+
+        /* if we didn't find anything, use localhost */
         if (HYD_server_info.node_list == NULL) {
             char localhost[MAX_HOSTNAME_LEN] = { 0 };
 
@@ -107,9 +116,16 @@ int main(int argc, char **argv)
             status = HYDU_add_to_node_list(localhost, 1, &HYD_server_info.node_list);
             HYDU_ERR_POP(status, "unable to add to node list\n");
 
-            user_provided_host_list = 1;
+            HYD_server_info.user_global.rmk = MPL_strdup("user");
         }
     }
+
+    /* we are ready to initialize the bootstrap server now */
+    status =
+        HYDT_bsci_init(HYD_server_info.user_global.rmk, HYD_server_info.user_global.launcher,
+                       HYD_server_info.user_global.launcher_exec,
+                       HYD_server_info.user_global.enablex, HYD_server_info.user_global.debug);
+    HYDU_ERR_POP(status, "unable to initialize the bootstrap server\n");
 
     if (HYD_server_info.user_global.debug)
         for (node = HYD_server_info.node_list; node; node = node->next)
@@ -120,26 +136,6 @@ int main(int argc, char **argv)
     if (HYD_ui_mpich_info.ppn != -1) {
         for (node = HYD_server_info.node_list; node; node = node->next)
             node->core_count = HYD_ui_mpich_info.ppn;
-
-        /* The user modified how we look at the lists of hosts, so we
-         * consider it a user-provided host list */
-        user_provided_host_list = 1;
-    }
-
-    if (user_provided_host_list) {
-        /* Reassign node IDs to each node */
-        for (node = HYD_server_info.node_list, i = 0; node; node = node->next, i++)
-            node->node_id = i;
-
-        /* Reinitialize the bootstrap server with the "user" RMK, so
-         * it knows that we are not using the node list provided by
-         * the RMK */
-        status = HYDT_bsci_finalize();
-        HYDU_ERR_POP(status, "unable to finalize bootstrap device\n");
-
-        status = HYDT_bsci_init("user", HYDT_bsci_info.launcher, HYDT_bsci_info.launcher_exec,
-                                HYDT_bsci_info.enablex, HYDT_bsci_info.debug);
-        HYDU_ERR_POP(status, "unable to reinitialize the bootstrap server\n");
     }
 
     /* If the number of processes is not given, we allocate all the
