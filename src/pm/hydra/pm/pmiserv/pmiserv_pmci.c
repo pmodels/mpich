@@ -94,8 +94,8 @@ HYD_status HYD_pmci_launch_procs(void)
     for (i = 0; i < node_count; i++)
         control_fd[i] = HYD_FD_UNSET;
 
-    status = HYDT_bsci_launch_procs(proxy_stash.strlist, HYD_server_info.pg_list.proxy_list,
-                                    HYD_TRUE, control_fd);
+    status = HYDT_bsci_launch_procs(HYD_server_info.user_global.rmk, HYD_server_info.node_list,
+                                    proxy_stash.strlist, control_fd);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
     for (i = 0, proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next, i++)

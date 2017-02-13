@@ -8,17 +8,6 @@
 #include "bsci.h"
 #include "common.h"
 
-int HYDTI_bscd_env_is_avail(const char *env_name)
-{
-    char *dummy = NULL;
-
-    MPL_env2str(env_name, (const char **) &dummy);
-    if (!dummy)
-        return 0;
-
-    return 1;
-}
-
 int HYDTI_bscd_in_env_list(const char *env_name, const char *env_list[])
 {
     int i;

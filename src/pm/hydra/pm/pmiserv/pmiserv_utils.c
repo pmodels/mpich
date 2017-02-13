@@ -59,10 +59,8 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(struct HYD_string_stash *proxy_stash,
     if (HYD_server_info.user_global.debug)
         HYD_STRING_STASH(*proxy_stash, MPL_strdup("--debug"), status);
 
-    if (HYDT_bsci_info.rmk) {
-        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--rmk"), status);
-        HYD_STRING_STASH(*proxy_stash, MPL_strdup(HYDT_bsci_info.rmk), status);
-    }
+    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--rmk"), status);
+    HYD_STRING_STASH(*proxy_stash, MPL_strdup(HYD_server_info.user_global.rmk), status);
 
     if (HYDT_bsci_info.launcher) {
         HYD_STRING_STASH(*proxy_stash, MPL_strdup("--launcher"), status);

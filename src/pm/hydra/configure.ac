@@ -254,7 +254,7 @@ AC_ARG_WITH(hydra-bss,
 	[AC_HELP_STRING([--with-hydra-bss=name],
 		[Bootstrap Server (user,ssh,rsh,fork,slurm,ll,lsf,sge,pbs,cobalt,manual)])],
 	[ hydra_bss=$withval ],
-	[ hydra_bss="user,ssh,rsh,fork,slurm,ll,lsf,sge,pbs,cobalt,manual" ])
+	[ hydra_bss="ssh,rsh,fork,slurm,ll,lsf,sge,pbs,manual" ])
 AC_MSG_CHECKING(bootstrap server)
 AC_MSG_RESULT($hydra_bss)
 hydra_bss_names="`echo $hydra_bss | sed -e 's/:/ /g' -e 's/,/ /g'`"
@@ -278,22 +278,18 @@ for hydra_bss_name in ${hydra_bss_names}; do
 	slurm)
 		hydra_bss_external=true
 		available_launchers="$available_launchers slurm"
-		available_rmks="$available_rmks slurm"
 		;;
 	ll)
 		hydra_bss_external=true
 		available_launchers="$available_launchers ll"
-		available_rmks="$available_rmks ll"
 		;;
 	lsf)
 		hydra_bss_external=true
 		available_launchers="$available_launchers lsf"
-		available_rmks="$available_rmks lsf"
 		;;
 	sge)
 		hydra_bss_external=true
 		available_launchers="$available_launchers sge"
-		available_rmks="$available_rmks sge"
 		;;
 	pbs)
 		hydra_bss_external=true
@@ -307,19 +303,10 @@ for hydra_bss_name in ${hydra_bss_names}; do
 		    available_launchers="$available_launchers pbs"
 		    PAC_APPEND_FLAG([-ltorque],[WRAPPER_LIBS])
                 fi
-		available_rmks="$available_rmks pbs"
-		;;
-	cobalt)
-		hydra_bss_external=true
-		available_rmks="$available_rmks cobalt"
 		;;
 	manual)
 		hydra_bss_external=true
 		available_launchers="$available_launchers manual"
-		;;
-	user)
-		hydra_bss_external=true
-		available_rmks="$available_rmks user"
 		;;
 	*)
 		;;
@@ -362,30 +349,6 @@ AC_SUBST(hydra_launcher_init_decl)
 AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_LAUNCHERS,"${available_launchers}",
 	[Definition of enabled launchers])
 
-## RMK
-tmp_list=
-for hydra_rmk in ${available_rmks} ; do
-    hydra_rmk_array="${hydra_rmk_array} \"${hydra_rmk}\", "
-    if test -z "${hydra_default_rmk}" ; then
-       hydra_default_rmk=$hydra_rmk
-       AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_RMK,"$hydra_default_rmk",[Default RMK])
-       tmp_list="${hydra_rmk}"
-    else
-       tmp_list="${tmp_list} ${hydra_rmk}"
-    fi
-    hydra_rmk_init_decl="${hydra_rmk_init_decl}
-HYD_status HYDT_bsci_rmk_${hydra_rmk}_init(void);"
-    hydra_rmk_init_array="${hydra_rmk_init_array} HYDT_bsci_rmk_${hydra_rmk}_init, "
-done
-available_rmks=$tmp_list
-hydra_rmk_array="${hydra_rmk_array} NULL"
-hydra_rmk_init_array="${hydra_rmk_init_array} NULL"
-AM_SUBST_NOTMAKE(hydra_rmk_init_decl)
-AC_SUBST(hydra_rmk_array)
-AC_SUBST(hydra_rmk_init_array)
-AC_SUBST(hydra_rmk_init_decl)
-AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_RMKS,"${available_rmks}",[Definition of enabled RMKS])
-
 
 #########################################################################
 # Check what RMK we should use
@@ -400,10 +363,16 @@ AC_MSG_RESULT($hydra_rmk)
 hydra_rmk_list="`echo $hydra_rmk | sed -e 's/:/ /g' -e 's/,/ /g'`"
 
 hydra_rmk_names=
+hydra_rmk_names_unquoted=
 hydra_rmk_detect_fns=
 hydra_rmk_query_node_list_fns=
 for rmk in ${hydra_rmk_list} ; do
     hydra_rmk_names="${hydra_rmk_names} \"${rmk}\", "
+    if test -z "${hydra_rmk_names_unquoted}" ; then
+       hydra_rmk_names_unquoted="${rmk}"
+    else
+       hydra_rmk_names_unquoted="${hydra_rmk_names_unquoted} ${rmk}"
+    fi
     hydra_rmk_detect_fns="${hydra_rmk_detect_fns} HYDT_rmki_${rmk}_detect, "
     hydra_rmk_query_node_list_fns="${hydra_rmk_query_node_list_fns} HYDT_rmki_${rmk}_query_node_list, "
 done
@@ -413,7 +382,7 @@ hydra_rmk_query_node_list_fns="${hydra_rmk_query_node_list_fns} NULL"
 AC_SUBST(hydra_rmk_names)
 AC_SUBST(hydra_rmk_detect_fns)
 AC_SUBST(hydra_rmk_query_node_list_fns)
-AC_DEFINE_UNQUOTED(HYDRA_RMKS,"${hydra_rmk_names}",[Available RMKS])
+AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_RMKS,"${hydra_rmk_names_unquoted}",[Definition of enabled RMKS])
 
 
 

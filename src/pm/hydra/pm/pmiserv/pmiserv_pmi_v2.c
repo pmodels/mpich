@@ -706,7 +706,9 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    status = HYDT_bsci_launch_procs(proxy_stash.strlist, pg->proxy_list, HYD_FALSE, NULL);
+    /* FIXME: if the user did not provide us with a node list, we need
+     * to create a new node list to pass down to the launcher */
+    status = HYDT_bsci_launch_procs("user", pg->user_node_list, proxy_stash.strlist, NULL);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
     {
