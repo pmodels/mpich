@@ -215,14 +215,14 @@ HYD_status HYDT_bscd_common_launch_procs(const char *rmk, struct HYD_node *node_
 
         if (targs[host_idx])
             MPL_free(targs[host_idx]);
-        if (node->user == NULL) {
+        if (node->username == NULL) {
             targs[host_idx] = MPL_strdup(node->hostname);
         }
         else {
-            len = strlen(node->user) + strlen("@") + strlen(node->hostname) + 1;
+            len = strlen(node->username) + strlen("@") + strlen(node->hostname) + 1;
 
             HYDU_MALLOC_OR_JUMP(targs[host_idx], char *, len, status);
-            MPL_snprintf(targs[host_idx], len, "%s@%s", node->user, node->hostname);
+            MPL_snprintf(targs[host_idx], len, "%s@%s", node->username, node->hostname);
         }
 
         /* append proxy ID */
