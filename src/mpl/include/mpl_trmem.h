@@ -185,7 +185,7 @@ typedef union {
  */
 void MPL_trinit(int, int);
 void *MPL_trmalloc(size_t, int, const char[]);
-void MPL_trfree(void *, int, const char[]);
+void MPL_trfree(const void *, int, const char[]);
 int MPL_trvalid(const char[]);
 int MPL_trvalid2(const char[],int,const char[]);
 void *MPL_trcalloc(size_t, size_t, int, const char[]);

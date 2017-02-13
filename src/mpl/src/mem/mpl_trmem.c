@@ -135,7 +135,7 @@ static MPL_thread_mutex_t memalloc_mutex;
 /* 8 bytes = 16 hex chars + 0x (2 chars) + the null is 19 */
 #define MAX_ADDRESS_CHARS 19
 
-static void addrToHex(void *addr, char string[MAX_ADDRESS_CHARS])
+static void addrToHex(const void *addr, char string[MAX_ADDRESS_CHARS])
 {
     int i;
     static char hex[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
@@ -341,7 +341,7 @@ Input Parameters:
 .  line - line in file where called
 -  file - Name of file where called
  +*/
-static void trfree(void *a_ptr, int line, const char file[])
+static void trfree(const void *a_ptr, int line, const char file[])
 {
     TRSPACE *head;
     unsigned long *nend;
@@ -488,7 +488,7 @@ static void trfree(void *a_ptr, int line, const char file[])
     free(head);
 }
 
-void MPL_trfree(void *a_ptr, int line, const char fname[])
+void MPL_trfree(const void *a_ptr, int line, const char fname[])
 {
     TR_THREAD_CS_ENTER;
     trfree(a_ptr, line, fname);
