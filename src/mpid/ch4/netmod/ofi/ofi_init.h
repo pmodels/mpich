@@ -228,7 +228,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     CH4_COMPILE_TIME_ASSERT(sizeof(MPIR_Request) >= sizeof(MPIDI_OFI_win_request_t));
     CH4_COMPILE_TIME_ASSERT(sizeof(MPIR_Context_id_t) * 8 >= MPIDI_OFI_AM_CONTEXT_ID_BITS);
 
-    *tag_ub = (1ULL << MPIDI_OFI_TAG_SHIFT) - 1;
+    *tag_ub = (1ULL << MPIDI_OFI_TAG_BITS) - 1;
 
     MPID_Thread_mutex_create(&MPIDI_OFI_THREAD_UTIL_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDI_OFI_THREAD_PROGRESS_MUTEX, &thr_err);
@@ -1203,7 +1203,7 @@ static inline int MPIDI_OFI_application_hints(int rank)
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_RMA: %d", MPIDI_OFI_ENABLE_RMA));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_FETCH_ATOMIC_IOVECS: %d", MPIDI_OFI_FETCH_ATOMIC_IOVECS));
 
-    rank_bits = MPIDI_OFI_SOURCE_SHIFT ? MPIDI_OFI_SOURCE_SHIFT : 32;
+    rank_bits = MPIDI_OFI_SOURCE_BITS ? MPIDI_OFI_SOURCE_BITS : 32;
 
     if (MPIR_CVAR_CH4_OFI_CAPABILITY_SETS_DEBUG && rank == 0) {
         fprintf(stdout, "==== Capability set configuration ====\n");
@@ -1224,7 +1224,7 @@ static inline int MPIDI_OFI_application_hints(int rank)
         fprintf(stdout, "MAXIMUM SUPPORTED RANKS: %ld\n", (long int) 1 << rank_bits);
 
         /* Discover the tag_ub */
-        fprintf(stdout, "MAXIMUM TAG: %" PRIu64 "\n", 1UL << MPIDI_OFI_TAG_SHIFT);
+        fprintf(stdout, "MAXIMUM TAG: %" PRIu64 "\n", 1UL << MPIDI_OFI_TAG_BITS);
         fprintf(stdout, "======================================\n");
     }
 
