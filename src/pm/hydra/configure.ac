@@ -388,6 +388,36 @@ AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_RMKS,"${available_rmks}",[Definition of enabl
 
 
 #########################################################################
+# Check what RMK we should use
+#########################################################################
+AC_ARG_WITH(hydra-rmk,
+	[AC_HELP_STRING([--with-hydra-rmk=name],
+		[RMK (slurm,ll,lsf,sge,pbs,cobalt)])],
+	[ hydra_rmk=$withval ],
+	[ hydra_rmk="slurm,ll,lsf,sge,pbs,cobalt" ])
+AC_MSG_CHECKING(rmk)
+AC_MSG_RESULT($hydra_rmk)
+hydra_rmk_list="`echo $hydra_rmk | sed -e 's/:/ /g' -e 's/,/ /g'`"
+
+hydra_rmk_names=
+hydra_rmk_detect_fns=
+hydra_rmk_query_node_list_fns=
+for rmk in ${hydra_rmk_list} ; do
+    hydra_rmk_names="${hydra_rmk_names} \"${rmk}\", "
+    hydra_rmk_detect_fns="${hydra_rmk_detect_fns} HYDT_rmki_${rmk}_detect, "
+    hydra_rmk_query_node_list_fns="${hydra_rmk_query_node_list_fns} HYDT_rmki_${rmk}_query_node_list, "
+done
+hydra_rmk_names="${hydra_rmk_names} NULL"
+hydra_rmk_detect_fns="${hydra_rmk_detect_fns} NULL"
+hydra_rmk_query_node_list_fns="${hydra_rmk_query_node_list_fns} NULL"
+AC_SUBST(hydra_rmk_names)
+AC_SUBST(hydra_rmk_detect_fns)
+AC_SUBST(hydra_rmk_query_node_list_fns)
+AC_DEFINE_UNQUOTED(HYDRA_RMKS,"${hydra_rmk_names}",[Available RMKS])
+
+
+
+#########################################################################
 # Check what process manager we should use
 #########################################################################
 AC_ARG_WITH(hydra-pm, [  --with-hydra-pm=name - Process Manager (pmiserv)],
@@ -692,6 +722,7 @@ fi
 
 # Final output
 AC_OUTPUT(Makefile
+	tools/rmk/src/rmk.c
 	tools/bootstrap/src/bsci_init.c
 	hydra-doxygen.cfg
 )

@@ -1,0 +1,25 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *  (C) 2008 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+#include "hydra.h"
+#include "ll_rmk.h"
+
+int HYDT_rmki_ll_detect(void)
+{
+    int ret;
+    char *dummy = NULL;
+
+    HYDU_FUNC_EXIT();
+
+    if (MPL_env2str("LOADL_HOSTFILE", (const char **) &dummy) &&
+        MPL_env2str("MP_CHILD", (const char **) &dummy))
+        ret = 1;
+    else
+        ret = 0;
+
+    HYDU_FUNC_EXIT();
+    return ret;
+}
