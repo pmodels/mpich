@@ -5,6 +5,7 @@
  */
 
 #include "mpidimpl.h"
+#include "datatype.h"
 
 #define MAX_JOBID_LEN 1024
 
