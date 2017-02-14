@@ -28,7 +28,10 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .enable_rma                = MPIDI_OFI_ENABLE_RMA_PSM,
         .enable_atomics            = MPIDI_OFI_ENABLE_ATOMICS_PSM,
         .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_PSM,
-        .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_PSM
+        .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_PSM,
+        .context_bits              = MPIDI_OFI_CONTEXT_BITS_PSM,
+        .source_bits               = MPIDI_OFI_SOURCE_BITS_PSM,
+        .tag_bits                  = MPIDI_OFI_TAG_BITS_PSM
     },
     { /* psm2 */
         .enable_data               = MPIDI_OFI_ENABLE_DATA_PSM2,
@@ -41,7 +44,10 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .enable_rma                = MPIDI_OFI_ENABLE_RMA_PSM2,
         .enable_atomics            = MPIDI_OFI_ENABLE_ATOMICS_PSM2,
         .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_PSM2,
-        .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_PSM2
+        .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_PSM2,
+        .context_bits              = MPIDI_OFI_CONTEXT_BITS_PSM2,
+        .source_bits               = MPIDI_OFI_SOURCE_BITS_PSM2,
+        .tag_bits                  = MPIDI_OFI_TAG_BITS_PSM2
     },
     { /* gni */
         .enable_data               = MPIDI_OFI_ENABLE_DATA_GNI,
@@ -54,7 +60,10 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .enable_rma                = MPIDI_OFI_ENABLE_RMA_GNI,
         .enable_atomics            = MPIDI_OFI_ENABLE_ATOMICS_GNI,
         .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_GNI,
-        .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_GNI
+        .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_GNI,
+        .context_bits              = MPIDI_OFI_CONTEXT_BITS_GNI,
+        .source_bits               = MPIDI_OFI_SOURCE_BITS_GNI,
+        .tag_bits                  = MPIDI_OFI_TAG_BITS_GNI
     },
     { /* sockets */
         .enable_data               = MPIDI_OFI_ENABLE_DATA_SOCKETS,
@@ -67,7 +76,10 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .enable_rma                = MPIDI_OFI_ENABLE_RMA_SOCKETS,
         .enable_atomics            = MPIDI_OFI_ENABLE_ATOMICS_SOCKETS,
         .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_SOCKETS,
-        .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_SOCKETS
+        .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_SOCKETS,
+        .context_bits              = MPIDI_OFI_CONTEXT_BITS_SOCKETS,
+        .source_bits               = MPIDI_OFI_SOURCE_BITS_SOCKETS,
+        .tag_bits                  = MPIDI_OFI_TAG_BITS_SOCKETS
     },
     { /* bgq */
         .enable_data               = MPIDI_OFI_ENABLE_DATA_BGQ,
@@ -80,7 +92,10 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .enable_rma                = MPIDI_OFI_ENABLE_RMA_BGQ,
         .enable_atomics            = MPIDI_OFI_ENABLE_ATOMICS_BGQ,
         .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_BGQ,
-        .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_BGQ
+        .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_BGQ,
+        .context_bits              = MPIDI_OFI_CONTEXT_BITS_BGQ,
+        .source_bits               = MPIDI_OFI_SOURCE_BITS_BGQ,
+        .tag_bits                  = MPIDI_OFI_TAG_BITS_BGQ
     },
     { /* verbs */
         .enable_data               = MPIDI_OFI_ENABLE_DATA_VERBS,
@@ -93,6 +108,9 @@ MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
         .enable_rma                = MPIDI_OFI_ENABLE_RMA_VERBS,
         .enable_atomics            = MPIDI_OFI_ENABLE_ATOMICS_VERBS,
         .max_endpoints             = MPIDI_OFI_MAX_ENDPOINTS_VERBS,
-        .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_VERBS
+        .max_endpoints_bits        = MPIDI_OFI_MAX_ENDPOINTS_BITS_VERBS,
+        .context_bits              = MPIDI_OFI_CONTEXT_BITS_VERBS,
+        .source_bits               = MPIDI_OFI_SOURCE_BITS_VERBS,
+        .tag_bits                  = MPIDI_OFI_TAG_BITS_VERBS
     }
 };

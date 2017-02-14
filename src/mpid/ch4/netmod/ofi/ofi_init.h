@@ -139,6 +139,42 @@ cvars:
         for fetch_atomic operations. The default value is -1, indicating that
         no value is set.
 
+    - name        : MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS
+      category    : CH4_OFI
+      type        : int
+      default     : 16
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the number of bits that will be used for matching the context
+        ID. The default value is -1, indicating that no value is set and that
+        the default will be defined in the ofi_types.h file.
+
+    - name        : MPIR_CVAR_CH4_OFI_RANK_BITS
+      category    : CH4_OFI
+      type        : int
+      default     : 24
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the number of bits that will be used for matching the MPI
+        rank. The default value is -1, indicating that no value is set and that
+        the default will be defined in the ofi_types.h file.
+
+    - name        : MPIR_CVAR_CH4_OFI_TAG_BITS
+      category    : CH4_OFI
+      type        : int
+      default     : 20
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        Specifies the number of bits that will be used for matching the user
+        tag. The default value is -1, indicating that no value is set and that
+        the default will be defined in the ofi_types.h file.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -209,6 +245,12 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                                         MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].enable_atomics : MPIR_CVAR_CH4_OFI_ENABLE_ATOMICS;
     MPIDI_Global.settings.fetch_atomic_iovecs       = MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS != -1 ? MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS :
                                                         MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].fetch_atomic_iovecs : MPIR_CVAR_CH4_OFI_FETCH_ATOMIC_IOVECS;
+    MPIDI_Global.settings.context_bits              = MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS != 16 ? MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS :
+                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].context_bits : MPIR_CVAR_CH4_OFI_CONTEXT_ID_BITS;
+    MPIDI_Global.settings.source_bits                = MPIR_CVAR_CH4_OFI_RANK_BITS != 24 ? MPIR_CVAR_CH4_OFI_RANK_BITS :
+                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].source_bits : MPIR_CVAR_CH4_OFI_RANK_BITS;
+    MPIDI_Global.settings.tag_bits                  = MPIR_CVAR_CH4_OFI_TAG_BITS != 20 ? MPIR_CVAR_CH4_OFI_TAG_BITS :
+                                                        MPIR_CVAR_OFI_USE_PROVIDER ? MPIDI_OFI_caps_list[MPIDI_OFI_get_set_number(MPIR_CVAR_OFI_USE_PROVIDER)].tag_bits : MPIR_CVAR_CH4_OFI_TAG_BITS;
 
     CH4_COMPILE_TIME_ASSERT(offsetof(struct MPIR_Request, dev.ch4.netmod) ==
                             offsetof(MPIDI_OFI_chunk_request, context));
@@ -340,6 +382,10 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
     /* If the user picked a particular provider, ignore the checks */
     if (MPIDI_OFI_ENABLE_RUNTIME_CHECKS) {
+        /* Ensure that we aren't trying to shove too many bits into the match_bits.
+         * Currently, this needs to fit into a uint64_t and we take 4 bits for protocol. */
+        MPIR_Assert(MPIDI_OFI_CONTEXT_BITS + MPIDI_OFI_SOURCE_BITS + MPIDI_OFI_TAG_BITS <= 60);
+
         MPIDI_OFI_CALL(fi_getinfo(fi_version, NULL, NULL, 0ULL, NULL, &prov), addrinfo);
         while (NULL != prov) {
             MPIDI_OFI_CHOOSE_PROVIDER(prov, &prov_use, "No suitable provider provider found");
@@ -1202,6 +1248,9 @@ static inline int MPIDI_OFI_application_hints(int rank)
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_AM: %d", MPIDI_OFI_ENABLE_AM));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_ENABLE_RMA: %d", MPIDI_OFI_ENABLE_RMA));
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_FETCH_ATOMIC_IOVECS: %d", MPIDI_OFI_FETCH_ATOMIC_IOVECS));
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_CONTEXT_BITS: %d", MPIDI_OFI_CONTEXT_BITS));
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_SOURCE_BITS: %d", MPIDI_OFI_SOURCE_BITS));
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,(MPL_DBG_FDEST, "MPIDI_OFI_TAG_BITS: %d", MPIDI_OFI_TAG_BITS));
 
     rank_bits = MPIDI_OFI_SOURCE_BITS ? MPIDI_OFI_SOURCE_BITS : 32;
 
@@ -1216,6 +1265,9 @@ static inline int MPIDI_OFI_application_hints(int rank)
         fprintf(stdout, "MPIDI_OFI_ENABLE_AM: %d\n", MPIDI_OFI_ENABLE_AM);
         fprintf(stdout, "MPIDI_OFI_ENABLE_RMA: %d\n", MPIDI_OFI_ENABLE_RMA);
         fprintf(stdout, "MPIDI_OFI_FETCH_ATOMIC_IOVECS: %d\n", MPIDI_OFI_FETCH_ATOMIC_IOVECS);
+        fprintf(stdout, "MPIDI_OFI_CONTEXT_BITS: %d\n", MPIDI_OFI_CONTEXT_BITS);
+        fprintf(stdout, "MPIDI_OFI_SOURCE_BITS: %d\n", MPIDI_OFI_SOURCE_BITS);
+        fprintf(stdout, "MPIDI_OFI_TAG_BITS: %d\n", MPIDI_OFI_TAG_BITS);
         fprintf(stdout, "======================================\n");
 
         /* Discover the maximum number of ranks. If the source shift is not
