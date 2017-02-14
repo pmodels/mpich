@@ -59,6 +59,19 @@ extern struct HYDT_bsci_info HYDT_bsci_info;
 /** \endcond */
 
 /**
+ * \brief HYDT_bsci_query_avail - Query if a launcher is available
+ *
+ * \param[in]   launcher        Launcher to use
+ *
+ * This function initializes the bootstrap control device. This needs
+ * to be called before any other BSCI function. Implementors are
+ * expected to set any bootstrap implementation specific function
+ * pointers in this function to be used by later BSCI calls.
+ */
+int HYDT_bsci_query_avail(const char *launcher);
+
+
+/**
  * \brief HYDT_bsci_init - Initialize the bootstrap control device
  *
  * \param[in]   launcher        Launcher to use

@@ -5,7 +5,6 @@
  */
 
 #include "hydra.h"
-#include "rmk.h"
 #include "lsf_rmk.h"
 
 HYD_status HYDT_rmki_lsf_query_node_list(struct HYD_node **node_list)
