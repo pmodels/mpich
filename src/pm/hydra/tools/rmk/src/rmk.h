@@ -13,20 +13,6 @@
  * @{
  */
 
-/* *INDENT-OFF* */
-/**
- * \brief Function pointers for device specific implementations of
- * different RMK functions.
- */
-struct HYDT_rmki_fns {
-    /** \brief Query if an RMK is available */
-    int (*detect) (void);
-
-    /** \brief Query for node list information */
-    HYD_status(*query_node_list) (struct HYD_node ** node_list);
-};
-/* *INDENT-ON* */
-
 /**
  * \brief HYDT_rmk_detect - Detect any available RMKs
  *

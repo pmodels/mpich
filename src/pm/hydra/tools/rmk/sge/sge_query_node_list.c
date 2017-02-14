@@ -5,7 +5,6 @@
  */
 
 #include "hydra.h"
-#include "rmk.h"
 #include "sge_rmk.h"
 
 static HYD_status process_mfile_token(char *token, int newline, struct HYD_node **node_list)

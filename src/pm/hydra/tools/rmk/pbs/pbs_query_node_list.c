@@ -5,7 +5,6 @@
  */
 
 #include "hydra.h"
-#include "rmk.h"
 #include "pbs_rmk.h"
 
 HYD_status HYDT_rmki_pbs_query_node_list(struct HYD_node **node_list)

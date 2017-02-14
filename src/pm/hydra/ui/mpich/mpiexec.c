@@ -50,6 +50,99 @@ static void signal_cb(int signum)
     return;
 }
 
+static HYD_status get_node_list(void)
+{
+    int i;
+    HYD_status status = HYD_SUCCESS;
+
+    if (HYD_server_info.node_list) {
+        /* if we already have the node list filled out, it had to come
+         * from the user */
+        HYD_server_info.user_global.rmk = MPL_strdup("user");
+    }
+    else {
+        /* Node list is not created yet. The user might not have
+         * provided the host file. Find an RMK to query. */
+
+        /* check for environment settings */
+        if (HYD_server_info.user_global.rmk == NULL)
+            MPL_env2str("HYDRA_RMK", (const char **) &HYD_server_info.user_global.rmk);
+
+        /* try to autodetect */
+        if (HYD_server_info.user_global.rmk == NULL) {
+            const char *rmk = HYDT_rmk_detect();
+            if (rmk)
+                HYD_server_info.user_global.rmk = MPL_strdup(rmk);
+        }
+
+        /* if we found an RMK, ask it for a list of nodes */
+        if (HYD_server_info.user_global.rmk) {
+            status = HYDT_rmk_query_node_list(HYD_server_info.user_global.rmk, &HYD_server_info.node_list);
+            HYDU_ERR_POP(status, "error querying rmk for a node list\n");
+        }
+
+        /* if we didn't find anything, use localhost */
+        if (HYD_server_info.node_list == NULL) {
+            char localhost[MAX_HOSTNAME_LEN] = { 0 };
+
+            /* The RMK didn't give us anything back; use localhost */
+            if (gethostname(localhost, MAX_HOSTNAME_LEN) < 0)
+                HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local hostname\n");
+
+            status = HYDU_add_to_node_list(localhost, 1, &HYD_server_info.node_list);
+            HYDU_ERR_POP(status, "unable to add to node list\n");
+
+            HYD_server_info.user_global.rmk = MPL_strdup("user");
+        }
+    }
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+static HYD_status find_launcher(void)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    /* check environment variables */
+    if (HYD_server_info.user_global.launcher == NULL)
+        MPL_env2str("HYDRA_LAUNCHER", (const char **) &HYD_server_info.user_global.launcher);
+    if (HYD_server_info.user_global.launcher == NULL)
+        MPL_env2str("HYDRA_BOOTSTRAP", (const char **) &HYD_server_info.user_global.launcher);
+
+    /* if there was an RMK set, see if we can use that as a launcher
+     * as well */
+    if (HYD_server_info.user_global.rmk)
+        if (HYDT_bsci_query_avail(HYD_server_info.user_global.rmk))
+            HYD_server_info.user_global.launcher = MPL_strdup(HYD_server_info.user_global.rmk);
+
+    /* fallback to the default launcher */
+    if (HYD_server_info.user_global.launcher == NULL)
+        HYD_server_info.user_global.launcher = MPL_strdup(HYDRA_DEFAULT_LAUNCHER);
+
+    /* if we still do not have a launcher, abort */
+    if (HYD_server_info.user_global.launcher == NULL)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no appropriate launcher found\n");
+
+    /* try to find a launcher executable */
+    if (HYD_server_info.user_global.launcher_exec == NULL)
+        MPL_env2str("HYDRA_LAUNCHER_EXEC", (const char **) &HYD_server_info.user_global.launcher_exec);
+
+    if (HYD_server_info.user_global.launcher_exec == NULL)
+        MPL_env2str("HYDRA_BOOTSTRAP_EXEC", (const char **) &HYD_server_info.user_global.launcher_exec);
+
+  fn_exit:
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 int main(int argc, char **argv)
 {
     struct HYD_proxy *proxy;
@@ -79,48 +172,13 @@ int main(int argc, char **argv)
     status = HYDT_dmx_init(&HYD_server_info.user_global.demux);
     HYDU_ERR_POP(status, "unable to initialize the demux engine\n");
 
-    if (HYD_server_info.node_list) {
-        /* if we already have the node list filled out, it had to come
-         * from the user */
-        HYD_server_info.user_global.rmk = MPL_strdup("user");
-    }
-    else {
-        const char *rmk;
-
-        /* Node list is not created yet. The user might not have
-         * provided the host file. Find an RMK to query. */
-
-        /* check for environment settings */
-        if (HYD_server_info.user_global.rmk == NULL)
-            MPL_env2str("HYDRA_RMK", (const char **) &HYDT_bsci_info.rmk);
-
-        /* try to autodetect */
-        if (HYD_server_info.user_global.rmk == NULL) {
-            rmk = HYDT_rmk_detect();
-            if (rmk)
-                HYD_server_info.user_global.rmk = MPL_strdup(rmk);
-        }
-
-        /* if we found an RMK, ask it for a list of nodes */
-        if (HYD_server_info.user_global.rmk)
-            HYDT_rmk_query_node_list(HYD_server_info.user_global.rmk, &HYD_server_info.node_list);
-
-        /* if we didn't find anything, use localhost */
-        if (HYD_server_info.node_list == NULL) {
-            char localhost[MAX_HOSTNAME_LEN] = { 0 };
-
-            /* The RMK didn't give us anything back; use localhost */
-            if (gethostname(localhost, MAX_HOSTNAME_LEN) < 0)
-                HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local hostname\n");
-
-            status = HYDU_add_to_node_list(localhost, 1, &HYD_server_info.node_list);
-            HYDU_ERR_POP(status, "unable to add to node list\n");
-
-            HYD_server_info.user_global.rmk = MPL_strdup("user");
-        }
-    }
+    status = get_node_list();
+    HYDU_ERR_POP(status, "unable to find an RMK and the node list\n");
 
     /* we are ready to initialize the bootstrap server now */
+    status = find_launcher();
+    HYDU_ERR_POP(status, "unable to find a valid launcher\n");
+
     status =
         HYDT_bsci_init(HYD_server_info.user_global.launcher,
                        HYD_server_info.user_global.launcher_exec,

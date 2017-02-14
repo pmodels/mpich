@@ -16,75 +16,38 @@ static const char *launcher_names[] = { @hydra_launcher_names@ };
 static HYD_status(*launcher_init_fns[])(void) = { @hydra_launcher_init_fns@ };
 /* *INDENT-ON* */
 
-static void init_launcher_fns(void)
+int HYDT_bsci_query_avail(const char *launcher)
 {
-    HYDT_bsci_fns.launch_procs = NULL;
-    HYDT_bsci_fns.launcher_finalize = NULL;
-    HYDT_bsci_fns.wait_for_completion = NULL;
-    HYDT_bsci_fns.query_proxy_id = NULL;
-    HYDT_bsci_fns.query_env_inherit = NULL;
+    int i;
+
+    for (i = 0; launcher_names[i]; i++)
+        if (!strcmp(launcher, launcher_names[i]))
+            return 1;
+
+    return 0;
 }
 
-static void init_bsci_info(void)
-{
-    HYDT_bsci_info.launcher = NULL;
-    HYDT_bsci_info.launcher_exec = NULL;
-    HYDT_bsci_info.enablex = -1;
-    HYDT_bsci_info.debug = -1;
-}
-
-HYD_status HYDT_bsci_init(const char *user_launcher,
-                          const char *user_launcher_exec, int enablex, int debug)
+HYD_status HYDT_bsci_init(const char *launcher,
+                          const char *launcher_exec, int enablex, int debug)
 {
     int i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    /* Initialize the launcher functions */
-    init_bsci_info();
-    init_launcher_fns();
-
-    /* See if the user specified a launcher */
-    if (user_launcher)
-        HYDT_bsci_info.launcher = user_launcher;
-    if (HYDT_bsci_info.launcher == NULL)
-        MPL_env2str("HYDRA_LAUNCHER", (const char **) &HYDT_bsci_info.launcher);
-    if (HYDT_bsci_info.launcher == NULL)
-        MPL_env2str("HYDRA_BOOTSTRAP", (const char **) &HYDT_bsci_info.launcher);
-
-    /* If no launcher is provided or detected, use the default launcher */
-    if (HYDT_bsci_info.launcher == NULL)
-        HYDT_bsci_info.launcher = HYDRA_DEFAULT_LAUNCHER;
-
-    if (HYDT_bsci_info.launcher == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no appropriate launcher found\n");
-
+    HYDT_bsci_info.launcher = launcher;
+    HYDT_bsci_info.launcher_exec = launcher_exec;
     HYDT_bsci_info.debug = debug;
     HYDT_bsci_info.enablex = enablex;
 
-    if (user_launcher_exec)
-        HYDT_bsci_info.launcher_exec = user_launcher_exec;
-    if (HYDT_bsci_info.launcher_exec == NULL) {
-        if (MPL_env2str("HYDRA_LAUNCHER_EXEC", &HYDT_bsci_info.launcher_exec) == 0)
-            HYDT_bsci_info.launcher_exec = NULL;
-    }
-    if (HYDT_bsci_info.launcher_exec == NULL) {
-        if (MPL_env2str("HYDRA_BOOTSTRAP_EXEC", &HYDT_bsci_info.launcher_exec) == 0)
-            HYDT_bsci_info.launcher_exec = NULL;
-    }
-
     /* Make sure the launcher we found is valid */
     for (i = 0; launcher_names[i]; i++) {
-        if (!strcmp(HYDT_bsci_info.launcher, launcher_names[i])) {
+        if (!strcmp(launcher, launcher_names[i])) {
             status = (*launcher_init_fns[i]) ();
             HYDU_ERR_POP(status, "launcher init returned error\n");
             break;
         }
     }
-    if (launcher_names[i] == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "unrecognized launcher: %s\n", HYDT_bsci_info.launcher);
 
     /* This function is mandatory */
     if (HYDT_bsci_fns.launch_procs == NULL)
