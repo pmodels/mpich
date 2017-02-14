@@ -14,12 +14,12 @@
  */
 
 /**
- * \brief HYD_pmci_launch_procs - Launch processes
+ * \brief HYD_pmci_launch_proxies - Launch proxies
  *
  * This function appends the appropriate process management interface
  * specific environment and other functionality
  */
-HYD_status HYD_pmci_launch_procs(void);
+HYD_status HYD_pmci_launch_proxies(void);
 
 /**
  * \brief HYD_pmci_wait_for_completion - Wait for launched processes to complete

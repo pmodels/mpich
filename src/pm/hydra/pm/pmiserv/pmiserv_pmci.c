@@ -56,7 +56,7 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
     goto fn_exit;
 }
 
-HYD_status HYD_pmci_launch_procs(void)
+HYD_status HYD_pmci_launch_proxies(void)
 {
     struct HYD_proxy *proxy;
     struct HYD_string_stash proxy_stash;
