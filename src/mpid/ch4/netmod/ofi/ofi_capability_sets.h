@@ -65,6 +65,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
  * MPIDI_OFI_ENABLE_AM                 Use FI_MSG and FI_MULTI_RECV for active messages
  * MPIDI_OFI_ENABLE_RMA                Use FI_ATOMICS and FI_RMA interfaces
  * MPIDI_OFI_FETCH_ATOMIC_IOVECS       The maximum number of iovecs that can be used for fetch_atomic operations
+ * MPIDI_OFI_CONTEXT_MASK_CAPSET       The bitmask used to extract the context ID from the match_bits in an OFI message
+ * MPIDI_OFI_SOURCE_MASK_CAPSET        The bitmask used to extract the source rank from the match_bits in an OFI message
+ * MPIDI_OFI_TAG_MASK_CAPSET           The bitmask used to extract the tag from the match_bits in an OFI message
+ * MPIDI_OFI_CONTEXT_BITS              The number of bits used for the context ID in an OFI message
+ * MPIDI_OFI_SOURCE_BITS               The number of bits used for the source rank in an OFI message
+ * MPIDI_OFI_TAG_BITS                  The number of bits used for the tag in an OFI message
  */
 
 #define MPIDI_OFI_ENABLE_DATA_PSM               MPIDI_OFI_OFF
@@ -79,6 +85,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA_PSM                MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_ATOMICS_PSM            MPIDI_OFI_ENABLE_RMA_PSM
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS_PSM       1
+#define MPIDI_OFI_CONTEXT_MASK_PSM              (0x0FFFF00000000000ULL)
+#define MPIDI_OFI_SOURCE_MASK_PSM               (0x00000FFFFFF00000ULL) /* PSM does not support immediate data
+                                                                         * so this field needs to be available */
+#define MPIDI_OFI_TAG_MASK_PSM                  (0x00000000000FFFFFULL)
+#define MPIDI_OFI_CONTEXT_BITS_PSM              (16)
+#define MPIDI_OFI_SOURCE_BITS_PSM               (24)
+#define MPIDI_OFI_TAG_BITS_PSM                  (20)
 
 #ifdef MPIDI_CH4_OFI_USE_SET_PSM
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
@@ -94,6 +107,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_PSM
 #define MPIDI_OFI_ENABLE_ATOMICS            MPIDI_OFI_ENABLE_ATOMICS_PSM
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_PSM
+#define MPIDI_OFI_CONTEXT_MASK_CAPSET       MPIDI_OFI_CONTEXT_MASK_PSM
+#define MPIDI_OFI_SOURCE_MASK_CAPSET        MPIDI_OFI_SOURCE_MASK_PSM
+#define MPIDI_OFI_TAG_MASK_CAPSET           MPIDI_OFI_TAG_MASK_PSM
+#define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_PSM
+#define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_PSM
+#define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_PSM
 #endif
 
 #define MPIDI_OFI_ENABLE_DATA_PSM2               MPIDI_OFI_OFF
@@ -107,7 +126,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_AM_PSM2                 MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_RMA_PSM2                MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_ATOMICS_PSM2            MPIDI_OFI_ENABLE_RMA_PSM2
-#define MPIDI_OFI_FETCH_ATOMIC_IOVECS_PSM2      1
+#define MPIDI_OFI_FETCH_ATOMIC_IOVECS_PSM2       1
+#define MPIDI_OFI_CONTEXT_MASK_PSM2              (0x0FFFF00000000000ULL)
+#define MPIDI_OFI_SOURCE_MASK_PSM2               (0x00000FFFFFF00000ULL) /* PSM2 does not support immediate data
+                                                                          * so this field needs to be available */
+#define MPIDI_OFI_TAG_MASK_PSM2                  (0x00000000000FFFFFULL)
+#define MPIDI_OFI_CONTEXT_BITS_PSM2              (16)
+#define MPIDI_OFI_SOURCE_BITS_PSM2               (24)
+#define MPIDI_OFI_TAG_BITS_PSM2                  (20)
 
 #ifdef MPIDI_CH4_OFI_USE_SET_PSM2
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
@@ -123,6 +149,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_PSM2
 #define MPIDI_OFI_ENABLE_ATOMICS            MPIDI_OFI_ENABLE_ATOMICS_PSM2
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_PSM2
+#define MPIDI_OFI_CONTEXT_MASK_CAPSET       MPIDI_OFI_CONTEXT_MASK_PSM2
+#define MPIDI_OFI_SOURCE_MASK_CAPSET        MPIDI_OFI_SOURCE_MASK_PSM2
+#define MPIDI_OFI_TAG_MASK_CAPSET           MPIDI_OFI_TAG_MASK_PSM2
+#define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_PSM2
+#define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_PSM2
+#define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_PSM2
 #endif
 
 #define MPIDI_OFI_ENABLE_DATA_GNI               MPIDI_OFI_OFF
@@ -137,6 +169,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA_GNI                MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_ATOMICS_GNI            MPIDI_OFI_ENABLE_RMA_GNI
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS_GNI       1
+#define MPIDI_OFI_CONTEXT_MASK_GNI              (0x0FFFF00000000000ULL)
+#define MPIDI_OFI_SOURCE_MASK_GNI               (0x00000FFFFFF00000ULL) /* GNI does not support immediate data
+                                                                         * so this field needs to be available */
+#define MPIDI_OFI_TAG_MASK_GNI                  (0x00000000000FFFFFULL)
+#define MPIDI_OFI_CONTEXT_BITS_GNI              (16)
+#define MPIDI_OFI_SOURCE_BITS_GNI               (24)
+#define MPIDI_OFI_TAG_BITS_GNI                  (20)
 
 #ifdef MPIDI_CH4_OFI_USE_SET_GNI
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
@@ -152,6 +191,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_GNI
 #define MPIDI_OFI_ENABLE_ATOMICS            MPIDI_OFI_ENABLE_ATOMICS_GNI
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_GNI
+#define MPIDI_OFI_CONTEXT_MASK_CAPSET       MPIDI_OFI_CONTEXT_MASK_GNI
+#define MPIDI_OFI_SOURCE_MASK_CAPSET        MPIDI_OFI_SOURCE_MASK_GNI
+#define MPIDI_OFI_TAG_MASK_CAPSET           MPIDI_OFI_TAG_MASK_GNI
+#define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_GNI
+#define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_GNI
+#define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_GNI
 #endif
 
 #define MPIDI_OFI_ENABLE_DATA_SOCKETS               MPIDI_OFI_ON
@@ -166,6 +211,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA_SOCKETS                MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_ATOMICS_SOCKETS            MPIDI_OFI_ENABLE_RMA_SOCKETS
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS_SOCKETS       1
+#define MPIDI_OFI_CONTEXT_MASK_SOCKETS              (0x0000FFFF00000000ULL)
+#define MPIDI_OFI_SOURCE_MASK_SOCKETS               (0x0000000000000000ULL) /* Sockets does support immediate data
+                                                                             * so this field is zeroed */
+#define MPIDI_OFI_TAG_MASK_SOCKETS                  (0x000000007FFFFFFFULL)
+#define MPIDI_OFI_CONTEXT_BITS_SOCKETS              (16)
+#define MPIDI_OFI_SOURCE_BITS_SOCKETS               (0)
+#define MPIDI_OFI_TAG_BITS_SOCKETS                  (31)
 
 #ifdef MPIDI_CH4_OFI_USE_SET_SOCKETS
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
@@ -181,6 +233,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_SOCKETS
 #define MPIDI_OFI_ENABLE_ATOMICS            MPIDI_OFI_ENABLE_ATOMICS_SOCKETS
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_SOCKETS
+#define MPIDI_OFI_CONTEXT_MASK_CAPSET       MPIDI_OFI_CONTEXT_MASK_SOCKETS
+#define MPIDI_OFI_SOURCE_MASK_CAPSET        MPIDI_OFI_SOURCE_MASK_SOCKETS
+#define MPIDI_OFI_TAG_MASK_CAPSET           MPIDI_OFI_TAG_MASK_SOCKETS
+#define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_SOCKETS
+#define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_SOCKETS
+#define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_SOCKETS
 #endif
 
 #define MPIDI_OFI_ENABLE_DATA_BGQ               MPIDI_OFI_ON
@@ -195,6 +253,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA_BGQ                MPIDI_OFI_ON
 #define MPIDI_OFI_ENABLE_ATOMICS_BGQ            MPIDI_OFI_ENABLE_RMA_BGQ
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS_BGQ       1
+#define MPIDI_OFI_CONTEXT_MASK_BGQ              (0x0000FFFF00000000ULL)
+#define MPIDI_OFI_SOURCE_MASK_BGQ               (0x0000000000000000ULL) /* BGQ does support immediate data
+                                                                         * so this field is zeroed */
+#define MPIDI_OFI_TAG_MASK_BGQ                  (0x000000007FFFFFFFULL)
+#define MPIDI_OFI_CONTEXT_BITS_BGQ              (16)
+#define MPIDI_OFI_SOURCE_BITS_BGQ               (0)
+#define MPIDI_OFI_TAG_BITS_BGQ                  (31)
 
 #ifdef MPIDI_CH4_OFI_USE_SET_BGQ
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
@@ -210,6 +275,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_BGQ
 #define MPIDI_OFI_ENABLE_ATOMICS            MPIDI_OFI_ENABLE_ATOMICS_BGQ
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_BGQ
+#define MPIDI_OFI_CONTEXT_MASK_CAPSET       MPIDI_OFI_CONTEXT_MASK_BGQ
+#define MPIDI_OFI_SOURCE_MASK_CAPSET        MPIDI_OFI_SOURCE_MASK_BGQ
+#define MPIDI_OFI_TAG_MASK_CAPSET           MPIDI_OFI_TAG_MASK_BGQ
+#define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_BGQ
+#define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_BGQ
+#define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_BGQ
 #endif
 
 #define MPIDI_OFI_ENABLE_DATA_VERBS               MPIDI_OFI_OFF
@@ -223,6 +294,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_ATOMICS_VERBS            MPIDI_OFI_OFF
 #define MPIDI_OFI_MAX_ENDPOINTS_VERBS             MPIDI_OFI_MAX_ENDPOINTS_REGULAR
 #define MPIDI_OFI_MAX_ENDPOINTS_BITS_VERBS        MPIDI_OFI_MAX_ENDPOINTS_BITS_REGULAR
+#define MPIDI_OFI_CONTEXT_MASK_VERBS              (0x0FFFF00000000000ULL)
+#define MPIDI_OFI_SOURCE_MASK_VERBS               (0x00000FFFFFF00000ULL) /* Verbs does not support immediate data
+                                                                           * so this field needs to be available */
+#define MPIDI_OFI_TAG_MASK_VERBS                  (0x00000000000FFFFFULL)
+#define MPIDI_OFI_CONTEXT_BITS_VERBS              (16)
+#define MPIDI_OFI_SOURCE_BITS_VERBS               (24)
+#define MPIDI_OFI_TAG_BITS_VERBS                  (20)
 
 #ifdef MPIDI_CH4_OFI_USE_SET_VERBS
 #define MPIDI_OFI_ENABLE_RUNTIME_CHECKS     MPIDI_OFI_OFF
@@ -238,6 +316,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_OFI_ENABLE_RMA_VERBS
 #define MPIDI_OFI_ENABLE_ATOMICS            MPIDI_OFI_ENABLE_ATOMICS_VERBS
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_OFI_FETCH_ATOMIC_IOVECS_VERBS
+#define MPIDI_OFI_CONTEXT_MASK_CAPSET       MPIDI_OFI_CONTEXT_MASK_VERBS
+#define MPIDI_OFI_SOURCE_MASK_CAPSET        MPIDI_OFI_SOURCE_MASK_VERBS
+#define MPIDI_OFI_TAG_MASK_CAPSET           MPIDI_OFI_TAG_MASK_VERBS
+#define MPIDI_OFI_CONTEXT_BITS              MPIDI_OFI_CONTEXT_BITS_VERBS
+#define MPIDI_OFI_SOURCE_BITS               MPIDI_OFI_SOURCE_BITS_VERBS
+#define MPIDI_OFI_TAG_BITS                  MPIDI_OFI_TAG_BITS_VERBS
 #endif
 
 #ifdef MPIDI_CH4_OFI_USE_SET_RUNTIME
@@ -254,6 +338,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_set_number(char *set_name)
 #define MPIDI_OFI_ENABLE_RMA                MPIDI_Global.settings.enable_rma
 #define MPIDI_OFI_ENABLE_ATOMICS            MPIDI_Global.settings.enable_atomics
 #define MPIDI_OFI_FETCH_ATOMIC_IOVECS       MPIDI_Global.settings.fetch_atomic_iovecs
+#define MPIDI_OFI_CONTEXT_BITS              MPIDI_Global.settings.context_bits
+#define MPIDI_OFI_SOURCE_BITS               MPIDI_Global.settings.source_bits
+#define MPIDI_OFI_TAG_BITS                  MPIDI_Global.settings.tag_bits
 #endif
 
 #endif
