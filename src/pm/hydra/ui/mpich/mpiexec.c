@@ -213,7 +213,7 @@ int main(int argc, char **argv)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "pipe error\n");
 
     /* Launch the processes */
-    status = HYD_pmci_launch_procs();
+    status = HYD_pmci_launch_proxies();
     HYDU_ERR_POP(status, "process manager returned error launching processes\n");
 
     /* Wait for their completion */
