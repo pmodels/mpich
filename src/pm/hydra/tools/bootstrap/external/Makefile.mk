@@ -17,7 +17,6 @@ noinst_HEADERS +=                     \
 libhydra_la_SOURCES += tools/bootstrap/external/external_common.c \
 	tools/bootstrap/external/external_common_launch.c \
 	tools/bootstrap/external/fork_init.c \
-	tools/bootstrap/external/manual_init.c \
 	tools/bootstrap/external/rsh_init.c \
 	tools/bootstrap/external/rsh_env.c \
 	tools/bootstrap/external/ssh_init.c \

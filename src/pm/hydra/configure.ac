@@ -252,9 +252,9 @@ fi
 #########################################################################
 AC_ARG_WITH(hydra-bss,
 	[AC_HELP_STRING([--with-hydra-bss=name],
-		[Bootstrap Server (user,ssh,rsh,fork,slurm,ll,lsf,sge,pbs,cobalt,manual)])],
+		[Bootstrap Server (user,ssh,rsh,fork,slurm,ll,lsf,sge,pbs,cobalt)])],
 	[ hydra_bss=$withval ],
-	[ hydra_bss="ssh,rsh,fork,slurm,ll,lsf,sge,pbs,manual" ])
+	[ hydra_bss="ssh,rsh,fork,slurm,ll,lsf,sge,pbs" ])
 AC_MSG_CHECKING(bootstrap server)
 AC_MSG_RESULT($hydra_bss)
 hydra_bss_names="`echo $hydra_bss | sed -e 's/:/ /g' -e 's/,/ /g'`"
@@ -303,10 +303,6 @@ for hydra_bss_name in ${hydra_bss_names}; do
 		    available_launchers="$available_launchers pbs"
 		    PAC_APPEND_FLAG([-ltorque],[WRAPPER_LIBS])
                 fi
-		;;
-	manual)
-		hydra_bss_external=true
-		available_launchers="$available_launchers manual"
 		;;
 	*)
 		;;

@@ -130,9 +130,6 @@ HYD_status HYDT_bscd_common_launch_procs(const char *rmk, struct HYD_node *node_
         status = sge_get_path(&path);
         HYDU_ERR_POP(status, "unable to get path to the qrsh executable\n");
     }
-    else if (!strcmp(HYDT_bsci_info.launcher, "manual")) {
-        /* manual has no separate launcher */
-    }
     else {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "bad launcher type %s\n",
                             HYDT_bsci_info.launcher);
@@ -235,8 +232,7 @@ HYD_status HYDT_bscd_common_launch_procs(const char *rmk, struct HYD_node *node_
 
         /* If launcher is 'fork', or this is the localhost, use fork
          * to launch the process */
-        if (autofork && (!strcmp(HYDT_bsci_info.launcher, "fork") ||
-                         !strcmp(HYDT_bsci_info.launcher, "manual") || lh)) {
+        if (autofork && (!strcmp(HYDT_bsci_info.launcher, "fork") || lh)) {
             offset = exec_idx;
 
             if (control_fd) {
@@ -283,12 +279,6 @@ HYD_status HYDT_bscd_common_launch_procs(const char *rmk, struct HYD_node *node_
             HYDU_print_strlist(targs + offset);
         }
 
-        if (!strcmp(HYDT_bsci_info.launcher, "manual")) {
-            HYDU_dump_noprefix(stdout, "HYDRA_LAUNCH: ");
-            HYDU_print_strlist(targs + offset);
-            continue;
-        }
-
         /* ssh has many types of security controls that do not allow a
          * user to ssh to the same node multiple times very
          * quickly. If this happens, the ssh daemons disables ssh
@@ -329,9 +319,6 @@ HYD_status HYDT_bscd_common_launch_procs(const char *rmk, struct HYD_node *node_
                                       (void *) (size_t) STDERR_FILENO, HYDT_bscu_stdio_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }
-
-    if (!strcmp(HYDT_bsci_info.launcher, "manual"))
-        HYDU_dump_noprefix(stdout, "HYDRA_LAUNCH_END\n");
 
   fn_exit:
     HYDU_free_strlist(targs);
