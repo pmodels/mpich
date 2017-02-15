@@ -113,15 +113,16 @@ static inline int MPIDI_OFI_win_allgather(MPIR_Win * win, void *base, int disp_u
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_win_init_generic
+#define FUNCNAME MPIDI_OFI_win_init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_OFI_win_init_generic(MPI_Aint length,
-                                             int disp_unit,
-                                             MPIR_Win ** win_ptr,
-                                             MPIR_Info * info,
-                                             MPIR_Comm * comm_ptr,
-                                             int create_flavor, int model)
+static inline int MPIDI_OFI_win_init(MPI_Aint length,
+                                     int disp_unit,
+                                     MPIR_Win ** win_ptr,
+                                     MPIR_Info * info,
+                                     MPIR_Comm * comm_ptr,
+                                     int create_flavor,
+                                     int model)
 {
     int mpi_errno = MPI_SUCCESS;
     uint64_t window_instance;
@@ -129,8 +130,8 @@ static inline int MPIDI_OFI_win_init_generic(MPI_Aint length,
     struct fi_info *finfo;
     struct fi_cntr_attr cntr_attr;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_INIT_GENERIC);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_INIT_GENERIC);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_INIT);
 
     CH4_COMPILE_TIME_ASSERT(sizeof(MPIDI_Devwin_t) >= sizeof(MPIDI_OFI_win_t));
     CH4_COMPILE_TIME_ASSERT(sizeof(MPIDI_Devdt_t) >= sizeof(MPIDI_OFI_datatype_t));
@@ -215,35 +216,10 @@ static inline int MPIDI_OFI_win_init_generic(MPI_Aint length,
     }
 
   fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_INIT_GENERIC);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_INIT);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_OFI_win_init
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_OFI_win_init(MPI_Aint length,
-                                     int disp_unit,
-                                     MPIR_Win ** win_ptr,
-                                     MPIR_Info * info,
-                                     MPIR_Comm * comm_ptr, int create_flavor, int model)
-{
-    int mpi_errno;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_WIN_INIT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_WIN_INIT);
-
-    mpi_errno = MPIDI_OFI_win_init_generic(length,
-                                           disp_unit,
-                                           win_ptr,
-                                           info, comm_ptr, create_flavor, model);
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_WIN_INIT);
-
-    return mpi_errno;
 }
 
 #undef FUNCNAME
