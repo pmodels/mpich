@@ -47,6 +47,8 @@ static inline int MPIDI_CH4R_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
         else if (!strcmp(curr_ptr->key, "accumulate_ordering")) {
             save_ordering = MPIDI_CH4U_WIN(win, info_args).accumulate_ordering;
             MPIDI_CH4U_WIN(win, info_args).accumulate_ordering = 0;
+            if (!strcmp(curr_ptr->value, "none"))
+                goto next;
             value = curr_ptr->value;
             token = (char *) strtok_r(value, ",", &savePtr);
 
@@ -81,7 +83,7 @@ static inline int MPIDI_CH4R_mpi_win_set_info(MPIR_Win * win, MPIR_Info * info)
             if (!strcmp(curr_ptr->value, "same_op"))
                 MPIDI_CH4U_WIN(win, info_args).accumulate_ops = MPIDI_CH4I_ACCU_SAME_OP;
         }
-
+    next:
         curr_ptr = curr_ptr->next;
     }
 
@@ -532,6 +534,8 @@ static inline int MPIDI_CH4R_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_
         char buf[BUFSIZE];
         int c = 0;
 
+        CH4_COMPILE_TIME_ASSERT(BUFSIZE >= 16); /* maximum: strlen("rar,raw,war,waw") + 1 */
+
         if (MPIDI_CH4U_WIN(win, info_args).accumulate_ordering & MPIDI_CH4I_ACCU_ORDER_RAR)
             c += snprintf(buf + c, BUFSIZE - c, "%srar", (c > 0) ? "," : "");
 
@@ -545,7 +549,7 @@ static inline int MPIDI_CH4R_mpi_win_get_info(MPIR_Win * win, MPIR_Info ** info_
             c += snprintf(buf + c, BUFSIZE - c, "%swaw", (c > 0) ? "," : "");
 
         if (c == 0) {
-            memcpy(&buf[0], "not set   ", 10);
+            strncpy(buf, "none", BUFSIZE);
         }
 
         MPIR_Info_set_impl(*info_p_p, "accumulate_ordering", buf);
