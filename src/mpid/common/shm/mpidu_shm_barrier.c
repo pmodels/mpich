@@ -14,7 +14,7 @@ static int barrier_init = 0;
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 int MPIDU_shm_barrier_init(MPIDU_shm_barrier_t *barrier_region,
-                           MPIDU_shm_barrier_ptr_t *barrier, int init_values)
+                           MPIDU_shm_barrier_t **barrier, int init_values)
 {
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SHM_BARRIER_INIT);
 

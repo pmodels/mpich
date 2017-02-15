@@ -42,7 +42,7 @@ static inline int MPIDI_POSIX_mpi_init_hook(int rank, int size)
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_INIT);
 
     MPIDI_POSIX_mem_region.num_seg = 1;
-    MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_mem_region.seg, MPIDU_shm_seg_info_ptr_t,
+    MPIR_CHKPMEM_MALLOC(MPIDI_POSIX_mem_region.seg, MPIDU_shm_seg_info_t *,
                         MPIDI_POSIX_mem_region.num_seg * sizeof(MPIDU_shm_seg_info_t), mpi_errno,
                         "mem_region segments");
     MPIR_CHKPMEM_MALLOC(local_procs, int *, size * sizeof(int), mpi_errno,
