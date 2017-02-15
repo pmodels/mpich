@@ -38,7 +38,7 @@ typedef struct alloc_elem {
 
 static struct { alloc_elem_t *head, *tail; } allocq = {0};
 
-static int check_alloc(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t barrier,
+static int check_alloc(MPIDU_shm_seg_t *memory, MPIDU_shm_barrier_t *barrier,
                        int num_local, int local_rank);
 
 #define ALLOCQ_HEAD() GENERIC_Q_HEAD(allocq)
@@ -127,7 +127,7 @@ int MPIDU_shm_seg_alloc(size_t len, void **ptr_p)
 #define FUNCNAME MPIDU_shm_seg_commit
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *barrier,
+int MPIDU_shm_seg_commit(MPIDU_shm_seg_t *memory, MPIDU_shm_barrier_t **barrier,
                      int num_local, int local_rank, int local_procs_0, int rank)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -457,7 +457,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *ba
 #define FUNCNAME MPIDU_shm_seg_destroy
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-int MPIDU_shm_seg_destroy(MPIDU_shm_seg_ptr_t memory, int num_local)
+int MPIDU_shm_seg_destroy(MPIDU_shm_seg_t *memory, int num_local)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDU_SHM_SEG_DESTROY);
@@ -488,7 +488,7 @@ int MPIDU_shm_seg_destroy(MPIDU_shm_seg_ptr_t memory, int num_local)
 #define FUNCNAME check_alloc
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static int check_alloc(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t barrier,
+static int check_alloc(MPIDU_shm_seg_t *memory, MPIDU_shm_barrier_t *barrier,
                        int num_local, int local_rank)
 {
     int mpi_errno = MPI_SUCCESS;
