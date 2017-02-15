@@ -1018,7 +1018,7 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     int rc, acc_check = 0, mpi_errno = MPI_SUCCESS;
     uint64_t flags;
     MPIDI_OFI_win_request_t *req;
-    size_t origin_bytes, offset, max_size, dt_size, omax, tmax, tout, oout;
+    size_t origin_bytes, offset, max_count, max_size, dt_size, omax, tmax, tout, oout;
     struct fid_ep *ep;
     MPI_Datatype basic_type;
     enum fi_op fi_op;
@@ -1053,16 +1053,15 @@ static inline int MPIDI_OFI_do_accumulate(const void *origin_addr,
     if (basic_type == MPI_DATATYPE_NULL || (acc_check && op != MPI_REPLACE))
         goto am_fallback;
 
-    max_size = MPIDI_OFI_QUERY_ATOMIC_COUNT;
+    max_count = MPIDI_OFI_QUERY_ATOMIC_COUNT;
 
-    MPIDI_OFI_query_datatype(basic_type, &fi_dt, op, &fi_op, &max_size, &dt_size);
-    if (max_size == 0)
+    MPIDI_OFI_query_datatype(basic_type, &fi_dt, op, &fi_op, &max_count, &dt_size);
+    if (max_count == 0)
         goto am_fallback;
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_accumulate
                            (win, origin_count, target_count, target_rank, origin_datatype,
-                            target_datatype, max_size, &req, &flags, &ep, sigreq)
-);
-    max_size = max_size * dt_size;
+                            target_datatype, max_count, &req, &flags, &ep, sigreq));
+    max_size = max_count * dt_size;
 
     req->event_id = MPIDI_OFI_EVENT_ABORT;
     req->next = MPIDI_OFI_WIN(win).syncQ;
@@ -1147,7 +1146,7 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     int rc, acc_check = 0, mpi_errno = MPI_SUCCESS;
     uint64_t flags;
     MPIDI_OFI_win_request_t *req;
-    size_t target_bytes, offset, max_size, dt_size, omax, rmax, tmax, tout, rout, oout;
+    size_t target_bytes, offset, max_count, max_size, dt_size, omax, rmax, tmax, tout, rout, oout;
     struct fid_ep *ep;
     MPI_Datatype rt, basic_type, basic_type_res;
     enum fi_op fi_op;
@@ -1187,18 +1186,16 @@ static inline int MPIDI_OFI_do_get_accumulate(const void *origin_addr,
     MPIDI_OFI_GET_BASIC_TYPE(rt, basic_type_res);
     MPIR_Assert(basic_type_res != MPI_DATATYPE_NULL);
 
-    max_size = MPIDI_OFI_QUERY_FETCH_ATOMIC_COUNT;
-    MPIDI_OFI_query_datatype(basic_type_res, &fi_dt, op, &fi_op, &max_size, &dt_size);
-    if (max_size == 0)
+    max_count = MPIDI_OFI_QUERY_FETCH_ATOMIC_COUNT;
+    MPIDI_OFI_query_datatype(basic_type_res, &fi_dt, op, &fi_op, &max_count, &dt_size);
+    if (max_count == 0)
         goto am_fallback;
 
     MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_allocate_win_request_get_accumulate
                            (win, origin_count, target_count, result_count, target_rank, op,
-                            origin_datatype, target_datatype, result_datatype, max_size, &req,
-                            &flags, &ep, sigreq)
-);
-    max_size = max_size * dt_size;
-
+                            origin_datatype, target_datatype, result_datatype, max_count, &req,
+                            &flags, &ep, sigreq));
+    max_size = max_count * dt_size;
 
     req->event_id = MPIDI_OFI_EVENT_RMA_DONE;
     req->next = MPIDI_OFI_WIN(win).syncQ;
