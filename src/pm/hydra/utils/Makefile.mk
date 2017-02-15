@@ -4,12 +4,12 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-include utils/alloc/Makefile.mk
-include utils/args/Makefile.mk
-include utils/dbg/Makefile.mk
-include utils/env/Makefile.mk
-include utils/launch/Makefile.mk
-include utils/others/Makefile.mk
-include utils/signals/Makefile.mk
-include utils/sock/Makefile.mk
-include utils/string/Makefile.mk
+libhydra_la_SOURCES += utils/alloc.c		\
+			utils/args.c		\
+			utils/dbg.c		\
+			utils/env.c		\
+			utils/launch.c		\
+			utils/others.c		\
+			utils/signals.c		\
+			utils/sock.c		\
+			utils/string.c
