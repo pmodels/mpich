@@ -327,7 +327,7 @@ AM_CONDITIONAL([hydra_pbs_launcher], [test "$have_pbs_launcher" = "yes"])
 
 tmp_list=
 for hydra_launcher in ${available_launchers} ; do
-    hydra_launcher_array="${hydra_launcher_array} \"${hydra_launcher}\", "
+    hydra_launcher_names="${hydra_launcher_names} \"${hydra_launcher}\", "
     if test -z "${hydra_default_launcher}" ; then
        hydra_default_launcher=$hydra_launcher
        AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_LAUNCHER,"$hydra_default_launcher",[Default launcher])
@@ -337,14 +337,14 @@ for hydra_launcher in ${available_launchers} ; do
     fi
     hydra_launcher_init_decl="${hydra_launcher_init_decl}
 HYD_status HYDT_bsci_launcher_${hydra_launcher}_init(void);"
-    hydra_launcher_init_array="${hydra_launcher_init_array} HYDT_bsci_launcher_${hydra_launcher}_init, "
+    hydra_launcher_init_fns="${hydra_launcher_init_fns} HYDT_bsci_launcher_${hydra_launcher}_init, "
 done
 available_launchers=$tmp_list
-hydra_launcher_array="${hydra_launcher_array} NULL"
-hydra_launcher_init_array="${hydra_launcher_init_array} NULL"
+hydra_launcher_names="${hydra_launcher_names} NULL"
+hydra_launcher_init_fns="${hydra_launcher_init_fns} NULL"
 AM_SUBST_NOTMAKE(hydra_launcher_init_decl)
-AC_SUBST(hydra_launcher_array)
-AC_SUBST(hydra_launcher_init_array)
+AC_SUBST(hydra_launcher_names)
+AC_SUBST(hydra_launcher_init_fns)
 AC_SUBST(hydra_launcher_init_decl)
 AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_LAUNCHERS,"${available_launchers}",
 	[Definition of enabled launchers])
