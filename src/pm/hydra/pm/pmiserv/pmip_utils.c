@@ -7,7 +7,6 @@
 #include "pmip.h"
 #include "bsci.h"
 #include "topo.h"
-#include "demux.h"
 #include "hydra.h"
 
 
@@ -120,17 +119,6 @@ static HYD_status launcher_exec_fn(char *arg, char ***argv)
     HYD_status status = HYD_SUCCESS;
 
     status = HYDU_set_str(arg, &HYD_pmcd_pmip.user_global.launcher_exec, **argv);
-
-    (*argv)++;
-
-    return status;
-}
-
-static HYD_status demux_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.user_global.demux, **argv);
 
     (*argv)++;
 
@@ -540,7 +528,6 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"rmk", rmk_fn, NULL},
     {"launcher", launcher_fn, NULL},
     {"launcher-exec", launcher_exec_fn, NULL},
-    {"demux", demux_fn, NULL},
     {"auto-cleanup", auto_cleanup_fn, NULL},
     {"retries", retries_fn, NULL},
 
@@ -596,9 +583,6 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
 
     if (HYD_pmcd_pmip.upstream.server_port == -1)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "server port not available\n");
-
-    if (HYD_pmcd_pmip.user_global.demux == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "demux engine not available\n");
 
     if (HYD_pmcd_pmip.user_global.debug == -1)
         HYD_pmcd_pmip.user_global.debug = 0;

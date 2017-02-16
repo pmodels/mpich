@@ -109,10 +109,6 @@ static void help_help_fn(void)
     printf("    -membind                         memory binding policy\n");
 
     printf("\n");
-    printf("  Demux engine options:\n");
-    printf("    -demux                           demux engine (%s)\n", HYDRA_AVAILABLE_DEMUXES);
-
-    printf("\n");
     printf("  Other Hydra options:\n");
     printf("    -verbose                         verbose mode\n");
     printf("    -info                            build information\n");
@@ -989,34 +985,6 @@ static HYD_status topolib_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static void demux_help_fn(void)
-{
-    printf("\n");
-    printf("-demux: Demux engine to use\n\n");
-    printf("Notes:\n");
-    printf("  * Use the -info option to see what all are compiled in\n\n");
-}
-
-static HYD_status demux_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    if (reading_config_file && HYD_server_info.user_global.demux) {
-        /* global variable already set; ignore */
-        goto fn_exit;
-    }
-
-    status = HYDU_set_str(arg, &HYD_server_info.user_global.demux, **argv);
-    HYDU_ERR_POP(status, "error setting demux\n");
-
-  fn_exit:
-    (*argv)++;
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static void verbose_help_fn(void)
 {
     printf("\n");
@@ -1072,9 +1040,6 @@ static HYD_status info_fn(char *arg, char ***argv)
                        HYDRA_AVAILABLE_TOPOLIBS);
     HYDU_dump_noprefix(stdout,
                        "    Resource management kernels available:   %s\n", HYDRA_AVAILABLE_RMKS);
-    HYDU_dump_noprefix(stdout,
-                       "    Demux engines available:                 %s\n",
-                       HYDRA_AVAILABLE_DEMUXES);
 
     HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "%s", "");
 
@@ -1555,9 +1520,6 @@ static struct HYD_arg_match_table match_table[] = {
     {"bind-to", bind_to_fn, bind_to_help_fn},
     {"map-by", map_by_fn, bind_to_help_fn},
     {"membind", membind_fn, bind_to_help_fn},
-
-    /* Demux engine options */
-    {"demux", demux_fn, demux_help_fn},
 
     /* Other hydra options */
     {"verbose", verbose_fn, verbose_help_fn},

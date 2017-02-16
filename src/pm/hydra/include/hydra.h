@@ -393,9 +393,6 @@ struct HYD_user_global {
     char *mapping;
     char *membind;
 
-    /* Demux engine */
-    char *demux;
-
     /* Other random parameters */
     int enablex;
     int debug;

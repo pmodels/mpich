@@ -15,8 +15,6 @@ void HYDU_init_user_global(struct HYD_user_global *user_global)
     user_global->binding = NULL;
     user_global->topolib = NULL;
 
-    user_global->demux = NULL;
-
     user_global->enablex = -1;
     user_global->debug = -1;
     user_global->usize = HYD_USIZE_UNSET;
@@ -42,9 +40,6 @@ void HYDU_finalize_user_global(struct HYD_user_global *user_global)
 
     if (user_global->topolib)
         MPL_free(user_global->topolib);
-
-    if (user_global->demux)
-        MPL_free(user_global->demux);
 
     HYDU_finalize_global_env(&user_global->global_env);
 }

@@ -518,48 +518,21 @@ for hydra_demux in ${hydra_demuxes}; do
     case "$hydra_demux" in
     	poll)
 		AC_CHECK_FUNCS(poll,[have_poll=yes],[have_poll=no])
-		if test "$have_poll" = "yes" ; then
-		   available_demuxes="$available_demuxes poll"
-		fi
 		;;
 	select)
 		AC_CHECK_FUNCS(select,[have_select=yes],[have_select=no])
-		if test "$have_select" = "yes" ; then
-		   available_demuxes="$available_demuxes select"
-		fi
 		;;
 	port)
 		# FIXME: Need to add a test for completion ports
-		if test "$have_port" = "yes" ; then
-		   available_demuxes="$available_demuxes port"
-		fi
 		;;
 	*)
 		;;
     esac
 done
 
-tmp_list=
-for hydra_demux in ${available_demuxes}; do
-    if test -z "$hydra_default_demux" ; then
-       hydra_default_demux=${hydra_demux}
-       tmp_list="${hydra_demux}"
-    else
-       tmp_list="$tmp_list ${hydra_demux}"
-    fi
-done
-available_demuxes=$tmp_list
-
 AM_CONDITIONAL([hydra_have_poll], [test "${have_poll}" = "yes"])
 AM_CONDITIONAL([hydra_have_select], [test "${have_select}" = "yes"])
 AM_CONDITIONAL([hydra_have_port], [test "${have_port}" = "yes"])
-AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_DEMUXES,"$available_demuxes",
-	[Definition of enabled demux engines])
-if test "$hydra_default_demux" != "" ; then
-   AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_DEMUX,"$hydra_default_demux",[Default demux engine])
-else
-   AC_DEFINE(HYDRA_DEFAULT_DEMUX,NULL,[Default demux engine])
-fi
 
 
 #########################################################################

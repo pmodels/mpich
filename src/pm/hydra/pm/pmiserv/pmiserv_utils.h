@@ -7,7 +7,6 @@
 #ifndef PMISERV_UTILS_H_INCLUDED
 #define PMISERV_UTILS_H_INCLUDED
 
-#include "demux.h"
 #include "pmiserv_pmi.h"
 
 HYD_status HYD_pmcd_pmi_fill_in_proxy_args(struct HYD_string_stash *stash,

@@ -169,7 +169,7 @@ int main(int argc, char **argv)
      * created, since it checks for STDIN's validity.  If STDIN was
      * closed and we opened a socket that got the same fd as STDIN,
      * this test will not be possible. */
-    status = HYDT_dmx_init(&HYD_server_info.user_global.demux);
+    status = HYDT_dmx_init();
     HYDU_ERR_POP(status, "unable to initialize the demux engine\n");
 
     status = get_node_list();
