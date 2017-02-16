@@ -9,8 +9,8 @@ fi
 echo "=== running autoreconf in 'mpl' ==="
 (cd mpl && $autoreconf ${autoreconf_args:-"-vif"}) || exit 1
 
-echo "=== running autoreconf in 'tools/topo/hwloc/hwloc' ==="
-(cd tools/topo/hwloc/hwloc && ./autogen.sh) || exit 1
+echo "=== running autoreconf in 'libhydra/topo/hwloc/hwloc' ==="
+(cd libhydra/topo/hwloc/hwloc && ./autogen.sh) || exit 1
 
 echo "=== running autoreconf in '.' ==="
 $autoreconf ${autoreconf_args:-"-vif"} || exit 1

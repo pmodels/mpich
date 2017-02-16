@@ -12,6 +12,7 @@ external_libs = @mpl_lib@ @WRAPPER_LIBS@
 
 bin_PROGRAMS =
 noinst_HEADERS =
+noinst_LTLIBRARIES =
 DISTCLEANFILES =
 EXTRA_DIST =
 SUFFIXES =
@@ -20,18 +21,13 @@ doc1_src_txt =
 ACLOCAL_AMFLAGS = -I confdb
 AM_CPPFLAGS = -I$(top_srcdir)/include $(external_includes)
 
-noinst_HEADERS += include/hydra.h include/hydra_server.h
-
 EXTRA_DIST += autogen.sh
 
-noinst_LTLIBRARIES = libhydra.la
-libhydra_la_SOURCES =
-
-# The below directories contribute to libhydra
-include utils/Makefile.mk
-include tools/Makefile.mk
-include pm/Makefile.mk
-include ui/Makefile.mk
+include mpiexec/Makefile.mk
+include proxy/Makefile.mk
+include common/Makefile.mk
+include nameserver/Makefile.mk
+include libhydra/Makefile.mk
 
 # External subdirs should be built first, as we might depend on them
 SUBDIRS = ${external_subdirs} .

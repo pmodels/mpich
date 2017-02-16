@@ -250,7 +250,7 @@ exist.
     mpich-%VERSION%/src/openpa/config.log (generated in step 1(d) above)
     mpich-%VERSION%/src/mpl/config.log (generated in step 1(d) above)
     mpich-%VERSION%/src/pm/hydra/config.log (generated in step 1(d) above)
-    mpich-%VERSION%/src/pm/hydra/tools/topo/hwloc/hwloc/config.log (generated in step 1(d) above)
+    mpich-%VERSION%/src/pm/hydra/libhydra/topo/hwloc/hwloc/config.log (generated in step 1(d) above)
 
     DID WE MENTION? DO NOT FORGET TO COMPRESS THESE FILES!
 

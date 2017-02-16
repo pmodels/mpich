@@ -1,0 +1,57 @@
+/* -*- Mode: C; c-basic-offset:4 ; -*- */
+/*
+ *  (C) 2017 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+#include "hydra_rmk.h"
+
+/* *INDENT-OFF* */
+@hydra_rmk_includes@
+
+static const char *rmk_names[] = { @hydra_rmk_names@ };
+static int (*rmk_detect_fns[])(void) = { @hydra_rmk_detect_fns@ };
+static HYD_status(*rmk_query_node_list_fns[])(int *node_count, struct HYD_node ** nodes) = { @hydra_rmk_query_node_list_fns@ };
+/* *INDENT-ON* */
+
+const char *HYD_rmk_detect(void)
+{
+    const char *rmk = NULL;
+    int i;
+
+    HYD_FUNC_ENTER();
+
+    for (i = 0; rmk_names[i]; i++) {
+        if ((*rmk_detect_fns[i]) ()) {
+            rmk = rmk_names[i];
+            break;
+        }
+    }
+
+    HYD_FUNC_EXIT();
+    return rmk;
+}
+
+HYD_status HYD_rmk_query_node_list(const char *rmk, int *node_count, struct HYD_node ** nodes)
+{
+    int i;
+    HYD_status status = HYD_SUCCESS;
+
+    HYD_FUNC_ENTER();
+
+    for (i = 0; rmk_names[i]; i++)
+        if (!strcmp(rmk_names[i], rmk))
+            break;
+
+    if (rmk_names[i] == NULL)
+        *node_count = 0;
+    else
+        status = rmk_query_node_list_fns[i] (node_count, nodes);
+
+  fn_exit:
+    HYD_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
