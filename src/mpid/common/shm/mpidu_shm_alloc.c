@@ -50,6 +50,8 @@ static int check_alloc(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t barri
 
 static size_t segment_len = 0;
 
+static int num_segments = 0;
+
 typedef struct asym_check_region 
 {
     void *base_ptr;
@@ -337,7 +339,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *ba
 
             /* post name of shared file */
             MPIR_Assert(local_procs_0 == rank);
-            MPL_snprintf(key, key_max_sz, "sharedFilename[%i]", rank);
+            MPL_snprintf(key, key_max_sz, "sharedFilename[%i]-%i", rank, num_segments);
 
             mpi_errno = MPL_shm_hnd_get_serialized_by_ref(memory->hnd, &serialized_hnd);
             if (mpi_errno != MPI_SUCCESS) MPIR_ERR_POP (mpi_errno);
@@ -367,7 +369,7 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *ba
             MPIR_ERR_CHKANDJUMP1 (pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**pmi_barrier", "**pmi_barrier %d", pmi_errno);
 
             /* get name of shared file */
-            MPL_snprintf(key, key_max_sz, "sharedFilename[%i]", local_procs_0);
+            MPL_snprintf(key, key_max_sz, "sharedFilename[%i]-%i", local_procs_0, num_segments);
             pmi_errno = PMI_KVS_Get(kvs_name, key, val, val_max_sz);
             MPIR_ERR_CHKANDJUMP1(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER,
                                  "**pmi_kvs_get", "**pmi_kvs_get %d", pmi_errno);
@@ -401,6 +403,8 @@ int MPIDU_shm_seg_commit(MPIDU_shm_seg_ptr_t memory, MPIDU_shm_barrier_ptr_t *ba
         memory->symmetrical = 0 ;
     }
 #endif
+    num_segments++;
+
     /* assign sections of the shared memory segment to their pointers */
 
     start_addr = current_addr;

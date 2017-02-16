@@ -8,6 +8,7 @@
  *  Contributor License Agreement dated February 8, 2012.
  */
 #include "ofi_impl.h"
+#include "mpiu_addr.h"
 
 static inline int dump_and_choose_providers(info_t * prov, info_t ** prov_use);
 static inline int compile_time_checking();
@@ -42,18 +43,16 @@ cvars:
 #define FCNAME DECL_FUNC(MPID_nem_ofi_init)
 int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
-    int ret, fi_version, i, len, pmi_errno;
+    int fi_version, i;
     int mpi_errno = MPI_SUCCESS;
     info_t *hints, *prov_tagged, *prov_use;
     cq_attr_t cq_attr;
     av_attr_t av_attr;
-    char kvsname[OFI_KVSAPPSTRLEN], key[OFI_KVSAPPSTRLEN], bc[OFI_KVSAPPSTRLEN];
-    char *my_bc, *addrs, *null_addr;
+    void *addrs;
     fi_addr_t *fi_addrs = NULL;
     MPIDI_VC_t *vc;
 
     BEGIN_FUNC(FCNAME);
-    MPIR_CHKLMEM_DECL(2);
 
     compile_time_checking();
     /* ------------------------------------------------------------------------ */
@@ -205,60 +204,20 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     fi_freeinfo(hints);
     fi_freeinfo(prov_use);
 
-    /* ---------------------------------------------------- */
-    /* Exchange endpoint addresses using scalable database  */
-    /* or job launcher, in this case, use PMI interfaces    */
-    /* ---------------------------------------------------- */
-    gl_data.bound_addrlen = sizeof(gl_data.bound_addr);
-    FI_RC(fi_getname((fid_t) gl_data.endpoint, &gl_data.bound_addr,
-                     &gl_data.bound_addrlen), getname);
-
-    /* -------------------------------- */
-    /* Get our business card            */
-    /* -------------------------------- */
-    my_bc = *bc_val_p;
-    MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_get_business_card(pg_rank, bc_val_p, val_max_sz_p));
-
-    /* -------------------------------- */
-    /* Publish the business card        */
-    /* to the KVS                       */
-    /* -------------------------------- */
-    PMI_RC(PMI_KVS_Get_my_name(kvsname, OFI_KVSAPPSTRLEN), pmi);
-    sprintf(key, "OFI-%d", pg_rank);
-
-    PMI_RC(PMI_KVS_Put(kvsname, key, my_bc), pmi);
-    PMI_RC(PMI_KVS_Commit(kvsname), pmi);
-
     /* -------------------------------- */
     /* Set the MPI maximum tag value    */
     /* -------------------------------- */
     MPIR_Process.attrs.tag_ub = (1 << MPID_TAG_BITS) - 1;
 
-    /* --------------------------------- */
-    /* Wait for all the ranks to publish */
-    /* their business card               */
-    /* --------------------------------- */
-    gl_data.rts_cts_in_flight = 0;
-    PMI_Barrier();
-
-    /* --------------------------------- */
-    /* Retrieve every rank's address     */
-    /* from KVS and store them in local  */
-    /* table                             */
-    /* --------------------------------- */
-    MPIR_CHKLMEM_MALLOC(addrs, char *, pg_p->size * gl_data.bound_addrlen, mpi_errno, "addrs");
-
-    for (i = 0; i < pg_p->size; ++i) {
-        sprintf(key, "OFI-%d", i);
-
-        PMI_RC(PMI_KVS_Get(kvsname, key, bc, OFI_KVSAPPSTRLEN), pmi);
-        ret = MPL_str_get_binary_arg(bc, "OFI",
-                                      (char *) &addrs[i * gl_data.bound_addrlen],
-                                      gl_data.bound_addrlen, &len);
-        MPIR_ERR_CHKANDJUMP((ret != MPL_STR_SUCCESS && ret != MPL_STR_NOMEM) ||
-                            (size_t) len != gl_data.bound_addrlen,
-                            mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
-    }
+    /* ---------------------------------------------------- */
+    /* Exchange endpoint addresses                          */
+    /* ---------------------------------------------------- */
+    gl_data.bound_addrlen = sizeof(gl_data.bound_addr);
+    FI_RC(fi_getname((fid_t) gl_data.endpoint, &gl_data.bound_addr,
+                     &gl_data.bound_addrlen), getname);
+    mpi_errno = MPIU_addr_table_create(pg_p->size, pg_rank, MPID_nem_mem_region.num_local,
+				       MPID_nem_mem_region.local_rank, MPID_nem_mem_region.local_procs[0],
+				       &gl_data.bound_addr, gl_data.bound_addrlen, &addrs);
 
     /* ---------------------------------------------------- */
     /* Map the addresses into an address vector             */
@@ -267,6 +226,8 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* ---------------------------------------------------- */
     fi_addrs = MPL_malloc(pg_p->size * sizeof(fi_addr_t));
     FI_RC(fi_av_insert(gl_data.av, addrs, pg_p->size, fi_addrs, 0ULL, NULL), avmap);
+
+    mpi_errno = MPIU_addr_table_destroy(addrs, MPID_nem_mem_region.num_local);
 
     /* --------------------------------- */
     /* Store the direct addresses in     */
@@ -287,10 +248,10 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* startcontig messages                          */
     /* --------------------------------------------- */
     MPIDI_CH3I_NM_OFI_RC(MPID_nem_ofi_cm_init(pg_p, pg_rank));
+    gl_data.rts_cts_in_flight = 0;
   fn_exit:
     if (fi_addrs)
         MPL_free(fi_addrs);
-    MPIR_CHKLMEM_FREEALL();
     END_FUNC(FCNAME);
     return mpi_errno;
   fn_fail:
