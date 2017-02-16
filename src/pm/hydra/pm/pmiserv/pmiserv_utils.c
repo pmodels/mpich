@@ -72,9 +72,6 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(struct HYD_string_stash *proxy_stash,
         HYD_STRING_STASH(*proxy_stash, MPL_strdup(HYDT_bsci_info.launcher_exec), status);
     }
 
-    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--demux"), status);
-    HYD_STRING_STASH(*proxy_stash, MPL_strdup(HYD_server_info.user_global.demux), status);
-
     HYD_STRING_STASH(*proxy_stash, MPL_strdup("--pgid"), status);
     HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(pgid), status);
 

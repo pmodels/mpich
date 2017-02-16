@@ -154,7 +154,7 @@ int main(int argc, char **argv)
     status = HYD_pmcd_pmip_get_params(argv);
     HYDU_ERR_POP(status, "bad parameters passed to the proxy\n");
 
-    status = HYDT_dmx_init(&HYD_pmcd_pmip.user_global.demux);
+    status = HYDT_dmx_init();
     HYDU_ERR_POP(status, "unable to initialize the demux engine\n");
 
     /* See if HYDI_CONTROL_FD is set before trying to connect upstream */

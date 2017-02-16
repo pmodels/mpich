@@ -18,14 +18,12 @@ static struct HYDT_ns_publish *publish_list = NULL;
 static struct {
     int port;
     int debug;
-    char *demux;
 } private;
 
 static void init_params(void)
 {
     private.port = -1;
     private.debug = -1;
-    private.demux = NULL;
 }
 
 static void port_help_fn(void)
@@ -56,27 +54,9 @@ static HYD_status debug_fn(char *arg, char ***argv)
     return HYDU_set_int(arg, &private.debug, 1);
 }
 
-static void demux_help_fn(void)
-{
-    printf("\n");
-    printf("-demux: Demux engine to use\n");
-}
-
-static HYD_status demux_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_str(arg, &private.demux, **argv);
-
-    (*argv)++;
-
-    return status;
-}
-
 static struct HYD_arg_match_table match_table[] = {
     {"port", port_fn, port_help_fn},
-    {"debug", debug_fn, debug_help_fn},
-    {"demux", demux_fn, demux_help_fn}
+    {"debug", debug_fn, debug_help_fn}
 };
 
 static void free_publish_element(struct HYDT_ns_publish *publish)
@@ -314,11 +294,7 @@ int main(int argc, char **argv)
     if (private.port == -1 && MPL_env2int("HYDRA_NAMESERVER_PORT", &private.port) == 0)
         private.port = HYDRA_NAMESERVER_DEFAULT_PORT;
 
-    if (private.demux == NULL &&
-        MPL_env2str("HYDRA_NAMESERVER_DEMUX", (const char **) &private.demux) == 0)
-        private.demux = NULL;
-
-    status = HYDT_dmx_init(&private.demux);
+    status = HYDT_dmx_init();
     HYDU_ERR_POP(status, "unable to initialize the demux engine\n");
 
     /* wait for connection requests and process them */

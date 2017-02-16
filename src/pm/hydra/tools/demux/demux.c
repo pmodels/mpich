@@ -9,7 +9,6 @@
 
 int HYDT_dmxu_num_cb_fds = 0;
 struct HYDT_dmxu_callback *HYDT_dmxu_cb_list = NULL;
-struct HYDT_dmxu_fns HYDT_dmxu_fns = { 0 };
 
 static int got_sigttin = 0;
 static int stdin_valid;
@@ -28,43 +27,17 @@ static void signal_cb(int sig)
 }
 #endif /* SIGTTIN */
 
-HYD_status HYDT_dmx_init(char **demux)
+HYD_status HYDT_dmx_init(void)
 {
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    if (!(*demux)) {    /* user didn't specify anything */
 #if defined HAVE_POLL
-        HYDT_dmxu_fns.wait_for_event = HYDT_dmxu_poll_wait_for_event;
-        HYDT_dmxu_fns.stdin_valid = HYDT_dmxu_poll_stdin_valid;
-        *demux = MPL_strdup("poll");
+    status = HYDT_dmxu_poll_stdin_valid(&stdin_valid);
 #elif defined HAVE_SELECT
-        HYDT_dmxu_fns.wait_for_event = HYDT_dmxu_select_wait_for_event;
-        HYDT_dmxu_fns.stdin_valid = HYDT_dmxu_select_stdin_valid;
-        *demux = MPL_strdup("select");
-#endif /* HAVE_SELECT */
-    }
-    else if (!strcmp(*demux, "poll")) { /* user wants to use poll */
-#if defined HAVE_POLL
-        HYDT_dmxu_fns.wait_for_event = HYDT_dmxu_poll_wait_for_event;
-        HYDT_dmxu_fns.stdin_valid = HYDT_dmxu_poll_stdin_valid;
-#endif /* HAVE_POLL */
-    }
-    else if (!strcmp(*demux, "select")) {       /* user wants to use select */
-#if defined HAVE_SELECT
-        HYDT_dmxu_fns.wait_for_event = HYDT_dmxu_select_wait_for_event;
-        HYDT_dmxu_fns.stdin_valid = HYDT_dmxu_select_stdin_valid;
-#endif /* HAVE_SELECT */
-    }
-
-    if (HYDT_dmxu_fns.wait_for_event == NULL || HYDT_dmxu_fns.stdin_valid == NULL) {
-        /* We couldn't find anything; return an error */
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "cannot find an appropriate demux engine\n");
-    }
-
-    status = HYDT_dmxu_fns.stdin_valid(&stdin_valid);
+    status = HYDT_dmxu_select_stdin_valid(&stdin_valid);
+#endif
     HYDU_ERR_POP(status, "error checking for stdin validity\n");
 
   fn_exit:
@@ -169,7 +142,11 @@ HYD_status HYDT_dmx_deregister_fd(int fd)
 
 HYD_status HYDT_dmx_wait_for_event(int wtime)
 {
-    return HYDT_dmxu_fns.wait_for_event(wtime);
+#if defined HAVE_POLL
+    return HYDT_dmxu_poll_wait_for_event(wtime);
+#elif defined HAVE_SELECT
+    return HYDT_dmxu_select_wait_for_event(wtime);
+#endif
 }
 
 int HYDT_dmx_query_fd_registration(int fd)
