@@ -14,7 +14,7 @@
 #include "ofi_impl.h"
 #include "mpir_cvars.h"
 #include "pmi.h"
-#include "mpidu_shm.h"
+#include "mpiu_addr.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -210,15 +210,13 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int spawned, int num_contexts, void **netmod_contexts)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno, i, fi_version;
-    int thr_err = 0, str_errno, maxlen;
-    char *table = NULL, *provname = NULL;
+    int thr_err = 0;
+    void *table = NULL, *provname = NULL;
     struct fi_info *hints, *prov, *prov_use;
     struct fi_cq_attr cq_attr;
     struct fi_cntr_attr cntr_attr;
     fi_addr_t *mapped_table;
     struct fi_av_attr av_attr;
-    char valS[MPIDI_KVSAPPSTRLEN], *val;
-    char keyS[MPIDI_KVSAPPSTRLEN];
     size_t optlen;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_INIT);
@@ -654,9 +652,6 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
     if (do_av_insert) {
         int local_rank, num_local = 0, local_rank_0 = -1;
-        MPIDU_shm_seg_t memory;
-        MPIDU_shm_barrier_t *barrier;
-        int start, end;
 
         /* ---------------------------------- */
         /* Get our endpoint name and publish  */
@@ -666,20 +661,6 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDI_OFI_CALL(fi_getname((fid_t) MPIDI_Global.ep, MPIDI_Global.addrname,
                                   &MPIDI_Global.addrnamelen), getname);
         MPIR_Assert(MPIDI_Global.addrnamelen <= FI_NAME_MAX);
-
-        val = valS;
-        str_errno = MPL_STR_SUCCESS;
-        maxlen = MPIDI_KVSAPPSTRLEN;
-        memset(val, 0, maxlen);
-        MPIDI_OFI_STR_CALL(MPL_str_add_binary_arg
-                           (&val, &maxlen, "OFI", (char *) &MPIDI_Global.addrname,
-                            MPIDI_Global.addrnamelen), buscard_len);
-        MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get_my_name(MPIDI_Global.kvsname, MPIDI_KVSAPPSTRLEN), pmi);
-
-        val = valS;
-        sprintf(keyS, "OFI-%d", rank);
-        MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Put(MPIDI_Global.kvsname, keyS, val), pmi);
-        MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Commit(MPIDI_Global.kvsname), pmi);
 
         for (i = 0; i < size; i++) {
             if (MPIDI_CH4_rank_is_local(i, MPIR_Process.comm_world)) {
@@ -693,28 +674,10 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
             }
         }
 
-        MPIDU_shm_seg_alloc(size * MPIDI_Global.addrnamelen, (void **)&table);
-        MPIDU_shm_seg_commit(&memory, &barrier, num_local, local_rank, local_rank_0, rank);
-
-        /* -------------------------------- */
-        /* Create our address table from    */
-        /* encoded KVS values               */
-        /* -------------------------------- */
-        start = local_rank * (size / num_local);
-        end = start + (size / num_local);
-        if (local_rank == num_local - 1)
-            end += size % num_local;
-        for (i = start; i < end; i++) {
-            sprintf(keyS, "OFI-%d", i);
-            MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get
-                                   (MPIDI_Global.kvsname, keyS, valS, MPIDI_KVSAPPSTRLEN), pmi);
-            MPIDI_OFI_STR_CALL(MPL_str_get_binary_arg
-                               (valS, "OFI", (char *) &table[i * MPIDI_Global.addrnamelen],
-                                MPIDI_Global.addrnamelen, &maxlen), buscard_len);
-        }
-        mpi_errno = MPIDU_shm_barrier(barrier, num_local);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
+        mpi_errno = MPIU_addr_table_create(size, rank, num_local, local_rank, local_rank_0,
+                                           &MPIDI_Global.addrname, MPIDI_Global.addrnamelen,
+                                           &table);
+        if (mpi_errno) MPIR_ERR_POP(mpi_errno);
 
         /* -------------------------------- */
         /* Table is constructed.  Map it    */
@@ -727,10 +690,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         }
         MPL_free(mapped_table);
 
-        mpi_errno = MPIDU_shm_barrier(barrier, num_local);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-        MPIDU_shm_seg_destroy(&memory, num_local);
+        MPIU_addr_table_destroy(table, num_local);
     }
 
     /* -------------------------------- */
