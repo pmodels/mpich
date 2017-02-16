@@ -58,7 +58,7 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
 
         /* Forced environment overwrites existing environment */
         if (env_list) {
-            status = HYDU_putenv_list(env_list, HYD_ENV_OVERWRITE_TRUE);
+            status = HYDU_putenv_list(env_list);
             HYDU_ERR_POP(status, "unable to putenv\n");
         }
 

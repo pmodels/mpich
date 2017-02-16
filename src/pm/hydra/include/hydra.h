@@ -283,11 +283,6 @@ struct HYD_env {
     struct HYD_env *next;
 };
 
-typedef enum HYD_env_overwrite {
-    HYD_ENV_OVERWRITE_TRUE,
-    HYD_ENV_OVERWRITE_FALSE
-} HYD_env_overwrite_t;
-
 typedef enum {
     HYD_ENV_PROP_UNSET,
     HYD_ENV_PROP_ALL,
@@ -545,8 +540,8 @@ struct HYD_env *HYDU_env_lookup(char *env_name, struct HYD_env *env_list);
 HYD_status HYDU_append_env_to_list(const char *env_name, const char *env_value,
                                    struct HYD_env **env_list);
 HYD_status HYDU_append_env_str_to_list(const char *str, struct HYD_env **env_list);
-HYD_status HYDU_putenv(struct HYD_env *env, HYD_env_overwrite_t overwrite);
-HYD_status HYDU_putenv_list(struct HYD_env *env_list, HYD_env_overwrite_t overwrite);
+HYD_status HYDU_putenv(struct HYD_env *env);
+HYD_status HYDU_putenv_list(struct HYD_env *env_list);
 HYD_status HYDU_comma_list_to_env_list(char *str, struct HYD_env **env_list);
 
 /* launch */
