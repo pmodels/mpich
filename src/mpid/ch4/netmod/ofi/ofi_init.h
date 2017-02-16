@@ -13,12 +13,7 @@
 
 #include "ofi_impl.h"
 #include "mpir_cvars.h"
-#ifndef USE_PMIX_API
-#include "pmi.h"
-#else
-#include "pmix.h"
-#endif
-#include "mpidu_shm.h"
+#include "mpidu_bc.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -437,15 +432,13 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          MPIR_Comm * comm_self, int spawned, int *n_vnis_provided)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno, i, fi_version;
-    int thr_err = 0, str_errno, maxlen;
-    char *table = NULL, *provname = NULL;
+    int thr_err = 0;
+    void *table = NULL, *provname = NULL;
     struct fi_info *hints, *prov, *prov_use, *prov_first;
     struct fi_cq_attr cq_attr;
     struct fi_cntr_attr cntr_attr;
     fi_addr_t *mapped_table;
     struct fi_av_attr av_attr;
-    char valS[MPIDI_KVSAPPSTRLEN], *val;
-    char keyS[MPIDI_KVSAPPSTRLEN];
     size_t optlen;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_INIT);
@@ -881,11 +874,6 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     *n_vnis_provided = MPIDI_Global.max_ch4_vnis;
 
     if (do_av_insert) {
-        int local_rank = -1, num_local = 0, local_rank_0 = -1;
-        MPIDU_shm_seg_t memory;
-        MPIDU_shm_barrier_t *barrier;
-        int start, end;
-
         /* ---------------------------------- */
         /* Get our endpoint name and publish  */
         /* the socket to the KVS              */
@@ -895,120 +883,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                   &MPIDI_Global.addrnamelen), getname);
         MPIR_Assert(MPIDI_Global.addrnamelen <= FI_NAME_MAX);
 
-        val = valS;
-        str_errno = MPL_STR_SUCCESS;
-        maxlen = MPIDI_KVSAPPSTRLEN;
-        memset(val, 0, maxlen);
-        MPIDI_OFI_STR_CALL(MPL_str_add_binary_arg
-                           (&val, &maxlen, "OFI", (char *) &MPIDI_Global.addrname,
-                            MPIDI_Global.addrnamelen), buscard_len);
-#ifndef USE_PMIX_API
-        MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get_my_name(MPIDI_Global.kvsname, MPIDI_KVSAPPSTRLEN), pmi);
-#endif
-
-        val = valS;
-        MPL_snprintf(keyS, sizeof(keyS), "OFI-%d", rank);
-#ifdef USE_PMI2_API
-        MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Put(keyS, val), pmi);
-        MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Fence(), pmi);
-#elif defined(USE_PMIX_API)
-        {
-            pmix_value_t value;
-            pmix_info_t *info;
-            int flag = 1;
-
-            value.type = PMIX_STRING;
-            value.data.string = val;
-            pmi_errno = PMIx_Put(PMIX_LOCAL, keyS, &value);
-            if (pmi_errno != PMIX_SUCCESS) {
-                MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_put", "**pmix_put %d",
-                                     pmi_errno);
-            }
-            pmi_errno = PMIx_Put(PMIX_REMOTE, keyS, &value);
-            if (pmi_errno != PMIX_SUCCESS) {
-                MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_put", "**pmix_put %d",
-                                     pmi_errno);
-            }
-            pmi_errno = PMIx_Commit();
-            if (pmi_errno != PMIX_SUCCESS) {
-                MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_commit", "**pmix_commit %d",
-                                     pmi_errno);
-            }
-
-            PMIX_INFO_CREATE(info, 1);
-            PMIX_INFO_LOAD(info, PMIX_COLLECT_DATA, &flag, PMIX_BOOL);
-            pmi_errno = PMIx_Fence(&MPIR_Process.pmix_wcproc, 1, info, 1);
-            if (pmi_errno != PMIX_SUCCESS) {
-                MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_fence", "**pmix_fence %d",
-                                     pmi_errno);
-            }
-            PMIX_INFO_FREE(info, 1);
-        }
-#else
-        MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Put(MPIDI_Global.kvsname, keyS, val), pmi);
-        MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Commit(MPIDI_Global.kvsname), pmi);
-#endif
-
-        MPIDI_av_entry_t *av = NULL;
-        for (i = 0; i < size; i++) {
-            av = MPIDIU_comm_rank_to_av(MPIR_Process.comm_world, i);
-            if (MPIDI_av_is_local(av)) {
-                if (i == rank)
-                    local_rank = num_local;
-
-                if (local_rank_0 == -1)
-                    local_rank_0 = i;
-
-                num_local++;
-            }
-        }
-        if (0 == num_local)
-            MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch4|ch4_init");
-
-        MPIDU_shm_seg_alloc(size * MPIDI_Global.addrnamelen, (void **) &table, MPL_MEM_ADDRESS);
-        MPIDU_shm_seg_commit(&memory, &barrier, num_local, local_rank, local_rank_0, rank,
-                             MPL_MEM_ADDRESS);
-
-        /* -------------------------------- */
-        /* Create our address table from    */
-        /* encoded KVS values               */
-        /* -------------------------------- */
-        start = local_rank * (size / num_local);
-        end = start + (size / num_local);
-        if (local_rank == num_local - 1)
-            end += size % num_local;
-        for (i = start; i < end; i++) {
-            MPL_snprintf(keyS, sizeof(keyS), "OFI-%d", i);
-#ifdef USE_PMI2_API
-            int vallen;
-            MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Get
-                                   (NULL, -1, keyS, valS, MPIDI_KVSAPPSTRLEN, &vallen), pmi);
-            MPIR_Assert(vallen > 0);
-#elif defined(USE_PMIX_API)
-            {
-                pmix_proc_t proc;
-                pmix_value_t *pvalue = NULL;
-
-                PMIX_PROC_CONSTRUCT(&proc);
-                MPL_strncpy(proc.nspace, MPIR_Process.pmix_proc.nspace, PMIX_MAX_NSLEN);
-                proc.rank = i;
-                pmi_errno = PMIx_Get(&proc, keyS, NULL, 0, &pvalue);
-                if (pmi_errno != PMIX_SUCCESS) {
-                    MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_get", "**pmix_get %d",
-                                         pmi_errno);
-                }
-                MPL_strncpy(valS, pvalue->data.string, MPIDI_KVSAPPSTRLEN);
-                PMIX_VALUE_RELEASE(pvalue);
-            }
-#else
-            MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get
-                                   (MPIDI_Global.kvsname, keyS, valS, MPIDI_KVSAPPSTRLEN), pmi);
-#endif
-            MPIDI_OFI_STR_CALL(MPL_str_get_binary_arg
-                               (valS, "OFI", (char *) &table[i * MPIDI_Global.addrnamelen],
-                                MPIDI_Global.addrnamelen, &maxlen), buscard_len);
-        }
-        mpi_errno = MPIDU_shm_barrier(barrier, num_local);
+        mpi_errno = MPIDU_bc_table_create(rank, size, MPIDI_CH4_Global.node_map[0],
+                                          &MPIDI_Global.addrname, MPIDI_Global.addrnamelen, TRUE,
+                                          &table, NULL);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
 
@@ -1029,20 +906,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 #endif
         }
         MPL_free(mapped_table);
-
-        mpi_errno = MPIDU_shm_barrier(barrier, num_local);
-        if (mpi_errno)
-            MPIR_ERR_POP(mpi_errno);
-        MPIDU_shm_seg_destroy(&memory, num_local);
-#ifndef USE_PMIX_API
-        PMI_Barrier();
-#else
-        pmi_errno = PMIx_Fence(&MPIR_Process.pmix_wcproc, 1, NULL, 0);
-        if (pmi_errno != PMIX_SUCCESS) {
-            MPIR_ERR_SETANDJUMP1(pmi_errno, MPI_ERR_OTHER, "**pmix_fence", "**pmix_fence %d",
-                                 pmi_errno);
-        }
-#endif
+        MPIDU_bc_table_destroy(table);
     }
 
     /* -------------------------------- */
