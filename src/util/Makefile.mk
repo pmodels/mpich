@@ -12,3 +12,4 @@ include $(top_srcdir)/src/util/procmap/Makefile.mk
 include $(top_srcdir)/src/util/nodemap/Makefile.mk
 include $(top_srcdir)/src/util/wrappers/Makefile.mk
 include $(top_srcdir)/src/util/assert/Makefile.mk
+include $(top_srcdir)/src/util/addr/Makefile.mk
