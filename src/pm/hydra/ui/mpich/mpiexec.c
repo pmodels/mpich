@@ -249,16 +249,7 @@ int main(int argc, char **argv)
 
     /* Check if the user wants us to use a port within a certain
      * range. */
-    if (MPL_env2str("MPIR_CVAR_CH3_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIR_PARAM_CH3_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPICH_CH3_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIR_CVAR_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIR_CVAR_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIR_PARAM_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIR_PARAM_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPICH_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPICH_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPIEXEC_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
+    if (MPL_env2str("MPIEXEC_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
         MPL_env2str("MPIEXEC_PORT_RANGE", (const char **) &HYD_server_info.port_range))
         HYD_server_info.port_range = MPL_strdup(HYD_server_info.port_range);
 
