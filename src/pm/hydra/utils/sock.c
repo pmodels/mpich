@@ -475,18 +475,7 @@ HYDU_sock_create_and_listen_portstr(char *hostname, char *port_range,
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     /* Create a port string for MPI processes to use to connect to */
-    if (hostname) {
-        ip = MPL_strdup(hostname);
-    }
-    else {
-        char localhost[MAX_HOSTNAME_LEN] = { 0 };
-
-        if (gethostname(localhost, MAX_HOSTNAME_LEN) < 0)
-            HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local hostname\n");
-
-        ip = MPL_strdup(localhost);
-    }
-
+    ip = MPL_strdup(hostname);
     sport = HYDU_int_to_str(port);
     HYDU_MALLOC_OR_JUMP(*port_str, char *, strlen(ip) + 1 + strlen(sport) + 1, status);
     MPL_snprintf(*port_str, strlen(ip) + 1 + strlen(sport) + 1, "%s:%s", ip, sport);
