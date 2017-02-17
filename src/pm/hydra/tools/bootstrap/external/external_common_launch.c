@@ -97,8 +97,8 @@ static HYD_status sge_get_path(char **path)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_common_launch_procs(const char *rmk, struct HYD_node *node_list, char **args,
-                                         int *control_fd)
+HYD_status HYDT_bscd_common_launch_procs(const char *rmk, struct HYD_node **nodes, int num_nodes,
+                                         char **args, int *control_fd)
 {
     int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh, len, rc, autofork;
     int *pid, *fd_list, *dummy;
@@ -182,20 +182,15 @@ HYD_status HYDT_bscd_common_launch_procs(const char *rmk, struct HYD_node *node_
      * actual launcher */
     MPL_snprintf(quoted_exec_string, HYD_TMP_STRLEN, "\"%s\"", targs[exec_idx]);
 
-    /* pid_list might already have some PIDs */
-    num_hosts = 0;
-    for (node = node_list; node; node = node->next)
-        num_hosts++;
-
     /* Increase pid list to accommodate these new pids */
-    HYDU_MALLOC_OR_JUMP(pid, int *, (HYD_bscu_pid_count + num_hosts) * sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(pid, int *, (HYD_bscu_pid_count + num_nodes) * sizeof(int), status);
     for (i = 0; i < HYD_bscu_pid_count; i++)
         pid[i] = HYD_bscu_pid_list[i];
     MPL_free(HYD_bscu_pid_list);
     HYD_bscu_pid_list = pid;
 
     /* Increase fd list to accommodate these new fds */
-    HYDU_MALLOC_OR_JUMP(fd_list, int *, (HYD_bscu_fd_count + (2 * num_hosts) + 1) * sizeof(int),
+    HYDU_MALLOC_OR_JUMP(fd_list, int *, (HYD_bscu_fd_count + (2 * num_nodes) + 1) * sizeof(int),
                         status);
     for (i = 0; i < HYD_bscu_fd_count; i++)
         fd_list[i] = HYD_bscu_fd_list[i];
@@ -208,18 +203,18 @@ HYD_status HYDT_bscd_common_launch_procs(const char *rmk, struct HYD_node *node_
         autofork = 1;
 
     targs[idx] = NULL;
-    for (node = node_list, i = 0; node; node = node->next, i++) {
+    for (i = 0; i < num_nodes; i++) {
 
         if (targs[host_idx])
             MPL_free(targs[host_idx]);
-        if (node->username == NULL) {
-            targs[host_idx] = MPL_strdup(node->hostname);
+        if (nodes[i]->username == NULL) {
+            targs[host_idx] = MPL_strdup(nodes[i]->hostname);
         }
         else {
-            len = strlen(node->username) + strlen("@") + strlen(node->hostname) + 1;
+            len = strlen(nodes[i]->username) + strlen("@") + strlen(nodes[i]->hostname) + 1;
 
             HYDU_MALLOC_OR_JUMP(targs[host_idx], char *, len, status);
-            MPL_snprintf(targs[host_idx], len, "%s@%s", node->username, node->hostname);
+            MPL_snprintf(targs[host_idx], len, "%s@%s", nodes[i]->username, nodes[i]->hostname);
         }
 
         /* append proxy ID */
@@ -228,7 +223,7 @@ HYD_status HYDT_bscd_common_launch_procs(const char *rmk, struct HYD_node *node_
         targs[idx] = HYDU_int_to_str(i);
         targs[idx + 1] = NULL;
 
-        lh = MPL_host_is_local(node->hostname);
+        lh = MPL_host_is_local(nodes[i]->hostname);
 
         /* If launcher is 'fork', or this is the localhost, use fork
          * to launch the process */
@@ -288,7 +283,7 @@ HYD_status HYDT_bscd_common_launch_procs(const char *rmk, struct HYD_node *node_
          * slow down the cases where ssh is being used, and not the
          * cases where we fall back to fork. */
         if (!strcmp(HYDT_bsci_info.launcher, "ssh") && !offset) {
-            status = HYDTI_bscd_ssh_store_launch_time(node->hostname);
+            status = HYDTI_bscd_ssh_store_launch_time(nodes[i]->hostname);
             HYDU_ERR_POP(status, "error storing launch time\n");
         }
 

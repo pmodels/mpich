@@ -17,7 +17,7 @@
 
 int HYDTI_bscd_in_env_list(const char *env_name, const char *env_list[]);
 
-HYD_status HYDT_bscd_common_launch_procs(const char *rmk, struct HYD_node *node_list, char **args,
-                                         int *control_fd);
+HYD_status HYDT_bscd_common_launch_procs(const char *rmk, struct HYD_node **nodes, int num_nodes,
+                                         char **args, int *control_fd);
 
 #endif /* COMMON_H_INCLUDED */

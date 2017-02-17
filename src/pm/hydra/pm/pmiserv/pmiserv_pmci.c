@@ -60,8 +60,9 @@ HYD_status HYD_pmci_launch_proxies(void)
 {
     struct HYD_proxy *proxy;
     struct HYD_string_stash proxy_stash;
+    struct HYD_node **launch_nodes = NULL;
     char *control_port = NULL;
-    int node_count, i, *control_fd;
+    int i, *control_fd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -86,16 +87,19 @@ HYD_status HYD_pmci_launch_proxies(void)
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(&HYD_server_info.pg_list);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    node_count = 0;
-    for (proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next)
-        node_count++;
+    HYDU_MALLOC_OR_JUMP(launch_nodes, struct HYD_node **,
+                        HYD_server_info.pg_list.proxy_count * sizeof(struct HYD_node *), status);
+    for (i = 0, proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next, i++)
+        launch_nodes[i] = proxy->node;
 
-    HYDU_MALLOC_OR_JUMP(control_fd, int *, node_count * sizeof(int), status);
-    for (i = 0; i < node_count; i++)
+    HYDU_MALLOC_OR_JUMP(control_fd, int *, HYD_server_info.pg_list.proxy_count * sizeof(int),
+                        status);
+    for (i = 0; i < HYD_server_info.pg_list.proxy_count; i++)
         control_fd[i] = HYD_FD_UNSET;
 
-    status = HYDT_bsci_launch_procs(HYD_server_info.user_global.rmk, HYD_server_info.node_list,
-                                    proxy_stash.strlist, control_fd);
+    status = HYDT_bsci_launch_procs(HYD_server_info.user_global.rmk, launch_nodes,
+                                    HYD_server_info.pg_list.proxy_count, proxy_stash.strlist,
+                                    control_fd);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
     for (i = 0, proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next, i++)
@@ -110,6 +114,7 @@ HYD_status HYD_pmci_launch_proxies(void)
     MPL_free(control_fd);
 
   fn_exit:
+    MPL_free(launch_nodes);
     if (control_port)
         MPL_free(control_port);
     HYD_STRING_STASH_FREE(proxy_stash);
