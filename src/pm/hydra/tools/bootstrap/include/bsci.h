@@ -37,8 +37,8 @@ struct HYDT_bsci_info {
 struct HYDT_bsci_fns {
     /* Launcher functions */
     /** \brief Launch processes */
-    HYD_status(*launch_procs) (const char *rmk, struct HYD_node * node_list, char **args,
-                               int *control_fd);
+    HYD_status(*launch_procs) (const char *rmk, struct HYD_node **nodes, int num_nodes,
+                               char **args, int *control_fd);
 
     /** \brief Finalize the bootstrap control device */
     HYD_status(*launcher_finalize) (void);
@@ -106,8 +106,8 @@ HYD_status HYDT_bsci_init(const char *launcher, const char *launcher_exec, int e
  * but allow proxies to query their ID information on each node using
  * the HYDT_bsci_query_proxy_id function.
  */
-HYD_status HYDT_bsci_launch_procs(const char *rmk, struct HYD_node *node_list, char **args,
-                                  int *control_fd);
+HYD_status HYDT_bsci_launch_procs(const char *rmk, struct HYD_node **nodes, int num_nodes,
+                                  char **args, int *control_fd);
 
 
 /**

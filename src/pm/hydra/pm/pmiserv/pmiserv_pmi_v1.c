@@ -308,6 +308,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     struct HYD_exec *exec_list = NULL, *exec;
     struct HYD_env *env;
     struct HYD_node *node;
+    struct HYD_node **launch_nodes = NULL;
 
     char key[PMI_MAXKEYLEN], *val;
     int nprocs, preput_num, info_num, ret;
@@ -586,9 +587,12 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    /* FIXME: if the user did not provide us with a node list, we need
-     * to create a new node list to pass down to the launcher */
-    status = HYDT_bsci_launch_procs("user", pg->user_node_list, proxy_stash.strlist, NULL);
+    HYDU_MALLOC_OR_JUMP(launch_nodes, struct HYD_node **, pg->proxy_count * sizeof(struct HYD_node *),
+                        status);
+    for (proxy = pg->proxy_list, i = 0; i < pg->proxy_count; i++, proxy = proxy->next)
+        launch_nodes[i] = proxy->node;
+
+    status = HYDT_bsci_launch_procs("user", launch_nodes, pg->proxy_count, proxy_stash.strlist, NULL);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
     {
@@ -610,6 +614,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         bcast_keyvals(fd, pid);
 
   fn_exit:
+    MPL_free(launch_nodes);
     HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYD_STRING_STASH_FREE(proxy_stash);
     if (segment_list)

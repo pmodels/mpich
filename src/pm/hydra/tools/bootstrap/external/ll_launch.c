@@ -52,10 +52,10 @@ static HYD_status query_node_count(int *count)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_ll_launch_procs(const char *rmk, struct HYD_node *node_list, char **args,
-                                     int *control_fd)
+HYD_status HYDT_bscd_ll_launch_procs(const char *rmk, struct HYD_node **nodes, int num_nodes,
+                                     char **args, int *control_fd)
 {
-    int idx, i, total_procs, node_count;
+    int idx, i, total_procs;
     int *pid, *fd_list, exec_idx;
     char *targs[HYD_NUM_TMP_STRINGS], *node_list_str = NULL;
     char *path = NULL, *extra_arg_list = NULL, *extra_arg, quoted_exec_string[HYD_TMP_STRLEN];
@@ -86,11 +86,7 @@ HYD_status HYDT_bscd_ll_launch_procs(const char *rmk, struct HYD_node *node_list
     status = query_node_count(&total_procs);
     HYDU_ERR_POP(status, "unable to query for the node count\n");
 
-    node_count = 0;
-    for (node = node_list; node; node = node->next)
-        node_count++;
-
-    if (total_procs != node_count)
+    if (total_procs != num_nodes)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "processes to be launched have to cover all nodes\n");
 
