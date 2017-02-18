@@ -18,7 +18,7 @@ struct fwd_hash {
     struct fwd_hash *next;
 };
 
-HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
+HYD_status HYDU_sock_listen(int *listen_fd, const char *port_range, uint16_t * port)
 {
     struct sockaddr_in sa;
     int one = 1;
@@ -35,7 +35,10 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
         /* If port range is set, we always pick from there */
         *port = 0;
 
-        port_str = strtok(port_range, ":");
+        /* strtok does not modify the first parameter, but uses
+         * "char*" instead of "const char*".  We do an unsafe typecast
+         * here to work around this issue with strtok. */
+        port_str = strtok((char *) port_range, ":");
         if (port_str == NULL)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "error parsing port range\n");
         low_port = atoi(port_str);

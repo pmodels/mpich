@@ -577,7 +577,7 @@ enum HYDU_sock_comm_flag {
     HYDU_SOCK_COMM_MSGWAIT = 1
 };
 
-HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port);
+HYD_status HYDU_sock_listen(int *listen_fd, const char *port_range, uint16_t * port);
 
 /* delay is in microseconds */
 HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd, int retries,
