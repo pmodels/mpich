@@ -84,7 +84,7 @@ static void init_lhost_list(void)
     append_lhost("127.0.1.1");
 }
 
-int MPL_host_is_local(char *host)
+int MPL_host_is_local(const char *host)
 {
     int i;
 
