@@ -35,7 +35,7 @@ static void signal_cb(int signum)
      * we will send it to the processes. The next time, we will treat
      * it as a SIGKILL (user convenience to force kill processes). */
     if (signum == SIGINT && ++sigint_count > 1)
-        cmd.type = HYD_CLEANUP;
+        exit(1);
     else if (signum == SIGINT) {
         /* First Ctrl-C */
         HYDU_dump(stdout, "Sending Ctrl-C to processes as requested\n");
