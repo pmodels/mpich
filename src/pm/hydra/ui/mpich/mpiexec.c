@@ -175,10 +175,16 @@ int main(int argc, char **argv)
     status = get_node_list();
     HYDU_ERR_POP(status, "unable to find an RMK and the node list\n");
 
-    /* we are ready to initialize the bootstrap server now */
+    /* if the user set -ppn, reset the cores available on each node
+     * based on what the user wants */
+    if (HYD_ui_mpich_info.ppn != -1)
+        for (node = HYD_server_info.node_list; node; node = node->next)
+            node->core_count = HYD_ui_mpich_info.ppn;
+
     status = find_launcher();
     HYDU_ERR_POP(status, "unable to find a valid launcher\n");
 
+    /* we are ready to initialize the bootstrap server now */
     status =
         HYDT_bsci_init(HYD_server_info.user_global.launcher,
                        HYD_server_info.user_global.launcher_exec,
@@ -189,23 +195,15 @@ int main(int argc, char **argv)
         for (node = HYD_server_info.node_list; node; node = node->next)
             HYDU_dump_noprefix(stdout, "host: %s\n", node->hostname);
 
-    /* Reset the host list to use only the number of processes per
-     * node as specified by the ppn option. */
-    if (HYD_ui_mpich_info.ppn != -1) {
-        for (node = HYD_server_info.node_list; node; node = node->next)
-            node->core_count = HYD_ui_mpich_info.ppn;
-    }
-
     /* If the number of processes is not given, we allocate all the
      * available nodes to each executable */
+    global_core_count = 0;
+    for (node = HYD_server_info.node_list; node; node = node->next)
+        global_core_count += node->core_count;
     HYD_server_info.pg_list.pg_process_count = 0;
     for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
-        if (exec->proc_count == -1) {
-            global_core_count = 0;
-            for (node = HYD_server_info.node_list, i = 0; node; node = node->next, i++)
-                global_core_count += node->core_count;
+        if (exec->proc_count == -1)
             exec->proc_count = global_core_count;
-        }
         HYD_server_info.pg_list.pg_process_count += exec->proc_count;
     }
 
