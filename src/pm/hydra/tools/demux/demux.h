@@ -81,5 +81,6 @@ HYD_status HYDT_dmx_finalize(void);
 int HYDT_dmx_query_fd_registration(int fd);
 
 HYD_status HYDT_dmx_stdin_valid(int *out);
+HYD_status HYDT_dmx_splice(int in, int out);
 
 #endif /* DEMUX_H_INCLUDED */
