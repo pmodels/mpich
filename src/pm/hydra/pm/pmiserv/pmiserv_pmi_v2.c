@@ -12,14 +12,14 @@
 #include "pmiserv_utils.h"
 #include "pmi_v2_common.h"
 
-static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[]);
-static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[]);
-static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[]);
-static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[]);
+static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[], int rank);
+static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[], int rank);
+static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[], int rank);
+static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[], int rank);
 
 static struct HYD_pmcd_pmi_v2_reqs *pending_reqs = NULL;
 
-static HYD_status cmd_response(int fd, int pid, char *cmd)
+static HYD_status cmd_response(int fd, int pid, char *cmd, int rank)
 {
     char cmdlen[7];
     struct HYD_pmcd_hdr hdr;
@@ -33,6 +33,7 @@ static HYD_status cmd_response(int fd, int pid, char *cmd)
     hdr.pid = pid;
     hdr.pmi_version = 2;
     hdr.buflen = 6 + strlen(cmd);
+    hdr.rank = rank;
     status = HYDU_sock_write(fd, &hdr, sizeof(hdr), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send PMI_RESPONSE header to proxy\n");
     HYDU_ASSERT(!closed, status);
@@ -88,7 +89,7 @@ static HYD_status poke_progress(char *key)
             }
         }
         else {
-            status = fn_kvs_get(req->fd, req->pid, req->pgid, req->args);
+            status = fn_kvs_get(req->fd, req->pid, req->pgid, req->args, req->rank);
             HYDU_ERR_POP(status, "kvs_get returned error\n");
 
             /* Free the dequeued request */
@@ -109,7 +110,7 @@ static HYD_status poke_progress(char *key)
     goto fn_exit;
 }
 
-static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[], int rank)
 {
     struct HYD_proxy *proxy;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
@@ -167,7 +168,7 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
 
     HYD_STRING_SPIT(stash, cmd, status);
 
-    status = cmd_response(fd, pid, cmd);
+    status = cmd_response(fd, pid, cmd, rank);
     HYDU_ERR_POP(status, "send command failed\n");
 
     MPL_free(cmd);
@@ -181,7 +182,7 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[], int rank)
 {
     struct HYD_string_stash stash;
     char *key, *val, *thrid, *cmd;
@@ -230,7 +231,7 @@ static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[])
 
     HYD_STRING_SPIT(stash, cmd, status);
 
-    status = cmd_response(fd, pid, cmd);
+    status = cmd_response(fd, pid, cmd, rank);
     HYDU_ERR_POP(status, "send command failed\n");
     MPL_free(cmd);
 
@@ -252,7 +253,7 @@ static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[], int rank)
 {
     int i, idx, found;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
@@ -304,7 +305,7 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
         for (i = 0; i < pg->pg_process_count; i++) {
             if (pg_scratch->ecount[i].epoch < pg_scratch->ecount[idx].epoch) {
                 /* We haven't reached a barrier yet; queue up request */
-                status = HYD_pmcd_pmi_v2_queue_req(fd, pid, pgid, args, key, &pending_reqs);
+                status = HYD_pmcd_pmi_v2_queue_req(fd, pid, pgid, rank, args, key, &pending_reqs);
                 HYDU_ERR_POP(status, "unable to queue request\n");
 
                 /* We are done */
@@ -332,7 +333,7 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
 
     HYD_STRING_SPIT(stash, cmd, status);
 
-    status = cmd_response(fd, pid, cmd);
+    status = cmd_response(fd, pid, cmd, rank);
     HYDU_ERR_POP(status, "send command failed\n");
     MPL_free(cmd);
 
@@ -345,7 +346,7 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[], int rank)
 {
     struct HYD_proxy *proxy;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
@@ -396,7 +397,7 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
 
     HYD_STRING_SPIT(stash, cmd, status);
 
-    status = cmd_response(fd, pid, cmd);
+    status = cmd_response(fd, pid, cmd, rank);
     HYDU_ERR_POP(status, "send command failed\n");
     MPL_free(cmd);
 
@@ -437,7 +438,7 @@ static void segment_tokens(struct HYD_pmcd_token *tokens, int token_count,
     *num_segments = j + 1;
 }
 
-static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[], int rank)
 {
     struct HYD_pg *pg;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
@@ -707,7 +708,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    status = HYDT_bsci_launch_procs(proxy_stash.strlist, pg->proxy_list, HYD_FALSE, NULL);
+    status = HYDT_bsci_launch_procs(proxy_stash.strlist, pg->proxy_list, pg->user_node_list, HYD_FALSE, NULL);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
     {
@@ -728,7 +729,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
         HYD_STRING_SPIT(stash, cmd, status);
 
-        status = cmd_response(fd, pid, cmd);
+        status = cmd_response(fd, pid, cmd, rank);
         HYDU_ERR_POP(status, "send command failed\n");
         MPL_free(cmd);
     }
@@ -745,7 +746,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[], int rank)
 {
     struct HYD_string_stash stash;
     char *cmd, *thrid, *val, *name = NULL, *port = NULL;
@@ -788,7 +789,7 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
 
     HYD_STRING_SPIT(stash, cmd, status);
 
-    status = cmd_response(fd, pid, cmd);
+    status = cmd_response(fd, pid, cmd, rank);
     HYDU_ERR_POP(status, "send command failed\n");
     MPL_free(cmd);
 
@@ -806,7 +807,7 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[], int rank)
 {
     struct HYD_string_stash stash;
     char *cmd, *thrid, *name;
@@ -844,7 +845,7 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
 
     HYD_STRING_SPIT(stash, cmd, status);
 
-    status = cmd_response(fd, pid, cmd);
+    status = cmd_response(fd, pid, cmd, rank);
     HYDU_ERR_POP(status, "send command failed\n");
     MPL_free(cmd);
 
@@ -858,7 +859,7 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
-static HYD_status fn_name_lookup(int fd, int pid, int pgid, char *args[])
+static HYD_status fn_name_lookup(int fd, int pid, int pgid, char *args[], int rank)
 {
     struct HYD_string_stash stash;
     char *cmd, *thrid, *name, *value;
@@ -897,7 +898,7 @@ static HYD_status fn_name_lookup(int fd, int pid, int pgid, char *args[])
 
     HYD_STRING_SPIT(stash, cmd, status);
 
-    status = cmd_response(fd, pid, cmd);
+    status = cmd_response(fd, pid, cmd, rank);
     HYDU_ERR_POP(status, "send command failed\n");
     MPL_free(cmd);
 

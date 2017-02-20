@@ -18,7 +18,7 @@ extern struct HYD_pmcd_pmip_pmi_handle *HYD_pmcd_pmip_pmi_v2;
 
 struct HYD_pmcd_pmip_pmi_handle {
     const char *cmd;
-     HYD_status(*handler) (int fd, char *args[]);
+     HYD_status(*handler) (int fd, char *args[], struct HYD_pmcd_hdr *hdr);
 };
 
 extern struct HYD_pmcd_pmip_pmi_handle *HYD_pmcd_pmip_pmi_handle;
