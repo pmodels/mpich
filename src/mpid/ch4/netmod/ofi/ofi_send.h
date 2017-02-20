@@ -178,20 +178,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(MPIDI_OFI_SENDPARAMS,
         c = 1;
         MPIDI_OFI_REQUEST(sreq, event_id) = MPIDI_OFI_EVENT_SEND_HUGE;
         MPIR_cc_incr(sreq->cc_ptr, &c);
-        ptr = MPIDI_OFI_map_lookup(MPIDI_OFI_COMM(comm).huge_send_counters, rank);
 
         MPID_THREAD_CS_ENTER(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);
 
-        if (ptr == MPIDI_OFI_MAP_NOT_FOUND) {
-            ptr = MPL_malloc(sizeof(MPIDI_OFI_huge_counter_t));
-            cntr = (MPIDI_OFI_huge_counter_t *) ptr;
-            cntr->outstanding = 0;
-            cntr->counter = 0;
-            MPIDI_OFI_map_set(MPIDI_OFI_COMM(comm).huge_send_counters, rank, ptr);
-        }
-
+        /* Create a new huge counter */
+        ptr = MPL_malloc(sizeof(MPIDI_OFI_huge_counter_t));
         cntr = (MPIDI_OFI_huge_counter_t *) ptr;
+        MPIDI_OFI_map_set(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle, cntr);
 
+        cntr->outstanding = 0;
+        cntr->counter = 0;
+
+        /* Set up a memory region for the lmt data transfer */
         ctrl.rma_key = MPIDI_OFI_index_allocator_alloc(MPIDI_OFI_COMM(comm).rma_id_allocator);
         MPIR_Assert(ctrl.rma_key < MPIDI_Global.max_huge_rmas);
         if (MPIDI_OFI_ENABLE_MR_SCALABLE)
@@ -211,6 +209,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(MPIDI_OFI_SENDPARAMS,
             ctrl.rma_key = fi_mr_key(cntr->mr);
         }
 
+        /* Send the maximum amount of data that we can here to get things
+         * started, then do the rest using the MR below. This can be confirmed
+         * in the MPIDI_OFI_get_huge code where we start the offset at
+         * MPIDI_Global.max_send */
         cntr->outstanding++;
         cntr->counter++;
         MPIR_Assert(cntr->outstanding != USHRT_MAX);
@@ -230,6 +232,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(MPIDI_OFI_SENDPARAMS,
             MPIR_ERR_POP(mpi_errno);
         ctrl.type = MPIDI_OFI_CTRL_HUGE;
         ctrl.seqno = cntr->counter - 1;
+        ctrl.tag = tag;
+
+        /* Send information about the memory region here to get the lmt going. */
         MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_do_control_send
                                (&ctrl, send_buf, data_sz, rank, comm, sreq, FALSE));
         MPID_THREAD_CS_EXIT(POBJ, MPIDI_OFI_THREAD_FI_MUTEX);

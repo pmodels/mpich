@@ -198,8 +198,7 @@ enum {
     MPIDI_OFI_CTRL_COMPLETE,  /**< End a START epoch     */
     MPIDI_OFI_CTRL_POST,      /**< Begin POST epoch      */
     MPIDI_OFI_CTRL_HUGE,      /**< Huge message          */
-    MPIDI_OFI_CTRL_HUGEACK,   /**< Huge message ack      */
-    MPIDI_OFI_CTRL_HUGE_CLEANUP
+    MPIDI_OFI_CTRL_HUGEACK    /**< Huge message ack      */
     /**< Huge message cleanup  */
 };
 
@@ -419,6 +418,7 @@ typedef struct {
     int comm_id;
     int endpoint_id;
     uint64_t rma_key;
+    int tag;
 } MPIDI_OFI_send_control_t;
 
 typedef struct {
@@ -515,7 +515,7 @@ typedef struct {
     MPIR_Request *parent;       /* Parent request           */
 } MPIDI_OFI_chunk_request;
 
-typedef struct {
+typedef struct MPIDI_OFI_huge_recv {
     char pad[MPIDI_REQUEST_HDR_SIZE];
     struct fi_context context;  /* fixed field, do not move */
     int event_id;               /* fixed field, do not move */
@@ -525,6 +525,8 @@ typedef struct {
     MPIR_Comm *comm_ptr;
     MPIR_Request *localreq;
     struct fi_cq_tagged_entry wc;
+    struct MPIDI_OFI_huge_recv *next; /* Points to the next entry in the unexpected list
+                                         * (when in the unexpected list) */
 } MPIDI_OFI_huge_recv_t;
 
 typedef struct MPIDI_OFI_huge_counter_t {
@@ -533,8 +535,25 @@ typedef struct MPIDI_OFI_huge_counter_t {
     struct fid_mr *mr;
 } MPIDI_OFI_huge_counter_t;
 
+/* The list of posted huge receives that haven't been matched yet. These need
+ * to get matched up when handling the control message that starts transfering
+ * data from the remote memory region and we need a way of matching up the
+ * control messages with the "real" requests. */
+typedef struct MPIDI_OFI_huge_recv_list {
+    int comm_id;
+    int rank;
+    int tag;
+    MPIR_Request *rreq;
+    struct MPIDI_OFI_huge_recv_list *next;
+} MPIDI_OFI_huge_recv_list_t;
+
 /* Externs */
 extern MPIDI_OFI_global_t MPIDI_Global;
+extern MPIDI_OFI_huge_recv_t *MPIDI_unexp_huge_recv_head;
+extern MPIDI_OFI_huge_recv_t *MPIDI_unexp_huge_recv_tail;
+extern MPIDI_OFI_huge_recv_list_t *MPIDI_posted_huge_recv_head;
+extern MPIDI_OFI_huge_recv_list_t *MPIDI_posted_huge_recv_tail;
+
 extern int MPIR_Datatype_init_names(void);
 extern MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS];
 
