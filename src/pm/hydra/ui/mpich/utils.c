@@ -619,6 +619,27 @@ static HYD_status config_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
+static void branch_count_help_fn(void)
+{
+    printf("\n");
+    printf("-branch-count: number of child proxies in tree\n");
+}
+
+static HYD_status branch_count_fn(char *arg, char ***argv)
+{
+    HYD_status status = HYD_SUCCESS;
+
+    status = HYDU_set_int(arg, &HYD_server_info.user_global.branch_count, atoi(**argv));
+    HYDU_ERR_POP(status, "error setting branch count\n");
+
+  fn_exit:
+    (*argv)++;
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static void env_help_fn(void)
 {
     printf("\n");
@@ -1533,6 +1554,14 @@ static HYD_status set_default_values(void)
     if (hostname_propagation == -1)
         MPL_env2bool("HYDRA_HOSTNAME_PROPAGATION", &hostname_propagation);
 
+    if (HYD_server_info.user_global.branch_count == -1) {
+        if (MPL_env2str("HYDRA_BRANCH_COUNT", (const char **) &tmp) != 0)
+            HYD_server_info.user_global.branch_count = atoi(tmp);
+        tmp = NULL;
+    }
+    if (HYD_server_info.user_global.branch_count < 1)
+        HYD_server_info.user_global.branch_count = -1;
+
     /* If an interface is provided, set that */
     if (HYD_server_info.user_global.iface) {
         if (hostname_propagation == 1) {
@@ -1790,6 +1819,7 @@ static struct HYD_arg_match_table match_table[] = {
     {"errfile", errfile_pattern_fn, errfile_pattern_help_fn},
     {"wdir", wdir_fn, wdir_help_fn},
     {"configfile", config_fn, config_help_fn},
+    {"branch-count", branch_count_fn, branch_count_help_fn},
 
     /* Local environment options */
     {"env", env_fn, env_help_fn},

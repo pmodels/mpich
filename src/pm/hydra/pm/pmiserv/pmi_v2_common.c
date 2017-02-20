@@ -9,7 +9,7 @@
 #include "pmiserv_pmi.h"
 #include "pmi_v2_common.h"
 
-HYD_status HYD_pmcd_pmi_v2_queue_req(int fd, int pid, int pgid, char *args[], char *key,
+HYD_status HYD_pmcd_pmi_v2_queue_req(int fd, int pid, int pgid, int rank, char *args[], char *key,
                                      struct HYD_pmcd_pmi_v2_reqs **pending_reqs)
 {
     struct HYD_pmcd_pmi_v2_reqs *req, *tmp;
@@ -20,6 +20,7 @@ HYD_status HYD_pmcd_pmi_v2_queue_req(int fd, int pid, int pgid, char *args[], ch
     req->fd = fd;
     req->pid = pid;
     req->pgid = pgid;
+    req->rank = rank;
     req->prev = NULL;
     req->next = NULL;
 

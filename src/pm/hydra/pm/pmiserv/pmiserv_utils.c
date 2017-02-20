@@ -59,6 +59,11 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(struct HYD_string_stash *proxy_stash,
     if (HYD_server_info.user_global.debug)
         HYD_STRING_STASH(*proxy_stash, MPL_strdup("--debug"), status);
 
+    if (HYD_server_info.user_global.branch_count != -1) {
+        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--branch-count"), status);
+        HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(HYD_server_info.user_global.branch_count), status);
+    }
+
     if (HYDT_bsci_info.rmk) {
         HYD_STRING_STASH(*proxy_stash, MPL_strdup("--rmk"), status);
         HYD_STRING_STASH(*proxy_stash, MPL_strdup(HYDT_bsci_info.rmk), status);

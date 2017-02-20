@@ -44,6 +44,7 @@ struct HYD_server_info_s {
     /* Cleanup */
     int cmd_pipe[2];
 
+    char **nodes_lists;
 #if defined ENABLE_PROFILING
     int enable_profiling;
     int num_pmi_calls;

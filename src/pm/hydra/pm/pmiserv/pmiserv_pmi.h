@@ -62,7 +62,7 @@ HYD_status HYD_pmcd_pmi_lookup(char *name, char **value);
 
 struct HYD_pmcd_pmi_handle {
     const char *cmd;
-     HYD_status(*handler) (int fd, int pid, int pgid, char *args[]);
+     HYD_status(*handler) (int fd, int pid, int pgid, char *args[], int rank);
 };
 
 extern struct HYD_pmcd_pmi_handle *HYD_pmcd_pmi_handle;
