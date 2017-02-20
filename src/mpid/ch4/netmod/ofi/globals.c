@@ -11,6 +11,12 @@
 #include <mpidimpl.h>
 #include "ofi_impl.h"
 MPIDI_OFI_global_t MPIDI_Global = { 0 };
+
+MPIDI_OFI_huge_recv_t *MPIDI_unexp_huge_recv_head = NULL;
+MPIDI_OFI_huge_recv_t *MPIDI_unexp_huge_recv_tail = NULL;
+MPIDI_OFI_huge_recv_list_t *MPIDI_posted_huge_recv_head = NULL;
+MPIDI_OFI_huge_recv_list_t *MPIDI_posted_huge_recv_tail = NULL;
+
 MPIDI_OFI_capabilities_t MPIDI_OFI_caps_list[MPIDI_OFI_NUM_SETS] =
 
 /* Initialize a runtime version of all of the capability sets defined in

@@ -339,41 +339,60 @@ static inline void MPIDI_OFI_win_unlock_done_proc(const MPIDI_OFI_win_control_t 
 
 }
 
-static inline void MPIDI_OFI_get_huge_cleanup(MPIDI_OFI_send_control_t * info)
-{
-    MPIDI_OFI_huge_recv_t *recv;
-    MPIR_Comm *comm_ptr;
-    uint64_t mapid;
-    /* Look up the communicator */
-    mapid = ((uint64_t) info->endpoint_id << 32) | info->comm_id;
-    comm_ptr = MPIDI_CH4U_context_id_to_comm(mapid);
-    /* Look up the per destination receive queue object */
-    recv =
-        (MPIDI_OFI_huge_recv_t *) MPIDI_OFI_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
-                                                       info->origin_rank);
-    MPIDI_OFI_map_erase(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, info->origin_rank);
-    MPL_free(recv);
-}
-
+/* Translate the control message to get a huge message into a request to
+ * actually perform the data transfer. */
 static inline void MPIDI_OFI_get_huge(MPIDI_OFI_send_control_t * info)
 {
-    MPIDI_OFI_huge_recv_t *recv;
+    MPIDI_OFI_huge_recv_t *recv = NULL;
     MPIR_Comm *comm_ptr;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_GET_HUGE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_GET_HUGE);
+
     /* Look up the communicator */
     comm_ptr = MPIDI_CH4U_context_id_to_comm(info->comm_id);
-    /* Look up the per destination receive queue object */
-    recv =
-        (MPIDI_OFI_huge_recv_t *) MPIDI_OFI_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
-                                                       info->origin_rank);
-    if (recv == MPIDI_OFI_MAP_NOT_FOUND) {
-        recv = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv), 1);
-        MPIDI_OFI_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, info->origin_rank, recv);
+
+    /* If there has been a posted receive, search through the list of unmatched
+     * receives to find the one that goes with the incoming message. */
+    {
+        MPIDI_OFI_huge_recv_list_t *list_ptr;
+
+        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT,VERBOSE,(MPL_DBG_FDEST, "SEARCHING POSTED LIST: (%d, %d, %d)", info->comm_id, info->origin_rank, info->tag));
+
+        MPL_LL_FOREACH(MPIDI_posted_huge_recv_head, list_ptr) {
+            if (list_ptr->comm_id == info->comm_id &&
+                    list_ptr->rank == info->origin_rank &&
+                    list_ptr->tag == info->tag) {
+                MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT,VERBOSE,(MPL_DBG_FDEST, "MATCHED POSTED LIST: (%d, %d, %d, %d)", info->comm_id, info->origin_rank, info->tag, list_ptr->rreq->handle));
+
+                MPL_LL_DELETE(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
+
+                recv = (MPIDI_OFI_huge_recv_t *) MPIDI_OFI_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
+                            list_ptr->rreq->handle);
+
+                MPL_free(list_ptr);
+                break;
+            }
+        }
     }
+
+    if (recv == NULL) { /* Put the struct describing the transfer on an
+                           unexpected list to be retrieved later */
+        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT,VERBOSE,(MPL_DBG_FDEST, "CREATING UNEXPECTED HUGE RECV: (%d, %d, %d)", info->comm_id, info->origin_rank, info->tag));
+
+        /* If this is unexpected, create a new tracker and put it in the unexpected list. */
+        recv = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv), 1);
+
+        MPL_LL_APPEND(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, recv);
+    }
+
     recv->event_id = MPIDI_OFI_EVENT_GET_HUGE;
     recv->cur_offset = MPIDI_Global.max_send;
     recv->remote_info = *info;
     recv->comm_ptr = comm_ptr;
+    recv->next = NULL;
     MPIDI_OFI_get_huge_event(NULL, (MPIR_Request *) recv);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_GET_HUGE);
 }
 
 int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
@@ -400,13 +419,6 @@ int MPIDI_OFI_control_handler(int handler_id, void *am_hdr,
     case MPIDI_OFI_CTRL_HUGE:{
             MPIDI_OFI_send_control_t *ctrlsend = (MPIDI_OFI_send_control_t *) buf;
             MPIDI_OFI_get_huge(ctrlsend);
-            goto fn_exit;
-        }
-        break;
-
-    case MPIDI_OFI_CTRL_HUGE_CLEANUP:{
-            MPIDI_OFI_send_control_t *ctrlsend = (MPIDI_OFI_send_control_t *) buf;
-            MPIDI_OFI_get_huge_cleanup(ctrlsend);
             goto fn_exit;
         }
         break;
