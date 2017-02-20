@@ -15,6 +15,7 @@
 #include "ofi_am_impl.h"
 #include "ofi_am_events.h"
 #include "ofi_control.h"
+#include "mpl_utlist.h"
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry *wc,
                                                       MPIR_Request * req);
@@ -162,6 +163,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
     goto fn_exit;
 }
 
+/* If we posted a huge receive, this event gets called to translate the
+ * completion queue entry into a get huge event */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_OFI_recv_huge_event
 #undef FCNAME
@@ -169,22 +172,55 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_event(struct fi_cq_tagged_entry *wc,
 MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry *wc,
                                                        MPIR_Request * rreq)
 {
-    MPIDI_OFI_huge_recv_t *recv;
+    MPIDI_OFI_huge_recv_t *recv = NULL;
     MPIR_Comm *comm_ptr;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_RECV_HUGE_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_RECV_HUGE_EVENT);
 
-    /* Look up the receive sequence number and chunk queue */
     comm_ptr = MPIDI_OFI_REQUEST(rreq, util_comm);
-    recv =
-        (MPIDI_OFI_huge_recv_t *) MPIDI_OFI_map_lookup(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
-                                                       MPIDI_OFI_cqe_get_source(wc));
-    if (recv == MPIDI_OFI_MAP_NOT_FOUND) {
-        recv = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv), 1);
-        MPIDI_OFI_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters,
-                          MPIDI_OFI_cqe_get_source(wc), recv);
+
+    /* Check to see if the tracker is already in the unexpected list.
+     * Otherwise, allocate one. */
+    {
+        MPIDI_OFI_huge_recv_t *list_ptr;
+
+        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT,VERBOSE,(MPL_DBG_FDEST, "SEARCHING HUGE UNEXPECTED LIST: (%d, %d, %llu)", comm_ptr->context_id, MPIDI_OFI_cqe_get_source(wc), (MPIDI_OFI_TAG_MASK & wc->tag)));
+
+        MPL_LL_FOREACH(MPIDI_unexp_huge_recv_head, list_ptr) {
+            if (list_ptr->remote_info.comm_id == comm_ptr->context_id &&
+                    list_ptr->remote_info.origin_rank == MPIDI_OFI_cqe_get_source(wc) &&
+                    list_ptr->remote_info.tag == (MPIDI_OFI_TAG_MASK & wc->tag)) {
+                MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT,VERBOSE,(MPL_DBG_FDEST, "MATCHED HUGE UNEXPECTED LIST: (%d, %d, %llu, %d)", comm_ptr->context_id, MPIDI_OFI_cqe_get_source(wc), (MPIDI_OFI_TAG_MASK & wc->tag), rreq->handle));
+
+                MPL_LL_DELETE(MPIDI_unexp_huge_recv_head, MPIDI_unexp_huge_recv_tail, list_ptr);
+
+                recv = list_ptr;
+                MPIDI_OFI_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv);
+                break;
+            }
+        }
     }
 
+    if (recv == NULL) {
+        MPIDI_OFI_huge_recv_list_t *list_ptr;
+
+        MPL_DBG_MSG_FMT(MPIR_DBG_PT2PT,VERBOSE,(MPL_DBG_FDEST, "CREATING HUGE POSTED ENTRY: (%d, %d, %llu)", comm_ptr->context_id, MPIDI_OFI_cqe_get_source(wc), (MPIDI_OFI_TAG_MASK & wc->tag)));
+
+        recv = (MPIDI_OFI_huge_recv_t *) MPL_calloc(sizeof(*recv), 1);
+        MPIDI_OFI_map_set(MPIDI_OFI_COMM(comm_ptr).huge_recv_counters, rreq->handle, recv);
+
+        list_ptr = (MPIDI_OFI_huge_recv_list_t *) MPL_calloc(sizeof(*list_ptr), 1);
+
+        list_ptr->comm_id = comm_ptr->context_id;
+        list_ptr->rank = MPIDI_OFI_cqe_get_source(wc);
+        list_ptr->tag = (MPIDI_OFI_TAG_MASK & wc->tag);
+        list_ptr->rreq = rreq;
+
+        MPL_LL_APPEND(MPIDI_posted_huge_recv_head, MPIDI_posted_huge_recv_tail, list_ptr);
+    }
+
+    /* Plug the information for the huge event into the receive request and go
+       to the get_huge_event function. */
     recv->event_id = MPIDI_OFI_EVENT_GET_HUGE;
     recv->localreq = rreq;
     recv->done_fn = MPIDI_OFI_recv_event;
@@ -239,28 +275,31 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_huge_event(struct fi_cq_tagged_entry
         MPIR_Comm *comm;
         void *ptr;
         MPIDI_OFI_huge_counter_t *cntr;
+
         comm = MPIDI_OFI_REQUEST(sreq, util_comm);
-        ptr =
-            MPIDI_OFI_map_lookup(MPIDI_OFI_COMM(comm).huge_send_counters,
-                                 MPIDI_OFI_REQUEST(sreq, util_id));
+
+        /* Look for the counter using the sreq handle */
+        ptr = MPIDI_OFI_map_lookup(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle);
         MPIR_Assert(ptr != MPIDI_OFI_MAP_NOT_FOUND);
+
         cntr = (MPIDI_OFI_huge_counter_t *) ptr;
         cntr->outstanding--;
+
+        /* If that was the last message to be sent, send a cleanup message to
+         * the receivier and clean up local resources. */
         if (cntr->outstanding == 0) {
-            MPIDI_OFI_send_control_t ctrl;
             uint64_t key;
             int key_back;
-            MPIDI_OFI_map_erase(MPIDI_OFI_COMM(comm).huge_send_counters,
-                                MPIDI_OFI_REQUEST(sreq, util_id));
+
+            /* Clean up the local counter */
+            MPIDI_OFI_map_erase(MPIDI_OFI_COMM(comm).huge_send_counters, sreq->handle);
+
+            /* Clean up the memory region */
             key = fi_mr_key(cntr->mr);
             key_back = (key >> MPIDI_Global.huge_rma_shift);
             MPIDI_OFI_index_allocator_free(MPIDI_OFI_COMM(comm).rma_id_allocator, key_back);
             MPIDI_OFI_CALL_NOLOCK(fi_close(&cntr->mr->fid), mr_unreg);
             MPL_free(ptr);
-            ctrl.type = MPIDI_OFI_CTRL_HUGE_CLEANUP;
-            MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_do_control_send
-                                   (&ctrl, NULL, 0, MPIDI_OFI_REQUEST(sreq, util_id), comm, NULL,
-                                    FALSE /* no lock */));
         }
 
         if (MPIDI_OFI_REQUEST(sreq, noncontig))
@@ -316,7 +355,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_GETHUGE_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_GETHUGE_EVENT);
 
-    if (recv->localreq && recv->cur_offset != 0) {
+    if (recv->localreq && recv->cur_offset != 0) { /* If this is true, then the message has a posted
+                                                      receive already and we'll be able to find the
+                                                      struct describing the transfer. */
+        /* Subtract one max_send because we send the first chunk via a regular message instead of the memory region */
         size_t bytesSent = recv->cur_offset - MPIDI_Global.max_send;
         size_t bytesLeft = recv->remote_info.msgsize - bytesSent - MPIDI_Global.max_send;
         size_t bytesToGet =
@@ -330,7 +372,10 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_get_huge_event(struct fi_cq_tagged_entry 
             MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_do_control_send
                                    (&ctrl, NULL, 0, recv->remote_info.origin_rank, recv->comm_ptr,
                                     recv->remote_info.ackreq, FALSE));
-            /* "recv" and maps will be freed in MPIDI_OFI_get_huge_cleanup */
+
+            MPIDI_OFI_map_erase(MPIDI_OFI_COMM(recv->comm_ptr).huge_recv_counters, recv->localreq->handle);
+            MPL_free(recv);
+
             goto fn_exit;
         }
 
