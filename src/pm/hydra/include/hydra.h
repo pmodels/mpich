@@ -623,7 +623,7 @@ HYD_status HYDU_sock_cloexec(int fd);
     }
 
 HYD_status HYDU_list_append_strlist(char **exec, char **client_arg);
-HYD_status HYDU_print_strlist(char **args);
+HYD_status HYDU_print_strlist(char * const * const args);
 void HYDU_free_strlist(char **args);
 HYD_status HYDU_str_alloc_and_join(char **strlist, char **strjoin);
 HYD_status HYDU_strsplit(char *str, char **str1, char **str2, char sep);

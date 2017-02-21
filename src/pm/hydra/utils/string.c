@@ -23,7 +23,7 @@ HYD_status HYDU_list_append_strlist(char **src_strlist, char **dest_strlist)
 }
 
 
-HYD_status HYDU_print_strlist(char **strlist)
+HYD_status HYDU_print_strlist(char * const * const strlist)
 {
     int arg;
     HYD_status status = HYD_SUCCESS;
