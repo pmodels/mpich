@@ -7,10 +7,10 @@
 #ifndef AD_UNIX_INCLUDE
 #define AD_UNIX_INCLUDE
 
+#include "adio.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include "adio.h"
 
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>
