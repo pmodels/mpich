@@ -372,6 +372,7 @@ if test "$enable_ch4r_per_comm_msg_queue" = "yes" ; then
 fi
 
 AC_CHECK_HEADERS(sys/mman.h sys/stat.h fcntl.h)
+AC_CHECK_FUNC(mmap, [], [AC_MSG_ERROR(mmap is required to build CH4)])
 
 gl_FUNC_RANDOM_R
 if test "$HAVE_RANDOM_R" = "1" -a "$HAVE_STRUCT_RANDOM_DATA" = "1" ; then
