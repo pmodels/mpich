@@ -371,14 +371,11 @@ if test "$enable_ch4r_per_comm_msg_queue" = "yes" ; then
         [Define if CH4U will use per-communicator message queues])
 fi
 
-PAC_ARG_SHARED_MEMORY
-
 AC_CONFIG_FILES([
 src/mpid/ch4/src/mpid_ch4_net_array.c
 src/mpid/ch4/include/netmodpre.h
 src/mpid/ch4/include/shmpre.h
 ])
-PAC_ARG_SHARED_MEMORY
 ])dnl end AM_COND_IF(BUILD_CH4,...)
 
 AM_CONDITIONAL([BUILD_CH4_SHM],[test "$ch4_shm_level" = "yes" -o "$ch4_shm_level" = "exclusive"])
