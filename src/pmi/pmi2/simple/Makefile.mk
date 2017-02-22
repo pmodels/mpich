@@ -14,8 +14,10 @@ mpi_core_sources += \
 noinst_HEADERS +=                 \
     src/pmi/pmi2/simple/simple_pmiutil.h \
     src/pmi/pmi2/simple/simple2pmi.h     \
-    src/pmi/pmi2/simple/pmi2compat.h
+    src/pmi/pmi2/simple/pmi2compat.h     \
+    src/pmi/pmi2/include/pmi2.h
 
 AM_CPPFLAGS += -I$(top_srcdir)/src/pmi/pmi2/simple
+AM_CPPFLAGS += -I$(top_srcdir)/src/pmi/pmi2/include
 
 endif BUILD_PMI_PMI2_SIMPLE
