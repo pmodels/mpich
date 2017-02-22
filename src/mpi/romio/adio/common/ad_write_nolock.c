@@ -5,10 +5,10 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#include <unistd.h>
 
 #include "adio.h"
 #include "adio_extern.h"
+#include <unistd.h>
 
 
 /* #define IO_DEBUG 1 */
