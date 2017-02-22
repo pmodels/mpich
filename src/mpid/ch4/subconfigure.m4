@@ -371,15 +371,6 @@ if test "$enable_ch4r_per_comm_msg_queue" = "yes" ; then
         [Define if CH4U will use per-communicator message queues])
 fi
 
-AC_CONFIG_FILES([
-src/mpid/ch4/src/mpid_ch4_net_array.c
-src/mpid/ch4/include/netmodpre.h
-src/mpid/ch4/include/shmpre.h
-])
-])dnl end AM_COND_IF(BUILD_CH4,...)
-
-AM_CONDITIONAL([BUILD_CH4_SHM],[test "$ch4_shm_level" = "yes" -o "$ch4_shm_level" = "exclusive"])
-
 AC_CHECK_HEADERS(sys/mman.h sys/stat.h fcntl.h)
 
 gl_FUNC_RANDOM_R
@@ -390,6 +381,14 @@ else
     AC_MSG_NOTICE([Using a non-symmetric heap])
 fi
 
+AC_CONFIG_FILES([
+src/mpid/ch4/src/mpid_ch4_net_array.c
+src/mpid/ch4/include/netmodpre.h
+src/mpid/ch4/include/shmpre.h
+])
+])dnl end AM_COND_IF(BUILD_CH4,...)
+
+AM_CONDITIONAL([BUILD_CH4_SHM],[test "$ch4_shm_level" = "yes" -o "$ch4_shm_level" = "exclusive"])
 
 ])dnl end _BODY
 
