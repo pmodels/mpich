@@ -3,10 +3,10 @@
  *  (C) 2003 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#include <string.h>
 #include "mpioimpl.h"
 #include "mpiu_greq.h"
 
+#include <string.h>
 #ifdef HAVE_WEAK_SYMBOLS
 /* Include mapping from MPI->PMPI */
 #define MPIO_BUILD_PROFILING
