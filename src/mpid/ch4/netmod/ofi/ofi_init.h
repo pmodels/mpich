@@ -230,7 +230,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int spawned, int num_contexts, void **netmod_contexts)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno, i, fi_version;
-    int thr_err = 0, str_errno, maxlen;
+    int thr_err = 0, str_errno, maxlen, vallen;
     char *table = NULL, *provname = NULL;
     struct fi_info *hints, *prov, *prov_use;
     struct fi_cq_attr cq_attr;
@@ -775,7 +775,8 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
             sprintf(keyS, "OFI-%d", i);
 #ifdef USE_CRAYPMI_API
             MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Get
-                                   (NULL, -1, keyS, valS, MPIDI_KVSAPPSTRLEN, &len), pmi);
+                                   (NULL, -1, keyS, valS, MPIDI_KVSAPPSTRLEN, &vallen), pmi);
+            MPIR_Assert(vallen > 0);
 #else
             MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get
                                    (MPIDI_Global.kvsname, keyS, valS, MPIDI_KVSAPPSTRLEN), pmi);
