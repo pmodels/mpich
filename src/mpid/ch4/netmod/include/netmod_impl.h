@@ -60,7 +60,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(void *netmod_context, int blockin
 }
 
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_connect(const char *port_name, MPIR_Info * info,
-                                                       int root, MPIR_Comm * comm,
+                                                       int root, int timeout, MPIR_Comm * comm,
                                                        MPIR_Comm ** newcomm_ptr)
 {
     int ret;
@@ -68,7 +68,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_connect(const char *port_name, MP
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_COMM_CONNECT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_NM_MPI_COMM_CONNECT);
 
-    ret = MPIDI_NM_func->mpi_comm_connect(port_name, info, root, comm, newcomm_ptr);
+    ret = MPIDI_NM_func->mpi_comm_connect(port_name, info, root, timeout, comm, newcomm_ptr);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_COMM_CONNECT);
     return ret;

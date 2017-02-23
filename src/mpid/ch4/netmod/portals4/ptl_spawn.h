@@ -15,7 +15,8 @@
 
 static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
                                             MPIR_Info * info,
-                                            int root, MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
+                                            int root, int timeout,
+                                            MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr)
 {
     MPIR_Assert(0);
     return MPI_SUCCESS;

@@ -435,4 +435,130 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_handler(struct fid_ep *ep, const voi
     goto fn_exit;
 }
 
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_conn_manager_insert_conn(fi_addr_t conn,
+                                                                int rank,
+                                                                int state)
+{
+    int conn_id = -1;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INSERT_CONN);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INSERT_CONN);
+
+    /* We've run out of space in the connection table. Allocate more. */
+    if (MPIDI_Global.conn_mgr.next_conn_id == -1) {
+        int old_max, new_max, i;
+        old_max = MPIDI_Global.conn_mgr.max_n_conn;
+        new_max = old_max + 1;
+        MPIDI_Global.conn_mgr.free_conn_id =
+            (int *) MPL_realloc(MPIDI_Global.conn_mgr.free_conn_id, new_max * sizeof(int));
+        for (i = old_max; i < new_max - 1; ++i) {
+            MPIDI_Global.conn_mgr.free_conn_id[i] = i + 1;
+        }
+        MPIDI_Global.conn_mgr.free_conn_id[new_max - 1] = -1;
+        MPIDI_Global.conn_mgr.max_n_conn = new_max;
+        MPIDI_Global.conn_mgr.next_conn_id = old_max;
+    }
+
+    conn_id = MPIDI_Global.conn_mgr.next_conn_id;
+    MPIDI_Global.conn_mgr.next_conn_id = MPIDI_Global.conn_mgr.free_conn_id[conn_id];
+    MPIDI_Global.conn_mgr.free_conn_id[conn_id] = -1;
+    MPIDI_Global.conn_mgr.n_conn++;
+
+    MPIR_Assert(MPIDI_Global.conn_mgr.n_conn <= MPIDI_Global.conn_mgr.max_n_conn);
+
+    MPIDI_Global.conn_mgr.conn_list[conn_id].dest = conn;
+    MPIDI_Global.conn_mgr.conn_list[conn_id].rank = rank;
+    MPIDI_Global.conn_mgr.conn_list[conn_id].state = state;
+
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, " new_conn_id=%d for conn=%lu rank=%d state=%d",
+                     conn_id, conn, rank,
+                     MPIDI_Global.conn_mgr.conn_list[conn_id].state));
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INSERT_CONN);
+    return conn_id;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_conn_manager_remove_conn(int conn_id)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONN_MANAGER_REMOVE_CONN);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONN_MANAGER_REMOVE_CONN);
+
+    MPIR_Assert(MPIDI_Global.conn_mgr.n_conn > 0);
+    MPIDI_Global.conn_mgr.free_conn_id[conn_id] = MPIDI_Global.conn_mgr.next_conn_id;
+    MPIDI_Global.conn_mgr.next_conn_id = conn_id;
+    MPIDI_Global.conn_mgr.n_conn--;
+
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, " free_conn_id=%d", conn_id));
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONN_MANAGER_REMOVE_CONN);
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_dynproc_send_disconnect(int conn_id)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_Context_id_t context_id = 0xF000;
+    MPIDI_OFI_dynamic_process_request_t req;
+    uint64_t match_bits = 0;
+    int close_msg = 0xcccccccc;
+    int rank = MPIDI_Global.conn_mgr.conn_list[conn_id].rank;
+    struct fi_msg_tagged msg;
+    struct iovec msg_iov;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_DYNPROC_SEND_DISCONNECT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_DYNPROC_SEND_DISCONNECT);
+
+    if (MPIDI_Global.conn_mgr.conn_list[conn_id].state == MPIDI_OFI_DYNPROC_CONNECTED_CHILD) {
+        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                        (MPL_DBG_FDEST, " send disconnect msg conn_id=%d from child side",
+                         conn_id));
+        match_bits = MPIDI_OFI_init_sendtag(context_id,
+                                            rank,
+                                            1, MPIDI_OFI_DYNPROC_SEND);
+
+        /* fi_av_map here is not quite right for some providers */
+        /* we need to get this connection from the sockname     */
+        req.done = 0;
+        req.event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
+        msg_iov.iov_base = &close_msg;
+        msg_iov.iov_len = sizeof(close_msg);
+        msg.msg_iov = &msg_iov;
+        msg.desc = NULL;
+        msg.iov_count = 0;
+        msg.addr = MPIDI_Global.conn_mgr.conn_list[conn_id].dest;
+        msg.tag = match_bits;
+        msg.ignore = context_id;
+        msg.context = (void *) &req.context;
+        msg.data = 0;
+        MPIDI_OFI_CALL_RETRY(fi_tsendmsg(MPIDI_OFI_EP_TX_TAG(0), &msg,
+                                         FI_COMPLETION | FI_TRANSMIT_COMPLETE | (MPIDI_OFI_ENABLE_DATA ? FI_REMOTE_CQ_DATA : 0)),
+                             tsendmsg, MPIDI_OFI_CALL_LOCK);
+        MPIDI_OFI_PROGRESS_WHILE(!req.done);
+    }
+
+    switch (MPIDI_Global.conn_mgr.conn_list[conn_id].state) {
+    case MPIDI_OFI_DYNPROC_CONNECTED_CHILD:
+        MPIDI_Global.conn_mgr.conn_list[conn_id].state = MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_CHILD;
+        break;
+    case MPIDI_OFI_DYNPROC_CONNECTED_PARENT:
+        MPIDI_Global.conn_mgr.conn_list[conn_id].state = MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_PARENT;
+        break;
+    default:
+        break;
+    }
+
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, " local_disconnected conn_id=%d state=%d",
+                     conn_id, MPIDI_Global.conn_mgr.conn_list[conn_id].state));
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_DYNPROC_SEND_DISCONNECT);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 #endif /* OFI_IMPL_H_INCLUDED */

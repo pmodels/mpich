@@ -47,6 +47,9 @@ MPL_STATIC_INLINE_PREFIX int MPIDIU_upids_to_lupids(int size,
                  * so CH4 don't care what node they are on
                  */
                 MPIDI_CH4_Global.node_map[_avtid][_lpid] = remote_node_ids[i];
+                if (remote_node_ids[i] >= MPIDI_CH4_Global.max_node_id) {
+                    MPIDI_CH4_Global.max_node_id = remote_node_ids[i] + 1;
+                }
 #ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
                 MPIDI_av_table[_avtid]->table[_lpid].is_local = 0;
 #endif

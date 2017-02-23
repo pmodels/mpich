@@ -13,6 +13,26 @@
 
 #include "ch4_impl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_CH4_COMM_CONNECT_TIMEOUT
+      category    : CH4
+      type        : int
+      default     : 180
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_GROUP_EQ
+      description : >-
+        The default time out period in seconds for a connection attempt to the
+        server communicator where the named port exists but no pending accept.
+        User can change the value for a specified connection through its info
+        argument.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 static inline int MPIDI_mpi_to_pmi_keyvals(MPIR_Info * info_ptr,
                                            PMI_keyval_t ** kv_ptr, int *nkeys_ptr)
 {
@@ -221,10 +241,21 @@ MPL_STATIC_INLINE_PREFIX int MPID_Comm_connect(const char *port_name,
                                                 int root, MPIR_Comm * comm,
                                                 MPIR_Comm ** newcomm_ptr)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
+    int timeout = MPIR_CVAR_CH4_COMM_CONNECT_TIMEOUT;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_COMM_CONNECT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_COMM_CONNECT);
-    mpi_errno = MPIDI_NM_mpi_comm_connect(port_name, info, root, comm, newcomm_ptr);
+
+    if (info != NULL) {
+        int info_flag = 0;
+        char info_value[MPI_MAX_INFO_VAL + 1];
+        MPIR_Info_get_impl(info, "timeout", MPI_MAX_INFO_VAL, info_value, &info_flag);
+        if (info_flag) {
+            timeout = atoi(info_value);
+        }
+    }
+    mpi_errno = MPIDI_NM_mpi_comm_connect(port_name, info, root, timeout,
+                                          comm, newcomm_ptr);
 
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POP(mpi_errno);

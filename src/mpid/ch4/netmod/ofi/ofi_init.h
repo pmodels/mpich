@@ -217,6 +217,115 @@ static inline int MPIDI_OFI_application_hints(int rank);
         MPIDI_OFI_choose_provider(prov,prov_use);                           \
     } while (0);
 
+static inline int MPIDI_OFI_conn_manager_init()
+{
+    int mpi_errno = MPI_SUCCESS, i;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INIT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INIT);
+
+    MPIDI_Global.conn_mgr.mmapped_size = 8 * 4 * 1024;
+    MPIDI_Global.conn_mgr.max_n_conn = 1;
+    MPIDI_Global.conn_mgr.next_conn_id = 0;
+    MPIDI_Global.conn_mgr.n_conn = 0;
+
+    MPIDI_Global.conn_mgr.conn_list =
+        (MPIDI_OFI_conn_t *) mmap(NULL, MPIDI_Global.conn_mgr.mmapped_size,
+                                  PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+    MPIR_ERR_CHKANDSTMT(MPIDI_Global.conn_mgr.conn_list == MAP_FAILED, mpi_errno,
+                        MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
+
+    MPIDI_Global.conn_mgr.free_conn_id =
+        (int *) MPL_malloc(MPIDI_Global.conn_mgr.max_n_conn * sizeof(int));
+    MPIR_ERR_CHKANDSTMT(MPIDI_Global.conn_mgr.free_conn_id == NULL, mpi_errno,
+                        MPI_ERR_NO_MEM, goto fn_fail, "**nomem");
+
+    for (i = 0; i < MPIDI_Global.conn_mgr.max_n_conn; ++i) {
+        MPIDI_Global.conn_mgr.free_conn_id[i] = i + 1;
+    }
+    MPIDI_Global.conn_mgr.free_conn_id[MPIDI_Global.conn_mgr.max_n_conn - 1] = -1;
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONN_MANAGER_INIT);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static inline int MPIDI_OFI_conn_manager_destroy()
+{
+    int mpi_errno = MPI_SUCCESS, i, j;
+    MPIDI_OFI_dynamic_process_request_t *req;
+    fi_addr_t *conn;
+    int max_n_conn = MPIDI_Global.conn_mgr.max_n_conn;
+    int *close_msg;
+    uint64_t match_bits = 0;
+    uint64_t mask_bits = 0;
+    MPIR_Context_id_t context_id = 0xF000;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_CONN_MANAGER_DESTROY);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_CONN_MANAGER_DESTROY);
+
+    match_bits = MPIDI_OFI_init_recvtag(&mask_bits, context_id, MPI_ANY_SOURCE, 1);
+    match_bits |= MPIDI_OFI_DYNPROC_SEND;
+
+    if (max_n_conn > 0) {
+        /* try wait/close connections */
+        req = (MPIDI_OFI_dynamic_process_request_t*)
+                MPL_malloc(max_n_conn * sizeof(MPIDI_OFI_dynamic_process_request_t));
+        conn = (fi_addr_t *) MPL_malloc(max_n_conn * sizeof(fi_addr_t));
+        close_msg = (int *) MPL_malloc(max_n_conn * sizeof(int));
+
+        j = 0;
+        for (i = 0; i < max_n_conn; ++i) {
+            switch (MPIDI_Global.conn_mgr.conn_list[i].state) {
+            case MPIDI_OFI_DYNPROC_CONNECTED_CHILD:
+                MPIDI_OFI_dynproc_send_disconnect(i);
+                break;
+            case MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_PARENT:
+            case MPIDI_OFI_DYNPROC_CONNECTED_PARENT:
+                MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,
+                                (MPL_DBG_FDEST, "Wait for close of conn_id=%d", i));
+                conn[j] = MPIDI_Global.conn_mgr.conn_list[i].dest;
+                req[j].done = 0;
+                req[j].event_id = MPIDI_OFI_EVENT_DYNPROC_DONE;
+                MPIDI_OFI_CALL_RETRY(fi_trecv(MPIDI_OFI_EP_RX_TAG(0),
+                                              &close_msg[j],
+                                              sizeof(int),
+                                              NULL,
+                                              conn[j],
+                                              match_bits,
+                                              mask_bits, &req[j].context),
+                                     trecv, MPIDI_OFI_CALL_LOCK);
+                j++;
+                break;
+            default:
+                break;
+            }
+        }
+
+        for (i = 0; i < j; ++i) {
+            MPIDI_OFI_PROGRESS_WHILE(!req[i].done);
+            MPIDI_Global.conn_mgr.conn_list[i].state = MPIDI_OFI_DYNPROC_DISCONNECTED;
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL,VERBOSE,
+                            (MPL_DBG_FDEST, "conn_id=%d closed", i));
+        }
+
+        MPL_free(req);
+        MPL_free(conn);
+        MPL_free(close_msg);
+    }
+
+    munmap((void *) MPIDI_Global.conn_mgr.conn_list, MPIDI_Global.conn_mgr.mmapped_size);
+    MPL_free(MPIDI_Global.conn_mgr.free_conn_id);
+
+  fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_CONN_MANAGER_DESTROY);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_NM_mpi_init_hook
 #undef FCNAME
@@ -672,6 +781,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         mapped_table = (fi_addr_t *) av_attr.map_addr;
         for (i = 0; i < size; i++) {
             MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
+            MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
+                            (MPL_DBG_FDEST, " grank mapped to: rank=%d, av=%p, dest=%lu",
+                             i, (void*)&MPIDIU_get_av(0, i), mapped_table[i]));
         }
         mapped_table = NULL;
     }
@@ -868,6 +980,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* -------------------------------- */
     /* Initialize Dynamic Tasking       */
     /* -------------------------------- */
+    MPIDI_OFI_conn_manager_init();
     if (spawned) {
         char parent_port[MPIDI_MAX_KVS_VALUE_LEN];
         MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Get(MPIDI_Global.kvsname,
@@ -908,6 +1021,12 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     int barrier[2] = { 0 };
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     MPIR_Comm *comm;
+
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_FINALIZE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_FINALIZE);
+
+    /* clean dynamic process connections */
+    MPIDI_OFI_conn_manager_destroy();
 
     /* Progress until we drain all inflight RMA send long buffers */
     while (OPA_load_int(&MPIDI_Global.am_inflight_rma_send_mrs) > 0)
@@ -983,6 +1102,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     MPID_Thread_mutex_destroy(&MPIDI_OFI_THREAD_SPAWN_MUTEX, &thr_err);
 
   fn_exit:
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_FINALIZE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
