@@ -307,6 +307,8 @@ typedef struct {
     int context_bits;
     int source_bits;
     int tag_bits;
+
+    int enable_auto_progress;
 } MPIDI_OFI_capabilities_t;
 
 /* Global state data */
