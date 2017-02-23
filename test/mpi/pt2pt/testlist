@@ -44,6 +44,7 @@ mprobe 2 mpiversion=3.0
 big_count_status 1 mpiversion=3.0
 many_isend 3
 manylmt 2
+huge_underflow 2
 dtype_send 2
 recv_any 2
 irecv_any 2
