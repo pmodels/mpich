@@ -22,7 +22,7 @@ typedef int (*MPIDI_NM_mpi_init_t) (int rank, int size, int appnum, int *tag_ub,
 typedef int (*MPIDI_NM_mpi_finalize_t) (void);
 typedef int (*MPIDI_NM_progress_t) (void *netmod_context, int blocking);
 typedef int (*MPIDI_NM_mpi_comm_connect_t) (const char *port_name, MPIR_Info * info, int root,
-                                            MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr);
+                                            int timeout, MPIR_Comm * comm, MPIR_Comm ** newcomm_ptr);
 typedef int (*MPIDI_NM_mpi_comm_disconnect_t) (MPIR_Comm * comm_ptr);
 typedef int (*MPIDI_NM_mpi_open_port_t) (MPIR_Info * info_ptr, char *port_name);
 typedef int (*MPIDI_NM_mpi_close_port_t) (const char *port_name);
@@ -498,8 +498,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_finalize_hook(void) MPL_STATIC_INLINE_
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_progress(void *netmod_context,
                                                int blocking) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_connect(const char *port_name, MPIR_Info * info,
-                                                       int root, MPIR_Comm * comm,
-                                                       MPIR_Comm **
+                                                       int root, int timeout,
+                                                       MPIR_Comm * comm, MPIR_Comm **
                                                        newcomm_ptr) MPL_STATIC_INLINE_SUFFIX;
 MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_comm_disconnect(MPIR_Comm *
                                                           comm_ptr) MPL_STATIC_INLINE_SUFFIX;

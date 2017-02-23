@@ -45,7 +45,8 @@ static inline int MPIDI_NM_mpi_close_port(const char *port_name)
 #define FCNAME MPL_QUOTE(FUNCNAME)
 static inline int MPIDI_NM_mpi_comm_connect(const char *port_name,
                                             MPIR_Info * info,
-                                            int root, MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm)
+                                            int root, int timeout,
+                                            MPIR_Comm * comm_ptr, MPIR_Comm ** newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
 
