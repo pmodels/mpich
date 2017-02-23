@@ -233,6 +233,14 @@ enum {
     MPIDI_OFI_PEEK_FOUND
 };
 
+enum {
+    MPIDI_OFI_DYNPROC_DISCONNECTED = 0,
+    MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_CHILD,
+    MPIDI_OFI_DYNPROC_LOCAL_DISCONNECTED_PARENT,
+    MPIDI_OFI_DYNPROC_CONNECTED_CHILD,
+    MPIDI_OFI_DYNPROC_CONNECTED_PARENT
+};
+
 typedef struct {
     char pad[MPIDI_REQUEST_HDR_SIZE];
     struct fi_context context;  /* fixed field, do not move */
@@ -323,6 +331,23 @@ typedef struct {
     int tag_bits;
 } MPIDI_OFI_capabilities_t;
 
+typedef struct {
+    fi_addr_t dest;
+    int rank;
+    int state;
+} MPIDI_OFI_conn_t;
+
+typedef struct MPIDI_OFI_conn_manager_t {
+    int mmapped_size;            /* Size of the connection list memory which is mmapped */
+    int max_n_conn;              /* Maximum number of connections up to this point */
+    int n_conn;                  /* Current number of open connections */
+    int next_conn_id;            /* The next connection id to be used. */
+    int *free_conn_id;           /* The list of the next connection id to be used so we
+                                    can garbage collect as we go. */
+    MPIDI_OFI_conn_t *conn_list; /* The list of connection structs to track the
+                                    outstanding dynamic process connections. */
+} MPIDI_OFI_conn_manager_t;
+
 /* Global state data */
 #define MPIDI_KVSAPPSTRLEN 1024
 typedef struct {
@@ -389,6 +414,9 @@ typedef struct {
     char kvsname[MPIDI_KVSAPPSTRLEN];
     char pname[MPI_MAX_PROCESSOR_NAME];
     int port_name_tag_mask[MPIR_MAX_CONTEXT_MASK];
+
+    /* Communication info for dynamic processes */
+    MPIDI_OFI_conn_manager_t conn_mgr;
 
     /* Capability settings */
 #ifdef MPIDI_OFI_ENABLE_RUNTIME_CHECKS

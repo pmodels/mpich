@@ -31,6 +31,9 @@ static inline int MPIDI_NM_mpi_comm_create_hook(MPIR_Comm * comm)
 
     mpi_errno = MPIDI_CH4U_init_comm(comm);
 
+    /* no connection for non-dynamic or non-root-rank of intercomm */
+    MPIDI_OFI_COMM(comm).conn_id = -1;
+
     /* Do not handle intercomms */
     if (comm->comm_kind == MPIR_COMM_KIND__INTERCOMM)
         goto fn_exit;

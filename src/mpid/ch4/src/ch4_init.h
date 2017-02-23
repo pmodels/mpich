@@ -220,6 +220,10 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 
+    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_GENERAL, VERBOSE,
+                    (MPL_DBG_FDEST, "MPIDI_CH4_Global.max_node_id = %d",
+                     MPIDI_CH4_Global.max_node_id));
+
     for (i = 0; i < MPIR_Process.comm_world->local_size; i++) {
         MPIDI_av_table0->table[i].is_local =
             (MPIDI_CH4_Global.node_map[0][i] ==
