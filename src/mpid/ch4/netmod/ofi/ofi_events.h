@@ -177,6 +177,12 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_recv_huge_event(struct fi_cq_tagged_entry
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_NETMOD_OFI_RECV_HUGE_EVENT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_NETMOD_OFI_RECV_HUGE_EVENT);
 
+    /* Check that the sender didn't underflow the message by sending less than
+     * the huge message threshold. */
+    if (wc->len < MPIDI_Global.max_send) {
+        return MPIDI_OFI_recv_event(wc, rreq);
+    }
+
     comm_ptr = MPIDI_OFI_REQUEST(rreq, util_comm);
 
     /* Check to see if the tracker is already in the unexpected list.
