@@ -242,7 +242,6 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
     }
 
     if (hdr.cmd == PID_LIST) {  /* Got PIDs */
-        struct HYD_proxy *tproxy;
         if (HYD_server_info.user_global.branch_count != -1) {
             for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next) {
                 if (tproxy->proxy_id == hdr.pid)

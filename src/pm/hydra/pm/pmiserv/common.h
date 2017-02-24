@@ -82,5 +82,7 @@ char *HYD_pmcd_pmi_find_token_keyval(struct HYD_pmcd_token *tokens, int count, c
 HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs, int pgid);
 void HYD_pmcd_free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list);
 HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs *kvs, int *ret);
+HYD_status node_list_to_strings(struct HYD_node *node_list, int size, char **node_list_str);
+HYD_status HYDU_send_start_children(int fd, char *nodes, int proxy_id);
 
 #endif /* COMMON_H_INCLUDED */

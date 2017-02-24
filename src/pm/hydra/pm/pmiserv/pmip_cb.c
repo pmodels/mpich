@@ -10,6 +10,7 @@
 #include "ckpoint.h"
 #include "demux.h"
 #include "topo.h"
+#include "bsci.h"
 
 static HYD_status control_cb(int fd, HYD_event_t events, void *userp);
 HYD_status HYD_pmci_launch_child_procs(char *nodes);
@@ -517,7 +518,7 @@ static HYD_status handle_pmi_command(int fd, struct HYD_pmcd_hdr hdr)
     goto fn_exit;
 }
 
-HYD_status handle_launch_children(int fd, struct HYD_pmcd_hdr *hdr)
+static HYD_status handle_launch_children(int fd, struct HYD_pmcd_hdr *hdr)
 {
     int count, closed;
     char *buf=NULL;

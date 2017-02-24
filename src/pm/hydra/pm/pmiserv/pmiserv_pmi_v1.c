@@ -143,6 +143,7 @@ static HYD_status bcast_keyvals(int fd, int pid, int rank)
 static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[], int rank)
 {
     struct HYD_proxy *proxy, *tproxy;
+    int num_barriers;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -152,11 +153,13 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[], int ran
 
     proxy->pg->barrier_count++;
 
-    if (HYD_server_info.user_global.branch_count != -1 && proxy_count > HYD_server_info.user_global.branch_count && pgid == 0) {
-        proxy_count = HYD_server_info.user_global.branch_count;
+    if (HYD_server_info.user_global.branch_count != -1 && proxy->pg->proxy_count > HYD_server_info.user_global.branch_count && pgid == 0) {
+        num_barriers = HYD_server_info.user_global.branch_count;
+    } else {
+        num_barriers = proxy->pg->proxy_count;
     }
 
-    if (proxy->pg->barrier_count == proxy_count) {
+    if (proxy->pg->barrier_count == num_barriers) {
         proxy->pg->barrier_count = 0;
 
         bcast_keyvals(fd, pid, rank);
