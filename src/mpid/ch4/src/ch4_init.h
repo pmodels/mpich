@@ -119,7 +119,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     MPIDI_CH4_DBG_MEMORY = MPL_dbg_class_alloc("CH4_MEMORY", "ch4_memory");
 #endif
     MPIDI_choose_netmod();
-#ifdef USE_CRAYPMI_API
+#ifdef USE_PMI2_API
     pmi_errno = PMI2_Init(&has_parent, &size, &rank, &appnum);
 
     if (pmi_errno != PMI_SUCCESS) {

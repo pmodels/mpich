@@ -740,7 +740,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
 
         val = valS;
         sprintf(keyS, "OFI-%d", rank);
-#ifdef USE_CRAYPMI_API
+#ifdef USE_PMI2_API
         MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Put(keyS, val), pmi);
         MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Fence(), pmi);
 #else
@@ -773,7 +773,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
             end += size % num_local;
         for (i = start; i < end; i++) {
             sprintf(keyS, "OFI-%d", i);
-#ifdef USE_CRAYPMI_API
+#ifdef USE_PMI2_API
             MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Get
                                    (NULL, -1, keyS, valS, MPIDI_KVSAPPSTRLEN, &vallen), pmi);
             MPIR_Assert(vallen > 0);
@@ -968,7 +968,7 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
         MPIR_Assert(slist_empty(&MPIDI_Global.cq_buff_list));
     }
 
-#ifdef USE_CRAYPMI_API
+#ifdef USE_PMI2_API
     PMI2_Finalize();
 #else
     PMI_Finalize();
