@@ -15,7 +15,7 @@ PAC_PREPEND_FLAG([$CRAY_PMI_POST_LINK_OPTS], [LDFLAGS])
 AC_CHECK_HEADER([pmi.h], [], [AC_MSG_ERROR([could not find pmi.h.  Configure aborted])])
 AC_CHECK_LIB([pmi], [PMI_Init], [], [AC_MSG_ERROR([could not find the cray libpmi.  Configure aborted])])
 
-AC_DEFINE(USE_CRAYPMI_API, 1, [Define if Cray PMI API must be used])
+AC_DEFINE(USE_PMI2_API, 1, [Define if Cray PMI API must be used])
 PAC_APPEND_FLAG([-lpmi], [WRAPPER_LIBS])
 
 ])dnl end COND_IF
