@@ -1,0 +1,13 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: Izem
+Description: Advanced synchronization and concurrent data-structures for shared-memory programming
+Version: @ZM_VERSION@
+URL: https://izem.dummy
+Requires:
+Libs: -L${libdir} -lzm
+Libs.private: @LIBS@
+Cflags: -I${includedir}

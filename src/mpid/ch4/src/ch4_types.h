@@ -277,6 +277,12 @@ typedef struct MPIDI_CH4_Global_t {
     OPA_int_t nxt_seq_no;
     void *netmod_context[8];
     MPIU_buf_pool_t *buf_pool;
+    int n_netmod_eps;
+    MPID_Thread_mutex_t *ep_locks;
+    /* Per-endpoint queues for saving pending operations to issue */
+    MPIDI_workq_t *ep_pt2pt_pend_ops;
+    MPIDI_workq_t *ep_rma_pend_ops;
+    int progress_hook_id;
 } MPIDI_CH4_Global_t;
 extern MPIDI_CH4_Global_t MPIDI_CH4_Global;
 #ifdef MPL_USE_DBG_LOGGING

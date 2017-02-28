@@ -226,7 +226,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                          int *tag_ub,
                                          MPIR_Comm * comm_world,
                                          MPIR_Comm * comm_self,
-                                         int spawned, int num_contexts, void **netmod_contexts)
+                                         int spawned, int num_eps_req, int *num_eps_prov)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno, i, fi_version;
     int thr_err = 0, str_errno, maxlen;
@@ -706,12 +706,32 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
     /* and the resources consumed by it, such as address vectors, counters,     */
     /* completion queues, etc.                                                  */
     /* ------------------------------------------------------------------------ */
-    MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_create_endpoint(prov_use,
-                                                     MPIDI_Global.domain,
-                                                     MPIDI_Global.p2p_cq,
-                                                     MPIDI_Global.rma_cmpl_cntr,
-                                                     MPIDI_Global.av,
-                                                     &MPIDI_Global.ep, 0));
+
+     /* FIXME: what if CH4 specifies num_eps_req<=0? */
+    if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
+        MPIDI_Global.max_ch4_eps = prov_use->domain_attr->tx_ctx_cnt / 4;
+        if (MPIDI_Global.max_ch4_eps < 1) {
+            MPIR_ERR_SETFATALANDJUMP4(mpi_errno,
+                                      MPI_ERR_OTHER,
+                                      "**ofid_ep",
+                                      "**ofid_ep %s %d %s %s",
+                                      __SHORT_FILE__, __LINE__, FCNAME, "Not enough scalable endpoints");
+        }
+        if (MPIDI_Global.max_ch4_eps > num_eps_req)
+            MPIDI_Global.max_ch4_eps = num_eps_req;
+    } else
+        MPIDI_Global.max_ch4_eps = 1;
+
+    for (i = 0; i < MPIDI_Global.max_ch4_eps; i++) {
+        MPIDI_OFI_MPI_CALL_POP(MPIDI_OFI_create_endpoint(prov_use,
+                                                         MPIDI_Global.domain,
+                                                         MPIDI_Global.p2p_cq,
+                                                         MPIDI_Global.rma_cmpl_cntr,
+                                                         MPIDI_Global.av,
+                                                         &MPIDI_Global.ep, i));
+    }
+
+    *num_eps_prov = MPIDI_Global.max_ch4_eps;
 
     if (do_av_insert) {
 
@@ -791,7 +811,7 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIR_Assert(MPIDI_OFI_DEFAULT_SHORT_SEND_SIZE <= MPIDI_Global.max_send);
         MPIDI_Global.am_buf_pool =
             MPIDI_CH4U_create_buf_pool(MPIDI_OFI_BUF_POOL_NUM, MPIDI_OFI_BUF_POOL_SIZE);
-        mpi_errno = MPIDIG_init(comm_world, comm_self, num_contexts, netmod_contexts);
+        mpi_errno = MPIDIG_init(comm_world, comm_self,  *num_eps_prov);
 
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
@@ -903,18 +923,20 @@ static inline int MPIDI_NM_mpi_finalize_hook(void)
     MPIR_Assert(OPA_load_int(&MPIDI_Global.am_inflight_inject_emus) == 0);
 
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
-        if (MPIDI_OFI_ENABLE_TAGGED)
-            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_TX_TAG(0)), epclose);
+        for (i = 0; i < MPIDI_Global.max_ch4_eps; i++) {
+            if (MPIDI_OFI_ENABLE_TAGGED)
+                MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_TX_TAG(i)), epclose);
 
-        MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_TX_RMA(0)), epclose);
-        MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_TX_MSG(0)), epclose);
-        MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_TX_CTR(0)), epclose);
+            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_TX_RMA(i)), epclose);
+            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_TX_MSG(i)), epclose);
+            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_TX_CTR(i)), epclose);
 
-        if (MPIDI_OFI_ENABLE_TAGGED)
-            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_RX_TAG(0)), epclose);
+            if (MPIDI_OFI_ENABLE_TAGGED)
+                MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_RX_TAG(i)), epclose);
 
-        MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_RX_RMA(0)), epclose);
-        MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_RX_MSG(0)), epclose);
+            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_RX_RMA(i)), epclose);
+            MPIDI_OFI_CALL(fi_close((fid_t) MPIDI_OFI_EP_RX_MSG(i)), epclose);
+        }
     }
 
     if (MPIDI_OFI_ENABLE_STX_RMA && MPIDI_Global.stx_ctx != NULL)
@@ -1156,8 +1178,11 @@ static inline int MPIDI_OFI_create_endpoint(struct fi_info *prov_use,
 
     if (MPIDI_OFI_ENABLE_SCALABLE_ENDPOINTS) {
         int idx_off;
-        MPIDI_OFI_CALL(fi_scalable_ep(domain, prov_use, ep, NULL), ep);
-        MPIDI_OFI_CALL(fi_scalable_ep_bind(*ep, &av->fid, 0), bind);
+        if (*ep == NULL) {
+            /* First call to this function -- set up scalable endpoint */
+            MPIDI_OFI_CALL(fi_scalable_ep(domain, prov_use, ep, NULL), ep);
+            MPIDI_OFI_CALL(fi_scalable_ep_bind(*ep, &av->fid, 0), bind);
+        }
 
         idx_off = index * 4;
         MPIDI_Global.ctx[index].ctx_offset = idx_off;

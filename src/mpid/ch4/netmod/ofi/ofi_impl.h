@@ -215,15 +215,38 @@
         MPIR_Request_add_ref((req));                                \
     } while (0)
 
-#define MPIDI_OFI_SEND_REQUEST_CREATE_LW(req)                   \
-    do {                                                                \
-        (req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);           \
-        MPIR_cc_set(&(req)->cc, 0);                                     \
-    } while (0)
-
 #define MPIDI_OFI_SSEND_ACKREQUEST_CREATE(req)            \
     do {                                                          \
         MPIDI_OFI_ssendack_request_t_tls_alloc(req);      \
+    } while (0)
+
+/* Conditional request allocation inside netmod functions */
+#ifdef MPIDI_CH4_MT_DIRECT
+#  define MPIDI_OFI_REQUEST_CREATE_COND 1 /* Always allocated by netmod */
+#elif defined MPIDI_CH4_MT_HANDOFF
+#  define MPIDI_OFI_REQUEST_CREATE_COND 0 /* Always allocated by CH4 */
+#else /* Trylock-enqueue */
+#  define MPIDI_OFI_REQUEST_CREATE_COND req /* Depends on upper layer */
+#endif
+
+#define MPIDI_OFI_REQUEST_CREATE_CONDITIONAL(req, kind)                 \
+      do {                                                              \
+          if (MPIDI_OFI_REQUEST_CREATE_COND) {                          \
+              MPIR_Assert((req) == NULL);                               \
+              (req) = MPIR_Request_create(kind);                        \
+          }                                                             \
+          /* At this line we should always have a valid request */      \
+          MPIR_Request_add_ref((req));                                  \
+      } while (0)
+
+#define MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(req)               \
+    do {                                                                \
+        if (MPIDI_OFI_REQUEST_CREATE_COND) {                            \
+            MPIR_Assert((req) == NULL);                                 \
+            (req) = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);       \
+        }                                                               \
+        /* At this line we should always have a valid request */        \
+        MPIR_cc_set(&(req)->cc, 0);                                     \
     } while (0)
 
 #define WINFO(w,rank) MPIDI_CH4U_WINFO(w,rank)

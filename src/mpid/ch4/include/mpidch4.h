@@ -256,6 +256,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4_rank_is_local(int rank, MPIR_Comm * comm)
 #include "shm_impl.h"
 #endif
 
+#include "ch4i_workq.h"
+
 #include "ch4_init.h"
 #include "ch4_probe.h"
 #include "ch4_send.h"

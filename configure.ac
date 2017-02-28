@@ -511,7 +511,7 @@ AC_ARG_ENABLE(thread-cs,
 			[Choose the method used for critical sections
                          and other atomic updates when multiple
                          threads are present.  Values may be global
-                         (default), per-object, lock-free]),,enable_thread_cs=global)
+                         (default), per-object, per-endpoint, lock-free]),,enable_thread_cs=global)
 
 AC_ARG_ENABLE(refcount,
 	AC_HELP_STRING([--enable-refcount=type],
@@ -520,7 +520,7 @@ AC_ARG_ENABLE(refcount,
                          Values may be lock-free or none.  The
                          default depends on the thread-cs choice; for
                          global it is none (because none is required),
-                         for per-object and lock-free, lock-free]),,
+                         for per-object, per-endpoint, and lock-free, lock-free]),,
                          enable_refcount=default)
 
 AC_ARG_ENABLE(mutex-timing,
@@ -1283,6 +1283,58 @@ else
     PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib],[WRAPPER_LDFLAGS])
 fi
 
+# Izem
+AC_ARG_VAR([ZMLIBNAME],[can be used to override the name of the Izem library (default: "zm")])
+ZMLIBNAME=${ZMLIBNAME:-"zm"}
+export ZMLIBNAME
+AC_SUBST(ZMLIBNAME)
+AC_ARG_WITH([zm-prefix],
+            [AS_HELP_STRING([[--with-zm-prefix[=DIR]]],
+                            [use the Izem library installed in DIR,
+                             rather than the one included in src/izem.  Pass
+                             "embedded" to force usage of the Izem source
+                             distributed with MPICH.])],
+            [],
+            [# see if Izem is already installed on the system
+             PAC_PUSH_FLAG([LIBS])
+             PAC_PREPEND_FLAG([-l${ZMLIBNAME}],[LIBS])
+             AC_LINK_IFELSE([AC_LANG_PROGRAM([dnl
+#include "lock/zm_ticket.h"
+],[
+zm_ticket_t lock;
+zm_ticket_init(&lock);
+zm_ticket_acquire(&lock);
+zm_ticket_release(&lock);
+])dnl
+                             ],
+                            [with_zm_prefix=system],[with_zm_prefix=embedded])
+             PAC_POP_FLAG([LIBS])
+             ])
+
+zmsrcdir=""
+AC_SUBST([zmsrcdir])
+zmlibdir=""
+AC_SUBST([zmlibdir])
+zmlib=""
+AC_SUBST([zmlib])
+
+if test "$with_zm_prefix" = "embedded" ; then
+    if test -e "${use_top_srcdir}/src/izem" ; then
+        # no need for libtool versioning when embedding Izem
+        zm_subdir_args="--enable-embedded"
+        PAC_CONFIG_SUBDIR_ARGS([src/izem],[$zm_subdir_args],[],[AC_MSG_ERROR(Izem configure failed)])
+        zmsrcdir="${master_top_builddir}/src/izem"
+        zmlib="${master_top_builddir}/src/izem/src/lib${ZMLIBNAME}.la"
+        PAC_APPEND_FLAG([-I${use_top_srcdir}/src/izem/src/include],[CPPFLAGS])
+        PAC_APPEND_FLAG([-I${master_top_builddir}/src/izem/src/include],[CPPFLAGS])
+
+        PAC_CONFIG_SUBDIR_ARGS([src/izem],[$zm_subdir_args],[],[AC_MSG_ERROR([Izem configure failed])])
+    else
+        AC_MSG_WARN([Attempted to use the embedded Izem source tree in "src/izem", but it is missing.  Configuration or compilation may fail later.])
+    fi
+fi
+
+
 # ----------------------------------------------------------------------------
 # Threads
 # ----------------------------------------------------------------------------
@@ -1386,6 +1438,10 @@ if test "$enable_threads" = "multiple" ; then
     ;;
     per-object|per_object)
     thread_granularity=MPICH_THREAD_GRANULARITY__POBJ
+    if test "$enable_refcount" = "default" ; then enable_refcount=lock-free ; fi
+    ;;
+    per-endpoint|per_endpoint)
+    thread_granularity=MPICH_THREAD_GRANULARITY__EP
     if test "$enable_refcount" = "default" ; then enable_refcount=lock-free ; fi
     ;;
     lock-free|lock_free|lockfree)

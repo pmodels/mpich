@@ -88,6 +88,8 @@ static inline int MPIDI_choose_netmod(void)
 
 #if (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__POBJ)
 #define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
+#elif (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__EP)
+#define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
 #elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__GLOBAL)
 #define MAX_THREAD_MODE MPI_THREAD_MULTIPLE
 #elif  (MPICH_THREAD_GRANULARITY == MPICH_THREAD_GRANULARITY__SINGLE)
@@ -107,7 +109,6 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
                                         int requested, int *provided, int *has_args, int *has_env)
 {
     int pmi_errno, mpi_errno = MPI_SUCCESS, rank, has_parent, size, appnum, thr_err;
-    void *netmod_contexts;
     int avtid, max_n_avts;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_INIT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_INIT);
@@ -161,6 +162,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
     /* Initialize MPI_COMM_SELF           */
     /* ---------------------------------- */
     MPIR_Process.comm_self->rank = 0;
+
     MPIR_Process.comm_self->remote_size = 1;
     MPIR_Process.comm_self->local_size = 1;
 
@@ -215,13 +217,30 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 
     mpi_errno = MPIDI_NM_mpi_init_hook(rank, size, appnum, &MPIR_Process.attrs.tag_ub,
                                        MPIR_Process.comm_world,
-                                       MPIR_Process.comm_self, has_parent, 1, &netmod_contexts);
+                                       MPIR_Process.comm_self, has_parent,
+                                       16 /* n_eps_req */, &MPIDI_CH4_Global.n_netmod_eps);
     if (mpi_errno != MPI_SUCCESS) {
         MPIR_ERR_POPFATAL(mpi_errno);
     }
 
-#ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
+    MPIDI_CH4_Global.ep_locks = (MPID_Thread_mutex_t*) MPL_malloc(MPIDI_CH4_Global.n_netmod_eps * sizeof(MPID_Thread_mutex_t));
+    MPIDI_CH4_Global.ep_pt2pt_pend_ops = MPL_malloc(sizeof(MPIDI_workq_t) * MPIDI_CH4_Global.n_netmod_eps);
+    MPIDI_CH4_Global.ep_rma_pend_ops   = MPL_malloc(sizeof(MPIDI_workq_t) * MPIDI_CH4_Global.n_netmod_eps);
+
     int i;
+    for (i = 0; i < MPIDI_CH4_Global.n_netmod_eps; i++) {
+        MPID_Thread_mutex_create(&MPIDI_CH4_Global.ep_locks[i], &mpi_errno);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPIR_ERR_POPFATAL(mpi_errno);
+        }
+        MPIDI_workq_init(&MPIDI_CH4_Global.ep_pt2pt_pend_ops[i]);
+        MPIDI_workq_init(&MPIDI_CH4_Global.ep_rma_pend_ops[i]);
+    }
+
+    MPID_Progress_register(MPIDI_workq_global_progress, &MPIDI_CH4_Global.progress_hook_id);
+    MPID_Progress_activate(MPIDI_CH4_Global.progress_hook_id);
+
+#ifdef MPIDI_BUILD_CH4_LOCALITY_INFO
     for (i = 0; i < MPIR_Process.comm_world->local_size; i++) {
         MPIDI_av_table0->table[i].is_local = 0;
     }
@@ -334,6 +353,18 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
     MPL_free(MPIDI_CH4_Global.node_map);
 
     MPIDIU_avt_destroy();
+
+    MPL_free(MPIDI_CH4_Global.ep_pt2pt_pend_ops);
+    MPL_free(MPIDI_CH4_Global.ep_rma_pend_ops);
+
+    for (i = 0; i < MPIDI_CH4_Global.n_netmod_eps; i++) {
+        MPID_Thread_mutex_destroy(&MPIDI_CH4_Global.ep_locks[i], &thr_err);
+    }
+
+    MPL_free(MPIDI_CH4_Global.ep_locks);
+
+    MPID_Progress_deactivate(MPIDI_CH4_Global.progress_hook_id);
+    MPID_Progress_deregister(MPIDI_CH4_Global.progress_hook_id);
 
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
     MPID_Thread_mutex_destroy(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
