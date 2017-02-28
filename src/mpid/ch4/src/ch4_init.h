@@ -99,12 +99,72 @@ static inline int MPIDI_choose_netmod(void)
 #endif
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_coll_selection_init
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_coll_selection_init(void)
+{
+    /* tuning table init */
+    int coll_id, layer_id;
+
+    MPIDI_coll_table_size = (int **) MPL_malloc(NUM_LAYERS * sizeof(int *));
+    for (layer_id = 0; layer_id < NUM_LAYERS; layer_id++) {
+        MPIDI_coll_table_size[layer_id] = (int *) MPL_malloc(MPIDI_NUM_COLLECTIVES * sizeof(int));
+        for (coll_id = 0; coll_id < MPIDI_NUM_COLLECTIVES; coll_id++) {
+            MPIDI_coll_table_size[layer_id][coll_id] = 0;
+        }
+    }
+
+    for (layer_id = 0; layer_id < NUM_LAYERS; layer_id++) {
+        MPIDI_coll_table_size[layer_id][MPIDI_BCAST] = 2;
+        MPIDI_coll_table_size[layer_id][MPIDI_ALLREDUCE] = 2;
+        MPIDI_coll_table_size[layer_id][MPIDI_REDUCE] = 2;
+    }
+
+
+    MPIDI_coll_tuning_table =
+        (MPIDI_coll_tuning_table_entry_t ***) MPL_malloc(MPIDI_NUM_COLLECTIVES *
+                                                         sizeof(MPIDI_coll_tuning_table_entry_t
+                                                                **));
+    for (layer_id = 0; layer_id < NUM_LAYERS; layer_id++) {
+        MPIDI_coll_tuning_table[layer_id] =
+            (MPIDI_coll_tuning_table_entry_t **) MPL_malloc(MPIDI_NUM_COLLECTIVES *
+                                                            sizeof(MPIDI_coll_tuning_table_entry_t
+                                                                   *));
+        for (coll_id = 0; coll_id < MPIDI_NUM_COLLECTIVES; coll_id++) {
+            MPIDI_coll_tuning_table[layer_id][coll_id] = NULL;
+        }
+    }
+
+    MPIDI_coll_tuning_table[CH4][MPIDI_BCAST] = (MPIDI_coll_tuning_table_entry_t *) BCAST_TUNING_CH4;
+    MPIDI_coll_tuning_table[NETMOD][MPIDI_BCAST] = (MPIDI_coll_tuning_table_entry_t *) BCAST_TUNING_NETMOD;
+#ifdef MPIDI_BUILD_CH4_SHM
+    MPIDI_coll_tuning_table[SHM][MPIDI_BCAST] = (MPIDI_coll_tuning_table_entry_t *) BCAST_TUNING_SHM;
+#endif
+
+    MPIDI_coll_tuning_table[CH4][MPIDI_REDUCE] = (MPIDI_coll_tuning_table_entry_t *) REDUCE_TUNING_CH4;
+    MPIDI_coll_tuning_table[NETMOD][MPIDI_REDUCE] = (MPIDI_coll_tuning_table_entry_t *) REDUCE_TUNING_NETMOD;
+#ifdef MPIDI_BUILD_CH4_SHM
+    MPIDI_coll_tuning_table[SHM][MPIDI_REDUCE] = (MPIDI_coll_tuning_table_entry_t *) REDUCE_TUNING_SHM;
+#endif
+
+    MPIDI_coll_tuning_table[CH4][MPIDI_ALLREDUCE] = (MPIDI_coll_tuning_table_entry_t *) ALLREDUCE_TUNING_CH4;
+    MPIDI_coll_tuning_table[NETMOD][MPIDI_ALLREDUCE] =
+        (MPIDI_coll_tuning_table_entry_t *) ALLREDUCE_TUNING_NETMOD;
+#ifdef MPIDI_BUILD_CH4_SHM
+    MPIDI_coll_tuning_table[SHM][MPIDI_ALLREDUCE] = (MPIDI_coll_tuning_table_entry_t *) ALLREDUCE_TUNING_SHM;
+#endif
+
+    return MPI_SUCCESS;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPID_Init
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
-                                        char ***argv,
-                                        int requested, int *provided, int *has_args, int *has_env)
+                                       char ***argv,
+                                       int requested, int *provided, int *has_args, int *has_env)
 {
     int pmi_errno, mpi_errno = MPI_SUCCESS, rank, has_parent, size, appnum, thr_err;
     void *netmod_contexts;
@@ -156,6 +216,9 @@ MPL_STATIC_INLINE_PREFIX int MPID_Init(int *argc,
 
     MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_PROGRESS_MUTEX, &thr_err);
     MPID_Thread_mutex_create(&MPIDI_CH4I_THREAD_PROGRESS_HOOK_MUTEX, &thr_err);
+
+    /* tuning table init */
+    MPIDI_coll_selection_init();
 
     /* ---------------------------------- */
     /* Initialize MPI_COMM_SELF           */
@@ -304,6 +367,39 @@ MPL_STATIC_INLINE_PREFIX int MPID_InitCompleted(void)
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_coll_selection_finalize
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+MPL_STATIC_INLINE_PREFIX int MPIDI_coll_selection_finalize(void)
+{
+    /* release MPIDI_coll_tuning_table and MPIDI_coll_table_size */
+    int layer_id;
+    for (layer_id = 0; layer_id < NUM_LAYERS; layer_id++) {
+        if (MPIDI_coll_tuning_table[layer_id]) {
+            MPL_free(MPIDI_coll_tuning_table[layer_id]);
+            MPIDI_coll_tuning_table[layer_id] = NULL;
+        }
+    }
+    if (MPIDI_coll_tuning_table) {
+        MPL_free(MPIDI_coll_tuning_table);
+        MPIDI_coll_tuning_table = NULL;
+    }
+
+    for (layer_id = 0; layer_id < NUM_LAYERS; layer_id++) {
+        if (MPIDI_coll_table_size[layer_id]) {
+            MPL_free(MPIDI_coll_table_size[layer_id]);
+            MPIDI_coll_table_size[layer_id] = NULL;
+        }
+    }
+    if (MPIDI_coll_table_size) {
+        MPL_free(MPIDI_coll_table_size);
+        MPIDI_coll_table_size = NULL;
+    }
+
+    return MPI_SUCCESS;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPID_Finalize
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -321,6 +417,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Finalize(void)
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
 #endif
+    MPIDI_coll_selection_finalize();
 
     int i;
     int max_n_avts;
@@ -458,7 +555,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Free_mem(void *ptr)
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Comm_get_lpid(MPIR_Comm * comm_ptr,
-                                                 int idx, int *lpid_ptr, MPL_bool is_remote)
+                                                int idx, int *lpid_ptr, MPL_bool is_remote)
 {
     int mpi_errno = MPI_SUCCESS;
     int avtid = 0, lpid = 0;
@@ -567,7 +664,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_upids_to_lupids(int size,
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
 MPL_STATIC_INLINE_PREFIX int MPID_Create_intercomm_from_lpids(MPIR_Comm * newcomm_ptr,
-                                                               int size, const int lpids[])
+                                                              int size, const int lpids[])
 {
     int mpi_errno = MPI_SUCCESS, i;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_CREATE_INTERCOMM_FROM_LPIDS);

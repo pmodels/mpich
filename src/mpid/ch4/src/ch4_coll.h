@@ -13,6 +13,9 @@
 
 #include "ch4_impl.h"
 #include "ch4r_proc.h"
+#include "ch4_coll_select.h"
+#include "ch4_coll_params.h"
+
 
 MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
@@ -30,31 +33,191 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
 MPL_STATIC_INLINE_PREFIX int MPID_Bcast(void *buffer, int count, MPI_Datatype datatype,
                                          int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag)
 {
-    int ret;
+    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
+    int mpi_errno = MPI_SUCCESS;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_BCAST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BCAST);
 
-    ret = MPIDI_NM_mpi_bcast(buffer, count, datatype, root, comm, errflag);
+    ch4_algo_parameters_container = MPIDI_CH4_Bcast_select(buffer, count, datatype, root, comm, errflag);
+
+    mpi_errno =
+        MPIDI_CH4_Bcast_call(buffer, count, datatype, root, comm, errflag, ch4_algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_BCAST);
-    return ret;
+
+    return mpi_errno;
+
 }
+
+#ifdef MPIDI_BUILD_CH4_SHM
+MPL_STATIC_INLINE_PREFIX int MPIDI_Bcast_composition_alpha(void *buffer, int count, MPI_Datatype datatype,
+                                                           int root, MPIR_Comm * comm, MPIR_Errflag_t * errflag,
+                                                           MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void * nm_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    void * shm_container = MPIDI_coll_get_next_container(nm_container);
+
+    if (comm->node_roots_comm == NULL && comm->rank == root) {
+        mpi_errno = MPIC_Send(buffer, count, datatype, 0, MPIR_BCAST_TAG, comm->node_comm, errflag);
+    }
+
+    if (comm->node_roots_comm != NULL && comm->rank != root && comm->intranode_table[comm->rank] != -1){
+        mpi_errno = MPIC_Recv(buffer, count, datatype, comm->intranode_table[root], MPIR_BCAST_TAG, 
+                              comm->node_comm, MPI_STATUS_IGNORE, errflag);
+    }
+
+    if (comm->node_roots_comm != NULL) {
+        mpi_errno =
+            MPIDI_NM_mpi_bcast(buffer, count, datatype, comm->internode_table[root], comm->node_roots_comm, errflag,
+                               nm_container);
+    }
+    if (comm->node_comm != NULL) {
+        mpi_errno =
+            MPIDI_SHM_mpi_bcast(buffer, count, datatype, 0, comm->node_comm, errflag,
+                                shm_container);
+    }
+
+    return mpi_errno;
+}
+#endif
 
 MPL_STATIC_INLINE_PREFIX int MPID_Allreduce(const void *sendbuf, void *recvbuf, int count,
                                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
                                              MPIR_Errflag_t * errflag)
 {
-    int ret;
+    int ret = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_ALLREDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_ALLREDUCE);
 
-    ret = MPIDI_NM_mpi_allreduce(sendbuf, recvbuf, count, datatype, op, comm, errflag);
+    ch4_algo_parameters_container =
+        MPIDI_CH4_Allreduce_select(sendbuf, recvbuf, count, datatype, op, comm, errflag);
+
+    ret = MPIDI_CH4_Allreduce_call(sendbuf, recvbuf, count, datatype, op, comm, errflag,
+                                   ch4_algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_ALLREDUCE);
     return ret;
 }
+
+#ifdef MPIDI_BUILD_CH4_SHM
+MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_composition_alpha(const void *sendbuf, void *recvbuf, int count,
+                                                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                                               MPIR_Errflag_t * errflag,
+                                                               MPIDI_coll_algo_container_t *
+                                                               ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    void * shm_reduce_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    void * nm_allred_container = MPIDI_coll_get_next_container(shm_reduce_container);
+    void * shm_bcast_container = MPIDI_coll_get_next_container(nm_allred_container);
+
+    if(comm->node_comm != NULL){
+        if((sendbuf == MPI_IN_PLACE) && (comm->node_comm->rank != 0)){
+            mpi_errno = MPIDI_SHM_mpi_reduce(recvbuf, NULL, count, datatype, op, 0, comm->node_comm, errflag,
+                                             shm_reduce_container);
+        }
+        else{
+            mpi_errno = MPIDI_SHM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, 0, comm->node_comm, errflag,
+                                             shm_reduce_container);
+        }
+    }
+    else{
+        if (sendbuf != MPI_IN_PLACE) {
+            mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
+        }
+    }
+
+    if (comm->node_roots_comm != NULL) {
+        mpi_errno = MPIDI_NM_mpi_allreduce(MPI_IN_PLACE, recvbuf, count, datatype, op, comm->node_roots_comm,
+                                           errflag, nm_allred_container);
+    }
+
+    if (comm->node_comm != NULL) {
+        mpi_errno = MPIDI_SHM_mpi_bcast(recvbuf, count, datatype, 0, comm->node_comm, errflag,
+                                        shm_bcast_container);
+    }
+
+
+    return mpi_errno;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_composition_beta(const void *sendbuf, void *recvbuf, int count,
+                                                              MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                                              MPIR_Errflag_t * errflag,
+                                                              MPIDI_coll_algo_container_t *
+                                                              ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t * shm_reduce_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    MPIDI_coll_algo_container_t * nm_reduce_container = MPIDI_coll_get_next_container(shm_reduce_container);
+    MPIDI_coll_algo_container_t * nm_bcast_container = MPIDI_coll_get_next_container(nm_reduce_container);
+    MPIDI_coll_algo_container_t * shm_bcast_container = MPIDI_coll_get_next_container(nm_bcast_container);    
+
+    if(comm->node_comm != NULL){
+        if((sendbuf == MPI_IN_PLACE) && (comm->node_comm->rank != 0)){
+            mpi_errno = MPIDI_SHM_mpi_reduce(recvbuf, NULL, count, datatype, op, 0, comm->node_comm, errflag,
+                                             shm_reduce_container);
+        }
+        else{
+            mpi_errno = MPIDI_SHM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, 0, comm->node_comm, errflag,
+                                             shm_reduce_container);
+        }
+    }
+    else{
+        if (sendbuf != MPI_IN_PLACE) {
+            mpi_errno = MPIR_Localcopy(sendbuf, count, datatype, recvbuf, count, datatype);
+        }
+    }
+
+    if (comm->node_roots_comm != NULL) {
+        mpi_errno = MPIDI_NM_mpi_reduce(MPI_IN_PLACE, recvbuf, count, datatype, op, 0, comm->node_roots_comm,
+                                        errflag, nm_reduce_container);
+        mpi_errno = MPIDI_NM_mpi_bcast(recvbuf, count, datatype, 0, comm->node_roots_comm, errflag,
+                                       nm_reduce_container);
+    }
+
+    if (comm->node_comm != NULL) {
+        mpi_errno = MPIDI_SHM_mpi_bcast(recvbuf, count, datatype, 0, comm->node_comm, errflag,
+                                        shm_bcast_container);
+    }
+
+    return mpi_errno;
+}
+#endif
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_Allreduce_composition_gamma(const void *sendbuf, void *recvbuf, int count,
+                                                               MPI_Datatype datatype, MPI_Op op, MPIR_Comm * comm,
+                                                               MPIR_Errflag_t * errflag,
+                                                               MPIDI_coll_algo_container_t *
+                                                               ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t * nm_reduce_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    MPIDI_coll_algo_container_t * nm_bcast_container = MPIDI_coll_get_next_container(nm_reduce_container);
+
+    if (comm != NULL) {
+
+        if(sendbuf == MPI_IN_PLACE){
+            mpi_errno = MPIDI_NM_mpi_reduce(recvbuf, NULL, count, datatype, op, 0, comm, errflag,
+                                            nm_reduce_container);
+        }
+        else{
+            mpi_errno = MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, 0, comm, errflag,
+                                            nm_reduce_container);
+        }
+
+        mpi_errno = MPIDI_NM_mpi_bcast(recvbuf, count, datatype, 0, comm, errflag,
+                                       nm_bcast_container);
+    }
+
+    return mpi_errno;
+}
+
+
 
 MPL_STATIC_INLINE_PREFIX int MPID_Allgather(const void *sendbuf, int sendcount,
                                              MPI_Datatype sendtype, void *recvbuf, int recvcount,
@@ -214,18 +377,75 @@ MPL_STATIC_INLINE_PREFIX int MPID_Alltoallw(const void *sendbuf, const int sendc
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Reduce(const void *sendbuf, void *recvbuf,
-                                          int count, MPI_Datatype datatype, MPI_Op op,
-                                          int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
+                                         int count, MPI_Datatype datatype, MPI_Op op,
+                                         int root, MPIR_Comm * comm_ptr, MPIR_Errflag_t * errflag)
 {
-    int ret;
+    int ret = MPI_SUCCESS;
+    MPIDI_coll_algo_container_t *ch4_algo_parameters_container = NULL;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPID_REDUCE);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_REDUCE);
 
-    ret = MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+    ch4_algo_parameters_container =
+        MPIDI_CH4_Reduce_select(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag);
+
+    ret = MPIDI_CH4_Reduce_call(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, errflag,
+                                  ch4_algo_parameters_container);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPID_REDUCE);
     return ret;
+}
+
+MPL_STATIC_INLINE_PREFIX int MPIDI_Reduce_composition_alpha(const void *sendbuf, void *recvbuf, int count,
+                                                            MPI_Datatype datatype, MPI_Op op, int root,
+                                                            MPIR_Comm * comm, MPIR_Errflag_t * errflag,
+                                                            MPIDI_coll_algo_container_t * ch4_algo_parameters_container)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPI_Aint true_lb, true_extent;
+    void * nm_reduce_container = MPIDI_coll_get_next_container(ch4_algo_parameters_container);
+    void * shm_reduce_container = MPIDI_coll_get_next_container(nm_reduce_container);
+
+    MPIR_CHKLMEM_DECL(1);
+
+    if (comm->node_comm != NULL) {
+
+        if(comm->node_comm->rank == 0 && recvbuf == NULL){
+            MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
+            MPIR_CHKLMEM_MALLOC(recvbuf, void *, count*true_extent, mpi_errno, "receive buffer");
+        }
+
+        if(comm->rank == root && sendbuf == MPI_IN_PLACE){
+            sendbuf = recvbuf;
+        }
+
+        mpi_errno =
+            MPIDI_SHM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, 0, comm->node_comm, errflag,
+                                 nm_reduce_container);
+
+    }
+
+    if (comm->node_roots_comm != NULL) {
+        mpi_errno =
+            MPIDI_NM_mpi_reduce(sendbuf, recvbuf, count, datatype, op, comm->internode_table[root], 
+                                comm->node_roots_comm, errflag, nm_reduce_container);
+    }
+
+    if (comm->node_roots_comm == NULL && comm->rank == root) {
+        mpi_errno = MPIC_Recv(recvbuf, count, datatype, 0, MPIR_REDUCE_TAG, comm->node_comm, MPI_STATUS_IGNORE, errflag);
+    }
+
+    if (comm->node_roots_comm != NULL && comm->rank != root && comm->intranode_table[comm->rank] != -1){
+        mpi_errno = MPIC_Send(recvbuf, count, datatype, comm->intranode_table[root], MPIR_REDUCE_TAG, 
+                              comm->node_comm, errflag);
+    }
+
+
+  fn_exit:
+    MPIR_CHKLMEM_FREEALL();
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
 }
 
 MPL_STATIC_INLINE_PREFIX int MPID_Reduce_scatter(const void *sendbuf, void *recvbuf,
