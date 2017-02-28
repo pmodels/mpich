@@ -278,6 +278,8 @@
 #define MPI_Type_lb PMPI_Type_lb
 #undef MPI_Type_size
 #define MPI_Type_size PMPI_Type_size
+#undef MPI_Type_size_x
+#define MPI_Type_size_x PMPI_Type_size_x
 #undef MPI_Type_struct
 #define MPI_Type_struct PMPI_Type_struct
 #undef MPI_Type_ub
@@ -332,6 +334,8 @@
 
 #undef MPI_Status_set_elements
 #define MPI_Status_set_elements PMPI_Status_set_elements
+#undef MPI_Status_set_elements_x
+#define MPI_Status_set_elements_x PMPI_Status_set_elements_x
 
 #ifndef HAVE_MPI_INFO_SRC       /* everywhere except in info source directory */
 #undef MPI_Info_create
