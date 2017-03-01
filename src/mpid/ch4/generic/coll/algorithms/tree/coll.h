@@ -103,6 +103,19 @@ static inline int COLL_reduce(const void *sendbuf,
     return rc;
 }
 
+static inline int COLL_barrier(COLL_comm_t *comm,
+                               int         *errflag,
+                               int          k)
+{
+    int                rc;
+    COLL_sched_t s;
+    int                tag = (*comm->tree_comm.curTag)++;
+    COLL_sched_init(&s);
+    rc = COLL_sched_barrier(tag, comm, k, &s);
+    COLL_sched_kick(&s);
+    return rc;
+}
+
 
 static inline int COLL_kick(COLL_queue_elem_t * elem)
 {

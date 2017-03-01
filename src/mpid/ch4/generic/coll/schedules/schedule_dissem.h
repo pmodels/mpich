@@ -209,21 +209,27 @@ COLL_sched_barrier_dissem(int                 tag,
     TSP_dt_t         *dt      = &((TSP_global).control_dt);
 
     for(n=mycomm->tree.nranks-1; n>0; n>>=1)nphases++;
+    if(0) printf("dissem barrier - nphases = %d\n", nphases);
 
     int *recvids = TSP_allocate_mem(sizeof(int)*nphases);
     for(i=0; i<nphases; i++) {
+        if(0) printf("dissem barrier - start scheduling phase %d\n", i);
         int shift   = (1<<i);
         int to      = (mycomm->tree.rank+shift)%mycomm->tree.nranks;
         int from    = (mycomm->tree.rank)-shift;
 
         if(from<0) from = mycomm->tree.nranks+from;
-
+        
+        if(0) printf("dissem barrier - scheduling recv phase %d\n", i);
         recvids[i] = TSP_recv(NULL,0,dt,from,tag,&comm->tsp_comm,&s->tsp_sched,0,NULL);
+        if(0) printf("dissem barrier - scheduling send phase %d\n", i);
         TSP_send(NULL,0,dt,to,tag,&comm->tsp_comm,&s->tsp_sched,i,recvids);
+        if(0) printf("dissem barrier - scheduled phase %d\n", i);
     }
 
     TSP_sched_commit(&s->tsp_sched);
     TSP_free_mem(recvids);
+    if(0)printf("dissem barrier - finished scheduling\n");
     return 0;
 }
 

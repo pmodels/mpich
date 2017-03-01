@@ -127,7 +127,7 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPID_BARRIER);
 
 #ifdef MPIDI_BUILD_CH4_COLL
-    int valid_coll[] = {1};
+    int valid_coll[] = {0,1,2,3};
     int use_coll = (MPIR_CVAR_USE_BARRIER < 0)?
                         MPIDI_CH4_cycle_algorithm(comm, valid_coll, 1) :
                         MPIR_CVAR_USE_BARRIER;
@@ -140,6 +140,12 @@ MPL_STATIC_INLINE_PREFIX int MPID_Barrier(MPIR_Comm * comm, MPIR_Errflag_t * err
     case 1:
         ret = MPIDI_COLL_MPICH_DISSEM_barrier( &(MPIDI_COLL_COMM(comm)->mpich_dissem),
                         errflag);
+        break;
+    case 2:
+        ret = MPIDI_COLL_MPICH_KARY_barrier(&(MPIDI_COLL_COMM(comm)->mpich_kary), errflag, 2);
+        break;
+    case 3:
+        ret = MPIDI_COLL_MPICH_KNOMIAL_barrier(&(MPIDI_COLL_COMM(comm)->mpich_knomial), errflag, 2);
         break;
     }
 #endif
