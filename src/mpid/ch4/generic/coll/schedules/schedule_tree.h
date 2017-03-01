@@ -347,3 +347,47 @@ COLL_sched_allreduce(const void *sendbuf,
     }
     return 0;
 }
+
+
+static inline int
+COLL_sched_barrier(int                 tag,
+                   COLL_comm_t        *comm,
+                   int                 k,
+                   COLL_sched_t *s)
+{
+    int i, j;
+    COLL_tree_comm_t *mycomm    = &comm->tree_comm;
+    COLL_tree_t      *tree      = &mycomm->tree;
+    COLL_tree_t       myTree;
+    TSP_dt_t         *dt        = &TSP_global.control_dt;
+
+    if(k > 1 && 
+       k != COLL_TREE_RADIX_DEFAULT) {
+        tree = &myTree;
+        COLL_tree_init(TSP_rank(&comm->tsp_comm),
+                       TSP_size(&comm->tsp_comm),
+                       k,
+                       0,
+                       tree);
+    }
+    /* Receive from all children */
+    SCHED_FOREACHCHILDDO(TSP_recv(NULL,0,dt,j,tag,&comm->tsp_comm,
+			      &s->tsp_sched,0,NULL));
+
+    int fid = TSP_fence(&s->tsp_sched);
+    
+    if(tree->parent == -1) {
+        SCHED_FOREACHCHILDDO(TSP_send(NULL,0,dt,j,tag,&comm->tsp_comm,
+                                      &s->tsp_sched,1,&fid));
+    } else {
+        /* Send to Parent      */
+        TSP_send(NULL,0,dt,tree->parent,tag,&comm->tsp_comm,&s->tsp_sched,1,&fid);
+        /* Receive from Parent */
+        int recv_id = TSP_recv(NULL,0,dt,tree->parent,tag,&comm->tsp_comm,&s->tsp_sched,0,NULL);
+        /* Send to all children */
+        SCHED_FOREACHCHILDDO(TSP_send(NULL,0,dt,j,tag,&comm->tsp_comm,
+                                      &s->tsp_sched,1,&recv_id));
+    }
+    return 0;
+}
+
