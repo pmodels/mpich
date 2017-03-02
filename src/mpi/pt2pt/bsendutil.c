@@ -358,39 +358,12 @@ int MPIR_Bsend_free_req_seg( MPIR_Request* req )
    within the check_active */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Bsend_free_segment
+#define FUNCNAME MPIR_Bsend_merge_segment
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
-static void MPIR_Bsend_free_segment( MPII_Bsend_data_t *p )
+static void MPIR_Bsend_merge_segment( MPII_Bsend_data_t *p )
 {
-    MPII_Bsend_data_t *prev = p->prev, *avail = BsendBuffer.avail, *avail_prev;
-
-    MPL_DBG_MSG_FMT(MPIR_DBG_BSEND,TYPICAL,(MPL_DBG_FDEST,
-                 "Freeing bsend segment at %p of size %llu, next at %p",
-                 p, (unsigned long long) p->size, ((char *)p)+p->total_size));
-
-    MPL_DBG_MSG_D(MPIR_DBG_BSEND,TYPICAL,
-                   "At the begining of free_segment with size %llu:",
-                   (unsigned long long) p->total_size );
-    MPL_DBG_STMT(MPIR_DBG_BSEND,TYPICAL,MPIR_Bsend_dump());
-
-    /* Remove the segment from the active list */
-    if (prev) {
-	MPL_DBG_MSG(MPIR_DBG_BSEND,TYPICAL,"free segment is within active list");
-	prev->next = p->next;
-    }
-    else {
-	/* p was at the head of the active list */
-	MPL_DBG_MSG(MPIR_DBG_BSEND,TYPICAL,"free segment is head of active list");
-	BsendBuffer.active = p->next;
-	/* The next test sets the prev pointer to null */
-    }
-    if (p->next) {
-	p->next->prev = prev;
-    }
-
-    MPL_DBG_STMT(MPIR_DBG_BSEND,VERBOSE,MPIR_Bsend_dump());
-
+    MPII_Bsend_data_t *avail = BsendBuffer.avail, *avail_prev;
     /* Merge into the avail list */
     /* Find avail_prev, avail, such that p is between them.
        either may be null if p is at either end of the list */
@@ -443,6 +416,42 @@ static void MPIR_Bsend_free_segment( MPII_Bsend_data_t *p )
     MPL_DBG_STMT(MPIR_DBG_BSEND,TYPICAL,MPIR_Bsend_dump());
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIR_Bsend_free_segment
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+static void MPIR_Bsend_free_segment( MPII_Bsend_data_t *p )
+{
+    MPII_Bsend_data_t *prev = p->prev;
+
+    MPL_DBG_MSG_FMT(MPIR_DBG_BSEND,TYPICAL,(MPL_DBG_FDEST,
+                 "Freeing bsend segment at %p of size %llu, next at %p",
+                 p, (unsigned long long) p->size, ((char *)p)+p->total_size));
+
+    MPL_DBG_MSG_D(MPIR_DBG_BSEND,TYPICAL,
+                   "At the begining of free_segment with size %llu:",
+                   (unsigned long long) p->total_size );
+    MPL_DBG_STMT(MPIR_DBG_BSEND,TYPICAL,MPIR_Bsend_dump());
+
+    /* Remove the segment from the active list */
+    if (prev) {
+	MPL_DBG_MSG(MPIR_DBG_BSEND,TYPICAL,"free segment is within active list");
+	prev->next = p->next;
+    }
+    else {
+	/* p was at the head of the active list */
+	MPL_DBG_MSG(MPIR_DBG_BSEND,TYPICAL,"free segment is head of active list");
+	BsendBuffer.active = p->next;
+	/* The next test sets the prev pointer to null */
+    }
+    if (p->next) {
+	p->next->prev = prev;
+    }
+
+    MPL_DBG_STMT(MPIR_DBG_BSEND,VERBOSE,MPIR_Bsend_dump());
+    MPIR_Bsend_merge_segment(p);
+}
+
 /* 
  * The following routine tests for completion of active sends and 
  * frees the related storage
@@ -458,52 +467,70 @@ static void MPIR_Bsend_free_segment( MPII_Bsend_data_t *p )
 static int MPIR_Bsend_check_active( void )
 {
     int mpi_errno = MPI_SUCCESS;
-    MPII_Bsend_data_t *active = BsendBuffer.active, *next_active;
+    MPID_Progress_state progress_state;
+    MPII_Bsend_data_t *active, *next_active, *list_head;
 
+    active = BsendBuffer.active;
+    if(active) {
+        /* Multithreading:  work on this list exclusively by dequeuing all elements */
+        /* The lock may be released during progress so this thread will process all */
+        /* the elements it can                                                      */
+        active    = BsendBuffer.active;
+        list_head = active;
+        BsendBuffer.active = NULL;
+    } else
+        goto fn_exit;
     MPL_DBG_MSG_P(MPIR_DBG_BSEND,TYPICAL,"Checking active starting at %p", active);
     while (active) {
-	MPI_Request r = active->request->handle;
-	int         flag;
-	
-	next_active = active->next;
-
-	if (active->kind == IBSEND) {
-	    /* We handle ibsend specially to allow for the user
-	       to attempt and cancel the request. Also, to allow
-	       for a cancel attempt (which must be attempted before
-	       a successful test or wait), we only start
-	       testing when the user has successfully released
-	       the request (it is a grequest, the free call will do it) */
-	    flag = 0;
-            /* XXX DJG FIXME-MT should we be checking this? */
-	    if (MPIR_Object_get_ref(active->request) == 1) {
-		mpi_errno = MPIR_Test_impl(&r, &flag, MPI_STATUS_IGNORE );
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	    } else {
-		/* We need to invoke the progress engine in case we 
-		 need to advance other, incomplete communication.  */
-		MPID_Progress_state progress_state;
-		MPID_Progress_start(&progress_state);
-		mpi_errno = MPID_Progress_test( );
-		MPID_Progress_end(&progress_state);
-                if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	    }
-	} else {
-	    mpi_errno = MPIR_Test_impl( &r, &flag, MPI_STATUS_IGNORE );
+        next_active = active->next;
+        /* We handle ibsend specially to allow for the user
+           to attempt and cancel the request. Also, to allow
+           for a cancel attempt (which must be attempted before
+           a successful test or wait), we only start
+           testing when the user has successfully released
+           the request (it is a grequest, the free call will do it) */
+        if(!(active->kind == IBSEND && MPIR_Object_get_ref(active->request) != 1)) {
+            MPI_Request r = active->request->handle;
+            int flag;
+            mpi_errno = MPIR_Test_impl(&r, &flag, MPI_STATUS_IGNORE);
             if (mpi_errno) MPIR_ERR_POP(mpi_errno);
-	}
-	if (flag) {
-	    /* We're done.  Remove this segment */
-	    MPL_DBG_MSG_P(MPIR_DBG_BSEND,TYPICAL,"Removing segment %p", active);
-	    MPIR_Bsend_free_segment( active );
-	}
-	active = next_active;
-	MPL_DBG_MSG_P(MPIR_DBG_BSEND,TYPICAL,"Next active is %p",active);
+            if (flag) {
+                MPII_Bsend_data_t *prev = active->prev;
+                if (prev) prev->next    = active->next;
+                else list_head          = active->next;
+                if (active->next) active->next->prev = prev;
+                MPL_DBG_MSG_P(MPIR_DBG_BSEND,TYPICAL,"Removing segment %p", active);
+                MPIR_Bsend_merge_segment( active );
+            }
+        } else {
+            MPID_Progress_start(&progress_state);
+            mpi_errno = MPID_Progress_test( );
+            MPID_Progress_end(&progress_state);
+            if (mpi_errno) MPIR_ERR_POP(mpi_errno);
+        }
+        active    = next_active;
+        MPL_DBG_MSG_P(MPIR_DBG_BSEND,TYPICAL,"Next active is %p",active);
     }
-
- fn_exit:
+    /* Append the working list back on to the global active list */
+    /* Since we've just processed this list, append to the back  */
+    /* of the global list to allow other segments to be checked  */
+    if(list_head) {
+        MPII_Bsend_data_t *last;
+        active = BsendBuffer.active;
+        last   = active;
+        while(active) {
+            last   = active;
+            active = active->next;
+        }
+        if(last) {
+            last->next      = list_head;
+            list_head->prev = last;
+        }
+        else BsendBuffer.active = list_head;
+    }
+fn_exit:
     return mpi_errno;
- fn_fail:
+fn_fail:
     goto fn_exit;
 }
 
