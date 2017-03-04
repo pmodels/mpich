@@ -49,7 +49,7 @@ struct hwloc_linux_backend_data_s {
 #ifdef HWLOC_HAVE_LIBUDEV
   struct udev *udev; /* Global udev context */
 #endif
-  char *dumped_hwdata_dirname;
+  const char *dumped_hwdata_dirname;
   enum {
     HWLOC_LINUX_ARCH_X86, /* x86 32 or 64bits, including k1om (KNC) */
     HWLOC_LINUX_ARCH_IA64,
