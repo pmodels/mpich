@@ -700,6 +700,10 @@ static inline void create_dt_map()
     dtsize[FI_LONG_DOUBLE] = sizeof(long double);
     dtsize[FI_LONG_DOUBLE_COMPLEX] = sizeof(long double complex);
 
+    /* when atomics are disabled and atomics capability are not
+     * enabled call fo fi_atomic*** may crash */
+    MPIR_Assert(MPIDI_OFI_ENABLE_ATOMICS);
+
     for (i = 0; i < MPIDI_OFI_DT_SIZES; i++)
         for (j = 0; j < MPIDI_OFI_OP_SIZES; j++) {
             enum fi_datatype fi_dt = (enum fi_datatype) -1;
@@ -817,5 +821,8 @@ void MPIDI_OFI_index_datatypes()
     add_index(MPI_LONG_INT, &index);
     add_index(MPI_SHORT_INT, &index);   /* 60 */
     add_index(MPI_LONG_DOUBLE_INT, &index);
-    create_dt_map();
+
+    /* do not generate map when atomics are not enabled */
+    if(MPIDI_OFI_ENABLE_ATOMICS)
+        create_dt_map();
 }
