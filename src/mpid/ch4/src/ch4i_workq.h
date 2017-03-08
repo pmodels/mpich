@@ -8,41 +8,38 @@
 #ifndef CH4I_WORKQ_H_INCLUDED
 #define CH4I_WORKQ_H_INCLUDED
 
-/* Point-to-Point */
-typedef enum MPIDI_pt2pt_op MPIDI_pt2pt_op_t;
-typedef struct MPIDI_pt2pt_elemt MPIDI_pt2pt_elemt_t;
+typedef enum MPIDI_workq_op MPIDI_workq_op_t;
+enum MPIDI_workq_op {MPIDI_SEND, MPIDI_ISEND, MPIDI_IRECV, MPIDI_PUT};
 
-enum MPIDI_pt2pt_op {MPIDI_SEND, MPIDI_ISEND, MPIDI_IRECV};
+typedef struct MPIDI_workq_elemt MPIDI_workq_elemt_t;
 
-struct MPIDI_pt2pt_elemt {
-    MPIDI_pt2pt_op_t op;
-    const void *send_buf;
-    void *recv_buf;
-    MPI_Aint count;
-    MPI_Datatype datatype;
-    int rank;
-    int tag;
-    MPIR_Comm *comm_ptr;
-    int context_offset;
-    MPIR_Request *request;
-};
-
-/* RMA */
-typedef enum MPIDI_rma_op MPIDI_rma_op_t;
-typedef struct MPIDI_rma_elemt MPIDI_rma_elemt_t;
-
-enum MPIDI_rma_op {MPIDI_PUT};
-
-struct MPIDI_rma_elemt {
-    MPIDI_rma_op_t op;
-    const void *origin_addr;
-    int origin_count;
-    MPI_Datatype origin_datatype;
-    int target_rank;
-    MPI_Aint target_disp;
-    int target_count;
-    MPI_Datatype target_datatype;
-    MPIR_Win *win_ptr;
+struct MPIDI_workq_elemt {
+    MPIDI_workq_op_t op;
+    union {
+        /* Point-to-Point */
+        struct {
+            const void *send_buf;
+            void *recv_buf;
+            MPI_Aint count;
+            MPI_Datatype datatype;
+            int rank;
+            int tag;
+            MPIR_Comm *comm_ptr;
+            int context_offset;
+            MPIR_Request *request;
+        };
+        /* RMA */
+        struct {
+            const void *origin_addr;
+            int origin_count;
+            MPI_Datatype origin_datatype;
+            int target_rank;
+            MPI_Aint target_disp;
+            int target_count;
+            MPI_Datatype target_datatype;
+            MPIR_Win *win_ptr;
+        };
+    };
 };
 
 /* For profiling */
@@ -107,7 +104,7 @@ extern double MPIDI_rma_issue_pend_time;
 #define MPIDI_WORKQ_RMA_ISSUE_STOP
 #endif
 
-static inline void MPIDI_workq_pt2pt_enqueue_body(MPIDI_pt2pt_op_t op,
+static inline void MPIDI_workq_pt2pt_enqueue_body(MPIDI_workq_op_t op,
                                                   const void *send_buf,
                                                   void *recv_buf,
                                                   MPI_Aint count,
@@ -119,7 +116,7 @@ static inline void MPIDI_workq_pt2pt_enqueue_body(MPIDI_pt2pt_op_t op,
                                                   int ep_idx,
                                                   MPIR_Request *request)
 {
-    MPIDI_pt2pt_elemt_t* pt2pt_elemt = NULL;
+    MPIDI_workq_elemt_t* pt2pt_elemt = NULL;
     pt2pt_elemt = MPL_malloc(sizeof (*pt2pt_elemt));
     pt2pt_elemt->op       = op;
     pt2pt_elemt->send_buf = send_buf;
@@ -134,7 +131,7 @@ static inline void MPIDI_workq_pt2pt_enqueue_body(MPIDI_pt2pt_op_t op,
     MPIDI_workq_enqueue(&MPIDI_CH4_Global.ep_pt2pt_pend_ops[ep_idx], pt2pt_elemt);
 }
 
-static inline void MPIDI_workq_rma_enqueue_body(MPIDI_rma_op_t op,
+static inline void MPIDI_workq_rma_enqueue_body(MPIDI_workq_op_t op,
                                                 const void *origin_addr,
                                                 int origin_count,
                                                 MPI_Datatype origin_datatype,
@@ -145,7 +142,7 @@ static inline void MPIDI_workq_rma_enqueue_body(MPIDI_rma_op_t op,
                                                 MPIR_Win *win_ptr,
                                                 int ep_idx)
 {
-    MPIDI_rma_elemt_t* rma_elemt = NULL;
+    MPIDI_workq_elemt_t* rma_elemt = NULL;
     rma_elemt = MPL_malloc(sizeof (*rma_elemt));
     rma_elemt->op               = op;
     rma_elemt->origin_addr      = origin_addr;
@@ -162,8 +159,9 @@ static inline void MPIDI_workq_rma_enqueue_body(MPIDI_rma_op_t op,
 static inline int MPIDI_workq_pt2pt_progress(int ep_idx)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_pt2pt_elemt_t* pt2pt_elemt = NULL;
+    MPIDI_workq_elemt_t* pt2pt_elemt = NULL;
     MPIDI_WORKQ_PT2PT_PROGRESS_START;
+
     MPIDI_workq_dequeue(&MPIDI_CH4_Global.ep_pt2pt_pend_ops[ep_idx], (void**)&pt2pt_elemt);
     while(pt2pt_elemt != NULL) {
         MPIDI_WORKQ_PT2PT_ISSUE_START;
@@ -206,7 +204,7 @@ fn_fail:
 static inline int MPIDI_workq_rma_progress(int ep_idx)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_rma_elemt_t* rma_elemt = NULL;
+    MPIDI_workq_elemt_t* rma_elemt = NULL;
     MPIDI_WORKQ_RMA_PROGRESS_START;
     MPIDI_workq_dequeue(&MPIDI_CH4_Global.ep_rma_pend_ops[ep_idx], (void**)&rma_elemt);
     while(rma_elemt != NULL) {
@@ -243,7 +241,7 @@ fn_fail:
     return mpi_errno;
 }
 
-static inline void MPIDI_workq_pt2pt_enqueue(MPIDI_pt2pt_op_t op,
+static inline void MPIDI_workq_pt2pt_enqueue(MPIDI_workq_op_t op,
                                              const void *send_buf,
                                              void *recv_buf,
                                              MPI_Aint count,
@@ -261,7 +259,7 @@ static inline void MPIDI_workq_pt2pt_enqueue(MPIDI_pt2pt_op_t op,
     MPIDI_WORKQ_PT2PT_ENQUEUE_STOP;
 }
 
-static inline void MPIDI_workq_rma_enqueue(MPIDI_rma_op_t op,
+static inline void MPIDI_workq_rma_enqueue(MPIDI_workq_op_t op,
                                            const void *origin_addr,
                                            int origin_count,
                                            MPI_Datatype origin_datatype,
@@ -303,7 +301,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_dispatch_send(int (*func)(const void *buf, in
                                                              int tag, MPIR_Comm * comm,
                                                              int context_offset,
                                                              MPIR_Request ** request),
-                                                 MPIDI_pt2pt_op_t op,
+                                                 MPIDI_workq_op_t op,
                                                  const void *buf, int count,
                                                  MPI_Datatype datatype, int rank,
                                                  int tag, MPIR_Comm * comm,
