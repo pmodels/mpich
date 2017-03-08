@@ -176,7 +176,6 @@ static inline int MPIDI_workq_pt2pt_progress(int ep_idx)
                                           pt2pt_elemt->tag,
                                           pt2pt_elemt->comm_ptr,
                                           pt2pt_elemt->context_offset,
-                                          ep_idx,
                                           &pt2pt_elemt->request);
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             break;
@@ -188,7 +187,6 @@ static inline int MPIDI_workq_pt2pt_progress(int ep_idx)
                                            pt2pt_elemt->tag,
                                            pt2pt_elemt->comm_ptr,
                                            pt2pt_elemt->context_offset,
-                                           ep_idx,
                                            &pt2pt_elemt->request);
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             break;
@@ -222,8 +220,7 @@ static inline int MPIDI_workq_rma_progress(int ep_idx)
                                          rma_elemt->target_disp,
                                          rma_elemt->target_count,
                                          rma_elemt->target_datatype,
-                                         rma_elemt->win_ptr,
-                                         ep_idx);
+                                         rma_elemt->win_ptr);
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             break;
         }
@@ -305,25 +302,25 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_dispatch_send(int (*func)(const void *buf, in
                                                              MPI_Datatype datatype, int rank,
                                                              int tag, MPIR_Comm * comm,
                                                              int context_offset,
-                                                             int ep_idx,
                                                              MPIR_Request ** request),
                                                  MPIDI_pt2pt_op_t op,
                                                  const void *buf, int count,
                                                  MPI_Datatype datatype, int rank,
                                                  int tag, MPIR_Comm * comm,
                                                  int context_offset,
-                                                 int ep_idx,
                                                  MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
 
 #ifdef MPIDI_CH4_MT_DIRECT
-    mpi_errno = func(buf, count, datatype, rank, tag, comm, context_offset, ep_idx, request);
+    mpi_errno = func(buf, count, datatype, rank, tag, comm, context_offset, request);
 #else
 #  ifdef MPIDI_CH4_MT_TRYLOCK
     /* FIXME: Implement trylock-enqueue */
 #  else
     {
+        int ep_idx;
+        MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
         /* Enqueue and hand-off */
         *request = MPIR_Request_create(MPIR_REQUEST_KIND__SEND);
         /* FIXME: do we need to add a refcount while holding ownership in the queue? */

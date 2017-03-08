@@ -16,10 +16,10 @@
 
 #define MPIDI_OFI_SENDPARAMS const void *buf,int count,MPI_Datatype datatype, \
     int rank,int tag,MPIR_Comm *comm,                               \
-    int context_offset,int ep_idx,MPIR_Request **request
+    int context_offset, MPIR_Request **request
 
 #define MPIDI_OFI_SENDARGS buf,count,datatype,rank,tag, \
-        comm,context_offset,ep_idx,request
+        comm,context_offset,request
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_OFI_send_lightweight
@@ -29,14 +29,16 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight(const void *buf,
                                                         size_t data_sz,
                                                         int rank,
                                                         int tag, MPIR_Comm * comm,
-                                                        int context_offset, int ep_idx)
+                                                        int context_offset)
 {
     int mpi_errno = MPI_SUCCESS;
     uint64_t match_bits;
+    int ep_idx;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT);
     match_bits =
         MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0);
+    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
     mpi_errno =
         MPIDI_OFI_send_handler(MPIDI_OFI_EP_TX_TAG(ep_idx), buf, data_sz, NULL, comm->rank,
                                MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG), match_bits,
@@ -59,16 +61,18 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_lightweight_request(const void *buf,
                                                                 int rank,
                                                                 int tag,
                                                                 MPIR_Comm * comm,
-                                                                int context_offset, int ep_idx,
+                                                                int context_offset,
                                                                 MPIR_Request ** request)
 {
     int mpi_errno = MPI_SUCCESS;
     uint64_t match_bits;
+    int ep_idx;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT_REQUEST);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_LIGHTWEIGHT_REQUEST);
     MPIDI_OFI_SEND_REQUEST_CREATE_LW_CONDITIONAL(*request);
     match_bits =
         MPIDI_OFI_init_sendtag(comm->context_id + context_offset, comm->rank, tag, 0);
+    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
     mpi_errno =
         MPIDI_OFI_send_handler(MPIDI_OFI_EP_TX_TAG(ep_idx), buf, data_sz, NULL, comm->rank,
                                MPIDI_OFI_comm_to_phys(comm, rank, MPIDI_OFI_API_TAG), match_bits,
@@ -97,6 +101,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(MPIDI_OFI_SENDPARAMS,
     MPI_Aint last;
     char *send_buf;
     uint64_t match_bits;
+    int ep_idx;
 
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_OFI_SEND_NORMAL);
@@ -148,6 +153,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send_normal(MPIDI_OFI_SENDPARAMS,
     else
         MPIDI_OFI_REQUEST(sreq, noncontig) = NULL;
 
+    MPIDI_find_tag_ep(comm, rank, tag, &ep_idx);
     if (data_sz <= MPIDI_Global.max_buffered_send) {
         mpi_errno =
             MPIDI_OFI_send_handler(MPIDI_OFI_EP_TX_TAG(ep_idx), send_buf, data_sz, NULL, comm->rank,
@@ -259,14 +265,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_send(MPIDI_OFI_SENDPARAMS, int noreq, uin
     if (likely(!syncflag && dt_contig && (data_sz <= MPIDI_Global.max_buffered_send)))
         if (noreq)
             mpi_errno = MPIDI_OFI_send_lightweight((char *) buf + dt_true_lb, data_sz,
-                                                   rank, tag, comm, context_offset, ep_idx);
+                                                   rank, tag, comm, context_offset);
         else
             mpi_errno = MPIDI_OFI_send_lightweight_request((char *) buf + dt_true_lb, data_sz,
-                                                           rank, tag, comm, context_offset, ep_idx,
+                                                           rank, tag, comm, context_offset,
                                                            request);
     else
         mpi_errno = MPIDI_OFI_send_normal(buf, count, datatype, rank, tag, comm,
-                                          context_offset, ep_idx, request, dt_contig,
+                                          context_offset, request, dt_contig,
                                           data_sz, dt_ptr, dt_true_lb, syncflag);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_OFI_SEND);
@@ -321,22 +327,6 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_OFI_persistent_send(MPIDI_OFI_SENDPARAMS)
                      CONTEXTID,                        \
                      &preq->u.persist.real_request);          \
     break;                                      \
-  }
-
-#define STARTALL_CASE_EP(CASELABEL,FUNC,CONTEXTID)                      \
-  case CASELABEL:                                                       \
-  {                                                                     \
-      mpi_errno = FUNC(MPIDI_OFI_REQUEST(preq,util.persist.buf),        \
-                       MPIDI_OFI_REQUEST(preq,util.persist.count),      \
-                       MPIDI_OFI_REQUEST(preq,datatype),                \
-                       MPIDI_OFI_REQUEST(preq,util.persist.rank),       \
-                       MPIDI_OFI_REQUEST(preq,util.persist.tag),        \
-                       preq->comm,                                      \
-                       MPIDI_OFI_REQUEST(preq,util_id) -                \
-                       CONTEXTID,                                       \
-                       0,  /* FIXME: ep_idx */                          \
-                       &preq->u.persist.real_request);                  \
-      break;                                                            \
   }
 
 #undef FUNCNAME
@@ -449,13 +439,13 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_NM_mpi_startall(int count, MPIR_Request * req
 
         switch (MPIDI_OFI_REQUEST(preq, util.persist.type)) {
 #ifdef MPIDI_BUILD_CH4_SHM
-            STARTALL_CASE_EP(MPIDI_PTYPE_RECV, MPIDI_NM_mpi_irecv, preq->comm->recvcontext_id);
+            STARTALL_CASE(MPIDI_PTYPE_RECV, MPIDI_NM_mpi_irecv, preq->comm->recvcontext_id);
 #else
             STARTALL_CASE(MPIDI_PTYPE_RECV, MPID_Irecv, preq->comm->recvcontext_id);
 #endif
 
 #ifdef MPIDI_BUILD_CH4_SHM
-            STARTALL_CASE_EP(MPIDI_PTYPE_SEND, MPIDI_NM_mpi_isend, preq->comm->context_id);
+            STARTALL_CASE(MPIDI_PTYPE_SEND, MPIDI_NM_mpi_isend, preq->comm->context_id);
 #else
             STARTALL_CASE(MPIDI_PTYPE_SEND, MPID_Isend, preq->comm->context_id);
 #endif

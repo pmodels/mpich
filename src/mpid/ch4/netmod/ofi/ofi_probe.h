@@ -20,7 +20,7 @@
 static inline int MPIDI_OFI_do_iprobe(int source,
                                       int tag,
                                       MPIR_Comm * comm,
-                                      int context_offset, int ep_idx,
+                                      int context_offset,
                                       int *flag,
                                       MPI_Status * status,
                                       MPIR_Request ** message, uint64_t peek_flags)
@@ -101,7 +101,7 @@ static inline int MPIDI_OFI_do_iprobe(int source,
 static inline int MPIDI_NM_mpi_improbe(int source,
                                        int tag,
                                        MPIR_Comm * comm,
-                                       int context_offset, int ep_idx,
+                                       int context_offset,
                                        int *flag, MPIR_Request ** message, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -116,7 +116,7 @@ static inline int MPIDI_NM_mpi_improbe(int source,
 
     /* Set flags for mprobe peek, when ready */
 
-    mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, ep_idx,
+    mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset,
                                     flag, status, message, FI_CLAIM | FI_COMPLETION);
 
     if (*flag && *message) {
@@ -136,7 +136,7 @@ fn_exit:
 static inline int MPIDI_NM_mpi_iprobe(int source,
                                       int tag,
                                       MPIR_Comm * comm,
-                                      int context_offset, int ep_idx, int *flag, MPI_Status * status)
+                                      int context_offset, int *flag, MPI_Status * status)
 {
     int mpi_errno;
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_NM_MPI_IPROBE);
@@ -147,7 +147,7 @@ static inline int MPIDI_NM_mpi_iprobe(int source,
         goto fn_exit;
     }
 
-    mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, ep_idx, flag, status, NULL, 0ULL);
+    mpi_errno = MPIDI_OFI_do_iprobe(source, tag, comm, context_offset, flag, status, NULL, 0ULL);
 
 fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_NM_MPI_IPROBE);
