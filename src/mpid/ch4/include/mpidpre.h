@@ -22,6 +22,7 @@
 #include "netmodpre.h"
 #include "shmpre.h"
 #include "mpl_uthash.h"
+#include "ch4i_workq_types.h"
 
 typedef struct {
     union {
@@ -293,6 +294,9 @@ typedef struct {
     MPIDI_CH4U_win_t ch4u;
     union {
     MPIDI_NM_WIN_DECL} netmod;
+
+    int nqueues;
+    MPIDI_workq_list_t *work_queues;
 } MPIDI_Devwin_t;
 
 #define MPIDI_CH4U_WIN(win,field)        (((win)->dev.ch4u).field)
@@ -385,6 +389,9 @@ typedef struct MPIDI_Devcomm_t {
         MPIDI_rank_map_t map;
         MPIDI_rank_map_t local_map;
     } ch4;
+
+    int nqueues;
+    MPIDI_workq_list_t *work_queues;
 } MPIDI_Devcomm_t;
 #define MPIDI_CH4U_COMM(comm,field) ((comm)->dev.ch4.ch4u).field
 #define MPIDI_COMM(comm,field) ((comm)->dev.ch4).field
@@ -461,32 +468,5 @@ extern MPIDI_av_table_t *MPIDI_av_table0;
     (MPIDI_COMM((comm),map).avtid == 0 && MPIDI_COMM((comm),local_map).avtid == 0)
 
 #include "mpidu_pre.h"
-
-/* Define the work queue implementation type */
-#if defined(MPIDI_USE_NMQUEUE)
-#include <queue/zm_nmqueue.h>
-#define MPIDI_workq_t       zm_nmqueue_t
-#define MPIDI_workq_init    zm_nmqueue_init
-#define MPIDI_workq_enqueue zm_nmqueue_enqueue
-#define MPIDI_workq_dequeue zm_nmqueue_dequeue
-#elif defined(MPIDI_USE_MSQUEUE)
-#include <queue/zm_msqueue.h>
-#define MPIDI_workq_t       zm_msqueue_t
-#define MPIDI_workq_init    zm_msqueue_init
-#define MPIDI_workq_enqueue zm_msqueue_enqueue
-#define MPIDI_workq_dequeue zm_msqueue_dequeue
-#elif defined(MPIDI_USE_GLQUEUE)
-#include <queue/zm_glqueue.h>
-#define MPIDI_workq_t       zm_glqueue_t
-#define MPIDI_workq_init    zm_glqueue_init
-#define MPIDI_workq_enqueue zm_glqueue_enqueue
-#define MPIDI_workq_dequeue zm_glqueue_dequeue
-#else
-/* Stub implementation to make it compile */
-typedef void *MPIDI_workq_t;
-MPL_STATIC_INLINE_PREFIX void MPIDI_workq_init(MPIDI_workq_t *q) {}
-MPL_STATIC_INLINE_PREFIX void MPIDI_workq_enqueue(MPIDI_workq_t *q, void *p) {}
-MPL_STATIC_INLINE_PREFIX void MPIDI_workq_dequeue(MPIDI_workq_t *q, void **pp) {}
-#endif
 
 #endif /* MPIDPRE_H_INCLUDED */

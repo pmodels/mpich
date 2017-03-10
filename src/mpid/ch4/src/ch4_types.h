@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include "mpir_cvars.h"
 #include "pmi.h"
+#include "ch4i_workq_types.h"
 
 /* Macros and inlines */
 /* match/ignore bit manipulation
@@ -279,9 +280,8 @@ typedef struct MPIDI_CH4_Global_t {
     MPIU_buf_pool_t *buf_pool;
     int n_netmod_eps;
     MPID_Thread_mutex_t *ep_locks;
+    MPIDI_workq_list_t **ep_queues;
     /* Per-endpoint queues for saving pending operations to issue */
-    MPIDI_workq_t *ep_pt2pt_pend_ops;
-    MPIDI_workq_t *ep_rma_pend_ops;
     int progress_hook_id;
 } MPIDI_CH4_Global_t;
 extern MPIDI_CH4_Global_t MPIDI_CH4_Global;
