@@ -11,6 +11,8 @@
 
 #include <pip.h>
 
+extern int pip_get_pid( int pipid, pid_t *pidp );
+
 static HYD_status HYDU_pip_envv(struct HYD_env *env_list, char ***envv_ptr)
 {
     struct HYD_env *env;
@@ -117,7 +119,7 @@ static int HYDU_pip_after(struct pip_task_fds *fds)
 HYD_status HYDU_spawn_pip_tasks(char **client_arg, struct HYD_env * env_list,
                                 int *in, int *out, int *err, int *pid, int idx)
 {
-    static pipid = 0;
+    static int pipid = 0;
     struct pip_task_fds *fds;
     int tpid;
     int pip_err;
