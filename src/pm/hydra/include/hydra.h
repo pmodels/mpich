@@ -15,6 +15,7 @@
 #include "hydra_config.h"
 
 #include "mpl.h"
+#include "mpl_uthash.h"
 
 extern char *HYD_dbg_prefix;
 
@@ -278,11 +279,6 @@ struct HYD_env {
     struct HYD_env *next;
 };
 
-typedef enum HYD_env_overwrite {
-    HYD_ENV_OVERWRITE_TRUE,
-    HYD_ENV_OVERWRITE_FALSE
-} HYD_env_overwrite_t;
-
 typedef enum {
     HYD_ENV_PROP_UNSET,
     HYD_ENV_PROP_ALL,
@@ -315,6 +311,7 @@ struct HYD_exec {
 struct HYD_pg {
     int pgid;
     struct HYD_proxy *proxy_list;
+    int proxy_count;
     int pg_process_count;
     int barrier_count;
 
@@ -332,17 +329,16 @@ struct HYD_pg {
 
 /* Information about the node itself */
 struct HYD_node {
+    /* information filled out by the RMK */
+    char *username;
     char *hostname;
     int core_count;
+    char *local_binding;
+
+    /* information filled out once the proxies are setup */
     int active_processes;
 
     int node_id;
-
-    /* Username */
-    char *user;
-
-    /* Node-specific binding information */
-    char *local_binding;
 
     struct HYD_node *next;
 };
@@ -369,6 +365,8 @@ struct HYD_proxy {
     int control_fd;
 
     struct HYD_proxy *next;
+
+    MPL_UT_hash_handle hh;
 };
 
 /* Global user parameters */
@@ -385,17 +383,6 @@ struct HYD_user_global {
     char *binding;
     char *mapping;
     char *membind;
-
-    /* Checkpoint restart */
-    char *ckpointlib;
-    char *ckpoint_prefix;
-    int ckpoint_num;
-
-    /* Demux engine */
-    char *demux;
-
-    /* Network interface */
-    char *iface;
 
     /* Other random parameters */
     int enablex;
@@ -549,8 +536,8 @@ struct HYD_env *HYDU_env_lookup(char *env_name, struct HYD_env *env_list);
 HYD_status HYDU_append_env_to_list(const char *env_name, const char *env_value,
                                    struct HYD_env **env_list);
 HYD_status HYDU_append_env_str_to_list(const char *str, struct HYD_env **env_list);
-HYD_status HYDU_putenv(struct HYD_env *env, HYD_env_overwrite_t overwrite);
-HYD_status HYDU_putenv_list(struct HYD_env *env_list, HYD_env_overwrite_t overwrite);
+HYD_status HYDU_putenv(struct HYD_env *env);
+HYD_status HYDU_putenv_list(struct HYD_env *env_list);
 HYD_status HYDU_comma_list_to_env_list(char *str, struct HYD_env **env_list);
 
 /* launch */
@@ -586,7 +573,7 @@ enum HYDU_sock_comm_flag {
     HYDU_SOCK_COMM_MSGWAIT = 1
 };
 
-HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port);
+HYD_status HYDU_sock_listen(int *listen_fd, const char *port_range, uint16_t * port);
 
 /* delay is in microseconds */
 HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd, int retries,
@@ -599,10 +586,8 @@ HYD_status HYDU_sock_write(int fd, const void *buf, int maxlen, int *sent, int *
 HYD_status HYDU_sock_set_nonblock(int fd);
 HYD_status HYDU_sock_forward_stdio(int in, int out, int *closed);
 void HYDU_sock_finalize(void);
-HYD_status HYDU_sock_get_iface_ip(char *iface, char **ip);
-HYD_status HYDU_sock_is_local(char *host, int *is_local);
 HYD_status
-HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_range,
+HYDU_sock_create_and_listen_portstr(char *hostname, char *port_range,
                                     char **port_str,
                                     HYD_status(*callback) (int fd, HYD_event_t events,
                                                            void *userp), void *userp);

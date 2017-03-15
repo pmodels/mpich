@@ -22,7 +22,6 @@ void HYD_uiu_init_params(void)
     HYD_server_info.base_path = NULL;
 
     HYD_server_info.port_range = NULL;
-    HYD_server_info.iface_ip_env_name = NULL;
 
     HYD_server_info.nameserver = NULL;
     HYD_server_info.localhost = NULL;
@@ -36,11 +35,6 @@ void HYD_uiu_init_params(void)
 
     HYD_server_info.pg_list.pgid = 0;
     HYD_server_info.pg_list.next = NULL;
-
-#if defined ENABLE_PROFILING
-    HYD_server_info.enable_profiling = -1;
-    HYD_server_info.num_pmi_calls = 0;
-#endif /* ENABLE_PROFILING */
 
     HYD_ui_info.prepend_pattern = NULL;
     HYD_ui_info.outfile_pattern = NULL;
@@ -60,9 +54,6 @@ void HYD_uiu_free_params(void)
 
     if (HYD_server_info.port_range)
         MPL_free(HYD_server_info.port_range);
-
-    if (HYD_server_info.iface_ip_env_name)
-        MPL_free(HYD_server_info.iface_ip_env_name);
 
     if (HYD_server_info.nameserver)
         MPL_free(HYD_server_info.nameserver);

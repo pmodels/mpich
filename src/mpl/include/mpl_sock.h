@@ -36,6 +36,7 @@ extern "C" {
 
 ssize_t MPL_large_writev(int fd, const struct iovec *iov, int iovcnt);
 ssize_t MPL_large_readv(int fd, const struct iovec *iov, int iovcnt);
+int MPL_host_is_local(const char *host);
 
 /* *INDENT-ON* */
 #if defined(__cplusplus)

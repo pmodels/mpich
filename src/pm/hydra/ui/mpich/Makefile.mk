@@ -4,7 +4,8 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-AM_CPPFLAGS += -I$(top_srcdir)/ui/utils -DHYDRA_CONF_FILE=\"@sysconfdir@/mpiexec.hydra.conf\"
+AM_CPPFLAGS += -I$(top_srcdir)/ui/utils -DHYDRA_CONF_FILE=\"@sysconfdir@/mpiexec.hydra.conf\" \
+	-I$(top_srcdir)/ui/mpich
 
 noinst_HEADERS += ui/mpich/mpiexec.h
 

@@ -13,7 +13,6 @@
 struct HYD_cmd {
     enum {
         HYD_CLEANUP,
-        HYD_CKPOINT,
         HYD_SIGNAL
     } type;
 
@@ -25,7 +24,6 @@ struct HYD_server_info_s {
 
     char *base_path;
     char *port_range;
-    char *iface_ip_env_name;
     char *nameserver;
     char *localhost;
 
@@ -37,6 +35,9 @@ struct HYD_server_info_s {
 
     /* Process groups */
     struct HYD_pg pg_list;
+
+    /* Hash for fast proxy lookup */
+    struct HYD_proxy *proxy_hash;
 
     /* Cleanup */
     int cmd_pipe[2];

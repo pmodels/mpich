@@ -136,7 +136,6 @@ static HYD_status bcast_keyvals(int fd, int pid)
 static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
 {
     struct HYD_proxy *proxy, *tproxy;
-    int proxy_count;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -144,12 +143,8 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
     proxy = HYD_pmcd_pmi_find_proxy(fd);
     HYDU_ASSERT(proxy, status);
 
-    proxy_count = 0;
-    for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next)
-        proxy_count++;
-
     proxy->pg->barrier_count++;
-    if (proxy->pg->barrier_count == proxy_count) {
+    if (proxy->pg->barrier_count == proxy->pg->proxy_count) {
         proxy->pg->barrier_count = 0;
 
         bcast_keyvals(fd, pid);
@@ -313,6 +308,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     struct HYD_exec *exec_list = NULL, *exec;
     struct HYD_env *env;
     struct HYD_node *node;
+    struct HYD_node **launch_nodes = NULL;
 
     char key[PMI_MAXKEYLEN], *val;
     int nprocs, preput_num, info_num, ret;
@@ -573,8 +569,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
             pg->pg_core_count += proxy->node->core_count;
     }
 
-    status = HYDU_sock_create_and_listen_portstr(HYD_server_info.user_global.iface,
-                                                 HYD_server_info.localhost,
+    status = HYDU_sock_create_and_listen_portstr(HYD_server_info.localhost,
                                                  HYD_server_info.port_range, &control_port,
                                                  HYD_pmcd_pmiserv_control_listen_cb,
                                                  (void *) (size_t) new_pgid);
@@ -592,7 +587,12 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(pg);
     HYDU_ERR_POP(status, "unable to fill in executable arguments\n");
 
-    status = HYDT_bsci_launch_procs(proxy_stash.strlist, pg->proxy_list, HYD_FALSE, NULL);
+    HYDU_MALLOC_OR_JUMP(launch_nodes, struct HYD_node **, pg->proxy_count * sizeof(struct HYD_node *),
+                        status);
+    for (proxy = pg->proxy_list, i = 0; i < pg->proxy_count; i++, proxy = proxy->next)
+        launch_nodes[i] = proxy->node;
+
+    status = HYDT_bsci_launch_procs("user", launch_nodes, pg->proxy_count, proxy_stash.strlist, NULL);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
     {
@@ -614,6 +614,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         bcast_keyvals(fd, pid);
 
   fn_exit:
+    MPL_free(launch_nodes);
     HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYD_STRING_STASH_FREE(proxy_stash);
     if (segment_list)

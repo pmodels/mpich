@@ -8,7 +8,10 @@ AM_CPPFLAGS += -I$(top_srcdir)/tools/demux
 
 noinst_HEADERS += tools/demux/demux.h tools/demux/demux_internal.h
 
-libhydra_la_SOURCES += tools/demux/demux.c
+libhydra_la_SOURCES += \
+	tools/demux/demux.c \
+	tools/demux/demux_internal.c \
+	tools/demux/demux_splice.c
 
 if hydra_have_poll
 libhydra_la_SOURCES += tools/demux/demux_poll.c

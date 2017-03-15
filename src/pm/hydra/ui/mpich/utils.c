@@ -19,9 +19,7 @@ static struct HYD_arg_match_table match_table[];
 static void init_ui_mpich_info(void)
 {
     HYD_ui_mpich_info.ppn = -1;
-    HYD_ui_mpich_info.ckpoint_int = -1;
     HYD_ui_mpich_info.print_all_exitcodes = -1;
-    HYD_ui_mpich_info.sort_order = NONE;
 }
 
 static HYD_status get_current_exec(struct HYD_exec **exec)
@@ -111,25 +109,11 @@ static void help_help_fn(void)
     printf("    -membind                         memory binding policy\n");
 
     printf("\n");
-    printf("  Checkpoint/Restart options:\n");
-    printf("    -ckpoint-interval                checkpoint interval\n");
-    printf("    -ckpoint-prefix                  checkpoint file prefix\n");
-    printf("    -ckpoint-num                     checkpoint number to restart\n");
-    printf("    -ckpointlib                      checkpointing library (%s)\n",
-           !strcmp(HYDRA_AVAILABLE_CKPOINTLIBS, "") ? "none" : HYDRA_AVAILABLE_CKPOINTLIBS);
-
-    printf("\n");
-    printf("  Demux engine options:\n");
-    printf("    -demux                           demux engine (%s)\n", HYDRA_AVAILABLE_DEMUXES);
-
-    printf("\n");
     printf("  Other Hydra options:\n");
     printf("    -verbose                         verbose mode\n");
     printf("    -info                            build information\n");
     printf("    -print-all-exitcodes             print exit codes of all processes\n");
-    printf("    -iface                           network interface to use\n");
     printf("    -ppn                             processes per node\n");
-    printf("    -profile                         turn on internal profiling\n");
     printf("    -prepend-rank                    prepend rank to output\n");
     printf("    -prepend-pattern                 prepend pattern to output\n");
     printf("    -outfile-pattern                 direct stdout to file\n");
@@ -137,7 +121,6 @@ static void help_help_fn(void)
     printf("    -nameserver                      name server information (host:port format)\n");
     printf("    -disable-auto-cleanup            don't cleanup processes on error\n");
     printf("    -disable-hostname-propagation    let MPICH auto-detect the hostname\n");
-    printf("    -order-nodes                     order nodes as ascending/descending cores\n");
     printf("    -localhost                       local hostname for the launching node\n");
     printf("    -usize                           universe size (SYSTEM, INFINITE, <value>)\n");
 
@@ -419,35 +402,6 @@ static HYD_status ppn_fn(char *arg, char ***argv)
 
   fn_exit:
     (*argv)++;
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static void profile_help_fn(void)
-{
-    printf("\n");
-    printf("-profile: Turn on internal profiling\n\n");
-}
-
-static HYD_status profile_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    if (reading_config_file && HYD_server_info.enable_profiling != -1) {
-        /* global variable already set; ignore */
-        goto fn_exit;
-    }
-
-#if !defined ENABLE_PROFILING
-    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "profiling support not compiled in\n");
-#endif /* ENABLE_PROFILING */
-
-    status = HYDU_set_int(arg, &HYD_server_info.enable_profiling, 1);
-    HYDU_ERR_POP(status, "error enabling profiling\n");
-
-  fn_exit:
     return status;
 
   fn_fail:
@@ -1031,141 +985,6 @@ static HYD_status topolib_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static void ckpoint_interval_help_fn(void)
-{
-    printf("\n");
-    printf("-ckpoint-interval: Checkpointing interval\n\n");
-}
-
-static HYD_status ckpoint_interval_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    if (reading_config_file && HYD_ui_mpich_info.ckpoint_int != -1) {
-        /* global variable already set; ignore */
-        goto fn_exit;
-    }
-
-    status = HYDU_set_int(arg, &HYD_ui_mpich_info.ckpoint_int, atoi(**argv));
-    HYDU_ERR_POP(status, "error setting ckpoint interval\n");
-
-  fn_exit:
-    (*argv)++;
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static void ckpoint_prefix_help_fn(void)
-{
-    printf("\n");
-    printf("-ckpoint-prefix: Checkpoint file prefix to use\n");
-    printf("    You can have multiple backup prefixes separated by a ':'\n\n");
-}
-
-static HYD_status ckpoint_prefix_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    if (reading_config_file && HYD_server_info.user_global.ckpoint_prefix) {
-        /* global variable already set; ignore */
-        goto fn_exit;
-    }
-
-    status = HYDU_set_str(arg, &HYD_server_info.user_global.ckpoint_prefix, **argv);
-    HYDU_ERR_POP(status, "error setting ckpoint_prefix\n");
-
-  fn_exit:
-    (*argv)++;
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static void ckpoint_num_help_fn(void)
-{
-    printf("\n");
-    printf("-ckpoint-num: Which checkpoint number to restart from.\n\n");
-}
-
-static HYD_status ckpoint_num_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    if (reading_config_file && HYD_server_info.user_global.ckpoint_num != -1) {
-        /* global variable already set; ignore */
-        goto fn_exit;
-    }
-
-    status = HYDU_set_int(arg, &HYD_server_info.user_global.ckpoint_num, atoi(**argv));
-    HYDU_ERR_POP(status, "error setting ckpoint_num\n");
-
-  fn_exit:
-    (*argv)++;
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static void ckpointlib_help_fn(void)
-{
-    printf("\n");
-    printf("-ckpointlib: Checkpointing library to use\n\n");
-    printf("Notes:\n");
-    printf("  * Use the -info option to see what all are compiled in\n\n");
-}
-
-static HYD_status ckpointlib_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    if (reading_config_file && HYD_server_info.user_global.ckpointlib) {
-        /* global variable already set; ignore */
-        goto fn_exit;
-    }
-
-    status = HYDU_set_str(arg, &HYD_server_info.user_global.ckpointlib, **argv);
-    HYDU_ERR_POP(status, "error setting ckpointlib\n");
-
-  fn_exit:
-    (*argv)++;
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static void demux_help_fn(void)
-{
-    printf("\n");
-    printf("-demux: Demux engine to use\n\n");
-    printf("Notes:\n");
-    printf("  * Use the -info option to see what all are compiled in\n\n");
-}
-
-static HYD_status demux_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    if (reading_config_file && HYD_server_info.user_global.demux) {
-        /* global variable already set; ignore */
-        goto fn_exit;
-    }
-
-    status = HYDU_set_str(arg, &HYD_server_info.user_global.demux, **argv);
-    HYDU_ERR_POP(status, "error setting demux\n");
-
-  fn_exit:
-    (*argv)++;
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static void verbose_help_fn(void)
 {
     printf("\n");
@@ -1221,12 +1040,6 @@ static HYD_status info_fn(char *arg, char ***argv)
                        HYDRA_AVAILABLE_TOPOLIBS);
     HYDU_dump_noprefix(stdout,
                        "    Resource management kernels available:   %s\n", HYDRA_AVAILABLE_RMKS);
-    HYDU_dump_noprefix(stdout,
-                       "    Checkpointing libraries available:       %s\n",
-                       HYDRA_AVAILABLE_CKPOINTLIBS);
-    HYDU_dump_noprefix(stdout,
-                       "    Demux engines available:                 %s\n",
-                       HYDRA_AVAILABLE_DEMUXES);
 
     HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "%s", "");
 
@@ -1256,32 +1069,6 @@ static HYD_status print_all_exitcodes_fn(char *arg, char ***argv)
     HYDU_ERR_POP(status, "error setting print_all_exitcodes\n");
 
   fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static void iface_help_fn(void)
-{
-    printf("\n");
-    printf("-iface: Network interface to use (e.g., eth0, eth1, myri0, ib0)\n\n");
-}
-
-static HYD_status iface_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    if (reading_config_file && HYD_server_info.user_global.iface) {
-        /* global variable already set; ignore */
-        goto fn_exit;
-    }
-
-    status = HYDU_set_str(arg, &HYD_server_info.user_global.iface, **argv);
-    HYDU_ERR_POP(status, "error setting iface\n");
-
-  fn_exit:
-    (*argv)++;
     return status;
 
   fn_fail:
@@ -1367,39 +1154,6 @@ static HYD_status hostname_propagation_fn(char *arg, char ***argv)
     goto fn_exit;
 }
 
-static void order_nodes_help_fn(void)
-{
-    printf("\n");
-    printf("-order-nodes ASCENDING: Sort the node list in ascending order\n");
-    printf("-order-nodes DESCENDING: Sort the node list in descending order\n");
-}
-
-static HYD_status order_nodes_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    if (reading_config_file && HYD_ui_mpich_info.sort_order != NONE) {
-        /* global variable already set; ignore */
-        goto fn_exit;
-    }
-
-    if (!strcmp(**argv, "ASCENDING") || !strcmp(**argv, "ascending") ||
-        !strcmp(**argv, "UP") || !strcmp(**argv, "up"))
-        HYD_ui_mpich_info.sort_order = ASCENDING;
-    else if (!strcmp(**argv, "DESCENDING") || !strcmp(**argv, "descending") ||
-             !strcmp(**argv, "DOWN") || !strcmp(**argv, "down"))
-        HYD_ui_mpich_info.sort_order = DESCENDING;
-    else
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "unrecognized sort order\n");
-
-  fn_exit:
-    (*argv)++;
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 static void localhost_help_fn(void)
 {
     printf("\n");
@@ -1471,21 +1225,9 @@ static HYD_status set_default_values(void)
     struct HYD_exec *exec;
     HYD_status status = HYD_SUCCESS;
 
-    if (HYD_server_info.user_global.ckpoint_prefix == NULL) {
-        if (MPL_env2str("HYDRA_CKPOINT_PREFIX", (const char **) &tmp) != 0)
-            HYD_server_info.user_global.ckpoint_prefix = MPL_strdup(tmp);
-        tmp = NULL;
-    }
-
-    if (HYD_ui_mpich_info.ckpoint_int == -1) {
-        if (MPL_env2str("HYDRA_CKPOINT_INT", (const char **) &tmp) != 0)
-            HYD_ui_mpich_info.ckpoint_int = atoi(tmp);
-        tmp = NULL;
-    }
-
     /* If exec_list is not NULL, make sure local executable is set */
     for (exec = HYD_uii_mpx_exec_list; exec; exec = exec->next) {
-        if (exec->exec[0] == NULL && HYD_server_info.user_global.ckpoint_prefix == NULL)
+        if (exec->exec[0] == NULL)
             HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable specified\n");
 
         status = HYDU_correct_wdir(&exec->wdir);
@@ -1495,19 +1237,9 @@ static HYD_status set_default_values(void)
     if (HYD_ui_mpich_info.print_all_exitcodes == -1)
         HYD_ui_mpich_info.print_all_exitcodes = 0;
 
-    if (HYD_server_info.enable_profiling == -1)
-        HYD_server_info.enable_profiling = 0;
-
     if (HYD_server_info.user_global.debug == -1 &&
         MPL_env2bool("HYDRA_DEBUG", &HYD_server_info.user_global.debug) == 0)
         HYD_server_info.user_global.debug = 0;
-
-    /* don't clobber existing iface values from the command line */
-    if (HYD_server_info.user_global.iface == NULL) {
-        if (MPL_env2str("HYDRA_IFACE", (const char **) &tmp) != 0)
-            HYD_server_info.user_global.iface = MPL_strdup(tmp);
-        tmp = NULL;
-    }
 
     if (HYD_server_info.node_list == NULL && MPL_env2str("HYDRA_HOST_FILE", (const char **) &tmp)) {
         status = HYDU_parse_hostfile(tmp, &HYD_server_info.node_list, HYDU_process_mfile_token);
@@ -1523,35 +1255,10 @@ static HYD_status set_default_values(void)
     if (HYD_server_info.user_global.auto_cleanup == -1)
         HYD_server_info.user_global.auto_cleanup = 1;
 
-    /* Make sure this is either a restart or there is an executable to
-     * launch */
-    if (HYD_uii_mpx_exec_list == NULL && HYD_server_info.user_global.ckpoint_prefix == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable provided\n");
-
     /* If hostname propagation is not set on the command-line, check
      * for the environment variable */
     if (hostname_propagation == -1)
         MPL_env2bool("HYDRA_HOSTNAME_PROPAGATION", &hostname_propagation);
-
-    /* If an interface is provided, set that */
-    if (HYD_server_info.user_global.iface) {
-        if (hostname_propagation == 1) {
-            HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                                "cannot set iface and force hostname propagation");
-        }
-
-        HYDU_append_env_to_list("MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE",
-                                HYD_server_info.user_global.iface,
-                                &HYD_server_info.user_global.global_env.system);
-
-        /* Disable hostname propagation */
-        hostname_propagation = 0;
-    }
-
-    /* If hostname propagation is requested (or not set), set the
-     * environment variable for doing that */
-    if (hostname_propagation || hostname_propagation == -1)
-        HYD_server_info.iface_ip_env_name = MPL_strdup("MPIR_CVAR_CH3_INTERFACE_HOSTNAME");
 
     /* Default universe size if the user did not specify anything is
      * INFINITE */
@@ -1739,12 +1446,6 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
     status = set_default_values();
     HYDU_ERR_POP(status, "setting default values failed\n");
 
-    /* If the user set the checkpoint prefix, set env var to enable
-     * checkpointing on the processes  */
-    if (HYD_server_info.user_global.ckpoint_prefix)
-        HYDU_append_env_to_list("MPIR_CVAR_NEMESIS_ENABLE_CKPOINT", "1",
-                                &HYD_server_info.user_global.global_env.system);
-
     /* Preset common environment options for disabling STDIO buffering
      * in Fortran */
     HYDU_append_env_to_list("GFORTRAN_UNBUFFERED_PRECONNECTED", "y",
@@ -1780,7 +1481,6 @@ static struct HYD_arg_match_table match_table[] = {
     {"hosts", hostlist_fn, hostlist_help_fn},
     {"hostlist", hostlist_fn, hostlist_help_fn},
     {"ppn", ppn_fn, ppn_help_fn},
-    {"profile", profile_fn, profile_help_fn},
     {"prepend-rank", prepend_rank_fn, prepend_rank_help_fn},
     {"l", prepend_rank_fn, prepend_rank_help_fn},
     {"prepend-pattern", prepend_pattern_fn, prepend_pattern_help_fn},
@@ -1821,15 +1521,6 @@ static struct HYD_arg_match_table match_table[] = {
     {"map-by", map_by_fn, bind_to_help_fn},
     {"membind", membind_fn, bind_to_help_fn},
 
-    /* Checkpoint/restart options */
-    {"ckpoint-interval", ckpoint_interval_fn, ckpoint_interval_help_fn},
-    {"ckpoint-prefix", ckpoint_prefix_fn, ckpoint_prefix_help_fn},
-    {"ckpoint-num", ckpoint_num_fn, ckpoint_num_help_fn},
-    {"ckpointlib", ckpointlib_fn, ckpointlib_help_fn},
-
-    /* Demux engine options */
-    {"demux", demux_fn, demux_help_fn},
-
     /* Other hydra options */
     {"verbose", verbose_fn, verbose_help_fn},
     {"v", verbose_fn, verbose_help_fn},
@@ -1837,14 +1528,12 @@ static struct HYD_arg_match_table match_table[] = {
     {"info", info_fn, info_help_fn},
     {"version", info_fn, info_help_fn},
     {"print-all-exitcodes", print_all_exitcodes_fn, print_all_exitcodes_help_fn},
-    {"iface", iface_fn, iface_help_fn},
     {"nameserver", nameserver_fn, nameserver_help_fn},
     {"disable-auto-cleanup", auto_cleanup_fn, auto_cleanup_help_fn},
     {"dac", auto_cleanup_fn, auto_cleanup_help_fn},
     {"enable-auto-cleanup", auto_cleanup_fn, auto_cleanup_help_fn},
     {"disable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
     {"enable-hostname-propagation", hostname_propagation_fn, hostname_propagation_help_fn},
-    {"order-nodes", order_nodes_fn, order_nodes_help_fn},
     {"localhost", localhost_fn, localhost_help_fn},
     {"usize", usize_fn, usize_help_fn},
 

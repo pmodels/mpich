@@ -22,7 +22,7 @@
  * used. If the input parameter is non-NULL, it will remain unchanged;
  * if it is NULL, an appropriate value will be filled in.
  */
-HYD_status HYDT_dmx_init(char **demux);
+HYD_status HYDT_dmx_init(void);
 
 /**
  * \brief HYDT_dmx_register_fd - Register file descriptors for events
@@ -81,5 +81,6 @@ HYD_status HYDT_dmx_finalize(void);
 int HYDT_dmx_query_fd_registration(int fd);
 
 HYD_status HYDT_dmx_stdin_valid(int *out);
+HYD_status HYDT_dmx_splice(int in, int out);
 
 #endif /* DEMUX_H_INCLUDED */

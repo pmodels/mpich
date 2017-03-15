@@ -14,6 +14,7 @@
 #include "ofi_impl.h"
 #include "mpir_cvars.h"
 #include "pmi.h"
+#include "mpidu_shm.h"
 
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
@@ -714,6 +715,10 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                                      &MPIDI_Global.ep, 0));
 
     if (do_av_insert) {
+        int local_rank, num_local = 0, local_rank_0 = -1;
+        MPIDU_shm_seg_t memory;
+        MPIDU_shm_barrier_t *barrier;
+        int start, end;
 
         /* ---------------------------------- */
         /* Get our endpoint name and publish  */
@@ -742,16 +747,31 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Put(MPIDI_Global.kvsname, keyS, val), pmi);
         MPIDI_OFI_PMI_CALL_POP(PMI_KVS_Commit(MPIDI_Global.kvsname), pmi);
 #endif
-        MPIDI_OFI_PMI_CALL_POP(PMI_Barrier(), pmi);
+
+        for (i = 0; i < size; i++) {
+            if (MPIDI_CH4_rank_is_local(i, MPIR_Process.comm_world)) {
+                if (i == rank)
+                    local_rank = num_local;
+
+                if (local_rank_0 == -1)
+                    local_rank_0 = i;
+
+                num_local++;
+            }
+        }
+
+        MPIDU_shm_seg_alloc(size * MPIDI_Global.addrnamelen, (void **)&table);
+        MPIDU_shm_seg_commit(&memory, &barrier, num_local, local_rank, local_rank_0, rank);
 
         /* -------------------------------- */
         /* Create our address table from    */
         /* encoded KVS values               */
         /* -------------------------------- */
-        table = (char *) MPL_malloc(size * MPIDI_Global.addrnamelen);
-        maxlen = MPIDI_KVSAPPSTRLEN;
-
-        for (i = 0; i < size; i++) {
+        start = local_rank * (size / num_local);
+        end = start + (size / num_local);
+        if (local_rank == num_local - 1)
+            end += size % num_local;
+        for (i = start; i < end; i++) {
             sprintf(keyS, "OFI-%d", i);
 #ifdef USE_CRAYPMI_API
             MPIDI_OFI_PMI_CALL_POP(PMI2_KVS_Get
@@ -764,6 +784,9 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
                                (valS, "OFI", (char *) &table[i * MPIDI_Global.addrnamelen],
                                 MPIDI_Global.addrnamelen, &maxlen), buscard_len);
         }
+        mpi_errno = MPIDU_shm_barrier(barrier, num_local);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
 
         /* -------------------------------- */
         /* Table is constructed.  Map it    */
@@ -775,6 +798,11 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
             MPIDI_OFI_AV(&MPIDIU_get_av(0, i)).dest = mapped_table[i];
         }
         MPL_free(mapped_table);
+
+        mpi_errno = MPIDU_shm_barrier(barrier, num_local);
+        if (mpi_errno)
+            MPIR_ERR_POP(mpi_errno);
+        MPIDU_shm_seg_destroy(&memory, num_local);
     }
 
     /* -------------------------------- */
@@ -869,9 +897,6 @@ static inline int MPIDI_NM_mpi_init_hook(int rank,
         fi_freeinfo(prov);
 
     fi_freeinfo(hints);
-
-    if (table)
-        MPL_free(table);
 
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_NETMOD_OFI_INIT);
     return mpi_errno;

@@ -59,10 +59,8 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(struct HYD_string_stash *proxy_stash,
     if (HYD_server_info.user_global.debug)
         HYD_STRING_STASH(*proxy_stash, MPL_strdup("--debug"), status);
 
-    if (HYDT_bsci_info.rmk) {
-        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--rmk"), status);
-        HYD_STRING_STASH(*proxy_stash, MPL_strdup(HYDT_bsci_info.rmk), status);
-    }
+    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--rmk"), status);
+    HYD_STRING_STASH(*proxy_stash, MPL_strdup(HYD_server_info.user_global.rmk), status);
 
     if (HYDT_bsci_info.launcher) {
         HYD_STRING_STASH(*proxy_stash, MPL_strdup("--launcher"), status);
@@ -72,14 +70,6 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(struct HYD_string_stash *proxy_stash,
     if (HYDT_bsci_info.launcher_exec) {
         HYD_STRING_STASH(*proxy_stash, MPL_strdup("--launcher-exec"), status);
         HYD_STRING_STASH(*proxy_stash, MPL_strdup(HYDT_bsci_info.launcher_exec), status);
-    }
-
-    HYD_STRING_STASH(*proxy_stash, MPL_strdup("--demux"), status);
-    HYD_STRING_STASH(*proxy_stash, MPL_strdup(HYD_server_info.user_global.demux), status);
-
-    if (HYD_server_info.user_global.iface) {
-        HYD_STRING_STASH(*proxy_stash, MPL_strdup("--iface"), status);
-        HYD_STRING_STASH(*proxy_stash, MPL_strdup(HYD_server_info.user_global.iface), status);
     }
 
     HYD_STRING_STASH(*proxy_stash, MPL_strdup("--pgid"), status);
@@ -299,11 +289,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         HYD_STRING_STASH(exec_stash, MPL_strdup("--version"), status);
         HYD_STRING_STASH(exec_stash, MPL_strdup(HYDRA_VERSION), status);
 
-        if (HYD_server_info.iface_ip_env_name) {
-            HYD_STRING_STASH(exec_stash, MPL_strdup("--iface-ip-env-name"), status);
-            HYD_STRING_STASH(exec_stash, MPL_strdup(HYD_server_info.iface_ip_env_name), status);
-        }
-
         HYD_STRING_STASH(exec_stash, MPL_strdup("--hostname"), status);
         HYD_STRING_STASH(exec_stash, MPL_strdup(proxy->node->hostname), status);
 
@@ -375,24 +360,6 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         if (HYD_server_info.user_global.topolib) {
             HYD_STRING_STASH(exec_stash, MPL_strdup("--topolib"), status);
             HYD_STRING_STASH(exec_stash, MPL_strdup(HYD_server_info.user_global.topolib), status);
-        }
-
-        if (HYD_server_info.user_global.ckpointlib) {
-            HYD_STRING_STASH(exec_stash, MPL_strdup("--ckpointlib"), status);
-            HYD_STRING_STASH(exec_stash, MPL_strdup(HYD_server_info.user_global.ckpointlib),
-                             status);
-        }
-
-        if (HYD_server_info.user_global.ckpoint_prefix) {
-            HYD_STRING_STASH(exec_stash, MPL_strdup("--ckpoint-prefix"), status);
-            HYD_STRING_STASH(exec_stash, MPL_strdup(HYD_server_info.user_global.ckpoint_prefix),
-                             status);
-        }
-
-        if (HYD_server_info.user_global.ckpoint_num) {
-            HYD_STRING_STASH(exec_stash, MPL_strdup("--ckpoint-num"), status);
-            HYD_STRING_STASH(exec_stash, HYDU_int_to_str(HYD_server_info.user_global.ckpoint_num),
-                             status);
         }
 
         HYD_STRING_STASH(exec_stash, MPL_strdup("--global-inherited-env"), status);

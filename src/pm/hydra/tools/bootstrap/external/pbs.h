@@ -20,14 +20,11 @@ struct HYDT_bscd_pbs_sys_s {
 
 extern struct HYDT_bscd_pbs_sys_s *HYDT_bscd_pbs_sys;
 
-HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list, int use_rmk,
+HYD_status HYDT_bscd_pbs_launch_procs(const char *rmk, char **args, struct HYD_proxy *proxy_list,
                                       int *control_fd);
 HYD_status HYDT_bscd_pbs_query_env_inherit(const char *env_name, int *ret);
 HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout);
 HYD_status HYDT_bscd_pbs_launcher_finalize(void);
 #endif /* if defined(HAVE_TM_H) */
-
-HYD_status HYDT_bscd_pbs_query_native_int(int *ret);
-HYD_status HYDT_bscd_pbs_query_node_list(struct HYD_node **node_list);
 
 #endif /* PBS_H_INCLUDED */

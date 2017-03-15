@@ -96,7 +96,6 @@ configure
 /css/src/cssi_init.c
 /hydra-doxygen.cfg
 /hydra_nameserver
-/hydra_persist
 /hydra_pmi_proxy
 /hydserv
 /include/stamp-h1

@@ -16,11 +16,3 @@ HYD_status HYDT_bsci_launcher_ll_init(void)
 
     return HYD_SUCCESS;
 }
-
-HYD_status HYDT_bsci_rmk_ll_init(void)
-{
-    HYDT_bsci_fns.query_node_list = HYDT_bscd_ll_query_node_list;
-    HYDT_bsci_fns.query_native_int = HYDT_bscd_ll_query_native_int;
-
-    return HYD_SUCCESS;
-}

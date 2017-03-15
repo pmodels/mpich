@@ -11,14 +11,7 @@
 
 struct HYD_ui_mpich_info_s {
     int ppn;
-    int ckpoint_int;
     int print_all_exitcodes;
-
-    enum HYD_sort_order {
-        NONE = 0,
-        ASCENDING = 1,
-        DESCENDING = 2
-    } sort_order;
 };
 
 extern struct HYD_ui_mpich_info_s HYD_ui_mpich_info;

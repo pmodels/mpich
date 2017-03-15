@@ -7,8 +7,6 @@
 #include "pmip.h"
 #include "bsci.h"
 #include "topo.h"
-#include "ckpoint.h"
-#include "demux.h"
 #include "hydra.h"
 
 
@@ -127,28 +125,6 @@ static HYD_status launcher_exec_fn(char *arg, char ***argv)
     return status;
 }
 
-static HYD_status demux_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.user_global.demux, **argv);
-
-    (*argv)++;
-
-    return status;
-}
-
-static HYD_status iface_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.user_global.iface, **argv);
-
-    (*argv)++;
-
-    return status;
-}
-
 static HYD_status auto_cleanup_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
@@ -248,80 +224,6 @@ static HYD_status topolib_fn(char *arg, char ***argv)
     (*argv)++;
 
     return status;
-}
-
-static HYD_status ckpointlib_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.user_global.ckpointlib, **argv);
-
-    (*argv)++;
-
-    return status;
-}
-
-static HYD_status ckpoint_num_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_int(arg, &HYD_pmcd_pmip.user_global.ckpoint_num, atoi(**argv));
-
-    (*argv)++;
-
-    return status;
-}
-
-static HYD_status parse_ckpoint_prefix(char *pathlist)
-{
-    int i, prefixes;
-    char *dummy;
-    HYD_status status = HYD_SUCCESS;
-
-    /* Find the number of prefixes provided */
-    prefixes = 1;
-    for (i = 0; pathlist[i]; i++)
-        if (pathlist[i] == ':')
-            prefixes++;
-
-    /* Add one more to the prefix list for a NULL ending string */
-    prefixes++;
-
-    HYDU_MALLOC_OR_JUMP(HYD_pmcd_pmip.local.ckpoint_prefix_list, char **, prefixes * sizeof(char *),
-                        status);
-
-    dummy = strtok(pathlist, ":");
-    i = 0;
-    while (dummy) {
-        HYD_pmcd_pmip.local.ckpoint_prefix_list[i] = MPL_strdup(dummy);
-        dummy = strtok(NULL, ":");
-        i++;
-    }
-    HYD_pmcd_pmip.local.ckpoint_prefix_list[i] = NULL;
-
-  fn_exit:
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
-static HYD_status ckpoint_prefix_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.user_global.ckpoint_prefix, **argv);
-    HYDU_ERR_POP(status, "error setting checkpoint prefix\n");
-
-    status = parse_ckpoint_prefix(**argv);
-    HYDU_ERR_POP(status, "error setting checkpoint prefix\n");
-
-  fn_exit:
-    (*argv)++;
-    return status;
-
-  fn_fail:
-    goto fn_exit;
 }
 
 static HYD_status global_env_fn(char *arg, char ***argv)
@@ -454,17 +356,6 @@ static HYD_status version_fn(char *arg, char ***argv)
 
   fn_fail:
     goto fn_exit;
-}
-
-static HYD_status iface_ip_env_name_fn(char *arg, char ***argv)
-{
-    HYD_status status = HYD_SUCCESS;
-
-    status = HYDU_set_str(arg, &HYD_pmcd_pmip.local.iface_ip_env_name, **argv);
-
-    (*argv)++;
-
-    return status;
 }
 
 static HYD_status hostname_fn(char *arg, char ***argv)
@@ -637,8 +528,6 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"rmk", rmk_fn, NULL},
     {"launcher", launcher_fn, NULL},
     {"launcher-exec", launcher_exec_fn, NULL},
-    {"demux", demux_fn, NULL},
-    {"iface", iface_fn, NULL},
     {"auto-cleanup", auto_cleanup_fn, NULL},
     {"retries", retries_fn, NULL},
 
@@ -650,9 +539,6 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"binding", binding_fn, NULL},
     {"mapping", mapping_fn, NULL},
     {"membind", membind_fn, NULL},
-    {"ckpointlib", ckpointlib_fn, NULL},
-    {"ckpoint-prefix", ckpoint_prefix_fn, NULL},
-    {"ckpoint-num", ckpoint_num_fn, NULL},
     {"global-inherited-env", global_env_fn, NULL},
     {"global-system-env", global_env_fn, NULL},
     {"global-user-env", global_env_fn, NULL},
@@ -661,7 +547,6 @@ struct HYD_arg_match_table HYD_pmcd_pmip_match_table[] = {
     {"pmi-id-map", pmi_id_map_fn, NULL},
     {"global-process-count", global_process_count_fn, NULL},
     {"version", version_fn, NULL},
-    {"iface-ip-env-name", iface_ip_env_name_fn, NULL},
     {"hostname", hostname_fn, NULL},
     {"proxy-core-count", proxy_core_count_fn, NULL},
     {"exec", exec_fn, NULL},
@@ -699,14 +584,10 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
     if (HYD_pmcd_pmip.upstream.server_port == -1)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "server port not available\n");
 
-    if (HYD_pmcd_pmip.user_global.demux == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "demux engine not available\n");
-
     if (HYD_pmcd_pmip.user_global.debug == -1)
         HYD_pmcd_pmip.user_global.debug = 0;
 
-    status = HYDT_bsci_init(HYD_pmcd_pmip.user_global.rmk,
-                            HYD_pmcd_pmip.user_global.launcher,
+    status = HYDT_bsci_init(HYD_pmcd_pmip.user_global.launcher,
                             HYD_pmcd_pmip.user_global.launcher_exec,
                             0 /* disable x */ , HYD_pmcd_pmip.user_global.debug);
     HYDU_ERR_POP(status, "proxy unable to initialize bootstrap server\n");

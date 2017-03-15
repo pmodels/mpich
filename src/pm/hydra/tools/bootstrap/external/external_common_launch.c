@@ -97,13 +97,13 @@ static HYD_status sge_get_path(char **path)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_list, int use_rmk,
-                                         int *control_fd)
+HYD_status HYDT_bscd_common_launch_procs(const char *rmk, struct HYD_node **nodes, int num_nodes,
+                                         char **args, int *control_fd)
 {
     int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh, len, rc, autofork;
     int *pid, *fd_list, *dummy;
     int sockpair[2];
-    struct HYD_proxy *proxy;
+    struct HYD_node *node;
     char *targs[HYD_NUM_TMP_STRINGS] = { NULL }, *path = NULL, *extra_arg_list = NULL, *extra_arg;
     char quoted_exec_string[HYD_TMP_STRLEN], *original_exec_string;
     struct HYD_env *env = NULL;
@@ -129,9 +129,6 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
     else if (!strcmp(HYDT_bsci_info.launcher, "sge")) {
         status = sge_get_path(&path);
         HYDU_ERR_POP(status, "unable to get path to the qrsh executable\n");
-    }
-    else if (!strcmp(HYDT_bsci_info.launcher, "manual")) {
-        /* manual has no separate launcher */
     }
     else {
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "bad launcher type %s\n",
@@ -185,20 +182,15 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
      * actual launcher */
     MPL_snprintf(quoted_exec_string, HYD_TMP_STRLEN, "\"%s\"", targs[exec_idx]);
 
-    /* pid_list might already have some PIDs */
-    num_hosts = 0;
-    for (proxy = proxy_list; proxy; proxy = proxy->next)
-        num_hosts++;
-
     /* Increase pid list to accommodate these new pids */
-    HYDU_MALLOC_OR_JUMP(pid, int *, (HYD_bscu_pid_count + num_hosts) * sizeof(int), status);
+    HYDU_MALLOC_OR_JUMP(pid, int *, (HYD_bscu_pid_count + num_nodes) * sizeof(int), status);
     for (i = 0; i < HYD_bscu_pid_count; i++)
         pid[i] = HYD_bscu_pid_list[i];
     MPL_free(HYD_bscu_pid_list);
     HYD_bscu_pid_list = pid;
 
     /* Increase fd list to accommodate these new fds */
-    HYDU_MALLOC_OR_JUMP(fd_list, int *, (HYD_bscu_fd_count + (2 * num_hosts) + 1) * sizeof(int),
+    HYDU_MALLOC_OR_JUMP(fd_list, int *, (HYD_bscu_fd_count + (2 * num_nodes) + 1) * sizeof(int),
                         status);
     for (i = 0; i < HYD_bscu_fd_count; i++)
         fd_list[i] = HYD_bscu_fd_list[i];
@@ -211,33 +203,31 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
         autofork = 1;
 
     targs[idx] = NULL;
-    for (proxy = proxy_list; proxy; proxy = proxy->next) {
+    for (i = 0; i < num_nodes; i++) {
 
         if (targs[host_idx])
             MPL_free(targs[host_idx]);
-        if (proxy->node->user == NULL) {
-            targs[host_idx] = MPL_strdup(proxy->node->hostname);
+        if (nodes[i]->username == NULL) {
+            targs[host_idx] = MPL_strdup(nodes[i]->hostname);
         }
         else {
-            len = strlen(proxy->node->user) + strlen("@") + strlen(proxy->node->hostname) + 1;
+            len = strlen(nodes[i]->username) + strlen("@") + strlen(nodes[i]->hostname) + 1;
 
             HYDU_MALLOC_OR_JUMP(targs[host_idx], char *, len, status);
-            MPL_snprintf(targs[host_idx], len, "%s@%s", proxy->node->user, proxy->node->hostname);
+            MPL_snprintf(targs[host_idx], len, "%s@%s", nodes[i]->username, nodes[i]->hostname);
         }
 
         /* append proxy ID */
         if (targs[idx])
             MPL_free(targs[idx]);
-        targs[idx] = HYDU_int_to_str(proxy->proxy_id);
+        targs[idx] = HYDU_int_to_str(i);
         targs[idx + 1] = NULL;
 
-        status = HYDU_sock_is_local(proxy->node->hostname, &lh);
-        HYDU_ERR_POP(status, "error checking if node is localhost\n");
+        lh = MPL_host_is_local(nodes[i]->hostname);
 
         /* If launcher is 'fork', or this is the localhost, use fork
          * to launch the process */
-        if (autofork && (!strcmp(HYDT_bsci_info.launcher, "fork") ||
-                         !strcmp(HYDT_bsci_info.launcher, "manual") || lh)) {
+        if (autofork && (!strcmp(HYDT_bsci_info.launcher, "fork") || lh)) {
             offset = exec_idx;
 
             if (control_fd) {
@@ -251,11 +241,11 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
                 HYDU_ERR_POP(status, "unable to create env\n");
                 MPL_free(str);
 
-                control_fd[proxy->proxy_id] = sockpair[0];
+                control_fd[i] = sockpair[0];
 
                 /* make sure control_fd[i] is not shared by the
                  * processes spawned in the future */
-                status = HYDU_sock_cloexec(control_fd[proxy->proxy_id]);
+                status = HYDU_sock_cloexec(control_fd[i]);
                 HYDU_ERR_POP(status, "unable to set control socket to close on exec\n");
             }
 
@@ -284,12 +274,6 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
             HYDU_print_strlist(targs + offset);
         }
 
-        if (!strcmp(HYDT_bsci_info.launcher, "manual")) {
-            HYDU_dump_noprefix(stdout, "HYDRA_LAUNCH: ");
-            HYDU_print_strlist(targs + offset);
-            continue;
-        }
-
         /* ssh has many types of security controls that do not allow a
          * user to ssh to the same node multiple times very
          * quickly. If this happens, the ssh daemons disables ssh
@@ -299,7 +283,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
          * slow down the cases where ssh is being used, and not the
          * cases where we fall back to fork. */
         if (!strcmp(HYDT_bsci_info.launcher, "ssh") && !offset) {
-            status = HYDTI_bscd_ssh_store_launch_time(proxy->node->hostname);
+            status = HYDTI_bscd_ssh_store_launch_time(nodes[i]->hostname);
             HYDU_ERR_POP(status, "error storing launch time\n");
         }
 
@@ -330,9 +314,6 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
                                       (void *) (size_t) STDERR_FILENO, HYDT_bscu_stdio_cb);
         HYDU_ERR_POP(status, "demux returned error registering fd\n");
     }
-
-    if (!strcmp(HYDT_bsci_info.launcher, "manual"))
-        HYDU_dump_noprefix(stdout, "HYDRA_LAUNCH_END\n");
 
   fn_exit:
     HYDU_free_strlist(targs);
